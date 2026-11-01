@@ -1,0 +1,1672 @@
+{
+  "schema_version": 1,
+  "kind": "writfold-baseline-work-ledger",
+  "ancestor": "1c17b94be37af8f82f222baddf31435f14172e1a",
+  "evidence_status": "source-derived dispositions; no new test or proof execution",
+  "authority": [
+    "handover/plan/11-workflow3-contract.md",
+    "docs/kctx/first-admission-review.md",
+    "docs/kctx/migration-hardening.md",
+    "docs/kctx/gates.md"
+  ],
+  "destination_status": "planned gates, not evidence of Rust implementation",
+  "open_work": [
+    {
+      "id": "FR3",
+      "title": "Canonical bootstrap policy identity",
+      "status": "open_in_reference_adapter",
+      "source_owners": [
+        {
+          "path": "src/kctx/services/knowledge.py",
+          "symbol": "KnowledgeEngine._policy",
+          "line": 208
+        },
+        {
+          "path": "src/kctx/services/knowledge_models.py",
+          "symbol": "decode_policy",
+          "line": 59
+        }
+      ],
+      "destination_stages": [
+        "P02",
+        "P07",
+        "P10",
+        "P11"
+      ],
+      "destination_gates": [
+        "WF03",
+        "WF10",
+        "WF14"
+      ],
+      "scenarios": [
+        "X77"
+      ],
+      "acceptance": [
+        "Validate and canonicalize new bootstrap policy before deriving its identity.",
+        "Preserve original historical policy bytes, identities and signatures.",
+        "Re-anchor only through explicit migration; never silently canonicalize retained artifacts."
+      ],
+      "scenario_stage_bindings": [
+        {
+          "id": "X77",
+          "stages": [
+            "P07",
+            "P11"
+          ]
+        }
+      ],
+      "source_requirement": "handover/plan/11-workflow3-contract.md:87-98"
+    },
+    {
+      "id": "FR8",
+      "title": "Partial aggregate incident context readers",
+      "status": "open_in_reference_adapter",
+      "source_owners": [
+        {
+          "path": "src/kctx/services/context.py",
+          "symbol": "context",
+          "line": 114
+        }
+      ],
+      "destination_stages": [
+        "P08",
+        "P09",
+        "P11"
+      ],
+      "destination_gates": [
+        "WF12",
+        "WF13"
+      ],
+      "scenarios": [
+        "X78"
+      ],
+      "acceptance": [
+        "Aggregate context reading retains valid records and discloses malformed signature/investigation inputs as partial with warnings.",
+        "Named-record reads and validate stay strict; missing evidence is never success.",
+        "Keep already-fixed impact/match/stale tolerance; do not weaken decoders."
+      ],
+      "scenario_stage_bindings": [
+        {
+          "id": "X78",
+          "stages": [
+            "P08",
+            "P09",
+            "P11"
+          ]
+        }
+      ],
+      "source_requirement": "handover/plan/11-workflow3-contract.md:87-98"
+    },
+    {
+      "id": "FR9",
+      "title": "Guarded restore into unborn branches",
+      "status": "open_in_reference_adapter",
+      "source_owners": [
+        {
+          "path": "src/kctx/services/knowledge.py",
+          "symbol": "KnowledgeEngine.restore",
+          "line": 1573
+        }
+      ],
+      "destination_stages": [
+        "P10",
+        "P11"
+      ],
+      "destination_gates": [
+        "WF11",
+        "WF14"
+      ],
+      "scenarios": [
+        "X79"
+      ],
+      "acceptance": [
+        "Exercise matching and differing unborn branch names with real Git and native store.",
+        "Stage and authenticate complete closure before checkout and visible release publication.",
+        "Remove only operation-owned temporary refs on both success and failure; preserve unrelated refs.",
+        "Workflow3 restore campaign used knowledge refs without a populated authored branch and does not close this defect."
+      ],
+      "scenario_stage_bindings": [
+        {
+          "id": "X79",
+          "stages": [
+            "P10",
+            "P11"
+          ]
+        }
+      ],
+      "source_requirement": "handover/plan/11-workflow3-contract.md:87-98"
+    },
+    {
+      "id": "FR10",
+      "title": "Typed native-generation availability diagnostics",
+      "status": "open_in_reference_adapter",
+      "source_owners": [
+        {
+          "path": "src/kctx/adapters/dolt/knowledge.py",
+          "symbol": "KnowledgeDolt",
+          "line": 94
+        },
+        {
+          "path": "src/kctx/services/knowledge.py",
+          "symbol": "KnowledgeEngine._base",
+          "line": 252
+        }
+      ],
+      "destination_stages": [
+        "P06",
+        "P07",
+        "P10",
+        "P11"
+      ],
+      "destination_gates": [
+        "WF09",
+        "WF11",
+        "WF14"
+      ],
+      "scenarios": [
+        "X80"
+      ],
+      "acceptance": [
+        "Distinguish absent store, unavailable requested commit/predecessor, permissions, corruption and wrong KB/policy.",
+        "Name requested release, exact native generation and configured store.",
+        "Never fall back to an older/current release; fetching is conditional advice, not guaranteed repair."
+      ],
+      "scenario_stage_bindings": [
+        {
+          "id": "X80",
+          "stages": [
+            "P06",
+            "P10",
+            "P11"
+          ]
+        }
+      ],
+      "source_requirement": "handover/plan/11-workflow3-contract.md:87-98"
+    },
+    {
+      "id": "FR11",
+      "title": "Stable managed authored lock namespace",
+      "status": "open_in_reference_adapter",
+      "source_owners": [
+        {
+          "path": "src/kctx/adapters/files/mutations.py",
+          "symbol": "file_lock",
+          "line": 43
+        },
+        {
+          "path": "src/kctx/services/proposals.py",
+          "symbol": "load",
+          "line": 475
+        },
+        {
+          "path": "src/kctx/services/proposals.py",
+          "symbol": "_locked",
+          "line": 486
+        }
+      ],
+      "destination_stages": [
+        "P05",
+        "P08",
+        "P08D",
+        "P10",
+        "P11"
+      ],
+      "destination_gates": [
+        "WF08",
+        "WF11",
+        "WF20"
+      ],
+      "scenarios": [
+        "X81"
+      ],
+      "acceptance": [
+        "Use Git common-directory managed state, or deterministic configured state for non-Git workspaces, keyed by canonical record/worktree identity.",
+        "Readers, writers and recovery share the same stable lock inode namespace; never unlink after unlocking.",
+        "Migrate old adjacent locks only when quiescent; reads leave authored tree unchanged.",
+        "Preserve conditional writes and interrupted-recovery exclusion."
+      ],
+      "scenario_stage_bindings": [
+        {
+          "id": "X81",
+          "stages": [
+            "P08",
+            "P08D",
+            "P10",
+            "P11"
+          ]
+        }
+      ],
+      "source_requirement": "handover/plan/11-workflow3-contract.md:87-98"
+    },
+    {
+      "id": "FR7",
+      "title": "Supported published-closure replication",
+      "status": "open_in_reference_adapter",
+      "source_owners": [
+        {
+          "path": "src/kctx/services/knowledge.py",
+          "symbol": "KnowledgeEngine.__init__",
+          "line": 152
+        },
+        {
+          "path": "src/kctx/adapters/dolt/knowledge.py",
+          "symbol": "KnowledgeDolt",
+          "line": 94
+        },
+        {
+          "path": "src/kctx/adapters/git/knowledge.py",
+          "symbol": "GitReleases.publish",
+          "line": 207
+        }
+      ],
+      "destination_stages": [
+        "P04",
+        "P10",
+        "P11"
+      ],
+      "destination_gates": [
+        "WF06",
+        "WF07",
+        "WF11",
+        "WF14"
+      ],
+      "scenarios": [
+        "X33",
+        "X34",
+        "X82",
+        "X83"
+      ],
+      "acceptance": [
+        "Support one publishing writer; local flock is not distributed fencing.",
+        "Transfer native retained objects and published artifact closure before advertising Git release refs; do not push all candidate branches.",
+        "Receive into staging, authenticate history/closure, then conditionally advance visibility.",
+        "Exercise two clients, lagging store, half-transfer, conflicting pointer update, relocation and pruning; hosted endpoint policy remains separately qualified."
+      ],
+      "scenario_stage_bindings": [
+        {
+          "id": "X33",
+          "stages": [
+            "P04",
+            "P10"
+          ]
+        },
+        {
+          "id": "X34",
+          "stages": [
+            "P04",
+            "P10"
+          ]
+        },
+        {
+          "id": "X82",
+          "stages": [
+            "P10",
+            "P11"
+          ]
+        },
+        {
+          "id": "X83",
+          "stages": [
+            "P10",
+            "P11"
+          ]
+        }
+      ],
+      "source_requirement": "handover/plan/11-workflow3-contract.md:87-98"
+    },
+    {
+      "id": "FR12",
+      "title": "Portable read-only replicas and writer ownership",
+      "status": "open_in_reference_adapter",
+      "source_owners": [
+        {
+          "path": "src/kctx/services/knowledge.py",
+          "symbol": "KnowledgeEngine.__init__",
+          "line": 152
+        },
+        {
+          "path": "src/kctx/engine/operations.py",
+          "symbol": "Operations.knowledge_engine",
+          "line": 57
+        }
+      ],
+      "destination_stages": [
+        "P06",
+        "P09",
+        "P10",
+        "P11"
+      ],
+      "destination_gates": [
+        "WF09",
+        "WF13",
+        "WF14"
+      ],
+      "scenarios": [
+        "X82",
+        "X83"
+      ],
+      "acceptance": [
+        "Separate logical KB/trust identity from writer-instance ownership.",
+        "Read construction must not initialize operations, claim ownership or recover mutations.",
+        "Enforce capability at CLI, RPC and embedding boundaries, not only by hiding commands.",
+        "Block capture, propose/sign/admit, selection, migration, restore and recovery under read-only capability.",
+        "Replica refresh is an explicit mutation; ordinary reads never implicitly sync."
+      ],
+      "scenario_stage_bindings": [
+        {
+          "id": "X82",
+          "stages": [
+            "P10",
+            "P11"
+          ]
+        },
+        {
+          "id": "X83",
+          "stages": [
+            "P10",
+            "P11"
+          ]
+        }
+      ],
+      "source_requirement": "handover/plan/11-workflow3-contract.md:87-98"
+    },
+    {
+      "id": "RUST-TOOL-ADMISSION",
+      "title": "Strict version and executable identity admission",
+      "status": "new_rust_qualification_obligation",
+      "source_owners": [
+        {
+          "path": "src/kctx/graph/inputs.py",
+          "symbol": "generation_inputs",
+          "line": 165
+        }
+      ],
+      "destination_stages": [
+        "P00",
+        "P01",
+        "P06",
+        "P11"
+      ],
+      "destination_gates": [
+        "WF01",
+        "WF09"
+      ],
+      "scenarios": [
+        "X01",
+        "X02"
+      ],
+      "acceptance": [
+        "Admit exact executable content, tool version and installation provenance; same version text with changed executable is not same tool.",
+        "Strict parse and duplicate/conflicting version-line refusal are not provided by the existing permissive regex.",
+        "Preserve completed warning exclusion; do not reopen it as the remaining parser task."
+      ],
+      "scenario_stage_bindings": [
+        {
+          "id": "X01",
+          "stages": [
+            "P00",
+            "P06",
+            "P11"
+          ]
+        },
+        {
+          "id": "X02",
+          "stages": [
+            "P00",
+            "P01",
+            "P06"
+          ]
+        }
+      ],
+      "source_requirement": "handover/stages/P00.md:13"
+    }
+  ],
+  "preserved_completed_fixes": [
+    {
+      "id": "C1",
+      "title": "Strict readiness and named failures; explicit adoption routes",
+      "status": "implemented_in_reference_preserve_during_port",
+      "source_owners": [
+        {
+          "path": "src/kctx/semantics/workflow.py",
+          "symbol": "authored_candidate_problems",
+          "line": 258
+        },
+        {
+          "path": "src/kctx/services/proposals.py",
+          "symbol": "adopt",
+          "line": 947
+        },
+        {
+          "path": "src/kctx/services/proposals.py",
+          "symbol": "reopen",
+          "line": 927
+        }
+      ],
+      "destination_stages": [
+        "P08",
+        "P08D"
+      ],
+      "destination_gates": [
+        "WF12",
+        "WF20"
+      ],
+      "preservation_contract": "Do not waive decided-status predicates for legacy flat files. Draft/proposed may adopt; accepted/landing must reopen; finalized records require supersession. Preserve named failures.",
+      "reference_test_owners": [
+        "tests/test_validate.py",
+        "tests/test_authored_design.py"
+      ],
+      "retained_basis": "docs/kctx/migration-hardening.md; docs/kctx/first-admission-review.md",
+      "fresh_execution": false,
+      "rust_status": "not_ported"
+    },
+    {
+      "id": "C2",
+      "title": "Closed evidence-address relationship references",
+      "status": "implemented_in_reference_preserve_during_port",
+      "source_owners": [
+        {
+          "path": "src/kctx/domain/targets.py",
+          "symbol": "parse_evidence_address",
+          "line": 106
+        },
+        {
+          "path": "src/kctx/codecs/records.py",
+          "symbol": "decode_relationship",
+          "line": 130
+        }
+      ],
+      "destination_stages": [
+        "P02",
+        "P08"
+      ],
+      "destination_gates": [
+        "WF03",
+        "WF12"
+      ],
+      "preservation_contract": "Accept evidence record or exact code locator, reject bare prose/slugs; retain reverse navigation.",
+      "reference_test_owners": [
+        "tests/test_reader_tolerance.py",
+        "tests/test_domain_targets.py"
+      ],
+      "retained_basis": "docs/kctx/migration-hardening.md",
+      "fresh_execution": false,
+      "rust_status": "not_ported"
+    },
+    {
+      "id": "C3",
+      "title": "Existing tolerant aggregate readers",
+      "status": "implemented_in_reference_preserve_during_port",
+      "source_owners": [
+        {
+          "path": "src/kctx/services/signatures.py",
+          "symbol": "list_signatures",
+          "line": 167
+        },
+        {
+          "path": "src/kctx/services/freshness.py",
+          "symbol": "stale",
+          "line": 233
+        }
+      ],
+      "destination_stages": [
+        "P08",
+        "P09"
+      ],
+      "destination_gates": [
+        "WF12",
+        "WF13"
+      ],
+      "preservation_contract": "impact/match/stale retain valid results, warnings and exit 2 on malformed records; strict named/validate readers unchanged. Broader context gap remains FR8.",
+      "reference_test_owners": [
+        "tests/test_reader_tolerance.py"
+      ],
+      "retained_basis": "docs/kctx/migration-hardening.md",
+      "fresh_execution": false,
+      "rust_status": "not_ported"
+    },
+    {
+      "id": "C6",
+      "title": "Located malformed citation scanning",
+      "status": "implemented_in_reference_preserve_during_port",
+      "source_owners": [
+        {
+          "path": "src/kctx/citations/scan.py",
+          "symbol": "run_check",
+          "line": 171
+        },
+        {
+          "path": "src/kctx/citations/scan.py",
+          "symbol": "run_stale",
+          "line": 289
+        }
+      ],
+      "destination_stages": [
+        "P05"
+      ],
+      "destination_gates": [
+        "WF08"
+      ],
+      "preservation_contract": "Malformed tokens are located; later tokens still scanned; cite check unverifiable exits 3, cite stale non-clean exits 2. Duplicate and unterminated structures remain refused.",
+      "reference_test_owners": [
+        "tests/test_citation_scan.py"
+      ],
+      "retained_basis": "docs/kctx/migration-hardening.md",
+      "fresh_execution": false,
+      "rust_status": "not_ported"
+    },
+    {
+      "id": "C7",
+      "title": "Safe non-Markdown symlink skipping",
+      "status": "implemented_in_reference_preserve_during_port",
+      "source_owners": [
+        {
+          "path": "src/kctx/adapters/files/contained.py",
+          "symbol": "_walk",
+          "line": 178
+        }
+      ],
+      "destination_stages": [
+        "P05"
+      ],
+      "destination_gates": [
+        "WF08"
+      ],
+      "preservation_contract": "Skip implicitly encountered non-Markdown links unread. Explicit, ancestor and Markdown-suffixed links remain refused; no promise of following directory links or respecting gitignore.",
+      "reference_test_owners": [
+        "tests/test_contained_citations.py"
+      ],
+      "retained_basis": "docs/kctx/migration-hardening.md",
+      "fresh_execution": false,
+      "rust_status": "not_ported"
+    },
+    {
+      "id": "C8",
+      "title": "No ignored explain pagination options",
+      "status": "implemented_in_reference_preserve_during_port",
+      "source_owners": [
+        {
+          "path": "src/kctx/cli/knowledge.py",
+          "symbol": "explain",
+          "line": 193
+        }
+      ],
+      "destination_stages": [
+        "P09"
+      ],
+      "destination_gates": [
+        "WF13"
+      ],
+      "preservation_contract": "knowledge explain exposes request/release only, not ignored limit/continuation options.",
+      "reference_test_owners": [
+        "tests/test_cli_commands.py"
+      ],
+      "retained_basis": "docs/kctx/migration-hardening.md",
+      "fresh_execution": false,
+      "rust_status": "not_ported"
+    },
+    {
+      "id": "C9",
+      "title": "Separate gate binding from repository evidence",
+      "status": "implemented_in_reference_preserve_during_port",
+      "source_owners": [
+        {
+          "path": "src/kctx/services/proposals.py",
+          "symbol": "gate",
+          "line": 967
+        }
+      ],
+      "destination_stages": [
+        "P08D"
+      ],
+      "destination_gates": [
+        "WF20"
+      ],
+      "preservation_contract": "Compute gate table digest in rev; retain supplied --rev verbatim as repo_rev; adding profile on first write must not self-invalidate gate binding.",
+      "reference_test_owners": [
+        "tests/test_gates_rev.py"
+      ],
+      "retained_basis": "docs/kctx/migration-hardening.md",
+      "fresh_execution": false,
+      "rust_status": "not_ported"
+    },
+    {
+      "id": "C11-FR4",
+      "title": "Every failing assignment has assessment attribution",
+      "status": "implemented_in_reference_preserve_during_port",
+      "source_owners": [
+        {
+          "path": "src/kctx/semantics/checker.py",
+          "symbol": "assessment_gaps",
+          "line": 362
+        },
+        {
+          "path": "src/kctx/services/knowledge.py",
+          "symbol": "KnowledgeEngine.propose",
+          "line": 852
+        }
+      ],
+      "destination_stages": [
+        "P03P",
+        "P07",
+        "P09"
+      ],
+      "destination_gates": [
+        "WF19",
+        "WF10",
+        "WF13"
+      ],
+      "preservation_contract": "Preserve named stale/unsupported/inapplicable gaps and schema3 all-assignment claim/context attribution. Earlier C11 partial diagnosis was superseded by FR4 follow-through.",
+      "reference_test_owners": [
+        "tests/semantics/test_core.py",
+        "tests/test_knowledge_portfolio.py"
+      ],
+      "retained_basis": "docs/kctx/first-admission-review.md:18-38",
+      "fresh_execution": false,
+      "rust_status": "not_ported"
+    },
+    {
+      "id": "C12",
+      "title": "Bounded read-only descriptor ownership",
+      "status": "implemented_in_reference_preserve_during_port",
+      "source_owners": [
+        {
+          "path": "src/kctx/adapters/files/contained.py",
+          "symbol": "_acquire_file",
+          "line": 126
+        },
+        {
+          "path": "src/kctx/adapters/files/contained.py",
+          "symbol": "contained_markdown",
+          "line": 211
+        }
+      ],
+      "destination_stages": [
+        "P05"
+      ],
+      "destination_gates": [
+        "WF08"
+      ],
+      "preservation_contract": "Read each read-only leaf once then release descriptor. Write-back retains descriptors intentionally; raising fd limits or claiming unlimited mutation batches is not the fix.",
+      "reference_test_owners": [
+        "tests/test_contained_citations.py"
+      ],
+      "retained_basis": "docs/kctx/migration-hardening.md",
+      "fresh_execution": false,
+      "rust_status": "not_ported"
+    },
+    {
+      "id": "FR1",
+      "title": "Fix reference closed union",
+      "status": "implemented_in_reference_preserve_during_port",
+      "source_owners": [
+        {
+          "path": "src/kctx/domain/targets.py",
+          "symbol": "parse_fix_reference",
+          "line": 125
+        },
+        {
+          "path": "src/kctx/services/freshness.py",
+          "symbol": "regression_flags",
+          "line": 123
+        }
+      ],
+      "destination_stages": [
+        "P02",
+        "P05",
+        "P08"
+      ],
+      "destination_gates": [
+        "WF03",
+        "WF08",
+        "WF12"
+      ],
+      "preservation_contract": "ProposalId | EvidenceAddress, explicit fixed_at, advisory regression only; writers/readers/reverse queries/graph agree; citation or PR is not proof of successful fix.",
+      "reference_test_owners": [
+        "tests/test_signatures.py",
+        "tests/test_domain_targets.py"
+      ],
+      "retained_basis": "docs/kctx/review-feature-requests.md",
+      "fresh_execution": false,
+      "rust_status": "not_ported"
+    },
+    {
+      "id": "FR2",
+      "title": "Exact local commit-diff retrieval",
+      "status": "implemented_in_reference_preserve_during_port",
+      "source_owners": [
+        {
+          "path": "src/kctx/adapters/git/diff.py",
+          "symbol": "read_local_diff",
+          "line": 168
+        },
+        {
+          "path": "src/kctx/services/diff_impact.py",
+          "symbol": "impact_diff",
+          "line": 75
+        }
+      ],
+      "destination_stages": [
+        "P05",
+        "P09"
+      ],
+      "destination_gates": [
+        "WF08",
+        "WF13"
+      ],
+      "preservation_contract": "Resolve two local endpoints once; no fetch/external diff/textconv/worktree substitution/triple-dot. Preserve both hunk coordinates, unmapped historical pins, no invented binary/mode spans, no_release and omissions, one pinned context-claim release.",
+      "reference_test_owners": [
+        "tests/test_diff_impact.py",
+        "tests/test_diff_inputs.py"
+      ],
+      "retained_basis": "docs/kctx/review-feature-requests.md",
+      "fresh_execution": false,
+      "rust_status": "not_ported"
+    },
+    {
+      "id": "FR5",
+      "title": "Named authorized portfolios",
+      "status": "implemented_in_reference_preserve_during_port",
+      "source_owners": [
+        {
+          "path": "src/kctx/semantics/portfolio.py",
+          "symbol": "portfolio_plan_valid",
+          "line": 112
+        },
+        {
+          "path": "src/kctx/semantics/portfolio.py",
+          "symbol": "query_context_allowed",
+          "line": 155
+        },
+        {
+          "path": "src/kctx/semantics/portfolio.py",
+          "symbol": "apply_portfolio_selection",
+          "line": 224
+        },
+        {
+          "path": "src/kctx/services/knowledge.py",
+          "symbol": "KnowledgeEngine._verify",
+          "line": 1032
+        }
+      ],
+      "destination_stages": [
+        "P03P",
+        "P07",
+        "P09",
+        "P10"
+      ],
+      "destination_gates": [
+        "WF19",
+        "WF03",
+        "WF04",
+        "WF05",
+        "WF10",
+        "WF13",
+        "WF14"
+      ],
+      "preservation_contract": "Preserve ordered context family, exact appended-claim assignments, explicit retirement, all-context key uses, no pooling, exact replay and current correction history under retained selection. v2 history stays authenticated read-only.",
+      "reference_test_owners": [
+        "tests/test_knowledge_portfolio.py",
+        "tests/semantics/test_core.py"
+      ],
+      "retained_basis": "handover/plan/11-workflow3-contract.md",
+      "fresh_execution": false,
+      "rust_status": "not_ported"
+    },
+    {
+      "id": "FR6",
+      "title": "Design acceptance independent of implementation binding",
+      "status": "implemented_in_reference_preserve_during_port",
+      "source_owners": [
+        {
+          "path": "src/kctx/semantics/design_workflow.py",
+          "symbol": "bind_implementation",
+          "line": 95
+        },
+        {
+          "path": "src/kctx/semantics/design_workflow.py",
+          "symbol": "reopen_design",
+          "line": 127
+        },
+        {
+          "path": "src/kctx/services/proposals.py",
+          "symbol": "bind",
+          "line": 795
+        },
+        {
+          "path": "src/kctx/services/proposals.py",
+          "symbol": "material_revision",
+          "line": 170
+        }
+      ],
+      "destination_stages": [
+        "P08D",
+        "P10"
+      ],
+      "destination_gates": [
+        "WF20",
+        "WF03",
+        "WF04",
+        "WF05",
+        "WF14"
+      ],
+      "preservation_contract": "Preserve actual source resolution, accepted design identity, conditional mutation, old-target gate history without authority, explicit reopen, and finalized supersession.",
+      "reference_test_owners": [
+        "tests/test_authored_design.py",
+        "tests/test_authored_design_cli.py"
+      ],
+      "retained_basis": "handover/plan/11-workflow3-contract.md",
+      "fresh_execution": false,
+      "rust_status": "not_ported"
+    },
+    {
+      "id": "DOLT-WARNING-IDENTITY",
+      "title": "Stable graph provenance despite upgrade warnings",
+      "status": "implemented_in_reference_preserve_during_port",
+      "source_owners": [
+        {
+          "path": "src/kctx/graph/inputs.py",
+          "symbol": "generation_inputs",
+          "line": 165
+        }
+      ],
+      "destination_stages": [
+        "P01",
+        "P06"
+      ],
+      "destination_gates": [
+        "WF01",
+        "WF09"
+      ],
+      "preservation_contract": "Keep only version-line match in graph identity; unrelated upgrade advice cannot change inputs. Current regex is permissive: strict parser, multiple-line rejection and executable-byte identity remain new Rust admission obligations.",
+      "reference_test_owners": [
+        "tests/test_graph_inputs.py"
+      ],
+      "retained_basis": "docs/kctx/gates.md",
+      "fresh_execution": false,
+      "rust_status": "not_ported"
+    },
+    {
+      "id": "PRIVATE-READER-DESCENDANTS",
+      "title": "Private native reader descendant lifetime",
+      "status": "implemented_in_reference_preserve_during_port",
+      "source_owners": [
+        {
+          "path": "src/kctx/adapters/dolt/read_session.py",
+          "symbol": "DoltReadSession.__enter__",
+          "line": 191
+        },
+        {
+          "path": "src/kctx/adapters/dolt/read_session.py",
+          "symbol": "DoltReadSession.close",
+          "line": 400
+        }
+      ],
+      "destination_stages": [
+        "P06",
+        "P08S"
+      ],
+      "destination_gates": [
+        "WF09",
+        "WF18"
+      ],
+      "preservation_contract": "Keep DOLT_DISABLE_EVENT_FLUSH=1 scoped to private reader subprocesses; reap owned child before deleting private files. Do not substitute cleanup retries/suppression or mutate user configuration; full cancellation ownership still requires Rust qualification.",
+      "reference_test_owners": [
+        "tests/test_dolt_read_session.py",
+        "tests/test_graph_query_session.py",
+        "tests/test_engine_protocol.py"
+      ],
+      "retained_basis": "docs/kctx/gates.md",
+      "fresh_execution": false,
+      "rust_status": "not_ported"
+    },
+    {
+      "id": "WF3-INTEGRATION-MATERIAL",
+      "title": "Disjoint design projection and preserved unknown metadata",
+      "status": "implemented_in_reference_preserve_during_port",
+      "source_owners": [
+        {
+          "path": "src/kctx/services/proposals.py",
+          "symbol": "material_revision",
+          "line": 170
+        },
+        {
+          "path": "src/kctx/codecs/proposals.py",
+          "symbol": "decode_proposal",
+          "line": 76
+        }
+      ],
+      "destination_stages": [
+        "P02",
+        "P08D"
+      ],
+      "destination_gates": [
+        "WF03",
+        "WF20"
+      ],
+      "preservation_contract": "Retain long inline gate tables, historical custom-field materiality, design-v3 prefix, and refusal to infer missing acceptor from legacy attribution. No old binding-like field gains authority.",
+      "reference_test_owners": [
+        "tests/test_authored_design.py",
+        "tests/test_gates_rev.py"
+      ],
+      "retained_basis": "docs/kctx/gates.md",
+      "fresh_execution": false,
+      "rust_status": "not_ported"
+    },
+    {
+      "id": "REFERENCE-NONEMPTY-ID",
+      "title": "Workflow reference request ID agreement",
+      "status": "implemented_in_reference_preserve_during_port",
+      "source_owners": [
+        {
+          "path": "src/kctx/semantics/workflow_reference.py",
+          "symbol": "handle",
+          "line": 41
+        },
+        {
+          "path": "src/kctx/semantics/wire.py",
+          "symbol": "handle",
+          "line": 963
+        }
+      ],
+      "destination_stages": [
+        "P02",
+        "P03P"
+      ],
+      "destination_gates": [
+        "WF03",
+        "WF04",
+        "WF19"
+      ],
+      "preservation_contract": "Both reference schema2/schema3 require nonempty ID. Retain Lean decoder counterpart and counterexample; production RPC ID rules are a different surface.",
+      "reference_test_owners": [
+        "tests/semantics/test_conformance_runner.py"
+      ],
+      "retained_basis": "docs/kctx/gates.md",
+      "fresh_execution": false,
+      "rust_status": "not_ported"
+    },
+    {
+      "id": "RECURSIVE-SUPPORT",
+      "title": "Proposition-specific leaves and recursive finite witnesses",
+      "status": "implemented_in_reference_preserve_during_port",
+      "source_owners": [
+        {
+          "path": "src/kctx/semantics/checker.py",
+          "symbol": "_check",
+          "line": 83
+        },
+        {
+          "path": "src/kctx/semantics/checker.py",
+          "symbol": "supported",
+          "line": 238
+        }
+      ],
+      "destination_stages": [
+        "P03"
+      ],
+      "destination_gates": [
+        "WF04",
+        "WF05"
+      ],
+      "preservation_contract": "Preserve exact attestation leaves, every recursive premise, independent inventory/finite-domain interpretation, four-valued support and alternative derivations; do not restore v1 blanket truth premise.",
+      "reference_test_owners": [
+        "tests/semantics/test_core.py"
+      ],
+      "retained_basis": "docs/kctx/gates.md",
+      "fresh_execution": false,
+      "rust_status": "not_ported"
+    },
+    {
+      "id": "AUTHORITY-REPLAY-SCOPE",
+      "title": "No false coverage, scope widening or self-issued approval",
+      "status": "implemented_in_reference_preserve_during_port",
+      "source_owners": [
+        {
+          "path": "src/kctx/semantics/workflow.py",
+          "symbol": "plan_valid",
+          "line": 50
+        },
+        {
+          "path": "src/kctx/semantics/workflow.py",
+          "symbol": "apply_plan",
+          "line": 87
+        },
+        {
+          "path": "src/kctx/services/knowledge.py",
+          "symbol": "KnowledgeEngine._verify",
+          "line": 1032
+        }
+      ],
+      "destination_stages": [
+        "P03",
+        "P07"
+      ],
+      "destination_gates": [
+        "WF04",
+        "WF05",
+        "WF10"
+      ],
+      "preservation_contract": "Full-plan equality controls replay; context/authority verification is adapter-derived; rejection preserves state/journal. Coverage and scope are not widened by navigation or empty inventory.",
+      "reference_test_owners": [
+        "tests/test_knowledge_boundaries.py",
+        "tests/semantics/test_core.py"
+      ],
+      "retained_basis": "docs/kctx/gates.md",
+      "fresh_execution": false,
+      "rust_status": "not_ported"
+    },
+    {
+      "id": "IMMUTABLE-GRAPH-PUBLICATION",
+      "title": "Pinned complete native graphs and owner isolation",
+      "status": "implemented_in_reference_preserve_during_port",
+      "source_owners": [
+        {
+          "path": "src/kctx/graph/generation.py",
+          "symbol": "snapshot_at",
+          "line": 62
+        },
+        {
+          "path": "src/kctx/graph/operations.py",
+          "symbol": "activate",
+          "line": 470
+        },
+        {
+          "path": "src/kctx/graph/operations.py",
+          "symbol": "require_owner",
+          "line": 134
+        },
+        {
+          "path": "src/kctx/graph/query_session.py",
+          "symbol": "QuerySession",
+          "line": 18
+        }
+      ],
+      "destination_stages": [
+        "P06",
+        "P07"
+      ],
+      "destination_gates": [
+        "WF09",
+        "WF11",
+        "WF13"
+      ],
+      "preservation_contract": "No mutable working-state or null/incomplete-current reads; preserve cross-KB ownership, predecessor publication, retained rebuild history and exact binding parity, not count-only parity.",
+      "reference_test_owners": [
+        "tests/test_graph_recovery.py",
+        "tests/test_graph_parity.py",
+        "tests/test_graph_query_session.py"
+      ],
+      "retained_basis": "docs/kctx/gates.md",
+      "fresh_execution": false,
+      "rust_status": "not_ported"
+    },
+    {
+      "id": "HISTORICAL-CITATION-BYTES",
+      "title": "Historical citation coordinates and times remain original",
+      "status": "implemented_in_reference_preserve_during_port",
+      "source_owners": [
+        {
+          "path": "src/kctx/services/citation_refresh.py",
+          "symbol": "refresh_code_citations",
+          "line": 225
+        },
+        {
+          "path": "src/kctx/citations/scan.py",
+          "symbol": "run_check",
+          "line": 171
+        }
+      ],
+      "destination_stages": [
+        "P05",
+        "P10"
+      ],
+      "destination_gates": [
+        "WF08",
+        "WF14"
+      ],
+      "preservation_contract": "Original rev/blob/span/L/seen and state remain historical; current locations/checks are separate advisory fields.",
+      "reference_test_owners": [
+        "tests/test_citation_sources.py",
+        "tests/test_citation_scan.py"
+      ],
+      "retained_basis": "docs/kctx/gates.md",
+      "fresh_execution": false,
+      "rust_status": "not_ported"
+    },
+    {
+      "id": "EXACT-ACQUISITION",
+      "title": "Contained source acquisition and worktree provenance",
+      "status": "implemented_in_reference_preserve_during_port",
+      "source_owners": [
+        {
+          "path": "src/kctx/adapters/files/contained.py",
+          "symbol": "contained_markdown",
+          "line": 211
+        },
+        {
+          "path": "src/kctx/adapters/git/inspection.py",
+          "symbol": "capture_worktree",
+          "line": 249
+        }
+      ],
+      "destination_stages": [
+        "P05"
+      ],
+      "destination_gates": [
+        "WF08"
+      ],
+      "preservation_contract": "Preserve containment, source identity and source-movement checks; do not execute repository-controlled helpers. Worktree profile includes declared staged/unstaged/untracked/binary/submodule bytes rather than HEAD alone.",
+      "reference_test_owners": [
+        "tests/test_contained_citations.py",
+        "tests/test_observation_quality.py"
+      ],
+      "retained_basis": "docs/kctx/gates.md",
+      "fresh_execution": false,
+      "rust_status": "not_ported"
+    },
+    {
+      "id": "UNICODE-RPC-BOUNDARY",
+      "title": "Unicode scalar and deep malformed RPC refusal",
+      "status": "implemented_in_reference_preserve_during_port",
+      "source_owners": [
+        {
+          "path": "src/kctx/semantics/wire.py",
+          "symbol": "_validate_unicode",
+          "line": 1132
+        },
+        {
+          "path": "src/kctx/engine/protocol.py",
+          "symbol": "serve",
+          "line": 223
+        }
+      ],
+      "destination_stages": [
+        "P02",
+        "P09"
+      ],
+      "destination_gates": [
+        "WF03",
+        "WF13"
+      ],
+      "preservation_contract": "Reject lone UTF-16 surrogate semantic inputs; bounded malformed/deep RPC frames must not terminate the server or fabricate successful response.",
+      "reference_test_owners": [
+        "tests/semantics/test_core.py",
+        "tests/test_engine_protocol.py"
+      ],
+      "retained_basis": "docs/kctx/gates.md",
+      "fresh_execution": false,
+      "rust_status": "not_ported"
+    },
+    {
+      "id": "COMPLETE-PACKAGE-PROVENANCE",
+      "title": "Decoder and new modules change generation identity",
+      "status": "implemented_in_reference_preserve_during_port",
+      "source_owners": [
+        {
+          "path": "src/kctx/graph/inputs.py",
+          "symbol": "_implementation_sources",
+          "line": 62
+        }
+      ],
+      "destination_stages": [
+        "P01",
+        "P06"
+      ],
+      "destination_gates": [
+        "WF01",
+        "WF09"
+      ],
+      "preservation_contract": "Hash complete installed package, including unloaded modules without importing them. Missing source/version is not a shared fallback identity.",
+      "reference_test_owners": [
+        "tests/test_graph_inputs.py"
+      ],
+      "retained_basis": "docs/kctx/gates.md",
+      "fresh_execution": false,
+      "rust_status": "not_ported"
+    },
+    {
+      "id": "CORRECTION-DURABLE-INTENT",
+      "title": "Recoverable correction projections",
+      "status": "implemented_in_reference_preserve_during_port",
+      "source_owners": [
+        {
+          "path": "src/kctx/services/corrections.py",
+          "symbol": "retract",
+          "line": 387
+        },
+        {
+          "path": "src/kctx/services/corrections.py",
+          "symbol": "_replay",
+          "line": 357
+        }
+      ],
+      "destination_stages": [
+        "P04",
+        "P08"
+      ],
+      "destination_gates": [
+        "WF06",
+        "WF07",
+        "WF11",
+        "WF12"
+      ],
+      "preservation_contract": "Persist operation intent before review projections; same operation/input is replayable and conflicting reuse rejected; preserve pending reviews across partial writes.",
+      "reference_test_owners": [
+        "tests/test_corrections.py"
+      ],
+      "retained_basis": "PORTING.md",
+      "fresh_execution": false,
+      "rust_status": "not_ported"
+    },
+    {
+      "id": "BOUNDED-REDACTION",
+      "title": "Isolated regex redaction",
+      "status": "implemented_in_reference_preserve_during_port",
+      "source_owners": [
+        {
+          "path": "src/kctx/citations/redaction.py",
+          "symbol": "apply_redact_fields",
+          "line": 21
+        }
+      ],
+      "destination_stages": [
+        "P05"
+      ],
+      "destination_gates": [
+        "WF08"
+      ],
+      "preservation_contract": "Keep fixed isolated worker, bounded input/runtime and fail-closed redaction; source text never becomes executable helper code.",
+      "reference_test_owners": [
+        "tests/test_citation_redaction.py"
+      ],
+      "retained_basis": "docs/kctx/gates.md",
+      "fresh_execution": false,
+      "rust_status": "not_ported"
+    },
+    {
+      "id": "AUTHENTICATED-RECOVERY",
+      "title": "Revalidate complete signed operation on recovery",
+      "status": "implemented_in_reference_preserve_during_port",
+      "source_owners": [
+        {
+          "path": "src/kctx/services/knowledge.py",
+          "symbol": "KnowledgeEngine._verify",
+          "line": 1032
+        },
+        {
+          "path": "src/kctx/services/knowledge.py",
+          "symbol": "KnowledgeEngine._validate_release_hint",
+          "line": 458
+        }
+      ],
+      "destination_stages": [
+        "P07"
+      ],
+      "destination_gates": [
+        "WF10",
+        "WF11"
+      ],
+      "preservation_contract": "Journal hints are not authority: recheck plan, approval, policy, captures, native closure, manifest linkage and predecessor; never assume a hinted successful publication.",
+      "reference_test_owners": [
+        "tests/test_knowledge_boundaries.py",
+        "tests/test_storage_publication.py"
+      ],
+      "retained_basis": "docs/kctx/gates.md",
+      "fresh_execution": false,
+      "rust_status": "not_ported"
+    },
+    {
+      "id": "CAPTURE-HARNESS-DEADLOCK",
+      "title": "Concurrent qualification output capture repair",
+      "status": "implemented_in_reference_preserve_during_port",
+      "source_owners": [
+        {
+          "path": "scripts/qualification_common.py",
+          "symbol": "Qualification.capture",
+          "line": 112
+        }
+      ],
+      "destination_stages": [
+        "P11"
+      ],
+      "destination_gates": [
+        "WF11",
+        "WF15"
+      ],
+      "preservation_contract": "Independent bounded capture files and supervised child cleanup replace serialized pipe waits that deadlocked competing publishers. Retain failed original campaign and repair evidence separately; harness revision is not runtime proof.",
+      "reference_test_owners": [
+        "scripts/qualify_storage.py"
+      ],
+      "retained_basis": "docs/kctx/gates.md:143-163",
+      "fresh_execution": false,
+      "rust_status": "not_ported"
+    },
+    {
+      "id": "CORPUS-HISTORICAL-BLINDNESS",
+      "title": "Historical trial excludes later correction",
+      "status": "implemented_in_reference_preserve_during_port",
+      "source_owners": [
+        {
+          "path": "scripts/evaluate_kctx.py",
+          "symbol": "corpus",
+          "line": 38
+        },
+        {
+          "path": "scripts/evaluate_kctx.py",
+          "symbol": "require_historical_blindness",
+          "line": 102
+        }
+      ],
+      "destination_stages": [
+        "P11"
+      ],
+      "destination_gates": [
+        "WF15"
+      ],
+      "preservation_contract": "Old-release payload must bind old revision, exclude later correction and future observations; preserve corpus correction lineage and failed earlier reports.",
+      "reference_test_owners": [
+        "tests/test_qualification_protocol.py"
+      ],
+      "retained_basis": "fixtures/qualification/corpus-lock.json",
+      "fresh_execution": false,
+      "rust_status": "not_ported"
+    },
+    {
+      "id": "CORPUS-RECORD-IDENTITY",
+      "title": "Explicit evidence identity in synthetic notes",
+      "status": "implemented_in_reference_preserve_during_port",
+      "source_owners": [
+        {
+          "path": "scripts/evaluate_kctx.py",
+          "symbol": "corpus",
+          "line": 38
+        },
+        {
+          "path": "scripts/evaluate_kctx.py",
+          "symbol": "import_agent_receipts",
+          "line": 337
+        }
+      ],
+      "destination_stages": [
+        "P11"
+      ],
+      "destination_gates": [
+        "WF15"
+      ],
+      "preservation_contract": "Corpus 1.0.2 adds evidence_id separate from ticket target without label/prompt/threshold changes. Keep original 0/48 exact-label failures and later baseline-only atlas-07 failure; never relabel strict importer as passing.",
+      "reference_test_owners": [
+        "tests/test_qualification_protocol.py"
+      ],
+      "retained_basis": "fixtures/qualification/corpus-lock.json; docs/kctx/reports/evaluation-assessment.json",
+      "fresh_execution": false,
+      "rust_status": "not_ported"
+    }
+  ],
+  "non_defect_dispositions": [
+    {
+      "id": "C5",
+      "disposition": "rejected/dropped",
+      "contract": "deferred proposal lifecycle is not a new land/deploy/use gate timing",
+      "source": "docs/kctx/migration-hardening.md"
+    },
+    {
+      "id": "C1-waiver",
+      "disposition": "rejected",
+      "contract": "no legacy decided-status exemption or inferred acceptor; preserve strict readiness and explicit migration",
+      "source": "docs/kctx/first-admission-review.md"
+    },
+    {
+      "id": "C10",
+      "disposition": "policy disclosure, not TTL calculus defect",
+      "contract": "signed per-context TTL changes policy, not observation time; disclose old/new TTL/source/policy without fabricated claim edits",
+      "source": "handover/plan/11-workflow3-contract.md",
+      "destination_stages": [
+        "P07",
+        "P09"
+      ],
+      "destination_gates": [
+        "WF19",
+        "WF13"
+      ]
+    }
+  ],
+  "qualification_limits": [
+    {
+      "id": "EVAL-PRODUCTION",
+      "status": "not_available",
+      "destination_stages": [
+        "P00",
+        "P11"
+      ],
+      "destination_gates": [
+        "WF00",
+        "WF15"
+      ],
+      "contract": "Only 24 synthetic tasks across atlas/boreal are frozen. No representative production corpus, provider-resolved model identity or token accounting is supplied."
+    },
+    {
+      "id": "EVAL-HARDWARE-BUDGETS",
+      "status": "not_frozen",
+      "destination_stages": [
+        "P01",
+        "P11"
+      ],
+      "destination_gates": [
+        "WF01",
+        "WF15"
+      ],
+      "contract": "Existing synthetic ratios remain frozen; cold install/open, cancellation, full history, extraction, peak simultaneous RSS, storage growth and proof/build resource budgets require actual admitted hardware/input profile before optimization. Do not fabricate thresholds or infer them from historical timing.",
+      "acceptance_prerequisite": "Freeze additional budgets under the owner-reviewed scope on the actual admitted hardware before optimization; this inventory does not invent machine limits."
+    },
+    {
+      "id": "NATIVE-FULL-SCOPE",
+      "status": "not_reexecuted",
+      "destination_stages": [
+        "P07",
+        "P10",
+        "P11"
+      ],
+      "destination_gates": [
+        "WF11",
+        "WF14"
+      ],
+      "contract": "Workflow3 knowledge campaign is narrower than full storage/remote gates; retain input hashes and source-delta limits. Hosted endpoint authentication/retention, power loss and hostile same-user writers remain separate claims."
+    },
+    {
+      "id": "RUST-GOLDEN-BYTES",
+      "status": "not_executed",
+      "destination_stages": [
+        "P02"
+      ],
+      "destination_gates": [
+        "WF03"
+      ],
+      "contract": "Source-owned v2/v3 canonical/signature domains are frozen; cross-host golden byte/signature execution remains P02."
+    }
+  ],
+  "retained_requirement_inventory": "qualification/contracts.json#/requirements",
+  "source_files": [
+    {
+      "path": "scripts/evaluate_kctx.py",
+      "sha256": "18943370402763d2379d28d0dde9d99cb39a9964cc3264394d7cc77fd28cab5f",
+      "bytes": 30503
+    },
+    {
+      "path": "scripts/qualification_common.py",
+      "sha256": "a1a0d1d3320ee425826f39c15db06269e2f57e5119ef53a8403a8b7cb798c7b9",
+      "bytes": 10954
+    },
+    {
+      "path": "src/kctx/adapters/dolt/knowledge.py",
+      "sha256": "2ddb91cdab9a7f753b3dcb33cbfb9ddac5fa37849536f0f2c13b4d643b95a05d",
+      "bytes": 8186
+    },
+    {
+      "path": "src/kctx/adapters/dolt/read_session.py",
+      "sha256": "f48cd4f5e112639393844015880768895c59103d67c9f23473db7ad56ae540b1",
+      "bytes": 18210
+    },
+    {
+      "path": "src/kctx/adapters/files/contained.py",
+      "sha256": "548381936d146a450c79475fc18750c05d2c449e458eeec29d969066e9f56f84",
+      "bytes": 9949
+    },
+    {
+      "path": "src/kctx/adapters/files/mutations.py",
+      "sha256": "6b618ea42dffca60c4debd94ff9374387ce92060deb458fec19d7b4cbfaffa00",
+      "bytes": 3018
+    },
+    {
+      "path": "src/kctx/adapters/git/diff.py",
+      "sha256": "a10da74fde236a14e82499f07d6a170f876c193f4cd8f1404f42aee464db81c8",
+      "bytes": 9235
+    },
+    {
+      "path": "src/kctx/adapters/git/inspection.py",
+      "sha256": "9b394de2f37f53ad64c8714cb4668b12477af2fb7a5d4da389dd25e37df76ffd",
+      "bytes": 11501
+    },
+    {
+      "path": "src/kctx/adapters/git/knowledge.py",
+      "sha256": "3cddce03a7bbbabb435330c41dd1e2e3a0ebe761c9069b3ee30e0685af4eff39",
+      "bytes": 8509
+    },
+    {
+      "path": "src/kctx/citations/redaction.py",
+      "sha256": "ed952081fdf111212ce96dcc791f4c72638f8921ce1aede2359f21b21dbfe3cb",
+      "bytes": 2638
+    },
+    {
+      "path": "src/kctx/citations/scan.py",
+      "sha256": "1f3f3edcc34f64def702729c8d78c2021ab2b2fa2ff7166047ceec58517e534f",
+      "bytes": 12865
+    },
+    {
+      "path": "src/kctx/cli/knowledge.py",
+      "sha256": "db0ebfa8695ebdf7e05581bb48c74ae4eb6a6827abe7fc0915e1a40f2ea6623d",
+      "bytes": 8923
+    },
+    {
+      "path": "src/kctx/codecs/proposals.py",
+      "sha256": "7df82ec4227af6390312fa0a4a0a8be17efb65bb5ab824c8e4cf951c55b5b2dc",
+      "bytes": 10509
+    },
+    {
+      "path": "src/kctx/codecs/records.py",
+      "sha256": "95665e4f0f53099cea86591231562c8414c294e346428cabb124c49db75f915d",
+      "bytes": 21028
+    },
+    {
+      "path": "src/kctx/domain/targets.py",
+      "sha256": "399b572a669140b1fd99070d5c4fea12486f878a9e7b8a3eb5ff15cbaaee0dca",
+      "bytes": 4487
+    },
+    {
+      "path": "src/kctx/engine/operations.py",
+      "sha256": "4606820a4aee9e0602f247155d5ac0b0b2263c2d295a9709b6f42812694e60bc",
+      "bytes": 15003
+    },
+    {
+      "path": "src/kctx/engine/protocol.py",
+      "sha256": "5c95d40bb4bef11313b0b72b512ce887cd35ff84f00664b62edb6b040ef3eaeb",
+      "bytes": 9036
+    },
+    {
+      "path": "src/kctx/graph/generation.py",
+      "sha256": "19b8e4dc98d2da445aaae7ba9ac1386698d103a7c0895e98ee0a332154a79c95",
+      "bytes": 5176
+    },
+    {
+      "path": "src/kctx/graph/inputs.py",
+      "sha256": "fd6065447d425ff01328003ae1008a5672dbf1dee593f2addae9f2c3aa7d3e20",
+      "bytes": 8792
+    },
+    {
+      "path": "src/kctx/graph/operations.py",
+      "sha256": "3593de4eed72a37123d24a383aaaa43a45e7df5a3c6c9c88a6e2b77ae985c141",
+      "bytes": 20003
+    },
+    {
+      "path": "src/kctx/graph/query_session.py",
+      "sha256": "85be998ed12db264041869e5aa09766c2f9e3c43b05a447b0fffabbc6c6964d5",
+      "bytes": 4780
+    },
+    {
+      "path": "src/kctx/semantics/checker.py",
+      "sha256": "98b70e28e02afa1ed28b18c8c0438dd2269dbb54c5b189cf9745b22a8ea04dc3",
+      "bytes": 13889
+    },
+    {
+      "path": "src/kctx/semantics/design_workflow.py",
+      "sha256": "f7088f19f224e12afb1d11d3787d050f949eba440ddbddacbc4a03dce07ec8b0",
+      "bytes": 4440
+    },
+    {
+      "path": "src/kctx/semantics/portfolio.py",
+      "sha256": "3dcf223eb1a969cdebd0cc730750be9e3777c768d85f31195962b5ee4acbe87e",
+      "bytes": 9169
+    },
+    {
+      "path": "src/kctx/semantics/wire.py",
+      "sha256": "72d6f436ca8f0c91a79bac5d89ab6d6a9a27f55475c2fa012ad3275c60bb093a",
+      "bytes": 40181
+    },
+    {
+      "path": "src/kctx/semantics/workflow.py",
+      "sha256": "27ba03dc7701bc767ccc6c42b5a7273f9b1ee8ec4b0ed609fe44089eca5712d9",
+      "bytes": 15169
+    },
+    {
+      "path": "src/kctx/semantics/workflow_reference.py",
+      "sha256": "93ae4117fb2a79a8597d4151f6ec02391a9ca65437dec759f8a14212d46fcae0",
+      "bytes": 5832
+    },
+    {
+      "path": "src/kctx/services/citation_refresh.py",
+      "sha256": "854ef394dc14b6cbc461c4eb1773e2ed1fbfa3cb65465c089a5e4ce4fe79937e",
+      "bytes": 8304
+    },
+    {
+      "path": "src/kctx/services/context.py",
+      "sha256": "0e7859012af5b9432788292bea8acfe91a89abf3c111bbcbbb9928a0116dffe4",
+      "bytes": 6818
+    },
+    {
+      "path": "src/kctx/services/corrections.py",
+      "sha256": "0d7dbe8f0dfaebe153c547f2413cd336f9ee23557d2c5adce815dfe0107a8c7d",
+      "bytes": 17506
+    },
+    {
+      "path": "src/kctx/services/diff_impact.py",
+      "sha256": "41a833fb0f2744051bfe6f101b8fbff2f097983fbb5635363280c627fb0eebd6",
+      "bytes": 7090
+    },
+    {
+      "path": "src/kctx/services/freshness.py",
+      "sha256": "193e0138827770bb696373c2d8f784ad979d6496124210e4780c9d274f195af9",
+      "bytes": 11811
+    },
+    {
+      "path": "src/kctx/services/knowledge.py",
+      "sha256": "769a94b282bab1362c5d28ba7bc59228d3d0d208193dbf82755de51c6e68b2a4",
+      "bytes": 81143
+    },
+    {
+      "path": "src/kctx/services/knowledge_models.py",
+      "sha256": "b638905d4a92cd6eb04385f5413de0b63b613691a4cef68597bdda6b8388bad5",
+      "bytes": 15373
+    },
+    {
+      "path": "src/kctx/services/proposals.py",
+      "sha256": "b72b485195e4fb99c44fc9ca5198eca9a377ef95e0fafeb784cb8c11077786fe",
+      "bytes": 39616
+    },
+    {
+      "path": "src/kctx/services/signatures.py",
+      "sha256": "36e884f111dc94369e6eb088eb7addbf0aadd7a07afbc5fceed17782d8896484",
+      "bytes": 7956
+    }
+  ],
+  "documentation_rule": "Historical reports are retained input artifacts, not freshly executed passes; new Rust stages remain subject to their own exact-source gate receipts."
+}

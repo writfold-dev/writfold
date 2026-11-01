@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "stage": "P00",
+  "status": "pass",
+  "scope": "baseline freeze and adoption only; no complete Rust gate or historical proof rerun claim",
+  "baseline_commit": "1c17b94be37af8f82f222baddf31435f14172e1a",
+  "playbook_commit": "e7d991e990e3dff9c5d70e4327c0e90298e2f67e",
+  "checks": {
+    "source_report_reconciliation": 886,
+    "baseline_inventory_gate": "pass",
+    "changed_semantic_source_rejected": true,
+    "fresh_native_cli_git_dolt_smoke": "pass",
+    "fresh_private_reader_regressions": 3
+  },
+  "evidence": [
+    {
+      "path": "~/.local/share/writfold/qualification/p00-baseline-003.json",
+      "sha256": "04b4fe85da19d9ba451df276b8d43e3de0c8c4c1b8e7deb50a885ef683899099"
+    },
+    {
+      "path": "~/.local/share/writfold/qualification/p00-identity-002/report.json",
+      "sha256": "1f4e85256ba5000e0198ca9b33c0d478483620fe39c987a37489028e31ed2da7"
+    },
+    {
+      "path": "~/.local/share/writfold/qualification/p00-negative-001/calibration.json",
+      "sha256": "745a07bee007a9bf9ff6317fc1c3914668e16e1c507036b46453bacd72efe182"
+    },
+    {
+      "path": "~/.local/share/writfold/qualification/p00-native-001/native.log",
+      "sha256": "6879a2af0ce498410a3db5da1020438d70fc3cba160fc0e344fb8cb3b9ca300d"
+    },
+    {
+      "path": "~/.local/share/writfold/qualification/p00-native-001/reader-regressions.log",
+      "sha256": "72219f52c06f54c88ec7fdb2e68e848d7bfc341d95f519fa6276172b7cb0b104"
+    }
+  ],
+  "inventories": {
+    "qualification/baseline-inputs.json": "098b86330147b1d3276b65021d81e38c46117ae006600d1a5a95913545a1893e",
+    "qualification/contracts.json": "35a00999110464da47498f880c51b77d5b8d7a37f267009a61c20663e8835d6a",
+    "qualification/evaluation-profile.json": "bfb9faf5703950efba552919fdb905804113a3f3d841eaec566de882106faf13",
+    "qualification/remaining-work.json": "c5831223cbc0dda27fc3be513c4b5efe7a6e460f84d7b069d0fa8ad5ad3e541c"
+  },
+  "companion": {
+    "handover/plan/12-playbook-adoption.md": "6b9d43d7a58f5f510b420e39487171d1b958bc4dff5d3c67a50e8ee4c026bb40",
+    "handover/diagrams/P00.mmd": "fd165be703d12eaa3cf51c351b332829f7d12b2c57986bcc921b42bf253a630f",
+    "handover/review-atlas.pdf": "30536d4b948897237ee59e7918aa7f185085c2858288c997341635590eeca4b9",
+    "handover/evidence/atlas-review.json": "6380e4863ab9a55d9eb060e3996f272715ccbdebab58ed52d34388aa8cdd7265"
+  },
+  "preserved_failures": [
+    "handover/evidence/current/behavior.json",
+    "p00-identity-001/report.json",
+    "bootstrap-001/build.log"
+  ],
+  "limits": [
+    "Retained Lean353/conformance334/mutants11/behavior740 reports are source-matched historical evidence, not fresh executions.",
+    "Native smoke and3reader regressions do not qualify full storage or enterprise transport.",
+    "No production corpus supplied; existing synthetic profile and initial local resource allocation are explicit.",
+    "Adoption of the exact playbook pin is separate from its concurrently edited live checkout.",
+    "WF00/WF21 final release scope remains unqualified until required candidate-wide gates complete."
+  ]
+}

@@ -1,0 +1,453 @@
+{
+  "schema_version": 1,
+  "product": "Writfold",
+  "baseline_commit": "1c17b94be37af8f82f222baddf31435f14172e1a",
+  "playbook_commit": "e7d991e990e3dff9c5d70e4327c0e90298e2f67e",
+  "platform": "x86_64-unknown-linux-musl on Linux/WSL2",
+  "qualification_scope": "local-only; enterprise endpoints and hardware power loss unqualified",
+  "stages": [
+    {
+      "id": "P00",
+      "title": "Freeze workflow 3 and adopt the playbook",
+      "dependencies": [],
+      "gates": [
+        "WF00",
+        "WF21"
+      ],
+      "status": "pass",
+      "receipts": ["~/.local/share/writfold/qualification/p00-baseline-003.json"],
+      "completion_record": "qualification/p00-completion.json"
+    },
+    {
+      "id": "P01",
+      "title": "Pin the build and storage setup",
+      "dependencies": [
+        "P00"
+      ],
+      "gates": [
+        "WF01"
+      ],
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "P02",
+      "title": "Nominal domain and strict wire",
+      "dependencies": [
+        "P01"
+      ],
+      "gates": [
+        "WF02",
+        "WF03"
+      ],
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "P03",
+      "title": "Verify the executable semantic core",
+      "dependencies": [
+        "P02"
+      ],
+      "gates": [
+        "WF04",
+        "WF05"
+      ],
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "P03P",
+      "title": "Verify named context portfolios",
+      "dependencies": [
+        "P03"
+      ],
+      "gates": [
+        "WF19",
+        "WF03",
+        "WF04",
+        "WF05",
+        "WF06",
+        "WF07"
+      ],
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "P04",
+      "title": "Prove the operational protocols",
+      "dependencies": [
+        "P02"
+      ],
+      "gates": [
+        "WF06",
+        "WF07"
+      ],
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "P05",
+      "title": "Exact sources, citations and filesystem effects",
+      "dependencies": [
+        "P02",
+        "P04"
+      ],
+      "gates": [
+        "WF08"
+      ],
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "P06",
+      "title": "Managed Dolt and native queries",
+      "dependencies": [
+        "P01",
+        "P02",
+        "P04"
+      ],
+      "gates": [
+        "WF09"
+      ],
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "P07",
+      "title": "Authenticated publication and recovery",
+      "dependencies": [
+        "P03",
+        "P04",
+        "P05",
+        "P06",
+        "P03P"
+      ],
+      "gates": [
+        "WF05",
+        "WF10",
+        "WF11",
+        "WF19"
+      ],
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "P08",
+      "title": "Workflows and provider-neutral catalog",
+      "dependencies": [
+        "P03",
+        "P05",
+        "P07"
+      ],
+      "gates": [
+        "WF12"
+      ],
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "P08D",
+      "title": "Bind implementations to accepted designs",
+      "dependencies": [
+        "P08",
+        "P03P",
+        "P04",
+        "P05"
+      ],
+      "gates": [
+        "WF20",
+        "WF02",
+        "WF04",
+        "WF05",
+        "WF06",
+        "WF07",
+        "WF11"
+      ],
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "P08S",
+      "title": "Scribes and immutable writs",
+      "dependencies": [
+        "P04",
+        "P05",
+        "P06",
+        "P08"
+      ],
+      "gates": [
+        "WF18",
+        "WF05",
+        "WF06",
+        "WF07"
+      ],
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "P09",
+      "title": "Pinned context and agent interface",
+      "dependencies": [
+        "P06",
+        "P07",
+        "P08",
+        "P08S",
+        "P08D"
+      ],
+      "gates": [
+        "WF13",
+        "WF19",
+        "WF21"
+      ],
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "P10",
+      "title": "Migration, sync and retained history",
+      "dependencies": [
+        "P07",
+        "P09"
+      ],
+      "gates": [
+        "WF05",
+        "WF11",
+        "WF14"
+      ],
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "P11",
+      "title": "Qualify outcomes and Rust cutover",
+      "dependencies": [
+        "P03",
+        "P04",
+        "P08",
+        "P09",
+        "P10",
+        "P08S",
+        "P03P",
+        "P08D"
+      ],
+      "gates": [
+        "WF00",
+        "WF01",
+        "WF02",
+        "WF03",
+        "WF04",
+        "WF05",
+        "WF06",
+        "WF07",
+        "WF08",
+        "WF09",
+        "WF10",
+        "WF11",
+        "WF12",
+        "WF13",
+        "WF14",
+        "WF15",
+        "WF18",
+        "WF19",
+        "WF20",
+        "WF21"
+      ],
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "P12",
+      "title": "Package the native product",
+      "dependencies": [
+        "P11"
+      ],
+      "gates": [
+        "WF16"
+      ],
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "P13",
+      "title": "Website and project launch",
+      "dependencies": [
+        "P12"
+      ],
+      "gates": [
+        "WF17",
+        "WF21"
+      ],
+      "status": "not_run",
+      "receipts": []
+    }
+  ],
+  "gates": [
+    {
+      "id": "WF00",
+      "name": "Baseline freeze",
+      "required": true,
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "WF01",
+      "name": "Build and offline closure",
+      "required": true,
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "WF02",
+      "name": "Architecture and nominal values",
+      "required": true,
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "WF03",
+      "name": "Wire and canonical bytes",
+      "required": true,
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "WF04",
+      "name": "Lean and three-host conformance",
+      "required": true,
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "WF05",
+      "name": "Production Verus verification",
+      "required": true,
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "WF06",
+      "name": "TLC exploration",
+      "required": true,
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "WF07",
+      "name": "TLAPS safety and bridges",
+      "required": true,
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "WF08",
+      "name": "Sources and filesystem",
+      "required": true,
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "WF09",
+      "name": "Dolt and companion lifecycle",
+      "required": true,
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "WF10",
+      "name": "Authenticated operations",
+      "required": true,
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "WF11",
+      "name": "Publication and recovery",
+      "required": true,
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "WF12",
+      "name": "Workflows and catalog",
+      "required": true,
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "WF13",
+      "name": "Bounded query and transport",
+      "required": true,
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "WF14",
+      "name": "Migration sync and retention",
+      "required": true,
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "WF15",
+      "name": "Outcomes and performance",
+      "required": true,
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "WF16",
+      "name": "Native release",
+      "required": true,
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "WF17",
+      "name": "Static website",
+      "required": true,
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "WF18",
+      "name": "Scribes and writ acquisition",
+      "required": true,
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "WF19",
+      "name": "Workflow-3 portfolio authority",
+      "required": true,
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "WF20",
+      "name": "Design binding and reopening",
+      "required": true,
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "WF21",
+      "name": "Playbook adoption and companion continuity",
+      "required": true,
+      "status": "not_run",
+      "receipts": []
+    }
+  ],
+  "retained_failures": [
+    {
+      "kind": "tool-bootstrap",
+      "attempt": "bootstrap-001",
+      "tool": "TLAPS 1.6.0-pre",
+      "expected_sha256": "a2860384bc89c4c5b2c73ec367e29f44d829e4d4a2698ab295139f829219331c",
+      "observed_sha256": "39620b869ed939d991f5e2c4d604d84d16c05c5dd95787a1e5f47da296746b7b",
+      "result": "checksum-refused",
+      "log": "~/.local/share/writfold/qualification/bootstrap-001/build.log",
+      "disposition": "Replacement asset 698564747 published by tlaplus/tlapm on 2026-11-01; source tag resolves to 9ed03762aa5202ce72048816b9d8d981fadad622. New pinned tool requires fresh qualification."
+    }
+  ]
+}

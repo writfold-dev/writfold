@@ -1,0 +1,2921 @@
+{
+  "archive": {
+    "path": "handover/reference/kctx-1c17b94-source.tar.gz",
+    "prefix": "kctx-1c17b94/",
+    "sha256": "c6e87a17829046aa67fa316eeb6244502a51a6a194cde7b11e7960296dfb3657"
+  },
+  "baseline_commit": "1c17b94be37af8f82f222baddf31435f14172e1a",
+  "baseline_files": {
+    ".dockerignore": {
+      "git_blob": "b23d401da4900a25498953b1b85b81fe60ba2ea6",
+      "sha256": "1428ed65c061e9350c0aae070bfd8ae7f9474a1dd792a2b1eabf8747f4960cba"
+    },
+    ".gitignore": {
+      "git_blob": "e628abf8427f403defa3704897b4da9f2b9a5e03",
+      "sha256": "11459e1cc1c1f3a80be9fa8860eb519931e641e8c615b4d8860b8072f715aa2b"
+    },
+    "PORTING.md": {
+      "git_blob": "fe3606e0bbb63eb521a5a45918772526d4a98dfb",
+      "sha256": "f31d53ece7d93c0c7681ee903adba4db67b8ced2ffe8057f171538e71a93ebe0"
+    },
+    "README.md": {
+      "git_blob": "9693ff410d668566e448613071c6accef7440a6a",
+      "sha256": "e80fced095e638a0e7a58ab2a63cf1574810c27d8b02849a378ea1c2ea93fa71"
+    },
+    "compose.yaml": {
+      "git_blob": "727bb3dadb06b03486c2bcc1e05e23cdc00b50a9",
+      "sha256": "a1b07fb983d7fd924384bdd62f787d4e77b31b2163af4827b48361053d9e287a"
+    },
+    "conformance-report.json": {
+      "git_blob": "25d86233920bfed911159c30e78cf8f143cd2f8a",
+      "sha256": "55f7c2e19cd8e7eeeb097e177a37a048a9b2485720f62bc0d8b93d9006dca650"
+    },
+    "docker/Dockerfile.runtime": {
+      "git_blob": "73ea82e1a1b4ea02e7cf3e8b8713f60804acbebf",
+      "sha256": "6af006fa0e0fa44a1dd50b828c01958550770aeeaa69505f2670fe70bb4a42a4"
+    },
+    "docker/Dockerfile.verify": {
+      "git_blob": "da7ff00bb0cf1aef8366aec7e2a5f4f828c0bb23",
+      "sha256": "94e56292163458bc3dff76199d641951a7b571454e64fc4899e999e4ab14c94b"
+    },
+    "docs/kctx/calculus-revision.md": {
+      "git_blob": "beed5de27402c4848e5d74ecac965b3363ff14fc",
+      "sha256": "f9f1686797503a85902ee8864bde83c25946977fbb27f62304eecc93c1ae143d"
+    },
+    "docs/kctx/calculus.md": {
+      "git_blob": "e78abc1177b50bcea709d4a5140c8f7727c15402",
+      "sha256": "67279cf576872d5d8177ef3056a22699fa48b3411978503a5653afe727ec5ca0"
+    },
+    "docs/kctx/catalog-design.md": {
+      "git_blob": "66d6d7caffc72233fca5c2100799fc93740d988c",
+      "sha256": "f90524c338ef466deef4605b619a30a712c1b472e3d952dc42f3022386a136fb"
+    },
+    "docs/kctx/config.md": {
+      "git_blob": "b9ef5b97dac2b36c9a6467e9c3f2872dd157b6ac",
+      "sha256": "9f7d221e78c295b4468e5b25248d8ff2d2c3accb9a24a1d76aac6ea6a648cc8d"
+    },
+    "docs/kctx/discovery.md": {
+      "git_blob": "5146f357c3691dcfed23f048fda9b493de965107",
+      "sha256": "db44424f86beed5c675132f9d18c82c5889d18e19c27cec2bcabfce9c59a39d7"
+    },
+    "docs/kctx/first-admission-review.md": {
+      "git_blob": "9a091e5be5cea3cda0f01040abcbad8719e5f49a",
+      "sha256": "b90b215b1e6e003856b696effaba0f43e6e1e3ee0f63bc6a99710b3ebf3bb6e6"
+    },
+    "docs/kctx/flows.md": {
+      "git_blob": "1d28392736fdd32fd9c4333fd7ac6236cc6cfdca",
+      "sha256": "695fa942e973b036fb5f3b5912a888746bdc0af94b70c1ef8fa49470a360081e"
+    },
+    "docs/kctx/gates.md": {
+      "git_blob": "3077191e9eeb0b47988c8f6f1631c7c4e9b8565c",
+      "sha256": "dc06a7b723ab201013f104d0796f8a730dae9211d465b0717272730189ef4d3e"
+    },
+    "docs/kctx/greenfield-design.md": {
+      "git_blob": "a1cd3d51ac9881676a3143b75f5e175022616922",
+      "sha256": "e8b1d59627c26dadf97ad481dc7c257978753189972d4a76f7d8a58fc842ea9e"
+    },
+    "docs/kctx/handover.md": {
+      "git_blob": "fd85146c32c2dbbf8a7489c773130fc437eadff6",
+      "sha256": "4203387deaf67a5ec938e7d648bec516ee1770eb7df844132a23ed88dffb8aac"
+    },
+    "docs/kctx/migration-hardening.md": {
+      "git_blob": "b9cb148ff1eaced45759ff72502c6114a3f8fdb9",
+      "sha256": "964690e65e5ed4e21b7573d06daad1770efb7916d6831034b9a853ab112fce68"
+    },
+    "docs/kctx/refactor-plan.md": {
+      "git_blob": "b9abb6534b18dc07e6ca5cea670923fd2a1988af",
+      "sha256": "d47831c5db7ac40f92d34ac7fd1a972047f714d8f4183f70c1a8595fb912534d"
+    },
+    "docs/kctx/reports/dolt-before-repair.json": {
+      "git_blob": "af6995b70a3a70af6175f8d267bda84046e23586",
+      "sha256": "f02332a4461d565234b99b4b6a0b59b50f7a36ff472f669e92a193c2a2476a7e"
+    },
+    "docs/kctx/reports/evaluation-assessment.json": {
+      "git_blob": "d224425c19f4d5bca62d4bee6158da45784a0397",
+      "sha256": "607d24760446d8312d2d58f5b40ebc13ffa8631b15a4d13a0dbea6bbf28e315c"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/harness.json": {
+      "git_blob": "393208787ed616dc99e5d1a0a83122baa158a58a",
+      "sha256": "dcd72e21c0e5517c74939928ac185633f04deba08414a6c53515d3f2d17a5fb6"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/receipts.json": {
+      "git_blob": "93ebcb0388e999954c3e970bceccabb35c388bad",
+      "sha256": "aebfbef85d1b68d99f838a5fc647ac6a507050d60cd2d7b715eeb170a9650191"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/baseline-atlas-01.json": {
+      "git_blob": "c88217a072544504cb8df2402a465241f4d6d57f",
+      "sha256": "0989f558640ad0f651cd34b10f74c9dc6cabe5a7c70c5a9ac1f9d4fec364f4d8"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/baseline-atlas-02.json": {
+      "git_blob": "e0418d41ed85dd5c8661c8ba39b7ebd6208ca247",
+      "sha256": "4febbb7534b364b7245b95f7be71d0dc871c0e501b3ed2e49353479675b935df"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/baseline-atlas-03.json": {
+      "git_blob": "dd9bdf4a7651ed91300b30ad5499c7983157ccc4",
+      "sha256": "20a192637ac90b10c5d70289fc7ee6316f92b069d4a6248baacb86342a11ef85"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/baseline-atlas-04.json": {
+      "git_blob": "e80c29cb07c3a1a183c402042f3e7b10494be087",
+      "sha256": "784a3ff67da0a67e61e97022c7fbc68d1d4a86a7bd7ab15160c71a3791cd4b2c"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/baseline-atlas-05.json": {
+      "git_blob": "a287bdb16f89510e69f5062ab1795cf27b5fd6f5",
+      "sha256": "0f078531c8da092f5d079a88e9ece798d049193c8a90f8f88d78207972ff32ca"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/baseline-atlas-06.json": {
+      "git_blob": "83a561f510fcce0cf0ba8c8364484edcf8a8645d",
+      "sha256": "f38b1e882fb19c72b378514a73a1e44f6732cf803c70fe7d4dc748d18c8a0fb5"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/baseline-atlas-07.json": {
+      "git_blob": "faac7b76d914ffd3226c61614b9d67153aa8bb37",
+      "sha256": "83077dfdcc0521885c39b3db310ef948b4fc516fe4a2e118fdc0746f520af00a"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/baseline-atlas-08.json": {
+      "git_blob": "4e4097e2262dc59859ed83d99af4c4be6abaf45c",
+      "sha256": "92479b34197233feb5691533dfdf6ac705b13d843199f3cb0ef20d97f67b1169"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/baseline-atlas-09.json": {
+      "git_blob": "1f2db0f6bdb5ef989b2121ea84ae1f42a612a51d",
+      "sha256": "5ad156ad0b22ebc3bfc69004961e373dbaea31375180540370cc262d01c15bf5"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/baseline-atlas-10.json": {
+      "git_blob": "f973c65c29bac48371010577bcf12f58484c4f10",
+      "sha256": "35108427c7e15646a03347b4d9127b2a71079c0550b51bed7efc23623a28497e"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/baseline-atlas-11.json": {
+      "git_blob": "d2ed768e793bb9907bfb02f7adfef15a79aeccdb",
+      "sha256": "fbe55f5e0342c9cd2e3b8da1b746babc8bc9c310cd80a55419f41b7844e89889"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/baseline-atlas-12.json": {
+      "git_blob": "695f3636329ba3ca56bff357c5e946b67e3e2e70",
+      "sha256": "b9997fecbf7838ceec632ad972a4fe34b4d2dcbc1fd0486aeacabb4ae5d723ec"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/baseline-boreal-01.json": {
+      "git_blob": "d2f3d7b7f3832ccca80eb82e34d33ddd37b7c4ca",
+      "sha256": "5bb2b1e6a17385a78f225bd81074db808585db3511bddd067c6b99c07d995a8e"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/baseline-boreal-02.json": {
+      "git_blob": "156302403424dd689d7f32593e29eb2fb3b8e0b6",
+      "sha256": "31e3cab0e02a505a548af82a6ea04471a9ba7deb76c850194fb4543d51a20a19"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/baseline-boreal-03.json": {
+      "git_blob": "80d6147e52f95ebf27dbfd574cc7547d6cbc81c7",
+      "sha256": "39ddb9b4ef33334ee6a337ab28039cc289906bf7441c65906ab430e2bfc957e9"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/baseline-boreal-04.json": {
+      "git_blob": "0c77426f8f9a0e9ffd086aa5827131f578229c3b",
+      "sha256": "803a753f54b74145ad803d87dc4232af3bf774fefdc7508872f1296471ba3304"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/baseline-boreal-05.json": {
+      "git_blob": "d67667673e6fa611d939e803119ef0eff7336f11",
+      "sha256": "3628aaa9765cb332de4946e5877381a076d3ec8d760e802f88e0c3eedc6cce0c"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/baseline-boreal-06.json": {
+      "git_blob": "c2da3c57d16a19c919d56eb143a5d8a05fc3eecf",
+      "sha256": "09314c917e647a3e5d03a93852998d259a3870abd58e271c729bbbc0ee7c044e"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/baseline-boreal-07.json": {
+      "git_blob": "1e6ce9ac9a550440c4a8af871c55242a5b31b854",
+      "sha256": "d8502c1bd87f9f092b40bc4db7c9c08fdeaedf015d7f18dba069a6fb78fde6f0"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/baseline-boreal-08.json": {
+      "git_blob": "ef2af8731f3bebfd14508946c48d9413318ca3e9",
+      "sha256": "0ca866831c2f9a019eaeedaa66df2f4744dd236ae397e3322065cdaf1de0a8ed"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/baseline-boreal-09.json": {
+      "git_blob": "10e661bedc75cb838c7d68df211df98948a516fb",
+      "sha256": "ed21f25085aa35d963e8a99803aca34862f365b16ff7d1fd29eeaf56ae569f99"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/baseline-boreal-10.json": {
+      "git_blob": "ae82ba5b5766bf732bcec274ef25db9bf0294264",
+      "sha256": "f9552157795de3d69f3a43d037a2930e9765597b15e21fc74e5df0d4453d48ca"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/baseline-boreal-11.json": {
+      "git_blob": "d1b968796f10030ae37e06f1c496b63b449ff732",
+      "sha256": "297ff6c6067bd3312dfa93a1ce400d2f934a2b79bf25da5766c002468f44c559"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/baseline-boreal-12.json": {
+      "git_blob": "5496cbce878ae8ef2070b1a1fb64a4a12b0d4154",
+      "sha256": "9257c8e72776a94e4ba7e66ffc11642c69e30a715ffaf9ece85bfe0b69d41430"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/candidate-atlas-01.json": {
+      "git_blob": "eea89bb8fe177cb049af65b08da0aeda96162402",
+      "sha256": "2143f09932188c3ed5498c3c2ca12a0c7dea7d382fbe3af35b22b701c81023a8"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/candidate-atlas-02.json": {
+      "git_blob": "11fc833bb63f22b897fb2554cad81484e9d4e67c",
+      "sha256": "c7da89f28829625f026c96f700b8819e5fa73d6411e913b80eeaf5b6999e6840"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/candidate-atlas-03.json": {
+      "git_blob": "4dcb0b4d40f4362730d360efe88c0a5d3b862bc9",
+      "sha256": "4825c932befc2353278d7d4802fcc85b24ea723a83a0780a19aa1f29ddab29cb"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/candidate-atlas-04.json": {
+      "git_blob": "6802526dc364c5bc03398f4f16bd2d35f3ef1995",
+      "sha256": "41ef3d2ab25174f096f1cccc607020fd5c03340657fb0f2010c111071e1c641e"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/candidate-atlas-05.json": {
+      "git_blob": "3cd08d6371510bb663501854b74a1173abcee2b4",
+      "sha256": "e98c51cc0ed58037039fb11ce3b6c5eee17d1583e1cd4dc66fd49991d6f871a5"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/candidate-atlas-06.json": {
+      "git_blob": "ca4ffe2eaed34dda24d648483523f7b16f592df3",
+      "sha256": "ca4178df4db901e13abfd682b9d57c459eee9d7bf3eaf7ca9d22463d24ed8449"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/candidate-atlas-07.json": {
+      "git_blob": "092cf63aba68e133e3880fb79fce8acfd4058d04",
+      "sha256": "3f9df40334413eaaa8fba000e595a3262c1c3a8d7b0884e8ccc6ea4ca2c61054"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/candidate-atlas-08.json": {
+      "git_blob": "b296ea0da87b577fdf93278ba6578bac4aa5b323",
+      "sha256": "5f334bf74a120ab897f335f1b302e4ec7acfc722fdc15abf96f42f65eab3f17d"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/candidate-atlas-09.json": {
+      "git_blob": "cde46844ccf25f6b4eafd06f931ce67933a96369",
+      "sha256": "f400ab54e480412c0769858f64c9b351f33a6b339f148f876e42072aea13dcb7"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/candidate-atlas-10.json": {
+      "git_blob": "b7d095f990b5938c2d66dbe234cf252935af90c2",
+      "sha256": "ec75cb6a0ff88578a9be6ddedbbd44b1bbcfbb5e2ea8f44a90bd92ed3738f2a9"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/candidate-atlas-11.json": {
+      "git_blob": "d96e9c4ee0f939478f2c72bafb3b75a621dbb714",
+      "sha256": "ab23ef6f26f62023b8f2e71809d4ccfe28fffb8a313384ae51f3f760133b28eb"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/candidate-atlas-12.json": {
+      "git_blob": "225efd343624369695e58c227ed0f3b8618e0d99",
+      "sha256": "1bc85ac8512fc37c069fba40ee4c9ec3229f306b8f1aec2094434bb31a2bb0e4"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/candidate-boreal-01.json": {
+      "git_blob": "e6f264ab258e1a848fe1d5b4fc05a02ab71ae1ba",
+      "sha256": "c60484065fb90bab0bcbed33960633c086eafac26ba5c8507a990d0039c8602f"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/candidate-boreal-02.json": {
+      "git_blob": "08a0f00418403b915a13a89cb101811b02e826a4",
+      "sha256": "6e8c378b0b4d98afb61b561e272b4f0dec64de33d833aa6fbc4aaf9a02539b56"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/candidate-boreal-03.json": {
+      "git_blob": "6a7d9ca4c44bbc3d1dc248247c5763893afaa2ef",
+      "sha256": "5a230418130471656835df141c46e8287f4610b1dfda840dc1c5c484371c4bb0"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/candidate-boreal-04.json": {
+      "git_blob": "36fd2acc125e05437fd828ff9956242368c28562",
+      "sha256": "c844d6751fe0bb82ba6098e80c9dac480a1a2c35fa4c22b5ed8b2432026b639b"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/candidate-boreal-05.json": {
+      "git_blob": "8457f935eab4fd62b481481a862db2d41641941a",
+      "sha256": "19c3e29d6b6d2df1f94c07ea071fd1f9404b1fec24b91dd81fc5b7c823476c49"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/candidate-boreal-06.json": {
+      "git_blob": "5f69a7a5209c86f9feb51cd9ddc0348409e6881d",
+      "sha256": "eb08a13c1d60212153b438ce9f7fcd58627121787ca6eb87e09de00203bc8207"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/candidate-boreal-07.json": {
+      "git_blob": "3911e68f87bd80df68beff5719b3f481b4302aae",
+      "sha256": "93ccf77c06bf602ee0a7e4a9cb5494fac9809b8b492cee8790687bea87c1007a"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/candidate-boreal-08.json": {
+      "git_blob": "df9cefad2e40d4bc1c35032377d27548fda5dc56",
+      "sha256": "a9a03238dcd2659ae0344a9712268a67fd2b96b31a68aad173742a2c3ef898c2"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/candidate-boreal-09.json": {
+      "git_blob": "3e9b5185301eea48d8fd51507e185f28bd7eceb4",
+      "sha256": "4531424f8555377c0b0694ada3de4c8aa486c9a6d9b660b90d768bb57bb0ba6c"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/candidate-boreal-10.json": {
+      "git_blob": "9d24edf510e51f1cada930d383fad15f83976701",
+      "sha256": "138d025db3fc2025d39e642eba932898a09dde6ccabfa2b73ce4c1ce0a902e01"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/candidate-boreal-11.json": {
+      "git_blob": "05e52792301534fc1b85edeb8c96c47b27c7b51b",
+      "sha256": "676b3001d9221f2e521b1e9c7ef4f668eb00414c94efe82efe6160b478d8541a"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/transcripts/candidate-boreal-12.json": {
+      "git_blob": "e8d77e6031b5673ba984e2a2c613d627643404dd",
+      "sha256": "ba31c4630fc8690c5c96d23ef2ea76ddfcadebd5938f7814a130ad7bc47f625a"
+    },
+    "docs/kctx/reports/model-trials-1.0.2/validation/report.json": {
+      "git_blob": "8bea53fb165fcb6832c3a72bc668ca943d867bdb",
+      "sha256": "65348be8abd1e4d638e0d20b141ff9b32f347f57b3f8961ca8e5021364b570cb"
+    },
+    "docs/kctx/reports/model-trials/harness.json": {
+      "git_blob": "b4b85594307a5bed238f60eaef5a1505a499166a",
+      "sha256": "9713fd06860b9268923a651443f9198707da39b11a5f7daf70fa988d4f82fffc"
+    },
+    "docs/kctx/reports/model-trials/receipts.json": {
+      "git_blob": "35b887ce118bcc242c0a7f881adeec8f21043964",
+      "sha256": "2c5b9b968772153fe2af8a1dd5e57fb9d2420154d96af77fe76fcfbdb0ca9773"
+    },
+    "docs/kctx/reports/model-trials/transcripts/baseline-atlas-01.json": {
+      "git_blob": "56a397cc433f2eb7ffee4c6ae14cb1b48e73f64f",
+      "sha256": "72d1e67e996aad8eab196f0acdce47c2dcf6880528f824a5a5e3ade4806f0985"
+    },
+    "docs/kctx/reports/model-trials/transcripts/baseline-atlas-02.json": {
+      "git_blob": "3194eb3d4ac8d8729fb430c1995c4ad6033f1352",
+      "sha256": "2105035473a900fcc7aeecc3bd9cabc322419350650a515545e41ce043e509ec"
+    },
+    "docs/kctx/reports/model-trials/transcripts/baseline-atlas-03.json": {
+      "git_blob": "5eef3595da9d6f612506d8eb442a213c592f83b5",
+      "sha256": "f7bd8b38f626074c61f121e0d8c2cfafe92b22e369f51c05ea0df449d3dd54ab"
+    },
+    "docs/kctx/reports/model-trials/transcripts/baseline-atlas-04.json": {
+      "git_blob": "c68399fc35508afc18d714836a349c886b4dd037",
+      "sha256": "e929b7a1d5567395a13923e52abb0acb7746443b9af1e98544d0f32a1b472123"
+    },
+    "docs/kctx/reports/model-trials/transcripts/baseline-atlas-05.json": {
+      "git_blob": "23cc603a72109b48b5e38e70ce53ba18735e978b",
+      "sha256": "d9d00f772380d647d00326e43bb63feb612bc0ccff5f97bd5bf460a943c9617b"
+    },
+    "docs/kctx/reports/model-trials/transcripts/baseline-atlas-06.json": {
+      "git_blob": "3b014c3e270f0bbddd4ee64a189ca3181754a11e",
+      "sha256": "dbaf144fff47dad02d8902ac089eb405dedf447b02a84c4d616c2a8ec05de27a"
+    },
+    "docs/kctx/reports/model-trials/transcripts/baseline-atlas-07.json": {
+      "git_blob": "5ce8727e30110b2d79a4554786f6040851c10a37",
+      "sha256": "92f14685201b370906f4a06d5146e5b61963c3243686310725d58bc0bf0c5adf"
+    },
+    "docs/kctx/reports/model-trials/transcripts/baseline-atlas-08.json": {
+      "git_blob": "f2e5a29478ab16e8ae1b3096bea602924810af61",
+      "sha256": "0d338278c06b0bdfc587519f15d3369b6480e4c52b4f3a8533c599e995b16c27"
+    },
+    "docs/kctx/reports/model-trials/transcripts/baseline-atlas-09.json": {
+      "git_blob": "4362e25eb42496a90bd4a8d6bb6e2ea2750d8089",
+      "sha256": "ebb5661dd5906ad0c61084d11f173a2efd7802e2eb206b319b935ad52fdde305"
+    },
+    "docs/kctx/reports/model-trials/transcripts/baseline-atlas-10.json": {
+      "git_blob": "932af875020425bc108298ed3c0686ef9ebd4866",
+      "sha256": "81f6396168830b4c9243aeba0f7e71001a8ca116a0b46599eb88503f63da7e0d"
+    },
+    "docs/kctx/reports/model-trials/transcripts/baseline-atlas-11.json": {
+      "git_blob": "646d322ddc67c70615c6065b6ba66ef3e92cb505",
+      "sha256": "788d49ed5defc16117889593a06b1969116f557d44bdab5a017738e99ee7e7e7"
+    },
+    "docs/kctx/reports/model-trials/transcripts/baseline-atlas-12.json": {
+      "git_blob": "fb96cc9bf34270119f6c49e36b7271265e56c96b",
+      "sha256": "4b04171eb501b5f4bb6e7753b261c3fd1267d3a6e79bb912252c863750679ed0"
+    },
+    "docs/kctx/reports/model-trials/transcripts/baseline-boreal-01.json": {
+      "git_blob": "ca8233520701b28a1afdf2b5cf036cf6689da5ed",
+      "sha256": "97b821681d868c1bee5129f0e47e1b2df0b8459482485acee4603c464ad14cb6"
+    },
+    "docs/kctx/reports/model-trials/transcripts/baseline-boreal-02.json": {
+      "git_blob": "0c6609989935fbe09aef4b94ee3d91ee9ae71f48",
+      "sha256": "6f91a408379d149b5f44398f08e7623dbc0a9d9abc4bdfbf583f354dab61735d"
+    },
+    "docs/kctx/reports/model-trials/transcripts/baseline-boreal-03.json": {
+      "git_blob": "86a9fea6c7a336f747b5b09e1741ff3866ba48ca",
+      "sha256": "42556197d6adc9ff2a2121d74bb0954e57f4c1e7182520f959a99d41637dce66"
+    },
+    "docs/kctx/reports/model-trials/transcripts/baseline-boreal-04.json": {
+      "git_blob": "f2fd4b937d2acf3b8def1906b805483a1a7c5598",
+      "sha256": "eb21983a08b1adb6c57011ed671b1a61b981c89cf73d763aa07a89c9b3fa933a"
+    },
+    "docs/kctx/reports/model-trials/transcripts/baseline-boreal-05.json": {
+      "git_blob": "eb728b3b718c5d879411fa345e2c6a12ae1630e7",
+      "sha256": "e03e69ae43da4e4ba39dcc6ed1ef172f2ace94e7eff71be9976c41d5c466dd64"
+    },
+    "docs/kctx/reports/model-trials/transcripts/baseline-boreal-06.json": {
+      "git_blob": "65aa9d83c4ddc583a7fa959f33c964b6aedfdf2e",
+      "sha256": "ec59b3a16097e6288a68c3d4899785095c86bc8ad76bbedd672f98767226bd5d"
+    },
+    "docs/kctx/reports/model-trials/transcripts/baseline-boreal-07.json": {
+      "git_blob": "49e84cff388cbfa12a1d4dd0a43d7dc1c27206c8",
+      "sha256": "88072f94475f1d17560385911d1c72826cd836f82c6a29e392bfbe212ac601e4"
+    },
+    "docs/kctx/reports/model-trials/transcripts/baseline-boreal-08.json": {
+      "git_blob": "d9fb1e0c3c6aed6aa38461dd66da8d55c61de1f9",
+      "sha256": "10809d5f35f651b59eb0051a85964bd851d49cf162083298470b1054cf947ff8"
+    },
+    "docs/kctx/reports/model-trials/transcripts/baseline-boreal-09.json": {
+      "git_blob": "db36fbb4ea061f9db1684cab7a10961180da00f6",
+      "sha256": "3180ca3cc4212615a38e501b8648a42f596d9b74a5a2d0080edf0ac7bc3b3582"
+    },
+    "docs/kctx/reports/model-trials/transcripts/baseline-boreal-10.json": {
+      "git_blob": "1afc0dc87ca3f8454118a39e486d312df0576902",
+      "sha256": "d45fec0de36341e2836d446275e489fd783e147b44fd137666c65cb791afd482"
+    },
+    "docs/kctx/reports/model-trials/transcripts/baseline-boreal-11.json": {
+      "git_blob": "95dc3c581c4a00de859a6c42289213a772ea3fdc",
+      "sha256": "183d8ac2b1e7d07d683392150e436abe8b23ad40fcea9f7fd1393adaf81650da"
+    },
+    "docs/kctx/reports/model-trials/transcripts/baseline-boreal-12.json": {
+      "git_blob": "1ac1997919ca5578dee0948755052ff68be26086",
+      "sha256": "44532793dd9a7c8dda28d92214de76361bc57003ff966560dce9bb85e93d7027"
+    },
+    "docs/kctx/reports/model-trials/transcripts/candidate-atlas-01.json": {
+      "git_blob": "80df89113cdac9a597c122422c1cec1014a67ffc",
+      "sha256": "344e897d7f580c9b723d4efb80de0ad830cb01a91951ddf71e141bd7875aae7b"
+    },
+    "docs/kctx/reports/model-trials/transcripts/candidate-atlas-02.json": {
+      "git_blob": "5c73c0e5a9056b6112645cfd7a5be788b980a96b",
+      "sha256": "1755088936609eb697842a3dfe35c18df6efd3e9466ed2410787f4b8a4f6843d"
+    },
+    "docs/kctx/reports/model-trials/transcripts/candidate-atlas-03.json": {
+      "git_blob": "5eb5129d74837d04e5a747d154d1208768d551e9",
+      "sha256": "28cd2cfc78981557ac40b947cb06c118d914126f99669aed16fdd7831bb96314"
+    },
+    "docs/kctx/reports/model-trials/transcripts/candidate-atlas-04.json": {
+      "git_blob": "71a5b20c3ed3eed5fed0143fccc2f433b1eecb74",
+      "sha256": "9f920e370aa6b2d360a447a12ca0971ed291a37dc54441bc112f46d84867a354"
+    },
+    "docs/kctx/reports/model-trials/transcripts/candidate-atlas-05.json": {
+      "git_blob": "6ddcc2a87a454637a77d2281218a9c58a04ae54d",
+      "sha256": "a18303abd4612b9a6bdb5e096dae9659cf9284c55221f00b3799d09184910f9f"
+    },
+    "docs/kctx/reports/model-trials/transcripts/candidate-atlas-06.json": {
+      "git_blob": "1fa886a797e03e9032546b46b8ab0cc1d7185462",
+      "sha256": "758b869ba2523c1a52ae4378a7ab735def039f7f20a881eae309735245cb5669"
+    },
+    "docs/kctx/reports/model-trials/transcripts/candidate-atlas-07.json": {
+      "git_blob": "ebb34ed5af04f3dcf3edf9a9eb27c73f339ae096",
+      "sha256": "05393e120ef44458a0c1efb239a4e018294ebcb2f09ad02520809df1528105c9"
+    },
+    "docs/kctx/reports/model-trials/transcripts/candidate-atlas-08.json": {
+      "git_blob": "6f9bf8c35311ebc833f3e6cb87e19a73bf404abb",
+      "sha256": "be7c826fbf373ff7e69930a727722e1d21d7e332a307b2071d832d95d480a5a2"
+    },
+    "docs/kctx/reports/model-trials/transcripts/candidate-atlas-09.json": {
+      "git_blob": "3041abd28894304a4927b1e6ef2b6d59b4e7ed7e",
+      "sha256": "7aef2520cff34ea40b76b176725e7458cda01af5e2dabaee66673d466e86a38a"
+    },
+    "docs/kctx/reports/model-trials/transcripts/candidate-atlas-10.json": {
+      "git_blob": "073e41d5640bf48c17e827ccd92a9ee63bcec53f",
+      "sha256": "030b79711685771e66894010f3fd569ab1ad3ebe73aab940b33d8fbe8a7ded67"
+    },
+    "docs/kctx/reports/model-trials/transcripts/candidate-atlas-11.json": {
+      "git_blob": "15404b9b0164931b3209df6a418037f53a2b2fa6",
+      "sha256": "08a0cb9f5f549f792facee59d68d67825d045a0cae1d9700935e25bc6941c8e7"
+    },
+    "docs/kctx/reports/model-trials/transcripts/candidate-atlas-12.json": {
+      "git_blob": "ec3bb7cc4e362a4645d2b53969ab5285fe1ddbc6",
+      "sha256": "c844a2a9029affae19f71d4f0db6c495760880bcbbc5879ab4c61cbfecb88938"
+    },
+    "docs/kctx/reports/model-trials/transcripts/candidate-boreal-01.json": {
+      "git_blob": "fb4cf419d34c6d90531af759f3c3ba0ff4d1873c",
+      "sha256": "8e20303bc62040aa6bf17a3ce14863d0745b8fe2cc04ee352faff6b84359e9e2"
+    },
+    "docs/kctx/reports/model-trials/transcripts/candidate-boreal-02.json": {
+      "git_blob": "3604fd7d61e2dd0b564a0b5e7bd5e5f696a978cf",
+      "sha256": "9cbb37cd75f9dd37e7491976643f0231ccd9bdb44d558c2cc2875444c336ab84"
+    },
+    "docs/kctx/reports/model-trials/transcripts/candidate-boreal-03.json": {
+      "git_blob": "d0b5f6d5e06222aac136a5fcdb1f09d0fcfe611a",
+      "sha256": "fb3c72ba900e3f99d4ffd4360ae5dd5a30f2f82fe61e8a9e382079f6bda32372"
+    },
+    "docs/kctx/reports/model-trials/transcripts/candidate-boreal-04.json": {
+      "git_blob": "2a1a996a7d833f047d7dc5dfd5139345811324ac",
+      "sha256": "56f8f575f0c1bb54c68b7566555bd3fc8a5c5206036b6649f3407b55e0d0c64f"
+    },
+    "docs/kctx/reports/model-trials/transcripts/candidate-boreal-05.json": {
+      "git_blob": "dc5c4f1801dfd9061cdd1166ef48a2770071ebc7",
+      "sha256": "dd49dab7a42fe3a01fe7679fc243cf3138eabeb7584d315aa21c5db91efcbfc4"
+    },
+    "docs/kctx/reports/model-trials/transcripts/candidate-boreal-06.json": {
+      "git_blob": "c5746c471898b215bb07864e249b80235ed21efe",
+      "sha256": "2a434fc11965eee1e8a47e91a386631e6717f85e3816182272119b7dd0865004"
+    },
+    "docs/kctx/reports/model-trials/transcripts/candidate-boreal-07.json": {
+      "git_blob": "2f4def3ce3988b50df6b7dc223b5de72a0a99b8f",
+      "sha256": "2d8d23e8b156ad2363471545f7f3403bf806a22ccaac1d2a18145aabe0c16f1a"
+    },
+    "docs/kctx/reports/model-trials/transcripts/candidate-boreal-08.json": {
+      "git_blob": "b6f658c9b5f61232a83c7bedf7f758551a2c9ecd",
+      "sha256": "e5e4fe407c461dff2052df0e5aa717f4cb7d9ad8d048a9c5e810054b1bc25acf"
+    },
+    "docs/kctx/reports/model-trials/transcripts/candidate-boreal-09.json": {
+      "git_blob": "381e1c5bdc59d8ac69290c63638a9072808ae35b",
+      "sha256": "45fda9810067380b555551033563c783769ec2d784a1830aeed21795d170b6d5"
+    },
+    "docs/kctx/reports/model-trials/transcripts/candidate-boreal-10.json": {
+      "git_blob": "0b1594d31d48bf8ecd2111b728603cd87225c867",
+      "sha256": "e40c36a62582d1e9d305c6fd841da46a3f7701c741a72cf04ca7e09ea40086af"
+    },
+    "docs/kctx/reports/model-trials/transcripts/candidate-boreal-11.json": {
+      "git_blob": "82d7b6b87fd999be3679446dbfff0de14b1c9b33",
+      "sha256": "7748f5765bfa03ed64b0754dec89b753c827c008df6c3d13b1efffa1a18b8c4d"
+    },
+    "docs/kctx/reports/model-trials/transcripts/candidate-boreal-12.json": {
+      "git_blob": "7317877084e9f0933a060e53b5f7d71d07fc7e28",
+      "sha256": "cd8711fb6c62453fd6978a0747c07720714e97510ccc566af26c917822787020"
+    },
+    "docs/kctx/reports/model-trials/validation/report.json": {
+      "git_blob": "3b9f6462f9c369360dcbadd4b1a2188c7a14d6c2",
+      "sha256": "3d7649ff1e3eb49200f7f47790757944d65d0a35d37cdedcbf24b85c4b9e092a"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/report.json": {
+      "git_blob": "30f661026392402cc1d427e252cb1def1ffd4b07",
+      "sha256": "f166774d1350803ea9306336b89f0acfc6b243c35af6ad2c12f0abb64b0d30ab"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/baseline/atlas-01.json": {
+      "git_blob": "4e30c5deeeaed02c982f78904a81fab2bba96c29",
+      "sha256": "e6d5e45d04bbfadf96d65938340da44964a927fb8f245313332f83b8d2200506"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/baseline/atlas-02.json": {
+      "git_blob": "f1d425780112532456f8e1f4a3d2f9d9319df085",
+      "sha256": "ea3f712aec2950be2dd72fa60664a6b134cead8edaefdde150b89b0cc6262a3c"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/baseline/atlas-03.json": {
+      "git_blob": "c705e9382e93481663a2f42d7fc1b644d674be00",
+      "sha256": "76aa80ebd6467e990b46f140c152a92ef19a4b76808b29079cd6f77118f989db"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/baseline/atlas-04.json": {
+      "git_blob": "b323835a88fa0427184b755709512a3081c511ca",
+      "sha256": "7b79d63b85636161fd674bceffbab4f8f60081770850d03d9fb7cb147725382b"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/baseline/atlas-05.json": {
+      "git_blob": "7b3294c939b5a58c46cf710947a94a9534004b8d",
+      "sha256": "4992449252eab4a62f13b95d1e6304a9693c6000ec535ed3b3bc5a54c571eb9f"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/baseline/atlas-06.json": {
+      "git_blob": "c69fb9f3aaa84debbec427a286de2c34d751f0ac",
+      "sha256": "38d5306c5abb1693850537625d1ea3da55636654105bc7ad706e89c186311e1f"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/baseline/atlas-07.json": {
+      "git_blob": "959a7fac3bc878df2bf42abf8bddb8cb94b3ff35",
+      "sha256": "520c610ce5bf2c285008081445830e78ebed378e3660346ffc52329700973ea2"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/baseline/atlas-08.json": {
+      "git_blob": "baf222d360bc2d0d13b113b1578d5ea8d2001d2d",
+      "sha256": "b3a52d94e6fb42d51670955c678da605697aa9b7fd6fceabdb2f78e347e9a0e0"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/baseline/atlas-09.json": {
+      "git_blob": "66427eeda27fb593d81528cc353bc3d5e3678f06",
+      "sha256": "f60dbf451ab5debf8f5cb4457a6ed9b80e700d992723e1b5de0011d5ca243be0"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/baseline/atlas-10.json": {
+      "git_blob": "533ecaf4204e8eed77a337f54a19828be27cbfa6",
+      "sha256": "d5ef7e9b24e028821e51588bfce809d4c989a7dcf78ffd3bceecebe948511cdd"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/baseline/atlas-11.json": {
+      "git_blob": "ccb6a6e805a70fd2cfe92009682d85b9db3ce970",
+      "sha256": "f73378abaa898722f0bd7e8f0b9a5171b755d1d67fc68bd200cf473269c32ca3"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/baseline/atlas-12.json": {
+      "git_blob": "c327b15a6d5fe93674ccbb1684b38daedaf55bf5",
+      "sha256": "3580548fa49de939397bb3775ba89aa74acbae811657033bd95e060b384558d4"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/baseline/boreal-01.json": {
+      "git_blob": "06c98d4da35c122f0be269d15cb807b18eb599ae",
+      "sha256": "7814da387dabaa59b55f564765014ea957da63b8eceadcf5cf9ba61652984612"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/baseline/boreal-02.json": {
+      "git_blob": "c870a2a48f4eae611b0881d4b740f9087c841945",
+      "sha256": "8634860acf8b239a70560cadefb83c63fc851f4027491a162861c4d7c8c90d6a"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/baseline/boreal-03.json": {
+      "git_blob": "4d26d9789294b7226dfa5a49ca6f8097e59da206",
+      "sha256": "de6b4c67b5a244722fa8adcbedd8d85d5fe28e821b572f2bb9a20a3304284efc"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/baseline/boreal-04.json": {
+      "git_blob": "99c4cb756a551c0d047f8d87039d6bd09ec6fc0e",
+      "sha256": "e2f672998ca2975bc0baf8122a5e3bc5ec1b1e5df046bac1127988ebd1db293d"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/baseline/boreal-05.json": {
+      "git_blob": "aff0e893db194dbdb61929cdbcfa8c671c672cf3",
+      "sha256": "869012f954b4dfa72868bd111bf919682ec17ab4687c909f01f08b0d66edcd57"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/baseline/boreal-06.json": {
+      "git_blob": "3fe93699e88fa4d8cb03a9bff9c8a72782e6ad05",
+      "sha256": "420f3992390b549e1d8dd5a6e6ee3937f15bde6301063169975484d154ee9084"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/baseline/boreal-07.json": {
+      "git_blob": "3604aaa21530a9a7a364aa8e0e0c3eb5fe5bb84e",
+      "sha256": "392f9654a1ac23ee8af1947c40c2ec91977b37cc1627e0189dc3147db651015b"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/baseline/boreal-08.json": {
+      "git_blob": "20b70152d372eb46b3061381f3bcfe07420fd713",
+      "sha256": "dc75857e34518ea4454b8799e2a270efd7dc3ab36b6a850ef4f9a0a1c3efb36c"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/baseline/boreal-09.json": {
+      "git_blob": "06c7a0cd2aa5fa14e3b0c05ecc17ce0dd15e18fa",
+      "sha256": "de5cd3c1ad9ace3d87be3d4b803e6312ef80eb0666d78bc1a5a0e4deccb4f81a"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/baseline/boreal-10.json": {
+      "git_blob": "ce2a8ddc66a5a936d4f92d3a9eaabfa8da511eda",
+      "sha256": "189b29ebe2265a72944353260a7ec212cb20d78a0e7d3a842c789cafbe845f15"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/baseline/boreal-11.json": {
+      "git_blob": "115b427c9ff498b655a11ef6bdf58501517489f2",
+      "sha256": "65c53b4e5e2f45cfbdcca994111ca416bf91b6bf92eef5e4f2f5b36da5a276c1"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/baseline/boreal-12.json": {
+      "git_blob": "08905feaa6bc6b422765ab75060334c0cd7242cb",
+      "sha256": "7ef7a7dba937dc8fea95747604a1bc336f05fea8809c533ecc3a0bdd3dfc1648"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/candidate/atlas-01.json": {
+      "git_blob": "4e30c5deeeaed02c982f78904a81fab2bba96c29",
+      "sha256": "e6d5e45d04bbfadf96d65938340da44964a927fb8f245313332f83b8d2200506"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/candidate/atlas-02.json": {
+      "git_blob": "f1d425780112532456f8e1f4a3d2f9d9319df085",
+      "sha256": "ea3f712aec2950be2dd72fa60664a6b134cead8edaefdde150b89b0cc6262a3c"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/candidate/atlas-03.json": {
+      "git_blob": "c705e9382e93481663a2f42d7fc1b644d674be00",
+      "sha256": "76aa80ebd6467e990b46f140c152a92ef19a4b76808b29079cd6f77118f989db"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/candidate/atlas-04.json": {
+      "git_blob": "b323835a88fa0427184b755709512a3081c511ca",
+      "sha256": "7b79d63b85636161fd674bceffbab4f8f60081770850d03d9fb7cb147725382b"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/candidate/atlas-05.json": {
+      "git_blob": "7b3294c939b5a58c46cf710947a94a9534004b8d",
+      "sha256": "4992449252eab4a62f13b95d1e6304a9693c6000ec535ed3b3bc5a54c571eb9f"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/candidate/atlas-06.json": {
+      "git_blob": "c69fb9f3aaa84debbec427a286de2c34d751f0ac",
+      "sha256": "38d5306c5abb1693850537625d1ea3da55636654105bc7ad706e89c186311e1f"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/candidate/atlas-07.json": {
+      "git_blob": "959a7fac3bc878df2bf42abf8bddb8cb94b3ff35",
+      "sha256": "520c610ce5bf2c285008081445830e78ebed378e3660346ffc52329700973ea2"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/candidate/atlas-08.json": {
+      "git_blob": "baf222d360bc2d0d13b113b1578d5ea8d2001d2d",
+      "sha256": "b3a52d94e6fb42d51670955c678da605697aa9b7fd6fceabdb2f78e347e9a0e0"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/candidate/atlas-09.json": {
+      "git_blob": "66427eeda27fb593d81528cc353bc3d5e3678f06",
+      "sha256": "f60dbf451ab5debf8f5cb4457a6ed9b80e700d992723e1b5de0011d5ca243be0"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/candidate/atlas-10.json": {
+      "git_blob": "533ecaf4204e8eed77a337f54a19828be27cbfa6",
+      "sha256": "d5ef7e9b24e028821e51588bfce809d4c989a7dcf78ffd3bceecebe948511cdd"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/candidate/atlas-11.json": {
+      "git_blob": "ccb6a6e805a70fd2cfe92009682d85b9db3ce970",
+      "sha256": "f73378abaa898722f0bd7e8f0b9a5171b755d1d67fc68bd200cf473269c32ca3"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/candidate/atlas-12.json": {
+      "git_blob": "c327b15a6d5fe93674ccbb1684b38daedaf55bf5",
+      "sha256": "3580548fa49de939397bb3775ba89aa74acbae811657033bd95e060b384558d4"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/candidate/boreal-01.json": {
+      "git_blob": "06c98d4da35c122f0be269d15cb807b18eb599ae",
+      "sha256": "7814da387dabaa59b55f564765014ea957da63b8eceadcf5cf9ba61652984612"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/candidate/boreal-02.json": {
+      "git_blob": "c870a2a48f4eae611b0881d4b740f9087c841945",
+      "sha256": "8634860acf8b239a70560cadefb83c63fc851f4027491a162861c4d7c8c90d6a"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/candidate/boreal-03.json": {
+      "git_blob": "4d26d9789294b7226dfa5a49ca6f8097e59da206",
+      "sha256": "de6b4c67b5a244722fa8adcbedd8d85d5fe28e821b572f2bb9a20a3304284efc"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/candidate/boreal-04.json": {
+      "git_blob": "99c4cb756a551c0d047f8d87039d6bd09ec6fc0e",
+      "sha256": "e2f672998ca2975bc0baf8122a5e3bc5ec1b1e5df046bac1127988ebd1db293d"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/candidate/boreal-05.json": {
+      "git_blob": "aff0e893db194dbdb61929cdbcfa8c671c672cf3",
+      "sha256": "869012f954b4dfa72868bd111bf919682ec17ab4687c909f01f08b0d66edcd57"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/candidate/boreal-06.json": {
+      "git_blob": "3fe93699e88fa4d8cb03a9bff9c8a72782e6ad05",
+      "sha256": "420f3992390b549e1d8dd5a6e6ee3937f15bde6301063169975484d154ee9084"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/candidate/boreal-07.json": {
+      "git_blob": "3604aaa21530a9a7a364aa8e0e0c3eb5fe5bb84e",
+      "sha256": "392f9654a1ac23ee8af1947c40c2ec91977b37cc1627e0189dc3147db651015b"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/candidate/boreal-08.json": {
+      "git_blob": "20b70152d372eb46b3061381f3bcfe07420fd713",
+      "sha256": "dc75857e34518ea4454b8799e2a270efd7dc3ab36b6a850ef4f9a0a1c3efb36c"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/candidate/boreal-09.json": {
+      "git_blob": "06c7a0cd2aa5fa14e3b0c05ecc17ce0dd15e18fa",
+      "sha256": "de5cd3c1ad9ace3d87be3d4b803e6312ef80eb0666d78bc1a5a0e4deccb4f81a"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/candidate/boreal-10.json": {
+      "git_blob": "ce2a8ddc66a5a936d4f92d3a9eaabfa8da511eda",
+      "sha256": "189b29ebe2265a72944353260a7ec212cb20d78a0e7d3a842c789cafbe845f15"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/candidate/boreal-11.json": {
+      "git_blob": "115b427c9ff498b655a11ef6bdf58501517489f2",
+      "sha256": "65c53b4e5e2f45cfbdcca994111ca416bf91b6bf92eef5e4f2f5b36da5a276c1"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/evaluation/trials/candidate/boreal-12.json": {
+      "git_blob": "08905feaa6bc6b422765ab75060334c0cd7242cb",
+      "sha256": "7ef7a7dba937dc8fea95747604a1bc336f05fea8809c533ecc3a0bdd3dfc1648"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/protocol-tests.json": {
+      "git_blob": "c0f91297d2beff3aa59cb10ea7de5412a6279045",
+      "sha256": "c31c1ac08d33b2cbaa1d01a477537ae41071f6349fbcd4e034ba835af01036ab"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/source-snapshot.json": {
+      "git_blob": "c06ccef1a64414c676972e30d169aa8c619702b2",
+      "sha256": "eb8d17d6ef7cbf335ae721fe8e17503b8e5577237e8aa86b06ab2339c9bf665c"
+    },
+    "docs/kctx/reports/qualification-corpus-1.0.1/source-snapshot.tar.gz": {
+      "git_blob": "447ff2e23d2ce54a93ae900d9db001745e265ea4",
+      "sha256": "1f0e5dbabe90b3091db0e6ae4751af63da0928a100c0136866f5de0c46c2a3e3"
+    },
+    "docs/kctx/reports/qualification-evaluation/attempts/1793430905181693855-93320224df98.json": {
+      "git_blob": "afb1f48c53582b95a60154d9aa45591bcc9cd85d",
+      "sha256": "93320224df9857c102beafbdca2a7d57bb1cd5955c55384169eba95df37176ed"
+    },
+    "docs/kctx/reports/qualification-evaluation/attempts/1793431886762084847-c145b28cfa8b.json": {
+      "git_blob": "a52139194dc49d81919a5cc26dc8bd5626b59dd1",
+      "sha256": "c145b28cfa8be77f2435114eddbb4d5c7c5fe3ffd0daeda56f89b6121e007b11"
+    },
+    "docs/kctx/reports/qualification-evaluation/report.json": {
+      "git_blob": "2bff28aa99dbbb01238ee74a2fc4262b9e7fdafc",
+      "sha256": "a8ce04c4c318f5f79ab028b2385ff6de0bd7474497b2e57f8d05d001c43b3bf3"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/baseline/atlas-01.json": {
+      "git_blob": "8b3196b36b54cf63cc83e43fa53e460c25d4e920",
+      "sha256": "19b804daa7182bc2193c312579b77edaa72c3166aa5015e12ee093c6dba37c68"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/baseline/atlas-02.json": {
+      "git_blob": "7b1aa3db6afb073f9c6425d8b6c7797871bfbf76",
+      "sha256": "de1236d6fa88fb4953d4ce23028f499d1d4db89a0c859f7df7b4a92dc5760f6e"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/baseline/atlas-03.json": {
+      "git_blob": "93324933e24fbed3fde98d7e240798ac9719186e",
+      "sha256": "94cc145da88fa1a9a0f760392fe03949016097cccf478f5cc7c7b95aa98f1f9b"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/baseline/atlas-04.json": {
+      "git_blob": "e1246a3ef73ed7ea3628512c68358dc9ff11c14b",
+      "sha256": "5fd3503008bce457cd1bc32066c1a457162ab692be6f7ad0cf5351b2fa438510"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/baseline/atlas-05.json": {
+      "git_blob": "58c1900ca04d4f445706370f83c8bd34e029135b",
+      "sha256": "06e816539b2ca98326487680d593a97e599514940ab0923693b781778fd9888e"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/baseline/atlas-06.json": {
+      "git_blob": "da40138773250999312d73dcec462a5eda78909d",
+      "sha256": "d7cf3709095a4b648a7a6e70109f73a500732a70ebc3aafe81a365ed5e1552fa"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/baseline/atlas-07.json": {
+      "git_blob": "6faca8e611d96e8e5e2f4e3c1456a04db9af01c5",
+      "sha256": "10b5f60a594c03e9a59af17dd3de07a7bcffcc9ee72c9781a9ef8f732a087add"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/baseline/atlas-08.json": {
+      "git_blob": "b625d50b949e45931b5f5ac20c25719b14a76093",
+      "sha256": "f72355711795b3c62f054e47cea63953206539eee3d1ecba1815a7186dd8b8ba"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/baseline/atlas-09.json": {
+      "git_blob": "e0198bf3847ddd889aec9b841744df75b1b0b457",
+      "sha256": "2547c3fa61423e42cf82163a6b32322a3bffbf5b5e6e6b22174c53c71b9020df"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/baseline/atlas-10.json": {
+      "git_blob": "59ef52aa209f15b257c34605ea41174a2c9ca3aa",
+      "sha256": "6a341e0ee04dc13cf2a2235927dfb7c0137bbfdf1cd7a54e79800fe094949dc4"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/baseline/atlas-11.json": {
+      "git_blob": "36647d46931f6f703defbed1345e32ec4895c5e7",
+      "sha256": "226dbf925912501a50cacc98e99366d5fab3de8a1068177618c3f3054c94dd1a"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/baseline/atlas-12.json": {
+      "git_blob": "dae5da4bf9d47705ad2b453ff676f00250aba65f",
+      "sha256": "0d52a7d890b479ef1f955b98f66689f78d57c78d006fac5872f68e23373f96ed"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/baseline/boreal-01.json": {
+      "git_blob": "556bb2c0cbe3045458d69197953e25bd21554958",
+      "sha256": "1b022af0f673d9bd63da49d7afeca51b5edc1407d1e9c8b127843edc18cac3f8"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/baseline/boreal-02.json": {
+      "git_blob": "57f67991e883d8b765e72e526fbaed3a0e692e53",
+      "sha256": "37858dd5072fe986abce5b123f959e3fb7e1f6df9a9f82e4488f621dfaddecd4"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/baseline/boreal-03.json": {
+      "git_blob": "964bf120c7bb3fb6c4c60d572f618ff9583ed8a9",
+      "sha256": "5b54593cd2227c9e3c92334d70a6c7ba7d94e6ebd10bb48a2a0d81e481097285"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/baseline/boreal-04.json": {
+      "git_blob": "e29114d71f3af25975c983f38779763eac82d77c",
+      "sha256": "2e003d22b7458fc232594c4bd798acf27056defb2a4876933e01190bbae97725"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/baseline/boreal-05.json": {
+      "git_blob": "d15cb23f67a0e84a945116e16044f527c87b07e6",
+      "sha256": "9183c690d552d47e765e517dcea0a3aa36ce25e6aeca039507493dd01d22bfe1"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/baseline/boreal-06.json": {
+      "git_blob": "4fefc68675c586c3589b80c8ecc02a81393911c4",
+      "sha256": "775a3e11bbcb9efbcdd1e071fbb86528182b45d2332b50a6dffb005e1d235d8c"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/baseline/boreal-07.json": {
+      "git_blob": "7ee82afa0a19600b46e169636e3a5cc48a2f41ed",
+      "sha256": "ce11b7762147c3294cf2c0ce0cfb44d00e31b2a77ce04eb7bcaed656a1740a79"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/baseline/boreal-08.json": {
+      "git_blob": "813189137e2a7e228fe74d61ff251481503133d3",
+      "sha256": "d5718f2a1f1f1d46fae055338ab0eb7484da36febc3311c651c16625e9266860"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/baseline/boreal-09.json": {
+      "git_blob": "0bd21e7f3decf1121493dcf14f172e0dc95954bd",
+      "sha256": "1fb8bd394f644293a2818f4b08148ed10e5e1651d0373198d8f6e27399529984"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/baseline/boreal-10.json": {
+      "git_blob": "ade446e68c5de3a1147c38435d6928b5d664200a",
+      "sha256": "23cb828c826e51ff89025b227a757b3932b2609131df73e8cb73404f7d915c1b"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/baseline/boreal-11.json": {
+      "git_blob": "bfa9a83031444c1bbf06048faa4c096f626aac59",
+      "sha256": "90611bc6d082d667ad6be099464827acb1d8b55586db4f8607950ab9d66062a6"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/baseline/boreal-12.json": {
+      "git_blob": "96bb08cf1a2300d3a264f8517a14196ccfedc44f",
+      "sha256": "561de075cf0ea46f3a8d32f0a1d9a9cd09eff0e8abc6fc542db0c3cfc9885f56"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/candidate/atlas-01.json": {
+      "git_blob": "8b3196b36b54cf63cc83e43fa53e460c25d4e920",
+      "sha256": "19b804daa7182bc2193c312579b77edaa72c3166aa5015e12ee093c6dba37c68"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/candidate/atlas-02.json": {
+      "git_blob": "7b1aa3db6afb073f9c6425d8b6c7797871bfbf76",
+      "sha256": "de1236d6fa88fb4953d4ce23028f499d1d4db89a0c859f7df7b4a92dc5760f6e"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/candidate/atlas-03.json": {
+      "git_blob": "93324933e24fbed3fde98d7e240798ac9719186e",
+      "sha256": "94cc145da88fa1a9a0f760392fe03949016097cccf478f5cc7c7b95aa98f1f9b"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/candidate/atlas-04.json": {
+      "git_blob": "e1246a3ef73ed7ea3628512c68358dc9ff11c14b",
+      "sha256": "5fd3503008bce457cd1bc32066c1a457162ab692be6f7ad0cf5351b2fa438510"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/candidate/atlas-05.json": {
+      "git_blob": "58c1900ca04d4f445706370f83c8bd34e029135b",
+      "sha256": "06e816539b2ca98326487680d593a97e599514940ab0923693b781778fd9888e"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/candidate/atlas-06.json": {
+      "git_blob": "da40138773250999312d73dcec462a5eda78909d",
+      "sha256": "d7cf3709095a4b648a7a6e70109f73a500732a70ebc3aafe81a365ed5e1552fa"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/candidate/atlas-07.json": {
+      "git_blob": "6faca8e611d96e8e5e2f4e3c1456a04db9af01c5",
+      "sha256": "10b5f60a594c03e9a59af17dd3de07a7bcffcc9ee72c9781a9ef8f732a087add"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/candidate/atlas-08.json": {
+      "git_blob": "b625d50b949e45931b5f5ac20c25719b14a76093",
+      "sha256": "f72355711795b3c62f054e47cea63953206539eee3d1ecba1815a7186dd8b8ba"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/candidate/atlas-09.json": {
+      "git_blob": "e0198bf3847ddd889aec9b841744df75b1b0b457",
+      "sha256": "2547c3fa61423e42cf82163a6b32322a3bffbf5b5e6e6b22174c53c71b9020df"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/candidate/atlas-10.json": {
+      "git_blob": "59ef52aa209f15b257c34605ea41174a2c9ca3aa",
+      "sha256": "6a341e0ee04dc13cf2a2235927dfb7c0137bbfdf1cd7a54e79800fe094949dc4"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/candidate/atlas-11.json": {
+      "git_blob": "36647d46931f6f703defbed1345e32ec4895c5e7",
+      "sha256": "226dbf925912501a50cacc98e99366d5fab3de8a1068177618c3f3054c94dd1a"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/candidate/atlas-12.json": {
+      "git_blob": "dae5da4bf9d47705ad2b453ff676f00250aba65f",
+      "sha256": "0d52a7d890b479ef1f955b98f66689f78d57c78d006fac5872f68e23373f96ed"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/candidate/boreal-01.json": {
+      "git_blob": "556bb2c0cbe3045458d69197953e25bd21554958",
+      "sha256": "1b022af0f673d9bd63da49d7afeca51b5edc1407d1e9c8b127843edc18cac3f8"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/candidate/boreal-02.json": {
+      "git_blob": "57f67991e883d8b765e72e526fbaed3a0e692e53",
+      "sha256": "37858dd5072fe986abce5b123f959e3fb7e1f6df9a9f82e4488f621dfaddecd4"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/candidate/boreal-03.json": {
+      "git_blob": "964bf120c7bb3fb6c4c60d572f618ff9583ed8a9",
+      "sha256": "5b54593cd2227c9e3c92334d70a6c7ba7d94e6ebd10bb48a2a0d81e481097285"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/candidate/boreal-04.json": {
+      "git_blob": "e29114d71f3af25975c983f38779763eac82d77c",
+      "sha256": "2e003d22b7458fc232594c4bd798acf27056defb2a4876933e01190bbae97725"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/candidate/boreal-05.json": {
+      "git_blob": "d15cb23f67a0e84a945116e16044f527c87b07e6",
+      "sha256": "9183c690d552d47e765e517dcea0a3aa36ce25e6aeca039507493dd01d22bfe1"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/candidate/boreal-06.json": {
+      "git_blob": "4fefc68675c586c3589b80c8ecc02a81393911c4",
+      "sha256": "775a3e11bbcb9efbcdd1e071fbb86528182b45d2332b50a6dffb005e1d235d8c"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/candidate/boreal-07.json": {
+      "git_blob": "7ee82afa0a19600b46e169636e3a5cc48a2f41ed",
+      "sha256": "ce11b7762147c3294cf2c0ce0cfb44d00e31b2a77ce04eb7bcaed656a1740a79"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/candidate/boreal-08.json": {
+      "git_blob": "813189137e2a7e228fe74d61ff251481503133d3",
+      "sha256": "d5718f2a1f1f1d46fae055338ab0eb7484da36febc3311c651c16625e9266860"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/candidate/boreal-09.json": {
+      "git_blob": "0bd21e7f3decf1121493dcf14f172e0dc95954bd",
+      "sha256": "1fb8bd394f644293a2818f4b08148ed10e5e1651d0373198d8f6e27399529984"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/candidate/boreal-10.json": {
+      "git_blob": "ade446e68c5de3a1147c38435d6928b5d664200a",
+      "sha256": "23cb828c826e51ff89025b227a757b3932b2609131df73e8cb73404f7d915c1b"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/candidate/boreal-11.json": {
+      "git_blob": "bfa9a83031444c1bbf06048faa4c096f626aac59",
+      "sha256": "90611bc6d082d667ad6be099464827acb1d8b55586db4f8607950ab9d66062a6"
+    },
+    "docs/kctx/reports/qualification-evaluation/trials/candidate/boreal-12.json": {
+      "git_blob": "96bb08cf1a2300d3a264f8517a14196ccfedc44f",
+      "sha256": "561de075cf0ea46f3a8d32f0a1d9a9cd09eff0e8abc6fc542db0c3cfc9885f56"
+    },
+    "docs/kctx/reports/qualification-final/concurrency-repair/report.json": {
+      "git_blob": "811ccdfc614c899a3895573121d5c7244df98ab1",
+      "sha256": "0e8702fae5e4c621d21dc7e528687f60918b1405ecd23f19e08ed9718e1c9be5"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/report.json": {
+      "git_blob": "6cba4b8d86f708148fac363a83080e9fcaadafd3",
+      "sha256": "5861a15289278ae9d40df60fee6970b45b84216bc73f9164c8f92cd6f318a67e"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/baseline/atlas-01.json": {
+      "git_blob": "c6b3d4cd92c3dea00c68426fce44b5d9245fa831",
+      "sha256": "fc74f2f40ee02d6a513c9f7ed04153b22050e6445039255a6c2ebc8f0d6e5ee3"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/baseline/atlas-02.json": {
+      "git_blob": "f0f81ee84c6f68e7eb3ed0b6cffdfeceadd39489",
+      "sha256": "f470f3a4d831eb034f1f6170acd101ec5c300a7390f4ccb63667a03d0c546a31"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/baseline/atlas-03.json": {
+      "git_blob": "3161ee6668c4bdc7e32ace2ff57f2ad9597e5270",
+      "sha256": "1549fe78b91f0e653b478c24ecfe69977aeb255654f29040bf4830459b00823d"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/baseline/atlas-04.json": {
+      "git_blob": "2dcdc22a9ca67a3abff54efd6c9d8b01e2730854",
+      "sha256": "a156c885ac7454e19b415c26ec41c687de99d26bbca7a29e6ddbffe5946dc708"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/baseline/atlas-05.json": {
+      "git_blob": "e1ba52c393332d2946637e747519f1964ce495e9",
+      "sha256": "3ca2114dfcfb6605f977d622bc0dd7f293854effff1ce1b371b0922b10dc0b82"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/baseline/atlas-06.json": {
+      "git_blob": "64c88085dcff1840bb1dc7ee9bc414690b5c69d9",
+      "sha256": "af1c53ff35f1d04ae26f8a080f80e28634615fd8826446bbd5e033fdaa856ad7"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/baseline/atlas-07.json": {
+      "git_blob": "75720389e54e6b35e995aa79085c07c929195141",
+      "sha256": "15b02b7d826a38dedd4c090656cd416f6a752031c7f67121672ff911468b2cb4"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/baseline/atlas-08.json": {
+      "git_blob": "a70502e07fae6c0bc34af157c4800f6b2377e936",
+      "sha256": "896d0a6225085c0d310f16363237087e09d532bf0777cc101cfd42e04d46b7b8"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/baseline/atlas-09.json": {
+      "git_blob": "864133985fd13d4e7e93fef117ad944efdeccc5b",
+      "sha256": "48cd600767630fe4dfc5210a9721d8256c8f6f9c3cb2bdb28cca1ba2bd154fe8"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/baseline/atlas-10.json": {
+      "git_blob": "f786eefcc6feeda90d497e56c36bfb2bff25b1b2",
+      "sha256": "7306254d3729f2f9c33ea35542e625ab76a52af3323299b1ec40dbfcbcbc21de"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/baseline/atlas-11.json": {
+      "git_blob": "1b228feb687274b67529d390daf183b2f0312edc",
+      "sha256": "e4200833ff8328bcefc71e771d3bc8700e50f1e1c57356377122f38a7e5e4155"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/baseline/atlas-12.json": {
+      "git_blob": "9f7b5a2e8393fc9a5333ee463895e129ca0190c6",
+      "sha256": "da4efe2f8d15fe2ea1f69c7894208c3147dacd6bd7f7d89d9ab8f1121ee03576"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/baseline/boreal-01.json": {
+      "git_blob": "331ce43725f86572c742c706851f32cfef3313e6",
+      "sha256": "544de7b86f4c091572210cc882159d0949b695f2da7a2e5e4cf977f78d7acffe"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/baseline/boreal-02.json": {
+      "git_blob": "50ac535121b6bc15319c84a88dd5ff7543ea36dc",
+      "sha256": "a8d25890975ae66af76daf338459ada97142838bd41b03838a3ad2e6c1f86119"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/baseline/boreal-03.json": {
+      "git_blob": "c1195f2572bda2b611d51c3a7963f6cf76557b9b",
+      "sha256": "afc3b304927f9648bd9ed9e0b808deaf1cd21ffeffddf7ad554d0fac0a7ce1d9"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/baseline/boreal-04.json": {
+      "git_blob": "92bbdb8b2d12599efbbc53686c267f930506ca5e",
+      "sha256": "aa94b0b9551cf8bf4b62b6a437ae73aa1c8297d9094d08d22242123045c4d8d9"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/baseline/boreal-05.json": {
+      "git_blob": "ddb778a81a7c63361a309d9efc5ead116a772175",
+      "sha256": "1f3de765a2bc086202fc665d1257d9985e7bdb0e40dc60f1baa8512ceb72b8ad"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/baseline/boreal-06.json": {
+      "git_blob": "095ca98750509399aa690f91e369daa53d687c4d",
+      "sha256": "81be29480a61630a62d9597100c31c92a1a54c53b3d8bc0c0ab67d804146d841"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/baseline/boreal-07.json": {
+      "git_blob": "3da0b226fd647947b97b8e3f9f596cea860202ea",
+      "sha256": "8babf5497f236ab6a7dd5f572b24ab24f42570750a7306c94e35477b14b241e5"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/baseline/boreal-08.json": {
+      "git_blob": "88e7674ea211fa8bc71e927a31b09c8fad5c5cbb",
+      "sha256": "d0ae72e4cb090b7af144dac24154d80ab180059dd0eaaa7442810dbaf48f9b91"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/baseline/boreal-09.json": {
+      "git_blob": "8a997e9ae970693c5a09c48a18e85c3642216d21",
+      "sha256": "6c28917f820e292271e08dcf9dbfdfce81fe19e417896cca50934b2c254808a3"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/baseline/boreal-10.json": {
+      "git_blob": "32571a1b8156c63c4610ff1e5d2d9ab02f6315d3",
+      "sha256": "21393178035775bbe4b92f0e7b63d39450b0b96a2ae4d482b9f2bbe46c606f17"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/baseline/boreal-11.json": {
+      "git_blob": "3b87cbb7859c1fa53225e313024d497378ff8843",
+      "sha256": "ce16910ce03bd1f9d83ffb94df58a8fda25df33edbf6c14f091d6ebdb2f90829"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/baseline/boreal-12.json": {
+      "git_blob": "1974d2927205d9b399d700c71c15e3ab67c74591",
+      "sha256": "77e520e037e60335ee11c9aad55379755caf9a5c2967a3e73980f9619891f310"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/candidate/atlas-01.json": {
+      "git_blob": "c6b3d4cd92c3dea00c68426fce44b5d9245fa831",
+      "sha256": "fc74f2f40ee02d6a513c9f7ed04153b22050e6445039255a6c2ebc8f0d6e5ee3"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/candidate/atlas-02.json": {
+      "git_blob": "f0f81ee84c6f68e7eb3ed0b6cffdfeceadd39489",
+      "sha256": "f470f3a4d831eb034f1f6170acd101ec5c300a7390f4ccb63667a03d0c546a31"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/candidate/atlas-03.json": {
+      "git_blob": "3161ee6668c4bdc7e32ace2ff57f2ad9597e5270",
+      "sha256": "1549fe78b91f0e653b478c24ecfe69977aeb255654f29040bf4830459b00823d"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/candidate/atlas-04.json": {
+      "git_blob": "2dcdc22a9ca67a3abff54efd6c9d8b01e2730854",
+      "sha256": "a156c885ac7454e19b415c26ec41c687de99d26bbca7a29e6ddbffe5946dc708"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/candidate/atlas-05.json": {
+      "git_blob": "e1ba52c393332d2946637e747519f1964ce495e9",
+      "sha256": "3ca2114dfcfb6605f977d622bc0dd7f293854effff1ce1b371b0922b10dc0b82"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/candidate/atlas-06.json": {
+      "git_blob": "64c88085dcff1840bb1dc7ee9bc414690b5c69d9",
+      "sha256": "af1c53ff35f1d04ae26f8a080f80e28634615fd8826446bbd5e033fdaa856ad7"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/candidate/atlas-07.json": {
+      "git_blob": "75720389e54e6b35e995aa79085c07c929195141",
+      "sha256": "15b02b7d826a38dedd4c090656cd416f6a752031c7f67121672ff911468b2cb4"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/candidate/atlas-08.json": {
+      "git_blob": "a70502e07fae6c0bc34af157c4800f6b2377e936",
+      "sha256": "896d0a6225085c0d310f16363237087e09d532bf0777cc101cfd42e04d46b7b8"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/candidate/atlas-09.json": {
+      "git_blob": "864133985fd13d4e7e93fef117ad944efdeccc5b",
+      "sha256": "48cd600767630fe4dfc5210a9721d8256c8f6f9c3cb2bdb28cca1ba2bd154fe8"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/candidate/atlas-10.json": {
+      "git_blob": "f786eefcc6feeda90d497e56c36bfb2bff25b1b2",
+      "sha256": "7306254d3729f2f9c33ea35542e625ab76a52af3323299b1ec40dbfcbcbc21de"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/candidate/atlas-11.json": {
+      "git_blob": "1b228feb687274b67529d390daf183b2f0312edc",
+      "sha256": "e4200833ff8328bcefc71e771d3bc8700e50f1e1c57356377122f38a7e5e4155"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/candidate/atlas-12.json": {
+      "git_blob": "9f7b5a2e8393fc9a5333ee463895e129ca0190c6",
+      "sha256": "da4efe2f8d15fe2ea1f69c7894208c3147dacd6bd7f7d89d9ab8f1121ee03576"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/candidate/boreal-01.json": {
+      "git_blob": "331ce43725f86572c742c706851f32cfef3313e6",
+      "sha256": "544de7b86f4c091572210cc882159d0949b695f2da7a2e5e4cf977f78d7acffe"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/candidate/boreal-02.json": {
+      "git_blob": "50ac535121b6bc15319c84a88dd5ff7543ea36dc",
+      "sha256": "a8d25890975ae66af76daf338459ada97142838bd41b03838a3ad2e6c1f86119"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/candidate/boreal-03.json": {
+      "git_blob": "c1195f2572bda2b611d51c3a7963f6cf76557b9b",
+      "sha256": "afc3b304927f9648bd9ed9e0b808deaf1cd21ffeffddf7ad554d0fac0a7ce1d9"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/candidate/boreal-04.json": {
+      "git_blob": "92bbdb8b2d12599efbbc53686c267f930506ca5e",
+      "sha256": "aa94b0b9551cf8bf4b62b6a437ae73aa1c8297d9094d08d22242123045c4d8d9"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/candidate/boreal-05.json": {
+      "git_blob": "ddb778a81a7c63361a309d9efc5ead116a772175",
+      "sha256": "1f3de765a2bc086202fc665d1257d9985e7bdb0e40dc60f1baa8512ceb72b8ad"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/candidate/boreal-06.json": {
+      "git_blob": "095ca98750509399aa690f91e369daa53d687c4d",
+      "sha256": "81be29480a61630a62d9597100c31c92a1a54c53b3d8bc0c0ab67d804146d841"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/candidate/boreal-07.json": {
+      "git_blob": "3da0b226fd647947b97b8e3f9f596cea860202ea",
+      "sha256": "8babf5497f236ab6a7dd5f572b24ab24f42570750a7306c94e35477b14b241e5"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/candidate/boreal-08.json": {
+      "git_blob": "88e7674ea211fa8bc71e927a31b09c8fad5c5cbb",
+      "sha256": "d0ae72e4cb090b7af144dac24154d80ab180059dd0eaaa7442810dbaf48f9b91"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/candidate/boreal-09.json": {
+      "git_blob": "8a997e9ae970693c5a09c48a18e85c3642216d21",
+      "sha256": "6c28917f820e292271e08dcf9dbfdfce81fe19e417896cca50934b2c254808a3"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/candidate/boreal-10.json": {
+      "git_blob": "32571a1b8156c63c4610ff1e5d2d9ab02f6315d3",
+      "sha256": "21393178035775bbe4b92f0e7b63d39450b0b96a2ae4d482b9f2bbe46c606f17"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/candidate/boreal-11.json": {
+      "git_blob": "3b87cbb7859c1fa53225e313024d497378ff8843",
+      "sha256": "ce16910ce03bd1f9d83ffb94df58a8fda25df33edbf6c14f091d6ebdb2f90829"
+    },
+    "docs/kctx/reports/qualification-final/evaluation/trials/candidate/boreal-12.json": {
+      "git_blob": "1974d2927205d9b399d700c71c15e3ab67c74591",
+      "sha256": "77e520e037e60335ee11c9aad55379755caf9a5c2967a3e73980f9619891f310"
+    },
+    "docs/kctx/reports/qualification-final/remote/attempts/1793446557590979604-e9d1d42a9afe.json": {
+      "git_blob": "492039b51b272f9ac62c56432d90372a5dd15b17",
+      "sha256": "e9d1d42a9afe9c876cfadaa64085b02a2df3095cb9ae69ed9f84a61063406b90"
+    },
+    "docs/kctx/reports/qualification-final/remote/report.json": {
+      "git_blob": "258a9073fd5bbe510f16b2ac0e4f350f8a7cade5",
+      "sha256": "9affc47f5b3e719445f4588a0d79ce3bda28cf9b34e377a5f4850a654eb3edb1"
+    },
+    "docs/kctx/reports/qualification-final/storage/attempts/1793444303628850465-098909363fe4.json": {
+      "git_blob": "79d655281e84749932cbcb2f0b2926b5970bc167",
+      "sha256": "098909363fe44ecb031108216bbd1e484cef5935ed93ddf257bd95c00fb0c948"
+    },
+    "docs/kctx/reports/qualification-final/storage/report.json": {
+      "git_blob": "f2d8a25cafa62141d5c0773a70c8ffafce0c5291",
+      "sha256": "8137f3426a6990d70df98a9da5783a7efe91396749f6ecb82d37b4aea04bbcf4"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/report.json": {
+      "git_blob": "3c6cc817e37a2e750276bf6e1a9784f2aeb395aa",
+      "sha256": "729289d18b90e3e24904e5941fafc734b8a8ad1b922a9aae2c8168d1673fb014"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/baseline/atlas-01.json": {
+      "git_blob": "0ef9a6ec99a2450c0068821859ff5a1a7e44d1bb",
+      "sha256": "515323ff6cc5d7d86318bdb02a1f31830e9d6f23e87b4acb7ea9959704e1ec29"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/baseline/atlas-02.json": {
+      "git_blob": "86447238cfa42d7b5a7b5f603c6b311c1a308bfd",
+      "sha256": "907779c15080f024d95d7900142edc257a3249646bf19222c85006126d50173d"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/baseline/atlas-03.json": {
+      "git_blob": "ba2e1bce199593c0a9f07e1f04622cf5e7c60912",
+      "sha256": "542ed9207d8ba1123b2777d40f871d437bd876c9039b4dda43025b6e595d2ebe"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/baseline/atlas-04.json": {
+      "git_blob": "0f87feebaa4eb65ecef3d2525ae619432ba38843",
+      "sha256": "659db62ed9b711743ff043b3a19207399c65ed888212d3548f3e0ecad37cf3f7"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/baseline/atlas-05.json": {
+      "git_blob": "aadd4a8fd6cc7a28eaf99983275ce4c119c4c092",
+      "sha256": "4a154864b070a01f69fc1b4a66ff60bc2eca372189ac5bf89a15d9ac7b5ebddb"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/baseline/atlas-06.json": {
+      "git_blob": "cea9af2092d9e3e457a2fe11936392fc0529daed",
+      "sha256": "a1568d73516fba3a49943163e4cb2edb3803cf237f1fb22a89acee0a311281ac"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/baseline/atlas-07.json": {
+      "git_blob": "d01385336002c9cd578b94525e4de1c52a18742d",
+      "sha256": "f26020915ab24d25f8bc4064d902d0d10dc690f01910facd8ec020b682980d01"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/baseline/atlas-08.json": {
+      "git_blob": "2312c951ed020512a23a80a5f9dca1784004933b",
+      "sha256": "496cb3a46358d3cb2b1061af881bc39fa73de4862d702ca7c3c26464f948ab27"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/baseline/atlas-09.json": {
+      "git_blob": "84904404f2f3989dc0e72be83eec7126d0faada0",
+      "sha256": "95f484758ab606fbf396af8cf8007e57322493ce61c715e11e58ca6ac056eefb"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/baseline/atlas-10.json": {
+      "git_blob": "a299b812375913204171ccc46636f6ddb233460f",
+      "sha256": "f402c091ba37ed23ae5b809f40e1680aaa57bb8e80c42842e5b1ec6797fb9be0"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/baseline/atlas-11.json": {
+      "git_blob": "9555f59ff65ab0d5f71625edc99ae9260617a067",
+      "sha256": "1d311896cc186daa3d7912b96f0c75d073243cd846495568aa7074cb4481d949"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/baseline/atlas-12.json": {
+      "git_blob": "9ceb569e21f1c5f1bae1d47a07f2469d31cf8c9a",
+      "sha256": "611e6da5907e0cdd239e4d6ebb98ec4268daa43dd2e0cfead1f9d804cb78876f"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/baseline/boreal-01.json": {
+      "git_blob": "662e8548b3e808c2341bd5b03da05bb4b47b1cc5",
+      "sha256": "245062a6a5034807c576a798989893980769b179fa2620b1897c99c83d5aae4b"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/baseline/boreal-02.json": {
+      "git_blob": "da1bc8b7dc475be4ead3335113febbc77d725136",
+      "sha256": "b68b035be3e2957a85a95f5d4b4261642cd26cecfd5e765bf97fc0628a15135d"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/baseline/boreal-03.json": {
+      "git_blob": "87b3806e83ba2523c1559c0a983fcfbabe67bdfe",
+      "sha256": "daf56c8726f010674093bb0da11c1401ebeade275934f1cd67dd0dc1ef4a3b27"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/baseline/boreal-04.json": {
+      "git_blob": "ee32d0c2d0f2fc0d5e0c23c253465553ef3e1a63",
+      "sha256": "db2d01636d2085b2da8e3f1281d59a321274948e39918c5b2343c56d70310468"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/baseline/boreal-05.json": {
+      "git_blob": "349ded5505d7e6c2d82e6cd15357470c608db296",
+      "sha256": "93750a41fd1b1a534c39552e12edcaf945ce2fdfc821483145cb12e81735f7ea"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/baseline/boreal-06.json": {
+      "git_blob": "145a1169a52ad9eb70b3c68ebcc8cba9365a16e2",
+      "sha256": "ac7779d591a194a9bf78ae53e64b2a41efbfab1c3efeb8fdecc703f3d91641c4"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/baseline/boreal-07.json": {
+      "git_blob": "5b650e418d9762c6124a44fad27994aeb52f3a32",
+      "sha256": "bec02e1b61d82a16c0833f0ac16bca2b06115dd07f238bca15433012c2712083"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/baseline/boreal-08.json": {
+      "git_blob": "165ee73f5c8063b5c3754fb6749c4591dc01efca",
+      "sha256": "c1d6df73ca75f06cc1245c756a5583baaed63612d086a5d1c5b7bd7016bae912"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/baseline/boreal-09.json": {
+      "git_blob": "ca67433c6f6e0ff22ca6f251cb0dd028408910f1",
+      "sha256": "93b5e38c094f3241b824be95121ab6d9d806a4d252f77c9ab0e20c075f2c4a59"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/baseline/boreal-10.json": {
+      "git_blob": "7a0f1c4a8ba4a75943218e7fe7da81cf99506c78",
+      "sha256": "ef78312b508080e60dbd3f91c8b0dac01d119d79f7524ed7a6bd29c1d41a1a80"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/baseline/boreal-11.json": {
+      "git_blob": "242e01dfa4edaf716d122705d83b438958852dc4",
+      "sha256": "d2be5971aad51a2986775b1ad3d2ca509073ad0556e41e542678856301e1c164"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/baseline/boreal-12.json": {
+      "git_blob": "99b6ef233fe58b499ae68e71e98497ef781855a4",
+      "sha256": "63aa69783c0f25a42b4c9a9e321a8e9b35a7b2c9e81487f23cbc5864e94971de"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/candidate/atlas-01.json": {
+      "git_blob": "0ef9a6ec99a2450c0068821859ff5a1a7e44d1bb",
+      "sha256": "515323ff6cc5d7d86318bdb02a1f31830e9d6f23e87b4acb7ea9959704e1ec29"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/candidate/atlas-02.json": {
+      "git_blob": "86447238cfa42d7b5a7b5f603c6b311c1a308bfd",
+      "sha256": "907779c15080f024d95d7900142edc257a3249646bf19222c85006126d50173d"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/candidate/atlas-03.json": {
+      "git_blob": "ba2e1bce199593c0a9f07e1f04622cf5e7c60912",
+      "sha256": "542ed9207d8ba1123b2777d40f871d437bd876c9039b4dda43025b6e595d2ebe"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/candidate/atlas-04.json": {
+      "git_blob": "0f87feebaa4eb65ecef3d2525ae619432ba38843",
+      "sha256": "659db62ed9b711743ff043b3a19207399c65ed888212d3548f3e0ecad37cf3f7"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/candidate/atlas-05.json": {
+      "git_blob": "aadd4a8fd6cc7a28eaf99983275ce4c119c4c092",
+      "sha256": "4a154864b070a01f69fc1b4a66ff60bc2eca372189ac5bf89a15d9ac7b5ebddb"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/candidate/atlas-06.json": {
+      "git_blob": "cea9af2092d9e3e457a2fe11936392fc0529daed",
+      "sha256": "a1568d73516fba3a49943163e4cb2edb3803cf237f1fb22a89acee0a311281ac"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/candidate/atlas-07.json": {
+      "git_blob": "d01385336002c9cd578b94525e4de1c52a18742d",
+      "sha256": "f26020915ab24d25f8bc4064d902d0d10dc690f01910facd8ec020b682980d01"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/candidate/atlas-08.json": {
+      "git_blob": "2312c951ed020512a23a80a5f9dca1784004933b",
+      "sha256": "496cb3a46358d3cb2b1061af881bc39fa73de4862d702ca7c3c26464f948ab27"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/candidate/atlas-09.json": {
+      "git_blob": "84904404f2f3989dc0e72be83eec7126d0faada0",
+      "sha256": "95f484758ab606fbf396af8cf8007e57322493ce61c715e11e58ca6ac056eefb"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/candidate/atlas-10.json": {
+      "git_blob": "a299b812375913204171ccc46636f6ddb233460f",
+      "sha256": "f402c091ba37ed23ae5b809f40e1680aaa57bb8e80c42842e5b1ec6797fb9be0"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/candidate/atlas-11.json": {
+      "git_blob": "9555f59ff65ab0d5f71625edc99ae9260617a067",
+      "sha256": "1d311896cc186daa3d7912b96f0c75d073243cd846495568aa7074cb4481d949"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/candidate/atlas-12.json": {
+      "git_blob": "9ceb569e21f1c5f1bae1d47a07f2469d31cf8c9a",
+      "sha256": "611e6da5907e0cdd239e4d6ebb98ec4268daa43dd2e0cfead1f9d804cb78876f"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/candidate/boreal-01.json": {
+      "git_blob": "662e8548b3e808c2341bd5b03da05bb4b47b1cc5",
+      "sha256": "245062a6a5034807c576a798989893980769b179fa2620b1897c99c83d5aae4b"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/candidate/boreal-02.json": {
+      "git_blob": "da1bc8b7dc475be4ead3335113febbc77d725136",
+      "sha256": "b68b035be3e2957a85a95f5d4b4261642cd26cecfd5e765bf97fc0628a15135d"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/candidate/boreal-03.json": {
+      "git_blob": "87b3806e83ba2523c1559c0a983fcfbabe67bdfe",
+      "sha256": "daf56c8726f010674093bb0da11c1401ebeade275934f1cd67dd0dc1ef4a3b27"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/candidate/boreal-04.json": {
+      "git_blob": "ee32d0c2d0f2fc0d5e0c23c253465553ef3e1a63",
+      "sha256": "db2d01636d2085b2da8e3f1281d59a321274948e39918c5b2343c56d70310468"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/candidate/boreal-05.json": {
+      "git_blob": "349ded5505d7e6c2d82e6cd15357470c608db296",
+      "sha256": "93750a41fd1b1a534c39552e12edcaf945ce2fdfc821483145cb12e81735f7ea"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/candidate/boreal-06.json": {
+      "git_blob": "145a1169a52ad9eb70b3c68ebcc8cba9365a16e2",
+      "sha256": "ac7779d591a194a9bf78ae53e64b2a41efbfab1c3efeb8fdecc703f3d91641c4"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/candidate/boreal-07.json": {
+      "git_blob": "5b650e418d9762c6124a44fad27994aeb52f3a32",
+      "sha256": "bec02e1b61d82a16c0833f0ac16bca2b06115dd07f238bca15433012c2712083"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/candidate/boreal-08.json": {
+      "git_blob": "165ee73f5c8063b5c3754fb6749c4591dc01efca",
+      "sha256": "c1d6df73ca75f06cc1245c756a5583baaed63612d086a5d1c5b7bd7016bae912"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/candidate/boreal-09.json": {
+      "git_blob": "ca67433c6f6e0ff22ca6f251cb0dd028408910f1",
+      "sha256": "93b5e38c094f3241b824be95121ab6d9d806a4d252f77c9ab0e20c075f2c4a59"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/candidate/boreal-10.json": {
+      "git_blob": "7a0f1c4a8ba4a75943218e7fe7da81cf99506c78",
+      "sha256": "ef78312b508080e60dbd3f91c8b0dac01d119d79f7524ed7a6bd29c1d41a1a80"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/candidate/boreal-11.json": {
+      "git_blob": "242e01dfa4edaf716d122705d83b438958852dc4",
+      "sha256": "d2be5971aad51a2986775b1ad3d2ca509073ad0556e41e542678856301e1c164"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/evaluation/trials/candidate/boreal-12.json": {
+      "git_blob": "99b6ef233fe58b499ae68e71e98497ef781855a4",
+      "sha256": "63aa69783c0f25a42b4c9a9e321a8e9b35a7b2c9e81487f23cbc5864e94971de"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/source-snapshot.json": {
+      "git_blob": "843539875d8e8e5b8a95fed66ea19ea2c224b36b",
+      "sha256": "883c284e555c25fb83cba8b75b925fc0454fc271257af6809a29a0de099debdf"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/source-snapshot.tar.gz": {
+      "git_blob": "c60a680193289d3144d88383936904e72acc1428",
+      "sha256": "b1c8aa375fd641aae2d5ee8a4546240e9edfaa14171bea1dd7f2be426acd8429"
+    },
+    "docs/kctx/reports/qualification-isolated-v2/storage/report.json": {
+      "git_blob": "76c2bc43fccebde0ff48fae1360111ab070862ab",
+      "sha256": "d422d1dc0fd1d014154b89ef421a2c63baebf0903c5749a154ebfc07b4c0aa1e"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/report.json": {
+      "git_blob": "7bca4c8ad9d124694a0deb39e43680fa14308cb9",
+      "sha256": "990eda3f3a4b5c1512a0ed54d1ee462c79cf3171748be08beeb196ee6208bc0e"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/baseline/atlas-01.json": {
+      "git_blob": "5c9e6c270800bef87210f36d7299682e86b6b718",
+      "sha256": "4894567b4f96d17474ba650620f0186ca67fc29726c3c8eac07279d0aaf9b935"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/baseline/atlas-02.json": {
+      "git_blob": "0bad04563c8c0600638bb1ea817cfa9877edd155",
+      "sha256": "78652d5e2b27594f6eb7f1dba0de6f03f457d72fcaa6e8de38b3101a92fb59b3"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/baseline/atlas-03.json": {
+      "git_blob": "39eae2d72c6834621efd5903995d94f1145ff724",
+      "sha256": "5f4cee7f481b1c5bc4df86cf940aa02ab86007bc35cdffffdd10ee2150e36401"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/baseline/atlas-04.json": {
+      "git_blob": "b61ff5ad06fe5874bba8ee3c35c7edcc93cf1819",
+      "sha256": "17010febbd5f0dba4933fe8a99435479c2e93403f30d82e0fad6b714f4d24401"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/baseline/atlas-05.json": {
+      "git_blob": "4d2bea9c264f27fced7702915a6a0900c874ee86",
+      "sha256": "29ae37156ca92c8de079a08f474f97d7af0a2cb5c556a9e410c10bcbe78ebbac"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/baseline/atlas-06.json": {
+      "git_blob": "29fdd890f9494a790d619076bc95584fac9e2ebd",
+      "sha256": "11ef68fc786a0d402c705cd6584139eab1601b2f6d1700e6d3f4769de56611b5"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/baseline/atlas-07.json": {
+      "git_blob": "f61ad514721331695622d111c233a895aa583899",
+      "sha256": "959d4335926df2afab9bf3488f76d39582d62528cfd1725b704764f85b01ea00"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/baseline/atlas-08.json": {
+      "git_blob": "99e2dd1bd0ff57304d3188e37666621921bb8b37",
+      "sha256": "a0a7fc4487d8f5ee9e7f5bc545802762bdf0b7085ac93a8d5cee09ae5ff081f8"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/baseline/atlas-09.json": {
+      "git_blob": "c521a7a0ec215b4edf06d43927b1b4956c90bbb8",
+      "sha256": "785390ea3ef6464fa2317c0b282b38935f7b6b4998664889c017fcba7d70ce47"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/baseline/atlas-10.json": {
+      "git_blob": "72c251f72f0ccead4d1c84f4634acec1fbfe5059",
+      "sha256": "c77f3077b8c13dd0f928e92003d1bacbc61ef88870fa0e62f6c893b4534f6c74"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/baseline/atlas-11.json": {
+      "git_blob": "d8adb43961ca9801f03f70069a8655ab29791d1b",
+      "sha256": "04f5772c8787e7e72a3612fbae96eed8405b20e13f88c66bc2a3d4705c0a1e6f"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/baseline/atlas-12.json": {
+      "git_blob": "d627c799ec33924f487b73fa86a66505478fb105",
+      "sha256": "d5cea49d71780a40cf4e0db039520274cf0125f4dee47aaaec8f593c1b390fde"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/baseline/boreal-01.json": {
+      "git_blob": "93ee051180157eb9c6f72ea536e1d4ef056b2551",
+      "sha256": "8b845e19431afae9c9c3fdce18025be41fa4958dea7e5119d0c42ef61f33075c"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/baseline/boreal-02.json": {
+      "git_blob": "7dc457844abfefd4276a8233ca1f07a2d61c9538",
+      "sha256": "1c5a2d4f43db1013b134963dd625860d7a9e64ba7b858ddaef3f8482f6da2e89"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/baseline/boreal-03.json": {
+      "git_blob": "54100d515ae38b08efb4ef0fae3637e5063efcd9",
+      "sha256": "265851cea922b6615379c24072abc931638e111a2a389fe759e791ed78b68b12"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/baseline/boreal-04.json": {
+      "git_blob": "00eebbe90ed26e5cdb2a5681f2e0db2d08ddf83f",
+      "sha256": "c0bd17301552d9aa6e96ffb825cbda9490c4f2b7436b68275a97c21d35f96411"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/baseline/boreal-05.json": {
+      "git_blob": "7170067bc4f4b3cdd9e899117cad63c2480dd472",
+      "sha256": "43493ecaecc631b366a55079be29ba793d6cc24c14bfb5c81698ae25f2c60c4d"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/baseline/boreal-06.json": {
+      "git_blob": "edc30cf0bf32f9258d829dd60f2210019afcf700",
+      "sha256": "d903ac0f17d2fdd767ee1021b495f2258067ab7e411ebeac8c13c549e7d72943"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/baseline/boreal-07.json": {
+      "git_blob": "c70e27562fa626ec53f05b445964adc404b198e8",
+      "sha256": "41b480fa509849410aada36b14e22d08d9a80134bda38767c2961f70b001cf0a"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/baseline/boreal-08.json": {
+      "git_blob": "9d787249f13449fb907ecac893eeb9d5b6184f3a",
+      "sha256": "79d847d8d7e107a945e3e39ed0205c4a7cc31f070c7014d95b5cbff2d6b1ca6b"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/baseline/boreal-09.json": {
+      "git_blob": "5cbab6b7f6fed0db580a7c794b837f2293cda733",
+      "sha256": "c9b037e11b29469a5f520e008816c70679087f6f96b02a39c698b1e46180a8dd"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/baseline/boreal-10.json": {
+      "git_blob": "9a2a2fbb3963316370b363044ff0a11f9d77f454",
+      "sha256": "116e39ddd8be535a328d1606d90b779d0ed40419eb238d2c7b3c399611f70ace"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/baseline/boreal-11.json": {
+      "git_blob": "b3abff96a64d0dec385e8d74a911db361e9e23d3",
+      "sha256": "b7f5d37333d58a9db75c6a58407c220e5064744698ba1f0d8acd92bd7ea0a443"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/baseline/boreal-12.json": {
+      "git_blob": "52cf37ddaf8594f50336cdb878bd334234a7bb88",
+      "sha256": "3c565a017dac991927ec751ab7e3ac153db799b5af2ec69317404e933fa28e0a"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/candidate/atlas-01.json": {
+      "git_blob": "5c9e6c270800bef87210f36d7299682e86b6b718",
+      "sha256": "4894567b4f96d17474ba650620f0186ca67fc29726c3c8eac07279d0aaf9b935"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/candidate/atlas-02.json": {
+      "git_blob": "0bad04563c8c0600638bb1ea817cfa9877edd155",
+      "sha256": "78652d5e2b27594f6eb7f1dba0de6f03f457d72fcaa6e8de38b3101a92fb59b3"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/candidate/atlas-03.json": {
+      "git_blob": "39eae2d72c6834621efd5903995d94f1145ff724",
+      "sha256": "5f4cee7f481b1c5bc4df86cf940aa02ab86007bc35cdffffdd10ee2150e36401"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/candidate/atlas-04.json": {
+      "git_blob": "b61ff5ad06fe5874bba8ee3c35c7edcc93cf1819",
+      "sha256": "17010febbd5f0dba4933fe8a99435479c2e93403f30d82e0fad6b714f4d24401"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/candidate/atlas-05.json": {
+      "git_blob": "4d2bea9c264f27fced7702915a6a0900c874ee86",
+      "sha256": "29ae37156ca92c8de079a08f474f97d7af0a2cb5c556a9e410c10bcbe78ebbac"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/candidate/atlas-06.json": {
+      "git_blob": "29fdd890f9494a790d619076bc95584fac9e2ebd",
+      "sha256": "11ef68fc786a0d402c705cd6584139eab1601b2f6d1700e6d3f4769de56611b5"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/candidate/atlas-07.json": {
+      "git_blob": "f61ad514721331695622d111c233a895aa583899",
+      "sha256": "959d4335926df2afab9bf3488f76d39582d62528cfd1725b704764f85b01ea00"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/candidate/atlas-08.json": {
+      "git_blob": "99e2dd1bd0ff57304d3188e37666621921bb8b37",
+      "sha256": "a0a7fc4487d8f5ee9e7f5bc545802762bdf0b7085ac93a8d5cee09ae5ff081f8"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/candidate/atlas-09.json": {
+      "git_blob": "c521a7a0ec215b4edf06d43927b1b4956c90bbb8",
+      "sha256": "785390ea3ef6464fa2317c0b282b38935f7b6b4998664889c017fcba7d70ce47"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/candidate/atlas-10.json": {
+      "git_blob": "72c251f72f0ccead4d1c84f4634acec1fbfe5059",
+      "sha256": "c77f3077b8c13dd0f928e92003d1bacbc61ef88870fa0e62f6c893b4534f6c74"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/candidate/atlas-11.json": {
+      "git_blob": "d8adb43961ca9801f03f70069a8655ab29791d1b",
+      "sha256": "04f5772c8787e7e72a3612fbae96eed8405b20e13f88c66bc2a3d4705c0a1e6f"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/candidate/atlas-12.json": {
+      "git_blob": "d627c799ec33924f487b73fa86a66505478fb105",
+      "sha256": "d5cea49d71780a40cf4e0db039520274cf0125f4dee47aaaec8f593c1b390fde"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/candidate/boreal-01.json": {
+      "git_blob": "93ee051180157eb9c6f72ea536e1d4ef056b2551",
+      "sha256": "8b845e19431afae9c9c3fdce18025be41fa4958dea7e5119d0c42ef61f33075c"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/candidate/boreal-02.json": {
+      "git_blob": "7dc457844abfefd4276a8233ca1f07a2d61c9538",
+      "sha256": "1c5a2d4f43db1013b134963dd625860d7a9e64ba7b858ddaef3f8482f6da2e89"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/candidate/boreal-03.json": {
+      "git_blob": "54100d515ae38b08efb4ef0fae3637e5063efcd9",
+      "sha256": "265851cea922b6615379c24072abc931638e111a2a389fe759e791ed78b68b12"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/candidate/boreal-04.json": {
+      "git_blob": "00eebbe90ed26e5cdb2a5681f2e0db2d08ddf83f",
+      "sha256": "c0bd17301552d9aa6e96ffb825cbda9490c4f2b7436b68275a97c21d35f96411"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/candidate/boreal-05.json": {
+      "git_blob": "7170067bc4f4b3cdd9e899117cad63c2480dd472",
+      "sha256": "43493ecaecc631b366a55079be29ba793d6cc24c14bfb5c81698ae25f2c60c4d"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/candidate/boreal-06.json": {
+      "git_blob": "edc30cf0bf32f9258d829dd60f2210019afcf700",
+      "sha256": "d903ac0f17d2fdd767ee1021b495f2258067ab7e411ebeac8c13c549e7d72943"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/candidate/boreal-07.json": {
+      "git_blob": "c70e27562fa626ec53f05b445964adc404b198e8",
+      "sha256": "41b480fa509849410aada36b14e22d08d9a80134bda38767c2961f70b001cf0a"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/candidate/boreal-08.json": {
+      "git_blob": "9d787249f13449fb907ecac893eeb9d5b6184f3a",
+      "sha256": "79d847d8d7e107a945e3e39ed0205c4a7cc31f070c7014d95b5cbff2d6b1ca6b"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/candidate/boreal-09.json": {
+      "git_blob": "5cbab6b7f6fed0db580a7c794b837f2293cda733",
+      "sha256": "c9b037e11b29469a5f520e008816c70679087f6f96b02a39c698b1e46180a8dd"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/candidate/boreal-10.json": {
+      "git_blob": "9a2a2fbb3963316370b363044ff0a11f9d77f454",
+      "sha256": "116e39ddd8be535a328d1606d90b779d0ed40419eb238d2c7b3c399611f70ace"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/candidate/boreal-11.json": {
+      "git_blob": "b3abff96a64d0dec385e8d74a911db361e9e23d3",
+      "sha256": "b7f5d37333d58a9db75c6a58407c220e5064744698ba1f0d8acd92bd7ea0a443"
+    },
+    "docs/kctx/reports/qualification-isolated/evaluation/trials/candidate/boreal-12.json": {
+      "git_blob": "52cf37ddaf8594f50336cdb878bd334234a7bb88",
+      "sha256": "3c565a017dac991927ec751ab7e3ac153db799b5af2ec69317404e933fa28e0a"
+    },
+    "docs/kctx/reports/qualification-isolated/source-snapshot.json": {
+      "git_blob": "0365628e8019bc8920c70d6d8bc0b7121b8aad93",
+      "sha256": "b1bb6da9cb7c081010bb68d6ed871192d678049762676b4cdb0692e424277d4f"
+    },
+    "docs/kctx/reports/qualification-isolated/source-snapshot.tar.gz": {
+      "git_blob": "65c7de922087732e4deea07a886e286e8aac10a2",
+      "sha256": "1085e0e7bc41f22bd84b531c550a9f6cfd3846d052aeab756ed1ab6bc063840c"
+    },
+    "docs/kctx/reports/qualification-isolated/storage/report.json": {
+      "git_blob": "616c4d8cac15e868dcddd2546eb9809fbe3f5889",
+      "sha256": "8f6374f37b5d3ad59de2835d188267b31e3658625bd079692e405aae354c4146"
+    },
+    "docs/kctx/reports/qualification-linkage.json": {
+      "git_blob": "3c8a096fd9ab721cdbe89094804e4d79d2a67fb6",
+      "sha256": "a8b6d82aa39781548f3983a714a7ac597149f15fdf24912c6736218e77374d6a"
+    },
+    "docs/kctx/reports/qualification-local-remote/report.json": {
+      "git_blob": "4c8c5fc54565dc0d9678fc3c7f3198bb6f24f0ff",
+      "sha256": "80fb3769ac3d24bc5f41de7b941acc3fb6ecddc925cc3abc01974e3b7830bd4c"
+    },
+    "docs/kctx/reports/qualification-remote/attempts/1793430885098045853-3ff4e0efca07.json": {
+      "git_blob": "7d106804373ef8efb46b3b555b087b920cb9d461",
+      "sha256": "3ff4e0efca07418ab5dd038076f7f2dd5ead82267a77a3449a4299baafcbf1e9"
+    },
+    "docs/kctx/reports/qualification-remote/attempts/1793431129086176382-6d5154d1f284.json": {
+      "git_blob": "9497e111a8bdab997e5b4febe4d520981fb664d0",
+      "sha256": "6d5154d1f28462f91e289c842382658ceb2b9899ddc03d3933c91b4c048239c8"
+    },
+    "docs/kctx/reports/qualification-remote/report.json": {
+      "git_blob": "a9441879c46c27127eff42174ed93514e477d384",
+      "sha256": "76846a4a1cf84105471a49b63f07da0120c409c6d3cac0036ec2cb0091298000"
+    },
+    "docs/kctx/reports/qualification-storage/attempts/1793430613310784007-1c22797dd2ed.json": {
+      "git_blob": "2365ae72baf65ad5454a2f570493be20ec4e20c6",
+      "sha256": "1c22797dd2ed0abf748d7c944721fe1d9a65dd92d79ce8bd5671ae9431461c3a"
+    },
+    "docs/kctx/reports/qualification-storage/attempts/1793431200835568972-bb6ffcfafd1a.json": {
+      "git_blob": "7fc46b5f0920544ef1fa7d93787a47d44bed1e3c",
+      "sha256": "bb6ffcfafd1aef58c6b418a49d5c166b5d7d7e167aaf7e5cbe58a85648b62171"
+    },
+    "docs/kctx/reports/qualification-storage/report.json": {
+      "git_blob": "710154efc605b76a58ba90eb429e9390e2cb95d6",
+      "sha256": "8db9e639edb5be622ee571b9221b5c0d865724df03400dc66ff625e2c93f009e"
+    },
+    "docs/kctx/reports/runtime-ui-final.json": {
+      "git_blob": "141bbf746428c60faf285a0b6782ea10d2b69fe3",
+      "sha256": "eecb953fcb137665376d2a9d3c1e252550b7419626dffbfe922da3418013334f"
+    },
+    "docs/kctx/reports/runtime-ui.json": {
+      "git_blob": "475ae06400a20921d07222367ba1f4b866f8bdb0",
+      "sha256": "367f89425730c6f4159f2f40b094bd4790e9bcb3e95d8bea44c205273f98e522"
+    },
+    "docs/kctx/reports/semantic-audit-cases.jsonl": {
+      "git_blob": "4574ab5816240b5b1bc209e005e40ec4bd28adc0",
+      "sha256": "e0f905cde4457482b681e18018ab041e57c31a6b2fb4084d1f1d59f3da310345"
+    },
+    "docs/kctx/reports/workflow-v3/runtime.json": {
+      "git_blob": "839afa6f438d4bc9acd40664a60c480e872e0143",
+      "sha256": "7d3b04c24a3a9cf7febc55a144f92d6a1c86887ba4ef6d56a4883b8f276fc5f8"
+    },
+    "docs/kctx/reports/workflow-v3/storage/report.json": {
+      "git_blob": "69bd367d17e5ca114d3eef1f991896b0652f589a",
+      "sha256": "efee25b21384b0924f0e1dfd83fedb490a09961e2534d5d5338423deba97c485"
+    },
+    "docs/kctx/review-feature-requests.md": {
+      "git_blob": "bf12437dbe3dc616762b0f496eb0ffcc87825cef",
+      "sha256": "6eb3f09d8af1c8ae4b118e6fa8c0c86ce251627ec45987ef37c3043b98922ce6"
+    },
+    "docs/kctx/scenarios-d.md": {
+      "git_blob": "47199a0cfa11e20d054255f5f731502a1f9c02b0",
+      "sha256": "3f67c0530229ca156adc1582f49d7f336091aba5925bcf5760867f820bc58a1d"
+    },
+    "docs/kctx/scenarios-q.md": {
+      "git_blob": "97aaa4794bd1700e196bd7baf32ce9eadada6347",
+      "sha256": "d52c6d22695cae1e41ccb6fbb1587af2d4c65efacbcb6a391e2205d6df8ab227"
+    },
+    "docs/kctx/workflows.md": {
+      "git_blob": "5efafbc366028ab2c1864d139708402ad35defb8",
+      "sha256": "09ba4cde6c68ef6a5c92892521f261bcc0fb1a67853f3c8de3aec7823952f0c9"
+    },
+    "fixtures/qualification/corpus-lock.json": {
+      "git_blob": "52a857e1acd35acf4c5eff761f4ed8a8a6ea9ccd",
+      "sha256": "1f298b4da9dac063907b7cb4cd6f9c33a20e45ff6bf2ee488ed803368f2abd82"
+    },
+    "fixtures/qualification/evaluation-v1.json": {
+      "git_blob": "7631389c44e29d7953546a0ea6328d3c6fcedcd4",
+      "sha256": "37110f972c6f49a9995ebd0f34393aba8465f8414f941f991fb61da40f7c2ff6"
+    },
+    "fixtures/qualification/protocol-lock.json": {
+      "git_blob": "534b1a0f58329572d2959f68a05b5e0ba45fbc7b",
+      "sha256": "c02eba340f89522011007e349e4dc496c532715b6bc0c71e87946d081f38fb54"
+    },
+    "fixtures/qualification/scenario-map.json": {
+      "git_blob": "46ef4c1eb96e9fb5aa030c27644a0a1159020a68",
+      "sha256": "28cb1f8982805177aa8ae9fe1c1323edf3b569dcac878787d6ee94b1b4e08324"
+    },
+    "formal/Dockerfile": {
+      "git_blob": "8041fd08b288a3160c5c0d492f0bccea29406037",
+      "sha256": "a3a73615d1843c2bf6b97623d9c8df19d475d9de56321dfdc1a2367b03b577cd"
+    },
+    "formal/Kctx.lean": {
+      "git_blob": "47148c9ed39a65c0d487acd84ba14f87b408f9ab",
+      "sha256": "c017f8e8cfdbb44700e67e5323eb5db2008588057796812777f90512908b17be"
+    },
+    "formal/Kctx/AuthoredCodec.lean": {
+      "git_blob": "92e949da9851917d2d4ba1509df8256051105280",
+      "sha256": "0a2df62e8862874e4ff32bdbdee3f6189a23479ee07ad0b33aaf1c078110acb5"
+    },
+    "formal/Kctx/Checker.lean": {
+      "git_blob": "3ea5ab6ceeb37bfd31ab5f44c54145a8f69895d5",
+      "sha256": "744e298eb2994694feb3e546429bebab7ac7084e4cfa2eab1e9e3eace011c03c"
+    },
+    "formal/Kctx/Codec.lean": {
+      "git_blob": "d81fd4b3d4f6797a125b1e4049148323b32ece12",
+      "sha256": "143f7d8b103227996cf525ce192f50fb7b9ef5cc785dec7e4b233b72421378ad"
+    },
+    "formal/Kctx/CodecProofs.lean": {
+      "git_blob": "399a90a0e2af4dd82c279cd257f8fb6caf0b3a2a",
+      "sha256": "d93c83ebde3ad5080bad98bd3a69adc9bc2e186d5877b2f00bba271fb2874f06"
+    },
+    "formal/Kctx/CodecRecords.lean": {
+      "git_blob": "a2e624ede4bc9bda4080a7479bdedc1393c829d2",
+      "sha256": "529756d377b2b9d781d2b58398737bf49294e30e32024aad223301c81723a8f9"
+    },
+    "formal/Kctx/CompositionLaws.lean": {
+      "git_blob": "d3eb7d6c4ae6960df4d9d5bcac3923feda0cee88",
+      "sha256": "6c9ae61b8a29a5ea95c81f9b63f6c0a84c6962d7504499bf70841cb71f62799e"
+    },
+    "formal/Kctx/DesignWorkflow.lean": {
+      "git_blob": "b85aec93aaa1dd4ddbcad11ccfe86e9ecd70a034",
+      "sha256": "e4b966fa8d1215b426a27860afc72359e024ff451a492283534e26bc187db93d"
+    },
+    "formal/Kctx/DesignWorkflowExamples.lean": {
+      "git_blob": "c23e0d72df3f1488b0987aeb12ec0d25625ae104",
+      "sha256": "63fad67340ab6d180d789a59460a59bc4393c0c2c58229b52f1893275b4b8853"
+    },
+    "formal/Kctx/Footprint.lean": {
+      "git_blob": "80e2c5bcea7dd3348c006e6d2f90bff5e10be76a",
+      "sha256": "e045fb60fb069d9f75fb360d6720fe9ab8126ef07eff02d1a475ae2bc592ca5d"
+    },
+    "formal/Kctx/Ids.lean": {
+      "git_blob": "918fc858ce034666c659c756353ddde19a08751d",
+      "sha256": "9c454aa5064ecfd6e56885ecea7cf2de683c6d0ba330b60dc8404d4973e65771"
+    },
+    "formal/Kctx/Locality.lean": {
+      "git_blob": "a48da59d56c3f97257cac4d92339e9c990c2375c",
+      "sha256": "391070961bf50bdad7ddf1474d983bceca62391ba8e09c8e8ff88554ab19cd81"
+    },
+    "formal/Kctx/Model.lean": {
+      "git_blob": "5165f91833e3cf2a70e8d9425e28b1fdc591233b",
+      "sha256": "bb5c0952086607c94d2e32f9309378c384aae38bc0efe63cdf1ff3072b295ac3"
+    },
+    "formal/Kctx/NonVacuity.lean": {
+      "git_blob": "24f45080dc94ff7f0412bd734f739556fcfd2634",
+      "sha256": "2a64f0c308f1a6581290677af6dc17e6737d59e953262054159c9d6ece5f8f6d"
+    },
+    "formal/Kctx/Portfolio.lean": {
+      "git_blob": "c2ef4d4e20e54e3976282e943f872a644b8b36c7",
+      "sha256": "326d4682b7687fff797431adc710d41d3a227bff3b37f5ff3d2f18f8bb87be0c"
+    },
+    "formal/Kctx/PortfolioExamples.lean": {
+      "git_blob": "dfa3dc315f1da6e6bdbf007d9dfd5425d7f1580e",
+      "sha256": "2f6e440ade9678a31bdce3d8e41b99249d62d7f606887709486d4b06897f6e0f"
+    },
+    "formal/Kctx/Reference.lean": {
+      "git_blob": "6b2dcfbc5d3fccd9e99dee962a80110f5617ca82",
+      "sha256": "47bf1483ad2ca4eb6c7f998b79573e924711ce7b24d938b14180629de5c008f4"
+    },
+    "formal/Kctx/Selection.lean": {
+      "git_blob": "532c733e79bfc5825b2c8b44fb69b938653807b2",
+      "sha256": "b86b662a2789d6eee187f38cc01aba7212b3dfe26872bbf164f482ce0eb1359c"
+    },
+    "formal/Kctx/SelectionCodec.lean": {
+      "git_blob": "6dd98fb604c8b3d69492a77f5e4500cfaed62aef",
+      "sha256": "a7189659dad4a7ca39062a93e1bc804e75424f1770c8bce99cc591a076915c80"
+    },
+    "formal/Kctx/Semantics.lean": {
+      "git_blob": "5daeaa0b2c5bc22faca43858f734d54fe8e9c7d5",
+      "sha256": "2534f96772cfbdbb587c71e104a577d9bb1156256262586b6fd1a9076d5e00d0"
+    },
+    "formal/Kctx/Theorems.lean": {
+      "git_blob": "10ff07eec96b94419bccbba51ac3ec66938460a8",
+      "sha256": "f73abce561950689d29e702e2da5100c287d89df557263870be2d6e1c9790183"
+    },
+    "formal/Kctx/Theorems2.lean": {
+      "git_blob": "28b66d892e0f620b94a48778c8ad3c6b573a1649",
+      "sha256": "75bd4a8ed56bd76ee36a20b106b60f770c387da0ccdad09bc1baeaa160aee063"
+    },
+    "formal/Kctx/Time.lean": {
+      "git_blob": "f9bdb8c6c346dcc71f13c0a05387f406fed33a67",
+      "sha256": "04762ca1c0e6694611222ff7bb948954477a3bd7ec8bcd8fbe9190ee814ffed7"
+    },
+    "formal/Kctx/WellFormed.lean": {
+      "git_blob": "264d5e8844f8884c9b93b6bc99bc228977f89ec6",
+      "sha256": "ac783b7d07db7db75ce58ca21363b45bd50dadff8ec1b43a4e10a1c57624b254"
+    },
+    "formal/Kctx/Workflow.lean": {
+      "git_blob": "95ff6a95ace299c7b4cb0542f1442e9f941c15b0",
+      "sha256": "e1d1ee37c9fe1e41a659122dbb09ab2b0a9f818db33d2c3c876ad5d915f814a3"
+    },
+    "formal/Kctx/WorkflowCodecProofs.lean": {
+      "git_blob": "fabd85403d1f8b39a0b0d36487f89e558169a4a0",
+      "sha256": "189ee1ce18ef36cf089c0bc1c71d4e685b989a260ceeb4306928fea3882ce213"
+    },
+    "formal/Kctx/WorkflowV3Codec.lean": {
+      "git_blob": "53de0bbaea7001f1e44837f5a0ed84a831345e39",
+      "sha256": "568472b95838a1e5b2e2b70a60cc3ca4954ae1d2012b3d30c7c47a838eb1a940"
+    },
+    "formal/Kctx/WorkflowV3Reference.lean": {
+      "git_blob": "8037a5df05edb987429836c6981bec05e0e4582c",
+      "sha256": "1649439b92c56ed51adbcee6f9c3926b438a0b708bf2944cd7df9864ca6e4562"
+    },
+    "formal/Kctx/WorkflowWireObjects.lean": {
+      "git_blob": "2d80e36d449c16708ca10bdd55202f6f04634bed",
+      "sha256": "b6dc870131067c64b2e1be3ce20a104b4b9a3717ff8fcbb132382fda0eaa05cc"
+    },
+    "formal/compilefail/claim_as_observation.lean": {
+      "git_blob": "94de89c1d49d1fcd586242727a064a1f015aeda5",
+      "sha256": "f4530eb70178310a6fa6610dcb5e363d7368739822b865f0ab340793fe27d30f"
+    },
+    "formal/compilefail/cross_namespace_equality.lean": {
+      "git_blob": "e2d62a8eba6a6eb14a280106bf10dfb9d8f12032",
+      "sha256": "b15c8194367817003f767f430b7207d31b00c69af0f1356637c9ff93bb4f3cb8"
+    },
+    "formal/compilefail/empty_identifier.lean": {
+      "git_blob": "8c3bf4aa34ee2000e675a46cde418be5cf55efc4",
+      "sha256": "3fb251653560cf986c3acfc00c41d63e2509fcb50ee5254415d82641fe457df9"
+    },
+    "formal/compilefail/observation_as_enumeration.lean": {
+      "git_blob": "926b091feeaf8645d6d19d097872db7b1602b1a7",
+      "sha256": "3bb42b08ecd316c53bf46b6d603b0b0cd6f18524bdf844a0e99d5224f4a00955"
+    },
+    "formal/compilefail/raw_string_lookup.lean": {
+      "git_blob": "88f19376fe62045712d711d7471044030e6542c3",
+      "sha256": "a8bc3950429aebc01b750d455254b48460545ab7845ab7d604fca22422a88553"
+    },
+    "formal/compilefail/source_revision_as_snapshot.lean": {
+      "git_blob": "08923049815edb86f92e8ac8945745b9df0bfd3e",
+      "sha256": "67a178cd73c9f34c0a8e26e285c39e6ab4c32172492608d2976e5498a6c111c1"
+    },
+    "formal/lake-manifest.json": {
+      "git_blob": "5429a60fa3bb2c78bea5cd23511ba262d6541668",
+      "sha256": "d166d37a8c85c291fbb128494da9d71477ea80dbedbe0f74557a50616413757d"
+    },
+    "formal/lakefile.toml": {
+      "git_blob": "b16820e332338d60e9c8afeec129082d82c1684e",
+      "sha256": "0cf694f8f5984f4eded5b00a674fcbbc5181d4c3f6a70b0d4f7fccb6b0071fc1"
+    },
+    "formal/lean-toolchain": {
+      "git_blob": "980709bbbae28702ec58c368b84fdf6638093c63",
+      "sha256": "d24fed434d3b13adfaab57724a0a7f270ea8bf1c818b5ae5cf25cbce24dd685c"
+    },
+    "formal/nagini/Dockerfile": {
+      "git_blob": "af239ddcbfb41123d39a6484d65f322c388154ce",
+      "sha256": "74af6ea6d066ac5c7c0be78a509dfcc3bcda1e1d8883190213637e46ecbd227c"
+    },
+    "formal/nagini/__init__.py": {
+      "git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "formal/nagini/assess_fresh_contracts.py": {
+      "git_blob": "5f782f011a062ec3f6eb48bbe1dd986f6c75492d",
+      "sha256": "5198266d2555ba81c3106eccfdbe629a7dbbaf48c735ae5064b318c9faf2f2e8"
+    },
+    "formal/nagini/equivalence_grid.py": {
+      "git_blob": "772a23a3787b2859d49a1ee7b449cfb6f921aae6",
+      "sha256": "9a869da7189a2acbe1461b363e26fcad0942baec952b3c2ff6c774e2e81f8443"
+    },
+    "formal/nagini/scripts/nagini_check.sh": {
+      "git_blob": "1f9e6a4a0ab25f368e10a13113581d83ef4b6782",
+      "sha256": "d08257dd57ee47bafe784cf015758e3f876b12e25548f5878910613be479a659"
+    },
+    "formal/nagini/twin_drift_check.py": {
+      "git_blob": "cc9121593b8f7c878a7bba1e0c48a230bf1cab56",
+      "sha256": "031009b6b30596d600baea9f8fa39847aa02add5258951f9b63db270e4de0172"
+    },
+    "formal/nagini/twin_runtime.py": {
+      "git_blob": "73ae0a9cb2a93c2534bb5ae356627aea98b572a4",
+      "sha256": "a4b1366e8596f1bdfb7d0c5cb6ae818264fd6fe145538841ff3c6ff90830fe96"
+    },
+    "formal/nagini/usable_for_contracts.py": {
+      "git_blob": "257298857f73942b956d420d32065f00f80e3068",
+      "sha256": "e19d082736115d213fe8c2b9786a097e6beaa9c84902cccddb21f85bba0dee3d"
+    },
+    "formal/nagini/usable_for_grid.py": {
+      "git_blob": "b5c8df61167602a9757c114d66327b9085b0f507",
+      "sha256": "80a94ad77de5f3389183b5d223ff21fc9f65d99a72c6f71b7f0a1386790b183e"
+    },
+    "formal/nagini/usable_for_runtime.py": {
+      "git_blob": "525f01ec3fa74cffd66976b11f5bbef1933286d3",
+      "sha256": "a0ef589d8b0d620af2a8f048507957e2b07e35a250614a491493d10d1cb23f25"
+    },
+    "formal/nominal-compilefail-report.json": {
+      "git_blob": "31eb693a024c4fab7841412c43896ebff1c01ea1",
+      "sha256": "bd16d43b824c912b933026ae7274f8c2a38dcb7219b7225c90d4fa2d0576e259"
+    },
+    "formal/proof-report.json": {
+      "git_blob": "6211d078d7d5ade053c4ceb50b1e7d4ee13f5d4e",
+      "sha256": "6b8bda4f3a454d5584e55a8fce11b9b3aa6df49531b1988153744db633b88bf6"
+    },
+    "formal/scripts/check_nominal.py": {
+      "git_blob": "c3dad1b920436efb3e8ad4b11b41c6f17a6ef3fe",
+      "sha256": "d647e07c933791f57e4e090a6202a49387eb89bbca983e584e42829a825fae26"
+    },
+    "formal/scripts/proof_check.py": {
+      "git_blob": "8227bbd4708fa46dc5456dc2418205dea21a9623",
+      "sha256": "c878d98f17e764aed70690f149303b803c2857385f5c65abc4df3ca956665187"
+    },
+    "formal/scripts/proof_check.sh": {
+      "git_blob": "597e52686b36b39e82675d86e74b07418edec4c7",
+      "sha256": "b5598f7deaf7a2496a9b01ac03381185ddd2ff2d2aec451e0e82cd8f88ed23d2"
+    },
+    "formal/theorems.json": {
+      "git_blob": "220bed6ee03ec68a30548f682024623c4b96a033",
+      "sha256": "7927d383f9b303a4fd0cc0219e61dea3e7cb4d158a1cd8d663da3d6e7d4f6584"
+    },
+    "pyproject.toml": {
+      "git_blob": "a7206658b33f9633ae36273add571830fa9fff49",
+      "sha256": "71024206e989b025676d28b4ccb824fb0a9e68aa4164c9c3a3483aea6b3c50d1"
+    },
+    "pyrightconfig.json": {
+      "git_blob": "fa0f4471665ad712e81a381c593da4eecefd5a2e",
+      "sha256": "240befa8772092f3e6d617bbd3ae68736e96daf5bbaa752533326a35343db919"
+    },
+    "script": {
+      "git_blob": "9a4e766d83d658e88722641b5fc2203ca604d4fc",
+      "sha256": "30772c18d361f6ab095f45e07db925479ecaed99bdeef8bca92094c4a6d9589d"
+    },
+    "scripts/check_contracts.py": {
+      "git_blob": "5d8d04aa6ef50581b86f280d6637fcfa2b309bf1",
+      "sha256": "0e9b71b70417758d9cde3a7178947e14b2d3f3978d7afd942b0689be8cd68da9"
+    },
+    "scripts/check_quality.sh": {
+      "git_blob": "ff51db83d0c68c16019d94cce02d7d7cb946f017",
+      "sha256": "169b55313ac8df56bbd97af87f4f040e2d77f1569aba90e5e2871a7a1724932c"
+    },
+    "scripts/check_type_contracts.py": {
+      "git_blob": "551d595017e37961c674a125414bf4b3addeaf1f",
+      "sha256": "5cfec8ce333a43e116ca86ad370434b594932ee4903408edfdd2843dc49eaea3"
+    },
+    "scripts/conformance_check.py": {
+      "git_blob": "bd816df4ab61b68f389ba7ba69781a67691ba9a4",
+      "sha256": "d21c0dc791ef7bace590f961e9aec3b36fd8d436965bf50f521d3e62d12c6f3f"
+    },
+    "scripts/dolt_smoke.py": {
+      "git_blob": "22ee9ccc9656daa797dbf1ab7d1ad753b87530b3",
+      "sha256": "f9b3f5f58a41cacc3c5126d2f2cfccf98c2a1282aa5005b91109df393167ebf3"
+    },
+    "scripts/evaluate_kctx.py": {
+      "git_blob": "b28e8bbda8df703848161a836ff89363588a12f0",
+      "sha256": "18943370402763d2379d28d0dde9d99cb39a9964cc3264394d7cc77fd28cab5f"
+    },
+    "scripts/qualification_common.py": {
+      "git_blob": "f8239cdafef568daf3d1279626642d70072493bd",
+      "sha256": "a1a0d1d3320ee425826f39c15db06269e2f57e5119ef53a8403a8b7cb798c7b9"
+    },
+    "scripts/qualification_knowledge.py": {
+      "git_blob": "ca0841ba417b09e4d61d63be4045ab930a25ff3d",
+      "sha256": "c46d4b1656603df861983d4408f5ff957ba53c3b55ca1bd5c266999f40beb6a3"
+    },
+    "scripts/qualify_remote.py": {
+      "git_blob": "340b71b3f82e9182bb876cccb150cee17cc90120",
+      "sha256": "4ef1444338d53cb3cb33ed90d198ad8f659a7802c701a8fe44962853ab3243ca"
+    },
+    "scripts/qualify_storage.py": {
+      "git_blob": "9065e203e9e38b58467cdda9d2bbe01a6439ceb7",
+      "sha256": "21c0a2d23ef24e8fa297676c1f58269bcb0cc745b4b81ca8b749e5911619209e"
+    },
+    "scripts/run_tests.py": {
+      "git_blob": "8eb98f97a1830d34c75151182db755be830c1955",
+      "sha256": "06418df8bdd773b15a9bfe2c7ef76bba57279ca8b2fde0f19fb79068c7396153"
+    },
+    "scripts/runtime_smoke.py": {
+      "git_blob": "8a404319a00207058d1b72042b6cf99927809b22",
+      "sha256": "984aa638ee976f3eac5be308463ab0659082b57c35b49c38512e1b2f71425269"
+    },
+    "scripts/semantic_cases.py": {
+      "git_blob": "1ca74015ef364e2d74cea41109f6ce156dcf71ee",
+      "sha256": "9427d308ea4bdda807f4488498122e7363421c03b4e4620732c1cb2e064a9246"
+    },
+    "scripts/semantic_mutations.py": {
+      "git_blob": "3b9c95a5d0fba591973a488aae786a58f5c7da76",
+      "sha256": "78dc1947c6bf63e05098385553a3c2b62eb3570ec4226b5a340425da5448cccc"
+    },
+    "scripts/verify_all.sh": {
+      "git_blob": "7552982ceecaf6864e4c22102b288ace41dc02f1",
+      "sha256": "3484104d56d4f88f615c84c5211eadea1a372b6b6a89c8f15abfc725ecf343fc"
+    },
+    "src/kctx/__init__.py": {
+      "git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "src/kctx/__main__.py": {
+      "git_blob": "0f710357b88b73869fb8fde1b20a58d460dfd5a9",
+      "sha256": "ba365945d364207bbd524092e65a824878c77a6f873682231fe74a3b809b43d8"
+    },
+    "src/kctx/adapters/__init__.py": {
+      "git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "src/kctx/adapters/dolt/__init__.py": {
+      "git_blob": "d962a3bc49c0a69678e366d2d88f67e7d8a00eb7",
+      "sha256": "db6a1579c2874258e9b776bbe4908e3fa80fc3ab86ca96e70d88ba9298846721"
+    },
+    "src/kctx/adapters/dolt/knowledge.py": {
+      "git_blob": "26d5bb22b5a146794be119ecda2c4ae1eb638194",
+      "sha256": "2ddb91cdab9a7f753b3dcb33cbfb9ddac5fa37849536f0f2c13b4d643b95a05d"
+    },
+    "src/kctx/adapters/dolt/native.py": {
+      "git_blob": "d22237c22cdf280c899edfd972dafd4993a49cd2",
+      "sha256": "10425fd59f67bed2afc90376ee135428c0e47ca220a3aaffa6d67625f537fb41"
+    },
+    "src/kctx/adapters/dolt/read_session.py": {
+      "git_blob": "478c0165f9fa88d8c1d9c4cf324e2a9706899bed",
+      "sha256": "f48cd4f5e112639393844015880768895c59103d67c9f23473db7ad56ae540b1"
+    },
+    "src/kctx/adapters/files/__init__.py": {
+      "git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "src/kctx/adapters/files/contained.py": {
+      "git_blob": "e66d30a560df40af3d14e81d41c4442eefb19c1b",
+      "sha256": "548381936d146a450c79475fc18750c05d2c449e458eeec29d969066e9f56f84"
+    },
+    "src/kctx/adapters/files/knowledge.py": {
+      "git_blob": "9fe8eebb4bc69c329b96058788e73b76b6feed3b",
+      "sha256": "b9be2547f92478d4903320162443e7a34d8cf2f7143b5edf590f621e7c962ae7"
+    },
+    "src/kctx/adapters/files/mutations.py": {
+      "git_blob": "cf4fc7c4501ce563c56cfb9541f4324daa273e04",
+      "sha256": "6b618ea42dffca60c4debd94ff9374387ce92060deb458fec19d7b4cbfaffa00"
+    },
+    "src/kctx/adapters/files/roots.py": {
+      "git_blob": "369c86962f90bdc0e67b2578668be50c874dbf4d",
+      "sha256": "1f4ccdcd7fd5207654662adfb96eafca1e98fd072a3ed16a95c3dd79d48829c3"
+    },
+    "src/kctx/adapters/files/storage.py": {
+      "git_blob": "f701e2fe81613a2744da7ac06dcf9bb086309b9e",
+      "sha256": "ac7aaaa91bc1cd23dd9a9d1fe1ba635bdda128b385eec6fded97ab49e31c7079"
+    },
+    "src/kctx/adapters/git/__init__.py": {
+      "git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "src/kctx/adapters/git/citations.py": {
+      "git_blob": "2485e117bb6be4c44ab043c0b3fdd2e3dfa83120",
+      "sha256": "c056434b86d1977918f2732b35fe7e6750837bd73a3bf802306b18d7caaa9d08"
+    },
+    "src/kctx/adapters/git/diff.py": {
+      "git_blob": "9de8bbb6255b7942746b72346c97244d69dac7ff",
+      "sha256": "a10da74fde236a14e82499f07d6a170f876c193f4cd8f1404f42aee464db81c8"
+    },
+    "src/kctx/adapters/git/inspection.py": {
+      "git_blob": "472f34033851306cc259b8d0bf4475cfe6a08710",
+      "sha256": "9b394de2f37f53ad64c8714cb4668b12477af2fb7a5d4da389dd25e37df76ffd"
+    },
+    "src/kctx/adapters/git/knowledge.py": {
+      "git_blob": "7b23de5d5a91c265b0e1e0e1a6491d10de2fc1ed",
+      "sha256": "3cddce03a7bbbabb435330c41dd1e2e3a0ebe761c9069b3ee30e0685af4eff39"
+    },
+    "src/kctx/citations/__init__.py": {
+      "git_blob": "55b426d8def447fd9f62b40e2b457f8e2a6412e7",
+      "sha256": "79c9e7f2df6fdf0e2cd07e12588b3e6a79340742016a7b393ca7f26fbd5e4e42"
+    },
+    "src/kctx/citations/_redaction_worker.py": {
+      "git_blob": "45fdd70cf6cbaf7c18ee355e5e87f085c3a59c1a",
+      "sha256": "04bbce474f826095ad07c08e35b02ca10804d314662de55d0513e56d69fce9b3"
+    },
+    "src/kctx/citations/classification.py": {
+      "git_blob": "a8c08a0438434dab172a6d14d4f5529755d2a713",
+      "sha256": "f9e7c551d311077d24e3ba1811c5486b6b3b921553339b84ada36aab1b1b570a"
+    },
+    "src/kctx/citations/cli.py": {
+      "git_blob": "ab5e682251ba16e5ac5cd66278a4d9672af1d01f",
+      "sha256": "5e2a62c2a0f4ba15a990c373bebf5a329fc1a176dfd3a1333e6a1de5b2d669d0"
+    },
+    "src/kctx/citations/code.py": {
+      "git_blob": "3c5a234a06c25e7b8dd6100bee2b21a9603f3fe3",
+      "sha256": "5f63aeb87348d8823127547516c59c805fecb3b4407dac441a59b91d268343ec"
+    },
+    "src/kctx/citations/construction.py": {
+      "git_blob": "b9220fd77639cc0448f4edb5094f22ee8b89be33",
+      "sha256": "45fbeea09c6a1d72037e5dab70356157d1ee7d7bc37b26605dd590ed42c66bf5"
+    },
+    "src/kctx/citations/models.py": {
+      "git_blob": "b0e51e52809a4797c920a8e9319ec92db0b8395b",
+      "sha256": "eb19784ade38eb686eea7dea991a92d0e8636143d9e457dbe8141274078ab9b5"
+    },
+    "src/kctx/citations/records.py": {
+      "git_blob": "f81b40997bf1ef7777bf5483038a20843869b4ee",
+      "sha256": "abfa9bba01a683c67a2c3407f1750581bde72dedda6cfb1d8eda402b309170d0"
+    },
+    "src/kctx/citations/redaction.py": {
+      "git_blob": "7b16d7fee96d5993624feb88a5be15e3f6783813",
+      "sha256": "ed952081fdf111212ce96dcc791f4c72638f8921ce1aede2359f21b21dbfe3cb"
+    },
+    "src/kctx/citations/rendering.py": {
+      "git_blob": "be4e3253007a3619f80ece8a8dca7fa72620e737",
+      "sha256": "dce8f9b788200223cdb7f8c4d6c73c9805223660d3dd766e419e856d8b0525db"
+    },
+    "src/kctx/citations/scan.py": {
+      "git_blob": "8ddece4376344e7244db0fccfad412d793e57044",
+      "sha256": "1f3f3edcc34f64def702729c8d78c2021ab2b2fa2ff7166047ceec58517e534f"
+    },
+    "src/kctx/citations/syntax.py": {
+      "git_blob": "ccba0c50fc55b8327a3533c1a3e5de5181bed47b",
+      "sha256": "a8ba4fc08701d9dae903113bd79d9113ec5c1ab55f66a7b6e9aeffcc3033b2bd"
+    },
+    "src/kctx/citations/time.py": {
+      "git_blob": "610259ff3a74df26f8f14350692f595edc078c31",
+      "sha256": "6d03c730c1a1da9447d20f7a3412fb144b0adc7e81dccc87d92c21d4063743eb"
+    },
+    "src/kctx/cli/__init__.py": {
+      "git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "src/kctx/cli/app.py": {
+      "git_blob": "a9966e5d808ac999d839c3eedfd804fcf1bd04e0",
+      "sha256": "66dfcd65246a6e64968021a9cb74760baaa73ee8761e4c2b80fcea9ae066fd3d"
+    },
+    "src/kctx/cli/context.py": {
+      "git_blob": "e982e306de5063074d04679ff4ec21bc1982543d",
+      "sha256": "d768a3f0e9d97478c097f07b59dc98dbd741f43e2eeed61a13ebdf181fbab9b9"
+    },
+    "src/kctx/cli/help.py": {
+      "git_blob": "f5f75fc70db9290174494e4baa685eea45472cc5",
+      "sha256": "144eb0790dd872b7472851d36be6737d8baa85bdbc823ef28c9ba452cc3fc943"
+    },
+    "src/kctx/cli/incidents.py": {
+      "git_blob": "fa9fa46beeae6a8ac2e509608f77783b1dd109ee",
+      "sha256": "aecb56934e5cfbbe2143df288de7b02f773c4a19a1bcb0845c05b086edfc03aa"
+    },
+    "src/kctx/cli/inventory.py": {
+      "git_blob": "14bbfddcd2f9e0d9eb66c6c27a3775e75f684ff5",
+      "sha256": "0ee6e033f43ac2447433712b54788795705ae5af1e3777031d4df251a809a66e"
+    },
+    "src/kctx/cli/knowledge.py": {
+      "git_blob": "3d223557562094a623c438caf7f226f8e63c34a9",
+      "sha256": "db0ebfa8695ebdf7e05581bb48c74ae4eb6a6827abe7fc0915e1a40f2ea6623d"
+    },
+    "src/kctx/cli/logs.py": {
+      "git_blob": "13f4c20995706ce8ef4e4829d34c74e61a7f5706",
+      "sha256": "c83896d44926b7ca7e9b58e78cafdfdc2007a50d2526eb6dbc177710b3ce0f3c"
+    },
+    "src/kctx/cli/navigation.py": {
+      "git_blob": "abba5ab47429e83ba1a22dab853a5ac3e1335543",
+      "sha256": "007e79c1b3ee2d8eceaf08d9cce58a9de01c2d36d7afc3535c4d118ad3392535"
+    },
+    "src/kctx/cli/proposals.py": {
+      "git_blob": "11ec2ac1e527954bfd678560f04651965f7f6da7",
+      "sha256": "e1247785371f805ec42564a69c4704aa2df390a8ed73c0df9cae9d082965e85f"
+    },
+    "src/kctx/cli/rendering.py": {
+      "git_blob": "58c9673e0f6d751818f0345bbf81d7b28539d370",
+      "sha256": "b7f84d42f6770f78cf60ee920a53bc5bd639f649ec87be0eff4af0468f9d755e"
+    },
+    "src/kctx/cli/result.py": {
+      "git_blob": "b64fc560ccd7c9559c84c128ccd5a18b0b5e6eb5",
+      "sha256": "8980932f525f69402070a43b5fbb93a709bf6dae6102a52cd7b2ece14cdffcd1"
+    },
+    "src/kctx/cli/runs.py": {
+      "git_blob": "ae74e61aae3211259dd257dfaed619a52565ce02",
+      "sha256": "f716eae0d6897ce8bd3d7ee39733a6c64391ec67d160195c4277cf0d8df268ee"
+    },
+    "src/kctx/cli/values.py": {
+      "git_blob": "07ee200c049b0d92df4a8a5251ba9b872c22b49b",
+      "sha256": "cea805250b81c780afebf5d7d166f859a54819d527cd9ce3865210f2d200613b"
+    },
+    "src/kctx/codecs/__init__.py": {
+      "git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "src/kctx/codecs/capture.py": {
+      "git_blob": "e8cf894c9e82038c174c7090a0344887470eef73",
+      "sha256": "2078d92b9b1c60ef503450a985ff61daf0dbda554cc3c8a0bac6920fbefb0821"
+    },
+    "src/kctx/codecs/documents.py": {
+      "git_blob": "2a586d67166722bf6ec4688b1725ef089ca4ac1a",
+      "sha256": "20f4d2b0bdc9678e21a45a8517c141c800a4594b32f3f580631069bed34965ea"
+    },
+    "src/kctx/codecs/frontmatter.py": {
+      "git_blob": "635cf3a45ae5dfb8e905d684824b0e0927b70dba",
+      "sha256": "ac570ae36d752a56983c4f42fb5e2c6bc547e80e8103fe033922748e9d7b814d"
+    },
+    "src/kctx/codecs/gates.py": {
+      "git_blob": "db374ad225ed36024a2884b51786752581bd17c7",
+      "sha256": "4b0d96ceb9fed12607bc50081b3215f4806ad1f461a10443f557fca3bc9bc92a"
+    },
+    "src/kctx/codecs/proposals.py": {
+      "git_blob": "1c8aec7d26b2b3eb49ab8b713600f2e20e51b78c",
+      "sha256": "7df82ec4227af6390312fa0a4a0a8be17efb65bb5ab824c8e4cf951c55b5b2dc"
+    },
+    "src/kctx/codecs/records.py": {
+      "git_blob": "3620f02f747b6fe9682d16e1673c77d2588b23e8",
+      "sha256": "95665e4f0f53099cea86591231562c8414c294e346428cabb124c49db75f915d"
+    },
+    "src/kctx/codecs/validation.py": {
+      "git_blob": "19f4267d19910856768b6acf6caf062d240611b2",
+      "sha256": "662fbdc7ce541728c2f7aa71d15740f3bb896184aebb41729ddc681de8797e2e"
+    },
+    "src/kctx/config.py": {
+      "git_blob": "90d12e679703fb1717583abcad99f1db9ba7520b",
+      "sha256": "e7d1c72ffaf44d0e2f2a35f6cfff2b319ceb3ce74cedb1ba115ed00e60423933"
+    },
+    "src/kctx/domain/__init__.py": {
+      "git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "src/kctx/domain/capture.py": {
+      "git_blob": "b3f767379d212146e7b52ec7e279867cc8f87f37",
+      "sha256": "d8563d612eef7017e411a22fa34ff4ee65fa89eeb181fa2263cabb94e0476461"
+    },
+    "src/kctx/domain/corrections.py": {
+      "git_blob": "9d3f9eb243319156e47ae5fc040cec385ea93850",
+      "sha256": "b0d272f95371f30acf168ab210fad22455146ca91ea3838cf2ecacd7d4fdb02d"
+    },
+    "src/kctx/domain/diff.py": {
+      "git_blob": "d07f953d9b8e093ac2b67e3ff7fda143da3fb471",
+      "sha256": "236a427f4b3bd90cb05eb246aa5e1dd1791ff292f0ed9eb5968d2cd9d52bdb16"
+    },
+    "src/kctx/domain/ids.py": {
+      "git_blob": "a920d2c78dc7bbeff94db0c084fb020799362def",
+      "sha256": "774c2e6e423803cf6782e6a2953d5c21caa2e68e441a38bf782cbe40d1e73b64"
+    },
+    "src/kctx/domain/incidents.py": {
+      "git_blob": "948c6fb1c8a90104e14ff895bf7b33fad6ade64e",
+      "sha256": "203a3c25a707783236a795038cfbeff04eeb66ea9e430b5652c2306aa36e5556"
+    },
+    "src/kctx/domain/json.py": {
+      "git_blob": "4e8b577b5a0704087294c124e43abe585121c1ef",
+      "sha256": "160f688523591ad01b92ff461dfd95f8d273698f0d94749d560dacbf151bf8d2"
+    },
+    "src/kctx/domain/proposals.py": {
+      "git_blob": "6e516aac62623415897587febffc883156c94be4",
+      "sha256": "ded6437e57e04c1e8647fb9e70f415404dd1501ed7776a800ac73815fe4fc301"
+    },
+    "src/kctx/domain/records.py": {
+      "git_blob": "2d4eb710f051ba57260f88d68b5738064f47753d",
+      "sha256": "e85b44529845a737fbe0d6e873869bcdc30b0d69ac1d9d8d4dad008cd7f66f81"
+    },
+    "src/kctx/domain/targets.py": {
+      "git_blob": "9c63e838ff43beadeb6ea7cded31504cbdf58d8e",
+      "sha256": "399b572a669140b1fd99070d5c4fea12486f878a9e7b8a3eb5ff15cbaaee0dca"
+    },
+    "src/kctx/domain/time.py": {
+      "git_blob": "05f8ccd82945f09cbb59210632072dca5b3afe7c",
+      "sha256": "4e8468906a6d024e0c6376d7b990fc8d9542767b7587c60176d23eb04e75e299"
+    },
+    "src/kctx/domain/vocabulary.py": {
+      "git_blob": "bcd525c39a59287316092898fb49f0b57cf54b0b",
+      "sha256": "953917e8d907747f8db8a1221728bb917d3c639d267c7c9e14dc59518665b768"
+    },
+    "src/kctx/engine/__init__.py": {
+      "git_blob": "9cad3fcec732602009e2246785d1e7772072fcb5",
+      "sha256": "ceb991b3054f82a82e2902b5695d7c74e7e0e28c6a84f46dae3bef1c31c22c63"
+    },
+    "src/kctx/engine/operations.py": {
+      "git_blob": "05549ec25da0ea8472ad8c5a27bad0e844ecb662",
+      "sha256": "4606820a4aee9e0602f247155d5ac0b0b2263c2d295a9709b6f42812694e60bc"
+    },
+    "src/kctx/engine/protocol.py": {
+      "git_blob": "ded455b418e2fc41b74b00c752fca686bbb6d2cd",
+      "sha256": "5c95d40bb4bef11313b0b72b512ce887cd35ff84f00664b62edb6b040ef3eaeb"
+    },
+    "src/kctx/engine/schemas.py": {
+      "git_blob": "04fbb06cd7e425b107195c01e23c8213df08225b",
+      "sha256": "6518172876d593e37cadad5d5e8d822842bc493ee6c243933afc4b2b551a5046"
+    },
+    "src/kctx/errors.py": {
+      "git_blob": "296556610245293a2f67f54cb52106aa479b9a9d",
+      "sha256": "7525192b5e1a7a084b6a5b80c94beafb83b379cd71294ce5ec467297413504d0"
+    },
+    "src/kctx/graph/__init__.py": {
+      "git_blob": "fad61c1bee5d929039043f361d1d0359a57b3496",
+      "sha256": "7281776deffb40c44f17c98c36414340b57aff7d6f14663f94540f7a058cd438"
+    },
+    "src/kctx/graph/cli_graph.py": {
+      "git_blob": "e3b18225a2e86c79f1cac74cf9b800a6becab4d8",
+      "sha256": "572de466e80746af66c26fc4a6240390a279dcc770a1f3c5c4fb2054737321a4"
+    },
+    "src/kctx/graph/dolt_store.py": {
+      "git_blob": "b1bfc447daf3f43813fdcaea6f0f89a52a98b485",
+      "sha256": "5a35fe36eb0fbf88039cb9c4e32832d150328e169f2fd1610f7f4b147cd99c22"
+    },
+    "src/kctx/graph/extract.py": {
+      "git_blob": "0f4833ba2b3171db50dd972bfd3d89ce0c98cd17",
+      "sha256": "92f27a6cbf499ccec5f9479d4bd4b85e7ef8a60c80ab417384382b7897b30825"
+    },
+    "src/kctx/graph/generation.py": {
+      "git_blob": "d8cf052995b11b7dc2cf8adbe032356b08161944",
+      "sha256": "19b8e4dc98d2da445aaae7ba9ac1386698d103a7c0895e98ee0a332154a79c95"
+    },
+    "src/kctx/graph/identity.py": {
+      "git_blob": "1f61b892fb690dbbfa5aba8f4889609a13426b5f",
+      "sha256": "6d76a000b92a3e12b527a6b94f7d55cc2293be76af6c6154adbc640e0f29b9b1"
+    },
+    "src/kctx/graph/inputs.py": {
+      "git_blob": "aeb6bffda0c8ddbe570ed94ba18fcfd4c9335ba1",
+      "sha256": "fd6065447d425ff01328003ae1008a5672dbf1dee593f2addae9f2c3aa7d3e20"
+    },
+    "src/kctx/graph/models.py": {
+      "git_blob": "82f0643dcdaff6c4297df4d36b10a92f716b0345",
+      "sha256": "8db30a252b8c11c0cdd0c2afc2a379f11ab75090ba912d0f161f3676df86503f"
+    },
+    "src/kctx/graph/operations.py": {
+      "git_blob": "004e0edbb3aed21e6ed96b7d6e29e5396a4e8f38",
+      "sha256": "3593de4eed72a37123d24a383aaaa43a45e7df5a3c6c9c88a6e2b77ae985c141"
+    },
+    "src/kctx/graph/parity.py": {
+      "git_blob": "0801c0466433bea553fb259322f17982a6997fc1",
+      "sha256": "b3fa5a39d293ce7eae819cefc3a2c7d647d80d77bf7899c242ac14ada0d5d034"
+    },
+    "src/kctx/graph/queries.py": {
+      "git_blob": "69ad2c25a0d10ff2b4c23433515cf3074cb8c451",
+      "sha256": "2ee9ba4fd32e7dc2a325d28934c03e142b24f5a0f6a54f238e79be5db08a491c"
+    },
+    "src/kctx/graph/query_session.py": {
+      "git_blob": "958e9546004cc6a93c96cc2a5083403cb0aa9fc3",
+      "sha256": "85be998ed12db264041869e5aa09766c2f9e3c43b05a447b0fffabbc6c6964d5"
+    },
+    "src/kctx/graph/quoting.py": {
+      "git_blob": "4d70200c0b9fc35e0ef6784e3b497a4b8300df12",
+      "sha256": "89ce409503d75d5d0ccd94c29151def6ae4f9152cbf45bd6bd01d61cedaccaa2"
+    },
+    "src/kctx/graph/source_tokens.py": {
+      "git_blob": "8ea223e54fb415cb6427b13455cd3ac767a72b01",
+      "sha256": "d2f623f10401ada83245155834e665829a253cf802aca1e4f7a1012d2f7e717d"
+    },
+    "src/kctx/graph/sync.py": {
+      "git_blob": "3b07eab8ef1c91e9895068315331a6079ad553ad",
+      "sha256": "f0772b1d0d582cdd70132d86885232613d2e9951a317168f8f5e5ee3cec9b127"
+    },
+    "src/kctx/observability.py": {
+      "git_blob": "a8c58398abe8196a04bed41c59cbc902b761c620",
+      "sha256": "c42163c1e9c4e3a745bdb93487bc5a939c89ae8fe132e154c0f883887ffd3855"
+    },
+    "src/kctx/presentation.py": {
+      "git_blob": "63bd991e95845f0a84223bb27862f257f2499008",
+      "sha256": "608e7c18ebc8bc14d9e8949f78c975b3145c38b2b308c45027df46787a76fbe3"
+    },
+    "src/kctx/py.typed": {
+      "git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "src/kctx/redaction.py": {
+      "git_blob": "2dad3943e93bfc0a322074c260c7cfdbf17bf4dd",
+      "sha256": "52682253c1d14f592d8ff78abbf75e9f6395598fe77eb4012fe7fa852b0a3e65"
+    },
+    "src/kctx/semantics/__init__.py": {
+      "git_blob": "ee94cf9be3c44aadc4e9963e6194e11f4fc847c1",
+      "sha256": "4e12ad82720a923437d623c46e5a27a068ea8da79509cf23ee9da5707f7e677b"
+    },
+    "src/kctx/semantics/checker.py": {
+      "git_blob": "888ae08906c4a04204c8ed08ac395f55fc3951f6",
+      "sha256": "98b70e28e02afa1ed28b18c8c0438dd2269dbb54c5b189cf9745b22a8ea04dc3"
+    },
+    "src/kctx/semantics/design_workflow.py": {
+      "git_blob": "12dd70848128fe880485dff44c5c8e1e81e0be7d",
+      "sha256": "f7088f19f224e12afb1d11d3787d050f949eba440ddbddacbc4a03dce07ec8b0"
+    },
+    "src/kctx/semantics/model.py": {
+      "git_blob": "4c71180992c54953e53509a961f7ec76eb9d9deb",
+      "sha256": "4fa9a05d7d1b64992200e32874c4ec252f976a0fc3f59f02d7b1cc121df9ceda"
+    },
+    "src/kctx/semantics/portfolio.py": {
+      "git_blob": "c67b8b259ee9a484a4ac1775b6fcd8863a7e9f7b",
+      "sha256": "3dcf223eb1a969cdebd0cc730750be9e3777c768d85f31195962b5ee4acbe87e"
+    },
+    "src/kctx/semantics/time.py": {
+      "git_blob": "eac7405d0648a8602739caa20033d282a5a1eb0d",
+      "sha256": "eea9776469088e289be1c7536107d3a9822d418bfff5c45fbcc752cb4346669e"
+    },
+    "src/kctx/semantics/wellformed.py": {
+      "git_blob": "f25c7959dafec6355d2710ce5c91b452169b2fc4",
+      "sha256": "d05794e489ea94afef934c3d9aec33942fd12b491e096e6891b9a89c11447602"
+    },
+    "src/kctx/semantics/wire.py": {
+      "git_blob": "4a50f371172856a90af3a2bb0139c39d2462d908",
+      "sha256": "72d6f436ca8f0c91a79bac5d89ab6d6a9a27f55475c2fa012ad3275c60bb093a"
+    },
+    "src/kctx/semantics/workflow.py": {
+      "git_blob": "9d4e0e35b2970f256e9abe310f995b9bfc0395b5",
+      "sha256": "27ba03dc7701bc767ccc6c42b5a7273f9b1ee8ec4b0ed609fe44089eca5712d9"
+    },
+    "src/kctx/semantics/workflow_models.py": {
+      "git_blob": "9e27b2056d2c44a91fec850f95b603216db35eee",
+      "sha256": "49d8ed986df0094b4d534633f1ad3e2227ea9331f404ca304a077c16ed346ebc"
+    },
+    "src/kctx/semantics/workflow_reference.py": {
+      "git_blob": "c5a5d0c72d2c22ae05a397dafe5e92609e915ac0",
+      "sha256": "93ae4117fb2a79a8597d4151f6ec02391a9ca65437dec759f8a14212d46fcae0"
+    },
+    "src/kctx/semantics/workflow_wire.py": {
+      "git_blob": "c385d65575f5311a6c305f0b171ca83291e4b5a1",
+      "sha256": "f5ff3bc1606134d8acffd54d840ed697a57e82dba279c4edbd8144bb4ece06dd"
+    },
+    "src/kctx/services/__init__.py": {
+      "git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "src/kctx/services/admission_changes.py": {
+      "git_blob": "f33eeda1ec02c4d6a6eca4cba1cacb06b78c0e4d",
+      "sha256": "1302417c67ef1dcb6681f639014e10b9dcc5497d7a3e9fdd10d3ae5e27d43ba2"
+    },
+    "src/kctx/services/admission_judgments.py": {
+      "git_blob": "6236faed53cbf7cb35c550946fccb8d74203baca",
+      "sha256": "ca2558f9960c3377a3f19266148fc9bedee6ee299b333c939e3f5de91e1f11a7"
+    },
+    "src/kctx/services/admission_state.py": {
+      "git_blob": "dde3154260715312bfe2e816d8e23685495e5509",
+      "sha256": "0588e2ed8d951b09532bf7cb39650fc72103001b09579989df3c0f8af291cd0a"
+    },
+    "src/kctx/services/admit.py": {
+      "git_blob": "990a7c489abfac08dbc503a49d25d24ce7a14c5d",
+      "sha256": "c22d57c7ae716fa7c59c110000c56298c4c519f8d41ebe6cd4f700e8f1f67bd7"
+    },
+    "src/kctx/services/backlinks.py": {
+      "git_blob": "2df62e174df7caf39239f365115c376ec42a2470",
+      "sha256": "7cd0789d3f116e87692d872408a054a9ba2a2058fd0248c09ed3af0d66479bbe"
+    },
+    "src/kctx/services/citation_refresh.py": {
+      "git_blob": "905acdf886b984089395247151fc9b1a671cdb2a",
+      "sha256": "854ef394dc14b6cbc461c4eb1773e2ed1fbfa3cb65465c089a5e4ce4fe79937e"
+    },
+    "src/kctx/services/context.py": {
+      "git_blob": "16894146a644417ad3e0437e60be504b09ae1b1f",
+      "sha256": "0e7859012af5b9432788292bea8acfe91a89abf3c111bbcbbb9928a0116dffe4"
+    },
+    "src/kctx/services/corrections.py": {
+      "git_blob": "fbc157555fce5df1d771324d563b1bc4062b0462",
+      "sha256": "0d7dbe8f0dfaebe153c547f2413cd336f9ee23557d2c5adce815dfe0107a8c7d"
+    },
+    "src/kctx/services/diff_citations.py": {
+      "git_blob": "6365da355cdc6a7e5526d3f9399ed53330e11133",
+      "sha256": "62d862227ff21f7f9f4a54963aac80b52b3a49efc0bc8f24281f47492d4f624e"
+    },
+    "src/kctx/services/diff_impact.py": {
+      "git_blob": "4733382e294328d38678f2168a6d6b0936594eea",
+      "sha256": "41a833fb0f2744051bfe6f101b8fbff2f097983fbb5635363280c627fb0eebd6"
+    },
+    "src/kctx/services/discovery.py": {
+      "git_blob": "b6afb37236bcda15fbb398eef05aaa72d13e00c3",
+      "sha256": "533255cbcbb68815a5b12fd128dd8753eda9a1652f5b0a7e1658d99beaf0c7a6"
+    },
+    "src/kctx/services/dossiers.py": {
+      "git_blob": "cf6f783d65b06cccb02e6e2871190581a738a4fe",
+      "sha256": "3fa2ad25a1e80593f3f85ca1dedac46cc7aaaa85b7de8c45700c87e0c5e385fd"
+    },
+    "src/kctx/services/freshness.py": {
+      "git_blob": "4ac7bd31324413cd0780bd3ab91d2ae4c62b7470",
+      "sha256": "193e0138827770bb696373c2d8f784ad979d6496124210e4780c9d274f195af9"
+    },
+    "src/kctx/services/gates.py": {
+      "git_blob": "4a36aa95b081a1e0873da4298813f70eaca7d2cc",
+      "sha256": "50e27ebfcd5c1e670ba79ecdcd0779ad7f2cbd5f373fc969a89e689526d1e58f"
+    },
+    "src/kctx/services/inventory.py": {
+      "git_blob": "8ae3ee28d401fb2f118249ddd755c8cfe7fa9b2e",
+      "sha256": "dc1a42d13e9d17ddba409e5459a939a12c33208296bb22a3713264b84a12a957"
+    },
+    "src/kctx/services/investigations.py": {
+      "git_blob": "14883a347528e66dfd6401aa549596e2dc95bc92",
+      "sha256": "423f9afad91fb2664c9be6215175fee5f207df0e634f91c0fc39a19c17b4d899"
+    },
+    "src/kctx/services/knowledge.py": {
+      "git_blob": "f02a87a3c74e074f830ee95eea9535092fc72dec",
+      "sha256": "769a94b282bab1362c5d28ba7bc59228d3d0d208193dbf82755de51c6e68b2a4"
+    },
+    "src/kctx/services/knowledge_migration.py": {
+      "git_blob": "b7d2170db758684bdaaaea02f9ac9b54a9c6bdbd",
+      "sha256": "994c37407e4ee81fa19fb7bfd56bd35594f783460ce952c64abd5a74a6f9abb4"
+    },
+    "src/kctx/services/knowledge_models.py": {
+      "git_blob": "da2bd0ca89233d15f7266a67db1ddb906d6496e5",
+      "sha256": "b638905d4a92cd6eb04385f5413de0b63b613691a4cef68597bdda6b8388bad5"
+    },
+    "src/kctx/services/ktlo.py": {
+      "git_blob": "44f837c8d380f0b365ba7451843c21530adca845",
+      "sha256": "97ffc3e0dafc8ad3ce0fa9b4862ba650a7fbd8dd5e39e054c31c42f14c248c58"
+    },
+    "src/kctx/services/proposal_mutation.py": {
+      "git_blob": "2326224024e001cc0f4e939fea1a8e3e008b07a8",
+      "sha256": "a969099afb4792e5359f69a09bbbc7163f5972c7c1898d11d3946bf2d9d16ff8"
+    },
+    "src/kctx/services/proposal_targets.py": {
+      "git_blob": "36610a9bf10b20c80bc582f7c88c776e0fd0a348",
+      "sha256": "bade9db38f5946bb701c846e7b668fd2e29673d5f03227d8db57dd7286f922ba"
+    },
+    "src/kctx/services/proposals.py": {
+      "git_blob": "4d10aed2ce692b10c2bd61a2ea20d548cead00b8",
+      "sha256": "b72b485195e4fb99c44fc9ca5198eca9a377ef95e0fafeb784cb8c11077786fe"
+    },
+    "src/kctx/services/run_inputs.py": {
+      "git_blob": "c19ebd7d8822b9186c5362c3a025cdb967d7198d",
+      "sha256": "e5ea603f44cbc2988c4607d78ab74c2019f988ce88e50062f4a79d470e6d740c"
+    },
+    "src/kctx/services/run_provenance.py": {
+      "git_blob": "913d97a7ba49886941ab2405c7ec496cccf8bdcb",
+      "sha256": "948ac2fc2fde2c9a344003d24fece6361e9748636c6ae7d08aa10e61f2fce018"
+    },
+    "src/kctx/services/runs.py": {
+      "git_blob": "b1fae5df5133e2b6433a79f0deb00133f55e9658",
+      "sha256": "39240140f00080ca5e81e37711be6f4aa9c1bb4c7fbc0ed321d127aa46bd1b05"
+    },
+    "src/kctx/services/signatures.py": {
+      "git_blob": "adf26e5dba80765e10232bc76843e1f24f3eff2c",
+      "sha256": "36e884f111dc94369e6eb088eb7addbf0aadd7a07afbc5fceed17782d8896484"
+    },
+    "src/kctx/services/validate.py": {
+      "git_blob": "cad9fb40c30517c16ecf79bfe6a4a92fb597f672",
+      "sha256": "fab12471ed26c9ba1f6c21702f868d80ce1c82a0657f0095b39b79b767a89ee3"
+    },
+    "src/kctx/services/validation_common.py": {
+      "git_blob": "7c8c17d463cffe7e5fa8fea3ed8f91dddbebd98c",
+      "sha256": "49b65ab646a21506efe792087ee5c5539420b39ae2cd72c15b96a36bd5443079"
+    },
+    "src/kctx/services/validation_corrections.py": {
+      "git_blob": "5613c142a607a41965792c64c8cb41397d7bf1d2",
+      "sha256": "f9046b40db3831e46b614eeb24b40a4d90f92f87945d472d9990ed5573a790c8"
+    },
+    "src/kctx/services/validation_documents.py": {
+      "git_blob": "f2ade777664d9624638db4f7da31503aefd796a0",
+      "sha256": "2539b91cf12712b8fee018b72bea6ddd98500532356d6827a487a3b551079bcb"
+    },
+    "src/kctx/services/validation_incidents.py": {
+      "git_blob": "0da7d0c020d7d2e9076596dfdd283c5551d51d13",
+      "sha256": "7c4287700c40558a0dbce365b72629764799bc95604961511cd67b32384275a8"
+    },
+    "src/kctx/services/validation_inventory.py": {
+      "git_blob": "ee90e8bc9e133b1b0512ca45f34e8353ac13d153",
+      "sha256": "4a9bb97fbc7cf89f5b2ce479fcd3fd0d11448bdf1c28f534073e41acab46d6b1"
+    },
+    "src/kctx/services/validation_proposals.py": {
+      "git_blob": "01dd56f3a0ec04ae88910045ccc521395c4ad2f6",
+      "sha256": "e37c73d1196cecdefe1615948944d327350f762cd1ec69527d7e8a2d23d1470d"
+    },
+    "test-report.json": {
+      "git_blob": "1a99936d2c35190cce4573d7cdcba5acf5f4c8cd",
+      "sha256": "9a1982adcdd760697da5fc3ac4cfc09cf1d415ddac12422895e6c95f977d03d1"
+    },
+    "tests/_base.py": {
+      "git_blob": "c35394985da1047ff1760218f65026a10a239a56",
+      "sha256": "5030df3b6e09105453d1b1144959b4a7e01abec468b45b3eee3c49f9dd5f90bf"
+    },
+    "tests/_config_state.py": {
+      "git_blob": "44590a00c690b04f1da7367b28fc60b92f6574b6",
+      "sha256": "eefa9f8f09ff0d023c1b52a92e87bef4c3bde1e356d7412688dcbd73baa96550"
+    },
+    "tests/conformance/cases.jsonl": {
+      "git_blob": "fc607540b3c5a8eb6a005b70b0c8db2e7cc00cea",
+      "sha256": "0a4955c3738942607469374f4bc805afc2080f68cfb1c39646b6a16b65342cad"
+    },
+    "tests/conformance/workflow-v3-boundaries.jsonl": {
+      "git_blob": "2b27741552b538aaa0cf07e836378785ba84d998",
+      "sha256": "52591717bc061666b85494d2097c55c47c36d9c453b775996f46fc7aa5d20ff1"
+    },
+    "tests/conformance/workflow-v3.jsonl": {
+      "git_blob": "7350ebe5967975d3579d1c42b50a785890688107",
+      "sha256": "216f786df3dad57fa40529ae37ca6e16fa66d9a25ebc8485e2ce5e19b45c6d7f"
+    },
+    "tests/semantics/__init__.py": {
+      "git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "tests/semantics/examples.py": {
+      "git_blob": "acd11187e64dee51401bfa38e621718ac3608ae3",
+      "sha256": "471758a3d412b92e31e527322bfbd602b6b474cf32d12facba63416226189def"
+    },
+    "tests/semantics/test_conformance_runner.py": {
+      "git_blob": "be4995bbd47f2734506926f0c77478517b3b9fd7",
+      "sha256": "013aa1e4388563aa71adf2734d3d972aed7d61f972997da615cb11c3e1dee1c1"
+    },
+    "tests/semantics/test_core.py": {
+      "git_blob": "a770f0a92a4a658a1b5da2c90e8f262faa84c247",
+      "sha256": "01d8c71a26b824014430570b59092c64c668be1aa3333cdeb21b8e8648456a9d"
+    },
+    "tests/test_admit.py": {
+      "git_blob": "d1a9e1b86f5c32fc90f37f5833cb3439781023b9",
+      "sha256": "f3fb142b7359f2d057dd89568255011f8ad82e736df5bda939feca810fe50653"
+    },
+    "tests/test_authored_design.py": {
+      "git_blob": "423974a175d72ea6ff033bcb1567af49a1e296ac",
+      "sha256": "0a584222289d8871970ca1f2a764db555bd7ef5a3711eb925a72b0d3278961d9"
+    },
+    "tests/test_authored_design_cli.py": {
+      "git_blob": "bbf71cc6e600e2f2fe41266fb7de7e93e4fe47da",
+      "sha256": "5d48311ebac752fc6043548a0a7c598cbc93f1b68e6195d54c6d76bd70756684"
+    },
+    "tests/test_citation_cli.py": {
+      "git_blob": "2e6b602515a299b362042263d9fa2b6a7cd679a3",
+      "sha256": "af331565a1db6c1c00bcfb9e7aa69a9bdbdd8493f230c293afca45f82498bcce"
+    },
+    "tests/test_citation_redaction.py": {
+      "git_blob": "e840d1ba2dba7e98770484b4c3881ca3f998615b",
+      "sha256": "6d6e5eaf1f825a360ce3157ee3b4b726ed9f9c76b009dd9d0d203f8977247b99"
+    },
+    "tests/test_citation_rendering.py": {
+      "git_blob": "f43f5d213b8cb1891cd34858076cbfea05d71186",
+      "sha256": "ca3f609baf99af10a4855f445b3d8a22e3b1214ae52ccab51fa4484ee1b58069"
+    },
+    "tests/test_citation_scan.py": {
+      "git_blob": "c3ddcde3a76cf2d0bd8d56a310ce0c92c30c686a",
+      "sha256": "0e85248f55d8dd467c0e2991b010a3fad863f7c6462a6e613f7c8229d0b95ac2"
+    },
+    "tests/test_citation_sources.py": {
+      "git_blob": "0febab289ce8c63e93b49fcb3da83b76e1828150",
+      "sha256": "fea30a8010f2c90ae0a886381a4a5dbb53a8aefaf0d273d727338b7140672360"
+    },
+    "tests/test_citation_syntax.py": {
+      "git_blob": "7de162ec371230d02dbe0e3e38e33324d3ebe580",
+      "sha256": "ae1e9745c1d5d08b4c08ad713d0d7a7bc9058f5328576c57446ed2e7432a76ce"
+    },
+    "tests/test_cli_commands.py": {
+      "git_blob": "ba13ce424609378ac1d715a1b18b4034d29a2006",
+      "sha256": "cc721bab457598c2a65770049c1f7b4585e36319d6a410fd332cf1578d9a2111"
+    },
+    "tests/test_cli_logs.py": {
+      "git_blob": "0175251114edbbe10be8ef5d8a78aa179dc0f44c",
+      "sha256": "f2bc01fbde45ad3f1c48dfa1b1e82c0b4baf569a90f2b432d57da9f918e2c838"
+    },
+    "tests/test_cli_presentation.py": {
+      "git_blob": "81cef5d96e5082e02ba400125651c378177ec9e4",
+      "sha256": "5a2f5ae629be496bfd88d7ef99f5be70a99b0331d93b5e372ada62d89d358957"
+    },
+    "tests/test_config.py": {
+      "git_blob": "febc5d4c36810c8b42ccee15cdc9b9754f820568",
+      "sha256": "0874f0ceaf74a2a7b890b7c4335cc29e5e1f89fff5e67dd14f84e54d4b5191c3"
+    },
+    "tests/test_contained_citations.py": {
+      "git_blob": "aed33760835fbdc58997b6ae9455f2a24db74c62",
+      "sha256": "f1a0db41c3a4a6c13b5af7125a9dabc23fc40bf489cb0767007311c4f6506dc9"
+    },
+    "tests/test_corrections.py": {
+      "git_blob": "522ce058b5197a131e22b1752ae3453fd352ea36",
+      "sha256": "d345530b149983389f0128d3bf04c37a4797e008134ef7217572f264b2c9f985"
+    },
+    "tests/test_diff_impact.py": {
+      "git_blob": "b9c08f9839a27e156a0c9be8597d0c08f9dcc110",
+      "sha256": "ca9f204abe8eb8254098484223038390abd9ed87f2ecdbcc70d749481e713ad3"
+    },
+    "tests/test_diff_inputs.py": {
+      "git_blob": "81bfbf7f6c754f911bdb572bc703036074d34e1a",
+      "sha256": "9c8f372429a7a26cb7329340d7be4cdacd78b7577e55981fb49400f1fc8c1eb5"
+    },
+    "tests/test_documents.py": {
+      "git_blob": "c9509a25d25b737256990395c3f2c07c7f97ebfd",
+      "sha256": "c5c73d2a23e25cfb655f92485d0c3bf971bf7bedb156bd937ec9cbff5674994a"
+    },
+    "tests/test_dolt_read_session.py": {
+      "git_blob": "728240fc9e604160cfeaa00faedc0e10f148d06c",
+      "sha256": "fe7a1d655851d01ea23e59ba28f16897969d3ff9a4b37a15bf59db58d8d43ad1"
+    },
+    "tests/test_domain_ids.py": {
+      "git_blob": "07a6e93a1052f34fc3c90cd42baa51297bb3b436",
+      "sha256": "08fbbaaabc929ba3973a40b748e2c81a0396e068f225e94f26297b0fc507d240"
+    },
+    "tests/test_domain_targets.py": {
+      "git_blob": "9b7af8f47b259cf67c485a0b9164937b0686d825",
+      "sha256": "51ebea194d888ac8576c34440ecad96d50e2bc803e80e810d43c1e0b07d3b6a5"
+    },
+    "tests/test_dossiers.py": {
+      "git_blob": "aeb0c2c5d8970779607713d5ea9833f2a20511de",
+      "sha256": "06760c054ef28ebaca14a3c94b73af4ced91bc322ab8d7fc12619ccbac4f7117"
+    },
+    "tests/test_engine_protocol.py": {
+      "git_blob": "36810331eb39e198adedc30ba6fde43153389c88",
+      "sha256": "7f257c1619d8d7132f7eb128d5027b871859f1d07f86916e7b3de07f38da9e2b"
+    },
+    "tests/test_gates.py": {
+      "git_blob": "ef80799bd8a5145437bab1c6db648f9b87e88564",
+      "sha256": "26475a3abfe63939c483059b98e92131a4c980766717598d6ffa919f9b451842"
+    },
+    "tests/test_gates_rev.py": {
+      "git_blob": "f6b36a5979346d5e7ac9ff3e091440862d1425c9",
+      "sha256": "f9886a29ec99b399e75a4062d68a17b6f1b45e36e5739b8a30a677b8c132778f"
+    },
+    "tests/test_graph_dolt_store.py": {
+      "git_blob": "ea5c3d42ec4286c519349c1da4c9a9e51e9ef5d7",
+      "sha256": "a3c50ff3a08562bab82400ff4b8b75312874329bfc96d02d1b7aa734a444d671"
+    },
+    "tests/test_graph_extract.py": {
+      "git_blob": "bb4cadcf9b227e8771a383771c2709f1b5db878b",
+      "sha256": "1acd8445c33e75a10a22b29a15f5f32ee70fe2105411a5defb5b1d429e9b0edc"
+    },
+    "tests/test_graph_identity.py": {
+      "git_blob": "43a0f3f7f1b09fe87d8f059bea67035f781835e4",
+      "sha256": "5c470bfdfaac59912755690df83fcd21284d9322f26d5797c4b858ac4a79c965"
+    },
+    "tests/test_graph_inputs.py": {
+      "git_blob": "f41a2750250aeb1dd21cd232b10bb539d5f30845",
+      "sha256": "13565699179dc51f65fd28987add68a2967dbb93b34bc1ab8127875dc0ebd88f"
+    },
+    "tests/test_graph_integration.py": {
+      "git_blob": "370da3cc005494fbc09ae66652b028288ba5e53d",
+      "sha256": "b531d3885422d25a63068736c9593856766ff070d8e1515289e91acd73105764"
+    },
+    "tests/test_graph_models.py": {
+      "git_blob": "4d8c51d4064b67917f9a3e75f0784a0d455a18cf",
+      "sha256": "221992c9a6860cd99bda03afae4ecf016fc5d74845a3c4669512072d2df79bf8"
+    },
+    "tests/test_graph_parity.py": {
+      "git_blob": "cd1c1d54ee28fa0bc31358f1091904f64c5aacdf",
+      "sha256": "ebf78008871c8abbf875bbf13b5f6ae42b3822cd33b7b10790e77b1453f9dd49"
+    },
+    "tests/test_graph_query_session.py": {
+      "git_blob": "d7da58029b209a064fe409cb7be5faed5fbb2d76",
+      "sha256": "1962cab462c2b014adb457098447970ee4a2fe79cf96370fb35356e956c773e7"
+    },
+    "tests/test_graph_quoting.py": {
+      "git_blob": "f8ccbe630fccc6d759aaddce7d746127d0642bdc",
+      "sha256": "e6ee1e2f410091caa3fa0a6c90971255c6cc33f43f763bd97068487baeaf5e5c"
+    },
+    "tests/test_graph_recovery.py": {
+      "git_blob": "60e0efe17f1daa600c758acc99ab1f6d6bdb0d82",
+      "sha256": "c818f9bf12f5da84eaa5d0ce73d70498d5b79f95b5192404ec657dc4d3dc95e8"
+    },
+    "tests/test_graph_render.py": {
+      "git_blob": "8481e5ad3003fd071fedf29dd43bff33e3181bbd",
+      "sha256": "c467596c2717fbfd093382feb1bdb48d95ec5a3ff03c0a869afa6492295e643e"
+    },
+    "tests/test_inventory.py": {
+      "git_blob": "ea9e00a66b01615103c5874820f41e6aba81fc49",
+      "sha256": "f3b54c0bc9e2dc3fdf533e8e59772552018397eba8e4748f0a2ec2e6f67d2e7e"
+    },
+    "tests/test_investigations.py": {
+      "git_blob": "57eb1fce7756dbb1db9ddc9ac92495f6f1a738b3",
+      "sha256": "5c87322c79b701d17e43f651a1124fbb49de7023d18b715ca66f74807fb4a765"
+    },
+    "tests/test_knowledge.py": {
+      "git_blob": "1c6dad76cfea8060101122ca319c49584726044b",
+      "sha256": "3c321b76a71945c83db6797c4ab6dcac5c91e939c52a4d9db67e75f4ca2a9cf2"
+    },
+    "tests/test_knowledge_boundaries.py": {
+      "git_blob": "ef59a8147ad50ec33afe0a5d7b2dfe709c932676",
+      "sha256": "88ca2a707a33706ab5dc59f57b82fe83371a4b517d3779a726a1c94bf31fe662"
+    },
+    "tests/test_knowledge_portfolio.py": {
+      "git_blob": "b5b6deaefd84790561e90ed0fd0718d621825d0d",
+      "sha256": "5aa4b05d650438fc9547911b45bb7a8783587a21991034ba02f3f9410f482d9b"
+    },
+    "tests/test_ktlo.py": {
+      "git_blob": "8c9c4c2d23d4f605da41a2ddad5f784cca0efb15",
+      "sha256": "17e650312b371b2e884e254f7d216f4a0eb2a09f2aae2cd9c1e830fd4abf1d79"
+    },
+    "tests/test_nav.py": {
+      "git_blob": "2df5cdced05ae1e6534539be6871ca5193ecee68",
+      "sha256": "16a291d5cbf56b87c0f344c4c02f65f14448c169707bb7f3acbaf8f0554d7711"
+    },
+    "tests/test_observation_quality.py": {
+      "git_blob": "23db05881e0e3457c1655f75bcf60636d5da5165",
+      "sha256": "f614494aeb887d70bae0be54c60a4131dd25d3a84a99b19f072c3797e020fc2d"
+    },
+    "tests/test_proposal_boundaries.py": {
+      "git_blob": "5405de00f8ddd552b50dee14ea7e6f84e6518e16",
+      "sha256": "f477b295b53fd3d1c816e2048e47dbe197628b3ecd52fe1e7793e3e4edadb640"
+    },
+    "tests/test_proposal_targets.py": {
+      "git_blob": "70a0ac9d358980153d26eb629a7568b4886709fe",
+      "sha256": "66379066786fa1aeb06dd5505a88e218fe12fd53a6f8043416fff7792addfd0a"
+    },
+    "tests/test_proposals.py": {
+      "git_blob": "797be0aa579c0f8e27180fe0c36f9ad6714618d9",
+      "sha256": "fe50e9946cb9cf05dd3093169358257c1c79f9789e5099a8afad83af37f831ca"
+    },
+    "tests/test_qualification_protocol.py": {
+      "git_blob": "d3f3ca7a7381527b7761e39a9c87787212990eba",
+      "sha256": "eb2fde78b290753a0155d1b6b410b239e5aaabd21bfa6d53cc0012bc83df027e"
+    },
+    "tests/test_reader_tolerance.py": {
+      "git_blob": "87383ec4eb9c734c2ecfbe864a322057f1f92b26",
+      "sha256": "1365ef5ca20270da9d676a83990c7090ccc8fe10051d51c1bce45902c914c8d2"
+    },
+    "tests/test_record_codecs.py": {
+      "git_blob": "625b4ba8b6b0ce7d6d1c7833b5cdb048e563e422",
+      "sha256": "002ff8cc5ffc05bf6c270213a8cf18717b97b7e0701a51bc782f15258d23c8ce"
+    },
+    "tests/test_redaction.py": {
+      "git_blob": "3478564185f443bd6b3d785f9c848e8b9c3008c9",
+      "sha256": "e376d32e99d15ee8526168b50c3764c0e20883674809008c4f596d1376785238"
+    },
+    "tests/test_runs.py": {
+      "git_blob": "69f5ca390e65bb21bb92cdfea707f09746a4776e",
+      "sha256": "d69e088af0e51d2850f10cb4879fb3ab90cd377f6398e9e92667bc245139dfdf"
+    },
+    "tests/test_signatures.py": {
+      "git_blob": "bfb5e55f8b8560b8e1a71ceb467a9b26a2aed556",
+      "sha256": "b37b53619e51836f5ee499995e071d289ef073f62952d6aa6a268d8126ffe7a0"
+    },
+    "tests/test_storage_publication.py": {
+      "git_blob": "269be47805beb3d1e439fedc51959b4a3002c8f6",
+      "sha256": "8cee49a26f23b2c5eb4cc58c4ce445e9f6ddfa38e0d63bc3106d2f33130b7743"
+    },
+    "tests/test_storage_ttl.py": {
+      "git_blob": "61caad231fa5655bd11a0e7e70f677915682aa2c",
+      "sha256": "aa67084247234069610e4ebaf843b6ab38e0cd8d5c5a736a437a1552f6f53da9"
+    },
+    "tests/test_validate.py": {
+      "git_blob": "cb1175d55b716a5bd68b87af25a86b9a2db06dab",
+      "sha256": "adb2d49d9aa65681bc8ef7a81592fede83e3a51ba4e3a19547eabb85dd939a53"
+    },
+    "tests/typing/invalid_ids.py": {
+      "git_blob": "e36eb88fc601bd92136ee830c4676b39ab8d05fa",
+      "sha256": "40db9a34de253b21afb6b2ce67ba7dd4ebd514c63a7e949ebff3a9ab3a9b0911"
+    },
+    "tests/typing/valid_ids.py": {
+      "git_blob": "caf7353342aae55b1453a5ecd8f7d8fab3969d20",
+      "sha256": "260622c58542a11378952a2a4a2dd1fda2f7a2f7f4528dadaab782ad9d188015"
+    },
+    "uv.lock": {
+      "git_blob": "7be53ff33a6cf3aaf64d996d607307f94b491b13",
+      "sha256": "d3468bd2037aec12848226ceac76cbe7dcb68f0c453829c384f3f8f46679e371"
+    }
+  },
+  "evidence_limits": [
+    "The retained test report records aggregate counts, not 740 individual result rows.",
+    "Historical temporary native smoke harnesses were not retained.",
+    "No Rust, Verus, TLC, TLAPS, Lean, test, build or native tools are executed by reconciliation."
+  ],
+  "handover_files": {
+    "handover/AGENT_START_HERE.md": "e5d18a1468e77aaa4beba1857de6afdab0934de06fcc6f992349b796fd33c70b",
+    "handover/README.md": "5ecf4e5579741aa6d863a73d8eacef038779352adab3a2c687e4a8a37a87f4eb",
+    "handover/brand/branding.toml": "936c97fcc6cceeb00646b909ba747a37506c6a2640c9d254fda6c3b49414e965",
+    "handover/brand/favicon.png": "732e070aadc3b02795d77c4ab76d6f69f4d5d2bebe6a552f57a12e9fe0b63954",
+    "handover/brand/favicon.svg": "09df37a9c7184b1427d4cb3dbb79f1df483d24aa8d3de33c50509f5f79440c7c",
+    "handover/brand/writfold-icon-dark.png": "edaa8a560dad95ef5287c3c4f6db89885b3b546f36a79c1ab6e0cef324d78eb2",
+    "handover/brand/writfold-icon-dark.svg": "3e3b3a02ec657022033886191173e3d952fd17a6688d1cc30f99e4ba67cb80f5",
+    "handover/brand/writfold-icon-mono.svg": "30e6ac71eb7a94fe0ddec70e63591302de4bc5eec44b24d785db8dc2cf734f2a",
+    "handover/brand/writfold-icon.png": "89ef7ea9d4e9675675f78d88bf2b05a8a49a765511f960a80d7d599a21ab9162",
+    "handover/brand/writfold-icon.svg": "8fcfb53dbed16fc8239657eaa5577f5afefdba7388642d48107f2a7027553fee",
+    "handover/diagrams/P00.mmd": "fd165be703d12eaa3cf51c351b332829f7d12b2c57986bcc921b42bf253a630f",
+    "handover/diagrams/P00.png": "092991b1784d25993baa07d03fa882d24e14f7ddcf302a6c8fa88c4b987fb810",
+    "handover/diagrams/P00.svg": "e0cde36f57d56cadb88fe7c7af7ef72078ab8b385994828fb0561f7dd9a29db5",
+    "handover/diagrams/P01.mmd": "b3ecf52b9c77c5f8728c5d967d61804342ac69e88195b4f27e893703d0739d4b",
+    "handover/diagrams/P01.png": "9825021659599f96c1436603c5383547160bfea452325251b202b9d6d33f537f",
+    "handover/diagrams/P01.svg": "39798ac8a68d93d1a06c98c64623e5b2bd465c6377579d7cc7358f864ac79024",
+    "handover/diagrams/P02.mmd": "34b2ea3d2e37ed7fd642f72c124a5971693b165db9c3aa0cf44ff4f65e07a257",
+    "handover/diagrams/P02.png": "21fb7c305e538bdda37f3c210e1bfe3222447c34496490218c2034b1a3bd71dd",
+    "handover/diagrams/P02.svg": "665988cfa0c7196bbc407442a1f86320a48900577d4ea7f2c034b8a1e91d3193",
+    "handover/diagrams/P03.mmd": "3ed846b1937e784fb06aec237e926d48ba9d9cf18fae7f7256ab7945d3639bbe",
+    "handover/diagrams/P03.png": "29c0262af0263d33a0169e2debf15544cdb2bc1412032232373098b57435a5bf",
+    "handover/diagrams/P03.svg": "a72e7116c1ac3faaae97aa2d10f1ef01d3c13bfb3bf2beaa3cf5b264d147bd3f",
+    "handover/diagrams/P03P.mmd": "dcabd11d3eee20430ba6bd5fb192ae5da8289ae770c802c9f8ba6e8524d0106c",
+    "handover/diagrams/P03P.png": "76eab5c421ddb5fd0f144be4acfe7e06038d948cf381417d34e318a59c0ab923",
+    "handover/diagrams/P03P.svg": "10c9b85b56ad3751ed212573e5545395de84f45e7478029cdc914dcfe1f6ed8b",
+    "handover/diagrams/P04.mmd": "786490add816332bc3350ec4abe8bff94bd89b28ccbd8aa48767ba0ba4d69af0",
+    "handover/diagrams/P04.png": "d34604dbd06076b75fc6da668a855f9fad098208f2d4760d62ebcde2525cf0c7",
+    "handover/diagrams/P04.svg": "d251da6f99c360b14d5addd49265751b79093254d70a99439eb326eb0b935246",
+    "handover/diagrams/P05.mmd": "460caad85a5895828345633b0d04b9a77ae8458c1adf0300e83d05dd34f41548",
+    "handover/diagrams/P05.png": "c293938254c8cc26e22220a8e6d5177f206311198cffc3c98c5a9be4b2bfb658",
+    "handover/diagrams/P05.svg": "8a973d992fefb4a8fb180c83b23ef005f7aa7f4b8810970afa0e8f32da8fdb36",
+    "handover/diagrams/P06.mmd": "8cbff51298c3c6dad81c24182fdbdf91766472c46a73a1b236db79d5cb827428",
+    "handover/diagrams/P06.png": "17d20f52c886374bd7a0e6586be9ee7344a56e3b60b0f51fe7509e2b68de6fb2",
+    "handover/diagrams/P06.svg": "8b5739b88edd05f60e31b9f48021a49976cfd8fdc41a7f5f0cb7ea5d53b1516a",
+    "handover/diagrams/P07.mmd": "cd6b5e7bf0bea03cc673847b406a31ff7e2eaf9f5a1abf863950ba2dd605ae3a",
+    "handover/diagrams/P07.png": "77b81b85fa2446fa9adfee763099be2a0ae652e6d06a3e911ee4aecf184eeb96",
+    "handover/diagrams/P07.svg": "d7acc6987106de93918cd02fe55e7d3c0c5883b1535ae2d1d860bf80efff40b4",
+    "handover/diagrams/P08.mmd": "f12cdf88b499b978e54b778bf0b429dfbce2b9cfa2884e72cbc28db4e803f4e6",
+    "handover/diagrams/P08.png": "e1e4eb13ef440e25a7092fbe57cdcfaac88bcab6f2d660cea07d1acad38dfede",
+    "handover/diagrams/P08.svg": "7f257063d7f20348252adcad961c9821d5e27c95bd92747c01da62d29c9c8fd4",
+    "handover/diagrams/P08D.mmd": "63eee8eb42dac5d252e576a79dc35c126213359afa75c0fd251e2fa0a89446ca",
+    "handover/diagrams/P08D.png": "9b5fec13492847550c70e49245a8d2fad719f2f21bb1465fdd3e47f9f2f6ec44",
+    "handover/diagrams/P08D.svg": "5ac68460f20aeb7f10732a6a06a0984ceb998037445d798c2ad53182a294a920",
+    "handover/diagrams/P08S.mmd": "6f000cb23da02fabace0ea8049040cb7ae97c79fc0882ee319f1515debab8e16",
+    "handover/diagrams/P08S.png": "5c639adfd55116425156c2c83f207b993c442fcb5d87d2294f66594971b1acda",
+    "handover/diagrams/P08S.svg": "d9fba7810b30ff7e4608f3c6db279d931f9c791f246ddcf8ec5b26f97a5a0150",
+    "handover/diagrams/P09.mmd": "a5ccd4256cca407b07986ae849c616a172b0004d40ef12c509143897a7ee9dc3",
+    "handover/diagrams/P09.png": "e924b205bd1a797f9c1de3dd046c6fc90a5892a1b67004673811d6d71f4f54ec",
+    "handover/diagrams/P09.svg": "225460d3f7c78dcdc110ee09b486da2c78528579e72d7765b594ffeae2954e95",
+    "handover/diagrams/P10.mmd": "f9e8130b8b0e4648ed9025690d49ff13fec330ea00b1fa2d54477d173a18e0af",
+    "handover/diagrams/P10.png": "0a73e0bef51adda78e84d6817eb43ed989f4b7c61f4d75de3b2546e15164618d",
+    "handover/diagrams/P10.svg": "6a4ded4982342badb6fec6b5f675312065121d4b74b9afec5625d75fc4fd9f39",
+    "handover/diagrams/P11.mmd": "7ec6f59b2bdd78ba2681c8b3f9212f478d95043b92b41269cd005cef8c25353d",
+    "handover/diagrams/P11.png": "ae63da52b6abe3213007d92cb78fb58733b830b9326064fc4e07fa55b5629390",
+    "handover/diagrams/P11.svg": "e97838b7690e0cdd9cfa173114fd79c64a811af3910939f1c4cf733217a05506",
+    "handover/diagrams/P12.mmd": "24803bf514c555cd0e8a9786a62de4ad95b4ee1d777714c435080cad63895921",
+    "handover/diagrams/P12.png": "330aa4088bd14013dd402b06a9a51aa51801fcf060b7776f39bb7f001639e93f",
+    "handover/diagrams/P12.svg": "097d45663b5f3ee82967bfedee6cc9fafc27ca7ca558c5901b2fe8fbbb610334",
+    "handover/diagrams/P13.mmd": "a879d4c96e44d0df53e1e092117e142e3e837d5c224be78ac2e67185ed32e2a7",
+    "handover/diagrams/P13.png": "07e786b6571b50e873d6cd879eaa5547c7f90dd9803449b84bd0c546f92bf71e",
+    "handover/diagrams/P13.svg": "2910f857f6fb38a371232232a44b4d4fd6a5a5ce7f4ce7110df3ceef5c16da11",
+    "handover/diagrams/SYSTEM.png": "1aab1e80fdd0940f91571e39f6db7c832108965a989c8cc233b009b9673164ee",
+    "handover/diagrams/SYSTEM.svg": "03cec1ae344a0d1f9e136588d3a42fb12f2c24a57157d65a4a71a9d11c91e29c",
+    "handover/evidence/atlas-build.json": "7860801760acc51a802c9a148593d5fd790300bfe983be23e7ce406ac4f837ba",
+    "handover/evidence/atlas-review.json": "6380e4863ab9a55d9eb060e3996f272715ccbdebab58ed52d34388aa8cdd7265",
+    "handover/evidence/baseline-3134c8c/baseline-digests.json": "45b16c4c6cbcef03103e9b6b98954714a7e7f1286d922e0b691feb6a7ac50b27",
+    "handover/evidence/baseline-3134c8c/behavior.json": "7ff39e4d23293e24be629aadad51e2c04405d2dd76d8d88884d295bb31988c26",
+    "handover/evidence/baseline-3134c8c/diagnose_native.py": "aade134b66c996895accb4df9fca5b3aa5f750537405e8e8a8e5fd80cf32d961",
+    "handover/evidence/baseline-3134c8c/name-checks.json": "f3b44de79a77b1c4ca6be57636be834b0e22b2c0abb0f1edd778de6108ed9abc",
+    "handover/evidence/baseline-3134c8c/name-namespace-checks.json": "0ca84c5aedc7f54d3c848ac71fa256ee926bf28952505b5429798e7307950615",
+    "handover/evidence/baseline-3134c8c/native-diagnostic.log": "3d2e482cdf2e9a1ae94872dc2b817dd910a5fd8af5360ca2573ae5ac966e3d03",
+    "handover/evidence/baseline-3134c8c/native-regression.log": "b0106baf3df10a3d20f14b9d90ffdf31e9a5c7974c286af1cbe09f4f9cf03fde",
+    "handover/evidence/baseline-3134c8c/quality.log": "eb38c621fb95688c8a1d3a946c977a02a317c8bc6b4de5856bdafbb3aaece00b",
+    "handover/evidence/baseline-3134c8c/report-source-comparison.json": "c25570811d87bc6ecf0f0dff3db4bf83661d6abd1dc9c37bd9f5112d612cc2dc",
+    "handover/evidence/baseline-3134c8c/review-summary.json": "182237d1bf6b4dcf034a0d6c3dc79ee95cb6d8dc03a55c9b47bff2241134d8d4",
+    "handover/evidence/baseline-3134c8c/review-v1.md": "e11bd58e42a4d3e2e7ac346798445466dd26905d52fba14f70c4d03b01eec490",
+    "handover/evidence/current/README.md": "7cfd0233d4fcafe53da715adf9a6b2f6d09397c5dcf1de8aa8eb50e6b46f78f3",
+    "handover/evidence/current/audit_sources.py": "b190d8847d45ea8a3f4be9060320cb9f697396dd4e1d971f14eef4b504998fab",
+    "handover/evidence/current/behavior.json": "158d56651637d80f5bd15406baa2ff280eede65c125de29a3c63ce78881d2572",
+    "handover/evidence/current/behavior.log": "57283ee3a7699b2096796eeac35687770476b0f2b6eb146d4391d04344bfc5de",
+    "handover/evidence/current/contracts.log": "2bd56ea1e20f10e3a052f10dd65a62e4b98868ae94b274e827cb200562dc6147",
+    "handover/evidence/current/diagnose_rpc.py": "8885c3d0111bd34657507af9be6714dd31597330773329bde19f86dae992a54b",
+    "handover/evidence/current/execution-assessment.json": "50b9f0743aa362fa4606b55d6e8c947abd120ce733cd9db2c31577286be4925a",
+    "handover/evidence/current/quality.log": "5afffb8ff5cdbbdf2522d748cbabd41ca5c8d67b4be021c8819985de19625a3b",
+    "handover/evidence/current/remote-head-check.json": "83a81c08e7509cce4327dc1ed7d61864fed721a0e6eea326c9400d25208328ea",
+    "handover/evidence/current/rpc-diagnostic.log": "536727f2ed5ac7e7f9a1b34cdf55771150937198e8e6243f97bf4e59190baa72",
+    "handover/evidence/current/run_review_tests.py": "548083b91ebae1691f3c302ad2a48ad5ab1900aa376f8eafedba9c550a700ac0",
+    "handover/evidence/current/source-audit-summary.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "handover/evidence/current/source-audit.json": "9be045bd6e561f5cf2845a7a66854abcb939093d13c1bb577bb5a17a38a5e8cd",
+    "handover/evidence/current/type-contracts.log": "2cff96e7bdea0aab268c6201c1f51e745cd29e5439324dc57d92052db8d0bc9f",
+    "handover/examples/README.md": "5502cc7be1b7c6d28eba9ef98af9edc1e5c57dd974e5d2f5974e4b7c8688eff4",
+    "handover/index.html": "af78d503a1684f26c2b7260352798b4adeb3ac173af2b4e1156a33b464c308e4",
+    "handover/plan/01-review-findings.md": "35583b6061b3d84ef88591a6fed4f4f4543190a5573fc73a3d43a940b191ecef",
+    "handover/plan/02-architecture.md": "6e1ba13104bbb69eff7da57f0a78870a672ab0604e8355e426cfa4cced866008",
+    "handover/plan/03-formal-assurance.md": "171f542b5d367029e3c8cbbc2c8be3aecabeaddaca37cf66a3455fd63f7cdf03",
+    "handover/plan/04-storage-protocols.md": "c1888f1d35a276616b458bb1c4d6c1b9db2f5b55a5a60626071da499577c449f",
+    "handover/plan/05-build-and-quality.md": "28595f589991f4af302cb35f25a9383cc85efd236a5e336b0761b09719a49d5b",
+    "handover/plan/06-compatibility-and-tests.md": "5c79836be813dd5d2215330a54d4f93c696b22066230d7e13d11cfca5e6de32f",
+    "handover/plan/07-brand-and-website.md": "8df6e56c6ca74e9b71629ee2bb4a68e59debd320749b9f8e59b1105318d6dcac",
+    "handover/plan/08-execution-and-acceptance.md": "f6229daa1e847df7cbfedca1c4f1af3abc7c6a34c368938e5bd71e6e0ca055b9",
+    "handover/plan/09-scribes-and-writs.md": "c5908338d9c35ac5e4b6024d62d8fe30163ba298d34a7ccacd9bd66b58ef2e17",
+    "handover/plan/10-minimal-website-outline.md": "2819b2473c3ad04958aae2eac751b22512f79bc2a74810411d46c952f38bc0f8",
+    "handover/plan/11-workflow3-contract.md": "47d1c5867495da2bf825ccaff31c08acc283233c98a839961a097b601fd41cab",
+    "handover/plan/12-playbook-adoption.md": "6b9d43d7a58f5f510b420e39487171d1b958bc4dff5d3c67a50e8ee4c026bb40",
+    "handover/reference/kctx-1c17b94-source.tar.gz": "c6e87a17829046aa67fa316eeb6244502a51a6a194cde7b11e7960296dfb3657",
+    "handover/reference/kctx-current-calculus.md": "67279cf576872d5d8177ef3056a22699fa48b3411978503a5653afe727ec5ca0",
+    "handover/reference/kctx-current-gates.md": "dc06a7b723ab201013f104d0796f8a730dae9211d465b0717272730189ef4d3e",
+    "handover/reference/kctx-current-requirements.md": "4203387deaf67a5ec938e7d648bec516ee1770eb7df844132a23ed88dffb8aac",
+    "handover/reference/kctx-current-rust-design.md": "e8b1d59627c26dadf97ad481dc7c257978753189972d4a76f7d8a58fc842ea9e",
+    "handover/reference/kctx-current-workflows.md": "09ba4cde6c68ef6a5c92892521f261bcc0fb1a67853f3c8de3aec7823952f0c9",
+    "handover/reference/kctx-feature-requests.md": "6eb3f09d8af1c8ae4b118e6fa8c0c86ce251627ec45987ef37c3043b98922ce6",
+    "handover/reference/kctx-first-admission-review.md": "b90b215b1e6e003856b696effaba0f43e6e1e3ee0f63bc6a99710b3ebf3bb6e6",
+    "handover/reference/kctx-lean-and-typed-refactoring-handover.md": "06a0fde42cd47697425c036f6e8e0f0bd0e503c9863c36c42e77fd0ae432102a",
+    "handover/reference/kctx-workflow3-porting.md": "f31d53ece7d93c0c7681ee903adba4db67b8ced2ffe8057f171538e71a93ebe0",
+    "handover/reference/lean-theorems.json": "7927d383f9b303a4fd0cc0219e61dea3e7cb4d158a1cd8d663da3d6e7d4f6584",
+    "handover/reference/playbook-source-manifest.json": "046f2ad56b9ac924d2c4dd86ea93f4fc18e4c1a55892199bf8cb092bc17fc51c",
+    "handover/reference/project-knowledge-workflow-handover.md": "05341ccc6618888d9278c2af01a26f74bc70076ca958eaeca2e57f5380f6cbdd",
+    "handover/registries/bundle.json": "8964f60f98c270e1d3544aa0892bfa2def39600033442e2f071ba8edf6e905f8",
+    "handover/registries/gates.json": "8555f718b04f3414a754ccd80f4cece3303a07d69e8ef991993483b903ad7348",
+    "handover/registries/legacy-gate-map.json": "a92537a6b3a578609e0d05ec6795e16a1ae6e36d46ddd29ef256b44545775d0d",
+    "handover/registries/proofs.json": "f10d8fc4fd8d4bf631ef09cb00badd7c7b8fc5ae40254604682584f17d4c7a19",
+    "handover/registries/scenarios.json": "b91c48ad8e48f3d54c63647d95e09730678cb1595327f94b50135bfbdca10b75",
+    "handover/registries/stages.json": "57db747f94911057d20dc01fff8efa374146f572f75d7145882d450491e1efb3",
+    "handover/review-atlas.pdf": "30536d4b948897237ee59e7918aa7f185085c2858288c997341635590eeca4b9",
+    "handover/stages/P00.md": "ef6f52f77988e2ae88cd096b08e4044083540fee401ac15a557e3df6e0cf35e4",
+    "handover/stages/P01.md": "1fb8532c1719ca5a7062190ef6d45e8b64420a7817dd0a955d876e8605aed964",
+    "handover/stages/P02.md": "a092846e5c02231d165a8dcc337cb58cc7b637211ec53017f887eab5a721db0e",
+    "handover/stages/P03.md": "12ecea21900859c4a60beae4faf5abf0592739c403e3064d543f3b73e3066971",
+    "handover/stages/P03P.md": "5ee986eff7955a2f140371b00e9bb931766fa4a3ac3988f96b07d6b594191e60",
+    "handover/stages/P04.md": "9612a5cb1ec5ea03265a53d350f806dc9812149f2ce062febec25299dc0970c2",
+    "handover/stages/P05.md": "ae8d97c37dc37e4b8036b11074dd1b796bd994eb883870c83f24cef752595675",
+    "handover/stages/P06.md": "035788772d80e47ca559bc2a5765c0a55ae1ed7e64283d967a697564c7696d0a",
+    "handover/stages/P07.md": "f60284c6ea3c58fad0f89e423553c6ebcd602ffad71bd4fdcc13baf354110acf",
+    "handover/stages/P08.md": "997c4dc88f66eac7beb059fb7ac3e1689a10b483c6502a8d07a33cc36a646ff7",
+    "handover/stages/P08D.md": "8ff9002142b2ef26bc0dad1b024b92b2e76062c3a179c2c99b791d688d2e164a",
+    "handover/stages/P08S.md": "618350d8e2af0d1a21e186d71c3e002d1c29389dcd2ff2596471cdc1cffaaec0",
+    "handover/stages/P09.md": "4b1230995be1223eae5f0e6e84386dedf0dae717292521da51537911b5e291b5",
+    "handover/stages/P10.md": "f0647ac9a0a87a28fd4ebdd3c343805804a57039770f7fb3734150ab4c8a902d",
+    "handover/stages/P11.md": "0932dbfe24cc75a905781777a566fb06c4846e89a92ff06735dd29aad93f1b5f",
+    "handover/stages/P12.md": "ccac6b8d060e1424119979473b136ce23b6b5f57dd6c9f87fdb3812319e72c83",
+    "handover/stages/P13.md": "6f8c8ba60d74d2c0e43445e4c325d8a0d4964f547bcd4250e1ff61f3ae599b0e",
+    "handover/templates/README.md": "e7e5b3fd2eee9431621c976dfcc36d9a6a222a795243b8650bfd85647c65184f",
+    "handover/templates/gate-receipt.schema.json": "7b75a0d735832675e1819273d6a5d89329e58408e09703c1cade00a76f55a7d8",
+    "handover/templates/tool-artifact.schema.json": "f4a4c7eaad2c45981cd1b1642da9d3879511516cc176786efffbb4cc9b1c7d5b",
+    "handover/tools/README.md": "6e7849adf2fc419a7688b92c734d59d99622dac596a47c036fb8a80729728b37",
+    "handover/tools/check_bundle.py": "f7e85b6f78e82da8472fed2c88cc036a3224bb33fae71c6554e1b02e6c58135b",
+    "handover/tools/fonts/DejaVuSans-Bold.ttf": "5c1247acef7f2b8522a31742c76d6adcb5569bacc0be7ceaa4dc39dd252ce895",
+    "handover/tools/fonts/DejaVuSans.ttf": "ae7b7855e115a5966d8b1b3f80f254ccc117ec86f9965e202ee2940453837280",
+    "handover/tools/fonts/DejaVuSansMono.ttf": "c805f9436dbc268644c1d9584f01a601a653e028e08fd74b9b949f6cf8304d88",
+    "handover/tools/fonts/LICENSE.txt": "63d3ba759d12804c5b31a9d5940d855c1820d1f5999e6b0872eb1c7ff045fbc9",
+    "handover/tools/render_assets.py": "5b1a68c34dd1326ff654aabcaaac3426ee1f9e9ee17cbefa5b217756c5f5dbeb",
+    "handover/tools/render_plan.py": "664a329c64579f9aeacf6ce7d4c4da88d4534d2ce010394828b38b640686e71e",
+    "handover/tools/requirements.txt": "054e7483ed0899a13425d3ff89d0ae162290c88989825c77d22174ceb36f33f1",
+    "handover/website/README.md": "5a4d2f620b3c8d66d256f8c0284c1f4311f0ccff208b22e4c10c2104702a1331"
+  },
+  "handover_manifest_sha256": "e67038c5f15842922a298e7f60fc497a534570601faf93765c3351d350433144",
+  "mutable_successor_paths": [
+    ".dockerignore",
+    ".gitignore",
+    "README.md",
+    "compose.yaml"
+  ],
+  "playbook_commit": "e7d991e990e3dff9c5d70e4327c0e90298e2f67e",
+  "provenance": "Frozen from the immutable handover source archive and MANIFEST.sha256; not a fresh qualification run.",
+  "schema_version": 1
+}
