@@ -49,14 +49,18 @@ additional external syntax constraints.
 
 New architecture names choose explicit grammars without changing old ones:
 
-- `KbId`, `InstanceId`, `SessionIncarnation`, `CatalogRevision`, `PolicyRevision`,
-  `SchemaRevision`, and `KeyId` use the token grammar.
+- `InstanceId`, `SessionIncarnation`, `CatalogRevision`, `SchemaRevision`, and
+  `KeyId` use the token grammar.
+- `KbId` and `PolicyRevision` preserve the authority-policy envelope's opaque
+  text rather than silently imposing the semantic `PolicyId` token grammar.
+  Policy admission separately rejects blank identities and validates new
+  bootstrap's semantic snapshot/policy projection; historical bytes are not trimmed.
 - `AuthoredRevision`, `FileRevision`, and `DesignRevision` use the opaque grammar.
   `DesignRevision` is nominally distinct from legacy `ProposalMaterialRevision`
-  and implementation `TargetRevision`. The workflow-3 material producer owns the
-  `design-v3:<sha256>` profile. The semantic candidate domain does not reject the
-  reference's other nonempty revision spellings or implicitly reinterpret a
-  legacy revision. A codec must make that versioned mapping explicit.
+  and implementation `TargetRevision`. `writfold_sources::material::material_revision`
+  implements the workflow-selected legacy or `design-v3:<sha256>` projection.
+  The semantic candidate domain still preserves the reference's other nonempty
+  revision spellings; a nominal value alone does not authenticate a material hash.
 - `ToolDigest` and `PlanDigest` use the 64-lowercase-hex grammar and are distinct
   from `ContentDigest` and `PolicyDigest` even when their bytes match.
 - `GitObjectId` carries `GitObjectFormat::Sha1` or `Sha256` with exactly 40 or 64
@@ -86,14 +90,19 @@ constrain the semantic model. Unit-to-semantic conversion is explicit; no
 inter-unit conversion is implicit. An evidence timestamp is not an OS timestamp
 or monotonic deadline.
 
-`RequestGeneration` is isolated in `src/request_generation.rs` for the P01
-production-body spike. `first()` is zero, `get()` returns its value,
-`from_u64()` explicitly represents any counter state, and `checked_next()` is
-`None` exactly at `u64::MAX`; otherwise it returns the exact successor. The
-production bodies and their contracts are inside `vstd::verus!`, without
-external bodies or assumptions. `value()` is the public closed specification
-view. This source inclusion is not a claim that the proof/compiler/musl
-arrangement has been exercised.
+`RequestGeneration` remains isolated in `src/request_generation.rs`. `first()` is
+zero, `get()` returns its value, `from_u64()` explicitly represents any counter
+state, and `checked_next()` returns `None` exactly at `u64::MAX`, otherwise the
+exact successor. Its executable contracts and the protocol live-set transition
+are verified directly; the caller still owns session lifetime and the complete
+live-generation set.
+
+The identity grammar, borrowed/owned admission, tagged Git-object construction,
+primitive integer construction and checked unit conversion bodies now carry
+Verus contracts. `WF-TCB-001` explicitly trusts the pinned num-bigint primitives;
+that dependency's arithmetic is not mechanically verified. The only admitted
+external specifications live in `integer/primitive_specs.rs`, are absent from
+ordinary builds, and are hash-bound by `qualification/trusted-boundaries.json`.
 
 ## Complete model and authority distinction
 
@@ -125,11 +134,24 @@ set freshness or publication status.
 
 ## Qualification status
 
-Written tests cover exact identifier boundaries, opaque byte preservation,
-digest/format separation, negative and beyond-u64 integers, runtime conversion
-refusal, candidate semantics, ordered member formulas, and generation exhaustion.
-Crate documentation includes compile-fail examples for ClaimId/ObservationId and
-numeric-unit interchange. No build, formatter, lint, test, or Verus command was
-run by the domain implementation worker. The integration owner must run the
-workspace quality/unit gates and the source-bound Verus/musl qualification before
-claiming a pass.
+The source-bound P02 campaign requires 258 named domain solver successes, exact
+coverage of overloaded constructors, 348 domain obligations and the retained
+generation protocol checks. Six semantic mutation families and eleven independent
+evidence-admission controls per mutation passed in `p02-verus-003.json`.
+
+A static musl consumer exercised 56,656 identity/numeric scenarios against the
+pinned Python grammar and mathematical boundary oracle with zero mismatches.
+Both borrowed and owned identity constructors retained exact original bytes.
+The executable ran with `PATH=/nonexistent`; ELF inspection found no interpreter
+or needed shared libraries. These are component results, not an installed
+product, a whole-kernel proof or a Lean-to-Rust refinement theorem.
+
+```mermaid
+flowchart LR
+  Input["Untrusted bytes"] --> Raw["Bounded, duplicate-aware JSON"]
+  Raw --> Typed["Checked identities and typed records"]
+  Typed --> Semantic["Kernel judgments on candidates"]
+  Typed --> Crypto["Exact signed operation and supplied policy"]
+  Crypto --> Bound["Supplied-input authorization"]
+  Bound --> Live["Store must establish live-state authority"]
+```

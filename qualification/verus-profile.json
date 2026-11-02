@@ -1,29 +1,3291 @@
 {
-  "schema_version": 1,
-  "scope": "P01 generation executable-body compilation feasibility only",
-  "excluded_claims": ["V01-V13 completion", "WF05 completion", "whole-kernel verification", "musl linking or runtime execution by this producer", "Lean-to-Rust refinement"],
+  "schema_version": 3,
+  "scope": "P02 nominal identity admission and checked runtime conversions, plus retained P01 generation allocation",
+  "excluded_claims": [
+    "BigInt arithmetic implementation verification",
+    "whole semantic-kernel verification",
+    "V02-V13 completion",
+    "WF05 completion",
+    "musl linking or runtime execution by this producer",
+    "Lean-to-Rust refinement"
+  ],
   "verification_target": "x86_64-unknown-linux-gnu",
   "shipping_target": "x86_64-unknown-linux-musl",
   "crates": {
     "writfold_domain": {
-      "minimum_verified": 5,
+      "minimum_verified": 348,
       "functions": {
-        "writfold_domain::request_generation::RequestGeneration::first": {"source": "crates/writfold-domain/src/request_generation.rs", "lines": [16, 20]},
-        "writfold_domain::request_generation::RequestGeneration::get": {"source": "crates/writfold-domain/src/request_generation.rs", "lines": [22, 26]},
-        "writfold_domain::request_generation::RequestGeneration::from_u64": {"source": "crates/writfold-domain/src/request_generation.rs", "lines": [28, 32]},
-        "writfold_domain::request_generation::RequestGeneration::checked_next": {"source": "crates/writfold-domain/src/request_generation.rs", "lines": [34, 44]}
+        "writfold_domain::identity_grammar::byte_in_range": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/identity_grammar.rs",
+              "lines": [
+                14,
+                18
+              ]
+            }
+          ]
+        },
+        "writfold_domain::identity_grammar::byte_matches": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/identity_grammar.rs",
+              "lines": [
+                20,
+                36
+              ]
+            }
+          ]
+        },
+        "writfold_domain::identity_grammar::digest": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/identity_grammar.rs",
+              "lines": [
+                186,
+                191
+              ]
+            }
+          ]
+        },
+        "writfold_domain::identity_grammar::dolt": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/identity_grammar.rs",
+              "lines": [
+                200,
+                206
+              ]
+            }
+          ]
+        },
+        "writfold_domain::identity_grammar::investigation": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/identity_grammar.rs",
+              "lines": [
+                158,
+                170
+              ]
+            }
+          ]
+        },
+        "writfold_domain::identity_grammar::lower_hex": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/identity_grammar.rs",
+              "lines": [
+                178,
+                184
+              ]
+            }
+          ]
+        },
+        "writfold_domain::identity_grammar::opaque": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/identity_grammar.rs",
+              "lines": [
+                172,
+                176
+              ]
+            }
+          ]
+        },
+        "writfold_domain::identity_grammar::proposal": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/identity_grammar.rs",
+              "lines": [
+                125,
+                156
+              ]
+            }
+          ]
+        },
+        "writfold_domain::identity_grammar::range_matches": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/identity_grammar.rs",
+              "lines": [
+                38,
+                53
+              ]
+            }
+          ]
+        },
+        "writfold_domain::identity_grammar::relationship": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/identity_grammar.rs",
+              "lines": [
+                97,
+                123
+              ]
+            }
+          ]
+        },
+        "writfold_domain::identity_grammar::relationship_byte": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/identity_grammar.rs",
+              "lines": [
+                79,
+                95
+              ]
+            }
+          ]
+        },
+        "writfold_domain::identity_grammar::release": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/identity_grammar.rs",
+              "lines": [
+                193,
+                198
+              ]
+            }
+          ]
+        },
+        "writfold_domain::identity_grammar::slug": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/identity_grammar.rs",
+              "lines": [
+                72,
+                77
+              ]
+            }
+          ]
+        },
+        "writfold_domain::identity_grammar::slug_part": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/identity_grammar.rs",
+              "lines": [
+                63,
+                70
+              ]
+            }
+          ]
+        },
+        "writfold_domain::identity_grammar::token": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/identity_grammar.rs",
+              "lines": [
+                55,
+                61
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ActorId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ActorId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ActorId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ActorId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::AssetId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::AssetId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::AssetId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::AssetId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::AttestationId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::AttestationId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::AttestationId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::AttestationId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::AuthoredRevision::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::AuthoredRevision::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::AuthoredRevision::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::AuthoredRevision::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::AuthorityKeyId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::AuthorityKeyId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::AuthorityKeyId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::AuthorityKeyId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::CatalogRevision::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::CatalogRevision::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::CatalogRevision::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::CatalogRevision::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::CheckerId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::CheckerId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::CheckerId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::CheckerId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::CitationId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::CitationId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::CitationId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::CitationId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ClaimId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ClaimId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ClaimId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ClaimId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ClaimRevision::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ClaimRevision::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ClaimRevision::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ClaimRevision::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ContentDigest::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ContentDigest::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ContentDigest::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ContentDigest::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ContentId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ContentId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ContentId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ContentId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ContextId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ContextId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ContextId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ContextId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::CorrectionId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::CorrectionId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::CorrectionId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::CorrectionId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::DerivationId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::DerivationId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::DerivationId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::DerivationId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::DesignRevision::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::DesignRevision::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::DesignRevision::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::DesignRevision::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::DoltCommitId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::DoltCommitId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::DoltCommitId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::DoltCommitId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::EnumerationId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::EnumerationId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::EnumerationId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::EnumerationId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::EvidenceId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::EvidenceId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::EvidenceId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::EvidenceId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::FileRevision::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::FileRevision::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::FileRevision::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::FileRevision::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::GateId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::GateId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::GateId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::GateId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::GitObjectId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                189,
+                191
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::GitObjectId::format": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                186,
+                188
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::GitObjectId::infer_format": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                166,
+                175
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::GitObjectId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                192,
+                194
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::GitObjectId::new": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                176,
+                185
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::GitObjectId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                195,
+                206
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::GitObjectId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                229,
+                240
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::GitRevision::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::GitRevision::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::GitRevision::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::GitRevision::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::IdentityError::kind": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                16,
+                20
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::InstanceId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::InstanceId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::InstanceId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::InstanceId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::InvestigationId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::InvestigationId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::InvestigationId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::InvestigationId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::KbId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::KbId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::KbId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::KbId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::KeyId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::KeyId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::KeyId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::KeyId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ObservationId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ObservationId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ObservationId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ObservationId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::OperationId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::OperationId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::OperationId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::OperationId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::PlanDigest::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::PlanDigest::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::PlanDigest::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::PlanDigest::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::PlanId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::PlanId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::PlanId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::PlanId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::PolicyDigest::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::PolicyDigest::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::PolicyDigest::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::PolicyDigest::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::PolicyId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::PolicyId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::PolicyId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::PolicyId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::PolicyRevision::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::PolicyRevision::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::PolicyRevision::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::PolicyRevision::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ProjectId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ProjectId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ProjectId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ProjectId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ProposalId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ProposalId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ProposalId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ProposalId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ProposalMaterialRevision::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ProposalMaterialRevision::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ProposalMaterialRevision::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ProposalMaterialRevision::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ReceiptId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ReceiptId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ReceiptId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ReceiptId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::RelationshipId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::RelationshipId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::RelationshipId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::RelationshipId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ReleaseId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ReleaseId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ReleaseId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ReleaseId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::RuleVersion::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::RuleVersion::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::RuleVersion::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::RuleVersion::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::RunId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::RunId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::RunId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::RunId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::SchemaRevision::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::SchemaRevision::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::SchemaRevision::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::SchemaRevision::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::SessionIncarnation::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::SessionIncarnation::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::SessionIncarnation::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::SessionIncarnation::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::SignatureId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::SignatureId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::SignatureId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::SignatureId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::SnapshotId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::SnapshotId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::SnapshotId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::SnapshotId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::SourceCaptureId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::SourceCaptureId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::SourceCaptureId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::SourceCaptureId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::SourceId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::SourceId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::SourceId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::SourceId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::SourceRevision::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::SourceRevision::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::SourceRevision::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::SourceRevision::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::TargetRevision::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::TargetRevision::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::TargetRevision::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::TargetRevision::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::TicketId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::TicketId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::TicketId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::TicketId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ToolDigest::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                45,
+                47
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ToolDigest::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                48,
+                50
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ToolDigest::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                51,
+                59
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::ToolDigest::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::integer::Integer::as_bigint": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/integer.rs",
+              "lines": [
+                30,
+                34
+              ]
+            }
+          ]
+        },
+        "writfold_domain::integer::Integer::from": {
+          "solver_entries": 18,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/integer.rs",
+              "lines": [
+                87,
+                89
+              ]
+            },
+            {
+              "source": "crates/writfold-domain/src/units.rs",
+              "lines": [
+                113,
+                117
+              ]
+            }
+          ]
+        },
+        "writfold_domain::integer::Integer::from_bigint": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/integer.rs",
+              "lines": [
+                25,
+                29
+              ]
+            }
+          ]
+        },
+        "writfold_domain::integer::Integer::into_bigint": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/integer.rs",
+              "lines": [
+                35,
+                39
+              ]
+            }
+          ]
+        },
+        "writfold_domain::integer::Integer::is_negative": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/integer.rs",
+              "lines": [
+                54,
+                58
+              ]
+            }
+          ]
+        },
+        "writfold_domain::integer::Integer::to_i64": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/integer.rs",
+              "lines": [
+                47,
+                53
+              ]
+            }
+          ]
+        },
+        "writfold_domain::integer::Integer::to_u64": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/integer.rs",
+              "lines": [
+                40,
+                46
+              ]
+            }
+          ]
+        },
+        "writfold_domain::request_generation::RequestGeneration::checked_next": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/request_generation.rs",
+              "lines": [
+                34,
+                44
+              ]
+            }
+          ]
+        },
+        "writfold_domain::request_generation::RequestGeneration::first": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/request_generation.rs",
+              "lines": [
+                16,
+                20
+              ]
+            }
+          ]
+        },
+        "writfold_domain::request_generation::RequestGeneration::from_u64": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/request_generation.rs",
+              "lines": [
+                28,
+                32
+              ]
+            }
+          ]
+        },
+        "writfold_domain::request_generation::RequestGeneration::get": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/request_generation.rs",
+              "lines": [
+                22,
+                26
+              ]
+            }
+          ]
+        },
+        "writfold_domain::units::ByteCount::get": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/units.rs",
+              "lines": [
+                61,
+                65
+              ]
+            }
+          ]
+        },
+        "writfold_domain::units::ByteCount::new": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/units.rs",
+              "lines": [
+                47,
+                60
+              ]
+            }
+          ]
+        },
+        "writfold_domain::units::ByteCount::try_from": {
+          "solver_entries": 2,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/units.rs",
+              "lines": [
+                91,
+                97
+              ]
+            },
+            {
+              "source": "crates/writfold-domain/src/units.rs",
+              "lines": [
+                101,
+                110
+              ]
+            }
+          ]
+        },
+        "writfold_domain::units::DurationSeconds::get": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/units.rs",
+              "lines": [
+                61,
+                65
+              ]
+            }
+          ]
+        },
+        "writfold_domain::units::DurationSeconds::new": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/units.rs",
+              "lines": [
+                47,
+                60
+              ]
+            }
+          ]
+        },
+        "writfold_domain::units::DurationSeconds::try_from": {
+          "solver_entries": 2,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/units.rs",
+              "lines": [
+                91,
+                97
+              ]
+            },
+            {
+              "source": "crates/writfold-domain/src/units.rs",
+              "lines": [
+                101,
+                110
+              ]
+            }
+          ]
+        },
+        "writfold_domain::units::EpochSeconds::get": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/units.rs",
+              "lines": [
+                61,
+                65
+              ]
+            }
+          ]
+        },
+        "writfold_domain::units::EpochSeconds::new": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/units.rs",
+              "lines": [
+                47,
+                60
+              ]
+            }
+          ]
+        },
+        "writfold_domain::units::EpochSeconds::try_from": {
+          "solver_entries": 2,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/units.rs",
+              "lines": [
+                91,
+                97
+              ]
+            },
+            {
+              "source": "crates/writfold-domain/src/units.rs",
+              "lines": [
+                101,
+                110
+              ]
+            }
+          ]
+        },
+        "writfold_domain::units::PageSize::get": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/units.rs",
+              "lines": [
+                61,
+                65
+              ]
+            }
+          ]
+        },
+        "writfold_domain::units::PageSize::new": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/units.rs",
+              "lines": [
+                47,
+                60
+              ]
+            }
+          ]
+        },
+        "writfold_domain::units::PageSize::try_from": {
+          "solver_entries": 2,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/units.rs",
+              "lines": [
+                91,
+                97
+              ]
+            },
+            {
+              "source": "crates/writfold-domain/src/units.rs",
+              "lines": [
+                101,
+                110
+              ]
+            }
+          ]
+        },
+        "writfold_domain::units::QuantityError::kind": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/units.rs",
+              "lines": [
+                19,
+                23
+              ]
+            }
+          ]
+        },
+        "writfold_domain::units::RowLimit::get": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/units.rs",
+              "lines": [
+                61,
+                65
+              ]
+            }
+          ]
+        },
+        "writfold_domain::units::RowLimit::new": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/units.rs",
+              "lines": [
+                47,
+                60
+              ]
+            }
+          ]
+        },
+        "writfold_domain::units::RowLimit::try_from": {
+          "solver_entries": 2,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/units.rs",
+              "lines": [
+                91,
+                97
+              ]
+            },
+            {
+              "source": "crates/writfold-domain/src/units.rs",
+              "lines": [
+                101,
+                110
+              ]
+            }
+          ]
+        },
+        "writfold_domain::units::WitnessDepth::get": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/units.rs",
+              "lines": [
+                61,
+                65
+              ]
+            }
+          ]
+        },
+        "writfold_domain::units::WitnessDepth::new": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/units.rs",
+              "lines": [
+                47,
+                60
+              ]
+            }
+          ]
+        },
+        "writfold_domain::units::WitnessDepth::try_from": {
+          "solver_entries": 2,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/units.rs",
+              "lines": [
+                91,
+                97
+              ]
+            },
+            {
+              "source": "crates/writfold-domain/src/units.rs",
+              "lines": [
+                101,
+                110
+              ]
+            }
+          ]
+        },
+        "writfold_domain::units::at_least": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/units.rs",
+              "lines": [
+                12,
+                16
+              ]
+            }
+          ]
+        }
       }
     },
     "writfold_protocol": {
       "minimum_verified": 4,
       "functions": {
-        "writfold_protocol::generation::generation_is_live": {"source": "crates/writfold-protocol/src/generation.rs", "lines": [16, 34]},
-        "writfold_protocol::generation::advance_generation": {"source": "crates/writfold-protocol/src/generation.rs", "lines": [38, 60]}
+        "writfold_protocol::generation::advance_generation": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-protocol/src/generation.rs",
+              "lines": [
+                38,
+                60
+              ]
+            }
+          ]
+        },
+        "writfold_protocol::generation::generation_is_live": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-protocol/src/generation.rs",
+              "lines": [
+                16,
+                34
+              ]
+            }
+          ]
+        }
       }
     }
   },
   "mutations": [
-    {"name": "overflow-guard-removal", "crate": "writfold_domain", "function": "writfold_domain::request_generation::RequestGeneration::checked_next", "before": "if self.value == u64::MAX {", "after": "if false {"},
-    {"name": "live-generation-admission-bypass", "crate": "writfold_protocol", "function": "writfold_protocol::generation::advance_generation", "before": "if generation_is_live(active, next) {", "after": "if false {"}
+    {
+      "name": "overflow-guard-removal",
+      "crate": "writfold_domain",
+      "functions": ["writfold_domain::request_generation::RequestGeneration::checked_next"],
+      "before": "if self.value == u64::MAX {",
+      "after": "if false {"
+    },
+    {
+      "name": "live-generation-admission-bypass",
+      "crate": "writfold_protocol",
+      "functions": ["writfold_protocol::generation::advance_generation"],
+      "before": "if generation_is_live(active, next) {",
+      "after": "if false {"
+    },
+    {
+      "name": "token-leading-character-bypass",
+      "crate": "writfold_domain",
+      "functions": ["writfold_domain::identity_grammar::token"],
+      "before": "byte_matches(bytes[0], Alphabet::Alphanumeric)",
+      "after": "byte_matches(bytes[0], Alphabet::Token)"
+    },
+    {
+      "name": "identity-constructor-bypass",
+      "crate": "writfold_domain",
+      "functions": [
+        "writfold_domain::ids::ActorId::parse_checked",
+        "writfold_domain::ids::AssetId::parse_checked",
+        "writfold_domain::ids::AttestationId::parse_checked",
+        "writfold_domain::ids::AuthoredRevision::parse_checked",
+        "writfold_domain::ids::AuthorityKeyId::parse_checked",
+        "writfold_domain::ids::CatalogRevision::parse_checked",
+        "writfold_domain::ids::CheckerId::parse_checked",
+        "writfold_domain::ids::CitationId::parse_checked",
+        "writfold_domain::ids::ClaimId::parse_checked",
+        "writfold_domain::ids::ClaimRevision::parse_checked",
+        "writfold_domain::ids::ContentDigest::parse_checked",
+        "writfold_domain::ids::ContentId::parse_checked",
+        "writfold_domain::ids::ContextId::parse_checked",
+        "writfold_domain::ids::CorrectionId::parse_checked",
+        "writfold_domain::ids::DerivationId::parse_checked",
+        "writfold_domain::ids::DesignRevision::parse_checked",
+        "writfold_domain::ids::DoltCommitId::parse_checked",
+        "writfold_domain::ids::EnumerationId::parse_checked",
+        "writfold_domain::ids::EvidenceId::parse_checked",
+        "writfold_domain::ids::FileRevision::parse_checked",
+        "writfold_domain::ids::GateId::parse_checked",
+        "writfold_domain::ids::GitRevision::parse_checked",
+        "writfold_domain::ids::InstanceId::parse_checked",
+        "writfold_domain::ids::InvestigationId::parse_checked",
+        "writfold_domain::ids::KbId::parse_checked",
+        "writfold_domain::ids::KeyId::parse_checked",
+        "writfold_domain::ids::ObservationId::parse_checked",
+        "writfold_domain::ids::OperationId::parse_checked",
+        "writfold_domain::ids::PlanDigest::parse_checked",
+        "writfold_domain::ids::PlanId::parse_checked",
+        "writfold_domain::ids::PolicyDigest::parse_checked",
+        "writfold_domain::ids::PolicyId::parse_checked",
+        "writfold_domain::ids::PolicyRevision::parse_checked",
+        "writfold_domain::ids::ProjectId::parse_checked",
+        "writfold_domain::ids::ProposalId::parse_checked",
+        "writfold_domain::ids::ProposalMaterialRevision::parse_checked",
+        "writfold_domain::ids::ReceiptId::parse_checked",
+        "writfold_domain::ids::RelationshipId::parse_checked",
+        "writfold_domain::ids::ReleaseId::parse_checked",
+        "writfold_domain::ids::RuleVersion::parse_checked",
+        "writfold_domain::ids::RunId::parse_checked",
+        "writfold_domain::ids::SchemaRevision::parse_checked",
+        "writfold_domain::ids::SessionIncarnation::parse_checked",
+        "writfold_domain::ids::SignatureId::parse_checked",
+        "writfold_domain::ids::SnapshotId::parse_checked",
+        "writfold_domain::ids::SourceCaptureId::parse_checked",
+        "writfold_domain::ids::SourceId::parse_checked",
+        "writfold_domain::ids::SourceRevision::parse_checked",
+        "writfold_domain::ids::TargetRevision::parse_checked",
+        "writfold_domain::ids::TicketId::parse_checked",
+        "writfold_domain::ids::ToolDigest::parse_checked"
+      ],
+      "before": "if grammar::$grammar(value) { Ok(Self(value.to_owned())) }",
+      "after": "if true { Ok(Self(value.to_owned())) }"
+    },
+    {
+      "name": "quantity-minimum-bypass",
+      "crate": "writfold_domain",
+      "functions": ["writfold_domain::units::at_least"],
+      "before": "    value >= minimum\n}",
+      "after": "    true\n}"
+    },
+    {
+      "name": "numeric-overflow-fallback",
+      "crate": "writfold_domain",
+      "functions": ["writfold_domain::integer::Integer::to_u64"],
+      "before": "u64::try_from(&self.0).ok()",
+      "after": "match u64::try_from(&self.0) { Ok(value) => Some(value), Err(_) => Some(0) }"
+    }
   ]
 }

@@ -10,11 +10,12 @@ The original kctx Git history is preserved. `src/kctx`, `formal`, and the refere
 
 The Rust implementation lives in `crates/`:
 
-- `writfold-domain`: checked nominal identities, arbitrary-precision semantic integers and immutable model records.
-- `writfold-kernel`: finite witnesses, independent assessments, admission, portfolio and design judgments.
-- `writfold-wire`: bounded JSON, canonical approval bytes, typed semantic codecs and the development `writfold-ref` host.
-- `writfold-protocol`: pure operational decisions, beginning with checked generation allocation.
+- `writfold-domain`: checked nominal identities, verified admission/runtime-conversion bodies, arbitrary-precision semantic integers and immutable model records.
+- `writfold-kernel`: finite witnesses, independent assessments, admission, portfolio and design judgments; its broader Rust semantic proofs remain open.
+- `writfold-wire`: bounded JSON, typed semantic/result codecs, exact canonical signed operations, supplied-policy Ed25519 authorization, protocol-2 request admission and the development `writfold-ref` host.
+- `writfold-protocol`: checked generation allocation and distinct instance/session/request identities with initialization/shutdown transitions.
 - `writfold-runtime`: descriptor-relative native filesystem reads, conditional publication and stable managed locks.
+- `writfold-sources`: byte-preserving authored-document and citation syntax, with new single-line mutation admission and pinned Unicode behavior.
 - `writfold-xtask`: development-only syntax, dependency and nominal-type qualification.
 
 `writfold-ref` is a development conformance executable, not the production CLI or an authentication capability. No installable Rust product or complete Rust qualification is claimed yet. Current stage/gate dispositions are in [`qualification/status.json`](qualification/status.json); unrun obligations remain explicit.
@@ -37,6 +38,9 @@ Use a new receipt path for every attempt. Missing producers, stale sources, fail
 
 
 The [P01 completion record](qualification/p01-completion.json) links the exercised cold/offline build, matching verified/musl source inputs, runtime-supplied generation cases in a `scratch` image, retained tool archive, and fail-closed storage preflight. It is build feasibility evidence, not a complete product release.
+
+The [P02 completion record](qualification/p02-completion.json) links verified nominal/conversion bodies, six semantic mutation families, strict/canonical wire and signature boundaries, lossless authored identities, protocol-2 admission, and static consumers checked against Python. Semantic-kernel and operational-protocol verification remain later stages; no production CLI or store publication capability is implied by these boundary results.
+
 ## Compatibility and assurance
 
 - Preserve inference semantics `2.0.0`, core reference wire `2`, knowledge workflow schema `3`, and production initialization protocol string `"2"` as separate version axes.

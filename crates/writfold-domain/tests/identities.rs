@@ -62,3 +62,14 @@ fn opaque_values_are_not_normalized_or_confused_with_digests() -> Result<(), Box
     );
     Ok(())
 }
+
+#[test]
+fn policy_identities_preserve_historical_text() -> Result<(), Box<dyn Error>> {
+    let kb = " work 知識 ";
+    let version = " policy revision 1 ";
+    assert_eq!(kb.parse::<KbId>()?.as_str(), kb);
+    assert_eq!(version.parse::<PolicyRevision>()?.as_str(), version);
+    assert!("".parse::<KbId>().is_err());
+    assert!("".parse::<PolicyRevision>().is_err());
+    Ok(())
+}

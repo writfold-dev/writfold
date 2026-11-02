@@ -11,7 +11,6 @@ verify = true
 
 [dependencies]
 num-bigint.workspace = true
-num-traits.workspace = true
 vstd.workspace = true
 
 [lints]

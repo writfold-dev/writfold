@@ -1,5 +1,6 @@
-use crate::{macros, syntax::Audit, tokens};
+use crate::{macros, syntax::Audit, tokens, trust};
 use serde_json::{Value, json};
+use sha2::{Digest, Sha256};
 use std::{
     collections::BTreeSet,
     fs,
@@ -16,6 +17,7 @@ struct Unit<'a> {
     package_root: &'a Path,
     file: syn::File,
     lines: BTreeSet<usize>,
+    digest: [u8; 32],
 }
 
 fn load<'a>(
@@ -68,6 +70,7 @@ fn load<'a>(
                     package_root: directory,
                     file,
                     lines,
+                    digest: Sha256::digest(source.as_bytes()).into(),
                 }),
                 Err(error) => {
                     let span = error.span();
@@ -85,9 +88,16 @@ fn load<'a>(
     Ok(units)
 }
 
-pub fn check(root: &Path, metadata: &Value, diagnostics: &mut Vec<Value>) -> Result<(), String> {
+pub fn check(
+    root: &Path,
+    metadata: &Value,
+    diagnostics: &mut Vec<Value>,
+) -> Result<Vec<crate::syntax::FunctionSource>, String> {
     let units = load(root, metadata, diagnostics)?;
+    let trust = trust::Policy::load(root)?;
+    let mut inspected_sources = BTreeSet::new();
     let mut definitions = Definitions(BTreeSet::new());
+    let mut functions = BTreeSet::new();
     for unit in &units {
         definitions.visit_file(&unit.file);
     }
@@ -101,6 +111,15 @@ pub fn check(root: &Path, metadata: &Value, diagnostics: &mut Vec<Value>) -> Res
             .strip_prefix(root)
             .map_err(|error| error.to_string())?
             .to_string_lossy();
+        inspected_sources.insert(relative.to_string());
+        let proof_approval = match trust.admit(&relative, &unit.digest) {
+            Ok(approval) => approval,
+            Err(message) => {
+                diagnostics.push(json!({"rule":"proof-trust-identity", "severity":"error",
+                    "path":relative, "line":1, "message":message}));
+                None
+            }
+        };
         let dev = unit.path.components().any(|component| {
             matches!(
                 component.as_os_str().to_str(),
@@ -116,6 +135,8 @@ pub fn check(root: &Path, metadata: &Value, diagnostics: &mut Vec<Value>) -> Res
             lines: &unit.lines,
             diagnostics,
             definitions: &definitions.0,
+            functions: &mut functions,
+            proof_approval,
             test: dev,
             ghost: false,
         };
@@ -130,7 +151,8 @@ pub fn check(root: &Path, metadata: &Value, diagnostics: &mut Vec<Value>) -> Res
         audit.budget(unit.file.span(), limit, 250, "module-budget");
         audit.visit_file(&unit.file);
     }
-    Ok(())
+    trust.require_owned_sources(&inspected_sources)?;
+    Ok(functions.into_iter().collect())
 }
 
 fn discover(directory: &Path, files: &mut Vec<PathBuf>) -> Result<(), String> {

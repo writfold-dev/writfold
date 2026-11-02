@@ -14,6 +14,14 @@ pub fn check(audit: &mut Audit<'_>, attribute: &Attribute) {
             "unclassified attribute-generated declarations",
         );
     }
+    if root.as_deref() == Some("verifier") {
+        let name = attribute
+            .path()
+            .segments
+            .last()
+            .map(|part| part.ident.to_string());
+        audit.proof_attribute(name.as_deref(), attribute.span());
+    }
     if attribute.path().is_ident("unsafe") {
         audit.emit("unsafe", attribute.span(), "unsafe attribute");
     }

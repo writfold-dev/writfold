@@ -1,17 +1,25 @@
 //! Checked identities. Parsing never trims, folds case, or normalizes Unicode.
 use crate::identity_grammar as grammar;
 use std::{error::Error, fmt, str::FromStr};
+use vstd::prelude::*;
+#[cfg(verus_keep_ghost)]
+use vstd::string::StringSliceAdditionalSpecFns;
 
+verus! {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct IdentityError {
     kind: &'static str,
 }
 
 impl IdentityError {
-    pub fn kind(&self) -> &'static str {
+    pub closed spec fn kind_value(&self) -> &'static str { self.kind }
+    pub fn kind(&self) -> (kind: &str)
+        ensures kind == self.kind_value(),
+    {
         self.kind
     }
 }
+} // verus!
 
 impl fmt::Display for IdentityError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -21,25 +29,60 @@ impl fmt::Display for IdentityError {
 impl Error for IdentityError {}
 
 macro_rules! identities {
-    ($grammar:ident; $($name:ident),+ $(,)?) => {$(
+    ($grammar:ident, $language:ident; $($name:ident),+ $(,)?) => {$(
+        verus! {
         #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
         pub struct $name(String);
+        impl View for $name {
+            type V = Seq<char>;
+            closed spec fn view(&self) -> Seq<char> { self.0@ }
+        }
         impl $name {
-            pub fn as_str(&self) -> &str { &self.0 }
-            pub fn into_string(self) -> String { self.0 }
+            pub closed spec fn accepts(value: Seq<char>) -> bool {
+                grammar::spec::$language(vstd::utf8::encode_utf8(value))
+            }
+            pub closed spec fn valid(&self) -> bool { Self::accepts(self@) }
+            pub fn as_str(&self) -> (value: &str)
+                ensures value@ == self@,
+            { self.0.as_str() }
+            pub fn into_string(self) -> (value: String)
+                ensures value@ == self@,
+            { self.0 }
+            fn parse_checked(value: &str) -> (result: Result<Self, IdentityError>)
+                ensures
+                    result.is_ok() <==> Self::accepts(value@),
+                    result.is_ok() ==> result.unwrap()@ == value@,
+                    result.is_ok() ==> result.unwrap().valid(),
+            {
+                if grammar::$grammar(value) { Ok(Self(value.to_owned())) }
+                else { Err(IdentityError { kind: stringify!($name) }) }
+            }
+        }
+        #[cfg(verus_keep_ghost)]
+        impl vstd::std_specs::convert::TryFromSpecImpl<String> for $name {
+            open spec fn obeys_try_from_spec() -> bool { true }
+            closed spec fn try_from_spec(value: String) -> Result<Self, IdentityError> {
+                if Self::accepts(value@) { Ok(Self(value)) }
+                else { Err(IdentityError { kind: stringify!($name) }) }
+            }
         }
         impl TryFrom<String> for $name {
             type Error = IdentityError;
-            fn try_from(value: String) -> Result<Self, Self::Error> {
-                if grammar::$grammar(&value) { Ok(Self(value)) }
+            fn try_from(value: String) -> (result: Result<Self, Self::Error>)
+                ensures
+                    result.is_ok() <==> Self::accepts(value@),
+                    result.is_ok() ==> result.unwrap()@ == value@,
+                    result.is_ok() ==> result.unwrap().valid(),
+            {
+                if grammar::$grammar(value.as_str()) { Ok(Self(value)) }
                 else { Err(IdentityError { kind: stringify!($name) }) }
             }
+        }
         }
         impl FromStr for $name {
             type Err = IdentityError;
             fn from_str(value: &str) -> Result<Self, Self::Err> {
-                if grammar::$grammar(value) { Ok(Self(value.to_owned())) }
-                else { Err(IdentityError { kind: stringify!($name) }) }
+                Self::parse_checked(value)
             }
         }
         impl fmt::Display for $name {
@@ -50,25 +93,24 @@ macro_rules! identities {
     )+};
 }
 
-identities!(slug; AssetId, EvidenceId, SignatureId);
-identities!(relationship; RelationshipId);
-identities!(proposal; ProposalId);
-identities!(investigation; InvestigationId);
-identities!(token;
+identities!(slug, slug_identity; AssetId, EvidenceId, SignatureId);
+identities!(relationship, relationship_language; RelationshipId);
+identities!(proposal, proposal_language; ProposalId);
+identities!(investigation, investigation_language; InvestigationId);
+identities!(token, token_language;
     ObservationId, ClaimId, ClaimRevision, CitationId, RuleVersion,
     OperationId, SnapshotId, DerivationId, RunId, GateId, TicketId,
     AuthorityKeyId, AttestationId, EnumerationId, CorrectionId, ReceiptId,
     PolicyId, ContextId,
-    KbId, InstanceId, SessionIncarnation, CatalogRevision, PolicyRevision,
-    SchemaRevision, KeyId,
+    InstanceId, SessionIncarnation, CatalogRevision, SchemaRevision, KeyId,
 );
-identities!(digest; PlanId, SourceCaptureId, ContentDigest, PolicyDigest, ToolDigest, PlanDigest);
-identities!(release; ReleaseId, GitRevision);
-identities!(dolt; DoltCommitId);
-identities!(opaque;
+identities!(digest, digest_identity; PlanId, SourceCaptureId, ContentDigest, PolicyDigest, ToolDigest, PlanDigest);
+identities!(release, release_identity; ReleaseId, GitRevision);
+identities!(dolt, dolt_identity; DoltCommitId);
+identities!(opaque, opaque_identity;
     CheckerId, SourceId, SourceRevision, ContentId, ProjectId, ActorId,
     ProposalMaterialRevision, TargetRevision,
-    AuthoredRevision, FileRevision, DesignRevision,
+    AuthoredRevision, FileRevision, DesignRevision, KbId, PolicyRevision,
 );
 
 struct InventoryMembers<'a>(&'a [String]);
@@ -89,6 +131,7 @@ impl ContentId {
     }
 }
 
+verus! {
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum GitObjectFormat {
     Sha1,
@@ -101,30 +144,68 @@ pub struct GitObjectId {
     hex: String,
 }
 
+impl View for GitObjectId {
+    type V = (GitObjectFormat, Seq<char>);
+    closed spec fn view(&self) -> Self::V { (self.format, self.hex@) }
+}
+
 impl GitObjectId {
-    pub fn new(format: GitObjectFormat, hex: String) -> Result<Self, IdentityError> {
-        let size = match format {
-            GitObjectFormat::Sha1 => 40,
-            GitObjectFormat::Sha256 => 64,
-        };
-        if grammar::lower_hex(&hex, size) {
-            Ok(Self { format, hex })
-        } else {
-            Err(IdentityError {
-                kind: "GitObjectId",
-            })
+    pub closed spec fn accepts_any(text: Seq<char>) -> bool {
+        grammar::spec::release_identity(vstd::utf8::encode_utf8(text))
+    }
+    pub closed spec fn accepts(format: GitObjectFormat, text: Seq<char>) -> bool {
+        let bytes = vstd::utf8::encode_utf8(text);
+        let width: int = match format { GitObjectFormat::Sha1 => 40, GitObjectFormat::Sha256 => 64 };
+        bytes.len() == width
+            && grammar::spec::range_language(bytes, 0, width, grammar::spec::Alphabet::Hex)
+    }
+    pub closed spec fn from_parts_spec(format: GitObjectFormat, hex: String) -> Result<Self, IdentityError> {
+        if Self::accepts(format, hex@) { Ok(Self { format, hex }) }
+        else { Err(IdentityError { kind: "GitObjectId" }) }
+    }
+    fn infer_format(length: usize) -> (format: Option<GitObjectFormat>)
+        ensures format == if length == 40 { Some(GitObjectFormat::Sha1) }
+            else if length == 64 { Some(GitObjectFormat::Sha256) } else { None },
+    {
+        match length {
+            40 => Some(GitObjectFormat::Sha1),
+            64 => Some(GitObjectFormat::Sha256),
+            _ => None,
         }
     }
-    pub fn format(&self) -> GitObjectFormat {
-        self.format
+    pub fn new(format: GitObjectFormat, hex: String) -> (result: Result<Self, IdentityError>)
+        ensures
+            result == Self::from_parts_spec(format, hex),
+            result.is_ok() <==> Self::accepts(format, hex@),
+            result.is_ok() ==> result.unwrap()@ == (format, hex@),
+    {
+        let size = match format { GitObjectFormat::Sha1 => 40, GitObjectFormat::Sha256 => 64 };
+        if grammar::lower_hex(hex.as_str(), size) { Ok(Self { format, hex }) }
+        else { Err(IdentityError { kind: "GitObjectId" }) }
     }
-    pub fn as_str(&self) -> &str {
-        &self.hex
-    }
-    pub fn into_string(self) -> String {
-        self.hex
+    pub fn format(&self) -> (format: GitObjectFormat)
+        ensures format == self@.0,
+    { self.format }
+    pub fn as_str(&self) -> (text: &str)
+        ensures text@ == self@.1,
+    { self.hex.as_str() }
+    pub fn into_string(self) -> (text: String)
+        ensures text@ == self@.1,
+    { self.hex }
+    fn parse_checked(value: &str) -> (result: Result<Self, IdentityError>)
+        ensures
+            result.is_ok() <==> grammar::spec::release_identity(value.spec_bytes()),
+            result.is_ok() ==> result.unwrap()@.1 == value@,
+            result.is_ok() ==> Self::accepts(result.unwrap()@.0, value@),
+    {
+        let Some(format) = Self::infer_format(value.len()) else {
+            return Err(IdentityError { kind: "GitObjectId" });
+        };
+        if grammar::release(value) { Ok(Self { format, hex: value.to_owned() }) }
+        else { Err(IdentityError { kind: "GitObjectId" }) }
     }
 }
+} // verus!
 
 impl fmt::Display for GitObjectId {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -132,31 +213,37 @@ impl fmt::Display for GitObjectId {
     }
 }
 
+verus! {
+#[cfg(verus_keep_ghost)]
+impl vstd::std_specs::convert::TryFromSpecImpl<String> for GitObjectId {
+    open spec fn obeys_try_from_spec() -> bool { true }
+    closed spec fn try_from_spec(value: String) -> Result<Self, IdentityError> {
+        let length = vstd::utf8::encode_utf8(value@).len();
+        if length == 40 { Self::from_parts_spec(GitObjectFormat::Sha1, value) }
+        else if length == 64 { Self::from_parts_spec(GitObjectFormat::Sha256, value) }
+        else { Err(IdentityError { kind: "GitObjectId" }) }
+    }
+}
 impl TryFrom<String> for GitObjectId {
     type Error = IdentityError;
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        let format = match value.len() {
-            40 => GitObjectFormat::Sha1,
-            64 => GitObjectFormat::Sha256,
-            _ => {
-                return Err(IdentityError {
-                    kind: "GitObjectId",
-                });
-            }
+    fn try_from(value: String) -> (result: Result<Self, Self::Error>)
+        ensures
+            result.is_ok() <==> Self::accepts_any(value@),
+            result.is_ok() ==> result.unwrap()@.1 == value@,
+            result.is_ok() ==> Self::accepts(result.unwrap()@.0, value@),
+    {
+        let input: &str = &value;
+        let Some(format) = Self::infer_format(input.len()) else {
+            return Err(IdentityError { kind: "GitObjectId" });
         };
         Self::new(format, value)
     }
 }
+} // verus!
 
 impl FromStr for GitObjectId {
     type Err = IdentityError;
     fn from_str(value: &str) -> Result<Self, Self::Err> {
-        if grammar::release(value) {
-            Self::try_from(value.to_owned())
-        } else {
-            Err(IdentityError {
-                kind: "GitObjectId",
-            })
-        }
+        Self::parse_checked(value)
     }
 }

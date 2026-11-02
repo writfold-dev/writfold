@@ -9,6 +9,8 @@ publish.workspace = true
 [dependencies]
 serde_json.workspace = true
 thiserror.workspace = true
+sha2.workspace = true
+ed25519-dalek.workspace = true
 writfold-domain = { path = "../writfold-domain" }
 writfold-kernel = { path = "../writfold-kernel" }
 

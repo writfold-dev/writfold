@@ -41,8 +41,14 @@
         "WF02",
         "WF03"
       ],
-      "status": "not_run",
-      "receipts": []
+      "status": "pass",
+      "receipts": [
+        "~/.local/share/writfold/qualification/p02-unit-005.json",
+        "~/.local/share/writfold/qualification/p02-quality-007.json",
+        "~/.local/share/writfold/qualification/p02-verus-003.json",
+        "~/.local/share/writfold/qualification/p02-conformance-002.json"
+      ],
+      "completion_record": "qualification/p02-completion.json"
     },
     {
       "id": "P03",

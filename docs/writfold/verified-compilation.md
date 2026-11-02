@@ -1,51 +1,61 @@
-# Verified compilation: generation feasibility
+# Verified nominal boundaries and compilation
 
-The current profile is **P01 generation executable-body compilation feasibility**, not completion of V01–V13 or WF05. It selects the actual `RequestGeneration` newtype and the protocol collection/admission transition, not a proof-only twin. Plain Rust functions elsewhere in these crates are not thereby verified. No whole-kernel or cross-prover refinement claim follows.
+The current profile covers **V01 nominal admission and checked runtime conversions**, plus the previously qualified generation allocator. It checks the actual executable bodies, not proof-only twins. Broader kernel judgments, publication/lifecycle protocols, V02–V13 and complete WF05 remain separate obligations. Plain Rust functions outside the selected verified bodies are not thereby proved, and no cross-prover refinement theorem is claimed.
 
 ## Producer and independent admission
 
-The Compose `verus` service should invoke:
+Run in the admitted offline Compose `verus` service:
 
 ```sh
 python3 scripts/writfold_verus.py
 ```
 
-The service must have network disabled, the admitted tool image and offline Cargo dependency closure available, and an operator-selected writable `/evidence` mount. The producer does not install or download tools. Runtime tool/image admission remains the enclosing gate's responsibility; the producer records actual identities, rather than claiming that recording a hash admits it. Optional `--evidence PATH` and `--timeout SECONDS` select the output directory and per-child deadline (default 1800 seconds).
+The service requires the admitted tool image, offline Cargo closure and a writable external `/evidence` mount. It installs nothing. Optional `--evidence PATH` and `--timeout SECONDS` select the output directory and per-child deadline. Every attempt retains its own `verus-<id>` directory; failed attempts are never overwritten.
 
-Each invocation retains a unique `verus-<id>` directory and writes `/evidence/obligations.json` pointing to it. Old attempts are never deleted. The exact verification command is:
+The producer first compiles and runs the real syntax/trust checker against a copied workspace. The exact-source trust manifest is included in that copy. Required function declarations must match the checker's AST-derived source spans. It then runs:
 
 ```sh
 cargo verus verify -p writfold-protocol --locked --offline --message-format=json -- --output-json --time-expanded
 ```
 
-Positive and negative runs each have their own newly created target directory and copied real Cargo workspace. No tested workspace files are modified. All generated source directories are mode 0755, with readable source files. Every child command, environment, combined complete output, exit status, deadline, and log digest is retained. A timeout or signal termination fails admission; it is never a semantic counterexample.
+Each proof attempt has a fresh target directory under the admitted Docker cache. Cargo cache success without a fresh named solver report is not proof evidence. Commands, environment, full output, exit status, deadlines, tool/dependency inventories and source hashes are retained. Timeouts, signals and front-end errors are not semantic counterexamples.
 
-`writfold_verus_evidence.py` independently decodes JSON records from the raw output. It requires exactly one solver report per selected crate, entire-crate verification, no VIR errors, successful process/Cargo completion, fresh production compiler artifacts, successful named production solver queries, and the profile's obligation floors. Imported `func-details` entries are not solver successes. Dependency/vstd reports remain in the complete log and parsed records but cannot contribute to Writfold floors.
+`writfold_verus_evidence.py` independently requires an entire-crate solver report for each selected crate, successful named queries, obligation floors, fresh production compiler artifacts and matching source paths. Imported `func-details` and dependency/vstd successes cannot contribute to Writfold's proof floor.
 
-`qualification/verus-profile.json` currently requires:
+The schema-3 profile in `qualification/verus-profile.json` requires:
 
-| Crate | Minimum verified obligations | Required production solver successes |
+| Crate | Minimum verified obligations | Named production solver coverage |
 | --- | ---: | --- |
-| `writfold_domain` | 5 | `RequestGeneration::{first,get,from_u64,checked_next}` |
+| `writfold_domain` | 348 | 258 names: grammar/admission, tagged identities, primitive/checked unit conversions and generation arithmetic |
 | `writfold_protocol` | 4 | `generation_is_live`, `advance_generation` |
 
-Counts include generated Clone obligations and are deliberately not described as counts of named production methods. The six explicit methods are separately required. Source declarations, line ranges and complete file digests bind the profile to production sources; compiler artifact source paths must identify the attempt's copy.
+Counts include generated obligations and are not counts of independent semantic theorems. The solver uses one name for some overloads; the profile additionally requires exact entry multiplicity. In particular, `Integer::from` has eighteen entries, and each runtime unit's `try_from` has two. Missing one overload cannot hide behind another successful entry with the same name.
 
-## Semantic calibration
+## Explicit numeric trust boundary
 
-Two separately retained copies modify only one exact source expression each:
+WF-TCB-001 retains **num-bigint 0.4.8** as an external trusted implementation. `integer/primitive_specs.rs` binds its mathematical representation, clone, sign, borrowed checked conversions and twelve primitive constructors. These are reviewed library assumptions, not verified BigInt arithmetic. The opaque external types and external function bindings are confined to that hash-approved, verification-only module. No Writfold executable body is marked external.
 
-* **Overflow guard removal:** replace `if self.value == u64::MAX {` with `if false {` in `RequestGeneration::checked_next`.
-* **Live-generation admission bypass:** replace `if generation_is_live(active, next) {` with `if false {` in `advance_generation`.
+The ordinary build erases the specifications and spec-only trait implementations; the runtime conversion and admission bodies remain the ones checked by Verus. The quality checker rejects other proof assumptions, axioms, arbitrary assumed specifications and unapproved verifier attributes. A changed approved module digest requires a new explicit admission. Compiler, erasure, vstd/std and allocator correctness remain trusted.
 
-The negative must fail the named method's postcondition or arithmetic obligation, with a primary diagnostic span in that method's source range. A syntax/type/translation error, foreign-file error, unrelated failed method, missing proof report, successful process, or timeout does not qualify. Each mutant retains its entire source tree, before/after digests, exact substitution, full output, parsed reports and admission result. Untouched workspace and external dependency source hashes are checked for equality. No verifier exclusion, added assumption or weakened contract is introduced.
+## Semantic negative calibration
 
-Admission self-controls corrupt actual captured reports and require rejection of absent, truncated, foreign-only, partial-crate, zero-obligation, missing-named-function and split-diagnostic evidence, plus a successful mutant process status. These are parser controls, not fabricated verifier runs; they are recorded separately from proof logs.
+Six isolated source mutations are mandatory:
 
-## Attributed inputs and scope limits
+- Remove the generation overflow guard.
+- Bypass supplied-live-generation admission.
+- Permit a token-only continuation character as the first identifier byte.
+- Remove the shared identity-constructor guard, deliberately affecting all fifty-one named constructors.
+- Bypass the runtime quantity minimum.
+- Return a value after an out-of-range integer conversion fails.
 
-Retained inputs include the profile, producer/parser, tool lock, complete copied Cargo source and lock inventories, Cargo metadata with resolved features, dependency source inventories, compiler/Cargo/Verus versions and executable digests, Z3 digest, and the bundled Verus distribution inventory (including vstd). The artifact manifest hashes retained inputs, logs and reports. Rebuildable target outputs live in the admitted Docker-managed cache rather than the host evidence filesystem; exported binaries and proof reports have separate retained identities. Both targets are explicit: verification is GNU Linux x86_64, while the shipping target is x86_64 musl.
+Each mutation declares its exact affected function set before execution. Admission requires precisely that set of failed solver queries, complete named/overloaded coverage, and real contract/arithmetic diagnostics with primary spans in the mapped declarations. Missing or unrelated failures are rejected. The shared-constructor control expects all fifty-one failures; it does not permit an arbitrary superset.
 
-This service **does not itself build or execute the musl product**. Same-body musl compilation, static-link inspection, scratch execution, and compiler/cfg/feature correspondence require their own exact-source evidence from the integration gate. A successful producer receipt proves only the scoped verification and negative calibration it actually exercised. The earlier bootstrap proof log and scratch example are historical evidence, not a replacement for a fresh run against changed source.
+The earlier single-constructor filtering attempt is retained in `p02-verus-001.json`. Its string selector left unrelated constructors unproved, and admission correctly rejected it. The replacement removes the actual shared guard without selector logic. `p02-verus-002.json` records the first corrected pass; `p02-verus-003.json` qualifies the completed P02 dependency closure including X74.
 
-The [P01 completion record](../../qualification/p01-completion.json) links the executed producer, both intended semantic mutants, admission rejection controls, exact shared source/manifests/compiler, cold musl build and tool-free runtime-input smoke. Future profile expansion must add actual source-linked function families and semantic calibrations; unimplemented families cannot be listed as passing placeholders.
+Eleven controls corrupt actual captured reports and require rejection: absent, truncated, foreign-only, partial-crate, zero-obligation, missing named function, missing overload, missing intended failure, unexpected failure, split-diagnostic attribution and successful mutant process status. These are evidence-parser controls, never fabricated solver executions.
+
+## Execution and compilation scope
+
+`p02-verus-003.json` records 75 required passing producer/admission obligations with no skips. Its source snapshot matches `p02-conformance-002.json` and the final static API consumers: 56,656 identity/numeric cases, 30 authored-material cases, exact signatures, lossless mutation and protocol-2 initialization. Execution used `PATH=/nonexistent`; ELF inspection found no interpreter or needed shared libraries. The [P02 completion record](../../qualification/p02-completion.json) links exact artifacts; the final runtime bundle is under `~/.local/share/writfold/qualification/p02-material-001/`.
+
+This producer does not itself build or execute the musl product. The separately retained compilation/runtime evidence supplies that component link. The [P01 completion record](../../qualification/p01-completion.json) remains historical evidence for cold/offline toolchain feasibility, generation smoke and storage preflight. Changed code, dependency, compiler, feature or contract inputs need applicable requalification. No installed complete product, whole-kernel verification, operational protocol proof or release approval follows from these component results.

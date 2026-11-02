@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "decisions": [
+    {
+      "id": "WF-ID-001",
+      "status": "adopted",
+      "old": "The initial new Rust KbId and PolicyRevision factories used the generic token grammar.",
+      "new": "These policy-envelope identities retain nonempty opaque text. Authority-policy admission separately rejects blank values and checks new-bootstrap semantic snapshot/policy projections.",
+      "reason": "The retained policy codec accepts opaque nonblank identity text; silently applying a new token restriction would lose historical input bytes or change decoding.",
+      "source": "src/kctx/services/knowledge_models.py:decode_policy",
+      "affected": ["writfold-domain::KbId", "writfold-domain::PolicyRevision", "WF03"],
+      "migration": "No existing signed bytes are changed or normalized. Semantic PolicyId remains a distinct token identity."
+    },
+    {
+      "id": "WF-AUTH-001",
+      "status": "adopted_for_implementation",
+      "old": "The pinned Python cryptography backend accepts the identity-point public key and identity-R/zero-S signature for arbitrary messages. Equation verification therefore does not establish signer authority for such keys.",
+      "new": "Historical inspection preserves the original equation-verification result and labels weak/non-strict acceptance explicitly. Only strong, correctly bound signatures may construct a new approval capability; weak results cannot authorize new publication or be silently promoted to reusable authority.",
+      "reason": "Restore the authenticated-adapter premise rather than treating a backend Boolean as proof of approval.",
+      "evidence": "~/.local/share/writfold/qualification/legacy-crypto-compatibility-probe.json",
+      "affected": ["WF03", "WF10", "WF14", "V05", "M01", "M02", "historical approval inspection", "new-bootstrap policy admission"],
+      "migration": "Strong-key histories are unchanged. Weak-key history remains inspectable with original bytes; restoring authority requires explicit operator review/re-anchoring, never automatic re-signing or rewriting."
+    },
+    {
+      "id": "WF-ARCH-001",
+      "status": "adopted_for_implementation",
+      "old": "The handover dependency table omits direct sources/dolt-to-runtime, store-to-kernel and app-to-domain edges.",
+      "new": "Permit these downward edges when those consumers are introduced: sources -> runtime; dolt -> runtime; store -> kernel; app -> domain.",
+      "reason": "Reuse one real process/filesystem boundary, perform final semantic and authority checks at the store publication boundary, and use nominal types directly. This avoids a cyclic app/store dependency, public fake-verifier factories and forwarding-only type re-export layers.",
+      "affected": ["WF02", "WF08", "WF09", "WF10", "WF11", "V05", "V07", "M01", "M02"],
+      "invariants": "The dependency graph stays acyclic. Domain/kernel/protocol remain IO-free. Application services prepare immutable views and orchestrate; store/runtime own durable effects. No inference or wire version changes."
+    },
+    {
+      "id": "WF-TEXT-001",
+      "status": "adopted_for_implementation",
+      "old": "The historical document mutators only reject CR/LF in single-line inputs. Other Python splitlines separators can create extra frontmatter fields or headings.",
+      "new": "Keep historical parsing and unrelated original bytes unchanged. Reject every Python splitlines boundary in newly supplied frontmatter keys/values and heading/title names before editing or rendering new documents.",
+      "reason": "Enforce the existing one-line mutation contract rather than reproduce metadata injection.",
+      "source": "src/kctx/codecs/documents.py:update_fields, update_section, render_document",
+      "affected": ["WF03", "WF08", "WF12", "WF20", "lossless authored mutation", "design material and actor fields"],
+      "migration": "No historical bytes are rewritten. Existing parsed content remains readable; callers must provide actual single-line values for new mutations."
+    },
+    {
+      "id": "WF-CODEC-001",
+      "status": "preserved_reference_distinction",
+      "old": "The pinned Lean selection-plan decoder rejects empty intended_use but permits duplicate selected references; the pinned Python production decoder and current Rust do the reverse.",
+      "new": "Preserve Python-compatible production request decoding. Record the Lean decoder distinction explicitly instead of claiming universal cross-host codec equivalence from finite conformance.",
+      "reason": "Changing either acceptance boundary silently would alter the preserved production contract. Semantic selection validation remains separate from representation decoding.",
+      "sources": ["formal/Kctx/SelectionCodec.lean:decSelectionPlan", "src/kctx/semantics/wire.py:dec_selection_plan", "crates/writfold-wire/src/semantic/selection.rs:dec_selection_plan"],
+      "affected": ["T02", "WF03", "WF04", "V01", "selection result decoding"],
+      "limits": "The 334-scenario correspondence corpus is not a proof that these known-different decoders agree on every malformed or semantically invalid input."
+    },
+    {
+      "id": "WF-TCB-001",
+      "status": "adopted_for_implementation",
+      "old": "Semantic integers use pinned num-bigint, but the Verus representation and checked-conversion boundary are not yet specified.",
+      "new": "Retain num-bigint 0.4.8 as a trusted external numeric implementation. Admit only explicitly enumerated, source-reviewed library primitive contracts for its mathematical value, clone, sign, comparison and borrowed checked integer conversions. Verify Writfold's actual wrapper and unit-admission bodies against those contracts.",
+      "reason": "Reimplementing arbitrary-precision arithmetic would enlarge the critical implementation. External library assumptions are explicit and source-pinned; they are not proofs of that library or permission to exclude Writfold decision bodies.",
+      "dependency_checksum": "c89e69e7e0f03bea5ef08013795c25018e101932225a656383bd384495ecc367",
+      "reviewed_sources": ["num-bigint/src/bigint.rs", "num-bigint/src/bigint/convert.rs", "num-bigint/src/biguint/convert.rs"],
+      "affected": ["A-INTEGER", "V01", "V03"],
+      "limits": "No general assume, always-true verifier, unchecked authority factory, blanket module exclusion or proof twin is authorized. Producer admission must enumerate the exact trusted symbols and retain negative numeric-bound controls."
+    }
+  ]
+}

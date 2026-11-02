@@ -1,0 +1,14 @@
+{
+  "purpose": "data_generation_only_not_qualification",
+  "image": "writfold-tools@sha256:c854889f19c83174e69600ee28f0d4d35a0d2de1a23b3a35b1ecf4c4a88e0fc6",
+  "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+  "unicode": "15.0.0",
+  "generator_sha256": "bc55bac265887bcce2c86bc307dcfcea749bed29aa711dcd9a51e07f6fe82e60",
+  "output_sha256": "f8fe676b9fb556a921a14779f6c80079914ac3839133b8697d5708e9a0167066",
+  "predicates": {
+    "WORD": "re.fullmatch(r'\\w', char)",
+    "DECIMAL": "re.fullmatch(r'\\d', char)",
+    "SPACE": "str.isspace",
+    "LINE_BREAK": "len(('a'+char+'b').splitlines()) == 2"
+  }
+}

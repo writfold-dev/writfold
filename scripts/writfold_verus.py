@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Offline, source-bound P01 Verus producer. Invoke through the verus service."""
+"""Offline, source-bound nominal/quantity Verus producer; use the verus service."""
 import argparse
 from datetime import datetime, timezone
 import hashlib
@@ -12,7 +12,7 @@ import subprocess
 import sys
 import uuid
 
-from writfold_verus_evidence import ADMISSION_CONTROLS, Evidence, EvidenceError, require, self_controls
+from writfold_verus_evidence import ADMISSION_CONTROLS, Evidence, EvidenceError, mutation_functions, require, self_controls
 
 ROOT = Path(__file__).resolve().parent.parent
 COMMAND = ["cargo", "verus", "verify", "-p", "writfold-protocol", "--locked", "--offline",
@@ -46,6 +46,9 @@ def copy_workspace(destination):
     for name in ("Cargo.toml", "Cargo.lock", "rust-toolchain.toml"):
         shutil.copy2(ROOT / name, destination / name)
     shutil.copytree(ROOT / "crates", destination / "crates")
+    (destination / "qualification").mkdir(mode=0o755)
+    shutil.copy2(ROOT / "qualification/trusted-boundaries.json",
+                 destination / "qualification/trusted-boundaries.json")
     if (ROOT / ".cargo").exists():
         shutil.copytree(ROOT / ".cargo", destination / ".cargo")
     readable(destination)
@@ -121,13 +124,46 @@ def identities(directory, workspace, env, timeout):
     return dependencies
 
 
-def verify_attempt(directory, workspace, profile, timeout, mutation=None):
+def target_environment(profile):
     cache = Path(os.environ.get("CARGO_TARGET_DIR", ""))
     require(cache.is_absolute() and cache.is_relative_to(Path("/cache/target")),
             "verification requires the admitted Docker-managed target cache")
     target = cache / "verus" / uuid.uuid4().hex
-    target.mkdir(parents=True, mode=0o755)  # fresh targets never touch the host evidence filesystem
-    env = environment(target, profile)
+    target.mkdir(parents=True, mode=0o755)
+    return environment(target, profile)
+
+
+def inspect_workspace(directory, workspace, profile, timeout):
+    env = target_environment(profile)
+    before = inventory(workspace)
+    status, text = run(["cargo", "metadata", "--locked", "--offline", "--all-features",
+                        "--format-version=1"], workspace, directory / "metadata", env, timeout)
+    require(status == 0, "source trust metadata failed")
+    metadata = directory / "metadata.json"
+    save(metadata, json.loads(text))
+    report = directory / "source-audit.json"
+    status, _ = run(["cargo", "run", "-p", "writfold-xtask", "--locked", "--offline", "--",
+                     "quality", "--root", str(workspace), "--metadata", str(metadata),
+                     "--report", str(report)], workspace, directory / "audit", env, timeout)
+    require(status == 0, "source trust/syntax admission failed")
+    audit = json.loads(report.read_text())
+    require(audit.get("complete") is True and audit.get("success") is True,
+            "incomplete source trust/syntax admission")
+    available = {(item["source"], item["name"], tuple(item["lines"]))
+                 for item in audit["declarations"]}
+    for spec in profile["crates"].values():
+        for name, function in spec["functions"].items():
+            require(function["declarations"], "missing declared production source")
+            for declaration in function["declarations"]:
+                require((declaration["source"], name.split("::")[-1],
+                         tuple(declaration["lines"])) in available,
+                        f"stale syntax-derived production linkage: {name}")
+    require(inventory(workspace) == before, "source audit changed candidate inputs")
+    return audit
+
+
+def verify_attempt(directory, workspace, profile, timeout, mutation=None):
+    env = target_environment(profile)
     before = inventory(workspace)
     save(directory / "source-hashes.json", before)
     if mutation:
@@ -151,6 +187,7 @@ def verify_attempt(directory, workspace, profile, timeout, mutation=None):
 
 def produce(args, run_root, summary):
     profile = json.loads((ROOT / "qualification/verus-profile.json").read_text())
+    require(profile["schema_version"] == 3, "unsupported Verus profile schema")
     summary["required_mutations"] = [mutation["name"] for mutation in profile["mutations"]]
     summary.update({"scope": profile["scope"], "excluded_claims": profile["excluded_claims"],
                     "verification_target": profile["verification_target"],
@@ -158,6 +195,7 @@ def produce(args, run_root, summary):
     inputs = run_root / "inputs"
     inputs.mkdir(mode=0o755)
     for name in ("qualification/verus-profile.json", "toolchains.lock.json",
+                 "qualification/trusted-boundaries.json", "qualification/implementation-decisions.json",
                  "scripts/writfold_verus.py", "scripts/writfold_verus_evidence.py"):
         destination = inputs / name
         destination.parent.mkdir(parents=True, exist_ok=True, mode=0o755)
@@ -166,12 +204,8 @@ def produce(args, run_root, summary):
     positive_dir.mkdir(mode=0o755)
     workspace = positive_dir / "source"
     copy_workspace(workspace)
-    for spec in profile["crates"].values():
-        for name, source in spec["functions"].items():
-            lines = (workspace / source["source"]).read_text().splitlines()
-            first, last = source["lines"]
-            require(last <= len(lines) and "fn " + name.split("::")[-1] + "(" in lines[first - 1],
-                    f"stale production source linkage: {name}")
+    inspect_workspace(run_root / "source-admission", workspace, profile, args.timeout)
+    summary["source_admission"] = "pass"
     dependencies = identities(run_root / "identity", workspace,
                               environment(run_root / "identity-target", profile), args.timeout)
     positive = verify_attempt(positive_dir, workspace, profile, args.timeout)
@@ -183,16 +217,18 @@ def produce(args, run_root, summary):
         clone = attempt / "source"
         shutil.copytree(workspace, clone)
         readable(clone)
-        spec = profile["crates"][mutation["crate"]]["functions"][mutation["function"]]
-        source = clone / spec["source"]
+        names = mutation_functions(profile, mutation)
+        spec = profile["crates"][mutation["crate"]]["functions"][names[0]]
+        source = clone / spec["declarations"][0]["source"]
         text = source.read_text()
         require(text.count(mutation["before"]) == 1, "mutation must match exactly once")
         source.write_text(text.replace(mutation["before"], mutation["after"]))
         changed = inventory(clone)
-        require({p for p in baseline if baseline[p] != changed.get(p)} == {spec["source"]}
+        require({p for p in baseline if baseline[p] != changed.get(p)} == {spec["declarations"][0]["source"]}
                 and baseline.keys() == changed.keys(), "mutant changed unrelated sources")
-        attribution = {**mutation, "source": spec["source"], "before_sha256": baseline[spec["source"]],
-                       "after_sha256": changed[spec["source"]]}
+        relative = spec["declarations"][0]["source"]
+        attribution = {**mutation, "source": relative, "before_sha256": baseline[relative],
+                       "after_sha256": changed[relative]}
         try:
             negative = verify_attempt(attempt, clone, profile, args.timeout, attribution)
             controls = self_controls(profile, positive, negative, mutation, clone)
@@ -211,6 +247,8 @@ def produce(args, run_root, summary):
 
 def checks_for(summary):
     checks = [
+        {"name": "proof-trust-and-source-admission", "required": True,
+         "status": "pass" if summary["source_admission"] == "pass" else "fail"},
         {"name": "positive-production-proof", "required": True,
          "status": "pass" if summary["positive"] == "pass" else "fail"},
         {"name": "source-and-dependency-stability", "required": True,
@@ -239,7 +277,8 @@ def main():
     run_root = args.evidence / ("verus-" + uuid.uuid4().hex)
     run_root.mkdir(mode=0o755)
     summary = {"schema_version": 1, "producer": "writfold_verus.py", "outcome": "fail",
-               "run_directory": str(run_root), "positive": "not_run", "mutations": {}}
+               "run_directory": str(run_root), "positive": "not_run",
+               "source_admission": "not_run", "mutations": {}}
     try:
         produce(args, run_root, summary)
     except (EvidenceError, OSError, ValueError, KeyError) as error:

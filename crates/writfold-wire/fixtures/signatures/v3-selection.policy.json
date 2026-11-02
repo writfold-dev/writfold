@@ -1,0 +1,1 @@
+{"kb_id":"test-kb","policy_version":"review-policy","schema_version":2,"trusted_keys":{"reviewer-key":{"public_key":"03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8","target_uses":["review","audit"]}}}

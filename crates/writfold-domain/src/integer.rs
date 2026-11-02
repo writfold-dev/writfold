@@ -1,35 +1,64 @@
 //! Signed, unbounded semantic integers, independent of OS time and size units.
+#[cfg(verus_keep_ghost)]
+mod primitive_specs;
 use num_bigint::{BigInt, ParseBigIntError};
-use num_traits::ToPrimitive;
+#[cfg(verus_keep_ghost)]
+use primitive_specs::{from_primitive, mathematical};
 use std::{
     fmt,
     ops::{Add, Sub},
     str::FromStr,
 };
+use vstd::prelude::*;
+
+verus! {
 
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Integer(BigInt);
 
+impl View for Integer {
+    type V = int;
+    closed spec fn view(&self) -> int { mathematical(self.0) }
+}
+
 impl Integer {
-    pub fn from_bigint(value: BigInt) -> Self {
+    pub fn from_bigint(value: BigInt) -> (result: Self)
+        ensures result@ == mathematical(value),
+    {
         Self(value)
     }
-    pub fn as_bigint(&self) -> &BigInt {
+    pub fn as_bigint(&self) -> (result: &BigInt)
+        ensures mathematical(*result) == self@,
+    {
         &self.0
     }
-    pub fn into_bigint(self) -> BigInt {
+    pub fn into_bigint(self) -> (result: BigInt)
+        ensures mathematical(result) == self@,
+    {
         self.0
     }
-    pub fn to_u64(&self) -> Option<u64> {
-        self.0.to_u64()
+    pub fn to_u64(&self) -> (result: Option<u64>)
+        ensures
+            result.is_some() <==> 0 <= self@ <= u64::MAX,
+            result.is_some() ==> result.unwrap() as int == self@,
+    {
+        u64::try_from(&self.0).ok()
     }
-    pub fn to_i64(&self) -> Option<i64> {
-        self.0.to_i64()
+    pub fn to_i64(&self) -> (result: Option<i64>)
+        ensures
+            result.is_some() <==> i64::MIN <= self@ <= i64::MAX,
+            result.is_some() ==> result.unwrap() as int == self@,
+    {
+        i64::try_from(&self.0).ok()
     }
-    pub fn is_negative(&self) -> bool {
-        self.0.sign() == num_bigint::Sign::Minus
+    pub fn is_negative(&self) -> (result: bool)
+        ensures result == (self@ < 0),
+    {
+        matches!(self.0.sign(), num_bigint::Sign::Minus)
     }
 }
+
+} // verus!
 
 impl FromStr for Integer {
     type Err = ParseBigIntError;
@@ -46,8 +75,19 @@ impl fmt::Display for Integer {
 
 macro_rules! primitive_integers {
     ($($primitive:ty),+ $(,)?) => {$(
+        verus! {
+        #[cfg(verus_keep_ghost)]
+        impl vstd::std_specs::convert::FromSpecImpl<$primitive> for Integer {
+            open spec fn obeys_from_spec() -> bool { true }
+            closed spec fn from_spec(value: $primitive) -> Self {
+                Self(from_primitive(value as int))
+            }
+        }
         impl From<$primitive> for Integer {
-            fn from(value: $primitive) -> Self { Self(BigInt::from(value)) }
+            fn from(value: $primitive) -> (result: Self)
+                ensures result@ == value as int,
+            { Self(BigInt::from(value)) }
+        }
         }
     )+};
 }

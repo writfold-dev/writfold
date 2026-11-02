@@ -89,8 +89,8 @@ exact derivation registration and claim acceptance conditions.
 inclusive/future/signed/unbounded freshness, independent witness revocation,
 exact receipt ordering and context matching, borrowed snapshot evaluation,
 contradictory evidence, independent assessment dimensions, and UTF-8 inventory
-framing. The implementing worker executed no build, test, lint, formatter or
-proof command; integration owns execution and evidence recording.
+framing. The current P02 campaign also re-executed complete-response comparison
+against Lean and Python on all 334 retained scenarios with zero mismatches.
 
 Remaining proof work is source-bound Verus qualification of these shipping
 bodies: V02 finite-witness conclusions and transitive footprints; V03 exact
@@ -98,6 +98,6 @@ integer freshness and independent assessment/policy precedence; V04 ordered
 input reuse and correction behavior. Qualification must cover the borrowed
 context-frame projection, owned-output materialization, safe caller
 preconditions and the arbitrary-precision arithmetic trust boundary. The
-unchanged Lean calculus, unexecuted regressions, and agreement with reference
-fixtures are not proofs of these Rust bodies or a cross-prover refinement
-bridge. No proof twin, assumed body, or verification exclusion is supplied.
+unchanged Lean calculus, behavioral regressions, and reference agreement do
+not prove these Rust bodies or a cross-prover refinement bridge. No semantic
+proof twin or excluded Writfold decision body is supplied.

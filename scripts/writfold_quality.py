@@ -121,6 +121,12 @@ class Producer:
             ("test-control", '#[cfg(test)] mod tests { #[test] fn allowed() { Some(1).unwrap(); } }', None),
             ("ghost-control", 'verus! { proof fn allowed() { let x = Some(1); x.unwrap(); } }', None),
             ("ghost-contract-control", 'verus! { fn allowed(x: Option<u64>) -> (r: Option<u64>) ensures r.is_some() ==> r.unwrap() == x.unwrap(), { x } }', None),
+            ("proof-assume", 'verus! { proof fn forbidden() { assume(false); } }', "unapproved-proof-assumption"),
+            ("proof-axiom", 'verus! { axiom fn forbidden() ensures false; }', "unapproved-proof-assumption"),
+            ("proof-external-body", 'verus! { #[verifier::external_body] fn forbidden() -> bool { true } }', "unapproved-proof-assumption"),
+            ("proof-external-spec", 'verus! { #[verifier::external_fn_specification] fn forbidden() -> bool { foreign() } }', "unapproved-proof-assumption"),
+            ("proof-conditional-external", 'verus! { #[cfg_attr(feature="bypass", verifier::external_body)] fn forbidden() -> bool { true } }', "unapproved-proof-assumption"),
+            ("proof-assumed-spec", 'verus! { assume_specification[foreign]() -> bool; }', "unapproved-proof-assumption"),
             ("rust-proof-identifiers", 'struct Audit { ghost: bool, tracked: bool } fn proof(spec: Audit) -> bool { let ghost = spec.ghost; let tracked = spec.tracked; ghost || tracked }', None),
             ("rust-proof-expression", 'fn proof() -> bool { true } fn runtime() -> bool { proof() }', None),
             ("rust-proof-macro", 'macro_rules! record { () => { struct Audit { ghost: bool } fn proof(ghost: Audit) -> bool { ghost.ghost } }; } record!();', None),
@@ -166,6 +172,26 @@ class Producer:
             metadata = self.metadata(f"calibration-manifest-{level}-metadata", root, False)
             if metadata:
                 self.lint_policy(f"calibration-manifest-{level}", root, metadata, reject=level == "allow")
+
+    def trust_calibrations(self) -> None:
+        source = 'verus! { #[verifier::external_type_specification] #[verifier::external_body] pub struct Foreign(std::ffi::OsString); }'
+        for changed in (False, True):
+            name = "proof-trust-drift" if changed else "proof-trust-control"
+            root = self.fixture(name, source)
+            policy = root / "qualification"
+            policy.mkdir()
+            manifest = {"schema_version": 1, "modules": [{
+                "source": "src/lib.rs", "decision": "calibration-only",
+                "sha256": hashlib.sha256(source.encode()).hexdigest(),
+                "attributes": ["external_type_specification", "external_body"],
+            }]}
+            (policy / "trusted-boundaries.json").write_text(json.dumps(manifest) + "\n")
+            if changed:
+                (root / "src/lib.rs").write_text(source.replace("Foreign", "Different"))
+            metadata = self.metadata(f"calibration-{name}-metadata", root, False)
+            if metadata:
+                self.inspect(f"calibration-{name}", root, metadata,
+                             "proof-trust-identity" if changed else None)
 
     def module_calibrations(self) -> None:
         for name, escaped, panic in [
@@ -295,6 +321,7 @@ class Producer:
         if built:
             self.syntax_calibrations()
             self.module_calibrations()
+            self.trust_calibrations()
             self.graph_calibrations()
         else:
             self.record("checker-calibration", False, reason="xtask build failed; no calibration executed")

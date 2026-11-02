@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "modules": [
+    {
+      "source": "crates/writfold-domain/src/integer/primitive_specs.rs",
+      "decision": "WF-TCB-001",
+      "sha256": "4ad574bc9e03441772847f60cfbca7ada186bd243779288091438fded50ecbb9",
+      "attributes": [
+        "external_type_specification",
+        "external_body",
+        "external_fn_specification",
+        "accept_recursive_types"
+      ]
+    }
+  ]
+}

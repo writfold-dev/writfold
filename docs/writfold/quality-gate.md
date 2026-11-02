@@ -18,6 +18,7 @@ Run it in the admitted, offline Compose `quality` service. Source may be mounted
 - TOML-parsed manifest lint policy: every actual workspace member must inherit or explicitly declare `unsafe_code = "forbid"`, with positive/negative isolated manifest controls.
 - Positive and negative checker calibrations, including generated macro bodies and runtime functions inside `verus!`.
 - Conditional attributes and macro-supplied metadata are inspected; `matches!` guards, repeated `vec!` expressions and JSON-embedded Rust cannot hide executable bodies.
+- Proof assumptions are fail-closed: `assume`, proof axioms and assumed-specification statements are rejected. Verifier attributes require an explicit exact-source approval; ordinary blanket verification exclusions are not admitted.
 - Actual consumer compilations against `writfold-domain`: matching-ID/unit/state positive controls and wrong-ID/unit/state negative controls. Rejection requires exactly one rustc error, `E0308`, with the primary span on the intended argument and both expected and supplied nominal types in the diagnostic. Unrelated compiler/tool/dependency failures cannot satisfy these checks.
 
 `/evidence/obligations.json` contains named required checks, statuses, an explicit empty skips list, and artifact SHA256 hashes. Standard output, standard error, command arguments, working directories, elapsed time, exit codes, checker reports and exact generated fixture bytes remain available. A missing executable, timeout, malformed output or unmet prerequisite fails a required obligation. The enclosing gate runner binds this evidence to source/tool/lock identities.
@@ -42,6 +43,14 @@ The crate dependency table follows `handover/plan/02-architecture.md`. Unknown w
 
 Pure production crates cannot import ambient filesystem/network/process/environment/clock/thread/IO APIs or emit stdio through macros. Aliased/grouped imports are inspected. Domain `Deserialize` derives, implementations and imports are rejected: untrusted bytes must enter through checked wire conversions. Untyped `serde_json::Value` is rejected in domain/kernel/protocol/app/store paths. Unsafe blocks/functions/traits/implementations/foreign boundaries and unsafe attributes fail; broad unsafe/panic lint allowances fail. Production panic, unwrap, expect, todo and unimplemented paths fail. No invariant exception is currently admitted.
 
+`qualification/trusted-boundaries.json` lists the exact approved source digest and
+attribute set for a reviewed external-library boundary. The current approval is
+WF-TCB-001's num-bigint specification module only. Changing its bytes invalidates
+admission; an approval must name inspected workspace source. Conditional
+attributes and macro bodies cannot escape this rule. Positive approved-source,
+hash-drift, unapproved external-body/specification, conditional-exclusion, axiom
+and assumption controls exercise the actual checker.
+
 ## Direct checker interface
 
 After producing full Cargo metadata and building the tool:
@@ -53,8 +62,8 @@ cargo run -p writfold-xtask --locked --offline -- quality \
   --report /evidence/manual-quality.report.json
 ```
 
-A completed report has `schema: 1`, `complete: true`, an explicit `success` boolean and structured diagnostics with rule names. A successful shell exit without a completed report does not qualify the source.
+A completed report has `schema: 1`, `complete: true`, an explicit `success` boolean, structured diagnostics and syntax-derived executable declaration spans. The Verus producer consumes these spans rather than guessing function boundaries from source text. A successful shell exit without a completed report does not qualify the source.
 
 ## Scope and evidence status
 
-These checks enforce syntax/typing/dependency boundaries, not semantic correctness or formal refinement. They do not replace Verus, Lean, TLC/TLAPS, conformance, unit tests or runtime integration. Advisory/license qualification with a retained advisory snapshot is not implemented by this producer and must not be inferred from its success. No executions or green evidence are claimed by this implementation document; qualification status comes only from retained gate attempts.
+These checks enforce syntax/typing/dependency/trust boundaries, not semantic correctness or formal refinement. They do not replace Verus, Lean, TLC/TLAPS, conformance, unit tests or runtime integration. Advisory/license qualification with a retained advisory snapshot is not implemented by this producer and must not be inferred from its success. Executed status comes from retained gate attempts, not from the existence of this document.

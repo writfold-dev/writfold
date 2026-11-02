@@ -15,6 +15,7 @@ mod safety;
 mod source;
 mod syntax;
 mod tokens;
+mod trust;
 
 use serde_json::json;
 use std::{collections::BTreeMap, env, fs, path::PathBuf, process::ExitCode};
@@ -42,13 +43,13 @@ fn run() -> Result<bool, Box<dyn std::error::Error>> {
     let report = options.get("--report").ok_or("--report required")?;
     let mut diagnostics = Vec::new();
     graph::check(&metadata, &mut diagnostics)?;
-    source::check(&root, &metadata, &mut diagnostics)?;
+    let declarations = source::check(&root, &metadata, &mut diagnostics)?;
     let success = !diagnostics.iter().any(|item| item["severity"] == "error");
     fs::write(
         report,
         serde_json::to_vec_pretty(&json!({"schema":1,"complete":true,"success":success,
         "scope":"all workspace Rust files, macro templates, Verus executable and ghost bodies, declared and resolved Cargo dependencies",
-        "diagnostics":diagnostics}))?,
+        "diagnostics":diagnostics, "declarations":declarations}))?,
     )?;
     Ok(success)
 }

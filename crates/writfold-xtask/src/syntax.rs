@@ -9,6 +9,13 @@ use verus_syn::{
     visit::{self, Visit},
 };
 
+#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, serde::Serialize)]
+pub struct FunctionSource {
+    pub source: String,
+    pub name: String,
+    pub lines: [usize; 2],
+}
+
 pub struct Audit<'a> {
     pub path: &'a str,
     pub package: &'a str,
@@ -18,6 +25,8 @@ pub struct Audit<'a> {
     pub lines: &'a BTreeSet<usize>,
     pub diagnostics: &'a mut Vec<Value>,
     pub definitions: &'a BTreeSet<String>,
+    pub functions: &'a mut BTreeSet<FunctionSource>,
+    pub proof_approval: Option<&'a BTreeSet<String>>,
     pub test: bool,
     pub ghost: bool,
 }
@@ -28,6 +37,19 @@ impl Audit<'_> {
             "line":span.start().line,"column":span.start().column + 1,
             "end_line":span.end().line,"end_column":span.end().column + 1,
             "message":message.into(),"severity":"error"}));
+    }
+
+    pub fn proof_attribute(&mut self, name: Option<&str>, span: Span) {
+        if !name.is_some_and(|name| {
+            self.proof_approval
+                .is_some_and(|allowed| allowed.contains(name))
+        }) {
+            self.emit(
+                "unapproved-proof-assumption",
+                span,
+                format!("unapproved verifier attribute {name:?}"),
+            );
+        }
     }
 
     pub fn budget(&mut self, span: Span, limit: usize, warning: usize, rule: &str) {
@@ -84,6 +106,16 @@ impl Audit<'_> {
             signature.mode,
             verus_syn::FnMode::Exec(_) | verus_syn::FnMode::Default
         );
+        if !self.ghost && !self.test {
+            self.functions.insert(FunctionSource {
+                source: self.path.to_owned(),
+                name: signature.ident.to_string(),
+                lines: [
+                    signature.fn_token.span.start().line,
+                    block.span().end().line,
+                ],
+            });
+        }
         self.budget(block.span(), 80, 50, "function-budget");
         if signature.unsafety.is_some() {
             self.emit("unsafe", signature.span(), "unsafe function");
@@ -135,10 +167,33 @@ impl<'ast> Visit<'ast> for Audit<'_> {
         self.ghost = old;
     }
     fn visit_assume(&mut self, node: &'ast verus_syn::Assume) {
+        self.emit(
+            "unapproved-proof-assumption",
+            node.span(),
+            "proof assumes a proposition",
+        );
         let old = self.ghost;
         self.ghost = true;
         visit::visit_assume(self, node);
         self.ghost = old;
+    }
+    fn visit_assume_specification(&mut self, node: &'ast verus_syn::AssumeSpecification) {
+        self.emit(
+            "unapproved-proof-assumption",
+            node.span(),
+            "unapproved assumed specification",
+        );
+        visit::visit_assume_specification(self, node);
+    }
+    fn visit_fn_mode(&mut self, node: &'ast verus_syn::FnMode) {
+        if matches!(node, verus_syn::FnMode::ProofAxiom(_)) {
+            self.emit(
+                "unapproved-proof-assumption",
+                node.span(),
+                "unapproved proof axiom",
+            );
+        }
+        visit::visit_fn_mode(self, node);
     }
     fn visit_item_fn(&mut self, node: &'ast verus_syn::ItemFn) {
         let old = self.test;

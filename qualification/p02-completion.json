@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "stage": "P02",
+  "status": "pass",
+  "scope": "Nominal/domain/wire/authored-codec boundary stage; not complete product or release-wide WF02/WF03/WF05 qualification",
+  "source_candidate_sha256": "1b119fa97161009bb688ccaa43b7e9c8758138a70fdbb75c58b6020e8873c9ef",
+  "source_commit": "c3ba95068f16566cefad79619287666d383b4041",
+  "tool_image": "writfold-tools@sha256:c854889f19c83174e69600ee28f0d4d35a0d2de1a23b3a35b1ecf4c4a88e0fc6",
+  "target": "x86_64-unknown-linux-musl",
+  "verification": {
+    "domain_obligations": 348,
+    "generation_protocol_obligations": 4,
+    "required_domain_solver_names": 258,
+    "semantic_mutation_families": 6,
+    "identity_constructor_mutant_functions": 51,
+    "independent_controls_per_mutation": 11
+  },
+  "runtime": {
+    "domain_scenarios": 56656,
+    "authored_material_scenarios": 30,
+    "pairwise_mismatches": 0,
+    "interpreter": false,
+    "needed_libraries": [],
+    "PATH": "/nonexistent"
+  },
+  "conformance": {
+    "scenarios": 334,
+    "responses_per_host": 335,
+    "pairwise_mismatches": 0,
+    "python_decision_mutants_killed": 11
+  },
+  "gate_commands": {
+    "p02-unit-005": {
+      "scope": "unit-only",
+      "obligations": {
+        "failed": 0,
+        "passed": 116,
+        "required": 116,
+        "skipped": 0
+      }
+    },
+    "p02-quality-007": {
+      "scope": "quality-only",
+      "obligations": {
+        "failed": 0,
+        "passed": 129,
+        "required": 129,
+        "skipped": 0
+      }
+    },
+    "p02-verus-003": {
+      "scope": "verus-only",
+      "obligations": {
+        "failed": 0,
+        "passed": 75,
+        "required": 75,
+        "skipped": 0
+      }
+    },
+    "p02-conformance-002": {
+      "scope": "conformance-only",
+      "obligations": {
+        "failed": 0,
+        "passed": 12,
+        "required": 12,
+        "skipped": 0
+      }
+    }
+  },
+  "evidence": [
+    {
+      "path": "~/.local/share/writfold/qualification/p02-unit-005.json",
+      "sha256": "ab0334a9e181474d9d3e86943b8285677f38b0814e1853b8bc198888fc750aa5",
+      "bytes": 223767
+    },
+    {
+      "path": "~/.local/share/writfold/qualification/p02-quality-007.json",
+      "sha256": "00fccaacf849133b130c44a53cbfacf86226b3f930b93a4c7a4351abe53642c3",
+      "bytes": 361372
+    },
+    {
+      "path": "~/.local/share/writfold/qualification/p02-verus-003.json",
+      "sha256": "29605293c4bf233a6c23814a58f0bc9ca8bfac89b658fad1026cec930f03a1ab",
+      "bytes": 588555
+    },
+    {
+      "path": "~/.local/share/writfold/qualification/p02-conformance-002.json",
+      "sha256": "d8de0ec5768d1da614246db097bf8dd965ae614e4ebc22023b4d81e19c1b86b1",
+      "bytes": 236928
+    },
+    {
+      "path": "~/.local/share/writfold/qualification/p02-material-001/runtime-all.json",
+      "sha256": "c3f0be70f59c16c6881fb7e00d8d07ae7c486224904056aa5711bf7a90ec0d41",
+      "bytes": 276817
+    },
+    {
+      "path": "~/.local/share/writfold/qualification/p02-material-001/report.json",
+      "sha256": "8cdc7dd71c78dc7fd085a4ac5a2ee838f85b907e320b7b3e354e8b82d823bb2c",
+      "bytes": 274917
+    },
+    {
+      "path": "~/.local/share/writfold/qualification/p02-compilation-linkage-002.json",
+      "sha256": "f0c567cd71d15853f9f73e95322783209a8c3fe24f0a5059746b20666ee3a626",
+      "bytes": 4753
+    }
+  ],
+  "scenarios": {
+    "X05": "Wrong namespace/unit/state rejected by intended E0308 compile-fail controls.",
+    "X06": "Bounded duplicate-aware Unicode/JSON and exact closed variants; deep ownership cleanup and authored line-injection regressions.",
+    "X07": "Mathematical integers, checked runtime bounds and generation overflow; executable proofs plus static input campaign.",
+    "X08": "Canonical whole-operation bytes and cross-host Ed25519 fixtures.",
+    "X65": "Original schema-2 signature domain and exact retained message bytes; inspection separated from current authority.",
+    "X66": "Boundary rejects schema-2 signing/current authorization. Composed historical store-order/recovery remains later P07/P10 scope.",
+    "X67": "Protocol string 2, independent wire/workflow versions, exact request IDs including empty reference ID.",
+    "X74": "Legacy custom metadata retained; exact unprefixed material hashes and disjoint design-v3 identity. Bind/reopen/CAS authority remains P08D/P07."
+  },
+  "assurance_map": "qualification/claims.json",
+  "proof_registry": "qualification/proofs.json",
+  "trusted_boundary": "qualification/trusted-boundaries.json",
+  "preserved_failures": [
+    "p02-unit-001.json",
+    "p02-unit-002.json",
+    "p02-unit-003.json",
+    "p02-quality-001.json",
+    "p02-quality-002.json",
+    "p02-quality-004.json",
+    "p02-verus-001.json"
+  ],
+  "limits": [
+    "num-bigint primitive contracts, cryptographic implementation, compiler/erasure and standard libraries remain trusted",
+    "Finite correspondence is not a Lean-to-Rust refinement proof; WF-CODEC-001 retains the known selection-plan decoder distinction",
+    "No semantic proof of V02-V13, operational model completion, installed production CLI, storage publication or website release is implied",
+    "Later code/dependency changes require applicable current-candidate requalification"
+  ]
+}

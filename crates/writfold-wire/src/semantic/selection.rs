@@ -83,3 +83,12 @@ pub fn enc_selection_result(value: &SelectionResult) -> Value {
         "outcome": enc_commit_outcome(value.outcome())
     })
 }
+
+pub fn dec_selection_result(value: &Value) -> Result<SelectionResult> {
+    let v = obj(value, "state journal outcome")?;
+    Ok(SelectionResult::new(
+        dec_selection_state(field(v, "state")?)?,
+        items(field(v, "journal")?, dec_selection_journal_entry)?,
+        dec_commit_outcome(field(v, "outcome")?)?,
+    ))
+}

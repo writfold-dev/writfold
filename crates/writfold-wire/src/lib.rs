@@ -3,9 +3,13 @@
 
 mod approval;
 mod canonical;
+pub mod operation;
 mod parser;
+pub mod policy;
 pub mod reference;
+pub mod rpc;
 pub mod semantic;
+pub mod signatures;
 
 pub use approval::{ApprovalDomain, OperationVariant};
 pub use canonical::canonical;
