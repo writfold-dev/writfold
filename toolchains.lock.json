@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "admitted": true,
+  "scope": "Exact executable/image identity admitted for local development qualification. This is not a passed WF01 offline-closure or product proof claim.",
+  "image": {
+    "reference": "writfold-tools@sha256:c854889f19c83174e69600ee28f0d4d35a0d2de1a23b3a35b1ecf4c4a88e0fc6",
+    "id": "sha256:c854889f19c83174e69600ee28f0d4d35a0d2de1a23b3a35b1ecf4c4a88e0fc6",
+    "platform": "linux/amd64",
+    "base": "ubuntu:24.04@sha256:a61567bd31828687156d735ea8eb01ba4e37636e225dd6a48ba94136a70d9d61",
+    "dockerfile_frontend": "docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e",
+    "provisioning": "Distro packages retained in this exact image; rebuilding moving apt mirrors is not claimed byte-reproducible."
+  },
+  "observation": {
+    "path": "qualification/toolchain-observation.json",
+    "sha256": "1d4bc6552abf2dfd381636f5c6f1d9dcd2feb81c3359520341939cecb9450683"
+  },
+  "target": "x86_64-unknown-linux-musl",
+  "compiler": "rustc 1.98.0 (88d9e12ae 2026-08-18)",
+  "rust_components": [
+    "cargo-x86_64-unknown-linux-gnu",
+    "clippy-x86_64-unknown-linux-gnu",
+    "llvm-tools-x86_64-unknown-linux-gnu",
+    "rust-std-x86_64-unknown-linux-gnu",
+    "rust-std-x86_64-unknown-linux-musl",
+    "rustc-x86_64-unknown-linux-gnu",
+    "rustc-dev-x86_64-unknown-linux-gnu",
+    "rustfmt-x86_64-unknown-linux-gnu"
+  ],
+  "artifacts": [
+    {
+      "name": "rustup",
+      "version": "1.29.2",
+      "platform": "linux/amd64",
+      "url": "https://static.rust-lang.org/rustup/archive/1.29.2/x86_64-unknown-linux-gnu/rustup-init",
+      "archive_sha256": "5be191e8c70a5007074254cb74d78dbfdd25cd5a61c27de7b8e5410122ec24f4",
+      "executable_sha256": "5be191e8c70a5007074254cb74d78dbfdd25cd5a61c27de7b8e5410122ec24f4",
+      "license": "Apache-2.0 OR MIT",
+      "provenance": "Published upstream release bytes, checksum-enforced by docker/Dockerfile.tools; executed identity retained in qualification/toolchain-observation.json."
+    },
+    {
+      "name": "verus",
+      "version": "0.2026.09.06.8dea4a2",
+      "platform": "linux/amd64",
+      "url": "https://github.com/verus-lang/verus/releases/download/release/0.2026.09.06.8dea4a2/verus-0.2026.09.06.8dea4a2-x86-linux.zip",
+      "archive_sha256": "13d01e134c0620c3b29770874707d16c33b3d227c843a489c8ceb744d43c0a16",
+      "executable_sha256": "14cf479624e1277e38ecbbc288a4df4c2b7f0c50a5cc5b0ae272a2235037eb81",
+      "license": "MIT",
+      "provenance": "Published upstream release bytes, checksum-enforced by docker/Dockerfile.tools; executed identity retained in qualification/toolchain-observation.json."
+    },
+    {
+      "name": "z3",
+      "version": "4.16.0",
+      "platform": "linux/amd64",
+      "url": "https://github.com/Z3Prover/z3/releases/download/z3-4.16.0/z3-4.16.0-x64-glibc-2.39.zip",
+      "archive_sha256": "7288c49a5bd6dbafd7b0b0d1f65956b91672da24b08f09242919af159be3418e",
+      "executable_sha256": "e583c4186a45e72411fa2cb2048401eed03f0f8e5f24694676a8f6271a50b765",
+      "license": "MIT",
+      "provenance": "Published upstream release bytes, checksum-enforced by docker/Dockerfile.tools; executed identity retained in qualification/toolchain-observation.json."
+    },
+    {
+      "name": "lean",
+      "version": "4.21.0",
+      "platform": "linux/amd64",
+      "url": "https://github.com/leanprover/lean4/releases/download/v4.21.0/lean-4.21.0-linux.tar.zst",
+      "archive_sha256": "455c6df09d5bd54d2a51b137939c47e2dda816d512ac789c4b3642c9bf98bde8",
+      "executable_sha256": "cbf5fd536e142ef1beaccf33f788fd8a7f3f29fb214e75c11319a8d8677b4b2b",
+      "license": "Apache-2.0",
+      "provenance": "Published upstream release bytes, checksum-enforced by docker/Dockerfile.tools; executed identity retained in qualification/toolchain-observation.json."
+    },
+    {
+      "name": "dolt",
+      "version": "2.6.1",
+      "platform": "linux/amd64",
+      "url": "https://github.com/dolthub/dolt/releases/download/v2.6.1/dolt-linux-amd64.tar.gz",
+      "archive_sha256": "5fcbc6f4f7152617b8b122855155e05b0785f595a96e8966fac63e104b3e7610",
+      "executable_sha256": "ea866d85a8d38fad303268589b56a4766e05e72c9869556c0da60a0f819726b2",
+      "license": "Apache-2.0",
+      "provenance": "Published upstream release bytes, checksum-enforced by docker/Dockerfile.tools; executed identity retained in qualification/toolchain-observation.json."
+    },
+    {
+      "name": "tlc",
+      "version": "1.7.4 (TLC 2.19)",
+      "platform": "java",
+      "url": "https://github.com/tlaplus/tlaplus/releases/download/v1.7.4/tla2tools.jar",
+      "archive_sha256": "936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88",
+      "executable_sha256": "936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88",
+      "license": "MIT",
+      "provenance": "Published upstream release bytes, checksum-enforced by docker/Dockerfile.tools; executed identity retained in qualification/toolchain-observation.json."
+    },
+    {
+      "name": "tlaps",
+      "version": "1.6.0-pre / 9ed0376",
+      "platform": "linux/amd64",
+      "url": "https://github.com/tlaplus/tlapm/releases/download/1.6.0-pre/tlapm-1.6.0-pre-x86_64-linux-gnu.tar.gz",
+      "archive_sha256": "39620b869ed939d991f5e2c4d604d84d16c05c5dd95787a1e5f47da296746b7b",
+      "executable_sha256": "d975503212624e6e4c70a82a22547c1bf8e50ecc0578a78794a48251f0dfc39b",
+      "license": "BSD-2-Clause",
+      "provenance": "Published upstream release bytes, checksum-enforced by docker/Dockerfile.tools; executed identity retained in qualification/toolchain-observation.json."
+    },
+    {
+      "name": "uv",
+      "version": "0.9.9",
+      "platform": "linux/amd64",
+      "url": "https://github.com/astral-sh/uv/releases/download/0.9.9/uv-x86_64-unknown-linux-gnu.tar.gz",
+      "archive_sha256": "9ec303873e00deed44d1b2b52b85ab7aa55d849588d7242298748390eaea07ef",
+      "executable_sha256": "83f28650272b5543e939debbc7a5578d087952399fd945e9267b1db0ccc27d33",
+      "license": "Apache-2.0 OR MIT",
+      "provenance": "Published upstream release bytes, checksum-enforced by docker/Dockerfile.tools; executed identity retained in qualification/toolchain-observation.json."
+    }
+  ],
+  "distro_packages_sha256": "f7948475c22632baa61663fd5cdc279eaf9e923981c26cf76d9905fe491a1cf0",
+  "changed_candidate": {
+    "tool": "TLAPS",
+    "rejected_sha256": "a2860384bc89c4c5b2c73ec367e29f44d829e4d4a2698ab295139f829219331c",
+    "new_asset_id": 698564747,
+    "source_commit": "9ed03762aa5202ce72048816b9d8d981fadad622",
+    "observed_revision": "9ed0376",
+    "prior_proofs_reused": false
+  },
+  "trusted_compilation_boundary": "Rust compiler, Verus erasure macros and target code generation are trusted; matching source and compiler identities are not a cross-logic refinement theorem."
+}

@@ -1,229 +1,55 @@
-# kctx
+# Writfold
 
-A typed knowledge engine for retaining evidence, admitting scoped claims and
-retrieving them across sessions. Git keeps authored assets and release manifests;
-Dolt keeps versioned structured records and relationship projections. The pure
-semantic core is specified in Lean and implemented in Python.
+A local knowledge engine for agents, with exact evidence, explicit approval and reproducible context. Writfold is the Rust successor to [kctx](private:kctx).
 
-**Acquisition is not truth. A citation is not approval. A database join is not an
-inference.** The engine keeps support, contrary evidence, freshness, validation,
-authority and publication separate.
+**Acquisition is not truth. A citation is not approval. A database join is not inference.** Support, contrary evidence, freshness, validation, authority and publication remain independent. Work and personal projects use explicit authorized contexts; contexts do not pool evidence or approval.
 
-## Start with Docker Compose
+## Implementation status
 
-No host Python, Lean, Dolt or package installation is required for this workflow.
-Create one `config.toml` using paths visible inside the container:
+The original kctx Git history is preserved. `src/kctx`, `formal`, and the reference fixtures remain the exact compatibility baseline at `1c17b94be37af8f82f222baddf31435f14172e1a`. The original implementation handover is retained unchanged under [`handover/`](handover/README.md).
 
-```toml
-root = "/kb"
-graph_dir = "/state/graph"
-knowledge_dir = "/state/knowledge"
-cache_dir = "/state/citations"
-log_dir = "/state/logs"
-```
+The Rust implementation lives in `crates/`:
 
-Run the installed CLI against your mounted workspace:
+- `writfold-domain`: checked nominal identities, arbitrary-precision semantic integers and immutable model records.
+- `writfold-kernel`: finite witnesses, independent assessments, admission, portfolio and design judgments.
+- `writfold-wire`: bounded JSON, canonical approval bytes, typed semantic codecs and the development `writfold-ref` host.
+- `writfold-protocol`: pure operational decisions, beginning with checked generation allocation.
+- `writfold-runtime`: descriptor-relative native filesystem reads, conditional publication and stable managed locks.
+- `writfold-xtask`: development-only syntax, dependency and nominal-type qualification.
 
-```sh
-docker compose --profile runtime run --build --rm \
-  --volume /absolute/path/to/kb:/kb \
-  --volume /absolute/path/to/state:/state \
-  --env KCTX_CONFIG=/kb/config.toml \
-  kctx --json asset list
-```
+`writfold-ref` is a development conformance executable, not the production CLI or an authentication capability. No installable Rust product or complete Rust qualification is claimed yet. Current stage/gate dispositions are in [`qualification/status.json`](qualification/status.json); unrun obligations remain explicit.
 
-`KCTX_CONFIG` only locates the file. There is no CLI/env/config precedence for
-individual settings. Without an explicit root setting, the CLI discovers a KB
-by its workspace marker, never by assuming any Git repository is a KB.
-[Configuration details](docs/kctx/config.md).
+## Local build and qualification
 
-For an already managed Python environment, the same entry point is
-`uv run --locked kctx`; `python -m kctx` is also supported. There are no root
-module shims. The installed runtime does not need Lean or formal source files.
+Linux/WSL2 x86_64 is the only active target. Build and proof tools run locally through Compose/BuildKit. Cargo registry/target caches live in named Docker volumes on the operator-admitted external store, not the source checkout. The preflight reuses the existing storage binding and free-space floors; a missing or mismatched store is a failure, never a fallback to the system disk.
 
-## Choose the right operation
+[`toolchains.lock.json`](toolchains.lock.json) binds the actual tool image and observed executable bytes. The static target is `x86_64-unknown-linux-musl`; Dolt and Git must be qualified separately as native dependencies. A static core does not make those dependencies disappear.
 
-| Need | Command family | Meaning |
-| --- | --- | --- |
-| Record entities and explicit relations | `asset`, `rel`, `impact` | Inventory and bounded navigation; absence is not proof of no dependents |
-| Review an unpushed commit diff | `impact --diff BASE..HEAD [--repo PATH]` | Citation/hunk overlap, related inventory, signatures and pinned admitted claims; a checklist, not a safety verdict |
-| Orient a session | `home`, `context`, `match`, `timeline`, `uses` | Authored-workspace navigation with provenance and coverage boundaries |
-| Make or inspect durable citations | `cite make/check/stale/render` | Built-in grammar, exact source identity, current advisories and safe rendering |
-| Refresh after source changes | `admit --repo …`, `admit <PR>` | Source/citation refresh and durable pending judgment work—not approval of new facts |
-| Record work and evidence | `run`, `observe`, `cover`, `check`, `resume`, `checkpoint` | Immutable observations, retained input identity, coverage and eligibility |
-| Manage authored workflows | `proposal`, `inv`, `ktlo`, `sig`, `dossier` | Typed state transitions and lossless authored-document updates |
-| Correct knowledge and repair projections | `retract`, `correction recover` | Durable correction event first, then replayable target/review projections |
-| Admit canonical structured knowledge | `knowledge capture/propose/sign/admit` | Exact captures, explicit candidates, authenticated approval and conditional publication |
-| Read admitted knowledge | `knowledge contexts/context/explain` | Discover authenticated named contexts, then retrieve pinned claims, assessments, evidence and bounded continuation |
-| Recover, migrate or retain history | `knowledge recover/migrate/rollback/backup/restore` | Explicit recoverable operations; migration does not auto-admit prose |
-| Query the relationship projection | `graph sync/status/uses/impact/diff/check`, `serve` | Completed immutable generations, exact binding parity and reusable read-only sessions |
-| Diagnose records or operations | `validate`, `logs` | Aggregated typed diagnostics and redacted structured operation logs |
-
-Put `--json` before the command for machine output. Exit codes remain `0` success,
-`2` partial, `3` blocked and `1` error. Expected failures carry a stable category;
-missing or unavailable evidence is not converted into an empty successful answer.
-Use each command's `--help` for the exact supported parameters.
-
-### Human output and agent transport
-
-The CLI uses native Click groups and Rich help, tables and diagnostics. Human
-results use stdout; warnings/errors and requested verbose events use stderr.
-Color is detected separately for each stream; `NO_COLOR` and
-`--color auto|always|never` control human presentation. Untrusted terminal
-controls are escaped and markup-looking source text stays literal. JSON output
-bypasses styling, including command-line errors. Full logs remain redacted JSONL.
-
-`kctx serve` exposes the same application to agents over JSON-RPC 2.0, one JSON
-frame per line. Initialize before sending operations:
-
-```jsonl
-{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocol_version":"2"}}
-{"jsonrpc":"2.0","id":2,"method":"cite.make","params":{"citation":{"kind":"web","fields":{"url":"https://example.com","q":"reference"}}}}
-{"jsonrpc":"2.0","id":3,"method":"shutdown"}
-```
-
-Initialization returns exact method schemas and request-size bounds. Citation,
-authored navigation, graph and knowledge methods share this process. Graph reads
-stay on their pinned generation until `graph.refresh`; knowledge reads and
-continuations retain their release identity. Responses include operation exit
-state, generation and completeness. Signing with an operator-held private key
-and filesystem backup/migration remain explicit CLI operations, not RPC methods.
-See [the operational flows](docs/kctx/flows.md) and
-`src/kctx/engine/schemas.py` for the supported method contracts.
-
-## Citations are part of kctx
-
-There is no external `cite` executable or `cite.py` loader:
+The operator entrypoint is:
 
 ```sh
-kctx --json cite make ticket id=DRQS-7 'q=Which deployment changed?'
-kctx --json cite check notes/
-kctx --json cite stale notes/ --offline
-kctx cite render notes/decision.md --format md
+./scripts/gate baseline --receipt "$HOME/.local/share/writfold/qualification/baseline.json"
+./scripts/gate unit --receipt "$HOME/.local/share/writfold/qualification/unit.json"
+./scripts/gate conformance --receipt "$HOME/.local/share/writfold/qualification/conformance.json"
 ```
 
-The public `⟦cite …⟧` syntax remains. Historical `rev`, `blob`, `span`, `L`,
-`seen` and cited `state` are preserved. Refresh writes separate current advisory
-fields such as `checked_at`, `current_rev`, `current_L` and `current_state`.
-Rendering does not silently repoint a historical link or renew an observation's
-age. Illustrative citations remain distinguishable from evidence.
+Use a new receipt path for every attempt. Missing producers, stale sources, failed commands, skipped obligations and missing tools refuse qualification. See the [qualification contract](docs/writfold/qualification.md) for bootstrap, exact scope and command details. These command examples are not pass receipts.
 
-Source reads and write-backs reject unsafe traversal/symlink targets. Secret
-redaction covers rendering and diagnostics; authored regex redaction is bounded
-and fails closed. See [citation flow and limits](docs/kctx/flows.md#citation).
 
-## Authored workflows versus signed admission
+The [P01 completion record](qualification/p01-completion.json) links the exercised cold/offline build, matching verified/musl source inputs, runtime-supplied generation cases in a `scratch` image, retained tool archive, and fail-closed storage preflight. It is build feasibility evidence, not a complete product release.
+## Compatibility and assurance
 
-A proposal's lifecycle is not publication of admitted knowledge. Workflow 3
-separates acceptance of a material **design revision** from binding its concrete
-implementation with `proposal bind`. The design names its intended source before
-the implementing file or commit exists. Gates remain bound to that design, exact
-target, environment, scope, checker, time and actor; old-target passes do not
-transfer. Material changes require `proposal reopen` and fresh acceptance.
-Actual landed references must resolve. See [the workflow guide](docs/kctx/workflows.md).
+- Preserve inference semantics `2.0.0`, core reference wire `2`, knowledge workflow schema `3`, and production initialization protocol string `"2"` as separate version axes.
+- Preserve historical identifiers, citations, signed bytes, checker namespaces and `refs/kctx/*`.
+- Preserve the Lean calculus and its explicit evidence/authentication assumptions. Source-matched historical reports are not fresh proof runs.
+- Selected shipping Rust bodies require Verus verification. Operational interleavings require TLC and inductive safety/bridge obligations require TLAPS. Differential agreement is not a cross-prover equivalence theorem.
+- Real filesystem, Git, Dolt, cancellation, concurrency, crash, migration and independent-restore qualification remain mandatory for the corresponding claims.
+- Enterprise endpoints, hardware power loss and unavailable production-corpus outcomes are separate scopes; local synthetic results cannot stand in for them.
 
-Canonical knowledge admission additionally needs a trusted policy and detached
-Ed25519 approval. Configure `knowledge_policy_digest` to the exact SHA256 of the
-bootstrap `.kctx/knowledge-policy.json`; the policy holds public keys and allowed
-uses, never private keys. The operator retains the signing key separately.
+The [baseline contract](docs/writfold/baseline-contract.md) links exact CLI/RPC/envelope, evaluation and unresolved-work inventories. Historical Python operational documentation remains under [`docs/kctx/`](docs/kctx/); it describes the reference implementation, not completed Rust commands.
 
-```sh
-kctx --json knowledge capture --kind document --source docs/design.md \
-  --revision <exact-source-revision> --file /path/to/design.md --observed-at <epoch>
-kctx --json knowledge propose --candidate /path/to/candidate.json \
-  --target-use review --now <epoch>
-kctx --json knowledge sign <plan-id> --private-key /private/operator.pem --key-id reviewer
-kctx --json knowledge admit <plan-id> --approval /path/to/approval.json
-kctx --json knowledge contexts --release <release-id>
-kctx --json knowledge context --request /path/to/context-request.json
-```
+## Execution and publication
 
-`capture` retains supplied acquisition bytes and declared source identity; it does
-not infer arbitrary prose claims. A schema-3 candidate names its expected snapshot,
-full KB, retained captures, named contexts and an explicit context/witness
-assignment for every added claim. Signing binds the complete candidate and all
-context authorizations, not a mutable `accepted` flag. Queries require
-`context_id`; multiple contexts never pool premises or assessments. Prepared
-native commits are not current until authenticated publication succeeds.
-[Admission and retrieval flows](docs/kctx/flows.md).
+Start with [`AGENTS.md`](AGENTS.md) and the [17-stage handover](handover/plan/08-execution-and-acceptance.md). Preserve failures and source-bound replacements. The private playbook is consumed at its adopted pin, never copied into the public website.
 
-## Storage and history
-
-- **Authored files:** existing inventory, proposal, incident and document layouts
-  stay readable. Targeted edits preserve unknown sections, citation text and line
-  endings. Nominal IDs and enums are decoded at boundaries.
-- **Knowledge releases:** a completed Git release pins native Dolt data and
-  retained signed inputs. Reads do not fall back to HEAD or WORKING. Forward
-  rollback selects earlier admitted claims without deleting subsequent audit or
-  correction history.
-- **Relationship projection:** extraction binds source, parser, schema, semantic,
-  configuration and engine identities. Candidate generations are isolated;
-  publication selects only complete retained data. Equal counts are not enough:
-  parity compares exact bindings.
-- **Observations:** complete published JSON appears atomically. Git capture
-  retains the declared raw worktree/index/submodule profile; missing or moved
-  input is explicit. Coverage that an item was examined is distinct from
-  eligibility to proceed.
-- **Recovery:** operation journals are recovery hints, not authority. They are
-  revalidated against signed inputs and retained objects before replay or
-  publication. No live `.dolt` directory is committed as ordinary authored files.
-
-The finite-witness inference language remains semantic version `2.0.0` (core wire
-schema 2). New knowledge operations/manifests and authored workflow contracts use
-schema/version 3; stdio initialization uses protocol `"2"`. Signed schema-2 history
-keeps its original bytes and interpretation, exposed through the explicit
-`legacy` context. New writes cannot downgrade a schema-3 history or reinterpret
-an old approval. Open authored records migrate through `proposal adopt` or
-`proposal reopen`; finalized history is superseded, not silently rewritten.
-See [cutover details](PORTING.md#workflow-3-cutover).
-
-[Detailed flows](docs/kctx/flows.md) · [Schemas and calculus](docs/kctx/calculus.md)
-
-## Verification
-
-```sh
-# Locked Python checks, static misuse fixtures, behavior, Lean audit,
-# full-response cross-host conformance and actual CLI/Dolt smoke
-docker compose --profile verify run --build --rm verify &&
-
-# Executable twin verification and production equivalence grids
-docker compose --profile nagini run --build --rm nagini &&
-
-# Installed runtime without Lean/Docker/formal artifacts
-docker compose --profile verify run --build --rm runtime
-```
-
-The chain stops on the first failed stage. The runtime includes Git, Dolt and
-the GitHub CLI; no host tool installation is needed beyond Docker Compose.
-
-Additional real-process qualification is provided by
-`scripts/qualify_storage.py`, `scripts/qualify_remote.py` and
-`scripts/evaluate_kctx.py`. The [gate report](docs/kctx/gates.md) records exact
-commands, source/fixture identities, outcomes and scope. Local Git/Dolt transport
-is not represented as enterprise-policy qualification; deployment-specific checks
-are left to the work agent as requested.
-
-The Lean proofs establish the declared finite semantic model under explicit
-proposition-specific evidence and authenticated-environment assumptions. Python
-correspondence, cryptographic/source adapters, durable publication, native SQL,
-restore and agent usefulness have separate executable evidence. A theorem count
-alone is not a complete-system correctness claim.
-
-## Architecture and future Rust host
-
-Runtime code lives under `src/kctx`: `domain`, `codecs`, `semantics`, `citations`,
-`services`, `adapters`, `graph` and `cli`. Formal code is under `formal/Kctx` and
-is excluded from the runtime artifact.
-
-- [Implementation/refactor decisions](docs/kctx/refactor-plan.md)
-- [Sound calculus revision](docs/kctx/calculus-revision.md)
-- [Rust implementation handover and R00–R13 gates](docs/kctx/greenfield-design.md)
-- [Migration hardening after the first v2 migration](docs/kctx/migration-hardening.md)
-- [Tracked fixes and local diff review: rationale and kernel boundary](docs/kctx/review-feature-requests.md)
-- [Provider-neutral asset catalog design](docs/kctx/catalog-design.md)
-- [Full requirements and Q/D scenario registries](docs/kctx/handover.md)
-
-The Rust design keeps Dolt outside the calculus, manages it as a pinned companion
-rather than embedding Go through FFI, and preserves the same semantic and
-operational qualification gates. Vendor-specific source names belong in catalogs
-and providers, not the logical kernel.
+The companion website repository is [writfold-dev/writfold-dev.github.io](https://github.com/writfold-dev/writfold-dev.github.io). `writfold.dev` is verified for the organization, but a repository or DNS record is not a deployed website. Installation links and assurance claims must come from actual qualified release artifacts.

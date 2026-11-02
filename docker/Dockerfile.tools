@@ -1,0 +1,53 @@
+# syntax=docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e
+# Online bootstrap only. Qualification admits the resulting immutable image ID
+# and package inventory; it does not claim moving distro mirrors reproduce bytes.
+FROM ubuntu:24.04@sha256:a61567bd31828687156d735ea8eb01ba4e37636e225dd6a48ba94136a70d9d61
+ENV DEBIAN_FRONTEND=noninteractive \
+    RUSTUP_HOME=/opt/rustup CARGO_HOME=/opt/cargo \
+    PATH=/opt/cargo/bin:/opt/verus-x86-linux:/opt/lean/bin:/opt/tlapm/bin:/opt/python/bin:$PATH \
+    RUSTUP_TOOLCHAIN=1.98.0 \
+    VERUS_Z3_PATH=/opt/z3-4.16.0-x64-glibc-2.39/bin/z3 \
+    UV_PROJECT_ENVIRONMENT=/opt/python UV_PYTHON_DOWNLOADS=never \
+    CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_LINKER=musl-gcc
+RUN --mount=type=cache,id=writfold-ubuntu24-apt,target=/var/cache/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
+      ca-certificates curl git gh build-essential musl-tools pkg-config \
+      python3 python3-pip python3-venv unzip xz-utils zstd file binutils \
+      openjdk-21-jre-headless libgmp10 \
+    && rm -rf /var/lib/apt/lists/*
+
+ADD --checksum=sha256:5be191e8c70a5007074254cb74d78dbfdd25cd5a61c27de7b8e5410122ec24f4 https://static.rust-lang.org/rustup/archive/1.29.2/x86_64-unknown-linux-gnu/rustup-init /tmp/rustup-init
+RUN chmod 755 /tmp/rustup-init && /tmp/rustup-init -y --no-modify-path \
+      --default-toolchain 1.98.0 --profile minimal \
+      --component rustc-dev --component llvm-tools --component rustfmt --component clippy \
+      --target x86_64-unknown-linux-musl \
+    && rm /tmp/rustup-init
+ADD --checksum=sha256:13d01e134c0620c3b29770874707d16c33b3d227c843a489c8ceb744d43c0a16 https://github.com/verus-lang/verus/releases/download/release/0.2026.09.06.8dea4a2/verus-0.2026.09.06.8dea4a2-x86-linux.zip /tmp/verus.zip
+ADD --checksum=sha256:7288c49a5bd6dbafd7b0b0d1f65956b91672da24b08f09242919af159be3418e https://github.com/Z3Prover/z3/releases/download/z3-4.16.0/z3-4.16.0-x64-glibc-2.39.zip /tmp/z3.zip
+RUN unzip -q /tmp/verus.zip -d /opt && unzip -q /tmp/z3.zip -d /opt \
+    && rm /tmp/verus.zip /tmp/z3.zip
+ADD --checksum=sha256:455c6df09d5bd54d2a51b137939c47e2dda816d512ac789c4b3642c9bf98bde8 https://github.com/leanprover/lean4/releases/download/v4.21.0/lean-4.21.0-linux.tar.zst /tmp/lean.tar.zst
+RUN mkdir /opt/lean && tar --zstd -xf /tmp/lean.tar.zst -C /opt/lean --strip-components=1 \
+    && rm /tmp/lean.tar.zst
+ADD --checksum=sha256:5fcbc6f4f7152617b8b122855155e05b0785f595a96e8966fac63e104b3e7610 https://github.com/dolthub/dolt/releases/download/v2.6.1/dolt-linux-amd64.tar.gz /tmp/dolt.tar.gz
+RUN tar -xzf /tmp/dolt.tar.gz -C /tmp \
+    && install -m 755 /tmp/dolt-linux-amd64/bin/dolt /usr/local/bin/dolt \
+    && rm -rf /tmp/dolt.tar.gz /tmp/dolt-linux-amd64
+ADD --checksum=sha256:936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88 https://github.com/tlaplus/tlaplus/releases/download/v1.7.4/tla2tools.jar /opt/tla/tla2tools.jar
+ADD --checksum=sha256:39620b869ed939d991f5e2c4d604d84d16c05c5dd95787a1e5f47da296746b7b https://github.com/tlaplus/tlapm/releases/download/1.6.0-pre/tlapm-1.6.0-pre-x86_64-linux-gnu.tar.gz /tmp/tlapm.tar.gz
+RUN mkdir /opt/tlapm && tar -xzf /tmp/tlapm.tar.gz -C /opt/tlapm --strip-components=1 \
+    && rm /tmp/tlapm.tar.gz
+
+ADD --checksum=sha256:9ec303873e00deed44d1b2b52b85ab7aa55d849588d7242298748390eaea07ef https://github.com/astral-sh/uv/releases/download/0.9.9/uv-x86_64-unknown-linux-gnu.tar.gz /tmp/uv.tar.gz
+RUN tar -xzf /tmp/uv.tar.gz -C /tmp \
+    && install -m 755 /tmp/uv-x86_64-unknown-linux-gnu/uv /usr/local/bin/uv \
+    && rm -rf /tmp/uv.tar.gz /tmp/uv-x86_64-unknown-linux-gnu
+WORKDIR /work/writfold
+COPY pyproject.toml uv.lock ./
+COPY src ./src
+RUN uv sync --frozen --group dev --no-editable \
+    && git config --system user.email writfold-qualification@example.invalid \
+    && git config --system user.name 'Writfold qualification' \
+    && mkdir -p /opt/writfold-toolchain \
+    && dpkg-query -W -f='${Package}\t${Version}\n' > /opt/writfold-toolchain/distro-packages.tsv
+CMD ["bash"]

@@ -1,0 +1,18 @@
+[package]
+name = "writfold-domain"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[package.metadata.verus]
+verify = true
+
+[dependencies]
+num-bigint.workspace = true
+num-traits.workspace = true
+vstd.workspace = true
+
+[lints]
+workspace = true

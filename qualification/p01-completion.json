@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "stage": "P01",
+  "status": "pass",
+  "scope": "admitted local toolchain, source-bound verified generation compilation and cold offline musl feasibility; not complete Rust product or WF05",
+  "tool_image": "writfold-tools@sha256:c854889f19c83174e69600ee28f0d4d35a0d2de1a23b3a35b1ecf4c4a88e0fc6",
+  "target": "x86_64-unknown-linux-musl",
+  "source_linkage_inputs": 23,
+  "verification_obligations": {
+    "failed": 0,
+    "passed": 20,
+    "required": 20,
+    "skipped": 0
+  },
+  "scratch_runtime_cases": 3,
+  "cold_vendored_files": 3107,
+  "evidence": [
+    {
+      "path": "~/.local/share/writfold/qualification/verus-003.json",
+      "sha256": "441ef4d97ae6ab512e750c54c1b2e6a006b0a173227f559c10a0e71f429935c7"
+    },
+    {
+      "path": "~/.local/share/writfold/qualification/rust-integration-007/cold-offline/report.json",
+      "sha256": "5b39a72639dd95c0c260213cf1c05b3bb4cf2cf4d9d6325fb691060f973707ba"
+    },
+    {
+      "path": "~/.local/share/writfold/qualification/p01-compilation-linkage.json",
+      "sha256": "af39d99371ea82ac334aed12d559f247ae5f1bf889ab24a2f3b1117f3a993836"
+    },
+    {
+      "path": "~/.local/share/writfold/qualification/musl-runtime-002/runtime.json",
+      "sha256": "6f475098d401abde06b45fbab6087427f8897f6a5f963e29f2daaab604461b21"
+    },
+    {
+      "path": "~/.local/share/writfold/qualification/preflight-missing-001/result.json",
+      "sha256": "f3b7938aa13913a45edf3a11cf2165eb0e32d4310b177bef5ae21d26a45f4aa2"
+    },
+    {
+      "path": "~/.local/share/writfold/qualification/preflight-drive-missing-001/result.json",
+      "sha256": "5d10eafdbfbd9ce63abaf50381454e238cace9ad8847737f37d586bdd9957c42"
+    },
+    {
+      "path": "~/.local/share/writfold/qualification/tool-archive-001.json",
+      "sha256": "7a47fdf0416a808b70780e4353e09462f76d3f7b382ef7a7dc207b61bb91fd6f"
+    }
+  ],
+  "tool_lock_sha256": "7d315f5bf3eb8add0d3ba8345684696de2fb304b20a885a6f59802f461d7205f",
+  "cargo_lock_sha256": "80782ec473d51e50c902ad493602ee188659528c01a1e973c50dede89ef658bc",
+  "limits": [
+    "Compiler and Verus erasure remain trusted; no cross-logic equivalence claimed.",
+    "Immutable provisioned distro image is retained; rebuilding moving apt mirrors is not claimed byte-identical.",
+    "Missing-binding and unconfigured-drive refusal were exercised; no physical unplug or power-loss claim.",
+    "Later code/dependency changes require applicable WF01 requalification; runtime Git/Dolt/Scribe closure remains later stage work."
+  ]
+}

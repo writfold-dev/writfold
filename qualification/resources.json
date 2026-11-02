@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "profile": "local-linux-x64",
+  "observed_host": {"cpus": 32, "memory_bytes": 32404889600},
+  "allocation": {"cpus": 8, "memory_bytes": 12884901888, "pids": 1024, "cargo_jobs": 8},
+  "rationale": "One qualification container uses one quarter of observed CPUs and less than half of observed Docker memory, leaving capacity for the existing shared CI services. This is an explicit initial execution bound, not a measured performance guarantee.",
+  "storage_policy": "Require the operator's existing ci_infra.storage.check binding and all of its external/system/state free-space floors. No project-local replacement or weaker fallback.",
+  "cache_policy": "Docker-managed namespaced volumes on the admitted daemon; never bind Cargo target, registry or proof outputs into the workstation source tree.",
+  "authoritative_state": "Source, receipts and retained release artifacts are outside disposable Docker caches. No production KB is used by qualification."
+}

@@ -1,0 +1,45 @@
+{
+  "reference_commit": "1c17b94be37af8f82f222baddf31435f14172e1a",
+  "source": "src/kctx/services/knowledge_models.py",
+  "scope": "raw operation envelopes; semantic records and detached approval decoding are not implemented here",
+  "operations": [
+    {
+      "variant": "LegacyAdmissionPlan",
+      "schema_version": 2,
+      "kind": "admission",
+      "fields": ["schema_version", "kind", "id", "base", "policy", "captures", "context", "plan", "toolchain"],
+      "signature_domain": "kctx-operation-v2\u0000",
+      "usage": "historical-verification-only"
+    },
+    {
+      "variant": "LegacyReleaseSelectionPlan",
+      "schema_version": 2,
+      "kind": "selection",
+      "fields": ["schema_version", "kind", "id", "base", "retained", "policy", "context", "plan", "toolchain"],
+      "signature_domain": "kctx-operation-v2\u0000",
+      "usage": "historical-verification-only"
+    },
+    {
+      "variant": "AdmissionPlan",
+      "source_class": "PortfolioAdmissionPlan",
+      "schema_version": 3,
+      "kind": "admission",
+      "fields": ["schema_version", "kind", "id", "base", "policy", "captures", "target_use", "plan", "toolchain"],
+      "signature_domain": "kctx-operation-v3\u0000"
+    },
+    {
+      "variant": "ReleaseSelectionPlan",
+      "source_class": "PortfolioReleaseSelectionPlan",
+      "schema_version": 3,
+      "kind": "selection",
+      "fields": ["schema_version", "kind", "id", "base", "retained", "policy", "target_use", "plan", "toolchain"],
+      "signature_domain": "kctx-operation-v3\u0000"
+    }
+  ],
+  "detached_approval_reference": {
+    "schema_versions": [2, 3],
+    "fields": ["schema_version", "plan", "key", "signature"],
+    "signature_encoding": "64 bytes as hexadecimal; case-insensitive read, lowercase write",
+    "signed_payload": "domain prefix including NUL followed by canonical full outer operation, not this approval record"
+  }
+}

@@ -27,8 +27,9 @@
       "gates": [
         "WF01"
       ],
-      "status": "not_run",
-      "receipts": []
+      "status": "pass",
+      "receipts": ["~/.local/share/writfold/qualification/verus-003.json"],
+      "completion_record": "qualification/p01-completion.json"
     },
     {
       "id": "P02",

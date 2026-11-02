@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:writfold:qualification:gate-receipt:2",
+  "title": "Writfold local source-bound gate receipt v2",
+  "description": "Scoped command passes are not full-gate qualification. Null tool locks are allowed for baseline reconciliation and explicitly unadmitted observation; release consumption requires all identities and complete obligations.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "gate", "status", "scope", "source", "source_after_digest", "command", "commands", "toolchain_digest", "cargo_lock_digest", "tool_image", "tool_admission", "fixture_digest", "gate_definition_digest", "target", "features", "playbook_commit", "playbook_path", "start_ns", "end_ns", "duration_ns", "clock", "exit_code", "skips", "obligations", "artifacts", "candidate_artifacts", "logs", "evidence_mode", "error"],
+  "properties": {
+    "schema_version": {"const": 2},
+    "gate": {"type": "string", "pattern": "^(WF[0-9]{2}|release-required)$"},
+    "status": {"enum": ["not_run", "blocked", "fail", "pass"]},
+    "scope": {"type": "string"},
+    "source": {"$ref": "#/$defs/source"},
+    "source_after_digest": {"$ref": "#/$defs/nullableHash"},
+    "command": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+    "commands": {"type": "array", "items": {"$ref": "#/$defs/command"}},
+    "toolchain_digest": {"$ref": "#/$defs/nullableHash"},
+    "cargo_lock_digest": {"$ref": "#/$defs/nullableHash"},
+    "tool_image": {"type": ["string", "null"]},
+    "tool_admission": {"enum": ["not-admitted", "explicit-unadmitted", "admitted"]},
+    "fixture_digest": {"$ref": "#/$defs/nullableHash"},
+    "gate_definition_digest": {"$ref": "#/$defs/nullableHash"},
+    "target": {"type": "string"},
+    "features": {"type": "array", "items": {"type": "string"}},
+    "playbook_commit": {"type": ["string", "null"], "pattern": "^[0-9a-f]{40}$"},
+    "playbook_path": {"type": ["string", "null"]},
+    "start_ns": {"type": "integer", "minimum": 0},
+    "end_ns": {"type": "integer", "minimum": 0},
+    "duration_ns": {"type": "integer", "minimum": 0},
+    "clock": {"const": "time.time_ns / time.monotonic_ns"},
+    "exit_code": {"type": ["integer", "null"]},
+    "skips": {"type": "array", "items": {"type": "string"}},
+    "obligations": {"type": "object", "additionalProperties": false,
+      "required": ["required", "passed", "failed", "skipped"],
+      "properties": {
+        "required": {"type": "integer", "minimum": 0},
+        "passed": {"type": "integer", "minimum": 0},
+        "failed": {"type": "integer", "minimum": 0},
+        "skipped": {"type": "integer", "minimum": 0}
+      }
+    },
+    "artifacts": {"type": "array", "items": {"$ref": "#/$defs/file"}},
+    "candidate_artifacts": {"type": "array", "items": {"$ref": "#/$defs/file"}},
+    "logs": {"type": "array", "items": {"$ref": "#/$defs/file"}},
+    "evidence_mode": {"enum": ["executed", "reused"]},
+    "error": {"type": ["string", "null"]}
+  },
+  "allOf": [{
+    "if": {"properties": {"status": {"const": "pass"}}},
+    "then": {"properties": {
+      "exit_code": {"const": 0}, "error": {"const": null},
+      "source": {"type": "object"},
+      "source_after_digest": {"$ref": "#/$defs/hash"},
+      "fixture_digest": {"$ref": "#/$defs/hash"},
+      "gate_definition_digest": {"$ref": "#/$defs/hash"},
+      "playbook_commit": {"const": "e7d991e990e3dff9c5d70e4327c0e90298e2f67e"},
+      "logs": {"type": "array", "minItems": 1},
+      "commands": {"type": "array", "minItems": 1},
+      "skips": {"type": "array", "maxItems": 0},
+      "obligations": {"properties": {
+        "required": {"minimum": 1}, "failed": {"const": 0}, "skipped": {"const": 0}
+      }}
+    }}
+  }],
+  "$defs": {
+    "nullableHash": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+    "hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "file": {"type": "object", "additionalProperties": false,
+      "required": ["path", "sha256", "bytes"],
+      "properties": {
+        "path": {"type": "string"}, "sha256": {"$ref": "#/$defs/hash"},
+        "bytes": {"type": "integer", "minimum": 0}
+      }
+    },
+    "sourceFile": {"type": "object", "additionalProperties": false,
+      "properties": {
+        "sha256": {"$ref": "#/$defs/hash"}, "mode": {"type": "integer", "minimum": 0},
+        "bytes": {"type": "integer", "minimum": 0}, "kind": {"const": "deleted"}
+      }
+    },
+    "source": {"type": ["object", "null"], "additionalProperties": false,
+      "required": ["commit", "tree_digest", "dirty", "scope", "files", "scope_policy"],
+      "properties": {
+        "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "tree_digest": {"$ref": "#/$defs/hash"}, "dirty": {"type": "boolean"},
+        "scope": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "files": {"type": "object", "additionalProperties": {"$ref": "#/$defs/sourceFile"}},
+        "scope_policy": {"type": "string"}
+      }
+    },
+    "command": {"type": "object", "additionalProperties": false,
+      "required": ["argv", "cwd", "start_ns", "end_ns", "duration_ns", "exit_code", "timeout_seconds", "timed_out"],
+      "properties": {
+        "argv": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "cwd": {"type": "string"}, "start_ns": {"type": "integer", "minimum": 0},
+        "end_ns": {"type": "integer", "minimum": 0},
+        "duration_ns": {"type": "integer", "minimum": 0},
+        "exit_code": {"type": ["integer", "null"]},
+        "timeout_seconds": {"type": "integer", "minimum": 1},
+        "timed_out": {"type": "boolean"}
+      }
+    }
+  }
+}

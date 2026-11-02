@@ -1,0 +1,98 @@
+# Native contained filesystem effects
+
+`writfold-runtime::fs` implements the descriptor-relative filesystem portion of P05 and plan/04. It uses `rustix = 1.1.4` filesystem operations, checked domain `ContentDigest` values, SHA-256 and typed errors. The crate forbids unsafe Rust. This is not completion of P05, a knowledge-release transaction, a Git/Dolt adapter, or a claim of lock-free filesystem correctness.
+
+## Public API
+
+All constructors retain private fields. Filesystem paths are distinct from public UTF-8 domain identifiers.
+
+| Type | Public operations |
+| --- | --- |
+| `RelativePath` | `new(impl AsRef<Path>) -> Result<Self, PathError>`; `as_path() -> &Path` |
+| `ContainedRoot` | `open(impl AsRef<Path>) -> Result<Self, FsError>`; `create(impl AsRef<Path>) -> Result<Self, FsError>`; `pin(&RelativePath) -> Result<PinnedFile, FsError>` |
+| `PinnedFile` | `open_read() -> Result<OpenedFile<'_>, FsError>`; `read(ByteCount) -> Result<ReadResult, FsError>`; `try_lock(&ManagedLocks, &LockKey) -> Result<LockedFile<'_>, FsError>` |
+| `OpenedFile` | `read(ByteCount) -> Result<ReadResult, FsError>` |
+| `ManagedLocks` | `open(impl AsRef<Path>) -> Result<Self, FsError>`; `create(impl AsRef<Path>) -> Result<Self, FsError>` |
+| `LockKey` | `new(&str) -> Result<Self, FsError>`; `as_str() -> &str` |
+| `LockedFile` | `read(ByteCount) -> Result<ReadResult, FsError>`; `lock_identity() -> FileIdentity`; `create(&mut self, &[u8], ByteCount) -> Result<SyncedWrite, WriteError>`; `compare_and_write(&mut self, Option<&ContentDigest>, &[u8], ByteCount, ByteCount) -> Result<SyncedWrite, WriteError>` |
+| `ReadResult` | `bytes() -> &[u8]`; `into_bytes() -> Vec<u8>`; `digest() -> &ContentDigest`; `identity() -> FileIdentity`; `extent() -> ReadExtent` |
+| `SyncedWrite` | `digest() -> &ContentDigest`; `bytes() -> usize`; `identity() -> FileIdentity` |
+| `FileIdentity` | `device() -> u64`; `inode() -> u64` |
+
+The two `compare_and_write` limits are **current-source read limit**, then **replacement write limit**. `None` expects an absent destination. `Some(digest)` requires a complete current read with exactly that content digest. All mutation methods borrow the guard mutably, preventing simultaneous mutations through one shared flock guard. `PinnedFile::try_lock` borrows both the pinned target and namespace for the guard's lifetime; it does not retain a borrow of the key.
+
+`ReadExtent` is `Complete` or `Truncated { limit: ByteCount, observed_size: u64 }`. A truncated result's digest describes **only its returned prefix**. It never authenticates the unread suffix. Returned bytes are exact, with no decoding, newline conversion, or normalization. Digest strings use `ContentDigest::try_from`, not an unchecked public string factory.
+
+`PathError` distinguishes absolute paths, empty components, dot/parent components and NUL. `FsError` distinguishes invalid paths/lock keys, missing entries, permission denial, symlinks, nonregular files, nondirectories, changed sources, hardlink refusal, busy locks, existing destinations, stale expected revisions, budgets, unsupported operations and other IO. Budget kinds are read, write, allocation and temporary-name attempts. Underlying errors remain sources where applicable. Generated-digest validation failure is explicit. Root initialization that fails synchronization reports `RootDurabilityUnknown` rather than a successful root handle.
+
+## Admission and retained descriptors
+
+`ContainedRoot::open` never creates anything. Absolute roots start at an opened `/`; relative roots start at an opened process current directory. Every supplied nonempty root component, including `.`, is opened relative to the previous descriptor with `O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC | O_RDONLY`. Root `..` and NUL are rejected before IO. No `canonicalize`, `resolve`, prefix comparison, or lexical containment test authorizes access.
+
+`ContainedRoot::create` explicitly creates **one** new root, using mode 0700 before umask; ancestors must already exist. It admits the parent by the same descriptor walk, uses `mkdirat`, opens the new directory without following links, and synchronizes the new directory and its parent. An existing leaf is a collision. A failed initialization can leave its new directory visible; there is no automatic rollback or creation receipt on error.
+
+`RelativePath` preserves OS bytes. It rejects an absolute path, an empty path, empty slash-separated components (including doubled/trailing slashes), `.`/`..` and NUL. Non-UTF-8 filenames and ordinary user filenames beginning `.writfold-tmp-` remain usable. Root path syntax is not the same as this deliberately stricter descendant grammar.
+
+`pin` walks descendant directories without following links and retains the final parent descriptor plus one leaf name. Subsequent reads, temporaries, publication, and synchronization use that descriptor, never the original ancestor pathname. If the parent is renamed after admission, operations remain attached to the admitted directory inode; they do not switch to whatever occupies its previous path. A root or parent descriptor is an object capability, not a promise that its directory still has the original textual ancestry.
+
+Leaves are opened with `O_NOFOLLOW | O_CLOEXEC | O_NONBLOCK` **before** checking that they are regular files. FIFOs therefore cannot block admission waiting for a peer. Regular-file IO itself can still block in the kernel: byte bounds are not wall-clock/cancellation guarantees. Opening an arbitrary special file is not a device sandbox; access to untrusted device namespaces is outside the qualified profile.
+
+## Exact bounded reads
+
+An `OpenedFile` holds the leaf descriptor and borrows its pinned parent. Reads use `pread`, so multiple reads do not share or advance a file offset. Retained allocation is bounded by the smaller of opened size and the caller's byte limit; allocation failure is explicit. At most that prefix plus one byte of EOF probing is read. Complete empty files and nonempty zero-budget truncations are distinguishable.
+
+Before and after reading, the adapter compares the opened inode's device/inode, size, link count, mode, uid/gid, mtime and ctime (including nanoseconds). It also compares the named leaf, obtained without following links, against the opened stamp. Atime is deliberately excluded because reads may update it. Removal, observed replacement, changed metadata, and size/EOF inconsistency are failures, not complete empty evidence. An IO failure does not return a complete result with partial bytes.
+
+These comparisons are **observations**, not a proof that an uncooperative writer could not perform an ABA change between observations or exploit timestamp granularity. Ordinary reads do not take or create writer locks. Callers needing a cooperating-writer critical section explicitly acquire a managed guard and use its read method.
+
+## Managed coordination, not adjacent lock files
+
+Following plan/11 FR11, `ManagedLocks` admits one separately managed namespace. `open` opens an existing namespace without initializing it; `create` explicitly initializes one new directory. `LockKey` accepts 1–128 ASCII letters, digits, `_` and `-`. An entry is `<key>.lock` inside that namespace. The application supplies the stable logical-record key; it must not derive a different key just because an authored path or content revision changes.
+
+`PinnedFile::try_lock` is an explicit write-capability operation. It creates a missing lock entry with mode 0600 before umask, rejects symlinks/nonregular entries/multiply linked entries, and uses nonblocking exclusive `flock`. Busy returns `LockBusy` without a sleep/retry loop. Successful acquisition checks the retained and named lock inode, then synchronizes the lock file and namespace directory. Revalidation occurs before publication. Dropping the guard closes its owned descriptor; **it never unlinks the lock entry**.
+
+All coordinating readers, writers and recovery code must use the same namespace inode and logical key. Two paths may intentionally share one logical-record lock. Conversely, choosing different keys for the same record is **not CAS**. Namespaces cannot be renamed/replaced/unlinked by another participant while clients may reopen them; namespace migration requires quiescence. Python's adjacent `.<leaf>.kctx-lock` is not used and does not interoperate automatically with this managed namespace. Mixed old/new writers require an explicit quiescent cutover, not an implicit alias.
+
+Opening a root, pinning, opening a source, and ordinary reads never initialize directories, locks, recovery state, or ownership. Acquiring a guard is explicitly different from ordinary reading. `ManagedLocks::open` itself also has no creation side effects.
+
+## Atomic publication and uncertainty
+
+Under a retained managed lock, a conditional update reads and compares the full current revision. Current files with a link count other than one are refused, preserving authored hardlink-write refusal. An exceeded current-read budget cannot be used as a revision match. The old leaf descriptor remains open across preparation and the final unchanged check.
+
+Publication uses these ordered effects:
+
+1. Enforce the replacement byte budget and compute the checked content digest.
+2. Create a same-directory `.writfold-tmp-<pid>-<sequence>` with `O_EXCL | O_CREAT | O_NOFOLLOW`, mode 0600 before umask. The requested destination name is never used for staging. Existing name collisions are skipped, never removed; the attempt count is bounded.
+3. Write all bytes, handling short writes and interruption. A zero-byte write is an IO failure. Fsync the temporary file.
+4. Recheck the lock inode and, for replacement, the retained old source identity/metadata.
+5. For replacement use `renameat`; for exclusive creation use `linkat`, which refuses a pre-existing destination atomically. No check-then-overwrite substitute is used for creation.
+6. Remove the operation-owned temporary link if publication used `linkat`, then fsync the held parent directory.
+7. Only then construct `SyncedWrite` with digest, byte length and published inode identity.
+
+A temporary cleanup first compares the named entry with the operation's still-open inode. It never sweeps a prefix, removes pre-existing collision entries, or performs automatic GC. Pre-publication cleanup is best effort and can leave an operation-owned temporary if cleanup itself fails. After publication, cleanup failure is explicitly unsuccessful. The comparison/unlink pair is not an atomic defense against a malicious same-user namespace mutator; the namespace ownership assumption remains necessary.
+
+`WriteError` has two explicit states:
+
+- `NotPublished(FsError)`: this operation has not completed a successful publication syscall. It may have created its managed lock and/or left its own temporary behind. No successful write receipt is supplied.
+- `PublishedButDurabilityUnknown { digest, bytes, source }`: publication succeeded, but temporary cleanup or parent synchronization failed. New bytes became visible at the publication point; this does not promise they remain current after later writers. The caller must re-observe/recover rather than assume failure or blindly replay the old predecessor. There is no `SyncedWrite` in this error.
+
+A crash or killed caller can occur between any syscall and its response. An interrupted response is not evidence that publication failed. This adapter does not implement a recovery journal or a multi-file transaction.
+
+## Required qualification and trust boundary
+
+The supported target is Linux/WSL x86_64. The intended filesystem profile is an operator-admitted **local Linux filesystem** supporting descriptor-relative no-follow opens, coherent inode/stat observations, exclusive creation, advisory flock, atomic same-directory rename/hardlink publication, and file/directory fsync. Qualification must bind the actual mount/filesystem and storage path used by the operator. NFS, SMB, FUSE, Windows/DrvFS mounts, unusual pseudo-filesystems, and other environments with different locking/rename/error/durability semantics are not implicitly qualified. A Linux target triple alone is not filesystem qualification. Detected unsupported syscalls are errors; the adapter does not silently downgrade.
+
+Additional assumptions:
+
+- Writers and recovery cooperate on one stable managed namespace/key protocol. Same-user malicious memory/filesystem manipulation and arbitrary direct external writes are outside the CAS guarantee.
+- The process current directory anchors relative roots. Process-global cwd mutation is not supplied by this adapter. Bind mounts and mount crossing are not rejected; the admitted root and mount topology are operator trust inputs.
+- Directory namespace owners do not maliciously replace operation temporaries or lock entries between checking and publication/cleanup. Observed replacements are refused, but metadata checks do not establish lock-free ABA immunity.
+- Successful local publication syscalls have the qualified local filesystem's namespace semantics; remote filesystems with ambiguous failed rename/link responses need another outcome protocol.
+- Fsync success is an observed OS result, not proof of drive-cache behavior or host-power-loss safety. No power-loss guarantee, automatic GC, device sandbox, or cross-store atomicity is claimed.
+- Read byte budgets, write byte budgets and lock contention are explicit; supervisor-level IO deadlines/cancellation and process lifetime management belong outside this module.
+
+## Test and evidence scope
+
+`tests/filesystem.rs` loads isolated real-directory tests for byte-preserving path validation, absolute/relative root symlink ancestors, leaf symlinks, FIFO/nonregular refusal, no implicit initialization, retained roots/parents under rename, observed leaf replacement/in-place changes, zero/partial/full and multi-buffer reads, checked digest examples, conditional creation/replacement, stale revisions, both byte budgets, exclusive-create collision, hardlink refusal, stable managed lock inodes, lock-entry substitution, and a channel-coordinated competing writer. They use no user KB, time-based races, mock syscall echoes or production credentials.
+
+Integration exercised all 24 filesystem regressions within the 66-test Rust run (`rust-unit-005.json`) and a separately compiled static `contained_smoke` consumer on the observed WSL ext4 filesystem with an empty PATH. That consumer created a new isolated record, published a conditional replacement, rejected a stale write, and observed the retained replacement bytes and inode. Evidence is retained under the operator's Writfold qualification root in `native-files-001/`; no user KB was touched. This does not close P05: post-publication IO-failure injection, process-crash windows and full source/Git qualification remain required. No power-loss guarantee follows.

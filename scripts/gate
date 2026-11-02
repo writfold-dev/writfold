@@ -1,0 +1,8 @@
+#!/usr/bin/env python3
+"""Local qualification entrypoint; evidence is always outside the checkout."""
+import sys
+
+sys.dont_write_bytecode = True
+from writfold_gate import main
+
+raise SystemExit(main())

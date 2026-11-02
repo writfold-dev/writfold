@@ -1,0 +1,46 @@
+[workspace]
+members = [
+    "crates/writfold-domain",
+    "crates/writfold-kernel",
+    "crates/writfold-wire",
+    "crates/writfold-protocol",
+    "crates/writfold-xtask",
+    "crates/writfold-runtime",
+]
+resolver = "3"
+
+[workspace.package]
+version = "0.1.0-dev.0"
+edition = "2024"
+rust-version = "1.98"
+repository = "https://github.com/writfold-dev/writfold"
+publish = false
+
+[workspace.dependencies]
+vstd = "=0.0.0-2026-09-06-0133"
+serde = { version = "=1.0.229", features = ["derive"] }
+serde_json = { version = "=1.0.151", features = ["arbitrary_precision"] }
+num-bigint = "=0.4.8"
+num-traits = "=0.2.19"
+sha2 = "=0.11.0"
+thiserror = "=2.0.20"
+verus_syn = { version = "=0.0.0-2026-09-06-0133", features = ["full", "visit"] }
+proc-macro2 = { version = "=1.0.107", features = ["span-locations"] }
+syn = { version = "=2.0.119", features = ["full", "visit"] }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+unexpected_cfgs = { level = "warn", check-cfg = ["cfg(verus_only)", "cfg(verus_keep_ghost)", "cfg(verus_keep_ghost_body)"] }
+
+[workspace.lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+todo = "deny"
+unimplemented = "deny"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = "symbols"
+panic = "abort"

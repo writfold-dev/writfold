@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "scope": "P01 generation executable-body compilation feasibility only",
+  "excluded_claims": ["V01-V13 completion", "WF05 completion", "whole-kernel verification", "musl linking or runtime execution by this producer", "Lean-to-Rust refinement"],
+  "verification_target": "x86_64-unknown-linux-gnu",
+  "shipping_target": "x86_64-unknown-linux-musl",
+  "crates": {
+    "writfold_domain": {
+      "minimum_verified": 5,
+      "functions": {
+        "writfold_domain::request_generation::RequestGeneration::first": {"source": "crates/writfold-domain/src/request_generation.rs", "lines": [16, 20]},
+        "writfold_domain::request_generation::RequestGeneration::get": {"source": "crates/writfold-domain/src/request_generation.rs", "lines": [22, 26]},
+        "writfold_domain::request_generation::RequestGeneration::from_u64": {"source": "crates/writfold-domain/src/request_generation.rs", "lines": [28, 32]},
+        "writfold_domain::request_generation::RequestGeneration::checked_next": {"source": "crates/writfold-domain/src/request_generation.rs", "lines": [34, 44]}
+      }
+    },
+    "writfold_protocol": {
+      "minimum_verified": 4,
+      "functions": {
+        "writfold_protocol::generation::generation_is_live": {"source": "crates/writfold-protocol/src/generation.rs", "lines": [16, 34]},
+        "writfold_protocol::generation::advance_generation": {"source": "crates/writfold-protocol/src/generation.rs", "lines": [38, 60]}
+      }
+    }
+  },
+  "mutations": [
+    {"name": "overflow-guard-removal", "crate": "writfold_domain", "function": "writfold_domain::request_generation::RequestGeneration::checked_next", "before": "if self.value == u64::MAX {", "after": "if false {"},
+    {"name": "live-generation-admission-bypass", "crate": "writfold_protocol", "function": "writfold_protocol::generation::advance_generation", "before": "if generation_is_live(active, next) {", "after": "if false {"}
+  ]
+}
