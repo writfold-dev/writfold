@@ -1,5 +1,5 @@
-use writfold_domain::{Integer, *};
 use vstd::prelude::*;
+use writfold_domain::{Integer, *};
 
 verus! {
 

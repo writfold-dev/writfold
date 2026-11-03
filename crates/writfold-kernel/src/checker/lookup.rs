@@ -133,4 +133,36 @@ pub(super) fn find_enumeration<'a>(kb: &'a KB, ident: &EnumerationId) -> (found:
     None
 }
 
+pub(super) fn find_claim_identity<'a>(
+    kb: &'a KB, id: &ClaimId, revision: &ClaimRevision,
+) -> (found: Option<&'a Claim>)
+    ensures found.deep_view() == claim_value(kb@, ClaimRefView { id: id@, rev: revision@ }),
+{
+    let ghost reference = ClaimRefView { id: id@, rev: revision@ };
+    let rows = kb.claims();
+    let mut index = 0;
+    proof { assert(rows.deep_view().len() == rows.len()); }
+    while index < rows.len()
+        invariant
+            reference == (ClaimRefView { id: id@, rev: revision@ }),
+            rows.deep_view() == kb@.claims, rows.len() == kb@.claims.len(),
+            index <= rows.len(),
+            forall|i: int| 0 <= i < index ==> !claim_matches_spec(kb@.claims[i], reference),
+        decreases rows.len() - index,
+    {
+        let row = &rows[index];
+        proof { assert(row@ == kb@.claims[index as int]); }
+        if row.id() == id && row.revision() == revision {
+            proof {
+                assert(claim_matches_spec(kb@.claims[index as int], reference));
+                first_matching_at(kb@.claims, |c: ClaimView| claim_matches_spec(c, reference), index as int);
+            }
+            return Some(row);
+        }
+        index += 1;
+    }
+    proof { first_matching_absent(kb@.claims, |c: ClaimView| claim_matches_spec(c, reference)); }
+    None
+}
+
 } // verus!

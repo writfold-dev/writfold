@@ -3,10 +3,13 @@
   "registry_kind": "current_obligations_not_receipts",
   "observed_at": "2026-11-02T06:09:52.519618+00:00",
   "status": "in_progress",
-  "normative_registry": "handover/registries/proofs.json",
+  "normative_registry": "handovers/revision-4/writfold/registries/proofs.json",
+  "historical_normative_registry": "handover/registries/proofs.json",
+  "mapping_applicability": "Existing proof-mapping-snapshot hashes, symbol locations and absence statements describe the retained earlier-scope snapshot, not the current source. New execution must bind its own exact source; revision-4 storage/view obligations are separately inventoried below. Historical component evidence remains unchanged.",
   "assumption_registry": "qualification/claims.json#/assumptions",
   "caller_boundary_registry": "qualification/claims.json#/caller_boundaries",
   "evidence_registry": "qualification/claims.json#/evidence",
+  "current_component_evidence": "qualification/revision-4-progress.json#/independent_components",
   "mapping_closures": [
     {
       "id": "proof-mapping-snapshot",
@@ -452,7 +455,9 @@
       "id": "V01",
       "name": "Representations and numeric conversions",
       "system": "Verus",
-      "status": "pass",
+      "status": "not_run",
+      "historical_status": "pass",
+      "active_scope_note": "Earlier nominal/conversion completion remains retained; revision-4 graph/storage identities and the changed domain source require new scoped verification and full obligation admission.",
       "contract": "handover/plan/03-formal-assurance.md",
       "production_symbols": [
         {
@@ -5350,6 +5355,60 @@
         }
       ],
       "empty_proof_symbols_reason": "No completed obligation-wide Rust proof or operational model. Refer only to separately named P01 component where listed."
+    },
+    {
+      "id": "V14",
+      "name": "Faithful scoped view projection and output identities",
+      "system": "Verus",
+      "status": "not_run",
+      "contract": "handovers/revision-4/writfold/plan/13-view-channels.md",
+      "production_symbols": [],
+      "theorem_symbols": [],
+      "trusted_assumptions": [],
+      "receipt": null,
+      "completion_rule": "Map exact shipping projection/path validators and callers; prove plan/13 properties with negative calibration. Native reader fixtures do not implement or verify the Rust projection."
+    },
+    {
+      "id": "M10",
+      "name": "View generation publication and reader lifecycle",
+      "system": "TLA+/TLC/TLAPS",
+      "status": "not_run",
+      "contract": "handovers/revision-4/writfold/plan/13-view-channels.md",
+      "production_symbols": [],
+      "theorem_symbols": [],
+      "trusted_assumptions": [],
+      "receipt": null,
+      "completion_rule": "Complete owned view generation actions, every induction/frame/bridge obligation and calibrated TLC configurations; plugin rendering is not a publication proof."
+    },
+    {
+      "id": "V15",
+      "name": "Storage-pin compatibility and canonical migration admission",
+      "system": "Verus",
+      "status": "not_run",
+      "contract": "handovers/revision-4/writfold/plan/16-omnigraph-storage-contract.md",
+      "production_symbols": [
+        {
+          "source": "crates/writfold-protocol/src/storage.rs",
+          "symbol": "writfold_protocol::storage::admit_read",
+          "scope": "Pure pin/reader compatibility implementation; not yet production-body verified or integrated with authenticated IO."
+        }
+      ],
+      "theorem_symbols": [],
+      "trusted_assumptions": [],
+      "receipt": null,
+      "completion_rule": "Verify actual pin/profile and complete canonical migration admission bodies and callers with negative calibration. No upstream engine proof or renamed historical receipt counts."
+    },
+    {
+      "id": "M11",
+      "name": "Immutable schema epochs and migration publication",
+      "system": "TLA+/TLC/TLAPS",
+      "status": "not_run",
+      "contract": "handovers/revision-4/writfold/plan/16-omnigraph-storage-contract.md",
+      "production_symbols": [],
+      "theorem_symbols": [],
+      "trusted_assumptions": [],
+      "receipt": null,
+      "completion_rule": "Complete epoch/migration actions and M01-M06/M10 bridges under an admitted backend effect contract; all induction, finite campaign and calibration obligations remain required."
     }
   ],
   "scoped_components": [

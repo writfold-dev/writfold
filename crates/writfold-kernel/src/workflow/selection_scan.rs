@@ -2,12 +2,12 @@
 #[cfg(verus_keep_ghost)]
 use super::admission_model::*;
 use vstd::prelude::*;
-use writfold_domain::*;
 #[cfg(verus_keep_ghost)]
 use vstd::std_specs::cmp::PartialEqSpec;
+use writfold_domain::*;
 
 verus! {
-pub(super) fn selected_unique(selected: &Vec<ClaimRef>) -> (valid: bool)
+pub(crate) fn selected_unique(selected: &[ClaimRef]) -> (valid: bool)
     ensures valid == selected.deep_view().no_duplicates(),
 {
     let valid = super::unique(selected);
@@ -26,17 +26,29 @@ pub(super) fn selected_unique(selected: &Vec<ClaimRef>) -> (valid: bool)
     }
     valid
 }
-pub(super) fn references_present(kb: &KB, selected: &Vec<ClaimRef>) -> (valid: bool)
+pub(crate) fn references_present(kb: &KB, selected: &[ClaimRef]) -> (valid: bool)
     ensures valid == selected_present(kb@, selected.deep_view()),
 {
     let mut i = 0;
+    proof { assert(selected.deep_view().len() == selected.len()); }
     while i < selected.len()
         invariant i <= selected.len(),
-            forall|a: int| 0 <= a < i ==> exists|b: int| 0 <= b < kb@.claims.len()
-                && claim_matches_spec(kb@.claims[b], selected.deep_view()[a]),
+            selected.deep_view().len() == selected.len(),
+            forall|a: int| 0 <= a < i
+                ==> #[trigger] crate::wellformed::spec::claim_present(kb@, selected.deep_view()[a]),
         decreases selected.len() - i,
     {
-        if find_claim(kb, &selected[i]).is_none() { return false; }
+        let reference = &selected[i];
+        proof { assert(reference@ == selected.deep_view()[i as int]); }
+        if find_claim(kb, reference).is_none() {
+            proof {
+                assert(!crate::wellformed::spec::claim_present(kb@, reference@));
+                if selected_present(kb@, selected.deep_view()) {
+                    assert(crate::wellformed::spec::claim_present(kb@, selected.deep_view()[i as int]));
+                }
+            }
+            return false;
+        }
         i += 1;
     }
     true
@@ -74,10 +86,10 @@ pub(super) fn retained_valid(retained: &[KB], snapshot: &SnapshotId) -> (valid: 
 }
 pub(super) fn retained_target<'a>(retained: &'a [KB], snapshot: &SnapshotId) -> (found: Option<&'a KB>)
     ensures match found {
-        None => forall|i: int| 0 <= i < retained.len() ==> retained.deep_view()[i].snapshot != snapshot@,
-        Some(target) => exists|i: int| 0 <= i < retained.len() && target@ == retained.deep_view()[i]
+        None => forall|i: int| 0 <= i < retained.len() ==> #[trigger] retained.deep_view()[i].snapshot != snapshot@,
+        Some(target) => exists|i: int| 0 <= i < retained.len() && target@ == #[trigger] retained.deep_view()[i]
             && target@.snapshot == snapshot@
-            && forall|j: int| 0 <= j < i ==> retained.deep_view()[j].snapshot != snapshot@,
+            && forall|j: int| 0 <= j < i ==> #[trigger] retained.deep_view()[j].snapshot != snapshot@,
     },
 {
     let mut i = 0;
@@ -93,21 +105,31 @@ pub(super) fn retained_target<'a>(retained: &'a [KB], snapshot: &SnapshotId) -> 
     }
     None
 }
-pub(super) fn selected_exact(target: &KB, selected: &Vec<ClaimRef>) -> (valid: bool)
+pub(super) fn selected_exact(target: &KB, selected: &[ClaimRef]) -> (valid: bool)
     ensures valid == (selected.len() == target@.claims.len()
         && forall|i: int| 0 <= i < selected.len() ==> claim_matches_spec(target@.claims[i], selected.deep_view()[i])),
 {
     let claims = target.claims();
+    proof {
+        assert(selected.deep_view().len() == selected.len());
+        assert(claims.deep_view().len() == claims.len());
+    }
     if selected.len() != claims.len() { return false; }
     let mut i = 0;
     while i < selected.len()
         invariant i <= selected.len(), selected.len() == claims.len(), claims.deep_view() == target@.claims,
+            selected.deep_view().len() == selected.len(), claims.deep_view().len() == claims.len(),
             forall|j: int| 0 <= j < i ==> claim_matches_spec(target@.claims[j], selected.deep_view()[j]),
         decreases selected.len() - i,
     {
         let claim = &claims[i];
         proof { assert(claim@ == target@.claims[i as int]); }
-        if !claim.matches_ref(&selected[i]) { return false; }
+        let reference = &selected[i];
+        proof { assert(reference@ == selected.deep_view()[i as int]); }
+        if !claim.matches_ref(reference) {
+            proof { assert(!claim_matches_spec(target@.claims[i as int], selected.deep_view()[i as int])); }
+            return false;
+        }
         i += 1;
     }
     true
@@ -153,5 +175,31 @@ pub(super) fn first_entry<'a>(journal: &'a [SelectionJournalEntry], plan: &Selec
         i += 1;
     }
     None
+}
+pub(super) fn prepend_entry(journal: &[SelectionJournalEntry], plan: &SelectionPlan) -> (updated: Vec<SelectionJournalEntry>)
+    ensures updated.deep_view() == seq![SelectionJournalEntryView { plan: plan@ }] + journal.deep_view(),
+{
+    let mut updated = Vec::with_capacity(journal.len().saturating_add(1));
+    updated.push(SelectionJournalEntry::new(plan.clone()));
+    let mut i = 0;
+    proof { assert(journal.deep_view().len() == journal.len()); }
+    while i < journal.len()
+        invariant i <= journal.len(), journal.deep_view().len() == journal.len(),
+            updated.deep_view() == seq![SelectionJournalEntryView { plan: plan@ }] + journal.deep_view().take(i as int),
+        decreases journal.len() - i,
+    {
+        let ghost previous = updated.deep_view();
+        let entry = journal[i].clone();
+        proof { assert(entry@ == journal.deep_view()[i as int]); }
+        updated.push(entry);
+        proof {
+            assert(updated.deep_view() =~= previous.push(entry@));
+            assert(seq![SelectionJournalEntryView { plan: plan@ }] + journal.deep_view().take(i as int + 1)
+                =~= previous.push(entry@));
+        }
+        i += 1;
+    }
+    proof { assert(journal.deep_view().take(journal.len() as int) == journal.deep_view()); }
+    updated
 }
 }

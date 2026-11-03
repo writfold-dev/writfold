@@ -98,6 +98,18 @@ impl Audit<'_> {
         }
     }
 
+    fn function_attributes(
+        &mut self,
+        attrs: &[verus_syn::Attribute],
+        signature: &verus_syn::Signature,
+        has_body: bool,
+    ) {
+        for attr in attrs {
+            crate::attributes::check_function(self, attr, signature, has_body);
+            visit::visit_attribute(self, attr);
+        }
+    }
+
     fn function(
         &mut self,
         signature: &verus_syn::Signature,
@@ -202,24 +214,20 @@ impl<'ast> Visit<'ast> for Audit<'_> {
     fn visit_item_fn(&mut self, node: &'ast verus_syn::ItemFn) {
         let old = self.test;
         self.test |= is_test(&node.attrs);
-        for attr in &node.attrs {
-            self.visit_attribute(attr);
-        }
+        self.function_attributes(&node.attrs, &node.sig, true);
         self.function(&node.sig, &node.block, &node.attrs);
         self.test = old;
     }
     fn visit_impl_item_fn(&mut self, node: &'ast verus_syn::ImplItemFn) {
-        for attr in &node.attrs {
-            self.visit_attribute(attr);
-        }
+        self.function_attributes(&node.attrs, &node.sig, true);
         self.function(&node.sig, &node.block, &node.attrs);
     }
     fn visit_trait_item_fn(&mut self, node: &'ast verus_syn::TraitItemFn) {
-        for attr in &node.attrs {
-            self.visit_attribute(attr);
-        }
+        self.function_attributes(&node.attrs, &node.sig, node.default.is_some());
         if let Some(block) = &node.default {
             self.function(&node.sig, block, &node.attrs);
+        } else {
+            visit::visit_signature(self, &node.sig);
         }
     }
     fn visit_item_mod(&mut self, node: &'ast verus_syn::ItemMod) {
@@ -228,6 +236,18 @@ impl<'ast> Visit<'ast> for Audit<'_> {
         self.budget(node.span(), 400, 250, "module-budget");
         visit::visit_item_mod(self, node);
         self.test = old;
+    }
+    fn visit_expr(&mut self, node: &'ast verus_syn::Expr) {
+        if matches!(node, verus_syn::Expr::Verbatim(_)) {
+            self.emit("macro-parse", node.span(), "unsupported expression tokens");
+        }
+        visit::visit_expr(self, node);
+    }
+    fn visit_item(&mut self, node: &'ast verus_syn::Item) {
+        if matches!(node, verus_syn::Item::Verbatim(_)) {
+            self.emit("macro-parse", node.span(), "unsupported declaration tokens");
+        }
+        visit::visit_item(self, node);
     }
     fn visit_expr_closure(&mut self, node: &'ast verus_syn::ExprClosure) {
         self.budget(node.body.span(), 80, 50, "function-budget");

@@ -3,38 +3,43 @@ mod context;
 pub use assessment::usable_for_snapshot;
 use context::Frame;
 mod assessment;
-mod inventory;
 #[cfg(verus_keep_ghost)]
 mod assessment_model;
 mod dependencies;
+mod inventory;
 pub use dependencies::dependencies_union;
-#[cfg(verus_keep_ghost)]
-pub mod spec;
 mod evaluation;
 #[cfg(verus_keep_ghost)]
 mod evaluation_model;
 mod footprint;
 mod input;
 mod lookup;
+#[cfg(verus_keep_ghost)]
+pub mod spec;
 
 pub use assessment::{
     assess, assessment_gaps, policy_allows, reusable, usable_for, witness_freshness,
 };
-use evaluation::{accepted_derivation, evaluate, has_accepted_claim};
-use footprint::{corrections, push_unique};
-use input::Input;
-use writfold_domain::*;
-use vstd::prelude::*;
 #[cfg(verus_keep_ghost)]
 pub use context::same_context_spec;
+use evaluation::{accepted_derivation, evaluate, has_accepted_claim, has_accepted_identity};
 #[cfg(verus_keep_ghost)]
 use evaluation_model::{accepted_rows, supported_frame_spec};
 #[cfg(verus_keep_ghost)]
 use footprint::{EvaluationView, checked_value};
+use footprint::{corrections, push_unique};
+use input::Input;
 #[cfg(verus_keep_ghost)]
 use lookup::{claim_lookup_value, claim_value};
 #[cfg(verus_keep_ghost)]
-use spec::{accepted_spec, check_spec, check_matches_spec, check_matches_snapshot_spec, correction_dependency_spec};
+pub(crate) use lookup::{first_matching, first_matching_absent, first_matching_at};
+#[cfg(verus_keep_ghost)]
+use spec::{
+    accepted_spec, check_matches_snapshot_spec, check_matches_spec, check_spec,
+    correction_dependency_spec,
+};
+use vstd::prelude::*;
+use writfold_domain::*;
 
 verus! {
 pub fn context_matches(kb: &KB, context: &Context) -> (matches: bool)
@@ -112,7 +117,6 @@ pub fn retracted(kb: &KB, context: &Context, reference: &ClaimRef) -> (retracted
 }
 }
 
-
 verus! {
 pub fn correction_dependency(kb: &KB, context: &Context, reference: &ClaimRef) -> (dependency: Dependency)
     ensures dependency@ == correction_dependency_spec(kb@, context@, reference@),
@@ -157,17 +161,27 @@ pub fn accepted<'a>(
                 .map_values(|item: (WitnessView, EvaluationView)| (item.0, checked_value(item.1))),
         decreases rows.len() - index,
     {
+        proof {
+            evaluation_model::accepted_rows_step(kb@, frame@, claim@, kb@.derivations, index as int);
+        }
         let row = &rows[index];
         proof { assert(row@ == kb@.derivations[index as int]); }
+        let ghost prior = accepted_rows(kb@, frame@, claim@, kb@.derivations.take(index as int));
         if let Some(result) = accepted_derivation(kb, frame, claim, row) {
-            accepted.push((row.witness(), result.into_owned()));
+            let ghost evaluated = result@;
+            let checked = result.into_owned();
+            let item = (row.witness(), checked);
+            proof { assert(item.deep_view() == (row@.witness, checked_value(evaluated))); }
+            accepted.push(item);
+            proof {
+                footprint::map_push(prior, (row@.witness, evaluated),
+                    |value: (WitnessView, EvaluationView)| (value.0, checked_value(value.1)));
+                assert(accepted.deep_view() =~= prior
+                    .map_values(|value: (WitnessView, EvaluationView)| (value.0, checked_value(value.1)))
+                    .push((row@.witness, checked_value(evaluated))));
+            }
         }
         index += 1;
-        proof {
-            let prefix = kb@.derivations.take(index as int);
-            assert(prefix.drop_last() == kb@.derivations.take(index as int - 1));
-            assert(prefix.last() == row@);
-        }
     }
     proof { assert(kb@.derivations.take(rows.len() as int) == kb@.derivations); }
     accepted
@@ -182,7 +196,10 @@ pub fn supported(kb: &KB, context: &Context, reference: &ClaimRef, polarity: Pol
 fn supported_frame(kb: &KB, context: Frame<'_>, reference: &ClaimRef, polarity: Polarity) -> (supported: bool)
     ensures supported == supported_frame_spec(kb@, context@, reference@, polarity),
 {
-    proof { broadcast use claim_lookup_value; }
+    proof {
+        broadcast use claim_lookup_value;
+        reveal_with_fuel(<Formula as View>::view, 2);
+    }
     let Some(claim) = find_claim(kb, reference) else {
         return false;
     };
@@ -202,14 +219,15 @@ fn supported_frame(kb: &KB, context: Frame<'_>, reference: &ClaimRef, polarity: 
             rows.deep_view() == kb@.claims, rows.len() == kb@.claims.len(),
             forall|i: int| 0 <= i < index ==> !(kb@.claims[i].statement.formula == claim@.statement.formula
                 && kb@.claims[i].statement.scope == claim@.statement.scope && kb@.claims[i].statement.polarity == polarity
-                && evaluation_model::has_accepted_claim_spec(kb@, context@, kb@.claims[i])),
+                && evaluation_model::has_accepted_reference_spec(kb@, context@,
+                    ClaimRefView { id: kb@.claims[i].id, rev: kb@.claims[i].revision })),
         decreases rows.len() - index,
     {
         let row = &rows[index];
         proof { assert(row@ == kb@.claims[index as int]); }
         if row.statement().formula() == claim.statement().formula()
             && row.statement().scope() == claim.statement().scope() && *row.statement().polarity() == polarity
-            && has_accepted_claim(kb, context, row) {
+            && has_accepted_identity(kb, context, row.id(), row.revision()) {
             return true;
         }
         index += 1;

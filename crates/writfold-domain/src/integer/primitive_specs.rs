@@ -2,7 +2,10 @@
 //! No Writfold executable body is excluded here. These are assumptions about
 //! external library primitives, not mechanically verified BigInt arithmetic.
 use num_bigint::{BigInt, Sign, TryFromBigIntError};
-use std::{cmp::Ordering, ops::{Add, Sub}};
+use std::{
+    cmp::Ordering,
+    ops::{Add, Sub},
+};
 use vstd::prelude::*;
 use vstd::std_specs::ops::{AddSpec, SubSpec};
 

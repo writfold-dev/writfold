@@ -77,6 +77,42 @@
       "evidence": "~/.local/share/writfold/qualification/p03-whitespace-001/",
       "affected": ["T18", "T19", "T22", "V05", "V06", "V12", "V13", "authored metadata admission", "source Unicode predicates"],
       "limits": "Finite three-host correspondence does not imply equality for every Unicode whitespace input. Rust positive nonblank admission remains at least as strict as the Lean ASCII predicate; external truth and publication authority are unchanged."
+    },
+    {
+      "id": "WF-STORAGE-001",
+      "status": "implemented_component",
+      "old": "Revision-4 graph, epoch, query and reader compatibility identities were not represented by current Rust domain/wire values.",
+      "new": "Use distinct checked storage identities, an exact immutable OmnigraphPin and explicit LegacyDoltPin, and the closed writfold-storage-pin schema-1 envelope. Read admission compares the complete expected/observed pin and separately matches the declared reader profile, actual reader generation and exact readable-format inventory.",
+      "reason": "Make HEAD drift, namespace casts, epoch/query mismatch and reader-generation drift explicit without depending on native relocation or creating another writer.",
+      "sources": [
+        "handovers/revision-4/writfold/plan/16-omnigraph-storage-contract.md",
+        "https://github.com/ModernRelay/omnigraph/blob/60bfd19db780fdff3a5178f959c1204143420114/crates/omnigraph-core/src/graph_commit_id.rs",
+        "https://github.com/ModernRelay/omnigraph/blob/60bfd19db780fdff3a5178f959c1204143420114/crates/omnigraph-server/src/graph_id.rs"
+      ],
+      "affected": ["P02", "WF02", "WF03", "V01", "V15"],
+      "migration": "No historical byte, namespace or signature change. The new legacy pin variant is inspection data, not a new legacy writer. Storage-aware operation approvals and RPC profile negotiation are implemented under WF-STORAGE-002; release manifests and integrated migration remain open.",
+      "limits": "Typed matching is not external authentication, tool admission, graph existence, retention, IO authority or migration correctness. A newer admitted reader may read an older producer; equality of their generation digests is not required."
+    },
+    {
+      "id": "WF-MODEL-001",
+      "status": "proof_domain_correction",
+      "old": "M02M06Bridge attempted unconditional component-bound obligations and derived the migration input bound of at least 8 from a recovery bound of at least 4.",
+      "new": "State the existing component domain as BridgeParameters = R!Bounds /\\ M!Bounds, link it into Init/Inv/TypeOK, and condition the bridge theorems on it. Existing baseline/mutant 2/8/2 and wide 3/10/3 writer/input/context configurations satisfy that domain.",
+      "reason": "Repair an unjustified theorem premise explicitly rather than add global trust or claim a false arithmetic implication.",
+      "affected": ["M02", "M06", "M02M06Bridge", "WF06", "WF07"],
+      "limits": "No action guard, fault action, configuration or expected mutant invariant is removed or weakened. This is a structural constant-domain condition, not an admitted Omnigraph effect or runtime refinement theorem."
+    },
+    {
+      "id": "WF-STORAGE-002",
+      "status": "implemented_component",
+      "old": "Workflow-3 approval bytes do not bind the new storage base, immutable epoch/query/profile target or migration mapping, and protocol-2 clients did not explicitly select that storage profile.",
+      "new": "Use writfold-storage-operation schema1 with independently domain-separated outer identity and signing bytes, exact base release/pin binding, a noncircular target without candidate commit, and explicit mapping provenance. New approvals use strict Ed25519 and existing supplied-policy/all-context checks. Protocol2 explicitly admits writfold.storage/1; absent or unsupported profile use refuses without reinterpreting legacy responses.",
+      "identity_domain": "writfold-storage-plan-v1 plus NUL",
+      "signature_domain": "writfold-storage-operation-v1 plus NUL",
+      "approval_namespace": "writfold-storage-approval",
+      "affected": ["P02", "WF03", "WF10", "V15", "RPC storage-profile negotiation"],
+      "migration": "Schema2 operations cannot be wrapped for new writes. Legacy storage can be named only as an explicit base with a required mapping. Original schema2/schema3 messages and signatures remain unchanged.",
+      "limits": "Supplied-input authorization is not live policy/predecessor authority, canonical migration correctness, native retention or completed publication. This boundary does not provide a release manifest or installed product."
     }
   ]
 }

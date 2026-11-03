@@ -90,7 +90,9 @@ impl AuthorityPolicy {
             let target_uses = items(field(key, "target_uses")?, text)?;
             if target_uses.is_empty()
                 || !unique(&target_uses)
-                || target_uses.iter().any(|s| !writfold_domain::text::nonblank(s))
+                || target_uses
+                    .iter()
+                    .any(|s| !writfold_domain::text::nonblank(s))
             {
                 return Err(BoundaryError::Binding(
                     "target uses must be distinct and nonblank",

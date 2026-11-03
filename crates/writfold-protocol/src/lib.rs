@@ -3,3 +3,4 @@
 
 pub mod generation;
 pub mod session;
+pub mod storage;

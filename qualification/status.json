@@ -19,7 +19,7 @@
       "receipts": [],
       "contract": "handovers/revision-4/writfold/stages/P00.md",
       "historical_completion": "qualification/p00-completion.json",
-      "scope_note": "Revision-4 reconciliation and policy delta adopted; fresh source-bound qualification not run."
+      "scope_note": "Revision-4 reconciliation and policy delta adopted; baseline-only integrity/registry components are exercised. Fresh complete P00 qualification is not claimed."
     },
     {
       "id": "P01",
@@ -68,7 +68,7 @@
       "receipts": [],
       "contract": "handovers/revision-4/writfold/stages/P02.md",
       "historical_completion": "qualification/p02-completion.json",
-      "scope_note": "Earlier domain/wire completion retained; storage nominal identities, versioned approval/release profiles and negotiation fixtures not run."
+      "scope_note": "Earlier completion retained. Revision-4 storage identities/pins, pure reader matching, new-domain operation approvals and explicit protocol-2 storage capability are implemented and exercised as components. Full release manifests, canonical migration/caller integration and complete stage qualification remain open."
     },
     {
       "id": "P03",
@@ -82,7 +82,8 @@
       ],
       "status": "not_run",
       "receipts": [],
-      "contract": "handovers/revision-4/writfold/stages/P03.md"
+      "contract": "handovers/revision-4/writfold/stages/P03.md",
+      "scope_note": "Source-sealed whole-crate Verus invocation passes 428 checked-body/helper obligations; semantic negatives, 170 workspace tests, 233 quality checks and fresh 334-case conformance are retained in revision-4-progress.json. Full V-family semantic/caller and complete-stage closure are not inferred."
     },
     {
       "id": "P03P",
@@ -100,7 +101,8 @@
       ],
       "status": "not_run",
       "receipts": [],
-      "contract": "handovers/revision-4/writfold/stages/P03P.md"
+      "contract": "handovers/revision-4/writfold/stages/P03P.md",
+      "scope_note": "Portfolio and authored-design executable contracts participate in the 428-obligation kernel component; replay/context/reset behavior is exercised. Full WF19 and integrated caller/storage qualification remain open."
     },
     {
       "id": "P04",
@@ -116,7 +118,7 @@
       "status": "blocked",
       "receipts": [],
       "contract": "handovers/revision-4/writfold/stages/P04.md",
-      "scope_note": "P01O/WF24 foundation has not passed; storage-dependent integration blocked."
+      "scope_note": "P01O/WF24 still blocks storage-dependent integration. Twelve canonical model/composition modules pass strict TLAPS with 7972 obligations, plus two probe inclusion obligations; all twenty selected semantic negatives have counterexamples. Only M01/M03/M04 positive TLC baselines completed; nine baseline timeouts and remaining profile/gate matrices prevent full P04 qualification. No engine-effect refinement is claimed."
     },
     {
       "id": "P05",

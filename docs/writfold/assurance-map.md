@@ -2,7 +2,7 @@
 
 ## What this page establishes
 
-This map separates **source-inspected traceability** from executed component evidence. [claims.json](../../qualification/claims.json) maps all **353 audited Lean declarations** to exact sources, actual Rust consumers, T01–T22 contracts, fixtures and assumptions. [proofs.json](../../qualification/proofs.json) preserves **V01–V13 and M01–M09**. V01 now has source-bound nominal/conversion evidence; broader semantic and operational proof obligations remain unqualified.
+This map separates **retained source-inspected traceability** from executed component evidence. [claims.json](../../qualification/claims.json) maps all **353 audited Lean declarations** in its recorded candidate to Rust consumers, T01–T22 contracts, fixtures and assumptions. [proofs.json](../../qualification/proofs.json) inventories all **V01–V15 and M01–M11**. Old mapping hashes, locations and absence statements remain historical; current component evidence does not automatically complete an obligation or establish refinement.
 
 The mapping distinguishes three different things:
 
@@ -19,9 +19,9 @@ The P02 update links actual Verus, negative-calibration, three-host and static-r
 - Each row retains the exact audited statement, transitive axiom list, file/line/hash, real Rust function file/name/line/hash, consuming families, operation-level fixtures and assumption inheritance. Local Lean hypotheses remain visible in the statement.
 - `fixture_groups` resolves each operation to actual IDs in the retained 334-case corpus. These are operation-level regressions, **not 353 independent tests** or a theorem-by-theorem coverage certificate.
 - `caller_boundaries` identifies the concrete validator, actual current caller and what remains the future adapter's responsibility. `pattern_mappings` preserves S1–S3/I1–I3, including absent application boundaries.
-- `proofs.json` records absent models/actions/theorems with reasons. Empty symbol lists mean **not implemented**, never a passing placeholder.
+- Earlier empty symbol lists and absence statements describe the retained mapping snapshot, never a passing placeholder. Consult the current component records for later implementation and proof evidence.
 
-There are **no unlocated or unmapped audited declarations** in this snapshot. That is mapping completeness only; it does not mean every corresponding Rust contract or codec direction is implemented or proved.
+There are **no unlocated or unmapped audited declarations** in the retained mapping snapshot. That is historical mapping completeness only; it does not mean every current Rust contract or codec direction is implemented, mapped or proved.
 
 ### T01–T22 crosswalk
 
@@ -155,29 +155,52 @@ owned or hash-pinned inherited contract for every primary diagnostic span.
 This is component evidence, not complete independent assessment/policy
 verification, full P03, or an installed-product claim.
 
+### Revision-4 independent executable components
+
+The 3 November component campaign is recorded separately in
+`qualification/revision-4-progress.json`. The active nominal/storage-reader
+profile passed 138 obligations, with 905 domain and 19 protocol obligations
+and nine semantic mutation families. A whole-crate kernel invocation then
+passed 428 obligations at the normal solver limit. Four further executable
+semantic mutations fail exactly their intended kernel functions; all thirteen
+mutation cases also reject fourteen tampered-proof inputs each under the
+current evidence consumer. Earlier failed execution/admission attempts remain
+retained.
+
+The matched Rust source cohort passed 170 workspace tests, 233 quality checks,
+and the unchanged 334-case complete-response corpus in freshly executed
+Lean/Python/Rust hosts. A static musl consumer exercised 35 storage-operation,
+signature-domain and RPC-profile scenarios with `PATH=/nonexistent`.
+The separate direct-API duplicate-reference regression failed before the
+first-match implementation/model correction and agrees across all three
+implementations afterward. These are component results, not all-input
+equivalence, full V-family closure, backend admission or a release receipt.
+
 ## Current mandatory Rust proof obligations
 
-V01 has executed nominal/conversion evidence for its recorded candidate and trusted primitive boundary. Other rows remain `not_run`; existing production bodies alone are not proof. Precise declarations, source linkage, exclusions and negative controls are in `proofs.json`.
+V01 retains executed nominal/conversion component evidence for its earlier candidate and explicit trusted primitive boundary. Revision-4 additions require their own current-source evidence; no earlier obligation-wide status is renewed. The active inventory includes V01–V15 and M01–M11. Precise declarations, source linkage, exclusions and negative controls are in `proofs.json`; historical mapping hashes/absence statements remain labelled as such.
 
 | Obligation | Required subject | Current boundary |
 | --- | --- | --- |
 | V01 | Representations and numeric conversions | Verified nominal/conversion component; explicit pinned BigInt primitive assumptions |
-| V02 | Recursive witness checker | Production bodies mapped; proof absent |
-| V03 | Assessment and time | Verified signed-time component; independent assessment/policy proof remains absent |
-| V04 | Reuse and corrections | Production bodies mapped; proof absent |
-| V05 | Operations and selection | Production bodies mapped; proof absent |
-| V06 | Authored workflows | Production bodies mapped; proof absent |
+| V02 | Recursive witness checker | Checked executable/model contracts and footprints; semantic/caller closure remains separate |
+| V03 | Assessment and time | Checked time, assessment and policy bodies; obligation-wide qualification remains separate |
+| V04 | Reuse and corrections | Checked ordered-reuse/correction bodies; retained-storage integration remains open |
+| V05 | Operations and selection | Checked operation, replay and selection bodies; publication integration remains open |
+| V06 | Authored workflows | Checked authored decision and ordered-trace bodies; adapter closure remains open |
 | V07 | Publication/recovery reducer | Production reducer absent |
 | V08 | Retention/GC reducer | Production reducer absent |
 | V09 | Companion/sync reducer | Scoped generation component only; rest unproved |
 | V10 | Pagination and budgets | Reference pagination only; product boundary absent |
 | V11 | Scribe acceptance reducer | Production reducer absent |
-| V12 | Portfolio admission, query projection and selection | Production bodies mapped; proof absent |
-| V13 | Design binding, rebind and reopen | Production bodies mapped; proof absent |
+| V12 | Portfolio admission, query projection and selection | Checked production body contracts; integrated portfolio authority/IO remains open |
+| V13 | Design binding, rebind and reopen | Checked production transition/reset bodies; production lifecycle integration remains open |
+| V14 | Faithful view projection and output identities | Native reader fixture only; production Rust projection absent |
+| V15 | Storage-pin compatibility and canonical migration admission | Verified typed pin/reader component and exercised versioned approvals; complete migration and authenticated IO remain open |
 
 ## Operational models and composition
 
-P04 operational models and composition modules are being implemented and qualified. Initial TLC/TLAPS attempts exposed syntax, grouping and open-proof failures; no model is qualified yet. M07/M08 remain later-stage work. Pure semantic functions, filesystem primitives and draft model files do not establish production reducer refinement.
+Canonical M01–M06/M09 and the five implemented composition modules now have complete strict `--nofp` TLAPS component receipts: **7,972 obligations** across twelve modules. Two additional authored-witness inclusion obligations are separately proved. These are abstract safety/frame/composition results, not production effect refinement or full P04 completion. M07/M08 and revision-4 M10/M11 remain separate later-stage obligations.
 
 | Model | Required model | Related Rust obligations |
 | --- | --- | --- |
@@ -190,10 +213,28 @@ P04 operational models and composition modules are being implemented and qualifi
 | M07 | ScribeSession | V11 |
 | M08 | WritAcquisition | V11 |
 | M09 | AuthoredDesignLifecycle | V13, V07 |
+| M10 | ViewGeneration | V14, V09 |
+| M11 | SchemaEpoch | V15, V07, V08, V09 |
 
 Every model requires `TypeOK`, strengthening `Inv`, `Init`, real named actions including crash/restart/error/conflict paths, checked action preservation, `Inv => Safety`, and frame/stuttering checks. Required composition bridges remain explicit: M01/M02 plan identity and linearization; M01/M03 roots before CAS; M03/M04 process incarnations; M01/M05 closure before advertisement; M02/M06 operation/correction history; M07/M08 authenticated acquisition; M08/M01 and M08/M03 retention; and M09/M02 authored-state recovery with an identity separate from knowledge-release CAS.
 
 TLC bounded exploration must record actual bounds, states, symmetry and deadlock conventions. A timeout is not a pass. Eventual progress requires explicit IO/network/storage/fairness assumptions; no unbounded TLAPS liveness claim follows from finite exploration or safety induction.
+
+The current positive TLC baselines completed for M01, M03 and M04. Nine other
+canonical/bridge baseline searches reached their admitted deadlines and
+remain incomplete, including the proof-backed hint-erased M02/M01M02 runs.
+No absent counterexample, timeout or skipped wide/workload obligation is
+promoted to a pass.
+
+All twenty selected semantic negatives now have actual invariant
+counterexamples. Seven use directed witnesses that preserve canonical
+initial states/constants and conjoin every controlled successor with the
+original mutant transition. They establish negative reachability only;
+the earlier breadth-first timeouts and an IdOnlyReplay simulation without a
+counterexample remain failed/inconclusive attempts. Only the M02/M01M02
+positive configurations use the admitted hint-erasure VIEW; no mutant or
+other bridge inherits that certificate.
+
 
 ## Caller and trusted-base boundaries
 

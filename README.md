@@ -66,20 +66,28 @@ The development-preview website is live at [writfold.dev](https://writfold.dev/)
 
 ### Next work toward an alpha
 
-Progress is preserved at `7dedca3e30468330c6b6f10975b9d1863390bb44`.
-Its exact pre-commit content passed 117 Rust checks and fresh Lean/Python/Rust
-comparison on all 334 scenarios with zero mismatches. The
-[progress ledger](qualification/revision-4-progress.json) links the receipts and
-explicit byte-tree correspondence; these scoped runs do not pass release gates.
+The earlier checkpoint is `7dedca3e30468330c6b6f10975b9d1863390bb44`;
+its original 117-check receipt remains historical. The current independent
+batch adds checked storage pins/read profiles, versioned storage approvals,
+explicit RPC capability negotiation, and checked semantic/workflow/portfolio/
+design bodies. It has 428 kernel Verus obligations, 170 workspace tests,
+233 quality checks and fresh complete-response agreement on the unchanged
+334-case corpus. The [progress ledger](qualification/revision-4-progress.json)
+binds exact sources, tools and artifacts; none of these components passes
+the full release gate set.
 
-1. Reconcile revision-4 P00/P01 identities and admission. Resolve the native
-   history portability contract tracked in
-   [Omnigraph #1233](https://github.com/ModernRelay/omnigraph/issues/1233), then
-   qualify the complete P01O/WF24 profile. No metadata/path workaround or backend
-   fallback is adopted.
-2. Continue storage-independent P02 storage identity/signature boundaries and
-   P03/P03P production semantic proofs while upstream triage is pending.
-   Existing component proofs and conformance do not close those stages.
+1. Close remaining obligation/caller mappings and integrated qualification.
+   Twelve abstract model/composition modules have strict safety proofs, and
+   all twenty selected semantic negatives have counterexamples. Nine positive
+   baseline explorations still reached their deadlines; further justified
+   state-space work is required, not smaller bounds or relabelled timeouts.
+2. Upstream accepted [Omnigraph #1233](https://github.com/ModernRelay/omnigraph/issues/1233)
+   as a size-L bug and took ownership of the RFC/code fix. Do not open a competing
+   PR or admit its prototype as a backend. Retain the **8 November 2026**
+   checkpoint and the authorized fork as a fallback if no usable supported
+   remedy is available. Any new artifact requires fresh package/runtime and
+   complete P01O/WF24 qualification; no path workaround or backend fallback
+   is adopted, and no scheduled monitoring is implied.
 3. After foundation admission, complete the dependent protocols, storage,
    authenticated publication/recovery, workflows, Scribes, CLI/RPC, views and
    migration stages in the [mandatory dependency order](handovers/revision-4/writfold/plan/08-execution-and-acceptance.md).
@@ -87,12 +95,15 @@ explicit byte-tree correspondence; these scoped runs do not pass release gates.
    artifacts before tagging an alpha. The current `writfold-ref` is not an
    end-user substitute.
 
-Public-source readiness is a separate gate: review preserved Git history,
-both immutable handovers and nested reference archives, private-reference
-metadata, operator paths and third-party redistribution notices. The local
-checkpoint audit is not publication clearance. Keep immutable originals
-unchanged; no release tag, repository-visibility change or public source
-publication is claimed.
+Public-source readiness is separate. A read-only audit covered 2,078 reachable
+Git objects, 1,512 current paths and four distinct archives, including the
+previously oversized nested report. No confirmed real secret or exact copy
+of the manifest-listed private source was found. Publication permission for
+private-derived adoption summaries/review PDFs and retained reference material
+remains unresolved; opening the existing repository would expose its history.
+Keep immutable originals unchanged. A separate reviewed product export would
+need its own build/test/documentation closure and truthful provenance; neither
+that export nor a visibility change or alpha release is claimed here.
 
 
 ## License

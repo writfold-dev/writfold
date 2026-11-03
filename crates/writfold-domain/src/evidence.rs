@@ -124,21 +124,27 @@ pub enum ObsOutcome {
 
 } // verus!
 
-record!(Observation, ObservationView {
-    id: ObservationId,
-    source: SourceId,
-    revision: SourceRevision,
-    content: ContentId,
-    observed_at: Integer,
-    outcome: ObsOutcome,
-});
-record!(Attestation, AttestationView {
-    id: AttestationId,
-    claim: ClaimRef,
-    observation: ObservationId,
-    statement: Statement,
-    authority: ActorId,
-});
+record!(
+    Observation,
+    ObservationView {
+        id: ObservationId,
+        source: SourceId,
+        revision: SourceRevision,
+        content: ContentId,
+        observed_at: Integer,
+        outcome: ObsOutcome,
+    }
+);
+record!(
+    Attestation,
+    AttestationView {
+        id: AttestationId,
+        claim: ClaimRef,
+        observation: ObservationId,
+        statement: Statement,
+        authority: ActorId,
+    }
+);
 record!(Enumeration, EnumerationView {
     id: EnumerationId, source: SourceId, revision: SourceRevision,
     query: String, scope: Scope, observation: ObservationId,
@@ -163,11 +169,14 @@ record!(Policy, PolicyView {
     id: PolicyId, require_fresh: bool, require_validation: bool,
     require_uncontested: bool, ttl: Ttl, authorized_actors: Vec<ActorId>,
 });
-record!(SourceSelection, SourceSelectionView {
-    source: SourceId,
-    revision: SourceRevision,
-    content: ContentId
-});
+record!(
+    SourceSelection,
+    SourceSelectionView {
+        source: SourceId,
+        revision: SourceRevision,
+        content: ContentId
+    }
+);
 record!(Context, ContextView {
     snapshot: SnapshotId, semantic_version: String, ruleset: RuleVersion,
     checker: CheckerId, policy: Policy, now: Integer, target: Scope,

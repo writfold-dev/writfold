@@ -2,8 +2,9 @@
 
 The IO-free `writfold-kernel` core implements the retained semantic-2.0.0
 checker, mathematical time rules, and whole-candidate invariants. The Python
-and Lean sources remain unchanged reference material. This implementation is
-not a claim that executable Rust has received Verus qualification.
+and Lean sources remain unchanged reference material. The source-sealed
+executable-body campaign described below is not a Lean-to-Rust refinement
+theorem or a whole-product qualification.
 
 ## Source mapping
 
@@ -81,6 +82,11 @@ exact derivation registration and claim acceptance conditions.
   Dispute and contrary support contest claims; supersession does not transfer
   validation. Whole-candidate validation detects supersession cycles without
   applying evaluation-time filtering to the history.
+- References always resolve to their first KB row. A contrary candidate row
+  selects a reference; accepting its derivations still uses that reference's
+  first row, not the later candidate's statement. Direct pure APIs retain this
+  rule even for unadmitted duplicate-reference KBs. The wire boundary separately
+  refuses those KBs through whole-state validation.
 - Positive and negative support, applicability, freshness, validation,
   contestation and availability remain independent. Any fresh accepted
   alternative makes freshness fresh; all-stale alternatives make it stale;
@@ -91,12 +97,12 @@ exact derivation registration and claim acceptance conditions.
 
 ## Tests and remaining assurance
 
-`crates/writfold-kernel/tests/core.rs` contains behavioral regressions for
-inclusive/future/signed/unbounded freshness, independent witness revocation,
-exact receipt ordering and context matching, borrowed snapshot evaluation,
-contradictory evidence, independent assessment dimensions, and UTF-8 inventory
-framing. The current P02 campaign also re-executed complete-response comparison
-against Lean and Python on all 334 retained scenarios with zero mismatches.
+`crates/writfold-kernel/tests/core.rs` and its `core/first_match.rs` regression
+cover inclusive/future/signed/unbounded freshness, independent witness
+revocation, exact receipt ordering and context matching, borrowed snapshot
+evaluation, contradictory evidence, first-match duplicate references,
+independent assessment dimensions, and UTF-8 inventory framing. The retained
+334-scenario three-host corpus remains unchanged.
 
 The sealed P03 integration in
 `~/.local/share/writfold/qualification/p03-kernel-010/native-smoke.json`
@@ -111,12 +117,30 @@ Inventory premise comparison traverses the borrowed conjunction/atomic tree
 directly, preserving ordered members, exact predicates, empty arguments and
 the terminal truth node without allocating a duplicate expected formula.
 
-Remaining proof work is source-bound Verus qualification of these shipping
-bodies: V02 finite-witness conclusions and transitive footprints; V03 exact
-integer freshness and independent assessment/policy precedence; V04 ordered
-input reuse and correction behavior. Qualification must cover the borrowed
-context-frame projection, owned-output materialization, safe caller
-preconditions and the arbitrary-precision arithmetic trust boundary. The
-unchanged Lean calculus, behavioral regressions, and reference agreement do
-not prove these Rust bodies or a cross-prover refinement bridge. No semantic
-proof twin or excluded Writfold decision body is supplied.
+The 3 November source-sealed `unblocked-proof-20261103-020` campaign completed
+the whole-crate Verus invocation with **428 obligations verified and zero
+errors**, at the normal solver resource limit. This covers the checked
+decision bodies and proof helpers, including borrowed context projections,
+ordered footprint materialization, assessment/reuse, workflow, portfolio and
+design contracts. Ordinary Rust diagnostic rendering and trusted external
+implementations are not thereby proved. No decision-body exclusion or new
+assumption was introduced to close the campaign.
+
+Earlier failures remain retained. In particular, the first-receipt theorem
+exhausted an 8 GiB solver allowance when expressed directly over the full KB;
+a generic first-match congruence lemma using the shared lookup lemmas closed
+the same obligation without expanding reuse semantics or increasing limits.
+
+The duplicate-reference discrepancy was reproduced through direct Rust,
+Python and Lean APIs before correction. Rust incorrectly reported negative
+support where both references reported none. The implementation and model
+now resolve the canonical first row; the permanent positive control also
+preserves the reference's `Both` result when that first row has an accepted
+positive witness. Rejecting all invalid KBs or ignoring duplicate rows would
+not satisfy that contract.
+
+Exact current source/compilation/calibration links belong in
+`qualification/revision-4-progress.json`. Full V02–V06/V12/V13 closure,
+caller/integration admission and cross-logic correspondence remain separate
+obligations; counts, finite agreement and a correctly checked Rust model do
+not establish them automatically.

@@ -33,6 +33,48 @@ Canonicalization sorts keys by Unicode scalar order (UTF-8 lexicographic order),
 
 `writfold_protocol::session` keeps instance, incarnation and generation identities distinct. Initialization and shutdown have explicit refusal-preserving transitions; a new incarnation cannot accept an earlier request even when generation numbers coincide. These pure values confer neither live-process ownership nor writer authority. Production transport/application integration remains a later stage.
 
+Storage-aware requests require the explicit `writfold.storage/1` capability.
+`Initialize::require_storage_profile` yields `StorageProfileVersion::V1` only
+after that capability was admitted. Old protocol-2 initialization still works,
+but requesting new storage data without the capability returns typed
+`UnsupportedStorageProfile` (`-32000`), never a silently reinterpreted legacy
+response. Unknown versions in the reserved storage capability family receive
+the same typed refusal. All parameter types are checked before support, and
+support errors preserve input-order precedence. No server or method metadata
+is fabricated by these pure codecs.
+
+
+## Versioned storage-pin records
+
+`storage::{decode_pin, encode_pin}` exposes a separate closed envelope:
+`namespace: "writfold-storage-pin"`, integer `schema: 1`. This does not change
+semantic wire 2, workflow schema 3, RPC protocol `"2"` or historical signature
+domains.
+
+The `omnigraph` backend requires exactly `namespace`, `schema`, `backend`, `kb`,
+`graph`, `commit`, `epoch`, `schema_digest`, `query_digest`, `storage_profile`,
+`native_format` and `producer_generation`. The `legacy-dolt` variant instead
+requires exactly `namespace`, `schema`, `backend`, `kb` and `dolt_commit`.
+Mixed variants, unknown fields/versions/backends, absent/null fields and invalid
+nominal identities refuse. No field receives an implicit default.
+
+Raw parsing applies the supplied byte/depth/container/node limits and detects
+duplicate or escape-equivalent keys before typed decoding. Schema and native
+format values must be JSON integer tokens: floats, exponents, strings and
+Booleans cannot stand in for them. Native formats use checked positive `u64`
+conversion; overflow never narrows. Canonical output uses the existing exact
+UTF-8 encoder and an independent output-byte budget. Fixed canonical examples
+live in `crates/writfold-wire/fixtures/storage/`.
+
+The `legacy-dolt` envelope is a new typed inspection representation, not a
+rewrite of a historical signed release. Existing operation codecs and signed
+bytes stay unchanged. Storage pins are not signatures, approvals or proof that
+the named graph exists. The [storage-aware operation/approval boundary](signed-operations.md#storage-aware-operations-and-approvals)
+and protocol-2 profile negotiation are implemented separately. Release manifests,
+canonical migration and live storage integration remain later obligations;
+this codec does not complete the `storage-profile` gate.
+
+
 ## Source mapping
 
 Reference: `1c17b94be37af8f82f222baddf31435f14172e1a`.

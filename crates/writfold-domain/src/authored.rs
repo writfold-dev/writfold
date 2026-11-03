@@ -10,10 +10,13 @@ pub enum HypothesisStatus {
     Unknown,
 }
 }
-record!(Hypothesis, HypothesisView {
-    text: String,
-    status: HypothesisStatus
-});
+record!(
+    Hypothesis,
+    HypothesisView {
+        text: String,
+        status: HypothesisStatus
+    }
+);
 record!(Investigation, InvestigationView {
     checked_against: String, scope_and_limits: String, hypotheses: Vec<Hypothesis>,
 });
@@ -80,4 +83,10 @@ record!(AuthoredProposal, AuthoredProposalView {
     scope: String, resolved_landed: Vec<AuthoredLanded>,
 });
 
-crate::records::scalar_views!(HypothesisStatus, AuthoredStatus, AuthoredProfile, GateWhen, GateOutcome);
+crate::records::scalar_views!(
+    HypothesisStatus,
+    AuthoredStatus,
+    AuthoredProfile,
+    GateWhen,
+    GateOutcome
+);

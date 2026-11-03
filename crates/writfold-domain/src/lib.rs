@@ -33,6 +33,7 @@ pub mod knowledge;
 pub mod language;
 mod records;
 pub mod request_generation;
+pub mod storage;
 pub mod text;
 pub mod units;
 pub mod workflow;
@@ -45,6 +46,7 @@ pub use integer::Integer;
 pub use knowledge::*;
 pub use language::*;
 pub use request_generation::RequestGeneration;
+pub use storage::*;
 pub use units::*;
 pub use workflow::*;
 

@@ -80,10 +80,12 @@ impl ProblemReducer {
         requires old(self).invariant(),
         ensures final(self).invariant(), final(self).collect == old(self).collect,
             final(self).trace@ == old(self).trace@.push(problem),
+            final(self).trace@ == old(self).trace@ + seq![problem],
     {
         self.valid = false;
         if self.collect { self.problems.push(problem_label(problem)); }
         self.trace = Ghost(self.trace@.push(problem));
+        proof { assert(self.trace@ =~= old(self).trace@ + seq![problem]); }
     }
 }
 

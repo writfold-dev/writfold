@@ -9,7 +9,7 @@ import re
 
 ADMISSION_CONTROLS = (
     "absent", "truncated", "foreign-only", "partial", "zero-obligation",
-    "missing-named-function", "missing-overload", "missing-failed-function",
+    "missing-named-function", "solver-multiplicity", "missing-failed-function",
     "unexpected-failed-function", "split-diagnostic", "unowned-primary",
     "missing-owned-site", "contract-source-drift", "successful-mutant-process",
 )
@@ -226,6 +226,27 @@ def changed_verdict(evidence, crate, name, success):
     return changed
 
 
+def multiplicity_control(profile, positive, rejected):
+    """Check exact solver multiplicity without requiring an overloaded API."""
+    candidates = [(owner, name, source["solver_entries"])
+                  for owner, spec in profile["crates"].items()
+                  for name, source in spec["functions"].items()]
+    require(candidates, "profile lacks a named solver multiplicity")
+    owner, name, count = next((entry for entry in candidates if entry[2] > 1), candidates[0])
+    changed = deepcopy(positive)
+    target, _ = changed.report(owner)
+    for module in target["times-ms"]["smt"]["smt-run-module-times"]:
+        for index, entry in enumerate(module["function-breakdown"]):
+            if entry["function"] == name:
+                if count > 1:
+                    del module["function-breakdown"][index]
+                else:
+                    module["function-breakdown"].append(deepcopy(entry))
+                rejected("solver-multiplicity", lambda: changed.positive(0, profile))
+                return
+    raise EvidenceError("profiled solver entry absent from positive evidence")
+
+
 def contract_controls(profile, positive, negative, mutation, workspace, rejected):
     names = mutation_functions(profile, mutation)
     declarations = [declaration for name in names
@@ -285,23 +306,7 @@ def self_controls(profile, positive, negative, mutation, workspace):
         module["function-breakdown"] = [f for f in module["function-breakdown"]
                                         if f["function"] != missing]
     rejected("missing-named-function", lambda: changed.positive(0, profile))
-    changed = deepcopy(positive)
-    overloads = [(owner, name) for owner, spec in profile["crates"].items()
-                 for name, source in spec["functions"].items() if source["solver_entries"] > 1]
-    require(overloads, "profile lacks required overloaded-constructor calibration")
-    owner, overloaded = overloads[0]
-    target, _ = changed.report(owner)
-    removed = False
-    for module in target["times-ms"]["smt"]["smt-run-module-times"]:
-        for index, entry in enumerate(module["function-breakdown"]):
-            if entry["function"] == overloaded:
-                del module["function-breakdown"][index]
-                removed = True
-                break
-        if removed:
-            break
-    require(removed, "overloaded solver entry absent from positive evidence")
-    rejected("missing-overload", lambda: changed.positive(0, profile))
+    multiplicity_control(profile, positive, rejected)
     intended = mutation_functions(profile, mutation)
     hidden_failure = changed_verdict(negative, crate, intended[0], True)
     rejected("missing-failed-function", lambda: hidden_failure.mutant(1, profile, mutation, workspace))

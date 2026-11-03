@@ -1,10 +1,15 @@
 //! Declarative byte languages for the immutable Python identity patterns.
 use vstd::prelude::*;
+mod storage;
+#[cfg(verus_keep_ghost)]
+pub(crate) use storage::{
+    graph_commit_identity, graph_identity, history_slot_language, ulid_language,
+};
 
 verus! {
 
 #[derive(Clone, Copy)]
-pub(crate) enum Alphabet { Digit, Alphanumeric, SlugEnd, Slug, Token, Hex, Dolt }
+pub(crate) enum Alphabet { Digit, Alphanumeric, SlugEnd, Slug, Token, Hex, Dolt, Graph, Crockford }
 
 pub(crate) open spec fn digit(byte: u8) -> bool { b'0' <= byte <= b'9' }
 pub(crate) open spec fn lower(byte: u8) -> bool { b'a' <= byte <= b'z' }
@@ -22,6 +27,10 @@ pub(crate) open spec fn alphabet(byte: u8, class: Alphabet) -> bool {
             || byte == b':' || byte == b'-',
         Alphabet::Hex => digit(byte) || b'a' <= byte <= b'f',
         Alphabet::Dolt => digit(byte) || b'a' <= byte <= b'v',
+        Alphabet::Graph => alphanumeric(byte) || byte == b'-',
+        Alphabet::Crockford => digit(byte) || b'A' <= byte <= b'H'
+            || b'J' <= byte <= b'K' || b'M' <= byte <= b'N'
+            || b'P' <= byte <= b'T' || b'V' <= byte <= b'Z',
     }
 }
 pub(crate) open spec fn range_language(bytes: Seq<u8>, start: int, end: int, class: Alphabet) -> bool {

@@ -232,9 +232,9 @@ RecoverySpec == RecoveryInit /\ [][RecoveryNext]_recoveryVars
 FiniteRecoverySpec == RecoveryInit /\ [][FiniteRecoveryNext]_recoveryVars
 WorkloadRecoverySpec(workload) ==
   RecoveryInit /\ [][WorkloadRecoveryNext(workload)]_recoveryVars
-SameInputRecoverySpec == WorkloadRecoverySpec(1)
-SuccessorRecoverySpec == WorkloadRecoverySpec(2)
-LegacyWorkloadRecoverySpec == WorkloadRecoverySpec(3)
+SameInputRecoverySpec == RecoveryInit /\ [][WorkloadRecoveryNext(1)]_recoveryVars
+SuccessorRecoverySpec == RecoveryInit /\ [][WorkloadRecoveryNext(2)]_recoveryVars
+LegacyWorkloadRecoverySpec == RecoveryInit /\ [][WorkloadRecoveryNext(3)]_recoveryVars
 WidePublicationStep(profile) ==
   /\ WideNext(profile)
   /\ p.head \notin r.corrupt
@@ -243,10 +243,10 @@ WidePublicationStep(profile) ==
 WideRecoveryNext(profile) ==
   WidePublicationStep(profile) \/ WorkloadLocalNext(0) \/ FiniteHintStep
 WideRecoverySpec(profile) == RecoveryInit /\ [][WideRecoveryNext(profile)]_recoveryVars
-WideRecoverySpec0 == WideRecoverySpec(0)
-WideRecoverySpec1 == WideRecoverySpec(1)
-WideRecoverySpec2 == WideRecoverySpec(2)
-WideRecoverySpec3 == WideRecoverySpec(3)
+WideRecoverySpec0 == RecoveryInit /\ [][WideRecoveryNext(0)]_recoveryVars
+WideRecoverySpec1 == RecoveryInit /\ [][WideRecoveryNext(1)]_recoveryVars
+WideRecoverySpec2 == RecoveryInit /\ [][WideRecoveryNext(2)]_recoveryVars
+WideRecoverySpec3 == RecoveryInit /\ [][WideRecoveryNext(3)]_recoveryVars
 
 (* Separate positive profile: admission profile 0, with independently forged
    hints for operations 1 and 2. No participant or phase bounds are reduced. *)
@@ -406,6 +406,27 @@ BY SMT DEF RecoveryClientEvidence, RecoveryDurableCarry
 THEOREM RecoveryDurableFrame ==
   UNCHANGED <<p.receipt,p.intent>> => RecoveryDurableCarry
 BY SMT DEF RecoveryDurableCarry, BoundIntent
+
+(* A publication-side observation may change auth/validated without changing
+   the recovery client or its durable evidence. Keep the post-publication
+   invariant as an explicit premise; a frame alone cannot establish it. *)
+THEOREM RecoveryEvidenceFrame ==
+  RecoveryInv /\ Inv' /\ UNCHANGED <<r,p.receipt,p.intent>> => RecoveryInv'
+<1>1. ASSUME RecoveryInv, Inv', UNCHANGED <<r,p.receipt,p.intent>>
+      PROVE RecoveryInv'
+  <2>1. RecoveryTypeOK'
+    BY SMT, <1>1 DEF RecoveryInv, RecoveryTypeOK
+  <2>2. HistoricalAuthentic'
+    BY <1>1, InvHistoricalAuthenticNext DEF InvHistoricalAuthenticNext
+  <2>3. RecoveryDurableCarry
+    BY <1>1, RecoveryDurableFrame DEF RecoveryDurableFrame
+  <2>4. \A w \in Writers : RecoveryClientEvidence(w)'
+    BY SMT, <1>1, <2>2, <2>3, RecoveryClientFrame, RecoveryEvidencePointwise
+      DEF RecoveryClientFrame, RecoveryEvidencePointwise, RecoveryInv
+  <2>5. RecoveryEvidence'
+    BY <2>4, RecoveryEvidencePointwiseNext DEF RecoveryEvidencePointwiseNext
+  <2>6. QED BY <1>1, <2>1, <2>5 DEF RecoveryInv
+<1>2. QED BY <1>1
 
 THEOREM PublicationReceiptMonotone ==
   TypeOK /\ Next => p.receipt \subseteq p'.receipt

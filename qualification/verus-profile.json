@@ -1,10 +1,10 @@
 {
   "schema_version": 4,
-  "scope": "P02 nominal identity admission and checked runtime conversions, plus retained P01 generation allocation",
+  "scope": "P02 nominal identities, checked runtime conversions and storage-pin read consistency, plus retained P01 generation allocation",
   "excluded_claims": [
     "BigInt arithmetic implementation verification",
     "whole semantic-kernel verification",
-    "V02-V13 completion",
+    "V02-V15 completion",
     "WF05 completion",
     "musl linking or runtime execution by this producer",
     "Lean-to-Rust refinement"
@@ -13,7 +13,7 @@
   "shipping_target": "x86_64-unknown-linux-musl",
   "crates": {
     "writfold_domain": {
-      "minimum_verified": 348,
+      "minimum_verified": 905,
       "functions": {
         "writfold_domain::identity_grammar::byte_in_range": {
           "solver_entries": 1,
@@ -21,8 +21,8 @@
             {
               "source": "crates/writfold-domain/src/identity_grammar.rs",
               "lines": [
-                14,
-                18
+                16,
+                20
               ]
             }
           ]
@@ -33,8 +33,8 @@
             {
               "source": "crates/writfold-domain/src/identity_grammar.rs",
               "lines": [
-                20,
-                36
+                22,
+                42
               ]
             }
           ]
@@ -45,8 +45,8 @@
             {
               "source": "crates/writfold-domain/src/identity_grammar.rs",
               "lines": [
-                186,
-                191
+                192,
+                197
               ]
             }
           ]
@@ -57,8 +57,8 @@
             {
               "source": "crates/writfold-domain/src/identity_grammar.rs",
               "lines": [
-                200,
-                206
+                206,
+                212
               ]
             }
           ]
@@ -69,8 +69,8 @@
             {
               "source": "crates/writfold-domain/src/identity_grammar.rs",
               "lines": [
-                158,
-                170
+                164,
+                176
               ]
             }
           ]
@@ -81,8 +81,8 @@
             {
               "source": "crates/writfold-domain/src/identity_grammar.rs",
               "lines": [
-                178,
-                184
+                184,
+                190
               ]
             }
           ]
@@ -93,8 +93,8 @@
             {
               "source": "crates/writfold-domain/src/identity_grammar.rs",
               "lines": [
-                172,
-                176
+                178,
+                182
               ]
             }
           ]
@@ -105,8 +105,8 @@
             {
               "source": "crates/writfold-domain/src/identity_grammar.rs",
               "lines": [
-                125,
-                156
+                131,
+                162
               ]
             }
           ]
@@ -117,8 +117,8 @@
             {
               "source": "crates/writfold-domain/src/identity_grammar.rs",
               "lines": [
-                38,
-                53
+                44,
+                59
               ]
             }
           ]
@@ -129,8 +129,8 @@
             {
               "source": "crates/writfold-domain/src/identity_grammar.rs",
               "lines": [
-                97,
-                123
+                103,
+                129
               ]
             }
           ]
@@ -141,8 +141,8 @@
             {
               "source": "crates/writfold-domain/src/identity_grammar.rs",
               "lines": [
-                79,
-                95
+                85,
+                101
               ]
             }
           ]
@@ -153,8 +153,8 @@
             {
               "source": "crates/writfold-domain/src/identity_grammar.rs",
               "lines": [
-                193,
-                198
+                199,
+                204
               ]
             }
           ]
@@ -165,8 +165,8 @@
             {
               "source": "crates/writfold-domain/src/identity_grammar.rs",
               "lines": [
-                72,
-                77
+                78,
+                83
               ]
             }
           ]
@@ -177,8 +177,68 @@
             {
               "source": "crates/writfold-domain/src/identity_grammar.rs",
               "lines": [
+                69,
+                76
+              ]
+            }
+          ]
+        },
+        "writfold_domain::identity_grammar::storage::graph": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/identity_grammar/storage.rs",
+              "lines": [
+                30,
+                53
+              ]
+            }
+          ]
+        },
+        "writfold_domain::identity_grammar::storage::graph_commit": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/identity_grammar/storage.rs",
+              "lines": [
+                81,
+                92
+              ]
+            }
+          ]
+        },
+        "writfold_domain::identity_grammar::storage::history_slot": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/identity_grammar/storage.rs",
+              "lines": [
                 63,
-                70
+                79
+              ]
+            }
+          ]
+        },
+        "writfold_domain::identity_grammar::storage::same_bytes": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/identity_grammar/storage.rs",
+              "lines": [
+                12,
+                28
+              ]
+            }
+          ]
+        },
+        "writfold_domain::identity_grammar::storage::ulid_part": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/identity_grammar/storage.rs",
+              "lines": [
+                55,
+                61
               ]
             }
           ]
@@ -189,8 +249,8 @@
             {
               "source": "crates/writfold-domain/src/identity_grammar.rs",
               "lines": [
-                55,
-                61
+                61,
+                67
               ]
             }
           ]
@@ -201,8 +261,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -213,8 +273,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -225,8 +285,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -237,8 +297,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -249,8 +309,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -261,8 +321,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -273,8 +333,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -285,8 +345,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -297,8 +357,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -309,8 +369,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -321,8 +381,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -333,8 +393,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -345,8 +405,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -357,8 +417,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -369,8 +429,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -381,8 +441,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -393,8 +453,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -405,8 +465,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -417,8 +477,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -429,8 +489,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -441,8 +501,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -453,8 +513,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -465,8 +525,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -477,8 +537,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -489,8 +549,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -501,8 +561,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -513,8 +573,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -525,8 +585,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -537,8 +597,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -549,8 +609,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -561,8 +621,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -573,8 +633,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -585,8 +645,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -597,8 +657,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -609,8 +669,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -621,8 +681,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -633,8 +693,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -645,8 +705,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -657,8 +717,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -669,8 +729,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -681,8 +741,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -693,8 +753,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -705,8 +765,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -717,8 +777,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -729,8 +789,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -741,8 +801,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -753,8 +813,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -765,8 +825,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -777,8 +837,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -789,8 +849,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -801,8 +861,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -813,8 +873,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -825,8 +885,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -837,8 +897,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -849,8 +909,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -861,8 +921,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -873,8 +933,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -885,8 +945,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -897,8 +957,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -909,8 +969,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -921,8 +981,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -933,8 +993,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -945,8 +1005,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -957,8 +1017,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -969,8 +1029,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -981,8 +1041,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -993,8 +1053,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -1005,8 +1065,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -1017,8 +1077,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -1029,8 +1089,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -1041,8 +1101,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -1053,8 +1113,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -1065,8 +1125,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -1077,8 +1137,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -1089,8 +1149,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -1101,8 +1161,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -1113,8 +1173,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -1125,8 +1185,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -1137,8 +1197,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -1149,8 +1209,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -1161,8 +1221,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -1173,8 +1233,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -1185,8 +1245,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -1197,8 +1257,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -1209,8 +1269,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                189,
-                191
+                204,
+                206
               ]
             }
           ]
@@ -1221,8 +1281,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                186,
-                188
+                201,
+                203
               ]
             }
           ]
@@ -1233,8 +1293,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                166,
-                175
+                181,
+                190
               ]
             }
           ]
@@ -1245,8 +1305,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                192,
-                194
+                207,
+                209
               ]
             }
           ]
@@ -1257,8 +1317,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                176,
-                185
+                191,
+                200
               ]
             }
           ]
@@ -1269,8 +1329,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                195,
-                206
+                210,
+                221
               ]
             }
           ]
@@ -1281,8 +1341,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                229,
-                240
+                244,
+                255
               ]
             }
           ]
@@ -1293,8 +1353,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -1305,8 +1365,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -1317,8 +1377,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -1329,8 +1389,104 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
+                94,
+                102
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::GraphCommitId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                68,
+                70
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::GraphCommitId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
                 71,
-                79
+                73
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::GraphCommitId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                74,
+                82
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::GraphCommitId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                94,
+                102
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::GraphId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                68,
+                70
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::GraphId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                73
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::GraphId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                74,
+                82
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::GraphId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                94,
+                102
               ]
             }
           ]
@@ -1341,8 +1497,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                16,
-                20
+                17,
+                21
               ]
             }
           ]
@@ -1353,8 +1509,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -1365,8 +1521,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -1377,8 +1533,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -1389,8 +1545,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -1401,8 +1557,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -1413,8 +1569,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -1425,8 +1581,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -1437,8 +1593,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -1449,8 +1605,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -1461,8 +1617,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -1473,8 +1629,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -1485,8 +1641,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -1497,8 +1653,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -1509,8 +1665,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -1521,8 +1677,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -1533,8 +1689,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -1545,8 +1701,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -1557,8 +1713,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -1569,8 +1725,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -1581,8 +1737,56 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
+                94,
+                102
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::OmnigraphToolGeneration::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                68,
+                70
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::OmnigraphToolGeneration::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
                 71,
-                79
+                73
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::OmnigraphToolGeneration::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                74,
+                82
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::OmnigraphToolGeneration::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                94,
+                102
               ]
             }
           ]
@@ -1593,8 +1797,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -1605,8 +1809,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -1617,8 +1821,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -1629,8 +1833,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -1641,8 +1845,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -1653,8 +1857,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -1665,8 +1869,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -1677,8 +1881,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -1689,8 +1893,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -1701,8 +1905,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -1713,8 +1917,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -1725,8 +1929,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -1737,8 +1941,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -1749,8 +1953,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -1761,8 +1965,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -1773,8 +1977,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -1785,8 +1989,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -1797,8 +2001,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -1809,8 +2013,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -1821,8 +2025,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -1833,8 +2037,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -1845,8 +2049,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -1857,8 +2061,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -1869,8 +2073,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -1881,8 +2085,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -1893,8 +2097,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -1905,8 +2109,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -1917,8 +2121,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -1929,8 +2133,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -1941,8 +2145,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -1953,8 +2157,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -1965,8 +2169,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -1977,8 +2181,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -1989,8 +2193,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -2001,8 +2205,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -2013,8 +2217,56 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
+                94,
+                102
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::QueryContractDigest::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                68,
+                70
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::QueryContractDigest::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
                 71,
-                79
+                73
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::QueryContractDigest::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                74,
+                82
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::QueryContractDigest::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                94,
+                102
               ]
             }
           ]
@@ -2025,8 +2277,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -2037,8 +2289,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -2049,8 +2301,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -2061,8 +2313,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -2073,8 +2325,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -2085,8 +2337,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -2097,8 +2349,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -2109,8 +2361,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -2121,8 +2373,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -2133,8 +2385,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -2145,8 +2397,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -2157,8 +2409,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -2169,8 +2421,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -2181,8 +2433,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -2193,8 +2445,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -2205,8 +2457,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -2217,8 +2469,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -2229,8 +2481,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -2241,8 +2493,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -2253,8 +2505,104 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
+                94,
+                102
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::SchemaDigest::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                68,
+                70
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::SchemaDigest::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
                 71,
-                79
+                73
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::SchemaDigest::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                74,
+                82
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::SchemaDigest::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                94,
+                102
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::SchemaEpochId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                68,
+                70
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::SchemaEpochId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                71,
+                73
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::SchemaEpochId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                74,
+                82
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::SchemaEpochId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                94,
+                102
               ]
             }
           ]
@@ -2265,8 +2613,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -2277,8 +2625,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -2289,8 +2637,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -2301,8 +2649,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -2313,8 +2661,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -2325,8 +2673,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -2337,8 +2685,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -2349,8 +2697,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -2361,8 +2709,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -2373,8 +2721,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -2385,8 +2733,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -2397,8 +2745,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -2409,8 +2757,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -2421,8 +2769,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -2433,8 +2781,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -2445,8 +2793,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -2457,8 +2805,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -2469,8 +2817,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -2481,8 +2829,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -2493,8 +2841,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -2505,8 +2853,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -2517,8 +2865,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -2529,8 +2877,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -2541,8 +2889,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -2553,8 +2901,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -2565,8 +2913,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -2577,8 +2925,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -2589,8 +2937,56 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
+                94,
+                102
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::StorageProfileId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                68,
+                70
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::StorageProfileId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
                 71,
-                79
+                73
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::StorageProfileId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                74,
+                82
+              ]
+            }
+          ]
+        },
+        "writfold_domain::ids::StorageProfileId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                94,
+                102
               ]
             }
           ]
@@ -2601,8 +2997,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -2613,8 +3009,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -2625,8 +3021,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -2637,8 +3033,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -2649,8 +3045,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -2661,8 +3057,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -2673,8 +3069,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -2685,8 +3081,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -2697,8 +3093,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                45,
-                47
+                68,
+                70
               ]
             }
           ]
@@ -2709,8 +3105,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                48,
-                50
+                71,
+                73
               ]
             }
           ]
@@ -2721,8 +3117,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                51,
-                59
+                74,
+                82
               ]
             }
           ]
@@ -2733,8 +3129,8 @@
             {
               "source": "crates/writfold-domain/src/ids.rs",
               "lines": [
-                71,
-                79
+                94,
+                102
               ]
             }
           ]
@@ -2745,20 +3141,20 @@
             {
               "source": "crates/writfold-domain/src/integer.rs",
               "lines": [
-                30,
-                34
+                33,
+                37
               ]
             }
           ]
         },
         "writfold_domain::integer::Integer::from": {
-          "solver_entries": 18,
+          "solver_entries": 19,
           "declarations": [
             {
               "source": "crates/writfold-domain/src/integer.rs",
               "lines": [
-                87,
-                89
+                97,
+                99
               ]
             },
             {
@@ -2776,8 +3172,8 @@
             {
               "source": "crates/writfold-domain/src/integer.rs",
               "lines": [
-                25,
-                29
+                28,
+                32
               ]
             }
           ]
@@ -2788,8 +3184,8 @@
             {
               "source": "crates/writfold-domain/src/integer.rs",
               "lines": [
-                35,
-                39
+                38,
+                42
               ]
             }
           ]
@@ -2800,8 +3196,8 @@
             {
               "source": "crates/writfold-domain/src/integer.rs",
               "lines": [
-                54,
-                58
+                57,
+                61
               ]
             }
           ]
@@ -2812,8 +3208,8 @@
             {
               "source": "crates/writfold-domain/src/integer.rs",
               "lines": [
-                47,
-                53
+                50,
+                56
               ]
             }
           ]
@@ -2824,8 +3220,8 @@
             {
               "source": "crates/writfold-domain/src/integer.rs",
               "lines": [
-                40,
-                46
+                43,
+                49
               ]
             }
           ]
@@ -3007,6 +3403,49 @@
             }
           ]
         },
+        "writfold_domain::units::NativeFormatVersion::get": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/units.rs",
+              "lines": [
+                61,
+                65
+              ]
+            }
+          ]
+        },
+        "writfold_domain::units::NativeFormatVersion::new": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/units.rs",
+              "lines": [
+                47,
+                60
+              ]
+            }
+          ]
+        },
+        "writfold_domain::units::NativeFormatVersion::try_from": {
+          "solver_entries": 2,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/units.rs",
+              "lines": [
+                91,
+                97
+              ]
+            },
+            {
+              "source": "crates/writfold-domain/src/units.rs",
+              "lines": [
+                101,
+                110
+              ]
+            }
+          ]
+        },
         "writfold_domain::units::PageSize::get": {
           "solver_entries": 1,
           "declarations": [
@@ -3163,7 +3602,7 @@
       }
     },
     "writfold_protocol": {
-      "minimum_verified": 4,
+      "minimum_verified": 19,
       "functions": {
         "writfold_protocol::generation::advance_generation": {
           "solver_entries": 1,
@@ -3188,6 +3627,102 @@
               ]
             }
           ]
+        },
+        "writfold_protocol::storage::MatchedStoragePin::pin": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-protocol/src/storage.rs",
+              "lines": [
+                180,
+                184
+              ]
+            }
+          ]
+        },
+        "writfold_protocol::storage::ReaderProfile::generation": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-protocol/src/storage.rs",
+              "lines": [
+                84,
+                88
+              ]
+            }
+          ]
+        },
+        "writfold_protocol::storage::ReaderProfile::id": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-protocol/src/storage.rs",
+              "lines": [
+                78,
+                82
+              ]
+            }
+          ]
+        },
+        "writfold_protocol::storage::ReaderProfile::native_formats": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-protocol/src/storage.rs",
+              "lines": [
+                90,
+                94
+              ]
+            }
+          ]
+        },
+        "writfold_protocol::storage::ReaderProfile::new": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-protocol/src/storage.rs",
+              "lines": [
+                54,
+                76
+              ]
+            }
+          ]
+        },
+        "writfold_protocol::storage::admit_read": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-protocol/src/storage.rs",
+              "lines": [
+                292,
+                351
+              ]
+            }
+          ]
+        },
+        "writfold_protocol::storage::contains_format": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-protocol/src/storage.rs",
+              "lines": [
+                127,
+                143
+              ]
+            }
+          ]
+        },
+        "writfold_protocol::storage::formats_are_unique": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-protocol/src/storage.rs",
+              "lines": [
+                97,
+                125
+              ]
+            }
+          ]
         }
       }
     }
@@ -3196,21 +3731,27 @@
     {
       "name": "overflow-guard-removal",
       "crate": "writfold_domain",
-      "functions": ["writfold_domain::request_generation::RequestGeneration::checked_next"],
+      "functions": [
+        "writfold_domain::request_generation::RequestGeneration::checked_next"
+      ],
       "before": "if self.value == u64::MAX {",
       "after": "if false {"
     },
     {
       "name": "live-generation-admission-bypass",
       "crate": "writfold_protocol",
-      "functions": ["writfold_protocol::generation::advance_generation"],
+      "functions": [
+        "writfold_protocol::generation::advance_generation"
+      ],
       "before": "if generation_is_live(active, next) {",
       "after": "if false {"
     },
     {
       "name": "token-leading-character-bypass",
       "crate": "writfold_domain",
-      "functions": ["writfold_domain::identity_grammar::token"],
+      "functions": [
+        "writfold_domain::identity_grammar::token"
+      ],
       "before": "byte_matches(bytes[0], Alphabet::Alphanumeric)",
       "after": "byte_matches(bytes[0], Alphabet::Token)"
     },
@@ -3240,11 +3781,14 @@
         "writfold_domain::ids::FileRevision::parse_checked",
         "writfold_domain::ids::GateId::parse_checked",
         "writfold_domain::ids::GitRevision::parse_checked",
+        "writfold_domain::ids::GraphCommitId::parse_checked",
+        "writfold_domain::ids::GraphId::parse_checked",
         "writfold_domain::ids::InstanceId::parse_checked",
         "writfold_domain::ids::InvestigationId::parse_checked",
         "writfold_domain::ids::KbId::parse_checked",
         "writfold_domain::ids::KeyId::parse_checked",
         "writfold_domain::ids::ObservationId::parse_checked",
+        "writfold_domain::ids::OmnigraphToolGeneration::parse_checked",
         "writfold_domain::ids::OperationId::parse_checked",
         "writfold_domain::ids::PlanDigest::parse_checked",
         "writfold_domain::ids::PlanId::parse_checked",
@@ -3254,11 +3798,14 @@
         "writfold_domain::ids::ProjectId::parse_checked",
         "writfold_domain::ids::ProposalId::parse_checked",
         "writfold_domain::ids::ProposalMaterialRevision::parse_checked",
+        "writfold_domain::ids::QueryContractDigest::parse_checked",
         "writfold_domain::ids::ReceiptId::parse_checked",
         "writfold_domain::ids::RelationshipId::parse_checked",
         "writfold_domain::ids::ReleaseId::parse_checked",
         "writfold_domain::ids::RuleVersion::parse_checked",
         "writfold_domain::ids::RunId::parse_checked",
+        "writfold_domain::ids::SchemaDigest::parse_checked",
+        "writfold_domain::ids::SchemaEpochId::parse_checked",
         "writfold_domain::ids::SchemaRevision::parse_checked",
         "writfold_domain::ids::SessionIncarnation::parse_checked",
         "writfold_domain::ids::SignatureId::parse_checked",
@@ -3266,6 +3813,7 @@
         "writfold_domain::ids::SourceCaptureId::parse_checked",
         "writfold_domain::ids::SourceId::parse_checked",
         "writfold_domain::ids::SourceRevision::parse_checked",
+        "writfold_domain::ids::StorageProfileId::parse_checked",
         "writfold_domain::ids::TargetRevision::parse_checked",
         "writfold_domain::ids::TicketId::parse_checked",
         "writfold_domain::ids::ToolDigest::parse_checked"
@@ -3276,16 +3824,47 @@
     {
       "name": "quantity-minimum-bypass",
       "crate": "writfold_domain",
-      "functions": ["writfold_domain::units::at_least"],
+      "functions": [
+        "writfold_domain::units::at_least"
+      ],
       "before": "    value >= minimum\n}",
       "after": "    true\n}"
     },
     {
       "name": "numeric-overflow-fallback",
       "crate": "writfold_domain",
-      "functions": ["writfold_domain::integer::Integer::to_u64"],
+      "functions": [
+        "writfold_domain::integer::Integer::to_u64"
+      ],
       "before": "u64::try_from(&self.0).ok()",
       "after": "match u64::try_from(&self.0) { Ok(value) => Some(value), Err(_) => Some(0) }"
+    },
+    {
+      "name": "storage-commit-check-bypass",
+      "crate": "writfold_protocol",
+      "functions": [
+        "writfold_protocol::storage::admit_read"
+      ],
+      "before": "if expected.commit() != observed.commit() {",
+      "after": "if false {"
+    },
+    {
+      "name": "storage-reader-generation-bypass",
+      "crate": "writfold_protocol",
+      "functions": [
+        "writfold_protocol::storage::admit_read"
+      ],
+      "before": "if actual_reader != profile.generation() {",
+      "after": "if false {"
+    },
+    {
+      "name": "storage-history-slot-overflow",
+      "crate": "writfold_domain",
+      "functions": [
+        "writfold_domain::identity_grammar::storage::history_slot"
+      ],
+      "before": "bytes[start + 4] < b'4'",
+      "after": "bytes[start + 4] <= b'4'"
     }
   ]
 }

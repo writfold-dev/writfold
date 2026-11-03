@@ -1,7 +1,9 @@
-use super::{collections, context_wf, graph, membership::*, natural, nonempty, scope_wf,
-    statement_wf, unique, witness_wf};
 #[cfg(verus_keep_ghost)]
 use super::spec::*;
+use super::{
+    collections, context_wf, graph, membership::*, natural, nonempty, scope_wf, statement_wf,
+    unique, witness_wf,
+};
 use vstd::prelude::*;
 use writfold_domain::{Integer, *};
 
@@ -18,8 +20,11 @@ pub fn dependency_wf(dependency: &Dependency, kb: &KB) -> (valid: bool)
         Dependency::Corrections { target, events } => {
             if find_claim(kb, target).is_none() { return false; }
             let mut i = 0;
+            proof { assert(events.deep_view().len() == events.len()); }
             while i < events.len()
                 invariant i <= events.len(), claim_present(kb@, target@),
+                    events.deep_view().len() == events.len(),
+                    dependency@ == (DependencyView::Corrections { target: target@, events: events.deep_view() }),
                     forall|j: int| 0 <= j < i ==> kb@.corrections.contains(events.deep_view()[j])
                         && events.deep_view()[j].target == target@,
                 decreases events.len() - i,
@@ -49,8 +54,10 @@ fn inventory_bound(attestation: &Attestation, kb: &KB, id: &EnumerationId) -> (v
 {
     let values = kb.enumerations();
     let mut i = 0;
+    proof { assert(values.deep_view().len() == values.len()); }
     while i < values.len()
         invariant i <= values.len(), values.deep_view() == kb@.enumerations,
+            values.len() == kb@.enumerations.len(),
             forall|j: int| 0 <= j < i ==> !(kb@.enumerations[j].id == id@
                 && attestation@.statement.polarity == Polarity::Positive
                 && attestation@.observation == kb@.enumerations[j].observation
@@ -77,6 +84,7 @@ fn inventory_bound(attestation: &Attestation, kb: &KB, id: &EnumerationId) -> (v
 fn attestation_wf(attestation: &Attestation, kb: &KB) -> (valid: bool)
     ensures valid == attestation_wf_spec(attestation@, kb@),
 {
+    proof { reveal_with_fuel(<Formula as View>::view, 2); }
     let Some(claim) = find_claim(kb, attestation.claim()) else { return false; };
     if claim.statement() != attestation.statement()
         || !matches!(attestation.statement().formula(), Formula::Atomic(_) | Formula::Inventory { .. })
@@ -98,8 +106,10 @@ fn enumeration_wf(enumeration: &Enumeration, kb: &KB) -> (valid: bool)
         || !unique(enumeration.members()) { return false; }
     let members = enumeration.members();
     let mut i = 0;
+    proof { assert(members.deep_view().len() == members.len()); }
     while i < members.len()
         invariant i <= members.len(), members.deep_view() == enumeration@.members,
+            members.len() == enumeration@.members.len(),
             enumeration@.members == enumeration@.universe, enumeration@.members.no_duplicates(),
             observation@.source == enumeration@.source, observation@.revision == enumeration@.revision,
             first_observation_match(kb@.observations, enumeration@.observation, Some(observation@)),
@@ -151,8 +161,10 @@ fn receipt_wf(receipt: &Receipt, kb: &KB) -> (valid: bool)
         || !witness_wf(receipt.witness(), kb) || !natural(receipt.expires_at()) { return false; }
     let dependencies = receipt.dependencies();
     let mut i = 0;
+    proof { assert(dependencies.deep_view().len() == dependencies.len()); }
     while i < dependencies.len()
         invariant i <= dependencies.len(), dependencies.deep_view() == receipt@.dependencies,
+            dependencies.len() == receipt@.dependencies.len(),
             claim_present(kb@, receipt@.claim), context_wf_spec(receipt@.context),
             witness_wf_spec(receipt@.witness, kb@), natural_spec(receipt@.expires_at),
             forall|j: int| 0 <= j < i ==> dependency_wf_spec(receipt@.dependencies[j], kb@),
@@ -178,8 +190,10 @@ macro_rules! all_rows {
         {
             let values = kb.$field();
             let mut i = 0;
+            proof { assert(values.deep_view().len() == values.len()); }
             while i < values.len()
                 invariant i <= values.len(), values.deep_view() == kb@.$field,
+                    values.len() == kb@.$field.len(),
                     forall|j: int| 0 <= j < i ==> ($model)(kb@.$field[j], kb@),
                 decreases values.len() - i,
             {
@@ -196,13 +210,45 @@ macro_rules! all_rows {
         }
     };
 }
-all_rows!(observations_wf, observations, observation_wf, |r: ObservationView, _k: KBView| observation_wf_spec(r));
-all_rows!(claims_wf, claims, claim_wf, |r: ClaimView, k: KBView| statement_wf_spec(r.statement, k));
-all_rows!(attestations_wf, attestations, attestation_wf, |r: AttestationView, k: KBView| attestation_wf_spec(r, k));
-all_rows!(enumerations_wf, enumerations, enumeration_wf, |r: EnumerationView, k: KBView| enumeration_wf_spec(r, k));
-all_rows!(derivations_wf, derivations, derivation_wf, |r: DerivationView, k: KBView| derivation_wf_spec(r, k));
-all_rows!(correction_rows_wf, corrections, correction_wf, |r: CorrectionView, k: KBView| correction_wf_spec(r, k));
-all_rows!(receipts_wf, receipts, receipt_wf, |r: ReceiptView, k: KBView| receipt_wf_spec(r, k));
+all_rows!(
+    observations_wf,
+    observations,
+    observation_wf,
+    |r: ObservationView, _k: KBView| observation_wf_spec(r)
+);
+all_rows!(claims_wf, claims, claim_wf, |r: ClaimView, k: KBView| {
+    statement_wf_spec(r.statement, k)
+});
+all_rows!(
+    attestations_wf,
+    attestations,
+    attestation_wf,
+    |r: AttestationView, k: KBView| attestation_wf_spec(r, k)
+);
+all_rows!(
+    enumerations_wf,
+    enumerations,
+    enumeration_wf,
+    |r: EnumerationView, k: KBView| enumeration_wf_spec(r, k)
+);
+all_rows!(
+    derivations_wf,
+    derivations,
+    derivation_wf,
+    |r: DerivationView, k: KBView| derivation_wf_spec(r, k)
+);
+all_rows!(
+    correction_rows_wf,
+    corrections,
+    correction_wf,
+    |r: CorrectionView, k: KBView| correction_wf_spec(r, k)
+);
+all_rows!(
+    receipts_wf,
+    receipts,
+    receipt_wf,
+    |r: ReceiptView, k: KBView| receipt_wf_spec(r, k)
+);
 
 verus! {
 pub fn well_formed(kb: &KB) -> (valid: bool)

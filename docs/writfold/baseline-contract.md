@@ -14,6 +14,14 @@ Follow [root instructions](../../AGENTS.md), [P00](../../handover/stages/P00.md)
 
 These records do not replace executable codecs or normative requirements. `required_fields` on a closed envelope is an exact set; multiple codec variants must not become one permissive optional-field structure. Source-expression values are preserved source syntax, not executed defaults. Literal producer sites supplement the normalized envelopes: later source updates and decoder checks still govern complete shapes. Reference test owners identify modules, not newly demonstrated coverage. Planned Writfold command spellings do not establish implemented Rust commands.
 
+Revision-4 execution additionally reconciles the current immutable manifest,
+registry hashes, 19 stage contracts and dependency/gate lists, all WF00–WF24,
+and all 26 V/M obligations. The current proof inventory points to
+`handovers/revision-4/writfold/registries/proofs.json`; earlier symbol maps and
+component evidence remain explicitly historical rather than being silently
+refreshed. This identity/inventory check is still not a product gate pass.
+
+
 ## Independent version axes
 
 - Inference semantics remain **`2.0.0`**. Core development reference wire is **2**, with explicit workflow-reference schema **3** operations; it is not production RPC.

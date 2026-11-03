@@ -162,6 +162,10 @@ USE DEF PostStateBridgeLift
 THEOREM BridgeInitPreserves == BridgeInit => BridgeInv
 BY SMT, InitPreserves, RootsFromActualPublication DEF BridgeInit, BridgeInv, InitPreserves, RootsFromActualPublication
 USE DEF BridgeInitPreserves
+THEOREM PublicationEffectContract ==
+  p.published \subseteq p'.published /\ p.objects \subseteq p'.objects /\
+  UNCHANGED q => BridgeEffects
+BY SMT DEF BridgeEffects
 THEOREM PublicationPreservesBridge == BridgeInv /\ LocalPublication =>
   /\ BridgeInv' /\ BridgeEffects /\ UNCHANGED TransportProjection
 <1>1. ASSUME BridgeInv, LocalPublication
@@ -170,8 +174,10 @@ THEOREM PublicationPreservesBridge == BridgeInv /\ LocalPublication =>
   <2>1. Inv' BY SMT, <1>1, LocalPublicationPreserves DEF BridgeInv, LocalPublicationPreserves
   <2>2. BridgeInv' BY SMT, <2>1, PostStateBridgeLift DEF PostStateBridgeLift
   <2>3. BridgeEffects
-    BY SMT, <1>1, LocalPublicationRetention DEF BridgeInv, Inv,
-      LocalPublication, BridgeEffects, LocalPublicationRetention
+    <3>1. p.published \subseteq p'.published /\ p.objects \subseteq p'.objects /\
+      UNCHANGED q
+      BY <1>1, LocalPublicationRetention DEF BridgeInv, Inv, LocalPublicationRetention
+    <3>2. QED BY <3>1, PublicationEffectContract DEF PublicationEffectContract
   <2>4. UNCHANGED TransportProjection
     BY SMT, <1>1 DEF LocalPublication, TransportProjection
   <2>5. QED BY <2>2, <2>3, <2>4
@@ -588,8 +594,9 @@ THEOREM SourceDisappearBridgePreserves == BridgeInv /\ SourceDisappear =>
   <2>1. Inv' BY SMT, <1>1, SourceDisappearPreserves DEF BridgeInv, SourceDisappearPreserves
   <2>2. BridgeInv' BY SMT, <2>1, PostStateBridgeLift DEF PostStateBridgeLift
   <2>3. BridgeEffects
-    BY SMT, <1>1 DEF BridgeInv, Inv, TypeOK, RemoteTypeOK,
-      BridgeEffects, SourceDisappear
+    <3>1. UNCHANGED <<p,q.received,q.acknowledged,q.history,q.advertised>>
+      BY SMT, <1>1 DEF BridgeInv, Inv, TypeOK, RemoteTypeOK, SourceDisappear
+    <3>2. QED BY <3>1, FramedRemoteEffects DEF FramedRemoteEffects
   <2>4. UNCHANGED PublicationProjection
     BY SMT, <1>1 DEF SourceDisappear, PublicationProjection, LocalRoots, LocalRecords
   <2>5. QED BY <2>2, <2>3, <2>4
@@ -600,7 +607,8 @@ THEOREM StutterBridgePreserves == BridgeInv /\ Stutter => BridgeInv' /\ BridgeEf
   <2> USE BridgeInv, Stutter
   <2>1. Inv' BY SMT, <1>1, StutterPreserves DEF BridgeInv, StutterPreserves
   <2>2. BridgeInv' BY SMT, <2>1, PostStateBridgeLift DEF PostStateBridgeLift
-  <2>3. BridgeEffects BY SMT, <1>1 DEF BridgeEffects, Stutter, vars
+  <2>3. BridgeEffects
+    BY <1>1, FramedRemoteEffects DEF FramedRemoteEffects, Stutter, vars
   <2>4. QED BY <2>2, <2>3
 <1>2. QED BY <1>1
 USE DEF StutterBridgePreserves
@@ -616,7 +624,18 @@ THEOREM PublicationCASDoesNotAdvertise == \A w \in P!Writers :
     /\ p'.head = p.request[w]
     /\ p.head = P!Input(p.request[w]).predecessor
     /\ UNCHANGED TransportProjection
-BY SMT, P!CASLinearization DEF BridgeInv, Inv, TransportProjection, P!CASLinearization
+<1>1. \A w \in P!Writers : BridgeInv /\ P!DoCAS(w) =>
+  p'.head = p.request[w] /\ p.head = P!Input(p.request[w]).predecessor
+  <2>1. \A w \in P!Writers : BridgeInv /\ P!DoCAS(w) =>
+    p'.head=p.request[w]
+    BY SMT DEF BridgeInv, Inv, TypeOK, P!TypeOK, P!DoCAS, P!CASCore
+  <2>2. \A w \in P!Writers : P!DoCAS(w) =>
+    p.head=P!Input(p.request[w]).predecessor
+    BY SMT DEF P!DoCAS, P!CASCore, P!Input
+  <2>3. QED BY <2>1, <2>2
+<1>2. UNCHANGED q => UNCHANGED TransportProjection
+  BY DEF TransportProjection
+<1>3. QED BY <1>1, <1>2
 THEOREM TransferUsesCompletedExactRoot == \A c \in Clients, k \in Kinds :
   BridgeInv /\ TransferObject(c,k) =>
     /\ q.target[c] \in PublicationProjection.roots
@@ -687,6 +706,20 @@ THEOREM HistoricalReadUsesActualBytes == BridgeInv =>
   <2> USE BridgeInv
   <2>1. p.legacy = P!LegacyHistory
     BY SMT, <1>1 DEF BridgeInv, Inv, TypeOK, P!TypeOK
-  <2>2. QED BY SMT, <2>1 DEF HistoricalProjection, P!LegacyHistory, P!LegacyInput, ReadFamily
+  <2>2. HistoricalProjection.input = P!LegacyInput
+    BY SMT, <2>1 DEF HistoricalProjection, P!LegacyHistory
+  <2>3. HistoricalProjection.manifest.input = HistoricalProjection.input /\
+    HistoricalProjection.receipt.input = HistoricalProjection.input
+    BY SMT, <2>1 DEF HistoricalProjection, P!LegacyHistory
+  <2>4. ReadFamily(0).legacy = HistoricalProjection.input.context
+    BY SMT, <2>2 DEF ReadFamily
+  <2>5. HistoricalProjection.authentication.signedBytes = P!LegacyInput.canonicalBytes /\
+    HistoricalProjection.authentication.approvalBytes = P!LegacyInput.approvalBytes
+    BY SMT, <2>1 DEF HistoricalProjection, P!LegacyHistory
+  <2>6. P!LegacyInput.domain = "kctx-operation-v2"
+    BY SMT DEF P!LegacyInput
+  <2>7. HistoricalProjection.authentication.domain = "kctx-operation-v2"
+    BY SMT, <2>1, <2>6 DEF HistoricalProjection, P!LegacyHistory
+  <2>8. QED BY <2>2, <2>3, <2>4, <2>5, <2>7
 <1>2. QED BY <1>1
 =============================================================================

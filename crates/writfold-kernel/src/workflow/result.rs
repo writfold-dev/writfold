@@ -1,9 +1,9 @@
 //! Rejected and replayed operations retain the exact borrowed inputs.
 use std::borrow::Cow;
-use writfold_domain::*;
 use vstd::prelude::*;
 #[cfg(verus_keep_ghost)]
 use vstd::std_specs::cmp::PartialEqSpec;
+use writfold_domain::*;
 
 verus! {
 #[derive(Debug)]
@@ -27,6 +27,20 @@ impl<S: Clone, J: Clone> Clone for WorkflowResult<'_, S, J> {
         Self { state, journal, outcome: self.outcome }
     }
 }
+#[cfg(verus_keep_ghost)]
+impl<S: Clone + PartialEq, J: Clone + PartialEq> vstd::std_specs::cmp::PartialEqSpecImpl for WorkflowResult<'_, S, J> {
+    open spec fn obeys_eq_spec() -> bool {
+        S::obeys_eq_spec() && J::obeys_eq_spec()
+    }
+    open spec fn eq_spec(&self, other: &Self) -> bool {
+        let left = self.storage();
+        let right = other.storage();
+        left.state.eq_spec(&right.state) && left.outcome == right.outcome
+            && left.journal.len() == right.journal.len()
+            && forall|i: int| 0 <= i < left.journal.len()
+                ==> left.journal[i].eq_spec(&right.journal[i])
+    }
+}
 impl<S: Clone + PartialEq, J: Clone + PartialEq> PartialEq for WorkflowResult<'_, S, J> {
     fn eq(&self, other: &Self) -> bool {
         self.state() == other.state() && self.journal() == other.journal()
@@ -46,11 +60,12 @@ pub ghost struct WorkflowResultView<S, J> {
 impl<S: Clone + DeepView, J: Clone + DeepView> View for WorkflowResult<'_, S, J> {
     type V = WorkflowResultView<S::V, J::V>;
     open spec fn view(&self) -> Self::V {
-        let storage = self.storage();
-        WorkflowResultView { state: storage.state.deep_view(),
-            journal: storage.journal.map_values(|entry: J| entry.deep_view()),
-            outcome: storage.outcome, state_borrowed: storage.state_borrowed,
-            journal_borrowed: storage.journal_borrowed }
+        let parts = self.parts_spec();
+        WorkflowResultView {
+            state: match parts.0 { Cow::Borrowed(value) => value.deep_view(), Cow::Owned(value) => value.deep_view() },
+            journal: match parts.1 { Cow::Borrowed(value) => value.deep_view(), Cow::Owned(value) => value.deep_view() },
+            outcome: parts.2, state_borrowed: matches!(parts.0, Cow::Borrowed(_)),
+            journal_borrowed: matches!(parts.1, Cow::Borrowed(_)) }
     }
 }
 #[cfg(verus_keep_ghost)]

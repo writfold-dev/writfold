@@ -164,9 +164,10 @@ Safety ==
  /\ (c.alive => c.tool \in c.admitted)
  /\ (c.phase = "ready" => c.readyKB = KnowledgeBase /\ Compatible(c.tool, c.format))
  /\ Compatible(c.selected, c.format)
+InitialPlan == [valid |-> FALSE, oldTool |-> 1, newTool |-> 1, oldFormat |-> 1, newFormat |-> 1]
 Init ==
  c = [admitted |-> {1}, selected |-> 1, format |-> 1, backups |-> {},
-      plan |-> [valid |-> FALSE, oldTool |-> 1, newTool |-> 1, oldFormat |-> 1, newFormat |-> 1],
+      plan |-> InitialPlan,
       phase |-> "idle", inc |-> CHOOSE i \in Incarnations : TRUE,
       pid |-> CHOOSE p \in Pids : TRUE, tool |-> 1, used |-> {},
       actual |-> [p \in Pids |-> "none"], launched |-> {}, signals |-> {},
@@ -296,6 +297,44 @@ THEOREM DiagnosticFrame == TypeOK /\ DiagnosticStep => UNCHANGED SemanticFields
 THEOREM DiagnosticPreserves == Inv /\ DiagnosticStep => Inv'
  BY DiagnosticTyped, DiagnosticFrame, CoreFrame DEF DiagnosticTyped, DiagnosticFrame, CoreFrame, Inv, CoreInvariant
 
+(* Factor the actual EXCEPT chain for proof search only. Spawn itself and its
+   guards are unchanged; each projection traverses at most one update stage. *)
+SpawnIdentityState(i,p) ==
+ [c EXCEPT !.phase="starting", !.inc=i, !.pid=p, !.tool=c.selected,
+   !.used=@ \cup {i}, !.actual[p]=i, !.launched=@ \cup {<<p,i>>}]
+SpawnResourceState(s) ==
+ [s EXCEPT !.alive=TRUE, !.descendants=Children, !.charged=TRUE,
+   !.reaped=FALSE, !.teardownKnown=FALSE, !.readyKB="none", !.outcome="ok"]
+THEOREM SpawnFactor == \A i,p :
+ Spawn(i,p) => c'=SpawnResourceState(SpawnIdentityState(i,p))
+ BY ONLY DEF Spawn, SpawnIdentityState, SpawnResourceState
+THEOREM SpawnGuard == \A i,p : Spawn(i,p) => c.phase="idle" /\ ~c.plan.valid
+ BY ONLY DEF Spawn
+THEOREM SpawnIdentityProjection == \A i,p : StateShape(c) =>
+ LET s == SpawnIdentityState(i,p) IN
+ /\ StateShape(s)
+ /\ s.phase="starting" /\ s.inc=i /\ s.pid=p /\ s.tool=c.selected
+ /\ s.used=c.used \cup {i} /\ s.actual=[c.actual EXCEPT ![p]=i]
+ /\ s.launched=c.launched \cup {<<p,i>>}
+ /\ <<s.admitted,s.selected,s.format,s.backups,s.plan,s.signals,
+      s.childSignals,s.admitResults,s.up>> =
+    <<c.admitted,c.selected,c.format,c.backups,c.plan,c.signals,
+      c.childSignals,c.admitResults,c.up>>
+ BY ONLY SMT, ExactShapeUpdate, ExactShapeSelect, ExactNestedUpdate
+ DEF ExactShapeUpdate, ExactShapeSelect, ExactNestedUpdate, LifecycleFields, SpawnIdentityState
+THEOREM SpawnResourceProjection == \A s : StateShape(s) =>
+ LET t == SpawnResourceState(s) IN
+ /\ StateShape(t)
+ /\ t.alive /\ t.descendants=Children /\ t.charged /\ ~t.reaped
+ /\ ~t.teardownKnown /\ t.readyKB="none" /\ t.outcome="ok"
+ /\ <<t.phase,t.inc,t.pid,t.tool,t.used,t.actual,t.launched>> =
+    <<s.phase,s.inc,s.pid,s.tool,s.used,s.actual,s.launched>>
+ /\ <<t.admitted,t.selected,t.format,t.backups,t.plan,t.signals,
+      t.childSignals,t.admitResults,t.up>> =
+    <<s.admitted,s.selected,s.format,s.backups,s.plan,s.signals,
+      s.childSignals,s.admitResults,s.up>>
+ BY ONLY SMT, ExactShapeUpdate, ExactShapeSelect
+ DEF ExactShapeUpdate, ExactShapeSelect, LifecycleFields, SpawnResourceState
 SpawnChanged(i, p) ==
  /\ c.phase = "idle" /\ ~c.plan.valid
  /\ c'.phase = "starting" /\ c'.inc = i /\ c'.pid = p
@@ -314,7 +353,8 @@ THEOREM SpawnChanges == \A i \in Incarnations, p \in Pids :
  <1>1. \A i \in Incarnations, p \in Pids : TypeOK /\ Spawn(i, p) =>
    /\ c.phase = "idle" /\ ~c.plan.valid /\ c'.phase = "starting"
    /\ c'.inc = i /\ c'.pid = p /\ c'.tool = c.selected
-   BY SMT DEF TypeOK, Spawn
+   BY SpawnGuard, SpawnFactor, SpawnIdentityProjection, SpawnResourceProjection, SMT
+   DEF SpawnGuard, SpawnFactor, SpawnIdentityProjection, SpawnResourceProjection, TypeOK
  <1>2. \A i \in Incarnations, p \in Pids : TypeOK /\ Spawn(i, p) =>
    /\ c'.used = c.used \cup {i}
    /\ c'.actual = [c.actual EXCEPT ![p] = i]
@@ -333,7 +373,19 @@ THEOREM SpawnFrame == \A i \in Incarnations, p \in Pids :
  <1>2. \A i \in Incarnations, p \in Pids : TypeOK /\ Spawn(i, p) =>
    UNCHANGED <<c.admitted, c.selected, c.format, c.backups, c.plan,
                c.signals, c.childSignals, c.admitResults, c.up>>
-   BY SMT DEF TypeOK, Spawn
+   <2>1. \A i \in Incarnations, p \in Pids : TypeOK /\ Spawn(i,p) =>
+     UNCHANGED <<c.admitted, c.selected, c.format>>
+     BY SpawnFactor, SpawnIdentityProjection, SpawnResourceProjection, SMT
+     DEF SpawnFactor, SpawnIdentityProjection, SpawnResourceProjection, TypeOK
+   <2>2. \A i \in Incarnations, p \in Pids : TypeOK /\ Spawn(i,p) =>
+     UNCHANGED <<c.backups, c.plan, c.signals>>
+     BY SpawnFactor, SpawnIdentityProjection, SpawnResourceProjection, SMT
+     DEF SpawnFactor, SpawnIdentityProjection, SpawnResourceProjection, TypeOK
+   <2>3. \A i \in Incarnations, p \in Pids : TypeOK /\ Spawn(i,p) =>
+     UNCHANGED <<c.childSignals, c.admitResults, c.up>>
+     BY SpawnFactor, SpawnIdentityProjection, SpawnResourceProjection, SMT
+     DEF SpawnFactor, SpawnIdentityProjection, SpawnResourceProjection, TypeOK
+   <2> QED BY <2>1, <2>2, <2>3
  <1> QED BY <1>1, <1>2, ExactShapeReconstruct DEF ExactShapeReconstruct, TypeOK, SpawnStable
 THEOREM SpawnTyped == \A i \in Incarnations, p \in Pids :
  TypeOK /\ Spawn(i, p) => TypeOK'
@@ -414,9 +466,18 @@ THEOREM UpgradeExitMonotone == Inv /\ UpgradeExit => c.format <= c.format'
 
 THEOREM InitInvariant == Environment /\ Init => Inv
  <1>1. Environment /\ Init => StateShape(c)
-   BY SMT DEF Environment, Init, StateShape, LifecycleFields
+   BY ONLY DEF Environment, Init, StateShape, LifecycleFields
  <1>2. Environment /\ Init => ToolTypes(c)
-   BY SMT DEF Environment, Init, ToolTypes, Tools, Formats
+   <2>1. Init =>
+     c.admitted={1} /\ c.selected=1 /\ c.format=1 /\ c.backups={} /\ c.tool=1
+     BY ONLY DEF Init
+   <2>2. Init =>
+     c.plan=InitialPlan
+     BY ONLY DEF Init
+   <2>3. InitialPlan
+     \in [valid : BOOLEAN, oldTool : Tools, newTool : Tools, oldFormat : Formats, newFormat : Formats]
+     BY ONLY DEF InitialPlan, Tools, Formats
+   <2> QED BY ONLY <2>1, <2>2, <2>3 DEF ToolTypes, Tools, Formats
  <1>3. Environment /\ Init => ProcessTypes(c)
    BY SMT DEF Environment, Init, ProcessTypes
  <1>4. Init => ControlTypes(c)
@@ -426,7 +487,7 @@ THEOREM InitInvariant == Environment /\ Init => Inv
  <1>6. Init => Ownership
    BY SMT DEF Init, Ownership
  <1>7. Init => Readiness /\ UpgradeIntegrity
-   BY SMT DEF Init, Readiness, UpgradeIntegrity
+   BY SMT DEF Init, InitialPlan, Readiness, UpgradeIntegrity
  <1> QED BY <1>1, <1>2, <1>3, <1>4, <1>5, <1>6, <1>7, TypeConstruct DEF TypeConstruct, Inv, TypeOK
 THEOREM InstallPreserves == \A t \in Tools : Inv /\ Install(t) => Inv'
  <1>1. \A t \in Tools : TypeOK /\ Install(t) => TypeOK'
@@ -845,7 +906,11 @@ THEOREM CrashPreserves == Inv /\ Crash => Inv'
 THEOREM RestartPreserves == Inv /\ Restart => Inv'
  BY DiagnosticPreserves DEF DiagnosticPreserves, DiagnosticStep
 THEOREM StutterPreserves == Inv /\ UNCHANGED vars => Inv'
- BY ONLY SMT DEF vars, Inv, TypeOK, Admission, Ownership, Readiness, UpgradeIntegrity
+ <1>1. TypeOK /\ UNCHANGED vars => TypeOK'
+   BY ONLY DEF vars, TypeOK, LifecycleType
+ <1>2. Inv /\ UNCHANGED vars => CoreInvariant'
+   BY CoreFrame DEF CoreFrame, Inv, CoreInvariant, SemanticFields, vars
+ <1> QED BY <1>1, <1>2 DEF Inv, CoreInvariant
 THEOREM StepPreserves == Inv /\ [Next]_vars => Inv'
  BY InstallPreserves, FailedInstallPreserves, SpawnPreserves, ListeningPreserves,
     QueryReadyPreserves, StartFailedPreserves, QueryFailedPreserves, StopPreserves,
@@ -859,9 +924,37 @@ THEOREM InvariantImpliesSafety == Inv => Safety
  <1>1. Admission /\ Ownership /\ Readiness => Safety
    BY ONLY DEF Admission, Ownership, Readiness, Safety
  <1> QED BY <1>1 DEF Inv
+(* Incarnation sets are arbitrary under Environment; no campaign constraint
+   or fairness premise enters this mathematical safety induction. *)
+THEOREM InductiveSafety == Environment /\ Spec => []Safety
+ <1>1. Environment /\ Init => Inv
+   BY InitInvariant DEF InitInvariant
+ <1>2. Inv /\ [Next]_vars => Inv'
+   BY StepPreserves DEF StepPreserves
+ <1>3. Environment /\ Spec => []Inv
+   BY <1>1, <1>2, PTL DEF Spec
+ <1> QED BY <1>3, InvariantImpliesSafety, PTL DEF InvariantImpliesSafety
 THEOREM CancellationFrame == TypeOK /\ Cancel => UNCHANGED
  <<c.charged, c.alive, c.descendants, c.reaped, c.inc, c.pid, c.tool>>
  BY SMT DEF Cancel, Stop, TypeOK
+THEOREM CancellationKeepsTeardownEvidence == TypeOK /\ Cancel =>
+ UNCHANGED <<c.teardownKnown, c.actual, c.launched, c.used, c.childSignals>>
+ BY SMT DEF Cancel, Stop, TypeOK
+THEOREM SignalExactIncarnation == TypeOK /\ SignalParent =>
+ /\ c.actual[c.pid] = c.inc
+ /\ <<c.pid, c.inc>> \in c.launched
+ /\ c'.signals = c.signals \cup {<<c.pid, c.inc>>}
+ /\ UNCHANGED <<c.inc, c.pid, c.actual, c.launched, c.charged, c.reaped>>
+ BY SMT DEF TypeOK, SignalParent
+THEOREM ReapOwnershipEffects == TypeOK /\ Reap =>
+ /\ c.teardownKnown /\ ~c.alive /\ c.descendants = {}
+ /\ c'.reaped /\ ~c'.charged
+ /\ UNCHANGED <<c.inc, c.pid, c.actual, c.launched, c.used>>
+ BY SMT DEF TypeOK, Reap
+THEOREM CrashRetainsOwnership == TypeOK /\ Crash =>
+ UNCHANGED <<c.inc, c.pid, c.actual, c.launched, c.used, c.charged,
+             c.alive, c.descendants, c.reaped, c.teardownKnown>>
+ BY SMT DEF TypeOK, Crash
 StableToolStep ==
  (\E t \in Tools : Install(t) \/ Rollback(t))
  \/ FailedInstall \/ VerifyBackup

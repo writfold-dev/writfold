@@ -1,6 +1,6 @@
 //! Stable dependency union without copying duplicate entries.
 #[cfg(verus_keep_ghost)]
-use super::footprint::{extend_push, extend_concat, extend_unique_spec, push_unique_spec};
+use super::footprint::{extend_concat, extend_push, extend_unique_spec, push_unique_spec};
 use vstd::prelude::*;
 use writfold_domain::*;
 
@@ -54,9 +54,15 @@ pub fn dependencies_union(left: &[Dependency], right: &[Dependency]) -> (depende
     ensures dependencies.deep_view() == extend_unique_spec(Seq::empty(), left.deep_view() + right.deep_view()),
 {
     let mut result = Vec::new();
+    proof { assert(result.deep_view() =~= Seq::<DependencyView>::empty()); }
     extend(&mut result, left);
+    proof { assert(result.deep_view() == extend_unique_spec(Seq::empty(), left.deep_view())); }
     extend(&mut result, right);
-    proof { extend_concat(Seq::empty(), left.deep_view(), right.deep_view()); }
+    proof {
+        assert(result.deep_view() == extend_unique_spec(
+            extend_unique_spec(Seq::empty(), left.deep_view()), right.deep_view()));
+        extend_concat(Seq::empty(), left.deep_view(), right.deep_view());
+    }
     result
 }
 

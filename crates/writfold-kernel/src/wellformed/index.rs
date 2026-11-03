@@ -1,16 +1,19 @@
 //! Sorted borrowed identities index generation-stamped visitation, without resets.
+use super::order::{Key, compare};
+#[cfg(verus_keep_ghost)]
+use super::{
+    order::{KeyView, key_le, key_order},
+    sort::sorted,
+};
 use std::cmp::Ordering;
 use vstd::prelude::*;
-use super::order::{compare, Key};
-#[cfg(verus_keep_ghost)]
-use super::{order::{key_le, key_order, KeyView}, sort::sorted};
 
 verus! {
 broadcast use key_order;
 pub open spec fn visited(keys: Seq<KeyView>, stamps: Seq<usize>, generation: usize) -> Set<KeyView> {
     keys.to_set().filter(|key: KeyView| exists|i: int| 0 <= i < keys.len() && i < stamps.len() && stamps[i] == generation && keys[i] == key)
 }
-pub(super) fn find(keys: &Vec<Key<'_>>, key: Key<'_>) -> (found: Option<usize>)
+pub(super) fn find(keys: &[Key<'_>], key: Key<'_>) -> (found: Option<usize>)
     requires sorted(keys.deep_view()),
     ensures match found {
         Some(index) => index < keys.len() && keys.deep_view()[index as int] == key.deep_view(),

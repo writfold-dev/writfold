@@ -26,4 +26,14 @@ Release consumption requires all 25 gates exactly once and binds active contract
 
 Integrated smoke evidence is retained separately: `v4-baseline-001.json` under the external qualification directory passed with scope `baseline-only`; all six newly recognized commands refused their unavailable producers; removing WF22, WF23 or WF24 from an in-memory candidate ledger caused independent aggregation refusal. Exact observations are in `~/.local/share/writfold/evidence/revision-4-gate-smoke-001.json`. These checks do not pass the full revision-4 stages or renew earlier proofs.
 
+`unblocked-baseline-20261103-001.json` additionally exercises current manifest
+and registry reconciliation: 258 immutable members, 19 stages, 25 mandatory
+gates, 26 V/M obligations and 108 scenarios. The full baseline-only receipt
+records 1,322 passing identity checks. The separate
+`baseline-calibration-20261103-001/report.json` campaign uses real copied file
+closures: the positive control passes, and changed manifest bytes, omitted
+WF24, omitted V15 and a weakened P06 dependency each trigger their intended
+refusal. No stage, proof or backend status is promoted by those checks.
+
+
 The public website remains a separate repository, [writfold-dev/writfold-dev.github.io](https://github.com/writfold-dev/writfold-dev.github.io). Its publication state is recorded separately in the root README; site work does not pass backend, installation or release gates.

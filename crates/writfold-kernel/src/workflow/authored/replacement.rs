@@ -30,7 +30,7 @@ pub open spec fn authored_supersession_valid_spec(p: AuthoredProposalView) -> bo
         }
 }
 
-fn unique_rows(rows: &Vec<AuthoredReplacement>) -> (unique: bool)
+fn unique_rows(rows: &[AuthoredReplacement]) -> (unique: bool)
     ensures unique == replacement_ids_unique(rows.deep_view()),
 {
     let mut i = 0;
@@ -43,6 +43,8 @@ fn unique_rows(rows: &Vec<AuthoredReplacement>) -> (unique: bool)
         let mut j = 0;
         while j < i
             invariant j <= i < rows.len(),
+                forall|k: int, j: int| 0 <= k < j < i ==>
+                    rows.deep_view()[k].id != rows.deep_view()[j].id,
                 forall|k: int| 0 <= k < j ==> rows.deep_view()[k].id != rows.deep_view()[i as int].id,
             decreases i - j,
         {
@@ -62,7 +64,7 @@ fn unique_rows(rows: &Vec<AuthoredReplacement>) -> (unique: bool)
     true
 }
 
-fn find_row<'a>(rows: &'a Vec<AuthoredReplacement>, target: &ProposalId)
+fn find_row<'a>(rows: &'a [AuthoredReplacement], target: &ProposalId)
     -> (found: Option<&'a AuthoredReplacement>)
     ensures match found {
         Some(row) => rows.deep_view().contains(row@) && row@.id == target@,

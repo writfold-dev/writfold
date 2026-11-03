@@ -2,13 +2,13 @@
 mod freshness;
 mod receipts;
 
-use super::context::Frame;
-use super::evaluation::alternatives;
-use super::supported_frame;
 #[cfg(verus_keep_ghost)]
 use super::assessment_model::*;
+use super::context::Frame;
+use super::evaluation::alternatives;
 #[cfg(verus_keep_ghost)]
 use super::lookup::claim_lookup_value;
+use super::supported_frame;
 use freshness::alternative_freshness;
 pub use freshness::witness_freshness;
 use receipts::{current, reusable_with, validated};
@@ -48,8 +48,10 @@ fn disputed(kb: &KB, context: Frame<'_>, reference: &ClaimRef) -> (disputed: boo
 {
     let corrections = kb.corrections();
     let mut index = 0;
+    proof { assert(corrections.deep_view().len() == corrections.len()); }
     while index < corrections.len()
         invariant index <= corrections.len(), corrections.deep_view() == kb@.corrections,
+            corrections.len() == kb@.corrections.len(),
             forall|i: int| 0 <= i < index ==> !dispute_matches(context@.base, reference@, kb@.corrections[i]),
         decreases corrections.len() - index,
     {
@@ -76,6 +78,7 @@ fn assess_frame(kb: &KB, context: Frame<'_>, reference: &ClaimRef) -> (assessmen
     proof { broadcast use claim_lookup_value; }
     let claim = find_claim(kb, reference);
     let accepted = alternatives(kb, context, reference);
+    proof { assert(accepted.deep_view().len() == accepted.len()); }
     let selected = !accepted.is_empty();
     let selected_negative = match claim {
         Some(value) => *value.statement().polarity() == Polarity::Negative,

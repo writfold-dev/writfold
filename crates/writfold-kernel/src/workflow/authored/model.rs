@@ -1,12 +1,12 @@
 #![cfg(verus_keep_ghost)]
+use super::super::actor_present_spec;
 use super::gates::*;
 use super::landing::*;
 use super::problems::*;
 use super::replacement::*;
-use super::super::actor_present_spec;
 use vstd::prelude::*;
-use writfold_domain::*;
 use writfold_domain::text::nonblank_spec;
+use writfold_domain::*;
 
 verus! {
 
@@ -80,6 +80,15 @@ pub proof fn problems_characterize_validity(p: AuthoredProposalView, target: Aut
     ensures (authored_candidate_problems_spec(p, target, now).len() == 0)
         == authored_candidate_valid_spec(p, target, now),
 {
+    if needs_landing(target) {
+        assert(target == AuthoredStatus::Applied || target == AuthoredStatus::Verified);
+        assert((landing_problems_spec(p, target, now).len() == 0)
+            == (explicit_landed(p) && resolved_landed(p) && bound_landed(p)
+                && applicable_gates_pass(p, target, now)
+                && (target == AuthoredStatus::Applied ==> has_phase(p, GateWhen::Land))
+                && (target == AuthoredStatus::Verified ==>
+                    has_phase(p, GateWhen::Deploy) && has_phase(p, GateWhen::Use))));
+    }
 }
 
 pub open spec fn authored_transition_spec(p: AuthoredProposalView, target: AuthoredStatus,

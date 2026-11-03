@@ -125,3 +125,6 @@ quantity!(PageSize, 1);
 quantity!(WitnessDepth, 0);
 quantity!(EpochSeconds, 0);
 quantity!(DurationSeconds, 0);
+quantity!(NativeFormatVersion, 1);
+
+crate::records::scalar_views!(NativeFormatVersion);

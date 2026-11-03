@@ -1,7 +1,7 @@
 //! Declarative finite witness rules and exact ordered borrowed footprints.
 use super::context::FrameView;
-use super::footprint::{EvaluationView, correction_events, extend_unique_spec};
 use super::footprint::statement_value;
+use super::footprint::{EvaluationView, correction_events, extend_unique_spec};
 use super::input::InputView;
 use super::lookup::{attestation_value, claim_value, enumeration_value, observation_value};
 use super::{retracted_spec, source_selected_spec};
@@ -187,6 +187,22 @@ pub open spec fn accepted_rows(
     }
 }
 
+pub proof fn accepted_rows_step(
+    kb: KBView, frame: FrameView, claim: ClaimView, rows: Seq<DerivationView>, index: int,
+)
+    requires 0 <= index < rows.len(),
+    ensures accepted_rows(kb, frame, claim, rows.take(index + 1)) ==
+        (match accepted_derivation_spec(kb, frame, claim, rows[index]) {
+            Some(value) => accepted_rows(kb, frame, claim, rows.take(index)).push((rows[index].witness, value)),
+            None => accepted_rows(kb, frame, claim, rows.take(index)),
+        }),
+{
+    let prefix = rows.take(index + 1);
+    assert(prefix.drop_last() =~= rows.take(index));
+    assert(prefix.last() == rows[index]);
+    reveal_with_fuel(accepted_rows, 2);
+}
+
 pub open spec fn alternatives_spec(kb: KBView, frame: FrameView, reference: ClaimRefView)
     -> Seq<(WitnessView, EvaluationView)> {
     if retracted_spec(kb, frame.base, reference) { Seq::empty() }
@@ -204,6 +220,13 @@ pub open spec fn has_accepted_claim_spec(kb: KBView, frame: FrameView, claim: Cl
             && accepted_derivation_spec(kb, frame, claim, kb.derivations[i]).is_some()
 }
 
+pub open spec fn has_accepted_reference_spec(kb: KBView, frame: FrameView, reference: ClaimRefView) -> bool {
+    match claim_value(kb, reference) {
+        Some(claim) => has_accepted_claim_spec(kb, frame, claim),
+        None => false,
+    }
+}
+
 pub open spec fn supported_frame_spec(kb: KBView, frame: FrameView, reference: ClaimRefView, polarity: Polarity) -> bool {
     match claim_value(kb, reference) {
         None => false,
@@ -215,7 +238,8 @@ pub open spec fn supported_frame_spec(kb: KBView, frame: FrameView, reference: C
                     && kb.claims[i].statement.formula == claim.statement.formula
                     && kb.claims[i].statement.scope == claim.statement.scope
                     && kb.claims[i].statement.polarity == polarity
-                    && has_accepted_claim_spec(kb, frame, kb.claims[i])
+                    && has_accepted_reference_spec(kb, frame,
+                        ClaimRefView { id: kb.claims[i].id, rev: kb.claims[i].revision })
         },
     }
 }

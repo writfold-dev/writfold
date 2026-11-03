@@ -2,10 +2,10 @@ use super::super::actor_present;
 #[cfg(verus_keep_ghost)]
 use super::super::actor_present_spec;
 use vstd::prelude::*;
-use writfold_domain::{Integer, *};
 use writfold_domain::text::nonblank;
 #[cfg(verus_keep_ghost)]
 use writfold_domain::text::nonblank_spec;
+use writfold_domain::{Integer, *};
 
 verus! {
 
@@ -95,14 +95,19 @@ pub fn authored_ready(proposal: &AuthoredProposal) -> (ready: bool)
     if !*proposal.research_present() || proposal.alternatives_count() < &Integer::from(2)
         || definitions.is_empty() { return false; }
     let mut i = 0;
+    proof { assert(definitions.deep_view().len() == definitions.len()); }
     while i < definitions.len()
         invariant i <= definitions.len(),
+            definitions.deep_view() == proposal@.gate_definitions, definitions.deep_view().len() == definitions.len(),
+            proposal@.profile != AuthoredProfile::LegacyLimited, proposal@.research_present,
+            proposal@.alternatives_count >= 2, definitions.len() > 0,
             forall|k: int| 0 <= k < i ==> authored_gate_valid_spec(definitions.deep_view()[k]),
             forall|k: int, j: int| 0 <= k < j < i ==>
                 definitions.deep_view()[k].id != definitions.deep_view()[j].id,
         decreases definitions.len() - i,
     {
         let definition = &definitions[i];
+        proof { assert(definition@ == proposal@.gate_definitions[i as int]); }
         if !authored_gate_valid(definition) {
             proof {
                 assert(definition@ == proposal@.gate_definitions[i as int]);
@@ -115,6 +120,13 @@ pub fn authored_ready(proposal: &AuthoredProposal) -> (ready: bool)
         let mut j = 0;
         while j < i
             invariant j <= i < definitions.len(),
+                definitions.deep_view() == proposal@.gate_definitions, definitions.deep_view().len() == definitions.len(),
+                definition@ == proposal@.gate_definitions[i as int], authored_gate_valid_spec(definition@),
+                proposal@.profile != AuthoredProfile::LegacyLimited, proposal@.research_present,
+                proposal@.alternatives_count >= 2, definitions.len() > 0,
+                forall|k: int| 0 <= k < i ==> authored_gate_valid_spec(definitions.deep_view()[k]),
+                forall|k: int, j: int| 0 <= k < j < i ==>
+                    definitions.deep_view()[k].id != definitions.deep_view()[j].id,
                 forall|k: int| 0 <= k < j ==>
                     definitions.deep_view()[k].id != definition@.id,
             decreases i - j,
@@ -149,7 +161,7 @@ fn checker_present(checker: &Option<CheckerId>) -> (present: bool)
     match checker { Some(id) => nonblank(id.as_str()), None => false }
 }
 
-pub(super) fn nonblank_references(refs: &Vec<String>) -> (present: bool)
+pub(super) fn nonblank_references(refs: &[String]) -> (present: bool)
     ensures present == references_present(refs.deep_view()),
 {
     if refs.is_empty() { return false; }
@@ -193,8 +205,12 @@ pub fn authored_gate_passes(proposal: &AuthoredProposal,
         || !material_present(proposal.proposal_revision()) { return false; }
     let results = proposal.gate_results();
     let mut end = results.len();
+    proof { assert(results.deep_view().len() == results.len()); }
     while end > 0
         invariant end <= results.len(),
+            results.deep_view() == proposal@.gate_results, results.deep_view().len() == results.len(),
+            nonblank_spec(proposal@.environment), nonblank_spec(proposal@.scope),
+            actor_present_spec(proposal@.proposal_revision),
             forall|j: int| end <= j < results.len() ==>
                 !gate_matches(proposal@, definition@, results.deep_view()[j], now@),
         decreases end,

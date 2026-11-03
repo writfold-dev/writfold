@@ -26,6 +26,21 @@ pub open spec fn dependencies_match(inputs: Seq<InputView>, dependencies: Seq<De
         && forall|i: int| 0 <= i < inputs.len() ==> dependency_value(inputs[i]) == dependencies[i]
 }
 
+pub proof fn dependencies_match_projection(inputs: Seq<InputView>, dependencies: Seq<DependencyView>)
+    ensures (dependencies_match(inputs, dependencies)
+        == (inputs.map_values(|input: InputView| dependency_value(input)) == dependencies)),
+{
+    let projected = inputs.map_values(|input: InputView| dependency_value(input));
+    if dependencies_match(inputs, dependencies) {
+        assert(projected =~= dependencies);
+    } else if projected == dependencies {
+        assert forall|i: int| 0 <= i < inputs.len()
+            implies dependency_value(inputs[i]) == dependencies[i] by {
+            assert(projected[i] == dependency_value(inputs[i]));
+        }
+    }
+}
+
 pub open spec fn accepted_matches(accepted: (WitnessView, EvaluationView), receipt: ReceiptView) -> bool {
     accepted.0 == receipt.witness && dependencies_match(accepted.1.dependencies, receipt.dependencies)
 }
@@ -63,7 +78,7 @@ pub open spec fn witness_freshness_spec(context: ContextView, dependencies: Seq<
 }
 
 pub open spec fn input_freshness_spec(context: ContextView, dependencies: Seq<InputView>) -> Freshness {
-    witness_freshness_spec(context, dependencies.map(|i: int, input: InputView| dependency_value(input)))
+    witness_freshness_spec(context, dependencies.map_values(|input: InputView| dependency_value(input)))
 }
 
 pub open spec fn alternative_freshness_spec(context: ContextView, accepted: Seq<(WitnessView, EvaluationView)>) -> Freshness {

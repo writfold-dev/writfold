@@ -112,6 +112,32 @@ source was not executed. Location-bound clone metadata remains a hypothesis.
 The report asks whether whole-root relocation is supported and, if not, for
 the supported history-preserving restore procedure. P01O/WF24 remains blocked.
 
+On 3 November, [ragnorc's contributor analysis](https://github.com/ModernRelay/omnigraph/issues/1233#issuecomment-6592078609)
+reported independent reproduction on 0.14.0 and main `b68f367`, including a
+child branch and branch-only snapshot lookup. It traces the dependency to
+Lance clone `base_paths` and proposes graph-internal origin resolution without
+rewriting retained manifests. These are attributed upstream findings, not a
+locally executed fixed build.
+
+Tarek supplied the [authorized fork](https://github.com/tknawara/omnigraph).
+Following the [implementation offer](https://github.com/ModernRelay/omnigraph/issues/1233#issuecomment-6592350631),
+upstream [accepted the bug as size L and took ownership of its RFC and code PR](https://github.com/ModernRelay/omnigraph/issues/1233#issuecomment-6594527176).
+The issue is `needs-rfc`, not ready for a competing code PR. Any candidate must preserve exact
+history/manifest identity, leave genuinely external bases and Blob URIs alone,
+refuse missing copied closure without consulting the old tree, and cover the
+still-present/divergent-original case. Fork availability is not backend
+admission; independent Writfold implementation continues meanwhile.
+
+Upstream's linked prototype rebinds in-memory catalog bases after checkout
+without modifying retained manifest bytes or the native format stamp. Their
+planned work includes centralized coverage of all catalog checkouts, explicit
+legacy-fork and mismatched-base rules, relocated cleanup, RustFS/Azurite
+evidence, and RFC 0029/0064 amendments. These are upstream plans/prototype
+observations, not local admission. Retain the end-of-week fallback review and
+test the exact accepted artifact against Writfold's closure/restore campaign.
+
+
+
 
 ## Authenticated companion evidence
 

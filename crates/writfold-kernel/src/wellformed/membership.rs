@@ -5,7 +5,7 @@ use writfold_domain::*;
 macro_rules! record_membership {
     ($name:ident, $row:ty) => {
         verus! {
-        pub(super) fn $name(values: &Vec<$row>, value: &$row) -> (present: bool)
+        pub(super) fn $name(values: &[$row], value: &$row) -> (present: bool)
             ensures present == values.deep_view().contains(value@),
         {
             let mut i = 0;

@@ -277,6 +277,33 @@ BY SMT, RemoteParameterBounds, P!InputShape
       P!Objects, P!Closure, P!Bounds, RemoteParameterBounds, P!InputShape
 USE DEF RemoteDomainFacts
 
+(* Factor record typing only in proofs; the public RemoteTypeOK is unchanged. *)
+RemoteShape == q = [received |-> q.received, receiverVerified |-> q.receiverVerified,
+  acknowledged |-> q.acknowledged, advertised |-> q.advertised, history |-> q.history,
+  advertisementEvidence |-> q.advertisementEvidence, stagedEvidence |-> q.stagedEvidence,
+  target |-> q.target, expected |-> q.expected, pc |-> q.pc, result |-> q.result,
+  checked |-> q.checked, stage |-> q.stage, stageChecked |-> q.stageChecked,
+  destination |-> q.destination, restored |-> q.restored, selected |-> q.selected,
+  sourceAvailable |-> q.sourceAvailable, fault |-> q.fault]
+RemoteStoreTypes ==
+  /\ q.received \subseteq Objects /\ q.destination \subseteq Objects
+  /\ q.receiverVerified \subseteq Releases /\ q.acknowledged \subseteq Releases
+  /\ q.advertised \in Releases /\ q.history \subseteq Releases
+  /\ q.advertisementEvidence \subseteq Releases /\ q.stagedEvidence \subseteq Releases
+  /\ q.restored \subseteq Releases /\ q.sourceAvailable \in BOOLEAN
+  /\ q.fault \in [Releases -> Errors \cup {"ok"}]
+RemoteClientTypes ==
+  /\ q.target \in [Clients -> Releases] /\ q.expected \in [Clients -> Releases]
+  /\ q.pc \in [Clients -> Phases] /\ q.result \in [Clients -> Results]
+  /\ q.checked \in [Clients -> BOOLEAN] /\ q.stage \in [Clients -> SUBSET Objects]
+  /\ q.stageChecked \in [Clients -> BOOLEAN] /\ q.selected \in [Clients -> Releases]
+THEOREM RemoteTypeSplit == RemoteTypeOK =>
+  RemoteShape /\ RemoteStoreTypes /\ RemoteClientTypes
+BY SMT DEF RemoteTypeOK, RemoteShape, RemoteStoreTypes, RemoteClientTypes
+THEOREM RemoteTypeJoinNext ==
+  RemoteShape' /\ RemoteStoreTypes' /\ RemoteClientTypes' => RemoteTypeOK'
+BY SMT DEF RemoteTypeOK, RemoteShape, RemoteStoreTypes, RemoteClientTypes
+
 (* Publication changes are split per reducer action. This avoids expanding
    every record update and every invariant in a single SMT query. *)
 THEOREM PublicationStartRetention == \A w \in P!Writers, i \in Inputs :
@@ -411,9 +438,17 @@ THEOREM StartTransferPreserves == \A c \in Clients, i \in Releases :
   <2> USE Inv, StartTransfer(c,i)
   <2>1. P!Inv' BY SMT, <1>1, PublicationFrame DEF Inv, StartTransfer, PublicationFrame
   <2>2. RemoteTypeOK'
-    BY SMT, <1>1, RemoteDomainFacts
-      DEF Inv, TypeOK, RemoteTypeOK, P!TypeOK, StartTransfer,
-        Phases, Results, Errors, Inputs, Releases, Objects, BaseOf, RemoteDomainFacts
+    <3>1. i \in Inputs /\ BaseOf(i) \in Releases
+      BY SMT, <1>1, RemoteDomainFacts DEF RemoteDomainFacts, Inv, TypeOK,
+        P!TypeOK, StartTransfer, Releases, Inputs
+    <3>2. RemoteShape'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK, RemoteShape, StartTransfer
+    <3>3. RemoteStoreTypes'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK, RemoteShape, RemoteStoreTypes, StartTransfer
+    <3>4. RemoteClientTypes'
+      BY SMT, <1>1, <3>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK,
+        RemoteShape, RemoteClientTypes, StartTransfer, Phases, Results
+    <3>5. QED BY <3>2, <3>3, <3>4, RemoteTypeJoinNext DEF RemoteTypeJoinNext
   <2>3. TransferRoots'
     BY SMT, <1>1 DEF Inv, TypeOK, RemoteTypeOK, TransferRoots, StartTransfer
   <2>4. ReceiverSound'
@@ -425,65 +460,41 @@ THEOREM StartTransferPreserves == \A c \in Clients, i \in Releases :
   <2>7. QED BY <2>1, <2>2, <2>3, <2>4, <2>5, <2>6 DEF Inv, TypeOK, P!Inv
 <1>2. QED BY <1>1
 USE DEF StartTransferPreserves
+(* All three transport actions use the same reducer. Establish the exact
+   object type from the retained-object guard, independently of record typing;
+   each public action still has an explicit specialization below. *)
+THEOREM TransferObjectPreserves == \A c \in Clients, k \in Kinds :
+  Inv /\ TransferObject(c,k) => Inv'
+<1>1. ASSUME NEW c \in Clients, NEW k \in Kinds, Inv, TransferObject(c,k)
+      PROVE Inv'
+  <2>1. <<k,q.target[c]>> \in Objects /\ q.target[c] \in p.published
+    BY SMT, <1>1 DEF Inv, TypeOK, P!TypeOK, Objects, TransferObject
+  <2>2. P!Inv'
+    BY SMT, <1>1, PublicationFrame DEF Inv, TransferObject, PublicationFrame
+  <2>3. RemoteTypeOK'
+    BY SMT, <1>1, <2>1 DEF Inv, TypeOK, RemoteTypeOK, TransferObject
+  <2>4. TransferRoots'
+    BY SMT, <1>1, <2>1
+      DEF Inv, TypeOK, RemoteTypeOK, TransferRoots, TransferObject
+  <2>5. ReceiverSound'
+    BY SMT, <1>1
+      DEF Inv, TypeOK, RemoteTypeOK, ReceiverSound, TransferObject
+  <2>6. AdvertisementChain' /\ ClientSound'
+    BY SMT, <1>1
+      DEF Inv, TypeOK, RemoteTypeOK, AdvertisementChain, ClientSound, TransferObject
+  <2>7. QED BY <2>2, <2>3, <2>4, <2>5, <2>6 DEF Inv, TypeOK, P!Inv
+<1>2. QED BY <1>1
 THEOREM TransferGitPreserves == \A c \in Clients :
   Inv /\ TransferGit(c) => Inv'
-<1>1. ASSUME NEW c \in Clients, Inv, TransferGit(c) PROVE Inv'
-  <2> USE Inv, TransferGit(c)
-  <2>1. P!Inv' BY SMT, <1>1, PublicationFrame DEF Inv, TransferGit, TransferObject, PublicationFrame
-  <2>2. RemoteTypeOK'
-    BY SMT, <1>1, RemoteDomainFacts
-      DEF Inv, TypeOK, RemoteTypeOK, P!TypeOK, TransferGit, TransferObject,
-        Phases, Results, Errors, Inputs, Releases, Objects, BaseOf, RemoteDomainFacts
-  <2>3. TransferRoots'
-    BY SMT, <1>1 DEF Inv, TypeOK, RemoteTypeOK, TransferRoots, TransferGit, TransferObject
-  <2>4. ReceiverSound'
-    BY SMT, <1>1 DEF Inv, TypeOK, RemoteTypeOK, ReceiverSound, TransferGit, TransferObject
-  <2>5. AdvertisementChain'
-    BY SMT, <1>1 DEF Inv, TypeOK, RemoteTypeOK, AdvertisementChain, TransferGit, TransferObject
-  <2>6. ClientSound'
-    BY SMT, <1>1 DEF Inv, TypeOK, RemoteTypeOK, ClientSound, TransferGit, TransferObject
-  <2>7. QED BY <2>1, <2>2, <2>3, <2>4, <2>5, <2>6 DEF Inv, TypeOK, P!Inv
-<1>2. QED BY <1>1
+BY TransferObjectPreserves DEF TransferObjectPreserves, TransferGit, Kinds
 USE DEF TransferGitPreserves
 THEOREM TransferNativePreserves == \A c \in Clients :
   Inv /\ TransferNative(c) => Inv'
-<1>1. ASSUME NEW c \in Clients, Inv, TransferNative(c) PROVE Inv'
-  <2> USE Inv, TransferNative(c)
-  <2>1. P!Inv' BY SMT, <1>1, PublicationFrame DEF Inv, TransferNative, TransferObject, PublicationFrame
-  <2>2. RemoteTypeOK'
-    BY SMT, <1>1, RemoteDomainFacts
-      DEF Inv, TypeOK, RemoteTypeOK, P!TypeOK, TransferNative, TransferObject,
-        Phases, Results, Errors, Inputs, Releases, Objects, BaseOf, RemoteDomainFacts
-  <2>3. TransferRoots'
-    BY SMT, <1>1 DEF Inv, TypeOK, RemoteTypeOK, TransferRoots, TransferNative, TransferObject
-  <2>4. ReceiverSound'
-    BY SMT, <1>1 DEF Inv, TypeOK, RemoteTypeOK, ReceiverSound, TransferNative, TransferObject
-  <2>5. AdvertisementChain'
-    BY SMT, <1>1 DEF Inv, TypeOK, RemoteTypeOK, AdvertisementChain, TransferNative, TransferObject
-  <2>6. ClientSound'
-    BY SMT, <1>1 DEF Inv, TypeOK, RemoteTypeOK, ClientSound, TransferNative, TransferObject
-  <2>7. QED BY <2>1, <2>2, <2>3, <2>4, <2>5, <2>6 DEF Inv, TypeOK, P!Inv
-<1>2. QED BY <1>1
+BY TransferObjectPreserves DEF TransferObjectPreserves, TransferNative, Kinds
 USE DEF TransferNativePreserves
 THEOREM TransferCapturePreserves == \A c \in Clients :
   Inv /\ TransferCapture(c) => Inv'
-<1>1. ASSUME NEW c \in Clients, Inv, TransferCapture(c) PROVE Inv'
-  <2> USE Inv, TransferCapture(c)
-  <2>1. P!Inv' BY SMT, <1>1, PublicationFrame DEF Inv, TransferCapture, TransferObject, PublicationFrame
-  <2>2. RemoteTypeOK'
-    BY SMT, <1>1, RemoteDomainFacts
-      DEF Inv, TypeOK, RemoteTypeOK, P!TypeOK, TransferCapture, TransferObject,
-        Phases, Results, Errors, Inputs, Releases, Objects, BaseOf, RemoteDomainFacts
-  <2>3. TransferRoots'
-    BY SMT, <1>1 DEF Inv, TypeOK, RemoteTypeOK, TransferRoots, TransferCapture, TransferObject
-  <2>4. ReceiverSound'
-    BY SMT, <1>1 DEF Inv, TypeOK, RemoteTypeOK, ReceiverSound, TransferCapture, TransferObject
-  <2>5. AdvertisementChain'
-    BY SMT, <1>1 DEF Inv, TypeOK, RemoteTypeOK, AdvertisementChain, TransferCapture, TransferObject
-  <2>6. ClientSound'
-    BY SMT, <1>1 DEF Inv, TypeOK, RemoteTypeOK, ClientSound, TransferCapture, TransferObject
-  <2>7. QED BY <2>1, <2>2, <2>3, <2>4, <2>5, <2>6 DEF Inv, TypeOK, P!Inv
-<1>2. QED BY <1>1
+BY TransferObjectPreserves DEF TransferObjectPreserves, TransferCapture, Kinds
 USE DEF TransferCapturePreserves
 THEOREM ReceiverVerifyPreserves == \A c \in Clients :
   Inv /\ ReceiverVerify(c) => Inv'
@@ -491,9 +502,15 @@ THEOREM ReceiverVerifyPreserves == \A c \in Clients :
   <2> USE Inv, ReceiverVerify(c)
   <2>1. P!Inv' BY SMT, <1>1, PublicationFrame DEF Inv, ReceiverVerify, PublicationFrame
   <2>2. RemoteTypeOK'
-    BY SMT, <1>1, RemoteDomainFacts
-      DEF Inv, TypeOK, RemoteTypeOK, P!TypeOK, ReceiverVerify,
-        Phases, Results, Errors, Inputs, Releases, Objects, BaseOf, RemoteDomainFacts
+    <3>1. RemoteShape'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK, RemoteShape, ReceiverVerify
+    <3>2. RemoteStoreTypes'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK,
+        RemoteShape, RemoteStoreTypes, RemoteClientTypes, ReceiverVerify
+    <3>3. RemoteClientTypes'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK,
+        RemoteShape, RemoteClientTypes, ReceiverVerify, Phases
+    <3>4. QED BY <3>1, <3>2, <3>3, RemoteTypeJoinNext DEF RemoteTypeJoinNext
   <2>3. TransferRoots'
     BY SMT, <1>1 DEF Inv, TypeOK, RemoteTypeOK, TransferRoots, ReceiverVerify
   <2>4. ReceiverSound'
@@ -511,9 +528,15 @@ THEOREM AcknowledgePreserves == \A c \in Clients :
   <2> USE Inv, Acknowledge(c)
   <2>1. P!Inv' BY SMT, <1>1, PublicationFrame DEF Inv, Acknowledge, PublicationFrame
   <2>2. RemoteTypeOK'
-    BY SMT, <1>1, RemoteDomainFacts
-      DEF Inv, TypeOK, RemoteTypeOK, P!TypeOK, Acknowledge,
-        Phases, Results, Errors, Inputs, Releases, Objects, BaseOf, RemoteDomainFacts
+    <3>1. RemoteShape'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK, RemoteShape, Acknowledge
+    <3>2. RemoteStoreTypes'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK,
+        RemoteShape, RemoteStoreTypes, RemoteClientTypes, Acknowledge
+    <3>3. RemoteClientTypes'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK,
+        RemoteShape, RemoteClientTypes, Acknowledge, Phases
+    <3>4. QED BY <3>1, <3>2, <3>3, RemoteTypeJoinNext DEF RemoteTypeJoinNext
   <2>3. TransferRoots'
     BY SMT, <1>1 DEF Inv, TypeOK, RemoteTypeOK, TransferRoots, Acknowledge
   <2>4. ReceiverSound'
@@ -531,9 +554,15 @@ THEOREM ClientVerifyPreserves == \A c \in Clients :
   <2> USE Inv, ClientVerify(c)
   <2>1. P!Inv' BY SMT, <1>1, PublicationFrame DEF Inv, ClientVerify, PublicationFrame
   <2>2. RemoteTypeOK'
-    BY SMT, <1>1, RemoteDomainFacts
-      DEF Inv, TypeOK, RemoteTypeOK, P!TypeOK, ClientVerify,
-        Phases, Results, Errors, Inputs, Releases, Objects, BaseOf, RemoteDomainFacts
+    <3>1. RemoteShape'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK, RemoteShape, ClientVerify
+    <3>2. RemoteStoreTypes'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK,
+        RemoteShape, RemoteStoreTypes, ClientVerify
+    <3>3. RemoteClientTypes'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK,
+        RemoteShape, RemoteClientTypes, ClientVerify, Phases
+    <3>4. QED BY <3>1, <3>2, <3>3, RemoteTypeJoinNext DEF RemoteTypeJoinNext
   <2>3. TransferRoots'
     BY SMT, <1>1 DEF Inv, TypeOK, RemoteTypeOK, TransferRoots, ClientVerify
   <2>4. ReceiverSound'
@@ -551,9 +580,15 @@ THEOREM AdvertisePreserves == \A c \in Clients :
   <2> USE Inv, Advertise(c)
   <2>1. P!Inv' BY SMT, <1>1, PublicationFrame DEF Inv, Advertise, AdvertiseCore, PublicationFrame
   <2>2. RemoteTypeOK'
-    BY SMT, <1>1, RemoteDomainFacts
-      DEF Inv, TypeOK, RemoteTypeOK, P!TypeOK, Advertise, AdvertiseCore,
-        Phases, Results, Errors, Inputs, Releases, Objects, BaseOf, RemoteDomainFacts
+    <3>1. RemoteShape'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK, RemoteShape, Advertise, AdvertiseCore
+    <3>2. RemoteStoreTypes'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK,
+        RemoteShape, RemoteStoreTypes, RemoteClientTypes, Advertise, AdvertiseCore
+    <3>3. RemoteClientTypes'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK,
+        RemoteShape, RemoteClientTypes, Advertise, AdvertiseCore, Phases, Results
+    <3>4. QED BY <3>1, <3>2, <3>3, RemoteTypeJoinNext DEF RemoteTypeJoinNext
   <2>3. TransferRoots'
     BY SMT, <1>1 DEF Inv, TypeOK, RemoteTypeOK, TransferRoots, Advertise, AdvertiseCore
   <2>4. ReceiverSound'
@@ -561,9 +596,20 @@ THEOREM AdvertisePreserves == \A c \in Clients :
   <2>5. AdvertisementChain'
     <3>1. q.target[c] \in Inputs /\ BaseOf(q.target[c]) = q.advertised /\
           q.advertised < q.target[c] /\ Input(q.target[c]).schema = 3
-      BY SMT, <1>1, RemoteDomainFacts
-        DEF Advertise, AdvertiseCore, Inv, TypeOK, P!Inv, P!TypeOK,
-          P!PublicationChain, Input, P!Input, BaseOf, Releases, RemoteDomainFacts
+      <4>1. q.target[c] \in Inputs
+        BY SMT, <1>1, RemoteDomainFacts DEF RemoteDomainFacts, Advertise,
+          AdvertiseCore, Inv, TypeOK, P!TypeOK, Releases, Inputs
+      <4>2. BaseOf(q.target[c]) = q.advertised
+        BY SMT, <1>1 DEF Advertise, AdvertiseCore
+      <4>3. BaseOf(q.target[c]) < q.target[c]
+        BY SMT, <4>1, P!InputShape DEF P!InputShape, BaseOf, Inputs
+      <4>4. Input(q.target[c]).schema = 3
+        <5>1. q.target[c] \in p.published \ {0}
+          BY DEF Advertise, AdvertiseCore
+        <5>2. P!SchemaOf(q.target[c]) = 3
+          BY SMT, <5>1 DEF Inv, P!Inv, P!PublicationChain
+        <5>3. QED BY SMT, <5>2 DEF Input, P!Input
+      <4>5. QED BY <4>1, <4>2, <4>3, <4>4
     <3>2. \A i \in q.history \cup {q.target[c]} : i <= q.target[c]
       BY SMT, <1>1, <3>1 DEF Inv, TypeOK, RemoteTypeOK,
         AdvertisementChain, Releases, P!Releases
@@ -586,9 +632,15 @@ THEOREM PointerConflictPreserves == \A c \in Clients :
   <2> USE Inv, PointerConflict(c)
   <2>1. P!Inv' BY SMT, <1>1, PublicationFrame DEF Inv, PointerConflict, PublicationFrame
   <2>2. RemoteTypeOK'
-    BY SMT, <1>1, RemoteDomainFacts
-      DEF Inv, TypeOK, RemoteTypeOK, P!TypeOK, PointerConflict,
-        Phases, Results, Errors, Inputs, Releases, Objects, BaseOf, RemoteDomainFacts
+    <3>1. RemoteShape'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK, RemoteShape, PointerConflict
+    <3>2. RemoteStoreTypes'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK,
+        RemoteShape, RemoteStoreTypes, PointerConflict
+    <3>3. RemoteClientTypes'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK,
+        RemoteShape, RemoteClientTypes, PointerConflict, Phases, Results
+    <3>4. QED BY <3>1, <3>2, <3>3, RemoteTypeJoinNext DEF RemoteTypeJoinNext
   <2>3. TransferRoots'
     BY SMT, <1>1 DEF Inv, TypeOK, RemoteTypeOK, TransferRoots, PointerConflict
   <2>4. ReceiverSound'
@@ -606,9 +658,15 @@ THEOREM BeginRestorePreserves == \A c \in Clients, i \in Releases :
   <2> USE Inv, BeginRestore(c,i)
   <2>1. P!Inv' BY SMT, <1>1, PublicationFrame DEF Inv, BeginRestore, PublicationFrame
   <2>2. RemoteTypeOK'
-    BY SMT, <1>1, RemoteDomainFacts
-      DEF Inv, TypeOK, RemoteTypeOK, P!TypeOK, BeginRestore,
-        Phases, Results, Errors, Inputs, Releases, Objects, BaseOf, RemoteDomainFacts
+    <3>1. RemoteShape'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK, RemoteShape, BeginRestore
+    <3>2. RemoteStoreTypes'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK,
+        RemoteShape, RemoteStoreTypes, BeginRestore
+    <3>3. RemoteClientTypes'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK,
+        RemoteShape, RemoteClientTypes, BeginRestore, Phases, Results
+    <3>4. QED BY <3>1, <3>2, <3>3, RemoteTypeJoinNext DEF RemoteTypeJoinNext
   <2>3. TransferRoots'
     BY SMT, <1>1 DEF Inv, TypeOK, RemoteTypeOK, TransferRoots, BeginRestore
   <2>4. ReceiverSound'
@@ -626,9 +684,15 @@ THEOREM StageObjectPreserves == \A c \in Clients, k \in Kinds :
   <2> USE Inv, StageObject(c,k)
   <2>1. P!Inv' BY SMT, <1>1, PublicationFrame DEF Inv, StageObject, Kinds, PublicationFrame
   <2>2. RemoteTypeOK'
-    BY SMT, <1>1, RemoteDomainFacts
-      DEF Inv, TypeOK, RemoteTypeOK, P!TypeOK, StageObject, Kinds,
-        Phases, Results, Errors, Inputs, Releases, Objects, BaseOf, RemoteDomainFacts
+    <3>1. RemoteShape'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK, RemoteShape, StageObject
+    <3>2. RemoteStoreTypes'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK,
+        RemoteShape, RemoteStoreTypes, StageObject
+    <3>3. RemoteClientTypes'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK,
+        RemoteShape, RemoteStoreTypes, RemoteClientTypes, StageObject
+    <3>4. QED BY <3>1, <3>2, <3>3, RemoteTypeJoinNext DEF RemoteTypeJoinNext
   <2>3. TransferRoots'
     BY SMT, <1>1 DEF Inv, TypeOK, RemoteTypeOK, TransferRoots, StageObject, Kinds
   <2>4. ReceiverSound'
@@ -646,9 +710,15 @@ THEOREM StageVerifyPreserves == \A c \in Clients :
   <2> USE Inv, StageVerify(c)
   <2>1. P!Inv' BY SMT, <1>1, PublicationFrame DEF Inv, StageVerify, PublicationFrame
   <2>2. RemoteTypeOK'
-    BY SMT, <1>1, RemoteDomainFacts
-      DEF Inv, TypeOK, RemoteTypeOK, P!TypeOK, StageVerify,
-        Phases, Results, Errors, Inputs, Releases, Objects, BaseOf, RemoteDomainFacts
+    <3>1. RemoteShape'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK, RemoteShape, StageVerify
+    <3>2. RemoteStoreTypes'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK,
+        RemoteShape, RemoteStoreTypes, RemoteClientTypes, StageVerify
+    <3>3. RemoteClientTypes'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK,
+        RemoteShape, RemoteClientTypes, StageVerify, Phases
+    <3>4. QED BY <3>1, <3>2, <3>3, RemoteTypeJoinNext DEF RemoteTypeJoinNext
   <2>3. TransferRoots'
     BY SMT, <1>1 DEF Inv, TypeOK, RemoteTypeOK, TransferRoots, StageVerify
   <2>4. ReceiverSound'
@@ -666,9 +736,15 @@ THEOREM SelectRestorePreserves == \A c \in Clients :
   <2> USE Inv, SelectRestore(c)
   <2>1. P!Inv' BY SMT, <1>1, PublicationFrame DEF Inv, SelectRestore, PublicationFrame
   <2>2. RemoteTypeOK'
-    BY SMT, <1>1, RemoteDomainFacts
-      DEF Inv, TypeOK, RemoteTypeOK, P!TypeOK, SelectRestore,
-        Phases, Results, Errors, Inputs, Releases, Objects, BaseOf, RemoteDomainFacts
+    <3>1. RemoteShape'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK, RemoteShape, SelectRestore
+    <3>2. RemoteStoreTypes'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK,
+        RemoteShape, RemoteStoreTypes, RemoteClientTypes, SelectRestore
+    <3>3. RemoteClientTypes'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK,
+        RemoteShape, RemoteClientTypes, SelectRestore, Phases, Results
+    <3>4. QED BY <3>1, <3>2, <3>3, RemoteTypeJoinNext DEF RemoteTypeJoinNext
   <2>3. TransferRoots'
     BY SMT, <1>1 DEF Inv, TypeOK, RemoteTypeOK, TransferRoots, SelectRestore
   <2>4. ReceiverSound'
@@ -686,9 +762,15 @@ THEOREM ReplicaReadPreserves == \A c \in Clients, i \in Releases : \A context \i
   <2> USE Inv, ReplicaRead(c,i,context)
   <2>1. P!Inv' BY SMT, <1>1, PublicationFrame DEF Inv, ReplicaRead, ReadContexts, PublicationFrame
   <2>2. RemoteTypeOK'
-    BY SMT, <1>1, RemoteDomainFacts
-      DEF Inv, TypeOK, RemoteTypeOK, P!TypeOK, ReplicaRead, ReadContexts,
-        Phases, Results, Errors, Inputs, Releases, Objects, BaseOf, RemoteDomainFacts
+    <3>1. RemoteShape'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK, RemoteShape, ReplicaRead
+    <3>2. RemoteStoreTypes'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK,
+        RemoteShape, RemoteStoreTypes, ReplicaRead
+    <3>3. RemoteClientTypes'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK,
+        RemoteShape, RemoteClientTypes, ReplicaRead, Results
+    <3>4. QED BY <3>1, <3>2, <3>3, RemoteTypeJoinNext DEF RemoteTypeJoinNext
   <2>3. TransferRoots'
     BY SMT, <1>1 DEF Inv, TypeOK, RemoteTypeOK, TransferRoots, ReplicaRead, ReadContexts
   <2>4. ReceiverSound'
@@ -706,9 +788,15 @@ THEOREM ReplicaReadFailurePreserves == \A c \in Clients, i \in Releases, e \in E
   <2> USE Inv, ReplicaReadFailure(c,i,e)
   <2>1. P!Inv' BY SMT, <1>1, PublicationFrame DEF Inv, ReplicaReadFailure, PublicationFrame
   <2>2. RemoteTypeOK'
-    BY SMT, <1>1, RemoteDomainFacts
-      DEF Inv, TypeOK, RemoteTypeOK, P!TypeOK, ReplicaReadFailure,
-        Phases, Results, Errors, Inputs, Releases, Objects, BaseOf, RemoteDomainFacts
+    <3>1. RemoteShape'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK, RemoteShape, ReplicaReadFailure
+    <3>2. RemoteStoreTypes'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK,
+        RemoteShape, RemoteStoreTypes, ReplicaReadFailure
+    <3>3. RemoteClientTypes'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK,
+        RemoteShape, RemoteClientTypes, ReplicaReadFailure, Results
+    <3>4. QED BY <3>1, <3>2, <3>3, RemoteTypeJoinNext DEF RemoteTypeJoinNext
   <2>3. TransferRoots'
     BY SMT, <1>1 DEF Inv, TypeOK, RemoteTypeOK, TransferRoots, ReplicaReadFailure
   <2>4. ReceiverSound'
@@ -726,9 +814,15 @@ THEOREM TypedFailurePreserves == \A c \in Clients, e \in Errors :
   <2> USE Inv, TypedFailure(c,e)
   <2>1. P!Inv' BY SMT, <1>1, PublicationFrame DEF Inv, TypedFailure, PublicationFrame
   <2>2. RemoteTypeOK'
-    BY SMT, <1>1, RemoteDomainFacts
-      DEF Inv, TypeOK, RemoteTypeOK, P!TypeOK, TypedFailure,
-        Phases, Results, Errors, Inputs, Releases, Objects, BaseOf, RemoteDomainFacts
+    <3>1. RemoteShape'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK, RemoteShape, TypedFailure
+    <3>2. RemoteStoreTypes'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK,
+        RemoteShape, RemoteStoreTypes, TypedFailure
+    <3>3. RemoteClientTypes'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK,
+        RemoteShape, RemoteClientTypes, TypedFailure, Phases, Results
+    <3>4. QED BY <3>1, <3>2, <3>3, RemoteTypeJoinNext DEF RemoteTypeJoinNext
   <2>3. TransferRoots'
     BY SMT, <1>1 DEF Inv, TypeOK, RemoteTypeOK, TransferRoots, TypedFailure
   <2>4. ReceiverSound'
@@ -746,9 +840,15 @@ THEOREM NetworkInterruptPreserves == \A c \in Clients :
   <2> USE Inv, NetworkInterrupt(c)
   <2>1. P!Inv' BY SMT, <1>1, PublicationFrame DEF Inv, NetworkInterrupt, PublicationFrame
   <2>2. RemoteTypeOK'
-    BY SMT, <1>1, RemoteDomainFacts
-      DEF Inv, TypeOK, RemoteTypeOK, P!TypeOK, NetworkInterrupt,
-        Phases, Results, Errors, Inputs, Releases, Objects, BaseOf, RemoteDomainFacts
+    <3>1. RemoteShape'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK, RemoteShape, NetworkInterrupt
+    <3>2. RemoteStoreTypes'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK,
+        RemoteShape, RemoteStoreTypes, NetworkInterrupt
+    <3>3. RemoteClientTypes'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK,
+        RemoteShape, RemoteClientTypes, NetworkInterrupt, Phases, Results, Errors
+    <3>4. QED BY <3>1, <3>2, <3>3, RemoteTypeJoinNext DEF RemoteTypeJoinNext
   <2>3. TransferRoots'
     BY SMT, <1>1 DEF Inv, TypeOK, RemoteTypeOK, TransferRoots, NetworkInterrupt
   <2>4. ReceiverSound'
@@ -766,9 +866,15 @@ THEOREM CrashPreserves == \A c \in Clients :
   <2> USE Inv, Crash(c)
   <2>1. P!Inv' BY SMT, <1>1, PublicationFrame DEF Inv, Crash, PublicationFrame
   <2>2. RemoteTypeOK'
-    BY SMT, <1>1, RemoteDomainFacts
-      DEF Inv, TypeOK, RemoteTypeOK, P!TypeOK, Crash,
-        Phases, Results, Errors, Inputs, Releases, Objects, BaseOf, RemoteDomainFacts
+    <3>1. RemoteShape'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK, RemoteShape, Crash
+    <3>2. RemoteStoreTypes'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK,
+        RemoteShape, RemoteStoreTypes, Crash
+    <3>3. RemoteClientTypes'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK,
+        RemoteShape, RemoteClientTypes, Crash, Phases, Results, Errors
+    <3>4. QED BY <3>1, <3>2, <3>3, RemoteTypeJoinNext DEF RemoteTypeJoinNext
   <2>3. TransferRoots'
     BY SMT, <1>1 DEF Inv, TypeOK, RemoteTypeOK, TransferRoots, Crash
   <2>4. ReceiverSound'
@@ -786,9 +892,15 @@ THEOREM RestartPreserves == \A c \in Clients :
   <2> USE Inv, Restart(c)
   <2>1. P!Inv' BY SMT, <1>1, PublicationFrame DEF Inv, Restart, PublicationFrame
   <2>2. RemoteTypeOK'
-    BY SMT, <1>1, RemoteDomainFacts
-      DEF Inv, TypeOK, RemoteTypeOK, P!TypeOK, Restart,
-        Phases, Results, Errors, Inputs, Releases, Objects, BaseOf, RemoteDomainFacts
+    <3>1. RemoteShape'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK, RemoteShape, Restart
+    <3>2. RemoteStoreTypes'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK,
+        RemoteShape, RemoteStoreTypes, Restart
+    <3>3. RemoteClientTypes'
+      BY SMT, <1>1, RemoteTypeSplit DEF RemoteTypeSplit, Inv, TypeOK,
+        RemoteShape, RemoteClientTypes, Restart, Phases, Results
+    <3>4. QED BY <3>1, <3>2, <3>3, RemoteTypeJoinNext DEF RemoteTypeJoinNext
   <2>3. TransferRoots'
     BY SMT, <1>1 DEF Inv, TypeOK, RemoteTypeOK, TransferRoots, Restart
   <2>4. ReceiverSound'
@@ -873,5 +985,15 @@ THEOREM ExactAdvertisementCAS == \A c \in Clients : Inv /\ Advertise(c) =>
   /\ q'.advertised = q.target[c] /\ q.target[c] \in p.published
   /\ q.target[c] \in q.acknowledged /\ Closure(q.target[c]) \subseteq q.received
   /\ q.history \subseteq q'.history /\ UNCHANGED p
-BY SMT DEF Advertise, AdvertiseCore, Inv, TypeOK, RemoteTypeOK, Input, BaseOf, P!Input
+<1>1. \A c \in Clients : Inv /\ Advertise(c) =>
+  q.advertised = Input(q.target[c]).predecessor
+  BY SMT DEF Advertise, AdvertiseCore, Input, BaseOf, P!Input
+<1>2. \A c \in Clients : Inv /\ Advertise(c) =>
+  q'.advertised = q.target[c] /\ q.history \subseteq q'.history
+  BY SMT DEF Advertise, AdvertiseCore, Inv, TypeOK, RemoteTypeOK
+<1>3. \A c \in Clients : Advertise(c) =>
+  q.target[c] \in p.published /\ q.target[c] \in q.acknowledged /\
+  Closure(q.target[c]) \subseteq q.received /\ UNCHANGED p
+  BY DEF Advertise, AdvertiseCore
+<1>4. QED BY <1>1, <1>2, <1>3
 =============================================================================

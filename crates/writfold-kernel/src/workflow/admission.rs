@@ -3,11 +3,37 @@
 use super::admission_model::*;
 use crate::checker::{check_matches_snapshot, retracted, reusable, usable_for_snapshot};
 use vstd::prelude::*;
-use writfold_domain::*;
 #[cfg(verus_keep_ghost)]
 use vstd::std_specs::cmp::PartialEqSpec;
+use writfold_domain::*;
 
 verus! {
+pub(super) proof fn prefix_views<T: PartialEq + DeepView>(base: Seq<T>, candidate: Seq<T>)
+    requires forall|a: T, b: T| #[trigger] a.eq_spec(&b) == (a.deep_view() == b.deep_view()),
+    ensures (base.len() <= candidate.len()
+        && forall|i: int| 0 <= i < base.len() ==> base[i].eq_spec(&candidate[i]))
+        == prefix(Seq::new(base.len(), |i: int| base[i].deep_view()),
+            Seq::new(candidate.len(), |i: int| candidate[i].deep_view())),
+{
+    let left = Seq::new(base.len(), |i: int| base[i].deep_view());
+    let right = Seq::new(candidate.len(), |i: int| candidate[i].deep_view());
+    assert(left.len() == base.len());
+    assert(right.len() == candidate.len());
+    if base.len() <= candidate.len() {
+        if (forall|i: int| 0 <= i < base.len() ==> base[i].eq_spec(&candidate[i])) {
+            assert forall|i: int| 0 <= i < left.len() implies left[i] == right[i] by {
+                assert(base[i].eq_spec(&candidate[i]));
+                assert(base[i].deep_view() == candidate[i].deep_view());
+            }
+        }
+        if prefix(left, right) {
+            assert forall|i: int| 0 <= i < base.len() implies base[i].eq_spec(&candidate[i]) by {
+                assert(left[i] == right[i]);
+                assert(base[i].deep_view() == candidate[i].deep_view());
+            }
+        }
+    }
+}
 pub(super) fn slice_prefix<T: PartialEq>(base: &[T], candidate: &[T]) -> (valid: bool)
     requires T::obeys_eq_spec(),
     ensures valid == (base.len() <= candidate.len()
@@ -25,17 +51,24 @@ pub(super) fn slice_prefix<T: PartialEq>(base: &[T], candidate: &[T]) -> (valid:
     }
     true
 }
-pub(super) fn actor_authorized(context: &Context, actor: &ActorId) -> (valid: bool)
+pub(crate) fn actor_authorized(context: &Context, actor: &ActorId) -> (valid: bool)
     ensures valid == context@.policy.authorized_actors.contains(actor@),
 {
     let actors = context.policy().authorized_actors();
     let mut i = 0;
+    proof { assert(actors.deep_view().len() == actors.len()); }
     while i < actors.len()
         invariant i <= actors.len(), actors.deep_view() == context@.policy.authorized_actors,
+            actors.deep_view().len() == actors.len(),
             forall|j: int| 0 <= j < i ==> actors.deep_view()[j] != actor@,
         decreases actors.len() - i,
     {
-        if &actors[i] == actor { return true; }
+        let current = &actors[i];
+        proof { assert(current@ == actors.deep_view()[i as int]); }
+        if current == actor {
+            proof { assert(context@.policy.authorized_actors.contains(actor@)); }
+            return true;
+        }
         i += 1;
     }
     false
@@ -127,6 +160,7 @@ pub(super) fn first_entry<'a>(journal: &'a [JournalEntry], plan: &Plan) -> (foun
         proof { assert(entry@ == journal.deep_view()[i as int]); }
         if entry.plan().id() == plan.id() {
             proof {
+                reveal(first_plan);
                 assert(exists|k: int| 0 <= k < journal.len() && journal.deep_view()[k].plan.id == plan@.id);
                 assert(exists|k: int| 0 <= k < journal.len() && journal.deep_view()[k].plan.id == plan@.id
                     && forall|j: int| 0 <= j < k ==> journal.deep_view()[j].plan.id != plan@.id);
@@ -138,32 +172,76 @@ pub(super) fn first_entry<'a>(journal: &'a [JournalEntry], plan: &Plan) -> (foun
         }
         i += 1;
     }
+    proof { reveal(first_plan); }
+    None
+}
+pub(super) fn prepend_entry(journal: &[JournalEntry], plan: &Plan) -> (updated: Vec<JournalEntry>)
+    ensures updated.deep_view() == seq![JournalEntryView { plan: plan@ }] + journal.deep_view(),
+{
+    let mut updated = Vec::with_capacity(journal.len().saturating_add(1));
+    updated.push(JournalEntry::new(plan.clone()));
+    let mut i = 0;
+    proof { assert(journal.deep_view().len() == journal.len()); }
+    while i < journal.len()
+        invariant i <= journal.len(), journal.deep_view().len() == journal.len(),
+            updated.deep_view() == seq![JournalEntryView { plan: plan@ }] + journal.deep_view().take(i as int),
+        decreases journal.len() - i,
+    {
+        let ghost previous = updated.deep_view();
+        let entry = journal[i].clone();
+        proof { assert(entry@ == journal.deep_view()[i as int]); }
+        updated.push(entry);
+        proof {
+            assert(updated.deep_view() =~= previous.push(entry@));
+            assert(seq![JournalEntryView { plan: plan@ }] + journal.deep_view().take(i as int + 1)
+                =~= previous.push(entry@));
+        }
+        i += 1;
+    }
+    proof { assert(journal.deep_view().take(journal.len() as int) == journal.deep_view()); }
+    updated
+}
+fn first_gate_receipt<'a>(receipts: &'a [Receipt], gate: &ReceiptId) -> (found: Option<&'a Receipt>)
+    ensures match found {
+        None => forall|i: int| 0 <= i < receipts.len() ==> receipts.deep_view()[i].id != gate@,
+        Some(receipt) => exists|i: int| 0 <= i < receipts.len() && receipt@ == receipts.deep_view()[i]
+            && receipt@.id == gate@ && forall|j: int| 0 <= j < i ==> receipts.deep_view()[j].id != gate@,
+    },
+        found.deep_view() == crate::checker::first_matching(receipts.deep_view(), |receipt: ReceiptView| receipt.id == gate@),
+{
+    let mut i = 0;
+    proof { assert(receipts.deep_view().len() == receipts.len()); }
+    while i < receipts.len()
+        invariant i <= receipts.len(), receipts.deep_view().len() == receipts.len(),
+            forall|j: int| 0 <= j < i ==> receipts.deep_view()[j].id != gate@,
+        decreases receipts.len() - i,
+    {
+        let receipt = &receipts[i];
+        proof { assert(receipt@ == receipts.deep_view()[i as int]); }
+        if receipt.id() == gate {
+            proof { crate::checker::first_matching_at(receipts.deep_view(), |row: ReceiptView| row.id == gate@, i as int); }
+            return Some(receipt);
+        }
+        i += 1;
+    }
+    proof { crate::checker::first_matching_absent(receipts.deep_view(), |row: ReceiptView| row.id == gate@); }
     None
 }
 fn gate_usable(kb: &KB, context: &Context, target: &ClaimRef, gate: &ReceiptId) -> (valid: bool)
     ensures valid == gate_reusable(kb@, context@, target@, gate@),
 {
     let receipts = kb.receipts();
-    let mut i = 0;
-    while i < receipts.len()
-        invariant i <= receipts.len(), receipts.deep_view() == kb@.receipts,
-            forall|j: int| 0 <= j < i ==> kb@.receipts[j].id != gate@,
-        decreases receipts.len() - i,
-    {
-        let receipt = &receipts[i];
-        proof { assert(receipt@ == kb@.receipts[i as int]); }
-        if receipt.id() == gate {
-            let valid = reusable(kb, context, target, receipt);
-            proof {
-                assert forall|j: int| 0 <= j < receipts.len() && kb@.receipts[j].id == gate@
-                    && (forall|k: int| 0 <= k < j ==> kb@.receipts[k].id != gate@)
-                    implies j == i by { }
-            }
-            return valid;
-        }
-        i += 1;
+    proof { assert(receipts.deep_view().len() == receipts.len()); }
+    let Some(receipt) = first_gate_receipt(receipts, gate) else {
+        proof { reveal(gate_reusable); }
+        return false;
+    };
+    proof {
+        let i = choose|i: int| 0 <= i < receipts.len() && receipt@ == receipts.deep_view()[i]
+            && receipt@.id == gate@ && forall|j: int| 0 <= j < i ==> receipts.deep_view()[j].id != gate@;
+        first_gate_decides(kb@, context@, target@, gate@, i);
     }
-    false
+    reusable(kb, context, target, receipt)
 }
 pub(super) fn gates_usable(kb: &KB, context: &Context, proposal: &Proposal) -> (valid: bool)
     ensures valid == (forall|i: int| 0 <= i < proposal@.gates.len()
@@ -171,12 +249,19 @@ pub(super) fn gates_usable(kb: &KB, context: &Context, proposal: &Proposal) -> (
 {
     let gates = proposal.gates();
     let mut i = 0;
+    proof { assert(gates.deep_view().len() == gates.len()); }
     while i < gates.len()
         invariant i <= gates.len(), gates.deep_view() == proposal@.gates,
+            gates.deep_view().len() == gates.len(),
             forall|j: int| 0 <= j < i ==> gate_reusable(kb@, context@, proposal@.target, proposal@.gates[j]),
         decreases gates.len() - i,
     {
-        if !gate_usable(kb, context, proposal.target(), &gates[i]) { return false; }
+        let gate = &gates[i];
+        proof { assert(gate@ == proposal@.gates[i as int]); }
+        if !gate_usable(kb, context, proposal.target(), gate) {
+            proof { assert(!gate_reusable(kb@, context@, proposal@.target, proposal@.gates[i as int])); }
+            return false;
+        }
         i += 1;
     }
     true

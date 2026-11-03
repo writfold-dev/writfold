@@ -6,10 +6,7 @@ mod primitive_specs;
 use num_bigint::{BigInt, ParseBigIntError};
 #[cfg(verus_keep_ghost)]
 use primitive_specs::{from_primitive, mathematical};
-use std::{
-    fmt,
-    str::FromStr,
-};
+use std::{fmt, str::FromStr};
 use vstd::prelude::*;
 
 verus! {
@@ -107,4 +104,3 @@ macro_rules! primitive_integers {
 primitive_integers!(
     i8, i16, i32, i64, i128, isize, u8, u16, u32, u64, u128, usize
 );
-

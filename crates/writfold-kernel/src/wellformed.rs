@@ -6,18 +6,18 @@ use writfold_domain::{Integer, *};
 mod collections;
 mod context;
 pub mod graph;
-mod rows;
-mod membership;
-#[cfg(verus_keep_ghost)]
-mod lookups;
-mod order;
-mod sort;
 mod index;
 #[cfg(verus_keep_ghost)]
+mod lookups;
+mod membership;
+mod order;
+mod rows;
+mod sort;
+#[cfg(verus_keep_ghost)]
 pub mod spec;
+pub(crate) use collections::unique;
 pub use context::context_wf;
 pub use rows::{dependency_wf, well_formed};
-pub(crate) use collections::unique;
 #[cfg(verus_keep_ghost)]
 use spec::*;
 
@@ -47,8 +47,10 @@ fn has_enumeration(kb: &KB, id: &EnumerationId) -> (found: bool)
 {
     let values = kb.enumerations();
     let mut i = 0;
+    proof { assert(values.deep_view().len() == values.len()); }
     while i < values.len()
         invariant i <= values.len(), values.deep_view() == kb@.enumerations,
+            values.len() == kb@.enumerations.len(),
             forall|j: int| 0 <= j < i ==> kb@.enumerations[j].id != id@,
         decreases values.len() - i,
     {
@@ -67,8 +69,10 @@ fn has_attestation(kb: &KB, id: &AttestationId) -> (found: bool)
 {
     let values = kb.attestations();
     let mut i = 0;
+    proof { assert(values.deep_view().len() == values.len()); }
     while i < values.len()
         invariant i <= values.len(), values.deep_view() == kb@.attestations,
+            values.len() == kb@.attestations.len(),
             forall|j: int| 0 <= j < i ==> kb@.attestations[j].id != id@,
         decreases values.len() - i,
     {
@@ -86,6 +90,10 @@ pub fn formula_wf(formula: &Formula, kb: &KB) -> (valid: bool)
     ensures valid == formula_wf_spec(formula@, kb@),
     decreases formula,
 {
+    proof {
+        reveal_with_fuel(<Formula as View>::view, 2);
+        reveal_with_fuel(formula_wf_spec, 2);
+    }
     match formula {
         Formula::Atomic(atom) => nonempty(atom.subject()) && nonempty(atom.predicate()),
         Formula::Truth => true,
@@ -97,6 +105,7 @@ pub fn formula_wf(formula: &Formula, kb: &KB) -> (valid: bool)
 pub fn statement_wf(statement: &Statement, kb: &KB) -> (valid: bool)
     ensures valid == statement_wf_spec(statement@, kb@),
 {
+    proof { reveal_with_fuel(<Formula as View>::view, 2); }
     scope_wf(statement.scope()) && formula_wf(statement.formula(), kb)
         && (*statement.polarity() == Polarity::Positive || matches!(statement.formula(), Formula::Atomic(_)))
 }
@@ -104,6 +113,10 @@ pub fn witness_wf(witness: &Witness, kb: &KB) -> (valid: bool)
     ensures valid == witness_wf_spec(witness@, kb@),
     decreases witness,
 {
+    proof {
+        reveal_with_fuel(<Witness as View>::view, 2);
+        reveal_with_fuel(witness_wf_spec, 2);
+    }
     match witness {
         Witness::Attest { attestation } => has_attestation(kb, attestation),
         Witness::Truth { scope } => scope_wf(scope),

@@ -18,7 +18,7 @@ Run it in the admitted, offline Compose `quality` service. Source may be mounted
 - TOML-parsed manifest lint policy: every actual workspace member must inherit or explicitly declare `unsafe_code = "forbid"`, with positive/negative isolated manifest controls.
 - Positive and negative checker calibrations, including generated macro bodies and runtime functions inside `verus!`.
 - Conditional attributes and macro-supplied metadata are inspected; `matches!` guards, repeated `vec!` expressions and JSON-embedded Rust cannot hide executable bodies.
-- Proof assumptions are fail-closed: `assume`, proof axioms and assumed-specification statements are rejected. Verifier attributes require an explicit exact-source approval; ordinary blanket verification exclusions are not admitted.
+- Proof assumptions are fail-closed: `assume`, proof axioms and assumed-specification statements are rejected. Assumption/exclusion attributes require exact-source approval. Bare `verifier::opaque` is only a spec-function unfolding control when that function has an inspected body; it does not waive body inspection or admit an external body.
 - Actual consumer compilations against `writfold-domain`: matching-ID/unit/state positive controls and wrong-ID/unit/state negative controls. Rejection requires exactly one rustc error, `E0308`, with the primary span on the intended argument and both expected and supplied nominal types in the diagnostic. Unrelated compiler/tool/dependency failures cannot satisfy these checks.
 
 `/evidence/obligations.json` contains named required checks, statuses, an explicit empty skips list, and artifact SHA256 hashes. Standard output, standard error, command arguments, working directories, elapsed time, exit codes, checker reports and exact generated fixture bytes remain available. A missing executable, timeout, malformed output or unmet prerequisite fails a required obligation. The enclosing gate runner binds this evidence to source/tool/lock identities.
@@ -35,7 +35,24 @@ Handwritten modules have a 400-line ceiling and a warning above 250. Function/cl
 
 `macro_rules!` matchers identify metavariable fragment kinds. Every handwritten expansion template is normalized into parseable representative syntax and inspected once, retaining source spans; unsupported fragments or expansions fail closed. Invocation arguments cannot silently supply uninspected executable declarations. Unknown macros fail closed. The JSON macro has a dedicated recursive grammar adapter that visits embedded Rust expressions, including closures. Supported standard expression macros inspect their expressions; unparsed dangerous arguments are rejected. Derive-generated declarations are restricted to the explicitly classified standard/data/error derives. Parser token DSL macros are an exact development-tool scope, not a production escape hatch.
 
-Integration tests, examples and benches are development contexts. Explicit `#[test]` functions and `#[cfg(test)]` modules may use assertion unwraps. These contexts are not excluded from size or unsafe checks. `writfold-xtask` is explicitly a tooling crate permitted to inspect JSON metadata and perform IO; its Rust source still receives syntax, budget and error-path inspection.
+Verus `seq!` literals use a fully parsed comma-expression grammar, and every
+element is visited in its caller's mode. Nested assumptions, unsafe/IO and
+runtime panic paths remain checked. Ordinary Rust `seq!`, unsupported tokens
+and uninspected declarations refuse. Spec-opacity ownership passes only through
+the owning function's conditional attributes, never to nested declarations or
+unexpanded macro arguments. Verifier namespace paths in metadata arguments
+refuse, including raw identifiers; an ordinary record field named `verifier`
+is not an attribute. The producer carries positive and negative controls for
+these distinctions.
+
+Nominal compile controls use separate root-package identities and require a
+fresh positive consumer artifact. A retained failure exposed Cargo reusing a
+successful same-named consumer for a different negative fixture. Cache reuse
+cannot count as the required wrong-ID/unit/state rejection; exactly the intended
+compiler error and primary source span remain required.
+
+
+Integration tests, examples and benches are development contexts for the syntax audit, but workspace Clippy policies still apply to all targets. Fallible test setup uses `Result` rather than panic/unwrap waivers. Development contexts are not excluded from size or unsafe checks. `writfold-xtask` is explicitly a tooling crate permitted to inspect JSON metadata and perform IO; its Rust source still receives syntax, budget and error-path inspection.
 
 ## Architecture and safety
 

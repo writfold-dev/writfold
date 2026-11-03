@@ -3,10 +3,13 @@ use crate::{ids::*, records::record};
 mod traits;
 use vstd::prelude::*;
 
-record!( Scope, ScopeView {
-    project: ProjectId,
-    selector: String
-});
+record!(
+    Scope,
+    ScopeView {
+        project: ProjectId,
+        selector: String
+    }
+);
 
 verus! {
 pub open spec fn narrower_spec(target: ScopeView, source: ScopeView) -> bool {
@@ -89,20 +92,29 @@ pub enum Polarity {
 }
 }
 
-record!(Statement, StatementView {
-    formula: Formula,
-    scope: Scope,
-    polarity: Polarity
-});
-record!(ClaimRef, ClaimRefView {
-    id: ClaimId,
-    rev: ClaimRevision
-});
-record!(Claim, ClaimView {
-    id: ClaimId,
-    revision: ClaimRevision,
-    statement: Statement
-});
+record!(
+    Statement,
+    StatementView {
+        formula: Formula,
+        scope: Scope,
+        polarity: Polarity
+    }
+);
+record!(
+    ClaimRef,
+    ClaimRefView {
+        id: ClaimId,
+        rev: ClaimRevision
+    }
+);
+record!(
+    Claim,
+    ClaimView {
+        id: ClaimId,
+        revision: ClaimRevision,
+        statement: Statement
+    }
+);
 
 verus! {
 pub open spec fn claim_matches_spec(claim: ClaimView, reference: ClaimRefView) -> bool {
@@ -191,11 +203,14 @@ impl DeepView for Witness {
 }
 }
 
-record!(Derivation, DerivationView {
-    id: DerivationId,
-    claim: ClaimRef,
-    witness: Witness
-});
+record!(
+    Derivation,
+    DerivationView {
+        id: DerivationId,
+        claim: ClaimRef,
+        witness: Witness
+    }
+);
 
 verus! {
 pub open spec fn member_formula_spec(members: Seq<Seq<char>>, predicate: Seq<char>) -> FormulaView

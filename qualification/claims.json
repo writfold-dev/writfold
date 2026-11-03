@@ -3,6 +3,7 @@
   "registry_kind": "source_backed_claim_mapping_not_receipt",
   "observed_at": "2026-11-02T06:09:52.519618+00:00",
   "status": "not_run",
+  "mapping_applicability": "This retained source/line/hash mapping describes its recorded P02 candidate, not the current working tree. Later Rust implementations and proofs do not renew old locations or absence statements. Current source-sealed component evidence is tracked in qualification/revision-4-progress.json; obligation-wide and cross-logic refinement claims remain separate.",
   "semantic_version": "2.0.0",
   "workflow_schema_version": 3,
   "reference_registries": [

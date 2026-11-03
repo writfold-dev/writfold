@@ -5,14 +5,17 @@ record!(Authority, AuthorityView {
     actor: ActorId, target: ClaimRef, intended_use: String, policy: PolicyId,
     statement: Statement, approved: KB, approvals: Vec<Claim>, context: Context,
 });
-record!(Plan, PlanView {
-    id: OperationId,
-    expected_snapshot: SnapshotId,
-    candidate: KB,
-    authority: Authority,
-    claim: ClaimRef,
-    witness: Witness,
-});
+record!(
+    Plan,
+    PlanView {
+        id: OperationId,
+        expected_snapshot: SnapshotId,
+        candidate: KB,
+        authority: Authority,
+        claim: ClaimRef,
+        witness: Witness,
+    }
+);
 record!(
     /// Reference `VerifiedApproval` input. This value does not authenticate an actor or authorize IO.
     ModelApproval, ModelApprovalView { plan: Plan }
@@ -59,9 +62,12 @@ record!(
     /// Reference `VerifiedSelectionApproval` input; never a publication capability.
     ModelSelectionApproval, ModelSelectionApprovalView { plan: SelectionPlan }
 );
-record!(SelectionJournalEntry, SelectionJournalEntryView {
-    plan: SelectionPlan
-});
+record!(
+    SelectionJournalEntry,
+    SelectionJournalEntryView {
+        plan: SelectionPlan
+    }
+);
 record!(SelectionResult, SelectionResultView {
     state: SelectionState, journal: Vec<SelectionJournalEntry>, outcome: CommitOutcome,
 });

@@ -77,14 +77,21 @@ Behavioral tests in `crates/writfold-kernel/tests/workflows.rs` cover complete-p
 replay conflict and borrowed rejection, omitted assignments, explicit retirement,
 context source isolation, forward selection retaining corrections/current
 policy, rebind invalidation, reopen authority clearing/final-state refusal, and
-complete authored problem ordering. These tests were authored without running
-checks in the workflow implementation task; their presence is not a passing
-receipt.
+complete authored problem ordering. They execute in the current 170-test
+workspace campaign; the 334-case three-host corpus also exercises the retained
+workflow/portfolio/design decisions.
 
-Source-bound Verus verification of these actual executable bodies and caller
-conversions remains outstanding: V05/V06 and V12/V13. No `assume`,
-`external_body`, proof twin, or new Lean claim is provided. Three-host complete
-response conformance, integration execution, mutation qualification, and the
-M09 authored lifecycle / publication-recovery protocol obligations remain
-separate qualification work. Historical Lean proofs and these source mappings
-do not prove the Rust implementation.
+`unblocked-proof-20261103-020` completed the whole-crate Verus invocation with
+428 verified obligations and zero errors at the normal solver limit. Checked
+contracts cover actual operation/selection, portfolio and design bodies,
+borrowed rejection/replay state, exact ordered projections and diagnostic
+traces. Shared first-match lemmas avoid expanding checker reuse semantics
+inside receipt lookup. No new `assume`, `external_body`, proof twin or Lean
+claim was introduced.
+
+Source-bound semantic negatives additionally reject ID-only changed-input
+replay and reopening a finalized design; these are not substitutes for every
+V05/V06/V12/V13 requirement. Full caller/conversion closure, publication and
+retention integration, cross-logic correspondence, and M09-to-production
+refinement remain separate obligations. Current evidence links are retained
+in `qualification/revision-4-progress.json`, not inferred from this mapping.

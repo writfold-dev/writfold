@@ -2,6 +2,24 @@ use crate::{syntax::Audit, tokens};
 use verus_syn::{Attribute, Meta, MetaList, Path, parse::Parser, spanned::Spanned};
 
 pub fn check(audit: &mut Audit<'_>, attribute: &Attribute) {
+    check_owned(audit, attribute, false);
+}
+
+pub fn check_function(
+    audit: &mut Audit<'_>,
+    attribute: &Attribute,
+    signature: &verus_syn::Signature,
+    has_body: bool,
+) {
+    let spec_body = has_body
+        && matches!(
+            signature.mode,
+            verus_syn::FnMode::Spec(_) | verus_syn::FnMode::SpecChecked(_)
+        );
+    check_owned(audit, attribute, spec_body);
+}
+
+fn check_owned(audit: &mut Audit<'_>, attribute: &Attribute, spec_body: bool) {
     let root = attribute
         .path()
         .segments
@@ -20,7 +38,16 @@ pub fn check(audit: &mut Audit<'_>, attribute: &Attribute) {
             .segments
             .last()
             .map(|part| part.ident.to_string());
-        audit.proof_attribute(name.as_deref(), attribute.span());
+        // Opacity controls unfolding only on a spec definition. Ownership is
+        // passed through cfg_attr, never inherited by attributes in the body
+        // or by unexpanded macro arguments.
+        let unfolding = spec_body
+            && name.as_deref() == Some("opaque")
+            && attribute.path().segments.len() == 2
+            && matches!(&attribute.meta, Meta::Path(_));
+        if !unfolding {
+            audit.proof_attribute(name.as_deref(), attribute.span());
+        }
     }
     if attribute.path().is_ident("unsafe") {
         audit.emit("unsafe", attribute.span(), "unsafe attribute");
@@ -40,7 +67,7 @@ pub fn check(audit: &mut Audit<'_>, attribute: &Attribute) {
         return;
     };
     if list.path.is_ident("cfg_attr") {
-        conditional(audit, list);
+        conditional(audit, list, spec_body);
     }
     if list.path.is_ident("derive") {
         derives(audit, list);
@@ -105,7 +132,7 @@ fn known(name: &str) -> bool {
     )
 }
 
-fn conditional(audit: &mut Audit<'_>, list: &MetaList) {
+fn conditional(audit: &mut Audit<'_>, list: &MetaList, spec_body: bool) {
     let parser = verus_syn::punctuated::Punctuated::<Meta, verus_syn::Token![,]>::parse_terminated;
     match parser.parse2(list.tokens.clone()) {
         Ok(metas) => {
@@ -116,7 +143,7 @@ fn conditional(audit: &mut Audit<'_>, list: &MetaList) {
                     bracket_token: Default::default(),
                     meta,
                 };
-                check(audit, &attribute);
+                check_owned(audit, &attribute, spec_body);
             }
         }
         Err(error) => audit.emit("macro-parse", list.span(), error.to_string()),

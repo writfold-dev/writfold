@@ -1,8 +1,8 @@
+#[cfg(verus_keep_ghost)]
+use super::super::assessment_model::*;
 use super::super::context::Frame;
 use super::super::footprint::Evaluation;
 use super::super::input::Input;
-#[cfg(verus_keep_ghost)]
-use super::super::assessment_model::*;
 #[cfg(verus_keep_ghost)]
 use super::super::input::{InputView, dependency_value};
 use crate::time::assess_fresh;
@@ -42,14 +42,14 @@ pub fn witness_freshness(context: &Context, dependencies: &[Dependency]) -> (fre
 fn input_freshness(context: &Context, dependencies: &[Input<'_>]) -> (freshness: Freshness)
     ensures freshness == input_freshness_spec(context@, dependencies.deep_view()),
 {
-    let ghost values = dependencies.deep_view().map(|i: int, input: InputView| dependency_value(input));
+    let ghost values = dependencies.deep_view().map_values(|input: InputView| dependency_value(input));
     proof { assert(values.len() == dependencies.len()); }
     let mut index = 0;
     let mut any = false;
     let mut unknown = false;
     while index < dependencies.len()
         invariant index <= dependencies.len(), values.len() == dependencies.len(),
-            values == dependencies.deep_view().map(|i: int, input: InputView| dependency_value(input)),
+            values == dependencies.deep_view().map_values(|input: InputView| dependency_value(input)),
             any == (exists|i: int| 0 <= i < index && observation_state(context@, values[i]).is_some()),
             unknown == (exists|i: int| 0 <= i < index && observation_state(context@, values[i]) == Some(Freshness::Unknown)),
             forall|i: int| 0 <= i < index ==> observation_state(context@, values[i]) != Some(Freshness::Stale),
@@ -75,8 +75,10 @@ pub(super) fn alternative_freshness(context: Frame<'_>, accepted: &[(&Witness, E
 {
     let mut all_stale = !accepted.is_empty();
     let mut index = 0;
+    proof { assert(accepted.deep_view().len() == accepted.len()); }
     while index < accepted.len()
         invariant index <= accepted.len(),
+            accepted.deep_view().len() == accepted.len(),
             forall|i: int| 0 <= i < index ==> input_freshness_spec(context@.base, accepted.deep_view()[i].1.dependencies) != Freshness::Fresh,
             all_stale == (accepted.len() > 0 && (forall|i: int| 0 <= i < index
                 ==> input_freshness_spec(context@.base, accepted.deep_view()[i].1.dependencies) == Freshness::Stale)),

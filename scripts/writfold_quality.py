@@ -122,6 +122,56 @@ class Producer:
             ("ghost-control", 'verus! { proof fn allowed() { let x = Some(1); x.unwrap(); } }', None),
             ("ghost-contract-control", 'verus! { fn allowed(x: Option<u64>) -> (r: Option<u64>) ensures r.is_some() ==> r.unwrap() == x.unwrap(), { x } }', None),
             ("proof-positivity-control", 'verus! { #[verifier::reject_recursive_types(T)] struct Restricted<T> { value: T } }', None),
+            ("seq-literal-control", 'verus! { spec fn allowed() -> Seq<int> { seq![1, 2 + 3,] } }', None),
+            ("seq-empty-control", 'verus! { spec fn allowed() -> Seq<int> { seq![] } }', None),
+            ("seq-proof-control", 'verus! { proof fn allowed() { let _ = seq![Some(1).unwrap(), seq![2, 3].len()]; } }', None),
+            ("seq-qualified-control", 'verus! { spec fn allowed() -> Seq<int> { vstd::seq![1, 2] } }', None),
+            ("seq-contract-control", 'verus! { fn allowed() ensures seq![Some(1).unwrap()].len() == 1, {} }', None),
+            ("seq-assume-first", 'verus! { proof fn forbidden() { let _ = seq![{ assume(false); 0 }, 1]; } }', "unapproved-proof-assumption"),
+            ("seq-assume-last", 'verus! { proof fn forbidden() { let _ = seq![0, { assume(false); 1 }]; } }', "unapproved-proof-assumption"),
+            ("seq-assume-nested", 'verus! { proof fn forbidden() { let _ = seq![seq![{ assume(false); 1 }]]; } }', "unapproved-proof-assumption"),
+            ("seq-unsafe", 'verus! { spec fn forbidden() -> Seq<int> { seq![0, unsafe { 1 }] } }', "unsafe"),
+            ("seq-io", 'verus! { spec fn forbidden() -> Seq<int> { seq![{ let _ = std::fs::read("x"); 0 }] } }', "core-io"),
+            ("seq-stdio", 'verus! { proof fn forbidden() { let _ = seq![{ println!("hidden"); 0 }]; } }', "core-io"),
+            ("seq-runtime-unwrap", 'verus! { fn forbidden() { let _ = seq![Some(1).unwrap()]; } }', "production-panic"),
+            ("seq-runtime-panic", 'verus! { fn forbidden() { let _ = seq![{ panic!("hidden"); 0 }]; } }', "production-panic"),
+            ("seq-runtime-nested-function", 'verus! { proof fn forbidden() { let _ = seq![{ fn runtime() { Some(1).unwrap(); } 0 }]; } }', "production-panic"),
+            ("seq-external-body", 'verus! { proof fn forbidden() { let _ = seq![{ #[verifier::external_body] spec fn hidden() -> bool { true } 0 }]; } }', "unapproved-proof-assumption"),
+            ("seq-unknown-macro", 'verus! { spec fn forbidden() -> Seq<int> { seq![unknown!(1)] } }', "opaque-macro"),
+            ("seq-repeat-reject", 'verus! { spec fn forbidden() -> Seq<int> { seq![1; 2] } }', "macro-parse"),
+            ("seq-missing-comma", 'verus! { spec fn forbidden() -> Seq<int> { seq![1 2] } }', "macro-parse"),
+            ("seq-extra-comma", 'verus! { spec fn forbidden() -> Seq<int> { seq![1,, 2] } }', "macro-parse"),
+            ("seq-verbatim-reject", 'verus! { spec fn forbidden() -> Seq<int> { seq![builtin#hidden(unsafe { 0 })] } }', "macro-parse"),
+            ("rust-seq-reject", 'fn forbidden() { let _ = seq![1, 2]; }', "opaque-macro"),
+            ("spec-opaque-control", 'verus! { #[verifier::opaque] spec fn allowed() -> Seq<int> { seq![1, 2] } }', None),
+            ("spec-opaque-checked-control", 'verus! { #[verifier::opaque] spec(checked) fn allowed() -> bool { true } }', None),
+            ("spec-opaque-conditional-control", 'verus! { #[cfg_attr(feature="opaque", cfg_attr(feature="nested", verifier::opaque))] spec fn allowed() -> bool { true } }', None),
+            ("spec-opaque-method-control", 'verus! { struct S; impl S { #[verifier::opaque] spec fn allowed() -> bool { true } } }', None),
+            ("spec-opaque-trait-control", 'verus! { trait S { #[verifier::opaque] spec fn allowed() -> bool { true } } }', None),
+            ("spec-opaque-assume", 'verus! { #[verifier::opaque] spec fn forbidden() -> bool { assume(false); true } }', "unapproved-proof-assumption"),
+            ("spec-opaque-seq-assume", 'verus! { #[verifier::opaque] spec fn forbidden() -> Seq<int> { seq![{ assume(false); 0 }] } }', "unapproved-proof-assumption"),
+            ("spec-opaque-unsafe", 'verus! { #[verifier::opaque] spec fn forbidden() -> bool { unsafe { true } } }', "unsafe"),
+            ("spec-opaque-io", 'verus! { #[verifier::opaque] spec fn forbidden() -> bool { let _ = std::fs::read("x"); true } }', "core-io"),
+            ("spec-opaque-runtime", 'verus! { #[verifier::opaque] spec fn forbidden() -> bool { fn runtime() { Some(1).unwrap(); } true } }', "production-panic"),
+            ("spec-opaque-external", 'verus! { #[verifier::opaque] #[verifier::external_body] spec fn forbidden() -> bool { true } }', "unapproved-proof-assumption"),
+            ("spec-opaque-conditional-external", 'verus! { #[cfg_attr(feature="bypass", verifier::opaque, verifier::external_body)] spec fn forbidden() -> bool { true } }', "unapproved-proof-assumption"),
+            ("spec-opaque-nested-owner", 'verus! { #[verifier::opaque] spec fn forbidden() -> bool { #[verifier::opaque] fn runtime() {} true } }', "unapproved-proof-assumption"),
+            ("spec-opaque-no-body", 'verus! { trait S { #[verifier::opaque] spec fn forbidden() -> bool; } }', "unapproved-proof-assumption"),
+            ("proof-opaque-reject", 'verus! { #[verifier::opaque] proof fn forbidden() {} }', "unapproved-proof-assumption"),
+            ("exec-opaque-reject", 'verus! { #[verifier::opaque] fn forbidden() {} }', "unapproved-proof-assumption"),
+            ("datatype-opaque-reject", 'verus! { #[verifier::opaque] struct Forbidden; }', "unapproved-proof-assumption"),
+            ("spec-opaque-arguments-reject", 'verus! { #[verifier::opaque(external_body)] spec fn forbidden() -> bool { true } }', "unapproved-proof-assumption"),
+            ("rust-opaque-reject", '#[verifier::opaque] fn forbidden() {}', "unapproved-proof-assumption"),
+            ("rust-opaque-conditional-reject", '#[cfg_attr(feature="opaque", verifier::opaque)] fn forbidden() {}', "unapproved-proof-assumption"),
+            ("spec-opaque-macro-argument", 'verus! { macro_rules! record { ($(#[$meta:meta])* $name:ident) => { $(#[$meta])* spec fn $name() -> bool { true } }; } record!(#[verifier::opaque] hidden); }', "unapproved-proof-assumption"),
+            ("spec-opaque-conditional-macro-argument", 'verus! { macro_rules! record { ($(#[$meta:meta])* $name:ident) => { $(#[$meta])* spec fn $name() -> bool { true } }; } record!(#[cfg_attr(feature="opaque", verifier::opaque)] hidden); }', "unapproved-proof-assumption"),
+            ("spec-opaque-body-macro-argument", 'verus! { macro_rules! record { ($(#[$meta:meta])* $name:ident) => { $(#[$meta])* struct $name; }; } #[verifier::opaque] spec fn forbidden() -> bool { record!(#[verifier::opaque] Hidden); true } }', "unapproved-proof-assumption"),
+            ("spec-opaque-bare-macro-argument", 'verus! { macro_rules! record { ($meta:meta) => { #[$meta] spec fn hidden() -> bool { true } }; } record!(verifier::opaque); }', "macro-argument"),
+            ("spec-external-bare-macro-argument", 'verus! { macro_rules! record { ($meta:meta) => { #[$meta] spec fn hidden() -> bool { true } }; } record!(cfg_attr(feature="bypass", verifier::external_body)); }', "macro-argument"),
+            ("rust-opaque-bare-macro-argument", 'macro_rules! record { ($meta:meta) => { #[$meta] fn hidden() {} }; } record!(verifier::opaque);', "macro-argument"),
+            ("rust-verifier-field-macro", 'macro_rules! record { ($field:ident : $ty:ty) => { struct Row { $field: $ty } }; } record!(verifier: u64);', None),
+            ("verus-verifier-field-macro", 'verus! { macro_rules! record { ($field:ident : $ty:ty) => { struct Row { $field: $ty } }; } record!(verifier: u64); }', None),
+            ("spec-raw-verifier-meta", 'verus! { macro_rules! record { ($meta:meta) => { #[$meta] spec fn hidden() -> bool { true } }; } record!(r#verifier::external_body); }', "macro-argument"),
             ("proof-recursion-acceptance", 'verus! { #[verifier::accept_recursive_types(T)] struct Unreviewed<T> { value: T } }', "unapproved-proof-assumption"),
             ("proof-assume", 'verus! { proof fn forbidden() { assume(false); } }', "unapproved-proof-assumption"),
             ("proof-axiom", 'verus! { axiom fn forbidden() ensures false; }', "unapproved-proof-assumption"),
@@ -261,7 +311,9 @@ class Producer:
                 actual = supplied if negative else expected
                 source = (f"fn accept(_: writfold_domain::{expected}) {{}}\n"
                           f"fn exercise(value: writfold_domain::{actual}) {{ accept(value); }}\nfn main() {{}}\n")
-                root = self.fixture(f"{name}-{suffix}", source, "nominal-consumer", True)
+                # Separate roots must not share a cached successful consumer.
+                package = f"nominal-{name}-{suffix}-{time.monotonic_ns()}"
+                root = self.fixture(f"{name}-{suffix}", source, package, True)
                 with (root / "Cargo.toml").open("a") as manifest:
                     manifest.write(f'\n[dependencies]\nwritfold-domain={{path={json.dumps(str(domain))}}}\n')
                 lock_code, _ = self.command(f"{name}-{suffix}-lock", ["cargo", "generate-lockfile", "--offline"], root)
@@ -275,16 +327,23 @@ class Producer:
                     completed = len(finished) == 1 and finished[0].get("success") is (not negative)
                     errors = [message["message"] for message in messages
                               if message.get("reason") == "compiler-message" and message["message"]["level"] == "error"]
+                    artifacts = [message for message in messages if message.get("reason") == "compiler-artifact"
+                                 and message.get("target", {}).get("name") == package]
+                    fresh_control = (len(artifacts) == 1 and artifacts[0].get("fresh") is False
+                                     and artifacts[0]["target"].get("src_path") == str(root / "src/main.rs"))
                     intended = len(errors) == 1 and errors[0].get("code", {}).get("code") == "E0308"
                     if intended:
                         diagnostic = errors[0]
                         intended = expected in diagnostic.get("rendered", "") and supplied in diagnostic.get("rendered", "") and any(
                             span["is_primary"] and span["file_name"] == "src/main.rs" and span["line_start"] == 2
                             for span in diagnostic["spans"])
-                    passed = completed and ((code == 101 and intended) if negative else (code == 0 and not errors))
+                    passed = completed and ((code == 101 and intended) if negative
+                                            else (code == 0 and not errors and fresh_control))
                 except (ValueError, KeyError, TypeError, AttributeError):
                     passed = False
-                self.record(f"{name}-{suffix}", passed, exit_status=code, expected_error="E0308" if negative else None)
+                self.record(f"{name}-{suffix}", passed, exit_status=code,
+                            expected_error="E0308" if negative else None,
+                            consumer_package=package, source_sha256=hashlib.sha256(source.encode()).hexdigest())
 
     def lint_policy(self, name: str, root: Path, metadata: Path, reject: bool = False) -> None:
         workspace = tomllib.loads((root / "Cargo.toml").read_text()).get("workspace", {})

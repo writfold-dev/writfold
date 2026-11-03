@@ -12,6 +12,7 @@ pub enum Capability {
     Knowledge,
     Authored,
     Notifications,
+    StorageV1,
 }
 
 impl Capability {
@@ -22,6 +23,7 @@ impl Capability {
             Self::Knowledge => "knowledge",
             Self::Authored => "authored",
             Self::Notifications => "notifications",
+            Self::StorageV1 => "writfold.storage/1",
         }
     }
 
@@ -32,9 +34,26 @@ impl Capability {
             "knowledge" => Some(Self::Knowledge),
             "authored" => Some(Self::Authored),
             "notifications" => Some(Self::Notifications),
+            "writfold.storage/1" => Some(Self::StorageV1),
             _ => None,
         }
     }
+}
+
+/// Negotiated storage codec version, not native backend or tool admission.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum StorageProfileVersion {
+    V1,
+}
+
+impl StorageProfileVersion {
+    /// Version-1 storage-pin envelope schema.
+    pub const PIN_SCHEMA: u64 = crate::storage::STORAGE_PIN_SCHEMA;
+    /// Version-1 storage-operation envelope schema, not semantic workflow 3.
+    pub const OPERATION_SCHEMA: u64 = crate::storage_operation::STORAGE_OPERATION_SCHEMA;
+    /// Backend tag understood by the new storage-operation target codec.
+    /// This does not advertise a running companion or implemented RPC methods.
+    pub const BACKEND: &'static str = crate::storage_operation::STORAGE_BACKEND;
 }
 
 #[derive(Clone, Copy, Debug, thiserror::Error, Eq, PartialEq)]
@@ -49,6 +68,8 @@ pub enum ParamsError {
     InvalidCapabilities,
     #[error("unsupported requested capability")]
     UnsupportedCapability,
+    #[error("unsupported requested storage profile")]
+    UnsupportedStorageProfile,
 }
 
 impl ParamsError {
@@ -56,7 +77,7 @@ impl ParamsError {
     /// reference; schema/type/version errors are JSON-RPC Invalid params.
     pub fn code(self) -> i32 {
         match self {
-            Self::UnsupportedCapability => -32000,
+            Self::UnsupportedCapability | Self::UnsupportedStorageProfile => -32000,
             _ => -32602,
         }
     }
@@ -98,12 +119,19 @@ impl<'a> InitializeParams<'a> {
     }
 
     pub fn admit(self) -> Result<Initialize<'a>, ParamsError> {
-        if self
-            .capabilities
-            .iter()
-            .any(|value| Capability::from_value(value).is_none())
-        {
-            return Err(ParamsError::UnsupportedCapability);
+        for value in self.capabilities {
+            if Capability::from_value(value).is_none() {
+                return Err(
+                    if value
+                        .as_str()
+                        .is_some_and(|value| value.starts_with("writfold.storage/"))
+                    {
+                        ParamsError::UnsupportedStorageProfile
+                    } else {
+                        ParamsError::UnsupportedCapability
+                    },
+                );
+            }
         }
         Ok(Initialize {
             capabilities: self.capabilities,
@@ -127,6 +155,19 @@ impl<'a> Initialize<'a> {
 
     pub fn protocol_version(self) -> &'static str {
         PROTOCOL_VERSION
+    }
+
+    /// Storage-aware consumers must require explicit negotiation; ordinary
+    /// protocol-2 initialization remains valid without this capability.
+    pub fn require_storage_profile(self) -> Result<StorageProfileVersion, ParamsError> {
+        if self
+            .capabilities()
+            .any(|value| value == Capability::StorageV1)
+        {
+            Ok(StorageProfileVersion::V1)
+        } else {
+            Err(ParamsError::UnsupportedStorageProfile)
+        }
     }
 
     /// All values were validated at construction and cannot subsequently change.

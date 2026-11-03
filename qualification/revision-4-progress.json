@@ -25,12 +25,13 @@
       "Omnigraph retained-history relocation has no admitted supported remedy; P01O/WF24 remains blocked.",
       "Production CLI, integrated publication/recovery, and installed release artifacts are not implemented/qualified; writfold-ref is development-only.",
       "All 25 mandatory revision-4 gates still require complete source-bound release evidence.",
-      "Public disclosure review must cover preserved history, immutable handovers, nested archives, private-reference metadata, operator paths and third-party notices."
+      "Publication audit found no confirmed real secret/exact listed private-source copy, but private-derived planning/reference redistribution remains uncleared; opening the existing repository also exposes its history."
     ],
     "independent_next_work": [
-      "P00/P01 revision-4 reconciliation and native tool/runtime admission",
-      "P02 storage nominal identities and explicitly versioned signature/wire boundaries",
-      "P03/P03P actual production semantic and portfolio proof completion"
+      "Close remaining V-family semantic/caller mappings and complete revision-4 stage/gate qualification without renewing older-scope completions.",
+      "Complete justified positive model exploration and remaining wide/workload gate matrices; retain nine baseline timeouts as incomplete.",
+      "Review and qualify the upstream-owned relocation remedy when its RFC/code/artifact is available; retain the 2026-11-08 conditional fork checkpoint.",
+      "Resolve public artifact/redistribution scope; a clean product export requires its own usable build/test/documentation closure and source-bound provenance."
     ]
   },
   "handover": {
@@ -90,7 +91,18 @@
     "foundation_disposition": "blocked",
     "blocker": "Retained branch after whole-root relocation requests an unavailable original-path Lance object. Original snapshot rows remain readable; that does not pass retained-history portability.",
     "upstream_issue": "https://github.com/ModernRelay/omnigraph/issues/1233",
-    "upstream_state_observed": "open, needs-triage; no accepted remedy",
+    "upstream_state_observed": "open; bug accepted as size L, needs-rfc; upstream team owns RFC and implementation",
+    "follow_up_policy": {
+      "review_after": "2026-11-08",
+      "priority": "Continue independent Writfold work; upstream owns the accepted size-L fix. Do not open a competing PR.",
+      "fork": "https://github.com/tknawara/omnigraph",
+      "upstream_analysis": "https://github.com/ModernRelay/omnigraph/issues/1233#issuecomment-6592078609",
+      "implementation_offer": "https://github.com/ModernRelay/omnigraph/issues/1233#issuecomment-6592350631",
+      "upstream_ownership": "https://github.com/ModernRelay/omnigraph/issues/1233#issuecomment-6594527176",
+      "upstream_prototype": "https://github.com/ragnorc/omnigraph/tree/proto/1233-branch-base-follows-root",
+      "if_unresolved": "Evaluate a source-pinned targeted fork fix at the end-of-week checkpoint, preserving upstream evidence and requiring fresh CLI/server/runtime and retained-history qualification.",
+      "limits": "Code follows accepted RFC amendments. The linked prototype is not an admitted backend build; no backend cutover or scheduled monitoring is implied. Requalify exact CLI/server/runtime and retained-history closure before integration."
+    },
     "reduced_reproduction": "~/.local/share/writfold/evidence/omnigraph-relocation-issue-001/receipt.json",
     "reduced_scope": "One synthetic node and retained branch; no schema changes, server or concurrency. Whole-root file hashes match, original pathname is absent, exact snapshot rows/commit survive, branch read exits 1 at the original Lance path. Not a replacement for the earlier fresh-container restore campaign.",
     "automatic_dolt_fallback": false
@@ -219,6 +231,170 @@
       "path": "~/.local/share/writfold/native/omnigraph/0.14.0/attestation-attempt-001.json",
       "sha256": "d22a2b0d1bbae5b375ddb008c2c75f4a48bd1f3c82690e7bb06a7ab76b73cfda",
       "bytes": 562
+    },
+    {
+      "path": "~/.local/share/writfold/evidence/unblocked-component-summary-20261103-001.json",
+      "sha256": "027ae925824917a24d762499a246bcc024ac963346a0e325c900f1b861191eb9",
+      "bytes": 5610
+    },
+    {
+      "path": "~/.local/share/writfold/qualification/abstract-protocol-component-20261103-001/report.json",
+      "sha256": "66687385059c784736c80bf605519efd09a6fcfd319343c2ca1af3d3689881c1",
+      "bytes": 29471
+    },
+    {
+      "path": "~/.local/share/writfold/evidence/publication-audit-20261103-001/publication-object-audit.json",
+      "sha256": "ae98ec83f6a25cdf56203e0a2e57288d6889c363e8151045c4fdcd291305cb86",
+      "bytes": 2247251
+    },
+    {
+      "path": "~/.local/share/writfold/qualification/active-profile-20261103-001/results/obligations.json",
+      "sha256": "bd93bfc5cce7ab8f8cc608cec01f827ff36023469d091063ab5f0e8710c3c92f",
+      "bytes": 31717
+    },
+    {
+      "path": "~/.local/share/writfold/qualification/active-profile-20261103-001/readmission-20261103-001/report.json",
+      "sha256": "6ba0f7ddd6d3c9660e0a900212f676031891d4c95986b3a02624b4f263b88344",
+      "bytes": 6795
+    },
+    {
+      "path": "~/.local/share/writfold/qualification/unblocked-proof-20261103-020/summary.json",
+      "sha256": "35017f64fc8f19aac55bc80a69ae4e1be7bb6087b3da8217e9b76e70927273d4",
+      "bytes": 57
+    },
+    {
+      "path": "~/.local/share/writfold/qualification/unblocked-proof-20261103-020/reports.json",
+      "sha256": "cdc1894325d9a2ce2a794bc4c8c3736e3cdf8ea183a9a166e2c17b932cab86e7",
+      "bytes": 1512000
+    },
+    {
+      "path": "~/.local/share/writfold/qualification/unblocked-proof-20261103-020/source-hashes.json",
+      "sha256": "3c5dfa655feadc6018ab13bef20e6f09c5213614ff3040971477c0da84778ec0",
+      "bytes": 28345
+    },
+    {
+      "path": "~/.local/share/writfold/qualification/unblocked-proof-20261103-020/tool-inputs.json",
+      "sha256": "c637e664231ed6fd2c16f676968dea5ba6112bed2957e5b6fd5590de31064947",
+      "bytes": 748
+    },
+    {
+      "path": "~/.local/share/writfold/qualification/kernel-calibration-20261103-001/report.json",
+      "sha256": "c6882cbc65e7db76b4e48314392d55514fc9dd362c0b351058ea18e039769481",
+      "bytes": 928
+    },
+    {
+      "path": "~/.local/share/writfold/qualification/kernel-calibration-20261103-001/readmission-20261103-001/report.json",
+      "sha256": "40f80140823f0bbd618667908abfff32a94c494f3246b278d9137c341542b47e",
+      "bytes": 1648
+    },
+    {
+      "path": "~/.local/share/writfold/qualification/unblocked-integration-20261103-003/inputs.json",
+      "sha256": "87477c8e7e629a078e7339e074555b1e230c514f0aa189d0f9f54eceb70d79ba",
+      "bytes": 50770
+    },
+    {
+      "path": "~/.local/share/writfold/qualification/unblocked-integration-20261103-003/smoke/receipt.json",
+      "sha256": "11a6cf72e29a9326bc3ade58a9f00dfa2ee18d66fb9ff5440cb7da22e82b2627",
+      "bytes": 2223
+    },
+    {
+      "path": "~/.local/share/writfold/qualification/unblocked-integration-20261103-003/quality/obligations.json",
+      "sha256": "2cbeab59b60d09e5852b4dcdba0173c7365c8a2638ed598d521835fb28e9b9df",
+      "bytes": 227885
+    },
+    {
+      "path": "~/.local/share/writfold/qualification/unblocked-integration-20261103-003/conformance/conformance-report.json",
+      "sha256": "44b76cdd52ce492264e6035b9917222a769d4292fef96cbe18db7080eb43f51e",
+      "bytes": 115477
+    },
+    {
+      "path": "~/.local/share/writfold/qualification/unblocked-integration-20261103-003/storage-approval-current/receipt.json",
+      "sha256": "26c14019a1abb79022a48768f5fcbd91e4370586b208c9d95cc34db4f0a604ea",
+      "bytes": 1137
+    },
+    {
+      "path": "~/.local/share/writfold/qualification/unblocked-baseline-20261103-001.json",
+      "sha256": "d3ff08b000be35199b725a2a546b98d184fcd77d8efaa149fb85d6a59c97fb4d",
+      "bytes": 316885
+    },
+    {
+      "path": "~/.local/share/writfold/qualification/baseline-calibration-20261103-001/report.json",
+      "sha256": "3d577db885db766dff741488a6863827e93a64df0dc53e5451b61a7a1a45af87",
+      "bytes": 1657
+    },
+    {
+      "path": "~/.local/share/writfold/qualification/unblocked-baseline-20261103-002.json",
+      "sha256": "b0c346d0c32c1d335979a459eca842698bb4f20f39503e44162f37c4fe25e7b4",
+      "bytes": 324544
     }
-  ]
+  ],
+  "independent_components": {
+    "status": "component_evidence_retained",
+    "record": {
+      "path": "~/.local/share/writfold/evidence/unblocked-component-summary-20261103-001.json",
+      "sha256": "027ae925824917a24d762499a246bcc024ac963346a0e325c900f1b861191eb9",
+      "bytes": 5610
+    },
+    "matched_current_rust_inputs": 241,
+    "kernel_verified_obligations": 428,
+    "domain_verified_obligations": 905,
+    "protocol_verified_obligations": 19,
+    "semantic_mutation_families": 13,
+    "admission_refusals_per_family": 14,
+    "unit_checks_passed": 170,
+    "quality_checks_passed": 233,
+    "conformance_cases": 334,
+    "conformance_pairwise_mismatches": 0,
+    "storage_api_scenarios": 35,
+    "abstract_protocols": {
+      "canonical_modules_proved": 12,
+      "canonical_obligations_proved": 7972,
+      "supplemental_inclusion_obligations": 2,
+      "semantic_negatives_witnessed": 20,
+      "directed_negative_witnesses": 7,
+      "complete_positive_baselines": [
+        "M01ReleasePublication",
+        "M03ReaderRetention",
+        "M04CompanionLifecycle"
+      ],
+      "incomplete_positive_baselines": [
+        "M02RecoveryReplay",
+        "M01M02Bridge",
+        "M05RemoteClosure",
+        "M06MigrationSelection",
+        "M09AuthoredDesignLifecycle",
+        "M01M05Bridge",
+        "M03M04Bridge",
+        "M02M06Bridge",
+        "M02M09Bridge"
+      ],
+      "record": {
+        "path": "~/.local/share/writfold/qualification/abstract-protocol-component-20261103-001/report.json",
+        "sha256": "66687385059c784736c80bf605519efd09a6fcfd319343c2ca1af3d3689881c1",
+        "bytes": 29471
+      }
+    },
+    "scope": "Exact source-bound components only. Ordinary unchecked Rust, cross-logic/engine refinement, full V-family/stage/gate closure and release admission are not inferred."
+  },
+  "publication_audit": {
+    "status": "inspected_not_cleared_for_publication",
+    "record": {
+      "path": "~/.local/share/writfold/evidence/publication-audit-20261103-001/publication-object-audit.json",
+      "sha256": "ae98ec83f6a25cdf56203e0a2e57288d6889c363e8151045c4fdcd291305cb86",
+      "bytes": 2247251
+    },
+    "reachable_git_objects": 2078,
+    "reachable_commits": 38,
+    "reachable_blobs": 1607,
+    "tracked_plus_nonignored_paths": 1512,
+    "distinct_archives_streamed": 4,
+    "confirmed_real_secret_findings": 0,
+    "exact_manifest_private_blob_matches": 0,
+    "oversized_report_bytes": 67172026,
+    "archived_git_and_current_report_equal": true,
+    "refs_kctx_present": false,
+    "baseline_commit_reachable": true,
+    "reference_or_history_rewritten": false,
+    "remaining": "Explicit publication/redistribution disposition for private-derived adoption summaries/review PDFs and retained reference material. Exact private-body absence and pattern scanning are not blanket permission or proof that arbitrary encoded secrets cannot exist."
+  }
 }

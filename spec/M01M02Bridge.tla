@@ -476,8 +476,8 @@ BY LegacyWorkloadBridgeSpecRefines, DurableProjectionSimulation
   DEF LegacyWorkloadBridgeSpecRefines, DurableProjectionSimulation
 
 (* A typed hint replacement describes every state with the same observable
-   recovery core, not merely one hand-picked empty journal. The named module
-   instance changes r.hint only and leaves p and all exact identities intact.
+   recovery core, not merely one hand-picked empty journal. The explicit proof
+   projections change r.hint only and leave p and all exact identities intact.
    VIEW remains disabled pending checked noninterference/observation proofs. *)
 HintMaps == [Ops -> [input : Releases, phase : HintPhases]]
 EmptyHintMap == [o \in Ops |-> [input |-> 0, phase |-> "none"]]
@@ -488,7 +488,218 @@ RecoveryRecordSpace == [
   pc : [Writers -> RecoveryPhases], result : [Writers -> RecoveryOutcomes],
   hint : HintMaps, corrupt : SUBSET Releases,
   checked : [Writers -> Releases \cup {LegacyId}]]
-Rehint(h) == INSTANCE M02RecoveryReplay WITH r <- SetHintMap(r,h)
+(* Explicit capture-free projections of the M02 recovery definitions.
+   Publication-only dependencies are shared, not re-instantiated. Each operator
+   below replaces r by SetHintMap(r,hintMap), including under prime/UNCHANGED;
+   the hintMap parameter is fixed across both endpoints of an action. This
+   avoids TLAPM's loss of the bound parameter in parametric INSTANCE expansion.
+   No kernel action is replaced: the replay theorems relate the original
+   actions to these proof-only projections, preserving guards and full frames. *)
+RehintrecoveryVars(hintMap) == <<p,SetHintMap(r,hintMap)>>
+
+RehintRecoveryTypeOK(hintMap) == SetHintMap(r,hintMap) \in [target : [Writers -> Releases \cup {LegacyId}],
+  pc : [Writers -> RecoveryPhases], result : [Writers -> RecoveryOutcomes],
+  hint : [Ops -> [input : Releases, phase : HintPhases]],
+  corrupt : SUBSET Releases, checked : [Writers -> Releases \cup {LegacyId}]]
+
+RehintRecoveryEvidence(hintMap) ==
+  /\ (\A w \in Writers : SetHintMap(r,hintMap).result[w] = "complete" =>
+       /\ SetHintMap(r,hintMap).target[w] \in Inputs
+       /\ SetHintMap(r,hintMap).checked[w] = SetHintMap(r,hintMap).target[w]
+       /\ SetHintMap(r,hintMap).target[w] \in p.receipt
+       /\ BoundIntent(SetHintMap(r,hintMap).target[w]))
+  /\ (\A w \in Writers : SetHintMap(r,hintMap).result[w] = "already_applied" =>
+       /\ SetHintMap(r,hintMap).target[w] = LegacyId
+       /\ SetHintMap(r,hintMap).checked[w] = LegacyId
+       /\ HistoricalAuthentic)
+  /\ (\A w \in Writers : SetHintMap(r,hintMap).pc[w] = "resumed" =>
+       /\ SetHintMap(r,hintMap).target[w] \in Inputs
+       /\ SchemaOf(SetHintMap(r,hintMap).target[w]) = 3)
+
+RehintRecoveryInv(hintMap) == Inv /\ RehintRecoveryTypeOK(hintMap) /\ RehintRecoveryEvidence(hintMap)
+
+RehintRecoverySafety(hintMap) ==
+  /\ Safety
+  /\ (\A w \in Writers : SetHintMap(r,hintMap).result[w] = "complete" =>
+       /\ SetHintMap(r,hintMap).target[w] \in p.published
+       /\ Input(SetHintMap(r,hintMap).checked[w]) = Input(SetHintMap(r,hintMap).target[w])
+       /\ p.intent[OpOf(SetHintMap(r,hintMap).target[w])] = SetHintMap(r,hintMap).target[w])
+  /\ (\A w \in Writers : SetHintMap(r,hintMap).result[w] = "already_applied" =>
+       /\ SetHintMap(r,hintMap).target[w] = p.legacy.input.identity
+       /\ p.legacy.receipt.input = LegacyInput
+       /\ p.legacy.input.schema = 2
+       /\ p.legacy.input.domain = "kctx-operation-v2"
+       /\ HistoricalAuthentic)
+  /\ (\A w \in Writers : SetHintMap(r,hintMap).target[w] = InputCount => SetHintMap(r,hintMap).pc[w] # "resumed")
+
+RehintRecoveryInit(hintMap) == Init /\ SetHintMap(r,hintMap) = [target |-> [w \in Writers |-> 0],
+  pc |-> [w \in Writers |-> "idle"], result |-> [w \in Writers |-> "none"],
+  hint |-> [o \in Ops |-> [input |-> 0, phase |-> "none"]],
+  corrupt |-> {}, checked |-> [w \in Writers |-> 0]]
+
+RehintInspecting(hintMap,w,i) ==
+  /\ SetHintMap(r,hintMap).pc[w] = "inspect"
+  /\ SetHintMap(r,hintMap).target[w] = i
+  /\ i \in ReplayInputs
+
+RehintIntact(hintMap,i) == p.head \notin SetHintMap(r,hintMap).corrupt /\
+  (IF i = LegacyId THEN 0 \notin SetHintMap(r,hintMap).corrupt ELSE i \notin SetHintMap(r,hintMap).corrupt)
+
+RehintRecoverStart(hintMap,w,i) ==
+  /\ SetHintMap(r,hintMap).pc[w] \in {"idle","done"}
+  /\ p.pc[w] \in {"idle","failed","conflict","done","down"}
+  /\ SetHintMap(r',hintMap) = [SetHintMap(r,hintMap) EXCEPT !.target[w] = i, !.pc[w] = "inspect",
+       !.result[w] = "pending", !.checked[w] = 0]
+  /\ UNCHANGED p
+
+RehintMisleadHint(hintMap,o,i,h) ==
+  /\ SetHintMap(r',hintMap) =
+       [SetHintMap(r,hintMap) EXCEPT !.hint[o] = [input |-> i, phase |-> h]]
+  /\ UNCHANGED p
+
+RehintDetectCorruption(hintMap,i) ==
+  /\ SetHintMap(r',hintMap) =
+       [SetHintMap(r,hintMap) EXCEPT !.corrupt = @ \cup {i}]
+  /\ UNCHANGED p
+
+RehintRefuseCorruption(hintMap,w) == LET i == SetHintMap(r,hintMap).target[w] IN
+  /\ RehintInspecting(hintMap,w,i) /\ ~RehintIntact(hintMap,i)
+  /\ SetHintMap(r',hintMap) = [SetHintMap(r,hintMap) EXCEPT !.pc[w] = "done", !.result[w] = "refused"] /\ UNCHANGED p
+
+RehintReplayConflict(hintMap,w) == LET i == SetHintMap(r,hintMap).target[w] IN
+  /\ i \in Inputs /\ RehintInspecting(hintMap,w,i) /\ RehintIntact(hintMap,i) /\ p.intent[OpOf(i)] \notin {0,i}
+  /\ SetHintMap(r',hintMap) = [SetHintMap(r,hintMap) EXCEPT !.pc[w] = "done", !.result[w] = "conflict"] /\ UNCHANGED p
+
+RehintRefuseAuthority(hintMap,w) == LET i == SetHintMap(r,hintMap).target[w] IN
+  /\ i \in Inputs /\ RehintInspecting(hintMap,w,i) /\ RehintIntact(hintMap,i) /\ ~Valid(i)
+  /\ SetHintMap(r',hintMap) = [SetHintMap(r,hintMap) EXCEPT !.pc[w] = "done", !.result[w] = "refused"] /\ UNCHANGED p
+
+RehintPredecessorConflict(hintMap,w) == LET i == SetHintMap(r,hintMap).target[w] IN
+  /\ i \in Inputs /\ RehintInspecting(hintMap,w,i) /\ RehintIntact(hintMap,i) /\ i \notin p.published
+  /\ p.intent[OpOf(i)] \in {0,i} /\ p.head # BaseOf(i)
+  /\ SetHintMap(r',hintMap) = [SetHintMap(r,hintMap) EXCEPT !.pc[w] = "done", !.result[w] = "conflict"] /\ UNCHANGED p
+
+RehintResumeExact(hintMap,w) == LET i == SetHintMap(r,hintMap).target[w] IN
+  /\ i \in Inputs /\ RehintInspecting(hintMap,w,i) /\ RehintIntact(hintMap,i) /\ Valid(i)
+  /\ i \notin p.published /\ p.intent[OpOf(i)] \in {0,i}
+  /\ p.head = BaseOf(i)
+  /\ p' = [p EXCEPT !.request[w] = i, !.outcome[w] = "pending",
+       !.pc[w] = IF i \in p.manifest THEN "manifest"
+                 ELSE IF i \in p.native THEN "native"
+                 ELSE IF BoundIntent(i) THEN "intent" ELSE "planned"]
+  /\ SetHintMap(r',hintMap) = [SetHintMap(r,hintMap) EXCEPT !.pc[w] = "resumed"]
+
+RehintRepairModernCompletion(hintMap,w) == LET i == SetHintMap(r,hintMap).target[w] IN
+  /\ i \in Inputs /\ RehintInspecting(hintMap,w,i) /\ RehintIntact(hintMap,i) /\ Valid(i) /\ BoundIntent(i)
+  /\ i \in p.published
+  /\ p' = [p EXCEPT !.receipt = @ \cup {i}]
+  /\ SetHintMap(r',hintMap) = [SetHintMap(r,hintMap) EXCEPT !.pc[w] = "done", !.result[w] = "complete", !.checked[w] = i]
+
+RehintRepairLegacyCompletion(hintMap,w) ==
+  /\ RehintInspecting(hintMap,w,LegacyId)
+  /\ RehintIntact(hintMap,LegacyId)
+  /\ HistoricalAuthentic
+  /\ SetHintMap(r',hintMap) = [SetHintMap(r,hintMap) EXCEPT !.pc[w] = "done", !.result[w] = "already_applied",
+       !.checked[w] = LegacyId]
+  /\ UNCHANGED p
+
+RehintRepairCompletion(hintMap,w) == RehintRepairModernCompletion(hintMap,w) \/ RehintRepairLegacyCompletion(hintMap,w)
+
+RehintRefusePendingLegacy(hintMap,w) == LET i == SetHintMap(r,hintMap).target[w] IN
+  /\ i \in Inputs /\ RehintInspecting(hintMap,w,i) /\ SchemaOf(i) = 2
+  /\ SetHintMap(r',hintMap) = [SetHintMap(r,hintMap) EXCEPT !.pc[w] = "done", !.result[w] = "refused"]
+  /\ UNCHANGED p
+
+RehintObserveCompletion(hintMap,w) == LET i == SetHintMap(r,hintMap).target[w] IN
+  /\ SetHintMap(r,hintMap).pc[w] = "resumed" /\ i \in Inputs /\ RehintIntact(hintMap,i) /\ Valid(i)
+  /\ i \in p.receipt /\ BoundIntent(i)
+  /\ SetHintMap(r',hintMap) = [SetHintMap(r,hintMap) EXCEPT !.pc[w] = "done", !.result[w] = "complete", !.checked[w] = i]
+  /\ UNCHANGED p
+
+RehintRecoveryIOFailure(hintMap,w) ==
+  /\ SetHintMap(r,hintMap).pc[w] \in {"inspect","resumed"}
+  /\ SetHintMap(r',hintMap) = [SetHintMap(r,hintMap) EXCEPT !.pc[w] = "done", !.result[w] = "unknown"] /\ UNCHANGED p
+
+RehintRecoveryCrash(hintMap,w) ==
+  /\ Crash(w)
+  /\ SetHintMap(r',hintMap) = [SetHintMap(r,hintMap) EXCEPT !.pc[w] = "down", !.result[w] = "unknown"]
+
+RehintRecoveryRestart(hintMap,w) ==
+  /\ Restart(w)
+  /\ SetHintMap(r',hintMap) = [SetHintMap(r,hintMap) EXCEPT !.pc[w] = "idle", !.target[w] = 0,
+       !.result[w] = "none", !.checked[w] = 0]
+
+RehintPublicationStep(hintMap) ==
+  /\ Next
+  /\ p.head \notin SetHintMap(r,hintMap).corrupt
+  /\ p'.head \notin SetHintMap(r,hintMap).corrupt
+  /\ UNCHANGED SetHintMap(r,hintMap)
+
+RehintRecoveryStutter(hintMap) == UNCHANGED RehintrecoveryVars(hintMap)
+
+RehintLocalRecoveryNext(hintMap) ==
+  \/ (\E w \in Writers, i \in ReplayInputs : RehintRecoverStart(hintMap,w,i))
+  \/ (\E o \in Ops, i \in Releases, h \in HintPhases : RehintMisleadHint(hintMap,o,i,h))
+  \/ (\E i \in Releases : RehintDetectCorruption(hintMap,i))
+  \/ (\E w \in Writers :
+       \/ RehintRefuseCorruption(hintMap,w) \/ RehintReplayConflict(hintMap,w) \/ RehintRefuseAuthority(hintMap,w)
+       \/ RehintPredecessorConflict(hintMap,w) \/ RehintResumeExact(hintMap,w) \/ RehintRepairCompletion(hintMap,w)
+       \/ RehintObserveCompletion(hintMap,w) \/ RehintRecoveryIOFailure(hintMap,w) \/ RehintRecoveryCrash(hintMap,w)
+       \/ RehintRecoveryRestart(hintMap,w) \/ RehintRefusePendingLegacy(hintMap,w))
+  \/ RehintRecoveryStutter(hintMap)
+
+RehintRecoveryNext(hintMap) == RehintPublicationStep(hintMap) \/ RehintLocalRecoveryNext(hintMap)
+
+RehintNonHintRecoveryNext(hintMap) ==
+  \/ (\E w \in Writers, i \in ReplayInputs : RehintRecoverStart(hintMap,w,i))
+  \/ (\E i \in Releases : RehintDetectCorruption(hintMap,i))
+  \/ (\E w \in Writers :
+       \/ RehintRefuseCorruption(hintMap,w) \/ RehintReplayConflict(hintMap,w) \/ RehintRefuseAuthority(hintMap,w)
+       \/ RehintPredecessorConflict(hintMap,w) \/ RehintResumeExact(hintMap,w) \/ RehintRepairCompletion(hintMap,w)
+       \/ RehintObserveCompletion(hintMap,w) \/ RehintRecoveryIOFailure(hintMap,w) \/ RehintRecoveryCrash(hintMap,w)
+       \/ RehintRecoveryRestart(hintMap,w) \/ RehintRefusePendingLegacy(hintMap,w))
+  \/ RehintRecoveryStutter(hintMap)
+
+RehintFiniteHintStep(hintMap) == \E i \in {0,1,2,InputCount}, h \in HintPhases : RehintMisleadHint(hintMap,1,i,h)
+
+RehintCrossHintStep(hintMap) ==
+  \/ (\E o \in {1,2}, h \in HintPhases :
+       RehintMisleadHint(hintMap,o,(IF o = 1 THEN 3 ELSE 1),h))
+  \/ (\E o \in {1,2} : RehintMisleadHint(hintMap,o,0,"none"))
+
+RehintRecoveryObservation(hintMap) == <<p,SetHintMap(r,hintMap).target,SetHintMap(r,hintMap).pc,SetHintMap(r,hintMap).result,SetHintMap(r,hintMap).checked,SetHintMap(r,hintMap).corrupt>>
+
+RehintRecoveryServiceNext(hintMap) ==
+  \/ (\E i \in Releases : RehintDetectCorruption(hintMap,i))
+  \/ (\E w \in Writers :
+       \/ RehintRefuseCorruption(hintMap,w) \/ RehintReplayConflict(hintMap,w) \/ RehintRefuseAuthority(hintMap,w)
+       \/ RehintPredecessorConflict(hintMap,w) \/ RehintResumeExact(hintMap,w) \/ RehintRepairCompletion(hintMap,w)
+       \/ RehintObserveCompletion(hintMap,w) \/ RehintRecoveryIOFailure(hintMap,w) \/ RehintRecoveryCrash(hintMap,w)
+       \/ RehintRecoveryRestart(hintMap,w) \/ RehintRefusePendingLegacy(hintMap,w))
+  \/ RehintRecoveryStutter(hintMap)
+
+RehintWorkloadLocalNext(hintMap,workload) == RehintRecoveryServiceNext(hintMap) \/
+  (\E w \in Writers : RehintRecoverStart(hintMap,w,WorkloadTarget(w,workload)))
+
+RehintFinitePublicationStep(hintMap) ==
+  /\ FiniteNext
+  /\ p.head \notin SetHintMap(r,hintMap).corrupt
+  /\ p'.head \notin SetHintMap(r,hintMap).corrupt
+  /\ UNCHANGED SetHintMap(r,hintMap)
+
+RehintWorkloadRecoveryNext(hintMap,workload) == RehintFinitePublicationStep(hintMap) \/ RehintWorkloadLocalNext(hintMap,workload) \/ RehintFiniteHintStep(hintMap)
+
+RehintFiniteRecoveryNext(hintMap) == RehintWorkloadRecoveryNext(hintMap,0)
+
+RehintWidePublicationStep(hintMap,profile) ==
+  /\ WideNext(profile)
+  /\ p.head \notin SetHintMap(r,hintMap).corrupt
+  /\ p'.head \notin SetHintMap(r,hintMap).corrupt
+  /\ UNCHANGED SetHintMap(r,hintMap)
+
+RehintWideRecoveryNext(hintMap,profile) == RehintWidePublicationStep(hintMap,profile) \/ RehintWorkloadLocalNext(hintMap,0) \/ RehintFiniteHintStep(hintMap)
+
+RehintCrossHintRecoveryNext(hintMap) == RehintWidePublicationStep(hintMap,0) \/ RehintWorkloadLocalNext(hintMap,2) \/ RehintCrossHintStep(hintMap)
 
 (* Positive hint-erasing VIEW: state half of the certificate.
    A recovery record has exactly the six fields below. Erasing hints does not
@@ -567,80 +778,87 @@ THEOREM HintViewRepresentatives == RecoveryTypeOK =>
           => SetHintMap(r,q.hint) = q)
 BY SMT, HintRecordType, HintViewCharacterizes, HintCoreCharacterizes
   DEF HintRecordType, HintViewCharacterizes, HintCoreCharacterizes,
-    HintStateObservation, HintErasedView, RecoveryObservation
+  HintStateObservation, HintErasedView, RecoveryObservation
 
 THEOREM HintObservedState ==
   \A h \in HintMaps : RecoveryTypeOK =>
-    Rehint(h)!RecoveryObservation = RecoveryObservation
-BY SMT, HintRecordType, HintRetargetFields
-  DEF HintRecordType, HintRetargetFields,
-    Rehint!RecoveryObservation, RecoveryObservation
+    RehintRecoveryObservation(h) = RecoveryObservation
+BY SMT, HintRecordType
+  DEF HintRecordType, RehintRecoveryObservation, RecoveryObservation, SetHintMap,
+  RecoveryRecordSpace
 
 (* This is a direct action-level proof about the next record, not an appeal to
    a primed theorem name. The bound hint map is constant across the action. *)
 THEOREM HintObservedNextState ==
   \A h \in HintMaps : RecoveryTypeOK' =>
-    (Rehint(h)!RecoveryObservation)' = RecoveryObservation'
-BY SMT DEF Rehint!RecoveryObservation, RecoveryObservation,
-  RecoveryTypeOK, SetHintMap
+    (RehintRecoveryObservation(h))' = RecoveryObservation'
+BY SMT DEF RehintRecoveryObservation, RecoveryObservation, RecoveryTypeOK, SetHintMap
 
-(* The instance substitutes r only. Isolate p-only predicates, especially the
+(* The projections substitute r only. Isolate p-only predicates, especially the
    immutable historical record, rather than unfolding historical bytes in each
    recovery or bridge property proof. These equalities require no truth or
    typing assumption about those publication predicates. *)
 THEOREM HintPublicationStateUnchanged == \A h \in HintMaps :
-  /\ (Rehint(h)!Inv <=> Inv)
-  /\ (Rehint(h)!Safety <=> Safety)
-  /\ (Rehint(h)!Init <=> Init)
-BY DEF Rehint!Inv, Inv, Rehint!Safety, Safety, Rehint!Init, Init
+  /\ (Inv <=> Inv)
+  /\ (Safety <=> Safety)
+  /\ (Init <=> Init)
+OBVIOUS
 
 THEOREM HintHistoricalEquivalent == \A h \in HintMaps :
-  Rehint(h)!HistoricalAuthentic <=> HistoricalAuthentic
-BY DEF Rehint!HistoricalAuthentic, HistoricalAuthentic
+  HistoricalAuthentic <=> HistoricalAuthentic
+OBVIOUS
 
 THEOREM HintRecoveryTypePreserved ==
-  \A h \in HintMaps : RecoveryTypeOK => Rehint(h)!RecoveryTypeOK
+  \A h \in HintMaps : RecoveryTypeOK => RehintRecoveryTypeOK(h)
 BY SMT, HintRecordType, HintRetargetTyped
-  DEF HintRecordType, HintRetargetTyped, Rehint!RecoveryTypeOK,
-    RecoveryRecordSpace, HintMaps
+  DEF HintRecordType, HintRetargetTyped, RehintRecoveryTypeOK,
+  RecoveryRecordSpace, HintMaps, SetHintMap, Writers, Releases, LegacyId, Ops,
+  RecoveryPhases, RecoveryOutcomes, HintPhases
 
 THEOREM HintRecoveryEvidenceEquivalent ==
   \A h \in HintMaps : RecoveryTypeOK =>
-    (Rehint(h)!RecoveryEvidence <=> RecoveryEvidence)
+    (RehintRecoveryEvidence(h) <=> RecoveryEvidence)
 BY SMT, HintRecordType, HintRetargetFields, HintHistoricalEquivalent
   DEF HintRecordType, HintRetargetFields, HintHistoricalEquivalent,
-    Rehint!RecoveryEvidence, RecoveryEvidence
+  RehintRecoveryEvidence, RecoveryEvidence, SetHintMap, RecoveryRecordSpace,
+  Writers, Inputs, LegacyId, BoundIntent, OpOf, SchemaOf
 
 THEOREM HintRecoveryInvEquivalent ==
   \A h \in HintMaps : RecoveryTypeOK =>
-    (Rehint(h)!RecoveryInv <=> RecoveryInv)
+    (RehintRecoveryInv(h) <=> RecoveryInv)
 BY SMT, HintPublicationStateUnchanged, HintRecoveryTypePreserved,
   HintRecoveryEvidenceEquivalent
   DEF HintPublicationStateUnchanged, HintRecoveryTypePreserved,
-    HintRecoveryEvidenceEquivalent, Rehint!RecoveryInv, RecoveryInv
+  HintRecoveryEvidenceEquivalent, RehintRecoveryInv, RecoveryInv
 
 THEOREM HintRecoverySafetyEquivalent ==
   \A h \in HintMaps : RecoveryTypeOK =>
-    (Rehint(h)!RecoverySafety <=> RecoverySafety)
-BY SMT, HintRecordType, HintRetargetFields, HintPublicationStateUnchanged,
-  HintHistoricalEquivalent
-  DEF HintRecordType, HintRetargetFields, HintPublicationStateUnchanged,
-    HintHistoricalEquivalent, Rehint!RecoverySafety, RecoverySafety
+    (RehintRecoverySafety(h) <=> RecoverySafety)
+<1>1. ASSUME NEW h \in HintMaps, RecoveryTypeOK
+      PROVE RehintRecoverySafety(h) <=> RecoverySafety
+  <2> USE RecoveryTypeOK
+  <2>1. r \in RecoveryRecordSpace
+    BY HintRecordType DEF HintRecordType
+  <2>2. SetHintMap(r,h).target=r.target /\ SetHintMap(r,h).pc=r.pc /\
+    SetHintMap(r,h).result=r.result /\ SetHintMap(r,h).checked=r.checked
+    BY SMT, <2>1, HintRetargetFields DEF HintRetargetFields
+  <2>3. QED BY SMT, <2>2 DEF RehintRecoverySafety, RecoverySafety
+<1>2. QED BY <1>1
 
 (* No self-instance of this bridge is needed. Its extra checked predicates use
    only p: PublicationView and ReplayView, and therefore ExactAgreement,
    SingleApplication and BeforeCASInvisible, contain no occurrence of r.
    These explicit retargeted predicates are exactly BridgeInv/BridgeSafety
    with the recovery conjunct retargeted and the shared p left unchanged. *)
-HintBridgeInv(h) == Rehint(h)!RecoveryInv
+HintBridgeInv(h) == RehintRecoveryInv(h)
   /\ ExactAgreement /\ SingleApplication /\ BeforeCASInvisible
-HintBridgeSafety(h) == Rehint(h)!RecoverySafety
+HintBridgeSafety(h) == RehintRecoverySafety(h)
   /\ SingleApplication /\ ExactAgreement
 HintCheckedProperties ==
   <<RecoveryInv,RecoverySafety,HistoricalAuthentic,BridgeInv,BridgeSafety>>
 HintRetargetedChecks(h) ==
-  <<Rehint(h)!RecoveryInv,Rehint(h)!RecoverySafety,
-    Rehint(h)!HistoricalAuthentic,HintBridgeInv(h),HintBridgeSafety(h)>>
+  <<RehintRecoveryInv(h),RehintRecoverySafety(h),
+    HistoricalAuthentic,HintBridgeInv(h),HintBridgeSafety(h)>>
 
 THEOREM HintBridgeInvEquivalent ==
   \A h \in HintMaps : RecoveryTypeOK => (HintBridgeInv(h) <=> BridgeInv)
@@ -655,11 +873,24 @@ BY SMT, HintRecoverySafetyEquivalent
 THEOREM HintCheckedPropertiesPreserved ==
   \A h \in HintMaps : RecoveryTypeOK =>
     HintRetargetedChecks(h) = HintCheckedProperties
-BY SMT, HintRecoveryInvEquivalent, HintRecoverySafetyEquivalent,
-  HintHistoricalEquivalent, HintBridgeInvEquivalent, HintBridgeSafetyEquivalent
-  DEF HintRecoveryInvEquivalent, HintRecoverySafetyEquivalent,
-    HintHistoricalEquivalent, HintBridgeInvEquivalent, HintBridgeSafetyEquivalent,
-    HintRetargetedChecks, HintCheckedProperties
+<1>1. ASSUME NEW h \in HintMaps, RecoveryTypeOK
+      PROVE HintRetargetedChecks(h)=HintCheckedProperties
+  <2> USE RecoveryTypeOK
+  <2>1. RehintRecoveryInv(h)=RecoveryInv
+    BY SMT, HintRecoveryInvEquivalent
+      DEF HintRecoveryInvEquivalent, RehintRecoveryInv, RecoveryInv
+  <2>2. RehintRecoverySafety(h)=RecoverySafety
+    BY SMT, HintRecoverySafetyEquivalent
+      DEF HintRecoverySafetyEquivalent, RehintRecoverySafety, RecoverySafety
+  <2>3. HintBridgeInv(h)=BridgeInv
+    BY SMT, HintBridgeInvEquivalent
+      DEF HintBridgeInvEquivalent, HintBridgeInv, BridgeInv
+  <2>4. HintBridgeSafety(h)=BridgeSafety
+    BY SMT, HintBridgeSafetyEquivalent
+      DEF HintBridgeSafetyEquivalent, HintBridgeSafety, BridgeSafety
+  <2>5. QED BY SMT, <2>1, <2>2, <2>3, <2>4
+    DEF HintRetargetedChecks, HintCheckedProperties
+<1>2. QED BY <1>1
 
 (* Init chooses one canonical hint map; arbitrary retargeting need not remain
    initial. Its erased initial class nevertheless has an exact reconstruction:
@@ -671,17 +902,17 @@ THEOREM HintInitialFacts == RecoveryInit =>
   /\ r \in RecoveryRecordSpace
   /\ r.hint = EmptyHintMap
 BY SMT, RecoveryInitPreserves, HintRecordType
-  DEF RecoveryInitPreserves, HintRecordType, RecoveryInv,
-    RecoveryInit, EmptyHintMap
+  DEF RecoveryInitPreserves, HintRecordType, RecoveryInv, RecoveryInit,
+  EmptyHintMap
 
 THEOREM HintCanonicalInitPreserves ==
-  RecoveryInit => Rehint(EmptyHintMap)!RecoveryInit
+  RecoveryInit => RehintRecoveryInit(EmptyHintMap)
 <1>1. RecoveryInit => SetHintMap(r,EmptyHintMap) = r
   BY SMT, HintInitialFacts, HintRetargetIdentity
     DEF HintInitialFacts, HintRetargetIdentity
 <1>2. QED BY SMT, <1>1, HintEmptyMapTyped, HintPublicationStateUnchanged
-  DEF HintEmptyMapTyped, HintPublicationStateUnchanged,
-    RecoveryInit, Rehint!RecoveryInit
+  DEF HintEmptyMapTyped, HintPublicationStateUnchanged, RecoveryInit,
+  RehintRecoveryInit, SetHintMap, Writers, Ops
 
 THEOREM HintInitialRecordReconstruction == RecoveryInit =>
   \A q \in RecoveryRecordSpace : RecoveryCore(q) = RecoveryCore(r) =>
@@ -728,200 +959,386 @@ THEOREM HintPositiveReachableTyping ==
 
 (***************************************************************************
 Positive-only hint replacement: the bound h is one fixed value for both ends
-of an action. Consequently Rehint(h)!A evaluates A at SetHintMap(r,h) and
-SetHintMap(r',h), with exactly the original p and p'. No mutant is included.
+of an action. Each Rehint action evaluates its M02 action at SetHintMap(r,h)
+and SetHintMap(r',h), with exactly the original p and p'. No mutant is included.
 The atomic replay lemmas require recovery typing, not RecoverySafety or any
 claimed observation property. The matching lemmas obtain successor typing
 from RecoveryNextPreserves and the existing positive-kernel refinements.
 ***************************************************************************)
 
-(* All publication predicates are independent of r. Expand both namespaces
-   explicitly, rather than assume that opaque instance names are equal. *)
+(* Publication predicates are shared verbatim: none depends on r. *)
 THEOREM HintPublicationKernelIdentity == \A h \in HintMaps :
-  /\ (Rehint(h)!Next <=> Next)
-  /\ (Rehint(h)!FiniteNext <=> FiniteNext)
+  /\ (Next <=> Next)
+  /\ (FiniteNext <=> FiniteNext)
   /\ (\A profile \in 0..3 :
-       Rehint(h)!WideNext(profile) <=> WideNext(profile))
-BY DEF Next, Rehint!Next, FiniteNext, Rehint!FiniteNext,
-  WideNext, Rehint!WideNext, NonObservationNext, Rehint!NonObservationNext,
-  Start, Rehint!Start, Admit, Rehint!Admit,
-  RetainIntent, Rehint!RetainIntent, InputConflict, Rehint!InputConflict,
-  NativeCommit, Rehint!NativeCommit, RetainManifest, Rehint!RetainManifest,
-  FinalRevalidate, Rehint!FinalRevalidate, DoCAS, Rehint!DoCAS,
-  CASCore, Rehint!CASCore, CASMismatch, Rehint!CASMismatch,
-  Finish, Rehint!Finish, RejectAdmission, Rehint!RejectAdmission,
-  FailIO, Rehint!FailIO, LostResponse, Rehint!LostResponse,
-  Crash, Rehint!Crash, Restart, Rehint!Restart,
-  RecordReceipt, Rehint!RecordReceipt, Stutter, Rehint!Stutter,
-  Observe, Rehint!Observe, Valid, Rehint!Valid,
-  BoundIntent, Rehint!BoundIntent, Prepared, Rehint!Prepared,
-  Fresh, Rehint!Fresh, SchemaOf, Rehint!SchemaOf,
-  OpOf, Rehint!OpOf, BaseOf, Rehint!BaseOf, Closure, Rehint!Closure,
-  RepresentativeObservations, Rehint!RepresentativeObservations,
-  ProfileObservations, Rehint!ProfileObservations,
-  ProfileFault, Rehint!ProfileFault, ProfileCheck, Rehint!ProfileCheck,
-  Writers, Rehint!Writers, Inputs, Rehint!Inputs,
-  FullChecks, Rehint!FullChecks, Checks, Rehint!Checks,
-  Contexts, Rehint!Contexts
+       WideNext(profile) <=> WideNext(profile))
+OBVIOUS
 
 THEOREM HintPublicationStepReplay == \A h \in HintMaps :
-  RecoveryTypeOK /\ PublicationStep => Rehint(h)!PublicationStep
+  RecoveryTypeOK /\ PublicationStep => RehintPublicationStep(h)
 BY SMT, HintPublicationKernelIdentity
-  DEF HintPublicationKernelIdentity, RecoveryTypeOK, SetHintMap,
-    PublicationStep, Rehint!PublicationStep
+  DEF HintPublicationKernelIdentity, RecoveryTypeOK, SetHintMap, PublicationStep,
+  RehintPublicationStep
 
 THEOREM HintFinitePublicationStepReplay == \A h \in HintMaps :
-  RecoveryTypeOK /\ FinitePublicationStep => Rehint(h)!FinitePublicationStep
+  RecoveryTypeOK /\ FinitePublicationStep => RehintFinitePublicationStep(h)
 BY SMT, HintPublicationKernelIdentity
   DEF HintPublicationKernelIdentity, RecoveryTypeOK, SetHintMap,
-    FinitePublicationStep, Rehint!FinitePublicationStep
+  FinitePublicationStep, RehintFinitePublicationStep
 
 THEOREM HintWidePublicationStepReplay ==
   \A h \in HintMaps, profile \in 0..3 :
     RecoveryTypeOK /\ WidePublicationStep(profile) =>
-      Rehint(h)!WidePublicationStep(profile)
+      RehintWidePublicationStep(h,profile)
 BY SMT, HintPublicationKernelIdentity
   DEF HintPublicationKernelIdentity, RecoveryTypeOK, SetHintMap,
-    WidePublicationStep, Rehint!WidePublicationStep
+  WidePublicationStep, RehintWidePublicationStep
 
 THEOREM HintRecoverStartReplay ==
   \A h \in HintMaps, w \in Writers, i \in ReplayInputs :
-    RecoveryTypeOK /\ RecoverStart(w,i) => Rehint(h)!RecoverStart(w,i)
-BY SMT DEF RecoveryTypeOK, SetHintMap, RecoverStart, Rehint!RecoverStart
+    RecoveryTypeOK /\ RecoverStart(w,i) => RehintRecoverStart(h,w,i)
+<1>1. ASSUME NEW h \in HintMaps,
+             NEW w \in Writers,
+             NEW i \in ReplayInputs,
+             RecoveryTypeOK, RecoverStart(w,i)
+      PROVE RehintRecoverStart(h,w,i)
+  <2>1. r \in RecoveryRecordSpace
+    BY <1>1, HintRecordType DEF HintRecordType
+  <2>2. /\ SetHintMap(r,h).target = r.target
+        /\ SetHintMap(r,h).pc = r.pc
+        /\ SetHintMap(r,h).result = r.result
+        /\ SetHintMap(r,h).checked = r.checked
+        /\ SetHintMap(r,h).corrupt = r.corrupt
+    BY SMT, <1>1, <2>1, HintRetargetFields DEF HintRetargetFields
+  <2>3. SetHintMap(r',h) = [SetHintMap(r,h) EXCEPT !.target[w] = i, !.pc[w] = "inspect",
+               !.result[w] = "pending", !.checked[w] = 0]
+    BY SMT, <1>1 DEF RecoveryTypeOK, SetHintMap, RecoverStart
+  <2>4. QED BY SMT, <1>1, <2>1, <2>2, <2>3
+    DEF RecoveryTypeOK, SetHintMap, RecoverStart, RehintRecoverStart
+<1>2. QED BY <1>1
 
 THEOREM HintDetectCorruptionReplay == \A h \in HintMaps, i \in Releases :
-  RecoveryTypeOK /\ DetectCorruption(i) => Rehint(h)!DetectCorruption(i)
-BY SMT DEF RecoveryTypeOK, SetHintMap, DetectCorruption, Rehint!DetectCorruption
+  RecoveryTypeOK /\ DetectCorruption(i) => RehintDetectCorruption(h,i)
+<1>1. ASSUME NEW h \in HintMaps,
+             NEW i \in Releases,
+             RecoveryTypeOK, DetectCorruption(i)
+      PROVE RehintDetectCorruption(h,i)
+  <2>1. r \in RecoveryRecordSpace
+    BY <1>1, HintRecordType DEF HintRecordType
+  <2>2. /\ SetHintMap(r,h).target = r.target
+        /\ SetHintMap(r,h).pc = r.pc
+        /\ SetHintMap(r,h).result = r.result
+        /\ SetHintMap(r,h).checked = r.checked
+        /\ SetHintMap(r,h).corrupt = r.corrupt
+    BY SMT, <1>1, <2>1, HintRetargetFields DEF HintRetargetFields
+  <2>3. SetHintMap(r',h) = [SetHintMap(r,h) EXCEPT !.corrupt = @ \cup {i}]
+    BY SMT, <1>1 DEF RecoveryTypeOK, SetHintMap, DetectCorruption
+  <2>4. QED BY SMT, <1>1, <2>1, <2>2, <2>3
+    DEF RecoveryTypeOK, SetHintMap, DetectCorruption, RehintDetectCorruption
+<1>2. QED BY <1>1
 
 THEOREM HintRefuseCorruptionReplay == \A h \in HintMaps, w \in Writers :
-  RecoveryTypeOK /\ RefuseCorruption(w) => Rehint(h)!RefuseCorruption(w)
-BY SMT DEF RecoveryTypeOK, SetHintMap,
-  RefuseCorruption, Rehint!RefuseCorruption, Inspecting, Rehint!Inspecting,
-  Intact, Rehint!Intact, ReplayInputs, Rehint!ReplayInputs,
-  Inputs, Rehint!Inputs, LegacyId, Rehint!LegacyId
+  RecoveryTypeOK /\ RefuseCorruption(w) => RehintRefuseCorruption(h,w)
+<1>1. ASSUME NEW h \in HintMaps,
+             NEW w \in Writers,
+             RecoveryTypeOK, RefuseCorruption(w)
+      PROVE RehintRefuseCorruption(h,w)
+  <2>1. r \in RecoveryRecordSpace
+    BY <1>1, HintRecordType DEF HintRecordType
+  <2>2. /\ SetHintMap(r,h).target = r.target
+        /\ SetHintMap(r,h).pc = r.pc
+        /\ SetHintMap(r,h).result = r.result
+        /\ SetHintMap(r,h).checked = r.checked
+        /\ SetHintMap(r,h).corrupt = r.corrupt
+    BY SMT, <1>1, <2>1, HintRetargetFields DEF HintRetargetFields
+  <2>3. SetHintMap(r',h) = [SetHintMap(r,h) EXCEPT !.pc[w] = "done", !.result[w] = "refused"]
+    BY SMT, <1>1 DEF RecoveryTypeOK, SetHintMap, RefuseCorruption
+  <2>4. QED BY SMT, <1>1, <2>1, <2>2, <2>3
+    DEF RecoveryTypeOK, SetHintMap, RefuseCorruption, RehintRefuseCorruption,
+  Inspecting, RehintInspecting, Intact, RehintIntact, ReplayInputs, Inputs,
+  LegacyId
+<1>2. QED BY <1>1
 
 THEOREM HintReplayConflictReplay == \A h \in HintMaps, w \in Writers :
-  RecoveryTypeOK /\ ReplayConflict(w) => Rehint(h)!ReplayConflict(w)
-BY SMT DEF RecoveryTypeOK, SetHintMap,
-  ReplayConflict, Rehint!ReplayConflict, Inspecting, Rehint!Inspecting,
-  Intact, Rehint!Intact, ReplayInputs, Rehint!ReplayInputs,
-  Inputs, Rehint!Inputs, LegacyId, Rehint!LegacyId, OpOf, Rehint!OpOf
+  RecoveryTypeOK /\ ReplayConflict(w) => RehintReplayConflict(h,w)
+<1>1. ASSUME NEW h \in HintMaps,
+             NEW w \in Writers,
+             RecoveryTypeOK, ReplayConflict(w)
+      PROVE RehintReplayConflict(h,w)
+  <2>1. r \in RecoveryRecordSpace
+    BY <1>1, HintRecordType DEF HintRecordType
+  <2>2. /\ SetHintMap(r,h).target = r.target
+        /\ SetHintMap(r,h).pc = r.pc
+        /\ SetHintMap(r,h).result = r.result
+        /\ SetHintMap(r,h).checked = r.checked
+        /\ SetHintMap(r,h).corrupt = r.corrupt
+    BY SMT, <1>1, <2>1, HintRetargetFields DEF HintRetargetFields
+  <2>3. SetHintMap(r',h) = [SetHintMap(r,h) EXCEPT !.pc[w] = "done", !.result[w] = "conflict"]
+    BY SMT, <1>1 DEF RecoveryTypeOK, SetHintMap, ReplayConflict
+  <2>4. QED BY SMT, <1>1, <2>1, <2>2, <2>3
+    DEF RecoveryTypeOK, SetHintMap, ReplayConflict, RehintReplayConflict,
+  Inspecting, RehintInspecting, Intact, RehintIntact, ReplayInputs, Inputs,
+  LegacyId, OpOf
+<1>2. QED BY <1>1
 
 THEOREM HintRefuseAuthorityReplay == \A h \in HintMaps, w \in Writers :
-  RecoveryTypeOK /\ RefuseAuthority(w) => Rehint(h)!RefuseAuthority(w)
-BY SMT DEF RecoveryTypeOK, SetHintMap,
-  RefuseAuthority, Rehint!RefuseAuthority, Inspecting, Rehint!Inspecting,
-  Intact, Rehint!Intact, ReplayInputs, Rehint!ReplayInputs,
-  Inputs, Rehint!Inputs, LegacyId, Rehint!LegacyId,
-  Valid, Rehint!Valid, SchemaOf, Rehint!SchemaOf,
-  Contexts, Rehint!Contexts, Checks, Rehint!Checks
+  RecoveryTypeOK /\ RefuseAuthority(w) => RehintRefuseAuthority(h,w)
+<1>1. ASSUME NEW h \in HintMaps,
+             NEW w \in Writers,
+             RecoveryTypeOK, RefuseAuthority(w)
+      PROVE RehintRefuseAuthority(h,w)
+  <2>1. r \in RecoveryRecordSpace
+    BY <1>1, HintRecordType DEF HintRecordType
+  <2>2. /\ SetHintMap(r,h).target = r.target
+        /\ SetHintMap(r,h).pc = r.pc
+        /\ SetHintMap(r,h).result = r.result
+        /\ SetHintMap(r,h).checked = r.checked
+        /\ SetHintMap(r,h).corrupt = r.corrupt
+    BY SMT, <1>1, <2>1, HintRetargetFields DEF HintRetargetFields
+  <2>3. SetHintMap(r',h) = [SetHintMap(r,h) EXCEPT !.pc[w] = "done", !.result[w] = "refused"]
+    BY SMT, <1>1 DEF RecoveryTypeOK, SetHintMap, RefuseAuthority
+  <2>4. QED BY SMT, <1>1, <2>1, <2>2, <2>3
+    DEF RecoveryTypeOK, SetHintMap, RefuseAuthority, RehintRefuseAuthority,
+  Inspecting, RehintInspecting, Intact, RehintIntact, ReplayInputs, Inputs,
+  LegacyId, Valid, SchemaOf, Contexts, Checks
+<1>2. QED BY <1>1
 
 THEOREM HintPredecessorConflictReplay == \A h \in HintMaps, w \in Writers :
-  RecoveryTypeOK /\ PredecessorConflict(w) => Rehint(h)!PredecessorConflict(w)
-BY SMT DEF RecoveryTypeOK, SetHintMap,
-  PredecessorConflict, Rehint!PredecessorConflict, Inspecting, Rehint!Inspecting,
-  Intact, Rehint!Intact, ReplayInputs, Rehint!ReplayInputs,
-  Inputs, Rehint!Inputs, LegacyId, Rehint!LegacyId,
-  OpOf, Rehint!OpOf, BaseOf, Rehint!BaseOf
+  RecoveryTypeOK /\ PredecessorConflict(w) => RehintPredecessorConflict(h,w)
+<1>1. ASSUME NEW h \in HintMaps,
+             NEW w \in Writers,
+             RecoveryTypeOK, PredecessorConflict(w)
+      PROVE RehintPredecessorConflict(h,w)
+  <2>1. r \in RecoveryRecordSpace
+    BY <1>1, HintRecordType DEF HintRecordType
+  <2>2. /\ SetHintMap(r,h).target = r.target
+        /\ SetHintMap(r,h).pc = r.pc
+        /\ SetHintMap(r,h).result = r.result
+        /\ SetHintMap(r,h).checked = r.checked
+        /\ SetHintMap(r,h).corrupt = r.corrupt
+    BY SMT, <1>1, <2>1, HintRetargetFields DEF HintRetargetFields
+  <2>3. SetHintMap(r',h) = [SetHintMap(r,h) EXCEPT !.pc[w] = "done", !.result[w] = "conflict"]
+    BY SMT, <1>1 DEF RecoveryTypeOK, SetHintMap, PredecessorConflict
+  <2>4. QED BY SMT, <1>1, <2>1, <2>2, <2>3
+    DEF RecoveryTypeOK, SetHintMap, PredecessorConflict, RehintPredecessorConflict,
+  Inspecting, RehintInspecting, Intact, RehintIntact, ReplayInputs, Inputs,
+  LegacyId, OpOf, BaseOf
+<1>2. QED BY <1>1
 
 THEOREM HintResumeExactReplay == \A h \in HintMaps, w \in Writers :
-  RecoveryTypeOK /\ ResumeExact(w) => Rehint(h)!ResumeExact(w)
-BY SMT DEF RecoveryTypeOK, SetHintMap,
-  ResumeExact, Rehint!ResumeExact, Inspecting, Rehint!Inspecting,
-  Intact, Rehint!Intact, ReplayInputs, Rehint!ReplayInputs,
-  Inputs, Rehint!Inputs, LegacyId, Rehint!LegacyId,
-  Valid, Rehint!Valid, SchemaOf, Rehint!SchemaOf,
-  Contexts, Rehint!Contexts, Checks, Rehint!Checks,
-  BoundIntent, Rehint!BoundIntent, OpOf, Rehint!OpOf, BaseOf, Rehint!BaseOf
+  RecoveryTypeOK /\ ResumeExact(w) => RehintResumeExact(h,w)
+<1>1. ASSUME NEW h \in HintMaps,
+             NEW w \in Writers,
+             RecoveryTypeOK, ResumeExact(w)
+      PROVE RehintResumeExact(h,w)
+  <2>1. r \in RecoveryRecordSpace
+    BY <1>1, HintRecordType DEF HintRecordType
+  <2>2. /\ SetHintMap(r,h).target = r.target
+        /\ SetHintMap(r,h).pc = r.pc
+        /\ SetHintMap(r,h).result = r.result
+        /\ SetHintMap(r,h).checked = r.checked
+        /\ SetHintMap(r,h).corrupt = r.corrupt
+    BY SMT, <1>1, <2>1, HintRetargetFields DEF HintRetargetFields
+  <2>3. SetHintMap(r',h) = [SetHintMap(r,h) EXCEPT !.pc[w] = "resumed"]
+    BY SMT, <1>1 DEF RecoveryTypeOK, SetHintMap, ResumeExact
+  <2>4. QED BY SMT, <1>1, <2>1, <2>2, <2>3
+    DEF RecoveryTypeOK, SetHintMap, ResumeExact, RehintResumeExact, Inspecting,
+  RehintInspecting, Intact, RehintIntact, ReplayInputs, Inputs, LegacyId,
+  Valid, SchemaOf, Contexts, Checks, BoundIntent, OpOf, BaseOf
+<1>2. QED BY <1>1
 
 THEOREM HintRepairModernCompletionReplay == \A h \in HintMaps, w \in Writers :
   RecoveryTypeOK /\ RepairModernCompletion(w) =>
-    Rehint(h)!RepairModernCompletion(w)
-BY SMT DEF RecoveryTypeOK, SetHintMap,
-  RepairModernCompletion, Rehint!RepairModernCompletion,
-  Inspecting, Rehint!Inspecting, Intact, Rehint!Intact,
-  ReplayInputs, Rehint!ReplayInputs, Inputs, Rehint!Inputs,
-  LegacyId, Rehint!LegacyId, Valid, Rehint!Valid,
-  SchemaOf, Rehint!SchemaOf, Contexts, Rehint!Contexts, Checks, Rehint!Checks,
-  BoundIntent, Rehint!BoundIntent, OpOf, Rehint!OpOf
+    RehintRepairModernCompletion(h,w)
+<1>1. ASSUME NEW h \in HintMaps,
+             NEW w \in Writers,
+             RecoveryTypeOK, RepairModernCompletion(w)
+      PROVE RehintRepairModernCompletion(h,w)
+  <2>1. r \in RecoveryRecordSpace
+    BY <1>1, HintRecordType DEF HintRecordType
+  <2>2. /\ SetHintMap(r,h).target = r.target
+        /\ SetHintMap(r,h).pc = r.pc
+        /\ SetHintMap(r,h).result = r.result
+        /\ SetHintMap(r,h).checked = r.checked
+        /\ SetHintMap(r,h).corrupt = r.corrupt
+    BY SMT, <1>1, <2>1, HintRetargetFields DEF HintRetargetFields
+  <2>3. SetHintMap(r',h) = [SetHintMap(r,h) EXCEPT !.pc[w] = "done", !.result[w] = "complete", !.checked[w] = SetHintMap(r,h).target[w]]
+    BY SMT, <1>1 DEF RecoveryTypeOK, SetHintMap, RepairModernCompletion
+  <2>4. QED BY SMT, <1>1, <2>1, <2>2, <2>3
+    DEF RecoveryTypeOK, SetHintMap, RepairModernCompletion,
+  RehintRepairModernCompletion, Inspecting, RehintInspecting, Intact,
+  RehintIntact, ReplayInputs, Inputs, LegacyId, Valid, SchemaOf, Contexts,
+  Checks, BoundIntent, OpOf
+<1>2. QED BY <1>1
 
 THEOREM HintRepairLegacyCompletionReplay == \A h \in HintMaps, w \in Writers :
   RecoveryTypeOK /\ RepairLegacyCompletion(w) =>
-    Rehint(h)!RepairLegacyCompletion(w)
-BY SMT DEF RecoveryTypeOK, SetHintMap,
-  RepairLegacyCompletion, Rehint!RepairLegacyCompletion,
-  Inspecting, Rehint!Inspecting, Intact, Rehint!Intact,
-  ReplayInputs, Rehint!ReplayInputs, Inputs, Rehint!Inputs,
-  LegacyId, Rehint!LegacyId, HistoricalAuthentic, Rehint!HistoricalAuthentic,
-  LegacyHistory, Rehint!LegacyHistory, LegacyInput, Rehint!LegacyInput,
-  Closure, Rehint!Closure
+    RehintRepairLegacyCompletion(h,w)
+<1>1. ASSUME NEW h \in HintMaps,
+             NEW w \in Writers,
+             RecoveryTypeOK, RepairLegacyCompletion(w)
+      PROVE RehintRepairLegacyCompletion(h,w)
+  <2> USE RecoveryTypeOK, RepairLegacyCompletion(w)
+  <2>1. r \in RecoveryRecordSpace
+    BY <1>1, HintRecordType DEF HintRecordType
+  <2>2. /\ SetHintMap(r,h).target = r.target
+        /\ SetHintMap(r,h).pc = r.pc
+        /\ SetHintMap(r,h).result = r.result
+        /\ SetHintMap(r,h).checked = r.checked
+        /\ SetHintMap(r,h).corrupt = r.corrupt
+    BY SMT, <1>1, <2>1, HintRetargetFields DEF HintRetargetFields
+  <2>3. SetHintMap(r',h) = [SetHintMap(r,h) EXCEPT !.pc[w] = "done", !.result[w] = "already_applied",
+               !.checked[w] = LegacyId]
+    BY SMT, <1>1 DEF RecoveryTypeOK, SetHintMap, RepairLegacyCompletion
+  <2>4. RehintInspecting(h,w,LegacyId) /\ RehintIntact(h,LegacyId)
+    BY SMT, <2>2 DEF RepairLegacyCompletion, Inspecting, RehintInspecting,
+      Intact, RehintIntact
+  <2>5. HistoricalAuthentic /\ UNCHANGED p
+    BY DEF RepairLegacyCompletion
+  <2>6. QED BY <2>3, <2>4, <2>5 DEF RehintRepairLegacyCompletion
+<1>2. QED BY <1>1
 
 THEOREM HintRepairCompletionReplay == \A h \in HintMaps, w \in Writers :
-  RecoveryTypeOK /\ RepairCompletion(w) => Rehint(h)!RepairCompletion(w)
+  RecoveryTypeOK /\ RepairCompletion(w) => RehintRepairCompletion(h,w)
 BY SMT, HintRepairModernCompletionReplay, HintRepairLegacyCompletionReplay
   DEF HintRepairModernCompletionReplay, HintRepairLegacyCompletionReplay,
-    RepairCompletion, Rehint!RepairCompletion
+  RepairCompletion, RehintRepairCompletion
 
 THEOREM HintRefusePendingLegacyReplay == \A h \in HintMaps, w \in Writers :
-  RecoveryTypeOK /\ RefusePendingLegacy(w) => Rehint(h)!RefusePendingLegacy(w)
-BY SMT DEF RecoveryTypeOK, SetHintMap,
-  RefusePendingLegacy, Rehint!RefusePendingLegacy, Inspecting, Rehint!Inspecting,
-  ReplayInputs, Rehint!ReplayInputs, Inputs, Rehint!Inputs,
-  LegacyId, Rehint!LegacyId, SchemaOf, Rehint!SchemaOf
+  RecoveryTypeOK /\ RefusePendingLegacy(w) => RehintRefusePendingLegacy(h,w)
+<1>1. ASSUME NEW h \in HintMaps,
+             NEW w \in Writers,
+             RecoveryTypeOK, RefusePendingLegacy(w)
+      PROVE RehintRefusePendingLegacy(h,w)
+  <2>1. r \in RecoveryRecordSpace
+    BY <1>1, HintRecordType DEF HintRecordType
+  <2>2. /\ SetHintMap(r,h).target = r.target
+        /\ SetHintMap(r,h).pc = r.pc
+        /\ SetHintMap(r,h).result = r.result
+        /\ SetHintMap(r,h).checked = r.checked
+        /\ SetHintMap(r,h).corrupt = r.corrupt
+    BY SMT, <1>1, <2>1, HintRetargetFields DEF HintRetargetFields
+  <2>3. SetHintMap(r',h) = [SetHintMap(r,h) EXCEPT !.pc[w] = "done", !.result[w] = "refused"]
+    BY SMT, <1>1 DEF RecoveryTypeOK, SetHintMap, RefusePendingLegacy
+  <2>4. QED BY SMT, <1>1, <2>1, <2>2, <2>3
+    DEF RecoveryTypeOK, SetHintMap, RefusePendingLegacy, RehintRefusePendingLegacy,
+  Inspecting, RehintInspecting, ReplayInputs, Inputs, LegacyId, SchemaOf
+<1>2. QED BY <1>1
 
 THEOREM HintObserveCompletionReplay == \A h \in HintMaps, w \in Writers :
-  RecoveryTypeOK /\ ObserveCompletion(w) => Rehint(h)!ObserveCompletion(w)
-BY SMT DEF RecoveryTypeOK, SetHintMap,
-  ObserveCompletion, Rehint!ObserveCompletion, Intact, Rehint!Intact,
-  Inputs, Rehint!Inputs, LegacyId, Rehint!LegacyId,
-  Valid, Rehint!Valid, SchemaOf, Rehint!SchemaOf,
-  Contexts, Rehint!Contexts, Checks, Rehint!Checks,
-  BoundIntent, Rehint!BoundIntent, OpOf, Rehint!OpOf
+  RecoveryTypeOK /\ ObserveCompletion(w) => RehintObserveCompletion(h,w)
+<1>1. ASSUME NEW h \in HintMaps,
+             NEW w \in Writers,
+             RecoveryTypeOK, ObserveCompletion(w)
+      PROVE RehintObserveCompletion(h,w)
+  <2>1. r \in RecoveryRecordSpace
+    BY <1>1, HintRecordType DEF HintRecordType
+  <2>2. /\ SetHintMap(r,h).target = r.target
+        /\ SetHintMap(r,h).pc = r.pc
+        /\ SetHintMap(r,h).result = r.result
+        /\ SetHintMap(r,h).checked = r.checked
+        /\ SetHintMap(r,h).corrupt = r.corrupt
+    BY SMT, <1>1, <2>1, HintRetargetFields DEF HintRetargetFields
+  <2>3. SetHintMap(r',h) = [SetHintMap(r,h) EXCEPT !.pc[w] = "done", !.result[w] = "complete", !.checked[w] = SetHintMap(r,h).target[w]]
+    BY SMT, <1>1 DEF RecoveryTypeOK, SetHintMap, ObserveCompletion
+  <2>4. QED BY SMT, <1>1, <2>1, <2>2, <2>3
+    DEF RecoveryTypeOK, SetHintMap, ObserveCompletion, RehintObserveCompletion,
+  Intact, RehintIntact, Inputs, LegacyId, Valid, SchemaOf, Contexts, Checks,
+  BoundIntent, OpOf
+<1>2. QED BY <1>1
 
 THEOREM HintRecoveryIOFailureReplay == \A h \in HintMaps, w \in Writers :
-  RecoveryTypeOK /\ RecoveryIOFailure(w) => Rehint(h)!RecoveryIOFailure(w)
-BY SMT DEF RecoveryTypeOK, SetHintMap, RecoveryIOFailure, Rehint!RecoveryIOFailure
+  RecoveryTypeOK /\ RecoveryIOFailure(w) => RehintRecoveryIOFailure(h,w)
+<1>1. ASSUME NEW h \in HintMaps,
+             NEW w \in Writers,
+             RecoveryTypeOK, RecoveryIOFailure(w)
+      PROVE RehintRecoveryIOFailure(h,w)
+  <2>1. r \in RecoveryRecordSpace
+    BY <1>1, HintRecordType DEF HintRecordType
+  <2>2. /\ SetHintMap(r,h).target = r.target
+        /\ SetHintMap(r,h).pc = r.pc
+        /\ SetHintMap(r,h).result = r.result
+        /\ SetHintMap(r,h).checked = r.checked
+        /\ SetHintMap(r,h).corrupt = r.corrupt
+    BY SMT, <1>1, <2>1, HintRetargetFields DEF HintRetargetFields
+  <2>3. SetHintMap(r',h) = [SetHintMap(r,h) EXCEPT !.pc[w] = "done", !.result[w] = "unknown"]
+    BY SMT, <1>1 DEF RecoveryTypeOK, SetHintMap, RecoveryIOFailure
+  <2>4. QED BY SMT, <1>1, <2>1, <2>2, <2>3
+    DEF RecoveryTypeOK, SetHintMap, RecoveryIOFailure, RehintRecoveryIOFailure
+<1>2. QED BY <1>1
 
 THEOREM HintRecoveryCrashReplay == \A h \in HintMaps, w \in Writers :
-  RecoveryTypeOK /\ RecoveryCrash(w) => Rehint(h)!RecoveryCrash(w)
-BY SMT DEF RecoveryTypeOK, SetHintMap,
-  RecoveryCrash, Rehint!RecoveryCrash, Crash, Rehint!Crash
+  RecoveryTypeOK /\ RecoveryCrash(w) => RehintRecoveryCrash(h,w)
+<1>1. ASSUME NEW h \in HintMaps,
+             NEW w \in Writers,
+             RecoveryTypeOK, RecoveryCrash(w)
+      PROVE RehintRecoveryCrash(h,w)
+  <2>1. r \in RecoveryRecordSpace
+    BY <1>1, HintRecordType DEF HintRecordType
+  <2>2. /\ SetHintMap(r,h).target = r.target
+        /\ SetHintMap(r,h).pc = r.pc
+        /\ SetHintMap(r,h).result = r.result
+        /\ SetHintMap(r,h).checked = r.checked
+        /\ SetHintMap(r,h).corrupt = r.corrupt
+    BY SMT, <1>1, <2>1, HintRetargetFields DEF HintRetargetFields
+  <2>3. SetHintMap(r',h) = [SetHintMap(r,h) EXCEPT !.pc[w] = "down", !.result[w] = "unknown"]
+    BY SMT, <1>1 DEF RecoveryTypeOK, SetHintMap, RecoveryCrash
+  <2>4. QED BY SMT, <1>1, <2>1, <2>2, <2>3
+    DEF RecoveryTypeOK, SetHintMap, RecoveryCrash, RehintRecoveryCrash, Crash
+<1>2. QED BY <1>1
 
 THEOREM HintRecoveryRestartReplay == \A h \in HintMaps, w \in Writers :
-  RecoveryTypeOK /\ RecoveryRestart(w) => Rehint(h)!RecoveryRestart(w)
-BY SMT DEF RecoveryTypeOK, SetHintMap,
-  RecoveryRestart, Rehint!RecoveryRestart, Restart, Rehint!Restart
+  RecoveryTypeOK /\ RecoveryRestart(w) => RehintRecoveryRestart(h,w)
+<1>1. ASSUME NEW h \in HintMaps,
+             NEW w \in Writers,
+             RecoveryTypeOK, RecoveryRestart(w)
+      PROVE RehintRecoveryRestart(h,w)
+  <2>1. r \in RecoveryRecordSpace
+    BY <1>1, HintRecordType DEF HintRecordType
+  <2>2. /\ SetHintMap(r,h).target = r.target
+        /\ SetHintMap(r,h).pc = r.pc
+        /\ SetHintMap(r,h).result = r.result
+        /\ SetHintMap(r,h).checked = r.checked
+        /\ SetHintMap(r,h).corrupt = r.corrupt
+    BY SMT, <1>1, <2>1, HintRetargetFields DEF HintRetargetFields
+  <2>3. SetHintMap(r',h) = [SetHintMap(r,h) EXCEPT !.pc[w] = "idle", !.target[w] = 0,
+               !.result[w] = "none", !.checked[w] = 0]
+    BY SMT, <1>1 DEF RecoveryTypeOK, SetHintMap, RecoveryRestart
+  <2>4. QED BY SMT, <1>1, <2>1, <2>2, <2>3
+    DEF RecoveryTypeOK, SetHintMap, RecoveryRestart, RehintRecoveryRestart,
+  Restart
+<1>2. QED BY <1>1
 
 THEOREM HintRecoveryStutterReplay == \A h \in HintMaps :
-  RecoveryTypeOK /\ RecoveryStutter => Rehint(h)!RecoveryStutter
-BY SMT DEF SetHintMap, RecoveryStutter, Rehint!RecoveryStutter,
-  recoveryVars, Rehint!recoveryVars
+  RecoveryTypeOK /\ RecoveryStutter => RehintRecoveryStutter(h)
+BY SMT DEF SetHintMap, RecoveryStutter, RehintRecoveryStutter, recoveryVars,
+  RehintrecoveryVars
 
 (* An original hint write need not be the same hint write after replacement.
    Its matching action is the explicit stutter available in every kernel. *)
 THEOREM HintMisleadReplaysAsStutter ==
   \A h \in HintMaps, o \in Ops, i \in Releases, phase \in HintPhases :
-    RecoveryTypeOK /\ MisleadHint(o,i,phase) => Rehint(h)!RecoveryStutter
-BY SMT DEF RecoveryTypeOK, SetHintMap, MisleadHint,
-  Rehint!RecoveryStutter, Rehint!recoveryVars
+    RecoveryTypeOK /\ MisleadHint(o,i,phase) => RehintRecoveryStutter(h)
+BY SMT DEF RecoveryTypeOK, SetHintMap, MisleadHint, RehintRecoveryStutter,
+  RehintrecoveryVars
 
 THEOREM HintUnrestrictedHintReplay == \A h \in HintMaps :
-  RecoveryTypeOK /\ UnrestrictedHintStep => Rehint(h)!RecoveryStutter
+  RecoveryTypeOK /\ UnrestrictedHintStep => RehintRecoveryStutter(h)
 BY SMT, HintMisleadReplaysAsStutter
   DEF HintMisleadReplaysAsStutter, UnrestrictedHintStep
 
 THEOREM HintFiniteHintReplay == \A h \in HintMaps :
-  RecoveryTypeOK /\ FiniteHintStep => Rehint(h)!RecoveryStutter
+  RecoveryTypeOK /\ FiniteHintStep => RehintRecoveryStutter(h)
 BY SMT, FiniteHintRefines, HintUnrestrictedHintReplay
   DEF FiniteHintRefines, HintUnrestrictedHintReplay
 
 THEOREM HintCrossHintReplay == \A h \in HintMaps :
-  RecoveryTypeOK /\ CrossHintStep => Rehint(h)!RecoveryStutter
+  RecoveryTypeOK /\ CrossHintStep => RehintRecoveryStutter(h)
 BY SMT, CrossHintRefines, HintUnrestrictedHintReplay
   DEF CrossHintRefines, HintUnrestrictedHintReplay
 
 THEOREM HintRecoveryServiceReplay == \A h \in HintMaps :
-  RecoveryTypeOK /\ RecoveryServiceNext => Rehint(h)!RecoveryServiceNext
+  RecoveryTypeOK /\ RecoveryServiceNext => RehintRecoveryServiceNext(h)
 BY SMT, HintDetectCorruptionReplay, HintRefuseCorruptionReplay,
   HintReplayConflictReplay, HintRefuseAuthorityReplay,
   HintPredecessorConflictReplay, HintResumeExactReplay,
@@ -930,86 +1347,83 @@ BY SMT, HintDetectCorruptionReplay, HintRefuseCorruptionReplay,
   HintRecoveryRestartReplay, HintRefusePendingLegacyReplay,
   HintRecoveryStutterReplay
   DEF HintDetectCorruptionReplay, HintRefuseCorruptionReplay,
-    HintReplayConflictReplay, HintRefuseAuthorityReplay,
-    HintPredecessorConflictReplay, HintResumeExactReplay,
-    HintRepairCompletionReplay, HintObserveCompletionReplay,
-    HintRecoveryIOFailureReplay, HintRecoveryCrashReplay,
-    HintRecoveryRestartReplay, HintRefusePendingLegacyReplay,
-    HintRecoveryStutterReplay, RecoveryServiceNext, Rehint!RecoveryServiceNext,
-    Writers, Rehint!Writers, Releases, Rehint!Releases
+  HintReplayConflictReplay, HintRefuseAuthorityReplay,
+  HintPredecessorConflictReplay, HintResumeExactReplay,
+  HintRepairCompletionReplay, HintObserveCompletionReplay,
+  HintRecoveryIOFailureReplay, HintRecoveryCrashReplay,
+  HintRecoveryRestartReplay, HintRefusePendingLegacyReplay,
+  HintRecoveryStutterReplay, RecoveryServiceNext, RehintRecoveryServiceNext,
+  Writers, Releases
 
 THEOREM HintNonHintRecoveryReplay == \A h \in HintMaps :
-  RecoveryTypeOK /\ NonHintRecoveryNext => Rehint(h)!NonHintRecoveryNext
+  RecoveryTypeOK /\ NonHintRecoveryNext => RehintNonHintRecoveryNext(h)
 BY SMT, HintRecoverStartReplay, HintRecoveryServiceReplay
-  DEF HintRecoverStartReplay, HintRecoveryServiceReplay,
-    NonHintRecoveryNext, Rehint!NonHintRecoveryNext,
-    RecoveryServiceNext, Rehint!RecoveryServiceNext,
-    Writers, Rehint!Writers, Releases, Rehint!Releases,
-    ReplayInputs, Rehint!ReplayInputs, Inputs, Rehint!Inputs,
-    LegacyId, Rehint!LegacyId
+  DEF HintRecoverStartReplay, HintRecoveryServiceReplay, NonHintRecoveryNext,
+  RehintNonHintRecoveryNext, RecoveryServiceNext, RehintRecoveryServiceNext,
+  Writers, Releases, ReplayInputs, Inputs, LegacyId
 
 THEOREM HintLocalRecoveryReplay == \A h \in HintMaps :
-  RecoveryTypeOK /\ LocalRecoveryNext => Rehint(h)!LocalRecoveryNext
+  RecoveryTypeOK /\ LocalRecoveryNext => RehintLocalRecoveryNext(h)
 BY SMT, HintNonHintRecoveryReplay, HintUnrestrictedHintReplay
-  DEF HintNonHintRecoveryReplay, HintUnrestrictedHintReplay,
-    LocalRecoveryNext, Rehint!LocalRecoveryNext,
-    NonHintRecoveryNext, Rehint!NonHintRecoveryNext, UnrestrictedHintStep
+  DEF HintNonHintRecoveryReplay, HintUnrestrictedHintReplay, LocalRecoveryNext,
+  RehintLocalRecoveryNext, NonHintRecoveryNext, RehintNonHintRecoveryNext,
+  UnrestrictedHintStep
 
 THEOREM HintRecoveryNextReplay == \A h \in HintMaps :
-  RecoveryTypeOK /\ RecoveryNext => Rehint(h)!RecoveryNext
+  RecoveryTypeOK /\ RecoveryNext => RehintRecoveryNext(h)
 BY SMT, HintPublicationStepReplay, HintLocalRecoveryReplay
-  DEF HintPublicationStepReplay, HintLocalRecoveryReplay,
-    RecoveryNext, Rehint!RecoveryNext
+  DEF HintPublicationStepReplay, HintLocalRecoveryReplay, RecoveryNext,
+  RehintRecoveryNext
 
 THEOREM HintWorkloadLocalReplay == \A h \in HintMaps, workload \in 0..3 :
   RecoveryTypeOK /\ WorkloadLocalNext(workload) =>
-    Rehint(h)!WorkloadLocalNext(workload)
+    RehintWorkloadLocalNext(h,workload)
 BY SMT, HintRecoveryServiceReplay, HintRecoverStartReplay, WorkloadTargetsTyped
   DEF HintRecoveryServiceReplay, HintRecoverStartReplay, WorkloadTargetsTyped,
-    WorkloadLocalNext, Rehint!WorkloadLocalNext,
-    WorkloadTarget, Rehint!WorkloadTarget, Writers, Rehint!Writers,
-    LegacyId, Rehint!LegacyId
+  WorkloadLocalNext, RehintWorkloadLocalNext, WorkloadTarget, Writers,
+  LegacyId
 
 THEOREM HintWorkloadRecoveryNextReplay ==
   \A h \in HintMaps, workload \in 0..3 :
     RecoveryTypeOK /\ WorkloadRecoveryNext(workload) =>
-      Rehint(h)!WorkloadRecoveryNext(workload)
+      RehintWorkloadRecoveryNext(h,workload)
 BY SMT, HintFinitePublicationStepReplay, HintWorkloadLocalReplay,
   HintFiniteHintReplay
   DEF HintFinitePublicationStepReplay, HintWorkloadLocalReplay,
-    HintFiniteHintReplay, WorkloadRecoveryNext, Rehint!WorkloadRecoveryNext,
-    Rehint!WorkloadLocalNext, Rehint!RecoveryServiceNext
+  HintFiniteHintReplay, WorkloadRecoveryNext, RehintWorkloadRecoveryNext,
+  RehintWorkloadLocalNext, RehintRecoveryServiceNext
 
 THEOREM HintFiniteRecoveryNextReplay == \A h \in HintMaps :
-  RecoveryTypeOK /\ FiniteRecoveryNext => Rehint(h)!FiniteRecoveryNext
+  RecoveryTypeOK /\ FiniteRecoveryNext => RehintFiniteRecoveryNext(h)
 BY SMT, HintWorkloadRecoveryNextReplay
-  DEF HintWorkloadRecoveryNextReplay, FiniteRecoveryNext, Rehint!FiniteRecoveryNext
+  DEF HintWorkloadRecoveryNextReplay, FiniteRecoveryNext,
+  RehintFiniteRecoveryNext
 
 THEOREM HintWideRecoveryNextReplay == \A h \in HintMaps, profile \in 0..3 :
-  RecoveryTypeOK /\ WideRecoveryNext(profile) => Rehint(h)!WideRecoveryNext(profile)
+  RecoveryTypeOK /\ WideRecoveryNext(profile) => RehintWideRecoveryNext(h,profile)
 BY SMT, HintWidePublicationStepReplay, HintWorkloadLocalReplay, HintFiniteHintReplay
-  DEF HintWidePublicationStepReplay, HintWorkloadLocalReplay, HintFiniteHintReplay,
-    WideRecoveryNext, Rehint!WideRecoveryNext,
-    Rehint!WorkloadLocalNext, Rehint!RecoveryServiceNext
+  DEF HintWidePublicationStepReplay, HintWorkloadLocalReplay,
+  HintFiniteHintReplay, WideRecoveryNext, RehintWideRecoveryNext,
+  RehintWorkloadLocalNext, RehintRecoveryServiceNext
 
 THEOREM HintCrossHintRecoveryNextReplay == \A h \in HintMaps :
-  RecoveryTypeOK /\ CrossHintRecoveryNext => Rehint(h)!CrossHintRecoveryNext
+  RecoveryTypeOK /\ CrossHintRecoveryNext => RehintCrossHintRecoveryNext(h)
 BY SMT, HintWidePublicationStepReplay, HintWorkloadLocalReplay, HintCrossHintReplay
-  DEF HintWidePublicationStepReplay, HintWorkloadLocalReplay, HintCrossHintReplay,
-    CrossHintRecoveryNext, Rehint!CrossHintRecoveryNext,
-    Rehint!WorkloadLocalNext, Rehint!RecoveryServiceNext
+  DEF HintWidePublicationStepReplay, HintWorkloadLocalReplay,
+  HintCrossHintReplay, CrossHintRecoveryNext, RehintCrossHintRecoveryNext,
+  RehintWorkloadLocalNext, RehintRecoveryServiceNext
 
 (* q is an arbitrary typed alternate recovery record, not a canonical-hint
    restriction. t is its explicit matching successor; p and p' are shared.
-   The action instance in each theorem below uses the fixed map q.hint. *)
+   The action projection in each theorem below uses the fixed map q.hint. *)
 HintMatchingPair(q,t) ==
   /\ q = SetHintMap(r,q.hint)
   /\ t = SetHintMap(r',q.hint)
   /\ RecoveryCore(t) = RecoveryCore(r')
   /\ <<p,q.target,q.pc,q.result,q.checked,q.corrupt>> = RecoveryObservation
   /\ <<p',t.target,t.pc,t.result,t.checked,t.corrupt>> = RecoveryObservation'
-  /\ Rehint(q.hint)!RecoveryObservation = RecoveryObservation
-  /\ (Rehint(q.hint)!RecoveryObservation)' = RecoveryObservation'
+  /\ RehintRecoveryObservation(q.hint) = RecoveryObservation
+  /\ (RehintRecoveryObservation(q.hint))' = RecoveryObservation'
 
 THEOREM HintMatchingEndpoints == \A q \in RecoveryRecordSpace :
   RecoveryInv /\ RecoveryNext /\ RecoveryCore(q) = RecoveryCore(r) =>
@@ -1024,67 +1438,72 @@ THEOREM HintMatchingEndpoints == \A q \in RecoveryRecordSpace :
   <2>3. RecoveryTypeOK' /\ r' \in RecoveryRecordSpace
     BY SMT, <1>1, RecoveryNextPreserves
       DEF RecoveryNextPreserves, RecoveryInv, RecoveryTypeOK, RecoveryRecordSpace,
-        HintMaps
+  HintMaps
   <2>4. q = SetHintMap(r,q.hint)
     BY SMT, <1>1, <2>1, HintCoreCharacterizes DEF HintCoreCharacterizes
   <2>5. /\ SetHintMap(r',q.hint) \in RecoveryRecordSpace
         /\ RecoveryCore(SetHintMap(r',q.hint)) = RecoveryCore(r')
     BY SMT, <2>2, <2>3, HintRetargetTyped, HintRetargetCore
       DEF HintRetargetTyped, HintRetargetCore
-  <2>6. /\ Rehint(q.hint)!RecoveryObservation = RecoveryObservation
-        /\ (Rehint(q.hint)!RecoveryObservation)' = RecoveryObservation'
+  <2>6. /\ RehintRecoveryObservation(q.hint) = RecoveryObservation
+        /\ (RehintRecoveryObservation(q.hint))' = RecoveryObservation'
     BY SMT, <2>1, <2>2, <2>3, HintObservedState, HintObservedNextState
       DEF HintObservedState, HintObservedNextState
-  <2>7. HintMatchingPair(q,SetHintMap(r',q.hint))
-    BY SMT, <2>1, <2>3, <2>4, <2>5, <2>6
-      DEF HintMatchingPair, SetHintMap, RecoveryObservation,
-        Rehint!RecoveryObservation, RecoveryRecordSpace
-  <2>8. QED BY <2>5, <2>7
+  <2>7. /\ <<p,q.target,q.pc,q.result,q.checked,q.corrupt>>
+             = RecoveryObservation
+        /\ <<p',SetHintMap(r',q.hint).target,SetHintMap(r',q.hint).pc,
+                SetHintMap(r',q.hint).result,SetHintMap(r',q.hint).checked,
+                SetHintMap(r',q.hint).corrupt>> = RecoveryObservation'
+    BY SMT, <1>1, <2>1, <2>2, <2>3, <2>4
+      DEF SetHintMap, RecoveryObservation, RecoveryRecordSpace
+  <2>8. HintMatchingPair(q,SetHintMap(r',q.hint))
+    BY <2>4, <2>5, <2>6, <2>7 DEF HintMatchingPair
+  <2>9. QED BY <2>5, <2>8
 <1>2. QED BY <1>1
 
 THEOREM HintRecoveryNextMatches == \A q \in RecoveryRecordSpace :
   RecoveryInv /\ RecoveryNext /\ RecoveryCore(q) = RecoveryCore(r) =>
-    /\ Rehint(q.hint)!RecoveryNext
+    /\ RehintRecoveryNext(q.hint)
     /\ \E t \in RecoveryRecordSpace : HintMatchingPair(q,t)
 BY SMT, HintRecoveryNextReplay, HintMatchingEndpoints
-  DEF HintRecoveryNextReplay, HintMatchingEndpoints,
-    RecoveryInv, RecoveryRecordSpace
+  DEF HintRecoveryNextReplay, HintMatchingEndpoints, RecoveryInv,
+  RecoveryRecordSpace
 
 THEOREM HintWorkloadRecoveryNextMatches ==
   \A q \in RecoveryRecordSpace, workload \in 0..3 :
     RecoveryInv /\ WorkloadRecoveryNext(workload) /\
       RecoveryCore(q) = RecoveryCore(r) =>
-      /\ Rehint(q.hint)!WorkloadRecoveryNext(workload)
+      /\ RehintWorkloadRecoveryNext(q.hint,workload)
       /\ \E t \in RecoveryRecordSpace : HintMatchingPair(q,t)
 BY SMT, HintWorkloadRecoveryNextReplay, WorkloadRecoveryStepRefines,
   HintMatchingEndpoints
   DEF HintWorkloadRecoveryNextReplay, WorkloadRecoveryStepRefines,
-    HintMatchingEndpoints, RecoveryInv, RecoveryRecordSpace
+  HintMatchingEndpoints, RecoveryInv, RecoveryRecordSpace
 
 THEOREM HintFiniteRecoveryNextMatches == \A q \in RecoveryRecordSpace :
   RecoveryInv /\ FiniteRecoveryNext /\ RecoveryCore(q) = RecoveryCore(r) =>
-    /\ Rehint(q.hint)!FiniteRecoveryNext
+    /\ RehintFiniteRecoveryNext(q.hint)
     /\ \E t \in RecoveryRecordSpace : HintMatchingPair(q,t)
 BY SMT, HintFiniteRecoveryNextReplay, FiniteRecoveryStepRefines,
   HintMatchingEndpoints
   DEF HintFiniteRecoveryNextReplay, FiniteRecoveryStepRefines,
-    HintMatchingEndpoints, RecoveryInv, RecoveryRecordSpace
+  HintMatchingEndpoints, RecoveryInv, RecoveryRecordSpace
 
 THEOREM HintWideRecoveryNextMatches ==
   \A q \in RecoveryRecordSpace, profile \in 0..3 :
     RecoveryInv /\ WideRecoveryNext(profile) /\ RecoveryCore(q) = RecoveryCore(r) =>
-      /\ Rehint(q.hint)!WideRecoveryNext(profile)
+      /\ RehintWideRecoveryNext(q.hint,profile)
       /\ \E t \in RecoveryRecordSpace : HintMatchingPair(q,t)
 BY SMT, HintWideRecoveryNextReplay, WideRecoveryStepRefines, HintMatchingEndpoints
   DEF HintWideRecoveryNextReplay, WideRecoveryStepRefines, HintMatchingEndpoints,
-    RecoveryInv, RecoveryRecordSpace
+  RecoveryInv, RecoveryRecordSpace
 
 THEOREM HintCrossHintRecoveryNextMatches == \A q \in RecoveryRecordSpace :
   RecoveryInv /\ CrossHintRecoveryNext /\ RecoveryCore(q) = RecoveryCore(r) =>
-    /\ Rehint(q.hint)!CrossHintRecoveryNext
+    /\ RehintCrossHintRecoveryNext(q.hint)
     /\ \E t \in RecoveryRecordSpace : HintMatchingPair(q,t)
 BY SMT, HintCrossHintRecoveryNextReplay, CrossHintRecoveryStepRefines,
   HintMatchingEndpoints
   DEF HintCrossHintRecoveryNextReplay, CrossHintRecoveryStepRefines,
-    HintMatchingEndpoints, RecoveryInv, RecoveryRecordSpace
+  HintMatchingEndpoints, RecoveryInv, RecoveryRecordSpace
 =============================================================================

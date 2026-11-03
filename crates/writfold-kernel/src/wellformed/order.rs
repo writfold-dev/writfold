@@ -42,7 +42,7 @@ proof fn bytes_order(a: Seq<u8>, b: Seq<u8>, c: Seq<u8>)
             assert(bytes_le(b.skip(1), a.skip(1)));
             assert(a.skip(1) == b.skip(1));
             assert(a.len() == b.len());
-            assert forall|i: int| 0 <= i < a.len() implies a[i] == b[i] by {
+            assert forall|i: int| 0 <= i < a.len() implies #[trigger] a[i] == b[i] by {
                 if i > 0 { assert(a.skip(1)[i - 1] == b.skip(1)[i - 1]); }
             }
         }
@@ -96,7 +96,7 @@ fn compare_text(left: &str, right: &str) -> (order: Ordering)
             a@ == encode_utf8(left@), b@ == encode_utf8(right@),
             bytes_le(a@, b@) == bytes_le(a@.skip(i as int), b@.skip(i as int)),
             bytes_le(b@, a@) == bytes_le(b@.skip(i as int), a@.skip(i as int)),
-            forall|j: int| 0 <= j < i ==> a@[j] == b@[j],
+            forall|j: int| 0 <= j < i ==> #[trigger] a@[j] == b@[j],
         decreases a.len() - i,
     {
         if a[i] < b[i] { return Ordering::Less; }

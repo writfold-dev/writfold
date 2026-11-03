@@ -1,5 +1,7 @@
 //! Public mathematical contracts for consumers of the finite-witness checker.
-pub use super::assessment_model::{assess_spec, reusable_spec, usable_for_spec, usable_for_snapshot_spec};
+pub use super::assessment_model::{
+    assess_spec, reusable_spec, usable_for_snapshot_spec, usable_for_spec,
+};
 use super::context::FrameView;
 use super::evaluation_model::{alternatives_spec, correction_input, evaluate_spec};
 use super::footprint::{EvaluationView, checked_value, push_unique_spec, statement_value};

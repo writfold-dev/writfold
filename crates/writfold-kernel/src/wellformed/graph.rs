@@ -1,10 +1,10 @@
 //! Supersession acyclicity uses the retained borrowed-key DFS.
 //! Reachability is the intersection of forward-closed sets, independent of DFS.
+use super::{index, order::Key};
+#[cfg(verus_keep_ghost)]
+use super::{index::visited, sort::sorted, spec::correction_wf_spec};
 use vstd::prelude::*;
 use writfold_domain::*;
-use super::{order::Key, index};
-#[cfg(verus_keep_ghost)]
-use super::{spec::correction_wf_spec, index::visited, sort::sorted};
 
 verus! {
 broadcast use vstd::seq_lib::group_seq_properties;
@@ -100,8 +100,10 @@ fn extend_frontier<'a>(kb: &'a KB, start: Key<'a>, current: Key<'a>, frontier: &
 {
     let rows = kb.corrections();
     let mut i = 0;
+    proof { assert(rows.deep_view().len() == rows.len()); }
     while i < rows.len()
         invariant i <= rows.len(), rows.deep_view() == kb@.corrections,
+            rows.len() == kb@.corrections.len(),
             reachable(kb@, start.deep_view(), current.deep_view()),
             frontier_reachable(kb@, start.deep_view(), frontier.deep_view()),
             !edge_prefix(kb@, i as int, current.deep_view(), start.deep_view()),
@@ -112,21 +114,23 @@ fn extend_frontier<'a>(kb: &'a KB, start: Key<'a>, current: Key<'a>, frontier: &
         let correction = &rows[i];
         if *correction.kind() == CorrectionKind::Supersede
             && (correction.target().id().as_str(), correction.target().rev().as_str()) == current {
-            if let Some(replacement) = correction.replacement() {
-                let next = (replacement.id().as_str(), replacement.rev().as_str());
-                proof {
-                    assert(row_edge(kb@.corrections[i as int], current.deep_view(), next.deep_view()));
-                    reachable_step(kb@, start.deep_view(), current.deep_view(), next.deep_view());
-                }
-                if next == start { return false; }
-                let ghost previous = frontier.deep_view();
-                frontier.push(next);
-                proof {
-                    assert(frontier.deep_view() =~= previous.push(next.deep_view()));
-                    assert forall|j: int| 0 <= j < frontier.len()
-                        implies reachable(kb@, start.deep_view(), frontier.deep_view()[j]) by {
-                        if j < previous.len() { assert(frontier.deep_view()[j] == previous[j]); }
-                    }
+            let Some(replacement) = correction.replacement() else {
+                i += 1;
+                continue;
+            };
+            let next = (replacement.id().as_str(), replacement.rev().as_str());
+            proof {
+                assert(row_edge(kb@.corrections[i as int], current.deep_view(), next.deep_view()));
+                reachable_step(kb@, start.deep_view(), current.deep_view(), next.deep_view());
+            }
+            if next == start { return false; }
+            let ghost previous = frontier.deep_view();
+            frontier.push(next);
+            proof {
+                assert(frontier.deep_view() =~= previous.push(next.deep_view()));
+                assert forall|j: int| 0 <= j < frontier.len()
+                    implies reachable(kb@, start.deep_view(), frontier.deep_view()[j]) by {
+                    if j < previous.len() { assert(frontier.deep_view()[j] == previous[j]); }
                 }
             }
         }
@@ -147,7 +151,7 @@ proof fn completed_search(kb: KBView, start: Vertex, seen: Set<Vertex>)
         assert(seen.contains(from));
     }
 }
-fn search_start<'a>(kb: &'a KB, start: Key<'a>, keys: &Vec<Key<'_>>, generation: usize, frontier: &mut Vec<Key<'a>>, seen: &mut Vec<usize>) -> (valid: bool)
+fn search_start<'a>(kb: &'a KB, start: Key<'a>, keys: &[Key<'_>], generation: usize, frontier: &mut Vec<Key<'a>>, seen: &mut Vec<usize>) -> (valid: bool)
     requires vertices(kb@).contains(start.deep_view()), sorted(keys.deep_view()),
         keys.deep_view().no_duplicates(), keys.deep_view().to_set() == vertices(kb@),
         old(seen).len() == keys.len(),
@@ -177,7 +181,9 @@ fn search_start<'a>(kb: &'a KB, start: Key<'a>, keys: &Vec<Key<'_>>, generation:
     {
         let ghost previous_seen = visited(keys.deep_view(), seen@, generation);
         let ghost previous_frontier = frontier.deep_view();
-        let current = frontier.pop().unwrap();
+        let last = frontier.len() - 1;
+        let current = frontier[last];
+        frontier.truncate(last);
         proof {
             assert(previous_frontier.len() > 0);
             assert(current.deep_view() == previous_frontier.last());
@@ -190,8 +196,11 @@ fn search_start<'a>(kb: &'a KB, start: Key<'a>, keys: &Vec<Key<'_>>, generation:
                 assert(frontier.deep_view()[j] == previous_frontier[j]);
             }
             assert(vertices(kb@).contains(current.deep_view()));
+            assert(keys.deep_view().contains(current.deep_view()));
         }
-        let at = index::find(keys, current).unwrap();
+        let Some(at) = index::find(keys, current) else {
+            return false;
+        };
         if seen[at] == generation {
             proof {
                 assert(previous_seen.contains(current.deep_view()));
@@ -217,7 +226,7 @@ fn search_start<'a>(kb: &'a KB, start: Key<'a>, keys: &Vec<Key<'_>>, generation:
     }
     true
 }
-pub(super) fn corrections_acyclic(kb: &KB, keys: &Vec<Key<'_>>) -> (valid: bool)
+pub(super) fn corrections_acyclic(kb: &KB, keys: &[Key<'_>]) -> (valid: bool)
     requires sorted(keys.deep_view()), keys.deep_view().no_duplicates(),
         keys.deep_view().to_set() == vertices(kb@),
         forall|i: int| 0 <= i < kb@.corrections.len() ==> correction_wf_spec(kb@.corrections[i], kb@),
@@ -227,8 +236,10 @@ pub(super) fn corrections_acyclic(kb: &KB, keys: &Vec<Key<'_>>) -> (valid: bool)
     let mut seen = index::empty_stamps(keys.len());
     let claims = kb.claims();
     let mut i = 0;
+    proof { assert(claims.deep_view().len() == claims.len()); }
     while i < claims.len()
         invariant i <= claims.len(), claims.deep_view() == kb@.claims, seen.len() == keys.len(),
+            claims.len() == kb@.claims.len(),
             forall|j: int| 0 <= j < seen.len() ==> seen@[j] <= i,
             sorted(keys.deep_view()), keys.deep_view().no_duplicates(), keys.deep_view().to_set() == vertices(kb@),
             forall|j: int| 0 <= j < kb@.corrections.len() ==> correction_wf_spec(kb@.corrections[j], kb@),

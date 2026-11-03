@@ -73,6 +73,42 @@ logical token. OS paths, monotonic clock origins/deadlines, operational snapshot
 handles, and production authority capabilities belong to their owning adapters
 or application/protocol layers, not invented baseline semantic records here.
 
+## Portable storage identities
+
+The revision-4 storage values are independent of live Omnigraph admission:
+
+| Type | Checked representation |
+| --- | --- |
+| `GraphId` | Omnigraph 0.14 registry name: 1–64 ASCII letters, digits or hyphens; exact lowercase `policies`, `healthz`, `openapi`, `graphs` are reserved |
+| `GraphCommitId` | Canonical uppercase ULID, or `hb1.<ULID>.<decimal slot 0..16383>.<ULID>`; no leading-zero slot, nonce alias, Git/Dolt cast or `HEAD` selector |
+| `SchemaEpochId`, `StorageProfileId` | Existing token grammar, in distinct nominal namespaces |
+| `SchemaDigest`, `QueryContractDigest`, `OmnigraphToolGeneration` | Distinct 64-lowercase-hex identities |
+| `NativeFormatVersion` | Checked positive `u64`; format compatibility is a separate decision |
+
+The graph grammars follow the pinned upstream
+[`graph_id.rs`](https://github.com/ModernRelay/omnigraph/blob/60bfd19db780fdff3a5178f959c1204143420114/crates/omnigraph-server/src/graph_id.rs)
+and [`graph_commit_id.rs`](https://github.com/ModernRelay/omnigraph/blob/60bfd19db780fdff3a5178f959c1204143420114/crates/omnigraph-core/src/graph_commit_id.rs).
+After validation, commit IDs remain opaque exact identities; the reader never
+substitutes a nonce for its addressed commit. No upstream engine dependency is
+linked or embedded to parse these values.
+
+`SchemaEpoch` binds epoch ID, schema digest and query digest. `OmnigraphPin`
+binds KB, graph, commit, epoch, storage profile, native format and producing
+tool generation. `StoragePin::LegacyDolt` carries only historical KB/commit
+identity; it cannot enter the normal Omnigraph read path. Paths, credentials,
+process IDs and live writer ownership are absent from portable identity.
+An `OmnigraphToolGeneration` identifies an externally admitted tool/runtime
+manifest; constructing its digest does not admit that runtime.
+
+`writfold_protocol::storage::admit_read` compares every expected/observed pin
+field, the declared reader profile, actual reader generation and exact readable
+format inventory. A newer admitted reader may consume an older producer's
+format; producer and reader identity are intentionally different. Empty or
+duplicate format inventories are refused, and a gap in the inventory is not
+filled by treating it as a range. Successful matching returns a borrow of the
+expected pin, not an authenticated observation, retained lease or IO capability.
+
+
 ## Semantic integers versus runtime quantities
 
 Every reference Python `int` field is `Integer`, a private `num_bigint::BigInt`
@@ -152,6 +188,8 @@ flowchart LR
   Raw --> Typed["Checked identities and typed records"]
   Typed --> Semantic["Kernel judgments on candidates"]
   Typed --> Crypto["Exact signed operation and supplied policy"]
+  Typed --> Pins["Exact storage pin and declared reader compatibility"]
+  Pins --> Consistent["Borrowed matching pin or typed refusal"]
   Crypto --> Bound["Supplied-input authorization"]
   Bound --> Live["Store must establish live-state authority"]
 ```

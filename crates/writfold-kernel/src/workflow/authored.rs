@@ -7,23 +7,23 @@ mod model;
 mod problems;
 mod replacement;
 
+use super::actor_present;
+use gates::material_present;
 pub use gates::{authored_gate_passes, authored_gate_valid, authored_ready};
 #[cfg(verus_keep_ghost)]
 pub use gates::{authored_gate_passes_spec, authored_gate_valid_spec, authored_ready_spec};
+use landing::visit_landing_problems;
 #[cfg(verus_keep_ghost)]
 pub use model::*;
 pub use problems::AuthoredProblem;
+use problems::ProblemReducer;
 #[cfg(verus_keep_ghost)]
 pub use problems::problem_text;
 pub use replacement::authored_supersession_valid;
 #[cfg(verus_keep_ghost)]
 pub use replacement::authored_supersession_valid_spec;
-use gates::material_present;
-use landing::visit_landing_problems;
-use problems::ProblemReducer;
-use super::actor_present;
-use writfold_domain::{Integer, *};
 use vstd::prelude::*;
+use writfold_domain::{Integer, *};
 
 verus! {
 
@@ -93,6 +93,7 @@ fn candidate_decision(
     ensures problems.invariant(), problems.collect == collect,
         problems.trace@ == authored_candidate_problems_spec(proposal@, target, now@),
 {
+    proof { broadcast use vstd::seq_lib::group_seq_properties; }
     use AuthoredStatus::*;
     let mut problems = ProblemReducer::new(collect);
     let decided = matches!(target, Accepted | Landing | Applied | Verified);
@@ -126,6 +127,7 @@ fn candidate_decision(
     if target == Regressed && !writfold_domain::text::nonblank(proposal.regression_note()) {
         problems.emit(AuthoredProblem::Regression);
     }
+    proof { assert(problems.trace@ =~= authored_candidate_problems_spec(proposal@, target, now@)); }
     problems
 }
 

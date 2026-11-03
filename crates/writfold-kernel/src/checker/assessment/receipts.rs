@@ -1,8 +1,8 @@
+#[cfg(verus_keep_ghost)]
+use super::super::assessment_model::*;
 use super::super::context::Frame;
 use super::super::footprint::Evaluation;
 use super::super::input::Input;
-#[cfg(verus_keep_ghost)]
-use super::super::assessment_model::*;
 #[cfg(verus_keep_ghost)]
 use super::super::input::dependency_value;
 use vstd::prelude::*;
@@ -12,11 +12,20 @@ verus! {
 
 fn matching_dependencies(inputs: &[Input<'_>], dependencies: &[Dependency]) -> (matches: bool)
     ensures matches == dependencies_match(inputs.deep_view(), dependencies.deep_view()),
+        matches == (inputs.deep_view().map_values(|input: super::super::input::InputView| dependency_value(input))
+            == dependencies.deep_view()),
 {
+    proof {
+        assert(inputs.deep_view().len() == inputs.len());
+        assert(dependencies.deep_view().len() == dependencies.len());
+        dependencies_match_projection(inputs.deep_view(), dependencies.deep_view());
+    }
     if inputs.len() != dependencies.len() { return false; }
     let mut index = 0;
     while index < inputs.len()
         invariant index <= inputs.len(), inputs.len() == dependencies.len(),
+            inputs.deep_view().len() == inputs.len(),
+            dependencies.deep_view().len() == dependencies.len(),
             forall|i: int| 0 <= i < index ==> dependency_value(inputs.deep_view()[i]) == dependencies.deep_view()[i],
         decreases inputs.len() - index,
     {
@@ -45,8 +54,10 @@ pub(super) fn reusable_with(
 {
     if !current(context, reference, receipt) { return false; }
     let mut index = 0;
+    proof { assert(accepted.deep_view().len() == accepted.len()); }
     while index < accepted.len()
         invariant index <= accepted.len(), receipt_current(context@, reference@, receipt@),
+            accepted.deep_view().len() == accepted.len(),
             forall|i: int| 0 <= i < index ==> !accepted_matches(accepted.deep_view()[i], receipt@),
         decreases accepted.len() - index,
     {
@@ -67,8 +78,10 @@ pub(super) fn validated(
 {
     let receipts = kb.receipts();
     let mut index = 0;
+    proof { assert(receipts.deep_view().len() == receipts.len()); }
     while index < receipts.len()
         invariant index <= receipts.len(), receipts.deep_view() == kb@.receipts,
+            receipts.len() == kb@.receipts.len(),
             forall|i: int| 0 <= i < index ==> !reusable_with_spec(context@, reference@, kb@.receipts[i], accepted.deep_view()),
         decreases receipts.len() - index,
     {

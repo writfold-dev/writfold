@@ -44,6 +44,77 @@ There is no domain fallback. Approval schema/plan/key must match the operation. 
 
 WF-AUTH-001 preserves the observed pinned Python acceptance of an identity-point public key (`01` plus 31 zero bytes) and identity-R/zero-S signature (`01` plus 63 zero bytes) for arbitrary messages. Dalek's ordinary verification result is retained for historical inspection and explicitly distinguished from strict/strong acceptance. Weak/non-strict results cannot mint current authority. New bootstrap rejects weak keys. No automatic re-signing, rewriting, restoration of authority or re-anchoring is supplied. The retained vectors exercise this named compatibility case and ordinary strong-key signatures; they are not a universal equivalence proof for every malformed point/scalar accepted by every OpenSSL version.
 
+## Storage-aware operations and approvals
+
+`storage_operation::StorageOperation::{prepare, decode}` binds an unchanged,
+checked **workflow-3** operation to an explicit storage transition. The closed
+schema-1 envelope has exactly `namespace`, `schema`, `id`, `operation`, `base`,
+`target` and `mapping`; its namespace is `writfold-storage-operation`.
+
+The nullable base contains exactly a completed `release` and versioned storage
+`pin`. Its presence/release must equal the embedded operation's base. The target
+binds Omnigraph backend, KB, graph, epoch/schema/query identities, storage profile,
+native format and producing tool generation. It deliberately contains **no
+candidate native commit**, avoiding a circular approval of a commit derived
+from its own signed input.
+
+Base and target KB identities must match. Legacy import, or a changed
+graph/epoch/schema/query/profile/native-format binding, requires an explicit
+mapping digest. A producer-only upgrade does not itself require a data mapping.
+A bootstrap has neither base nor mapping. These are structural binding rules;
+the digest does not prove the mapping correct or establish migration authority.
+
+The exact new byte domains are:
+
+- Outer identity: SHA256 of `writfold-storage-plan-v1` + NUL + canonical envelope
+  **without** its `id` field.
+- Approval message: `writfold-storage-operation-v1` + NUL + complete canonical
+  envelope **including** the checked outer ID.
+- Detached approval: namespace `writfold-storage-approval`, integer schema 1,
+  exactly `namespace`, `schema`, `plan`, `key` and `signature`.
+
+`ApprovalSigningKey::sign_storage` and
+`signatures::storage::verify_storage_current` reuse current-policy,
+all-context-use, actor and toolchain admission. They additionally bind target KB
+to policy KB and the approval to the new outer ID. Weak keys refuse and only the
+new message receives strict Ed25519 verification. Relabelling a historical
+approval cannot authorize this wrapper. `SuppliedStorageAuthorization` borrows
+the exact supplied inputs and remains incapable of publication or backend IO.
+
+Preparation/decoding retain one canonical outer signing buffer, with the
+approval prefix included in the byte budget. The encoder appends the existing
+canonical nested operation without recursively cloning or serializing an
+untrusted JSON tree. Decoding moves subtrees into iterative-drop owners.
+Complete-envelope depth/entry/node budgets still apply.
+
+```mermaid
+flowchart LR
+  W["Checked workflow-3 operation"] --> S["Exact base, target and mapping"]
+  S --> P["Immutable storage operation and new-domain ID"]
+  P --> A["Strict signature and supplied-policy binding"]
+  A --> C["SuppliedStorageAuthorization"]
+  C --> L["Store must revalidate live state and retained closure"]
+```
+
+`fixtures/storage-operation/` retains independent canonical/signature goldens
+for bootstrap, native selection and explicit legacy selection. The sealed
+`storage-approval-smoke-20261103-001` campaign executed a static musl consumer
+with `PATH=/nonexistent`: 35 scenarios covered exact bytes, real signing and
+verification, old-domain transplant refusal, target/base/mapping tampering,
+policy/actor/toolchain binding and RPC profile selection. Its permission-only
+post-build failure and continuation remain retained. This is API component
+evidence, not a release-manifest implementation, a working store, or full WF03.
+
+`scripts/writfold_storage_fixtures.py --verify` independently regenerates all
+nine storage vector payloads and checks their exact bytes and provenance.
+Run it through the admitted offline Compose image. Its manifest records the
+generator, immutable input vectors, Python/cryptography versions and output
+hashes; the signing seed is only the public `00..1f` test seed. Generation
+refuses differing existing files rather than silently replacing a golden.
+The synthetic native-format/profile values are not an admitted engine profile.
+
+
+
 ## Reproducible public fixtures
 
 `crates/writfold-wire/fixtures/signatures/` contains actual Python-generated normal schema-2/schema-3 admission and selection operations, approvals, exact signed messages, wrong-domain signatures, and the named weak-key historical vectors. The deterministic seed is the public bytes `00` through `1f`. `PUBLIC-TEST-ONLY.pem` is a **published synthetic test key**, never an operational credential. These are codec/crypto fixtures, not evidence that their synthetic knowledge records form publishable semantic plans.

@@ -3,6 +3,8 @@ use writfold_domain::*;
 use writfold_kernel::{checker::*, time::*, wellformed::*};
 
 type TestResult = Result<(), Box<dyn Error>>;
+#[path = "core/first_match.rs"]
+mod first_match;
 #[path = "core/fixture.rs"]
 mod fixture;
 use fixture::fixture;

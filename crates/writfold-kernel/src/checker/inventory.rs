@@ -40,6 +40,14 @@ fn members_match(formula: &Formula, members: &[String], predicate: &str) -> (mat
             || !atom.predicate().as_str().eq(predicate) || !arguments.is_empty() {
             return false;
         }
+        proof {
+            assert(arguments.deep_view() =~= Seq::<Seq<char>>::empty());
+            assert(atom@ == (AtomView {
+                subject: members.deep_view()[index as int], predicate: predicate@, args: Seq::empty(),
+            }));
+            assert((current@ == member_formula_spec(members.deep_view().skip(index as int), predicate@))
+                == ((**tail)@ == member_formula_spec(members.deep_view().skip(index as int + 1), predicate@)));
+        }
         current = tail;
         index += 1;
     }
@@ -50,6 +58,7 @@ fn members_match(formula: &Formula, members: &[String], predicate: &str) -> (mat
 fn inventory_matches(formula: &Formula, ident: &EnumerationId) -> (matches: bool)
     ensures matches == (formula@ == (FormulaView::Inventory { enumeration: ident@ })),
 {
+    proof { reveal_with_fuel(<Formula as View>::view, 2); }
     match formula {
         Formula::Inventory { enumeration } => enumeration == ident,
         _ => false,
@@ -59,6 +68,7 @@ fn inventory_matches(formula: &Formula, ident: &EnumerationId) -> (matches: bool
 pub(super) fn matches_expected(formula: &Formula, enumeration: &Enumeration, predicate: Option<&str>) -> (matches: bool)
     ensures matches == (formula@ == inventory_expected(enumeration@, predicate.deep_view())),
 {
+    proof { reveal_with_fuel(<Formula as View>::view, 2); }
     match predicate {
         None => inventory_matches(formula, enumeration.id()),
         Some(predicate) => match formula {

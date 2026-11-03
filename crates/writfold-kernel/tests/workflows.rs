@@ -321,18 +321,30 @@ fn control_whitespace_is_not_authored_actor_or_gate_text() -> TestResult {
     use writfold_kernel::workflow::authored_gate_valid;
     for whitespace in ["\u{1c}", "\u{1d}", "\u{1e}", "\u{1f}"] {
         let actor = AuthoredGateDefinition::new(
-            "gate".parse()?, "claim".into(), "check".into(), GateWhen::Land,
-            Some(whitespace.parse()?), None,
+            "gate".parse()?,
+            "claim".into(),
+            "check".into(),
+            GateWhen::Land,
+            Some(whitespace.parse()?),
+            None,
         );
         assert!(!authored_gate_valid(&actor), "blank actor {whitespace:?}");
         let claim = AuthoredGateDefinition::new(
-            "gate".parse()?, whitespace.into(), "check".into(), GateWhen::Land,
-            Some("reviewer".parse()?), None,
+            "gate".parse()?,
+            whitespace.into(),
+            "check".into(),
+            GateWhen::Land,
+            Some("reviewer".parse()?),
+            None,
         );
         assert!(!authored_gate_valid(&claim), "blank claim {whitespace:?}");
         let check = AuthoredGateDefinition::new(
-            "gate".parse()?, "claim".into(), whitespace.into(), GateWhen::Land,
-            Some("reviewer".parse()?), None,
+            "gate".parse()?,
+            "claim".into(),
+            whitespace.into(),
+            GateWhen::Land,
+            Some("reviewer".parse()?),
+            None,
         );
         assert!(!authored_gate_valid(&check), "blank check {whitespace:?}");
     }

@@ -1,9 +1,9 @@
 //! Mathematical freshness, with inclusive expiry and no machine-integer narrowing.
 use std::ops::Add;
 use vstd::prelude::*;
-use writfold_domain::{Freshness, Integer, Ttl};
 #[cfg(verus_keep_ghost)]
 use writfold_domain::TtlView;
+use writfold_domain::{Freshness, Integer, Ttl};
 
 verus! {
 

@@ -330,25 +330,69 @@ THEOREM ChainShape == \A i \in Releases :
 <1>5. CASE i # 0 /\ i # 2 /\ i % 2 # 1
   BY SMT, <1>5 DEF Chain, ChainLength, Releases
 <1> QED BY <1>2, <1>3, <1>4, <1>5
+THEOREM AppendMembers == \A s \in Seq(Releases), i \in Releases :
+  Members(Append(s,i)) = Members(s) \cup {i}
+BY SMT DEF Members
+THEOREM ChainLengthExtension == \A i \in Inputs :
+  ChainLength(i) = ChainLength(BaseOf(i)) + 1
+BY SMT DEF Inputs, ChainLength, BaseOf
+THEOREM ChainLast == \A i \in Inputs : Chain(i)[ChainLength(i)] = i
+BY SMT, ChainShape, InputShape
+  DEF ChainShape, InputShape, Chain, ChainLength, Inputs, Releases
+THEOREM ChainPrefixIndices == \A i \in Inputs :
+  \A n \in 1..ChainLength(BaseOf(i)) : Chain(i)[n] = Chain(BaseOf(i))[n]
+<1>1. ASSUME NEW i \in Inputs, NEW n \in 1..ChainLength(BaseOf(i))
+      PROVE Chain(i)[n]=Chain(BaseOf(i))[n]
+  <2> USE i \in Inputs, n \in 1..ChainLength(BaseOf(i))
+  <2>1. CASE i \in {1,2,4}
+    BY SMT, <2>1 DEF Chain, ChainLength, BaseOf, Inputs
+  <2>2. CASE i \notin {1,2,4} /\ i % 2=1
+    <3>1. i >= 3 /\ BaseOf(i)=i-2 /\ (i-2) % 2=1 /\
+      n \in 1..((i+1) \div 2) /\ n \in 1..((i+3) \div 2)
+      BY SMT, <2>2 DEF Inputs, BaseOf, ChainLength
+    <3>2. QED BY SMT, <2>2, <3>1 DEF Chain, Inputs
+  <2>3. CASE i \notin {1,2,4} /\ i % 2 # 1
+    <3>1. i >= 6 /\ BaseOf(i)=i-2 /\ (i-2) % 2=0 /\
+      n \in 1..((i-2) \div 2) /\ n \in 1..(i \div 2)
+      BY SMT, <2>3 DEF Inputs, BaseOf, ChainLength
+    <3>2. QED BY SMT, <2>3, <3>1 DEF Chain, Inputs
+  <2>4. QED BY <2>1, <2>2, <2>3
+<1>2. QED BY <1>1
+THEOREM ChainMemberBound == \A i \in Releases :
+  \A j \in Members(Chain(i)) : j <= i
+BY SMT, ChainShape DEF ChainShape, Chain, ChainLength, Members, Releases
+THEOREM ChainAppend == \A i \in Inputs : Chain(i)=Append(Chain(BaseOf(i)),i)
+<1>1. ASSUME NEW i \in Inputs PROVE Chain(i)=Append(Chain(BaseOf(i)),i)
+  <2>1. i \in Releases /\ BaseOf(i) \in Releases
+    BY <1>1, InputShape DEF InputShape
+  <2>2. Chain(i) \in Seq(Releases) /\ Chain(BaseOf(i)) \in Seq(Releases)
+    BY <2>1, ChainShape DEF ChainShape
+  <2>3. Len(Chain(i))=Len(Chain(BaseOf(i)))+1
+    BY SMT, <1>1, <2>1, ChainShape, ChainLengthExtension
+      DEF ChainShape, ChainLengthExtension
+  <2>4. \A n \in 1..Len(Chain(BaseOf(i))) :
+    Chain(i)[n]=Chain(BaseOf(i))[n]
+    BY SMT, <1>1, <2>1, ChainShape, ChainPrefixIndices
+      DEF ChainShape, ChainPrefixIndices
+  <2>5. Chain(i)[Len(Chain(i))]=i
+    BY SMT, <1>1, <2>1, ChainShape, ChainLast DEF ChainShape, ChainLast
+  <2>6. QED BY SMT, <2>1, <2>2, <2>3, <2>4, <2>5
+<1>2. QED BY <1>1
 THEOREM ChainExtension == \A i \in Inputs :
   /\ Chain(i)=Append(Chain(BaseOf(i)),i)
   /\ Members(Chain(i))=Members(Chain(BaseOf(i))) \cup {i}
   /\ BaseOf(i)<i /\ i \notin Members(Chain(BaseOf(i)))
-<1>1. SUFFICES ASSUME NEW i \in Inputs
-      PROVE /\ Chain(i)=Append(Chain(BaseOf(i)),i)
-            /\ Members(Chain(i))=Members(Chain(BaseOf(i))) \cup {i}
-            /\ BaseOf(i)<i /\ i \notin Members(Chain(BaseOf(i)))
-  OBVIOUS
-<1>2. CASE i \in {1,2,4}
-  BY SMT, <1>2, ChainShape, InputShape DEF ChainShape, InputShape,
-    Chain, ChainLength, BaseOf, Members, Inputs, Releases
-<1>3. CASE i \notin {1,2,4} /\ i % 2=1
-  BY SMT, <1>3, ChainShape, InputShape DEF ChainShape, InputShape,
-    Chain, ChainLength, BaseOf, Members, Inputs, Releases
-<1>4. CASE i \notin {1,2,4} /\ i % 2 # 1
-  BY SMT, <1>4, ChainShape, InputShape DEF ChainShape, InputShape,
-    Chain, ChainLength, BaseOf, Members, Inputs, Releases
-<1> QED BY <1>2, <1>3, <1>4
+<1>1. \A i \in Inputs :
+  Chain(i)=Append(Chain(BaseOf(i)),i)
+  BY ChainAppend DEF ChainAppend
+<1>2. \A i \in Inputs :
+  Members(Chain(i))=Members(Chain(BaseOf(i))) \cup {i}
+  BY SMT, <1>1, AppendMembers, ChainShape, InputShape
+    DEF AppendMembers, ChainShape, InputShape
+<1>3. \A i \in Inputs : BaseOf(i)<i /\ i \notin Members(Chain(BaseOf(i)))
+  BY SMT, InputShape, ChainMemberBound
+    DEF InputShape, ChainMemberBound, Inputs, Releases
+<1>4. QED BY <1>1, <1>2, <1>3
 THEOREM CorrectionExtension == \A i \in Inputs : Corrections(i)=
   Corrections(BaseOf(i)) \cup (IF Kind(i)="correction" THEN {i} \cap {3,6} ELSE {})
 BY SMT, ChainExtension DEF ChainExtension, Corrections, Kind
@@ -359,6 +403,29 @@ THEOREM RecordTyped == \A i \in Releases : Record(i) \in
     policy : {"legacy-policy","current-policy"},
     source : {"legacy-source","current-source"}, use : Contexts]]]
 BY SMT, ChainShape DEF ChainShape, Record, SchemaOf, Corrections, Selected, Family, Claims
+THEOREM HistoryRecordReplacementTyped == \A h,i \in Releases : \A retained,records :
+  HistoryTyped(h,retained,records) =>
+    HistoryTyped(i,retained \cup {i},[records EXCEPT ![i]=Record(i)])
+<1>1. ASSUME NEW h \in Releases, NEW i \in Releases, NEW retained, NEW records,
+        HistoryTyped(h,retained,records)
+      PROVE HistoryTyped(i,retained \cup {i},[records EXCEPT ![i]=Record(i)])
+  <2> USE h \in Releases, i \in Releases, HistoryTyped(h,retained,records)
+  <2> DEFINE R == [snapshot : Releases, schema : {2,3}, history : Seq(Releases),
+    corrections : SUBSET {3,6}, selected : SUBSET Claims,
+    contexts : [Contexts -> [id : Contexts, snapshot : Releases, time : Releases,
+      policy : {"legacy-policy","current-policy"},
+      source : {"legacy-source","current-source"}, use : Contexts]]]
+  <2>1. records \in [Releases -> R] /\ Record(i) \in R
+    BY RecordTyped DEF RecordTyped, HistoryTyped, R
+  <2>2. [records EXCEPT ![i]=Record(i)] =
+    [j \in Releases |-> IF j=i THEN Record(i) ELSE records[j]]
+    BY SMT, <2>1
+  <2>3. \A j \in Releases : (IF j=i THEN Record(i) ELSE records[j]) \in R
+    BY SMT, <2>1
+  <2>4. [records EXCEPT ![i]=Record(i)] \in [Releases -> R]
+    BY SMT, <2>2, <2>3
+  <2>5. QED BY SMT, <2>4 DEF HistoryTyped, R
+<1>2. QED BY <1>1
 THEOREM AccountingTyped == \A v \in {0,1} :
   /\ DOMAIN Accounting(v)=Files
   /\ (\A f \in Files : Accounting(v)[f] \in
@@ -431,8 +498,52 @@ THEOREM ForwardSelectionFrame == \A w \in Writers : LET i==m.request[w] IN
   /\ (\A c \in Contexts : m'.records[i].contexts[c]=
        [m.records[m.head].contexts[c] EXCEPT !.snapshot=i, !.time=i])
   /\ (\A c \in Contexts : m'.records[i].contexts[c].time >= m.records[m.head].contexts[c].time)
-BY SMT, InputShape DEF InputShape, Apply, Candidate, Kind, Inv, TypeOK,
-  StateShape, HistoryTypes, HistoryTyped, HistorySound, HistoryValid, Record, Family
+<1>1. ASSUME NEW w \in Writers, Inv, Apply(w),
+        Kind(m.request[w]) \in {"selection","restoration"}
+      PROVE /\ m'.records[m.request[w]].history=Append(m.records[m.head].history,m.request[w])
+            /\ m'.records[m.request[w]].corrections=m.records[m.head].corrections
+            /\ m'.records[m.request[w]].selected=m.records[0].selected
+            /\ (\A c \in Contexts : m'.records[m.request[w]].contexts[c]=
+                 [m.records[m.head].contexts[c] EXCEPT !.snapshot=m.request[w], !.time=m.request[w]])
+            /\ (\A c \in Contexts : m'.records[m.request[w]].contexts[c].time >=
+                 m.records[m.head].contexts[c].time)
+  <2> USE Inv, Apply(w), Kind(m.request[w]) \in {"selection","restoration"}
+  <2>1. m.request[w] \in Inputs /\ m.head=BaseOf(m.request[w]) /\
+    m'.records[m.request[w]]=Candidate(m.request[w])
+    BY SMT, <1>1, InputShape DEF InputShape, Inv, TypeOK, StateShape,
+      HistoryTypes, HistoryTyped, Apply
+  <2>2. m.records[m.head]=Record(m.head) /\ m.head<m.request[w]
+    BY SMT, <1>1, <2>1, InputShape
+      DEF InputShape, Inv, HistorySound, HistoryValid
+  <2>3. \A c \in Contexts : m.records[m.head].contexts[c].time=m.head
+    BY SMT, <2>2 DEF Record, Family
+  <2>4. \A c \in Contexts :
+    Candidate(m.request[w]).contexts[c].time=m.request[w]
+    BY SMT, <1>1, <2>2 DEF Candidate, Record, Family
+  <2>5. m.head \in Nat /\ m.request[w] \in Nat
+    BY SMT, <2>1, InputShape DEF InputShape, Inputs, Releases
+  <2>6. m.records[m.head].corrections \subseteq {3,6}
+    BY SMT DEF Inv, TypeOK, HistoryTypes, HistoryTyped
+  <2>7. m'.records[m.request[w]].history=Append(m.records[m.head].history,m.request[w])
+    BY SMT, <2>1 DEF Candidate
+  <2>8. m'.records[m.request[w]].corrections=m.records[m.head].corrections
+    <3>1. Kind(m.request[w]) # "correction"
+      BY SMT
+    <3>2. m.records[m.head].corrections=Corrections(m.head)
+      BY SMT, <2>2 DEF Record
+    <3>3. Corrections(m.head) \cup {} = Corrections(m.head)
+      BY SMT DEF Corrections
+    <3>4. QED BY SMT, <2>1, <3>1, <3>2, <3>3 DEF Candidate
+  <2>9. m'.records[m.request[w]].selected=m.records[0].selected
+    BY SMT, <2>1 DEF Candidate
+  <2>10. \A c \in Contexts : m'.records[m.request[w]].contexts[c]=
+    [m.records[m.head].contexts[c] EXCEPT !.snapshot=m.request[w], !.time=m.request[w]]
+    BY SMT, <2>1 DEF Candidate
+  <2>11. \A c \in Contexts : m'.records[m.request[w]].contexts[c].time >=
+    m.records[m.head].contexts[c].time
+    BY SMT, <2>1, <2>2, <2>3, <2>4, <2>5
+  <2>12. QED BY <2>7, <2>8, <2>9, <2>10, <2>11
+<1>2. QED BY <1>1
 THEOREM HistoricalReadPreserves == \A w \in Writers, i \in Releases : Inv /\ HistoricalRead(w,i) => Inv'
 <1>1. \A w \in Writers, i \in Releases : Inv /\ HistoricalRead(w,i) => TypeOK'
   BY SMT DEF Inv, TypeOK, StateShape, HistoryTypes, InventoryTypes, StagingTypes, ControlTypes, HistoricalRead, ControlTyped, Phases, Results
@@ -479,13 +590,65 @@ THEOREM RetainIntentPreserves == \A w \in Writers : Inv /\ RetainIntent(w) => In
 <1>2. \A w \in Writers : Inv /\ RetainIntent(w) => HistorySound'
   BY SMT DEF Inv, TypeOK, StateShape, HistorySound, RetainIntent
 <1>3. \A w \in Writers : Inv /\ RetainIntent(w) => StageSound'
-  BY SMT, InputShape DEF InputShape, Inv, TypeOK, StateShape, StageSound, RetainIntent, StageValid, StageReady, CompleteAccounting, BoundIntent, StagingTypes, StagingTyped
+  <2>1. \A w \in Writers : Inv /\ RetainIntent(w) =>
+    \A o \in Ops : m.intent[o] # 0 => m'.intent[o]=m.intent[o]
+    BY SMT, InputShape DEF InputShape, Inv, TypeOK, StateShape,
+      StagingTypes, StagingTyped, RetainIntent
+  <2>2. \A w \in Writers : Inv /\ RetainIntent(w) =>
+    \A o \in Ops : m'.intent[o] # 0 => OpOf(m'.intent[o])=o
+    BY SMT, InputShape DEF InputShape, Inv, TypeOK, StateShape,
+      StagingTypes, StagingTyped, StageSound, StageValid, RetainIntent
+  <2>3. QED BY SMT, <2>1, <2>2, InputShape
+    DEF InputShape, Inv, TypeOK, StateShape, StageSound, StageValid,
+      RetainIntent, StagingTypes, StagingTyped, Inputs
 <1>4. \A w \in Writers : Inv /\ RetainIntent(w) => CompletionSound'
   BY SMT DEF Inv, TypeOK, StateShape, CompletionSound, RetainIntent
 <1> QED BY <1>1, <1>2, <1>3, <1>4 DEF Inv
 THEOREM StagePreserves == \A w \in Writers : Inv /\ Stage(w) => Inv'
 <1>1. \A w \in Writers : Inv /\ Stage(w) => TypeOK'
-  BY SMT, AccountingTyped, InputShape DEF AccountingTyped, InputShape, Inv, TypeOK, StateShape, HistoryTypes, InventoryTypes, StagingTypes, ControlTypes, Stage, ControlTyped, Phases, Results, StagingTyped, InventoryTyped, Accounting, InventoryOf
+  <2>1. \A w \in Writers : Inv /\ Stage(w) => StateShape' /\ HistoryTypes'
+    BY SMT DEF Inv, TypeOK, StateShape, HistoryTypes, Stage
+  <2>2. \A w \in Writers : Inv /\ Stage(w) => InventoryTypes'
+    <3>1. ASSUME NEW w \in Writers, Inv, Stage(w) PROVE InventoryTypes'
+      <4> USE Inv, Stage(w)
+      <4>1. m.request[w] \in Inputs /\ InventoryOf(m.request[w]) \in {0,1}
+        BY SMT, InputShape DEF InputShape, Stage
+      <4>2. InventoryTyped(m.inventory,m.original,m.byteRoots,m.accounts)
+        BY DEF Inv, TypeOK, InventoryTypes
+      <4>3. m'.inventory=m.inventory /\ m'.original=m.original /\
+        m'.byteRoots=m.byteRoots \cup {InventoryOf(m.request[w])} /\
+        m'.accounts=[m.accounts EXCEPT ![m.request[w]]=Accounting(InventoryOf(m.request[w]))]
+        BY SMT, <4>1, <4>2 DEF Inv, TypeOK, StateShape, InventoryTyped, Stage
+      <4>4. DOMAIN Accounting(InventoryOf(m.request[w]))=Files /\
+        Accounting(InventoryOf(m.request[w])) =
+          [f \in Files |-> Accounting(InventoryOf(m.request[w]))[f]]
+        BY SMT DEF Accounting
+      <4>5. \A f \in Files : Accounting(InventoryOf(m.request[w]))[f] \in
+        [bytes : Files \X {0,1},
+         disposition : {"imported","preserved","quarantined","rejected"},
+         reason : {"unapproved-source-only","opaque-byte-preservation",
+                   "untrusted-log-not-evidence","legacy-accepted-is-not-approval"}]
+        BY <4>1, AccountingTyped DEF AccountingTyped
+      <4>6. DOMAIN m'.accounts=Inputs /\
+        m'.accounts=[i \in Inputs |-> m'.accounts[i]]
+        BY SMT, <4>1, <4>2, <4>3 DEF InventoryTyped
+      <4>7. \A i \in Inputs :
+        /\ DOMAIN m'.accounts[i] \subseteq Files
+        /\ m'.accounts[i]=[f \in DOMAIN m'.accounts[i] |-> m'.accounts[i][f]]
+        /\ (\A f \in DOMAIN m'.accounts[i] : m'.accounts[i][f] \in
+             [bytes : Files \X {0,1},
+              disposition : {"imported","preserved","quarantined","rejected"},
+              reason : {"unapproved-source-only","opaque-byte-preservation",
+                        "untrusted-log-not-evidence","legacy-accepted-is-not-approval"}])
+        BY SMT, <4>1, <4>2, <4>3, <4>4, <4>5 DEF InventoryTyped
+      <4>8. QED BY SMT, <4>1, <4>2, <4>3, <4>6, <4>7
+        DEF InventoryTypes, InventoryTyped
+    <3>2. QED BY <3>1
+  <2>3. \A w \in Writers : Inv /\ Stage(w) => StagingTypes'
+    BY SMT DEF Inv, TypeOK, StateShape, StagingTypes, StagingTyped, Stage
+  <2>4. \A w \in Writers : Inv /\ Stage(w) => ControlTypes'
+    BY SMT DEF Inv, TypeOK, StateShape, ControlTypes, ControlTyped, Stage, Phases
+  <2>5. QED BY <2>1, <2>2, <2>3, <2>4 DEF TypeOK
 <1>2. \A w \in Writers : Inv /\ Stage(w) => HistorySound'
   BY SMT DEF Inv, TypeOK, StateShape, HistorySound, Stage
 <1>3. \A w \in Writers : Inv /\ Stage(w) => StageSound'
@@ -515,9 +678,58 @@ THEOREM VerifyStagePreserves == \A w \in Writers : Inv /\ VerifyStage(w) => Inv'
 <1> QED BY <1>1, <1>2, <1>3, <1>4 DEF Inv
 THEOREM ApplyPreserves == \A w \in Writers : Inv /\ Apply(w) => Inv'
 <1>1. \A w \in Writers : Inv /\ Apply(w) => TypeOK'
-  BY SMT, RecordTyped, CandidatePreservesHistory, InputShape DEF RecordTyped, CandidatePreservesHistory, InputShape, Inv, TypeOK, StateShape, HistoryTypes, InventoryTypes, StagingTypes, ControlTypes, Apply, ControlTyped, Phases, Results, StagingTyped, HistoryTyped
+  <2>1. \A w \in Writers : Inv /\ Apply(w) =>
+    Candidate(m.request[w])=Record(m.request[w]) /\ m.request[w] \in Releases
+    BY SMT, CandidatePreservesHistory, InputShape
+      DEF CandidatePreservesHistory, InputShape, Apply
+  <2>2. \A w \in Writers : Inv /\ Apply(w) => StateShape' /\ InventoryTypes'
+    BY SMT DEF Inv, TypeOK, StateShape, InventoryTypes, Apply
+  <2>3. \A w \in Writers : Inv /\ Apply(w) => HistoryTypes'
+    <3>1. ASSUME NEW w \in Writers, Inv, Apply(w) PROVE HistoryTypes'
+      <4> USE Inv, Apply(w)
+      <4>1. m.request[w] \in Releases /\ Candidate(m.request[w])=Record(m.request[w])
+        BY <2>1
+      <4>2. HistoryTyped(m.head,m.retained,m.records)
+        BY DEF Inv, TypeOK, HistoryTypes
+      <4>3. m'.head=m.request[w] /\ m'.retained=m.retained \cup {m.request[w]} /\
+        m'.records=[m.records EXCEPT ![m.request[w]]=Record(m.request[w])]
+        BY SMT, <4>1 DEF Inv, TypeOK, StateShape, HistoryTypes, HistoryTyped, Apply
+      <4>4. m.head \in Releases
+        BY <4>2 DEF HistoryTyped
+      <4>5. HistoryTyped(m.request[w],m.retained \cup {m.request[w]},
+        [m.records EXCEPT ![m.request[w]]=Record(m.request[w])])
+        BY <4>1, <4>2, <4>4, HistoryRecordReplacementTyped
+          DEF HistoryRecordReplacementTyped
+      <4>6. QED BY <4>3, <4>5 DEF HistoryTypes
+    <3>2. QED BY <3>1
+  <2>4. \A w \in Writers : Inv /\ Apply(w) => StagingTypes' /\ ControlTypes'
+    BY SMT DEF Inv, TypeOK, StateShape, StagingTypes, StagingTyped,
+      ControlTypes, ControlTyped, Apply, Phases
+  <2>5. QED BY <2>2, <2>3, <2>4 DEF TypeOK
 <1>2. \A w \in Writers : Inv /\ Apply(w) => HistorySound'
-  BY SMT, ChainExtension, CandidatePreservesHistory DEF ChainExtension, CandidatePreservesHistory, Inv, TypeOK, StateShape, HistoryTypes, HistoryTyped, HistorySound, Apply, HistoryValid, Valid, Authority
+  <2>1. ASSUME NEW w \in Writers, Inv, Apply(w) PROVE HistorySound'
+    <3>1. m.request[w] \in Inputs /\ m.request[w] \notin m.retained /\
+      m.head=BaseOf(m.request[w]) /\ Candidate(m.request[w])=Record(m.request[w])
+      BY SMT, <2>1, CandidatePreservesHistory DEF CandidatePreservesHistory, Apply
+    <3>2. m'.head=m.request[w] /\ m'.retained=m.retained \cup {m.request[w]} /\
+      m'.applied=m.applied \cup {m.request[w]} /\
+      m'.records=[m.records EXCEPT ![m.request[w]]=Record(m.request[w])]
+      BY SMT, <2>1, <3>1
+        DEF Inv, TypeOK, StateShape, HistoryTypes, HistoryTyped, Apply
+    <3>3. 0 \in m'.retained /\ m'.head \in m'.retained /\
+      m'.applied=m'.retained \ {0}
+      BY SMT, <2>1, <3>1, <3>2 DEF Inv, HistorySound, HistoryValid, Inputs
+    <3>4. \A i \in m'.retained : m'.records[i]=Record(i)
+      BY SMT, <2>1, <3>1, <3>2
+        DEF Inv, TypeOK, HistoryTypes, HistoryTyped, HistorySound, HistoryValid, Inputs, Releases
+    <3>5. m'.retained=Members(Chain(m'.head))
+      BY SMT, <2>1, <3>1, <3>2, ChainExtension
+        DEF ChainExtension, Inv, HistorySound, HistoryValid
+    <3>6. \A i \in m'.applied : SchemaOf(i)=3 /\ BaseOf(i) \in m'.retained
+      BY SMT, <2>1, <3>1, <3>2
+        DEF Inv, HistorySound, HistoryValid, Apply, Valid, Authority
+    <3>7. QED BY <3>3, <3>4, <3>5, <3>6 DEF HistorySound, HistoryValid
+  <2>2. QED BY <2>1
 <1>3. \A w \in Writers : Inv /\ Apply(w) => StageSound'
   BY SMT DEF Inv, TypeOK, StateShape, StageSound, Apply, StageValid, StageReady, CompleteAccounting, BoundIntent, StagingTypes, StagingTyped
 <1>4. \A w \in Writers : Inv /\ Apply(w) => CompletionSound'
@@ -626,11 +838,41 @@ THEOREM LegacyReplayPreserves == \A w \in Writers, b \in LegacyInputs : Inv /\ L
 THEOREM LegacyReplayFrame == \A w \in Writers, b \in LegacyInputs :
   TypeOK /\ LegacyReplay(w,b) => UNCHANGED Durable
 BY SMT DEF TypeOK, StateShape, LegacyReplay, Durable
+(* Sequence laws are independent of record updates and validator observations.
+   Exposing the typed source sequence first keeps append reasoning out of the
+   complete nested state type and inventory-accounting obligation. *)
+THEOREM AppendExtendsPrefix == \A s \in Seq(Releases), i \in Releases :
+  Prefix(s,Append(s,i))
+BY SMT DEF Prefix
+THEOREM PrefixReflexive == \A s \in Seq(Releases) : Prefix(s,s)
+BY SMT DEF Prefix
+THEOREM CurrentHistoryTyped == Inv => m.records[m.head].history \in Seq(Releases)
+<1>1. Inv => m.head \in Releases /\ m.records[m.head]=Record(m.head)
+  BY SMT DEF Inv, TypeOK, HistoryTypes, HistoryTyped, HistorySound, HistoryValid
+<1>2. QED BY SMT, <1>1, ChainShape DEF ChainShape, Record
 THEOREM ApplyHistoryMonotone == \A w \in Writers : Inv /\ Apply(w) =>
   /\ m.retained \subseteq m'.retained /\ m.applied \subseteq m'.applied
   /\ Prefix(m.records[m.head].history,m'.records[m'.head].history)
   /\ m.records[m.head].corrections \subseteq m'.records[m'.head].corrections
-BY SMT DEF Apply, Candidate, Inv, TypeOK, StateShape, HistoryTypes, HistoryTyped, Prefix
+<1>1. ASSUME NEW w \in Writers, Inv, Apply(w)
+      PROVE /\ m.retained \subseteq m'.retained /\ m.applied \subseteq m'.applied
+            /\ Prefix(m.records[m.head].history,m'.records[m'.head].history)
+            /\ m.records[m.head].corrections \subseteq m'.records[m'.head].corrections
+  <2>1. m.request[w] \in Releases /\
+    m.records[m.head].history \in Seq(Releases)
+    BY SMT, <1>1, InputShape, CurrentHistoryTyped
+      DEF InputShape, CurrentHistoryTyped, Apply
+  <2>2. m'.head=m.request[w] /\ m'.records[m'.head]=Candidate(m.request[w])
+    BY SMT, <1>1, <2>1
+      DEF Inv, TypeOK, StateShape, HistoryTypes, HistoryTyped, Apply
+  <2>3. m.retained \subseteq m'.retained /\ m.applied \subseteq m'.applied
+    BY SMT, <1>1 DEF Inv, TypeOK, StateShape, Apply
+  <2>4. Prefix(m.records[m.head].history,m'.records[m'.head].history)
+    BY SMT, <2>1, <2>2, AppendExtendsPrefix DEF AppendExtendsPrefix, Candidate
+  <2>5. m.records[m.head].corrections \subseteq m'.records[m'.head].corrections
+    BY SMT, <2>2 DEF Candidate
+  <2>6. QED BY <2>3, <2>4, <2>5
+<1>2. QED BY <1>1
 THEOREM NonApplyHistoryFrame == Inv /\ Next =>
   (\E w \in Writers : Apply(w)) \/ UNCHANGED <<m.head,m.retained,m.records,m.applied>>
 BY SMT DEF Inv, TypeOK, StateShape, Next, CoreNext, DryRun, Stutter,
@@ -641,9 +883,17 @@ THEOREM NextHistoryMonotone == Inv /\ Next =>
   /\ m.retained \subseteq m'.retained /\ m.applied \subseteq m'.applied
   /\ Prefix(m.records[m.head].history,m'.records[m'.head].history)
   /\ m.records[m.head].corrections \subseteq m'.records[m'.head].corrections
-BY SMT, ApplyHistoryMonotone, NonApplyHistoryFrame
-  DEF ApplyHistoryMonotone, NonApplyHistoryFrame, Inv, TypeOK,
-      HistoryTypes, HistoryTyped, Prefix
+<1>1. ASSUME Inv, Next
+      PROVE /\ m.retained \subseteq m'.retained /\ m.applied \subseteq m'.applied
+            /\ Prefix(m.records[m.head].history,m'.records[m'.head].history)
+            /\ m.records[m.head].corrections \subseteq m'.records[m'.head].corrections
+  <2>1. CASE \E w \in Writers : Apply(w)
+    BY SMT, <1>1, <2>1, ApplyHistoryMonotone DEF ApplyHistoryMonotone
+  <2>2. CASE UNCHANGED <<m.head,m.retained,m.records,m.applied>>
+    BY SMT, <1>1, <2>2, CurrentHistoryTyped, PrefixReflexive
+      DEF CurrentHistoryTyped, PrefixReflexive
+  <2>3. QED BY <1>1, <2>1, <2>2, NonApplyHistoryFrame DEF NonApplyHistoryFrame
+<1>2. QED BY <1>1
 THEOREM InvImpliesSafety == Inv => Safety
 <1>1. Inv => \A i \in m.applied :
     /\ CompleteAccounting(i) /\ BoundIntent(i) /\ Input(i).schema=3

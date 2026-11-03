@@ -5,7 +5,9 @@
 //! Missing IDs are notifications only after envelope validation succeeds.
 
 mod initialize;
-pub use initialize::{Capability, Initialize, InitializeParams, PROTOCOL_VERSION, ParamsError};
+pub use initialize::{
+    Capability, Initialize, InitializeParams, PROTOCOL_VERSION, ParamsError, StorageProfileVersion,
+};
 
 use crate::{Error, Limits, RawJson};
 use serde_json::Value;

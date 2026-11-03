@@ -67,6 +67,22 @@ impl Audit<'_> {
     }
 
     fn inspect_ordinary_macro(&mut self, node: &verus_syn::Macro, name: &str) {
+        if name == "seq" {
+            // vstd's literal grammar is a comma-separated expression list,
+            // not vec!'s repetition grammar. Preserve the caller's mode.
+            use verus_syn::parse::Parser;
+            let parser =
+                verus_syn::punctuated::Punctuated::<verus_syn::Expr, verus_syn::Token![,]>::parse_terminated;
+            match parser.parse2(node.tokens.clone()) {
+                Ok(expressions) => {
+                    for expression in expressions {
+                        self.visit_expr(&expression);
+                    }
+                }
+                Err(error) => self.emit("macro-parse", error.span(), error.to_string()),
+            }
+            return;
+        }
         if name == "json" {
             match verus_syn::parse2::<crate::json_macro::Expressions>(node.tokens.clone()) {
                 Ok(expressions) => {
@@ -115,7 +131,8 @@ impl Audit<'_> {
     fn inspect_arguments(&mut self, node: &verus_syn::Macro, name: &str) {
         if self.definitions.contains(name) {
             // A declaration macro's template is checked independently. Arguments
-            // may supply data/types, never undisclosed executable declarations.
+            // may supply data/types, never undisclosed declarations or verifier
+            // attributes (including bare $meta fragments without a # wrapper).
             if tokens::contains_ident(
                 node.tokens.clone(),
                 &[
@@ -132,11 +149,12 @@ impl Audit<'_> {
                     "todo",
                     "unimplemented",
                 ],
-            ) {
+            ) || tokens::contains_verifier_path(node.tokens.clone())
+            {
                 self.emit(
                     "macro-argument",
                     node.span(),
-                    "executable macro arguments require explicit syntax support",
+                    "executable or verifier macro arguments require explicit syntax support",
                 );
             }
             self.argument_blocks(node.tokens.clone());

@@ -2,7 +2,6 @@
 use crate::{
     CodecError,
     documents::{MarkdownDocument, unfenced_lines},
-    unicode,
 };
 use serde::ser::{Serialize, SerializeMap, SerializeSeq, Serializer};
 use sha2::{Digest, Sha256};

@@ -160,9 +160,23 @@ BY KnowledgeStepPreserves, AuthoredStepPreserves, BridgeStutterPreserves
 THEOREM BridgeFiniteNextPreserves == BridgeInv /\ BridgeFiniteNext => BridgeInv'
 BY BridgeNextPreserves DEF BridgeFiniteNext, BridgeNextPreserves
 THEOREM BridgeInvImpliesSafety == BridgeInv => BridgeSafety
-BY RecoveryInvImpliesSafety, A!InvImpliesSafety
-  DEF BridgeInv, BridgeParameters, BridgeSafety, RecoveryInvImpliesSafety,
-    A!InvImpliesSafety, A!ActorUniverse, A!ActorBounds
+<1>1. BridgeInv => RecoverySafety
+  BY RecoveryInvImpliesSafety DEF BridgeInv, RecoveryInvImpliesSafety
+<1>2. BridgeInv => A!Safety
+  BY A!InvImpliesSafety
+    DEF BridgeInv, BridgeParameters, A!InvImpliesSafety, A!ActorUniverse, A!ActorBounds
+<1>3. QED BY <1>1, <1>2 DEF BridgeInv, BridgeSafety
+THEOREM BridgeStepPreserves == BridgeInv /\ [BridgeNext]_bridgeVars => BridgeInv'
+BY BridgeNextPreserves, BridgeStutterPreserves
+  DEF BridgeNextPreserves, BridgeStutterPreserves, BridgeStutter
+(* Product induction does not use BridgeObservationProfiles or the authored
+   finite hint/corruption quotient. Neither side establishes engine effects. *)
+THEOREM BridgeInductiveSafety == BridgeSpec => []BridgeSafety
+<1>1. BridgeInit => BridgeInv BY BridgeInitPreserves DEF BridgeInitPreserves
+<1>2. BridgeInv /\ [BridgeNext]_bridgeVars => BridgeInv'
+  BY BridgeStepPreserves DEF BridgeStepPreserves
+<1>3. BridgeSpec => []BridgeInv BY <1>1, <1>2, PTL DEF BridgeSpec
+<1>4. QED BY <1>3, BridgeInvImpliesSafety, PTL DEF BridgeInvImpliesSafety
 
 THEOREM KnowledgeRepairExactAndFrame == \A w \in Writers :
   BridgeInv /\ RepairCompletion(w) /\ UNCHANGED a =>

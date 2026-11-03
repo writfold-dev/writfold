@@ -1,19 +1,19 @@
 use super::context::Frame;
-use super::footprint::{Evaluation, corrections, extend_unique, formula_ref, into_formula, push_unique};
-use super::input::Input;
-use super::inventory::matches_expected;
-use super::lookup::{find_attestation, find_enumeration};
 #[cfg(verus_keep_ghost)]
 use super::evaluation_model::*;
 #[cfg(verus_keep_ghost)]
-use super::lookup::{claim_lookup_value, claim_value, observation_lookup_value};
-#[cfg(verus_keep_ghost)]
 use super::footprint::extend_unique_spec;
+use super::footprint::{Evaluation, corrections, extend_unique, into_formula, push_unique};
+use super::input::Input;
+use super::inventory::matches_expected;
+#[cfg(verus_keep_ghost)]
+use super::lookup::{claim_lookup_value, claim_value, observation_lookup_value};
+use super::lookup::{find_attestation, find_enumeration};
 use super::{inventory_content, retracted, source_selected};
 use crate::wellformed::unique;
 use std::borrow::Cow;
-use writfold_domain::*;
 use vstd::prelude::*;
+use writfold_domain::*;
 
 verus! {
 
@@ -34,14 +34,23 @@ fn evaluate_valid<'a>(kb: &'a KB, context: Frame<'a>, witness: &'a Witness) -> (
     ensures result.deep_view() == evaluate_valid_spec(kb@, context@, witness@),
     decreases witness, 0nat,
 {
+    proof {
+        reveal_with_fuel(<Witness as View>::view, 2);
+        reveal_with_fuel(<Formula as View>::view, 2);
+        reveal_with_fuel(evaluate_valid_spec, 2);
+    }
     match witness {
         Witness::Attest { attestation } => attest(kb, context, attestation),
-        Witness::Truth { scope } => Some(Evaluation {
-            formula: Cow::Owned(Formula::Truth),
-            scope,
-            polarity: Polarity::Positive,
-            dependencies: Vec::new(),
-        }),
+        Witness::Truth { scope } => {
+            let dependencies = Vec::new();
+            proof { assert(dependencies.deep_view() =~= Seq::<super::input::InputView>::empty()); }
+            Some(Evaluation {
+                formula: Cow::Owned(Formula::Truth),
+                scope,
+                polarity: Polarity::Positive,
+                dependencies,
+            })
+        },
         Witness::And { left, right } => {
             let left = evaluate_valid(kb, context, left)?;
             let right = evaluate_valid(kb, context, right)?;
@@ -86,6 +95,7 @@ fn evaluate_valid<'a>(kb: &'a KB, context: Frame<'a>, witness: &'a Witness) -> (
 fn attest<'a>(kb: &'a KB, context: Frame<'a>, id: &AttestationId) -> (result: Option<Evaluation<'a>>)
     ensures result.deep_view() == attest_spec(kb@, context@, id@),
 {
+    proof { reveal_with_fuel(<Formula as View>::view, 2); }
     proof { broadcast use claim_lookup_value, observation_lookup_value; }
     let attestation = find_attestation(kb, id)?;
     if retracted(kb, context.base, attestation.claim()) {
@@ -111,6 +121,15 @@ fn attest<'a>(kb: &'a KB, context: Frame<'a>, id: &AttestationId) -> (result: Op
         Input::Attestation(attestation),
         corrections(kb, context, attestation.claim()),
     ];
+    proof {
+        assert(dependencies.deep_view() =~= seq![
+            super::input::InputView::Observation(observation@),
+            super::input::InputView::Claim(claim@),
+            super::input::InputView::Attestation(attestation@),
+            correction_input(kb@, context@, attestation@.claim),
+        ]);
+    }
+    let ghost initial_dependencies = dependencies.deep_view();
     if let Formula::Inventory { enumeration } = attestation.statement().formula() {
         let enumeration = find_enumeration(kb, enumeration)?;
         if *attestation.statement().polarity() != Polarity::Positive
@@ -120,6 +139,10 @@ fn attest<'a>(kb: &'a KB, context: Frame<'a>, id: &AttestationId) -> (result: Op
             return None;
         }
         dependencies.push(Input::Enumeration(enumeration));
+        proof {
+            assert(dependencies.deep_view() =~=
+                initial_dependencies.push(super::input::InputView::Enumeration(enumeration@)));
+        }
     }
     Some(Evaluation {
         formula: Cow::Borrowed(attestation.statement().formula()),
@@ -140,7 +163,9 @@ fn enumerate<'a>(
     decreases witness, 1nat,
 {
     proof {
-        broadcast use observation_lookup_value, writfold_domain::equality::vector_equality;
+        broadcast use observation_lookup_value;
+        reveal_with_fuel(<Formula as View>::view, 2);
+        reveal_with_fuel(extend_unique_spec, 3);
     }
     let enumeration = find_enumeration(kb, id)?;
     let observation = find_observation(kb, enumeration.observation())?;
@@ -150,7 +175,7 @@ fn enumerate<'a>(
         || observation.content() != &inventory_content(enumeration.universe())
         || observation.source() != enumeration.source()
         || observation.revision() != enumeration.revision()
-        || enumeration.members() != enumeration.universe()
+        || !writfold_domain::equality::strings_equal(enumeration.members(), enumeration.universe())
         || !unique(enumeration.members())
         || enumeration.method().is_empty()
         || enumeration.query().is_empty()
@@ -162,20 +187,28 @@ fn enumerate<'a>(
         None => enumeration.members().is_empty(),
         Some(value) => !value.is_empty(),
     };
-    if !mode_valid || !matches_expected(formula_ref(&premise.formula), enumeration, predicate)
+    if !mode_valid || !matches_expected(premise.formula(), enumeration, predicate)
         || premise.scope != enumeration.scope()
         || premise.polarity != Polarity::Positive
     {
         return None;
     }
+    let ghost original_premise = premise@;
     let conclusion = match predicate {
         None => Formula::Absent { enumeration: enumeration.id().clone() },
         Some(value) => Formula::All {
             enumeration: enumeration.id().clone(), predicate: value.to_owned(),
         },
     };
+    proof { assert(conclusion@ == inventory_conclusion(enumeration@, predicate.deep_view())); }
     push_unique(&mut premise.dependencies, Input::Observation(observation));
     push_unique(&mut premise.dependencies, Input::Enumeration(enumeration));
+    proof {
+        assert(premise.dependencies.deep_view() == extend_unique_spec(original_premise.dependencies, seq![
+            super::input::InputView::Observation(observation@),
+            super::input::InputView::Enumeration(enumeration@),
+        ]));
+    }
     Some(Evaluation {
         formula: Cow::Owned(conclusion),
         scope: enumeration.scope(),
@@ -232,17 +265,15 @@ pub(super) fn alternatives<'a>(
             accepted.deep_view() == accepted_rows(kb@, context@, claim@, rows.deep_view().take(index as int)),
         decreases rows.len() - index,
     {
+        proof {
+            accepted_rows_step(kb@, context@, claim@, kb@.derivations, index as int);
+        }
         let row = &rows[index];
         proof { assert(row@ == kb@.derivations[index as int]); }
         if let Some(value) = accepted_derivation(kb, context, claim, row) {
             accepted.push((row.witness(), value));
         }
         index += 1;
-        proof {
-            let prefix = kb@.derivations.take(index as int);
-            assert(prefix.drop_last() == kb@.derivations.take(index as int - 1));
-            assert(prefix.last() == row@);
-        }
     }
     proof { assert(kb@.derivations.take(rows.len() as int) == kb@.derivations); }
     accepted
@@ -287,6 +318,19 @@ pub(super) fn has_accepted_claim(kb: &KB, context: Frame<'_>, claim: &Claim) -> 
         index += 1;
     }
     false
+}
+
+// Contrary rows select a reference, not a different interpretation of that reference.
+// Even an unadmitted KB with duplicate identities resolves acceptance to its first row.
+pub(super) fn has_accepted_identity(
+    kb: &KB, context: Frame<'_>, id: &ClaimId, revision: &ClaimRevision,
+) -> (accepted: bool)
+    ensures accepted == has_accepted_reference_spec(kb@, context@, ClaimRefView { id: id@, rev: revision@ }),
+{
+    match super::lookup::find_claim_identity(kb, id, revision) {
+        Some(claim) => has_accepted_claim(kb, context, claim),
+        None => false,
+    }
 }
 
 } // verus!

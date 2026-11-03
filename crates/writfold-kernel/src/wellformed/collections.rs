@@ -1,26 +1,40 @@
 //! Explicit O(n) borrowed-key scratch replaces opaque BTreeSet key models.
 //! Sorting is O(n log n); no record, identifier, or string data is cloned.
+use super::{order::Key, sort};
 use vstd::prelude::*;
 use writfold_domain::*;
-use super::{order::Key, sort};
 
 macro_rules! unique_rows {
     ($name:ident, $row:ty, $rowvar:ident => $get:expr, $model:expr) => {
         verus! {
-        pub(super) fn $name(values: &Vec<$row>) -> (unique: bool)
+        pub(super) fn $name(values: &[$row]) -> (unique: bool)
             ensures unique == values.deep_view().map_values($model).no_duplicates(),
         {
+            proof {
+                reveal_strlit("");
+                assert(""@ =~= Seq::<char>::empty());
+                assert(values.deep_view().len() == values.len());
+            }
             if values.len() < 2 { return true; }
             let mut keys: Vec<Key<'_>> = Vec::with_capacity(values.len());
             let mut i = 0;
             while i < values.len()
                 invariant i <= values.len(), keys.len() == i,
+                    values.deep_view().len() == values.len(),
                     keys.deep_view() == values.deep_view().take(i as int).map_values(|r| (($model)(r), Seq::empty())),
                 decreases values.len() - i,
             {
                 let $rowvar = &values[i];
                 let key = ($get, "");
-                proof { assert(key.deep_view() == (($model)(values.deep_view()[i as int]), Seq::<char>::empty())); }
+                proof {
+                    reveal_strlit("");
+                    assert(key.1@ =~= Seq::<char>::empty());
+                    assert($rowvar.deep_view() == values.deep_view()[i as int]);
+                    assert(key.deep_view() == (($model)(values.deep_view()[i as int]), Seq::<char>::empty()));
+                    values.deep_view().lemma_take_succ_push(i as int);
+                    values.deep_view().take(i as int).lemma_push_map_commute(
+                        |r| (($model)(r), Seq::<char>::empty()), values.deep_view()[i as int]);
+                }
                 keys.push(key);
                 proof {
                     assert(keys.deep_view() =~= values.deep_view().take(i as int + 1)
@@ -51,16 +65,30 @@ verus! {
 pub(crate) fn unique(values: &[String]) -> (unique: bool)
     ensures unique == values.deep_view().no_duplicates(),
 {
+    proof {
+        reveal_strlit("");
+        assert(""@ =~= Seq::<char>::empty());
+        assert(values.deep_view().len() == values.len());
+    }
     if values.len() < 2 { return true; }
     let mut keys: Vec<Key<'_>> = Vec::with_capacity(values.len());
     let mut i = 0;
     while i < values.len()
         invariant i <= values.len(), keys.len() == i,
+            values.deep_view().len() == values.len(),
             keys.deep_view() == values.deep_view().take(i as int).map_values(|text: Seq<char>| (text, Seq::<char>::empty())),
         decreases values.len() - i,
     {
         let key = (values[i].as_str(), "");
-        proof { assert(key.deep_view() == (values.deep_view()[i as int], Seq::<char>::empty())); }
+        proof {
+            reveal_strlit("");
+            assert(key.1@ =~= Seq::<char>::empty());
+            assert(values[i as int]@ == values.deep_view()[i as int]);
+            assert(key.deep_view() == (values.deep_view()[i as int], Seq::<char>::empty()));
+            values.deep_view().lemma_take_succ_push(i as int);
+            values.deep_view().take(i as int).lemma_push_map_commute(
+                |text: Seq<char>| (text, Seq::<char>::empty()), values.deep_view()[i as int]);
+        }
         keys.push(key);
         proof {
             assert(keys.deep_view() =~= values.deep_view().take(i as int + 1)
@@ -83,14 +111,21 @@ pub(super) fn claim_index(kb: &KB) -> (keys: Vec<Key<'_>>)
     let claims = kb.claims();
     let mut keys: Vec<Key<'_>> = Vec::with_capacity(claims.len());
     let mut i = 0;
+    proof { assert(claims.deep_view().len() == claims.len()); }
     while i < claims.len()
         invariant i <= claims.len(), keys.len() == i, claims.deep_view() == kb@.claims,
+            claims.len() == kb@.claims.len(),
             keys.deep_view() == kb@.claims.take(i as int).map_values(|c: ClaimView| (c.id, c.revision)),
         decreases claims.len() - i,
     {
         let claim = &claims[i];
         let key = (claim.id().as_str(), claim.revision().as_str());
         proof { assert(key.deep_view() == (kb@.claims[i as int].id, kb@.claims[i as int].revision)); }
+        proof {
+            kb@.claims.lemma_take_succ_push(i as int);
+            kb@.claims.take(i as int).lemma_push_map_commute(
+                |c: ClaimView| (c.id, c.revision), kb@.claims[i as int]);
+        }
         keys.push(key);
         proof {
             assert(keys.deep_view() =~= kb@.claims.take(i as int + 1).map_values(|c: ClaimView| (c.id, c.revision)));

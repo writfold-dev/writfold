@@ -80,8 +80,12 @@ macro_rules! scalar_views {
 }
 
 macro_rules! field_equal {
-    ($left:expr, $right:expr) => { ($left).eq($right) };
-    ($left:expr, $right:expr, $compare:path) => { $compare($left, $right) };
+    ($left:expr, $right:expr) => {
+        ($left).eq($right)
+    };
+    ($left:expr, $right:expr, $compare:path) => {
+        $compare($left, $right)
+    };
 }
 
 pub(crate) use {field_equal, record, scalar_views};

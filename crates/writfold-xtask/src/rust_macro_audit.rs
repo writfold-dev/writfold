@@ -115,7 +115,8 @@ impl Audit<'_> {
     fn inspect_rust_arguments(&mut self, node: &syn::Macro, name: &str) {
         if self.definitions.contains(name) {
             // A declaration macro's template is checked independently. Arguments
-            // may supply data/types, never undisclosed executable declarations.
+            // may supply data/types, never undisclosed declarations or verifier
+            // attributes (including bare $meta fragments without a # wrapper).
             if tokens::contains_ident(
                 node.tokens.clone(),
                 &[
@@ -132,11 +133,12 @@ impl Audit<'_> {
                     "todo",
                     "unimplemented",
                 ],
-            ) {
+            ) || tokens::contains_verifier_path(node.tokens.clone())
+            {
                 self.emit(
                     "macro-argument",
                     node.span(),
-                    "executable macro arguments require explicit syntax support",
+                    "executable or verifier macro arguments require explicit syntax support",
                 );
             }
             self.rust_argument_blocks(node.tokens.clone());

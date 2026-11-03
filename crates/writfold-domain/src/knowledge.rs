@@ -93,15 +93,18 @@ pub enum Support {
 }
 }
 
-record!(Assessment, AssessmentView {
-    support: Support,
-    applicable: bool,
-    freshness: Freshness,
-    validated: bool,
-    contested: bool,
-    available: bool,
-    usable: bool,
-});
+record!(
+    Assessment,
+    AssessmentView {
+        support: Support,
+        applicable: bool,
+        freshness: Freshness,
+        validated: bool,
+        contested: bool,
+        available: bool,
+        usable: bool,
+    }
+);
 
 verus! {
 pub open spec fn first_claim_match(

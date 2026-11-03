@@ -1,7 +1,7 @@
-use super::gates::*;
-use super::problems::*;
 #[cfg(verus_keep_ghost)]
 use super::super::actor_present_spec;
+use super::gates::*;
+use super::problems::*;
 use vstd::prelude::*;
 use writfold_domain::{Integer, *};
 
@@ -60,7 +60,7 @@ fn target_present(target: &Option<TargetRevision>) -> (present: bool)
     }
 }
 
-fn reference_resolves(rows: &Vec<AuthoredLanded>, reference: &String) -> (resolves: bool)
+fn reference_resolves(rows: &[AuthoredLanded], reference: &String) -> (resolves: bool)
     ensures resolves == resolution_present(rows.deep_view(), reference@),
 {
     let mut i = 0;
@@ -86,8 +86,10 @@ fn all_landed_resolve(proposal: &AuthoredProposal) -> (resolves: bool)
 {
     let refs = proposal.landed_refs();
     let mut i = 0;
+    proof { assert(refs.deep_view().len() == refs.len()); }
     while i < refs.len()
         invariant i <= refs.len(),
+            refs.deep_view() == proposal@.landed_refs, refs.deep_view().len() == refs.len(),
             forall|k: int| 0 <= k < i ==>
                 #[trigger] resolution_present(proposal@.resolved_landed, refs.deep_view()[k]),
         decreases refs.len() - i,
@@ -106,7 +108,7 @@ fn all_landed_resolve(proposal: &AuthoredProposal) -> (resolves: bool)
     true
 }
 
-fn contains_reference(refs: &Vec<String>, reference: &String) -> (contains: bool)
+fn contains_reference(refs: &[String], reference: &String) -> (contains: bool)
     ensures contains == refs.deep_view().contains(reference@),
 {
     let mut i = 0;
@@ -130,28 +132,29 @@ fn contains_reference(refs: &Vec<String>, reference: &String) -> (contains: bool
 fn landed_bound(proposal: &AuthoredProposal) -> (bound: bool)
     ensures bound == bound_landed(proposal@),
 {
+    let Some(target) = proposal.target_revision() else { return false; };
     let rows = proposal.resolved_landed();
     let mut i = 0;
+    proof { assert(rows.deep_view().len() == rows.len()); }
     while i < rows.len()
         invariant i <= rows.len(),
+            rows.deep_view() == proposal@.resolved_landed, rows.deep_view().len() == rows.len(),
+            proposal@.target_revision == Some(target@),
             forall|j: int| 0 <= j < i ==>
                 !proposal@.landed_refs.contains(rows.deep_view()[j].reference)
                     || proposal@.target_revision != Some(rows.deep_view()[j].target_revision),
         decreases rows.len() - i,
     {
         let row = &rows[i];
-        if contains_reference(proposal.landed_refs(), row.reference()) {
-            if let Some(target) = proposal.target_revision() {
-                if target == row.target_revision() {
-                    proof {
-                        assert(row@ == proposal@.resolved_landed[i as int]);
-                        assert(proposal@.landed_refs.contains(proposal@.resolved_landed[i as int].reference));
-                        assert(proposal@.target_revision == Some(proposal@.resolved_landed[i as int].target_revision));
-                        assert(bound_landed(proposal@));
-                    }
-                    return true;
-                }
+        if contains_reference(proposal.landed_refs(), row.reference())
+            && target == row.target_revision() {
+            proof {
+                assert(row@ == proposal@.resolved_landed[i as int]);
+                assert(proposal@.landed_refs.contains(proposal@.resolved_landed[i as int].reference));
+                assert(proposal@.target_revision == Some(proposal@.resolved_landed[i as int].target_revision));
+                assert(bound_landed(proposal@));
             }
+            return true;
         }
         i += 1;
     }
@@ -163,8 +166,10 @@ fn contains_phase(proposal: &AuthoredProposal, phase: GateWhen) -> (present: boo
 {
     let definitions = proposal.gate_definitions();
     let mut i = 0;
+    proof { assert(definitions.deep_view().len() == definitions.len()); }
     while i < definitions.len()
         invariant i <= definitions.len(),
+            definitions.deep_view() == proposal@.gate_definitions, definitions.deep_view().len() == definitions.len(),
             forall|j: int| 0 <= j < i ==> definitions.deep_view()[j].when != phase,
         decreases definitions.len() - i,
     {
@@ -186,24 +191,25 @@ fn all_applicable_pass(proposal: &AuthoredProposal, target: AuthoredStatus,
 {
     let definitions = proposal.gate_definitions();
     let mut i = 0;
+    proof { assert(definitions.deep_view().len() == definitions.len()); }
     while i < definitions.len()
         invariant i <= definitions.len(),
+            definitions.deep_view() == proposal@.gate_definitions, definitions.deep_view().len() == definitions.len(),
             forall|j: int| 0 <= j < i
                 && (target != AuthoredStatus::Applied || definitions.deep_view()[j].when == GateWhen::Land)
                 ==> authored_gate_passes_spec(proposal@, definitions.deep_view()[j], now@),
         decreases definitions.len() - i,
     {
         let definition = &definitions[i];
-        if target != AuthoredStatus::Applied || *definition.when() == GateWhen::Land {
-            if !authored_gate_passes(proposal, definition, now) {
-                proof {
-                    assert(definition@ == proposal@.gate_definitions[i as int]);
-                    if applicable_gates_pass(proposal@, target, now@) {
-                        assert(authored_gate_passes_spec(proposal@, proposal@.gate_definitions[i as int], now@));
-                    }
+        if (target != AuthoredStatus::Applied || *definition.when() == GateWhen::Land)
+            && !authored_gate_passes(proposal, definition, now) {
+            proof {
+                assert(definition@ == proposal@.gate_definitions[i as int]);
+                if applicable_gates_pass(proposal@, target, now@) {
+                    assert(authored_gate_passes_spec(proposal@, proposal@.gate_definitions[i as int], now@));
                 }
-                return false;
             }
+            return false;
         }
         i += 1;
     }
@@ -216,6 +222,8 @@ pub(super) fn visit_landing_problems(proposal: &AuthoredProposal, target: Author
     ensures final(problems).invariant(), final(problems).collect == old(problems).collect,
         final(problems).trace@ == old(problems).trace@ + landing_problems_spec(proposal@, target, now@),
 {
+    proof { broadcast use vstd::seq_lib::group_seq_properties; }
+    let ghost initial = problems.trace@;
     if !target_present(proposal.target_revision()) || !nonblank_references(proposal.landed_refs()) {
         problems.emit(AuthoredProblem::ExplicitLanded);
     } else if !all_landed_resolve(proposal) {
@@ -230,6 +238,7 @@ pub(super) fn visit_landing_problems(proposal: &AuthoredProposal, target: Author
         }
         if !all_applicable_pass(proposal, target, now) { problems.emit(AuthoredProblem::CurrentGates); }
     }
+    proof { assert(problems.trace@ =~= initial + landing_problems_spec(proposal@, target, now@)); }
 }
 
 } // verus!

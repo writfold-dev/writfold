@@ -91,6 +91,7 @@ fn same_events(left: &[&Correction], right: &[Correction]) -> (equal: bool)
     let mut index = 0;
     while index < left.len()
         invariant left.len() == right.len(), index <= left.len(),
+            left.deep_view().len() == left.len(), right.deep_view().len() == right.len(),
             forall|i: int| 0 <= i < index ==> left.deep_view()[i] == right.deep_view()[i],
         decreases left.len() - index,
     {

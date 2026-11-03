@@ -47,3 +47,33 @@ pub fn contains_ident(tokens: TokenStream, wanted: &[&str]) -> bool {
         _ => false,
     })
 }
+
+/// Match the verifier namespace path, not a field merely named `verifier`.
+pub fn contains_verifier_path(tokens: TokenStream) -> bool {
+    let mut phase = 0;
+    for token in tokens {
+        match token {
+            TokenTree::Group(group) => {
+                if contains_verifier_path(group.stream()) {
+                    return true;
+                }
+                phase = 0;
+            }
+            TokenTree::Ident(ident) => {
+                phase = if ident == "verifier" || ident == "r#verifier" {
+                    1
+                } else {
+                    0
+                };
+            }
+            TokenTree::Punct(punct) if punct.as_char() == ':' && phase > 0 => {
+                if phase == 2 {
+                    return true;
+                }
+                phase = 2;
+            }
+            _ => phase = 0,
+        }
+    }
+    false
+}

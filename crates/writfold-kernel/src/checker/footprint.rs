@@ -10,14 +10,6 @@ use writfold_domain::*;
 
 verus! {
 
-pub(super) fn formula_ref<'value, 'borrow>(value: &'borrow Cow<'value, Formula>) -> (formula: &'borrow Formula)
-    ensures formula@ == value@,
-{
-    match value {
-        Cow::Borrowed(formula) => *formula,
-        Cow::Owned(formula) => formula,
-    }
-}
 
 pub(super) fn into_formula(value: Cow<'_, Formula>) -> (formula: Formula)
     ensures formula@ == value@,
@@ -66,7 +58,22 @@ pub open spec fn checked_value(value: EvaluationView) -> CheckedView {
         dependencies: value.dependencies.map_values(|input: InputView| dependency_value(input)) }
 }
 
+pub(super) proof fn map_push<A, B>(values: Seq<A>, value: A, project: spec_fn(A) -> B)
+    ensures values.push(value).map_values(project) == values.map_values(project).push(project(value)),
+{
+    assert(values.push(value).map_values(project) =~= values.map_values(project).push(project(value)));
+}
+
 impl Evaluation<'_> {
+    pub(super) fn formula(&self) -> (formula: &Formula)
+        ensures formula@ == self@.formula,
+    {
+        match &self.formula {
+            Cow::Borrowed(formula) => formula,
+            Cow::Owned(formula) => formula,
+        }
+    }
+
     pub(super) fn into_owned(self) -> (checked: Checked)
         ensures checked@ == checked_value(self@),
     {
@@ -81,6 +88,7 @@ impl Evaluation<'_> {
         let ghost mut consumed = Seq::<InputView>::empty();
         loop
             invariant
+                before == self@,
                 items.obeys_prophetic_iter_laws(),
                 statement@ == statement_value(before),
                 before.dependencies == consumed + items.remaining().map_values(|item: Input| item@),
@@ -101,17 +109,16 @@ impl Evaluation<'_> {
                 },
                 None => {
                     proof { assert(consumed =~= before.dependencies); }
-                    break;
+                    return Checked::new(statement, copied);
                 },
             }
         }
-        Checked::new(statement, copied)
     }
 
     pub(super) fn matches_statement(&self, statement: &Statement) -> (matches: bool)
         ensures matches == (statement_value(self@) == statement@),
     {
-        formula_ref(&self.formula) == statement.formula()
+        self.formula() == statement.formula()
             && self.scope == statement.scope() && self.polarity == *statement.polarity()
     }
 }
@@ -178,6 +185,7 @@ pub(super) fn extend_unique<'a>(left: &mut Vec<Input<'a>>, right: Vec<Input<'a>>
     let ghost mut consumed = Seq::<InputView>::empty();
     loop
         invariant
+            before == old(left).deep_view(), source == right.deep_view(),
             items.obeys_prophetic_iter_laws(),
             source == consumed + items.remaining().map_values(|item: Input| item@),
             left.deep_view() == extend_unique_spec(before, consumed),
@@ -194,7 +202,7 @@ pub(super) fn extend_unique<'a>(left: &mut Vec<Input<'a>>, right: Vec<Input<'a>>
             },
             None => {
                 proof { assert(consumed =~= source); }
-                break;
+                return;
             },
         }
     }
@@ -209,6 +217,19 @@ pub open spec fn correction_events(rows: Seq<CorrectionView>, target: ClaimRefVi
         let last = rows.last();
         if last.target == target && last.recorded_at <= now { prior.push(last) } else { prior }
     }
+}
+
+proof fn correction_events_step(rows: Seq<CorrectionView>, target: ClaimRefView, now: int, index: int)
+    requires 0 <= index < rows.len(),
+    ensures correction_events(rows.take(index + 1), target, now) ==
+        if rows[index].target == target && rows[index].recorded_at <= now {
+            correction_events(rows.take(index), target, now).push(rows[index])
+        } else { correction_events(rows.take(index), target, now) },
+{
+    let prefix = rows.take(index + 1);
+    assert(prefix.drop_last() =~= rows.take(index));
+    assert(prefix.last() == rows[index]);
+    reveal_with_fuel(correction_events, 2);
 }
 
 pub(super) fn corrections<'a>(kb: &'a KB, context: Frame<'_>, target: &'a ClaimRef) -> (input: Input<'a>)
@@ -227,16 +248,14 @@ pub(super) fn corrections<'a>(kb: &'a KB, context: Frame<'_>, target: &'a ClaimR
             events.deep_view() == correction_events(kb@.corrections.take(index as int), target@, context@.base.now),
         decreases rows.len() - index,
     {
+        proof {
+            correction_events_step(kb@.corrections, target@, context@.base.now, index as int);
+        }
         let correction = &rows[index];
         if correction.target() == target && correction.recorded_at() <= context.now() {
             events.push(correction);
         }
         index += 1;
-        proof {
-            let prefix = kb@.corrections.take(index as int);
-            assert(prefix.drop_last() == kb@.corrections.take(index as int - 1));
-            assert(prefix.last() == correction@);
-        }
     }
     proof { assert(kb@.corrections.take(rows.len() as int) == kb@.corrections); }
     Input::Corrections { target, events }

@@ -36,6 +36,7 @@ pub open spec fn added_claim_spec(kb: KBView, context: ContextView, claim: Claim
     exists|i: int| 0 <= i < kb.derivations.len()
         && added_derivation_spec(kb, context, claim, kb.derivations[i])
 }
+#[verifier::opaque]
 pub open spec fn plan_valid_spec(kb: KBView, context: ContextView, plan: PlanView) -> bool {
     let candidate = plan.candidate;
     let authority = plan.authority;
@@ -56,6 +57,7 @@ pub open spec fn plan_valid_spec(kb: KBView, context: ContextView, plan: PlanVie
         && (forall|i: int| kb.claims.len() <= i < candidate.claims.len()
             ==> added_claim_spec(candidate, context, candidate.claims[i]))
 }
+#[verifier::opaque]
 pub open spec fn first_plan(journal: Seq<JournalEntryView>, plan: PlanView) -> Option<PlanView> {
     if exists|i: int| 0 <= i < journal.len() && journal[i].plan.id == plan.id {
         let i = choose|i: int| 0 <= i < journal.len() && journal[i].plan.id == plan.id
@@ -83,8 +85,8 @@ pub open spec fn apply_plan_spec(kb: KBView, context: ContextView, journal: Seq<
     }
 }
 pub open spec fn selected_present(kb: KBView, selected: Seq<ClaimRefView>) -> bool {
-    forall|i: int| 0 <= i < selected.len() ==> exists|j: int| 0 <= j < kb.claims.len()
-        && claim_matches_spec(kb.claims[j], selected[i])
+    forall|i: int| 0 <= i < selected.len()
+        ==> #[trigger] crate::wellformed::spec::claim_present(kb, selected[i])
 }
 pub open spec fn retained_unique(retained: Seq<KBView>) -> bool {
     forall|i: int, j: int| 0 <= j < i < retained.len() ==> retained[j].snapshot != retained[i].snapshot
@@ -139,10 +141,43 @@ pub open spec fn transition_edge(current: ProposalStatus, target: ProposalStatus
     matches!((current, target), (Draft, Proposed) | (Proposed, Approved) | (Proposed, Rejected)
         | (Approved, Applied) | (Approved, Rejected) | (Applied, Verified))
 }
+#[verifier::opaque]
 pub open spec fn gate_reusable(kb: KBView, context: ContextView, target: ClaimRefView, gate: Seq<char>) -> bool {
     exists|i: int| 0 <= i < kb.receipts.len() && kb.receipts[i].id == gate
         && (forall|j: int| 0 <= j < i ==> kb.receipts[j].id != gate)
         && reusable_spec(kb, context, target, kb.receipts[i])
+}
+proof fn first_match_decides<A>(values: Seq<A>, matches: spec_fn(A) -> bool,
+    eligible: spec_fn(A) -> bool, index: int)
+    requires 0 <= index < values.len(), matches(values[index]),
+        forall|j: int| 0 <= j < index ==> !matches(values[j]),
+    ensures (exists|i: int| 0 <= i < values.len() && matches(values[i])
+        && (forall|j: int| 0 <= j < i ==> !matches(values[j])) && eligible(values[i]))
+        == eligible(values[index]),
+{
+    crate::checker::first_matching_at(values, matches, index);
+    if (exists|i: int| 0 <= i < values.len() && matches(values[i])
+        && (forall|j: int| 0 <= j < i ==> !matches(values[j])) && eligible(values[i])) {
+        let i = choose|i: int| 0 <= i < values.len() && matches(values[i])
+            && (forall|j: int| 0 <= j < i ==> !matches(values[j])) && eligible(values[i]);
+        crate::checker::first_matching_at(values, matches, i);
+        assert(crate::checker::first_matching(values, matches) == Some(values[index]));
+        assert(values[i] == values[index]);
+    }
+    if eligible(values[index]) {
+        assert(exists|i: int| 0 <= i < values.len() && matches(values[i])
+            && (forall|j: int| 0 <= j < i ==> !matches(values[j])) && eligible(values[i]));
+    }
+}
+pub proof fn first_gate_decides(kb: KBView, context: ContextView, target: ClaimRefView, gate: Seq<char>, index: int)
+    requires 0 <= index < kb.receipts.len(), kb.receipts[index].id == gate,
+        forall|j: int| 0 <= j < index ==> kb.receipts[j].id != gate,
+    ensures gate_reusable(kb, context, target, gate) == reusable_spec(kb, context, target, kb.receipts[index]),
+{
+    hide(reusable_spec);
+    first_match_decides(kb.receipts, |receipt: ReceiptView| receipt.id == gate,
+        |receipt: ReceiptView| reusable_spec(kb, context, target, receipt), index);
+    reveal(gate_reusable);
 }
 pub open spec fn transition_spec(kb: KBView, context: ContextView, proposal: ProposalView, target: ProposalStatus) -> bool {
     use ProposalStatus::*;

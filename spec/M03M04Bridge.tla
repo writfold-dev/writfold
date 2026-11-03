@@ -121,7 +121,7 @@ THEOREM InitInvariant == Environment /\ Init => Inv
  <1>2. Init => Binding
    BY SMT DEF Init, Binding, R!Init
  <1> QED BY <1>1, <1>2 DEF Inv
-(* Local projections leave the qualified M03 source unchanged. They expose
+(* Local projections preserve M03's existing action/proof bodies. They expose
    only the reader metadata consumed by Binding, not the full storage record. *)
 THEOREM ReaderAcquireProjection == \A q \in Readers :
  R!TypeOK /\ R!AcquirePin(q) =>
@@ -169,15 +169,20 @@ THEOREM ReleasePreserves == \A q \in Readers : Inv /\ ReleaseReader(q) => Inv'
  BY R!ReleasePreserves, C!StutterPreserves, SMT
  DEF R!ReleasePreserves, C!StutterPreserves, Inv, Binding, ReleaseReader, R!ReleasePin, R!Inv, R!TypeOK, R!Typed, R!StateType, C!vars
 THEOREM SpawnPreserves == \A i \in Incarnations, p \in Pids : Inv /\ SpawnEngine(i, p) => Inv'
- BY C!SpawnPreserves, R!StutterPreserves, SMT
- DEF C!SpawnPreserves, R!StutterPreserves, Inv, Binding, SpawnEngine, NoBindings, C!Spawn, C!Inv, C!TypeOK, C!LifecycleType, R!vars
+ <1>1. \A i \in Incarnations, p \in Pids : Inv /\ SpawnEngine(i,p) => R!Inv' /\ C!Inv'
+   BY C!SpawnPreserves, R!StutterPreserves
+   DEF C!SpawnPreserves, R!StutterPreserves, Inv, SpawnEngine, R!vars
+ <1>2. \A i \in Incarnations, p \in Pids : Inv /\ SpawnEngine(i,p) => Binding'
+   BY C!SpawnChanges, SMT
+   DEF C!SpawnChanges, C!SpawnChanged, Inv, C!Inv, Binding, SpawnEngine, NoBindings
+ <1> QED BY <1>1, <1>2 DEF Inv
 THEOREM ReapPreserves == Inv /\ ReapEngine => Inv'
  <1>1. Inv /\ ReapEngine => R!Inv' /\ C!Inv'
    BY C!ReapPreserves, R!StutterPreserves
    DEF C!ReapPreserves, R!StutterPreserves, Inv, ReapEngine, R!vars
  <1>2. Inv /\ ReapEngine => Binding'
-   BY SMT DEF Inv, Binding, ReapEngine, C!Reap, C!Inv, C!TypeOK,
-              C!LifecycleType, C!StateShape, C!LifecycleFields
+   BY C!ReapOwnershipEffects, SMT
+   DEF C!ReapOwnershipEffects, Inv, Binding, ReapEngine, C!Inv
  <1> QED BY <1>1, <1>2 DEF Inv
 THEOREM ToolPreserves == Inv /\ ToolStep => Inv'
  BY C!StepPreserves, R!StutterPreserves, SMT
@@ -219,8 +224,15 @@ THEOREM StepPreserves == Environment /\ Inv /\ [Next]_vars => Inv'
  ReleasePreserves, SpawnPreserves, ReapPreserves, ToolPreserves,
  EnginePreserves, RetentionPreserves, StutterPreserves DEF BindPreserves, ReadPreserves, CancelPreserves, CertifyPreserves, ConnectionClosePreserves, ReleasePreserves, SpawnPreserves, ReapPreserves, ToolPreserves, EnginePreserves, RetentionPreserves, StutterPreserves, Next, ReaderStep
 THEOREM InvariantImpliesSafety == Inv => Safety
- BY R!InvariantImpliesSafety, C!InvariantImpliesSafety, SMT
- DEF R!InvariantImpliesSafety, C!InvariantImpliesSafety, Inv, Safety, Binding, R!Safety
+ <1>1. Inv => R!Safety /\ C!Safety
+   BY R!InvariantImpliesSafety, C!InvariantImpliesSafety
+   DEF R!InvariantImpliesSafety, C!InvariantImpliesSafety, Inv
+ <1>2. Inv => (\A q \in connections :
+   q \in Readers /\ r.phase[q] # "idle" /\ bound[q]=c.inc /\ c.charged)
+   BY SMT DEF Inv, Binding
+ <1>3. Inv => (\A q \in Readers : bound[q] # "none" => r.phase[q] # "idle")
+   BY DEF Inv, Binding
+ <1> QED BY <1>1, <1>2, <1>3 DEF Safety, R!Safety
 THEOREM RetentionFrame == RetentionStep => UNCHANGED <<c, bound, connections>>
  BY DEF RetentionStep
 THEOREM EngineFrame == EngineStep => UNCHANGED <<r, bound, connections>>

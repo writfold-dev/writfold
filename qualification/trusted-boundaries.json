@@ -4,7 +4,7 @@
     {
       "source": "crates/writfold-domain/src/integer/primitive_specs.rs",
       "decision": "WF-TCB-001",
-      "sha256": "eb7c72405ec5a40f7778c8e4d7082e64ff4956154e75dd1872029bcb5f604bfe",
+      "sha256": "7dacd7bcf0a73148d18ef7e94b02ebd903ae2f5a06ae06f75c9fdb21a0f27c62",
       "attributes": [
         "external_type_specification",
         "external_body",

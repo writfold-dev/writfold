@@ -1,8 +1,10 @@
 //! Byte-exact ASCII grammars; opaque identifiers preserve arbitrary UTF-8.
 pub(crate) mod spec;
+mod storage;
 use spec::Alphabet;
 #[cfg(verus_keep_ghost)]
 use spec::*;
+pub(crate) use storage::{graph, graph_commit};
 use vstd::prelude::*;
 #[cfg(verus_keep_ghost)]
 use vstd::string::StringSliceAdditionalSpecFns;
@@ -32,6 +34,10 @@ fn byte_matches(byte: u8, class: Alphabet) -> (accepted: bool)
             || byte == b':' || byte == b'-',
         Alphabet::Hex => digit || byte_in_range(byte, b'a', b'f'),
         Alphabet::Dolt => digit || byte_in_range(byte, b'a', b'v'),
+        Alphabet::Graph => alphanumeric || byte == b'-',
+        Alphabet::Crockford => digit || byte_in_range(byte, b'A', b'H')
+            || byte_in_range(byte, b'J', b'K') || byte_in_range(byte, b'M', b'N')
+            || byte_in_range(byte, b'P', b'T') || byte_in_range(byte, b'V', b'Z'),
     }
 }
 

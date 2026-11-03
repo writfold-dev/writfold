@@ -10,7 +10,7 @@ successful reference command into Rust product qualification.
 
 | Command | Executed work | Meaning of a successful receipt |
 | --- | --- | --- |
-| `baseline` | Existing baseline reconciliation plus SHA256 and byte-length validation of every `source_files` entry in the frozen contract and evaluation inventories | Current retained-evidence identities reconciled; not complete WF00/WF21 or fresh historical test execution |
+| `baseline` | Historical reconciliation and frozen inventory hashes, plus revision-4 manifest/registry identities and the complete 19-stage/25-gate/26-proof inventory | Retained and active-contract identities reconciled; not complete WF00/WF21 or fresh historical test execution |
 | `bootstrap --tool-image IMAGE@sha256:DIGEST` | Storage preflight, local immutable image inspection, fresh in-container executable/tool observation | Explicitly unadmitted tool observation only |
 | `bootstrap` | Storage preflight, local Compose/BuildKit `tools` build, then inspection and observation of the admitted lock image | Tool build/observation only; not offline-closure qualification. A missing lock is a failure, never execution of the mutable bootstrap tag |
 | `reference`, `native-smoke` | Compose `reference`, running the existing real Git/Dolt/Python CLI smoke | Historical Dolt reference-only scope; retains historical WF09 association, never qualifies revision-4 Omnigraph WF09 |

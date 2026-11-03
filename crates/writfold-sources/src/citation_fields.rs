@@ -105,7 +105,10 @@ pub(crate) fn format_field(key: &str, value: &str) -> Result<String, CodecError>
             "unrepresentable citation field {key:?}"
         )));
     }
-    if value.chars().any(writfold_domain::text::whitespace) || value.is_empty() || value.starts_with('"') {
+    if value.chars().any(writfold_domain::text::whitespace)
+        || value.is_empty()
+        || value.starts_with('"')
+    {
         if value.contains('"') {
             return Err(CodecError::malformed(format!(
                 "citation field {key:?} cannot quote embedded double quotes"
