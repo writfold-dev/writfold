@@ -88,6 +88,31 @@ The pinned [storage contract](https://github.com/ModernRelay/omnigraph/blob/60bf
 
 The blocker is retained in `~/.local/share/writfold/evidence/omnigraph-relocation-blocker-001.json`. A supported native remedy or a separately admitted fixed release is needed. Metadata rewriting, aliases that conceal the missing original root, skipping branch checks, logical export presented as native-history backup, and automatic Dolt fallback are not accepted remedies.
 
+### Upstream report and reduced reproduction
+
+[Omnigraph issue #1233](https://github.com/ModernRelay/omnigraph/issues/1233)
+records the failure with a standalone, synthetic CLI reproducer. It was filed
+on 2 November 2026 and observed open with `needs-triage`; maintainer acceptance
+and a supported remedy remain outstanding.
+
+The reduction uses one node and one retained branch, with no schema migration,
+concurrent writer, cleanup or server. After every CLI exits, it copies the
+complete root, compares every relative file's SHA256, and renames only its own
+original root so the original pathname is absent. The relocated snapshot returns
+the exact original row and graph commit. The retained-branch read exits 1 and
+requests `original.omni/__manifest/data/...lance`, despite targeting
+`relocated.omni`. This smaller case does not replace the earlier fresh-container
+restore campaign: its source bytes remain retained at a different pathname.
+
+The executed script, command logs and failed receipt are retained under
+`~/.local/share/writfold/evidence/omnigraph-relocation-issue-001/`. The public
+issue includes the script and exact output, not private reference material.
+The latest published release checked during filing was still 0.14.0; newer
+source was not executed. Location-bound clone metadata remains a hypothesis.
+The report asks whether whole-root relocation is supported and, if not, for
+the supported history-preserving restore procedure. P01O/WF24 remains blocked.
+
+
 ## Authenticated companion evidence
 
 `~/.local/share/writfold/evidence/omnigraph-companion-005.json` passes 19 scoped checks. The server binds only `127.0.0.1` inside a network-disabled container, uses private synthetic bearer credentials and an applied read/write policy, and reports readiness through an authenticated named query. Actual responses include 401 for absent/wrong credentials, 403 for a reader's mutation, and 400 for an unsupported HTTP contract.

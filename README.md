@@ -64,6 +64,37 @@ Start with [`AGENTS.md`](AGENTS.md) and the [19-stage handover](handovers/revisi
 
 The development-preview website is live at [writfold.dev](https://writfold.dev/), with HTTPS enforced, a public project guide and explicit planned-versus-implemented boundaries. The [website repository](https://github.com/writfold-dev/writfold-dev.github.io) publishes reviewed static commits through a manifest-checked Pages workflow. This website does not complete product stage P13 or advertise an installable Rust release. The Rust repository remains private.
 
+### Next work toward an alpha
+
+Progress is preserved at `7dedca3e30468330c6b6f10975b9d1863390bb44`.
+Its exact pre-commit content passed 117 Rust checks and fresh Lean/Python/Rust
+comparison on all 334 scenarios with zero mismatches. The
+[progress ledger](qualification/revision-4-progress.json) links the receipts and
+explicit byte-tree correspondence; these scoped runs do not pass release gates.
+
+1. Reconcile revision-4 P00/P01 identities and admission. Resolve the native
+   history portability contract tracked in
+   [Omnigraph #1233](https://github.com/ModernRelay/omnigraph/issues/1233), then
+   qualify the complete P01O/WF24 profile. No metadata/path workaround or backend
+   fallback is adopted.
+2. Continue storage-independent P02 storage identity/signature boundaries and
+   P03/P03P production semantic proofs while upstream triage is pending.
+   Existing component proofs and conformance do not close those stages.
+3. After foundation admission, complete the dependent protocols, storage,
+   authenticated publication/recovery, workflows, Scribes, CLI/RPC, views and
+   migration stages in the [mandatory dependency order](handovers/revision-4/writfold/plan/08-execution-and-acceptance.md).
+4. Qualify the integrated product, installed Linux/WSL runtime and release
+   artifacts before tagging an alpha. The current `writfold-ref` is not an
+   end-user substitute.
+
+Public-source readiness is a separate gate: review preserved Git history,
+both immutable handovers and nested reference archives, private-reference
+metadata, operator paths and third-party redistribution notices. The local
+checkpoint audit is not publication clearance. Keep immutable originals
+unchanged; no release tag, repository-visibility change or public source
+publication is claimed.
+
+
 ## License
 
 Writfold and its companion website use the [MIT license](LICENSE), selected by Tarek Nawara on 2 November 2026. Third-party materials retain their original notices and licenses; this does not relicense bundled reference material or authorize publication of private playbook content.

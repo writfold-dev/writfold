@@ -168,6 +168,8 @@ The old `handover/`, historical manifests and frozen inventories remain unchange
 Earlier P00/P01/P02 records are preserved under `historical_completions` in the
 status ledger; active stage statuses separately describe revision-4 obligations.
 
-No runner checks were executed as part of introducing this implementation.
-Integration qualification belongs to the main implementation owner, after all
-concurrent source changes have landed.
+The original runner implementation handoff did not execute integration checks.
+Later source-bound attempts are indexed separately in
+[`qualification/revision-4-progress.json`](../../qualification/revision-4-progress.json).
+Run qualification only after concurrent source edits finish; neither this
+documentation nor a checkpoint commit renews earlier receipts.

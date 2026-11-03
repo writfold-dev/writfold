@@ -1,7 +1,38 @@
 {
   "schema_version": 1,
-  "date": "2026-11-02",
+  "date": "2026-11-03",
   "scope": "Current exercised progress; not a release or mandatory-gate receipt",
+  "checkpoint": {
+    "commit": "7dedca3e30468330c6b6f10975b9d1863390bb44",
+    "tree_digest": "9b1b4792dd95139736a1f21055fd062d1edc1503cb992c03a636541243cfec62",
+    "tested_parent": "31b27f8b4577b6a3c692597a7da85eaa12387e5f",
+    "tested_dirty": true,
+    "committed_content_matches_executed_snapshot": true,
+    "linkage": "~/.local/share/writfold/evidence/commit-linkage-20261103-001.json",
+    "unit_checks_passed": 117,
+    "unit_skips": 0,
+    "conformance_cases": 334,
+    "conformance_pairwise_mismatches": 0,
+    "conformance_obligations_passed": 12,
+    "scope": "Fresh Compose unit and three-host conformance executions on the pre-commit content; explicit byte-tree linkage only, not fresh post-commit or full-gate qualification. Subsequent documentation changes do not renew these receipts."
+  },
+  "alpha_release": {
+    "status": "blocked",
+    "release_tag_created": false,
+    "repository_visibility": "private",
+    "publication_review": "not_cleared",
+    "blockers": [
+      "Omnigraph retained-history relocation has no admitted supported remedy; P01O/WF24 remains blocked.",
+      "Production CLI, integrated publication/recovery, and installed release artifacts are not implemented/qualified; writfold-ref is development-only.",
+      "All 25 mandatory revision-4 gates still require complete source-bound release evidence.",
+      "Public disclosure review must cover preserved history, immutable handovers, nested archives, private-reference metadata, operator paths and third-party notices."
+    ],
+    "independent_next_work": [
+      "P00/P01 revision-4 reconciliation and native tool/runtime admission",
+      "P02 storage nominal identities and explicitly versioned signature/wire boundaries",
+      "P03/P03P actual production semantic and portfolio proof completion"
+    ]
+  },
   "handover": {
     "revision": 4,
     "path": "handovers/revision-4/writfold",
@@ -58,6 +89,10 @@
     "independent_restore_status": "fail",
     "foundation_disposition": "blocked",
     "blocker": "Retained branch after whole-root relocation requests an unavailable original-path Lance object. Original snapshot rows remain readable; that does not pass retained-history portability.",
+    "upstream_issue": "https://github.com/ModernRelay/omnigraph/issues/1233",
+    "upstream_state_observed": "open, needs-triage; no accepted remedy",
+    "reduced_reproduction": "~/.local/share/writfold/evidence/omnigraph-relocation-issue-001/receipt.json",
+    "reduced_scope": "One synthetic node and retained branch; no schema changes, server or concurrency. Whole-root file hashes match, original pathname is absent, exact snapshot rows/commit survive, branch read exits 1 at the original Lance path. Not a replacement for the earlier fresh-container restore campaign.",
     "automatic_dolt_fallback": false
   },
   "native_view": {
@@ -80,6 +115,36 @@
   },
   "evidence_reuse": "Each receipt binds its executed snapshot; later documentation/ledger changes do not renew or broaden it.",
   "records": [
+    {
+      "path": "~/.local/share/writfold/evidence/commit-linkage-20261103-001.json",
+      "sha256": "6386260b23ee1478fa7ecff1f0fa418a5bac64d758d8310407b2a1af6cb2b6b7",
+      "bytes": 847
+    },
+    {
+      "path": "~/.local/share/writfold/qualification/commit-unit-20261102-001.json",
+      "sha256": "28e6c5a35de0d203297d40f8a73302e6c9c096a955f63c0ada4f1adc1eed23c5",
+      "bytes": 315403
+    },
+    {
+      "path": "~/.local/share/writfold/qualification/commit-conformance-20261102-001.json",
+      "sha256": "6de98663285e91864e3c72ee6f3d68868a581d8438a03faae940d6eaa26a592c",
+      "bytes": 329307
+    },
+    {
+      "path": "~/.local/share/writfold/evidence/omnigraph-relocation-issue-001/receipt.json",
+      "sha256": "442c6b3221f9c443ef6256b15e57b691cbe1ff72ca1595220086b2031a0f411e",
+      "bytes": 337416
+    },
+    {
+      "path": "~/.local/share/writfold/evidence/omnigraph-relocation-issue-001/repro.py",
+      "sha256": "833add24f0a51d57055a54d6897830e965fb74fa37e86e235d2c37349d13c332",
+      "bytes": 3679
+    },
+    {
+      "path": "~/.local/share/writfold/evidence/omnigraph-relocation-issue-001/work/result.json",
+      "sha256": "488e4db4381525d9690458cbd65b944f2e8437ad290ff9dda10eaa641ea860e0",
+      "bytes": 1182
+    },
     {
       "path": "~/.local/share/writfold/qualification/v4-baseline-001.json",
       "sha256": "1c712b4dfdfa3fe2ce7ed555808ec08d69de0cc095da49f72a05a6c2fe498c2d",

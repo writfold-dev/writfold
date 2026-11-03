@@ -51,6 +51,7 @@
       "receipts": [],
       "contract": "handovers/revision-4/writfold/stages/P01O.md",
       "blocking_evidence": "~/.local/share/writfold/evidence/omnigraph-relocation-blocker-001.json",
+      "upstream_issue": "https://github.com/ModernRelay/omnigraph/issues/1233",
       "scope_note": "Omnigraph 0.14.0 separate epochs and authenticated companion smokes are exercised, but an independent relocated retained-branch read still references the unavailable original Lance path. Full WF24 remains unqualified; no automatic backend fallback."
     },
     {
@@ -631,6 +632,7 @@
       "status": "blocked",
       "receipts": [],
       "blocking_evidence": "~/.local/share/writfold/evidence/omnigraph-relocation-blocker-001.json",
+      "upstream_issue": "https://github.com/ModernRelay/omnigraph/issues/1233",
       "stages": [
         "P01O",
         "P06",
@@ -639,6 +641,15 @@
     }
   ],
   "retained_failures": [
+    {
+      "kind": "omnigraph-minimal-relocation-reproduction",
+      "attempt": "omnigraph-relocation-issue-001",
+      "tool": "Omnigraph 0.14.0",
+      "result": "one-node-retained-branch-read-uses-original-path",
+      "receipt": "~/.local/share/writfold/evidence/omnigraph-relocation-issue-001/receipt.json",
+      "upstream_issue": "https://github.com/ModernRelay/omnigraph/issues/1233",
+      "disposition": "Synthetic CLI reduction preserves the original failure: identical copied bytes and successful exact snapshot read, but branch read exits 1 after the original pathname is made unavailable. Await supported remedy; P01O/WF24 stays blocked."
+    },
     {
       "kind": "omnigraph-native-history-relocation",
       "attempt": "omnigraph-foundation-003",
