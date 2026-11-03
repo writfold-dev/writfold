@@ -1,0 +1,21 @@
+{
+  "http_contract": "0.14",
+  "unsupported_contract": "99.0",
+  "graph_id": "companion",
+  "seed_entities": 9,
+  "empty": [],
+  "all_nodes": [
+    {"s.slug": "a", "s.name": "A"},
+    {"s.slug": "b", "s.name": "B"},
+    {"s.slug": "c", "s.name": "C"},
+    {"s.slug": "d", "s.name": "D"}
+  ],
+  "two": [{"t.slug": "d"}],
+  "rename_params": {"name": "A companion"},
+  "renamed": [
+    {"s.slug": "a", "s.name": "A companion"},
+    {"s.slug": "b", "s.name": "B"},
+    {"s.slug": "c", "s.name": "C"},
+    {"s.slug": "d", "s.name": "D"}
+  ]
+}

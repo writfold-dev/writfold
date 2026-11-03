@@ -502,9 +502,11 @@
       "source": "formal/Kctx/Theorems.lean"
     },
     "A-INTEGER": {
-      "statement": "Integer wraps pinned num-bigint 0.4.8. Its parsing/arithmetic remain trusted external implementation behavior. WF-TCB-001 admits explicit source-reviewed primitive representation, clone, sign and integer construction/conversion contracts; Writfold identity/quantity admission and conversion bodies are verified against them. No external BigInt arithmetic implementation proof is claimed.",
+      "statement": "Integer wraps pinned num-bigint 0.4.8. Its parsing/arithmetic remain trusted external implementation behavior. WF-TCB-001 admits exact source-reviewed representation, clone, sign, comparison, borrowed arithmetic and construction/conversion contracts, plus the explicitly named foreign AddSpec/SubSpec total-domain fact. Writfold wrapper bodies are verified against these assumptions; no BigInt implementation proof or proof of that trusted fact is claimed.",
       "sources": [
         "crates/writfold-domain/src/integer.rs",
+        "crates/writfold-domain/src/integer/arithmetic.rs",
+        "crates/writfold-domain/src/integer/comparison.rs",
         "crates/writfold-domain/src/units.rs",
         "crates/writfold-wire/src/semantic/codec.rs",
         "Cargo.toml",
@@ -516,19 +518,24 @@
         "num-bigint": "0.4.8",
         "num-traits": "0.2.19"
       },
-      "approval": "WF-TCB-001; exact verification-only source and attributes admitted by qualification/trusted-boundaries.json. General assumptions, proof axioms and Writfold executable-body exclusions are forbidden.",
+      "approval": "WF-TCB-001; exact verification-only source and attributes admitted by qualification/trusted-boundaries.json. The sole assumed proof fact is borrowed_arithmetic_domain for the two foreign BigInt trait preconditions. General assumptions, other proof axioms and Writfold executable-body exclusions remain forbidden.",
       "approved_specification_module": "crates/writfold-domain/src/integer/primitive_specs.rs",
-      "approved_specification_sha256": "4ad574bc9e03441772847f60cfbca7ada186bd243779288091438fded50ecbb9",
+      "approved_specification_sha256": "eb7c72405ec5a40f7778c8e4d7082e64ff4956154e75dd1872029bcb5f604bfe",
       "dependency_package_checksum": "c89e69e7e0f03bea5ef08013795c25018e101932225a656383bd384495ecc367",
       "reviewed_dependency_sources": {
         "src/bigint.rs": "bbed782925af8f9a3c15a02f94154548df92f37aee6b8593597d192533f25c13",
         "src/bigint/convert.rs": "da5ff804ae7be9b88b1f59837d4acad6fda6f39eb97c9fb63c1a7bd35ea2729f",
+        "src/bigint/addition.rs": "cdc28e59a5dc6fe7dbad2d8d9514b49fe1bea061e82ebefe89c518f448dc8ba9",
+        "src/bigint/subtraction.rs": "c2aa7e0fbfc7747099d0eec77efdedaa8d79cff88b1587d640d6b1c3c7dc0e4a",
         "src/biguint/convert.rs": "f4daf2e5e48fc5f9cd91d70f35574aca00ed27ced8e63f56dcc216dc6fb97dbc"
       },
       "primitive_contracts": [
         "num_bigint::BigInt::{sign,clone,clone_from}",
         "TryFrom<&BigInt> for u64 and i64",
-        "From<i8,i16,i32,i64,i128,isize,u8,u16,u32,u64,u128,usize> for BigInt"
+        "From<i8,i16,i32,i64,i128,isize,u8,u16,u32,u64,u128,usize> for BigInt",
+        "PartialEq::eq and Ord::cmp for BigInt",
+        "Add<&BigInt>::add and Sub<&BigInt>::sub for &BigInt",
+        "borrowed_arithmetic_domain: assumed totality of exactly the corresponding foreign AddSpec/SubSpec preconditions"
       ]
     },
     "A-MODEL-AUTH": {

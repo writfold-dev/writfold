@@ -1,0 +1,10 @@
+query nodes() {
+ match { $s: Service }
+ return { $s.@id as identity, $s.slug as slug, $s.name as name, $s.description as description }
+ order { identity }
+}
+query relationships() {
+ match { $s: Service $s $e:dependsOn $t }
+ return { $e.@id as identity, $e.@type as type, $e.@src as source, $e.@dst as destination }
+ order { source, destination, identity }
+}

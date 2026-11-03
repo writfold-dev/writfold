@@ -108,7 +108,7 @@ pub fn portfolio_plan_valid(state: &PortfolioState, plan: &PortfolioPlan) -> boo
     if !portfolio_state_valid(state)
         || plan.candidate().snapshot() == state.kb().snapshot()
         || !preserves_prefix(state.kb(), plan.candidate())
-        || plan.actor().as_str().trim().is_empty()
+        || !writfold_domain::text::nonblank(plan.actor().as_str())
         || plan.contexts().is_empty()
         || !plan.contexts().iter().all(|item| {
             item.context()

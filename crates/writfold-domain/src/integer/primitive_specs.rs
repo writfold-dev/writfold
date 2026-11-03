@@ -2,7 +2,9 @@
 //! No Writfold executable body is excluded here. These are assumptions about
 //! external library primitives, not mechanically verified BigInt arithmetic.
 use num_bigint::{BigInt, Sign, TryFromBigIntError};
+use std::{cmp::Ordering, ops::{Add, Sub}};
 use vstd::prelude::*;
+use vstd::std_specs::ops::{AddSpec, SubSpec};
 
 verus! {
 
@@ -55,6 +57,46 @@ pub fn clone(value: &BigInt) -> (result: BigInt)
 pub fn clone_from(target: &mut BigInt, source: &BigInt)
     ensures *final(target) == *source,
 { target.clone_from(source) }
+
+#[verifier::external_fn_specification]
+pub fn equal(left: &BigInt, right: &BigInt) -> (result: bool)
+    ensures result == (mathematical(*left) == mathematical(*right)),
+{ left.eq(right) }
+
+#[verifier::external_fn_specification]
+pub fn compare(left: &BigInt, right: &BigInt) -> (result: Ordering)
+    ensures
+        (result is Less) <==> mathematical(*left) < mathematical(*right),
+        (result is Equal) <==> mathematical(*left) == mathematical(*right),
+        (result is Greater) <==> mathematical(*left) > mathematical(*right),
+{ left.cmp(right) }
+
+// WF-TCB-001 explicitly assumes only the domains of these two foreign
+// operations are total. vstd/std_specs/ops.rs documents this orphan-rule
+// limitation: this crate cannot implement its SpecImpl traits for BigInt.
+// This is a trusted library fact, not a verified lemma or a Writfold decision.
+#[verifier::external_body]
+pub proof fn borrowed_arithmetic_domain(left: &BigInt, right: &BigInt)
+    ensures
+        <&BigInt as AddSpec<&BigInt>>::add_req(left, right),
+        <&BigInt as SubSpec<&BigInt>>::sub_req(left, right),
+{}
+
+// These results are normalized by the library. Canonical identity connects
+// Rust's trait result type to the same unbounded mathematical representation.
+#[verifier::external_fn_specification]
+pub fn add<'a, 'b>(left: &'b BigInt, right: &BigInt) -> (result: BigInt)
+    ensures
+        mathematical(result) == mathematical(*left) + mathematical(*right),
+        result == from_primitive(mathematical(*left) + mathematical(*right)),
+{ left.add(right) }
+
+#[verifier::external_fn_specification]
+pub fn subtract<'a, 'b>(left: &'b BigInt, right: &BigInt) -> (result: BigInt)
+    ensures
+        mathematical(result) == mathematical(*left) - mathematical(*right),
+        result == from_primitive(mathematical(*left) - mathematical(*right)),
+{ left.sub(right) }
 
 } // verus!
 

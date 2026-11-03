@@ -187,7 +187,7 @@ def verify_attempt(directory, workspace, profile, timeout, mutation=None):
 
 def produce(args, run_root, summary):
     profile = json.loads((ROOT / "qualification/verus-profile.json").read_text())
-    require(profile["schema_version"] == 3, "unsupported Verus profile schema")
+    require(profile["schema_version"] == 4, "unsupported Verus profile schema")
     summary["required_mutations"] = [mutation["name"] for mutation in profile["mutations"]]
     summary.update({"scope": profile["scope"], "excluded_claims": profile["excluded_claims"],
                     "verification_target": profile["verification_target"],

@@ -93,7 +93,7 @@ fn field_value(body: &str, start: usize) -> Option<(&str, usize)> {
     }
     let length = rest
         .chars()
-        .take_while(|&c| !unicode::space(c) && c != '⟧')
+        .take_while(|&c| !writfold_domain::text::whitespace(c) && c != '⟧')
         .map(char::len_utf8)
         .sum::<usize>();
     (length > 0).then_some((&rest[..length], start + length))
@@ -105,7 +105,7 @@ pub(crate) fn format_field(key: &str, value: &str) -> Result<String, CodecError>
             "unrepresentable citation field {key:?}"
         )));
     }
-    if value.chars().any(unicode::space) || value.is_empty() || value.starts_with('"') {
+    if value.chars().any(writfold_domain::text::whitespace) || value.is_empty() || value.starts_with('"') {
         if value.contains('"') {
             return Err(CodecError::malformed(format!(
                 "citation field {key:?} cannot quote embedded double quotes"

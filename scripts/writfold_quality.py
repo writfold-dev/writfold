@@ -121,6 +121,8 @@ class Producer:
             ("test-control", '#[cfg(test)] mod tests { #[test] fn allowed() { Some(1).unwrap(); } }', None),
             ("ghost-control", 'verus! { proof fn allowed() { let x = Some(1); x.unwrap(); } }', None),
             ("ghost-contract-control", 'verus! { fn allowed(x: Option<u64>) -> (r: Option<u64>) ensures r.is_some() ==> r.unwrap() == x.unwrap(), { x } }', None),
+            ("proof-positivity-control", 'verus! { #[verifier::reject_recursive_types(T)] struct Restricted<T> { value: T } }', None),
+            ("proof-recursion-acceptance", 'verus! { #[verifier::accept_recursive_types(T)] struct Unreviewed<T> { value: T } }', "unapproved-proof-assumption"),
             ("proof-assume", 'verus! { proof fn forbidden() { assume(false); } }', "unapproved-proof-assumption"),
             ("proof-axiom", 'verus! { axiom fn forbidden() ensures false; }', "unapproved-proof-assumption"),
             ("proof-external-body", 'verus! { #[verifier::external_body] fn forbidden() -> bool { true } }', "unapproved-proof-assumption"),

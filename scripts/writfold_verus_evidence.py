@@ -1,6 +1,7 @@
 """Strict admission of pinned cargo-verus reports, independent of execution."""
 from copy import deepcopy
 from dataclasses import dataclass
+import hashlib
 import json
 from pathlib import Path
 import re
@@ -9,7 +10,8 @@ import re
 ADMISSION_CONTROLS = (
     "absent", "truncated", "foreign-only", "partial", "zero-obligation",
     "missing-named-function", "missing-overload", "missing-failed-function",
-    "unexpected-failed-function", "split-diagnostic", "successful-mutant-process",
+    "unexpected-failed-function", "split-diagnostic", "unowned-primary",
+    "missing-owned-site", "contract-source-drift", "successful-mutant-process",
 )
 
 class EvidenceError(ValueError):
@@ -75,6 +77,55 @@ def mutation_functions(profile, mutation):
     return names
 
 
+def validate_contracts(profile):
+    """Admit only exact source-pinned inherited trait contract locations."""
+    require(profile.get("schema_version") == 4, "unsupported Verus evidence profile")
+    checked = {}
+    for spec in profile["crates"].values():
+        for function in spec["functions"].values():
+            contracts = function.get("inherited_contracts", [])
+            require(isinstance(contracts, list), "invalid inherited contract list")
+            for contract in contracts:
+                require(isinstance(contract, dict)
+                        and set(contract) == {"source", "lines", "sha256"},
+                        "invalid inherited contract declaration")
+                source, lines, expected = contract["source"], contract["lines"], contract["sha256"]
+                require(isinstance(source, str) and Path(source).is_absolute()
+                        and isinstance(lines, list) and len(lines) == 2
+                        and all(type(line) is int for line in lines) and 1 <= lines[0] <= lines[1]
+                        and isinstance(expected, str) and re.fullmatch(r"[0-9a-f]{64}", expected),
+                        "invalid inherited contract identity")
+                if source not in checked:
+                    try:
+                        data = Path(source).read_bytes()
+                    except OSError as error:
+                        raise EvidenceError(f"unavailable inherited contract: {source}") from error
+                    checked[source] = (hashlib.sha256(data).hexdigest(), len(data.splitlines()))
+                actual, length = checked[source]
+                require(actual == expected and lines[1] <= length,
+                        "inherited contract source or range changed")
+
+
+def span_in_declaration(span, declaration, workspace):
+    source = span.get("file_name")
+    first, last = span.get("line_start"), span.get("line_end")
+    return (isinstance(source, str) and type(first) is int and type(last) is int
+            and (workspace / source).resolve() == (workspace / declaration["source"]).resolve()
+            and declaration["lines"][0] <= first <= last <= declaration["lines"][1])
+
+
+def attributable_diagnostic(message, declarations, contracts, workspace):
+    spans = message.get("spans", [])
+    owned = lambda span: any(span_in_declaration(span, declaration, workspace)
+                             for declaration in declarations)
+    primary = [span for span in spans if span.get("is_primary") is True]
+    # Trait errors locate the generic contract first and the actual return site
+    # second. Neither an unrelated contract nor an unpaired library error passes.
+    return (any(owned(span) for span in spans) and bool(primary)
+            and all(owned(span) or any(span_in_declaration(span, contract, workspace)
+                                      for contract in contracts) for span in primary))
+
+
 @dataclass
 class Evidence:
     records: list
@@ -101,6 +152,7 @@ class Evidence:
 
     def positive(self, status, profile):
         require(status == 0, "verifier process failed")
+        validate_contracts(profile)
         admitted = {}
         for crate, spec in profile["crates"].items():
             report, functions = self.report(crate)
@@ -127,6 +179,7 @@ class Evidence:
 
     def mutant(self, status, profile, mutation, workspace):
         require(status > 0, "mutant process did not fail normally")
+        validate_contracts(profile)
         crate = mutation["crate"]
         names = mutation_functions(profile, mutation)
         report, functions = self.report(crate)
@@ -139,6 +192,8 @@ class Evidence:
         declarations = [declaration for name in names
                         for declaration in profile["crates"][crate]["functions"][name]["declarations"]]
         require(declarations, "missing production declaration mapping")
+        contracts = [contract for name in names
+                     for contract in profile["crates"][crate]["functions"][name].get("inherited_contracts", [])]
         diagnostics = []
         for record in self.records:
             if record.get("reason") != "compiler-message":
@@ -153,15 +208,8 @@ class Evidence:
                     "foreign compiler error")
             require(text in {"postcondition not satisfied", "possible arithmetic underflow/overflow"},
                     f"not an intended contract/arithmetic failure: {text}")
-            require(any(s.get("is_primary") is True
-                        and any((workspace / s.get("file_name", "")).resolve()
-                                == (workspace / declaration["source"]).resolve()
-                                and type(s.get("line_start")) is int and type(s.get("line_end")) is int
-                                and declaration["lines"][0] <= s["line_start"]
-                                    <= s["line_end"] <= declaration["lines"][1]
-                                for declaration in declarations)
-                        for s in message.get("spans", [])),
-                    "proof failure lacks primary span in the named production function")
+            require(attributable_diagnostic(message, declarations, contracts, workspace),
+                    "proof failure lacks an owned site and approved primary contract")
             diagnostics.append(record)
         require(diagnostics, "missing attributable proof diagnostic")
         return {"results": result, "functions": functions, "diagnostics": diagnostics}
@@ -176,6 +224,37 @@ def changed_verdict(evidence, crate, name, success):
             if entry["function"] == name:
                 entry["success"] = success
     return changed
+
+
+def contract_controls(profile, positive, negative, mutation, workspace, rejected):
+    names = mutation_functions(profile, mutation)
+    declarations = [declaration for name in names
+                    for declaration in profile["crates"][mutation["crate"]]["functions"][name]["declarations"]]
+    unowned = deepcopy(negative)
+    missing = deepcopy(negative)
+    for evidence, mode in ((unowned, "primary"), (missing, "owned")):
+        for record in evidence.records:
+            if record.get("reason") != "compiler-message" or record.get("message", {}).get("level") != "error":
+                continue
+            message = record["message"]
+            if mode == "primary":
+                for span in message.get("spans", []):
+                    if span.get("is_primary") is True:
+                        span["file_name"] = "unapproved-contract.rs"
+            else:
+                message["spans"] = [span for span in message.get("spans", [])
+                                   if not any(span_in_declaration(span, declaration, workspace)
+                                              for declaration in declarations)]
+    rejected("unowned-primary", lambda: unowned.mutant(1, profile, mutation, workspace))
+    rejected("missing-owned-site", lambda: missing.mutant(1, profile, mutation, workspace))
+    changed = deepcopy(profile)
+    function = changed["crates"][mutation["crate"]]["functions"][names[0]]
+    declaration = function["declarations"][0]
+    function.setdefault("inherited_contracts", []).append({
+        "source": str((workspace / declaration["source"]).resolve()),
+        "lines": declaration["lines"], "sha256": "0" * 64,
+    })
+    rejected("contract-source-drift", lambda: positive.positive(0, changed))
 
 
 def self_controls(profile, positive, negative, mutation, workspace):
@@ -242,6 +321,7 @@ def self_controls(profile, positive, negative, mutation, workspace):
         for span in record["message"].get("spans", []):
             span["file_name"] = "foreign.rs"
     rejected("split-diagnostic", lambda: split.mutant(1, profile, mutation, workspace))
+    contract_controls(profile, positive, negative, mutation, workspace, rejected)
     rejected("successful-mutant-process", lambda: negative.mutant(0, profile, mutation, workspace))
     require(tuple(case["name"] for case in cases) == ADMISSION_CONTROLS,
             "incomplete independent admission calibration")

@@ -1,4 +1,6 @@
 //! Signed, unbounded semantic integers, independent of OS time and size units.
+mod arithmetic;
+mod comparison;
 #[cfg(verus_keep_ghost)]
 mod primitive_specs;
 use num_bigint::{BigInt, ParseBigIntError};
@@ -6,19 +8,23 @@ use num_bigint::{BigInt, ParseBigIntError};
 use primitive_specs::{from_primitive, mathematical};
 use std::{
     fmt,
-    ops::{Add, Sub},
     str::FromStr,
 };
 use vstd::prelude::*;
 
 verus! {
 
-#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Debug)]
 pub struct Integer(BigInt);
 
 impl View for Integer {
     type V = int;
     closed spec fn view(&self) -> int { mathematical(self.0) }
+}
+
+impl DeepView for Integer {
+    type V = int;
+    open spec fn deep_view(&self) -> int { self@ }
 }
 
 impl Integer {
@@ -60,6 +66,13 @@ impl Integer {
 
 } // verus!
 
+impl std::hash::Hash for Integer {
+    #[inline]
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        std::hash::Hash::hash(&self.0, state);
+    }
+}
+
 impl FromStr for Integer {
     type Err = ParseBigIntError;
     fn from_str(value: &str) -> Result<Self, Self::Err> {
@@ -95,15 +108,3 @@ primitive_integers!(
     i8, i16, i32, i64, i128, isize, u8, u16, u32, u64, u128, usize
 );
 
-impl Add<&Integer> for &Integer {
-    type Output = Integer;
-    fn add(self, rhs: &Integer) -> Integer {
-        Integer(&self.0 + &rhs.0)
-    }
-}
-impl Sub<&Integer> for &Integer {
-    type Output = Integer;
-    fn sub(self, rhs: &Integer) -> Integer {
-        Integer(&self.0 - &rhs.0)
-    }
-}

@@ -77,7 +77,7 @@ impl AuthorityPolicy {
         }
         let kb = text(field(v, "kb_id")?)?;
         let version = text(field(v, "policy_version")?)?;
-        if blank(&kb) || blank(&version) {
+        if !writfold_domain::text::nonblank(&kb) || !writfold_domain::text::nonblank(&version) {
             return Err(BoundaryError::Binding("blank policy identity"));
         }
         let mut trusted_keys = BTreeMap::new();
@@ -90,7 +90,7 @@ impl AuthorityPolicy {
             let target_uses = items(field(key, "target_uses")?, text)?;
             if target_uses.is_empty()
                 || !unique(&target_uses)
-                || target_uses.iter().any(|s| blank(s))
+                || target_uses.iter().any(|s| !writfold_domain::text::nonblank(s))
             {
                 return Err(BoundaryError::Binding(
                     "target uses must be distinct and nonblank",
@@ -206,11 +206,4 @@ impl AuthorityPolicy {
             .filter(|key| key.permits(target_use))
             .ok_or(BoundaryError::Binding("untrusted key or unauthorized use"))
     }
-}
-
-fn blank(text: &str) -> bool {
-    // Python str.strip also treats the four ASCII information separators as
-    // whitespace; Rust's Unicode White_Space property deliberately does not.
-    text.chars()
-        .all(|ch| ch.is_whitespace() || matches!(ch, '\u{1c}'..='\u{1f}'))
 }

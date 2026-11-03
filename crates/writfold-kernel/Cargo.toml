@@ -5,10 +5,15 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 repository.workspace = true
+license.workspace = true
 publish.workspace = true
+
+[package.metadata.verus]
+verify = true
 
 [lints]
 workspace = true
 
 [dependencies]
 writfold-domain = { path = "../writfold-domain" }
+vstd.workspace = true

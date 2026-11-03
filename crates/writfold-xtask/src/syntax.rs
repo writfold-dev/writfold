@@ -40,6 +40,10 @@ impl Audit<'_> {
     }
 
     pub fn proof_attribute(&mut self, name: Option<&str>, span: Span) {
+        // This only restricts datatype recursion; it cannot add a trusted fact.
+        if name == Some("reject_recursive_types") {
+            return;
+        }
         if !name.is_some_and(|name| {
             self.proof_approval
                 .is_some_and(|allowed| allowed.contains(name))

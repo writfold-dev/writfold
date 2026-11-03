@@ -11,10 +11,10 @@ not a claim that executable Rust has received Verus qualification.
 | --- | --- |
 | `semantics/time.py`: `fresh_at`, `assess_fresh` | `time` (same public names) |
 | `semantics/checker.py`: `context_matches`, `source_selected`, `inventory_content`, `retracted`, `dependencies_union`, `correction_dependency`, `check`, `accepted`, `supported`, `same_context` | `checker` (same public names) |
-| `semantics/checker.py`: `_check`, all six witness branches | private `checker::evaluation::evaluate`, `attest`, `enumerate` |
+| `semantics/checker.py`: `_check`, all six witness branches | private `checker::evaluation::{evaluate,evaluate_valid,attest,enumerate}` |
 | `semantics/checker.py`: `reusable`, `witness_freshness`, `policy_allows`, `assess`, `usable_for`, `assessment_gaps` | `checker` exports from private `assessment` |
 | `semantics/wellformed.py`: `nonempty`, `natural`, `ttl_wf`, `scope_wf`, `formula_wf`, `statement_wf`, `context_wf`, `witness_wf`, `dependency_wf`, `well_formed` | `wellformed` (same public names) |
-| Whole-candidate attestation, enumeration, correction and supersession-cycle checks | private `wellformed::{attestation_wf,enumeration_wf,corrections_wf}` |
+| Whole-candidate attestation, enumeration, correction and supersession-cycle checks | `wellformed::{rows,graph}` |
 
 The domain's nominal values eliminate Python runtime type confusion. They do
 not turn candidate records into evidence or grant production authorization.
@@ -44,6 +44,12 @@ copying already-built conclusions. Boolean support queries short-circuit;
 assessment reuses its selected accepted alternatives for freshness and
 validation. No query duplicates the KB or materializes owned evidence merely
 to compare a conclusion or receipt.
+
+The recursive evaluator validates its immutable context frame once, then
+checks each witness branch against that same KB/frame. Ghost-only content
+views describe exact ordered footprints without adding fields to runtime
+records. `checker::spec` exposes the mathematical contracts consumed by
+admission and selection; it is not a second executable checker.
 
 For workflow candidate evaluation, `usable_for_snapshot(&KB, &Context,
 &SnapshotId, &ClaimRef)` and `check_matches_snapshot(&KB, &Context,
@@ -91,6 +97,19 @@ exact receipt ordering and context matching, borrowed snapshot evaluation,
 contradictory evidence, independent assessment dimensions, and UTF-8 inventory
 framing. The current P02 campaign also re-executed complete-response comparison
 against Lean and Python on all 334 retained scenarios with zero mismatches.
+
+The sealed P03 integration in
+`~/.local/share/writfold/qualification/p03-kernel-010/native-smoke.json`
+compiled and executed the static musl `writfold-ref` with `PATH=/nonexistent`.
+All 335 responses (handshake plus 334 scenarios) matched both retained
+Lean and Python responses field-for-field. This exercised the composed
+borrowed checker, assessment, receipt-reuse, well-formedness, admission and
+selection implementations. It reused retained oracle outputs; it was not a
+fresh three-host gate, whole-kernel proof, or P03 completion. Failed proof
+and native-build attempts remain alongside the successful runtime record.
+Inventory premise comparison traverses the borrowed conjunction/atomic tree
+directly, preserving ordered members, exact predicates, empty arguments and
+the terminal truth node without allocating a duplicate expected formula.
 
 Remaining proof work is source-bound Verus qualification of these shipping
 bodies: V02 finite-witness conclusions and transitive footprints; V03 exact

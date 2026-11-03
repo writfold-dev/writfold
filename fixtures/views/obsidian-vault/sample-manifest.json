@@ -1,0 +1,37 @@
+{
+  "synthetic": true,
+  "generation": "demo-r2",
+  "context": "demo-operations",
+  "derived_from": "handovers/revision-4/writfold/examples/obsidian-vault",
+  "changes": [
+    "Escape wikilink alias separators inside Markdown table cells.",
+    "Use actual Dataview 0.5.68 JavaScript-disable setting keys.",
+    "Bound the optional properties panel with scrolling, without hiding properties or warnings."
+  ],
+  "files": {
+    "Writfold/Generations/demo-r2/Assets.base": "23139a6f25a7a34349483c706c8a5aa85ef984212fd12bb8dd845397f2b9d0b7",
+    "Writfold/Generations/demo-r2/Context.md": "2d05868a2faaec8575321a59fdf0837c6bdc8743589b680ec2d85c9bafb8a040",
+    "Writfold/Generations/demo-r2/Dashboards.md": "7735f076671eec657727ae57892ed7280c07421b38b861e028a3c20ee0ef4adb",
+    "Writfold/Generations/demo-r2/Decisions/dec-export.md": "c9144038af239826095091dc21dc9380494853ad9d22a476db38bef065133c0d",
+    "Writfold/Generations/demo-r2/Evidence/writ-contract.md": "680cd2255dc2e28a8176bf11fdeb2bc99b804dfb29b8a77cafa79abbe5679221",
+    "Writfold/Generations/demo-r2/Evidence/writ-test.md": "51f8ce8a49454e5516e629e0694ed29f56537e64a898c2e99fcc8070bd8d9e38",
+    "Writfold/Generations/demo-r2/Overview.md": "5cadda005d19e58da6930b8469a847d209d5121e5c0ebfb7c05ad28a034b9f91",
+    "Writfold/Generations/demo-r2/Services/svc-checkout.md": "85886538151472488f12c69bf1e99d5add2303aa1c25a7d794b15563ca8f5bec",
+    "Writfold/Generations/demo-r2/Services/svc-inventory.md": "c65fa4d1db8d074d0f10b0d11aa0ea76dac9928565d983361f98690ce1c6eda8",
+    "Writfold/Generations/demo-r2/Sources/contract.md": "aa471326722766411a57e98ca3ab77f25f89e94c4a25bb24a74bd5938dc659bf",
+    "Writfold/Home.md": "89afde887dfe0a5782abbb27748377c3ef521ad1ea45341f2f933fbe3c8041dd"
+  },
+  "expected": {
+    "services": [
+      "svc-checkout",
+      "svc-inventory"
+    ],
+    "attention": [
+      "svc-checkout"
+    ],
+    "evidence": [
+      "writ-contract",
+      "writ-test"
+    ]
+  }
+}

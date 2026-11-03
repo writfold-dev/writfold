@@ -635,6 +635,7 @@ dependencies = [
 name = "writfold-kernel"
 version = "0.1.0-dev.0"
 dependencies = [
+ "vstd",
  "writfold-domain",
 ]
 

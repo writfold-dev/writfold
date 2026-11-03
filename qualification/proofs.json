@@ -4068,13 +4068,20 @@
       ],
       "model_actions": [],
       "scope": "Independent support/applicability/freshness/validation/contestation/policy and exact signed-integer time.",
-      "exclusions_and_remaining": "num-bigint behavior is trusted executable code; no arithmetic model/spec bridge or production proof yet.",
+      "exclusions_and_remaining": "The signed-time component is source-bound, verified and semantically calibrated; full independent support/applicability/validation/contestation/policy assessment remains unproved. BigInt internals and the explicit foreign-trait domain fact remain trusted.",
       "required_semantic_calibrations": [
         "expiry boundary",
         "future timestamp",
         "missing policy"
       ],
-      "proof_implementation": "absent",
+      "proof_implementation": "verified_signed_time_component_with_remaining_assessment_obligations",
+      "verified_components": [
+        {
+          "descriptor": "qualification/p03-time-component.json",
+          "scope": "Integer traits and actual fresh_at/assess_fresh; not full V03",
+          "status": "pass"
+        }
+      ],
       "required_gates": [
         "WF05"
       ],
@@ -4084,7 +4091,7 @@
         "T11",
         "T17"
       ],
-      "empty_proof_symbols_reason": "No completed obligation-wide Rust proof or operational model. Refer only to separately named P01 component where listed."
+      "empty_proof_symbols_reason": "No completed obligation-wide assessment proof. Exact verified signed-time functions, source closure, trusted assumptions and calibrations are recorded by the separate component descriptor."
     },
     {
       "id": "V04",
@@ -5616,21 +5623,32 @@
     "new_external_body_approved": [
       {
         "source": "crates/writfold-domain/src/integer/primitive_specs.rs",
-        "sha256": "4ad574bc9e03441772847f60cfbca7ada186bd243779288091438fded50ecbb9",
-        "kind": "opaque external type only",
+        "sha256": "eb7c72405ec5a40f7778c8e4d7082e64ff4956154e75dd1872029bcb5f604bfe",
+        "kind": "opaque external types and explicitly named foreign-trait domain fact",
         "symbols": [
           "ExBigInt",
-          "ExConversionError"
+          "ExConversionError",
+          "borrowed_arithmetic_domain"
         ]
       }
     ],
-    "new_assumed_theorems_approved": [],
+    "new_assumed_theorems_approved": [
+      {
+        "source": "crates/writfold-domain/src/integer/primitive_specs.rs",
+        "symbol": "borrowed_arithmetic_domain",
+        "status": "trusted_library_assumption_not_proved",
+        "contract": "Only borrowed BigInt AddSpec::add_req and SubSpec::sub_req hold for arbitrary valid BigInt operands. Result equations remain explicit external-function contracts; Writfold wrapper bodies are not excluded.",
+        "reason": "Rust coherence prevents implementing foreign vstd SpecImpl traits for BigInt. The pinned vstd operator-specification module documents the narrow trait-axiom alternative."
+      }
+    ],
     "external_function_contracts": [
       "num_bigint::BigInt::{sign,clone,clone_from}",
       "TryFrom<&BigInt> for u64 and i64",
-      "From<i8,i16,i32,i64,i128,isize,u8,u16,u32,u64,u128,usize> for BigInt"
+      "From<i8,i16,i32,i64,i128,isize,u8,u16,u32,u64,u128,usize> for BigInt",
+      "PartialEq::eq and Ord::cmp for BigInt",
+      "Add<&BigInt>::add and Sub<&BigInt>::sub for &BigInt"
     ],
-    "rule": "Only exact hash-admitted external numeric primitives are trusted. No Writfold executable body is excluded; assume statements, proof axioms, arbitrary assumed specifications and other verifier attributes fail source admission."
+    "rule": "Only exact hash-admitted external numeric contracts and the single named foreign-trait domain fact are trusted. No Writfold executable body is excluded. General assume statements, other proof axioms, arbitrary assumed specifications and unapproved verifier attributes fail source admission."
   },
   "execution": "V01 nominal/quantity component executed with source-bound semantic mutation and evidence-admission calibration; other obligation-wide proof/model results remain not_run."
 }

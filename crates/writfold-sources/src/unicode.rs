@@ -1,5 +1,6 @@
 //! Handwritten algorithms over pinned, generated Python Unicode tables.
-use crate::unicode_data::{DECIMAL, LINE_BREAK, SPACE, WORD};
+use crate::unicode_data::{DECIMAL, LINE_BREAK, WORD};
+use writfold_domain::text::whitespace;
 
 fn contains(ranges: &[(u32, u32)], character: char) -> bool {
     let value = u32::from(character);
@@ -16,20 +17,17 @@ fn contains(ranges: &[(u32, u32)], character: char) -> bool {
         .is_ok()
 }
 
-pub(crate) fn space(character: char) -> bool {
-    contains(SPACE, character)
-}
 pub(crate) fn word(character: char) -> bool {
     contains(WORD, character)
 }
 pub(crate) fn trim(text: &str) -> &str {
-    text.trim_matches(space)
+    text.trim_matches(whitespace)
 }
 pub(crate) fn trim_start(text: &str) -> &str {
-    text.trim_start_matches(space)
+    text.trim_start_matches(whitespace)
 }
 pub(crate) fn trim_end(text: &str) -> &str {
-    text.trim_end_matches(space)
+    text.trim_end_matches(whitespace)
 }
 
 pub(crate) fn has_line_break(text: &str) -> bool {

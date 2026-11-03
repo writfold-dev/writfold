@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "scope": "P01O supplemental CLI probes and server package observation; not WF24 admission",
+  "version": "0.14.0",
+  "source_commit": "60bfd19db780fdff3a5178f959c1204143420114",
+  "archive_url": "https://github.com/ModernRelay/omnigraph/releases/download/v0.14.0/omnigraph-linux-x86_64.tar.gz",
+  "archive_sha256": "02bde3e3a2c6c8cf50dc9739a8b1041df87cfeaa6ab59f620e1d8e32acffd4d9",
+  "archive_bytes": 192187663,
+  "members": {
+    "omnigraph": "978e200a412e7b0db46657417d348569f97529c18b47e64687132e565d19dc64",
+    "omnigraph-server": "01720242435da9b2709dc62bfe703e1fd23a4b271f9b6bb093f1f1fbb4bb9aef",
+    "omnigraph-azure-admission": "c01f71d6262d0a0663776eb3ef61462919e4a6b2c1f5ddff83a804ffd6b4d7b2"
+  },
+  "member_provenance": "SHA256 streamed from regular archive members on 2026-11-02; CLI independently matches revision-4 handover. No executable run on host.",
+  "fixture_root": "handovers/revision-4/writfold/qualification/storage",
+  "server_reported_version": null,
+  "server_version_note": "Pinned server main.rs declares no clap version flag; retain actual --version refusal. Package version is not a server-reported version.",
+  "fixture_sha256": {
+    "README.md": "c6cdeed7f14188a3e9f6f0434e4e102bb57a79560ede232c6d92001a1023ffc7",
+    "compare.py": "ee069f6b33e82ec55582d5b9d6201a34d1af444773efc6bd3f54832c74efc58a",
+    "queries.gq": "d37726bfba9e76dc72b49c7191a7c9d67cb2ca31b90fb650d0779afdd640d4a1",
+    "schema-next.pg": "7e58e1f108a32ed1069fffaabf119662cd88210531038ca89f325368dd3a9b5e",
+    "schema.pg": "d95e4109914f909b850cebd79bcb7e0094aef33df6cbc8226e71ff491a6d7098",
+    "seed.jsonl": "a0d6d522b83867ab4a2df45b2f898b5f89576c8f46643682dbbd32b3f5bf0cb7",
+    "seed.sql": "aaae8df49c092691a59607cfe642307b1a307c43683053633fb3cc4afdf4fbd6",
+    "traversal.sql": "46dd8891ee2143143e116ce8408494d459db39427175e55bd673e952a0ad31cc",
+    "versioned_schema.py": "5dce6348651b424557e6d7c356536c1147ba2cb93d3f3de154afa4278fbbf5e2"
+  },
+  "dependency_scope": "Observe ldd-resolved ELF dependency bytes for all packaged executables inside admitted tool image; image digest retains runtime filesystem. Not a claim of exhaustive dynamically loaded production dependencies.",
+  "wf24": "not_run",
+  "server_lifecycle": "not_run",
+  "epochs_restore": "not_run"
+}

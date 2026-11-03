@@ -1,4 +1,5 @@
 //! Checked identities. Parsing never trims, folds case, or normalizes Unicode.
+pub mod inventory;
 use crate::identity_grammar as grammar;
 use std::{error::Error, fmt, str::FromStr};
 use vstd::prelude::*;
@@ -31,12 +32,34 @@ impl Error for IdentityError {}
 macro_rules! identities {
     ($grammar:ident, $language:ident; $($name:ident),+ $(,)?) => {$(
         verus! {
-        #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
+        #[derive(Debug, Ord, PartialOrd)]
         pub struct $name(String);
         impl View for $name {
             type V = Seq<char>;
             closed spec fn view(&self) -> Seq<char> { self.0@ }
         }
+        impl DeepView for $name {
+            type V = Seq<char>;
+            open spec fn deep_view(&self) -> Seq<char> { self@ }
+        }
+        impl Clone for $name {
+            #[inline]
+            fn clone(&self) -> (cloned: Self)
+                ensures cloned == *self,
+            { Self(self.0.clone()) }
+        }
+        #[cfg(verus_keep_ghost)]
+        impl vstd::std_specs::cmp::PartialEqSpecImpl for $name {
+            open spec fn obeys_eq_spec() -> bool { true }
+            open spec fn eq_spec(&self, other: &Self) -> bool { self@ == other@ }
+        }
+        impl PartialEq for $name {
+            #[inline]
+            fn eq(&self, other: &Self) -> (equal: bool)
+                ensures equal == (self@ == other@),
+            { self.0.as_str().eq(other.0.as_str()) }
+        }
+        impl Eq for $name {}
         impl $name {
             pub closed spec fn accepts(value: Seq<char>) -> bool {
                 grammar::spec::$language(vstd::utf8::encode_utf8(value))
@@ -79,6 +102,12 @@ macro_rules! identities {
             }
         }
         }
+        impl std::hash::Hash for $name {
+            #[inline]
+            fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+                std::hash::Hash::hash(&self.0, state);
+            }
+        }
         impl FromStr for $name {
             type Err = IdentityError;
             fn from_str(value: &str) -> Result<Self, Self::Err> {
@@ -113,23 +142,6 @@ identities!(opaque, opaque_identity;
     AuthoredRevision, FileRevision, DesignRevision, KbId, PolicyRevision,
 );
 
-struct InventoryMembers<'a>(&'a [String]);
-
-impl fmt::Display for InventoryMembers<'_> {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for member in self.0 {
-            write!(formatter, "{}:{}", member.len(), member)?;
-        }
-        Ok(())
-    }
-}
-
-impl ContentId {
-    /// Exact nonempty inventory framing; lengths count UTF-8 bytes, not characters.
-    pub fn inventory(members: &[String]) -> Self {
-        Self(format!("inventory:{}", InventoryMembers(members)))
-    }
-}
 
 verus! {
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]

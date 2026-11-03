@@ -54,12 +54,29 @@
       "id": "WF-TCB-001",
       "status": "adopted_for_implementation",
       "old": "Semantic integers use pinned num-bigint, but the Verus representation and checked-conversion boundary are not yet specified.",
-      "new": "Retain num-bigint 0.4.8 as a trusted external numeric implementation. Admit only explicitly enumerated, source-reviewed library primitive contracts for its mathematical value, clone, sign, comparison and borrowed checked integer conversions. Verify Writfold's actual wrapper and unit-admission bodies against those contracts.",
+      "new": "Retain num-bigint 0.4.8 as a trusted external numeric implementation. Admit only explicitly enumerated, source-reviewed library primitive contracts for its normalized mathematical value, clone, sign, comparison, borrowed addition/subtraction and checked integer conversions. Verify Writfold's actual wrapper and unit-admission bodies against those contracts.",
       "reason": "Reimplementing arbitrary-precision arithmetic would enlarge the critical implementation. External library assumptions are explicit and source-pinned; they are not proofs of that library or permission to exclude Writfold decision bodies.",
       "dependency_checksum": "c89e69e7e0f03bea5ef08013795c25018e101932225a656383bd384495ecc367",
-      "reviewed_sources": ["num-bigint/src/bigint.rs", "num-bigint/src/bigint/convert.rs", "num-bigint/src/biguint/convert.rs"],
+      "reviewed_sources": ["num-bigint/src/bigint.rs", "num-bigint/src/bigint/convert.rs", "num-bigint/src/bigint/addition.rs", "num-bigint/src/bigint/subtraction.rs", "num-bigint/src/biguint/convert.rs"],
+      "foreign_trait_totality": {
+        "symbol": "writfold_domain::integer::primitive_specs::borrowed_arithmetic_domain",
+        "status": "explicit_trusted_library_assumption_not_proved",
+        "contract": "Only the vstd AddSpec/SubSpec preconditions for borrowed num_bigint::BigInt are total. No result equation, Writfold predicate, approval or effect is asserted by this fact.",
+        "reason": "The foreign library operations are unbounded and total under the existing allocation premise. Rust coherence prevents implementing vstd's foreign SpecImpl traits for BigInt; pinned vstd/std_specs/ops.rs:12-17 documents this exact limitation and the narrow trait-axiom alternative.",
+        "reference": "https://verus-lang.github.io/verus/guide/external_trait_specifications.html"
+      },
       "affected": ["A-INTEGER", "V01", "V03"],
       "limits": "No general assume, always-true verifier, unchecked authority factory, blanket module exclusion or proof twin is authorized. Producer admission must enumerate the exact trusted symbols and retain negative numeric-bound controls."
+    },
+    {
+      "id": "WF-SEM-001",
+      "status": "preserved_production_contract",
+      "old": "Pinned Lean nonblank uses Char.isWhitespace (ASCII space, tab, CR and LF); Python production uses str.strip Unicode whitespace. Rust's trim also missed Python's U+001C-U+001F information separators.",
+      "new": "Use one pinned Python-3.12/Unicode-15 whitespace predicate for Rust production nonblank metadata and source text handling. Preserve byte-nonempty nominal identity construction separately. Leave the immutable Lean baseline unchanged and record the pre-existing correspondence limit.",
+      "reason": "Restore production refusals for whitespace-only actors, gate text and related authored metadata without normalizing identities or adding an inference rule.",
+      "evidence": "~/.local/share/writfold/qualification/p03-whitespace-001/",
+      "affected": ["T18", "T19", "T22", "V05", "V06", "V12", "V13", "authored metadata admission", "source Unicode predicates"],
+      "limits": "Finite three-host correspondence does not imply equality for every Unicode whitespace input. Rust positive nonblank admission remains at least as strict as the Lean ASCII predicate; external truth and publication authority are unchanged."
     }
   ]
 }

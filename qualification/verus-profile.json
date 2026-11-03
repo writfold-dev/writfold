@@ -1,5 +1,5 @@
 {
-  "schema_version": 3,
+  "schema_version": 4,
   "scope": "P02 nominal identity admission and checked runtime conversions, plus retained P01 generation allocation",
   "excluded_claims": [
     "BigInt arithmetic implementation verification",

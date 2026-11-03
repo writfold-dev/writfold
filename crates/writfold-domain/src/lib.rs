@@ -24,6 +24,7 @@
 
 pub mod admission;
 pub mod authored;
+pub mod equality;
 pub mod evidence;
 mod identity_grammar;
 pub mod ids;
@@ -32,6 +33,7 @@ pub mod knowledge;
 pub mod language;
 mod records;
 pub mod request_generation;
+pub mod text;
 pub mod units;
 pub mod workflow;
 
@@ -46,5 +48,15 @@ pub use request_generation::RequestGeneration;
 pub use units::*;
 pub use workflow::*;
 
-pub const SEMANTIC_VERSION: &str = "2.0.0";
+#[cfg(verus_keep_ghost)]
+use vstd::prelude::View;
+
+::vstd::prelude::verus! {
+#[inline]
+pub const fn semantic_version() -> (value: &'static str)
+    ensures value@ == "2.0.0"@,
+{
+    "2.0.0"
+}
 pub const SCHEMA_VERSION: u32 = 2;
+}

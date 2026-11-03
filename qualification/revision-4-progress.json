@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-02",
+  "scope": "Current exercised progress; not a release or mandatory-gate receipt",
+  "handover": {
+    "revision": 4,
+    "path": "handovers/revision-4/writfold",
+    "archive_sha256": "0b1e43b6b4caaa091187c55511ddc7a69a21b3f681cf8879b71c6bb3b09d853d",
+    "archive_bytes": 47996552,
+    "stages": 19,
+    "required_gates": 25,
+    "original_handover_preserved": true
+  },
+  "website": {
+    "url": "https://writfold.dev/",
+    "repository": "https://github.com/writfold-dev/writfold-dev.github.io",
+    "site_commit": "b080fd792a2290a9dbe5d9c939b6810dbf2cfbde",
+    "deployment": "https://github.com/writfold-dev/writfold-dev.github.io/actions/runs/41522615991",
+    "content_manifest_sha256": "7e62499cb42aacd0a7d8fc912e33d1b41ecd23788d283eb1bd55a9d52ce2954f",
+    "https_enforced": true,
+    "observed_routes": [
+      "/",
+      "/docs.html",
+      "/LICENSE.txt",
+      "custom 404",
+      "www redirect",
+      "HTTP redirect",
+      "github.io redirect"
+    ],
+    "responsive_checks": "360/768/1440 CSS pixels, system light/dark; keyboard skip focus; footer checked locally and live",
+    "publication_scope": "Development-preview static site; no product release/install claims"
+  },
+  "license": {
+    "identifier": "MIT",
+    "copyright": "2026 Tarek Nawara",
+    "authorized_scope": "Product and website",
+    "product_repository_visibility": "private",
+    "cargo_packages_observed": {
+      "writfold-domain": "MIT",
+      "writfold-kernel": "MIT",
+      "writfold-wire": "MIT",
+      "writfold-protocol": "MIT",
+      "writfold-xtask": "MIT",
+      "writfold-runtime": "MIT",
+      "writfold-sources": "MIT"
+    }
+  },
+  "native_backend": {
+    "version": "0.14.0",
+    "source_commit": "60bfd19db780fdff3a5178f959c1204143420114",
+    "supplied_probe_checks": {
+      "compare": 12,
+      "versioned-schema": 6
+    },
+    "companion_checks": 20,
+    "companion_status": "pass",
+    "companion_scope": "Private authenticated loopback; named query/write and refusal state preservation; clean owned shutdown",
+    "independent_restore_status": "fail",
+    "foundation_disposition": "blocked",
+    "blocker": "Retained branch after whole-root relocation requests an unavailable original-path Lance object. Original snapshot rows remain readable; that does not pass retained-history portability.",
+    "automatic_dolt_fallback": false
+  },
+  "native_view": {
+    "vault": "Writfold Preview",
+    "path": "C:\\Users\\owner\\Writfold Preview",
+    "obsidian_version": "1.15.0",
+    "dataview_version": "0.5.68",
+    "source_fixture": "fixtures/views/obsidian-vault",
+    "generation": "demo-r2",
+    "scope": "Synthetic native reader smoke, not Rust view generation/publication",
+    "personal_content_or_plugin_settings_modified": false,
+    "full_wf22_wf23": "not_run"
+  },
+  "gate_disposition": {
+    "P01O": "blocked",
+    "WF24": "blocked",
+    "WF22": "not_run",
+    "WF23": "not_run",
+    "WF17": "not_run"
+  },
+  "evidence_reuse": "Each receipt binds its executed snapshot; later documentation/ledger changes do not renew or broaden it.",
+  "records": [
+    {
+      "path": "~/.local/share/writfold/qualification/v4-baseline-001.json",
+      "sha256": "1c712b4dfdfa3fe2ce7ed555808ec08d69de0cc095da49f72a05a6c2fe498c2d",
+      "bytes": 522341
+    },
+    {
+      "path": "~/.local/share/writfold/evidence/revision-4-gate-smoke-001.json",
+      "sha256": "43e571f5f880a6378c2adb67af17c7423db04c64b34b9e88bbd5a291d24030b8",
+      "bytes": 2218
+    },
+    {
+      "path": "~/.local/share/writfold/evidence/omnigraph-0.14.0-001.json",
+      "sha256": "9f16396d1dbd220ca689902af4b6204bdd234c4cb7929c75f548a366f28f75b6",
+      "bytes": 584167
+    },
+    {
+      "path": "~/.local/share/writfold/evidence/omnigraph-invalid-001.json",
+      "sha256": "fa7b19aa737bf92de3861cca2d4b9fd60f7c57bc392c1d9bde6f05d165efed7d",
+      "bytes": 527641
+    },
+    {
+      "path": "~/.local/share/writfold/evidence/omnigraph-foundation-002.json",
+      "sha256": "846f926578550854d4eaf5845a87a3579345742d575edbbd1099f4fbb4d05242",
+      "bytes": 623240
+    },
+    {
+      "path": "~/.local/share/writfold/evidence/omnigraph-foundation-003.json",
+      "sha256": "705844d2d8247c796619fe26a18099bb73a1edda1731a0f372516c8f6585db15",
+      "bytes": 713807
+    },
+    {
+      "path": "~/.local/share/writfold/evidence/omnigraph-companion-004.json",
+      "sha256": "3e225f0574de398c05664d81b9ff73eff5dc623c0b1dfba8d53dfe2d140a7531",
+      "bytes": 550782
+    },
+    {
+      "path": "~/.local/share/writfold/evidence/omnigraph-companion-005.json",
+      "sha256": "c09250d599c351ca6d42f9671672086477a1573bc253674a3a1c372ff6196589",
+      "bytes": 578395
+    },
+    {
+      "path": "~/.local/share/writfold/evidence/omnigraph-companion-006.json",
+      "sha256": "52deb02854b589fa9290461cd01ec9792568899132bbd1419f842fec213beb50",
+      "bytes": 579317
+    },
+    {
+      "path": "~/.local/share/writfold/evidence/omnigraph-foundation-007.json",
+      "sha256": "44fa09d95c0ac05fb6a9f2baf5dc6f371b28dd4a06680652d2e693bec22e34e2",
+      "bytes": 713807
+    },
+    {
+      "path": "~/.local/share/writfold/evidence/omnigraph-relocation-blocker-001.json",
+      "sha256": "c70e9aebc920085bcc89dd0822c298687ce86208ddacc3df25d43e34a3eff31e",
+      "bytes": 2532
+    },
+    {
+      "path": "~/.local/share/writfold/evidence/obsidian-profile-001/receipt.json",
+      "sha256": "c108f21d2c75528026e6a772c0de6f1fe17d84f1fa0b040282a23535a9456d80",
+      "bytes": 10411
+    },
+    {
+      "path": "~/.local/share/writfold/evidence/view-fixture-compose-001/receipt.json",
+      "sha256": "ae61a050a0a3e8c13bb214fda24995a66fa1ab4de5bf7b047fe074419aa1006e",
+      "bytes": 1141
+    },
+    {
+      "path": "~/.local/share/writfold/evidence/license-metadata-001/receipt.json",
+      "sha256": "66d005e7b5cc10d11e051446cb424733d94c33811593485e734d20651ee979bc",
+      "bytes": 688
+    },
+    {
+      "path": "~/.local/share/writfold/native/omnigraph/0.14.0/attestation-attempt-001.json",
+      "sha256": "d22a2b0d1bbae5b375ddb008c2c75f4a48bd1f3c82690e7bb06a7ab76b73cfda",
+      "bytes": 562
+    }
+  ]
+}

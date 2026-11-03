@@ -5,6 +5,7 @@
   "playbook_commit": "e7d991e990e3dff9c5d70e4327c0e90298e2f67e",
   "platform": "x86_64-unknown-linux-musl on Linux/WSL2",
   "qualification_scope": "local-only; enterprise endpoints and hardware power loss unqualified",
+  "supplemental_evidence_index": "qualification/revision-4-progress.json",
   "stages": [
     {
       "id": "P00",
@@ -14,9 +15,11 @@
         "WF00",
         "WF21"
       ],
-      "status": "pass",
-      "receipts": ["~/.local/share/writfold/qualification/p00-baseline-003.json"],
-      "completion_record": "qualification/p00-completion.json"
+      "status": "not_run",
+      "receipts": [],
+      "contract": "handovers/revision-4/writfold/stages/P00.md",
+      "historical_completion": "qualification/p00-completion.json",
+      "scope_note": "Revision-4 reconciliation and policy delta adopted; fresh source-bound qualification not run."
     },
     {
       "id": "P01",
@@ -27,9 +30,28 @@
       "gates": [
         "WF01"
       ],
-      "status": "pass",
-      "receipts": ["~/.local/share/writfold/qualification/verus-003.json"],
-      "completion_record": "qualification/p01-completion.json"
+      "status": "not_run",
+      "receipts": [],
+      "contract": "handovers/revision-4/writfold/stages/P01.md",
+      "historical_completion": "qualification/p01-completion.json",
+      "scope_note": "Earlier build feasibility retained; Omnigraph CLI/server/runtime admission and offline closure not run."
+    },
+    {
+      "id": "P01O",
+      "title": "Qualify the Omnigraph foundation",
+      "dependencies": [
+        "P01"
+      ],
+      "gates": [
+        "WF01",
+        "WF24",
+        "WF21"
+      ],
+      "status": "blocked",
+      "receipts": [],
+      "contract": "handovers/revision-4/writfold/stages/P01O.md",
+      "blocking_evidence": "~/.local/share/writfold/evidence/omnigraph-relocation-blocker-001.json",
+      "scope_note": "Omnigraph 0.14.0 separate epochs and authenticated companion smokes are exercised, but an independent relocated retained-branch read still references the unavailable original Lance path. Full WF24 remains unqualified; no automatic backend fallback."
     },
     {
       "id": "P02",
@@ -41,14 +63,11 @@
         "WF02",
         "WF03"
       ],
-      "status": "pass",
-      "receipts": [
-        "~/.local/share/writfold/qualification/p02-unit-005.json",
-        "~/.local/share/writfold/qualification/p02-quality-007.json",
-        "~/.local/share/writfold/qualification/p02-verus-003.json",
-        "~/.local/share/writfold/qualification/p02-conformance-002.json"
-      ],
-      "completion_record": "qualification/p02-completion.json"
+      "status": "not_run",
+      "receipts": [],
+      "contract": "handovers/revision-4/writfold/stages/P02.md",
+      "historical_completion": "qualification/p02-completion.json",
+      "scope_note": "Earlier domain/wire completion retained; storage nominal identities, versioned approval/release profiles and negotiation fixtures not run."
     },
     {
       "id": "P03",
@@ -61,7 +80,8 @@
         "WF05"
       ],
       "status": "not_run",
-      "receipts": []
+      "receipts": [],
+      "contract": "handovers/revision-4/writfold/stages/P03.md"
     },
     {
       "id": "P03P",
@@ -78,20 +98,24 @@
         "WF07"
       ],
       "status": "not_run",
-      "receipts": []
+      "receipts": [],
+      "contract": "handovers/revision-4/writfold/stages/P03P.md"
     },
     {
       "id": "P04",
       "title": "Prove the operational protocols",
       "dependencies": [
-        "P02"
+        "P02",
+        "P01O"
       ],
       "gates": [
         "WF06",
         "WF07"
       ],
-      "status": "not_run",
-      "receipts": []
+      "status": "blocked",
+      "receipts": [],
+      "contract": "handovers/revision-4/writfold/stages/P04.md",
+      "scope_note": "P01O/WF24 foundation has not passed; storage-dependent integration blocked."
     },
     {
       "id": "P05",
@@ -104,21 +128,26 @@
         "WF08"
       ],
       "status": "not_run",
-      "receipts": []
+      "receipts": [],
+      "contract": "handovers/revision-4/writfold/stages/P05.md"
     },
     {
       "id": "P06",
-      "title": "Managed Dolt and native queries",
+      "title": "Managed Omnigraph and pinned queries",
       "dependencies": [
         "P01",
         "P02",
-        "P04"
+        "P04",
+        "P01O"
       ],
       "gates": [
-        "WF09"
+        "WF09",
+        "WF24"
       ],
-      "status": "not_run",
-      "receipts": []
+      "status": "blocked",
+      "receipts": [],
+      "contract": "handovers/revision-4/writfold/stages/P06.md",
+      "scope_note": "P01O/WF24 foundation has not passed; storage-dependent integration blocked."
     },
     {
       "id": "P07",
@@ -137,7 +166,8 @@
         "WF19"
       ],
       "status": "not_run",
-      "receipts": []
+      "receipts": [],
+      "contract": "handovers/revision-4/writfold/stages/P07.md"
     },
     {
       "id": "P08",
@@ -151,7 +181,8 @@
         "WF12"
       ],
       "status": "not_run",
-      "receipts": []
+      "receipts": [],
+      "contract": "handovers/revision-4/writfold/stages/P08.md"
     },
     {
       "id": "P08D",
@@ -172,7 +203,8 @@
         "WF11"
       ],
       "status": "not_run",
-      "receipts": []
+      "receipts": [],
+      "contract": "handovers/revision-4/writfold/stages/P08D.md"
     },
     {
       "id": "P08S",
@@ -190,7 +222,8 @@
         "WF07"
       ],
       "status": "not_run",
-      "receipts": []
+      "receipts": [],
+      "contract": "handovers/revision-4/writfold/stages/P08S.md"
     },
     {
       "id": "P09",
@@ -208,7 +241,27 @@
         "WF21"
       ],
       "status": "not_run",
-      "receipts": []
+      "receipts": [],
+      "contract": "handovers/revision-4/writfold/stages/P09.md"
+    },
+    {
+      "id": "P09V",
+      "title": "Readable views and Obsidian companion",
+      "dependencies": [
+        "P09"
+      ],
+      "gates": [
+        "WF02",
+        "WF05",
+        "WF06",
+        "WF07",
+        "WF21",
+        "WF22",
+        "WF23"
+      ],
+      "status": "not_run",
+      "receipts": [],
+      "contract": "handovers/revision-4/writfold/stages/P09V.md"
     },
     {
       "id": "P10",
@@ -223,7 +276,8 @@
         "WF14"
       ],
       "status": "not_run",
-      "receipts": []
+      "receipts": [],
+      "contract": "handovers/revision-4/writfold/stages/P10.md"
     },
     {
       "id": "P11",
@@ -236,7 +290,8 @@
         "P10",
         "P08S",
         "P03P",
-        "P08D"
+        "P08D",
+        "P09V"
       ],
       "gates": [
         "WF00",
@@ -258,10 +313,14 @@
         "WF18",
         "WF19",
         "WF20",
-        "WF21"
+        "WF21",
+        "WF22",
+        "WF23",
+        "WF24"
       ],
       "status": "not_run",
-      "receipts": []
+      "receipts": [],
+      "contract": "handovers/revision-4/writfold/stages/P11.md"
     },
     {
       "id": "P12",
@@ -273,7 +332,8 @@
         "WF16"
       ],
       "status": "not_run",
-      "receipts": []
+      "receipts": [],
+      "contract": "handovers/revision-4/writfold/stages/P12.md"
     },
     {
       "id": "P13",
@@ -286,7 +346,8 @@
         "WF21"
       ],
       "status": "not_run",
-      "receipts": []
+      "receipts": [],
+      "contract": "handovers/revision-4/writfold/stages/P13.md"
     }
   ],
   "gates": [
@@ -295,157 +356,297 @@
       "name": "Baseline freeze",
       "required": true,
       "status": "not_run",
-      "receipts": []
+      "receipts": [],
+      "stages": [
+        "P00",
+        "P11"
+      ]
     },
     {
       "id": "WF01",
       "name": "Build and offline closure",
       "required": true,
       "status": "not_run",
-      "receipts": []
+      "receipts": [],
+      "stages": [
+        "P01",
+        "P11"
+      ]
     },
     {
       "id": "WF02",
       "name": "Architecture and nominal values",
       "required": true,
       "status": "not_run",
-      "receipts": []
+      "receipts": [],
+      "stages": [
+        "P02",
+        "P11"
+      ]
     },
     {
       "id": "WF03",
       "name": "Wire and canonical bytes",
       "required": true,
       "status": "not_run",
-      "receipts": []
+      "receipts": [],
+      "stages": [
+        "P02",
+        "P11"
+      ]
     },
     {
       "id": "WF04",
       "name": "Lean and three-host conformance",
       "required": true,
       "status": "not_run",
-      "receipts": []
+      "receipts": [],
+      "stages": [
+        "P03",
+        "P11"
+      ]
     },
     {
       "id": "WF05",
       "name": "Production Verus verification",
       "required": true,
       "status": "not_run",
-      "receipts": []
+      "receipts": [],
+      "stages": [
+        "P03",
+        "P07",
+        "P08S",
+        "P10",
+        "P11"
+      ]
     },
     {
       "id": "WF06",
       "name": "TLC exploration",
       "required": true,
       "status": "not_run",
-      "receipts": []
+      "receipts": [],
+      "stages": [
+        "P04",
+        "P08S",
+        "P11"
+      ]
     },
     {
       "id": "WF07",
       "name": "TLAPS safety and bridges",
       "required": true,
       "status": "not_run",
-      "receipts": []
+      "receipts": [],
+      "stages": [
+        "P04",
+        "P08S",
+        "P11"
+      ]
     },
     {
       "id": "WF08",
       "name": "Sources and filesystem",
       "required": true,
       "status": "not_run",
-      "receipts": []
+      "receipts": [],
+      "stages": [
+        "P05",
+        "P11"
+      ]
     },
     {
       "id": "WF09",
-      "name": "Dolt and companion lifecycle",
+      "name": "Omnigraph and native companion lifecycle",
       "required": true,
       "status": "not_run",
-      "receipts": []
+      "receipts": [],
+      "stages": [
+        "P06",
+        "P11"
+      ]
     },
     {
       "id": "WF10",
       "name": "Authenticated operations",
       "required": true,
       "status": "not_run",
-      "receipts": []
+      "receipts": [],
+      "stages": [
+        "P07",
+        "P11"
+      ]
     },
     {
       "id": "WF11",
       "name": "Publication and recovery",
       "required": true,
       "status": "not_run",
-      "receipts": []
+      "receipts": [],
+      "stages": [
+        "P07",
+        "P10",
+        "P11"
+      ]
     },
     {
       "id": "WF12",
       "name": "Workflows and catalog",
       "required": true,
       "status": "not_run",
-      "receipts": []
+      "receipts": [],
+      "stages": [
+        "P08",
+        "P11"
+      ]
     },
     {
       "id": "WF13",
       "name": "Bounded query and transport",
       "required": true,
       "status": "not_run",
-      "receipts": []
+      "receipts": [],
+      "stages": [
+        "P09",
+        "P11"
+      ]
     },
     {
       "id": "WF14",
       "name": "Migration sync and retention",
       "required": true,
       "status": "not_run",
-      "receipts": []
+      "receipts": [],
+      "stages": [
+        "P10",
+        "P11"
+      ]
     },
     {
       "id": "WF15",
       "name": "Outcomes and performance",
       "required": true,
       "status": "not_run",
-      "receipts": []
+      "receipts": [],
+      "stages": [
+        "P11"
+      ]
     },
     {
       "id": "WF16",
       "name": "Native release",
       "required": true,
       "status": "not_run",
-      "receipts": []
+      "receipts": [],
+      "stages": [
+        "P12"
+      ]
     },
     {
       "id": "WF17",
       "name": "Static website",
       "required": true,
       "status": "not_run",
-      "receipts": []
+      "receipts": [],
+      "stages": [
+        "P13"
+      ]
     },
     {
       "id": "WF18",
       "name": "Scribes and writ acquisition",
       "required": true,
       "status": "not_run",
-      "receipts": []
+      "receipts": [],
+      "stages": [
+        "P08S",
+        "P11"
+      ]
     },
     {
       "id": "WF19",
       "name": "Workflow-3 portfolio authority",
       "required": true,
       "status": "not_run",
-      "receipts": []
+      "receipts": [],
+      "stages": [
+        "P03P",
+        "P07",
+        "P09",
+        "P10",
+        "P11"
+      ]
     },
     {
       "id": "WF20",
       "name": "Design binding and reopening",
       "required": true,
       "status": "not_run",
-      "receipts": []
+      "receipts": [],
+      "stages": [
+        "P08D",
+        "P10",
+        "P11"
+      ]
     },
     {
       "id": "WF21",
       "name": "Playbook adoption and companion continuity",
       "required": true,
       "status": "not_run",
-      "receipts": []
+      "receipts": [],
+      "stages": [
+        "P00",
+        "P09",
+        "P11",
+        "P13"
+      ]
+    },
+    {
+      "id": "WF22",
+      "name": "Faithful view projection and publication",
+      "required": true,
+      "status": "not_run",
+      "receipts": [],
+      "stages": [
+        "P09V",
+        "P11"
+      ]
+    },
+    {
+      "id": "WF23",
+      "name": "Native Obsidian and plugin reading profile",
+      "required": true,
+      "status": "not_run",
+      "receipts": [],
+      "stages": [
+        "P09V",
+        "P11"
+      ]
+    },
+    {
+      "id": "WF24",
+      "name": "Omnigraph foundation qualification",
+      "required": true,
+      "status": "blocked",
+      "receipts": [],
+      "blocking_evidence": "~/.local/share/writfold/evidence/omnigraph-relocation-blocker-001.json",
+      "stages": [
+        "P01O",
+        "P06",
+        "P11"
+      ]
     }
   ],
   "retained_failures": [
+    {
+      "kind": "omnigraph-native-history-relocation",
+      "attempt": "omnigraph-foundation-003",
+      "tool": "Omnigraph 0.14.0",
+      "result": "retained-branch-read-refused-after-independent-relocation",
+      "receipt": "~/.local/share/writfold/evidence/omnigraph-foundation-003.json",
+      "disposition": "Blocks P01O/WF24 admission. Whole-root inventory and old snapshot reads pass, but retained branch metadata requests an unavailable original-path Lance file. Preserve the native check; require a supported history-preserving remedy or separately qualified fixed release."
+    },
     {
       "kind": "tool-bootstrap",
       "attempt": "bootstrap-001",
@@ -456,5 +657,221 @@
       "log": "~/.local/share/writfold/qualification/bootstrap-001/build.log",
       "disposition": "Replacement asset 698564747 published by tlaplus/tlapm on 2026-11-01; source tag resolves to 9ed03762aa5202ce72048816b9d8d981fadad622. New pinned tool requires fresh qualification."
     }
-  ]
+  ],
+  "active_handover": "qualification/handover-adoption.json",
+  "historical_completions": [
+    {
+      "id": "P00",
+      "title": "Freeze workflow 3 and adopt the playbook",
+      "dependencies": [],
+      "gates": [
+        "WF00",
+        "WF21"
+      ],
+      "status": "pass",
+      "receipts": [
+        "~/.local/share/writfold/qualification/p00-baseline-003.json"
+      ],
+      "completion_record": "qualification/p00-completion.json",
+      "contract": "handover/",
+      "applicability": "Earlier-scope completion retained unchanged; not a revision-4 pass"
+    },
+    {
+      "id": "P01",
+      "title": "Pin the build and storage setup",
+      "dependencies": [
+        "P00"
+      ],
+      "gates": [
+        "WF01"
+      ],
+      "status": "pass",
+      "receipts": [
+        "~/.local/share/writfold/qualification/verus-003.json"
+      ],
+      "completion_record": "qualification/p01-completion.json",
+      "contract": "handover/",
+      "applicability": "Earlier-scope completion retained unchanged; not a revision-4 pass"
+    },
+    {
+      "id": "P02",
+      "title": "Nominal domain and strict wire",
+      "dependencies": [
+        "P01"
+      ],
+      "gates": [
+        "WF02",
+        "WF03"
+      ],
+      "status": "pass",
+      "receipts": [
+        "~/.local/share/writfold/qualification/p02-unit-005.json",
+        "~/.local/share/writfold/qualification/p02-quality-007.json",
+        "~/.local/share/writfold/qualification/p02-verus-003.json",
+        "~/.local/share/writfold/qualification/p02-conformance-002.json"
+      ],
+      "completion_record": "qualification/p02-completion.json",
+      "contract": "handover/",
+      "applicability": "Earlier-scope completion retained unchanged; not a revision-4 pass"
+    }
+  ],
+  "historical_gate_inventory": {
+    "contract": "handover/",
+    "gates": [
+      {
+        "id": "WF00",
+        "name": "Baseline freeze",
+        "required": true,
+        "status": "not_run",
+        "receipts": []
+      },
+      {
+        "id": "WF01",
+        "name": "Build and offline closure",
+        "required": true,
+        "status": "not_run",
+        "receipts": []
+      },
+      {
+        "id": "WF02",
+        "name": "Architecture and nominal values",
+        "required": true,
+        "status": "not_run",
+        "receipts": []
+      },
+      {
+        "id": "WF03",
+        "name": "Wire and canonical bytes",
+        "required": true,
+        "status": "not_run",
+        "receipts": []
+      },
+      {
+        "id": "WF04",
+        "name": "Lean and three-host conformance",
+        "required": true,
+        "status": "not_run",
+        "receipts": []
+      },
+      {
+        "id": "WF05",
+        "name": "Production Verus verification",
+        "required": true,
+        "status": "not_run",
+        "receipts": []
+      },
+      {
+        "id": "WF06",
+        "name": "TLC exploration",
+        "required": true,
+        "status": "not_run",
+        "receipts": []
+      },
+      {
+        "id": "WF07",
+        "name": "TLAPS safety and bridges",
+        "required": true,
+        "status": "not_run",
+        "receipts": []
+      },
+      {
+        "id": "WF08",
+        "name": "Sources and filesystem",
+        "required": true,
+        "status": "not_run",
+        "receipts": []
+      },
+      {
+        "id": "WF09",
+        "name": "Dolt and companion lifecycle",
+        "required": true,
+        "status": "not_run",
+        "receipts": []
+      },
+      {
+        "id": "WF10",
+        "name": "Authenticated operations",
+        "required": true,
+        "status": "not_run",
+        "receipts": []
+      },
+      {
+        "id": "WF11",
+        "name": "Publication and recovery",
+        "required": true,
+        "status": "not_run",
+        "receipts": []
+      },
+      {
+        "id": "WF12",
+        "name": "Workflows and catalog",
+        "required": true,
+        "status": "not_run",
+        "receipts": []
+      },
+      {
+        "id": "WF13",
+        "name": "Bounded query and transport",
+        "required": true,
+        "status": "not_run",
+        "receipts": []
+      },
+      {
+        "id": "WF14",
+        "name": "Migration sync and retention",
+        "required": true,
+        "status": "not_run",
+        "receipts": []
+      },
+      {
+        "id": "WF15",
+        "name": "Outcomes and performance",
+        "required": true,
+        "status": "not_run",
+        "receipts": []
+      },
+      {
+        "id": "WF16",
+        "name": "Native release",
+        "required": true,
+        "status": "not_run",
+        "receipts": []
+      },
+      {
+        "id": "WF17",
+        "name": "Static website",
+        "required": true,
+        "status": "not_run",
+        "receipts": []
+      },
+      {
+        "id": "WF18",
+        "name": "Scribes and writ acquisition",
+        "required": true,
+        "status": "not_run",
+        "receipts": []
+      },
+      {
+        "id": "WF19",
+        "name": "Workflow-3 portfolio authority",
+        "required": true,
+        "status": "not_run",
+        "receipts": []
+      },
+      {
+        "id": "WF20",
+        "name": "Design binding and reopening",
+        "required": true,
+        "status": "not_run",
+        "receipts": []
+      },
+      {
+        "id": "WF21",
+        "name": "Playbook adoption and companion continuity",
+        "required": true,
+        "status": "not_run",
+        "receipts": []
+      }
+    ]
+  }
 }

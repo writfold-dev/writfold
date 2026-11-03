@@ -14,8 +14,10 @@ import writfold_evidence as evidence
 ROOT = evidence.ROOT
 GATES = {"baseline": "WF00", "bootstrap": "WF01", "build": "WF01", "unit": "WF02",
          "quality": "WF02", "lean": "WF04", "verus": "WF05", "model": "WF06",
-         "tlaps": "WF07", "conformance": "WF04", "sources": "WF08", "dolt": "WF09",
+         "tlaps": "WF07", "conformance": "WF04", "sources": "WF08", "omnigraph": "WF09",
          "reference": "WF09", "native-smoke": "WF09", "publication": "WF11",
+         "storage-foundation": "WF24", "storage-profile": "WF03", "legacy-import": "WF14",
+         "views": "WF22", "obsidian": "WF23",
          "workflows": "WF12", "transport": "WF13", "migration": "WF14",
          "evaluate": "WF15", "runtime": "WF16", "package": "WF16", "site": "WF17",
          "scribes": "WF18", "portfolio": "WF19", "design": "WF20", "companion": "WF21",
@@ -206,6 +208,7 @@ def execute(args, attempt: evidence.Attempt, receipt: dict) -> list[dict]:
 
 def initial_receipt(args, attempt: evidence.Attempt) -> dict:
     return {"schema_version": 2, "gate": GATES[args.command], "status": "blocked",
+            # Historical Dolt smoke is not the revision-4 Omnigraph WF09 contract.
             "scope": "release-aggregation" if args.command == "release-required" else f"{args.command}-only",
             "source": None, "source_after_digest": None, "command": [sys.executable, *sys.argv],
             "commands": attempt.commands, "toolchain_digest": None, "cargo_lock_digest": None,
@@ -220,6 +223,8 @@ def initial_receipt(args, attempt: evidence.Attempt) -> dict:
 
 def qualify(args, attempt: evidence.Attempt) -> int:
     receipt = initial_receipt(args, attempt)
+    if args.command in ("reference", "native-smoke"):
+        receipt["scope"] = "historical-dolt-reference-native-smoke-only"
     started = time.monotonic_ns()
     try:
         receipt["source"] = evidence.snapshot()

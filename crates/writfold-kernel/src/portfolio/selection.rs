@@ -40,7 +40,7 @@ pub fn portfolio_selection_valid(
     plan: &PortfolioSelectionPlan,
     retained: &[PortfolioState],
 ) -> bool {
-    if !portfolio_state_valid(state) || plan.actor().as_str().trim().is_empty()
+    if !portfolio_state_valid(state) || !writfold_domain::text::nonblank(plan.actor().as_str())
         || plan.new_snapshot() == state.kb().snapshot()
         || retained.iter().any(|old| old.kb().snapshot() == plan.new_snapshot())
         || retained.iter().enumerate().any(|(index, old)| retained[..index].iter()

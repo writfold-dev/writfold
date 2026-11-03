@@ -1,4 +1,5 @@
-use crate::unicode::{self, space, trim};
+use crate::unicode::{self, trim};
+use writfold_domain::text::whitespace;
 
 /// Original byte offsets and borrowed lines outside Markdown backtick/tilde fences.
 pub fn unfenced_lines(text: &str) -> UnfencedLines<'_> {
@@ -59,11 +60,11 @@ impl<'a> Iterator for UnfencedLines<'a> {
 /// Equivalent to Python ^##\s+(.+?)\s*#*\s*$ over a split line.
 pub(crate) fn heading(line: &str) -> Option<&str> {
     let text = line.trim_end_matches(['\r', '\n']).strip_prefix("##")?;
-    let whitespace = text.len() - text.trim_start_matches(space).len();
-    if whitespace == 0 {
+    let width = text.len() - text.trim_start_matches(whitespace).len();
+    if width == 0 {
         return None;
     }
-    let mut start = whitespace;
+    let mut start = width;
     if start == text.len() {
         start = text.char_indices().next_back()?.0;
         if start == 0 {
@@ -72,9 +73,9 @@ pub(crate) fn heading(line: &str) -> Option<&str> {
     }
     let rest = &text[start..];
     let suffix = rest
-        .trim_end_matches(space)
+        .trim_end_matches(whitespace)
         .trim_end_matches('#')
-        .trim_end_matches(space);
+        .trim_end_matches(whitespace);
     let first_end = rest.chars().next()?.len_utf8();
     Some(trim(&rest[..suffix.len().max(first_end)]))
 }

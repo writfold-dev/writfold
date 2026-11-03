@@ -36,10 +36,10 @@ pub fn implementation_binding_valid(
             .as_ref()
             .is_some_and(|revision| revision.as_str() == binding.design_revision().as_str())
         && binding.source() == proposal.target_source()
-        && !binding.actor().as_str().trim().is_empty()
-        && !binding.source().as_str().trim().is_empty()
-        && !binding.design_revision().as_str().trim().is_empty()
-        && !binding.target_revision().as_str().trim().is_empty()
+        && writfold_domain::text::nonblank(binding.actor().as_str())
+        && writfold_domain::text::nonblank(binding.source().as_str())
+        && writfold_domain::text::nonblank(binding.design_revision().as_str())
+        && writfold_domain::text::nonblank(binding.target_revision().as_str())
         && binding.observed_at() <= now
 }
 
@@ -56,7 +56,7 @@ pub fn design_candidate_valid(
     now: &Integer,
 ) -> bool {
     authored_candidate_valid(proposal.authored(), target, now)
-        && (!active(target) || !proposal.target_source().as_str().trim().is_empty())
+        && (!active(target) || writfold_domain::text::nonblank(proposal.target_source().as_str()))
         && (!finalized(target) || implementation_bound(proposal, now))
 }
 
@@ -66,7 +66,7 @@ pub fn design_candidate_problems(
     now: &Integer,
 ) -> Vec<&'static str> {
     let mut problems = authored_candidate_problems(proposal.authored(), target, now);
-    if active(target) && proposal.target_source().as_str().trim().is_empty() {
+    if active(target) && !writfold_domain::text::nonblank(proposal.target_source().as_str()) {
         problems.push("known implementation source");
     }
     if finalized(target) && !implementation_bound(proposal, now) {
@@ -165,8 +165,8 @@ pub fn reopen_design(
 ) -> Option<DesignProposal> {
     if current == command.expected()
         && bindable(*current.authored().status())
-        && !command.actor().as_str().trim().is_empty()
-        && !command.reason().trim().is_empty()
+        && writfold_domain::text::nonblank(command.actor().as_str())
+        && writfold_domain::text::nonblank(command.reason())
     {
         Some(design_reopened(current, command.actor()))
     } else {

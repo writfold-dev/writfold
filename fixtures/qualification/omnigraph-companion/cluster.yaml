@@ -1,0 +1,11 @@
+version: 1
+metadata:
+  name: writfold-companion-smoke
+graphs:
+  companion:
+    schema: schema.pg
+    queries: [queries.gq, rename.gq]
+policies:
+  companion-access:
+    file: graph.policy.yaml
+    applies_to: [companion]

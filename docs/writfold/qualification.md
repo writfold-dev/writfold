@@ -13,18 +13,22 @@ successful reference command into Rust product qualification.
 | `baseline` | Existing baseline reconciliation plus SHA256 and byte-length validation of every `source_files` entry in the frozen contract and evaluation inventories | Current retained-evidence identities reconciled; not complete WF00/WF21 or fresh historical test execution |
 | `bootstrap --tool-image IMAGE@sha256:DIGEST` | Storage preflight, local immutable image inspection, fresh in-container executable/tool observation | Explicitly unadmitted tool observation only |
 | `bootstrap` | Storage preflight, local Compose/BuildKit `tools` build, then inspection and observation of the admitted lock image | Tool build/observation only; not offline-closure qualification. A missing lock is a failure, never execution of the mutable bootstrap tag |
-| `reference`, `native-smoke` | Compose `reference`, running the existing real Git/Dolt/Python CLI smoke | Reference-native smoke only, not Rust Dolt adapter qualification |
+| `reference`, `native-smoke` | Compose `reference`, running the existing real Git/Dolt/Python CLI smoke | Historical Dolt reference-only scope; retains historical WF09 association, never qualifies revision-4 Omnigraph WF09 |
 | `unit` | Compose `unit`, offline locked workspace Cargo tests | Executed Rust test counts; ignored tests fail the attempt |
 | `quality`, `verus`, `conformance` | Corresponding Compose services and existing backing Python producers | Only the explicitly reported producer obligations; absent implementation/report fails |
 | `build` | Compose `build`, offline locked release musl workspace build with Cargo JSON messages | Compiled workspace artifacts, not an installed executable or release. A second explicit container command copies exactly the compiler-reported filenames into the attempt, including Cargo-reported cached artifacts |
-| `release-required` | Independent validation of all WF00–WF21 status entries and their receipts, using freshly verified admitted tools | Complete required-gate aggregation only if every mandatory gate independently qualifies |
+| `release-required` | Independent validation of all WF00–WF24 status entries and their receipts, using freshly verified admitted tools | Complete required-gate aggregation only if every mandatory gate independently qualifies |
 
-The other normative names (`lean`, `model`, `tlaps`, `sources`, `dolt`,
-`publication`, `workflows`, `transport`, `migration`, `evaluate`, `runtime`,
-`package`, `site`, `scribes`, `portfolio`, `design`, `companion`) are recognized
-but refuse execution until their actual producers are implemented. They do not
-print an unrun success. The runner currently emits no `full-gate` producer
-receipts. A scoped pass is deliberately insufficient for release.
+The new explicit commands are `storage-foundation` (WF24), `omnigraph` (WF09),
+`legacy-import` (WF14), `views` (WF22), `obsidian` (WF23), and
+`storage-profile` (WF03: versioned storage wire/signature/profile boundary).
+They refuse until actual producers exist. The planned production `dolt` command
+is removed; reference-native smoke remains available only with its historical scope.
+The other normative names (`lean`, `model`, `tlaps`, `sources`, `publication`,
+`workflows`, `transport`, `migration`, `evaluate`, `runtime`, `package`, `site`,
+`scribes`, `portfolio`, `design`, `companion`) likewise refuse until implemented.
+They do not print an unrun success. The runner currently emits no `full-gate`
+producer receipts. A scoped pass is deliberately insufficient for release.
 
 `quality`, `verus`, and `conformance` producers must write
 `/evidence/obligations.json` containing:
@@ -136,7 +140,7 @@ freshness flags remain in the build log.
 
 ## Fail-closed release consumption
 
-Every WF00–WF21 entry must be present exactly once, required, passed and linked
+Every WF00–WF24 entry must be present exactly once, required, passed and linked
 to at least one receipt. Receipt paths in `qualification/status.json` are retained
 external paths, not in-tree reports. Every selected receipt must use the current
 closed schema, name the expected gate, have `scope: full-gate`, admitted tools,
@@ -153,6 +157,16 @@ while aggregation reads it. There is no waiver switch. Reused receipts are
 currently refused conservatively: no undocumented source-closure equivalence or
 documentation-only reuse is inferred. A successful unit command cannot renew a
 stale persistence or proof receipt.
+
+The active contract is `handovers/revision-4/writfold/`. Gate definitions bind
+its complete bundled bytes plus the current adoption record; fixture identity
+binds its registries, references, examples and qualification fixtures explicitly.
+Aggregation checks that the candidate carries those current identities, so
+old receipts cannot qualify the new contract even if manually relabelled.
+The old `handover/`, historical manifests and frozen inventories remain unchanged:
+`baseline` still verifies that historical reference, not a revision-4 product pass.
+Earlier P00/P01/P02 records are preserved under `historical_completions` in the
+status ledger; active stage statuses separately describe revision-4 obligations.
 
 No runner checks were executed as part of introducing this implementation.
 Integration qualification belongs to the main implementation owner, after all

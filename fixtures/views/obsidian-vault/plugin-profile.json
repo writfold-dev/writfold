@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "status": "candidate_not_native_qualified",
+  "plugin_id": "dataview",
+  "release_tag": "0.5.68",
+  "manifest_version": "0.5.68",
+  "assets": [
+    {
+      "name": "manifest.json",
+      "url": "https://github.com/blacksmithgu/obsidian-dataview/releases/download/0.5.68/manifest.json",
+      "sha256": "9235db47112da81b85591c79ecb9ae2574e5e72207056e976472f90616286185",
+      "bytes": 357
+    },
+    {
+      "name": "main.js",
+      "url": "https://github.com/blacksmithgu/obsidian-dataview/releases/download/0.5.68/main.js",
+      "sha256": "794e9eaede73920bb8d54b0eda4f5de2182d698cc638774500f24f14bcd4da0b",
+      "bytes": 2377639
+    },
+    {
+      "name": "styles.css",
+      "url": "https://github.com/blacksmithgu/obsidian-dataview/releases/download/0.5.68/styles.css",
+      "sha256": "3306dd9032e00f989ba7233a37fd255bc4d3f4340cee661762e952f3f6aa1de9",
+      "bytes": 2965
+    }
+  ],
+  "configuration": {
+    "enableDataviewJs": false,
+    "enableInlineDataviewJs": false
+  },
+  "qualification": "WF23; inspect actual plugin settings schema before applying; preserve unrelated settings",
+  "core": [
+    "bases",
+    "backlink",
+    "outline",
+    "page-preview",
+    "bookmarks"
+  ],
+  "note": "0.5.70 was inspected but its release manifest declares 0.5.68; select internally consistent 0.5.68 tag/assets. No plugin binaries included.",
+  "configuration_basis": "Keys inspected in the exact pinned main.js settings defaults and handlers; handover labels are not literal plugin settings."
+}

@@ -19,3 +19,6 @@ formal/build/
 
 # Native Dolt working state is never an authored Git asset.
 .dolt/
+
+# Rust build output stays outside authored source and commit snapshots.
+/target/

@@ -50,7 +50,7 @@ pub fn material_revision(document: &MarkdownDocument) -> Result<MaterialIdentity
         .find_map(|(offset, line)| {
             line.strip_prefix("##")
                 .and_then(|rest| rest.chars().next())
-                .is_some_and(unicode::space)
+                .is_some_and(writfold_domain::text::whitespace)
                 .then_some(offset)
         })
         .unwrap_or(body.len());

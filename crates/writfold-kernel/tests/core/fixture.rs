@@ -73,7 +73,7 @@ fn evidence_context(
 ) -> Result<Context, IdentityError> {
     Ok(Context::new(
         "snapshot".parse()?,
-        SEMANTIC_VERSION.into(),
+        semantic_version().into(),
         "core-2".parse()?,
         "kctx-2".parse()?,
         Policy::new(

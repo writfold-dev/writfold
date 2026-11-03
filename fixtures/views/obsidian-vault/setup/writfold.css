@@ -1,0 +1,10 @@
+/* Optional; scoped to generated notes, no fixed theme or hidden warnings. */
+.writfold-view { --file-line-width: 72ch; --line-height-normal: 1.65; }
+.writfold-view .markdown-preview-sizer { max-width: 72ch; margin-inline: auto; }
+.writfold-view h2 { margin-top: 1.8em; }
+.writfold-view table { font-size: 0.95em; }
+.writfold-view td, .writfold-view th { padding: 0.55em 0.75em; }
+.writfold-view .callout { border-radius: 0.5rem; }
+
+/* Keep all properties reachable without letting metadata dominate the page. */
+.writfold-view .metadata-container { max-height: 12rem; overflow-y: auto; }

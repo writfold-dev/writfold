@@ -1,81 +1,28 @@
+//! Assessment decision contracts; diagnostic rendering remains ordinary Rust.
+mod freshness;
+mod receipts;
+
 use super::context::Frame;
 use super::evaluation::alternatives;
-use super::footprint::{Evaluation, Input};
-use super::{same_context, supported_frame};
-use crate::time::assess_fresh;
+use super::supported_frame;
+#[cfg(verus_keep_ghost)]
+use super::assessment_model::*;
+#[cfg(verus_keep_ghost)]
+use super::lookup::claim_lookup_value;
+use freshness::alternative_freshness;
+pub use freshness::witness_freshness;
+use receipts::{current, reusable_with, validated};
+use vstd::prelude::*;
 use writfold_domain::*;
 
-fn reusable_with(
-    context: Frame<'_>,
-    reference: &ClaimRef,
-    receipt: &Receipt,
-    accepted: &[(&Witness, Evaluation<'_>)],
-) -> bool {
-    receipt.claim() == reference
-        && *receipt.result() == ReceiptResult::Pass
-        && context.same_context(receipt.context())
-        && receipt.context().now() <= context.now()
-        && context.now() <= receipt.expires_at()
-        && accepted.iter().any(|(witness, checked)| {
-            *witness == receipt.witness()
-                && checked.dependencies.len() == receipt.dependencies().len()
-                && checked
-                    .dependencies
-                    .iter()
-                    .zip(receipt.dependencies())
-                    .all(|(a, b)| a.matches(b))
-        })
-}
+verus! {
 
-pub fn reusable(kb: &KB, context: &Context, reference: &ClaimRef, receipt: &Receipt) -> bool {
-    if receipt.claim() != reference
-        || *receipt.result() != ReceiptResult::Pass
-        || !same_context(receipt.context(), context)
-        || receipt.context().now() > context.now()
-        || context.now() > receipt.expires_at()
-    {
-        return false;
-    }
-    reusable_with(
-        Frame::new(context),
-        reference,
-        receipt,
-        &alternatives(kb, Frame::new(context), reference),
-    )
-}
-
-fn observations_freshness<'a>(
-    context: &Context,
-    observations: impl Iterator<Item = &'a Observation>,
-) -> Freshness {
-    let mut state = Freshness::Fresh;
-    let mut any = false;
-    for observation in observations {
-        any = true;
-        match assess_fresh(
-            context.policy().ttl(),
-            observation.observed_at(),
-            context.now(),
-        ) {
-            Freshness::Stale => return Freshness::Stale,
-            Freshness::Unknown => state = Freshness::Unknown,
-            Freshness::Fresh => {}
-        }
-    }
-    if any { state } else { Freshness::Unknown }
-}
-
-pub fn witness_freshness(context: &Context, dependencies: &[Dependency]) -> Freshness {
-    observations_freshness(
-        context,
-        dependencies.iter().filter_map(|dependency| {
-            if let Dependency::Observation(value) = dependency {
-                Some(value)
-            } else {
-                None
-            }
-        }),
-    )
+pub fn reusable(kb: &KB, context: &Context, reference: &ClaimRef, receipt: &Receipt) -> (reusable: bool)
+    ensures reusable == reusable_spec(kb@, context@, reference@, receipt@),
+{
+    let frame = Frame::new(context);
+    if !current(frame, reference, receipt) { return false; }
+    reusable_with(frame, reference, receipt, &alternatives(kb, frame, reference))
 }
 
 pub fn policy_allows(
@@ -86,57 +33,56 @@ pub fn policy_allows(
     require_fresh: bool,
     require_validated: bool,
     require_uncontested: bool,
-) -> bool {
+) -> (allowed: bool)
+    ensures allowed == policy_allows_spec(supported_positive, fresh, validated, uncontested,
+        require_fresh, require_validated, require_uncontested),
+{
     supported_positive
         && (!require_fresh || fresh)
         && (!require_validated || validated)
         && (!require_uncontested || uncontested)
 }
 
-fn alternative_freshness(context: Frame<'_>, accepted: &[(&Witness, Evaluation<'_>)]) -> Freshness {
-    let mut all_stale = !accepted.is_empty();
-    for (_, result) in accepted {
-        let state = observations_freshness(
-            context.base,
-            result.dependencies.iter().filter_map(|dependency| {
-                if let Input::Observation(value) = dependency {
-                    Some(*value)
-                } else {
-                    None
-                }
-            }),
-        );
-        if state == Freshness::Fresh {
-            return Freshness::Fresh;
+fn disputed(kb: &KB, context: Frame<'_>, reference: &ClaimRef) -> (disputed: bool)
+    ensures disputed == disputed_spec(kb@, context@.base, reference@),
+{
+    let corrections = kb.corrections();
+    let mut index = 0;
+    while index < corrections.len()
+        invariant index <= corrections.len(), corrections.deep_view() == kb@.corrections,
+            forall|i: int| 0 <= i < index ==> !dispute_matches(context@.base, reference@, kb@.corrections[i]),
+        decreases corrections.len() - index,
+    {
+        let correction = &corrections[index];
+        if correction.target() == reference && *correction.kind() == CorrectionKind::Dispute
+            && correction.recorded_at() <= context.now() {
+            proof { assert(dispute_matches(context@.base, reference@, kb@.corrections[index as int])); }
+            return true;
         }
-        all_stale &= state == Freshness::Stale;
+        index += 1;
     }
-    if all_stale {
-        Freshness::Stale
-    } else {
-        Freshness::Unknown
-    }
+    false
 }
 
-pub fn assess(kb: &KB, context: &Context, reference: &ClaimRef) -> Assessment {
+pub fn assess(kb: &KB, context: &Context, reference: &ClaimRef) -> (assessment: Assessment)
+    ensures assessment@ == assess_spec(kb@, context@, reference@),
+{
     assess_frame(kb, Frame::new(context), reference)
 }
 
-fn assess_frame(kb: &KB, context: Frame<'_>, reference: &ClaimRef) -> Assessment {
+fn assess_frame(kb: &KB, context: Frame<'_>, reference: &ClaimRef) -> (assessment: Assessment)
+    ensures assessment@ == assess_frame_spec(kb@, context@, reference@),
+{
+    proof { broadcast use claim_lookup_value; }
     let claim = find_claim(kb, reference);
     let accepted = alternatives(kb, context, reference);
     let selected = !accepted.is_empty();
-    let selected_negative = claim.is_some_and(|c| *c.statement().polarity() == Polarity::Negative);
-    let contrary = supported_frame(
-        kb,
-        context,
-        reference,
-        if selected_negative {
-            Polarity::Positive
-        } else {
-            Polarity::Negative
-        },
-    );
+    let selected_negative = match claim {
+        Some(value) => *value.statement().polarity() == Polarity::Negative,
+        None => false,
+    };
+    let contrary = supported_frame(kb, context, reference,
+        if selected_negative { Polarity::Positive } else { Polarity::Negative });
     let (positive, negative) = if selected_negative {
         (contrary, selected)
     } else {
@@ -148,19 +94,13 @@ fn assess_frame(kb: &KB, context: Frame<'_>, reference: &ClaimRef) -> Assessment
         (false, true) => Support::Negative,
         (false, false) => Support::None,
     };
-    let applicable = claim
-        .is_some_and(|c| context.matches(kb) && narrower(context.target(), c.statement().scope()));
+    let applicable = match claim {
+        Some(value) => context.matches(kb) && narrower(context.target(), value.statement().scope()),
+        None => false,
+    };
     let freshness = alternative_freshness(context, &accepted);
-    let validated = kb
-        .receipts()
-        .iter()
-        .any(|r| reusable_with(context, reference, r, &accepted));
-    let contested = contrary
-        || kb.corrections().iter().any(|c| {
-            c.target() == reference
-                && *c.kind() == CorrectionKind::Dispute
-                && c.recorded_at() <= context.now()
-        });
+    let validated = validated(kb, context, reference, &accepted);
+    let contested = contrary || disputed(kb, context, reference);
     let usable = applicable
         && policy_allows(
             selected,
@@ -171,18 +111,12 @@ fn assess_frame(kb: &KB, context: Frame<'_>, reference: &ClaimRef) -> Assessment
             *context.policy().require_validation(),
             *context.policy().require_uncontested(),
         );
-    Assessment::new(
-        support,
-        applicable,
-        freshness,
-        validated,
-        contested,
-        positive || negative,
-        usable,
-    )
+    Assessment::new(support, applicable, freshness, validated, contested, positive || negative, usable)
 }
 
-pub fn usable_for(kb: &KB, context: &Context, reference: &ClaimRef) -> bool {
+pub fn usable_for(kb: &KB, context: &Context, reference: &ClaimRef) -> (usable: bool)
+    ensures usable == usable_for_spec(kb@, context@, reference@),
+{
     *assess(kb, context, reference).usable()
 }
 
@@ -191,17 +125,13 @@ pub fn usable_for_snapshot(
     context: &Context,
     snapshot: &SnapshotId,
     reference: &ClaimRef,
-) -> bool {
-    *assess_frame(
-        kb,
-        Frame {
-            base: context,
-            snapshot,
-        },
-        reference,
-    )
-    .usable()
+) -> (usable: bool)
+    ensures usable == usable_for_snapshot_spec(kb@, context@, snapshot@, reference@),
+{
+    *assess_frame(kb, Frame { base: context, snapshot }, reference).usable()
 }
+
+} // verus!
 
 pub fn assessment_gaps(kb: &KB, context: &Context, reference: &ClaimRef) -> Vec<String> {
     let verdict = assess(kb, context, reference);

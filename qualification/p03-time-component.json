@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "component": "signed-arithmetic-and-freshness",
+  "status": "pass",
+  "stage": "P03",
+  "scope": "Actual Integer comparison/clone/borrowed arithmetic wrappers and fresh_at/assess_fresh; not complete V03 or P03.",
+  "source_inputs": {
+    "path": "~/.local/share/writfold/qualification/p03-time-001/workspace-sha256.json",
+    "sha256": "50a5859767376a6d073aad89b88cab214f4c1ca143804a367cf58b059679b54a",
+    "bytes": 20500
+  },
+  "source_audit": {
+    "path": "~/.local/share/writfold/qualification/p03-time-001/source-admission/source-audit.json",
+    "sha256": "0c2e80edd5c93f0dced96e5034fb6e822bb5f494f9195962823115965e715200",
+    "bytes": 18034
+  },
+  "profile": {
+    "path": "~/.local/share/writfold/qualification/p03-time-001/profile-v2.json",
+    "sha256": "4bb7fbe69ed48ef0ebe2462088a160deaf5064d9dfdd28a098ff0fc6645c0522",
+    "bytes": 5051
+  },
+  "proof_execution": {
+    "path": "~/.local/share/writfold/qualification/p03-time-001/positive-command.json",
+    "sha256": "265b2dc9359508a74f0b85a6e731099d67774cf63d37fd4299d35b95505fa3e5",
+    "bytes": 538
+  },
+  "proof_stdout": {
+    "path": "~/.local/share/writfold/qualification/p03-time-001/positive.stdout.log",
+    "sha256": "bfe1bd6beb72cd023dc6b69ce7fba19fd8530d413aa5f8e1fba8397820191279",
+    "bytes": 2016335
+  },
+  "admission": {
+    "path": "~/.local/share/writfold/qualification/p03-time-001/admission-002/results.json",
+    "sha256": "72a7d7b32baca1394bcbba778cd6f923e95292818f234888734cfdc84191338c",
+    "bytes": 855
+  },
+  "runtime": {
+    "path": "~/.local/share/writfold/qualification/p03-time-001/runtime.json",
+    "sha256": "02b37287c93419153bb37063a989e9c54aeddf123cb91fe47a121755138c669f",
+    "bytes": 484
+  },
+  "native_binary": {
+    "path": "~/.local/share/writfold/qualification/p03-time-001/writfold-time-smoke",
+    "sha256": "1803326cf6b526e89505272e684e445b713b37a61d3f366db5726943d1281fd9",
+    "bytes": 699592
+  },
+  "actual_solver_functions": [
+    "writfold_domain::integer::arithmetic::impl&%2::add",
+    "writfold_domain::integer::arithmetic::impl&%3::sub",
+    "writfold_domain::integer::Integer::clone",
+    "writfold_domain::integer::Integer::eq",
+    "writfold_domain::integer::Integer::cmp",
+    "writfold_domain::integer::Integer::partial_cmp",
+    "writfold_kernel::time::fresh_at",
+    "writfold_kernel::time::assess_fresh"
+  ],
+  "verified_obligations": {
+    "writfold_domain": 364,
+    "writfold_kernel": 2
+  },
+  "semantic_mutations": [
+    {
+      "controls": 14,
+      "functions": [
+        "writfold_domain::integer::arithmetic::impl&%2::add"
+      ],
+      "name": "arithmetic-substitution",
+      "outcome": "pass"
+    },
+    {
+      "controls": 14,
+      "functions": [
+        "writfold_kernel::time::fresh_at"
+      ],
+      "name": "expiry-exclusive",
+      "outcome": "pass"
+    },
+    {
+      "controls": 14,
+      "functions": [
+        "writfold_kernel::time::assess_fresh"
+      ],
+      "name": "future-direction",
+      "outcome": "pass"
+    },
+    {
+      "controls": 14,
+      "functions": [
+        "writfold_kernel::time::assess_fresh"
+      ],
+      "name": "missing-policy-fresh",
+      "outcome": "pass"
+    }
+  ],
+  "runtime_scenarios": 1038,
+  "python_rust_mismatches": 0,
+  "trusted_boundary": "WF-TCB-001, including the explicit unproved foreign BigInt AddSpec/SubSpec domain fact; no Writfold executable body excluded.",
+  "prior_failed_attempts": [
+    "p03-numeric-001 (unsealed exploratory compiles)",
+    "p03-time-001/mutation-results.json (old admission could not attribute inherited contract or calibrate missing overload)"
+  ],
+  "admission_replacement": "Original solver logs unchanged. Schema4 admission pairs each diagnostic with an owned function site and every primary with an owned or hash-pinned inherited contract;14 tampered-evidence controls per mutant.",
+  "limits": [
+    "No full independent-assessment/policy proof",
+    "No full P03 closure or release gate",
+    "No proof of num-bigint internals or trusted total-domain fact",
+    "No formal cross-prover refinement",
+    "Native smoke consumer is not the complete installed product"
+  ]
+}

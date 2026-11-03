@@ -1,0 +1,39 @@
+name: writfold-omnigraph-probe
+services:
+  probe:
+    image: ${WRITFOLD_TOOL_IMAGE:?Admitted immutable tool image required}
+    pull_policy: never
+    platform: linux/amd64
+    user: "${WRITFOLD_PROBE_UID:?}:${WRITFOLD_PROBE_GID:?}"
+    working_dir: /evidence
+    entrypoint: []
+    command: [/usr/bin/python3, /work/writfold/scripts/writfold_omnigraph_probe.py, --inside]
+    network_mode: none
+    read_only: true
+    init: true
+    cpus: 2
+    mem_limit: 4294967296
+    memswap_limit: 4294967296
+    pids_limit: 256
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,size=268435456,mode=1777
+    volumes:
+      - type: bind
+        source: .
+        target: /work/writfold
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${WRITFOLD_PROBE_WORK:?Fresh exclusive scratch required}
+        target: /evidence
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${WRITFOLD_PROBE_PACKAGE:?Verified extracted package required}
+        target: /native
+        read_only: true
+        bind:
+          create_host_path: false

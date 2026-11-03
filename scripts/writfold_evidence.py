@@ -15,10 +15,13 @@ import time
 ROOT = Path(__file__).resolve().parents[1]
 PLAYBOOK = "e7d991e990e3dff9c5d70e4327c0e90298e2f67e"
 TARGET = "x86_64-unknown-linux-musl"
+ACTIVE_HANDOVER = "handovers/revision-4/writfold"
 DEFINITIONS = ("scripts/gate", "scripts/writfold_gate.py", "scripts/writfold_evidence.py",
                "qualification/gate-receipt.schema.json", "compose.yaml",
-               "handover/registries/gates.json", "handover/plan/05-build-and-quality.md",
-               "handover/plan/08-execution-and-acceptance.md")
+               "qualification/handover-adoption.json",
+               f"{ACTIVE_HANDOVER}/MANIFEST.sha256",
+               f"{ACTIVE_HANDOVER}/registries/gates.json",
+               f"{ACTIVE_HANDOVER}/plan/08-execution-and-acceptance.md")
 
 
 def canonical(value: object) -> bytes:
@@ -87,6 +90,11 @@ def snapshot() -> dict:
 
 def definition() -> str:
     files = {name: sha(source_path(name)) for name in DEFINITIONS}
+    # Bind all active contracts and bundled fixtures even before Git tracks the import.
+    for path in sorted(source_path(ACTIVE_HANDOVER).rglob("*")):
+        if path.is_file():
+            name = path.relative_to(ROOT).as_posix()
+            files[name] = sha(source_path(name))
     for name in git("ls-files", "-z", "--cached", "--others", "--exclude-standard", "handover/stages", "qualification", "scripts", "docker").decode().split("\0"):
         if name and name != "qualification/status.json" and source_path(name).is_file():
             files[name] = sha(source_path(name))
@@ -94,8 +102,14 @@ def definition() -> str:
 
 
 def fixtures(source: dict) -> str:
-    return digest({name: value for name, value in source["files"].items()
-                   if name.startswith(("fixtures/", "tests/", "handover/registries/", "handover/reference/"))})
+    files = {name: value for name, value in source["files"].items()
+             if name.startswith(("fixtures/", "tests/", "handover/registries/", "handover/reference/"))}
+    for directory in ("registries", "reference", "examples", "qualification"):
+        for path in sorted(source_path(f"{ACTIVE_HANDOVER}/{directory}").rglob("*")):
+            if path.is_file():
+                name = path.relative_to(ROOT).as_posix()
+                files[name] = {"sha256": sha(source_path(name)), "bytes": path.stat().st_size}
+    return digest(files)
 
 
 def file_record(path: Path) -> dict:
@@ -238,10 +252,18 @@ def release_required(current: dict, candidate: list[dict]) -> dict:
     status_path = ROOT / "qualification/status.json"
     status_digest = sha(status_path)
     status = document(status_path)
-    expected = {f"WF{number:02d}" for number in range(22)}
+    expected = {f"WF{number:02d}" for number in range(25)}
+    registry = document(source_path(f"{ACTIVE_HANDOVER}/registries/gates.json"))
+    if (len(registry) != 25 or {gate["id"] for gate in registry} != expected
+            or any(gate.get("required") is not True for gate in registry)):
+        raise ValueError("Active contract must require WF00-WF24 exactly once")
     gates = status.get("gates", [])
-    if len(gates) != 22 or {gate["id"] for gate in gates} != expected:
-        raise ValueError("Status must inventory WF00-WF21 exactly once")
+    if len(gates) != 25 or {gate["id"] for gate in gates} != expected:
+        raise ValueError("Status must inventory WF00-WF24 exactly once")
+    if current.get("gate_definition_digest") != definition():
+        raise ValueError("Candidate does not bind the active revision-4 gate definitions")
+    if not current.get("source") or current.get("fixture_digest") != fixtures(current["source"]):
+        raise ValueError("Candidate does not bind the active revision-4 fixtures")
     if not candidate:
         raise ValueError("Release requires --artifact for the exact candidate artifact")
     schema = document(ROOT / "qualification/gate-receipt.schema.json")

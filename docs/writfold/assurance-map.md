@@ -121,6 +121,40 @@ excluded, and the exact workflow-3 identity has a disjoint `design-v3:` prefix.
 That projection is not authored acceptance, binding or CAS authority.
 
 
+### P03: shared production whitespace admission
+
+`writfold_domain::text::{whitespace, nonblank}` now supplies the pinned
+Python-3.12/Unicode-15 predicate to kernel metadata, authority policy and source
+parsing. The previously accepted U+001C–U+001F blank actor/claim/check regression
+was reproduced before the change and passes afterward. A static musl consumer,
+run with `PATH=/nonexistent`, matched Python on all **1,112,064 Unicode scalar
+values**, exercised 87 metadata refusals and 145 composed strings, and preserved
+opaque identity bytes. Scoped Verus execution discharged three obligations over
+the actual streaming functions. Evidence: `p03-whitespace-001/report.json`.
+
+WF-SEM-001 records a pre-existing reference distinction: Lean's `nonblank`
+recognizes only space, tab, CR and LF; Python production recognizes its Unicode
+whitespace set. The immutable Lean baseline remains unchanged. This component
+evidence is not full V03/V06 or P03 completion.
+
+### P03: signed arithmetic and freshness
+
+`qualification/p03-time-component.json` binds a sealed workspace to the actual
+`Integer` clone/comparison/borrowed-arithmetic bodies and both production time
+decisions. Verus discharged 364 domain obligations and two kernel obligations.
+The static musl consumer matched the preserved Python implementation on 1,038
+complete responses, including 200-digit values, negative TTLs, future times,
+missing policy and both sides of inclusive expiry.
+
+Four semantic mutations failed their named production functions: addition
+replaced by subtraction, exclusive expiry, reversed future-time comparison and
+missing policy promoted to fresh. Each has 14 rejected evidence-tampering
+controls. The original failed admission remains retained; corrected schema-4
+admission uses the same solver logs, requiring an owned function site and an
+owned or hash-pinned inherited contract for every primary diagnostic span.
+This is component evidence, not complete independent assessment/policy
+verification, full P03, or an installed-product claim.
+
 ## Current mandatory Rust proof obligations
 
 V01 has executed nominal/conversion evidence for its recorded candidate and trusted primitive boundary. Other rows remain `not_run`; existing production bodies alone are not proof. Precise declarations, source linkage, exclusions and negative controls are in `proofs.json`.
@@ -129,7 +163,7 @@ V01 has executed nominal/conversion evidence for its recorded candidate and trus
 | --- | --- | --- |
 | V01 | Representations and numeric conversions | Verified nominal/conversion component; explicit pinned BigInt primitive assumptions |
 | V02 | Recursive witness checker | Production bodies mapped; proof absent |
-| V03 | Assessment and time | Production bodies mapped; proof absent |
+| V03 | Assessment and time | Verified signed-time component; independent assessment/policy proof remains absent |
 | V04 | Reuse and corrections | Production bodies mapped; proof absent |
 | V05 | Operations and selection | Production bodies mapped; proof absent |
 | V06 | Authored workflows | Production bodies mapped; proof absent |
@@ -143,7 +177,7 @@ V01 has executed nominal/conversion evidence for its recorded candidate and trus
 
 ## Operational models and composition
 
-All nine operational models, their TLC configurations, TLAPS inductive proofs and model-action mappings are **absent / not_run** in this snapshot. Pure semantic application functions and native filesystem primitives are listed as related components, not mislabeled as implemented models.
+P04 operational models and composition modules are being implemented and qualified. Initial TLC/TLAPS attempts exposed syntax, grouping and open-proof failures; no model is qualified yet. M07/M08 remain later-stage work. Pure semantic functions, filesystem primitives and draft model files do not establish production reducer refinement.
 
 | Model | Required model | Related Rust obligations |
 | --- | --- | --- |
@@ -157,7 +191,7 @@ All nine operational models, their TLC configurations, TLAPS inductive proofs an
 | M08 | WritAcquisition | V11 |
 | M09 | AuthoredDesignLifecycle | V13, V07 |
 
-Each model still needs `TypeOK`, strengthening `Inv`, `Init`, real named actions including crash/restart/error/conflict paths, action preservation, `Inv => Safety`, and frame/stuttering checks. Required composition bridges remain explicit: M01/M02 plan identity and linearization; M01/M03 roots before CAS; M03/M04 process incarnations; M01/M05 closure before advertisement; M02/M06 operation/correction history; M07/M08 authenticated acquisition; M08/M01 and M08/M03 retention; and M09/M02 authored-state recovery with an identity separate from knowledge-release CAS.
+Every model requires `TypeOK`, strengthening `Inv`, `Init`, real named actions including crash/restart/error/conflict paths, checked action preservation, `Inv => Safety`, and frame/stuttering checks. Required composition bridges remain explicit: M01/M02 plan identity and linearization; M01/M03 roots before CAS; M03/M04 process incarnations; M01/M05 closure before advertisement; M02/M06 operation/correction history; M07/M08 authenticated acquisition; M08/M01 and M08/M03 retention; and M09/M02 authored-state recovery with an identity separate from knowledge-release CAS.
 
 TLC bounded exploration must record actual bounds, states, symmetry and deadlock conventions. A timeout is not a pass. Eventual progress requires explicit IO/network/storage/fairness assumptions; no unbounded TLAPS liveness claim follows from finite exploration or safety induction.
 
@@ -175,7 +209,7 @@ Under WF-ID-001, historical `KbId`/`PolicyRevision` text remains opaque and is n
 
 `EvidenceSound` is local to actual exact selected atomic/inventory attestation leaves. Inventory truth is equality with an independently interpreted source/revision/query/scope/method domain, not supplied-members definitional truth. A signature, capture, schema-valid record or Scribe response does not prove external truth. There is no new pooled-context inference rule.
 
-`Integer` wraps **num-bigint 0.4.8**; its parsing and arithmetic remain trusted external implementation behavior. WF-TCB-001 admits exact, reviewed library contracts for mathematical representation, primitive construction, clone, sign and checked conversion. Writfold's wrapper and runtime-unit admission bodies are verified against those assumptions; the library itself is not. The approved verification-only module is source-hash-bound by `qualification/trusted-boundaries.json`. Semantic values remain unbounded; finite runtime conversions reject rather than truncate or saturate.
+`Integer` wraps **num-bigint 0.4.8**; its parsing and arithmetic remain trusted external implementation behavior. WF-TCB-001 admits reviewed contracts for representation, primitive construction, clone, sign, comparison, borrowed arithmetic and checked conversion. It separately identifies `borrowed_arithmetic_domain` as an **unproved library assumption** about exactly the foreign AddSpec/SubSpec preconditions; Rust coherence prevents supplying those foreign trait implementations directly. Writfold executable wrappers are verified, not excluded. The library and the named assumption are not proved. The verification-only module is source-hash-bound by `qualification/trusted-boundaries.json`. Semantic values remain unbounded; finite runtime conversions reject rather than truncate or saturate.
 
 ### Crypto, effects, compiler and operating system
 
@@ -185,7 +219,7 @@ Native `LockedFile::compare_and_write` supplies a cooperating-writer, descriptor
 
 ## Source freshness and maintenance
 
-The conservative mapping closure contains **429 exact file hashes**, including actual Rust/Lean/Python source, fixtures, relevant plans/stages, dependency/tool locks, qualification producers and retained audit inputs. Its aggregate identity at this update is:
+The recorded **P02** conservative mapping closure contains **429 exact file hashes**, including actual Rust/Lean/Python source, fixtures, relevant plans/stages, dependency/tool locks, qualification producers and retained audit inputs. P03 edits require a new mapping and candidate admission; they do not inherit that earlier candidate's qualification. The recorded P02 aggregate identity is:
 
 ```text
 eecb93e771ce59a88d9219474d1e97a504c6c176bf40695ecdcc736e77c760f9
