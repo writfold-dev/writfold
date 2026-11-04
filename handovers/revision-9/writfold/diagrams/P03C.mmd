@@ -1,0 +1,12 @@
+flowchart TD
+  N0["Pinned knowledge core — Legacy semantics and actual proof branch"]
+  N1["Typed citation model — Representation selector and scope"]
+  N2["Lean kernel check — CIT01-CIT08 and axiom audit"]
+  N3["Adversarial fixture — Copied line and stale proof profile"]
+  N4["Reviewed proof bundle — Exact source and trusted assumptions"]
+  N5["Next stage enabled — Checked machinery implementation"]
+  N0 --> N1
+  N1 --> N2
+  N3 -->|"challenge"| N2
+  N2 -->|"receipt"| N4
+  N4 -->|"WF32"| N5

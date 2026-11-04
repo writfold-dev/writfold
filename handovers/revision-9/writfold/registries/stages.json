@@ -1,0 +1,2589 @@
+[
+  {
+    "id": "P00",
+    "title": "Freeze workflow 3 and adopt the playbook",
+    "dependencies": [],
+    "goal": "Start from the current verified contracts and explicit remaining adapter work.",
+    "tasks": [
+      "Compare source and dirty bytes with kctx 1c17b94; read current instructions. Pin playbook e7d991e and the project adoption record in plan/12.",
+      "Reconcile 353 Lean declarations, 334 conformance cases, 11 mutants and the current 740-test report by full input hashes. Retain the prior failure and newer fixes; do not repeat a superseded repair.",
+      "Validate the Dolt warning regression and descendant-lifetime fix. Keep strict parser/executable identity hardening as a Rust tool-admission obligation, not a claim the new parser already enforces it.",
+      "Classify workflow-3 knowledge campaign evidence separately from the full storage/remote gates. Record remaining FR3/FR8/FR9/FR10/FR11 and FR7/FR12 tasks with destination stages.",
+      "Inventory every current CLI/RPC/versioned envelope, requirement and producer provenance field. Freeze performance/outcome profiles and source qualification scope before porting.",
+      "Record the approved Omnigraph-first decision and legacy/reference boundaries in plans/15–16. P01O must qualify the backend before storage-dependent integration."
+    ],
+    "deliverables": [
+      "Current-source baseline and version matrix",
+      "Pinned playbook adoption + compatibility inventory",
+      "Evidence applicability and unresolved-work ledger"
+    ],
+    "acceptance": [
+      "Current source matches the claimed report inputs; unrun/full-scope claims stay explicit.",
+      "Completed fixes are preserved and unresolved behaviors have destination gates.",
+      "Workflow 3, protocol 2 and private playbook adoption are explicit."
+    ],
+    "gates": [
+      "WF00",
+      "WF21"
+    ],
+    "proofs": [],
+    "scenarios": [
+      "X01",
+      "X02",
+      "X03",
+      "X04"
+    ],
+    "nodes": [
+      "Current kctx|1c17b94 + exact bytes",
+      "Versioned contracts|Core 2 / workflow 3 / RPC 2",
+      "Playbook adoption|Pinned patterns and claims",
+      "Frozen baseline|No superseded repair task",
+      "Evidence scope|Full versus partial campaigns",
+      "Open adapter work|Named stages and tests"
+    ],
+    "edges": [
+      [
+        0,
+        1,
+        ""
+      ],
+      [
+        1,
+        2,
+        ""
+      ],
+      [
+        0,
+        4,
+        "hash audit"
+      ],
+      [
+        2,
+        4,
+        "claims"
+      ],
+      [
+        4,
+        5,
+        "gaps"
+      ],
+      [
+        4,
+        3,
+        "freeze"
+      ]
+    ],
+    "status": "not_run",
+    "file": "stages/P00.md"
+  },
+  {
+    "id": "P01",
+    "title": "Pin the build and storage setup",
+    "dependencies": [
+      "P00"
+    ],
+    "goal": "Build the same admitted toolchain on WSL without filling the wrong disk.",
+    "tasks": [
+      "Inspect actual Docker context/buildx/cache volumes and external-drive filesystem identity. Fail if the configured cache mount is absent; keep authoritative state separate.",
+      "Admit Rust, Cargo, Verus/compiler, solver, Lean, TLC, TLAPS, Omnigraph CLI/server, legacy-only Dolt, Git and OCI bases into one byte-identified lock. Audit mutable package sources and bootstrap installers.",
+      "Implement Compose service ownership and gate receipts; online bootstrap is separate from offline verification. Keep heavy cache namespaces keyed by target/tool/source identities.",
+      "Verify and link a nontrivial Verus exec function into the musl product spike. Prove/check the release cfg/features match the verified body; record trusted compilation boundaries.",
+      "Implement offline dependency closure and a minimal installed-runtime smoke with proof tools absent. Record CPU/RAM/storage budgets without changing the workstation reserve policy."
+    ],
+    "deliverables": [
+      "Dockerfiles/compose.yaml + toolchains.lock.json",
+      "scripts/gate + receipt schema + preflight",
+      "Verus-to-musl feasibility artifact and offline tool closure"
+    ],
+    "acceptance": [
+      "Clean container build and offline rerun succeed from admitted bytes.",
+      "Missing external mount fails before creating large output on the system disk.",
+      "Verified executable body is linked into the smoke artifact with recorded target/features."
+    ],
+    "gates": [
+      "WF01"
+    ],
+    "proofs": [
+      "V01"
+    ],
+    "scenarios": [
+      "X02",
+      "X35",
+      "X36"
+    ],
+    "nodes": [
+      "Tool lock|Versions + artifact digests",
+      "Bootstrap|Verify and retain tools",
+      "Offline gates|No hidden downloads",
+      "Machine preflight|Drive + volume identities",
+      "Build cache|Rebuildable and isolated",
+      "Product artifact|No proof tools at runtime"
+    ],
+    "edges": [
+      [
+        0,
+        1,
+        ""
+      ],
+      [
+        1,
+        2,
+        ""
+      ],
+      [
+        3,
+        4,
+        "qualified mount"
+      ],
+      [
+        4,
+        1,
+        "cache only"
+      ],
+      [
+        2,
+        5,
+        "recorded output"
+      ]
+    ],
+    "status": "not_run",
+    "file": "stages/P01.md"
+  },
+  {
+    "id": "P01O",
+    "title": "Qualify the Omnigraph foundation",
+    "dependencies": [
+      "P01"
+    ],
+    "goal": "Admit the chosen backend contract before storage-dependent protocols and integration rely on it.",
+    "tasks": [
+      "Freeze the exact CLI/server/runtime, transport, schema/query and workload profile; complete missing pins instead of extrapolating from the tested CLI.",
+      "Run both retained smoke fixtures and the full plan/15 WF24 campaigns on WSL: exact queries, atomic boundaries, uncertain writes and one-writer ownership.",
+      "Demonstrate the plan/16 two-epoch migration/old-read profile, native roots, quiesced backup and independent restore with originals unavailable.",
+      "Inject crashes and lost responses, test resource ownership/cancellation and measure frozen exact/discovery workloads against predeclared SLOs.",
+      "Record a source-bound qualified profile or a concrete failure. Fix causes; a backend fallback needs an explicit design deviation, not an automatic runtime switch."
+    ],
+    "deliverables": [
+      "Pinned native backend and compatibility contract",
+      "WSL storage/history/failure/restore evidence",
+      "Frozen budgets and explicit go/no-go receipt"
+    ],
+    "acceptance": [
+      "Full declared WF24 scope passes; smoke probes alone are insufficient.",
+      "Old epoch reads and independent restore preserve exact identities.",
+      "No second normal database writer or hidden fallback is introduced."
+    ],
+    "gates": [
+      "WF01",
+      "WF24",
+      "WF21"
+    ],
+    "proofs": [],
+    "scenarios": [
+      "X100",
+      "X101",
+      "X102",
+      "X103",
+      "X104",
+      "X105",
+      "X106",
+      "X107",
+      "X108"
+    ],
+    "nodes": [
+      "Selected candidate|CLI + server + native closure",
+      "Exact contract|Queries + epochs + ownership",
+      "Native campaigns|WSL + faults + restore",
+      "Frozen workloads|Correctness + resource budgets",
+      "Qualification decision|Exact evidence; no waived failure",
+      "Admitted foundation|Required before P04/P06"
+    ],
+    "edges": [
+      [
+        0,
+        1,
+        ""
+      ],
+      [
+        1,
+        2,
+        ""
+      ],
+      [
+        0,
+        3,
+        "measure"
+      ],
+      [
+        2,
+        4,
+        "evidence"
+      ],
+      [
+        3,
+        4,
+        "budgets"
+      ],
+      [
+        4,
+        5,
+        "pass"
+      ]
+    ],
+    "status": "not_run",
+    "file": "stages/P01O.md"
+  },
+  {
+    "id": "P02",
+    "title": "Nominal domain and strict wire",
+    "dependencies": [
+      "P01"
+    ],
+    "goal": "Make invalid identities, units and boundary data impossible to use silently.",
+    "tasks": [
+      "Create domain/kernel/wire/protocol workspace members with explicit dependency rules and private validated types.",
+      "Port exact reference/record/state distinctions and structured errors; implement semantic numeric range/profile policy without truncating Lean/Python integers.",
+      "Implement duplicate-key-aware bounded JSON decoding, Unicode/depth limits, exact variant/version refusal and deterministic model ordering.",
+      "Freeze legacy canonical approval bytes and cross-host Ed25519 verification. Add lossless authored-document spans and intentional change registry.",
+      "Add compile-fail wrong-ID/unit/state fixtures, syntax-aware module/function budgets, dependency direction and calibrated negative quality tests.",
+      "Implement ContextId, DesignRevision, ImplementationBinding, session/instance/generation and capability distinctions. Add strict schema-2 historical/schema-3 writer variants and protocol-2 initialization; preserve exact old signature domains.",
+      "Implement plan/16 nominal StoragePin/GraphId/GraphCommitId/SchemaEpochId and new outer release/approval profile. Freeze canonical bytes and capability/refusal fixtures; never reinterpret legacy IDs or signatures."
+    ],
+    "deliverables": [
+      "Validated domain types + wire schemas/codecs",
+      "Canonical byte/signature fixtures",
+      "Architecture/size/type gate with deliberate failing controls"
+    ],
+    "acceptance": [
+      "Wrong namespace/unit/state fails compilation for the intended reason.",
+      "Malformed, oversized, ambiguous and unsupported inputs fail before domain construction.",
+      "Legacy signatures verify over unchanged exact bytes; no JSON-number narrowing."
+    ],
+    "gates": [
+      "WF02",
+      "WF03"
+    ],
+    "proofs": [
+      "V01"
+    ],
+    "scenarios": [
+      "X05",
+      "X06",
+      "X07",
+      "X08",
+      "X65",
+      "X66",
+      "X67",
+      "X74"
+    ],
+    "nodes": [
+      "Untrusted bytes|Bounded raw envelope",
+      "Strict decoder|No duplicate-key collapse",
+      "Validated domain|Private nominal constructors",
+      "Rejected input|Typed stable diagnostic",
+      "Canonical bytes|Exact legacy signature profile",
+      "Typed operation|No raw JSON in core"
+    ],
+    "edges": [
+      [
+        0,
+        1,
+        ""
+      ],
+      [
+        1,
+        2,
+        "valid"
+      ],
+      [
+        1,
+        3,
+        "invalid"
+      ],
+      [
+        2,
+        4,
+        "encode"
+      ],
+      [
+        2,
+        5,
+        "admit"
+      ]
+    ],
+    "status": "not_run",
+    "file": "stages/P02.md"
+  },
+  {
+    "id": "P03",
+    "title": "Verify the executable semantic core",
+    "dependencies": [
+      "P02"
+    ],
+    "goal": "Port the actual calculus and verify Rust decision bodies without weakening semantics.",
+    "tasks": [
+      "Map all 353 audited declarations within T01–T22 and every reference operation to Rust symbols and assumptions; portfolio/design extensions have dedicated P03P/P08D owners.",
+      "Implement recursive witness checking, finite inventory coverage, alternative support, corrections, independent assessment, receipt reuse and authored/knowledge transitions.",
+      "Write Verus specs over meaningful abstract representations and verify actual exec functions V01–V06. Keep IO/time acquisition outside the core.",
+      "Build a Rust reference runner for every operation and compare full responses against Lean/Python on the 334-case baseline plus adversarial/generated/stateful cases.",
+      "Run clean Lean axiom audit, nonvacuity checks and Verus trust-boundary scan; kill named semantic mutants without relying on syntax failures."
+    ],
+    "deliverables": [
+      "Pure production kernel + Verus contracts",
+      "Three-host reference harness and traceability",
+      "Lean/Verus/conformance/mutation receipts"
+    ],
+    "acceptance": [
+      "All reference operations agree on complete responses; no Python runtime fallback.",
+      "Selected actual Rust functions verify and are linked into the candidate binary.",
+      "Unapproved assumptions/open obligations are zero; cross-prover correspondence limits are stated."
+    ],
+    "gates": [
+      "WF04",
+      "WF05"
+    ],
+    "proofs": [
+      "V01",
+      "V02",
+      "V03",
+      "V04",
+      "V05",
+      "V06"
+    ],
+    "scenarios": [
+      "X07",
+      "X09",
+      "X10",
+      "X11",
+      "X12",
+      "X13",
+      "X14"
+    ],
+    "nodes": [
+      "Lean authority|Language + T01-T22",
+      "Shared contract|Definitions + fixtures",
+      "Rust kernel|Production exec bodies",
+      "Python reference|Frozen behavior baseline",
+      "Three-host comparison|Full envelopes + sequences",
+      "Verus proof|Contracts + nonvacuity"
+    ],
+    "edges": [
+      [
+        0,
+        1,
+        ""
+      ],
+      [
+        1,
+        2,
+        "port"
+      ],
+      [
+        0,
+        4,
+        "oracle"
+      ],
+      [
+        3,
+        4,
+        "baseline"
+      ],
+      [
+        2,
+        5,
+        "verify"
+      ],
+      [
+        5,
+        4,
+        "same bodies"
+      ]
+    ],
+    "status": "not_run",
+    "file": "stages/P03.md"
+  },
+  {
+    "id": "P03P",
+    "title": "Verify named context portfolios",
+    "dependencies": [
+      "P03"
+    ],
+    "goal": "Authorize several contexts in one release without pooling their evidence.",
+    "tasks": [
+      "Implement exact portfolio state/family/evolution/assignment/apply/query/selection predicates with ordered nominal records.",
+      "Verify production V12; map the new Lean declaration families and nonvacuity examples; keep all 334 complete-response cases and 11 mutants.",
+      "Add source/key/policy adapter preconditions: every context use authorized, declared operation use present, exact captures retained and canonical schema-3 plan signed.",
+      "Extend M01/M02/M06 with portfolio identity and selection/migration rules, and M03/V10 with context-claim pagination. Carry these contracts into P07/P09.",
+      "Freeze schema-2 historical reads, legacy context projection and refusal of pending old writes; no new inference constructors or implicit context union."
+    ],
+    "deliverables": [
+      "kernel/portfolio + nominal records",
+      "V12 and updated model/conformance receipts",
+      "Context query, version and migration contracts"
+    ],
+    "acceptance": [
+      "Multiple targets remain separately assessed in one authenticated release.",
+      "Cross-context borrowing, omitted assignments and implicit retirement fail.",
+      "Historical selection preserves current corrections and context policy."
+    ],
+    "gates": [
+      "WF19",
+      "WF03",
+      "WF04",
+      "WF05",
+      "WF06",
+      "WF07"
+    ],
+    "proofs": [
+      "V12",
+      "M01",
+      "M02",
+      "M03",
+      "M06",
+      "V10"
+    ],
+    "scenarios": [
+      "X56",
+      "X57",
+      "X58",
+      "X59",
+      "X60",
+      "X61",
+      "X62",
+      "X63",
+      "X64",
+      "X65",
+      "X66",
+      "X67"
+    ],
+    "nodes": [
+      "Candidate KB|Exact appended claims",
+      "Named contexts|Separate sources and policies",
+      "Exact assignments|Claim + context + witness",
+      "Signed portfolio|Full plan, actor and use",
+      "Per-context query|Narrow target; later time only",
+      "Retained selection|Current history and contexts"
+    ],
+    "edges": [
+      [
+        0,
+        1,
+        "frame"
+      ],
+      [
+        1,
+        2,
+        "check"
+      ],
+      [
+        2,
+        3,
+        "authorize"
+      ],
+      [
+        3,
+        4,
+        "query"
+      ],
+      [
+        3,
+        5,
+        "select"
+      ],
+      [
+        5,
+        4,
+        "reassess"
+      ]
+    ],
+    "status": "not_run",
+    "file": "stages/P03P.md"
+  },
+  {
+    "id": "P03C",
+    "title": "Prove citation binding and admission",
+    "goal": "Establish exact citation judgments and a verified admission floor before enabling new proposals.",
+    "dependencies": [
+      "P03",
+      "P03P"
+    ],
+    "gates": [
+      "WF32",
+      "WF02",
+      "WF04"
+    ],
+    "proofs": [],
+    "scenarios": [
+      "X149",
+      "X150",
+      "X151",
+      "X152",
+      "X153",
+      "X154",
+      "X155",
+      "X156"
+    ],
+    "tasks": [
+      "Reconcile the active proof branch first. Freeze new statement/source identities, original semantics and trusted external assumptions.",
+      "Model retained representations, typed selectors, scoped aliases, complete versus partial enumeration and independent correspondence evidence.",
+      "Model every authoritative proposal constructor, the trusted rule-profile selector and candidate-bound witness. Prove CIT01-CIT08 in Lean.",
+      "Execute both inhabited successful paths and semantic counterexamples. Include the copied-line fixture, independent witnesses, inclusive expiry and false proof receipts.",
+      "Retain exact proof source/toolchain/axiom/command receipts. WF32 is a prerequisite for production admission. Keep candidate work possible when blocked.",
+      "Reconcile the plan/28 discovery boundary with CIT obligations. Check the candidate Lean terms and register the exact receipt or blocker."
+    ],
+    "deliverables": [
+      "Lean judgments and theorem map",
+      "Checked proof bundles and assumptions",
+      "Counterexamples and mutation results"
+    ],
+    "acceptance": [
+      "CIT01-CIT08 have audited receipts.",
+      "Legacy interpretations are preserved.",
+      "Missing or mismatched proofs block."
+    ],
+    "nodes": [
+      "Pinned knowledge core|Legacy semantics and actual proof branch",
+      "Typed citation model|Representation selector and scope",
+      "Lean kernel check|CIT01-CIT08 and axiom audit",
+      "Adversarial fixture|Copied line and stale proof profile",
+      "Reviewed proof bundle|Exact source and trusted assumptions",
+      "Next stage enabled|Checked machinery implementation"
+    ],
+    "edges": [
+      [
+        0,
+        1,
+        ""
+      ],
+      [
+        1,
+        2,
+        ""
+      ],
+      [
+        3,
+        2,
+        "challenge"
+      ],
+      [
+        2,
+        4,
+        "receipt"
+      ],
+      [
+        4,
+        5,
+        "WF32"
+      ]
+    ],
+    "status": "not_run",
+    "file": "stages/P03C.md"
+  },
+  {
+    "id": "P04",
+    "title": "Prove the operational protocols",
+    "dependencies": [
+      "P02",
+      "P01O"
+    ],
+    "goal": "Find interleaving failures and prove the declared safety invariants before integrating effects.",
+    "tasks": [
+      "Define M01–M06 state/action/assumption registries with explicit crash/restart/uncertain-outcome semantics.",
+      "Run TLC finite configurations with multiple writers/readers, replay collisions, GC and two remote clients; retain calibrated failing models.",
+      "Write TLAPS Init and each-action preservation lemmas, frame/stutter cases, and Inv-implies-Safety proofs.",
+      "Prove bridge invariants between publication/recovery/retention/supervisor/sync/migration; map reducer commands and effect results to actions.",
+      "Document fairness and eventual-IO assumptions for bounded liveness checks. Implement complete obligation reports and negative harness controls.",
+      "Model authored bind/reopen/transition CAS as M09 and compose recovery with M02. Keep authored record authority separate from the completed knowledge ref.",
+      "Specify M11 schema epochs and compose M01–M06/M10 bridges using the P01O-admitted Omnigraph effect contract. Native behavior remains tested assumptions, not a verified engine."
+    ],
+    "deliverables": [
+      "spec/M01-M06, M09 and M11 + TLC/TLAPS modules",
+      "Action/refinement/effect contract map",
+      "TLC/TLAPS receipts + calibrated mutant registry"
+    ],
+    "acceptance": [
+      "Every named action and bridge has a checked safety obligation.",
+      "All positive TLC runs finish; mutants violate the intended property, not parsing.",
+      "No general temporal proof claim is inferred from the supported TLAPS fragment."
+    ],
+    "gates": [
+      "WF06",
+      "WF07"
+    ],
+    "proofs": [
+      "M01",
+      "M02",
+      "M03",
+      "M04",
+      "M05",
+      "M06",
+      "M09",
+      "M11"
+    ],
+    "scenarios": [
+      "X15",
+      "X16",
+      "X17",
+      "X18",
+      "X19",
+      "X21",
+      "X22",
+      "X24",
+      "X30",
+      "X32",
+      "X33",
+      "X34"
+    ],
+    "nodes": [
+      "Protocol state|Inputs + environment assumptions",
+      "TLA+ actions|Crash and recovery included",
+      "TLAPS induction|Init; every Next action",
+      "Finite instances|Writers + readers + GC",
+      "TLC exploration|Positive and negative configs",
+      "Refinement contract|Actions to executable effects"
+    ],
+    "edges": [
+      [
+        0,
+        1,
+        ""
+      ],
+      [
+        1,
+        2,
+        "prove"
+      ],
+      [
+        0,
+        3,
+        "instantiate"
+      ],
+      [
+        3,
+        4,
+        "explore"
+      ],
+      [
+        4,
+        1,
+        "counterexamples"
+      ],
+      [
+        2,
+        5,
+        "mapped obligations"
+      ]
+    ],
+    "status": "not_run",
+    "file": "stages/P04.md"
+  },
+  {
+    "id": "P05",
+    "title": "Exact sources, citations and filesystem effects",
+    "dependencies": [
+      "P02",
+      "P04"
+    ],
+    "goal": "Acquire and retain exact evidence while preserving authored bytes and containment.",
+    "tasks": [
+      "Port Git object/index/worktree acquisition with explicit profiles and retained exact revisions; block repository-controlled helpers/filters during reads.",
+      "Implement source/citation grammar, scanner, renderers and advisory refresh. Preserve original coordinates/time and disclose missing historical bytes.",
+      "Implement contained descriptor-relative reads/writes, atomic file publication, directory synchronization and typed durable effect outcomes.",
+      "Port lossless document edits, unknown sections, CRLF and ambiguous structure refusal; avoid generic parse-and-reserialize behavior.",
+      "Qualify symlink swaps, path traversal, binary/untracked/submodule inputs, interrupted publication, redaction limits and source denial/truncation.",
+      "Port typed fix references and local two-endpoint diff/citation mapping: no dirty-worktree substitution, provider fetch, external diff helper or fabricated hunk range."
+    ],
+    "deliverables": [
+      "sources crate + filesystem/Git adapters",
+      "Lossless document and citation fixtures",
+      "Real-source containment/publication receipts"
+    ],
+    "acceptance": [
+      "Historical citation bytes survive rename/refresh/correction.",
+      "No lexical-path-only containment claim; symlink/TOCTOU profile is exercised.",
+      "Missing/partial/denied sources cannot become complete empty evidence."
+    ],
+    "gates": [
+      "WF08"
+    ],
+    "proofs": [
+      "V01",
+      "M01"
+    ],
+    "scenarios": [
+      "X06",
+      "X08",
+      "X18",
+      "X29",
+      "X75",
+      "X76"
+    ],
+    "nodes": [
+      "Source request|Pinned identity + profile",
+      "Contained acquisition|Git objects or provider read",
+      "Retained capture|Bytes + outcome + digest",
+      "Authored document|Unknown sections preserved",
+      "Citation binding|Original revision + coordinates",
+      "Current advisory|Separate freshness check"
+    ],
+    "edges": [
+      [
+        0,
+        1,
+        ""
+      ],
+      [
+        1,
+        2,
+        "retain"
+      ],
+      [
+        3,
+        4,
+        "parse"
+      ],
+      [
+        2,
+        4,
+        "exact source"
+      ],
+      [
+        4,
+        5,
+        "refresh separately"
+      ]
+    ],
+    "status": "not_run",
+    "file": "stages/P05.md"
+  },
+  {
+    "id": "P05C",
+    "title": "Qualify the compact citation reader",
+    "goal": "Bind the proven judgments to the shipping reader and proposal-admission checker.",
+    "dependencies": [
+      "P03C",
+      "P05"
+    ],
+    "gates": [
+      "WF33",
+      "WF02",
+      "WF05",
+      "WF06",
+      "WF07"
+    ],
+    "proofs": [
+      "V22",
+      "V23"
+    ],
+    "scenarios": [
+      "X157",
+      "X158",
+      "X159",
+      "X160",
+      "X161",
+      "X162",
+      "X163",
+      "X164"
+    ],
+    "tasks": [
+      "Implement find, peek, cite and compare as small modules over retained source, pinned access and scoped handle mappings. Preserve legacy tokens.",
+      "Verify V22/V23 shipping decision bodies, strict callers and all relevant IO assumptions. Reconcile retention/recovery tests with M01/M02/M03 at their owning stages.",
+      "Implement authenticated rule-bundle validation and per-proposal Lean instance checking on exact inputs. Retain the verified instance receipt before P07 or a later owner enables an authoritative transition.",
+      "Exercise duplicate/ambiguous spans, UTF-16/byte confusion, scope, access changes, pagination, invalidation and legacy historical resolution.",
+      "Measure complete repeated tasks against kctx and targeted rg. Record empirical default/opt-in decision and known limits.",
+      "Keep similar-case retrieval in find. Test arbitrary ordering, fresh authorization at peek, exact selectors and no inferred absence.",
+      "Use the general find contract in plan/30. Bind kind-qualified identities and evidence roles; cover omitted versus explicit kind restrictions and disabled profiles."
+    ],
+    "deliverables": [
+      "Bounded reader and Rust checks",
+      "Proof-bundle and witness validator",
+      "Correctness and token evaluation"
+    ],
+    "acceptance": [
+      "No incorrect successor attachment.",
+      "Compact results preserve coverage.",
+      "All admission paths require proofs."
+    ],
+    "nodes": [
+      "Captured source|Exact revision and representation",
+      "Scoped find and peek|Bounded content and omissions",
+      "Checked citation|Host expands durable reference",
+      "New target revision|Compare every viable occurrence",
+      "Qualified decision|Verus and actual evidence",
+      "Proposal prepared|Publication requires rule and witness"
+    ],
+    "edges": [
+      [
+        0,
+        1,
+        ""
+      ],
+      [
+        1,
+        2,
+        ""
+      ],
+      [
+        0,
+        3,
+        "compare"
+      ],
+      [
+        2,
+        4,
+        "bind"
+      ],
+      [
+        3,
+        4,
+        "evidence"
+      ],
+      [
+        4,
+        5,
+        "prepare"
+      ]
+    ],
+    "status": "not_run",
+    "file": "stages/P05C.md"
+  },
+  {
+    "id": "P06",
+    "title": "Managed Omnigraph and pinned queries",
+    "dependencies": [
+      "P01",
+      "P02",
+      "P04",
+      "P01O"
+    ],
+    "goal": "Provision one admitted native writer and bind every read to graph, commit, schema epoch and query contract.",
+    "tasks": [
+      "Implement immutable verified CLI/server installation and offline native closure; no ambient PATH fallback.",
+      "Implement one-writer supervisor ownership, private authenticated transport, query readiness, bounded shutdown and cancellation ownership.",
+      "Implement immutable schema epochs, typed GQ/record mapping and canonical reconstruction; preserve IDs, arbitrary integers, null rules and order.",
+      "Implement explicit graph/commit/epoch/query pins and identity validation on every request; exact judgments never depend on approximate search completeness.",
+      "Implement root-before-visibility candidate retention, compatible upgrades/backups and explicit refusal of old-schema branching or incompatible tool rollback.",
+      "Verify V15 production admission/callers and M11 refinement; own all native work until teardown and report uncertainty without blind retries.",
+      "Map isolated Dolt reference/import profiles without a second normal writer; preserve signed legacy bytes and IDs.",
+      "Evaluate authorized case retrieval on the pinned Omnigraph engine under plan/28 and plan/29; qualify historical pins, isolation and coverage."
+    ],
+    "deliverables": [
+      "omnigraph adapter + native supervisor/installer",
+      "Epoch/query profiles + exact canonical mapping",
+      "Integrated native lifecycle and pinned-read evidence"
+    ],
+    "acceptance": [
+      "Fresh/offline install uses admitted CLI/server and native dependencies.",
+      "Queries cannot drift across graph, commit, epoch or query contract.",
+      "Wrong pins, overlap, uncertain writes and unsafe rollback fail explicitly."
+    ],
+    "gates": [
+      "WF09",
+      "WF24"
+    ],
+    "proofs": [
+      "V09",
+      "M03",
+      "M04",
+      "V15",
+      "M11"
+    ],
+    "scenarios": [
+      "X01",
+      "X02",
+      "X20",
+      "X21",
+      "X22",
+      "X23",
+      "X24",
+      "X25",
+      "X35",
+      "X80",
+      "X84",
+      "X100",
+      "X101",
+      "X102",
+      "X103",
+      "X104",
+      "X105",
+      "X106",
+      "X107",
+      "X108"
+    ],
+    "nodes": [
+      "Admitted tool slots|CLI + server + native hashes",
+      "Single writer owner|Private endpoint + readiness",
+      "Immutable schema epoch|Graph identity + commits",
+      "Upgrade candidate|Backup + compatibility",
+      "Pinned query request|Graph + commit + query contract",
+      "Canonical result|Identity + order + omissions"
+    ],
+    "edges": [
+      [
+        0,
+        1,
+        "execute"
+      ],
+      [
+        1,
+        2,
+        "manage"
+      ],
+      [
+        3,
+        0,
+        "verified selection"
+      ],
+      [
+        2,
+        4,
+        "pin"
+      ],
+      [
+        4,
+        5,
+        "decode"
+      ]
+    ],
+    "status": "not_run",
+    "file": "stages/P06.md"
+  },
+  {
+    "id": "P07",
+    "title": "Authenticated publication and recovery",
+    "dependencies": [
+      "P03",
+      "P04",
+      "P05",
+      "P06",
+      "P03P",
+      "P05C"
+    ],
+    "goal": "Publish a complete approved generation once and recover every interrupted outcome.",
+    "tasks": [
+      "Build small capture/propose/authority/admission services using the verified kernel; preserve exact legacy signed plan semantics.",
+      "Implement protocol reducer V07 and adapter effects: durable intent, isolated native candidate, retained manifest/closure, exact Git predecessor CAS.",
+      "Distinguish recovery hints from semantic applied-operation journal. Revalidate canonical input, approval, native rows and current history during replay.",
+      "Implement correction and forward-selection publication without erasing later audit/history; reject self-issued authority and stale material.",
+      "Inject real process death around every durable boundary and run competing signed publishers with pinned readers. Preserve logs without pipe deadlock.",
+      "Integrate schema-3 portfolio signing/publication with canonical full contexts, exact assignments and explicit retirement. Verify declared/every-context key use, changed-policy preview and old/new signature domains.",
+      "Use the new signed storage profile and exact epoch/query pin under plan/16. Preserve the Git CAS visibility point and retain native roots across uncertain outcomes.",
+      "Apply plan/25 immediately before authoritative mutation. Preserve old signed histories and enforce the new signed proof-profile input for new admissions."
+    ],
+    "deliverables": [
+      "Working source-to-approval-to-publication vertical slice",
+      "Verified protocol reducer and action map",
+      "Crash/race/replay receipts and operator recovery output"
+    ],
+    "acceptance": [
+      "One winner per expected predecessor; changed replay input conflicts.",
+      "Post-CAS crash recovers as already applied without duplicate admission.",
+      "Journal tampering/missing closure never creates publication authority."
+    ],
+    "gates": [
+      "WF05",
+      "WF10",
+      "WF11",
+      "WF19"
+    ],
+    "proofs": [
+      "V05",
+      "V07",
+      "M01",
+      "M02",
+      "M03",
+      "V12",
+      "V15",
+      "M11"
+    ],
+    "scenarios": [
+      "X13",
+      "X14",
+      "X15",
+      "X16",
+      "X17",
+      "X18",
+      "X23",
+      "X59",
+      "X62",
+      "X64",
+      "X65",
+      "X66",
+      "X77",
+      "X85"
+    ],
+    "nodes": [
+      "Exact approved plan|Base + policy + input closure",
+      "Prepare and retain|Omnigraph pin + Git manifest",
+      "Completed ref CAS|Single visibility point",
+      "Recovery journal|Hints; not authority",
+      "Revalidation|Signature + objects + history",
+      "Published receipt|Applied or exact replay"
+    ],
+    "edges": [
+      [
+        0,
+        1,
+        "validate"
+      ],
+      [
+        1,
+        2,
+        "durable closure"
+      ],
+      [
+        1,
+        3,
+        "intent"
+      ],
+      [
+        3,
+        4,
+        "restart"
+      ],
+      [
+        4,
+        2,
+        "same base only"
+      ],
+      [
+        2,
+        5,
+        "commit"
+      ]
+    ],
+    "status": "not_run",
+    "file": "stages/P07.md"
+  },
+  {
+    "id": "P08",
+    "title": "Workflows and provider-neutral catalog",
+    "dependencies": [
+      "P03",
+      "P05",
+      "P07"
+    ],
+    "goal": "Preserve useful kctx workflows while keeping extensions outside the calculus.",
+    "tasks": [
+      "Port inventory, relations, proposal/gates, investigation, KTLO, signatures, dossiers, correction, observations/runs and admission-refresh as cohesive application services.",
+      "Bind readiness/gates to exact material/target/environment/checker/scope and preserve intentional old bypass repairs.",
+      "Implement data-only catalog descriptors, namespaced kinds/providers, pinned schemas, aliases and rename-stable asset IDs.",
+      "Qualify a software-service workflow and a research/document workflow through the same semantic kernel.",
+      "Migrate caller/skill assumptions and compatibility map; source acquisition and session summaries remain proposals rather than auto-admitted facts.",
+      "Fix aggregate context partial diagnostics and managed stable lock ownership rather than porting FR8/FR11 defects. Use the exact typed fix-reference union."
+    ],
+    "deliverables": [
+      "Complete authored workflow services",
+      "Catalog defaults + legacy provider profiles",
+      "End-to-end multi-domain fixtures and updated operation map"
+    ],
+    "acceptance": [
+      "All baseline command behaviors have tested parity or approved explicit changes.",
+      "Unknown extensions cannot silently fall back or inject inference/authority.",
+      "Unknown authored content survives edits; gate readiness has one owner."
+    ],
+    "gates": [
+      "WF12"
+    ],
+    "proofs": [
+      "V06"
+    ],
+    "scenarios": [
+      "X12",
+      "X26",
+      "X27",
+      "X28",
+      "X29",
+      "X76",
+      "X78",
+      "X81"
+    ],
+    "nodes": [
+      "Authored workflow|Proposal; incident; observation",
+      "Typed app service|One readiness/transition policy",
+      "Semantic kernel|Closed inference language",
+      "Catalog descriptor|Pinned kinds and schemas",
+      "Provider acquisition|Explicit complete/partial outcome",
+      "Admission proposal|No automatic truth or authority"
+    ],
+    "edges": [
+      [
+        0,
+        1,
+        ""
+      ],
+      [
+        1,
+        2,
+        "check"
+      ],
+      [
+        3,
+        4,
+        "capabilities"
+      ],
+      [
+        4,
+        5,
+        "capture"
+      ],
+      [
+        5,
+        1,
+        "propose"
+      ],
+      [
+        3,
+        1,
+        "validate only"
+      ]
+    ],
+    "status": "not_run",
+    "file": "stages/P08.md"
+  },
+  {
+    "id": "P08D",
+    "title": "Bind implementations to accepted designs",
+    "dependencies": [
+      "P08",
+      "P03P",
+      "P04",
+      "P05"
+    ],
+    "goal": "Keep design approval stable while exact implementation evidence changes.",
+    "tasks": [
+      "Implement design-v3 material projection and distinct DesignRevision/TargetRevision/SourceId types; verify included and excluded fields against the current codec.",
+      "Port accepted/landing bind and rebind with exact expected-state CAS, real target resolution and preservation of design acceptance; clear all landed authority.",
+      "Port explicit reopen, renewed acceptance and terminal-state supersession; retain historical gates without granting them new-target validity.",
+      "Verify production V13 and complete M09 TLC/TLAPS, recovery bridge and negative calibration. Test competing bind/reopen/transition and interrupted authored writes.",
+      "Implement draft/proposed adoption, accepted/landing reopening and finalized supersession with no inferred acceptor or legacy custom-field authority. Run actual CLI/RPC service parity.",
+      "Enable this proposal kind only after its applicable Lean profile, per-proposal witness, executable checks and protocol receipts are qualified under plan/25."
+    ],
+    "deliverables": [
+      "kernel/design + authored projection/service",
+      "V13 + M09 with caller/effect correspondence",
+      "Migration, bind/reopen CLI and recovery fixtures"
+    ],
+    "acceptance": [
+      "Design can be accepted before implementation exists; bind resolves exact source/target.",
+      "Rebind preserves approval but old-target passes cannot satisfy execution gates.",
+      "Stale CAS, changed design and finalized-history rewriting are rejected."
+    ],
+    "gates": [
+      "WF20",
+      "WF02",
+      "WF04",
+      "WF05",
+      "WF06",
+      "WF07",
+      "WF11"
+    ],
+    "proofs": [
+      "V13",
+      "V06",
+      "M09",
+      "M02"
+    ],
+    "scenarios": [
+      "X68",
+      "X69",
+      "X70",
+      "X71",
+      "X72",
+      "X73",
+      "X74",
+      "X81",
+      "X85"
+    ],
+    "nodes": [
+      "Accepted design|Design-v3 identity + source",
+      "Exact implementation|Resolved source and revision",
+      "Conditional bind|Expected proposal + actor",
+      "Reopen design|Clear authority; keep history",
+      "Execution gates|New target; same accepted design",
+      "Apply or verify|Current bound evidence only"
+    ],
+    "edges": [
+      [
+        0,
+        1,
+        "constrain"
+      ],
+      [
+        1,
+        2,
+        "resolve"
+      ],
+      [
+        2,
+        4,
+        "new binding"
+      ],
+      [
+        4,
+        5,
+        "pass"
+      ],
+      [
+        0,
+        3,
+        "material edit"
+      ],
+      [
+        3,
+        0,
+        "new acceptance"
+      ]
+    ],
+    "status": "not_run",
+    "file": "stages/P08D.md"
+  },
+  {
+    "id": "P08S",
+    "title": "Scribes and immutable writs",
+    "dependencies": [
+      "P04",
+      "P05",
+      "P06",
+      "P08"
+    ],
+    "goal": "Let small scripts acquire evidence through a supervised, bounded and proved protocol.",
+    "tasks": [
+      "Implement admitted scribe descriptors with exact code/interpreter/dependency identities, catalog routing and separate capability grants.",
+      "Implement JSON-RPC/NDJSON handshake, request/session correlation, bounded frames/chunks/pages, cancellation and owned child lifecycle.",
+      "Implement restricted Linux sandbox and host file/Git/HTTP broker; refuse missing isolation and keep explicit trusted-exec profile separate.",
+      "Add M07 session and M08 acquisition TLC/TLAPS models, bridge them to publication/retention, and verify production acceptance reducer V11.",
+      "Deliver two real read-only scribes, a simple script SDK/example and a standalone conformance tool; qualify hostile output, retries, false completeness and credential boundaries.",
+      "Bind every completion to instance/session/request/generation, exact source and grant. Keep resource capacity charged after cancellation until child teardown; Scribes cannot pick an unsigned approval context."
+    ],
+    "deliverables": [
+      "writfold-scribes + catalog descriptors + optional script SDK",
+      "M07/M08/V11 source-bound proof and calibration receipts",
+      "Real local/HTTP integrations and script-author guide"
+    ],
+    "acceptance": [
+      "Only admitted code/runtime/grants can execute; no automatic plugin loading from sources.",
+      "Late, duplicate, cancelled or old-session replies cannot create accepted writs.",
+      "Complete acquisition requires validated stable transfer; no plugin can sign/admit claims."
+    ],
+    "gates": [
+      "WF18",
+      "WF05",
+      "WF06",
+      "WF07"
+    ],
+    "proofs": [
+      "V11",
+      "M07",
+      "M08",
+      "M01",
+      "M03"
+    ],
+    "scenarios": [
+      "X41",
+      "X42",
+      "X43",
+      "X44",
+      "X45",
+      "X46",
+      "X47",
+      "X48",
+      "X49",
+      "X50",
+      "X51",
+      "X52",
+      "X53",
+      "X54",
+      "X55",
+      "X84"
+    ],
+    "nodes": [
+      "Agent request|Catalog locator + allowed capability",
+      "Writfold supervisor|Admitted code + session identity",
+      "External scribe|Small script or native process",
+      "Capability broker|Contained roots + allowed hosts",
+      "Validated writ|Retained bytes + exact provenance",
+      "Claim admission|Separate approval and calculus"
+    ],
+    "edges": [
+      [
+        0,
+        1,
+        ""
+      ],
+      [
+        1,
+        2,
+        "stdio RPC"
+      ],
+      [
+        2,
+        3,
+        "bounded callbacks"
+      ],
+      [
+        3,
+        1,
+        "host evidence"
+      ],
+      [
+        2,
+        4,
+        "validated result"
+      ],
+      [
+        4,
+        5,
+        "propose only"
+      ]
+    ],
+    "status": "not_run",
+    "file": "stages/P08S.md"
+  },
+  {
+    "id": "P09",
+    "title": "Pinned context and agent interface",
+    "dependencies": [
+      "P06",
+      "P07",
+      "P08",
+      "P08S",
+      "P08D"
+    ],
+    "goal": "Deliver bounded usable context through one native CLI and stable stdio service.",
+    "tasks": [
+      "Port all production CLI/JSON-RPC contracts to common typed application requests; preserve exit codes and version negotiation.",
+      "Implement one-release query selection, exact graph binding, deterministic ordering, explicit omissions and continuation leases.",
+      "Include applicable contrary evidence and required dependencies; budget exhaustion is visible and cannot certify an omitted check.",
+      "Verify pagination/budget reducer V10 and connect pins to M03; close uncertain connections on cancellation.",
+      "Qualify actual installed CLI/TTY/pipe/stdio behavior: framing, malformed requests, EOF/shutdown, concurrent requests, logs, color and redaction.",
+      "Expose protocol 2, explicit knowledge contexts and full context requests, context-claim pairs and pinned continuations. Prepare immutable views in the engine; CLI/RPC renderers perform no IO or mutation."
+    ],
+    "deliverables": [
+      "Native CLI + initialized JSON-RPC service",
+      "Context/explain/graph query and continuation types",
+      "Installed transport and query completeness fixtures"
+    ],
+    "acceptance": [
+      "No command shells out to the Python host or another CLI frontend.",
+      "Every page uses the same release, filters and ordering or refuses.",
+      "Machine stdout is clean; omissions/contradictions remain explicit."
+    ],
+    "gates": [
+      "WF13",
+      "WF19",
+      "WF21"
+    ],
+    "proofs": [
+      "V10",
+      "M03",
+      "V12"
+    ],
+    "scenarios": [
+      "X04",
+      "X20",
+      "X23",
+      "X37",
+      "X38",
+      "X61",
+      "X62",
+      "X75",
+      "X78",
+      "X85"
+    ],
+    "nodes": [
+      "Agent request|Version + scope + budget",
+      "Pin release and graph|One immutable view",
+      "Select and assess|Positive + contrary evidence",
+      "Retention lease|Protect exact objects",
+      "Bounded response|Explain included and omitted",
+      "Continuation|Same release and ordering"
+    ],
+    "edges": [
+      [
+        0,
+        1,
+        ""
+      ],
+      [
+        1,
+        2,
+        ""
+      ],
+      [
+        1,
+        3,
+        "pin"
+      ],
+      [
+        2,
+        4,
+        "assess"
+      ],
+      [
+        4,
+        5,
+        "more"
+      ],
+      [
+        5,
+        3,
+        "retain"
+      ]
+    ],
+    "status": "not_run",
+    "file": "stages/P09.md"
+  },
+  {
+    "id": "P09V",
+    "title": "Readable views and Obsidian companion",
+    "dependencies": [
+      "P09"
+    ],
+    "goal": "Publish faithful, scoped knowledge views with readable Obsidian navigation and an optional CLI companion.",
+    "tasks": [
+      "Implement plan/13 prepared document values, nominal output identities and pure Markdown/Obsidian renderers; no renderer IO or query authority.",
+      "Implement immutable generation publication, ownership manifests, conditional Home activation and crash recovery. Preserve human edits and old-generation links.",
+      "Complete V14 production/caller proofs and M10 TLC/TLAPS safety/bridge obligations with negative calibration; no claims about third-party GUI correctness.",
+      "Produce plan/14 reading templates, Bases and scoped Dataview DQL with pinned plugin assets and portable fallback. Follow the provided synthetic sample without copying fictional facts into real exports.",
+      "Add exact-vault CLI lifecycle, version/capability discovery and separately admitted plugin setup; qualify Linux/WSL and optional Windows desktop bridge.",
+      "Execute WF22/WF23, inspect light/dark/narrow native views, validate query results and document stale index behavior. Update the atlas and receipts."
+    ],
+    "deliverables": [
+      "Typed prepared documents + pure renderers",
+      "Owned generation publisher and recovery model",
+      "Native Obsidian profile and reading acceptance"
+    ],
+    "acceptance": [
+      "V14/M10 and all view isolation/recovery scenarios pass.",
+      "Human files survive; stale views never masquerade as current.",
+      "CLI/plugin profile and readable fallback pass on the admitted PC."
+    ],
+    "gates": [
+      "WF02",
+      "WF05",
+      "WF06",
+      "WF07",
+      "WF21",
+      "WF22",
+      "WF23"
+    ],
+    "proofs": [
+      "V14",
+      "M10"
+    ],
+    "scenarios": [
+      "X86",
+      "X87",
+      "X88",
+      "X89",
+      "X90",
+      "X91",
+      "X92",
+      "X93",
+      "X94",
+      "X95",
+      "X96",
+      "X97",
+      "X98",
+      "X99"
+    ],
+    "nodes": [
+      "Pinned source|Release + context + grant",
+      "Prepared document|Faithful typed projection",
+      "Pure renderers|Markdown; Obsidian; future HTML",
+      "Validated generation|Paths + links + hashes",
+      "Conditional activation|Closure + source stamp; Home last",
+      "Human reader|Bases + Dataview + CLI"
+    ],
+    "edges": [
+      [
+        0,
+        1,
+        ""
+      ],
+      [
+        1,
+        2,
+        ""
+      ],
+      [
+        2,
+        3,
+        "bounded outputs"
+      ],
+      [
+        3,
+        4,
+        "validated"
+      ],
+      [
+        4,
+        5,
+        "observe"
+      ]
+    ],
+    "status": "not_run",
+    "file": "stages/P09V.md"
+  },
+  {
+    "id": "P10",
+    "title": "Migration, sync and retained history",
+    "dependencies": [
+      "P07",
+      "P09"
+    ],
+    "goal": "Move and restore the full knowledge closure without losing authority or history.",
+    "tasks": [
+      "Implement accounted legacy import dry-run/apply/repeat/quarantine/restore, preserving bytes and IDs without auto-admitting prose.",
+      "Implement complete closure backup and restore into empty owned staging; test after original sources are unavailable.",
+      "Implement forward history selection retaining later corrections, explicit policy/schema compatibility and independent runtime tool compatibility.",
+      "Implement remote closure-first transfer and conditional advertised release with two-client conflicts; keep enterprise-host qualification separate.",
+      "Implement auditable retention roots/leases and GC plan/apply under the modeled lock/epoch protocol; qualify publication/read/GC races.",
+      "Separate schema-2 authenticated history from forbidden pending old writes; forward selection retains current context policy/corrections.",
+      "Implement read-replica capabilities, portable logical identity versus local writer ownership, published-only transfer closure, typed missing-generation errors, and guarded unborn-branch restore with owned-ref cleanup.",
+      "Implement separately initialized schema-epoch migration and isolated Dolt import, complete native backup/restore and exact historical reads under plan/16; no cross-schema branch or JSONL-history shortcut."
+    ],
+    "deliverables": [
+      "Migration and independent restore tooling",
+      "Local native/Git sync with closure receipts",
+      "Retention/GC reducer, roots explain and race fixtures"
+    ],
+    "acceptance": [
+      "Every input has a disposition; repeats are idempotent; source-removal restore succeeds.",
+      "Half-transfers never advertise incomplete releases; two clients do not erase history.",
+      "Pinned readers and pending approved operations survive GC; rollback does not erase corrections."
+    ],
+    "gates": [
+      "WF05",
+      "WF11",
+      "WF14"
+    ],
+    "proofs": [
+      "V08",
+      "V09",
+      "M02",
+      "M03",
+      "M05",
+      "M06",
+      "V12",
+      "M09",
+      "V15",
+      "M11"
+    ],
+    "scenarios": [
+      "X19",
+      "X24",
+      "X29",
+      "X30",
+      "X31",
+      "X32",
+      "X33",
+      "X34",
+      "X37",
+      "X63",
+      "X65",
+      "X66",
+      "X74",
+      "X79",
+      "X80",
+      "X81",
+      "X82",
+      "X83"
+    ],
+    "nodes": [
+      "Pinned release closure|Git + Omnigraph + writs + epochs",
+      "Stage transfer / import|Account for every object",
+      "Validate receiver|Bytes; signatures; schema",
+      "Retention roots|Readers; pending; history",
+      "Conditional selection|Advertise only complete closure",
+      "Independent restore|Original sources unavailable"
+    ],
+    "edges": [
+      [
+        0,
+        1,
+        ""
+      ],
+      [
+        1,
+        2,
+        ""
+      ],
+      [
+        3,
+        0,
+        "protect"
+      ],
+      [
+        2,
+        4,
+        "complete"
+      ],
+      [
+        2,
+        5,
+        "replay"
+      ],
+      [
+        4,
+        3,
+        "new root"
+      ]
+    ],
+    "status": "not_run",
+    "file": "stages/P10.md"
+  },
+  {
+    "id": "P14",
+    "title": "Engineering identities and ledger",
+    "dependencies": [
+      "P02",
+      "P04",
+      "P08D",
+      "P10"
+    ],
+    "goal": "Establish exact identities, durable operational history and the conservative calculus boundary.",
+    "tasks": [
+      "Read plans/17-18 and /22-23. Preserve v4 authorities and historical codecs; freeze engineering/1 domains and canonical schemas.",
+      "Implement typed realm/stream/attempt/effect identities, flat dependency locks, input fingerprints and exact read-cut manifests.",
+      "Implement immutable ledger records, conditional stream heads, stable coordination and corruption/refusal diagnostics.",
+      "Formalize E01-E12 definitions and begin proofs; map V16/M12 to actual bodies and durable boundaries. Do not introduce unproved truth premises.",
+      "Qualify canonical vectors, stale-head conflicts, realm isolation, complete input capture and backup-incarnation handling.",
+      "Implement the plan/27 durable request-key binding and atomic start acknowledgement. Exercise identical concurrent starts, conflicting intake and response loss."
+    ],
+    "deliverables": [
+      "Identity and codec contracts",
+      "Durable ledger and head CAS",
+      "Lean definitions and proof mapping"
+    ],
+    "acceptance": [
+      "No identity or authority substitution.",
+      "Crashes preserve honest stream state.",
+      "Golden codecs and model checks agree."
+    ],
+    "gates": [
+      "WF25",
+      "WF02",
+      "WF03"
+    ],
+    "proofs": [
+      "V16",
+      "M12"
+    ],
+    "scenarios": [
+      "X109",
+      "X110",
+      "X111",
+      "X112",
+      "X113",
+      "X114"
+    ],
+    "nodes": [
+      "Realm and source|Exact baseline identities",
+      "Typed fingerprints|Canonical engineering profile",
+      "Finite calculus|Closed judgments and states",
+      "Immutable objects|Ledger records and closure",
+      "Conditional heads|Expected predecessor + owner",
+      "Qualified foundation|No product proof by assertion"
+    ],
+    "edges": [
+      [
+        0,
+        1,
+        ""
+      ],
+      [
+        1,
+        2,
+        ""
+      ],
+      [
+        0,
+        3,
+        "inputs"
+      ],
+      [
+        2,
+        4,
+        "check"
+      ],
+      [
+        3,
+        4,
+        "bind"
+      ],
+      [
+        4,
+        5,
+        "accept"
+      ]
+    ],
+    "status": "not_run",
+    "file": "stages/P14.md"
+  },
+  {
+    "id": "P15",
+    "title": "Skills and procedure composition",
+    "dependencies": [
+      "P14",
+      "P08S"
+    ],
+    "goal": "Preserve existing Markdown and scripts while checking loading, calls and effect ceilings.",
+    "tasks": [
+      "Inventory real author-change and reflection packages; preserve all bytes and produce reviewed sidecars and a flat dependency lock.",
+      "Implement discovery, progressive loading, scoped activation, typed routing and context delivery records.",
+      "Implement typed calls/returns/joins and bounded retries; allow document cycles and reject executable recursion in v1.",
+      "Separate advisory guidance from executable contracts; enforce parent delegation and the inherited policy gate floor.",
+      "Prove V17/M14, cross-model bridges and E03/E10; qualify stale returns, dependency drift and host context rehydration.",
+      "Enable this proposal kind only after its applicable Lean profile, per-proposal witness, executable checks and protocol receipts are qualified under plan/25.",
+      "Use the plan/27 session-driver candidate for package-local discovery, resume, narrowed grants and immediate human handoff rehearsals."
+    ],
+    "deliverables": [
+      "Pinned skill import and loader",
+      "Typed procedure contracts",
+      "Nested-call qualification"
+    ],
+    "acceptance": [
+      "Prose cannot grant capabilities.",
+      "Calls bind exact inputs and results.",
+      "Active revisions never hot-swap."
+    ],
+    "gates": [
+      "WF26",
+      "WF02"
+    ],
+    "proofs": [
+      "V17",
+      "M14"
+    ],
+    "scenarios": [
+      "X115",
+      "X116",
+      "X117",
+      "X118",
+      "X119",
+      "X120"
+    ],
+    "nodes": [
+      "Legacy skill|Markdown scripts references",
+      "Admitted package|Payload + flat lock",
+      "Procedure contract|Routes calls effects gates",
+      "Scoped activation|Run inputs and guidance",
+      "Checked call|Preconditions + delegation",
+      "Returned evidence|Exact child and postconditions"
+    ],
+    "edges": [
+      [
+        0,
+        1,
+        ""
+      ],
+      [
+        1,
+        2,
+        ""
+      ],
+      [
+        0,
+        3,
+        "inputs"
+      ],
+      [
+        2,
+        4,
+        "check"
+      ],
+      [
+        3,
+        4,
+        "bind"
+      ],
+      [
+        4,
+        5,
+        "accept"
+      ]
+    ],
+    "status": "not_run",
+    "file": "stages/P15.md"
+  },
+  {
+    "id": "P16",
+    "title": "Controlled effects and recovery",
+    "dependencies": [
+      "P15",
+      "P05",
+      "P06"
+    ],
+    "goal": "Authorize real effects through bounded adapters and shared resource ownership.",
+    "tasks": [
+      "Implement Effect Adapter Protocol 1 separately from read-only Scribes; pin code/runtime schemas and profiles.",
+      "Implement shared resource reservations, ownership generations, controlled dispatch and durable intent ordering.",
+      "Qualify Worktrunk/Git/test adapters, hook descendants, sandbox limits and provider-specific conditional operations.",
+      "Implement Unknown/Partial outcomes, reconciliation, bounded cancellation and restore without blind external replay.",
+      "Prove V18/M12/M13 composition and E05-E07. Inject crashes at every retain/head/dispatch/observe boundary.",
+      "Exercise plan/27 viewer noninterference, writer transfer and unknown forge response under the qualified adapter and ownership model."
+    ],
+    "deliverables": [
+      "Admitted effect adapters",
+      "Shared ownership and fencing",
+      "Crash and outcome reconciliation"
+    ],
+    "acceptance": [
+      "No stale or ungranted dispatch.",
+      "Unknown outcomes remain explicit.",
+      "Resources wait for real teardown."
+    ],
+    "gates": [
+      "WF27",
+      "WF02"
+    ],
+    "proofs": [
+      "V18",
+      "M12",
+      "M13"
+    ],
+    "scenarios": [
+      "X121",
+      "X122",
+      "X123",
+      "X124",
+      "X125",
+      "X126",
+      "X127",
+      "X128"
+    ],
+    "nodes": [
+      "Prepared intent|Exact input grant and target",
+      "Shared ownership|Cross-run reservation",
+      "Controlled dispatch|Conditional provider effect",
+      "Crash or cancellation|No inferred rollback",
+      "Reconciliation|Observe exact remote state",
+      "Durable outcome|Confirmed failed partial unknown"
+    ],
+    "edges": [
+      [
+        0,
+        1,
+        ""
+      ],
+      [
+        1,
+        2,
+        ""
+      ],
+      [
+        0,
+        3,
+        "inputs"
+      ],
+      [
+        2,
+        4,
+        "check"
+      ],
+      [
+        3,
+        4,
+        "bind"
+      ],
+      [
+        4,
+        5,
+        "accept"
+      ]
+    ],
+    "status": "not_run",
+    "file": "stages/P16.md"
+  },
+  {
+    "id": "P17",
+    "title": "Cross-repo author-change procedure",
+    "dependencies": [
+      "P16",
+      "P08D",
+      "P09"
+    ],
+    "goal": "Deliver one complete change lifecycle across API, SDK and CLI repositories.",
+    "tasks": [
+      "Build the three-repository pagination fixture and a skill-driven run from intake through critical design review.",
+      "Bind repository vectors, assumptions, conventions and compatibility constraints; preserve user work and BuildKit setup.",
+      "Implement author/test/review/docs/PR feedback loops with dependency-based receipt invalidation and nominal types.",
+      "Qualify exact merge-candidate checks, safe partial landing and explicit rollout/completion boundaries in authorized profiles.",
+      "Prove V19/M13 and E04/E11/E12; retain failures and follow-up obligations without rewriting old runs.",
+      "Drive plan/27 through the real author-change entry point. Carry one portable run reference across worktrees and authorized session changes."
+    ],
+    "deliverables": [
+      "Complete author-change procedure",
+      "Cross-repo compatibility matrix",
+      "PR and recovery evidence"
+    ],
+    "acceptance": [
+      "Tests bind the actual repo vector.",
+      "Partial landing has a safe path.",
+      "Review changes invalidate evidence."
+    ],
+    "gates": [
+      "WF28",
+      "WF02"
+    ],
+    "proofs": [
+      "V19",
+      "M13"
+    ],
+    "scenarios": [
+      "X129",
+      "X130",
+      "X131",
+      "X132",
+      "X133",
+      "X134"
+    ],
+    "nodes": [
+      "Task and repositories|Scope grants completion",
+      "Evidence and design|Assumptions alternatives review",
+      "Implement and test|Nominals conventions docs",
+      "Changed upstream|Rebind affected dependencies",
+      "Review and land|Exact candidate compatibility",
+      "Observed completion|Merge release rollout distinct"
+    ],
+    "edges": [
+      [
+        0,
+        1,
+        ""
+      ],
+      [
+        1,
+        2,
+        ""
+      ],
+      [
+        0,
+        3,
+        "inputs"
+      ],
+      [
+        2,
+        4,
+        "check"
+      ],
+      [
+        3,
+        4,
+        "bind"
+      ],
+      [
+        4,
+        5,
+        "accept"
+      ]
+    ],
+    "status": "not_run",
+    "file": "stages/P17.md"
+  },
+  {
+    "id": "P18",
+    "title": "Learning and reviewed promotion",
+    "dependencies": [
+      "P17",
+      "P07"
+    ],
+    "goal": "Turn failures and feedback into evaluated revisions without self-authorization.",
+    "tasks": [
+      "Adapt the session hook into observation/proposal clients; capture relevant test/review/rollout/user feedback throughout runs.",
+      "Implement candidate kinds, scope/counterexamples, frozen evaluation protocol and held-out/adverse cases.",
+      "Enforce existing claim admission plus procedure type/effect/gate-floor and evaluation conditions.",
+      "Retain complete evidence in corpus closure before existing Git publication CAS; reconcile lost promotion acknowledgement.",
+      "Prove V20/M15, E03/E08/E12 and publication/retention bridges. Qualify competing promotions and procedure withdrawal.",
+      "Enable this proposal kind only after its applicable Lean profile, per-proposal witness, executable checks and protocol receipts are qualified under plan/25."
+    ],
+    "deliverables": [
+      "Scoped candidate lifecycle",
+      "Frozen empirical evaluation",
+      "Authenticated promotion bridge"
+    ],
+    "acceptance": [
+      "Observations do not self-admit.",
+      "Learning cannot weaken gate floors.",
+      "Published evidence survives pruning."
+    ],
+    "gates": [
+      "WF29",
+      "WF02"
+    ],
+    "proofs": [
+      "V20",
+      "M15"
+    ],
+    "scenarios": [
+      "X135",
+      "X136",
+      "X137",
+      "X138",
+      "X139",
+      "X140",
+      "X141",
+      "X142"
+    ],
+    "nodes": [
+      "Observed failure|Exact event and reproduction",
+      "Candidate lesson|Scope delta counterexamples",
+      "Frozen evaluation|Baseline held-out adverse cases",
+      "Current policy|Witnesses approval gate floor",
+      "Retain and publish|Corpus closure then Git CAS",
+      "New revision|Future runs or explicit migration"
+    ],
+    "edges": [
+      [
+        0,
+        1,
+        ""
+      ],
+      [
+        1,
+        2,
+        ""
+      ],
+      [
+        0,
+        3,
+        "inputs"
+      ],
+      [
+        2,
+        4,
+        "check"
+      ],
+      [
+        3,
+        4,
+        "bind"
+      ],
+      [
+        4,
+        5,
+        "accept"
+      ]
+    ],
+    "status": "not_run",
+    "file": "stages/P18.md"
+  },
+  {
+    "id": "P19",
+    "title": "Unified dossiers and restoration",
+    "dependencies": [
+      "P18",
+      "P09V",
+      "P10"
+    ],
+    "goal": "Join all three semantic graphs through exact cuts and readable human views.",
+    "tasks": [
+      "Provision two logical graph families with independent retained epochs; enforce one native cluster owner.",
+      "Implement activity projection from validated ledger streams with exact watermark and stream-inventory manifests.",
+      "Join corpus and activity through typed pinned references; report lag/incompleteness and pin pagination.",
+      "Render Obsidian change dossiers and skill/learning views through the existing pure prepared-document boundary.",
+      "Qualify corpus migration, full-root backup, source-inaccessible restore, activity rebuild and cross-store retention. Prove V21/M16 bridges.",
+      "Produce plan/27 show and watch from the same prepared run view. Qualify the five approved layouts against CLI output, including disconnect and historical reads."
+    ],
+    "deliverables": [
+      "Two-family storage and exact cuts",
+      "Human change and learning dossiers",
+      "Independent restore and rebuild"
+    ],
+    "acceptance": [
+      "Projection cannot authorize effects.",
+      "Views disclose pins and omissions.",
+      "Restore cannot replay old effects."
+    ],
+    "gates": [
+      "WF30",
+      "WF21",
+      "WF22",
+      "WF23"
+    ],
+    "proofs": [
+      "V21",
+      "M16"
+    ],
+    "scenarios": [
+      "X143",
+      "X144",
+      "X145",
+      "X146",
+      "X147",
+      "X148"
+    ],
+    "nodes": [
+      "Corpus release|Knowledge procedures lessons",
+      "Operational ledger|Runs observations candidates",
+      "Activity projection|Exact stream watermarks",
+      "Retained read cut|Pins inventory closure",
+      "Prepared dossier|Filtered facts status evidence",
+      "Human views and restore|Readable reproducible honest"
+    ],
+    "edges": [
+      [
+        0,
+        1,
+        ""
+      ],
+      [
+        1,
+        2,
+        ""
+      ],
+      [
+        0,
+        3,
+        "inputs"
+      ],
+      [
+        2,
+        4,
+        "check"
+      ],
+      [
+        3,
+        4,
+        "bind"
+      ],
+      [
+        4,
+        5,
+        "accept"
+      ]
+    ],
+    "status": "not_run",
+    "file": "stages/P19.md"
+  },
+  {
+    "id": "P11",
+    "title": "Qualify outcomes and Rust cutover",
+    "dependencies": [
+      "P03",
+      "P04",
+      "P08",
+      "P09",
+      "P10",
+      "P08S",
+      "P03P",
+      "P08D",
+      "P09V",
+      "P19"
+    ],
+    "goal": "Demonstrate complete behavior, protocol evidence and measured usefulness on the candidate.",
+    "tasks": [
+      "Run all required proof/conformance/quality/native/fault/migration/transport gates on the exact integrated candidate.",
+      "Run frozen paired Python/Rust retrieval and held-out agent tasks with decision-time source isolation and unchanged grading.",
+      "Profile cold/warm startup/query, refresh, memory, subprocesses, history growth and cancellation; fix measured bottlenecks without changing semantics.",
+      "Reconcile every G/Q/D/R requirement and WF gate with source-bound evidence. No count-only or doc-only completion.",
+      "Prepare caller migration and default-runtime cutover; explicitly reject unsafe mixed writers and retain isolated historical readers only where required.",
+      "Qualify native views and Omnigraph as the intended primary backend under plans/13–16. Confirm WF24 foundation identity matches integrated WF09/WF11/WF14/WF15 evidence.",
+      "Run all revision-5 engineering scenarios, E01-E12 and V16-V21/M12-M16 bridges on exact shipping inputs. No planning receipt passes product qualification.",
+      "Audit every enabled authoritative proposal route against plan/25. Reject uncovered proposal kinds. Verify CIT01-CIT08, V22/V23, dependency-local invalidation, and completed empirical measurements.",
+      "Require held-out WSL evidence before enabling hybrid case search; report token and cost outcomes for failures as well as correct answers.",
+      "Evaluate each enabled retrieval profile against its own workload. Require separate scope, safety and quality evidence for mixed design/review queries."
+    ],
+    "deliverables": [
+      "Integrated qualification and traceability report",
+      "Matched correctness/resource/outcome measurements",
+      "Cutover decision + migrated caller contracts"
+    ],
+    "acceptance": [
+      "No unresolved deterministic candidate regression or required proof gap.",
+      "Predeclared budgets/outcome policy met; limits and confounders disclosed.",
+      "All delivered workflows run with the Rust artifact; no hidden Python fallback."
+    ],
+    "gates": [
+      "WF00",
+      "WF01",
+      "WF02",
+      "WF03",
+      "WF04",
+      "WF05",
+      "WF06",
+      "WF07",
+      "WF08",
+      "WF09",
+      "WF10",
+      "WF11",
+      "WF12",
+      "WF13",
+      "WF14",
+      "WF15",
+      "WF18",
+      "WF19",
+      "WF20",
+      "WF21",
+      "WF22",
+      "WF23",
+      "WF24",
+      "WF25",
+      "WF26",
+      "WF27",
+      "WF28",
+      "WF29",
+      "WF30",
+      "WF31",
+      "WF32",
+      "WF33"
+    ],
+    "proofs": [
+      "V01",
+      "V02",
+      "V03",
+      "V04",
+      "V05",
+      "V06",
+      "V07",
+      "V08",
+      "V09",
+      "V10",
+      "M01",
+      "M02",
+      "M03",
+      "M04",
+      "M05",
+      "M06",
+      "V11",
+      "M07",
+      "M08",
+      "V12",
+      "V13",
+      "M09",
+      "V14",
+      "M10",
+      "V15",
+      "M11",
+      "V16",
+      "V17",
+      "V18",
+      "V19",
+      "V20",
+      "V21",
+      "M12",
+      "M13",
+      "M14",
+      "M15",
+      "M16",
+      "V22",
+      "V23"
+    ],
+    "scenarios": [
+      "X01",
+      "X03",
+      "X39",
+      "X56",
+      "X57",
+      "X58",
+      "X59",
+      "X60",
+      "X61",
+      "X62",
+      "X63",
+      "X64",
+      "X65",
+      "X66",
+      "X67",
+      "X68",
+      "X69",
+      "X70",
+      "X71",
+      "X72",
+      "X73",
+      "X74",
+      "X75",
+      "X76",
+      "X77",
+      "X78",
+      "X79",
+      "X80",
+      "X81",
+      "X82",
+      "X83",
+      "X84",
+      "X85",
+      "X86",
+      "X87",
+      "X88",
+      "X89",
+      "X90",
+      "X91",
+      "X92",
+      "X93",
+      "X94",
+      "X95",
+      "X96",
+      "X97",
+      "X98",
+      "X99",
+      "X100",
+      "X101",
+      "X102",
+      "X103",
+      "X104",
+      "X105",
+      "X106",
+      "X107",
+      "X108",
+      "X109",
+      "X110",
+      "X111",
+      "X112",
+      "X113",
+      "X114",
+      "X115",
+      "X116",
+      "X117",
+      "X118",
+      "X119",
+      "X120",
+      "X121",
+      "X122",
+      "X123",
+      "X124",
+      "X125",
+      "X126",
+      "X127",
+      "X128",
+      "X129",
+      "X130",
+      "X131",
+      "X132",
+      "X133",
+      "X134",
+      "X135",
+      "X136",
+      "X137",
+      "X138",
+      "X139",
+      "X140",
+      "X141",
+      "X142",
+      "X143",
+      "X144",
+      "X145",
+      "X146",
+      "X147",
+      "X148",
+      "X149",
+      "X150",
+      "X151",
+      "X152",
+      "X153",
+      "X154",
+      "X155",
+      "X156",
+      "X157",
+      "X158",
+      "X159",
+      "X160",
+      "X161",
+      "X162",
+      "X163",
+      "X164"
+    ],
+    "nodes": [
+      "Exact candidate|Source + target + tools",
+      "Required gate matrix|Proofs + real process tests",
+      "Acceptance ledger|No missing or stale evidence",
+      "Frozen task corpus|Same sources and model access",
+      "Paired measurement|Correctness; time; resources",
+      "Cutover decision|Explicit supported scope"
+    ],
+    "edges": [
+      [
+        0,
+        1,
+        ""
+      ],
+      [
+        1,
+        2,
+        ""
+      ],
+      [
+        3,
+        4,
+        "held out"
+      ],
+      [
+        0,
+        4,
+        "candidate"
+      ],
+      [
+        4,
+        2,
+        "outcomes"
+      ],
+      [
+        2,
+        5,
+        "all required pass"
+      ]
+    ],
+    "status": "not_run",
+    "file": "stages/P11.md"
+  },
+  {
+    "id": "P12",
+    "title": "Package the native product",
+    "dependencies": [
+      "P11"
+    ],
+    "goal": "Ship a reproducible Linux/WSL artifact and an honest offline runtime closure.",
+    "tasks": [
+      "Create versioned core archive, Omnigraph/Git dependency closure or enforced prerequisites, offline bundle, checksums, licenses and SBOM. Package a separately declared legacy import kit only when requested by migration scope.",
+      "Build deterministic archives and verify source/features/executable correspondence to the qualified candidate; compare clean builds if claiming reproducibility.",
+      "Test install/open/query/sign/admit/recover/update/uninstall-retain-data with proof/Python/toolchain artifacts absent.",
+      "Implement installer/update verification against the selected release trust policy and preserve user state on partial failure.",
+      "Prepare exact release notes, assurance page data, migration/restore docs and publication manifest; do not publish an unqualified artifact.",
+      "Package engineering schemas, procedure dependencies, effect adapters and restoration profiles; preserve old release/signature compatibility and unresolved effect reconciliation."
+    ],
+    "deliverables": [
+      "Linux x86_64 release archives and offline bundle",
+      "Checksums/SBOM/license/qualification closure",
+      "Installed clean-machine acceptance report"
+    ],
+    "acceptance": [
+      "No hidden Docker/Python/proof runtime dependency; Git/Omnigraph closure is explicit.",
+      "Bad download/update is refused; user data survives interrupted install/uninstall.",
+      "Every release claim maps to exact artifact/source evidence."
+    ],
+    "gates": [
+      "WF16"
+    ],
+    "proofs": [
+      "M04"
+    ],
+    "scenarios": [
+      "X21",
+      "X24",
+      "X35",
+      "X40"
+    ],
+    "nodes": [
+      "Qualified source|Frozen target and features",
+      "Release build|Deterministic packaging",
+      "Artifact manifest|Hashes + dependency closure",
+      "Clean WSL install|No development toolchain",
+      "Runtime acceptance|Real user workflows",
+      "Release candidate|Docs + evidence + rollback"
+    ],
+    "edges": [
+      [
+        0,
+        1,
+        ""
+      ],
+      [
+        1,
+        2,
+        ""
+      ],
+      [
+        2,
+        3,
+        "install"
+      ],
+      [
+        3,
+        4,
+        "execute"
+      ],
+      [
+        4,
+        5,
+        "pass"
+      ],
+      [
+        2,
+        5,
+        "provenance"
+      ]
+    ],
+    "status": "not_run",
+    "file": "stages/P12.md"
+  },
+  {
+    "id": "P13",
+    "title": "Website and project launch",
+    "dependencies": [
+      "P12"
+    ],
+    "goal": "Present the real product through a polished static site tied to its exact release.",
+    "tasks": [
+      "Use the settled Writfold name and registered writfold.dev; include the supplied SVG icon and minimal section outline. Preserve historical namespaces.",
+      "Implement the separate organization Pages repository, accessible design, tested quickstart/docs and generated assurance status.",
+      "Build static output locally from the selected core commit and release manifest; validate links/examples/mobile/keyboard/contrast.",
+      "Prepare exact domain-verification/DNS settings and a publish-only Pages workflow that validates the nominated static commit.",
+      "After owner/account authorization, configure domain and deploy the reviewed static commit; verify HTTPS, apex/www, deep links/downloads and retained rollback.",
+      "Update docs examples for named contexts, explicit design acceptance/binding and Scribe boundaries. Generate public assurance from actual receipts without publishing private playbook content.",
+      "Describe context, execution and learning with honest assurance. Keep the site minimal; publish no private source or unexecuted proof claim."
+    ],
+    "deliverables": [
+      "Static website source + rendered artifact",
+      "Porkbun/Pages checklist and exact release links",
+      "Site qualification and, if authorized, deployment receipt",
+      "SVG icon variants + minimal homepage specification"
+    ],
+    "acceptance": [
+      "Install/examples match a real release; no exaggerated verification claim.",
+      "Pages only deploys the reviewed static commit and never builds product code.",
+      "Publication/DNS/purchase are reported distinctly from local preparation."
+    ],
+    "gates": [
+      "WF17",
+      "WF21"
+    ],
+    "proofs": [],
+    "scenarios": [
+      "X40"
+    ],
+    "nodes": [
+      "Owner-selected brand|Domain + org + repository",
+      "Exact core release|Docs and install metadata",
+      "Local static build|Accessible tested pages",
+      "Domain verification|Preserve unrelated DNS",
+      "Pages deployment|Upload reviewed commit only",
+      "Live verification|HTTPS; links; rollback"
+    ],
+    "edges": [
+      [
+        0,
+        2,
+        "branding"
+      ],
+      [
+        1,
+        2,
+        "content"
+      ],
+      [
+        0,
+        3,
+        "owner action"
+      ],
+      [
+        2,
+        4,
+        "artifact"
+      ],
+      [
+        3,
+        4,
+        "configured host"
+      ],
+      [
+        4,
+        5,
+        "verify"
+      ]
+    ],
+    "status": "not_run",
+    "file": "stages/P13.md"
+  }
+]

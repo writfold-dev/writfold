@@ -10,6 +10,15 @@ The original kctx Git history is preserved. `src/kctx`, the legacy Lean theorem/
 
 The current implementation authority is the [revision-5 handover](handovers/revision-5/writfold/README.md): **25 stages, 32 mandatory gates (WF00–WF31), 37 V/M entries, 12 engineering theorems (E01–E12), and 148 scenarios**. The [adoption delta](docs/writfold/handover-adoption.md) records exact archive/manifest/registry identities and retains earlier-scope evidence without requalification. Full calculus proofs take priority before production engineering implementation; WF31 is final composed qualification, not a scoped Lean pass.
 
+A [scoped revision-9 feature supplement](docs/writfold/revision-9-features.md)
+admits citation integrity and compact operations, Run Watch/session handoff,
+and authorized corpus-wide discovery for planning. The original bundle is
+preserved, not adopted wholesale. Its universal per-proposal Lean-certificate
+policy remains a separate decision; the external prover/language is exploratory.
+No new feature implementation or product-gate pass is implied.
+The [external proof-language exploration handover](docs/writfold/proof-query-exploration.md)
+captures the separate-session discussion, observed demo results and open IR/REPL decisions.
+
 The Rust implementation lives in `crates/`:
 
 - `writfold-domain`: checked nominal identities, verified admission/runtime-conversion bodies, arbitrary-precision semantic integers, immutable model records and 16 distinct engineering fingerprint types.

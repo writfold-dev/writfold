@@ -1,0 +1,196 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-04",
+  "status": "feature_planning_adopted",
+  "decision": "Features; separate proof-policy decision",
+  "implementation_authority": "handovers/revision-5/writfold",
+  "supplement": "docs/writfold/revision-9-features.md",
+  "precedence": "Revision 5 governs implementation, admission and release gates. The scoped supplement adopts the selected feature requirements only; its explicit exclusions control over conflicting revision-9 text.",
+  "archive": {
+    "archive": "~/Downloads/writfold-rust-handover-version-9.zip",
+    "sha256": "1efc4222a67380ae969ba3012b63e1b55c045f09310cdb61e467d7dcab39574d",
+    "bytes": 46837240
+  },
+  "retained_bundle": "handovers/revision-9/writfold",
+  "manifest": {
+    "path": "handovers/revision-9/writfold/MANIFEST.sha256",
+    "sha256": "a49d90be040146c6cc80b36e61667aadcb00d122aab7134807d504497bb3221c",
+    "verified_members": 359
+  },
+  "candidate_inventory": {
+    "stages": 27,
+    "required_gates": 34,
+    "proof_models": 39,
+    "engineering_theorems": 12,
+    "citation_theorems": 8,
+    "scenarios": 164,
+    "activation": "not_wholesale_adopted"
+  },
+  "active_inventory": {
+    "stages": 25,
+    "required_gates": 32,
+    "proof_models": 37,
+    "engineering_theorems": 12,
+    "scenarios": 148,
+    "authority_record": "qualification/handover-adoption.json",
+    "changed": false
+  },
+  "features": [
+    {
+      "id": "citation-integrity-and-compact-reader",
+      "status": "planned",
+      "sources": [
+        "plan/24-citation-calculus.md",
+        "plan/26-compact-citations-and-followups.md"
+      ],
+      "lean_targets": [
+        "CIT01",
+        "CIT02",
+        "CIT03",
+        "CIT04",
+        "CIT05",
+        "CIT06",
+        "CIT08"
+      ],
+      "production_scope": "V22 selector/alias/correspondence/coverage/reuse requirements; exact implementation and proof mappings remain unqualified. Existing admission checks continue unchanged.",
+      "owner_stages": [
+        "P03",
+        "P03P",
+        "P05",
+        "P07",
+        "P09",
+        "P11"
+      ],
+      "prerequisites": "Qualified pure judgments before production use; retained Git/blob profile first; explicit applicable retention/publication/recovery bridges.",
+      "acceptance": "Exact historical resolution; no incorrect successor attachment; honest coverage; scoped/revocable aliases; typed coordinates; preserved legacy assessment/freshness; complete repeated-workflow measurement."
+    },
+    {
+      "id": "run-watch-and-session-handoff",
+      "status": "planned",
+      "sources": [
+        "plan/27-run-watch-and-session-handoff.md"
+      ],
+      "owner_stages": [
+        "P14",
+        "P15",
+        "P16",
+        "P17",
+        "P19",
+        "P11"
+      ],
+      "prerequisites": "Qualified ledger, atomic intake, ownership/effect protocols and immutable prepared views. Plain run show precedes Ratatui.",
+      "acceptance": "Idempotent/conflict-aware start; exact session recovery; reader noninterference; coherent historical cuts; no stale green receipts; honest unknown effects; installed WSL comparison and narrow-terminal behavior.",
+      "excluded_from_examples": "Universal Lean-instance prerequisite labels; configured driver activation; provider effects."
+    },
+    {
+      "id": "authorized-corpus-discovery",
+      "status": "planned",
+      "sources": [
+        "plan/28-similar-incident-discovery.md",
+        "plan/29-omnigraph-capability-fit.md",
+        "plan/30-corpus-discovery.md"
+      ],
+      "owner_stages": [
+        "P03",
+        "P03P",
+        "P05",
+        "P06",
+        "P09",
+        "P11"
+      ],
+      "prerequisites": "Qualified citation binding and exact reader; P01O/WF24 before native storage integration; scoped lexical baseline before conditional hybrid admission.",
+      "acceptance": "Kind-qualified exact bindings; authorized ranking inputs and outputs; current access/retention checks; explicit omissions; no inferred absence or authority; immutable index/query profiles; incident and mixed-kind held-out evaluations."
+    }
+  ],
+  "deferred": [
+    {
+      "id": "universal-proposal-instance-policy",
+      "sources": [
+        "plan/25-proof-first-admission.md",
+        "registries/proposal-proof-profiles.json",
+        "templates/proposal-proof-receipt.schema.json"
+      ],
+      "rule": "Not adopted, including repeated requirements in any other plan, stage, example or screen."
+    },
+    {
+      "id": "mixed-policy-stage-gate-activation",
+      "identifiers": [
+        "P03C",
+        "P05C",
+        "WF32",
+        "WF33",
+        "CIT07",
+        "V23"
+      ],
+      "rule": "Original definitions retained for traceability, not activated or silently repurposed."
+    },
+    {
+      "id": "global-priority-entrypoint",
+      "sources": [
+        "AGENT_START_HERE.md",
+        "PRIORITIES.md"
+      ],
+      "rule": "Imported candidate instructions do not replace the current root instructions or revision-5 dependency order."
+    },
+    {
+      "id": "follow-on-experiments",
+      "items": [
+        "per-observation TTL semantics",
+        "general graph browser",
+        "traffic-based autonomous learning",
+        "remote embedding fallback",
+        "arbitrary graph mutation"
+      ]
+    }
+  ],
+  "qualification_policy": {
+    "feature_gates": "Before enabling these features, integrate scoped requirement/theorem/caller/scenario mappings and actual receipt producers into current tooling. Revision-5 aggregation alone does not qualify the additions.",
+    "proofs": "Proof-first and existing Lean/Verus/TLC/TLAPS obligations remain; no existing guard or required proof is weakened.",
+    "evidence_reuse": "No historical receipt or completed obligation is renewed by planning adoption.",
+    "storage": "Known P01O/WF24 retained-branch relocation blocker remains; no rerun, workaround or fallback.",
+    "product_gates_passed": []
+  },
+  "retained_active_record_sha256": {
+    "qualification/handover-adoption.json": "f130e234978b32ae114a91c26a630dbe7bbcd79999e44b41ea290e6016d1c989",
+    "qualification/status.json": "5ed70e2829cb3cb7f794e7dbea1cb807d12c6d159740c69c8b7092ea0a9a716c",
+    "qualification/proofs.json": "dfea50bf931815dd8c7bfb9fc6ab9f6ce1e090dfaea7dc51ccce5b46fc0e5b01",
+    "qualification/engineering-theorems.json": "88cbbf56f34f61dcb97ee80168a0c3177ed9d10e73d3f9bd3590b9f4b9c118b6",
+    "formal/engineering-theorems.json": "66c630c2dc96cd0eef9e86dab79bc281ce5bd82400f87de54045a24f0888bb70"
+  },
+  "selected_source_sha256": {
+    "plan/24-citation-calculus.md": "b03883df933f40e22c5ec5942cacdc4fd3a4cc088a62e740c1e8620d9c0771c9",
+    "plan/26-compact-citations-and-followups.md": "791e3af3180d7586bf06f219dbc322c3f9e4033ec77536154a81642553932475",
+    "plan/27-run-watch-and-session-handoff.md": "993ae9b2dc731cc23d755d27111d63caa80d7c3b35d9f10296b21beb6527e429",
+    "plan/28-similar-incident-discovery.md": "a1afd1d295a694eda92b680f30bc7da45a3f7c0190e157f7604383880a6d6d30",
+    "plan/29-omnigraph-capability-fit.md": "3ee5c3952b1ba09ebc63eef214956ce47ce00e9f4cdf4a8e3061dd60cb80c5b3",
+    "plan/30-corpus-discovery.md": "71fba9364e2979dfbb1791e7d6c3f2af01e4727bcd8a562c7e97e9d50957255d",
+    "qualification/similar-cases/formal/CaseDiscovery.lean": "2fcd977bc030c0d40ccf961128500cf8a1bc65270493ff49c045ef038a786224"
+  },
+  "investigation": {
+    "path": "~/.local/share/writfold/evidence/handover-review-20261104-001.json",
+    "sha256": "f3c9b826d2ea20f2b742b0d56cbf771248b9254e85abe5bf17844674b8191e5d",
+    "bytes": 21112,
+    "scope": "Package, synthetic examples, standalone Lean module and external prover replay only; failed attempts retained; no product qualification."
+  },
+  "standalone_discovery_lean": {
+    "status": "checked_in_isolation",
+    "version": "4.21.0",
+    "printed_declarations": 8,
+    "observed_axioms": [
+      "propext"
+    ],
+    "product_gate": null,
+    "source": "handovers/revision-9/writfold/qualification/similar-cases/formal/CaseDiscovery.lean"
+  },
+  "external_prover": {
+    "status": "exploratory_not_adopted",
+    "archive": {
+      "archive": "~/Downloads/writfold-proof-query-demo.zip",
+      "sha256": "fb9171632017f8eb4153239e4ebb4699d29cd3947ea7e4d6d54e22539117d614",
+      "bytes": 97960
+    },
+    "request_sha256": "eafaadbcd4b440230772033367c7d937efc9e6855bd287f30f8217326b493caf",
+    "evidence_sha256": "667752861bf3c1887c2f6d25c13b74e14398bf18a896a56cf20b031ef7b1ecb9",
+    "scope": "Two-line refutation and genuine certificate/evidence negative controls, no Writfold runtime or language implementation. Separate IR/interpreter/REPL design remains discussion only."
+  }
+}

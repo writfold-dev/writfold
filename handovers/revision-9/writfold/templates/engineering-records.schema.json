@@ -1,0 +1,194 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Proposed engineering/1 readable record shapes",
+  "description": "Design shapes only. JSON Schema is not authorization, canonical CBOR validation or proof. Sequence integers use lossless decimal strings in this readable projection; canonical payload schemas use mathematical integers. P14 freezes mappings before a writer. Native Git/Omnigraph identity formats and reference authenticity are validated by typed production parsers; nonempty strings here are not sufficient admission.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/head"
+    },
+    {
+      "$ref": "#/$defs/dispatch_stamp"
+    }
+  ],
+  "$defs": {
+    "stream": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "realm_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "run",
+            "learning"
+          ]
+        },
+        "stream_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "realm_id",
+        "kind",
+        "stream_id"
+      ]
+    },
+    "head": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "stream": {
+          "$ref": "#/$defs/stream"
+        },
+        "sequence": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        },
+        "event_digest": {
+          "type": "string",
+          "pattern": "^wf1:ledger-event:sha256:[0-9a-f]{64}$"
+        },
+        "reducer_profile": {
+          "type": "string",
+          "minLength": 1
+        },
+        "owner_generation": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        }
+      },
+      "required": [
+        "schema_version",
+        "stream",
+        "sequence",
+        "event_digest",
+        "reducer_profile",
+        "owner_generation"
+      ]
+    },
+    "dispatch_stamp": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "effect_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "intent_digest": {
+          "type": "string",
+          "pattern": "^wf1:effect-intent:sha256:[0-9a-f]{64}$"
+        },
+        "attempt_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "grant_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "policy_revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expected_head": {
+          "type": "string",
+          "pattern": "^wf1:ledger-event:sha256:[0-9a-f]{64}$"
+        },
+        "owner_generation": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        },
+        "session_incarnation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "stream": {
+          "$ref": "#/$defs/stream"
+        }
+      },
+      "required": [
+        "schema_version",
+        "effect_id",
+        "intent_digest",
+        "attempt_id",
+        "grant_ref",
+        "policy_revision",
+        "expected_head",
+        "owner_generation",
+        "session_incarnation",
+        "stream"
+      ]
+    },
+    "repo_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "repo_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "object_format": {
+          "enum": [
+            "sha1",
+            "sha256"
+          ]
+        },
+        "base_object_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target_object_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "content_manifest": {
+          "type": "string",
+          "pattern": "^wf1:blob:sha256:[0-9a-f]{64}$"
+        },
+        "dependency_binding": {
+          "type": "string",
+          "pattern": "^wf1:dependency-lock:sha256:[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "repo_id",
+        "object_format",
+        "base_object_id",
+        "target_object_id",
+        "content_manifest",
+        "dependency_binding"
+      ]
+    },
+    "watermark": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "stream": {
+          "$ref": "#/$defs/stream"
+        },
+        "sequence": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        },
+        "head_digest": {
+          "type": "string",
+          "pattern": "^wf1:ledger-event:sha256:[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "stream",
+        "sequence",
+        "head_digest"
+      ]
+    }
+  }
+}

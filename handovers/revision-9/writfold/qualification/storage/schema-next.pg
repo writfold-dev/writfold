@@ -1,0 +1,6 @@
+node Service {
+ slug: String @key
+ name: String
+ description: String?
+}
+edge DependsOn: Service -> Service

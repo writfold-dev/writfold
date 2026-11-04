@@ -1,0 +1,17 @@
+{
+  "purpose": "Synthetic smoke cases, authored with the contract. Never use these as the held-out quality set.",
+  "pins": {"realm":"demo","context":"checkout","release":"R42","index_profile":"case-find/fixture-1"},
+  "cases": [
+    {"id":"A","revision":3,"scope":"checkout","admitted":true,"release":"R42","asset":"sdk-incident-17","signal":"Older SDK rejected an unknown cursor field during response decoding","discriminator":"Strict decoder v1 only","witness":"retained/17#fixture-span-3"},
+    {"id":"B","revision":1,"scope":"checkout","admitted":true,"release":"R42","asset":"pager-incident-33","signal":"Pagination requests repeated indefinitely","discriminator":"Client reused the same continuation token","witness":"retained/33#fixture-span-1"},
+    {"id":"C","revision":2,"scope":"checkout","admitted":true,"release":"R42","asset":"gateway-incident-11","signal":"Responses failed immediately after deploying the gateway","discriminator":"Expired TLS certificate on the upstream route","witness":"retained/11#fixture-span-2"},
+    {"id":"OLD","revision":2,"scope":"checkout","admitted":true,"release":"R41","asset":"sdk-incident-17","signal":"Exact incident in an earlier release","discriminator":"Historical only at this query cut","witness":"retained/17#fixture-span-2"},
+    {"id":"DRAFT","revision":1,"scope":"checkout","admitted":false,"release":"R42","asset":"candidate-note","signal":"Looks exactly like the current case","discriminator":"Unadmitted draft","witness":""},
+    {"id":"HIDDEN","revision":4,"scope":"restricted","admitted":true,"release":"R42","asset":"private-case","signal":"Strong lexical match","discriminator":"Caller cannot inspect this scope","witness":"restricted/example"}
+  ],
+  "queries":[
+    {"id":"paraphrase","text":"Why do older callers crash when we add a response field?","positive":["A"],"hard_negative":["B","C"]},
+    {"id":"different-cause","text":"The client keeps fetching page one even though requests succeed","positive":["B"],"hard_negative":["A"]},
+    {"id":"no-analogue","text":"Is a deadlock in the compactor starving writes?","positive":[],"hard_negative":["A","B","C"]}
+  ]
+}

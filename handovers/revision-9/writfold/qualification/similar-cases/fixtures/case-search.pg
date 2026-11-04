@@ -1,0 +1,9 @@
+node Service {
+  slug: String @key
+}
+node Incident {
+  caseKey: String @key
+  body: String @index
+  embedding: Vector(4) @index
+}
+edge Affects: Incident -> Service

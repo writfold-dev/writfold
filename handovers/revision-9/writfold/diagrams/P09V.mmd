@@ -1,0 +1,12 @@
+flowchart TD
+  N0["Pinned source — Release + context + grant"]
+  N1["Prepared document — Faithful typed projection"]
+  N2["Pure renderers — Markdown; Obsidian; future HTML"]
+  N3["Validated generation — Paths + links + hashes"]
+  N4["Conditional activation — Closure + source stamp; Home last"]
+  N5["Human reader — Bases + Dataview + CLI"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|"bounded outputs"| N3
+  N3 -->|"validated"| N4
+  N4 -->|"observe"| N5

@@ -1,0 +1,484 @@
+[
+  {
+    "id": "WF00",
+    "name": "Baseline freeze",
+    "status": "not_run",
+    "required": true,
+    "stages": [
+      "P00",
+      "P11"
+    ],
+    "pass_rule": "All named obligations in the referenced stages pass on exact candidate source with no required skips; receipt and raw output hashes are present.",
+    "receipt": null,
+    "scope_note": "Enterprise-host and hardware-power-loss claims require separately executed profiles; no local substitute."
+  },
+  {
+    "id": "WF01",
+    "name": "Build and offline closure",
+    "status": "not_run",
+    "required": true,
+    "stages": [
+      "P01",
+      "P01O",
+      "P11"
+    ],
+    "pass_rule": "All named obligations in the referenced stages pass on exact candidate source with no required skips; receipt and raw output hashes are present.",
+    "receipt": null,
+    "scope_note": "Enterprise-host and hardware-power-loss claims require separately executed profiles; no local substitute."
+  },
+  {
+    "id": "WF02",
+    "name": "Architecture and nominal values",
+    "status": "not_run",
+    "required": true,
+    "stages": [
+      "P02",
+      "P03C",
+      "P05C",
+      "P08D",
+      "P09V",
+      "P14",
+      "P15",
+      "P16",
+      "P17",
+      "P18",
+      "P11"
+    ],
+    "pass_rule": "All named obligations in the referenced stages pass on exact candidate source with no required skips; receipt and raw output hashes are present.",
+    "receipt": null,
+    "scope_note": "Enterprise-host and hardware-power-loss claims require separately executed profiles; no local substitute."
+  },
+  {
+    "id": "WF03",
+    "name": "Wire and canonical bytes",
+    "status": "not_run",
+    "required": true,
+    "stages": [
+      "P02",
+      "P03P",
+      "P14",
+      "P11"
+    ],
+    "pass_rule": "All named obligations in the referenced stages pass on exact candidate source with no required skips; receipt and raw output hashes are present.",
+    "receipt": null,
+    "scope_note": "Enterprise-host and hardware-power-loss claims require separately executed profiles; no local substitute."
+  },
+  {
+    "id": "WF04",
+    "name": "Lean and three-host conformance",
+    "status": "not_run",
+    "required": true,
+    "stages": [
+      "P03",
+      "P03P",
+      "P03C",
+      "P08D",
+      "P11"
+    ],
+    "pass_rule": "All named obligations in the referenced stages pass on exact candidate source with no required skips; receipt and raw output hashes are present.",
+    "receipt": null,
+    "scope_note": "Enterprise-host and hardware-power-loss claims require separately executed profiles; no local substitute."
+  },
+  {
+    "id": "WF05",
+    "name": "Production Verus verification",
+    "status": "not_run",
+    "required": true,
+    "stages": [
+      "P03",
+      "P03P",
+      "P05C",
+      "P07",
+      "P08D",
+      "P08S",
+      "P09V",
+      "P10",
+      "P11"
+    ],
+    "pass_rule": "All named obligations in the referenced stages pass on exact candidate source with no required skips; receipt and raw output hashes are present.",
+    "receipt": null,
+    "scope_note": "Enterprise-host and hardware-power-loss claims require separately executed profiles; no local substitute."
+  },
+  {
+    "id": "WF06",
+    "name": "TLC exploration",
+    "status": "not_run",
+    "required": true,
+    "stages": [
+      "P03P",
+      "P04",
+      "P05C",
+      "P08D",
+      "P08S",
+      "P09V",
+      "P11"
+    ],
+    "pass_rule": "All named obligations in the referenced stages pass on exact candidate source with no required skips; receipt and raw output hashes are present.",
+    "receipt": null,
+    "scope_note": "Enterprise-host and hardware-power-loss claims require separately executed profiles; no local substitute."
+  },
+  {
+    "id": "WF07",
+    "name": "TLAPS safety and bridges",
+    "status": "not_run",
+    "required": true,
+    "stages": [
+      "P03P",
+      "P04",
+      "P05C",
+      "P08D",
+      "P08S",
+      "P09V",
+      "P11"
+    ],
+    "pass_rule": "All named obligations in the referenced stages pass on exact candidate source with no required skips; receipt and raw output hashes are present.",
+    "receipt": null,
+    "scope_note": "Enterprise-host and hardware-power-loss claims require separately executed profiles; no local substitute."
+  },
+  {
+    "id": "WF08",
+    "name": "Sources and filesystem",
+    "status": "not_run",
+    "required": true,
+    "stages": [
+      "P05",
+      "P11"
+    ],
+    "pass_rule": "All named obligations in the referenced stages pass on exact candidate source with no required skips; receipt and raw output hashes are present.",
+    "receipt": null,
+    "scope_note": "Enterprise-host and hardware-power-loss claims require separately executed profiles; no local substitute."
+  },
+  {
+    "id": "WF09",
+    "name": "Omnigraph and native companion lifecycle",
+    "status": "not_run",
+    "required": true,
+    "stages": [
+      "P06",
+      "P11"
+    ],
+    "pass_rule": "All named obligations in the referenced stages pass on exact candidate source with no required skips; receipt and raw output hashes are present.",
+    "receipt": null,
+    "scope_note": "Enterprise-host and hardware-power-loss claims require separately executed profiles; no local substitute."
+  },
+  {
+    "id": "WF10",
+    "name": "Authenticated operations",
+    "status": "not_run",
+    "required": true,
+    "stages": [
+      "P07",
+      "P11"
+    ],
+    "pass_rule": "All named obligations in the referenced stages pass on exact candidate source with no required skips; receipt and raw output hashes are present.",
+    "receipt": null,
+    "scope_note": "Enterprise-host and hardware-power-loss claims require separately executed profiles; no local substitute."
+  },
+  {
+    "id": "WF11",
+    "name": "Publication and recovery",
+    "status": "not_run",
+    "required": true,
+    "stages": [
+      "P07",
+      "P08D",
+      "P10",
+      "P11"
+    ],
+    "pass_rule": "All named obligations in the referenced stages pass on exact candidate source with no required skips; receipt and raw output hashes are present.",
+    "receipt": null,
+    "scope_note": "Enterprise-host and hardware-power-loss claims require separately executed profiles; no local substitute."
+  },
+  {
+    "id": "WF12",
+    "name": "Workflows and catalog",
+    "status": "not_run",
+    "required": true,
+    "stages": [
+      "P08",
+      "P11"
+    ],
+    "pass_rule": "All named obligations in the referenced stages pass on exact candidate source with no required skips; receipt and raw output hashes are present.",
+    "receipt": null,
+    "scope_note": "Enterprise-host and hardware-power-loss claims require separately executed profiles; no local substitute."
+  },
+  {
+    "id": "WF13",
+    "name": "Bounded query and transport",
+    "status": "not_run",
+    "required": true,
+    "stages": [
+      "P09",
+      "P11"
+    ],
+    "pass_rule": "All named obligations in the referenced stages pass on exact candidate source with no required skips; receipt and raw output hashes are present.",
+    "receipt": null,
+    "scope_note": "Enterprise-host and hardware-power-loss claims require separately executed profiles; no local substitute."
+  },
+  {
+    "id": "WF14",
+    "name": "Migration sync and retention",
+    "status": "not_run",
+    "required": true,
+    "stages": [
+      "P10",
+      "P11"
+    ],
+    "pass_rule": "All named obligations in the referenced stages pass on exact candidate source with no required skips; receipt and raw output hashes are present.",
+    "receipt": null,
+    "scope_note": "Enterprise-host and hardware-power-loss claims require separately executed profiles; no local substitute."
+  },
+  {
+    "id": "WF15",
+    "name": "Outcomes and performance",
+    "status": "not_run",
+    "required": true,
+    "stages": [
+      "P11"
+    ],
+    "pass_rule": "All named obligations in the referenced stages pass on exact candidate source with no required skips; receipt and raw output hashes are present.",
+    "receipt": null,
+    "scope_note": "Enterprise-host and hardware-power-loss claims require separately executed profiles; no local substitute."
+  },
+  {
+    "id": "WF16",
+    "name": "Native release",
+    "status": "not_run",
+    "required": true,
+    "stages": [
+      "P12"
+    ],
+    "pass_rule": "All named obligations in the referenced stages pass on exact candidate source with no required skips; receipt and raw output hashes are present.",
+    "receipt": null,
+    "scope_note": "Enterprise-host and hardware-power-loss claims require separately executed profiles; no local substitute."
+  },
+  {
+    "id": "WF17",
+    "name": "Static website",
+    "status": "not_run",
+    "required": true,
+    "stages": [
+      "P13"
+    ],
+    "pass_rule": "All named obligations in the referenced stages pass on exact candidate source with no required skips; receipt and raw output hashes are present.",
+    "receipt": null,
+    "scope_note": "Enterprise-host and hardware-power-loss claims require separately executed profiles; no local substitute."
+  },
+  {
+    "id": "WF18",
+    "name": "Scribes and writ acquisition",
+    "status": "not_run",
+    "required": true,
+    "stages": [
+      "P08S",
+      "P11"
+    ],
+    "pass_rule": "All named obligations in the referenced stages pass on exact candidate source with no required skips; receipt and raw output hashes are present.",
+    "receipt": null,
+    "scope_note": "Enterprise-host and hardware-power-loss claims require separately executed profiles; no local substitute."
+  },
+  {
+    "id": "WF19",
+    "name": "Workflow-3 portfolio authority",
+    "status": "not_run",
+    "required": true,
+    "stages": [
+      "P03P",
+      "P07",
+      "P09",
+      "P11"
+    ],
+    "pass_rule": "All named obligations in plan/11 and plan/12 applicable to this gate pass on exact candidate; current contracts, production/caller mapping and source-bound evidence required. No missing/skipped/stale required evidence.",
+    "receipt": null,
+    "scope_note": "Versioned existing contract; not a new inference rule."
+  },
+  {
+    "id": "WF20",
+    "name": "Design binding and reopening",
+    "status": "not_run",
+    "required": true,
+    "stages": [
+      "P08D",
+      "P11"
+    ],
+    "pass_rule": "All named obligations in plan/11 and plan/12 applicable to this gate pass on exact candidate; current contracts, production/caller mapping and source-bound evidence required. No missing/skipped/stale required evidence.",
+    "receipt": null,
+    "scope_note": "Versioned existing contract; not a new inference rule."
+  },
+  {
+    "id": "WF21",
+    "name": "Playbook adoption and companion continuity",
+    "status": "not_run",
+    "required": true,
+    "stages": [
+      "P00",
+      "P01O",
+      "P09",
+      "P09V",
+      "P19",
+      "P11",
+      "P13"
+    ],
+    "pass_rule": "All named obligations in plan/11 and plan/12 applicable to this gate pass on exact candidate; current contracts, production/caller mapping and source-bound evidence required. No missing/skipped/stale required evidence.",
+    "receipt": null,
+    "scope_note": "WF21 checks adoption and Writfold companion, not upstream playbook product verification."
+  },
+  {
+    "id": "WF22",
+    "name": "Faithful view projection and publication",
+    "status": "not_run",
+    "required": true,
+    "stages": [
+      "P09V",
+      "P19",
+      "P11"
+    ],
+    "pass_rule": "V14/M10 verified; isolation, escaping, manifest ownership, recovery and deterministic outputs qualified on exact source.",
+    "receipt": null,
+    "scope_note": "Planning refresh evidence does not pass a Rust product gate."
+  },
+  {
+    "id": "WF23",
+    "name": "Native Obsidian and plugin reading profile",
+    "status": "not_run",
+    "required": true,
+    "stages": [
+      "P09V",
+      "P19",
+      "P11"
+    ],
+    "pass_rule": "Actual desktop/CLI/plugin versions and bytes identified; native query, refresh, fallback, theme/narrow reading and lifecycle checks pass.",
+    "receipt": null,
+    "scope_note": "Planning refresh evidence does not pass a Rust product gate."
+  },
+  {
+    "id": "WF24",
+    "name": "Omnigraph foundation qualification",
+    "status": "not_run",
+    "required": true,
+    "stages": [
+      "P01O",
+      "P06",
+      "P11"
+    ],
+    "pass_rule": "All declared early backend campaigns in plan/15 pass on the exact selected WSL profile; plan/16 epoch/restore/ownership behavior demonstrated. Smoke probes are insufficient. Integrated gates remain independently required; no retain-Dolt-only or optional-index shortcut can pass the approved Omnigraph scope.",
+    "receipt": null,
+    "scope_note": "Planning refresh evidence does not pass a Rust product gate."
+  },
+  {
+    "id": "WF25",
+    "name": "Engineering identities and durable ledger",
+    "status": "not_run",
+    "required": true,
+    "stages": [
+      "P14",
+      "P11"
+    ],
+    "pass_rule": "Plans/17-18 and ledger/CAS/identity scenarios pass with V16/M12 and exact production codecs.",
+    "receipt": null,
+    "scope_note": "Design and bundle checks do not establish a completed product or proof."
+  },
+  {
+    "id": "WF26",
+    "name": "Skill packages and checked composition",
+    "status": "not_run",
+    "required": true,
+    "stages": [
+      "P15",
+      "P11"
+    ],
+    "pass_rule": "Plan/19 loading/call/runtime campaigns pass with V17/M14 and enforcement of inherited gate floors.",
+    "receipt": null,
+    "scope_note": "Design and bundle checks do not establish a completed product or proof."
+  },
+  {
+    "id": "WF27",
+    "name": "Controlled effects and recovery",
+    "status": "not_run",
+    "required": true,
+    "stages": [
+      "P16",
+      "P11"
+    ],
+    "pass_rule": "Plan/20 effect and ownership campaigns pass with V18/M12/M13; real external outcomes and containment are qualified.",
+    "receipt": null,
+    "scope_note": "Design and bundle checks do not establish a completed product or proof."
+  },
+  {
+    "id": "WF28",
+    "name": "Cross-repository author-change lifecycle",
+    "status": "not_run",
+    "required": true,
+    "stages": [
+      "P17",
+      "P11"
+    ],
+    "pass_rule": "The full three-repository procedure passes, including actual merge/PR profile qualification, partial landing and V19/M13.",
+    "receipt": null,
+    "scope_note": "Design and bundle checks do not establish a completed product or proof."
+  },
+  {
+    "id": "WF29",
+    "name": "Learning evaluation and promotion",
+    "status": "not_run",
+    "required": true,
+    "stages": [
+      "P18",
+      "P11"
+    ],
+    "pass_rule": "Plan/21 evaluation/admission campaigns pass with V20/M15 and retained publication closure; usefulness and safety receipts remain distinct.",
+    "receipt": null,
+    "scope_note": "Design and bundle checks do not establish a completed product or proof."
+  },
+  {
+    "id": "WF30",
+    "name": "Engineering cuts views and restoration",
+    "status": "not_run",
+    "required": true,
+    "stages": [
+      "P19",
+      "P11"
+    ],
+    "pass_rule": "Plan/17 cuts/epochs and plan/13 dossiers pass with V21/M16, native views, independent restore and activity rebuild.",
+    "receipt": null,
+    "scope_note": "Design and bundle checks do not establish a completed product or proof."
+  },
+  {
+    "id": "WF31",
+    "name": "Engineering calculus and composed refinement",
+    "status": "not_run",
+    "required": true,
+    "stages": [
+      "P11"
+    ],
+    "pass_rule": "E01-E12, V16-V21, M12-M16 and every named composition bridge complete on exact source; meaningful semantic mutants fail; no empty mappings or unreviewed assumptions.",
+    "receipt": null,
+    "scope_note": "Design and bundle checks do not establish a completed product or proof."
+  },
+  {
+    "id": "WF32",
+    "name": "Lean proof of citation and admission judgments",
+    "status": "not_run",
+    "required": true,
+    "stages": [
+      "P03C",
+      "P11"
+    ],
+    "pass_rule": "CIT01-CIT08 checked on recorded Lean source and toolchain with transitive axiom audit, inhabited positive cases and calibrated negative controls. Historical compatibility audited. Candidate and authoritative transitions distinguished.",
+    "receipt": null,
+    "scope_note": "A plan, fixture or advisory classifier cannot certify a product admission."
+  },
+  {
+    "id": "WF33",
+    "name": "Shipping citation machinery and admission enforcement",
+    "status": "not_run",
+    "required": true,
+    "stages": [
+      "P05C",
+      "P11"
+    ],
+    "pass_rule": "Actual V22/V23 production predicates/callers verified against the qualified rules. Golden, differential, process and access checks pass. Duplicate-line regression is conservative. Matched token benchmark recorded and a default/opt-in decision justified. Subsequent publication and profile gates remain required. A general theorem with no exact Lean instance certificate must block. Changed evidence or base cannot reuse the certificate.",
+    "receipt": null,
+    "scope_note": "A plan, fixture or advisory classifier cannot certify a product admission."
+  }
+]

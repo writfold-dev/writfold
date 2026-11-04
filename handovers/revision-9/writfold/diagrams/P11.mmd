@@ -1,0 +1,13 @@
+flowchart TD
+  N0["Exact candidate — Source + target + tools"]
+  N1["Required gate matrix — Proofs + real process tests"]
+  N2["Acceptance ledger — No missing or stale evidence"]
+  N3["Frozen task corpus — Same sources and model access"]
+  N4["Paired measurement — Correctness; time; resources"]
+  N5["Cutover decision — Explicit supported scope"]
+  N0 --> N1
+  N1 --> N2
+  N3 -->|"held out"| N4
+  N0 -->|"candidate"| N4
+  N4 -->|"outcomes"| N2
+  N2 -->|"all required pass"| N5

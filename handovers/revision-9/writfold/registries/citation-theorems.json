@@ -1,0 +1,98 @@
+[
+  {
+    "id": "CIT01",
+    "name": "Exact retained resolution",
+    "statement": "No wrong representation, unit or out-of-bounds interval resolves exactly.",
+    "negative_control": "Wrong blob and Unicode offsets",
+    "status": "not_run",
+    "system": "Lean",
+    "contract": "plan/24-citation-calculus.md",
+    "theorem_symbols": [],
+    "production_symbols": [],
+    "receipt": null
+  },
+  {
+    "id": "CIT02",
+    "name": "Scoped compact expansion",
+    "statement": "Expansion and presentation preserve pinned subject, grant, omissions and coverage.",
+    "negative_control": "Foreign alias or truncated contrary evidence",
+    "status": "not_run",
+    "system": "Lean",
+    "contract": "plan/24-citation-calculus.md",
+    "theorem_symbols": [],
+    "production_symbols": [],
+    "receipt": null
+  },
+  {
+    "id": "CIT03",
+    "name": "Historical stability",
+    "statement": "An appended successor cannot retarget a retained historical binding.",
+    "negative_control": "Lookup substitutes current HEAD",
+    "status": "not_run",
+    "system": "Lean",
+    "contract": "plan/24-citation-calculus.md",
+    "theorem_symbols": [],
+    "production_symbols": [],
+    "receipt": null
+  },
+  {
+    "id": "CIT04",
+    "name": "Correspondence soundness",
+    "statement": "UniqueJustified requires positive evidence and sufficient uniqueness information.",
+    "negative_control": "First duplicate match accepted as unique",
+    "status": "not_run",
+    "system": "Lean",
+    "contract": "plan/24-citation-calculus.md",
+    "theorem_symbols": [],
+    "production_symbols": [],
+    "receipt": null
+  },
+  {
+    "id": "CIT05",
+    "name": "Dependency invalidation",
+    "statement": "Receipt reuse requires exact current dependencies while other qualified witnesses survive.",
+    "negative_control": "Copy transfers old validation",
+    "status": "not_run",
+    "system": "Lean",
+    "contract": "plan/24-citation-calculus.md",
+    "theorem_symbols": [],
+    "production_symbols": [],
+    "receipt": null
+  },
+  {
+    "id": "CIT06",
+    "name": "Freshness conservativity",
+    "statement": "Catalog hints and rereads preserve signed-context freshness and timestamps.",
+    "negative_control": "Refresh hint extends signed TTL",
+    "status": "not_run",
+    "system": "Lean",
+    "contract": "plan/24-citation-calculus.md",
+    "theorem_symbols": [],
+    "production_symbols": [],
+    "receipt": null
+  },
+  {
+    "id": "CIT07",
+    "name": "Proposal admission floor",
+    "statement": "All authoritative constructors require an applicable qualified Lean rule and proposal witness.",
+    "negative_control": "Forged theorem name or policy self-approval",
+    "status": "not_run",
+    "system": "Lean",
+    "contract": "plan/24-citation-calculus.md",
+    "theorem_symbols": [],
+    "production_symbols": [],
+    "receipt": null
+  },
+  {
+    "id": "CIT08",
+    "name": "Legacy conservativity",
+    "statement": "New reference operations cannot add knowledge conclusions outside admitted transitions.",
+    "negative_control": "Renderer promotes a discovered candidate",
+    "status": "not_run",
+    "system": "Lean",
+    "contract": "plan/24-citation-calculus.md",
+    "theorem_symbols": [],
+    "production_symbols": [],
+    "receipt": null
+  }
+]

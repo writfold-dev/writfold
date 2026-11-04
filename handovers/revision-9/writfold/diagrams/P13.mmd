@@ -1,0 +1,13 @@
+flowchart TD
+  N0["Owner-selected brand — Domain + org + repository"]
+  N1["Exact core release — Docs and install metadata"]
+  N2["Local static build — Accessible tested pages"]
+  N3["Domain verification — Preserve unrelated DNS"]
+  N4["Pages deployment — Upload reviewed commit only"]
+  N5["Live verification — HTTPS; links; rollback"]
+  N0 -->|"branding"| N2
+  N1 -->|"content"| N2
+  N0 -->|"owner action"| N3
+  N2 -->|"artifact"| N4
+  N3 -->|"configured host"| N4
+  N4 -->|"verify"| N5

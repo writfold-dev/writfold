@@ -1,0 +1,13 @@
+flowchart TD
+  N0["Corpus release — Knowledge procedures lessons"]
+  N1["Operational ledger — Runs observations candidates"]
+  N2["Activity projection — Exact stream watermarks"]
+  N3["Retained read cut — Pins inventory closure"]
+  N4["Prepared dossier — Filtered facts status evidence"]
+  N5["Human views and restore — Readable reproducible honest"]
+  N0 --> N1
+  N1 --> N2
+  N0 -->|"inputs"| N3
+  N2 -->|"check"| N4
+  N3 -->|"bind"| N4
+  N4 -->|"accept"| N5

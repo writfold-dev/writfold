@@ -1,0 +1,13 @@
+flowchart TD
+  N0["Candidate KB — Exact appended claims"]
+  N1["Named contexts — Separate sources and policies"]
+  N2["Exact assignments — Claim + context + witness"]
+  N3["Signed portfolio — Full plan, actor and use"]
+  N4["Per-context query — Narrow target; later time only"]
+  N5["Retained selection — Current history and contexts"]
+  N0 -->|"frame"| N1
+  N1 -->|"check"| N2
+  N2 -->|"authorize"| N3
+  N3 -->|"query"| N4
+  N3 -->|"select"| N5
+  N5 -->|"reassess"| N4

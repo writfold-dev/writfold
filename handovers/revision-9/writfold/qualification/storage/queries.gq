@@ -1,0 +1,7 @@
+query two($key: String) {
+ match { $s: Service { slug: $key } $s dependsOn{2,2} $t }
+ return { $t.slug }
+ order { $t.slug }
+}
+query all_nodes() { match { $s: Service } return { $s.slug, $s.name } order { $s.slug } }
+query whole() { match { $s: Service } return { $s } order { $s.slug } }

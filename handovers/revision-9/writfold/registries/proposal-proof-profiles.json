@@ -1,0 +1,186 @@
+{
+  "format": "proposed-r6-floor/1",
+  "source": "plan/25-proof-first-admission.md",
+  "default": "deny",
+  "scope": "minimum sets; union all applicable profiles and trusted operation-specific obligations. Release engineering must freeze and qualify concrete profiles before enabling them.",
+  "common_lean": [
+    "CIT01",
+    "CIT02",
+    "CIT03",
+    "CIT04",
+    "CIT05",
+    "CIT06",
+    "CIT07",
+    "CIT08"
+  ],
+  "common_verus": [
+    "V22",
+    "V23"
+  ],
+  "common_gates": [
+    "WF32",
+    "WF33"
+  ],
+  "profiles": [
+    {
+      "kind": "knowledge-admission-or-correction",
+      "additional_lean": [
+        "T03",
+        "T04",
+        "T05",
+        "T06",
+        "T08",
+        "T09",
+        "T15",
+        "T17",
+        "T20",
+        "T21"
+      ],
+      "additional_verus": [
+        "V02",
+        "V03",
+        "V04",
+        "V05",
+        "V07",
+        "V12"
+      ],
+      "protocol_models": [
+        "M01",
+        "M02",
+        "M03"
+      ],
+      "status": "not_run",
+      "production_receipt": null
+    },
+    {
+      "kind": "citation-successor",
+      "additional_lean": [
+        "T04",
+        "T06",
+        "T08",
+        "T09",
+        "T15",
+        "T16",
+        "T17",
+        "T20"
+      ],
+      "additional_verus": [
+        "V02",
+        "V04",
+        "V05",
+        "V07",
+        "V12"
+      ],
+      "protocol_models": [
+        "M01",
+        "M02",
+        "M03"
+      ],
+      "status": "not_run",
+      "production_receipt": null
+    },
+    {
+      "kind": "design-acceptance-or-binding",
+      "additional_lean": [
+        "T18",
+        "T20",
+        "T21"
+      ],
+      "additional_verus": [
+        "V06",
+        "V12",
+        "V13"
+      ],
+      "protocol_models": [
+        "M09"
+      ],
+      "status": "not_run",
+      "production_receipt": null
+    },
+    {
+      "kind": "procedure-or-skill",
+      "additional_lean": [
+        "E01",
+        "E02",
+        "E03",
+        "E04",
+        "E10",
+        "E12"
+      ],
+      "additional_verus": [
+        "V16",
+        "V17",
+        "V19"
+      ],
+      "protocol_models": [
+        "M12",
+        "M14"
+      ],
+      "status": "not_run",
+      "production_receipt": null
+    },
+    {
+      "kind": "learning-promotion",
+      "additional_lean": [
+        "E01",
+        "E02",
+        "E03",
+        "E04",
+        "E08",
+        "E12"
+      ],
+      "additional_verus": [
+        "V17",
+        "V20"
+      ],
+      "protocol_models": [
+        "M01",
+        "M02",
+        "M03",
+        "M15"
+      ],
+      "status": "not_run",
+      "production_receipt": null
+    },
+    {
+      "kind": "policy-schema-or-rule",
+      "additional_lean": [
+        "T03",
+        "T15",
+        "T20",
+        "T21"
+      ],
+      "additional_verus": [
+        "V05",
+        "V07",
+        "V12",
+        "V15"
+      ],
+      "protocol_models": [
+        "M01",
+        "M02",
+        "M06",
+        "M11"
+      ],
+      "status": "not_run",
+      "production_receipt": null
+    }
+  ],
+  "instance_certificate": {
+    "required": true,
+    "checker": "Lean kernel",
+    "subject": [
+      "realm",
+      "proposal material digest",
+      "expected predecessor",
+      "rule/profile digest",
+      "canonical witness digest",
+      "evidence closure digest",
+      "assumption and validity conditions",
+      "semantic and encoding profiles"
+    ],
+    "receipt_issuer": "independently qualified proof worker",
+    "on_missing_or_mismatch": "blocked",
+    "self_inclusion": "exclude receipt/signature from proved material; include checked receipt in signed outer operation"
+  }
+}

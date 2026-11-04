@@ -4,6 +4,28 @@ The current immutable authority is [`handovers/revision-5/writfold/`](../../hand
 
 Read AGENT_START_HERE, all **25 stage contracts**, execution/acceptance plan 08 and normative plans 11–23. The active inventory is **32 mandatory gates WF00–WF31, 37 V/M obligations, E01–E12, 148 scenarios and 16 fingerprint kinds**. The [status ledger](../../qualification/status.json) follows registry order and exact dependency/gate membership, not numeric sorting. P14–P19 precede final P11–P13. Immutable registries describe requirements; mutable ledgers describe execution evidence.
 
+## Scoped revision-9 feature supplement
+
+On 4 November 2026, Tarek selected feature planning with a separate proof-policy
+decision. The [controlling supplement](revision-9-features.md) adopts citation
+integrity/compact operations, Run Watch/session handoff and authorized corpus
+discovery. [Its adoption record](../../qualification/revision-9-feature-adoption.json)
+binds the exact archive, manifest, selected requirements and exclusions.
+The [original revision-9 bundle](../../handovers/revision-9/writfold/README.md)
+is retained verbatim as source material, not a replacement implementation
+authority. Its plan 25 universal per-proposal Lean certificate, mixed-policy
+P03C/P05C and WF32/WF33 activation, CIT07/V23, and external prover remain deferred.
+This explicit selection controls over repeated proof-floor text elsewhere in
+that bundle. Existing admission checks and proof obligations are not weakened.
+
+The active revision-5 inventories and evidence below remain unchanged. The
+candidate package separately inventories 27 stages, 34 gates, 39 V/M entries,
+12 E targets, eight CIT targets and 164 scenarios; its labels do not reset or
+renew current evidence. Scoped feature qualification mappings and producers must
+be integrated before new production paths are enabled. The retained standalone
+discovery Lean check and synthetic examples are not product qualification.
+
+
 ## Proof-first execution
 
 Complete the full E01–E12 calculus proofs, explicit assumptions, closed-action coverage and meaningful negative calibration before production engineering implementation. Preserve legacy T01–T22, its historical declaration/proof identities, all signed bytes and the adopted private playbook pin. Component proofs neither establish production refinement nor substitute for Verus V16–V21, TLC/TLAPS M12–M16 and their mandatory bridges.

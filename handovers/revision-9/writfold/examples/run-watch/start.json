@@ -1,0 +1,11 @@
+{
+  "schema": "writfold.run-start/1",
+  "realm_id": "demo",
+  "request_key": "req-pagination-017",
+  "objective": "Add compatible cursor pagination across API, SDK and CLI",
+  "completion_boundary": "open-reviewed-pull-requests",
+  "repo_ids": ["api", "sdk", "cli"],
+  "procedure_revision": "author-change@p17",
+  "context_release": "R42",
+  "authority_ref": "demo/grant-07"
+}

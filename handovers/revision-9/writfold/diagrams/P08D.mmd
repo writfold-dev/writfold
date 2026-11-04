@@ -1,0 +1,13 @@
+flowchart TD
+  N0["Accepted design — Design-v3 identity + source"]
+  N1["Exact implementation — Resolved source and revision"]
+  N2["Conditional bind — Expected proposal + actor"]
+  N3["Reopen design — Clear authority; keep history"]
+  N4["Execution gates — New target; same accepted design"]
+  N5["Apply or verify — Current bound evidence only"]
+  N0 -->|"constrain"| N1
+  N1 -->|"resolve"| N2
+  N2 -->|"new binding"| N4
+  N4 -->|"pass"| N5
+  N0 -->|"material edit"| N3
+  N3 -->|"new acceptance"| N0

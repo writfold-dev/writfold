@@ -1,0 +1,21 @@
+query case_lexical($service: String, $q: String) {
+  match {
+    $s: Service { slug: $service }
+    $c: Incident
+    $c affects $s
+  }
+  return { $c.caseKey }
+  order { bm25($c.body, $q) desc }
+  limit 3
+}
+
+query case_hybrid($service: String, $q: String, $v: Vector(4)) {
+  match {
+    $s: Service { slug: $service }
+    $c: Incident
+    $c affects $s
+  }
+  return { $c.caseKey }
+  order { rrf(nearest($c.embedding, $v), bm25($c.body, $q)) }
+  limit 3
+}

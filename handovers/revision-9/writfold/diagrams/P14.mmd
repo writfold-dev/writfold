@@ -1,0 +1,13 @@
+flowchart TD
+  N0["Realm and source — Exact baseline identities"]
+  N1["Typed fingerprints — Canonical engineering profile"]
+  N2["Finite calculus — Closed judgments and states"]
+  N3["Immutable objects — Ledger records and closure"]
+  N4["Conditional heads — Expected predecessor + owner"]
+  N5["Qualified foundation — No product proof by assertion"]
+  N0 --> N1
+  N1 --> N2
+  N0 -->|"inputs"| N3
+  N2 -->|"check"| N4
+  N3 -->|"bind"| N4
+  N4 -->|"accept"| N5

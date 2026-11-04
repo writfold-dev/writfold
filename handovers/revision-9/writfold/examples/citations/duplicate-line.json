@@ -1,0 +1,18 @@
+{
+  "name": "insertion-of-identical-line",
+  "baseline_commit": "1c17b94be37af8f82f222baddf31435f14172e1a",
+  "path": "example.py",
+  "original": "def intended():\n    return DEFAULT\n",
+  "old_range": "2-2",
+  "target": "def other():\n    return DEFAULT\n\ndef intended():\n    return DEFAULT\n",
+  "expected_legacy_advisory": {
+    "status": "moved",
+    "line_range": "2-2"
+  },
+  "exact_text_candidates": [
+    2,
+    5
+  ],
+  "expected_r6": "Multiple text candidates; no justified unique successor from normalized text alone.",
+  "historical_expected": "The old binding still selects the line in intended()."
+}

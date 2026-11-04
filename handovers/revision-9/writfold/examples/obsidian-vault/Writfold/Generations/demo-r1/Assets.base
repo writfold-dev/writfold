@@ -1,0 +1,29 @@
+filters:
+  and:
+    - 'file.inFolder("Writfold/Generations/demo-r1/Services")'
+    - 'wf_generation == "demo-r1"'
+    - 'wf_context == "demo-operations"'
+    - 'wf_kind == "service"'
+formulas:
+  asset: 'file.asLink(wf_title)'
+properties:
+  formula.asset:
+    displayName: Asset
+  note.wf_status:
+    displayName: Status
+  note.wf_assessed_at:
+    displayName: Assessed
+views:
+  - type: table
+    name: Services
+    limit: 25
+    order:
+      - formula.asset
+      - note.wf_status
+      - note.wf_assessed_at
+  - type: cards
+    name: Cards
+    limit: 25
+    order:
+      - formula.asset
+      - note.wf_status

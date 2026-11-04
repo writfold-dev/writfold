@@ -1,0 +1,13 @@
+flowchart TD
+  N0["Agent request — Catalog locator + allowed capability"]
+  N1["Writfold supervisor — Admitted code + session identity"]
+  N2["External scribe — Small script or native process"]
+  N3["Capability broker — Contained roots + allowed hosts"]
+  N4["Validated writ — Retained bytes + exact provenance"]
+  N5["Claim admission — Separate approval and calculus"]
+  N0 --> N1
+  N1 -->|"stdio RPC"| N2
+  N2 -->|"bounded callbacks"| N3
+  N3 -->|"host evidence"| N1
+  N2 -->|"validated result"| N4
+  N4 -->|"propose only"| N5

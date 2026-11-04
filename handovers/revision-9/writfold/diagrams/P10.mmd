@@ -1,0 +1,13 @@
+flowchart TD
+  N0["Pinned release closure — Git + Omnigraph + writs + epochs"]
+  N1["Stage transfer / import — Account for every object"]
+  N2["Validate receiver — Bytes; signatures; schema"]
+  N3["Retention roots — Readers; pending; history"]
+  N4["Conditional selection — Advertise only complete closure"]
+  N5["Independent restore — Original sources unavailable"]
+  N0 --> N1
+  N1 --> N2
+  N3 -->|"protect"| N0
+  N2 -->|"complete"| N4
+  N2 -->|"replay"| N5
+  N4 -->|"new root"| N3

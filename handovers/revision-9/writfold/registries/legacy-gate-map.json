@@ -1,0 +1,145 @@
+[
+  {
+    "id": "R00",
+    "name": "Baseline freeze",
+    "writfold_gates": [
+      "WF00"
+    ],
+    "source": "reference/kctx-current-rust-design.md",
+    "rule": "Preserve the full legacy acceptance requirement; the WF mapping adds assurance rather than replacing required behavior."
+  },
+  {
+    "id": "R01",
+    "name": "Reproducible artifact",
+    "writfold_gates": [
+      "WF01",
+      "WF16"
+    ],
+    "source": "reference/kctx-current-rust-design.md",
+    "rule": "Preserve the full legacy acceptance requirement; the WF mapping adds assurance rather than replacing required behavior."
+  },
+  {
+    "id": "R02",
+    "name": "Nominal values and codecs",
+    "writfold_gates": [
+      "WF02",
+      "WF03"
+    ],
+    "source": "reference/kctx-current-rust-design.md",
+    "rule": "Preserve the full legacy acceptance requirement; the WF mapping adds assurance rather than replacing required behavior."
+  },
+  {
+    "id": "R03",
+    "name": "Kernel correspondence",
+    "writfold_gates": [
+      "WF04",
+      "WF05",
+      "WF19",
+      "WF20"
+    ],
+    "source": "reference/kctx-current-rust-design.md",
+    "rule": "Preserve the full legacy acceptance requirement; the WF mapping adds assurance rather than replacing required behavior."
+  },
+  {
+    "id": "R04",
+    "name": "Real source and citation adapters",
+    "writfold_gates": [
+      "WF08"
+    ],
+    "source": "reference/kctx-current-rust-design.md",
+    "rule": "Preserve the full legacy acceptance requirement; the WF mapping adds assurance rather than replacing required behavior."
+  },
+  {
+    "id": "R05",
+    "name": "Authenticated operations",
+    "writfold_gates": [
+      "WF10",
+      "WF19"
+    ],
+    "source": "reference/kctx-current-rust-design.md",
+    "rule": "Preserve the full legacy acceptance requirement; the WF mapping adds assurance rather than replacing required behavior."
+  },
+  {
+    "id": "R06",
+    "name": "Publication and concurrency",
+    "writfold_gates": [
+      "WF06",
+      "WF07",
+      "WF11",
+      "WF20"
+    ],
+    "source": "reference/kctx-current-rust-design.md",
+    "rule": "Preserve the full legacy acceptance requirement; the WF mapping adds assurance rather than replacing required behavior."
+  },
+  {
+    "id": "R07",
+    "name": "Dolt/query refinement",
+    "writfold_gates": [
+      "WF09",
+      "WF13"
+    ],
+    "source": "reference/kctx-current-rust-design.md",
+    "rule": "Preserve the full legacy acceptance requirement; the WF mapping adds assurance rather than replacing required behavior."
+  },
+  {
+    "id": "R08",
+    "name": "Provisioning and lifecycle",
+    "writfold_gates": [
+      "WF01",
+      "WF09",
+      "WF16"
+    ],
+    "source": "reference/kctx-current-rust-design.md",
+    "rule": "Preserve the full legacy acceptance requirement; the WF mapping adds assurance rather than replacing required behavior."
+  },
+  {
+    "id": "R09",
+    "name": "Catalog and domain neutrality",
+    "writfold_gates": [
+      "WF12",
+      "WF18"
+    ],
+    "source": "reference/kctx-current-rust-design.md",
+    "rule": "Preserve the full legacy acceptance requirement; the WF mapping adds assurance rather than replacing required behavior."
+  },
+  {
+    "id": "R10",
+    "name": "Migration, retention and restore",
+    "writfold_gates": [
+      "WF14",
+      "WF19",
+      "WF20"
+    ],
+    "source": "reference/kctx-current-rust-design.md",
+    "rule": "Preserve the full legacy acceptance requirement; the WF mapping adds assurance rather than replacing required behavior."
+  },
+  {
+    "id": "R11",
+    "name": "Cost and agent usefulness",
+    "writfold_gates": [
+      "WF15"
+    ],
+    "source": "reference/kctx-current-rust-design.md",
+    "rule": "Preserve the full legacy acceptance requirement; the WF mapping adds assurance rather than replacing required behavior."
+  },
+  {
+    "id": "R12",
+    "name": "Release/cutover",
+    "writfold_gates": [
+      "WF16"
+    ],
+    "source": "reference/kctx-current-rust-design.md",
+    "rule": "Preserve the full legacy acceptance requirement; the WF mapping adds assurance rather than replacing required behavior."
+  },
+  {
+    "id": "R13",
+    "name": "Human and machine presentation",
+    "writfold_gates": [
+      "WF13",
+      "WF15",
+      "WF21"
+    ],
+    "source": "reference/kctx-current-rust-design.md",
+    "rule": "Preserve the full legacy acceptance requirement; the WF mapping adds assurance rather than replacing required behavior."
+  }
+]

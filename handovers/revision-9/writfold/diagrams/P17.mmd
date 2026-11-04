@@ -1,0 +1,13 @@
+flowchart TD
+  N0["Task and repositories — Scope grants completion"]
+  N1["Evidence and design — Assumptions alternatives review"]
+  N2["Implement and test — Nominals conventions docs"]
+  N3["Changed upstream — Rebind affected dependencies"]
+  N4["Review and land — Exact candidate compatibility"]
+  N5["Observed completion — Merge release rollout distinct"]
+  N0 --> N1
+  N1 --> N2
+  N0 -->|"inputs"| N3
+  N2 -->|"check"| N4
+  N3 -->|"bind"| N4
+  N4 -->|"accept"| N5

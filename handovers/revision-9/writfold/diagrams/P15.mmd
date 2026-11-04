@@ -1,0 +1,13 @@
+flowchart TD
+  N0["Legacy skill — Markdown scripts references"]
+  N1["Admitted package — Payload + flat lock"]
+  N2["Procedure contract — Routes calls effects gates"]
+  N3["Scoped activation — Run inputs and guidance"]
+  N4["Checked call — Preconditions + delegation"]
+  N5["Returned evidence — Exact child and postconditions"]
+  N0 --> N1
+  N1 --> N2
+  N0 -->|"inputs"| N3
+  N2 -->|"check"| N4
+  N3 -->|"bind"| N4
+  N4 -->|"accept"| N5

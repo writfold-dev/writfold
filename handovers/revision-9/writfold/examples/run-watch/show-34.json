@@ -1,0 +1,13 @@
+{
+  "schema": "writfold.run-view/1",
+  "run_ref": "demo/RUN-017",
+  "selected_event": 34,
+  "view_through": 34,
+  "sampled_ledger_head": 34,
+  "corpus_release": "R42",
+  "procedure_revision": "author-change@p17",
+  "repo_vector": {"api": "a17", "sdk": "d02", "cli": "c38"},
+  "run_state": "Blocked",
+  "blocker": {"citation": "C7", "proposal": "CP-12", "repo": "sdk", "revision": "d02", "matches": 2},
+  "next_evidence": "Inspect both source spans and obtain an independent correspondence witness."
+}

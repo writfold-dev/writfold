@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Proposed Writfold gate receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "gate",
+    "status",
+    "source",
+    "toolchain_digest",
+    "fixture_digest",
+    "command",
+    "exit_code",
+    "skips",
+    "artifacts",
+    "logs",
+    "evidence_mode",
+    "gate_definition_digest",
+    "playbook_commit"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "gate": {
+      "type": "string",
+      "pattern": "^WF[0-9]{2}$"
+    },
+    "status": {
+      "enum": [
+        "not_run",
+        "blocked",
+        "fail",
+        "pass"
+      ]
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "commit",
+        "tree_digest",
+        "dirty",
+        "scope"
+      ],
+      "properties": {
+        "commit": {
+          "type": "string"
+        },
+        "tree_digest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "dirty": {
+          "type": "boolean"
+        },
+        "scope": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "toolchain_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "fixture_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "command": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "exit_code": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "skips": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "logs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "evidence_mode": {
+      "enum": [
+        "executed",
+        "reused"
+      ]
+    },
+    "gate_definition_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "playbook_commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "pass"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "exit_code": {
+            "const": 0
+          },
+          "skips": {
+            "maxItems": 0
+          },
+          "logs": {
+            "minItems": 1
+          }
+        }
+      }
+    }
+  ]
+}

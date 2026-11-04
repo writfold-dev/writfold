@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Proposed readable Lean instance-proof receipt",
+  "description": "Planning schema for the material authenticated by a qualified proof worker. A parser match never confers trust. Exact canonical encodings, signing domain and verification keys are frozen and qualified before writing.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "proposed-citation-proof/1"
+    },
+    "realm_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "proposal_kind": {
+      "type": "string",
+      "minLength": 1
+    },
+    "subject_digest": {
+      "type": "string",
+      "minLength": 1
+    },
+    "expected_predecessor": {
+      "type": "string",
+      "minLength": 1
+    },
+    "rule_profile_digest": {
+      "type": "string",
+      "minLength": 1
+    },
+    "rule_bundle_digest": {
+      "type": "string",
+      "minLength": 1
+    },
+    "witness_digest": {
+      "type": "string",
+      "minLength": 1
+    },
+    "evidence_closure_digest": {
+      "type": "string",
+      "minLength": 1
+    },
+    "checked_statement_digest": {
+      "type": "string",
+      "minLength": 1
+    },
+    "instance_declaration": {
+      "type": "string",
+      "minLength": 1
+    },
+    "lean_inputs_digest": {
+      "type": "string",
+      "minLength": 1
+    },
+    "toolchain_digest": {
+      "type": "string",
+      "minLength": 1
+    },
+    "axiom_audit_digest": {
+      "type": "string",
+      "minLength": 1
+    },
+    "premises_and_validity_digest": {
+      "type": "string",
+      "minLength": 1
+    },
+    "producer_key_id": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "required": [
+    "schema_version",
+    "realm_id",
+    "proposal_kind",
+    "subject_digest",
+    "expected_predecessor",
+    "rule_profile_digest",
+    "rule_bundle_digest",
+    "witness_digest",
+    "evidence_closure_digest",
+    "checked_statement_digest",
+    "instance_declaration",
+    "lean_inputs_digest",
+    "toolchain_digest",
+    "axiom_audit_digest",
+    "premises_and_validity_digest",
+    "producer_key_id"
+  ]
+}

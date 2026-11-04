@@ -1,0 +1,12 @@
+flowchart TD
+  N0["Tool lock — Versions + artifact digests"]
+  N1["Bootstrap — Verify and retain tools"]
+  N2["Offline gates — No hidden downloads"]
+  N3["Machine preflight — Drive + volume identities"]
+  N4["Build cache — Rebuildable and isolated"]
+  N5["Product artifact — No proof tools at runtime"]
+  N0 --> N1
+  N1 --> N2
+  N3 -->|"qualified mount"| N4
+  N4 -->|"cache only"| N1
+  N2 -->|"recorded output"| N5

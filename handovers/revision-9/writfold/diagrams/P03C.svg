@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<svg width="1200" height="610" preserveAspectRatio="xMinYMin meet" viewBox="0 0 1200 610" xmlns="http://www.w3.org/2000/svg" version="1.0" fill-rule="evenodd" xmlns:xlink="http://www.w3.org/1999/xlink">
+	<title>Prove citation binding and admission</title>
+	<desc>Establish exact citation judgments and a verified admission floor before enabling new proposals.</desc>
+	<clipPath id="clip">
+		<rect x="0" y="0" width="1200" height="610"/>
+	</clipPath>
+	<g id="group" transform="scale(1,-1) translate(0,-610)" style="clip-path: url(#clip)">
+		<g transform="">
+			<rect x="0" y="0" width="1200" height="610" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(96%,97%,95%); fill-rule: evenodd;"/>
+			<text x="48" y="566" style="font-family: Bold; font-size: 19px;fill: rgb(3%,49%,44%); stroke:none;" transform="translate(0,1132) scale(1,-1)">P03C</text>
+			<text x="126" y="565" style="font-family: Bold; font-size: 25px;fill: rgb(9%,17%,21%); stroke:none;" transform="translate(0,1130) scale(1,-1)">Prove citation binding and admission</text>
+			<text x="48" y="530" style="font-family: Sans; font-size: 16px;fill: rgb(32%,40%,44%); stroke:none;" transform="translate(0,1060) scale(1,-1)">Establish exact citation judgments and a verified admission floor before enabling new proposals.</text>
+			<polyline points="378 387, 435 387" style="stroke: rgb(3%,49%,44%); stroke-linecap: butt; stroke-width: 2; fill: None; fill-rule: evenodd;"/>
+			<polygon points="435 387, 426.7105 390.5048, 426.7105 383.4952" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(3%,49%,44%); fill-rule: evenodd;"/>
+			<polyline points="765 387, 822 387" style="stroke: rgb(3%,49%,44%); stroke-linecap: butt; stroke-width: 2; fill: None; fill-rule: evenodd;"/>
+			<polygon points="822 387, 813.7105 390.5048, 813.7105 383.4952" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(3%,49%,44%); fill-rule: evenodd;"/>
+			<polyline points="213 210, 213 276, 987 276, 987 322" style="stroke: rgb(3%,49%,44%); stroke-linecap: butt; stroke-width: 2; fill: None; fill-rule: evenodd;"/>
+			<polygon points="987 322, 983.4952 313.7105, 990.5048 313.7105" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(3%,49%,44%); fill-rule: evenodd;"/>
+			<rect x="569.319091796875" y="280" width="61.36181640625" height="15" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(96%,97%,95%); fill-rule: evenodd;"/>
+			<text x="573.319091796875" y="283" style="font-family: Sans; font-size: 11px;fill: rgb(3%,49%,44%); stroke:none;" transform="translate(0,566) scale(1,-1)">challenge</text>
+			<polyline points="987 322, 987 242, 600 242, 600 210" style="stroke: rgb(3%,49%,44%); stroke-linecap: butt; stroke-width: 2; fill: None; fill-rule: evenodd;"/>
+			<polygon points="600 210, 603.5048 218.2895, 596.4952 218.2895" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(3%,49%,44%); fill-rule: evenodd;"/>
+			<rect x="770.271484375" y="246" width="46.45703125" height="15" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(96%,97%,95%); fill-rule: evenodd;"/>
+			<text x="774.271484375" y="249" style="font-family: Sans; font-size: 11px;fill: rgb(3%,49%,44%); stroke:none;" transform="translate(0,498) scale(1,-1)">receipt</text>
+			<polyline points="765 145, 822 145" style="stroke: rgb(3%,49%,44%); stroke-linecap: butt; stroke-width: 2; fill: None; fill-rule: evenodd;"/>
+			<polygon points="822 145, 813.7105 148.5048, 813.7105 141.4952" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(3%,49%,44%); fill-rule: evenodd;"/>
+			<rect x="773.899658203125" y="156.0" width="39.20068359375" height="15.0" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(96%,97%,95%); fill-rule: evenodd;"/>
+			<text x="777.899658203125" y="159.0" style="font-family: Sans; font-size: 11px;fill: rgb(3%,49%,44%); stroke:none;" transform="translate(0,318) scale(1,-1)">WF32</text>
+			<rect x="48" y="322" width="330" height="130" rx="13" ry="13" style="stroke: rgb(85%,88%,87%); stroke-linecap: butt; stroke-width: 1.3; fill: rgb(100%,100%,100%); fill-rule: evenodd;"/>
+			<rect x="48" y="445" width="330" height="7" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(85%,88%,87%); fill-rule: evenodd;"/>
+			<text x="66" y="420" style="font-family: Bold; font-size: 18px;fill: rgb(9%,17%,21%); stroke:none;" transform="translate(0,840) scale(1,-1)">Pinned knowledge core</text>
+			<text x="66" y="387" style="font-family: Sans; font-size: 14px;fill: rgb(32%,40%,44%); stroke:none;" transform="translate(0,774) scale(1,-1)">Legacy semantics and actual proof</text>
+			<text x="66" y="368" style="font-family: Sans; font-size: 14px;fill: rgb(32%,40%,44%); stroke:none;" transform="translate(0,736) scale(1,-1)">branch</text>
+			<rect x="435" y="322" width="330" height="130" rx="13" ry="13" style="stroke: rgb(85%,88%,87%); stroke-linecap: butt; stroke-width: 1.3; fill: rgb(100%,100%,100%); fill-rule: evenodd;"/>
+			<rect x="435" y="445" width="330" height="7" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(3%,49%,44%); fill-rule: evenodd;"/>
+			<text x="453" y="420" style="font-family: Bold; font-size: 18px;fill: rgb(9%,17%,21%); stroke:none;" transform="translate(0,840) scale(1,-1)">Typed citation model</text>
+			<text x="453" y="387" style="font-family: Sans; font-size: 14px;fill: rgb(32%,40%,44%); stroke:none;" transform="translate(0,774) scale(1,-1)">Representation selector and scope</text>
+			<rect x="822" y="322" width="330" height="130" rx="13" ry="13" style="stroke: rgb(85%,88%,87%); stroke-linecap: butt; stroke-width: 1.3; fill: rgb(100%,100%,100%); fill-rule: evenodd;"/>
+			<rect x="822" y="445" width="330" height="7" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(85%,88%,87%); fill-rule: evenodd;"/>
+			<text x="840" y="420" style="font-family: Bold; font-size: 18px;fill: rgb(9%,17%,21%); stroke:none;" transform="translate(0,840) scale(1,-1)">Lean kernel check</text>
+			<text x="840" y="387" style="font-family: Sans; font-size: 14px;fill: rgb(32%,40%,44%); stroke:none;" transform="translate(0,774) scale(1,-1)">CIT01-CIT08 and axiom audit</text>
+			<rect x="48" y="80" width="330" height="130" rx="13" ry="13" style="stroke: rgb(85%,88%,87%); stroke-linecap: butt; stroke-width: 1.3; fill: rgb(100%,100%,100%); fill-rule: evenodd;"/>
+			<rect x="48" y="203" width="330" height="7" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(85%,88%,87%); fill-rule: evenodd;"/>
+			<text x="66" y="178" style="font-family: Bold; font-size: 18px;fill: rgb(9%,17%,21%); stroke:none;" transform="translate(0,356) scale(1,-1)">Adversarial fixture</text>
+			<text x="66" y="145" style="font-family: Sans; font-size: 14px;fill: rgb(32%,40%,44%); stroke:none;" transform="translate(0,290) scale(1,-1)">Copied line and stale proof profile</text>
+			<rect x="435" y="80" width="330" height="130" rx="13" ry="13" style="stroke: rgb(85%,88%,87%); stroke-linecap: butt; stroke-width: 1.3; fill: rgb(100%,100%,100%); fill-rule: evenodd;"/>
+			<rect x="435" y="203" width="330" height="7" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(3%,49%,44%); fill-rule: evenodd;"/>
+			<text x="453" y="178" style="font-family: Bold; font-size: 18px;fill: rgb(9%,17%,21%); stroke:none;" transform="translate(0,356) scale(1,-1)">Reviewed proof bundle</text>
+			<text x="453" y="145" style="font-family: Sans; font-size: 14px;fill: rgb(32%,40%,44%); stroke:none;" transform="translate(0,290) scale(1,-1)">Exact source and trusted assumptions</text>
+			<rect x="822" y="80" width="330" height="130" rx="13" ry="13" style="stroke: rgb(85%,88%,87%); stroke-linecap: butt; stroke-width: 1.3; fill: rgb(100%,100%,100%); fill-rule: evenodd;"/>
+			<rect x="822" y="203" width="330" height="7" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(85%,88%,87%); fill-rule: evenodd;"/>
+			<text x="840" y="178" style="font-family: Bold; font-size: 18px;fill: rgb(9%,17%,21%); stroke:none;" transform="translate(0,356) scale(1,-1)">Next stage enabled</text>
+			<text x="840" y="145" style="font-family: Sans; font-size: 14px;fill: rgb(32%,40%,44%); stroke:none;" transform="translate(0,290) scale(1,-1)">Checked machinery implementation</text>
+		</g>
+	</g>
+</svg>
