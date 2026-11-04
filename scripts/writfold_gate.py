@@ -21,10 +21,14 @@ GATES = {"baseline": "WF00", "bootstrap": "WF01", "build": "WF01", "unit": "WF02
          "workflows": "WF12", "transport": "WF13", "migration": "WF14",
          "evaluate": "WF15", "runtime": "WF16", "package": "WF16", "site": "WF17",
          "scribes": "WF18", "portfolio": "WF19", "design": "WF20", "companion": "WF21",
+         "engineering-ledger": "WF25", "skills": "WF26", "effects": "WF27",
+         "cross-repo": "WF28", "learning": "WF29", "engineering-cuts": "WF30",
+         "engineering-calculus": "WF31", "engineering-lean": "WF31",
          "release-required": "release-required"}
 SERVICES = {"unit": ("unit", "Cargo.lock"), "build": ("build", "Cargo.lock"),
             "quality": ("quality", "scripts/writfold_quality.py"),
             "verus": ("verus", "scripts/writfold_verus.py"),
+            "engineering-lean": ("engineering-lean", "scripts/writfold_engineering_lean.py"),
             "conformance": ("conformance", "scripts/writfold_conformance.py"),
             "reference": ("reference", "scripts/dolt_smoke.py"),
             "native-smoke": ("reference", "scripts/dolt_smoke.py")}
@@ -208,7 +212,7 @@ def execute(args, attempt: evidence.Attempt, receipt: dict) -> list[dict]:
 
 def initial_receipt(args, attempt: evidence.Attempt) -> dict:
     return {"schema_version": 2, "gate": GATES[args.command], "status": "blocked",
-            # Historical Dolt smoke is not the revision-4 Omnigraph WF09 contract.
+            # Historical Dolt smoke is not the current Omnigraph WF09 contract.
             "scope": "release-aggregation" if args.command == "release-required" else f"{args.command}-only",
             "source": None, "source_after_digest": None, "command": [sys.executable, *sys.argv],
             "commands": attempt.commands, "toolchain_digest": None, "cargo_lock_digest": None,

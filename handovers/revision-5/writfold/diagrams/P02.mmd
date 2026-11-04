@@ -1,0 +1,12 @@
+flowchart TD
+  N0["Untrusted bytes — Bounded raw envelope"]
+  N1["Strict decoder — No duplicate-key collapse"]
+  N2["Validated domain — Private nominal constructors"]
+  N3["Rejected input — Typed stable diagnostic"]
+  N4["Canonical bytes — Exact legacy signature profile"]
+  N5["Typed operation — No raw JSON in core"]
+  N0 --> N1
+  N1 -->|"valid"| N2
+  N1 -->|"invalid"| N3
+  N2 -->|"encode"| N4
+  N2 -->|"admit"| N5

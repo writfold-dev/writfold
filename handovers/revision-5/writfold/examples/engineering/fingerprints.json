@@ -1,0 +1,78 @@
+[
+  {
+    "name": "synthetic-dependency-lock",
+    "kind": "dependency-lock",
+    "payload": {
+      "schema_version": 1,
+      "packages": [
+        {
+          "id": "demo.a",
+          "payload": "synthetic-payload-a"
+        },
+        {
+          "id": "demo.b",
+          "payload": "synthetic-payload-b"
+        }
+      ],
+      "edges": [
+        [
+          "demo.a",
+          "read",
+          "demo.b"
+        ],
+        [
+          "demo.b",
+          "read",
+          "demo.a"
+        ]
+      ]
+    },
+    "canonical_hex": "a365656467657382836664656d6f2e6164726561646664656d6f2e62836664656d6f2e6264726561646664656d6f2e61687061636b6167657382a26269646664656d6f2e61677061796c6f61647373796e7468657469632d7061796c6f61642d61a26269646664656d6f2e62677061796c6f61647373796e7468657469632d7061796c6f61642d626e736368656d615f76657273696f6e01",
+    "fingerprint": "wf1:dependency-lock:sha256:95f1c40fb4adc82ed5a64b79d73ef80cc438332a9338a31277d12696b9b841f9"
+  },
+  {
+    "name": "synthetic-repo-vector",
+    "kind": "repo-vector",
+    "payload": {
+      "schema_version": 1,
+      "repositories": [
+        {
+          "repo": "demo.api",
+          "base": "synthetic-base",
+          "target": "synthetic-target",
+          "content": "synthetic-content"
+        }
+      ]
+    },
+    "canonical_hex": "a26c7265706f7369746f7269657381a464626173656e73796e7468657469632d62617365647265706f6864656d6f2e617069667461726765747073796e7468657469632d74617267657467636f6e74656e747173796e7468657469632d636f6e74656e746e736368656d615f76657273696f6e01",
+    "fingerprint": "wf1:repo-vector:sha256:3dfede434c956274e498569d5d1f8efa31ff78f23e444a05ac7f4f0e093bd816"
+  },
+  {
+    "name": "synthetic-attempt-input",
+    "kind": "attempt-input",
+    "payload": {
+      "schema_version": 1,
+      "procedure": "synthetic-procedure-1",
+      "repository_vector": "synthetic-vector-1",
+      "gate": "compatibility",
+      "environment": "synthetic-env-1"
+    },
+    "canonical_hex": "a564676174656d636f6d7061746962696c6974796970726f6365647572657573796e7468657469632d70726f6365647572652d316b656e7669726f6e6d656e746f73796e7468657469632d656e762d316e736368656d615f76657273696f6e01717265706f7369746f72795f766563746f727273796e7468657469632d766563746f722d31",
+    "fingerprint": "wf1:attempt-input:sha256:b7a14154afbbf15212b0e449e468709d3c0c7eb7a5f915a1eadb8fe29dbb8f81"
+  },
+  {
+    "name": "synthetic-learning",
+    "kind": "learning",
+    "payload": {
+      "schema_version": 1,
+      "scope": "API response extensions",
+      "delta": "check strict old consumers",
+      "evidence": [
+        "synthetic-failure-1"
+      ],
+      "evaluation_protocol": "synthetic-frozen-eval-1"
+    },
+    "canonical_hex": "a56564656c7461781a636865636b20737472696374206f6c6420636f6e73756d6572736573636f70657741504920726573706f6e736520657874656e73696f6e736865766964656e6365817373796e7468657469632d6661696c7572652d316e736368656d615f76657273696f6e01736576616c756174696f6e5f70726f746f636f6c7773796e7468657469632d66726f7a656e2d6576616c2d31",
+    "fingerprint": "wf1:learning:sha256:cfa5c27c0097589f803833f47dcbddb9a7b7dbef26496e27ff287e1dfe1d9409"
+  }
+]

@@ -1,0 +1,25 @@
+{
+  "profile": "writfold-engineering/1",
+  "status": "proposed",
+  "algorithm": "sha256",
+  "encoding": "restricted RFC8949 core deterministic CBOR",
+  "kinds": [
+    "attempt-input",
+    "blob",
+    "dependency-lock",
+    "design",
+    "effect-intent",
+    "environment",
+    "learning",
+    "ledger-event",
+    "package",
+    "procedure",
+    "read-cut",
+    "read-set",
+    "receipt",
+    "repo-vector",
+    "skill",
+    "dispatch-stamp"
+  ],
+  "contract": "plan/18-identities-fingerprints-and-cuts.md"
+}

@@ -1,0 +1,31 @@
+{
+  "synthetic": true,
+  "generation": "demo-r1",
+  "context": "demo-operations",
+  "files": {
+    "Writfold/Generations/demo-r1/Assets.base": "a11aa7ce7686bc2c072724b6aca177ed6351a3c903865c70f759f188d35cad10",
+    "Writfold/Generations/demo-r1/Context.md": "419917d4030f4340bf8c156349d6a3a9aef6030e5cad9a8865f75184451e1eb9",
+    "Writfold/Generations/demo-r1/Dashboards.md": "6ca8157f03927c79966ad54be8de68e5a57bc9edf7b448c8f010cc416e0a58c2",
+    "Writfold/Generations/demo-r1/Decisions/dec-export.md": "921fd0f48528f6cf1d6d20279afa97b8c15d4bf8a1fc7316b28bebc45ba3a77f",
+    "Writfold/Generations/demo-r1/Evidence/writ-contract.md": "650973db46db0bf66d3275943862cdf3267087003ac0d1d6927ca9c328d06c83",
+    "Writfold/Generations/demo-r1/Evidence/writ-test.md": "b6956ef9d47034b7c8700937fd768479fa2ea57f86d6ed865d2257904780dab6",
+    "Writfold/Generations/demo-r1/Overview.md": "c2ee8e8d7cb47d610219fd7a30d959eb4a82daaa185e9678f3824e3aebfb3689",
+    "Writfold/Generations/demo-r1/Services/svc-checkout.md": "7c791e1fb6f638886449e43916c428a64ff6f232bf7114d34a16460beb8c492a",
+    "Writfold/Generations/demo-r1/Services/svc-inventory.md": "3f30295ed090a23c956b468d6b6f5c385548d0c58f43e698ca3d2a6066dbb02e",
+    "Writfold/Generations/demo-r1/Sources/contract.md": "a13d69168e58205cff90815bab6c7685d1d2c4d038fecff8940a863bcae2a2ce",
+    "Writfold/Home.md": "9c99fdfed4e3d9b4d6767327838eddf4e3d9c6236a65a0044ea823460d83acac"
+  },
+  "expected": {
+    "services": [
+      "svc-checkout",
+      "svc-inventory"
+    ],
+    "attention": [
+      "svc-checkout"
+    ],
+    "evidence": [
+      "writ-contract",
+      "writ-test"
+    ]
+  }
+}

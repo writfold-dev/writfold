@@ -1,0 +1,1793 @@
+[
+  {
+    "id": "X01",
+    "name": "Version warning stability",
+    "stages": [
+      "P00",
+      "P06",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X02",
+    "name": "Same version changed executable",
+    "stages": [
+      "P00",
+      "P01",
+      "P06"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X03",
+    "name": "Report source drift",
+    "stages": [
+      "P00",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X04",
+    "name": "Forced color and streams",
+    "stages": [
+      "P00",
+      "P09"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X05",
+    "name": "Wrong nominal namespace/unit",
+    "stages": [
+      "P02"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X06",
+    "name": "Strict malformed wire",
+    "stages": [
+      "P02",
+      "P05"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X07",
+    "name": "Numeric bounds and overflow",
+    "stages": [
+      "P02",
+      "P03"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X08",
+    "name": "Canonical signature bytes",
+    "stages": [
+      "P02",
+      "P05"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X09",
+    "name": "Recursive premise mutation",
+    "stages": [
+      "P03"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X10",
+    "name": "False inventory/absence",
+    "stages": [
+      "P03"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X11",
+    "name": "Independent support after retraction",
+    "stages": [
+      "P03"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X12",
+    "name": "Stale receipt and scope substitution",
+    "stages": [
+      "P03",
+      "P08"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X13",
+    "name": "Self-issued approval",
+    "stages": [
+      "P03",
+      "P07"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X14",
+    "name": "Changed signed plan",
+    "stages": [
+      "P03",
+      "P07"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X15",
+    "name": "Predecessor race",
+    "stages": [
+      "P04",
+      "P07"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X16",
+    "name": "Crash after CAS",
+    "stages": [
+      "P04",
+      "P07"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X17",
+    "name": "Forged journal hint",
+    "stages": [
+      "P04",
+      "P07"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X18",
+    "name": "Missing retained closure",
+    "stages": [
+      "P04",
+      "P05",
+      "P07"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X19",
+    "name": "Reader and GC race",
+    "stages": [
+      "P04",
+      "P10"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X20",
+    "name": "Mixed revision read/pages",
+    "stages": [
+      "P06",
+      "P09"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X21",
+    "name": "Interrupted or corrupt tool install",
+    "stages": [
+      "P04",
+      "P06",
+      "P12"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X22",
+    "name": "Endpoint ownership and PID reuse",
+    "stages": [
+      "P04",
+      "P06"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X23",
+    "name": "Cancellation and log backpressure",
+    "stages": [
+      "P06",
+      "P07",
+      "P09"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X24",
+    "name": "Incompatible tool/data downgrade",
+    "stages": [
+      "P04",
+      "P06",
+      "P10",
+      "P12"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X25",
+    "name": "GQ parameter, query-name and identifier boundary",
+    "stages": [
+      "P06"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X26",
+    "name": "Unknown catalog/provider/schema",
+    "stages": [
+      "P08"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X27",
+    "name": "Catalog cannot inject inference",
+    "stages": [
+      "P08"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X28",
+    "name": "Rename-stable identity",
+    "stages": [
+      "P08"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X29",
+    "name": "Accounted lossless import",
+    "stages": [
+      "P05",
+      "P08",
+      "P10"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X30",
+    "name": "Idempotent migration/recovery",
+    "stages": [
+      "P04",
+      "P10"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X31",
+    "name": "Restore after source removal",
+    "stages": [
+      "P10"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X32",
+    "name": "Forward rollback keeps corrections",
+    "stages": [
+      "P04",
+      "P10"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X33",
+    "name": "Remote half-transfer",
+    "stages": [
+      "P04",
+      "P10"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X34",
+    "name": "Two remote publishers",
+    "stages": [
+      "P04",
+      "P10"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X35",
+    "name": "Clean offline installation",
+    "stages": [
+      "P01",
+      "P06",
+      "P12"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X36",
+    "name": "Missing external cache mount",
+    "stages": [
+      "P01"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X37",
+    "name": "Expired continuation",
+    "stages": [
+      "P09",
+      "P10"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X38",
+    "name": "Omitted contrary context",
+    "stages": [
+      "P09"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X39",
+    "name": "Frozen paired outcome regression",
+    "stages": [
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X40",
+    "name": "Release/site source mismatch",
+    "stages": [
+      "P12",
+      "P13"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X41",
+    "name": "Request before handshake",
+    "stages": [
+      "P08S"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X42",
+    "name": "Protocol or grant mismatch",
+    "stages": [
+      "P08S"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X43",
+    "name": "Duplicate or out-of-order response",
+    "stages": [
+      "P08S"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X44",
+    "name": "Prior-incarnation reply",
+    "stages": [
+      "P08S"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X45",
+    "name": "Cancellation/reply race",
+    "stages": [
+      "P08S"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X46",
+    "name": "Oversized or malformed frame",
+    "stages": [
+      "P08S"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X47",
+    "name": "Stdout diagnostic injection",
+    "stages": [
+      "P08S"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X48",
+    "name": "Blocked stderr",
+    "stages": [
+      "P08S"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X49",
+    "name": "Forbidden broker root/host",
+    "stages": [
+      "P08S"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X50",
+    "name": "Code/interpreter mutation",
+    "stages": [
+      "P08S"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X51",
+    "name": "Credential leakage",
+    "stages": [
+      "P08S"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X52",
+    "name": "Mixed-revision chunks/pages",
+    "stages": [
+      "P08S"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X53",
+    "name": "False enumeration completeness",
+    "stages": [
+      "P08S"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X54",
+    "name": "Plugin attempts sign/admit",
+    "stages": [
+      "P08S"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X55",
+    "name": "Sandbox unavailable",
+    "stages": [
+      "P08S"
+    ],
+    "status": "not_run",
+    "contract": "plan/06-compatibility-and-tests.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X56",
+    "name": "Three contexts and distinct target uses",
+    "stages": [
+      "P03P",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/11-workflow3-contract.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X57",
+    "name": "Cross-context conjunction or receipt borrowing",
+    "stages": [
+      "P03P",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/11-workflow3-contract.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X58",
+    "name": "Missing duplicate or reordered claim assignment",
+    "stages": [
+      "P03P",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/11-workflow3-contract.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X59",
+    "name": "Key denies one context intended use",
+    "stages": [
+      "P03P",
+      "P07",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/11-workflow3-contract.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X60",
+    "name": "Implicit retirement or context-ID retarget",
+    "stages": [
+      "P03P",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/11-workflow3-contract.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X61",
+    "name": "Query narrow target and nondecreasing time",
+    "stages": [
+      "P03P",
+      "P09",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/11-workflow3-contract.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X62",
+    "name": "Context policy TTL/source change disclosure",
+    "stages": [
+      "P03P",
+      "P07",
+      "P09",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/11-workflow3-contract.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X63",
+    "name": "Retained selection preserves current contexts/corrections",
+    "stages": [
+      "P03P",
+      "P10",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/11-workflow3-contract.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X64",
+    "name": "Same operation ID with changed portfolio",
+    "stages": [
+      "P03P",
+      "P07",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/11-workflow3-contract.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X65",
+    "name": "Historical schema2 signature/domain bytes",
+    "stages": [
+      "P02",
+      "P03P",
+      "P07",
+      "P10",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/11-workflow3-contract.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X66",
+    "name": "Pending schema2 and schema2-after-schema3 refusal",
+    "stages": [
+      "P02",
+      "P03P",
+      "P07",
+      "P10",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/11-workflow3-contract.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X67",
+    "name": "Version matrix and empty reference request ID",
+    "stages": [
+      "P02",
+      "P03P",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/11-workflow3-contract.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X68",
+    "name": "Accept design before repository exists",
+    "stages": [
+      "P08D",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/11-workflow3-contract.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X69",
+    "name": "Exact local source/target binding",
+    "stages": [
+      "P08D",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/11-workflow3-contract.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X70",
+    "name": "Rebind invalidates old gates and landed refs",
+    "stages": [
+      "P08D",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/11-workflow3-contract.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X71",
+    "name": "Material edit requires reopen and acceptance",
+    "stages": [
+      "P08D",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/11-workflow3-contract.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X72",
+    "name": "Concurrent bind/reopen with stale expected state",
+    "stages": [
+      "P08D",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/11-workflow3-contract.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X73",
+    "name": "Finalized design history cannot be rewritten",
+    "stages": [
+      "P08D",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/11-workflow3-contract.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X74",
+    "name": "Legacy custom metadata and disjoint design hash",
+    "stages": [
+      "P02",
+      "P08D",
+      "P10",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/11-workflow3-contract.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X75",
+    "name": "Local diff exact endpoints and unmapped citations",
+    "stages": [
+      "P05",
+      "P09",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/11-workflow3-contract.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X76",
+    "name": "Fix reference closed union and explicit fixed_at",
+    "stages": [
+      "P05",
+      "P08",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/11-workflow3-contract.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X77",
+    "name": "New bootstrap canonical policy identity",
+    "stages": [
+      "P07",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/11-workflow3-contract.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X78",
+    "name": "Malformed incident aggregate returns partial",
+    "stages": [
+      "P08",
+      "P09",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/11-workflow3-contract.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X79",
+    "name": "Unborn restore and temporary-ref cleanup",
+    "stages": [
+      "P10",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/11-workflow3-contract.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X80",
+    "name": "Typed unavailable/corrupt native generation",
+    "stages": [
+      "P06",
+      "P10",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/11-workflow3-contract.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X81",
+    "name": "Stable managed lock namespace race",
+    "stages": [
+      "P08",
+      "P08D",
+      "P10",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/11-workflow3-contract.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X82",
+    "name": "Readonly replica rejects every mutation route",
+    "stages": [
+      "P10",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/11-workflow3-contract.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X83",
+    "name": "Published closure excludes unadmitted candidate data",
+    "stages": [
+      "P10",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/11-workflow3-contract.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X84",
+    "name": "Cancelled work capacity and child descendants",
+    "stages": [
+      "P06",
+      "P08S",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/12-playbook-adoption.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X85",
+    "name": "Immutable render view and exact approval preview",
+    "stages": [
+      "P07",
+      "P08D",
+      "P09",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/12-playbook-adoption.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X86",
+    "name": "View context/grant isolation including counts and filenames",
+    "stages": [
+      "P09V",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/13-view-channels.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X87",
+    "name": "Deterministic rendering with fixed assessment clock",
+    "stages": [
+      "P09V",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/13-view-channels.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X88",
+    "name": "Hostile Markdown/YAML/DQL content remains literal",
+    "stages": [
+      "P09V",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/13-view-channels.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X89",
+    "name": "Traversal/symlink/hardlink/case-fold/reserved-name rejection",
+    "stages": [
+      "P09V",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/13-view-channels.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X90",
+    "name": "Crash before generation closure leaves old Home intact",
+    "stages": [
+      "P09V",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/13-view-channels.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X91",
+    "name": "Two refreshes cannot activate a stale prepared result",
+    "stages": [
+      "P09V",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/13-view-channels.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X92",
+    "name": "Cancellation retains slot until child is reaped",
+    "stages": [
+      "P09V",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/13-view-channels.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X93",
+    "name": "Human notes and edited generated files survive refresh",
+    "stages": [
+      "P09V",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/13-view-channels.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X94",
+    "name": "Generation-scoped links and queries exclude older contexts",
+    "stages": [
+      "P09V",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/13-view-channels.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X95",
+    "name": "Expired/unknown/truncated evidence remains visibly qualified",
+    "stages": [
+      "P09V",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/13-view-channels.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X96",
+    "name": "Plugin-off or missing-plugin view preserves readable facts",
+    "stages": [
+      "P09V",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/13-view-channels.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X97",
+    "name": "Wrong vault/version/plugin digest refuses setup or activation",
+    "stages": [
+      "P09V",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/13-view-channels.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X98",
+    "name": "Native reader indexing lag reported without false current status",
+    "stages": [
+      "P09V",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/13-view-channels.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X99",
+    "name": "Native light/dark/narrow reading and Base expected IDs",
+    "stages": [
+      "P09V",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/13-view-channels.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X100",
+    "name": "Mandatory Omnigraph foundation admission",
+    "stages": [
+      "P01O",
+      "P06",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/15-storage-decision.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X101",
+    "name": "Versioned types preserve pinned old explicit and whole-node reads",
+    "stages": [
+      "P01O",
+      "P06",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/16-omnigraph-storage-contract.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X102",
+    "name": "Cross-schema native branch shortcut is refused",
+    "stages": [
+      "P01O",
+      "P06",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/16-omnigraph-storage-contract.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X103",
+    "name": "Wrong graph/epoch/query-profile pin cannot admit a snapshot",
+    "stages": [
+      "P01O",
+      "P06",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/16-omnigraph-storage-contract.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X104",
+    "name": "Epoch migration retains old readers through publish and crash",
+    "stages": [
+      "P01O",
+      "P06",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/16-omnigraph-storage-contract.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X105",
+    "name": "Competing publication invalidates prepared epoch migration",
+    "stages": [
+      "P01O",
+      "P06",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/16-omnigraph-storage-contract.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X106",
+    "name": "Legacy Dolt mapping preserves bytes, contexts, corrections and IDs",
+    "stages": [
+      "P01O",
+      "P06",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/16-omnigraph-storage-contract.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X107",
+    "name": "Native roots and independent epoch backup survive original removal",
+    "stages": [
+      "P01O",
+      "P06",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/16-omnigraph-storage-contract.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X108",
+    "name": "Single writer and uncertain outcome forbid retry/fallback shortcuts",
+    "stages": [
+      "P01O",
+      "P06",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/16-omnigraph-storage-contract.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X109",
+    "name": "Wrong fingerprint domain cannot substitute for a typed identity",
+    "stages": [
+      "P14",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/23-engineering-extension-acceptance.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X110",
+    "name": "Canonical CBOR refuses duplicate keys noncanonical encodings and floats",
+    "stages": [
+      "P14",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/23-engineering-extension-acceptance.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X111",
+    "name": "Flat dependency lock handles document cycles without recursive self-hash",
+    "stages": [
+      "P14",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/23-engineering-extension-acceptance.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X112",
+    "name": "Two stream appends from one expected head select at most one successor",
+    "stages": [
+      "P14",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/23-engineering-extension-acceptance.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X113",
+    "name": "Untracked input and path-dependent environment disable unsound reuse",
+    "stages": [
+      "P14",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/23-engineering-extension-acceptance.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X114",
+    "name": "Realm mismatch and same-name repository aliases cannot cross authority",
+    "stages": [
+      "P14",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/23-engineering-extension-acceptance.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X115",
+    "name": "Nested skill resolution pins indirect Markdown scripts and runtimes",
+    "stages": [
+      "P15",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/23-engineering-extension-acceptance.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X116",
+    "name": "Document cycles terminate while executable call recursion is rejected",
+    "stages": [
+      "P15",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/23-engineering-extension-acceptance.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X117",
+    "name": "Skill capability metadata cannot grant effect authority",
+    "stages": [
+      "P15",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/23-engineering-extension-acceptance.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X118",
+    "name": "Late child result cannot satisfy a newer invocation or parallel join",
+    "stages": [
+      "P15",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/23-engineering-extension-acceptance.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X119",
+    "name": "Loader context loss triggers explicit rehydration without comprehension claim",
+    "stages": [
+      "P15",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/23-engineering-extension-acceptance.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X120",
+    "name": "Route conflict and missing required context block only affected steps",
+    "stages": [
+      "P15",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/23-engineering-extension-acceptance.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X121",
+    "name": "Two runs cannot concurrently own one writable worktree",
+    "stages": [
+      "P16",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/23-engineering-extension-acceptance.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X122",
+    "name": "Cancelled child retains reservation until physical teardown",
+    "stages": [
+      "P16",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/23-engineering-extension-acceptance.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X123",
+    "name": "Lost remote response remains Unknown and forbids blind replay",
+    "stages": [
+      "P16",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/23-engineering-extension-acceptance.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X124",
+    "name": "Effect ID reuse with changed input conflicts",
+    "stages": [
+      "P16",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/23-engineering-extension-acceptance.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X125",
+    "name": "Revoked grant is checked again before dispatch",
+    "stages": [
+      "P16",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/23-engineering-extension-acceptance.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X126",
+    "name": "Provider CAS conflict cannot be reported as applied",
+    "stages": [
+      "P16",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/23-engineering-extension-acceptance.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X127",
+    "name": "Restored old ledger cannot replay an externally completed operation",
+    "stages": [
+      "P16",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/23-engineering-extension-acceptance.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X128",
+    "name": "Unrestricted script profile cannot claim sandbox enforcement",
+    "stages": [
+      "P16",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/23-engineering-extension-acceptance.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X129",
+    "name": "Old consumer rejects additive field and refutes compatibility assumption",
+    "stages": [
+      "P17",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/23-engineering-extension-acceptance.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X130",
+    "name": "Upstream movement invalidates affected merge-candidate receipts",
+    "stages": [
+      "P17",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/23-engineering-extension-acceptance.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X131",
+    "name": "Partial multi-repo merge preserves safe intermediate state and history",
+    "stages": [
+      "P17",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/23-engineering-extension-acceptance.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X132",
+    "name": "Material review feedback reopens design instead of reusing acceptance",
+    "stages": [
+      "P17",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/23-engineering-extension-acceptance.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X133",
+    "name": "Unrelated context advance does not silently refresh observation time",
+    "stages": [
+      "P17",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/23-engineering-extension-acceptance.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X134",
+    "name": "Changed SDK bytes stale the cross-repository test receipt",
+    "stages": [
+      "P17",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/23-engineering-extension-acceptance.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X135",
+    "name": "Observation and PR preference cannot auto-publish a global fact",
+    "stages": [
+      "P18",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/23-engineering-extension-acceptance.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X136",
+    "name": "Candidate cannot change its own frozen evaluation threshold after results",
+    "stages": [
+      "P18",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/23-engineering-extension-acceptance.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X137",
+    "name": "Held-out leakage and omitted adverse results refuse evaluation acceptance",
+    "stages": [
+      "P18",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/23-engineering-extension-acceptance.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X138",
+    "name": "Learned procedure cannot weaken the policy gate floor",
+    "stages": [
+      "P18",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/23-engineering-extension-acceptance.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X139",
+    "name": "Lost promotion acknowledgement reconciles completed release once",
+    "stages": [
+      "P18",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/23-engineering-extension-acceptance.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X140",
+    "name": "Activity pruning preserves the promoted evidence closure",
+    "stages": [
+      "P18",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/23-engineering-extension-acceptance.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X141",
+    "name": "Competing promotions require new predecessor-bound approval",
+    "stages": [
+      "P18",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/23-engineering-extension-acceptance.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X142",
+    "name": "Procedure withdrawal blocks affected pinned continuation",
+    "stages": [
+      "P18",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/23-engineering-extension-acceptance.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X143",
+    "name": "Projection lag is disclosed and cannot authorize effects",
+    "stages": [
+      "P19",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/23-engineering-extension-acceptance.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X144",
+    "name": "Cross-graph cut checks causal closure and stream-inventory completeness",
+    "stages": [
+      "P19",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/23-engineering-extension-acceptance.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X145",
+    "name": "Pagination remains pinned across independent epoch changes",
+    "stages": [
+      "P19",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/23-engineering-extension-acceptance.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X146",
+    "name": "Activity rebuild and independent restore preserve dossier meaning",
+    "stages": [
+      "P19",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/23-engineering-extension-acceptance.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X147",
+    "name": "View export filters operational evidence and preserves human notes",
+    "stages": [
+      "P19",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/23-engineering-extension-acceptance.md",
+    "test_symbol": null,
+    "receipt": null
+  },
+  {
+    "id": "X148",
+    "name": "Corpus schema migration preserves legacy releases and procedure pins",
+    "stages": [
+      "P19",
+      "P11"
+    ],
+    "status": "not_run",
+    "contract": "plan/23-engineering-extension-acceptance.md",
+    "test_symbol": null,
+    "receipt": null
+  }
+]

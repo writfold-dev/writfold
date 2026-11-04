@@ -1,0 +1,13 @@
+flowchart TD
+  N0["Selected candidate — CLI + server + native closure"]
+  N1["Exact contract — Queries + epochs + ownership"]
+  N2["Native campaigns — WSL + faults + restore"]
+  N3["Frozen workloads — Correctness + resource budgets"]
+  N4["Qualification decision — Exact evidence; no waived failure"]
+  N5["Admitted foundation — Required before P04/P06"]
+  N0 --> N1
+  N1 --> N2
+  N0 -->|"measure"| N3
+  N2 -->|"evidence"| N4
+  N3 -->|"budgets"| N4
+  N4 -->|"pass"| N5

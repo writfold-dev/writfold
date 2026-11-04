@@ -1,0 +1,13 @@
+flowchart TD
+  N0["Authored workflow — Proposal; incident; observation"]
+  N1["Typed app service — One readiness/transition policy"]
+  N2["Semantic kernel — Closed inference language"]
+  N3["Catalog descriptor — Pinned kinds and schemas"]
+  N4["Provider acquisition — Explicit complete/partial outcome"]
+  N5["Admission proposal — No automatic truth or authority"]
+  N0 --> N1
+  N1 -->|"check"| N2
+  N3 -->|"capabilities"| N4
+  N4 -->|"capture"| N5
+  N5 -->|"propose"| N1
+  N3 -->|"validate only"| N1

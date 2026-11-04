@@ -1,0 +1,13 @@
+flowchart TD
+  N0["Agent request — Version + scope + budget"]
+  N1["Pin release and graph — One immutable view"]
+  N2["Select and assess — Positive + contrary evidence"]
+  N3["Retention lease — Protect exact objects"]
+  N4["Bounded response — Explain included and omitted"]
+  N5["Continuation — Same release and ordering"]
+  N0 --> N1
+  N1 --> N2
+  N1 -->|"pin"| N3
+  N2 -->|"assess"| N4
+  N4 -->|"more"| N5
+  N5 -->|"retain"| N3

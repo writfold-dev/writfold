@@ -2,7 +2,7 @@
 
 ## What this page establishes
 
-This map separates **retained source-inspected traceability** from executed component evidence. [claims.json](../../qualification/claims.json) maps all **353 audited Lean declarations** in its recorded candidate to Rust consumers, T01–T22 contracts, fixtures and assumptions. [proofs.json](../../qualification/proofs.json) inventories all **V01–V15 and M01–M11**. Old mapping hashes, locations and absence statements remain historical; current component evidence does not automatically complete an obligation or establish refinement.
+This map separates **retained source-inspected traceability** from executed component evidence. [claims.json](../../qualification/claims.json) maps all **353 audited legacy Lean declarations** in its recorded candidate to Rust consumers, T01–T22 contracts, fixtures and assumptions. [proofs.json](../../qualification/proofs.json) inventories **V01–V21 and M01–M16**; [engineering-theorems.json](../../qualification/engineering-theorems.json) separately inventories **E01–E12**. Old mapping hashes, locations and absence statements remain historical; adoption and current component evidence do not automatically complete an obligation or establish refinement.
 
 The mapping distinguishes three different things:
 
@@ -62,17 +62,61 @@ The eight original unsound-v1 counterexamples remain byte-identical in [semantic
 
 ## Evidence actually retained
 
-### Lean: executed calculus audit, source matched
+### Lean: retained historical calculus audit
 
-[formal/proof-report.json](../../formal/proof-report.json) records a passing Lean 4.21.0 clean kernel build and transitive axiom audit for the 353 declarations. Its own scope is **“kernel build and registry axiom integrity, not handover theorem fidelity.”** The recorded and inspected source identity is:
+[formal/proof-report.json](../../formal/proof-report.json) records a passing Lean 4.21.0 clean kernel build and transitive axiom audit for the 353 legacy declarations. Its own scope is **“kernel build and registry axiom integrity, not handover theorem fidelity.”** The recorded historical source identity is:
 
 ```text
 a2ccd0a20dfe4c4e0e410cbee6554729e3fe73e523bc935857524078087c9fb3
 ```
 
-The exact `formal/scripts/proof_check.py::source_digest` framing was used for source identity. This is a retained executed result, not a fresh proof run. The only approved foundational axioms are `propext`, `Classical.choice` and `Quot.sound`; each declaration carries its actual audited subset. No custom axiom, new assumed theorem or new Verus `external_body` is approved here.
+The exact `formal/scripts/proof_check.py::source_digest` framing produced that identity. Revision 5 adds a separate engineering calculus, so this retained report is not evidence for the extended source closure. Baseline reconciliation verifies the historical closure separately, admitting only the exact additive Lake executable target. Legacy `Kctx.lean` and theorem sources remain byte-identical. The `engineering-lean` component builds and audits both registries afresh in an isolated Compose build. The only approved foundational axioms remain `propext`, `Classical.choice` and `Quot.sound`; no custom axiom, new assumed theorem or new Verus `external_body` is approved here.
 
 Lean `Derives`/`Holds` results constrain the consuming checker contract but do not name a fictional Rust interpretation theorem. The Rust executable and its future Verus specification still need their own proof and an explicitly scoped correspondence argument.
+
+### Engineering calculus: discharged mathematical obligations, production bridges open
+
+The retained first increment, `revision-5-engineering-lean-20261103-003.json`,
+records an offline Compose clean build, transitive audit of **407 declarations**
+(353 legacy, 36 engineering lemmas and 18 nonvacuity declarations), and
+**30 executable cases**. Only the three approved foundational axioms occur.
+Its successful and failed attempts remain historical, not current-source qualification.
+
+The expanded source now contains per-stream historical replay, typed procedure
+and invocation semantics, shared budgets, exact consumer certificates, canonical
+logical-effect reconciliation, live continuation checks and retained native cuts.
+The [formal registry](../../formal/engineering-theorems.json) maps the complete
+E01–E12 statements, explicit assumptions and essential negative scenarios.
+Independent review and clean kernel/axiom qualification establish the mathematical
+obligations; they do not establish production refinement.
+
+`revision-5-engineering-lean-complete-002.json` records **571 audited declarations**
+(353 legacy, 176 engineering roots, 42 nonvacuity) and **66 passing reference
+cases**. Only the approved three foundational axioms occur; no skips or errors
+are promoted. Its original source identity remains binding.
+
+`revision-5-lean-mutations-004/report.json` records nine actual semantic mutant
+kills. Every modified interpreter compiles, changes an executed witness outcome,
+and fails the intended direct safety property. The source-closure link proves
+that its model, named proof and witness files match the clean audit. The only
+full-manifest difference is a separately compiled auxiliary LedgerExamples
+normalization proof, outside the mutation targets' dependency closure.
+
+Retained failures include insufficient rollback calibration, a subsequent
+eight-kill campaign with an incorrect final declaration binding, and qualification
+rejected when the source changed during execution. None is a pass. The successful
+nine-kill replacement is separately bound; the first increment remains historical.
+
+Engineering Rust progress is scoped to nominal fingerprints and the canonical
+CBOR boundary. The whole-domain Verus report verifies 993 obligations and explicitly
+covers all 16 parser/constructor/accessor families plus kind and shared-parser
+bodies. CBOR/hash/formatter refinement and full V16 remain open. A static-musl
+development program exercises the new APIs; this is not an installed product.
+
+The [current evidence index](../../qualification/engineering-theorems.json) and
+[revision-5 progress](../../qualification/revision-5-progress.json) preserve source
+bindings. All production V16–V21/M12–M16, native effects, cross-model bridges and
+full product WF31 require their own qualification.
 
 ### Three hosts: executed correspondence, not a Rust proof
 

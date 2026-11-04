@@ -1,43 +1,52 @@
 {
   "schema_version": 1,
-  "revision": 4,
-  "date": "2026-11-02",
-  "authority": "handovers/revision-4/writfold",
+  "revision": 5,
+  "date": "2026-11-03",
+  "authority": "handovers/revision-5/writfold",
   "archive": {
-    "path": "~/Downloads/writfold-rust-handover-version-4.zip",
-    "sha256": "0b1e43b6b4caaa091187c55511ddc7a69a21b3f681cf8879b71c6bb3b09d853d",
-    "bytes": 47996552,
-    "identity_provenance": "Parent verified supplied archive and imported immutable bytes"
+    "path": "~/Downloads/writfold-rust-handover-version-5.zip",
+    "sha256": "3f8fd0d8c6fd3f75c9bb54ebd8b46ba808a2305f827fe80d05dac02465cb5e0d",
+    "bytes": 46580969,
+    "identity_provenance": "Parent verified supplied archive and all 300 manifest members before immutable import"
   },
   "manifest": {
-    "path": "handovers/revision-4/writfold/MANIFEST.sha256",
-    "sha256": "a0c4b89e0cd86e52e9160d103f9e5b0a54fea93cfad19eaeb01bb08383ae8c7c"
+    "path": "handovers/revision-5/writfold/MANIFEST.sha256",
+    "sha256": "14f9585e4aa9b8bd287911715dd6593e3f4128b871081d14c09fac6dc2e3bae3"
   },
   "historical_baseline": "handover/",
   "historical_policy": "Preserve immutable handover and frozen manifests; prior P00/P01/P02 receipts retain earlier scope only. No evidence is renewed by adoption.",
   "inventory": {
-    "stages": 19,
-    "required_gates": 25,
-    "proof_models": 26,
-    "scenarios": 108,
-    "atlas_pages": 32
+    "stages": 25,
+    "required_gates": 32,
+    "proof_models": 37,
+    "engineering_theorems": 12,
+    "scenarios": 148,
+    "fingerprint_kinds": 16
   },
   "registries": {
-    "stages": {
-      "path": "handovers/revision-4/writfold/registries/stages.json",
-      "sha256": "be2ed5c5d9150c1f54f721c1167ccbb326ec9b6d0d9514680c7f02f90e81162d"
+    "scenarios": {
+      "path": "handovers/revision-5/writfold/registries/scenarios.json",
+      "sha256": "9c1b4bcb54b65bb404064fe46884cbddd87e29320cd040ff51a8ab15b0b8886a"
     },
     "gates": {
-      "path": "handovers/revision-4/writfold/registries/gates.json",
-      "sha256": "ffc52ca235c2b278cc73ad2373a42f97e7046192d107c9f6a0d41343fc6ed2dd"
+      "path": "handovers/revision-5/writfold/registries/gates.json",
+      "sha256": "6c9789b961b44fe013b0e471fd58b625a6414d63e50c3d1b3e2e080e0092a870"
+    },
+    "fingerprints": {
+      "path": "handovers/revision-5/writfold/registries/fingerprints.json",
+      "sha256": "6415d0667eb0976e236ab8c81183c9d182d75961548bde18e8146b25a2e4b9e7"
     },
     "proofs": {
-      "path": "handovers/revision-4/writfold/registries/proofs.json",
-      "sha256": "b3aa2f83608315a9a1b326a85b56c092635cc48a2038e6ad4584dacbaebbf350"
+      "path": "handovers/revision-5/writfold/registries/proofs.json",
+      "sha256": "723269addde37569393fff754e8bb666740ee5561e16f5ea87af738c40459113"
     },
-    "scenarios": {
-      "path": "handovers/revision-4/writfold/registries/scenarios.json",
-      "sha256": "0e1b1744ef606d8d5dfe128e28c0ba63a8551700d95e8aad9dee8c3058ed3f76"
+    "engineering-theorems": {
+      "path": "handovers/revision-5/writfold/registries/engineering-theorems.json",
+      "sha256": "5759e58882ab2e97acc46256a55e2d1e87be466e5d4a4148fc152283ec4a1e7a"
+    },
+    "stages": {
+      "path": "handovers/revision-5/writfold/registries/stages.json",
+      "sha256": "7ab44618d156afbc694e76e6f441bcf34ed30cb70b8d5fad8fe12b1e4af050d6"
     }
   },
   "policy_delta": {
@@ -47,7 +56,10 @@
     "epochs": "Separate physical graphs with immutable schema per epoch; exact graph/commit/epoch/query/storage-profile pins",
     "wire": "Preserve legacy signed bytes; explicitly version new outer release/approval storage envelope and negotiate storage capability",
     "views": "P09V/WF22/WF23 require faithful prepared views, owned publication and native Obsidian qualification",
-    "formal": "V14/V15/M10/M11 and revised operational assumptions remain required; no renamed Dolt proof or receipt qualifies Omnigraph"
+    "formal": "V14/V15/M10/M11 and revised operational assumptions remain required; no renamed Dolt proof or receipt qualifies Omnigraph",
+    "engineering": "Three semantic graphs C/X/L; two logical corpus/activity graph families per trust realm, independent immutable epochs. Validated EngineeringLedger conditional heads select execution state; activity is derived and cannot authorize effects.",
+    "proof_first": "Complete E01-E12 calculus proofs and explicit assumptions before production engineering implementation; preserve T01-T22. WF31 is P11 final composition, never a Lean component pass.",
+    "order": "P14-P19 precede P11-P13 in normative registry dependency order."
   },
   "tested_candidate": {
     "name": "Omnigraph",
@@ -58,5 +70,10 @@
     "scope": "Bundled local probes only; server/runtime and full WSL/native foundation not admitted by this record"
   },
   "qualification_status": "not_run",
-  "evidence_reuse": "No automatic reuse; all active gates not_run and historical completions separately retained in status.json"
+  "evidence_reuse": "No automatic reuse; active expanded obligations remain not_run or blocked. Historical completions and failed evidence retain their original scope.",
+  "retained_revision_4": {
+    "adoption": "qualification/revision-4-handover-adoption.json",
+    "status": "qualification/revision-4-status.json",
+    "progress": "qualification/revision-4-progress.json"
+  }
 }

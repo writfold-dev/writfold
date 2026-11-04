@@ -6,21 +6,34 @@ A local knowledge engine for agents, with exact evidence, explicit approval and 
 
 ## Implementation status
 
-The original kctx Git history is preserved. `src/kctx`, `formal`, and the reference fixtures remain the exact compatibility baseline at `1c17b94be37af8f82f222baddf31435f14172e1a`. The original implementation handover is retained unchanged under [`handover/`](handover/README.md).
+The original kctx Git history is preserved. `src/kctx`, the legacy Lean theorem/root sources and the reference fixtures retain the compatibility baseline at `1c17b94be37af8f82f222baddf31435f14172e1a`. Revision 5 adds a separate `formal/Kctx/Engineering` calculus and an explicit Lake executable target without rewriting that baseline. The original implementation handover remains unchanged under [`handover/`](handover/README.md).
 
-The current implementation authority is the [revision-4 handover](handovers/revision-4/writfold/README.md), with 19 stages and 25 mandatory gates (WF00–WF24). The [adoption delta](docs/writfold/handover-adoption.md) records its exact archive identity and separates earlier-scope evidence from newly unrun obligations.
+The current implementation authority is the [revision-5 handover](handovers/revision-5/writfold/README.md): **25 stages, 32 mandatory gates (WF00–WF31), 37 V/M entries, 12 engineering theorems (E01–E12), and 148 scenarios**. The [adoption delta](docs/writfold/handover-adoption.md) records exact archive/manifest/registry identities and retains earlier-scope evidence without requalification. Full calculus proofs take priority before production engineering implementation; WF31 is final composed qualification, not a scoped Lean pass.
 
 The Rust implementation lives in `crates/`:
 
-- `writfold-domain`: checked nominal identities, verified admission/runtime-conversion bodies, arbitrary-precision semantic integers and immutable model records.
+- `writfold-domain`: checked nominal identities, verified admission/runtime-conversion bodies, arbitrary-precision semantic integers, immutable model records and 16 distinct engineering fingerprint types.
 - `writfold-kernel`: finite witnesses, independent assessments, admission, portfolio and design judgments; its broader Rust semantic proofs remain open.
-- `writfold-wire`: bounded JSON, typed semantic/result codecs, exact canonical signed operations, supplied-policy Ed25519 authorization, protocol-2 request admission and the development `writfold-ref` host.
+- `writfold-wire`: bounded JSON and restricted deterministic CBOR, typed semantic/result codecs, domain-separated engineering fingerprints, exact canonical signed operations, supplied-policy Ed25519 authorization, protocol-2 request admission and the development `writfold-ref` host.
 - `writfold-protocol`: checked generation allocation and distinct instance/session/request identities with initialization/shutdown transitions.
 - `writfold-runtime`: descriptor-relative native filesystem reads, conditional publication and stable managed locks.
 - `writfold-sources`: byte-preserving authored-document and citation syntax, with new single-line mutation admission and pinned Unicode behavior.
 - `writfold-xtask`: development-only syntax, dependency and nominal-type qualification.
 
 `writfold-ref` is a development conformance executable, not the production CLI or an authentication capability. No installable Rust product or complete Rust qualification is claimed yet. Current stage/gate dispositions are in [`qualification/status.json`](qualification/status.json); unrun obligations remain explicit.
+
+The revision-5 **E01–E12 mathematical calculus is discharged under its recorded
+assumptions**: a clean Lean audit covers 571 declarations, the reference executes
+66 cases, and nine behavior-changing source mutants fail their intended safety
+properties. The earlier 407-declaration/30-case result remains historical evidence.
+These are not Rust refinement proofs or complete WF31 qualification.
+
+Independent P14 implementation now provides checked engineering fingerprints and
+a bounded canonical-CBOR boundary, exercised through a static-musl API program.
+Durable EngineeringLedger, graph integration and production effect adapters are
+not implemented by this increment. See
+[revision-5 progress](qualification/revision-5-progress.json) for exact receipts,
+source applicability and retained failures.
 
 ## Local build and qualification
 
@@ -34,6 +47,7 @@ The operator entrypoint is:
 ./scripts/gate baseline --receipt "$HOME/.local/share/writfold/qualification/baseline.json"
 ./scripts/gate unit --receipt "$HOME/.local/share/writfold/qualification/unit.json"
 ./scripts/gate conformance --receipt "$HOME/.local/share/writfold/qualification/conformance.json"
+./scripts/gate engineering-lean --receipt "$HOME/.local/share/writfold/qualification/engineering-lean.json"
 ```
 
 Use a new receipt path for every attempt. Missing producers, stale sources, failed commands, skipped obligations and missing tools refuse qualification. See the [qualification contract](docs/writfold/qualification.md) for bootstrap, exact scope and command details. These command examples are not pass receipts.
@@ -54,13 +68,14 @@ The [native Obsidian reading profile](docs/writfold/obsidian-reading.md) is exer
 - Preserve the Lean calculus and its explicit evidence/authentication assumptions. Source-matched historical reports are not fresh proof runs.
 - Selected shipping Rust bodies require Verus verification. Operational interleavings require TLC and inductive safety/bridge obligations require TLAPS. Differential agreement is not a cross-prover equivalence theorem.
 - Real filesystem, Git, Omnigraph, cancellation, concurrency, crash, migration and independent-restore qualification remain mandatory. P01O/WF24 is an early blocking storage foundation gate, not a substitute for integrated WF09/WF11/WF14/WF15. Exact reads bind graph, commit, immutable physical schema epoch, query contract and storage profile; legacy signed bytes stay unchanged.
+- Revision 5 distinguishes context, execution and learning semantic graphs from two logical corpus/activity storage families. Each has independently retained schema epochs under one companion per trust realm. Validated EngineeringLedger records and conditional heads select execution state; the activity index cannot authorize effects. Corpus publication still uses completed Git CAS; read-only Scribes do not become effect adapters.
 - Enterprise endpoints, hardware power loss and unavailable production-corpus outcomes are separate scopes; local synthetic results cannot stand in for them.
 
 The [baseline contract](docs/writfold/baseline-contract.md) links exact CLI/RPC/envelope, evaluation and unresolved-work inventories. Historical Python operational documentation remains under [`docs/kctx/`](docs/kctx/); it describes the reference implementation, not completed Rust commands.
 
 ## Execution and publication
 
-Start with [`AGENTS.md`](AGENTS.md) and the [19-stage handover](handovers/revision-4/writfold/plan/08-execution-and-acceptance.md). Preserve failures and source-bound replacements. The private playbook is consumed at its adopted pin, never copied into the public website.
+Start with [`AGENTS.md`](AGENTS.md) and the [25-stage handover](handovers/revision-5/writfold/plan/08-execution-and-acceptance.md), including normative plans 17–23. Preserve failures and source-bound replacements. The private playbook is consumed at its adopted pin, never copied into the public website.
 
 The development-preview website is live at [writfold.dev](https://writfold.dev/), with HTTPS enforced, a public project guide and explicit planned-versus-implemented boundaries. The [website repository](https://github.com/writfold-dev/writfold-dev.github.io) publishes reviewed static commits through a manifest-checked Pages workflow. This website does not complete product stage P13 or advertise an installable Rust release. The Rust repository remains private.
 
@@ -76,7 +91,7 @@ design bodies. It has 428 kernel Verus obligations, 170 workspace tests,
 binds exact sources, tools and artifacts; none of these components passes
 the full release gate set.
 
-1. Close remaining obligation/caller mappings and integrated qualification.
+1. Carry the discharged E01–E12 contracts into the remaining production bodies, V16–V21/M12–M16 and composition bridges. Preserve legacy T01–T22 and signed bytes. The independent engineering domain/wire primitives do not close the durable-ledger or integrated qualification obligations.
    Twelve abstract model/composition modules have strict safety proofs, and
    all twenty selected semantic negatives have counterexamples. Nine positive
    baseline explorations still reached their deadlines; further justified
@@ -90,7 +105,7 @@ the full release gate set.
    is adopted, and no scheduled monitoring is implied.
 3. After foundation admission, complete the dependent protocols, storage,
    authenticated publication/recovery, workflows, Scribes, CLI/RPC, views and
-   migration stages in the [mandatory dependency order](handovers/revision-4/writfold/plan/08-execution-and-acceptance.md).
+   migration stages in the [mandatory dependency order](handovers/revision-5/writfold/plan/08-execution-and-acceptance.md). P14–P19 extend identities/ledger, skills, effects, cross-repository changes, learning and exact dossiers before final P11–P13; numeric sorting is not execution order.
 4. Qualify the integrated product, installed Linux/WSL runtime and release
    artifacts before tagging an alpha. The current `writfold-ref` is not an
    end-user substitute.

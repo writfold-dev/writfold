@@ -1,0 +1,1 @@
+CREATE TABLE service(slug VARCHAR(20) PRIMARY KEY, name TEXT); INSERT INTO service VALUES ('a','A'),('b','B'),('c','C'),('d','D'); CREATE TABLE dep(src VARCHAR(20), dst VARCHAR(20), PRIMARY KEY(src,dst)); INSERT INTO dep VALUES ('a','b'),('b','c'),('a','c'),('c','a'),('c','d'); CALL DOLT_ADD('.'); CALL DOLT_COMMIT('-m','fixture');

@@ -1,0 +1,13 @@
+flowchart TD
+  N0["Protocol state — Inputs + environment assumptions"]
+  N1["TLA+ actions — Crash and recovery included"]
+  N2["TLAPS induction — Init; every Next action"]
+  N3["Finite instances — Writers + readers + GC"]
+  N4["TLC exploration — Positive and negative configs"]
+  N5["Refinement contract — Actions to executable effects"]
+  N0 --> N1
+  N1 -->|"prove"| N2
+  N0 -->|"instantiate"| N3
+  N3 -->|"explore"| N4
+  N4 -->|"counterexamples"| N1
+  N2 -->|"mapped obligations"| N5

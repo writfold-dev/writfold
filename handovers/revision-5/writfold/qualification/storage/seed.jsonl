@@ -1,0 +1,9 @@
+{"type": "Service", "data": {"slug": "a", "name": "A"}}
+{"type": "Service", "data": {"slug": "b", "name": "B"}}
+{"type": "Service", "data": {"slug": "c", "name": "C"}}
+{"type": "Service", "data": {"slug": "d", "name": "D"}}
+{"edge": "DependsOn", "from": "a", "to": "b"}
+{"edge": "DependsOn", "from": "b", "to": "c"}
+{"edge": "DependsOn", "from": "a", "to": "c"}
+{"edge": "DependsOn", "from": "c", "to": "a"}
+{"edge": "DependsOn", "from": "c", "to": "d"}

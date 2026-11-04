@@ -3,9 +3,9 @@
   "registry_kind": "current_obligations_not_receipts",
   "observed_at": "2026-11-02T06:09:52.519618+00:00",
   "status": "in_progress",
-  "normative_registry": "handovers/revision-4/writfold/registries/proofs.json",
+  "normative_registry": "handovers/revision-5/writfold/registries/proofs.json",
   "historical_normative_registry": "handover/registries/proofs.json",
-  "mapping_applicability": "Existing proof-mapping-snapshot hashes, symbol locations and absence statements describe the retained earlier-scope snapshot, not the current source. New execution must bind its own exact source; revision-4 storage/view obligations are separately inventoried below. Historical component evidence remains unchanged.",
+  "mapping_applicability": "Existing proof-mapping-snapshot hashes, symbol locations and absence statements describe retained earlier-scope work, not current qualification. Revision-5 V16-V21/M12-M16 and composition bridges are required below; E01-E12 have a separate engineering-theorems.json index. No evidence is renewed by adoption.",
   "assumption_registry": "qualification/claims.json#/assumptions",
   "caller_boundary_registry": "qualification/claims.json#/caller_boundaries",
   "evidence_registry": "qualification/claims.json#/evidence",
@@ -5409,6 +5409,209 @@
       "trusted_assumptions": [],
       "receipt": null,
       "completion_rule": "Complete epoch/migration actions and M01-M06/M10 bridges under an admitted backend effect contract; all induction, finite campaign and calibration obligations remain required."
+    },
+    {
+      "id": "V16",
+      "name": "Engineering identity and canonical binding",
+      "system": "Verus",
+      "status": "not_run",
+      "contract": "handovers/revision-5/writfold/plan/18-identities-fingerprints-and-cuts.md",
+      "production_symbols": [],
+      "theorem_symbols": [],
+      "trusted_assumptions": [],
+      "receipt": null,
+      "partial_components": [
+        {
+          "name": "engineering_fingerprint_parsing_and_construction",
+          "status": "pass",
+          "scope": "Exact closed-domain parsing and byte-array construction/access; not full canonical-schema, hash, formatter, ledger or V16 closure.",
+          "verified_functions": [
+            "writfold_domain::engineering::codec::nibble",
+            "writfold_domain::engineering::codec::parse",
+            "writfold_domain::engineering::digests::AttemptInputDigest::as_digest",
+            "writfold_domain::engineering::digests::AttemptInputDigest::from_digest",
+            "writfold_domain::engineering::digests::AttemptInputDigest::parse_checked",
+            "writfold_domain::engineering::digests::BlobDigest::as_digest",
+            "writfold_domain::engineering::digests::BlobDigest::from_digest",
+            "writfold_domain::engineering::digests::BlobDigest::parse_checked",
+            "writfold_domain::engineering::digests::DependencyLockDigest::as_digest",
+            "writfold_domain::engineering::digests::DependencyLockDigest::from_digest",
+            "writfold_domain::engineering::digests::DependencyLockDigest::parse_checked",
+            "writfold_domain::engineering::digests::DispatchStampDigest::as_digest",
+            "writfold_domain::engineering::digests::DispatchStampDigest::from_digest",
+            "writfold_domain::engineering::digests::DispatchStampDigest::parse_checked",
+            "writfold_domain::engineering::digests::EffectIntentDigest::as_digest",
+            "writfold_domain::engineering::digests::EffectIntentDigest::from_digest",
+            "writfold_domain::engineering::digests::EffectIntentDigest::parse_checked",
+            "writfold_domain::engineering::digests::EngineeringDesignRef::as_digest",
+            "writfold_domain::engineering::digests::EngineeringDesignRef::from_digest",
+            "writfold_domain::engineering::digests::EngineeringDesignRef::parse_checked",
+            "writfold_domain::engineering::digests::EngineeringReadCutDigest::as_digest",
+            "writfold_domain::engineering::digests::EngineeringReadCutDigest::from_digest",
+            "writfold_domain::engineering::digests::EngineeringReadCutDigest::parse_checked",
+            "writfold_domain::engineering::digests::EnvironmentDigest::as_digest",
+            "writfold_domain::engineering::digests::EnvironmentDigest::from_digest",
+            "writfold_domain::engineering::digests::EnvironmentDigest::parse_checked",
+            "writfold_domain::engineering::digests::KnowledgeReadSetDigest::as_digest",
+            "writfold_domain::engineering::digests::KnowledgeReadSetDigest::from_digest",
+            "writfold_domain::engineering::digests::KnowledgeReadSetDigest::parse_checked",
+            "writfold_domain::engineering::digests::LearningCandidateDigest::as_digest",
+            "writfold_domain::engineering::digests::LearningCandidateDigest::from_digest",
+            "writfold_domain::engineering::digests::LearningCandidateDigest::parse_checked",
+            "writfold_domain::engineering::digests::LedgerEventDigest::as_digest",
+            "writfold_domain::engineering::digests::LedgerEventDigest::from_digest",
+            "writfold_domain::engineering::digests::LedgerEventDigest::parse_checked",
+            "writfold_domain::engineering::digests::PackagePayloadDigest::as_digest",
+            "writfold_domain::engineering::digests::PackagePayloadDigest::from_digest",
+            "writfold_domain::engineering::digests::PackagePayloadDigest::parse_checked",
+            "writfold_domain::engineering::digests::ProcedureRevision::as_digest",
+            "writfold_domain::engineering::digests::ProcedureRevision::from_digest",
+            "writfold_domain::engineering::digests::ProcedureRevision::parse_checked",
+            "writfold_domain::engineering::digests::ReceiptDigest::as_digest",
+            "writfold_domain::engineering::digests::ReceiptDigest::from_digest",
+            "writfold_domain::engineering::digests::ReceiptDigest::parse_checked",
+            "writfold_domain::engineering::digests::RepoVectorDigest::as_digest",
+            "writfold_domain::engineering::digests::RepoVectorDigest::from_digest",
+            "writfold_domain::engineering::digests::RepoVectorDigest::parse_checked",
+            "writfold_domain::engineering::digests::SkillRevision::as_digest",
+            "writfold_domain::engineering::digests::SkillRevision::from_digest",
+            "writfold_domain::engineering::digests::SkillRevision::parse_checked",
+            "writfold_domain::engineering::kinds::FingerprintKind::as_str",
+            "writfold_domain::engineering::kinds::FingerprintKind::parse_checked"
+          ],
+          "verification_report": {
+            "path": "~/.local/share/writfold/evidence/revision-5-engineering-verus-005/report.json",
+            "sha256": "d96ced1ed83d844504257de6dd5e2791fe985227b740770fd4e16acb974e8640",
+            "bytes": 39045
+          },
+          "remaining": [
+            "Typed engineering record schema validation and complete dependency binding.",
+            "Canonical CBOR and cryptographic/formatting refinement.",
+            "Durable EngineeringLedger and native boundary integration."
+          ]
+        }
+      ],
+      "completion_rule": "Complete this entry's named contract, production mapping and assigned proof obligations. Record local proofs and bridge contributions separately; final composed completion is aggregated only by WF31 at P11. Empty mappings and planning checks cannot pass."
+    },
+    {
+      "id": "V17",
+      "name": "Procedure typing and delegated capability",
+      "system": "Verus",
+      "status": "not_run",
+      "contract": "handovers/revision-5/writfold/plan/19-skill-packages-and-composition.md",
+      "production_symbols": [],
+      "theorem_symbols": [],
+      "trusted_assumptions": [],
+      "receipt": null,
+      "completion_rule": "Complete this entry's named contract, production mapping and assigned proof obligations. Record local proofs and bridge contributions separately; final composed completion is aggregated only by WF31 at P11. Empty mappings and planning checks cannot pass."
+    },
+    {
+      "id": "V18",
+      "name": "Ledger ownership and effect decisions",
+      "system": "Verus",
+      "status": "not_run",
+      "contract": "handovers/revision-5/writfold/plan/20-execution-and-cross-repository.md",
+      "production_symbols": [],
+      "theorem_symbols": [],
+      "trusted_assumptions": [],
+      "receipt": null,
+      "completion_rule": "Complete this entry's named contract, production mapping and assigned proof obligations. Record local proofs and bridge contributions separately; final composed completion is aggregated only by WF31 at P11. Empty mappings and planning checks cannot pass."
+    },
+    {
+      "id": "V19",
+      "name": "Dependency reuse and cross-repo readiness",
+      "system": "Verus",
+      "status": "not_run",
+      "contract": "handovers/revision-5/writfold/plan/20-execution-and-cross-repository.md",
+      "production_symbols": [],
+      "theorem_symbols": [],
+      "trusted_assumptions": [],
+      "receipt": null,
+      "completion_rule": "Complete this entry's named contract, production mapping and assigned proof obligations. Record local proofs and bridge contributions separately; final composed completion is aggregated only by WF31 at P11. Empty mappings and planning checks cannot pass."
+    },
+    {
+      "id": "V20",
+      "name": "Learning admission and gate-floor preservation",
+      "system": "Verus",
+      "status": "not_run",
+      "contract": "handovers/revision-5/writfold/plan/21-learning-and-promotion.md",
+      "production_symbols": [],
+      "theorem_symbols": [],
+      "trusted_assumptions": [],
+      "receipt": null,
+      "completion_rule": "Complete this entry's named contract, production mapping and assigned proof obligations. Record local proofs and bridge contributions separately; final composed completion is aggregated only by WF31 at P11. Empty mappings and planning checks cannot pass."
+    },
+    {
+      "id": "V21",
+      "name": "Projection cuts and retained evidence closure",
+      "system": "Verus",
+      "status": "not_run",
+      "contract": "handovers/revision-5/writfold/plan/17-engineering-graphs-and-layout.md",
+      "production_symbols": [],
+      "theorem_symbols": [],
+      "trusted_assumptions": [],
+      "receipt": null,
+      "completion_rule": "Complete this entry's named contract, production mapping and assigned proof obligations. Record local proofs and bridge contributions separately; final composed completion is aggregated only by WF31 at P11. Empty mappings and planning checks cannot pass."
+    },
+    {
+      "id": "M12",
+      "name": "EngineeringLedgerOwnership",
+      "system": "TLA+/TLC/TLAPS",
+      "status": "not_run",
+      "contract": "handovers/revision-5/writfold/plan/20-execution-and-cross-repository.md",
+      "production_symbols": [],
+      "theorem_symbols": [],
+      "trusted_assumptions": [],
+      "receipt": null,
+      "completion_rule": "Complete this entry's named contract, production mapping and assigned proof obligations. Record local proofs and bridge contributions separately; final composed completion is aggregated only by WF31 at P11. Empty mappings and planning checks cannot pass."
+    },
+    {
+      "id": "M13",
+      "name": "EffectsAndCrossRepo",
+      "system": "TLA+/TLC/TLAPS",
+      "status": "not_run",
+      "contract": "handovers/revision-5/writfold/plan/20-execution-and-cross-repository.md",
+      "production_symbols": [],
+      "theorem_symbols": [],
+      "trusted_assumptions": [],
+      "receipt": null,
+      "completion_rule": "Complete this entry's named contract, production mapping and assigned proof obligations. Record local proofs and bridge contributions separately; final composed completion is aggregated only by WF31 at P11. Empty mappings and planning checks cannot pass."
+    },
+    {
+      "id": "M14",
+      "name": "SkillComposition",
+      "system": "TLA+/TLC/TLAPS",
+      "status": "not_run",
+      "contract": "handovers/revision-5/writfold/plan/19-skill-packages-and-composition.md",
+      "production_symbols": [],
+      "theorem_symbols": [],
+      "trusted_assumptions": [],
+      "receipt": null,
+      "completion_rule": "Complete this entry's named contract, production mapping and assigned proof obligations. Record local proofs and bridge contributions separately; final composed completion is aggregated only by WF31 at P11. Empty mappings and planning checks cannot pass."
+    },
+    {
+      "id": "M15",
+      "name": "LearningPromotion",
+      "system": "TLA+/TLC/TLAPS",
+      "status": "not_run",
+      "contract": "handovers/revision-5/writfold/plan/21-learning-and-promotion.md",
+      "production_symbols": [],
+      "theorem_symbols": [],
+      "trusted_assumptions": [],
+      "receipt": null,
+      "completion_rule": "Complete this entry's named contract, production mapping and assigned proof obligations. Record local proofs and bridge contributions separately; final composed completion is aggregated only by WF31 at P11. Empty mappings and planning checks cannot pass."
+    },
+    {
+      "id": "M16",
+      "name": "ProjectionCutsRetention",
+      "system": "TLA+/TLC/TLAPS",
+      "status": "not_run",
+      "contract": "handovers/revision-5/writfold/plan/17-engineering-graphs-and-layout.md",
+      "production_symbols": [],
+      "theorem_symbols": [],
+      "trusted_assumptions": [],
+      "receipt": null,
+      "completion_rule": "Complete this entry's named contract, production mapping and assigned proof obligations. Record local proofs and bridge contributions separately; final composed completion is aggregated only by WF31 at P11. Empty mappings and planning checks cannot pass."
     }
   ],
   "scoped_components": [
@@ -5668,6 +5871,81 @@
       "status": "not_run",
       "theorem_symbols": [],
       "absence_reason": "Bridge model and TLAPS proof not implemented; related pure functions do not prove composition."
+    },
+    {
+      "models": [
+        "M12",
+        "M13"
+      ],
+      "required_contract": "Stream heads, reservations, live dispatch claims and stable effect identity",
+      "status": "not_run",
+      "theorem_symbols": [],
+      "absence_reason": "Revision-5 composition obligation; not discharged by existing isolated model receipts."
+    },
+    {
+      "models": [
+        "M12",
+        "M14"
+      ],
+      "required_contract": "Invocation identity, budget accounting and ownership through child teardown",
+      "status": "not_run",
+      "theorem_symbols": [],
+      "absence_reason": "Revision-5 composition obligation; not discharged by existing isolated model receipts."
+    },
+    {
+      "models": [
+        "M15",
+        "M01",
+        "M02"
+      ],
+      "required_contract": "Exact learning admission, completed Git CAS and lost acknowledgement",
+      "status": "not_run",
+      "theorem_symbols": [],
+      "absence_reason": "Revision-5 composition obligation; not discharged by existing isolated model receipts."
+    },
+    {
+      "models": [
+        "M15",
+        "M03",
+        "M11"
+      ],
+      "required_contract": "Promotion evidence retained across publication and physical schema epochs",
+      "status": "not_run",
+      "theorem_symbols": [],
+      "absence_reason": "Revision-5 composition obligation; not discharged by existing isolated model receipts."
+    },
+    {
+      "models": [
+        "M16",
+        "M03",
+        "M10",
+        "M11"
+      ],
+      "required_contract": "Cut closure, reader pins, owned view generations, schema epochs and GC",
+      "status": "not_run",
+      "theorem_symbols": [],
+      "absence_reason": "Revision-5 composition obligation; not discharged by existing isolated model receipts."
+    },
+    {
+      "models": [
+        "M13",
+        "M09"
+      ],
+      "required_contract": "Accepted design binding, material reopen and affected receipt invalidation",
+      "status": "not_run",
+      "theorem_symbols": [],
+      "absence_reason": "Revision-5 composition obligation; not discharged by existing isolated model receipts."
+    },
+    {
+      "models": [
+        "M14",
+        "M07",
+        "M08"
+      ],
+      "required_contract": "Shared supervised process ownership with separate read-only Scribe and effect permissions",
+      "status": "not_run",
+      "theorem_symbols": [],
+      "absence_reason": "Revision-5 composition obligation; not discharged by existing isolated model receipts."
     }
   ],
   "model_campaign_requirements": {

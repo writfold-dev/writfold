@@ -12,3 +12,7 @@ name = "Kctx"
 [[lean_exe]]
 name = "kctxref"
 root = "Kctx.Reference"
+
+[[lean_exe]]
+name = "engineeringref"
+root = "Kctx.Engineering.Reference"

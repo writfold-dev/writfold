@@ -1,39 +1,55 @@
-# Revision-4 contract adoption
+# Revision-5 contract adoption
 
-The current authority is [`handovers/revision-4/writfold/`](../../handovers/revision-4/writfold/README.md), dated 2 November 2026. The supplied `writfold-rust-handover-version-4.zip` is **47,996,552 bytes**, SHA256 `0b1e43b6b4caaa091187c55511ddc7a69a21b3f681cf8879b71c6bb3b09d853d`. The parent verified and imported those immutable bytes. [Machine-readable adoption](../../qualification/handover-adoption.json) records archive, manifest and registry identities. Package integrity is not product qualification.
+The current immutable authority is [`handovers/revision-5/writfold/`](../../handovers/revision-5/writfold/README.md), supplied on 3 November 2026. The archive `writfold-rust-handover-version-5.zip` is **46,580,969 bytes**, SHA256 `3f8fd0d8c6fd3f75c9bb54ebd8b46ba808a2305f827fe80d05dac02465cb5e0d`. Its manifest SHA256 is `14f9585e4aa9b8bd287911715dd6593e3f4128b871081d14c09fac6dc2e3bae3`. Archive verification checked all 300 listed members and the absence of unlisted files except the manifest before importing the immutable bundle. [Machine-readable adoption](../../qualification/handover-adoption.json) binds the exact archive, manifest and all six active registries, including engineering theorems and fingerprints. Integrity is not product qualification.
 
-Read its AGENT_START_HERE, all 19 stage contracts, and plans 08 and 11–16. The normative stage/gate inventories are copied into the current [status ledger](../../qualification/status.json), including names and dependencies, with **WF00–WF24 required**. Registries and stage files remain immutable; current execution results belong in the separate ledger.
+Read AGENT_START_HERE, all **25 stage contracts**, execution/acceptance plan 08 and normative plans 11–23. The active inventory is **32 mandatory gates WF00–WF31, 37 V/M obligations, E01–E12, 148 scenarios and 16 fingerprint kinds**. The [status ledger](../../qualification/status.json) follows registry order and exact dependency/gate membership, not numeric sorting. P14–P19 precede final P11–P13. Immutable registries describe requirements; mutable ledgers describe execution evidence.
 
-## Approved policy delta
+## Proof-first execution
 
-- Omnigraph replaces planned production Dolt as the intended primary structured backend. Start with a supervised native companion and typed transport, not an embedded engine. Dolt remains isolated reference/import tooling, not a second normal writer. Any fallback requires an explicit evidence-backed design revision; uncertain writes never trigger automatic fallback or blind retry.
-- P01O/WF24 follows P01 and blocks storage-dependent P04/P06 and downstream integration. Independent domain/calculus work may continue. Smoke fixtures do not pass WF24; integrated WF09/WF11/WF14/WF15 remain independently required.
-- Each physical schema epoch owns a separate graph with immutable schema and historical query contracts. A release/read pin binds graph, commit, epoch, query and storage compatibility profile. Retain old readers and complete native roots; independently restore with original storage unavailable.
-- Preserve all historical signature bytes and identifiers. New storage/release/approval envelopes have explicit version/domain boundaries and capability negotiation; never cast a graph commit into a legacy Dolt field. Semantic wire 2 and workflow schema 3 remain distinct from storage and RPC versions.
-- Mandatory P09V adds prepared document projections, owned generation publication and native Obsidian reading qualification (WF22/WF23). V14/V15/M10/M11 and changed protocol assumptions need actual production/model evidence, not renamed old claims.
+Complete the full E01–E12 calculus proofs, explicit assumptions, closed-action coverage and meaningful negative calibration before production engineering implementation. Preserve legacy T01–T22, its historical declaration/proof identities, all signed bytes and the adopted private playbook pin. Component proofs neither establish production refinement nor substitute for Verus V16–V21, TLC/TLAPS M12–M16 and their mandatory bridges.
 
-The tested candidate is Omnigraph 0.14.0, source `60bfd19db780fdff3a5178f959c1204143420114`, archive SHA256 `02bde3e3a2c6c8cf50dc9739a8b1041df87cfeaa6ab59f620e1d8e32acffd4d9`, CLI SHA256 `978e200a412e7b0db46657417d348569f97529c18b47e64687132e565d19dc64`. This identifies bundled local experiments, not an admitted server/runtime or complete WSL/native campaign. Existing operator storage, Compose/tool-image admission and reserve policies remain unchanged.
+WF31 belongs to final P11 composed qualification. The separate `engineering-lean` command has scope `engineering-lean-only`, associated with WF31 solely as a contributing component. It cannot close WF31, P11 or release. Package integrity and illustrative engineering codec/example checks cannot pass any product gate. No adoption action renews a previous proof or gate.
 
-## Evidence applicability
+That mathematical prerequisite is now discharged under the recorded assumptions:
+the complete clean Lean audit, independent statement review, 66 executed cases and
+nine semantic mutant kills are indexed in
+[`qualification/revision-5-progress.json`](../../qualification/revision-5-progress.json).
+The subsequent Rust increment implements 16 nominal fingerprint domains and the
+bounded engineering/1 CBOR/hash boundary. Whole-workspace tests/quality, exact
+Verus parser/construction coverage and a static-musl API smoke have been exercised.
+These are independent P14 components, not durable EngineeringLedger, native
+adapter, P14 stage or full WF31 completion.
 
-`handover/` remains the historical baseline; no file or historical manifest is rewritten. The existing baseline runner and frozen contract/evaluation inventories still verify those historical bytes. All failed attempts and completion records remain retained.
+## Authority and storage distinction
 
-Earlier P00/P01/P02 completion records remain under `historical_completions` in the ledger, with their exact receipt links. They do not imply revision-4 completion: P00 needs current source-bound reconciliation; P01 needs native Omnigraph CLI/server/runtime admission; P02 needs storage identities, new outer wire/signature/profile boundaries and fixtures. Active stage dispositions distinguish these unrun extensions and the P01O blocker. Existing Rust/proof work is neither discarded nor declared requalified.
+- Context C, execution X and learning L are three **semantic graphs**, not three databases. One managed Omnigraph companion per trust realm serves two logical graph families, corpus and activity, each with independently retained immutable physical schema epochs. There may be more than two physical graphs over time.
+- Validated immutable **EngineeringLedger** records selected by conditional stream heads determine operational history. Reconstruct through checked reducers and revalidate current grants/preconditions before effects. A ledger head is not permission. Plan/04 recovery-intent files remain non-authoritative hints.
+- Activity is a derived, rebuildable index. Lagging rows cannot authorize dispatch or publish knowledge. Exact read cuts disclose corpus/activity pins, watermarks, inventory closure, completeness and omissions. Corpus publication retains the completed Git release CAS and its retained evidence closure.
+- Read-only Scribes remain read-only. Effect adapters use a separate admitted protocol; Unknown outcomes require reconciliation, not blind replay. Reservations remain owned until descendants are quiescent/reaped.
+- Dolt remains isolated historical reference/import tooling, not a second normal writer or runtime fallback. Historical wire/signature bytes and old schema epochs are never rewritten by engineering-envelope adoption.
 
-The runner now recognizes `storage-foundation`→WF24, `omnigraph`→WF09, `legacy-import`→WF14, `views`→WF22, `obsidian`→WF23 and `storage-profile`→WF03. Unimplemented producers refuse. `dolt` is no longer a planned production gate command. `reference`/`native-smoke` retain their historical WF09 association with explicit Dolt-reference-only scope; they cannot qualify current Omnigraph WF09.
+**P01O/WF24 remains blocked** by the retained-branch relocation defect: an independently relocated branch still requests a Lance file at the unavailable original path. The retained blocker and upstream issue are linked from the status ledger. Do not rerun merely to confirm it, introduce a path workaround or silently switch backends. Storage-independent calculus work proceeds; storage-dependent integration remains blocked. The Omnigraph 0.14.0 candidate identity and operator storage/Compose admission remain unchanged in the adoption record.
 
-Release consumption requires all 25 gates exactly once and binds active contract and fixture bytes. Old receipts, scoped passes, missing producers and unrun obligations cannot qualify the new contract.
+## Retained evidence and applicability
 
-Integrated smoke evidence is retained separately: `v4-baseline-001.json` under the external qualification directory passed with scope `baseline-only`; all six newly recognized commands refused their unavailable producers; removing WF22, WF23 or WF24 from an in-memory candidate ledger caused independent aggregation refusal. Exact observations are in `~/.local/share/writfold/evidence/revision-4-gate-smoke-001.json`. These checks do not pass the full revision-4 stages or renew earlier proofs.
+`handover/` and `handovers/revision-4/writfold/` remain byte-preserved. Exact pre-adoption mutable snapshots are retained as [`revision-4-handover-adoption.json`](../../qualification/revision-4-handover-adoption.json) and [`revision-4-status.json`](../../qualification/revision-4-status.json). The [revision-4 progress ledger](../../qualification/revision-4-progress.json), prior P00/P01/P02 completions, raw receipts and all failed attempts remain unchanged. Their historical scope is neither discarded nor promoted to revision 5.
 
-`unblocked-baseline-20261103-001.json` additionally exercises current manifest
-and registry reconciliation: 258 immutable members, 19 stages, 25 mandatory
-gates, 26 V/M obligations and 108 scenarios. The full baseline-only receipt
-records 1,322 passing identity checks. The separate
-`baseline-calibration-20261103-001/report.json` campaign uses real copied file
-closures: the positive control passes, and changed manifest bytes, omitted
-WF24, omitted V15 and a weakened P06 dependency each trigger their intended
-refusal. No stage, proof or backend status is promoted by those checks.
+The legacy baseline reconciler permits only the exact reviewed additive executable target in `formal/lakefile.toml`. It removes that suffix solely to check the original immutable hash, records both current and retained identities, and excludes the separate `Kctx/Engineering` namespace from the historical report closure. `formal/Kctx.lean` and all legacy theorem sources remain byte-identical; the engineering executable and audit import the extension directly. No general mutable-source exemption is introduced. The new proof runner independently audits current legacy and engineering sources; the old report is never relabelled as current.
 
+Earlier baseline-only evidence includes `v4-baseline-001.json`, the unavailable-producer/omitted-gate smoke campaign `revision-4-gate-smoke-001.json`, and `unblocked-baseline-20261103-001.json` (1,322 identity checks against the then-current 258-member, 19-stage, 25-gate, 26-V/M, 108-scenario inventory). `baseline-calibration-20261103-001/report.json` retains the positive copied-closure control and refusals for changed manifest, omitted WF24/V15 and weakened P06 dependency. Those historical results do not exercise this revision's expanded inventory.
 
-The public website remains a separate repository, [writfold-dev/writfold-dev.github.io](https://github.com/writfold-dev/writfold-dev.github.io). Its publication state is recorded separately in the root README; site work does not pass backend, installation or release gates.
+All expanded active obligations remain `not_run` or `blocked` until exact scoped evidence closes them. Explicit unchanged-closure reuse requires recorded source/dependency linkage; copying a status label or retaining a historical receipt is not reuse admission.
+
+## Gate tooling and aggregation
+
+The runner recognizes `engineering-ledger`→WF25, `skills`→WF26, `effects`→WF27, `cross-repo`→WF28, `learning`→WF29, `engineering-cuts`→WF30 and `engineering-calculus`→WF31. Unavailable producers refuse. The separately implemented `engineering-lean` component uses the admitted offline Compose/tool path; successful execution still has component-only scope.
+
+`Reconciliation.current_contract()` checks all current registry identities, stage order/dependencies and forward/reverse gate membership, 37 V/M entries and E01–E12. `definition()` and `fixtures()` bind the complete active bundle, including fingerprint/theorem registries. `release_required()` requires all 32 gates exactly once, the complete V/M inventory, individually closed E01–E12 with source-bound Lean receipts, and an independent full-gate WF31 receipt. Scoped/package checks cannot substitute for full-gate receipts or missing production/model bridge evidence.
+
+Executed adoption checks are retained under `~/.local/share/writfold/evidence/`: `revision-5-package-20261103-001/report.json` records package integrity plus 18 hand-encoded codec vectors, five unsupported inputs and four illustrative fingerprints. `revision-5-adoption-calibration-20261103-001/report.json` records eight copied-closure cases: positive and restored controls, missing E12/V21/WF31/P19, a weakened P11 dependency and altered fingerprint-registry bytes. Each negative triggers its intended refusal. These are admission checks, not calculus or product qualification.
+
+`revision-5-baseline-20261103-001.json` passed 1,407 source/registry identity checks before the review repairs. Review then found two admission holes: unchecked `pass` labels on V/M/bridge rows and unlisted immutable bundle members. Both were reproduced and corrected; `revision-5-admission-regressions-001/{before,after}.json` retains the outcomes. All 53 unreceipted proof/bridge rows now refuse, and an extra bundle member triggers the exact-members check. This does not promote any proof status.
+
+The source-bound commands are `scripts/gate baseline --receipt <external-new-path>`, `scripts/gate engineering-lean --receipt <external-new-path>` and `scripts/gate release-required --artifact <exact-candidate> --receipt <external-new-path>`. Release remains unavailable until every required obligation is satisfied.
+
+The public website remains a separate repository, [writfold-dev/writfold-dev.github.io](https://github.com/writfold-dev/writfold-dev.github.io). Its publication state is recorded separately in the root README. This adoption authorizes no publication, remote effect or installable-product claim.

@@ -1,0 +1,12 @@
+flowchart TD
+  N0["Source request — Pinned identity + profile"]
+  N1["Contained acquisition — Git objects or provider read"]
+  N2["Retained capture — Bytes + outcome + digest"]
+  N3["Authored document — Unknown sections preserved"]
+  N4["Citation binding — Original revision + coordinates"]
+  N5["Current advisory — Separate freshness check"]
+  N0 --> N1
+  N1 -->|"retain"| N2
+  N3 -->|"parse"| N4
+  N2 -->|"exact source"| N4
+  N4 -->|"refresh separately"| N5

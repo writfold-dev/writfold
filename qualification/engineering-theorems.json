@@ -1,0 +1,518 @@
+{
+  "schema_version": 1,
+  "registry_kind": "discharged_mathematical_obligations_with_independently_checked_receipt_locators",
+  "normative_registry": "handovers/revision-5/writfold/registries/engineering-theorems.json",
+  "formal_registry": "formal/engineering-theorems.json",
+  "profile": "writfold-engineering/1",
+  "mathematical_status": "pass_under_explicit_model_assumptions",
+  "historical_index": "qualification/revision-5-initial-engineering-theorems.json",
+  "completion_rule": "Status records the completed mathematical discharge, supported by clean002, statement review and mutation004. Receipt locators are not results: source-current admission independently checks existence, executed success, all obligations, tools, artifacts and exact source identity. A missing/failed/stale receipt refuses. No product WF31, Rust refinement or native qualification is inferred.",
+  "supporting_evidence": {
+    "clean_receipt": {
+      "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json",
+      "sha256": "b6f3b6d00675c41c9357c32957effd143fa04e93e590aeb18deb955d8095c435",
+      "bytes": 426744
+    },
+    "clean_report": {
+      "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json.attempt/engineering-lean-report.json",
+      "sha256": "8d1c7c3166398a1e26c997b27ba3a5fe22d64f210218176747cff8ac0a8eb471",
+      "bytes": 5793771
+    },
+    "semantic_mutations": {
+      "path": "~/.local/share/writfold/evidence/revision-5-lean-mutations-004/report.json",
+      "sha256": "e3ac744d0180d7ac2c512cc439ca3361a194e640a851d6fb0773ab8b5d213b35",
+      "bytes": 90288
+    },
+    "mutation_source_binding": {
+      "path": "~/.local/share/writfold/evidence/revision-5-lean-mutations-004/source-closure-link.json",
+      "sha256": "2e7edbe96c86bd83216aa6e6be61478f8cb2f78e053f27336f273e8f4c964ae8",
+      "bytes": 3569
+    },
+    "audited_declarations": 571,
+    "reference_cases": 66,
+    "semantic_mutants_killed": 9,
+    "axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "independent_fidelity": "FullCalculusFidelity re-reviewed all proposed E statements and accepted the exact Prepared-release repair; CalculusRegistryReview maps every statement and essential negative. This is source-level review, separate from kernel evidence."
+  },
+  "assumption_boundaries": {
+    "input_and_codec": "Checked InitialInputs and nominal exact values only; authenticated decoding, canonical bytes, namespace-safe Rust conversion, integer bounds and hash assumptions require independent qualification.",
+    "Contracts.packages/packageReleases": "Authenticated exact package closure and immutable admitted release mapping, including retained historical activation pins.",
+    "Contracts.corpusBindings/projections": "Authenticated realm/family/native graph commit/schema/query/profile envelopes and exact observed projection heads/inventory; not an atomic cross-store snapshot.",
+    "Contracts.approvals": "Existing VerifiedPortfolioApproval boundary; actual portfolioPlanValid/applyPortfolio still execute.",
+    "Contracts.predicates/typedEvidence/TypedEvidenceSound": "Registered typed signatures and qualified exact predicate observations; signature matching does not imply semantic truth.",
+    "Contracts.receipts": "Qualified exact invocation, binding, root/node inputs, role, output and complete dependencies; retention does not manufacture fresh observation times.",
+    "Contracts.materialObservations": "Qualified completed durable object capture with unique capture identity, realm and capturedAt <= now; no authority, receipt, knowledge or effect truth is inferred from object availability.",
+    "Contracts.evaluations/reviews/learningApprovals": "Frozen exact CandidateMaterial, complete trial/rubric observations and current scoped policy/time approval, not a candidate-ID allowlist.",
+    "Contracts.observations/ExternalSound.observations": "Truthful exact adapter observations/classification, including qualified no-effect evidence after absence of pending/applied effects.",
+    "Contracts.quiescent": "Actual process-tree termination/reaping at exact resource, reservation generation and process generation; cooperating-client fencing and alias-free resource identification.",
+    "Contracts.effectAuthorizations": "Authorization at physical external effect boundary independent of local coordinator lifetime.",
+    "Contracts.compatibility/ExternalSound.compatibility": "Sound actual-result revision/producer/consumer tuples and provider conditional revision enforcement; uncontrolled external changes may break compatibility.",
+    "Contracts.migrations": "Qualified exact root, old/new Binding, process incarnation and observed provider; no digest-only implicit resume.",
+    "storage_and_fencing": "Private serial coordinator; durable atomic expected-head selection and separate completed corpus CAS; ledger retention and qualified native pins; enforced capabilities and resource fencing.",
+    "Contracts.retryAuthorizations": "Qualified exact immutable intent, previous claim, current incarnation/policy and validity interval. Provider-idempotent means canonical provider deduplication; proven-no-effect means attempt-specific authenticated absence. Neither follows from timeout or local Unknown.",
+    "Contracts.resumptions": "Qualified exact root/invocation/procedure/Binding/input/control and previous/current incarnation with policy/correction/provider/time. Explicit resumption does not create new authority or reset budgets."
+  },
+  "obligations": [
+    {
+      "id": "E01",
+      "name": "Conservative knowledge extension",
+      "system": "Lean",
+      "status": "pass",
+      "contract": "handovers/revision-5/writfold/plan/22-engineering-calculus.md",
+      "scope": "Every actual finite Request/environment/refusal trace projects to LegacyTrace over both knowledge and the exact threaded portfolio journal; only completed publication applies the existing portfolio operation.",
+      "theorem_symbols": [
+        "Kctx.Engineering.E01_conservative_extension",
+        "Kctx.Engineering.E01_nonpublication_derivation",
+        "Kctx.Engineering.append_legacy_frame",
+        "Kctx.Engineering.environment_legacy_frame",
+        "Kctx.Engineering.publishSelected_certificate"
+      ],
+      "receipts": [
+        "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-004.json"
+      ],
+      "assumptions": [
+        "Mathematical nominal identities and exact equality; production canonical codecs, namespace-safe conversions, integer bounds and collision resistance/injective identity require separate refinement.",
+        "Qualified authenticated immutable inputs and durable conditional storage; enforced capability and cooperating-owner boundaries are external assumptions, not consequences of list membership.",
+        "Existing authenticated VerifiedPortfolioApproval; EvidenceSound only when interpreting legacy factual truth, not needed to prove operational conservation."
+      ],
+      "production_refinement_boundaries": [
+        "Production admission/authentication refinement and any factual EvidenceSound interpretation remain external bridges."
+      ]
+    },
+    {
+      "id": "E02",
+      "name": "Type and representation preservation",
+      "system": "Lean",
+      "status": "pass",
+      "contract": "handovers/revision-5/writfold/plan/22-engineering-calculus.md",
+      "scope": "Checked initialization and every operational/environment/refusal transition preserve the actual OperationalWellFormed conjunction; ledger well-formedness/evidence closure are supplied separately by E05_E09_history.",
+      "theorem_symbols": [
+        "Kctx.Engineering.E02_representation_preserved",
+        "Kctx.Engineering.init_operational_wellFormed",
+        "Kctx.Engineering.domain_preserves_operationalWellFormed",
+        "Kctx.Engineering.step_preserves_operationalWellFormed",
+        "Kctx.Engineering.transition_preserves_operationalWellFormed",
+        "Kctx.Engineering.replay_preserves_operationalWellFormed",
+        "Kctx.Engineering.environment_preserves_operationalWellFormed",
+        "Kctx.Engineering.localAction_preserves_operationalWellFormed",
+        "Kctx.Engineering.E05_E09_history",
+        "Kctx.Engineering.validateProcedure_sound"
+      ],
+      "receipts": [
+        "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-004.json"
+      ],
+      "assumptions": [
+        "Mathematical nominal identities and exact equality; production canonical codecs, namespace-safe conversions, integer bounds and collision resistance/injective identity require separate refinement.",
+        "Qualified authenticated immutable inputs and durable conditional storage; enforced capability and cooperating-owner boundaries are external assumptions, not consequences of list membership.",
+        "Authenticated packages/packageReleases/corpusBindings; registered predicate signatures; Contracts.receipts/materialObservations/evaluations/reviews qualify exact records.",
+        "Historical representation deliberately excludes current grant liveness, expiry and policy equality; E12 guards new work."
+      ],
+      "production_refinement_boundaries": [
+        "Rust namespace-safe casts, malformed-byte decoding, canonical codecs and integer bounds belong production representation/refinement obligations; finite nominal Lean types are permitted by plan22."
+      ]
+    },
+    {
+      "id": "E03",
+      "name": "Capability and gate-floor non-amplification",
+      "system": "Lean",
+      "status": "pass",
+      "contract": "handovers/revision-5/writfold/plan/22-engineering-calculus.md",
+      "scope": "Actual arbitrary-depth invocation paths retain ancestor capabilities/floors; typed catalog and run representations bind grants and ceilings; publication checks governing and kernel floors for learned procedures.",
+      "theorem_symbols": [
+        "Kctx.Engineering.E02_representation_preserved",
+        "Kctx.Engineering.E04_E10_arbitrary_invocation_bounds",
+        "Kctx.Engineering.invocation_path_kernel_floor",
+        "Kctx.Engineering.call_capabilities_bounded",
+        "Kctx.Engineering.operational_effective_floor",
+        "Kctx.Engineering.publication_procedure_policy_floor",
+        "Kctx.Engineering.E08_publication_safe"
+      ],
+      "receipts": [
+        "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-004.json"
+      ],
+      "assumptions": [
+        "Mathematical nominal identities and exact equality; production canonical codecs, namespace-safe conversions, integer bounds and collision resistance/injective identity require separate refinement.",
+        "Qualified authenticated immutable inputs and durable conditional storage; enforced capability and cooperating-owner boundaries are external assumptions, not consequences of list membership.",
+        "Scoped Grant binds root, complete Binding, resource set and validity interval; authenticated package and learning approval boundaries."
+      ],
+      "production_refinement_boundaries": [
+        "Enforced runtime capability boundary and authenticated package/learning inputs require production qualification."
+      ]
+    },
+    {
+      "id": "E04",
+      "name": "Subject and dependency integrity",
+      "system": "Lean",
+      "status": "pass",
+      "contract": "handovers/revision-5/writfold/plan/22-engineering-calculus.md",
+      "scope": "Representation and actual dependency/Join guards identify exact invocation, root input, node input, types, successful child and retained qualified receipt roles; selected mismatch lemmas refuse stale inputs.",
+      "theorem_symbols": [
+        "Kctx.Engineering.E02_representation_preserved",
+        "Kctx.Engineering.enabled_exact_dependency",
+        "Kctx.Engineering.enabled_unique_dependency",
+        "Kctx.Engineering.joinReady_exact_invocation",
+        "Kctx.Engineering.E03_exact_pending_invocation",
+        "Kctx.Engineering.E03_exact_join_returns",
+        "Kctx.Engineering.admitted_receipt_retains_exact_inputs",
+        "Kctx.Engineering.changed_invocation_input_refuses_receipt",
+        "Kctx.Engineering.changed_node_input_refuses_receipt",
+        "Kctx.Engineering.stale_binding_evidence_refused",
+        "Kctx.Engineering.gate_receipt_has_evidence_type",
+        "Kctx.Engineering.procedure_receipt_has_terminal_subject",
+        "Kctx.Engineering.E12_return_refuses_stale_child",
+        "Kctx.Engineering.reuse_checked",
+        "Kctx.Engineering.domain_reuse_checked",
+        "Kctx.Engineering.E04_request_reuse_integrity",
+        "Kctx.Engineering.E04_reuse_keeps_observation",
+        "Kctx.Engineering.ancestryLive_operational",
+        "Kctx.Engineering.live_operational",
+        "Kctx.Engineering.receiptValid_operational",
+        "Kctx.Engineering.predicatesHold_qualified",
+        "Kctx.Engineering.consumer_enabled_dependencies",
+        "Kctx.Engineering.consumer_append_source_valid",
+        "Kctx.Engineering.consumer_append_body",
+        "Kctx.Engineering.advanceNode_certificate",
+        "Kctx.Engineering.returnChild_certificate",
+        "Kctx.Engineering.E04_request_advance_integrity",
+        "Kctx.Engineering.E04_request_return_integrity"
+      ],
+      "receipts": [
+        "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-004.json"
+      ],
+      "assumptions": [
+        "Mathematical nominal identities and exact equality; production canonical codecs, namespace-safe conversions, integer bounds and collision resistance/injective identity require separate refinement.",
+        "Qualified authenticated immutable inputs and durable conditional storage; enforced capability and cooperating-owner boundaries are external assumptions, not consequences of list membership.",
+        "Qualified complete dependency capture and authentic exact receipt/evaluator outputs; TypedEvidenceSound is a separate semantic boundary, not inferred from registered signatures."
+      ],
+      "production_refinement_boundaries": [
+        "Qualified evaluator truth, receipt authenticity and complete dependency capture remain explicit assumptions; binding them to real producer/SDK artifacts requires production refinement."
+      ]
+    },
+    {
+      "id": "E05",
+      "name": "Ledger expected-head safety",
+      "system": "Lean",
+      "status": "pass",
+      "contract": "handovers/revision-5/writfold/plan/22-engineering-calculus.md",
+      "scope": "Initialized traces retain per-stream immutable exact payloads and captured historical inputs/contracts; selected prefixes replay under historical premises and a consumed predecessor cannot select a competing append.",
+      "theorem_symbols": [
+        "Kctx.Engineering.E05_E09_history",
+        "Kctx.Engineering.E05_retained_origin",
+        "Kctx.Engineering.conflicting_head_requires_refusal",
+        "Kctx.Engineering.stale_head_requires_refusal",
+        "Kctx.Engineering.append_captures_exact_inputs",
+        "Kctx.Engineering.historicalValid_contract",
+        "Kctx.Engineering.reachable_immutable_payload",
+        "Kctx.Engineering.every_selected_stream_replays",
+        "Kctx.Engineering.step_storageEvolution",
+        "Kctx.Engineering.Ledger.competing_append_refuses",
+        "Kctx.Engineering.Ledger.commit_other_stream"
+      ],
+      "receipts": [
+        "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-004.json"
+      ],
+      "assumptions": [
+        "Mathematical nominal identities and exact equality; production canonical codecs, namespace-safe conversions, integer bounds and collision resistance/injective identity require separate refinement.",
+        "Qualified authenticated immutable inputs and durable conditional storage; enforced capability and cooperating-owner boundaries are external assumptions, not consequences of list membership.",
+        "Private serial coordinator and atomic durable expected-head selection across shared ownership state; list algebra does not prove filesystem/Git/database CAS."
+      ],
+      "production_refinement_boundaries": [
+        "Authenticated byte-level origin, reducer-profile codecs, concurrent durable expected-head selection and partial-write storage recovery require production storage/protocol refinement.",
+        "Destructive GC is outside the permanent-retention profile and requires its own bridge, not a proof obligation for a nonexistent calculus writer."
+      ]
+    },
+    {
+      "id": "E06",
+      "name": "Resource exclusivity under qualified fencing",
+      "system": "Lean",
+      "status": "pass",
+      "contract": "handovers/revision-5/writfold/plan/22-engineering-calculus.md",
+      "scope": "Unique ownership is preserved with exact root/holder/generation identities; every transition retains blocked ownership or supplies qualified release checks; physical issue advances process generation and stale teardown certificates refuse.",
+      "theorem_symbols": [
+        "Kctx.Engineering.E02_representation_preserved",
+        "Kctx.Engineering.E06_exclusive_conflicting_ownership",
+        "Kctx.Engineering.E06_reachable_ownership_audited",
+        "Kctx.Engineering.E06_transition_cannot_release_or_transfer_early",
+        "Kctx.Engineering.E06_quiesce_release_checked",
+        "Kctx.Engineering.E06_prepared_prevents_release",
+        "Kctx.Engineering.E06_issue_increments_owned_process_generation",
+        "Kctx.Engineering.E06_terminate_requires_current_generations",
+        "Kctx.Engineering.E06_stale_process_certificate_refused",
+        "Kctx.Engineering.E06_reservation_generation_fresh",
+        "Kctx.Engineering.E06_cancel_preserves_capacity",
+        "Kctx.Engineering.E06_crash_preserves_capacity",
+        "Kctx.Engineering.E06_recovery_preserves_capacity",
+        "Kctx.Engineering.E06_rebind_requires_released_ownership",
+        "Kctx.Engineering.E06_reachable_exclusive_conflicting_ownership",
+        "Kctx.Engineering.E06_dispatch_excludes_other_unsettled_effects"
+      ],
+      "receipts": [
+        "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-004.json"
+      ],
+      "assumptions": [
+        "Mathematical nominal identities and exact equality; production canonical codecs, namespace-safe conversions, integer bounds and collision resistance/injective identity require separate refinement.",
+        "Qualified authenticated immutable inputs and durable conditional storage; enforced capability and cooperating-owner boundaries are external assumptions, not consequences of list membership.",
+        "Contracts.quiescent authenticates actual reaped process-tree quiescence for exact resource/reservation/process generation; no other writer bypasses fencing."
+      ],
+      "production_refinement_boundaries": [
+        "Physical writable-worktree alias detection, operating-system/process-tree fencing and truthful generation-bound quiescence require qualified adapters and cooperating-owner assumptions."
+      ]
+    },
+    {
+      "id": "E07",
+      "name": "Honest effect outcomes",
+      "system": "Lean",
+      "status": "pass",
+      "contract": "handovers/revision-5/writfold/plan/22-engineering-calculus.md",
+      "scope": "Every reachable settled outcome has exact retained qualified observation/classification. Physical sends consume unique retained claim identities; explicit authorized retry may issue a fresh claim for the same immutable intent. Canonical logical application replay is read-only.",
+      "theorem_symbols": [
+        "Kctx.Engineering.E07_reachable_evidence",
+        "Kctx.Engineering.E07_reachable_settled_sound",
+        "Kctx.Engineering.E07_dispatch_request_checks_selected_claim",
+        "Kctx.Engineering.E07_selected_claim_unique",
+        "Kctx.Engineering.E07_no_second_send_after_trace",
+        "Kctx.Engineering.E07_no_effect_observation_closes_send",
+        "Kctx.Engineering.E07_no_effect_observation_closes_preparation",
+        "Kctx.Engineering.E07_external_completion_independent_of_coordinator",
+        "Kctx.Engineering.E07_reconcile_preserves_mutation_world",
+        "Kctx.Engineering.E05_E09_history",
+        "Kctx.Engineering.E07_reconcile_refuses_old_rejection",
+        "Kctx.Engineering.E07_completion_preserves_application",
+        "Kctx.Engineering.E07_completion_records_application",
+        "Kctx.Engineering.E07_existing_application_response_is_read_only",
+        "Kctx.Engineering.E07_environment_preserves_application",
+        "Kctx.Engineering.E07_application_persists_reachable",
+        "Kctx.Engineering.E07_environment_records_application",
+        "Kctx.Engineering.E07_environment_existing_application_is_read_only",
+        "Kctx.Engineering.E07_no_second_logical_application_after_trace",
+        "Kctx.Engineering.E12_append_retry_has_exact_authorization",
+        "Kctx.Engineering.E12_dispatch_retry_revalidates"
+      ],
+      "receipts": [
+        "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-004.json"
+      ],
+      "assumptions": [
+        "Mathematical nominal identities and exact equality; production canonical codecs, namespace-safe conversions, integer bounds and collision resistance/injective identity require separate refinement.",
+        "Qualified authenticated immutable inputs and durable conditional storage; enforced capability and cooperating-owner boundaries are external assumptions, not consequences of list membership.",
+        "ExternalSound.observations supplies semantic truth of exact adapter observations; effectAuthorizations supplies authorization at effect boundary independently of coordinator liveness.",
+        "Qualified provider CAS and adapter classification semantics; no timeout-as-failure; retry requires exact qualified provider-idempotent or proven-no-effect authorization."
+      ],
+      "production_refinement_boundaries": [
+        "Adapter truth, authorization-at-effect, provider CAS and provider-idempotency/proven-absence contracts remain explicit qualified assumptions; their implementation mapping is not supplied by Lean."
+      ]
+    },
+    {
+      "id": "E08",
+      "name": "Promotion publication and closure",
+      "system": "Lean",
+      "status": "pass",
+      "contract": "handovers/revision-5/writfold/plan/22-engineering-calculus.md",
+      "scope": "Selected historical preparation plus exact CandidateMaterial evaluation/review and current scoped approval gates ordinary corpus publication; evidence/native roots precede selection and survive all later transitions independently of acknowledgement.",
+      "theorem_symbols": [
+        "Kctx.Engineering.E08_publication_safe",
+        "Kctx.Engineering.publishSelected_certificate",
+        "Kctx.Engineering.publication_current_engineering_approval",
+        "Kctx.Engineering.publication_evidence_and_native_roots",
+        "Kctx.Engineering.publication_procedure_policy_floor",
+        "Kctx.Engineering.published_evidence_permanent",
+        "Kctx.Engineering.environment_cannot_undo_publication",
+        "Kctx.Engineering.changed_material_requires_refusal",
+        "Kctx.Engineering.unprepared_publication_requires_refusal",
+        "Kctx.Engineering.E02_representation_preserved",
+        "Kctx.Engineering.E05_E09_history",
+        "Kctx.Engineering.E08_publication_safe_reachable"
+      ],
+      "receipts": [
+        "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-004.json"
+      ],
+      "assumptions": [
+        "Mathematical nominal identities and exact equality; production canonical codecs, namespace-safe conversions, integer bounds and collision resistance/injective identity require separate refinement.",
+        "Qualified authenticated immutable inputs and durable conditional storage; enforced capability and cooperating-owner boundaries are external assumptions, not consequences of list membership.",
+        "Authenticated frozen rubric/all-trial evaluator and review observations, exact scoped learning approvals and legacy portfolio approvals.",
+        "Completed corpus CAS modeled by applied legacy operation; native corpusBindings, durable release roots and retained package closure require qualified storage bridge."
+      ],
+      "production_refinement_boundaries": [
+        "Completed corpus CAS, authenticated review/evaluation and durable root retention need production qualification; prunable storage/GC requires a separate bridge."
+      ]
+    },
+    {
+      "id": "E09",
+      "name": "Projection non-authority and exact cuts",
+      "system": "Lean",
+      "status": "pass",
+      "contract": "handovers/revision-5/writfold/plan/22-engineering-calculus.md",
+      "scope": "Projection updates only pin/heads/inventory metadata; acquisition captures complete ordered stream inventory and exact native/visibility inputs; every surviving read keeps exact captured corpus interpretation and manifest across arbitrary transitions.",
+      "theorem_symbols": [
+        "Kctx.Engineering.project_non_authority",
+        "Kctx.Engineering.acquireCut_certificate",
+        "Kctx.Engineering.acquireCut_inventory_complete",
+        "Kctx.Engineering.E09_surviving_cut_exact",
+        "Kctx.Engineering.E09_surviving_stream_exact",
+        "Kctx.Engineering.E05_E09_history",
+        "Kctx.Engineering.released_cut_requires_refusal",
+        "Kctx.Engineering.missing_cut_requires_refusal",
+        "Kctx.Engineering.lagging_projection_requires_refusal",
+        "Kctx.Engineering.stale_inventory_requires_refusal",
+        "Kctx.Engineering.missing_watermark_has_no_head_fallback",
+        "Kctx.Engineering.missing_native_root_requires_refusal",
+        "Kctx.Engineering.wrong_activity_family_requires_refusal",
+        "Kctx.Engineering.Ledger.pin_native_pins_valid",
+        "Kctx.Engineering.Examples.CutEquationProof.started_exact",
+        "Kctx.Engineering.Examples.CutEquationProof.before_selections",
+        "Kctx.Engineering.Examples.CutEquationProof.before_sorted",
+        "Kctx.Engineering.Examples.CutEquationProof.projection_before_exact",
+        "Kctx.Engineering.Examples.CutEquationProof.acquire_before_exact",
+        "Kctx.Engineering.Examples.CutEquationProof.cut_before_exact",
+        "Kctx.Engineering.Examples.CutEquationProof.advance_exact",
+        "Kctx.Engineering.Examples.CutEquationProof.after_selections",
+        "Kctx.Engineering.Examples.CutEquationProof.after_sorted",
+        "Kctx.Engineering.Examples.CutEquationProof.projection_after_exact",
+        "Kctx.Engineering.Examples.CutEquationProof.acquire_after_exact",
+        "Kctx.Engineering.Examples.CutEquationProof.cut_after_exact",
+        "Kctx.Engineering.Examples.CutEquationProof.positive",
+        "Kctx.Engineering.Examples.CutEquationProof.negative"
+      ],
+      "receipts": [
+        "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-004.json"
+      ],
+      "assumptions": [
+        "Mathematical nominal identities and exact equality; production canonical codecs, namespace-safe conversions, integer bounds and collision resistance/injective identity require separate refinement.",
+        "Qualified authenticated immutable inputs and durable conditional storage; enforced capability and cooperating-owner boundaries are external assumptions, not consequences of list membership.",
+        "Contracts.projections authenticates exact native pin/head/inventory observations; envelope/query/schema/visibility interpretation and retention are qualified native boundaries."
+      ],
+      "production_refinement_boundaries": [
+        "Native query/visibility interpretation, production pagination and destructive-GC retention bridges remain external."
+      ]
+    },
+    {
+      "id": "E10",
+      "name": "Pinned composition and bounded traversal",
+      "system": "Lean",
+      "status": "pass",
+      "contract": "handovers/revision-5/writfold/plan/22-engineering-calculus.md",
+      "scope": "Typed exact catalog/call targets bound invocation rank and share one root account. Every actual reachable suffix constructs a SharedAccountTrace automatically; positive account-changing steps are bounded by the activation budget. Explicit resumption clears loaded context without resetting the account.",
+      "theorem_symbols": [
+        "Kctx.Engineering.E02_representation_preserved",
+        "Kctx.Engineering.parent_call_version_pinned",
+        "Kctx.Engineering.E04_E10_arbitrary_invocation_bounds",
+        "Kctx.Engineering.E10_shared_account_traversal_bound",
+        "Kctx.Engineering.E10_acyclic_invocation_composition",
+        "Kctx.Engineering.invocation_path_unique_account",
+        "Kctx.Engineering.charge_has_bounded_positive_cost",
+        "Kctx.Engineering.completed_node_disabled",
+        "Kctx.Engineering.validateProcedure_sound",
+        "Kctx.Engineering.transition_account_evolution",
+        "Kctx.Engineering.transition_account_classified",
+        "Kctx.Engineering.reachable_constructs_shared_account_trace",
+        "Kctx.Engineering.E10_every_reachable_suffix_bounded",
+        "Kctx.Engineering.E10_after_activation_bounded",
+        "Kctx.Engineering.domainBody_budget_evolution",
+        "Kctx.Engineering.step_budget_evolution",
+        "Kctx.Engineering.transition_budget_evolution",
+        "Kctx.Engineering.loadResource_actual_charge",
+        "Kctx.Engineering.prepare_actual_charge",
+        "Kctx.Engineering.failNode_actual_charge",
+        "Kctx.Engineering.selectRoute_actual_charge",
+        "Kctx.Engineering.call_actual_charge",
+        "Kctx.Engineering.rebind_actual_charge",
+        "Kctx.Engineering.resume_actual_charge",
+        "Kctx.Engineering.retryClaim_actual_charge",
+        "Kctx.Engineering.advanceNode_actual_charge",
+        "Kctx.Engineering.advanceNode_effect_budgets",
+        "Kctx.Engineering.append_actual_domainBody",
+        "Kctx.Engineering.ActualCharge.rebase",
+        "Kctx.Engineering.charged_transition_changes_account",
+        "Kctx.Engineering.append_loadResource_counted",
+        "Kctx.Engineering.ActualCharge.counted_transition",
+        "Kctx.Engineering.E12_resume_preserves_control_and_clears_context",
+        "Kctx.Engineering.E12_cleared_required_context_blocks_node"
+      ],
+      "receipts": [
+        "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-004.json"
+      ],
+      "assumptions": [
+        "Mathematical nominal identities and exact equality; production canonical codecs, namespace-safe conversions, integer bounds and collision resistance/injective identity require separate refinement.",
+        "Qualified authenticated immutable inputs and durable conditional storage; enforced capability and cooperating-owner boundaries are external assumptions, not consequences of list membership.",
+        "Authenticated exact packageReleases and package closure; no moving alias substitution; input budget and finite typed graph validated before execution."
+      ],
+      "production_refinement_boundaries": [
+        "Authenticated immutable package mapping, bounded Rust conversions and production resource accounting need refinement."
+      ]
+    },
+    {
+      "id": "E11",
+      "name": "Declared cross-repo compatibility preservation",
+      "system": "Lean",
+      "status": "pass",
+      "contract": "handovers/revision-5/writfold/plan/22-engineering-calculus.md",
+      "scope": "Every operational request and controlled environment completion preserves declared compatibility; uncontrolled upstream/provider changes are explicit possible breakers, not hidden preservation premises.",
+      "theorem_symbols": [
+        "Kctx.Engineering.E11_completion_uses_actual_result",
+        "Kctx.Engineering.E11_completion_preserves",
+        "Kctx.Engineering.E11_step_preserves_compatibility",
+        "Kctx.Engineering.E11_transition_preserves_or_external_change",
+        "Kctx.Engineering.E11_permitted_execution_compatible",
+        "Kctx.Engineering.E11_external_change_can_break_compatibility",
+        "Kctx.Engineering.E11_changed_provider_refuses_prepare",
+        "Kctx.Engineering.E11_binding_cannot_silently_refresh",
+        "Kctx.Engineering.E11_changed_provider_refuses_request"
+      ],
+      "receipts": [
+        "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-004.json"
+      ],
+      "assumptions": [
+        "Mathematical nominal identities and exact equality; production canonical codecs, namespace-safe conversions, integer bounds and collision resistance/injective identity require separate refinement.",
+        "Qualified authenticated immutable inputs and durable conditional storage; enforced capability and cooperating-owner boundaries are external assumptions, not consequences of list membership.",
+        "ExternalSound.compatibility maps exact actual-result provider/producer/consumer tuples to the declared relation; initial CompatibleState is required.",
+        "Provider conditional expected-revision enforcement and authorization-at-effect; permitted CompatibleExecution excludes only explicit uncontrolled provider changes."
+      ],
+      "production_refinement_boundaries": [
+        "Nominal ProviderRevision plus declared producer/consumer Nat indices are permitted mathematical state domains. Mapping them to actual Rust/forge repositories and artifact identities belongs V19/M13/WF28/WF31 and is not evidence of a missing E11 Lean theorem.",
+        "Sound compatibility observations, expected-provider atomicity and effect authorization are explicit conditional premises; production adapters must qualify them."
+      ]
+    },
+    {
+      "id": "E12",
+      "name": "Revocation-aware continuation",
+      "system": "Lean",
+      "status": "pass",
+      "contract": "handovers/revision-5/writfold/plan/22-engineering-calculus.md",
+      "scope": "Every actual request carries action-specific current continuation checks. Recovery itself never refreshes activation authority; explicit migration or exact authorized resumption checks current scope and incarnation. Resumption preserves control and clears loaded context; retry authorization is revalidated at send.",
+      "theorem_symbols": [
+        "Kctx.Engineering.E12_step_checks_continuation",
+        "Kctx.Engineering.E12_reachable_continuation_audited",
+        "Kctx.Engineering.E12_live_current_authority",
+        "Kctx.Engineering.E12_live_checks_parent",
+        "Kctx.Engineering.E12_append_migration_exact",
+        "Kctx.Engineering.E12_recovery_preserves_historical_inputs",
+        "Kctx.Engineering.E12_recovered_old_activation_refused",
+        "Kctx.Engineering.E12_return_refuses_stale_child",
+        "Kctx.Engineering.E07_dispatch_request_checks_selected_claim",
+        "Kctx.Engineering.publication_current_engineering_approval",
+        "Kctx.Engineering.E12_append_resume_has_exact_authorization",
+        "Kctx.Engineering.E12_resume_preserves_control_and_clears_context",
+        "Kctx.Engineering.E12_resume_preserves_effect_history",
+        "Kctx.Engineering.E12_cleared_required_context_blocks_node",
+        "Kctx.Engineering.E12_append_retry_has_exact_authorization",
+        "Kctx.Engineering.E12_dispatch_retry_revalidates"
+      ],
+      "receipts": [
+        "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-004.json"
+      ],
+      "assumptions": [
+        "Mathematical nominal identities and exact equality; production canonical codecs, namespace-safe conversions, integer bounds and collision resistance/injective identity require separate refinement.",
+        "Qualified authenticated immutable inputs and durable conditional storage; enforced capability and cooperating-owner boundaries are external assumptions, not consequences of list membership.",
+        "Current observed authority/policy/correction and exact scoped grant intervals; contracts.migrations binds root, old/new Binding, incarnation and provider.",
+        "Provider authorization-at-effect is separate; no instantaneous worldwide revocation assumption."
+      ],
+      "production_refinement_boundaries": [
+        "Authority observation authenticity, migration/resumption approvals and authorization-at-effect require qualified production boundaries; instantaneous worldwide revocation is not assumed."
+      ]
+    }
+  ],
+  "full_product_WF31": "not_run; V16-V21, M12-M16, composition bridges and native integration remain separate"
+}

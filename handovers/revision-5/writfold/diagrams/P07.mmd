@@ -1,0 +1,13 @@
+flowchart TD
+  N0["Exact approved plan — Base + policy + input closure"]
+  N1["Prepare and retain — Omnigraph pin + Git manifest"]
+  N2["Completed ref CAS — Single visibility point"]
+  N3["Recovery journal — Hints; not authority"]
+  N4["Revalidation — Signature + objects + history"]
+  N5["Published receipt — Applied or exact replay"]
+  N0 -->|"validate"| N1
+  N1 -->|"durable closure"| N2
+  N1 -->|"intent"| N3
+  N3 -->|"restart"| N4
+  N4 -->|"same base only"| N2
+  N2 -->|"commit"| N5

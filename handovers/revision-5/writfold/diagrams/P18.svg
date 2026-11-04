@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<svg width="1200" height="610" preserveAspectRatio="xMinYMin meet" viewBox="0 0 1200 610" xmlns="http://www.w3.org/2000/svg" version="1.0" fill-rule="evenodd" xmlns:xlink="http://www.w3.org/1999/xlink">
+	<title>Learning and reviewed promotion</title>
+	<desc>Turn failures and feedback into evaluated revisions without self-authorization.</desc>
+	<clipPath id="clip">
+		<rect x="0" y="0" width="1200" height="610"/>
+	</clipPath>
+	<g id="group" transform="scale(1,-1) translate(0,-610)" style="clip-path: url(#clip)">
+		<g transform="">
+			<rect x="0" y="0" width="1200" height="610" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(96%,97%,95%); fill-rule: evenodd;"/>
+			<text x="48" y="566" style="font-family: Bold; font-size: 19px;fill: rgb(3%,49%,44%); stroke:none;" transform="translate(0,1132) scale(1,-1)">P18</text>
+			<text x="126" y="565" style="font-family: Bold; font-size: 25px;fill: rgb(9%,17%,21%); stroke:none;" transform="translate(0,1130) scale(1,-1)">Learning and reviewed promotion</text>
+			<text x="48" y="530" style="font-family: Sans; font-size: 16px;fill: rgb(32%,40%,44%); stroke:none;" transform="translate(0,1060) scale(1,-1)">Turn failures and feedback into evaluated revisions without self-authorization.</text>
+			<polyline points="378 387, 435 387" style="stroke: rgb(3%,49%,44%); stroke-linecap: butt; stroke-width: 2; fill: None; fill-rule: evenodd;"/>
+			<polygon points="435 387, 426.7105 390.5048, 426.7105 383.4952" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(3%,49%,44%); fill-rule: evenodd;"/>
+			<polyline points="765 387, 822 387" style="stroke: rgb(3%,49%,44%); stroke-linecap: butt; stroke-width: 2; fill: None; fill-rule: evenodd;"/>
+			<polygon points="822 387, 813.7105 390.5048, 813.7105 383.4952" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(3%,49%,44%); fill-rule: evenodd;"/>
+			<polyline points="213 322, 213 276, 213 276, 213 210" style="stroke: rgb(3%,49%,44%); stroke-linecap: butt; stroke-width: 2; fill: None; fill-rule: evenodd;"/>
+			<polygon points="213 210, 216.5048 218.2895, 209.4952 218.2895" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(3%,49%,44%); fill-rule: evenodd;"/>
+			<rect x="191.987060546875" y="280" width="42.02587890625" height="15" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(96%,97%,95%); fill-rule: evenodd;"/>
+			<text x="195.987060546875" y="283" style="font-family: Sans; font-size: 11px;fill: rgb(3%,49%,44%); stroke:none;" transform="translate(0,566) scale(1,-1)">inputs</text>
+			<polyline points="987 322, 987 242, 600 242, 600 210" style="stroke: rgb(3%,49%,44%); stroke-linecap: butt; stroke-width: 2; fill: None; fill-rule: evenodd;"/>
+			<polygon points="600 210, 603.5048 218.2895, 596.4952 218.2895" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(3%,49%,44%); fill-rule: evenodd;"/>
+			<rect x="773.3974609375" y="246" width="40.205078125" height="15" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(96%,97%,95%); fill-rule: evenodd;"/>
+			<text x="777.3974609375" y="249" style="font-family: Sans; font-size: 11px;fill: rgb(3%,49%,44%); stroke:none;" transform="translate(0,498) scale(1,-1)">check</text>
+			<polyline points="378 145, 435 145" style="stroke: rgb(3%,49%,44%); stroke-linecap: butt; stroke-width: 2; fill: None; fill-rule: evenodd;"/>
+			<polygon points="435 145, 426.7105 148.5048, 426.7105 141.4952" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(3%,49%,44%); fill-rule: evenodd;"/>
+			<rect x="390.503662109375" y="156.0" width="31.99267578125" height="15.0" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(96%,97%,95%); fill-rule: evenodd;"/>
+			<text x="394.503662109375" y="159.0" style="font-family: Sans; font-size: 11px;fill: rgb(3%,49%,44%); stroke:none;" transform="translate(0,318) scale(1,-1)">bind</text>
+			<polyline points="765 145, 822 145" style="stroke: rgb(3%,49%,44%); stroke-linecap: butt; stroke-width: 2; fill: None; fill-rule: evenodd;"/>
+			<polygon points="822 145, 813.7105 148.5048, 813.7105 141.4952" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(3%,49%,44%); fill-rule: evenodd;"/>
+			<rect x="771.05029296875" y="156.0" width="44.8994140625" height="15.0" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(96%,97%,95%); fill-rule: evenodd;"/>
+			<text x="775.05029296875" y="159.0" style="font-family: Sans; font-size: 11px;fill: rgb(3%,49%,44%); stroke:none;" transform="translate(0,318) scale(1,-1)">accept</text>
+			<rect x="48" y="322" width="330" height="130" rx="13" ry="13" style="stroke: rgb(85%,88%,87%); stroke-linecap: butt; stroke-width: 1.3; fill: rgb(100%,100%,100%); fill-rule: evenodd;"/>
+			<rect x="48" y="445" width="330" height="7" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(85%,88%,87%); fill-rule: evenodd;"/>
+			<text x="66" y="420" style="font-family: Bold; font-size: 18px;fill: rgb(9%,17%,21%); stroke:none;" transform="translate(0,840) scale(1,-1)">Observed failure</text>
+			<text x="66" y="387" style="font-family: Sans; font-size: 14px;fill: rgb(32%,40%,44%); stroke:none;" transform="translate(0,774) scale(1,-1)">Exact event and reproduction</text>
+			<rect x="435" y="322" width="330" height="130" rx="13" ry="13" style="stroke: rgb(85%,88%,87%); stroke-linecap: butt; stroke-width: 1.3; fill: rgb(100%,100%,100%); fill-rule: evenodd;"/>
+			<rect x="435" y="445" width="330" height="7" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(3%,49%,44%); fill-rule: evenodd;"/>
+			<text x="453" y="420" style="font-family: Bold; font-size: 18px;fill: rgb(9%,17%,21%); stroke:none;" transform="translate(0,840) scale(1,-1)">Candidate lesson</text>
+			<text x="453" y="387" style="font-family: Sans; font-size: 14px;fill: rgb(32%,40%,44%); stroke:none;" transform="translate(0,774) scale(1,-1)">Scope delta counterexamples</text>
+			<rect x="822" y="322" width="330" height="130" rx="13" ry="13" style="stroke: rgb(85%,88%,87%); stroke-linecap: butt; stroke-width: 1.3; fill: rgb(100%,100%,100%); fill-rule: evenodd;"/>
+			<rect x="822" y="445" width="330" height="7" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(85%,88%,87%); fill-rule: evenodd;"/>
+			<text x="840" y="420" style="font-family: Bold; font-size: 18px;fill: rgb(9%,17%,21%); stroke:none;" transform="translate(0,840) scale(1,-1)">Frozen evaluation</text>
+			<text x="840" y="387" style="font-family: Sans; font-size: 14px;fill: rgb(32%,40%,44%); stroke:none;" transform="translate(0,774) scale(1,-1)">Baseline held-out adverse cases</text>
+			<rect x="48" y="80" width="330" height="130" rx="13" ry="13" style="stroke: rgb(85%,88%,87%); stroke-linecap: butt; stroke-width: 1.3; fill: rgb(100%,100%,100%); fill-rule: evenodd;"/>
+			<rect x="48" y="203" width="330" height="7" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(85%,88%,87%); fill-rule: evenodd;"/>
+			<text x="66" y="178" style="font-family: Bold; font-size: 18px;fill: rgb(9%,17%,21%); stroke:none;" transform="translate(0,356) scale(1,-1)">Current policy</text>
+			<text x="66" y="145" style="font-family: Sans; font-size: 14px;fill: rgb(32%,40%,44%); stroke:none;" transform="translate(0,290) scale(1,-1)">Witnesses approval gate floor</text>
+			<rect x="435" y="80" width="330" height="130" rx="13" ry="13" style="stroke: rgb(85%,88%,87%); stroke-linecap: butt; stroke-width: 1.3; fill: rgb(100%,100%,100%); fill-rule: evenodd;"/>
+			<rect x="435" y="203" width="330" height="7" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(3%,49%,44%); fill-rule: evenodd;"/>
+			<text x="453" y="178" style="font-family: Bold; font-size: 18px;fill: rgb(9%,17%,21%); stroke:none;" transform="translate(0,356) scale(1,-1)">Retain and publish</text>
+			<text x="453" y="145" style="font-family: Sans; font-size: 14px;fill: rgb(32%,40%,44%); stroke:none;" transform="translate(0,290) scale(1,-1)">Corpus closure then Git CAS</text>
+			<rect x="822" y="80" width="330" height="130" rx="13" ry="13" style="stroke: rgb(85%,88%,87%); stroke-linecap: butt; stroke-width: 1.3; fill: rgb(100%,100%,100%); fill-rule: evenodd;"/>
+			<rect x="822" y="203" width="330" height="7" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(85%,88%,87%); fill-rule: evenodd;"/>
+			<text x="840" y="178" style="font-family: Bold; font-size: 18px;fill: rgb(9%,17%,21%); stroke:none;" transform="translate(0,356) scale(1,-1)">New revision</text>
+			<text x="840" y="145" style="font-family: Sans; font-size: 14px;fill: rgb(32%,40%,44%); stroke:none;" transform="translate(0,290) scale(1,-1)">Future runs or explicit migration</text>
+		</g>
+	</g>
+</svg>

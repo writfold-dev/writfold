@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "revision": 4,
+  "date": "2026-11-02",
+  "authority": "handovers/revision-4/writfold",
+  "archive": {
+    "path": "~/Downloads/writfold-rust-handover-version-4.zip",
+    "sha256": "0b1e43b6b4caaa091187c55511ddc7a69a21b3f681cf8879b71c6bb3b09d853d",
+    "bytes": 47996552,
+    "identity_provenance": "Parent verified supplied archive and imported immutable bytes"
+  },
+  "manifest": {
+    "path": "handovers/revision-4/writfold/MANIFEST.sha256",
+    "sha256": "a0c4b89e0cd86e52e9160d103f9e5b0a54fea93cfad19eaeb01bb08383ae8c7c"
+  },
+  "historical_baseline": "handover/",
+  "historical_policy": "Preserve immutable handover and frozen manifests; prior P00/P01/P02 receipts retain earlier scope only. No evidence is renewed by adoption.",
+  "inventory": {
+    "stages": 19,
+    "required_gates": 25,
+    "proof_models": 26,
+    "scenarios": 108,
+    "atlas_pages": 32
+  },
+  "registries": {
+    "stages": {
+      "path": "handovers/revision-4/writfold/registries/stages.json",
+      "sha256": "be2ed5c5d9150c1f54f721c1167ccbb326ec9b6d0d9514680c7f02f90e81162d"
+    },
+    "gates": {
+      "path": "handovers/revision-4/writfold/registries/gates.json",
+      "sha256": "ffc52ca235c2b278cc73ad2373a42f97e7046192d107c9f6a0d41343fc6ed2dd"
+    },
+    "proofs": {
+      "path": "handovers/revision-4/writfold/registries/proofs.json",
+      "sha256": "b3aa2f83608315a9a1b326a85b56c092635cc48a2038e6ad4584dacbaebbf350"
+    },
+    "scenarios": {
+      "path": "handovers/revision-4/writfold/registries/scenarios.json",
+      "sha256": "0e1b1744ef606d8d5dfe128e28c0ba63a8551700d95e8aad9dee8c3058ed3f76"
+    }
+  },
+  "policy_delta": {
+    "primary_backend": "Omnigraph supervised native companion, not embedded",
+    "foundation": "P01O/WF24 blocks storage-dependent P04/P06 and downstream integration; independent calculus work may proceed",
+    "legacy": "Dolt isolated reference/import only; no dual writer or automatic fallback, especially after uncertain writes",
+    "epochs": "Separate physical graphs with immutable schema per epoch; exact graph/commit/epoch/query/storage-profile pins",
+    "wire": "Preserve legacy signed bytes; explicitly version new outer release/approval storage envelope and negotiate storage capability",
+    "views": "P09V/WF22/WF23 require faithful prepared views, owned publication and native Obsidian qualification",
+    "formal": "V14/V15/M10/M11 and revised operational assumptions remain required; no renamed Dolt proof or receipt qualifies Omnigraph"
+  },
+  "tested_candidate": {
+    "name": "Omnigraph",
+    "version": "0.14.0",
+    "source_commit": "60bfd19db780fdff3a5178f959c1204143420114",
+    "archive_sha256": "02bde3e3a2c6c8cf50dc9739a8b1041df87cfeaa6ab59f620e1d8e32acffd4d9",
+    "cli_sha256": "978e200a412e7b0db46657417d348569f97529c18b47e64687132e565d19dc64",
+    "scope": "Bundled local probes only; server/runtime and full WSL/native foundation not admitted by this record"
+  },
+  "qualification_status": "not_run",
+  "evidence_reuse": "No automatic reuse; all active gates not_run and historical completions separately retained in status.json"
+}

@@ -4,7 +4,7 @@ This record freezes the public kctx compatibility inputs for the Rust successor.
 
 ## Authority and consumable records
 
-Follow [root instructions](../../AGENTS.md), [P00](../../handover/stages/P00.md), [compatibility and evaluation](../../handover/plan/06-compatibility-and-tests.md), [workflow 3](../../handover/plan/11-workflow3-contract.md), and [playbook adoption](../../handover/plan/12-playbook-adoption.md). The handover is immutable. The consuming project adopts private `private:playbook@e7d991e990e3dff9c5d70e4327c0e90298e2f67e`; this contract neither copies private material nor asserts that reading a policy proves conformance.
+Follow [root instructions](../../AGENTS.md) and the current [revision-5 adoption](handover-adoption.md). The frozen baseline contracts below retain [historical P00](../../handover/stages/P00.md), [compatibility and evaluation](../../handover/plan/06-compatibility-and-tests.md), [workflow 3](../../handover/plan/11-workflow3-contract.md), and [playbook adoption](../../handover/plan/12-playbook-adoption.md) as their original sources, not the current execution inventory. All handover bundles are immutable. The consuming project adopts private `private:playbook@e7d991e990e3dff9c5d70e4327c0e90298e2f67e`; this contract neither copies private material nor asserts that reading a policy proves conformance.
 
 | Record | Consumer contract |
 | --- | --- |
@@ -14,12 +14,13 @@ Follow [root instructions](../../AGENTS.md), [P00](../../handover/stages/P00.md)
 
 These records do not replace executable codecs or normative requirements. `required_fields` on a closed envelope is an exact set; multiple codec variants must not become one permissive optional-field structure. Source-expression values are preserved source syntax, not executed defaults. Literal producer sites supplement the normalized envelopes: later source updates and decoder checks still govern complete shapes. Reference test owners identify modules, not newly demonstrated coverage. Planned Writfold command spellings do not establish implemented Rust commands.
 
-Revision-4 execution additionally reconciles the current immutable manifest,
-registry hashes, 19 stage contracts and dependency/gate lists, all WF00–WF24,
-and all 26 V/M obligations. The current proof inventory points to
-`handovers/revision-4/writfold/registries/proofs.json`; earlier symbol maps and
-component evidence remain explicitly historical rather than being silently
-refreshed. This identity/inventory check is still not a product gate pass.
+Revision-5 execution additionally reconciles the current immutable manifest,
+registry hashes, 25 stage contracts and dependency/gate lists, all WF00–WF31,
+37 V/M obligations, E01–E12 and 16 fingerprint kinds. The current proof inventory
+points to `handovers/revision-5/writfold/registries/proofs.json`; engineering
+theorems have a separate current index. Earlier symbol maps and component
+evidence remain explicitly historical. This identity/inventory check is not
+a product gate pass.
 
 
 ## Independent version axes

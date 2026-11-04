@@ -3,6 +3,7 @@
 
 mod approval;
 mod canonical;
+pub mod engineering;
 pub mod operation;
 mod parser;
 pub mod policy;

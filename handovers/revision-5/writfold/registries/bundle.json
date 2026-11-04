@@ -1,0 +1,31 @@
+{
+  "revision": 5,
+  "review_date": "2026-11-03",
+  "kctx_commit": "1c17b94be37af8f82f222baddf31435f14172e1a",
+  "previous_kctx_commit": "3134c8c722e46ea4bef4459b4b5517e985d34b78",
+  "playbook_commit": "e7d991e990e3dff9c5d70e4327c0e90298e2f67e",
+  "archive": "reference/kctx-1c17b94-source.tar.gz",
+  "stage_count": 25,
+  "gate_count": 32,
+  "proof_count": 37,
+  "scenario_count": 148,
+  "atlas_pages": 48,
+  "scope": "implementation plan; product gates unexecuted",
+  "selected_backend": "omnigraph",
+  "foundation_stage": "P01O",
+  "foundation_gate": "WF24",
+  "legacy_backend_role": "Dolt: reference/import and explicit design fallback; no normal writer",
+  "engineering_theorem_count": 12,
+  "engineering_profile": "writfold-engineering/1",
+  "graph_families": [
+    "corpus",
+    "activity"
+  ],
+  "semantic_graphs": [
+    "context",
+    "execution",
+    "learning"
+  ],
+  "execution_authority": "validated EngineeringLedger + conditional stream heads; current guards rechecked",
+  "activity_role": "derived projection; never effect authority"
+}

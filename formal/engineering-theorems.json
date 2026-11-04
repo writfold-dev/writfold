@@ -1,0 +1,2221 @@
+{
+  "schema_version": 1,
+  "profile": "writfold-engineering/1",
+  "status": "pass",
+  "full_obligations_status": "pass",
+  "theorems": {
+    "E01": {
+      "theorem": [
+        "Kctx.Engineering.E01_conservative_extension",
+        "Kctx.Engineering.E01_nonpublication_derivation",
+        "Kctx.Engineering.append_legacy_frame",
+        "Kctx.Engineering.environment_legacy_frame",
+        "Kctx.Engineering.publishSelected_certificate"
+      ],
+      "proposed_statement": "Conservative extension: new actions cannot derive additional legacy knowledge conclusions except through existing admitted operations",
+      "meaning": "Every actual finite Request/environment/refusal trace projects to LegacyTrace over both knowledge and the exact threaded portfolio journal; only completed publication applies the existing portfolio operation.",
+      "status": "pass",
+      "full_obligation_status": "pass",
+      "assumptions": [
+        "Mathematical nominal identities and exact equality; production canonical codecs, namespace-safe conversions, integer bounds and collision resistance/injective identity require separate refinement.",
+        "Qualified authenticated immutable inputs and durable conditional storage; enforced capability and cooperating-owner boundaries are external assumptions, not consequences of list membership.",
+        "Existing authenticated VerifiedPortfolioApproval; EvidenceSound only when interpreting legacy factual truth, not needed to prove operational conservation."
+      ],
+      "executable": [
+        "Kctx.Engineering.Examples.E01_positive",
+        "Kctx.Engineering.Examples.E01_negative",
+        "Kctx.Engineering.Examples.legacyContextIsolation"
+      ],
+      "actions": [
+        "Request.append",
+        "Request.publish",
+        "Request.dispatch",
+        "Request.local",
+        "Resolve",
+        "Activate",
+        "LoadResource",
+        "AdvanceNode",
+        "FailNode",
+        "SelectRoute",
+        "Call",
+        "Prepare",
+        "Reserve",
+        "ClaimDispatch",
+        "IssueEffect",
+        "Observe",
+        "ObserveMaterial",
+        "Reconcile",
+        "RecordReceipt",
+        "Reuse",
+        "Return",
+        "Rebind",
+        "Reopen",
+        "Cancel",
+        "Quiesce",
+        "Propose",
+        "Evaluate",
+        "Review",
+        "PrepareAdmission",
+        "PublishAdmission",
+        "AcknowledgeAdmission",
+        "Project",
+        "AcquireReadCut",
+        "ReleaseReadCut",
+        "Crash",
+        "Recover",
+        "Retire",
+        "AdvanceTime",
+        "RevokeGrant",
+        "ChangePolicy",
+        "WithdrawProcedure",
+        "CorrectKnowledge",
+        "AdvanceUpstream",
+        "ChangeProviderState",
+        "CompleteExternalEffect",
+        "LoseReply",
+        "TerminateProcess",
+        "RetryClaim",
+        "Resume"
+      ],
+      "scope": "Every actual finite Request/environment/refusal trace projects to LegacyTrace over both knowledge and the exact threaded portfolio journal; only completed publication applies the existing portfolio operation.",
+      "fidelity": {
+        "status": "pass",
+        "statement_mapping": [
+          "E01_conservative_extension preserves the joint legacy state/journal through arbitrary Reachable, not an existential replacement journal.",
+          "E01_nonpublication_derivation states exact Derives equivalence for nonpublication domain steps; append_legacy_frame and environment_legacy_frame cover those outer writers.",
+          "publishSelected_certificate exposes exact applied legacy result and unchanged acknowledgement."
+        ],
+        "remaining_defects": [],
+        "mathematical_fidelity_assessment": "Exact joint knowledge/journal conservation is stated over every actual Reachable trace; no additional mathematical gap identified in this registry review.",
+        "production_refinement_boundaries": [
+          "Production admission/authentication refinement and any factual EvidenceSound interpretation remain external bridges."
+        ],
+        "helper_only_limitations": [],
+        "invariant_instantiation": "E02_representation_preserved supplies OperationalWellFormed from checked init and Reachable; E05_E09_history supplies HistorySafe and RetainedHistory on the same trace. These are separate conclusions, not assumed transition preservation.",
+        "qualification_completed": {
+          "kernel_and_transitive_axioms": {
+            "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json.attempt/engineering-lean-report.json",
+            "sha256": "8d1c7c3166398a1e26c997b27ba3a5fe22d64f210218176747cff8ac0a8eb471"
+          },
+          "reference_cases": "All exact registered cases passed in the completed Lean report.",
+          "independent_statement_review": "All reported independent fidelity findings resolved in current source.",
+          "semantic_campaign": {
+            "path": "~/.local/share/writfold/evidence/revision-5-lean-mutations-004/report.json",
+            "sha256": "e3ac744d0180d7ac2c512cc439ca3361a194e640a851d6fb0773ab8b5d213b35"
+          },
+          "scope": "Conditional mathematical obligation only; production refinement boundaries below remain open."
+        }
+      },
+      "receipt": {
+        "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json",
+        "sha256": "b6f3b6d00675c41c9357c32957effd143fa04e93e590aeb18deb955d8095c435"
+      },
+      "nonvacuity": [
+        "Kctx.Engineering.Examples.E01_nonvacuous",
+        "Kctx.Engineering.Examples.legacy_context_isolation_nonvacuous"
+      ],
+      "semantic_negative_calibration": {
+        "status": "pass",
+        "source_scope": "Rejects unsupported legacy portfolio plan after qualified evaluation/review; preserves original observation bytes and context isolation.",
+        "essential_cases": [
+          "E01-negative"
+        ],
+        "essential_mapping": "Exact approval/evaluation/review cannot admit an unsupported legacy witness plan; legacy context isolation is a separate positive check, not the witness-rejection negative.",
+        "remaining_gap": null,
+        "mutant_receipt": null,
+        "executable_receipt": {
+          "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json.attempt/engineering-lean-report.json",
+          "sha256": "8d1c7c3166398a1e26c997b27ba3a5fe22d64f210218176747cff8ac0a8eb471"
+        },
+        "source_mutants": [],
+        "mutation_scope": "Listed source mutants are campaign004 evidence. An empty source_mutants list means no dedicated mutant is claimed for this E; its named essential negatives were executed in clean002."
+      },
+      "production_refinement_status": "open"
+    },
+    "E02": {
+      "theorem": [
+        "Kctx.Engineering.E02_representation_preserved",
+        "Kctx.Engineering.init_operational_wellFormed",
+        "Kctx.Engineering.domain_preserves_operationalWellFormed",
+        "Kctx.Engineering.step_preserves_operationalWellFormed",
+        "Kctx.Engineering.transition_preserves_operationalWellFormed",
+        "Kctx.Engineering.replay_preserves_operationalWellFormed",
+        "Kctx.Engineering.environment_preserves_operationalWellFormed",
+        "Kctx.Engineering.localAction_preserves_operationalWellFormed",
+        "Kctx.Engineering.E05_E09_history",
+        "Kctx.Engineering.validateProcedure_sound"
+      ],
+      "proposed_statement": "Type/representation preservation: Init and every admitted action preserve WellFormed",
+      "meaning": "Checked initialization and every operational/environment/refusal transition preserve the actual OperationalWellFormed conjunction; ledger well-formedness/evidence closure are supplied separately by E05_E09_history.",
+      "status": "pass",
+      "full_obligation_status": "pass",
+      "assumptions": [
+        "Mathematical nominal identities and exact equality; production canonical codecs, namespace-safe conversions, integer bounds and collision resistance/injective identity require separate refinement.",
+        "Qualified authenticated immutable inputs and durable conditional storage; enforced capability and cooperating-owner boundaries are external assumptions, not consequences of list membership.",
+        "Authenticated packages/packageReleases/corpusBindings; registered predicate signatures; Contracts.receipts/materialObservations/evaluations/reviews qualify exact records.",
+        "Historical representation deliberately excludes current grant liveness, expiry and policy equality; E12 guards new work."
+      ],
+      "executable": [
+        "Kctx.Engineering.Examples.E02_positive",
+        "Kctx.Engineering.Examples.E02_negative",
+        "Kctx.Engineering.Examples.captureIntroducesObject",
+        "Kctx.Engineering.Examples.duplicateCaptureRefused",
+        "Kctx.Engineering.Examples.phantomObjectRefused",
+        "Kctx.Engineering.Examples.unqualifiedCaptureRefused"
+      ],
+      "actions": [
+        "Init",
+        "Request.append",
+        "Request.publish",
+        "Request.dispatch",
+        "Request.local",
+        "Resolve",
+        "Activate",
+        "LoadResource",
+        "AdvanceNode",
+        "FailNode",
+        "SelectRoute",
+        "Call",
+        "Prepare",
+        "Reserve",
+        "ClaimDispatch",
+        "IssueEffect",
+        "Observe",
+        "ObserveMaterial",
+        "Reconcile",
+        "RecordReceipt",
+        "Reuse",
+        "Return",
+        "Rebind",
+        "Reopen",
+        "Cancel",
+        "Quiesce",
+        "Propose",
+        "Evaluate",
+        "Review",
+        "PrepareAdmission",
+        "PublishAdmission",
+        "AcknowledgeAdmission",
+        "Project",
+        "AcquireReadCut",
+        "ReleaseReadCut",
+        "Crash",
+        "Recover",
+        "Retire",
+        "AdvanceTime",
+        "RevokeGrant",
+        "ChangePolicy",
+        "WithdrawProcedure",
+        "CorrectKnowledge",
+        "AdvanceUpstream",
+        "ChangeProviderState",
+        "CompleteExternalEffect",
+        "LoseReply",
+        "TerminateProcess",
+        "RetryClaim",
+        "Resume"
+      ],
+      "scope": "Checked initialization and every operational/environment/refusal transition preserve the actual OperationalWellFormed conjunction; ledger well-formedness/evidence closure are supplied separately by E05_E09_history.",
+      "fidelity": {
+        "status": "pass",
+        "statement_mapping": [
+          "E02_representation_preserved is initialized reachability, not a post-state invariant filter.",
+          "OperationalWellFormed includes portfolio, catalog/pins/typing, unique activations/accounts/effects/ownership/candidates/captures, bounded shared accounts, run parent/pending/control representation, exact effects/receipts/returns and qualified captures.",
+          "E05_E09_history adds per-stream history and cut/release evidence closure; neither theorem proves a production serialization boundary."
+        ],
+        "remaining_defects": [],
+        "mathematical_fidelity_assessment": "Initialized operational representation and E05 history/evidence closure jointly cover the declared finite mathematical state. Their full-statement fidelity is accepted under explicit input/authority/storage assumptions; this does not prove production serialization.",
+        "production_refinement_boundaries": [
+          "Rust namespace-safe casts, malformed-byte decoding, canonical codecs and integer bounds belong production representation/refinement obligations; finite nominal Lean types are permitted by plan22."
+        ],
+        "helper_only_limitations": [],
+        "invariant_instantiation": "E02_representation_preserved supplies OperationalWellFormed from checked init and Reachable; E05_E09_history supplies HistorySafe and RetainedHistory on the same trace. These are separate conclusions, not assumed transition preservation.",
+        "qualification_completed": {
+          "kernel_and_transitive_axioms": {
+            "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json.attempt/engineering-lean-report.json",
+            "sha256": "8d1c7c3166398a1e26c997b27ba3a5fe22d64f210218176747cff8ac0a8eb471"
+          },
+          "reference_cases": "All exact registered cases passed in the completed Lean report.",
+          "independent_statement_review": "All reported independent fidelity findings resolved in current source.",
+          "semantic_campaign": {
+            "path": "~/.local/share/writfold/evidence/revision-5-lean-mutations-004/report.json",
+            "sha256": "e3ac744d0180d7ac2c512cc439ca3361a194e640a851d6fb0773ab8b5d213b35"
+          },
+          "scope": "Conditional mathematical obligation only; production refinement boundaries below remain open."
+        }
+      },
+      "receipt": {
+        "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json",
+        "sha256": "b6f3b6d00675c41c9357c32957effd143fa04e93e590aeb18deb955d8095c435"
+      },
+      "nonvacuity": [
+        "Kctx.Engineering.Examples.E02_nonvacuous",
+        "Kctx.Engineering.Examples.capture_nonvacuous"
+      ],
+      "semantic_negative_calibration": {
+        "status": "pass",
+        "source_scope": "Rejects malformed activation input type, phantom package closure and unqualified/duplicate material capture; accepts qualified capture and two-root ownership.",
+        "essential_cases": [
+          "E02-negative",
+          "E02-phantom-object",
+          "E02-unqualified-capture"
+        ],
+        "essential_mapping": "Malformed runtime input type is refused; cross-namespace values are unrepresentable in the nominal model, while malformed external byte decoding remains a production boundary.",
+        "remaining_gap": null,
+        "mutant_receipt": null,
+        "executable_receipt": {
+          "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json.attempt/engineering-lean-report.json",
+          "sha256": "8d1c7c3166398a1e26c997b27ba3a5fe22d64f210218176747cff8ac0a8eb471"
+        },
+        "source_mutants": [],
+        "mutation_scope": "Listed source mutants are campaign004 evidence. An empty source_mutants list means no dedicated mutant is claimed for this E; its named essential negatives were executed in clean002."
+      },
+      "production_refinement_status": "open"
+    },
+    "E03": {
+      "theorem": [
+        "Kctx.Engineering.E02_representation_preserved",
+        "Kctx.Engineering.E04_E10_arbitrary_invocation_bounds",
+        "Kctx.Engineering.invocation_path_kernel_floor",
+        "Kctx.Engineering.call_capabilities_bounded",
+        "Kctx.Engineering.operational_effective_floor",
+        "Kctx.Engineering.publication_procedure_policy_floor",
+        "Kctx.Engineering.E08_publication_safe"
+      ],
+      "proposed_statement": "Capability non-amplification and gate-floor preservation across nested calls and learning",
+      "meaning": "Actual arbitrary-depth invocation paths retain ancestor capabilities/floors; typed catalog and run representations bind grants and ceilings; publication checks governing and kernel floors for learned procedures.",
+      "status": "pass",
+      "full_obligation_status": "pass",
+      "assumptions": [
+        "Mathematical nominal identities and exact equality; production canonical codecs, namespace-safe conversions, integer bounds and collision resistance/injective identity require separate refinement.",
+        "Qualified authenticated immutable inputs and durable conditional storage; enforced capability and cooperating-owner boundaries are external assumptions, not consequences of list membership.",
+        "Scoped Grant binds root, complete Binding, resource set and validity interval; authenticated package and learning approval boundaries."
+      ],
+      "executable": [
+        "Kctx.Engineering.Examples.E03_positive",
+        "Kctx.Engineering.Examples.E03_negative",
+        "Kctx.Engineering.Examples.failedJoinRefused",
+        "Kctx.Engineering.Examples.cancelledJoinRefused",
+        "Kctx.Engineering.Examples.unknownJoinRefused",
+        "Kctx.Engineering.Examples.learnedFloorRefused",
+        "Kctx.Engineering.Examples.childPublishRefused"
+      ],
+      "actions": [
+        "Activate",
+        "Call",
+        "AdvanceNode",
+        "FailNode",
+        "Prepare",
+        "Reserve",
+        "ClaimDispatch",
+        "IssueEffect",
+        "Rebind",
+        "Propose",
+        "Evaluate",
+        "Review",
+        "PrepareAdmission",
+        "PublishAdmission",
+        "ChangePolicy",
+        "RevokeGrant",
+        "RetryClaim",
+        "Resume"
+      ],
+      "scope": "Actual arbitrary-depth invocation paths retain ancestor capabilities/floors; typed catalog and run representations bind grants and ceilings; publication checks governing and kernel floors for learned procedures.",
+      "fidelity": {
+        "status": "pass",
+        "statement_mapping": [
+          "E04_E10_arbitrary_invocation_bounds instantiates OperationalWellFormed from init/reachability and bounds every actual InvocationPath.",
+          "call_capabilities_bounded proves five-way grant/parent/delegation/node/callee intersection; it is a construction lemma, not alone a call-transition theorem.",
+          "publication_procedure_policy_floor checks current authority floor and kernel floor for any optional learned procedure; E02 provides governing_floor."
+        ],
+        "remaining_defects": [],
+        "mathematical_fidelity_assessment": "Actual invocation-path bounds and publication floor checks supply the mathematical mapping; construction lemmas alone are not the full argument.",
+        "production_refinement_boundaries": [
+          "Enforced runtime capability boundary and authenticated package/learning inputs require production qualification."
+        ],
+        "helper_only_limitations": [
+          "call_capabilities_bounded and effective-floor membership lemmas cannot substitute for initialized representation plus actual publication checks."
+        ],
+        "invariant_instantiation": "E02_representation_preserved supplies OperationalWellFormed from checked init and Reachable; E05_E09_history supplies HistorySafe and RetainedHistory on the same trace. These are separate conclusions, not assumed transition preservation.",
+        "qualification_completed": {
+          "kernel_and_transitive_axioms": {
+            "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json.attempt/engineering-lean-report.json",
+            "sha256": "8d1c7c3166398a1e26c997b27ba3a5fe22d64f210218176747cff8ac0a8eb471"
+          },
+          "reference_cases": "All exact registered cases passed in the completed Lean report.",
+          "independent_statement_review": "All reported independent fidelity findings resolved in current source.",
+          "semantic_campaign": {
+            "path": "~/.local/share/writfold/evidence/revision-5-lean-mutations-004/report.json",
+            "sha256": "e3ac744d0180d7ac2c512cc439ca3361a194e640a851d6fb0773ab8b5d213b35"
+          },
+          "scope": "Conditional mathematical obligation only; production refinement boundaries below remain open."
+        }
+      },
+      "receipt": {
+        "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json",
+        "sha256": "b6f3b6d00675c41c9357c32957effd143fa04e93e590aeb18deb955d8095c435"
+      },
+      "nonvacuity": [
+        "Kctx.Engineering.Examples.E03_nonvacuous",
+        "Kctx.Engineering.Examples.non_success_cannot_join",
+        "Kctx.Engineering.Examples.learned_floor_nonvacuous",
+        "Kctx.Engineering.Examples.child_publish_nonvacuous"
+      ],
+      "semantic_negative_calibration": {
+        "status": "pass",
+        "source_scope": "Typed route/call/return/Join succeeds; direct call-node advancement and unsuccessful child Join refuse. An exact evaluated/reviewed learned procedure with weakened floor refuses while the governing-floor-preserving control admits preparation.",
+        "essential_cases": [
+          "E03-learned-floor",
+          "E03-child-publish"
+        ],
+        "essential_mapping": "Learned review-floor weakening has a matched positive control. A successful real Call requests publish through admitted callee/node ceilings and delegation, but the parent and grant lack publish; the resulting child must contain only check. This directly calibrates capability intersection without turning a type error into a rejection.",
+        "remaining_gap": null,
+        "mutant_receipt": {
+          "path": "~/.local/share/writfold/evidence/revision-5-lean-mutations-004/report.json",
+          "sha256": "e3ac744d0180d7ac2c512cc439ca3361a194e640a851d6fb0773ab8b5d213b35"
+        },
+        "executable_receipt": {
+          "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json.attempt/engineering-lean-report.json",
+          "sha256": "8d1c7c3166398a1e26c997b27ba3a5fe22d64f210218176747cff8ac0a8eb471"
+        },
+        "source_mutants": [
+          "child-ignores-grant"
+        ],
+        "mutation_scope": "Listed source mutants are campaign004 evidence. An empty source_mutants list means no dedicated mutant is claimed for this E; its named essential negatives were executed in clean002."
+      },
+      "production_refinement_status": "open"
+    },
+    "E04": {
+      "theorem": [
+        "Kctx.Engineering.E02_representation_preserved",
+        "Kctx.Engineering.enabled_exact_dependency",
+        "Kctx.Engineering.enabled_unique_dependency",
+        "Kctx.Engineering.joinReady_exact_invocation",
+        "Kctx.Engineering.E03_exact_pending_invocation",
+        "Kctx.Engineering.E03_exact_join_returns",
+        "Kctx.Engineering.admitted_receipt_retains_exact_inputs",
+        "Kctx.Engineering.changed_invocation_input_refuses_receipt",
+        "Kctx.Engineering.changed_node_input_refuses_receipt",
+        "Kctx.Engineering.stale_binding_evidence_refused",
+        "Kctx.Engineering.gate_receipt_has_evidence_type",
+        "Kctx.Engineering.procedure_receipt_has_terminal_subject",
+        "Kctx.Engineering.E12_return_refuses_stale_child",
+        "Kctx.Engineering.reuse_checked",
+        "Kctx.Engineering.domain_reuse_checked",
+        "Kctx.Engineering.E04_request_reuse_integrity",
+        "Kctx.Engineering.E04_reuse_keeps_observation",
+        "Kctx.Engineering.ancestryLive_operational",
+        "Kctx.Engineering.live_operational",
+        "Kctx.Engineering.receiptValid_operational",
+        "Kctx.Engineering.predicatesHold_qualified",
+        "Kctx.Engineering.consumer_enabled_dependencies",
+        "Kctx.Engineering.consumer_append_source_valid",
+        "Kctx.Engineering.consumer_append_body",
+        "Kctx.Engineering.advanceNode_certificate",
+        "Kctx.Engineering.returnChild_certificate",
+        "Kctx.Engineering.E04_request_advance_integrity",
+        "Kctx.Engineering.E04_request_return_integrity"
+      ],
+      "proposed_statement": "Subject/dependency integrity of checks, reuse and returns",
+      "meaning": "Representation and actual dependency/Join guards identify exact invocation, root input, node input, types, successful child and retained qualified receipt roles; selected mismatch lemmas refuse stale inputs.",
+      "status": "pass",
+      "full_obligation_status": "pass",
+      "assumptions": [
+        "Mathematical nominal identities and exact equality; production canonical codecs, namespace-safe conversions, integer bounds and collision resistance/injective identity require separate refinement.",
+        "Qualified authenticated immutable inputs and durable conditional storage; enforced capability and cooperating-owner boundaries are external assumptions, not consequences of list membership.",
+        "Qualified complete dependency capture and authentic exact receipt/evaluator outputs; TypedEvidenceSound is a separate semantic boundary, not inferred from registered signatures."
+      ],
+      "executable": [
+        "Kctx.Engineering.Examples.E04_positive",
+        "Kctx.Engineering.Examples.E04_negative",
+        "Kctx.Engineering.Examples.wrongRoleRefused",
+        "Kctx.Engineering.Examples.staleReuseRefused",
+        "Kctx.Engineering.Examples.changedDependencyReuseRefused",
+        "Kctx.Engineering.Examples.oldChildReturnRefused"
+      ],
+      "actions": [
+        "AdvanceNode",
+        "FailNode",
+        "SelectRoute",
+        "Call",
+        "Prepare",
+        "RecordReceipt",
+        "Reuse",
+        "Return",
+        "Rebind",
+        "Reopen",
+        "ObserveMaterial"
+      ],
+      "scope": "Representation and actual dependency/Join guards identify exact invocation, root input, node input, types, successful child and retained qualified receipt roles; selected mismatch lemmas refuse stale inputs.",
+      "fidelity": {
+        "status": "pass",
+        "statement_mapping": [
+          "enabled_exact_dependency/unique_dependency require the enabled guard (and representation for uniqueness), not merely same-shaped output.",
+          "E03_exact_pending_invocation and E03_exact_join_returns instantiate representation on arbitrary initialized traces; joinReady_exact_invocation additionally exposes completed child, parent and exact binding/input.",
+          "Changed root/node-input and binding lemmas establish explicit refusal predicates.",
+          "E04_request_reuse_integrity extracts ReuseChecked from actual append: retained original receipt, exact binding/procedure/root and node inputs, current live/floor/role/complete/retention/time/policy/correction checks. E04_reuse_keeps_observation preserves original timestamp and outcome.",
+          "E04_request_return_integrity extracts ReturnCertificate from actual append, including live parent/child, current caller node input equal to the pending child input, exact terminal result and receipt input, qualified/current procedureResult receipt, both success postcondition witnesses, settled child effects and exact run/ChildReturn updates.",
+          "E04_request_advance_integrity extracts AdvanceCertificate from actual append: typed selected node, enabled exact dependencies and loaded context, qualified exact pre/postcondition witnesses, retained typed output, form-specific Read/Judge/Check/Join/End/Effect consumer and exact successful result update. Select/Call cannot use this writer.",
+          "consumer_append_source_valid derives source OperationalWellFormed from the actual historical input validation of successful Ledger.append; the consumer roots do not assume a checked certificate, successor invariant or separately supplied source invariant."
+        ],
+        "remaining_defects": [],
+        "consumer_statement_acceptance": {
+          "Return": "For every successful actual Request.append of returnChild, derive from its source state the selected live parent/child and exact pending call target, shared root and binding, exact child/root input, terminal recorded result matching the original procedureResult receipt, receipt applicability and qualification on initialized reachable inputs, absence of unresolved child effects, and both child-procedure and parent-node postconditions when the outcome is success; expose the exact appended ChildReturn and consumed pending entry. Do not assume a checked-return certificate or post-state invariant as an execution premise.",
+          "AdvanceNode": "For every successful actual Request.append of advanceNode, derive the selected run/node, current enabled dependencies and required loaded context, exact node input, typed retained output and node postconditions; expose the form-specific witness: exact loaded read object, applicable registered judge/check evidence with exact input/output, checked exact Join return, terminal procedure postconditions, or confirmed exact effect and applicable effectResult receipt. Select/call must be impossible through this writer. Connect the witness to the exact recorded successful result, rather than only assuming nodeReady or output representation."
+        },
+        "mathematical_fidelity_assessment": "Actual Request-level reuse, return and advance certificates cover the exact consumer guard/postcondition statements. QualifiedPredicates exposes exact registered evidence rather than inferring semantic truth from typing. The declarations passed clean kernel/axiom qualification and independent fidelity review; production evidence-source refinement remains open.",
+        "production_refinement_boundaries": [
+          "Qualified evaluator truth, receipt authenticity and complete dependency capture remain explicit assumptions; binding them to real producer/SDK artifacts requires production refinement."
+        ],
+        "helper_only_limitations": [],
+        "invariant_instantiation": "E02_representation_preserved supplies OperationalWellFormed from checked init and Reachable; E05_E09_history supplies HistorySafe and RetainedHistory on the same trace. These are separate conclusions, not assumed transition preservation.",
+        "writer_audit": {
+          "RecordReceipt": "Qualification, retained root/node/output objects, exact root input/binding/procedure, existing node and output-type equality checked; current applicability is deferred to consumers.",
+          "Reuse": "E04_request_reuse_integrity extracts current applicability and exact inputs from actual Request.append; E04_reuse_keeps_observation preserves the complete original receipt, timestamp and outcome.",
+          "Return": "E04_request_return_integrity exposes the complete source ReturnCertificate, including current caller-input equality, exact child/terminal receipt inputs, both success postcondition witnesses and exact appended ChildReturn/consumed pending updates.",
+          "AdvanceNode/FailNode": "E04_request_advance_integrity exposes form-specific successful consumers and qualified predicate witnesses with exact result update. FailNode remains covered by actual typed representation preservation and the non-success Join checks; semantic evaluator truth remains qualified."
+        },
+        "qualification_completed": {
+          "kernel_and_transitive_axioms": {
+            "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json.attempt/engineering-lean-report.json",
+            "sha256": "8d1c7c3166398a1e26c997b27ba3a5fe22d64f210218176747cff8ac0a8eb471"
+          },
+          "reference_cases": "All exact registered cases passed in the completed Lean report.",
+          "independent_statement_review": "All reported independent fidelity findings resolved in current source.",
+          "semantic_campaign": {
+            "path": "~/.local/share/writfold/evidence/revision-5-lean-mutations-004/report.json",
+            "sha256": "e3ac744d0180d7ac2c512cc439ca3361a194e640a851d6fb0773ab8b5d213b35"
+          },
+          "scope": "Conditional mathematical obligation only; production refinement boundaries below remain open."
+        }
+      },
+      "receipt": {
+        "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json",
+        "sha256": "b6f3b6d00675c41c9357c32957effd143fa04e93e590aeb18deb955d8095c435"
+      },
+      "nonvacuity": [
+        "Kctx.Engineering.Examples.E04_nonvacuous",
+        "Kctx.Engineering.Examples.stale_reuse_nonvacuous",
+        "Kctx.Engineering.Examples.changed_dependency_reuse_nonvacuous",
+        "Kctx.Engineering.Examples.old_child_return_nonvacuous"
+      ],
+      "semantic_negative_calibration": {
+        "status": "pass",
+        "source_scope": "Exact reuse preserves original observation time; foreign receipt inputs/roles refuse. Actual Reuse refuses expired retained evidence with a live grant, and changed dependency identity with an unchanged-binding positive control. A completed old child cannot return into a new activation with a different pending child.",
+        "essential_cases": [
+          "E04-dependency-reuse",
+          "E04-old-child-return",
+          "E04-stale-reuse"
+        ],
+        "essential_mapping": "The dependency-edit analogue reaches Reuse itself, not merely RecordReceipt. The old-child/new-activation case uses one fixed migrationReturnContracts from init, including qualified invocation9 predicate evidence, then real cancellation/crash/recovery/rebind/call transitions; no precondition guard is skipped.",
+        "remaining_gap": null,
+        "mutant_receipt": null,
+        "executable_receipt": {
+          "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json.attempt/engineering-lean-report.json",
+          "sha256": "8d1c7c3166398a1e26c997b27ba3a5fe22d64f210218176747cff8ac0a8eb471"
+        },
+        "source_mutants": [],
+        "mutation_scope": "Listed source mutants are campaign004 evidence. An empty source_mutants list means no dedicated mutant is claimed for this E; its named essential negatives were executed in clean002."
+      },
+      "production_refinement_status": "open"
+    },
+    "E05": {
+      "theorem": [
+        "Kctx.Engineering.E05_E09_history",
+        "Kctx.Engineering.E05_retained_origin",
+        "Kctx.Engineering.conflicting_head_requires_refusal",
+        "Kctx.Engineering.stale_head_requires_refusal",
+        "Kctx.Engineering.append_captures_exact_inputs",
+        "Kctx.Engineering.historicalValid_contract",
+        "Kctx.Engineering.reachable_immutable_payload",
+        "Kctx.Engineering.every_selected_stream_replays",
+        "Kctx.Engineering.step_storageEvolution",
+        "Kctx.Engineering.Ledger.competing_append_refuses",
+        "Kctx.Engineering.Ledger.commit_other_stream"
+      ],
+      "proposed_statement": "Operational history integrity and expected-head conflict safety",
+      "meaning": "Initialized traces retain per-stream immutable exact payloads and captured historical inputs/contracts; selected prefixes replay under historical premises and a consumed predecessor cannot select a competing append.",
+      "status": "pass",
+      "full_obligation_status": "pass",
+      "assumptions": [
+        "Mathematical nominal identities and exact equality; production canonical codecs, namespace-safe conversions, integer bounds and collision resistance/injective identity require separate refinement.",
+        "Qualified authenticated immutable inputs and durable conditional storage; enforced capability and cooperating-owner boundaries are external assumptions, not consequences of list membership.",
+        "Private serial coordinator and atomic durable expected-head selection across shared ownership state; list algebra does not prove filesystem/Git/database CAS."
+      ],
+      "executable": [
+        "Kctx.Engineering.Examples.E05_positive",
+        "Kctx.Engineering.Examples.E05_negative"
+      ],
+      "actions": [
+        "Resolve",
+        "Activate",
+        "LoadResource",
+        "AdvanceNode",
+        "FailNode",
+        "SelectRoute",
+        "Call",
+        "Prepare",
+        "Reserve",
+        "ClaimDispatch",
+        "Observe",
+        "ObserveMaterial",
+        "Reconcile",
+        "RecordReceipt",
+        "Reuse",
+        "Return",
+        "Rebind",
+        "Reopen",
+        "Cancel",
+        "Quiesce",
+        "Propose",
+        "Evaluate",
+        "Review",
+        "PrepareAdmission",
+        "AcknowledgeAdmission",
+        "Retire",
+        "Request.append",
+        "Request.publish",
+        "Request.dispatch",
+        "Request.local",
+        "AdvanceTime",
+        "RevokeGrant",
+        "ChangePolicy",
+        "WithdrawProcedure",
+        "CorrectKnowledge",
+        "AdvanceUpstream",
+        "ChangeProviderState",
+        "CompleteExternalEffect",
+        "LoseReply",
+        "TerminateProcess",
+        "RetryClaim",
+        "Resume"
+      ],
+      "scope": "Initialized traces retain per-stream immutable exact payloads and captured historical inputs/contracts; selected prefixes replay under historical premises and a consumed predecessor cannot select a competing append.",
+      "fidelity": {
+        "status": "pass",
+        "statement_mapping": [
+          "E05_E09_history proves HistorySafe and RetainedHistory for all actual reachable states.",
+          "E05_retained_origin binds each retained record to initial realm and exact contracts/captured premises.",
+          "conflicting_head_requires_refusal applies at step append, not merely generic Ledger; immutable identity and other-stream frame supplement it."
+        ],
+        "remaining_defects": [],
+        "mathematical_fidelity_assessment": "Per-stream history, captured premises, immutability and consumed-head conflict refusal are stated for the actual transition relation under the declared serial conditional-storage abstraction.",
+        "production_refinement_boundaries": [
+          "Authenticated byte-level origin, reducer-profile codecs, concurrent durable expected-head selection and partial-write storage recovery require production storage/protocol refinement.",
+          "Destructive GC is outside the permanent-retention profile and requires its own bridge, not a proof obligation for a nonexistent calculus writer."
+        ],
+        "helper_only_limitations": [],
+        "invariant_instantiation": "E02_representation_preserved supplies OperationalWellFormed from checked init and Reachable; E05_E09_history supplies HistorySafe and RetainedHistory on the same trace. These are separate conclusions, not assumed transition preservation.",
+        "qualification_completed": {
+          "kernel_and_transitive_axioms": {
+            "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json.attempt/engineering-lean-report.json",
+            "sha256": "8d1c7c3166398a1e26c997b27ba3a5fe22d64f210218176747cff8ac0a8eb471"
+          },
+          "reference_cases": "All exact registered cases passed in the completed Lean report.",
+          "independent_statement_review": "All reported independent fidelity findings resolved in current source.",
+          "semantic_campaign": {
+            "path": "~/.local/share/writfold/evidence/revision-5-lean-mutations-004/report.json",
+            "sha256": "e3ac744d0180d7ac2c512cc439ca3361a194e640a851d6fb0773ab8b5d213b35"
+          },
+          "scope": "Conditional mathematical obligation only; production refinement boundaries below remain open."
+        }
+      },
+      "receipt": {
+        "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json",
+        "sha256": "b6f3b6d00675c41c9357c32957effd143fa04e93e590aeb18deb955d8095c435"
+      },
+      "nonvacuity": [
+        "Kctx.Engineering.Examples.E05_nonvacuous"
+      ],
+      "semantic_negative_calibration": {
+        "status": "pass",
+        "source_scope": "Second append from consumed predecessor, foreign-stream routing and conflicting root reservation refuse.",
+        "essential_cases": [
+          "E05-positive",
+          "E05-negative"
+        ],
+        "essential_mapping": "The positive trace includes refusal of a second append from the consumed predecessor; the negative also refuses foreign-stream routing and conflicting ownership.",
+        "remaining_gap": null,
+        "mutant_receipt": {
+          "path": "~/.local/share/writfold/evidence/revision-5-lean-mutations-004/report.json",
+          "sha256": "e3ac744d0180d7ac2c512cc439ca3361a194e640a851d6fb0773ab8b5d213b35"
+        },
+        "executable_receipt": {
+          "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json.attempt/engineering-lean-report.json",
+          "sha256": "8d1c7c3166398a1e26c997b27ba3a5fe22d64f210218176747cff8ac0a8eb471"
+        },
+        "source_mutants": [
+          "stale-head"
+        ],
+        "mutation_scope": "Listed source mutants are campaign004 evidence. An empty source_mutants list means no dedicated mutant is claimed for this E; its named essential negatives were executed in clean002."
+      },
+      "production_refinement_status": "open"
+    },
+    "E06": {
+      "theorem": [
+        "Kctx.Engineering.E02_representation_preserved",
+        "Kctx.Engineering.E06_exclusive_conflicting_ownership",
+        "Kctx.Engineering.E06_reachable_ownership_audited",
+        "Kctx.Engineering.E06_transition_cannot_release_or_transfer_early",
+        "Kctx.Engineering.E06_quiesce_release_checked",
+        "Kctx.Engineering.E06_prepared_prevents_release",
+        "Kctx.Engineering.E06_issue_increments_owned_process_generation",
+        "Kctx.Engineering.E06_terminate_requires_current_generations",
+        "Kctx.Engineering.E06_stale_process_certificate_refused",
+        "Kctx.Engineering.E06_reservation_generation_fresh",
+        "Kctx.Engineering.E06_cancel_preserves_capacity",
+        "Kctx.Engineering.E06_crash_preserves_capacity",
+        "Kctx.Engineering.E06_recovery_preserves_capacity",
+        "Kctx.Engineering.E06_rebind_requires_released_ownership",
+        "Kctx.Engineering.E06_reachable_exclusive_conflicting_ownership",
+        "Kctx.Engineering.E06_dispatch_excludes_other_unsettled_effects"
+      ],
+      "proposed_statement": "Exclusive conflicting resource use under qualified fencing/quiescence assumptions",
+      "meaning": "Unique ownership is preserved with exact root/holder/generation identities; every transition retains blocked ownership or supplies qualified release checks; physical issue advances process generation and stale teardown certificates refuse.",
+      "status": "pass",
+      "full_obligation_status": "pass",
+      "assumptions": [
+        "Mathematical nominal identities and exact equality; production canonical codecs, namespace-safe conversions, integer bounds and collision resistance/injective identity require separate refinement.",
+        "Qualified authenticated immutable inputs and durable conditional storage; enforced capability and cooperating-owner boundaries are external assumptions, not consequences of list membership.",
+        "Contracts.quiescent authenticates actual reaped process-tree quiescence for exact resource/reservation/process generation; no other writer bypasses fencing."
+      ],
+      "executable": [
+        "Kctx.Engineering.Examples.E06_positive",
+        "Kctx.Engineering.Examples.E06_negative",
+        "Kctx.Engineering.Examples.staleQuiescenceRefused",
+        "Kctx.Engineering.Examples.sameActivationConflictRefused",
+        "Kctx.Engineering.Examples.preparedReleaseRefused"
+      ],
+      "actions": [
+        "Activate",
+        "Call",
+        "Reserve",
+        "Prepare",
+        "ClaimDispatch",
+        "IssueEffect",
+        "Cancel",
+        "Quiesce",
+        "Crash",
+        "Recover",
+        "Rebind",
+        "Retire",
+        "TerminateProcess",
+        "Observe",
+        "Reconcile",
+        "CompleteExternalEffect",
+        "LoseReply",
+        "RetryClaim",
+        "Resume"
+      ],
+      "scope": "Unique ownership is preserved with exact root/holder/generation identities; every transition retains blocked ownership or supplies qualified release checks; physical issue advances process generation and stale teardown certificates refuse.",
+      "fidelity": {
+        "status": "pass",
+        "statement_mapping": [
+          "E06_reachable_exclusive_conflicting_ownership instantiates OperationalWellFormed from checked init and Reachable; same-resource retained reservations are equal.",
+          "E06_transition_cannot_release_or_transfer_early covers every actual transition and retains resource/root/holder/reservation generation when children or Prepared/Claimed/Unknown/Partial effects block release. E06_prepared_prevents_release explicitly forbids abandoning an unclaimed prepared intent through quiescence.",
+          "E06_reachable_ownership_audited is derived from Reachable, not a supplied safe-trace assumption."
+        ],
+        "remaining_defects": [],
+        "finding_dispositions": [
+          {
+            "finding": "Quiesce formerly released ownership while a Prepared effect remained globally conflicting, stranding later overlapping work.",
+            "disposition": "resolved_verified_in_clean_and_mutation_qualification",
+            "source_change": "ReleaseChecked and actual quiesce/no-early-release guards now include Prepared alongside Claimed/Unknown/Partial; prepared_release_nonvacuous requires refusal before cancellation and successful cancellation/release/new-root generation2 reservation plus distinct effect preparation.",
+            "reported_evidence": "Parent-reported diagnostic040 reproduced the exact Prepared-release counterexample and diagnostic041 verified the repair. Completed clean002 includes prepared_release_nonvacuous and the executed regression; completed mutation004 kills release-live-prepared-intent through the intended release property. All independent fidelity findings are resolved.",
+            "receipt": {
+              "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json.attempt/engineering-lean-report.json",
+              "sha256": "8d1c7c3166398a1e26c997b27ba3a5fe22d64f210218176747cff8ac0a8eb471"
+            },
+            "mutation_receipt": {
+              "path": "~/.local/share/writfold/evidence/revision-5-lean-mutations-004/report.json",
+              "sha256": "e3ac744d0180d7ac2c512cc439ca3361a194e640a851d6fb0773ab8b5d213b35"
+            }
+          }
+        ],
+        "mathematical_fidelity_assessment": "Initialized exclusive ownership and every-transition qualified release/retention are stated. Real OS enforcement is an assumption bridge, not an additional internal writer.",
+        "production_refinement_boundaries": [
+          "Physical writable-worktree alias detection, operating-system/process-tree fencing and truthful generation-bound quiescence require qualified adapters and cooperating-owner assumptions."
+        ],
+        "helper_only_limitations": [],
+        "invariant_instantiation": "E02_representation_preserved supplies OperationalWellFormed from checked init and Reachable; E05_E09_history supplies HistorySafe and RetainedHistory on the same trace. These are separate conclusions, not assumed transition preservation.",
+        "qualification_completed": {
+          "kernel_and_transitive_axioms": {
+            "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json.attempt/engineering-lean-report.json",
+            "sha256": "8d1c7c3166398a1e26c997b27ba3a5fe22d64f210218176747cff8ac0a8eb471"
+          },
+          "reference_cases": "All exact registered cases passed in the completed Lean report.",
+          "independent_statement_review": "All reported independent fidelity findings resolved in current source.",
+          "semantic_campaign": {
+            "path": "~/.local/share/writfold/evidence/revision-5-lean-mutations-004/report.json",
+            "sha256": "e3ac744d0180d7ac2c512cc439ca3361a194e640a851d6fb0773ab8b5d213b35"
+          },
+          "scope": "Conditional mathematical obligation only; production refinement boundaries below remain open."
+        }
+      },
+      "receipt": {
+        "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json",
+        "sha256": "b6f3b6d00675c41c9357c32957effd143fa04e93e590aeb18deb955d8095c435"
+      },
+      "nonvacuity": [
+        "Kctx.Engineering.Examples.E06_nonvacuous",
+        "Kctx.Engineering.Examples.stale_quiescence_nonvacuous",
+        "Kctx.Engineering.Examples.same_activation_conflict_nonvacuous",
+        "Kctx.Engineering.Examples.prepared_release_nonvacuous"
+      ],
+      "semantic_negative_calibration": {
+        "status": "pass",
+        "source_scope": "Reservation release keeps generation tombstone; issued tree blocks quiescence and stale process-generation certificate refuses. After actual send, completion, reconciliation and current-generation termination, stale quiescence evidence refuses release while current evidence permits it. Same-activation distinct enabled effect nodes with overlapping resources cannot prepare concurrently.",
+        "essential_cases": [
+          "E05-negative",
+          "E06-negative",
+          "E06-stale-process-generation",
+          "E06-same-activation-conflict",
+          "E06-prepared-release"
+        ],
+        "essential_mapping": "Cross-run conflicting ownership, live-child early release, stale process-generation evidence and same-activation overlapping effects are exercised separately. Prepared-release calibration first refuses premature quiescence, then actually cancels/releases and lets a new root reserve the same resource at generation2 and prepare a distinct effect.",
+        "remaining_gap": null,
+        "mutant_receipt": {
+          "path": "~/.local/share/writfold/evidence/revision-5-lean-mutations-004/report.json",
+          "sha256": "e3ac744d0180d7ac2c512cc439ca3361a194e640a851d6fb0773ab8b5d213b35"
+        },
+        "executable_receipt": {
+          "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json.attempt/engineering-lean-report.json",
+          "sha256": "8d1c7c3166398a1e26c997b27ba3a5fe22d64f210218176747cff8ac0a8eb471"
+        },
+        "source_mutants": [
+          "stale-process-generation",
+          "release-live-prepared-intent"
+        ],
+        "mutation_scope": "Listed source mutants are campaign004 evidence. An empty source_mutants list means no dedicated mutant is claimed for this E; its named essential negatives were executed in clean002."
+      },
+      "production_refinement_status": "open"
+    },
+    "E07": {
+      "theorem": [
+        "Kctx.Engineering.E07_reachable_evidence",
+        "Kctx.Engineering.E07_reachable_settled_sound",
+        "Kctx.Engineering.E07_dispatch_request_checks_selected_claim",
+        "Kctx.Engineering.E07_selected_claim_unique",
+        "Kctx.Engineering.E07_no_second_send_after_trace",
+        "Kctx.Engineering.E07_no_effect_observation_closes_send",
+        "Kctx.Engineering.E07_no_effect_observation_closes_preparation",
+        "Kctx.Engineering.E07_external_completion_independent_of_coordinator",
+        "Kctx.Engineering.E07_reconcile_preserves_mutation_world",
+        "Kctx.Engineering.E05_E09_history",
+        "Kctx.Engineering.E07_reconcile_refuses_old_rejection",
+        "Kctx.Engineering.E07_completion_preserves_application",
+        "Kctx.Engineering.E07_completion_records_application",
+        "Kctx.Engineering.E07_existing_application_response_is_read_only",
+        "Kctx.Engineering.E07_environment_preserves_application",
+        "Kctx.Engineering.E07_application_persists_reachable",
+        "Kctx.Engineering.E07_environment_records_application",
+        "Kctx.Engineering.E07_environment_existing_application_is_read_only",
+        "Kctx.Engineering.E07_no_second_logical_application_after_trace",
+        "Kctx.Engineering.E12_append_retry_has_exact_authorization",
+        "Kctx.Engineering.E12_dispatch_retry_revalidates"
+      ],
+      "proposed_statement": "Outcome honesty: no Confirmed/Failed without the adapter evidence needed for that classification",
+      "meaning": "Every reachable settled outcome has exact retained qualified observation/classification. Physical sends consume unique retained claim identities; explicit authorized retry may issue a fresh claim for the same immutable intent. Canonical logical application replay is read-only.",
+      "status": "pass",
+      "full_obligation_status": "pass",
+      "assumptions": [
+        "Mathematical nominal identities and exact equality; production canonical codecs, namespace-safe conversions, integer bounds and collision resistance/injective identity require separate refinement.",
+        "Qualified authenticated immutable inputs and durable conditional storage; enforced capability and cooperating-owner boundaries are external assumptions, not consequences of list membership.",
+        "ExternalSound.observations supplies semantic truth of exact adapter observations; effectAuthorizations supplies authorization at effect boundary independently of coordinator liveness.",
+        "Qualified provider CAS and adapter classification semantics; no timeout-as-failure; retry requires exact qualified provider-idempotent or proven-no-effect authorization."
+      ],
+      "executable": [
+        "Kctx.Engineering.Examples.E07_positive",
+        "Kctx.Engineering.Examples.E07_negative",
+        "Kctx.Engineering.Examples.replyLossUnknown",
+        "Kctx.Engineering.Examples.replyLossReconciliation",
+        "Kctx.Engineering.Examples.noEffectPrepared",
+        "Kctx.Engineering.Examples.noEffectClaimed",
+        "Kctx.Engineering.Examples.retryWithoutOldClaim",
+        "Kctx.Engineering.Examples.retryAfterClaimBeforeIO",
+        "Kctx.Engineering.Examples.retryNeedsFreshClaim",
+        "Kctx.Engineering.Examples.idempotentRetryOneApplication",
+        "Kctx.Engineering.Examples.idempotentReplyPreservesOutsideChange",
+        "Kctx.Engineering.Examples.provenAbsenceRetryApplies",
+        "Kctx.Engineering.Examples.oldRejectionCannotClassifyRetry"
+      ],
+      "actions": [
+        "Prepare",
+        "ClaimDispatch",
+        "IssueEffect",
+        "Observe",
+        "Reconcile",
+        "CompleteExternalEffect",
+        "LoseReply",
+        "Crash",
+        "Recover",
+        "Cancel",
+        "Rebind",
+        "TerminateProcess",
+        "RetryClaim",
+        "Resume"
+      ],
+      "scope": "Every reachable settled outcome has exact retained qualified observation/classification. Physical sends consume unique retained claim identities; explicit authorized retry may issue a fresh claim for the same immutable intent. Canonical logical application replay is read-only.",
+      "fidelity": {
+        "status": "pass",
+        "statement_mapping": [
+          "E07_reachable_settled_sound derives exact event/intent binding and classification from initialized Reachable plus ExternalSound.",
+          "DispatchChecked exposes exact retained selected claim inventory, current grant/policy/incarnation/generation, ownership/evidence/node readiness, quiet owned trees and revalidated retry authorization; expected provider may differ only for provider-idempotent retry.",
+          "E07_no_second_send_after_trace proves distinct claim IDs for any two actual sends separated by Reachable; it no longer forbids a fresh qualified retry of the same logical effect. E07_existing_application_response_is_read_only preserves canonical application and current provider vector.",
+          "E07_no_second_logical_application_after_trace starts from an actual non-rejected environment completion, traverses arbitrary Reachable steps, and proves a second same-effect completion leaves the application list and current provider/producer/consumer unchanged while returning the original classification and providerAfter. E07_application_persists_reachable covers all Request/environment/refusal writers. The statement does not need an initialized-state premise: it applies more generally to every such actual first completion."
+        ],
+        "remaining_defects": [],
+        "mathematical_fidelity_assessment": "Claim uniqueness is per physical-attempt claim; qualified retries preserve stable logical intent. The actual-completion/Reachable theorem establishes no second logical application and canonical response preservation without a supplied invariant. Mathematical fidelity, clean kernel/reference qualification and the listed semantic mutants passed under explicit adapter assumptions.",
+        "production_refinement_boundaries": [
+          "Adapter truth, authorization-at-effect, provider CAS and provider-idempotency/proven-absence contracts remain explicit qualified assumptions; their implementation mapping is not supplied by Lean."
+        ],
+        "helper_only_limitations": [],
+        "invariant_instantiation": "E02_representation_preserved supplies OperationalWellFormed from checked init and Reachable; E05_E09_history supplies HistorySafe and RetainedHistory on the same trace. These are separate conclusions, not assumed transition preservation.",
+        "qualification_completed": {
+          "kernel_and_transitive_axioms": {
+            "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json.attempt/engineering-lean-report.json",
+            "sha256": "8d1c7c3166398a1e26c997b27ba3a5fe22d64f210218176747cff8ac0a8eb471"
+          },
+          "reference_cases": "All exact registered cases passed in the completed Lean report.",
+          "independent_statement_review": "All reported independent fidelity findings resolved in current source.",
+          "semantic_campaign": {
+            "path": "~/.local/share/writfold/evidence/revision-5-lean-mutations-004/report.json",
+            "sha256": "e3ac744d0180d7ac2c512cc439ca3361a194e640a851d6fb0773ab8b5d213b35"
+          },
+          "scope": "Conditional mathematical obligation only; production refinement boundaries below remain open."
+        }
+      },
+      "receipt": {
+        "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json",
+        "sha256": "b6f3b6d00675c41c9357c32957effd143fa04e93e590aeb18deb955d8095c435"
+      },
+      "nonvacuity": [
+        "Kctx.Engineering.Examples.E07_nonvacuous",
+        "Kctx.Engineering.Examples.reply_loss_nonvacuous",
+        "Kctx.Engineering.Examples.no_effect_closes_admission",
+        "Kctx.Engineering.Examples.retry_unclaimed_nonvacuous",
+        "Kctx.Engineering.Examples.retry_claimed_nonvacuous",
+        "Kctx.Engineering.Examples.retry_fresh_claim_nonvacuous",
+        "Kctx.Engineering.Examples.retry_idempotent_nonvacuous",
+        "Kctx.Engineering.Examples.retry_outside_change_nonvacuous",
+        "Kctx.Engineering.Examples.retry_absence_nonvacuous",
+        "Kctx.Engineering.Examples.retry_old_rejection_nonvacuous"
+      ],
+      "semantic_negative_calibration": {
+        "status": "pass",
+        "source_scope": "Crash before IO leaves Unknown without blind send; completion after cancellation/crash plus lost reply can reconcile; rejected observation closes preparation/claim. Fresh retry claims cover unclaimed/claimed crash boundaries, provider-idempotent replay and proven absence; old rejection cannot classify a later attempt.",
+        "essential_cases": [
+          "E07-negative",
+          "E07-reply-loss-unknown",
+          "E07-retry-fresh-claim",
+          "E07-retry-idempotent",
+          "E07-retry-old-rejection",
+          "E07-retry-outside-change"
+        ],
+        "essential_mapping": "Crash/reply loss does not classify failure or authorize blind replay; fresh qualified retry claims preserve canonical logical application and reject prior-attempt negative evidence. After actual retry dispatch and independent changeProviderState to (3,7,8), a canonical response reporting original provider2 must preserve all three current world coordinates.",
+        "remaining_gap": null,
+        "mutant_receipt": {
+          "path": "~/.local/share/writfold/evidence/revision-5-lean-mutations-004/report.json",
+          "sha256": "e3ac744d0180d7ac2c512cc439ca3361a194e640a851d6fb0773ab8b5d213b35"
+        },
+        "executable_receipt": {
+          "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json.attempt/engineering-lean-report.json",
+          "sha256": "8d1c7c3166398a1e26c997b27ba3a5fe22d64f210218176747cff8ac0a8eb471"
+        },
+        "source_mutants": [
+          "timeout-is-failure",
+          "dispatch-skips-live-evidence",
+          "retry-rewrites-current-provider"
+        ],
+        "mutation_scope": "Listed source mutants are campaign004 evidence. An empty source_mutants list means no dedicated mutant is claimed for this E; its named essential negatives were executed in clean002.",
+        "calibration_history": "Campaign002 did not kill retry-rewrites-current-provider because resetting provider2 to already-current provider2 was unobservable; that failed attempt is preserved. The outside-change trace distinguishes the rollback, and completed campaign004 kills that mutant. No success is retroactively assigned to failed campaigns002/003."
+      },
+      "production_refinement_status": "open"
+    },
+    "E08": {
+      "theorem": [
+        "Kctx.Engineering.E08_publication_safe",
+        "Kctx.Engineering.publishSelected_certificate",
+        "Kctx.Engineering.publication_current_engineering_approval",
+        "Kctx.Engineering.publication_evidence_and_native_roots",
+        "Kctx.Engineering.publication_procedure_policy_floor",
+        "Kctx.Engineering.published_evidence_permanent",
+        "Kctx.Engineering.environment_cannot_undo_publication",
+        "Kctx.Engineering.changed_material_requires_refusal",
+        "Kctx.Engineering.unprepared_publication_requires_refusal",
+        "Kctx.Engineering.E02_representation_preserved",
+        "Kctx.Engineering.E05_E09_history",
+        "Kctx.Engineering.E08_publication_safe_reachable"
+      ],
+      "proposed_statement": "Publication closure and promotion integrity",
+      "meaning": "Selected historical preparation plus exact CandidateMaterial evaluation/review and current scoped approval gates ordinary corpus publication; evidence/native roots precede selection and survive all later transitions independently of acknowledgement.",
+      "status": "pass",
+      "full_obligation_status": "pass",
+      "assumptions": [
+        "Mathematical nominal identities and exact equality; production canonical codecs, namespace-safe conversions, integer bounds and collision resistance/injective identity require separate refinement.",
+        "Qualified authenticated immutable inputs and durable conditional storage; enforced capability and cooperating-owner boundaries are external assumptions, not consequences of list membership.",
+        "Authenticated frozen rubric/all-trial evaluator and review observations, exact scoped learning approvals and legacy portfolio approvals.",
+        "Completed corpus CAS modeled by applied legacy operation; native corpusBindings, durable release roots and retained package closure require qualified storage bridge."
+      ],
+      "executable": [
+        "Kctx.Engineering.Examples.E08_positive",
+        "Kctx.Engineering.Examples.E08_negative",
+        "Kctx.Engineering.Examples.exactMaterialRefused",
+        "Kctx.Engineering.Examples.competingPromotion",
+        "Kctx.Engineering.Examples.lostPublicationAcknowledgement",
+        "Kctx.Engineering.Examples.publicationRetentionRefused"
+      ],
+      "actions": [
+        "ObserveMaterial",
+        "Propose",
+        "Evaluate",
+        "Review",
+        "PrepareAdmission",
+        "PublishAdmission",
+        "AcknowledgeAdmission",
+        "Resolve",
+        "ChangePolicy",
+        "CorrectKnowledge",
+        "Crash",
+        "Recover",
+        "AcquireReadCut",
+        "ReleaseReadCut"
+      ],
+      "scope": "Selected historical preparation plus exact CandidateMaterial evaluation/review and current scoped approval gates ordinary corpus publication; evidence/native roots precede selection and survive all later transitions independently of acknowledgement.",
+      "fidelity": {
+        "status": "pass",
+        "statement_mapping": [
+          "E08_publication_safe exposes certificate, exact retained/replayed preparation, legacy approval, evidence/native roots and learned kernel floor.",
+          "HistorySafe and OperationalWellFormed premises are discharged separately by E05_E09_history and E02_representation_preserved for the same initialized trace.",
+          "PublicationCertificate clears admission and leaves acknowledgement unchanged; published_evidence_permanent covers any later Reachable.",
+          "E08_publication_safe_reachable now discharges both invariant premises from checked init and Reachable, and includes exact current learning approval, target-release package binding and post-publication HistorySafe."
+        ],
+        "remaining_defects": [],
+        "mathematical_fidelity_assessment": "Initialized reachable publication theorem now discharges representation/history premises and exposes exact approvals, roots and package-release binding.",
+        "production_refinement_boundaries": [
+          "Completed corpus CAS, authenticated review/evaluation and durable root retention need production qualification; prunable storage/GC requires a separate bridge."
+        ],
+        "helper_only_limitations": [],
+        "invariant_instantiation": "E02_representation_preserved supplies OperationalWellFormed from checked init and Reachable; E05_E09_history supplies HistorySafe and RetainedHistory on the same trace. These are separate conclusions, not assumed transition preservation.",
+        "qualification_completed": {
+          "kernel_and_transitive_axioms": {
+            "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json.attempt/engineering-lean-report.json",
+            "sha256": "8d1c7c3166398a1e26c997b27ba3a5fe22d64f210218176747cff8ac0a8eb471"
+          },
+          "reference_cases": "All exact registered cases passed in the completed Lean report.",
+          "independent_statement_review": "All reported independent fidelity findings resolved in current source.",
+          "semantic_campaign": {
+            "path": "~/.local/share/writfold/evidence/revision-5-lean-mutations-004/report.json",
+            "sha256": "e3ac744d0180d7ac2c512cc439ca3361a194e640a851d6fb0773ab8b5d213b35"
+          },
+          "scope": "Conditional mathematical obligation only; production refinement boundaries below remain open."
+        }
+      },
+      "receipt": {
+        "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json",
+        "sha256": "b6f3b6d00675c41c9357c32957effd143fa04e93e590aeb18deb955d8095c435"
+      },
+      "nonvacuity": [
+        "Kctx.Engineering.Examples.E08_nonvacuous",
+        "Kctx.Engineering.Examples.exact_learning_nonvacuous",
+        "Kctx.Engineering.Examples.publication_retention_nonvacuous"
+      ],
+      "semantic_negative_calibration": {
+        "status": "pass",
+        "source_scope": "Missing scoped approval, changed exact material and competing promotion refuse; lost acknowledgement cannot replay publication. Intact publication roots all retained evidence before selection, while a physical material-loss fault input refuses before corpus publication.",
+        "essential_cases": [
+          "E08-publication-retention"
+        ],
+        "essential_mapping": "publicationRetentionRefused supplies an intact-publication positive control and a missing physical-closure refusal with unchanged initial knowledge. This is a retention-fault input, not an admitted destructive-GC transition or a source-mutant kill.",
+        "remaining_gap": null,
+        "mutant_receipt": {
+          "path": "~/.local/share/writfold/evidence/revision-5-lean-mutations-004/report.json",
+          "sha256": "e3ac744d0180d7ac2c512cc439ca3361a194e640a851d6fb0773ab8b5d213b35"
+        },
+        "executable_receipt": {
+          "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json.attempt/engineering-lean-report.json",
+          "sha256": "8d1c7c3166398a1e26c997b27ba3a5fe22d64f210218176747cff8ac0a8eb471"
+        },
+        "source_mutants": [
+          "publish-before-retention"
+        ],
+        "mutation_scope": "Listed source mutants are campaign004 evidence. An empty source_mutants list means no dedicated mutant is claimed for this E; its named essential negatives were executed in clean002."
+      },
+      "production_refinement_status": "open"
+    },
+    "E09": {
+      "theorem": [
+        "Kctx.Engineering.project_non_authority",
+        "Kctx.Engineering.acquireCut_certificate",
+        "Kctx.Engineering.acquireCut_inventory_complete",
+        "Kctx.Engineering.E09_surviving_cut_exact",
+        "Kctx.Engineering.E09_surviving_stream_exact",
+        "Kctx.Engineering.E05_E09_history",
+        "Kctx.Engineering.released_cut_requires_refusal",
+        "Kctx.Engineering.missing_cut_requires_refusal",
+        "Kctx.Engineering.lagging_projection_requires_refusal",
+        "Kctx.Engineering.stale_inventory_requires_refusal",
+        "Kctx.Engineering.missing_watermark_has_no_head_fallback",
+        "Kctx.Engineering.missing_native_root_requires_refusal",
+        "Kctx.Engineering.wrong_activity_family_requires_refusal",
+        "Kctx.Engineering.Ledger.pin_native_pins_valid",
+        "Kctx.Engineering.Examples.CutEquationProof.started_exact",
+        "Kctx.Engineering.Examples.CutEquationProof.before_selections",
+        "Kctx.Engineering.Examples.CutEquationProof.before_sorted",
+        "Kctx.Engineering.Examples.CutEquationProof.projection_before_exact",
+        "Kctx.Engineering.Examples.CutEquationProof.acquire_before_exact",
+        "Kctx.Engineering.Examples.CutEquationProof.cut_before_exact",
+        "Kctx.Engineering.Examples.CutEquationProof.advance_exact",
+        "Kctx.Engineering.Examples.CutEquationProof.after_selections",
+        "Kctx.Engineering.Examples.CutEquationProof.after_sorted",
+        "Kctx.Engineering.Examples.CutEquationProof.projection_after_exact",
+        "Kctx.Engineering.Examples.CutEquationProof.acquire_after_exact",
+        "Kctx.Engineering.Examples.CutEquationProof.cut_after_exact",
+        "Kctx.Engineering.Examples.CutEquationProof.positive",
+        "Kctx.Engineering.Examples.CutEquationProof.negative"
+      ],
+      "proposed_statement": "Projection non-authority and exact-cut interpretation",
+      "meaning": "Projection updates only pin/heads/inventory metadata; acquisition captures complete ordered stream inventory and exact native/visibility inputs; every surviving read keeps exact captured corpus interpretation and manifest across arbitrary transitions.",
+      "status": "pass",
+      "full_obligation_status": "pass",
+      "assumptions": [
+        "Mathematical nominal identities and exact equality; production canonical codecs, namespace-safe conversions, integer bounds and collision resistance/injective identity require separate refinement.",
+        "Qualified authenticated immutable inputs and durable conditional storage; enforced capability and cooperating-owner boundaries are external assumptions, not consequences of list membership.",
+        "Contracts.projections authenticates exact native pin/head/inventory observations; envelope/query/schema/visibility interpretation and retention are qualified native boundaries."
+      ],
+      "executable": [
+        "Kctx.Engineering.Examples.E09_positive",
+        "Kctx.Engineering.Examples.E09_negative"
+      ],
+      "actions": [
+        "Project",
+        "AcquireReadCut",
+        "ReleaseReadCut",
+        "Request.append",
+        "Request.publish",
+        "Request.dispatch",
+        "Request.local",
+        "AdvanceTime",
+        "RevokeGrant",
+        "ChangePolicy",
+        "WithdrawProcedure",
+        "CorrectKnowledge",
+        "AdvanceUpstream",
+        "ChangeProviderState",
+        "CompleteExternalEffect",
+        "LoseReply",
+        "TerminateProcess",
+        "RetryClaim",
+        "Resume"
+      ],
+      "scope": "Projection updates only pin/heads/inventory metadata; acquisition captures complete ordered stream inventory and exact native/visibility inputs; every surviving read keeps exact captured corpus interpretation and manifest across arbitrary transitions.",
+      "fidelity": {
+        "status": "pass",
+        "statement_mapping": [
+          "project_non_authority is exact State equality with only three metadata fields changed.",
+          "acquireCut_certificate and inventory_complete expose CutReady, exact current ordered heads and complete inventory, rather than an ordinal watermark.",
+          "E09_surviving_cut_exact/stream_exact retain the original result if the cut remains unreleased; missing/released/incomplete inputs refuse without mutable HEAD fallback."
+        ],
+        "remaining_defects": [],
+        "mathematical_fidelity_assessment": "Cuts are exact observation manifests, not global cross-store atomic snapshots; the latter is not the proposed E09 statement.",
+        "production_refinement_boundaries": [
+          "Native query/visibility interpretation, production pagination and destructive-GC retention bridges remain external."
+        ],
+        "helper_only_limitations": [
+          "Examples.CutEquationProof declarations are concrete exact-transition and sorting witnesses supporting unchanged E09_nonvacuous, not additional runtime cases or universal safety theorems. Exact started/advance/cut success equations exclude the proof snapshots' getD fallback; actual executable cases retain the original sorting path. The landed helper composition was included in clean002 kernel/axiom and reference qualification."
+        ],
+        "invariant_instantiation": "E02_representation_preserved supplies OperationalWellFormed from checked init and Reachable; E05_E09_history supplies HistorySafe and RetainedHistory on the same trace. These are separate conclusions, not assumed transition preservation.",
+        "qualification_completed": {
+          "kernel_and_transitive_axioms": {
+            "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json.attempt/engineering-lean-report.json",
+            "sha256": "8d1c7c3166398a1e26c997b27ba3a5fe22d64f210218176747cff8ac0a8eb471"
+          },
+          "reference_cases": "All exact registered cases passed in the completed Lean report.",
+          "independent_statement_review": "All reported independent fidelity findings resolved in current source.",
+          "semantic_campaign": {
+            "path": "~/.local/share/writfold/evidence/revision-5-lean-mutations-004/report.json",
+            "sha256": "e3ac744d0180d7ac2c512cc439ca3361a194e640a851d6fb0773ab8b5d213b35"
+          },
+          "scope": "Conditional mathematical obligation only; production refinement boundaries below remain open."
+        }
+      },
+      "receipt": {
+        "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json",
+        "sha256": "b6f3b6d00675c41c9357c32957effd143fa04e93e590aeb18deb955d8095c435"
+      },
+      "nonvacuity": [
+        "Kctx.Engineering.Examples.E09_nonvacuous"
+      ],
+      "semantic_negative_calibration": {
+        "status": "pass",
+        "source_scope": "Old/new cuts retain distinct corpus/native pins and exact nonempty activation versus newer cancellation/activation prefixes; lagging, wrong-realm/family and missing-material reads refuse without HEAD fallback.",
+        "essential_cases": [
+          "E09-positive",
+          "E09-negative"
+        ],
+        "essential_mapping": "The positive compares exact old/new nonempty payload prefixes across publication/native epochs; the negative refuses lagging/wrong-family projections and a pinned-material-loss fault input. Projection authority is separately covered by project_non_authority.",
+        "remaining_gap": null,
+        "mutant_receipt": null,
+        "executable_receipt": {
+          "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json.attempt/engineering-lean-report.json",
+          "sha256": "8d1c7c3166398a1e26c997b27ba3a5fe22d64f210218176747cff8ac0a8eb471"
+        },
+        "source_mutants": [],
+        "mutation_scope": "Listed source mutants are campaign004 evidence. An empty source_mutants list means no dedicated mutant is claimed for this E; its named essential negatives were executed in clean002."
+      },
+      "production_refinement_status": "open"
+    },
+    "E10": {
+      "theorem": [
+        "Kctx.Engineering.E02_representation_preserved",
+        "Kctx.Engineering.parent_call_version_pinned",
+        "Kctx.Engineering.E04_E10_arbitrary_invocation_bounds",
+        "Kctx.Engineering.E10_shared_account_traversal_bound",
+        "Kctx.Engineering.E10_acyclic_invocation_composition",
+        "Kctx.Engineering.invocation_path_unique_account",
+        "Kctx.Engineering.charge_has_bounded_positive_cost",
+        "Kctx.Engineering.completed_node_disabled",
+        "Kctx.Engineering.validateProcedure_sound",
+        "Kctx.Engineering.transition_account_evolution",
+        "Kctx.Engineering.transition_account_classified",
+        "Kctx.Engineering.reachable_constructs_shared_account_trace",
+        "Kctx.Engineering.E10_every_reachable_suffix_bounded",
+        "Kctx.Engineering.E10_after_activation_bounded",
+        "Kctx.Engineering.domainBody_budget_evolution",
+        "Kctx.Engineering.step_budget_evolution",
+        "Kctx.Engineering.transition_budget_evolution",
+        "Kctx.Engineering.loadResource_actual_charge",
+        "Kctx.Engineering.prepare_actual_charge",
+        "Kctx.Engineering.failNode_actual_charge",
+        "Kctx.Engineering.selectRoute_actual_charge",
+        "Kctx.Engineering.call_actual_charge",
+        "Kctx.Engineering.rebind_actual_charge",
+        "Kctx.Engineering.resume_actual_charge",
+        "Kctx.Engineering.retryClaim_actual_charge",
+        "Kctx.Engineering.advanceNode_actual_charge",
+        "Kctx.Engineering.advanceNode_effect_budgets",
+        "Kctx.Engineering.append_actual_domainBody",
+        "Kctx.Engineering.ActualCharge.rebase",
+        "Kctx.Engineering.charged_transition_changes_account",
+        "Kctx.Engineering.append_loadResource_counted",
+        "Kctx.Engineering.ActualCharge.counted_transition",
+        "Kctx.Engineering.E12_resume_preserves_control_and_clears_context",
+        "Kctx.Engineering.E12_cleared_required_context_blocks_node"
+      ],
+      "proposed_statement": "Version-pinned composition and bounded resource traversal",
+      "meaning": "Typed exact catalog/call targets bound invocation rank and share one root account. Every actual reachable suffix constructs a SharedAccountTrace automatically; positive account-changing steps are bounded by the activation budget. Explicit resumption clears loaded context without resetting the account.",
+      "status": "pass",
+      "full_obligation_status": "pass",
+      "assumptions": [
+        "Mathematical nominal identities and exact equality; production canonical codecs, namespace-safe conversions, integer bounds and collision resistance/injective identity require separate refinement.",
+        "Qualified authenticated immutable inputs and durable conditional storage; enforced capability and cooperating-owner boundaries are external assumptions, not consequences of list membership.",
+        "Authenticated exact packageReleases and package closure; no moving alias substitution; input budget and finite typed graph validated before execution."
+      ],
+      "executable": [
+        "Kctx.Engineering.Examples.E10_positive",
+        "Kctx.Engineering.Examples.E10_negative",
+        "Kctx.Engineering.Examples.revisionsPinned",
+        "Kctx.Engineering.Examples.aliasDriftRefused",
+        "Kctx.Engineering.Examples.recursionRefused",
+        "Kctx.Engineering.Examples.resumeRequiresContextReload"
+      ],
+      "actions": [
+        "Resolve",
+        "Activate",
+        "LoadResource",
+        "AdvanceNode",
+        "FailNode",
+        "SelectRoute",
+        "Call",
+        "Prepare",
+        "Return",
+        "Rebind",
+        "Cancel",
+        "Quiesce",
+        "PublishAdmission",
+        "RetryClaim",
+        "Resume"
+      ],
+      "scope": "Typed exact catalog/call targets bound invocation rank and share one root account. Every actual reachable suffix constructs a SharedAccountTrace automatically; positive account-changing steps are bounded by the activation budget. Explicit resumption clears loaded context without resetting the account.",
+      "fidelity": {
+        "status": "pass",
+        "statement_mapping": [
+          "parent_call_version_pinned extracts exact target ID/revision/input/output under OperationalWellFormed, discharged separately by E02.",
+          "E04_E10_arbitrary_invocation_bounds and E10_acyclic_invocation_composition quantify actual initialized invocation paths.",
+          "E10_shared_account_traversal_bound proves spent + count <= limit given SharedAccountTrace; its constructors require an actual Transition plus unchanged-account or charge witness.",
+          "Effect-result AdvanceNode is uncharged because Prepare already paid that node cost; full traversal counting must distinguish this from pure-node advancement and Return.",
+          "transition_account_classified and reachable_constructs_shared_account_trace derive unchanged/debit classification from actual Transition and independently preserved representation. E10_after_activation_bounded constructs a bounded trace for every Reachable suffix, not a caller-supplied safe trace.",
+          "ActualCharge extraction covers LoadResource, Prepare, FailNode, SelectRoute, Call, Rebind, Resume, RetryClaim and non-effect AdvanceNode. append_actual_domainBody and ActualCharge.rebase transport those actual reducer debits to Request states; charged_transition_changes_account excludes counting them as unchanged. Effect advancement preserves budgets because Prepare paid the cost; Return consumes the pending call result rather than loading/calling again. The claim is bounded resource traversal and composition, not a bound on all observation/refusal/lifecycle steps."
+        ],
+        "remaining_defects": [],
+        "mathematical_fidelity_assessment": "Automatic every-transition classification plus action-specific actual debit extraction closes supplied-safe-trace and traversal-account linkage concerns. Shared-root/rank/cycle proofs cover nested composition. Clean kernel/reference qualification and independent mathematical fidelity review passed; no dedicated E10 source-mutant kill is claimed.",
+        "production_refinement_boundaries": [
+          "Authenticated immutable package mapping, bounded Rust conversions and production resource accounting need refinement."
+        ],
+        "helper_only_limitations": [
+          "charge_has_bounded_positive_cost and completed_node_disabled alone do not link arbitrary Request traces to an aggregate traversal count."
+        ],
+        "invariant_instantiation": "E02_representation_preserved supplies OperationalWellFormed from checked init and Reachable; E05_E09_history supplies HistorySafe and RetainedHistory on the same trace. These are separate conclusions, not assumed transition preservation.",
+        "qualification_completed": {
+          "kernel_and_transitive_axioms": {
+            "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json.attempt/engineering-lean-report.json",
+            "sha256": "8d1c7c3166398a1e26c997b27ba3a5fe22d64f210218176747cff8ac0a8eb471"
+          },
+          "reference_cases": "All exact registered cases passed in the completed Lean report.",
+          "independent_statement_review": "All reported independent fidelity findings resolved in current source.",
+          "semantic_campaign": {
+            "path": "~/.local/share/writfold/evidence/revision-5-lean-mutations-004/report.json",
+            "sha256": "e3ac744d0180d7ac2c512cc439ca3361a194e640a851d6fb0773ab8b5d213b35"
+          },
+          "scope": "Conditional mathematical obligation only; production refinement boundaries below remain open."
+        }
+      },
+      "receipt": {
+        "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json",
+        "sha256": "b6f3b6d00675c41c9357c32957effd143fa04e93e590aeb18deb955d8095c435"
+      },
+      "nonvacuity": [
+        "Kctx.Engineering.Examples.E10_nonvacuous",
+        "Kctx.Engineering.Examples.package_pins_nonvacuous",
+        "Kctx.Engineering.Examples.resume_context_nonvacuous"
+      ],
+      "semantic_negative_calibration": {
+        "status": "pass",
+        "source_scope": "Three nested calls share exhausted root budget; old pinned procedure remains; moving revision and nondecreasing rank refuse. Resumption clears required loaded context and blocks retry until an actual charged reload.",
+        "essential_cases": [
+          "E10-alias-drift",
+          "E10-recursion",
+          "E10-positive",
+          "E10-negative",
+          "E10-resume-context-reload"
+        ],
+        "essential_mapping": "Moving revision aliases and nondecreasing call rank refuse; actual nested calls share one exhausted account, and resumed context must be reloaded under the same budget.",
+        "remaining_gap": null,
+        "mutant_receipt": null,
+        "executable_receipt": {
+          "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json.attempt/engineering-lean-report.json",
+          "sha256": "8d1c7c3166398a1e26c997b27ba3a5fe22d64f210218176747cff8ac0a8eb471"
+        },
+        "source_mutants": [],
+        "mutation_scope": "Listed source mutants are campaign004 evidence. An empty source_mutants list means no dedicated mutant is claimed for this E; its named essential negatives were executed in clean002."
+      },
+      "production_refinement_status": "open"
+    },
+    "E11": {
+      "theorem": [
+        "Kctx.Engineering.E11_completion_uses_actual_result",
+        "Kctx.Engineering.E11_completion_preserves",
+        "Kctx.Engineering.E11_step_preserves_compatibility",
+        "Kctx.Engineering.E11_transition_preserves_or_external_change",
+        "Kctx.Engineering.E11_permitted_execution_compatible",
+        "Kctx.Engineering.E11_external_change_can_break_compatibility",
+        "Kctx.Engineering.E11_changed_provider_refuses_prepare",
+        "Kctx.Engineering.E11_binding_cannot_silently_refresh",
+        "Kctx.Engineering.E11_changed_provider_refuses_request"
+      ],
+      "proposed_statement": "Declared compatibility preserved by each permitted cross-repo transition, assuming sound compatibility observations",
+      "meaning": "Every operational request and controlled environment completion preserves declared compatibility; uncontrolled upstream/provider changes are explicit possible breakers, not hidden preservation premises.",
+      "status": "pass",
+      "full_obligation_status": "pass",
+      "assumptions": [
+        "Mathematical nominal identities and exact equality; production canonical codecs, namespace-safe conversions, integer bounds and collision resistance/injective identity require separate refinement.",
+        "Qualified authenticated immutable inputs and durable conditional storage; enforced capability and cooperating-owner boundaries are external assumptions, not consequences of list membership.",
+        "ExternalSound.compatibility maps exact actual-result provider/producer/consumer tuples to the declared relation; initial CompatibleState is required.",
+        "Provider conditional expected-revision enforcement and authorization-at-effect; permitted CompatibleExecution excludes only explicit uncontrolled provider changes."
+      ],
+      "executable": [
+        "Kctx.Engineering.Examples.E11_positive",
+        "Kctx.Engineering.Examples.E11_negative",
+        "Kctx.Engineering.Examples.changedProviderBindingRefused"
+      ],
+      "actions": [
+        "Request.append",
+        "Request.publish",
+        "Request.dispatch",
+        "Request.local",
+        "AdvanceTime",
+        "RevokeGrant",
+        "ChangePolicy",
+        "WithdrawProcedure",
+        "CorrectKnowledge",
+        "AdvanceUpstream",
+        "ChangeProviderState",
+        "CompleteExternalEffect",
+        "LoseReply",
+        "TerminateProcess",
+        "RetryClaim",
+        "Resume"
+      ],
+      "scope": "Every operational request and controlled environment completion preserves declared compatibility; uncontrolled upstream/provider changes are explicit possible breakers, not hidden preservation premises.",
+      "fidelity": {
+        "status": "pass",
+        "statement_mapping": [
+          "E11_completion_uses_actual_result distinguishes read-only rejection/canonical replay from first application, whose actual resulting provider/producer/consumer vector must have qualified compatibility evidence and expected-provider authorization.",
+          "E11_transition_preserves_or_external_change classifies arbitrary Transition; E11_permitted_execution_compatible proves the controlled trace induction.",
+          "E11_external_change_can_break_compatibility supplies an actual external counter-transition for an incompatible vector.",
+          "E11_changed_provider_refuses_request blocks actual append/Prepare when the intent provider differs from the observed world. E11_binding_cannot_silently_refresh also rejects changing only the requested provider relative to the exact activation binding; historical inputs are not silently rewritten."
+        ],
+        "remaining_defects": [],
+        "mathematical_fidelity_assessment": "Controlled step/trace compatibility is proved conditional on ExternalSound and initial compatibility; arbitrary external changes are represented, and known provider mismatch blocks actual Prepare without silently refreshing binding. This mathematical statement passed clean kernel/reference qualification and independent fidelity review; actual repository/artifact and provider-CAS refinement remains open.",
+        "production_refinement_boundaries": [
+          "Nominal ProviderRevision plus declared producer/consumer Nat indices are permitted mathematical state domains. Mapping them to actual Rust/forge repositories and artifact identities belongs V19/M13/WF28/WF31 and is not evidence of a missing E11 Lean theorem.",
+          "Sound compatibility observations, expected-provider atomicity and effect authorization are explicit conditional premises; production adapters must qualify them."
+        ],
+        "helper_only_limitations": [],
+        "invariant_instantiation": "E02_representation_preserved supplies OperationalWellFormed from checked init and Reachable; E05_E09_history supplies HistorySafe and RetainedHistory on the same trace. These are separate conclusions, not assumed transition preservation.",
+        "qualification_completed": {
+          "kernel_and_transitive_axioms": {
+            "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json.attempt/engineering-lean-report.json",
+            "sha256": "8d1c7c3166398a1e26c997b27ba3a5fe22d64f210218176747cff8ac0a8eb471"
+          },
+          "reference_cases": "All exact registered cases passed in the completed Lean report.",
+          "independent_statement_review": "All reported independent fidelity findings resolved in current source.",
+          "semantic_campaign": {
+            "path": "~/.local/share/writfold/evidence/revision-5-lean-mutations-004/report.json",
+            "sha256": "e3ac744d0180d7ac2c512cc439ca3361a194e640a851d6fb0773ab8b5d213b35"
+          },
+          "scope": "Conditional mathematical obligation only; production refinement boundaries below remain open."
+        }
+      },
+      "receipt": {
+        "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json",
+        "sha256": "b6f3b6d00675c41c9357c32957effd143fa04e93e590aeb18deb955d8095c435"
+      },
+      "nonvacuity": [
+        "Kctx.Engineering.Examples.E11_nonvacuous",
+        "Kctx.Engineering.Examples.changed_provider_binding_nonvacuous"
+      ],
+      "semantic_negative_calibration": {
+        "status": "pass",
+        "source_scope": "Actual provider completion updates compatible producer/consumer vector; early consumer vector refuses.",
+        "essential_cases": [
+          "E11-negative",
+          "E11-changed-provider-binding"
+        ],
+        "essential_mapping": "Completion with producer=0, consumer=1 refuses the incompatible early-consumer vector; the matched producer=1, consumer=0 completion succeeds. After actual AdvanceUpstream, Prepare refuses both the historical intent and an intent-only expected-provider refresh, with a successful pre-change control.",
+        "remaining_gap": null,
+        "mutant_receipt": {
+          "path": "~/.local/share/writfold/evidence/revision-5-lean-mutations-004/report.json",
+          "sha256": "e3ac744d0180d7ac2c512cc439ca3361a194e640a851d6fb0773ab8b5d213b35"
+        },
+        "executable_receipt": {
+          "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json.attempt/engineering-lean-report.json",
+          "sha256": "8d1c7c3166398a1e26c997b27ba3a5fe22d64f210218176747cff8ac0a8eb471"
+        },
+        "source_mutants": [
+          "prepare-skips-current-provider"
+        ],
+        "mutation_scope": "Listed source mutants are campaign004 evidence. An empty source_mutants list means no dedicated mutant is claimed for this E; its named essential negatives were executed in clean002."
+      },
+      "production_refinement_status": "open"
+    },
+    "E12": {
+      "theorem": [
+        "Kctx.Engineering.E12_step_checks_continuation",
+        "Kctx.Engineering.E12_reachable_continuation_audited",
+        "Kctx.Engineering.E12_live_current_authority",
+        "Kctx.Engineering.E12_live_checks_parent",
+        "Kctx.Engineering.E12_append_migration_exact",
+        "Kctx.Engineering.E12_recovery_preserves_historical_inputs",
+        "Kctx.Engineering.E12_recovered_old_activation_refused",
+        "Kctx.Engineering.E12_return_refuses_stale_child",
+        "Kctx.Engineering.E07_dispatch_request_checks_selected_claim",
+        "Kctx.Engineering.publication_current_engineering_approval",
+        "Kctx.Engineering.E12_append_resume_has_exact_authorization",
+        "Kctx.Engineering.E12_resume_preserves_control_and_clears_context",
+        "Kctx.Engineering.E12_resume_preserves_effect_history",
+        "Kctx.Engineering.E12_cleared_required_context_blocks_node",
+        "Kctx.Engineering.E12_append_retry_has_exact_authorization",
+        "Kctx.Engineering.E12_dispatch_retry_revalidates"
+      ],
+      "proposed_statement": "Revocation/correction-aware continuation and explicit migration",
+      "meaning": "Every actual request carries action-specific current continuation checks. Recovery itself never refreshes activation authority; explicit migration or exact authorized resumption checks current scope and incarnation. Resumption preserves control and clears loaded context; retry authorization is revalidated at send.",
+      "status": "pass",
+      "full_obligation_status": "pass",
+      "assumptions": [
+        "Mathematical nominal identities and exact equality; production canonical codecs, namespace-safe conversions, integer bounds and collision resistance/injective identity require separate refinement.",
+        "Qualified authenticated immutable inputs and durable conditional storage; enforced capability and cooperating-owner boundaries are external assumptions, not consequences of list membership.",
+        "Current observed authority/policy/correction and exact scoped grant intervals; contracts.migrations binds root, old/new Binding, incarnation and provider.",
+        "Provider authorization-at-effect is separate; no instantaneous worldwide revocation assumption."
+      ],
+      "executable": [
+        "Kctx.Engineering.Examples.E12_positive",
+        "Kctx.Engineering.Examples.E12_negative",
+        "Kctx.Engineering.Examples.revokedDispatchRefused",
+        "Kctx.Engineering.Examples.unqualifiedResumeRefused",
+        "Kctx.Engineering.Examples.expiredGrantRefused",
+        "Kctx.Engineering.Examples.withdrawnProcedureRefused",
+        "Kctx.Engineering.Examples.correctedContinuationRefused"
+      ],
+      "actions": [
+        "AdvanceTime",
+        "RevokeGrant",
+        "ChangePolicy",
+        "WithdrawProcedure",
+        "CorrectKnowledge",
+        "AdvanceUpstream",
+        "ChangeProviderState",
+        "Activate",
+        "LoadResource",
+        "AdvanceNode",
+        "FailNode",
+        "SelectRoute",
+        "Call",
+        "Prepare",
+        "Reserve",
+        "ClaimDispatch",
+        "IssueEffect",
+        "Reuse",
+        "Return",
+        "Rebind",
+        "Reopen",
+        "PublishAdmission",
+        "Crash",
+        "Recover",
+        "Observe",
+        "Reconcile",
+        "ObserveMaterial",
+        "RetryClaim",
+        "Resume"
+      ],
+      "scope": "Every actual request carries action-specific current continuation checks. Recovery itself never refreshes activation authority; explicit migration or exact authorized resumption checks current scope and incarnation. Resumption preserves control and clears loaded context; retry authorization is revalidated at send.",
+      "fidelity": {
+        "status": "pass",
+        "statement_mapping": [
+          "E12_step_checks_continuation handles every Request; E12_reachable_continuation_audited derives checks through actual Reachable.",
+          "E12_live_current_authority exposes current grant root/binding/time and policy/correction/incarnation; E12_live_checks_parent checks ancestry.",
+          "E12_append_migration_exact extracts exact migration observation and fresh invocation; recovery preserves historical ledger/run/effect/receipt inputs.",
+          "E12_append_resume_has_exact_authorization binds root/invocation/procedure/input/control/old-new incarnation/policy/correction/provider/time. Resume preserves effect/claim/ownership/receipt history. E12_append_retry_has_exact_authorization binds old claim and immutable intent; E12_dispatch_retry_revalidates checks it again at IO."
+        ],
+        "remaining_defects": [],
+        "mathematical_fidelity_assessment": "The continuation audit is action-specific. Publication uses its separately registered exact current approval certificate; observations and teardown intentionally do not require mutation authority. Migration, resumption and qualified retry are distinct checked paths.",
+        "production_refinement_boundaries": [
+          "Authority observation authenticity, migration/resumption approvals and authorization-at-effect require qualified production boundaries; instantaneous worldwide revocation is not assumed."
+        ],
+        "helper_only_limitations": [],
+        "invariant_instantiation": "E02_representation_preserved supplies OperationalWellFormed from checked init and Reachable; E05_E09_history supplies HistorySafe and RetainedHistory on the same trace. These are separate conclusions, not assumed transition preservation.",
+        "qualification_completed": {
+          "kernel_and_transitive_axioms": {
+            "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json.attempt/engineering-lean-report.json",
+            "sha256": "8d1c7c3166398a1e26c997b27ba3a5fe22d64f210218176747cff8ac0a8eb471"
+          },
+          "reference_cases": "All exact registered cases passed in the completed Lean report.",
+          "independent_statement_review": "All reported independent fidelity findings resolved in current source.",
+          "semantic_campaign": {
+            "path": "~/.local/share/writfold/evidence/revision-5-lean-mutations-004/report.json",
+            "sha256": "e3ac744d0180d7ac2c512cc439ca3361a194e640a851d6fb0773ab8b5d213b35"
+          },
+          "scope": "Conditional mathematical obligation only; production refinement boundaries below remain open."
+        }
+      },
+      "receipt": {
+        "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json",
+        "sha256": "b6f3b6d00675c41c9357c32957effd143fa04e93e590aeb18deb955d8095c435"
+      },
+      "nonvacuity": [
+        "Kctx.Engineering.Examples.E12_nonvacuous",
+        "Kctx.Engineering.Examples.revoked_dispatch_nonvacuous",
+        "Kctx.Engineering.Examples.resume_authority_nonvacuous",
+        "Kctx.Engineering.Examples.expired_grant_nonvacuous",
+        "Kctx.Engineering.Examples.withdrawn_procedure_nonvacuous",
+        "Kctx.Engineering.Examples.corrected_continuation_nonvacuous"
+      ],
+      "semantic_negative_calibration": {
+        "status": "pass",
+        "source_scope": "Recovery leaves old activation stale; explicit migration restores only fresh invocation; absent migration and revoked grants refuse. The time51 dispatch arm tests receipt expiry while the grant remains valid, not grant expiry. Unqualified same-invocation resumption refuses; exact qualified resumption succeeds.",
+        "essential_cases": [
+          "E12-negative",
+          "E12-revoked-dispatch",
+          "E12-resume-authority",
+          "E12-expired-grant",
+          "E12-withdrawn-procedure",
+          "E12-correction-generation"
+        ],
+        "essential_mapping": "True grant expiry uses grant.expires=20 and now=21 while receipt.expires=50, with successful pre-expiry dispatch. Withdrawal preserves a present grant and fresh receipt but blocks continuation; correction preserves the grant but invalidates the recorded generation. These complement revocation, receipt expiry, stale incarnation and explicit migration/resumption checks.",
+        "remaining_gap": null,
+        "mutant_receipt": {
+          "path": "~/.local/share/writfold/evidence/revision-5-lean-mutations-004/report.json",
+          "sha256": "e3ac744d0180d7ac2c512cc439ca3361a194e640a851d6fb0773ab8b5d213b35"
+        },
+        "executable_receipt": {
+          "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json.attempt/engineering-lean-report.json",
+          "sha256": "8d1c7c3166398a1e26c997b27ba3a5fe22d64f210218176747cff8ac0a8eb471"
+        },
+        "source_mutants": [
+          "dispatch-skips-live-evidence"
+        ],
+        "mutation_scope": "Listed source mutants are campaign004 evidence. An empty source_mutants list means no dedicated mutant is claimed for this E; its named essential negatives were executed in clean002."
+      },
+      "production_refinement_status": "open"
+    }
+  },
+  "nonvacuity": [
+    "Kctx.Engineering.Examples.E01_nonvacuous",
+    "Kctx.Engineering.Examples.E02_nonvacuous",
+    "Kctx.Engineering.Examples.E03_nonvacuous",
+    "Kctx.Engineering.Examples.E04_nonvacuous",
+    "Kctx.Engineering.Examples.E05_nonvacuous",
+    "Kctx.Engineering.Examples.E06_nonvacuous",
+    "Kctx.Engineering.Examples.stale_quiescence_nonvacuous",
+    "Kctx.Engineering.Examples.E07_nonvacuous",
+    "Kctx.Engineering.Examples.E08_nonvacuous",
+    "Kctx.Engineering.Examples.E09_nonvacuous",
+    "Kctx.Engineering.Examples.E10_nonvacuous",
+    "Kctx.Engineering.Examples.E11_nonvacuous",
+    "Kctx.Engineering.Examples.E12_nonvacuous",
+    "Kctx.Engineering.Examples.reply_loss_nonvacuous",
+    "Kctx.Engineering.Examples.no_effect_closes_admission",
+    "Kctx.Engineering.Examples.exact_learning_nonvacuous",
+    "Kctx.Engineering.Examples.package_pins_nonvacuous",
+    "Kctx.Engineering.Examples.capture_nonvacuous",
+    "Kctx.Engineering.Examples.non_success_cannot_join",
+    "Kctx.Engineering.Examples.revoked_dispatch_nonvacuous",
+    "Kctx.Engineering.Examples.legacy_context_isolation_nonvacuous",
+    "Kctx.Engineering.Examples.retry_unclaimed_nonvacuous",
+    "Kctx.Engineering.Examples.retry_claimed_nonvacuous",
+    "Kctx.Engineering.Examples.retry_fresh_claim_nonvacuous",
+    "Kctx.Engineering.Examples.retry_idempotent_nonvacuous",
+    "Kctx.Engineering.Examples.retry_outside_change_nonvacuous",
+    "Kctx.Engineering.Examples.retry_absence_nonvacuous",
+    "Kctx.Engineering.Examples.retry_old_rejection_nonvacuous",
+    "Kctx.Engineering.Examples.resume_context_nonvacuous",
+    "Kctx.Engineering.Examples.resume_authority_nonvacuous",
+    "Kctx.Engineering.Examples.same_activation_conflict_nonvacuous",
+    "Kctx.Engineering.Examples.prepared_release_nonvacuous",
+    "Kctx.Engineering.Examples.learned_floor_nonvacuous",
+    "Kctx.Engineering.Examples.stale_reuse_nonvacuous",
+    "Kctx.Engineering.Examples.changed_dependency_reuse_nonvacuous",
+    "Kctx.Engineering.Examples.old_child_return_nonvacuous",
+    "Kctx.Engineering.Examples.publication_retention_nonvacuous",
+    "Kctx.Engineering.Examples.child_publish_nonvacuous",
+    "Kctx.Engineering.Examples.expired_grant_nonvacuous",
+    "Kctx.Engineering.Examples.withdrawn_procedure_nonvacuous",
+    "Kctx.Engineering.Examples.corrected_continuation_nonvacuous",
+    "Kctx.Engineering.Examples.changed_provider_binding_nonvacuous"
+  ],
+  "cases": [
+    {
+      "id": "E07-retry-outside-change",
+      "obligation": "E07",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.idempotentReplyPreservesOutsideChange"
+    },
+    {
+      "id": "E06-prepared-release",
+      "obligation": "E06",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.preparedReleaseRefused"
+    },
+    {
+      "id": "E03-child-publish",
+      "obligation": "E03",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.childPublishRefused"
+    },
+    {
+      "id": "E12-expired-grant",
+      "obligation": "E12",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.expiredGrantRefused"
+    },
+    {
+      "id": "E12-withdrawn-procedure",
+      "obligation": "E12",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.withdrawnProcedureRefused"
+    },
+    {
+      "id": "E12-correction-generation",
+      "obligation": "E12",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.correctedContinuationRefused"
+    },
+    {
+      "id": "E11-changed-provider-binding",
+      "obligation": "E11",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.changedProviderBindingRefused"
+    },
+    {
+      "id": "E03-learned-floor",
+      "obligation": "E03",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.learnedFloorRefused"
+    },
+    {
+      "id": "E04-stale-reuse",
+      "obligation": "E04",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.staleReuseRefused"
+    },
+    {
+      "id": "E04-dependency-reuse",
+      "obligation": "E04",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.changedDependencyReuseRefused"
+    },
+    {
+      "id": "E04-old-child-return",
+      "obligation": "E04",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.oldChildReturnRefused"
+    },
+    {
+      "id": "E08-publication-retention",
+      "obligation": "E08",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.publicationRetentionRefused"
+    },
+    {
+      "id": "E01-positive",
+      "obligation": "E01",
+      "polarity": "positive",
+      "executable": "Kctx.Engineering.Examples.E01_positive"
+    },
+    {
+      "id": "E01-negative",
+      "obligation": "E01",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.E01_negative"
+    },
+    {
+      "id": "E02-positive",
+      "obligation": "E02",
+      "polarity": "positive",
+      "executable": "Kctx.Engineering.Examples.E02_positive"
+    },
+    {
+      "id": "E02-negative",
+      "obligation": "E02",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.E02_negative"
+    },
+    {
+      "id": "E03-positive",
+      "obligation": "E03",
+      "polarity": "positive",
+      "executable": "Kctx.Engineering.Examples.E03_positive"
+    },
+    {
+      "id": "E03-negative",
+      "obligation": "E03",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.E03_negative"
+    },
+    {
+      "id": "E04-positive",
+      "obligation": "E04",
+      "polarity": "positive",
+      "executable": "Kctx.Engineering.Examples.E04_positive"
+    },
+    {
+      "id": "E04-negative",
+      "obligation": "E04",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.E04_negative"
+    },
+    {
+      "id": "E05-positive",
+      "obligation": "E05",
+      "polarity": "positive",
+      "executable": "Kctx.Engineering.Examples.E05_positive"
+    },
+    {
+      "id": "E05-negative",
+      "obligation": "E05",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.E05_negative"
+    },
+    {
+      "id": "E06-positive",
+      "obligation": "E06",
+      "polarity": "positive",
+      "executable": "Kctx.Engineering.Examples.E06_positive"
+    },
+    {
+      "id": "E06-negative",
+      "obligation": "E06",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.E06_negative"
+    },
+    {
+      "id": "E06-stale-process-generation",
+      "obligation": "E06",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.staleQuiescenceRefused"
+    },
+    {
+      "id": "E07-positive",
+      "obligation": "E07",
+      "polarity": "positive",
+      "executable": "Kctx.Engineering.Examples.E07_positive"
+    },
+    {
+      "id": "E07-negative",
+      "obligation": "E07",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.E07_negative"
+    },
+    {
+      "id": "E08-positive",
+      "obligation": "E08",
+      "polarity": "positive",
+      "executable": "Kctx.Engineering.Examples.E08_positive"
+    },
+    {
+      "id": "E08-negative",
+      "obligation": "E08",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.E08_negative"
+    },
+    {
+      "id": "E09-positive",
+      "obligation": "E09",
+      "polarity": "positive",
+      "executable": "Kctx.Engineering.Examples.E09_positive"
+    },
+    {
+      "id": "E09-negative",
+      "obligation": "E09",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.E09_negative"
+    },
+    {
+      "id": "E10-positive",
+      "obligation": "E10",
+      "polarity": "positive",
+      "executable": "Kctx.Engineering.Examples.E10_positive"
+    },
+    {
+      "id": "E10-negative",
+      "obligation": "E10",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.E10_negative"
+    },
+    {
+      "id": "E11-positive",
+      "obligation": "E11",
+      "polarity": "positive",
+      "executable": "Kctx.Engineering.Examples.E11_positive"
+    },
+    {
+      "id": "E11-negative",
+      "obligation": "E11",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.E11_negative"
+    },
+    {
+      "id": "E12-positive",
+      "obligation": "E12",
+      "polarity": "positive",
+      "executable": "Kctx.Engineering.Examples.E12_positive"
+    },
+    {
+      "id": "E12-negative",
+      "obligation": "E12",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.E12_negative"
+    },
+    {
+      "id": "E04-wrong-role",
+      "obligation": "E04",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.wrongRoleRefused"
+    },
+    {
+      "id": "E07-reply-loss-unknown",
+      "obligation": "E07",
+      "polarity": "positive",
+      "executable": "Kctx.Engineering.Examples.replyLossUnknown"
+    },
+    {
+      "id": "E07-reply-reconciled",
+      "obligation": "E07",
+      "polarity": "positive",
+      "executable": "Kctx.Engineering.Examples.replyLossReconciliation"
+    },
+    {
+      "id": "E07-no-effect-prepared",
+      "obligation": "E07",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.noEffectPrepared"
+    },
+    {
+      "id": "E07-no-effect-claimed",
+      "obligation": "E07",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.noEffectClaimed"
+    },
+    {
+      "id": "E08-exact-material",
+      "obligation": "E08",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.exactMaterialRefused"
+    },
+    {
+      "id": "E08-competing-promotion",
+      "obligation": "E08",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.competingPromotion"
+    },
+    {
+      "id": "E08-lost-publication-ack",
+      "obligation": "E08",
+      "polarity": "positive",
+      "executable": "Kctx.Engineering.Examples.lostPublicationAcknowledgement"
+    },
+    {
+      "id": "E10-pinned-revisions",
+      "obligation": "E10",
+      "polarity": "positive",
+      "executable": "Kctx.Engineering.Examples.revisionsPinned"
+    },
+    {
+      "id": "E10-alias-drift",
+      "obligation": "E10",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.aliasDriftRefused"
+    },
+    {
+      "id": "E10-recursion",
+      "obligation": "E10",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.recursionRefused"
+    },
+    {
+      "id": "E02-qualified-capture",
+      "obligation": "E02",
+      "polarity": "positive",
+      "executable": "Kctx.Engineering.Examples.captureIntroducesObject"
+    },
+    {
+      "id": "E02-duplicate-capture",
+      "obligation": "E02",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.duplicateCaptureRefused"
+    },
+    {
+      "id": "E02-phantom-object",
+      "obligation": "E02",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.phantomObjectRefused"
+    },
+    {
+      "id": "E02-unqualified-capture",
+      "obligation": "E02",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.unqualifiedCaptureRefused"
+    },
+    {
+      "id": "E03-failed-join",
+      "obligation": "E03",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.failedJoinRefused"
+    },
+    {
+      "id": "E03-cancelled-join",
+      "obligation": "E03",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.cancelledJoinRefused"
+    },
+    {
+      "id": "E03-unknown-join",
+      "obligation": "E03",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.unknownJoinRefused"
+    },
+    {
+      "id": "E12-revoked-dispatch",
+      "obligation": "E12",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.revokedDispatchRefused"
+    },
+    {
+      "id": "E01-context-isolation",
+      "obligation": "E01",
+      "polarity": "positive",
+      "executable": "Kctx.Engineering.Examples.legacyContextIsolation"
+    },
+    {
+      "id": "E07-retry-unclaimed",
+      "obligation": "E07",
+      "polarity": "positive",
+      "executable": "Kctx.Engineering.Examples.retryWithoutOldClaim"
+    },
+    {
+      "id": "E07-retry-claimed-before-io",
+      "obligation": "E07",
+      "polarity": "positive",
+      "executable": "Kctx.Engineering.Examples.retryAfterClaimBeforeIO"
+    },
+    {
+      "id": "E07-retry-fresh-claim",
+      "obligation": "E07",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.retryNeedsFreshClaim"
+    },
+    {
+      "id": "E07-retry-idempotent",
+      "obligation": "E07",
+      "polarity": "positive",
+      "executable": "Kctx.Engineering.Examples.idempotentRetryOneApplication"
+    },
+    {
+      "id": "E07-retry-proven-absence",
+      "obligation": "E07",
+      "polarity": "positive",
+      "executable": "Kctx.Engineering.Examples.provenAbsenceRetryApplies"
+    },
+    {
+      "id": "E07-retry-old-rejection",
+      "obligation": "E07",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.oldRejectionCannotClassifyRetry"
+    },
+    {
+      "id": "E10-resume-context-reload",
+      "obligation": "E10",
+      "polarity": "positive",
+      "executable": "Kctx.Engineering.Examples.resumeRequiresContextReload"
+    },
+    {
+      "id": "E12-resume-authority",
+      "obligation": "E12",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.unqualifiedResumeRefused"
+    },
+    {
+      "id": "E06-same-activation-conflict",
+      "obligation": "E06",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.sameActivationConflictRefused"
+    }
+  ],
+  "limitations": [
+    "E01-E12 mathematical calculus obligations and declaration fidelity pass under their explicit assumptions, supported by completed clean002 and mutation004 evidence plus independent source review. Registry counts alone are not proof.",
+    "The old 407/30/4 scoped result remains historical only and is not evidence for this expanded completion.",
+    "Completed clean002 audited 571 declarations and ran 66 cases with no errors or skips. Its retained source/registry digest is immutable; this disposition-only registry update requires refreshed whole-checkout binding before the separate current qualification index is updated.",
+    "Finite mathematical lists/Nat identities are not production codecs, bounded Rust conversions, cryptographic truth or arbitrary storage implementations. All production refinement boundaries remain open.",
+    "Qualified trust inputs are explicit Contracts values and soundness propositions. The completed transitive audit found only Classical.choice, Quot.sound and propext; no sorry/admit/custom axioms or native_decide are authorized.",
+    "No destructive GC, remote publication or production adapter implementation is supplied. Full product WF31 still requires Rust/protocol/storage/refinement, V16-V21, M12-M16 and named cross-model bridges.",
+    "Mutation004 records nine intended semantic kills of compiled altered interpreters with changed executable witnesses and direct property failures. Failed earlier attempts remain failed; fixture changes, unrelated type errors and timeouts are not kills."
+  ],
+  "assumption_boundaries": {
+    "input_and_codec": "Checked InitialInputs and nominal exact values only; authenticated decoding, canonical bytes, namespace-safe Rust conversion, integer bounds and hash assumptions require independent qualification.",
+    "Contracts.packages/packageReleases": "Authenticated exact package closure and immutable admitted release mapping, including retained historical activation pins.",
+    "Contracts.corpusBindings/projections": "Authenticated realm/family/native graph commit/schema/query/profile envelopes and exact observed projection heads/inventory; not an atomic cross-store snapshot.",
+    "Contracts.approvals": "Existing VerifiedPortfolioApproval boundary; actual portfolioPlanValid/applyPortfolio still execute.",
+    "Contracts.predicates/typedEvidence/TypedEvidenceSound": "Registered typed signatures and qualified exact predicate observations; signature matching does not imply semantic truth.",
+    "Contracts.receipts": "Qualified exact invocation, binding, root/node inputs, role, output and complete dependencies; retention does not manufacture fresh observation times.",
+    "Contracts.materialObservations": "Qualified completed durable object capture with unique capture identity, realm and capturedAt <= now; no authority, receipt, knowledge or effect truth is inferred from object availability.",
+    "Contracts.evaluations/reviews/learningApprovals": "Frozen exact CandidateMaterial, complete trial/rubric observations and current scoped policy/time approval, not a candidate-ID allowlist.",
+    "Contracts.observations/ExternalSound.observations": "Truthful exact adapter observations/classification, including qualified no-effect evidence after absence of pending/applied effects.",
+    "Contracts.quiescent": "Actual process-tree termination/reaping at exact resource, reservation generation and process generation; cooperating-client fencing and alias-free resource identification.",
+    "Contracts.effectAuthorizations": "Authorization at physical external effect boundary independent of local coordinator lifetime.",
+    "Contracts.compatibility/ExternalSound.compatibility": "Sound actual-result revision/producer/consumer tuples and provider conditional revision enforcement; uncontrolled external changes may break compatibility.",
+    "Contracts.migrations": "Qualified exact root, old/new Binding, process incarnation and observed provider; no digest-only implicit resume.",
+    "storage_and_fencing": "Private serial coordinator; durable atomic expected-head selection and separate completed corpus CAS; ledger retention and qualified native pins; enforced capabilities and resource fencing.",
+    "Contracts.retryAuthorizations": "Qualified exact immutable intent, previous claim, current incarnation/policy and validity interval. Provider-idempotent means canonical provider deduplication; proven-no-effect means attempt-specific authenticated absence. Neither follows from timeout or local Unknown.",
+    "Contracts.resumptions": "Qualified exact root/invocation/procedure/Binding/input/control and previous/current incarnation with policy/correction/provider/time. Explicit resumption does not create new authority or reset budgets."
+  },
+  "action_coverage": {
+    "operational": [
+      "Resolve",
+      "Activate",
+      "LoadResource",
+      "AdvanceNode",
+      "FailNode",
+      "SelectRoute",
+      "Call",
+      "Prepare",
+      "Reserve",
+      "ClaimDispatch",
+      "IssueEffect",
+      "Observe",
+      "ObserveMaterial",
+      "Reconcile",
+      "RecordReceipt",
+      "Reuse",
+      "Return",
+      "Rebind",
+      "Reopen",
+      "Cancel",
+      "Quiesce",
+      "Propose",
+      "Evaluate",
+      "Review",
+      "PrepareAdmission",
+      "PublishAdmission",
+      "AcknowledgeAdmission",
+      "Project",
+      "AcquireReadCut",
+      "ReleaseReadCut",
+      "Crash",
+      "Recover",
+      "Retire",
+      "RetryClaim",
+      "Resume"
+    ],
+    "environment": [
+      "AdvanceTime",
+      "RevokeGrant",
+      "ChangePolicy",
+      "WithdrawProcedure",
+      "CorrectKnowledge",
+      "AdvanceUpstream",
+      "ChangeProviderState",
+      "CompleteExternalEffect",
+      "LoseReply",
+      "TerminateProcess"
+    ],
+    "requests": [
+      "Request.append",
+      "Request.publish",
+      "Request.dispatch",
+      "Request.local"
+    ],
+    "constructor_mapping": {
+      "Resolve": "Kctx.Engineering.Action.resolve",
+      "Activate": "Kctx.Engineering.Action.activate",
+      "LoadResource": "Kctx.Engineering.Action.loadResource",
+      "AdvanceNode": "Kctx.Engineering.Action.advanceNode",
+      "FailNode": "Kctx.Engineering.Action.failNode",
+      "SelectRoute": "Kctx.Engineering.Action.selectRoute",
+      "Call": "Kctx.Engineering.Action.call",
+      "Prepare": "Kctx.Engineering.Action.prepare",
+      "Reserve": "Kctx.Engineering.Action.reserve",
+      "ClaimDispatch": "Kctx.Engineering.Action.claimDispatch",
+      "IssueEffect": "Kctx.Engineering.Action.issueEffect",
+      "Observe": "Kctx.Engineering.Action.observe",
+      "ObserveMaterial": "Kctx.Engineering.Action.observeMaterial",
+      "Reconcile": "Kctx.Engineering.Action.reconcile",
+      "RecordReceipt": "Kctx.Engineering.Action.recordReceipt",
+      "Reuse": "Kctx.Engineering.Action.reuse",
+      "Return": "Kctx.Engineering.Action.returnChild",
+      "Rebind": "Kctx.Engineering.Action.rebind",
+      "Reopen": "Kctx.Engineering.Action.reopen",
+      "Cancel": "Kctx.Engineering.Action.cancel",
+      "Quiesce": "Kctx.Engineering.Action.quiesce",
+      "Propose": "Kctx.Engineering.Action.propose",
+      "Evaluate": "Kctx.Engineering.Action.evaluate",
+      "Review": "Kctx.Engineering.Action.review",
+      "PrepareAdmission": "Kctx.Engineering.Action.prepareAdmission",
+      "PublishAdmission": "Kctx.Engineering.Action.publishAdmission",
+      "AcknowledgeAdmission": "Kctx.Engineering.Action.acknowledgeAdmission",
+      "Project": "Kctx.Engineering.Action.project",
+      "AcquireReadCut": "Kctx.Engineering.Action.acquireReadCut",
+      "ReleaseReadCut": "Kctx.Engineering.Action.releaseReadCut",
+      "Crash": "Kctx.Engineering.Action.crash",
+      "Recover": "Kctx.Engineering.Action.recover",
+      "Retire": "Kctx.Engineering.Action.retire",
+      "RetryClaim": "Kctx.Engineering.Action.retryClaim",
+      "Resume": "Kctx.Engineering.Action.resume"
+    },
+    "environment_constructor_mapping": {
+      "AdvanceTime": "Kctx.Engineering.Environment.advanceTime",
+      "RevokeGrant": "Kctx.Engineering.Environment.revokeGrant",
+      "ChangePolicy": "Kctx.Engineering.Environment.changePolicy",
+      "WithdrawProcedure": "Kctx.Engineering.Environment.withdrawProcedure",
+      "CorrectKnowledge": "Kctx.Engineering.Environment.correctKnowledge",
+      "AdvanceUpstream": "Kctx.Engineering.Environment.advanceUpstream",
+      "ChangeProviderState": "Kctx.Engineering.Environment.changeProviderState",
+      "CompleteExternalEffect": "Kctx.Engineering.Environment.completeExternalEffect",
+      "LoseReply": "Kctx.Engineering.Environment.loseReply",
+      "TerminateProcess": "Kctx.Engineering.Environment.terminateProcess"
+    },
+    "refinements": {
+      "ObserveMaterial": "Authority-neutral qualified durable data acquisition on the control stream. Checks Contracts.materialObservations membership, realm, capture time, object uniqueness and fresh capture ID; changes retained/captures only before ordinary append.",
+      "AdvanceNode": "Typed enabled-node progression for read/judge/check/join/end and already-confirmed effect results, with exact qualified inputs. Pure progression charges the shared account; effect advancement uses the charge already paid at Prepare. Select and Call cannot use this writer. No new effect/publication authority.",
+      "FailNode": "Qualified receipt-driven non-success progression and declared failure/cancellation route; cannot invent success or bypass live continuation.",
+      "RecordReceipt": "Retains qualified exact historical receipt inputs/role data; does not itself assert current receipt applicability or execute a node.",
+      "Reuse": "References original retained receipt under current exact applicability; no fabricated execution or refreshed observation time.",
+      "Request.append": "Only durable action constructors; stream owner, expected head, fresh record and exact claim stamp checked; stores closed payload plus captured operational inputs/contracts.",
+      "Request.publish": "Only completed corpus publication; separately selected recorded preparation, current policy/approval and retained roots; acknowledgement is later append.",
+      "Request.dispatch": "Only physical issue of selected durable claim; does not synthesize an atomic second ledger write.",
+      "Request.local": "Only Project, AcquireReadCut, ReleaseReadCut, Crash, Recover; other local actions refuse.",
+      "RetryClaim": "Durable exact qualified retry for an Unknown logical intent, with a fresh permanent ClaimId and expected-head/record stamp. Retains old claim history; authorization is provider-idempotent or proven-no-effect and rechecked at physical send. No authority from timeout alone.",
+      "Resume": "Durable exact qualified same-invocation resumption; preserves immutable inputs/control and effect/claim/ownership history, charges the shared account, rechecks current authority and clears loaded context. Recovery alone cannot authorize it."
+    }
+  },
+  "reference": {
+    "target": "engineeringref",
+    "root": "Kctx.Engineering.Reference",
+    "format": "One JSON line per registered case, with computed predicates and actual trace context. Completed clean002 executed all 66 exact cases: 23 positive and 43 negative.",
+    "transition": "Kctx.Engineering.step",
+    "environment": "Kctx.Engineering.environment",
+    "trace": "Kctx.Engineering.Examples.trace"
+  },
+  "audit_policy": {
+    "registered_symbols": "theorems[*].theorem and nonvacuity are the exact closed audit roots consumed by scripts/writfold_engineering_lean.py; Lean print axioms audits every transitive helper dependency, including initialization and preservation families.",
+    "helper_scope": "Standalone construction/arithmetic/frame lemmas are supporting evidence only. They do not replace initialized transition induction or establish full statement fidelity.",
+    "execution_status": "pass",
+    "fidelity_status": "pass",
+    "receipts": [
+      {
+        "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json",
+        "sha256": "b6f3b6d00675c41c9357c32957effd143fa04e93e590aeb18deb955d8095c435"
+      },
+      {
+        "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json.attempt/engineering-lean-report.json",
+        "sha256": "8d1c7c3166398a1e26c997b27ba3a5fe22d64f210218176747cff8ac0a8eb471"
+      },
+      {
+        "path": "~/.local/share/writfold/evidence/revision-5-lean-mutations-004/report.json",
+        "sha256": "e3ac744d0180d7ac2c512cc439ca3361a194e640a851d6fb0773ab8b5d213b35"
+      }
+    ],
+    "scope": "Conditional mathematical calculus completion only. Production refinement remains open; status updates do not renew immutable evidence or its whole-checkout digest."
+  },
+  "source_review": {
+    "scope": "Read declaration statements and invariant/guard definitions in Conservation, OperationalInvariant/OperationalProofs families, HistorySafety families, PromotionSafety families, CutSafety, EffectsSafety families, ContinuationSafety, CompatibilitySafety, Procedure/ControlProofs and Ledger families; read exact current Examples and Reference case inventory. Also reviewed actual consumer certificates, qualified retry/resumption, canonical application trace induction, every-transition shared-budget construction and all essential calibration extensions.",
+    "excluded": "Obsolete ordinal Proofs declarations are not audit roots. Generic Ledger.Calibration payload examples are not substituted for actual engineering Action nonvacuity.",
+    "remaining_review": "No unresolved mathematical declaration-fidelity finding remains from the completed review. Production implementation/refinement and full product qualification remain open; refresh whole-checkout binding after this metadata update before publishing the separate current qualification index.",
+    "status": "pass"
+  },
+  "completion_scope": "E01-E12 mathematical calculus and declaration fidelity under the explicitly recorded assumptions; not shipping implementation, Rust/protocol refinement or full product WF31.",
+  "production_refinement_status": "open",
+  "supporting_completed_evidence": {
+    "clean_gate": {
+      "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json",
+      "sha256": "b6f3b6d00675c41c9357c32957effd143fa04e93e590aeb18deb955d8095c435"
+    },
+    "lean_report": {
+      "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json.attempt/engineering-lean-report.json",
+      "sha256": "8d1c7c3166398a1e26c997b27ba3a5fe22d64f210218176747cff8ac0a8eb471"
+    },
+    "semantic_mutations": {
+      "path": "~/.local/share/writfold/evidence/revision-5-lean-mutations-004/report.json",
+      "sha256": "e3ac744d0180d7ac2c512cc439ca3361a194e640a851d6fb0773ab8b5d213b35"
+    },
+    "audit": {
+      "total_declarations": 571,
+      "legacy_declarations": 353,
+      "engineering_roots": 176,
+      "engineering_nonvacuity": 42,
+      "allowed_axioms": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ],
+      "errors": [],
+      "skips": []
+    },
+    "reference": {
+      "cases": 66,
+      "positive": 23,
+      "negative": 43
+    },
+    "mutation_campaign": {
+      "result": "pass",
+      "kills": 9,
+      "scope": "Actual changed reducer behavior, compiled altered model, changed executable witness and failure of intended direct property; not one mutant per E."
+    },
+    "fidelity_review": {
+      "reviewer": "FullCalculusFidelity",
+      "result": "all_findings_resolved",
+      "source": "agent://FullCalculusFidelity",
+      "scope": "Independent current-source statement/guard review, including Prepared reservation release; completed kernel/reference/mutation evidence supplies the execution qualification separately."
+    },
+    "registry_binding": "The completed clean evidence covers the expanded Lean sources and pre-disposition registry bytes. This status/prose-only update does not rewrite that receipt or claim its input digest equals the updated registry; refreshed whole-checkout binding is required before updating the current qualification index."
+  }
+}

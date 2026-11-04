@@ -1,0 +1,13 @@
+flowchart TD
+  N0["Qualified source — Frozen target and features"]
+  N1["Release build — Deterministic packaging"]
+  N2["Artifact manifest — Hashes + dependency closure"]
+  N3["Clean WSL install — No development toolchain"]
+  N4["Runtime acceptance — Real user workflows"]
+  N5["Release candidate — Docs + evidence + rollback"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|"install"| N3
+  N3 -->|"execute"| N4
+  N4 -->|"pass"| N5
+  N2 -->|"provenance"| N5

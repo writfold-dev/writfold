@@ -1,0 +1,13 @@
+flowchart TD
+  N0["Lean authority — Language + T01-T22"]
+  N1["Shared contract — Definitions + fixtures"]
+  N2["Rust kernel — Production exec bodies"]
+  N3["Python reference — Frozen behavior baseline"]
+  N4["Three-host comparison — Full envelopes + sequences"]
+  N5["Verus proof — Contracts + nonvacuity"]
+  N0 --> N1
+  N1 -->|"port"| N2
+  N0 -->|"oracle"| N4
+  N3 -->|"baseline"| N4
+  N2 -->|"verify"| N5
+  N5 -->|"same bodies"| N4

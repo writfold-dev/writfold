@@ -77,6 +77,10 @@ services:
     <<: *qualified-tools
     network_mode: none
     command: [python3, scripts/writfold_conformance.py]
+  engineering-lean:
+    <<: *qualified-tools
+    network_mode: none
+    command: [python3, scripts/writfold_engineering_lean.py]
 
 volumes:
   cargo-target:

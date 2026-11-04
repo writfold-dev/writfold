@@ -10,14 +10,15 @@ successful reference command into Rust product qualification.
 
 | Command | Executed work | Meaning of a successful receipt |
 | --- | --- | --- |
-| `baseline` | Historical reconciliation and frozen inventory hashes, plus revision-4 manifest/registry identities and the complete 19-stage/25-gate/26-proof inventory | Retained and active-contract identities reconciled; not complete WF00/WF21 or fresh historical test execution |
+| `baseline` | Historical reconciliation and frozen inventory hashes, plus revision-5 manifest/registry identities, 25 stages, 32 gates, 37 V/M obligations and E01–E12 | Retained and active-contract identities reconciled; not complete WF00/WF21 or fresh historical test execution |
 | `bootstrap --tool-image IMAGE@sha256:DIGEST` | Storage preflight, local immutable image inspection, fresh in-container executable/tool observation | Explicitly unadmitted tool observation only |
 | `bootstrap` | Storage preflight, local Compose/BuildKit `tools` build, then inspection and observation of the admitted lock image | Tool build/observation only; not offline-closure qualification. A missing lock is a failure, never execution of the mutable bootstrap tag |
-| `reference`, `native-smoke` | Compose `reference`, running the existing real Git/Dolt/Python CLI smoke | Historical Dolt reference-only scope; retains historical WF09 association, never qualifies revision-4 Omnigraph WF09 |
+| `reference`, `native-smoke` | Compose `reference`, running the existing real Git/Dolt/Python CLI smoke | Historical Dolt reference-only scope; retains historical WF09 association, never qualifies Omnigraph WF09 |
 | `unit` | Compose `unit`, offline locked workspace Cargo tests | Executed Rust test counts; ignored tests fail the attempt |
 | `quality`, `verus`, `conformance` | Corresponding Compose services and existing backing Python producers | Only the explicitly reported producer obligations; absent implementation/report fails |
+| `engineering-lean` | Clean isolated Lean build, transitive audit of legacy and engineering declarations, executable engineering examples | Scoped calculus component only; theorem fidelity remains separate, and WF31 also requires production verification and model bridges |
 | `build` | Compose `build`, offline locked release musl workspace build with Cargo JSON messages | Compiled workspace artifacts, not an installed executable or release. A second explicit container command copies exactly the compiler-reported filenames into the attempt, including Cargo-reported cached artifacts |
-| `release-required` | Independent validation of all WF00–WF24 status entries and their receipts, using freshly verified admitted tools | Complete required-gate aggregation only if every mandatory gate independently qualifies |
+| `release-required` | Independent validation of all WF00–WF31 entries, V01–V21/M01–M16, E01–E12, composition bridges and source-bound receipts | Complete required-gate aggregation only if every mandatory gate independently qualifies |
 
 The new explicit commands are `storage-foundation` (WF24), `omnigraph` (WF09),
 `legacy-import` (WF14), `views` (WF22), `obsidian` (WF23), and
@@ -27,10 +28,13 @@ is removed; reference-native smoke remains available only with its historical sc
 The other normative names (`lean`, `model`, `tlaps`, `sources`, `publication`,
 `workflows`, `transport`, `migration`, `evaluate`, `runtime`, `package`, `site`,
 `scribes`, `portfolio`, `design`, `companion`) likewise refuse until implemented.
+Revision 5 additionally recognizes `engineering-ledger`, `skills`, `effects`,
+`cross-repo`, `learning`, `engineering-cuts` and `engineering-calculus`
+(WF25–WF31 respectively); these full-gate producers remain unavailable.
 They do not print an unrun success. The runner currently emits no `full-gate`
 producer receipts. A scoped pass is deliberately insufficient for release.
 
-`quality`, `verus`, and `conformance` producers must write
+`quality`, `verus`, `conformance`, and `engineering-lean` producers must write
 `/evidence/obligations.json` containing:
 
 ```json
@@ -140,13 +144,32 @@ freshness flags remain in the build log.
 
 ## Fail-closed release consumption
 
-Every WF00–WF24 entry must be present exactly once, required, passed and linked
+Every WF00–WF31 entry must be present exactly once, required, passed and linked
 to at least one receipt. Receipt paths in `qualification/status.json` are retained
 external paths, not in-tree reports. Every selected receipt must use the current
 closed schema, name the expected gate, have `scope: full-gate`, admitted tools,
 zero exit, no skips or failed obligations, positive complete obligation counts,
 and actual command/log/artifact evidence. Every command must have succeeded
 without timeout. Each receipt must bind all supplied candidate artifact hashes.
+E01–E12 additionally require exact symbol agreement with the audited engineering
+registry, its explicit full-obligation pass, and applicable `engineering-lean-only`
+receipts. Component success while fidelity remains open cannot qualify an E row.
+These receipts do not replace the separate full-gate WF31 receipt.
+
+The engineering index distinguishes completed mathematical discharge from
+source-current receipt admission. Its external receipt paths are locators, never
+inferred successes: an absent, failed or mismatched artifact is refused even when
+the mathematical status is `pass`. Finalize source-bound registry/documentation
+changes before qualification and keep that checkout frozen during execution.
+Record the final receipt identity and admission outcome in the separately hashed
+mutable `qualification/status.json`, rather than rewriting source-bound metadata
+after its own receipt was produced.
+
+V obligations require declared Verus-profile symbols and full WF05 receipts;
+M obligations require qualified `Module!Theorem` declarations and full WF06/WF07
+receipts. Composition rows require full WF07/WF31 receipts. Bare status labels
+cannot qualify these rows. Full producers remain responsible for validating
+their complete named obligations, not merely finding declaration text.
 
 The consumer independently compares exact source scope/commit/dirty state,
 Cargo/tool locks, target/features, fixtures/assumption registries, gate definition
@@ -158,15 +181,16 @@ currently refused conservatively: no undocumented source-closure equivalence or
 documentation-only reuse is inferred. A successful unit command cannot renew a
 stale persistence or proof receipt.
 
-The active contract is `handovers/revision-4/writfold/`. Gate definitions bind
+The active contract is `handovers/revision-5/writfold/`. Gate definitions bind
 its complete bundled bytes plus the current adoption record; fixture identity
 binds its registries, references, examples and qualification fixtures explicitly.
 Aggregation checks that the candidate carries those current identities, so
 old receipts cannot qualify the new contract even if manually relabelled.
-The old `handover/`, historical manifests and frozen inventories remain unchanged:
-`baseline` still verifies that historical reference, not a revision-4 product pass.
-Earlier P00/P01/P02 records are preserved under `historical_completions` in the
-status ledger; active stage statuses separately describe revision-4 obligations.
+The old `handover/`, `handovers/revision-4/writfold/`, historical manifests and
+frozen inventories remain unchanged. `baseline` reconciles those historical
+inputs separately from the active contract; it does not pass a product gate.
+Earlier P00/P01/P02 completions and revision-4 ledger snapshots remain retained;
+active stage statuses separately describe revision-5 obligations.
 
 The original runner implementation handoff did not execute integration checks.
 Later source-bound attempts are indexed separately in

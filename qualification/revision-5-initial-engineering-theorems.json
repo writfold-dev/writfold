@@ -1,0 +1,393 @@
+{
+  "schema_version": 1,
+  "registry_kind": "current_obligations_not_receipts",
+  "normative_registry": "handovers/revision-5/writfold/registries/engineering-theorems.json",
+  "formal_registry": "formal/engineering-theorems.json",
+  "profile": "writfold-engineering/1",
+  "status": "not_run",
+  "completion_rule": "A component kernel/axiom pass is not full theorem fidelity, Rust refinement or WF31. Exact theorem meanings, all admitted/environment actions, nonvacuity and explicit assumptions must be reviewed before E completion. Full WF31 additionally requires V16-V21, M12-M16 and named bridges.",
+  "component_evidence": {
+    "scope": "Finite Lean component only, not full E01-E12 or WF31",
+    "status": "pass",
+    "receipt": {
+      "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-20261103-003.json",
+      "sha256": "9f1431679e2f38f9ebd3b3c504e91963d0b9ab2940559c57a9168069d34b8781",
+      "bytes": 408829
+    },
+    "report": {
+      "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-20261103-003.json.attempt/engineering-lean-report.json",
+      "sha256": "fe4c0635f8d6b1a8e96cc5e1867b8aeb23a8cdc82da8039c26dc596523a3783a",
+      "bytes": 299865
+    },
+    "declarations": {
+      "legacy": 353,
+      "engineering_contracts": 36,
+      "engineering_nonvacuity": 18,
+      "total_audited": 407
+    },
+    "examples": {
+      "positive": 16,
+      "negative": 14
+    },
+    "mutation_report": {
+      "path": "~/.local/share/writfold/evidence/revision-5-lean-mutations-001/report.json",
+      "sha256": "98e39bc5d26268e18963d0d7dbe090c7444c2642a9fb435ee6581586295447f6",
+      "bytes": 19869
+    },
+    "mutation_source_link": {
+      "path": "~/.local/share/writfold/evidence/revision-5-lean-mutations-001/source-closure-link.json",
+      "sha256": "e2681830837b7fd9bb1980b6c64f3ea44c6e27c80413eabf4399f02aadb047fd",
+      "bytes": 10280
+    },
+    "scope_admission": {
+      "path": "~/.local/share/writfold/evidence/revision-5-calculus-scope-admission-001.json",
+      "sha256": "a9c6195e555993f68f2d3e573205404a89f516c709b33832c05080499480ce17",
+      "bytes": 959
+    },
+    "failed_attempts": [
+      "~/.local/share/writfold/evidence/revision-5-engineering-lean-20261103-001.json",
+      "~/.local/share/writfold/evidence/revision-5-engineering-lean-20261103-002.json"
+    ],
+    "source_scope": {
+      "contracts": {
+        "files": {
+          "handovers/revision-5/writfold/MANIFEST.sha256": "14f9585e4aa9b8bd287911715dd6593e3f4128b871081d14c09fac6dc2e3bae3",
+          "handovers/revision-5/writfold/plan/17-engineering-graphs-and-layout.md": "6785864dbb4989f2adb7232dddf1fac83516de202c86e333bb13e2ed230913aa",
+          "handovers/revision-5/writfold/plan/18-identities-fingerprints-and-cuts.md": "35ffed9a9c8e1cb944de1f20b57a7705619df15eb76e64cd8ff6a1e949971eb0",
+          "handovers/revision-5/writfold/plan/19-skill-packages-and-composition.md": "2498f50512493df39a4838254de81152fd4becd4d2a6fdae4026a9fb09644563",
+          "handovers/revision-5/writfold/plan/20-execution-and-cross-repository.md": "60deeedb78db453d9255078af6489c08231cdd4f803202f2af929223bd431d11",
+          "handovers/revision-5/writfold/plan/21-learning-and-promotion.md": "9c0612b220a500b4265c9b4379614603dbc96e162fe900ab17133f5660ac1d70",
+          "handovers/revision-5/writfold/plan/22-engineering-calculus.md": "00cff424f9557e0bfcf986164eeb0106b74fe57923e9f9f9f865787bf341a216",
+          "handovers/revision-5/writfold/plan/23-engineering-extension-acceptance.md": "6b3f7403a52eb5175d13dbd3e8742017edb9a2749769dc7ef3ccbbca3120107a",
+          "handovers/revision-5/writfold/registries/engineering-theorems.json": "5759e58882ab2e97acc46256a55e2d1e87be466e5d4a4148fc152283ec4a1e7a"
+        },
+        "sha256": "afb1440bfa58554ffe3cc07f759b22e9a375bf01f3b76939a7aaef8a57675a6d"
+      },
+      "lean": {
+        "files": {
+          "formal/Kctx.lean": "c017f8e8cfdbb44700e67e5323eb5db2008588057796812777f90512908b17be",
+          "formal/Kctx/AuthoredCodec.lean": "0a2df62e8862874e4ff32bdbdee3f6189a23479ee07ad0b33aaf1c078110acb5",
+          "formal/Kctx/Checker.lean": "744e298eb2994694feb3e546429bebab7ac7084e4cfa2eab1e9e3eace011c03c",
+          "formal/Kctx/Codec.lean": "143f7d8b103227996cf525ce192f50fb7b9ef5cc785dec7e4b233b72421378ad",
+          "formal/Kctx/CodecProofs.lean": "d93c83ebde3ad5080bad98bd3a69adc9bc2e186d5877b2f00bba271fb2874f06",
+          "formal/Kctx/CodecRecords.lean": "529756d377b2b9d781d2b58398737bf49294e30e32024aad223301c81723a8f9",
+          "formal/Kctx/CompositionLaws.lean": "6c9ae61b8a29a5ea95c81f9b63f6c0a84c6962d7504499bf70841cb71f62799e",
+          "formal/Kctx/DesignWorkflow.lean": "e4b966fa8d1215b426a27860afc72359e024ff451a492283534e26bc187db93d",
+          "formal/Kctx/DesignWorkflowExamples.lean": "63fad67340ab6d180d789a59460a59bc4393c0c2c58229b52f1893275b4b8853",
+          "formal/Kctx/Engineering.lean": "f4d5b3b10278bf17b6825e02050fe42682bc4ddfbed93f0d39ce922b04753828",
+          "formal/Kctx/Engineering/Actions.lean": "c372f5bf4692b1503cbe58878bb22983cc47fdc1d3dedf5509bb74e37650d5aa",
+          "formal/Kctx/Engineering/Core.lean": "264c6b6d5c5c2e4d3dd3ba43a797248caefe7ef38cbf8a37d75f2feac1b6d7f0",
+          "formal/Kctx/Engineering/Examples.lean": "1107c554a59b514c8a40fbf313e41990cc11b2c3ded79378f15ca4ce42517add",
+          "formal/Kctx/Engineering/Learning.lean": "6efd8eb30cdcabd9980dc219bf3534de54cdd0684a0cd046e72ea8a8a2b0f7b8",
+          "formal/Kctx/Engineering/Proofs.lean": "033173a60090662503253661dd68b3c7e7b8cb2be28de025c14d49d7eb4d1e9f",
+          "formal/Kctx/Engineering/Reference.lean": "19e34e39cb82d41f97a047273baa415580e74d1fc6d8b66aef551fd74c35eeee",
+          "formal/Kctx/Engineering/Types.lean": "35c301093f62a011920f926283bb8935f50a19ff91b11110212e02da7281559c",
+          "formal/Kctx/Footprint.lean": "e045fb60fb069d9f75fb360d6720fe9ab8126ef07eff02d1a475ae2bc592ca5d",
+          "formal/Kctx/Ids.lean": "9c454aa5064ecfd6e56885ecea7cf2de683c6d0ba330b60dc8404d4973e65771",
+          "formal/Kctx/Locality.lean": "391070961bf50bdad7ddf1474d983bceca62391ba8e09c8e8ff88554ab19cd81",
+          "formal/Kctx/Model.lean": "bb5c0952086607c94d2e32f9309378c384aae38bc0efe63cdf1ff3072b295ac3",
+          "formal/Kctx/NonVacuity.lean": "2a64f0c308f1a6581290677af6dc17e6737d59e953262054159c9d6ece5f8f6d",
+          "formal/Kctx/Portfolio.lean": "326d4682b7687fff797431adc710d41d3a227bff3b37f5ff3d2f18f8bb87be0c",
+          "formal/Kctx/PortfolioExamples.lean": "2f6e440ade9678a31bdce3d8e41b99249d62d7f606887709486d4b06897f6e0f",
+          "formal/Kctx/Reference.lean": "47bf1483ad2ca4eb6c7f998b79573e924711ce7b24d938b14180629de5c008f4",
+          "formal/Kctx/Selection.lean": "b86b662a2789d6eee187f38cc01aba7212b3dfe26872bbf164f482ce0eb1359c",
+          "formal/Kctx/SelectionCodec.lean": "a7189659dad4a7ca39062a93e1bc804e75424f1770c8bce99cc591a076915c80",
+          "formal/Kctx/Semantics.lean": "2534f96772cfbdbb587c71e104a577d9bb1156256262586b6fd1a9076d5e00d0",
+          "formal/Kctx/Theorems.lean": "f73abce561950689d29e702e2da5100c287d89df557263870be2d6e1c9790183",
+          "formal/Kctx/Theorems2.lean": "75bd4a8ed56bd76ee36a20b106b60f770c387da0ccdad09bc1baeaa160aee063",
+          "formal/Kctx/Time.lean": "04762ca1c0e6694611222ff7bb948954477a3bd7ec8bcd8fbe9190ee814ffed7",
+          "formal/Kctx/WellFormed.lean": "ac783b7d07db7db75ce58ca21363b45bd50dadff8ec1b43a4e10a1c57624b254",
+          "formal/Kctx/Workflow.lean": "e1d1ee37c9fe1e41a659122dbb09ab2b0a9f818db33d2c3c876ad5d915f814a3",
+          "formal/Kctx/WorkflowCodecProofs.lean": "189ee1ce18ef36cf089c0bc1c71d4e685b989a260ceeb4306928fea3882ce213",
+          "formal/Kctx/WorkflowV3Codec.lean": "568472b95838a1e5b2e2b70a60cc3ca4954ae1d2012b3d30c7c47a838eb1a940",
+          "formal/Kctx/WorkflowV3Reference.lean": "1649439b92c56ed51adbcee6f9c3926b438a0b708bf2944cd7df9864ca6e4562",
+          "formal/Kctx/WorkflowWireObjects.lean": "b6dc870131067c64b2e1be3ce20a104b4b9a3717ff8fcbb132382fda0eaa05cc",
+          "formal/engineering-theorems.json": "08e8f900766b526b7c122c5cf098a8538f2492afc38fe8aa6f35d7f0aa888030",
+          "formal/lake-manifest.json": "d166d37a8c85c291fbb128494da9d71477ea80dbedbe0f74557a50616413757d",
+          "formal/lakefile.toml": "8530201fee445dec85925092f27a7dcd29912abe94c06c4f53c24f268dadd97e",
+          "formal/lean-toolchain": "d24fed434d3b13adfaab57724a0a7f270ea8bf1c818b5ae5cf25cbce24dd685c",
+          "formal/theorems.json": "7927d383f9b303a4fd0cc0219e61dea3e7cb4d158a1cd8d663da3d6e7d4f6584"
+        },
+        "sha256": "98043850c644a585e64f5d1782dd2beca36c0c684a207dd3a97001c94b8718cd"
+      },
+      "recipe": {
+        "files": {
+          "compose.yaml": "ef605b97e357e5eef7ef4b6c96918fff671b55eda8a4fb82ee6ee5eb3ccaa2dd",
+          "qualification/toolchain-observation.json": "1d4bc6552abf2dfd381636f5c6f1d9dcd2feb81c3359520341939cecb9450683",
+          "scripts/writfold_conformance_process.py": "231b4a789a26d625f3b9ad2af7b5e8f8d5adffb5296ad6cab84b42b301e708f2",
+          "scripts/writfold_engineering_lean.py": "0a4aabe8275c233b3cf92d2d5d08588082ad7b3798dfb458425d70d5f2dee5b8",
+          "toolchains.lock.json": "7d315f5bf3eb8add0d3ba8345684696de2fb304b20a885a6f59802f461d7205f"
+        },
+        "sha256": "a57e1e60556cd2e4d7232418780dfdd5125663d1617a9d52c6d762c23d109a0a"
+      }
+    },
+    "applicability": "Named source/recipe/contract closure is explicit. Documentation and mutable index updates do not renew the whole-tree gate receipt or constitute full-gate evidence."
+  },
+  "obligations": [
+    {
+      "id": "E01",
+      "name": "Conservative knowledge extension",
+      "system": "Lean",
+      "status": "not_run",
+      "contract": "handovers/revision-5/writfold/plan/22-engineering-calculus.md",
+      "theorem_symbols": [
+        "Kctx.Engineering.E01_nonpublication_frame",
+        "Kctx.Engineering.E01_legacy_derivation_unchanged",
+        "Kctx.Engineering.E01_publication_uses_legacy",
+        "Kctx.Engineering.E01_publication_applied",
+        "Kctx.Engineering.E01_reduce_legacy_admissions",
+        "Kctx.Engineering.E01_step_legacy_admissions",
+        "Kctx.Engineering.E01_reachable_legacy_admissions"
+      ],
+      "assumptions": [
+        "Legacy portfolio authenticated-approval boundary and EvidenceSound where factual soundness is claimed."
+      ],
+      "receipts": [],
+      "proved_component": "Non-publication preserves exact legacy K/Derives; arbitrary transition traces obtain knowledge only through applied existing portfolio admissions. Successful publication exposes exact legacy state and journal.",
+      "remaining_full_obligation": "Knowledge-only provenance induction is proved; joint journal, correction, policy and publication/retention integrity and full E01 remain open.",
+      "component_receipts": [
+        "~/.local/share/writfold/evidence/revision-5-engineering-lean-20261103-003.json"
+      ],
+      "scope_note": "Scoped component declarations audited and examples executed; full E obligation remains open and receipts for full completion remain empty."
+    },
+    {
+      "id": "E02",
+      "name": "Type and representation preservation",
+      "system": "Lean",
+      "status": "not_run",
+      "contract": "handovers/revision-5/writfold/plan/22-engineering-calculus.md",
+      "theorem_symbols": [
+        "Kctx.Engineering.E02_init_ledger",
+        "Kctx.Engineering.E02_step_ledger",
+        "Kctx.Engineering.E02_transition_ledger",
+        "Kctx.Engineering.E02_reachable_ledger"
+      ],
+      "assumptions": [
+        "Lean nominal representation; arbitrary legacy mathematical integers unchanged."
+      ],
+      "receipts": [],
+      "proved_component": "Init and arbitrary operational/environment/refusal traces preserve linked ordinal ledger history.",
+      "remaining_full_obligation": "Full WellFormed joint induction (unique runs/effects/resources, catalog authority and typed procedure graph) is stated but not proved.",
+      "component_receipts": [
+        "~/.local/share/writfold/evidence/revision-5-engineering-lean-20261103-003.json"
+      ],
+      "scope_note": "Scoped component declarations audited and examples executed; full E obligation remains open and receipts for full completion remain empty."
+    },
+    {
+      "id": "E03",
+      "name": "Capability and gate-floor non-amplification",
+      "system": "Lean",
+      "status": "not_run",
+      "contract": "handovers/revision-5/writfold/plan/22-engineering-calculus.md",
+      "theorem_symbols": [
+        "Kctx.Engineering.E03_child_nonamplification",
+        "Kctx.Engineering.E03_nested_nonamplification",
+        "Kctx.Engineering.E03_floor_preserved"
+      ],
+      "assumptions": [
+        "Current grant observations and capability enforcement are external qualified boundaries."
+      ],
+      "receipts": [],
+      "proved_component": "Constructed child capability intersection is bounded by grant, parent and callee; repeated intersection cannot amplify; inherited floor includes parent floor.",
+      "remaining_full_obligation": "Nested-call and learning whole-state invariant proof remains open; supplied lemmas prove the exact construction, not universal procedure safety.",
+      "component_receipts": [
+        "~/.local/share/writfold/evidence/revision-5-engineering-lean-20261103-003.json"
+      ],
+      "scope_note": "Scoped component declarations audited and examples executed; full E obligation remains open and receipts for full completion remain empty."
+    },
+    {
+      "id": "E04",
+      "name": "Subject and dependency integrity",
+      "system": "Lean",
+      "status": "not_run",
+      "contract": "handovers/revision-5/writfold/plan/22-engineering-calculus.md",
+      "theorem_symbols": [
+        "Kctx.Engineering.E04_reuse_preserves_original",
+        "Kctx.Engineering.E04_reuse_guarded"
+      ],
+      "assumptions": [
+        "Qualified receipt producer and complete dependency capture; no hash truth assumption."
+      ],
+      "receipts": [],
+      "proved_component": "Successful reuse requires exact binding/subject/dependencies, live authority and current qualified evidence, and stores the unmodified original receipt.",
+      "remaining_full_obligation": "Return/postcondition/Join whole-trace integrity and typed dependency completeness proofs remain open.",
+      "component_receipts": [
+        "~/.local/share/writfold/evidence/revision-5-engineering-lean-20261103-003.json"
+      ],
+      "scope_note": "Scoped component declarations audited and examples executed; full E obligation remains open and receipts for full completion remain empty."
+    },
+    {
+      "id": "E05",
+      "name": "Ledger expected-head safety",
+      "system": "Lean",
+      "status": "not_run",
+      "contract": "handovers/revision-5/writfold/plan/22-engineering-calculus.md",
+      "theorem_symbols": [
+        "Kctx.Engineering.E05_stale_head_refused",
+        "Kctx.Engineering.E05_append_excludes_old_head",
+        "Kctx.Engineering.E05_retains_historical_authority"
+      ],
+      "assumptions": [
+        "Single serial coordinator and qualified durable conditional storage."
+      ],
+      "receipts": [],
+      "proved_component": "Selected ordinal append excludes a second append from its old predecessor and retains historical authority/time/incarnation.",
+      "remaining_full_obligation": "Global ordinal serialization is not per-stream immutable payload/hash provenance reconstruction; no complete E05 claim.",
+      "component_receipts": [
+        "~/.local/share/writfold/evidence/revision-5-engineering-lean-20261103-003.json"
+      ],
+      "scope_note": "Scoped component declarations audited and examples executed; full E obligation remains open and receipts for full completion remain empty."
+    },
+    {
+      "id": "E06",
+      "name": "Resource exclusivity under qualified fencing",
+      "system": "Lean",
+      "status": "not_run",
+      "contract": "handovers/revision-5/writfold/plan/22-engineering-calculus.md",
+      "theorem_symbols": [
+        "Kctx.Engineering.E06_cancel_keeps_reservations",
+        "Kctx.Engineering.E06_crash_keeps_reservations",
+        "Kctx.Engineering.E06_quiesce_removes_only_owner"
+      ],
+      "assumptions": [
+        "Contracts.quiescent denotes actual terminated/reaped descendants; cooperating user and enforced resource boundaries."
+      ],
+      "receipts": [],
+      "proved_component": "Cancellation/crash retain reservation ownership; successful quiesce removes only the named owner.",
+      "remaining_full_obligation": "Whole-state cross-stream exclusivity/fencing and descendant lifetime induction remain open.",
+      "component_receipts": [
+        "~/.local/share/writfold/evidence/revision-5-engineering-lean-20261103-003.json"
+      ],
+      "scope_note": "Scoped component declarations audited and examples executed; full E obligation remains open and receipts for full completion remain empty."
+    },
+    {
+      "id": "E07",
+      "name": "Honest effect outcomes",
+      "system": "Lean",
+      "status": "not_run",
+      "contract": "handovers/revision-5/writfold/plan/22-engineering-calculus.md",
+      "theorem_symbols": [
+        "Kctx.Engineering.E07_confirmed_iff_applied",
+        "Kctx.Engineering.E07_failed_iff_rejected",
+        "Kctx.Engineering.E07_crash_claim_unknown",
+        "Kctx.Engineering.E07_issue_requires_current_evidence"
+      ],
+      "assumptions": [
+        "Contracts.observations are truthful exact external events; Contracts.effectAuthorizations are provider authorization-at-effect facts, not local alive status."
+      ],
+      "receipts": [],
+      "proved_component": "Physical send requires a persisted unissued claim, current incarnation, live authority and current evidence. Classification distinguishes applied/rejected/partial; claimed effects become Unknown on crash. Separate executable traces cover reply loss without crash and independent reconciliation.",
+      "remaining_full_obligation": "All-reachable outcome-evidence invariant and qualified retry/idempotency profile remain open. No retry fallback exists.",
+      "component_receipts": [
+        "~/.local/share/writfold/evidence/revision-5-engineering-lean-20261103-003.json"
+      ],
+      "scope_note": "Scoped component declarations audited and examples executed; full E obligation remains open and receipts for full completion remain empty."
+    },
+    {
+      "id": "E08",
+      "name": "Promotion publication and closure",
+      "system": "Lean",
+      "status": "not_run",
+      "contract": "handovers/revision-5/writfold/plan/22-engineering-calculus.md",
+      "theorem_symbols": [
+        "Kctx.Engineering.E08_publication_retains_objects",
+        "Kctx.Engineering.E01_publication_uses_legacy",
+        "Kctx.Engineering.E08_publication_advances_catalog_pin"
+      ],
+      "assumptions": [
+        "Authenticated exact portfolio approvals; retained evaluation/rubric/trials observation contracts; completed release CAS represented by applyPortfolio."
+      ],
+      "receipts": [],
+      "proved_component": "Publication preserves retained objects, uses legacy authenticated portfolio admission, advances the catalog release to the admitted snapshot and preserves existing catalog/run pins. Executable cases check exact admitted state/journal/evidence closure and post-promotion resolution.",
+      "remaining_full_obligation": "Published evidence-root closure, competing promotions and governing-policy preservation joint induction remain open.",
+      "component_receipts": [
+        "~/.local/share/writfold/evidence/revision-5-engineering-lean-20261103-003.json"
+      ],
+      "scope_note": "Scoped component declarations audited and examples executed; full E obligation remains open and receipts for full completion remain empty."
+    },
+    {
+      "id": "E09",
+      "name": "Projection non-authority and exact cuts",
+      "system": "Lean",
+      "status": "not_run",
+      "contract": "handovers/revision-5/writfold/plan/22-engineering-calculus.md",
+      "theorem_symbols": [
+        "Kctx.Engineering.E09_projection_non_authority",
+        "Kctx.Engineering.E09_append_pins_cut"
+      ],
+      "assumptions": [
+        "Exact retained object identity; no mutable-HEAD substitution."
+      ],
+      "receipts": [],
+      "proved_component": "Project changes no knowledge/authority/head/history/effects; an append does not refresh an existing cut.",
+      "remaining_full_obligation": "Full realm/epoch/query/inventory/watermark causal cut closure and retention bridge remain open.",
+      "component_receipts": [
+        "~/.local/share/writfold/evidence/revision-5-engineering-lean-20261103-003.json"
+      ],
+      "scope_note": "Scoped component declarations audited and examples executed; full E obligation remains open and receipts for full completion remain empty."
+    },
+    {
+      "id": "E10",
+      "name": "Pinned composition and bounded traversal",
+      "system": "Lean",
+      "status": "not_run",
+      "contract": "handovers/revision-5/writfold/plan/22-engineering-calculus.md",
+      "theorem_symbols": [
+        "Kctx.Engineering.E10_positive_budget_decreases"
+      ],
+      "assumptions": [
+        "Catalog packages and packageReleases are authenticated exact corpus/package observations."
+      ],
+      "receipts": [],
+      "proved_component": "Positive finite budgets decrease arithmetically; executable traces test pinned resource loading, exhaustion, consumed prepare nodes and completed call/return nodes.",
+      "remaining_full_obligation": "This arithmetic lemma is NOT full E10: aggregate traversal bounds, typed control graph/Join, call/return induction and pinned catalog evolution remain open.",
+      "component_receipts": [
+        "~/.local/share/writfold/evidence/revision-5-engineering-lean-20261103-003.json"
+      ],
+      "scope_note": "Scoped component declarations audited and examples executed; full E obligation remains open and receipts for full completion remain empty."
+    },
+    {
+      "id": "E11",
+      "name": "Declared cross-repo compatibility preservation",
+      "system": "Lean",
+      "status": "not_run",
+      "contract": "handovers/revision-5/writfold/plan/22-engineering-calculus.md",
+      "theorem_symbols": [
+        "Kctx.Engineering.E11_completion_body_preserves",
+        "Kctx.Engineering.E11_completion_preserves"
+      ],
+      "assumptions": [
+        "ExternalSound.compatibility: each Contracts.compatibility tuple implies the declared relation; provider conditional revision enforcement; effectAuthorizations truthful."
+      ],
+      "receipts": [],
+      "proved_component": "Every permitted external completion preserves a declared compatibility relation under explicit sound compatibility observations; rejected completion retains prior vector.",
+      "remaining_full_obligation": "Uncontrolled AdvanceUpstream/ChangeProviderState may violate compatibility. Integration with full producer/artifact identities and observed-binding invalidation remains open.",
+      "component_receipts": [
+        "~/.local/share/writfold/evidence/revision-5-engineering-lean-20261103-003.json"
+      ],
+      "scope_note": "Scoped component declarations audited and examples executed; full E obligation remains open and receipts for full completion remain empty."
+    },
+    {
+      "id": "E12",
+      "name": "Revocation-aware continuation",
+      "system": "Lean",
+      "status": "not_run",
+      "contract": "handovers/revision-5/writfold/plan/22-engineering-calculus.md",
+      "theorem_symbols": [
+        "Kctx.Engineering.E12_withdrawn_blocks_live",
+        "Kctx.Engineering.E12_cancelled_blocks_live",
+        "Kctx.Engineering.E12_correction_blocks_live"
+      ],
+      "assumptions": [
+        "Current authority/policy/correction observations; provider authorization-at-effect separately explicit; no instantaneous global revocation assumption."
+      ],
+      "receipts": [],
+      "proved_component": "Known withdrawal, cancellation or changed correction generation blocks the live continuation predicate; executable traces test evidence expiry and revoked grants before IO.",
+      "remaining_full_obligation": "Whole-transition continuation/migration induction and descendant lifetime invariant remain open; finite descendant cancellation is executable, not full E12 closure.",
+      "component_receipts": [
+        "~/.local/share/writfold/evidence/revision-5-engineering-lean-20261103-003.json"
+      ],
+      "scope_note": "Scoped component declarations audited and examples executed; full E obligation remains open and receipts for full completion remain empty."
+    }
+  ]
+}

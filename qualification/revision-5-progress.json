@@ -1,0 +1,288 @@
+{
+  "schema_version": 1,
+  "revision": 5,
+  "date": "2026-11-04",
+  "scope": "Revision-5 admission, discharged E01-E12 mathematical calculus and exercised independent engineering/1 Rust primitives. No complete product gate, durable engineering ledger or release is claimed.",
+  "authority": "handovers/revision-5/writfold",
+  "historical_progress": "qualification/revision-4-progress.json",
+  "status_ledger": "qualification/status.json",
+  "calculus_index": "qualification/engineering-theorems.json",
+  "adoption": {
+    "archive_sha256": "3f8fd0d8c6fd3f75c9bb54ebd8b46ba808a2305f827fe80d05dac02465cb5e0d",
+    "manifest_members": 300,
+    "stages": 25,
+    "gates": 32,
+    "proof_models": 37,
+    "engineering_theorems": 12,
+    "scenarios": 148,
+    "package_validation": {
+      "path": "~/.local/share/writfold/evidence/revision-5-package-20261103-001/report.json",
+      "sha256": "7a68c75f7e779eb317a0de709c1b22b9d64a6293a332b5d5c3d7554f175a8a2a",
+      "bytes": 8686
+    },
+    "baseline": {
+      "path": "~/.local/share/writfold/evidence/revision-5-baseline-20261103-002.json",
+      "sha256": "224d8cbda21f94da114127dfbe3e545429c219282ae0ea5399db2b0e7bb83211",
+      "bytes": 396884
+    },
+    "copied_closure_calibration": {
+      "path": "~/.local/share/writfold/evidence/revision-5-adoption-calibration-20261103-001/report.json",
+      "sha256": "b5b7719b7a8f0582781880c5989bb5e7e696dd87067ef337bd2dd2be826df310",
+      "bytes": 2426
+    },
+    "admission_regression_before": {
+      "path": "~/.local/share/writfold/evidence/revision-5-admission-regressions-001/before.json",
+      "sha256": "1c2052f39430ce19d152d1b51331bfb1b22430a615a004a239c458e1d17d35a1",
+      "bytes": 5531
+    },
+    "admission_regression_after": {
+      "path": "~/.local/share/writfold/evidence/revision-5-admission-regressions-001/after.json",
+      "sha256": "07ff7fcdc174884f842d4cde30d0ac796b0d9e1eab2309fe2ca6fd291a03f8b0",
+      "bytes": 10398
+    },
+    "unavailable_producers": {
+      "path": "~/.local/share/writfold/evidence/revision-5-unavailable-producers-001/report.json",
+      "sha256": "189f1b6e2329e632ece87bf47d212e293252386433b819ebf7f3351be33b1d15",
+      "bytes": 32738
+    }
+  },
+  "calculus": {
+    "evidence_scope": "Historical first-increment source only; not qualification of the expanded calculus.",
+    "applies_to_current_source": false,
+    "receipt": {
+      "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-20261103-003.json",
+      "sha256": "9f1431679e2f38f9ebd3b3c504e91963d0b9ab2940559c57a9168069d34b8781",
+      "bytes": 408829
+    },
+    "report": {
+      "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-20261103-003.json.attempt/engineering-lean-report.json",
+      "sha256": "fe4c0635f8d6b1a8e96cc5e1867b8aeb23a8cdc82da8039c26dc596523a3783a",
+      "bytes": 299865
+    },
+    "component_status": "pass",
+    "full_E01_E12": "open",
+    "new_contract_declarations": 36,
+    "new_nonvacuity_declarations": 18,
+    "total_audited_declarations": 407,
+    "executable_cases": 30,
+    "semantic_source_mutations_killed": 4,
+    "mutations": {
+      "path": "~/.local/share/writfold/evidence/revision-5-lean-mutations-001/report.json",
+      "sha256": "98e39bc5d26268e18963d0d7dbe090c7444c2642a9fb435ee6581586295447f6",
+      "bytes": 19869
+    },
+    "mutation_source_link": {
+      "path": "~/.local/share/writfold/evidence/revision-5-lean-mutations-001/source-closure-link.json",
+      "sha256": "e2681830837b7fd9bb1980b6c64f3ea44c6e27c80413eabf4399f02aadb047fd",
+      "bytes": 10280
+    },
+    "scope_admission": {
+      "path": "~/.local/share/writfold/evidence/revision-5-calculus-scope-admission-001.json",
+      "sha256": "a9c6195e555993f68f2d3e573205404a89f516c709b33832c05080499480ce17",
+      "bytes": 959
+    },
+    "formal_source_manifest": {
+      "files": {
+        "formal/Kctx.lean": "c017f8e8cfdbb44700e67e5323eb5db2008588057796812777f90512908b17be",
+        "formal/Kctx/AuthoredCodec.lean": "0a2df62e8862874e4ff32bdbdee3f6189a23479ee07ad0b33aaf1c078110acb5",
+        "formal/Kctx/Checker.lean": "744e298eb2994694feb3e546429bebab7ac7084e4cfa2eab1e9e3eace011c03c",
+        "formal/Kctx/Codec.lean": "143f7d8b103227996cf525ce192f50fb7b9ef5cc785dec7e4b233b72421378ad",
+        "formal/Kctx/CodecProofs.lean": "d93c83ebde3ad5080bad98bd3a69adc9bc2e186d5877b2f00bba271fb2874f06",
+        "formal/Kctx/CodecRecords.lean": "529756d377b2b9d781d2b58398737bf49294e30e32024aad223301c81723a8f9",
+        "formal/Kctx/CompositionLaws.lean": "6c9ae61b8a29a5ea95c81f9b63f6c0a84c6962d7504499bf70841cb71f62799e",
+        "formal/Kctx/DesignWorkflow.lean": "e4b966fa8d1215b426a27860afc72359e024ff451a492283534e26bc187db93d",
+        "formal/Kctx/DesignWorkflowExamples.lean": "63fad67340ab6d180d789a59460a59bc4393c0c2c58229b52f1893275b4b8853",
+        "formal/Kctx/Engineering.lean": "f4d5b3b10278bf17b6825e02050fe42682bc4ddfbed93f0d39ce922b04753828",
+        "formal/Kctx/Engineering/Actions.lean": "c372f5bf4692b1503cbe58878bb22983cc47fdc1d3dedf5509bb74e37650d5aa",
+        "formal/Kctx/Engineering/Core.lean": "264c6b6d5c5c2e4d3dd3ba43a797248caefe7ef38cbf8a37d75f2feac1b6d7f0",
+        "formal/Kctx/Engineering/Examples.lean": "1107c554a59b514c8a40fbf313e41990cc11b2c3ded79378f15ca4ce42517add",
+        "formal/Kctx/Engineering/Learning.lean": "6efd8eb30cdcabd9980dc219bf3534de54cdd0684a0cd046e72ea8a8a2b0f7b8",
+        "formal/Kctx/Engineering/Proofs.lean": "033173a60090662503253661dd68b3c7e7b8cb2be28de025c14d49d7eb4d1e9f",
+        "formal/Kctx/Engineering/Reference.lean": "19e34e39cb82d41f97a047273baa415580e74d1fc6d8b66aef551fd74c35eeee",
+        "formal/Kctx/Engineering/Types.lean": "35c301093f62a011920f926283bb8935f50a19ff91b11110212e02da7281559c",
+        "formal/Kctx/Footprint.lean": "e045fb60fb069d9f75fb360d6720fe9ab8126ef07eff02d1a475ae2bc592ca5d",
+        "formal/Kctx/Ids.lean": "9c454aa5064ecfd6e56885ecea7cf2de683c6d0ba330b60dc8404d4973e65771",
+        "formal/Kctx/Locality.lean": "391070961bf50bdad7ddf1474d983bceca62391ba8e09c8e8ff88554ab19cd81",
+        "formal/Kctx/Model.lean": "bb5c0952086607c94d2e32f9309378c384aae38bc0efe63cdf1ff3072b295ac3",
+        "formal/Kctx/NonVacuity.lean": "2a64f0c308f1a6581290677af6dc17e6737d59e953262054159c9d6ece5f8f6d",
+        "formal/Kctx/Portfolio.lean": "326d4682b7687fff797431adc710d41d3a227bff3b37f5ff3d2f18f8bb87be0c",
+        "formal/Kctx/PortfolioExamples.lean": "2f6e440ade9678a31bdce3d8e41b99249d62d7f606887709486d4b06897f6e0f",
+        "formal/Kctx/Reference.lean": "47bf1483ad2ca4eb6c7f998b79573e924711ce7b24d938b14180629de5c008f4",
+        "formal/Kctx/Selection.lean": "b86b662a2789d6eee187f38cc01aba7212b3dfe26872bbf164f482ce0eb1359c",
+        "formal/Kctx/SelectionCodec.lean": "a7189659dad4a7ca39062a93e1bc804e75424f1770c8bce99cc591a076915c80",
+        "formal/Kctx/Semantics.lean": "2534f96772cfbdbb587c71e104a577d9bb1156256262586b6fd1a9076d5e00d0",
+        "formal/Kctx/Theorems.lean": "f73abce561950689d29e702e2da5100c287d89df557263870be2d6e1c9790183",
+        "formal/Kctx/Theorems2.lean": "75bd4a8ed56bd76ee36a20b106b60f770c387da0ccdad09bc1baeaa160aee063",
+        "formal/Kctx/Time.lean": "04762ca1c0e6694611222ff7bb948954477a3bd7ec8bcd8fbe9190ee814ffed7",
+        "formal/Kctx/WellFormed.lean": "ac783b7d07db7db75ce58ca21363b45bd50dadff8ec1b43a4e10a1c57624b254",
+        "formal/Kctx/Workflow.lean": "e1d1ee37c9fe1e41a659122dbb09ab2b0a9f818db33d2c3c876ad5d915f814a3",
+        "formal/Kctx/WorkflowCodecProofs.lean": "189ee1ce18ef36cf089c0bc1c71d4e685b989a260ceeb4306928fea3882ce213",
+        "formal/Kctx/WorkflowV3Codec.lean": "568472b95838a1e5b2e2b70a60cc3ca4954ae1d2012b3d30c7c47a838eb1a940",
+        "formal/Kctx/WorkflowV3Reference.lean": "1649439b92c56ed51adbcee6f9c3926b438a0b708bf2944cd7df9864ca6e4562",
+        "formal/Kctx/WorkflowWireObjects.lean": "b6dc870131067c64b2e1be3ce20a104b4b9a3717ff8fcbb132382fda0eaa05cc",
+        "formal/engineering-theorems.json": "08e8f900766b526b7c122c5cf098a8538f2492afc38fe8aa6f35d7f0aa888030",
+        "formal/lake-manifest.json": "d166d37a8c85c291fbb128494da9d71477ea80dbedbe0f74557a50616413757d",
+        "formal/lakefile.toml": "8530201fee445dec85925092f27a7dcd29912abe94c06c4f53c24f268dadd97e",
+        "formal/lean-toolchain": "d24fed434d3b13adfaab57724a0a7f270ea8bf1c818b5ae5cf25cbce24dd685c",
+        "formal/theorems.json": "7927d383f9b303a4fd0cc0219e61dea3e7cb4d158a1cd8d663da3d6e7d4f6584"
+      },
+      "sha256": "98043850c644a585e64f5d1782dd2beca36c0c684a207dd3a97001c94b8718cd"
+    },
+    "reference_artifact": {
+      "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-20261103-003.json.attempt/engineeringref",
+      "sha256": "002ed187f4d69506a31e3c54ac517367fd66936781feaeb1208f07dfdfa25ccb",
+      "bytes": 156623328
+    },
+    "failed_clean_attempts": [
+      "~/.local/share/writfold/evidence/revision-5-engineering-lean-20261103-001.json",
+      "~/.local/share/writfold/evidence/revision-5-engineering-lean-20261103-002.json"
+    ],
+    "incremental_diagnostics": [
+      "~/.local/share/writfold/evidence/revision-5-lean-development-001/report.json",
+      "~/.local/share/writfold/evidence/revision-5-lean-development-002/report.json",
+      "~/.local/share/writfold/evidence/revision-5-lean-development-003/report.json",
+      "~/.local/share/writfold/evidence/revision-5-lean-development-004/report.json",
+      "~/.local/share/writfold/evidence/revision-5-lean-development-005/report.json",
+      "~/.local/share/writfold/evidence/revision-5-lean-development-006/report.json"
+    ],
+    "scope_limits": [
+      "Knowledge-only provenance induction is proved; joint journal, correction, policy and publication/retention integrity and full E01 remain open.",
+      "Full WellFormed joint induction (unique runs/effects/resources, catalog authority and typed procedure graph) is stated but not proved.",
+      "Nested-call and learning whole-state invariant proof remains open; supplied lemmas prove the exact construction, not universal procedure safety.",
+      "Return/postcondition/Join whole-trace integrity and typed dependency completeness proofs remain open.",
+      "Global ordinal serialization is not per-stream immutable payload/hash provenance reconstruction; no complete E05 claim.",
+      "Whole-state cross-stream exclusivity/fencing and descendant lifetime induction remain open.",
+      "All-reachable outcome-evidence invariant and qualified retry/idempotency profile remain open. No retry fallback exists.",
+      "Published evidence-root closure, competing promotions and governing-policy preservation joint induction remain open.",
+      "Full realm/epoch/query/inventory/watermark causal cut closure and retention bridge remain open.",
+      "This arithmetic lemma is NOT full E10: aggregate traversal bounds, typed control graph/Join, call/return induction and pinned catalog evolution remain open.",
+      "Uncontrolled AdvanceUpstream/ChangeProviderState may violate compatibility. Integration with full producer/artifact identities and observed-binding invalidation remains open.",
+      "Whole-transition continuation/migration induction and descendant lifetime invariant remain open; finite descendant cancellation is executable, not full E12 closure."
+    ]
+  },
+  "current_calculus": {
+    "status": "pass_under_explicit_model_assumptions",
+    "full_E01_E12": "pass",
+    "formal_registry": "formal/engineering-theorems.json",
+    "qualification_index": "qualification/engineering-theorems.json",
+    "clean_receipt": {
+      "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json",
+      "sha256": "b6f3b6d00675c41c9357c32957effd143fa04e93e590aeb18deb955d8095c435",
+      "bytes": 426744
+    },
+    "clean_report": {
+      "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-002.json.attempt/engineering-lean-report.json",
+      "sha256": "8d1c7c3166398a1e26c997b27ba3a5fe22d64f210218176747cff8ac0a8eb471",
+      "bytes": 5793771
+    },
+    "audited_declarations": {
+      "legacy": 353,
+      "engineering_roots": 176,
+      "nonvacuity": 42,
+      "total": 571
+    },
+    "reference_cases": {
+      "positive": 23,
+      "negative": 43,
+      "total": 66
+    },
+    "axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "semantic_source_mutations_killed": 9,
+    "mutation_report": {
+      "path": "~/.local/share/writfold/evidence/revision-5-lean-mutations-004/report.json",
+      "sha256": "e3ac744d0180d7ac2c512cc439ca3361a194e640a851d6fb0773ab8b5d213b35",
+      "bytes": 90288
+    },
+    "mutation_source_link": {
+      "path": "~/.local/share/writfold/evidence/revision-5-lean-mutations-004/source-closure-link.json",
+      "sha256": "2e7edbe96c86bd83216aa6e6be61478f8cb2f78e053f27336f273e8f4c964ae8",
+      "bytes": 3569
+    },
+    "prepared_release_regression": {
+      "before": {
+        "path": "~/.local/share/writfold/evidence/revision-5-lean-development-040/report.json",
+        "sha256": "29f26b9b63bb2f5ce282e5da072e4eb026699bfb4180abd7f61383fbf93d84e5",
+        "bytes": 19391
+      },
+      "after": {
+        "path": "~/.local/share/writfold/evidence/revision-5-lean-development-041/report.json",
+        "sha256": "f61ca8030a092275f88d62edec8492b32b5f8fc39944bc6a4cc0dbc0d69a4cfc",
+        "bytes": 19216
+      },
+      "behavior": "Live Prepared intent prevents quiescence; explicit cancellation permits release and another root to reserve generation2 and prepare a distinct overlapping effect."
+    },
+    "source_current_receipt_locator": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-004.json",
+    "receipt_admission_rule": "The locator is not a result. Read qualification/status.json for exercised admission; a missing, failed or mismatched source-current receipt is refused. Completed mathematical evidence above keeps its own exact source identity.",
+    "retained_failures": [
+      "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-001.json",
+      "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-003.json",
+      "~/.local/share/writfold/evidence/revision-5-lean-mutations-002/report.json",
+      "~/.local/share/writfold/evidence/revision-5-lean-mutations-003/report.json"
+    ],
+    "remaining": [
+      "V16-V21 and M12-M16 production/refinement obligations and composition bridges.",
+      "Native storage/effect qualification and full product WF31."
+    ]
+  },
+  "implementation": {
+    "scope": "Independent P14 engineering/1 domain and wire primitives; not durable ledger integration or full P14/WF25.",
+    "status": "implemented_and_exercised",
+    "features": [
+      "16 sealed nominal SHA-256 fingerprint domains with exact checked public forms.",
+      "Bounded iterative restricted deterministic CBOR encoding and zero-copy canonical-byte validation.",
+      "Streaming domain-separated hashing; historical signed JSON and identifier namespaces unchanged."
+    ],
+    "workspace_report": {
+      "path": "~/.local/share/writfold/evidence/revision-5-engineering-integration-003/report.json",
+      "sha256": "d8a4960ef660270d8284a24ea3c983fc2692c8b6915d3df999054295e3a9764f",
+      "bytes": 543674
+    },
+    "quality_report": {
+      "path": "~/.local/share/writfold/evidence/revision-5-engineering-integration-003/quality/obligations.json",
+      "sha256": "adc0379e7487f418e671b449893aba60b60572c1e5f661303e0f96c5a632d3f7",
+      "bytes": 227885
+    },
+    "quality_checks": 233,
+    "verus_report": {
+      "path": "~/.local/share/writfold/evidence/revision-5-engineering-verus-005/report.json",
+      "sha256": "d96ced1ed83d844504257de6dd5e2791fe985227b740770fd4e16acb974e8640",
+      "bytes": 39045
+    },
+    "verified_domain_obligations": 993,
+    "required_new_body_coverage": 52,
+    "native_smoke_report": {
+      "path": "~/.local/share/writfold/evidence/revision-5-engineering-smoke-002/report.json",
+      "sha256": "30975b6b6a9a171a27bddd07d8b3bff72156051959562e9cef64727e9d48c527",
+      "bytes": 550462
+    },
+    "native_smoke_artifact": {
+      "path": "~/.local/share/writfold/evidence/revision-5-engineering-smoke-002/engineering-profile-smoke",
+      "sha256": "41739a5d388227f805ad973682a4e24a5fa8c4ae030935b4e359bc0eb35b3840",
+      "bytes": 504456
+    },
+    "native_scope": "Executed x86_64 static-musl development API smoke; not an installed end-user CLI or native effect adapter.",
+    "storage_foundation": "P01O/WF24 retained independent relocated-branch failure remains; no rerun, workaround or backend fallback.",
+    "V16_V21_M12_M16": "Full obligations not_run; V16 separately records verified primitive-body contribution.",
+    "retained_failures": [
+      "~/.local/share/writfold/evidence/revision-5-engineering-rust-001/report.json",
+      "~/.local/share/writfold/evidence/revision-5-engineering-rust-002/report.json",
+      "~/.local/share/writfold/evidence/revision-5-engineering-verus-001/report.json",
+      "~/.local/share/writfold/evidence/revision-5-engineering-verus-002/report.json",
+      "~/.local/share/writfold/evidence/revision-5-engineering-verus-003/report.json",
+      "~/.local/share/writfold/evidence/revision-5-engineering-integration-001/report.json",
+      "~/.local/share/writfold/evidence/revision-5-engineering-integration-002/report.json"
+    ]
+  },
+  "review_dispositions": [
+    "Removed invalid root import; all legacy theorem/root bytes remain unchanged, only the explicit Lake executable target is additive.",
+    "Repaired catalog-pin advancement, response-loss Unknown, initial/consumed cursors, matched returns, cancellation propagation, ownership generation reuse and live reopen guards.",
+    "Deleted toy mutant predicates and replaced them with four actual source mutations that compile the altered model but fail the intended proof declaration.",
+    "Reconciler now rejects unlisted bundle members; proof aggregation requires real receipts and declared names, not bare pass labels."
+  ],
+  "evidence_applicability": "Exact component source/recipe/contract identities are recorded. Later documentation and mutable evidence-index edits do not renew whole-tree receipts. No historical completion or gate is promoted.",
+  "publication": "No repository push, website deployment, live provider write or production realm migration performed."
+}

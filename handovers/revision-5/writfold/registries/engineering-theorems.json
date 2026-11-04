@@ -1,0 +1,122 @@
+[
+  {
+    "id": "E01",
+    "name": "Conservative knowledge extension",
+    "system": "Lean",
+    "status": "not_run",
+    "contract": "plan/22-engineering-calculus.md",
+    "theorem_symbols": [],
+    "assumptions": [],
+    "receipt": null
+  },
+  {
+    "id": "E02",
+    "name": "Type and representation preservation",
+    "system": "Lean",
+    "status": "not_run",
+    "contract": "plan/22-engineering-calculus.md",
+    "theorem_symbols": [],
+    "assumptions": [],
+    "receipt": null
+  },
+  {
+    "id": "E03",
+    "name": "Capability and gate-floor non-amplification",
+    "system": "Lean",
+    "status": "not_run",
+    "contract": "plan/22-engineering-calculus.md",
+    "theorem_symbols": [],
+    "assumptions": [],
+    "receipt": null
+  },
+  {
+    "id": "E04",
+    "name": "Subject and dependency integrity",
+    "system": "Lean",
+    "status": "not_run",
+    "contract": "plan/22-engineering-calculus.md",
+    "theorem_symbols": [],
+    "assumptions": [],
+    "receipt": null
+  },
+  {
+    "id": "E05",
+    "name": "Ledger expected-head safety",
+    "system": "Lean",
+    "status": "not_run",
+    "contract": "plan/22-engineering-calculus.md",
+    "theorem_symbols": [],
+    "assumptions": [],
+    "receipt": null
+  },
+  {
+    "id": "E06",
+    "name": "Resource exclusivity under qualified fencing",
+    "system": "Lean",
+    "status": "not_run",
+    "contract": "plan/22-engineering-calculus.md",
+    "theorem_symbols": [],
+    "assumptions": [],
+    "receipt": null
+  },
+  {
+    "id": "E07",
+    "name": "Honest effect outcomes",
+    "system": "Lean",
+    "status": "not_run",
+    "contract": "plan/22-engineering-calculus.md",
+    "theorem_symbols": [],
+    "assumptions": [],
+    "receipt": null
+  },
+  {
+    "id": "E08",
+    "name": "Promotion publication and closure",
+    "system": "Lean",
+    "status": "not_run",
+    "contract": "plan/22-engineering-calculus.md",
+    "theorem_symbols": [],
+    "assumptions": [],
+    "receipt": null
+  },
+  {
+    "id": "E09",
+    "name": "Projection non-authority and exact cuts",
+    "system": "Lean",
+    "status": "not_run",
+    "contract": "plan/22-engineering-calculus.md",
+    "theorem_symbols": [],
+    "assumptions": [],
+    "receipt": null
+  },
+  {
+    "id": "E10",
+    "name": "Pinned composition and bounded traversal",
+    "system": "Lean",
+    "status": "not_run",
+    "contract": "plan/22-engineering-calculus.md",
+    "theorem_symbols": [],
+    "assumptions": [],
+    "receipt": null
+  },
+  {
+    "id": "E11",
+    "name": "Declared cross-repo compatibility preservation",
+    "system": "Lean",
+    "status": "not_run",
+    "contract": "plan/22-engineering-calculus.md",
+    "theorem_symbols": [],
+    "assumptions": [],
+    "receipt": null
+  },
+  {
+    "id": "E12",
+    "name": "Revocation-aware continuation",
+    "system": "Lean",
+    "status": "not_run",
+    "contract": "plan/22-engineering-calculus.md",
+    "theorem_symbols": [],
+    "assumptions": [],
+    "receipt": null
+  }
+]

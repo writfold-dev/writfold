@@ -1,0 +1,13 @@
+flowchart TD
+  N0["Observed failure — Exact event and reproduction"]
+  N1["Candidate lesson — Scope delta counterexamples"]
+  N2["Frozen evaluation — Baseline held-out adverse cases"]
+  N3["Current policy — Witnesses approval gate floor"]
+  N4["Retain and publish — Corpus closure then Git CAS"]
+  N5["New revision — Future runs or explicit migration"]
+  N0 --> N1
+  N1 --> N2
+  N0 -->|"inputs"| N3
+  N2 -->|"check"| N4
+  N3 -->|"bind"| N4
+  N4 -->|"accept"| N5

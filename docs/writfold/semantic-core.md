@@ -1,9 +1,10 @@
 # Rust semantic core
 
 The IO-free `writfold-kernel` core implements the retained semantic-2.0.0
-checker, mathematical time rules, and whole-candidate invariants. The Python
-and Lean sources remain unchanged reference material. The source-sealed
-executable-body campaign described below is not a Lean-to-Rust refinement
+checker, mathematical time rules, and whole-candidate invariants. The legacy
+Python and Lean theorem sources remain unchanged compatibility material;
+revision 5 adds the separate engineering reference described below. The
+source-sealed Rust executable-body campaign is not a Lean-to-Rust refinement
 theorem or a whole-product qualification.
 
 ## Source mapping
@@ -144,3 +145,101 @@ Exact current source/compilation/calibration links belong in
 caller/integration admission and cross-logic correspondence remain separate
 obligations; counts, finite agreement and a correctly checked Rust model do
 not establish them automatically.
+
+## Revision-5 engineering calculus progress
+
+`formal/Kctx/Engineering/` now models the three semantic graphs through a
+typed procedure IR, invocation-specific control and returns, shared root budgets,
+per-stream immutable records and expected-head selection. Captured historical
+premises are distinct from current authorization. The interpreter does not accept
+a successor merely because an invariant checker approves it.
+
+Physical send and completed corpus publication are separate from ledger append.
+The environment models time, revocation, policy/correction changes, provider
+changes, external completion, reply loss and generation-bound process termination.
+This is an executable mathematical reference, not the production engine.
+
+```mermaid
+flowchart LR
+  A[Current authority and exact evidence] --> P[Retain stable intent]
+  P --> C[Append selected dispatch claim]
+  C --> I[Recheck and send once per claim]
+  I --> W[Qualified provider outcome]
+  I --> U[Crash or lost reply: Unknown]
+  W --> O[Qualified observation]
+  U --> O
+  O --> R[Reconcile the exact logical effect]
+  U --> Q[Exact resume and retry authorization]
+  Q --> C
+  L[Exact evaluated and reviewed candidate] --> T[Retain release evidence roots]
+  T --> K[Original portfolio admission and corpus CAS]
+  K --> N[Separate acknowledgement]
+```
+
+The reference exercises nested calls, typed dependencies, Join and non-success
+returns; immutable delegation snapshots; bounded resource loading; exact
+receipt reuse; competing learning publication and lost acknowledgement; and
+complete old/new cuts across native epochs. Missing retained material refuses
+instead of consulting mutable HEAD. Destructive GC is disabled.
+
+Qualified retries retain the logical intent but obtain a fresh claim and current
+authorization. A duplicate application response cannot rewrite current provider
+state. Recovery alone does not make old invocations live, reload their context,
+renew receipts, or release owned process trees.
+Prepared intents retain their reservations until explicit cancellation or settlement;
+quiescence cannot strand an unresolved intent while transferring its resource.
+`World.replies` records untrusted transport delivery/loss for observable traces;
+only qualified observations can classify an effect.
+
+`revision-5-engineering-lean-complete-002.json` records clean offline kernel
+acceptance and a transitive audit of **571 declarations**: 353 unchanged legacy
+declarations, 176 engineering roots and 42 nonvacuity declarations. All **66
+reference cases** pass; only `propext`, `Classical.choice` and `Quot.sound` occur.
+Independent statement review closed all E01–E12 findings under the explicit
+assumptions. These theorems quantify arbitrary finite traces of the model, not a
+fixed TLC exploration bound.
+
+The expanded semantic campaign kills nine actual interpreter mutations. Every
+changed model compiles, an actual execution violates the expected behavior, and
+the intended safety declaration fails. It includes stale heads, timeout
+misclassification, privilege amplification, stale evidence/provider state,
+canonical-reply rollback, publication before retention, process-generation reuse
+and release of a live prepared intent. Failed calibration and build attempts remain
+retained. The old 407/30/4 result applies only to its first-increment sources.
+
+The [formal registry](../../formal/engineering-theorems.json) maps the expanded
+statements and essential negatives. The [qualification index](../../qualification/engineering-theorems.json)
+and [revision-5 progress](../../qualification/revision-5-progress.json) retain
+exact evidence and historical scope. Source/status changes require a fresh
+matching receipt; a scoped pass never closes full product WF31 or Rust refinement.
+
+## Engineering/1 Rust byte boundary
+
+`writfold_domain::engineering` exposes 16 private-array nominal digest types and
+the sealed `EngineeringDigest` trait. Parsing requires the exact
+`wf1:<kind>:sha256:<64 lowercase hex>` form; no trimming, case folding, algorithm
+substitution or cross-domain coercion occurs. `from_digest` wraps supplied bytes
+only and does not authenticate or validate a payload.
+
+`writfold_wire::engineering::cbor::Value` borrows text, byte strings, unbounded
+`Integer` values and container contents. `encode` returns owned canonical
+`RawCbor`; `RawCbor::parse` validates canonical input without copying its bytes.
+Both use the existing byte/depth/container-entry/value-node `Limits` and iterative
+traversal. Native integers and minimal tags 2/3 share one mathematical encoding.
+Maps have unique text keys in encoded-byte order; arrays, Unicode and line endings
+remain material. Nonminimal headers/bignums, invalid UTF-8, unsupported tags,
+floats, indefinite lengths, truncation and trailing bytes refuse.
+
+`fingerprint::<D>(&raw)` streams the profile/kind/NUL prefix and the exact
+canonical bytes into SHA-256. No temporary concatenated preimage is allocated.
+The 18 hand-encoded vectors and four frozen fingerprint fixtures exercise this
+boundary. A real static-musl program also exercises canonical encoding, typed
+hashing, wrong-domain refusal and negative bignum parsing.
+
+The actual nominal parser, constructors and accessors are Verus-checked inside
+the whole domain crate. This is not verification of the CBOR encoder/parser,
+SHA-256, formatter, cryptographic assumptions, or the full V16 ledger obligation.
+Schema validity, complete input capture, current authority and receipt reuse
+remain separate application decisions. No ledger writer or new graph owner is
+introduced by these primitives.
+

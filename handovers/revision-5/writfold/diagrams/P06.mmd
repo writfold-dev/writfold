@@ -1,0 +1,12 @@
+flowchart TD
+  N0["Admitted tool slots — CLI + server + native hashes"]
+  N1["Single writer owner — Private endpoint + readiness"]
+  N2["Immutable schema epoch — Graph identity + commits"]
+  N3["Upgrade candidate — Backup + compatibility"]
+  N4["Pinned query request — Graph + commit + query contract"]
+  N5["Canonical result — Identity + order + omissions"]
+  N0 -->|"execute"| N1
+  N1 -->|"manage"| N2
+  N3 -->|"verified selection"| N0
+  N2 -->|"pin"| N4
+  N4 -->|"decode"| N5

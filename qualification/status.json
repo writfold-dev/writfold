@@ -5,7 +5,8 @@
   "playbook_commit": "e7d991e990e3dff9c5d70e4327c0e90298e2f67e",
   "platform": "x86_64-unknown-linux-musl on Linux/WSL2",
   "qualification_scope": "local-only; enterprise endpoints and hardware power loss unqualified",
-  "supplemental_evidence_index": "qualification/revision-4-progress.json",
+  "supplemental_evidence_index": "qualification/revision-5-progress.json",
+  "current_component_closure": "~/.local/share/writfold/evidence/revision-5-final-component-closure-001.json",
   "stages": [
     {
       "id": "P00",
@@ -17,9 +18,10 @@
       ],
       "status": "not_run",
       "receipts": [],
-      "contract": "handovers/revision-4/writfold/stages/P00.md",
+      "contract": "handovers/revision-5/writfold/stages/P00.md",
+      "component_receipts": ["~/.local/share/writfold/evidence/revision-5-baseline-20261103-003.json"],
       "historical_completion": "qualification/p00-completion.json",
-      "scope_note": "Revision-4 reconciliation and policy delta adopted; baseline-only integrity/registry components are exercised. Fresh complete P00 qualification is not claimed."
+      "scope_note": "Revision-5 source/registry reconciliation passed 1409 checks, with copied-closure refusal calibration and historical evidence preserved. This baseline-only component does not close full P00/WF00/WF21."
     },
     {
       "id": "P01",
@@ -32,9 +34,9 @@
       ],
       "status": "not_run",
       "receipts": [],
-      "contract": "handovers/revision-4/writfold/stages/P01.md",
+      "contract": "handovers/revision-5/writfold/stages/P01.md",
       "historical_completion": "qualification/p01-completion.json",
-      "scope_note": "Earlier build feasibility retained; Omnigraph CLI/server/runtime admission and offline closure not run."
+      "scope_note": "Revision-5 contract adopted without requalification. Earlier component evidence is retained in qualification/revision-4-status.json and revision-4-progress.json; full current scope remains open."
     },
     {
       "id": "P01O",
@@ -49,10 +51,10 @@
       ],
       "status": "blocked",
       "receipts": [],
-      "contract": "handovers/revision-4/writfold/stages/P01O.md",
+      "contract": "handovers/revision-5/writfold/stages/P01O.md",
       "blocking_evidence": "~/.local/share/writfold/evidence/omnigraph-relocation-blocker-001.json",
       "upstream_issue": "https://github.com/ModernRelay/omnigraph/issues/1233",
-      "scope_note": "Omnigraph 0.14.0 separate epochs and authenticated companion smokes are exercised, but an independent relocated retained-branch read still references the unavailable original Lance path. Full WF24 remains unqualified; no automatic backend fallback."
+      "scope_note": "Revision-5 contract adopted without requalification. Earlier component evidence is retained in qualification/revision-4-status.json and revision-4-progress.json; full current scope remains open. Known retained-branch relocation blocker persists; no rerun or fallback."
     },
     {
       "id": "P02",
@@ -66,9 +68,9 @@
       ],
       "status": "not_run",
       "receipts": [],
-      "contract": "handovers/revision-4/writfold/stages/P02.md",
+      "contract": "handovers/revision-5/writfold/stages/P02.md",
       "historical_completion": "qualification/p02-completion.json",
-      "scope_note": "Earlier completion retained. Revision-4 storage identities/pins, pure reader matching, new-domain operation approvals and explicit protocol-2 storage capability are implemented and exercised as components. Full release manifests, canonical migration/caller integration and complete stage qualification remain open."
+      "scope_note": "Revision-5 contract adopted without requalification. Earlier component evidence is retained in qualification/revision-4-status.json and revision-4-progress.json; full current scope remains open."
     },
     {
       "id": "P03",
@@ -82,8 +84,8 @@
       ],
       "status": "not_run",
       "receipts": [],
-      "contract": "handovers/revision-4/writfold/stages/P03.md",
-      "scope_note": "Source-sealed whole-crate Verus invocation passes 428 checked-body/helper obligations; semantic negatives, 170 workspace tests, 233 quality checks and fresh 334-case conformance are retained in revision-4-progress.json. Full V-family semantic/caller and complete-stage closure are not inferred."
+      "contract": "handovers/revision-5/writfold/stages/P03.md",
+      "scope_note": "Revision-5 contract adopted without requalification. Earlier component evidence is retained in qualification/revision-4-status.json and revision-4-progress.json; full current scope remains open."
     },
     {
       "id": "P03P",
@@ -101,8 +103,8 @@
       ],
       "status": "not_run",
       "receipts": [],
-      "contract": "handovers/revision-4/writfold/stages/P03P.md",
-      "scope_note": "Portfolio and authored-design executable contracts participate in the 428-obligation kernel component; replay/context/reset behavior is exercised. Full WF19 and integrated caller/storage qualification remain open."
+      "contract": "handovers/revision-5/writfold/stages/P03P.md",
+      "scope_note": "Revision-5 contract adopted without requalification. Earlier component evidence is retained in qualification/revision-4-status.json and revision-4-progress.json; full current scope remains open."
     },
     {
       "id": "P04",
@@ -117,8 +119,8 @@
       ],
       "status": "blocked",
       "receipts": [],
-      "contract": "handovers/revision-4/writfold/stages/P04.md",
-      "scope_note": "P01O/WF24 still blocks storage-dependent integration. Twelve canonical model/composition modules pass strict TLAPS with 7972 obligations, plus two probe inclusion obligations; all twenty selected semantic negatives have counterexamples. Only M01/M03/M04 positive TLC baselines completed; nine baseline timeouts and remaining profile/gate matrices prevent full P04 qualification. No engine-effect refinement is claimed."
+      "contract": "handovers/revision-5/writfold/stages/P04.md",
+      "scope_note": "Revision-5 contract adopted without requalification. Earlier component evidence is retained in qualification/revision-4-status.json and revision-4-progress.json; full current scope remains open. Known retained-branch relocation blocker persists; no rerun or fallback."
     },
     {
       "id": "P05",
@@ -132,7 +134,8 @@
       ],
       "status": "not_run",
       "receipts": [],
-      "contract": "handovers/revision-4/writfold/stages/P05.md"
+      "contract": "handovers/revision-5/writfold/stages/P05.md",
+      "scope_note": "Revision-5 contract adopted without requalification. Earlier component evidence is retained in qualification/revision-4-status.json and revision-4-progress.json; full current scope remains open."
     },
     {
       "id": "P06",
@@ -149,8 +152,8 @@
       ],
       "status": "blocked",
       "receipts": [],
-      "contract": "handovers/revision-4/writfold/stages/P06.md",
-      "scope_note": "P01O/WF24 foundation has not passed; storage-dependent integration blocked."
+      "contract": "handovers/revision-5/writfold/stages/P06.md",
+      "scope_note": "Revision-5 contract adopted without requalification. Earlier component evidence is retained in qualification/revision-4-status.json and revision-4-progress.json; full current scope remains open. Known retained-branch relocation blocker persists; no rerun or fallback."
     },
     {
       "id": "P07",
@@ -170,7 +173,8 @@
       ],
       "status": "not_run",
       "receipts": [],
-      "contract": "handovers/revision-4/writfold/stages/P07.md"
+      "contract": "handovers/revision-5/writfold/stages/P07.md",
+      "scope_note": "Revision-5 contract adopted without requalification. Earlier component evidence is retained in qualification/revision-4-status.json and revision-4-progress.json; full current scope remains open."
     },
     {
       "id": "P08",
@@ -185,7 +189,8 @@
       ],
       "status": "not_run",
       "receipts": [],
-      "contract": "handovers/revision-4/writfold/stages/P08.md"
+      "contract": "handovers/revision-5/writfold/stages/P08.md",
+      "scope_note": "Revision-5 contract adopted without requalification. Earlier component evidence is retained in qualification/revision-4-status.json and revision-4-progress.json; full current scope remains open."
     },
     {
       "id": "P08D",
@@ -207,7 +212,8 @@
       ],
       "status": "not_run",
       "receipts": [],
-      "contract": "handovers/revision-4/writfold/stages/P08D.md"
+      "contract": "handovers/revision-5/writfold/stages/P08D.md",
+      "scope_note": "Revision-5 contract adopted without requalification. Earlier component evidence is retained in qualification/revision-4-status.json and revision-4-progress.json; full current scope remains open."
     },
     {
       "id": "P08S",
@@ -226,7 +232,8 @@
       ],
       "status": "not_run",
       "receipts": [],
-      "contract": "handovers/revision-4/writfold/stages/P08S.md"
+      "contract": "handovers/revision-5/writfold/stages/P08S.md",
+      "scope_note": "Revision-5 contract adopted without requalification. Earlier component evidence is retained in qualification/revision-4-status.json and revision-4-progress.json; full current scope remains open."
     },
     {
       "id": "P09",
@@ -245,7 +252,8 @@
       ],
       "status": "not_run",
       "receipts": [],
-      "contract": "handovers/revision-4/writfold/stages/P09.md"
+      "contract": "handovers/revision-5/writfold/stages/P09.md",
+      "scope_note": "Revision-5 contract adopted without requalification. Earlier component evidence is retained in qualification/revision-4-status.json and revision-4-progress.json; full current scope remains open."
     },
     {
       "id": "P09V",
@@ -264,7 +272,8 @@
       ],
       "status": "not_run",
       "receipts": [],
-      "contract": "handovers/revision-4/writfold/stages/P09V.md"
+      "contract": "handovers/revision-5/writfold/stages/P09V.md",
+      "scope_note": "Revision-5 contract adopted without requalification. Earlier component evidence is retained in qualification/revision-4-status.json and revision-4-progress.json; full current scope remains open."
     },
     {
       "id": "P10",
@@ -280,7 +289,119 @@
       ],
       "status": "not_run",
       "receipts": [],
-      "contract": "handovers/revision-4/writfold/stages/P10.md"
+      "contract": "handovers/revision-5/writfold/stages/P10.md",
+      "scope_note": "Revision-5 contract adopted without requalification. Earlier component evidence is retained in qualification/revision-4-status.json and revision-4-progress.json; full current scope remains open."
+    },
+    {
+      "id": "P14",
+      "title": "Engineering identities and ledger",
+      "dependencies": [
+        "P02",
+        "P04",
+        "P08D",
+        "P10"
+      ],
+      "gates": [
+        "WF25",
+        "WF02",
+        "WF03"
+      ],
+      "status": "not_run",
+      "receipts": [],
+      "contract": "handovers/revision-5/writfold/stages/P14.md",
+      "component_receipts": ["~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-004.json"],
+      "component_reports": [
+        "~/.local/share/writfold/evidence/revision-5-lean-mutations-004/report.json",
+        "~/.local/share/writfold/evidence/revision-5-engineering-integration-003/report.json",
+        "~/.local/share/writfold/evidence/revision-5-engineering-verus-005/report.json",
+        "~/.local/share/writfold/evidence/revision-5-engineering-smoke-002/report.json"
+      ],
+      "scope_note": "E01-E12 mathematical obligations are discharged under explicit model assumptions: clean 571-declaration audit, 66 executed cases and nine semantic mutant kills, with independent current-source receipt admission. Independent Rust engineering/1 fingerprints and canonical-CBOR primitives are implemented and exercised, including exact Verus body coverage and a static-musl API smoke. Durable ledger, complete V16/M12, stage dependencies and full WF25 remain open; see qualification/revision-5-progress.json."
+    },
+    {
+      "id": "P15",
+      "title": "Skills and procedure composition",
+      "dependencies": [
+        "P14",
+        "P08S"
+      ],
+      "gates": [
+        "WF26",
+        "WF02"
+      ],
+      "status": "not_run",
+      "receipts": [],
+      "contract": "handovers/revision-5/writfold/stages/P15.md",
+      "scope_note": "Revision-5 contract adopted without requalification. Earlier component evidence is retained in qualification/revision-4-status.json and revision-4-progress.json; full current scope remains open."
+    },
+    {
+      "id": "P16",
+      "title": "Controlled effects and recovery",
+      "dependencies": [
+        "P15",
+        "P05",
+        "P06"
+      ],
+      "gates": [
+        "WF27",
+        "WF02"
+      ],
+      "status": "not_run",
+      "receipts": [],
+      "contract": "handovers/revision-5/writfold/stages/P16.md",
+      "scope_note": "Revision-5 contract adopted without requalification. Earlier component evidence is retained in qualification/revision-4-status.json and revision-4-progress.json; full current scope remains open."
+    },
+    {
+      "id": "P17",
+      "title": "Cross-repo author-change procedure",
+      "dependencies": [
+        "P16",
+        "P08D",
+        "P09"
+      ],
+      "gates": [
+        "WF28",
+        "WF02"
+      ],
+      "status": "not_run",
+      "receipts": [],
+      "contract": "handovers/revision-5/writfold/stages/P17.md",
+      "scope_note": "Revision-5 contract adopted without requalification. Earlier component evidence is retained in qualification/revision-4-status.json and revision-4-progress.json; full current scope remains open."
+    },
+    {
+      "id": "P18",
+      "title": "Learning and reviewed promotion",
+      "dependencies": [
+        "P17",
+        "P07"
+      ],
+      "gates": [
+        "WF29",
+        "WF02"
+      ],
+      "status": "not_run",
+      "receipts": [],
+      "contract": "handovers/revision-5/writfold/stages/P18.md",
+      "scope_note": "Revision-5 contract adopted without requalification. Earlier component evidence is retained in qualification/revision-4-status.json and revision-4-progress.json; full current scope remains open."
+    },
+    {
+      "id": "P19",
+      "title": "Unified dossiers and restoration",
+      "dependencies": [
+        "P18",
+        "P09V",
+        "P10"
+      ],
+      "gates": [
+        "WF30",
+        "WF21",
+        "WF22",
+        "WF23"
+      ],
+      "status": "not_run",
+      "receipts": [],
+      "contract": "handovers/revision-5/writfold/stages/P19.md",
+      "scope_note": "Revision-5 contract adopted without requalification. Earlier component evidence is retained in qualification/revision-4-status.json and revision-4-progress.json; full current scope remains open."
     },
     {
       "id": "P11",
@@ -294,7 +415,8 @@
         "P08S",
         "P03P",
         "P08D",
-        "P09V"
+        "P09V",
+        "P19"
       ],
       "gates": [
         "WF00",
@@ -319,11 +441,19 @@
         "WF21",
         "WF22",
         "WF23",
-        "WF24"
+        "WF24",
+        "WF25",
+        "WF26",
+        "WF27",
+        "WF28",
+        "WF29",
+        "WF30",
+        "WF31"
       ],
       "status": "not_run",
       "receipts": [],
-      "contract": "handovers/revision-4/writfold/stages/P11.md"
+      "contract": "handovers/revision-5/writfold/stages/P11.md",
+      "scope_note": "Revision-5 contract adopted without requalification. Earlier component evidence is retained in qualification/revision-4-status.json and revision-4-progress.json; full current scope remains open."
     },
     {
       "id": "P12",
@@ -336,7 +466,8 @@
       ],
       "status": "not_run",
       "receipts": [],
-      "contract": "handovers/revision-4/writfold/stages/P12.md"
+      "contract": "handovers/revision-5/writfold/stages/P12.md",
+      "scope_note": "Revision-5 contract adopted without requalification. Earlier component evidence is retained in qualification/revision-4-status.json and revision-4-progress.json; full current scope remains open."
     },
     {
       "id": "P13",
@@ -350,7 +481,8 @@
       ],
       "status": "not_run",
       "receipts": [],
-      "contract": "handovers/revision-4/writfold/stages/P13.md"
+      "contract": "handovers/revision-5/writfold/stages/P13.md",
+      "scope_note": "Revision-5 contract adopted without requalification. Earlier component evidence is retained in qualification/revision-4-status.json and revision-4-progress.json; full current scope remains open."
     }
   ],
   "gates": [
@@ -358,288 +490,391 @@
       "id": "WF00",
       "name": "Baseline freeze",
       "required": true,
-      "status": "not_run",
-      "receipts": [],
       "stages": [
         "P00",
         "P11"
-      ]
+      ],
+      "status": "not_run",
+      "receipts": []
     },
     {
       "id": "WF01",
       "name": "Build and offline closure",
       "required": true,
-      "status": "not_run",
-      "receipts": [],
       "stages": [
         "P01",
+        "P01O",
         "P11"
-      ]
+      ],
+      "status": "not_run",
+      "receipts": []
     },
     {
       "id": "WF02",
       "name": "Architecture and nominal values",
       "required": true,
-      "status": "not_run",
-      "receipts": [],
       "stages": [
         "P02",
+        "P08D",
+        "P09V",
+        "P14",
+        "P15",
+        "P16",
+        "P17",
+        "P18",
         "P11"
-      ]
+      ],
+      "status": "not_run",
+      "receipts": []
     },
     {
       "id": "WF03",
       "name": "Wire and canonical bytes",
       "required": true,
-      "status": "not_run",
-      "receipts": [],
       "stages": [
         "P02",
+        "P03P",
+        "P14",
         "P11"
-      ]
+      ],
+      "status": "not_run",
+      "receipts": []
     },
     {
       "id": "WF04",
       "name": "Lean and three-host conformance",
       "required": true,
-      "status": "not_run",
-      "receipts": [],
       "stages": [
         "P03",
+        "P03P",
+        "P08D",
         "P11"
-      ]
+      ],
+      "status": "not_run",
+      "receipts": []
     },
     {
       "id": "WF05",
       "name": "Production Verus verification",
       "required": true,
-      "status": "not_run",
-      "receipts": [],
       "stages": [
         "P03",
+        "P03P",
         "P07",
+        "P08D",
         "P08S",
+        "P09V",
         "P10",
         "P11"
-      ]
+      ],
+      "status": "not_run",
+      "receipts": []
     },
     {
       "id": "WF06",
       "name": "TLC exploration",
       "required": true,
-      "status": "not_run",
-      "receipts": [],
       "stages": [
+        "P03P",
         "P04",
+        "P08D",
         "P08S",
+        "P09V",
         "P11"
-      ]
+      ],
+      "status": "not_run",
+      "receipts": []
     },
     {
       "id": "WF07",
       "name": "TLAPS safety and bridges",
       "required": true,
-      "status": "not_run",
-      "receipts": [],
       "stages": [
+        "P03P",
         "P04",
+        "P08D",
         "P08S",
+        "P09V",
         "P11"
-      ]
+      ],
+      "status": "not_run",
+      "receipts": []
     },
     {
       "id": "WF08",
       "name": "Sources and filesystem",
       "required": true,
-      "status": "not_run",
-      "receipts": [],
       "stages": [
         "P05",
         "P11"
-      ]
+      ],
+      "status": "not_run",
+      "receipts": []
     },
     {
       "id": "WF09",
       "name": "Omnigraph and native companion lifecycle",
       "required": true,
-      "status": "not_run",
-      "receipts": [],
       "stages": [
         "P06",
         "P11"
-      ]
+      ],
+      "status": "not_run",
+      "receipts": []
     },
     {
       "id": "WF10",
       "name": "Authenticated operations",
       "required": true,
-      "status": "not_run",
-      "receipts": [],
       "stages": [
         "P07",
         "P11"
-      ]
+      ],
+      "status": "not_run",
+      "receipts": []
     },
     {
       "id": "WF11",
       "name": "Publication and recovery",
       "required": true,
-      "status": "not_run",
-      "receipts": [],
       "stages": [
         "P07",
+        "P08D",
         "P10",
         "P11"
-      ]
+      ],
+      "status": "not_run",
+      "receipts": []
     },
     {
       "id": "WF12",
       "name": "Workflows and catalog",
       "required": true,
-      "status": "not_run",
-      "receipts": [],
       "stages": [
         "P08",
         "P11"
-      ]
+      ],
+      "status": "not_run",
+      "receipts": []
     },
     {
       "id": "WF13",
       "name": "Bounded query and transport",
       "required": true,
-      "status": "not_run",
-      "receipts": [],
       "stages": [
         "P09",
         "P11"
-      ]
+      ],
+      "status": "not_run",
+      "receipts": []
     },
     {
       "id": "WF14",
       "name": "Migration sync and retention",
       "required": true,
-      "status": "not_run",
-      "receipts": [],
       "stages": [
         "P10",
         "P11"
-      ]
+      ],
+      "status": "not_run",
+      "receipts": []
     },
     {
       "id": "WF15",
       "name": "Outcomes and performance",
       "required": true,
-      "status": "not_run",
-      "receipts": [],
       "stages": [
         "P11"
-      ]
+      ],
+      "status": "not_run",
+      "receipts": []
     },
     {
       "id": "WF16",
       "name": "Native release",
       "required": true,
-      "status": "not_run",
-      "receipts": [],
       "stages": [
         "P12"
-      ]
+      ],
+      "status": "not_run",
+      "receipts": []
     },
     {
       "id": "WF17",
       "name": "Static website",
       "required": true,
-      "status": "not_run",
-      "receipts": [],
       "stages": [
         "P13"
-      ]
+      ],
+      "status": "not_run",
+      "receipts": []
     },
     {
       "id": "WF18",
       "name": "Scribes and writ acquisition",
       "required": true,
-      "status": "not_run",
-      "receipts": [],
       "stages": [
         "P08S",
         "P11"
-      ]
+      ],
+      "status": "not_run",
+      "receipts": []
     },
     {
       "id": "WF19",
       "name": "Workflow-3 portfolio authority",
       "required": true,
-      "status": "not_run",
-      "receipts": [],
       "stages": [
         "P03P",
         "P07",
         "P09",
-        "P10",
         "P11"
-      ]
+      ],
+      "status": "not_run",
+      "receipts": []
     },
     {
       "id": "WF20",
       "name": "Design binding and reopening",
       "required": true,
-      "status": "not_run",
-      "receipts": [],
       "stages": [
         "P08D",
-        "P10",
         "P11"
-      ]
+      ],
+      "status": "not_run",
+      "receipts": []
     },
     {
       "id": "WF21",
       "name": "Playbook adoption and companion continuity",
       "required": true,
-      "status": "not_run",
-      "receipts": [],
       "stages": [
         "P00",
+        "P01O",
         "P09",
+        "P09V",
+        "P19",
         "P11",
         "P13"
-      ]
+      ],
+      "status": "not_run",
+      "receipts": []
     },
     {
       "id": "WF22",
       "name": "Faithful view projection and publication",
       "required": true,
-      "status": "not_run",
-      "receipts": [],
       "stages": [
         "P09V",
+        "P19",
         "P11"
-      ]
+      ],
+      "status": "not_run",
+      "receipts": []
     },
     {
       "id": "WF23",
       "name": "Native Obsidian and plugin reading profile",
       "required": true,
-      "status": "not_run",
-      "receipts": [],
       "stages": [
         "P09V",
+        "P19",
         "P11"
-      ]
+      ],
+      "status": "not_run",
+      "receipts": []
     },
     {
       "id": "WF24",
       "name": "Omnigraph foundation qualification",
       "required": true,
-      "status": "blocked",
-      "receipts": [],
-      "blocking_evidence": "~/.local/share/writfold/evidence/omnigraph-relocation-blocker-001.json",
-      "upstream_issue": "https://github.com/ModernRelay/omnigraph/issues/1233",
       "stages": [
         "P01O",
         "P06",
         "P11"
-      ]
+      ],
+      "status": "blocked",
+      "receipts": [],
+      "blocking_evidence": "~/.local/share/writfold/evidence/omnigraph-relocation-blocker-001.json",
+      "upstream_issue": "https://github.com/ModernRelay/omnigraph/issues/1233"
+    },
+    {
+      "id": "WF25",
+      "name": "Engineering identities and durable ledger",
+      "required": true,
+      "stages": [
+        "P14",
+        "P11"
+      ],
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "WF26",
+      "name": "Skill packages and checked composition",
+      "required": true,
+      "stages": [
+        "P15",
+        "P11"
+      ],
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "WF27",
+      "name": "Controlled effects and recovery",
+      "required": true,
+      "stages": [
+        "P16",
+        "P11"
+      ],
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "WF28",
+      "name": "Cross-repository author-change lifecycle",
+      "required": true,
+      "stages": [
+        "P17",
+        "P11"
+      ],
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "WF29",
+      "name": "Learning evaluation and promotion",
+      "required": true,
+      "stages": [
+        "P18",
+        "P11"
+      ],
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "WF30",
+      "name": "Engineering cuts views and restoration",
+      "required": true,
+      "stages": [
+        "P19",
+        "P11"
+      ],
+      "status": "not_run",
+      "receipts": []
+    },
+    {
+      "id": "WF31",
+      "name": "Engineering calculus and composed refinement",
+      "required": true,
+      "stages": [
+        "P11"
+      ],
+      "status": "not_run",
+      "receipts": [],
+      "component_receipts": ["~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-004.json"],
+      "scope_note": "Lean E01-E12 mathematical discharge contributes only engineering-lean-only evidence; production/refinement/model/native obligations keep full WF31 not_run."
     }
   ],
   "retained_failures": [
@@ -886,5 +1121,46 @@
         "receipts": []
       }
     ]
-  }
+  },
+  "active_authority": "handovers/revision-5/writfold",
+  "retained_revision_4_status": "qualification/revision-4-status.json",
+  "engineering_theorem_registry": "qualification/engineering-theorems.json",
+  "engineering_calculus_admission": {
+    "status": "pass",
+    "scope": "Source-current E01-E12 mathematical calculus only; not full WF31 or production refinement.",
+    "qualified_obligations": [
+      "E01",
+      "E02",
+      "E03",
+      "E04",
+      "E05",
+      "E06",
+      "E07",
+      "E08",
+      "E09",
+      "E10",
+      "E11",
+      "E12"
+    ],
+    "source_tree_digest": "97f59105619a0c7b062414e471fd18f37ed70cb5da4bf188277c5383fa0f3997",
+    "receipt": {
+      "path": "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-004.json",
+      "sha256": "d86b1357c2b5df462df38249e850f101fcaf6576599291ced5922db6865eaed9",
+      "bytes": 429624
+    },
+    "admission": {
+      "path": "~/.local/share/writfold/evidence/revision-5-final-calculus-admission-001/report.json",
+      "sha256": "f9f3d108b25497cd63f8703eb722c4d4c33feb00b81a1437046eb10e8f981efd",
+      "bytes": 2047
+    },
+    "baseline": {
+      "path": "~/.local/share/writfold/evidence/revision-5-final-baseline-001.json",
+      "sha256": "a492d9efb30a836afbda660c369ef2c485df7f8009e63546ccab1d58d6f34588",
+      "bytes": 417629
+    },
+    "full_WF31": "not_run",
+    "full_scope_refusal_exercised": true,
+    "stale_source_refusal_exercised": true
+  },
+  "execution_priority": "Full E01-E12 calculus proofs before production engineering implementation; P14-P19 before final P11-P13, respecting registry dependencies. WF31 is final aggregation only."
 }

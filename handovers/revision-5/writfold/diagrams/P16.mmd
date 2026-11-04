@@ -1,0 +1,13 @@
+flowchart TD
+  N0["Prepared intent — Exact input grant and target"]
+  N1["Shared ownership — Cross-run reservation"]
+  N2["Controlled dispatch — Conditional provider effect"]
+  N3["Crash or cancellation — No inferred rollback"]
+  N4["Reconciliation — Observe exact remote state"]
+  N5["Durable outcome — Confirmed failed partial unknown"]
+  N0 --> N1
+  N1 --> N2
+  N0 -->|"inputs"| N3
+  N2 -->|"check"| N4
+  N3 -->|"bind"| N4
+  N4 -->|"accept"| N5
