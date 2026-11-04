@@ -7,13 +7,13 @@ admission rule or dependency.**
 
 ## User intent and parallel ownership
 
-Tarek wants a separate agent-friendly reasoning/prover tool. It should lower a
-pleasant language to a precise intermediate representation, execute proof work
-externally, and use Writfold for evidence and controlled execution. The initial
-idea called Writfold a VM/driver. Discussion refined this to direct typed
-Writfold operations first, with an external recipe interpreter and possibly a
-REPL over the same IR. A full VM inside Writfold is not required. The language,
-IR and naming are deliberately unsettled.
+Tarek wants **Weft** to ship alongside Writfold as an agent-friendly language
+frontend. His latest direction is: settle the syntax and required Writfold atoms
+(opcodes), let Weft perform lowering and semantic passes, then hand the resulting
+typed recipe to Writfold for validated execution. A REPL is desirable. A general
+bytecode VM is not required; direct typed operations and bounded recipes should
+reuse Writfold's procedure/execution services rather than create a second engine.
+Syntax, atom set, recipe format and exact trust boundaries remain unsettled.
 
 Tarek approved **features; separate proof-policy decision** for revision 9.
 The citation integrity/compact reader, Run Watch/session handoff and authorized
@@ -101,22 +101,25 @@ Lean 4.21.0 toolchain. Its eight printed declarations used no axioms or only
 proof of native retrieval, privacy or a new external language. Supplemental
 Metamath checks are not a production dependency or a substitute for Lean.
 
-## Proposed separation, not yet a selected architecture
+## Working direction and open execution contract
 
-The recommendation discussed with Tarek is to keep the language and logical
-semantics outside Writfold. Writfold can host exact scoped evidence, authorized
-child-process execution, resource/cancellation ownership and immutable artifacts.
-Its activity index never authorizes effects. The separate program owns query
-elaboration, interpretations, lowering, proof search and independent checking.
+Keep language elaboration and logical semantics outside Writfold. Weft lowers
+to a versioned typed recipe; Writfold independently validates its types, allowed
+operations, pinned inputs, budgets and current authority before execution.
+Prefer extending the existing checked procedure/execution contract over adding
+a parallel interpreter or scheduler. Writfold hosts exact scoped evidence,
+owned child processes and immutable artifacts; proof search and certificate
+checking may run in separately qualified external processes. Compilation and
+successful proof checking cannot mint capabilities or bypass admission.
 
 ```mermaid
 flowchart LR
-    S[External language or REPL] --> I[Versioned typed query IR]
-    W[Writfold pinned evidence and capabilities] --> I
-    I --> L[Qualified lowering profile]
-    L --> P[External proof search]
-    P --> C[Independent certificate checker]
-    I --> C
+    S[Weft language or REPL] --> I[Semantic passes and typed recipe]
+    I --> W[Writfold validation and procedure execution]
+    W --> E[Exact scoped evidence atoms]
+    W --> P[Admitted external proof search]
+    P --> C[Independent certificate checking]
+    E --> C
     C --> R[Scoped conclusion and dependencies]
     R --> A[Separate current Writfold admission]
 ```
@@ -207,10 +210,11 @@ that were not needed by the final proof when that distinction can be checked.
 
 ## Recipe interpreter and REPL
 
-Tarek likes both direct operations and an opcode/recipe executor, possibly with a
-REPL. The proposed incremental design uses **one evaluator** for batch programs
-and interactive cells. Begin with a typed, bounded dataflow recipe; general
-loops, arbitrary native code and a bytecode format need demonstrated demand.
+Tarek's latest direction places recipe execution in Writfold and the frontend/
+REPL in Weft. Use one recipe semantics for batch and interactive submissions,
+with the same typed primitives as direct operations. Begin with a bounded
+dataflow recipe; general loops, arbitrary native code and a bytecode format
+need demonstrated demand. The contract is not yet frozen or implemented.
 
 A successful REPL cell introduces a new immutable value into an explicit query
 environment. Failed/interrupted cells must not leave a successful binding. A new
@@ -241,10 +245,10 @@ readability; a concrete proposal must make both explicit and qualified. Export
 must contain full durable bindings, not a dependence on a transient `c7` alias.
 Do not mistake this snippet for a runnable interface.
 
-**Working name:** Weft was suggested as a companion name. Tarek also suggested
-`writfolds` or another name for the opcode/recipe executor. No name was selected,
-searched for availability, registered or admitted as a command. Keep the semantic
-proposal independent of naming.
+**Working name:** Tarek is now using Weft for the companion frontend. Earlier
+`writfolds` was floated for an opcode executor, not selected as a second product.
+No name availability, registration or installed command is claimed. Keep the
+semantic proposal independent of eventual packaging and naming decisions.
 
 ## Relationship to v9 plan 25
 
@@ -277,10 +281,11 @@ assuming that one prover's certificate is another prover's refinement theorem.
 4. Specify a result packet: exact query/IR and evidence identities, claim/polarity,
    interpretations/lowering/checker, assumptions and validity, consistency proof,
    proof/model artifacts, checked dependency closure and verification failures.
-5. Decide whether an external deterministic recipe interpreter is needed beyond
-   the direct typed command runner. Keep one semantics/evaluator for any batch,
-   REPL and future compiled forms. Evaluate ergonomics after the semantics are
-   concrete, not by accumulating more opcodes first.
+5. Specify the Writfold recipe-execution boundary using the existing skill/
+   procedure machinery where possible. Keep one semantics for direct typed
+   operations, batch recipes and REPL submissions, with Weft owning elaboration.
+   Evaluate ergonomics after the semantics are concrete, not by accumulating
+   opcodes or building a parallel VM first.
 6. Present a reviewed proposal with non-goals, trusted computing base, proof
    obligations, adversarial acceptance cases and integration/migration impact.
    Seek an explicit adoption decision before implementation. Retain all failed
