@@ -7,13 +7,13 @@ admission rule or dependency.**
 
 ## User intent and parallel ownership
 
-Tarek wants **Weft** to ship alongside Writfold as an agent-friendly language
-frontend. His latest direction is: settle the syntax and required Writfold atoms
-(opcodes), let Weft perform lowering and semantic passes, then hand the resulting
-typed recipe to Writfold for validated execution. A REPL is desirable. A general
-bytecode VM is not required; direct typed operations and bounded recipes should
-reuse Writfold's procedure/execution services rather than create a second engine.
-Syntax, atom set, recipe format and exact trust boundaries remain unsettled.
+Tarek wants **Weft** to ship alongside Writfold as an agent-friendly language,
+interpreter and possible REPL. His latest decision explicitly withdraws the
+Writfold atoms/opcode proposal: Weft's interpreter will drive Writfold through
+the same stdio, LSP-style agent interface. Weft owns its syntax, semantic passes,
+lowering and interpretation. Writfold does not gain a Weft-specific bytecode,
+recipe interpreter or parallel API. Syntax, internal Weft IR and supported
+logical theories remain unsettled.
 
 Tarek approved **features; separate proof-policy decision** for revision 9.
 The citation integrity/compact reader, Run Watch/session handoff and authorized
@@ -101,25 +101,25 @@ Lean 4.21.0 toolchain. Its eight printed declarations used no axioms or only
 proof of native retrieval, privacy or a new external language. Supplemental
 Metamath checks are not a production dependency or a substitute for Lean.
 
-## Working direction and open execution contract
+## Working direction and shared stdio contract
 
-Keep language elaboration and logical semantics outside Writfold. Weft lowers
-to a versioned typed recipe; Writfold independently validates its types, allowed
-operations, pinned inputs, budgets and current authority before execution.
-Prefer extending the existing checked procedure/execution contract over adding
-a parallel interpreter or scheduler. Writfold hosts exact scoped evidence,
-owned child processes and immutable artifacts; proof search and certificate
-checking may run in separately qualified external processes. Compilation and
-successful proof checking cannot mint capabilities or bypass admission.
+Keep language elaboration, lowering and interpretation in Weft. Its interpreter
+uses Writfold's ordinary typed stdio interface, also used by agents. Writfold
+continues to validate scope, exact inputs, budgets and current authority for
+each request. Existing procedure/execution services keep their own contracts;
+there is no new opcode/recipe ingestion route for Weft. Proof search and
+certificate checking remain separately qualified external computation.
+Compilation and successful proof checking cannot mint capabilities or bypass
+admission. This supersedes the earlier recipe-to-Writfold sketch.
 
 ```mermaid
 flowchart LR
-    S[Weft language or REPL] --> I[Semantic passes and typed recipe]
-    I --> W[Writfold validation and procedure execution]
-    W --> E[Exact scoped evidence atoms]
-    W --> P[Admitted external proof search]
+    S[Weft language or REPL] --> I[Weft semantic passes and interpreter]
+    I --> W[Shared Writfold stdio agent interface]
+    W --> E[Exact scoped evidence and authorized services]
+    E --> I
+    I --> P[External proof search]
     P --> C[Independent certificate checking]
-    E --> C
     C --> R[Scoped conclusion and dependencies]
     R --> A[Separate current Writfold admission]
 ```
@@ -210,11 +210,11 @@ that were not needed by the final proof when that distinction can be checked.
 
 ## Recipe interpreter and REPL
 
-Tarek's latest direction places recipe execution in Writfold and the frontend/
-REPL in Weft. Use one recipe semantics for batch and interactive submissions,
-with the same typed primitives as direct operations. Begin with a bounded
-dataflow recipe; general loops, arbitrary native code and a bytecode format
-need demonstrated demand. The contract is not yet frozen or implemented.
+Weft owns the recipe/IR interpreter and REPL. Batch and interactive execution
+should use one Weft evaluator, calling the same Writfold stdio operations as
+agents. Writfold's interface stays shared; do not add Weft-only opcodes or a
+recipe-execution endpoint. The internal Weft recipe format is still exploratory.
+General loops, arbitrary native code and bytecode need demonstrated demand.
 
 A successful REPL cell introduces a new immutable value into an explicit query
 environment. Failed/interrupted cells must not leave a successful binding. A new
@@ -281,11 +281,10 @@ assuming that one prover's certificate is another prover's refinement theorem.
 4. Specify a result packet: exact query/IR and evidence identities, claim/polarity,
    interpretations/lowering/checker, assumptions and validity, consistency proof,
    proof/model artifacts, checked dependency closure and verification failures.
-5. Specify the Writfold recipe-execution boundary using the existing skill/
-   procedure machinery where possible. Keep one semantics for direct typed
-   operations, batch recipes and REPL submissions, with Weft owning elaboration.
-   Evaluate ergonomics after the semantics are concrete, not by accumulating
-   opcodes or building a parallel VM first.
+5. Specify how Weft's interpreter maps its internal IR onto the shared Writfold
+   stdio protocol, including request identity, cancellation, reconnect and exact
+   scope restoration. Keep one Weft evaluator for batch and REPL. Do not reopen
+   the withdrawn Writfold-opcode or recipe-VM proposal by assumption.
 6. Present a reviewed proposal with non-goals, trusted computing base, proof
    obligations, adversarial acceptance cases and integration/migration impact.
    Seek an explicit adoption decision before implementation. Retain all failed
