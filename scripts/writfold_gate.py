@@ -24,11 +24,13 @@ GATES = {"baseline": "WF00", "bootstrap": "WF01", "build": "WF01", "unit": "WF02
          "engineering-ledger": "WF25", "skills": "WF26", "effects": "WF27",
          "cross-repo": "WF28", "learning": "WF29", "engineering-cuts": "WF30",
          "engineering-calculus": "WF31", "engineering-lean": "WF31",
+         "citation-lean": "WF08",
          "release-required": "release-required"}
 SERVICES = {"unit": ("unit", "Cargo.lock"), "build": ("build", "Cargo.lock"),
             "quality": ("quality", "scripts/writfold_quality.py"),
             "verus": ("verus", "scripts/writfold_verus.py"),
             "engineering-lean": ("engineering-lean", "scripts/writfold_engineering_lean.py"),
+            "citation-lean": ("citation-lean", "scripts/writfold_citation_lean.py"),
             "conformance": ("conformance", "scripts/writfold_conformance.py"),
             "reference": ("reference", "scripts/dolt_smoke.py"),
             "native-smoke": ("reference", "scripts/dolt_smoke.py")}

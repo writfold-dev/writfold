@@ -17,6 +17,7 @@ successful reference command into Rust product qualification.
 | `unit` | Compose `unit`, offline locked workspace Cargo tests | Executed Rust test counts; ignored tests fail the attempt |
 | `quality`, `verus`, `conformance` | Corresponding Compose services and existing backing Python producers | Only the explicitly reported producer obligations; absent implementation/report fails |
 | `engineering-lean` | Clean isolated Lean build, transitive audit of legacy and engineering declarations, executable engineering examples | Scoped calculus component only; theorem fidelity remains separate, and WF31 also requires production verification and model bridges |
+| `citation-lean` | Clean legacy/engineering/citation build and transitive axiom audit, native citation reference, concrete semantic-mutant controls and proof rejections | Scoped CIT01–CIT06/CIT08 component under WF08; never full WF08, WF32/WF33 activation, universal instance certificates or Rust refinement |
 | `build` | Compose `build`, offline locked release musl workspace build with Cargo JSON messages | Compiled workspace artifacts, not an installed executable or release. A second explicit container command copies exactly the compiler-reported filenames into the attempt, including Cargo-reported cached artifacts |
 | `release-required` | Independent validation of all WF00–WF31 entries, V01–V21/M01–M16, E01–E12, composition bridges and source-bound receipts | Complete required-gate aggregation only if every mandatory gate independently qualifies |
 
@@ -34,8 +35,8 @@ Revision 5 additionally recognizes `engineering-ledger`, `skills`, `effects`,
 They do not print an unrun success. The runner currently emits no `full-gate`
 producer receipts. A scoped pass is deliberately insufficient for release.
 
-`quality`, `verus`, `conformance`, and `engineering-lean` producers must write
-`/evidence/obligations.json` containing:
+`quality`, `verus`, `conformance`, `engineering-lean`, and `citation-lean`
+producers must write `/evidence/obligations.json` containing:
 
 ```json
 {
@@ -53,6 +54,18 @@ fails the attempt. Additional producer reports and partial outputs are retained
 and hashed even when the producer fails. Unit counts are extracted from Cargo's
 actual test summaries; the native reference command must emit its existing
 `DOLT_INTEGRATION_OK:` marker and exit successfully.
+
+The citation producer follows
+[`qualification/citation-profile.json`](../../qualification/citation-profile.json)
+and the [scoped feature adoption](revision-9-features.md). Calibration compiles
+each actual mutated decision body first, kernel-checks a concrete violating
+witness, and requires rejection at an intended safety declaration. Syntax,
+missing-import, timeout and unrelated failures do not count as mutant kills.
+Expected negative exits remain in the raw logs and are explicitly bound by
+command index; every other command must succeed. A successful accepted proof
+cannot contain `sorry`. Models, proof sources and concrete counterexamples are
+retained outside disposable build caches in the attempt's `calibration/` tree.
+No mandatory full-gate producer is replaced by this component.
 
 ## Invocation and tool admission
 

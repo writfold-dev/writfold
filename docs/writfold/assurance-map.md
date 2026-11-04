@@ -313,3 +313,27 @@ eecb93e771ce59a88d9219474d1e97a504c6c176bf40695ecdcc736e77c760f9
 This is an inspected mapping closure, not a compiler-generated whole-program dependency proof. Each declaration and consumer also records its source-file hash. The digest recipe is specified in JSON; `proofs.json` references and repeats the same conservative closure.
 
 **Any affected source, fixture, dependency or contract change requires refreshing the mapping.** Compare exact files/names/lines and caller assumptions, update the closure, then let integration separately admit new execution evidence. A source-matched old receipt can remain historical evidence; a mismatched receipt cannot be relabeled current. Do not replace retained failures, mutate immutable handover records, or change `not_run` because this page is complete.
+
+## Selected citation feature obligations
+
+The [scoped revision-9 supplement](revision-9-features.md) adds a separate
+[`citation-profile.json`](../../qualification/citation-profile.json), without
+activating the package's mixed-policy gate registry or weakening existing
+admission. [`formal/citation-theorems.json`](../../formal/citation-theorems.json)
+maps CIT01–CIT06/CIT08 to actual definitions, proof roots, assumptions and 90
+executable cases. CIT07/V23 remain deferred.
+
+The [citation calculus description](semantic-core.md#scoped-citation-calculus)
+separates exact historical resolution, conservative correspondence, scoped
+aliases, honest coverage, legacy-footprint reuse and trace erasure. The
+`citation-lean` command audits the legacy, engineering and citation declarations
+and calibrates real model mutations. Its component receipt cannot establish
+V22, native capture/authorization, M01/M02/M03 retention/publication/recovery
+bridges, the complete reader, or full WF08. Relevant later design/view/epoch/
+learning/cut bridges remain required when their production paths are enabled.
+
+The mathematical `Access` predicate and prepared-notice provenance are supplied
+host premises, not authentication implemented by Lean. Exact modeled preimages
+do not prove SHA-256, native Git, retained storage or private endpoint behavior.
+No Weft-specific opcode or recipe VM is introduced: Weft remains an external
+interpreter using the same stdio interface as agents.

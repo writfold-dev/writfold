@@ -16,3 +16,7 @@ root = "Kctx.Reference"
 [[lean_exe]]
 name = "engineeringref"
 root = "Kctx.Engineering.Reference"
+
+[[lean_exe]]
+name = "citationref"
+root = "Kctx.Citation.Reference"

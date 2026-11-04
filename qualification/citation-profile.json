@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "profile": "writfold-citation/1",
+  "adoption": "qualification/revision-9-feature-adoption.json",
+  "contract": "docs/writfold/revision-9-features.md",
+  "scope": "Citation integrity and compact reader only; existing admission policy is unchanged.",
+  "required_lean": ["CIT01", "CIT02", "CIT03", "CIT04", "CIT05", "CIT06", "CIT08"],
+  "deferred": ["CIT07", "V23", "universal per-proposal Lean instance certificate"],
+  "formal_registry": "formal/citation-theorems.json",
+  "initial_representation": "Exact retained Git blob bytes with half-open byte selectors; source/repository/path/revision/profile identity checked separately from content equality.",
+  "correspondence": "Same immutable occurrence is the only initial justified transport profile. Text search, even unique and exhaustive, is diagnostic only; other transformations and deletion without sufficient evidence remain unknown.",
+  "coverage": "Unavailable enumeration is distinct from a measured exhaustive empty domain. Search coverage and presentation completeness remain separate.",
+  "commands": {
+    "citation-lean": {
+      "gate": "WF08",
+      "scope": "citation-lean-only",
+      "producer": "scripts/writfold_citation_lean.py",
+      "meaning": "Clean Lean build, complete registered axiom audit, executable examples, kernel-checked concrete mutant counterexamples and rejection at intended safety declarations. Mathematical fidelity is reviewed separately. Not full WF08 or a Rust refinement proof."
+    }
+  },
+  "production_obligations": {
+    "V22": "Actual selector, binding, alias, cursor, correspondence, coverage and reuse predicates, checked conversions and complete caller mapping.",
+    "native": "Contained retained Git/blob acquisition, immutable storage, current authorization and real CLI/stdio entrypoints; storage-dependent integration requires P01O/WF24.",
+    "models": ["M01", "M02", "M03"],
+    "conditional_bridges": ["M09", "M10", "M11", "M15", "M16"],
+    "empirical": "Complete repeated-workflow correctness and actual token/latency comparisons against competent targeted search plus kctx."
+  },
+  "gate_policy": "No mixed-policy WF32/WF33 activation or renaming. A component receipt cannot close existing WF08, P05, P09, P11 or release. Full feature integration requires all relevant production, protocol and native obligations.",
+  "weft": "External interpreter uses the same Writfold stdio interface as agents; no Weft-only opcodes, recipe VM or bypass."
+}

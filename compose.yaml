@@ -81,6 +81,10 @@ services:
     <<: *qualified-tools
     network_mode: none
     command: [python3, scripts/writfold_engineering_lean.py]
+  citation-lean:
+    <<: *qualified-tools
+    network_mode: none
+    command: [python3, scripts/writfold_citation_lean.py]
 
 volumes:
   cargo-target:

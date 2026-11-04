@@ -1,0 +1,760 @@
+{
+  "schema_version": 1,
+  "profile": "writfold-citation/1",
+  "scope": "Selected citation calculus only; no universal per-proposal certificate or production-refinement claim. Execution status is recorded in external receipts and the mutable qualification status index.",
+  "deferred": [
+    "CIT07"
+  ],
+  "theorems": {
+    "CIT01": {
+      "theorem": [
+        "Kctx.Citation.resolve_exact",
+        "Kctx.Citation.resolve_denied",
+        "Kctx.Citation.resolve_wrong_expected",
+        "Kctx.Citation.resolve_unsupported_profile",
+        "Kctx.Citation.resolve_mixed_units",
+        "Kctx.Citation.resolve_invalid_bounds",
+        "Kctx.Citation.resolve_missing_object",
+        "Kctx.Citation.resolve_of_valid"
+      ],
+      "meaning": "Authorized exact retained-byte resolution with checked provenance/profile/units/bounds/expected selection.",
+      "assumptions": [
+        "Exact retained bytes and immutable provenance keys are mathematical preimages; production capture, canonical encodings, digest collision resistance and byte/coordinate conversions require separate qualification.",
+        "Current access and active alias scope are authenticated host inputs, not caller-supplied capabilities. Native isolation, revocation and retention races require separate adapter/protocol qualification.",
+        "Legacy evidence, authority, context, freshness and publication assumptions are unchanged; reading or presenting a citation does not establish factual truth."
+      ],
+      "actions": [
+        "resolve"
+      ],
+      "production_boundary": "V22 actual Rust predicates and caller mapping; exact Git capture/retention and shared CLI/stdio surfaces; applicable M01/M02/M03 bridges. None is established by this mathematical receipt."
+    },
+    "CIT02": {
+      "theorem": [
+        "Kctx.Citation.issueAlias_retains_scope",
+        "Kctx.Citation.issueAlias_preserves_mapping",
+        "Kctx.Citation.issueAlias_duplicate_refused",
+        "Kctx.Citation.expandAlias_exact_agreement",
+        "Kctx.Citation.expandAlias_foreign_refused",
+        "Kctx.Citation.expandAlias_generation_refused",
+        "Kctx.Citation.expandAlias_revoked_refused",
+        "Kctx.Citation.expandAlias_expired_refused",
+        "Kctx.Citation.presentNotices_displayed_from_input",
+        "Kctx.Citation.presentNotices_bounded",
+        "Kctx.Citation.presentNotices_omitted_not_complete",
+        "Kctx.Citation.presentNotices_coverage_unchanged",
+        "Kctx.Citation.presentNotices_incomplete_search_stays_incomplete",
+        "Kctx.Citation.presentNotices_cursor_contract",
+        "Kctx.Citation.presentNotices_mismatched_cursor_refused"
+      ],
+      "meaning": "Scoped aliases expand only to their retained mapping under current access/lifetime. Pinned pagination cannot substitute query inputs or strengthen underlying coverage.",
+      "assumptions": [
+        "Exact retained bytes and immutable provenance keys are mathematical preimages; production capture, canonical encodings, digest collision resistance and byte/coordinate conversions require separate qualification.",
+        "Current access and active alias scope are authenticated host inputs, not caller-supplied capabilities. Native isolation, revocation and retention races require separate adapter/protocol qualification.",
+        "Legacy evidence, authority, context, freshness and publication assumptions are unchanged; reading or presenting a citation does not establish factual truth."
+      ],
+      "actions": [
+        "issueAlias",
+        "expandAlias",
+        "presentNotices"
+      ],
+      "production_boundary": "V22 actual Rust predicates and caller mapping; exact Git capture/retention and shared CLI/stdio surfaces; applicable M01/M02/M03 bridges. None is established by this mathematical receipt."
+    },
+    "CIT03": {
+      "theorem": [
+        "Kctx.Citation.retain_rejects_existing",
+        "Kctx.Citation.retain_preserves_lookup",
+        "Kctx.Citation.evolution_preserves_lookup",
+        "Kctx.Citation.evolution_preserves_resolution",
+        "Kctx.Citation.ResolutionExamples.arbitrary_retention_preserves_fixture"
+      ],
+      "meaning": "Append-only retention never reinterprets an existing exact provenance key or previously resolved binding under unchanged authorization.",
+      "assumptions": [
+        "Exact retained bytes and immutable provenance keys are mathematical preimages; production capture, canonical encodings, digest collision resistance and byte/coordinate conversions require separate qualification.",
+        "Current access and active alias scope are authenticated host inputs, not caller-supplied capabilities. Native isolation, revocation and retention races require separate adapter/protocol qualification.",
+        "Legacy evidence, authority, context, freshness and publication assumptions are unchanged; reading or presenting a citation does not establish factual truth."
+      ],
+      "actions": [
+        "retain"
+      ],
+      "production_boundary": "V22 actual Rust predicates and caller mapping; exact Git capture/retention and shared CLI/stdio surfaces; applicable M01/M02/M03 bridges. None is established by this mathematical receipt."
+    },
+    "CIT04": {
+      "theorem": [
+        "Kctx.Citation.compare_unique_identity",
+        "Kctx.Citation.compare_text_only_ne_unique",
+        "Kctx.Citation.compare_sameBinding_exact",
+        "Kctx.Citation.scanCoverage_examined",
+        "Kctx.Citation.textCandidates_sound",
+        "Kctx.Citation.textCandidates_bounds",
+        "Kctx.Citation.textCandidates_complete",
+        "Kctx.Citation.diagnose_multiple_observed",
+        "Kctx.Citation.incomplete_search_not_absence"
+      ],
+      "meaning": "Only independently resolved identical immutable positions justify transport. Actual bounded text enumeration cannot prove lineage or deletion; unavailable coverage is not exhaustive empty enumeration.",
+      "assumptions": [
+        "Exact retained bytes and immutable provenance keys are mathematical preimages; production capture, canonical encodings, digest collision resistance and byte/coordinate conversions require separate qualification.",
+        "Current access and active alias scope are authenticated host inputs, not caller-supplied capabilities. Native isolation, revocation and retention races require separate adapter/protocol qualification.",
+        "Legacy evidence, authority, context, freshness and publication assumptions are unchanged; reading or presenting a citation does not establish factual truth."
+      ],
+      "actions": [
+        "compare",
+        "diagnose",
+        "textCandidates"
+      ],
+      "production_boundary": "V22 actual Rust predicates and caller mapping; exact Git capture/retention and shared CLI/stdio surfaces; applicable M01/M02/M03 bridges. None is established by this mathematical receipt."
+    },
+    "CIT05": {
+      "theorem": [
+        "Kctx.Citation.CIT05_reuse_requires_exact_bindings",
+        "Kctx.Citation.CIT05_changed_binding_refuses",
+        "Kctx.Citation.CIT05_foreign_context_refuses",
+        "Kctx.Citation.CIT05_unaffected_reuse",
+        "Kctx.Citation.CIT05_computed_footprint_transfer",
+        "Kctx.Citation.CIT05_independent_alternative",
+        "Kctx.Citation.CIT05_legacy_validation_unchanged"
+      ],
+      "meaning": "Citation-bound reuse checks exact bindings, named context, source membership in the legacy computed footprint, retained readable bytes and the original legacy reuse decision. Unaffected witnesses preserve legacy behavior.",
+      "assumptions": [
+        "Exact retained bytes and immutable provenance keys are mathematical preimages; production capture, canonical encodings, digest collision resistance and byte/coordinate conversions require separate qualification.",
+        "Current access and active alias scope are authenticated host inputs, not caller-supplied capabilities. Native isolation, revocation and retention races require separate adapter/protocol qualification.",
+        "Legacy evidence, authority, context, freshness and publication assumptions are unchanged; reading or presenting a citation does not establish factual truth."
+      ],
+      "actions": [
+        "citationReusable",
+        "localStep",
+        "inspect"
+      ],
+      "production_boundary": "V22 actual Rust predicates and caller mapping; exact Git capture/retention and shared CLI/stdio surfaces; applicable M01/M02/M03 bridges. None is established by this mathematical receipt."
+    },
+    "CIT06": {
+      "theorem": [
+        "Kctx.Citation.CIT06_inclusive_expiry",
+        "Kctx.Citation.CIT06_no_refresh_without_observation",
+        "Kctx.Citation.CIT06_future_not_fresh",
+        "Kctx.Citation.CIT06_assessment_unchanged",
+        "Kctx.Citation.CIT06_observation_times_unchanged",
+        "Kctx.Citation.LegacyExamples.hint_preserves_assessment"
+      ],
+      "meaning": "Acquisition hints and arbitrary citation traces cannot retimestamp legacy observations or alter assessment. Inclusive expiry, future-time uncertainty and stale monotonicity use the inherited semantics.",
+      "assumptions": [
+        "Exact retained bytes and immutable provenance keys are mathematical preimages; production capture, canonical encodings, digest collision resistance and byte/coordinate conversions require separate qualification.",
+        "Current access and active alias scope are authenticated host inputs, not caller-supplied capabilities. Native isolation, revocation and retention races require separate adapter/protocol qualification.",
+        "Legacy evidence, authority, context, freshness and publication assumptions are unchanged; reading or presenting a citation does not establish factual truth."
+      ],
+      "actions": [
+        "localStep",
+        "inspect"
+      ],
+      "production_boundary": "V22 actual Rust predicates and caller mapping; exact Git capture/retention and shared CLI/stdio surfaces; applicable M01/M02/M03 bridges. None is established by this mathematical receipt."
+    },
+    "CIT08": {
+      "theorem": [
+        "Kctx.Citation.localStep_engineering_frame",
+        "Kctx.Citation.CIT08_erasure",
+        "Kctx.Citation.CIT08_legacy_conservation",
+        "Kctx.Citation.citationTrace_frame",
+        "Kctx.Citation.CIT08_no_new_derivation",
+        "Kctx.Citation.LegacyExamples.hint_trace"
+      ],
+      "meaning": "Erasing arbitrary citation/core/environment/refusal traces yields the same original engineering trace and exact legacy knowledge/journal admission history. Citation-only traces add no derivation.",
+      "assumptions": [
+        "Exact retained bytes and immutable provenance keys are mathematical preimages; production capture, canonical encodings, digest collision resistance and byte/coordinate conversions require separate qualification.",
+        "Current access and active alias scope are authenticated host inputs, not caller-supplied capabilities. Native isolation, revocation and retention races require separate adapter/protocol qualification.",
+        "Legacy evidence, authority, context, freshness and publication assumptions are unchanged; reading or presenting a citation does not establish factual truth."
+      ],
+      "actions": [
+        "localStep",
+        "inspect",
+        "Engineering.Transition"
+      ],
+      "production_boundary": "V22 actual Rust predicates and caller mapping; exact Git capture/retention and shared CLI/stdio surfaces; applicable M01/M02/M03 bridges. None is established by this mathematical receipt."
+    }
+  },
+  "nonvacuity": [
+    "Kctx.Citation.ResolutionExamples.exactResolution_nonvacuous",
+    "Kctx.Citation.ResolutionExamples.emptyRange_nonvacuous",
+    "Kctx.Citation.ResolutionExamples.startBoundary_nonvacuous",
+    "Kctx.Citation.ResolutionExamples.reversedBounds_nonvacuous",
+    "Kctx.Citation.ResolutionExamples.endBeyondLength_nonvacuous",
+    "Kctx.Citation.ResolutionExamples.machineOverflowEquivalent_nonvacuous",
+    "Kctx.Citation.ResolutionExamples.mixedUnits_nonvacuous",
+    "Kctx.Citation.ResolutionExamples.unsupportedProfile_nonvacuous",
+    "Kctx.Citation.ResolutionExamples.wrongRealm_nonvacuous",
+    "Kctx.Citation.ResolutionExamples.wrongSource_nonvacuous",
+    "Kctx.Citation.ResolutionExamples.wrongPath_nonvacuous",
+    "Kctx.Citation.ResolutionExamples.wrongRevision_nonvacuous",
+    "Kctx.Citation.ResolutionExamples.wrongContent_nonvacuous",
+    "Kctx.Citation.ResolutionExamples.expectedMismatch_nonvacuous",
+    "Kctx.Citation.ResolutionExamples.missingObject_nonvacuous",
+    "Kctx.Citation.ResolutionExamples.deniedRead_nonvacuous",
+    "Kctx.Citation.ResolutionExamples.deniedBeforeDisclosure_nonvacuous",
+    "Kctx.Citation.ResolutionExamples.rejectedRebinding_nonvacuous",
+    "Kctx.Citation.ResolutionExamples.successfulAppend_nonvacuous",
+    "Kctx.Citation.ResolutionExamples.copiedLineAmbiguous_nonvacuous",
+    "Kctx.Citation.ResolutionExamples.singletonTextUnknown_nonvacuous",
+    "Kctx.Citation.ResolutionExamples.truncatedTextUnknown_nonvacuous",
+    "Kctx.Citation.ResolutionExamples.zeroBudgetUnknown_nonvacuous",
+    "Kctx.Citation.ResolutionExamples.identityWitnessSuccess_nonvacuous",
+    "Kctx.Citation.ResolutionExamples.sameBindingSuccess_nonvacuous",
+    "Kctx.Citation.ResolutionExamples.forgedPositionRefused_nonvacuous",
+    "Kctx.Citation.ResolutionExamples.foreignContextRefused_nonvacuous",
+    "Kctx.Citation.ResolutionExamples.targetDeniedRefused_nonvacuous",
+    "Kctx.Citation.ResolutionExamples.originalMustResolve_nonvacuous",
+    "Kctx.Citation.ResolutionExamples.exhaustiveNoMatchUnknown_nonvacuous",
+    "Kctx.Citation.ResolutionExamples.missingTargetUnknown_nonvacuous",
+    "Kctx.Citation.ResolutionExamples.targetMixedUnitsRefused_nonvacuous",
+    "Kctx.Citation.ResolutionExamples.targetProfileRefused_nonvacuous",
+    "Kctx.Citation.ResolutionExamples.foreignRealmRefused_nonvacuous",
+    "Kctx.Citation.ResolutionExamples.foreignSourceRefused_nonvacuous",
+    "Kctx.Citation.ResolutionExamples.invalidOriginalPreserved_nonvacuous",
+    "Kctx.Citation.HandleExamples.allCases_nonvacuous",
+    "Kctx.Citation.HandleExamples.successfulIssueExpand_nonvacuous",
+    "Kctx.Citation.HandleExamples.inheritedMappingPreserved_nonvacuous",
+    "Kctx.Citation.HandleExamples.paginatedContraryEvidence_nonvacuous",
+    "Kctx.Citation.HandleExamples.partialSearchCompletePage_nonvacuous",
+    "Kctx.Citation.LegacyExamples.allCases_nonvacuous",
+    "Kctx.Citation.LegacyExamples.hint_step"
+  ],
+  "cases": [
+    {
+      "id": "exact_resolution",
+      "obligation": "CIT01",
+      "polarity": "positive",
+      "symbol": "Kctx.Citation.ResolutionExamples.exactResolution"
+    },
+    {
+      "id": "empty_range",
+      "obligation": "CIT01",
+      "polarity": "positive",
+      "symbol": "Kctx.Citation.ResolutionExamples.emptyRange"
+    },
+    {
+      "id": "start_boundary",
+      "obligation": "CIT01",
+      "polarity": "positive",
+      "symbol": "Kctx.Citation.ResolutionExamples.startBoundary"
+    },
+    {
+      "id": "reversed_bounds",
+      "obligation": "CIT01",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.ResolutionExamples.reversedBounds"
+    },
+    {
+      "id": "end_beyond_length",
+      "obligation": "CIT01",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.ResolutionExamples.endBeyondLength"
+    },
+    {
+      "id": "machine_overflow_equivalent",
+      "obligation": "CIT01",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.ResolutionExamples.machineOverflowEquivalent"
+    },
+    {
+      "id": "mixed_units",
+      "obligation": "CIT01",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.ResolutionExamples.mixedUnits"
+    },
+    {
+      "id": "unsupported_profile",
+      "obligation": "CIT01",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.ResolutionExamples.unsupportedProfile"
+    },
+    {
+      "id": "wrong_realm",
+      "obligation": "CIT01",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.ResolutionExamples.wrongRealm"
+    },
+    {
+      "id": "wrong_source",
+      "obligation": "CIT01",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.ResolutionExamples.wrongSource"
+    },
+    {
+      "id": "wrong_path",
+      "obligation": "CIT01",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.ResolutionExamples.wrongPath"
+    },
+    {
+      "id": "wrong_revision",
+      "obligation": "CIT01",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.ResolutionExamples.wrongRevision"
+    },
+    {
+      "id": "wrong_content",
+      "obligation": "CIT01",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.ResolutionExamples.wrongContent"
+    },
+    {
+      "id": "expected_mismatch",
+      "obligation": "CIT01",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.ResolutionExamples.expectedMismatch"
+    },
+    {
+      "id": "missing_object",
+      "obligation": "CIT01",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.ResolutionExamples.missingObject"
+    },
+    {
+      "id": "denied_read",
+      "obligation": "CIT01",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.ResolutionExamples.deniedRead"
+    },
+    {
+      "id": "denied_before_disclosure",
+      "obligation": "CIT01",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.ResolutionExamples.deniedBeforeDisclosure"
+    },
+    {
+      "id": "rejected_rebinding",
+      "obligation": "CIT03",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.ResolutionExamples.rejectedRebinding"
+    },
+    {
+      "id": "successful_append",
+      "obligation": "CIT03",
+      "polarity": "positive",
+      "symbol": "Kctx.Citation.ResolutionExamples.successfulAppend"
+    },
+    {
+      "id": "copied_line_ambiguous",
+      "obligation": "CIT04",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.ResolutionExamples.copiedLineAmbiguous"
+    },
+    {
+      "id": "singleton_text_unknown",
+      "obligation": "CIT04",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.ResolutionExamples.singletonTextUnknown"
+    },
+    {
+      "id": "truncated_text_unknown",
+      "obligation": "CIT04",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.ResolutionExamples.truncatedTextUnknown"
+    },
+    {
+      "id": "zero_search_budget",
+      "obligation": "CIT04",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.ResolutionExamples.zeroBudgetUnknown"
+    },
+    {
+      "id": "identity_witness",
+      "obligation": "CIT04",
+      "polarity": "positive",
+      "symbol": "Kctx.Citation.ResolutionExamples.identityWitnessSuccess"
+    },
+    {
+      "id": "same_binding",
+      "obligation": "CIT04",
+      "polarity": "positive",
+      "symbol": "Kctx.Citation.ResolutionExamples.sameBindingSuccess"
+    },
+    {
+      "id": "forged_position",
+      "obligation": "CIT04",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.ResolutionExamples.forgedPositionRefused"
+    },
+    {
+      "id": "foreign_comparison_context",
+      "obligation": "CIT04",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.ResolutionExamples.foreignContextRefused"
+    },
+    {
+      "id": "target_denied",
+      "obligation": "CIT04",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.ResolutionExamples.targetDeniedRefused"
+    },
+    {
+      "id": "original_must_resolve",
+      "obligation": "CIT04",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.ResolutionExamples.originalMustResolve"
+    },
+    {
+      "id": "exhaustive_no_match_unknown",
+      "obligation": "CIT04",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.ResolutionExamples.exhaustiveNoMatchUnknown"
+    },
+    {
+      "id": "missing_target_unknown",
+      "obligation": "CIT04",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.ResolutionExamples.missingTargetUnknown"
+    },
+    {
+      "id": "target_mixed_units",
+      "obligation": "CIT04",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.ResolutionExamples.targetMixedUnitsRefused"
+    },
+    {
+      "id": "target_unsupported_profile",
+      "obligation": "CIT04",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.ResolutionExamples.targetProfileRefused"
+    },
+    {
+      "id": "foreign_comparison_realm",
+      "obligation": "CIT04",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.ResolutionExamples.foreignRealmRefused"
+    },
+    {
+      "id": "foreign_comparison_source",
+      "obligation": "CIT04",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.ResolutionExamples.foreignSourceRefused"
+    },
+    {
+      "id": "alias_successful_issue_expand",
+      "obligation": "CIT02",
+      "polarity": "positive",
+      "symbol": "Kctx.Citation.HandleExamples.successfulIssueExpand"
+    },
+    {
+      "id": "alias_duplicate_handle_refused",
+      "obligation": "CIT02",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.HandleExamples.duplicateHandleRefused"
+    },
+    {
+      "id": "alias_issue_wrong_realm_refused",
+      "obligation": "CIT02",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.HandleExamples.issueWrongRealmRefused"
+    },
+    {
+      "id": "alias_issue_wrong_context_refused",
+      "obligation": "CIT02",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.HandleExamples.issueWrongContextRefused"
+    },
+    {
+      "id": "alias_issue_wrong_release_refused",
+      "obligation": "CIT02",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.HandleExamples.issueWrongReleaseRefused"
+    },
+    {
+      "id": "alias_issue_revoked_refused",
+      "obligation": "CIT02",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.HandleExamples.issueRevokedRefused"
+    },
+    {
+      "id": "alias_issue_reversed_lifetime_refused",
+      "obligation": "CIT02",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.HandleExamples.issueReversedLifetimeRefused"
+    },
+    {
+      "id": "alias_generation_collision",
+      "obligation": "CIT02",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.HandleExamples.generationCollision"
+    },
+    {
+      "id": "alias_session_collision",
+      "obligation": "CIT02",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.HandleExamples.sessionCollision"
+    },
+    {
+      "id": "alias_realm_collision",
+      "obligation": "CIT02",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.HandleExamples.realmCollision"
+    },
+    {
+      "id": "alias_context_collision",
+      "obligation": "CIT02",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.HandleExamples.contextCollision"
+    },
+    {
+      "id": "alias_principal_collision",
+      "obligation": "CIT02",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.HandleExamples.principalCollision"
+    },
+    {
+      "id": "alias_release_collision",
+      "obligation": "CIT02",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.HandleExamples.releaseCollision"
+    },
+    {
+      "id": "alias_revoked_permission",
+      "obligation": "CIT02",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.HandleExamples.revokedPermission"
+    },
+    {
+      "id": "alias_inclusive_expiry_boundary",
+      "obligation": "CIT02",
+      "polarity": "positive",
+      "symbol": "Kctx.Citation.HandleExamples.inclusiveExpiryBoundary"
+    },
+    {
+      "id": "alias_after_expiry_boundary",
+      "obligation": "CIT02",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.HandleExamples.afterExpiryBoundary"
+    },
+    {
+      "id": "alias_before_issue",
+      "obligation": "CIT02",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.HandleExamples.beforeIssue"
+    },
+    {
+      "id": "alias_inclusive_issue_boundary",
+      "obligation": "CIT02",
+      "polarity": "positive",
+      "symbol": "Kctx.Citation.HandleExamples.inclusiveIssueBoundary"
+    },
+    {
+      "id": "alias_missing_handle",
+      "obligation": "CIT02",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.HandleExamples.missingHandle"
+    },
+    {
+      "id": "alias_foreign_before_disclosure",
+      "obligation": "CIT02",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.HandleExamples.foreignBeforeDisclosure"
+    },
+    {
+      "id": "alias_forged_entry_scope",
+      "obligation": "CIT02",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.HandleExamples.forgedEntryScope"
+    },
+    {
+      "id": "alias_forged_entry_lifetime",
+      "obligation": "CIT02",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.HandleExamples.forgedEntryLifetime"
+    },
+    {
+      "id": "alias_inherited_mapping_preserved",
+      "obligation": "CIT02",
+      "polarity": "positive",
+      "symbol": "Kctx.Citation.HandleExamples.inheritedMappingPreserved"
+    },
+    {
+      "id": "alias_paginated_contrary_evidence",
+      "obligation": "CIT02",
+      "polarity": "positive",
+      "symbol": "Kctx.Citation.HandleExamples.paginatedContraryEvidence"
+    },
+    {
+      "id": "alias_final_page_still_partial",
+      "obligation": "CIT02",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.HandleExamples.finalPageStillPartial"
+    },
+    {
+      "id": "alias_missing_notices_partial",
+      "obligation": "CIT02",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.HandleExamples.missingNoticesPartial"
+    },
+    {
+      "id": "alias_partial_search_complete_page",
+      "obligation": "CIT02",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.HandleExamples.partialSearchCompletePage"
+    },
+    {
+      "id": "alias_bad_cursor_scope",
+      "obligation": "CIT02",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.HandleExamples.badCursorScope"
+    },
+    {
+      "id": "alias_bad_cursor_query",
+      "obligation": "CIT02",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.HandleExamples.badCursorQuery"
+    },
+    {
+      "id": "alias_bad_cursor_profile",
+      "obligation": "CIT02",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.HandleExamples.badCursorProfile"
+    },
+    {
+      "id": "alias_bad_cursor_budget",
+      "obligation": "CIT02",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.HandleExamples.badCursorBudget"
+    },
+    {
+      "id": "alias_bad_cursor_source",
+      "obligation": "CIT02",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.HandleExamples.badCursorSource"
+    },
+    {
+      "id": "alias_bad_cursor_coverage",
+      "obligation": "CIT02",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.HandleExamples.badCursorCoverage"
+    },
+    {
+      "id": "alias_zero_budget",
+      "obligation": "CIT02",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.HandleExamples.zeroBudget"
+    },
+    {
+      "id": "alias_bad_cursor_offset",
+      "obligation": "CIT02",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.HandleExamples.badCursorOffset"
+    },
+    {
+      "id": "alias_empty_complete_page",
+      "obligation": "CIT02",
+      "polarity": "positive",
+      "symbol": "Kctx.Citation.HandleExamples.emptyCompletePage"
+    },
+    {
+      "id": "legacy_matching_reuse",
+      "obligation": "CIT05",
+      "polarity": "positive",
+      "symbol": "Kctx.Citation.LegacyExamples.matchingReuse"
+    },
+    {
+      "id": "legacy_changed_binding",
+      "obligation": "CIT05",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.LegacyExamples.changedBindingRefuses"
+    },
+    {
+      "id": "legacy_unrelated_source",
+      "obligation": "CIT05",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.LegacyExamples.unrelatedSourceRefuses"
+    },
+    {
+      "id": "legacy_foreign_context",
+      "obligation": "CIT05",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.LegacyExamples.foreignContextRefuses"
+    },
+    {
+      "id": "legacy_revoked_source",
+      "obligation": "CIT05",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.LegacyExamples.revokedSourceRefuses"
+    },
+    {
+      "id": "legacy_missing_source",
+      "obligation": "CIT05",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.LegacyExamples.missingSourceRefuses"
+    },
+    {
+      "id": "legacy_changed_footprint",
+      "obligation": "CIT05",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.LegacyExamples.changedFootprintRefuses"
+    },
+    {
+      "id": "legacy_unrelated_retention",
+      "obligation": "CIT05",
+      "polarity": "positive",
+      "symbol": "Kctx.Citation.LegacyExamples.unrelatedRetentionPreserves"
+    },
+    {
+      "id": "legacy_expired_receipt",
+      "obligation": "CIT05",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.LegacyExamples.expiredReceiptRefuses"
+    },
+    {
+      "id": "legacy_hint_does_not_refresh",
+      "obligation": "CIT06",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.LegacyExamples.hintDoesNotRefresh"
+    },
+    {
+      "id": "legacy_inclusive_expiry",
+      "obligation": "CIT06",
+      "polarity": "positive",
+      "symbol": "Kctx.Citation.LegacyExamples.inclusiveExpiry"
+    },
+    {
+      "id": "legacy_after_expiry",
+      "obligation": "CIT06",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.LegacyExamples.afterExpiry"
+    },
+    {
+      "id": "legacy_missing_policy",
+      "obligation": "CIT06",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.LegacyExamples.missingPolicyUnknown"
+    },
+    {
+      "id": "legacy_future_observation",
+      "obligation": "CIT06",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.LegacyExamples.futureObservationUnknown"
+    },
+    {
+      "id": "legacy_query_does_not_admit",
+      "obligation": "CIT08",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.LegacyExamples.queryDoesNotAdmit"
+    },
+    {
+      "id": "legacy_refused_read_preserves_knowledge",
+      "obligation": "CIT08",
+      "polarity": "positive",
+      "symbol": "Kctx.Citation.LegacyExamples.refusedReadPreservesKnowledge"
+    },
+    {
+      "id": "legacy_hint_preserves_journal",
+      "obligation": "CIT08",
+      "polarity": "positive",
+      "symbol": "Kctx.Citation.LegacyExamples.hintPreservesJournal"
+    },
+    {
+      "id": "legacy_unavailable_coverage",
+      "obligation": "CIT04",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.LegacyExamples.unavailableCoverage"
+    },
+    {
+      "id": "invalid_original_preserved",
+      "obligation": "CIT04",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.ResolutionExamples.invalidOriginalPreserved"
+    }
+  ]
+}

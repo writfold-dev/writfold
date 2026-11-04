@@ -243,3 +243,51 @@ Schema validity, complete input capture, current authority and receipt reuse
 remain separate application decisions. No ledger writer or new graph owner is
 introduced by these primitives.
 
+## Scoped citation calculus
+
+The selected revision-9 feature contract is implemented mathematically in
+`formal/Kctx/Citation/`, with a separate root, executable and
+[`formal/citation-theorems.json`](../../formal/citation-theorems.json).
+It covers CIT01–CIT06 and CIT08. CIT07 and universal per-proposal Lean
+certificates are not part of this extension.
+
+| Boundary | Executable model and statement |
+| --- | --- |
+| Exact resolution | Full realm/repository/revision/path/content/profile key, byte units, half-open bounds, expected preimage and access-before-disclosure. Missing objects, invalid bindings and denial remain distinct. |
+| Historical stability | Retention rejects an existing key; arbitrary finite append histories preserve previously resolved exact bytes under unchanged authorization. |
+| Correspondence | Only the same immutable occurrence with a checked identity witness can justify transport. Bounded text enumeration reports actual positions and coverage, never lineage or deletion from a singleton/empty result. |
+| Scoped aliases | Audience, generation, named context, release, lifetime, stored binding and current access are checked. Appending a handle cannot replace an older mapping. |
+| Presentation | Cursors bind the complete prepared query, source notices, ordering/profile and budget. Omitted notices make the packet partial; pagination cannot upgrade underlying search coverage. |
+| Reuse | Exact current bindings and named context must match the retained validation; each source must occur in the legacy witness's observation footprint. Original correction, policy, time and reuse checks remain mandatory. |
+| Conservation | The closed citation updater cannot write engineering state. Erasing arbitrary interleaved citation/core/environment/refusal traces yields the original engineering trace and exact knowledge/journal admission history. |
+
+`Coverage.unavailable` is not `Coverage.measured 0 0`: only the latter describes
+an actually exhaustive empty enumeration. An invalid-but-present original
+comparison carries `originalInvalid(reason)`, not an unavailable-source claim.
+The initial transport profile deliberately leaves unsupported source-history
+transformations unknown; exact same-position evidence does not establish program
+meaning or the truth of the citing claim.
+
+The model uses exact byte preimages and mathematical coordinates. Production
+capture, hashing, checked machine conversions, current authenticated access,
+already-authorized prepared notices and durable scope restoration are separate
+refinement/adapter obligations. No new `Witness` or `Derives` constructor, legacy
+theorem source, root import, signed byte domain or context-freshness rule changes.
+Acquisition scheduling hints live outside knowledge and cannot retimestamp it.
+
+The reference contains 90 executable positive/negative cases. Incremental
+diagnostic `citation-development-20261104-007/report.json` executed all 90.
+`citation-mutation-smoke-20261104-001/report.json` exercised nine actual semantic
+source mutations: each changed model compiled, a concrete violating witness was
+kernel-checked and executed, and its intended safety declaration was rejected.
+The matching unmodified controls passed. These diagnostics are retained under
+`~/.local/share/writfold/evidence/`, together with the initial clean-build failure
+and subsequent development failures; they are not a clean gate receipt.
+
+`scripts/gate citation-lean --receipt <new-external-path>` is the clean
+source-bound producer: legacy/engineering/citation build, transitive axiom audit,
+native reference execution and semantic calibration. Its receipt has
+`citation-lean-only` scope under WF08. Consult `qualification/status.json` for
+current receipt admission; command availability and these diagnostic counts
+cannot close WF08, a Rust refinement obligation, a product stage or release.
+
