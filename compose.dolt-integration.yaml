@@ -1,0 +1,42 @@
+name: writfold-dolt-integration
+services:
+  probe:
+    image: ${WRITFOLD_TOOL_IMAGE:?Admitted immutable tool image required}
+    pull_policy: never
+    platform: linux/amd64
+    user: "${WRITFOLD_DOLT_UID:?}:${WRITFOLD_DOLT_GID:?}"
+    working_dir: /evidence
+    entrypoint: []
+    command: [/usr/bin/python3, /work/writfold/scripts/writfold_dolt_fixture.py, prepare, --work, /evidence]
+    network_mode: none
+    read_only: true
+    init: true
+    cpus: 2
+    mem_limit: 4294967296
+    memswap_limit: 4294967296
+    pids_limit: 256
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment:
+      HOME: /evidence/home
+      PYTHONDONTWRITEBYTECODE: "1"
+      DOLT_DISABLE_EVENT_FLUSH: "1"
+      DOLT_DISABLE_VERSION_CHECK: "1"
+      GOMAXPROCS: "2"
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
+      TZ: UTC
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,size=268435456,mode=1777
+    volumes:
+      - type: bind
+        source: .
+        target: /work/writfold
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${WRITFOLD_DOLT_WORK:?Fresh exclusive scratch required}
+        target: /evidence
+        bind:
+          create_host_path: false

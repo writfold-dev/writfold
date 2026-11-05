@@ -168,6 +168,64 @@
       "Native storage foundation and downstream integration; no backend switch or fallback was introduced."
     ]
   },
+  "agent_benchmark_plan": {
+    "status": "planned_not_run",
+    "date": "2026-11-05",
+    "working_label": "Evidence Stack (Writfold + Weft + Splicery); no product or namespace rename",
+    "plan": {
+      "path": "docs/writfold/agent-integration-benchmarks.md",
+      "sha256": "9c394b7a5bd90455f60b04c8f631277098fd71c46b80a728f7e021d35ab4fb8a",
+      "bytes": 29646
+    },
+    "primary_comparison": "Matched competent conventional tools versus actually admitted stack paths; same model, authorized evidence, budgets and delegation rights.",
+    "session_comparison": "Fresh reconstruction, conventional saved notes/files/Git, and Writfold persistence; hold Weft/Splicery availability constant for Writfold-specific attribution.",
+    "planned_session_counts": [1, 3, 5, 10],
+    "metrics": ["task success", "finding precision and known-defect recall", "evidence correctness", "appropriate abstention", "realized safety failures", "complete provider usage and cost", "inference requests", "tool calls", "time and effort to qualified evidence/plan/implementation milestones", "cumulative and per-resume session cost", "observed break-even including initial capture"],
+    "measurements": null,
+    "public_benefit_claims": [],
+    "paid_model_campaign": "not_run",
+    "website_publication": "not_run",
+    "limits": "Research/plan only. Historical kctx byte proxies and native foundation receipts are not agent token, accuracy or session-switching results. Publication requires reproducible source-bound reports and authorization."
+  },
+  "dolt_integration_admission": {
+    "status": "pass",
+    "milestone": "DINT00",
+    "decision": "WF-STORAGE-003",
+    "profile": "qualification/dolt-integration-profile.json",
+    "scope": "Disposable stopped/exclusive native CLI foundation plus receipt and owned-container cleanup controls; not a Rust store, client/agent E2E or release.",
+    "record": {
+      "path": "~/.local/share/writfold/evidence/dolt-integration-admission-20261105-001.json",
+      "sha256": "ddd73efb2a336542abc901b17446449629185f9a9d394ae8d03ba899d275ef8f",
+      "bytes": 9338
+    },
+    "native_receipt": "~/.local/share/writfold/evidence/dolt-integration-20261105-006.json",
+    "tested_native_source_tree": "d0a2a651af8fd156189def2352461d4d3be6a04585a7f7e835384f827473548d",
+    "current_documented_source_tree": "4cab2d1f37d8c10edcdee68666cd9ca605c728ce0c2e3ff428d29dfaa0f6c9e9",
+    "applicability": "Native, receipt-control and interruption evidence bind identical source. Only exercised-evidence prose changed afterward; exact unchanged scripts/profile/fixture/Compose/tool inputs and final-documentation baseline are linked in the admission record.",
+    "verification": {
+      "native_checks": 17,
+      "native_commands": 105,
+      "historical_commits": 3,
+      "retained_branches": 3,
+      "receipt_controls": 14,
+      "owned_container_interruptions": 1,
+      "baseline_checks": 1409,
+      "local_markdown_links": 10,
+      "python_modules_parsed": 2
+    },
+    "retained_failures": [
+      "~/.local/share/writfold/evidence/dolt-integration-20261105-001.json",
+      "~/.local/share/writfold/evidence/dolt-integration-20261105-002.json",
+      "~/.local/share/writfold/evidence/dolt-integration-20261105-003.json",
+      "~/.local/share/writfold/evidence/dolt-integration-20261105-004.json",
+      "~/.local/share/writfold/evidence/dolt-onboarding-interruption-20261105-001.json"
+    ],
+    "release_gates_passed": [],
+    "omnigraph_wf24": "blocked_unchanged",
+    "rust_adapter": "not_run",
+    "agent_e2e": "not_run",
+    "next": "DINT01: freeze distinct integration pins/envelopes and implement/qualify the actual Rust exact-store/read boundary before corpus methods or a writer are enabled."
+  },
   "stages": [
     {
       "id": "P00",
@@ -215,7 +273,7 @@
       "contract": "handovers/revision-5/writfold/stages/P01O.md",
       "blocking_evidence": "~/.local/share/writfold/evidence/omnigraph-relocation-blocker-001.json",
       "upstream_issue": "https://github.com/ModernRelay/omnigraph/issues/1233",
-      "scope_note": "Revision-5 contract adopted without requalification. Earlier component evidence is retained in qualification/revision-4-status.json and revision-4-progress.json; full current scope remains open. Known retained-branch relocation blocker persists; no rerun or fallback."
+      "scope_note": "Revision-5 contract adopted without requalification. Earlier component evidence is retained in qualification/revision-4-status.json and revision-4-progress.json; full current scope remains open. Known retained-branch relocation blocker persists; no rerun or runtime fallback. The separately authorized Dolt DINT00 component is indexed in dolt_integration_admission and does not pass this stage or WF24."
     },
     {
       "id": "P02",

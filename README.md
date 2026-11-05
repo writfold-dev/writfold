@@ -116,6 +116,14 @@ The latest storage-independent P14 component is the
 exact package/export references, typed edges and invocation-cycle refusal.
 It does not enable skill execution or bypass the native storage blocker.
 
+The immediate integration priority is the explicitly authorized
+[Dolt development profile](docs/writfold/dolt-integration.md), using disposable
+realms and its own native/typed/service evidence while Omnigraph remains blocked.
+The [Evidence Stack benchmark plan](docs/writfold/agent-integration-benchmarks.md)
+covers competent baselines, full model usage, repeated-session reconstruction,
+correctness and reproducible website reports. It contains no measured benefit
+claim and does not authorize publication.
+
 1. Carry the discharged E01–E12 contracts into the remaining production bodies, V16–V21/M12–M16 and composition bridges. Preserve legacy T01–T22 and signed bytes. The independent engineering domain/wire primitives do not close the durable-ledger or integrated qualification obligations.
    Twelve abstract model/composition modules have strict safety proofs, and
    all twenty selected semantic negatives have counterexamples. Nine positive
@@ -126,8 +134,9 @@ It does not enable skill execution or bypass the native storage blocker.
    PR or admit its prototype as a backend. Retain the **8 November 2026**
    checkpoint and the authorized fork as a fallback if no usable supported
    remedy is available. Any new artifact requires fresh package/runtime and
-   complete P01O/WF24 qualification; no path workaround or backend fallback
-   is adopted, and no scheduled monitoring is implied.
+   complete P01O/WF24 qualification; no path workaround or automatic runtime
+   fallback is adopted. The separate Dolt development profile is not an Omnigraph
+   remedy or release waiver, and no scheduled monitoring is implied.
 3. After foundation admission, complete the dependent protocols, storage,
    authenticated publication/recovery, workflows, Scribes, CLI/RPC, views and
    migration stages in the [mandatory dependency order](handovers/revision-5/writfold/plan/08-execution-and-acceptance.md). P14–P19 extend identities/ledger, skills, effects, cross-repository changes, learning and exact dossiers before final P11–P13; numeric sorting is not execution order.

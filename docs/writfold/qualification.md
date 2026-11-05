@@ -37,6 +37,14 @@ Revision 5 additionally recognizes `engineering-ledger`, `skills`, `effects`,
 They do not print an unrun success. The runner currently emits no `full-gate`
 producer receipts. A scoped pass is deliberately insufficient for release.
 
+The separately authorized [Dolt development profile](dolt-integration.md) uses
+`python3 scripts/writfold_dolt_probe.py --receipt <new-external-path>` for DINT00.
+Its source-bound native CLI/backup/restore receipt is supplemental: no Rust store,
+agent E2E, WF24 replacement or full-gate producer is implied. It preserves the
+existing operator storage admission and executes in network-disabled isolated
+Compose containers. Failed attempts remain retained; a successful preparation
+without independent restore cannot pass DINT00.
+
 `quality`, `verus`, `conformance`, `engineering-lean`, `citation-lean`, `citation-verus`, and `stdio-control`
 producers must write `/evidence/obligations.json` containing:
 

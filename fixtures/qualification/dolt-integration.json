@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "scope": "Synthetic native rows only; no knowledge admission, source authenticity or real user data",
+  "table": "exact_records",
+  "seed": [
+    {"id": "A", "text_value": "café\r\nnaïve", "payload_hex": "000A0DFF7F", "mathematical_integer": "18446744073709551617", "optional_value": null, "revision": 0},
+    {"id": "a", "text_value": "é\n", "payload_hex": "", "mathematical_integer": "-18446744073709551617", "optional_value": "", "revision": 0}
+  ],
+  "side": [
+    {"id": "A", "text_value": "side branch only\r\n", "payload_hex": "112200FF", "mathematical_integer": "18446744073709551617", "optional_value": null, "revision": 1},
+    {"id": "a", "text_value": "é\n", "payload_hex": "", "mathematical_integer": "-18446744073709551617", "optional_value": "", "revision": 0}
+  ],
+  "main": [
+    {"id": "A", "text_value": "café\r\nnaïve", "payload_hex": "000A0DFF7F", "mathematical_integer": "18446744073709551617", "optional_value": null, "revision": 0},
+    {"id": "a", "text_value": "main branch only\n", "payload_hex": "FFEEDD00", "mathematical_integer": "-18446744073709551617", "optional_value": "", "revision": 2}
+  ]
+}

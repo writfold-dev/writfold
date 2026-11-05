@@ -4,6 +4,10 @@ These are reproducible **P01O progress campaigns**, not WF24 admission or a prod
 
 **P01O/WF24 is blocked at the tested 0.14.0 pin:** a whole-root native backup restores old snapshot rows after relocation, but a retained branch still requests a Lance file at its original, unavailable path. The authenticated companion smoke passes independently. Do not weaken the restore check or convert either scoped result into backend admission.
 
+The later [Dolt integration-only decision](dolt-integration.md) authorizes separate
+disposable development realms and its own evidence. It does not change these
+Omnigraph campaign results, waive WF24 or introduce fallback into this runner.
+
 ## Run once from the checkout
 
 After concurrent source edits finish, select a new absolute receipt path outside the checkout:

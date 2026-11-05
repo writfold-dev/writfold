@@ -282,6 +282,8 @@ unknown effects and rejected learning promotion. Observe actual retained objects
 ledger/run references and effects where applicable—not JSON resembling them.
 
 Mathematical/component receipts and planning adoption do not pass these service
-or composed gates. P01O/WF24's recorded storage blocker remains binding. No Weft
-source, grammar, report schema, proof result or completion label is changed by
-this owner-side reconciliation.
+or composed gates. P01O/WF24 remains binding for Omnigraph integration/release.
+The separately authorized [Dolt development profile](dolt-integration.md) may
+exercise the same ordinary Rust client contracts only after its own prerequisites;
+it neither changes client semantics nor advertises unqualified methods. No Weft
+source, grammar, report schema, proof result or completion label is changed here.

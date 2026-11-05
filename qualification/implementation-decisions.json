@@ -132,6 +132,21 @@
       "affected": ["WF13", "writfold-app", "writfold-runtime::stdio", "writfold-wire::rpc::response", "writfold.agent/1"],
       "migration": "Legacy signed/semantic bytes remain unchanged. Clients bind this exact profile/artifact and its implemented capability set. The control process launches no native child/effect; SIGINT/SIGTERM use native process termination, while broken output pipe maps to cancellation 130.",
       "limits": "No corpus, knowledge context, retained release, grounding, edit, ledger or effect capability is enabled. Current control faults describe no-effect rejection; uncertain/partial future effects require their own qualified outcome projection and reconciliation."
+    },
+    {
+      "id": "WF-STORAGE-003",
+      "status": "authorized_for_integration_only",
+      "date": "2026-11-05",
+      "old": "Dolt is isolated reference/import tooling and Omnigraph WF24 blocks storage-dependent Rust integration.",
+      "new": "Adopt writfold-dolt-integration/1 for disposable local Rust integration-test realms with one explicitly selected backend/writer, beginning with an independent native candidate campaign. Keep Omnigraph as the intended release backend and retain all existing release gates.",
+      "reason": "Tarek authorized finding integration bugs and evaluating realistic agent/multi-session outcomes without waiting for the retained Omnigraph branch-relocation blocker.",
+      "evidence": "~/.local/share/writfold/evidence/omnigraph-relocation-blocker-001.json",
+      "profile": "qualification/dolt-integration-profile.json",
+      "design": "docs/writfold/dolt-integration.md",
+      "benchmark_plan": "docs/writfold/agent-integration-benchmarks.md",
+      "affected": ["P02", "P04", "P06", "P07", "P09", "P10", "P11", "P14-P19", "WF03", "WF09", "WF10", "WF11", "WF14", "WF15", "V07-V10", "V15", "M01-M06", "M11"],
+      "migration": "No user realm or historical bytes migrate. Future integration writers need distinct typed pins, canonical/signing profiles, source/approval closure and Git CAS qualification. LegacyDoltPin remains inspection-only.",
+      "limits": "DINT00-DINT04 are supplemental development milestones, not replacement gates. No second shipping writer, automatic fallback, Python product store, Omnigraph pass, enabled client/effect capability or benchmark benefit is implied."
     }
   ]
 }

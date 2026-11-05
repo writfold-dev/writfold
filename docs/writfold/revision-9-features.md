@@ -206,10 +206,12 @@ replace those obligations or add a product dependency.
 ## Execution dependencies and gate integration
 
 The existing dependency order remains controlling. Citation calculus and retained
-fixture work can proceed independently of the known storage blocker. Native
-search/index integration cannot bypass P01O/WF24. Run intake, drivers, effects
-and cross-repository work depend on P14-P17; prepared run views depend on P19.
-Final composed qualification still belongs to P11, then packaging/launch.
+fixture work can proceed independently of the known storage blocker. Omnigraph
+search/index integration cannot bypass P01O/WF24. The explicitly authorized
+[Dolt development profile](dolt-integration.md) has separate native/typed/service
+prerequisites and cannot pass those Omnigraph release gates. Run intake, drivers,
+effects and cross-repository work still depend on P14-P17; prepared run views
+depend on P19. Final composed qualification remains P11, then packaging/launch.
 
 ```mermaid
 flowchart LR
@@ -282,7 +284,8 @@ Exact receipts, source identities and applicability belong to
 planning registries.
 
 These are not enabled production `find`/`peek`/`cite` methods, corpus authorization,
-durable alias restoration, an installed CLI/stdio host or an empirical token win.
-P01O/WF24 still blocks storage-dependent integration; P14–P19 retain their existing
-prerequisites. No stage/full-gate completion, fallback backend, Weft-specific API,
-TUI capability or universal per-proposal certificate policy is implied.
+durable alias restoration, a corpus-enabled CLI/stdio host or an empirical token
+win. P01O/WF24 still blocks Omnigraph integration/release; the separate Dolt
+development profile changes neither P14–P19 prerequisites nor client authority.
+No stage/full-gate completion, automatic fallback, Weft-specific API, TUI
+capability or universal per-proposal certificate policy is implied.

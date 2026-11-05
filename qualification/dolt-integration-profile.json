@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "profile": "writfold-dolt-integration/1",
+  "decision": "WF-STORAGE-003",
+  "authorization_date": "2026-11-05",
+  "scope": "DINT00 stopped/exclusive native CLI foundation for disposable Rust integration-test realms; not a Rust store, service, agent E2E or release gate",
+  "implementation_plan": "docs/writfold/dolt-integration.md",
+  "benchmark_plan": "docs/writfold/agent-integration-benchmarks.md",
+  "release_backend": "omnigraph",
+  "release_gate_effect": "none; P01O/WF24 remains blocked and the active revision-5 gate inventory is unchanged",
+  "candidate": {
+    "name": "dolt",
+    "version": "2.6.1",
+    "executable": "/usr/local/bin/dolt",
+    "sha256": "ea866d85a8d38fad303268589b56a4766e05e72c9869556c0da60a0f819726b2",
+    "archive_sha256": "5fcbc6f4f7152617b8b122855155e05b0785f595a96e8966fac63e104b3e7610",
+    "tool_lock": "toolchains.lock.json",
+    "observation": "qualification/toolchain-observation.json"
+  },
+  "fixture": "fixtures/qualification/dolt-integration.json",
+  "isolation": {
+    "network": "none",
+    "root_filesystem": "read-only",
+    "work": "new private out-of-tree attempt only",
+    "source": "read-only checkout",
+    "users": "Native prepare/restore use the operator UID/GID; full-tool observation alone uses container root for root-readable proof artifacts, with all capabilities dropped and HOME/cwd on bounded tmpfs, not the operator-private work mount",
+    "restore": "separate container mounts only copied backup and pin manifest; original database roots absent",
+    "writer": "one sequential native CLI command owner, no server or concurrent database users",
+    "runtime": "Linux/WSL x86_64 with existing operator storage admission",
+    "native_command_timeout_seconds": 120,
+    "native_output_bytes_per_stream": 2097152
+  },
+  "required_prepare_checks": [
+    "candidate-identity",
+    "wrong-candidate-refusal",
+    "exact-row-fidelity",
+    "pinned-history-and-branches",
+    "transaction-rollback",
+    "conditional-row-controls",
+    "missing-history-refusal",
+    "native-backup-inventory"
+  ],
+  "required_restore_checks": [
+    "candidate-identity",
+    "original-roots-unavailable",
+    "backup-input-integrity",
+    "restored-pins-and-branches"
+  ],
+  "required_host_checks": [
+    "operator-storage-and-image-admission",
+    "native-refusal-attribution",
+    "changed-backup-refusal",
+    "independent-restore",
+    "source-stability"
+  ],
+  "milestones": [
+    {"id": "DINT00", "scope": "native candidate foundation", "evidence_index": "qualification/status.json#/dolt_integration_admission"},
+    {"id": "DINT01", "scope": "typed Rust exact store and read boundary", "status": "not_run"},
+    {"id": "DINT02", "scope": "authenticated publication and recovery integration", "status": "not_run"},
+    {"id": "DINT03", "scope": "ordinary client and engineering integration", "status": "not_run"},
+    {"id": "DINT04", "scope": "instrumented paired agent and multi-session episodes", "status": "not_run"}
+  ],
+  "excluded_claims": [
+    "Omnigraph qualification or automatic backend fallback",
+    "production Rust adapter or enabled corpus/edit capability",
+    "SQL-server transport, concurrent-writer safety or power-loss durability",
+    "Writfold completed Git CAS or EngineeringLedger from a SQL row predicate",
+    "full semantic codec/refinement or authenticated package/source truth",
+    "agent token, accuracy, inference-request or session-switching savings"
+  ]
+}
