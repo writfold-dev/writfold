@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:writfold:agent:1:request",
+  "type": "object",
+  "properties": {
+    "jsonrpc": {
+      "const": "2.0"
+    },
+    "id": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "integer"
+        }
+      ],
+      "description": "Integer IDs require integer lexical tokens; fractional/exponent spellings are invalid even when mathematically integral. Preserve arbitrary precision."
+    },
+    "method": {
+      "type": "string"
+    },
+    "params": {}
+  },
+  "required": [
+    "jsonrpc",
+    "method"
+  ],
+  "additionalProperties": false
+}

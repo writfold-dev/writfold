@@ -1,0 +1,15 @@
+[package]
+name = "writfold"
+description = "Writfold native CLI and ordinary agent stdio host"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+writfold-app = { path = "../writfold-app" }
+
+[lints]
+workspace = true

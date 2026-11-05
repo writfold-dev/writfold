@@ -23,13 +23,24 @@ The Rust implementation lives in `crates/`:
 
 - `writfold-domain`: checked nominal identities, verified admission/runtime-conversion bodies, arbitrary-precision semantic integers, immutable model records and 16 distinct engineering fingerprint types.
 - `writfold-kernel`: finite witnesses, independent assessments, admission, portfolio and design judgments; its broader Rust semantic proofs remain open.
-- `writfold-wire`: bounded JSON and restricted deterministic CBOR, typed semantic/result codecs, domain-separated engineering fingerprints, exact canonical signed operations, supplied-policy Ed25519 authorization, protocol-2 request admission and the development `writfold-ref` host.
-- `writfold-protocol`: checked generation allocation and distinct instance/session/request identities with initialization/shutdown transitions.
-- `writfold-runtime`: descriptor-relative native filesystem reads, conditional publication and stable managed locks.
+- `writfold-wire`: bounded JSON/CBOR, typed semantic and citation codecs, signatures, protocol-2 request admission, bounded control replies and the shared agent contract.
+- `writfold-protocol`: checked generation allocation and distinct instance/session/request identities with executable-body initialization/shutdown guarantees.
+- `writfold-runtime`: contained filesystem/Git primitives, owned-process cleanup, bounded stdio framing and observed ephemeral invocation identities.
 - `writfold-sources`: byte-preserving authored-document and citation syntax, with new single-line mutation admission and pinned Unicode behavior.
 - `writfold-xtask`: development-only syntax, dependency and nominal-type qualification.
+- `writfold-app`: typed application orchestration for the control-only agent profile.
+- `writfold`: native `serve`, version and help commands; no corpus/effect commands are registered in this profile.
 
-`writfold-ref` is a development conformance executable, not the production CLI or an authentication capability. No installable Rust product or complete Rust qualification is claimed yet. Current stage/gate dispositions are in [`qualification/status.json`](qualification/status.json); unrun obligations remain explicit.
+`writfold serve` now implements the ordinary **transport-control-only** stdio
+profile: initialized JSON-RPC, capability refusal, correlated bounded replies,
+notifications and shutdown. It advertises only `initialize`/`shutdown` and
+`notifications`; successful initialization does not make grounding, corpus reads,
+artifact retention, worktree editing or effects available.
+[`wire-boundary.md`](docs/writfold/wire-boundary.md#ordinary-stdio-control-profile)
+documents the exact boundary and client artifact. `writfold-ref` remains a
+separate development conformance executable, never a grounding fallback.
+No complete Rust product/stage qualification is implied. Exact current component
+evidence and blocked prerequisites remain in [`qualification/status.json`](qualification/status.json).
 
 The revision-5 **E01–E12 mathematical calculus is discharged under its recorded
 assumptions**: a clean Lean audit covers 571 declarations, the reference executes

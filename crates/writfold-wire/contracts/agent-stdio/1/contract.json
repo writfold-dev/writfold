@@ -1,0 +1,114 @@
+{
+  "namespace": "writfold-agent-contract",
+  "schema": 1,
+  "profile": "writfold.agent/1",
+  "implementation_scope": "transport-control-only",
+  "command": [
+    "writfold",
+    "serve"
+  ],
+  "protocol": {
+    "jsonrpc": "2.0",
+    "protocol_version": "2",
+    "framing": "one UTF-8 JSON object per line",
+    "max_request_bytes": 65536,
+    "max_response_bytes": 65536,
+    "limits_include_final_lf": true,
+    "batch": false,
+    "notifications": true,
+    "max_depth": 1024,
+    "max_container_entries": 65536,
+    "max_value_nodes": 65536
+  },
+  "implemented_methods": [
+    "initialize",
+    "shutdown"
+  ],
+  "advertised_capabilities": [
+    "notifications"
+  ],
+  "identity": {
+    "instance": "Ephemeral entropy-backed transport-process label, not a KB or durable owner.",
+    "incarnation": "Independent ephemeral session label, not a grant.",
+    "generation": "Unsigned 64-bit invocation counter; first admitted envelope is 1, every valid envelope including notifications/refusals consumes one, malformed JSON/envelopes consume none. Exhaustion refuses and closes; no wrap/reuse. Not CitationTableGeneration.",
+    "integer_request_ids": "Preserve arbitrary-precision signed integer lexical tokens. Fraction/exponent tokens are invalid even when mathematically integral. Parsed integer -0 normalizes to 0. Strings and explicit null remain distinct; missing id is a notification only after envelope admission.",
+    "durable_citations": "The included writfold-citation/1 descriptor schema names candidate immutable material only; it does not expose a citation RPC method, acquire bytes, authenticate a release, or grant access."
+  },
+  "lifecycle": {
+    "precedence": [
+      "strict frame/envelope admission",
+      "allocate an invocation generation",
+      "lookup implemented method",
+      "enforce session state and method-specific schema/capability precedence",
+      "prepare complete bounded reply unless notification",
+      "commit successful lifecycle change",
+      "write/flush prepared bytes; fatal IO closes the invocation"
+    ],
+    "initialize_order": [
+      "require running",
+      "validate parameter schema",
+      "require uninitialized",
+      "admit supported capability spellings and current capability set",
+      "encode success",
+      "commit initialized"
+    ],
+    "shutdown_order": [
+      "require initialized",
+      "validate empty params",
+      "encode success unless notification",
+      "commit shutdown",
+      "flush and close without reading another request"
+    ],
+    "eof": "A final non-newline frame is evaluated; EOF then exits 0. Shutdown closes immediately, including shutdown notifications.",
+    "oversized": "Drain through LF/EOF with bounded memory, report Invalid Request with null id/generation, then continue if input remains.",
+    "encoding_failure": "Terminate without emitting a partial reply, truncating or substituting the ID; no successful lifecycle change precedes successful complete encoding.",
+    "notifications": "Well-formed notifications execute lifecycle; method/param/state failures emit nothing. Invalid JSON/envelopes still receive errors.",
+    "effects": "No corpus, retained-release, grounding, publication, ledger or effect service exists in this profile. No child process is launched."
+  },
+  "validation": {
+    "schema_dialect": "https://json-schema.org/draft/2020-12/schema",
+    "schema_limit": "JSON Schema validates shapes but cannot distinguish integer lexical forms or prove cross-field/order/content/authenticity conditions. Implement the declared byte rules and run the vectors.",
+    "citation_conditions": [
+      "selector first <= last; integer u64 tokens only",
+      "Git commit/blob algorithm and full lowercase width match",
+      "literal relative UTF-8 path: no empty, dot, parent or NUL components",
+      "capture_digest is raw whole-capture SHA256 and becomes semantic ContentId, not native Git blob ID",
+      "bind requires exact selected preimage length and raw SHA256; full provenance/access/retention remain external host obligations"
+    ],
+    "stream_safety": "No raw malformed values or parser diagnostics are reflected in error details. Correlation IDs are preserved and JSON-escaped, not normalized into another namespace."
+  },
+  "blocked_requirements": [
+    "authorized realm/context/completed-release selection",
+    "citation, assessment, finite-collection and frozen read-closure services",
+    "bounded large-artifact transfer and retention",
+    "ledger/run/effect/learning admission",
+    "P01O/WF24 and dependent full-stage qualification"
+  ],
+  "files": [
+    {
+      "path": "methods.json",
+      "sha256": "450533fa5c21cfbf7632659c6a07bd844b4c5eb05eac1dadfbdbe4bc0a813829",
+      "bytes": 377
+    },
+    {
+      "path": "request.schema.json",
+      "sha256": "6c4ad381bbbaa849ce6d49fe44744e5c13feace9f546458226e3ac6760ec9e82",
+      "bytes": 699
+    },
+    {
+      "path": "response.schema.json",
+      "sha256": "7dbc47fd2cd5b55699eb737ee1f1340439a3c4891b83925d758e936862bf0bd3",
+      "bytes": 10818
+    },
+    {
+      "path": "citation-binding.schema.json",
+      "sha256": "692276839bd9d9651345569aa1b887b31912fb32b3eeb48a8e8b9cbcf983c32e",
+      "bytes": 5793
+    },
+    {
+      "path": "vectors.json",
+      "sha256": "d12eb7434ea151e7674ef04d0c4b201219b099cd2b24cc895bd768650bd33cc2",
+      "bytes": 6167
+    }
+  ]
+}

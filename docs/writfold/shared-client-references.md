@@ -1,16 +1,19 @@
-# Stable references for ordinary proof clients
+# Stable references for ordinary toolchain clients
 
-Weft and agents use the same Writfold interface. This is the Writfold-owned
-integration requirement set, reconciled with Weft's revision-1 WR1–WR8 handoff.
+Agents, Weft and Splicery use the ordinary Writfold interface. This is the
+Writfold-owned integration requirement set, reconciled with Weft's inherited
+WR1–WR8 handoff, current revision-3 finite/set-algebra requirements, and Splicery's
+worktree-edit /1 owner proposal.
 It adds no Weft opcode set, recipe VM, alternate backend, admission bypass or
 universal per-proposal Lean-certificate rule. The
 [scoped feature plan](revision-9-features.md) and revision-5 authority remain
-controlling. [The integration inventory](../../qualification/weft-integration.json)
-binds the reviewed Weft inputs and maps work to existing epics.
+controlling. [The Weft inventory](../../qualification/weft-integration.json) and
+[Splicery inventory](../../qualification/splicery-integration.json) bind exact
+reviewed inputs and map requirements to existing epics.
 
-These are accepted interface requirements, **not a claim of available production
-methods or frozen method names**. Publish actual versioned schemas and vectors
-with the qualified implementation, not guessed RPC names in a client.
+The implemented [control-only transport](wire-boundary.md#ordinary-stdio-control-profile)
+has its own pinned schemas and vectors. Other sections remain accepted interface
+requirements, **not available data/effect methods or guessed RPC names**.
 
 ## What must be stable
 
@@ -121,7 +124,7 @@ unless a separately qualified Writfold selector profile is introduced.
 ## Separate the session counters
 
 `CitationTableGeneration` is a distinct nominal type from `RequestGeneration`.
-The in-flight citation scope now uses the former. A request advancing must not
+The citation scope uses the former. A request advancing must not
 rotate the alias table. Table replacement/retirement changes the table epoch;
 request correlation, instance/incarnation changes and execution-owner fencing
 retain their separate meanings. Counter exhaustion refuses rather than wraps.
@@ -164,6 +167,65 @@ Search hits or an empty result establish none of the other meanings by default.
 An unrelated corpus advance does not rewrite historical inputs; live use still
 rechecks applicable corrections, authority and freshness. Replay does not create
 new observations. New evidence or an intentional refresh creates a new assessment.
+
+## Captured finite collections
+
+Weft owns finite-set algebra and quantifier interpretation. Writfold's shared
+reader must supply an exact authorized context/release/read cut, query,
+interpretation profile and collection/domain identity, with typed durable members,
+deterministic ordering and independently applicable member/dependency assessments.
+Materialization completeness, measured search coverage and presentation completeness
+are separate. A top-k candidate list cannot establish an exhaustive affected-asset
+domain; unavailable enumeration is not an empty domain. Filter authorization before
+disclosing identities, cardinalities or omissions.
+
+Derived set operations must retain complete captured operand closure even when no
+member survives. Deduplication, difference, an empty intersection, vacuous subset
+or early membership hit cannot erase a denied/expired/partial input or an independent
+required assessment. Surviving-member origins and operation-level dependencies
+are distinct. These are WR4/WR5 reader obligations, not a Writfold set-language
+interpreter or a new collection writer.
+
+Weft's 16 MiB report bound does not widen the 64 KiB transport frame. Large report,
+model, capture and read-closure transfer remains a separately qualified generic
+artifact/selection service. No such method is advertised by the control profile.
+
+## Splicery worktree-edit boundary
+
+The [owner integration inventory](../../qualification/splicery-integration.json)
+records the supplied worktree-edit /1 archive and selected requirements. It does
+not adopt Splicery's SG registry as Writfold gates or enable a write capability.
+
+Splicery owns its language, lowering, normalized IR and pure checked kernel.
+Writfold owns the pinned adapter, actual IO, authenticated run/principal/grant,
+Worktrunk worktree binding, current predecessor/resource/owner generation,
+durable dispatch claim and observed effect receipt. Weft's report, a corpus
+citation explaining why and a worktree selection identifying where remain separate
+subjects. None independently grants edit authority.
+
+Dirty/generated/untracked regular-file captures require a separately admitted
+run-owned worktree profile, not a relabelled immutable `git-blob/1` citation.
+Preserve exact realm/run/repository/worktree/binding/capture/profile/metadata
+identity and original bytes. Historical handles cannot silently retarget.
+Recipe-attributed receipts require host-side replay through the same pinned
+compiler/kernel over authorized captured input; a client-supplied digest is not
+proof of derivation. IR-only input, if later admitted, must be labelled separately.
+
+Keep recipe, capture, candidate, prepared-edit, request-key and effect identities
+distinct and register their canonical domains/vectors before a writer ships.
+Identical output is not identical intent. Authenticated key-to-intent/effect
+history survives response loss and byte ABA; expired preparation cannot reopen a
+dispatched key. Multi-file execution preserves per-file outcomes and its applied
+prefix, not fictional rollback.
+
+Visibility, durability and durable acknowledgement are separate boundaries.
+Post-install fsync failure or lost claimed-write outcomes remain Unknown/partial
+with reservations until qualified reconciliation. A matching after-hash alone
+does not establish causation. Do not reuse the control-only `rejected` error
+projection as a generic edit-effect outcome. Worktree ownership, cooperating-writer
+assumptions, metadata preservation, containment/no-clobber and real fault evidence
+remain mandatory under P14/P16/P17 and applicable native gates. The existing
+filesystem primitives alone are not a Splicery edit-admission service.
 
 ## Shared transport and contract distribution
 

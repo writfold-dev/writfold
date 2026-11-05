@@ -7,9 +7,9 @@
   "feature_adoption": "qualification/revision-9-feature-adoption.json",
   "weft_review": {
     "checkout": "../weft",
-    "observed_head": "aa3296ffa2fb867bdebbb2ca014c969f75ecd338",
-    "authority": "handovers/revision-1/weft",
-    "manifest_sha256": "dc87588eabfd241c64f7c5558200f1a349572be46d1152c3cf2da1cb355d5a4a",
+    "observed_head": "db116fd773b593c8ee16cbb322f1822f3fb067a7",
+    "authority": "handovers/revision-3/weft",
+    "manifest_sha256": "cc033a8e846929aeb29c952ef6a1ab9f02cff3e56e6deadbc4114ac4458d1f8e",
     "inputs": {
       "handovers/revision-1/weft/plan/06-writfold-handoff.md": {
         "sha256": "f4d5d04ebcb368a430e19b6ef04e8df874994972866d39fb3f89ec762c52ccba",
@@ -24,27 +24,55 @@
         "bytes": 9275
       },
       "docs/implementation-profile.md": {
-        "sha256": "7970a359ff2d657c5d25a8f11254b420696ef563aad35aaa1a2165dc907e1fe3",
-        "bytes": 3964
+        "sha256": "5ce13d243906e1b2435629bfb6a587a0c91aa220e2ab51f20a59c8e13748b32e",
+        "bytes": 9229
       },
       "docs/verification-report.md": {
         "sha256": "dacc7edde9af1f17cdb08c28f0e0b9323c860de45de6272689f1c2347f7d8816",
         "bytes": 7843
       },
       "spec/language.md": {
-        "sha256": "286806cd3ae56b43723e92a3208a847869e548721038ad0c19aa1228e9e614a9",
-        "bytes": 8724
+        "sha256": "2b6b6cd0250bf929b861a66c561fa44e5ccafafba22115d0f9bea541e40e7f77",
+        "bytes": 16702
       },
       "spec/report-v1.md": {
-        "sha256": "3e372723e425e89fbeb9d69d59c25df2c6b9c38d7b353da05931492f70021a88",
-        "bytes": 6830
+        "sha256": "e629f3a5f627379e65cb9205acbb8ca577651d84bfd982b476ab475692f7bce3",
+        "bytes": 11068
       },
       "qualification/handover-adoption.json": {
-        "sha256": "204ad926a4f912c23de8461a78c4cbf9f6af48e41c45ecc8d6be9758ad73ba67",
-        "bytes": 1392
+        "sha256": "e7d7e209ae3e1bdecccc7d07df63c7ec248569310f1c40c2a699a9f7c75c67e4",
+        "bytes": 2189
+      },
+      "docs/writfold-finite-collections-request.md": {
+        "sha256": "8b4d51d9642b04bcf66b122f13f8637211873604ff7736201109b21a9250ec1d",
+        "bytes": 2496
+      },
+      "docs/runtime-assurance.md": {
+        "sha256": "c396a2a82aebcb4426ff0770b3e23d719386e77db77e811c35114b5cbd45282d",
+        "bytes": 4753
+      },
+      "qualification/local-runtime.json": {
+        "sha256": "4b091d239bb195fdf1c86c8a1fd887ef4e8e2521b9aeda264c24d9cf442474c4",
+        "bytes": 25540
+      },
+      "qualification/status.json": {
+        "sha256": "42054df4ca33a5bbdd1fa085902fcc132ae54b8357d05c923748b82dbe21e621",
+        "bytes": 7776
+      },
+      "handovers/revision-3/weft/plan/01-language-and-semantics.md": {
+        "sha256": "1fb358c2667795e1c6183034debbc0f13730df3eb3294b4093b039fb7e978746",
+        "bytes": 8094
+      },
+      "handovers/revision-3/weft/plan/03-implementation-and-gates.md": {
+        "sha256": "13f06b5446aa5a48d182d6a35f935b53bf41cc3c38ae976abafb21ba15d959ac",
+        "bytes": 16804
+      },
+      "docs/writfold-interface-status.md": {
+        "sha256": "2f186df443951dd22e56c88ddfc2ee441b62acd8182b0c5a1c325e0a0311904e",
+        "bytes": 3308
       }
     },
-    "scope": "Read-only review of owner-requested WR1-WR8 and current design/report files. Mutable Weft work may advance; these hashes identify only this review."
+    "scope": "Read-only review of the current revision-3 set-algebra authority, inherited WR1-WR8 and revision-2 finite-collection request. File hashes identify mutable worktree inputs; the observed HEAD is not asserted to contain uncommitted adoption changes. No Weft source/configuration/qualification/handover edits; plans-folder coordination only."
   },
   "decisions": {
     "shared_interface": "The same qualified protocol-2 stdio services for Weft and agents; no VM/opcodes/recipe endpoint or direct database fallback.",
@@ -54,7 +82,10 @@
     "artifacts": "Raw source SHA256, domain-separated Writfold blob digests, producer/profile identities, logical evidence IDs and validation receipts remain distinct. Retention is not admission.",
     "assessment": "Preserve complete applicable Writfold dimensions and dependency identities; neither support nor stored assets become classical facts without a qualified bridge.",
     "distribution": "Owner-landed pinned shared contract artifact or exact source revision with schema/canonicalization identities and conformance vectors; no mutable sibling checkout build dependency.",
-    "transport": "Honor 65536-byte frame ceiling; large artifacts need a qualified bounded transfer/selection contract bound to exact object, length, integrity and scope."
+    "transport": "Honor 65536-byte frame ceiling; large artifacts need a qualified bounded transfer/selection contract bound to exact object, length, integrity and scope.",
+    "finite_collections": "Exact authorized cut/query/interpretation/domain identity, typed ordered members and independent member/dependency assessments; materialization, measured coverage and presentation remain distinct. Candidate/top-k sets are not authoritative exhaustive universes. Unknown enumeration is not empty; identities and counts are permission-aware.",
+    "large_artifacts": "Weft local reports may reach 16777216 bytes; the ordinary frame ceiling remains 65536 bytes. Qualified generic bounded selection/transfer with object/length/integrity/order/scope/completeness is required before exposing large artifacts; no oversized request or Weft-private endpoint.",
+    "set_algebra_ownership": "Weft owns union/intersection/difference/membership/subset interpretation. Shared captured reads must retain complete operand dependencies and member assessments even when computation removes every member or a comparison can short-circuit; absence remains relative to the exact supplied authorized domain. This adds no Writfold algebra endpoint or writer."
   },
   "requirements": [
     {
@@ -67,7 +98,7 @@
         "WF13"
       ],
       "status": "not_run",
-      "current_boundary": "Protocol codecs/session transitions exist; live production host remains unqualified."
+      "current_boundary": "Actual control-only serve lifecycle and bounded replies are exercised. Authorized realm/context/release and corpus services remain blocked; full WR1 is not passed."
     },
     {
       "id": "WR2",
@@ -114,7 +145,7 @@
         "WF19"
       ],
       "status": "not_run",
-      "current_boundary": "Model/kernel components exist; current live policy/corpus facade and interpretation service mapping remain open."
+      "current_boundary": "Model/kernel components exist. Revision-2 finite-member requirements and revision-3 complete operand/dependency closure are reconciled; live policy/corpus and qualified external interpretation remain open."
     },
     {
       "id": "WR5",
@@ -132,7 +163,7 @@
         "WF15"
       ],
       "status": "not_run",
-      "current_boundary": "Read-set/cut identities planned; no released shared client contract or live closure service claimed."
+      "current_boundary": "A self-contained pinned control/data contract is published and exercised as a component. Frozen live read/collection closure and large-artifact transfer remain blocked; full WR5 is not passed."
     },
     {
       "id": "WR6",
@@ -192,10 +223,90 @@
     "incomplete discovery cannot become a complete quantifier domain",
     "report copied to another subject/procedure/repository vector refuses reuse",
     "lost acknowledgement recovers the original request/operation identity",
-    "stored report, hypothesis or activity row cannot self-admit or authorize effects"
+    "stored report, hypothesis or activity row cannot self-admit or authorize effects",
+    "finite materialization and exhaustive authorized domain are distinct from top-k candidate discovery",
+    "duplicate values cannot erase failed references or independently required member assessments",
+    "unknown enumeration differs from exhaustive empty enumeration and cannot disclose unauthorized counts",
+    "every collection and continuation retains exact query/context/release/interpretation/domain identity",
+    "an over-frame report/model requires bounded artifact transfer, never truncation or a larger protocol frame",
+    "successful transport initialization cannot turn a symbolic Weft report into grounded or authorized output",
+    "empty algebraic results and removed members do not erase captured operand dependencies, failures, observations or independent required assessments"
   ],
   "qualification_status": "not_run",
-  "production_methods_advertised": [],
-  "weft_files_modified": false,
-  "storage_blocker": "P01O/WF24 retained relocation failure remains; no rerun, workaround, alternate backend or service claim."
+  "production_methods_advertised": [
+    "initialize",
+    "shutdown"
+  ],
+  "weft_files_modified": true,
+  "storage_blocker": "P01O/WF24 retained relocation failure remains; no rerun, workaround, alternate backend or service claim.",
+  "prior_reviews": [
+    {
+      "checkout": "../weft",
+      "observed_head": "aa3296ffa2fb867bdebbb2ca014c969f75ecd338",
+      "authority": "handovers/revision-1/weft",
+      "manifest_sha256": "dc87588eabfd241c64f7c5558200f1a349572be46d1152c3cf2da1cb355d5a4a",
+      "inputs": {
+        "handovers/revision-1/weft/plan/06-writfold-handoff.md": {
+          "sha256": "f4d5d04ebcb368a430e19b6ef04e8df874994972866d39fb3f89ec762c52ccba",
+          "bytes": 7207
+        },
+        "docs/execution-integration.md": {
+          "sha256": "1bfece802ae4b125c51836bc2bbceba03a6ed85c09986c8c8ea13aa63b0a51a0",
+          "bytes": 3200
+        },
+        "docs/grounded-plans.md": {
+          "sha256": "69fc3cb483339c7bdb4a2ef1e24489e197d5ed881c0d23f57e3664d32f00c188",
+          "bytes": 9275
+        },
+        "docs/implementation-profile.md": {
+          "sha256": "7970a359ff2d657c5d25a8f11254b420696ef563aad35aaa1a2165dc907e1fe3",
+          "bytes": 3964
+        },
+        "docs/verification-report.md": {
+          "sha256": "dacc7edde9af1f17cdb08c28f0e0b9323c860de45de6272689f1c2347f7d8816",
+          "bytes": 7843
+        },
+        "spec/language.md": {
+          "sha256": "286806cd3ae56b43723e92a3208a847869e548721038ad0c19aa1228e9e614a9",
+          "bytes": 8724
+        },
+        "spec/report-v1.md": {
+          "sha256": "3e372723e425e89fbeb9d69d59c25df2c6b9c38d7b353da05931492f70021a88",
+          "bytes": 6830
+        },
+        "qualification/handover-adoption.json": {
+          "sha256": "204ad926a4f912c23de8461a78c4cbf9f6af48e41c45ecc8d6be9758ad73ba67",
+          "bytes": 1392
+        }
+      },
+      "scope": "Read-only review of owner-requested WR1-WR8 and current design/report files. Mutable Weft work may advance; these hashes identify only this review."
+    }
+  ],
+  "control_contract": {
+    "path": "crates/writfold-wire/contracts/agent-stdio/1/contract.json",
+    "profile": "writfold.agent/1",
+    "scope": "Transport/session control only. Contract definition and implementation are not a qualification receipt; actual source-bound evidence is indexed separately.",
+    "methods": [
+      "initialize",
+      "shutdown"
+    ],
+    "capabilities": [
+      "notifications"
+    ],
+    "grounded_reads_available": false,
+    "qualification_index": "qualification/status.json",
+    "contract_sha256": "b673d10f7c14c73d8f5778cfb9b2e84a98a159f1553d5c008054402ee85e7be2"
+  },
+  "weft_change_scope": {
+    "source_modified": false,
+    "configuration_modified": false,
+    "qualification_modified": false,
+    "immutable_handovers_modified": false,
+    "plans_only": [
+      "plans/writfold-integration-sync-2026-11-05.md",
+      "plans/writfold-stdio-contract-inflight.md",
+      "plans/writfold-agent-control-contract-ready.md"
+    ]
+  },
+  "production_method_scope": "Qualified transport-control-only profile; no authenticated corpus, grounding, editing, artifact or effect methods."
 }

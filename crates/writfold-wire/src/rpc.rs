@@ -5,6 +5,7 @@
 //! Missing IDs are notifications only after envelope validation succeeds.
 
 mod initialize;
+pub mod response;
 pub use initialize::{
     Capability, Initialize, InitializeParams, PROTOCOL_VERSION, ParamsError, StorageProfileVersion,
 };

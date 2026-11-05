@@ -624,6 +624,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "writfold"
+version = "0.1.0-dev.0"
+dependencies = [
+ "writfold-app",
+]
+
+[[package]]
+name = "writfold-app"
+version = "0.1.0-dev.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.11.0",
+ "thiserror",
+ "writfold-domain",
+ "writfold-protocol",
+ "writfold-runtime",
+ "writfold-wire",
+]
+
+[[package]]
 name = "writfold-domain"
 version = "0.1.0-dev.0"
 dependencies = [

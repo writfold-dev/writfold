@@ -1,6 +1,6 @@
 {
   "schema_version": 4,
-  "scope": "P02 nominal identities, checked runtime conversions and storage-pin read consistency, plus retained P01 generation allocation",
+  "scope": "P02 nominal identities, checked runtime conversions and storage-pin read consistency; retained P01 generation allocation; ordinary invocation-local session lifecycle and exact reply correlation. Not corpus/authority/service integration.",
   "excluded_claims": [
     "BigInt arithmetic implementation verification",
     "whole semantic-kernel verification",
@@ -3601,32 +3601,80 @@
         },
         "writfold_domain::ids::AliasId::parse_checked": {
           "solver_entries": 1,
-          "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [74, 82]}]
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                74,
+                82
+              ]
+            }
+          ]
         },
         "writfold_domain::ids::CitationBindingDigest::parse_checked": {
           "solver_entries": 1,
-          "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [74, 82]}]
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                74,
+                82
+              ]
+            }
+          ]
         },
         "writfold_domain::ids::CitationCorrespondenceDigest::parse_checked": {
           "solver_entries": 1,
-          "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [74, 82]}]
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                74,
+                82
+              ]
+            }
+          ]
         },
         "writfold_domain::ids::CitationRepresentationDigest::parse_checked": {
           "solver_entries": 1,
-          "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [74, 82]}]
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                74,
+                82
+              ]
+            }
+          ]
         },
         "writfold_domain::ids::EvidenceRoleId::parse_checked": {
           "solver_entries": 1,
-          "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [74, 82]}]
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                74,
+                82
+              ]
+            }
+          ]
         },
         "writfold_domain::ids::RealmId::parse_checked": {
           "solver_entries": 1,
-          "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [74, 82]}]
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/ids.rs",
+              "lines": [
+                74,
+                82
+              ]
+            }
+          ]
         }
       }
     },
     "writfold_protocol": {
-      "minimum_verified": 19,
+      "minimum_verified": 41,
       "functions": {
         "writfold_protocol::generation::advance_generation": {
           "solver_entries": 1,
@@ -3747,8 +3795,295 @@
               ]
             }
           ]
+        },
+        "writfold_protocol::session::IdentityMismatch::clone": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                78,
+                79
+              ],
+              "origin": {
+                "kind": "derive-clone",
+                "type_name": "IdentityMismatch"
+              },
+              "source": "crates/writfold-protocol/src/session.rs"
+            }
+          ]
+        },
+        "writfold_protocol::session::RequestIdentity::clone": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                38,
+                42
+              ],
+              "origin": {
+                "kind": "derive-clone",
+                "type_name": "RequestIdentity"
+              },
+              "source": "crates/writfold-protocol/src/session.rs"
+            }
+          ]
+        },
+        "writfold_protocol::session::RequestIdentity::ensure_current": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                62,
+                75
+              ],
+              "source": "crates/writfold-protocol/src/session.rs"
+            }
+          ]
+        },
+        "writfold_protocol::session::RequestIdentity::generation": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                56,
+                58
+              ],
+              "source": "crates/writfold-protocol/src/session.rs"
+            }
+          ]
+        },
+        "writfold_protocol::session::RequestIdentity::new": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                48,
+                50
+              ],
+              "source": "crates/writfold-protocol/src/session.rs"
+            }
+          ]
+        },
+        "writfold_protocol::session::RequestIdentity::session": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                52,
+                54
+              ],
+              "source": "crates/writfold-protocol/src/session.rs"
+            }
+          ]
+        },
+        "writfold_protocol::session::Session::identity": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                117,
+                119
+              ],
+              "source": "crates/writfold-protocol/src/session.rs"
+            }
+          ]
+        },
+        "writfold_protocol::session::Session::initialize": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                170,
+                183
+              ],
+              "source": "crates/writfold-protocol/src/session.rs"
+            }
+          ]
+        },
+        "writfold_protocol::session::Session::new": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                113,
+                115
+              ],
+              "source": "crates/writfold-protocol/src/session.rs"
+            }
+          ]
+        },
+        "writfold_protocol::session::Session::require_initialized": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                126,
+                138
+              ],
+              "source": "crates/writfold-protocol/src/session.rs"
+            }
+          ]
+        },
+        "writfold_protocol::session::Session::require_running": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                141,
+                151
+              ],
+              "source": "crates/writfold-protocol/src/session.rs"
+            }
+          ]
+        },
+        "writfold_protocol::session::Session::require_uninitialized": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                154,
+                166
+              ],
+              "source": "crates/writfold-protocol/src/session.rs"
+            }
+          ]
+        },
+        "writfold_protocol::session::Session::shutdown": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                187,
+                200
+              ],
+              "source": "crates/writfold-protocol/src/session.rs"
+            }
+          ]
+        },
+        "writfold_protocol::session::Session::state": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                121,
+                123
+              ],
+              "source": "crates/writfold-protocol/src/session.rs"
+            }
+          ]
+        },
+        "writfold_protocol::session::SessionError::clone": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                84,
+                85
+              ],
+              "origin": {
+                "kind": "derive-clone",
+                "type_name": "SessionError"
+              },
+              "source": "crates/writfold-protocol/src/session.rs"
+            }
+          ]
+        },
+        "writfold_protocol::session::SessionError::code": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                88,
+                98
+              ],
+              "source": "crates/writfold-protocol/src/session.rs"
+            }
+          ]
+        },
+        "writfold_protocol::session::SessionIdentity::clone": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                11,
+                15
+              ],
+              "origin": {
+                "kind": "derive-clone",
+                "type_name": "SessionIdentity"
+              },
+              "source": "crates/writfold-protocol/src/session.rs"
+            }
+          ]
+        },
+        "writfold_protocol::session::SessionIdentity::incarnation": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                29,
+                31
+              ],
+              "source": "crates/writfold-protocol/src/session.rs"
+            }
+          ]
+        },
+        "writfold_protocol::session::SessionIdentity::instance": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                25,
+                27
+              ],
+              "source": "crates/writfold-protocol/src/session.rs"
+            }
+          ]
+        },
+        "writfold_protocol::session::SessionIdentity::new": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                21,
+                23
+              ],
+              "source": "crates/writfold-protocol/src/session.rs"
+            }
+          ]
+        },
+        "writfold_protocol::session::SessionIdentity::same": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                33,
+                35
+              ],
+              "source": "crates/writfold-protocol/src/session.rs"
+            }
+          ]
+        },
+        "writfold_protocol::session::SessionState::clone": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                81,
+                82
+              ],
+              "origin": {
+                "kind": "derive-clone",
+                "type_name": "SessionState"
+              },
+              "source": "crates/writfold-protocol/src/session.rs"
+            }
+          ]
         }
-      }
+      },
+      "required_function_prefixes": [
+        "writfold_protocol::session::"
+      ]
     }
   },
   "mutations": [
@@ -3895,6 +4230,42 @@
       ],
       "before": "bytes[start + 4] < b'4'",
       "after": "bytes[start + 4] <= b'4'"
+    },
+    {
+      "name": "session-incarnation-check-bypass",
+      "crate": "writfold_protocol",
+      "functions": [
+        "writfold_protocol::session::SessionIdentity::same"
+      ],
+      "before": "self.instance == other.instance && self.incarnation == other.incarnation",
+      "after": "self.instance == other.instance && true"
+    },
+    {
+      "name": "session-request-generation-bypass",
+      "crate": "writfold_protocol",
+      "functions": [
+        "writfold_protocol::session::RequestIdentity::ensure_current"
+      ],
+      "before": "else if self.generation.get() != current.generation.get() {",
+      "after": "else if false {"
+    },
+    {
+      "name": "session-initialize-state-bypass",
+      "crate": "writfold_protocol",
+      "functions": [
+        "writfold_protocol::session::Session::initialize"
+      ],
+      "before": "self.require_uninitialized()?;",
+      "after": "let _ = self.require_uninitialized();"
+    },
+    {
+      "name": "session-shutdown-state-bypass",
+      "crate": "writfold_protocol",
+      "functions": [
+        "writfold_protocol::session::Session::shutdown"
+      ],
+      "before": "self.require_initialized()?;",
+      "after": "let _ = self.require_initialized();"
     }
   ]
 }

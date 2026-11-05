@@ -1,0 +1,220 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:writfold:citation:1:binding",
+  "description": "Structural descriptor admission only. Enforce integer lexical tokens, first <= last, raw selected preimage length/digest, current authorization and actual retained provenance separately. This is not an RPC method or a grant.",
+  "type": "object",
+  "properties": {
+    "namespace": {
+      "const": "writfold-citation"
+    },
+    "schema": {
+      "const": 1
+    },
+    "kind": {
+      "const": "binding"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*(?![\\s\\S])"
+    },
+    "release": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*(?![\\s\\S])"
+    },
+    "context": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*(?![\\s\\S])"
+    },
+    "role": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*(?![\\s\\S])"
+    },
+    "representation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "realm": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*(?![\\s\\S])"
+            },
+            "repository": {
+              "type": "string",
+              "minLength": 1
+            },
+            "revision": {
+              "type": "object",
+              "properties": {
+                "algorithm": {
+                  "const": "sha1"
+                },
+                "value": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{40}(?![\\s\\S])"
+                }
+              },
+              "required": [
+                "algorithm",
+                "value"
+              ],
+              "additionalProperties": false
+            },
+            "path": {
+              "type": "string",
+              "pattern": "^[^/\\u0000]+(?:/[^/\\u0000]+)*(?![\\s\\S])",
+              "not": {
+                "pattern": "(^|/)\\.{1,2}(/|(?![\\s\\S]))"
+              }
+            },
+            "blob": {
+              "type": "object",
+              "properties": {
+                "algorithm": {
+                  "const": "sha1"
+                },
+                "value": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{40}(?![\\s\\S])"
+                }
+              },
+              "required": [
+                "algorithm",
+                "value"
+              ],
+              "additionalProperties": false
+            },
+            "capture_digest": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}(?![\\s\\S])"
+            },
+            "profile": {
+              "const": "git-blob/1"
+            }
+          },
+          "required": [
+            "realm",
+            "repository",
+            "revision",
+            "path",
+            "blob",
+            "capture_digest",
+            "profile"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "realm": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*(?![\\s\\S])"
+            },
+            "repository": {
+              "type": "string",
+              "minLength": 1
+            },
+            "revision": {
+              "type": "object",
+              "properties": {
+                "algorithm": {
+                  "const": "sha256"
+                },
+                "value": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}(?![\\s\\S])"
+                }
+              },
+              "required": [
+                "algorithm",
+                "value"
+              ],
+              "additionalProperties": false
+            },
+            "path": {
+              "type": "string",
+              "pattern": "^[^/\\u0000]+(?:/[^/\\u0000]+)*(?![\\s\\S])",
+              "not": {
+                "pattern": "(^|/)\\.{1,2}(/|(?![\\s\\S]))"
+              }
+            },
+            "blob": {
+              "type": "object",
+              "properties": {
+                "algorithm": {
+                  "const": "sha256"
+                },
+                "value": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}(?![\\s\\S])"
+                }
+              },
+              "required": [
+                "algorithm",
+                "value"
+              ],
+              "additionalProperties": false
+            },
+            "capture_digest": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}(?![\\s\\S])"
+            },
+            "profile": {
+              "const": "git-blob/1"
+            }
+          },
+          "required": [
+            "realm",
+            "repository",
+            "revision",
+            "path",
+            "blob",
+            "capture_digest",
+            "profile"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "selector": {
+      "type": "object",
+      "properties": {
+        "first": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "last": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "unit": {
+          "const": "byte"
+        }
+      },
+      "required": [
+        "first",
+        "last",
+        "unit"
+      ],
+      "additionalProperties": false
+    },
+    "selection_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}(?![\\s\\S])"
+    }
+  },
+  "required": [
+    "namespace",
+    "schema",
+    "kind",
+    "id",
+    "release",
+    "context",
+    "role",
+    "representation",
+    "selector",
+    "selection_digest"
+  ],
+  "additionalProperties": false
+}

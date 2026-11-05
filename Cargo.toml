@@ -7,6 +7,8 @@ members = [
     "crates/writfold-xtask",
     "crates/writfold-runtime",
     "crates/writfold-sources",
+    "crates/writfold-app",
+    "crates/writfold",
 ]
 resolver = "3"
 

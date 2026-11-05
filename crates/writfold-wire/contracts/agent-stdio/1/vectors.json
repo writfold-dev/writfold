@@ -1,0 +1,217 @@
+{
+  "schema_version": 1,
+  "profile": "writfold.agent/1",
+  "scope": "Stateful control transport vectors; ephemeral session labels and contract digest are validated against the running process, not fixed fixture IDs.",
+  "cases": [
+    {
+      "name": "initialize-shutdown",
+      "frames": [
+        "{\"jsonrpc\":\"2.0\",\"method\":\"initialize\",\"id\":\"init\",\"params\":{\"protocol_version\":\"2\"}}",
+        "{\"jsonrpc\":\"2.0\",\"method\":\"shutdown\",\"id\":\"stop\"}"
+      ],
+      "expected": [
+        {
+          "id": "init",
+          "kind": "initialize",
+          "generation": 1
+        },
+        {
+          "id": "stop",
+          "kind": "shutdown",
+          "generation": 2
+        }
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "scope-capabilities-not-fabricated",
+      "frames": [
+        "{\"jsonrpc\":\"2.0\",\"method\":\"initialize\",\"id\":1,\"params\":{\"protocol_version\":\"2\",\"capabilities\":[\"knowledge\"]}}",
+        "{\"jsonrpc\":\"2.0\",\"method\":\"initialize\",\"id\":2,\"params\":{\"protocol_version\":\"2\"}}",
+        "{\"jsonrpc\":\"2.0\",\"method\":\"cite.peek\",\"id\":3,\"params\":{}}",
+        "{\"jsonrpc\":\"2.0\",\"method\":\"shutdown\",\"id\":4}"
+      ],
+      "expected": [
+        {
+          "id": 1,
+          "code": -32000,
+          "category": "malformed",
+          "generation": 1
+        },
+        {
+          "id": 2,
+          "kind": "initialize",
+          "generation": 2
+        },
+        {
+          "id": 3,
+          "code": -32601,
+          "category": "malformed",
+          "generation": 3
+        },
+        {
+          "id": 4,
+          "kind": "shutdown",
+          "generation": 4
+        }
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "schema-state-capability-precedence",
+      "frames": [
+        "{\"jsonrpc\":\"2.0\",\"method\":\"shutdown\",\"id\":1,\"params\":{\"extra\":true}}",
+        "{\"jsonrpc\":\"2.0\",\"method\":\"initialize\",\"id\":2,\"params\":{\"protocol_version\":\"2\"}}",
+        "{\"jsonrpc\":\"2.0\",\"method\":\"initialize\",\"id\":3,\"params\":{\"protocol_version\":2}}",
+        "{\"jsonrpc\":\"2.0\",\"method\":\"initialize\",\"id\":4,\"params\":{\"protocol_version\":\"2\",\"capabilities\":[\"unknown\"]}}",
+        "{\"jsonrpc\":\"2.0\",\"method\":\"shutdown\",\"id\":5}"
+      ],
+      "expected": [
+        {
+          "id": 1,
+          "code": -32002,
+          "category": "conflict",
+          "generation": 1
+        },
+        {
+          "id": 2,
+          "kind": "initialize",
+          "generation": 2
+        },
+        {
+          "id": 3,
+          "code": -32602,
+          "category": "malformed",
+          "generation": 3
+        },
+        {
+          "id": 4,
+          "code": -32000,
+          "category": "conflict",
+          "generation": 4
+        },
+        {
+          "id": 5,
+          "kind": "shutdown",
+          "generation": 5
+        }
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "notifications-and-invalid-envelope",
+      "frames": [
+        "{\"jsonrpc\":\"2.0\",\"method\":\"unknown\"}",
+        "{\"jsonrpc\":\"2.0\",\"method\":\"initialize\",\"params\":{\"protocol_version\":\"2\"}}",
+        "{\"jsonrpc\":\"2.0\",\"method\":true}",
+        "{\"jsonrpc\":\"2.0\",\"method\":\"shutdown\",\"id\":null}"
+      ],
+      "expected": [
+        {
+          "id": null,
+          "code": -32600,
+          "category": "malformed",
+          "generation": null
+        },
+        {
+          "id": null,
+          "kind": "shutdown",
+          "generation": 3
+        }
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "duplicate-keys-and-integral-float-id",
+      "frames": [
+        "{\"jsonrpc\":\"2.0\",\"id\":1,\"id\":2,\"method\":\"initialize\"}",
+        "{\"jsonrpc\":\"2.0\",\"id\":1.0,\"method\":\"initialize\"}",
+        "{\"jsonrpc\":\"2.0\",\"method\":\"initialize\",\"id\":\"ready\",\"params\":{\"protocol_version\":\"2\"}}",
+        "{\"jsonrpc\":\"2.0\",\"method\":\"shutdown\",\"id\":\"done\"}"
+      ],
+      "expected": [
+        {
+          "id": null,
+          "code": -32700,
+          "category": "malformed",
+          "generation": null
+        },
+        {
+          "id": null,
+          "code": -32600,
+          "category": "malformed",
+          "generation": null
+        },
+        {
+          "id": "ready",
+          "kind": "initialize",
+          "generation": 1
+        },
+        {
+          "id": "done",
+          "kind": "shutdown",
+          "generation": 2
+        }
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "unknown-extra-field-retains-safe-id",
+      "frames": [
+        "{\"jsonrpc\":\"2.0\",\"id\":\"kept\",\"method\":\"initialize\",\"secret\":true}",
+        "{\"jsonrpc\":\"2.0\",\"method\":\"initialize\",\"id\":\"start\",\"params\":{\"protocol_version\":\"2\"}}",
+        "{\"jsonrpc\":\"2.0\",\"method\":\"shutdown\",\"id\":\"end\"}"
+      ],
+      "expected": [
+        {
+          "id": "kept",
+          "code": -32600,
+          "category": "malformed",
+          "generation": null
+        },
+        {
+          "id": "start",
+          "kind": "initialize",
+          "generation": 1
+        },
+        {
+          "id": "end",
+          "kind": "shutdown",
+          "generation": 2
+        }
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "eof-without-newline",
+      "frames": [
+        "{\"jsonrpc\":\"2.0\",\"method\":\"initialize\",\"id\":\"last\",\"params\":{\"protocol_version\":\"2\"}}"
+      ],
+      "final_lf": false,
+      "expected": [
+        {
+          "id": "last",
+          "kind": "initialize",
+          "generation": 1
+        }
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "shutdown-notification-closes",
+      "frames": [
+        "{\"jsonrpc\":\"2.0\",\"method\":\"initialize\",\"id\":\"start\",\"params\":{\"protocol_version\":\"2\"}}",
+        "{\"jsonrpc\":\"2.0\",\"method\":\"shutdown\"}",
+        "{\"jsonrpc\":\"2.0\",\"method\":\"unknown\",\"id\":\"unread\"}"
+      ],
+      "expected": [
+        {
+          "id": "start",
+          "kind": "initialize",
+          "generation": 1
+        }
+      ],
+      "exit_code": 0
+    }
+  ]
+}

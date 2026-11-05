@@ -1,0 +1,370 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:writfold:agent:1:response",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "id": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            }
+          ],
+          "description": "Integer IDs require integer lexical tokens; fractional/exponent spellings are invalid even when mathematically integral. Preserve arbitrary precision."
+        },
+        "result": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "protocol_version": {
+                  "const": "2"
+                },
+                "profile": {
+                  "const": "writfold.agent/1"
+                },
+                "implementation_scope": {
+                  "const": "transport-control-only"
+                },
+                "server": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "const": "writfold"
+                    },
+                    "version": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "version"
+                  ],
+                  "additionalProperties": false
+                },
+                "session": {
+                  "type": "object",
+                  "properties": {
+                    "instance_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*(?![\\s\\S])"
+                    },
+                    "incarnation": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*(?![\\s\\S])"
+                    }
+                  },
+                  "required": [
+                    "instance_id",
+                    "incarnation"
+                  ],
+                  "additionalProperties": false
+                },
+                "generation": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                "capabilities": {
+                  "const": [
+                    "notifications"
+                  ]
+                },
+                "batch": {
+                  "const": false
+                },
+                "notifications": {
+                  "const": true
+                },
+                "max_request_bytes": {
+                  "const": 65536
+                },
+                "max_response_bytes": {
+                  "const": 65536
+                },
+                "methods": {
+                  "type": "object",
+                  "properties": {
+                    "initialize": {
+                      "type": "object"
+                    },
+                    "shutdown": {
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "initialize",
+                    "shutdown"
+                  ],
+                  "additionalProperties": false
+                },
+                "contract": {
+                  "type": "object",
+                  "properties": {
+                    "namespace": {
+                      "const": "writfold-agent-contract"
+                    },
+                    "schema": {
+                      "const": 1
+                    },
+                    "sha256": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{64}(?![\\s\\S])"
+                    }
+                  },
+                  "required": [
+                    "namespace",
+                    "schema",
+                    "sha256"
+                  ],
+                  "additionalProperties": false
+                },
+                "trust_boundary": {
+                  "const": "Transport/session control only; no authorized corpus, retained release, grounding or effect service is available."
+                }
+              },
+              "required": [
+                "protocol_version",
+                "profile",
+                "implementation_scope",
+                "server",
+                "session",
+                "generation",
+                "capabilities",
+                "batch",
+                "notifications",
+                "max_request_bytes",
+                "max_response_bytes",
+                "methods",
+                "contract",
+                "trust_boundary"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "exit_code": {
+                  "const": 0
+                },
+                "complete": {
+                  "const": true
+                },
+                "generation": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                "session": {
+                  "type": "object",
+                  "properties": {
+                    "instance_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*(?![\\s\\S])"
+                    },
+                    "incarnation": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*(?![\\s\\S])"
+                    }
+                  },
+                  "required": [
+                    "instance_id",
+                    "incarnation"
+                  ],
+                  "additionalProperties": false
+                },
+                "payload": {
+                  "type": "object",
+                  "properties": {
+                    "shutdown": {
+                      "const": true
+                    }
+                  },
+                  "required": [
+                    "shutdown"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "exit_code",
+                "complete",
+                "generation",
+                "session",
+                "payload"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        }
+      },
+      "required": [
+        "jsonrpc",
+        "id",
+        "result"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "id": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            }
+          ],
+          "description": "Integer IDs require integer lexical tokens; fractional/exponent spellings are invalid even when mathematically integral. Preserve arbitrary precision."
+        },
+        "error": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "enum": [
+                -32700,
+                -32600,
+                -32601,
+                -32602,
+                -32000,
+                -32002
+              ]
+            },
+            "message": {
+              "type": "string"
+            },
+            "data": {
+              "type": "object",
+              "properties": {
+                "schema_version": {
+                  "const": 1
+                },
+                "category": {
+                  "enum": [
+                    "malformed",
+                    "conflict"
+                  ]
+                },
+                "message": {
+                  "type": "string"
+                },
+                "diagnostic": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "enum": [
+                        "E102",
+                        "E104"
+                      ]
+                    },
+                    "severity": {
+                      "const": "error"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "labels": {
+                      "const": []
+                    },
+                    "help": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "severity",
+                    "message",
+                    "labels",
+                    "help"
+                  ],
+                  "additionalProperties": false
+                },
+                "exit_code": {
+                  "const": 1
+                },
+                "complete": {
+                  "const": false
+                },
+                "generation": {
+                  "oneOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 18446744073709551615
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "session": {
+                  "type": "object",
+                  "properties": {
+                    "instance_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*(?![\\s\\S])"
+                    },
+                    "incarnation": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*(?![\\s\\S])"
+                    }
+                  },
+                  "required": [
+                    "instance_id",
+                    "incarnation"
+                  ],
+                  "additionalProperties": false
+                },
+                "outcome": {
+                  "const": "rejected"
+                }
+              },
+              "required": [
+                "schema_version",
+                "category",
+                "message",
+                "diagnostic",
+                "exit_code",
+                "complete",
+                "generation",
+                "session",
+                "outcome"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "code",
+            "message",
+            "data"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "jsonrpc",
+        "id",
+        "error"
+      ],
+      "additionalProperties": false
+    }
+  ]
+}

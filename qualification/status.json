@@ -81,6 +81,53 @@
       "Execution-ledger and skill/procedure integration retain existing P14-P19 prerequisites."
     ]
   },
+  "stdio_control_admission": {
+    "status": "pass",
+    "scope": "Actual ordinary transport-control component; not full P09/WF13, authenticated corpus reads, grounded client E2E, worktree editing, ledger/effects or product release.",
+    "profile": "qualification/stdio-control-profile.json",
+    "record": {
+      "path": "~/.local/share/writfold/evidence/stdio-component-admission-20261105-001.json",
+      "sha256": "72eae3f2e5102d52348c5c87c8eefb85d4c8e7b18a5cecb86b7d3d4c4d12bdea",
+      "bytes": 88372
+    },
+    "qualified_source_tree_digest": "68688f3d270462092b27072c9ddaa4f2e57e891f245df94ee447e66a0ed9c6f9",
+    "applicability": "327 native/compiler/fixture inputs, 319 copied proof-workspace inputs and selected proof recipe inputs match. Later availability-index/prose changes are explicitly reconciled in the admission record; broader whole-tree receipts are not relabelled.",
+    "command": ["writfold", "serve"],
+    "implemented_methods": ["initialize", "shutdown"],
+    "advertised_capabilities": ["notifications"],
+    "contract": {
+      "path": "crates/writfold-wire/contracts/agent-stdio/1/contract.json",
+      "sha256": "b673d10f7c14c73d8f5778cfb9b2e84a98a159f1553d5c008054402ee85e7be2"
+    },
+    "contract_archive": {
+      "path": "~/.local/share/writfold/evidence/stdio-control-20261105-001.json.attempt/writfold-agent-contract.tar.gz",
+      "sha256": "1971ed3fb84a210eee6e53a9af3fb331affb3ad931e7717adb8926b641bba842",
+      "bytes": 5811
+    },
+    "binary": {
+      "path": "~/.local/share/writfold/evidence/stdio-control-20261105-001.json.attempt/writfold",
+      "sha256": "70b0d07b18e2f1bd70fc34fce4cc5335fccdd5c6307c014f55abf81ecd97fcca",
+      "bytes": 615112,
+      "target": "x86_64-unknown-linux-musl"
+    },
+    "verification": {
+      "rust_tests": 262,
+      "quality_checks": 239,
+      "native_control_checks": 24,
+      "standalone_artifact_controls": 19,
+      "verus_domain_obligations": 1112,
+      "verus_protocol_obligations": 41,
+      "new_session_functions": 22,
+      "semantic_mutant_families_rejected": 13,
+      "evidence_admission_controls_rejected": 182,
+      "verus_required_checks": 198,
+      "wsl_retained_binary_smoke": "pass"
+    },
+    "weft_scope": "Revision-3 requirements reconciled; only mutable plans-folder handoffs written in Weft, no source/configuration/qualification/handover edits.",
+    "splicery_scope": "Worktree-edit /1 archive integrity and owner requirements recorded in qualification/splicery-integration.json; no runtime edit capability or sibling source change.",
+    "full_service_requirements": "WR1-WR8 and existing P09/native/ledger/effect gates remain open. Control initialization is neither scope authorization nor grounding.",
+    "storage_blocker": "P01O/WF24 retained-branch relocation remains blocked. Upstream issue status was inspected; native failure was not rerun, prototype not adopted and no fallback introduced."
+  },
   "stages": [
     {
       "id": "P00",

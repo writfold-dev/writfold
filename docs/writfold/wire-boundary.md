@@ -31,7 +31,7 @@ Canonicalization sorts keys by Unicode scalar order (UTF-8 lexicographic order),
 
 `InitializeParams::parse` validates only the closed initialization schema; a stateful consumer then checks double initialization, calls `admit` for supported capabilities and commits the session transition. `Initialize::parse` combines the two stateless checks. Protocol version is exactly string `"2"`. Capabilities retain caller order and duplicates; absent capabilities are empty. This boundary advertises no unimplemented method bodies.
 
-`writfold_protocol::session` keeps instance, incarnation and generation identities distinct. Initialization and shutdown have explicit refusal-preserving transitions; a new incarnation cannot accept an earlier request even when generation numbers coincide. These pure values confer neither live-process ownership nor writer authority. Production transport/application integration remains a later stage.
+`writfold_protocol::session` keeps instance, incarnation and generation identities distinct. Its actual executable initialization/shutdown and correlation bodies carry explicit Verus contracts: refusal preserves state/identity, shutdown cannot reopen, and stale incarnation/generation cannot correlate. Pure labels confer neither live-process ownership nor writer authority. The application now consumes these bodies for the control profile below; corpus/service integration remains separately gated.
 
 Storage-aware requests require the explicit `writfold.storage/1` capability.
 `Initialize::require_storage_profile` yields `StorageProfileVersion::V1` only
@@ -43,6 +43,72 @@ the same typed refusal. All parameter types are checked before support, and
 support errors preserve input-order precedence. No server or method metadata
 is fabricated by these pure codecs.
 
+
+## Ordinary stdio control profile
+
+The native command is `writfold serve`. It uses shared typed application decisions
+and the existing protocol-2 boundary, not the semantic-input `writfold-ref` host
+or the historical Python engine. The implementation profile is `writfold.agent/1`,
+explicitly `transport-control-only`. It registers only `initialize` and `shutdown`
+and advertises only the `notifications` capability. Unsupported data/edit
+capabilities refuse before initialization commits; unavailable methods are absent
+from lookup, not placeholder handlers.
+
+```mermaid
+flowchart LR
+    C[Ordinary client pipe] --> R[runtime: bounded frame acquisition]
+    R --> W[wire: strict envelope and typed parameters]
+    W --> A[app: method and capability decisions]
+    A --> P[protocol: identity and lifecycle predicates]
+    P --> E[wire: complete bounded reply]
+    E --> T[app: commit lifecycle transition]
+    T --> O[Owned stdout pipe]
+    D[Pinned contract artifact] -. exact identity and vectors .-> W
+```
+
+Each invocation observes independent OS entropy for ephemeral instance/incarnation
+labels. They name this transport process/session, not a KB, persisted owner, grant
+or evidence object. Every valid envelope consumes a checked request generation,
+starting at 1, including notifications and refused/unknown methods. Malformed
+JSON/envelopes have no allocated generation. The counter never wraps or reuses a
+live value and is independent of citation-table epochs.
+
+Frames and replies are bounded at 65,536 bytes including LF. The native reader
+preserves raw bytes and drains overlong frames through LF/EOF without swallowing
+the next frame. A final non-newline request is evaluated; blank lines are not
+silently ignored. Output uses borrowed typed metadata and exact integer/string/
+null IDs. Valid notifications execute lifecycle without output; invalid envelopes
+still receive errors.
+
+Method lookup precedes state/parameter refusal. Initialize checks running state,
+parameter schema, double initialization and supported capabilities in that order.
+Shutdown checks initialization before empty parameters. Complete reply encoding
+precedes a successful lifecycle commit. If a valid huge ID cannot fit a bounded
+correlated reply, the connection closes without truncation, ID substitution or
+partial response. Output IO failure is fatal; no reply is blindly retried.
+Shutdown closes the invocation immediately, including shutdown notifications.
+
+EOF/shutdown exits 0; setup/read/encoding failures exit 1; a broken output pipe is
+cancellation (130). SIGINT/SIGTERM retain native process-signal termination.
+This profile launches no child or persistent effect; it does not qualify the
+later resource-owning backend's signal/reconciliation obligations.
+
+The [owner contract](../../crates/writfold-wire/contracts/agent-stdio/1/contract.json)
+binds its schemas and stateful vectors by exact hash/length. Initialization names
+the raw SHA-256 of those contract bytes. JSON Schema alone cannot express integer
+lexical distinctions, selector-order/preimage checks or live authority; the
+contract states those separate constraints. The citation schema describes the
+existing data codec, not a callable citation service.
+
+`scripts/writfold_agent_contract.py --output <new-external-archive>` exports a
+self-contained deterministic contract archive, with offline inspection via
+`--inspect`. Runtime Python is not required by `writfold`. Consumers must bind
+the exact artifact or source pin and observe negotiated capability availability,
+never use a mutable sibling checkout or infer grounding from initialization.
+
+`stdio-control` qualifies the actual native control component under WF13 with
+`stdio-control-only` scope. Full `transport`, P09, live WR1–WR8, storage admission,
+grounded Weft E2E and Splicery editing remain separate obligations.
 
 ## Versioned storage-pin records
 

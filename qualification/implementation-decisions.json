@@ -31,6 +31,15 @@
       "invariants": "The dependency graph stays acyclic. Domain/kernel/protocol remain IO-free. Application services prepare immutable views and orchestrate; store/runtime own durable effects. No inference or wire version changes."
     },
     {
+      "id": "WF-ARCH-002",
+      "status": "adopted_for_implementation",
+      "old": "The architecture table omits a direct app-to-protocol edge; WF-ARCH-001 already admits app-to-domain.",
+      "new": "Permit app -> protocol when composing the ordinary stdio session lifecycle, alongside the already adopted app -> domain edge.",
+      "reason": "The application must invoke the existing pure lifecycle/generation decisions directly instead of duplicating their state machine or creating a forwarding-only runtime re-export. The graph remains acyclic and the core remains IO-free.",
+      "affected": ["WF02", "WF13", "writfold-app", "writfold-protocol::session", "writfold-protocol::generation"],
+      "limits": "This module-ownership clarification grants no corpus, storage, publication, grounding or effect authority and does not pass the blocked native foundation or P09."
+    },
+    {
       "id": "WF-TEXT-001",
       "status": "adopted_for_implementation",
       "old": "The historical document mutators only reject CR/LF in single-line inputs. Other Python splitlines separators can create extra frontmatter fields or headings.",
@@ -113,6 +122,16 @@
       "affected": ["P02", "WF03", "WF10", "V15", "RPC storage-profile negotiation"],
       "migration": "Schema2 operations cannot be wrapped for new writes. Legacy storage can be named only as an explicit base with a required mapping. Original schema2/schema3 messages and signatures remain unchanged.",
       "limits": "Supplied-input authorization is not live policy/predecessor authority, canonical migration correctness, native retention or completed publication. This boundary does not provide a release manifest or installed product."
+    },
+    {
+      "id": "WF-RPC-001",
+      "status": "adopted_for_implementation",
+      "old": "The legacy engine bounds requests but not replies and does not bind every control response to observed invocation identities and a checked request generation.",
+      "new": "The explicitly versioned writfold.agent/1 control profile adds ephemeral process/session metadata, a checked per-envelope generation and a 65536-byte LF-inclusive response bound. Complete encoding precedes successful lifecycle commits; unrepresentable correlated replies terminate the connection without partial bytes, ID substitution or a fabricated result.",
+      "reason": "Preserve ordinary protocol-2 request/notification/refusal semantics while making the shared client boundary bounded and correlation-safe. A near-ceiling valid ID may leave insufficient room for even a correlated error envelope; silent truncation or null-ID substitution is not valid.",
+      "affected": ["WF13", "writfold-app", "writfold-runtime::stdio", "writfold-wire::rpc::response", "writfold.agent/1"],
+      "migration": "Legacy signed/semantic bytes remain unchanged. Clients bind this exact profile/artifact and its implemented capability set. The control process launches no native child/effect; SIGINT/SIGTERM use native process termination, while broken output pipe maps to cancellation 130.",
+      "limits": "No corpus, knowledge context, retained release, grounding, edit, ledger or effect capability is enabled. Current control faults describe no-effect rejection; uncertain/partial future effects require their own qualified outcome projection and reconciliation."
     }
   ]
 }

@@ -1,0 +1,154 @@
+{
+  "schema_version": 1,
+  "status": "requirements_reconciled_no_runtime_admission",
+  "authority": "handovers/revision-5/writfold",
+  "feature_adoption": "qualification/revision-9-feature-adoption.json",
+  "source_archive": {
+    "path": "~/Downloads/splicery-worktree-edit-handover-version-1.zip",
+    "sha256": "46855689f5f3042ab0790a7b8b98bef219bd1611f3059d6470a39d9bbf2c462f",
+    "bytes": 69313,
+    "manifest_sha256": "b23464f08205ff6d8e14f938ff1305ef8cdf534adcf063adcc3c9d963fc0b389",
+    "listed_members": 47,
+    "archive_members": 48
+  },
+  "reviewed_inputs": {
+    "README.md": {
+      "sha256": "eff855df18bb3b0e9d7e9e19233ce705feff77d4ebdac2857194b88c8133c97f",
+      "bytes": 3222
+    },
+    "AGENT_START_HERE.md": {
+      "sha256": "2e5214be4cabee1a9c1eb043f86ae08705f966a7330341405cdf436784630057",
+      "bytes": 4057
+    },
+    "protocol/worktree.md": {
+      "sha256": "43ee8255f5df2dbf8d7638d4487db9d4d1049e1a90c4f78f854decd38d84b203",
+      "bytes": 8313
+    },
+    "spec/resolved-ir.md": {
+      "sha256": "cde3bbecffcd489bbe2d8f74b69fba9930369b769572aa251b10d016b5ba4cb4",
+      "bytes": 3567
+    },
+    "guide/sources.md": {
+      "sha256": "aaa2bc8c807ded29263a8a5cd8402058bc750333b24317f4cac5b40ae6547bde",
+      "bytes": 3382
+    },
+    "qualification/implementation-map.md": {
+      "sha256": "69387d2b03018597d4926abb28bca6fdeee56496e70b4fd729eb5c7aa7219e64",
+      "bytes": 3051
+    }
+  },
+  "source_policy": "Original supplied archive/member bytes remain untouched. This owner review does not activate Splicery stage/gate registries as Writfold authority or edit the sibling implementation.",
+  "contract": "docs/writfold/shared-client-references.md#splicery-worktree-edit-boundary",
+  "ownership": {
+    "splicery": "Language semantics, frontend, normalized IR, pure checked edit kernel and their own qualifications.",
+    "writfold": "Ordinary capability discovery, authenticated scope, run/worktree/Worktrunk bindings, prepared-edit admission, durable claims, grants/predecessors/resource generations, native materialization, receipts and reconciliation.",
+    "weft": "Its own logical/report interpretation. A report is not edit permission; a selected admitted procedure may require a precisely bound report without imposing a universal proof floor."
+  },
+  "decisions": {
+    "transport": "Reuse ordinary initialized shared stdio. Logical open/select/prepare/apply/reconcile names in the handover remain proposals, not registered methods. Current control-only capabilities are unchanged.",
+    "worktree_profile": "A run-owned dirty/generated/untracked regular-file capture needs a separately admitted worktree profile. It is not an immutable Git-blob citation or corpus admission; preserve realm/run/repository/worktree/binding/capture/profile/metadata identity.",
+    "subjects": "Weft report, knowledge citation explaining why, exact worktree selection identifying where, source recipe, resolved IR, prepared edit, candidate bytes and effect are distinct typed subjects.",
+    "replay": "Recipe-attributed host receipts require independent replay of exact source/lowering/read-set over authorized immutable input through the pinned shared Splicery kernel. Client digests alone do not establish derivation; future IR-only inputs must be labeled separately.",
+    "identity": "Review and register distinct canonical domains and vectors for recipe/capture/candidate/prepared-edit/request/effect material before a writer. Existing canonical framing and semantic intent versus dispatch stamps remain controlling; output equality is not intent equality.",
+    "idempotency": "Authenticated principal/realm/run/request key binds one immutable intent and original effect/outcome. Conflicting intent refuses, including byte ABA. Lost replies and expired prepared material do not reopen a dispatched key.",
+    "materialization": "Private or cooperating run-owned worktrees; contained descriptors, regular/singly-linked files and explicit metadata policy. Check exact raw preimage and ownership under reservation; qualified absence/no-clobber mechanisms for create/rename; no auto-parent creation or cross-device copy/delete fallback.",
+    "outcomes": "Visibility, durability and durable acknowledgement are separate. Post-install sync failure and uncertain claimed writes retain Unknown/partial observations and reservations, never a fabricated no-effect rejection or blind replay. Multi-file operations retain per-file outcomes and applied prefix, not fictional global rollback.",
+    "disclosure": "Preview/diff truncation never changes candidate identity. Access checks precede content/count diagnostics. Historical handles retain exact meaning or expire; stale anchors never retarget silently.",
+    "policy": "No new generic VM, second writer, mutable sibling dependency, automatic Weft-report authority, CIT07/V23 floor or storage fallback."
+  },
+  "requirements": [
+    {
+      "id": "SW1",
+      "subject": "Run-owned worktree acquisition, separate profile and exact aliases",
+      "owner_stages": [
+        "P05",
+        "P09",
+        "P14",
+        "P17"
+      ],
+      "related_gates": [
+        "WF08",
+        "WF13",
+        "WF25",
+        "WF28"
+      ],
+      "status": "not_run"
+    },
+    {
+      "id": "SW2",
+      "subject": "Pinned compiler/kernel replay, normalized intent and host-created prepared edit",
+      "owner_stages": [
+        "P05",
+        "P14",
+        "P16"
+      ],
+      "related_gates": [
+        "WF08",
+        "WF25",
+        "WF27"
+      ],
+      "status": "not_run"
+    },
+    {
+      "id": "SW3",
+      "subject": "Durable claim, current authority, expected heads, request-key history and reconciliation",
+      "owner_stages": [
+        "P14",
+        "P16",
+        "P17"
+      ],
+      "related_gates": [
+        "WF25",
+        "WF27",
+        "WF28"
+      ],
+      "status": "not_run"
+    },
+    {
+      "id": "SW4",
+      "subject": "Native replace/create/remove/rename and per-file uncertainty",
+      "owner_stages": [
+        "P16",
+        "P17"
+      ],
+      "related_gates": [
+        "WF27",
+        "WF28"
+      ],
+      "status": "not_run"
+    },
+    {
+      "id": "SW5",
+      "subject": "Exact effect receipts and read-only Run Watch projections",
+      "owner_stages": [
+        "P19",
+        "P11"
+      ],
+      "related_gates": [
+        "WF30",
+        "WF31"
+      ],
+      "status": "not_run"
+    }
+  ],
+  "required_adverse_cases": [
+    "wrong realm/run/worktree/binding/profile or foreign same-text capture",
+    "formatter or metadata change between prepare and apply gives stale refusal",
+    "cross-image keep, partial match sets or overlapping original destinations refuse",
+    "same request key and changed intent conflicts after byte ABA",
+    "lost acknowledgement resolves the original effect without redispatch",
+    "post-rename fsync error is uncertain durability, not rejected/no-effect",
+    "symlink/magic-link/multiply-linked/special-file and unsupported metadata configurations refuse",
+    "create/rename destination race never overwrites a competing file",
+    "cancelled or unknown claimed write retains reservation until qualified quiescence/reconciliation",
+    "partial multi-file success never reports rollback or whole-batch completion",
+    "unauthorized original text/counts never appear in diffs/diagnostics"
+  ],
+  "qualification": {
+    "package_integrity": "~/.local/share/writfold/evidence/stdio-development-20261105T183018Z-ba3a4818/splicery-handover-identity.json",
+    "runtime_status": "not_run",
+    "splicery_sources_modified": false,
+    "production_edit_methods_advertised": [],
+    "storage_dependency": "Known P01O/WF24 and downstream authoritative ledger/native prerequisites remain blocked; no rerun, prototype adoption or fallback."
+  }
+}

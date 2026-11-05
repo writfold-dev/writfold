@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "profile": "writfold.agent/1",
+  "gate": "WF13",
+  "command": "stdio-control",
+  "scope": "stdio-control-only; actual bounded initialization/shutdown transport, not complete P09 or authenticated data/effect services",
+  "authority": "handovers/revision-5/writfold",
+  "contract": "crates/writfold-wire/contracts/agent-stdio/1/contract.json",
+  "producer": "scripts/writfold_stdio.py",
+  "artifact_publisher": "scripts/writfold_agent_contract.py",
+  "implemented_command": ["writfold", "serve"],
+  "implemented_methods": ["initialize", "shutdown"],
+  "implemented_capabilities": ["notifications"],
+  "owners": {
+    "writfold": "CLI argument/stream composition and process exit mapping",
+    "writfold-app": "Typed method lookup, lifecycle/schema/capability refusal precedence, generation allocation and prepare-before-commit orchestration",
+    "writfold-wire": "Strict bounded envelopes, exact ID kinds, closed parameter/data schemas and borrowed LF-inclusive response encoding",
+    "writfold-protocol": "Actual checked generation allocation, exact instance/incarnation/request correlation and refusal-preserving lifecycle transitions",
+    "writfold-runtime": "Observed OS entropy and bounded byte-preserving frame acquisition; no backend child is launched by this profile"
+  },
+  "proof_mapping": {
+    "profile": "qualification/verus-profile.json",
+    "selected_bodies": [
+      "writfold_protocol::generation::advance_generation",
+      "writfold_protocol::session::SessionIdentity::same",
+      "writfold_protocol::session::RequestIdentity::ensure_current",
+      "writfold_protocol::session::Session::require_initialized",
+      "writfold_protocol::session::Session::require_uninitialized",
+      "writfold_protocol::session::Session::initialize",
+      "writfold_protocol::session::Session::shutdown"
+    ],
+    "meaning": "Executable-body identity/state/generation guarantees and intended-declaration negative calibrations. This is not a machine-checked whole native transport, JSON parser, syscall, entropy, or CLI-to-Lean refinement theorem."
+  },
+  "native_obligations": [
+    "actual static x86_64 musl binary and clean line-delimited stdout",
+    "all pinned contract sequences through real subprocess pipes",
+    "exact LF-inclusive request boundary and oversize draining/recovery",
+    "fragmented, EOF and invalid UTF-8/JSON behavior",
+    "exact string/null/arbitrary integer correlation without float narrowing",
+    "bounded complete response or connection termination without partial bytes/ID substitution",
+    "notification silence and shutdown without processing subsequent input",
+    "SIGTERM during partial pending input and broken output pipe",
+    "self-contained exact contract archive, reproducibility, standalone inspection and hostile archive refusal"
+  ],
+  "scenario_relationships": {
+    "X04": "Contributes pipe/stream cleanliness and diagnostics only; full CLI/TTY/color scope remains open.",
+    "X23": "Contributes this no-backend-child control process cancellation/bounded IO only; owned child-tree/resource and uncertain-effect guarantees remain separate.",
+    "X20,X37,X38,X61,X62,X75,X78,X85": "Not established: pinned corpus pages, continuation leases, contrary evidence, semantic context and prepared authoritative views require their actual services."
+  },
+  "trust_boundaries": [
+    "OS entropy labels are invocation-local transport identity, not durable KB ownership or a grant.",
+    "Contract/artifact digests establish byte identity relative to the pinned owner artifact, not authenticity or truth by themselves.",
+    "JSON Schema does not replace lexical integer rules, checked selector ordering/preimages, live authorization or retained provenance.",
+    "Application dispatch and native IO are exercised; only explicitly mapped protocol bodies receive the stated Verus coverage.",
+    "Control faults are rejected/no-effect outcomes. Future Splicery or other effects require distinct Unknown/partial outcome projection, retained reservations and reconciliation."
+  ],
+  "blocked_scope": [
+    "P01O/WF24 retained-branch relocation; no rerun or fallback",
+    "authorized realm/context/completed release and live citation/assessment readers",
+    "finite collections, pinned read closure and bounded large-artifact transfer",
+    "Worktrunk/run-owned editing, durable ledger/effects and learning admission",
+    "full WR1-WR8, full V10/M03/V22/P09/WF13 and product release"
+  ],
+  "evidence_policy": "Current results are recorded only in exact external receipts and qualification/status.json. Neither this profile nor a control handshake is a full-gate or grounded-E2E pass."
+}

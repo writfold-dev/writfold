@@ -57,6 +57,10 @@ services:
     <<: *qualified-tools
     network_mode: none
     command: [python3, scripts/writfold_quality.py]
+  stdio-control:
+    <<: *qualified-tools
+    network_mode: none
+    command: [python3, scripts/writfold_stdio.py]
   unit:
     <<: *qualified-tools
     network_mode: none

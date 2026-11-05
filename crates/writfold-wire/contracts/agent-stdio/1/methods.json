@@ -1,0 +1,1 @@
+{"initialize":{"additionalProperties":false,"properties":{"protocol_version":{"const":"2","title":"Protocol Version","type":"string"},"capabilities":{"items":{"type":"string"},"title":"Capabilities","type":"array"}},"required":["protocol_version"],"title":"Initialize","type":"object"},"shutdown":{"additionalProperties":false,"properties":{},"title":"Params","type":"object"}}

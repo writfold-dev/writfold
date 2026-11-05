@@ -1,8 +1,8 @@
 use super::{
     CitationDescriptor, CitationWireError, GIT_BLOB_PROFILE, NAMESPACE, Result, SCHEMA, algorithm,
 };
+use crate::rpc::response::bounded::{Bounded, Failure};
 use serde::Serialize;
-use std::io::{self, Write};
 
 // Fields are in canonical Unicode-key order. Values borrow checked immutable
 // metadata: no cloned JSON tree or copied source preimage is created to encode.
@@ -44,46 +44,6 @@ struct Envelope<'a> {
     selector: Selection,
 }
 
-#[derive(Clone, Copy)]
-enum Failure {
-    Limit,
-    Allocation,
-}
-
-struct Bounded {
-    bytes: Vec<u8>,
-    maximum: usize,
-    failure: Option<Failure>,
-}
-
-impl Write for Bounded {
-    fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
-        if bytes.len() > self.maximum.saturating_sub(self.bytes.len()) {
-            self.failure = Some(Failure::Limit);
-            return Err(io::Error::other("citation output budget"));
-        }
-        let required = self.bytes.len() + bytes.len();
-        if required > self.bytes.capacity() {
-            let capacity = required
-                .max(self.bytes.capacity().saturating_mul(2))
-                .min(self.maximum);
-            if self
-                .bytes
-                .try_reserve_exact(capacity - self.bytes.len())
-                .is_err()
-            {
-                self.failure = Some(Failure::Allocation);
-                return Err(io::Error::other("citation output allocation"));
-            }
-        }
-        self.bytes.extend_from_slice(bytes);
-        Ok(bytes.len())
-    }
-    fn flush(&mut self) -> io::Result<()> {
-        Ok(())
-    }
-}
-
 pub(super) fn encode(descriptor: &CitationDescriptor, maximum: usize) -> Result<Vec<u8>> {
     let reference = descriptor.source.reference();
     let format = algorithm(descriptor.source.format());
@@ -117,20 +77,16 @@ pub(super) fn encode(descriptor: &CitationDescriptor, maximum: usize) -> Result<
             unit: "byte",
         },
     };
-    let mut output = Bounded {
-        bytes: Vec::new(),
-        maximum,
-        failure: None,
-    };
-    if serde_json::to_writer(&mut output, &envelope).is_err() {
-        return Err(match output.failure {
-            Some(Failure::Limit) => CitationWireError::Wire(crate::Error::Limit {
+    let mut output = Bounded::new(maximum);
+    if let Err(failure) = output.json(&envelope) {
+        return Err(match failure {
+            Failure::Limit => CitationWireError::Wire(crate::Error::Limit {
                 budget: crate::Budget::Bytes,
-                offset: output.bytes.len(),
+                offset: output.len(),
             }),
-            Some(Failure::Allocation) => CitationWireError::Allocation,
-            None => CitationWireError::Encoding,
+            Failure::Allocation => CitationWireError::Allocation,
+            Failure::Encoding => CitationWireError::Encoding,
         });
     }
-    Ok(output.bytes)
+    Ok(output.into_bytes())
 }

@@ -19,6 +19,8 @@ fn allowed(name: &str) -> Option<&'static [&'static str]> {
             "writfold-runtime",
         ],
         "writfold-app" => &[
+            "writfold-domain",
+            "writfold-protocol",
             "writfold-kernel",
             "writfold-store",
             "writfold-sources",
