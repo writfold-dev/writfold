@@ -243,6 +243,30 @@ Schema validity, complete input capture, current authority and receipt reuse
 remain separate application decisions. No ledger writer or new graph owner is
 introduced by these primitives.
 
+### Flat dependency-lock component
+
+`engineering::dependency::DependencyLock::new` now normalizes the finite package,
+export and typed-edge sets, resolves both ends against exact package revisions,
+and rejects conflicting declarations and non-descending procedure calls. Tables
+are sorted in place; endpoint lookup uses binary search without cloning keys.
+Read/reference cycles remain valid. Private fields prevent bypassing admission by
+constructing an allegedly validated lock directly.
+
+The actual `call_rank_allowed` body has the exact contract
+`kind != InvokeProcedure || target < source`. `finite_call_chain_descends` states
+that a nonempty strictly descending call chain cannot return to its initial rank.
+This follows the rank premise of Lean `Procedure.FormTyped`; it is not a
+Lean-to-Rust refinement theorem. The default Verus profile names the production
+guard and calibrates a `<` to `<=` mutation; the finite-chain helper belongs to
+the whole-crate proof and theorem mapping. Collection sorting, endpoint lookup,
+nominal lock-string parsing and the wire codec are outside this selected proof.
+
+The [schema and byte contract](wire-boundary.md#engineering-dependency-lock-schema-1)
+is frozen separately from the immutable handover's illustrative untyped payloads.
+No package importer, skill activation, corpus writer or effect path is enabled.
+Exact evidence is indexed in `qualification/status.json`; complete input
+fingerprints, read-cut manifests, durable ledger and full V16 remain separate work.
+
 ## Scoped citation calculus
 
 The selected revision-9 feature contract is implemented mathematically in

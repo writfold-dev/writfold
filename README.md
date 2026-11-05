@@ -111,6 +111,11 @@ design bodies. It has 428 kernel Verus obligations, 170 workspace tests,
 binds exact sources, tools and artifacts; none of these components passes
 the full release gate set.
 
+The latest storage-independent P14 component is the
+[canonical flat dependency lock](docs/writfold/wire-boundary.md#engineering-dependency-lock-schema-1):
+exact package/export references, typed edges and invocation-cycle refusal.
+It does not enable skill execution or bypass the native storage blocker.
+
 1. Carry the discharged E01–E12 contracts into the remaining production bodies, V16–V21/M12–M16 and composition bridges. Preserve legacy T01–T22 and signed bytes. The independent engineering domain/wire primitives do not close the durable-ledger or integrated qualification obligations.
    Twelve abstract model/composition modules have strict safety proofs, and
    all twenty selected semantic negatives have counterexamples. Nine positive

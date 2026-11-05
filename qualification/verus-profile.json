@@ -1,6 +1,6 @@
 {
   "schema_version": 4,
-  "scope": "P02 nominal identities, checked runtime conversions and storage-pin read consistency; retained P01 generation allocation; ordinary invocation-local session lifecycle and exact reply correlation. Not corpus/authority/service integration.",
+  "scope": "P02 nominal identities, checked runtime conversions and storage-pin read consistency; retained P01 generation allocation; ordinary invocation-local session lifecycle and exact reply correlation; engineering dependency-lock call-rank guard and finite-chain lemma. Not full lock normalization/codec verification, corpus/authority/service integration.",
   "excluded_claims": [
     "BigInt arithmetic implementation verification",
     "whole semantic-kernel verification",
@@ -15,6 +15,15 @@
     "writfold_domain": {
       "minimum_verified": 1112,
       "functions": {
+        "writfold_domain::engineering::dependency::call_rank_allowed": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "source": "crates/writfold-domain/src/engineering/dependency.rs",
+              "lines": [82, 89]
+            }
+          ]
+        },
         "writfold_domain::identity_grammar::byte_in_range": {
           "solver_entries": 1,
           "declarations": [
@@ -4087,6 +4096,15 @@
     }
   },
   "mutations": [
+    {
+      "name": "dependency-call-rank-equality-bypass",
+      "crate": "writfold_domain",
+      "functions": [
+        "writfold_domain::engineering::dependency::call_rank_allowed"
+      ],
+      "before": "DependencyKind::InvokeProcedure => target < source,",
+      "after": "DependencyKind::InvokeProcedure => target <= source,"
+    },
     {
       "name": "overflow-guard-removal",
       "crate": "writfold_domain",

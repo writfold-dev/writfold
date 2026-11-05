@@ -128,6 +128,46 @@
     "full_service_requirements": "WR1-WR8 and existing P09/native/ledger/effect gates remain open. Control initialization is neither scope authorization nor grounding.",
     "storage_blocker": "P01O/WF24 retained-branch relocation remains blocked. Upstream issue status was inspected; native failure was not rerun, prototype not adopted and no fallback introduced."
   },
+  "dependency_lock_component_admission": {
+    "status": "pass",
+    "scope": "Storage-independent P14 flat dependency-lock component; not full P14/WF25/V16, package acquisition/ABI/authentication, storage/effects or release.",
+    "record": {
+      "path": "~/.local/share/writfold/evidence/dependency-lock-component-admission-20261105-001.json",
+      "sha256": "00b0d667b4d957e6546087a0a9bf656506479308bf6d5d1f210169c2d69f5390",
+      "bytes": 53497
+    },
+    "source_tree_digest": "4cdfcce9abf326944058a9b699ee4ddcd2ff854fec98258861c00bab8cd7f366",
+    "applicability": "All final unit, quality, Verus and native receipts match the same exact source snapshot; 324 compiler/fixture inputs are retained. The mutable status index is excluded. No historical gate is renewed.",
+    "schema": "docs/writfold/wire-boundary.md#engineering-dependency-lock-schema-1",
+    "fixture": "crates/writfold-wire/fixtures/engineering/dependency-lock.json",
+    "verification": {
+      "rust_tests": 271,
+      "quality_checks": 239,
+      "verus_required_checks": 213,
+      "verus_domain_obligations": 1115,
+      "verus_protocol_obligations": 41,
+      "semantic_mutant_families_rejected": 14,
+      "evidence_admission_controls_rejected": 196,
+      "native_static_musl_cases": 28
+    },
+    "proof_scope": "Actual call_rank_allowed guard and finite_call_chain_descends lemma; the < to <= semantic mutant fails. Collection normalization/resolution and wire codecs remain exercised, not proved by these declarations.",
+    "native_binary": {
+      "path": "~/.local/share/writfold/evidence/dependency-lock-native-20261105-002.json.attempt/dependency-lock-smoke",
+      "sha256": "2b8b9fe6d55637e24dff2bb7579d1c0ae654fe7e356ff65580c3d37236175e21",
+      "bytes": 858832,
+      "target": "x86_64-unknown-linux-musl"
+    },
+    "retained_failures": [
+      "~/.local/share/writfold/evidence/dependency-lock-verus-20261105-001.json",
+      "~/.local/share/writfold/evidence/dependency-lock-verus-20261105-002.json",
+      "~/.local/share/writfold/evidence/dependency-lock-canonical-smoke-20261105-001.json"
+    ],
+    "remaining": [
+      "Complete input fingerprints, exact read-cut manifests and durable EngineeringLedger.",
+      "Full V16/M12 and production composition/refinement obligations.",
+      "Native storage foundation and downstream integration; no backend switch or fallback was introduced."
+    ]
+  },
   "stages": [
     {
       "id": "P00",
@@ -435,9 +475,10 @@
         "~/.local/share/writfold/evidence/revision-5-lean-mutations-004/report.json",
         "~/.local/share/writfold/evidence/revision-5-engineering-integration-003/report.json",
         "~/.local/share/writfold/evidence/revision-5-engineering-verus-005/report.json",
-        "~/.local/share/writfold/evidence/revision-5-engineering-smoke-002/report.json"
+        "~/.local/share/writfold/evidence/revision-5-engineering-smoke-002/report.json",
+        "~/.local/share/writfold/evidence/dependency-lock-component-admission-20261105-001.json"
       ],
-      "scope_note": "E01-E12 mathematical obligations are discharged under explicit model assumptions: clean 571-declaration audit, 66 executed cases and nine semantic mutant kills, with independent current-source receipt admission. Independent Rust engineering/1 fingerprints and canonical-CBOR primitives are implemented and exercised, including exact Verus body coverage and a static-musl API smoke. Durable ledger, complete V16/M12, stage dependencies and full WF25 remain open; see qualification/revision-5-progress.json."
+      "scope_note": "E01-E12 mathematical obligations are discharged under explicit model assumptions: clean 571-declaration audit, 66 executed cases and nine semantic mutant kills, with independent current-source receipt admission. Independent Rust engineering/1 fingerprints, canonical-CBOR primitives and flat dependency locks are implemented and exercised; dependency_lock_component_admission records exact lock/rank evidence. Complete input fingerprints, read-cut manifests, durable ledger, complete V16/M12, stage dependencies and full WF25 remain open; earlier components retain qualification/revision-5-progress.json scope."
     },
     {
       "id": "P15",

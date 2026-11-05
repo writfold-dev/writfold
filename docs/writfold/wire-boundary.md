@@ -141,6 +141,59 @@ canonical migration and live storage integration remain later obligations;
 this codec does not complete the `storage-profile` gate.
 
 
+## Engineering dependency-lock schema 1
+
+`writfold_wire::engineering::dependency::{decode, canonical, digest}` implements
+the first typed engineering payload schema. `decode` accepts bounded JSON;
+`canonical` emits restricted deterministic CBOR; `digest` returns only a
+`DependencyLockDigest`. There is no dependency-lock CBOR importer or RPC method.
+
+The closed JSON root contains `namespace: "writfold-engineering"`,
+`schema_version: 1`, `kind: "dependency-lock"`, `realm`, `packages` and `edges`.
+Each package has `id`, a public `wf1:package:sha256:…` payload fingerprint, and
+`exports` containing `{name, rank}`. Each edge has `source`, `kind` and `target`;
+each endpoint contains `{id, payload, export}`. Rank is an unsigned 64-bit finite
+ordering certificate, not runtime fuel, an inherited semantic integer or approval.
+Unknown fields/kinds, duplicate JSON keys, fractional/exponent integers,
+wrong-domain fingerprints and unresolved exact endpoints refuse.
+
+Canonical material keeps the six root fields, with these row encodings:
+
+| Set | Canonical row |
+| --- | --- |
+| Packages | `[id, payload_bytes32, exports]` |
+| Exports | `[name, rank]` |
+| Edges | `[source_id, source_payload_bytes32, source_export, kind, target_id, target_payload_bytes32, target_export]` |
+
+Sets deduplicate exact entries and sort by their encoded CBOR bytes. Conflicting
+declarations for one package revision or export name refuse. References bind both
+logical package ID and payload revision; two revisions of one ID remain distinct.
+Realm is part of the lock fingerprint. Strings preserve exact UTF-8 bytes without
+Unicode or newline normalization. The payload contains no self-digest.
+
+```mermaid
+flowchart LR
+    J[Budgeted closed JSON] --> D[Exact pinned endpoint resolution]
+    D --> R[Invocation rank check]
+    R --> S[Immutable normalized lock]
+    S --> C[Bounded canonical CBOR]
+    C --> H[DependencyLockDigest]
+```
+
+The six edge kinds are `read_reference`, `require_context`, `select_route`,
+`invoke_procedure`, `execute_adapter` and `produce_artifact`. Only
+`invoke_procedure` requires strictly decreasing export ranks. Documentation
+cycles remain representable; direct or indirect executable cycles cannot satisfy
+that ordering. This structural check does not establish export ABI, package
+authenticity, complete acquisition, effect safety or permission to execute.
+
+The [independent golden vector](../../crates/writfold-wire/fixtures/engineering/dependency-lock.json)
+and `tests/dependency_lock.rs` cover canonical identity, exact references,
+conflicts, cycles and all four resource budgets. A static-musl consumer exercised
+the same boundary with no runtime toolchain on PATH. Exact source-bound results
+and proof scope belong to [`qualification/status.json`](../../qualification/status.json);
+no full P14/WF25/V16 or installed-service completion is implied.
+
 ## Source mapping
 
 Reference: `1c17b94be37af8f82f222baddf31435f14172e1a`.

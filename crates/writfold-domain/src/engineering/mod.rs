@@ -26,6 +26,7 @@
 //! ```
 
 mod codec;
+pub mod dependency;
 mod digests;
 mod kinds;
 

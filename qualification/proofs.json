@@ -5489,6 +5489,30 @@
             "Canonical CBOR and cryptographic/formatting refinement.",
             "Durable EngineeringLedger and native boundary integration."
           ]
+        },
+        {
+          "name": "flat_dependency_lock_call_ranks",
+          "evidence_index": "qualification/status.json#/dependency_lock_component_admission",
+          "scope": "Selected production call-rank guard and finite-chain lemma only; collection normalization, endpoint resolution and canonical codec are exercised Rust, not proved by these declarations.",
+          "production_symbols": [
+            "writfold_domain::engineering::dependency::DependencyLock::new",
+            "writfold_domain::engineering::dependency::call_rank_allowed",
+            "writfold_wire::engineering::dependency::decode",
+            "writfold_wire::engineering::dependency::canonical",
+            "writfold_wire::engineering::dependency::digest"
+          ],
+          "theorem_symbols": [
+            "writfold_domain::engineering::dependency::finite_call_chain_descends"
+          ],
+          "model_mapping": "formal/Kctx/Engineering/Procedure.lean FormTyped call rank premise and E10; conceptual correspondence, not a proved refinement.",
+          "profile": "qualification/verus-profile.json",
+          "calibration": "dependency-call-rank-equality-bypass",
+          "fixture": "crates/writfold-wire/fixtures/engineering/dependency-lock.json",
+          "tests": "crates/writfold-wire/tests/dependency_lock.rs",
+          "limits": [
+            "A rank certificate establishes only structural non-recursion, not export ABI, authenticity, authority or effect safety.",
+            "Full V16, V17/E10 production refinement, package acquisition, complete input binding and durable ledger remain open."
+          ]
         }
       ],
       "completion_rule": "Complete this entry's named contract, production mapping and assigned proof obligations. Record local proofs and bridge contributions separately; final composed completion is aggregated only by WF31 at P11. Empty mappings and planning checks cannot pass."

@@ -4,6 +4,7 @@
 //! authenticity, authority, complete input capture, or permission to reuse evidence.
 
 pub mod cbor;
+pub mod dependency;
 
 use sha2::{Digest, Sha256};
 use writfold_domain::engineering::EngineeringDigest;
