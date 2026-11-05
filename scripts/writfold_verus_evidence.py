@@ -61,6 +61,12 @@ def solver_counts(report):
 
 def require_coverage(report, functions, spec):
     counts = solver_counts(report)
+    for prefix in spec.get("required_function_prefixes", []):
+        actual = {name for name in functions if name.startswith(prefix)}
+        expected = {name for name in spec["functions"] if name.startswith(prefix)}
+        require(actual and actual == expected, "incomplete component body inventory")
+    require(set(spec.get("required_functions", [])) <= set(spec["functions"]),
+            "missing critical reused production function")
     for name, source in spec["functions"].items():
         require(name in functions, "missing named production solver entry")
         require(type(source["solver_entries"]) is int and source["solver_entries"] > 0

@@ -1,0 +1,201 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-05",
+  "status": "requirements_adopted_not_service_qualification",
+  "contract": "docs/writfold/shared-client-references.md",
+  "authority": "handovers/revision-5/writfold",
+  "feature_adoption": "qualification/revision-9-feature-adoption.json",
+  "weft_review": {
+    "checkout": "../weft",
+    "observed_head": "aa3296ffa2fb867bdebbb2ca014c969f75ecd338",
+    "authority": "handovers/revision-1/weft",
+    "manifest_sha256": "dc87588eabfd241c64f7c5558200f1a349572be46d1152c3cf2da1cb355d5a4a",
+    "inputs": {
+      "handovers/revision-1/weft/plan/06-writfold-handoff.md": {
+        "sha256": "f4d5d04ebcb368a430e19b6ef04e8df874994972866d39fb3f89ec762c52ccba",
+        "bytes": 7207
+      },
+      "docs/execution-integration.md": {
+        "sha256": "1bfece802ae4b125c51836bc2bbceba03a6ed85c09986c8c8ea13aa63b0a51a0",
+        "bytes": 3200
+      },
+      "docs/grounded-plans.md": {
+        "sha256": "69fc3cb483339c7bdb4a2ef1e24489e197d5ed881c0d23f57e3664d32f00c188",
+        "bytes": 9275
+      },
+      "docs/implementation-profile.md": {
+        "sha256": "7970a359ff2d657c5d25a8f11254b420696ef563aad35aaa1a2165dc907e1fe3",
+        "bytes": 3964
+      },
+      "docs/verification-report.md": {
+        "sha256": "dacc7edde9af1f17cdb08c28f0e0b9323c860de45de6272689f1c2347f7d8816",
+        "bytes": 7843
+      },
+      "spec/language.md": {
+        "sha256": "286806cd3ae56b43723e92a3208a847869e548721038ad0c19aa1228e9e614a9",
+        "bytes": 8724
+      },
+      "spec/report-v1.md": {
+        "sha256": "3e372723e425e89fbeb9d69d59c25df2c6b9c38d7b353da05931492f70021a88",
+        "bytes": 6830
+      },
+      "qualification/handover-adoption.json": {
+        "sha256": "204ad926a4f912c23de8461a78c4cbf9f6af48e41c45ecc8d6be9758ad73ba67",
+        "bytes": 1392
+      }
+    },
+    "scope": "Read-only review of owner-requested WR1-WR8 and current design/report files. Mutable Weft work may advance; these hashes identify only this review."
+  },
+  "decisions": {
+    "shared_interface": "The same qualified protocol-2 stdio services for Weft and agents; no VM/opcodes/recipe endpoint or direct database fallback.",
+    "identity": "Realm/kind-qualified logical identities plus exact immutable revisions/material, selectors and profiles. Preserve historical namespaces; no universal UUID replacement.",
+    "aliases": "CitationTableGeneration is distinct from RequestGeneration and session incarnation. Export full durable bindings; short aliases are not proof identities.",
+    "local_weft_nodes": "Weft owns local binding/hypothesis/atom/model/trace IDs. Cross-session references qualify them by exact artifact identity and schema; Writfold does not allocate their local IDs.",
+    "artifacts": "Raw source SHA256, domain-separated Writfold blob digests, producer/profile identities, logical evidence IDs and validation receipts remain distinct. Retention is not admission.",
+    "assessment": "Preserve complete applicable Writfold dimensions and dependency identities; neither support nor stored assets become classical facts without a qualified bridge.",
+    "distribution": "Owner-landed pinned shared contract artifact or exact source revision with schema/canonicalization identities and conformance vectors; no mutable sibling checkout build dependency.",
+    "transport": "Honor 65536-byte frame ceiling; large artifacts need a qualified bounded transfer/selection contract bound to exact object, length, integrity and scope."
+  },
+  "requirements": [
+    {
+      "id": "WR1",
+      "subject": "shared stdio and explicit scope",
+      "owner_stages": [
+        "P09"
+      ],
+      "related_gates": [
+        "WF13"
+      ],
+      "status": "not_run",
+      "current_boundary": "Protocol codecs/session transitions exist; live production host remains unqualified."
+    },
+    {
+      "id": "WR2",
+      "subject": "exact durable citation binding",
+      "owner_stages": [
+        "P05",
+        "P09"
+      ],
+      "related_gates": [
+        "WF08",
+        "WF13"
+      ],
+      "status": "not_run",
+      "current_boundary": "Selected calculus qualified; domain/kernel/codec/native components implemented with source-bound component evidence indexed in qualification/status.json. No live corpus service."
+    },
+    {
+      "id": "WR3",
+      "subject": "compact handles and kind-safe references",
+      "owner_stages": [
+        "P05",
+        "P09"
+      ],
+      "related_gates": [
+        "WF08",
+        "WF13"
+      ],
+      "status": "not_run",
+      "current_boundary": "Distinct CitationTableGeneration and strict kind/profile byte boundary exercised as components; live alias restoration/authorization and shared-stdio export remain unqualified."
+    },
+    {
+      "id": "WR4",
+      "subject": "faithful assessment and interpretation inputs",
+      "owner_stages": [
+        "P03",
+        "P03P",
+        "P07",
+        "P09"
+      ],
+      "related_gates": [
+        "WF04",
+        "WF05",
+        "WF10",
+        "WF13",
+        "WF19"
+      ],
+      "status": "not_run",
+      "current_boundary": "Model/kernel components exist; current live policy/corpus facade and interpretation service mapping remain open."
+    },
+    {
+      "id": "WR5",
+      "subject": "frozen read closure and pinned shared contract",
+      "owner_stages": [
+        "P09",
+        "P10",
+        "P19",
+        "P11"
+      ],
+      "related_gates": [
+        "WF13",
+        "WF14",
+        "WF30",
+        "WF15"
+      ],
+      "status": "not_run",
+      "current_boundary": "Read-set/cut identities planned; no released shared client contract or live closure service claimed."
+    },
+    {
+      "id": "WR6",
+      "subject": "report retention and plan/run attachment",
+      "owner_stages": [
+        "P14",
+        "P15",
+        "P17"
+      ],
+      "related_gates": [
+        "WF25",
+        "WF26",
+        "WF28"
+      ],
+      "status": "not_run",
+      "current_boundary": "Requires qualified ledger/intake and owner-defined procedure/start/admission schemas."
+    },
+    {
+      "id": "WR7",
+      "subject": "separately authorized effects",
+      "owner_stages": [
+        "P14",
+        "P15",
+        "P16",
+        "P17"
+      ],
+      "related_gates": [
+        "WF25",
+        "WF26",
+        "WF27",
+        "WF28"
+      ],
+      "status": "not_run",
+      "current_boundary": "Requires real guarded execution, resource ownership and reconciliation; a proof report is not permission."
+    },
+    {
+      "id": "WR8",
+      "subject": "reviewed learning admission",
+      "owner_stages": [
+        "P18"
+      ],
+      "related_gates": [
+        "WF29"
+      ],
+      "status": "not_run",
+      "current_boundary": "Requires frozen evaluation, review, evidence closure and ordinary corpus publication."
+    }
+  ],
+  "adopted_regressions": [
+    "wrong object kind or same-spelled ID in another realm",
+    "changed immutable revision, evidence role, selector or profile",
+    "expired alias table and stale transport reply treated independently",
+    "multiple requests against one unchanged citation-table epoch",
+    "reconnect requires exact restored mapping or durable-reference resolution",
+    "missing/denied retained closure never substituted by HEAD or empty bytes",
+    "raw SHA256 cannot substitute for a domain-separated blob/material digest",
+    "incomplete discovery cannot become a complete quantifier domain",
+    "report copied to another subject/procedure/repository vector refuses reuse",
+    "lost acknowledgement recovers the original request/operation identity",
+    "stored report, hypothesis or activity row cannot self-admit or authorize effects"
+  ],
+  "qualification_status": "not_run",
+  "production_methods_advertised": [],
+  "weft_files_modified": false,
+  "storage_blocker": "P01O/WF24 retained relocation failure remains; no rerun, workaround, alternate backend or service claim."
+}

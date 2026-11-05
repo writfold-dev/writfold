@@ -21,6 +21,7 @@ DEFINITIONS = ("scripts/gate", "scripts/writfold_gate.py", "scripts/writfold_evi
                "qualification/handover-adoption.json",
                "qualification/revision-9-feature-adoption.json",
                "qualification/citation-profile.json", "docs/writfold/revision-9-features.md",
+               "qualification/weft-integration.json", "docs/writfold/shared-client-references.md",
                "handovers/revision-9/writfold/MANIFEST.sha256",
                f"{ACTIVE_HANDOVER}/MANIFEST.sha256",
                f"{ACTIVE_HANDOVER}/registries/gates.json",

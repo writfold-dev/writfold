@@ -22,6 +22,15 @@ and authorized corpus-wide discovery as planned features. Preserve their formal,
 production-refinement, native qualification and empirical obligations. This is
 not permission to enable an unproved implementation, and it passes no gate.
 
+The [shared proof-client reference requirements](shared-client-references.md)
+fold Weft's WR1–WR8 integration request into these same epics. They require
+realm/kind/revision-qualified durable references, a citation-table epoch distinct
+from request correlation, faithful assessment/read-set metadata, bounded artifact
+transfer and a pinned owner-published client contract. They do not add a separate
+API or adopt Weft's language as Writfold semantics. The
+[integration inventory](../../qualification/weft-integration.json) records exact
+reviewed inputs, owner stages and still-unrun service acceptance obligations.
+
 Specifically deferred:
 
 - Plan 25's mandatory Lean-kernel instance certificate for every authoritative
@@ -206,7 +215,7 @@ Final composed qualification still belongs to P11, then packaging/launch.
 flowchart LR
     C[Qualified citation judgments] --> R[Compact exact reader]
     R --> L[Scoped lexical discovery]
-    N[P01O native foundation] --> L
+    N[P01O native foundation] --> R
     L --> H[Measured hybrid decision]
     E[P14-P17 qualified ledger and effects] --> S[P19 prepared run show]
     S --> T[Read-only Run Watch pilot]
@@ -251,3 +260,29 @@ pinned Compose tool image, with network disabled and source mounted read-only.
 No product TUI, native discovery, held-out token benchmark, new citation writer,
 proposal worker, live provider effect or website publication was exercised by
 this planning adoption. The known Omnigraph relocation blocker was not rerun.
+
+## Citation components implemented after planning adoption
+
+The [Rust component boundary](semantic-core.md#rust-citation-component-boundary)
+now includes pure selectors/resolution/correspondence/aliases/pagination/reuse,
+strict citation descriptors and fingerprints, and contained native Git capture.
+The [shared-client byte contract](shared-client-references.md#implemented-citation-byte-boundary)
+keeps native Git blob identity, whole-capture SHA-256, selected-byte SHA-256,
+logical IDs and scoped aliases distinct. It preserves the legacy observation
+content projection instead of substituting a Git object ID.
+
+The current component tests exercise both native Git object formats, packed and
+loose histories, corruption/refusals, exact Unicode/CRLF/binary/empty selections,
+scope collisions/revocation and actual child-process reaping. A real static-musl
+consumer exercises the composed library boundary. Its isolated missing-reap
+mutation fails while the unmodified control passes; each variant uses a distinct
+build cache and must compile its own source. Failed attempts remain retained.
+Exact receipts, source identities and applicability belong to
+[`qualification/status.json`](../../qualification/status.json), not the immutable
+planning registries.
+
+These are not enabled production `find`/`peek`/`cite` methods, corpus authorization,
+durable alias restoration, an installed CLI/stdio host or an empirical token win.
+P01O/WF24 still blocks storage-dependent integration; P14–P19 retain their existing
+prerequisites. No stage/full-gate completion, fallback backend, Weft-specific API,
+TUI capability or universal per-proposal certificate policy is implied.

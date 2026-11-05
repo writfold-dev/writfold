@@ -7,6 +7,80 @@
   "qualification_scope": "local-only; enterprise endpoints and hardware power loss unqualified",
   "supplemental_evidence_index": "qualification/revision-5-progress.json",
   "current_component_closure": "~/.local/share/writfold/evidence/revision-5-final-component-closure-001.json",
+  "citation_calculus_admission": {
+    "mathematical_status": "pass_under_explicit_model_assumptions",
+    "profile": "qualification/citation-profile.json",
+    "registry": "formal/citation-theorems.json",
+    "required_targets": ["CIT01", "CIT02", "CIT03", "CIT04", "CIT05", "CIT06", "CIT08"],
+    "deferred_targets": ["CIT07", "V23"],
+    "scope": "citation-lean-only; no full WF08, production refinement, native reader or release pass",
+    "source_commit": "23a1389d21178827e6ac6a2882bbcfdef20a9bc6",
+    "source_tree_digest": "28c58f336a5a31fdfe105b48613e5485bf61fa6b2eabc077453b9f0effd1bd06",
+    "lean_source_manifest_sha256": "1ddbbf1fa66077bfbfda0ee325dc2d6bd8f2e8bfc543e182579bb209f45e3f53",
+    "audited_declarations": 674,
+    "executable_cases": 93,
+    "semantic_mutants_killed": 11,
+    "receipt": {
+      "path": "~/.local/share/writfold/evidence/citation-lean-20261105-001.json",
+      "sha256": "cbc156e77e353069a342dfe58deadd6f01c5a81c3eaa92e83bc0c321a83e1dea",
+      "bytes": 580034
+    },
+    "report": {
+      "path": "~/.local/share/writfold/evidence/citation-lean-20261105-001.json.attempt/citation-lean-report.json",
+      "sha256": "2596b62110e8c0d0244f420d06fb70532c31cac65a308f04bc6e9bd48bb63c1f",
+      "bytes": 335544
+    },
+    "prior_clean_scope": "~/.local/share/writfold/evidence/citation-lean-20261104-002.json (670 declarations, 90 cases, 9 mutants; before explicit role/material guarantees)",
+    "retained_failure": "~/.local/share/writfold/evidence/citation-lean-20261104-001.json",
+    "production_status": "separately_recorded_in_citation_component_admission",
+    "applicability": "Exact recorded source closure only. Later commits or implementation changes do not renew this whole-tree receipt; source-current consumption must check identities or qualify explicit reuse.",
+    "source_applicability": {
+      "path": "~/.local/share/writfold/evidence/citation-wire-development-20261105-001/lean-source-applicability.json",
+      "sha256": "29097a4cc9050aa8edb0856781d52779cc34426b63a5483da864ff3143324b58",
+      "bytes": 47516,
+      "unchanged_named_lean_inputs": 146,
+      "meaning": "Identical mathematical source inputs; changed surrounding contracts/recipe disclosed. No fresh Lean execution or whole-tree receipt renewal."
+    }
+  },
+  "citation_component_admission": {
+    "status": "pass",
+    "scope": "Actual citation domain/kernel bodies, strict wire boundary, native Git/process components and shared-client requirements only; not a complete live reader, full V22/WF08, stage or release.",
+    "record": {
+      "path": "~/.local/share/writfold/evidence/citation-component-admission-20261105-001.json",
+      "sha256": "6a7a44f0ebb8f5f7284d7e193c0ae12e6393b1296a468466fbb1317298d5b43a",
+      "bytes": 44986
+    },
+    "source_tree_digest": "6677cec3dcaa8829042c6e65235b4004e201c2a1cd34f990857ed2334fe5ee19",
+    "applicability": "297 copied workspace inputs match the exercised unit, quality, native and proof components. Citation-specific producer/profile/tool inputs also match; the later separate default-profile migration is explicitly reconciled, not a renewed whole-tree citation receipt.",
+    "citation_verus": {
+      "domain_obligations": 1112,
+      "kernel_obligations": 479,
+      "named_functions": 170,
+      "semantic_mutants_rejected": 8,
+      "evidence_admission_controls_rejected": 112,
+      "required_checks_passed": 123
+    },
+    "default_verus": {
+      "domain_obligations": 1112,
+      "protocol_obligations": 19,
+      "nominal_constructor_mutation_family": 64,
+      "required_checks_passed": 138
+    },
+    "rust_tests_passed": 240,
+    "quality_checks_passed": 239,
+    "baseline_checks_passed": 1409,
+    "native_smoke": "Static-musl consumer executed real exact Git/codec/kernel paths. The missing-descendant-reap mutant failed and current source passed with isolated fresh build caches. Git remains a native dependency.",
+    "shared_client_contract": "docs/writfold/shared-client-references.md",
+    "weft_requirements": "qualification/weft-integration.json",
+    "weft_files_modified": false,
+    "advertised_stdio_capabilities": [],
+    "remaining": [
+      "P01O/WF24 retained-branch relocation remains blocked; not rerun and no fallback adopted.",
+      "Live corpus authorization, completed-release binding, durable retention/alias restoration and CLI/stdio integration.",
+      "Operational model bridges, empirical token/latency comparison, owner-published client contract and full V22/WF08.",
+      "Execution-ledger and skill/procedure integration retain existing P14-P19 prerequisites."
+    ]
+  },
   "stages": [
     {
       "id": "P00",

@@ -130,7 +130,7 @@ identities!(token, token_language;
     ObservationId, ClaimId, ClaimRevision, CitationId, RuleVersion,
     OperationId, SnapshotId, DerivationId, RunId, GateId, TicketId,
     AuthorityKeyId, AttestationId, EnumerationId, CorrectionId, ReceiptId,
-    PolicyId, ContextId,
+    PolicyId, ContextId, RealmId, EvidenceRoleId, AliasId,
     InstanceId, SessionIncarnation, CatalogRevision, SchemaRevision, KeyId,
 );
 identities!(token, token_language; SchemaEpochId, StorageProfileId);
@@ -138,6 +138,9 @@ identities!(graph, graph_identity; GraphId);
 identities!(graph_commit, graph_commit_identity; GraphCommitId);
 identities!(digest, digest_identity; SchemaDigest, QueryContractDigest, OmnigraphToolGeneration);
 identities!(digest, digest_identity; PlanId, SourceCaptureId, ContentDigest, PolicyDigest, ToolDigest, PlanDigest);
+identities!(digest, digest_identity;
+    CitationRepresentationDigest, CitationBindingDigest, CitationCorrespondenceDigest,
+);
 identities!(release, release_identity; ReleaseId, GitRevision);
 identities!(dolt, dolt_identity; DoltCommitId);
 identities!(opaque, opaque_identity;

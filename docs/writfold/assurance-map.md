@@ -337,3 +337,18 @@ host premises, not authentication implemented by Lean. Exact modeled preimages
 do not prove SHA-256, native Git, retained storage or private endpoint behavior.
 No Weft-specific opcode or recipe VM is introduced: Weft remains an external
 interpreter using the same stdio interface as agents.
+
+The [production correspondence map](../../qualification/citation-profile.json)
+names actual Rust consumers for each selected CIT family and states the remaining
+caller boundaries. The [Verus profile](../../qualification/citation-verus-profile.json)
+binds their exact source/symbol inventory, generated declaration origins and
+semantic calibrations. `citation-verus` runs that component through the existing
+strict producer; its default P02/P01 profile remains separate.
+
+The [implemented component boundary](semantic-core.md#rust-citation-component-boundary)
+and [shared-client byte contract](shared-client-references.md#implemented-citation-byte-boundary)
+describe typed conversions and native assumptions. Raw whole-capture SHA-256 is
+the legacy observation-content identity; native Git blob IDs and excerpt digests
+cannot replace it. Component tests and a static-musl consumer exercise the actual
+Git/codec/kernel path, while live authorization, completed-release binding,
+durable retention and composed operational erasure remain unqualified.

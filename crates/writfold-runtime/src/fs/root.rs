@@ -20,6 +20,10 @@ pub struct PinnedFile {
 }
 
 impl ContainedRoot {
+    pub(crate) fn descriptor(&self) -> &OwnedFd {
+        &self.directory
+    }
+
     /// Open an existing root. This never creates directories or writer locks.
     pub fn open(path: impl AsRef<Path>) -> Result<Self, FsError> {
         let path = path.as_ref();

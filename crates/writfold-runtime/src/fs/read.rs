@@ -71,6 +71,14 @@ impl PinnedFile {
 }
 
 impl OpenedFile<'_> {
+    pub(crate) fn descriptor(&self) -> &OwnedFd {
+        &self.descriptor
+    }
+
+    pub(crate) fn check_unchanged(&self) -> Result<(), FsError> {
+        self.ensure_unchanged()
+    }
+
     /// At most `limit` retained bytes plus a one-byte EOF probe are read. A
     /// truncated prefix is explicit, including the zero-budget/nonempty case.
     pub fn read(&self, limit: ByteCount) -> Result<ReadResult, FsError> {

@@ -1,0 +1,2398 @@
+{
+  "schema_version": 4,
+  "package": "writfold-kernel",
+  "qualification_status": "unqualified",
+  "source_map_status": "frozen",
+  "scope": "Source-bound domain and kernel citation component bodies and critical existing receipt reuse calls; not live corpus integration",
+  "excluded_claims": [
+    "live corpus authorization or retention service",
+    "CLI or shared-stdio integration",
+    "P01O/WF24 qualification",
+    "CIT07/V23 mandatory per-proposal Lean policy",
+    "whole semantic-kernel qualification",
+    "shipping-target linking or runtime execution"
+  ],
+  "verification_target": "x86_64-unknown-linux-gnu",
+  "shipping_target": "x86_64-unknown-linux-musl",
+  "source_hashes": {
+    "crates/writfold-domain/src/citation/binding.rs": "1afd79a191cf1f10855d7f4ea433f5c4e199aae5cf62e823abb89d7841dafaa3",
+    "crates/writfold-domain/src/citation/generation.rs": "a290f06c973a9e5edd2e7a26295d1e630ec35c42cec9ef4ddbbf1999f74783a5",
+    "crates/writfold-domain/src/citation/handles.rs": "b9ce6dad1d8768d59706dd5d4b33304552d727fa31426582fbad3fcf4ac69420",
+    "crates/writfold-domain/src/citation/mod.rs": "9bb57510074800ff1bd704b4d84fa0e86e38320be096f6413ca55b14a2832b24",
+    "crates/writfold-domain/src/citation/presentation.rs": "7a2f0c49e5b0c209f59caf85741c71718aa41e48d0e09b84502c5170b9124d4e",
+    "crates/writfold-domain/src/citation/selector.rs": "c9fec6aec257ef3e831aa681bae8522d427ccc69b9c8ed5507b20061c9daa95c",
+    "crates/writfold-domain/src/ids.rs": "e41c3939116f47fad2c362518db2c83731c413438ad9d02efc270871ad5210ad",
+    "crates/writfold-domain/src/records.rs": "7943cc27e0fed7d403b035b196e5a1a2006b6b58352b26083d82e3c30fa3f498",
+    "crates/writfold-domain/src/units.rs": "f2d953e671f18a434e5f82cb57e4463d1a03326172cacad0302c818fe2ea3f06",
+    "crates/writfold-kernel/src/checker/assessment.rs": "94b1bc04e52c3e8d9ee5858ecb7d863c72d5397b55214abee62bcc1e85e6ba68",
+    "crates/writfold-kernel/src/checker/assessment/receipts.rs": "e89f43d09ad3725f9fbaf287f0054f9566bc5c156d29486d52ae37359a14fc22",
+    "crates/writfold-kernel/src/citation/compare.rs": "0621c9615418e8a0d549995e58ddcf669c08d986420e338b9491da87461a1bdf",
+    "crates/writfold-kernel/src/citation/handles.rs": "1aa8607ac3c173224f9753b8e2e9c8e7090b49fc41b3d04b3728ff11b8e971b1",
+    "crates/writfold-kernel/src/citation/presentation.rs": "ce9849e6aa8562be42e94ab7125ec7c7e349b34c7de40ab17e8b8da97680cca1",
+    "crates/writfold-kernel/src/citation/resolution.rs": "9612acf71b5fc80d287418c4c07928b68ec72b2460db50c5d4c2524ea00f24f1",
+    "crates/writfold-kernel/src/citation/reuse.rs": "e2ff7351587cb9530a52e30b6ae331df09a258889eabb016c3601acfb774e9f1",
+    "crates/writfold-kernel/src/citation/scan.rs": "4a9782320484514a21689931a0bd875745f86d444945a3fa1190424b3f5f4f0e"
+  },
+  "finalization": [
+    "For a future re-freeze, use parent-observed admitted-image cargo verus verify -p writfold-kernel --locked --offline --message-format=json -- --output-json --time-expanded output and syntax quality audit of the same sources; retain every failed attempt. The mapping observations below are not a substitute for a fresh joint positive producer run.",
+    "For each crate take minimum_verified from verification-results.verified and select every actual function-breakdown symbol under required_function_prefixes plus required_functions. Count all solver entries per symbol, including overloaded macro-generated implementations. Do not infer coverage from func-details.",
+    "Map each selected symbol to every exact source/lines declaration from the syntax audit, resolving module and impl ownership against the frozen source. Macro-generated ids and units must include all corresponding macro-body declarations; do not reuse stale P02 line numbers. Populate functions with solver_entries and declarations using schema 4 conventions.",
+    "Set source_hashes to SHA256 of every mapped source, update mutation literal matches against that freeze without changing contracts or line counts, and set source_map_status to frozen. qualification_status remains unqualified: only a complete positive run, intended-declaration negatives and all independent admission self-controls establish qualification.",
+    "Run scripts/writfold_verus.py --profile qualification/citation-verus-profile.json --package writfold-kernel with admitted Compose image writfold-tools@sha256:c854889f19c83174e69600ee28f0d4d35a0d2de1a23b3a35b1ecf4c4a88e0fc6 and operator evidence/cache storage. This is component evidence only, never the blocked P01O/WF24 gate."
+  ],
+  "crates": {
+    "writfold_domain": {
+      "minimum_verified": 1112,
+      "required_function_prefixes": [
+        "writfold_domain::citation::",
+        "writfold_domain::ids::CitationId::",
+        "writfold_domain::ids::EvidenceRoleId::",
+        "writfold_domain::ids::AliasId::",
+        "writfold_domain::ids::CitationRepresentationDigest::",
+        "writfold_domain::ids::CitationBindingDigest::",
+        "writfold_domain::ids::CitationCorrespondenceDigest::",
+        "writfold_domain::units::ByteOffset::",
+        "writfold_domain::ids::RealmId::"
+      ],
+      "required_functions": [],
+      "functions": {
+        "writfold_domain::citation::Representation::bytes": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                61,
+                63
+              ],
+              "source": "crates/writfold-domain/src/citation/mod.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::Representation::clone": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                47,
+                51
+              ],
+              "origin": {
+                "kind": "derive-clone",
+                "type_name": "Representation"
+              },
+              "source": "crates/writfold-domain/src/citation/mod.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::Representation::new": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                55,
+                57
+              ],
+              "source": "crates/writfold-domain/src/citation/mod.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::Representation::reference": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                58,
+                60
+              ],
+              "source": "crates/writfold-domain/src/citation/mod.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::RepresentationProfile::clone": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                29,
+                30
+              ],
+              "origin": {
+                "kind": "derive-clone",
+                "type_name": "RepresentationProfile"
+              },
+              "source": "crates/writfold-domain/src/citation/mod.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::RepresentationRef::clone": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                26,
+                31
+              ],
+              "source": "crates/writfold-domain/src/records.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::RepresentationRef::content": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                57,
+                59
+              ],
+              "source": "crates/writfold-domain/src/records.rs",
+              "audit_name": "__wf_field"
+            },
+            {
+              "lines": [
+                41,
+                41
+              ],
+              "origin": {
+                "kind": "record-field",
+                "type_name": "RepresentationRef"
+              },
+              "source": "crates/writfold-domain/src/citation/mod.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::RepresentationRef::eq": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                42,
+                47
+              ],
+              "source": "crates/writfold-domain/src/records.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::RepresentationRef::new": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                53,
+                56
+              ],
+              "source": "crates/writfold-domain/src/records.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::RepresentationRef::path": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                57,
+                59
+              ],
+              "source": "crates/writfold-domain/src/records.rs",
+              "audit_name": "__wf_field"
+            },
+            {
+              "lines": [
+                40,
+                40
+              ],
+              "origin": {
+                "kind": "record-field",
+                "type_name": "RepresentationRef"
+              },
+              "source": "crates/writfold-domain/src/citation/mod.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::RepresentationRef::profile": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                57,
+                59
+              ],
+              "source": "crates/writfold-domain/src/records.rs",
+              "audit_name": "__wf_field"
+            },
+            {
+              "lines": [
+                42,
+                42
+              ],
+              "origin": {
+                "kind": "record-field",
+                "type_name": "RepresentationRef"
+              },
+              "source": "crates/writfold-domain/src/citation/mod.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::RepresentationRef::realm": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                57,
+                59
+              ],
+              "source": "crates/writfold-domain/src/records.rs",
+              "audit_name": "__wf_field"
+            },
+            {
+              "lines": [
+                37,
+                37
+              ],
+              "origin": {
+                "kind": "record-field",
+                "type_name": "RepresentationRef"
+              },
+              "source": "crates/writfold-domain/src/citation/mod.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::RepresentationRef::repository": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                57,
+                59
+              ],
+              "source": "crates/writfold-domain/src/records.rs",
+              "audit_name": "__wf_field"
+            },
+            {
+              "lines": [
+                38,
+                38
+              ],
+              "origin": {
+                "kind": "record-field",
+                "type_name": "RepresentationRef"
+              },
+              "source": "crates/writfold-domain/src/citation/mod.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::RepresentationRef::revision": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                57,
+                59
+              ],
+              "source": "crates/writfold-domain/src/records.rs",
+              "audit_name": "__wf_field"
+            },
+            {
+              "lines": [
+                39,
+                39
+              ],
+              "origin": {
+                "kind": "record-field",
+                "type_name": "RepresentationRef"
+              },
+              "source": "crates/writfold-domain/src/citation/mod.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::binding::AccessDecision::allows": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                82,
+                84
+              ],
+              "source": "crates/writfold-domain/src/citation/binding.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::binding::AccessDecision::clone": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                74,
+                75
+              ],
+              "origin": {
+                "kind": "derive-clone",
+                "type_name": "AccessDecision"
+              },
+              "source": "crates/writfold-domain/src/citation/binding.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::binding::AccessDecision::new": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                79,
+                81
+              ],
+              "source": "crates/writfold-domain/src/citation/binding.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::binding::Binding::clone": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                8,
+                17
+              ],
+              "origin": {
+                "kind": "derive-clone",
+                "type_name": "Binding"
+              },
+              "source": "crates/writfold-domain/src/citation/binding.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::binding::Binding::context": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                47,
+                49
+              ],
+              "source": "crates/writfold-domain/src/citation/binding.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::binding::Binding::expected": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                59,
+                61
+              ],
+              "source": "crates/writfold-domain/src/citation/binding.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::binding::Binding::id": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                41,
+                43
+              ],
+              "source": "crates/writfold-domain/src/citation/binding.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::binding::Binding::new": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                35,
+                40
+              ],
+              "source": "crates/writfold-domain/src/citation/binding.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::binding::Binding::release": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                44,
+                46
+              ],
+              "source": "crates/writfold-domain/src/citation/binding.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::binding::Binding::representation": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                53,
+                55
+              ],
+              "source": "crates/writfold-domain/src/citation/binding.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::binding::Binding::role": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                50,
+                52
+              ],
+              "source": "crates/writfold-domain/src/citation/binding.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::binding::Binding::same": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                62,
+                69
+              ],
+              "source": "crates/writfold-domain/src/citation/binding.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::binding::Binding::selector": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                56,
+                58
+              ],
+              "source": "crates/writfold-domain/src/citation/binding.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::bytes_equal": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                67,
+                82
+              ],
+              "source": "crates/writfold-domain/src/citation/mod.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::generation::CitationTableGeneration::checked_next": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                31,
+                41
+              ],
+              "source": "crates/writfold-domain/src/citation/generation.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::generation::CitationTableGeneration::clone": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                15,
+                18
+              ],
+              "origin": {
+                "kind": "derive-clone",
+                "type_name": "CitationTableGeneration"
+              },
+              "source": "crates/writfold-domain/src/citation/generation.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::generation::CitationTableGeneration::from_u64": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                23,
+                25
+              ],
+              "source": "crates/writfold-domain/src/citation/generation.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::generation::CitationTableGeneration::get": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                27,
+                29
+              ],
+              "source": "crates/writfold-domain/src/citation/generation.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::handles::AliasScope::clone": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                7,
+                16
+              ],
+              "origin": {
+                "kind": "derive-clone",
+                "type_name": "AliasScope"
+              },
+              "source": "crates/writfold-domain/src/citation/handles.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::handles::AliasScope::context": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                56,
+                58
+              ],
+              "source": "crates/writfold-domain/src/citation/handles.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::handles::AliasScope::fits": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                74,
+                80
+              ],
+              "source": "crates/writfold-domain/src/citation/handles.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::handles::AliasScope::incarnation": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                50,
+                52
+              ],
+              "source": "crates/writfold-domain/src/citation/handles.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::handles::AliasScope::instance": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                47,
+                49
+              ],
+              "source": "crates/writfold-domain/src/citation/handles.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::handles::AliasScope::new": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                34,
+                40
+              ],
+              "source": "crates/writfold-domain/src/citation/handles.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::handles::AliasScope::principal": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                44,
+                46
+              ],
+              "source": "crates/writfold-domain/src/citation/handles.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::handles::AliasScope::realm": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                41,
+                43
+              ],
+              "source": "crates/writfold-domain/src/citation/handles.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::handles::AliasScope::release": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                53,
+                55
+              ],
+              "source": "crates/writfold-domain/src/citation/handles.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::handles::AliasScope::same": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                71,
+                73
+              ],
+              "source": "crates/writfold-domain/src/citation/handles.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::handles::AliasScope::same_audience": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                62,
+                70
+              ],
+              "source": "crates/writfold-domain/src/citation/handles.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::handles::AliasScope::table_generation": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                59,
+                61
+              ],
+              "source": "crates/writfold-domain/src/citation/handles.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::presentation::Notice::clone": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                10,
+                11
+              ],
+              "origin": {
+                "kind": "derive-clone",
+                "type_name": "Notice"
+              },
+              "source": "crates/writfold-domain/src/citation/presentation.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::presentation::Notice::kind": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                17,
+                19
+              ],
+              "source": "crates/writfold-domain/src/citation/presentation.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::presentation::Notice::new": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                14,
+                16
+              ],
+              "source": "crates/writfold-domain/src/citation/presentation.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::presentation::Notice::text": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                20,
+                22
+              ],
+              "source": "crates/writfold-domain/src/citation/presentation.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::presentation::NoticeCursor::clone": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                110,
+                111
+              ],
+              "origin": {
+                "kind": "derive-clone",
+                "type_name": "NoticeCursor"
+              },
+              "source": "crates/writfold-domain/src/citation/presentation.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::presentation::NoticeCursor::new": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                115,
+                117
+              ],
+              "source": "crates/writfold-domain/src/citation/presentation.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::presentation::NoticeCursor::offset": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                121,
+                123
+              ],
+              "source": "crates/writfold-domain/src/citation/presentation.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::presentation::NoticeCursor::query": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                118,
+                120
+              ],
+              "source": "crates/writfold-domain/src/citation/presentation.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::presentation::NoticeKind::clone": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                8,
+                9
+              ],
+              "origin": {
+                "kind": "derive-clone",
+                "type_name": "NoticeKind"
+              },
+              "source": "crates/writfold-domain/src/citation/presentation.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::presentation::NoticeQuery::budget": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                62,
+                64
+              ],
+              "source": "crates/writfold-domain/src/citation/presentation.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::presentation::NoticeQuery::coverage": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                68,
+                70
+              ],
+              "source": "crates/writfold-domain/src/citation/presentation.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::presentation::NoticeQuery::identity": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                56,
+                58
+              ],
+              "source": "crates/writfold-domain/src/citation/presentation.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::presentation::NoticeQuery::new": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                47,
+                52
+              ],
+              "source": "crates/writfold-domain/src/citation/presentation.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::presentation::NoticeQuery::notices": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                65,
+                67
+              ],
+              "source": "crates/writfold-domain/src/citation/presentation.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::presentation::NoticeQuery::ordering_profile": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                59,
+                61
+              ],
+              "source": "crates/writfold-domain/src/citation/presentation.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::presentation::NoticeQuery::same": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                71,
+                106
+              ],
+              "source": "crates/writfold-domain/src/citation/presentation.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::presentation::NoticeQuery::scope": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                53,
+                55
+              ],
+              "source": "crates/writfold-domain/src/citation/presentation.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::selector::CoordinateUnit::clone": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                5,
+                6
+              ],
+              "origin": {
+                "kind": "derive-clone",
+                "type_name": "CoordinateUnit"
+              },
+              "source": "crates/writfold-domain/src/citation/selector.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::selector::Coverage::clone": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                64,
+                65
+              ],
+              "origin": {
+                "kind": "derive-clone",
+                "type_name": "Coverage"
+              },
+              "source": "crates/writfold-domain/src/citation/selector.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::selector::Coverage::complete": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                67,
+                77
+              ],
+              "source": "crates/writfold-domain/src/citation/selector.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::selector::SearchBudget::candidates": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                58,
+                60
+              ],
+              "source": "crates/writfold-domain/src/citation/selector.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::selector::SearchBudget::clone": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                47,
+                48
+              ],
+              "origin": {
+                "kind": "derive-clone",
+                "type_name": "SearchBudget"
+              },
+              "source": "crates/writfold-domain/src/citation/selector.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::selector::SearchBudget::new": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                52,
+                54
+              ],
+              "source": "crates/writfold-domain/src/citation/selector.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::selector::SearchBudget::positions": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                55,
+                57
+              ],
+              "source": "crates/writfold-domain/src/citation/selector.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::selector::Selector::clone": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                11,
+                16
+              ],
+              "origin": {
+                "kind": "derive-clone",
+                "type_name": "Selector"
+              },
+              "source": "crates/writfold-domain/src/citation/selector.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::selector::Selector::first": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                30,
+                32
+              ],
+              "source": "crates/writfold-domain/src/citation/selector.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::selector::Selector::last": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                33,
+                35
+              ],
+              "source": "crates/writfold-domain/src/citation/selector.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::selector::Selector::new": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                22,
+                29
+              ],
+              "source": "crates/writfold-domain/src/citation/selector.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::selector::Selector::same": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                39,
+                44
+              ],
+              "source": "crates/writfold-domain/src/citation/selector.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::selector::Selector::unit": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                36,
+                38
+              ],
+              "source": "crates/writfold-domain/src/citation/selector.rs"
+            }
+          ]
+        },
+        "writfold_domain::citation::selector::SelectorError::clone": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                7,
+                8
+              ],
+              "origin": {
+                "kind": "derive-clone",
+                "type_name": "SelectorError"
+              },
+              "source": "crates/writfold-domain/src/citation/selector.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::AliasId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                68,
+                70
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::AliasId::clone": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                47,
+                49
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::AliasId::eq": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                58,
+                60
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::AliasId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                71,
+                73
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::AliasId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                74,
+                82
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::AliasId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                94,
+                102
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::CitationBindingDigest::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                68,
+                70
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::CitationBindingDigest::clone": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                47,
+                49
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::CitationBindingDigest::eq": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                58,
+                60
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::CitationBindingDigest::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                71,
+                73
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::CitationBindingDigest::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                74,
+                82
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::CitationBindingDigest::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                94,
+                102
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::CitationCorrespondenceDigest::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                68,
+                70
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::CitationCorrespondenceDigest::clone": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                47,
+                49
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::CitationCorrespondenceDigest::eq": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                58,
+                60
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::CitationCorrespondenceDigest::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                71,
+                73
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::CitationCorrespondenceDigest::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                74,
+                82
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::CitationCorrespondenceDigest::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                94,
+                102
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::CitationId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                68,
+                70
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::CitationId::clone": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                47,
+                49
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::CitationId::eq": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                58,
+                60
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::CitationId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                71,
+                73
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::CitationId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                74,
+                82
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::CitationId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                94,
+                102
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::CitationRepresentationDigest::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                68,
+                70
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::CitationRepresentationDigest::clone": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                47,
+                49
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::CitationRepresentationDigest::eq": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                58,
+                60
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::CitationRepresentationDigest::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                71,
+                73
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::CitationRepresentationDigest::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                74,
+                82
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::CitationRepresentationDigest::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                94,
+                102
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::EvidenceRoleId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                68,
+                70
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::EvidenceRoleId::clone": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                47,
+                49
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::EvidenceRoleId::eq": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                58,
+                60
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::EvidenceRoleId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                71,
+                73
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::EvidenceRoleId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                74,
+                82
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::EvidenceRoleId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                94,
+                102
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::RealmId::as_str": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                68,
+                70
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::RealmId::clone": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                47,
+                49
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::RealmId::eq": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                58,
+                60
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::RealmId::into_string": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                71,
+                73
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::RealmId::parse_checked": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                74,
+                82
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::ids::RealmId::try_from": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                94,
+                102
+              ],
+              "source": "crates/writfold-domain/src/ids.rs"
+            }
+          ]
+        },
+        "writfold_domain::units::ByteOffset::clone": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                36,
+                37
+              ],
+              "origin": {
+                "kind": "derive-clone",
+                "type_name": "__wf_name"
+              },
+              "source": "crates/writfold-domain/src/units.rs"
+            },
+            {
+              "lines": [
+                123,
+                123
+              ],
+              "origin": {
+                "kind": "quantity-clone",
+                "type_name": "ByteOffset"
+              },
+              "source": "crates/writfold-domain/src/units.rs"
+            }
+          ]
+        },
+        "writfold_domain::units::ByteOffset::get": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                61,
+                65
+              ],
+              "source": "crates/writfold-domain/src/units.rs"
+            }
+          ]
+        },
+        "writfold_domain::units::ByteOffset::new": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                47,
+                60
+              ],
+              "source": "crates/writfold-domain/src/units.rs"
+            }
+          ]
+        },
+        "writfold_domain::units::ByteOffset::try_from": {
+          "solver_entries": 2,
+          "declarations": [
+            {
+              "lines": [
+                91,
+                97
+              ],
+              "source": "crates/writfold-domain/src/units.rs"
+            },
+            {
+              "lines": [
+                101,
+                110
+              ],
+              "source": "crates/writfold-domain/src/units.rs"
+            }
+          ]
+        }
+      }
+    },
+    "writfold_kernel": {
+      "minimum_verified": 479,
+      "required_function_prefixes": [
+        "writfold_kernel::citation::"
+      ],
+      "required_functions": [
+        "writfold_kernel::checker::assessment::reusable",
+        "writfold_kernel::checker::assessment::receipts::reusable_with",
+        "writfold_kernel::checker::assessment::receipts::matching_dependencies"
+      ],
+      "functions": {
+        "writfold_kernel::checker::assessment::receipts::matching_dependencies": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                13,
+                39
+              ],
+              "source": "crates/writfold-kernel/src/checker/assessment/receipts.rs"
+            }
+          ]
+        },
+        "writfold_kernel::checker::assessment::receipts::reusable_with": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                49,
+                72
+              ],
+              "source": "crates/writfold-kernel/src/checker/assessment/receipts.rs"
+            }
+          ]
+        },
+        "writfold_kernel::checker::assessment::reusable": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                20,
+                26
+              ],
+              "source": "crates/writfold-kernel/src/checker/assessment.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::compare::CorrespondenceWitness::clone": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                6,
+                7
+              ],
+              "origin": {
+                "kind": "derive-clone",
+                "type_name": "CorrespondenceWitness"
+              },
+              "source": "crates/writfold-kernel/src/citation/compare.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::compare::UnknownReason::clone": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                8,
+                12
+              ],
+              "origin": {
+                "kind": "derive-clone",
+                "type_name": "UnknownReason"
+              },
+              "source": "crates/writfold-kernel/src/citation/compare.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::compare::compare": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                59,
+                109
+              ],
+              "source": "crates/writfold-kernel/src/citation/compare.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::compare::same_occurrence": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                22,
+                31
+              ],
+              "source": "crates/writfold-kernel/src/citation/compare.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::compare::text_diagnosis": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                43,
+                53
+              ],
+              "source": "crates/writfold-kernel/src/citation/compare.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::compare::unavailable": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                33,
+                41
+              ],
+              "source": "crates/writfold-kernel/src/citation/compare.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::handles::AliasEntry::binding": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                22,
+                24
+              ],
+              "source": "crates/writfold-kernel/src/citation/handles.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::handles::AliasEntry::clone": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                10,
+                13
+              ],
+              "origin": {
+                "kind": "derive-clone",
+                "type_name": "AliasEntry"
+              },
+              "source": "crates/writfold-kernel/src/citation/handles.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::handles::AliasEntry::expires_at": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                28,
+                30
+              ],
+              "source": "crates/writfold-kernel/src/citation/handles.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::handles::AliasEntry::handle": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                19,
+                21
+              ],
+              "source": "crates/writfold-kernel/src/citation/handles.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::handles::AliasEntry::issued_at": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                25,
+                27
+              ],
+              "source": "crates/writfold-kernel/src/citation/handles.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::handles::AliasIssueError::clone": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                5,
+                6
+              ],
+              "origin": {
+                "kind": "derive-clone",
+                "type_name": "AliasIssueError"
+              },
+              "source": "crates/writfold-kernel/src/citation/handles.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::handles::AliasResult::clone": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                7,
+                8
+              ],
+              "origin": {
+                "kind": "derive-clone",
+                "type_name": "AliasResult"
+              },
+              "source": "crates/writfold-kernel/src/citation/handles.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::handles::AliasTable::entries": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                48,
+                50
+              ],
+              "source": "crates/writfold-kernel/src/citation/handles.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::handles::AliasTable::expand": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                112,
+                143
+              ],
+              "source": "crates/writfold-kernel/src/citation/handles.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::handles::AliasTable::issue": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                84,
+                109
+              ],
+              "source": "crates/writfold-kernel/src/citation/handles.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::handles::AliasTable::lookup": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                55,
+                83
+              ],
+              "source": "crates/writfold-kernel/src/citation/handles.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::handles::AliasTable::new": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                41,
+                44
+              ],
+              "source": "crates/writfold-kernel/src/citation/handles.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::handles::AliasTable::retire": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                51,
+                54
+              ],
+              "source": "crates/writfold-kernel/src/citation/handles.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::handles::AliasTable::scope": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                45,
+                47
+              ],
+              "source": "crates/writfold-kernel/src/citation/handles.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::presentation::NoticePage::coverage": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                33,
+                35
+              ],
+              "source": "crates/writfold-kernel/src/citation/presentation.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::presentation::NoticePage::next": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                36,
+                38
+              ],
+              "source": "crates/writfold-kernel/src/citation/presentation.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::presentation::NoticePage::notices": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                21,
+                23
+              ],
+              "source": "crates/writfold-kernel/src/citation/presentation.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::presentation::NoticePage::offset": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                24,
+                26
+              ],
+              "source": "crates/writfold-kernel/src/citation/presentation.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::presentation::NoticePage::omitted_count": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                27,
+                29
+              ],
+              "source": "crates/writfold-kernel/src/citation/presentation.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::presentation::NoticePage::presentation_complete": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                30,
+                32
+              ],
+              "source": "crates/writfold-kernel/src/citation/presentation.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::presentation::PresentationError::clone": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                5,
+                6
+              ],
+              "origin": {
+                "kind": "derive-clone",
+                "type_name": "PresentationError"
+              },
+              "source": "crates/writfold-kernel/src/citation/presentation.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::presentation::bounded_page": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                41,
+                68
+              ],
+              "source": "crates/writfold-kernel/src/citation/presentation.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::presentation::present_notices": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                72,
+                97
+              ],
+              "source": "crates/writfold-kernel/src/citation/presentation.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::resolution::InvalidReason::clone": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                5,
+                6
+              ],
+              "origin": {
+                "kind": "derive-clone",
+                "type_name": "InvalidReason"
+              },
+              "source": "crates/writfold-kernel/src/citation/resolution.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::resolution::ResolveResult::clone": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                7,
+                11
+              ],
+              "origin": {
+                "kind": "derive-clone",
+                "type_name": "ResolveResult"
+              },
+              "source": "crates/writfold-kernel/src/citation/resolution.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::resolution::RetainError::clone": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                12,
+                13
+              ],
+              "origin": {
+                "kind": "derive-clone",
+                "type_name": "RetainError"
+              },
+              "source": "crates/writfold-kernel/src/citation/resolution.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::resolution::lookup_representation": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                26,
+                41
+              ],
+              "source": "crates/writfold-kernel/src/citation/resolution.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::resolution::resolve": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                59,
+                99
+              ],
+              "source": "crates/writfold-kernel/src/citation/resolution.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::resolution::retain": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                44,
+                56
+              ],
+              "source": "crates/writfold-kernel/src/citation/resolution.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::reuse::BindingValidation::bindings": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                29,
+                31
+              ],
+              "source": "crates/writfold-kernel/src/citation/reuse.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::reuse::BindingValidation::context_id": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                26,
+                28
+              ],
+              "source": "crates/writfold-kernel/src/citation/reuse.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::reuse::BindingValidation::legacy": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                23,
+                25
+              ],
+              "source": "crates/writfold-kernel/src/citation/reuse.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::reuse::BindingValidation::new": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                18,
+                22
+              ],
+              "source": "crates/writfold-kernel/src/citation/reuse.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::reuse::binding_in_footprint": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                43,
+                69
+              ],
+              "source": "crates/writfold-kernel/src/citation/reuse.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::reuse::citation_reusable": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                75,
+                130
+              ],
+              "source": "crates/writfold-kernel/src/citation/reuse.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::scan::ScanResult::candidates": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                10,
+                12
+              ],
+              "source": "crates/writfold-kernel/src/citation/scan.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::scan::ScanResult::coverage": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                13,
+                15
+              ],
+              "source": "crates/writfold-kernel/src/citation/scan.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::scan::ScanResult::into_parts": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                16,
+                18
+              ],
+              "source": "crates/writfold-kernel/src/citation/scan.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::scan::diagnose": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                35,
+                109
+              ],
+              "source": "crates/writfold-kernel/src/citation/scan.rs"
+            }
+          ]
+        },
+        "writfold_kernel::citation::scan::position_selector": {
+          "solver_entries": 1,
+          "declarations": [
+            {
+              "lines": [
+                21,
+                29
+              ],
+              "source": "crates/writfold-kernel/src/citation/scan.rs"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "mutations": [
+    {
+      "name": "citation-access-bypass",
+      "crate": "writfold_kernel",
+      "functions": [
+        "writfold_kernel::citation::resolution::resolve"
+      ],
+      "before": "if !access.allows(binding) { return ResolveResult::Denied; }",
+      "after": "if false { return ResolveResult::Denied; }",
+      "independent_guarantee": "Denied on a denied or foreign-binding decision; Exact requires current binding-specific access."
+    },
+    {
+      "name": "citation-role-context-omission",
+      "crate": "writfold_kernel",
+      "functions": [
+        "writfold_kernel::citation::compare::same_occurrence"
+      ],
+      "before": "&& original.context() == target.context() && original.role() == target.role()",
+      "after": "&& true",
+      "independent_guarantee": "Occurrence equality independently requires both context and evidence role."
+    },
+    {
+      "name": "citation-false-unique",
+      "crate": "writfold_kernel",
+      "functions": [
+        "writfold_kernel::citation::compare::compare"
+      ],
+      "before": "if matches!(witness, Some(CorrespondenceWitness::IdenticalPosition))\n        && same_occurrence(original, target)\n        && matches!(resolve(store, target, target_access), ResolveResult::Exact { .. }) {",
+      "after": "if true\n        && true\n        && matches!(resolve(store, target, target_access), ResolveResult::Exact { .. }) {",
+      "independent_guarantee": "UniqueJustified requires explicit identical-position witness and equal immutable occurrence, context and role; text or target resolution alone is insufficient."
+    },
+    {
+      "name": "citation-incomplete-coverage",
+      "crate": "writfold_domain",
+      "functions": [
+        "writfold_domain::citation::selector::Coverage::complete"
+      ],
+      "before": "Self::Measured { examined, total } => examined as u128 == total,\n        }\n    }",
+      "after": "Self::Measured { examined: _, total: _ } => true,\n        }\n    }",
+      "independent_guarantee": "Measured coverage is complete iff examined equals total; budget exhaustion cannot assert completeness."
+    },
+    {
+      "name": "citation-alias-scope-bypass",
+      "crate": "writfold_kernel",
+      "functions": [
+        "writfold_kernel::citation::handles::AliasTable::expand"
+      ],
+      "before": "if !self.scope.same_audience(current) { return AliasResult::Foreign; }",
+      "after": "if false { return AliasResult::Foreign; }",
+      "independent_guarantee": "Durable expansion requires exact realm, principal, instance, incarnation, release and context."
+    },
+    {
+      "name": "citation-alias-epoch-bypass",
+      "crate": "writfold_kernel",
+      "functions": [
+        "writfold_kernel::citation::handles::AliasTable::expand"
+      ],
+      "before": "if self.scope.table_generation().get() != current.table_generation().get() { return AliasResult::Expired; }",
+      "after": "if false { return AliasResult::Expired; }",
+      "independent_guarantee": "Durable expansion requires exact table generation independently of audience and lifetime."
+    },
+    {
+      "name": "citation-reuse-footprint-bypass",
+      "crate": "writfold_kernel",
+      "functions": [
+        "writfold_kernel::citation::reuse::binding_in_footprint"
+      ],
+      "before": "index += 1;\n    }\n    false",
+      "after": "index += 1;\n    }\n    true",
+      "independent_guarantee": "Footprint membership is true iff an observation matches source, immutable revision and exact content; an exhausted search cannot fabricate membership."
+    },
+    {
+      "name": "citation-legacy-reuse-bypass",
+      "crate": "writfold_kernel",
+      "functions": [
+        "writfold_kernel::citation::reuse::citation_reusable"
+      ],
+      "before": "crate::checker::reusable(kb, context, claim, validation.legacy)\n}",
+      "after": "true\n}",
+      "independent_guarantee": "Citation reuse implies the unchanged legacy reusable_spec, not merely resolved bindings."
+    }
+  ],
+  "mapping_observations": {
+    "purpose": "Source-map freeze observations only; not a joint positive or negative-calibration qualification receipt.",
+    "writfold_domain": {
+      "path": "~/.local/share/writfold/evidence/citation-wire-development-20261105-001/citation-verus-mapping.log",
+      "sha256": "346d9ccffcd4caa39fbf593bbeb2cbe60a1837656dcd04bf77affab7bb2a9b85"
+    },
+    "writfold_kernel": {
+      "path": "~/.local/share/writfold/evidence/citation-wire-development-20261105-001/citation-verus-mapping-second.log",
+      "sha256": "b3924145dcd9e03252ef3fe8bbb6ecb1f2eccd6071b4cead4f8859f1d7689ece"
+    },
+    "syntax_audit": {
+      "path": "~/.local/share/writfold/evidence/citation-quality-20261105-006.json.attempt/workspace-syntax-architecture.report.json",
+      "sha256": "acf6153ece3f727c72ca18c05680981ea7be618f170e9a5a6aa0bf531798131c"
+    }
+  }
+}

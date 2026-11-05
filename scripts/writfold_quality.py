@@ -225,6 +225,78 @@ class Producer:
             if metadata:
                 self.lint_policy(f"calibration-manifest-{level}", root, metadata, reject=level == "allow")
 
+    def declaration_calibrations(self) -> None:
+        source = (
+            'verus! {\n'
+            '#[derive(Clone, Copy)]\npub struct Record { value: u64 }\n'
+            '#[derive(Clone, Copy)]\npub enum Choice { One, Two }\n'
+            'pub fn clone() {}\n'
+            'pub struct NotDerived;\n'
+            '#[cfg(test)] mod tests { #[derive(Clone)] struct Hidden; }\n'
+            'pub fn text() -> &\'static str { "#[derive(Clone)] struct Fake;" }\n'
+            '}\n'
+        )
+        name = "calibration-generated-declarations"
+        root = self.fixture(name, source)
+        metadata = self.metadata(name + "-metadata", root, False)
+        if metadata is None:
+            self.record(name + "-mapping", False, reason="metadata prerequisite failed")
+            return
+        self.inspect(name, root, metadata)
+        try:
+            declarations = json.loads((self.evidence / f"{name}.report.json").read_text())["declarations"]
+            generated = [entry for entry in declarations if entry.get("origin") is not None]
+            expected = [
+                {"source": "src/lib.rs", "name": "clone", "lines": lines,
+                 "origin": {"kind": "derive-clone", "type_name": owner}}
+                for owner, lines in (("Record", [2, 3]), ("Choice", [4, 5]))
+            ]
+            handwritten = [entry for entry in declarations
+                           if entry["name"] == "clone" and entry.get("origin") is None]
+            passed = (sorted(generated, key=lambda row: row["lines"])
+                      == sorted(expected, key=lambda row: row["lines"])
+                      and handwritten == [{"source": "src/lib.rs", "name": "clone", "lines": [6, 6]}])
+        except (OSError, ValueError, KeyError, TypeError):
+            passed = False
+        self.record(name + "-mapping", passed)
+
+    def macro_declaration_calibrations(self) -> None:
+        source = (
+            'macro_rules! record { ($name:ident, $view:ident { $($field:ident: $ty:ty),* $(,)? }) => { '
+            'verus! { struct $name { $($field: $ty),* } impl $name { '
+            '$(fn $field(&self) -> &$ty { &self.$field })* } } }; }\n'
+            'record!(Linked, LinkedView { field: u64 });\n'
+            'macro_rules! quantity { ($name:ident, $min:expr) => { '
+            'verus! { #[derive(Clone, Copy)] struct $name(u64); } }; }\n'
+            'quantity!(Count, 0);\n'
+            'const TEXT: &str = "record!(Fake, FakeView { invented: u64 });";\n'
+            '#[cfg(test)] mod tests { record!(Hidden, HiddenView { secret: u64 }); }\n'
+        )
+        name = "calibration-macro-declarations"
+        root = self.fixture(name, source)
+        metadata = self.metadata(name + "-metadata", root, False)
+        if metadata is None:
+            self.record(name + "-mapping", False, reason="metadata prerequisite failed")
+            return
+        self.inspect(name, root, metadata)
+        try:
+            declarations = json.loads((self.evidence / f"{name}.report.json").read_text())["declarations"]
+            generated = [entry for entry in declarations if entry.get("origin") is not None]
+            expected = [
+                {"source": "src/lib.rs", "name": leaf, "lines": [line, line],
+                 "origin": {"kind": kind, "type_name": owner}}
+                for leaf, line, kind, owner in (
+                    ("field", 2, "record-field", "Linked"),
+                    ("clone", 3, "derive-clone", "__wf_name"),
+                    ("clone", 4, "quantity-clone", "Count"),
+                )
+            ]
+            passed = (sorted(generated, key=lambda row: row["lines"]) == expected
+                      and {"source": "src/lib.rs", "name": "__wf_field", "lines": [1, 1]} in declarations)
+        except (OSError, ValueError, KeyError, TypeError):
+            passed = False
+        self.record(name + "-mapping", passed)
+
     def trust_calibrations(self) -> None:
         source = 'verus! { #[verifier::external_type_specification] #[verifier::external_body] pub struct Foreign(std::ffi::OsString); }'
         for changed in (False, True):
@@ -381,6 +453,8 @@ class Producer:
             self.record("workspace-syntax-architecture", False, reason="required build/metadata prerequisite failed")
         if built:
             self.syntax_calibrations()
+            self.declaration_calibrations()
+            self.macro_declaration_calibrations()
             self.module_calibrations()
             self.trust_calibrations()
             self.graph_calibrations()

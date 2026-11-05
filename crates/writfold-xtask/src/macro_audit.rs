@@ -158,6 +158,7 @@ impl Audit<'_> {
                 );
             }
             self.argument_blocks(node.tokens.clone());
+            self.declaration_bindings(node.tokens.clone(), node.span(), name);
             return;
         }
         if !BUILTIN.contains(&name) {
@@ -243,5 +244,96 @@ impl Audit<'_> {
                 }
             }
         }
+    }
+
+    pub fn declaration_bindings(
+        &mut self,
+        tokens: proc_macro2::TokenStream,
+        span: proc_macro2::Span,
+        name: &str,
+    ) {
+        if self.test || self.ghost || !matches!(name, "record" | "quantity") {
+            return;
+        }
+        let parsed = if name == "record" {
+            verus_syn::parse2::<RecordBindings>(tokens).map(|record| {
+                record
+                    .fields
+                    .into_iter()
+                    .map(|(field, span)| (field, span, "record-field", record.owner.to_string()))
+                    .collect::<Vec<_>>()
+            })
+        } else {
+            verus_syn::parse2::<QuantityBinding>(tokens).map(|quantity| {
+                vec![(
+                    "clone".to_owned(),
+                    span,
+                    "quantity-clone",
+                    quantity.owner.to_string(),
+                )]
+            })
+        };
+        // Unrelated macros may share these names; unsupported invocations get
+        // no declaration linkage, while their ordinary syntax audit still runs.
+        if let Ok(bindings) = parsed {
+            for (name, span, kind, type_name) in bindings {
+                self.functions.insert(crate::syntax::FunctionSource {
+                    source: self.path.to_owned(),
+                    name,
+                    lines: [span.start().line, span.end().line],
+                    origin: Some(crate::syntax::GeneratedOrigin { kind, type_name }),
+                });
+            }
+        }
+    }
+}
+
+struct RecordBindings {
+    owner: verus_syn::Ident,
+    fields: Vec<(String, proc_macro2::Span)>,
+}
+
+impl verus_syn::parse::Parse for RecordBindings {
+    fn parse(input: verus_syn::parse::ParseStream<'_>) -> verus_syn::Result<Self> {
+        let _ = input.call(verus_syn::Attribute::parse_outer)?;
+        let owner = input.parse()?;
+        input.parse::<verus_syn::Token![,]>()?;
+        let _: verus_syn::Ident = input.parse()?;
+        let fields;
+        verus_syn::braced!(fields in input);
+        let mut bindings = Vec::new();
+        while !fields.is_empty() {
+            let field: verus_syn::Ident = fields.parse()?;
+            fields.parse::<verus_syn::Token![:]>()?;
+            let _: verus_syn::Type = fields.parse()?;
+            if fields.peek(verus_syn::Token![=>]) {
+                fields.parse::<verus_syn::Token![=>]>()?;
+                let _: verus_syn::Path = fields.parse()?;
+            }
+            bindings.push((field.to_string(), field.span()));
+            if !fields.is_empty() {
+                fields.parse::<verus_syn::Token![,]>()?;
+            }
+        }
+        if input.peek(verus_syn::Token![,]) {
+            input.parse::<verus_syn::Token![,]>()?;
+        }
+        Ok(Self {
+            owner,
+            fields: bindings,
+        })
+    }
+}
+
+struct QuantityBinding {
+    owner: verus_syn::Ident,
+}
+
+impl verus_syn::parse::Parse for QuantityBinding {
+    fn parse(input: verus_syn::parse::ParseStream<'_>) -> verus_syn::Result<Self> {
+        let owner = input.parse()?;
+        input.parse::<verus_syn::Token![,]>()?;
+        let _: verus_syn::Expr = input.parse()?;
+        Ok(Self { owner })
     }
 }

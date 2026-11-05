@@ -3,6 +3,9 @@
   "profile": "writfold-citation/1",
   "adoption": "qualification/revision-9-feature-adoption.json",
   "contract": "docs/writfold/revision-9-features.md",
+  "client_contract": "docs/writfold/shared-client-references.md",
+  "client_integration_inventory": "qualification/weft-integration.json",
+  "alias_epoch": "CitationTableGeneration is a distinct nominal type from RequestGeneration, session incarnation and execution-owner generation. Ordinary requests do not rotate the citation table.",
   "scope": "Citation integrity and compact reader only; existing admission policy is unchanged.",
   "required_lean": ["CIT01", "CIT02", "CIT03", "CIT04", "CIT05", "CIT06", "CIT08"],
   "deferred": ["CIT07", "V23", "universal per-proposal Lean instance certificate"],
@@ -16,6 +19,13 @@
       "scope": "citation-lean-only",
       "producer": "scripts/writfold_citation_lean.py",
       "meaning": "Clean Lean build, complete registered axiom audit, executable examples, kernel-checked concrete mutant counterexamples and rejection at intended safety declarations. Mathematical fidelity is reviewed separately. Not full WF08 or a Rust refinement proof."
+    },
+    "citation-verus": {
+      "gate": "WF08",
+      "scope": "citation-verus-only",
+      "producer": "scripts/writfold_verus.py",
+      "profile": "qualification/citation-verus-profile.json",
+      "meaning": "Actual domain/kernel body verification, frozen source and solver inventory, semantic mutations rejected at intended declarations, and independent evidence-admission controls. Not live-reader integration, complete V22, cross-prover refinement or full WF08."
     }
   },
   "production_obligations": {
@@ -24,6 +34,51 @@
     "models": ["M01", "M02", "M03"],
     "conditional_bridges": ["M09", "M10", "M11", "M15", "M16"],
     "empirical": "Complete repeated-workflow correctness and actual token/latency comparisons against competent targeted search plus kctx."
+  },
+  "production_mapping": {
+    "relation": "Reviewed semantic correspondence and explicit caller boundaries, not a machine-checked Lean-to-Rust refinement theorem. Mathematical unbounded coordinates become checked u64 offsets and bounded usize scans in the Linux x86_64 profile.",
+    "CIT01": {
+      "lean": ["Kctx.Citation.resolve_exact", "Kctx.Citation.resolve_denied", "Kctx.Citation.resolve_invalid_bounds"],
+      "rust": ["writfold_domain::citation::Selector::new", "writfold_domain::citation::Binding::same", "writfold_kernel::citation::resolve", "writfold_kernel::citation::lookup_representation"],
+      "caller": "compare and citation_reusable consume the actual resolver. Wire descriptor binding and native Git acquisition supply model material; the authenticated production host is not implemented.",
+      "boundary": "Reversed selectors refuse during typed construction; valid typed inputs still undergo access-first profile/unit/retained-length/preimage checks. Native capture and live authorization remain separate."
+    },
+    "CIT02": {
+      "lean": ["Kctx.Citation.expandAlias_exact_agreement", "Kctx.Citation.expandAlias_scope_identity", "Kctx.Citation.presentNotices_cursor_contract", "Kctx.Citation.presentNotices_coverage_unchanged"],
+      "rust": ["writfold_kernel::citation::AliasTable::issue", "writfold_kernel::citation::AliasTable::expand", "writfold_kernel::citation::AliasTable::retire", "writfold_domain::citation::NoticeQuery::same", "writfold_kernel::citation::present_notices"],
+      "caller": "Library callers supply immutable bindings/query closure and current binding-specific model access. No CLI/stdio session restoration or capability negotiation is claimed.",
+      "boundary": "CitationTableGeneration is separate from RequestGeneration; exhausted allocation refuses. Prepared notice visibility/meaning and durable table restoration are host obligations."
+    },
+    "CIT03": {
+      "lean": ["Kctx.Citation.retain_rejects_existing", "Kctx.Citation.retain_preserves_lookup", "Kctx.Citation.evolution_preserves_resolution"],
+      "rust": ["writfold_kernel::citation::retain", "writfold_kernel::citation::lookup_representation"],
+      "caller": "Borrowed immutable representation vectors; not the durable retained-object store or publication/GC protocol.",
+      "boundary": "The Rust append operation cannot overwrite an existing key. Arbitrary operational retention histories still require the applicable native/protocol bridges."
+    },
+    "CIT04": {
+      "lean": ["Kctx.Citation.compare_unique_binding_material", "Kctx.Citation.compare_text_only_ne_unique", "Kctx.Citation.textCandidates_complete", "Kctx.Citation.incomplete_search_not_absence"],
+      "rust": ["writfold_kernel::citation::same_occurrence", "writfold_kernel::citation::compare", "writfold_kernel::citation::diagnose", "writfold_domain::citation::Coverage::complete"],
+      "caller": "compare consumes exact resolution and bounded text diagnosis; text candidates cannot construct UniqueJustified or a deletion judgment.",
+      "boundary": "Only identical immutable position/context/role transport is admitted. Native move/rename, provider selectors and unsupported coordinate transformations remain unknown."
+    },
+    "CIT05": {
+      "lean": ["Kctx.Citation.CIT05_reuse_requires_exact_bindings", "Kctx.Citation.CIT05_changed_binding_refuses", "Kctx.Citation.CIT05_independent_alternative"],
+      "rust": ["writfold_kernel::citation::binding_in_footprint", "writfold_kernel::citation::citation_reusable", "writfold_kernel::checker::reusable"],
+      "caller": "citation_reusable invokes the actual legacy reusable predicate after exact ordered binding/context/access/retained-byte and observation-footprint checks.",
+      "boundary": "The added association never manufactures a receipt or bypasses legacy dependency, witness, correction, policy or time checks."
+    },
+    "CIT06": {
+      "lean": ["Kctx.Citation.CIT06_inclusive_expiry", "Kctx.Citation.CIT06_no_refresh_without_observation", "Kctx.Citation.CIT06_observation_times_unchanged"],
+      "rust": ["writfold_kernel::citation::citation_reusable", "writfold_kernel::checker::reusable"],
+      "caller": "Borrowed KB/context/receipt inputs and unchanged legacy freshness implementation; no acquisition-hint writer is introduced.",
+      "boundary": "Inclusive expiry and independent surviving witnesses are exercised by component behavior cases. Live acquisition scheduling is not qualified here."
+    },
+    "CIT08": {
+      "lean": ["Kctx.Citation.localStep_engineering_frame", "Kctx.Citation.CIT08_erasure", "Kctx.Citation.CIT08_legacy_conservation"],
+      "rust": ["crates/writfold-kernel/src/citation", "crates/writfold-wire/src/citation"],
+      "caller": "Pure borrowed core judgments and candidate byte codecs only; no new Witness/Derives constructor, knowledge writer or engineering transition caller.",
+      "boundary": "Full composed Rust state-transition erasure and operational noninterference remain unqualified until their real application/store callers exist."
+    }
   },
   "gate_policy": "No mixed-policy WF32/WF33 activation or renaming. A component receipt cannot close existing WF08, P05, P09, P11 or release. Full feature integration requires all relevant production, protocol and native obligations.",
   "weft": "External interpreter uses the same Writfold stdio interface as agents; no Weft-only opcodes, recipe VM or bypass."

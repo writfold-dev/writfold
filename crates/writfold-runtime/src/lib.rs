@@ -5,3 +5,4 @@
 compile_error!("writfold-runtime supports Linux/WSL x86_64 only");
 
 pub mod fs;
+pub mod git;

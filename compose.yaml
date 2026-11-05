@@ -65,6 +65,10 @@ services:
     <<: *qualified-tools
     network_mode: none
     command: [python3, scripts/writfold_verus.py]
+  citation-verus:
+    <<: *qualified-tools
+    network_mode: none
+    command: [python3, scripts/writfold_verus.py, --profile, qualification/citation-verus-profile.json, --package, writfold-kernel]
   reference:
     <<: *qualified-tools
     network_mode: none

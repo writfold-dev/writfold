@@ -17,6 +17,60 @@ from writfold_verus_evidence import ADMISSION_CONTROLS, Evidence, EvidenceError,
 ROOT = Path(__file__).resolve().parent.parent
 COMMAND = ["cargo", "verus", "verify", "-p", "writfold-protocol", "--locked", "--offline",
            "--message-format=json", "--", "--output-json", "--time-expanded"]
+PROFILES = {
+    "qualification/verus-profile.json": "writfold-protocol",
+    "qualification/citation-verus-profile.json": "writfold-kernel",
+}
+
+
+def selected_profile(args, summary):
+    path = ROOT / args.profile
+    profile = json.loads(path.read_text())
+    package = args.package or PROFILES[args.profile]
+    save(Path(summary["run_directory"]) / "selected-profile.json", profile)
+    summary["selected_input"] = {"profile": args.profile, "profile_sha256": digest(path),
+                                 "package": package}
+    require(profile.get("schema_version") == 4, "unsupported Verus profile schema")
+    require(package == PROFILES[args.profile], "package does not match selected profile")
+    if args.profile != "qualification/verus-profile.json":
+        require(profile.get("package") == package, "profile package identity mismatch")
+        require(profile.get("qualification_status") == "unqualified",
+                "component qualification is established by receipts, not a profile claim")
+        require(profile.get("source_map_status") == "frozen", "citation source map is not frozen")
+        require(set(profile["crates"]) == {"writfold_domain", "writfold_kernel"},
+                "unexpected citation crate selection")
+        require(profile.get("source_hashes"), "missing frozen source identities")
+        for source, expected in profile["source_hashes"].items():
+            require(isinstance(source, str) and source.startswith("crates/")
+                    and ".." not in Path(source).parts, "invalid frozen source path")
+            require(digest(ROOT / source) == expected, "frozen citation source changed")
+        for crate, spec in profile["crates"].items():
+            require(type(spec["minimum_verified"]) is int and spec["minimum_verified"] > 0,
+                    "missing measured crate obligation floor")
+            require(spec["functions"], "missing measured function inventory")
+            for name, function in spec["functions"].items():
+                require(name.startswith(crate + "::"), "foreign profile symbol")
+                require(type(function["solver_entries"]) is int and function["solver_entries"] > 0,
+                        "missing measured solver multiplicity")
+                require(function["declarations"], "missing frozen declaration")
+                for declaration in function["declarations"]:
+                    require(declaration["source"] in profile["source_hashes"],
+                            "declaration has no frozen source identity")
+                    lines = declaration["lines"]
+                    require(isinstance(lines, list) and len(lines) == 2
+                            and all(type(line) is int for line in lines)
+                            and 1 <= lines[0] <= lines[1], "unresolved declaration range")
+        names = [mutation["name"] for mutation in profile["mutations"]]
+        require(names and len(set(names)) == len(names), "missing or duplicate calibrations")
+        for mutation in profile["mutations"]:
+            require(mutation["name"].replace("-", "").isalnum(), "invalid mutation directory")
+            mutation_functions(profile, mutation)
+            require(isinstance(mutation["before"], str) and mutation["before"]
+                    and isinstance(mutation["after"], str)
+                    and mutation["before"] != mutation["after"], "invalid semantic mutation")
+            require(mutation["before"].count("\n") == mutation["after"].count("\n"),
+                    "mutation shifts frozen declaration ranges")
+    return profile, package
 
 
 def digest(path):
@@ -133,9 +187,42 @@ def target_environment(profile):
     return environment(target, profile)
 
 
+def declaration_links(name, function):
+    """Pair audited macro arguments with their independently audited bodies."""
+    owner, leaf = name.split("::")[-2:]
+    declarations = function["declarations"]
+    require(declarations, "missing declared production source")
+    origins = [declaration.get("origin") for declaration in declarations]
+    field = {"kind": "record-field", "type_name": owner} in origins
+    quantity = {"kind": "quantity-clone", "type_name": owner} in origins
+    template = any(declaration.get("audit_name") == "__wf_field"
+                   and declaration.get("origin") is None for declaration in declarations)
+    derived_template = {"kind": "derive-clone", "type_name": "__wf_name"} in origins
+    require(not field or template, "record field lacks audited template body")
+    require(not quantity or (leaf == "clone" and derived_template),
+            "quantity invocation lacks audited Clone derive")
+    for declaration in declarations:
+        origin = declaration.get("origin")
+        audit_name = declaration.get("audit_name", leaf)
+        require(audit_name == leaf or (audit_name == "__wf_field" and field and origin is None),
+                "unbound macro declaration name")
+        if origin is not None:
+            allowed = (
+                origin == {"kind": "derive-clone", "type_name": owner} and leaf == "clone"
+                or origin == {"kind": "record-field", "type_name": owner} and template
+                or origin == {"kind": "quantity-clone", "type_name": owner} and leaf == "clone"
+                or origin == {"kind": "derive-clone", "type_name": "__wf_name"}
+                and quantity and leaf == "clone"
+            )
+            require(allowed, "invalid generated declaration owner")
+        yield declaration["source"], audit_name, tuple(declaration["lines"]), json.dumps(origin, sort_keys=True)
+
+
 def inspect_workspace(directory, workspace, profile, timeout):
     env = target_environment(profile)
     before = inventory(workspace)
+    for source, expected in profile.get("source_hashes", {}).items():
+        require(before.get(source) == expected, "copied workspace differs from frozen source map")
     status, text = run(["cargo", "metadata", "--locked", "--offline", "--all-features",
                         "--format-version=1"], workspace, directory / "metadata", env, timeout)
     require(status == 0, "source trust metadata failed")
@@ -149,26 +236,26 @@ def inspect_workspace(directory, workspace, profile, timeout):
     audit = json.loads(report.read_text())
     require(audit.get("complete") is True and audit.get("success") is True,
             "incomplete source trust/syntax admission")
-    available = {(item["source"], item["name"], tuple(item["lines"]))
+    available = {(item["source"], item["name"], tuple(item["lines"]),
+                  json.dumps(item.get("origin"), sort_keys=True))
                  for item in audit["declarations"]}
     for spec in profile["crates"].values():
         for name, function in spec["functions"].items():
-            require(function["declarations"], "missing declared production source")
-            for declaration in function["declarations"]:
-                require((declaration["source"], name.split("::")[-1],
-                         tuple(declaration["lines"])) in available,
-                        f"stale syntax-derived production linkage: {name}")
+            for linkage in declaration_links(name, function):
+                require(linkage in available, f"stale syntax-derived production linkage: {name}")
     require(inventory(workspace) == before, "source audit changed candidate inputs")
     return audit
 
 
-def verify_attempt(directory, workspace, profile, timeout, mutation=None):
+def verify_attempt(directory, workspace, profile, timeout, mutation=None, package="writfold-protocol"):
     env = target_environment(profile)
     before = inventory(workspace)
     save(directory / "source-hashes.json", before)
     if mutation:
         save(directory / "mutation.json", mutation)
-    status, text = run(COMMAND, workspace, directory / "verify", env, timeout)
+    command = COMMAND.copy()
+    command[4] = package
+    status, text = run(command, workspace, directory / "verify", env, timeout)
     require(inventory(workspace) == before, "verifier changed input sources or lock")
     evidence = Evidence.parse(text)
     save(directory / "reports.json", evidence.records)
@@ -186,15 +273,14 @@ def verify_attempt(directory, workspace, profile, timeout, mutation=None):
 
 
 def produce(args, run_root, summary):
-    profile = json.loads((ROOT / "qualification/verus-profile.json").read_text())
-    require(profile["schema_version"] == 4, "unsupported Verus profile schema")
+    profile, package = selected_profile(args, summary)
     summary["required_mutations"] = [mutation["name"] for mutation in profile["mutations"]]
     summary.update({"scope": profile["scope"], "excluded_claims": profile["excluded_claims"],
                     "verification_target": profile["verification_target"],
                     "shipping_target": profile["shipping_target"]})
     inputs = run_root / "inputs"
     inputs.mkdir(mode=0o755)
-    for name in ("qualification/verus-profile.json", "toolchains.lock.json",
+    for name in (args.profile, "toolchains.lock.json",
                  "qualification/trusted-boundaries.json", "qualification/implementation-decisions.json",
                  "scripts/writfold_verus.py", "scripts/writfold_verus_evidence.py"):
         destination = inputs / name
@@ -208,7 +294,7 @@ def produce(args, run_root, summary):
     summary["source_admission"] = "pass"
     dependencies = identities(run_root / "identity", workspace,
                               environment(run_root / "identity-target", profile), args.timeout)
-    positive = verify_attempt(positive_dir, workspace, profile, args.timeout)
+    positive = verify_attempt(positive_dir, workspace, profile, args.timeout, package=package)
     summary["positive"] = "pass"
     baseline = inventory(workspace)
     for mutation in profile["mutations"]:
@@ -230,7 +316,7 @@ def produce(args, run_root, summary):
         attribution = {**mutation, "source": relative, "before_sha256": baseline[relative],
                        "after_sha256": changed[relative]}
         try:
-            negative = verify_attempt(attempt, clone, profile, args.timeout, attribution)
+            negative = verify_attempt(attempt, clone, profile, args.timeout, attribution, package)
             controls = self_controls(profile, positive, negative, mutation, clone)
             save(attempt / "admission-self-controls.json", controls)
             summary["mutations"][mutation["name"]] = {"outcome": "pass", "controls": controls}
@@ -270,6 +356,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--evidence", type=Path, default=Path("/evidence"))
     parser.add_argument("--timeout", type=int, default=1800)
+    parser.add_argument("--profile", choices=tuple(PROFILES), default="qualification/verus-profile.json")
+    parser.add_argument("--package", choices=tuple(PROFILES.values()),
+                        help="must match the selected profile; defaults to its package")
     args = parser.parse_args()
     require(args.timeout > 0, "timeout must be positive")
     os.umask(0o022)

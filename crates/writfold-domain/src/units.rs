@@ -120,6 +120,7 @@ macro_rules! quantity {
     };
 }
 quantity!(ByteCount, 0);
+quantity!(ByteOffset, 0);
 quantity!(RowLimit, 1);
 quantity!(PageSize, 1);
 quantity!(WitnessDepth, 0);

@@ -296,3 +296,48 @@ native reference execution and semantic calibration. Its receipt has
 current receipt admission; command availability and these diagnostic counts
 cannot close WF08, a Rust refinement obligation, a product stage or release.
 
+## Rust citation component boundary
+
+The implementation is split across the existing dependency layers; it is not a
+second knowledge backend or a live `find`/`peek`/`cite` service.
+
+| Owner | Implemented boundary |
+| --- | --- |
+| `writfold-domain::citation` | Checked byte selectors, full immutable representation/binding material, current-access model inputs, scoped aliases, prepared notices and a separate `CitationTableGeneration`. |
+| `writfold-kernel::citation` | Exact resolution, append-only retention, bounded diagnostic scanning, identical-position correspondence, alias expansion/retirement, pinned notice pagination and composition with the actual legacy receipt-reuse decision. |
+| `writfold-wire::citation` | Closed, bounded binding-descriptor JSON, canonical CBOR fingerprints and checked reconstruction from the retained selection preimage. |
+| `writfold-runtime::git` | Descriptor-pinned native Git execution and exact commit/tree/blob acquisition, including ordinary non-promisor packs and owned-process teardown. |
+
+Bindings and representations borrow retained bytes; comparison does not copy a
+blob or allocate every possible match position. The scan stops at either caller
+budget and reports the positions actually examined. `u128` represents the total
+number of possible empty-needle positions without overflowing `usize::MAX + 1`.
+Checked selector construction rejects reversed bounds before the pure resolver;
+this typed-input profile is not raw malformed-input parity with the Lean model.
+
+`AccessDecision` remains an explicit pure-model input, never a deserializable
+live grant. The source host must authenticate, authorize, bind the named snapshot
+to its completed retained release, and supply already-authorized notice material.
+Neither these constructors nor native Git admission establish that host boundary.
+Logical snapshot names, physical release identities and binding fingerprints are
+not interchangeable simply because their spellings happen to agree.
+
+The native adapter verifies the pinned commit, every traversed tree and the final
+blob through the admitted Git executable. It never substitutes HEAD or worktree
+bytes. It refuses helper-bearing configuration, alternates, grafts, shallow or
+promisor stores and linked-worktree indirection under its declared managed-repo
+profile. Native Git and its dynamic-loader/runtime closure remain dependencies;
+a static-musl consumer does not make Git static.
+
+`GitProcessSupervisor::enable` is an explicit process-wide Linux subreaper opt-in.
+The caller must preserve that setting and exclusive reaping of owned groups.
+Teardown reserves the unreaped leader PID, kills the owned group, drains pipes,
+reaps adopted descendants—including silent descendants—and reaps the leader last.
+Unrelated children are not consumed. This requires procfs and the documented
+no-process-group-escape assumption; it is not an arbitrary hostile-process sandbox.
+
+The citation Verus component producer targets these actual domain/kernel bodies,
+with source linkage and semantic negative calibrations. Hashing/codecs, Git,
+filesystem ownership, live authorization and cross-prover correspondence are
+separate obligations. Component qualification cannot close V22 as an integrated
+feature, WF08, the blocked WF24 foundation, P09, P11 or release.

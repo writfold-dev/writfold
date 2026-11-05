@@ -24,6 +24,7 @@
 
 pub mod admission;
 pub mod authored;
+pub mod citation;
 pub mod engineering;
 pub mod equality;
 pub mod evidence;
@@ -41,6 +42,7 @@ pub mod workflow;
 
 pub use admission::*;
 pub use authored::*;
+pub use citation::CitationTableGeneration;
 pub use evidence::*;
 pub use ids::*;
 pub use integer::Integer;

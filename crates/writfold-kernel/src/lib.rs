@@ -3,6 +3,7 @@
 #![forbid(unsafe_code)]
 
 pub mod checker;
+pub mod citation;
 pub mod design_workflow;
 pub mod portfolio;
 pub mod time;

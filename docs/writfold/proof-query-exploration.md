@@ -5,6 +5,14 @@ handover, not an admitted Writfold implementation contract. **Continue the
 exploration here; do not silently activate a new prover, language, worker,
 admission rule or dependency.**
 
+Weft now has its own revision-1 authority in the sibling `../weft` repository.
+The sketch below records the earlier exploration, not the latest Weft language
+or report contract. Writfold's response to that owner's WR1–WR8 request is the
+[shared proof-client reference contract](shared-client-references.md), with
+[source-bound review inputs](../../qualification/weft-integration.json).
+Keep subsequent Weft implementation decisions in that repository and preserve
+Writfold's existing admission/runtime boundaries.
+
 ## User intent and parallel ownership
 
 Tarek wants **Weft** to ship alongside Writfold as an agent-friendly language,

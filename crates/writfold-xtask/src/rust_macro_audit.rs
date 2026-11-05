@@ -142,6 +142,7 @@ impl Audit<'_> {
                 );
             }
             self.rust_argument_blocks(node.tokens.clone());
+            self.declaration_bindings(node.tokens.clone(), node.span(), name);
             return;
         }
         if !BUILTIN.contains(&name) {

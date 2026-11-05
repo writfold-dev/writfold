@@ -10,10 +10,18 @@ use verus_syn::{
 };
 
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, serde::Serialize)]
+pub struct GeneratedOrigin {
+    pub kind: &'static str,
+    pub type_name: String,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, serde::Serialize)]
 pub struct FunctionSource {
     pub source: String,
     pub name: String,
     pub lines: [usize; 2],
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub origin: Option<GeneratedOrigin>,
 }
 
 pub struct Audit<'a> {
@@ -110,6 +118,35 @@ impl Audit<'_> {
         }
     }
 
+    fn clone_derive(
+        &mut self,
+        attrs: &[verus_syn::Attribute],
+        ident: &verus_syn::Ident,
+        span: Span,
+    ) {
+        if self.test || self.ghost || is_test(attrs) {
+            return;
+        }
+        for attr in attrs.iter().filter(|attr| attr.path().is_ident("derive")) {
+            let Ok(paths) = attr.parse_args_with(
+                verus_syn::punctuated::Punctuated::<verus_syn::Path, verus_syn::Token![,]>::parse_terminated,
+            ) else {
+                continue;
+            };
+            if paths.iter().any(|path| path.is_ident("Clone")) {
+                self.functions.insert(FunctionSource {
+                    source: self.path.to_owned(),
+                    name: "clone".to_owned(),
+                    lines: [attr.span().start().line, span.end().line],
+                    origin: Some(GeneratedOrigin {
+                        kind: "derive-clone",
+                        type_name: ident.to_string(),
+                    }),
+                });
+            }
+        }
+    }
+
     fn function(
         &mut self,
         signature: &verus_syn::Signature,
@@ -126,6 +163,7 @@ impl Audit<'_> {
             self.functions.insert(FunctionSource {
                 source: self.path.to_owned(),
                 name: signature.ident.to_string(),
+                origin: None,
                 lines: [
                     signature.fn_token.span.start().line,
                     block.span().end().line,
@@ -152,6 +190,14 @@ pub fn is_test(attrs: &[verus_syn::Attribute]) -> bool {
 }
 
 impl<'ast> Visit<'ast> for Audit<'_> {
+    fn visit_item_struct(&mut self, node: &'ast verus_syn::ItemStruct) {
+        self.clone_derive(&node.attrs, &node.ident, node.span());
+        visit::visit_item_struct(self, node);
+    }
+    fn visit_item_enum(&mut self, node: &'ast verus_syn::ItemEnum) {
+        self.clone_derive(&node.attrs, &node.ident, node.span());
+        visit::visit_item_enum(self, node);
+    }
     fn visit_ensures(&mut self, node: &'ast verus_syn::Ensures) {
         let old = self.ghost;
         self.ghost = true;
