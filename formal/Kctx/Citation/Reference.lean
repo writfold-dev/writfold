@@ -38,6 +38,8 @@ def resolutionCases : List Case :=
    ⟨"identity_witness", "CIT04", "positive", identityWitnessSuccess⟩,
    ⟨"same_binding", "CIT04", "positive", sameBindingSuccess⟩,
    ⟨"forged_position", "CIT04", "negative", forgedPositionRefused⟩,
+   ⟨"changed_role_transport", "CIT04", "negative", changedRoleRefusesTransport⟩,
+   ⟨"duplicate_position_transport", "CIT04", "negative", duplicatePositionRefusesTransport⟩,
    ⟨"foreign_comparison_context", "CIT04", "negative", foreignContextRefused⟩,
    ⟨"target_denied", "CIT04", "negative", targetDeniedRefused⟩,
    ⟨"original_must_resolve", "CIT04", "negative", originalMustResolve⟩,

@@ -15,7 +15,7 @@ def copiedRef : RepresentationRef :=
 def originalObject : Representation := ⟨originalRef, lineBytes⟩
 def copiedObject : Representation := ⟨copiedRef, copiedBytes⟩
 def original : Binding :=
-  ⟨⟨"citation-a", by decide⟩, ⟨"release-a", by decide⟩, ⟨"context", by decide⟩,
+  ⟨⟨"citation-a", by decide⟩, ⟨"release-a", by decide⟩, ⟨"context", by decide⟩, ⟨1⟩,
     originalRef, ⟨0, 5, .byte⟩, lineBytes⟩
 def later : Binding :=
   { original with id := ⟨"citation-b", by decide⟩, release := ⟨"release-b", by decide⟩ }
@@ -165,6 +165,21 @@ def invalidOriginalPreserved : Bool :=
     .unknown (.originalInvalid .selectionMismatch) [] .unavailable
 
 theorem invalidOriginalPreserved_nonvacuous : invalidOriginalPreserved = true := by decide
+
+def changedRoleRefusesTransport : Bool :=
+  compare store allow original { later with role := ⟨2⟩ } (some .identicalPosition) 20 ==
+    .unknown .unsupportedCorrespondence [⟨0, 5, .byte⟩] (.measured 1 1)
+
+theorem changedRoleRefusesTransport_nonvacuous : changedRoleRefusesTransport = true := by decide
+
+def duplicatePositionRefusesTransport : Bool :=
+  let duplicated := { originalObject with bytes := copiedBytes }
+  let second := { later with selector := ⟨5, 10, .byte⟩ }
+  compare [duplicated] allow original second (some .identicalPosition) 20 ==
+    .multiple [⟨0, 5, .byte⟩, ⟨5, 10, .byte⟩] (.measured 6 6)
+
+theorem duplicatePositionRefusesTransport_nonvacuous :
+    duplicatePositionRefusesTransport = true := by decide
 
 theorem exactResolution_nonvacuous : exactResolution = true := by decide
 theorem emptyRange_nonvacuous : emptyRange = true := by decide

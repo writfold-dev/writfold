@@ -36,12 +36,12 @@ def diagnose (bytes needle : List UInt8) (budget : Nat) : CompareResult :=
       if candidates.isEmpty then .noTextMatch else .unsupportedCorrespondence
     else .incompleteSearch) candidates coverage
 
-/-- Identity transports an occurrence, not merely equal selected text. Release
-and citation IDs may differ; the immutable reference, offsets and context may not. -/
+/-- Identity transports an occurrence without changing its evidence role. Release
+and citation IDs may differ; reference, offsets, role and context may not. -/
 def SameOccurrence (original target : Binding) : Prop :=
   original.representation = target.representation ∧
   original.selector = target.selector ∧ original.expected = target.expected ∧
-  original.context = target.context
+  original.context = target.context ∧ original.role = target.role
 
 instance (original target : Binding) : Decidable (SameOccurrence original target) := by
   unfold SameOccurrence

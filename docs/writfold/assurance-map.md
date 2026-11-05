@@ -320,7 +320,7 @@ The [scoped revision-9 supplement](revision-9-features.md) adds a separate
 [`citation-profile.json`](../../qualification/citation-profile.json), without
 activating the package's mixed-policy gate registry or weakening existing
 admission. [`formal/citation-theorems.json`](../../formal/citation-theorems.json)
-maps CIT01–CIT06/CIT08 to actual definitions, proof roots, assumptions and 90
+maps CIT01–CIT06/CIT08 to actual definitions, proof roots, assumptions and 93
 executable cases. CIT07/V23 remain deferred.
 
 The [citation calculus description](semantic-core.md#scoped-citation-calculus)

@@ -50,6 +50,10 @@ def changedBindingRefuses : Bool := withValidation (fun receipt =>
   !citationReusable retained access NonVacuity.kb NonVacuity.context binding.context
     NonVacuity.claim.ref [{ binding with selector := ⟨0, 0, .byte⟩, expected := [] }] receipt)
 
+def changedRoleRefusesReuse : Bool := withValidation (fun receipt =>
+  !citationReusable retained access NonVacuity.kb NonVacuity.context binding.context
+    NonVacuity.claim.ref [{ binding with role := ⟨2⟩ }] receipt)
+
 def unrelatedSourceRefuses : Bool := withValidation (fun receipt =>
   !citationReusable ResolutionExamples.store access NonVacuity.kb NonVacuity.context
     binding.context NonVacuity.claim.ref [ResolutionExamples.original]
@@ -133,6 +137,7 @@ def unavailableCoverage : Bool := decide
 def allCases : List (String × String × String × Bool) :=
   [("matching_reuse", "CIT05", "positive", matchingReuse),
    ("changed_binding", "CIT05", "negative", changedBindingRefuses),
+   ("changed_role", "CIT05", "negative", changedRoleRefusesReuse),
    ("unrelated_source", "CIT05", "negative", unrelatedSourceRefuses),
    ("foreign_context", "CIT05", "negative", foreignContextRefuses),
    ("revoked_source", "CIT05", "negative", revokedSourceRefuses),

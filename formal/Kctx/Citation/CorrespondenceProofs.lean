@@ -51,6 +51,20 @@ theorem compare_unique_identity (store : Store) (access : Access)
               · exact False.elim (diagnose_ne_unique object.bytes original.expected
                   budget successor proof h)
 
+/-- Explicit material equality is independent of the executable SameOccurrence
+predicate, so weakening that predicate cannot weaken the registered conclusion. -/
+theorem compare_unique_binding_material (store : Store) (access : Access)
+    (original target successor : Binding) (witness : Option CorrespondenceWitness)
+    (proof : CorrespondenceWitness) (budget : Nat)
+    (accepted : compare store access original target witness budget = .uniqueJustified successor proof) :
+    original.representation = successor.representation ∧
+    original.selector = successor.selector ∧ original.expected = successor.expected ∧
+    original.context = successor.context ∧ original.role = successor.role := by
+  obtain ⟨same, _, _, material, _, _⟩ :=
+    compare_unique_identity store access original target successor witness proof budget accepted
+  subst successor
+  exact material
+
 theorem compare_text_only_ne_unique (store : Store) (access : Access)
     (original target successor : Binding) (proof : CorrespondenceWitness) (budget : Nat) :
     compare store access original target none budget ≠ .uniqueJustified successor proof := by

@@ -34,6 +34,7 @@
         "Kctx.Citation.issueAlias_preserves_mapping",
         "Kctx.Citation.issueAlias_duplicate_refused",
         "Kctx.Citation.expandAlias_exact_agreement",
+        "Kctx.Citation.expandAlias_scope_identity",
         "Kctx.Citation.expandAlias_foreign_refused",
         "Kctx.Citation.expandAlias_generation_refused",
         "Kctx.Citation.expandAlias_revoked_refused",
@@ -81,6 +82,7 @@
     "CIT04": {
       "theorem": [
         "Kctx.Citation.compare_unique_identity",
+        "Kctx.Citation.compare_unique_binding_material",
         "Kctx.Citation.compare_text_only_ne_unique",
         "Kctx.Citation.compare_sameBinding_exact",
         "Kctx.Citation.scanCoverage_examined",
@@ -90,7 +92,7 @@
         "Kctx.Citation.diagnose_multiple_observed",
         "Kctx.Citation.incomplete_search_not_absence"
       ],
-      "meaning": "Only independently resolved identical immutable positions justify transport. Actual bounded text enumeration cannot prove lineage or deletion; unavailable coverage is not exhaustive empty enumeration.",
+      "meaning": "Only independently resolved identical immutable positions with the same context and evidence role justify transport. The registered conclusion spells out material-field equality independently of the executable guard. Actual bounded text enumeration cannot prove lineage or deletion; unavailable coverage is not exhaustive empty enumeration.",
       "assumptions": [
         "Exact retained bytes and immutable provenance keys are mathematical preimages; production capture, canonical encodings, digest collision resistance and byte/coordinate conversions require separate qualification.",
         "Current access and active alias scope are authenticated host inputs, not caller-supplied capabilities. Native isolation, revocation and retention races require separate adapter/protocol qualification.",
@@ -207,6 +209,8 @@
     "Kctx.Citation.ResolutionExamples.foreignRealmRefused_nonvacuous",
     "Kctx.Citation.ResolutionExamples.foreignSourceRefused_nonvacuous",
     "Kctx.Citation.ResolutionExamples.invalidOriginalPreserved_nonvacuous",
+    "Kctx.Citation.ResolutionExamples.changedRoleRefusesTransport_nonvacuous",
+    "Kctx.Citation.ResolutionExamples.duplicatePositionRefusesTransport_nonvacuous",
     "Kctx.Citation.HandleExamples.allCases_nonvacuous",
     "Kctx.Citation.HandleExamples.successfulIssueExpand_nonvacuous",
     "Kctx.Citation.HandleExamples.inheritedMappingPreserved_nonvacuous",
@@ -755,6 +759,24 @@
       "obligation": "CIT04",
       "polarity": "negative",
       "symbol": "Kctx.Citation.ResolutionExamples.invalidOriginalPreserved"
+    },
+    {
+      "id": "changed_role_transport",
+      "obligation": "CIT04",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.ResolutionExamples.changedRoleRefusesTransport"
+    },
+    {
+      "id": "duplicate_position_transport",
+      "obligation": "CIT04",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.ResolutionExamples.duplicatePositionRefusesTransport"
+    },
+    {
+      "id": "legacy_changed_role",
+      "obligation": "CIT05",
+      "polarity": "negative",
+      "symbol": "Kctx.Citation.LegacyExamples.changedRoleRefusesReuse"
     }
   ]
 }

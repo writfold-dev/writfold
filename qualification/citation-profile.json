@@ -8,7 +8,7 @@
   "deferred": ["CIT07", "V23", "universal per-proposal Lean instance certificate"],
   "formal_registry": "formal/citation-theorems.json",
   "initial_representation": "Exact retained Git blob bytes with half-open byte selectors; source/repository/path/revision/profile identity checked separately from content equality.",
-  "correspondence": "Same immutable occurrence is the only initial justified transport profile. Text search, even unique and exhaustive, is diagnostic only; other transformations and deletion without sufficient evidence remain unknown.",
+  "correspondence": "Same immutable occurrence, context and evidence role is the only initial justified transport profile. Explicit material-field conclusions are independent of the executable identity predicate. Text search, even unique and exhaustive, is diagnostic only; other transformations and deletion without sufficient evidence remain unknown.",
   "coverage": "Unavailable enumeration is distinct from a measured exhaustive empty domain. Search coverage and presentation completeness remain separate.",
   "commands": {
     "citation-lean": {

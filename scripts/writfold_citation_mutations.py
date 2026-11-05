@@ -13,7 +13,7 @@ PREFIX = '''open Kctx Kctx.Citation
 def sourceRef : RepresentationRef :=
   ⟨⟨1⟩, ⟨"repo", by decide⟩, ⟨"revision", by decide⟩, "file", ⟨"blob", by decide⟩, .gitBlob⟩
 def citeA : Binding :=
-  ⟨⟨"cite", by decide⟩, ⟨"release", by decide⟩, ⟨"context", by decide⟩,
+  ⟨⟨"cite", by decide⟩, ⟨"release", by decide⟩, ⟨"context", by decide⟩, ⟨1⟩,
     sourceRef, ⟨0, 1, .byte⟩, [97]⟩
 def objectA : Representation := ⟨sourceRef, [97]⟩
 def storeA : Store := [objectA]
@@ -104,6 +104,22 @@ def mutations() -> tuple[Mutation, ...]:
   | none => false
   | some next => decide (lookupRepresentation next sourceRef = some replacement)
 ''', ('retain_rejects_existing', 'retain_preserves_lookup')),
+        Mutation('ignore-correspondence-position', 'Correspondence', 'CorrespondenceProofs',
+                 'original.selector = target.selector ∧ ', '',
+                 '''def attack : Bool :=
+  let duplicated := { objectA with bytes := [97, 97] }
+  let target := { citeA with selector := ⟨1, 2, .byte⟩ }
+  match Kctx.Citation.compare [duplicated] yes citeA target (some .identicalPosition) 5 with
+  | .uniqueJustified _ _ => true
+  | _ => false
+''', ('compare_unique_binding_material',)),
+        Mutation('ignore-correspondence-role', 'Correspondence', 'CorrespondenceProofs',
+                 ' ∧ original.role = target.role', '',
+                 '''def attack : Bool := match Kctx.Citation.compare storeA yes citeA
+    { citeA with role := ⟨2⟩ } (some .identicalPosition) 5 with
+  | .uniqueJustified _ _ => true
+  | _ => false
+''', ('compare_unique_binding_material',)),
         Mutation('ignore-current-access', 'Handles', 'HandlesProofs',
                  'else if access entry.binding = false then .denied',
                  'else if False then .denied',

@@ -255,10 +255,10 @@ certificates are not part of this extension.
 | --- | --- |
 | Exact resolution | Full realm/repository/revision/path/content/profile key, byte units, half-open bounds, expected preimage and access-before-disclosure. Missing objects, invalid bindings and denial remain distinct. |
 | Historical stability | Retention rejects an existing key; arbitrary finite append histories preserve previously resolved exact bytes under unchanged authorization. |
-| Correspondence | Only the same immutable occurrence with a checked identity witness can justify transport. Bounded text enumeration reports actual positions and coverage, never lineage or deletion from a singleton/empty result. |
+| Correspondence | Only the same immutable occurrence with a checked identity witness and unchanged context/evidence role can justify transport. Material-field equality is stated independently of the executable guard. Bounded text enumeration never proves lineage or deletion. |
 | Scoped aliases | Audience, generation, named context, release, lifetime, stored binding and current access are checked. Appending a handle cannot replace an older mapping. |
 | Presentation | Cursors bind the complete prepared query, source notices, ordering/profile and budget. Omitted notices make the packet partial; pagination cannot upgrade underlying search coverage. |
-| Reuse | Exact current bindings and named context must match the retained validation; each source must occur in the legacy witness's observation footprint. Original correction, policy, time and reuse checks remain mandatory. |
+| Reuse | Exact current bindings, including evidence role, and named context must match the retained validation; each source must occur in the legacy witness's observation footprint. Original correction, policy, time and reuse checks remain mandatory. |
 | Conservation | The closed citation updater cannot write engineering state. Erasing arbitrary interleaved citation/core/environment/refusal traces yields the original engineering trace and exact knowledge/journal admission history. |
 
 `Coverage.unavailable` is not `Coverage.measured 0 0`: only the latter describes
@@ -275,14 +275,19 @@ refinement/adapter obligations. No new `Witness` or `Derives` constructor, legac
 theorem source, root import, signed byte domain or context-freshness rule changes.
 Acquisition scheduling hints live outside knowledge and cannot retimestamp it.
 
-The reference contains 90 executable positive/negative cases. Incremental
-diagnostic `citation-development-20261104-007/report.json` executed all 90.
-`citation-mutation-smoke-20261104-001/report.json` exercised nine actual semantic
+The reference contains 93 executable positive/negative cases, including distinct
+equal-text positions in one blob and evidence-role changes during transport/reuse.
+`citation-development-20261105-001/report.json` executed all 93.
+`citation-mutation-smoke-20261105-001/report.json` exercised eleven actual semantic
 source mutations: each changed model compiled, a concrete violating witness was
 kernel-checked and executed, and its intended safety declaration was rejected.
 The matching unmodified controls passed. These diagnostics are retained under
-`~/.local/share/writfold/evidence/`, together with the initial clean-build failure
-and subsequent development failures; they are not a clean gate receipt.
+`~/.local/share/writfold/evidence/`, together with failed attempts.
+
+The earlier `citation-lean-20261104-002.json` clean receipt audited 670 declarations,
+executed 90 cases and killed nine source mutants. It retains that exact earlier
+scope, before explicit evidence-role identity and independent material/scope
+conclusions were added. It is not a pass for the expanded current source.
 
 `scripts/gate citation-lean --receipt <new-external-path>` is the clean
 source-bound producer: legacy/engineering/citation build, transitive axiom audit,

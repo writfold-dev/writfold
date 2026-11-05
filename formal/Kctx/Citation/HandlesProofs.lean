@@ -79,6 +79,24 @@ theorem expandAlias_exact_agreement (table : AliasTable) (scope : AliasScope)
                 (by simpa using lifetime : entry.issuedAt ≤ now ∧ now ≤ entry.expiresAt).2,
                 by simpa using allowed⟩
 
+/-- The declared scope conclusion is field identity, not just the value of the
+same executable audience predicate used in the expansion guard. -/
+theorem expandAlias_scope_identity (table : AliasTable) (scope : AliasScope)
+    (handle : Handle) (now : Nat) (access : Access) (binding : Binding)
+    (success : expandAlias table scope handle now access = .durable binding) :
+    table.scope = scope ∧ binding.representation.realm = scope.realm ∧
+      binding.release = scope.release ∧ binding.context = scope.context := by
+  obtain ⟨entry, _, bound, audience, generation, fits, _, _, _⟩ :=
+    expandAlias_exact_agreement table scope handle now access binding success
+  have same : table.scope = scope := by
+    cases ht : table.scope <;> cases hs : scope <;> simp_all [sameAliasAudience]
+  subst binding
+  have linked : entry.binding.representation.realm = table.scope.realm ∧
+      entry.binding.release = table.scope.release ∧ entry.binding.context = table.scope.context := by
+    simpa only [bindingFitsAlias, decide_eq_true_eq] using fits
+  rw [same] at linked
+  exact ⟨same, linked⟩
+
 theorem expandAlias_foreign_refused (table : AliasTable) (scope : AliasScope)
     (handle : Handle) (now : Nat) (access : Access)
     (foreign : sameAliasAudience table.scope scope = false) :

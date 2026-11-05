@@ -11,7 +11,7 @@ def scope : AliasScope :=
     ⟨"context-a", by decide⟩, 1⟩
 
 def binding : Binding :=
-  ⟨⟨"citation-a", by decide⟩, scope.release, scope.context,
+  ⟨⟨"citation-a", by decide⟩, scope.release, scope.context, ⟨1⟩,
     ⟨scope.realm, ⟨"repository-a", by decide⟩, ⟨"revision-a", by decide⟩,
       "source.txt", ⟨"content-a", by decide⟩, .gitBlob⟩,
     ⟨0, 1, .byte⟩, [65]⟩

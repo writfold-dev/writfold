@@ -8,7 +8,7 @@ are unchanged. Exact byte preimages are modeled rather than assuming hashes are
 injective; production digest/capture/authorization refinement is separate. -/
 
 inductive NameKind where
-  | session | handle
+  | session | handle | evidenceRole
   deriving DecidableEq, Repr, Inhabited
 
 structure Name (kind : NameKind) where
@@ -17,6 +17,7 @@ structure Name (kind : NameKind) where
 
 abbrev SessionId := Name .session
 abbrev Handle := Name .handle
+abbrev EvidenceRoleId := Name .evidenceRole
 abbrev RealmId := Engineering.Id .realm
 
 inductive RepresentationProfile where
@@ -48,6 +49,7 @@ structure Binding where
   id : CitationId
   release : SnapshotId
   context : ContextId
+  role : EvidenceRoleId
   representation : RepresentationRef
   selector : Selector
   expected : List UInt8
