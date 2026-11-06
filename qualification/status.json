@@ -7,6 +7,87 @@
   "qualification_scope": "local-only; enterprise endpoints and hardware power loss unqualified",
   "supplemental_evidence_index": "qualification/revision-5-progress.json",
   "current_component_closure": "~/.local/share/writfold/evidence/revision-5-final-component-closure-001.json",
+  "dolt_approval_admission": {
+    "status": "pass",
+    "milestone": "DINT02 signed-input prerequisite only",
+    "profile": "qualification/dolt-approval-profile.json",
+    "scope": "Distinct closed canonical Dolt operation/approval codecs and strict supplied-policy, all-context, actor, toolchain and request-realm verification; not live authority, a release envelope or native publication.",
+    "record": {
+      "path": "~/.local/share/writfold/evidence/dint02-toolchain-admission-20261106-001.json",
+      "sha256": "0c04684548c35651b2418f8fc251afc7c63cede5a822251f5216f97cc525eadf",
+      "bytes": 11628
+    },
+    "source_tree_digest": "5f7ff8633aad175a299f4e9af3205ac1f67eb8c7f9db447c4f87abc3f4469397",
+    "applicability": "The admission record enumerates every later documentation/mapping change and the test-only split following the first native smoke. Runtime, consumer, fixtures, dependency and producer bytes are unchanged; no whole-tree receipt or historical proof is renewed.",
+    "verification": {
+      "rust_tests": 313,
+      "quality_checks": 239,
+      "baseline_checks": 1409,
+      "native_approval_cases": 14,
+      "native_approval_refusals": 8,
+      "independent_golden_vectors": 3
+    },
+    "binary": {
+      "path": "~/.local/share/writfold/evidence/dint02-approval-20261106-001.json.attempt/dolt_approval",
+      "sha256": "88650fa29de34db682fbca01cb150447557af24ae02707945937447cc483c938",
+      "bytes": 1032840,
+      "target": "x86_64-unknown-linux-musl",
+      "scope": "Development-only supplied-input codec/crypto consumer using the published synthetic test key"
+    },
+    "retained_failures": [
+      "~/.local/share/writfold/evidence/dint02-quality-20261106-001.json"
+    ],
+    "full_dint02": "not_run",
+    "native_publication": "not_run",
+    "new_formal_refinement": "not_run",
+    "release_gates_passed": [],
+    "omnigraph_wf24": "blocked_unchanged",
+    "next": "Distinct release envelope, authenticated candidate preparation and retained closure, then completed Git CAS, conflicts and honest lost-response/crash recovery."
+  },
+  "toolchain_smoke_admission": {
+    "status": "pass",
+    "scope": "Actual pinned Weft-to-Writfold control and Splicery-to-Weft local artifact composition; not persistent grounding, authorized effects, full WR/SW service qualification or agent benchmarks.",
+    "scenarios": "fixtures/qualification/toolchain-smoke.yaml",
+    "profile": "qualification/toolchain-smoke-profile.json",
+    "reproduction": "docs/writfold/shared-client-references.md#executed-three-tool-component-smoke",
+    "record": {
+      "path": "~/.local/share/writfold/evidence/dint02-toolchain-admission-20261106-001.json",
+      "sha256": "0c04684548c35651b2418f8fc251afc7c63cede5a822251f5216f97cc525eadf",
+      "bytes": 11628
+    },
+    "smoke": {
+      "path": "~/.local/share/writfold/evidence/toolchain-smoke-20261106-001.json",
+      "sha256": "50ca41e5c0dce38a7f599edb4cb263fb5199786712718456f28824779484e3be",
+      "bytes": 140822
+    },
+    "verification": {
+      "actual_component_checks": 8,
+      "actual_process_commands": 7,
+      "fresh_native_control_checks": 24,
+      "blocked_scenarios": 4,
+      "weft_matching_declared_source_inputs": 146,
+      "splicery_matching_declared_source_inputs": 141
+    },
+    "observations": {
+      "shared_contract": "Exact owner/consumer archive member bytes and license match",
+      "control": "Real initialization/shutdown passes; wrong executable pin refuses",
+      "candidate": "Exact Splicery stdout is consumed by Weft; original source bytes unchanged",
+      "assessment": "Original entailed; changed candidate refuted; both remain local symbolic/unresolved",
+      "reuse": "Identical-source report reusable; changed source refused for source.sha256"
+    },
+    "blocked": [
+      "Persistent citation/assessment/artifact handoff",
+      "Authorized worktree effects with host-kernel replay",
+      "Crash/Unknown reconciliation",
+      "Retained-evidence repeated-session benchmarks"
+    ],
+    "writfold_grounded": false,
+    "effect_authority": false,
+    "full_e2e": "blocked",
+    "sibling_sources_modified": false,
+    "release_gates_passed": [],
+    "omnigraph_wf24": "blocked_unchanged"
+  },
   "citation_calculus_admission": {
     "mathematical_status": "pass_under_explicit_model_assumptions",
     "profile": "qualification/citation-profile.json",
@@ -268,7 +349,7 @@
       "~/.local/share/writfold/evidence/dint01-verus-20261106-001.json",
       "~/.local/share/writfold/evidence/dint01-quality-20261106-003.json"
     ],
-    "splicery_review": "qualification/splicery-integration.json#/sibling_implementation_review",
+    "splicery_review": "qualification/splicery-integration.json#/prior_sibling_implementation_review",
     "release_gates_passed": [],
     "omnigraph_wf24": "blocked_unchanged",
     "writer": "not_run",

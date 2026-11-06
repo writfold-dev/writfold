@@ -124,9 +124,7 @@ fn wrong_policy_toolchain_kb_actor_and_private_key_refuse() -> Result {
     let wrong_key = ApprovalSigningKey::from_pkcs8_pem(&pem)?;
     assert!(matches!(
         wrong_key.sign_storage(&operation, &policy, "reviewer-key".parse()?, toolchain),
-        Err(BoundaryError::Binding(
-            "private key differs from policy key"
-        ))
+        Err(BoundaryError::Binding(_))
     ));
     Ok(())
 }

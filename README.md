@@ -49,6 +49,15 @@ Dolt snapshots. It retains a single read lease and checks metadata, typed rows,
 relationship closure and retained roots. This library component does not widen
 the control-only service above or establish knowledge/citation authority.
 
+The [Dolt approval boundary](docs/writfold/signed-operations.md#dolt-integration-approval-boundary)
+adds distinct canonical operation/signature domains and supplied-policy/realm
+checks, exercised through a static-musl consumer. It is a DINT02 prerequisite,
+not a native writer or publication/recovery completion. Runnable
+[toolchain smoke scenarios](fixtures/qualification/toolchain-smoke.yaml) cover
+the available Writfold/Weft control and Splicery/Weft artifact boundaries while
+keeping persistent grounding and authorized effects explicitly blocked.
+See [reproduction and exact scope](docs/writfold/shared-client-references.md#executed-three-tool-component-smoke).
+
 The revision-5 **E01–E12 mathematical calculus is discharged under its recorded
 assumptions**: a clean Lean audit covers 571 declarations, the reference executes
 66 cases, and nine behavior-changing source mutants fail their intended safety

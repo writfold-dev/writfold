@@ -15,6 +15,54 @@ The implemented [control-only transport](wire-boundary.md#ordinary-stdio-control
 has its own pinned schemas and vectors. Other sections remain accepted interface
 requirements, **not available data/effect methods or guessed RPC names**.
 
+## Executed three-tool component smoke
+
+The runnable [YAML scenarios](../../fixtures/qualification/toolchain-smoke.yaml)
+and [pinned artifact profile](../../qualification/toolchain-smoke-profile.json)
+exercise actual executables, not mock services. The YAML uses the JSON-compatible
+subset so reproduction needs only Python's standard library.
+
+`toolchain-smoke-20261106-001.json` records eight passing component checks:
+owner/consumer contract bytes including the license; real Weft-owned Writfold
+initialization/shutdown; wrong binary-pin refusal; original Weft entailment;
+exact Splicery preview bytes with original bytes unchanged; candidate refutation;
+identical-source report reuse; and changed-source report refusal. The candidate
+stdout is fed directly to the next real Weft process. Both complete hypothetical
+proof outcomes correctly exit `1`, not `0`; exit alone is not a success oracle.
+All reports remain unresolved, `writfold_grounded=false`, `effect_authority=false`.
+
+The source-bound receipt and exact hashes are indexed under
+`toolchain_smoke_admission` in `qualification/status.json`. It uses Weft's
+`a115f512e5a9b9faa598c496dd0be68700222594` and Splicery's
+`c696b6e3e60938c2b19081c38801e0d67ced8df2` artifacts; the recorded declared-source
+manifests match the current sibling files. Their build/reproduction receipts,
+actual binaries, input bytes and process streams are retained with the smoke.
+No sibling source or qualification file was edited.
+
+Replay the exercised operator artifacts using a **new** external receipt:
+
+```sh
+python3 -B scripts/writfold_toolchain_smoke.py \
+  --writfold "$HOME/.local/share/writfold/evidence/toolchain-stdio-20261106-001.json.attempt/writfold" \
+  --expect-writfold-sha256 12fdaad21cb62f0d0371efd73a8febda38d0b13ba58e15c80079bf155502f65c \
+  --receipt "$HOME/.local/share/writfold/evidence/toolchain-smoke-new.json"
+```
+
+For changed Writfold source, first run `scripts/gate stdio-control` with a fresh
+receipt, then supply its retained executable and the SHA256 in `stdio-report.json`.
+The runner checks that report's source manifest against the checkout; a revision
+name or arbitrary binary path is insufficient. Outside this workstation, use
+`--weft`, `--splicery`, `--weft-contract` and `--provenance-root` to relocate the
+same pinned inputs, or supply `--profile` with separately qualified artifact and
+receipt identities. No mutable sibling build dependency or digest bypass exists.
+
+The four blocked rows are persistent citation/assessment/artifact handoff,
+authorized worktree effects with host-kernel replay, crash/Unknown reconciliation,
+and retained-evidence session benchmarks. They remain `BLOCKED`, never passes.
+This is operational control plus a local file-artifact composition—not a grounded
+three-tool service loop or a measured agent/token saving. Writfold's owner data
+and effect boundaries are the next integration dependency.
+
 ## What must be stable
 
 A stable name alone is insufficient for a proof. Distinguish four things:
@@ -196,14 +244,14 @@ The [owner integration inventory](../../qualification/splicery-integration.json)
 records the supplied worktree-edit /1 archive and selected requirements. It does
 not adopt Splicery's SG registry as Writfold gates or enable a write capability.
 
-The sibling implementation at `06028bc1083d2cc1bd1367d6babce10fc9943f06` reports
-`not_qualified` for full `/1`, with a real static-musl offline preview component.
-The owner review matched 21 compiler inputs to its retained build and exercised
-four cases: primitive application, exact preview, original-coordinate report and
-ambiguous-selector refusal. Targets stayed unchanged. Its documented unsupported
-language forms and the Writfold/Worktrunk apply/reconciliation boundary remain open.
-The integration inventory retains the exact artifact and review receipt; no
-Splicery source was edited and no fresh sibling proof/release gate is claimed.
+The earlier owner review at `06028bc1083d2cc1bd1367d6babce10fc9943f06` is
+preserved in the inventory. The current sibling at
+`c696b6e3e60938c2b19081c38801e0d67ced8df2` reports offline SG00–SG07 passes,
+including its cold offline reproduction, while full `/1` remains `not_qualified`
+and SG08–SG14 remain host-blocked. The component smoke above consumes that final
+reproduced artifact, matches its declared source inputs and exercises its exact
+preview-to-Weft handoff. This does not rerun or renew Splicery's formal gates,
+enable native target writes, or satisfy Writfold's host obligations.
 
 Splicery owns its language, lowering, normalized IR and pure checked kernel.
 Writfold owns the pinned adapter, actual IO, authenticated run/principal/grant,

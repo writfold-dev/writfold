@@ -297,6 +297,29 @@
     "qualification_index": "qualification/status.json",
     "contract_sha256": "b673d10f7c14c73d8f5778cfb9b2e84a98a159f1553d5c008054402ee85e7be2"
   },
+  "component_alignment_review": {
+    "date": "2026-11-06",
+    "observed_head": "a115f512e5a9b9faa598c496dd0be68700222594",
+    "status": "actual_control_and_local_artifact_smoke_pass",
+    "scope": "Real pinned Weft client against newly qualified Writfold, plus exact Splicery candidate/report handoff. Not persistent owner grounding, full WR1-WR8 or effect authority.",
+    "artifact_profile": "qualification/toolchain-smoke-profile.json",
+    "scenarios": "fixtures/qualification/toolchain-smoke.yaml",
+    "receipt": {
+      "path": "~/.local/share/writfold/evidence/toolchain-smoke-20261106-001.json",
+      "sha256": "50ca41e5c0dce38a7f599edb4cb263fb5199786712718456f28824779484e3be",
+      "bytes": 140822
+    },
+    "current_source_link": {
+      "path": "~/.local/share/writfold/evidence/toolchain-current-sources-20261106-001.json",
+      "sha256": "abc287eeb0867a8f066f2d7b0e8f11df1936fe406dfe89fe4777d7ffccd69208",
+      "bytes": 29417
+    },
+    "matching_declared_source_inputs": 146,
+    "binary_sha256": "939e35badb2eea01b3723810b96563987332dde581ffd8960b0d353939537845",
+    "writfold_grounded": false,
+    "effect_authority": false,
+    "full_service_requirements": "not_run"
+  },
   "weft_change_scope": {
     "source_modified": false,
     "configuration_modified": false,

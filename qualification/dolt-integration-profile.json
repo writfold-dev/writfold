@@ -56,8 +56,8 @@
   "milestones": [
     {"id": "DINT00", "scope": "native candidate foundation", "evidence_index": "qualification/status.json#/dolt_integration_admission"},
     {"id": "DINT01", "scope": "typed Rust exact store and read boundary", "evidence_index": "qualification/status.json#/dolt_reader_admission"},
-    {"id": "DINT02", "scope": "authenticated publication and recovery integration", "status": "not_run"},
-    {"id": "DINT03", "scope": "ordinary client and engineering integration", "status": "not_run"},
+    {"id": "DINT02", "scope": "authenticated publication and recovery integration", "status": "not_run", "signed_input_prerequisite": "qualification/dolt-approval-profile.json", "evidence_index": "qualification/status.json#/dolt_approval_admission"},
+    {"id": "DINT03", "scope": "ordinary client and engineering integration", "status": "not_run", "component_smoke_scenarios": "fixtures/qualification/toolchain-smoke.yaml", "evidence_index": "qualification/status.json#/toolchain_smoke_admission"},
     {"id": "DINT04", "scope": "instrumented paired agent and multi-session episodes", "status": "not_run"}
   ],
   "excluded_claims": [

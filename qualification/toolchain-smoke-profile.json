@@ -1,0 +1,43 @@
+{
+  "schema": "writfold-toolchain-smoke-inputs/1",
+  "scope": "Pinned local component artifacts and receipt provenance; not release admission or source-revision-only byte identity. Paths may be relocated with explicit CLI inputs and --provenance-root.",
+  "weft": {
+    "path": "~/.local/share/weft/evidence/client-20261106T0001/rust-002/weft",
+    "sha256": "939e35badb2eea01b3723810b96563987332dde581ffd8960b0d353939537845"
+  },
+  "splicery": {
+    "path": "../splicery-evidence/reproduction-final-001/out-a/splicery",
+    "sha256": "db79d50147cc51d7183b18474d1ea9f3f6eb935e14f7c7f8719e7fdea3965081"
+  },
+  "provenance": {
+    "weft_runtime": {
+      "path": "~/.local/share/weft/evidence/client-20261106T0001/rust-002/report.json",
+      "sha256": "a0986c05eb90bb1c64ed37a0354d926c9d26832b218708d5158f401ba59e5d43"
+    },
+    "weft_package": {
+      "path": "~/.local/share/weft/evidence/client-20261106T0001/runtime-package-001/report.json",
+      "sha256": "2222f5bdf40b0e6d52677686b5740d0052be1e11da10fc038d555c08c4954c4e"
+    },
+    "weft_package_rust": {
+      "path": "~/.local/share/weft/evidence/client-20261106T0001/rust-001/report.json",
+      "sha256": "6c5bc761f4b25d7b2c3b04402e0bf042e4ed993e1afcf88b2277d6db81f47cb4"
+    },
+    "splicery_reproduction": {
+      "path": "../splicery-evidence/reproduction-final-001/reproduction-receipt.json",
+      "sha256": "2ebab6fff2297b37e8430593b929f8536890066059a4c9f7aa2e5f70b8d0fa51"
+    },
+    "splicery_build": {
+      "path": "../splicery-evidence/reproduction-final-001/out-a/build-results.json",
+      "sha256": "824249e7d1c046899000d80a7a3b335b46e4877535965facef55115d60d381fe"
+    },
+    "splicery_build_b": {
+      "path": "../splicery-evidence/reproduction-final-001/out-b/build-results.json",
+      "sha256": "91c27e589a3e4e587852ddbb607741c6bb423e575b33be34db5f739188ee8064"
+    }
+  },
+  "contract": {
+    "path": "../weft/contracts/writfold-agent-1/writfold-agent-contract.tar.gz",
+    "sha256": "1971ed3fb84a210eee6e53a9af3fb331affb3ad931e7717adb8926b641bba842",
+    "contract_sha256": "b673d10f7c14c73d8f5778cfb9b2e84a98a159f1553d5c008054402ee85e7be2"
+  }
+}

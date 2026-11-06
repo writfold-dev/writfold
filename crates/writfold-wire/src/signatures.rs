@@ -1,6 +1,7 @@
 //! Detached Ed25519 approvals. Current authorization is relative to supplied
 //! immutable inputs, never evidence that those inputs are the live store state.
 mod binding;
+pub mod dolt;
 pub mod storage;
 use crate::{
     Limits, RawJson,

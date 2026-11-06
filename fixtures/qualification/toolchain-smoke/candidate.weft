@@ -1,0 +1,7 @@
+review smoke {
+  context "unresolved-sandbox" at "unresolved-release";
+  profile "weft.symbolic/1";
+  target change = proposal "unresolved-plan";
+  assume premise: ready("x");
+  check result: not ready("x");
+}

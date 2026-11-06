@@ -137,3 +137,59 @@ docker run --rm --network=none --user "$(id -u):$(id -g)" \
 To requalify, run the same pinned command with `--verify` appended and a read-only fixture mount, then run `cargo test -p writfold-wire --test signatures --locked --offline` in the admitted environment. The Python command rechecks provenance hashes and cryptographic equations. Rust compares exact canonical bytes, identities, domain messages and deterministic signatures, then exercises current/historical refusals. Bind each new result to its actual source/dependency/fixture candidate; generation alone remains insufficient.
 
 The cryptographic library and policy adapter are trusted implementation dependencies, not mechanically verified Ed25519 arithmetic. These checks are neither a full Rust semantic proof nor product release evidence.
+
+## Dolt integration approval boundary
+
+`writfold_wire::dolt_operation` is a separate boundary for the disposable
+[`writfold-dolt-integration/1`](dolt-integration.md) profile. It does not widen
+`StoragePin`, reinterpret historical `DoltCommitId`, or retarget the Omnigraph
+storage envelope. The [qualification mapping](../../qualification/dolt-approval-profile.json)
+records its DINT02 prerequisite scope, actual callers, fixtures and open obligations.
+
+`DoltOperation` has the closed fields `namespace`, `schema`, `id`, `operation`,
+`base`, `target`, `mapping`. Namespace is `writfold-dolt-operation`, schema is `1`,
+and the embedded operation remains checked workflow schema 3. Its ID is SHA256
+of `b"writfold-dolt-plan-v1\0"` followed by canonical JSON with only the outer
+`id` field removed. Signed bytes are `b"writfold-dolt-operation-v1\0"` followed
+by the complete canonical envelope. Canonical bytes are borrowed from that one
+message buffer; complete-envelope budgets include the domain prefix.
+
+`DoltBase` binds the exact predecessor release and a current `DoltReadPin`.
+`DoltTarget` binds backend `dolt-integration`, realm, KB, database, immutable
+epoch/schema/query digests, storage profile and producing-tool generation.
+It deliberately has no candidate commit: the eventual native result must be
+validated after execution, not circularly included in its own signing input.
+The base release must equal the embedded workflow predecessor. Realm/KB changes
+refuse even with a mapping. Database, epoch/schema/query or profile changes
+require a mapping digest; producer-only changes do not, but remain signed.
+Bootstrap has neither base nor mapping. A mapping digest is provenance, not
+evidence that a migration is approved or correct.
+
+`signatures::dolt::DoltApproval` uses namespace `writfold-dolt-approval`, schema
+`1`, and the closed fields `plan`, `key`, `signature` alongside that header.
+`ApprovalSigningKey::sign_dolt` and `verify_dolt_current` retain current-policy,
+all-context, actor/key-use, policy-KB and toolchain checks and additionally require
+the supplied request realm to equal the target realm. Verification is strong
+strict Ed25519 over the exact new domain. Transplanted workflow or Omnigraph
+approvals cannot authorize it. Existing domains and signed bytes remain unchanged.
+
+`SuppliedDoltAuthorization` borrows those exact inputs. It cannot open a backend
+or write, and does not prove that a supplied policy, realm or predecessor is live.
+Declared schema/query/tool identities still require native compatibility admission.
+No native publisher, release envelope, recovery protocol or service capability is
+enabled by this component.
+
+The public synthetic bootstrap, selection and mapped-transition vectors are in
+`crates/writfold-wire/fixtures/dolt-operation/`. Reproduce the independent
+Python/cryptography equations and execute the real static-musl Rust consumer with:
+
+```sh
+python3 -B scripts/writfold_dolt_approval.py \
+  --receipt "$HOME/.local/share/writfold/evidence/dolt-approval-new.json"
+```
+
+The runner uses admitted offline Compose tooling, retains its executable and
+exact process streams, and exercises deterministic signing, verification and
+eight refusal cases. It never opens a native database or an operational key.
+The current source-bound result is indexed separately in `qualification/status.json`;
+codec/crypto testing is not a native-publication or full DINT02 pass.

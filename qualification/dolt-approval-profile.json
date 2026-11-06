@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "profile": "writfold-dolt-approval/1",
+  "execution_profile": "writfold-dolt-integration/1",
+  "milestone": "DINT02 signed-input prerequisite only",
+  "authority": "handovers/revision-5/writfold",
+  "scope": "Closed canonical Dolt operation/approval codecs and strict supplied-policy Ed25519 verification. No live realm/policy admission, native candidate, release envelope, publication, recovery or write capability.",
+  "status_index": "qualification/status.json#/dolt_approval_admission",
+  "operation": {
+    "namespace": "writfold-dolt-operation",
+    "schema": 1,
+    "backend": "dolt-integration",
+    "identity_domain": "writfold-dolt-plan-v1\u0000",
+    "approval_domain": "writfold-dolt-operation-v1\u0000",
+    "base_pin": "writfold-dolt-read/1; current typed DoltReadPin only",
+    "candidate_commit": "excluded from signing input; resulting candidate still requires independent validation"
+  },
+  "approval": {"namespace": "writfold-dolt-approval", "schema": 1},
+  "mappings": [
+    {
+      "requirement": "DINT02 distinct versioned canonical signing inputs before a writer; inherited plan/16 identity and signed-boundary rules",
+      "rust": "writfold_wire::dolt_operation::{DoltOperation,DoltBase,DoltTarget}",
+      "evidence": "fixtures/dolt-operation independent canonical/message/Ed25519 vectors; tests/dolt_operation.rs and boundaries.rs; actual dolt_approval consumer",
+      "formal_scope": "Codec/hash/crypto implementation boundary is tested, not a new calculus theorem or Verus refinement result. Historical semantic/workflow bytes are unchanged."
+    },
+    {
+      "requirement": "Exact predecessor/realm/KB binding and explicit database/schema/query/profile transition mapping",
+      "rust": "dolt_operation::binding::check; DoltOperation::{prepare,decode}",
+      "evidence": "tests/dolt_operation/binding.rs; native cross-realm-base, missing-migration-mapping and retained-commit-replay refusals",
+      "formal_scope": "Structural provenance only. Full V15 migration admission and M11 native epoch/retention behavior remain open."
+    },
+    {
+      "requirement": "Supplied current authority, all portfolio contexts, designated actor, toolchain and expected request realm",
+      "rust": "signatures::dolt::{verify_dolt_current,SuppliedDoltAuthorization}; ApprovalSigningKey::sign_dolt; existing signatures::binding::current",
+      "evidence": "tests/dolt_operation/signatures.rs and native sign/verify/domain-transplant/realm/toolchain controls",
+      "formal_scope": "Existing calculus assumptions are preserved, not promoted to live-state or effect authority by a successful signature equation."
+    }
+  ],
+  "runner": "python3 -B scripts/writfold_dolt_approval.py --receipt ABS_NEW_EXTERNAL",
+  "consumer": "crates/writfold-wire/examples/dolt_approval.rs",
+  "fixtures": "crates/writfold-wire/fixtures/dolt-operation/manifest.json",
+  "producer": "scripts/writfold_dolt_fixtures.py",
+  "remaining": [
+    "Admit actual realm/policy/predecessor and compatible native target/tool profile at the owned publication boundary.",
+    "Implement authenticated candidate preparation, canonical state comparison and complete retained release closure.",
+    "Freeze a distinct release envelope; complete Git CAS and preserve competing/lost-response/crash observations.",
+    "Qualify actual V07-V10/V15 and M01-M06/M11 operational boundaries and bridges; signatures do not discharge them."
+  ],
+  "release_gates_passed": [],
+  "omnigraph_wf24": "blocked_unchanged"
+}

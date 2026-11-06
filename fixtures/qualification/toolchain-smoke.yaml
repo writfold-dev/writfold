@@ -1,0 +1,24 @@
+{
+  "schema": "writfold-toolchain-smoke/1",
+  "description": "Runnable JSON-compatible YAML, parsed with the Python standard-library JSON parser. Actual pinned binaries only; component smoke is not full E2E, corpus grounding, effect authorization or release qualification.",
+  "fixtures": {
+    "original": "toolchain-smoke/original.weft",
+    "expected_candidate": "toolchain-smoke/candidate.weft",
+    "recipe": "toolchain-smoke/negate-check.spl"
+  },
+  "frozen_edit": {"lo": 192, "hi": 202, "original": "ready(\"x\")", "replacement": "not ready(\"x\")"},
+  "cases": [
+    {"id": "shared-contract", "action": "contract-agreement"},
+    {"id": "control-session", "action": "control", "digest": "correct", "exit_code": 0, "expect": {"schema": "weft.control/1", "kind": "control-session", "scope": "writfold.agent/1 transport-control-only", "execution": "complete", "session.initialize_generation": 1, "session.shutdown_generation": 2, "writfold_grounded": false, "effect_authority": false}},
+    {"id": "control-wrong-pin", "action": "control", "digest": "incorrect", "exit_code": 2, "expect": {"schema": "weft.control/1", "execution": "failed", "peer.sha256": "unverified", "diagnostics.0.code": "ControlFailure", "diagnostics.0.phase": "peer", "writfold_grounded": false, "effect_authority": false}, "absent": ["session"]},
+    {"id": "prove-original", "action": "prove", "source": "original", "save": "original-report", "exit_code": 1, "expect": {"schema": "weft.report/1", "kind": "assessment", "scope": "local-symbolic", "execution": "complete", "checks.0.result": "entailed", "review.profile": "weft.symbolic/1", "review.requested_context": "unresolved-sandbox", "review.requested_snapshot": "unresolved-release", "review.target.reference": "unresolved-plan", "review.target.resolution": "unresolved", "writfold_grounded": false, "effect_authority": false}},
+    {"id": "preview-candidate", "action": "preview", "exit_code": 0, "source": "original", "recipe": "recipe", "save": "candidate", "expected_bytes": "expected_candidate"},
+    {"id": "prove-candidate", "action": "prove", "source": "candidate", "save": "candidate-report", "exit_code": 1, "expect": {"schema": "weft.report/1", "kind": "assessment", "scope": "local-symbolic", "execution": "complete", "checks.0.result": "refuted", "review.profile": "weft.symbolic/1", "review.requested_context": "unresolved-sandbox", "review.requested_snapshot": "unresolved-release", "review.target.reference": "unresolved-plan", "review.target.resolution": "unresolved", "writfold_grounded": false, "effect_authority": false}},
+    {"id": "reuse-identical", "action": "reuse", "report": "original-report", "source": "original", "exit_code": 0, "expect": {"schema": "weft.reuse/1", "scope": "local-report-scope-equality-only", "decision": "reusable", "differences": [], "writfold_grounded": false, "effect_authority": false}},
+    {"id": "reuse-changed", "action": "reuse", "report": "original-report", "source": "candidate", "exit_code": 1, "expect": {"schema": "weft.reuse/1", "scope": "local-report-scope-equality-only", "decision": "refused", "differences.0.field": "source.sha256", "writfold_grounded": false, "effect_authority": false}},
+    {"id": "persistent-handoff", "action": "blocked", "status": "BLOCKED", "requires": ["owner-published data contract", "persistent citation resolution", "assessment and artifact retention receipts"], "reason": "writfold.agent/1 exposes initialize/shutdown only; local Weft report paths and candidate bytes are not persistent owner handoff. No invented data RPC is executed."},
+    {"id": "authorized-worktree-effects", "action": "blocked", "status": "BLOCKED", "requires": ["owner-authorized worktree grant", "host kernel replay", "durable effect receipt", "Splicery SG08-SG14 host integration"], "reason": "Preview is read-only candidate computation; it does not authorize or apply native worktree effects."},
+    {"id": "crash-unknown-reconciliation", "action": "blocked", "status": "BLOCKED", "requires": ["durable operation ledger", "Unknown outcome lookup", "crash recovery and reconciliation protocol"], "reason": "Transport shutdown and digest refusal do not establish effect recovery; no retry or reconciliation RPC is invented."},
+    {"id": "retained-session-benchmarks", "action": "blocked", "status": "BLOCKED", "requires": ["persistent retained-evidence service", "repeated-session workload and benchmark budget", "cross-session evidence reuse contract"], "reason": "This bounded component smoke records process durations, not retained-evidence performance or repeated-session qualification."}
+  ]
+}

@@ -144,7 +144,7 @@
     "partial multi-file success never reports rollback or whole-batch completion",
     "unauthorized original text/counts never appear in diffs/diagnostics"
   ],
-  "sibling_implementation_review": {
+  "prior_sibling_implementation_review": {
     "date": "2026-11-05",
     "source_commit": "06028bc1083d2cc1bd1367d6babce10fc9943f06",
     "source_checkout": "../splicery",
@@ -165,6 +165,34 @@
     ],
     "scope": "Read-only sibling assessment and actual retained-preview execution; no Splicery source edits, fresh Lean/Verus gate run, release promotion or Writfold edit admission.",
     "contract_note": "The Writfold control-only stdio artifact exists; it does not provide the still-missing worktree data/effect methods."
+  },
+  "sibling_implementation_review": {
+    "date": "2026-11-06",
+    "source_commit": "c696b6e3e60938c2b19081c38801e0d67ced8df2",
+    "source_checkout": "../splicery",
+    "reported_release_status": "not_qualified",
+    "reported_offline_gates": "SG00-SG07 pass; not independently rerun here",
+    "reported_host_gates": "SG08-SG14 blocked",
+    "available_component": "Final cold-reproduced static-musl offline compiler/kernel preview, consumed as exact candidate bytes by Weft; no native target writer.",
+    "artifact_profile": "qualification/toolchain-smoke-profile.json",
+    "review_receipt": {
+      "path": "~/.local/share/writfold/evidence/toolchain-smoke-20261106-001.json",
+      "sha256": "50ca41e5c0dce38a7f599edb4cb263fb5199786712718456f28824779484e3be",
+      "bytes": 140822
+    },
+    "current_source_link": {
+      "path": "~/.local/share/writfold/evidence/toolchain-current-sources-20261106-001.json",
+      "sha256": "abc287eeb0867a8f066f2d7b0e8f11df1936fe406dfe89fe4777d7ffccd69208",
+      "bytes": 29417
+    },
+    "binary_sha256": "db79d50147cc51d7183b18474d1ea9f3f6eb935e14f7c7f8719e7fdea3965081",
+    "matching_declared_source_inputs": 141,
+    "remaining": [
+      "Pinned owner data/effect contracts and real run/worktree/Worktrunk binding.",
+      "Current grants, host replay, durable claims, native materialization and Unknown reconciliation.",
+      "Composed host integration, release and benchmark qualification."
+    ],
+    "scope": "Actual offline preview-to-Weft artifact smoke only; no sibling source/qualification edits, proof-gate renewal or Writfold write admission."
   },
   "qualification": {
     "package_integrity": "~/.local/share/writfold/evidence/stdio-development-20261105T183018Z-ba3a4818/splicery-handover-identity.json",

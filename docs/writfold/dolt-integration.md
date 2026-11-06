@@ -234,6 +234,44 @@ its nominal conversion boundaries. Commit, epoch/query and producer guard mutant
 calibrate it. This is not a proof of the native engine, codecs, store orchestration,
 authenticated release selection, M01/M03/M11 refinement or full V15.
 
+## Signed-input prerequisite for DINT02
+
+The distinct [Dolt operation and approval boundary](signed-operations.md#dolt-integration-approval-boundary)
+is implemented before a native writer. It binds the unchanged workflow operation,
+expected realm, exact predecessor/read pin, target database/schema/query/profile,
+producer and any migration mapping in new canonical/signature domains. Historical
+and Omnigraph approvals remain separate; an old signature cannot be replayed as
+Dolt integration approval.
+
+```mermaid
+flowchart LR
+    W[Checked workflow-3 operation] --> D[DoltOperation]
+    B[Exact predecessor and current DoltReadPin] --> D
+    T[Target realm/database/epoch and mapping] --> D
+    D --> S[New-domain Ed25519 approval]
+    P[Supplied policy, toolchain and request realm] --> V[Strict supplied-input verification]
+    S --> V
+    V --> A[Borrowed authorization evidence only]
+```
+
+The [qualification profile](../../qualification/dolt-approval-profile.json)
+maps requirements to the real Rust codec/signature functions and independent
+fixtures. `scripts/writfold_dolt_approval.py` builds and runs the static-musl
+consumer, including original-domain transplant, retained-commit/producer replay,
+wrong-realm/toolchain and missing-mapping refusals. Exact receipts and retained
+failed attempts are indexed under `dolt_approval_admission` in
+`qualification/status.json`.
+
+This completes only DINT02's signed-input prerequisite. Actual target/tool and
+live-policy admission, authenticated candidate preparation, retained release
+closure, completed Git CAS, conflict and lost-response/crash recovery remain
+open. The authorization value cannot perform IO, publish or turn a read pin into
+a completed release. No full V15/M11, WF10/WF11/WF14 or DINT02 pass is claimed.
+
+The separate [toolchain smoke scenarios](../../fixtures/qualification/toolchain-smoke.yaml)
+exercise currently available control and local artifact boundaries. They do not
+skip these publication prerequisites or enable a corpus/effect service.
+
 ## Work after native onboarding
 
 | Milestone | Existing owners and affected obligations | Exit evidence before moving on |
