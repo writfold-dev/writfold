@@ -1,5 +1,6 @@
-use super::{GitBudgets, GitError, GitExecutable, GitRepository, process, traversal};
+use super::{GitBudgets, GitError, GitExecutable, GitRepository, traversal};
 use crate::fs::RelativePath;
+use crate::process::{self, ProcessLimits};
 use sha2::{Digest, Sha256};
 use std::ffi::OsStr;
 use std::process::Command;
@@ -259,7 +260,7 @@ impl<'a, 'file> Session<'a, 'file> {
         let output = process::run(
             &mut command,
             input,
-            budgets,
+            ProcessLimits::new(budgets.stdout, budgets.stderr),
             self.deadline,
             self.cancelled,
             self.executable.supervisor(),

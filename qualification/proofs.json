@@ -5396,6 +5396,20 @@
       "theorem_symbols": [],
       "trusted_assumptions": [],
       "receipt": null,
+      "partial_components": [
+        {
+          "name": "dolt_integration_exact_read",
+          "profile": "qualification/dolt-reader-profile.json",
+          "evidence_index": "qualification/status.json#/dolt_reader_admission",
+          "production_symbol": "writfold_protocol::dolt::admit_read",
+          "caller": "writfold_store::dolt::read_snapshot",
+          "native_boundary": "writfold_runtime::dolt::DoltLease::query",
+          "scope": "Complete typed expected/observed pin and actual-tool comparison, with separately exercised strict codec, native metadata/projection, stable read lock and retained-root checks. Not canonical migration, authenticated release, current grant or full V15.",
+          "calibrations": ["dolt-read-commit-bypass", "dolt-read-epoch-bypass", "dolt-read-producer-bypass"],
+          "open_bridges": ["M01 completed publication authority", "M03 qualified reader/retention roots and GC", "M11 epoch migration and production refinement"],
+          "assumptions": "Pinned native Dolt/hash/compiler behavior, qualified local filesystem/procfs, private administratively controlled metadata and cooperating ownership; no hostile same-user or power-loss guarantee."
+        }
+      ],
       "completion_rule": "Verify actual pin/profile and complete canonical migration admission bodies and callers with negative calibration. No upstream engine proof or renamed historical receipt counts."
     },
     {

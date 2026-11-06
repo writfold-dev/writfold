@@ -4,6 +4,7 @@
 mod approval;
 mod canonical;
 pub mod citation;
+pub mod dolt;
 pub mod engineering;
 pub mod operation;
 mod parser;

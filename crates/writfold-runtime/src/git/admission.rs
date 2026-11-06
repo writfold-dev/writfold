@@ -1,8 +1,9 @@
 use super::{
-    GitError, GitProcessSupervisor,
+    GitError,
     profile::{check_config, check_packs},
 };
 use crate::fs::{ContainedRoot, FsError, OpenedFile, PinnedFile, ReadExtent, RelativePath};
+use crate::process::ProcessSupervisor;
 use rustix::fd::{AsRawFd, OwnedFd};
 use rustix::fs::{AtFlags, Mode, OFlags, openat, statat};
 use std::path::PathBuf;
@@ -13,7 +14,7 @@ use writfold_domain::{ByteCount, ContentDigest, GitObjectFormat};
 #[derive(Debug)]
 pub struct GitExecutable<'a> {
     opened: OpenedFile<'a>,
-    supervisor: &'a GitProcessSupervisor,
+    supervisor: &'a ProcessSupervisor,
 }
 
 impl<'a> GitExecutable<'a> {
@@ -21,22 +22,23 @@ impl<'a> GitExecutable<'a> {
         file: &'a PinnedFile,
         expected_digest: &ContentDigest,
         byte_limit: ByteCount,
-        supervisor: &'a GitProcessSupervisor,
+        supervisor: &'a ProcessSupervisor,
     ) -> Result<Self, GitError> {
         supervisor.ensure_current()?;
         let opened = file.open_read()?;
-        let observed = opened.read(byte_limit)?;
-        if observed.extent() != ReadExtent::Complete {
+        opened.check_unchanged()?;
+        if opened.size() > byte_limit.get() {
             return Err(GitError::Budget {
                 stream: "executable",
                 limit: byte_limit.get(),
             });
         }
-        if observed.digest() != expected_digest {
+        if &opened.revision(byte_limit)? != expected_digest {
             return Err(GitError::ExecutableMismatch);
         }
         // Scripts cannot preserve the descriptor pin through their interpreter.
-        if !observed.bytes().starts_with(b"\x7fELF") {
+        let mut header = [0_u8; 4];
+        if opened.read_prefix(&mut header)? != header.len() || header != *b"\x7fELF" {
             return Err(GitError::UnsupportedProfile(
                 "ELF native executable required",
             ));
@@ -49,7 +51,7 @@ impl<'a> GitExecutable<'a> {
         Ok(descriptor_path(self.opened.descriptor()))
     }
 
-    pub(super) fn supervisor(&self) -> &GitProcessSupervisor {
+    pub(super) fn supervisor(&self) -> &ProcessSupervisor {
         self.supervisor
     }
 }

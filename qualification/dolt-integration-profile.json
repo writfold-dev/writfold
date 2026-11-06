@@ -55,7 +55,7 @@
   ],
   "milestones": [
     {"id": "DINT00", "scope": "native candidate foundation", "evidence_index": "qualification/status.json#/dolt_integration_admission"},
-    {"id": "DINT01", "scope": "typed Rust exact store and read boundary", "status": "not_run"},
+    {"id": "DINT01", "scope": "typed Rust exact store and read boundary", "evidence_index": "qualification/status.json#/dolt_reader_admission"},
     {"id": "DINT02", "scope": "authenticated publication and recovery integration", "status": "not_run"},
     {"id": "DINT03", "scope": "ordinary client and engineering integration", "status": "not_run"},
     {"id": "DINT04", "scope": "instrumented paired agent and multi-session episodes", "status": "not_run"}

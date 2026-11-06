@@ -89,7 +89,7 @@ fn blob_stdout_stderr_deadline_and_cancellation_budgets_fail_closed() -> Result 
     );
     assert!(matches!(
         repository.read_blob(&executable, &commit, &path, &blob, zero_stdout, &ACTIVE),
-        Err(GitError::Budget { .. })
+        Err(GitError::Process(ProcessError::Budget { .. }))
     ));
     let zero_blob = GitBudgets::new(
         count(4096)?,
@@ -104,7 +104,7 @@ fn blob_stdout_stderr_deadline_and_cancellation_budgets_fail_closed() -> Result 
     let zero_time = GitBudgets::new(count(4096)?, count(4096)?, count(4096)?, Duration::ZERO);
     assert!(matches!(
         repository.read_blob(&executable, &commit, &path, &blob, zero_time, &ACTIVE),
-        Err(GitError::Deadline)
+        Err(GitError::Process(ProcessError::Deadline))
     ));
     assert!(matches!(
         repository.read_blob(
@@ -115,7 +115,7 @@ fn blob_stdout_stderr_deadline_and_cancellation_budgets_fail_closed() -> Result 
             budgets()?,
             &AtomicBool::new(true)
         ),
-        Err(GitError::Cancelled)
+        Err(GitError::Process(ProcessError::Cancelled))
     ));
     let missing = "0".repeat(40).parse()?;
     let zero_stderr = GitBudgets::new(
@@ -126,10 +126,10 @@ fn blob_stdout_stderr_deadline_and_cancellation_budgets_fail_closed() -> Result 
     );
     assert!(matches!(
         repository.lookup_blob(&executable, &missing, &path, zero_stderr, &ACTIVE),
-        Err(GitError::Budget {
+        Err(GitError::Process(ProcessError::Budget {
             stream: "stderr",
             ..
-        })
+        }))
     ));
     Ok(())
 }

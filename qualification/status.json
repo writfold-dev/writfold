@@ -224,7 +224,57 @@
     "omnigraph_wf24": "blocked_unchanged",
     "rust_adapter": "not_run",
     "agent_e2e": "not_run",
-    "next": "DINT01: freeze distinct integration pins/envelopes and implement/qualify the actual Rust exact-store/read boundary before corpus methods or a writer are enabled."
+    "next": "DINT01 reader evidence is separately indexed in dolt_reader_admission; DINT02 authenticated candidate/publication/recovery integration remains open."
+  },
+  "dolt_reader_admission": {
+    "status": "pass",
+    "milestone": "DINT01",
+    "profile": "qualification/dolt-reader-profile.json",
+    "scope": "Actual typed read-only Rust inventory/navigation library and static-musl consumer with nominal/pin guard proofs and native/ownership controls; not authenticated release, knowledge truth, writer, agent service, full V15/model refinement or release.",
+    "record": {
+      "path": "~/.local/share/writfold/evidence/dint01-component-admission-20261106-001.json",
+      "sha256": "1b3b140f7cfd64f91f9ba69caace986842dd291cd20a1d07742adf607641c2cd",
+      "bytes": 5287
+    },
+    "source_tree_digest": "92badf5947c3a1523cd79805142c3d9e2720edb2c1637632299e8effb5512f9f",
+    "applicability": "All final quality, Verus, unit, native and baseline receipts bind the same exact source snapshot. The mutable status index is excluded; no historical receipt is renewed.",
+    "verification": {
+      "rust_tests": 295,
+      "quality_checks": 239,
+      "baseline_checks": 1409,
+      "verus_domain_obligations": 1169,
+      "verus_protocol_obligations": 43,
+      "verus_required_checks": 258,
+      "semantic_mutant_families_rejected": 17,
+      "evidence_admission_controls_rejected": 238,
+      "native_campaign_checks": 41,
+      "native_host_checks": 4,
+      "native_named_refusals": 27,
+      "native_recorded_commands": 244,
+      "new_checked_nominal_types": 6
+    },
+    "binary": {
+      "path": "~/.local/share/writfold/evidence/dint01-native-20261106-003.json.attempt/build/dolt_read",
+      "sha256": "e048745130b53c83b183d6d60f5fcc61298456b5b04d87036acd907751022fe0",
+      "bytes": 766664,
+      "target": "x86_64-unknown-linux-musl",
+      "scope": "Development consumer of the actual store/runtime/wire/protocol bodies, not an installed product command"
+    },
+    "proof_scope": "Actual writfold_protocol::dolt::admit_read and nominal identity boundaries; commit, epoch/query and actual-producer guard mutants fail. No proof of engine internals, codecs, store orchestration or operational refinement is inferred.",
+    "retained_failures": [
+      "~/.local/share/writfold/evidence/dint01-unit-20261105-001.json",
+      "~/.local/share/writfold/evidence/dint01-quality-20261105-001.json",
+      "~/.local/share/writfold/evidence/dint01-native-20261105-001.json",
+      "~/.local/share/writfold/evidence/dint01-verus-20261106-001.json",
+      "~/.local/share/writfold/evidence/dint01-quality-20261106-003.json"
+    ],
+    "splicery_review": "qualification/splicery-integration.json#/sibling_implementation_review",
+    "release_gates_passed": [],
+    "omnigraph_wf24": "blocked_unchanged",
+    "writer": "not_run",
+    "agent_e2e": "not_run",
+    "benchmark_benefit": "not_run",
+    "next": "DINT02: authenticated candidate preparation, retained closure, completed Git CAS and honest recovery; DINT03 owns ordinary corpus/client and engineering/effect integration."
   },
   "stages": [
     {

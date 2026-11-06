@@ -265,3 +265,8 @@ impl FromStr for GitObjectId {
         Self::parse_checked(value)
     }
 }
+
+identities!(token, token_language; DoltDatabaseId, GraphNodeKind);
+identities!(opaque, opaque_identity; GraphNodeId, GraphEdgeId);
+identities!(dolt, dolt_identity; DoltIntegrationCommitId);
+identities!(digest, digest_identity; DoltToolGeneration);

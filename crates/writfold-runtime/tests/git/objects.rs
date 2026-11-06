@@ -98,7 +98,7 @@ fn typed_path_type_format_identity_and_missing_failures() -> Result {
     let missing: GitObjectId = "0".repeat(40).parse()?;
     assert!(matches!(
         repository.lookup_blob(&executable, &missing, &path, budgets()?, &ACTIVE),
-        Err(GitError::Command { .. })
+        Err(GitError::Process(ProcessError::Command { .. }))
     ));
     let other_format: GitObjectId = "0".repeat(64).parse()?;
     assert!(matches!(

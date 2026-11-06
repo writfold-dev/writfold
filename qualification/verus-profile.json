@@ -1,6 +1,6 @@
 {
   "schema_version": 4,
-  "scope": "P02 nominal identities, checked runtime conversions and storage-pin read consistency; retained P01 generation allocation; ordinary invocation-local session lifecycle and exact reply correlation; engineering dependency-lock call-rank guard and finite-chain lemma. Not full lock normalization/codec verification, corpus/authority/service integration.",
+  "scope": "P02 nominal identities, checked runtime conversions and storage-pin read consistency; retained P01 generation allocation; ordinary invocation-local session lifecycle and exact reply correlation; engineering dependency-lock call ranks; DINT01 current Dolt identity constructors and complete read-pin/actual-tool consistency. Not full codec/native/store refinement, corpus authorization or service integration.",
   "excluded_claims": [
     "BigInt arithmetic implementation verification",
     "whole semantic-kernel verification",
@@ -15,6 +15,30 @@
     "writfold_domain": {
       "minimum_verified": 1112,
       "functions": {
+        "writfold_domain::ids::DoltDatabaseId::as_str": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [68, 70]}]},
+        "writfold_domain::ids::DoltDatabaseId::into_string": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [71, 73]}]},
+        "writfold_domain::ids::DoltDatabaseId::parse_checked": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [74, 82]}]},
+        "writfold_domain::ids::DoltDatabaseId::try_from": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [94, 102]}]},
+        "writfold_domain::ids::GraphNodeKind::as_str": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [68, 70]}]},
+        "writfold_domain::ids::GraphNodeKind::into_string": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [71, 73]}]},
+        "writfold_domain::ids::GraphNodeKind::parse_checked": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [74, 82]}]},
+        "writfold_domain::ids::GraphNodeKind::try_from": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [94, 102]}]},
+        "writfold_domain::ids::GraphNodeId::as_str": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [68, 70]}]},
+        "writfold_domain::ids::GraphNodeId::into_string": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [71, 73]}]},
+        "writfold_domain::ids::GraphNodeId::parse_checked": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [74, 82]}]},
+        "writfold_domain::ids::GraphNodeId::try_from": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [94, 102]}]},
+        "writfold_domain::ids::GraphEdgeId::as_str": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [68, 70]}]},
+        "writfold_domain::ids::GraphEdgeId::into_string": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [71, 73]}]},
+        "writfold_domain::ids::GraphEdgeId::parse_checked": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [74, 82]}]},
+        "writfold_domain::ids::GraphEdgeId::try_from": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [94, 102]}]},
+        "writfold_domain::ids::DoltIntegrationCommitId::as_str": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [68, 70]}]},
+        "writfold_domain::ids::DoltIntegrationCommitId::into_string": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [71, 73]}]},
+        "writfold_domain::ids::DoltIntegrationCommitId::parse_checked": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [74, 82]}]},
+        "writfold_domain::ids::DoltIntegrationCommitId::try_from": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [94, 102]}]},
+        "writfold_domain::ids::DoltToolGeneration::as_str": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [68, 70]}]},
+        "writfold_domain::ids::DoltToolGeneration::into_string": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [71, 73]}]},
+        "writfold_domain::ids::DoltToolGeneration::parse_checked": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [74, 82]}]},
+        "writfold_domain::ids::DoltToolGeneration::try_from": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [94, 102]}]},
         "writfold_domain::engineering::dependency::call_rank_allowed": {
           "solver_entries": 1,
           "declarations": [
@@ -3685,6 +3709,10 @@
     "writfold_protocol": {
       "minimum_verified": 41,
       "functions": {
+        "writfold_protocol::dolt::admit_read": {
+          "solver_entries": 1,
+          "declarations": [{"source": "crates/writfold-protocol/src/dolt.rs", "lines": [42, 65]}]
+        },
         "writfold_protocol::generation::advance_generation": {
           "solver_entries": 1,
           "declarations": [
@@ -4097,6 +4125,27 @@
   },
   "mutations": [
     {
+      "name": "dolt-read-commit-bypass",
+      "crate": "writfold_protocol",
+      "functions": ["writfold_protocol::dolt::admit_read"],
+      "before": "if expected.commit() != observed.commit() { return Err(ReadRefusal::Commit); }",
+      "after": "if false { return Err(ReadRefusal::Commit); }"
+    },
+    {
+      "name": "dolt-read-epoch-bypass",
+      "crate": "writfold_protocol",
+      "functions": ["writfold_protocol::dolt::admit_read"],
+      "before": "if expected.epoch() != observed.epoch() { return Err(ReadRefusal::Epoch); }",
+      "after": "if false { return Err(ReadRefusal::Epoch); }"
+    },
+    {
+      "name": "dolt-read-producer-bypass",
+      "crate": "writfold_protocol",
+      "functions": ["writfold_protocol::dolt::admit_read"],
+      "before": "if expected.producer() != observed.producer() || expected.producer() != actual {",
+      "after": "if false {"
+    },
+    {
       "name": "dependency-call-rank-equality-bypass",
       "crate": "writfold_domain",
       "functions": [
@@ -4136,6 +4185,12 @@
       "name": "identity-constructor-bypass",
       "crate": "writfold_domain",
       "functions": [
+        "writfold_domain::ids::DoltDatabaseId::parse_checked",
+        "writfold_domain::ids::GraphNodeKind::parse_checked",
+        "writfold_domain::ids::GraphNodeId::parse_checked",
+        "writfold_domain::ids::GraphEdgeId::parse_checked",
+        "writfold_domain::ids::DoltIntegrationCommitId::parse_checked",
+        "writfold_domain::ids::DoltToolGeneration::parse_checked",
         "writfold_domain::ids::AliasId::parse_checked",
         "writfold_domain::ids::CitationBindingDigest::parse_checked",
         "writfold_domain::ids::CitationCorrespondenceDigest::parse_checked",

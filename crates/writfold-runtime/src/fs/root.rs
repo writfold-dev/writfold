@@ -1,6 +1,6 @@
-use super::{FsError, PathError, RelativePath};
+use super::{FileIdentity, FsError, PathError, RelativePath};
 use rustix::fd::OwnedFd;
-use rustix::fs::{AtFlags, CWD, FileType, Mode, OFlags, fsync, mkdirat, openat, statat};
+use rustix::fs::{AtFlags, CWD, FileType, Mode, OFlags, fstat, fsync, mkdirat, openat, statat};
 use std::ffi::{OsStr, OsString};
 use std::os::unix::ffi::OsStrExt;
 use std::path::Path;
@@ -9,6 +9,7 @@ use std::path::Path;
 #[derive(Debug)]
 pub struct ContainedRoot {
     pub(super) directory: OwnedFd,
+    bindings: Vec<(OwnedFd, OsString, FileIdentity)>,
 }
 
 /// An owned parent descriptor and a single validated leaf. No later operation
@@ -30,12 +31,20 @@ impl ContainedRoot {
         validate_root(path)?;
         let anchor = if path.is_absolute() { "/" } else { "." };
         let mut directory = open_directory_at(CWD, OsStr::new(anchor))?;
+        let mut bindings = Vec::new();
         for part in path.as_os_str().as_bytes().split(|byte| *byte == b'/') {
             if !part.is_empty() {
-                directory = open_directory_at(&directory, OsStr::from_bytes(part))?;
+                let name = OsStr::from_bytes(part);
+                let child = open_directory_at(&directory, name)?;
+                let identity = FileIdentity::of(&fstat(&child).map_err(FsError::from)?);
+                bindings.push((directory, name.to_owned(), identity));
+                directory = child;
             }
         }
-        Ok(Self { directory })
+        Ok(Self {
+            directory,
+            bindings,
+        })
     }
 
     /// Explicitly create one new root (0700 before umask), not missing ancestors.
@@ -50,7 +59,13 @@ impl ContainedRoot {
         let directory = open_directory_at(&parent.directory, name)?;
         fsync(&directory).map_err(FsError::RootDurabilityUnknown)?;
         fsync(&parent.directory).map_err(FsError::RootDurabilityUnknown)?;
-        Ok(Self { directory })
+        let identity = FileIdentity::of(&fstat(&directory).map_err(FsError::from)?);
+        let mut bindings = parent.bindings;
+        bindings.push((parent.directory, name.to_owned(), identity));
+        Ok(Self {
+            directory,
+            bindings,
+        })
     }
 
     pub fn pin(&self, path: &RelativePath) -> Result<PinnedFile, FsError> {
@@ -66,6 +81,43 @@ impl ContainedRoot {
             directory = open_directory_at(&directory, component.as_os_str())?;
         }
         Err(PathError::EmptyComponent.into())
+    }
+
+    /// Open an existing contained child directory without creating anything.
+    /// The parent root remains responsible for checking its own ancestor chain.
+    pub fn open_child(&self, path: &RelativePath) -> Result<Self, FsError> {
+        self.check_current()?;
+        let mut directory = rustix::io::dup(&self.directory).map_err(FsError::from)?;
+        let mut bindings = Vec::new();
+        for component in path.as_path().components() {
+            let name = component.as_os_str();
+            let child = open_directory_at(&directory, name)?;
+            let identity = FileIdentity::of(&fstat(&child).map_err(FsError::from)?);
+            bindings.push((directory, name.to_owned(), identity));
+            directory = child;
+        }
+        Ok(Self {
+            directory,
+            bindings,
+        })
+    }
+
+    /// Opt-in pathname identity check; ordinary descriptor-relative FS reads
+    /// retain their historical ability to operate after a directory rename.
+    pub fn check_current(&self) -> Result<(), FsError> {
+        for (parent, name, identity) in &self.bindings {
+            let named =
+                statat(parent, name, AtFlags::SYMLINK_NOFOLLOW).map_err(|error| match error {
+                    rustix::io::Errno::NOENT => FsError::ChangedSource,
+                    _ => FsError::from(error),
+                })?;
+            if FileIdentity::of(&named) != *identity
+                || FileType::from_raw_mode(named.st_mode) != FileType::Directory
+            {
+                return Err(FsError::ChangedSource);
+            }
+        }
+        Ok(())
     }
 }
 

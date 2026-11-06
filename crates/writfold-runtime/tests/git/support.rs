@@ -9,15 +9,14 @@ use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::time::Duration;
 use writfold_domain::{ByteCount, ContentDigest, GitObjectFormat, GitObjectId};
 use writfold_runtime::fs::{ContainedRoot, PinnedFile, RelativePath};
-use writfold_runtime::git::{
-    GitBudgets, GitError, GitExecutable, GitProcessSupervisor, GitRepository,
-};
+use writfold_runtime::git::{GitBudgets, GitExecutable, GitRepository};
+pub use writfold_runtime::process::{ProcessError, ProcessSupervisor};
 
 pub type Result<T = ()> = std::result::Result<T, Box<dyn Error>>;
 static NEXT: AtomicU64 = AtomicU64::new(0);
 pub static ACTIVE: AtomicBool = AtomicBool::new(false);
-static SUPERVISOR: LazyLock<std::result::Result<GitProcessSupervisor, GitError>> =
-    LazyLock::new(GitProcessSupervisor::enable);
+static SUPERVISOR: LazyLock<std::result::Result<ProcessSupervisor, ProcessError>> =
+    LazyLock::new(ProcessSupervisor::enable);
 
 pub struct Fixture {
     pub path: PathBuf,
@@ -129,7 +128,7 @@ pub fn executable(file: &PinnedFile) -> Result<GitExecutable<'_>> {
     )?)
 }
 
-pub fn supervisor() -> Result<&'static GitProcessSupervisor> {
+pub fn supervisor() -> Result<&'static ProcessSupervisor> {
     match &*SUPERVISOR {
         Ok(supervisor) => Ok(supervisor),
         Err(error) => Err(format!("process supervision admission failed: {error}").into()),

@@ -196,6 +196,15 @@ The [owner integration inventory](../../qualification/splicery-integration.json)
 records the supplied worktree-edit /1 archive and selected requirements. It does
 not adopt Splicery's SG registry as Writfold gates or enable a write capability.
 
+The sibling implementation at `06028bc1083d2cc1bd1367d6babce10fc9943f06` reports
+`not_qualified` for full `/1`, with a real static-musl offline preview component.
+The owner review matched 21 compiler inputs to its retained build and exercised
+four cases: primitive application, exact preview, original-coordinate report and
+ambiguous-selector refusal. Targets stayed unchanged. Its documented unsupported
+language forms and the Writfold/Worktrunk apply/reconciliation boundary remain open.
+The integration inventory retains the exact artifact and review receipt; no
+Splicery source was edited and no fresh sibling proof/release gate is claimed.
+
 Splicery owns its language, lowering, normalized IR and pure checked kernel.
 Writfold owns the pinned adapter, actual IO, authenticated run/principal/grant,
 Worktrunk worktree binding, current predecessor/resource/owner generation,

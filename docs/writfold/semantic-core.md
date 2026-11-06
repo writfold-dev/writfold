@@ -353,7 +353,8 @@ promisor stores and linked-worktree indirection under its declared managed-repo
 profile. Native Git and its dynamic-loader/runtime closure remain dependencies;
 a static-musl consumer does not make Git static.
 
-`GitProcessSupervisor::enable` is an explicit process-wide Linux subreaper opt-in.
+`writfold_runtime::process::ProcessSupervisor::enable` is the shared Git/Dolt
+process-wide Linux subreaper opt-in; the former Git-specific name is removed.
 The caller must preserve that setting and exclusive reaping of owned groups.
 Teardown reserves the unreaped leader PID, kills the owned group, drains pipes,
 reaps adopted descendants—including silent descendants—and reaps the leader last.

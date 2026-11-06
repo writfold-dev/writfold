@@ -45,6 +45,15 @@ impl ManagedLocks {
         })
     }
 
+    /// Adopt an already descriptor-contained namespace, without initialization.
+    pub fn from_root(root: ContainedRoot) -> Self {
+        Self { root }
+    }
+
+    pub fn check_current(&self) -> Result<(), FsError> {
+        self.root.check_current()
+    }
+
     /// Explicit initialization; missing ancestors are not created.
     pub fn create(path: impl AsRef<Path>) -> Result<Self, FsError> {
         Ok(Self {
@@ -71,11 +80,35 @@ impl PinnedFile {
         namespace: &'a ManagedLocks,
         key: &LockKey,
     ) -> Result<LockedFile<'a>, FsError> {
+        self.acquire_lock(namespace, key, true)
+    }
+
+    /// Read-side acquisition of a preprovisioned stable entry. Never creates or
+    /// synchronizes a lock file; a missing entry is a refusal.
+    pub fn try_lock_existing<'a>(
+        &'a self,
+        namespace: &'a ManagedLocks,
+        key: &LockKey,
+    ) -> Result<LockedFile<'a>, FsError> {
+        namespace.check_current()?;
+        self.acquire_lock(namespace, key, false)
+    }
+
+    fn acquire_lock<'a>(
+        &'a self,
+        namespace: &'a ManagedLocks,
+        key: &LockKey,
+        create: bool,
+    ) -> Result<LockedFile<'a>, FsError> {
         let name = OsString::from(format!("{}.lock", key.as_str()));
         let (descriptor, stamp) = open_regular(
             &namespace.root.directory,
             &name,
-            OFlags::RDWR | OFlags::CREATE,
+            if create {
+                OFlags::RDWR | OFlags::CREATE
+            } else {
+                OFlags::RDONLY
+            },
         )?;
         if stamp.links != 1 {
             return Err(FsError::HardLinked);
@@ -95,8 +128,12 @@ impl PinnedFile {
             identity: stamp.identity,
         };
         guard.ensure_lock()?;
-        fsync(&guard.descriptor).map_err(FsError::from)?;
-        fsync(&namespace.root.directory).map_err(FsError::from)?;
+        if create {
+            fsync(&guard.descriptor).map_err(FsError::from)?;
+            fsync(&namespace.root.directory).map_err(FsError::from)?;
+        } else {
+            guard.check_current()?;
+        }
         Ok(guard)
     }
 }
@@ -104,6 +141,12 @@ impl PinnedFile {
 impl LockedFile<'_> {
     pub fn lock_identity(&self) -> FileIdentity {
         self.identity
+    }
+
+    /// Verify both stable lock entry and its named namespace while holding flock.
+    pub fn check_current(&self) -> Result<(), FsError> {
+        self.namespace.check_current()?;
+        self.ensure_lock()
     }
 
     /// Explicitly coordinated read, unlike ordinary PinnedFile::read. Acquiring

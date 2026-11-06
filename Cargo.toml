@@ -7,6 +7,7 @@ members = [
     "crates/writfold-xtask",
     "crates/writfold-runtime",
     "crates/writfold-sources",
+    "crates/writfold-store",
     "crates/writfold-app",
     "crates/writfold",
 ]

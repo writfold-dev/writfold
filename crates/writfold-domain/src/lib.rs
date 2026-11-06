@@ -25,6 +25,7 @@
 pub mod admission;
 pub mod authored;
 pub mod citation;
+pub mod dolt;
 pub mod engineering;
 pub mod equality;
 pub mod evidence;

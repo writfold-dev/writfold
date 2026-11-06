@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "scope": "Synthetic typed navigation projection for DINT01 native reads; not admitted knowledge or citation lineage",
+  "identity": {"realm": "realm-reader", "kb": "reader knowledge base", "database": "corpus-reader", "epoch": "epoch-1", "storage_profile": "dolt-corpus-read-v1"},
+  "seed": {
+    "nodes": [
+      {"id": "doc:a", "kind": "document", "label": "café\r\nnaïve", "home_path": null},
+      {"id": "svc:a", "kind": "service", "label": "service A", "home_path": ""},
+      {"id": "svc:b", "kind": "service", "label": "'; DROP TABLE wf_nodes; --", "home_path": "src/é.rs"}
+    ],
+    "edges": [
+      {"id": "edge:a", "source": "doc:a", "target": "svc:a", "kind": "cites"},
+      {"id": "edge:b", "source": "svc:a", "target": "svc:b", "kind": "uses"}
+    ]
+  },
+  "head": {
+    "nodes": [
+      {"id": "doc:a", "kind": "document", "label": "new evidence\r\n", "home_path": null},
+      {"id": "svc:a", "kind": "service", "label": "service A", "home_path": ""},
+      {"id": "svc:b", "kind": "service", "label": "'; DROP TABLE wf_nodes; --", "home_path": "src/é.rs"}
+    ],
+    "edges": [
+      {"id": "edge:a", "source": "doc:a", "target": "svc:b", "kind": "cites"},
+      {"id": "edge:b", "source": "svc:a", "target": "svc:b", "kind": "uses"}
+    ]
+  }
+}

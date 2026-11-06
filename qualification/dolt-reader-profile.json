@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "profile": "dolt-corpus-read-v1",
+  "decision": "WF-STORAGE-003",
+  "milestone": "DINT01",
+  "qualification_status": "unqualified_until_source_bound_receipts",
+  "evidence_index": "qualification/status.json#/dolt_reader_admission",
+  "scope": "Typed exact read-only inventory/navigation projection in disposable Dolt integration realms; no authenticated release, knowledge truth, citation lineage, writer or agent service",
+  "native_foundation": "qualification/status.json#/dolt_integration_admission",
+  "native_candidate": {
+    "profile": "qualification/dolt-integration-profile.json",
+    "version": "2.6.1",
+    "executable_sha256": "ea866d85a8d38fad303268589b56a4766e05e72c9869556c0da60a0f819726b2"
+  },
+  "pin_contract": {
+    "namespace": "writfold-dolt-read",
+    "schema": 1,
+    "kind": "pin",
+    "fields": ["realm", "kb", "database", "commit", "epoch", "schema_digest", "query_digest", "storage_profile", "producer"],
+    "commit_type": "DoltIntegrationCommitId",
+    "legacy_policy": "StoragePin::LegacyDolt and its wire namespace remain unchanged and inspection-only; no casts or aliases",
+    "authority": "Structural identity only; not a signed release or permission"
+  },
+  "physical_contracts": {
+    "schema": "crates/writfold-store/src/dolt/schema.rs:SCHEMA_SQL",
+    "queries": "crates/writfold-runtime/src/dolt/query.rs:QUERY_CONTRACT",
+    "identity_rule": "SHA-256 of exact compiled UTF-8 material, including newlines; fixture producer independently hashes printed material from the retained real executable",
+    "tables": ["wf_reader_meta", "wf_nodes", "wf_edges"],
+    "null_projection": "Native IS NULL is a strict JSON boolean; COALESCE payload is empty for null, while false with an empty string remains Some(empty)",
+    "ordering": "Strict binary UTF-8 ID order; duplicate/out-of-order rows refuse rather than normalize",
+    "closure": "Every edge source and target must occur in the same pinned node projection"
+  },
+  "ownership": {
+    "roots": "Existing descriptor-contained owner-only DB, HOME and coordination directories",
+    "lock": "Preprovisioned singly-linked coordination/database.lock; existing-only exclusive flock for the entire query group; absence/replacement refuses",
+    "retention_root": "wf-retained/<exact native commit>; checked before and after the read group",
+    "native_profile": "Stopped/exclusive CLI only, no sql-server discovery, no inherited credentials/global profile, no saved/arbitrary SQL, no automatic GC",
+    "processes": "Shared ProcessSupervisor owns groups; reserved leader PID, group kill, drained pipes, adopted descendants reaped before leader; no resource release before cleanup",
+    "budgets": "Explicit bytes/rows plus one total read deadline and cancellation; overflow or partial/failed query yields no complete snapshot"
+  },
+  "production_mapping": {
+    "domain": "writfold_domain::dolt::DoltReadPin",
+    "protocol": "writfold_protocol::dolt::admit_read",
+    "wire": ["writfold_wire::dolt::decode_pin", "writfold_wire::dolt::decode_metadata", "writfold_wire::dolt::decode_root", "writfold_wire::dolt::decode_nodes", "writfold_wire::dolt::decode_edges"],
+    "runtime": ["writfold_runtime::dolt::DoltExecutable::admit", "writfold_runtime::dolt::DoltDatabase::open", "writfold_runtime::dolt::DoltLease::query", "writfold_runtime::process::ProcessSupervisor"],
+    "store": "writfold_store::dolt::read_snapshot",
+    "consumer": "crates/writfold-store/examples/dolt_read.rs",
+    "verus_profile": "qualification/verus-profile.json",
+    "models": "V15 and M01/M03/M11 exact pins, reader ownership and retention assumptions; mappings only, no automatic production/model refinement or full obligation pass"
+  },
+  "required_campaign_families": [
+    "canonical pin and namespace/type refusal",
+    "actual complete old/current node and edge snapshots after native advancement",
+    "null versus empty, Unicode/CRLF and injection-shaped text",
+    "complete pin and actual tool/metadata identity mismatch refusal",
+    "missing or moved retention root with restored positive control",
+    "empty graph versus invalid scalar/metadata and dangling relationship refusal",
+    "byte/row/timeout/cancellation boundaries without partial success",
+    "busy/missing/replaced lock and contained path/server/global-profile refusal",
+    "owned child and descendant cleanup including existing Git callers",
+    "source-bound actual-body proof and meaningful commit/producer guard mutations"
+  ],
+  "trusted_limits": [
+    "Qualified native Dolt internals, hash properties, compiler, Linux local filesystem/procfs and cooperating administratively controlled metadata remain assumptions.",
+    "No hostile same-user sandbox, arbitrary source authenticity, concurrent external native writer, live SQL server or power-loss guarantee.",
+    "Current grants, completed Git publication, authenticated retention closure and production corpus methods remain DINT02/DINT03 responsibilities.",
+    "DINT01 and Splicery offline preview do not enable worktree effects or constitute a complete toolchain/benchmark result."
+  ],
+  "release_gates_passed": [],
+  "omnigraph_wf24": "blocked_unchanged"
+}

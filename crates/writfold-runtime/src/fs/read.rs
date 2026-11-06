@@ -79,6 +79,29 @@ impl OpenedFile<'_> {
         self.ensure_unchanged()
     }
 
+    pub(crate) fn size(&self) -> u64 {
+        self.stamp.size
+    }
+
+    pub(crate) fn identity(&self) -> FileIdentity {
+        self.stamp.identity
+    }
+
+    /// Fill only a caller-owned prefix buffer without allocating the whole file.
+    pub(crate) fn read_prefix(&self, bytes: &mut [u8]) -> Result<usize, FsError> {
+        self.ensure_unchanged()?;
+        let mut count = 0;
+        while count < bytes.len() {
+            let read = read_at(&self.descriptor, &mut bytes[count..], count as u64)?;
+            if read == 0 {
+                break;
+            }
+            count += read;
+        }
+        self.ensure_unchanged()?;
+        Ok(count)
+    }
+
     /// At most `limit` retained bytes plus a one-byte EOF probe are read. A
     /// truncated prefix is explicit, including the zero-budget/nonempty case.
     pub fn read(&self, limit: ByteCount) -> Result<ReadResult, FsError> {
@@ -135,7 +158,7 @@ impl OpenedFile<'_> {
 
     /// Conditional writes need a full digest, not an allocated copy of the old
     /// authored file. Stream the admitted size and refuse any partial revision.
-    pub(super) fn revision(&self, limit: ByteCount) -> Result<ContentDigest, FsError> {
+    pub(crate) fn revision(&self, limit: ByteCount) -> Result<ContentDigest, FsError> {
         self.ensure_unchanged()?;
         if self.stamp.size > limit.get() {
             return Err(FsError::Budget {

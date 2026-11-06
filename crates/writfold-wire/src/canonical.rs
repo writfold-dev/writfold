@@ -24,9 +24,9 @@ pub(crate) fn canonical_prefixed(
     Ok(writer.bytes)
 }
 
-struct Writer {
-    bytes: Vec<u8>,
-    max_bytes: usize,
+pub(crate) struct Writer {
+    pub(crate) bytes: Vec<u8>,
+    pub(crate) max_bytes: usize,
 }
 
 enum Work<'a> {
@@ -36,7 +36,7 @@ enum Work<'a> {
 }
 
 impl Writer {
-    fn append(&mut self, bytes: &[u8]) -> Result<(), Error> {
+    pub(crate) fn append(&mut self, bytes: &[u8]) -> Result<(), Error> {
         if bytes.len() > self.max_bytes.saturating_sub(self.bytes.len()) {
             return Err(Error::Limit {
                 budget: Budget::Bytes,
@@ -47,7 +47,7 @@ impl Writer {
         Ok(())
     }
 
-    fn string(&mut self, text: &str) -> Result<(), Error> {
+    pub(crate) fn string(&mut self, text: &str) -> Result<(), Error> {
         self.append(b"\"")?;
         let mut start = 0;
         for (offset, byte) in text.bytes().enumerate() {

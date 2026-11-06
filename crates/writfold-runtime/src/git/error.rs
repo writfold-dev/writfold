@@ -1,4 +1,5 @@
 use crate::fs::FsError;
+use crate::process::ProcessError;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -23,17 +24,8 @@ pub enum GitError {
     Malformed(&'static str),
     #[error("native Git {stream} byte budget exceeded (limit {limit})")]
     Budget { stream: &'static str, limit: u64 },
-    #[error("native Git total deadline elapsed")]
-    Deadline,
-    #[error("native Git operation cancelled")]
-    Cancelled,
-    #[error("native Git failed (status {status:?}); bounded stderr: {stderr:?}")]
-    Command {
-        status: Option<i32>,
-        stderr: Vec<u8>,
-    },
-    #[error("native Git child cleanup failed: {0}")]
-    Cleanup(std::io::Error),
+    #[error(transparent)]
+    Process(#[from] ProcessError),
 }
 
 impl From<rustix::io::Errno> for GitError {

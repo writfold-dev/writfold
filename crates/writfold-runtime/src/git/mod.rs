@@ -26,16 +26,13 @@
 mod admission;
 mod error;
 mod objects;
-mod process;
 mod profile;
-mod supervisor;
 
 mod traversal;
 pub use admission::{GitExecutable, GitRepository};
 pub use error::GitError;
 pub use objects::{GitBlob, GitEntry};
 use std::time::Duration;
-pub use supervisor::GitProcessSupervisor;
 use writfold_domain::ByteCount;
 
 /// Per-command output limits, per-blob bytes, and a total read deadline.

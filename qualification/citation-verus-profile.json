@@ -21,7 +21,7 @@
     "crates/writfold-domain/src/citation/mod.rs": "9bb57510074800ff1bd704b4d84fa0e86e38320be096f6413ca55b14a2832b24",
     "crates/writfold-domain/src/citation/presentation.rs": "7a2f0c49e5b0c209f59caf85741c71718aa41e48d0e09b84502c5170b9124d4e",
     "crates/writfold-domain/src/citation/selector.rs": "c9fec6aec257ef3e831aa681bae8522d427ccc69b9c8ed5507b20061c9daa95c",
-    "crates/writfold-domain/src/ids.rs": "e41c3939116f47fad2c362518db2c83731c413438ad9d02efc270871ad5210ad",
+    "crates/writfold-domain/src/ids.rs": "02390161bd2072339007dec90e1308b11f5c34c55820915496c6bd4b93363f6c",
     "crates/writfold-domain/src/records.rs": "7943cc27e0fed7d403b035b196e5a1a2006b6b58352b26083d82e3c30fa3f498",
     "crates/writfold-domain/src/units.rs": "f2d953e671f18a434e5f82cb57e4463d1a03326172cacad0302c818fe2ea3f06",
     "crates/writfold-kernel/src/checker/assessment.rs": "94b1bc04e52c3e8d9ee5858ecb7d863c72d5397b55214abee62bcc1e85e6ba68",

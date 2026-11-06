@@ -25,8 +25,9 @@ The Rust implementation lives in `crates/`:
 - `writfold-kernel`: finite witnesses, independent assessments, admission, portfolio and design judgments; its broader Rust semantic proofs remain open.
 - `writfold-wire`: bounded JSON/CBOR, typed semantic and citation codecs, signatures, protocol-2 request admission, bounded control replies and the shared agent contract.
 - `writfold-protocol`: checked generation allocation and distinct instance/session/request identities with executable-body initialization/shutdown guarantees.
-- `writfold-runtime`: contained filesystem/Git primitives, owned-process cleanup, bounded stdio framing and observed ephemeral invocation identities.
+- `writfold-runtime`: contained filesystem/Git/Dolt primitives, shared owned-process cleanup, bounded stdio framing and observed ephemeral invocation identities.
 - `writfold-sources`: byte-preserving authored-document and citation syntax, with new single-line mutation admission and pinned Unicode behavior.
+- `writfold-store`: typed exact Dolt inventory/navigation reads under the disposable DINT01 profile; no authenticated release writer or corpus service.
 - `writfold-xtask`: development-only syntax, dependency and nominal-type qualification.
 - `writfold-app`: typed application orchestration for the control-only agent profile.
 - `writfold`: native `serve`, version and help commands; no corpus/effect commands are registered in this profile.
@@ -41,6 +42,12 @@ documents the exact boundary and client artifact. `writfold-ref` remains a
 separate development conformance executable, never a grounding fallback.
 No complete Rust product/stage qualification is implied. Exact current component
 evidence and blocked prerequisites remain in [`qualification/status.json`](qualification/status.json).
+
+The [DINT01 exact reader](docs/writfold/dolt-integration.md#typed-rust-exact-reader-dint01)
+has been exercised through an actual static-musl Rust consumer against pinned
+Dolt snapshots. It retains a single read lease and checks metadata, typed rows,
+relationship closure and retained roots. This library component does not widen
+the control-only service above or establish knowledge/citation authority.
 
 The revision-5 **E01–E12 mathematical calculus is discharged under its recorded
 assumptions**: a clean Lean audit covers 571 declarations, the reference executes

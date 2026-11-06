@@ -141,8 +141,98 @@ remains a failed attempt, with its successful replacement separately recorded.
 
 The mutable status index binds hashes and source applicability. Later prose/index
 changes do not renew a whole-tree receipt. These observations complete only the
-listed native fixture component; DINT01's actual Rust adapter and subsequent
-service/agent integration remain unimplemented and unqualified.
+listed DINT00 native fixture component. The separate typed Rust reader below has
+its own code, contracts and evidence; service/agent integration remains open.
+
+## Typed Rust exact reader (DINT01)
+
+`writfold_store::dolt::read_snapshot` is now an actual read-only Rust boundary over
+the qualified stopped/exclusive CLI profile. It returns typed **inventory and
+navigation** nodes/relationships, not admitted knowledge, citation lineage or an
+authenticated completed release. No corpus method is added to `writfold serve`.
+
+The [reader profile](../../qualification/dolt-reader-profile.json) maps these owners:
+
+| Owner | Implemented responsibility |
+| --- | --- |
+| `domain::dolt` | Distinct current Dolt commit/database/tool and graph identities, complete read pin and typed projection |
+| `protocol::dolt::admit_read` | Complete expected/observed realm, KB, database, commit, epoch/schema/query, profile and actual-tool consistency |
+| `wire::dolt` | Closed bounded pin envelope and native scalar/row decoding; exact ordering, cardinality and null representation |
+| `runtime::dolt` | Descriptor-pinned ELF/database/HOME, existing-only coordination lock, closed SELECT templates and native process execution |
+| `runtime::process` | Shared Git/Dolt ownership: kill, drain and reap adopted descendants before releasing the reserved leader |
+| `store::dolt` | One total deadline and lease, retained-root checks around all queries, typed decoding and relationship endpoint closure |
+
+```mermaid
+flowchart LR
+    P[Exact supplied pin and admitted tool] --> V[Supported schema and query profile]
+    V --> L[Existing stable exclusive read lease]
+    L --> R[Exact retained root and native metadata]
+    R --> N[Bounded pinned nodes and edges]
+    N --> C[Typed ordering and endpoint closure]
+    C --> F[Final root, lease and deadline checks]
+    F --> S[Complete typed snapshot]
+```
+
+The canonical JSON envelope uses namespace `writfold-dolt-read`, schema `1`, kind
+`pin`, and realm/KB/database/commit/epoch/schema/query/profile/producer identities.
+`DoltIntegrationCommitId` is distinct from historical `DoltCommitId`;
+`StoragePin::LegacyDolt` and old signed bytes/codecs are unchanged. A structurally
+valid pin is not authority. Writer/release/signing envelopes remain DINT02 work.
+
+Physical tables are `wf_reader_meta`, `wf_nodes` and `wf_edges`. Exact compiled
+`SCHEMA_SQL` and `QUERY_CONTRACT` bytes define their SHA-256 profile identities.
+Queries use the requested immutable commit, never HEAD/WORKING or caller SQL.
+The retained branch `wf-retained/<commit>` must resolve to that commit before and
+after the read group. Nodes and edges are strictly ordered by binary UTF-8 ID;
+duplicates, dangling endpoints, malformed/partial data and row/byte overflow refuse.
+Native `IS NULL` is a JSON **boolean**. Null and empty home-path strings remain
+distinct; home paths are returned locators, not automatically opened filesystem paths.
+
+The caller supplies existing owner-only DB/HOME/coordination roots and a regular,
+singly-linked `coordination/database.lock`. Reads never create that lock or
+initialize/migrate/check out a database. Native Dolt can create private bookkeeping,
+including an empty `.dolt/config_global.json`: the runtime admits only an absent
+file or a bounded empty JSON object with JSON whitespace, not settings, credentials
+or malformed content. It never clears a nonempty configuration to continue.
+Global profile/credential locations and native SQL-server discovery markers refuse.
+Local native metadata remains administratively controlled; this is not a hostile
+same-user filesystem sandbox or a claim that SELECT causes no native cache writes.
+
+The supervisor is now `writfold_runtime::process::ProcessSupervisor`; Git callers
+were migrated without an alias or a second process runner. ELF hashing streams
+the binary rather than retaining a full executable copy. Fixed schema/query hashes
+are lazily cached. Failed reads expose no complete/partial success packet, and
+the lease outlives command cleanup. Fatal owner crashes, SQL-server ownership,
+power loss, live grants/publication and model-refinement bridges remain separate.
+
+Reproduce the supplemental native campaign with a new external receipt:
+
+```sh
+python3 scripts/writfold_dolt_reader.py \
+  --receipt "$HOME/.local/share/writfold/evidence/dint01-reader-new.json"
+```
+
+It builds and retains the actual static-musl `writfold-store` example through
+admitted offline Compose, then compares complete typed rows/pins against native
+fixtures. The development consumer supports `--schema`, `--query-contract` and
+`DOLT DB PRIVATE_HOME PIN_JSON` plus explicit row/byte/deadline/cancellation
+options; it is not an installed product command. Its refusal diagnostics contain
+typed JSON `kind` and a separate human message, so qualification does not pin
+incidental error prose.
+
+The first source-bound native success is
+`dint01-native-20261106-002.json`: 41 native campaign checks, including 27 named
+refusals, plus four host/build checks. The same source passed 295 workspace tests.
+Retained failures include a test's incidental classification of canonical `-0`,
+test lint/size violations, and the original overstrict empty-global-config
+refusal. The native regression and configuration-transition tests preserve that
+failure/fix evidence. Current quality/Verus receipts and applicability are indexed
+in `qualification/status.json`; this prose does not relabel older evidence.
+
+The selected Verus contract is the actual complete-pin/actual-tool decision and
+its nominal conversion boundaries. Commit, epoch/query and producer guard mutants
+calibrate it. This is not a proof of the native engine, codecs, store orchestration,
+authenticated release selection, M01/M03/M11 refinement or full V15.
 
 ## Work after native onboarding
 

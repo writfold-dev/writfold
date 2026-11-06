@@ -53,7 +53,7 @@ fn repacked_and_garbage_collected_histories_preserve_exact_pinned_bytes() -> Res
         let missing = "0".repeat(commit.as_str().len()).parse()?;
         assert!(matches!(
             repository.lookup_blob(&executable, &missing, &path, budgets()?, &ACTIVE),
-            Err(GitError::Command { .. })
+            Err(GitError::Process(ProcessError::Command { .. }))
         ));
         assert!(!fixture.path.join("transport-helper-executed").exists());
     }
