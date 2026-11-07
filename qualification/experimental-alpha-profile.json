@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "profile": "writfold-experimental-alpha/1",
+  "authorization_date": "2026-11-07",
+  "decision": "Tarek explicitly selected Scoped experimental alpha: require the real full single-file toolchain flow and its safety/proof/native gates; keep omitted features unavailable and the full 32-gate release inventory unchanged.",
+  "status": "requirements_adopted_not_qualified",
+  "documentation": "docs/writfold/handover-adoption.md#scoped-experimental-alpha",
+  "implementation_authority": "qualification/handover-adoption.json",
+  "precedence": "This profile changes only the public experimental-alpha acceptance boundary. Revision-5 semantics, implemented-path safety and proof obligations remain controlling. No immutable registry is edited and no WF gate is passed by substitution.",
+  "full_release_inventory": {
+    "stages": 25,
+    "required_gates": 32,
+    "proof_models": 37,
+    "engineering_theorems": 12,
+    "scenarios": 148,
+    "changed": false,
+    "full_release_gate_command": "scripts/gate release-required"
+  },
+  "platform": {
+    "operating_system": "Linux/WSL x86_64",
+    "realm": "Fresh disposable private owner-controlled local filesystem only; no production-data migration or existing-realm conversion.",
+    "coordination": "One explicit backend and managed writer/coordinator per trust realm. Separate read-only clients do not acquire effect authority.",
+    "core": "Static musl Rust executable; Git, Worktrunk, Weft and Omnigraph are separately pinned native dependencies.",
+    "runtime_exclusions": ["Python product delegation", "Docker runtime requirement", "proof-checker runtime requirement", "ambient mutable sibling checkouts", "automatic backend fallback", "dual writes"],
+    "native_storage": "Independent complete native backup/restore at the same canonical URI. Managed-root adoption at a new URI is unsupported and must refuse rather than rewrite native metadata.",
+    "native_namespace_assumption": "Keep the canonical native root and every ancestor unchanged throughout ownership. The native engine resolves pathnames; a retained directory descriptor plus repeated identity checks does not contain rename ABA between checks. Non-cooperating namespace mutation is unsupported, observed drift contains the native process, and cleanup failure must retain ownership.",
+    "native_uri_profile": "The current runtime admits only plain absolute canonical file-URI paths using ASCII letters, digits, slash, dot, underscore and hyphen; other native-root spellings refuse rather than receive unqualified normalization."
+  },
+  "backend": {
+    "name": "omnigraph",
+    "development_candidate": "qualification/omnigraph-development-contract.json",
+    "source_commit": "1a856292c569e214333ab16b1d1af4d0e2de4ac2",
+    "decision": "Exact source candidate is a development unblocker; prefer a supported upstream remedy before public alpha. A matching version string is not matching source provenance.",
+    "public_distribution_admitted": false,
+    "retired_direction": "Dolt-specific alpha expansion remains paused; DINT receipts keep their original supplemental scope."
+  },
+  "enabled_scope_required_before_distribution": [
+    "Explicit new-realm initialization with exact native/tool/schema/query/profile identities and retained immutable policy.",
+    "Retained exact input/recipe/candidate/report artifacts with realm/kind/revision-qualified references and bounded integrity-checked reads.",
+    "Completed Git-CAS artifact-corpus publication over retained native graph pins; artifact retention is not automatic semantic knowledge admission.",
+    "A fixed immutable manually approved reviewed-edit procedure with exact repository/base/Worktrunk binding and a declared completion boundary.",
+    "Host replay through the pinned embedded Splicery compiler/kernel; one existing regular singly linked file, content edits only, no target write during preparation.",
+    "Actual pinned Weft local-symbolic assessment of exact retained bytes; grounding and effect-authority flags remain false. Incomplete or nonentailed required checks block this procedure's apply.",
+    "Separate explicit operator Ed25519 approval over the exact prepared/report/procedure/policy/realm/run/resource/binding/expiry material, with live grant/revocation checks.",
+    "Validated immutable EngineeringLedger records selected by conditional heads, full historical-prefix and closure checks, and explicit logical-record/material binding.",
+    "Stable principal/realm/run/request mapping to original intent/effect, cross-stream resource reservation, current-generation checks and durable claim before native target IO.",
+    "Persisted native stage witness, exactly-once attempted install, file/directory durability observation, durable receipt and original-effect lookup after lost responses.",
+    "Unknown-preserving crash/cancellation recovery under owned-child quiescence; exact inode/content/metadata reconciliation, never blind replay or equal-byte confirmation of a foreign inode.",
+    "CLI and ordinary bounded stdio methods sharing typed application decisions and immutable prepared views; no RPC-generated operator approval or oversized successful response.",
+    "Complete independent restore, clean installation and real multi-process end-to-end adverse-case campaign for the exact distributable artifacts."
+  ],
+  "disabled_scope": [
+    "Fuzzy/full-text/vector corpus discovery and ranking",
+    "Automatic grounded Weft knowledge or proof-derived edit permission",
+    "Arbitrary graph mutation, raw native queries or shell-command effect adapters",
+    "File creation, removal, rename, symlink/hardlink targets and unsupported native metadata",
+    "Unresolved interactive Splicery handles or client-authoritative candidate bytes",
+    "General skill-package ingestion, delegated procedure composition and arbitrary automatic workflows",
+    "Cross-repository changes, remote forge/deploy effects, remote synchronization and provider credentials",
+    "Autonomous learning/evaluation/promotion and inferred policy widening",
+    "Obsidian/plugin publication and general graph browser",
+    "Destructive garbage collection, production migration and managed-root relocation",
+    "Revision-9 universal per-proposal Lean certificate, external prover and mixed-policy registry activation"
+  ],
+  "qualification_requirements": [
+    {"id": "ALPHA00", "name": "Exact build, source and native dependency admission", "status": "not_run", "requires": "Source/tool/fixture/profile/archive/member identities, real installed native runtime, private roots, hook/environment control and owned bounded processes; no component-only receipt promoted to runtime admission."},
+    {"id": "ALPHA01", "name": "Canonical identity and bounded references", "status": "not_run", "requires": "Distinct logical/content identities, exact canonical/signing bytes, realm/kind/revision binding, separate request/citation/ownership generations and actual checked Rust-body proof mappings."},
+    {"id": "ALPHA02", "name": "Retained corpus and completed publication", "status": "not_run", "requires": "Native graph/commit/epoch/query pin compatibility and complete retained closure before completed Git CAS; failure/recovery preserves the selected release and original operation."},
+    {"id": "ALPHA03", "name": "Validated ledger and conditional ownership", "status": "not_run", "requires": "Closed historical payload validation, full linked retained prefixes, unique logical-record/material binding, checked sequence/generation arithmetic and compare-and-select heads; an opaque log or caller Boolean is not a ledger validator."},
+    {"id": "ALPHA04", "name": "Run, procedure, Worktrunk and current grants", "status": "not_run", "requires": "Real exact-base worktree creation, current scope/resource/binding/generation checks, fixed well-typed procedure, least authority, revocation/expiry and conflict-aware run intake."},
+    {"id": "ALPHA05", "name": "Real language-toolchain preparation", "status": "not_run", "requires": "Actual pinned Weft report and embedded Splicery host replay, exact byte/provenance closure, refusal of incomplete/nonentailed required checks, and no implicit grounding or effect authority."},
+    {"id": "ALPHA06", "name": "Separate explicit authenticated approval", "status": "not_run", "requires": "Exact closed approval payload/domain, strict strong Ed25519 verification, actual owner identity and live policy/grant/expiry checks; wrong-domain or transplanted signatures refuse."},
+    {"id": "ALPHA07", "name": "Claim, reservation and native materialization", "status": "not_run", "requires": "Durable original request/effect/intent mapping and cross-stream reservation before IO; full preimage metadata, persisted stage witness, no conflicting mutator and one attempted install."},
+    {"id": "ALPHA08", "name": "Receipt, cancellation and reconciliation", "status": "not_run", "requires": "Durable receipts; deterministic claim/stage/install/receipt interruption coverage; owned descendants reaped before resource release; original-ID outcome lookup and quiescent exact-inode reconciliation with Unknown preserved."},
+    {"id": "ALPHA09", "name": "Shared CLI and ordinary agent surface", "status": "not_run", "requires": "Same typed decisions, truthful separately pinned owner capability contract, bounded chunked artifacts and correlated frames, current authority per operation, cancellation/lost-response outcomes and explicit disabled methods."},
+    {"id": "ALPHA10", "name": "Independent complete restoration", "status": "not_run", "requires": "Original physical roots unavailable; canonical native URIs preserved; exact current and retained histories, ledger/artifact/policy/approval closure and signed bytes survive; no init/apply/re-import substitute."},
+    {"id": "ALPHA11", "name": "Composed safety and proof bridges", "status": "not_run", "requires": "Preserved E01-E12 assumptions and legacy T01-T22, selected shipping Rust-body Verus proofs, TLC interleavings, TLAPS safety and explicit native/codec/model refinement bridges for every enabled path; tests or differential agreement alone are not refinement."},
+    {"id": "ALPHA12", "name": "Clean installed full-flow acceptance", "status": "not_run", "requires": "Actual native binaries installed into a fresh private prefix; documented example and custom file exercised end to end, stale/wrong-domain/revoked/ABA/concurrent/uncertain adversarial controls; no mock service, source-checkout or proof-runtime dependency."},
+    {"id": "ALPHA13", "name": "Distribution, licenses and truthful public claims", "status": "not_run", "requires": "Exact manifest/checksums, complete applicable notices and license inventory, install/upgrade/refusal behavior, source-bound evidence summary and exercised website instructions; private source/playbook/credentials never published."}
+  ],
+  "evidence_policy": {
+    "rule": "Every ALPHA requirement is mandatory for this profile. Disabled paths must be absent or explicitly rejected, not silently exercised without their obligations.",
+    "mapping": "Before enabling a path, map its exact production symbols, native assumptions, source/model/caller bridges and adverse scenarios to the applicable R5 V/M/E obligations. A smaller enabled action family narrows coverage, not truth conditions.",
+    "reuse": "Retain failed attempts and original scope; reuse only by explicit exact-source/dependency/fixture linkage. A status label, passing unit suite or old component receipt is not admission.",
+    "release": "An alpha receipt may qualify only this profile and exact artifacts. Full WF00-WF31, V/M and scenario entries retain their original statuses; WF31 remains final full composed aggregation.",
+    "public_alpha_available": false,
+    "full_release_gates_passed": [],
+    "alpha_requirements_passed": []
+  }
+}

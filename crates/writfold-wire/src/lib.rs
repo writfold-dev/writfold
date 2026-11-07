@@ -7,6 +7,7 @@ pub mod citation;
 pub mod dolt;
 pub mod dolt_operation;
 pub mod engineering;
+pub mod omnigraph;
 pub mod operation;
 mod parser;
 pub mod policy;

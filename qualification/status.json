@@ -7,6 +7,40 @@
   "qualification_scope": "local-only; enterprise endpoints and hardware power loss unqualified",
   "supplemental_evidence_index": "qualification/revision-5-progress.json",
   "historical_component_closure": "~/.local/share/writfold/evidence/revision-5-final-component-closure-001.json",
+  "experimental_alpha_profile": {
+    "profile": "writfold-experimental-alpha/1",
+    "authorization_date": "2026-11-07",
+    "status": "requirements_adopted_not_qualified",
+    "path": "qualification/experimental-alpha-profile.json",
+    "sha256": "c0e5360c2907722682dd3a0d54ea95271f3e883e17cf369c4f5bf2c3bfc9a36d",
+    "required_alpha_requirements": 14,
+    "full_release_inventory_changed": false,
+    "full_release_gates_passed": [],
+    "alpha_requirements_passed": [],
+    "public_alpha_available": false,
+    "repository_visibility": "unchanged; proposed public transition remains conditional on qualified alpha and a complete publication audit"
+  },
+  "omnigraph_rust_component": {
+    "status": "scoped_component_pass",
+    "scope": "Pinned owned native client, exact supplied-response codecs and actual conditional native data-path smoke; not corpus/ledger/owner services, ALPHA00 or a WF gate.",
+    "record": {
+      "path": "~/.local/share/writfold/evidence/omnigraph-rust-runtime-hwuhwa0l/component-admission.json",
+      "sha256": "b1b92886b4f9502dd25d77ee83e28355f81776d801ab916555fcf1f5e9bcd5d1",
+      "bytes": 565870
+    },
+    "exercised_source_tree": "92e521bb514e4b0a7c987d6495a6d32800e7cef1878f7fa77b4f6fed2cbafe31",
+    "consumer_sha256": "c2d95b50596d6bb5158c3792dea1d563b46620e9d339dd8745e8f49fb5b47094",
+    "verification": {
+      "workspace_tests_passed": 391,
+      "workspace_tests_ignored": 0,
+      "quality_checks_passed": 255,
+      "quality_skips": 0,
+      "actual_native_rust_data_path": "pass"
+    },
+    "public_alpha_available": false,
+    "alpha_requirements_passed": [],
+    "full_release_gates_passed": []
+  },
   "owner_component_development": {
     "status": "components_exercised_services_unavailable",
     "scope": "Worktree byte contracts, pinned host replay, native Git CAS, native staging/reconciliation and exact source admission; not owner services, full SG08/WF25/WF27 or public alpha.",

@@ -1,0 +1,11 @@
+query inventory() {
+ match { $c: FaultCell }
+ return { $c.key as key, $c.value as value }
+ order { $c.key }
+}
+query insert_cell($key: String, $value: String) {
+ insert FaultCell { key: $key, value: $value }
+}
+query change($key: String, $value: String) {
+ update FaultCell set { value: $value } where key = $key
+}

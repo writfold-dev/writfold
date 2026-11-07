@@ -1,0 +1,1 @@
+{"query_name":"point","target":{"branch":"retained-original-e1","snapshot":null},"row_count":1,"columns":["native_id","slug","name","ordinal","active","score","note"],"rows":[{"native_id":"asset-000000","slug":"asset-000000","name":"Asset λ 0","ordinal":0,"active":true,"score":37.25}],"graph_commit_id":"hb1.01M6VFVPCK350PKHKXP0F2SYM6.20.01M6VFVPNKAAE5GDK63K43TFZE"}

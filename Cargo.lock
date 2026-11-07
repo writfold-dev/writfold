@@ -742,6 +742,7 @@ name = "writfold-runtime"
 version = "0.1.0-dev.0"
 dependencies = [
  "rustix",
+ "serde_json",
  "sha2 0.11.0",
  "thiserror",
  "writfold-domain",

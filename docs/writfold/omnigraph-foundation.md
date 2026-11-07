@@ -316,3 +316,86 @@ corrected decoder follows the existing epoch probe: require the complete
 explicit column contract, map only missing declared-nullable `note` cells to
 null, and reject missing required or extra fields. Raw native responses remain
 unchanged. No measured SLO was loosened.
+
+## Exercised Rust native data-path component
+
+`writfold_runtime::omnigraph` now supplies pinned executable admission, fresh
+local cluster initialization, exact observed bootstrap-lock handoff, owned
+ephemeral-listener startup, scalar named queries, conditional mutations,
+retention branches and bounded history requests. `NativeCall` supplies one
+deadline/cancellation signal across encoding, connection and response processing.
+There is no raw mutation endpoint, arbitrary HTTP target or automatic write retry.
+The ordinary agent control contract still advertises no owner effect service.
+
+`writfold_wire::omnigraph` separately checks supplied response bytes: complete
+ordered projections, exact scalar/null distinctions, query/branch/snapshot
+bindings, ordinary-main published successor and actor/predecessor bindings,
+exact 412 precondition refusals, retention acknowledgments and complete bounded
+first-parent histories. Partial, duplicate or disconnected histories refuse.
+These codecs do not authenticate origin, establish live grants or turn native
+commits into completed Writfold publication.
+
+The native server's response observer streams successful bodies. The Rust client
+therefore admits both unambiguous Content-Length and ordinary chunked framing,
+with separate byte budgets, a 65,536-byte/128-field header ceiling, at most 65,536
+data chunks, progress checks and required connection EOF. Stacked coding,
+Content-Length plus Transfer-Encoding, chunk extensions/trailers, malformed or
+truncated bodies, trailing bytes and wrong contract versions refuse. A failure
+after request issuance remains `Unknown`, not a no-effect result.
+
+### Ownership boundary
+
+The coordinator lease outlives the server and its owned descendants. Process
+group leaders remain reserved until descendant reaping; cancellation of an HTTP
+request does not imply that admitted native work stopped. Shutdown failure
+returns with the owner held. Drop retains ownership and may block beyond the
+request deadline if cleanup cannot establish quiescence; a failed diagnostic
+cannot panic and release that ownership.
+
+Native storage still resolves its canonical URI by pathname. The administrative
+owner must keep that root and all ancestors unchanged throughout ownership.
+Directory-descriptor checks detect observed changes, not rename ABA between
+checks. Observed binding drift contains the native process; no unsupported
+descriptor-path alias or metadata rewrite is used to claim stronger containment.
+The present native-root URI spelling is deliberately limited to plain absolute
+ASCII paths. Other spellings refuse. No process-group escape, independent child
+reaping or incompatible SIGCHLD/subreaper/procfs manipulation is admitted.
+
+### Exact evidence and retained failures
+
+Under `~/.local/share/writfold/evidence/omnigraph-rust-runtime-hwuhwa0l/`:
+
+- `native-005.json` exercises the actual static-musl Rust consumer and exact
+  source-built CLI/server in the admitted disposable native container. It
+  initializes a fresh root, performs conditional insert/change, checks old and
+  new snapshots, observes exact stale-head refusal, retains/reads the old branch,
+  checks the complete history and shuts down cleanly. This is not a clean
+  installed product or the full Weft/Splicery owner flow.
+- `unit-005.json` records 391 passing tests, zero failures and zero ignored tests
+  on the same source closure. `quality-003.json` passes the current quality
+  producer without relaxing architecture, function/module budgets or lints.
+- Native attempts 001–002 retain the malformed fixture projection and the
+  initially missing bootstrap diagnostics. Failed bootstrap acknowledgments now
+  carry their completed CLI bytes, including prior apply output if unlock fails.
+  The fixture uses the already exercised `expression as alias` syntax.
+- Native attempt 003 retains the rejected streamed response. Chunked decoding
+  fixes the actual transport boundary; it does not disable native streaming or
+  suppress the error. Attempts 004 and 005 preserve the successive real-process
+  successes, before and after typed history/quality integration.
+- Unit attempt 001 retains checked-quantity caller errors. Quality attempts
+  001–002 retain the missing structural decomposition, raw JSON outside wire
+  and lint refusals. They were repaired, not waived or reclassified as passes.
+
+The consumer is
+[`crates/writfold-store/examples/omnigraph_native_smoke.rs`](../../crates/writfold-store/examples/omnigraph_native_smoke.rs);
+its schema/query/policy inputs are in
+[`fixtures/qualification/omnigraph-runtime/`](../../fixtures/qualification/omnigraph-runtime/).
+Its CLI usage names exact binary digests, a fresh work directory and a shared
+managed lock namespace. Build/run through the admitted Compose/tool paths.
+Native response calibration vectors retain their original producer receipts in
+`crates/writfold-wire/fixtures/omnigraph-native/manifest.json`.
+
+The corpus store, completed corpus-plus-native publication, EngineeringLedger,
+run/grant/Worktrunk services, selected production/model bridges and public alpha
+acceptance remain unqualified. No ALPHA requirement or WF gate is passed by this
+component increment.

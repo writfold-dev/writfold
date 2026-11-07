@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "scope": "Exact synthetic native HTTP response calibration, not authenticated current authority or a product gate",
+  "source_commit": "1a856292c569e214333ab16b1d1af4d0e2de4ac2",
+  "native_archive_sha256": "6c336006edec1952550e3a06859e656c502d07107c2bdc963f592d158e106506",
+  "native_server_sha256": "aeeac98eab27ca76c37e0a661430a81876f74f469949e38a8b8fff9727714fab",
+  "http_contract": "0.14",
+  "receipts": [
+    {
+      "path": "~/.local/share/writfold/evidence/omnigraph-development-nli27nt8/faults-002.json",
+      "sha256": "6b840e1173799684b25f2cbd1dae0f56f036edff89f830b2374781baa4493279",
+      "bytes": 766474
+    },
+    {
+      "path": "~/.local/share/writfold/evidence/omnigraph-development-nli27nt8/workload-restore-003.json",
+      "sha256": "672a1e36185c361d845279516ed240e62c8017ca24ff6d6a5471316cd5871791",
+      "bytes": 4247881
+    }
+  ],
+  "outputs": {
+    "point.json": {
+      "sha256": "af5a7906a7181087bb7aa7bfa0fa0ea38b21d340a817e6a4a8adb7bf9b3d10dd",
+      "bytes": 368,
+      "source": {
+        "path": "~/.local/share/writfold/evidence/omnigraph-development-nli27nt8/workload-restore-003.json.attempt/work/workload/10000/response-000024.json",
+        "sha256": "af5a7906a7181087bb7aa7bfa0fa0ea38b21d340a817e6a4a8adb7bf9b3d10dd",
+        "bytes": 368
+      }
+    },
+    "change.json": {
+      "sha256": "887a1e36c292c864013ef41c056e8fa89ab50f8d919b00e25d6cd9abd071af13",
+      "bytes": 463,
+      "source": {
+        "path": "~/.local/share/writfold/evidence/omnigraph-development-nli27nt8/faults-002.json.attempt/work/faults/conditional-stale-head-no-effect/response-52eee3fc497216668d864d3fe8edc340.json",
+        "sha256": "887a1e36c292c864013ef41c056e8fa89ab50f8d919b00e25d6cd9abd071af13",
+        "bytes": 463
+      }
+    },
+    "precondition.json": {
+      "sha256": "20f036a217fe0002e94e1c8dd809ce3106a58bd1f4fe61b114bbdd366fda5eda",
+      "bytes": 450,
+      "source": {
+        "path": "~/.local/share/writfold/evidence/omnigraph-development-nli27nt8/faults-002.json.attempt/work/faults/conditional-stale-head-no-effect/response-bf3da3d4336a2cf8e966d229508ddc89.json",
+        "sha256": "20f036a217fe0002e94e1c8dd809ce3106a58bd1f4fe61b114bbdd366fda5eda",
+        "bytes": 450
+      }
+    },
+    "retain.json": {
+      "sha256": "fc1f93706342dd2fc1678c52488816407fca963c3e830d38c4c506d85b692fca",
+      "bytes": 206,
+      "source": {
+        "path": "~/.local/share/writfold/evidence/omnigraph-rust-runtime-hwuhwa0l/native-004.json.attempt/work/real-native/retain.body",
+        "sha256": "fc1f93706342dd2fc1678c52488816407fca963c3e830d38c4c506d85b692fca",
+        "bytes": 206
+      },
+      "producer_receipt": {
+        "path": "~/.local/share/writfold/evidence/omnigraph-rust-runtime-hwuhwa0l/native-004.json",
+        "sha256": "4eb187ad5adb71496c67b6dbb9a1d9b10053f2aaea96a2b92585b1d12caf9152",
+        "bytes": 1125508
+      }
+    },
+    "history.json": {
+      "sha256": "1cbe451f3fb1ac5ba3194358eb399022205535fd87726745cdad27a4dcf3146b",
+      "bytes": 1020,
+      "source": {
+        "path": "~/.local/share/writfold/evidence/omnigraph-rust-runtime-hwuhwa0l/native-004.json.attempt/work/real-native/history.body",
+        "sha256": "1cbe451f3fb1ac5ba3194358eb399022205535fd87726745cdad27a4dcf3146b",
+        "bytes": 1020
+      },
+      "producer_receipt": {
+        "path": "~/.local/share/writfold/evidence/omnigraph-rust-runtime-hwuhwa0l/native-004.json",
+        "sha256": "4eb187ad5adb71496c67b6dbb9a1d9b10053f2aaea96a2b92585b1d12caf9152",
+        "bytes": 1125508
+      }
+    }
+  }
+}

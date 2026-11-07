@@ -26,6 +26,46 @@ be integrated before new production paths are enabled. The retained standalone
 discovery Lean check and synthetic examples are not product qualification.
 
 
+## Scoped experimental alpha
+
+On 7 November 2026, Tarek explicitly selected **Scoped experimental alpha**:
+require the real full single-file toolchain flow and its safety/proof/native
+gates; keep omitted features unavailable and the full 32-gate release inventory
+unchanged. The controlling
+[`writfold-experimental-alpha/1` profile](../../qualification/experimental-alpha-profile.json)
+records that decision and fourteen mandatory ALPHA00–ALPHA13 requirements.
+It is **requirements adoption, not alpha qualification or availability**.
+
+The selected flow is retained input → actual pinned Weft assessment → host
+Splicery replay → separate operator approval → durable claim/reservation →
+native single-file edit → durable receipt and honest recovery. The environment
+is a fresh disposable private Linux/WSL realm with one explicit Omnigraph backend.
+Fuzzy discovery, arbitrary effects, cross-repository automation, learning,
+destructive GC and the other excluded paths stay unavailable, not implicitly
+authorized by an alpha label.
+
+This is an explicit distribution-policy supplement, not a new full-release
+registry. `release-required` still requires WF00–WF31. An eventual alpha
+aggregator must instead require every ALPHA requirement on the exact shipped
+artifacts and prove that disabled paths cannot execute. Scope-specific mappings
+must preserve the applicable Verus bodies, TLC interleavings, TLAPS safety and
+native/codec/model bridges; the complete E01–E12 calculus assumptions and legacy
+T01–T22 remain intact. A smaller action family does not permit weaker truth,
+authorization, retention, ownership, durability or uncertainty checks.
+
+No production path is enabled by this record. Existing component receipts and
+the source-candidate native campaigns keep their original scope. Before enabling
+storage-dependent alpha services, qualify the exact installed native/runtime
+boundary and its selected contracts under ALPHA00; do not relabel it WF24 or
+claim that the unmerged source candidate is already a supported release.
+
+Tarek also proposed making the product repositories public once the toolchain
+is built. That is conditional future publication, not an immediate visibility
+change. Audit complete histories, refs, dependencies, releases and CI publication
+surfaces first. Private playbook material and preserved private history must not
+be exposed; where necessary propose a clean public export while retaining the
+original private history. Public code does not make unfinished assurance pass.
+
 ## Proof-first execution
 
 Complete the full E01–E12 calculus proofs, explicit assumptions, closed-action coverage and meaningful negative calibration before production engineering implementation. Preserve legacy T01–T22, its historical declaration/proof identities, all signed bytes and the adopted private playbook pin. Component proofs neither establish production refinement nor substitute for Verus V16–V21, TLC/TLAPS M12–M16 and their mandatory bridges.

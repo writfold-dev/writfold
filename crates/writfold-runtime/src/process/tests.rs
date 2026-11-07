@@ -222,3 +222,132 @@ fn owned_group_reaping_does_not_consume_an_unrelated_child() -> TestResult {
     assert!(unrelated.wait()?.success());
     Ok(())
 }
+
+#[test]
+fn service_log_limits_are_lifetime_limits_and_errors_retain_ownership() -> TestResult {
+    let supervisor = ProcessSupervisor::enable()?;
+    for role in ["stdout", "stderr"] {
+        let ready = Rendezvous::new()?;
+        let deadline = Instant::now() + Duration::from_secs(10);
+        let mut service = Service::spawn(
+            &mut ready.child(role)?,
+            limits()?,
+            &supervisor,
+            deadline,
+            &AtomicBool::new(false),
+        )?;
+        let (mut release, pid) = ready.accept()?;
+        assert_eq!(service.pid(), pid);
+        release.write_all(&[1])?;
+        loop {
+            match service.pump() {
+                Err(ProcessError::Budget { stream, limit }) => {
+                    assert_eq!(stream, role);
+                    assert_eq!(limit, 4096);
+                    break;
+                }
+                Err(error) => return Err(error.into()),
+                Ok(_) => {}
+            }
+            assert!(Instant::now() < deadline);
+            assert!(service.stdout().len() <= 4096);
+            std::thread::sleep(Duration::from_millis(1));
+        }
+        assert!(matches!(service.pump(), Err(ProcessError::Budget { .. })));
+        assert!(matches!(
+            service.finish(Duration::from_millis(10), deadline),
+            Err(ProcessError::Budget { .. })
+        ));
+        // Failed shutdown returns the still-owned service, not a freed PID.
+        assert!(fs::metadata(format!("/proc/{pid}")).is_ok());
+        drop(service);
+        reaped(pid)?;
+    }
+    Ok(())
+}
+
+#[test]
+fn service_shutdown_reaps_silent_and_pipe_holding_descendants() -> TestResult {
+    let supervisor = ProcessSupervisor::enable()?;
+    for role in ["leader", "leader-silent"] {
+        let ready = Rendezvous::new()?;
+        let deadline = Instant::now() + Duration::from_secs(10);
+        let mut service = Service::spawn(
+            &mut ready.child(role)?,
+            limits()?,
+            &supervisor,
+            deadline,
+            &AtomicBool::new(false),
+        )?;
+        let (mut release, leader) = ready.accept()?;
+        let (_leaf, leaf) = ready.accept()?;
+        release.write_all(&[1])?;
+        while service.pump()? {
+            assert!(Instant::now() < deadline);
+            std::thread::sleep(Duration::from_millis(1));
+        }
+        // pump observes exit without reaping: the group identity remains reserved.
+        assert!(fs::metadata(format!("/proc/{leader}")).is_ok());
+        let output = service.finish(Duration::from_secs(1), deadline)?;
+        assert!(output.status.success());
+        assert!(!output.forced_kill);
+        assert!(output.stdout.len() <= 4096);
+        assert!(output.stderr.len() <= 4096);
+        reaped(leader)?;
+        reaped(leaf)?;
+    }
+    Ok(())
+}
+
+#[test]
+fn service_panic_cleanup_owns_the_whole_group() -> TestResult {
+    let supervisor = ProcessSupervisor::enable()?;
+    let ready = Rendezvous::new()?;
+    let service = Service::spawn(
+        &mut ready.child("leader-silent")?,
+        limits()?,
+        &supervisor,
+        Instant::now() + Duration::from_secs(10),
+        &AtomicBool::new(false),
+    )?;
+    let (_leader_stream, leader) = ready.accept()?;
+    let (_leaf_stream, leaf) = ready.accept()?;
+    let result = std::panic::catch_unwind(move || {
+        let _owned = service;
+        std::panic::resume_unwind(Box::new("exercise service unwind ownership"));
+    });
+    assert!(result.is_err());
+    reaped(leader)?;
+    reaped(leaf)?;
+    Ok(())
+}
+
+#[test]
+fn service_shutdown_escalates_for_term_resistant_group() -> TestResult {
+    use std::os::unix::process::ExitStatusExt;
+
+    let supervisor = ProcessSupervisor::enable()?;
+    let deadline = Instant::now() + Duration::from_secs(10);
+    let mut command = Command::new("/bin/sh");
+    command.args(["-c", "trap '' TERM; sleep 60 & printf '%s\\n' \"$!\"; wait"]);
+    let mut service = Service::spawn(
+        &mut command,
+        limits()?,
+        &supervisor,
+        deadline,
+        &AtomicBool::new(false),
+    )?;
+    let leader = service.pid();
+    while !service.stdout().contains(&b'\n') {
+        assert!(service.pump()?);
+        assert!(Instant::now() < deadline);
+        std::thread::sleep(Duration::from_millis(1));
+    }
+    let leaf: u32 = std::str::from_utf8(service.stdout())?.trim().parse()?;
+    let output = service.finish(Duration::from_millis(20), deadline)?;
+    assert!(output.forced_kill);
+    assert_eq!(output.status.signal(), Some(9));
+    reaped(leader)?;
+    reaped(leaf)?;
+    Ok(())
+}

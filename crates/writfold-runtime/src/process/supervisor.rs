@@ -39,6 +39,24 @@ impl ProcessSupervisor {
         Ok(())
     }
 
+    /// Poll adopted descendants only after the reserved leader has exited.
+    /// A live descendant is not quiescence, even if it closed every pipe.
+    pub(super) fn reap_exited_descendants(&self, leader: Pid) -> Result<bool, ProcessError> {
+        self.ensure_current()?;
+        while let Some(child) = group_descendant(leader).map_err(ProcessError::Cleanup)? {
+            loop {
+                match waitpid(Some(child), WaitOptions::NOHANG) {
+                    Ok(Some((_, status))) if status.exited() || status.signaled() => break,
+                    Ok(Some(_)) => continue,
+                    Ok(None) => return Ok(false),
+                    Err(rustix::io::Errno::INTR) => continue,
+                    Err(error) => return Err(ProcessError::Cleanup(error.into())),
+                }
+            }
+        }
+        Ok(true)
+    }
+
     /// The killed leader must already be observed exited with NOWAIT. Its PID
     /// remains reserved throughout this method; the caller waits it last.
     pub(super) fn reap_descendants(&self, leader: Pid) -> Result<(), ProcessError> {

@@ -12,6 +12,10 @@ pub(crate) struct Output {
     pub stdout: Vec<u8>,
 }
 
+#[path = "service.rs"]
+mod service;
+pub(crate) use service::Service;
+
 struct OwnedChild<'a> {
     child: Child,
     group: Pid,
@@ -57,7 +61,19 @@ impl<'a> OwnedChild<'a> {
     }
 
     fn kill_group(&self) -> Result<(), ProcessError> {
-        match kill_process_group(self.group, Signal::KILL) {
+        self.signal_group(Signal::KILL)
+    }
+
+    fn signal_group(&self, signal: Signal) -> Result<(), ProcessError> {
+        if self.reaped {
+            return Err(ProcessError::UnsupportedProfile(
+                "cannot signal a reaped child",
+            ));
+        }
+        // Also refuse a lost reservation before signalling. Independent reaping
+        // remains outside the admitted process-wide supervisor profile.
+        self.exited()?;
+        match kill_process_group(self.group, signal) {
             Ok(()) | Err(rustix::io::Errno::SRCH) => Ok(()),
             Err(error) => Err(ProcessError::Cleanup(error.into())),
         }
@@ -113,8 +129,24 @@ impl<'a> OwnedChild<'a> {
 
 impl Drop for OwnedChild<'_> {
     fn drop(&mut self) {
-        if !self.reaped {
-            let _ = self.finish();
+        let mut reported = false;
+        while !self.reaped {
+            if let Err(error) = self.finish()
+                && !self.reaped
+            {
+                if !reported {
+                    // A failed diagnostic must not panic during destruction or
+                    // change the requirement to keep owning unquiesced work.
+                    let _ = writeln!(
+                        std::io::stderr().lock(),
+                        "native process cleanup failed; ownership retained: {error}"
+                    );
+                    reported = true;
+                }
+                // Cleanup may outlive a request deadline. Returning here
+                // would release enclosing leases with live/unreaped work.
+                std::thread::sleep(Duration::from_millis(100));
+            }
         }
     }
 }
