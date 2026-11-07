@@ -2,36 +2,55 @@
 
 These are reproducible **P01O progress campaigns**, not WF24 admission or a production Writfold storage adapter. Omnigraph remains the intended primary backend. Dolt 2.6.1 is used only as the isolated supplied comparator; no fallback or dual writer is introduced. The immutable revision-4 handover remains unchanged.
 
-**P01O/WF24 is blocked at the tested 0.14.0 pin:** a whole-root native backup restores old snapshot rows after relocation, but a retained branch still requests a Lance file at its original, unavailable path. The authenticated companion smoke passes independently. Do not weaken the restore check or convert either scoped result into backend admission.
+**The released 0.14.0 profile remains blocked; the exact PR #1235 source candidate now passes the scoped relocation/restore campaign.** The historical failure is retained, not rerun or relabelled. Neither result completes P01O/WF24 or admits a production Writfold storage adapter.
 
-The later [Dolt integration-only decision](dolt-integration.md) authorizes separate
-disposable development realms and its own evidence. It does not change these
-Omnigraph campaign results, waive WF24 or introduce fallback into this runner.
+Tarek subsequently paused Dolt-specific alpha expansion and authorized
+[PR #1235](https://github.com/ModernRelay/omnigraph/pull/1235) at
+`1a856292c569e214333ab16b1d1af4d0e2de4ac2` as an isolated development unblocker.
+The earlier [Dolt integration-only decision](dolt-integration.md) and its evidence
+remain historical scope, not a fallback. A supported upstream remedy is preferred
+before public alpha; a source-candidate pass is not release admission.
 
-## Run once from the checkout
+## Reproduce an exact source-candidate campaign
 
-After concurrent source edits finish, select a new absolute receipt path outside the checkout:
+Set `OMNIGRAPH_SOURCE` to a dedicated checkout at the exact commit below.
+The builder checks committed file bytes/modes, rejects extra ignored inputs and
+escaping symlinks, and verifies the source closure again after compilation.
+Select fresh absolute receipt paths outside both checkouts:
 
 ```sh
-python3 scripts/writfold_omnigraph_probe.py --campaign all \
-  --receipt "$HOME/.local/share/writfold/evidence/omnigraph-foundation-new.json"
+build_receipt="$HOME/.local/share/writfold/evidence/omnigraph-source-new.json"
+python3 scripts/writfold_omnigraph_source.py \
+  --source "${OMNIGRAPH_SOURCE:?select the exact dedicated checkout}" \
+  --expect-source 1a856292c569e214333ab16b1d1af4d0e2de4ac2 \
+  --receipt "$build_receipt"
 
-python3 scripts/writfold_omnigraph_probe.py --campaign companion \
-  --receipt "$HOME/.local/share/writfold/evidence/omnigraph-companion-new.json"
+python3 scripts/writfold_omnigraph_probe.py --campaign all \
+  --profile "${build_receipt}.attempt/profile.json" \
+  --archive "${build_receipt}.attempt/omnigraph-linux-x86_64.tar.gz" \
+  --receipt "$HOME/.local/share/writfold/evidence/omnigraph-candidate-new.json"
 ```
 
-The receipt and its sibling `.attempt` directory must both be new. Failed attempts are retained and cannot be reused. A subsequent attempt needs a new name. Do not delete failure evidence to retry. The wrapper performs actual existing operator-storage preflight before Docker inspection/execution. It does not build, pull, install, relocate, prune, or update the admitted tool image.
+Each receipt and sibling `.attempt` directory must be new. Failed attempts are
+retained and cannot be overwritten. Both wrappers use the operator's actual
+storage preflight. The source builder explicitly provisions a derived BuildKit
+image and fetches locked dependencies online, then compiles offline with network
+disabled. The probe neither provisions nor downloads implicitly. Neither changes
+storage bindings, prunes resources or modifies the admitted base image.
 
-`all` is the default and currently fails the retained-branch relocation requirement before the companion phase. `companion` explicitly selects only the independent authenticated lifecycle smoke; it leaves epoch/restore scope unrun in that receipt and does not waive the failing foundation requirement.
+The default probe profile still selects historical 0.14.0. Do not rerun its known
+relocation failure merely to confirm it. `--profile` explicitly selects the new
+source-build receipt and exact archive; `--campaign companion` selects only the
+authenticated lifecycle scope and never waives restore or other WF24 obligations.
 
 Prerequisites:
 
 - Linux/WSL x86_64 host, Python standard library, Docker Compose and the existing `ci-infra` storage binding used by `scripts/writfold_preflight.py` (including its reserve/resource policy).
 - The exact locally present admitted `toolchains.lock.json` image and matching retained tool observation. Mutable tags and ambient native binaries are not accepted.
-- The retained upstream archive at `~/.local/share/writfold/native/omnigraph/0.14.0/omnigraph-linux-x86_64.tar.gz`. Use `--archive /absolute/path/to/omnigraph-linux-x86_64.tar.gz` to select another retained copy of the same bytes. The runner deliberately does not download implicitly.
-- Space for the 192,187,663-byte archive, approximately 540 MB of fresh extracted binaries per attempt, graphs and retained logs. The container allocation is two CPUs, 4 GiB RAM without additional swap, 256 processes and 256 MiB temporary storage. These are smoke containment limits, not product performance SLOs.
+- An exact source checkout and the generated archive/profile/build receipt for candidate runs. The successful archive is 194,021,218 bytes. Preserve enough space for binaries, graphs and all failed/successful logs.
+- Source compilation uses Rust 1.97.1, two Cargo jobs and the declared eight-CPU/12-GiB ceiling. Native smoke containers use two CPUs, 4 GiB RAM without additional swap, 256 processes and 256 MiB temporary storage. These are containment limits, not performance SLOs.
 
-The archive was obtained from the [v0.14.0 release](https://github.com/ModernRelay/omnigraph/releases/tag/v0.14.0), retained at the default path with `release.json` and `provenance.json`, and SHA256-checked against the handover. If provisioning another host, download the [exact archive URL](https://github.com/ModernRelay/omnigraph/releases/download/v0.14.0/omnigraph-linux-x86_64.tar.gz) into a new retained file; the runner checks its size and digest before extraction. Never replace a mismatched retained artifact silently.
+The historical archive was obtained from the [v0.14.0 release](https://github.com/ModernRelay/omnigraph/releases/tag/v0.14.0), retained at the default path with `release.json` and `provenance.json`, and SHA256-checked against the handover. Its exact bytes remain a historical reference, not the candidate selected above. Never replace a mismatched retained artifact silently.
 
 ## Identity and containment
 
@@ -58,11 +77,11 @@ The pinned [server entry point](https://github.com/ModernRelay/omnigraph/blob/60
 
 ## Evidence and limits
 
-The source-bound supplemental receipt records the full source snapshot, admitted image/lock, actual preflight result, archive/profile/fixture identities, command timings/exits and hashes of retained attempt files. It refuses success if source changes during execution. Runtime observations are retained separately in `.attempt/work/runtime.json`. Unmodified supplied `compare.py` and `versioned_schema.py` run under Compose; their own assertions, commands, stdout/stderr, graphs and receipts remain under `.attempt/work/compare` and `.attempt/work/versioned-schema`. Wrapper logs survive failures, including supplied-probe exceptions. Interrupted Docker clients trigger forced container removal before ownership is released; a removal failure is itself a failed attempt and requires operator inspection of the recorded container name.
+The source-bound supplemental receipt records the full source snapshot, admitted image/lock, actual preflight, archive/profile/fixture identities, command timings/exits and retained output hashes. It refuses success if source changes during execution. Runtime observations are retained in `.attempt/work/runtime.json`. Historical fixtures remain immutable. For a source candidate, `writfold_omnigraph_fixtures.py` derives external copies by AST-constrained replacement of exactly one version literal and one CLI digest literal per Python probe; all semantic assertions remain unchanged. `fixture-derivation.json` binds original/derived bytes. Interrupted Docker clients trigger forced container removal before ownership is released; failure to remove is itself a failed attempt.
 
 A supplemental `status: pass` applies only to its `selected_campaign`. The receipt always keeps `wf24: not_run`; successful bounded subscopes use `scoped-smoke-pass`, never full-gate status. It is not a gate-schema receipt. The separate current ledger records the known foundation blocker. A host/container crash may leave only reserved logs, not a final receipt; that is not success.
 
-The supplied comparison and versioned-type probes remain unchanged. `writfold_omnigraph_epochs.py` adds separate physical graphs, complete canonical node/relationship comparisons, old reads after head advancement, retained branch roots and a complete quiesced backup. Restore validates every archived byte and requires every declared snapshot and native root to remain readable with original locations absent. The first retained-branch read currently fails; subsequent restored pins remain unrun. `writfold_omnigraph_companion.py` exercises actual authenticated transport and lifecycle, not a production supervisor.
+`writfold_omnigraph_epochs.py` adds separate physical graphs, complete canonical node/relationship comparisons, old reads after head advancement, retained branch roots and a complete quiesced backup. Independent restore validates every archived byte and requires every declared snapshot and retained branch to remain readable with original locations unavailable. The historical 0.14.0 failure and source-candidate pass below remain distinct. `writfold_omnigraph_companion.py` exercises actual authenticated transport and lifecycle, not a production supervisor.
 
 Signed Writfold migration/CAS, complete semantic codecs, concurrent publication and writer replacement, uncertain-write recovery, crash/power-loss behavior, retention/GC, formal bridges, offline installation and frozen workload/SLO campaigns remain unqualified.
 
@@ -154,3 +173,56 @@ The final `omnigraph-companion-006.json` adds a current-HEAD read after the deni
 `omnigraph-foundation-002.json` preserves the first fixture parser failure: the pinned CLI's root/lock diagnostic format differed from the initial source-derived expectation. `omnigraph-companion-004.json` preserves a Python `Path.open(opener=...)` setup error. The parser now checks the actual pinned diagnostic and complete/converged apply response; private token creation uses the supported exclusive built-in `open` API. Neither failed attempt was overwritten.
 
 Upstream archive attestation verification was also attempted, but the installed host `gh` does not expose `attestation`. `native/omnigraph/0.14.0/attestation-attempt-001.json` under the external Writfold data directory records that blocker. Executable/archive byte checks still apply; no cryptographic upstream-attestation verification or independent rebuild is claimed.
+
+## Executed PR #1235 source-candidate trial
+
+The retained root is
+`~/.local/share/writfold/native/omnigraph/source-1235-u_eol09m/`.
+`build-004.json` passes at exact unmodified source
+`1a856292c569e214333ab16b1d1af4d0e2de4ac2`; before/after source manifests match.
+The binary reports `0.15.0` and a null source commit: commit provenance comes from
+the source/build receipt, not an invented embedded version field. Archive SHA256:
+`6c336006edec1952550e3a06859e656c502d07107c2bdc963f592d158e106506`.
+CLI SHA256:
+`ae26ae21b6b7dbaa3556256e0a9887281caea8cd0094c2b12f640353a8704994`.
+Server SHA256:
+`aeeac98eab27ca76c37e0a661430a81876f74f469949e38a8b8fff9727714fab`.
+The receipt also binds the azure helper, derived image, tool observations and
+loader-resolved ELF dependencies. Byte-reproducible rebuilding is not claimed.
+
+`campaign-002.json` passes the comparison and versioned-schema probes (12 and
+6 assertions), epoch preparation (187), independent restore (149), authenticated
+companion lifecycle (21 checks), and relocation adversaries (1,302 assertions
+across 116 native commands). The restore container mounted only copied backup
+inputs: both original native roots were unavailable. Snapshot and retained-branch
+reads preserve exact old/new rows and pins across both schema epochs.
+
+The seven relocation cases cover a minimal retained branch, a child of a written
+branch, branch-only historical lookup with an unwritten sibling, a divergent
+original, an absent original, same-path restore, and a missing copied object.
+The last case refuses without consulting the still-present original. These are
+native root/history checks, not Writfold authority or uncertain-write recovery.
+
+Earlier source-build attempts retain the committed-symlink admission, local
+BuildKit base-resolution and rustup cross-mount-rename failures. Campaign 001
+retains the old fixture version/digest refusal; candidate derivation corrected
+only those exact literals. `source-closure-tests.json` records five exercised
+admission regressions for hidden byte changes, committed link containment,
+ignored extra inputs, executable-mode drift and wrong source commits.
+
+All receipts retain `wf24: not_run`. Full crash/lost-response campaigns,
+contended ownership/cancellation/replacement, frozen workloads/SLOs, V14/V15 and
+M10/M11 bridges, the Rust Omnigraph adapter and composed release acceptance remain
+open. The unchanged 0.14.0 profile is not silently replaced by this candidate.
+
+The independent restore above covers **standalone graph roots**. The candidate's
+[cluster deployment boundary](https://github.com/ModernRelay/omnigraph/blob/1a856292c569e214333ab16b1d1af4d0e2de4ac2/docs/user/clusters/index.md#deployment-boundaries)
+does not admit importing existing managed roots, and PR #1235 explicitly leaves
+managed-root adoption at a new location unsupported. Managed-cluster backup/
+restore therefore remains a separate qualification/design boundary; no metadata
+rewrite, original-path alias or logical export is presented as its completion.
+
+The [review of this exact head](https://github.com/ModernRelay/omnigraph/pull/1235)
+also warns that main's planned `0.15.0` release may precede this fix. A version
+string is not fix provenance. Keep the exact source/archive/member identities
+above; do not substitute a same-version release or infer that the draft is merged.

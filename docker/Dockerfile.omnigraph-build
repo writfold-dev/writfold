@@ -1,0 +1,14 @@
+# syntax=docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e
+# Online provisioning; immutable resulting image is recorded, not byte-reproducibility.
+ARG WRITFOLD_TOOL_IMAGE
+FROM ${WRITFOLD_TOOL_IMAGE}
+ENV RUSTUP_TOOLCHAIN=1.97.1 RUSTFLAGS=""
+RUN --mount=type=cache,id=writfold-omnigraph-1235-apt,target=/var/cache/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
+      protobuf-compiler libprotobuf-dev clang libclang-dev cmake libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
+RUN --mount=type=cache,id=writfold-omnigraph-1235-rust-downloads,target=/opt/rustup/downloads,sharing=locked \
+    rustup toolchain install 1.97.1 --profile minimal \
+    && mkdir -p /opt/writfold-omnigraph \
+    && dpkg-query -W -f='${Package}\t${Version}\n' > /opt/writfold-omnigraph/distro-packages.tsv
+WORKDIR /source

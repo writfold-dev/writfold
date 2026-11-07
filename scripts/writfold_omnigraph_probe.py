@@ -19,6 +19,33 @@ import writfold_evidence as evidence
 
 ROOT = Path(__file__).resolve().parents[1]
 PROFILE = ROOT / "qualification/omnigraph-profile.json"
+SOURCE_CANDIDATE = "1a856292c569e214333ab16b1d1af4d0e2de4ac2"
+
+
+def validate_profile(path: Path, receipt_path: Path | None = None) -> dict:
+    profile = evidence.document(path)
+    historical = evidence.document(PROFILE)
+    require(profile["fixture_root"] == historical["fixture_root"] and
+            profile["fixture_sha256"] == historical["fixture_sha256"],
+            "Source profile must retain all immutable fixture identities")
+    require(set(profile["members"]) == set(historical["members"]), "Exact three native members required")
+    if profile != historical:
+        require(profile["source_commit"] == SOURCE_CANDIDATE, "Unpinned source candidate")
+        reference = profile["source_build_receipt"]
+        source = receipt_path or Path(reference["path"])
+        require(source.is_file() and not source.is_symlink() and evidence.sha(source) == reference["sha256"],
+                "Source build receipt digest mismatch")
+        build = evidence.document(source)
+        require(build["status"] == "pass" and build["source_commit"] == profile["source_commit"]
+                and build["members"] == profile["members"]
+                and build["archive"]["sha256"] == profile["archive_sha256"]
+                and build["archive"]["bytes"] == profile["archive_bytes"]
+                and build["version"] == profile["version"]
+                and build["phases"]["compile"] == {
+                    "status": "pass", "network": "none", "locked": True, "offline": True}
+                and build["source_before"]["sha256"] == build["source_after"]["sha256"],
+                "Source build provenance/archive/member mismatch")
+    return profile
 
 
 def require(condition: bool, message: str) -> None:
@@ -47,9 +74,9 @@ def extract(archive: Path, destination: Path, profile: dict) -> None:
             target.chmod(0o555)
 
 
-def inside(campaign: str) -> None:
+def inside(campaign: str, profile_path: Path) -> None:
     work = Path("/evidence")
-    profile = evidence.document(PROFILE)
+    profile = validate_profile(profile_path, Path("/profile/source-build.json"))
     lock = evidence.document(ROOT / "toolchains.lock.json")
     observation_path = ROOT / lock["observation"]["path"]
     require(evidence.sha(observation_path) == lock["observation"]["sha256"], "Tool observation changed")
@@ -110,16 +137,22 @@ def inside(campaign: str) -> None:
     for name, expected in profile["fixture_sha256"].items():
         require(evidence.sha(fixture / name) == expected, f"Immutable fixture changed: {name}")
     # Independent scopes use separate fresh graph roots, never a second live writer.
-    if campaign == "companion":
+    if campaign == "relocation":
+        run("relocation", [sys.executable, str(ROOT / "scripts/writfold_omnigraph_relocation.py"),
+                           "--work", str(work / "relocation"), "--profile", str(profile_path)], timeout=1500)
+    elif campaign == "companion":
         run("companion", [sys.executable, str(ROOT / "scripts/writfold_omnigraph_companion.py"),
-                          "--work", str(work / "companion")], timeout=660)
+                          "--work", str(work / "companion"), "--profile", str(profile_path)], timeout=660)
     else:
+        if "source_build_receipt" in profile:
+            from writfold_omnigraph_fixtures import derive
+            fixture = derive(fixture, work / "derived-fixtures", evidence.document(PROFILE), profile)
         run("compare", [sys.executable, str(fixture / "compare.py"), "--omnigraph", "/native/omnigraph",
                         "--dolt", tools["dolt"]["executable"], "--out", str(work / "compare")], timeout=1500)
         run("versioned-schema", [sys.executable, str(fixture / "versioned_schema.py"), "--omnigraph",
                                  "/native/omnigraph", "--out", str(work / "versioned-schema")], timeout=900)
         run("epochs-prepare", [sys.executable, str(ROOT / "scripts/writfold_omnigraph_epochs.py"),
-                               "prepare", "--work", str(work / "epochs")], timeout=900)
+                               "prepare", "--work", str(work / "epochs"), "--profile", str(profile_path)], timeout=900)
 
 
 def native_container(attempt: evidence.Attempt, env: dict, command: list[str] | None = None) -> None:
@@ -149,7 +182,7 @@ def independent_restore(attempt: evidence.Attempt, env: dict) -> dict:
     native_container(attempt, isolated, [
         "/usr/bin/python3", "/work/writfold/scripts/writfold_omnigraph_epochs.py", "restore",
         "--work", "/evidence/restore", "--backup", "/evidence/incoming/backup.tar",
-        "--manifest", "/evidence/incoming/backup.json"])
+        "--manifest", "/evidence/incoming/backup.json", "--profile", "/profile/profile.json"])
     report = evidence.document(mount / "restore/receipt.json")
     require(report["status"] == "pass" and report["original_roots_unavailable"] is True
             and report["independent_native_restore"] is True, "Independent restore did not pass")
@@ -161,10 +194,16 @@ def independent_restore(attempt: evidence.Attempt, env: dict) -> dict:
 def execute_campaigns(attempt: evidence.Attempt, env: dict, work: Path, campaign: str, receipt: dict) -> None:
     command = None if campaign == "all" else [
         "/usr/bin/python3", "/work/writfold/scripts/writfold_omnigraph_probe.py",
-        "--inside", "--campaign", campaign]
+        "--inside", "--campaign", campaign, "--profile", "/profile/profile.json"]
     native_container(attempt, env, command)
     receipt["runtime"] = evidence.document(work / "runtime.json")
     receipt["campaign_receipts"] = {}
+    if campaign == "relocation":
+        result = evidence.document(work / "relocation/receipt.json")
+        receipt["campaign_receipts"]["relocation"] = result
+        require(result["status"] == "pass", "Relocation campaign failed")
+        receipt["relocation"] = "candidate-smoke-pass"
+        return
     if campaign == "all":
         receipt["probe_receipts"] = {name: evidence.document(work / name / "receipt.json")
                                      for name in ("compare", "versioned-schema")}
@@ -175,7 +214,7 @@ def execute_campaigns(attempt: evidence.Attempt, env: dict, work: Path, campaign
         receipt["epochs_restore"] = "scoped-smoke-pass"
         native_container(attempt, env, [
             "/usr/bin/python3", "/work/writfold/scripts/writfold_omnigraph_companion.py",
-            "--work", "/evidence/companion"])
+            "--work", "/evidence/companion", "--profile", "/profile/profile.json"])
     companion = evidence.document(work / "companion/receipt.json")
     receipt["campaign_receipts"]["companion"] = companion
     require(companion["status"] == "pass", "Companion campaign failed")
@@ -184,11 +223,18 @@ def execute_campaigns(attempt: evidence.Attempt, env: dict, work: Path, campaign
             and not shutdown["forced_kill"] and shutdown["exit"] == 0,
             "Companion ownership was not cleanly discharged")
     receipt["server_lifecycle"] = "scoped-smoke-pass"
+    if campaign == "all" and "source_build_receipt" in receipt["profile"]:
+        native_container(attempt, env, [
+            "/usr/bin/python3", "/work/writfold/scripts/writfold_omnigraph_relocation.py",
+            "--work", "/evidence/relocation", "--profile", "/profile/profile.json"])
+        result = evidence.document(work / "relocation/receipt.json")
+        receipt["campaign_receipts"]["relocation"] = result
+        require(result["status"] == "pass", "Relocation campaign failed")
 
 
 def host(args: argparse.Namespace) -> int:
     attempt = evidence.Attempt(args.receipt, 2700)
-    receipt = {"schema_version": 1, "scope": f"Supplemental P01O native campaign: {args.campaign}",
+    receipt = {"schema_version": 1, "scope": f"Supplemental native smoke: {args.campaign}",
                "selected_campaign": args.campaign,
                "wf24": "not_run", "server_lifecycle": "not_run", "epochs_restore": "not_run",
                "status": "fail", "commands": attempt.commands, "started_ns": time.time_ns()}
@@ -198,8 +244,19 @@ def host(args: argparse.Namespace) -> int:
             preflight = attempt.run([sys.executable, str(ROOT / "scripts/writfold_preflight.py")])
             receipt["preflight"] = evidence.document(preflight)
             receipt["source"] = evidence.snapshot()
-            profile = evidence.document(PROFILE)
+            profile_path = args.profile.expanduser().absolute()
+            profile = validate_profile(profile_path)
+            if args.campaign == "relocation":
+                require(profile["source_commit"] == SOURCE_CANDIDATE,
+                        "Relocation adversaries require the exact source-candidate profile")
             receipt["profile"] = profile
+            receipt["profile_input"] = evidence.file_record(profile_path)
+            bundle = attempt.directory / "profile"
+            bundle.mkdir(mode=0o700)
+            shutil.copyfile(profile_path, bundle / "profile.json")
+            if "source_build_receipt" in profile:
+                shutil.copyfile(Path(profile["source_build_receipt"]["path"]), bundle / "source-build.json")
+            validate_profile(bundle / "profile.json", bundle / "source-build.json")
             lock = evidence.document(ROOT / "toolchains.lock.json")
             require(lock.get("admitted") is True and lock.get("schema_version") == 1, "Tool image not admitted")
             image = lock["image"]["reference"]
@@ -229,7 +286,7 @@ def host(args: argparse.Namespace) -> int:
                    if not key.startswith(("COMPOSE_", "WRITFOLD_PROBE_", "WRITFOLD_TOOL_"))}
             env.update(WRITFOLD_TOOL_IMAGE=image, WRITFOLD_PROBE_WORK=str(work),
                        WRITFOLD_PROBE_PACKAGE=str(package), WRITFOLD_PROBE_UID=str(os.getuid()),
-                       WRITFOLD_PROBE_GID=str(os.getgid()))
+                       WRITFOLD_PROBE_GID=str(os.getgid()), WRITFOLD_PROBE_PROFILE=str(bundle))
             execute_campaigns(attempt, env, work, args.campaign, receipt)
             require(evidence.snapshot()["tree_digest"] == receipt["source"]["tree_digest"],
                     "Checkout changed during attempt; refuse source-bound success")
@@ -248,14 +305,15 @@ def host(args: argparse.Namespace) -> int:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--receipt", type=Path)
+    parser.add_argument("--profile", type=Path, default=PROFILE)
     parser.add_argument("--archive", type=Path, default=Path.home() /
                         ".local/share/writfold/native/omnigraph/0.14.0/omnigraph-linux-x86_64.tar.gz")
-    parser.add_argument("--campaign", choices=("all", "companion"), default="all",
+    parser.add_argument("--campaign", choices=("all", "companion", "relocation"), default="all",
                         help="Select a supplemental scope; no selection passes WF24")
     parser.add_argument("--inside", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
     if args.inside:
-        inside(args.campaign)
+        inside(args.campaign, args.profile)
         return 0
     if args.receipt is None:
         parser.error("--receipt is required (fresh out-of-tree path)")

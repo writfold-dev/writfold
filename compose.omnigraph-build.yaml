@@ -1,0 +1,58 @@
+name: writfold-omnigraph-source
+x-source: &source
+  image: ${WRITFOLD_OMNI_BUILD_IMAGE:?Select source build image}
+  pull_policy: never
+  platform: linux/amd64
+  working_dir: /source
+  cpus: 8
+  mem_limit: 12884901888
+  pids_limit: 1024
+  init: true
+  environment:
+    RUSTUP_TOOLCHAIN: 1.97.1
+    RUSTFLAGS: ""
+    CARGO_HOME: /opt/cargo
+    CARGO_TARGET_DIR: /cache/target/${WRITFOLD_OMNI_RUN:?Select unique attempt}
+    CARGO_BUILD_JOBS: "2"
+    PYTHONDONTWRITEBYTECODE: "1"
+    GIT_CONFIG_COUNT: "1"
+    GIT_CONFIG_KEY_0: safe.directory
+    GIT_CONFIG_VALUE_0: /source
+  volumes:
+    - type: bind
+      source: ${WRITFOLD_OMNI_SOURCE:?Select pinned source}
+      target: /source
+      read_only: true
+    - type: bind
+      source: ./scripts
+      target: /runner
+      read_only: true
+    - type: bind
+      source: ${WRITFOLD_OMNI_EVIDENCE:?Select exclusive evidence}
+      target: /evidence
+    - target:/cache/target
+    - registry:/opt/cargo/registry
+    - git:/opt/cargo/git
+services:
+  provision:
+    image: ${WRITFOLD_OMNI_BUILD_IMAGE:?Select source build image}
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.omnigraph-build
+      args:
+        WRITFOLD_TOOL_IMAGE: ${WRITFOLD_TOOL_IMAGE:?Select admitted base}
+  fetch:
+    <<: *source
+    command: [python3, -B, /runner/writfold_omnigraph_source.py, --bootstrap]
+  compile:
+    <<: *source
+    network_mode: none
+    command: [python3, -B, /runner/writfold_omnigraph_source.py, --inside]
+volumes:
+  target:
+    name: writfold-omnigraph-1235-rust-1.97.1-target
+  registry:
+    name: writfold-omnigraph-1235-rust-1.97.1-registry
+  git:
+    name: writfold-omnigraph-1235-rust-1.97.1-git

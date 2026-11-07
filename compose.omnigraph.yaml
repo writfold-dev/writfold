@@ -7,7 +7,7 @@ services:
     user: "${WRITFOLD_PROBE_UID:?}:${WRITFOLD_PROBE_GID:?}"
     working_dir: /evidence
     entrypoint: []
-    command: [/usr/bin/python3, /work/writfold/scripts/writfold_omnigraph_probe.py, --inside]
+    command: [/usr/bin/python3, /work/writfold/scripts/writfold_omnigraph_probe.py, --inside, --profile, /profile/profile.json]
     network_mode: none
     read_only: true
     init: true
@@ -34,6 +34,12 @@ services:
       - type: bind
         source: ${WRITFOLD_PROBE_PACKAGE:?Verified extracted package required}
         target: /native
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${WRITFOLD_PROBE_PROFILE:?Verified profile bundle required}
+        target: /profile
         read_only: true
         bind:
           create_host_path: false

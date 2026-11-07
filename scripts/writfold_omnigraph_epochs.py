@@ -17,7 +17,8 @@ import time
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = ROOT / "fixtures/qualification/omnigraph-epochs"
 PROFILE = ROOT / "qualification/omnigraph-profile.json"
-SOURCE = "60bfd19db780fdff3a5178f959c1204143420114"
+
+from writfold_omnigraph_probe import validate_profile
 NOT_RUN = ["WF24", "signed Writfold migration", "completed Git CAS", "GC/cleanup",
            "powerloss/crash durability", "concurrent writer ownership", "uncertain writes",
            "production storage adapter", "full semantic codecs/workloads", "merge/changefeed"]
@@ -56,7 +57,8 @@ def inventory(root):
 
 
 class Campaign:
-    def __init__(self, work, mode):
+    def __init__(self, work, mode, profile=PROFILE):
+        self.profile_path = profile
         self.work = work
         work.mkdir(mode=0o700, parents=False, exist_ok=False)
         (work / "home").mkdir(mode=0o700)
@@ -74,7 +76,7 @@ class Campaign:
             "cross_schema_branch": "Not exercised here; epochs never schema-applied",
             "native_expected_nonzero_commands": "None; every selected supported native operation must succeed"}
         self.receipt["upstream_contracts"] = [
-            f"https://github.com/ModernRelay/omnigraph/blob/{SOURCE}/docs/user/{path}"
+            f"https://github.com/ModernRelay/omnigraph/blob/{document(profile)['source_commit']}/docs/user/{path}"
             for path in ("branching/index.md", "queries/index.md", "queries/traversal.md")]
 
     def check(self, name, ok):
@@ -110,18 +112,18 @@ class Campaign:
             save(self.work / "receipt.json", self.receipt)
 
     def admit(self):
-        profile = document(PROFILE)
-        self.check("Exact admitted source and version", profile["source_commit"] == SOURCE and profile["version"] == "0.14.0")
+        profile = validate_profile(self.profile_path, Path("/profile/source-build.json"))
         for name, digest in profile["members"].items():
             path = Path("/native") / name
             self.check(f"Exact regular native binary: {name}", path.is_file() and not path.is_symlink() and sha(path) == digest)
-        self.check("CLI reports exact version", self.run("version", ["version", "--json"])["version"] == "0.14.0")
+        self.check("CLI reports exact version", self.run("version", ["version", "--json"])["version"] == profile["version"])
         fixture = ROOT / profile["fixture_root"]
         for name, digest in profile["fixture_sha256"].items():
             self.check(f"Immutable supplied fixture: {name}", sha(fixture / name) == digest)
-        paths = [Path(__file__).resolve(), PROFILE, ROOT / "toolchains.lock.json"]
+        paths = [Path(__file__).resolve(), ROOT / "toolchains.lock.json"]
         paths += sorted(FIXTURE.iterdir()) + [fixture / name for name in profile["fixture_sha256"]]
         self.receipt["bindings"] = {p.relative_to(ROOT).as_posix(): sha(p) for p in paths}
+        self.receipt["bindings"]["native-profile"] = sha(self.profile_path)
         self.receipt["profile"] = profile
         return fixture
 
@@ -210,7 +212,7 @@ def prepare(campaign, fixture):
                "semantic_records": semantic(pins[0]["expected"]), "quarantined": [], "refused": []}
     closure = {"schema_version": 1, "bindings": campaign.receipt["bindings"], "pins": pins, "mapping": mapping,
                "original_roots": [str(payload / f"{epoch}.omni") for epoch in ("epoch1", "epoch2")],
-               "native_source": SOURCE, "not_run": NOT_RUN}
+               "native_source": campaign.receipt["profile"]["source_commit"], "not_run": NOT_RUN}
     save(payload / "closure.json", closure)
     # Every synchronous CLI has exited. Archive entire native roots, not selected Lance files.
     before = inventory(payload)
@@ -267,7 +269,7 @@ def unpack(campaign, archive, manifest_path):
 def restore(campaign, archive, manifest_path):
     payload, manifest = unpack(campaign, archive, manifest_path)
     closure = document(payload / "closure.json")
-    campaign.check("Closure source/profile/fixtures identical", closure["schema_version"] == 1 and closure["native_source"] == SOURCE and closure["bindings"] == campaign.receipt["bindings"])
+    campaign.check("Closure source/profile/fixtures identical", closure["schema_version"] == 1 and closure["native_source"] == campaign.receipt["profile"]["source_commit"] and closure["bindings"] == campaign.receipt["bindings"])
     campaign.check("Closure original roots match external manifest", closure["original_roots"] == manifest["original_roots"])
     supplied = ROOT / campaign.receipt["profile"]["fixture_root"]
     for source in [supplied / name for name in ("schema.pg", "schema-next.pg", "queries.gq", "seed.jsonl")] + sorted(FIXTURE.iterdir()):
@@ -290,6 +292,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("mode", choices=("prepare", "restore"))
     parser.add_argument("--work", type=Path, required=True)
+    parser.add_argument("--profile", type=Path, default=PROFILE)
     parser.add_argument("--backup", type=Path)
     parser.add_argument("--manifest", type=Path)
     args = parser.parse_args()
@@ -300,7 +303,7 @@ def main():
     work = args.work.absolute()
     require(work == work.resolve(), "Work path aliases or symlink ancestors refused")
     require(work.is_relative_to(Path("/evidence")) and work != Path("/evidence"), "Work must be a fresh child of /evidence")
-    campaign = Campaign(work, args.mode)
+    campaign = Campaign(work, args.mode, args.profile)
     try:
         fixture = campaign.admit()
         if args.mode == "prepare":

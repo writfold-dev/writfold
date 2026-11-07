@@ -17,10 +17,10 @@ import subprocess
 import threading
 import time
 
+from writfold_omnigraph_probe import validate_profile
+
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = ROOT / "fixtures/qualification/omnigraph-companion"
-SOURCE = "60bfd19db780fdff3a5178f959c1204143420114"
-UPSTREAM = f"https://github.com/ModernRelay/omnigraph/blob/{SOURCE}/"
 LIMIT = 1024 * 1024
 GRACE = 5
 
@@ -125,8 +125,11 @@ class Process:
 
 
 class Probe:
-    def __init__(self, work):
+    def __init__(self, work, profile):
         self.work = work
+        self.profile_path = profile
+        self.profile = json.loads(profile.read_text())
+        upstream = f"https://github.com/ModernRelay/omnigraph/blob/{self.profile['source_commit']}/"
         self.server = None
         self.port = None
         self.tokens = {actor: secrets.token_hex(32) for actor in ("act-reader", "act-writer", "wrong")}
@@ -137,7 +140,7 @@ class Probe:
                         "bounds": {"log_bytes_per_stream": LIMIT, "response_bytes": LIMIT,
                                    "readiness_seconds": 45, "request_seconds": 15,
                                    "cli_seconds": 120, "shutdown_grace_seconds": GRACE},
-                        "sources": [UPSTREAM + path for path in (
+                        "sources": [upstream + path for path in (
                             "docs/user/clusters/index.md", "docs/user/clusters/config.md",
                             "docs/user/operations/server.md", "docs/user/operations/policy.md",
                             "docs/user/cli/targets.md", "openapi.json",
@@ -166,13 +169,14 @@ class Probe:
         return process
 
     def bootstrap(self):
-        profile = json.loads((ROOT / "qualification/omnigraph-profile.json").read_text())
-        require(profile["version"] == "0.14.0" and profile["source_commit"] == SOURCE,
-                "Unsupported native profile")
+        profile = validate_profile(self.profile_path, Path("/profile/source-build.json"))
         identities = {name: sha(Path("/native") / name) for name in ("omnigraph", "omnigraph-server")}
         self.check("native executable identities", all(profile["members"][k] == v for k, v in identities.items()))
         self.receipt["executables"] = identities
-        self.receipt["source_commit"] = SOURCE
+        self.receipt["source_commit"] = profile["source_commit"]
+        self.receipt["profile_sha256"] = sha(self.profile_path)
+        self.cli("version", ["version", "--json"])
+        self.check("Exact CLI version", json.loads((self.work / "version.stdout").read_text())["version"] == profile["version"])
         bundle = self.work / "bundle"
         bundle.mkdir()
         original = ROOT / profile["fixture_root"]
@@ -330,12 +334,13 @@ def interrupted(signum, frame):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--work", type=Path, required=True)
+    parser.add_argument("--profile", type=Path, default=ROOT / "qualification/omnigraph-profile.json")
     args = parser.parse_args()
     os.umask(0o077)
     work = args.work.absolute()
     require(work.parent.resolve().is_relative_to(Path("/evidence")), "Work must be beneath /evidence")
     work.mkdir(mode=0o700, exist_ok=False)
-    probe = Probe(work)
+    probe = Probe(work, args.profile)
     for number in (signal.SIGTERM, signal.SIGINT, signal.SIGALRM):
         signal.signal(number, interrupted)
     try:
