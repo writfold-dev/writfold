@@ -8,6 +8,7 @@ pub mod documents;
 pub mod frontmatter;
 mod line_range;
 pub mod material;
+pub mod splicery;
 mod unicode;
 mod unicode_data;
 

@@ -1,5 +1,6 @@
 use serde_json::{Value, json};
 use std::collections::{BTreeMap, BTreeSet};
+use std::path::Path;
 
 fn allowed(name: &str) -> Option<&'static [&'static str]> {
     Some(match name {
@@ -34,7 +35,7 @@ fn allowed(name: &str) -> Option<&'static [&'static str]> {
     })
 }
 
-pub fn check(metadata: &Value, diagnostics: &mut Vec<Value>) -> Result<(), String> {
+pub fn check(root: &Path, metadata: &Value, diagnostics: &mut Vec<Value>) -> Result<(), String> {
     let packages = metadata["packages"]
         .as_array()
         .ok_or("metadata packages missing")?;
@@ -56,6 +57,7 @@ pub fn check(metadata: &Value, diagnostics: &mut Vec<Value>) -> Result<(), Strin
         .iter()
         .filter_map(|node| node["id"].as_str().map(|id| (id, node)))
         .collect();
+    let splicery = admit_splicery(root, packages, diagnostics);
     for id in &local {
         let package = by_id
             .get(id)
@@ -79,7 +81,14 @@ pub fn check(metadata: &Value, diagnostics: &mut Vec<Value>) -> Result<(), Strin
             let target = dependency["name"]
                 .as_str()
                 .ok_or("dependency name missing")?;
-            if dependency["path"].is_string() && !permitted.contains(&target) {
+            let admitted = if crate::vendored::directory(target).is_some() {
+                splicery
+                    .as_ref()
+                    .is_some_and(|export| export.permits(name, dependency))
+            } else {
+                !dependency["path"].is_string() || permitted.contains(&target)
+            };
+            if !admitted {
                 issue(
                     diagnostics,
                     "architecture",
@@ -95,6 +104,47 @@ pub fn check(metadata: &Value, diagnostics: &mut Vec<Value>) -> Result<(), Strin
         walk(id, name, &by_id, &edges, &local, &mut seen, diagnostics)?;
     }
     Ok(())
+}
+
+fn admit_splicery(
+    root: &Path,
+    packages: &[Value],
+    diagnostics: &mut Vec<Value>,
+) -> Option<crate::vendored::SpliceryExport> {
+    let named = |value: &Value| {
+        value["name"]
+            .as_str()
+            .and_then(crate::vendored::directory)
+            .is_some()
+    };
+    let needed = packages.iter().any(|package| {
+        named(package)
+            || package["dependencies"]
+                .as_array()
+                .is_some_and(|deps| deps.iter().any(named))
+    });
+    if !needed {
+        return None;
+    }
+    match crate::vendored::SpliceryExport::admit(root) {
+        Ok(export) => {
+            for package in packages.iter().filter(|p| named(p)) {
+                if !export.matches_package(package) {
+                    issue(
+                        diagnostics,
+                        "architecture",
+                        "writfold-sources",
+                        "resolved Splicery package is outside its exact source export",
+                    );
+                }
+            }
+            Some(export)
+        }
+        Err(error) => {
+            issue(diagnostics, "architecture", "writfold-sources", &error);
+            None
+        }
+    }
 }
 
 fn walk<'a>(

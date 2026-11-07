@@ -1,10 +1,18 @@
 {
   "schema": "writfold-toolchain-smoke/1",
-  "description": "Runnable JSON-compatible YAML, parsed with the Python standard-library JSON parser. Actual pinned binaries only; component smoke is not full E2E, corpus grounding, effect authorization or release qualification.",
+  "description": "Pinned real-process regression campaign in JSON-compatible YAML (stdlib JSON parsing): transport sessions, exact local artifact handoff and adverse cases. This is not full service E2E, corpus grounding, effect authorization or release qualification.",
   "fixtures": {
     "original": "toolchain-smoke/original.weft",
     "expected_candidate": "toolchain-smoke/candidate.weft",
-    "recipe": "toolchain-smoke/negate-check.spl"
+    "recipe": "toolchain-smoke/negate-check.spl",
+    "original_crlf": "toolchain-smoke/original-crlf.weft",
+    "artifacts_source": "toolchain-smoke/artifacts-source.weft",
+    "artifacts_candidate": "toolchain-smoke/artifacts-candidate.weft",
+    "artifacts_forward": "toolchain-smoke/artifacts-forward.spl",
+    "artifacts_reverse": "toolchain-smoke/artifacts-reverse.spl",
+    "artifacts_missing": "toolchain-smoke/artifacts-missing.spl",
+    "artifacts_ambiguous": "toolchain-smoke/artifacts-ambiguous.spl",
+    "artifacts_malformed": "toolchain-smoke/artifacts-malformed.json"
   },
   "frozen_edit": {"lo": 192, "hi": 202, "original": "ready(\"x\")", "replacement": "not ready(\"x\")"},
   "cases": [
@@ -16,6 +24,10 @@
     {"id": "prove-candidate", "action": "prove", "source": "candidate", "save": "candidate-report", "exit_code": 1, "expect": {"schema": "weft.report/1", "kind": "assessment", "scope": "local-symbolic", "execution": "complete", "checks.0.result": "refuted", "review.profile": "weft.symbolic/1", "review.requested_context": "unresolved-sandbox", "review.requested_snapshot": "unresolved-release", "review.target.reference": "unresolved-plan", "review.target.resolution": "unresolved", "writfold_grounded": false, "effect_authority": false}},
     {"id": "reuse-identical", "action": "reuse", "report": "original-report", "source": "original", "exit_code": 0, "expect": {"schema": "weft.reuse/1", "scope": "local-report-scope-equality-only", "decision": "reusable", "differences": [], "writfold_grounded": false, "effect_authority": false}},
     {"id": "reuse-changed", "action": "reuse", "report": "original-report", "source": "candidate", "exit_code": 1, "expect": {"schema": "weft.reuse/1", "scope": "local-report-scope-equality-only", "decision": "refused", "differences.0.field": "source.sha256", "writfold_grounded": false, "effect_authority": false}},
+    {"id": "prove-original-crlf", "action": "prove", "source": "original_crlf", "exit_code": 1, "expect": {"schema": "weft.report/1", "kind": "assessment", "scope": "local-symbolic", "execution": "complete", "checks.0.result": "entailed", "review.profile": "weft.symbolic/1", "review.requested_context": "unresolved-sandbox", "review.requested_snapshot": "unresolved-release", "review.target.reference": "unresolved-plan", "review.target.resolution": "unresolved", "writfold_grounded": false, "effect_authority": false}},
+    {"id": "artifact-source-aba", "action": "artifact-workflow"},
+    {"id": "artifact-denied-previews", "action": "preview-refusal"},
+    {"id": "concurrent-control", "action": "concurrent-control"},
     {"id": "persistent-handoff", "action": "blocked", "status": "BLOCKED", "requires": ["owner-published data contract", "persistent citation resolution", "assessment and artifact retention receipts"], "reason": "writfold.agent/1 exposes initialize/shutdown only; local Weft report paths and candidate bytes are not persistent owner handoff. No invented data RPC is executed."},
     {"id": "authorized-worktree-effects", "action": "blocked", "status": "BLOCKED", "requires": ["owner-authorized worktree grant", "host kernel replay", "durable effect receipt", "Splicery SG08-SG14 host integration"], "reason": "Preview is read-only candidate computation; it does not authorize or apply native worktree effects."},
     {"id": "crash-unknown-reconciliation", "action": "blocked", "status": "BLOCKED", "requires": ["durable operation ledger", "Unknown outcome lookup", "crash recovery and reconciliation protocol"], "reason": "Transport shutdown and digest refusal do not establish effect recovery; no retry or reconciliation RPC is invented."},

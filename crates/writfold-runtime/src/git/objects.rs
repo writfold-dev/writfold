@@ -3,7 +3,6 @@ use crate::fs::RelativePath;
 use crate::process::{self, ProcessLimits};
 use sha2::{Digest, Sha256};
 use std::ffi::OsStr;
-use std::process::Command;
 use std::sync::atomic::AtomicBool;
 use std::time::Instant;
 use writfold_domain::{ByteCount, ContentDigest, GitObjectId};
@@ -118,7 +117,7 @@ pub(super) struct Session<'a, 'file> {
 }
 
 impl<'a, 'file> Session<'a, 'file> {
-    fn new(
+    pub(super) fn new(
         repository: &'a GitRepository,
         executable: &'a GitExecutable<'file>,
         budgets: GitBudgets,
@@ -136,6 +135,11 @@ impl<'a, 'file> Session<'a, 'file> {
             deadline,
             cancelled,
         })
+    }
+
+    pub(super) fn check_stop(&self) -> Result<(), GitError> {
+        process::check_stop(self.deadline, self.cancelled)?;
+        Ok(())
     }
 
     pub(super) fn object(
@@ -214,48 +218,13 @@ impl<'a, 'file> Session<'a, 'file> {
         Ok(())
     }
 
-    fn command(
+    pub(super) fn command(
         &self,
         args: &[&OsStr],
         input: &[u8],
         budgets: GitBudgets,
     ) -> Result<Vec<u8>, GitError> {
-        let mut command = Command::new(self.executable.path()?);
-        command.env_clear().current_dir(self.repository.path());
-        for (key, value) in [
-            ("PATH", ""),
-            ("HOME", "/nonexistent"),
-            ("XDG_CONFIG_HOME", "/nonexistent"),
-            ("LC_ALL", "C"),
-            ("GIT_CONFIG_NOSYSTEM", "1"),
-            ("GIT_CONFIG_SYSTEM", "/dev/null"),
-            ("GIT_CONFIG_GLOBAL", "/dev/null"),
-            ("GIT_NO_REPLACE_OBJECTS", "1"),
-            ("GIT_NO_LAZY_FETCH", "1"),
-            ("GIT_TERMINAL_PROMPT", "0"),
-            ("GIT_OPTIONAL_LOCKS", "0"),
-            ("GIT_ATTR_NOSYSTEM", "1"),
-            ("GIT_ALLOW_PROTOCOL", ""),
-        ] {
-            command.env(key, value);
-        }
-        command
-            .arg("--no-replace-objects")
-            .arg("--literal-pathspecs")
-            .arg("--git-dir")
-            .arg(self.repository.path());
-        for setting in [
-            "core.fsmonitor=false",
-            "core.hooksPath=/dev/null",
-            "maintenance.auto=false",
-            "gc.auto=0",
-            "core.pager=cat",
-            "diff.external=",
-            "protocol.allow=never",
-            "core.attributesFile=/dev/null",
-        ] {
-            command.arg("-c").arg(setting);
-        }
+        let mut command = super::command::command(self.executable, &self.repository.path())?;
         command.args(args);
         let output = process::run(
             &mut command,

@@ -4,7 +4,7 @@
 
 ## Public API
 
-All constructors retain private fields. Filesystem paths are distinct from public UTF-8 domain identifiers.
+Capability constructors retain private fields. Plain stage witnesses expose fields for lossless owner-side persistence; constructing one does not create a capability. Filesystem paths are distinct from public UTF-8 domain identifiers.
 
 | Type | Public operations |
 | --- | --- |
@@ -18,6 +18,9 @@ All constructors retain private fields. Filesystem paths are distinct from publi
 | `ReadResult` | `bytes() -> &[u8]`; `into_bytes() -> Vec<u8>`; `digest() -> &ContentDigest`; `identity() -> FileIdentity`; `extent() -> ReadExtent` |
 | `SyncedWrite` | `digest() -> &ContentDigest`; `bytes() -> usize`; `identity() -> FileIdentity` |
 | `FileIdentity` | `device() -> u64`; `inode() -> u64` |
+| `ReplacementObservation` | `preimage() -> &StageImage`; obtained only through `LockedFile::observe_replacement(ByteCount)` |
+| `StagedReplacement` | `witness() -> &StageWitness`; consuming `install() -> Result<InstalledStage, InstallError>` |
+| `StageWitness` | Exact parent/lock/stage identities, target name, preimage/candidate bytes, digests and full admitted POSIX metadata; untrusted when rehydrated |
 
 The two `compare_and_write` limits are **current-source read limit**, then **replacement write limit**. `None` expects an absent destination. `Some(digest)` requires a complete current read with exactly that content digest. All mutation methods borrow the guard mutably, preventing simultaneous mutations through one shared flock guard. `PinnedFile::try_lock` borrows both the pinned target and namespace for the guard's lifetime; it does not retain a borrow of the key.
 
@@ -49,7 +52,7 @@ These comparisons are **observations**, not a proof that an uncooperative writer
 
 Following plan/11 FR11, `ManagedLocks` admits one separately managed namespace. `open` opens an existing namespace without initializing it; `create` explicitly initializes one new directory. `LockKey` accepts 1–128 ASCII letters, digits, `_` and `-`. An entry is `<key>.lock` inside that namespace. The application supplies the stable logical-record key; it must not derive a different key just because an authored path or content revision changes.
 
-`PinnedFile::try_lock` is an explicit write-capability operation. It creates a missing lock entry with mode 0600 before umask, rejects symlinks/nonregular entries/multiply linked entries, and uses nonblocking exclusive `flock`. Busy returns `LockBusy` without a sleep/retry loop. Successful acquisition checks the retained and named lock inode, then synchronizes the lock file and namespace directory. Revalidation occurs before publication. Dropping the guard closes its owned descriptor; **it never unlinks the lock entry**.
+`PinnedFile::try_lock` is an explicit write-capability operation. It creates a missing lock entry with mode 0600 before umask, rejects symlinks/nonregular entries/multiply linked entries, and uses nonblocking exclusive `flock`. Busy returns `LockBusy` without a sleep/retry loop. Successful acquisition checks the retained and named lock inode, then synchronizes the lock file and namespace directory. Revalidation occurs before publication. Dropping the guard explicitly unlocks before closing its descriptor; **it never unlinks the lock entry**. This prevents an unrelated fork's inherited open-file description from extending the logical lock lifetime. Owned effects must already be quiescent before drop; unlock failure cannot be returned from `Drop`, and later acquisition still observes any remaining kernel lock as busy.
 
 All coordinating readers, writers and recovery code must use the same namespace inode and logical key. Two paths may intentionally share one logical-record lock. Conversely, choosing different keys for the same record is **not CAS**. Namespaces cannot be renamed/replaced/unlinked by another participant while clients may reopen them; namespace migration requires quiescence. Python's adjacent `.<leaf>.kctx-lock` is not used and does not interoperate automatically with this managed namespace. Mixed old/new writers require an explicit quiescent cutover, not an implicit alias.
 
@@ -77,6 +80,47 @@ A temporary cleanup first compares the named entry with the operation's still-op
 - `PublishedButDurabilityUnknown { digest, bytes, source }`: publication succeeded, but temporary cleanup or parent synchronization failed. New bytes became visible at the publication point; this does not promise they remain current after later writers. The caller must re-observe/recover rather than assume failure or blindly replay the old predecessor. There is no `SyncedWrite` in this error.
 
 A crash or killed caller can occur between any syscall and its response. An interrupted response is not evidence that publication failed. This adapter does not implement a recovery journal or a multi-file transaction.
+
+## Recoverable single-file staging
+
+`LockedFile::observe_replacement` captures complete bytes and exact device/inode,
+full mode, uid/gid, link count, length, signed mtime/ctime seconds and nanoseconds.
+`stage_replacement(&mut self, observation, content, limit)` rechecks that observation,
+creates and synchronizes a same-parent stage, and returns an exclusively borrowed,
+single-use handle. A second live mutator cannot share that guard. The target stays
+unchanged until consuming `install`; dropping the stage deliberately retains it.
+
+This profile admits only an existing, singly linked regular file in a private,
+run-owned worktree. It preserves ordinary permission bits and ownership. Symlinks,
+hardlinks, special mode bits, enumerable ACLs/xattrs and unsupported ownership
+configurations refuse. Administrator-installed hidden attributes are excluded by
+the profile assumption: unprivileged `listxattr` cannot prove their absence.
+Original timestamps are not preserved. Metadata observations do not establish
+hostile-writer or inode-reuse immunity.
+
+The owner must durably claim the original effect/intent before staging, persist
+the full witness before installation, recheck current authorization/resource
+guards, and retain the final receipt after file/directory synchronization.
+These filesystem APIs do not implement that ledger or authorize dispatch.
+`InstallError::NotInstalled` and `OutcomeUnknown` remain distinct; a missing reply
+never implies that installation failed.
+
+Under admitted reservation/quiescence and the same stable lock,
+`reconcile_stage(&mut self, witness, limit)` only observes the original attempt.
+It confirms the exact staged inode, candidate bytes and admitted metadata after
+reopening, allowing only rename-related ctime drift. Equal candidate bytes on a
+foreign inode remain `Unknown`. Exact preimage plus exact retained stage permits
+only that stage's cleanup and directory synchronization; a foreign stage is never
+swept. Reconciliation never installs or replays an effect.
+
+The component regression suite covers stale bytes/metadata, aliasing mutators,
+unsupported metadata, interruption before install, lost receipt, forged witness
+and equal-byte foreign-inode outcomes. A static-musl adapter consumer separately
+replayed the published Splicery recipe through the embedded kernel, matched the
+independent CLI candidate, installed into a fresh disposable directory, reopened
+and reconciled the exact inode, then refused equal-byte foreign-inode attribution.
+`owner-alpha-components-mgmh53f5/native-replay-001.json` retains that execution
+with an empty `PATH`; it is not an owner-service, crash-process or alpha pass.
 
 ## Required qualification and trust boundary
 

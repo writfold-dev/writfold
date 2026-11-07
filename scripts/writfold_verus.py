@@ -99,7 +99,8 @@ def copy_workspace(destination):
     destination.mkdir(mode=0o755)
     for name in ("Cargo.toml", "Cargo.lock", "rust-toolchain.toml"):
         shutil.copy2(ROOT / name, destination / name)
-    shutil.copytree(ROOT / "crates", destination / "crates")
+    for name in ("crates", "vendor"):
+        shutil.copytree(ROOT / name, destination / name)
     (destination / "qualification").mkdir(mode=0o755)
     shutil.copy2(ROOT / "qualification/trusted-boundaries.json",
                  destination / "qualification/trusted-boundaries.json")

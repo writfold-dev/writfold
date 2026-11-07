@@ -1,4 +1,4 @@
-//! Exact local immutable Git reads, not a worktree/HEAD or network backend.
+//! Exact local immutable Git reads and explicitly leased native publication.
 //!
 //! The caller admits an executable using its externally supplied profile digest
 //! (the maintained tool profile is `qualification/evaluation-profile.json`).
@@ -15,6 +15,13 @@
 //! Each lookup hashes the raw commit and every tree on the selected path; each
 //! blob read also hashes its raw bytes with the repository's SHA-1/SHA-256 format.
 //! No retained read creates timestamps, validation receipts or authority.
+//! Writer admission is separate: a private owner-controlled repository, permanent
+//! ManagedLocks namespace and cooperating writer discipline are required. New
+//! initialization is bare SHA-256 only; historical SHA-1 reads are unchanged.
+//! Blobs and prepared commits have permanent retention refs; only expected-old
+//! `refs/kctx/knowledge` CAS publishes. Unknown native outcomes require exact
+//! operation/history reconciliation, never blind retries or head-mismatch guesses.
+//! Native fsync observations cover process crashes, not a power-loss guarantee.
 //!
 //! The caller explicitly enables permanent process-wide subreaper supervision
 //! before executable admission. Each command owns a process group; termination
@@ -24,9 +31,17 @@
 //! reaping of the owned group and no descendants escaping their process group.
 //! Arbitrary hostile executables require a stronger sandbox, not this API.
 mod admission;
+mod command;
 mod error;
 mod objects;
+mod preparation;
 mod profile;
+mod publication;
+mod write_objects;
+mod writer;
+mod writer_profile;
+pub use preparation::{GitManifestEntry, GitPrepareInput, GitPrepared};
+pub use writer::{GitWriteError, GitWriter, GitWriterLease};
 
 mod traversal;
 pub use admission::{GitExecutable, GitRepository};

@@ -16,6 +16,7 @@ pub mod semantic;
 pub mod signatures;
 pub mod storage;
 pub mod storage_operation;
+pub mod worktree;
 
 pub use approval::{ApprovalDomain, OperationVariant};
 pub use canonical::canonical;

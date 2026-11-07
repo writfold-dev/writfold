@@ -53,9 +53,11 @@ The [Dolt approval boundary](docs/writfold/signed-operations.md#dolt-integration
 adds distinct canonical operation/signature domains and supplied-policy/realm
 checks, exercised through a static-musl consumer. It is a DINT02 prerequisite,
 not a native writer or publication/recovery completion. Runnable
-[toolchain smoke scenarios](fixtures/qualification/toolchain-smoke.yaml) cover
-the available Writfold/Weft control and Splicery/Weft artifact boundaries while
-keeping persistent grounding and authorized effects explicitly blocked.
+[toolchain regression scenarios](fixtures/qualification/toolchain-smoke.yaml) now
+exercise concurrent control sessions, exact UTF-8/CRLF Splicery-to-Weft handoff,
+stale-report refusal, reversible source-byte reuse and failed previews through
+real pinned executables. Twelve scenarios and eight coverage-admission tests
+passed; persistent grounding and authorized effects remain explicitly blocked.
 See [reproduction and exact scope](docs/writfold/shared-client-references.md#executed-three-tool-component-smoke).
 
 The revision-5 **E01–E12 mathematical calculus is discharged under its recorded
@@ -115,6 +117,13 @@ Start with [`AGENTS.md`](AGENTS.md) and the [25-stage handover](handovers/revisi
 
 The development-preview website is live at [writfold.dev](https://writfold.dev/), with HTTPS enforced, a public project guide and explicit planned-versus-implemented boundaries. The [website repository](https://github.com/writfold-dev/writfold-dev.github.io) publishes reviewed static commits through a manifest-checked Pages workflow. This website does not complete product stage P13 or advertise an installable Rust release. The Rust repository remains private.
 
+The published [Weft](https://writfold.dev/weft.html) and
+[Splicery](https://writfold.dev/splicery.html) guides now include executed,
+downloadable examples, accessible diagrams and static highlighting matching
+Strop's Dark/Paper/Paper Dark token palettes. Site commit
+`cc36161264733b967628abc45aa7fb4df7d0c22e` passed packaged browser checks and
+live content-hash verification; this remains website evidence, not alpha admission.
+
 ### Next work toward an alpha
 
 The earlier checkpoint is `7dedca3e30468330c6b6f10975b9d1863390bb44`;
@@ -127,14 +136,17 @@ design bodies. It has 428 kernel Verus obligations, 170 workspace tests,
 binds exact sources, tools and artifacts; none of these components passes
 the full release gate set.
 
-The latest storage-independent P14 component is the
-[canonical flat dependency lock](docs/writfold/wire-boundary.md#engineering-dependency-lock-schema-1):
-exact package/export references, typed edges and invocation-cycle refusal.
-It does not enable skill execution or bypass the native storage blocker.
+The storage-independent owner groundwork now includes the canonical dependency
+lock, distinct worktree byte descriptors, embedded pinned Splicery replay,
+native Git preparation/completed-ref CAS and recoverable single-file staging.
+These are [component boundaries](docs/writfold/shared-client-references.md#owner-side-components-not-available-services),
+not a durable EngineeringLedger, live grants, run/Worktrunk binding or write RPC.
 
-The immediate integration priority is the explicitly authorized
-[Dolt development profile](docs/writfold/dolt-integration.md), using disposable
-realms and its own native/typed/service evidence while Omnigraph remains blocked.
+The immediate backend direction is now the exact
+[Omnigraph PR #1235 source candidate](docs/writfold/omnigraph-foundation.md#executed-pr-1235-source-candidate-trial),
+not further Dolt-specific alpha expansion. Its scoped native campaign passes,
+including independent restore with original roots unavailable. Full WF24 and
+the Rust Omnigraph adapter remain open; the earlier Dolt profile is not fallback.
 The [Evidence Stack benchmark plan](docs/writfold/agent-integration-benchmarks.md)
 covers competent baselines, full model usage, repeated-session reconstruction,
 correctness and reproducible website reports. It contains no measured benefit
@@ -145,14 +157,12 @@ claim and does not authorize publication.
    all twenty selected semantic negatives have counterexamples. Nine positive
    baseline explorations still reached their deadlines; further justified
    state-space work is required, not smaller bounds or relabelled timeouts.
-2. Upstream accepted [Omnigraph #1233](https://github.com/ModernRelay/omnigraph/issues/1233)
-   as a size-L bug and took ownership of the RFC/code fix. Do not open a competing
-   PR or admit its prototype as a backend. Retain the **8 November 2026**
-   checkpoint and the authorized fork as a fallback if no usable supported
-   remedy is available. Any new artifact requires fresh package/runtime and
-   complete P01O/WF24 qualification; no path workaround or automatic runtime
-   fallback is adopted. The separate Dolt development profile is not an Omnigraph
-   remedy or release waiver, and no scheduled monitoring is implied.
+2. Continue exact-candidate Omnigraph qualification and the real Rust adapter.
+   The source-built PR #1235 trial is an authorized development unblocker, not
+   an upstream release, full WF24 pass or permission to skip native
+   ownership/cancellation, crash/uncertain-write, workload and formal bridges.
+   Prefer a supported upstream remedy before public alpha. Preserve the old
+   relocation failures; no path workaround or automatic fallback is adopted.
 3. After foundation admission, complete the dependent protocols, storage,
    authenticated publication/recovery, workflows, Scribes, CLI/RPC, views and
    migration stages in the [mandatory dependency order](handovers/revision-5/writfold/plan/08-execution-and-acceptance.md). P14–P19 extend identities/ledger, skills, effects, cross-repository changes, learning and exact dossiers before final P11–P13; numeric sorting is not execution order.

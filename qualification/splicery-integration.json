@@ -194,11 +194,36 @@
     ],
     "scope": "Actual offline preview-to-Weft artifact smoke only; no sibling source/qualification edits, proof-gate renewal or Writfold write admission."
   },
+  "component_regression_review": {
+    "status": "real_process_regressions_pass",
+    "evidence_index": "qualification/status.json#/toolchain_regression_admission",
+    "scope": "Exact UTF-8/CRLF candidate stdout consumed by fresh Weft processes, reversible preview, missing/ambiguous selector refusal and unchanged input bytes. No host kernel replay, native target writer, durable request-key ABA or SW1-SW5 admission.",
+    "effect_authority": false,
+    "runtime_admission": "not_run"
+  },
+  "owner_component_development": {
+    "status": "components_exercised_services_unavailable",
+    "byte_profile": "qualification/worktree-identity-profile.json",
+    "host_replay": "writfold_sources::splicery::replay",
+    "embedded_source_commit": "c696b6e3e60938c2b19081c38801e0d67ced8df2",
+    "embedded_source_artifact_sha256": "e3b17b937a916b5b65c47b4f2ab40445c51d63fafdff59413fff7813ce0f9995",
+    "source_boundary": "Exact in-tree export with complete byte/mode inventory and declared/resolved Cargo-path admission; no mutable sibling coupling.",
+    "native_components": "Git retained preparation/completed-ref CAS and exact-inode single-file staging/reconciliation, exercised in disposable native consumers.",
+    "evidence_index": "qualification/status.json#/owner_component_development",
+    "remaining": [
+      "Complete owner data/effect operation contract and real run/grant/Worktrunk binding.",
+      "Authoritative ledger/head CAS, durable claims, shared reservations and dispatch.",
+      "Composed crash/Unknown recovery, native/backend gates and installed-toolchain acceptance."
+    ],
+    "effect_authority": false,
+    "sg08": "not_qualified",
+    "production_edit_methods_advertised": []
+  },
   "qualification": {
     "package_integrity": "~/.local/share/writfold/evidence/stdio-development-20261105T183018Z-ba3a4818/splicery-handover-identity.json",
     "runtime_status": "not_run",
     "splicery_sources_modified": false,
     "production_edit_methods_advertised": [],
-    "storage_dependency": "Omnigraph P01O/WF24 remains blocked. The authorized disposable Dolt integration profile has separate DINT prerequisites; neither its native foundation nor the sibling offline preview closes authoritative ledger/native-effect requirements."
+    "storage_dependency": "The exact Omnigraph PR1235 source candidate passes scoped native campaigns as a development unblocker; full P01O/WF24 is not admitted. Dolt-specific alpha expansion is paused. Neither candidate smoke nor these owner components close ledger/native-effect requirements."
   }
 }

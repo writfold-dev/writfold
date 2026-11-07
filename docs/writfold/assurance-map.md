@@ -118,6 +118,29 @@ The [current evidence index](../../qualification/engineering-theorems.json) and
 bindings. All production V16–V21/M12–M16, native effects, cross-model bridges and
 full product WF31 require their own qualification.
 
+### Owner integration primitives: exercised, not effect admission
+
+The worktree byte contract adds separate nominal `wfwt1` descriptors without
+changing the sixteen engineering domains. Observed content owns its hash in the
+type; an unobserved value cannot carry one. Native device/inode identity is a
+distinct POSIX observation, not a repository/run/resource identifier.
+The schema and independent canonical vectors remain unchanged by that Rust API
+grouping.
+
+Embedded Splicery replay consumes the exact pinned source export, not a sibling
+checkout or an asserted candidate. Git preparation binds borrowed plan/predecessor/
+manifest material before completed-ref CAS. Native staged replacement holds an
+exclusive mutable lock borrow; reopening/reconciliation attributes only the exact
+original stage inode. These component APIs do not implement current grants,
+durable ledger claims, Worktrunk ownership or authorized RPC dispatch.
+
+The source snapshot
+`828c146a19eb4407d74e8aa56df7431f38aa12748a508687088bc68dbcd631a9`
+passed 365 workspace tests and 255 quality obligations with no skips. Native
+consumer receipts and retained failures are separately indexed; they are not a
+new V16/WF25/WF27, hardware-power-loss, full SG08 or alpha admission.
+
+
 ### Three hosts: executed correspondence, not a Rust proof
 
 The retained `conformance-002.json` receipt and its `conformance-report.json` record **334 scenarios**: 203 fixture/reviewed, 112 generated and 19 stateful, plus one version handshake, giving **335 responses per host**. Lean/Python, Python/Rust and Lean/Rust complete-response comparisons have zero recorded mismatches. The eleven killed mutants are **Python production-decision mutants**, not Rust proof calibration.

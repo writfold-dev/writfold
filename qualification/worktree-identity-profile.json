@@ -1,0 +1,83 @@
+{
+  "profile": "writfold-worktree/1",
+  "status": "component-byte-contract-not-runtime-authority",
+  "algorithm": "sha256",
+  "prefix": "ASCII(writfold-worktree/1/<kind>) || 0x00",
+  "public_identity": "wfwt1:<kind>:sha256:<64 lowercase hex>",
+  "preimage": "prefix || restricted-deterministic-CBOR([profile,algorithm,kind,payload-array])",
+  "json_bytes": "lowercase hex, exact bytes, no normalization; text exact UTF-8",
+  "cbor": "Existing writfold-wire engineering::cbor encoder. Arrays only; shortest signed/unsigned integers and lengths. JSON object order irrelevant; no omitted optional fields. Null distinct from empty.",
+  "payload_arrays": {
+    "recipe": [
+      "language_profile",
+      "source:bytes"
+    ],
+    "capture": [
+      "scope:[realm,run,repo,worktree,binding]",
+      "path:text",
+      "content:bytes",
+      "content_sha256:bytes32",
+      "length:uint",
+      "metadata_policy:text",
+      "metadata:[device,inode,mode,uid,gid,links,mtime:[seconds:i64,nanoseconds:u32],ctime:[seconds:i64,nanoseconds:u32]]"
+    ],
+    "candidate": [
+      "capture:public-id-text",
+      "content:bytes",
+      "content_sha256:bytes32",
+      "length:uint"
+    ],
+    "prepared-edit": [
+      "operation:text",
+      "recipe:public-id-text",
+      "capture:public-id-text",
+      "candidate:public-id-text",
+      "compiler:[profile,sha256:bytes32]",
+      "kernel:[profile,sha256:bytes32]",
+      "splices:[[start,end,replacement:bytes,origin_start,origin_end],...]",
+      "read_set:[[start,bytes],...]"
+    ],
+    "request-key": [
+      "principal",
+      "realm",
+      "run",
+      "opaque_key:bytes"
+    ],
+    "observation": [
+      "intent:engineering-public-id-text",
+      "stamp:engineering-public-id-text",
+      "prepared:public-id-text",
+      "outcome",
+      "content",
+      "durability",
+      "metadata",
+      "observed_sha256:bytes32-or-null"
+    ]
+  },
+  "schemas": {
+    "wire": "crates/writfold-wire/tests/fixtures/worktree/schema.json"
+  },
+  "vectors": {
+    "golden": "crates/writfold-wire/tests/fixtures/worktree/golden.json",
+    "adverse": "crates/writfold-wire/tests/fixtures/worktree/adverse.json",
+    "relations": "crates/writfold-wire/tests/fixtures/worktree/relations.json"
+  },
+  "semantic_constraints": [
+    "Labels limited to 4096 UTF-8 bytes (JSON Schema length alone is not sufficient); no Unicode control characters.",
+    "Scope uses existing root RealmId and RunId plus concrete worktree RepositoryId, WorktreeId and BindingRevision. RequestKey uses existing ActorId, RealmId and RunId. Scope references require exact ASCII token spelling [A-Za-z0-9][A-Za-z0-9_.:-]* bounded to 4096 bytes. ActorId retains its existing opaque grammar with this profile's label bounds. BindingRevision is not an ownership or request generation. Nominal conversion preserves existing golden bytes exactly.",
+    "Strict bounded RawJson rejects duplicate/unknown/missing keys, exponent/fraction integers, negative unsigned fields, invalid UTF-8 and trailing bytes. POSIX seconds alone accept signed i64 integers, excluding negative zero. Caller supplies Limits for both JSON and CBOR.",
+    "Capture literal POSIX-relative path has no empty/dot/dotdot segments or backslash. This is lexical containment only; host must enforce no symlink/escape race.",
+    "POSIX mode contains regular file type and permission bits only; links exactly one. Exact mtime and ctime each bind signed i64 seconds and nanoseconds in 0..999999999, without rounding. Same-byte timestamp changes alter capture identity. These observations do not prove absence of ABA or confer authority.",
+    "Raw content length and SHA256 must match retained bytes.",
+    "Splices preserve pinned Splicery normalized order: ascending original-byte offsets, start <= end, no overlap; equal boundaries allowed only when both targets have positive width. Each edit preserves exact replacement bytes and its recipe-origin start/end. No merging, deletion of empty edits or rejection of unchanged replacements. Empty batch is representable data, never permission to dispatch.",
+    "Read ranges nonempty individually, sorted and nonoverlapping (adjacency allowed), checked against exact original bytes; the explicit read-set array may be empty.",
+    "validate_prepared requires exact scope and recipe/capture/candidate references, recipe-origin bounds and byte derivation. Compiler/kernel artifact hashes are bindings only, not attestation or proof of recipe evaluation. No-change classification and host dispatch eligibility are separate from this descriptor.",
+    "Observation content unobserved iff hash null; confirmed requires candidate/durable/preserved; no-effect requires original/preserved. Other combinations remain untrusted typed data. validate_observation binds exact intent/stamp/prepared and checks original/candidate/other hash dimensions.",
+    "Stable request key includes authenticated principal, realm, run and opaque bytes only. Host authenticates principal separately.",
+    "RequestMapping separately binds key to Engineering EffectIntentDigest and nominal worktree::EffectId. EffectId is an exact ASCII token [A-Za-z0-9][A-Za-z0-9_.:-]{0,255}, not a content digest. Persist atomically insert-or-compare; no overwrite. Current head/grant/owner/resource generations belong to DispatchStampDigest.",
+    "Create/rename/remove rejected; content replacement only.",
+    "No existing 16-kind engineering registry changes and no SG08 digest reinterpretation."
+  ],
+  "proof_scope": "Runtime structural/byte-consistency checks only; no new Verus proof claimed. SHA256 collision resistance, truthful retained bytes/artifacts and host authenticated identity/native observations are assumptions. Decoding never creates effect authority or a trusted outcome.",
+  "verification": "Component domain/wire/runtime/source tests and real native consumers exercised; see qualification/status.json owner component evidence. No new Verus proof, owner-service admission or full SG08/WF25/WF27 pass."
+}

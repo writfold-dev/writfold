@@ -127,8 +127,8 @@ class Producer:
             "docker/Dockerfile.tools", "scripts/writfold_stdio.py",
             "scripts/writfold_stdio_process.py", "scripts/writfold_conformance_process.py",
             "scripts/writfold_agent_contract.py")]
-        paths += [path for path in (ROOT / "crates").rglob("*") if path.is_file()]
-        paths += [path for path in (ROOT / ".cargo").rglob("*") if path.is_file()]
+        for directory in ("crates", "vendor", ".cargo"):
+            paths += [path for path in (ROOT / directory).rglob("*") if path.is_file()]
         return manifest(paths)
 
     def bind(self):

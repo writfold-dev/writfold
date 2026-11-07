@@ -8,6 +8,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import shutil
 import tempfile
 import time
 import tomllib
@@ -21,6 +22,7 @@ class Producer:
         self.timeout = timeout
         self.checks: list[dict] = []
         self.fixtures: list[Path] = []
+        self.preserved_fixtures: set[Path] = set()
         self.env = dict(os.environ)
         self.env.setdefault("CARGO_TARGET_DIR", "/cache/target/quality")
         self.target = Path(self.env["CARGO_TARGET_DIR"]).resolve()
@@ -38,7 +40,10 @@ class Producer:
             for path in root.rglob("*"):
                 if path.is_symlink():
                     raise OSError(f"unexpected synthetic fixture symlink: {path}")
-                path.chmod(0o755 if path.is_dir() else 0o644)
+                if path.is_dir():
+                    path.chmod(0o755)
+                elif root not in self.preserved_fixtures:
+                    path.chmod(0o644)
         artifacts = []
         for path in sorted(self.evidence.rglob("*")):
             if path.is_file() and path.name != "obligations.json":
@@ -372,6 +377,55 @@ class Producer:
             if metadata:
                 self.inspect(f"calibration-tls-{package}", root, metadata, "tls")
 
+    def vendored_calibrations(self) -> None:
+        cases = ("control", "bytes", "rehashed", "extra-build", "missing",
+                 "mode", "commit", "mutable-path")
+        for case in cases:
+            root = self.fixture(f"splicery-export-{case}", "pub fn safe() {}", "writfold-sources")
+            self.preserved_fixtures.add(root)
+            package = root / "crates/writfold-sources"
+            package.mkdir(parents=True)
+            (root / "src").rename(package / "src")
+            exported = root / "vendor/splicery"
+            shutil.copytree(self.root / "vendor/splicery", exported)
+            provenance = exported / "provenance.json"
+            profile = json.loads(provenance.read_text())
+            entry = next(item for item in profile["files"]
+                         if item["path"].startswith("crates/splicery-domain/")
+                         and item["path"].endswith(".rs"))
+            selected = exported / entry["path"]
+            if case in ("bytes", "rehashed"):
+                body = selected.read_bytes() + b"\n// Changed source is not the pinned source.\n"
+                selected.write_bytes(body)
+                if case == "rehashed":
+                    entry["sha256"] = hashlib.sha256(body).hexdigest()
+                    entry["git_blob"] = hashlib.sha1(b"blob " + str(len(body)).encode() + b"\0" + body).hexdigest()
+                    profile["source_artifact_sha256"] = hashlib.sha256(json.dumps(
+                        profile["files"], sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+                    provenance.write_text(json.dumps(profile))
+            elif case == "extra-build":
+                (exported / "crates/splicery-domain/build.rs").write_text("fn main() {}\n")
+            elif case == "missing":
+                (exported / "LICENSE").unlink()
+            elif case == "mode":
+                selected.chmod(0o755)
+            elif case == "commit":
+                profile["commit"] = "0" * 40
+                provenance.write_text(json.dumps(profile))
+            if case == "mutable-path":
+                shutil.copytree(exported, root / "mutable-source")
+            dependency = "mutable-source" if case == "mutable-path" else "vendor/splicery"
+            (root / "Cargo.toml").write_text(
+                '[workspace]\nmembers=["crates/writfold-sources"]\n'
+                'exclude=["vendor/splicery","mutable-source"]\nresolver="3"\n')
+            (package / "Cargo.toml").write_text(
+                '[package]\nname="writfold-sources"\nversion="0.0.0"\nedition="2024"\n'
+                f'[dependencies]\nsplicery-domain={{path="../../{dependency}/crates/splicery-domain"}}\n')
+            metadata = self.metadata(f"calibration-splicery-{case}-metadata", root, False)
+            if metadata:
+                self.inspect(f"calibration-splicery-{case}", root, metadata,
+                             None if case == "control" else "architecture")
+
     def nominal_calibrations(self) -> None:
         domain = self.root / "crates/writfold-domain"
         pairs = [("wrong-id", "ObservationId", "ClaimId"),
@@ -458,6 +512,7 @@ class Producer:
             self.module_calibrations()
             self.trust_calibrations()
             self.graph_calibrations()
+            self.vendored_calibrations()
         else:
             self.record("checker-calibration", False, reason="xtask build failed; no calibration executed")
         self.nominal_calibrations()

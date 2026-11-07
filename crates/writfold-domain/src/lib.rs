@@ -40,6 +40,7 @@ pub mod storage;
 pub mod text;
 pub mod units;
 pub mod workflow;
+pub mod worktree;
 
 pub use admission::*;
 pub use authored::*;

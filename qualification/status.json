@@ -6,7 +6,149 @@
   "platform": "x86_64-unknown-linux-musl on Linux/WSL2",
   "qualification_scope": "local-only; enterprise endpoints and hardware power loss unqualified",
   "supplemental_evidence_index": "qualification/revision-5-progress.json",
-  "current_component_closure": "~/.local/share/writfold/evidence/revision-5-final-component-closure-001.json",
+  "historical_component_closure": "~/.local/share/writfold/evidence/revision-5-final-component-closure-001.json",
+  "owner_component_development": {
+    "status": "components_exercised_services_unavailable",
+    "scope": "Worktree byte contracts, pinned host replay, native Git CAS, native staging/reconciliation and exact source admission; not owner services, full SG08/WF25/WF27 or public alpha.",
+    "record": {
+      "path": "~/.local/share/writfold/evidence/owner-alpha-components-mgmh53f5/component-admission-final.json",
+      "sha256": "5387a38d89220408dceefdf673df76fabe4c94fba7618d4d800808504b5d8028",
+      "bytes": 563523
+    },
+    "source_tree_digest": "f62c9b9444969c063ed04c899fae6e22a79713aa10dc250399e9768b0dff655b",
+    "applicability": "Exact compiled inputs and producers match. The admission record enumerates later documentation/scope-index differences; no whole-tree or historical proof receipt is relabelled.",
+    "verification": {
+      "rust_tests": 365,
+      "quality_obligations": 255,
+      "selected_verus_checks": 258,
+      "selected_verus_mutant_families": 17,
+      "static_musl_native_consumers": 2,
+      "stdio_checks": 24,
+      "stdio_cases": 19,
+      "three_tool_passed": 12,
+      "three_tool_process_calls": 29,
+      "three_tool_blocked": 4
+    },
+    "proof_scope": "Prior selected domain/protocol guards only; no new worktree, Splicery kernel, native Git/filesystem or ledger refinement claim.",
+    "control_binary_sha256": "12fdaad21cb62f0d0371efd73a8febda38d0b13ba58e15c80079bf155502f65c",
+    "control_contract_sha256": "b673d10f7c14c73d8f5778cfb9b2e84a98a159f1553d5c008054402ee85e7be2",
+    "production_edit_methods_advertised": [],
+    "full_e2e_status": "BLOCKED",
+    "public_alpha_available": false,
+    "release_gates_passed": []
+  },
+  "omnigraph_source_candidate": {
+    "status": "scoped_native_smoke_pass",
+    "scope": "Exact PR1235 source build and native comparison/epochs/independent restore/relocation/companion smoke only; not WF24 or backend admission.",
+    "source_commit": "1a856292c569e214333ab16b1d1af4d0e2de4ac2",
+    "decision": "Dolt-specific alpha expansion paused; this source candidate is an isolated development unblocker. Prefer a supported upstream remedy before public alpha.",
+    "native_restore_scope": "Standalone graph roots only; managed-cluster adoption at a new location remains unsupported/unqualified.",
+    "build": {
+      "path": "~/.local/share/writfold/native/omnigraph/source-1235-u_eol09m/build-004.json",
+      "sha256": "b5b5d71369ed5f73b45b66459f9fd4237af02ddb07a8f0de09ee728e299424d9",
+      "bytes": 15542
+    },
+    "campaign": {
+      "path": "~/.local/share/writfold/native/omnigraph/source-1235-u_eol09m/campaign-002.json",
+      "sha256": "0ca07b03f2be6c8c8fd44523e1d2bf22c51caaa2a4e79f5bb2bc24632f39c13f",
+      "bytes": 1274237
+    },
+    "source_admission_regressions": {
+      "path": "~/.local/share/writfold/native/omnigraph/source-1235-u_eol09m/source-closure-tests.json",
+      "sha256": "5aab268325b8242ebc7040215c177368fadbe8b63e5ff4e8d2259cbf1a89bffa",
+      "bytes": 1200
+    },
+    "archive_sha256": "6c336006edec1952550e3a06859e656c502d07107c2bdc963f592d158e106506",
+    "independent_restore": {
+      "assertions_passed": 149,
+      "original_roots_unavailable": true,
+      "only_copied_backup_inputs_mounted": true
+    },
+    "relocation_cases": 7,
+    "historical_014_failure": "preserved_not_rerun",
+    "wf24": "not_run",
+    "production_backend_admitted": false
+  },
+  "website_language_guides": {
+    "status": "published_verified",
+    "scope": "Executed downloadable Weft/Splicery examples, Strop-matched static highlighting and accessible diagrams; not product qualification.",
+    "site_commit": "cc36161264733b967628abc45aa7fb4df7d0c22e",
+    "pages_run": "https://github.com/writfold-dev/writfold-dev.github.io/actions/runs/42374250196",
+    "record": {
+      "path": "~/.local/share/writfold/evidence/site-language-examples-4l1j97ns/publication.json",
+      "sha256": "684a474f849a575d0ae0fa5542abc0ef000d8aa37e11830b9c8c040f14bf7ae4",
+      "bytes": 1294
+    },
+    "browser_combinations": 45,
+    "live_content_files_matched": 13,
+    "public_alpha_available": false
+  },
+  "weft_license_adoption": {
+    "status": "exercised",
+    "scope": "Owner-approved MIT for Weft project-owned code/binaries; dependency terms and private repository visibility unchanged. No public binary release or renewed engine proof.",
+    "source_commit": "b2966185e50f06db625cff9cf52db99442565bd9",
+    "record": {
+      "path": "~/.local/share/writfold/evidence/weft-mit-adoption-oasqfib3/receipt-002.json",
+      "sha256": "cc0ff970c4ad2d611a566bddb1b72a6db0ba531be24d8af4fdc6fc7fe18e60f3",
+      "bytes": 8395
+    }
+  },
+  "toolchain_regression_admission": {
+    "status": "pass",
+    "scope": "Real pinned control sessions and local artifact end-to-end regression paths only; not persistent grounding, authorized effects, full WR/SW qualification, agent benchmarks or release.",
+    "scenarios": "fixtures/qualification/toolchain-smoke.yaml",
+    "profile": "qualification/toolchain-smoke-profile.json",
+    "reproduction": "docs/writfold/shared-client-references.md#expanded-real-process-regressions",
+    "record": {
+      "path": "~/.local/share/writfold/evidence/toolchain-regression-lde3m_kz/admission.json",
+      "sha256": "81d4f3d63ff2b6a797ad2c4b0df50e938262c88ffa7e0f4456530664ee6d1d31",
+      "bytes": 62079
+    },
+    "campaign": {
+      "path": "~/.local/share/writfold/evidence/toolchain-regression-lde3m_kz/campaign-001.json",
+      "sha256": "f2f3bec8b7d5954a751a4c1d229c13ec7bbbc6feb4b7b04d881b5af7b19efef2",
+      "bytes": 249940
+    },
+    "before_regressions": {
+      "path": "~/.local/share/writfold/evidence/toolchain-regression-lde3m_kz/before-regressions.json",
+      "sha256": "be999226524336b490c35d7c947c8129f83ae553648cfb0f28946524006bd5e7",
+      "bytes": 783
+    },
+    "after_empty_suite": {
+      "path": "~/.local/share/writfold/evidence/toolchain-regression-lde3m_kz/after-empty.json",
+      "sha256": "19d49b7d7a34a495e7a15f93fd282bfd6f6da65c880501e3d5a2a55d1082c799",
+      "bytes": 2640
+    },
+    "verification": {
+      "scenarios_passed": 12,
+      "actual_outer_processes": 29,
+      "coverage_admission_tests": 8,
+      "required_scenario_omissions_rejected": 16,
+      "blocked_scenarios": 4,
+      "unchanged_writfold_build_inputs": 378,
+      "local_markdown_links": 52
+    },
+    "observations": {
+      "sessions": "Two direct Writfold servers overlap after validated initialize responses; session-continuous shutdown succeeds. Separate real Weft clients pass correct pins, refuse wrong pins and establish a fresh session after refusal.",
+      "artifacts": "Exact UTF-8/CRLF Splicery stdout is consumed by fresh Weft processes. Three semantic outcomes remain distinct; same-path and restored-byte report reuse decisions follow source identity.",
+      "refusals": "Missing/ambiguous Splicery selectors emit no candidate; malformed Weft prior emits no reuse decision.",
+      "harness_repairs": "Empty suite now fails rather than passing zero commands. CRLF source oracle compares exact decoded bytes without newline normalization."
+    },
+    "applicability": "Admission record links unchanged campaign inputs and all 378 Writfold build/qualification hashes after documentation updates. Previously Compose-built binaries were reused; no Rust rebuild, sibling-source freshness claim or proof-gate renewal.",
+    "blocked": [
+      "Persistent citation/assessment/artifact handoff",
+      "Authorized worktree effects with host-kernel replay",
+      "Crash/Unknown reconciliation",
+      "Retained-evidence repeated-session benchmarks"
+    ],
+    "writfold_grounded": false,
+    "effect_authority": false,
+    "full_e2e": "blocked",
+    "sibling_sources_modified": false,
+    "release_gates_passed": [],
+    "omnigraph_wf24": "blocked_unchanged",
+    "next": "DINT02 authenticated candidate preparation, complete retained release closure and completed Git CAS/conflict/crash recovery; DINT03 data/ledger/effects before persistent grounding or authorized worktree writes."
+  },
   "dolt_approval_admission": {
     "status": "pass",
     "milestone": "DINT02 signed-input prerequisite only",

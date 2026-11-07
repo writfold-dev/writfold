@@ -15,6 +15,12 @@ compatibility evidence, not qualification of a new Rust adapter. No upstream
 remedy is claimed. Omnigraph remains the intended release backend under revision
 5; its foundation and dependent release gates remain blocked/open.
 
+**Current direction:** Tarek subsequently paused Dolt-specific alpha expansion
+in favor of an exact [Omnigraph source-candidate trial](omnigraph-foundation.md#executed-pr-1235-source-candidate-trial).
+That scoped build/restore campaign passes, but does not admit WF24 or a new
+shipping backend. The DINT evidence below retains its original scope; this
+document is not an instruction to build a second alpha writer.
+
 This supplement permits **separate disposable local integration realms** to use
 one deliberately selected Dolt backend, with profile-specific evidence. It does
 not change immutable handovers, activate deferred revision-9 policies or reduce
@@ -268,9 +274,10 @@ closure, completed Git CAS, conflict and lost-response/crash recovery remain
 open. The authorization value cannot perform IO, publish or turn a read pin into
 a completed release. No full V15/M11, WF10/WF11/WF14 or DINT02 pass is claimed.
 
-The separate [toolchain smoke scenarios](../../fixtures/qualification/toolchain-smoke.yaml)
-exercise currently available control and local artifact boundaries. They do not
-skip these publication prerequisites or enable a corpus/effect service.
+The separate [toolchain regression scenarios](../../fixtures/qualification/toolchain-smoke.yaml)
+exercise real concurrent control sessions, byte-exact local artifact handoff and
+adverse cases. [Their evidence and reproduction](shared-client-references.md#expanded-real-process-regressions)
+do not skip these publication prerequisites or enable a corpus/effect service.
 
 ## Work after native onboarding
 

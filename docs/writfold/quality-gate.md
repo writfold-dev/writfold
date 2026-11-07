@@ -23,7 +23,7 @@ Run it in the admitted, offline Compose `quality` service. Source may be mounted
 
 `/evidence/obligations.json` contains named required checks, statuses, an explicit empty skips list, and artifact SHA256 hashes. Standard output, standard error, command arguments, working directories, elapsed time, exit codes, checker reports and exact generated fixture bytes remain available. A missing executable, timeout, malformed output or unmet prerequisite fails a required obligation. The enclosing gate runner binds this evidence to source/tool/lock identities.
 
-The receipt lists freshly generated synthetic fixture roots. Before hashing, the producer makes only those roots and their directories traversable (`0755`) and their files readable (`0644`), including generated manifests, sources and lockfiles. Fixture symlinks fail closed. This permits host inspection even when the container runs as root under a restrictive umask. No product source permissions, real secret inputs or already-sealed attempts are changed.
+The receipt lists freshly generated synthetic fixture roots. Before hashing, the producer makes only those roots and their directories traversable (`0755`) and ordinary fixture files readable (`0644`). Exact source-export controls preserve their file modes so normalization cannot erase a mode-drift counterexample. Fixture symlinks fail closed in this producer; separate Rust tests exercise source-link refusal in disposable directories. No product source permissions, real secret inputs or already-sealed attempts are changed.
 
 ## Syntax ownership and budgets
 
@@ -57,6 +57,22 @@ Integration tests, examples and benches are development contexts for the syntax 
 ## Architecture and safety
 
 The crate dependency table follows `handover/plan/02-architecture.md`. Unknown workspace members require classification. Renamed, optional, build, dev and target dependencies are checked by Cargo package identity, not import spelling. Resolved edges are traversed from every workspace member. Product crates cannot depend on tooling. Domain/kernel/protocol use an exact admitted pure arithmetic/proof/compiler-support closure; a newly introduced external dependency requires classification rather than slipping past an IO-name denylist. OpenSSL/native-tls packages are rejected in the active graph and in direct declarations.
+
+The only new local third-party exception is the four pure Splicery libraries used
+by `writfold-sources`. Admission checks the exact in-tree source export at commit
+`c696b6e3e60938c2b19081c38801e0d67ced8df2`, artifact
+`e3b17b937a916b5b65c47b4f2ab40445c51d63fafdff59413fff7813ce0f9995`.
+The canonical manifest, complete regular-file inventory, modes and every byte
+digest must match; declared and resolved Cargo paths must use that export.
+Matching package names, a self-rehashed manifest or a mutable sibling path do
+not suffice. Other crates cannot gain this dependency by reusing its name.
+The export is not subjected to a misleading Writfold source-proof claim: its own
+qualification remains separate. This is not a general vendor/engine exemption.
+
+The exercised controls include valid admission, changed bytes, self-rehashed
+changes, an unlisted implicit build script, a missing declared file, executable
+mode drift, a false commit and a mutable-source substitution. File/directory
+symlink controls use the real admission implementation in the Rust suite.
 
 Pure production crates cannot import ambient filesystem/network/process/environment/clock/thread/IO APIs or emit stdio through macros. Aliased/grouped imports are inspected. Domain `Deserialize` derives, implementations and imports are rejected: untrusted bytes must enter through checked wire conversions. Untyped `serde_json::Value` is rejected in domain/kernel/protocol/app/store paths. Unsafe blocks/functions/traits/implementations/foreign boundaries and unsafe attributes fail; broad unsafe/panic lint allowances fail. Production panic, unwrap, expect, todo and unimplemented paths fail. No invariant exception is currently admitted.
 

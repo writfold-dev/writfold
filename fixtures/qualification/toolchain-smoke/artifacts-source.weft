@@ -1,0 +1,9 @@
+review artifacts {
+  context "unresolved-sandbox" at "unresolved-release";
+  profile "weft.symbolic/1";
+  target change = proposal "unresolved-plan";
+  assume premise: ready("café");
+  check positive: ready("café");
+  check negative: not ready("café");
+  check independent: other("雪");
+}

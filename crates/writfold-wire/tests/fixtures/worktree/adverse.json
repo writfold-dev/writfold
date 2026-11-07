@@ -1,0 +1,230 @@
+{
+  "vectors": [
+    {
+      "name": "wrong-kind",
+      "stage": "decode",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"capture\",\"id\":\"wfwt1:recipe:sha256:fea53ef816383f12634b72e7fb50db74241e365d92deefdb5cd999aac802b8db\",\"payload\":{\"language_profile\":\"weft-symbolic/1\",\"source\":\"7265706c61636520ceb1207769746820ceb20d0a\"}}"
+    },
+    {
+      "name": "wrong-algorithm",
+      "stage": "decode",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha512\",\"kind\":\"recipe\",\"id\":\"wfwt1:recipe:sha256:fea53ef816383f12634b72e7fb50db74241e365d92deefdb5cd999aac802b8db\",\"payload\":{\"language_profile\":\"weft-symbolic/1\",\"source\":\"7265706c61636520ceb1207769746820ceb20d0a\"}}"
+    },
+    {
+      "name": "omitted-source",
+      "stage": "decode",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"recipe\",\"id\":\"wfwt1:recipe:sha256:59d868aed27ff45b3741c7a6eab50646e071599d91b51d48989b38819b0b5649\",\"payload\":{\"language_profile\":\"weft-symbolic/1\"}}"
+    },
+    {
+      "name": "unknown-field",
+      "stage": "decode",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"recipe\",\"id\":\"wfwt1:recipe:sha256:fea53ef816383f12634b72e7fb50db74241e365d92deefdb5cd999aac802b8db\",\"payload\":{\"language_profile\":\"weft-symbolic/1\",\"source\":\"7265706c61636520ceb1207769746820ceb20d0a\",\"extra\":\"not allowed\"}}"
+    },
+    {
+      "name": "uppercase-hex",
+      "stage": "decode",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"recipe\",\"id\":\"wfwt1:recipe:sha256:fea53ef816383f12634b72e7fb50db74241e365d92deefdb5cd999aac802b8db\",\"payload\":{\"language_profile\":\"weft-symbolic/1\",\"source\":\"AA\"}}"
+    },
+    {
+      "name": "wrong-reference-kind",
+      "stage": "decode",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"candidate\",\"id\":\"wfwt1:candidate:sha256:9e35d68ac2f953b2b718aff5a8e95b6e10e2c504dca9bc3409fc47e87e2af1eb\",\"payload\":{\"capture\":\"wfwt1:recipe:sha256:fea53ef816383f12634b72e7fb50db74241e365d92deefdb5cd999aac802b8db\",\"content\":\"ceb20d0a\",\"content_sha256\":\"13a888e0e78a658ab385e6f71bc6503d1dfc20cc297a588ae0599a819d1b5b28\",\"length\":4}}"
+    },
+    {
+      "name": "candidate-hash-mismatch",
+      "stage": "decode",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"candidate\",\"id\":\"wfwt1:candidate:sha256:9e35d68ac2f953b2b718aff5a8e95b6e10e2c504dca9bc3409fc47e87e2af1eb\",\"payload\":{\"capture\":\"wfwt1:capture:sha256:cde0e050d1b1b627542f917a6a72d994c9bcdceaa4b826524317c184e6d85b76\",\"content\":\"00\",\"content_sha256\":\"13a888e0e78a658ab385e6f71bc6503d1dfc20cc297a588ae0599a819d1b5b28\",\"length\":4}}"
+    },
+    {
+      "name": "malformed-path-/tmp/a",
+      "stage": "decode",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"capture\",\"id\":\"wfwt1:capture:sha256:cde0e050d1b1b627542f917a6a72d994c9bcdceaa4b826524317c184e6d85b76\",\"payload\":{\"scope\":{\"realm\":\"realm-a\",\"run\":\"run-a\",\"repo\":\"repo-a\",\"worktree\":\"worktree-a\",\"binding\":\"binding-a\"},\"path\":\"/tmp/a\",\"content\":\"ceb10d0a\",\"content_sha256\":\"e44d74fd467a8e25324a9a861839e9283d40c4895aaa52ae761aaadefe7b8403\",\"length\":4,\"metadata_policy\":\"posix-regular-single-link/1\",\"metadata\":{\"device\":1,\"inode\":42,\"mode\":33188,\"uid\":1000,\"gid\":1000,\"links\":1,\"mtime\":{\"seconds\":-1,\"nanoseconds\":999999999},\"ctime\":{\"seconds\":1730000000,\"nanoseconds\":123456789}}}}"
+    },
+    {
+      "name": "malformed-path-../a",
+      "stage": "decode",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"capture\",\"id\":\"wfwt1:capture:sha256:cde0e050d1b1b627542f917a6a72d994c9bcdceaa4b826524317c184e6d85b76\",\"payload\":{\"scope\":{\"realm\":\"realm-a\",\"run\":\"run-a\",\"repo\":\"repo-a\",\"worktree\":\"worktree-a\",\"binding\":\"binding-a\"},\"path\":\"../a\",\"content\":\"ceb10d0a\",\"content_sha256\":\"e44d74fd467a8e25324a9a861839e9283d40c4895aaa52ae761aaadefe7b8403\",\"length\":4,\"metadata_policy\":\"posix-regular-single-link/1\",\"metadata\":{\"device\":1,\"inode\":42,\"mode\":33188,\"uid\":1000,\"gid\":1000,\"links\":1,\"mtime\":{\"seconds\":-1,\"nanoseconds\":999999999},\"ctime\":{\"seconds\":1730000000,\"nanoseconds\":123456789}}}}"
+    },
+    {
+      "name": "malformed-path-a/../b",
+      "stage": "decode",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"capture\",\"id\":\"wfwt1:capture:sha256:cde0e050d1b1b627542f917a6a72d994c9bcdceaa4b826524317c184e6d85b76\",\"payload\":{\"scope\":{\"realm\":\"realm-a\",\"run\":\"run-a\",\"repo\":\"repo-a\",\"worktree\":\"worktree-a\",\"binding\":\"binding-a\"},\"path\":\"a/../b\",\"content\":\"ceb10d0a\",\"content_sha256\":\"e44d74fd467a8e25324a9a861839e9283d40c4895aaa52ae761aaadefe7b8403\",\"length\":4,\"metadata_policy\":\"posix-regular-single-link/1\",\"metadata\":{\"device\":1,\"inode\":42,\"mode\":33188,\"uid\":1000,\"gid\":1000,\"links\":1,\"mtime\":{\"seconds\":-1,\"nanoseconds\":999999999},\"ctime\":{\"seconds\":1730000000,\"nanoseconds\":123456789}}}}"
+    },
+    {
+      "name": "malformed-path-a//b",
+      "stage": "decode",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"capture\",\"id\":\"wfwt1:capture:sha256:cde0e050d1b1b627542f917a6a72d994c9bcdceaa4b826524317c184e6d85b76\",\"payload\":{\"scope\":{\"realm\":\"realm-a\",\"run\":\"run-a\",\"repo\":\"repo-a\",\"worktree\":\"worktree-a\",\"binding\":\"binding-a\"},\"path\":\"a//b\",\"content\":\"ceb10d0a\",\"content_sha256\":\"e44d74fd467a8e25324a9a861839e9283d40c4895aaa52ae761aaadefe7b8403\",\"length\":4,\"metadata_policy\":\"posix-regular-single-link/1\",\"metadata\":{\"device\":1,\"inode\":42,\"mode\":33188,\"uid\":1000,\"gid\":1000,\"links\":1,\"mtime\":{\"seconds\":-1,\"nanoseconds\":999999999},\"ctime\":{\"seconds\":1730000000,\"nanoseconds\":123456789}}}}"
+    },
+    {
+      "name": "malformed-path-./a",
+      "stage": "decode",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"capture\",\"id\":\"wfwt1:capture:sha256:cde0e050d1b1b627542f917a6a72d994c9bcdceaa4b826524317c184e6d85b76\",\"payload\":{\"scope\":{\"realm\":\"realm-a\",\"run\":\"run-a\",\"repo\":\"repo-a\",\"worktree\":\"worktree-a\",\"binding\":\"binding-a\"},\"path\":\"./a\",\"content\":\"ceb10d0a\",\"content_sha256\":\"e44d74fd467a8e25324a9a861839e9283d40c4895aaa52ae761aaadefe7b8403\",\"length\":4,\"metadata_policy\":\"posix-regular-single-link/1\",\"metadata\":{\"device\":1,\"inode\":42,\"mode\":33188,\"uid\":1000,\"gid\":1000,\"links\":1,\"mtime\":{\"seconds\":-1,\"nanoseconds\":999999999},\"ctime\":{\"seconds\":1730000000,\"nanoseconds\":123456789}}}}"
+    },
+    {
+      "name": "malformed-path-a/",
+      "stage": "decode",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"capture\",\"id\":\"wfwt1:capture:sha256:cde0e050d1b1b627542f917a6a72d994c9bcdceaa4b826524317c184e6d85b76\",\"payload\":{\"scope\":{\"realm\":\"realm-a\",\"run\":\"run-a\",\"repo\":\"repo-a\",\"worktree\":\"worktree-a\",\"binding\":\"binding-a\"},\"path\":\"a/\",\"content\":\"ceb10d0a\",\"content_sha256\":\"e44d74fd467a8e25324a9a861839e9283d40c4895aaa52ae761aaadefe7b8403\",\"length\":4,\"metadata_policy\":\"posix-regular-single-link/1\",\"metadata\":{\"device\":1,\"inode\":42,\"mode\":33188,\"uid\":1000,\"gid\":1000,\"links\":1,\"mtime\":{\"seconds\":-1,\"nanoseconds\":999999999},\"ctime\":{\"seconds\":1730000000,\"nanoseconds\":123456789}}}}"
+    },
+    {
+      "name": "malformed-path-a\\b",
+      "stage": "decode",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"capture\",\"id\":\"wfwt1:capture:sha256:cde0e050d1b1b627542f917a6a72d994c9bcdceaa4b826524317c184e6d85b76\",\"payload\":{\"scope\":{\"realm\":\"realm-a\",\"run\":\"run-a\",\"repo\":\"repo-a\",\"worktree\":\"worktree-a\",\"binding\":\"binding-a\"},\"path\":\"a\\\\b\",\"content\":\"ceb10d0a\",\"content_sha256\":\"e44d74fd467a8e25324a9a861839e9283d40c4895aaa52ae761aaadefe7b8403\",\"length\":4,\"metadata_policy\":\"posix-regular-single-link/1\",\"metadata\":{\"device\":1,\"inode\":42,\"mode\":33188,\"uid\":1000,\"gid\":1000,\"links\":1,\"mtime\":{\"seconds\":-1,\"nanoseconds\":999999999},\"ctime\":{\"seconds\":1730000000,\"nanoseconds\":123456789}}}}"
+    },
+    {
+      "name": "refuse-create",
+      "stage": "decode",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"prepared-edit\",\"id\":\"wfwt1:prepared-edit:sha256:934bb7f96553818229135e57e840b9576c7fa8f35a9af586dfc5fcbea479c230\",\"payload\":{\"operation\":\"create\",\"recipe\":\"wfwt1:recipe:sha256:fea53ef816383f12634b72e7fb50db74241e365d92deefdb5cd999aac802b8db\",\"capture\":\"wfwt1:capture:sha256:cde0e050d1b1b627542f917a6a72d994c9bcdceaa4b826524317c184e6d85b76\",\"candidate\":\"wfwt1:candidate:sha256:9e35d68ac2f953b2b718aff5a8e95b6e10e2c504dca9bc3409fc47e87e2af1eb\",\"compiler\":{\"profile\":\"weft-symbolic/1\",\"sha256\":\"ec6b898f7679a776ec32026bce300580800ffacb7400728a162fa032a46cb0cd\"},\"kernel\":{\"profile\":\"splicery-component/1\",\"sha256\":\"6ecbfbb7ee7d69187380281297f7034b3d0038ec4b2c018905fbca737c66aca2\"},\"splices\":[{\"start\":0,\"end\":2,\"replacement\":\"ceb2\",\"origin\":{\"start\":0,\"end\":20}}],\"read_set\":[{\"start\":0,\"bytes\":\"ceb10d0a\"}]}}"
+    },
+    {
+      "name": "refuse-rename",
+      "stage": "decode",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"prepared-edit\",\"id\":\"wfwt1:prepared-edit:sha256:934bb7f96553818229135e57e840b9576c7fa8f35a9af586dfc5fcbea479c230\",\"payload\":{\"operation\":\"rename\",\"recipe\":\"wfwt1:recipe:sha256:fea53ef816383f12634b72e7fb50db74241e365d92deefdb5cd999aac802b8db\",\"capture\":\"wfwt1:capture:sha256:cde0e050d1b1b627542f917a6a72d994c9bcdceaa4b826524317c184e6d85b76\",\"candidate\":\"wfwt1:candidate:sha256:9e35d68ac2f953b2b718aff5a8e95b6e10e2c504dca9bc3409fc47e87e2af1eb\",\"compiler\":{\"profile\":\"weft-symbolic/1\",\"sha256\":\"ec6b898f7679a776ec32026bce300580800ffacb7400728a162fa032a46cb0cd\"},\"kernel\":{\"profile\":\"splicery-component/1\",\"sha256\":\"6ecbfbb7ee7d69187380281297f7034b3d0038ec4b2c018905fbca737c66aca2\"},\"splices\":[{\"start\":0,\"end\":2,\"replacement\":\"ceb2\",\"origin\":{\"start\":0,\"end\":20}}],\"read_set\":[{\"start\":0,\"bytes\":\"ceb10d0a\"}]}}"
+    },
+    {
+      "name": "refuse-remove",
+      "stage": "decode",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"prepared-edit\",\"id\":\"wfwt1:prepared-edit:sha256:934bb7f96553818229135e57e840b9576c7fa8f35a9af586dfc5fcbea479c230\",\"payload\":{\"operation\":\"remove\",\"recipe\":\"wfwt1:recipe:sha256:fea53ef816383f12634b72e7fb50db74241e365d92deefdb5cd999aac802b8db\",\"capture\":\"wfwt1:capture:sha256:cde0e050d1b1b627542f917a6a72d994c9bcdceaa4b826524317c184e6d85b76\",\"candidate\":\"wfwt1:candidate:sha256:9e35d68ac2f953b2b718aff5a8e95b6e10e2c504dca9bc3409fc47e87e2af1eb\",\"compiler\":{\"profile\":\"weft-symbolic/1\",\"sha256\":\"ec6b898f7679a776ec32026bce300580800ffacb7400728a162fa032a46cb0cd\"},\"kernel\":{\"profile\":\"splicery-component/1\",\"sha256\":\"6ecbfbb7ee7d69187380281297f7034b3d0038ec4b2c018905fbca737c66aca2\"},\"splices\":[{\"start\":0,\"end\":2,\"replacement\":\"ceb2\",\"origin\":{\"start\":0,\"end\":20}}],\"read_set\":[{\"start\":0,\"bytes\":\"ceb10d0a\"}]}}"
+    },
+    {
+      "name": "reversed-selector",
+      "stage": "decode",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"prepared-edit\",\"id\":\"wfwt1:prepared-edit:sha256:934bb7f96553818229135e57e840b9576c7fa8f35a9af586dfc5fcbea479c230\",\"payload\":{\"operation\":\"replace-content\",\"recipe\":\"wfwt1:recipe:sha256:fea53ef816383f12634b72e7fb50db74241e365d92deefdb5cd999aac802b8db\",\"capture\":\"wfwt1:capture:sha256:cde0e050d1b1b627542f917a6a72d994c9bcdceaa4b826524317c184e6d85b76\",\"candidate\":\"wfwt1:candidate:sha256:9e35d68ac2f953b2b718aff5a8e95b6e10e2c504dca9bc3409fc47e87e2af1eb\",\"compiler\":{\"profile\":\"weft-symbolic/1\",\"sha256\":\"ec6b898f7679a776ec32026bce300580800ffacb7400728a162fa032a46cb0cd\"},\"kernel\":{\"profile\":\"splicery-component/1\",\"sha256\":\"6ecbfbb7ee7d69187380281297f7034b3d0038ec4b2c018905fbca737c66aca2\"},\"splices\":[{\"start\":3,\"end\":1,\"replacement\":\"ceb2\",\"origin\":{\"start\":0,\"end\":20}}],\"read_set\":[{\"start\":0,\"bytes\":\"ceb10d0a\"}]}}"
+    },
+    {
+      "name": "equal-boundary-insertion-conflict",
+      "stage": "decode",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"prepared-edit\",\"id\":\"wfwt1:prepared-edit:sha256:934bb7f96553818229135e57e840b9576c7fa8f35a9af586dfc5fcbea479c230\",\"payload\":{\"operation\":\"replace-content\",\"recipe\":\"wfwt1:recipe:sha256:fea53ef816383f12634b72e7fb50db74241e365d92deefdb5cd999aac802b8db\",\"capture\":\"wfwt1:capture:sha256:cde0e050d1b1b627542f917a6a72d994c9bcdceaa4b826524317c184e6d85b76\",\"candidate\":\"wfwt1:candidate:sha256:9e35d68ac2f953b2b718aff5a8e95b6e10e2c504dca9bc3409fc47e87e2af1eb\",\"compiler\":{\"profile\":\"weft-symbolic/1\",\"sha256\":\"ec6b898f7679a776ec32026bce300580800ffacb7400728a162fa032a46cb0cd\"},\"kernel\":{\"profile\":\"splicery-component/1\",\"sha256\":\"6ecbfbb7ee7d69187380281297f7034b3d0038ec4b2c018905fbca737c66aca2\"},\"splices\":[{\"start\":0,\"end\":2,\"replacement\":\"ceb2\",\"origin\":{\"start\":0,\"end\":20}},{\"start\":2,\"end\":2,\"replacement\":\"00\",\"origin\":{\"start\":0,\"end\":1}}],\"read_set\":[{\"start\":0,\"bytes\":\"ceb10d0a\"}]}}"
+    },
+    {
+      "name": "omitted-origin",
+      "stage": "decode",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"prepared-edit\",\"id\":\"wfwt1:prepared-edit:sha256:934bb7f96553818229135e57e840b9576c7fa8f35a9af586dfc5fcbea479c230\",\"payload\":{\"operation\":\"replace-content\",\"recipe\":\"wfwt1:recipe:sha256:fea53ef816383f12634b72e7fb50db74241e365d92deefdb5cd999aac802b8db\",\"capture\":\"wfwt1:capture:sha256:cde0e050d1b1b627542f917a6a72d994c9bcdceaa4b826524317c184e6d85b76\",\"candidate\":\"wfwt1:candidate:sha256:9e35d68ac2f953b2b718aff5a8e95b6e10e2c504dca9bc3409fc47e87e2af1eb\",\"compiler\":{\"profile\":\"weft-symbolic/1\",\"sha256\":\"ec6b898f7679a776ec32026bce300580800ffacb7400728a162fa032a46cb0cd\"},\"kernel\":{\"profile\":\"splicery-component/1\",\"sha256\":\"6ecbfbb7ee7d69187380281297f7034b3d0038ec4b2c018905fbca737c66aca2\"},\"splices\":[{\"start\":0,\"end\":2,\"replacement\":\"ceb2\"}],\"read_set\":[{\"start\":0,\"bytes\":\"ceb10d0a\"}]}}"
+    },
+    {
+      "name": "reversed-origin",
+      "stage": "decode",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"prepared-edit\",\"id\":\"wfwt1:prepared-edit:sha256:934bb7f96553818229135e57e840b9576c7fa8f35a9af586dfc5fcbea479c230\",\"payload\":{\"operation\":\"replace-content\",\"recipe\":\"wfwt1:recipe:sha256:fea53ef816383f12634b72e7fb50db74241e365d92deefdb5cd999aac802b8db\",\"capture\":\"wfwt1:capture:sha256:cde0e050d1b1b627542f917a6a72d994c9bcdceaa4b826524317c184e6d85b76\",\"candidate\":\"wfwt1:candidate:sha256:9e35d68ac2f953b2b718aff5a8e95b6e10e2c504dca9bc3409fc47e87e2af1eb\",\"compiler\":{\"profile\":\"weft-symbolic/1\",\"sha256\":\"ec6b898f7679a776ec32026bce300580800ffacb7400728a162fa032a46cb0cd\"},\"kernel\":{\"profile\":\"splicery-component/1\",\"sha256\":\"6ecbfbb7ee7d69187380281297f7034b3d0038ec4b2c018905fbca737c66aca2\"},\"splices\":[{\"start\":0,\"end\":2,\"replacement\":\"ceb2\",\"origin\":{\"start\":3,\"end\":1}}],\"read_set\":[{\"start\":0,\"bytes\":\"ceb10d0a\"}]}}"
+    },
+    {
+      "name": "omitted-observation-hash",
+      "stage": "decode",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"observation\",\"id\":\"wfwt1:observation:sha256:aae9f7db52d10363434f19fb4821d0c9acd196e4c1bac833343059ff44ac3c12\",\"payload\":{\"intent\":\"wf1:effect-intent:sha256:282bcbc3f0a34a8a4ac6f00c276fcf66cf3757a3332e83d92208e5079af46922\",\"stamp\":\"wf1:dispatch-stamp:sha256:e0afcdbf6ad4adf566c572d7f7c34d4dfb85e5122bba750d6a3a5842f915d39b\",\"prepared\":\"wfwt1:prepared-edit:sha256:934bb7f96553818229135e57e840b9576c7fa8f35a9af586dfc5fcbea479c230\",\"outcome\":\"unknown\",\"content\":\"unobserved\",\"durability\":\"unknown\",\"metadata\":\"unobserved\"}}"
+    },
+    {
+      "name": "multi-link",
+      "stage": "decode",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"capture\",\"id\":\"wfwt1:capture:sha256:cde0e050d1b1b627542f917a6a72d994c9bcdceaa4b826524317c184e6d85b76\",\"payload\":{\"scope\":{\"realm\":\"realm-a\",\"run\":\"run-a\",\"repo\":\"repo-a\",\"worktree\":\"worktree-a\",\"binding\":\"binding-a\"},\"path\":\"src/α.txt\",\"content\":\"ceb10d0a\",\"content_sha256\":\"e44d74fd467a8e25324a9a861839e9283d40c4895aaa52ae761aaadefe7b8403\",\"length\":4,\"metadata_policy\":\"posix-regular-single-link/1\",\"metadata\":{\"device\":1,\"inode\":42,\"mode\":33188,\"uid\":1000,\"gid\":1000,\"links\":2,\"mtime\":{\"seconds\":-1,\"nanoseconds\":999999999},\"ctime\":{\"seconds\":1730000000,\"nanoseconds\":123456789}}}}"
+    },
+    {
+      "name": "symlink-mode",
+      "stage": "decode",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"capture\",\"id\":\"wfwt1:capture:sha256:cde0e050d1b1b627542f917a6a72d994c9bcdceaa4b826524317c184e6d85b76\",\"payload\":{\"scope\":{\"realm\":\"realm-a\",\"run\":\"run-a\",\"repo\":\"repo-a\",\"worktree\":\"worktree-a\",\"binding\":\"binding-a\"},\"path\":\"src/α.txt\",\"content\":\"ceb10d0a\",\"content_sha256\":\"e44d74fd467a8e25324a9a861839e9283d40c4895aaa52ae761aaadefe7b8403\",\"length\":4,\"metadata_policy\":\"posix-regular-single-link/1\",\"metadata\":{\"device\":1,\"inode\":42,\"mode\":41471,\"uid\":1000,\"gid\":1000,\"links\":1,\"mtime\":{\"seconds\":-1,\"nanoseconds\":999999999},\"ctime\":{\"seconds\":1730000000,\"nanoseconds\":123456789}}}}"
+    },
+    {
+      "name": "omitted-mtime",
+      "stage": "decode",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"capture\",\"id\":\"wfwt1:capture:sha256:cde0e050d1b1b627542f917a6a72d994c9bcdceaa4b826524317c184e6d85b76\",\"payload\":{\"scope\":{\"realm\":\"realm-a\",\"run\":\"run-a\",\"repo\":\"repo-a\",\"worktree\":\"worktree-a\",\"binding\":\"binding-a\"},\"path\":\"src/α.txt\",\"content\":\"ceb10d0a\",\"content_sha256\":\"e44d74fd467a8e25324a9a861839e9283d40c4895aaa52ae761aaadefe7b8403\",\"length\":4,\"metadata_policy\":\"posix-regular-single-link/1\",\"metadata\":{\"device\":1,\"inode\":42,\"mode\":33188,\"uid\":1000,\"gid\":1000,\"links\":1,\"ctime\":{\"seconds\":1730000000,\"nanoseconds\":123456789}}}}"
+    },
+    {
+      "name": "mtime-nanosecond-overflow",
+      "stage": "decode",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"capture\",\"id\":\"wfwt1:capture:sha256:cde0e050d1b1b627542f917a6a72d994c9bcdceaa4b826524317c184e6d85b76\",\"payload\":{\"scope\":{\"realm\":\"realm-a\",\"run\":\"run-a\",\"repo\":\"repo-a\",\"worktree\":\"worktree-a\",\"binding\":\"binding-a\"},\"path\":\"src/α.txt\",\"content\":\"ceb10d0a\",\"content_sha256\":\"e44d74fd467a8e25324a9a861839e9283d40c4895aaa52ae761aaadefe7b8403\",\"length\":4,\"metadata_policy\":\"posix-regular-single-link/1\",\"metadata\":{\"device\":1,\"inode\":42,\"mode\":33188,\"uid\":1000,\"gid\":1000,\"links\":1,\"mtime\":{\"seconds\":-1,\"nanoseconds\":1000000000},\"ctime\":{\"seconds\":1730000000,\"nanoseconds\":123456789}}}}"
+    },
+    {
+      "name": "mtime-negative-nanoseconds",
+      "stage": "decode",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"capture\",\"id\":\"wfwt1:capture:sha256:cde0e050d1b1b627542f917a6a72d994c9bcdceaa4b826524317c184e6d85b76\",\"payload\":{\"scope\":{\"realm\":\"realm-a\",\"run\":\"run-a\",\"repo\":\"repo-a\",\"worktree\":\"worktree-a\",\"binding\":\"binding-a\"},\"path\":\"src/α.txt\",\"content\":\"ceb10d0a\",\"content_sha256\":\"e44d74fd467a8e25324a9a861839e9283d40c4895aaa52ae761aaadefe7b8403\",\"length\":4,\"metadata_policy\":\"posix-regular-single-link/1\",\"metadata\":{\"device\":1,\"inode\":42,\"mode\":33188,\"uid\":1000,\"gid\":1000,\"links\":1,\"mtime\":{\"seconds\":-1,\"nanoseconds\":-1},\"ctime\":{\"seconds\":1730000000,\"nanoseconds\":123456789}}}}"
+    },
+    {
+      "name": "mtime-seconds-overflow",
+      "stage": "decode",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"capture\",\"id\":\"wfwt1:capture:sha256:cde0e050d1b1b627542f917a6a72d994c9bcdceaa4b826524317c184e6d85b76\",\"payload\":{\"scope\":{\"realm\":\"realm-a\",\"run\":\"run-a\",\"repo\":\"repo-a\",\"worktree\":\"worktree-a\",\"binding\":\"binding-a\"},\"path\":\"src/α.txt\",\"content\":\"ceb10d0a\",\"content_sha256\":\"e44d74fd467a8e25324a9a861839e9283d40c4895aaa52ae761aaadefe7b8403\",\"length\":4,\"metadata_policy\":\"posix-regular-single-link/1\",\"metadata\":{\"device\":1,\"inode\":42,\"mode\":33188,\"uid\":1000,\"gid\":1000,\"links\":1,\"mtime\":{\"seconds\":9223372036854775808,\"nanoseconds\":999999999},\"ctime\":{\"seconds\":1730000000,\"nanoseconds\":123456789}}}}"
+    },
+    {
+      "name": "mtime-fractional-seconds",
+      "stage": "decode",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"capture\",\"id\":\"wfwt1:capture:sha256:cde0e050d1b1b627542f917a6a72d994c9bcdceaa4b826524317c184e6d85b76\",\"payload\":{\"scope\":{\"realm\":\"realm-a\",\"run\":\"run-a\",\"repo\":\"repo-a\",\"worktree\":\"worktree-a\",\"binding\":\"binding-a\"},\"path\":\"src/α.txt\",\"content\":\"ceb10d0a\",\"content_sha256\":\"e44d74fd467a8e25324a9a861839e9283d40c4895aaa52ae761aaadefe7b8403\",\"length\":4,\"metadata_policy\":\"posix-regular-single-link/1\",\"metadata\":{\"device\":1,\"inode\":42,\"mode\":33188,\"uid\":1000,\"gid\":1000,\"links\":1,\"mtime\":{\"seconds\":1.5,\"nanoseconds\":999999999},\"ctime\":{\"seconds\":1730000000,\"nanoseconds\":123456789}}}}"
+    },
+    {
+      "name": "mtime-same-bytes-identity-mismatch",
+      "stage": "decode",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"capture\",\"id\":\"wfwt1:capture:sha256:cde0e050d1b1b627542f917a6a72d994c9bcdceaa4b826524317c184e6d85b76\",\"payload\":{\"scope\":{\"realm\":\"realm-a\",\"run\":\"run-a\",\"repo\":\"repo-a\",\"worktree\":\"worktree-a\",\"binding\":\"binding-a\"},\"path\":\"src/α.txt\",\"content\":\"ceb10d0a\",\"content_sha256\":\"e44d74fd467a8e25324a9a861839e9283d40c4895aaa52ae761aaadefe7b8403\",\"length\":4,\"metadata_policy\":\"posix-regular-single-link/1\",\"metadata\":{\"device\":1,\"inode\":42,\"mode\":33188,\"uid\":1000,\"gid\":1000,\"links\":1,\"mtime\":{\"seconds\":-1,\"nanoseconds\":42},\"ctime\":{\"seconds\":1730000000,\"nanoseconds\":123456789}}}}"
+    },
+    {
+      "name": "omitted-ctime",
+      "stage": "decode",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"capture\",\"id\":\"wfwt1:capture:sha256:cde0e050d1b1b627542f917a6a72d994c9bcdceaa4b826524317c184e6d85b76\",\"payload\":{\"scope\":{\"realm\":\"realm-a\",\"run\":\"run-a\",\"repo\":\"repo-a\",\"worktree\":\"worktree-a\",\"binding\":\"binding-a\"},\"path\":\"src/α.txt\",\"content\":\"ceb10d0a\",\"content_sha256\":\"e44d74fd467a8e25324a9a861839e9283d40c4895aaa52ae761aaadefe7b8403\",\"length\":4,\"metadata_policy\":\"posix-regular-single-link/1\",\"metadata\":{\"device\":1,\"inode\":42,\"mode\":33188,\"uid\":1000,\"gid\":1000,\"links\":1,\"mtime\":{\"seconds\":-1,\"nanoseconds\":999999999}}}}"
+    },
+    {
+      "name": "ctime-nanosecond-overflow",
+      "stage": "decode",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"capture\",\"id\":\"wfwt1:capture:sha256:cde0e050d1b1b627542f917a6a72d994c9bcdceaa4b826524317c184e6d85b76\",\"payload\":{\"scope\":{\"realm\":\"realm-a\",\"run\":\"run-a\",\"repo\":\"repo-a\",\"worktree\":\"worktree-a\",\"binding\":\"binding-a\"},\"path\":\"src/α.txt\",\"content\":\"ceb10d0a\",\"content_sha256\":\"e44d74fd467a8e25324a9a861839e9283d40c4895aaa52ae761aaadefe7b8403\",\"length\":4,\"metadata_policy\":\"posix-regular-single-link/1\",\"metadata\":{\"device\":1,\"inode\":42,\"mode\":33188,\"uid\":1000,\"gid\":1000,\"links\":1,\"mtime\":{\"seconds\":-1,\"nanoseconds\":999999999},\"ctime\":{\"seconds\":1730000000,\"nanoseconds\":1000000000}}}}"
+    },
+    {
+      "name": "ctime-negative-nanoseconds",
+      "stage": "decode",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"capture\",\"id\":\"wfwt1:capture:sha256:cde0e050d1b1b627542f917a6a72d994c9bcdceaa4b826524317c184e6d85b76\",\"payload\":{\"scope\":{\"realm\":\"realm-a\",\"run\":\"run-a\",\"repo\":\"repo-a\",\"worktree\":\"worktree-a\",\"binding\":\"binding-a\"},\"path\":\"src/α.txt\",\"content\":\"ceb10d0a\",\"content_sha256\":\"e44d74fd467a8e25324a9a861839e9283d40c4895aaa52ae761aaadefe7b8403\",\"length\":4,\"metadata_policy\":\"posix-regular-single-link/1\",\"metadata\":{\"device\":1,\"inode\":42,\"mode\":33188,\"uid\":1000,\"gid\":1000,\"links\":1,\"mtime\":{\"seconds\":-1,\"nanoseconds\":999999999},\"ctime\":{\"seconds\":1730000000,\"nanoseconds\":-1}}}}"
+    },
+    {
+      "name": "ctime-seconds-overflow",
+      "stage": "decode",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"capture\",\"id\":\"wfwt1:capture:sha256:cde0e050d1b1b627542f917a6a72d994c9bcdceaa4b826524317c184e6d85b76\",\"payload\":{\"scope\":{\"realm\":\"realm-a\",\"run\":\"run-a\",\"repo\":\"repo-a\",\"worktree\":\"worktree-a\",\"binding\":\"binding-a\"},\"path\":\"src/α.txt\",\"content\":\"ceb10d0a\",\"content_sha256\":\"e44d74fd467a8e25324a9a861839e9283d40c4895aaa52ae761aaadefe7b8403\",\"length\":4,\"metadata_policy\":\"posix-regular-single-link/1\",\"metadata\":{\"device\":1,\"inode\":42,\"mode\":33188,\"uid\":1000,\"gid\":1000,\"links\":1,\"mtime\":{\"seconds\":-1,\"nanoseconds\":999999999},\"ctime\":{\"seconds\":9223372036854775808,\"nanoseconds\":123456789}}}}"
+    },
+    {
+      "name": "ctime-fractional-seconds",
+      "stage": "decode",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"capture\",\"id\":\"wfwt1:capture:sha256:cde0e050d1b1b627542f917a6a72d994c9bcdceaa4b826524317c184e6d85b76\",\"payload\":{\"scope\":{\"realm\":\"realm-a\",\"run\":\"run-a\",\"repo\":\"repo-a\",\"worktree\":\"worktree-a\",\"binding\":\"binding-a\"},\"path\":\"src/α.txt\",\"content\":\"ceb10d0a\",\"content_sha256\":\"e44d74fd467a8e25324a9a861839e9283d40c4895aaa52ae761aaadefe7b8403\",\"length\":4,\"metadata_policy\":\"posix-regular-single-link/1\",\"metadata\":{\"device\":1,\"inode\":42,\"mode\":33188,\"uid\":1000,\"gid\":1000,\"links\":1,\"mtime\":{\"seconds\":-1,\"nanoseconds\":999999999},\"ctime\":{\"seconds\":1.5,\"nanoseconds\":123456789}}}}"
+    },
+    {
+      "name": "ctime-same-bytes-identity-mismatch",
+      "stage": "decode",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"capture\",\"id\":\"wfwt1:capture:sha256:cde0e050d1b1b627542f917a6a72d994c9bcdceaa4b826524317c184e6d85b76\",\"payload\":{\"scope\":{\"realm\":\"realm-a\",\"run\":\"run-a\",\"repo\":\"repo-a\",\"worktree\":\"worktree-a\",\"binding\":\"binding-a\"},\"path\":\"src/α.txt\",\"content\":\"ceb10d0a\",\"content_sha256\":\"e44d74fd467a8e25324a9a861839e9283d40c4895aaa52ae761aaadefe7b8403\",\"length\":4,\"metadata_policy\":\"posix-regular-single-link/1\",\"metadata\":{\"device\":1,\"inode\":42,\"mode\":33188,\"uid\":1000,\"gid\":1000,\"links\":1,\"mtime\":{\"seconds\":-1,\"nanoseconds\":999999999},\"ctime\":{\"seconds\":1730000000,\"nanoseconds\":42}}}}"
+    },
+    {
+      "name": "duplicate-key",
+      "stage": "decode",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"recipe\",\"id\":\"wfwt1:recipe:sha256:fea53ef816383f12634b72e7fb50db74241e365d92deefdb5cd999aac802b8db\",\"payload\":{\"language_profile\":\"weft-symbolic/1\",\"source\":\"7265706c61636520ceb1207769746820ceb20d0a\"}}"
+    },
+    {
+      "name": "wrong-recipe-reference",
+      "stage": "validate-prepared",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"prepared-edit\",\"id\":\"wfwt1:prepared-edit:sha256:9b2145ba78b2fa0ec02db124ef5973252b0e8e4c0a992cbcbd254a938723ebf6\",\"payload\":{\"operation\":\"replace-content\",\"recipe\":\"wfwt1:recipe:sha256:61373c1be58acc7c192804a9c63b64467ce12f1cbcbaecc6029523008af6462c\",\"capture\":\"wfwt1:capture:sha256:cde0e050d1b1b627542f917a6a72d994c9bcdceaa4b826524317c184e6d85b76\",\"candidate\":\"wfwt1:candidate:sha256:9e35d68ac2f953b2b718aff5a8e95b6e10e2c504dca9bc3409fc47e87e2af1eb\",\"compiler\":{\"profile\":\"weft-symbolic/1\",\"sha256\":\"ec6b898f7679a776ec32026bce300580800ffacb7400728a162fa032a46cb0cd\"},\"kernel\":{\"profile\":\"splicery-component/1\",\"sha256\":\"6ecbfbb7ee7d69187380281297f7034b3d0038ec4b2c018905fbca737c66aca2\"},\"splices\":[{\"start\":0,\"end\":2,\"replacement\":\"ceb2\",\"origin\":{\"start\":0,\"end\":20}}],\"read_set\":[{\"start\":0,\"bytes\":\"ceb10d0a\"}]}}"
+    },
+    {
+      "name": "wrong-capture-reference",
+      "stage": "validate-prepared",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"prepared-edit\",\"id\":\"wfwt1:prepared-edit:sha256:e2975b965fb2304afd2c3e020aaefbc9fa6a5ab2a222bf28908f863e778185fe\",\"payload\":{\"operation\":\"replace-content\",\"recipe\":\"wfwt1:recipe:sha256:fea53ef816383f12634b72e7fb50db74241e365d92deefdb5cd999aac802b8db\",\"capture\":\"wfwt1:capture:sha256:0000000000000000000000000000000000000000000000000000000000000000\",\"candidate\":\"wfwt1:candidate:sha256:9e35d68ac2f953b2b718aff5a8e95b6e10e2c504dca9bc3409fc47e87e2af1eb\",\"compiler\":{\"profile\":\"weft-symbolic/1\",\"sha256\":\"ec6b898f7679a776ec32026bce300580800ffacb7400728a162fa032a46cb0cd\"},\"kernel\":{\"profile\":\"splicery-component/1\",\"sha256\":\"6ecbfbb7ee7d69187380281297f7034b3d0038ec4b2c018905fbca737c66aca2\"},\"splices\":[{\"start\":0,\"end\":2,\"replacement\":\"ceb2\",\"origin\":{\"start\":0,\"end\":20}}],\"read_set\":[{\"start\":0,\"bytes\":\"ceb10d0a\"}]}}"
+    },
+    {
+      "name": "wrong-candidate-reference",
+      "stage": "validate-prepared",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"prepared-edit\",\"id\":\"wfwt1:prepared-edit:sha256:93b18153b31d17d1288fa39106b7980f4e3fd9d92a7ce96dd923999201bbd695\",\"payload\":{\"operation\":\"replace-content\",\"recipe\":\"wfwt1:recipe:sha256:fea53ef816383f12634b72e7fb50db74241e365d92deefdb5cd999aac802b8db\",\"capture\":\"wfwt1:capture:sha256:cde0e050d1b1b627542f917a6a72d994c9bcdceaa4b826524317c184e6d85b76\",\"candidate\":\"wfwt1:candidate:sha256:0000000000000000000000000000000000000000000000000000000000000000\",\"compiler\":{\"profile\":\"weft-symbolic/1\",\"sha256\":\"ec6b898f7679a776ec32026bce300580800ffacb7400728a162fa032a46cb0cd\"},\"kernel\":{\"profile\":\"splicery-component/1\",\"sha256\":\"6ecbfbb7ee7d69187380281297f7034b3d0038ec4b2c018905fbca737c66aca2\"},\"splices\":[{\"start\":0,\"end\":2,\"replacement\":\"ceb2\",\"origin\":{\"start\":0,\"end\":20}}],\"read_set\":[{\"start\":0,\"bytes\":\"ceb10d0a\"}]}}"
+    },
+    {
+      "name": "candidate-derivation-mismatch",
+      "stage": "validate-prepared",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"prepared-edit\",\"id\":\"wfwt1:prepared-edit:sha256:e072ead06c1a81bb662192b1c5cd62e14317433b6e40562cc7489052fe633d93\",\"payload\":{\"operation\":\"replace-content\",\"recipe\":\"wfwt1:recipe:sha256:fea53ef816383f12634b72e7fb50db74241e365d92deefdb5cd999aac802b8db\",\"capture\":\"wfwt1:capture:sha256:cde0e050d1b1b627542f917a6a72d994c9bcdceaa4b826524317c184e6d85b76\",\"candidate\":\"wfwt1:candidate:sha256:9e35d68ac2f953b2b718aff5a8e95b6e10e2c504dca9bc3409fc47e87e2af1eb\",\"compiler\":{\"profile\":\"weft-symbolic/1\",\"sha256\":\"ec6b898f7679a776ec32026bce300580800ffacb7400728a162fa032a46cb0cd\"},\"kernel\":{\"profile\":\"splicery-component/1\",\"sha256\":\"6ecbfbb7ee7d69187380281297f7034b3d0038ec4b2c018905fbca737c66aca2\"},\"splices\":[{\"start\":0,\"end\":2,\"replacement\":\"00\",\"origin\":{\"start\":0,\"end\":20}}],\"read_set\":[{\"start\":0,\"bytes\":\"ceb10d0a\"}]}}"
+    },
+    {
+      "name": "selector-out-of-bounds",
+      "stage": "validate-prepared",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"prepared-edit\",\"id\":\"wfwt1:prepared-edit:sha256:74e7d7577927786bcc692caf11e056cb89a8f7b92bfb8a23b6a9e59c78274cbf\",\"payload\":{\"operation\":\"replace-content\",\"recipe\":\"wfwt1:recipe:sha256:fea53ef816383f12634b72e7fb50db74241e365d92deefdb5cd999aac802b8db\",\"capture\":\"wfwt1:capture:sha256:cde0e050d1b1b627542f917a6a72d994c9bcdceaa4b826524317c184e6d85b76\",\"candidate\":\"wfwt1:candidate:sha256:9e35d68ac2f953b2b718aff5a8e95b6e10e2c504dca9bc3409fc47e87e2af1eb\",\"compiler\":{\"profile\":\"weft-symbolic/1\",\"sha256\":\"ec6b898f7679a776ec32026bce300580800ffacb7400728a162fa032a46cb0cd\"},\"kernel\":{\"profile\":\"splicery-component/1\",\"sha256\":\"6ecbfbb7ee7d69187380281297f7034b3d0038ec4b2c018905fbca737c66aca2\"},\"splices\":[{\"start\":0,\"end\":999,\"replacement\":\"ceb2\",\"origin\":{\"start\":0,\"end\":20}}],\"read_set\":[{\"start\":0,\"bytes\":\"ceb10d0a\"}]}}"
+    },
+    {
+      "name": "origin-out-of-bounds",
+      "stage": "validate-prepared",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"prepared-edit\",\"id\":\"wfwt1:prepared-edit:sha256:38c6d491cd6a0be5feac46be486315e01baab73633b252eca51793345bd78a12\",\"payload\":{\"operation\":\"replace-content\",\"recipe\":\"wfwt1:recipe:sha256:fea53ef816383f12634b72e7fb50db74241e365d92deefdb5cd999aac802b8db\",\"capture\":\"wfwt1:capture:sha256:cde0e050d1b1b627542f917a6a72d994c9bcdceaa4b826524317c184e6d85b76\",\"candidate\":\"wfwt1:candidate:sha256:9e35d68ac2f953b2b718aff5a8e95b6e10e2c504dca9bc3409fc47e87e2af1eb\",\"compiler\":{\"profile\":\"weft-symbolic/1\",\"sha256\":\"ec6b898f7679a776ec32026bce300580800ffacb7400728a162fa032a46cb0cd\"},\"kernel\":{\"profile\":\"splicery-component/1\",\"sha256\":\"6ecbfbb7ee7d69187380281297f7034b3d0038ec4b2c018905fbca737c66aca2\"},\"splices\":[{\"start\":0,\"end\":2,\"replacement\":\"ceb2\",\"origin\":{\"start\":0,\"end\":999}}],\"read_set\":[{\"start\":0,\"bytes\":\"ceb10d0a\"}]}}"
+    },
+    {
+      "name": "read-set-mismatch",
+      "stage": "validate-prepared",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"prepared-edit\",\"id\":\"wfwt1:prepared-edit:sha256:244e2a1244addaa5d80c37e37c2105713d2e03c9e14637aff1b908d606c6bf60\",\"payload\":{\"operation\":\"replace-content\",\"recipe\":\"wfwt1:recipe:sha256:fea53ef816383f12634b72e7fb50db74241e365d92deefdb5cd999aac802b8db\",\"capture\":\"wfwt1:capture:sha256:cde0e050d1b1b627542f917a6a72d994c9bcdceaa4b826524317c184e6d85b76\",\"candidate\":\"wfwt1:candidate:sha256:9e35d68ac2f953b2b718aff5a8e95b6e10e2c504dca9bc3409fc47e87e2af1eb\",\"compiler\":{\"profile\":\"weft-symbolic/1\",\"sha256\":\"ec6b898f7679a776ec32026bce300580800ffacb7400728a162fa032a46cb0cd\"},\"kernel\":{\"profile\":\"splicery-component/1\",\"sha256\":\"6ecbfbb7ee7d69187380281297f7034b3d0038ec4b2c018905fbca737c66aca2\"},\"splices\":[{\"start\":0,\"end\":2,\"replacement\":\"ceb2\",\"origin\":{\"start\":0,\"end\":20}}],\"read_set\":[{\"start\":0,\"bytes\":\"00\"}]}}"
+    },
+    {
+      "name": "wrong-realm",
+      "stage": "expected-scope",
+      "json": "{\"profile\":\"writfold-worktree/1\",\"algorithm\":\"sha256\",\"kind\":\"prepared-edit\",\"id\":\"wfwt1:prepared-edit:sha256:934bb7f96553818229135e57e840b9576c7fa8f35a9af586dfc5fcbea479c230\",\"payload\":{\"operation\":\"replace-content\",\"recipe\":\"wfwt1:recipe:sha256:fea53ef816383f12634b72e7fb50db74241e365d92deefdb5cd999aac802b8db\",\"capture\":\"wfwt1:capture:sha256:cde0e050d1b1b627542f917a6a72d994c9bcdceaa4b826524317c184e6d85b76\",\"candidate\":\"wfwt1:candidate:sha256:9e35d68ac2f953b2b718aff5a8e95b6e10e2c504dca9bc3409fc47e87e2af1eb\",\"compiler\":{\"profile\":\"weft-symbolic/1\",\"sha256\":\"ec6b898f7679a776ec32026bce300580800ffacb7400728a162fa032a46cb0cd\"},\"kernel\":{\"profile\":\"splicery-component/1\",\"sha256\":\"6ecbfbb7ee7d69187380281297f7034b3d0038ec4b2c018905fbca737c66aca2\"},\"splices\":[{\"start\":0,\"end\":2,\"replacement\":\"ceb2\",\"origin\":{\"start\":0,\"end\":20}}],\"read_set\":[{\"start\":0,\"bytes\":\"ceb10d0a\"}]}}",
+      "expected_realm": "realm-b"
+    }
+  ]
+}

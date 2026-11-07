@@ -62,7 +62,7 @@ impl ManagedLocks {
     }
 }
 
-/// Closing this guard releases flock; its stable namespace entry is not unlinked.
+/// The logical owner unlocks on drop; its stable namespace entry is not unlinked.
 #[derive(Debug)]
 pub struct LockedFile<'a> {
     pub(super) target: &'a PinnedFile,
@@ -70,6 +70,18 @@ pub struct LockedFile<'a> {
     name: OsString,
     descriptor: OwnedFd,
     identity: FileIdentity,
+}
+
+impl Drop for LockedFile<'_> {
+    fn drop(&mut self) {
+        // CLOEXEC descriptors can still be inherited by another thread's fork
+        // before exec. Closing only this descriptor would let that unrelated
+        // process retain our flock. This guard is the sole logical lock owner;
+        // callers must already have quiesced their owned effects before drop.
+        // Drop cannot return an unlock error. Closing remains the fallback, and
+        // subsequent acquisition still observes any kernel-held lock as busy.
+        let _ = flock(&self.descriptor, FlockOperation::Unlock);
+    }
 }
 
 impl PinnedFile {
@@ -179,3 +191,7 @@ impl LockedFile<'_> {
         Ok(())
     }
 }
+
+#[cfg(test)]
+#[path = "lock_tests.rs"]
+mod tests;

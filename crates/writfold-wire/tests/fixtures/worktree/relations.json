@@ -1,0 +1,26 @@
+[
+  {
+    "name": "same-key-different-dispatch",
+    "key": "wfwt1:request-key:sha256:837ca636db5c033c9a6e5767167db48c2fcc0ca738d457de3f74723a28f50f72",
+    "intent": "wf1:effect-intent:sha256:282bcbc3f0a34a8a4ac6f00c276fcf66cf3757a3332e83d92208e5079af46922",
+    "first_stamp": "wf1:dispatch-stamp:sha256:e0afcdbf6ad4adf566c572d7f7c34d4dfb85e5122bba750d6a3a5842f915d39b",
+    "second_stamp": "wf1:dispatch-stamp:sha256:16becb85e8854a15378d1a2a29ff41123710722be800e4da07f4dabee1d439eb",
+    "stable_key_equal": true,
+    "mapping_equal": true
+  },
+  {
+    "name": "same-key-different-intent",
+    "key": "wfwt1:request-key:sha256:837ca636db5c033c9a6e5767167db48c2fcc0ca738d457de3f74723a28f50f72",
+    "first_intent": "wf1:effect-intent:sha256:282bcbc3f0a34a8a4ac6f00c276fcf66cf3757a3332e83d92208e5079af46922",
+    "second_intent": "wf1:effect-intent:sha256:9f66f1f130852663353f109b8976a83c27dcca7159f0e637a2972d9fb9f64447",
+    "stable_key_equal": true,
+    "mapping_equal": false
+  },
+  {
+    "name": "changed-recipe-same-output",
+    "first_prepared": "wfwt1:prepared-edit:sha256:934bb7f96553818229135e57e840b9576c7fa8f35a9af586dfc5fcbea479c230",
+    "second_prepared": "wfwt1:prepared-edit:sha256:9b2145ba78b2fa0ec02db124ef5973252b0e8e4c0a992cbcbd254a938723ebf6",
+    "candidate": "wfwt1:candidate:sha256:9e35d68ac2f953b2b718aff5a8e95b6e10e2c504dca9bc3409fc47e87e2af1eb",
+    "prepared_equal": false
+  }
+]

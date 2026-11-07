@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Run pinned actual binaries using runnable JSON-compatible YAML (stdlib JSON parsing).
+"""Run pinned real-process regression scenarios from JSON-compatible YAML.
 
-A component PASS never means full E2E, grounding, persistence or effect authority.
+A component PASS never means full service E2E, grounding or effect authority.
 Use a fresh external --receipt; no build, package manager, inference or native
 worktree operation is invoked. Weft's owned control client launches Writfold;
 Pipes bounds/captures the outer processes and owns their process groups.
@@ -21,6 +21,8 @@ import traceback
 sys.dont_write_bytecode = True
 from writfold_evidence import Attempt, ROOT, digest, document, file_record, publish, sha
 from writfold_stdio_process import Pipes
+import writfold_toolchain_artifacts
+import writfold_toolchain_sessions
 
 
 def require(condition, message):
@@ -43,6 +45,23 @@ def hex_digest(value):
     if not re.fullmatch(r"[0-9a-f]{64}", value):
         raise argparse.ArgumentTypeError("Expected lowercase 64-hex SHA-256")
     return value
+
+
+def checked_cases(scenarios, expected):
+    cases = scenarios["cases"]
+    require(isinstance(cases, list) and cases, "No scenarios supplied")
+    inventory = {}
+    for case in cases:
+        name = case["id"]
+        require(isinstance(name, str) and re.fullmatch(r"[a-z0-9-]+", name), "Unsafe case ID")
+        require(name not in inventory, "Duplicate case IDs")
+        inventory[name] = digest(case)
+        if case["action"] == "blocked":
+            require(case["status"] == "BLOCKED" and case["requires"] and case["reason"],
+                    "Unexplained blocker")
+    require(inventory == expected, "Scenario inventory or assertions differ from the qualified profile")
+    require(any(case["action"] != "blocked" for case in cases), "No runnable scenarios supplied")
+    return cases
 
 
 class Smoke:
@@ -131,7 +150,9 @@ class Smoke:
         cases_path = self.retain(self.args.cases, "scenarios.yaml")
         self.scenarios = document(cases_path)
         require(self.scenarios["schema"] == "writfold-toolchain-smoke/1", "Unknown scenario schema")
-        for name in ("writfold_toolchain_smoke.py", "writfold_evidence.py",
+        self.cases = checked_cases(self.scenarios, profile["case_sha256"])
+        for name in ("writfold_toolchain_smoke.py", "writfold_toolchain_artifacts.py",
+                     "writfold_toolchain_sessions.py", "writfold_evidence.py",
                      "writfold_stdio_process.py", "writfold_conformance_process.py"):
             self.retain(ROOT / "scripts" / name, f"producer-{name}")
         for name in ("writfold", "weft", "splicery"):
@@ -208,6 +229,10 @@ class Smoke:
         action = case["action"]
         if action == "contract-agreement":
             return self.contract_agreement()
+        if action in {"artifact-workflow", "preview-refusal"}:
+            return writfold_toolchain_artifacts.run(self, case)
+        if action == "concurrent-control":
+            return writfold_toolchain_sessions.run(self, case)
         weft = str(self.binaries["weft"])
         if action == "control":
             expected = self.args.expect_writfold_sha256
@@ -250,7 +275,7 @@ class Smoke:
         if action == "prove":
             source = self.paths[case["source"]]
             require(len(result["checks"]) == 1 and result["source"]["sha256"] == sha(source) and
-                    result["source"]["content"] == {"encoding": "utf-8", "text": source.read_text()},
+                    result["source"]["content"] == {"encoding": "utf-8", "text": source.read_bytes().decode("utf-8")},
                     "Prove did not evaluate the exact intended source")
         if action == "reuse":
             require(result["prior"]["sha256"] == sha(self.paths[case["report"]]) and
@@ -267,14 +292,12 @@ class Smoke:
         started = time.monotonic_ns()
         try:
             self.prepare()
-            cases = self.scenarios["cases"]
-            require(len({case["id"] for case in cases}) == len(cases), "Duplicate case IDs")
+            cases = self.cases
             for case in cases:
-                require(re.fullmatch(r"[a-z0-9-]+", case["id"]), "Unsafe case ID")
                 row = dict(id=case["id"], action=case["action"], status="NOT_RUN")
                 self.report["cases"].append(row)
                 if case["action"] == "blocked":
-                    require(case["status"] == "BLOCKED" and case["requires"] and case["reason"], "Unexplained blocker")
+                    # Blockers are part of the pinned inventory, never successful executions.
                     row.update(status="BLOCKED", requires=case["requires"], reason=case["reason"])
             for case, row in zip(cases, self.report["cases"]):
                 if row["status"] == "BLOCKED":
@@ -302,6 +325,8 @@ class Smoke:
             except (Exception, KeyboardInterrupt) as error:
                 self.report["component_status"] = "FAIL"
                 self.report["errors"].append(f"Evidence integrity: {error}")
+            self.report["counts"] = {status: sum(row["status"] == status for row in self.report["cases"])
+                                     for status in ("PASS", "FAIL", "BLOCKED", "NOT_RUN")}
             self.report.update(end_ns=time.time_ns(), duration_ns=time.monotonic_ns() - started)
             artifacts = []
             for path in sorted(self.attempt.directory.rglob("*")):

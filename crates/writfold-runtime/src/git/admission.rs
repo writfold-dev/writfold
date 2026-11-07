@@ -60,9 +60,9 @@ impl<'a> GitExecutable<'a> {
 /// The administrative owner must keep its metadata and object store stable.
 #[derive(Debug)]
 pub struct GitRepository {
-    root: ContainedRoot,
+    pub(super) root: ContainedRoot,
     format: GitObjectFormat,
-    metadata_limit: ByteCount,
+    pub(super) metadata_limit: ByteCount,
 }
 
 impl GitRepository {

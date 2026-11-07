@@ -1,0 +1,3 @@
+edit "artifacts-source.weft" {
+  replace one text "absent-marker" with "replacement"
+}

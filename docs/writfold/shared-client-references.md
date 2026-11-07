@@ -17,10 +17,11 @@ requirements, **not available data/effect methods or guessed RPC names**.
 
 ## Executed three-tool component smoke
 
-The runnable [YAML scenarios](../../fixtures/qualification/toolchain-smoke.yaml)
+The runnable [YAML regression scenarios](../../fixtures/qualification/toolchain-smoke.yaml)
 and [pinned artifact profile](../../qualification/toolchain-smoke-profile.json)
 exercise actual executables, not mock services. The YAML uses the JSON-compatible
-subset so reproduction needs only Python's standard library.
+subset so reproduction needs only Python's standard library. The command retains
+its `toolchain_smoke` name; its expanded coverage is described below.
 
 `toolchain-smoke-20261106-001.json` records eight passing component checks:
 owner/consumer contract bytes including the license; real Weft-owned Writfold
@@ -39,7 +40,49 @@ manifests match the current sibling files. Their build/reproduction receipts,
 actual binaries, input bytes and process streams are retained with the smoke.
 No sibling source or qualification file was edited.
 
-Replay the exercised operator artifacts using a **new** external receipt:
+### Expanded real-process regressions
+
+The source-bound campaign
+`toolchain-regression-lde3m_kz/campaign-001.json` passed **12 scenarios across 29
+outer process invocations**; four unavailable service scenarios remain `BLOCKED`.
+Eight additional runner regression tests passed. Exact receipts, binary identities,
+producer/fixture hashes and before/after defect evidence are indexed under
+`toolchain_regression_admission` in `qualification/status.json`. The initial
+eight-check receipt above is preserved, not relabelled.
+
+| Scenario | Exercised oracle |
+| --- | --- |
+| `prove-original-crlf` | Exact source bytes and SHA-256 survive reporting without newline normalization. |
+| `artifact-source-aba` | UTF-8/CRLF Splicery stdout becomes the next Weft input; three checks distinguish entailment, refutation and undetermined. Changed bytes refuse the old report, including at the same path; reverse preview restores exact A bytes and makes the original local report reusable. A malformed prior fails without a reuse decision. |
+| `artifact-denied-previews` | Missing and ambiguous selectors return their typed refusal, emit no candidate bytes and leave the input bytes unchanged; no candidate is handed downstream. |
+| `concurrent-control` | Two real Writfold servers initialize before either receives shutdown; both shut down with their own session identities and generations. Separate Weft clients exercise correct/wrong pins and a fresh session after refusal in the same private HOME. |
+
+The direct-server overlap is synchronized by validated responses, not sleeps.
+Weft clients have a launch barrier, but their hidden frame/child overlap is not
+claimed. Each worker uses an isolated HOME/cwd and bounded owned processes.
+A/B/A here concerns **local source bytes**, not durable request-key/effect replay.
+The host never applies a Splicery candidate as an authorized edit.
+
+This work also reproduced and fixed two qualification-runner defects. An empty
+scenario list previously produced `PASS` with zero commands; a valid CRLF report
+was incorrectly rejected by Python newline normalization. Retained before/after
+receipts identify both. The profile now pins every case's canonical JSON digest
+using `writfold_evidence.digest`; omitted cases, substituted blockers, duplicate
+IDs and weakened oracles refuse. Intentional scenario changes require a reviewed
+profile update, never automatic repinning during execution.
+
+Run the deterministic coverage-admission regressions without external artifacts:
+
+```sh
+python3 -B -m unittest discover -s tests -p test_writfold_toolchain.py -v
+```
+
+The native campaign below reuses the previously Compose-built exact binaries.
+All 378 declared Writfold build/qualification inputs matched before and after
+execution. No Rust source, sibling source, shipping capability or proof gate was
+changed or renewed by this test increment.
+
+Replay the complete real-process campaign with a **new** external receipt:
 
 ```sh
 python3 -B scripts/writfold_toolchain_smoke.py \
@@ -62,6 +105,46 @@ and retained-evidence session benchmarks. They remain `BLOCKED`, never passes.
 This is operational control plus a local file-artifact composition—not a grounded
 three-tool service loop or a measured agent/token saving. Writfold's owner data
 and effect boundaries are the next integration dependency.
+
+## Owner-side components, not available services
+
+The new [worktree byte profile](../../qualification/worktree-identity-profile.json)
+owns six distinct `wfwt1` kinds: recipe, capture, candidate, prepared edit,
+request key and observation. The existing 16 engineering fingerprint kinds are
+unchanged. Closed bounded JSON and deterministic CBOR retain exact bytes,
+POSIX metadata, original-coordinate splices/origins and typed scope. Decoding
+checks consistency, not provenance, current authority or a trusted effect outcome.
+Splicery's SG08 proposal is not silently reinterpreted as this owner contract.
+
+`writfold_sources::splicery::replay` runs the actual pinned parser, lowerer and
+kernel against host-supplied retained bytes. The in-repository product-source
+export is commit `c696b6e3e60938c2b19081c38801e0d67ced8df2`, artifact
+`e3b17b937a916b5b65c47b4f2ab40445c51d63fafdff59413fff7813ce0f9995`;
+54 exported files match their original modes, Git blobs and SHA256 values.
+No mutable sibling checkout is used during compilation. This profile accepts
+only an exact literal-path content edit, not unresolved handles or file
+create/rename/remove. Candidate bytes and original-coordinate edit origins remain
+separate from permission to install them.
+
+`GitWriter` prepares retained blobs/manifests and commits before a native
+expected-old CAS on `refs/kctx/knowledge`; preparation is not publication.
+Plan operation identity is nominally distinct from raw content digests.
+Unissued conflicts and possibly issued `Unknown` outcomes remain distinct.
+The [filesystem stage/witness boundary](filesystem-effects.md#recoverable-single-file-staging)
+preserves exact native attribution and never replays a claimed operation.
+
+The component tests and native consumers are indexed separately from gates.
+A static-musl consumer exercised embedded replay through real staging/install/
+reopen/reconciliation; an equal-byte foreign inode remained `Unknown`. A separate
+native Git consumer exercised preparation, exact retained reads, completed-ref CAS
+and stale publication refusal. These do **not** replace the four blocked full-flow
+regression rows. Durable ledger/heads, live grants, run/Worktrunk ownership,
+authorized service dispatch and composed crash recovery are still missing.
+No new RPC, write capability, SG08 completion or public alpha is advertised.
+
+Isolated proof workspaces and stdio/conformance source manifests now include the
+vendored source closure. This prevents omitted path dependencies in qualification;
+it does not claim a new Verus proof or automatic refinement of Splicery's kernel.
 
 ## What must be stable
 

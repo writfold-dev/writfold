@@ -1,0 +1,601 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:writfold:worktree:1",
+  "title": "Worktree untrusted descriptor wire envelopes",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile",
+        "algorithm",
+        "kind",
+        "id",
+        "payload"
+      ],
+      "properties": {
+        "profile": {
+          "const": "writfold-worktree/1"
+        },
+        "algorithm": {
+          "const": "sha256"
+        },
+        "kind": {
+          "const": "recipe"
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^wfwt1:recipe:sha256:[0-9a-f]{64}$"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "language_profile",
+            "source"
+          ],
+          "properties": {
+            "language_profile": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096,
+              "pattern": "^[^\\u0000-\\u001f\\u007f-\\u009f]+$"
+            },
+            "source": {
+              "type": "string",
+              "pattern": "^(?:[0-9a-f]{2})*$"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile",
+        "algorithm",
+        "kind",
+        "id",
+        "payload"
+      ],
+      "properties": {
+        "profile": {
+          "const": "writfold-worktree/1"
+        },
+        "algorithm": {
+          "const": "sha256"
+        },
+        "kind": {
+          "const": "capture"
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^wfwt1:capture:sha256:[0-9a-f]{64}$"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "scope",
+            "path",
+            "content",
+            "content_sha256",
+            "length",
+            "metadata_policy",
+            "metadata"
+          ],
+          "properties": {
+            "scope": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "realm",
+                "run",
+                "repo",
+                "worktree",
+                "binding"
+              ],
+              "properties": {
+                "realm": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4096,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "run": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4096,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "repo": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4096,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "worktree": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4096,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                },
+                "binding": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4096,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                }
+              }
+            },
+            "path": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096,
+              "pattern": "^(?!/)(?!.*\\\\)(?!.*(?:^|/)(?:\\.|\\.\\.)(?:/|$))[^\\u0000-\\u001f\\u007f-\\u009f/]+(?:/[^\\u0000-\\u001f\\u007f-\\u009f/]+)*$"
+            },
+            "content": {
+              "type": "string",
+              "pattern": "^(?:[0-9a-f]{2})*$"
+            },
+            "content_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "length": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "metadata_policy": {
+              "const": "posix-regular-single-link/1"
+            },
+            "metadata": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "device",
+                "inode",
+                "mode",
+                "uid",
+                "gid",
+                "links", "mtime", "ctime"
+              ],
+              "properties": {
+                "device": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                "inode": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                "mode": {
+                  "type": "integer",
+                  "minimum": 32768,
+                  "maximum": 36863
+                },
+                "uid": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 4294967295
+                },
+                "gid": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 4294967295
+                },
+                "mtime": {
+                  "type": "object", "additionalProperties": false,
+                  "required": ["seconds", "nanoseconds"],
+                  "properties": {
+                    "seconds": {"type": "integer", "minimum": -9223372036854775808, "maximum": 9223372036854775807},
+                    "nanoseconds": {"type": "integer", "minimum": 0, "maximum": 999999999}
+                  }
+                },
+                "ctime": {
+                  "type": "object", "additionalProperties": false,
+                  "required": ["seconds", "nanoseconds"],
+                  "properties": {
+                    "seconds": {"type": "integer", "minimum": -9223372036854775808, "maximum": 9223372036854775807},
+                    "nanoseconds": {"type": "integer", "minimum": 0, "maximum": 999999999}
+                  }
+                },
+                "links": {
+                  "const": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile",
+        "algorithm",
+        "kind",
+        "id",
+        "payload"
+      ],
+      "properties": {
+        "profile": {
+          "const": "writfold-worktree/1"
+        },
+        "algorithm": {
+          "const": "sha256"
+        },
+        "kind": {
+          "const": "candidate"
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^wfwt1:candidate:sha256:[0-9a-f]{64}$"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "capture",
+            "content",
+            "content_sha256",
+            "length"
+          ],
+          "properties": {
+            "capture": {
+              "type": "string",
+              "pattern": "^wfwt1:capture:sha256:[0-9a-f]{64}$"
+            },
+            "content": {
+              "type": "string",
+              "pattern": "^(?:[0-9a-f]{2})*$"
+            },
+            "content_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "length": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile",
+        "algorithm",
+        "kind",
+        "id",
+        "payload"
+      ],
+      "properties": {
+        "profile": {
+          "const": "writfold-worktree/1"
+        },
+        "algorithm": {
+          "const": "sha256"
+        },
+        "kind": {
+          "const": "prepared-edit"
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^wfwt1:prepared-edit:sha256:[0-9a-f]{64}$"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "operation",
+            "recipe",
+            "capture",
+            "candidate",
+            "compiler",
+            "kernel",
+            "splices",
+            "read_set"
+          ],
+          "properties": {
+            "operation": {
+              "const": "replace-content"
+            },
+            "recipe": {
+              "type": "string",
+              "pattern": "^wfwt1:recipe:sha256:[0-9a-f]{64}$"
+            },
+            "capture": {
+              "type": "string",
+              "pattern": "^wfwt1:capture:sha256:[0-9a-f]{64}$"
+            },
+            "candidate": {
+              "type": "string",
+              "pattern": "^wfwt1:candidate:sha256:[0-9a-f]{64}$"
+            },
+            "compiler": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "profile",
+                "sha256"
+              ],
+              "properties": {
+                "profile": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4096,
+                  "pattern": "^[^\\u0000-\\u001f\\u007f-\\u009f]+$"
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                }
+              }
+            },
+            "kernel": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "profile",
+                "sha256"
+              ],
+              "properties": {
+                "profile": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4096,
+                  "pattern": "^[^\\u0000-\\u001f\\u007f-\\u009f]+$"
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                }
+              }
+            },
+            "splices": {
+              "type": "array",
+              "minItems": 0,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "start",
+                  "end",
+                  "replacement", "origin"
+                ],
+                "properties": {
+                  "start": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 18446744073709551615
+                  },
+                  "end": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 18446744073709551615
+                  },
+                  "origin": {
+                    "type": "object", "additionalProperties": false,
+                    "required": ["start", "end"],
+                    "properties": {
+                      "start": {"type": "integer", "minimum": 0, "maximum": 18446744073709551615},
+                      "end": {"type": "integer", "minimum": 0, "maximum": 18446744073709551615}
+                    }
+                  },
+                  "replacement": {
+                    "type": "string",
+                    "pattern": "^(?:[0-9a-f]{2})*$"
+                  }
+                }
+              }
+            },
+            "read_set": {
+              "type": "array",
+              "minItems": 0,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "start",
+                  "bytes"
+                ],
+                "properties": {
+                  "start": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 18446744073709551615
+                  },
+                  "bytes": {
+                    "type": "string",
+                    "pattern": "^(?:[0-9a-f]{2})+$"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile",
+        "algorithm",
+        "kind",
+        "id",
+        "payload"
+      ],
+      "properties": {
+        "profile": {
+          "const": "writfold-worktree/1"
+        },
+        "algorithm": {
+          "const": "sha256"
+        },
+        "kind": {
+          "const": "request-key"
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^wfwt1:request-key:sha256:[0-9a-f]{64}$"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "principal",
+            "realm",
+            "run",
+            "opaque_key"
+          ],
+          "properties": {
+            "principal": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096,
+              "pattern": "^[^\\u0000-\\u001f\\u007f-\\u009f]+$"
+            },
+            "realm": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+            },
+            "run": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+            },
+            "opaque_key": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 8192,
+              "pattern": "^(?:[0-9a-f]{2})+$"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile",
+        "algorithm",
+        "kind",
+        "id",
+        "payload"
+      ],
+      "properties": {
+        "profile": {
+          "const": "writfold-worktree/1"
+        },
+        "algorithm": {
+          "const": "sha256"
+        },
+        "kind": {
+          "const": "observation"
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^wfwt1:observation:sha256:[0-9a-f]{64}$"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "if": {"properties": {"content": {"const": "unobserved"}}},
+              "then": {"properties": {"observed_sha256": {"type": "null"}}},
+              "else": {"properties": {"observed_sha256": {"type": "string"}}}
+            },
+            {
+              "if": {"properties": {"outcome": {"const": "confirmed"}}},
+              "then": {"properties": {"content": {"const": "candidate"}, "durability": {"const": "durable"}, "metadata": {"const": "preserved"}}}
+            },
+            {
+              "if": {"properties": {"outcome": {"const": "no-effect"}}},
+              "then": {"properties": {"content": {"const": "original"}, "metadata": {"const": "preserved"}}}
+            }
+          ],
+          "required": [
+            "intent",
+            "stamp",
+            "prepared",
+            "outcome",
+            "content",
+            "durability",
+            "metadata",
+            "observed_sha256"
+          ],
+          "properties": {
+            "intent": {
+              "type": "string",
+              "pattern": "^wf1:effect-intent:sha256:[0-9a-f]{64}$"
+            },
+            "stamp": {
+              "type": "string",
+              "pattern": "^wf1:dispatch-stamp:sha256:[0-9a-f]{64}$"
+            },
+            "prepared": {
+              "type": "string",
+              "pattern": "^wfwt1:prepared-edit:sha256:[0-9a-f]{64}$"
+            },
+            "outcome": {
+              "enum": [
+                "confirmed",
+                "no-effect",
+                "unknown",
+                "partial"
+              ]
+            },
+            "content": {
+              "enum": [
+                "original",
+                "candidate",
+                "other",
+                "unobserved"
+              ]
+            },
+            "durability": {
+              "enum": [
+                "durable",
+                "not-durable",
+                "unknown"
+              ]
+            },
+            "metadata": {
+              "enum": [
+                "preserved",
+                "changed",
+                "unobserved"
+              ]
+            },
+            "observed_sha256": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  ]
+}

@@ -320,6 +320,14 @@
     "effect_authority": false,
     "full_service_requirements": "not_run"
   },
+  "component_regression_review": {
+    "status": "real_process_regressions_pass",
+    "evidence_index": "qualification/status.json#/toolchain_regression_admission",
+    "scope": "Pinned control-client sessions, exact UTF-8/CRLF local proof/report handoff, source-byte A/B/A reuse and malformed-prior refusal. Not persistent grounding, full WR1-WR8 or effect authority.",
+    "writfold_grounded": false,
+    "effect_authority": false,
+    "full_service_requirements": "not_run"
+  },
   "weft_change_scope": {
     "source_modified": false,
     "configuration_modified": false,

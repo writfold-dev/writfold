@@ -1,6 +1,24 @@
 {
   "schema": "writfold-toolchain-smoke-inputs/1",
   "scope": "Pinned local component artifacts and receipt provenance; not release admission or source-revision-only byte identity. Paths may be relocated with explicit CLI inputs and --provenance-root.",
+  "case_sha256": {
+    "shared-contract": "fd22b74e09a9693441b660cd64bee4bacb2d308186890bc1c3375ab311a0cfa1",
+    "control-session": "811190c3a250c754e62de6cf2dd227809fb65de72cc2024827fac80cb569a30c",
+    "control-wrong-pin": "24cbb320070a3e6aa1415a3125d073760425fcade30ed8fa60abd9768dbe4267",
+    "prove-original": "0203e6d5e261489b426c2d40d5643a6f0d392ea8ca896fc08c40513842631674",
+    "preview-candidate": "d8c9748a9a87697821a77705e619e3bbfeaf72e32bf42eeedab4f74d1eb5338b",
+    "prove-candidate": "01ed8f51d1f5ba7b972e80c922f224ab5ab06de3ebd42467c11dac2792319947",
+    "reuse-identical": "44c00749883a8a8a3de7ae63a20fb9f750751f8b3c0522bdabeb54927f59c0fa",
+    "reuse-changed": "59d10cd19b182aac90ccdd610657be1d964998b9cfb9512e86a373de6a0368d5",
+    "prove-original-crlf": "a5a98482045ff51f61d4350f27ecfaf91a49bfa314e4e6ae21b5cffbc265b969",
+    "artifact-source-aba": "dc335c36a3c4f22625837f002d7e454889dee32871bff23d4cc3f71ea93a255e",
+    "artifact-denied-previews": "ae07e5c755309ff65fdcaf69896965b76f21f5b8586c21ecd93886c3cd1fd33b",
+    "concurrent-control": "30eb923bc02a9905b502e610c17321b45c5c4edc7f933d5dc4520b0d3f09aebc",
+    "persistent-handoff": "3fd177aad9b360ae0fb5549ea07dc2697d618c6974ce4acf5581a41074725962",
+    "authorized-worktree-effects": "69f1cbe2277f13228aa7783b613276fcb26caa401ec4f34082db895871f55dfa",
+    "crash-unknown-reconciliation": "1fb3efe7911fa38577346d78adc546d75dbfd9c6267867686390fb1a6dfe558e",
+    "retained-session-benchmarks": "eb4510715c3e9c83a2320ae42577b7c13968fe8af4cd3a5b8700eea34b3552a1"
+  },
   "weft": {
     "path": "~/.local/share/weft/evidence/client-20261106T0001/rust-002/weft",
     "sha256": "939e35badb2eea01b3723810b96563987332dde581ffd8960b0d353939537845"

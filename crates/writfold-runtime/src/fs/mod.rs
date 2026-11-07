@@ -10,6 +10,7 @@ mod lock;
 mod path;
 mod read;
 mod root;
+mod staged;
 mod temporary;
 mod write;
 
@@ -19,4 +20,8 @@ pub use lock::{LockKey, LockedFile, ManagedLocks};
 pub use path::RelativePath;
 pub use read::{OpenedFile, ReadExtent, ReadResult};
 pub use root::{ContainedRoot, PinnedFile};
+pub use staged::{
+    InstallError, InstalledStage, ReplacementObservation, RetainedStage, StageError, StageFailure,
+    StageIdentity, StageImage, StageMetadata, StageReconciliation, StageWitness, StagedReplacement,
+};
 pub use write::SyncedWrite;

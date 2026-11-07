@@ -162,6 +162,7 @@ def source_manifests() -> dict[str, Any]:
     for pattern in ("*.rs", "Cargo.toml", "*.lock"):
         rust.extend((ROOT / "crates").rglob(pattern))
     rust.extend(path for path in (ROOT / ".cargo").glob("*") if path.is_file())
+    rust.extend(path for path in (ROOT / "vendor").rglob("*") if path.is_file())
     producer = list((ROOT / "scripts").glob("writfold_conformance*.py"))
     producer.extend(ROOT / name for name in (
         "formal/Dockerfile", "docker/Dockerfile.tools", "compose.yaml",
