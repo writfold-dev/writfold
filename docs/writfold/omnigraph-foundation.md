@@ -210,19 +210,109 @@ only those exact literals. `source-closure-tests.json` records five exercised
 admission regressions for hidden byte changes, committed link containment,
 ignored extra inputs, executable-mode drift and wrong source commits.
 
-All receipts retain `wf24: not_run`. Full crash/lost-response campaigns,
-contended ownership/cancellation/replacement, frozen workloads/SLOs, V14/V15 and
-M10/M11 bridges, the Rust Omnigraph adapter and composed release acceptance remain
-open. The unchanged 0.14.0 profile is not silently replaced by this candidate.
+All receipts retain `wf24: not_run`. The later bounded development campaign below
+adds native failure/ownership, frozen workloads and fixed-URI managed restore.
+Uninstrumented in-flight/mid-commit boundaries, the complete native/runtime
+admission, Rust adapter and composed release acceptance remain open. Later
+V14/V15 and M10/M11 obligations are separate; P01O itself lists no V/M obligation.
+The unchanged 0.14.0 profile is not silently replaced by this candidate.
 
 The independent restore above covers **standalone graph roots**. The candidate's
 [cluster deployment boundary](https://github.com/ModernRelay/omnigraph/blob/1a856292c569e214333ab16b1d1af4d0e2de4ac2/docs/user/clusters/index.md#deployment-boundaries)
 does not admit importing existing managed roots, and PR #1235 explicitly leaves
-managed-root adoption at a new location unsupported. Managed-cluster backup/
-restore therefore remains a separate qualification/design boundary; no metadata
-rewrite, original-path alias or logical export is presented as its completion.
+managed-root adoption at a new location unsupported. The later managed restore
+below keeps the canonical URI while using independent physical storage. It does
+not qualify location adoption or replace standalone relocation checks; no native
+metadata rewrite, original-tree alias or logical export is used.
 
 The [review of this exact head](https://github.com/ModernRelay/omnigraph/pull/1235)
 also warns that main's planned `0.15.0` release may precede this fix. A version
 string is not fix provenance. Keep the exact source/archive/member identities
 above; do not substitute a same-version release or infer that the draft is merged.
+
+## Bounded native development contract
+
+[`omnigraph-development-contract.json`](../../qualification/omnigraph-development-contract.json)
+freezes the same source/archive/member identities, two-CPU/4-GiB containment,
+seven failure cases, 10k/100k typed graphs, sample counts and premeasurement
+budgets. It remains a development qualification input, not backend admission.
+Every request uses the actual authenticated native server; no mock store,
+Python product path, second normal writer or write retry is introduced.
+
+```sh
+python3 -B scripts/writfold_omnigraph_probe.py \
+  --campaign faults \
+  --profile qualification/omnigraph-development-contract.json \
+  --archive "$OMNIGRAPH_CANDIDATE_ARCHIVE" \
+  --receipt "$HOME/.local/share/writfold/evidence/native-faults-new.json"
+
+python3 -B scripts/writfold_omnigraph_probe.py \
+  --campaign managed-restore \
+  --profile qualification/omnigraph-development-contract.json \
+  --archive "$OMNIGRAPH_CANDIDATE_ARCHIVE" \
+  --receipt "$HOME/.local/share/writfold/evidence/native-workload-restore-new.json"
+```
+
+Select the exact retained candidate archive above and fresh receipt paths.
+`managed-restore` first executes both workload scales, then backs up their
+quiescent complete managed roots and restores only copied inputs in a fresh
+container. `workload` selects measurement alone. With this explicit development
+profile, `all` also selects these campaigns after the earlier native scopes.
+The hard 2700-second host-command and 2600-second workload-process caps apply
+in addition to individual SLOs; incomplete budget-limited runs cannot pass.
+
+### Executed evidence
+
+Under `~/.local/share/writfold/evidence/omnigraph-development-nli27nt8/`:
+
+- `faults-002.json`: seven cases and 365 case checks pass. Stale/malformed
+  conditions refuse without an unconditional fallback; concurrent same-base
+  writes have one winner; a second native owner refuses; the one-shot relay
+  withholds a real successful response and independent history finds exactly
+  that original effect. A disconnected request without observed admission stays
+  `Unknown`, with its original request identity and no replay. SIGKILL/reopen is
+  after acknowledged publication, not an invented mid-commit fault point.
+- `workload-restore-003.json`: 2,026 workload checks and 920 independent managed
+  restore checks pass. Both scales have complete node/edge inventories, native
+  keyed identities/endpoints, strict scalar/null handling, retained branches,
+  immutable epoch mapping and exact old/new pin reads.
+- `harness-regressions-001.json`: 13 source-closure, nullable-projection and
+  archive containment/integrity regressions pass.
+
+| Assets per epoch | Worst warm p95 query (ms) | Worst process-cold query (ms) | Peak native RSS (bytes) | Maximum observed native allocation (bytes) | Epoch mapping (s) |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 10,000 | 64.013 | 66.226 | 334,311,424 | 7,299,072 | 4.001 |
+| 100,000 | 1,499.864 | 1,450.995 | 636,776,448 | 94,367,744 | 505.648 |
+
+These are one source-bound synthetic run, not a comparative improvement or agent
+benchmark. Each of four queries in each epoch/scale has 20 warm and five
+fresh-process samples. Readiness itself performs an absent point query; OS caches
+are uncontrolled. Native warnings/errors and complete client request/response
+bytes are retained; workload INFO telemetry is disabled by the frozen profile.
+RSS is the owned Linux child's final `wait4` high-water observation, including
+exit, not aggregate concurrent-process RSS. Disk observations are not transient
+peak estimates. Fuzzy/vector retrieval remains unqualified.
+
+The managed restore preserved each canonical URI but used distinct mount/root
+identities, with original native roots absent from the restored container's
+mounts. URI boot used no deployment source bundle, init/apply, migration or
+logical re-import. Complete original/advanced snapshots, retained branches and
+current heads matched; native file inventories were unchanged after serving and
+shutdown. This does **not** claim that a managed cluster can move to a new URI.
+
+### Retained harness failures
+
+`faults-001.json` preserves the incorrect sent-request⇒admitted-write oracle and
+the resulting INFO-log overflow. The corrected oracle retains `Unknown` when
+only an unchanged read cut is observed; it never asserts no-effect. Read-only
+observation cadence is bounded without suppressing warnings or weakening the
+complete-log check. The unmeasured constant proxy-byte counter was removed;
+actual client EOF/reset and the withheld native response remain the evidence.
+
+`workload-restore-001.json` retains the invalid source-branch scope on a
+`branch_create` policy; the actual contract requires a target-branch scope.
+`workload-restore-002.json` retains the rejected omitted nullable cell. The
+corrected decoder follows the existing epoch probe: require the complete
+explicit column contract, map only missing declared-nullable `note` cells to
+null, and reject missing required or extra fields. Raw native responses remain
+unchanged. No measured SLO was loosened.

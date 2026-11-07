@@ -1,0 +1,11 @@
+version: 1
+metadata:
+  name: writfold-native-faults
+graphs:
+  faults:
+    schema: schema.pg
+    queries: [queries.gq]
+policies:
+  fault-access:
+    file: graph.policy.yaml
+    applies_to: [faults]

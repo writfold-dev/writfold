@@ -1,0 +1,13 @@
+node Asset {
+ slug: String @key
+ name: String
+ ordinal: I64
+ active: Bool
+ score: F64
+ note: String?
+ epoch: I64
+}
+edge DependsOn: Asset -> Asset {
+ ordinal: I64
+ @key(@src, @dst)
+}

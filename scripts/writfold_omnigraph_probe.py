@@ -45,6 +45,13 @@ def validate_profile(path: Path, receipt_path: Path | None = None) -> dict:
                     "status": "pass", "network": "none", "locked": True, "offline": True}
                 and build["source_before"]["sha256"] == build["source_after"]["sha256"],
                 "Source build provenance/archive/member mismatch")
+    if "development_contract" in profile:
+        contract = profile["development_contract"]
+        budgets = contract["execution_budget"]
+        require(contract["schema"] == "writfold-omnigraph-development/1"
+                and budgets["host_command_seconds"] == 2700
+                and budgets["workload_process_seconds"] == 2600,
+                "Development execution budget differs from the admitted runner")
     return profile
 
 
@@ -81,7 +88,7 @@ def inside(campaign: str, profile_path: Path) -> None:
     observation_path = ROOT / lock["observation"]["path"]
     require(evidence.sha(observation_path) == lock["observation"]["sha256"], "Tool observation changed")
     tools = {item["name"]: item for item in evidence.document(observation_path)["tools"]}
-    for name in ("python", "dolt"):
+    for name in (("python", "dolt") if campaign == "all" else ("python",)):
         require(evidence.sha(Path(tools[name]["executable"])) == tools[name]["sha256"],
                 f"Admitted {name} executable changed")
     require(Path(sys.executable).resolve() == Path(tools["python"]["executable"]),
@@ -143,6 +150,10 @@ def inside(campaign: str, profile_path: Path) -> None:
     elif campaign == "companion":
         run("companion", [sys.executable, str(ROOT / "scripts/writfold_omnigraph_companion.py"),
                           "--work", str(work / "companion"), "--profile", str(profile_path)], timeout=660)
+    elif campaign in ("faults", "workload", "managed-restore"):
+        selected = "workload" if campaign == "managed-restore" else campaign
+        run(selected, [sys.executable, str(ROOT / f"scripts/writfold_omnigraph_{selected}.py"),
+                       "--work", str(work / selected), "--profile", str(profile_path)], timeout=2600)
     else:
         if "source_build_receipt" in profile:
             from writfold_omnigraph_fixtures import derive
@@ -191,6 +202,93 @@ def independent_restore(attempt: evidence.Attempt, env: dict) -> dict:
             "isolation": "Fresh container mounts only copied backup inputs, never original native roots"}
 
 
+def collect_development(work: Path, campaign: str, receipt: dict) -> None:
+    path = work / campaign / "receipt.json"
+    result = evidence.document(path)
+    profile = receipt["profile"]
+    require(result["status"] == "pass" and result["source_commit"] == profile["source_commit"]
+            and result["profile_sha256"] == receipt["profile_input"]["sha256"]
+            and result["checks"] and all(check["pass"] is True for check in result["checks"]),
+            f"{campaign}: missing or failed source-bound checks")
+    if campaign == "faults":
+        required = profile["development_contract"]["required_failure_cases"]
+        cases = result["cases"]
+        require([case["name"] for case in cases] == required
+                and all(case["status"] == "pass" and case["checks"]
+                        and all(check["pass"] is True for check in case["checks"])
+                        and case["cleanup"]["pass"] is True for case in cases),
+                "Native failure coverage or owned teardown incomplete")
+        summary = {"cases": required, "unrun": result["unrun"]}
+    else:
+        contract = profile["development_contract"]["workloads"]
+        counts = contract["asset_counts"]
+        samples = result["samples"]
+        expected = {(count, epoch, query) for count in counts for epoch in (1, 2)
+                    for query in ("inventory", "edges", "point", "discovery")}
+        require(result["completed_scales"] == counts and len(samples) == len(expected)
+                and {(item["assets"], item["epoch"], item["query"]) for item in samples} == expected,
+                "Native workload scale/query/epoch coverage incomplete")
+        for item in samples:
+            warm, cold = item["warm_ms"], item["process_cold_ms"]
+            require(len(warm) == contract["warm_samples_per_query"]
+                    and len(cold) == contract["cold_process_samples_per_query"],
+                    "Native workload sample coverage incomplete")
+            p95 = sorted(warm)[(len(warm) * 95 + 99) // 100 - 1]
+            require(item["warm_p95_ms"] == p95 and p95 <= contract["slo"]["warm_p95_query_ms"]
+                    and max(cold) <= contract["slo"]["cold_process_max_query_ms"],
+                    "Native workload exceeded its frozen latency contract")
+        require([item["assets"] for item in result["restore_inputs"]] == counts
+                and all(item["quiescent"] is True for item in result["restore_inputs"]),
+                "Native workload roots are not a complete quiescent inventory")
+        summary = {"asset_counts": counts, "sample_groups": len(samples), "unrun": result["unrun_scope"]}
+    receipt["campaign_receipts"][campaign] = {
+        "status": "pass", "scope": result["scope"], "wf24": "not_run",
+        "receipt": evidence.file_record(path), "summary": summary}
+
+
+def managed_restore(attempt: evidence.Attempt, env: dict, work: Path) -> dict:
+    native_container(attempt, env, [
+        "/usr/bin/python3", "/work/writfold/scripts/writfold_omnigraph_managed_restore.py",
+        "prepare", "--work", "/evidence/managed-backup", "--workload", "/evidence/workload/receipt.json",
+        "--profile", "/profile/profile.json"])
+    prepared = evidence.document(work / "managed-backup/receipt.json")
+    require(prepared["status"] == "pass", "Managed native backup did not complete")
+    manifest = work / "managed-backup/manifest.json"
+    require(evidence.sha(manifest) == prepared["manifest"]["sha256"], "Managed manifest changed")
+    mount = attempt.directory / "managed-restore-work"
+    incoming = mount / "incoming"
+    incoming.mkdir(mode=0o700, parents=True)
+    sources = [manifest]
+    for archive in prepared["archives"]:
+        name = archive["archive"]
+        require(name == Path(name).name, "Unexpected managed archive name")
+        path = manifest.parent / name
+        require(evidence.sha(path) == archive["archive_sha256"]
+                and path.stat().st_size == archive["archive_bytes"], "Managed archive changed")
+        sources.append(path)
+    for source in sources:
+        require(source.is_file() and not source.is_symlink(), "Managed backup input must be regular")
+        with source.open("rb") as original, (incoming / source.name).open("xb") as copied:
+            shutil.copyfileobj(original, copied)
+        require(evidence.sha(source) == evidence.sha(incoming / source.name), "Managed transfer changed bytes")
+    native_container(attempt, dict(env, WRITFOLD_PROBE_WORK=str(mount)), [
+        "/usr/bin/python3", "/work/writfold/scripts/writfold_omnigraph_managed_restore.py",
+        "restore", "--work", "/evidence/managed-restored", "--manifest", "/evidence/incoming/manifest.json",
+        "--manifest-sha256", prepared["manifest"]["sha256"], "--profile", "/profile/profile.json"])
+    result = evidence.document(mount / "managed-restored/receipt.json")
+    require(result["status"] == "pass" and result["independent_physical_restore"] is True
+            and result["canonical_uris_preserved"] is True and result["managed_root_relocation"] is False
+            and result["source_bundle_used_for_boot"] is False
+            and result["checks"] and all(check["pass"] is True for check in result["checks"]),
+            "Independent fixed-location managed restore failed")
+    return {"scope": "fixed-canonical-URI independent physical restore; not managed-location adoption",
+            "wf24": "not_run", "status": "pass",
+            "isolation": "Fresh container mounts only copied native backups/manifest, never original native roots",
+            "mount": str(mount), "inputs": [evidence.file_record(incoming / p.name) for p in sources],
+            "prepare_receipt": evidence.file_record(work / "managed-backup/receipt.json"),
+            "restore_receipt": evidence.file_record(mount / "managed-restored/receipt.json")}
+
+
 def execute_campaigns(attempt: evidence.Attempt, env: dict, work: Path, campaign: str, receipt: dict) -> None:
     command = None if campaign == "all" else [
         "/usr/bin/python3", "/work/writfold/scripts/writfold_omnigraph_probe.py",
@@ -203,6 +301,12 @@ def execute_campaigns(attempt: evidence.Attempt, env: dict, work: Path, campaign
         receipt["campaign_receipts"]["relocation"] = result
         require(result["status"] == "pass", "Relocation campaign failed")
         receipt["relocation"] = "candidate-smoke-pass"
+        return
+    if campaign in ("faults", "workload", "managed-restore"):
+        selected = "workload" if campaign == "managed-restore" else campaign
+        collect_development(work, selected, receipt)
+        if campaign == "managed-restore":
+            receipt["managed_restore"] = managed_restore(attempt, env, work)
         return
     if campaign == "all":
         receipt["probe_receipts"] = {name: evidence.document(work / name / "receipt.json")
@@ -230,6 +334,13 @@ def execute_campaigns(attempt: evidence.Attempt, env: dict, work: Path, campaign
         result = evidence.document(work / "relocation/receipt.json")
         receipt["campaign_receipts"]["relocation"] = result
         require(result["status"] == "pass", "Relocation campaign failed")
+    if campaign == "all" and "development_contract" in receipt["profile"]:
+        for selected in ("faults", "workload"):
+            native_container(attempt, env, [
+                "/usr/bin/python3", f"/work/writfold/scripts/writfold_omnigraph_{selected}.py",
+                "--work", f"/evidence/{selected}", "--profile", "/profile/profile.json"])
+            collect_development(work, selected, receipt)
+        receipt["managed_restore"] = managed_restore(attempt, env, work)
 
 
 def host(args: argparse.Namespace) -> int:
@@ -249,6 +360,9 @@ def host(args: argparse.Namespace) -> int:
             if args.campaign == "relocation":
                 require(profile["source_commit"] == SOURCE_CANDIDATE,
                         "Relocation adversaries require the exact source-candidate profile")
+            if args.campaign in ("faults", "workload", "managed-restore"):
+                require(profile.get("development_contract", {}).get("schema") == "writfold-omnigraph-development/1",
+                        "Development campaigns require their explicit frozen contract")
             receipt["profile"] = profile
             receipt["profile_input"] = evidence.file_record(profile_path)
             bundle = attempt.directory / "profile"
@@ -308,7 +422,7 @@ def main() -> int:
     parser.add_argument("--profile", type=Path, default=PROFILE)
     parser.add_argument("--archive", type=Path, default=Path.home() /
                         ".local/share/writfold/native/omnigraph/0.14.0/omnigraph-linux-x86_64.tar.gz")
-    parser.add_argument("--campaign", choices=("all", "companion", "relocation"), default="all",
+    parser.add_argument("--campaign", choices=("all", "companion", "relocation", "faults", "workload", "managed-restore"), default="all",
                         help="Select a supplemental scope; no selection passes WF24")
     parser.add_argument("--inside", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()

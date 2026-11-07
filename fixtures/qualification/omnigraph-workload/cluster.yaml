@@ -1,0 +1,14 @@
+version: 1
+metadata:
+  name: writfold-bounded-workload
+graphs:
+  workload-e1:
+    schema: schema-e1.pg
+    queries: [queries-e1.gq]
+  workload-e2:
+    schema: schema-e2.pg
+    queries: [queries-e2.gq]
+policies:
+  workload-access:
+    file: graph.policy.yaml
+    applies_to: [workload-e1, workload-e2]

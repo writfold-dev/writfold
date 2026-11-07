@@ -1,0 +1,42 @@
+{
+  "schema": "writfold-native-faults/1",
+  "graph": "faults",
+  "state_contract": "Complete ordered projection of every property of every FaultCell. This schema has no other node types or relationship types. JSON types, field presence and exact native pins must agree.",
+  "initial_rows": [
+    {"c.key": "a", "c.value": "initial-a"},
+    {"c.key": "b", "c.value": "initial-b"}
+  ],
+  "required_cases": [
+    "conditional-stale-head-no-effect",
+    "conditional-header-never-downgrades",
+    "concurrent-condition-single-winner",
+    "second-writer-refused",
+    "lost-response-original-effect-observed",
+    "client-disconnect-does-not-release-owner",
+    "killed-owner-reopen-preserves-complete-history"
+  ],
+  "bounds": {
+    "case_seconds": 300,
+    "cli_seconds": 120,
+    "request_seconds": 15,
+    "ready_seconds": 45,
+    "response_bytes": 1048576,
+    "log_bytes_per_stream": 1048576,
+    "shutdown_grace_seconds": 5,
+    "race_clients": 2,
+    "history_commits": 32
+  },
+  "boundaries": {
+    "lost_response": "A one-shot TCP relay forwards one original request to the real native owner, consumes its real response and drops the client connection without response bytes. Independent native reads reconcile the unchanged original intent; no write retry.",
+    "disconnect": "Send a complete request directly to the native socket, then close without reading. Native admission and commit timing are not instrumented. Check competing-owner refusal and independently settle the original effect; no claim of observing an in-flight native permit.",
+    "kill": "SIGKILL after acknowledged native publication and complete history reads, then reap/drain/observe endpoint closure. Only local synchronous IO quiescence is asserted. Read supported cluster status, exact-ID unlock once, reopen and compare complete history and every retained pin. No unobserved mid-commit boundary."
+  },
+  "unrun": [
+    "WF24 as a whole and Writfold owner-service admission",
+    "hardware power loss, fsync/device durability and host crash",
+    "instrumented mid-commit crash and in-flight native cancellation/permit timing",
+    "cloud storage, leases, enterprise endpoints and remote outstanding IO",
+    "destructive cleanup, GC, managed relocation and restore",
+    "exhaustive thread scheduling or arbitrary-size graph history"
+  ]
+}

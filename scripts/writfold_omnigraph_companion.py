@@ -11,6 +11,7 @@ import os
 from pathlib import Path
 import re
 import secrets
+import select
 import signal
 import socket
 import subprocess
@@ -90,24 +91,50 @@ class Process:
         except ProcessLookupError:
             pass
 
+    def wait(self, timeout):
+        # A pidfd waits for this child without consuming its status. wait4 then
+        # retains the kernel high-water RSS, including the final exit interval.
+        if self.process.returncode is not None:
+            self.record.setdefault("rusage_unavailable", "child was already reaped by another observation")
+            return self.process.returncode
+        descriptor = os.pidfd_open(self.process.pid)
+        try:
+            readable, _, _ = select.select([descriptor], [], [], timeout)
+            if not readable:
+                raise subprocess.TimeoutExpired(self.process.args, timeout)
+            pid, status, usage = os.wait4(self.process.pid, 0)
+            require(pid == self.process.pid, "Wait returned another native child")
+            self.process.returncode = os.waitstatus_to_exitcode(status)
+            self.record["rusage"] = {
+                "peak_rss_bytes": usage.ru_maxrss * 1024,
+                "user_seconds": usage.ru_utime,
+                "system_seconds": usage.ru_stime,
+                "major_page_faults": usage.ru_majflt,
+                "minor_page_faults": usage.ru_minflt,
+                "scope": "kernel wait4 of the owned Linux native process; not aggregate simultaneous-tree RSS",
+            }
+            return self.process.returncode
+        finally:
+            os.close(descriptor)
+
     def finish(self, timeout, terminate=False):
-        if terminate and self.process.poll() is None:
+        if terminate and self.process.returncode is None:
             try:
                 os.killpg(self.process.pid, signal.SIGTERM)
                 self.record["sigterm_ns"] = time.time_ns()
             except ProcessLookupError:
                 pass
         try:
-            self.record["exit"] = self.process.wait(timeout=timeout)
+            self.record["exit"] = self.wait(timeout)
         except subprocess.TimeoutExpired:
             self.record["timeout_unknown_outcome"] = True
             self.kill()
-            self.record["exit"] = self.process.wait(timeout=5)
+            self.record["exit"] = self.wait(5)
         except BaseException as error:
             self.record["interrupted_unknown_outcome"] = type(error).__name__
             self.kill()
-            self.record["exit"] = self.process.wait(timeout=5)
-        self.record["reaped"] = self.process.poll() is not None
+            self.record["exit"] = self.wait(5)
+        self.record["reaped"] = self.process.returncode is not None
         for thread in self.threads:
             thread.join(timeout=2)
         if any(thread.is_alive() for thread in self.threads):

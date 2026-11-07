@@ -1,0 +1,117 @@
+{
+  "archive_bytes": 194021218,
+  "archive_sha256": "6c336006edec1952550e3a06859e656c502d07107c2bdc963f592d158e106506",
+  "archive_url": "file://~/.local/share/writfold/native/omnigraph/source-1235-u_eol09m/build-004.json.attempt/omnigraph-linux-x86_64.tar.gz",
+  "dependency_scope": "ldd-resolved ELF bytes observed inside recorded derived build image; not exhaustive runtime loading",
+  "development_contract": {
+    "execution_budget": {
+      "host_command_seconds": 2700,
+      "workload_process_seconds": 2600,
+      "precedence": "Hard global resource caps in addition to per-operation SLOs; their maxima are not additive allowances. Exhaustion leaves coverage incomplete and cannot pass or be reported as a measured backend SLO result."
+    },
+    "managed_restore": {
+      "archive_bytes_per_root": 3221225472,
+      "manifest_bytes": 67108864,
+      "maximum_members_per_root": 200000,
+      "canonical_location": "A fixed-canonical-URI restore must be labelled as such and cannot substitute for relocated graph-root checks. No cluster-location adoption, metadata rewrite, symlink or original-tree fallback. Any unmet required restore boundary remains blocked.",
+      "contract": "independent storage with originals unavailable; preserve exact cluster identity, graph pins and native closure",
+      "effect_replay": "No replay or new identity for an unknown native operation; ownership transfer only after qualified quiescence."
+    },
+    "not_admitted": [
+      "normal Writfold writer or owner services",
+      "managed-root adoption at a new location",
+      "hardware power-loss guarantees",
+      "destructive cleanup/GC",
+      "cloud or enterprise endpoint behavior",
+      "fuzzy/vector retrieval",
+      "agent/token-saving benchmarks"
+    ],
+    "required_failure_cases": [
+      "conditional-stale-head-no-effect",
+      "conditional-header-never-downgrades",
+      "concurrent-condition-single-winner",
+      "second-writer-refused",
+      "lost-response-original-effect-observed",
+      "client-disconnect-does-not-release-owner",
+      "killed-owner-reopen-preserves-complete-history"
+    ],
+    "resources": {
+      "cpus": 2,
+      "memory_bytes": 4294967296,
+      "operator_preflight": "qualification/resources.json and actual ci-infra storage binding, unchanged",
+      "pids": 256,
+      "threads": 2
+    },
+    "schema": "writfold-omnigraph-development/1",
+    "source_candidate": "1a856292c569e214333ab16b1d1af4d0e2de4ac2",
+    "status": "not_run",
+    "storage": "fresh disposable local-Linux cluster; one supervised native writer, no external providers or cloud stores",
+    "transport": "authenticated loopback HTTP 0.14; fixed named queries; conditional mutation route only after obtaining an exact pin",
+    "workloads": {
+      "asset_counts": [
+        10000,
+        100000
+      ],
+      "budget_policy": "Frozen before measurement. A failure is retained and cannot be turned into a pass by post-hoc threshold changes.",
+      "cold_definition": "fresh server process, OS page cache explicitly uncontrolled; no host-cache dropping or hardware-cold claim",
+      "cold_process_samples_per_query": 5,
+      "discovery": "bounded typed-relationship candidate discovery only; lexical/fuzzy/vector search is unqualified and not advertised",
+      "native_log_level": "warn",
+      "trace_policy": "All native warnings/errors and every complete client request/response are retained; per-read native INFO telemetry is disabled before workload measurement.",
+      "page_rows": 1000,
+      "required_observations": [
+        "complete-exact-inventory",
+        "exact-point-lookup",
+        "bounded-relationship-discovery",
+        "old-pin-survives-head-advance",
+        "cold-and-warm-query-times",
+        "native-peak-rss",
+        "native-disk-growth",
+        "old-and-new-epoch-mapping-cost"
+      ],
+      "seed": 20261106,
+      "slo": {
+        "cold_process_max_query_ms": 5000,
+        "complete_inventory_seconds": 300,
+        "epoch_mapping_seconds": 600,
+        "ingest_each_size_seconds": 600,
+        "native_disk_growth_bytes": 2147483648,
+        "native_peak_rss_bytes": 3221225472,
+        "server_ready_seconds": 45,
+        "warm_p95_query_ms": 2000
+      },
+      "warm_samples_per_query": 20
+    }
+  },
+  "epochs_restore": "not_run",
+  "fixture_root": "handovers/revision-4/writfold/qualification/storage",
+  "fixture_sha256": {
+    "README.md": "c6cdeed7f14188a3e9f6f0434e4e102bb57a79560ede232c6d92001a1023ffc7",
+    "compare.py": "ee069f6b33e82ec55582d5b9d6201a34d1af444773efc6bd3f54832c74efc58a",
+    "queries.gq": "d37726bfba9e76dc72b49c7191a7c9d67cb2ca31b90fb650d0779afdd640d4a1",
+    "schema-next.pg": "7e58e1f108a32ed1069fffaabf119662cd88210531038ca89f325368dd3a9b5e",
+    "schema.pg": "d95e4109914f909b850cebd79bcb7e0094aef33df6cbc8226e71ff491a6d7098",
+    "seed.jsonl": "a0d6d522b83867ab4a2df45b2f898b5f89576c8f46643682dbbd32b3f5bf0cb7",
+    "seed.sql": "aaae8df49c092691a59607cfe642307b1a307c43683053633fb3cc4afdf4fbd6",
+    "traversal.sql": "46dd8891ee2143143e116ce8408494d459db39427175e55bd673e952a0ad31cc",
+    "versioned_schema.py": "5dce6348651b424557e6d7c356536c1147ba2cb93d3f3de154afa4278fbbf5e2"
+  },
+  "member_provenance": "Built from pinned source; observed hashes in source build receipt",
+  "members": {
+    "omnigraph": "ae26ae21b6b7dbaa3556256e0a9887281caea8cd0094c2b12f640353a8704994",
+    "omnigraph-azure-admission": "111878c75dbed692b733700e11e27cfed075affdcd9362b29b2de84ff7b6962c",
+    "omnigraph-server": "aeeac98eab27ca76c37e0a661430a81876f74f469949e38a8b8fff9727714fab"
+  },
+  "schema_version": 1,
+  "scope": "Exact source development qualification contract; no public alpha, production backend or WF24 admission",
+  "server_lifecycle": "not_run",
+  "server_reported_version": null,
+  "server_version_note": "Actual --version and --help results retained in producer.json; no inferred server-reported version",
+  "source_build_receipt": {
+    "path": "~/.local/share/writfold/native/omnigraph/source-1235-u_eol09m/build-004.json",
+    "sha256": "b5b5d71369ed5f73b45b66459f9fd4237af02ddb07a8f0de09ee728e299424d9"
+  },
+  "source_commit": "1a856292c569e214333ab16b1d1af4d0e2de4ac2",
+  "version": "0.15.0",
+  "wf24": "not_run"
+}

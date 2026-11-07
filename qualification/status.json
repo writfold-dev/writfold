@@ -37,6 +37,43 @@
     "public_alpha_available": false,
     "release_gates_passed": []
   },
+  "omnigraph_native_development": {
+    "status": "scoped_campaigns_pass",
+    "profile": "qualification/omnigraph-development-contract.json",
+    "scope": "Exact candidate native failure/ownership, 10k/100k typed graphs and independent fixed-URI managed restore; not full WF24 or owner-service admission.",
+    "record": {
+      "path": "~/.local/share/writfold/evidence/omnigraph-development-nli27nt8/admission.json",
+      "sha256": "ae9cc7a3934e20a483080408518fafb0684987901467f3e8081f823f88408cf8",
+      "bytes": 559539
+    },
+    "verification": {
+      "failure_cases": 7,
+      "failure_case_checks": 365,
+      "workload_checks": 2026,
+      "managed_restore_checks": 920,
+      "harness_regressions": 13,
+      "query_sample_groups": 16
+    },
+    "restore_boundary": "Original physical storage not mounted; canonical URI preserved; exact native files unchanged after restored serving/shutdown. This is not managed-location adoption.",
+    "uncertainty": "A disconnected request without observed admission stays Unknown. Kill/reopen is after acknowledged publication; in-flight permit and mid-commit crash coverage remain unrun.",
+    "wf24": "not_run",
+    "production_backend_admitted": false,
+    "public_alpha_available": false
+  },
+  "worktrunk_native_observation": {
+    "status": "scoped_smoke_pass",
+    "scope": "Exact v0.81.0 Linux-musl artifact, SHA1/SHA256 disposable worktree creation, armed user/Git-hook suppression and occupied-path refusal. No Writfold run/grant/Worktrunk or interruption admission.",
+    "record": {
+      "path": "~/.local/share/writfold/native/worktrunk/v0.81.0-v051wdmm/native-observation-final.json",
+      "sha256": "edb7974c7ec0f478c91a1fc36b1242db6e58487b759962631626afcf14e64455",
+      "bytes": 3025
+    },
+    "source_commit": "e42f0f6fef2fdbd98fc92e5cd6c3cbea55b65b38",
+    "binary_sha256": "1f3d97a5c263f87345d03a1e439f5d53efa5a468e8bde10e724cbd9e5e79de9b",
+    "attestation_verification": "not_run",
+    "user_install_or_shell_integration_changed": false,
+    "owner_service_admitted": false
+  },
   "omnigraph_source_candidate": {
     "status": "scoped_native_smoke_pass",
     "scope": "Exact PR1235 source build and native comparison/epochs/independent restore/relocation/companion smoke only; not WF24 or backend admission.",

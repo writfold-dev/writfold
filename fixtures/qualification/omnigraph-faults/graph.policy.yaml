@@ -1,0 +1,20 @@
+version: 1
+protected_branches: [main]
+groups:
+  readers: [act-reader, act-writer]
+  writers: [act-writer]
+rules:
+  - id: synthetic-snapshot-read
+    allow:
+      actors: { group: readers }
+      actions: [read]
+      branch_scope: any
+  - id: synthetic-query-invoke
+    allow:
+      actors: { group: readers }
+      actions: [invoke_query]
+  - id: synthetic-main-change
+    allow:
+      actors: { group: writers }
+      actions: [change]
+      branch_scope: protected

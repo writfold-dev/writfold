@@ -1,0 +1,25 @@
+query inventory($after: String) {
+ match { $a: Asset $a.slug > $after }
+ return { $a.@id as native_id, $a.slug as slug, $a.name as name, $a.ordinal as ordinal, $a.active as active, $a.score as score, $a.note as note, $a.epoch as epoch }
+ order { $a.slug }
+ limit 1000
+}
+query edges($after: String, $destination: String) {
+ match { $a: Asset $a $e:dependsOn $b ($a.slug > $after or ($a.slug = $after and $b.slug > $destination)) }
+ return { $e.@id as native_id, $e.@src as native_source, $e.@dst as native_destination, $a.slug as source, $b.slug as destination, $e.ordinal as ordinal }
+ order { $a.slug, $b.slug }
+ limit 1000
+}
+query point($key: String) {
+ match { $a: Asset { slug: $key } }
+ return { $a.@id as native_id, $a.slug as slug, $a.name as name, $a.ordinal as ordinal, $a.active as active, $a.score as score, $a.note as note, $a.epoch as epoch }
+}
+query discovery($key: String) {
+ match { $a: Asset { slug: $key } $a dependsOn{1,2} $b }
+ return { $b.@id as native_id, $b.slug as slug }
+ order { $b.slug }
+ limit 3
+}
+query advance($name: String) {
+ update Asset set { name: $name } where slug = "asset-000000"
+}
