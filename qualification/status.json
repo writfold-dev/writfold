@@ -135,6 +135,72 @@
     "public_alpha_available": false,
     "full_release_gates_passed": []
   },
+  "procedure_admission_component": {
+    "status": "scoped_component_pass",
+    "scope": "Structural admission of a supplied finite procedure and its whole pinned catalog against every Lean ProcedureTyped conjunct plus stricter declaration, realm, gate, resource and adapter rules; not catalog authentication, revision-digest binding, gate truth, grants, adapter safety or execution authority.",
+    "receipts": {
+      "unit": {
+        "path": "~/.local/share/writfold/evidence/procedure-admission-rqLaElsf/unit-005.json",
+        "sha256": "5882d95a6f1708a6c82f822ff44b89bf0c6a5204f1b79f02d07178fd347ffdae",
+        "bytes": 579754
+      },
+      "verus": {
+        "path": "~/.local/share/writfold/evidence/procedure-admission-rqLaElsf/verus-005.json",
+        "sha256": "4ed3ca3ff4587a6add10fd8af1685bb032cf0bfc123b32b474ddd618d529b90c",
+        "bytes": 3858092
+      },
+      "quality": {
+        "path": "~/.local/share/writfold/evidence/procedure-admission-rqLaElsf/quality-005.json",
+        "sha256": "0ec00576e4d3565c8df1598cc8f742f0831ac3346252601404a0f0dfca96bdde",
+        "bytes": 1020406
+      }
+    },
+    "verification": {
+      "workspace_tests": 454,
+      "workspace_tests_ignored": 0,
+      "procedure_tests": 13,
+      "targeted_refusals": 48,
+      "refusal_rules_covered": 17,
+      "temporary_semantic_mutants_detected": 4,
+      "quality_checks": 255,
+      "quality_skips": 0,
+      "verus_producer_checks": 273,
+      "whole_domain_verified": 1294,
+      "verus_mutation_calibrations": 18
+    },
+    "proof_relation": "Only the reused call_rank_allowed guard and the new identity/quantity macro instances are Verus-checked; the checker body is tested ordinary Rust, not a proved Lean-to-Rust refinement.",
+    "retained_failed_attempts": [
+      {
+        "attempt": "verus-001, quality-001",
+        "disposition": "Documentation edited during the run; source scope changed."
+      },
+      {
+        "attempt": "citation-verus-001",
+        "disposition": "Frozen citation profile hashes for ids.rs/units.rs already differed at HEAD af55f98; frozen historical scope not re-pinned."
+      },
+      {
+        "attempt": "verus-002, quality-002",
+        "disposition": "Formatted refusal test module exceeded the 400-line and 80-line budgets; split into two modules."
+      },
+      {
+        "attempt": "unit-002, verus-003, quality-003",
+        "disposition": "Operator storage floor (state < 64 GiB) refused preflight; no prune performed."
+      },
+      {
+        "attempt": "verus-004",
+        "disposition": "Positive pass; identity-constructor-bypass mutant also failed the seven new token identities. Expected family extended by exactly those names."
+      }
+    ],
+    "not_claimed": [
+      "ALPHA04 or any ALPHA requirement",
+      "Lean-to-Rust refinement",
+      "wire schema or revision digest binding",
+      "operator grants, approvals or revocations (draft remains parked)",
+      "WF gate passes"
+    ],
+    "public_alpha_available": false,
+    "full_release_gates_passed": []
+  },
   "publication_history_audit": {
     "status": "inspected_not_cleared_for_publication",
     "record": {
