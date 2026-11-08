@@ -12,6 +12,8 @@ pub enum PathError {
     DotComponent,
     #[error("NUL bytes are forbidden in filesystem paths")]
     Nul,
+    #[error("exactly one child path component is required")]
+    MultipleComponents,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -40,7 +42,7 @@ pub enum FsError {
     NotDirectory,
     #[error("the opened source or its directory entry changed")]
     ChangedSource,
-    #[error("refusing to write a multiply linked file")]
+    #[error("multiply linked files are refused for this operation")]
     HardLinked,
     #[error("the cooperating-writer lock is busy")]
     LockBusy,
@@ -59,7 +61,7 @@ pub enum FsError {
     Io(#[source] Errno),
     #[error("a generated digest failed domain validation: {0}")]
     Digest(#[source] IdentityError),
-    #[error("the root directory was created but parent synchronization failed: {0}")]
+    #[error("a directory is visible but its synchronization is unknown: {0}")]
     RootDurabilityUnknown(#[source] Errno),
 }
 

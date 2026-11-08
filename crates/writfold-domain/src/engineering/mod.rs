@@ -29,6 +29,7 @@ mod codec;
 pub mod dependency;
 mod digests;
 mod kinds;
+pub mod objects;
 
 pub use digests::*;
 pub use kinds::FingerprintKind;

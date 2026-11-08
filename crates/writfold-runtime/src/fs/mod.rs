@@ -4,10 +4,12 @@
 //! when directories are renamed. Cooperating writers must retain lock entries and
 //! use the same lock protocol. Metadata comparisons are not lock-free ABA proofs.
 
+mod directories;
 mod error;
 mod identity;
 mod lock;
 mod path;
+mod private;
 mod read;
 mod root;
 mod staged;

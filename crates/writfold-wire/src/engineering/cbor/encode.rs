@@ -1,6 +1,19 @@
 use super::{Error, Value, integer};
 use crate::{Budget, Limits};
 
+pub(crate) fn argument_header(major: u8, argument: u64, header: &mut [u8; 9]) -> usize {
+    let (info, width) = match argument {
+        0..=23 => (argument as u8, 0),
+        24..=255 => (24, 1),
+        256..=65_535 => (25, 2),
+        65_536..=4_294_967_295 => (26, 4),
+        _ => (27, 8),
+    };
+    header[0] = (major << 5) | info;
+    header[1..1 + width].copy_from_slice(&argument.to_be_bytes()[8 - width..]);
+    1 + width
+}
+
 pub(super) struct Writer {
     pub(super) bytes: Vec<u8>,
     limits: Limits,
@@ -30,16 +43,8 @@ impl Writer {
 
     pub(super) fn header(&mut self, major: u8, argument: u64) -> Result<(), Error> {
         let mut header = [0_u8; 9];
-        let (info, width) = match argument {
-            0..=23 => (argument as u8, 0),
-            24..=255 => (24, 1),
-            256..=65_535 => (25, 2),
-            65_536..=4_294_967_295 => (26, 4),
-            _ => (27, 8),
-        };
-        header[0] = (major << 5) | info;
-        header[1..1 + width].copy_from_slice(&argument.to_be_bytes()[8 - width..]);
-        self.push(&header[..1 + width])
+        let length = argument_header(major, argument, &mut header);
+        self.push(&header[..length])
     }
 
     fn blob(&mut self, major: u8, bytes: &[u8]) -> Result<(), Error> {

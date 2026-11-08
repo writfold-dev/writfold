@@ -25,9 +25,9 @@ The Rust implementation lives in `crates/`:
 - `writfold-kernel`: finite witnesses, independent assessments, admission, portfolio and design judgments; its broader Rust semantic proofs remain open.
 - `writfold-wire`: bounded JSON/CBOR, typed semantic and citation codecs, signatures, protocol-2 request admission, bounded control replies and the shared agent contract.
 - `writfold-protocol`: checked generation allocation and distinct instance/session/request identities with executable-body initialization/shutdown guarantees.
-- `writfold-runtime`: contained filesystem/Git/Dolt primitives, shared owned-process cleanup, bounded stdio framing and observed ephemeral invocation identities.
+- `writfold-runtime`: contained filesystem/Git/Dolt primitives, a pinned owned Omnigraph client, shared process cleanup, bounded stdio framing and observed ephemeral invocation identities.
 - `writfold-sources`: byte-preserving authored-document and citation syntax, with new single-line mutation admission and pinned Unicode behavior.
-- `writfold-store`: typed exact Dolt inventory/navigation reads under the disposable DINT01 profile; no authenticated release writer or corpus service.
+- `writfold-store`: immutable realm-bound raw object retention and typed exact Dolt inventory/navigation reads under DINT01; no authenticated release writer or corpus/effect service.
 - `writfold-xtask`: development-only syntax, dependency and nominal-type qualification.
 - `writfold-app`: typed application orchestration for the control-only agent profile.
 - `writfold`: native `serve`, version and help commands; no corpus/effect commands are registered in this profile.
@@ -66,12 +66,18 @@ assumptions**: a clean Lean audit covers 571 declarations, the reference execute
 properties. The earlier 407-declaration/30-case result remains historical evidence.
 These are not Rust refinement proofs or complete WF31 qualification.
 
-Independent P14 implementation now provides checked engineering fingerprints and
-a bounded canonical-CBOR boundary, exercised through a static-musl API program.
-Durable EngineeringLedger, graph integration and production effect adapters are
-not implemented by this increment. See
-[revision-5 progress](qualification/revision-5-progress.json) for exact receipts,
-source applicability and retained failures.
+Independent P14 implementation provides checked engineering fingerprints, bounded
+canonical CBOR and [immutable retained objects](docs/writfold/filesystem-effects.md#immutable-retained-object-prerequisite),
+exercised through real static-musl consumers. The
+[Rust Omnigraph component](docs/writfold/omnigraph-foundation.md#exercised-rust-native-data-path-component)
+also exercises conditional native writes, exact snapshots and retained history.
+Neither component is a durable EngineeringLedger or owner authorization service.
+
+The approved [experimental-alpha profile](qualification/experimental-alpha-profile.json)
+requires the actual single-file toolchain flow and its safety/proof/native
+boundaries while omitted features remain unavailable. It does not relabel
+unfinished WF gates or make an installer available today. Current exact evidence,
+scope and retained failures remain in [the status ledger](qualification/status.json).
 
 ## Local build and qualification
 

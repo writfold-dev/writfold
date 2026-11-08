@@ -1,6 +1,8 @@
 use super::identity::digest;
 use super::temporary::Temporary;
-use super::{BudgetKind, FileIdentity, FsError, LockedFile, OpenedFile, WriteError};
+use super::{
+    BudgetKind, FileIdentity, FsError, LockedFile, OpenedFile, ReadExtent, ReadResult, WriteError,
+};
 use rustix::fs::fsync;
 use writfold_domain::{ByteCount, ContentDigest};
 
@@ -32,6 +34,43 @@ impl LockedFile<'_> {
     pub fn create(&mut self, content: &[u8], limit: ByteCount) -> Result<SyncedWrite, WriteError> {
         check_write_budget(content, limit)?;
         self.publish(content, None)
+    }
+
+    /// Synchronize a complete observed revision in place, never replacing it.
+    /// The retained writer lock and unchanged file stamp bind the observation;
+    /// this is not a lock-free ABA proof. Current synchronization says nothing
+    /// about prior native effect application or permission. Failed synchronization
+    /// remains explicit although these bytes were already visible before the call.
+    pub fn sync_existing(&self, observed: &ReadResult) -> Result<SyncedWrite, WriteError> {
+        self.ensure_lock()?;
+        if observed.extent() != ReadExtent::Complete {
+            return Err(FsError::ChangedSource.into());
+        }
+        let opened = self.target.open_read()?;
+        if opened.stamp.links != 1 {
+            return Err(FsError::HardLinked.into());
+        }
+        if opened.stamp != observed.stamp {
+            return Err(FsError::ChangedSource.into());
+        }
+        opened.ensure_unchanged()?;
+        let synchronized = fsync(&opened.descriptor)
+            .and_then(|()| fsync(&self.target.parent))
+            .map_err(FsError::from)
+            .and_then(|()| opened.ensure_unchanged())
+            .and_then(|()| self.ensure_lock());
+        if let Err(source) = synchronized {
+            return Err(WriteError::PublishedButDurabilityUnknown {
+                digest: observed.digest().clone(),
+                bytes: observed.bytes().len(),
+                source,
+            });
+        }
+        Ok(SyncedWrite {
+            digest: observed.digest().clone(),
+            bytes: observed.bytes().len(),
+            identity: observed.identity(),
+        })
     }
 
     /// Revalidate the full expected content under this managed writer lock.

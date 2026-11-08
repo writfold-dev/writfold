@@ -122,6 +122,58 @@ and reconciled the exact inode, then refused equal-byte foreign-inode attributio
 `owner-alpha-components-mgmh53f5/native-replay-001.json` retains that execution
 with an empty `PATH`; it is not an owner-service, crash-process or alpha pass.
 
+## Immutable retained-object prerequisite
+
+`writfold_store::objects::ObjectStore::{initialize, open, put, get}` implements
+the raw retained-byte portion of the experimental realm layout. Initialization
+preflights the closed identity schema and all metadata budgets, creates one new
+private root with `identity.json`, `objects/sha256/` and `coordination/`, and
+refuses existing roots. It does not initialize policy, keys, corpus publication,
+native graphs or effect services. This is not an effect-ready realm.
+
+Open binds the actual expected RealmId, exact original identity bytes and inode.
+A live handle refuses identity replacement or instance drift. Continuity across
+an arbitrary later reopen still requires the caller's separately retained and
+qualified expected incarnation; supplied metadata is not current authority.
+
+Put retains raw bytes under the engineering BlobDigest at
+`objects/sha256/<first-two-hex>/<remaining-hex>`. Shards are created lazily under
+managed coordination. Existing objects must match complete original bytes and
+length; they are synchronized in place, never repaired or replaced. Explicit
+put also synchronizes the identity binding under the same key as initialization,
+so visible identity bytes left by an uncertain initial publication do not
+silently become a durable binding. Reads do not perform that settlement.
+
+Get checks realm, identity, privacy, byte budget, complete length and the
+domain-separated fingerprint. It does not create directories/lock entries,
+fsync, substitute HEAD or return a truncated success. Symlinks, nonregular files,
+hardlinks, wrong-owner/private-mode failures and observed namespace drift refuse.
+These checks retain the cooperating-owner assumptions below.
+
+The runtime additions are descriptor-relative `ContainedRoot::create_child`,
+explicit private admission/locking and `LockedFile::sync_existing`. The latter
+requires a complete captured file stamp, rejects a same-byte foreign inode, and
+observes file then parent-directory fsync without rewriting the file. It proves
+neither past effect application nor permission. `PublishedButDurabilityUnknown`
+remains distinct from a successful retained reference.
+
+Evidence under `~/.local/share/writfold/evidence/retained-objects-ej3iov53/`:
+`native-001.json` records a real static-musl consumer, running as the operator UID
+with `PATH=/nonexistent`, exercising fresh/reopened stores, exact empty/binary/
+UTF-8+CRLF bytes, duplicate inode reuse and scope/content/path/privacy refusals.
+`unit-003.json` records 421 passing tests with zero failures/ignored tests;
+`quality-001.json` passes 255 checks with no skips. `verus-001.json` passes 273
+producer checks and 18 semantic mutant families, including the new structural
+reference bindings, not filesystem/refinement proofs.
+
+Review found that reopen could forget identity-publication uncertainty; explicit
+retention now settles it under the initialization key. The identity-owner
+contention regression exercises the ordering. The obsolete literal-layout-lock
+test failure is retained in `unit-002.json`; its replacement probes actual
+created coordination entries without pinning an internal lock filename.
+Injected fsync failures, host power loss and a separate-process simultaneous
+first-put campaign are not claimed by this component evidence.
+
 ## Required qualification and trust boundary
 
 The supported target is Linux/WSL x86_64. The intended filesystem profile is an operator-admitted **local Linux filesystem** supporting descriptor-relative no-follow opens, coherent inode/stat observations, exclusive creation, advisory flock, atomic same-directory rename/hardlink publication, and file/directory fsync. Qualification must bind the actual mount/filesystem and storage path used by the operator. NFS, SMB, FUSE, Windows/DrvFS mounts, unusual pseudo-filesystems, and other environments with different locking/rename/error/durability semantics are not implicitly qualified. A Linux target triple alone is not filesystem qualification. Detected unsupported syscalls are errors; the adapter does not silently downgrade.

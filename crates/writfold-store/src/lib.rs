@@ -1,4 +1,5 @@
-//! Read-only typed storage projections, not admission or publication authority.
+//! Typed storage projections and immutable byte retention, not effect authority.
 #![forbid(unsafe_code)]
 
 pub mod dolt;
+pub mod objects;

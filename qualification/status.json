@@ -41,6 +41,45 @@
     "alpha_requirements_passed": [],
     "full_release_gates_passed": []
   },
+  "retained_objects_component": {
+    "status": "scoped_component_pass",
+    "scope": "Immutable realm-bound raw byte retention and structural realm/blob-reference bindings; not EngineeringLedger, ready-realm initialization or authority.",
+    "record": {
+      "path": "~/.local/share/writfold/evidence/retained-objects-ej3iov53/component-admission.json",
+      "sha256": "44d71326624ef3112340255afdd3e3b930d7e9b1d057b03a87c79f6bdf100fcb",
+      "bytes": 568440
+    },
+    "consumer_sha256": "fe93161061ecad705291dea7f42a75f727d692ce90783ba09089befc2b46d9dd",
+    "verification": {
+      "workspace_tests_passed": 421,
+      "workspace_tests_ignored": 0,
+      "quality_checks_passed": 255,
+      "quality_skips": 0,
+      "verus_checks_passed": 273,
+      "semantic_mutant_families": 18,
+      "actual_static_musl_retention_smoke": "pass",
+      "observed_filesystem": "ext4"
+    },
+    "public_alpha_available": false,
+    "alpha_requirements_passed": [],
+    "full_release_gates_passed": []
+  },
+  "publication_history_audit": {
+    "status": "inspected_not_cleared_for_publication",
+    "record": {
+      "path": "~/.local/share/writfold/evidence/publication-history-audit-20261107-001/publication-history-report.json",
+      "sha256": "9bcac3ff744aa52c48b7881ac544cbab58b8d6e9d84c8cf94ec98ce76006ed61",
+      "bytes": 825784
+    },
+    "scope": "Observed reachable Git refs/objects, nested archives/PDF streams and caller-visible GitHub GET surfaces at the recorded times; later commits/assets need incremental review.",
+    "blockers": [
+      "Writfold private-derived/reference redistribution remains uncleared; preserve original private history.",
+      "Weft hosted v0.1.0-dev.1 asset 713398499 retains pre-MIT proprietary metadata.",
+      "Splicery source scan starts at its current import root; separate pre-import 0.6 history is outside that scope."
+    ],
+    "visibility_changes_performed": false,
+    "limitations": "No claim about unreachable/deleted hosted content, arbitrary encoded secrets or blanket legal clearance."
+  },
   "owner_component_development": {
     "status": "components_exercised_services_unavailable",
     "scope": "Worktree byte contracts, pinned host replay, native Git CAS, native staging/reconciliation and exact source admission; not owner services, full SG08/WF25/WF27 or public alpha.",

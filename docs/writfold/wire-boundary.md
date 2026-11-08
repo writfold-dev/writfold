@@ -194,6 +194,32 @@ the same boundary with no runtime toolchain on PATH. Exact source-bound results
 and proof scope belong to [`qualification/status.json`](../../qualification/status.json);
 no full P14/WF25/V16 or installed-service completion is implied.
 
+## Experimental realm identity and raw retained blobs
+
+`engineering::objects::{encode_identity, decode_identity}` freezes a separate
+local `identity.json` envelope: exactly `namespace: "writfold-realm"`, integer
+`schema: 1`, `profile: "writfold-experimental-alpha/1"` and nominal text `realm`,
+`kb`, `instance`. Encoding borrows fields into the existing bounded canonical
+JSON writer. Decoding rejects duplicates, unknown fields, noninteger schemas,
+unsupported profiles and malformed identities while retaining iterative cleanup.
+The supplied metadata is not authority or evidence that realm initialization
+finished. Original file bytes and incarnation are separately bound by the store.
+
+`engineering::blob_fingerprint` hashes the exact registered `blob` preimage:
+`writfold-engineering/1/blob` + NUL + the shortest canonical CBOR byte-string
+header + the original bytes. It streams those parts without constructing an
+artifact-sized CBOR copy. Empty, binary, Unicode and CRLF bytes are not normalized.
+Independent SHA-256 vectors exercise the 23/24, 255/256 and 65535/65536 length
+boundaries. An unqualified raw filesystem SHA-256 is not a BlobDigest.
+
+`RealmIdentity` and `BlobReference` retain distinct realm, KB, instance,
+domain-separated digest and byte-count types. Their selected constructor/accessor
+bodies are covered by the explicit Verus profile; digest substitution is a
+semantic negative calibration. This does not prove SHA-256 collision resistance,
+native durability, current authorization, ledger origin or cross-system refinement.
+See the [retained-object boundary](filesystem-effects.md#immutable-retained-object-prerequisite)
+for actual IO and evidence scope.
+
 ## Source mapping
 
 Reference: `1c17b94be37af8f82f222baddf31435f14172e1a`.

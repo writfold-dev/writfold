@@ -9,7 +9,7 @@ use std::path::Path;
 #[derive(Debug)]
 pub struct ContainedRoot {
     pub(super) directory: OwnedFd,
-    bindings: Vec<(OwnedFd, OsString, FileIdentity)>,
+    pub(super) bindings: Vec<(OwnedFd, OsString, FileIdentity)>,
 }
 
 /// An owned parent descriptor and a single validated leaf. No later operation

@@ -21,7 +21,7 @@ pub enum ReadExtent {
 pub struct ReadResult {
     bytes: Vec<u8>,
     digest: ContentDigest,
-    identity: FileIdentity,
+    pub(super) stamp: FileStamp,
     extent: ReadExtent,
 }
 
@@ -39,7 +39,7 @@ impl ReadResult {
     }
 
     pub fn identity(&self) -> FileIdentity {
-        self.identity
+        self.stamp.identity
     }
 
     pub fn extent(&self) -> ReadExtent {
@@ -151,7 +151,7 @@ impl OpenedFile<'_> {
         Ok(ReadResult {
             bytes,
             digest: finish_digest(hasher)?,
-            identity: self.stamp.identity,
+            stamp: self.stamp,
             extent,
         })
     }

@@ -54,6 +54,11 @@ impl ManagedLocks {
         self.root.check_current()
     }
 
+    /// Require a private cooperating-owner namespace without creating entries.
+    pub fn check_private(&self) -> Result<(), FsError> {
+        self.root.check_private()
+    }
+
     /// Explicit initialization; missing ancestors are not created.
     pub fn create(path: impl AsRef<Path>) -> Result<Self, FsError> {
         Ok(Self {
@@ -70,6 +75,7 @@ pub struct LockedFile<'a> {
     name: OsString,
     descriptor: OwnedFd,
     identity: FileIdentity,
+    private: bool,
 }
 
 impl Drop for LockedFile<'_> {
@@ -92,7 +98,17 @@ impl PinnedFile {
         namespace: &'a ManagedLocks,
         key: &LockKey,
     ) -> Result<LockedFile<'a>, FsError> {
-        self.acquire_lock(namespace, key, true)
+        self.acquire_lock(namespace, key, true, false)
+    }
+
+    /// Write-side acquisition in a private, effective-user-owned namespace.
+    /// An existing entry must be private before it is locked or synchronized.
+    pub fn try_lock_private<'a>(
+        &'a self,
+        namespace: &'a ManagedLocks,
+        key: &LockKey,
+    ) -> Result<LockedFile<'a>, FsError> {
+        self.acquire_lock(namespace, key, true, true)
     }
 
     /// Read-side acquisition of a preprovisioned stable entry. Never creates or
@@ -103,7 +119,7 @@ impl PinnedFile {
         key: &LockKey,
     ) -> Result<LockedFile<'a>, FsError> {
         namespace.check_current()?;
-        self.acquire_lock(namespace, key, false)
+        self.acquire_lock(namespace, key, false, false)
     }
 
     fn acquire_lock<'a>(
@@ -111,7 +127,11 @@ impl PinnedFile {
         namespace: &'a ManagedLocks,
         key: &LockKey,
         create: bool,
+        private: bool,
     ) -> Result<LockedFile<'a>, FsError> {
+        if private {
+            namespace.check_private()?;
+        }
         let name = OsString::from(format!("{}.lock", key.as_str()));
         let (descriptor, stamp) = open_regular(
             &namespace.root.directory,
@@ -124,6 +144,9 @@ impl PinnedFile {
         )?;
         if stamp.links != 1 {
             return Err(FsError::HardLinked);
+        }
+        if private {
+            super::private::private_file(&fstat(&descriptor).map_err(FsError::from)?)?;
         }
         flock(&descriptor, FlockOperation::NonBlockingLockExclusive).map_err(|error| {
             if error == Errno::AGAIN {
@@ -138,6 +161,7 @@ impl PinnedFile {
             name,
             descriptor,
             identity: stamp.identity,
+            private,
         };
         guard.ensure_lock()?;
         if create {
@@ -171,7 +195,13 @@ impl LockedFile<'_> {
     }
 
     pub(super) fn ensure_lock(&self) -> Result<(), FsError> {
+        if self.private {
+            self.namespace.check_private()?;
+        }
         let opened = fstat(&self.descriptor).map_err(FsError::from)?;
+        if self.private {
+            super::private::private_file(&opened)?;
+        }
         let named = statat(
             &self.namespace.root.directory,
             &self.name,

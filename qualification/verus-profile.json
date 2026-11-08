@@ -1,6 +1,6 @@
 {
   "schema_version": 4,
-  "scope": "P02 nominal identities, checked runtime conversions and storage-pin read consistency; retained P01 generation allocation; ordinary invocation-local session lifecycle and exact reply correlation; engineering dependency-lock call ranks; DINT01 current Dolt identity constructors and complete read-pin/actual-tool consistency. Not full codec/native/store refinement, corpus authorization or service integration.",
+  "scope": "P02 nominal identities, checked runtime conversions and storage-pin read consistency; retained P01 generation allocation; ordinary invocation-local session lifecycle and exact reply correlation; engineering dependency-lock call ranks and retained-object realm/blob-reference structural bindings; DINT01 current Dolt identity constructors and complete read-pin/actual-tool consistency. Not full codec/native/store refinement, corpus authorization or service integration.",
   "excluded_claims": [
     "BigInt arithmetic implementation verification",
     "whole semantic-kernel verification",
@@ -13,8 +13,18 @@
   "shipping_target": "x86_64-unknown-linux-musl",
   "crates": {
     "writfold_domain": {
-      "minimum_verified": 1112,
+      "minimum_verified": 1122,
       "functions": {
+        "writfold_domain::engineering::objects::RealmIdentity::new": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/records.rs", "lines": [53, 56]}]},
+        "writfold_domain::engineering::objects::RealmIdentity::clone": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/records.rs", "lines": [26, 31]}]},
+        "writfold_domain::engineering::objects::RealmIdentity::eq": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/records.rs", "lines": [42, 47]}]},
+        "writfold_domain::engineering::objects::RealmIdentity::realm": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/engineering/objects.rs", "lines": [10, 10], "origin": {"kind": "record-field", "type_name": "RealmIdentity"}}, {"source": "crates/writfold-domain/src/records.rs", "lines": [57, 59], "audit_name": "__wf_field"}]},
+        "writfold_domain::engineering::objects::RealmIdentity::kb": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/engineering/objects.rs", "lines": [11, 11], "origin": {"kind": "record-field", "type_name": "RealmIdentity"}}, {"source": "crates/writfold-domain/src/records.rs", "lines": [57, 59], "audit_name": "__wf_field"}]},
+        "writfold_domain::engineering::objects::RealmIdentity::instance": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/engineering/objects.rs", "lines": [12, 12], "origin": {"kind": "record-field", "type_name": "RealmIdentity"}}, {"source": "crates/writfold-domain/src/records.rs", "lines": [57, 59], "audit_name": "__wf_field"}]},
+        "writfold_domain::engineering::objects::BlobReference::new": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/engineering/objects.rs", "lines": [42, 46]}]},
+        "writfold_domain::engineering::objects::BlobReference::realm": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/engineering/objects.rs", "lines": [48, 52]}]},
+        "writfold_domain::engineering::objects::BlobReference::digest": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/engineering/objects.rs", "lines": [54, 58]}]},
+        "writfold_domain::engineering::objects::BlobReference::bytes": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/engineering/objects.rs", "lines": [60, 64]}]},
         "writfold_domain::ids::DoltDatabaseId::as_str": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [68, 70]}]},
         "writfold_domain::ids::DoltDatabaseId::into_string": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [71, 73]}]},
         "writfold_domain::ids::DoltDatabaseId::parse_checked": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [74, 82]}]},
@@ -4124,6 +4134,13 @@
     }
   },
   "mutations": [
+    {
+      "name": "retained-blob-reference-digest-substitution",
+      "crate": "writfold_domain",
+      "functions": ["writfold_domain::engineering::objects::BlobReference::new"],
+      "before": "Self { realm, digest, bytes }",
+      "after": "Self { realm, digest: <BlobDigest as crate::engineering::EngineeringDigest>::from_digest([0; 32]), bytes }"
+    },
     {
       "name": "dolt-read-commit-bypass",
       "crate": "writfold_protocol",

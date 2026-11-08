@@ -2,6 +2,7 @@
 mod encode;
 mod integer;
 mod parse;
+pub(crate) use encode::argument_header;
 
 use std::borrow::Cow;
 use writfold_domain::Integer;
