@@ -273,3 +273,7 @@ identities!(digest, digest_identity; DoltToolGeneration);
 
 // Structural ledger names use the existing token grammar, not origin evidence.
 identities!(token, token_language; StreamId, LedgerRecordId);
+// Supplied procedure declaration names; structure alone grants no authority.
+identities!(token, token_language;
+    ProcedureId, ProcedurePredicateId, ResourceId, ProcedureObjectId,
+    ProcedureDependencyId, AdapterId, SkillId);

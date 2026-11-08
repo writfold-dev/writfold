@@ -130,10 +130,17 @@ quantity!(NativeFormatVersion, 1);
 // Structural counters do not establish current ownership or ledger validity.
 quantity!(LedgerSequence, 1);
 quantity!(OwnershipGeneration, 1);
+// Procedure graph order, call rank and positive declared cost; no runtime budget.
+quantity!(ProcedureNodeId, 1);
+quantity!(ProcedureRank, 0);
+quantity!(ExecutionCost, 1);
 
 crate::records::scalar_views!(
     NativeFormatVersion,
     ByteCount,
     LedgerSequence,
-    OwnershipGeneration
+    OwnershipGeneration,
+    ProcedureNodeId,
+    ProcedureRank,
+    ExecutionCost
 );

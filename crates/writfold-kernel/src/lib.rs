@@ -6,6 +6,7 @@ pub mod checker;
 pub mod citation;
 pub mod design_workflow;
 pub mod portfolio;
+pub mod procedure;
 pub mod time;
 pub mod wellformed;
 pub mod workflow;

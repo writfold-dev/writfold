@@ -267,6 +267,56 @@ No package importer, skill activation, corpus writer or effect path is enabled.
 Exact evidence is indexed in `qualification/status.json`; complete input
 fingerprints, read-cut manifests, durable ledger and full V16 remain separate work.
 
+### Structural procedure admission component
+
+`writfold_domain::engineering::procedure` carries the supplied finite procedure
+IR: nodes, closed forms, typed dependencies, routes, contexts, scope packages,
+resources, adapters, pinned gate definitions and predicate signatures, plus the
+supplied catalog and registry. Public fields mark these values as unadmitted
+input. `ProcedureMaterial` has no field for its own revision. Seven new token
+identities (`ProcedureId`, `ProcedurePredicateId`, `ResourceId`,
+`ProcedureObjectId`, `ProcedureDependencyId`, `AdapterId`, `SkillId`) and three
+checked quantities (`ProcedureNodeId` ≥ 1, `ProcedureRank` ≥ 0,
+`ExecutionCost` ≥ 1) reuse the existing Verus-checked macros.
+
+`writfold_kernel::procedure::validate` admits the root and every catalog
+procedure, not only called signatures, and returns an opaque `CheckedProcedure`
+that retains the exact input and list order. Each conjunct of Lean
+`ProcedureTyped` has a corresponding production check:
+
+| Lean conjunct | Production refusal |
+|---|---|
+| unique node IDs; entry exists with procedure input, no dependencies/prerequisites; an End exists | `Duplicate nodes`, `Entry`, `MissingEnd` |
+| procedure/node pre- and postconditions are registered Evidence predicates over the input/output | `PredicateType`/`UnknownReference`, duplicate-free |
+| positive cost; typed dependencies and prerequisites point strictly backward | checked `ExecutionCost`; `BackwardDependency`, `DependencyType` |
+| node ceiling within the procedure ceiling; procedure floor within the node floor | `Capability node ceiling`, `Floor node floor` |
+| failure, cancellation and select routes point strictly forward | `ForwardRoute`, `UnknownReference route` |
+| `FormTyped` for Read, Select, Judge/Check, Call, Effect, Join, End | `FormType`, `CallIdentity`, `CallRank`, `Capability`, `Resource` |
+
+Production refinements are stricter than the Lean judgment. Catalog entries are
+keyed by the exact (logical ID, revision) pair and must share the root's realm.
+Local predicate declarations must equal the supplied registry entry. Gate
+definitions are unique by kind and ID, and each floor gate needs a definition.
+Contexts name declared closure objects; required context lies within the node's
+context. Resources stay within the procedure ceiling and the node's context.
+Effect nodes need resources that each permit the capability, plus a declared
+adapter with exactly that capability and value signature; non-effect nodes cannot
+name an adapter. Callees need no more than the delegated capabilities, keep the
+caller's floor, and come from a declared package. Every list is duplicate-free.
+
+Call descent reuses the Verus-checked `call_rank_allowed` guard. The rest of the
+checker is ordinary, tested Rust: this is **not** a proved Lean-to-Rust
+refinement. Thirteen tests exercise exact retention, a catalog-free leaf, and 48
+targeted refusals with exact rule, field and node attribution. Four temporary
+semantic mutants (rank bypass, self-edge, resource capability, catalog realm)
+were each detected and then reverted.
+
+Admission establishes no authenticated catalog, revision digest binding, gate
+result, current resource or grant, adapter safety, wire schema, or permission to
+execute or write. Operator grants, prepared-edit approvals and revocations are
+separate work. The draft retained out of tree under
+`interrupted-procedure-authority-20261108` is not part of this component.
+
 ## Scoped citation calculus
 
 The selected revision-9 feature contract is implemented mathematically in

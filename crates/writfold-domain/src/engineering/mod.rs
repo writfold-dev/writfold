@@ -28,9 +28,11 @@
 mod codec;
 pub mod dependency;
 mod digests;
+pub mod execution;
 mod kinds;
 pub mod ledger;
 pub mod objects;
+pub mod procedure;
 
 pub use digests::*;
 pub use kinds::FingerprintKind;

@@ -165,6 +165,20 @@ passed 365 workspace tests and 255 quality obligations with no skips. Native
 consumer receipts and retained failures are separately indexed; they are not a
 new V16/WF25/WF27, hardware-power-loss, full SG08 or alpha admission.
 
+### Structural procedure admission: tested Rust, not refinement
+
+`writfold_kernel::procedure::validate` checks every Lean `ProcedureTyped`
+conjunct (unique nodes, entry/end, typed conditions, strictly backward typed
+edges, ceiling/floor containment, forward routes and `FormTyped`), plus stricter
+production declaration, realm, gate, resource and adapter rules. The only
+Verus-checked body it relies on is the existing `call_rank_allowed` guard. The
+new identities and quantities are inside the whole-domain Verus run. The
+remaining checker is ordinary Rust, covered by 48 exact-attribution refusals
+and four temporarily applied semantic mutants. This is not a Lean-to-Rust proof,
+catalog authentication, gate truth, grant or effect authority, and not ALPHA04.
+Exact receipts are indexed under `procedure_admission_component` in
+`qualification/status.json`.
+
 
 ### Three hosts: executed correspondence, not a Rust proof
 
