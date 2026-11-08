@@ -43,10 +43,7 @@ RUN tar -xzf /tmp/uv.tar.gz -C /tmp \
     && install -m 755 /tmp/uv-x86_64-unknown-linux-gnu/uv /usr/local/bin/uv \
     && rm -rf /tmp/uv.tar.gz /tmp/uv-x86_64-unknown-linux-gnu
 WORKDIR /work/writfold
-COPY pyproject.toml uv.lock ./
-COPY src ./src
-RUN uv sync --frozen --group dev --no-editable \
-    && git config --system user.email writfold-qualification@example.invalid \
+RUN git config --system user.email writfold-qualification@example.invalid \
     && git config --system user.name 'Writfold qualification' \
     && mkdir -p /opt/writfold-toolchain \
     && dpkg-query -W -f='${Package}\t${Version}\n' > /opt/writfold-toolchain/distro-packages.tsv

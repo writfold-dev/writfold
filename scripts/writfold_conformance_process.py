@@ -153,11 +153,6 @@ def source_manifests() -> dict[str, Any]:
     lean = list((formal / "Kctx").rglob("*.lean"))
     lean.extend(formal / name for name in (
         "Kctx.lean", "lean-toolchain", "lakefile.toml", "lake-manifest.json"))
-    python = list((ROOT / "src" / "kctx").rglob("*.py"))
-    python.extend(ROOT / name for name in (
-        "scripts/conformance_check.py", "scripts/semantic_cases.py",
-        "scripts/semantic_mutations.py", "tests/semantics/examples.py",
-        "tests/semantics/__init__.py"))
     rust = [ROOT / name for name in ("Cargo.toml", "Cargo.lock", "rust-toolchain.toml")]
     for pattern in ("*.rs", "Cargo.toml", "*.lock"):
         rust.extend((ROOT / "crates").rglob(pattern))
@@ -166,9 +161,9 @@ def source_manifests() -> dict[str, Any]:
     producer = list((ROOT / "scripts").glob("writfold_conformance*.py"))
     producer.extend(ROOT / name for name in (
         "formal/Dockerfile", "docker/Dockerfile.tools", "compose.yaml",
-        "toolchains.lock.json", "qualification/toolchain-observation.json", "pyproject.toml", "uv.lock"))
-    fixtures = sorted((ROOT / "tests" / "conformance").glob("*.jsonl"))
-    return {"lean": manifest(lean), "python": manifest(python),
+        "toolchains.lock.json", "qualification/toolchain-observation.json"))
+    fixtures = sorted((ROOT / "crates/writfold-wire/tests/fixtures/conformance").glob("*.jsonl"))
+    return {"lean": manifest(lean),
             "rust": manifest(rust), "producer_and_locks": manifest(producer),
             "fixtures": manifest(fixtures)}
 

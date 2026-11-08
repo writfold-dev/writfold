@@ -1,0 +1,9 @@
+{"schema_version":2,"semantic_version":"2.0.0","id":"version-v2","op":"semantic_version","expected":"2.0.0"}
+{"schema_version":2,"semantic_version":"2.0.0","id":"ttl-inclusive-boundary","op":"fresh","now":110,"observed_at":100,"ttl":10,"expected":"fresh"}
+{"schema_version":2,"semantic_version":"2.0.0","id":"ttl-expired","op":"fresh","now":111,"observed_at":100,"ttl":10,"expected":"stale"}
+{"schema_version":2,"semantic_version":"2.0.0","id":"ttl-unknown","op":"fresh","now":110,"observed_at":100,"ttl":null,"expected":"unknown"}
+{"schema_version":2,"semantic_version":"2.0.0","id":"ttl-future","op":"fresh","now":99,"observed_at":100,"ttl":10,"expected":"unknown"}
+{"schema_version":2,"semantic_version":"2.0.0","id":"ttl-explicit-noexpiry","op":"fresh","now":1000000000000,"observed_at":100,"ttl":{"tag":"noExpiry"},"expected":"fresh"}
+{"schema_version":2,"semantic_version":"2.0.0","id":"ttl-noexpiry-future","op":"fresh","now":99,"observed_at":100,"ttl":{"tag":"noExpiry"},"expected":"unknown"}
+{"schema_version":2,"semantic_version":"2.0.0","id":"ttl-noexpiry-extra-field-rejected","op":"fresh","now":110,"observed_at":100,"ttl":{"tag":"noExpiry","secs":10},"expected_response":{"id":"ttl-noexpiry-extra-field-rejected","ok":false,"error":"invalid_request"}}
+{"schema_version":2,"semantic_version":"2.0.0","id":"ttl-unknown-constructor-rejected","op":"fresh","now":110,"observed_at":100,"ttl":{"tag":"indefinite"},"expected_response":{"id":"ttl-unknown-constructor-rejected","ok":false,"error":"invalid_request"}}

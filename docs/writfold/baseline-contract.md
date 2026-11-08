@@ -4,7 +4,7 @@ This record freezes the public kctx compatibility inputs for the Rust successor.
 
 ## Authority and consumable records
 
-Follow [root instructions](../../AGENTS.md) and the current [revision-5 adoption](handover-adoption.md). The frozen baseline contracts below retain [historical P00](../../handover/stages/P00.md), [compatibility and evaluation](../../handover/plan/06-compatibility-and-tests.md), [workflow 3](../../handover/plan/11-workflow3-contract.md), and [playbook adoption](../../handover/plan/12-playbook-adoption.md) as their original sources, not the current execution inventory. All handover bundles are immutable. The consuming project adopts private `private:playbook@e7d991e990e3dff9c5d70e4327c0e90298e2f67e`; this contract neither copies private material nor asserts that reading a policy proves conformance.
+Follow [root instructions](../../AGENTS.md) and the current [revision-5 adoption](handover-adoption.md). The frozen baseline contracts below retain [historical P00](../../handovers/revision-5/writfold/stages/P00.md), [compatibility and evaluation](../../handovers/revision-5/writfold/plan/06-compatibility-and-tests.md), [workflow 3](../../handovers/revision-5/writfold/plan/11-workflow3-contract.md), and [playbook adoption](../../handovers/revision-5/writfold/plan/12-playbook-adoption.md) as their original sources, not the current execution inventory. All handover bundles are immutable. The consuming project adopts private `private:playbook@e7d991e990e3dff9c5d70e4327c0e90298e2f67e`; this contract neither copies private material nor asserts that reading a policy proves conformance.
 
 | Record | Consumer contract |
 | --- | --- |

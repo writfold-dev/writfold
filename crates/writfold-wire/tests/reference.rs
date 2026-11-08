@@ -5,9 +5,9 @@ use writfold_wire::semantic::{dec_formula, dec_ttl, enc_formula};
 #[test]
 fn retained_source_examples_match_complete_responses() -> Result<(), Box<dyn std::error::Error>> {
     for source in [
-        include_str!("../../../tests/conformance/cases.jsonl"),
-        include_str!("../../../tests/conformance/workflow-v3.jsonl"),
-        include_str!("../../../tests/conformance/workflow-v3-boundaries.jsonl"),
+        include_str!("fixtures/conformance/cases.jsonl"),
+        include_str!("fixtures/conformance/workflow-v3.jsonl"),
+        include_str!("fixtures/conformance/workflow-v3-boundaries.jsonl"),
     ] {
         for line in source.lines().filter(|line| !line.trim().is_empty()) {
             let case: Value = serde_json::from_str(line)?;

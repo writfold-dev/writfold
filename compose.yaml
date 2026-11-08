@@ -73,18 +73,10 @@ services:
     <<: *qualified-tools
     network_mode: none
     command: [python3, scripts/writfold_verus.py, --profile, qualification/citation-verus-profile.json, --package, writfold-kernel]
-  reference:
-    <<: *qualified-tools
-    network_mode: none
-    command: [python3, scripts/dolt_smoke.py]
   build:
     <<: *qualified-tools
     network_mode: none
     command: [cargo, build, --workspace, --release, --target, x86_64-unknown-linux-musl, --locked, --offline]
-  conformance:
-    <<: *qualified-tools
-    network_mode: none
-    command: [python3, scripts/writfold_conformance.py]
   engineering-lean:
     <<: *qualified-tools
     network_mode: none

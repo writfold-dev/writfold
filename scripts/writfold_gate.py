@@ -33,9 +33,7 @@ SERVICES = {"unit": ("unit", "Cargo.lock"), "build": ("build", "Cargo.lock"),
             "citation-lean": ("citation-lean", "scripts/writfold_citation_lean.py"),
             "citation-verus": ("citation-verus", "scripts/writfold_verus.py"),
             "stdio-control": ("stdio-control", "scripts/writfold_stdio.py"),
-            "conformance": ("conformance", "scripts/writfold_conformance.py"),
-            "reference": ("reference", "scripts/dolt_smoke.py"),
-            "native-smoke": ("reference", "scripts/dolt_smoke.py")}
+}
 
 EXPORT_BUILD = """import json, pathlib, shutil, sys
 base = pathlib.Path('/cache/target/rust-1.98.0')
@@ -142,20 +140,8 @@ def playbook(args, attempt: evidence.Attempt, receipt: dict) -> None:
 
 
 def baseline(args, attempt: evidence.Attempt, receipt: dict) -> list[dict]:
-    report = attempt.directory / "baseline.json"
-    argv = [sys.executable, "scripts/writfold_baseline.py", "--source", str(ROOT),
-            "--output", str(report), "--playbook", receipt["playbook_path"]]
-    try:
-        attempt.run(argv)
-    finally:
-        if report.is_file():
-            receipt["artifacts"].append(evidence.file_record(report))
-    checks = evidence.document(report)["checks"] + evidence.frozen_inventories()
-    frozen = attempt.directory / "frozen-inventories.json"
-    evidence.publish(frozen, {"checks": checks})
-    receipt["artifacts"].append(evidence.file_record(frozen))
-    return checks
-
+    raise ValueError("The WF00 baseline compared against the retired kctx Python reference; "
+                     "it is not available in this repository")
 
 def service_checks(args, attempt: evidence.Attempt, receipt: dict, image: str) -> list[dict]:
     service, backing = SERVICES[args.command]
