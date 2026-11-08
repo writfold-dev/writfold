@@ -22,7 +22,7 @@ captures the separate-session discussion, observed demo results and open IR/REPL
 The Rust implementation lives in `crates/`:
 
 - `writfold-domain`: checked nominal identities, verified admission/runtime-conversion bodies, arbitrary-precision semantic integers, immutable model records and 16 distinct engineering fingerprint types.
-- `writfold-kernel`: finite witnesses, independent assessments, admission, portfolio and design judgments; its broader Rust semantic proofs remain open.
+- `writfold-kernel`: finite witnesses, independent assessments, admission, portfolio and design judgments, and structural engineering-procedure admission; its broader Rust semantic proofs remain open.
 - `writfold-wire`: bounded JSON/CBOR, typed semantic and citation codecs, signatures, protocol-2 request admission, bounded control replies and the shared agent contract.
 - `writfold-protocol`: checked generation allocation and distinct instance/session/request identities with executable-body initialization/shutdown guarantees.
 - `writfold-runtime`: contained filesystem/Git/Dolt primitives, pinned owned Omnigraph and Worktrunk boundaries, shared process cleanup, bounded stdio framing and observed ephemeral invocation identities.
@@ -77,6 +77,10 @@ The [native Worktrunk component](docs/writfold/filesystem-effects.md#native-work
 now exercises real SHA-1/SHA-256 worktree creation, armed hook isolation and
 corrupt commit/tree/blob refusal before creation. Its repeatable qualification
 command does not create owner run/grant services or an installed alpha.
+Structural [procedure admission](docs/writfold/semantic-core.md#structural-procedure-admission-component)
+checks a supplied finite procedure and its whole pinned catalog against every
+Lean `ProcedureTyped` conjunct, plus stricter declaration, realm and adapter rules.
+It is tested Rust, not a proved refinement, and grants no execution or write authority.
 
 The approved [experimental-alpha profile](qualification/experimental-alpha-profile.json)
 requires the actual single-file toolchain flow and its safety/proof/native
@@ -137,6 +141,11 @@ live content-hash verification; this remains website evidence, not alpha admissi
 
 ### Next work toward an alpha
 
+The [8 November independent review plan](docs/writfold/review-plan-2026-11-08.md)
+sets the current order: commit procedure admission, share Lean cases with Rust,
+then signed edit approval, the validated ledger and one connected
+prepare/approve/apply command path. It also lists the owner questions still open.
+
 The earlier checkpoint is `7dedca3e30468330c6b6f10975b9d1863390bb44`;
 its original 117-check receipt remains historical. The current independent
 batch adds checked storage pins/read profiles, versioned storage approvals,
@@ -190,6 +199,10 @@ remains unresolved; opening the existing repository would expose its history.
 Keep immutable originals unchanged. A separate reviewed product export would
 need its own build/test/documentation closure and truthful provenance; neither
 that export nor a visibility change or alpha release is claimed here.
+The approved strategy keeps the `writfold` repository name: after alpha
+qualification, this repository becomes a private archive with unchanged history,
+and an audited product-only export is published under the original name. That
+transition has not been executed.
 
 
 ## License
