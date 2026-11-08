@@ -311,6 +311,26 @@ targeted refusals with exact rule, field and node attribution. Four temporary
 semantic mutants (rank bypass, self-edge, resource capability, catalog realm)
 were each detected and then reverted.
 
+#### Shared Lean cases
+
+`formal/Kctx/Engineering/ProcedureCases.lean` defines a base procedure, a leaf
+callee and 37 targeted mutations. The `procedurecases` executable evaluates each
+case with the actual `validateProcedure` and exports Lean's verdict as JSON.
+`crates/writfold-wire/tests/procedure_lean.rs` embeds every case into Rust
+declarations by one fixed rule: it declares exactly the contexts, scopes,
+resources, adapters and gate definitions that Lean's judgment assumes exist.
+The test then requires that every Lean refusal is a Rust refusal, every Rust
+admission is Lean-admitted, and both Lean-valid cases are admitted. Rust may
+only be stricter on cases it lists explicitly, and none are listed today.
+
+The corpus already earned its keep. A route mutant allowing a node to route to
+itself passed the first 36-case corpus. Self-route, self-prerequisite and
+self-select cases were added, and both self-loop mutants are now detected, as
+is a call-rank bypass. `python3 -B scripts/writfold_procedure_cases.py`
+rebuilds the executable in the admitted tool image with networking off and
+requires the committed fixture to match byte for byte (`--write` refreshes
+it). This is agreement on finite cases, not a refinement proof.
+
 Admission establishes no authenticated catalog, revision digest binding, gate
 result, current resource or grant, adapter safety, wire schema, or permission to
 execute or write. Operator grants, prepared-edit approvals and revocations are

@@ -19,6 +19,8 @@ callable path rather than add another isolated component.
 |---|---|---|
 | Split identity contract blocking SG08 | Splicery's local `sg08-identity-vectors.json` marked superseded; `writfold-worktree/1` (`wfwt1`) declared normative in `protocol/worktree.md` | splicery `eae0bdf` |
 | Pin drift (hand-typed hash) | Weft's vendored `writfold.agent/1` README archive hash corrected (`…6e53a9af…`) | weft `c8ecb68` |
+| Lean↔Rust shared procedure cases | 39-case Lean-exported corpus with a Rust agreement test and a fixture freshness script; caught a self-route gap | writfold |
+| Splicery example language | Website Splicery page edits a Rust file, run with the pinned binary | website |
 | Website overclaims and wording | "a future native adapter"; Splicery page uses *apply* for writing an edit and *install* only for software; guide date updated | website |
 
 ## Accepted: execution order
