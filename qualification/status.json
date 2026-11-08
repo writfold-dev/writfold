@@ -64,6 +64,28 @@
     "alpha_requirements_passed": [],
     "full_release_gates_passed": []
   },
+  "splicery_notice_component": {
+    "status": "scoped_component_pass",
+    "scope": "Observed static binary and scratch image notice/source coverage; no release or owner-service admission.",
+    "record": {
+      "path": "/srv/splicery-evidence/runtime-notice-closure-7svxnt_1/component-admission.json",
+      "sha256": "1fb666689930bfda87ad130146e1b543eb990fb39484c62a78be651941872b16",
+      "bytes": 30530
+    },
+    "consumer_sha256": "db79d50147cc51d7183b18474d1ea9f3f6eb935e14f7c7f8719e7fdea3965081",
+    "verification": {
+      "full_workspace_final_link_builds": 2,
+      "cargo_packages": 43,
+      "conservative_runtime_packages": 28,
+      "observed_link_inputs": 55,
+      "collector_refusal_cases": 3,
+      "scratch_image_extraction_and_read_only_preview": "pass",
+      "standalone_sbom_without_final_link": "unresolved_as_required"
+    },
+    "nonruntime_missing_original_notices": ["convert_case 0.4.0"],
+    "public_alpha_available": false,
+    "full_release_gates_passed": []
+  },
   "publication_history_audit": {
     "status": "inspected_not_cleared_for_publication",
     "record": {
