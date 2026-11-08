@@ -1,0 +1,4 @@
+edit "src/report.rs" {
+  @expr := range [103,765)
+  replace @expr with ["sanitize(", keep(@expr), ")"]
+}

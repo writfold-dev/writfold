@@ -49,6 +49,7 @@ Rust kernels agree with cases exported from the Lean model.
 - `spec/`: TLA+ models of the operational protocols.
 - `docs/writfold/`: design and boundary documents; [status](docs/writfold/status.md)
   has the detailed implementation and evidence record.
+- `bench/`: agent benchmark pilots with fixtures, prompts, graders and raw results.
 - `handovers/`: the planning contracts the implementation follows.
 - `qualification/`: machine-readable status and evidence indexes.
 

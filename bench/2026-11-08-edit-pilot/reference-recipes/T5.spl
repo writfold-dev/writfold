@@ -1,0 +1,6 @@
+edit "config/limits.toml" {
+  @soft := one text "100"
+  @hard := one text "80"
+  replace @soft with keep(@hard)
+  replace @hard with keep(@soft)
+}

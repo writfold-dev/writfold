@@ -1,0 +1,6 @@
+edit "src/client.rs" {
+  @fn := one text "pub fn connect("
+  @call := one text "let conn = open(url)?;"
+  @open := one text "open(url)" within @call
+  replace @open with ["with_retry(3, || ", keep(@open), ")"]
+}

@@ -1,0 +1,5 @@
+edit "config/routes.conf" {
+  each @r in line_matches rx"^route (?<rest>[A-Z]+ /\S*)$" expect 5 {
+    replace @r with keep(@r.rest)
+  }
+}

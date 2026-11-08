@@ -1,0 +1,7 @@
+edit "src/lib.rs" {
+  @a := one line "// imports begin"
+  @b := one line "// imports end"
+  @window := between @a and @b
+  @next := one line "use crate::transport::Conn;" within @window
+  before @next insert lines like @next ["use crate::policy::Policy;"]
+}

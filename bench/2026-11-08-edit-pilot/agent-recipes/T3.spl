@@ -1,0 +1,5 @@
+edit "config/routes.conf" {
+  each @r in line_matches rx"^(?<k>route )(?<rest>[A-Z]+ /\S+)$" expect 5 {
+    delete @r.k
+  }
+}

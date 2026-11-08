@@ -1,0 +1,9 @@
+You are working in the repository at <trial>/repo.
+
+Task: In config/limits.toml, the values of `soft_limit` and `hard_limit` are reversed. Swap the two values so that `soft_limit` gets the current `hard_limit` value and `hard_limit` gets the current `soft_limit` value. Change nothing else.
+
+Rules:
+- Only modify files inside <trial>/repo. Put any scratch files in <trial>/work, never in the repository.
+- Make every repository file change with Splicery, a byte-exact edit language. Write a recipe file in <trial>/work, then run `<splicery-cli> preview --root <trial>/repo --file <relative-path> <recipe>`. It prints the complete candidate file to stdout, or exits non-zero with a diagnostic if the recipe is invalid or a selection is ambiguous. Then replace the file with that output, e.g. `<splicery-cli> preview --root <trial>/repo --file <path> <recipe> > <trial>/work/out && mv <trial>/work/out <trial>/repo/<path>`. Do not use the Edit or Write tools on repository files. The language reference is <splicery checkout>/spec/language.md and example recipes are in <splicery checkout>/examples/ (its README.md indexes them); you may read those.
+- Do not read anything else outside <trial> except where stated above.
+- When finished, reply with exactly one line: `DONE` if you made the change, or `REFUSED: <reason>` if you made no change.

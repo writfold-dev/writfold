@@ -1,0 +1,4 @@
+[limits]
+soft_limit = 80
+hard_limit = 100
+window_seconds = 60

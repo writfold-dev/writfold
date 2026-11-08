@@ -1,0 +1,5 @@
+edit "src/client.rs" {
+  @l := one line "    let conn = open(url)?;"
+  @c := one text "open(url)" within @l
+  replace @c with ["with_retry(3, || open(url))"]
+}

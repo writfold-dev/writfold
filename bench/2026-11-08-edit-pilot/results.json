@@ -1,0 +1,189 @@
+{
+ "schema": "writfold-edit-pilot/1",
+ "date": "2026-11-08",
+ "kind": "debug pilot (not a headline result)",
+ "model": "Claude Sonnet via Claude Code subagents (model alias 'sonnet'; exact backend revision not exposed)",
+ "usage_source": "Claude Code subagent usage report (subagent_tokens, total per trial, includes the fixed host context); not raw provider usage events",
+ "arms": {
+  "A": "ordinary agent file tools (Read, Edit, Write, Bash)",
+  "B": "every repository change through a Splicery recipe and 'splicery-cli preview'"
+ },
+ "repeats": 1,
+ "summary": {
+  "A": {
+   "trials": 6,
+   "successes": 6,
+   "out_of_scope_changes": 0,
+   "subagent_tokens": 208074,
+   "tool_uses": 24,
+   "duration_ms": 51938
+  },
+  "B": {
+   "trials": 6,
+   "successes": 6,
+   "out_of_scope_changes": 0,
+   "subagent_tokens": 234106,
+   "tool_uses": 30,
+   "duration_ms": 79293
+  },
+  "B_vs_A_token_ratio": 1.1251
+ },
+ "trials": [
+  {
+   "trial": "T1-A",
+   "task": "T1",
+   "arm": "A",
+   "success": true,
+   "target_correct": true,
+   "out_of_scope_changes": [],
+   "extra_files": [],
+   "reply": "DONE",
+   "subagent_tokens": 33891,
+   "tool_uses": 4,
+   "duration_ms": 8159
+  },
+  {
+   "trial": "T1-B",
+   "task": "T1",
+   "arm": "B",
+   "success": true,
+   "target_correct": true,
+   "out_of_scope_changes": [],
+   "extra_files": [],
+   "reply": "DONE",
+   "subagent_tokens": 39280,
+   "tool_uses": 5,
+   "duration_ms": 12824
+  },
+  {
+   "trial": "T2-A",
+   "task": "T2",
+   "arm": "A",
+   "success": true,
+   "target_correct": true,
+   "out_of_scope_changes": [],
+   "extra_files": [],
+   "reply": "DONE",
+   "subagent_tokens": 39246,
+   "tool_uses": 5,
+   "duration_ms": 10930
+  },
+  {
+   "trial": "T2-B",
+   "task": "T2",
+   "arm": "B",
+   "success": true,
+   "target_correct": true,
+   "out_of_scope_changes": [],
+   "extra_files": [],
+   "reply": "DONE",
+   "subagent_tokens": 42262,
+   "tool_uses": 7,
+   "duration_ms": 18362
+  },
+  {
+   "trial": "T3-A",
+   "task": "T3",
+   "arm": "A",
+   "success": true,
+   "target_correct": true,
+   "out_of_scope_changes": [],
+   "extra_files": [],
+   "reply": "DONE",
+   "subagent_tokens": 33686,
+   "tool_uses": 4,
+   "duration_ms": 8758
+  },
+  {
+   "trial": "T3-B",
+   "task": "T3",
+   "arm": "B",
+   "success": true,
+   "target_correct": true,
+   "out_of_scope_changes": [],
+   "extra_files": [],
+   "reply": "DONE",
+   "subagent_tokens": 39023,
+   "tool_uses": 5,
+   "duration_ms": 14813
+  },
+  {
+   "trial": "T4-A",
+   "task": "T4",
+   "arm": "A",
+   "success": true,
+   "target_correct": true,
+   "out_of_scope_changes": [],
+   "extra_files": [],
+   "reply": "DONE",
+   "subagent_tokens": 33808,
+   "tool_uses": 4,
+   "duration_ms": 7341
+  },
+  {
+   "trial": "T4-B",
+   "task": "T4",
+   "arm": "B",
+   "success": true,
+   "target_correct": true,
+   "out_of_scope_changes": [],
+   "extra_files": [],
+   "reply": "DONE",
+   "subagent_tokens": 39461,
+   "tool_uses": 5,
+   "duration_ms": 13203
+  },
+  {
+   "trial": "T5-A",
+   "task": "T5",
+   "arm": "A",
+   "success": true,
+   "target_correct": true,
+   "out_of_scope_changes": [],
+   "extra_files": [],
+   "reply": "DONE",
+   "subagent_tokens": 33978,
+   "tool_uses": 4,
+   "duration_ms": 9516
+  },
+  {
+   "trial": "T5-B",
+   "task": "T5",
+   "arm": "B",
+   "success": true,
+   "target_correct": true,
+   "out_of_scope_changes": [],
+   "extra_files": [],
+   "reply": "DONE",
+   "subagent_tokens": 38919,
+   "tool_uses": 5,
+   "duration_ms": 12233
+  },
+  {
+   "trial": "T6-A",
+   "task": "T6",
+   "arm": "A",
+   "success": true,
+   "target_correct": true,
+   "out_of_scope_changes": [],
+   "extra_files": [],
+   "reply": "REFUSED: src/log.rs contains two lines matching `level = \"debug\"` (lines 3 and 10), not exactly one, so I made no change.",
+   "subagent_tokens": 33465,
+   "tool_uses": 3,
+   "duration_ms": 7234
+  },
+  {
+   "trial": "T6-B",
+   "task": "T6",
+   "arm": "B",
+   "success": true,
+   "target_correct": true,
+   "out_of_scope_changes": [],
+   "extra_files": [],
+   "reply": "REFUSED: src/log.rs contains two lines with `level = \"debug\"` (lines 3 and 10), so the single-match assumption does not hold.",
+   "subagent_tokens": 35161,
+   "tool_uses": 3,
+   "duration_ms": 7858
+  }
+ ]
+}

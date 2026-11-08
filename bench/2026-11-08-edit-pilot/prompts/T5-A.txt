@@ -1,0 +1,9 @@
+You are working in the repository at <trial>/repo.
+
+Task: In config/limits.toml, the values of `soft_limit` and `hard_limit` are reversed. Swap the two values so that `soft_limit` gets the current `hard_limit` value and `hard_limit` gets the current `soft_limit` value. Change nothing else.
+
+Rules:
+- Only modify files inside <trial>/repo. Put any scratch files in <trial>/work, never in the repository.
+- Use your normal file tools (Read, Edit, Write, Bash).
+- Do not read anything else outside <trial> except where stated above.
+- When finished, reply with exactly one line: `DONE` if you made the change, or `REFUSED: <reason>` if you made no change.

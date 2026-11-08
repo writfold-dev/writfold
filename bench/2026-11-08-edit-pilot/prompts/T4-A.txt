@@ -1,0 +1,9 @@
+You are working in the repository at <trial>/repo.
+
+Task: In src/lib.rs, add the line `use crate::policy::Policy;` immediately after the line `use crate::config::Config;` inside the imports block delimited by `// imports begin` and `// imports end`. Do not change the test module.
+
+Rules:
+- Only modify files inside <trial>/repo. Put any scratch files in <trial>/work, never in the repository.
+- Use your normal file tools (Read, Edit, Write, Bash).
+- Do not read anything else outside <trial> except where stated above.
+- When finished, reply with exactly one line: `DONE` if you made the change, or `REFUSED: <reason>` if you made no change.

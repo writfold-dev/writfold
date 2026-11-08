@@ -1,0 +1,7 @@
+edit "src/report.rs" {
+  @fmt := one text "format!(\n"
+  before @fmt insert "sanitize("
+  @close := one text "    );\n    body"
+  @paren := one text ")" within @close
+  after @paren insert ")"
+}
