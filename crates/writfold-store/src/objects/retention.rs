@@ -77,6 +77,27 @@ impl ObjectStore {
         Ok(retained.into_bytes())
     }
 
+    /// Whether an object is retained under this digest. `put` verified its
+    /// bytes when it was created; this check does not reread them (use `get`
+    /// for verified bytes). It never creates shards or lock entries.
+    pub fn retains(&self, digest: &BlobDigest) -> Result<bool, ObjectError> {
+        self.check_context()?;
+        let hex = digest_hex(digest);
+        let shard = match self.hashes.open_child(&relative(&hex[..2])?) {
+            Ok(shard) => shard,
+            Err(FsError::Missing) => return Ok(false),
+            Err(error) => return Err(error.into()),
+        };
+        shard.check_private()?;
+        let retained = match shard.pin(&relative(&hex[2..])?) {
+            Ok(target) => target.check_private().map(|_| true),
+            Err(FsError::Missing) => Ok(false),
+            Err(error) => Err(error),
+        }?;
+        self.check_context()?;
+        Ok(retained)
+    }
+
     fn ensure_shard(&self, prefix: &str) -> Result<ContainedRoot, ObjectError> {
         let guard = self
             .identity_file

@@ -1,3 +1,5 @@
+#[path = "git/ledger.rs"]
+mod ledger;
 #[path = "git/objects.rs"]
 mod objects;
 #[path = "git/packed.rs"]

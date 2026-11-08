@@ -33,6 +33,7 @@
 mod admission;
 mod command;
 mod error;
+mod ledger;
 mod objects;
 mod preparation;
 mod profile;
@@ -46,6 +47,7 @@ pub use writer::{GitWriteError, GitWriter, GitWriterLease};
 mod traversal;
 pub use admission::{GitExecutable, GitRepository};
 pub use error::GitError;
+pub use ledger::{LedgerCommit, ledger_ref};
 pub use objects::{GitBlob, GitEntry};
 use std::time::Duration;
 use writfold_domain::ByteCount;

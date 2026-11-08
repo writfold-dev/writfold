@@ -8,6 +8,7 @@ pub mod dependency;
 pub mod edit_approval;
 pub mod grant;
 pub mod ledger;
+pub mod ledger_record;
 pub mod objects;
 
 use sha2::{Digest, Sha256};

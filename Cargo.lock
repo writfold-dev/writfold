@@ -708,8 +708,10 @@ dependencies = [
  "sha2 0.11.0",
  "thiserror",
  "writfold-domain",
+ "writfold-kernel",
  "writfold-protocol",
  "writfold-runtime",
+ "writfold-store",
  "writfold-wire",
 ]
 

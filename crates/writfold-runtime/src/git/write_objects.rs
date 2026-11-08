@@ -119,6 +119,43 @@ pub(super) fn hash(
     Ok(object)
 }
 
+/// A tree with exactly one regular blob entry.
+pub(super) fn single_blob_tree(
+    session: &Session<'_, '_>,
+    name: &str,
+    blob: &GitObjectId,
+) -> Result<GitObjectId, GitError> {
+    let mut input = Vec::new();
+    record(&mut input, name.as_bytes(), blob, false);
+    let output = command(session, &[OsStr::new("mktree"), OsStr::new("-z")], &input)?;
+    let object = parse(session, &output)?;
+    session.object(&object, "tree", session.budgets.stdout)?;
+    Ok(object)
+}
+
+/// The blob of a tree that must contain exactly one regular entry `name`.
+pub(super) fn single_blob_tree_entry(
+    session: &Session<'_, '_>,
+    tree: &GitObjectId,
+    name: &str,
+) -> Result<GitObjectId, GitError> {
+    let bytes = session.object(tree, "tree", session.budgets.stdout)?;
+    let header = format!("100644 {name}\0");
+    let raw = bytes
+        .strip_prefix(header.as_bytes())
+        .ok_or(GitError::Malformed("single-entry tree"))?;
+    let width = match session.repository.format() {
+        GitObjectFormat::Sha1 => 20,
+        GitObjectFormat::Sha256 => 32,
+    };
+    if raw.len() != width {
+        return Err(GitError::Malformed("single-entry tree"));
+    }
+    let hex: String = raw.iter().map(|b| format!("{b:02x}")).collect();
+    GitObjectId::new(session.repository.format(), hex)
+        .map_err(|_| GitError::Malformed("single-entry tree"))
+}
+
 pub(super) fn update(
     session: &Session<'_, '_>,
     name: &str,

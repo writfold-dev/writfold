@@ -4,6 +4,7 @@
 
 mod contract;
 mod engine;
+pub mod ledger;
 
 use std::io::{self, BufRead, Write};
 use writfold_domain::ByteCount;

@@ -376,6 +376,42 @@ inputs, durable atomic compare-and-select storage, ownership generations and
 the engineering action reducer. This is tested Rust with finite Lean agreement,
 not a proved refinement, and not ALPHA03.
 
+### Durable local ledger
+
+Owner decision, 8 November 2026: the experimental alpha keeps EngineeringLedger
+records and conditional heads in `writfold-local-ledger/1` rather than waiting for
+Omnigraph (see the [alpha profile amendment](../../qualification/experimental-alpha-profile.json)).
+
+- **Record bytes.** `writfold_wire::engineering::ledger_record` encodes a kernel
+  `Record` as a closed canonical CBOR array in the `writfold-ledger-record`
+  namespace, version 1: id, stream, sequence, optional predecessor, reducer
+  profile, payload and historical-premise bytes (each a closed `Part` with one
+  canonical spelling) and closure digests. Decoding requires an exact re-encode.
+- **Retention and heads.** `writfold_runtime::git` stores each record as one
+  commit in the private writer repository: a tree with exactly one blob,
+  `record`, a fixed message, and the predecessor record's commit as its only
+  parent. A stream head is the loose ref `refs/writfold/ledger/<hex stream>`,
+  moved only by Git's atomic expected-old `update-ref`. A head that is not the
+  expected one refuses before any ref write; an error after the update was
+  issued is Unknown and must be reconciled, not retried. Reading a commit
+  refuses any other commit shape.
+- **Validation.** `writfold_app::ledger::Ledger::load` walks the selected stream
+  (bounded), decodes every record, replays the complete history through the
+  kernel's `history_check` and requires every closure object to be retained in
+  the object store. A history written around the kernel (an overbooked record,
+  a sequence gap, unretained material, an over-long stream) refuses on load.
+  `append` rebuilds the kernel `Store` from that validated history, asks the
+  kernel's `ready` whether the record may follow the caller's expected head,
+  and only then moves the Git head with the expected-old update.
+
+Tests cover round trip, reopen, independent streams, conflicting and stale
+heads, every kernel refusal, hostile histories, foreign commit shapes and
+canonical codec bytes. Removing the load replay, the load or append material
+check, the append admission, the load bound, the Git expected-head check or the
+commit-shape check each fails a test. Not included: the edit-flow payloads and
+validator, receipts, and the CLI that uses them; cross-stream inventory epochs
+are not persisted.
+
 ### Operator grants, revocation and the current-grant check
 
 `writfold_kernel::authority` is the pure Rust counterpart of Lean

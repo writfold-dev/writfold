@@ -22,6 +22,7 @@ callable path rather than add another isolated component.
 | Lean↔Rust shared procedure cases | 39-case Lean-exported corpus with a Rust agreement test and a fixture freshness script; caught a self-route gap | writfold |
 | Splicery example language | Website Splicery page edits a Rust file, run with the pinned binary | website |
 | Signed edit approval (first slice) | Closed CBOR payload, distinct Ed25519 domain, strict policy-relative verification against current expected values; grants and revocations remain | writfold |
+| Durable local ledger | Owner chose files + Git CAS for the alpha ledger; record codec, Git record commits with expected-old head selection, and a kernel-validated durable ledger | writfold |
 | Operator grants and revocation | Closed CBOR grant/revocation payloads with distinct Ed25519 domains and target uses; pure authority kernel (install, revoke, current grant, coverage) in exact agreement with Lean on 79 exported steps | writfold |
 | Validated ledger kernel (first slice) | Pure history check and conditional append mirroring Lean E05; exact step-by-step agreement on 31 Lean-exported steps | writfold |
 | Website overclaims and wording | "a future native adapter"; Splicery page uses *apply* for writing an edit and *install* only for software; guide date updated | website |
@@ -44,7 +45,7 @@ callable path rather than add another isolated component.
 
 ## Owner questions
 
-1. May the experimental alpha use a filesystem/Git-CAS ledger with no Omnigraph companion, given that the only Omnigraph build is a development-only source candidate? The alpha profile currently names Omnigraph as its backend.
+1. ~~May the experimental alpha use a filesystem/Git-CAS ledger with no Omnigraph companion?~~ **Decided 8 November 2026: yes.** The alpha uses `writfold-local-ledger/1`; Omnigraph remains the target for a later profile.
 2. Is the operator approval signed over the exact Weft report bytes, or over a Writfold-canonical digest of them? Weft has no canonical form today.
 3. Should Verus coverage of macro-generated newtypes collapse into a single macro obligation?
 4. Who owns the dirty-worktree profile: Splicery `dirty-worktree-utf8/1` or Writfold's `metadata_policy`?

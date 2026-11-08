@@ -26,6 +26,9 @@
     "native_namespace_assumption": "Keep the canonical native root and every ancestor unchanged throughout ownership. The native engine resolves pathnames; a retained directory descriptor plus repeated identity checks does not contain rename ABA between checks. Non-cooperating namespace mutation is unsupported, observed drift contains the native process, and cleanup failure must retain ownership.",
     "native_uri_profile": "The current runtime admits only plain absolute canonical file-URI paths using ASCII letters, digits, slash, dot, underscore and hyphen; other native-root spellings refuse rather than receive unqualified normalization."
   },
+  "amendments": [
+    {"date": "2026-11-08", "decision": "Owner decision: the alpha's EngineeringLedger records and conditional heads use writfold-local-ledger/1 (record commits in the private writer Git repository, stream heads moved by Git's atomic expected-old ref update, record material in the retained object store) instead of waiting for Omnigraph. Omnigraph remains the intended structured backend for a later profile; the corpus/activity graphs are unaffected.", "documentation": "docs/writfold/semantic-core.md#durable-local-ledger"}
+  ],
   "backend": {
     "name": "omnigraph",
     "development_candidate": "qualification/omnigraph-development-contract.json",
