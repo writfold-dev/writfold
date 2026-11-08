@@ -81,6 +81,11 @@ Structural [procedure admission](docs/writfold/semantic-core.md#structural-proce
 checks a supplied finite procedure and its whole pinned catalog against every
 Lean `ProcedureTyped` conjunct, plus stricter declaration, realm and adapter rules.
 It is tested Rust, not a proved refinement, and grants no execution or write authority.
+A [signed prepared-edit approval](docs/writfold/signed-operations.md#prepared-edit-approval)
+now binds one exact prepared edit, report, procedure, resource generation and
+validity window under its own Ed25519 domain. It is verified strictly against
+the supplied policy and current expected values. Operator grants and revocation
+are not yet built, and a verified approval cannot write anything.
 
 The approved [experimental-alpha profile](qualification/experimental-alpha-profile.json)
 requires the actual single-file toolchain flow and its safety/proof/native

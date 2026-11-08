@@ -134,6 +134,8 @@ quantity!(OwnershipGeneration, 1);
 quantity!(ProcedureNodeId, 1);
 quantity!(ProcedureRank, 0);
 quantity!(ExecutionCost, 1);
+// A resource's current generation as bound by an approval; not a live lease.
+quantity!(ResourceGeneration, 1);
 
 crate::records::scalar_views!(
     NativeFormatVersion,
@@ -142,5 +144,6 @@ crate::records::scalar_views!(
     OwnershipGeneration,
     ProcedureNodeId,
     ProcedureRank,
-    ExecutionCost
+    ExecutionCost,
+    ResourceGeneration
 );

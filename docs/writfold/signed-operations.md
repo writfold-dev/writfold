@@ -193,3 +193,42 @@ exact process streams, and exercises deterministic signing, verification and
 eight refusal cases. It never opens a native database or an operational key.
 The current source-bound result is indexed separately in `qualification/status.json`;
 codec/crypto testing is not a native-publication or full DINT02 pass.
+
+## Prepared-edit approval
+
+`writfold_domain::engineering::approval::EditApproval` binds one exact prepared
+edit: the worktree scope (realm, run, repository, worktree, binding), the
+`wfwt1` prepared-edit digest, the blob digest of the exact retained Weft report
+bytes, the procedure revision, the resource and its `ResourceGeneration`, a
+half-open validity interval `[valid_from, expires)`, and the signer's policy key
+and policy identity digest. The report is bound by its retained bytes; the
+approval says nothing about whether the report's checks are true.
+
+`writfold_wire::engineering::edit_approval` encodes the payload as a closed,
+fixed-order 16-field canonical CBOR array in the `writfold-prepared-edit-approval`
+namespace, version 1. The envelope `writfold-signed-edit-approval` carries the
+exact payload bytes and a 64-byte signature. Decoding requires the exact
+namespace, version and field count, canonical CBOR and full input consumption,
+and the payload must re-encode to the identical bytes.
+
+Ed25519 signs `writfold-prepared-edit-approval/1\0 || payload`. That domain is
+shared with no other signed record. `ApprovalSigningKey::sign_edit` signs only
+when the payload names the supplied policy's identity, the key holds the
+`prepared-edit-approval` target use, and the private key matches the policy
+key. `signatures::edit::verify_edit` checks in order:
+1. policy identity, trusted key and target use, and refusal of weak keys;
+2. strict signature verification over the domain and exact payload bytes;
+3. every bound value against the caller's current expected values: scope,
+   prepared edit, report, procedure, resource and generation;
+4. validity at the supplied time.
+
+Tests cover exact round trip, both validity boundaries, a transplanted
+signature, the same key signing under the Dolt domain, a flipped signature bit,
+a different policy, a missing target use, a mismatched private key, each
+mismatched bound value, and trailing, truncated and noncanonical bytes. Removing
+the generation, validity or policy-identity check each fails the tests.
+
+Not included: operator grants, revocation and live grant checks, durable claim
+or reservation, approval retention, RPC methods, and any native effect. Grants
+and revocations are separate owner records with their own signing domains. A
+`VerifiedEditApproval` cannot write anything.

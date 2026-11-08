@@ -1,6 +1,6 @@
 {
   "schema_version": 4,
-  "scope": "P02 nominal identities, checked runtime conversions and storage-pin read consistency; retained P01 generation allocation; ordinary invocation-local session lifecycle and exact reply correlation; engineering dependency-lock call ranks, retained-object realm/blob-reference bindings and structural ledger-head identities/counters/record fields; procedure declaration identities and graph/rank/cost quantities; DINT01 identity/read-pin consistency. Not canonical-codec or native/store refinement, historical ledger validation, head selection, live ownership, corpus authorization or owner services.",
+  "scope": "P02 nominal identities, checked runtime conversions and storage-pin read consistency; retained P01 generation allocation; ordinary invocation-local session lifecycle and exact reply correlation; engineering dependency-lock call ranks, retained-object realm/blob-reference bindings and structural ledger-head identities/counters/record fields; procedure declaration identities and graph/rank/cost quantities; approval resource generation; DINT01 identity/read-pin consistency. Not canonical-codec or native/store refinement, historical ledger validation, head selection, live ownership, corpus authorization or owner services.",
   "excluded_claims": [
     "BigInt arithmetic implementation verification",
     "whole semantic-kernel verification",
@@ -64,6 +64,9 @@
         "writfold_domain::units::ExecutionCost::get": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/units.rs", "lines": [61, 65]}]},
         "writfold_domain::units::ExecutionCost::new": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/units.rs", "lines": [47, 60]}]},
         "writfold_domain::units::ExecutionCost::try_from": {"solver_entries": 2, "declarations": [{"source": "crates/writfold-domain/src/units.rs", "lines": [91, 97]}, {"source": "crates/writfold-domain/src/units.rs", "lines": [101, 110]}]},
+        "writfold_domain::units::ResourceGeneration::get": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/units.rs", "lines": [61, 65]}]},
+        "writfold_domain::units::ResourceGeneration::new": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/units.rs", "lines": [47, 60]}]},
+        "writfold_domain::units::ResourceGeneration::try_from": {"solver_entries": 2, "declarations": [{"source": "crates/writfold-domain/src/units.rs", "lines": [91, 97]}, {"source": "crates/writfold-domain/src/units.rs", "lines": [101, 110]}]},
         "writfold_domain::ids::ProcedureId::as_str": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [68, 70]}]},
         "writfold_domain::ids::ProcedureId::into_string": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [71, 73]}]},
         "writfold_domain::ids::ProcedureId::parse_checked": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [74, 82]}]},
@@ -3268,7 +3271,7 @@
           ]
         },
         "writfold_domain::integer::Integer::from": {
-          "solver_entries": 25,
+          "solver_entries": 26,
           "declarations": [
             {
               "source": "crates/writfold-domain/src/integer.rs",

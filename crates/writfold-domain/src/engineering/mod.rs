@@ -25,6 +25,7 @@
 //! }
 //! ```
 
+pub mod approval;
 mod codec;
 pub mod dependency;
 mod digests;

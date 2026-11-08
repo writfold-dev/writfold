@@ -5,6 +5,7 @@
 
 pub mod cbor;
 pub mod dependency;
+pub mod edit_approval;
 pub mod ledger;
 pub mod objects;
 
