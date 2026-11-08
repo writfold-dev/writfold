@@ -376,6 +376,57 @@
     "public_alpha_available": false,
     "full_release_gates_passed": []
   },
+  "durable_local_ledger_component": {
+    "status": "scoped_component_pass",
+    "scope": "writfold-local-ledger/1: canonical ledger-record codec, record commits in the private writer Git repository with stream heads moved only by atomic expected-old ref updates, and a durable ledger that replays every load through the kernel history check with retained closure material and admits every append through the kernel; not edit-flow payloads, receipts, CLI, cross-stream epochs or ALPHA03.",
+    "owner_decision": "2026-11-08: files + Git CAS for the alpha ledger (qualification/experimental-alpha-profile.json amendments)",
+    "source_commit": "d4b6ecf",
+    "receipts": {
+      "unit": {
+        "path": "~/.local/share/writfold/evidence/local-ledger-fo4UraDU/unit-001.json",
+        "sha256": "a85f11073be9dbe1e9387d9e72ed0e6c6bfef45ae62d2cf2838346404ce9cece",
+        "bytes": 305527
+      },
+      "quality": {
+        "path": "~/.local/share/writfold/evidence/local-ledger-fo4UraDU/quality-001.json",
+        "sha256": "e3b1018d2e85cf7b0c780a5d7afe39b496df45473ccf50c2f770db0425a38584",
+        "bytes": 733852
+      },
+      "verus": {
+        "path": "~/.local/share/writfold/evidence/local-ledger-fo4UraDU/verus-001.json",
+        "sha256": "86c4eaab7a003066df1c1ea22019c777c8b8de2a5d34baf8f6babc5c2775706c",
+        "bytes": 3665759
+      }
+    },
+    "retained_failed_attempts": [
+      {
+        "gate": "quality",
+        "receipt": {
+          "path": "~/.local/share/writfold/evidence/local-ledger-qwFZoMLn/quality-001.json",
+          "sha256": "9dfa2e0bac64bfc2a6d737fa2563b9cf279c7410f4fab1cfe26717a1b9f91ca9",
+          "bytes": 733135
+        },
+        "cause": "new app test module exceeded the 250-line module and 80-line function budgets"
+      },
+      {
+        "gate": "verus",
+        "receipt": {
+          "path": "~/.local/share/writfold/evidence/local-ledger-qwFZoMLn/verus-001.json",
+          "sha256": "9392073e14cfbd219a96d9ce446998f3d0604bb329a504804cfb90972fd2b87f",
+          "bytes": 472086
+        },
+        "cause": "source admission ran the same quality budget check"
+      }
+    ],
+    "verification": {
+      "workspace_tests": 476,
+      "quality_checks": 255,
+      "quality_skips": 0,
+      "detected_check_removals": 7
+    },
+    "public_alpha_available": false,
+    "full_release_gates_passed": []
+  },
   "publication_history_audit": {
     "status": "inspected_not_cleared_for_publication",
     "record": {
