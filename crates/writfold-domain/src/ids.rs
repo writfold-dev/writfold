@@ -270,3 +270,6 @@ identities!(token, token_language; DoltDatabaseId, GraphNodeKind);
 identities!(opaque, opaque_identity; GraphNodeId, GraphEdgeId);
 identities!(dolt, dolt_identity; DoltIntegrationCommitId);
 identities!(digest, digest_identity; DoltToolGeneration);
+
+// Structural ledger names use the existing token grammar, not origin evidence.
+identities!(token, token_language; StreamId, LedgerRecordId);

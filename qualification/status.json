@@ -111,6 +111,30 @@
     "public_alpha_available": false,
     "full_release_gates_passed": []
   },
+  "ledger_head_codec_component": {
+    "status": "scoped_component_pass",
+    "scope": "Nominal structural ledger heads and complete canonical CBOR decoding; not validated ledger history, head CAS or ownership authority.",
+    "record": {
+      "path": "~/.local/share/writfold/evidence/ledger-head-codec-llkx9qwf/component-admission.json",
+      "sha256": "3f269c36c7628aa3f01b23c0b41b819821add6d6a9b651e460f24416ac12f398",
+      "bytes": 572778
+    },
+    "consumer_sha256": "39d39d3028668e9d6c51b9339314002cab4b9bddf283388da0bee8aa2f566d65",
+    "verification": {
+      "workspace_tests": 441,
+      "workspace_tests_ignored": 0,
+      "quality_checks": 255,
+      "quality_skips": 0,
+      "whole_domain_verified": 1231,
+      "verus_producer_checks": 273,
+      "semantic_mutant_families": 18,
+      "head_goldens": 3,
+      "head_refusals": 11,
+      "actual_static_musl_empty_path_smoke": "pass"
+    },
+    "public_alpha_available": false,
+    "full_release_gates_passed": []
+  },
   "publication_history_audit": {
     "status": "inspected_not_cleared_for_publication",
     "record": {

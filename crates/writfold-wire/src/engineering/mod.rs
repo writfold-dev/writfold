@@ -5,6 +5,7 @@
 
 pub mod cbor;
 pub mod dependency;
+pub mod ledger;
 pub mod objects;
 
 use sha2::{Digest, Sha256};

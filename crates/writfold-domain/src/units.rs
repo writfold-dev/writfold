@@ -127,5 +127,13 @@ quantity!(WitnessDepth, 0);
 quantity!(EpochSeconds, 0);
 quantity!(DurationSeconds, 0);
 quantity!(NativeFormatVersion, 1);
+// Structural counters do not establish current ownership or ledger validity.
+quantity!(LedgerSequence, 1);
+quantity!(OwnershipGeneration, 1);
 
-crate::records::scalar_views!(NativeFormatVersion);
+crate::records::scalar_views!(
+    NativeFormatVersion,
+    ByteCount,
+    LedgerSequence,
+    OwnershipGeneration
+);

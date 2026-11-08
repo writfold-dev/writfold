@@ -73,3 +73,66 @@ fn policy_identities_preserve_historical_text() -> Result<(), Box<dyn Error>> {
     assert!("".parse::<PolicyRevision>().is_err());
     Ok(())
 }
+
+#[test]
+fn ledger_names_are_distinct_tokens_without_normalization() -> Result<(), Box<dyn Error>> {
+    use std::any::TypeId;
+    let identities = [
+        TypeId::of::<StreamId>(),
+        TypeId::of::<LedgerRecordId>(),
+        TypeId::of::<RunId>(),
+        TypeId::of::<ContentDigest>(),
+    ];
+    for (index, identity) in identities.iter().enumerate() {
+        assert!(!identities[..index].contains(identity));
+    }
+    for value in ["A", "0:a.b-c_d", "x::", "x_"] {
+        assert_eq!(value.parse::<StreamId>()?.as_str(), value);
+        assert_eq!(LedgerRecordId::try_from(value.to_owned())?.as_str(), value);
+    }
+    for value in ["", "_x", "a/b", " a", "a ", "a\n", "é"] {
+        assert!(value.parse::<StreamId>().is_err());
+        assert!(LedgerRecordId::try_from(value.to_owned()).is_err());
+    }
+    Ok(())
+}
+
+#[test]
+fn ledger_counters_are_distinct_positive_u64_values() -> Result<(), Box<dyn Error>> {
+    use std::any::TypeId;
+    assert_ne!(
+        TypeId::of::<LedgerSequence>(),
+        TypeId::of::<OwnershipGeneration>()
+    );
+    assert_ne!(
+        TypeId::of::<OwnershipGeneration>(),
+        TypeId::of::<RequestGeneration>()
+    );
+    for value in [
+        Integer::from(-1_i64),
+        Integer::from(0_u64),
+        "18446744073709551616".parse()?,
+    ] {
+        assert!(LedgerSequence::try_from(&value).is_err());
+        assert!(OwnershipGeneration::try_from(&value).is_err());
+    }
+    assert!(LedgerSequence::new(0).is_err());
+    assert!(OwnershipGeneration::try_from(0_u64).is_err());
+    for value in [1, u64::MAX] {
+        let integer = Integer::from(value);
+        assert_eq!(Integer::from(LedgerSequence::try_from(&integer)?), integer);
+        assert_eq!(
+            Integer::from(OwnershipGeneration::try_from(&integer)?),
+            integer
+        );
+        assert_eq!(
+            LedgerSequence::try_from(value)?,
+            LedgerSequence::new(value)?
+        );
+        assert_eq!(
+            OwnershipGeneration::try_from(value)?,
+            OwnershipGeneration::new(value)?
+        );
+    }
+    Ok(())
+}

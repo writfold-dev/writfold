@@ -1,13 +1,19 @@
 //! Restricted deterministic CBOR bytes, not schema validity or authenticity.
+mod decode;
 mod encode;
 mod integer;
 mod parse;
+mod token;
+pub use decode::{DecodeError, DecodeResult, Decoder};
 pub(crate) use encode::argument_header;
+pub use token::{IntegerRef, Kind, Token, TokenValue};
 
 use std::borrow::Cow;
 use writfold_domain::Integer;
 
 use crate::{Budget, Limits};
+
+pub type Result<T, E = Error> = std::result::Result<T, E>;
 
 /// Borrowed values: arrays retain order and map keys are exact UTF-8 text.
 #[derive(Debug)]

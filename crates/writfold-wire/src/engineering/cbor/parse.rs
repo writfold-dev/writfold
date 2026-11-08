@@ -1,8 +1,10 @@
-use super::Error;
+use super::{Error, IntegerRef, Token, TokenValue};
 use crate::{Budget, Limits};
 
 struct Frame<'a> {
     remaining: usize,
+    start: usize,
+    key_pending: bool,
     map: bool,
     previous_key: Option<&'a [u8]>,
 }
@@ -65,15 +67,14 @@ impl<'a> Parser<'a> {
         Ok((major, value))
     }
 
-    fn text(&mut self, length: u64) -> Result<(), Error> {
+    fn text(&mut self, length: u64) -> Result<&'a str, Error> {
         let offset = self.offset;
         std::str::from_utf8(self.take(length)?).map_err(|error| Error::Unicode {
             offset: offset + error.valid_up_to(),
-        })?;
-        Ok(())
+        })
     }
 
-    fn key(&mut self, previous: &mut Option<&'a [u8]>) -> Result<(), Error> {
+    fn key(&mut self, previous: &mut Option<&'a [u8]>) -> Result<&'a str, Error> {
         let start = self.offset;
         let (major, length) = self.header()?;
         if major != 3 {
@@ -82,7 +83,7 @@ impl<'a> Parser<'a> {
                 reason: "map key must be text",
             });
         }
-        self.text(length)?;
+        let text = self.text(length)?;
         let key = &self.bytes[start..self.offset];
         if let Some(prior) = previous {
             match (*prior).cmp(key) {
@@ -97,10 +98,10 @@ impl<'a> Parser<'a> {
             }
         }
         *previous = Some(key);
-        Ok(())
+        Ok(text)
     }
 
-    fn bignum(&mut self) -> Result<(), Error> {
+    fn bignum(&mut self) -> Result<&'a [u8], Error> {
         let start = self.offset;
         let (major, length) = self.header()?;
         if major != 2 {
@@ -116,56 +117,95 @@ impl<'a> Parser<'a> {
                 reason: "nonminimal bignum magnitude",
             });
         }
-        Ok(())
+        Ok(bytes)
     }
 }
 
-pub(super) fn validate(bytes: &[u8], limits: Limits) -> Result<(), Error> {
-    if bytes.len() > limits.bytes() {
-        return Err(Error::Limit {
-            budget: Budget::Bytes,
-            offset: limits.bytes(),
-        });
-    }
-    let mut parser = Parser { bytes, offset: 0 };
-    let mut stack: Vec<Frame<'_>> = Vec::new();
-    let mut nodes = 0_usize;
-    loop {
-        while stack.last().is_some_and(|frame| frame.remaining == 0) {
-            stack.pop();
+pub(super) struct Walker<'a> {
+    parser: Parser<'a>,
+    stack: Vec<Frame<'a>>,
+    nodes: usize,
+    limits: Limits,
+}
+
+impl<'a> Walker<'a> {
+    pub(super) fn new(bytes: &'a [u8], limits: Limits) -> Result<Self, Error> {
+        if bytes.len() > limits.bytes() {
+            return Err(Error::Limit {
+                budget: Budget::Bytes,
+                offset: limits.bytes(),
+            });
         }
-        if nodes != 0 && stack.is_empty() {
-            return if parser.offset == bytes.len() {
-                Ok(())
+        Ok(Self {
+            parser: Parser { bytes, offset: 0 },
+            stack: Vec::new(),
+            nodes: 0,
+            limits,
+        })
+    }
+
+    pub(super) fn offset(&self) -> usize {
+        self.parser.offset
+    }
+
+    fn token(&self, start: usize, value: TokenValue<'a>) -> Token<'a> {
+        Token {
+            value,
+            bytes: &self.parser.bytes[start..self.parser.offset],
+            offset: start,
+        }
+    }
+
+    pub(super) fn next_token(&mut self) -> Result<Option<Token<'a>>, Error> {
+        if self.stack.last().is_some_and(|frame| frame.remaining == 0)
+            && let Some(frame) = self.stack.pop()
+        {
+            let value = if frame.map {
+                TokenValue::EndMap
+            } else {
+                TokenValue::EndArray
+            };
+            return Ok(Some(self.token(frame.start, value)));
+        }
+        if self.nodes != 0 && self.stack.is_empty() {
+            return if self.parser.offset == self.parser.bytes.len() {
+                Ok(None)
             } else {
                 Err(Error::TrailingInput {
-                    offset: parser.offset,
+                    offset: self.parser.offset,
                 })
             };
         }
-        if let Some(frame) = stack.last_mut() {
-            if frame.map {
-                parser.key(&mut frame.previous_key)?;
+        if let Some(frame) = self.stack.last_mut() {
+            if frame.map && frame.key_pending {
+                let start = self.parser.offset;
+                let text = self.parser.key(&mut frame.previous_key)?;
+                frame.key_pending = false;
+                return Ok(Some(self.token(start, TokenValue::Key(text))));
             }
             frame.remaining -= 1;
+            frame.key_pending = true;
         }
-        let start = parser.offset;
-        if nodes == limits.nodes() {
+        self.value()
+    }
+
+    fn value(&mut self) -> Result<Option<Token<'a>>, Error> {
+        let start = self.parser.offset;
+        if self.nodes == self.limits.nodes() {
             return Err(Error::Limit {
                 budget: Budget::Nodes,
                 offset: start,
             });
         }
-        nodes += 1;
-        let (major, argument) = parser.header()?;
-        match major {
-            0 | 1 => {}
-            2 => {
-                parser.take(argument)?;
-            }
-            3 => parser.text(argument)?,
+        self.nodes += 1;
+        let (major, argument) = self.parser.header()?;
+        let value = match major {
+            0 => TokenValue::Integer(IntegerRef::Unsigned(argument)),
+            1 => TokenValue::Integer(IntegerRef::Negative(argument)),
+            2 => TokenValue::Bytes(self.parser.take(argument)?),
+            3 => TokenValue::Text(self.parser.text(argument)?),
             4 | 5 => {
-                if stack.len() == limits.depth() {
+                if self.stack.len() == self.limits.depth() {
                     return Err(Error::Limit {
                         budget: Budget::Depth,
                         offset: start,
@@ -173,26 +213,47 @@ pub(super) fn validate(bytes: &[u8], limits: Limits) -> Result<(), Error> {
                 }
                 let remaining = usize::try_from(argument)
                     .ok()
-                    .filter(|&size| size <= limits.container_entries())
+                    .filter(|&size| size <= self.limits.container_entries())
                     .ok_or(Error::Limit {
                         budget: Budget::ContainerEntries,
                         offset: start,
                     })?;
                 // No allocation is based on an advertised container size.
-                stack.push(Frame {
+                self.stack.push(Frame {
                     remaining,
+                    start,
+                    key_pending: true,
                     map: major == 5,
                     previous_key: None,
                 });
+                if major == 4 {
+                    TokenValue::Array(remaining)
+                } else {
+                    TokenValue::Map(remaining)
+                }
             }
-            6 if argument == 2 || argument == 3 => parser.bignum()?,
-            7 if matches!(argument, 20..=22) => {}
+            6 if argument == 2 => {
+                TokenValue::Integer(IntegerRef::PositiveBig(self.parser.bignum()?))
+            }
+            6 if argument == 3 => {
+                TokenValue::Integer(IntegerRef::NegativeBig(self.parser.bignum()?))
+            }
+            7 if argument == 20 => TokenValue::Bool(false),
+            7 if argument == 21 => TokenValue::Bool(true),
+            7 if argument == 22 => TokenValue::Null,
             _ => {
                 return Err(Error::Syntax {
                     offset: start,
                     reason: "unsupported tag or simple value",
                 });
             }
-        }
+        };
+        Ok(Some(self.token(start, value)))
     }
+}
+
+pub(super) fn validate(bytes: &[u8], limits: Limits) -> Result<(), Error> {
+    let mut walker = Walker::new(bytes, limits)?;
+    while walker.next_token()?.is_some() {}
+    Ok(())
 }

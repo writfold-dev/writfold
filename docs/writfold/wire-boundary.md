@@ -220,6 +220,63 @@ native durability, current authorization, ledger origin or cross-system refineme
 See the [retained-object boundary](filesystem-effects.md#immutable-retained-object-prerequisite)
 for actual IO and evidence scope.
 
+## Borrowed deterministic-CBOR decoding
+
+`engineering::cbor::Decoder` uses the same single-pass walker as `RawCbor::parse`.
+It exposes typed scalar/key/container tokens, exact original spans, native
+integers and borrowed minimal tag-2/tag-3 magnitudes. Negative integers mean
+`-1 - argument`; large magnitudes are not truncated into native counters.
+Only the bounded container stack is allocated, not a generic value tree.
+
+Validation is incremental. A token does not admit unread bytes; any parse or
+typed-read error poisons the cursor. Schema readers must check exact map/array
+lengths and keys, consume closing tokens, then call `finish()`. Only that complete
+success returns a borrowed validated `RawCbor`, without a second validation pass.
+Existing canonical ordering, integer minimality, UTF-8 and resource budgets remain
+controlling. None of these operations establishes schema truth or authority.
+
+## Structural ledger-head schema 1
+
+`engineering::ledger::{encode_head, decode_head}` freezes only the supplied
+head representation, not a ledger writer or historical validator:
+
+| Record | Exact fields |
+| --- | --- |
+| Root | `namespace = "writfold-engineering"`, `schema_version = 1`, `kind = "ledger-head"`, `position`, `material`, `owner`, `profile = "writfold-engineering/1"` |
+| `position` | `realm`, `stream`, `kind = control/run/learning`, `sequence` |
+| `material` | logical `record`, 32-byte `event` fingerprint, distinct 32-byte retained `blob` fingerprint, `bytes` |
+| `owner` | `instance`, `generation` |
+
+`StreamId` and `LedgerRecordId` use the existing exact token grammar but are
+distinct nominal types. `LedgerSequence` and `OwnershipGeneration` are distinct
+positive u64 quantities; sequence zero means no head, not an empty record.
+The byte count can be zero as an untrusted assertion; an actual ledger loader
+still has to validate the referenced record. IDs, Unicode and line endings are
+never normalized. Maps use the existing deterministic encoded-key ordering.
+
+The event field is a `LedgerEventDigest`; the raw retained bytes use `BlobDigest`.
+Neither is the logical record ID, a native revision or an ownership lease.
+Binary fingerprint fields assert a particular domain because of their schema;
+only checking the actual referenced record can establish that assertion.
+The recorded instance/generation never substitutes for current ownership.
+
+[Independent supplied-byte vectors](../../fixtures/qualification/ledger-head-v1.json)
+cover all three stream kinds, distinct field identities, native upper bounds and
+eleven schema/counter/type/width/trailing/truncation refusals. Their raw SHA-256
+checksums are byte checks, not an additional engineering fingerprint kind.
+`ledger-head-codec-llkx9qwf/native-001.json` records actual static-musl execution
+with an empty runtime PATH: three goldens and eleven refusals. The workspace
+passed 441 tests with no ignored tests and 255 quality checks with no skips.
+
+The separate Verus run verified 1231 whole-domain obligations and admitted
+273 producer checks with the existing 18 mutant families. New selected mappings
+bind structural identity/counter/record bodies, not CBOR correctness, origin,
+retained closure, historical replay, conditional-head IO or live authorization.
+The first proof attempt is retained: proofs ran successfully, but admission
+correctly refused the stale overloaded `Integer::from` multiplicity after two
+new quantity conversions. Its corrected mapping raises, rather than lowers,
+the proof floor. No full V16/M12/WF25 or alpha pass follows.
+
 ## Source mapping
 
 Reference: `1c17b94be37af8f82f222baddf31435f14172e1a`.

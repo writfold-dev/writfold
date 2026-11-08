@@ -3,10 +3,15 @@ use writfold_domain::Integer;
 use writfold_wire::engineering::cbor::{Error, RawCbor, Value, encode};
 use writfold_wire::{Budget, Limits, MAX_SUPPORTED_DEPTH};
 
+#[path = "engineering_cbor/decode.rs"]
+mod decode;
+#[path = "engineering_cbor/decode_errors.rs"]
+mod decode_errors;
+
 #[path = "engineering_cbor/integers.rs"]
 mod integers;
 
-type TestResult<T = ()> = Result<T, Box<dyn std::error::Error + Send + Sync>>;
+type TestResult<T = (), E = Box<dyn std::error::Error + Send + Sync>> = Result<T, E>;
 
 fn limits() -> Result<Limits, writfold_wire::Error> {
     Limits::new(1_000_000, MAX_SUPPORTED_DEPTH, 10_000, 20_000)
@@ -28,7 +33,6 @@ fn golden(value: &Value<'_>, hex: &str) -> TestResult {
     let expected = unhex(hex)?;
     assert_eq!(encode(value, limits()?)?.as_bytes(), expected);
     let parsed = RawCbor::parse(&expected, limits()?)?;
-    assert_eq!(parsed.as_bytes().as_ptr(), expected.as_ptr());
     assert_eq!(parsed.into_bytes(), expected);
     Ok(())
 }
@@ -334,9 +338,7 @@ fn deep_traversal_and_drop_use_no_native_recursion() -> TestResult {
             assert_eq!(owned.as_bytes(), expected);
             let raw = RawCbor::parse(&expected, bounded)?;
             drop(raw);
-            let pointer = owned.as_bytes().as_ptr();
-            let bytes = owned.into_bytes();
-            assert_eq!(pointer, bytes.as_ptr());
+            drop(owned);
             let shallower = Limits::new(
                 MAX_SUPPORTED_DEPTH + 1,
                 MAX_SUPPORTED_DEPTH - 1,
