@@ -95,6 +95,10 @@
         "writfold_domain::ids::SkillId::into_string": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [71, 73]}]},
         "writfold_domain::ids::SkillId::parse_checked": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [74, 82]}]},
         "writfold_domain::ids::SkillId::try_from": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [94, 102]}]},
+        "writfold_domain::ids::GrantId::as_str": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [68, 70]}]},
+        "writfold_domain::ids::GrantId::into_string": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [71, 73]}]},
+        "writfold_domain::ids::GrantId::parse_checked": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [74, 82]}]},
+        "writfold_domain::ids::GrantId::try_from": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/ids.rs", "lines": [94, 102]}]},
         "writfold_domain::engineering::objects::RealmIdentity::new": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/records.rs", "lines": [53, 56]}]},
         "writfold_domain::engineering::objects::RealmIdentity::clone": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/records.rs", "lines": [26, 31]}]},
         "writfold_domain::engineering::objects::RealmIdentity::eq": {"solver_entries": 1, "declarations": [{"source": "crates/writfold-domain/src/records.rs", "lines": [42, 47]}]},
@@ -4360,7 +4364,8 @@
         "writfold_domain::ids::ProcedureObjectId::parse_checked",
         "writfold_domain::ids::ProcedureDependencyId::parse_checked",
         "writfold_domain::ids::AdapterId::parse_checked",
-        "writfold_domain::ids::SkillId::parse_checked"
+        "writfold_domain::ids::SkillId::parse_checked",
+        "writfold_domain::ids::GrantId::parse_checked"
       ],
       "before": "if grammar::$grammar(value) { Ok(Self(value.to_owned())) }",
       "after": "if true { Ok(Self(value.to_owned())) }"

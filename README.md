@@ -84,8 +84,12 @@ It is tested Rust, not a proved refinement, and grants no execution or write aut
 A [signed prepared-edit approval](docs/writfold/signed-operations.md#prepared-edit-approval)
 now binds one exact prepared edit, report, procedure, resource generation and
 validity window under its own Ed25519 domain. It is verified strictly against
-the supplied policy and current expected values. Operator grants and revocation
-are not yet built, and a verified approval cannot write anything.
+the supplied policy and current expected values. Signed
+[operator grants and revocations](docs/writfold/signed-operations.md#operator-grants-and-revocations)
+use their own domains, and a pure
+[authority kernel](docs/writfold/semantic-core.md#operator-grants-revocation-and-the-current-grant-check)
+installs, revokes and selects the current grant, agreeing with Lean on 79
+exported steps. None of these can write anything yet.
 The pure [ledger kernel](docs/writfold/semantic-core.md#validated-ledger-history-and-conditional-append)
 replays and re-checks a stream's complete history before each conditional
 append. It agrees exactly with Lean's `append` on 31 exported steps. Durable

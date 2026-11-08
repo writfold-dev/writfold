@@ -28,3 +28,7 @@ root = "Kctx.Engineering.ProcedureCases"
 [[lean_exe]]
 name = "ledgercases"
 root = "Kctx.Engineering.LedgerCases"
+
+[[lean_exe]]
+name = "grantcases"
+root = "Kctx.Engineering.GrantCases"

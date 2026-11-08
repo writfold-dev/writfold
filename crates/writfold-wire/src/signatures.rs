@@ -3,6 +3,7 @@
 mod binding;
 pub mod dolt;
 pub mod edit;
+pub mod grant;
 pub mod storage;
 use crate::{
     Limits, RawJson,

@@ -228,7 +228,43 @@ a different policy, a missing target use, a mismatched private key, each
 mismatched bound value, and trailing, truncated and noncanonical bytes. Removing
 the generation, validity or policy-identity check each fails the tests.
 
-Not included: operator grants, revocation and live grant checks, durable claim
-or reservation, approval retention, RPC methods, and any native effect. Grants
-and revocations are separate owner records with their own signing domains. A
-`VerifiedEditApproval` cannot write anything.
+Not included: durable claim or reservation, approval retention, RPC methods,
+and any native effect. Grants and revocations are separate owner records with
+their own signing domains (below). A `VerifiedEditApproval` cannot write anything.
+
+## Operator grants and revocations
+
+An operator grant allows one run scope (realm, run, repository, worktree,
+binding) a nonempty set of resources and capabilities, a budget and a
+half-open validity interval, under the signer's policy key and policy identity.
+A revocation withdraws one grant by id; it names the realm, the grant id, the
+blob digest of the exact grant envelope the operator saw, the revocation time
+and the signer. It applies by id, so a mismatched digest can never keep a
+grant alive.
+
+`writfold_wire::engineering::grant` encodes each as a closed, fixed-order
+canonical CBOR array: 15 fields in the `writfold-operator-grant` namespace and
+8 in `writfold-grant-revocation`, both version 1. Resources and capabilities
+are sorted and deduplicated; an envelope whose payload is unsorted or
+duplicated is refused as noncanonical. Envelopes are
+`writfold-signed-operator-grant` and `writfold-signed-grant-revocation`.
+
+Ed25519 signs `writfold-operator-grant/1\0 || payload` or
+`writfold-grant-revocation/1\0 || payload`. Neither domain is shared with
+prepared-edit approvals or any other record. Signing and verification
+(`signatures::grant`) require the payload to name the supplied policy's
+identity, the key to hold the `operator-grant` or `grant-revocation` target
+use respectively, a non-weak key, and, when signing, a private key matching the
+policy key. Verification is strict. A verified grant is only a candidate for
+kernel installation (see
+[semantic core](semantic-core.md#operator-grants-revocation-and-the-current-grant-check));
+it is not current authority and cannot write anything.
+
+Tests cover exact round trip, signatures over exactly domain and payload, the
+same key signing under the revocation, grant and edit-approval domains, grant
+and revocation envelopes swapped, a transplanted signature on a wider grant, a
+flipped signature bit, a different policy, each missing target use, a
+mismatched private key, unsorted and duplicated sets, and trailing and
+truncated bytes. Removing the policy-identity, target-use, domain-prefix,
+canonical-form or private-key check each fails the tests.
+

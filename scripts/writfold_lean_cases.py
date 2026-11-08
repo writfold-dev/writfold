@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Rebuild a Lean-exported case corpus and compare it with its Rust fixture.
 
-Builds `procedurecases` or `ledgercases` from a scratch copy of formal/ inside
+Builds `procedurecases`, `ledgercases` or `grantcases` from a scratch copy of formal/ inside
 the admitted tool image (network disabled), then requires the exported JSON to
 equal the committed fixture under crates/writfold-wire/tests/fixtures/ byte for byte.
 `--write` replaces the fixture instead. This checks fixture freshness only; it
@@ -23,6 +23,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CORPORA = {
     "procedure": ("procedurecases", "procedure-lean-cases.json"),
     "ledger": ("ledgercases", "ledger-lean-cases.json"),
+    "grant": ("grantcases", "grant-lean-cases.json"),
 }
 FIXTURES = ROOT / "crates/writfold-wire/tests/fixtures"
 

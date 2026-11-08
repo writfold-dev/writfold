@@ -30,6 +30,7 @@ mod codec;
 pub mod dependency;
 mod digests;
 pub mod execution;
+pub mod grant;
 mod kinds;
 pub mod ledger;
 pub mod objects;

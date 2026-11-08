@@ -277,3 +277,5 @@ identities!(token, token_language; StreamId, LedgerRecordId);
 identities!(token, token_language;
     ProcedureId, ProcedurePredicateId, ResourceId, ProcedureObjectId,
     ProcedureDependencyId, AdapterId, SkillId);
+// Operator grant names; an id alone is never current authority.
+identities!(token, token_language; GrantId);

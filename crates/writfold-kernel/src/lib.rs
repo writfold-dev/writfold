@@ -2,6 +2,7 @@
 //! Production authentication and durable effects belong to concrete adapters.
 #![forbid(unsafe_code)]
 
+pub mod authority;
 pub mod checker;
 pub mod citation;
 pub mod design_workflow;

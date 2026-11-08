@@ -376,6 +376,47 @@ inputs, durable atomic compare-and-select storage, ownership generations and
 the engineering action reducer. This is tested Rust with finite Lean agreement,
 not a proved refinement, and not ALPHA03.
 
+### Operator grants, revocation and the current-grant check
+
+`writfold_kernel::authority` is the pure Rust counterpart of Lean
+`environment` `installGrant`, `revokeGrant` and `advanceTime`, `currentGrant`,
+and the grant conjunct of `intentReady`. An `Authority` holds one realm,
+policy and clock, and the installed grants newest first.
+
+`install` takes a qualified `Authorization`: the envelope's realm and policy,
+the `Grant`, and the digest of its retained signed envelope. The caller must
+already have verified the operator's signature (see
+[signed operations](signed-operations.md#operator-grants-and-revocations)).
+It refuses, in Lean's order, a foreign envelope realm, a foreign run-scope
+realm, a stale policy, an unretained envelope, a grant id already installed
+(including a revoked one, so renewal needs a fresh id), a grant not yet valid
+and an expired grant. Refusal changes nothing. `revoke` marks a grant revoked
+by id and is never refused; an unknown id changes nothing. Historical grants
+are never removed or replaced. `advance` refuses to move the clock backwards.
+
+`current` selects the newest unrevoked grant valid now for exactly this run
+scope (realm, run, repository, worktree and binding). A newer grant shadows
+older ones even when it covers less; there is no fallback search. `covers`
+requires the current grant to carry the capability and every requested
+resource. As in Lean, an empty resource request is covered; callers that act
+on resources refuse empty sets themselves.
+
+`formal/Kctx/Engineering/GrantCases.lean` exports 26 scenarios (79 steps,
+34 queries) applied with Lean's actual transitions and `currentGrant`.
+`crates/writfold-wire/tests/grant_lean.rs` runs them against the Rust kernel
+and requires exact agreement on every step's outcome, the clock, the installed
+grant list with revocation flags, the current grant and coverage. Disabling
+any of the 15 checks (each installation guard, the clock guard, revocation,
+the scope/revocation/validity filters, newest-first order, and both coverage
+conjuncts) fails the test. The cases place every authorization in Lean's
+qualified set, so they exercise the interpreter guards, not signature
+verification. `python3 -B scripts/writfold_lean_cases.py --corpus grant`
+rebuilds the fixture in the admitted tool image.
+
+Not included: durable grant storage, ownership reservations, dispatch claims
+that bind a grant id, budget charging and any native effect. This is tested
+Rust with finite Lean agreement, not a proved refinement.
+
 ## Scoped citation calculus
 
 The selected revision-9 feature contract is implemented mathematically in
