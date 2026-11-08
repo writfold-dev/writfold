@@ -333,6 +333,49 @@
     "public_alpha_available": false,
     "full_release_gates_passed": []
   },
+  "operator_grant_component": {
+    "status": "scoped_component_pass",
+    "scope": "Closed signed operator grant and revocation records with distinct Ed25519 domains and target uses, and a pure authority kernel (install, revoke, clock, current grant, coverage) in exact step-by-step agreement with Lean environment/currentGrant on 79 exported steps; not durable grant storage, reservations, dispatch claims, budget charging or any native effect.",
+    "source_commit": "42eba53",
+    "receipts": {
+      "unit": {
+        "path": "~/.local/share/writfold/evidence/operator-grants-Mw2mxUIQ/unit-001.json",
+        "sha256": "70fbaed25d6367a800e83a40b818ab841e6df926a936405f0316a634f257a741",
+        "bytes": 583861
+      },
+      "verus": {
+        "path": "~/.local/share/writfold/evidence/operator-grants-Mw2mxUIQ/verus-001.json",
+        "sha256": "7b47ef2423988a13c864a2bc93fb8a85d6ad1fa131720a94f9e44c4495a4606d",
+        "bytes": 3922355
+      },
+      "quality": {
+        "path": "~/.local/share/writfold/evidence/operator-grants-Mw2mxUIQ/quality-001.json",
+        "sha256": "a0245859abd9c3fcf012d544d6cf77aa28058211f2019a7e4a022a8c4b580784",
+        "bytes": 1017467
+      },
+      "engineering_lean": {
+        "path": "~/.local/share/writfold/evidence/operator-grants-Mw2mxUIQ/engineering-lean-001.json",
+        "sha256": "d905a542b4a430f4f22794bd66a43357964b367c07731ec489ae482be14888b9",
+        "bytes": 594062
+      }
+    },
+    "corpus": {
+      "fixture": "crates/writfold-wire/tests/fixtures/grant-lean-cases.json",
+      "sha256": "70bb0ab89c4e086474c313dcf10cd2036211761b66c6a3215e656e506e1f0491",
+      "scenarios": 26,
+      "steps": 79,
+      "queries": 34
+    },
+    "verification": {
+      "workspace_tests": 468,
+      "quality_checks": 255,
+      "quality_skips": 0,
+      "detected_kernel_check_removals": 15,
+      "detected_signature_check_removals": 5
+    },
+    "public_alpha_available": false,
+    "full_release_gates_passed": []
+  },
   "publication_history_audit": {
     "status": "inspected_not_cleared_for_publication",
     "record": {
