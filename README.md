@@ -25,7 +25,7 @@ The Rust implementation lives in `crates/`:
 - `writfold-kernel`: finite witnesses, independent assessments, admission, portfolio and design judgments; its broader Rust semantic proofs remain open.
 - `writfold-wire`: bounded JSON/CBOR, typed semantic and citation codecs, signatures, protocol-2 request admission, bounded control replies and the shared agent contract.
 - `writfold-protocol`: checked generation allocation and distinct instance/session/request identities with executable-body initialization/shutdown guarantees.
-- `writfold-runtime`: contained filesystem/Git/Dolt primitives, a pinned owned Omnigraph client, shared process cleanup, bounded stdio framing and observed ephemeral invocation identities.
+- `writfold-runtime`: contained filesystem/Git/Dolt primitives, pinned owned Omnigraph and Worktrunk boundaries, shared process cleanup, bounded stdio framing and observed ephemeral invocation identities.
 - `writfold-sources`: byte-preserving authored-document and citation syntax, with new single-line mutation admission and pinned Unicode behavior.
 - `writfold-store`: immutable realm-bound raw object retention and typed exact Dolt inventory/navigation reads under DINT01; no authenticated release writer or corpus/effect service.
 - `writfold-xtask`: development-only syntax, dependency and nominal-type qualification.
@@ -61,10 +61,11 @@ passed; persistent grounding and authorized effects remain explicitly blocked.
 See [reproduction and exact scope](docs/writfold/shared-client-references.md#executed-three-tool-component-smoke).
 
 The revision-5 **E01–E12 mathematical calculus is discharged under its recorded
-assumptions**: a clean Lean audit covers 571 declarations, the reference executes
-66 cases, and nine behavior-changing source mutants fail their intended safety
-properties. The earlier 407-declaration/30-case result remains historical evidence.
-These are not Rust refinement proofs or complete WF31 qualification.
+assumptions**. The post-initialization grant extension passes a clean Lean audit
+of 583 declarations and 74 executable cases. The earlier 571-declaration/66-case
+audit and nine semantic mutant kills retain their original source scope; no new
+grant-specific mutation campaign is claimed. These are not cryptographic grant
+verification, Rust refinement proofs or complete WF31 qualification.
 
 Independent P14 implementation provides checked engineering fingerprints, bounded
 canonical CBOR and [immutable retained objects](docs/writfold/filesystem-effects.md#immutable-retained-object-prerequisite),
@@ -72,6 +73,10 @@ exercised through real static-musl consumers. The
 [Rust Omnigraph component](docs/writfold/omnigraph-foundation.md#exercised-rust-native-data-path-component)
 also exercises conditional native writes, exact snapshots and retained history.
 Neither component is a durable EngineeringLedger or owner authorization service.
+The [native Worktrunk component](docs/writfold/filesystem-effects.md#native-worktrunk-creation)
+now exercises real SHA-1/SHA-256 worktree creation, armed hook isolation and
+corrupt commit/tree/blob refusal before creation. Its repeatable qualification
+command does not create owner run/grant services or an installed alpha.
 
 The approved [experimental-alpha profile](qualification/experimental-alpha-profile.json)
 requires the actual single-file toolchain flow and its safety/proof/native

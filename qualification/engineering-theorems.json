@@ -38,11 +38,32 @@
     ],
     "independent_fidelity": "FullCalculusFidelity re-reviewed all proposed E statements and accepted the exact Prepared-release repair; CalculusRegistryReview maps every statement and essential negative. This is source-level review, separate from kernel evidence."
   },
+  "grant_installation_extension": {
+    "status": "pass_under_explicit_model_assumptions",
+    "clean_receipt": {
+      "path": "~/.local/share/writfold/evidence/grant-installation-24dmbk6h/lean-006.json",
+      "sha256": "ff6e9605256f0e67b361839f08cf256c3aa4c509354e90ed71ceb70282402933",
+      "bytes": 2591
+    },
+    "clean_report": {
+      "path": "~/.local/share/writfold/evidence/grant-installation-24dmbk6h/lean-006.json.attempt/engineering-lean-report.json",
+      "sha256": "e1af0f685696ace559da72d51daa71f0d7be7df8576e37468d0a2a12c584daa5",
+      "bytes": 6101077
+    },
+    "audited_declarations": 583,
+    "reference_cases": 74,
+    "new_grant_cases": 8,
+    "scope": "Actual post-initialization grant installation with exact qualified retained authorization, current realm/policy/time and fresh identity; old grants, root spending and dispatch history remain unchanged.",
+    "new_semantic_mutants_killed": 0,
+    "new_semantic_mutation_campaign": "not_run",
+    "production_authorization_service": "not_implemented"
+  },
   "assumption_boundaries": {
     "input_and_codec": "Checked InitialInputs and nominal exact values only; authenticated decoding, canonical bytes, namespace-safe Rust conversion, integer bounds and hash assumptions require independent qualification.",
     "Contracts.packages/packageReleases": "Authenticated exact package closure and immutable admitted release mapping, including retained historical activation pins.",
     "Contracts.corpusBindings/projections": "Authenticated realm/family/native graph commit/schema/query/profile envelopes and exact observed projection heads/inventory; not an atomic cross-store snapshot.",
     "Contracts.approvals": "Existing VerifiedPortfolioApproval boundary; actual portfolioPlanValid/applyPortfolio still execute.",
+    "Contracts.grantAuthorizations": "Actual authenticated operator authorization binding the complete realm/policy/grant payload to its retained envelope. Membership is a qualified input, not a signature verifier, agent assertion or effect permission. Installation requires fresh GrantId and current scope/time; revocation history cannot be erased by reinstalling an old ID.",
     "Contracts.predicates/typedEvidence/TypedEvidenceSound": "Registered typed signatures and qualified exact predicate observations; signature matching does not imply semantic truth.",
     "Contracts.receipts": "Qualified exact invocation, binding, root/node inputs, role, output and complete dependencies; retention does not manufacture fresh observation times.",
     "Contracts.materialObservations": "Qualified completed durable object capture with unique capture identity, realm and capturedAt <= now; no authority, receipt, knowledge or effect truth is inferred from object availability.",
@@ -483,6 +504,10 @@
       "contract": "handovers/revision-5/writfold/plan/22-engineering-calculus.md",
       "scope": "Every actual request carries action-specific current continuation checks. Recovery itself never refreshes activation authority; explicit migration or exact authorized resumption checks current scope and incarnation. Resumption preserves control and clears loaded context; retry authorization is revalidated at send.",
       "theorem_symbols": [
+        "Kctx.Engineering.installGrant_body_checked",
+        "Kctx.Engineering.installGrant_checked",
+        "Kctx.Engineering.installGrant_preserves_existing_grants",
+        "Kctx.Engineering.installGrant_history_frame",
         "Kctx.Engineering.E12_step_checks_continuation",
         "Kctx.Engineering.E12_reachable_continuation_audited",
         "Kctx.Engineering.E12_live_current_authority",
@@ -501,11 +526,13 @@
         "Kctx.Engineering.E12_dispatch_retry_revalidates"
       ],
       "receipts": [
+        "~/.local/share/writfold/evidence/grant-installation-24dmbk6h/lean-006.json",
         "~/.local/share/writfold/evidence/revision-5-engineering-lean-complete-004.json"
       ],
       "assumptions": [
         "Mathematical nominal identities and exact equality; production canonical codecs, namespace-safe conversions, integer bounds and collision resistance/injective identity require separate refinement.",
         "Qualified authenticated immutable inputs and durable conditional storage; enforced capability and cooperating-owner boundaries are external assumptions, not consequences of list membership.",
+        "Qualified operator grant authorizations bind exact original envelopes; cryptographic verification, issuer authority and current production policy remain independently qualified boundaries.",
         "Current observed authority/policy/correction and exact scoped grant intervals; contracts.migrations binds root, old/new Binding, incarnation and provider.",
         "Provider authorization-at-effect is separate; no instantaneous worldwide revocation assumption."
       ],

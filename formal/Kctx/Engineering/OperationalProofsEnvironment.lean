@@ -3,6 +3,7 @@ import Kctx.Engineering.Actions
 import Kctx.Engineering.ControlProofs
 import Kctx.Engineering.OperationalProofs
 import Kctx.Engineering.OperationalProofsReducer
+import Kctx.Engineering.GrantAuthorizationSafety
 
 set_option autoImplicit false
 namespace Kctx.Engineering
@@ -88,6 +89,37 @@ private theorem frame {c : Contracts} {s t : OperationalState}
       by simpa only [retained] using material⟩
   · intro receipt hr
     exact receipt_frame (wf.receipts receipt (by simpa only [receipts] using hr)) runs retained
+
+/-- Fresh insertion keeps the original historical witnesses, including revoked
+grants and the resource bounds of already represented effects. -/
+private theorem grants_cons {c : Contracts} {s : OperationalState}
+    (wf : OperationalWellFormed c s) (grant : Grant)
+    (fresh : grant.id ∉ s.authority.grants.map Grant.id) :
+    OperationalWellFormed c { s with authority := { s.authority with
+      grants := grant :: s.authority.grants } } := by
+  refine { wf with grants_unique := ?_, runs := ?_, effects := ?_, receipts := ?_ }
+  · have filtered : (s.authority.grants.map Grant.id).filter
+        (fun id => !id == grant.id) = s.authority.grants.map Grant.id := by
+      apply List.filter_eq_self.mpr
+      intro id member
+      have different : id ≠ grant.id := by
+        intro same
+        exact fresh (same ▸ member)
+      simp [different]
+    simpa [unique, List.map_cons, List.eraseDups_cons, filtered, beq_iff_eq]
+      using wf.grants_unique
+  · intro r hr
+    have old := wf.runs r hr
+    refine { old with grant_bound := ?_ }
+    obtain ⟨g, hg, root, binding, bound⟩ := old.grant_bound
+    exact ⟨g, List.mem_cons_of_mem _ hg, root, binding, bound⟩
+  · intro e he
+    have old := wf.effects e he
+    refine { old with grant_bound := ?_ }
+    obtain ⟨g, hg, root, binding, capability, footprint⟩ := old.grant_bound
+    exact ⟨g, List.mem_cons_of_mem _ hg, root, binding, capability, footprint⟩
+  · intro r hr
+    apply receipt_frame (wf.receipts r hr) <;> rfl
 
 /-- Grant updates retain historical root, binding, capability and resource scope. -/
 private theorem grants_map {c : Contracts} {s : OperationalState}
@@ -272,6 +304,9 @@ private theorem environmentBody_preserves {contracts : Contracts} {s t : State}
       split at h
       next monotone => cases h; apply frame wf <;> first | rfl | exact monotone
       next => contradiction
+  | installGrant authorization =>
+      obtain ⟨checked, rfl⟩ := installGrant_body_checked h
+      exact grants_cons wf authorization.grant checked.fresh
   | revokeGrant id =>
       simp only [environmentBody, Option.some.injEq] at h
       subst t

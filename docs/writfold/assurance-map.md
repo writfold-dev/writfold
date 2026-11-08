@@ -107,16 +107,41 @@ eight-kill campaign with an incorrect final declaration binding, and qualificati
 rejected when the source changed during execution. None is a pass. The successful
 nine-kill replacement is separately bound; the first increment remains historical.
 
-Engineering Rust progress is scoped to nominal fingerprints and the canonical
-CBOR boundary. The whole-domain Verus report verifies 993 obligations and explicitly
-covers all 16 parser/constructor/accessor families plus kind and shared-parser
-bodies. CBOR/hash/formatter refinement and full V16 remain open. A static-musl
-development program exercises the new APIs; this is not an installed product.
+The earlier engineering Rust fingerprint increment covered nominal values and
+canonical CBOR. Its whole-domain Verus report verified 993 obligations across
+the 16 parser/constructor/accessor families plus kind/shared-parser bodies.
+Retained-object structural bindings have separate later evidence in the current
+status index. CBOR/hash/filesystem refinement and full V16 remain open.
 
 The [current evidence index](../../qualification/engineering-theorems.json) and
 [revision-5 progress](../../qualification/revision-5-progress.json) preserve source
 bindings. All production V16–V21/M12–M16, native effects, cross-model bridges and
 full product WF31 require their own qualification.
+
+### Post-initialization grant installation
+
+The calculus now permits an exact qualified operator grant after realm
+initialization, rather than assuming every future grant is in `InitialInputs`.
+`GrantAuthorization` binds realm, current policy, complete grant and retained
+original envelope. `Environment.installGrant` additionally checks the binding
+realm, fresh GrantId and unrevoked validity interval. It retains historical grants
+verbatim, including revoked entries, without resetting spending or rewriting
+existing runs, reservations, effects, claims or ledger heads.
+
+`GrantInstallationChecked` exposes those actual guards. The preservation proof
+extends the initialized-trace invariant; signature/issuer authentication remains
+an explicit qualified input boundary, not a theorem about list membership.
+The eight new executable cases include activation/dispatch after a new grant,
+missing/changed authorization, realm/policy/envelope/interval refusal, revoked-ID
+replay and renewal that cannot refresh an existing dispatch claim or account.
+
+`grant-installation-24dmbk6h/lean-006.json` records a clean build, transitive audit
+of **583 declarations** and **74 executed cases**, with only the existing three
+foundational axioms. Earlier failed proof-conversion attempts, the rejected
+runner option and targeted import-cache failure remain retained. The successful
+targeted check is not substituted for the later clean audit. No new grant-specific
+semantic mutant campaign, Rust signature service, model refinement or WF31 pass
+is claimed. Historical mutation receipts above retain their original source scope.
 
 ### Owner integration primitives: exercised, not effect admission
 

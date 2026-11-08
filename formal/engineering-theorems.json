@@ -3,6 +3,22 @@
   "profile": "writfold-engineering/1",
   "status": "pass",
   "full_obligations_status": "pass",
+  "grant_installation_extension": {
+    "status": "pass_under_explicit_model_assumptions",
+    "scope": "Post-initialization qualified grant installation, historical grant/claim/budget preservation and explicit current scope/time checks; mathematical model only.",
+    "qualified_boundary": "Authenticated operator authorization must bind the complete realm/policy/grant payload to its retained envelope. Contracts membership is not signature verification or client authority.",
+    "historical_evidence": "Existing completion and mutation receipts below retain their pre-extension source scope. The separate clean receipt qualifies the extended mathematical model, not cryptographic or production authorization.",
+    "clean_receipt": {
+      "path": "~/.local/share/writfold/evidence/grant-installation-24dmbk6h/lean-006.json",
+      "sha256": "ff6e9605256f0e67b361839f08cf256c3aa4c509354e90ed71ceb70282402933",
+      "bytes": 2591
+    },
+    "audited_declarations": 583,
+    "executed_cases": 74,
+    "new_grant_cases": 8,
+    "new_semantic_mutation_campaign": "not_run",
+    "production_authorization_service": "not_implemented"
+  },
   "theorems": {
     "E01": {
       "theorem": [
@@ -65,6 +81,7 @@
         "Recover",
         "Retire",
         "AdvanceTime",
+        "InstallGrant",
         "RevokeGrant",
         "ChangePolicy",
         "WithdrawProcedure",
@@ -203,6 +220,7 @@
         "Recover",
         "Retire",
         "AdvanceTime",
+        "InstallGrant",
         "RevokeGrant",
         "ChangePolicy",
         "WithdrawProcedure",
@@ -578,6 +596,7 @@
         "Request.dispatch",
         "Request.local",
         "AdvanceTime",
+        "InstallGrant",
         "RevokeGrant",
         "ChangePolicy",
         "WithdrawProcedure",
@@ -1096,6 +1115,7 @@
         "Request.dispatch",
         "Request.local",
         "AdvanceTime",
+        "InstallGrant",
         "RevokeGrant",
         "ChangePolicy",
         "WithdrawProcedure",
@@ -1334,6 +1354,7 @@
         "Request.dispatch",
         "Request.local",
         "AdvanceTime",
+        "InstallGrant",
         "RevokeGrant",
         "ChangePolicy",
         "WithdrawProcedure",
@@ -1411,6 +1432,10 @@
     },
     "E12": {
       "theorem": [
+        "Kctx.Engineering.installGrant_body_checked",
+        "Kctx.Engineering.installGrant_checked",
+        "Kctx.Engineering.installGrant_preserves_existing_grants",
+        "Kctx.Engineering.installGrant_history_frame",
         "Kctx.Engineering.E12_step_checks_continuation",
         "Kctx.Engineering.E12_reachable_continuation_audited",
         "Kctx.Engineering.E12_live_current_authority",
@@ -1435,10 +1460,19 @@
       "assumptions": [
         "Mathematical nominal identities and exact equality; production canonical codecs, namespace-safe conversions, integer bounds and collision resistance/injective identity require separate refinement.",
         "Qualified authenticated immutable inputs and durable conditional storage; enforced capability and cooperating-owner boundaries are external assumptions, not consequences of list membership.",
+        "Contracts.grantAuthorizations contains only exact authenticated operator authorizations bound to their original retained envelopes. Installation additionally checks current realm/binding/policy, fresh GrantId and valid interval, but the cryptographic/issuer boundary is a production obligation.",
         "Current observed authority/policy/correction and exact scoped grant intervals; contracts.migrations binds root, old/new Binding, incarnation and provider.",
         "Provider authorization-at-effect is separate; no instantaneous worldwide revocation assumption."
       ],
       "executable": [
+        "Kctx.Engineering.Examples.postInitGrantDispatch",
+        "Kctx.Engineering.Examples.unqualifiedGrantInstallationRefused",
+        "Kctx.Engineering.Examples.foreignGrantRealmRefused",
+        "Kctx.Engineering.Examples.staleGrantPolicyRefused",
+        "Kctx.Engineering.Examples.missingGrantEnvelopeRefused",
+        "Kctx.Engineering.Examples.invalidGrantIntervalRefused",
+        "Kctx.Engineering.Examples.revokedGrantIdCannotBeReinstalled",
+        "Kctx.Engineering.Examples.renewedGrantCannotRefreshClaim",
         "Kctx.Engineering.Examples.E12_positive",
         "Kctx.Engineering.Examples.E12_negative",
         "Kctx.Engineering.Examples.revokedDispatchRefused",
@@ -1449,6 +1483,7 @@
       ],
       "actions": [
         "AdvanceTime",
+        "InstallGrant",
         "RevokeGrant",
         "ChangePolicy",
         "WithdrawProcedure",
@@ -1513,6 +1548,14 @@
         "sha256": "b6f3b6d00675c41c9357c32957effd143fa04e93e590aeb18deb955d8095c435"
       },
       "nonvacuity": [
+        "Kctx.Engineering.Examples.post_init_grant_nonvacuous",
+        "Kctx.Engineering.Examples.unqualified_grant_installation_nonvacuous",
+        "Kctx.Engineering.Examples.foreign_grant_realm_nonvacuous",
+        "Kctx.Engineering.Examples.stale_grant_policy_nonvacuous",
+        "Kctx.Engineering.Examples.missing_grant_envelope_nonvacuous",
+        "Kctx.Engineering.Examples.invalid_grant_interval_nonvacuous",
+        "Kctx.Engineering.Examples.revoked_grant_id_nonvacuous",
+        "Kctx.Engineering.Examples.renewed_grant_claim_nonvacuous",
         "Kctx.Engineering.Examples.E12_nonvacuous",
         "Kctx.Engineering.Examples.revoked_dispatch_nonvacuous",
         "Kctx.Engineering.Examples.resume_authority_nonvacuous",
@@ -1550,6 +1593,14 @@
     }
   },
   "nonvacuity": [
+    "Kctx.Engineering.Examples.post_init_grant_nonvacuous",
+    "Kctx.Engineering.Examples.unqualified_grant_installation_nonvacuous",
+    "Kctx.Engineering.Examples.foreign_grant_realm_nonvacuous",
+    "Kctx.Engineering.Examples.stale_grant_policy_nonvacuous",
+    "Kctx.Engineering.Examples.missing_grant_envelope_nonvacuous",
+    "Kctx.Engineering.Examples.invalid_grant_interval_nonvacuous",
+    "Kctx.Engineering.Examples.revoked_grant_id_nonvacuous",
+    "Kctx.Engineering.Examples.renewed_grant_claim_nonvacuous",
     "Kctx.Engineering.Examples.E01_nonvacuous",
     "Kctx.Engineering.Examples.E02_nonvacuous",
     "Kctx.Engineering.Examples.E03_nonvacuous",
@@ -1594,6 +1645,54 @@
     "Kctx.Engineering.Examples.changed_provider_binding_nonvacuous"
   ],
   "cases": [
+    {
+      "id": "E12-post-init-grant",
+      "obligation": "E12",
+      "polarity": "positive",
+      "executable": "Kctx.Engineering.Examples.postInitGrantDispatch"
+    },
+    {
+      "id": "E12-unqualified-grant-installation",
+      "obligation": "E12",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.unqualifiedGrantInstallationRefused"
+    },
+    {
+      "id": "E12-foreign-grant-realm",
+      "obligation": "E12",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.foreignGrantRealmRefused"
+    },
+    {
+      "id": "E12-stale-grant-policy",
+      "obligation": "E12",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.staleGrantPolicyRefused"
+    },
+    {
+      "id": "E12-missing-grant-envelope",
+      "obligation": "E12",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.missingGrantEnvelopeRefused"
+    },
+    {
+      "id": "E12-invalid-grant-interval",
+      "obligation": "E12",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.invalidGrantIntervalRefused"
+    },
+    {
+      "id": "E12-revoked-grant-id",
+      "obligation": "E12",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.revokedGrantIdCannotBeReinstalled"
+    },
+    {
+      "id": "E12-renewed-grant-stale-claim",
+      "obligation": "E12",
+      "polarity": "negative",
+      "executable": "Kctx.Engineering.Examples.renewedGrantCannotRefreshClaim"
+    },
     {
       "id": "E07-retry-outside-change",
       "obligation": "E07",
@@ -2058,6 +2157,7 @@
     ],
     "environment": [
       "AdvanceTime",
+      "InstallGrant",
       "RevokeGrant",
       "ChangePolicy",
       "WithdrawProcedure",
@@ -2113,6 +2213,7 @@
     },
     "environment_constructor_mapping": {
       "AdvanceTime": "Kctx.Engineering.Environment.advanceTime",
+      "InstallGrant": "Kctx.Engineering.Environment.installGrant",
       "RevokeGrant": "Kctx.Engineering.Environment.revokeGrant",
       "ChangePolicy": "Kctx.Engineering.Environment.changePolicy",
       "WithdrawProcedure": "Kctx.Engineering.Environment.withdrawProcedure",
@@ -2124,6 +2225,7 @@
       "TerminateProcess": "Kctx.Engineering.Environment.terminateProcess"
     },
     "refinements": {
+      "InstallGrant": "Current qualified operator authorization with exact retained envelope, realm/binding/policy, fresh GrantId and valid unrevoked interval. Prepends the grant without rewriting historical grants, resetting budgets, refreshing existing dispatch stamps or creating runs/effects. Signature and issuer qualification remain external assumptions.",
       "ObserveMaterial": "Authority-neutral qualified durable data acquisition on the control stream. Checks Contracts.materialObservations membership, realm, capture time, object uniqueness and fresh capture ID; changes retained/captures only before ordinary append.",
       "AdvanceNode": "Typed enabled-node progression for read/judge/check/join/end and already-confirmed effect results, with exact qualified inputs. Pure progression charges the shared account; effect advancement uses the charge already paid at Prepare. Select and Call cannot use this writer. No new effect/publication authority.",
       "FailNode": "Qualified receipt-driven non-success progression and declared failure/cancellation route; cannot invent success or bypass live continuation.",

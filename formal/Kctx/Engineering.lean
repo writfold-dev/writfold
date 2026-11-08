@@ -7,5 +7,6 @@ import Kctx.Engineering.Examples
 import Kctx.Engineering.ExamplesRetry
 import Kctx.Engineering.CalibrationExamples
 import Kctx.Engineering.AuthorityExamples
+import Kctx.Engineering.GrantAuthorizationExamples
 import Kctx.Engineering.QuiescenceExamples
 import Kctx.Engineering.LedgerExamples

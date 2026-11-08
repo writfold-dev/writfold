@@ -88,6 +88,16 @@ structure Grant where
   revoked : Bool
   deriving DecidableEq, Repr, Inhabited
 
+/-- Qualified operator authorization of these exact grant bytes under one realm
+and policy. Membership is supplied by the authenticated authority boundary, never
+by an agent assertion; the original envelope must already be retained. -/
+structure GrantAuthorization where
+  realm : Id .realm
+  policy : Id .policy
+  grant : Grant
+  envelope : ObjectId
+  deriving DecidableEq, Repr, Inhabited
+
 structure Authority where
   grants : List Grant
   policy : Id .policy
@@ -341,6 +351,7 @@ structure Contracts where
   retryAuthorizations : List RetryAuthorization
   resumptions : List ResumeAuthorization
   materialObservations : List RetainedObservation
+  grantAuthorizations : List GrantAuthorization
   deriving DecidableEq, Repr, Inhabited
 
 inductive Action where

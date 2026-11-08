@@ -174,6 +174,63 @@ created coordination entries without pinning an internal lock filename.
 Injected fsync failures, host power loss and a separate-process simultaneous
 first-put campaign are not claimed by this component evidence.
 
+## Native Worktrunk creation
+
+`writfold_runtime::worktrunk` admits the exact v0.81.0 Linux-musl executable
+(`1f3d97a5…`) and a separately pinned Git executable. `Source`, `Destinations`
+and the borrowed `CreateRequest` identify the private source repository,
+destination namespace, fresh leaf/branch and exact Git base. This component is
+not an owner run service or permission to edit.
+
+Creation holds permanent managed source/destination leases through preflight,
+native execution, independent observation and owned-child cleanup. Before
+issuing Worktrunk, it hashes the actual selected commit and complete checkout
+tree/blob closure using the admitted Git hashing implementation. Identical
+objects are checked once per kind; every checkout path is still budgeted.
+Naming an OID or receiving a successful `cat-file` result is insufficient.
+It does not scan unrelated commit history.
+
+The profile permits only private, canonical standalone loose-object repositories
+with closed configuration. Packed/shallow/alternate repositories, remotes,
+includes, filters, attribute files, project Worktrunk configuration, symlinks,
+submodules and special files refuse. User/system configuration is isolated;
+the child PATH contains only the still-open admitted Git descriptor binding.
+Worktrunk and Git hooks are disabled. Filesystem scans check cooperative
+cancellation/deadlines as well as name/content/depth limits; this is not a
+hard-realtime guarantee for a blocking filesystem syscall.
+
+After a successful native process, Git independently checks the common directory
+and native device/inode, object format, exact base, branch and contained path.
+Original source bytes/modes and HEAD/branch are checked again. Worktrunk stdout
+is retained as a bounded observation, not trusted as the binding.
+Pre-issue refusals are `Unissued`; failures after the creation boundary are
+`Unknown`, including failed post-observation. Neither a timeout nor nonzero exit
+authorizes rollback, deletion or retry. The future owner must retain its durable
+claim and unresolved resource reservation independently of these native leases.
+
+Repeat the actual process campaign with an already retained pinned `wt`:
+
+```sh
+python3 -B scripts/writfold_worktrunk.py \
+  --worktrunk "$WT" \
+  --receipt "$HOME/.local/share/writfold/evidence/worktrunk-NEW.json"
+```
+
+The producer admits the existing local tools image/storage binding, builds the
+static-musl consumer, and runs fresh operator-owned SHA-1 and SHA-256 fixtures.
+`worktrunk-runtime-b_b3byph/campaign-001.json` passed normal creation, armed Git
+and Worktrunk hook controls, poisoned ambient PATH/configuration, exact nested/
+empty/shared-blob checkout, source preservation, conflicts and pre-cancellation.
+It also passed corrupt commit, tree and blob controls before creation in both
+formats. The executable is
+`692290397340826f7e9b926b41646e6ebcce40a7d896b18f73d33a1d0a32b6d1`.
+
+The real failing-before `corrupt-blob-before.json` remains retained: the earlier
+adapter returned `Created` for corrupt loose-object bytes. Hash verification
+closes that bug; the permanent producer exercises its regressions. This evidence
+does not qualify interrupted creation, coordinator-crash child ownership,
+reconciliation, signed grants, a full WF gate or an installable alpha.
+
 ## Required qualification and trust boundary
 
 The supported target is Linux/WSL x86_64. The intended filesystem profile is an operator-admitted **local Linux filesystem** supporting descriptor-relative no-follow opens, coherent inode/stat observations, exclusive creation, advisory flock, atomic same-directory rename/hardlink publication, and file/directory fsync. Qualification must bind the actual mount/filesystem and storage path used by the operator. NFS, SMB, FUSE, Windows/DrvFS mounts, unusual pseudo-filesystems, and other environments with different locking/rename/error/durability semantics are not implicitly qualified. A Linux target triple alone is not filesystem qualification. Detected unsupported syscalls are errors; the adapter does not silently downgrade.

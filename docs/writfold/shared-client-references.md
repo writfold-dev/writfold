@@ -133,6 +133,14 @@ Unissued conflicts and possibly issued `Unknown` outcomes remain distinct.
 The [filesystem stage/witness boundary](filesystem-effects.md#recoverable-single-file-staging)
 preserves exact native attribution and never replays a claimed operation.
 
+The [native Worktrunk boundary](filesystem-effects.md#native-worktrunk-creation)
+admits the exact v0.81.0 artifact, holds managed source/destination leases,
+verifies the selected commit/tree/blob closure and independently observes the
+created repository/base/branch/path. The real-process campaign covers both Git
+formats, armed hooks, source preservation and corruption refusal. It is not yet
+a durable run binding or a grant-authorized owner operation. The separate Lean
+grant-installation extension likewise does not implement a signature service.
+
 The component tests and native consumers are indexed separately from gates.
 A static-musl consumer exercised embedded replay through real staging/install/
 reopen/reconciliation; an equal-byte foreign inode remained `Unknown`. A separate

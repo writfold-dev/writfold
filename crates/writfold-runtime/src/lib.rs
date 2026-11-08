@@ -10,3 +10,4 @@ pub mod git;
 pub mod omnigraph;
 pub mod process;
 pub mod stdio;
+pub mod worktrunk;

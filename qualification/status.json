@@ -86,6 +86,31 @@
     "public_alpha_available": false,
     "full_release_gates_passed": []
   },
+  "owner_grant_worktrunk_components": {
+    "status": "scoped_components_pass",
+    "scope": "Post-initialization qualified grant calculus and real native Worktrunk creation/integrity; not owner authorization services or full alpha.",
+    "record": {
+      "path": "~/.local/share/writfold/evidence/worktrunk-runtime-b_b3byph/component-admission.json",
+      "sha256": "212b3db8eec5ba227b7109f8e71331e2b8ed2a35e18b60b3406b950cbe5372a0",
+      "bytes": 570800
+    },
+    "consumer_sha256": "692290397340826f7e9b926b41646e6ebcce40a7d896b18f73d33a1d0a32b6d1",
+    "verification": {
+      "lean_audited_declarations": 583,
+      "executed_calculus_cases": 74,
+      "new_grant_cases": 8,
+      "workspace_tests": 426,
+      "workspace_tests_ignored": 0,
+      "quality_checks": 255,
+      "quality_skips": 0,
+      "native_cases": ["normal", "blob", "tree", "commit"],
+      "native_git_formats": ["sha1", "sha256"]
+    },
+    "regression": "Real failing-before corrupt-blob creation is retained; permanent native controls now refuse corrupt commit/tree/blob bytes before creation.",
+    "new_grant_semantic_mutation_campaign": "not_run",
+    "public_alpha_available": false,
+    "full_release_gates_passed": []
+  },
   "publication_history_audit": {
     "status": "inspected_not_cleared_for_publication",
     "record": {

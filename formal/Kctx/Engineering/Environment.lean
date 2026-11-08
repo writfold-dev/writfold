@@ -6,6 +6,7 @@ namespace Kctx.Engineering
 
 inductive Environment where
   | advanceTime (time : Nat)
+  | installGrant (authorization : GrantAuthorization)
   | revokeGrant (grant : Id .grant)
   | changePolicy (policy : Id .policy) (floor : List Gate)
   | withdrawProcedure (revision : ProcedureRevision)
@@ -22,6 +23,17 @@ conditional-effect and authorization-at-effect contract remains a qualified
 boundary; arbitrary outside provider changes need not preserve compatibility. -/
 def environmentBody (contracts : Contracts) (s : State) : Environment → Option State
   | .advanceTime time => if s.now ≤ time then some { s with now := time } else none
+  | .installGrant authorization =>
+      if contracts.grantAuthorizations.contains authorization &&
+          authorization.realm == s.realm && authorization.grant.binding.realm == s.realm &&
+          authorization.policy == s.authority.policy &&
+          s.retained.contains authorization.envelope &&
+          !(s.authority.grants.map Grant.id).contains authorization.grant.id &&
+          !authorization.grant.revoked &&
+          authorization.grant.validFrom ≤ s.now && s.now < authorization.grant.expires then
+        some { s with authority := { s.authority with
+          grants := authorization.grant :: s.authority.grants } }
+      else none
   | .revokeGrant id => some { s with authority := { s.authority with
       grants := s.authority.grants.map (fun grant =>
         if grant.id == id then { grant with revoked := true } else grant) } }

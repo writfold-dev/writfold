@@ -46,12 +46,12 @@ impl<'a> GitExecutable<'a> {
         Ok(Self { opened, supervisor })
     }
 
-    pub(super) fn path(&self) -> Result<PathBuf, GitError> {
+    pub(crate) fn path(&self) -> Result<PathBuf, GitError> {
         self.opened.check_unchanged()?;
         Ok(descriptor_path(self.opened.descriptor()))
     }
 
-    pub(super) fn supervisor(&self) -> &ProcessSupervisor {
+    pub(crate) fn supervisor(&self) -> &ProcessSupervisor {
         self.supervisor
     }
 }

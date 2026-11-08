@@ -2,6 +2,7 @@ import Lean
 import Kctx.Engineering.ExamplesRetry
 import Kctx.Engineering.CalibrationExamples
 import Kctx.Engineering.AuthorityExamples
+import Kctx.Engineering.GrantAuthorizationExamples
 import Kctx.Engineering.QuiescenceExamples
 
 set_option autoImplicit false
@@ -29,6 +30,7 @@ def observe (context : Option State) (predicate : Bool) : Json :=
        ("corpus_pin", .str (reprStr s.corpusPin)),
        ("activity_pin", .str (reprStr s.activityPin)),
        ("catalog", .str (reprStr s.catalog)), ("runs", .str (reprStr s.runs)),
+       ("authority", .str (reprStr s.authority)),
        ("budgets", .str (reprStr s.budgets)), ("effects", .str (reprStr s.effects)),
        ("claims", .str (reprStr s.claims)),
        ("ownership", .str (reprStr s.ownership)), ("retained", .str (reprStr s.retained)),
@@ -65,6 +67,14 @@ def cases : List Case :=
      ("E12-expired-grant", "E12", "negative", expiredGrantRefused, shortGrantClaimed),
      ("E12-withdrawn-procedure", "E12", "negative", withdrawnProcedureRefused, claimed),
      ("E12-correction-generation", "E12", "negative", correctedContinuationRefused, claimed),
+     ("E12-post-init-grant", "E12", "positive", postInitGrantDispatch, installedGrantIssued),
+     ("E12-unqualified-grant-installation", "E12", "negative", unqualifiedGrantInstallationRefused, grantReady),
+     ("E12-foreign-grant-realm", "E12", "negative", foreignGrantRealmRefused, grantReady),
+     ("E12-stale-grant-policy", "E12", "negative", staleGrantPolicyRefused, grantReady),
+     ("E12-missing-grant-envelope", "E12", "negative", missingGrantEnvelopeRefused, grantReady),
+     ("E12-invalid-grant-interval", "E12", "negative", invalidGrantIntervalRefused, grantReady),
+     ("E12-revoked-grant-id", "E12", "negative", revokedGrantIdCannotBeReinstalled, installedGrantClaimed),
+     ("E12-renewed-grant-stale-claim", "E12", "negative", renewedGrantCannotRefreshClaim, renewedGrantClaimed),
      ("E11-changed-provider-binding", "E11", "negative", changedProviderBindingRefused, effectInputsReady),
      ("E06-prepared-release", "E06", "negative", preparedReleaseRefused, preparedOwner),
      ("E07-reply-loss-unknown", "E07", "positive", replyLossUnknown, replyLost),
