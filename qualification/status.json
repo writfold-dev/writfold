@@ -201,6 +201,55 @@
     "public_alpha_available": false,
     "full_release_gates_passed": []
   },
+  "procedure_lean_agreement": {
+    "status": "scoped_component_pass",
+    "scope": "Differential agreement between Lean validateProcedure and Rust procedure admission on a 39-case Lean-exported corpus; finite executable agreement, not a refinement proof.",
+    "receipts": {
+      "unit": {
+        "path": "~/.local/share/writfold/evidence/procedure-lean-cases-qNvvF92S/unit-002.json",
+        "sha256": "c5ef97736f4ed69c794c9776194f795eb3310b52a910712be7e78ffbb9cc3f01",
+        "bytes": 580781
+      },
+      "quality": {
+        "path": "~/.local/share/writfold/evidence/procedure-lean-cases-qNvvF92S/quality-002.json",
+        "sha256": "19cbebae0de1e32af0b5bf1588a6c284ba7cb6535ced89fda0043b236c237b47",
+        "bytes": 1023194
+      },
+      "engineering_lean": {
+        "path": "~/.local/share/writfold/evidence/procedure-lean-cases-qNvvF92S/engineering-lean-002.json",
+        "sha256": "b7c891e215b0f340b0549fd0bc9c544e252c71e05d96593f5216b85776d98d12",
+        "bytes": 591199
+      }
+    },
+    "corpus": {
+      "fixture": "crates/writfold-wire/tests/fixtures/procedure-lean-cases.json",
+      "sha256": "c1798aacd13d7ab9b033930d6539d77e26fe403b365917316be7534a491bed7f",
+      "cases": 39,
+      "lean_valid": 2,
+      "lean_refused": 37,
+      "rust_stricter_listed": 0,
+      "freshness": "python3 -B scripts/writfold_procedure_cases.py rebuilt it byte-identically in the admitted tool image"
+    },
+    "verification": {
+      "workspace_tests": 455,
+      "quality_checks": 255,
+      "quality_skips": 0,
+      "detected_checker_mutants": [
+        "call-rank bypass",
+        "self-route",
+        "self-prerequisite/backward edge"
+      ]
+    },
+    "finding": "The first 36-case corpus missed a self-route mutant; self-route, self-prerequisite and select-self cases were added.",
+    "retained_failed_attempts": [
+      {
+        "attempt": "quality-001",
+        "disposition": "Embedding helper exceeded the 80-line function budget; split into helpers."
+      }
+    ],
+    "public_alpha_available": false,
+    "full_release_gates_passed": []
+  },
   "publication_history_audit": {
     "status": "inspected_not_cleared_for_publication",
     "record": {
