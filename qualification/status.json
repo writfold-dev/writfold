@@ -250,6 +250,49 @@
     "public_alpha_available": false,
     "full_release_gates_passed": []
   },
+  "edit_approval_component": {
+    "status": "scoped_component_pass",
+    "scope": "Canonical prepared-edit approval payload and envelope, distinct Ed25519 signing domain, and strict verification relative to a supplied policy and the caller's current expected values; not grants, revocation, live grant checks, retention, claims, RPC or native effects.",
+    "receipts": {
+      "unit": {
+        "path": "~/.local/share/writfold/evidence/edit-approval-bKZ13SLx/unit-001.json",
+        "sha256": "9d10c29ec3a9600f242643d0927e5fe1e9fbecf2b24cc343c625c83cb4f1e691",
+        "bytes": 581468
+      },
+      "verus": {
+        "path": "~/.local/share/writfold/evidence/edit-approval-bKZ13SLx/verus-001.json",
+        "sha256": "127867aee3db7912de9ecf3add8c51fe846c9b49704237133c5fbd44c84dd34e",
+        "bytes": 3839678
+      },
+      "quality": {
+        "path": "~/.local/share/writfold/evidence/edit-approval-bKZ13SLx/quality-001.json",
+        "sha256": "c15d76022d86c822e0b072680c78c7bc875e3d174d6104168cd4b90e8210c035",
+        "bytes": 1011552
+      }
+    },
+    "verification": {
+      "workspace_tests": 460,
+      "approval_tests": 5,
+      "verus_producer_checks": 273,
+      "whole_domain_verified": 1300,
+      "quality_checks": 255,
+      "quality_skips": 0,
+      "detected_verifier_mutants": [
+        "generation check removed",
+        "validity check removed",
+        "policy identity check removed"
+      ]
+    },
+    "decision_pending": "Owner question: approval binds the exact retained Weft report bytes by blob digest; a Writfold-canonical report digest would change this binding.",
+    "not_claimed": [
+      "ALPHA06",
+      "operator grants or revocation",
+      "key custody",
+      "WF gate passes"
+    ],
+    "public_alpha_available": false,
+    "full_release_gates_passed": []
+  },
   "publication_history_audit": {
     "status": "inspected_not_cleared_for_publication",
     "record": {
