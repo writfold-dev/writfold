@@ -293,6 +293,46 @@
     "public_alpha_available": false,
     "full_release_gates_passed": []
   },
+  "ledger_kernel_component": {
+    "status": "scoped_component_pass",
+    "scope": "Pure validated ledger history and conditional append mirroring Lean E05, with exact step-by-step agreement on 31 Lean-exported append steps; not the record codec, authenticated inputs, durable compare-and-select storage, ownership or ALPHA03.",
+    "receipts": {
+      "unit": {
+        "path": "~/.local/share/writfold/evidence/ledger-kernel-p8vnCOw7/unit-001.json",
+        "sha256": "13bb09a2a1d5d54398ddd1465e19c638725ca243d4096560005f12062921eb58",
+        "bytes": 582240
+      },
+      "quality": {
+        "path": "~/.local/share/writfold/evidence/ledger-kernel-p8vnCOw7/quality-001.json",
+        "sha256": "9be57167a5f195f1899a68155352ccda1f73867c7cc5d7e6482d6e803cdc0d8c",
+        "bytes": 1012325
+      },
+      "engineering_lean": {
+        "path": "~/.local/share/writfold/evidence/ledger-kernel-p8vnCOw7/engineering-lean-001.json",
+        "sha256": "33a2478b532215e7bc769e5ce1f2a684292c4d3b68ed7ab0848bc275d796fb3f",
+        "bytes": 592355
+      }
+    },
+    "corpus": {
+      "fixture": "crates/writfold-wire/tests/fixtures/ledger-lean-cases.json",
+      "sha256": "e2235a64fb262f3d2975df04522371188d9b48ee432b39b3284a1313b267395e",
+      "scenarios": 18,
+      "steps": 31
+    },
+    "verification": {
+      "workspace_tests": 461,
+      "quality_checks": 255,
+      "quality_skips": 0,
+      "detected_conjunct_removals": 7,
+      "unreachable_defensive_conjuncts": [
+        "MalformedSelection",
+        "UnlinkedPrefix",
+        "UnretainedPrefix"
+      ]
+    },
+    "public_alpha_available": false,
+    "full_release_gates_passed": []
+  },
   "publication_history_audit": {
     "status": "inspected_not_cleared_for_publication",
     "record": {
