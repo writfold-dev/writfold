@@ -148,6 +148,14 @@
       "Weft hosted v0.1.0-dev.1 asset 713398499 retains pre-MIT proprietary metadata.",
       "Splicery source scan starts at its current import root; separate pre-import 0.6 history is outside that scope."
     ],
+    "approved_publication_strategy": {
+      "decision": "Keep the writfold repository name",
+      "public_repository": "writfold-dev/writfold",
+      "transition": "After alpha qualification, rename the original repository to a private archive and publish an audited product-only export under the original public name.",
+      "preserve": "Original commits, signed bytes, historical identifiers and refs remain unchanged in the private archive; no history rewrite.",
+      "requires": ["Clean installation and full scoped alpha flow", "Clean product-export publication audit", "Explicit migration of affected repository locators and integrations"],
+      "executed": false
+    },
     "visibility_changes_performed": false,
     "limitations": "No claim about unreachable/deleted hosted content, arbitrary encoded secrets or blanket legal clearance."
   },
