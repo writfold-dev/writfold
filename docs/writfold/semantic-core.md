@@ -326,7 +326,7 @@ only be stricter on cases it lists explicitly, and none are listed today.
 The corpus already earned its keep. A route mutant allowing a node to route to
 itself passed the first 36-case corpus. Self-route, self-prerequisite and
 self-select cases were added, and both self-loop mutants are now detected, as
-is a call-rank bypass. `python3 -B scripts/writfold_procedure_cases.py`
+is a call-rank bypass. `python3 -B scripts/writfold_lean_cases.py --corpus procedure`
 rebuilds the executable in the admitted tool image with networking off and
 requires the committed fixture to match byte for byte (`--write` refreshes
 it). This is agreement on finite cases, not a refinement proof.
@@ -336,6 +336,45 @@ result, current resource or grant, adapter safety, wire schema, or permission to
 execute or write. Operator grants, prepared-edit approvals and revocations are
 separate work. The draft retained out of tree under
 `interrupted-procedure-authority-20261108` is not part of this component.
+
+### Validated ledger history and conditional append
+
+`writfold_kernel::ledger` is the pure Rust counterpart of Lean `historyCheck`,
+`AppendReady` and `append` (E05). A `Store` retains immutable records and
+material and selects one prefix per stream. A `Validator` judges each record
+against exactly the prefix before it; it is a function of its arguments, not a
+caller Boolean.
+
+`history_check` requires every entry to be on the stream, numbered 1..n, linked
+to its predecessor and valid against its own prefix. Before every append,
+`append` re-checks these conjuncts in Lean's order:
+- the expected head equals the current head, and the selection is well formed;
+- the complete selected prefix replays and is retained;
+- the record's stream, next sequence and predecessor;
+- a fresh record ID and available closure material;
+- the validator.
+
+Refusal changes nothing, including material a rejected caller staged. A new
+stream advances the inventory epoch with checked arithmetic; overflow is
+refused rather than saturated.
+
+`formal/Kctx/Engineering/LedgerCases.lean` exports 18 scenarios (31 append
+steps) over the existing reservation-capacity calibration validator, applied
+with Lean's actual `append`. `crates/writfold-wire/tests/ledger_lean.rs` runs
+the same steps against the Rust kernel with a Rust copy of that validator. It
+requires exact agreement on every step's outcome, resulting head and inventory
+epoch, and both sides agree on all 31 steps. Disabling any one of the seven
+append-time conjuncts (stale head, foreign stream, sequence, predecessor,
+duplicate record, missing material, invalid record) fails the test. The three
+prefix re-validation conjuncts cannot be reached through the public API, which
+only ever stores admitted records; they are kept as defensive re-checks that
+mirror Lean. `python3 -B scripts/writfold_lean_cases.py --corpus ledger`
+rebuilds the fixture in the admitted tool image and compares it byte for byte.
+
+Not included: the canonical ledger-record codec, authenticated historical
+inputs, durable atomic compare-and-select storage, ownership generations and
+the engineering action reducer. This is tested Rust with finite Lean agreement,
+not a proved refinement, and not ALPHA03.
 
 ## Scoped citation calculus
 

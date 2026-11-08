@@ -24,3 +24,7 @@ root = "Kctx.Citation.Reference"
 [[lean_exe]]
 name = "procedurecases"
 root = "Kctx.Engineering.ProcedureCases"
+
+[[lean_exe]]
+name = "ledgercases"
+root = "Kctx.Engineering.LedgerCases"

@@ -22,6 +22,7 @@ callable path rather than add another isolated component.
 | Lean↔Rust shared procedure cases | 39-case Lean-exported corpus with a Rust agreement test and a fixture freshness script; caught a self-route gap | writfold |
 | Splicery example language | Website Splicery page edits a Rust file, run with the pinned binary | website |
 | Signed edit approval (first slice) | Closed CBOR payload, distinct Ed25519 domain, strict policy-relative verification against current expected values; grants and revocations remain | writfold |
+| Validated ledger kernel (first slice) | Pure history check and conditional append mirroring Lean E05; exact step-by-step agreement on 31 Lean-exported steps | writfold |
 | Website overclaims and wording | "a future native adapter"; Splicery page uses *apply* for writing an edit and *install* only for software; guide date updated | website |
 
 ## Accepted: execution order

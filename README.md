@@ -86,6 +86,10 @@ now binds one exact prepared edit, report, procedure, resource generation and
 validity window under its own Ed25519 domain. It is verified strictly against
 the supplied policy and current expected values. Operator grants and revocation
 are not yet built, and a verified approval cannot write anything.
+The pure [ledger kernel](docs/writfold/semantic-core.md#validated-ledger-history-and-conditional-append)
+replays and re-checks a stream's complete history before each conditional
+append. It agrees exactly with Lean's `append` on 31 exported steps. Durable
+storage and the record codec come next.
 
 The approved [experimental-alpha profile](qualification/experimental-alpha-profile.json)
 requires the actual single-file toolchain flow and its safety/proof/native
