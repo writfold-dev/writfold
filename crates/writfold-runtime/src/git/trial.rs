@@ -1,5 +1,5 @@
 //! `writfold-trial-worktree/1`: a cooperating-user trial profile that adds a
-//! detached Git worktree of an ordinary repository at its current HEAD.
+//! detached, sparse Git worktree of an ordinary repository at its current HEAD.
 //!
 //! Unlike the hardened Worktrunk path this accepts packed objects, remotes and
 //! ordinary configuration, because it runs plain `git worktree add` against the
@@ -8,17 +8,26 @@
 //! into the user's repository and grants no write authority by itself.
 use super::{GitBudgets, GitError, GitExecutable, command};
 use crate::process::{self, ProcessLimits};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::AtomicBool;
 use std::time::Instant;
 use writfold_domain::{GitObjectFormat, GitObjectId};
 
 /// Resolve the repository's HEAD commit, then add a detached worktree of that
-/// exact commit at `destination`, which must not exist. Returns the commit.
+/// exact commit at `destination`, which must not exist, populating only the
+/// `paths` the run edits. Returns the commit.
+///
+/// The worktree is added without a checkout and filled by one sparse
+/// `read-tree -mu` whose patterns name exactly `paths`: every other entry is
+/// marked skip-worktree, so `git status`, `git diff` and commits in the
+/// worktree behave normally while the cost no longer grows with the size of
+/// the repository. `core.sparseCheckout` is set for that single command only;
+/// the user's repository configuration is not changed.
 pub fn trial_worktree_add(
     executable: &GitExecutable<'_>,
     git_dir: &Path,
     destination: &Path,
+    paths: &[&str],
     budgets: GitBudgets,
     cancelled: &AtomicBool,
 ) -> Result<GitObjectId, GitError> {
@@ -27,6 +36,60 @@ pub fn trial_worktree_add(
             "trial worktree already exists",
         ));
     }
+    let commit = head_commit(executable, git_dir, budgets, cancelled)?;
+    let target = destination.to_str().ok_or(GitError::UnsupportedProfile(
+        "non-UTF-8 trial worktree path",
+    ))?;
+    git(
+        executable,
+        git_dir,
+        &[
+            "worktree",
+            "add",
+            "--quiet",
+            "--no-checkout",
+            "--detach",
+            target,
+            commit.as_str(),
+        ],
+        budgets,
+        cancelled,
+    )?;
+    let worktree_git_dir = linked_git_dir(git_dir, destination)?;
+    let info = worktree_git_dir.join("info");
+    std::fs::create_dir_all(&info).map_err(|_| GitError::Malformed("worktree info directory"))?;
+    let mut patterns = String::new();
+    for path in paths {
+        patterns.push('/');
+        patterns.push_str(&sparse_pattern(path));
+        patterns.push('\n');
+    }
+    std::fs::write(info.join("sparse-checkout"), patterns)
+        .map_err(|_| GitError::Malformed("sparse checkout patterns"))?;
+    git(
+        executable,
+        &worktree_git_dir,
+        &[
+            "--work-tree",
+            target,
+            "-c",
+            "core.sparseCheckout=true",
+            "read-tree",
+            "-mu",
+            commit.as_str(),
+        ],
+        budgets,
+        cancelled,
+    )?;
+    Ok(commit)
+}
+
+fn head_commit(
+    executable: &GitExecutable<'_>,
+    git_dir: &Path,
+    budgets: GitBudgets,
+    cancelled: &AtomicBool,
+) -> Result<GitObjectId, GitError> {
     let head = git(
         executable,
         git_dir,
@@ -43,26 +106,36 @@ pub fn trial_worktree_add(
         64 => GitObjectFormat::Sha256,
         _ => return Err(GitError::Malformed("HEAD commit")),
     };
-    let commit = GitObjectId::new(format, text.to_owned())
-        .map_err(|_| GitError::Malformed("HEAD commit"))?;
-    let destination = destination.to_str().ok_or(GitError::UnsupportedProfile(
-        "non-UTF-8 trial worktree path",
-    ))?;
-    git(
-        executable,
-        git_dir,
-        &[
-            "worktree",
-            "add",
-            "--quiet",
-            "--detach",
-            destination,
-            commit.as_str(),
-        ],
-        budgets,
-        cancelled,
-    )?;
-    Ok(commit)
+    GitObjectId::new(format, text.to_owned()).map_err(|_| GitError::Malformed("HEAD commit"))
+}
+
+/// The linked worktree's private Git directory, read from the `.git` file
+/// `git worktree add` wrote; it must lie under the repository's `worktrees/`.
+fn linked_git_dir(git_dir: &Path, destination: &Path) -> Result<PathBuf, GitError> {
+    let pointer = std::fs::read_to_string(destination.join(".git"))
+        .map_err(|_| GitError::Malformed("worktree .git file"))?;
+    let linked = pointer
+        .strip_prefix("gitdir: ")
+        .and_then(|p| p.strip_suffix('\n'))
+        .map(PathBuf::from)
+        .ok_or(GitError::Malformed("worktree .git file"))?;
+    if linked.parent() != Some(git_dir.join("worktrees").as_path()) {
+        return Err(GitError::Malformed("worktree .git file"));
+    }
+    Ok(linked)
+}
+
+/// A sparse-checkout pattern matching exactly `path`: gitignore-style
+/// metacharacters and spaces are escaped.
+fn sparse_pattern(path: &str) -> String {
+    let mut pattern = String::with_capacity(path.len());
+    for c in path.chars() {
+        if matches!(c, '\\' | '*' | '?' | '[' | ']' | '!' | '#' | ' ') {
+            pattern.push('\\');
+        }
+        pattern.push(c);
+    }
+    pattern
 }
 
 /// Remove a trial worktree this profile created, including its metadata in

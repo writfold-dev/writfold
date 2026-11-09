@@ -190,6 +190,7 @@ pub fn prepare(
         &executable,
         &fs::canonicalize(&git_dir)?,
         &worktree,
+        &[path],
         budgets()?,
         &CANCELLED,
     )?;

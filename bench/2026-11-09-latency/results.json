@@ -1,0 +1,128 @@
+{
+  "ceiling_ms": 5000,
+  "target_p95_ms": 1000,
+  "large_files": 100000,
+  "operations": [
+    {
+      "repo": "large",
+      "op": "apply",
+      "samples_ms": [
+        416,
+        421,
+        441,
+        468,
+        473
+      ],
+      "median_ms": 441,
+      "p95_ms": 473,
+      "max_ms": 473,
+      "within_budget": true
+    },
+    {
+      "repo": "large",
+      "op": "approve",
+      "samples_ms": [
+        187,
+        199,
+        215,
+        239,
+        240
+      ],
+      "median_ms": 215,
+      "p95_ms": 240,
+      "max_ms": 240,
+      "within_budget": true
+    },
+    {
+      "repo": "large",
+      "op": "prepare",
+      "samples_ms": [
+        138,
+        145,
+        163,
+        216,
+        239
+      ],
+      "median_ms": 163,
+      "p95_ms": 239,
+      "max_ms": 239,
+      "within_budget": true
+    },
+    {
+      "repo": "large",
+      "op": "show",
+      "samples_ms": [
+        159,
+        161,
+        161,
+        162,
+        171
+      ],
+      "median_ms": 161,
+      "p95_ms": 171,
+      "max_ms": 171,
+      "within_budget": true
+    },
+    {
+      "repo": "small",
+      "op": "apply",
+      "samples_ms": [
+        199,
+        419,
+        420,
+        435,
+        463
+      ],
+      "median_ms": 420,
+      "p95_ms": 463,
+      "max_ms": 463,
+      "within_budget": true
+    },
+    {
+      "repo": "small",
+      "op": "approve",
+      "samples_ms": [
+        185,
+        191,
+        217,
+        218,
+        227
+      ],
+      "median_ms": 217,
+      "p95_ms": 227,
+      "max_ms": 227,
+      "within_budget": true
+    },
+    {
+      "repo": "small",
+      "op": "prepare",
+      "samples_ms": [
+        86,
+        87,
+        153,
+        185,
+        214
+      ],
+      "median_ms": 153,
+      "p95_ms": 214,
+      "max_ms": 214,
+      "within_budget": true
+    },
+    {
+      "repo": "small",
+      "op": "show",
+      "samples_ms": [
+        151,
+        155,
+        155,
+        156,
+        162
+      ],
+      "median_ms": 155,
+      "p95_ms": 162,
+      "max_ms": 162,
+      "within_budget": true
+    }
+  ],
+  "within_budget": true
+}

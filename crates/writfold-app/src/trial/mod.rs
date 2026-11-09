@@ -18,6 +18,8 @@ mod prepare;
 mod recover;
 #[cfg(test)]
 mod recovery_tests;
+#[cfg(test)]
+mod sparse_tests;
 mod state;
 #[cfg(test)]
 mod tests;
