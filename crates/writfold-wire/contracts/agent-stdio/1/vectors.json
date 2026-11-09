@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "profile": "writfold.agent/1",
-  "scope": "Stateful control transport vectors; ephemeral session labels and contract digest are validated against the running process, not fixed fixture IDs.",
+  "scope": "Stateful control transport vectors; ephemeral session labels and contract digest are validated against the running process, not fixed fixture IDs. Vectors run `writfold serve` with no trial state configured (no --state, no WRITFOLD_STATE), so writfold.trial/1 is unavailable and refuses as unsupported.",
   "cases": [
     {
       "name": "initialize-shutdown",
@@ -209,6 +209,75 @@
           "id": "start",
           "kind": "initialize",
           "generation": 1
+        }
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "trial-negotiation-without-state",
+      "frames": [
+        "{\"jsonrpc\":\"2.0\",\"method\":\"trial/show\",\"id\":1,\"params\":{\"run\":\"run.1.aaaaaa\"}}",
+        "{\"jsonrpc\":\"2.0\",\"method\":\"trial/approve\",\"id\":2,\"params\":{\"run\":\"run.1.aaaaaa\"}}",
+        "{\"jsonrpc\":\"2.0\",\"method\":\"initialize\",\"id\":3,\"params\":{\"protocol_version\":\"2\",\"capabilities\":[\"writfold.trial/1\"]}}",
+        "{\"jsonrpc\":\"2.0\",\"method\":\"initialize\",\"id\":4,\"params\":{\"protocol_version\":\"2\"}}",
+        "{\"jsonrpc\":\"2.0\",\"method\":\"trial/show\",\"id\":5,\"params\":{\"run\":\"run.1.aaaaaa\"}}",
+        "{\"jsonrpc\":\"2.0\",\"method\":\"trial/apply\",\"id\":6,\"params\":{\"run\":\"run.1.aaaaaa\"}}",
+        "{\"jsonrpc\":\"2.0\",\"method\":\"trial/recover\",\"id\":7,\"params\":{\"run\":\"run.1.aaaaaa\"}}",
+        "{\"jsonrpc\":\"2.0\",\"method\":\"initialize\",\"id\":8,\"params\":{\"protocol_version\":\"2\",\"capabilities\":[\"writfold.trial/1\"]}}",
+        "{\"jsonrpc\":\"2.0\",\"method\":\"shutdown\",\"id\":9}"
+      ],
+      "expected": [
+        {
+          "id": 1,
+          "code": -32002,
+          "category": "conflict",
+          "generation": 1
+        },
+        {
+          "id": 2,
+          "code": -32601,
+          "category": "malformed",
+          "generation": 2
+        },
+        {
+          "id": 3,
+          "code": -32000,
+          "category": "malformed",
+          "generation": 3
+        },
+        {
+          "id": 4,
+          "kind": "initialize",
+          "generation": 4
+        },
+        {
+          "id": 5,
+          "code": -32000,
+          "category": "malformed",
+          "generation": 5
+        },
+        {
+          "id": 6,
+          "code": -32601,
+          "category": "malformed",
+          "generation": 6
+        },
+        {
+          "id": 7,
+          "code": -32601,
+          "category": "malformed",
+          "generation": 7
+        },
+        {
+          "id": 8,
+          "code": -32000,
+          "category": "conflict",
+          "generation": 8
+        },
+        {
+          "id": 9,
+          "kind": "shutdown",
+          "generation": 9
         }
       ],
       "exit_code": 0

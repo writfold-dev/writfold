@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Publish and inspect the standalone control-only agent contract (stdlib only).
+"""Publish and inspect the standalone agent contract (stdlib only): transport control
+plus the negotiated writfold.trial/1 capability.
 
 export(Path) exclusively creates a deterministic gzip/USTAR artifact; inspect(Path)
 reads an artifact without consulting the checkout or extracting any member. Both
@@ -27,11 +28,14 @@ import zlib
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "crates/writfold-wire/contracts/agent-stdio/1"
-PAYLOADS = frozenset({"methods.json", "request.schema.json", "response.schema.json",
-                      "citation-binding.schema.json", "vectors.json"})
+PAYLOADS = frozenset({"methods.json", "trial-methods.json", "request.schema.json",
+                      "response.schema.json", "citation-binding.schema.json", "vectors.json"})
+CONTROL_METHODS = ["initialize", "shutdown"]
+TRIAL_METHODS = ["trial/show", "trial/retain", "trial/prepare"]
+TRIAL_SCOPE = "transport-control+trial-worktree"
 ROOT_KEYS = frozenset({"namespace", "schema", "profile", "implementation_scope",
                        "command", "protocol", "implemented_methods",
-                       "advertised_capabilities", "identity", "lifecycle",
+                       "advertised_capabilities", "capabilities", "identity", "lifecycle",
                        "validation", "blocked_requirements", "files"})
 # Fixed tooling admission bounds for this small data-only contract artifact.
 # These are not protocol frame limits or operator storage admission floors.
@@ -92,10 +96,18 @@ def _declarations(raw: bytes) -> tuple[dict, dict]:
                           ("profile", "writfold.agent/1"),
                           ("implementation_scope", "transport-control-only"),
                           ("command", ["writfold", "serve"]),
-                          ("implemented_methods", ["initialize", "shutdown"]),
-                          ("advertised_capabilities", ["notifications"])):
+                          ("implemented_methods", CONTROL_METHODS + TRIAL_METHODS),
+                          ("advertised_capabilities", ["notifications", "writfold.trial/1"])):
         _require(type(contract[key]) is type(expected) and contract[key] == expected,
                  f"contract.json: unsupported {key}")
+    capabilities = contract["capabilities"]
+    _require(isinstance(capabilities, dict) and set(capabilities) == {"writfold.trial/1"},
+             "contract.json: unsupported negotiated capability set")
+    trial = capabilities["writfold.trial/1"]
+    _require(isinstance(trial, dict) and trial.get("implementation_scope") == TRIAL_SCOPE
+             and trial.get("methods") == TRIAL_METHODS
+             and trial.get("cli_only", {}).get("methods") == ["trial/approve", "trial/apply", "trial/recover"],
+             "contract.json: writfold.trial/1 scope, methods or CLI-only set changed")
     _require(isinstance(contract["files"], list), "contract.json: files must be an array")
     declarations = {}
     for entry in contract["files"]:
@@ -132,6 +144,14 @@ def _validate(members: dict[str, bytes]) -> dict:
         parsed[name] = _json(data, name)
     methods = parsed["methods.json"]
     _require(set(methods) == {"initialize", "shutdown"}, "methods.json: non-control method scope")
+    trial_methods = parsed["trial-methods.json"]
+    _require(list(trial_methods) == CONTROL_METHODS + TRIAL_METHODS,
+             "trial-methods.json: not exactly the control plus trial methods")
+    _require(all(trial_methods[name] == methods[name] for name in CONTROL_METHODS),
+             "trial-methods.json: control schemas differ from methods.json")
+    _require(all(isinstance(trial_methods[name], dict) and trial_methods[name].get("type") == "object"
+                 and trial_methods[name].get("additionalProperties") is False for name in TRIAL_METHODS),
+             "trial-methods.json: trial parameter schemas are not closed objects")
     initialize = methods["initialize"]
     shutdown = methods["shutdown"]
     _require(isinstance(initialize, dict) and isinstance(shutdown, dict), "invalid method schemas")
@@ -149,25 +169,30 @@ def _validate(members: dict[str, bytes]) -> dict:
         response = parsed["response.schema.json"]
         _require(len(response["oneOf"]) == 2, "response schema has extra envelope alternatives")
         results = response["oneOf"][0]["properties"]["result"]["oneOf"]
-        _require(len(results) == 2, "response schema has extra success alternatives")
-        advertisement = results[0]
-        props = advertisement["properties"]
-        _require(set(props) == {
-            "protocol_version", "profile", "implementation_scope", "server", "session",
-            "generation", "capabilities", "batch", "notifications", "max_request_bytes",
-            "max_response_bytes", "methods", "contract", "trust_boundary",
-        }, "response schema: unsupported initialization advertisement fields")
-        for key in ("profile", "implementation_scope"):
-            _require(props[key] == {"const": contract[key]}, f"response schema: unsupported {key}")
-        _require(props["capabilities"] == {"const": ["notifications"]},
-                 "response schema: non-control capabilities")
-        method_schema = props["methods"]
-        _require(set(method_schema["properties"]) == {"initialize", "shutdown"}
-                 and set(method_schema["required"]) == {"initialize", "shutdown"}
-                 and method_schema["additionalProperties"] is False,
-                 "response schema: non-control methods")
-        _require(advertisement["additionalProperties"] is False,
-                 "response schema: initialization advertisement must be closed")
+        # Control advertisement, shutdown, trial advertisement, trial result.
+        _require(len(results) == 4, "response schema has extra success alternatives")
+        for advertisement, scope, capabilities, names in (
+                (results[0], contract["implementation_scope"], ["notifications"], CONTROL_METHODS),
+                (results[2], TRIAL_SCOPE, ["notifications", "writfold.trial/1"],
+                 CONTROL_METHODS + TRIAL_METHODS)):
+            props = advertisement["properties"]
+            _require(set(props) == {
+                "protocol_version", "profile", "implementation_scope", "server", "session",
+                "generation", "capabilities", "batch", "notifications", "max_request_bytes",
+                "max_response_bytes", "methods", "contract", "trust_boundary",
+            }, "response schema: unsupported initialization advertisement fields")
+            _require(props["profile"] == {"const": contract["profile"]}, "response schema: unsupported profile")
+            _require(props["implementation_scope"] == {"const": scope},
+                     "response schema: unsupported implementation_scope")
+            _require(props["capabilities"] == {"const": capabilities},
+                     "response schema: capabilities differ from the negotiated set")
+            method_schema = props["methods"]
+            _require(set(method_schema["properties"]) == set(names)
+                     and set(method_schema["required"]) == set(names)
+                     and method_schema["additionalProperties"] is False,
+                     "response schema: advertised methods differ from the negotiated set")
+            _require(advertisement["additionalProperties"] is False,
+                     "response schema: initialization advertisement must be closed")
     except (KeyError, TypeError, IndexError) as error:
         raise ContractError("response schema: missing control advertisement structure") from error
     return contract

@@ -22,17 +22,56 @@
   },
   "implemented_methods": [
     "initialize",
-    "shutdown"
+    "shutdown",
+    "trial/show",
+    "trial/retain",
+    "trial/prepare"
   ],
   "advertised_capabilities": [
-    "notifications"
+    "notifications",
+    "writfold.trial/1"
   ],
+  "capabilities": {
+    "writfold.trial/1": {
+      "implementation_scope": "transport-control+trial-worktree",
+      "profile": "writfold-trial-worktree/1",
+      "methods": [
+        "trial/show",
+        "trial/retain",
+        "trial/prepare"
+      ],
+      "method_schemas": "trial-methods.json is the complete methods advertisement of a session that negotiated this capability; methods.json is the advertisement without it.",
+      "cli_only": {
+        "methods": [
+          "trial/approve",
+          "trial/apply",
+          "trial/recover"
+        ],
+        "rule": "Not registered: each is Method not found (-32601) in every session state. The operator key decides an approval and an agent session must not approve its own edit; apply and recover stay with the operator's CLI too."
+      },
+      "state": "Fixed at server startup by `writfold serve --state DIR` or WRITFOLD_STATE; never a request parameter. Without it, initialize requesting writfold.trial/1 refuses as an unsupported capability.",
+      "parameters": "Closed objects; unknown, missing or mistyped fields are Invalid params (-32602). repo, recipe and report are absolute host paths; file is a plain repository-relative path; start/end are u64 integer tokens selecting bytes [start, end).",
+      "refusal_order": [
+        "method lookup (approve/apply/recover and any unregistered name: -32601)",
+        "session state (before initialize or after shutdown: -32002)",
+        "negotiation (session did not negotiate writfold.trial/1: -32000 malformed, unsupported requested capability)",
+        "notification (not run; nothing emitted)",
+        "parameters (-32602)",
+        "the same application function as the CLI"
+      ],
+      "results": "Shutdown-shaped envelope: exit_code 0, complete true, generation, session and the method payload. trial/show's text is exactly the CLI's output; trial/prepare does not report the worktree path.",
+      "refusals": "Application refusals are -32000 Operation failed with category not-found/E101, malformed/E102, conflict/E104 (ledger step refused or head moved), incomplete/E105 (Git/IO/ledger failure, or result over the frame budget) or permission/E106, chosen by error type. data.message is exactly the text the CLI prints after `writfold: `.",
+      "outcomes": "rejected: trial/show, or a refusal decided before any write. unknown (exit_code null): trial/retain or trial/prepare failed after it may have written; observe with trial/show or the CLI before retrying.",
+      "budget": "A result that would exceed max_response_bytes refuses with incomplete/E105; it is never truncated. For prepare/retain the refusal names the run or binding and reports outcome unknown.",
+      "latency": "Agent-facing budget: p95 at most 1 s per call and at most 250 ms for trial/show; hard ceiling 5 s."
+    }
+  },
   "identity": {
     "instance": "Ephemeral entropy-backed transport-process label, not a KB or durable owner.",
     "incarnation": "Independent ephemeral session label, not a grant.",
     "generation": "Unsigned 64-bit invocation counter; first admitted envelope is 1, every valid envelope including notifications/refusals consumes one, malformed JSON/envelopes consume none. Exhaustion refuses and closes; no wrap/reuse. Not CitationTableGeneration.",
     "integer_request_ids": "Preserve arbitrary-precision signed integer lexical tokens. Fraction/exponent tokens are invalid even when mathematically integral. Parsed integer -0 normalizes to 0. Strings and explicit null remain distinct; missing id is a notification only after envelope admission.",
-    "durable_citations": "The included writfold-citation/1 descriptor schema names candidate immutable material only; it does not expose a citation RPC method, acquire bytes, authenticate a release, or grant access."
+    "durable_citations": "The included writfold-citation/1 descriptor schema names candidate immutable material only; it does not expose a citation reader RPC, acquire corpus bytes, authenticate a release, or grant access. trial/retain binds exact bytes in the cooperating trial state only."
   },
   "lifecycle": {
     "precedence": [
@@ -48,9 +87,9 @@
       "require running",
       "validate parameter schema",
       "require uninitialized",
-      "admit supported capability spellings and current capability set",
+      "admit supported capability spellings and current capability set (writfold.trial/1 only with a startup-configured trial state)",
       "encode success",
-      "commit initialized"
+      "commit initialized (and the negotiated capability set)"
     ],
     "shutdown_order": [
       "require initialized",
@@ -62,8 +101,8 @@
     "eof": "A final non-newline frame is evaluated; EOF then exits 0. Shutdown closes immediately, including shutdown notifications.",
     "oversized": "Drain through LF/EOF with bounded memory, report Invalid Request with null id/generation, then continue if input remains.",
     "encoding_failure": "Terminate without emitting a partial reply, truncating or substituting the ID; no successful lifecycle change precedes successful complete encoding.",
-    "notifications": "Well-formed notifications execute lifecycle; method/param/state failures emit nothing. Invalid JSON/envelopes still receive errors.",
-    "effects": "No corpus, retained-release, grounding, publication, ledger or effect service exists in this profile. No child process is launched."
+    "notifications": "Well-formed notifications execute lifecycle; method/param/state failures emit nothing. A trial method sent as a notification is not run, because it could not report its outcome. Invalid JSON/envelopes still receive errors.",
+    "effects": "Without writfold.trial/1 no corpus, retained-release, grounding, publication, ledger or effect service exists and no child process is launched. With it, trial/retain and trial/prepare write the configured trial state and launch the state's admitted Git executable exactly as the CLI does; nothing writes the user's checkout, and no approval, apply or recovery is reachable."
   },
   "validation": {
     "schema_dialect": "https://json-schema.org/draft/2020-12/schema",
@@ -91,14 +130,19 @@
       "bytes": 377
     },
     {
+      "path": "trial-methods.json",
+      "sha256": "f0d41cbb2ea22f482749f32b30a349e4ff9a91fc63d7fd1be636019b45b73d40",
+      "bytes": 2070
+    },
+    {
       "path": "request.schema.json",
       "sha256": "6c4ad381bbbaa849ce6d49fe44744e5c13feace9f546458226e3ac6760ec9e82",
       "bytes": 699
     },
     {
       "path": "response.schema.json",
-      "sha256": "7dbc47fd2cd5b55699eb737ee1f1340439a3c4891b83925d758e936862bf0bd3",
-      "bytes": 10818
+      "sha256": "c0228ecf6dd5944440817ffdcafec2ea4a429243dd60b669a2d338afd4398237",
+      "bytes": 25443
     },
     {
       "path": "citation-binding.schema.json",
@@ -107,8 +151,8 @@
     },
     {
       "path": "vectors.json",
-      "sha256": "d12eb7434ea151e7674ef04d0c4b201219b099cd2b24cc895bd768650bd33cc2",
-      "bytes": 6167
+      "sha256": "0dc26e4714eb86c7ab74cd17b863faf53b1eb9a2e5bb4e24dd8dd0b7b7319e64",
+      "bytes": 8548
     }
   ]
 }

@@ -48,11 +48,15 @@ is fabricated by these pure codecs.
 
 The native command is `writfold serve`. It uses shared typed application decisions
 and the existing protocol-2 boundary, not the semantic-input `writfold-ref` host
-or the historical Python engine. The implementation profile is `writfold.agent/1`,
-explicitly `transport-control-only`. It registers only `initialize` and `shutdown`
-and advertises only the `notifications` capability. Unsupported data/edit
-capabilities refuse before initialization commits; unavailable methods are absent
-from lookup, not placeholder handlers.
+or the historical Python engine. The implementation profile is `writfold.agent/1`.
+Without negotiated capabilities it is `transport-control-only`: it advertises
+`initialize`, `shutdown` and the `notifications` capability. A session that
+requests `writfold.trial/1` (and a server started with a trial state) also gets
+`trial/show`, `trial/retain` and `trial/prepare`, scope
+`transport-control+trial-worktree`; see
+[Negotiated `writfold.trial/1`](#negotiated-writfoldtrial1). Unsupported
+data/edit capabilities refuse before initialization commits; unavailable methods
+are absent from lookup, not placeholder handlers.
 
 ```mermaid
 flowchart LR
@@ -90,8 +94,9 @@ Shutdown closes the invocation immediately, including shutdown notifications.
 
 EOF/shutdown exits 0; setup/read/encoding failures exit 1; a broken output pipe is
 cancellation (130). SIGINT/SIGTERM retain native process-signal termination.
-This profile launches no child or persistent effect; it does not qualify the
-later resource-owning backend's signal/reconciliation obligations.
+Without `writfold.trial/1` this profile launches no child or persistent effect;
+it does not qualify the later resource-owning backend's signal/reconciliation
+obligations.
 
 The [owner contract](../../crates/writfold-wire/contracts/agent-stdio/1/contract.json)
 binds its schemas and stateful vectors by exact hash/length. Initialization names
@@ -108,7 +113,35 @@ never use a mutable sibling checkout or infer grounding from initialization.
 
 `stdio-control` qualifies the actual native control component under WF13 with
 `stdio-control-only` scope. Full `transport`, P09, live WR1–WR8, storage admission,
-grounded Weft E2E and Splicery editing remain separate obligations.
+grounded Weft E2E and Splicery editing remain separate obligations. **The current
+WF13 `stdio-control` receipt predates `writfold.trial/1`** (it binds contract
+`b673d10f…`); the changed contract and binary need a fresh receipt, which is not
+claimed here.
+
+### Negotiated `writfold.trial/1`
+
+`writfold serve [--state DIR]` fixes the trial state at startup (`--state`, else
+`WRITFOLD_STATE`); requests never name it. `initialize` admits
+`writfold.trial/1` only when requested and only when a state is configured; it
+then advertises `trial-methods.json` (the control schemas plus the three trial
+methods), capabilities `["notifications","writfold.trial/1"]` and a trust
+boundary saying approve/apply/recover are CLI-only. Each trial method calls
+exactly the CLI's application function (`crates/writfold-app/src/trial/rpc.rs`).
+
+Trial requests are checked in order: method lookup (approve/apply/recover are
+not registered, so -32601), session state (-32002), negotiation (-32000
+unsupported requested capability), notification (not run, nothing emitted),
+closed parameters (-32602; host paths must be absolute), then the application
+function. Its refusals are -32000 with a category chosen by error type and the
+CLI's own message; `outcome` is `unknown` (with `exit_code` null) when `retain`
+or `prepare` may have written before failing. Results that would exceed the
+65,536-byte budget refuse with `incomplete`/E105 instead of truncating. The full
+method and refusal tables are in [trial-profile.md](trial-profile.md#through-serve).
+
+The contract digest changes with this capability. A client pinned to the earlier
+digest refuses the new server at `initialize`, and a client pinned to the new
+digest refuses an earlier server: the pin is the exact `contract.json` SHA-256,
+never a compatibility range.
 
 ## Versioned storage-pin records
 

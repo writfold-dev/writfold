@@ -13,6 +13,8 @@ pub enum Capability {
     Authored,
     Notifications,
     StorageV1,
+    /// `writfold.trial/1`: trial show/retain/prepare; approve stays CLI-only.
+    TrialV1,
 }
 
 impl Capability {
@@ -24,6 +26,7 @@ impl Capability {
             Self::Authored => "authored",
             Self::Notifications => "notifications",
             Self::StorageV1 => "writfold.storage/1",
+            Self::TrialV1 => super::trial::TRIAL_CAPABILITY,
         }
     }
 
@@ -35,6 +38,7 @@ impl Capability {
             "authored" => Some(Self::Authored),
             "notifications" => Some(Self::Notifications),
             "writfold.storage/1" => Some(Self::StorageV1),
+            super::trial::TRIAL_CAPABILITY => Some(Self::TrialV1),
             _ => None,
         }
     }
@@ -70,6 +74,10 @@ pub enum ParamsError {
     UnsupportedCapability,
     #[error("unsupported requested storage profile")]
     UnsupportedStorageProfile,
+    #[error("a required parameter field is missing")]
+    MissingField,
+    #[error("a parameter field has the wrong type or value")]
+    InvalidField,
 }
 
 impl ParamsError {

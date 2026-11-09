@@ -1254,6 +1254,7 @@
   },
   "stdio_control_admission": {
     "status": "pass",
+    "current_source": "Stale for the current source: serve gained the negotiated writfold.trial/1 capability (trial/show, trial/retain, trial/prepare; approve/apply/recover CLI-only) and the contract changed. This receipt binds only its recorded source, contract b673d10f... and binary 70b0d07b...; a fresh stdio-control receipt is required before WF13 stdio-control is claimed for the current source.",
     "scope": "Actual ordinary transport-control component; not full P09/WF13, authenticated corpus reads, grounded client E2E, worktree editing, ledger/effects or product release.",
     "profile": "qualification/stdio-control-profile.json",
     "record": {

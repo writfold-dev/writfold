@@ -96,6 +96,11 @@ config is unchanged. Measured standalone: 4.1 s → 83 ms. The latency bench
 (`bench/latency/run.sh`) records every operation against both repositories,
 and the ceiling is checked there.
 
+Through `serve` (S3, `bench/latency/serve.py`, 10 calls each,
+`bench/2026-11-09-serve-latency/results.json`), the p95 on the 100,000-file
+repository is 27 ms for `trial/retain`, 166 ms for `trial/prepare` and 53 ms for
+`trial/show`.
+
 ## Delivery plan
 
 | # | Milestone | Exit test |
@@ -105,7 +110,7 @@ and the ceiling is checked there.
 | K1 | Pure trial decisions in `writfold-core`, proved: recovery outcome (`Applied ⇔ observed = candidate`, `Abandoned ⇔ observed = source`, else Unknown, given source ≠ candidate) and the required-verdict gate; `prepare` refuses a no-change candidate | Aeneas theorems, axiom audit and calibrated mutants |
 | S2 | Five independent badges in `trial show`: evidence, assessment, approval, claim, effect | Golden output for each ledger shape |
 | S1 | `trial retain`: exact bytes of a pinned Git blob range, retained and bound as `writfold-citation/1`; a report citing unretained or mismatched bytes refuses `prepare` | Equal text at two positions gives two bindings; HEAD is never substituted for the pinned commit |
-| S3 | `serve` capability `writfold.trial/1` with show/retain/prepare; **approve stays CLI-only** so an agent session cannot approve its own edit | Negotiation, MethodNotFound for approve, refreshed stdio-control receipt, Weft's vendored contract updated |
+| S3 | `serve` capability `writfold.trial/1` with show/retain/prepare; **approve stays CLI-only** so an agent session cannot approve its own edit | Negotiation, MethodNotFound for approve, refreshed stdio-control receipt, Weft's vendored contract updated. Implemented with engine, wire and real-process tests ([trial-profile.md](trial-profile.md#through-serve)); apply and recover also stay CLI-only. **The refreshed stdio-control receipt is still pending** |
 | S4 | Two-phase adversarial pilot: injected file change, SIGKILL after install, expired approval, refuted required check, direct checkout write | Every injected case ends in its expected ledger outcome; results retained |
 | T0 | Tuft v0: grammar, typed IR, `find`/`retain`/`project`/`emit` over a pinned commit, deterministic output and budget | Golden cases; zero-result completeness on a pinned tree; budget overflow emits omissions and a cursor, never silent truncation; excerpts resolve to retained bytes |
 | T1 | One-go run file: Tuft → Weft check → Splicery prepare, stopping at approval | One command produces evidence, report and prepared edit bound by digest; approval stays a separate CLI step |

@@ -6,6 +6,7 @@
 
 mod initialize;
 pub mod response;
+pub mod trial;
 pub use initialize::{
     Capability, Initialize, InitializeParams, PROTOCOL_VERSION, ParamsError, StorageProfileVersion,
 };

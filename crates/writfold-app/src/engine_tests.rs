@@ -52,7 +52,7 @@ fn response(dispatch: Dispatch) -> TestResult<Reply> {
 fn invalid_requests_and_capabilities_cannot_initialize_the_session() -> TestResult {
     let identity = InvocationIdentity::new()?;
     let contract = crate::contract::digest()?;
-    let mut engine = Engine::new(&identity, &contract)?;
+    let mut engine = Engine::new(&identity, &contract, None)?;
     for (request, code) in [
         (
             r#"{"jsonrpc":"2.0","id":1,"method":"shutdown","params":{"extra":true}}"#,
@@ -84,7 +84,7 @@ fn invalid_requests_and_capabilities_cannot_initialize_the_session() -> TestResu
 fn double_initialization_and_shutdown_keep_reference_refusal_precedence() -> TestResult {
     let identity = InvocationIdentity::new()?;
     let contract = crate::contract::digest()?;
-    let mut engine = Engine::new(&identity, &contract)?;
+    let mut engine = Engine::new(&identity, &contract, None)?;
     engine.handle(InputFrame::Bytes(
         br#"{"jsonrpc":"2.0","method":"initialize","params":{"protocol_version":"2"}}"#,
     ))?;
@@ -132,7 +132,7 @@ fn double_initialization_and_shutdown_keep_reference_refusal_precedence() -> Tes
 fn valid_notifications_are_silent_but_invalid_envelopes_are_not() -> TestResult {
     let identity = InvocationIdentity::new()?;
     let contract = crate::contract::digest()?;
-    let mut engine = Engine::new(&identity, &contract)?;
+    let mut engine = Engine::new(&identity, &contract, None)?;
     for request in [
         br#"{"jsonrpc":"2.0","method":"unknown"}"#.as_slice(),
         br#"{"jsonrpc":"2.0","method":"initialize","params":{"protocol_version":2}}"#,
@@ -165,7 +165,7 @@ fn valid_notifications_are_silent_but_invalid_envelopes_are_not() -> TestResult 
 fn bounded_reply_failure_does_not_commit_initialization_or_reuse_a_generation() -> TestResult {
     let identity = InvocationIdentity::new()?;
     let contract = crate::contract::digest()?;
-    let mut engine = Engine::new(&identity, &contract)?;
+    let mut engine = Engine::new(&identity, &contract, None)?;
     engine.maximum_response = 1;
     let request = br#"{"jsonrpc":"2.0","id":"request","method":"initialize","params":{"protocol_version":"2"}}"#;
     assert!(matches!(
@@ -184,7 +184,7 @@ fn bounded_reply_failure_does_not_commit_initialization_or_reuse_a_generation() 
 fn exhausted_generations_refuse_without_wrap_or_lifecycle_change() -> TestResult {
     let identity = InvocationIdentity::new()?;
     let contract = crate::contract::digest()?;
-    let mut engine = Engine::new(&identity, &contract)?;
+    let mut engine = Engine::new(&identity, &contract, None)?;
     engine.generation = RequestGeneration::from_u64(u64::MAX);
     let denied = engine.handle(InputFrame::Bytes(
         br#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocol_version":"2"}}"#,
@@ -198,3 +198,6 @@ fn exhausted_generations_refuse_without_wrap_or_lifecycle_change() -> TestResult
     assert_eq!(engine.session.state(), SessionState::Uninitialized);
     Ok(())
 }
+
+#[path = "engine_trial_tests.rs"]
+mod trial;

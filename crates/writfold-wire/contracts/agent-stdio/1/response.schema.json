@@ -204,6 +204,303 @@
                 "payload"
               ],
               "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "protocol_version": {
+                  "const": "2"
+                },
+                "profile": {
+                  "const": "writfold.agent/1"
+                },
+                "implementation_scope": {
+                  "const": "transport-control+trial-worktree"
+                },
+                "server": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "const": "writfold"
+                    },
+                    "version": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "version"
+                  ],
+                  "additionalProperties": false
+                },
+                "session": {
+                  "type": "object",
+                  "properties": {
+                    "instance_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*(?![\\s\\S])"
+                    },
+                    "incarnation": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*(?![\\s\\S])"
+                    }
+                  },
+                  "required": [
+                    "instance_id",
+                    "incarnation"
+                  ],
+                  "additionalProperties": false
+                },
+                "generation": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                "capabilities": {
+                  "const": [
+                    "notifications",
+                    "writfold.trial/1"
+                  ]
+                },
+                "batch": {
+                  "const": false
+                },
+                "notifications": {
+                  "const": true
+                },
+                "max_request_bytes": {
+                  "const": 65536
+                },
+                "max_response_bytes": {
+                  "const": 65536
+                },
+                "methods": {
+                  "type": "object",
+                  "properties": {
+                    "initialize": {
+                      "type": "object"
+                    },
+                    "shutdown": {
+                      "type": "object"
+                    },
+                    "trial/show": {
+                      "type": "object"
+                    },
+                    "trial/retain": {
+                      "type": "object"
+                    },
+                    "trial/prepare": {
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "initialize",
+                    "shutdown",
+                    "trial/show",
+                    "trial/retain",
+                    "trial/prepare"
+                  ],
+                  "additionalProperties": false
+                },
+                "contract": {
+                  "type": "object",
+                  "properties": {
+                    "namespace": {
+                      "const": "writfold-agent-contract"
+                    },
+                    "schema": {
+                      "const": 1
+                    },
+                    "sha256": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{64}(?![\\s\\S])"
+                    }
+                  },
+                  "required": [
+                    "namespace",
+                    "schema",
+                    "sha256"
+                  ],
+                  "additionalProperties": false
+                },
+                "trust_boundary": {
+                  "const": "Transport/session control plus writfold-trial-worktree/1 show, retain and prepare over the server's configured trial state; approve, apply and recover are CLI-only. No authorized corpus, retained release or grounding service is available."
+                }
+              },
+              "required": [
+                "protocol_version",
+                "profile",
+                "implementation_scope",
+                "server",
+                "session",
+                "generation",
+                "capabilities",
+                "batch",
+                "notifications",
+                "max_request_bytes",
+                "max_response_bytes",
+                "methods",
+                "contract",
+                "trust_boundary"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "exit_code": {
+                  "const": 0
+                },
+                "complete": {
+                  "const": true
+                },
+                "generation": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                "session": {
+                  "type": "object",
+                  "properties": {
+                    "instance_id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*(?![\\s\\S])"
+                    },
+                    "incarnation": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*(?![\\s\\S])"
+                    }
+                  },
+                  "required": [
+                    "instance_id",
+                    "incarnation"
+                  ],
+                  "additionalProperties": false
+                },
+                "payload": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "run": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "text": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "run",
+                        "text"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "binding": {
+                          "type": "string",
+                          "pattern": "^[0-9a-f]{64}(?![\\s\\S])"
+                        },
+                        "file": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "commit": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "start": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 18446744073709551615
+                        },
+                        "end": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 18446744073709551615
+                        }
+                      },
+                      "required": [
+                        "binding",
+                        "file",
+                        "commit",
+                        "start",
+                        "end"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "run": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "file": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "base": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "prepared": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "splices": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "start": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 18446744073709551615
+                              },
+                              "end": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 18446744073709551615
+                              },
+                              "inserted": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 18446744073709551615
+                              }
+                            },
+                            "required": [
+                              "start",
+                              "end",
+                              "inserted"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "run",
+                        "file",
+                        "base",
+                        "prepared",
+                        "splices"
+                      ],
+                      "additionalProperties": false
+                    }
+                  ],
+                  "description": "trial/show, trial/retain and trial/prepare payloads respectively."
+                }
+              },
+              "required": [
+                "exit_code",
+                "complete",
+                "generation",
+                "session",
+                "payload"
+              ],
+              "additionalProperties": false
             }
           ]
         }
@@ -252,103 +549,212 @@
               "type": "string"
             },
             "data": {
-              "type": "object",
-              "properties": {
-                "schema_version": {
-                  "const": 1
-                },
-                "category": {
-                  "enum": [
-                    "malformed",
-                    "conflict"
-                  ]
-                },
-                "message": {
-                  "type": "string"
-                },
-                "diagnostic": {
+              "anyOf": [
+                {
                   "type": "object",
                   "properties": {
-                    "code": {
-                      "enum": [
-                        "E102",
-                        "E104"
-                      ]
+                    "schema_version": {
+                      "const": 1
                     },
-                    "severity": {
-                      "const": "error"
+                    "category": {
+                      "enum": [
+                        "malformed",
+                        "conflict"
+                      ]
                     },
                     "message": {
                       "type": "string"
                     },
-                    "labels": {
-                      "const": []
+                    "diagnostic": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "enum": [
+                            "E102",
+                            "E104"
+                          ]
+                        },
+                        "severity": {
+                          "const": "error"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "labels": {
+                          "const": []
+                        },
+                        "help": {
+                          "type": "null"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "severity",
+                        "message",
+                        "labels",
+                        "help"
+                      ],
+                      "additionalProperties": false
                     },
-                    "help": {
-                      "type": "null"
+                    "exit_code": {
+                      "const": 1
+                    },
+                    "complete": {
+                      "const": false
+                    },
+                    "generation": {
+                      "oneOf": [
+                        {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 18446744073709551615
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "session": {
+                      "type": "object",
+                      "properties": {
+                        "instance_id": {
+                          "type": "string",
+                          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*(?![\\s\\S])"
+                        },
+                        "incarnation": {
+                          "type": "string",
+                          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*(?![\\s\\S])"
+                        }
+                      },
+                      "required": [
+                        "instance_id",
+                        "incarnation"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "outcome": {
+                      "const": "rejected"
                     }
                   },
                   "required": [
-                    "code",
-                    "severity",
+                    "schema_version",
+                    "category",
                     "message",
-                    "labels",
-                    "help"
+                    "diagnostic",
+                    "exit_code",
+                    "complete",
+                    "generation",
+                    "session",
+                    "outcome"
                   ],
                   "additionalProperties": false
                 },
-                "exit_code": {
-                  "const": 1
-                },
-                "complete": {
-                  "const": false
-                },
-                "generation": {
-                  "oneOf": [
-                    {
+                {
+                  "type": "object",
+                  "properties": {
+                    "schema_version": {
+                      "const": 1
+                    },
+                    "category": {
+                      "enum": [
+                        "not-found",
+                        "malformed",
+                        "conflict",
+                        "incomplete",
+                        "permission"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "diagnostic": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "enum": [
+                            "E101",
+                            "E102",
+                            "E104",
+                            "E105",
+                            "E106"
+                          ]
+                        },
+                        "severity": {
+                          "const": "error"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "labels": {
+                          "const": []
+                        },
+                        "help": {
+                          "type": "null"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "severity",
+                        "message",
+                        "labels",
+                        "help"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "exit_code": {
+                      "enum": [
+                        1,
+                        null
+                      ]
+                    },
+                    "complete": {
+                      "const": false
+                    },
+                    "generation": {
                       "type": "integer",
                       "minimum": 0,
                       "maximum": 18446744073709551615
                     },
-                    {
-                      "type": "null"
-                    }
-                  ]
-                },
-                "session": {
-                  "type": "object",
-                  "properties": {
-                    "instance_id": {
-                      "type": "string",
-                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*(?![\\s\\S])"
+                    "session": {
+                      "type": "object",
+                      "properties": {
+                        "instance_id": {
+                          "type": "string",
+                          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*(?![\\s\\S])"
+                        },
+                        "incarnation": {
+                          "type": "string",
+                          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*(?![\\s\\S])"
+                        }
+                      },
+                      "required": [
+                        "instance_id",
+                        "incarnation"
+                      ],
+                      "additionalProperties": false
                     },
-                    "incarnation": {
-                      "type": "string",
-                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*(?![\\s\\S])"
+                    "outcome": {
+                      "enum": [
+                        "rejected",
+                        "unknown"
+                      ]
                     }
                   },
                   "required": [
-                    "instance_id",
-                    "incarnation"
+                    "schema_version",
+                    "category",
+                    "message",
+                    "diagnostic",
+                    "exit_code",
+                    "complete",
+                    "generation",
+                    "session",
+                    "outcome"
                   ],
-                  "additionalProperties": false
-                },
-                "outcome": {
-                  "const": "rejected"
+                  "additionalProperties": false,
+                  "description": "writfold.trial/1 refusal (code -32000): message is the application's own text, exactly what the CLI prints. outcome unknown (with exit_code null) means a writing method may have written before failing; observe before any retry."
                 }
-              },
-              "required": [
-                "schema_version",
-                "category",
-                "message",
-                "diagnostic",
-                "exit_code",
-                "complete",
-                "generation",
-                "session",
-                "outcome"
-              ],
-              "additionalProperties": false
+              ]
             }
           },
           "required": [

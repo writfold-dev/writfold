@@ -1,4 +1,5 @@
-//! Bounded JSON-RPC replies for transport/session control only.
+//! Bounded JSON-RPC replies for transport/session control and, when negotiated,
+//! the `writfold.trial/1` methods.
 //!
 //! Encoding is pure: metadata authenticates nothing, no method is dispatched,
 //! and the caller must commit lifecycle changes only after encoding succeeds.
@@ -7,14 +8,23 @@
 pub(crate) mod bounded;
 mod codec;
 mod fault;
+mod trial;
 
 pub use codec::{encode_error, encode_success};
+pub use trial::{
+    PreparePayload, RetainPayload, ShowPayload, SpliceSummary, TrialCategory, TrialOutcome,
+    TrialRefusal, encode_trial_refusal, encode_trial_success,
+};
 use writfold_domain::{ContentDigest, InstanceId, SessionIncarnation};
 
 pub const PROFILE: &str = "writfold.agent/1";
 pub const MAX_RESPONSE_BYTES: usize = 65_536;
 /// Exact closed legacy parameter schemas, not a data-service advertisement.
 pub const METHOD_SCHEMAS: &str = include_str!("../../../contracts/agent-stdio/1/methods.json");
+/// The method advertisement for a session that negotiated `writfold.trial/1`:
+/// the control schemas plus `trial/show`, `trial/retain` and `trial/prepare`.
+pub const TRIAL_METHOD_SCHEMAS: &str =
+    include_str!("../../../contracts/agent-stdio/1/trial-methods.json");
 /// Self-describing pinned control-profile contract; data-service requirements
 /// remain outside its implemented method set.
 pub const CONTRACT: &[u8] = include_bytes!("../../../contracts/agent-stdio/1/contract.json");
@@ -46,7 +56,10 @@ impl<'a> ServerMetadata<'a> {
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Success {
+    /// Initialization without negotiated capabilities beyond notifications.
     Initialize,
+    /// Initialization that negotiated `writfold.trial/1`.
+    InitializeTrial,
     Shutdown,
 }
 

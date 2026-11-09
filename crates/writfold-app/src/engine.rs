@@ -1,4 +1,5 @@
-use crate::{ServeError, VERSION};
+use crate::{ServeError, VERSION, trial::rpc};
+use std::path::Path;
 use writfold_domain::{ContentDigest, RequestGeneration};
 use writfold_protocol::{
     generation::{GenerationAdvance, advance_generation},
@@ -12,6 +13,7 @@ use writfold_wire::{
         response::{
             Fault, MAX_RESPONSE_BYTES, ServerMetadata, Success, encode_error, encode_success,
         },
+        trial::TrialMethod,
     },
 };
 
@@ -32,12 +34,17 @@ pub(super) struct Engine<'a> {
     metadata: ServerMetadata<'a>,
     limits: Limits,
     maximum_response: usize,
+    /// Fixed at startup; without it `writfold.trial/1` refuses. `trial` is
+    /// whether this session negotiated the capability.
+    trial_state: Option<&'a Path>,
+    trial: bool,
 }
 
 impl<'a> Engine<'a> {
     pub fn new(
         identity: &'a InvocationIdentity,
         contract: &'a ContentDigest,
+        trial_state: Option<&'a Path>,
     ) -> Result<Self, ServeError> {
         Ok(Self {
             session: Session::new(SessionIdentity::new(
@@ -59,6 +66,8 @@ impl<'a> Engine<'a> {
                 MAX_REQUEST_BYTES,
             )?,
             maximum_response: MAX_RESPONSE_BYTES,
+            trial_state,
+            trial: false,
         })
     }
 
@@ -91,7 +100,10 @@ impl<'a> Engine<'a> {
             GenerationAdvance::InUse => return Err(ServeError::GenerationInUse),
         };
         self.generation = generation;
-        self.dispatch(request, generation)
+        match TrialMethod::lookup(request.method()) {
+            Some(method) => self.trial(request, method, generation),
+            None => self.dispatch(request, generation),
+        }
     }
 
     fn dispatch(
@@ -120,8 +132,9 @@ impl<'a> Engine<'a> {
             )?)
         };
         let flow = match success {
-            Success::Initialize => {
+            Success::Initialize | Success::InitializeTrial => {
                 self.session.initialize().map_err(ServeError::Session)?;
+                self.trial = success == Success::InitializeTrial;
                 Flow::Continue
             }
             Success::Shutdown => {
@@ -146,13 +159,19 @@ impl<'a> Engine<'a> {
                 let admitted = parameters
                     .admit()
                     .map_err(|_| Fault::UnsupportedCapability)?;
-                if admitted
-                    .capabilities()
-                    .any(|capability| capability != Capability::Notifications)
-                {
-                    return Err(Fault::UnsupportedCapability);
+                let mut trial = false;
+                for capability in admitted.capabilities() {
+                    match capability {
+                        Capability::Notifications => {}
+                        Capability::TrialV1 if self.trial_state.is_some() => trial = true,
+                        _ => return Err(Fault::UnsupportedCapability),
+                    }
                 }
-                Ok(Success::Initialize)
+                Ok(if trial {
+                    Success::InitializeTrial
+                } else {
+                    Success::Initialize
+                })
             }
             "shutdown" => {
                 self.session.require_initialized().map_err(session_fault)?;
@@ -162,6 +181,37 @@ impl<'a> Engine<'a> {
                 Ok(Success::Shutdown)
             }
             _ => Err(Fault::MethodNotFound),
+        }
+    }
+
+    /// Lifecycle, negotiation, then parameters. A trial notification is not run.
+    fn trial(
+        &self,
+        request: Request<'_>,
+        method: TrialMethod,
+        generation: RequestGeneration,
+    ) -> Result<Dispatch, ServeError> {
+        let state = self.trial_state.filter(|_| self.trial);
+        let called = match (self.session.require_initialized(), state) {
+            (Err(error), _) => Err(session_fault(error)),
+            (Ok(()), None) => Err(Fault::UnsupportedCapability),
+            (Ok(()), Some(_)) if request.is_notification() => Err(Fault::InvalidRequest),
+            (Ok(()), Some(state)) => {
+                let reply = rpc::Reply {
+                    id: request.id(),
+                    metadata: self.metadata,
+                    generation,
+                    maximum: self.maximum_response,
+                };
+                rpc::call(state, method, request, reply)
+            }
+        };
+        match called {
+            Ok(encoded) => Ok(Dispatch {
+                response: Some(encoded?),
+                flow: Flow::Continue,
+            }),
+            Err(fault) => self.refusal(request.id(), Some(generation), fault, Flow::Continue),
         }
     }
 

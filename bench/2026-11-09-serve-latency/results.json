@@ -1,0 +1,68 @@
+{
+  "transport": "writfold serve (stdio JSON-RPC), one session per repository",
+  "ceiling_ms": 5000,
+  "large_files": 100000,
+  "repeats": 10,
+  "operations": [
+    {
+      "repo": "small",
+      "op": "trial/retain",
+      "samples": 10,
+      "median_ms": 37.4,
+      "p95_ms": 41.3,
+      "max_ms": 41.3,
+      "target_p95_ms": 1000,
+      "within_budget": true
+    },
+    {
+      "repo": "small",
+      "op": "trial/prepare",
+      "samples": 10,
+      "median_ms": 163.5,
+      "p95_ms": 184.3,
+      "max_ms": 184.3,
+      "target_p95_ms": 1000,
+      "within_budget": true
+    },
+    {
+      "repo": "small",
+      "op": "trial/show",
+      "samples": 10,
+      "median_ms": 51.5,
+      "p95_ms": 53.1,
+      "max_ms": 53.1,
+      "target_p95_ms": 250,
+      "within_budget": true
+    },
+    {
+      "repo": "large",
+      "op": "trial/retain",
+      "samples": 10,
+      "median_ms": 15.0,
+      "p95_ms": 26.8,
+      "max_ms": 26.8,
+      "target_p95_ms": 1000,
+      "within_budget": true
+    },
+    {
+      "repo": "large",
+      "op": "trial/prepare",
+      "samples": 10,
+      "median_ms": 137.4,
+      "p95_ms": 165.5,
+      "max_ms": 165.5,
+      "target_p95_ms": 1000,
+      "within_budget": true
+    },
+    {
+      "repo": "large",
+      "op": "trial/show",
+      "samples": 10,
+      "median_ms": 50.8,
+      "p95_ms": 53.0,
+      "max_ms": 53.0,
+      "target_p95_ms": 250,
+      "within_budget": true
+    }
+  ]
+}

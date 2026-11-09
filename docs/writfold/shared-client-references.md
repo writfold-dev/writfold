@@ -12,7 +12,10 @@ controlling. [The Weft inventory](../../qualification/weft-integration.json) and
 reviewed inputs and map requirements to existing epics.
 
 The implemented [control-only transport](wire-boundary.md#ordinary-stdio-control-profile)
-has its own pinned schemas and vectors. Other sections remain accepted interface
+has its own pinned schemas and vectors. The owner has published one negotiated
+capability on it with tests: `writfold.trial/1` (`trial/show`, `trial/retain`,
+`trial/prepare` of the cooperating trial profile; approve, apply and recover are
+CLI-only and absent from lookup). Other sections remain accepted interface
 requirements, **not available data/effect methods or guessed RPC names**.
 
 ## Executed three-tool component smoke

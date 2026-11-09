@@ -11,5 +11,8 @@ publish.workspace = true
 [dependencies]
 writfold-app = { path = "../writfold-app" }
 
+[dev-dependencies]
+serde_json.workspace = true
+
 [lints]
 workspace = true

@@ -83,15 +83,21 @@ pub fn retain(
     path: &str,
     range: (u64, u64),
 ) -> Result<Retained> {
-    let trial = Trial::open(state)?;
-    let executable = trial.executable()?;
-    let git_dir = fs::canonicalize(repo.join(".git"))?;
-    let commit = commit_id(commit)?;
-    let (blob, content) = trial_blob(&executable, &git_dir, &commit, path, budgets()?, &CANCELLED)?;
-    let descriptor = descriptor(&trial, &commit, path, blob, &content, range)?;
-    let binding = binding_fingerprint(&descriptor, limits()?)?
-        .as_str()
-        .to_owned();
+    let trial = super::refused::before_effects(Trial::open(state))?;
+    // Reading the pinned blob and binding the selection write nothing.
+    let admitted = super::refused::before_effects((|| {
+        let executable = trial.executable()?;
+        let git_dir = fs::canonicalize(repo.join(".git"))?;
+        let commit = commit_id(commit)?;
+        let (blob, content) =
+            trial_blob(&executable, &git_dir, &commit, path, budgets()?, &CANCELLED)?;
+        let descriptor = descriptor(&trial, &commit, path, blob, &content, range)?;
+        let binding = binding_fingerprint(&descriptor, limits()?)?
+            .as_str()
+            .to_owned();
+        Ok((commit, content, descriptor, binding))
+    })());
+    let (commit, content, descriptor, binding) = admitted?;
     let selected = content
         .get(range.0 as usize..range.1 as usize)
         .ok_or("byte range is outside the file")?;

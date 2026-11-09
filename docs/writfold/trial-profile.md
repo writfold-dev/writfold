@@ -44,6 +44,81 @@ the run's history is replayed through the kernel and the edit-flow validator
 carrying its material, with the claim and `Applied` naming the prepared
 candidate and an abandonment saying why) before the head moves.
 
+## Through serve
+
+An agent can run `show`, `retain` and `prepare` over `writfold serve`
+(JSON-RPC 2.0 over bounded stdio, profile `writfold.agent/1`) by negotiating the
+`writfold.trial/1` capability. Each method calls exactly the function the CLI
+calls (`crates/writfold-app/src/trial/{show,retain,prepare}.rs`), so the same
+input gets the same decision and the same message.
+
+```sh
+writfold serve --state "$WRITFOLD_STATE"     # or set WRITFOLD_STATE and run: writfold serve
+{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocol_version":"2","capabilities":["writfold.trial/1"]}}
+{"jsonrpc":"2.0","id":2,"method":"trial/retain","params":{"repo":"/abs/repo","commit":"<full-sha>","file":"src/client.rs","start":0,"end":120}}
+{"jsonrpc":"2.0","id":3,"method":"trial/prepare","params":{"repo":"/abs/repo","file":"src/client.rs","recipe":"/abs/add-retry.spl","report":"/abs/report.json"}}
+{"jsonrpc":"2.0","id":4,"method":"trial/show","params":{"run":"run.1794262902.0f9dfb"}}
+{"jsonrpc":"2.0","id":5,"method":"shutdown"}
+```
+
+The state directory is fixed when the server starts (`--state DIR`, else
+`WRITFOLD_STATE`). It is never a request parameter. Without one, `initialize`
+requesting `writfold.trial/1` refuses as an unsupported capability. The
+capability is admitted only when requested; a session that did not request it
+advertises exactly the control methods and `notifications`, as before.
+
+| Method | Parameters (closed; unknown fields refuse) | Result `payload` |
+|---|---|---|
+| `trial/show` | `run` | `run`, `text`: exactly what `writfold trial show` prints |
+| `trial/retain` | `repo` (absolute), `commit` (full id), `file` (relative), `start`, `end` (u64, bytes `[start, end)`) | `binding`, `file`, `commit`, `start`, `end` |
+| `trial/prepare` | `repo`, `recipe` (absolute), `file` (relative), optional `report` (absolute) | `run`, `file`, `base`, `prepared`, `splices` (`start`, `end`, `inserted`) |
+
+Results use the shutdown-shaped envelope (`exit_code` 0, `complete`,
+`generation`, `session`, `payload`). `prepare` does not report the worktree
+path, because the CLI does not print it either.
+
+**Approve, apply and recover stay CLI-only.** There is no `trial/approve`,
+`trial/apply` or `trial/recover` method; each is Method not found (-32601) in
+every session state. The operator key decides an approval, and an agent session
+must not approve its own edit. Apply and recover also stay with the operator's
+CLI for now: apply installs into the worktree under the operator's grant, and
+recovery decides an Unknown outcome that a person may need to resolve. Moving
+either behind `serve` would need its own owner decision and tests.
+
+Refusals are checked in this order, with the existing typed faults:
+
+| Condition | Code | Category | Meaning |
+|---|---|---|---|
+| `trial/approve`, `trial/apply`, `trial/recover`, any unregistered name | -32601 | malformed | Method not found |
+| Trial method before `initialize` (or after `shutdown`) | -32002 | conflict | Initialization required (or shut down) |
+| Session did not negotiate `writfold.trial/1` | -32000 | malformed | Unsupported requested capability |
+| Sent as a notification | — | — | Not run; nothing is emitted, since it could not report its outcome |
+| Unknown, missing or mistyped parameter; relative host path | -32602 | malformed | Invalid params |
+| The trial function refused | -32000 | by error type | `data.message` is exactly the text the CLI prints after `writfold: ` |
+
+Trial refusal categories come from the error's type, never its text:
+`conflict`/E104 for a ledger refusal or moved head, `not-found`/E101 and
+`permission`/E106 for those host errors, `incomplete`/E105 for other Git, IO or
+ledger failures and for a result over the 65,536-byte frame budget, and
+`malformed`/E102 for the application's own input refusals (bad report, recipe,
+path, range or commit). The outcome is `rejected` for `trial/show` and for a
+refusal decided before anything was written (the CLI-side marker
+`BeforeEffects`, displayed exactly as its cause). A `retain` or `prepare` that
+fails after it may have written reports `unknown` with `exit_code` null:
+observe with `trial/show` before retrying. An oversized result is refused, never
+truncated; for `prepare` the refusal names the run.
+
+Measured through one `serve` session per repository (release host build, WSL2,
+10 calls each; [`bench/2026-11-09-serve-latency`](../../bench/2026-11-09-serve-latency/results.json),
+`bench/latency/serve.py`): on the 100,000-file repository `trial/retain` p95
+27 ms, `trial/prepare` p95 166 ms, `trial/show` p95 53 ms; on the small one
+41, 184 and 53 ms. All are within the 1 s p95 target (250 ms for `show`).
+
+The published contract (`crates/writfold-wire/contracts/agent-stdio/1/`) carries
+the trial method schemas (`trial-methods.json`), result and refusal schemas, and
+state-free negotiation vectors. The WF13 `stdio-control` receipt predates this
+capability and must be refreshed; it is not claimed here.
+
 ## What it does not do
 
 - It never writes to your checkout. Uncommitted changes are not included: the

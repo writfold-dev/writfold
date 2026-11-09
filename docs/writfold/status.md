@@ -29,9 +29,14 @@ The Rust implementation lives in `crates/`:
 
 `writfold serve` now implements the ordinary **transport-control-only** stdio
 profile: initialized JSON-RPC, capability refusal, correlated bounded replies,
-notifications and shutdown. It advertises only `initialize`/`shutdown` and
-`notifications`; successful initialization does not make grounding, corpus reads,
-artifact retention, worktree editing or effects available.
+notifications and shutdown. Without negotiated capabilities it advertises only
+`initialize`/`shutdown` and `notifications`; successful initialization does not
+make grounding, corpus reads, worktree editing or effects available. A session
+that negotiates `writfold.trial/1` (server started with a trial state) also gets
+`trial/show`, `trial/retain` and `trial/prepare` of the cooperating
+[trial profile](trial-profile.md#through-serve), through the same functions as
+the CLI; approve, apply and recover stay CLI-only. The WF13 `stdio-control`
+receipt predates this capability and needs a fresh run.
 [`wire-boundary.md`](wire-boundary.md#ordinary-stdio-control-profile)
 documents the exact boundary and client artifact. `writfold-ref` remains a
 separate development conformance executable, never a grounding fallback.

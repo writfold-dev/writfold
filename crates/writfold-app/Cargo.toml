@@ -16,12 +16,12 @@ writfold-kernel = { path = "../writfold-kernel" }
 writfold-store = { path = "../writfold-store" }
 writfold-sources = { path = "../writfold-sources" }
 ed25519-dalek.workspace = true
+serde.workspace = true
 writfold-wire = { path = "../writfold-wire" }
 sha2.workspace = true
 thiserror.workspace = true
 
 [dev-dependencies]
-serde.workspace = true
 serde_json.workspace = true
 
 [lints]

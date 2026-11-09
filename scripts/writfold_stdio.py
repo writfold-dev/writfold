@@ -21,7 +21,8 @@ from writfold_conformance_process import (
 )
 from writfold_stdio_process import Pipes
 
-SCOPE = ("transport-control-only: initialize/shutdown, notifications and bounded stdio; "
+SCOPE = ("transport-control-only: initialize/shutdown, notifications and bounded stdio, plus "
+         "writfold.trial/1 negotiation refusals without a trial state (its methods are not run); "
          "not child-tree, backend/native, corpus, authority, read/effect or Weft grounding "
          "qualification. WF24 and full transport remain blocked.")
 BOUNDARIES = (
@@ -165,9 +166,13 @@ class Producer:
             blobs = {item.name: archive.extractfile(item).read() for item in members}
         contract_raw = blobs["contract.json"]
         contract = loads(contract_raw)
+        # The vectors run without a trial state, so only the control scope and
+        # writfold.trial/1's refusals are exercised here; its methods are not.
         require(contract["implementation_scope"] == "transport-control-only" and
-                contract["implemented_methods"] == ["initialize", "shutdown"] and
-                contract["advertised_capabilities"] == ["notifications"], "Unexpected contract scope")
+                contract["implemented_methods"] == ["initialize", "shutdown", "trial/show",
+                                                    "trial/retain", "trial/prepare"] and
+                contract["advertised_capabilities"] == ["notifications", "writfold.trial/1"],
+                "Unexpected contract scope")
         require(set(blobs) == {"contract.json", "LICENSE", *(item["path"] for item in contract["files"])},
                 "Archive is not the exact self-contained contract")
         for item in contract["files"]:

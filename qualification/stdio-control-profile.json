@@ -8,12 +8,18 @@
   "contract": "crates/writfold-wire/contracts/agent-stdio/1/contract.json",
   "producer": "scripts/writfold_stdio.py",
   "artifact_publisher": "scripts/writfold_agent_contract.py",
-  "implemented_command": ["writfold", "serve"],
-  "implemented_methods": ["initialize", "shutdown"],
-  "implemented_capabilities": ["notifications"],
+  "implemented_command": ["writfold", "serve", "[--state DIR]"],
+  "implemented_methods": ["initialize", "shutdown", "trial/show", "trial/retain", "trial/prepare"],
+  "implemented_capabilities": ["notifications", "writfold.trial/1"],
+  "cli_only_methods": ["trial/approve", "trial/apply", "trial/recover"],
+  "receipt_status": {
+    "fresh_receipt_required": true,
+    "reason": "The contract (now with writfold.trial/1 and trial-methods.json) and the serve binary changed after the 2026-11-05 stdio-control receipt, which binds contract b673d10f7c14c73d8f5778cfb9b2e84a98a159f1553d5c008054402ee85e7be2. That receipt is preserved for its source and not relabelled; WF13 stdio-control is not claimed for the current source until a fresh gate run passes.",
+    "vector_scope": "The stdio-control vectors run without a trial state, so they exercise writfold.trial/1 negotiation refusals and Method not found for approve/apply/recover, not the trial methods. The trial methods are covered by crates/writfold/tests/serve_trial.rs and the writfold-app engine tests, which are not a gate receipt."
+  },
   "owners": {
-    "writfold": "CLI argument/stream composition and process exit mapping",
-    "writfold-app": "Typed method lookup, lifecycle/schema/capability refusal precedence, generation allocation and prepare-before-commit orchestration",
+    "writfold": "CLI argument/stream composition (including the startup trial state) and process exit mapping",
+    "writfold-app": "Typed method lookup, lifecycle/schema/capability refusal precedence, generation allocation, prepare-before-commit orchestration and the writfold.trial/1 adapter that calls the CLI's trial functions",
     "writfold-wire": "Strict bounded envelopes, exact ID kinds, closed parameter/data schemas and borrowed LF-inclusive response encoding",
     "writfold-protocol": "Actual checked generation allocation, exact instance/incarnation/request correlation and refusal-preserving lifecycle transitions",
     "writfold-runtime": "Observed OS entropy and bounded byte-preserving frame acquisition; no backend child is launched by this profile"
@@ -40,7 +46,8 @@
     "bounded complete response or connection termination without partial bytes/ID substitution",
     "notification silence and shutdown without processing subsequent input",
     "SIGTERM during partial pending input and broken output pipe",
-    "self-contained exact contract archive, reproducibility, standalone inspection and hostile archive refusal"
+    "self-contained exact contract archive, reproducibility, standalone inspection and hostile archive refusal",
+    "writfold.trial/1 negotiation refusals without a trial state, and Method not found for approve/apply/recover"
   ],
   "scenario_relationships": {
     "X04": "Contributes pipe/stream cleanliness and diagnostics only; full CLI/TTY/color scope remains open.",
