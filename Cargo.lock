@@ -589,6 +589,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "tuft"
+version = "0.1.0-dev.0"
+dependencies = [
+ "memchr",
+ "regex",
+ "sha2 0.11.0",
+ "writfold-domain",
+]
+
+[[package]]
 name = "typenum"
 version = "1.20.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -709,6 +719,7 @@ dependencies = [
  "serde_json",
  "sha2 0.11.0",
  "thiserror",
+ "tuft",
  "writfold-domain",
  "writfold-kernel",
  "writfold-protocol",
@@ -777,6 +788,7 @@ dependencies = [
 name = "writfold-store"
 version = "0.1.0-dev.0"
 dependencies = [
+ "memchr",
  "serde",
  "serde_json",
  "sha2 0.11.0",

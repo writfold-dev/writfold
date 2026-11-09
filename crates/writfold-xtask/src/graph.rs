@@ -5,6 +5,8 @@ use std::path::Path;
 fn allowed(name: &str) -> Option<&'static [&'static str]> {
     Some(match name {
         "writfold-domain" | "writfold-core" => &[],
+        // Tuft is pure (no IO); it reuses the domain's Coverage and SearchBudget.
+        "tuft" => &["writfold-domain"],
         "writfold-kernel" => &["writfold-domain", "writfold-core"],
         "writfold-protocol" => &["writfold-domain"],
         "writfold-wire" => &["writfold-domain", "writfold-kernel"],
@@ -29,6 +31,8 @@ fn allowed(name: &str) -> Option<&'static [&'static str]> {
             "writfold-catalog",
             "writfold-wire",
             "writfold-runtime",
+            // The `writfold tuft` adapter compiles programs with the pure crate.
+            "tuft",
         ],
         "writfold" => &["writfold-app", "writfold-wire", "writfold-domain"],
         "writfold-xtask" => &[],

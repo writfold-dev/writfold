@@ -1,0 +1,4 @@
+@h := find text "a\"b\\c\n" in "" at "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+@e := retain @h;
+@v := project @e [excerpt(max_chars: 1), range];
+emit @v budget_tokens 1;

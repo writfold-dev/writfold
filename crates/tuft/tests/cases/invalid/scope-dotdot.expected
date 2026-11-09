@@ -1,0 +1,1 @@
+scope-dotdot.tuft:1:24: error[T211]: `.` and `..` segments are refused in a scope

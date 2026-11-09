@@ -1,0 +1,4 @@
+find @hits rx "open\\(\\w+\\)" in "" at 0123456789abcdef0123456789abcdef01234567 positions=100 candidates=100
+retain None
+project ViewPlan { binding: "view", evidence: false, fields: [Path, Line, Range], sort: [(Line, Desc)], limit: None }
+emit EmitPlan { budget_tokens: 1000 }

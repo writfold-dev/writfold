@@ -6,7 +6,7 @@ use std::{
     process::ExitCode,
 };
 
-const USAGE: &str = "Usage: writfold serve [--state DIR]\n       writfold trial <command> (see: writfold trial help)\n       writfold --version\n       writfold --help\n\nserve: bounded JSON-RPC 2.0 over newline-delimited stdio; initialize/shutdown, plus\n       trial/show|retain|prepare when writfold.trial/1 is negotiated (state: --state\n       or $WRITFOLD_STATE). Approve, apply and recover are CLI-only.\ntrial: prepare, approve and apply one Splicery edit in a Writfold-owned worktree\n       (cooperating single-user profile writfold-trial-worktree/1).";
+const USAGE: &str = "Usage: writfold serve [--state DIR]\n       writfold trial <command> (see: writfold trial help)\n       writfold tuft <command> (see: writfold tuft help)\n       writfold --version\n       writfold --help\n\nserve: bounded JSON-RPC 2.0 over newline-delimited stdio; initialize/shutdown, plus\n       trial/show|retain|prepare when writfold.trial/1 is negotiated (state: --state\n       or $WRITFOLD_STATE). Approve, apply and recover are CLI-only.\ntrial: prepare, approve and apply one Splicery edit in a Writfold-owned worktree\n       (cooperating single-user profile writfold-trial-worktree/1).\ntuft: run a Tuft v0 retrieval and projection program over one pinned Git commit.";
 
 fn main() -> ExitCode {
     let Some(all) = env::args_os()
@@ -16,8 +16,13 @@ fn main() -> ExitCode {
     else {
         return failure("arguments must be valid UTF-8");
     };
-    if all.first().map(String::as_str) == Some("trial") {
-        return match writfold_app::trial::cli::main(&all[1..]) {
+    let subcommand: Option<fn(&[String]) -> _> = match all.first().map(String::as_str) {
+        Some("trial") => Some(writfold_app::trial::cli::main),
+        Some("tuft") => Some(writfold_app::tuft::cli::main),
+        _ => None,
+    };
+    if let Some(subcommand) = subcommand {
+        return match subcommand(&all[1..]) {
             Ok(text) => {
                 let _ = writeln!(io::stdout().lock(), "{text}");
                 ExitCode::SUCCESS

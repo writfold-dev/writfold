@@ -1,0 +1,4 @@
+find @hits text "open(url)" in "src/" at 0123456789abcdef0123456789abcdef01234567 positions=50 candidates=50
+retain Some(RetainPlan { binding: "ev", around: Some(1) })
+project ViewPlan { binding: "view", evidence: true, fields: [Path, Line, Binding, Excerpt { max_chars: 120 }], sort: [(Path, Asc), (Line, Asc)], limit: Some(6) }
+emit EmitPlan { budget_tokens: 400 }

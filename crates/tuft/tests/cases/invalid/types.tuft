@@ -1,0 +1,5 @@
+@h := find text "x" at "0123456789abcdef0123456789abcdef01234567";
+@e := retain @h;
+@x := retain @e;
+@v := project @e [path, path] sort [line, line];
+emit @h;

@@ -60,6 +60,20 @@ touches the file, and `writfold trial recover <run>` settles an interrupted
 apply from the file's exact bytes. This is a cooperating single-user trial, not
 the hardened alpha path.
 
+### Find and cite exact evidence with Tuft
+
+[Tuft v0](docs/tuft/language.md) searches one pinned commit exactly, retains
+each hit as a citation a Weft report can cite, and prints a compact view
+under a token budget, with explicit omissions and a resume cursor:
+
+```sh
+printf '@h := find text "trial_blob(" in "crates/" at "%s";\n@e := retain @h around lines 0;\n@v := project @e [path, line, binding, excerpt(max_chars: 72)] limit 6;\nemit @v budget_tokens 300;\n' "$(git rev-parse HEAD)" > q.tuft
+target/release/writfold tuft run q.tuft --repo .
+```
+
+Search is exact text or a bounded regex; semantic, fuzzy and ranked search
+are refused until the Omnigraph backend exists.
+
 `cargo test --workspace` runs the Rust test suite, including checks that the
 Rust kernels agree with cases exported from the Lean model.
 

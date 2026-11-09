@@ -218,6 +218,27 @@ Two tests run the suite:
 A future Omnigraph adapter must pass the same `conformance::run` against a
 disposable Omnigraph realm before it replaces Dolt.
 
+## The pinned Git tree adapter (Tuft v0, milestone T0)
+
+[`backend/git.rs`](../../crates/writfold-store/src/backend/git.rs) is a
+read-only adapter that [Tuft](../tuft/language.md)'s `find` lowers onto
+(`BackendKind::GitTree`). Its pin is a full commit id, which must resolve to
+exactly itself. Its records are the blobs under a path-prefix scope: key =
+path, kind = `blob`, content = exact bytes. It declares exact read and exact
+or lexical lookup and runs the shared pure `scan`. Writes are `Unavailable`;
+fuzzy, semantic and ranked lookups are `Unsupported`.
+
+It has not run `conformance::run`. The suite's fixed dataset needs per-record
+kinds (`document`, `service`) that a Git tree does not carry. The same rules
+(pinned history, digest binding, missing pin, scope, paging, cursor binding and
+typed refusals) are tested against a real repository in
+`crates/writfold-app/src/tuft/backend_tests.rs`. Whether the suite should take
+a kind-free dataset variant is an open question for the owner.
+
+The shared `scan` now matches `Substring` with `memchr::memmem` instead of a
+byte-window loop; the result is identical. A whole-tree lookup on the
+100,000-file bench repository would otherwise exceed the latency budget.
+
 ## What Omnigraph adds later
 
 Each item below arrives behind the same trait as a declared capability, with

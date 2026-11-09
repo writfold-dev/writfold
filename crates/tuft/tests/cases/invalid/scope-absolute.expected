@@ -1,0 +1,1 @@
+scope-absolute.tuft:1:24: error[T211]: scope is a repository-relative path prefix; a leading `/` is refused

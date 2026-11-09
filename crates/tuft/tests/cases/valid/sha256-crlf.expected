@@ -1,0 +1,4 @@
+find @h text "a\"b\\c\n" in "" at 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef positions=100 candidates=100
+retain Some(RetainPlan { binding: "e", around: None })
+project ViewPlan { binding: "v", evidence: true, fields: [Excerpt { max_chars: 1 }, Range], sort: [], limit: None }
+emit EmitPlan { budget_tokens: 1 }

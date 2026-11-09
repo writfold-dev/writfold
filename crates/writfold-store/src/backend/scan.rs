@@ -123,7 +123,7 @@ fn matches(record: &ScanRecord<'_>, request: &LookupRequest) -> bool {
     match request.mode() {
         MatchMode::Exact => value == needle,
         MatchMode::Prefix => value.starts_with(needle),
-        MatchMode::Substring => value.windows(needle.len()).any(|window| window == needle),
+        MatchMode::Substring => memchr::memmem::find(value, needle).is_some(),
         MatchMode::Fuzzy | MatchMode::Semantic => false,
     }
 }

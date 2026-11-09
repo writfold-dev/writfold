@@ -8,6 +8,7 @@ mod contract;
 mod engine;
 pub mod ledger;
 pub mod trial;
+pub mod tuft;
 
 use std::io::{self, BufRead, Write};
 use std::path::{Path, PathBuf};

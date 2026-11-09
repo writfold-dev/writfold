@@ -1,0 +1,1 @@
+regex-unicode-class.tuft:1:12: error[T208]: Unicode classes (\p, \P) are refused

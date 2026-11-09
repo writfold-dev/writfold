@@ -1,0 +1,3 @@
+@hits := find rx"open\(\w+\)" at "0123456789abcdef0123456789abcdef01234567";
+@view := project @hits [path, line, range] sort [line desc];
+emit @view;

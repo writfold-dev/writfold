@@ -1,0 +1,6 @@
+types.tuft:3:1: error[T204]: binding @x is never used
+types.tuft:3:14: error[T203]: @e is retained evidence, expected hits
+types.tuft:4:1: error[T204]: binding @v is never used
+types.tuft:4:25: error[T210]: field `path` repeated
+types.tuft:4:43: error[T210]: sort key repeated
+types.tuft:5:6: error[T203]: @h is hits, expected a view

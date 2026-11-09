@@ -10,6 +10,7 @@
 //! truth, publication, current authority or an EngineeringLedger head.
 pub mod conformance;
 pub mod dolt;
+pub mod git;
 mod refusal;
 mod scan;
 mod types;
@@ -32,6 +33,8 @@ pub enum BackendKind {
     Dolt,
     /// Target backend once P01O/WF24 admits it; no adapter exists yet.
     Omnigraph,
+    /// Read-only blobs of one pinned Git commit (Tuft v0 `find`); no writes.
+    GitTree,
 }
 
 /// A storage backend behind the Writfold boundary.

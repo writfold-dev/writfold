@@ -15,6 +15,7 @@ writfold-runtime = { path = "../writfold-runtime" }
 writfold-kernel = { path = "../writfold-kernel" }
 writfold-store = { path = "../writfold-store" }
 writfold-sources = { path = "../writfold-sources" }
+tuft = { path = "../tuft" }
 ed25519-dalek.workspace = true
 serde.workspace = true
 writfold-wire = { path = "../writfold-wire" }

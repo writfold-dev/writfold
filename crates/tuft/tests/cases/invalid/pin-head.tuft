@@ -1,0 +1,3 @@
+@h := find text "x" at "HEAD";
+@v := project @h [path];
+emit @v;

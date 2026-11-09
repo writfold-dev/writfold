@@ -6,6 +6,7 @@ members = [
     "crates/writfold-wire",
     "crates/writfold-protocol",
     "crates/writfold-xtask",
+    "crates/tuft",
     "crates/writfold-runtime",
     "crates/writfold-sources",
     "crates/writfold-store",
@@ -30,6 +31,10 @@ serde_json = { version = "=1.0.151", features = ["arbitrary_precision"] }
 num-bigint = "=0.4.8"
 sha2 = "=0.11.0"
 thiserror = "=2.0.20"
+# Tuft `rx"..."` (bounded, linear-time) and exact substring search. Both are
+# already locked through the vendored Splicery compiler; no new crate enters.
+regex = { version = "=1.11.1", default-features = false, features = ["std", "perf"] }
+memchr = { version = "=2.8.3", default-features = false, features = ["std"] }
 ed25519-dalek = { version = "=2.2.0", features = ["pkcs8", "pem"] }
 verus_syn = { version = "=0.0.0-2026-09-06-0133", features = ["full", "visit"] }
 proc-macro2 = { version = "=1.0.107", features = ["span-locations"] }

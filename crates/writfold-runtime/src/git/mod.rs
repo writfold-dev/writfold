@@ -38,6 +38,7 @@ mod objects;
 mod preparation;
 mod profile;
 mod publication;
+mod tree;
 mod trial;
 mod write_objects;
 mod writer;
@@ -51,6 +52,7 @@ pub use error::GitError;
 pub use ledger::{LedgerCommit, ledger_ref};
 pub use objects::{GitBlob, GitEntry};
 use std::time::Duration;
+pub use tree::{TreeBlob, pinned_blobs, pinned_tree};
 pub use trial::{trial_blob, trial_worktree_add, trial_worktree_remove};
 use writfold_domain::ByteCount;
 

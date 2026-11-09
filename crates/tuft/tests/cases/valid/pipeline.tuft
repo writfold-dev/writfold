@@ -1,0 +1,6 @@
+# The T0 example: exact text, retained whole lines, a six-row view.
+@hits := find text "open(url)" in "src/" at "0123456789abcdef0123456789abcdef01234567" limit 50;
+@ev   := retain @hits around lines 1;
+@view := project @ev [path, line, binding, excerpt(max_chars: 120)]
+           sort [path asc, line asc] limit 6;
+emit @view budget_tokens 400;
