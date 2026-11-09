@@ -427,6 +427,45 @@
     "public_alpha_available": false,
     "full_release_gates_passed": []
   },
+  "trial_edit_flow_component": {
+    "status": "scoped_component_pass",
+    "scope": "writfold-trial-worktree/1 cooperating single-user trial profile: 'writfold trial init/prepare/approve/apply/show' connects detached worktree creation at HEAD, pinned Splicery replay, a validated wfwt1 prepared edit, signed operator grant and prepared-edit approval, strict re-verification and the kernel current-grant check, the source-bytes file guard, staged install and the durable local ledger with the edit-flow validator; not the hardened Worktrunk alpha path, receipts/recovery, revocation commands or any ALPHA gate.",
+    "owner_decision": "2026-11-08: trial worktree profile for the first connected path",
+    "source_commit": "e578757",
+    "receipts": {
+      "quality": {
+        "path": "~/.local/share/writfold/evidence/trial-flow-jMPMu2ut/quality-001.json",
+        "sha256": "ce17870e19f9d39324bc07a4a115b8d152bf8d3555585356f26f04431d15e03a",
+        "bytes": 732488
+      },
+      "unit": {
+        "path": "~/.local/share/writfold/evidence/trial-flow-jMPMu2ut/unit-001.json",
+        "sha256": "0890c678a76e9d54dfabc17dbcf2d48d1b50935c7d19ee3771369e21138b3f3c",
+        "bytes": 307685
+      },
+      "verus": {
+        "path": "~/.local/share/writfold/evidence/trial-flow-jMPMu2ut/verus-001.json",
+        "sha256": "4331f6197ab452d9530c248717c6348d62af19a7c9256af7df420ffe3c4f8b9b",
+        "bytes": 3708962
+      }
+    },
+    "post_gate_additions": [
+      "examples/trial/add-retry.spl (recipe data, added after the gated tree; exercised by the fresh-clone run below)"
+    ],
+    "fresh_clone_run": {
+      "date": "2026-11-09",
+      "commands": "README/website trial commands from fresh clones of the public writfold and splicery repositories",
+      "result": "prepared, approved and applied one splice to examples/try/client.rs in the trial worktree; splicery checkout unchanged"
+    },
+    "verification": {
+      "workspace_tests": 484,
+      "quality_checks": 255,
+      "quality_skips": 0,
+      "detected_check_removals": 5
+    },
+    "public_alpha_available": false,
+    "full_release_gates_passed": []
+  },
   "publication_history_audit": {
     "status": "inspected_not_cleared_for_publication",
     "record": {
