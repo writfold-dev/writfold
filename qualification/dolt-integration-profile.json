@@ -8,6 +8,23 @@
   "benchmark_plan": "docs/writfold/agent-integration-benchmarks.md",
   "release_backend": "omnigraph",
   "release_gate_effect": "none; P01O/WF24 remains blocked and the active revision-5 gate inventory is unchanged",
+  "amendments": [
+    {
+      "id": "B0",
+      "date": "2026-11-09",
+      "authority": "owner (Tarek)",
+      "decision": [
+        "Omnigraph is blocking us constantly now, let us keep Dolt and have it as the backend for now until Omnigraph puts their stuff in order for us.",
+        "Build the adapter in a generic way to allow swapping Dolt with Omnigraph without too much pain.",
+        "Defer fuzzy/similarity searches until we have Omnigraph."
+      ],
+      "effect": "Dolt is the interim primary backend behind the storage-backend boundary until Omnigraph is admitted; Omnigraph remains the target. One writer per realm, no dual writes and no fallback after uncertain writes. Fuzzy/similarity, semantic search, ranking and graph follow are refused by type, never emulated.",
+      "supersedes": "the earlier 9 November instruction to retire this profile (agent-boundary-plan D0), reversed before anything was removed",
+      "design": "docs/writfold/storage-backend.md",
+      "evidence_index": "qualification/status.json#/storage_backend_component",
+      "unchanged": "candidate, isolation, DINT00-DINT04 scopes and excluded_claims; P01O/WF24 remains blocked; no WF gate or release admission is implied; the Rust Dolt adapter does not write yet"
+    }
+  ],
   "candidate": {
     "name": "dolt",
     "version": "2.6.1",

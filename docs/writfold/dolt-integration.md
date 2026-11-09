@@ -15,11 +15,20 @@ compatibility evidence, not qualification of a new Rust adapter. No upstream
 remedy is claimed. Omnigraph remains the intended release backend under revision
 5; its foundation and dependent release gates remain blocked/open.
 
-**Current direction:** Tarek subsequently paused Dolt-specific alpha expansion
+**Earlier direction:** Tarek subsequently paused Dolt-specific alpha expansion
 in favor of an exact [Omnigraph source-candidate trial](omnigraph-foundation.md#executed-pr-1235-source-candidate-trial).
 That scoped build/restore campaign passes, but does not admit WF24 or a new
-shipping backend. The DINT evidence below retains its original scope; this
-document is not an instruction to build a second alpha writer.
+shipping backend.
+
+**Current direction (9 November 2026, amendment B0):** because Omnigraph keeps
+blocking progress, Tarek made Dolt the **interim primary backend** behind the
+[storage-backend boundary](storage-backend.md) until Omnigraph is admitted.
+Omnigraph remains the target. A same-day instruction to retire this profile was
+reversed before anything was removed. Dolt is the one writer: there are no dual
+writes and no fallback after an uncertain write. The invariants below still
+apply. The DINT evidence retains its original scope, and the B0 Dolt adapter
+reads only, through the DINT01 reader. A Dolt writer still needs the typed
+integration profile described below.
 
 This supplement permits **separate disposable local integration realms** to use
 one deliberately selected Dolt backend, with profile-specific evidence. It does

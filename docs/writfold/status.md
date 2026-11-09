@@ -22,7 +22,7 @@ The Rust implementation lives in `crates/`:
 - `writfold-protocol`: checked generation allocation and distinct instance/session/request identities with executable-body initialization/shutdown guarantees.
 - `writfold-runtime`: contained filesystem/Git/Dolt primitives, pinned owned Omnigraph and Worktrunk boundaries, shared process cleanup, bounded stdio framing and observed ephemeral invocation identities.
 - `writfold-sources`: byte-preserving authored-document and citation syntax, with new single-line mutation admission and pinned Unicode behavior.
-- `writfold-store`: immutable realm-bound raw object retention and typed exact Dolt inventory/navigation reads under DINT01; no authenticated release writer or corpus/effect service.
+- `writfold-store`: immutable realm-bound raw object retention, typed exact Dolt inventory/navigation reads under DINT01, and the B0 [storage-backend boundary](storage-backend.md) with its Dolt adapter and conformance suite; no authenticated release writer or corpus/effect service.
 - `writfold-xtask`: development-only syntax, dependency and nominal-type qualification.
 - `writfold-app`: typed application orchestration for the control-only agent profile.
 - `writfold`: native `serve`, version and help commands; no corpus/effect commands are registered in this profile.
@@ -43,6 +43,19 @@ has been exercised through an actual static-musl Rust consumer against pinned
 Dolt snapshots. It retains a single read lease and checks metadata, typed rows,
 relationship closure and retained roots. This library component does not widen
 the control-only service above or establish knowledge/citation authority.
+
+**Backend decision (9 November 2026).** Dolt is the interim primary backend
+behind one [storage-backend boundary](storage-backend.md) until Omnigraph is
+admitted; Omnigraph remains the target. The earlier same-day instruction to
+retire Dolt was reversed before anything was removed. The B0 trait covers
+exact pinned reads, exact/lexical lookup with measured coverage and a pinned
+cursor, and single-writer admission. Its Dolt adapter reuses the DINT01 reader
+and passes the 13-check conformance suite against a real disposable Dolt
+database; a future Omnigraph adapter must pass the same suite. The adapter does
+not write yet (`Unavailable`): no typed Rust Dolt writer with conditional heads
+exists. Fuzzy/similarity, semantic search, ranking and graph `follow` are
+refused by type until Omnigraph. This is a scoped component, not a WF gate,
+RPC capability or release backend admission.
 
 The [Dolt approval boundary](signed-operations.md#dolt-integration-approval-boundary)
 adds distinct canonical operation/signature domains and supplied-policy/realm
@@ -100,7 +113,7 @@ scope and retained failures remain in [the status ledger](../../qualification/st
 
 Linux/WSL2 x86_64 is the only active target. Build and proof tools run locally through Compose/BuildKit. Cargo registry/target caches live in named Docker volumes on the operator-admitted external store, not the source checkout. The preflight reuses the existing storage binding and free-space floors; a missing or mismatched store is a failure, never a fallback to the system disk.
 
-[`toolchains.lock.json`](../../toolchains.lock.json) binds the actual tool image and observed executable bytes. The static target is `x86_64-unknown-linux-musl`. Omnigraph is the intended primary structured backend, as a supervised native companion with separately admitted CLI/server/runtime closure; Git remains a native dependency. Existing build-tool admission does not qualify the new backend. Dolt remains isolated reference/import tooling, not a second shipping writer or automatic fallback.
+[`toolchains.lock.json`](../../toolchains.lock.json) binds the actual tool image and observed executable bytes. The static target is `x86_64-unknown-linux-musl`. Omnigraph is the target structured backend, as a supervised native companion with separately admitted CLI/server/runtime closure; Git remains a native dependency. Existing build-tool admission does not qualify the new backend. Until Omnigraph is admitted, Dolt is the interim primary backend behind the [storage boundary](storage-backend.md): one writer, no dual writes, no automatic fallback.
 
 The operator entrypoint is:
 
@@ -168,11 +181,14 @@ native Git preparation/completed-ref CAS and recoverable single-file staging.
 These are [component boundaries](shared-client-references.md#owner-side-components-not-available-services),
 not a durable EngineeringLedger, live grants, run/Worktrunk binding or write RPC.
 
-The immediate backend direction is now the exact
-[Omnigraph PR #1235 source candidate](omnigraph-foundation.md#executed-pr-1235-source-candidate-trial),
-not further Dolt-specific alpha expansion. Its scoped native campaign passes,
+On 9 November 2026 the owner made Dolt the interim primary backend behind the
+[storage boundary](storage-backend.md), because Omnigraph keeps blocking
+progress. The exact
+[Omnigraph PR #1235 source candidate](omnigraph-foundation.md#executed-pr-1235-source-candidate-trial)
+remains the target's qualification path. Its scoped native campaign passes,
 including independent restore with original roots unavailable. Full WF24 and
-the Rust Omnigraph adapter remain open; the earlier Dolt profile is not fallback.
+the Rust Omnigraph adapter remain open. Dolt is the one writer, never an
+automatic fallback for Omnigraph or the reverse.
 The [Evidence Stack benchmark plan](agent-integration-benchmarks.md)
 covers competent baselines, full model usage, repeated-session reconstruction,
 correctness and reproducible website reports. It contains no measured benefit
@@ -183,7 +199,10 @@ claim and does not authorize publication.
    all twenty selected semantic negatives have counterexamples. Nine positive
    baseline explorations still reached their deadlines; further justified
    state-space work is required, not smaller bounds or relabelled timeouts.
-2. Continue exact-candidate Omnigraph qualification and the real Rust adapter.
+2. Build on Dolt behind the B0 storage boundary, starting with a typed native
+   Dolt writer with conditional heads and uncertain-write reconciliation.
+   Continue exact-candidate Omnigraph qualification; its Rust adapter must pass
+   the same conformance suite before it replaces Dolt.
    The source-built PR #1235 trial is an authorized development unblocker, not
    an upstream release, full WF24 pass or permission to skip native
    ownership/cancellation, crash/uncertain-write, workload and formal bridges.

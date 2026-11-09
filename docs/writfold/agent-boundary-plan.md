@@ -42,8 +42,8 @@ declines, and the delivery plan. It is a scoped current plan in the sense of
     - `project`/`emit` select fields and give source-mapped excerpts under a
       token budget, with explicit omissions and a cursor.
   - **What waits for Omnigraph** (P01O/WF24, no fallback): `follow` over graph
-    relations, semantic or hybrid `find`, and ranking. They arrive behind the
-    same grammar.
+    relations, semantic or hybrid `find`, fuzzy/similarity matching and
+    ranking. They arrive behind the same grammar and the B0 storage trait.
   - **Overlap:** v0 maps onto the admitted revision-9 vocabulary
     (`CandidateHandle`, `ScopeCut`, `Coverage`, `NoticeCursor`) rather than
     inventing parallel types.
@@ -110,7 +110,7 @@ and the ceiling is checked there.
 | T0 | Tuft v0: grammar, typed IR, `find`/`retain`/`project`/`emit` over a pinned commit, deterministic output and budget | Golden cases; zero-result completeness on a pinned tree; budget overflow emits omissions and a cursor, never silent truncation; excerpts resolve to retained bytes |
 | T1 | One-go run file: Tuft → Weft check → Splicery prepare, stopping at approval | One command produces evidence, report and prepared edit bound by digest; approval stays a separate CLI step |
 | T2 | Projection pilot: Tuft projections vs grep-and-read, same tasks and model | Tokens and correctness for both arms, published either way |
-| D0 | Retire the Dolt integration profile (owner, 9 November) | Code removed, records marked retired with receipts kept, gates green |
+| B0 | Swappable storage-backend boundary with Dolt as the interim backend (owner, 9 November; replaces the earlier D0 "retire Dolt" row, which was reversed before anything was removed). See [storage-backend.md](storage-backend.md) | The Dolt adapter passes the trait-only conformance suite against a real disposable Dolt database; fuzzy, semantic and ranked lookups refuse by type; undeclared writes refuse `Unavailable`; quality and unit gates green |
 | S5 | Source pre-release tag `v0.1.0-dev.1` ("trial preview"), README "what works" table, website | Fresh-clone commands reproduce; fresh gate receipts at the tag |
 
 Formal follow-ups, in order:
