@@ -43,7 +43,10 @@ fn steps_out_of_order_refuse() -> Result {
     assert!(apply(&s.state, &p.run).is_err(), "apply before approve");
     approve(&s.state, &p.run, &[])?;
     assert!(approve(&s.state, &p.run, &[]).is_err(), "approve twice");
-    assert!(approve(&s.state, "run.0.000000", &[]).is_err(), "unknown run");
+    assert!(
+        approve(&s.state, "run.0.000000", &[]).is_err(),
+        "unknown run"
+    );
     Ok(())
 }
 
