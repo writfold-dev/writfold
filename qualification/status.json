@@ -671,6 +671,35 @@
       }
     ]
   },
+  "latency_budget_component": {
+    "status": "scoped_component_pass",
+    "scope": "Agent-facing latency budget (5 s ceiling, 1 s p95 target; docs/writfold/agent-boundary-plan.md). Trial prepare adds a sparse worktree (no checkout, one sparse read-tree of the edited path, repository configuration unchanged): 100,000-file repository prepare 7,772 ms before, 163 ms median / 239 ms p95 after; every trial operation p95 under 0.5 s (bench/2026-11-09-latency). Single machine, warm cache; not a cross-platform performance claim.",
+    "source_commit": "eefc078",
+    "receipts": {
+      "quality": {
+        "path": "~/.local/share/writfold/evidence/latency-GBulwp3T/quality-002.json",
+        "sha256": "08c4e560bc9e0700d4a8063dcad3e5451286e4ed8dabedf27894457cfe33d41c",
+        "bytes": 736964
+      },
+      "unit": {
+        "path": "~/.local/share/writfold/evidence/latency-GBulwp3T/unit-002.json",
+        "sha256": "6b713d825b95338ef61129365ba7a661356d8f311cdfed3ea6d880a609eccf40",
+        "bytes": 317446
+      }
+    },
+    "bench": "bench/2026-11-09-latency/results.json",
+    "retained_failed_attempts": [
+      {
+        "gate": "quality",
+        "receipt": {
+          "path": "~/.local/share/writfold/evidence/latency-GBulwp3T/quality-001.json",
+          "sha256": "71609d9541df0c36c8a4103502915ae0f15aa31e67a5e2ae1fda5ab77d6b79b4",
+          "bytes": 736456
+        },
+        "cause": "production-panic: assertions in a non-#[test] helper of sparse_tests.rs; rewritten as error returns"
+      }
+    ]
+  },
   "publication_history_audit": {
     "status": "inspected_not_cleared_for_publication",
     "record": {
