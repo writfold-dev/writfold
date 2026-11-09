@@ -700,6 +700,126 @@
       }
     ]
   },
+  "trial_assessment_component": {
+    "status": "scoped_component_pass",
+    "scope": "Trial assessment and proved trial decisions. prepare refuses a malformed, incomplete or authority-claiming weft.report/1 and a candidate identical to its source; approve --require refuses unless every named check is present and entailed; recover decides through the proved recovery function; show prints five independent badges. writfold_core::trial proved over its Aeneas translation (changes_spec, recovery_spec, recoveryOutcome_unambiguous, required_entailed_spec, required_ok_iff); 17 required claims, 20/20 mutants. Weft results are recorded as hypothetical, never grounded; required names are enforced at approve but not carried inside the signed approval.",
+    "source_commit": "f1b9b75",
+    "proofs_source_commit": "e022f4c",
+    "receipts": {
+      "proofs_gate_log": {
+        "path": "~/.local/share/writfold/evidence/trial-assess-oA6XK8dx/proofs-gate.log",
+        "sha256": "cc93034d4935578728dc8259401d87cf41e527b630696135ba75a70e5d07f03f",
+        "bytes": 25451
+      },
+      "quality": {
+        "path": "~/.local/share/writfold/evidence/trial-assess-oA6XK8dx/quality-006.json",
+        "sha256": "351fe8c66cf5947ae1ee5734e0ba1245d69c3c2345626e8a6ecde2d37babbd98",
+        "bytes": 747270
+      },
+      "unit": {
+        "path": "~/.local/share/writfold/evidence/trial-assess-oA6XK8dx/unit-005.json",
+        "sha256": "fd2529737c4c0478d0d6f20a1bf7f2e58bbc23805a5917b144b6f39f9777f968",
+        "bytes": 318947
+      },
+      "verus": {
+        "path": "~/.local/share/writfold/evidence/trial-assess-oA6XK8dx/verus-004.json",
+        "sha256": "01772a1a08c7286d50fbd07a55b85c1b67f57da0b466663a04470a2a9da4c8eb",
+        "bytes": 3822494
+      }
+    },
+    "proofs": {
+      "required_claims": 17,
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "mutants_rejected": "20/20"
+    },
+    "retained_failed_attempts": [
+      {
+        "gate": "quality",
+        "receipt": {
+          "path": "~/.local/share/writfold/evidence/trial-assess-oA6XK8dx/quality-001.json",
+          "sha256": "37ac7934d63b791d39af008e461e083c941e8453b47e31e08c2dad1ba4bd4f2c",
+          "bytes": 746753
+        },
+        "cause": "shared Docker cargo target volume reused artifacts built from a concurrent checkout (unresolved writfold_domain::dolt)"
+      },
+      {
+        "gate": "unit",
+        "receipt": {
+          "path": "~/.local/share/writfold/evidence/trial-assess-oA6XK8dx/unit-001.json",
+          "sha256": "3c0ce0cf085b55b553ad2c198e7790c998f5f8923a674f18902a94409df32ea9",
+          "bytes": 318429
+        },
+        "cause": "same shared target volume reuse"
+      },
+      {
+        "gate": "quality",
+        "receipt": {
+          "path": "~/.local/share/writfold/evidence/trial-assess-oA6XK8dx/quality-002.json",
+          "sha256": "903b1201713a7d8df1485d00a9e9b20a596987f3db0f2e967885c64bdd9f901e",
+          "bytes": 746752
+        },
+        "cause": "same shared target volume reuse"
+      },
+      {
+        "gate": "unit",
+        "receipt": {
+          "path": "~/.local/share/writfold/evidence/trial-assess-oA6XK8dx/unit-002.json",
+          "sha256": "5e66417db3e66456d543b0ca46c63a090ce8004595337e49ca83d6ba3a70210e",
+          "bytes": 318427
+        },
+        "cause": "same shared target volume reuse"
+      },
+      {
+        "gate": "quality",
+        "receipt": {
+          "path": "~/.local/share/writfold/evidence/trial-assess-oA6XK8dx/quality-003.json",
+          "sha256": "4ed56ed4fb43e6fb5a3f8e825f7055c5e1a20d36772a45b272888ddd0cd45018",
+          "bytes": 746754
+        },
+        "cause": "integration test crates/writfold-app/tests/trial.rs still called approve with the old signature"
+      },
+      {
+        "gate": "unit",
+        "receipt": {
+          "path": "~/.local/share/writfold/evidence/trial-assess-oA6XK8dx/unit-003.json",
+          "sha256": "b6f9dee1529a2cb438c9a143f396846d1810b107fea6abd4b3eea68953c4b6cd",
+          "bytes": 318429
+        },
+        "cause": "same integration test signature"
+      },
+      {
+        "gate": "quality",
+        "receipt": {
+          "path": "~/.local/share/writfold/evidence/trial-assess-oA6XK8dx/quality-004.json",
+          "sha256": "992b82a55efa1b8b2d00090de2c804e6a18cee101e68bfc803677dbffd45f740",
+          "bytes": 746755
+        },
+        "cause": "clippy-all-features reused stale shared-volume artifacts"
+      },
+      {
+        "gate": "unit",
+        "receipt": {
+          "path": "~/.local/share/writfold/evidence/trial-assess-oA6XK8dx/unit-004.json",
+          "sha256": "15188fac2bd8d9b2fd39d600bf3edf036428c6b46154ad62e0ef7b22c1498859",
+          "bytes": 318944
+        },
+        "cause": "superseded: passed at feb02f2, rerun after a formatting-only commit"
+      },
+      {
+        "gate": "quality",
+        "receipt": {
+          "path": "~/.local/share/writfold/evidence/trial-assess-oA6XK8dx/quality-005.json",
+          "sha256": "3a2f5fca4d87c550586237c6bc6a68440aa3337bcbb1d6488f5589a32e9b1559",
+          "bytes": 746759
+        },
+        "cause": "rustfmt: the integration-test fix was unformatted"
+      }
+    ]
+  },
   "publication_history_audit": {
     "status": "inspected_not_cleared_for_publication",
     "record": {
