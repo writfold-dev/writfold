@@ -85,7 +85,7 @@ fn sparse_run(edited: &str) -> Result<()> {
         git(&p.worktree, &["status", "--porcelain"])?.is_empty(),
         "a clean status before apply",
     )?;
-    approve(&state, &p.run)?;
+    approve(&state, &p.run, &[])?;
     apply(&state, &p.run)?;
     ensure(
         git(&p.worktree, &["status", "--porcelain"])? == format!(" M {}\n", git_quoted(edited)),

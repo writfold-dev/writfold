@@ -113,6 +113,26 @@ MUTANTS = (
            "        while i < self.grants.len() {\n            if same(&self.grants[i].grant.id, id) {",
            "        while i + 1 < self.grants.len() {\n            if same(&self.grants[i].grant.id, id) {",
            ("Writfold.Core.revoke_loop_spec",)),
+    # a prepared candidate must change its source
+    Mutant("changes-always", "trial.rs",
+           "    !same(source, candidate)",
+           "    true",
+           ("Writfold.Core.changes_spec",)),
+    # recovery: only the candidate's exact bytes mean the install happened
+    Mutant("recovery-trusts-source", "trial.rs",
+           "    if same(observed, candidate) {",
+           "    if same(observed, candidate) || same(observed, source) {",
+           ("Writfold.Core.recovery_spec",)),
+    # a later entailed check never hides an earlier refutation
+    Mutant("status-forgets-refutation", "trial.rs",
+           "    if !matched || status == 2 {",
+           "    if !matched {",
+           ("Writfold.Core.fold_status_spec",)),
+    # a required check absent from the report refuses
+    Mutant("required-ignores-missing", "trial.rs",
+           "        if status == 0 {\n            return Err(Refusal::Missing(i));",
+           "        if false {\n            return Err(Refusal::Missing(i));",
+           ("Writfold.Core.required_entailed_loop_spec",)),
 )
 
 # lake reports `error: <path>.lean:<line>:<col>: <message>`

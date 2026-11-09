@@ -60,9 +60,23 @@ and the grant conjunct of `intentReady`:
 The gate (`docker compose -f compose.proofs.yaml run --build --rm proofs`)
 regenerates the translation and refuses drift from the committed copy, builds
 the proofs, audits every theorem's axioms (only `propext`,
-`Classical.choice`, `Quot.sound`; the twelve headline claims must exist) and
-calibrates sixteen semantic mutants of the Rust source, each of which must break
+`Classical.choice`, `Quot.sound`; the seventeen headline claims must exist) and
+calibrates twenty semantic mutants of the Rust source, each of which must break
 exactly its named theorem. Warm run: about three minutes.
+
+Trial edit flow (`writfold_core::trial`, adapter `writfold-kernel::trial`):
+
+- `changes_spec`: a candidate changes its source exactly when the bytes
+  differ; `prepare` refuses one that does not.
+- `recovery_spec`, `recoveryOutcome_unambiguous`: an interrupted apply is
+  reconciled from the observed bytes alone. The outcome is `Applied` exactly on
+  the candidate's bytes and `Abandoned` exactly on the source's (unambiguous
+  because the two differ); anything else is `Unknown`.
+- `required_entailed_spec`, `required_ok_iff`: an approval's required Weft
+  checks pass exactly when each is present and every check of that name is
+  `entailed`; otherwise the first unsatisfied requirement is named, as
+  missing or not entailed. A later entailed check never hides an earlier
+  refutation.
 
 ## Trust base
 
@@ -88,7 +102,8 @@ inventory epoch increment is checked and refuses instead of overflowing.
 - The spec predicates mirror the calculus's `historyCheck`/`AppendReady` but
   live in the proofs project; machine-linking them to `formal/` needs the
   calculus on the same Lean version.
-- Next kernels: the trial edit-flow validator, then procedure admission.
+- Next kernels: the trial edit-flow validator (record order and material),
+  then procedure admission.
 
 ## Writing kernels for translation
 

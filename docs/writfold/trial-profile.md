@@ -14,7 +14,7 @@ export WRITFOLD_STATE=/tmp/writfold-trial      # any new directory
 target/release/writfold trial init
 target/release/writfold trial prepare --repo /path/to/your/repo \
     --file src/client.rs --recipe add-retry.spl
-target/release/writfold trial approve <run>
+target/release/writfold trial approve <run> [--require <weft-check>]...
 target/release/writfold trial apply <run>
 target/release/writfold trial show <run>
 target/release/writfold trial recover <run>   # only after an interrupted apply
@@ -29,11 +29,11 @@ Recipes are [Splicery](https://github.com/writfold-dev/splicery) recipes; see it
 | Step | Effect | Ledger record |
 |---|---|---|
 | `init` | Creates the private state directory: an Ed25519 operator key, a bootstrap policy trusting it, the Git executable's observed digest, the ledger repository, the object store | — |
-| `prepare` | Adds a detached, **sparse** worktree of your repository's **HEAD commit** inside the state directory (only the edited file is checked out; everything else is skip-worktree, so `git status`/`diff`/commits behave normally and cost does not grow with repository size), replays the recipe through the pinned Splicery kernel, builds and validates the exact `writfold-worktree/1` prepared edit, retains source, recipe, candidate and report | `Prepared` |
-| `approve` | Signs an operator grant (Write on this run's worktree, one hour) and a prepared-edit approval binding the prepared-edit digest, report, procedure, resource generation and validity | `Approved` |
+| `prepare` | Adds a detached, **sparse** worktree of your repository's **HEAD commit** inside the state directory (only the edited file is checked out; everything else is skip-worktree, so `git status`/`diff`/commits behave normally and cost does not grow with repository size), replays the recipe through the pinned Splicery kernel, builds and validates the exact `writfold-worktree/1` prepared edit, retains source, recipe, candidate and report. Refuses a candidate identical to its source, and a `--report` that is not a complete `weft.report/1` claiming no grounding or effect authority | `Prepared` |
+| `approve` | With `--require CHECK` (repeatable), first reads the retained Weft report and refuses unless every named check is present and `entailed` (the proved `required_entailed`). Then signs an operator grant (Write on this run's worktree, one hour) and a prepared-edit approval binding the prepared-edit digest, report, procedure, resource generation and validity | `Approved` |
 | `apply` | Verifies both signatures strictly under the policy, every bound value and the validity window, and asks the kernel for a current grant covering Write; records a durable claim; checks the worktree file still holds the retained source bytes; installs the candidate through the staged installer | `Claimed`, then `Applied`, or `Abandoned` if the original was never replaced |
 | `recover` | For a claim with no outcome (a crash or error during install): observes the file without rewriting it. The candidate's exact bytes mean it was installed; the source's exact bytes mean it was not; anything else stays Unknown and refuses | `Applied` (reconciled) or `Abandoned` |
-| `show` | Replays the run's ledger history through the kernel and prints it | — |
+| `show` | Replays the run's ledger history through the kernel and prints it with five independent badges: evidence, assessment, approval, claim and effect. There is no aggregate status | — |
 
 Every append goes through the [durable local ledger](semantic-core.md#durable-local-ledger):
 the run's history is replayed through the kernel and the edit-flow validator
@@ -50,8 +50,13 @@ candidate and an abandonment saying why) before the head moves.
   A refused `prepare` removes the worktree it created.
 - It assumes nobody races it on the worktree and that the repository is not
   hostile; it is not a sandbox. The operator key lives in the state directory.
-- No Weft report is required. Without `--report`, an empty report is retained
-  and bound, so the approval says only that no report was supplied.
+- A Weft report is optional. Without `--report`, an empty report is retained
+  and bound, and `--require` refuses. With one, Weft's results are recorded as
+  Weft states them, local and **hypothetical**, never as grounded facts. The
+  required check names are enforced at `approve` but not yet carried inside the
+  signed approval.
+- Recovery's decision and the required-check gate are proved over the shipped
+  Rust (`docs/writfold/aeneas.md`); the rest of the flow is tested.
 - A claim is never re-dispatched: after an interrupted `apply`, `apply`
   refuses and `recover` decides from the file's exact bytes. If the file holds
   neither the source nor the candidate, the outcome stays Unknown for a person

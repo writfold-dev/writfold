@@ -1,13 +1,15 @@
 //! Argument handling for `writfold trial ...`; returns the text to print.
-use super::flow::{Event, Premises};
-use super::{Result, Trial, apply, approve, prepare, recover, stream};
+use super::show::show;
+use super::{Result, Trial, apply, approve, prepare, recover};
 use std::path::{Path, PathBuf};
 
 pub const USAGE: &str = "\
 writfold trial init                     create the private trial state directory
 writfold trial prepare --repo DIR --file PATH --recipe FILE [--report FILE]
                                         worktree at HEAD + Splicery replay; records Prepared
-writfold trial approve RUN              sign a grant and an approval; records Approved
+writfold trial approve RUN [--require CHECK]...
+                                        sign a grant and an approval; records Approved.
+                                        Each --require names a Weft check that must be entailed
 writfold trial apply RUN                re-verify, claim, check the file, install; records Applied
 writfold trial recover RUN              resolve a claim left without an outcome (e.g. after a crash)
 writfold trial show RUN                 print the run's validated ledger history
@@ -47,6 +49,13 @@ impl Args {
             .find(|(n, _)| n == name)
             .map(|(_, v)| v.as_str())
     }
+    fn all(&self, name: &str) -> Vec<String> {
+        self.options
+            .iter()
+            .filter(|(n, _)| n == name)
+            .map(|(_, v)| v.clone())
+            .collect()
+    }
     fn required(&self, name: &str) -> Result<&str> {
         self.option(name)
             .ok_or_else(|| format!("missing --{name}").into())
@@ -68,48 +77,6 @@ impl Args {
         let home = std::env::var_os("HOME").ok_or("HOME is not set; pass --state")?;
         Ok(Path::new(&home).join(".local/share/writfold/trial"))
     }
-}
-
-fn show(state: &Path, run: &str) -> Result<String> {
-    let trial = Trial::open(state)?;
-    let executable = trial.executable()?;
-    let lease = trial.writer.try_lease()?;
-    let loaded = trial
-        .ledger(&lease, &executable)?
-        .load::<Event, Premises>(&stream(run)?)?;
-    let mut out = format!(
-        "run {run}: {} record(s), history validated\n",
-        loaded.records.len()
-    );
-    for record in &loaded.records {
-        let line = match &record.payload {
-            Event::Prepared {
-                path,
-                base,
-                candidate,
-                ..
-            } => format!(
-                "prepared  {path} at {base}, candidate {} bytes",
-                candidate.bytes
-            ),
-            Event::Approved { .. } => {
-                "approved  operator grant + signed approval retained".to_owned()
-            }
-            Event::Claimed { .. } => "claimed   durable claim before touching the file".to_owned(),
-            Event::Applied { reconciled, .. } => format!(
-                "applied   candidate installed in {}{}",
-                trial.worktree(run).display(),
-                if *reconciled {
-                    " (reconciled by recover)"
-                } else {
-                    ""
-                }
-            ),
-            Event::Abandoned { reason } => format!("abandoned {reason}"),
-        };
-        out.push_str(&format!("  {}. {line}\n", record.sequence.get()));
-    }
-    Ok(out)
 }
 
 pub fn main(args: &[String]) -> Result<String> {
@@ -141,9 +108,9 @@ pub fn main(args: &[String]) -> Result<String> {
         }
         Some("approve") => {
             let run = parsed.run()?;
-            let expires = approve(&state, run)?;
+            let (expires, summary) = approve(&state, run, &parsed.all("require"))?;
             Ok(format!(
-                "approved run {run} until {expires} (unix seconds)\nnext: writfold trial apply {run}"
+                "approved run {run} until {expires} (unix seconds)\n  {summary}\nnext: writfold trial apply {run}"
             ))
         }
         Some("apply") => {

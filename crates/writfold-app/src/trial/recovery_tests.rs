@@ -61,7 +61,7 @@ fn claimed() -> Result<Run> {
     let state = root.join("state");
     Trial::init(&state)?;
     let p = prepare(&state, &repo, "src/main.rs", &root.join("r.spl"), None)?;
-    approve(&state, &p.run)?;
+    approve(&state, &p.run, &[])?;
     let trial = Trial::open(&state)?;
     let executable = trial.executable()?;
     let lease = trial.writer.try_lease()?;
@@ -135,6 +135,10 @@ fn a_claim_whose_install_never_happened_is_abandoned() -> Result<()> {
 #[test]
 fn a_claim_over_unexpected_bytes_stays_unknown() -> Result<()> {
     let r = claimed()?;
+    let shown = super::show::show(&r.state, &r.run)?;
+    if !shown.contains("claim       recorded") || !shown.contains("effect      unknown") {
+        return Err(format!("unexpected badges:\n{shown}").into());
+    }
     fs::write(&r.file, "something else\n")?;
     assert!(recover(&r.state, &r.run).is_err());
     assert!(matches!(outcome(&r)?, Event::Claimed { .. }));

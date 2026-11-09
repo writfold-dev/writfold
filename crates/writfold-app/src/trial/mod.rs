@@ -12,12 +12,15 @@
 //! replays the run's history through the kernel first.
 mod apply;
 mod approve;
+#[cfg(test)]
+mod assessment_tests;
 pub mod cli;
 pub mod flow;
 mod prepare;
 mod recover;
 #[cfg(test)]
 mod recovery_tests;
+mod show;
 #[cfg(test)]
 mod sparse_tests;
 mod state;

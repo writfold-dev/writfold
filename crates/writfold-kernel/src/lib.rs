@@ -10,5 +10,6 @@ pub mod ledger;
 pub mod portfolio;
 pub mod procedure;
 pub mod time;
+pub mod trial;
 pub mod wellformed;
 pub mod workflow;

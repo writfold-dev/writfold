@@ -16,6 +16,7 @@ repository.workspace = true
 start_from = [
     "writfold_core::authority",
     "writfold_core::bytes",
+    "writfold_core::trial",
     "writfold_core::ledger",
 ]
 

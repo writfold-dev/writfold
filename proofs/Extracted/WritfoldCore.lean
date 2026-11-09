@@ -1172,4 +1172,186 @@ def ledger.Store.append
         Unit (core.convert.FromSame ledger.Refusal) residual
     ok (r1, self)
 
+/-- [writfold_core::trial::changes]:
+    Source: 'crates/writfold-core/src/trial.rs', lines 10:0-12:1
+    Visibility: public -/
+def trial.changes
+  (source : Slice Std.U8) (candidate : Slice Std.U8) : Result Bool := do
+  let b ← bytes.same source candidate
+  ok (¬ b)
+
+/-- [writfold_core::trial::Outcome]
+    Source: 'crates/writfold-core/src/trial.rs', lines 15:0-22:1
+    Visibility: public -/
+@[discriminant isize]
+inductive trial.Outcome where
+| Applied : trial.Outcome
+| Abandoned : trial.Outcome
+| Unknown : trial.Outcome
+
+/-- [writfold_core::trial::recovery]:
+    Source: 'crates/writfold-core/src/trial.rs', lines 25:0-33:1
+    Visibility: public -/
+def trial.recovery
+  (observed : Slice Std.U8) (source : Slice Std.U8) (candidate : Slice Std.U8)
+  :
+  Result trial.Outcome
+  := do
+  let b ← bytes.same observed candidate
+  if b
+  then ok trial.Outcome.Applied
+  else
+    let b1 ← bytes.same observed source
+    if b1
+    then ok trial.Outcome.Abandoned
+    else ok trial.Outcome.Unknown
+
+/-- [writfold_core::trial::ENTAILED]
+    Source: 'crates/writfold-core/src/trial.rs', lines 36:0-36:27
+    Visibility: public -/
+@[global_simps, irreducible] def trial.ENTAILED : Std.U8 := 0#u8
+
+/-- [writfold_core::trial::REFUTED]
+    Source: 'crates/writfold-core/src/trial.rs', lines 37:0-37:26
+    Visibility: public -/
+@[global_simps, irreducible] def trial.REFUTED : Std.U8 := 1#u8
+
+/-- [writfold_core::trial::UNDETERMINED]
+    Source: 'crates/writfold-core/src/trial.rs', lines 38:0-38:31
+    Visibility: public -/
+@[global_simps, irreducible] def trial.UNDETERMINED : Std.U8 := 2#u8
+
+/-- [writfold_core::trial::INCONSISTENT_PREMISES]
+    Source: 'crates/writfold-core/src/trial.rs', lines 39:0-39:40
+    Visibility: public -/
+@[global_simps, irreducible] def trial.INCONSISTENT_PREMISES : Std.U8 := 3#u8
+
+/-- [writfold_core::trial::UNKNOWN]
+    Source: 'crates/writfold-core/src/trial.rs', lines 40:0-40:26
+    Visibility: public -/
+@[global_simps, irreducible] def trial.UNKNOWN : Std.U8 := 4#u8
+
+/-- [writfold_core::trial::NOT_EVALUATED]
+    Source: 'crates/writfold-core/src/trial.rs', lines 41:0-41:32
+    Visibility: public -/
+@[global_simps, irreducible] def trial.NOT_EVALUATED : Std.U8 := 5#u8
+
+/-- [writfold_core::trial::Check]
+    Source: 'crates/writfold-core/src/trial.rs', lines 44:0-47:1
+    Visibility: public -/
+structure trial.Check where
+  «name» : alloc.vec.Vec Std.U8
+  result : Std.U8
+
+/-- [writfold_core::trial::Refusal]
+    Source: 'crates/writfold-core/src/trial.rs', lines 50:0-55:1
+    Visibility: public -/
+@[discriminant isize]
+inductive trial.Refusal where
+| Missing : Std.Usize → trial.Refusal
+| NotEntailed : Std.Usize → trial.Refusal
+
+/-- [writfold_core::trial::fold_status]:
+    Source: 'crates/writfold-core/src/trial.rs', lines 59:0-67:1
+    Visibility: public -/
+def trial.fold_status
+  (status : Std.U8) (matched : Bool) (result : Std.U8) : Result Std.U8 := do
+  if matched
+  then
+    if status = 2#u8
+    then ok status
+    else if result = trial.ENTAILED
+         then ok 1#u8
+         else ok 2#u8
+  else ok status
+
+/-- [writfold_core::trial::name_status]: loop body 0:
+    Source: 'crates/writfold-core/src/trial.rs', lines 74:4-77:5
+    Visibility: public -/
+@[rust_loop_body]
+def trial.name_status_loop.body
+  (checks : Slice trial.Check) («name» : Slice Std.U8) (status : Std.U8)
+  (i : Std.Usize) :
+  Result (ControlFlow (Std.U8 × Std.Usize) Std.U8)
+  := do
+  let i1 := Slice.len checks
+  if i < i1
+  then
+    let c ← Slice.index_usize checks i
+    let s := alloc.vec.Vec.deref c.name
+    let b ← bytes.same s «name»
+    let status1 ← trial.fold_status status b c.result
+    let i2 ← i + 1#usize
+    ok (cont (status1, i2))
+  else ok (done status)
+
+/-- [writfold_core::trial::name_status]: loop 0:
+    Source: 'crates/writfold-core/src/trial.rs', lines 74:4-77:5
+    Visibility: public -/
+@[rust_loop]
+def trial.name_status_loop
+  (checks : Slice trial.Check) («name» : Slice Std.U8) (status : Std.U8)
+  (i : Std.Usize) :
+  Result Std.U8
+  := do
+  loop
+    (fun (status1, i1) => trial.name_status_loop.body checks «name» status1
+      i1)
+    (status, i)
+
+/-- [writfold_core::trial::name_status]:
+    Source: 'crates/writfold-core/src/trial.rs', lines 71:0-79:1
+    Visibility: public -/
+@[reducible]
+def trial.name_status
+  (checks : Slice trial.Check) («name» : Slice Std.U8) : Result Std.U8 := do
+  trial.name_status_loop checks «name» 0#u8 0#usize
+
+/-- [writfold_core::trial::required_entailed]: loop body 0:
+    Source: 'crates/writfold-core/src/trial.rs', lines 85:4-96:1
+    Visibility: public -/
+@[rust_loop_body]
+def trial.required_entailed_loop.body
+  (checks : Slice trial.Check) (required : Slice (alloc.vec.Vec Std.U8))
+  (i : Std.Usize) :
+  Result (ControlFlow Std.Usize (core.result.Result Unit trial.Refusal))
+  := do
+  let i1 := Slice.len required
+  if i < i1
+  then
+    let v ← Slice.index_usize required i
+    let s := alloc.vec.Vec.deref v
+    let status ← trial.name_status checks s
+    if status = 0#u8
+    then ok (done (core.result.Result.Err (trial.Refusal.Missing i)))
+    else
+      if status = 2#u8
+      then ok (done (core.result.Result.Err (trial.Refusal.NotEntailed i)))
+      else let i2 ← i + 1#usize
+           ok (cont i2)
+  else ok (done (core.result.Result.Ok ()))
+
+/-- [writfold_core::trial::required_entailed]: loop 0:
+    Source: 'crates/writfold-core/src/trial.rs', lines 85:4-96:1
+    Visibility: public -/
+@[rust_loop]
+def trial.required_entailed_loop
+  (checks : Slice trial.Check) (required : Slice (alloc.vec.Vec Std.U8))
+  (i : Std.Usize) :
+  Result (core.result.Result Unit trial.Refusal)
+  := do
+  loop
+    (fun i1 => trial.required_entailed_loop.body checks required i1)
+    i
+
+/-- [writfold_core::trial::required_entailed]:
+    Source: 'crates/writfold-core/src/trial.rs', lines 83:0-96:1
+    Visibility: public -/
+@[reducible]
+def trial.required_entailed
+  (checks : Slice trial.Check) (required : Slice (alloc.vec.Vec Std.U8)) :
+  Result (core.result.Result Unit trial.Refusal)
+  := do
+  trial.required_entailed_loop checks required 0#usize
+
 end writfold_core

@@ -14,6 +14,8 @@ use writfold_domain::{
     EpochSeconds, ExecutionCost, LedgerSequence, ResourceGeneration, ResourceId,
 };
 use writfold_kernel::ledger::Record;
+use writfold_kernel::trial::{CheckResult, Unsatisfied, required_entailed};
+use writfold_wire::weft_report::parse_report;
 
 /// The single resource a trial run may write: its own worktree.
 pub const RESOURCE: &str = "worktree";
@@ -85,8 +87,41 @@ pub(super) fn approval(
     Ok(signed.encode(limits()?)?)
 }
 
-/// Sign and record approval of the run's prepared edit. Returns the expiry.
-pub fn approve(state: &Path, run: &str) -> Result<u64> {
+/// Refuse unless each required check of the run's retained Weft report is
+/// present and `entailed` (the proved `required_entailed`). Returns a summary.
+fn assessment(trial: &Trial, report: &Blob, required: &[String]) -> Result<String> {
+    if report.bytes == 0 {
+        if required.is_empty() {
+            return Ok("no Weft report bound".to_owned());
+        }
+        return Err(
+            "checks are required but the run has no Weft report; prepare with --report".into(),
+        );
+    }
+    let parsed = parse_report(&trial.fetch(report)?, limits()?)?;
+    required_entailed(&parsed.checks, required).map_err(|unsatisfied| match unsatisfied {
+        Unsatisfied::Missing(name) => format!("approval refused: the report has no check {name:?}"),
+        Unsatisfied::NotEntailed(name) => {
+            format!("approval refused: required check {name:?} is not entailed")
+        }
+    })?;
+    let entailed = parsed
+        .checks
+        .iter()
+        .filter(|c| c.result == CheckResult::Entailed)
+        .count();
+    Ok(format!(
+        "Weft {} ({}): {entailed}/{} checks entailed, {} required; hypothetical, not grounded",
+        parsed.kind,
+        parsed.scope,
+        parsed.checks.len(),
+        required.len()
+    ))
+}
+
+/// Sign and record approval of the run's prepared edit. Returns the expiry
+/// and the assessment summary.
+pub fn approve(state: &Path, run: &str, required: &[String]) -> Result<(u64, String)> {
     let trial = Trial::open(state)?;
     let executable = trial.executable()?;
     let lease = trial.writer.try_lease()?;
@@ -104,6 +139,7 @@ pub fn approve(state: &Path, run: &str) -> Result<u64> {
     else {
         return Err(format!("run {run} has no prepared edit").into());
     };
+    let summary = assessment(&trial, report, required)?;
     let scope = scope(run, base)?;
     let validity = validity(now()?)?;
     let event = Event::Approved {
@@ -121,5 +157,5 @@ pub fn approve(state: &Path, run: &str) -> Result<u64> {
         historical: Premises,
     };
     ledger.append(&stream(run)?, Some(&prepared_record.head()), record)?;
-    Ok(validity.expires().get())
+    Ok((validity.expires().get(), summary))
 }

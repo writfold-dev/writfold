@@ -132,6 +132,9 @@ fn prepared_event(
     )?;
     let capture = capture(scope.clone(), path, source.clone(), &file)?;
     let (prepared, candidate) = prepared_edit(&replayed, &recipe_record, &capture, &scope)?;
+    if !writfold_kernel::trial::changes(&source, candidate.content()) {
+        return Err("recipe refused: the candidate is identical to the source".into());
+    }
     let digest = prepared_edit_digest(&prepared, limits()?)?;
     let event = Event::Prepared {
         path: path.to_owned(),
@@ -183,6 +186,10 @@ pub fn prepare(
     }
     let recipe_bytes = read_bounded(recipe)?;
     let report_bytes = report.map(read_bounded).transpose()?.unwrap_or_default();
+    if report.is_some() {
+        writfold_wire::weft_report::parse_report(&report_bytes, limits()?)
+            .map_err(|e| format!("report refused: {e}"))?;
+    }
     let run = run_id()?;
     let worktree = trial.worktree(&run);
     let executable = trial.executable()?;
