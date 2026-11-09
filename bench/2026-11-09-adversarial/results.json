@@ -1,0 +1,64 @@
+{
+  "binary_sha256": "30d3de45345d5fd7012cc35b9fa07bbd697edb365ff5a3d3b606ec44f1bc7b59",
+  "kill_runs": 60,
+  "passed": 8,
+  "total": 8,
+  "results": [
+    {
+      "case": "preimage-race",
+      "expected": "apply refuses; effect abandoned",
+      "observed": "rc=1; effect=abandoned: src/main.rs changed since it was prepared",
+      "ok": true,
+      "detail": "writfold: src/main.rs changed since it was prepared; nothing was applied (recorded as abandoned)\n"
+    },
+    {
+      "case": "refuted-required",
+      "expected": "approve refuses; approval none",
+      "observed": "rc=1; approval=none",
+      "ok": true,
+      "detail": "writfold: approval refused: required check \"safe\" is not entailed\n"
+    },
+    {
+      "case": "unretained-cite",
+      "expected": "prepare refuses before any worktree",
+      "observed": "rc=1; new worktrees=0",
+      "ok": true,
+      "detail": "writfold: report refused: it cites \"0000000000000000000000000000000000000000000000000000000000000000\", which is not evidence retained by `writfold trial retain`\n"
+    },
+    {
+      "case": "tampered-evidence",
+      "expected": "prepare refuses",
+      "observed": "retain rc=0; prepare rc=1",
+      "ok": true,
+      "detail": "writfold: report refused: it cites \"af8f7b073c941cb58285c24e549872bb1480a1a49539b41c87ba6eefc49c866a\", which is not evidence retained by `writfold trial retain`\n"
+    },
+    {
+      "case": "no-change",
+      "expected": "prepare refuses",
+      "observed": "rc=1",
+      "ok": true,
+      "detail": "writfold: recipe refused: the candidate is identical to the source\n"
+    },
+    {
+      "case": "replay",
+      "expected": "first applies; second apply and recover refuse; one outcome",
+      "observed": "rc=0,1,1; effect=applied",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "case": "kill-during-apply",
+      "expected": "every interrupted apply ends consistent with at most one outcome",
+      "observed": "{\"finished:applied\": 12, \"killed:applied:recovered\": 24, \"killed:none\": 24}",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "case": "checkout-untouched",
+      "expected": "user checkout byte-identical, status unchanged",
+      "observed": "same=True; status_equal=True",
+      "ok": true,
+      "detail": ""
+    }
+  ]
+}
