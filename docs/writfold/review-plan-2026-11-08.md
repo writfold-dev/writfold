@@ -22,6 +22,7 @@ callable path rather than add another isolated component.
 | Lean↔Rust shared procedure cases | 39-case Lean-exported corpus with a Rust agreement test and a fixture freshness script; caught a self-route gap | writfold |
 | Splicery example language | Website Splicery page edits a Rust file, run with the pinned binary | website |
 | Signed edit approval (first slice) | Closed CBOR payload, distinct Ed25519 domain, strict policy-relative verification against current expected values; grants and revocations remain | writfold |
+| Claims, outcomes and recovery | `apply` records a durable `Claimed` before touching the file and exactly one outcome (`Applied` or `Abandoned`); `writfold trial recover` settles an interrupted apply from exact bytes, never re-dispatching | writfold |
 | Connected trial flow | Owner chose a `writfold-trial-worktree/1` profile; `writfold trial init/prepare/approve/apply/show` connects worktree creation, pinned Splicery replay, wfwt1 prepared edits, signed grant and approval, kernel current-grant check, staged install and the durable ledger | writfold |
 | Durable local ledger | Owner chose files + Git CAS for the alpha ledger; record codec, Git record commits with expected-old head selection, and a kernel-validated durable ledger | writfold |
 | Operator grants and revocation | Closed CBOR grant/revocation payloads with distinct Ed25519 domains and target uses; pure authority kernel (install, revoke, current grant, coverage) in exact agreement with Lean on 79 exported steps | writfold |

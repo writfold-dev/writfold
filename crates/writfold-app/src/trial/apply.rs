@@ -69,6 +69,12 @@ pub fn authorize(
     Ok(())
 }
 
+/// What happened to the file. `Refused` means the original was never replaced.
+pub(super) enum Outcome {
+    Installed,
+    Refused(String),
+}
+
 fn install(
     trial: &Trial,
     worktree: &Path,
@@ -76,7 +82,7 @@ fn install(
     run: &str,
     source: &[u8],
     candidate: &[u8],
-) -> Result<()> {
+) -> Result<Outcome> {
     let file = worktree.join(path);
     let parent = file.parent().ok_or("file has no parent directory")?;
     let name = file
@@ -92,24 +98,48 @@ fn install(
     let target = ContainedRoot::open(parent)?.pin(&RelativePath::new(name)?)?;
     let mut guard = target.try_lock(&locks, &LockKey::new(&run.replace('.', "_"))?)?;
     let limit = super::state::count(BUDGET as u64)?;
-    let observed = guard.observe_replacement(limit)?;
+    let observed = match guard.observe_replacement(limit) {
+        Ok(observed) => observed,
+        Err(error) => {
+            return Ok(Outcome::Refused(format!(
+                "could not observe {path}: {error}"
+            )));
+        }
+    };
     if observed.preimage().bytes != source {
-        return Err(format!("{path} changed since it was prepared; nothing was applied").into());
+        return Ok(Outcome::Refused(format!(
+            "{path} changed since it was prepared"
+        )));
     }
-    let stage = guard
-        .stage_replacement(observed, candidate, limit)
-        .map_err(|f| f.source)?;
+    let stage = match guard.stage_replacement(observed, candidate, limit) {
+        Ok(stage) => stage,
+        Err(failure) => {
+            return Ok(Outcome::Refused(format!(
+                "staging failed: {}",
+                failure.source
+            )));
+        }
+    };
+    // From here the original may be replaced: errors leave the outcome Unknown.
     stage.install()?;
-    Ok(())
+    Ok(Outcome::Installed)
 }
 
-/// Apply the approved edit to the run's worktree. Returns the worktree path.
+/// Apply the approved edit: authorize, record `Claimed`, install, then record
+/// `Applied`, or `Abandoned` if the original was never replaced. Any error
+/// after `Claimed` without an outcome leaves the run for `recover`.
 pub fn apply(state: &Path, run: &str) -> Result<PathBuf> {
     let trial = Trial::open(state)?;
     let executable = trial.executable()?;
     let lease = trial.writer.try_lease()?;
     let ledger = trial.ledger(&lease, &executable)?;
     let loaded = ledger.load::<Event, Premises>(&stream(run)?)?;
+    if loaded.records.len() == 3 {
+        return Err(format!(
+            "run {run} is claimed without an outcome; run: writfold trial recover {run}"
+        )
+        .into());
+    }
     let [first, second] = loaded.records.as_slice() else {
         return Err(format!("run {run} is not approved and awaiting apply").into());
     };
@@ -128,31 +158,86 @@ pub fn apply(state: &Path, run: &str) -> Result<PathBuf> {
     else {
         return Err(format!("run {run} history is not prepared then approved").into());
     };
-    let scope = scope(run, base)?;
-    authorize(&trial, &scope, *prepared, report, grant, approval)?;
+    authorize(
+        &trial,
+        &scope(run, base)?,
+        *prepared,
+        report,
+        grant,
+        approval,
+    )?;
+    let claimed = append(
+        &ledger,
+        run,
+        second,
+        3,
+        "claimed",
+        Event::Claimed {
+            candidate: *candidate,
+        },
+    )?;
     let worktree = trial.worktree(run);
-    let candidate_bytes = trial.fetch(candidate)?;
-    install(
+    let outcome = install(
         &trial,
         &worktree,
         path,
         run,
         &trial.fetch(source)?,
-        &candidate_bytes,
-    )?;
-    let event = Event::Applied {
-        candidate: *candidate,
-    };
+        &trial.fetch(candidate)?,
+    )
+    .map_err(|e| format!("outcome unknown ({e}); run: writfold trial recover {run}"))?;
+    record_outcome(&ledger, run, &claimed, *candidate, outcome)?;
+    Ok(worktree)
+}
+
+type R = Record<Event, Premises>;
+
+/// Record the single outcome after `Claimed`; a refusal is an error to the caller.
+fn record_outcome(
+    ledger: &crate::ledger::Ledger<'_, super::flow::Flow>,
+    run: &str,
+    claimed: &R,
+    candidate: super::flow::Blob,
+    outcome: Outcome,
+) -> Result<()> {
+    match outcome {
+        Outcome::Installed => {
+            let event = Event::Applied {
+                candidate,
+                reconciled: false,
+            };
+            append(ledger, run, claimed, 4, "applied", event)?;
+            Ok(())
+        }
+        Outcome::Refused(reason) => {
+            let event = Event::Abandoned {
+                reason: reason.clone(),
+            };
+            append(ledger, run, claimed, 4, "abandoned", event)?;
+            Err(format!("{reason}; nothing was applied (recorded as abandoned)").into())
+        }
+    }
+}
+
+/// Append the next record of `run` after `previous`.
+pub(super) fn append(
+    ledger: &crate::ledger::Ledger<'_, super::flow::Flow>,
+    run: &str,
+    previous: &R,
+    sequence: u64,
+    name: &str,
+    event: Event,
+) -> Result<R> {
     let record = Record {
-        id: format!("{run}.applied").parse()?,
+        id: format!("{run}.{name}").parse()?,
         stream: stream(run)?,
-        sequence: LedgerSequence::new(3)?,
-        predecessor: Some(second.id.clone()),
+        sequence: LedgerSequence::new(sequence)?,
+        predecessor: Some(previous.id.clone()),
         profile: ReducerProfile::EngineeringV1,
         closure: event.blobs(),
         payload: event,
         historical: Premises,
     };
-    ledger.append(&stream(run)?, Some(&second.head()), record)?;
-    Ok(worktree)
+    ledger.append(&stream(run)?, Some(&previous.head()), record.clone())?;
+    Ok(record)
 }

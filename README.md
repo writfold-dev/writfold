@@ -55,8 +55,10 @@ target/release/writfold trial apply <run>
 git -C "$WRITFOLD_STATE/worktrees/<run>" diff
 ```
 
-Your own checkout is never written. This is a cooperating single-user trial,
-not the hardened alpha path.
+Your own checkout is never written. `apply` records a durable claim before it
+touches the file, and `writfold trial recover <run>` settles an interrupted
+apply from the file's exact bytes. This is a cooperating single-user trial, not
+the hardened alpha path.
 
 `cargo test --workspace` runs the Rust test suite, including checks that the
 Rust kernels agree with cases exported from the Lean model.

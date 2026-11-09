@@ -132,17 +132,44 @@ fn the_flow_validator_requires_order_material_and_the_prepared_candidate() -> Re
         "approval needs a prepared edit"
     );
     assert!(Flow.validate(std::slice::from_ref(&first), &second));
-    let applied = |n| Event::Applied { candidate: blob(n) };
-    let ok = record(3, applied(3), applied(3).blobs())?;
-    assert!(Flow.validate(&[first.clone(), second.clone()], &ok));
-    let wrong = record(3, applied(7), applied(7).blobs())?;
+    let claim = |n| Event::Claimed { candidate: blob(n) };
+    let third = record(3, claim(3), claim(3).blobs())?;
+    let pa = [first.clone(), second.clone()];
+    assert!(Flow.validate(&pa, &third));
+    let wrong = record(3, claim(7), claim(7).blobs())?;
     assert!(
-        !Flow.validate(&[first.clone(), second.clone()], &wrong),
+        !Flow.validate(&pa, &wrong),
+        "the claim must name the prepared candidate"
+    );
+    let applied = |n| Event::Applied {
+        candidate: blob(n),
+        reconciled: false,
+    };
+    assert!(
+        !Flow.validate(&pa, &record(3, applied(3), applied(3).blobs())?),
+        "no outcome without a claim"
+    );
+    let pac = [first.clone(), second.clone(), third.clone()];
+    assert!(Flow.validate(&pac, &record(4, applied(3), applied(3).blobs())?));
+    assert!(
+        !Flow.validate(&pac, &record(4, applied(7), applied(7).blobs())?),
         "candidate must be the prepared one"
     );
+    let abandon = |r: &str| Event::Abandoned { reason: r.into() };
+    assert!(Flow.validate(&pac, &record(4, abandon("not installed"), vec![])?));
     assert!(
-        !Flow.validate(&[first.clone(), second.clone(), ok.clone()], &ok),
-        "nothing after applied"
+        !Flow.validate(&pac, &record(4, abandon(""), vec![])?),
+        "an abandonment says why"
+    );
+    let done = [
+        first,
+        second,
+        third,
+        record(4, applied(3), applied(3).blobs())?,
+    ];
+    assert!(
+        !Flow.validate(&done, &record(5, abandon("again"), vec![])?),
+        "nothing after an outcome"
     );
     Ok(())
 }

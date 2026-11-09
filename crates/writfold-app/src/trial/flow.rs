@@ -1,9 +1,11 @@
 //! Edit-flow ledger records for `writfold-trial-worktree/1`, and their pure
-//! validator. One run is one stream: exactly `Prepared`, then `Approved`, then
-//! `Applied`. Each record names its retained material by digest and length and
-//! must carry that material in its closure. The validator checks order and
+//! validator. One run is one stream: `Prepared`, `Approved`, then a durable
+//! `Claimed` before any file is touched, then exactly one outcome: `Applied`
+//! (installed, or reconciled as installed after a lost outcome) or `Abandoned`
+//! (observed not installed). Each record names its retained material by digest
+//! and length and must carry it in its closure. The validator checks order and
 //! bindings only; signatures, grants and the file guard are checked by `apply`
-//! against the retained bytes before `Applied` is appended.
+//! against the retained bytes before `Claimed` is appended.
 use writfold_domain::engineering::{BlobDigest, EngineeringDigest};
 use writfold_kernel::ledger::{Record, Validator};
 use writfold_wire::Limits;
@@ -32,8 +34,15 @@ pub enum Event {
         grant: Blob,
         approval: Blob,
     },
+    Claimed {
+        candidate: Blob,
+    },
     Applied {
         candidate: Blob,
+        reconciled: bool,
+    },
+    Abandoned {
+        reason: String,
     },
 }
 
@@ -55,7 +64,10 @@ impl Event {
                 ]
             }
             Event::Approved { grant, approval } => vec![grant.digest, approval.digest],
-            Event::Applied { candidate } => vec![candidate.digest],
+            Event::Claimed { candidate } | Event::Applied { candidate, .. } => {
+                vec![candidate.digest]
+            }
+            Event::Abandoned { .. } => Vec::new(),
         }
     }
 }
@@ -117,9 +129,20 @@ impl Part for Event {
                     limits,
                 )?
             }
-            Event::Applied { candidate } => {
+            Event::Claimed { candidate } => {
                 let c = blob_values(candidate);
-                cbor::encode(&C::Array(&[C::Text("applied"), C::Array(&c)]), limits)?
+                cbor::encode(&C::Array(&[C::Text("claimed"), C::Array(&c)]), limits)?
+            }
+            Event::Applied {
+                candidate,
+                reconciled,
+            } => {
+                let c = blob_values(candidate);
+                let fields = [C::Text("applied"), C::Array(&c), C::Bool(*reconciled)];
+                cbor::encode(&C::Array(&fields), limits)?
+            }
+            Event::Abandoned { reason } => {
+                cbor::encode(&C::Array(&[C::Text("abandoned"), C::Text(reason)]), limits)?
             }
         };
         Ok(encoded.into_bytes())
@@ -142,8 +165,15 @@ impl Part for Event {
                 grant: blob(&mut d)?,
                 approval: blob(&mut d)?,
             },
-            ("applied", 2) => Event::Applied {
+            ("claimed", 2) => Event::Claimed {
                 candidate: blob(&mut d)?,
+            },
+            ("applied", 3) => Event::Applied {
+                candidate: blob(&mut d)?,
+                reconciled: d.boolean()?,
+            },
+            ("abandoned", 2) => Event::Abandoned {
+                reason: d.text()?.to_owned(),
             },
             _ => return Err(codec::Error::Field("edit event")),
         };
@@ -189,12 +219,22 @@ impl Validator<Event, Premises> for Flow {
         let follows = match (&record.payload, prefix) {
             (Event::Prepared { path, .. }, []) => !path.is_empty(),
             (Event::Approved { .. }, [only]) => matches!(only.payload, Event::Prepared { .. }),
-            (Event::Applied { candidate }, [first, second]) => {
-                matches!(second.payload, Event::Approved { .. })
-                    && matches!(&first.payload, Event::Prepared { candidate: prepared, .. } if prepared == candidate)
+            (Event::Claimed { candidate }, [first, second]) => {
+                matches!(second.payload, Event::Approved { .. }) && prepared(first, candidate)
+            }
+            (Event::Applied { candidate, .. }, [first, _, third]) => {
+                matches!(third.payload, Event::Claimed { .. }) && prepared(first, candidate)
+            }
+            (Event::Abandoned { reason }, [_, _, third]) => {
+                matches!(third.payload, Event::Claimed { .. }) && !reason.is_empty()
             }
             _ => false,
         };
         carried && follows
     }
+}
+
+/// Whether `first` prepared exactly this candidate.
+fn prepared(first: &Record<Event, Premises>, candidate: &Blob) -> bool {
+    matches!(&first.payload, Event::Prepared { candidate: c, .. } if c == candidate)
 }

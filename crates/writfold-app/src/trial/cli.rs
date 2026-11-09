@@ -1,6 +1,6 @@
 //! Argument handling for `writfold trial ...`; returns the text to print.
 use super::flow::{Event, Premises};
-use super::{Result, Trial, apply, approve, prepare, stream};
+use super::{Result, Trial, apply, approve, prepare, recover, stream};
 use std::path::{Path, PathBuf};
 
 pub const USAGE: &str = "\
@@ -8,7 +8,8 @@ writfold trial init                     create the private trial state directory
 writfold trial prepare --repo DIR --file PATH --recipe FILE [--report FILE]
                                         worktree at HEAD + Splicery replay; records Prepared
 writfold trial approve RUN              sign a grant and an approval; records Approved
-writfold trial apply RUN                re-verify, check the file, install; records Applied
+writfold trial apply RUN                re-verify, claim, check the file, install; records Applied
+writfold trial recover RUN              resolve a claim left without an outcome (e.g. after a crash)
 writfold trial show RUN                 print the run's validated ledger history
 
 Options: --state DIR (default: $WRITFOLD_STATE, else ~/.local/share/writfold/trial).
@@ -94,10 +95,17 @@ fn show(state: &Path, run: &str) -> Result<String> {
             Event::Approved { .. } => {
                 "approved  operator grant + signed approval retained".to_owned()
             }
-            Event::Applied { .. } => format!(
-                "applied   candidate installed in {}",
-                trial.worktree(run).display()
+            Event::Claimed { .. } => "claimed   durable claim before touching the file".to_owned(),
+            Event::Applied { reconciled, .. } => format!(
+                "applied   candidate installed in {}{}",
+                trial.worktree(run).display(),
+                if *reconciled {
+                    " (reconciled by recover)"
+                } else {
+                    ""
+                }
             ),
+            Event::Abandoned { reason } => format!("abandoned {reason}"),
         };
         out.push_str(&format!("  {}. {line}\n", record.sequence.get()));
     }
@@ -145,6 +153,10 @@ pub fn main(args: &[String]) -> Result<String> {
                 "applied run {run}\n  inspect: git -C {} diff",
                 worktree.display()
             ))
+        }
+        Some("recover") => {
+            let run = parsed.run()?;
+            Ok(format!("run {run}: {}", recover(&state, run)?))
         }
         Some("show") => show(&state, parsed.run()?),
         _ => Ok(USAGE.to_owned()),

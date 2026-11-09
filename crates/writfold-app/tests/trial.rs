@@ -32,7 +32,7 @@ fn prepare_approve_apply_lands_only_in_the_owned_worktree() -> Result {
         "--state".into(),
         s.state.display().to_string(),
     ])?;
-    assert!(shown.contains("3 record(s), history validated"));
+    assert!(shown.contains("4 record(s), history validated"));
     Ok(())
 }
 
@@ -58,6 +58,15 @@ fn a_file_changed_after_preparation_is_not_overwritten() -> Result {
         .err()
         .ok_or("changed file was overwritten")?;
     assert!(error.to_string().contains("changed since it was prepared"));
+    // The refusal is recorded as an outcome: the run is closed, not Unknown.
+    let shown = writfold_app::trial::cli::main(&[
+        "show".into(),
+        p.run.clone(),
+        "--state".into(),
+        s.state.display().to_string(),
+    ])?;
+    assert!(shown.contains("abandoned"), "{shown}");
+    assert!(apply(&s.state, &p.run).is_err());
     assert_eq!(fs::read_to_string(&file)?, "// someone else edited this\n");
     Ok(())
 }

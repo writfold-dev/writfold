@@ -15,6 +15,9 @@ mod approve;
 pub mod cli;
 pub mod flow;
 mod prepare;
+mod recover;
+#[cfg(test)]
+mod recovery_tests;
 mod state;
 #[cfg(test)]
 mod tests;
@@ -22,6 +25,7 @@ mod tests;
 pub use apply::{apply, authorize};
 pub use approve::approve;
 pub use prepare::{Prepared, prepare};
+pub use recover::recover;
 pub use state::Trial;
 
 use std::time::Duration;
