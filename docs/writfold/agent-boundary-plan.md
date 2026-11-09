@@ -140,9 +140,10 @@ Each row's evidence is the `qualification/status.json` entry named here:
 | T0 | done | `tuft_v0_component` |
 | B0 | done | `storage_backend_component`. Dolt writes are not built |
 | S5 | done | tag `v0.1.0-dev.1`; the fresh-clone flow was reproduced |
-| T1, T2 | next | — |
+| T2 | done: no token win | `bench/2026-11-09-projection-pilot`. Correctness was 12/12 in both arms; Tuft used 5.3% more tokens, more on all six tasks. The tasks had 1–9 matches, so the budget and omissions never engaged. Agents also retyped Tuft's quoted rows by hand instead of piping them, and its header lines doubled tool output |
+| T1 | next | — |
 
-Next after T1 and T2:
+Next after T1. T2 suggests these first: a compact Tuft row format (no byte ranges or headers unless asked), an `--out` that writes the view straight into an answer file, and a pilot whose tasks have enough hits for the budget to bind:
 
 - the TLA+ trial-stream model;
 - the edit-flow validator in `writfold-core`;
