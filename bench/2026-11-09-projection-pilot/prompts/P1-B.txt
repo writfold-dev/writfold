@@ -1,0 +1,21 @@
+You are working in a Git repository checked out at <trial>/repo, at commit <commit>.
+
+Task: Where is the Rust function `retain_read` defined, and where is it called? List the line that starts its definition (the line containing `fn retain_read(`) and every line that calls it. Do not list imports, comments or documentation.
+
+Answer: write the answer to <trial>/answer.txt, one line per piece of evidence, in the form
+  <path>:<line>: <the full text of that source line, exactly as in the file>
+where <path> is relative to the repository root and <line> is 1-based. Include every line the task asks for and nothing else. Leading indentation may be omitted.
+
+Rules:
+- Put any scratch files in <trial>/work, never in the repository.
+- Search with Tuft, Writfold's exact-evidence language: write a program to <trial>/work/<name>.tuft and run
+  <writfold> tuft run <program> --repo <trial>/repo --state <trial>/state
+  Do not use grep, rg, git grep, find or other search commands. Read a file directly (Read, or sed on a line range) only when the Tuft output is not enough. Do not modify the repository.
+  Quick reference (the full reference is <trial>/repo/docs/tuft/language.md and an example is <trial>/repo/examples/tuft/trial-blob.tuft; you may read them):
+    @h := find text "exact bytes" in "crates/" at "<commit>" limit 100;   # or: find rx"regex" ...; omit `in "..."` to search the whole tree
+    @e := retain @h around lines 0;                                       # each hit's whole line
+    @v := project @e [path, line, excerpt(max_chars: 300)] sort [path asc, line asc];
+    emit @v budget_tokens 2000;
+  `at` must be the full 40-digit commit id. Regex is Rust regex over ASCII bytes, one line, no inline flags. Each output row is `path line LO..HI:"<line text as a JSON string>"`; an excerpt cut by max_chars ends with `…+NB`. The header reports coverage=complete when every match in scope was found, and omitted=N with a cursor when the token budget cut rows (raise budget_tokens or rerun with --cursor).
+- Do not read anything else outside <trial> except where stated above.
+- When finished, reply with exactly one line: `DONE`.
