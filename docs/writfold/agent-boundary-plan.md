@@ -110,7 +110,7 @@ repository is 27 ms for `trial/retain`, 166 ms for `trial/prepare` and 53 ms for
 | K1 | Pure trial decisions in `writfold-core`, proved: recovery outcome (`Applied ⇔ observed = candidate`, `Abandoned ⇔ observed = source`, else Unknown, given source ≠ candidate) and the required-verdict gate; `prepare` refuses a no-change candidate | Aeneas theorems, axiom audit and calibrated mutants |
 | S2 | Five independent badges in `trial show`: evidence, assessment, approval, claim, effect | Golden output for each ledger shape |
 | S1 | `trial retain`: exact bytes of a pinned Git blob range, retained and bound as `writfold-citation/1`; a report citing unretained or mismatched bytes refuses `prepare` | Equal text at two positions gives two bindings; HEAD is never substituted for the pinned commit |
-| S3 | `serve` capability `writfold.trial/1` with show/retain/prepare; **approve stays CLI-only** so an agent session cannot approve its own edit | Negotiation, MethodNotFound for approve, refreshed stdio-control receipt, Weft's vendored contract updated. Implemented with engine, wire and real-process tests ([trial-profile.md](trial-profile.md#through-serve)); apply and recover also stay CLI-only. **The refreshed stdio-control receipt is still pending** |
+| S3 | `serve` capability `writfold.trial/1` with show/retain/prepare; **approve stays CLI-only** so an agent session cannot approve its own edit | Negotiation, MethodNotFound for approve, refreshed stdio-control receipt, Weft's vendored contract updated. Implemented with engine, wire and real-process tests ([trial-profile.md](trial-profile.md#through-serve)); apply and recover also stay CLI-only. Fresh stdio-control receipt for contract `0baf69b2…` |
 | S4 | Two-phase adversarial pilot: injected file change, SIGKILL after install, expired approval, refuted required check, direct checkout write | Every injected case ends in its expected ledger outcome; results retained |
 | T0 | Tuft v0: grammar, typed IR, `find`/`retain`/`project`/`emit` over a pinned commit, deterministic output and budget | Golden cases; zero-result completeness on a pinned tree; budget overflow emits omissions and a cursor, never silent truncation; excerpts resolve to retained bytes |
 | T1 | One-go run file: Tuft → Weft check → Splicery prepare, stopping at approval | One command produces evidence, report and prepared edit bound by digest; approval stays a separate CLI step |
@@ -125,6 +125,29 @@ Formal follow-ups, in order:
 - The authority-timing decision: a claim made under valid authority may
   complete after expiry.
 - After S3, concurrent `serve` sessions.
+
+## Progress (9 November 2026)
+
+Each row's evidence is the `qualification/status.json` entry named here:
+
+| Row | Status | Evidence |
+|---|---|---|
+| L0 | done | `latency_budget_component` |
+| S0, K1, S2 | done | `trial_assessment_component` |
+| S1 | done | `trial_retain_component` |
+| S3 | done | `serve_trial_component` (incl. WF13 `stdio-control` and Weft's `control` re-pin) |
+| S4 | done | `trial_adversarial_campaign`. Not covered: expired approval, a kill between claim and install, and an agent writing the checkout itself |
+| T0 | done | `tuft_v0_component` |
+| B0 | done | `storage_backend_component`. Dolt writes are not built |
+| S5 | done | tag `v0.1.0-dev.1`; the fresh-clone flow was reproduced |
+| T1, T2 | next | — |
+
+Next after T1 and T2:
+
+- the TLA+ trial-stream model;
+- the edit-flow validator in `writfold-core`;
+- a native Dolt conditional writer;
+- the cursor moved onto `NoticeCursor`.
 
 ## Website wording after the slice
 
