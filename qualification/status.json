@@ -619,6 +619,58 @@
     "public_alpha_available": false,
     "full_release_gates_passed": []
   },
+  "grant_revocation_proof": {
+    "status": "scoped_component_pass",
+    "scope": "Grant revocation proved over the Charon/Aeneas translation of writfold_core::authority::Authority::revoke: Authority.revoke_spec (exactly the grants with the id are revoked; no grant added, removed, reordered or un-revoked; realm, policy and clock unchanged; unknown id changes nothing; never refused). 55 theorems, 12 required claims, 16/16 mutants. Not proved: append success shape, adapters, edit-flow validator, procedure admission.",
+    "source_commit": "df44f2c",
+    "receipts": {
+      "proofs_gate_log": {
+        "path": "~/.local/share/writfold/evidence/aeneas-revoke-Nu3dVsvg/proofs-gate.log",
+        "sha256": "937864c2efc1c37d42aee81c73be8883e26ec2b49e9c7d5c2a5c295b21a31137",
+        "bytes": 19770
+      },
+      "quality": {
+        "path": "~/.local/share/writfold/evidence/aeneas-revoke-Nu3dVsvg/quality-002.json",
+        "sha256": "296ed4eeb753fdd91eb4304ecbfe9bdd4c3e48e6325b8bc210704cc075ae0287",
+        "bytes": 746268
+      },
+      "unit": {
+        "path": "~/.local/share/writfold/evidence/aeneas-revoke-Nu3dVsvg/unit-002.json",
+        "sha256": "6fcec9ca2ae4ece446558d97436c66dee069741f08c2efa0c1e5721756101fab",
+        "bytes": 316184
+      }
+    },
+    "proofs": {
+      "theorems": 55,
+      "required_claims": 12,
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "mutants_rejected": "16/16"
+    },
+    "retained_failed_attempts": [
+      {
+        "gate": "quality",
+        "receipt": {
+          "path": "~/.local/share/writfold/evidence/aeneas-revoke-Nu3dVsvg/quality-001.json",
+          "sha256": "e03b860a027af6145e55d8cca28570b0941670c3ccfc7b8c30b198199c3a7726",
+          "bytes": 939
+        },
+        "cause": "an untracked concurrent agent worktree under .claude/ was in the checkout; excluded locally, no source change"
+      },
+      {
+        "gate": "unit",
+        "receipt": {
+          "path": "~/.local/share/writfold/evidence/aeneas-revoke-Nu3dVsvg/unit-001.json",
+          "sha256": "d7eecb4286da3a53b3a0315920586666cdaac22e5ae74605d179320632898e28",
+          "bytes": 930
+        },
+        "cause": "same untracked .claude/ worktree"
+      }
+    ]
+  },
   "publication_history_audit": {
     "status": "inspected_not_cleared_for_publication",
     "record": {
