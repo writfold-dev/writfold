@@ -801,15 +801,6 @@
         "cause": "clippy-all-features reused stale shared-volume artifacts"
       },
       {
-        "gate": "unit",
-        "receipt": {
-          "path": "~/.local/share/writfold/evidence/trial-assess-oA6XK8dx/unit-004.json",
-          "sha256": "15188fac2bd8d9b2fd39d600bf3edf036428c6b46154ad62e0ef7b22c1498859",
-          "bytes": 318944
-        },
-        "cause": "superseded: passed at feb02f2, rerun after a formatting-only commit"
-      },
-      {
         "gate": "quality",
         "receipt": {
           "path": "~/.local/share/writfold/evidence/trial-assess-oA6XK8dx/quality-005.json",
