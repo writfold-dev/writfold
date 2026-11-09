@@ -14,7 +14,7 @@ fn prepare_approve_apply_lands_only_in_the_owned_worktree() -> Result {
     let p = prepare(&s.state, &s.repo, "src/client.rs", &s.recipe("wrap")?, None)?;
     assert_eq!(p.edits.len(), 1);
     assert!(p.prepared.starts_with("wfwt1:prepared-edit:sha256:"));
-    approve(&s.state, &p.run)?;
+    approve(&s.state, &p.run, &[])?;
     let worktree = apply(&s.state, &p.run)?;
     let edited = fs::read_to_string(worktree.join("src/client.rs"))?;
     assert!(edited.contains(WRAPPED));
@@ -41,9 +41,9 @@ fn steps_out_of_order_refuse() -> Result {
     let s = Setup::new()?;
     let p = prepare(&s.state, &s.repo, "src/client.rs", &s.recipe("wrap")?, None)?;
     assert!(apply(&s.state, &p.run).is_err(), "apply before approve");
-    approve(&s.state, &p.run)?;
-    assert!(approve(&s.state, &p.run).is_err(), "approve twice");
-    assert!(approve(&s.state, "run.0.000000").is_err(), "unknown run");
+    approve(&s.state, &p.run, &[])?;
+    assert!(approve(&s.state, &p.run, &[]).is_err(), "approve twice");
+    assert!(approve(&s.state, "run.0.000000", &[]).is_err(), "unknown run");
     Ok(())
 }
 
@@ -51,7 +51,7 @@ fn steps_out_of_order_refuse() -> Result {
 fn a_file_changed_after_preparation_is_not_overwritten() -> Result {
     let s = Setup::new()?;
     let p = prepare(&s.state, &s.repo, "src/client.rs", &s.recipe("wrap")?, None)?;
-    approve(&s.state, &p.run)?;
+    approve(&s.state, &p.run, &[])?;
     let file = p.worktree.join("src/client.rs");
     fs::write(&file, "// someone else edited this\n")?;
     let error = apply(&s.state, &p.run)
@@ -75,7 +75,7 @@ fn a_file_changed_after_preparation_is_not_overwritten() -> Result {
 fn an_approval_under_a_different_policy_refuses() -> Result {
     let s = Setup::new()?;
     let p = prepare(&s.state, &s.repo, "src/client.rs", &s.recipe("wrap")?, None)?;
-    approve(&s.state, &p.run)?;
+    approve(&s.state, &p.run, &[])?;
     // Swap in another trial state's policy (a different operator key).
     let other = Setup::new()?;
     fs::remove_file(s.state.join("policy.json"))?;
