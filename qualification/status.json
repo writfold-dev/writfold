@@ -829,6 +829,71 @@
     },
     "retained_failed_attempts": []
   },
+  "storage_backend_component": {
+    "status": "scoped_component_pass",
+    "scope": "B0 storage-backend boundary (docs/writfold/storage-backend.md): one typed trait with a per-backend pin type, exact pinned reads with recomputed digests, bounded exact/prefix/substring lookup with measured Coverage and pin-bound cursors, and expected-old conditional write admission. Dolt is the interim backend (owner decision 2026-11-09) over the unchanged DINT01 reader: exact read and lookup pass the 13-check conformance suite against a real disposable admitted Dolt 2.6.1 database; writes refuse as Unavailable (no Rust Dolt conditional writer yet); fuzzy/semantic/ranked lookups refuse as Unsupported before IO. An in-memory reference passes and six deliberately broken backends each fail their named check. Not a corpus service, not a writer, not Omnigraph.",
+    "owner_decision": "2026-11-09: keep Dolt as the interim backend behind a swappable boundary until Omnigraph is admitted; defer fuzzy/similarity search",
+    "source_commit": "5217ea5",
+    "receipts": {
+      "quality": {
+        "path": "~/.local/share/writfold/evidence/backend-main-ZGvxK9bW/quality-001.json",
+        "sha256": "9ca0d9e762988ddbebde86f881794df1c020269cd5f975ff8463d65066e80dd7",
+        "bytes": 750017
+      },
+      "unit": {
+        "path": "~/.local/share/writfold/evidence/backend-main-ZGvxK9bW/unit-001.json",
+        "sha256": "d26f2d949e3d16fadaa1940ecc60dc5d503f867a056ae91fe9f000f8cc286a90",
+        "bytes": 321692
+      }
+    },
+    "retained_failed_attempts": [
+      {
+        "gate": "quality",
+        "receipt": {
+          "path": "~/.local/share/writfold/evidence/backend-zPoApo7M/quality-001.json",
+          "sha256": "29daae585ec2c530cc5efe78dfb2b49790fdd8900aa5cb7d068c7cbad739f944",
+          "bytes": 315963
+        },
+        "cause": "preflight refused: WRITFOLD_CI_INFRA unset in the agent worktree"
+      },
+      {
+        "gate": "quality",
+        "receipt": {
+          "path": "~/.local/share/writfold/evidence/backend-zPoApo7M/quality-002.json",
+          "sha256": "159aa03348e62bd9974be049250a435beaff3ff4bf235fe1c8300190ed066f23",
+          "bytes": 739365
+        },
+        "cause": "domain-value rule: untyped JSON in a backend test helper; fixed"
+      },
+      {
+        "gate": "quality",
+        "receipt": {
+          "path": "~/.local/share/writfold/evidence/backend-zPoApo7M/quality-003.json",
+          "sha256": "4ed857c231e8810be5d515250919483bfe6fa4895a17304ea9082f02159e45e1",
+          "bytes": 739366
+        },
+        "cause": "shared Docker cargo target volume reused artifacts from another checkout"
+      },
+      {
+        "gate": "quality",
+        "receipt": {
+          "path": "~/.local/share/writfold/evidence/backend-zPoApo7M/quality-004.json",
+          "sha256": "8a77372d86137406a0650391e1c741d5ef70467d1104058b4bac143e94189fc7",
+          "bytes": 739365
+        },
+        "cause": "same shared target volume reuse"
+      },
+      {
+        "gate": "quality",
+        "receipt": {
+          "path": "~/.local/share/writfold/evidence/backend-zPoApo7M/quality-005.json",
+          "sha256": "448e71a9ec73417b801fb4b9541dccc2d2441bdc21ad7bea904b1b9f1541ec7c",
+          "bytes": 739366
+        },
+        "cause": "same shared target volume reuse"
+      }
+    ]
+  },
   "publication_history_audit": {
     "status": "inspected_not_cleared_for_publication",
     "record": {
