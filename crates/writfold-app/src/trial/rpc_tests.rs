@@ -1,7 +1,7 @@
 //! Typed refusal mapping and the response budget of the `serve` trial adapter.
 use super::BeforeEffects;
 use super::rpc::{Reply, refusal};
-use serde_json::Value;
+use serde::Deserialize;
 use writfold_domain::{ContentDigest, InstanceId, RequestGeneration, SessionIncarnation};
 use writfold_wire::rpc::RequestId;
 use writfold_wire::rpc::response::{
@@ -10,6 +10,36 @@ use writfold_wire::rpc::response::{
 use writfold_wire::rpc::trial::TrialMethod;
 
 type TestResult<T = (), E = Box<dyn std::error::Error>> = Result<T, E>;
+
+// Typed observations of the fields checked here.
+#[derive(Deserialize)]
+struct Observed {
+    id: String,
+    result: Option<Result_>,
+    error: Option<Error>,
+}
+#[derive(Deserialize)]
+struct Result_ {
+    payload: Payload,
+}
+#[derive(Deserialize)]
+struct Payload {
+    text: String,
+}
+#[derive(Deserialize)]
+struct Error {
+    data: ErrorData,
+}
+#[derive(Deserialize)]
+struct ErrorData {
+    category: String,
+    message: String,
+    diagnostic: Diagnostic,
+}
+#[derive(Deserialize)]
+struct Diagnostic {
+    code: String,
+}
 type Boxed = Box<dyn std::error::Error + Send + Sync>;
 
 #[test]
@@ -73,18 +103,19 @@ fn an_oversized_result_refuses_cleanly_and_is_never_truncated() -> TestResult {
     };
     let bytes = reply.deliver(&payload, TrialOutcome::Rejected, "too big")?;
     assert!(bytes.len() <= MAX_RESPONSE_BYTES);
-    let value: Value = serde_json::from_slice(&bytes)?;
-    assert_eq!(value["id"], "big");
-    assert_eq!(value["error"]["data"]["category"], "incomplete");
-    assert_eq!(value["error"]["data"]["diagnostic"]["code"], "E105");
-    assert_eq!(value["error"]["data"]["message"], "too big");
-    assert!(value.get("result").is_none());
+    let value: Observed = serde_json::from_slice(&bytes)?;
+    assert_eq!(value.id, "big");
+    assert!(value.result.is_none());
+    let data = value.error.ok_or("expected an error")?.data;
+    assert_eq!(data.category, "incomplete");
+    assert_eq!(data.diagnostic.code, "E105");
+    assert_eq!(data.message, "too big");
     let small = ShowPayload {
         run: "run.1.aaaaaa",
         text: "fits",
     };
-    let value: Value =
+    let value: Observed =
         serde_json::from_slice(&reply.deliver(&small, TrialOutcome::Rejected, "too big")?)?;
-    assert_eq!(value["result"]["payload"]["text"], "fits");
+    assert_eq!(value.result.ok_or("expected success")?.payload.text, "fits");
     Ok(())
 }

@@ -1,7 +1,9 @@
 //! `writfold.trial/1` negotiation and every refusal path before the trial
 //! functions run; the real-process flow is in `crates/writfold/tests`.
 use super::{Engine, InputFrame, InvocationIdentity, ServeError, TestResult};
-use serde_json::Value;
+use serde::Deserialize;
+use serde::de::IgnoredAny;
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use writfold_protocol::session::SessionState;
 use writfold_wire::rpc::response::{METHOD_SCHEMAS, TRIAL_METHOD_SCHEMAS};
@@ -15,11 +17,50 @@ fn missing_state() -> PathBuf {
     std::env::temp_dir().join(format!(".writfold-serve-absent-{}", std::process::id()))
 }
 
-fn send(engine: &mut Engine<'_>, frame: &str) -> Result<Option<Value>, ServeError> {
+// Typed observations of the reply fields these tests check; exact wire bytes
+// are covered at the wire and real-process boundaries.
+#[derive(Default, Deserialize)]
+struct Reply {
+    #[serde(default)]
+    result: Option<Success>,
+    #[serde(default)]
+    error: Option<Failure>,
+}
+#[derive(Deserialize)]
+struct Success {
+    #[serde(default)]
+    capabilities: Vec<String>,
+    #[serde(default)]
+    implementation_scope: String,
+    #[serde(default)]
+    methods: BTreeMap<String, IgnoredAny>,
+}
+#[derive(Deserialize)]
+struct Failure {
+    code: i64,
+    data: Data,
+}
+#[derive(Deserialize)]
+struct Data {
+    #[serde(default)]
+    category: String,
+    #[serde(default)]
+    message: String,
+    #[serde(default)]
+    outcome: String,
+    exit_code: Option<i64>,
+}
+
+fn method_names(schemas: &str) -> TestResult<Vec<String>> {
+    let parsed: BTreeMap<String, IgnoredAny> = serde_json::from_str(schemas)?;
+    Ok(parsed.into_keys().collect())
+}
+
+fn send(engine: &mut Engine<'_>, frame: &str) -> Result<Option<Reply>, ServeError> {
     let dispatch = engine.handle(InputFrame::Bytes(frame.as_bytes()))?;
     Ok(dispatch
         .response
-        .map(|bytes| serde_json::from_slice(&bytes).unwrap_or(Value::Null)))
+        .map(|bytes| serde_json::from_slice(&bytes).unwrap_or_default()))
 }
 
 fn call(method: &str, params: &str) -> String {
@@ -27,14 +68,12 @@ fn call(method: &str, params: &str) -> String {
 }
 
 /// (code, category, data.message) of a refusal.
-fn fault(value: Option<Value>) -> TestResult<(i64, String, String)> {
-    let value = value.ok_or("expected a correlated reply")?;
-    let data = &value["error"]["data"];
-    Ok((
-        value["error"]["code"].as_i64().ok_or("expected an error")?,
-        data["category"].as_str().unwrap_or_default().to_owned(),
-        data["message"].as_str().unwrap_or_default().to_owned(),
-    ))
+fn fault(value: Option<Reply>) -> TestResult<(i64, String, String)> {
+    let error = value
+        .ok_or("expected a correlated reply")?
+        .error
+        .ok_or("expected an error")?;
+    Ok((error.code, error.data.category, error.data.message))
 }
 
 fn engine<'a>(
@@ -60,21 +99,17 @@ fn trial_is_admitted_only_when_requested_and_a_state_is_configured() -> TestResu
     let unknown = INIT.replace("\"writfold.trial/1\"", "\"writfold.trial/1\",\"knowledge\"");
     assert_eq!(fault(send(&mut with, &unknown)?)?.0, -32000);
     let reply = send(&mut with, INIT)?.ok_or("initialize reply")?;
-    let result = &reply["result"];
+    let result = reply.result.ok_or("expected success")?;
+    assert_eq!(result.capabilities, ["notifications", "writfold.trial/1"]);
     assert_eq!(
-        result["capabilities"],
-        serde_json::json!(["notifications", "writfold.trial/1"])
-    );
-    assert_eq!(
-        result["implementation_scope"],
+        result.implementation_scope,
         "transport-control+trial-worktree"
     );
-    let methods: Value = serde_json::from_str(TRIAL_METHOD_SCHEMAS)?;
-    assert_eq!(result["methods"], methods);
+    let advertised: Vec<String> = result.methods.into_keys().collect();
+    assert_eq!(advertised, method_names(TRIAL_METHOD_SCHEMAS)?);
     // Exactly these methods (sorted keys): no approve, apply or recover.
-    let keys: Vec<&String> = methods.as_object().ok_or("methods")?.keys().collect();
     assert_eq!(
-        keys,
+        advertised,
         [
             "initialize",
             "shutdown",
@@ -86,14 +121,10 @@ fn trial_is_admitted_only_when_requested_and_a_state_is_configured() -> TestResu
     // Without the request, the advertisement is the unchanged control one.
     let mut plain = engine(&identity, &contract, Some(&state))?;
     let reply = send(&mut plain, PLAIN)?.ok_or("initialize reply")?;
-    assert_eq!(
-        reply["result"]["capabilities"],
-        serde_json::json!(["notifications"])
-    );
-    assert_eq!(
-        reply["result"]["methods"],
-        serde_json::from_str::<Value>(METHOD_SCHEMAS)?
-    );
+    let result = reply.result.ok_or("expected success")?;
+    assert_eq!(result.capabilities, ["notifications"]);
+    let advertised: Vec<String> = result.methods.into_keys().collect();
+    assert_eq!(advertised, method_names(METHOD_SCHEMAS)?);
     Ok(())
 }
 
@@ -193,10 +224,10 @@ fn parameters_are_strict_and_notifications_do_not_run() -> TestResult {
         &mut engine,
         &call("trial/show", r#"{"run":"run.1.aaaaaa"}"#),
     )?;
-    let data = reply.ok_or("reply")?["error"]["data"].clone();
-    assert_eq!(data["category"], "not-found");
-    assert_eq!(data["outcome"], "rejected");
-    assert_eq!(data["exit_code"], 1);
-    assert_eq!(data["message"], "No such file or directory (os error 2)");
+    let data = reply.ok_or("reply")?.error.ok_or("expected an error")?.data;
+    assert_eq!(data.category, "not-found");
+    assert_eq!(data.outcome, "rejected");
+    assert_eq!(data.exit_code, Some(1));
+    assert_eq!(data.message, "No such file or directory (os error 2)");
     Ok(())
 }
