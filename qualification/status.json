@@ -894,6 +894,64 @@
       }
     ]
   },
+  "serve_trial_component": {
+    "status": "scoped_component_pass",
+    "scope": "writfold serve negotiates writfold.trial/1 (trial/show, trial/retain, trial/prepare) through the same application functions as the CLI; approve, apply and recover are CLI-only and answer Method not found over RPC. Fresh WF13 stdio-control receipt for contract 0baf69b2 and executable 91a1924f; its vectors cover negotiation and the CLI-only refusals, the trial methods themselves are covered by engine and real-process tests. Weft's control gate re-pinned to this executable and passing. RPC p95 on a 100k-file repository: retain 27 ms, prepare 166 ms, show 53 ms (bench/2026-11-09-serve-latency).",
+    "source_commit": "fd82296",
+    "receipts": {
+      "quality": {
+        "path": "~/.local/share/writfold/evidence/serve-trial-cVqclyxI/quality-002.json",
+        "sha256": "910bcc19c34a9bab888cbbc2337b8956cba81d6d41cc674284ecebcd258d4b8d",
+        "bytes": 751437
+      },
+      "unit": {
+        "path": "~/.local/share/writfold/evidence/serve-trial-cVqclyxI/unit-002.json",
+        "sha256": "1cdb8ebb917ec76998f0c2cd4e4abb816ce815862212f1446919a8e8fa871d04",
+        "bytes": 324875
+      },
+      "stdio_control": {
+        "path": "~/.local/share/writfold/evidence/serve-trial-cVqclyxI/stdio-control-002.json",
+        "sha256": "efb5726d5cf20e5cfe58cc876d9d3d7783de36fb54af8ebcd319e8c7bb00da62",
+        "bytes": 361774
+      },
+      "weft_control": {
+        "path": "~/.local/share/weft/evidence/control-20261109-trial/report.json",
+        "sha256": "581acd70256f0917308595d43a6ea3c1ce81121dec3c6b795fa8903287b28c5e",
+        "bytes": 36998
+      }
+    },
+    "executable_sha256": "91a1924f5bae025a131bda99ea047c30adcc404d96429abf70956a7757230f4d",
+    "retained_failed_attempts": [
+      {
+        "gate": "quality",
+        "receipt": {
+          "path": "~/.local/share/writfold/evidence/serve-trial-cVqclyxI/quality-001.json",
+          "sha256": "e4f45fd66a7389df17bff6a09ac64820d37ebf1539f2fa6b587ca2de1c68cdb8",
+          "bytes": 750925
+        },
+        "cause": "domain-value: untyped serde_json::Value in two new test files; rewritten with typed observations"
+      }
+    ]
+  },
+  "trial_adversarial_campaign": {
+    "status": "scoped_component_pass",
+    "scope": "Adversarial campaign over the real trial CLI (bench/2026-11-09-adversarial): preimage race abandoned, refuted required check refused at approve, unretained and tampered citations refused at prepare, no-change candidate refused, replayed apply and post-outcome recover refused, 60 randomized SIGKILLs during apply each leaving the file consistent with at most one recorded outcome (24 reconciled to applied by recover), and the user's checkout byte-identical. Not covered: expired approval (no clock control), a kill between claim and install (unit tests and recovery_spec), an agent writing the checkout directly (the trial is not a sandbox).",
+    "source_commit": "a853c87",
+    "bench": "bench/2026-11-09-adversarial/results.json",
+    "receipts": {
+      "quality": {
+        "path": "~/.local/share/writfold/evidence/serve-trial-cVqclyxI/quality-002.json",
+        "sha256": "910bcc19c34a9bab888cbbc2337b8956cba81d6d41cc674284ecebcd258d4b8d",
+        "bytes": 751437
+      },
+      "unit": {
+        "path": "~/.local/share/writfold/evidence/serve-trial-cVqclyxI/unit-002.json",
+        "sha256": "1cdb8ebb917ec76998f0c2cd4e4abb816ce815862212f1446919a8e8fa871d04",
+        "bytes": 324875
+      }
+    },
+    "retained_failed_attempts": []
+  },
   "publication_history_audit": {
     "status": "inspected_not_cleared_for_publication",
     "record": {

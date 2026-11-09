@@ -113,10 +113,10 @@ never use a mutable sibling checkout or infer grounding from initialization.
 
 `stdio-control` qualifies the actual native control component under WF13 with
 `stdio-control-only` scope. Full `transport`, P09, live WR1–WR8, storage admission,
-grounded Weft E2E and Splicery editing remain separate obligations. **The current
-WF13 `stdio-control` receipt predates `writfold.trial/1`** (it binds contract
-`b673d10f…`); the changed contract and binary need a fresh receipt, which is not
-claimed here.
+grounded Weft E2E and Splicery editing remain separate obligations. The WF13
+`stdio-control` receipt was refreshed on 9 November 2026 for `writfold.trial/1`
+(contract `0baf69b2…`, executable `91a1924f…`); the earlier receipt for contract
+`b673d10f…` is preserved, not relabelled.
 
 ### Negotiated `writfold.trial/1`
 

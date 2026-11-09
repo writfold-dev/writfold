@@ -116,8 +116,10 @@ Measured through one `serve` session per repository (release host build, WSL2,
 
 The published contract (`crates/writfold-wire/contracts/agent-stdio/1/`) carries
 the trial method schemas (`trial-methods.json`), result and refusal schemas, and
-state-free negotiation vectors. The WF13 `stdio-control` receipt predates this
-capability and must be refreshed; it is not claimed here.
+state-free negotiation vectors. A fresh WF13 `stdio-control` receipt binds this
+contract and the executable Weft's `control` gate now pins (`91a1924f…`); its
+vectors exercise negotiation and the CLI-only refusals, while the trial methods
+themselves are covered by tests, not a gate receipt.
 
 ## What it does not do
 
