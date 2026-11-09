@@ -107,7 +107,7 @@ impl<V> Ledger<'_, V> {
         let loaded = self.load::<P, H>(stream)?;
         let mut store = Store::default();
         for old in &loaded.records {
-            let head = store.current_head(stream).cloned();
+            let head = store.current_head(stream);
             store
                 .append(
                     self.validator,

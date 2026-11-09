@@ -67,7 +67,9 @@ Rust kernels agree with cases exported from the Lean model.
 
 - `crates/`: the Rust implementation (domain types, pure kernels, wire formats,
   signatures, runtime boundaries and the `writfold` binary).
-- `formal/`: the Lean model and proofs the Rust kernels are checked against.
+- `formal/`: the Lean model (the specification) and its proofs.
+- `crates/writfold-core` and `proofs/`: the pure kernels production calls, translated to Lean by
+  Aeneas and proved there ([how](docs/writfold/aeneas.md)).
 - `spec/`: TLA+ models of the operational protocols.
 - `docs/writfold/`: design and boundary documents; [status](docs/writfold/status.md)
   has the detailed implementation and evidence record.

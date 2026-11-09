@@ -16,4 +16,5 @@ workspace = true
 
 [dependencies]
 writfold-domain = { path = "../writfold-domain" }
+writfold-core = { path = "../writfold-core" }
 vstd.workspace = true

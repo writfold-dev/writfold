@@ -339,6 +339,11 @@ separate work. The draft retained out of tree under
 
 ### Validated ledger history and conditional append
 
+**Now proved over the shipped Rust.** The decisions below run in
+`writfold_core::ledger` and are proved over its Aeneas translation
+([proofs over the shipped Rust](aeneas.md)); `writfold_kernel::ledger` is the
+typed adapter. The Lean-exported cases below still pass through both.
+
 `writfold_kernel::ledger` is the pure Rust counterpart of Lean `historyCheck`,
 `AppendReady` and `append` (E05). A `Store` retains immutable records and
 material and selects one prefix per stream. A `Validator` judges each record

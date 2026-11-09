@@ -1,0 +1,12 @@
+# Aeneas proofs over crates/writfold-core (docs/writfold/aeneas.md):
+# regenerate the translation, refuse drift against proofs/Extracted/,
+# lake build, axiom audit, mutant calibration.
+#   docker compose -f compose.proofs.yaml run --build --rm proofs
+#   sh proofs/refresh.sh      # regenerate and copy out proofs/Extracted/
+services:
+  proofs:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: proofs/Dockerfile
+      target: gate

@@ -155,7 +155,7 @@ fn rust_ledger_matches_lean_append_step_by_step() -> Fallible {
             let lean_head = head(step.get("head_after").ok_or("head_after")?)?;
             let lean_epoch = num(step, "inventory_epoch_after")?;
             if rust_ok != lean_ok
-                || store.current_head(&target) != lean_head.as_ref()
+                || store.current_head(&target) != lean_head
                 || store.inventory_epoch() != lean_epoch
             {
                 return Err(format!("{name} step {index}: lean ok={lean_ok} head={lean_head:?} epoch={lean_epoch}; rust ok={rust_ok} head={:?} epoch={}", store.current_head(&target), store.inventory_epoch()).into());

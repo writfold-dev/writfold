@@ -1,0 +1,26 @@
+[package]
+name = "writfold-core"
+description = "Writfold's pure decision kernels in plain safe Rust, translated to Lean 4 by Charon/Aeneas and proved under proofs/"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+# No dependencies by construction: no IO, no floats, no `dyn`, `no_std` +
+# `alloc`. The xtask dependency graph enforces the empty set.
+[dependencies]
+
+# Read by Charon when the `proofs` gate translates this crate
+# (proofs/extract.sh). Conveniences in `convenience.rs` are never reached.
+[package.metadata.charon]
+start_from = [
+    "writfold_core::authority",
+    "writfold_core::bytes",
+    "writfold_core::ledger",
+]
+
+
+# Stated locally, not inherited: the proofs gate translates this crate in a
+# shadow workspace that carries no `workspace.lints`.
+[lints.rust]
+unsafe_code = "forbid"

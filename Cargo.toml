@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "crates/writfold-domain",
+    "crates/writfold-core",
     "crates/writfold-kernel",
     "crates/writfold-wire",
     "crates/writfold-protocol",

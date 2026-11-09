@@ -1,16 +1,18 @@
-//! Installed operator grants and the current-grant check, refining Lean
-//! `environment` `installGrant`/`revokeGrant`/`advanceTime` and `currentGrant`
-//! (`Engineering/Environment.lean`, `Engineering/Control.lean`).
+//! Installed operator grants and the current-grant check: the typed adapter
+//! over `writfold_core::authority`, whose Aeneas translation is proved in
+//! `proofs/Writfold/Authority.lean` (`install_check_spec`, `current_spec`,
+//! `covers_spec`, `Authority.install_refused`, `Authority.advance_spec`).
 //!
-//! Pure and IO-free. An `Authorization` is a qualified input: the caller must
-//! already have verified the operator's signature over the exact grant and
-//! retained its envelope. This module checks realm, policy, retention, fresh
-//! identity and time. Historical grants, including revoked ones, are never
-//! removed or replaced. Tested Rust, not a proved refinement.
+//! An `Authorization` is a qualified input: the caller must already have
+//! verified the operator's signature over the exact grant and retained its
+//! envelope. Every decision is made by the proved core; this module converts
+//! nominal domain values to bytes and keeps the typed grants beside the core's
+//! (same order). Historical grants, including revoked ones, are never removed.
 use std::collections::BTreeSet;
-use writfold_domain::engineering::BlobDigest;
+use writfold_core::authority as core;
 use writfold_domain::engineering::execution::Capability;
-use writfold_domain::engineering::grant::Grant;
+use writfold_domain::engineering::grant::{Grant, capability_code};
+use writfold_domain::engineering::{BlobDigest, EngineeringDigest};
 use writfold_domain::worktree::Scope;
 use writfold_domain::{EpochSeconds, GrantId, PolicyDigest, RealmId, ResourceId};
 
@@ -55,37 +57,99 @@ pub enum Refusal {
     ClockRewind,
 }
 
-/// Grants for one realm under one policy, newest first as in Lean.
-#[derive(Clone, Debug, Eq, PartialEq)]
+fn refusal(r: core::Refusal) -> Refusal {
+    match r {
+        core::Refusal::ForeignRealm => Refusal::ForeignRealm,
+        core::Refusal::ForeignBindingRealm => Refusal::ForeignBindingRealm,
+        core::Refusal::StalePolicy => Refusal::StalePolicy,
+        core::Refusal::UnretainedEnvelope => Refusal::UnretainedEnvelope,
+        core::Refusal::DuplicateGrant => Refusal::DuplicateGrant,
+        core::Refusal::NotYetValid => Refusal::NotYetValid,
+        core::Refusal::Expired => Refusal::Expired,
+        core::Refusal::ClockRewind => Refusal::ClockRewind,
+    }
+}
+
+/// Canonical scope bytes: the five identity fields, NUL-separated. No field
+/// can contain NUL, so equal bytes mean an equal scope.
+fn scope_bytes(scope: &Scope) -> Vec<u8> {
+    [
+        scope.realm().as_str(),
+        scope.run().as_str(),
+        scope.repo().as_str(),
+        scope.worktree().as_str(),
+        scope.binding().as_str(),
+    ]
+    .join("\0")
+    .into_bytes()
+}
+
+fn capability(c: Capability) -> u8 {
+    u8::try_from(capability_code(c)).unwrap_or(u8::MAX)
+}
+
+fn core_grant(grant: &Grant) -> core::Grant {
+    core::Grant {
+        id: grant.id().as_str().as_bytes().to_vec(),
+        scope: scope_bytes(grant.scope()),
+        scope_realm: grant.scope().realm().as_str().as_bytes().to_vec(),
+        resources: grant
+            .resources()
+            .iter()
+            .map(|r| r.as_str().as_bytes().to_vec())
+            .collect(),
+        capabilities: grant
+            .capabilities()
+            .iter()
+            .map(|c| capability(*c))
+            .collect(),
+        valid_from: grant.validity().valid_from().get(),
+        expires: grant.validity().expires().get(),
+    }
+}
+
+/// Grants for one realm under one policy.
 pub struct Authority {
-    realm: RealmId,
-    policy: PolicyDigest,
+    inner: core::Authority,
+    /// The typed grants, in the core's order (oldest first).
+    typed: Vec<Grant>,
+    /// The typed clock; always equal to `inner.now`.
     now: EpochSeconds,
-    grants: Vec<Installed>,
 }
 
 impl Authority {
     pub fn new(realm: RealmId, policy: PolicyDigest, now: EpochSeconds) -> Self {
         Self {
-            realm,
-            policy,
+            inner: core::Authority {
+                realm: realm.as_str().as_bytes().to_vec(),
+                policy: policy.as_str().as_bytes().to_vec(),
+                now: now.get(),
+                grants: Vec::new(),
+            },
+            typed: Vec::new(),
             now,
-            grants: Vec::new(),
         }
     }
     pub fn now(&self) -> EpochSeconds {
         self.now
     }
-    /// Newest first, including revoked grants.
-    pub fn grants(&self) -> &[Installed] {
-        &self.grants
+    /// Newest first (Lean's order), including revoked grants.
+    pub fn grants(&self) -> Vec<Installed> {
+        self.typed
+            .iter()
+            .zip(&self.inner.grants)
+            .rev()
+            .map(|(grant, installed)| Installed {
+                grant: grant.clone(),
+                envelope: BlobDigest::from_digest(installed.envelope),
+                revoked: installed.revoked,
+            })
+            .collect()
     }
 
     /// Lean `advanceTime`: time never moves backwards.
     pub fn advance(&mut self, time: EpochSeconds) -> Result<(), Refusal> {
-        if time < self.now {
-            return Err(Refusal::ClockRewind);
-        }
+        self.inner.advance(time.get()).map_err(refusal)?;
         self.now = time;
         Ok(())
     }
@@ -97,67 +161,46 @@ impl Authority {
         authorization: Authorization,
         retained: &BTreeSet<BlobDigest>,
     ) -> Result<(), Refusal> {
-        let grant = &authorization.grant;
-        let validity = grant.validity();
-        let rules = [
-            (authorization.realm == self.realm, Refusal::ForeignRealm),
-            (
-                grant.scope().realm() == &self.realm,
-                Refusal::ForeignBindingRealm,
-            ),
-            (authorization.policy == self.policy, Refusal::StalePolicy),
-            (
-                retained.contains(&authorization.envelope),
-                Refusal::UnretainedEnvelope,
-            ),
-            (
-                !self.grants.iter().any(|g| g.grant.id() == grant.id()),
-                Refusal::DuplicateGrant,
-            ),
-            (validity.valid_from() <= self.now, Refusal::NotYetValid),
-            (self.now < validity.expires(), Refusal::Expired),
-        ];
-        if let Some((_, refusal)) = rules.into_iter().find(|(ok, _)| !ok) {
-            return Err(refusal);
-        }
-        self.grants.insert(
-            0,
-            Installed {
-                grant: authorization.grant,
-                envelope: authorization.envelope,
-                revoked: false,
-            },
-        );
+        let retained: Vec<[u8; 32]> = retained.iter().map(|d| *d.as_digest()).collect();
+        let core_authorization = core::Authorization {
+            realm: authorization.realm.as_str().as_bytes().to_vec(),
+            policy: authorization.policy.as_str().as_bytes().to_vec(),
+            grant: core_grant(&authorization.grant),
+            envelope: *authorization.envelope.as_digest(),
+        };
+        self.inner
+            .install(core_authorization, &retained)
+            .map_err(refusal)?;
+        self.typed.push(authorization.grant);
         Ok(())
     }
 
     /// Lean `revokeGrant`: marks every grant with this id revoked; an unknown
     /// id changes nothing. Revocation is never refused.
     pub fn revoke(&mut self, id: &GrantId) {
-        for installed in self.grants.iter_mut().filter(|g| g.grant.id() == id) {
-            installed.revoked = true;
-        }
+        self.inner.revoke(id.as_str().as_bytes());
     }
 
     /// Lean `currentGrant`: the newest unrevoked grant for exactly this run
-    /// scope that is valid now. A newer grant shadows older ones even when it
-    /// covers less; there is no fallback search.
+    /// scope that is valid now; a newer grant shadows older ones.
     pub fn current(&self, scope: &Scope) -> Option<&Grant> {
-        self.grants
-            .iter()
-            .find(|g| {
-                g.grant.scope() == scope && !g.revoked && g.grant.validity().contains(self.now)
-            })
-            .map(|g| &g.grant)
+        core::current(&self.inner.grants, &scope_bytes(scope), self.inner.now)
+            .and_then(|i| self.typed.get(i))
     }
 
-    /// The grant conjunct of Lean `intentReady`: the current grant carries the
-    /// capability and every requested resource. An empty request is covered;
+    /// The grant conjunct of Lean `intentReady`. An empty request is covered;
     /// callers that act on resources must refuse empty sets themselves.
-    pub fn covers(&self, scope: &Scope, capability: Capability, resources: &[ResourceId]) -> bool {
-        self.current(scope).is_some_and(|g| {
-            g.capabilities().contains(&capability)
-                && resources.iter().all(|r| g.resources().contains(r))
-        })
+    pub fn covers(&self, scope: &Scope, capability_: Capability, resources: &[ResourceId]) -> bool {
+        let resources: Vec<Vec<u8>> = resources
+            .iter()
+            .map(|r| r.as_str().as_bytes().to_vec())
+            .collect();
+        core::covers(
+            &self.inner.grants,
+            &scope_bytes(scope),
+            self.inner.now,
+            capability(capability_),
+            &resources,
+        )
     }
 }

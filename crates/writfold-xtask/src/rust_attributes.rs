@@ -84,6 +84,8 @@ fn known(name: &str) -> bool {
             | "expect"
             | "repr"
             | "inline"
+            // crate-level `#![no_std]` (writfold-core) generates no declarations
+            | "no_std"
             | "cold"
             | "must_use"
             | "deprecated"

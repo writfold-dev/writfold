@@ -4,8 +4,9 @@ use std::path::Path;
 
 fn allowed(name: &str) -> Option<&'static [&'static str]> {
     Some(match name {
-        "writfold-domain" => &[],
-        "writfold-kernel" | "writfold-protocol" => &["writfold-domain"],
+        "writfold-domain" | "writfold-core" => &[],
+        "writfold-kernel" => &["writfold-domain", "writfold-core"],
+        "writfold-protocol" => &["writfold-domain"],
         "writfold-wire" => &["writfold-domain", "writfold-kernel"],
         "writfold-sources" | "writfold-dolt" | "writfold-catalog" => {
             &["writfold-domain", "writfold-wire"]
