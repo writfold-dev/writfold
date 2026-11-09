@@ -519,6 +519,106 @@
     "public_alpha_available": false,
     "full_release_gates_passed": []
   },
+  "aeneas_kernel_proofs": {
+    "status": "scoped_component_pass",
+    "scope": "Aeneas adoption for pure kernels: crates/writfold-core ledger and grant-authority kernels proved over their Charon/Aeneas translation (history_check = historyCheck; ready = AppendReady in refusal order; refused append/installation changes nothing; current grant = newest live grant; coverage = intentReady grant conjunct; clock never rewinds); writfold-kernel ledger/authority are typed adapters over the proved code. Not proved: revocation, append success shape, adapters, edit-flow validator, procedure admission; specs restate the calculus in the proofs project (Lean v4.35) rather than linking formal/ (v4.21).",
+    "owner_decision": "2026-11-09: adopt Aeneas fully for pure kernels in all repositories",
+    "source_commit": "fcf7fcd",
+    "toolchain": {
+      "charon": "8cae8fd1905946de61147a65ecdd7122cc6b491b",
+      "aeneas": "nightly-2026.11.07-c5eb4a2",
+      "lean": "v4.35.0"
+    },
+    "receipts": {
+      "quality": {
+        "path": "~/.local/share/writfold/evidence/aeneas-ledger-2la8LhHd/quality-004.json",
+        "sha256": "379830256d77f85c8ae4356abe7180ce0399d28c89e8ca7c591dacedcdd32092",
+        "bytes": 746265
+      },
+      "unit": {
+        "path": "~/.local/share/writfold/evidence/aeneas-ledger-2la8LhHd/unit-004.json",
+        "sha256": "ed1d112a83ec6df205635b99537d52eec1b735352bd59acd36f6e881e850f5ce",
+        "bytes": 316180
+      },
+      "verus": {
+        "path": "~/.local/share/writfold/evidence/aeneas-ledger-2la8LhHd/verus-004.json",
+        "sha256": "d73fc62cd51d907f59d9124043cafb5edf8e15f92f0f3416740bde9f80ac7991",
+        "bytes": 3796312
+      },
+      "proofs_gate_log": {
+        "path": "~/.local/share/writfold/evidence/aeneas-proofs-Hxx3majK/proofs-gate.log",
+        "sha256": "7221c15c89b298752c833a185689913de97b331eb675625c7656bbfcacc7ee18",
+        "bytes": 18796
+      }
+    },
+    "proofs": {
+      "theorems": 51,
+      "required_claims": 11,
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "mutants_rejected": "15/15"
+    },
+    "retained_failed_attempts": [
+      {
+        "gate": "quality",
+        "receipt": {
+          "path": "~/.local/share/writfold/evidence/aeneas-ledger-2la8LhHd/quality-001.json",
+          "sha256": "b699b77dab8fda6722229229491bb8d48d42458c27ab5a4508f18f583e38fb0f",
+          "bytes": 745393
+        },
+        "cause": "#![no_std] unclassified by the attribute audit"
+      },
+      {
+        "gate": "verus",
+        "receipt": {
+          "path": "~/.local/share/writfold/evidence/aeneas-ledger-2la8LhHd/verus-001.json",
+          "sha256": "1a723e528cbfb90f1646dce71f3b72042c2d581d05402bee2e0a1ddefc4fec75",
+          "bytes": 488527
+        },
+        "cause": "same source admission check"
+      },
+      {
+        "gate": "quality",
+        "receipt": {
+          "path": "~/.local/share/writfold/evidence/aeneas-ledger-2la8LhHd/quality-002.json",
+          "sha256": "3426b7bcccb3b2690336c3e11909a5076cb6c596599b743250753fb1a0ca13ea",
+          "bytes": 745745
+        },
+        "cause": "no_std added to only one of the two attribute lists"
+      },
+      {
+        "gate": "verus",
+        "receipt": {
+          "path": "~/.local/share/writfold/evidence/aeneas-ledger-2la8LhHd/verus-002.json",
+          "sha256": "574432fd069b2d5103cb8b01476adec4f44f8b91b4ccf87ebaa593adf339734e",
+          "bytes": 489160
+        },
+        "cause": "same"
+      },
+      {
+        "gate": "quality",
+        "receipt": {
+          "path": "~/.local/share/writfold/evidence/aeneas-ledger-2la8LhHd/quality-003.json",
+          "sha256": "678ffc5c939e0078140f8a61ebc847b9d0c6474729b25b4a6718f950eedaeb8c",
+          "bytes": 745745
+        },
+        "cause": "writfold-core manifest did not forbid unsafe_code"
+      },
+      {
+        "gate": "proofs",
+        "cause": "first mutant calibration: material mutant removed a parameter and broke the wrapper theorem too; replaced by a signature-preserving mutant"
+      }
+    ],
+    "verification": {
+      "workspace_tests": 487,
+      "lean_differential": "ledger 31 steps and grants 79 steps still agree through the proved kernels"
+    },
+    "public_alpha_available": false,
+    "full_release_gates_passed": []
+  },
   "publication_history_audit": {
     "status": "inspected_not_cleared_for_publication",
     "record": {
