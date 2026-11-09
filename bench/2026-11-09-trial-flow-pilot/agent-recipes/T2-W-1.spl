@@ -1,0 +1,6 @@
+edit "src/report.rs" {
+  @open := one text "format!("
+  @close := one text "unwrap_or_default(),\n    )"
+  before @open insert "sanitize("
+  after @close insert ")"
+}

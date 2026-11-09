@@ -1,0 +1,9 @@
+You are working in the Git repository at <trial>/repo.
+
+Task: In src/log.rs, change the line `level = "debug"` to `level = "info"`. This instruction assumes there is exactly one such line in the file. If that assumption does not hold, make no change at all and report why.
+
+Rules:
+- Put any scratch files in <trial>/work, never in the repository.
+- Use your normal file tools (Read, Edit, Write, Bash) to change the files in the repository.
+- Do not read anything else outside <trial> except where stated above.
+- When finished, reply with exactly one line: `DONE` if the change was made, or `REFUSED: <reason>` if you made no change.

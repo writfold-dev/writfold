@@ -1,0 +1,13 @@
+You are working in the Git repository at <trial>/repo.
+
+Task: In src/log.rs, change the line `level = "debug"` to `level = "info"`. This instruction assumes there is exactly one such line in the file. If that assumption does not hold, make no change at all and report why.
+
+Rules:
+- Put any scratch files in <trial>/work, never in the repository.
+- Make the change through Writfold, an evidence-and-approval harness: you must not modify files in the repository directly. Write a Splicery recipe (a byte-exact edit language) in <trial>/work, then run, in order:
+  <writfold> trial prepare --repo <trial>/repo --file <relative-path> --recipe <recipe>
+  <writfold> trial approve <run>
+  <writfold> trial apply <run>
+with WRITFOLD_STATE=<trial>/state set in the environment. prepare prints the run id; if prepare refuses (for example an ambiguous selection), fix the recipe or, if the task's assumption does not hold, stop. Writfold applies the edit in its own worktree under <trial>/state/worktrees/<run>, never in <trial>/repo. Running `<writfold> trial help` lists the commands. Splicery's language reference is <splicery checkout>/spec/language.md and example recipes are in <splicery checkout>/examples/; you may read those.
+- Do not read anything else outside <trial> except where stated above.
+- When finished, reply with exactly one line: `DONE` if the change was made, or `REFUSED: <reason>` if you made no change.

@@ -1,0 +1,201 @@
+{
+ "schema": "writfold-trial-flow-pilot/1",
+ "date": "2026-11-09",
+ "kind": "debug pilot (not a headline result)",
+ "model": "Claude Sonnet via Claude Code subagents (alias 'sonnet'; exact backend revision not exposed)",
+ "usage_source": "Claude Code subagent usage report (total per trial, includes fixed host context); not raw provider usage events",
+ "arms": {
+  "A": "ordinary agent file tools editing the checkout",
+  "W": "writfold trial prepare/approve/apply; the agent also ran approve, which in real use is the operator's step; trial init done by the harness outside the measured cost"
+ },
+ "writfold_binary": "built from the trial flow with claims and recovery (public repo, 9 Nov 2026)",
+ "repeats": 1,
+ "summary": {
+  "A": {
+   "trials": 6,
+   "successes": 6,
+   "subagent_tokens": 203843,
+   "tool_uses": 24,
+   "duration_ms": 99386
+  },
+  "W": {
+   "trials": 6,
+   "successes": 6,
+   "subagent_tokens": 235976,
+   "tool_uses": 35,
+   "duration_ms": 145342
+  },
+  "W_vs_A_token_ratio": 1.1576,
+  "W_checkout_untouched": 6,
+  "W_preparations_not_approved": 1
+ },
+ "trials": [
+  {
+   "trial": "T1-A",
+   "task": "T1",
+   "arm": "A",
+   "success": true,
+   "wrong_or_extra": [],
+   "reply": "DONE",
+   "subagent_tokens": 33898,
+   "tool_uses": 4,
+   "duration_ms": 10223,
+   "ledger": []
+  },
+  {
+   "trial": "T1-W",
+   "task": "T1",
+   "arm": "W",
+   "success": true,
+   "checkout_untouched": true,
+   "worktree_correct": true,
+   "runs": 1,
+   "ledger": [
+    "run run.1794206686.ffa285: 4 record(s), history validated\n  1. prepared  src/client.rs at 91e8136872a6a9213973abc700c675fd4eff85ff, candidate 366 bytes\n  2. approved  operator grant + signed approval retained\n  3. claimed   durable claim before touching the file\n  4. applied   candidate installed in <trials>/T1-W/state/worktrees/run.1794206686.ffa285"
+   ],
+   "reply": "DONE",
+   "subagent_tokens": 39101,
+   "tool_uses": 6,
+   "duration_ms": 24260
+  },
+  {
+   "trial": "T2-A",
+   "task": "T2",
+   "arm": "A",
+   "success": true,
+   "wrong_or_extra": [],
+   "reply": "DONE",
+   "subagent_tokens": 34743,
+   "tool_uses": 5,
+   "duration_ms": 12831,
+   "ledger": []
+  },
+  {
+   "trial": "T2-W",
+   "task": "T2",
+   "arm": "W",
+   "success": true,
+   "checkout_untouched": true,
+   "worktree_correct": true,
+   "runs": 1,
+   "ledger": [
+    "run run.1794206694.eb4428: 4 record(s), history validated\n  1. prepared  src/report.rs at 91e8136872a6a9213973abc700c675fd4eff85ff, candidate 908 bytes\n  2. approved  operator grant + signed approval retained\n  3. claimed   durable claim before touching the file\n  4. applied   candidate installed in <trials>/T2-W/state/worktrees/run.1794206694.eb4428"
+   ],
+   "reply": "DONE",
+   "subagent_tokens": 40749,
+   "tool_uses": 7,
+   "duration_ms": 35417
+  },
+  {
+   "trial": "T3-A",
+   "task": "T3",
+   "arm": "A",
+   "success": true,
+   "wrong_or_extra": [],
+   "reply": "DONE",
+   "subagent_tokens": 33820,
+   "tool_uses": 4,
+   "duration_ms": 13074,
+   "ledger": []
+  },
+  {
+   "trial": "T3-W",
+   "task": "T3",
+   "arm": "W",
+   "success": true,
+   "checkout_untouched": true,
+   "worktree_correct": true,
+   "runs": 1,
+   "ledger": [
+    "run run.1794206685.d5491b: 4 record(s), history validated\n  1. prepared  config/routes.conf at 1ec9bf227d0f52bef15dd7948706c7ccd57a2e44, candidate 129 bytes\n  2. approved  operator grant + signed approval retained\n  3. claimed   durable claim before touching the file\n  4. applied   candidate installed in <trials>/T3-W/state/worktrees/run.1794206685.d5491b"
+   ],
+   "reply": "DONE",
+   "subagent_tokens": 39208,
+   "tool_uses": 6,
+   "duration_ms": 21979
+  },
+  {
+   "trial": "T4-A",
+   "task": "T4",
+   "arm": "A",
+   "success": true,
+   "wrong_or_extra": [],
+   "reply": "DONE",
+   "subagent_tokens": 33893,
+   "tool_uses": 4,
+   "duration_ms": 10728,
+   "ledger": []
+  },
+  {
+   "trial": "T4-W",
+   "task": "T4",
+   "arm": "W",
+   "success": true,
+   "checkout_untouched": true,
+   "worktree_correct": true,
+   "runs": 2,
+   "ledger": [
+    "run run.1794206683.6eeec8: 1 record(s), history validated\n  1. prepared  src/lib.rs at 1ec9bf227d0f52bef15dd7948706c7ccd57a2e44, candidate 415 bytes",
+    "run run.1794206690.c125e2: 4 record(s), history validated\n  1. prepared  src/lib.rs at 1ec9bf227d0f52bef15dd7948706c7ccd57a2e44, candidate 415 bytes\n  2. approved  operator grant + signed approval retained\n  3. claimed   durable claim before touching the file\n  4. applied   candidate installed in <trials>/T4-W/state/worktrees/run.1794206690.c125e2"
+   ],
+   "reply": "DONE",
+   "subagent_tokens": 40013,
+   "tool_uses": 7,
+   "duration_ms": 29281
+  },
+  {
+   "trial": "T5-A",
+   "task": "T5",
+   "arm": "A",
+   "success": true,
+   "wrong_or_extra": [],
+   "reply": "DONE",
+   "subagent_tokens": 33901,
+   "tool_uses": 4,
+   "duration_ms": 43726,
+   "ledger": []
+  },
+  {
+   "trial": "T5-W",
+   "task": "T5",
+   "arm": "W",
+   "success": true,
+   "checkout_untouched": true,
+   "worktree_correct": true,
+   "runs": 1,
+   "ledger": [
+    "run run.1794206688.873f2b: 4 record(s), history validated\n  1. prepared  config/limits.toml at 1ec9bf227d0f52bef15dd7948706c7ccd57a2e44, candidate 62 bytes\n  2. approved  operator grant + signed approval retained\n  3. claimed   durable claim before touching the file\n  4. applied   candidate installed in <trials>/T5-W/state/worktrees/run.1794206688.873f2b"
+   ],
+   "reply": "DONE",
+   "subagent_tokens": 39030,
+   "tool_uses": 6,
+   "duration_ms": 25147
+  },
+  {
+   "trial": "T6-A",
+   "task": "T6",
+   "arm": "A",
+   "success": true,
+   "wrong_or_extra": [],
+   "reply": "REFUSED: src/log.rs contains two lines matching `level = \"debug\"` (lines 3 and 10), not exactly one, so I made no change.",
+   "subagent_tokens": 33588,
+   "tool_uses": 3,
+   "duration_ms": 8804,
+   "ledger": []
+  },
+  {
+   "trial": "T6-W",
+   "task": "T6",
+   "arm": "W",
+   "success": true,
+   "checkout_untouched": true,
+   "worktree_correct": false,
+   "runs": 0,
+   "ledger": [],
+   "reply": "REFUSED: src/log.rs contains two lines matching `level = \"debug\"` (lines 3 and 10), not exactly one, so I made no change.",
+   "subagent_tokens": 37875,
+   "tool_uses": 3,
+   "duration_ms": 9258
+  }
+ ]
+}

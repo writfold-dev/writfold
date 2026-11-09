@@ -1,0 +1,9 @@
+You are working in the Git repository at <trial>/repo.
+
+Task: In src/client.rs, wrap the `open(url)` call inside the function `connect` so that line becomes `let conn = with_retry(3, || open(url))?;`. Leave every other `open(url)` call (in `probe` and `reconnect`) unchanged.
+
+Rules:
+- Put any scratch files in <trial>/work, never in the repository.
+- Use your normal file tools (Read, Edit, Write, Bash) to change the files in the repository.
+- Do not read anything else outside <trial> except where stated above.
+- When finished, reply with exactly one line: `DONE` if the change was made, or `REFUSED: <reason>` if you made no change.

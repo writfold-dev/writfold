@@ -1,0 +1,7 @@
+edit "src/lib.rs" {
+  @a := one line "// imports begin"
+  @b := one line "// imports end"
+  @window := between @a and @b
+  @anchor := one line "use crate::config::Config;" within @window
+  after @anchor insert lines like @anchor ["use crate::policy::Policy;"]
+}

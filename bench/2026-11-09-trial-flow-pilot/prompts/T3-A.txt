@@ -1,0 +1,9 @@
+You are working in the Git repository at <trial>/repo.
+
+Task: In config/routes.conf, every active route line has the form `route <VERB> <PATH>`. Remove the leading `route ` keyword from each active route line so it reads `<VERB> <PATH>`. Do not modify comment lines (lines starting with `#`) or any other line.
+
+Rules:
+- Put any scratch files in <trial>/work, never in the repository.
+- Use your normal file tools (Read, Edit, Write, Bash) to change the files in the repository.
+- Do not read anything else outside <trial> except where stated above.
+- When finished, reply with exactly one line: `DONE` if the change was made, or `REFUSED: <reason>` if you made no change.
