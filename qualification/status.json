@@ -811,6 +811,24 @@
       }
     ]
   },
+  "trial_retain_component": {
+    "status": "scoped_component_pass",
+    "scope": "writfold trial retain: exact bytes of a file at a full pinned commit id (refs, abbreviations and HEAD refused) retained in the trial state and bound as a writfold-citation/1 binding descriptor; prepare refuses a Weft report whose asset bindings are not retained, untampered bindings; show reports cited evidence as its own badge. Equal text at two positions yields two bindings. Exact retention only: no search, corpus or grounding claim.",
+    "source_commit": "7faf0db",
+    "receipts": {
+      "quality": {
+        "path": "~/.local/share/writfold/evidence/retain-PAYM7gTI/quality-001.json",
+        "sha256": "848ec4c8ac48e6b209589f372e5a01fed1ea91189d699ddd3633fba58bd032a9",
+        "bytes": 736982
+      },
+      "unit": {
+        "path": "~/.local/share/writfold/evidence/retain-PAYM7gTI/unit-001.json",
+        "sha256": "1b45800625a31a59e7bce6af240a7257900c77295293135c750ed161b06507af",
+        "bytes": 319223
+      }
+    },
+    "retained_failed_attempts": []
+  },
   "publication_history_audit": {
     "status": "inspected_not_cleared_for_publication",
     "record": {
