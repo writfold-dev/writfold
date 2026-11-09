@@ -466,6 +466,59 @@
     "public_alpha_available": false,
     "full_release_gates_passed": []
   },
+  "trial_claims_recovery_component": {
+    "status": "scoped_component_pass",
+    "scope": "Trial-profile claims and recovery: apply records a durable Claimed before touching the file and exactly one outcome (Applied, or Abandoned when the original was never replaced); 'writfold trial recover' settles a claim without an outcome from the file's exact bytes and never re-dispatches; not staging-file cleanup or any ALPHA gate.",
+    "source_commit": "e64f658",
+    "receipts": {
+      "quality": {
+        "path": "~/.local/share/writfold/evidence/trial-recovery-0WWyRfxt/quality-002.json",
+        "sha256": "288d047da7b58f6ee962ce31e2c0c68465dc694dcade0daf34a9c60ab9186c25",
+        "bytes": 740156
+      },
+      "unit": {
+        "path": "~/.local/share/writfold/evidence/trial-recovery-0WWyRfxt/unit-002.json",
+        "sha256": "db29d0f0797ba4c6ee72998aa86df71dd6f38cd12073b6541fbe4fa3393e1ee8",
+        "bytes": 308309
+      },
+      "verus": {
+        "path": "~/.local/share/writfold/evidence/trial-recovery-0WWyRfxt/verus-002.json",
+        "sha256": "7e9e19cd3e061b09812a0a2d626ed132fc5bbefd49c2d9d341fa576e855432af",
+        "bytes": 3765460
+      }
+    },
+    "retained_failed_attempts": [
+      {
+        "gate": "quality",
+        "receipt": {
+          "path": "~/.local/share/writfold/evidence/trial-recovery-0WWyRfxt/quality-001.json",
+          "sha256": "585144f8ba01912beb81c3f13ce518bbee2e07324f2eeef674537e7bb6e429c4",
+          "bytes": 739629
+        },
+        "cause": "apply() exceeded the 80-line function budget"
+      },
+      {
+        "gate": "verus",
+        "receipt": {
+          "path": "~/.local/share/writfold/evidence/trial-recovery-0WWyRfxt/verus-001.json",
+          "sha256": "b3a79419f7968e746dfd349e220b22ed197663fd2182c570c7fae98c9f13c061",
+          "bytes": 480200
+        },
+        "cause": "source admission ran the same budget check"
+      }
+    ],
+    "verification": {
+      "workspace_tests": 487,
+      "detected_check_removals": 4,
+      "defensive_only_checks": [
+        "apply's explicit claimed-without-outcome message",
+        "outcome rule that the third record is the claim"
+      ]
+    },
+    "agent_pilot": "bench/2026-11-09-trial-flow-pilot (debug pilot, not a headline result)",
+    "public_alpha_available": false,
+    "full_release_gates_passed": []
+  },
   "publication_history_audit": {
     "status": "inspected_not_cleared_for_publication",
     "record": {
