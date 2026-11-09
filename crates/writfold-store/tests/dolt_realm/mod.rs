@@ -21,17 +21,23 @@ const IDENTITY: [(&str, &str); 4] = [
     ("epoch", "epoch-1"),
 ];
 
+#[derive(serde::Deserialize)]
+struct Profile {
+    candidate: Candidate,
+}
+
+#[derive(serde::Deserialize)]
+struct Candidate {
+    executable: PathBuf,
+    sha256: String,
+}
+
 /// Admitted executable path and SHA-256 from the integration profile.
 pub fn admitted_candidate() -> Result<(PathBuf, String)> {
     let profile = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../qualification/dolt-integration-profile.json");
-    let profile: serde_json::Value = serde_json::from_slice(&fs::read(profile)?)?;
-    let candidate = &profile["candidate"];
-    let path = candidate["executable"]
-        .as_str()
-        .ok_or("candidate executable")?;
-    let digest = candidate["sha256"].as_str().ok_or("candidate sha256")?;
-    Ok((PathBuf::from(path), digest.to_owned()))
+    let profile: Profile = serde_json::from_slice(&fs::read(profile)?)?;
+    Ok((profile.candidate.executable, profile.candidate.sha256))
 }
 
 pub struct Realm {
