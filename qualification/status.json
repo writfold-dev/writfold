@@ -952,6 +952,29 @@
     },
     "retained_failed_attempts": []
   },
+  "tuft_v0_component": {
+    "status": "scoped_component_pass",
+    "scope": "Tuft v0 (docs/tuft/language.md): pure crate (lexer, parser, checker, IR, stable diagnostics T001-T301); writfold tuft run lowers find (exact text or bounded regex over one full pinned commit, path prefix, measured Coverage) through the B0 storage trait onto a read-only Git-tree backend; retain produces the same writfold-citation/1 bindings as trial retain; project/sort/limit/emit render a deterministic view with an envelope, a documented ceil((bytes+1)/4) token estimate, explicit omissions and a resume cursor. similar/rank/follow parse and refuse as Unsupported naming Omnigraph. p95 on a 100k-file repository: text find with excerpts 435 ms, regex over every file 798 ms, retain of 50 hits 759 ms. Includes a supervised-runner fix (drain pipes instead of one 8 KiB read per ms) that cut whole-tree reads from ~4.5 s to <0.3 s. Not semantic search, not a corpus service; the cursor is a serialized string, not yet the session-bound NoticeCursor; the Git backend is not run through the kind-based B0 conformance dataset.",
+    "source_commit": "cdf9172",
+    "receipts": {
+      "quality": {
+        "path": "~/.local/share/writfold/evidence/tuft-eBnj1WhR/quality-001.json",
+        "sha256": "8129eace5d02bc93099008ed4b1cbe87b456f1f0c2d6cce4b944c00784b9c356",
+        "bytes": 757008
+      },
+      "unit": {
+        "path": "~/.local/share/writfold/evidence/tuft-eBnj1WhR/unit-001.json",
+        "sha256": "6abd31a9e40af1ca482184f93da94d47fa2e5be0af1052d0d262d59deaa49190",
+        "bytes": 342770
+      },
+      "stdio_control": {
+        "path": "~/.local/share/writfold/evidence/tuft-eBnj1WhR/stdio-control-001.json",
+        "sha256": "0160c0da57d6ae655930d84df86edc7a45c4ace7564f5d6afd3dd0bf10c551f9",
+        "bytes": 378554
+      }
+    },
+    "retained_failed_attempts": []
+  },
   "publication_history_audit": {
     "status": "inspected_not_cleared_for_publication",
     "record": {
