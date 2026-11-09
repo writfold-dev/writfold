@@ -14,6 +14,8 @@ writfold-protocol = { path = "../writfold-protocol" }
 writfold-runtime = { path = "../writfold-runtime" }
 writfold-kernel = { path = "../writfold-kernel" }
 writfold-store = { path = "../writfold-store" }
+writfold-sources = { path = "../writfold-sources" }
+ed25519-dalek.workspace = true
 writfold-wire = { path = "../writfold-wire" }
 sha2.workspace = true
 thiserror.workspace = true

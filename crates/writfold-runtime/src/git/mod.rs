@@ -38,6 +38,7 @@ mod objects;
 mod preparation;
 mod profile;
 mod publication;
+mod trial;
 mod write_objects;
 mod writer;
 mod writer_profile;
@@ -50,6 +51,7 @@ pub use error::GitError;
 pub use ledger::{LedgerCommit, ledger_ref};
 pub use objects::{GitBlob, GitEntry};
 use std::time::Duration;
+pub use trial::{trial_worktree_add, trial_worktree_remove};
 use writfold_domain::ByteCount;
 
 /// Per-command output limits, per-blob bytes, and a total read deadline.

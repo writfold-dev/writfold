@@ -36,7 +36,27 @@ printf '%s\n' \
 
 `writfold serve` speaks newline-delimited JSON-RPC 2.0 on stdio. Today it
 implements session start and shutdown only and refuses every other method; it
-does not read a corpus or write anything yet.
+does not read a corpus yet.
+
+### Prepare, approve and apply one edit
+
+The [trial profile](docs/writfold/trial-profile.md) runs the connected flow on
+any Git repository. Writfold makes its own worktree of your repository's HEAD,
+replays a [Splicery](https://github.com/writfold-dev/splicery) recipe through
+the pinned kernel, and installs the result only after a signed approval and a
+current grant are verified. Every step is recorded in a validated ledger:
+
+```sh
+export WRITFOLD_STATE=/tmp/writfold-trial
+target/release/writfold trial init
+target/release/writfold trial prepare --repo /path/to/repo --file src/lib.rs --recipe edit.spl
+target/release/writfold trial approve <run>
+target/release/writfold trial apply <run>
+git -C "$WRITFOLD_STATE/worktrees/<run>" diff
+```
+
+Your own checkout is never written. This is a cooperating single-user trial,
+not the hardened alpha path.
 
 `cargo test --workspace` runs the Rust test suite, including checks that the
 Rust kernels agree with cases exported from the Lean model.

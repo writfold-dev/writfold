@@ -46,6 +46,21 @@ impl<'a> GitExecutable<'a> {
         Ok(Self { opened, supervisor })
     }
 
+    /// The content digest of an ELF executable, for a profile that pins the
+    /// bytes it observes (`writfold-trial-worktree/1`). Observation is not
+    /// qualification: it says these bytes were seen, not that they behave.
+    pub fn observe(file: &PinnedFile, byte_limit: ByteCount) -> Result<ContentDigest, GitError> {
+        let opened = file.open_read()?;
+        opened.check_unchanged()?;
+        if opened.size() > byte_limit.get() {
+            return Err(GitError::Budget {
+                stream: "executable",
+                limit: byte_limit.get(),
+            });
+        }
+        Ok(opened.revision(byte_limit)?)
+    }
+
     pub(crate) fn path(&self) -> Result<PathBuf, GitError> {
         self.opened.check_unchanged()?;
         Ok(descriptor_path(self.opened.descriptor()))
