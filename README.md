@@ -8,16 +8,18 @@ not inference.** Writfold keeps evidence, support, freshness and permission to a
 as separate, recorded steps, so an agent cannot quietly turn "I found a document"
 into "I am allowed to change the code".
 
-> **Early development.** Writfold is being built in public. Most of the system
-> exists as separately tested parts; the connected prepare → approve → apply flow
-> is not wired up yet. See [writfold.dev](https://writfold.dev/) for the overview
-> and [status](https://writfold.dev/status.html) for what runs today.
+> **Preview (`v0.1.0-dev.1`).** Writfold is built in public. A cooperating,
+> single-user trial runs end to end today: find and retain exact evidence, bind a
+> Weft report, prepare a Splicery edit, approve, apply and recover. It is not a
+> sandbox, not an installable release and not a knowledge service yet. See
+> [writfold.dev](https://writfold.dev/) and [status](https://writfold.dev/status.html).
 
-## The three tools
+## The family
 
 | Tool | Job | Try it |
 |---|---|---|
-| **Writfold** (this repo) | Holds exact evidence and the approval policy; the only part that may write files | `writfold serve` session, below |
+| **Writfold** (this repo) | Holds exact evidence and the approval policy; the only part that may write files | trial flow, below |
+| **Tuft** (this repo, `crates/tuft`) | Finds and projects exact evidence from a pinned commit under a token budget | [Tuft](#find-and-cite-exact-evidence-with-tuft), below |
 | [**Weft**](https://github.com/writfold-dev/weft) | Checks what declared assumptions actually support: entailed, refuted or open | [Weft: Try it](https://github.com/writfold-dev/weft#try-it) |
 | [**Splicery**](https://github.com/writfold-dev/splicery) | Describes byte-exact edits and previews the result without touching the file | [Splicery: Try it](https://github.com/writfold-dev/splicery#try-it) |
 
@@ -28,15 +30,22 @@ first build):
 
 ```sh
 cargo build --release -p writfold
-printf '%s\n' \
-  '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocol_version":"2"}}' \
-  '{"jsonrpc":"2.0","id":2,"method":"shutdown"}' \
-  | target/release/writfold serve
 ```
 
-`writfold serve` speaks newline-delimited JSON-RPC 2.0 on stdio. Today it
-implements session start and shutdown only and refuses every other method; it
-does not read a corpus yet.
+### What works today
+
+| Command | What it does | Evidence |
+|---|---|---|
+| `writfold trial prepare / approve / apply / recover / show` | One edit through a durable, validated ledger in Writfold's own sparse worktree; never your checkout | [trial profile](docs/writfold/trial-profile.md), [adversarial campaign](bench/2026-11-09-adversarial/) |
+| `writfold trial approve --require CHECK` | Refuses unless each named check of the bound Weft report is `entailed` (recorded as hypothetical, never as grounded) | proved: `required_entailed_spec` |
+| `writfold trial retain` | Keeps exact bytes of a file at a full commit id as a citation; reports citing anything else are refused | [trial profile](docs/writfold/trial-profile.md) |
+| `writfold tuft run` | Exact find, retain, project and emit over one pinned commit | [Tuft v0](docs/tuft/language.md) |
+| `writfold serve` | JSON-RPC 2.0 on stdio; with `writfold.trial/1`, `trial/show`, `trial/retain` and `trial/prepare`. Approval stays CLI-only | [trial profile](docs/writfold/trial-profile.md#through-serve) |
+
+Every agent-facing operation is budgeted at 1 s p95 (5 s ceiling); on a
+100,000-file repository every trial operation's p95 is under 0.5 s
+([bench](bench/2026-11-09-latency/)). The ledger, grant, revocation, recovery and
+required-check decisions are proved over the shipped Rust ([how](docs/writfold/aeneas.md)).
 
 ### Prepare, approve and apply one edit
 
