@@ -189,21 +189,25 @@ fn communicate(
         if sent == input.len() {
             child.stdin.take();
         }
+        let mut progressed = false;
         if let Some(pipe) = &mut child.stdin {
             match pipe.write(&input[sent..]) {
                 Ok(0) => return Err(ProcessError::ClosedStdin),
-                Ok(count) => sent += count,
+                Ok(count) => {
+                    sent += count;
+                    progressed = true;
+                }
                 Err(error) if retryable(&error) => {}
                 Err(error) => return Err(error.into()),
             }
         }
-        read_bounded(
+        progressed |= read_bounded(
             &mut child.stdout,
             &mut stdout,
             budgets.stdout.get(),
             "stdout",
         )?;
-        read_bounded(
+        progressed |= read_bounded(
             &mut child.stderr,
             &mut stderr,
             budgets.stderr.get(),
@@ -216,7 +220,11 @@ fn communicate(
         if exited && child.stdout.is_none() && child.stderr.is_none() {
             return Ok((stdout, stderr));
         }
-        std::thread::sleep(Duration::from_millis(1));
+        // Poll again at once while data moves; back off only when idle, so
+        // large outputs are not paced at one buffer per millisecond.
+        if !progressed {
+            std::thread::sleep(Duration::from_millis(1));
+        }
     }
 }
 
@@ -225,16 +233,34 @@ fn nonblocking(pipe: &impl AsFd) -> Result<(), ProcessError> {
     Ok(())
 }
 
+/// Read what the pipe holds now, up to `limit` total bytes. Returns whether
+/// any bytes (or end of file) were observed.
 fn read_bounded<R: Read>(
     pipe: &mut Option<R>,
     bytes: &mut Vec<u8>,
     limit: u64,
     stream: &'static str,
-) -> Result<(), ProcessError> {
+) -> Result<bool, ProcessError> {
+    let mut progressed = false;
+    while pipe.is_some() {
+        if !read_once(pipe, bytes, limit, stream)? {
+            break;
+        }
+        progressed = true;
+    }
+    Ok(progressed)
+}
+
+fn read_once<R: Read>(
+    pipe: &mut Option<R>,
+    bytes: &mut Vec<u8>,
+    limit: u64,
+    stream: &'static str,
+) -> Result<bool, ProcessError> {
     let Some(reader) = pipe else {
-        return Ok(());
+        return Ok(false);
     };
-    let mut buffer = [0_u8; 8192];
+    let mut buffer = [0_u8; 65536];
     let remaining = limit.saturating_sub(bytes.len() as u64);
     let count = remaining.saturating_add(1).min(buffer.len() as u64) as usize;
     match reader.read(&mut buffer[..count]) {
@@ -263,10 +289,10 @@ fn read_bounded<R: Read>(
             }
             bytes.extend_from_slice(&buffer[..count]);
         }
-        Err(error) if retryable(&error) => {}
+        Err(error) if retryable(&error) => return Ok(false),
         Err(error) => return Err(error.into()),
     }
-    Ok(())
+    Ok(true)
 }
 
 fn drain<A: Read, B: Read>(a: &mut Option<A>, b: &mut Option<B>) -> Result<(), ProcessError> {

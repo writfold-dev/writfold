@@ -80,7 +80,7 @@ impl<'a> Service<'a> {
             self.limits.stdout.get(),
             "stdout",
         )
-        .and_then(|()| {
+        .and_then(|_| {
             read_bounded(
                 &mut self.child.stderr,
                 &mut self.stderr,
@@ -91,7 +91,7 @@ impl<'a> Service<'a> {
         if let Err(ProcessError::Budget { stream, limit }) = &result {
             self.budget_failure = Some((*stream, *limit));
         }
-        result
+        result.map(drop)
     }
 
     pub(crate) fn finish(
