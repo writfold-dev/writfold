@@ -35,18 +35,29 @@ fn history(trial: &Trial, run: &str, event: &Event) -> String {
     }
 }
 
-fn assessment(trial: &Trial, report: &Blob) -> Result<String> {
+/// (evidence, assessment) badges from the bound report.
+fn assessment(trial: &Trial, report: &Blob) -> Result<(String, String)> {
     if report.bytes == 0 {
-        return Ok("none (no Weft report bound)".to_owned());
+        return Ok((
+            "none cited".to_owned(),
+            "none (no Weft report bound)".to_owned(),
+        ));
     }
     let parsed = parse_report(&trial.fetch(report)?, limits()?)?;
+    let evidence = match parsed.assets.len() {
+        0 => "none cited".to_owned(),
+        n => format!("{n} retained excerpt(s) cited by binding digest"),
+    };
     let count = |r: CheckResult| parsed.checks.iter().filter(|c| c.result == r).count();
     let entailed = count(CheckResult::Entailed);
     let refuted = count(CheckResult::Refuted);
     let open = parsed.checks.len() - entailed - refuted;
-    Ok(format!(
-        "{entailed} entailed, {open} open, {refuted} refuted (Weft {}, hypothetical)",
-        parsed.scope
+    Ok((
+        evidence,
+        format!(
+            "{entailed} entailed, {open} open, {refuted} refuted (Weft {}, hypothetical)",
+            parsed.scope
+        ),
     ))
 }
 
@@ -72,7 +83,8 @@ pub fn show(state: &Path, run: &str) -> Result<String> {
         "run {run}: {} record(s), history validated\n",
         loaded.records.len()
     );
-    let (mut assessed, mut approved) = ("none".to_owned(), "none".to_owned());
+    let (mut evidence, mut assessed) = ("none cited".to_owned(), "none".to_owned());
+    let mut approved = "none".to_owned();
     let (mut claim, mut effect) = ("none", "none".to_owned());
     for record in &loaded.records {
         let event = &record.payload;
@@ -82,7 +94,7 @@ pub fn show(state: &Path, run: &str) -> Result<String> {
             history(&trial, run, event)
         ));
         match event {
-            Event::Prepared { report, .. } => assessed = assessment(&trial, report)?,
+            Event::Prepared { report, .. } => (evidence, assessed) = assessment(&trial, report)?,
             Event::Approved { approval: a, .. } => approved = approval(&trial, a)?,
             Event::Claimed { .. } => {
                 claim = "recorded before touching the file";
@@ -100,7 +112,7 @@ pub fn show(state: &Path, run: &str) -> Result<String> {
         }
     }
     out.push_str(&format!(
-        "  evidence    none retained\n  assessment  {assessed}\n  approval    {approved}\n  claim       {claim}\n  effect      {effect}\n"
+        "  evidence    {evidence}\n  assessment  {assessed}\n  approval    {approved}\n  claim       {claim}\n  effect      {effect}\n"
     ));
     Ok(out)
 }

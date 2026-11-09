@@ -138,6 +138,67 @@ fn sparse_pattern(path: &str) -> String {
     pattern
 }
 
+/// The exact bytes of `path` at the full commit id `commit`, with the blob's
+/// native identity. `commit` must name an existing commit by its full object
+/// id; a ref, abbreviation or `HEAD` is refused, so the current checkout is
+/// never substituted for the pinned revision.
+pub fn trial_blob(
+    executable: &GitExecutable<'_>,
+    git_dir: &Path,
+    commit: &GitObjectId,
+    path: &str,
+    budgets: GitBudgets,
+    cancelled: &AtomicBool,
+) -> Result<(GitObjectId, Vec<u8>), GitError> {
+    let resolved = git(
+        executable,
+        git_dir,
+        &[
+            "rev-parse",
+            "--verify",
+            "--end-of-options",
+            &format!("{}^{{commit}}", commit.as_str()),
+        ],
+        budgets,
+        cancelled,
+    )?;
+    if resolved.strip_suffix(b"\n") != Some(commit.as_str().as_bytes()) {
+        return Err(GitError::Malformed("pinned commit"));
+    }
+    let spec = format!("{}:{path}", commit.as_str());
+    let kind = git(
+        executable,
+        git_dir,
+        &["cat-file", "-t", "--end-of-options", &spec],
+        budgets,
+        cancelled,
+    )?;
+    if kind != b"blob\n" {
+        return Err(GitError::UnsupportedProfile("pinned path is not a file"));
+    }
+    let id = git(
+        executable,
+        git_dir,
+        &["rev-parse", "--verify", "--end-of-options", &spec],
+        budgets,
+        cancelled,
+    )?;
+    let text = std::str::from_utf8(&id)
+        .ok()
+        .and_then(|t| t.strip_suffix('\n'))
+        .ok_or(GitError::Malformed("blob id"))?;
+    let blob = GitObjectId::new(commit.format(), text.to_owned())
+        .map_err(|_| GitError::Malformed("blob id"))?;
+    let bytes = git(
+        executable,
+        git_dir,
+        &["cat-file", "blob", blob.as_str()],
+        budgets,
+        cancelled,
+    )?;
+    Ok((blob, bytes))
+}
+
 /// Remove a trial worktree this profile created, including its metadata in
 /// the user's repository. Used only to undo a refused preparation.
 pub fn trial_worktree_remove(

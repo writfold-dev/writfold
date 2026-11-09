@@ -189,7 +189,7 @@ fn show_reports_independent_badges() -> Result<()> {
             "assessment  3 entailed, 1 open, 0 refuted (Weft local-symbolic, hypothetical)",
         ),
         (&before, "approval    none"),
-        (&before, "evidence    none retained"),
+        (&before, "evidence    none cited"),
         (&after, "approval    signed, valid until"),
         (&after, "claim       none"),
         (&after, "effect      none"),

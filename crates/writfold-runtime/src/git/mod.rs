@@ -51,7 +51,7 @@ pub use error::GitError;
 pub use ledger::{LedgerCommit, ledger_ref};
 pub use objects::{GitBlob, GitEntry};
 use std::time::Duration;
-pub use trial::{trial_worktree_add, trial_worktree_remove};
+pub use trial::{trial_blob, trial_worktree_add, trial_worktree_remove};
 use writfold_domain::ByteCount;
 
 /// Per-command output limits, per-blob bytes, and a total read deadline.

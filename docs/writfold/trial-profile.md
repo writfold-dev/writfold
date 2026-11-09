@@ -12,6 +12,8 @@ only), and it does not change that path's requirements.
 cargo build --release -p writfold
 export WRITFOLD_STATE=/tmp/writfold-trial      # any new directory
 target/release/writfold trial init
+target/release/writfold trial retain --repo /path/to/your/repo \
+    --commit <full-sha> --file src/client.rs --bytes 0..120   # optional evidence
 target/release/writfold trial prepare --repo /path/to/your/repo \
     --file src/client.rs --recipe add-retry.spl
 target/release/writfold trial approve <run> [--require <weft-check>]...
@@ -29,7 +31,8 @@ Recipes are [Splicery](https://github.com/writfold-dev/splicery) recipes; see it
 | Step | Effect | Ledger record |
 |---|---|---|
 | `init` | Creates the private state directory: an Ed25519 operator key, a bootstrap policy trusting it, the Git executable's observed digest, the ledger repository, the object store | — |
-| `prepare` | Adds a detached, **sparse** worktree of your repository's **HEAD commit** inside the state directory (only the edited file is checked out; everything else is skip-worktree, so `git status`/`diff`/commits behave normally and cost does not grow with repository size), replays the recipe through the pinned Splicery kernel, builds and validates the exact `writfold-worktree/1` prepared edit, retains source, recipe, candidate and report. Refuses a candidate identical to its source, and a `--report` that is not a complete `weft.report/1` claiming no grounding or effect authority | `Prepared` |
+| `prepare` | Adds a detached, **sparse** worktree of your repository's **HEAD commit** inside the state directory (only the edited file is checked out; everything else is skip-worktree, so `git status`/`diff`/commits behave normally and cost does not grow with repository size), replays the recipe through the pinned Splicery kernel, builds and validates the exact `writfold-worktree/1` prepared edit, retains source, recipe, candidate and report. Refuses a report citing evidence (`asset` bindings) that `retain` did not keep, or whose retained bytes no longer match their digest. Refuses a candidate identical to its source, and a `--report` that is not a complete `weft.report/1` claiming no grounding or effect authority | `Prepared` |
+| `retain` | Reads the exact bytes of a file at a **full pinned commit id** (refs, abbreviations and `HEAD` are refused), keeps the selected byte range in the state directory and binds it as a `writfold-citation/1` descriptor. Prints the binding digest; a Weft report cites it as `asset x = citation "<digest>";`. Equal text at two positions is two different bindings | — |
 | `approve` | With `--require CHECK` (repeatable), first reads the retained Weft report and refuses unless every named check is present and `entailed` (the proved `required_entailed`). Then signs an operator grant (Write on this run's worktree, one hour) and a prepared-edit approval binding the prepared-edit digest, report, procedure, resource generation and validity | `Approved` |
 | `apply` | Verifies both signatures strictly under the policy, every bound value and the validity window, and asks the kernel for a current grant covering Write; records a durable claim; checks the worktree file still holds the retained source bytes; installs the candidate through the staged installer | `Claimed`, then `Applied`, or `Abandoned` if the original was never replaced |
 | `recover` | For a claim with no outcome (a crash or error during install): observes the file without rewriting it. The candidate's exact bytes mean it was installed; the source's exact bytes mean it was not; anything else stays Unknown and refuses | `Applied` (reconciled) or `Abandoned` |

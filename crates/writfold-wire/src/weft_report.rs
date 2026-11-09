@@ -12,6 +12,8 @@ pub struct WeftReport {
     pub kind: String,
     pub scope: String,
     pub checks: Vec<Check>,
+    /// The references of the review's `asset` (evidence) bindings, verbatim.
+    pub assets: Vec<String>,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -65,9 +67,20 @@ pub fn parse_report(bytes: &[u8], limits: Limits) -> Result<WeftReport, ReportEr
             })
         })
         .collect::<Result<_, ReportError>>()?;
+    let assets = match root.get("review").and_then(|r| r.get("bindings")) {
+        None => Vec::new(),
+        Some(bindings) => bindings
+            .as_array()
+            .ok_or(ReportError::Shape("review bindings"))?
+            .iter()
+            .filter(|b| b.get("kind").and_then(Value::as_str) == Some("asset"))
+            .map(|b| text(b, "reference").map(str::to_owned))
+            .collect::<Result<_, ReportError>>()?,
+    };
     Ok(WeftReport {
         kind: text(root, "kind")?.to_owned(),
         scope: text(root, "scope")?.to_owned(),
         checks,
+        assets,
     })
 }

@@ -7,6 +7,9 @@ pub const USAGE: &str = "\
 writfold trial init                     create the private trial state directory
 writfold trial prepare --repo DIR --file PATH --recipe FILE [--report FILE]
                                         worktree at HEAD + Splicery replay; records Prepared
+writfold trial retain --repo DIR --commit SHA --file PATH --bytes LO..HI
+                                        retain exact bytes at a pinned commit; prints the
+                                        binding digest a Weft report cites as evidence
 writfold trial approve RUN [--require CHECK]...
                                         sign a grant and an approval; records Approved.
                                         Each --require names a Weft check that must be entailed
@@ -105,6 +108,23 @@ pub fn main(args: &[String]) -> Result<String> {
             }
             out.push_str(&format!("next: writfold trial approve {}", p.run));
             Ok(out)
+        }
+        Some("retain") => {
+            let (lo, hi) = parsed
+                .required("bytes")?
+                .split_once("..")
+                .ok_or("--bytes takes LO..HI")?;
+            let r = super::retain::retain(
+                &state,
+                Path::new(parsed.required("repo")?),
+                parsed.required("commit")?,
+                parsed.required("file")?,
+                (lo.parse()?, hi.parse()?),
+            )?;
+            Ok(format!(
+                "retained binding {}\n  {} at {} bytes [{},{})\n  cite in Weft: asset excerpt = citation \"{}\";",
+                r.binding, r.path, r.commit, r.range.0, r.range.1, r.binding
+            ))
         }
         Some("approve") => {
             let run = parsed.run()?;

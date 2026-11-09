@@ -167,6 +167,22 @@ fn relative(path: &str) -> Result<()> {
     Ok(())
 }
 
+/// A bound report must be a complete local Weft report, and every evidence
+/// binding it cites must be retained in this state.
+fn check_report(trial: &Trial, bytes: &[u8]) -> Result<()> {
+    let parsed = writfold_wire::weft_report::parse_report(bytes, limits()?)
+        .map_err(|e| format!("report refused: {e}"))?;
+    for asset in &parsed.assets {
+        if !super::retain::retained(trial, asset)? {
+            return Err(format!(
+                "report refused: it cites {asset:?}, which is not evidence retained by `writfold trial retain`"
+            )
+            .into());
+        }
+    }
+    Ok(())
+}
+
 pub fn prepare(
     state: &Path,
     repo: &Path,
@@ -175,7 +191,6 @@ pub fn prepare(
     report: Option<&Path>,
 ) -> Result<Prepared> {
     relative(path)?;
-    let trial = Trial::open(state)?;
     let git_dir = repo.join(".git");
     if !git_dir.is_dir() {
         return Err(format!(
@@ -186,9 +201,9 @@ pub fn prepare(
     }
     let recipe_bytes = read_bounded(recipe)?;
     let report_bytes = report.map(read_bounded).transpose()?.unwrap_or_default();
+    let trial = Trial::open(state)?;
     if report.is_some() {
-        writfold_wire::weft_report::parse_report(&report_bytes, limits()?)
-            .map_err(|e| format!("report refused: {e}"))?;
+        check_report(&trial, &report_bytes)?;
     }
     let run = run_id()?;
     let worktree = trial.worktree(&run);

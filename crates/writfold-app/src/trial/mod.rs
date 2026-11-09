@@ -20,6 +20,9 @@ mod prepare;
 mod recover;
 #[cfg(test)]
 mod recovery_tests;
+pub mod retain;
+#[cfg(test)]
+mod retain_tests;
 mod show;
 #[cfg(test)]
 mod sparse_tests;
