@@ -443,4 +443,122 @@ theorem covers_spec (grants : Slice authority.Installed) (scope : Slice U8) (now
       rw [hget] at hg'; simp only [Option.some.injEq] at hg'; subst hg'
       exact absurd (hbv.mpr hc) hbf
 
+open Classical in
+/-- Lean `revokeGrant` on one installed grant: revoked exactly when its id is the
+revoked id; nothing else about it changes. -/
+noncomputable def revokeOne (id : Slice U8) (g : authority.Installed) : authority.Installed :=
+  if g.grant.id.val = id.val then { g with revoked := true } else g
+
+theorem revoke_loop_spec (self0 : authority.Authority) (id : Slice U8)
+    (self : authority.Authority) (i : Usize)
+    (hrealm : self.realm = self0.realm) (hpolicy : self.policy = self0.policy)
+    (hnow : self.now = self0.now) (hi : i.val ≤ self0.grants.val.length)
+    (hlen : self.grants.val.length = self0.grants.val.length)
+    (hel : ∀ k, self.grants.val[k]? =
+      if k < i.val then (self0.grants.val[k]?).map (revokeOne id) else self0.grants.val[k]?) :
+    authority.Authority.revoke_loop self id i ⦃ r =>
+      r.1 = self0.realm ∧ r.2.1 = self0.policy ∧ r.2.2.1 = self0.now ∧
+      r.2.2.2.val = self0.grants.val.map (revokeOne id) ⦄ := by
+  unfold authority.Authority.revoke_loop
+  apply loop.spec_decr_nat (fun p : authority.Authority × Usize => self0.grants.val.length - p.2.val)
+    (fun p : authority.Authority × Usize =>
+      p.1.realm = self0.realm ∧ p.1.policy = self0.policy ∧ p.1.now = self0.now ∧
+      p.2.val ≤ self0.grants.val.length ∧ p.1.grants.val.length = self0.grants.val.length ∧
+      ∀ k, p.1.grants.val[k]? =
+        if k < p.2.val then (self0.grants.val[k]?).map (revokeOne id) else self0.grants.val[k]?)
+  · rintro ⟨s, i⟩ ⟨hr, hp, hn, hi, hl, he⟩
+    unfold authority.Authority.revoke_loop.body
+    simp only [alloc.vec.Vec.index_slice_index, alloc.vec.Vec.index_mut_slice_index]
+    split
+    · rename_i hlt
+      have hlt' : i.val < self0.grants.val.length := by
+        have := hlt; simp [alloc.vec.Vec.len] at this; scalar_tac
+      have hget : s.grants.val[i.val]? = self0.grants.val[i.val]? := by
+        rw [he]; simp
+      step as ⟨ g, hg ⟩
+      step with same_spec as ⟨ b, hb ⟩
+      have hgo : self0.grants.val[i.val]? = some g := by
+        rw [← hget, List.getElem?_eq_getElem (by scalar_tac)]; simp [hg]
+      have hinv : ∀ (v : alloc.vec.Vec authority.Installed) (i' : Usize),
+          v.val.length = self0.grants.val.length →
+          (∀ k, v.val[k]? = if k = i.val then some (revokeOne id g) else s.grants.val[k]?) →
+          i'.val = i.val + 1 →
+          s.realm = self0.realm ∧ s.policy = self0.policy ∧ s.now = self0.now ∧
+            i'.val ≤ self0.grants.val.length ∧ v.val.length = self0.grants.val.length ∧
+            (∀ k, v.val[k]? = if k < i'.val then
+              (self0.grants.val[k]?).map (revokeOne id) else self0.grants.val[k]?) ∧
+            self0.grants.val.length - i'.val < self0.grants.val.length - i.val := by
+        intro v i' hvl hv hi'
+        refine ⟨hr, hp, hn, by omega, hvl, ?_, by omega⟩
+        intro k
+        rw [hv k]
+        by_cases hk : k = i.val
+        · subst hk; simp [hgo, hi']
+        · rw [he k]
+          by_cases hki : k < i.val
+          · have : k < i'.val := by omega
+            simp [hk, hki, this]
+          · have : ¬ k < i'.val := by omega
+            simp [hk, hki, this]
+      split
+      · rename_i hbt
+        have hid : g.grant.id.val = id.val := by
+          simpa [alloc.vec.Vec.deref, Slice.from_val] using hb.mp hbt
+        step as ⟨ p, hx, hback ⟩
+        rcases p with ⟨ x, back ⟩
+        dsimp only at hx hback ⊢
+        subst hback
+        have hxg : x = g := by rw [hx, hg]
+        subst hxg
+        step as ⟨ i', hi' ⟩
+        try dsimp only
+        apply hinv _ _ (by rw [alloc.vec.Vec.set_val_eq, List.length_set]; exact hl) _ (by scalar_tac)
+        intro k
+        rw [alloc.vec.Vec.set_val_eq, List.getElem?_set]
+        by_cases hk : k = i.val
+        · subst hk
+          have hb' : i.val < s.grants.val.length := by scalar_tac
+          simp [revokeOne, hid, hb']
+        · simp [Ne.symm hk, hk]
+      · rename_i hbf
+        have hid : g.grant.id.val ≠ id.val := by
+          intro h; exact hbf (hb.mpr (by simpa [alloc.vec.Vec.deref, Slice.from_val] using h))
+        step as ⟨ i', hi' ⟩
+        apply hinv _ _ hl _ (by scalar_tac)
+        intro k
+        by_cases hk : k = i.val
+        · subst hk
+          rw [List.getElem?_eq_getElem (by scalar_tac), ← hg]
+          simp [revokeOne, hid]
+        · simp [hk]
+    · rename_i hge
+      simp only [WP.spec_ok]
+      have hle : self0.grants.val.length ≤ i.val := by
+        have := hge; simp [alloc.vec.Vec.len] at this; scalar_tac
+      refine ⟨hr, hp, hn, ?_⟩
+      apply List.ext_getElem?
+      intro k
+      rw [he k, List.getElem?_map]
+      by_cases hk : k < i.val
+      · simp [hk]
+      · have : self0.grants.val.length ≤ k := by omega
+        simp [hk, List.getElem?_eq_none this]
+  · exact ⟨hrealm, hpolicy, hnow, hi, hlen, hel⟩
+
+/-- Lean `revokeGrant`: every installed grant with the id is revoked, nothing
+else changes (no grant is added, removed, reordered or un-revoked), and an
+unknown id changes nothing. Revocation is never refused. -/
+theorem Authority.revoke_spec (self : authority.Authority) (id : Slice U8) :
+    authority.Authority.revoke self id ⦃ r =>
+      r.realm = self.realm ∧ r.policy = self.policy ∧ r.now = self.now ∧
+      r.grants.val = self.grants.val.map (revokeOne id) ⦄ := by
+  unfold authority.Authority.revoke
+  step with revoke_loop_spec self id self 0#usize rfl rfl rfl (by simp) rfl
+    (by intro k; simp)
+  simp_all
+
+theorem revokeOne_unknown (id : Slice U8) (g : authority.Installed)
+    (h : g.grant.id.val ≠ id.val) : revokeOne id g = g := by
+  simp [revokeOne, h]
+
 end Writfold.Core

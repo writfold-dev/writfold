@@ -1,7 +1,8 @@
 //! Installed operator grants and the current-grant check: the typed adapter
 //! over `writfold_core::authority`, whose Aeneas translation is proved in
 //! `proofs/Writfold/Authority.lean` (`install_check_spec`, `current_spec`,
-//! `covers_spec`, `Authority.install_refused`, `Authority.advance_spec`).
+//! `covers_spec`, `Authority.install_refused`, `Authority.advance_spec`,
+//! `Authority.revoke_spec`).
 //!
 //! An `Authorization` is a qualified input: the caller must already have
 //! verified the operator's signature over the exact grant and retained its

@@ -108,6 +108,11 @@ MUTANTS = (
            "            has_capability(&grants[i].grant.capabilities, capability)\n                && resources_within(&grants[i].grant.resources, resources)",
            "            has_capability(&grants[i].grant.capabilities, capability)",
            ("Writfold.Core.covers_spec",)),
+    # revokeGrant: every grant with the id, including the newest
+    Mutant("revoke-skips-newest", "authority.rs",
+           "        while i < self.grants.len() {\n            if same(&self.grants[i].grant.id, id) {",
+           "        while i + 1 < self.grants.len() {\n            if same(&self.grants[i].grant.id, id) {",
+           ("Writfold.Core.revoke_loop_spec",)),
 )
 
 # lake reports `error: <path>.lean:<line>:<col>: <message>`

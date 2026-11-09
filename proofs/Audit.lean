@@ -30,6 +30,7 @@ def claims : List Name := [
   ``Writfold.Core.covers_spec,
   ``Writfold.Core.Authority.install_refused,
   ``Writfold.Core.Authority.advance_spec,
+  ``Writfold.Core.Authority.revoke_spec,
 ]
 
 /-- Every theorem under `Writfold.Core`, sorted by name. -/

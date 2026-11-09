@@ -51,13 +51,17 @@ and the grant conjunct of `intentReady`:
   shadows older ones even when it covers less.
 - `covers_spec`: coverage holds exactly when that current grant carries the
   capability and every requested resource.
+- `Authority.revoke_spec`: revocation marks exactly the grants with that id
+  revoked and changes nothing else (no grant added, removed, reordered or
+  un-revoked; realm, policy and clock untouched); an unknown id changes
+  nothing. It is never refused.
 - `Authority.advance_spec`: the clock never moves backwards.
 
 The gate (`docker compose -f compose.proofs.yaml run --build --rm proofs`)
 regenerates the translation and refuses drift from the committed copy, builds
 the proofs, audits every theorem's axioms (only `propext`,
-`Classical.choice`, `Quot.sound`; the eleven headline claims must exist) and
-calibrates fifteen semantic mutants of the Rust source, each of which must break
+`Classical.choice`, `Quot.sound`; the twelve headline claims must exist) and
+calibrates sixteen semantic mutants of the Rust source, each of which must break
 exactly its named theorem. Warm run: about three minutes.
 
 ## Trust base
@@ -84,9 +88,6 @@ inventory epoch increment is checked and refuses instead of overflowing.
 - The spec predicates mirror the calculus's `historyCheck`/`AppendReady` but
   live in the proofs project; machine-linking them to `formal/` needs the
   calculus on the same Lean version.
-- Revocation (`Authority::revoke` flips the flag of every grant with the id):
-  tested and checked against the calculus's cases, not yet proved; it updates
-  vector elements in place, which needs more loop machinery.
 - Next kernels: the trial edit-flow validator, then procedure admission.
 
 ## Writing kernels for translation
