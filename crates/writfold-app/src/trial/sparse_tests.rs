@@ -76,17 +76,33 @@ fn sparse_run(edited: &str) -> Result<()> {
     let state = root.0.join("state");
     Trial::init(&state)?;
     let p = prepare(&state, &repo, edited, &root.0.join("r.spl"), None)?;
-    assert_eq!(materialized(&p.worktree)?, vec![edited.to_owned()]);
-    assert!(!p.worktree.join("other/a.rs").exists());
-    assert_eq!(git(&p.worktree, &["status", "--porcelain"])?, "");
+    ensure(
+        materialized(&p.worktree)? == [edited.to_owned()],
+        "only the edited path is checked out",
+    )?;
+    ensure(!p.worktree.join("other/a.rs").exists(), "no other file")?;
+    ensure(
+        git(&p.worktree, &["status", "--porcelain"])?.is_empty(),
+        "a clean status before apply",
+    )?;
     approve(&state, &p.run)?;
     apply(&state, &p.run)?;
-    assert_eq!(
-        git(&p.worktree, &["status", "--porcelain"])?,
-        format!(" M {}\n", git_quoted(edited))
-    );
-    assert_eq!(fs::read(repo.join(".git/config"))?, config);
-    Ok(())
+    ensure(
+        git(&p.worktree, &["status", "--porcelain"])? == format!(" M {}\n", git_quoted(edited)),
+        "only the edited path is modified after apply",
+    )?;
+    ensure(
+        fs::read(repo.join(".git/config"))? == config,
+        "the repository configuration is unchanged",
+    )
+}
+
+fn ensure(condition: bool, what: &str) -> Result<()> {
+    if condition {
+        Ok(())
+    } else {
+        Err(format!("expected {what}").into())
+    }
 }
 
 fn git_quoted(path: &str) -> String {
