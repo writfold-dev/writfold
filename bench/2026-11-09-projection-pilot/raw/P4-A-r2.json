@@ -1,0 +1,44 @@
+{
+ "trial": "P4-A-r2",
+ "batch": 6,
+ "models": [
+  "claude-sonnet-5-5"
+ ],
+ "api_calls": 2,
+ "usage_sum": {
+  "input_tokens": 4,
+  "cache_creation_input_tokens": 14799,
+  "cache_read_input_tokens": 50334,
+  "output_tokens": 250
+ },
+ "per_call_usage": [
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 12162,
+   "cache_read_input_tokens": 19086,
+   "output_tokens": 197
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 2637,
+   "cache_read_input_tokens": 31248,
+   "output_tokens": 53
+  }
+ ],
+ "tool_calls": 2,
+ "tool_result_bytes": 1317,
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "cd <trial>/repo && grep -rnF 'writfold-citation/1' crates | sed -E 's/^([^:]+:[0-9]+:)[ \\t]*/\\1 /' > ../answer.txt; cat ../answer.txt",
+   "result_bytes": 1256,
+   "result_head": "crates/writfold-app/src/trial/retain.rs:2: //! in the trial state and bound as a `writfold-citation/1` binding descriptor.\ncrates/writfold-app/src/tuft/mod.rs:6: //! `writfold-citation/1` bindings `writfold trial retain` produces, stored in\ncrates/writfold-wire/src/citation/fingerprint.rs:72: separated(b\"writfold-citation/1/representation\\0\", &payload)\ncrates/writfold-wire/src/citation/fingerprint.rs:109: separated(b\"writfold-citation/1/binding\\0\", &payload)\ncrates/writfold-wire/src/citation/fingerprint.rs:119: separated(b\"writfold-citation/1/correspondence\\0\", payload)\ncrates/writfold-wire/co"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

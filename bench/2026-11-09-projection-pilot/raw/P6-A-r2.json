@@ -1,0 +1,62 @@
+{
+ "trial": "P6-A-r2",
+ "batch": 7,
+ "models": [
+  "claude-sonnet-5-5"
+ ],
+ "api_calls": 3,
+ "usage_sum": {
+  "input_tokens": 6,
+  "cache_creation_input_tokens": 14470,
+  "cache_read_input_tokens": 83694,
+  "output_tokens": 569
+ },
+ "per_call_usage": [
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 12178,
+   "cache_read_input_tokens": 19086,
+   "output_tokens": 148
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 2080,
+   "cache_read_input_tokens": 31264,
+   "output_tokens": 197
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 212,
+   "cache_read_input_tokens": 33344,
+   "output_tokens": 224
+  }
+ ],
+ "tool_calls": 4,
+ "tool_result_bytes": 205,
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "cd <trial>/repo && grep -rn \"fn trial_blob(\" --include=*.rs .",
+   "result_bytes": 63,
+   "result_head": "crates/writfold-runtime/src/git/trial.rs:145:pub fn trial_blob("
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial> && echo \"crates/writfold-runtime/src/git/trial.rs:145: pub fn trial_blob(\" > answer.txt && sed -n 145p repo/crates/writfold-runtime/src/git/trial.rs",
+   "result_bytes": 18,
+   "result_head": "pub fn trial_blob("
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial> && echo \"crates/writfold-runtime/src/git/trial.rs:145:pub fn trial_blob(\" > answer.txt; cat answer.txt",
+   "result_bytes": 63,
+   "result_head": "crates/writfold-runtime/src/git/trial.rs:145:pub fn trial_blob("
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

@@ -1,0 +1,4 @@
+crates/writfold-app/src/trial/retain.rs:94: retain_read(&trial, &file, &[range])?
+crates/writfold-app/src/trial/retain.rs:110: retain_read(trial, &read_pinned(executable, repo, commit, path)?, ranges)
+crates/writfold-app/src/trial/retain.rs:143: pub fn retain_read(
+crates/writfold-app/src/tuft/mod.rs:194: for retained in retain_read(trial, &read, &ranges)? {

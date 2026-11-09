@@ -1,0 +1,9 @@
+crates/writfold-app/src/trial/retain.rs:2: //! in the trial state and bound as a `writfold-citation/1` binding descriptor.
+crates/writfold-app/src/tuft/mod.rs:6: //! `writfold-citation/1` bindings `writfold trial retain` produces, stored in
+crates/writfold-wire/contracts/agent-stdio/1/contract.json:74: "durable_citations": "The included writfold-citation/1 descriptor schema names candidate immutable material only; it does not expose a citation reader RPC, acquire corpus bytes, authenticate a release, or grant access. trial/retain binds exact bytes in the cooperating trial state only."
+crates/tuft/src/emit.rs:171: "retain @{} {around} bindings={count} schema=writfold-citation/1",
+crates/tuft/src/emit.rs:213: "{{\"binding\":{},\"around_lines\":{},\"bindings\":{count},\"schema\":\"writfold-citation/1\"}}",
+crates/writfold-wire/src/citation/fingerprint.rs:72: separated(b"writfold-citation/1/representation\0", &payload)
+crates/writfold-wire/src/citation/fingerprint.rs:109: separated(b"writfold-citation/1/binding\0", &payload)
+crates/writfold-wire/src/citation/fingerprint.rs:119: separated(b"writfold-citation/1/correspondence\0", payload)
+crates/tuft/src/view.rs:22: /// Retained evidence for a row: its `writfold-citation/1` binding digest and

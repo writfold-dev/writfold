@@ -1,0 +1,50 @@
+{
+ "trial": "P2-B-r1",
+ "batch": 3,
+ "models": [
+  "claude-sonnet-5-5"
+ ],
+ "api_calls": 2,
+ "usage_sum": {
+  "input_tokens": 4,
+  "cache_creation_input_tokens": 19339,
+  "cache_read_input_tokens": 51275,
+  "output_tokens": 726
+ },
+ "per_call_usage": [
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 13103,
+   "cache_read_input_tokens": 19086,
+   "output_tokens": 318
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 6236,
+   "cache_read_input_tokens": 32189,
+   "output_tokens": 408
+  }
+ ],
+ "tool_calls": 3,
+ "tool_result_bytes": 8133,
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "B=<trial>; mkdir -p $B/work; cat > $B/work/a.tuft <<'E'\n@h := find rx\"\\brecord\\(\" in \"crates/\" at \"9e0c8d648852e2e6f27c6f9517c71d8e5ea67a49\" limit 500;\n@e := retain @h around lines 0;\n@v := project @e [path, line, excerpt(max_chars: 300)] sort [path asc, line asc];\nemit @v budget_tokens 20000;\nE\n$B/../../bin/writfold tuft run $B/work/a.tuft --repo $B/repo --state $B/state",
+   "result_bytes": 8041,
+   "result_head": "tuft/0 program=sha256:69c32e77a39c3183354e8720b0ebd05aca309afbad0bbdf89515acac70633a4b commit=9e0c8d648852e2e6f27c6f9517c71d8e5ea67a49\nfind @h rx \"\\\\brecord\\\\(\" in \"crates/\" limit=500: coverage=complete files=640/640 hits=64\nretain @e range=lines(around=0) bindings=64 schema=writfold-citation/1\nview @v rows=64 merged=0 limited=0 from=0 shown=64 omitted=0 budget_tokens=20000 used=1923 estimate=ceil((bytes+1)/4) per text line\ncursor=none\ncolumns path line excerpt\ncrates/writfold-app/src/trial/apply.rs 60 2919..2973:\"                grant: signed_grant.record().clone(),\\n\"\ncrates/writfold-app/src"
+  },
+  {
+   "tool": "Bash",
+   "input": "B=<trial>\ncat > $B/answer.txt <<'E'\ncrates/writfold-runtime/src/git/write_objects.rs:66: record(&mut input, name, &tree.write(session, None)?, true);\ncrates/writfold-runtime/src/git/write_objects.rs:81: fn record(output: &mut Vec<u8>, name: &[u8], object: &GitObjectId, tree: bool) {\nE",
+   "result_bytes": 31,
+   "result_head": "(Bash completed with no output)"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

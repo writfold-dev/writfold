@@ -1,0 +1,137 @@
+{
+ "commit": "9e0c8d648852e2e6f27c6f9517c71d8e5ea67a49",
+ "answers": {
+  "P1": [
+   {
+    "path": "crates/writfold-app/src/trial/retain.rs",
+    "line": 94,
+    "text": "    retain_read(&trial, &file, &[range])?"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/retain.rs",
+    "line": 110,
+    "text": "    retain_read(trial, &read_pinned(executable, repo, commit, path)?, ranges)"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/retain.rs",
+    "line": 143,
+    "text": "pub fn retain_read("
+   },
+   {
+    "path": "crates/writfold-app/src/tuft/mod.rs",
+    "line": 194,
+    "text": "        for retained in retain_read(trial, &read, &ranges)? {"
+   }
+  ],
+  "P2": [
+   {
+    "path": "crates/writfold-runtime/src/git/write_objects.rs",
+    "line": 66,
+    "text": "            record(&mut input, name, &tree.write(session, None)?, true);"
+   },
+   {
+    "path": "crates/writfold-runtime/src/git/write_objects.rs",
+    "line": 81,
+    "text": "fn record(output: &mut Vec<u8>, name: &[u8], object: &GitObjectId, tree: bool) {"
+   }
+  ],
+  "P3": [
+   {
+    "path": "crates/writfold-app/src/tuft/backend_tests.rs",
+    "line": 75,
+    "text": "    require(matches!(page, Err(Refusal::Pin(_))), \"missing pin refused\")?;"
+   },
+   {
+    "path": "crates/writfold-app/src/tuft/tests.rs",
+    "line": 200,
+    "text": "        assert!(matches!(refusal, Refusal::Pin(_)), \"{refusal}\");"
+   },
+   {
+    "path": "crates/writfold-store/src/backend/dolt.rs",
+    "line": 61,
+    "text": "            return Err(Refusal::Pin(\"snapshot pin differs from the request\".into()));"
+   },
+   {
+    "path": "crates/writfold-store/src/backend/dolt.rs",
+    "line": 146,
+    "text": "            Refusal::Pin(error.to_string())"
+   },
+   {
+    "path": "crates/writfold-store/src/backend/git.rs",
+    "line": 232,
+    "text": "            Refusal::Pin(\"not a commit in this repository\".into())"
+   },
+   {
+    "path": "crates/writfold-store/tests/backend_conformance.rs",
+    "line": 44,
+    "text": "            _ => Err(Refusal::Pin(\"no such snapshot\".into())),"
+   }
+  ],
+  "P4": [
+   {
+    "path": "crates/tuft/src/emit.rs",
+    "line": 171,
+    "text": "            \"retain @{} {around} bindings={count} schema=writfold-citation/1\","
+   },
+   {
+    "path": "crates/tuft/src/emit.rs",
+    "line": 213,
+    "text": "            \"{{\\\"binding\\\":{},\\\"around_lines\\\":{},\\\"bindings\\\":{count},\\\"schema\\\":\\\"writfold-citation/1\\\"}}\","
+   },
+   {
+    "path": "crates/tuft/src/view.rs",
+    "line": 22,
+    "text": "/// Retained evidence for a row: its `writfold-citation/1` binding digest and"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/retain.rs",
+    "line": 2,
+    "text": "//! in the trial state and bound as a `writfold-citation/1` binding descriptor."
+   },
+   {
+    "path": "crates/writfold-app/src/tuft/mod.rs",
+    "line": 6,
+    "text": "//! `writfold-citation/1` bindings `writfold trial retain` produces, stored in"
+   },
+   {
+    "path": "crates/writfold-wire/contracts/agent-stdio/1/contract.json",
+    "line": 74,
+    "text": "    \"durable_citations\": \"The included writfold-citation/1 descriptor schema names candidate immutable material only; it does not expose a citation reader RPC, acquire corpus bytes, authenticate a release, or grant access. trial/retain binds exact bytes in the cooperating trial state only.\""
+   },
+   {
+    "path": "crates/writfold-wire/src/citation/fingerprint.rs",
+    "line": 72,
+    "text": "    separated(b\"writfold-citation/1/representation\\0\", &payload)"
+   },
+   {
+    "path": "crates/writfold-wire/src/citation/fingerprint.rs",
+    "line": 109,
+    "text": "    separated(b\"writfold-citation/1/binding\\0\", &payload)"
+   },
+   {
+    "path": "crates/writfold-wire/src/citation/fingerprint.rs",
+    "line": 119,
+    "text": "    separated(b\"writfold-citation/1/correspondence\\0\", payload)"
+   }
+  ],
+  "P5": [
+   {
+    "path": "crates/writfold-store/src/backend/dolt.rs",
+    "line": 32,
+    "text": "pub struct DoltBackend<'a> {"
+   },
+   {
+    "path": "crates/writfold-store/src/backend/git.rs",
+    "line": 43,
+    "text": "pub struct GitTreeBackend<'a> {"
+   }
+  ],
+  "P6": [
+   {
+    "path": "crates/writfold-runtime/src/git/trial.rs",
+    "line": 145,
+    "text": "pub fn trial_blob("
+   }
+  ]
+ }
+}

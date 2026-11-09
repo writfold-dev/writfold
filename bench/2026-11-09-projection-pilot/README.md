@@ -63,4 +63,95 @@ Written and committed before any trial ran.
 
 ## Results
 
-Not yet run.
+All 24 trials ran in the pre-registered order; none was dropped or rerun.
+
+| | Arm A: grep and read | Arm B: Tuft |
+|---|---|---|
+| Correct (exact lines and text) | 12 / 12 | 12 / 12 |
+| Total tokens (12 trials) | 408,734 | 430,351 (+5.3%) |
+| Mean tokens per trial | 34,061 | 35,863 |
+| Tool calls, as reported (incl. the final hand-back) | 34 | 38 |
+| Tool calls, excluding hand-back | 22 | 26 |
+| Tool output returned to the model | 11,183 B | 24,579 B |
+| Model output tokens (from transcripts) | 5,559 | 9,682 |
+| Wall time | 110.3 s | 134.2 s |
+
+Paired by task (mean of each cell's two repeats, B − A):
+
+| Task | Tokens A | Tokens B | B − A | Tool calls A / B | Output bytes A / B | Wall s A / B |
+|---|---|---|---|---|---|---|
+| P1 definition + callers | 34,171 | 35,640 | +1,470 | 3 / 3 | 909 / 1,328 | 10.2 / 12.5 |
+| P2 `record`, `true` only | 34,993 | 37,870 | +2,877 | 4 / 3.5 | 2,209 / 6,028 | 12.0 / 12.8 |
+| P3 `Refusal::Pin` | 33,716 | 35,490 | +1,774 | 2 / 3 | 696 / 1,337 | 7.6 / 9.6 |
+| P4 `writfold-citation/1` | 33,942 | 36,000 | +2,058 | 2 / 3 | 1,317 / 2,015 | 6.4 / 10.8 |
+| P5 `pub struct …Backend` | 33,847 | 35,105 | +1,258 | 2.5 / 3 | 288 / 808 | 9.8 / 9.9 |
+| P6 control | 33,699 | 35,073 | +1,374 | 3.5 / 3.5 | 174 / 775 | 9.1 / 11.5 |
+
+Mean paired token difference: **+1,801 tokens per task (range +1,258 to
++2,877); arm B used fewer tokens on 0 of 6 tasks.** Per-trial numbers are in
+[`results.json`](results.json), each trial's tool calls with scrubbed output
+heads are in [`raw/`](raw/), and every answer and Tuft program the agents
+wrote is in [`agent-answers/`](agent-answers/).
+
+**Verdict: no token win.** Correctness was equal (both perfect), so the
+pre-registered rule applies to tokens alone, and arm B used more on every task,
+including the control.
+
+## Reading
+
+- **Correctness was at ceiling in both arms.** Every agent found exactly the
+  right lines, including the disambiguation traps (the `use` import in P1, the
+  eight other `record` functions and the `false` call sites in P2). These
+  tasks did not separate the arms on quality.
+- **Where arm B's extra tokens came from.** Three measurable sources:
+  - the tool note: arm B's prompt is about 1.9 KB longer (the quick reference
+    and the longer command line), roughly a third of the gap;
+  - transcription: 8 of 12 arm A agents piped `grep -n | sed` straight into
+    `answer.txt` without retyping a line. Arm B rows are JSON-quoted with byte
+    ranges, so all 12 arm B agents retyped the answer by hand: 9,682 output
+    tokens against 5,559;
+  - output size: the Tuft envelope (program digest, find/retain/view lines,
+    byte ranges) roughly doubled the tool output bytes for the same hits.
+- **The quick reference was enough.** No arm B agent opened the full
+  language reference, and every Tuft program ran on the first attempt.
+- **Fixed host context dominates.** About 33,000 tokens of every trial are
+  the subagent's own context, so a 5% difference is the size of a tool note.
+  At this scale neither tool can save much.
+- **Protocol deviation.** In P2-B-r2 the agent piped one Tuft run's output
+  through `grep write_objects`, filtering tool output rather than searching
+  the repository, which the arm rule forbids. The trial stays in both
+  denominators. Its tokens (36,904) are the highest of all 24 trials, so
+  excluding it would not change the verdict.
+
+## Limits
+
+Two repeats, six tasks, one repository and one model: no statistical power, and
+the tasks have 1 to 9 hits each, where grep output is already compact. Tuft's
+budget, omission counts and resume cursor never triggered, so this pilot does
+not test them. Nor does it value the `writfold-citation/1` bindings Tuft
+retains; arm A produces no citations at all. Token totals are Claude Code's
+per-subagent usage reports and include fixed host context. Bytes and output
+tokens come from the subagent transcripts
+([`scripts/summarize.py`](scripts/summarize.py)). The model alias does not
+pin a backend revision, although the transcripts report `claude-sonnet-5-5`.
+Trials ran three at a time, so wall times include contention.
+
+## Next
+
+A token advantage for projection is plausible only where grep is not already
+compact: queries with hundreds of hits where a budgeted, sorted, limited view
+replaces paging through output, or tasks that must hand on cited evidence (a
+Weft report, a later session), where arm A would also have to retain bytes.
+A plain-text row format that pipes straight to a file would remove the
+transcription cost seen here. Those are hypotheses for a later pilot, not
+results.
+
+Reproduce: per trial, clone this repository into `<trial>/repo` detached at
+the pinned commit. For arm B, also run `writfold trial init --state <trial>/state`.
+Give the agent `prompts/<task>-<arm>.txt` with `<trial>`, `<commit>` and
+`<writfold>` filled in, then run `python3 grade.py expected.json <trials-dir>`
+with one directory per trial named `<task>-<arm>-r<n>` containing
+`answer.txt`. [`reference-programs/`](reference-programs/) holds a Tuft
+program per task that finds every expected line, the arm-B positive
+control. [`scripts/analyze.py`](scripts/analyze.py) rebuilds `results.json`
+from the grades, the harness usage reports and the transcript summaries.

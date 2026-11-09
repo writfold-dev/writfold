@@ -1,0 +1,50 @@
+{
+ "trial": "P1-B-r1",
+ "batch": 2,
+ "models": [
+  "claude-sonnet-5-5"
+ ],
+ "api_calls": 2,
+ "usage_sum": {
+  "input_tokens": 4,
+  "cache_creation_input_tokens": 16004,
+  "cache_read_input_tokens": 51263,
+  "output_tokens": 917
+ },
+ "per_call_usage": [
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 13091,
+   "cache_read_input_tokens": 19086,
+   "output_tokens": 446
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 2913,
+   "cache_read_input_tokens": 32177,
+   "output_tokens": 471
+  }
+ ],
+ "tool_calls": 3,
+ "tool_result_bytes": 1223,
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "mkdir -p <trial>/work && cd <trial> && cat > work/a.tuft <<'EOF'\n@h := find rx\"\\bretain_read\\b\" at \"9e0c8d648852e2e6f27c6f9517c71d8e5ea67a49\" limit 500;\n@e := retain @h around lines 0;\n@v := project @e [path, line, excerpt(max_chars: 300)] sort [path asc, line asc];\nemit @v budget_tokens 6000;\nEOF\n<writfold> tuft run work/a.tuft --repo $PWD/repo --state $PWD/state",
+   "result_bytes": 1131,
+   "result_head": "tuft/0 program=sha256:365867e52cf6148823b38680abad1232f199f019f13a5f927a933480423dce07 commit=9e0c8d648852e2e6f27c6f9517c71d8e5ea67a49\nfind @h rx \"\\\\bretain_read\\\\b\" in \"\" limit=500: coverage=complete files=1664/1664 hits=6\nretain @e range=lines(around=0) bindings=6 schema=writfold-citation/1\nview @v rows=6 merged=0 limited=0 from=0 shown=6 omitted=0 budget_tokens=6000 used=178 estimate=ceil((bytes+1)/4) per text line\ncursor=none\ncolumns path line excerpt\ncrates/writfold-app/src/trial/retain.rs 94 3031..3073:\"    retain_read(&trial, &file, &[range])?\\n\"\ncrates/writfold-app/src/trial/retain.rs "
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial> && cat > answer.txt <<'EOF'\ncrates/writfold-app/src/trial/retain.rs:94: retain_read(&trial, &file, &[range])?\ncrates/writfold-app/src/trial/retain.rs:110: retain_read(trial, &read_pinned(executable, repo, commit, path)?, ranges)\ncrates/writfold-app/src/trial/retain.rs:143: pub fn retain_read(\ncrates/writfold-app/src/tuft/mod.rs:194: for retained in retain_read(trial, &read, &ranges)? {\nEOF",
+   "result_bytes": 31,
+   "result_head": "(Bash completed with no output)"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

@@ -1,0 +1,6 @@
+crates/writfold-app/src/tuft/backend_tests.rs:75:     require(matches!(page, Err(Refusal::Pin(_))), "missing pin refused")?;
+crates/writfold-app/src/tuft/tests.rs:200:         assert!(matches!(refusal, Refusal::Pin(_)), "{refusal}");
+crates/writfold-store/src/backend/dolt.rs:61:             return Err(Refusal::Pin("snapshot pin differs from the request".into()));
+crates/writfold-store/src/backend/dolt.rs:146:             Refusal::Pin(error.to_string())
+crates/writfold-store/src/backend/git.rs:232:             Refusal::Pin("not a commit in this repository".into())
+crates/writfold-store/tests/backend_conformance.rs:44:             _ => Err(Refusal::Pin("no such snapshot".into())),

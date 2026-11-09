@@ -1,0 +1,44 @@
+{
+ "trial": "P3-A-r2",
+ "batch": 5,
+ "models": [
+  "claude-sonnet-5-5"
+ ],
+ "api_calls": 2,
+ "usage_sum": {
+  "input_tokens": 4,
+  "cache_creation_input_tokens": 14588,
+  "cache_read_input_tokens": 50331,
+  "output_tokens": 276
+ },
+ "per_call_usage": [
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 12159,
+   "cache_read_input_tokens": 19086,
+   "output_tokens": 223
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 2429,
+   "cache_read_input_tokens": 31245,
+   "output_tokens": 53
+  }
+ ],
+ "tool_calls": 2,
+ "tool_result_bytes": 704,
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "cd <trial>/repo && mkdir -p ../work && grep -rnF 'Refusal::Pin' crates | sed -E 's/^([^:]+:[0-9]+:)[ \\t]+/\\1 /' > ../answer.txt; cat ../answer.txt | head -50; wc -l ../answer.txt",
+   "result_bytes": 643,
+   "result_head": "crates/writfold-app/src/tuft/tests.rs:200: assert!(matches!(refusal, Refusal::Pin(_)), \"{refusal}\");\ncrates/writfold-store/tests/backend_conformance.rs:44: _ => Err(Refusal::Pin(\"no such snapshot\".into())),\ncrates/writfold-app/src/tuft/backend_tests.rs:75: require(matches!(page, Err(Refusal::Pin(_))), \"missing pin refused\")?;\ncrates/writfold-store/src/backend/dolt.rs:61: return Err(Refusal::Pin(\"snapshot pin differs from the request\".into()));\ncrates/writfold-store/src/backend/dolt.rs:146: Refusal::Pin(error.to_string())\ncrates/writfold-store/src/backend/git.rs:232: Refusal::Pin(\"not a commit "
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

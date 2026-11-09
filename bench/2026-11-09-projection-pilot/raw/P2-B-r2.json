@@ -1,0 +1,62 @@
+{
+ "trial": "P2-B-r2",
+ "batch": 8,
+ "models": [
+  "claude-sonnet-5-5"
+ ],
+ "api_calls": 3,
+ "usage_sum": {
+  "input_tokens": 6,
+  "cache_creation_input_tokens": 17510,
+  "cache_read_input_tokens": 87302,
+  "output_tokens": 939
+ },
+ "per_call_usage": [
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 13103,
+   "cache_read_input_tokens": 19086,
+   "output_tokens": 371
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 3838,
+   "cache_read_input_tokens": 32189,
+   "output_tokens": 262
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 569,
+   "cache_read_input_tokens": 36027,
+   "output_tokens": 306
+  }
+ ],
+ "tool_calls": 4,
+ "tool_result_bytes": 3922,
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "B=<trial>; mkdir -p $B/work; cat > $B/work/a.tuft <<'E'\n@h := find rx\"\\brecord\\(|fn record\\b|record\\b.*tree\" in \"crates/\" at \"9e0c8d648852e2e6f27c6f9517c71d8e5ea67a49\" limit 500;\n@e := retain @h around lines 0;\n@v := project @e [path, line, excerpt(max_chars: 300)] sort [path asc, line asc];\nemit @v budget_tokens 20000;\nE\n$B/../../bin/writfold tuft run $B/work/a.tuft --repo $B/repo --state $B/state | grep -v '^$' | grep -E 'fn record|record\\(.*(true|tree)|tree' | head -80",
+   "result_bytes": 3176,
+   "result_head": "find @h rx \"\\\\brecord\\\\(|fn record\\\\b|record\\\\b.*tree\" in \"crates/\" limit=500: coverage=complete files=640/640 hits=73\ncrates/writfold-app/src/trial/tests.rs 86 2845..2856:\"fn record(\\n\"\ncrates/writfold-app/tests/ledger/support.rs 157 5139..5154:\"pub fn record(\\n\"\ncrates/writfold-runtime/src/git/ledger.rs 4 121..201:\"//! Each record is one commit whose tree holds exactly one blob, `record`, with\\n\"\ncrates/writfold-runtime/src/git/write_objects.rs 66 2157..2230:\"            record(&mut input, name, &tree.write(session, None)?, true);\\n\"\ncrates/writfold-runtime/src/git/write_objects.rs 81 2688.."
+  },
+  {
+   "tool": "Bash",
+   "input": "B=<trial>; $B/../../bin/writfold tuft run $B/work/a.tuft --repo $B/repo --state $B/state | grep write_objects",
+   "result_bytes": 654,
+   "result_head": "crates/writfold-runtime/src/git/write_objects.rs 60 1944..2002:\"            record(&mut input, b\\\"manifest\\\", blob, false);\\n\"\ncrates/writfold-runtime/src/git/write_objects.rs 63 2054..2105:\"            record(&mut input, name, blob, false);\\n\"\ncrates/writfold-runtime/src/git/write_objects.rs 66 2157..2230:\"            record(&mut input, name, &tree.write(session, None)?, true);\\n\"\ncrates/writfold-runtime/src/git/write_objects.rs 81 2688..2769:\"fn record(output: &mut Vec<u8>, name: &[u8], object: &GitObjectId, tree: bool) {\\n\"\ncrates/writfold-runtime/src/git/write_objects.rs 129 3937..3991:\"  "
+  },
+  {
+   "tool": "Bash",
+   "input": "B=<trial>; cat > $B/answer.txt <<'E'\ncrates/writfold-runtime/src/git/write_objects.rs:81: fn record(output: &mut Vec<u8>, name: &[u8], object: &GitObjectId, tree: bool) {\ncrates/writfold-runtime/src/git/write_objects.rs:66: record(&mut input, name, &tree.write(session, None)?, true);\nE",
+   "result_bytes": 31,
+   "result_head": "(Bash completed with no output)"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

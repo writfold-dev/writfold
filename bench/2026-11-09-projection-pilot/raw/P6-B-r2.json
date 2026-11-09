@@ -1,0 +1,56 @@
+{
+ "trial": "P6-B-r2",
+ "batch": 8,
+ "models": [
+  "claude-sonnet-5-5"
+ ],
+ "api_calls": 3,
+ "usage_sum": {
+  "input_tokens": 6,
+  "cache_creation_input_tokens": 15831,
+  "cache_read_input_tokens": 85970,
+  "output_tokens": 535
+ },
+ "per_call_usage": [
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 13065,
+   "cache_read_input_tokens": 19086,
+   "output_tokens": 313
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 2582,
+   "cache_read_input_tokens": 32151,
+   "output_tokens": 169
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 184,
+   "cache_read_input_tokens": 34733,
+   "output_tokens": 53
+  }
+ ],
+ "tool_calls": 3,
+ "tool_result_bytes": 766,
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "W=<trial>; mkdir -p $W/work; cat > $W/work/a.tuft <<'E'\n@h := find text \"fn trial_blob(\" at \"9e0c8d648852e2e6f27c6f9517c71d8e5ea67a49\" limit 100;\n@e := retain @h around lines 0;\n@v := project @e [path, line, excerpt(max_chars: 300)] sort [path asc, line asc];\nemit @v budget_tokens 2000;\nE\n$W/../../bin/writfold tuft run $W/work/a.tuft --repo $W/repo --state $W/state",
+   "result_bytes": 674,
+   "result_head": "tuft/0 program=sha256:ce7142c86beb64d70ba17eb116e992cf1dde735b1f8877cc3cbf7ebccf3086c6 commit=9e0c8d648852e2e6f27c6f9517c71d8e5ea67a49\nfind @h text \"fn trial_blob(\" in \"\" limit=100: coverage=complete files=1664/1664 hits=2\nretain @e range=lines(around=0) bindings=2 schema=writfold-citation/1\nview @v rows=2 merged=0 limited=0 from=0 shown=2 omitted=0 budget_tokens=2000 used=62 estimate=ceil((bytes+1)/4) per text line\ncursor=none\ncolumns path line excerpt\ncrates/writfold-runtime/src/git/trial.rs 145 5258..5277:\"pub fn trial_blob(\\n\"\ndocs/tuft/language.md 42 2115..2210:\"crates/writfold-runtime/sr"
+  },
+  {
+   "tool": "Bash",
+   "input": "W=<trial>; echo 'crates/writfold-runtime/src/git/trial.rs:145: pub fn trial_blob(' > $W/answer.txt",
+   "result_bytes": 31,
+   "result_head": "(Bash completed with no output)"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

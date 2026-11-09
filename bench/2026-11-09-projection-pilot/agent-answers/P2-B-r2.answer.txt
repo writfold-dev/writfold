@@ -1,0 +1,2 @@
+crates/writfold-runtime/src/git/write_objects.rs:81: fn record(output: &mut Vec<u8>, name: &[u8], object: &GitObjectId, tree: bool) {
+crates/writfold-runtime/src/git/write_objects.rs:66: record(&mut input, name, &tree.write(session, None)?, true);

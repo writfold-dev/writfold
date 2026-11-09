@@ -1,0 +1,44 @@
+{
+ "trial": "P4-A-r1",
+ "batch": 1,
+ "models": [
+  "claude-sonnet-5-5"
+ ],
+ "api_calls": 2,
+ "usage_sum": {
+  "input_tokens": 4,
+  "cache_creation_input_tokens": 33889,
+  "cache_read_input_tokens": 31248,
+  "output_tokens": 254
+ },
+ "per_call_usage": [
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 31248,
+   "cache_read_input_tokens": 0,
+   "output_tokens": 201
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 2641,
+   "cache_read_input_tokens": 31248,
+   "output_tokens": 53
+  }
+ ],
+ "tool_calls": 2,
+ "tool_result_bytes": 1317,
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "cd <trial>/repo && mkdir -p ../work && grep -rnF 'writfold-citation/1' crates/ | sed 's/^\\([^:]*:[0-9]*:\\)[ \\t]*/\\1 /' | tee ../answer.txt",
+   "result_bytes": 1256,
+   "result_head": "crates/writfold-app/src/trial/retain.rs:2: //! in the trial state and bound as a `writfold-citation/1` binding descriptor.\ncrates/writfold-app/src/tuft/mod.rs:6: //! `writfold-citation/1` bindings `writfold trial retain` produces, stored in\ncrates/writfold-wire/contracts/agent-stdio/1/contract.json:74: \"durable_citations\": \"The included writfold-citation/1 descriptor schema names candidate immutable material only; it does not expose a citation reader RPC, acquire corpus bytes, authenticate a release, or grant access. trial/retain binds exact bytes in the cooperating trial state only.\"\ncrates/t"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

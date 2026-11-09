@@ -1,0 +1,56 @@
+{
+ "trial": "P1-B-r2",
+ "batch": 6,
+ "models": [
+  "claude-sonnet-5-5"
+ ],
+ "api_calls": 3,
+ "usage_sum": {
+  "input_tokens": 6,
+  "cache_creation_input_tokens": 16424,
+  "cache_read_input_tokens": 86240,
+  "output_tokens": 818
+ },
+ "per_call_usage": [
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 13091,
+   "cache_read_input_tokens": 19086,
+   "output_tokens": 382
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 2800,
+   "cache_read_input_tokens": 32177,
+   "output_tokens": 356
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 533,
+   "cache_read_input_tokens": 34977,
+   "output_tokens": 80
+  }
+ ],
+ "tool_calls": 3,
+ "tool_result_bytes": 1432,
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "mkdir -p <trial>/work && cd <trial> && cat > work/a.tuft <<'E'\n@h := find text \"retain_read\" in \"crates/\" at \"9e0c8d648852e2e6f27c6f9517c71d8e5ea67a49\" limit 500;\n@e := retain @h around lines 0;\n@v := project @e [path, line, excerpt(max_chars: 300)] sort [path asc, line asc];\nemit @v budget_tokens 4000;\nE\n../../bin/writfold tuft run work/a.tuft --repo $PWD/repo --state $PWD/state",
+   "result_bytes": 1011,
+   "result_head": "tuft/0 program=sha256:ce9de5a487a505b87a4134bd19e400bdd8e1ca72cbf6ee3d4c052d71810317af commit=9e0c8d648852e2e6f27c6f9517c71d8e5ea67a49\nfind @h text \"retain_read\" in \"crates/\" limit=500: coverage=complete files=640/640 hits=5\nretain @e range=lines(around=0) bindings=5 schema=writfold-citation/1\nview @v rows=5 merged=0 limited=0 from=0 shown=5 omitted=0 budget_tokens=4000 used=147 estimate=ceil((bytes+1)/4) per text line\ncursor=none\ncolumns path line excerpt\ncrates/writfold-app/src/trial/retain.rs 94 3031..3073:\"    retain_read(&trial, &file, &[range])?\\n\"\ncrates/writfold-app/src/trial/retain.rs"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial> && cat > answer.txt <<'E'\ncrates/writfold-app/src/trial/retain.rs:94:     retain_read(&trial, &file, &[range])?\ncrates/writfold-app/src/trial/retain.rs:110:     retain_read(trial, &read_pinned(executable, repo, commit, path)?, ranges)\ncrates/writfold-app/src/trial/retain.rs:143: pub fn retain_read(\ncrates/writfold-app/src/tuft/mod.rs:194:         for retained in retain_read(trial, &read, &ranges)? {\nE\nsed -i 's/^\\(.*:[0-9]*:\\) */\\1 /' answer.txt; cat answer.txt",
+   "result_bytes": 360,
+   "result_head": "crates/writfold-app/src/trial/retain.rs:94: retain_read(&trial, &file, &[range])?\ncrates/writfold-app/src/trial/retain.rs:110: retain_read(trial, &read_pinned(executable, repo, commit, path)?, ranges)\ncrates/writfold-app/src/trial/retain.rs:143: pub fn retain_read(\ncrates/writfold-app/src/tuft/mod.rs:194: for retained in retain_read(trial, &read, &ranges)? {"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

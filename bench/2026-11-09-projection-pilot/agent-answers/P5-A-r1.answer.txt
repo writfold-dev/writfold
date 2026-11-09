@@ -1,0 +1,2 @@
+crates/writfold-store/src/backend/dolt.rs:32: pub struct DoltBackend<'a> {
+crates/writfold-store/src/backend/git.rs:43: pub struct GitTreeBackend<'a> {

@@ -1,0 +1,50 @@
+{
+ "trial": "P3-B-r2",
+ "batch": 7,
+ "models": [
+  "claude-sonnet-5-5"
+ ],
+ "api_calls": 2,
+ "usage_sum": {
+  "input_tokens": 4,
+  "cache_creation_input_tokens": 15884,
+  "cache_read_input_tokens": 51218,
+  "output_tokens": 814
+ },
+ "per_call_usage": [
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 13046,
+   "cache_read_input_tokens": 19086,
+   "output_tokens": 320
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 2838,
+   "cache_read_input_tokens": 32132,
+   "output_tokens": 494
+  }
+ ],
+ "tool_calls": 3,
+ "tool_result_bytes": 1337,
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "B=<trial>\nmkdir -p $B/work\ncat > $B/work/a.tuft <<'E'\n@h := find text \"Refusal::Pin\" in \"crates/\" at \"9e0c8d648852e2e6f27c6f9517c71d8e5ea67a49\" limit 1000;\n@e := retain @h around lines 0;\n@v := project @e [path, line, excerpt(max_chars: 400)] sort [path asc, line asc];\nemit @v budget_tokens 20000;\nE\n$B/../../bin/writfold tuft run $B/work/a.tuft --repo $B/repo --state $B/state",
+   "result_bytes": 1245,
+   "result_head": "tuft/0 program=sha256:8924fca5f955926f97bc12106531be4bc3c21b15d4552cfb75d2da9f477f952e commit=9e0c8d648852e2e6f27c6f9517c71d8e5ea67a49\nfind @h text \"Refusal::Pin\" in \"crates/\" limit=1000: coverage=complete files=640/640 hits=6\nretain @e range=lines(around=0) bindings=6 schema=writfold-citation/1\nview @v rows=6 merged=0 limited=0 from=0 shown=6 omitted=0 budget_tokens=20000 used=206 estimate=ceil((bytes+1)/4) per text line\ncursor=none\ncolumns path line excerpt\ncrates/writfold-app/src/tuft/backend_tests.rs 75 2809..2884:\"    require(matches!(page, Err(Refusal::Pin(_))), \\\"missing pin refused\\\")?"
+  },
+  {
+   "tool": "Bash",
+   "input": "B=<trial>\ncat > $B/answer.txt <<'E'\ncrates/writfold-app/src/tuft/backend_tests.rs:75:     require(matches!(page, Err(Refusal::Pin(_))), \"missing pin refused\")?;\ncrates/writfold-app/src/tuft/tests.rs:200:         assert!(matches!(refusal, Refusal::Pin(_)), \"{refusal}\");\ncrates/writfold-store/src/backend/dolt.rs:61:             return Err(Refusal::Pin(\"snapshot pin differs from the request\".into()));\ncrates/writfold-store/src/backend/dolt.rs:146:             Refusal::Pin(error.to_string())\ncrates/writfold-store/src/backend/git.rs:232:             Refusal::Pin(\"not a commit in this repository\".into())\ncrates/writfold-store/tests/backend_conformance.rs:44:             _ => Err(Refusal::Pin(\"no such snapshot\".into())),\nE",
+   "result_bytes": 31,
+   "result_head": "(Bash completed with no output)"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

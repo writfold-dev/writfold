@@ -1,0 +1,4 @@
+@h := find text "writfold-citation/1" in "crates/" at "9e0c8d648852e2e6f27c6f9517c71d8e5ea67a49" limit 1000;
+@e := retain @h around lines 0;
+@v := project @e [path, line, excerpt(max_chars: 400)] sort [path asc, line asc];
+emit @v budget_tokens 20000;
