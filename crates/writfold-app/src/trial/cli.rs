@@ -7,6 +7,10 @@ pub const USAGE: &str = "\
 writfold trial init                     create the private trial state directory
 writfold trial prepare --repo DIR --file PATH --recipe FILE [--report FILE]
                                         worktree at HEAD + Splicery replay; records Prepared
+writfold trial run --repo DIR --file PATH --recipe FILE [--tuft QUERY.tuft]
+                  [--weft REVIEW.weft --weft-bin PATH]
+                                        tuft run, then Weft (citation \"tuft:@VIEW#N\" names a
+                                        retained row), then prepare; stops before approval
 writfold trial retain --repo DIR --commit SHA --file PATH --bytes LO..HI
                                         retain exact bytes at a pinned commit; prints the
                                         binding digest a Weft report cites as evidence
@@ -82,6 +86,23 @@ impl Args {
     }
 }
 
+fn trial_run(parsed: &Args, state: &Path) -> Result<String> {
+    let weft = match (parsed.option("weft"), parsed.option("weft-bin")) {
+        (Some(review), Some(bin)) => Some((Path::new(review), Path::new(bin))),
+        (None, None) => None,
+        _ => return Err("--weft and --weft-bin are given together".into()),
+    };
+    let ran = super::run::run(&super::run::Request {
+        state,
+        repo: Path::new(parsed.required("repo")?),
+        file: parsed.required("file")?,
+        recipe: Path::new(parsed.required("recipe")?),
+        tuft: parsed.option("tuft").map(Path::new),
+        weft,
+    })?;
+    Ok(super::run::render(&ran))
+}
+
 pub fn main(args: &[String]) -> Result<String> {
     let parsed = parse(args)?;
     let state = parsed.state()?;
@@ -109,6 +130,7 @@ pub fn main(args: &[String]) -> Result<String> {
             out.push_str(&format!("next: writfold trial approve {}", p.run));
             Ok(out)
         }
+        Some("run") => trial_run(&parsed, &state),
         Some("retain") => {
             let (lo, hi) = parsed
                 .required("bytes")?

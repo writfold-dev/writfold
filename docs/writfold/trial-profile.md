@@ -31,6 +31,86 @@ its bounded selector detail (match count and sites) in the error text.
 Splicery's own `--diff`, stdin-recipe and `--out` CLI options are not part of
 this path: Writfold replays recipe files through the library, not the CLI.
 
+## One command
+
+`writfold trial run` goes from evidence to a prepared edit and stops at
+approval:
+
+```sh
+writfold trial run --repo DIR --file PATH --recipe EDIT.spl \
+    [--tuft QUERY.tuft] [--weft REVIEW.weft --weft-bin PATH] [--state DIR]
+```
+
+It runs, in order, exactly what the separate commands run:
+
+1. `tuft`: the Tuft program, as `writfold tuft run` does; `retain` keeps its
+   hits as `writfold-citation/1` bindings in this state.
+2. `weft` (with `--weft`): the review source, after template substitution
+   (below), is retained and written to `$WRITFOLD_STATE/weft/<sha256>.weft`;
+   the binary named by `--weft-bin` runs `prove --json -- <that file>`, and its
+   `weft.report/1` is written next to it.
+3. `prepare`: exactly `trial prepare --report` with that report (no report
+   without `--weft`).
+
+The first failure stops the run and names its step (`step weft refused: ...`).
+A refused `prepare` leaves no worktree, as it always does. `approve`, `apply`
+and `recover` stay separate commands.
+
+**Citation template.** Inside the Weft source given to `trial run` only,
+`citation "tuft:@VIEW#N"` stands for the N-th row (from 1) of the Tuft view
+`@VIEW`, in projected order before the emit budget pages it. Writfold replaces
+the string with that row's exact binding digest, so Weft reads ordinary
+`asset x = citation "<digest>";` source; the substituted source is what Weft
+reads and what is retained. **This is a Writfold-side template, not Weft
+syntax.** Every `"tuft:` in the source must be such a template directly after
+`citation` and must resolve to a retained row; a wrong view name, a row out of
+range, a view that does not `retain`, or a template anywhere else (a comment
+included) refuses before Weft runs.
+
+**Weft binary.** Writfold does not bundle Weft. `--weft-bin` is required with
+`--weft`, is canonicalized and run by path (never looked up on `PATH`), and its
+sha256, read just before it runs, is printed. Weft's exit status is not read
+as a verdict: exits 0–2 hand the output to the same report check `prepare`
+uses, which refuses anything but a complete local report; another status, a
+signal or 30 s without finishing refuses.
+
+Example (a three-line repository, the real Weft binary):
+
+```text
+$ cat q.tuft
+@h := find text "open(url)" at "2fc202c137e58f5fbfe6d20ac522595e3f16721b";
+@e := retain @h around lines 0;
+@v := project @e [path, line, binding];
+emit @v;
+$ grep citation review.weft
+    asset call_site = citation "tuft:@v#1";
+$ writfold trial run --repo repo --file src/client.rs --recipe edit.spl \
+    --tuft q.tuft --weft review.weft --weft-bin "$WEFT"
+tuft @v retained=1 coverage=complete files=1/1 hits=1 shown=1 omitted=0 cursor=none program=fcf220f04fdd
+  "tuft:@v#1" = af572aad857cd76cf36983ea58e32ab55136afe87e6077ce24e867ee20c28880 (src/client.rs:2)
+weft bin sha256:345ea488… source sha256:d618877d… (results are hypothetical)
+  check retry_safe: entailed
+  check bounded: undetermined
+prepared run run.1794273538.214907
+  file src/client.rs at 2fc202c137e58f5fbfe6d20ac522595e3f16721b
+  prepared edit wfwt1:prepared-edit:sha256:bac75e9a…
+next: writfold trial approve run.1794273538.214907 --require retry_safe
+$ writfold trial approve run.1794273538.214907 --require bounded
+writfold: approval refused: required check "bounded" is not entailed
+```
+
+The suggested `--require` lists the checks Weft reported `entailed`; choose
+the ones the edit actually needs.
+
+With a stub Weft on the latency-bench repositories
+([`bench/2026-11-10-trial-run-latency`](../../bench/2026-11-10-trial-run-latency/)),
+`trial run` takes a median of 188 ms (small) and 319 ms (100,000 files),
+within 10 ms of its parts run one by one. Tests
+(`crates/writfold-app/src/trial/run/`) cover template substitution against the
+retained binding, unresolved templates refused before Weft runs, each step's
+named refusal leaving no worktree, and a refuted check making a later
+`approve --require` refuse.
+
 ## What each step does
 
 | Step | Effect | Ledger record |

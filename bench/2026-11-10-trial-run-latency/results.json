@@ -1,0 +1,338 @@
+{
+  "ceiling_ms": 5000,
+  "target_p95_ms": 1000,
+  "large_files": 100000,
+  "operations": [
+    {
+      "repo": "large",
+      "op": "apply",
+      "samples_ms": [
+        307,
+        408,
+        455,
+        461,
+        552
+      ],
+      "median_ms": 455,
+      "p95_ms": 552,
+      "max_ms": 552,
+      "within_budget": true
+    },
+    {
+      "repo": "large",
+      "op": "approve",
+      "samples_ms": [
+        174,
+        189,
+        220,
+        242,
+        274
+      ],
+      "median_ms": 220,
+      "p95_ms": 274,
+      "max_ms": 274,
+      "within_budget": true
+    },
+    {
+      "repo": "large",
+      "op": "part-prepare",
+      "samples_ms": [
+        133,
+        135,
+        139,
+        139,
+        168
+      ],
+      "median_ms": 139,
+      "p95_ms": 168,
+      "max_ms": 168,
+      "within_budget": true
+    },
+    {
+      "repo": "large",
+      "op": "part-tuft",
+      "samples_ms": [
+        169,
+        170,
+        171,
+        176,
+        180
+      ],
+      "median_ms": 171,
+      "p95_ms": 180,
+      "max_ms": 180,
+      "within_budget": true
+    },
+    {
+      "repo": "large",
+      "op": "part-weft",
+      "samples_ms": [
+        4,
+        4,
+        4,
+        4,
+        7
+      ],
+      "median_ms": 4,
+      "p95_ms": 7,
+      "max_ms": 7,
+      "within_budget": true
+    },
+    {
+      "repo": "large",
+      "op": "prepare",
+      "samples_ms": [
+        202,
+        203,
+        208,
+        229,
+        252
+      ],
+      "median_ms": 208,
+      "p95_ms": 252,
+      "max_ms": 252,
+      "within_budget": true
+    },
+    {
+      "repo": "large",
+      "op": "show",
+      "samples_ms": [
+        106,
+        127,
+        169,
+        169,
+        187
+      ],
+      "median_ms": 169,
+      "p95_ms": 187,
+      "max_ms": 187,
+      "within_budget": true
+    },
+    {
+      "repo": "large",
+      "op": "trial-run",
+      "samples_ms": [
+        311,
+        314,
+        319,
+        349,
+        487
+      ],
+      "median_ms": 319,
+      "p95_ms": 487,
+      "max_ms": 487,
+      "within_budget": true
+    },
+    {
+      "repo": "large",
+      "op": "tuft-retain50",
+      "samples_ms": [
+        822,
+        866,
+        1084,
+        1130,
+        1376
+      ],
+      "median_ms": 1084,
+      "p95_ms": 1376,
+      "max_ms": 1376,
+      "within_budget": false
+    },
+    {
+      "repo": "large",
+      "op": "tuft-rx",
+      "samples_ms": [
+        900,
+        969,
+        975,
+        1010,
+        1285
+      ],
+      "median_ms": 975,
+      "p95_ms": 1285,
+      "max_ms": 1285,
+      "within_budget": false
+    },
+    {
+      "repo": "large",
+      "op": "tuft-text",
+      "samples_ms": [
+        476,
+        504,
+        594,
+        889,
+        914
+      ],
+      "median_ms": 594,
+      "p95_ms": 914,
+      "max_ms": 914,
+      "within_budget": true
+    },
+    {
+      "repo": "small",
+      "op": "apply",
+      "samples_ms": [
+        346,
+        371,
+        444,
+        674,
+        855
+      ],
+      "median_ms": 444,
+      "p95_ms": 855,
+      "max_ms": 855,
+      "within_budget": true
+    },
+    {
+      "repo": "small",
+      "op": "approve",
+      "samples_ms": [
+        166,
+        259,
+        308,
+        391,
+        474
+      ],
+      "median_ms": 308,
+      "p95_ms": 474,
+      "max_ms": 474,
+      "within_budget": true
+    },
+    {
+      "repo": "small",
+      "op": "part-prepare",
+      "samples_ms": [
+        114,
+        134,
+        135,
+        136,
+        161
+      ],
+      "median_ms": 135,
+      "p95_ms": 161,
+      "max_ms": 161,
+      "within_budget": true
+    },
+    {
+      "repo": "small",
+      "op": "part-tuft",
+      "samples_ms": [
+        27,
+        32,
+        37,
+        42,
+        73
+      ],
+      "median_ms": 37,
+      "p95_ms": 73,
+      "max_ms": 73,
+      "within_budget": true
+    },
+    {
+      "repo": "small",
+      "op": "part-weft",
+      "samples_ms": [
+        4,
+        6,
+        6,
+        10,
+        11
+      ],
+      "median_ms": 6,
+      "p95_ms": 11,
+      "max_ms": 11,
+      "within_budget": true
+    },
+    {
+      "repo": "small",
+      "op": "prepare",
+      "samples_ms": [
+        88,
+        213,
+        264,
+        356,
+        384
+      ],
+      "median_ms": 264,
+      "p95_ms": 384,
+      "max_ms": 384,
+      "within_budget": true
+    },
+    {
+      "repo": "small",
+      "op": "show",
+      "samples_ms": [
+        101,
+        105,
+        112,
+        120,
+        154
+      ],
+      "median_ms": 112,
+      "p95_ms": 154,
+      "max_ms": 154,
+      "within_budget": true
+    },
+    {
+      "repo": "small",
+      "op": "trial-run",
+      "samples_ms": [
+        159,
+        179,
+        188,
+        193,
+        215
+      ],
+      "median_ms": 188,
+      "p95_ms": 215,
+      "max_ms": 215,
+      "within_budget": true
+    },
+    {
+      "repo": "small",
+      "op": "tuft-retain50",
+      "samples_ms": [
+        31,
+        107,
+        111,
+        143,
+        146
+      ],
+      "median_ms": 111,
+      "p95_ms": 146,
+      "max_ms": 146,
+      "within_budget": true
+    },
+    {
+      "repo": "small",
+      "op": "tuft-rx",
+      "samples_ms": [
+        12,
+        14,
+        16,
+        18,
+        19
+      ],
+      "median_ms": 16,
+      "p95_ms": 19,
+      "max_ms": 19,
+      "within_budget": true
+    },
+    {
+      "repo": "small",
+      "op": "tuft-text",
+      "samples_ms": [
+        51,
+        57,
+        59,
+        81,
+        99
+      ],
+      "median_ms": 59,
+      "p95_ms": 99,
+      "max_ms": 99,
+      "within_budget": true
+    }
+  ],
+  "within_budget": false
+}

@@ -40,6 +40,7 @@ cargo build --release -p writfold
 | `writfold trial approve --require CHECK` | Refuses unless each named check of the bound Weft report is `entailed` (recorded as hypothetical, never as grounded) | proved: `required_entailed_spec` |
 | `writfold trial retain` | Keeps exact bytes of a file at a full commit id as a citation; reports citing anything else are refused | [trial profile](docs/writfold/trial-profile.md) |
 | `writfold tuft run` | Exact find, retain, project and emit over one pinned commit | [Tuft v0](docs/tuft/language.md) |
+| `writfold trial run` | Tuft evidence → a Weft report from the binary you name → `prepare`, in one command; stops at approval | [one command](docs/writfold/trial-profile.md#one-command) |
 | `writfold serve` | JSON-RPC 2.0 on stdio; with `writfold.trial/1`, `trial/show`, `trial/retain` and `trial/prepare`. Approval stays CLI-only | [trial profile](docs/writfold/trial-profile.md#through-serve) |
 
 Every agent-facing operation is budgeted at 1 s p95 (5 s ceiling); on a
@@ -95,6 +96,25 @@ or `--json` for the full envelope.
 
 Search is exact text or a bounded regex; semantic, fuzzy and ranked search
 are refused until the Omnigraph backend exists.
+
+### From evidence to a prepared edit in one command
+
+`writfold trial run` runs a Tuft program, a Weft review and `prepare` in
+order and stops before approval. In the review, `citation "tuft:@v#1"` is a
+Writfold-side template (not Weft syntax) for the first row of view `@v`;
+Writfold substitutes its exact binding digest before Weft reads the source.
+Weft is not bundled: name its binary, and its sha256 is printed.
+
+```sh
+target/release/writfold trial run --repo /path/to/repo --file src/client.rs \
+    --recipe edit.spl --tuft q.tuft --weft review.weft --weft-bin /path/to/weft
+target/release/writfold trial approve <run> --require <entailed-check>
+target/release/writfold trial apply <run>
+```
+
+It prints the retained bindings, each Weft check (hypothetical), the run and
+the prepared-edit digest. Any failure names its step; see
+[one command](docs/writfold/trial-profile.md#one-command).
 
 `cargo test --workspace` runs the Rust test suite, including checks that the
 Rust kernels agree with cases exported from the Lean model.

@@ -12,7 +12,7 @@ use crate::trial::Result;
 use std::collections::BTreeMap;
 use tuft::ir::{FindPlan, MatcherPlan};
 use tuft::locate::{line_at, text_matches};
-use tuft::view::{SearchReport, Stop};
+use tuft::view::{Row, SearchReport, Stop};
 use writfold_domain::GitObjectId;
 use writfold_domain::citation::Coverage;
 use writfold_store::backend::git::GitTreeBackend;
@@ -33,6 +33,21 @@ pub struct Found {
     pub report: SearchReport,
     /// Exact bytes of every file with a hit, as `read_exact` returned them.
     pub files: BTreeMap<String, Vec<u8>>,
+}
+
+impl Found {
+    /// The hits as unretained rows.
+    pub fn rows(&self) -> Vec<Row> {
+        self.hits
+            .iter()
+            .map(|hit| Row {
+                path: hit.path.clone(),
+                range: (hit.range.0 as u64, hit.range.1 as u64),
+                line: hit.line,
+                evidence: None,
+            })
+            .collect()
+    }
 }
 
 struct Collector<'a> {

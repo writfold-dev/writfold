@@ -32,6 +32,7 @@ mod retain_tests;
 pub(crate) mod rpc;
 #[cfg(test)]
 mod rpc_tests;
+pub mod run;
 mod show;
 #[cfg(test)]
 mod sparse_tests;

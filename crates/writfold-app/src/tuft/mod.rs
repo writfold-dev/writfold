@@ -26,7 +26,7 @@ use std::sync::atomic::AtomicBool;
 use std::time::Duration;
 use tuft::emit::{Emitted, Format, Run, emit};
 use tuft::locate::{around, line_at};
-use tuft::view::{Evidence, Row, project};
+use tuft::view::{Evidence, Projected, Row, project};
 use tuft::{Deferred, Diagnostic, Plan};
 use writfold_domain::{ByteCount, GitObjectFormat, GitObjectId};
 use writfold_runtime::git::{GitBudgets, GitExecutable};
@@ -115,8 +115,19 @@ fn commit(text: &str) -> Result<GitObjectId> {
     Ok(GitObjectId::new(format, text.to_owned())?)
 }
 
+/// One run: the plan, all projected rows (before paging) and the page.
+pub struct Executed {
+    pub plan: Plan,
+    pub projected: Projected,
+    pub emitted: Emitted,
+}
+
 /// Compile and run one program; returns the emitted page.
 pub fn run(invocation: &Invocation<'_>) -> Result<Emitted> {
+    execute(invocation).map(|executed| executed.emitted)
+}
+/// Compile and run one program, keeping the projected rows.
+pub fn execute(invocation: &Invocation<'_>) -> Result<Executed> {
     let plan = compile(invocation.source, invocation.name)?;
     let trial = Trial::open(invocation.state)?;
     let executable = trial.executable()?;
@@ -131,7 +142,7 @@ pub fn run(invocation: &Invocation<'_>) -> Result<Emitted> {
     );
     let found = search::find(&backend, &pin, &plan.find)?;
     let (rows, retained) = match &plan.retain {
-        None => (hit_rows(&found), None),
+        None => (found.rows(), None),
         Some(retain) => {
             let source = (invocation.repo, plan.find.commit.as_str());
             let (rows, count) = retain_rows(&trial, &executable, source, &found, retain.around)?;
@@ -145,20 +156,12 @@ pub fn run(invocation: &Invocation<'_>) -> Result<Emitted> {
         retained,
         projected: &projected,
     };
-    Ok(emit(run, invocation.cursor, invocation.format)?)
-}
-
-fn hit_rows(found: &search::Found) -> Vec<Row> {
-    found
-        .hits
-        .iter()
-        .map(|hit| Row {
-            path: hit.path.clone(),
-            range: (hit.range.0 as u64, hit.range.1 as u64),
-            line: hit.line,
-            evidence: None,
-        })
-        .collect()
+    let emitted = emit(run, invocation.cursor, invocation.format)?;
+    Ok(Executed {
+        plan,
+        projected,
+        emitted,
+    })
 }
 
 /// Retain every hit (or its whole lines `around`), one pinned blob read per
