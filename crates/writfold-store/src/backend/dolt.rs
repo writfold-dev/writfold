@@ -11,6 +11,7 @@
 //! `follow` waits for Omnigraph. A writer instance (`DoltBackend::writer`)
 //! holds the realm's exclusive writer lease and adds the conditional commit in
 //! `dolt/write.rs`; a reader instance refuses writes as `Unavailable`.
+mod origin;
 mod ownership;
 mod retain;
 mod write;
@@ -19,7 +20,7 @@ pub use ownership::{DoltWriteApproval, WriterId};
 
 use super::BackendKind;
 use super::{
-    Capability, ExactRead, ExactRecord, LookupCursor, LookupPage, LookupRequest, RecordKey,
+    Capability, ExactRead, ExactRecord, LookupCursor, LookupPage, LookupRequest, Origin, RecordKey,
     RecordKind, Refusal, ScanRecord, StorageBackend, WriteObservation, WriteOutcome, WriteRequest,
     admit_lookup, scan,
 };
@@ -207,6 +208,10 @@ impl StorageBackend for DoltBackend<'_> {
         cancelled: &AtomicBool,
     ) -> Result<WriteObservation<DoltReadPin>, Refusal> {
         write::observe(self, request, cancelled)
+    }
+
+    fn origin(&self, cancelled: &AtomicBool) -> Result<Origin<DoltReadPin>, Refusal> {
+        origin::origin(self, cancelled)
     }
 
     fn retain(&mut self, pin: &DoltReadPin, cancelled: &AtomicBool) -> Result<(), Refusal> {

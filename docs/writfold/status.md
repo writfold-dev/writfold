@@ -226,8 +226,10 @@ claim and does not authorize publication.
 
    Quality and unit gates pass on main, the kill sweep included (`dolt_publication_component`;
    [order and recovery](dolt-integration.md#publication-order-and-recovery)).
-   Next: a signed candidate binding, bootstrap publication and the remaining
-   DINT02 owners and gates.
+   Bootstrap publication of a realm's first release is built
+   ([bootstrap publication](dolt-integration.md#bootstrap-publication)), with
+   its own kill sweep; it awaits the quality and unit gates on main.
+   Next: a signed candidate binding and the remaining DINT02 owners and gates.
    Continue exact-candidate Omnigraph qualification; its Rust adapter must pass
    the same conformance suite before it replaces Dolt.
    The source-built PR #1235 trial is an authorized development unblocker, not

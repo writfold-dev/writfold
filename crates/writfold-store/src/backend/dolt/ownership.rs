@@ -37,18 +37,22 @@ impl WriterId {
 }
 
 /// Write authority derived only from a strictly verified signed Dolt approval.
-/// It binds one expected-old pin and one target realm; it is not publication.
+/// It binds one expected-old state and one target realm; it is not publication.
+/// An ordinary approval binds its signed predecessor release and base pin. A
+/// bootstrap approval binds neither: it authorizes only the realm's first
+/// Writfold write, from a head with no Writfold write on its history, which
+/// the writer checks under the same native lease as the commit.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DoltWriteApproval {
     plan: PlanDigest,
-    release: ReleaseId,
-    base: DoltReadPin,
+    base: Option<(ReleaseId, DoltReadPin)>,
     target: DoltTarget,
 }
 
 impl DoltWriteApproval {
-    /// Bootstrap approvals name no expected-old head, and migration approvals
-    /// change the epoch or database; neither authorizes a B0 conditional write.
+    /// Bootstrap approvals name no expected-old head (see `bootstrap`), and
+    /// migration approvals change the epoch or database; neither authorizes a
+    /// B0 conditional write.
     pub fn admit(authorization: &SuppliedDoltAuthorization<'_>) -> Result<Self, Refusal> {
         let operation = authorization.operation();
         let base = operation.base().as_ref().ok_or(Refusal::Unauthorized(
@@ -61,8 +65,23 @@ impl DoltWriteApproval {
         }
         Ok(Self {
             plan: operation.id().clone(),
-            release: base.release().clone(),
-            base: base.pin().clone(),
+            base: Some((base.release().clone(), base.pin().clone())),
+            target: operation.target().clone(),
+        })
+    }
+
+    /// A verified bootstrap approval (neither base nor mapping): authority for
+    /// the realm's first Writfold write only. Anything else refuses.
+    pub fn bootstrap(authorization: &SuppliedDoltAuthorization<'_>) -> Result<Self, Refusal> {
+        let operation = authorization.operation();
+        if operation.base().is_some() || operation.mapping().is_some() {
+            return Err(Refusal::Unauthorized(
+                "only an approval with neither base nor mapping is a bootstrap",
+            ));
+        }
+        Ok(Self {
+            plan: operation.id().clone(),
+            base: None,
             target: operation.target().clone(),
         })
     }
@@ -70,11 +89,13 @@ impl DoltWriteApproval {
         &self.plan
     }
     /// The signed predecessor release: a publication's Git expected-old value.
-    pub fn release(&self) -> &ReleaseId {
-        &self.release
+    /// `None` for a bootstrap, whose expected-old completed ref is absent.
+    pub fn release(&self) -> Option<&ReleaseId> {
+        self.base.as_ref().map(|(release, _)| release)
     }
-    pub fn base(&self) -> &DoltReadPin {
-        &self.base
+    /// The signed base pin; `None` for a bootstrap.
+    pub fn base(&self) -> Option<&DoltReadPin> {
+        self.base.as_ref().map(|(_, pin)| pin)
     }
     pub fn target(&self) -> &DoltTarget {
         &self.target
@@ -91,12 +112,23 @@ pub(super) fn owns(target: &DoltTarget, pin: &DoltReadPin) -> bool {
         && pin.producer() == target.producer()
 }
 
-/// The approval names exactly this expected-old pin and this writer's realm.
+/// What a write must additionally hold under the native lease.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(super) enum Expected {
+    /// The signed base pin is the expected-old head.
+    Signed,
+    /// A bootstrap: the expected-old head must be the realm's origin, with no
+    /// Writfold write on its history.
+    Origin,
+}
+
+/// The approval names exactly this expected-old pin (or is a bootstrap) and
+/// this writer's realm.
 pub(super) fn authorizes(
     approval: Option<&DoltWriteApproval>,
     target: &DoltTarget,
     expected_old: &DoltReadPin,
-) -> Result<(), Refusal> {
+) -> Result<Expected, Refusal> {
     let approval = approval.ok_or(Refusal::Unauthorized(
         "a verified signed Dolt approval is required",
     ))?;
@@ -105,12 +137,13 @@ pub(super) fn authorizes(
             "approval targets a different realm or epoch",
         ));
     }
-    if approval.base() != expected_old {
-        return Err(Refusal::Unauthorized(
+    match approval.base() {
+        None => Ok(Expected::Origin),
+        Some(base) if base == expected_old => Ok(Expected::Signed),
+        Some(_) => Err(Refusal::Unauthorized(
             "approval names a different expected-old head",
-        ));
+        )),
     }
-    Ok(())
 }
 
 /// The recorded claim: who holds the writer lease for which realm.

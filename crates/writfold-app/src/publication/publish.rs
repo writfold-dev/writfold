@@ -2,7 +2,7 @@
 use super::release::CANDIDATE_PATH;
 use super::{
     Candidate, Manifest, Publication, PublicationAuthority, PublicationError, ReleasePin, Releases,
-    same_release,
+    same_release, storage_base,
 };
 use std::sync::atomic::AtomicBool;
 use writfold_domain::{GitObjectId, PlanDigest};
@@ -25,15 +25,23 @@ where
     B::Pin: ReleasePin,
     B::WriteAuthority: PublicationAuthority<B::Pin>,
 {
+    let base = storage_base(backend, authority, cancelled)?;
+    let release = authority.base().map(|(release, _)| release);
     let completed = releases.completed(cancelled)?;
-    let completed_is_base = same_release(authority.release(), completed.as_ref());
+    let completed_is_base = same_release(release, completed.as_ref());
     let base_pin_matches = match (&completed, completed_is_base) {
-        (Some(base), true) => {
-            &releases.interpret::<B::Pin>(base, cancelled)?.manifest.pin == authority.base()
+        (Some(current), true) => {
+            releases
+                .interpret::<B::Pin>(current, cancelled)?
+                .manifest
+                .pin
+                == base.pin
         }
+        (None, true) => !base.written,
         _ => false,
     };
     let before = Before {
+        bootstrap: release.is_none(),
         completed_is_base,
         base_pin_matches,
         prepared: releases
@@ -48,11 +56,11 @@ where
             });
         }
         Admission::Misinterpreted => return Err(PublicationError::Misinterpreted),
+        Admission::Initialized => return Err(PublicationError::Initialized),
         Admission::AlreadyPrepared => return Err(PublicationError::AlreadyPrepared),
     }
-    let base = completed.ok_or(PublicationError::Diverged)?;
     let blob = retain(releases, candidate, cancelled)?;
-    let request = candidate.request(authority.base())?;
+    let request = candidate.request(&base.pin)?;
     let new = match backend.admit_write(&request, Some(authority), cancelled) {
         Ok(WriteOutcome::Committed { new }) => new,
         Ok(WriteOutcome::Stale { observed }) => return Ok(Publication::Stale { observed }),
@@ -64,7 +72,7 @@ where
         releases,
         Pending {
             operation: authority.operation(),
-            base: &base,
+            base: completed.as_ref(),
             candidate,
             blob,
             pin: new,
@@ -78,7 +86,8 @@ where
 /// The storage commit exists; everything still owed to Git.
 pub(super) struct Pending<'p, P> {
     pub(super) operation: &'p PlanDigest,
-    pub(super) base: &'p GitObjectId,
+    /// The Git expected-old release; `None` for a bootstrap.
+    pub(super) base: Option<&'p GitObjectId>,
     pub(super) candidate: &'p Candidate,
     pub(super) blob: GitObjectId,
     pub(super) pin: P,
@@ -114,8 +123,7 @@ where
                 path: path(CANDIDATE_PATH)?,
                 blob: pending.blob.clone(),
             }];
-            let input =
-                GitPrepareInput::new(pending.operation, Some(pending.base), &manifest, &entries);
+            let input = GitPrepareInput::new(pending.operation, pending.base, &manifest, &entries);
             let native = releases.native();
             native
                 .prepare(releases.executable(), input, releases.budgets(), cancelled)

@@ -42,6 +42,7 @@ pub trait StorageBackend {
         -> Result<WriteOutcome<Self::Pin>, Refusal>;
     fn observe(&self, request: &WriteRequest<Self::Pin>, cancelled: &AtomicBool)
         -> Result<WriteObservation<Self::Pin>, Refusal>;
+    fn origin(&self, cancelled: &AtomicBool) -> Result<Origin<Self::Pin>, Refusal>;
     fn retain(&mut self, pin: &Self::Pin, cancelled: &AtomicBool) -> Result<(), Refusal>;
 }
 ```
@@ -118,6 +119,13 @@ guarded `DOLT_BRANCH` under the same coordination lease. A reconciler such as
 [publication recovery](dolt-integration.md#publication-order-and-recovery)
 calls it before reading such a head.
 
+`origin()` is read-only. It reports the realm's origin, the head before the
+first write through the boundary, and whether such a write is on the head's
+history. On Dolt, that is the head while no commit carries the writer's marker
+family, and afterwards the parent of the earliest one. It is the storage base
+of a [bootstrap publication](dolt-integration.md#bootstrap-publication), which
+recovery recomputes. Writer instances only.
+
 One writer instance per realm holds the realm's exclusive writer lease; a second
 writer is refused `NotOwner` while the first is live. A committed head is
 storage state only. It is not publication (completed Git CAS remains the
@@ -191,7 +199,13 @@ producer must equal the admitted executable's digest.
 writer. Each write therefore needs a `DoltWriteApproval`, built only from a
 strictly verified `SuppliedDoltAuthorization`. Its base pin must equal the
 request's expected-old pin, and its target must equal the writer's target.
-Bootstrap approvals (no base) and migration approvals (a mapping) are refused.
+Migration approvals (a mapping) are refused. A bootstrap approval (no base) is
+refused by `DoltWriteApproval::admit`. `DoltWriteApproval::bootstrap` admits it
+for the realm's first Writfold write only. That write must start from the
+realm's origin: under the same coordination lease as the commit, the writer
+refuses it if any commit on the head's history carries the writer's marker
+family. `StorageBackend::origin` reports that origin read-only. See
+[bootstrap publication](dolt-integration.md#bootstrap-publication).
 The approval binds the expected-old head, not the row changes. Because that head
 can commit once, an approval authorizes at most one commit.
 

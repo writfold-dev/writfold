@@ -296,8 +296,10 @@ do not skip these publication prerequisites or enable a corpus/effect service.
 This is the **first DINT02 slice**: one verified signed `DoltOperation`
 approval authorizes one publication of one prepared candidate through the
 [Dolt conditional writer](storage-backend.md#the-dolt-conditional-writer), and
-the completed Git CAS makes it visible. It is a scoped component, not a DINT02,
-V15/M11 or WF pass.
+the completed Git CAS makes it visible. A signed bootstrap approval creates a
+realm's first release through the same order
+([bootstrap publication](#bootstrap-publication)). It is a scoped component,
+not a DINT02, V15/M11 or WF pass.
 
 | Part | Where |
 | --- | --- |
@@ -305,11 +307,14 @@ V15/M11 or WF pass.
 | Pure decisions (`admit`, `resolve`) | `crates/writfold-core/src/publication.rs`, typed adapter `writfold_kernel::publication` |
 | Stale Git reference-lock reconciliation | `GitWriterLease::clear_stale_ref_locks` (`writfold-runtime/src/git/reconcile.rs`) |
 | Retention of an unretained write head | `StorageBackend::retain`; Dolt: `DoltSql::retain_head` (`writfold-store/src/backend/dolt/retain.rs`) |
+| Realm origin, the bootstrap's storage base | `StorageBackend::origin`; Dolt: `DoltSql::origin_probe` (`writfold-store/src/backend/dolt/origin.rs`) |
+| Bootstrap write authority | `DoltWriteApproval::bootstrap` (`writfold-store/src/backend/dolt/ownership.rs`) |
 | Real Dolt and Git tests | `crates/writfold-app/tests/publication.rs` |
 
 The publication is generic over the storage trait. The release manifest names
 a backend pin through `ReleasePin`, and the approval's checked fields come
-through `PublicationAuthority`. An Omnigraph adapter would implement the same
+through `PublicationAuthority`: the operation, and the signed base release and
+pin, which a bootstrap does not have. An Omnigraph adapter would implement the same
 two traits; nothing in the order is Dolt-specific.
 
 ### The order
@@ -413,6 +418,53 @@ is again `Unknown` → `observe`. There is no double publish:
 they are not yet in the Charon `start_from` list and no theorem is claimed. A
 kernel test checks the no-split properties over all 64 fact combinations.
 
+### Bootstrap publication
+
+A realm's first release comes from a verified signed **bootstrap** approval:
+a `DoltOperation` with neither base nor mapping (the `bootstrap` vector's
+shape in `writfold-wire/fixtures/dolt-operation`, re-targeted and signed for
+the realm). `DoltWriteApproval::admit` still refuses it for an ordinary write.
+`DoltWriteApproval::bootstrap` admits it as authority for the realm's first
+Writfold write only. It runs the same order and the same recovery as any
+publication. Only the two expected-old states differ:
+
+- **Git:** the completed ref must be **absent**. The prepared commit has no
+  parent, and the Git CAS creates the completed ref. That CAS is still the only
+  visibility point.
+- **Dolt:** the base is the realm's **origin**, the head before the first
+  Writfold write. It is read-only and the same before and after a crash.
+  Every commit the writer makes starts with the `writfold-dolt-write/1 `
+  marker family, and the writer advances `main` linearly. So the origin is
+  the current head while no such commit is on the head's history. Afterwards
+  it is the parent of the earliest one (`DoltSql::origin_probe`).
+
+The signed bootstrap binds the target: realm, KB, database, epoch, schema and
+query digests, storage profile and producer. The write's transaction guard
+checks them against `wf_reader_meta`. The origin commit itself is observed,
+not signed, so the writer checks it again. Under the same coordination lease
+as the commit, it refuses a bootstrap unless no Writfold write is on the head's
+history. The head guard then ties the commit to that head.
+
+| Bootstrap facts before any write | Result |
+| --- | --- |
+| completed ref present (an existing release, or a completed bootstrap) | `Conflict { observed }`, nothing written |
+| completed ref absent, a Writfold write on the storage history (an interrupted bootstrap, or a direct B0 write) | `Initialized`, nothing written |
+| both absent | `Proceed`: retain, Dolt commit from the origin, prepare, Git CAS |
+
+The pure `admit` takes the bootstrap as one more input, `Before::bootstrap`.
+For a bootstrap, `completed_is_base` means "absent" and `base_pin_matches`
+means "the origin is unwritten". A failed base check is `Initialized` exactly
+for a bootstrap, and `Misinterpreted` otherwise. A kernel test checks all 16
+combinations. `resolve` is unchanged. `observe` recomputes the origin, so it
+finds the bootstrap's own request identity. `complete` creates the ref with
+the same Git steps.
+
+An ordinary approval in a realm with no release is a `Conflict` with
+`observed: None`. A second bootstrap after the first was published is a
+`Conflict`. While the first is interrupted, a second is `Initialized`. Neither
+can split the realm. The realm's schema and identity row are still provisioned
+by the realm owner, here the test fixture.
+
 ### Bugs the kill sweep found
 
 The kill sweep found two real crash-recovery bugs below the publication. Both
@@ -462,8 +514,25 @@ docker run --rm --network none --user "$(id -u):$(id -g)" --init \
   cargo test -p writfold-app --test publication --locked --offline -- --nocapture --test-threads 1
 ```
 
-The four tests are:
+Every test except the two bootstrap refusals starts from a realm whose first
+release a real signed bootstrap publication created. The seven tests are:
 
+- **bootstrap:** in a fresh realm, an ordinary approval is a `Conflict` with
+  nothing to publish over. A bootstrap then publishes the first release: no
+  predecessor, complete retained closure, one Dolt write from the origin. A
+  second bootstrap is a `Conflict` and writes nothing.
+- **bootstrap over a write:** after a direct B0 write in a realm with no
+  release, a bootstrap is `Initialized`, observed `NotPublished`. The writer
+  itself refuses the bootstrap write under its lease, even from the current
+  head. Nothing is written.
+- **bootstrap kill sweep:** bootstraps are cancelled after 0, 20, 40, … ms
+  until one publishes uncancelled. Attempts that publish (directly or by
+  `complete`) each end their realm, and the next attempt starts in a fresh copy
+  of one provisioned template realm. Every outcome must agree with `observe`.
+  While a bootstrap is `Interrupted`, a rival bootstrap must be `Initialized`
+  with the Dolt head and the absent completed ref unchanged. Every published
+  realm has exactly one release, with no predecessor, and one Dolt write. Its
+  head is the release's pin, and a further bootstrap is a `Conflict`.
 - **publish:** a publication with complete retained closure (manifest, candidate
   blob and digest, Dolt retained root). A second publication follows. The first
   release still interprets to its own pin and bytes, and replaying the spent
@@ -472,11 +541,12 @@ The four tests are:
   base, and a `Misinterpreted` base pin. Nothing is written in either case.
 - **stale:** a Dolt head moved by a direct B0 write is `Stale` and is observed
   `NotPublished`.
-- **kill sweep:** publications are cancelled after 0, 20, 40, … ms, which kills
+- **kill sweep:** after the bootstrap, publications are cancelled after 0, 20, 40, … ms, which kills
   their native processes, until one completes uncancelled. Each attempt is its
   own signed operation and candidate. Every outcome must agree with `observe`.
   `Interrupted` attempts are completed. At the end:
-  - there is exactly one Dolt commit and one release per published attempt;
+  - there is exactly one Dolt commit and one release per published attempt,
+    besides the bootstrap's;
   - the release chain ends at the last one;
   - the Dolt head is exactly its pin.
 
@@ -488,7 +558,10 @@ DINT02 stays open. In particular:
 
 - a signed candidate binding;
 - live policy, target or tool admission;
-- bootstrap publication (the tests' genesis release is fixture-owned);
+- provisioning a realm's Dolt schema and identity row (still the realm owner's
+  fixture step; bootstrap publication starts from a provisioned origin);
+- a signed origin commit: the bootstrap's Dolt base is observed under the
+  writer lease, not named in the signed operation;
 - power-loss durability, and writers that bypass the leases;
 - kills during `complete` (resolved by the same `observe`, but not swept);
 - a Dolt `main` left ahead by a direct B0 write outside publication, which

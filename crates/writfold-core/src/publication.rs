@@ -7,14 +7,23 @@
 //! commit, Git prepared commit naming the new Dolt pin, Git expected-old CAS.
 //! The Git CAS is the only visibility point. Nothing here does IO.
 //!
+//! A bootstrap publication creates a realm's first release. Its approval names
+//! no predecessor, so its Git expected-old state is an absent completed ref
+//! and its storage base is the realm's origin: a head with no Writfold write
+//! on its history. Every other step, and recovery, is the same.
+//!
 //! Proof candidate: not yet in the Charon `start_from` list, so the `proofs`
 //! gate does not translate it and no theorem is claimed about it.
 
 /// What the publisher observed before writing anything.
 pub struct Before {
-    /// The Git completed ref is exactly the approval's base release.
+    /// The approval names no predecessor: the first release of a realm.
+    pub bootstrap: bool,
+    /// The Git completed ref is exactly the approval's base release; for a
+    /// bootstrap, the completed ref is absent.
     pub completed_is_base: bool,
-    /// The base release's retained manifest names exactly the approval's base pin.
+    /// The base release's retained manifest names exactly the approval's base
+    /// pin; for a bootstrap, no Writfold write is on the storage head's history.
     pub base_pin_matches: bool,
     /// A prepared commit for this operation already exists.
     pub prepared: bool,
@@ -28,16 +37,24 @@ pub enum Admission {
     Conflict,
     /// The base release does not name the approval's base pin.
     Misinterpreted,
+    /// A bootstrap over storage that already carries a Writfold write (an
+    /// earlier bootstrap, completed or not): refused, nothing written.
+    Initialized,
     /// This operation was already prepared: reconcile with observation.
     AlreadyPrepared,
 }
 
-/// Guards in this order: Git conflict, historical interpretation, reuse.
+/// Guards in this order: Git conflict, historical interpretation (for a
+/// bootstrap, an uninitialized storage origin), reuse.
 pub fn admit(before: &Before) -> Admission {
     if !before.completed_is_base {
         Admission::Conflict
     } else if !before.base_pin_matches {
-        Admission::Misinterpreted
+        if before.bootstrap {
+            Admission::Initialized
+        } else {
+            Admission::Misinterpreted
+        }
     } else if before.prepared {
         Admission::AlreadyPrepared
     } else {
@@ -57,7 +74,8 @@ pub struct Facts {
     pub applied: bool,
     /// The Dolt head is exactly that commit.
     pub head_is_applied: bool,
-    /// The Git completed ref is still the approval's base release.
+    /// The Git completed ref is still the approval's base release (for a
+    /// bootstrap, still absent).
     pub completed_is_base: bool,
 }
 

@@ -4,7 +4,7 @@
 use super::publish::{Pending, finish, retain};
 use super::{
     Candidate, Observation, Publication, PublicationAuthority, PublicationError, ReleasePin,
-    Releases, same_release,
+    Releases, same_release, storage_base,
 };
 use std::sync::atomic::AtomicBool;
 use writfold_domain::GitObjectId;
@@ -44,7 +44,8 @@ where
 {
     let completed = releases.completed(cancelled)?;
     let prepared = releases.prepared(authority.operation(), cancelled)?;
-    let storage = backend.observe(&candidate.request(authority.base())?, cancelled)?;
+    let base = storage_base(backend, authority, cancelled)?;
+    let storage = backend.observe(&candidate.request(&base.pin)?, cancelled)?;
     let mut named = None;
     let mut published = false;
     if let Some(prepared) = &prepared {
@@ -58,7 +59,10 @@ where
         prepared_names_applied: named.is_some() && named == storage.applied,
         applied: storage.applied.is_some(),
         head_is_applied: storage.applied.as_ref() == Some(&storage.head),
-        completed_is_base: same_release(authority.release(), completed.as_ref()),
+        completed_is_base: same_release(
+            authority.base().map(|(release, _)| release),
+            completed.as_ref(),
+        ),
     };
     let observation = match (resolve(&facts), storage.applied, &prepared) {
         (Resolution::Published, Some(pin), Some(prepared)) => Observation::Published {
@@ -95,10 +99,10 @@ where
     let Observation::Interrupted { pin, .. } = observation else {
         return Err(PublicationError::NotInterrupted);
     };
-    let base: GitObjectId = authority
-        .release()
-        .as_str()
-        .parse()
+    let base: Option<GitObjectId> = authority
+        .base()
+        .map(|(release, _)| release.as_str().parse())
+        .transpose()
         .map_err(|_| PublicationError::Manifest("base release"))?;
     // This lease's own killed `update-ref` may have left a reference lock.
     releases.native().clear_stale_ref_locks()?;
@@ -107,7 +111,7 @@ where
     };
     let pending = Pending {
         operation: authority.operation(),
-        base: &base,
+        base: base.as_ref(),
         candidate,
         blob,
         pin,

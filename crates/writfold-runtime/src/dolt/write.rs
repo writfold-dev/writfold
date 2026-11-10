@@ -93,6 +93,23 @@ impl DoltSql {
         )))
     }
 
+    /// The parent of the earliest commit on the head's history whose message
+    /// starts with `prefix` (the writer's marker family): the realm's origin
+    /// before its first write. No row means no such commit exists.
+    pub fn origin_probe(prefix: &str) -> Result<Self, DoltError> {
+        if !prefix.is_ascii() || prefix.is_empty() {
+            return Err(DoltError::QueryContract);
+        }
+        let (length, prefix) = (prefix.len(), literal(prefix));
+        Ok(Self(format!(
+            "SELECT a.parent_hash AS native_commit FROM dolt_log AS l JOIN \
+             dolt_commit_ancestors AS a ON a.commit_hash = l.commit_hash WHERE \
+             LEFT(l.message, {length}) = {prefix} AND a.parent_hash NOT IN (SELECT \
+             p.commit_hash FROM dolt_log AS p WHERE LEFT(p.message, {length}) = {prefix}) \
+             ORDER BY a.parent_hash LIMIT 2"
+        )))
+    }
+
     /// Create the retention root `wf-retained/<head>` for the current write
     /// head, guarded in the same process: the head must still be `head` and
     /// the working set clean. Changes no row and does not move the head. The
@@ -276,6 +293,10 @@ mod tests {
             Err(DoltError::Budget { .. })
         ));
         assert!(DoltSql::applied_probe(&expected, "é").is_err());
+        assert!(DoltSql::origin_probe("").is_err());
+        let origin = DoltSql::origin_probe("w'")?;
+        assert!(origin.as_str().contains("CONVERT(X'7727' USING utf8mb4)"));
+        assert!(!origin.as_str().contains("w'"));
         Ok(())
     }
 }

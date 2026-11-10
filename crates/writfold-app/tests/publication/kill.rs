@@ -6,12 +6,15 @@
 use super::world::{Result, STOP, World, candidate, reads};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
-use writfold_app::publication::{Observation, Publication, complete, observe, publish};
+use writfold_app::publication::{
+    Candidate, Observation, Publication, Releases, complete, observe, publish,
+};
 use writfold_domain::GitObjectId;
 use writfold_domain::dolt::DoltReadPin;
+use writfold_store::backend::dolt::{DoltBackend, DoltWriteApproval};
 
-const STEP: Duration = Duration::from_millis(20);
-const ATTEMPTS: u32 = 400;
+pub const STEP: Duration = Duration::from_millis(20);
+pub const ATTEMPTS: u32 = 400;
 
 /// How the sweep's attempts ended and how they resolved.
 #[derive(Clone, Copy, Debug, Default)]
@@ -31,19 +34,14 @@ pub struct Tally {
 pub fn sweep(world: &mut World<'_, '_, '_, '_>) -> Result<Tally> {
     let mut tally = Tally::default();
     let mut release = world.genesis.clone();
-    let mut pin = world.realm.after.clone();
+    let mut pin = world.base.clone();
     for attempt in 0..ATTEMPTS {
         tally.attempts += 1;
         let content = format!("kill attempt {attempt}");
         let next = candidate("doc:kill", &content)?;
         let approval = world.signer.approve(&release, &pin, attempt + 1)?;
-        let cancelled = AtomicBool::new(false);
-        let outcome = std::thread::scope(|scope| {
-            scope.spawn(|| {
-                std::thread::sleep(STEP * attempt);
-                cancelled.store(true, Ordering::SeqCst);
-            });
-            publish(world.backend, world.releases, &approval, &next, &cancelled)
+        let outcome = cancelled_after(STEP * attempt, |cancelled| {
+            publish(world.backend, world.releases, &approval, &next, cancelled)
         });
         let seen = observe(world.backend, world.releases, &approval, &next, &STOP)?;
         let direct = matches!(outcome, Ok(Publication::Published { .. }));
@@ -62,7 +60,13 @@ pub fn sweep(world: &mut World<'_, '_, '_, '_>) -> Result<Tally> {
             }
             (Ok(Publication::Unknown), Observation::Interrupted { pin: applied, .. }) => {
                 tally.unknown_completed += 1;
-                Some(finish(world, &approval, &next, &applied)?)
+                Some(finish(
+                    world.backend,
+                    world.releases,
+                    &approval,
+                    &next,
+                    &applied,
+                )?)
             }
             (Ok(Publication::Stale { .. }) | Err(_), Observation::NotPublished) => {
                 tally.refused += 1;
@@ -76,7 +80,7 @@ pub fn sweep(world: &mut World<'_, '_, '_, '_>) -> Result<Tally> {
         };
         if let Some((new_release, new_pin)) = resolved {
             tally.published += 1;
-            if reads(world, &new_pin, "doc:kill")? != content.as_bytes() {
+            if reads(world.backend, &new_pin, "doc:kill")? != content.as_bytes() {
                 return Err(format!("attempt {attempt}: published bytes differ").into());
             }
             release = new_release;
@@ -90,16 +94,30 @@ pub fn sweep(world: &mut World<'_, '_, '_, '_>) -> Result<Tally> {
     Err("no publication completed within the kill sweep".into())
 }
 
+/// Run `publish` with a cancellation flag raised after `delay`, which kills
+/// its native processes.
+pub fn cancelled_after<T>(delay: Duration, publish: impl FnOnce(&AtomicBool) -> T) -> T {
+    let cancelled = AtomicBool::new(false);
+    std::thread::scope(|scope| {
+        scope.spawn(|| {
+            std::thread::sleep(delay);
+            cancelled.store(true, Ordering::SeqCst);
+        });
+        publish(&cancelled)
+    })
+}
+
 /// `complete` an interrupted publication; it must publish exactly `applied`.
-fn finish(
-    world: &mut World<'_, '_, '_, '_>,
-    approval: &writfold_store::backend::dolt::DoltWriteApproval,
-    next: &writfold_app::publication::Candidate,
+pub fn finish(
+    backend: &mut DoltBackend<'_>,
+    releases: &Releases<'_, '_>,
+    approval: &DoltWriteApproval,
+    next: &Candidate,
     applied: &DoltReadPin,
 ) -> Result<(GitObjectId, DoltReadPin)> {
-    match complete(world.backend, world.releases, approval, next, &STOP)? {
+    match complete(backend, releases, approval, next, &STOP)? {
         Publication::Published { release, pin } if &pin == applied => {
-            let seen = observe(world.backend, world.releases, approval, next, &STOP)?;
+            let seen = observe(backend, releases, approval, next, &STOP)?;
             if seen
                 != (Observation::Published {
                     release: release.clone(),
@@ -124,7 +142,8 @@ fn verify(
     pin: &DoltReadPin,
 ) -> Result {
     let published = tally.published as usize;
-    if world.realm.commits_mentioning("writfold-dolt-write/1")? != published {
+    // The bootstrap write, then one per published attempt.
+    if world.realm.commits_mentioning("writfold-dolt-write/1")? != published + 1 {
         return Err("storage commits differ from published attempts".into());
     }
     let mut chain = 0;

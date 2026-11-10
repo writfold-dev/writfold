@@ -82,6 +82,19 @@ impl Realm {
         Ok(realm)
     }
 
+    /// This provisioned realm, copied file by file into a new private root, so
+    /// a sweep gets many fresh realms cheaply. The source is never opened.
+    pub fn copy(&self) -> Result<Self> {
+        let root = private_root()?;
+        copy_tree(&self.root, &root)?;
+        Ok(Self {
+            root,
+            dolt: self.dolt.clone(),
+            before: self.before.clone(),
+            after: self.after.clone(),
+        })
+    }
+
     pub fn path(&self, name: &str) -> PathBuf {
         self.root.join(name)
     }
@@ -183,6 +196,23 @@ fn private_root() -> Result<PathBuf> {
     ));
     fs::DirBuilder::new().mode(0o700).create(&root)?;
     Ok(root)
+}
+
+fn copy_tree(from: &Path, to: &Path) -> Result {
+    for entry in fs::read_dir(from)? {
+        let entry = entry?;
+        let target = to.join(entry.file_name());
+        let kind = entry.file_type()?;
+        if kind.is_dir() {
+            fs::DirBuilder::new().mode(0o700).create(&target)?;
+            copy_tree(&entry.path(), &target)?;
+        } else if kind.is_file() {
+            fs::copy(entry.path(), &target)?;
+        } else {
+            return Err(format!("unexpected file type at {}", entry.path().display()).into());
+        }
+    }
+    Ok(())
 }
 
 fn literal(value: &str) -> String {
