@@ -16,6 +16,7 @@ mod flow;
 
 use super::refused::BeforeEffects;
 use super::run::StepError;
+use super::run::weft::Pinned;
 use crate::ledger::LedgerError;
 use std::error::Error;
 use std::path::Path;
@@ -116,6 +117,9 @@ fn category(error: &(dyn Error + 'static)) -> TrialCategory {
     if error.downcast_ref::<GitError>().is_some() {
         return TrialCategory::Incomplete;
     }
+    if error.downcast_ref::<flow::WeftNotConfigured>().is_some() {
+        return TrialCategory::NotFound;
+    }
     TrialCategory::Malformed
 }
 
@@ -147,7 +151,7 @@ fn budget_message(method: TrialMethod) -> String {
 /// Run one admitted trial request. `Err(Fault)` is a parameter refusal that the
 /// caller encodes as a control fault; every application outcome is encoded here.
 pub(crate) fn call(
-    state: &Path,
+    (state, weft): (&Path, Option<&Pinned>),
     method: TrialMethod,
     request: Request<'_>,
     reply: Reply<'_>,
@@ -162,7 +166,10 @@ pub(crate) fn call(
         TrialMethod::Prepare => {
             flow::prepare(state, PrepareParams::parse(params).map_err(invalid)?, reply)
         }
-        TrialMethod::Run => flow::run(state, RunParams::parse(params).map_err(invalid)?, reply),
+        TrialMethod::Run => {
+            let parsed = RunParams::parse(params).map_err(invalid)?;
+            flow::run((state, weft), parsed, reply)
+        }
         TrialMethod::EvidenceList => {
             let parsed = EvidenceListParams::parse(params).map_err(invalid)?;
             evidence::list(state, parsed, reply)

@@ -50,23 +50,31 @@ fn only_the_six_trial_methods_are_registered() {
 
 #[test]
 fn run_and_evidence_parameters_are_closed_typed_and_absolute() -> TestResult {
-    let run = value(
-        r#"{"repo":"/r","file":"f","recipe":"/x.spl","tuft":"/q.tuft","weft":"/w.weft","weft_bin":"/bin/weft"}"#,
-    )?;
+    let run =
+        value(r#"{"repo":"/r","file":"f","recipe":"/x.spl","tuft":"/q.tuft","weft":"/w.weft"}"#)?;
     let parsed = RunParams::parse(Some(&run))?;
-    assert_eq!(parsed.weft, Some(("/w.weft", "/bin/weft")));
+    assert_eq!(parsed.weft, Some("/w.weft"));
     assert_eq!(parsed.tuft, Some("/q.tuft"));
     let bare = value(r#"{"repo":"/r","file":"f","recipe":"/x"}"#)?;
     let bare = RunParams::parse(Some(&bare))?;
     assert_eq!((bare.tuft, bare.weft), (None, None));
     for (text, error) in [
+        // The client never names a binary: the server's is fixed at startup.
         (
-            r#"{"repo":"/r","file":"f","recipe":"/x","weft":"/w"}"#,
-            ParamsError::MissingField,
+            r#"{"repo":"/r","file":"f","recipe":"/x","weft":"/w","weft_bin":"/b"}"#,
+            ParamsError::UnknownField,
         ),
         (
             r#"{"repo":"/r","file":"f","recipe":"/x","weft_bin":"/b"}"#,
-            ParamsError::MissingField,
+            ParamsError::UnknownField,
+        ),
+        (
+            r#"{"repo":"/r","file":"f","recipe":"/x","weft-bin":"/b"}"#,
+            ParamsError::UnknownField,
+        ),
+        (
+            r#"{"repo":"/r","file":"f","recipe":"/x","weft":"w.weft"}"#,
+            ParamsError::InvalidField,
         ),
         (
             r#"{"repo":"/r","file":"f","recipe":"/x","tuft":"q.tuft"}"#,

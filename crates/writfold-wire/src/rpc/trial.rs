@@ -84,16 +84,17 @@ pub struct PrepareParams<'a> {
     pub report: Option<&'a str>,
 }
 
-/// `trial/run {repo, file, recipe, tuft?, weft?, weft_bin?}`: `weft` and
-/// `weft_bin` are given together or not at all.
+/// `trial/run {repo, file, recipe, tuft?, weft?}`. There is no binary
+/// parameter: the Weft binary is fixed when the server starts (`serve --weft`),
+/// never named by the client, so a `weft_bin` field is an unknown field.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct RunParams<'a> {
     pub repo: &'a str,
     pub file: &'a str,
     pub recipe: &'a str,
     pub tuft: Option<&'a str>,
-    /// The Weft review source and the Weft binary to run it with.
-    pub weft: Option<(&'a str, &'a str)>,
+    /// The Weft review source, checked with the server's pinned Weft binary.
+    pub weft: Option<&'a str>,
 }
 
 /// `trial/evidence-list {path?, commit?, limit?}`: prefix filters and a page
@@ -221,22 +222,13 @@ impl<'a> PrepareParams<'a> {
 
 impl<'a> RunParams<'a> {
     pub fn parse(params: Option<&'a Value>) -> Result<Self, ParamsError> {
-        let optional = ["tuft", "weft", "weft_bin"];
-        let fields = Fields::new(params, &["repo", "file", "recipe"], &optional)?;
-        let weft = match (
-            fields.optional("weft", Fields::path)?,
-            fields.optional("weft_bin", Fields::path)?,
-        ) {
-            (Some(review), Some(bin)) => Some((review, bin)),
-            (None, None) => None,
-            _ => return Err(ParamsError::MissingField),
-        };
+        let fields = Fields::new(params, &["repo", "file", "recipe"], &["tuft", "weft"])?;
         Ok(Self {
             repo: fields.path("repo")?,
             file: fields.text("file")?,
             recipe: fields.path("recipe")?,
             tuft: fields.optional("tuft", Fields::path)?,
-            weft,
+            weft: fields.optional("weft", Fields::path)?,
         })
     }
 }

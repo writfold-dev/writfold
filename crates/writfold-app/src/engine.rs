@@ -1,3 +1,4 @@
+use crate::trial::run::weft::Pinned;
 use crate::{ServeError, VERSION, trial::rpc};
 use std::path::Path;
 use writfold_domain::{ContentDigest, RequestGeneration};
@@ -38,6 +39,8 @@ pub(super) struct Engine<'a> {
     /// whether this session negotiated the capability.
     trial_state: Option<&'a Path>,
     trial: bool,
+    /// The Weft binary pinned at startup, if any; never from a request.
+    weft: Option<&'a Pinned>,
 }
 
 impl<'a> Engine<'a> {
@@ -68,7 +71,12 @@ impl<'a> Engine<'a> {
             maximum_response: MAX_RESPONSE_BYTES,
             trial_state,
             trial: false,
+            weft: None,
         })
+    }
+
+    pub fn with_weft(self, weft: Option<&'a Pinned>) -> Self {
+        Self { weft, ..self }
     }
 
     pub fn handle(&mut self, input: InputFrame<'_>) -> Result<Dispatch, ServeError> {
@@ -203,7 +211,7 @@ impl<'a> Engine<'a> {
                     generation,
                     maximum: self.maximum_response,
                 };
-                rpc::call(state, method, request, reply)
+                rpc::call((state, self.weft), method, request, reply)
             }
         };
         match called {

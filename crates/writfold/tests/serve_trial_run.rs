@@ -119,10 +119,14 @@ struct Server {
 }
 
 impl Server {
-    fn start(state: &Path, capabilities: Value) -> Result<Self> {
-        let mut child = Command::new(WRITFOLD)
-            .args(["serve", "--state"])
-            .arg(state)
+    /// `serve --state STATE [--weft BIN]`: the Weft binary is fixed here.
+    fn start(state: &Path, weft: Option<&Path>, capabilities: Value) -> Result<Self> {
+        let mut command = Command::new(WRITFOLD);
+        command.args(["serve", "--state"]).arg(state);
+        if let Some(bin) = weft {
+            command.arg("--weft").arg(bin);
+        }
+        let mut child = command
             .env_remove("WRITFOLD_STATE")
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
@@ -221,7 +225,8 @@ fn retain_entry(f: &Fixture) -> Result<String> {
 #[test]
 fn serve_run_stops_at_a_prepared_edit_and_matches_the_cli() -> Result {
     let f = fixture("run")?;
-    let mut server = Server::start(&f.state, json!(["writfold.trial/1"]))?;
+    let pinned = f.root.join("weft");
+    let mut server = Server::start(&f.state, Some(&pinned), json!(["writfold.trial/1"]))?;
     let (repo, recipe) = (path(&f.repo)?, f.root.join("edit.spl"));
     let (recipe, tuft) = (path(&recipe)?, f.root.join("q.tuft"));
     let (review, weft) = (f.root.join("review.weft"), f.root.join("weft"));
@@ -229,7 +234,7 @@ fn serve_run_stops_at_a_prepared_edit_and_matches_the_cli() -> Result {
     let reply = server.call(
         "trial/run",
         json!({"repo": repo, "file": "src/lib.rs", "recipe": recipe,
-               "tuft": tuft, "weft": review, "weft_bin": weft}),
+               "tuft": tuft, "weft": review}),
     )?;
     let payload = &reply["result"]["payload"];
     let run = payload["run"].as_str().ok_or("run")?.to_owned();
@@ -273,7 +278,7 @@ fn serve_run_stops_at_a_prepared_edit_and_matches_the_cli() -> Result {
 #[test]
 fn a_refused_serve_run_has_the_cli_message_and_an_unknown_outcome() -> Result {
     let f = fixture("run-refused")?;
-    let mut server = Server::start(&f.state, json!(["writfold.trial/1"]))?;
+    let mut server = Server::start(&f.state, None, json!(["writfold.trial/1"]))?;
     let (repo, absent) = (path(&f.repo)?, f.root.join("absent.spl"));
     let absent = path(&absent)?;
     let reply = server.call(
@@ -298,7 +303,7 @@ fn serve_evidence_list_and_show_match_the_cli() -> Result {
     let f = fixture("evidence")?;
     let binding = retain_entry(&f)?;
     let repo = path(&f.repo)?;
-    let mut server = Server::start(&f.state, json!(["writfold.trial/1"]))?;
+    let mut server = Server::start(&f.state, None, json!(["writfold.trial/1"]))?;
     let listed = server.call("trial/evidence-list", json!({"path": "src/"}))?;
     let payload = &listed["result"]["payload"];
     let rows: Vec<String> = serde_json::from_value(payload["rows"].clone())?;
@@ -328,7 +333,7 @@ fn tampered_evidence_refuses_over_serve_as_on_the_cli() -> Result {
     let f = fixture("tampered")?;
     let binding = retain_entry(&f)?;
     fs::write(f.state.join(format!("evidence/{binding}.bytes")), "run(9);")?;
-    let mut server = Server::start(&f.state, json!(["writfold.trial/1"]))?;
+    let mut server = Server::start(&f.state, None, json!(["writfold.trial/1"]))?;
     for which in ["entry", binding.as_str()] {
         let reply = server.call("trial/evidence-show", json!({"binding": which}))?;
         let printed = cli(&argv("trial evidence show", &[which]), &f.state)?;
@@ -352,7 +357,7 @@ fn tampered_evidence_refuses_over_serve_as_on_the_cli() -> Result {
 #[test]
 fn a_session_without_the_capability_refuses_run_and_evidence() -> Result {
     let f = fixture("plain")?;
-    let mut server = Server::start(&f.state, json!([]))?;
+    let mut server = Server::start(&f.state, None, json!([]))?;
     for method in NEW {
         let refused = server.call(method, json!({"binding": "x"}))?;
         assert_eq!(refused["error"]["code"], -32000, "{method}");
@@ -364,4 +369,56 @@ fn a_session_without_the_capability_refuses_run_and_evidence() -> Result {
     server.stop()?;
     assert!(!f.state.join("weft").exists() && !f.state.join("evidence").exists());
     Ok(())
+}
+
+fn run_params(f: &Fixture, extra: Value) -> Result<Value> {
+    let recipe = f.root.join("edit.spl");
+    let mut params = json!({"repo": path(&f.repo)?, "file": "src/lib.rs",
+        "recipe": path(&recipe)?, "tuft": path(&f.root.join("q.tuft"))?,
+        "weft": path(&f.root.join("review.weft"))?});
+    if let (Some(params), Value::Object(extra)) = (params.as_object_mut(), extra) {
+        params.extend(extra);
+    }
+    Ok(params)
+}
+
+#[test]
+fn serve_never_runs_a_binary_the_client_names() -> Result {
+    let f = fixture("pin")?;
+    let weft = f.root.join("weft");
+    let mut server = Server::start(&f.state, None, json!(["writfold.trial/1"]))?;
+    // A client-supplied binary is an unknown parameter, whatever its spelling.
+    for key in ["weft_bin", "weft-bin", "bin"] {
+        let params = run_params(&f, json!({key: path(&weft)?}))?;
+        let refused = server.call("trial/run", params)?;
+        assert_eq!(refused["error"]["code"], -32602, "{key}");
+    }
+    // Without `serve --weft`, a run asking for a Weft check refuses before any step.
+    let refused = server.call("trial/run", run_params(&f, json!({}))?)?;
+    let data = &refused["error"]["data"];
+    assert_eq!(refused["error"]["code"], -32000);
+    assert_eq!(data["category"], "not-found");
+    assert_eq!(data["diagnostic"]["code"], "E101");
+    assert_eq!(data["outcome"], "rejected");
+    assert!(
+        data["message"]
+            .as_str()
+            .unwrap_or_default()
+            .contains("serve --weft PATH")
+    );
+    server.stop()?;
+    assert!(!f.state.join("weft").exists());
+    let worktrees = fs::read_dir(f.state.join("worktrees"));
+    assert!(worktrees.map_or(true, |mut d| d.next().is_none()));
+    // A pinned binary that changes after startup refuses the Weft step.
+    let mut server = Server::start(&f.state, Some(&weft), json!(["writfold.trial/1"]))?;
+    sh(r#"printf '#!/bin/sh\nexit 0\n' > "$1""#, &[path(&weft)?])?;
+    let refused = server.call("trial/run", run_params(&f, json!({}))?)?;
+    let message = refused["error"]["data"]["message"]
+        .as_str()
+        .unwrap_or_default();
+    assert!(message.starts_with("step weft refused: "), "{message}");
+    assert!(message.contains("changed since it was pinned"), "{message}");
+    assert_eq!(refused["error"]["data"]["outcome"], "unknown");
+    server.stop()
 }

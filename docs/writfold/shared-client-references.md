@@ -17,7 +17,7 @@ capability on it with tests: `writfold.trial/1` (`trial/show`, `trial/retain`,
 `trial/prepare`, `trial/run`, `trial/evidence-list` and `trial/evidence-show` of
 the cooperating trial profile; approve, apply and recover are CLI-only and absent
 from lookup). The 10 November revision adding `trial/run` and `trial/evidence-*`
-changes the contract digest from `0baf69b2…` to `ec88623c…`; a client pinning the
+changes the contract digest from `0baf69b2…` to `bfa436ba…`; a client pinning the
 contract digest must re-pin. Other sections remain accepted interface
 requirements, **not available data/effect methods or guessed RPC names**.
 

@@ -221,7 +221,7 @@ fn parameters_are_strict_and_notifications_do_not_run() -> TestResult {
         ),
         (
             "trial/run",
-            r#"{"repo":"/r","file":"f","recipe":"/r.spl","weft":"/w"}"#.to_owned(),
+            r#"{"repo":"/r","file":"f","recipe":"/r.spl","weft":"/w","weft_bin":"/b"}"#.to_owned(),
         ),
         ("trial/evidence-list", r#"{"out":"/f"}"#.to_owned()),
         (

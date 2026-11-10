@@ -6,7 +6,8 @@ Usage: python3 -I bench/latency/serve_run_evidence.py <writfold-binary> <out-dir
 Builds the same small and large synthetic repositories as run.sh, retains 1,000
 bindings in the large repository's state first (as evidence.sh does), then per
 repository negotiates writfold.trial/1 and times, request to response:
-trial/run (Tuft, a stub Weft and prepare, as run.sh times `trial run`),
+trial/run (Tuft, a stub Weft fixed by `serve --weft`, and prepare, as run.sh
+times `trial run`),
 trial/evidence-list (default page, and a path filter) and trial/evidence-show
 (full digest, and three context lines from the pinned blob). Weft is a stub;
 the real Weft is not timed. Writes samples.tsv and results.json; exits
@@ -54,7 +55,7 @@ def session(work, state, repo, name, samples):
     head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, check=True,
                           capture_output=True, text=True).stdout.strip()
     tuft, review = inputs(work, name, head)
-    server = subprocess.Popen([binary, "serve", "--state", state], stdin=subprocess.PIPE,
+    server = subprocess.Popen([binary, "serve", "--state", state, "--weft", os.path.join(work, "weft")], stdin=subprocess.PIPE,
                               stdout=subprocess.PIPE, env=dict(os.environ, WRITFOLD_STATE=""))
     ident = 0
 
@@ -77,7 +78,7 @@ def session(work, state, repo, name, samples):
     for _ in range(repeats):
         ran = call("trial/run", "trial/run", {
             "repo": repo, "file": "src/client.rs", "recipe": os.path.join(work, "edit.spl"),
-            "tuft": tuft, "weft": review, "weft_bin": os.path.join(work, "weft")})
+            "tuft": tuft, "weft": review})
         if [c["result"] for c in ran["checks"]] != ["entailed"]:
             raise SystemExit(f"unexpected checks: {ran['checks']}")
         binding = ran["resolved"][0]["binding"]

@@ -108,6 +108,7 @@ fn trial_run(parsed: &Args, state: &Path) -> Result<String> {
         recipe: Path::new(parsed.required("recipe")?),
         tuft: parsed.option("tuft").map(Path::new),
         weft,
+        weft_sha256: None,
     })?;
     Ok(super::run::render(&ran))
 }

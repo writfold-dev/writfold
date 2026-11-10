@@ -119,12 +119,14 @@ grounded Weft E2E and Splicery editing remain separate obligations. The WF13
 (contract `0baf69b2…`, executable `91a1924f…`); the earlier receipt for contract
 `b673d10f…` is preserved, not relabelled. The 10 November revision of
 `writfold.trial/1` (adding `trial/run` and `trial/evidence-*`) changes the
-contract to `ec88623c…`; that receipt is stale for it and a fresh run is needed.
+contract to `bfa436ba…`; that receipt is stale for it and a fresh run is needed.
 
 ### Negotiated `writfold.trial/1`
 
 `writfold serve [--state DIR]` fixes the trial state at startup (`--state`, else
-`WRITFOLD_STATE`); requests never name it. `initialize` admits
+`WRITFOLD_STATE`); requests never name it. Likewise the only Weft binary
+`trial/run` may execute is fixed and digested at startup by `--weft PATH`; no
+request names a binary. `initialize` admits
 `writfold.trial/1` only when requested and only when a state is configured; it
 then advertises `trial-methods.json` (the control schemas plus the six trial
 methods), capabilities `["notifications","writfold.trial/1"]` and a trust
