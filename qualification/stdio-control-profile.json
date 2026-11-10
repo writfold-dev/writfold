@@ -8,15 +8,51 @@
   "contract": "crates/writfold-wire/contracts/agent-stdio/1/contract.json",
   "producer": "scripts/writfold_stdio.py",
   "artifact_publisher": "scripts/writfold_agent_contract.py",
-  "implemented_command": ["writfold", "serve", "[--state DIR]", "[--weft PATH]"],
-  "implemented_methods": ["initialize", "shutdown", "trial/show", "trial/retain", "trial/prepare", "trial/run", "trial/evidence-list", "trial/evidence-show"],
-  "implemented_capabilities": ["notifications", "writfold.trial/1"],
-  "cli_only_methods": ["trial/approve", "trial/apply", "trial/recover"],
+  "implemented_command": [
+    "writfold",
+    "serve",
+    "[--state DIR]",
+    "[--weft PATH]"
+  ],
+  "implemented_methods": [
+    "initialize",
+    "shutdown",
+    "trial/show",
+    "trial/retain",
+    "trial/prepare",
+    "trial/run",
+    "trial/evidence-list",
+    "trial/evidence-show"
+  ],
+  "implemented_capabilities": [
+    "notifications",
+    "writfold.trial/1"
+  ],
+  "cli_only_methods": [
+    "trial/approve",
+    "trial/apply",
+    "trial/recover"
+  ],
   "receipt_status": {
-    "fresh_receipt_required": true,
-    "current_receipt": {"path": "~/.local/share/writfold/evidence/serve-trial-cVqclyxI/stdio-control-002.json", "sha256": "efb5726d5cf20e5cfe58cc876d9d3d7783de36fb54af8ebcd319e8c7bb00da62", "bytes": 361774, "executable_sha256": "91a1924f5bae025a131bda99ea047c30adcc404d96429abf70956a7757230f4d", "contract_sha256": "0baf69b21f1051ee620ca89ba4ec659605c0cf3ddc4ae82a7a9ad8eaf1d9ac3f"},
-    "reason": "Refreshed 2026-11-09 for the writfold.trial/1 contract and binary. The 2026-11-05 receipt (contract b673d10f…) is preserved for its own source and not relabelled. Stale since 2026-11-10: the writfold.trial/1 revision adding trial/run, trial/evidence-list and trial/evidence-show changes the contract to bfa436bac90a97a38b5b70d8a20713cfbd38a12ce35283637d5ac9fa235f3f4a; the receipt above binds 0baf69b2… and is not relabelled. No fresh receipt has been run.",
-    "vector_scope": "The stdio-control vectors run without a trial state, so they exercise writfold.trial/1 negotiation refusals and Method not found for approve/apply/recover, not the trial methods. The trial methods are covered by crates/writfold/tests/serve_trial.rs and the writfold-app engine tests, which are not a gate receipt."
+    "fresh_receipt_required": false,
+    "current_receipt": {
+      "path": "~/.local/share/writfold/evidence/cursor-serve-IN3JTNJz/stdio-control-003.json",
+      "sha256": "e53657238e3f5c71c57deb3e31e31cc384da316b39d99d71077b229f11d20655",
+      "bytes": 453429,
+      "executable_sha256": "3087e467328fd9eb6e4764a77295a98bfa43c9e1ab71d34d6a2297a460f16e41",
+      "contract_sha256": "bfa436bac90a97a38b5b70d8a20713cfbd38a12ce35283637d5ac9fa235f3f4a"
+    },
+    "reason": "Refreshed 2026-11-10 for the writfold.trial/1 revision adding trial/run, trial/evidence-list and trial/evidence-show (contract bfa436ba…, executable 3087e467…). The 2026-11-09 receipt (contract 0baf69b2…) and the 2026-11-05 receipt (contract b673d10f…) are preserved for their own sources and not relabelled. Two attempts on 2026-11-10 (stdio-control-001/002 in the same directory) were refused by preflight for insufficient storage headroom before any build.",
+    "vector_scope": "The stdio-control vectors run without a trial state, so they exercise writfold.trial/1 negotiation refusals and Method not found for approve/apply/recover, not the trial methods. The trial methods are covered by crates/writfold/tests/serve_trial.rs, crates/writfold/tests/serve_trial_run.rs and the writfold-app engine tests, which are not a gate receipt.",
+    "previous_receipts": [
+      {
+        "path": "~/.local/share/writfold/evidence/serve-trial-cVqclyxI/stdio-control-002.json",
+        "sha256": "efb5726d5cf20e5cfe58cc876d9d3d7783de36fb54af8ebcd319e8c7bb00da62",
+        "bytes": 361774,
+        "executable_sha256": "91a1924f5bae025a131bda99ea047c30adcc404d96429abf70956a7757230f4d",
+        "contract_sha256": "0baf69b21f1051ee620ca89ba4ec659605c0cf3ddc4ae82a7a9ad8eaf1d9ac3f"
+      }
+    ]
   },
   "owners": {
     "writfold": "CLI argument/stream composition (including the startup trial state) and process exit mapping",

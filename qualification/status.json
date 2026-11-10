@@ -1113,6 +1113,91 @@
     "retained_failed_attempts": [],
     "source_commit": "63bb5c4"
   },
+  "tuft_resume_cursor": {
+    "status": "scoped_component_pass",
+    "scope": "Tuft resume cursor as a nominal type (tuft::cursor::Cursor), canonical versioned text v2.P.C.OFFSET.K binding the program digest, commit, row offset and a check over the rows; only the canonical form parses, and tampered, foreign-program, other-commit, malformed, old-version and out-of-range cursors refuse with typed diagnostics. NoticeCursor was assessed and not used: it is a borrowed in-process position over a NoticeQuery with no serialized form, while Tuft's cursor crosses processes (docs/tuft/language.md). The envelope's cursor= key is unchanged; old TAG.OFFSET cursors refuse as UnsupportedVersion.",
+    "source_commit": "6679aa0",
+    "receipts": {
+      "quality": {
+        "path": "~/.local/share/writfold/evidence/cursor-serve-IN3JTNJz/quality-002.json",
+        "sha256": "ddb3adf859287a459fa622f4e2ba635b9a84bbf992ac603c67d9ee1f6bf81311",
+        "bytes": 886901
+      },
+      "unit": {
+        "path": "~/.local/share/writfold/evidence/cursor-serve-IN3JTNJz/unit-002.json",
+        "sha256": "a5a2688b0db2deca0512a2c51cbd3683ac8d753f9bf02769cf74bb81df8db707",
+        "bytes": 416367
+      }
+    },
+    "retained_failed_attempts": [
+      {
+        "gate": "quality",
+        "receipt": {
+          "path": "~/.local/share/writfold/evidence/cursor-serve-IN3JTNJz/quality-001.json",
+          "sha256": "c05650add5b8d916d9e2a5133494740dc72d91f2fc6898e327d655f8b45fac28",
+          "bytes": 412341
+        },
+        "cause": "preflight refused: insufficient state storage headroom (55 GiB free against a 64 GiB floor); this session's own build outputs were removed, no unrelated resources pruned"
+      },
+      {
+        "gate": "unit",
+        "receipt": {
+          "path": "~/.local/share/writfold/evidence/cursor-serve-IN3JTNJz/unit-001.json",
+          "sha256": "f78a878cd18465b299ce01e8f6b3f47e681d8541f9ab3269879fd019c67e4e1e",
+          "bytes": 412313
+        },
+        "cause": "preflight refused: insufficient state storage headroom (same run)"
+      }
+    ]
+  },
+  "serve_trial_run_evidence": {
+    "status": "scoped_component_pass",
+    "scope": "writfold.trial/1 revision (10 November 2026): serve adds trial/run, trial/evidence-list and trial/evidence-show through the same application functions as the CLI. trial/run stops before approval; approve, apply and recover stay CLI-only. The Weft binary for trial/run is fixed at startup by writfold serve --weft (resolved and digest-recorded, re-checked before the Weft step); a client-supplied binary field is rejected as an unknown param, and a run requiring Weft on a server without --weft refuses with WeftNotConfigured before any step. Refused runs report outcome unknown because earlier steps may have written. Contract 0baf69b2… -> bfa436ba… (archive eb5f4114…); fresh WF13 stdio-control receipt for executable 3087e467…; its vectors cover negotiation and CLI-only refusals, the methods themselves are covered by real-process tests (crates/writfold/tests/serve_trial_run.rs). Weft's control gate re-pinned to this contract and executable and passing. RPC p95 on a 100k-file repository with a stub Weft: trial/run 393 ms, evidence-list 29 ms, evidence-show 0.3 ms (12 ms with 3 context lines) (bench/2026-11-10-serve-run-evidence-latency). A real Weft step can take up to 30 s, outside the 5 s operation budget; no handle is returned yet.",
+    "source_commit": "6679aa0",
+    "receipts": {
+      "quality": {
+        "path": "~/.local/share/writfold/evidence/cursor-serve-IN3JTNJz/quality-002.json",
+        "sha256": "ddb3adf859287a459fa622f4e2ba635b9a84bbf992ac603c67d9ee1f6bf81311",
+        "bytes": 886901
+      },
+      "unit": {
+        "path": "~/.local/share/writfold/evidence/cursor-serve-IN3JTNJz/unit-002.json",
+        "sha256": "a5a2688b0db2deca0512a2c51cbd3683ac8d753f9bf02769cf74bb81df8db707",
+        "bytes": 416367
+      },
+      "stdio_control": {
+        "path": "~/.local/share/writfold/evidence/cursor-serve-IN3JTNJz/stdio-control-003.json",
+        "sha256": "e53657238e3f5c71c57deb3e31e31cc384da316b39d99d71077b229f11d20655",
+        "bytes": 453429
+      },
+      "weft_control": {
+        "path": "~/.local/share/weft/evidence/trial-rev2-20261110/control-001/report.json",
+        "sha256": "6bfeae9f229257d4e19cfe368f9ea75426bee9fa993f6cf3819ba6057a83edf1",
+        "bytes": 36997
+      }
+    },
+    "executable_sha256": "3087e467328fd9eb6e4764a77295a98bfa43c9e1ab71d34d6a2297a460f16e41",
+    "retained_failed_attempts": [
+      {
+        "gate": "stdio-control",
+        "receipt": {
+          "path": "~/.local/share/writfold/evidence/cursor-serve-IN3JTNJz/stdio-control-001.json",
+          "sha256": "5f43f1858e001376751b8efbd2ccbe60fa34f5132deb41c0f9f4912eedd35295",
+          "bytes": 412394
+        },
+        "cause": "preflight refused: insufficient state storage headroom"
+      },
+      {
+        "gate": "stdio-control",
+        "receipt": {
+          "path": "~/.local/share/writfold/evidence/cursor-serve-IN3JTNJz/stdio-control-002.json",
+          "sha256": "17d86e764ceeea98ddbf2607830220fc07ff9c3b3b364dee1a5584bcb51fe816",
+          "bytes": 412394
+        },
+        "cause": "preflight refused: insufficient state storage headroom after the quality and unit builds"
+      }
+    ]
+  },
   "publication_history_audit": {
     "status": "inspected_not_cleared_for_publication",
     "record": {

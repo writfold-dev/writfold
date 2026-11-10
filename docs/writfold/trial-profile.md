@@ -307,7 +307,7 @@ refusals are unchanged, so a client of the first revision keeps working with the
 same capability spelling. The contract records this in the capability's
 `revision` field. The contract digest changes to `bfa436ba…` (archive
 `eb5f4114…`); a client that pins the digest must re-pin, as it would for any
-contract change. No fresh WF13 receipt binds the new contract yet. Tests:
+contract change. A fresh WF13 `stdio-control` receipt binds the new contract and executable `3087e467…`, and Weft's `control` gate is re-pinned to both (`serve_trial_run_evidence` in `qualification/status.json`). Tests:
 `crates/writfold/tests/serve_trial_run.rs` (a real-process round trip per method
 compared with the CLI, a run left in the prepared state, tampered evidence,
 an unnegotiated session, a client-supplied binary refused, a missing `--weft`

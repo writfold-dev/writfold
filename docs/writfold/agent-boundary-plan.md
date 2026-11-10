@@ -157,9 +157,9 @@ Next after T1. T2 suggested a compact Tuft row format and an `--out` flag. Both 
 - ~~serve methods for `trial/run` and `trial/evidence-*`~~: built as a revision of
   `writfold.trial/1` ([trial-profile.md](trial-profile.md#through-serve); contract
   `0baf69b2…` → `bfa436ba…`; the Weft binary is fixed by `serve --weft`,
-  never named by the client; `bench/2026-11-10-serve-run-evidence-latency`). Still
-  needed: a fresh WF13 `stdio-control` receipt for the new contract, and Weft's
-  `control` re-pin to it and its executable;
+  never named by the client; `bench/2026-11-10-serve-run-evidence-latency`). Fresh
+  WF13 `stdio-control` receipt for executable `3087e467…`; Weft's `control` gate
+  re-pinned and passing (`serve_trial_run_evidence`);
 - DINT02 publication over the Dolt writer.
 
 ## Website wording after the slice
