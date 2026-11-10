@@ -31,7 +31,8 @@ SOURCE = ROOT / "crates/writfold-wire/contracts/agent-stdio/1"
 PAYLOADS = frozenset({"methods.json", "trial-methods.json", "request.schema.json",
                       "response.schema.json", "citation-binding.schema.json", "vectors.json"})
 CONTROL_METHODS = ["initialize", "shutdown"]
-TRIAL_METHODS = ["trial/show", "trial/retain", "trial/prepare"]
+TRIAL_METHODS = ["trial/show", "trial/retain", "trial/prepare", "trial/run",
+                 "trial/evidence-list", "trial/evidence-show"]
 TRIAL_SCOPE = "transport-control+trial-worktree"
 ROOT_KEYS = frozenset({"namespace", "schema", "profile", "implementation_scope",
                        "command", "protocol", "implemented_methods",

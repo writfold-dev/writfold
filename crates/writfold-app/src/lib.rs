@@ -1,7 +1,8 @@
 //! Shared typed application decisions. `serve` exposes transport control and,
-//! when a session negotiates `writfold.trial/1`, the trial show/retain/prepare
-//! decisions over the startup-configured state. No corpus, retained-release,
-//! grounding or publication service is enabled, and approval stays CLI-only.
+//! when a session negotiates `writfold.trial/1`, the trial show, retain,
+//! prepare and run decisions and the evidence reads over the startup-configured
+//! state. No corpus, retained-release, grounding or publication service is
+//! enabled, and approval stays CLI-only.
 #![forbid(unsafe_code)]
 
 mod contract;

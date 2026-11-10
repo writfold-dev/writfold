@@ -1,28 +1,38 @@
-//! `writfold.trial/1` over `serve`: `trial/show`, `trial/retain` and
-//! `trial/prepare` call exactly the application functions the CLI calls, with
-//! the state directory fixed at server startup.
+//! `writfold.trial/1` over `serve`: `trial/show`, `trial/retain`,
+//! `trial/prepare`, `trial/run`, `trial/evidence-list` and
+//! `trial/evidence-show` call exactly the application functions the CLI
+//! calls, with the state directory fixed at server startup.
 //!
 //! Approve, apply and recover are deliberately absent: the operator key decides
-//! an approval, and an agent session must not approve its own edit.
+//! an approval, and an agent session must not approve its own edit. `trial/run`
+//! stops at a prepared edit, exactly as `writfold trial run` does.
 //!
 //! A refusal carries the application's own message, exactly what the CLI
 //! prints. Its outcome is `rejected` when the method is read-only or the
 //! refusal was decided before any write ([`BeforeEffects`]); otherwise the call
 //! may have written, and the outcome is `unknown`.
+mod evidence;
+mod flow;
+
 use super::refused::BeforeEffects;
-use super::{Result, prepare, retain::retain, show::show};
+use super::run::StepError;
 use crate::ledger::LedgerError;
 use std::error::Error;
 use std::path::Path;
 use writfold_domain::RequestGeneration;
 use writfold_runtime::git::GitError;
 use writfold_wire::rpc::response::{
-    Fault, PreparePayload, ResponseError, RetainPayload, ServerMetadata, ShowPayload,
-    SpliceSummary, TrialCategory, TrialOutcome, TrialRefusal, encode_trial_refusal,
-    encode_trial_success,
+    Fault, ResponseError, ServerMetadata, TrialCategory, TrialOutcome, TrialRefusal,
+    encode_trial_refusal, encode_trial_success,
 };
-use writfold_wire::rpc::trial::{PrepareParams, RetainParams, ShowParams, TrialMethod};
-use writfold_wire::rpc::{Request, RequestId, response::MAX_RESPONSE_BYTES};
+use writfold_wire::rpc::trial::{
+    EvidenceListParams, EvidenceShowParams, PrepareParams, RetainParams, RunParams, ShowParams,
+    TrialMethod,
+};
+use writfold_wire::rpc::{ParamsError, Request, RequestId, response::MAX_RESPONSE_BYTES};
+
+/// An encoded reply, or the application error the CLI would print.
+type Encoded = super::Result<Result<Vec<u8>, ResponseError>>;
 
 /// Everything needed to encode one correlated reply.
 #[derive(Clone, Copy)]
@@ -75,8 +85,21 @@ impl Reply<'_> {
     }
 }
 
+/// The error a refusal is classified by: through the pre-effect marker and a
+/// `trial run` step, to the cause the step's own function returned.
+fn cause<'e>(error: &'e (dyn Error + 'static)) -> &'e (dyn Error + 'static) {
+    if let Some(BeforeEffects(inner)) = error.downcast_ref::<BeforeEffects>() {
+        return cause(&**inner);
+    }
+    if let Some(step) = error.downcast_ref::<StepError>() {
+        return cause(&*step.cause);
+    }
+    error
+}
+
 /// The class of a trial error, from its type, never from its text.
 fn category(error: &(dyn Error + 'static)) -> TrialCategory {
+    let error = cause(error);
     if let Some(ledger) = error.downcast_ref::<LedgerError>() {
         return match ledger {
             LedgerError::Refused(_) | LedgerError::Conflict => TrialCategory::Conflict,
@@ -97,21 +120,21 @@ fn category(error: &(dyn Error + 'static)) -> TrialCategory {
 }
 
 /// Map an application error to its typed refusal, with the CLI's message.
+///
+/// Only a marker on the whole call proves nothing was written: a `trial/run`
+/// step refused before its own writes may follow a step that wrote, so a
+/// refused run is `unknown`.
 pub(crate) fn refusal(
     method: TrialMethod,
     error: &(dyn Error + Send + Sync + 'static),
 ) -> (TrialCategory, TrialOutcome, String) {
-    let before = error.downcast_ref::<BeforeEffects>();
-    let cause: &(dyn Error + 'static) = match before {
-        Some(BeforeEffects(inner)) => &**inner,
-        None => error,
-    };
-    let outcome = if before.is_some() || !method.writes() {
+    let before = error.downcast_ref::<BeforeEffects>().is_some();
+    let outcome = if before || !method.writes() {
         TrialOutcome::Rejected
     } else {
         TrialOutcome::Unknown
     };
-    (category(cause), outcome, error.to_string())
+    (category(error), outcome, error.to_string())
 }
 
 fn budget_message(method: TrialMethod) -> String {
@@ -119,88 +142,6 @@ fn budget_message(method: TrialMethod) -> String {
         "{} result exceeds the {MAX_RESPONSE_BYTES}-byte response budget; nothing was truncated",
         method.as_str()
     )
-}
-
-fn run_show(
-    state: &Path,
-    params: ShowParams<'_>,
-    reply: Reply<'_>,
-) -> Result<Result<Vec<u8>, ResponseError>> {
-    let text = show(state, params.run)?;
-    let payload = ShowPayload {
-        run: params.run,
-        text: &text,
-    };
-    Ok(reply.deliver(
-        &payload,
-        TrialOutcome::Rejected,
-        &budget_message(TrialMethod::Show),
-    ))
-}
-
-fn run_retain(
-    state: &Path,
-    params: RetainParams<'_>,
-    reply: Reply<'_>,
-) -> Result<Result<Vec<u8>, ResponseError>> {
-    let range = (params.start, params.end);
-    let r = retain(
-        state,
-        Path::new(params.repo),
-        params.commit,
-        params.file,
-        range,
-    )?;
-    let payload = RetainPayload {
-        binding: &r.binding,
-        file: &r.path,
-        commit: &r.commit,
-        start: r.range.0,
-        end: r.range.1,
-    };
-    let message = format!(
-        "retained binding {}, but {}",
-        r.binding,
-        budget_message(TrialMethod::Retain)
-    );
-    Ok(reply.deliver(&payload, TrialOutcome::Unknown, &message))
-}
-
-fn run_prepare(
-    state: &Path,
-    params: PrepareParams<'_>,
-    reply: Reply<'_>,
-) -> Result<Result<Vec<u8>, ResponseError>> {
-    let report = params.report.map(Path::new);
-    let p = prepare(
-        state,
-        Path::new(params.repo),
-        params.file,
-        Path::new(params.recipe),
-        report,
-    )?;
-    let splices: Vec<SpliceSummary> = p
-        .edits
-        .iter()
-        .map(|&(start, end, inserted)| SpliceSummary {
-            start,
-            end,
-            inserted: inserted as u64,
-        })
-        .collect();
-    let payload = PreparePayload {
-        run: &p.run,
-        file: &p.path,
-        base: &p.base,
-        prepared: &p.prepared,
-        splices: &splices,
-    };
-    let message = format!(
-        "prepared run {}, but {}; inspect it with trial/show",
-        p.run,
-        budget_message(TrialMethod::Prepare)
-    );
-    Ok(reply.deliver(&payload, TrialOutcome::Unknown, &message))
 }
 
 /// Run one admitted trial request. `Err(Fault)` is a parameter refusal that the
@@ -212,22 +153,24 @@ pub(crate) fn call(
     reply: Reply<'_>,
 ) -> Result<Result<Vec<u8>, ResponseError>, Fault> {
     let params = request.params();
+    let invalid = |_: ParamsError| Fault::InvalidParams;
     let ran = match method {
-        TrialMethod::Show => run_show(
-            state,
-            ShowParams::parse(params).map_err(|_| Fault::InvalidParams)?,
-            reply,
-        ),
-        TrialMethod::Retain => run_retain(
-            state,
-            RetainParams::parse(params).map_err(|_| Fault::InvalidParams)?,
-            reply,
-        ),
-        TrialMethod::Prepare => run_prepare(
-            state,
-            PrepareParams::parse(params).map_err(|_| Fault::InvalidParams)?,
-            reply,
-        ),
+        TrialMethod::Show => flow::show(state, ShowParams::parse(params).map_err(invalid)?, reply),
+        TrialMethod::Retain => {
+            flow::retain(state, RetainParams::parse(params).map_err(invalid)?, reply)
+        }
+        TrialMethod::Prepare => {
+            flow::prepare(state, PrepareParams::parse(params).map_err(invalid)?, reply)
+        }
+        TrialMethod::Run => flow::run(state, RunParams::parse(params).map_err(invalid)?, reply),
+        TrialMethod::EvidenceList => {
+            let parsed = EvidenceListParams::parse(params).map_err(invalid)?;
+            evidence::list(state, parsed, reply)
+        }
+        TrialMethod::EvidenceShow => {
+            let parsed = EvidenceShowParams::parse(params).map_err(invalid)?;
+            evidence::show(state, parsed, reply)
+        }
     };
     Ok(match ran {
         Ok(encoded) => encoded,

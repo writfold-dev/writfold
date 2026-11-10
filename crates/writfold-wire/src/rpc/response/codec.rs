@@ -129,7 +129,7 @@ const TRIAL: Advertisement = Advertisement {
     scope: "transport-control+trial-worktree",
     capabilities: &["notifications", "writfold.trial/1"],
     methods: TRIAL_METHOD_SCHEMAS,
-    trust_boundary: "Transport/session control plus writfold-trial-worktree/1 show, retain and prepare over the server's configured trial state; approve, apply and recover are CLI-only. No authorized corpus, retained release or grounding service is available.",
+    trust_boundary: "Transport/session control plus writfold-trial-worktree/1 show, retain, prepare, run (stopping before approval) and evidence list/show over the server's configured trial state; approve, apply and recover are CLI-only. No authorized corpus, retained release or grounding service is available.",
 };
 
 fn initialize(

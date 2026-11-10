@@ -11,9 +11,9 @@
 //! and appends `Applied`. Every append goes through the durable ledger, which
 //! replays the run's history through the kernel first.
 //!
-//! `writfold serve` exposes `show`, `retain` and `prepare` as the negotiated
-//! `writfold.trial/1` capability ([`rpc`]); approve, apply and recover stay
-//! CLI-only.
+//! `writfold serve` exposes `show`, `retain`, `prepare`, `run` and `evidence`
+//! list/show as the negotiated `writfold.trial/1` capability ([`rpc`]); approve,
+//! apply and recover stay CLI-only.
 mod admit;
 mod apply;
 mod approve;

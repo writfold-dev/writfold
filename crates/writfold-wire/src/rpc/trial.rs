@@ -1,7 +1,9 @@
 //! Closed parameter schemas for the negotiated `writfold.trial/1` capability.
 //!
-//! Exactly three methods exist: `trial/show`, `trial/retain` and
-//! `trial/prepare`. Approval, apply and recovery are CLI-only: they are not
+//! Exactly six methods exist: `trial/show`, `trial/retain`, `trial/prepare`,
+//! `trial/run` (evidence to a prepared edit, stopping before approval), and the
+//! read-only `trial/evidence-list` and `trial/evidence-show`. Approval, apply
+//! and recovery are CLI-only: they are not
 //! registered here, so a request naming them is Method not found, the same as
 //! any other absent method. The operator key decides an approval; an agent
 //! session must not approve its own edit.
@@ -21,30 +23,39 @@ pub enum TrialMethod {
     Show,
     Retain,
     Prepare,
+    Run,
+    EvidenceList,
+    EvidenceShow,
 }
+
+const NAMES: [(TrialMethod, &str); 6] = [
+    (TrialMethod::Show, "trial/show"),
+    (TrialMethod::Retain, "trial/retain"),
+    (TrialMethod::Prepare, "trial/prepare"),
+    (TrialMethod::Run, "trial/run"),
+    (TrialMethod::EvidenceList, "trial/evidence-list"),
+    (TrialMethod::EvidenceShow, "trial/evidence-show"),
+];
 
 impl TrialMethod {
     pub fn lookup(method: &str) -> Option<Self> {
-        match method {
-            "trial/show" => Some(Self::Show),
-            "trial/retain" => Some(Self::Retain),
-            "trial/prepare" => Some(Self::Prepare),
-            _ => None,
-        }
+        NAMES
+            .iter()
+            .find(|(_, name)| *name == method)
+            .map(|(m, _)| *m)
     }
 
     pub fn as_str(self) -> &'static str {
-        match self {
-            Self::Show => "trial/show",
-            Self::Retain => "trial/retain",
-            Self::Prepare => "trial/prepare",
-        }
+        NAMES
+            .iter()
+            .find(|(m, _)| *m == self)
+            .map_or("", |(_, name)| name)
     }
 
     /// Whether the method can write trial state. A failure after dispatch of a
     /// writing method cannot by itself prove that nothing was written.
     pub fn writes(self) -> bool {
-        !matches!(self, Self::Show)
+        !matches!(self, Self::Show | Self::EvidenceList | Self::EvidenceShow)
     }
 }
 
@@ -71,6 +82,36 @@ pub struct PrepareParams<'a> {
     pub file: &'a str,
     pub recipe: &'a str,
     pub report: Option<&'a str>,
+}
+
+/// `trial/run {repo, file, recipe, tuft?, weft?, weft_bin?}`: `weft` and
+/// `weft_bin` are given together or not at all.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct RunParams<'a> {
+    pub repo: &'a str,
+    pub file: &'a str,
+    pub recipe: &'a str,
+    pub tuft: Option<&'a str>,
+    /// The Weft review source and the Weft binary to run it with.
+    pub weft: Option<(&'a str, &'a str)>,
+}
+
+/// `trial/evidence-list {path?, commit?, limit?}`: prefix filters and a page
+/// size; the CLI's `--out` has no RPC form.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct EvidenceListParams<'a> {
+    pub path: Option<&'a str>,
+    pub commit: Option<&'a str>,
+    pub limit: Option<u64>,
+}
+
+/// `trial/evidence-show {binding, context_lines?, repo?}`: `binding` is a full
+/// digest, a unique 8+ hex prefix or a local label.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct EvidenceShowParams<'a> {
+    pub binding: &'a str,
+    pub context_lines: Option<u64>,
+    pub repo: Option<&'a str>,
 }
 
 struct Fields<'a> {
@@ -130,6 +171,18 @@ impl<'a> Fields<'a> {
             _ => Err(ParamsError::InvalidField),
         }
     }
+
+    /// An optional field: absent is `None`, present must be valid.
+    fn optional<T>(
+        &self,
+        key: &str,
+        read: impl Fn(&Self, &str) -> Result<T, ParamsError>,
+    ) -> Result<Option<T>, ParamsError> {
+        match self.object.get(key) {
+            None => Ok(None),
+            Some(_) => read(self, key).map(Some),
+        }
+    }
 }
 
 impl<'a> ShowParams<'a> {
@@ -157,15 +210,55 @@ impl<'a> RetainParams<'a> {
 impl<'a> PrepareParams<'a> {
     pub fn parse(params: Option<&'a Value>) -> Result<Self, ParamsError> {
         let fields = Fields::new(params, &["repo", "file", "recipe"], &["report"])?;
-        let report = match fields.object.get("report") {
-            None => None,
-            Some(_) => Some(fields.path("report")?),
+        Ok(Self {
+            repo: fields.path("repo")?,
+            file: fields.text("file")?,
+            recipe: fields.path("recipe")?,
+            report: fields.optional("report", Fields::path)?,
+        })
+    }
+}
+
+impl<'a> RunParams<'a> {
+    pub fn parse(params: Option<&'a Value>) -> Result<Self, ParamsError> {
+        let optional = ["tuft", "weft", "weft_bin"];
+        let fields = Fields::new(params, &["repo", "file", "recipe"], &optional)?;
+        let weft = match (
+            fields.optional("weft", Fields::path)?,
+            fields.optional("weft_bin", Fields::path)?,
+        ) {
+            (Some(review), Some(bin)) => Some((review, bin)),
+            (None, None) => None,
+            _ => return Err(ParamsError::MissingField),
         };
         Ok(Self {
             repo: fields.path("repo")?,
             file: fields.text("file")?,
             recipe: fields.path("recipe")?,
-            report,
+            tuft: fields.optional("tuft", Fields::path)?,
+            weft,
+        })
+    }
+}
+
+impl<'a> EvidenceListParams<'a> {
+    pub fn parse(params: Option<&'a Value>) -> Result<Self, ParamsError> {
+        let fields = Fields::new(params, &[], &["path", "commit", "limit"])?;
+        Ok(Self {
+            path: fields.optional("path", Fields::text)?,
+            commit: fields.optional("commit", Fields::text)?,
+            limit: fields.optional("limit", Fields::integer)?,
+        })
+    }
+}
+
+impl<'a> EvidenceShowParams<'a> {
+    pub fn parse(params: Option<&'a Value>) -> Result<Self, ParamsError> {
+        let fields = Fields::new(params, &["binding"], &["context_lines", "repo"])?;
+        Ok(Self {
+            binding: fields.text("binding")?,
+            context_lines: fields.optional("context_lines", Fields::integer)?,
+            repo: fields.optional("repo", Fields::path)?,
         })
     }
 }

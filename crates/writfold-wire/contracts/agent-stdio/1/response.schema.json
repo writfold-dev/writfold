@@ -291,6 +291,15 @@
                     },
                     "trial/prepare": {
                       "type": "object"
+                    },
+                    "trial/run": {
+                      "type": "object"
+                    },
+                    "trial/evidence-list": {
+                      "type": "object"
+                    },
+                    "trial/evidence-show": {
+                      "type": "object"
                     }
                   },
                   "required": [
@@ -298,7 +307,10 @@
                     "shutdown",
                     "trial/show",
                     "trial/retain",
-                    "trial/prepare"
+                    "trial/prepare",
+                    "trial/run",
+                    "trial/evidence-list",
+                    "trial/evidence-show"
                   ],
                   "additionalProperties": false
                 },
@@ -324,7 +336,7 @@
                   "additionalProperties": false
                 },
                 "trust_boundary": {
-                  "const": "Transport/session control plus writfold-trial-worktree/1 show, retain and prepare over the server's configured trial state; approve, apply and recover are CLI-only. No authorized corpus, retained release or grounding service is available."
+                  "const": "Transport/session control plus writfold-trial-worktree/1 show, retain, prepare, run (stopping before approval) and evidence list/show over the server's configured trial state; approve, apply and recover are CLI-only. No authorized corpus, retained release or grounding service is available."
                 }
               },
               "required": [
@@ -488,9 +500,203 @@
                         "splices"
                       ],
                       "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "run": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "file": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "base": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "prepared": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "splices": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "start": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 18446744073709551615
+                              },
+                              "end": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 18446744073709551615
+                              },
+                              "inserted": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 18446744073709551615
+                              }
+                            },
+                            "required": [
+                              "start",
+                              "end",
+                              "inserted"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "resolved": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "placeholder": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "binding": {
+                                "type": "string",
+                                "pattern": "^[0-9a-f]{64}(?![\\s\\S])"
+                              },
+                              "path": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "line": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 18446744073709551615
+                              }
+                            },
+                            "required": [
+                              "placeholder",
+                              "binding",
+                              "path",
+                              "line"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "checks": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "name": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "result": {
+                                "enum": [
+                                  "entailed",
+                                  "refuted",
+                                  "undetermined",
+                                  "inconsistent-premises",
+                                  "unknown",
+                                  "not-evaluated"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "name",
+                              "result"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "text": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "run",
+                        "file",
+                        "base",
+                        "prepared",
+                        "splices",
+                        "resolved",
+                        "checks",
+                        "text"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "rows": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "trailer": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "rows",
+                        "trailer"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "binding": {
+                          "type": "string",
+                          "pattern": "^[0-9a-f]{64}(?![\\s\\S])"
+                        },
+                        "file": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "commit": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "start": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 18446744073709551615
+                        },
+                        "end": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 18446744073709551615
+                        },
+                        "line": {
+                          "oneOf": [
+                            {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 18446744073709551615
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "text": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "binding",
+                        "file",
+                        "commit",
+                        "start",
+                        "end",
+                        "line",
+                        "text"
+                      ],
+                      "additionalProperties": false
                     }
                   ],
-                  "description": "trial/show, trial/retain and trial/prepare payloads respectively."
+                  "description": "trial/show, trial/retain, trial/prepare, trial/run, trial/evidence-list and trial/evidence-show payloads respectively."
                 }
               },
               "required": [

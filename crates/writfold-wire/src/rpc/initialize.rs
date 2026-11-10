@@ -13,7 +13,8 @@ pub enum Capability {
     Authored,
     Notifications,
     StorageV1,
-    /// `writfold.trial/1`: trial show/retain/prepare; approve stays CLI-only.
+    /// `writfold.trial/1`: trial show/retain/prepare/run and evidence reads;
+    /// approve stays CLI-only.
     TrialV1,
 }
 

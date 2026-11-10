@@ -12,7 +12,8 @@ mod trial;
 
 pub use codec::{encode_error, encode_success};
 pub use trial::{
-    PreparePayload, RetainPayload, ShowPayload, SpliceSummary, TrialCategory, TrialOutcome,
+    CheckSummary, EvidenceListPayload, EvidenceShowPayload, PreparePayload, ResolvedCitation,
+    RetainPayload, RunPayload, ShowPayload, SpliceSummary, TrialCategory, TrialOutcome,
     TrialRefusal, encode_trial_refusal, encode_trial_success,
 };
 use writfold_domain::{ContentDigest, InstanceId, SessionIncarnation};
@@ -22,7 +23,7 @@ pub const MAX_RESPONSE_BYTES: usize = 65_536;
 /// Exact closed legacy parameter schemas, not a data-service advertisement.
 pub const METHOD_SCHEMAS: &str = include_str!("../../../contracts/agent-stdio/1/methods.json");
 /// The method advertisement for a session that negotiated `writfold.trial/1`:
-/// the control schemas plus `trial/show`, `trial/retain` and `trial/prepare`.
+/// the control schemas plus the six trial methods.
 pub const TRIAL_METHOD_SCHEMAS: &str =
     include_str!("../../../contracts/agent-stdio/1/trial-methods.json");
 /// Self-describing pinned control-profile contract; data-service requirements
