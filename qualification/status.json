@@ -1071,6 +1071,48 @@
     },
     "retained_failed_attempts": []
   },
+  "trial_evidence_reuse": {
+    "status": "scoped_component_pass",
+    "scope": "Cross-session evidence reuse: writfold trial evidence list (compact rows, trailer with count/shown/omitted, refused=R for entries failing verification) and evidence show (re-fingerprints and digest-checks before printing, refuses tampered evidence; context lines come from the pinned blob and are marked, never mixed in); optional mutable local labels via trial retain --label, never exported as identity. Latency with 1,001 bindings on a 100k-file repository: list p95 97 ms, show 6-16 ms, show with context 72 ms. Reuse pilot (bench/2026-11-10-reuse-pilot): correctness 12/12 both arms, read-back used 1.7% more tokens (paired +642 per task, lower on 2 of 6); arm A re-grepped instead of using its notes. Not in serve yet (needs a writfold.trial/1 contract revision).",
+    "source_commit": "63bb5c4",
+    "receipts": {
+      "quality": {
+        "path": "~/.local/share/writfold/evidence/reuse-writer-McnpCKbx/quality-001.json",
+        "sha256": "6e59acc0194236db8d8ab37fd896252ce1185c00893e001d1b7055049bfee248",
+        "bytes": 885172
+      },
+      "unit": {
+        "path": "~/.local/share/writfold/evidence/reuse-writer-McnpCKbx/unit-001.json",
+        "sha256": "3f042b4c9d848808ca57bbd454fef2a96f3b14e01f109db532f15e40c7103154",
+        "bytes": 414635
+      }
+    },
+    "retained_failed_attempts": []
+  },
+  "dolt_writer_component": {
+    "status": "scoped_component_pass",
+    "scope": "B0 Dolt conditional writer (docs/writfold/storage-backend.md#the-dolt-conditional-writer). One dolt sql process runs one explicit transaction: a guard checks that main and HEAD are the expected-old commit, the working set is clean and wf_reader_meta is exactly the writer's realm row; then hex-literal row changes, a closure guard, DOLT_COMMIT and the wf-retained root. Atomic because the dolt process holds the database's exclusive native lock for its lifetime (a second process is read-only; observed on 2.6.1) and DOLT_COMMIT moves head and working set in one root update. Exclusive recorded writer lease (coordination/writer.lock plus writer.claim). Every write needs a DoltWriteApproval built from a strictly verified SuppliedDoltAuthorization whose base is the expected-old pin. Outcomes come from probes under the same coordination lease; a killed or timed-out write is Unknown, never retried, and read-only observe resolves it by the request digest in the commit message. Not DINT02 publication, release closure or Git CAS.",
+    "local_evidence": {
+      "image": "writfold-tools@sha256:c854889f19c83174e69600ee28f0d4d35a0d2de1a23b3a35b1ecf4c4a88e0fc6 (admitted Dolt 2.6.1), run with docker run and a private CARGO_TARGET_DIR, not scripts/gate",
+      "tests": "backend_dolt (4 tests: read suite 13/13, writer suite 6/6, bootstrap/producer refusals, realm-row guard refusal) and backend_conformance (memory reference passes 19/19; 12 mutants each fail their named check)",
+      "kill_sweeps": "final source (with the realm-row guard): 89 attempts, Unknown resolved as applied 53 and as absent 14, 21 refused as cancelled before the native write; three earlier runs without that guard: 32/37/92 attempts, applied 18/22/55, absent 5/7/16",
+      "workspace": "cargo test --workspace --locked --offline in the same image: 548 passed, 1 failed (writfold-runtime tests/git objects::corrupt_named_commit_tree_and_blob_never_acquire_provenance, PermissionDenied as the non-root container user; untouched by this change and already known to fail outside the gate)"
+    },
+    "receipts": {
+      "quality": {
+        "path": "~/.local/share/writfold/evidence/reuse-writer-McnpCKbx/quality-001.json",
+        "sha256": "6e59acc0194236db8d8ab37fd896252ce1185c00893e001d1b7055049bfee248",
+        "bytes": 885172
+      },
+      "unit": {
+        "path": "~/.local/share/writfold/evidence/reuse-writer-McnpCKbx/unit-001.json",
+        "sha256": "3f042b4c9d848808ca57bbd454fef2a96f3b14e01f109db532f15e40c7103154",
+        "bytes": 414635
+      }
+    },
+    "retained_failed_attempts": [],
+    "source_commit": "63bb5c4"
+  },
   "publication_history_audit": {
     "status": "inspected_not_cleared_for_publication",
     "record": {
