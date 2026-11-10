@@ -1,0 +1,37 @@
+You are working in a Git repository checked out at <trial>/repo, at commit <commit>.
+
+Task: Rename the helper function `peek_filelike_length` (defined in `httpx/_utils.py`) to `peek_length`: change its definition and every import and use of it in the package directory `httpx/`, so that no use of the old name remains there. Change nothing else.
+
+Make the change in the checkout <trial>/repo; its final state is graded with `git diff`. Another process may also be editing files in this checkout while you work; keep any change it makes.
+
+Rules:
+- Put any scratch files in <trial>/work, never in the repository.
+- Search the repository with Tuft, as the note below says. Do not use grep, rg, git grep, find or other search commands on the repository; you may post-process Tuft's own output (for example the --out file) with ordinary shell tools. Read a file directly (Read, or sed on a line range) only when the Tuft output is not enough. Do not modify files in the repository directly (no Edit, Write, sed -i or similar on them); make the edit only through Writfold, as the edit note below says.
+  Search with Tuft. Write <trial>/work/q.tuft:
+    @h := find text "exact bytes" in "httpx/" at "<commit>" limit 100;
+    @e := retain @h around lines 0;
+    @v := project @e [path, line, excerpt(max_chars: 300)];
+    emit @v budget_tokens 4000;
+  (`find rx"..."`: Rust regex over ASCII; omit `in` for the whole tree.)
+  Run <writfold> tuft run q.tuft --repo <trial>/repo --state <trial>/state
+  Rows are `path:line: text`; --out FILE writes them to a new file.
+  The last line `# coverage=complete ... omitted=0 cursor=none` means none
+  are missing; else raise limit or budget_tokens, or rerun with --cursor C.
+- Edit note:
+  Edit through Writfold. A recipe edits one file. Write <trial>/work/e.spl:
+    edit "path/in/repo.py" {
+      @x := one text "exact old bytes"
+      replace @x with "new bytes"
+    }
+  (`one` refuses unless the text occurs exactly once in the file.) Then run:
+    <writfold> trial prepare --repo <trial>/repo --file path/in/repo.py --recipe <trial>/work/e.spl --state <trial>/state
+  Each step prints a `next:` line (approve, then apply): run it as printed,
+  with `writfold` replaced by <writfold>. It carries --state.
+  This edits a worktree at <trial>/state/worktrees/RUN made from the HEAD
+  commit, not the checkout. Bring the change into the checkout as a patch:
+    cd <trial>/state/worktrees/RUN && git diff > <trial>/work/e.patch
+    cd <trial>/repo && git apply <trial>/work/e.patch
+  Several files: one recipe and one prepare per file.
+  If a step refuses, read its message, fix the cause and redo that step.
+- Do not read anything else outside <trial> except where stated above.
+- When finished, reply with exactly one line: `DONE`, or `REFUSED: <reason>` if you made no change.

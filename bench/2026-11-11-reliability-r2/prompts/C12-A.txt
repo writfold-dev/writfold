@@ -1,0 +1,40 @@
+You are working in a Git repository checked out at <trial>/repo, at commit <commit>.
+
+Task: This task has five steps; later steps depend on the exact results of earlier ones.
+Step 1. Find the line that defines the exception class `TooManyRedirects`. Write it as one row `S1 <path>:<line>: <text>`.
+Step 2. Find the line that defines the class that `TooManyRedirects` directly inherits from. Write it as `S2 <path>:<line>: <text>`.
+Step 3. List the class definition line of every class in the same file that directly inherits from the step-2 class (`TooManyRedirects` included), one row each, as `S3 <path>:<line>: <text>`.
+Step 4. In class `AsyncClient` only, change the message `"Exceeded maximum allowed redirects."` passed to `TooManyRedirects` to `"Exceeded maximum allowed redirects (async client)."`. Leave class `Client`'s message unchanged.
+Step 5. Write the line you changed in step 4, as it now reads in the checkout, as `S5 <path>:<line>: <text>`.
+
+Write the step results to <trial>/answer.txt, one line per piece of evidence, in the form
+  S<n> <path>:<line>: <the full text of that source line, exactly as in the file>
+where <path> is relative to the repository root and <line> is 1-based. Leading indentation may be omitted. Make the step-4 change in the checkout <trial>/repo; its final state is graded with `git diff`. Another process may also be editing files in this checkout while you work; keep any change it makes.
+
+Rules:
+- Put any scratch files in <trial>/work, never in the repository.
+- Use your ordinary tools: Bash (grep, rg, git grep, sed and similar) and Read. Make the edit as the edit note below says.
+  Search with grep. For example, from <trial>/repo:
+    git grep -n -F "exact bytes" -- httpx/ > <trial>/work/hits.txt
+    git grep -c -F "exact bytes" -- httpx/     (lines per file)
+    wc -l < <trial>/work/hits.txt              (total; must equal -c sum)
+  (`-E` for regex, `-w` for whole words; omit `-- httpx/` for all.)
+  Rows are: `path:line:text`. Write long results to a file.
+  Long tool output is truncated: if a listing looks cut, count it with -c or
+  wc -l and read it in parts. Before editing, re-read the exact lines you will
+  change; edit by their exact text, never by an earlier line number. 
+- Edit note:
+  Edit with your ordinary tools, directly in <trial>/repo.
+  First locate the definition by search and read the lines around it. Then,
+  immediately before changing the file, Read it again: what you saw earlier may
+  be stale. Use the Edit tool with an old_string copied from that fresh read,
+  long enough to occur exactly once in the file (Edit refuses otherwise, and
+  also refuses if the file changed since your last Read: then Read it again
+  and retry). Do not rewrite the whole file, do not use sed -i or a script to
+  edit, and never edit by a line number taken from earlier output.
+  Afterwards check the result:
+    cd <trial>/repo && git diff
+  It must show your change, plus any change another process made,
+  which you must keep. If it shows anything else, fix that before you finish.                                                                                                                     
+- Do not read anything else outside <trial> except where stated above.
+- When finished, reply with exactly one line: `DONE`, `INCOMPLETE: <reason>` if you could not complete every step, or `REFUSED: <reason>` if you made no change.
