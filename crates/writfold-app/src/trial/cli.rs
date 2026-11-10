@@ -109,6 +109,31 @@ fn trial_run(parsed: &Args, dir: &StateDir) -> Result<String> {
     Ok(format!("{}{}", super::run::render(&ran), dir.flag()))
 }
 
+fn prepare_command(parsed: &Args, dir: &StateDir) -> Result<String> {
+    let state = dir.path.as_path();
+    let report = parsed.option("report").map(Path::new);
+    let p = prepare(
+        state,
+        Path::new(parsed.required("repo")?),
+        parsed.required("file")?,
+        Path::new(parsed.required("recipe")?),
+        report,
+    )?;
+    let mut out = format!(
+        "prepared run {}\n  file {} at {}\n  prepared edit {}\n",
+        p.run, p.path, p.base, p.prepared
+    );
+    for (lo, hi, inserted) in &p.edits {
+        out.push_str(&format!("  splice [{lo},{hi}) -> {inserted} bytes\n"));
+    }
+    out.push_str(&format!(
+        "next: writfold trial approve {}{}",
+        p.run,
+        dir.flag()
+    ));
+    Ok(out)
+}
+
 pub fn main(args: &[String]) -> Result<String> {
     let parsed = parse(args)?;
     let dir = parsed.state()?;
@@ -145,29 +170,7 @@ fn dispatch(parsed: &Args, dir: &StateDir) -> Result<String> {
             Trial::init(&state)?;
             Ok(format!("initialized trial state in {}", state.display()))
         }
-        Some("prepare") => {
-            let report = parsed.option("report").map(Path::new);
-            let p = prepare(
-                &state,
-                Path::new(parsed.required("repo")?),
-                parsed.required("file")?,
-                Path::new(parsed.required("recipe")?),
-                report,
-            )?;
-            let mut out = format!(
-                "prepared run {}\n  file {} at {}\n  prepared edit {}\n",
-                p.run, p.path, p.base, p.prepared
-            );
-            for (lo, hi, inserted) in &p.edits {
-                out.push_str(&format!("  splice [{lo},{hi}) -> {inserted} bytes\n"));
-            }
-            out.push_str(&format!(
-                "next: writfold trial approve {}{}",
-                p.run,
-                dir.flag()
-            ));
-            Ok(out)
-        }
+        Some("prepare") => prepare_command(parsed, dir),
         Some("run") => trial_run(parsed, dir),
         Some("retain") => {
             if let Some(name) = parsed.option("label") {

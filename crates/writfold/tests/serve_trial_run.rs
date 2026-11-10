@@ -269,7 +269,9 @@ fn serve_run_stops_at_a_prepared_edit_and_matches_the_cli() -> Result {
     let printed = printed.strip_suffix('\n').ok_or("no final LF")?;
     // The CLI's next: line also names its state, for use from a fresh shell.
     let flag = format!(" --state {}", f.state.display());
-    let printed = printed.strip_suffix(&flag).ok_or("no --state on the next: line")?;
+    let printed = printed
+        .strip_suffix(&flag)
+        .ok_or("no --state on the next: line")?;
     let cli_run = run_id(printed)?;
     assert_ne!(cli_run, run);
     assert_eq!(normalized(printed, cli_run), normalized(text, &run));
