@@ -1016,6 +1016,24 @@
     },
     "retained_failed_attempts": []
   },
+  "trial_run_component": {
+    "status": "scoped_component_pass",
+    "scope": "T1 writfold trial run: Tuft evidence, a Weft report and trial::prepare in one command, stopping before approval. citation \"tuft:@view#N\" is a Writfold-side template substituted with the exact retained binding digest before Weft runs (unresolved templates refuse); the Weft binary is passed explicitly (never PATH) and its sha256 printed; each failure names its step. Approve, apply and recover stay separate CLI steps. Latency with a stub Weft: 100k-file repository median 319 ms / p95 487 ms, about the sum of its parts (bench/2026-11-10-trial-run-latency). That bench recorded tuft-rx and tuft-retain50 p95 over 1 s under concurrent load; the quiet-machine measurement is in tuft_lean_output.",
+    "source_commit": "3f8f98c",
+    "receipts": {
+      "quality": {
+        "path": "~/.local/share/writfold/evidence/trial-run-a6KPwBfC/quality-001.json",
+        "sha256": "ea5a72377733ebf8dc18dbce6a9653577d80a072a53ad923a7b86b21f8ccbbaf",
+        "bytes": 852448
+      },
+      "unit": {
+        "path": "~/.local/share/writfold/evidence/trial-run-a6KPwBfC/unit-001.json",
+        "sha256": "452e7fd939a90c2800a4f594667882e170d388d063d14807ffe9994837802661",
+        "bytes": 387653
+      }
+    },
+    "retained_failed_attempts": []
+  },
   "publication_history_audit": {
     "status": "inspected_not_cleared_for_publication",
     "record": {
