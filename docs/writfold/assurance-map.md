@@ -332,6 +332,15 @@ remain incomplete, including the proof-backed hint-erased M02/M01M02 runs.
 No absent counterexample, timeout or skipped wide/workload obligation is
 promoted to a pass.
 
+Separately, `spec/TrialEditStream.tla` models one `writfold-trial-worktree/1`
+run (apply, recover, an outside writer, crashes, ledger CAS, authority
+timing). It is not one of the M01–M11 models and carries no TLAPS proof. Its
+positive (690 distinct states, depth 14) and wide (21,613 states, depth 21)
+configurations complete with no violation; its two calibrated negatives
+(no preimage guard, apply resuming a claimed run) and two probes (install
+after expiry, an ABA outside writer) each produce their expected
+counterexample.
+
 All twenty selected semantic negatives now have actual invariant
 counterexamples. Seven use directed witnesses that preserve canonical
 initial states/constants and conjoin every controlled successor with the

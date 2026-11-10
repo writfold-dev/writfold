@@ -220,8 +220,16 @@ themselves are covered by tests, not a gate receipt.
   Weft states them, local and **hypothetical**, never as grounded facts. The
   required check names are enforced at `approve` but not yet carried inside the
   signed approval.
-- Recovery's decision and the required-check gate are proved over the shipped
-  Rust (`docs/writfold/aeneas.md`); the rest of the flow is tested.
+- Recovery's decision, the required-check gate and the edit-flow validator
+  are proved over the shipped Rust (`docs/writfold/aeneas.md`); the
+  interleavings of apply, recover and an outside writer are model-checked
+  (below); the rest of the flow is tested.
+- Authority is checked once, immediately before `Claimed`. A claim made under
+  a valid approval may finish its install after the approval expires (or a
+  grant is later revoked): the claim is the commitment point and is never
+  re-dispatched, so that install is the single dispatch the approval
+  admitted. Nothing after the claim re-checks authority, and `recover` needs
+  none because it never writes the file.
 - A claim is never re-dispatched: after an interrupted `apply`, `apply`
   refuses and `recover` decides from the file's exact bytes. If the file holds
   neither the source nor the candidate, the outcome stays Unknown for a person
@@ -242,7 +250,19 @@ verification, the approval verification, the current-grant check, the file
 guard or the validator's material rule each fails a test. Recovery is tested
 for all three observations (installed, not installed, neither), plus a claim
 that `apply` must not re-dispatch; removing either recovery comparison, the
-claim's candidate binding or the abandonment-reason rule fails a test. Two
+claim's candidate binding or the abandonment-reason rule fails a test. The
+interleavings are model-checked in `spec/TrialEditStream.tla` (TLC, in the
+tool image): two apply invocations, recover and an outside writer, a crash at
+every step boundary, the ledger's expected-old-head CAS and a clock. At most
+one outcome is recorded; `Applied` implies the candidate was installed and
+`Abandoned` that it never was; nothing is dispatched twice after `Claimed`;
+install only ever replaces the exact source; `Unknown` only on bytes that are
+neither; recover never writes the file; every claim was made under valid
+authority. Removing the preimage guard, or letting `apply` resume a
+three-record run, each yields a counterexample. The model assumes the outside
+writer never writes the source's or candidate's exact bytes (a probe shows
+recovery would then reconcile wrongly) and never races install's re-check and
+rename. Two
 checks are defensive only: the explicit "claimed without an outcome" message in
 `apply` (the history-shape match already refuses) and the outcome rule that the
 third record is the claim (the ledger re-validates the prefix, so nothing else
