@@ -161,7 +161,7 @@ Next after T1. T2 suggested a compact Tuft row format and an `--out` flag. Both 
   never named by the client; `bench/2026-11-10-serve-run-evidence-latency`). Fresh
   WF13 `stdio-control` receipt for executable `3087e467…`; Weft's `control` gate
   re-pinned and passing (`serve_trial_run_evidence`);
-- DINT02 publication over the Dolt writer: first slice built (`dolt_publication_component`; [order and recovery](dolt-integration.md#publication-order-and-recovery)). It has local checks against real Dolt 2.6.1; gate receipts are pending. Next for DINT02:
+- DINT02 publication over the Dolt writer: first slice built (`dolt_publication_component`; [order and recovery](dolt-integration.md#publication-order-and-recovery)). Quality and unit gates pass on main, including the kill sweep against real Dolt 2.6.1. Next for DINT02:
   - a signed candidate binding (owner decision on a new signed schema);
   - bootstrap publication;
   - a TLA+ model of the publication order;

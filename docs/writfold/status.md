@@ -224,7 +224,7 @@ claim and does not authorize publication.
      publications;
    - a kill sweep against real Dolt 2.6.1.
 
-   Its local checks pass; gate receipts are pending (`dolt_publication_component`;
+   Quality and unit gates pass on main, the kill sweep included (`dolt_publication_component`;
    [order and recovery](dolt-integration.md#publication-order-and-recovery)).
    Next: a signed candidate binding, bootstrap publication and the remaining
    DINT02 owners and gates.

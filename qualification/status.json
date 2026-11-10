@@ -1199,7 +1199,7 @@
     ]
   },
   "dolt_publication_component": {
-    "status": "local_checks_only",
+    "status": "scoped_component_pass",
     "scope": "First DINT02 slice (docs/writfold/dolt-integration.md#publication-order-and-recovery): one verified signed DoltOperation approval publishes one candidate. Order under the exclusive Git and Dolt writer leases: Git expected-old check (completed ref = signed base release whose manifest names the signed base pin), retained candidate blob, Dolt conditional commit, head retention plus exact read-back plus prepared commit naming the new pin, Git expected-old CAS (the only visibility point). Outcomes Published/Conflict/Stale/Unknown; read-only observe resolves via the pure writfold_core::publication kernel (proof candidate, not translated, no theorem) to Published, NotPublished or Interrupted, which complete finishes with Git steps only. Fixes found by the kill sweep: abandoned Git ref locks (GitWriterLease::clear_stale_ref_locks) and an unretained Dolt head after a kill between DOLT_COMMIT and DOLT_BRANCH (StorageBackend::retain). Not claimed: signed candidate binding (the signed operation has no candidate field), live policy/target/tool admission, bootstrap publication (genesis is fixture-owned), kills during complete, power-loss durability, TLA+/TLAPS model, M11/V15, WF10/WF11/WF14, full DINT02.",
     "local_evidence": {
       "image": "writfold-tools@sha256:c854889f19c83174e69600ee28f0d4d35a0d2de1a23b3a35b1ecf4c4a88e0fc6 (admitted Dolt 2.6.1), run with docker run and a private CARGO_TARGET_DIR, not scripts/gate",
@@ -1208,10 +1208,23 @@
       "proofs_drift": "proofs/extract.sh in writfold-proofs:latest reproduces proofs/Extracted unchanged",
       "workspace": "cargo test --workspace --locked --offline --no-fail-fast in the same image, tests in parallel: 564 passed, 1 failed (the known writfold-runtime objects::corrupt_named_commit_tree_and_blob_never_acquire_provenance PermissionDenied as the non-root container user)"
     },
-    "receipts": {},
+    "receipts": {
+      "quality": {
+        "path": "~/.local/share/writfold/evidence/dint02-bMIIb0Dk/quality-001.json",
+        "sha256": "c7f7297072e0db7ed93843d8b941436c830b73d7f44b2b014069a4ed3b1e050e",
+        "bytes": 925547
+      },
+      "unit": {
+        "path": "~/.local/share/writfold/evidence/dint02-bMIIb0Dk/unit-001.json",
+        "sha256": "103d0afc5cd236a847ac4c88a5b8ed974fd87238227cfce2e5274f4f4b857014",
+        "bytes": 466497
+      }
+    },
     "retained_failed_attempts": [],
-    "source_commit": "e3521e2"
+    "source_commit": "09c6482",
+    "gate_note": "The unit gate on merged main ran all four tests/publication.rs tests against real Dolt 2.6.1, including the kill sweep (757 s). This is a scoped component pass of the first DINT02 slice only; DINT02, M11/V15 and WF10/WF11/WF14 remain open."
   },
+
   "publication_history_audit": {
     "status": "inspected_not_cleared_for_publication",
     "record": {
