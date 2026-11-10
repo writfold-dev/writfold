@@ -52,7 +52,8 @@ or the historical Python engine. The implementation profile is `writfold.agent/1
 Without negotiated capabilities it is `transport-control-only`: it advertises
 `initialize`, `shutdown` and the `notifications` capability. A session that
 requests `writfold.trial/1` (and a server started with a trial state) also gets
-`trial/show`, `trial/retain` and `trial/prepare`, scope
+`trial/show`, `trial/retain`, `trial/prepare`, `trial/run`,
+`trial/evidence-list` and `trial/evidence-show`, scope
 `transport-control+trial-worktree`; see
 [Negotiated `writfold.trial/1`](#negotiated-writfoldtrial1). Unsupported
 data/edit capabilities refuse before initialization commits; unavailable methods
@@ -116,14 +117,16 @@ never use a mutable sibling checkout or infer grounding from initialization.
 grounded Weft E2E and Splicery editing remain separate obligations. The WF13
 `stdio-control` receipt was refreshed on 9 November 2026 for `writfold.trial/1`
 (contract `0baf69b2…`, executable `91a1924f…`); the earlier receipt for contract
-`b673d10f…` is preserved, not relabelled.
+`b673d10f…` is preserved, not relabelled. The 10 November revision of
+`writfold.trial/1` (adding `trial/run` and `trial/evidence-*`) changes the
+contract to `ec88623c…`; that receipt is stale for it and a fresh run is needed.
 
 ### Negotiated `writfold.trial/1`
 
 `writfold serve [--state DIR]` fixes the trial state at startup (`--state`, else
 `WRITFOLD_STATE`); requests never name it. `initialize` admits
 `writfold.trial/1` only when requested and only when a state is configured; it
-then advertises `trial-methods.json` (the control schemas plus the three trial
+then advertises `trial-methods.json` (the control schemas plus the six trial
 methods), capabilities `["notifications","writfold.trial/1"]` and a trust
 boundary saying approve/apply/recover are CLI-only. Each trial method calls
 exactly the CLI's application function (`crates/writfold-app/src/trial/rpc.rs`).
@@ -133,8 +136,8 @@ not registered, so -32601), session state (-32002), negotiation (-32000
 unsupported requested capability), notification (not run, nothing emitted),
 closed parameters (-32602; host paths must be absolute), then the application
 function. Its refusals are -32000 with a category chosen by error type and the
-CLI's own message; `outcome` is `unknown` (with `exit_code` null) when `retain`
-or `prepare` may have written before failing. Results that would exceed the
+CLI's own message; `outcome` is `unknown` (with `exit_code` null) when `retain`,
+`prepare` or `run` may have written before failing. Results that would exceed the
 65,536-byte budget refuse with `incomplete`/E105 instead of truncating. The full
 method and refusal tables are in [trial-profile.md](trial-profile.md#through-serve).
 

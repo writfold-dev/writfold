@@ -1,0 +1,114 @@
+{
+  "transport": "writfold serve (stdio JSON-RPC), one session per repository",
+  "weft": "stub (fixed weft.report/1); the real Weft is not timed",
+  "ceiling_ms": 5000,
+  "large_files": 100000,
+  "large_retained_before": 1000,
+  "repeats": 10,
+  "last_list_trailer": {
+    "small": "# count=1 shown=1 omitted=0",
+    "large": "# count=1001 shown=100 omitted=901"
+  },
+  "operations": [
+    {
+      "repo": "small",
+      "op": "trial/run",
+      "samples": 10,
+      "median_ms": 167.2,
+      "p95_ms": 318.9,
+      "max_ms": 318.9,
+      "target_p95_ms": 1000,
+      "within_budget": true
+    },
+    {
+      "repo": "small",
+      "op": "evidence-list",
+      "samples": 10,
+      "median_ms": 0.2,
+      "p95_ms": 0.2,
+      "max_ms": 0.2,
+      "target_p95_ms": 250,
+      "within_budget": true
+    },
+    {
+      "repo": "small",
+      "op": "evidence-list-path",
+      "samples": 10,
+      "median_ms": 0.1,
+      "p95_ms": 0.1,
+      "max_ms": 0.1,
+      "target_p95_ms": 250,
+      "within_budget": true
+    },
+    {
+      "repo": "small",
+      "op": "evidence-show",
+      "samples": 10,
+      "median_ms": 0.1,
+      "p95_ms": 0.2,
+      "max_ms": 0.2,
+      "target_p95_ms": 250,
+      "within_budget": true
+    },
+    {
+      "repo": "small",
+      "op": "evidence-show-context3",
+      "samples": 10,
+      "median_ms": 7.7,
+      "p95_ms": 8.1,
+      "max_ms": 8.1,
+      "target_p95_ms": 250,
+      "within_budget": true
+    },
+    {
+      "repo": "large",
+      "op": "trial/run",
+      "samples": 10,
+      "median_ms": 331.3,
+      "p95_ms": 376.3,
+      "max_ms": 376.3,
+      "target_p95_ms": 1000,
+      "within_budget": true
+    },
+    {
+      "repo": "large",
+      "op": "evidence-list",
+      "samples": 10,
+      "median_ms": 19.5,
+      "p95_ms": 62.0,
+      "max_ms": 62.0,
+      "target_p95_ms": 250,
+      "within_budget": true
+    },
+    {
+      "repo": "large",
+      "op": "evidence-list-path",
+      "samples": 10,
+      "median_ms": 17.7,
+      "p95_ms": 19.3,
+      "max_ms": 19.3,
+      "target_p95_ms": 250,
+      "within_budget": true
+    },
+    {
+      "repo": "large",
+      "op": "evidence-show",
+      "samples": 10,
+      "median_ms": 0.1,
+      "p95_ms": 0.2,
+      "max_ms": 0.2,
+      "target_p95_ms": 250,
+      "within_budget": true
+    },
+    {
+      "repo": "large",
+      "op": "evidence-show-context3",
+      "samples": 10,
+      "median_ms": 8.3,
+      "p95_ms": 9.0,
+      "max_ms": 9.0,
+      "target_p95_ms": 250,
+      "within_budget": true
+    }
+  ]
+}

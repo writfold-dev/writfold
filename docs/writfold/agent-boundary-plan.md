@@ -99,7 +99,10 @@ and the ceiling is checked there.
 Through `serve` (S3, `bench/latency/serve.py`, 10 calls each,
 `bench/2026-11-09-serve-latency/results.json`), the p95 on the 100,000-file
 repository is 27 ms for `trial/retain`, 166 ms for `trial/prepare` and 53 ms for
-`trial/show`.
+`trial/show`. The revision adding `trial/run` and `trial/evidence-*`
+(`bench/2026-11-10-serve-run-evidence-latency`, stub Weft) measured p95 376 ms
+for `trial/run`, 62 ms for `trial/evidence-list` over 1,001 bindings and 9 ms for
+`trial/evidence-show` with three context lines.
 
 ## Delivery plan
 
@@ -149,7 +152,11 @@ Next after T1. T2 suggested a compact Tuft row format and an `--out` flag. Both 
 
 - ~~the TLA+ trial-stream model~~ and ~~the edit-flow validator in `writfold-core`~~: done (`trial_formal_component`);
 - the cursor moved onto `NoticeCursor`;
-- serve methods for `trial/run` and `trial/evidence-*` (a `writfold.trial/1` contract revision);
+- ~~serve methods for `trial/run` and `trial/evidence-*`~~: built as a revision of
+  `writfold.trial/1` ([trial-profile.md](trial-profile.md#through-serve); contract
+  `0baf69b2…` → `ec88623c…`; `bench/2026-11-10-serve-run-evidence-latency`). Still
+  needed: a fresh WF13 `stdio-control` receipt for the new contract, and Weft's
+  `control` re-pin to it and its executable;
 - DINT02 publication over the Dolt writer.
 
 ## Website wording after the slice

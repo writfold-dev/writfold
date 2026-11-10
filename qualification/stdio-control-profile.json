@@ -9,13 +9,13 @@
   "producer": "scripts/writfold_stdio.py",
   "artifact_publisher": "scripts/writfold_agent_contract.py",
   "implemented_command": ["writfold", "serve", "[--state DIR]"],
-  "implemented_methods": ["initialize", "shutdown", "trial/show", "trial/retain", "trial/prepare"],
+  "implemented_methods": ["initialize", "shutdown", "trial/show", "trial/retain", "trial/prepare", "trial/run", "trial/evidence-list", "trial/evidence-show"],
   "implemented_capabilities": ["notifications", "writfold.trial/1"],
   "cli_only_methods": ["trial/approve", "trial/apply", "trial/recover"],
   "receipt_status": {
-    "fresh_receipt_required": false,
+    "fresh_receipt_required": true,
     "current_receipt": {"path": "~/.local/share/writfold/evidence/serve-trial-cVqclyxI/stdio-control-002.json", "sha256": "efb5726d5cf20e5cfe58cc876d9d3d7783de36fb54af8ebcd319e8c7bb00da62", "bytes": 361774, "executable_sha256": "91a1924f5bae025a131bda99ea047c30adcc404d96429abf70956a7757230f4d", "contract_sha256": "0baf69b21f1051ee620ca89ba4ec659605c0cf3ddc4ae82a7a9ad8eaf1d9ac3f"},
-    "reason": "Refreshed 2026-11-09 for the writfold.trial/1 contract and binary. The 2026-11-05 receipt (contract b673d10f…) is preserved for its own source and not relabelled.",
+    "reason": "Refreshed 2026-11-09 for the writfold.trial/1 contract and binary. The 2026-11-05 receipt (contract b673d10f…) is preserved for its own source and not relabelled. Stale since 2026-11-10: the writfold.trial/1 revision adding trial/run, trial/evidence-list and trial/evidence-show changes the contract to ec88623c5ea2c47f51162cb2fd9755ae350cf2db7cb4e103dd9675dc344b8b04; the receipt above binds 0baf69b2… and is not relabelled. No fresh receipt has been run.",
     "vector_scope": "The stdio-control vectors run without a trial state, so they exercise writfold.trial/1 negotiation refusals and Method not found for approve/apply/recover, not the trial methods. The trial methods are covered by crates/writfold/tests/serve_trial.rs and the writfold-app engine tests, which are not a gate receipt."
   },
   "owners": {
