@@ -26,9 +26,11 @@ blocking progress, Tarek made Dolt the **interim primary backend** behind the
 Omnigraph remains the target. A same-day instruction to retire this profile was
 reversed before anything was removed. Dolt is the one writer: there are no dual
 writes and no fallback after an uncertain write. The invariants below still
-apply. The DINT evidence retains its original scope, and the B0 Dolt adapter
-reads only, through the DINT01 reader. A Dolt writer still needs the typed
-integration profile described below.
+apply. The DINT evidence retains its original scope. The B0 Dolt adapter reads
+through the DINT01 reader. Its [conditional writer](storage-backend.md#the-dolt-conditional-writer)
+requires a verified signed Dolt approval (below) for every write and holds an
+exclusive, recorded writer lease. A writer commit is storage state, not DINT02
+publication: candidate preparation, release closure and Git CAS remain open.
 
 This supplement permits **separate disposable local integration realms** to use
 one deliberately selected Dolt backend, with profile-specific evidence. It does

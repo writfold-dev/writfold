@@ -4,7 +4,7 @@ use super::{
 };
 use crate::backend::{
     Capability, ExactRead, HeadName, RecordChange, RecordKind, Refusal, StorageBackend,
-    WriteOutcome, WriteRequest, content_digest,
+    WriteRequest, content_digest,
 };
 
 /// Every record reads back with exact bytes, kind, recomputed digest and the
@@ -125,13 +125,20 @@ pub(super) fn missing_pin<B: StorageBackend>(
     )
 }
 
-/// Without a declared write capability, admission refuses `Unavailable(Write)`.
-/// With one, a stale expected-old head must refuse and report the observed pin.
+/// `run` checks reader instances: one that does not declare `Write` refuses a
+/// write as `Unavailable(Write)`. Writer instances are checked by `run_writes`,
+/// so a reader that declares `Write` fails here rather than passing unchecked.
 pub(super) fn write_admission<B: StorageBackend>(
     backend: &mut B,
     f: &ConformanceFixture<B::Pin>,
 ) -> Outcome {
     const CHECK: &str = "write-admission";
+    if declared(backend, Capability::Write) {
+        return Err(fail(
+            CHECK,
+            "run takes a reader instance; writer conformance is run_writes",
+        ));
+    }
     let change = RecordChange {
         key: key(CHECK, "doc:c")?,
         kind: RecordKind::new("document".to_owned()).map_err(|e| fail(CHECK, e.to_string()))?,
@@ -142,20 +149,10 @@ pub(super) fn write_admission<B: StorageBackend>(
         expected_old: f.before.clone(),
         changes: vec![change],
     };
-    let outcome = backend.admit_write(&stale, &not_cancelled());
-    if declared(backend, Capability::Write) {
-        let observed =
-            matches!(&outcome, Ok(WriteOutcome::Stale { observed }) if observed == &f.after);
-        require(
-            CHECK,
-            observed,
-            "stale expected-old head was not refused with the observed pin",
-        )
-    } else {
-        require(
-            CHECK,
-            outcome == Err(Refusal::Unavailable(Capability::Write)),
-            "undeclared write was not refused as Unavailable",
-        )
-    }
+    let outcome = backend.admit_write(&stale, None, &not_cancelled());
+    require(
+        CHECK,
+        outcome == Err(Refusal::Unavailable(Capability::Write)),
+        "undeclared write was not refused as Unavailable",
+    )
 }

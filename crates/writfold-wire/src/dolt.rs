@@ -1,12 +1,15 @@
-//! Bounded Dolt read projection codecs. No release or writer authority is encoded.
+//! Bounded Dolt read projection and writer-probe codecs. No release or writer
+//! authority is encoded.
 use crate::{Limits, RawJson, semantic::codec};
 use serde_json::{Map, Value};
 use thiserror::Error;
 
 mod pin;
 mod rows;
+mod write;
 pub use pin::{decode_metadata, decode_pin, decode_root, encode_pin};
 pub use rows::{decode_edges, decode_nodes};
+pub use write::{DoltHeadProbe, decode_applied, decode_head};
 
 #[derive(Debug, Error, Eq, PartialEq)]
 pub enum Error {

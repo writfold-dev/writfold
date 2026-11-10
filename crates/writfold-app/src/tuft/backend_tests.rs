@@ -149,7 +149,7 @@ fn refusals(backend: &mut Backend<'_>, before: &GitObjectId) -> Result<()> {
         expected_old: before.clone(),
         changes: Vec::new(),
     };
-    let refused = backend.admit_write(&write, &CANCELLED).err();
+    let refused = backend.admit_write(&write, None, &CANCELLED).err();
     require(
         refused == Some(Refusal::Unavailable(Capability::Write)),
         "write refused as Unavailable",

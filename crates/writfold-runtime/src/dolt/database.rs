@@ -1,5 +1,5 @@
 use super::executable::descriptor_path;
-use super::{DoltError, DoltExecutable, DoltQuery};
+use super::{DoltError, DoltExecutable, DoltQuery, DoltSql, DoltWriterSlot};
 use crate::fs::{
     ContainedRoot, FileIdentity, FsError, LockKey, LockedFile, ManagedLocks, PinnedFile,
     RelativePath,
@@ -85,6 +85,15 @@ impl DoltDatabase {
         Ok(lease)
     }
 
+    /// The realm's single-writer slot in the same coordination namespace. Its
+    /// `writer.lock` entry must already be provisioned; nothing is created here.
+    pub fn writer_slot(&self) -> Result<DoltWriterSlot<'_>, DoltError> {
+        self.check_current()?;
+        let coordination = self.root.open_child(&relative("coordination")?)?;
+        check_private(&coordination)?;
+        DoltWriterSlot::open(self, coordination)
+    }
+
     fn check_current(&self) -> Result<(), DoltError> {
         check_private(&self.root)?;
         check_private(&self.home)?;
@@ -131,6 +140,42 @@ impl DoltLease<'_> {
         process::check_stop(deadline, cancelled)?;
         self.check_current()?;
         let sql = query.render(pin.commit(), rows)?;
+        self.run_sql(executable, &sql, stdout, stderr, deadline, cancelled)
+    }
+
+    /// Run one closed writer statement group (`DoltSql`) under this lease. A
+    /// failed or cancelled run is not evidence that nothing was written; the
+    /// writer reconciles by probing the head under the same lease.
+    pub fn execute(
+        &self,
+        executable: &DoltExecutable<'_>,
+        sql: &DoltSql,
+        stdout: ByteCount,
+        stderr: ByteCount,
+        deadline: Instant,
+        cancelled: &AtomicBool,
+    ) -> Result<Vec<u8>, DoltError> {
+        process::check_stop(deadline, cancelled)?;
+        self.check_current()?;
+        self.run_sql(
+            executable,
+            sql.as_str(),
+            stdout,
+            stderr,
+            deadline,
+            cancelled,
+        )
+    }
+
+    fn run_sql(
+        &self,
+        executable: &DoltExecutable<'_>,
+        sql: &str,
+        stdout: ByteCount,
+        stderr: ByteCount,
+        deadline: Instant,
+        cancelled: &AtomicBool,
+    ) -> Result<Vec<u8>, DoltError> {
         let home = descriptor_path(self.database.home.descriptor());
         let mut command = Command::new(executable.path()?);
         command

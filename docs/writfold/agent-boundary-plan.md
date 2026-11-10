@@ -138,7 +138,7 @@ Each row's evidence is the `qualification/status.json` entry named here:
 | S3 | done | `serve_trial_component` (incl. WF13 `stdio-control` and Weft's `control` re-pin) |
 | S4 | done | `trial_adversarial_campaign`. Not covered: expired approval, a kill between claim and install, and an agent writing the checkout itself |
 | T0 | done | `tuft_v0_component` |
-| B0 | done | `storage_backend_component`. Dolt writes are not built |
+| B0 | done | `storage_backend_component`. The Dolt conditional writer is built (`dolt_writer_component`; local checks pass against real Dolt 2.6.1, gate receipts pending) |
 | S5 | done | tag `v0.1.0-dev.1`; the fresh-clone flow was reproduced |
 | T2 | done: no token win | `bench/2026-11-09-projection-pilot`. Correctness was 12/12 in both arms; Tuft used 5.3% more tokens, more on all six tasks. The tasks had 1–9 matches, so the budget and omissions never engaged. Agents also retyped Tuft's quoted rows by hand instead of piping them, and its header lines doubled tool output |
 | T2b | done: no token win | `bench/2026-11-10-projection-pilot-2`. Lean output, tasks with 50–297 matches. Correctness 12/12 in both arms; Tuft used 3.1% more tokens, more on all six tasks. Transcription and output volume no longer cost anything (arm-B tool output was 5.6% lower); the gap is the agent writing longer programs and making more calls. Budget and cursor still never engaged |
@@ -149,7 +149,6 @@ Next after T1. T2 suggested a compact Tuft row format and an `--out` flag. Both 
 
 - the TLA+ trial-stream model;
 - the edit-flow validator in `writfold-core`;
-- a native Dolt conditional writer;
 - the cursor moved onto `NoticeCursor`.
 
 ## Website wording after the slice

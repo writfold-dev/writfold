@@ -33,6 +33,10 @@ pub enum Refusal {
     DigestMismatch,
     #[error("cursor was issued for a different pin or request")]
     CursorMismatch,
+    #[error("writer does not own this realm: {0}")]
+    NotOwner(&'static str),
+    #[error("write is not authorized: {0}")]
+    Unauthorized(&'static str),
     #[error("pin refused: {0}")]
     Pin(String),
     #[error("backend refused: {0}")]

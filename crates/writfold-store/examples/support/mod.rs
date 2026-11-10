@@ -79,6 +79,7 @@ fn runtime(error: &DoltError) -> &'static str {
             ProcessError::UnsupportedProfile(_) => "process_profile",
             ProcessError::Io(_) | ProcessError::ClosedStdin => "process_io",
         },
+        DoltError::Claim(_) => "writer_claim",
         DoltError::ExecutableMismatch => "executable_mismatch",
         DoltError::UnsupportedProfile(_) => "unsupported_profile",
         DoltError::Budget { .. } => "native_budget",

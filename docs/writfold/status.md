@@ -56,9 +56,19 @@ retire Dolt was reversed before anything was removed. The B0 trait covers
 exact pinned reads, exact/lexical lookup with measured coverage and a pinned
 cursor, and single-writer admission. Its Dolt adapter reuses the DINT01 reader
 and passes the 13-check conformance suite against a real disposable Dolt
-database; a future Omnigraph adapter must pass the same suite. The adapter does
-not write yet (`Unavailable`): no typed Rust Dolt writer with conditional heads
-exists. Fuzzy/similarity, semantic search, ranking and graph `follow` are
+database; a future Omnigraph adapter must pass the same suite. The native
+[Dolt conditional writer](storage-backend.md#the-dolt-conditional-writer) is
+built:
+- one `dolt sql` transaction whose expected-old guard and `DOLT_COMMIT` run under
+  Dolt's process-exclusive native lock;
+- an exclusive, recorded writer lease per realm;
+- a verified signed approval per write;
+- `Unknown` on kill, with read-only `observe` reconciliation.
+
+It passes the 6-check writer suite against real disposable Dolt 2.6.1 in the
+admitted image, run locally and not yet through `scripts/gate`. It is storage
+state, not DINT02 publication. Fuzzy/similarity, semantic search, ranking and
+graph `follow` are
 refused by type until Omnigraph. This is a scoped component, not a WF gate,
 RPC capability or release backend admission.
 
@@ -204,8 +214,9 @@ claim and does not authorize publication.
    all twenty selected semantic negatives have counterexamples. Nine positive
    baseline explorations still reached their deadlines; further justified
    state-space work is required, not smaller bounds or relabelled timeouts.
-2. Build on Dolt behind the B0 storage boundary, starting with a typed native
-   Dolt writer with conditional heads and uncertain-write reconciliation.
+2. Build on Dolt behind the B0 storage boundary. The native conditional writer
+   with uncertain-write reconciliation is built (its gate receipts are pending).
+   Next: DINT02 candidate preparation, release closure and Git CAS over it.
    Continue exact-candidate Omnigraph qualification; its Rust adapter must pass
    the same conformance suite before it replaces Dolt.
    The source-built PR #1235 trial is an authorized development unblocker, not

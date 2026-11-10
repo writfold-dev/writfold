@@ -1,162 +1,50 @@
 //! Calibrates the storage conformance suite itself: an in-memory reference
-//! backend passes, and each deliberately broken backend fails the check that
-//! names its defect. The real Dolt run is `backend_dolt.rs`.
-use std::sync::atomic::AtomicBool;
-use writfold_domain::citation::Coverage;
+//! backend passes the read and writer checks, and each deliberately broken
+//! backend fails the check that names its defect. The real Dolt run is
+//! `backend_dolt.rs`.
+mod memory_backend;
+
+use memory_backend::{Grant, Memory, MemoryPin, Mutation, Shared, pin, realm};
 use writfold_store::backend::conformance::{
-    self, AFTER, BEFORE, CHECKS, ConformanceFixture, FixtureRecord,
+    self, CHECKS, ConformanceFailure, ConformanceFixture, WRITE_CHECKS, WriterFixture,
 };
 use writfold_store::backend::{
-    BackendKind, Capability, ExactRead, ExactRecord, LookupCursor, LookupPage, LookupRequest,
-    MatchMode, Order, RecordKey, RecordKind, Refusal, ScanRecord, StorageBackend, WriteOutcome,
-    WriteRequest, admit_lookup, scan,
+    LookupRequest, MatchMode, Order, RecordKey, RecordKind, Refusal, WriteRequest,
 };
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-struct MemoryPin(u8);
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-enum Mutation {
-    Faithful,
-    IgnorePin,
-    LatestOnMissing,
-    FuzzyAsSubstring,
-    TruncateWithoutCursor,
-    IgnoreCursorBinding,
-    WriteNotRefused,
-}
-
-struct Memory(Mutation);
-
-const CAPABILITIES: &[Capability] = &[
-    Capability::ExactRead,
-    Capability::ExactLookup,
-    Capability::LexicalLookup,
-];
-
-impl Memory {
-    fn records(&self, pin: &MemoryPin) -> Result<&'static [FixtureRecord], Refusal> {
-        match (pin.0, self.0) {
-            (_, Mutation::IgnorePin) => Ok(AFTER),
-            (0, _) => Ok(BEFORE),
-            (1, _) => Ok(AFTER),
-            (_, Mutation::LatestOnMissing) => Ok(AFTER),
-            _ => Err(Refusal::Pin("no such snapshot".into())),
-        }
-    }
-}
-
-fn rows(records: &[FixtureRecord]) -> Vec<ScanRecord<'_>> {
-    records
-        .iter()
-        .map(|record| ScanRecord {
-            key: record.key,
-            kind: record.kind,
-            content: record.content.as_bytes(),
-        })
-        .collect()
-}
-
-impl StorageBackend for Memory {
-    type Pin = MemoryPin;
-
-    fn kind(&self) -> BackendKind {
-        BackendKind::Dolt
-    }
-
-    fn capabilities(&self) -> &'static [Capability] {
-        CAPABILITIES
-    }
-
-    fn read_exact(
-        &self,
-        pin: &MemoryPin,
-        request: &ExactRead,
-        _: &AtomicBool,
-    ) -> Result<ExactRecord<MemoryPin>, Refusal> {
-        let records = self.records(pin)?;
-        let record = records
-            .iter()
-            .find(|record| record.key == request.key().as_str())
-            .ok_or(Refusal::NotFound)?;
-        let kind = RecordKind::new(record.kind.to_owned())?;
-        let read = ExactRecord::new(
-            *pin,
-            request.key().clone(),
-            kind,
-            record.content.as_bytes().to_vec(),
-        )?;
-        if request
-            .expected()
-            .is_some_and(|digest| digest != read.digest())
-        {
-            return Err(Refusal::DigestMismatch);
-        }
-        Ok(read)
-    }
-
-    fn lookup(
-        &self,
-        pin: &MemoryPin,
-        request: &LookupRequest,
-        cursor: Option<&LookupCursor<MemoryPin>>,
-        _: &AtomicBool,
-    ) -> Result<LookupPage<MemoryPin>, Refusal> {
-        let records = rows(self.records(pin)?);
-        match self.0 {
-            Mutation::FuzzyAsSubstring if request.mode() == MatchMode::Fuzzy => {
-                let emulated = LookupRequest::new(
-                    request.field(),
-                    MatchMode::Substring,
-                    Order::Key,
-                    request.needle().to_owned(),
-                    request.limit(),
-                )?;
-                return scan(pin, &records, &emulated, None);
-            }
-            Mutation::IgnoreCursorBinding => {
-                let rebound = cursor
-                    .map(|cursor| LookupCursor::new(*pin, request.clone(), cursor.after().clone()));
-                return scan(pin, &records, request, rebound.as_ref());
-            }
-            _ => admit_lookup(pin, request, cursor, CAPABILITIES)?,
-        }
-        let page = scan(pin, &records, request, cursor)?;
-        if self.0 == Mutation::TruncateWithoutCursor && page.next().is_some() {
-            let total = records.len();
-            let claimed = Coverage::Measured {
-                examined: total,
-                total: total as u128,
-            };
-            return Ok(LookupPage::new(*pin, page.hits().to_vec(), claimed, None));
-        }
-        Ok(page)
-    }
-
-    fn admit_write(
-        &mut self,
-        _: &WriteRequest<MemoryPin>,
-        _: &AtomicBool,
-    ) -> Result<WriteOutcome<MemoryPin>, Refusal> {
-        if self.0 == Mutation::WriteNotRefused {
-            return Ok(WriteOutcome::Unknown);
-        }
-        Err(Refusal::Unavailable(Capability::Write))
-    }
-}
 
 fn fixture() -> ConformanceFixture<MemoryPin> {
     ConformanceFixture {
-        before: MemoryPin(0),
-        after: MemoryPin(1),
-        missing: MemoryPin(9),
+        before: pin(0),
+        after: pin(1),
+        missing: pin(9),
     }
+}
+
+fn grant(request: &WriteRequest<MemoryPin>) -> Result<Grant, Refusal> {
+    Ok(Grant(request.expected_old))
+}
+
+/// Reads with a reader instance, then writes with writer instances.
+fn run_all(mutation: Mutation) -> Result<Vec<&'static str>, ConformanceFailure> {
+    let shared: Shared = realm();
+    let mut passed = conformance::run(&mut Memory::reader(mutation, shared.clone()), &fixture())?;
+    let open = || Memory::writer(mutation, shared.clone());
+    let writes = WriterFixture {
+        open: &open,
+        authorize: &grant,
+        foreign: MemoryPin {
+            realm: 7,
+            snapshot: 1,
+        },
+    };
+    passed.extend(conformance::run_writes(&fixture(), &writes)?.passed);
+    Ok(passed)
 }
 
 #[test]
 fn faithful_reference_backend_passes_every_check() -> Result<(), Box<dyn std::error::Error>> {
-    let passed = conformance::run(&mut Memory(Mutation::Faithful), &fixture())?;
-    assert_eq!(passed, CHECKS);
+    let passed = run_all(Mutation::Faithful)?;
+    assert_eq!(passed, [CHECKS, WRITE_CHECKS].concat());
     Ok(())
 }
 
@@ -169,13 +57,30 @@ fn each_broken_backend_fails_the_check_naming_its_defect() {
         (Mutation::TruncateWithoutCursor, "paging-and-coverage"),
         (Mutation::IgnoreCursorBinding, "cursor-binding"),
         (Mutation::WriteNotRefused, "write-admission"),
+        (Mutation::WriteWithoutAuthority, "write-authority"),
+        (Mutation::CommitUnobservable, "write-expected-old"),
+        (Mutation::IgnoreExpectedOld, "write-stale-no-change"),
+        (Mutation::NoLeaseRacyCompareAndSwap, "write-concurrent"),
+        (Mutation::ForeignRealmAccepted, "write-ownership"),
+        (Mutation::CancelledAfterCommit, "write-kill-reconcile"),
     ] {
-        let failure = conformance::run(&mut Memory(mutation), &fixture());
+        let failure = run_all(mutation);
         assert!(
             matches!(&failure, Err(failure) if failure.check == check),
             "{mutation:?}: {failure:?}"
         );
     }
+}
+
+#[test]
+fn a_writer_instance_is_not_accepted_as_a_reader() {
+    let shared = realm();
+    let writer = Memory::writer(Mutation::Faithful, shared);
+    let failure = writer.map(|mut writer| conformance::run(&mut writer, &fixture()));
+    assert!(
+        matches!(&failure, Ok(Err(failure)) if failure.check == "write-admission"),
+        "{failure:?}"
+    );
 }
 
 #[test]

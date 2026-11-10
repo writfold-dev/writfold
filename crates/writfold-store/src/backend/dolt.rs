@@ -8,34 +8,53 @@
 //!
 //! A record is one `wf_nodes` row: key = `id`, kind = `kind`, content = the UTF-8
 //! bytes of `label`. `home_path` and `wf_edges` are not exposed in B0; graph
-//! `follow` waits for Omnigraph. Writes are `Unavailable`: no typed Rust Dolt
-//! writer with conditional heads exists yet (DINT02 has not run).
+//! `follow` waits for Omnigraph. A writer instance (`DoltBackend::writer`)
+//! holds the realm's exclusive writer lease and adds the conditional commit in
+//! `dolt/write.rs`; a reader instance refuses writes as `Unavailable`.
+mod ownership;
+mod write;
+
+pub use ownership::{DoltWriteApproval, WriterId};
+
 use super::BackendKind;
 use super::{
     Capability, ExactRead, ExactRecord, LookupCursor, LookupPage, LookupRequest, RecordKey,
-    RecordKind, Refusal, ScanRecord, StorageBackend, WriteOutcome, WriteRequest, admit_lookup,
-    scan,
+    RecordKind, Refusal, ScanRecord, StorageBackend, WriteObservation, WriteOutcome, WriteRequest,
+    admit_lookup, scan,
 };
 use crate::dolt::{Error, ReadBudgets, read_snapshot};
 use std::sync::atomic::AtomicBool;
+use writfold_domain::ByteCount;
 use writfold_domain::dolt::{DoltReadPin, DoltSnapshot};
-use writfold_runtime::dolt::{DoltDatabase, DoltExecutable};
+use writfold_runtime::dolt::{DoltDatabase, DoltError, DoltExecutable, DoltWriterSlot};
+use writfold_runtime::fs::FsError;
+use writfold_wire::dolt_operation::DoltTarget;
 
 const CAPABILITIES: &[Capability] = &[
     Capability::ExactRead,
     Capability::ExactLookup,
     Capability::LexicalLookup,
 ];
+const WRITER_CAPABILITIES: &[Capability] = &[
+    Capability::ExactRead,
+    Capability::ExactLookup,
+    Capability::LexicalLookup,
+    Capability::Write,
+];
+const CLAIM_BYTES: u64 = 4096;
 
-/// One admitted database, one admitted executable and fixed read budgets.
+/// One admitted database, one admitted executable and fixed read budgets;
+/// a writer instance also holds the realm's writer lease.
 #[derive(Debug)]
 pub struct DoltBackend<'a> {
     database: &'a DoltDatabase,
     executable: &'a DoltExecutable<'a>,
     budgets: ReadBudgets,
+    writer: Option<write::Writer<'a>>,
 }
 
 impl<'a> DoltBackend<'a> {
+    /// A reader: exact reads, lookups and `observe`; writes are `Unavailable`.
     pub fn new(
         database: &'a DoltDatabase,
         executable: &'a DoltExecutable<'a>,
@@ -45,7 +64,45 @@ impl<'a> DoltBackend<'a> {
             database,
             executable,
             budgets,
+            writer: None,
         }
+    }
+
+    /// The realm's single writer for `target`. Takes the exclusive writer lease
+    /// in `slot`'s database without waiting and records `owner` as its holder;
+    /// another live writer refuses as `NotOwner`. The lease lasts until drop.
+    pub fn writer(
+        slot: &'a DoltWriterSlot<'a>,
+        executable: &'a DoltExecutable<'a>,
+        budgets: ReadBudgets,
+        owner: WriterId,
+        target: DoltTarget,
+    ) -> Result<Self, Refusal> {
+        if executable.generation() != target.producer() {
+            return Err(Refusal::Pin(
+                "writer target producer differs from the admitted executable".into(),
+            ));
+        }
+        let limit = ByteCount::new(CLAIM_BYTES)
+            .map_err(|_| Refusal::InvalidRequest("claim byte budget"))?;
+        let claim = slot
+            .claim(&ownership::claim_record(&owner, &target), limit)
+            .map_err(|error| match error {
+                DoltError::Filesystem(FsError::LockBusy) => {
+                    Refusal::NotOwner("another writer holds this realm's writer lease")
+                }
+                other => Refusal::Backend(other.to_string()),
+            })?;
+        Ok(Self {
+            database: slot.database(),
+            executable,
+            budgets,
+            writer: Some(write::Writer {
+                claim,
+                owner,
+                target,
+            }),
+        })
     }
 
     fn snapshot(&self, pin: &DoltReadPin, cancelled: &AtomicBool) -> Result<DoltSnapshot, Refusal> {
@@ -66,13 +123,18 @@ impl<'a> DoltBackend<'a> {
 
 impl StorageBackend for DoltBackend<'_> {
     type Pin = DoltReadPin;
+    type WriteAuthority = DoltWriteApproval;
 
     fn kind(&self) -> BackendKind {
         BackendKind::Dolt
     }
 
     fn capabilities(&self) -> &'static [Capability] {
-        CAPABILITIES
+        if self.writer.is_some() {
+            WRITER_CAPABILITIES
+        } else {
+            CAPABILITIES
+        }
     }
 
     fn read_exact(
@@ -115,7 +177,7 @@ impl StorageBackend for DoltBackend<'_> {
         cursor: Option<&LookupCursor<DoltReadPin>>,
         cancelled: &AtomicBool,
     ) -> Result<LookupPage<DoltReadPin>, Refusal> {
-        admit_lookup(pin, request, cursor, CAPABILITIES)?;
+        admit_lookup(pin, request, cursor, self.capabilities())?;
         let snapshot = self.snapshot(pin, cancelled)?;
         let records: Vec<ScanRecord<'_>> = snapshot
             .nodes()
@@ -131,10 +193,19 @@ impl StorageBackend for DoltBackend<'_> {
 
     fn admit_write(
         &mut self,
-        _request: &WriteRequest<DoltReadPin>,
-        _cancelled: &AtomicBool,
+        request: &WriteRequest<DoltReadPin>,
+        authority: Option<&DoltWriteApproval>,
+        cancelled: &AtomicBool,
     ) -> Result<WriteOutcome<DoltReadPin>, Refusal> {
-        Err(Refusal::Unavailable(Capability::Write))
+        write::admit(self, request, authority, cancelled)
+    }
+
+    fn observe(
+        &self,
+        request: &WriteRequest<DoltReadPin>,
+        cancelled: &AtomicBool,
+    ) -> Result<WriteObservation<DoltReadPin>, Refusal> {
+        write::observe(self, request, cancelled)
     }
 }
 

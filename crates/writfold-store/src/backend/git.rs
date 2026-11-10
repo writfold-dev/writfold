@@ -130,6 +130,7 @@ impl<'a> GitTreeBackend<'a> {
 
 impl StorageBackend for GitTreeBackend<'_> {
     type Pin = GitObjectId;
+    type WriteAuthority = ();
 
     fn kind(&self) -> BackendKind {
         BackendKind::GitTree
@@ -212,6 +213,7 @@ impl StorageBackend for GitTreeBackend<'_> {
     fn admit_write(
         &mut self,
         _request: &WriteRequest<GitObjectId>,
+        _authority: Option<&()>,
         _cancelled: &AtomicBool,
     ) -> Result<WriteOutcome<GitObjectId>, Refusal> {
         Err(Refusal::Unavailable(Capability::Write))

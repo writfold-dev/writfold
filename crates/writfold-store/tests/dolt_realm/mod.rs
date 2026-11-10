@@ -1,6 +1,8 @@
 //! Disposable Dolt realm for the storage conformance suite. Fixture provisioning
-//! uses the native CLI as the fixture owner; every product read goes through the
-//! Rust boundary. Helpers return errors and never assert.
+//! uses the native CLI as the fixture owner; every product read and write goes
+//! through the Rust boundary. Helpers return errors and never assert.
+pub mod approval;
+
 use std::fs;
 use std::os::unix::fs::{DirBuilderExt, OpenOptionsExt};
 use std::path::{Path, PathBuf};
@@ -11,12 +13,15 @@ use writfold_domain::dolt::{DOLT_READ_PROFILE, DoltReadPin};
 use writfold_runtime::dolt::query_contract_digest;
 use writfold_store::backend::conformance::{AFTER, BEFORE, ConformanceFixture, FixtureRecord};
 use writfold_store::dolt::{SCHEMA_SQL, schema_digest};
+use writfold_wire::dolt_operation::DoltTarget;
 
 type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error>>;
 static NEXT: AtomicU64 = AtomicU64::new(0);
+// Realm and KB equal the public synthetic Dolt approval fixtures' policy, so
+// the writer test can sign real approvals for this disposable realm.
 const IDENTITY: [(&str, &str); 4] = [
-    ("realm", "realm-backend"),
-    ("kb", "backend conformance base"),
+    ("realm", "test-realm"),
+    ("kb", "test-kb"),
     ("database_id", "corpus-backend"),
     ("epoch", "epoch-1"),
 ];
@@ -69,11 +74,13 @@ impl Realm {
         fs::DirBuilder::new()
             .mode(0o700)
             .create(native.path("database/coordination"))?;
-        fs::OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .mode(0o600)
-            .open(native.path("database/coordination/database.lock"))?;
+        for lock in ["database.lock", "writer.lock"] {
+            fs::OpenOptions::new()
+                .write(true)
+                .create_new(true)
+                .mode(0o600)
+                .open(native.path(&format!("database/coordination/{lock}")))?;
+        }
         let fixture = ConformanceFixture {
             before: pin(&before, producer)?,
             after: pin(&after, producer)?,
@@ -101,6 +108,44 @@ impl Realm {
 
     pub fn head(&self) -> Result<String> {
         self.native.head()
+    }
+
+    /// Native `dolt status` reports a clean working set.
+    pub fn clean(&self) -> Result<bool> {
+        let out = self.native.run(&["status"])?;
+        Ok(String::from_utf8(out)?.contains("nothing to commit, working tree clean"))
+    }
+
+    /// Native branch names (retained roots included).
+    pub fn branches(&self) -> Result<String> {
+        Ok(String::from_utf8(self.native.run(&["branch"])?)?)
+    }
+
+    /// The realm identity a writer owns.
+    pub fn target(&self) -> DoltTarget {
+        let pin = &self.fixture.after;
+        DoltTarget::new(
+            pin.realm().clone(),
+            pin.kb().clone(),
+            pin.database().clone(),
+            pin.epoch().clone(),
+            pin.profile().clone(),
+            pin.producer().clone(),
+        )
+    }
+
+    /// The `AFTER` commit named in a realm this writer does not own.
+    pub fn foreign(&self) -> Result<DoltReadPin> {
+        let pin = &self.fixture.after;
+        Ok(DoltReadPin::new(
+            "other-realm".parse()?,
+            pin.kb().clone(),
+            pin.database().clone(),
+            pin.commit().clone(),
+            pin.epoch().clone(),
+            pin.profile().clone(),
+            pin.producer().clone(),
+        ))
     }
 }
 

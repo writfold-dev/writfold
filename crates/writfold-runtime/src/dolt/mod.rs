@@ -1,11 +1,14 @@
-//! Exact read-only Dolt graph projection IO for the disposable managed profile.
+//! Exact Dolt graph projection IO for the disposable managed profile.
 //!
-//! Only the closed pinned SELECT vocabulary is available. Admission never
-//! initializes a database, lock entry or HOME, and never checks out, migrates,
-//! writes application tables or performs GC. Native SQL may perform its own
-//! administrative housekeeping: this is a read-only application API, not an OS
-//! write sandbox. The caller must supply private owner-only database, HOME and
-//! coordination directories and an existing single-link database.lock.
+//! Readers get only the closed pinned SELECT vocabulary (`DoltQuery`). The one
+//! realm writer additionally gets the closed conditional-commit vocabulary
+//! (`DoltSql`, `write.rs`) behind an exclusive recorded writer lease
+//! (`writer.rs`). Admission never initializes a database, lock entry or HOME,
+//! and never checks out, migrates or performs GC. Native SQL may perform its own
+//! administrative housekeeping; this is an application API, not an OS write
+//! sandbox. The caller must supply private owner-only database, HOME and
+//! coordination directories and an existing single-link database.lock (and
+//! writer.lock for a writer).
 //!
 //! The qualified executable, its loader/libraries, procfs and managed filesystem
 //! are trusted. All readers, writers, retention management and recovery must
@@ -24,8 +27,12 @@ mod database;
 mod error;
 mod executable;
 mod query;
+mod write;
+mod writer;
 
 pub use database::{DoltDatabase, DoltLease};
 pub use error::DoltError;
 pub use executable::DoltExecutable;
 pub use query::{DoltQuery, QUERY_CONTRACT, query_contract_digest};
+pub use write::{DoltNodeChange, DoltRealmRow, DoltSql, DoltWrite, WRITE_HEAD};
+pub use writer::{DoltWriterClaim, DoltWriterSlot};

@@ -4,10 +4,19 @@
 //! its backend, commits `BEFORE` then `AFTER`, and passes the three pins. Every
 //! adapter (Dolt now, Omnigraph later) must pass the same checks. Failures are
 //! returned as values; the suite never panics, so callers decide how to report.
+//!
+//! `run` checks a reader instance. `run_writes` then checks writer instances on
+//! the same realm, starting from the `AFTER` head.
 mod lookups;
+mod races;
 mod reads;
+mod writes;
 
-use super::{Capability, ExactRead, LookupRequest, RecordKey, StorageBackend};
+pub use races::KillTally;
+
+use super::{
+    Capability, ExactRead, LookupRequest, RecordKey, Refusal, StorageBackend, WriteRequest,
+};
 use std::fmt;
 use std::sync::atomic::AtomicBool;
 
@@ -64,6 +73,34 @@ pub const CHECKS: &[&str] = &[
     "unsupported-refused",
     "write-admission",
 ];
+
+/// Every writer check `run_writes` runs, in order.
+pub const WRITE_CHECKS: &[&str] = &[
+    "write-authority",
+    "write-expected-old",
+    "write-stale-no-change",
+    "write-concurrent",
+    "write-ownership",
+    "write-kill-reconcile",
+];
+
+/// Opens a writer instance on the provisioned realm.
+pub type OpenWriter<'f, B> = &'f (dyn Fn() -> Result<B, Refusal> + Sync);
+/// Supplies the write authority for one request (for Dolt, a verified approval).
+pub type Authorize<'f, B> = &'f (
+        dyn Fn(
+    &WriteRequest<<B as StorageBackend>::Pin>,
+) -> Result<<B as StorageBackend>::WriteAuthority, Refusal>
+            + Sync
+    );
+
+/// Writer fixture: how to open writers and authorize requests, plus a pin in a
+/// realm the writer does not own. At most one writer may be live at a time.
+pub struct WriterFixture<'f, B: StorageBackend> {
+    pub open: OpenWriter<'f, B>,
+    pub authorize: Authorize<'f, B>,
+    pub foreign: B::Pin,
+}
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ConformanceFailure {
@@ -136,6 +173,42 @@ pub fn run<B: StorageBackend>(
         passed.push(name);
     }
     Ok(passed)
+}
+
+/// Writer checks that ran and passed (`WRITE_CHECKS` on success) and how the
+/// kill sweep's attempts ended.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct WriteReport {
+    pub passed: Vec<&'static str>,
+    pub kill: KillTally,
+}
+
+/// Run every writer check on the realm `run` left at the `AFTER` head.
+pub fn run_writes<B>(
+    fixture: &ConformanceFixture<B::Pin>,
+    writes: &WriterFixture<'_, B>,
+) -> Result<WriteReport, ConformanceFailure>
+where
+    B: StorageBackend + Send,
+    B::Pin: Send + Sync,
+{
+    let mut passed = Vec::with_capacity(WRITE_CHECKS.len());
+    let mut writer = writes::open("write-authority", writes)?;
+    writes::authority(&mut writer, writes, fixture)?;
+    passed.push("write-authority");
+    let head = writes::expected_old(&mut writer, writes, fixture)?;
+    passed.push("write-expected-old");
+    writes::stale(&mut writer, writes, fixture, &head)?;
+    passed.push("write-stale-no-change");
+    drop(writer);
+    let head = races::concurrent(writes, &head)?;
+    passed.push("write-concurrent");
+    let mut writer = writes::open("write-ownership", writes)?;
+    writes::ownership(&mut writer, writes, &head)?;
+    passed.push("write-ownership");
+    let kill = races::kill(&mut writer, writes, &head)?;
+    passed.push("write-kill-reconcile");
+    Ok(WriteReport { passed, kill })
 }
 
 pub(super) fn key(check: &'static str, value: &str) -> Result<RecordKey, ConformanceFailure> {

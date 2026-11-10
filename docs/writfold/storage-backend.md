@@ -29,6 +29,7 @@ Verus proof can target them without the adapters.
 ```rust
 pub trait StorageBackend {
     type Pin: Clone + Eq + fmt::Debug;
+    type WriteAuthority;
     fn kind(&self) -> BackendKind;
     fn capabilities(&self) -> &'static [Capability];
     fn read_exact(&self, pin: &Self::Pin, request: &ExactRead, cancelled: &AtomicBool)
@@ -36,8 +37,11 @@ pub trait StorageBackend {
     fn lookup(&self, pin: &Self::Pin, request: &LookupRequest,
               cursor: Option<&LookupCursor<Self::Pin>>, cancelled: &AtomicBool)
         -> Result<LookupPage<Self::Pin>, Refusal>;
-    fn admit_write(&mut self, request: &WriteRequest<Self::Pin>, cancelled: &AtomicBool)
+    fn admit_write(&mut self, request: &WriteRequest<Self::Pin>,
+                   authority: Option<&Self::WriteAuthority>, cancelled: &AtomicBool)
         -> Result<WriteOutcome<Self::Pin>, Refusal>;
+    fn observe(&self, request: &WriteRequest<Self::Pin>, cancelled: &AtomicBool)
+        -> Result<WriteObservation<Self::Pin>, Refusal>;
 }
 ```
 
@@ -82,18 +86,33 @@ notice stream; the lookup cursor does not replace it.
 
 ### Single-writer admission
 
-`admit_write(WriteRequest { head, expected_old, changes })` applies the changes
-only if the named head still points at `expected_old`. It returns one of:
+`admit_write(WriteRequest { head, expected_old, changes }, authority)` applies
+the changes only if the named head still points at `expected_old`, as one
+atomic conditional commit. It returns one of:
 
-- `Committed { new }`.
-- `Stale { observed }`, with nothing written.
-- `Unknown`, when the backend cannot say whether the write happened.
+- `Committed { new }`: the new head was observed.
+- `Stale { observed }`: the head was elsewhere, and nothing was written.
+- `Unknown`: the backend cannot say whether the write happened (the process
+  died, was killed or timed out after it might have committed).
 
-`&mut self` makes one backend instance the only writer in a process. An
-`Unknown` outcome is reconciled against the same backend; it is never replayed
-or retried through another backend. A committed head is storage state only. It
-is not publication (completed Git CAS remains the visibility point), authority
-or an EngineeringLedger head.
+Before any IO it refuses:
+
+- `Unavailable(Write)` on an instance that is not a writer;
+- `NotOwner` for an expected-old pin in a realm the writer does not own;
+- `Unauthorized` without matching `WriteAuthority` (for Dolt, a verified signed
+  approval for exactly this expected-old pin).
+
+`observe(request)` is the separate, read-only reconciliation. It reports the
+current head and `applied`, the pin of the commit that carries exactly this
+request, if one is on the head's history. The request's content (head,
+canonical expected-old pin and ordered changes) is its identity; the backend
+records it with the commit. After `Unknown` the caller calls `observe`. It never
+replays the write, retries it, or falls back to another backend.
+
+One writer instance per realm holds the realm's exclusive writer lease; a second
+writer is refused `NotOwner` while the first is live. A committed head is
+storage state only. It is not publication (completed Git CAS remains the
+visibility point), authority or an EngineeringLedger head.
 
 ### Refusals and capabilities
 
@@ -103,6 +122,7 @@ or an EngineeringLedger head.
 - `Unavailable(capability)`: defined by the boundary but not built in this
   backend.
 - `InvalidRequest`, `NotFound`, `DigestMismatch` and `CursorMismatch`.
+- `NotOwner` and `Unauthorized` (writes).
 - `Pin`: pin, epoch, schema or retention-root mismatch.
 - `Backend`, `Deadline` and `Cancelled`.
 
@@ -123,7 +143,7 @@ them.
 | Pin | `DoltReadPin`: realm, KB, database, `DoltIntegrationCommitId`, schema epoch (schema and query digests), storage profile, producer tool digest | `OmnigraphPin`: KB, graph, `GraphCommitId`, schema epoch, storage profile, native format, producer |
 | Read binding | Exact commit through `AS OF`; retained root `wf-retained/<commit>` checked before and after; metadata row equals the pin; actual tool digest equals the producer | Exact graph commit and epoch; exact snapshot reads (see [Omnigraph foundation](omnigraph-foundation.md)) |
 | Completeness | The whole pinned `wf_nodes` projection is read within row and byte budgets, or the call refuses | Must report measured coverage under the same contract |
-| Writer | None yet: `Unavailable(Write)` | Conditional native writes, already exercised as a component |
+| Writer | One process-held `dolt sql` transaction on `main` with an in-transaction expected-old guard (below); exclusive writer lease; signed approval per write | Conditional native writes, already exercised as a component |
 
 `LegacyDoltPin` stays historical inspection data and is not a `StorageBackend`
 pin.
@@ -140,17 +160,88 @@ There is one backend binding and one writer per realm. That means:
 Swapping Dolt for Omnigraph is a migration with its own evidence, not a runtime
 toggle.
 
-The B0 Dolt adapter **does not write**. The existing Rust Dolt boundary is
-read-only (a closed SELECT vocabulary). The signed Dolt operation and approval
-envelopes exist, but no Rust native writer with conditional heads does (DINT02
-has not run). Building one is more than wiring existing primitives, so
-`admit_write` refuses `Unavailable(Write)`, and the conformance suite checks
-that refusal. Enabling writes needs, first:
+### The Dolt conditional writer
 
-- a native branch compare-and-set (not a SQL row predicate);
-- the distinct typed integration pin and signing profile required by
-  [the Dolt integration profile](dolt-integration.md#invariants-retained);
-- uncertain-write reconciliation.
+`DoltBackend::writer(slot, executable, budgets, owner, target)` is the realm's
+single writer
+([`backend/dolt/write.rs`](../../crates/writfold-store/src/backend/dolt/write.rs),
+runtime vocabulary in
+[`runtime/src/dolt/write.rs`](../../crates/writfold-runtime/src/dolt/write.rs)).
+
+**Ownership.** The writer takes a non-blocking exclusive flock on the
+preprovisioned `coordination/writer.lock` and holds it until it is dropped. It
+then records itself in `coordination/writer.claim` (owner, realm, KB, database,
+epoch and producer). Each commit message also records the owner and the
+approval plan digest. The lease is separate from the per-operation
+`database.lock` lease that readers and the writer share. A writer owns exactly
+one `DoltTarget`: realm, KB, database, epoch, profile and producer. A request
+pin must equal it in every field, and nothing is converted or cast. The target
+producer must equal the admitted executable's digest.
+
+**Authority.** The profile requires signed operation/approval admission before a
+writer. Each write therefore needs a `DoltWriteApproval`, built only from a
+strictly verified `SuppliedDoltAuthorization`. Its base pin must equal the
+request's expected-old pin, and its target must equal the writer's target.
+Bootstrap approvals (no base) and migration approvals (a mapping) are refused.
+The approval binds the expected-old head, not the row changes. Because that head
+can commit once, an approval authorizes at most one commit.
+
+**Atomicity.** A write is one `dolt sql` process running one explicit
+transaction:
+
+1. `START TRANSACTION`, then a guard. The guard aborts the process with a native
+   error unless all of these hold:
+   - the active branch is `main`;
+   - `HASHOF('main')` and `HASHOF('HEAD')` equal the expected-old commit;
+   - `dolt_status` is empty;
+   - `wf_reader_meta` is exactly the writer's realm row, compared as `HEX()`
+     bytes.
+2. Row changes as hex literals. A closure guard refuses dangling edges.
+3. `DOLT_COMMIT`, then `wf-retained/<new>` for the new commit.
+
+The check and the commit are atomic for two native reasons, both observed on
+the admitted 2.6.1 executable:
+
+- A `dolt` process holds the database's exclusive native lock for its whole
+  lifetime. A second process opens the database read-only, and its commit fails
+  with "cannot update manifest: database is read only". No other native process
+  can move `main` between the guard and the commit.
+- `DOLT_COMMIT` moves the branch head and its working set in one chunk-store
+  root update. A failed guard aborts before it. An uncommitted transaction
+  leaves no working-set change, including after `SIGKILL`. Without the
+  transaction, a killed process did leave a dirty working set, so the writer
+  always uses one.
+
+A SQL row predicate (DINT00's conditional row update) is not used. Dolt's
+`dolt_branches` table offers no compare-and-set. Writfold's leases sit above the
+native lock.
+
+**Outcomes.** Under one coordination lease and one deadline, the writer:
+
+1. probes the head;
+2. returns `Stale` without spawning a write if the head differs;
+3. refuses pending working-set changes;
+4. runs the transaction;
+5. classifies from fresh probes, never from exit status alone.
+
+| After the native write | Outcome |
+|---|---|
+| Killed by cancellation or deadline | `Unknown` |
+| The request's commit is the head | `Committed { new }` |
+| Head unchanged, request absent, native error | Refusal (nothing written) |
+| Head moved, request absent | `Stale { observed }` |
+| Probes fail, or another unexplained state | `Unknown` |
+
+`Unknown` is never retried. `observe` resolves it from the commit message
+prefix: `writfold-dolt-write/1 write=<SHA-256 of the request>`. That digest
+covers the head, the canonical expected-old pin and the length-prefixed changes.
+A kill between `DOLT_COMMIT` and the retained-root branch leaves a committed
+head without `wf-retained/<head>`. Reads of that pin refuse. The writer's next
+write retains its expected-old commit first.
+
+Only `main`, at most 1024 changes, Dolt node ids (up to 600 characters), node
+kinds and UTF-8 content are admitted. `home_path` is left unchanged, and edges
+are not written. The script travels as one argv string, at most 120 KiB.
 
 ## The Dolt adapter
 
@@ -162,6 +253,10 @@ one deadline and cancellation. It then answers from that snapshot:
 - A record is one `wf_nodes` row: key `id`, kind `kind`, content the UTF-8
   bytes of `label`.
 - `home_path` and `wf_edges` are not exposed in B0.
+
+`DoltBackend::new` is a reader: it reads, looks up and runs `observe`, and
+refuses writes as `Unavailable(Write)`. `DoltBackend::writer` adds the
+conditional writer described above.
 
 The physical schema and query contract are unchanged, so existing DINT01
 evidence and pins stay valid. Reading the whole projection per call is correct
@@ -176,7 +271,7 @@ is written against the trait only. A test provisions the fixed `BEFORE` and
 after and missing pins, and `conformance::run` returns the list of checks that
 ran or the first failure. The suite never panics.
 
-The 13 checks are:
+`run` takes a reader instance. Its 13 checks are:
 
 | Check | What it requires |
 |---|---|
@@ -192,19 +287,42 @@ The 13 checks are:
 | `cursor-binding` | A cursor refuses at another pin or for another request |
 | `lexical-lookup` | Prefix and substring are byte-wise and case-sensitive, including Unicode and SQL-injection text |
 | `unsupported-refused` | Fuzzy, semantic and ranked lookups refuse as `Unsupported` unless the backend declares them |
-| `write-admission` | An undeclared write refuses as `Unavailable`; a declared one must refuse a stale expected-old head with the observed pin |
+| `write-admission` | A reader instance refuses a write as `Unavailable(Write)`; an instance that declares `Write` fails here and must use `run_writes` |
+
+`run_writes(fixture, WriterFixture { open, authorize, foreign })` then checks
+writer instances on the same realm, starting at `AFTER`. `open` opens a writer.
+`authorize` supplies the authority for a request. `foreign` is a pin in a realm
+the writer does not own. Every check reconciles through `observe`, so a refusal
+that secretly wrote fails. The six checks are:
+
+| Check | What it requires |
+|---|---|
+| `write-authority` | No authority, or authority for another expected-old head, refuses `Unauthorized`; nothing is written |
+| `write-expected-old` | A current expected-old head commits; `observe` reports the new head and the commit; the new pin reads the change and the old pin keeps its history |
+| `write-stale-no-change` | A stale expected-old head returns `Stale` with the observed head; the head and content are unchanged |
+| `write-concurrent` | Two writers race from one head; exactly one commits; the other is refused the realm or is `Stale` at the winner's head |
+| `write-ownership` | A second writer cannot open while one is live; a pin in a foreign realm refuses `NotOwner`; nothing is written |
+| `write-kill-reconcile` | Writes are cancelled at 0, 10, 20 ms and so on until one completes. Every outcome agrees with `observe`, and at least one ends `Unknown` |
 
 Two tests run the suite:
 
 - [`tests/backend_conformance.rs`](../../crates/writfold-store/tests/backend_conformance.rs)
-  calibrates the suite itself. An in-memory reference backend passes. Six
-  deliberately broken backends each fail the check that names their defect:
+  calibrates the suite itself. An in-memory reference backend
+  ([`tests/memory_backend`](../../crates/writfold-store/tests/memory_backend/mod.rs))
+  passes all 19 checks. Twelve deliberately broken backends each fail the check
+  that names their defect:
   - ignoring the pin;
   - answering a missing pin with the latest state;
   - emulating fuzzy as substring;
   - truncating without a cursor;
   - ignoring the cursor binding;
-  - accepting an undeclared write.
+  - accepting an undeclared write;
+  - writing without authority;
+  - committing a write that `observe` cannot find;
+  - ignoring the expected-old head;
+  - a racy compare-and-set without a writer lease;
+  - accepting a foreign realm;
+  - reporting a killed write that committed as `Cancelled`.
 - [`tests/backend_dolt.rs`](../../crates/writfold-store/tests/backend_dolt.rs)
   runs the suite end to end against a real disposable Dolt database. The test:
   1. provisions the database with the admitted Dolt 2.6.1 executable;
@@ -212,8 +330,19 @@ Two tests run the suite:
   3. reads only through the Rust reader;
   4. checks that HEAD did not move during the reads.
 
-  It runs inside `scripts/gate unit`, whose tool image carries the admitted
-  executable. A missing or different Dolt fails the test; it is not skipped.
+  A second test runs `run_writes` against another disposable realm through the
+  native writer with real signed approvals. These are the public synthetic
+  operation, policy and PUBLIC-TEST-ONLY key from `writfold-wire/fixtures`,
+  re-based on each expected-old pin. The realm uses the fixtures' realm
+  `test-realm` and KB `test-kb`. Afterwards, `dolt status` must be clean, the
+  head retained and `writer.claim` must name the owner. Two more tests refuse a
+  bootstrap approval, a writer whose producer differs from the executable, and a
+  writer whose target is not the database's realm row; the last refuses in the
+  transaction guard with the head unchanged.
+
+  They run inside `scripts/gate unit`, whose tool image carries the admitted
+  executable. A missing or different Dolt fails these tests; they are not
+  skipped.
 
 A future Omnigraph adapter must pass the same `conformance::run` against a
 disposable Omnigraph realm before it replaces Dolt.
@@ -267,16 +396,23 @@ B0 claims:
 - the trait;
 - exact read and exact or lexical lookup through the Dolt adapter, against a
   real disposable database;
-- the calibrated conformance suite.
+- the Dolt conditional writer: exclusive recorded writer lease, signed approval
+  per write, atomic expected-old commit, `Unknown` on kill and `observe`
+  reconciliation, against a real disposable database;
+- the calibrated read and writer conformance suites.
 
 B0 does not claim:
 
-- a Dolt writer;
+- DINT02: authenticated candidate preparation, a release envelope, retained
+  release closure or completed Git CAS. A Dolt commit is not publication;
 - Omnigraph admission or an Omnigraph adapter;
 - a corpus, citation or effect service;
 - RPC exposure;
 - performance;
-- concurrent-writer or power-loss safety;
+- power-loss durability, or concurrent-writer safety against processes that
+  bypass Writfold's leases;
+- writes to `home_path` or `wf_edges`;
+- re-establishing a missing retained root without a further write;
 - any WF gate.
 
 Exact evidence is indexed at `storage_backend_component` in

@@ -14,14 +14,15 @@ pub mod git;
 mod refusal;
 mod scan;
 mod types;
+mod write;
 
 pub use refusal::{Capability, Refusal};
 pub use scan::{ScanRecord, admit_lookup, content_digest, scan};
 pub use types::{
     ExactRead, ExactRecord, HeadName, LookupCursor, LookupField, LookupHit, LookupPage,
-    LookupRequest, MatchMode, Order, RecordChange, RecordKey, RecordKind, WriteOutcome,
-    WriteRequest,
+    LookupRequest, MatchMode, Order, RecordKey, RecordKind,
 };
+pub use write::{RecordChange, WriteObservation, WriteOutcome, WriteRequest};
 
 use std::fmt;
 use std::sync::atomic::AtomicBool;
@@ -42,12 +43,17 @@ pub enum BackendKind {
 /// Every successful result names the exact pin it was read at, and that pin is
 /// equal to the pin the caller supplied. A missing pin or missing history is a
 /// refusal, never an empty or latest-state success. One backend instance per
-/// realm is the only writer: `admit_write` takes `&mut self`, there are no dual
-/// writes, and an `Unknown` write outcome is reconciled against this backend,
+/// realm is the only writer: `admit_write` takes `&mut self`, a writer instance
+/// holds the realm's exclusive writer lease, there are no dual writes, and an
+/// `Unknown` write outcome is reconciled with `observe` against this backend,
 /// never retried through another one.
 pub trait StorageBackend {
     /// Backend-specific exact pin. It is never converted to another backend's pin.
     type Pin: Clone + Eq + fmt::Debug;
+
+    /// Typed evidence a write needs before any IO (for Dolt, a verified signed
+    /// approval). It is checked against the request, never inferred.
+    type WriteAuthority;
 
     fn kind(&self) -> BackendKind;
 
@@ -75,10 +81,24 @@ pub trait StorageBackend {
     ) -> Result<LookupPage<Self::Pin>, Refusal>;
 
     /// Single-writer admission: apply `changes` only if `head` still names
-    /// `expected_old`. A stale head returns the observed pin and writes nothing.
+    /// `expected_old`, as one atomic conditional commit. A stale head returns the
+    /// observed pin and writes nothing. Missing or mismatched authority, a realm
+    /// this instance does not own and a non-writer instance refuse before IO.
     fn admit_write(
         &mut self,
         request: &WriteRequest<Self::Pin>,
+        authority: Option<&Self::WriteAuthority>,
         cancelled: &AtomicBool,
     ) -> Result<WriteOutcome<Self::Pin>, Refusal>;
+
+    /// Reconcile one write request without writing: the current head and the
+    /// commit carrying exactly this request, if present. Never retries.
+    fn observe(
+        &self,
+        request: &WriteRequest<Self::Pin>,
+        cancelled: &AtomicBool,
+    ) -> Result<WriteObservation<Self::Pin>, Refusal> {
+        let _ = (request, cancelled);
+        Err(Refusal::Unavailable(Capability::Write))
+    }
 }

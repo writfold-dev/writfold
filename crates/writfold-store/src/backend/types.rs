@@ -302,27 +302,3 @@ impl<P> LookupPage<P> {
         self.next.as_ref()
     }
 }
-
-/// `content: None` deletes the record.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct RecordChange {
-    pub key: RecordKey,
-    pub kind: RecordKind,
-    pub content: Option<Vec<u8>>,
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct WriteRequest<P> {
-    pub head: HeadName,
-    pub expected_old: P,
-    pub changes: Vec<RecordChange>,
-}
-
-/// `Unknown` means the backend cannot say whether the write happened. The caller
-/// reconciles against the same backend; it never replays elsewhere.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub enum WriteOutcome<P> {
-    Committed { new: P },
-    Stale { observed: P },
-    Unknown,
-}

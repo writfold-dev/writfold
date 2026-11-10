@@ -1,4 +1,7 @@
-use crate::{fs::FsError, process::ProcessError};
+use crate::{
+    fs::{FsError, WriteError},
+    process::ProcessError,
+};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -7,6 +10,8 @@ pub enum DoltError {
     Filesystem(#[from] FsError),
     #[error(transparent)]
     Process(#[from] ProcessError),
+    #[error("writer claim record: {0}")]
+    Claim(#[from] WriteError),
     #[error("Dolt executable digest differs from the external tool generation")]
     ExecutableMismatch,
     #[error("unsupported managed Dolt profile: {0}")]
