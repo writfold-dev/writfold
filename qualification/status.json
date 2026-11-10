@@ -975,6 +975,29 @@
     },
     "retained_failed_attempts": []
   },
+  "vendored_splicery_b14c67a": {
+    "status": "scoped_component_pass",
+    "scope": "Vendored Splicery re-pinned from c696b6e to b14c67a (71 files): adds the Aeneas-proved splicery-splice kernel, drops the retired Verus kernel family, and admits each Splicery crate with an exact dependency list (writfold-sources reaches splice only through the kernel). Trial prepare accepts the new whole @line and from @a to @b selectors (tests). Prepared-edit identities change because they bind the new artifact digest; compile refusals now carry selector detail.",
+    "source_commit": "8bd8c8a",
+    "receipts": {
+      "quality": {
+        "path": "~/.local/share/writfold/evidence/vendor-splicery-nQXt1muX/quality-001.json",
+        "sha256": "ce338b47877bb74855423e405c38591a28c4c3d61c5ef7928870fb10b9245a04",
+        "bytes": 841587
+      },
+      "unit": {
+        "path": "~/.local/share/writfold/evidence/vendor-splicery-nQXt1muX/unit-001.json",
+        "sha256": "0ecec0ce1043a92784ccbef2cf0244154a80d80fa502750cb8131c53ef664f79",
+        "bytes": 365309
+      },
+      "verus": {
+        "path": "~/.local/share/writfold/evidence/vendor-splicery-nQXt1muX/verus-001.json",
+        "sha256": "3446bddf0d0febc04e3875bcb21d054dff73d1a124db4db7aad9887c74644c5c",
+        "bytes": 4672350
+      }
+    },
+    "retained_failed_attempts": []
+  },
   "publication_history_audit": {
     "status": "inspected_not_cleared_for_publication",
     "record": {
