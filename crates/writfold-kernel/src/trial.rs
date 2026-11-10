@@ -1,8 +1,12 @@
 //! Trial edit-flow decisions: the typed adapter over `writfold_core::trial`,
 //! whose Aeneas translation is proved in `proofs/Writfold/Trial.lean`
 //! (`changes_spec`, `recovery_spec`, `recoveryOutcome_unambiguous`,
-//! `required_entailed_spec`, `required_ok_iff`).
+//! `required_entailed_spec`, `required_ok_iff`), and over
+//! `writfold_core::flow`, the edit-flow validator (`proofs/Writfold/Flow.lean`,
+//! `validate_spec`).
+use writfold_core::flow;
 use writfold_core::trial as core;
+use writfold_domain::engineering::{BlobDigest, EngineeringDigest};
 
 /// Whether a prepared candidate changes its source. `prepare` refuses a
 /// candidate that does not: recovery could not tell installed from not.
@@ -105,4 +109,84 @@ pub fn required_entailed(checks: &[Check], required: &[String]) -> Result<(), Un
             Unsatisfied::NotEntailed(required.get(i).cloned().unwrap_or_default())
         }
     })
+}
+
+/// A retained object: its digest and exact byte length.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct Blob {
+    pub digest: BlobDigest,
+    pub bytes: u64,
+}
+
+/// One edit-flow record as the validator reads it.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Step<'a> {
+    Prepared {
+        path: &'a str,
+        source: Blob,
+        recipe: Blob,
+        candidate: Blob,
+        report: Blob,
+    },
+    Approved {
+        grant: Blob,
+        approval: Blob,
+    },
+    Claimed {
+        candidate: Blob,
+    },
+    Applied {
+        candidate: Blob,
+    },
+    Abandoned {
+        reason: &'a str,
+    },
+}
+
+fn core_blob(blob: &Blob) -> flow::Blob {
+    flow::Blob {
+        digest: *blob.digest.as_digest(),
+        bytes: blob.bytes,
+    }
+}
+
+fn core_step(step: &Step<'_>) -> flow::Event {
+    match step {
+        Step::Prepared {
+            path,
+            source,
+            recipe,
+            candidate,
+            report,
+        } => flow::Event::Prepared {
+            path: path.as_bytes().to_vec(),
+            source: core_blob(source),
+            recipe: core_blob(recipe),
+            candidate: core_blob(candidate),
+            report: core_blob(report),
+        },
+        Step::Approved { grant, approval } => flow::Event::Approved {
+            grant: core_blob(grant),
+            approval: core_blob(approval),
+        },
+        Step::Claimed { candidate } => flow::Event::Claimed {
+            candidate: core_blob(candidate),
+        },
+        Step::Applied { candidate } => flow::Event::Applied {
+            candidate: core_blob(candidate),
+        },
+        Step::Abandoned { reason } => flow::Event::Abandoned {
+            reason: reason.as_bytes().to_vec(),
+        },
+    }
+}
+
+/// The edit-flow rule for one run (`validate_spec`): `step` carries every
+/// blob it names in `closure` and is the next record after `prefix`, exactly
+/// `Prepared` → `Approved` → `Claimed` → `Applied` or `Abandoned`, with the
+/// claim and `Applied` naming the prepared candidate and a non-empty reason.
+pub fn edit_flow(prefix: &[Step<'_>], step: &Step<'_>, closure: &[BlobDigest]) -> bool {
+    let prefix: Vec<flow::Event> = prefix.iter().map(core_step).collect();
+    let closure: Vec<[u8; 32]> = closure.iter().map(|d| *d.as_digest()).collect();
+    flow::validate(&prefix, &core_step(step), &closure)
 }

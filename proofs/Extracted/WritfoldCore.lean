@@ -562,6 +562,185 @@ def bytes.same_option
       let s1 := alloc.vec.Vec.deref r
       bytes.same s s1
 
+/-- [writfold_core::flow::Blob]
+    Source: 'crates/writfold-core/src/flow.rs', lines 11:0-14:1
+    Visibility: public -/
+structure flow.Blob where
+  digest : Array Std.U8 32#usize
+  bytes : Std.U64
+
+/-- [writfold_core::flow::Event]
+    Source: 'crates/writfold-core/src/flow.rs', lines 17:0-38:1
+    Visibility: public -/
+@[discriminant isize]
+inductive flow.Event where
+| Prepared :
+  alloc.vec.Vec Std.U8 →
+  flow.Blob →
+  flow.Blob →
+  flow.Blob →
+  flow.Blob →
+  flow.Event
+| Approved : flow.Blob → flow.Blob → flow.Event
+| Claimed : flow.Blob → flow.Event
+| Applied : flow.Blob → flow.Event
+| Abandoned : alloc.vec.Vec Std.U8 → flow.Event
+
+/-- [writfold_core::flow::same_blob]:
+    Source: 'crates/writfold-core/src/flow.rs', lines 41:0-43:1
+    Visibility: public -/
+def flow.same_blob (left : flow.Blob) (right : flow.Blob) : Result Bool := do
+  let s ← lift (Array.to_slice left.digest)
+  let s1 ← lift (Array.to_slice right.digest)
+  let b ← bytes.same s s1
+  if b
+  then ok (left.bytes = right.bytes)
+  else ok false
+
+/-- [writfold_core::flow::carried]:
+    Source: 'crates/writfold-core/src/flow.rs', lines 46:0-67:1
+    Visibility: public -/
+def flow.carried
+  (event : flow.Event) (closure : Slice (Array Std.U8 32#usize)) :
+  Result Bool
+  := do
+  match event with
+  | flow.Event.Prepared _ source recipe candidate report =>
+    let b ← bytes.contains_digest closure source.digest
+    if b
+    then
+      let b1 ← bytes.contains_digest closure recipe.digest
+      if b1
+      then
+        let b2 ← bytes.contains_digest closure candidate.digest
+        if b2
+        then bytes.contains_digest closure report.digest
+        else ok false
+      else ok false
+    else ok false
+  | flow.Event.Approved grant approval =>
+    let b ← bytes.contains_digest closure grant.digest
+    if b
+    then bytes.contains_digest closure approval.digest
+    else ok false
+  | flow.Event.Claimed candidate =>
+    bytes.contains_digest closure candidate.digest
+  | flow.Event.Applied candidate =>
+    bytes.contains_digest closure candidate.digest
+  | flow.Event.Abandoned _ => ok true
+
+/-- [writfold_core::flow::is_prepared]:
+    Source: 'crates/writfold-core/src/flow.rs', lines 69:0-74:1
+    Visibility: public -/
+def flow.is_prepared (event : flow.Event) : Result Bool := do
+  match event with
+  | flow.Event.Prepared _ _ _ _ _ => ok true
+  | flow.Event.Approved _ _ => ok false
+  | flow.Event.Claimed _ => ok false
+  | flow.Event.Applied _ => ok false
+  | flow.Event.Abandoned _ => ok false
+
+/-- [writfold_core::flow::is_approved]:
+    Source: 'crates/writfold-core/src/flow.rs', lines 76:0-81:1
+    Visibility: public -/
+def flow.is_approved (event : flow.Event) : Result Bool := do
+  match event with
+  | flow.Event.Prepared _ _ _ _ _ => ok false
+  | flow.Event.Approved _ _ => ok true
+  | flow.Event.Claimed _ => ok false
+  | flow.Event.Applied _ => ok false
+  | flow.Event.Abandoned _ => ok false
+
+/-- [writfold_core::flow::is_claimed]:
+    Source: 'crates/writfold-core/src/flow.rs', lines 83:0-88:1
+    Visibility: public -/
+def flow.is_claimed (event : flow.Event) : Result Bool := do
+  match event with
+  | flow.Event.Prepared _ _ _ _ _ => ok false
+  | flow.Event.Approved _ _ => ok false
+  | flow.Event.Claimed _ => ok true
+  | flow.Event.Applied _ => ok false
+  | flow.Event.Abandoned _ => ok false
+
+/-- [writfold_core::flow::prepared]:
+    Source: 'crates/writfold-core/src/flow.rs', lines 91:0-96:1
+    Visibility: public -/
+def flow.prepared
+  (first : flow.Event) (candidate : flow.Blob) : Result Bool := do
+  match first with
+  | flow.Event.Prepared _ _ _ c _ => flow.same_blob c candidate
+  | flow.Event.Approved _ _ => ok false
+  | flow.Event.Claimed _ => ok false
+  | flow.Event.Applied _ => ok false
+  | flow.Event.Abandoned _ => ok false
+
+/-- [writfold_core::flow::follows]:
+    Source: 'crates/writfold-core/src/flow.rs', lines 99:0-113:1
+    Visibility: public -/
+def flow.follows
+  («prefix» : Slice flow.Event) (event : flow.Event) : Result Bool := do
+  match event with
+  | flow.Event.Prepared path _ _ _ _ =>
+    let b ← core.slice.Slice.is_empty «prefix»
+    if b
+    then let b1 ← alloc.vec.Vec.is_empty path
+         ok (¬ b1)
+    else ok false
+  | flow.Event.Approved _ _ =>
+    let i := Slice.len «prefix»
+    if i = 1#usize
+    then let e ← Slice.index_usize «prefix» 0#usize
+         flow.is_prepared e
+    else ok false
+  | flow.Event.Claimed candidate =>
+    let i := Slice.len «prefix»
+    if i = 2#usize
+    then
+      let e ← Slice.index_usize «prefix» 1#usize
+      let b ← flow.is_approved e
+      if b
+      then
+        let e1 ← Slice.index_usize «prefix» 0#usize
+        flow.prepared e1 candidate
+      else ok false
+    else ok false
+  | flow.Event.Applied candidate =>
+    let i := Slice.len «prefix»
+    if i = 3#usize
+    then
+      let e ← Slice.index_usize «prefix» 2#usize
+      let b ← flow.is_claimed e
+      if b
+      then
+        let e1 ← Slice.index_usize «prefix» 0#usize
+        flow.prepared e1 candidate
+      else ok false
+    else ok false
+  | flow.Event.Abandoned reason =>
+    let i := Slice.len «prefix»
+    if i = 3#usize
+    then
+      let e ← Slice.index_usize «prefix» 2#usize
+      let b ← flow.is_claimed e
+      if b
+      then let b1 ← alloc.vec.Vec.is_empty reason
+           ok (¬ b1)
+      else ok false
+    else ok false
+
+/-- [writfold_core::flow::validate]:
+    Source: 'crates/writfold-core/src/flow.rs', lines 116:0-118:1
+    Visibility: public -/
+def flow.validate
+  («prefix» : Slice flow.Event) (event : flow.Event)
+  (closure : Slice (Array Std.U8 32#usize)) :
+  Result Bool
+  := do
+  let b ← flow.carried event closure
+  if b
+  then flow.follows «prefix» event
+  else ok false
+
 /-- [writfold_core::ledger::Entry]
     Source: 'crates/writfold-core/src/ledger.rs', lines 12:0-19:1
     Visibility: public -/

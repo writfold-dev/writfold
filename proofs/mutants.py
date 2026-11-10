@@ -133,6 +133,36 @@ MUTANTS = (
            "        if status == 0 {\n            return Err(Refusal::Missing(i));",
            "        if false {\n            return Err(Refusal::Missing(i));",
            ("Writfold.Core.required_entailed_loop_spec",)),
+    # edit flow: a retained object is its digest AND its length
+    Mutant("blob-ignores-length", "flow.rs",
+           "    same(&left.digest, &right.digest) && left.bytes == right.bytes",
+           "    same(&left.digest, &right.digest)",
+           ("Writfold.Core.Flow.same_blob_spec",)),
+    # edit flow: every blob a record names is in its closure, the report too
+    Mutant("carried-skips-report", "flow.rs",
+           "                && contains_digest(closure, &candidate.digest)\n                && contains_digest(closure, &report.digest)",
+           "                && contains_digest(closure, &candidate.digest)",
+           ("Writfold.Core.Flow.carried_spec",)),
+    # edit flow: the record must carry its material, not only follow its prefix
+    Mutant("validate-skips-material", "flow.rs",
+           "    carried(event, closure) && follows(prefix, event)",
+           "    follows(prefix, event)",
+           ("Writfold.Core.Flow.validate_spec",)),
+    # edit flow: the claim names exactly the prepared candidate
+    Mutant("claim-ignores-candidate", "flow.rs",
+           "            prefix.len() == 2 && is_approved(&prefix[1]) && prepared(&prefix[0], candidate)",
+           "            prefix.len() == 2 && is_approved(&prefix[1])",
+           ("Writfold.Core.Flow.follows_spec",)),
+    # edit flow: one outcome only; Applied never follows an outcome
+    Mutant("applied-after-outcome", "flow.rs",
+           "            prefix.len() == 3 && is_claimed(&prefix[2]) && prepared(&prefix[0], candidate)",
+           "            prefix.len() >= 3 && is_claimed(&prefix[2]) && prepared(&prefix[0], candidate)",
+           ("Writfold.Core.Flow.follows_spec",)),
+    # edit flow: an abandonment says why
+    Mutant("abandon-without-reason", "flow.rs",
+           "            prefix.len() == 3 && is_claimed(&prefix[2]) && !reason.is_empty()",
+           "            prefix.len() == 3 && is_claimed(&prefix[2])",
+           ("Writfold.Core.Flow.follows_spec",)),
 )
 
 # lake reports `error: <path>.lean:<line>:<col>: <message>`

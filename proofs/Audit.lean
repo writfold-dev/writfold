@@ -16,8 +16,9 @@ open Lean Elab Command
 def allowedAxioms : List Name := [``propext, ``Classical.choice, ``Quot.sound]
 
 /-- The headline claims: byte identity, Lean `historyCheck`, the complete
-`AppendReady` refusal order, `Store::ready` over the current selection and
-"a refusal changes nothing". -/
+`AppendReady` refusal order, `Store::ready` over the current selection,
+"a refusal changes nothing", and the trial edit-flow validator (`Valid`: order,
+material and candidate bindings; nothing follows an outcome). -/
 def claims : List Name := [
   ``Writfold.Core.same_spec,
   ``Writfold.Core.history_check_spec,
@@ -36,6 +37,11 @@ def claims : List Name := [
   ``Writfold.Core.recoveryOutcome_unambiguous,
   ``Writfold.Core.required_entailed_spec,
   ``Writfold.Core.required_ok_iff,
+  ``Writfold.Core.Flow.same_blob_spec,
+  ``Writfold.Core.Flow.carried_spec,
+  ``Writfold.Core.Flow.follows_spec,
+  ``Writfold.Core.Flow.validate_spec,
+  ``Writfold.Core.Flow.follows_closed,
 ]
 
 /-- Every theorem under `Writfold.Core`, sorted by name. -/

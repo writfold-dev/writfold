@@ -60,8 +60,8 @@ and the grant conjunct of `intentReady`:
 The gate (`docker compose -f compose.proofs.yaml run --build --rm proofs`)
 regenerates the translation and refuses drift from the committed copy, builds
 the proofs, audits every theorem's axioms (only `propext`,
-`Classical.choice`, `Quot.sound`; the seventeen headline claims must exist) and
-calibrates twenty semantic mutants of the Rust source, each of which must break
+`Classical.choice`, `Quot.sound`; the twenty-two headline claims must exist) and
+calibrates twenty-six semantic mutants of the Rust source, each of which must break
 exactly its named theorem. Warm run: about three minutes.
 
 Trial edit flow (`writfold_core::trial`, adapter `writfold-kernel::trial`):
@@ -78,13 +78,32 @@ Trial edit flow (`writfold_core::trial`, adapter `writfold-kernel::trial`):
   missing or not entailed. A later entailed check never hides an earlier
   refutation.
 
+Trial edit-flow validator (`writfold_core::flow`, adapter
+`writfold-kernel::trial::edit_flow`, called by the app's ledger `Flow`):
+
+- `validate_spec`: a record is accepted exactly when it is `Valid`: it
+  carries every blob it names in its closure (`carried_spec`) and it
+  `Follows` the run so far (`follows_spec`): `Prepared` with a non-empty path
+  on an empty run, `Approved` after it, `Claimed` after those two naming
+  exactly the prepared candidate (digest and length, `same_blob_spec`), then
+  `Applied` naming that same candidate or `Abandoned` with a non-empty reason.
+- `follows_closed`: nothing follows a four-record run, so a run has at most
+  one outcome and no second claim.
+
+Its six mutants drop the length from blob identity, the report from the
+material check, the material check from the rule, the claim's candidate
+binding and the abandonment reason, and admit `Applied` after an outcome.
+The interleavings around this stream (apply, recover, an external writer,
+crashes, the ledger CAS and authority timing) are model-checked separately
+in `spec/TrialEditStream.tla` (TLC).
+
 ## Trust base
 
 The Charon/Aeneas translation of the Rust (pinned: Charon `8cae8fd`, Aeneas
 `nightly-2026.11.07-c5eb4a2`), the Aeneas library's models of the Rust
 operations used, the Lean kernel and the three standard axioms. The domain
-adapters in `writfold-kernel::ledger` and `writfold-kernel::authority`
-(nominal types to bytes, validator adaptation, canonical scope bytes) are
+adapters in `writfold-kernel::ledger`, `writfold-kernel::authority` and
+`writfold-kernel::trial` (nominal types to bytes, validator adaptation, canonical scope bytes) are
 tested, not proved; the Lean-exported ledger and grant cases still pass
 through them and the core.
 
@@ -102,8 +121,7 @@ inventory epoch increment is checked and refuses instead of overflowing.
 - The spec predicates mirror the calculus's `historyCheck`/`AppendReady` but
   live in the proofs project; machine-linking them to `formal/` needs the
   calculus on the same Lean version.
-- Next kernels: the trial edit-flow validator (record order and material),
-  then procedure admission.
+- Next kernel: procedure admission.
 
 ## Writing kernels for translation
 

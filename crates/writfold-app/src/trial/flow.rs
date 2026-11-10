@@ -1,5 +1,5 @@
-//! Edit-flow ledger records for `writfold-trial-worktree/1`, and their pure
-//! validator. One run is one stream: `Prepared`, `Approved`, then a durable
+//! Edit-flow ledger records for `writfold-trial-worktree/1`, validated by the
+//! proved `writfold_core::flow` kernel through `writfold_kernel::trial`. One run is one stream: `Prepared`, `Approved`, then a durable
 //! `Claimed` before any file is touched, then exactly one outcome: `Applied`
 //! (installed, or reconciled as installed after a lost outcome) or `Abandoned`
 //! (observed not installed). Each record names its retained material by digest
@@ -8,16 +8,13 @@
 //! against the retained bytes before `Claimed` is appended.
 use writfold_domain::engineering::{BlobDigest, EngineeringDigest};
 use writfold_kernel::ledger::{Record, Validator};
+use writfold_kernel::trial::{Step, edit_flow};
 use writfold_wire::Limits;
 use writfold_wire::engineering::cbor::{self, Decoder, Value as C};
 use writfold_wire::engineering::ledger_record::{self as codec, Part};
 
 /// A retained object: its digest and exact byte length.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct Blob {
-    pub digest: BlobDigest,
-    pub bytes: u64,
-}
+pub use writfold_kernel::trial::Blob;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Event {
@@ -202,7 +199,42 @@ fn blob(d: &mut Decoder<'_>) -> codec::Result<Blob> {
     Ok(Blob { digest, bytes })
 }
 
-/// Order and binding rules for one edit run.
+impl Event {
+    /// What the proved edit-flow validator reads of this payload.
+    fn step(&self) -> Step<'_> {
+        match self {
+            Event::Prepared {
+                path,
+                source,
+                recipe,
+                candidate,
+                report,
+                ..
+            } => Step::Prepared {
+                path,
+                source: *source,
+                recipe: *recipe,
+                candidate: *candidate,
+                report: *report,
+            },
+            Event::Approved { grant, approval } => Step::Approved {
+                grant: *grant,
+                approval: *approval,
+            },
+            Event::Claimed { candidate } => Step::Claimed {
+                candidate: *candidate,
+            },
+            Event::Applied { candidate, .. } => Step::Applied {
+                candidate: *candidate,
+            },
+            Event::Abandoned { reason } => Step::Abandoned { reason },
+        }
+    }
+}
+
+/// Order and binding rules for one edit run: the proved
+/// `writfold_core::flow::validate` (`validate_spec`), through its typed
+/// kernel adapter.
 pub struct Flow;
 
 impl Validator<Event, Premises> for Flow {
@@ -211,30 +243,7 @@ impl Validator<Event, Premises> for Flow {
         prefix: &[Record<Event, Premises>],
         record: &Record<Event, Premises>,
     ) -> bool {
-        let carried = record
-            .payload
-            .blobs()
-            .iter()
-            .all(|b| record.closure.contains(b));
-        let follows = match (&record.payload, prefix) {
-            (Event::Prepared { path, .. }, []) => !path.is_empty(),
-            (Event::Approved { .. }, [only]) => matches!(only.payload, Event::Prepared { .. }),
-            (Event::Claimed { candidate }, [first, second]) => {
-                matches!(second.payload, Event::Approved { .. }) && prepared(first, candidate)
-            }
-            (Event::Applied { candidate, .. }, [first, _, third]) => {
-                matches!(third.payload, Event::Claimed { .. }) && prepared(first, candidate)
-            }
-            (Event::Abandoned { reason }, [_, _, third]) => {
-                matches!(third.payload, Event::Claimed { .. }) && !reason.is_empty()
-            }
-            _ => false,
-        };
-        carried && follows
+        let steps: Vec<Step<'_>> = prefix.iter().map(|r| r.payload.step()).collect();
+        edit_flow(&steps, &record.payload.step(), &record.closure)
     }
-}
-
-/// Whether `first` prepared exactly this candidate.
-fn prepared(first: &Record<Event, Premises>, candidate: &Blob) -> bool {
-    matches!(&first.payload, Event::Prepared { candidate: c, .. } if c == candidate)
 }
