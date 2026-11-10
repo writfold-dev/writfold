@@ -7,8 +7,8 @@
 //! verified signed Dolt approval (`SuppliedDoltAuthorization`) whose base pin is
 //! the request's expected-old head and whose target is the writer's realm.
 use crate::backend::Refusal;
-use writfold_domain::PlanDigest;
 use writfold_domain::dolt::DoltReadPin;
+use writfold_domain::{PlanDigest, ReleaseId};
 use writfold_wire::dolt_operation::DoltTarget;
 use writfold_wire::signatures::dolt::SuppliedDoltAuthorization;
 
@@ -41,6 +41,7 @@ impl WriterId {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DoltWriteApproval {
     plan: PlanDigest,
+    release: ReleaseId,
     base: DoltReadPin,
     target: DoltTarget,
 }
@@ -60,12 +61,17 @@ impl DoltWriteApproval {
         }
         Ok(Self {
             plan: operation.id().clone(),
+            release: base.release().clone(),
             base: base.pin().clone(),
             target: operation.target().clone(),
         })
     }
     pub fn plan(&self) -> &PlanDigest {
         &self.plan
+    }
+    /// The signed predecessor release: a publication's Git expected-old value.
+    pub fn release(&self) -> &ReleaseId {
+        &self.release
     }
     pub fn base(&self) -> &DoltReadPin {
         &self.base

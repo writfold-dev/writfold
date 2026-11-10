@@ -67,7 +67,8 @@ built:
 
 It passes the 6-check writer suite against real disposable Dolt 2.6.1 in the
 admitted image, run locally and not yet through `scripts/gate`. It is storage
-state, not DINT02 publication. Fuzzy/similarity, semantic search, ranking and
+state, not DINT02 publication. The [first DINT02 publication slice](dolt-integration.md#publication-order-and-recovery)
+builds on it. It is a scoped component, not a DINT02 pass. Fuzzy/similarity, semantic search, ranking and
 graph `follow` are
 refused by type until Omnigraph. This is a scoped component, not a WF gate,
 RPC capability or release backend admission.
@@ -216,7 +217,17 @@ claim and does not authorize publication.
    state-space work is required, not smaller bounds or relabelled timeouts.
 2. Build on Dolt behind the B0 storage boundary. The native conditional writer
    with uncertain-write reconciliation is built; quality and unit gates pass, including the writer suite against real Dolt 2.6.1 (`dolt_writer_component`).
-   Next: DINT02 candidate preparation, release closure and Git CAS over it.
+   The first DINT02 slice is built:
+   - an approved publication of one candidate through the writer;
+   - a Git expected-old check before the Dolt write, and a Git CAS after it;
+   - read-only `observe` recovery, with completion of interrupted
+     publications;
+   - a kill sweep against real Dolt 2.6.1.
+
+   Its local checks pass; gate receipts are pending (`dolt_publication_component`;
+   [order and recovery](dolt-integration.md#publication-order-and-recovery)).
+   Next: a signed candidate binding, bootstrap publication and the remaining
+   DINT02 owners and gates.
    Continue exact-candidate Omnigraph qualification; its Rust adapter must pass
    the same conformance suite before it replaces Dolt.
    The source-built PR #1235 trial is an authorized development unblocker, not

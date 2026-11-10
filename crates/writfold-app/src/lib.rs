@@ -8,6 +8,7 @@
 mod contract;
 mod engine;
 pub mod ledger;
+pub mod publication;
 pub mod trial;
 pub mod tuft;
 

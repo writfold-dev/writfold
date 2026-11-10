@@ -145,3 +145,36 @@ fn initialization_is_explicit_and_existing_repository_is_not_reinitialized() -> 
     assert!(!fixture.path.join("writfold-locks").exists());
     fixture.cleanup()
 }
+
+/// A killed `update-ref` leaves `<ref>.lock`; publication then fails until the
+/// lease holder clears the abandoned lock, which changes no reference.
+#[test]
+fn abandoned_reference_locks_block_publication_until_cleared() -> Result {
+    let file = executable_file()?;
+    let executable = executable(&file)?;
+    let fixture = Repository::new(&executable)?;
+    let lease = fixture.writer.try_lease()?;
+    let prepared = lease.prepare(
+        &executable,
+        GitPrepareInput::new(&operation('8')?, None, b"m", &[]),
+        budgets()?,
+        &ACTIVE,
+    )?;
+    fs::create_dir_all(fixture.path.join("refs/kctx"))?;
+    fs::write(fixture.path.join("refs/kctx/knowledge.lock"), b"partial")?;
+    assert!(matches!(
+        lease.publish(&executable, &prepared, budgets()?, &ACTIVE),
+        Err(GitWriteError::Unknown(_))
+    ));
+    assert_eq!(lease.completed(&executable, budgets()?, &ACTIVE)?, None);
+    assert_eq!(lease.clear_stale_ref_locks()?, 1);
+    assert_eq!(lease.clear_stale_ref_locks()?, 0);
+    assert_eq!(lease.completed(&executable, budgets()?, &ACTIVE)?, None);
+    lease.publish(&executable, &prepared, budgets()?, &ACTIVE)?;
+    assert_eq!(
+        lease.completed(&executable, budgets()?, &ACTIVE)?.as_ref(),
+        Some(prepared.commit())
+    );
+    drop(lease);
+    fixture.cleanup()
+}

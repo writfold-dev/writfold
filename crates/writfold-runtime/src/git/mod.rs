@@ -21,6 +21,8 @@
 //! Blobs and prepared commits have permanent retention refs; only expected-old
 //! `refs/kctx/knowledge` CAS publishes. Unknown native outcomes require exact
 //! operation/history reconciliation, never blind retries or head-mismatch guesses.
+//! A reference lock left by this lease's own killed `update-ref` is abandoned;
+//! only explicit reconciliation (`clear_stale_ref_locks`) removes it.
 //! Native fsync observations cover process crashes, not a power-loss guarantee.
 //!
 //! The caller explicitly enables permanent process-wide subreaper supervision
@@ -38,6 +40,7 @@ mod objects;
 mod preparation;
 mod profile;
 mod publication;
+mod reconcile;
 mod tree;
 mod trial;
 mod write_objects;
