@@ -174,6 +174,8 @@ pub fn retain_read(
             .ok_or("byte range is outside the file")?;
         trial.retain(selected)?;
         fs::write(dir.join(format!("{binding}.bytes")), selected)?;
+        let line = tuft::locate::line_at(&file.content, range.0 as usize);
+        fs::write(dir.join(format!("{binding}.line")), format!("{line}\n"))?;
         fs::write(
             dir.join(format!("{binding}.json")),
             encode_descriptor(&descriptor, super::BUDGET)?,

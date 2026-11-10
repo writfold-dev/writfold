@@ -20,6 +20,7 @@ mod approve;
 #[cfg(test)]
 mod assessment_tests;
 pub mod cli;
+pub mod evidence;
 pub mod flow;
 mod prepare;
 mod recover;

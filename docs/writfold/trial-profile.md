@@ -118,6 +118,8 @@ named refusal leaving no worktree, and a refuted check making a later
 | `init` | Creates the private state directory: an Ed25519 operator key, a bootstrap policy trusting it, the Git executable's observed digest, the ledger repository, the object store | — |
 | `prepare` | Adds a detached, **sparse** worktree of your repository's **HEAD commit** inside the state directory (only the edited file is checked out; everything else is skip-worktree, so `git status`/`diff`/commits behave normally and cost does not grow with repository size), replays the recipe through the pinned Splicery kernel, builds and validates the exact `writfold-worktree/1` prepared edit, retains source, recipe, candidate and report. Refuses a report citing evidence (`asset` bindings) that `retain` did not keep, or whose retained bytes no longer match their digest. Refuses a candidate identical to its source, and a `--report` that is not a complete `weft.report/1` claiming no grounding or effect authority | `Prepared` |
 | `retain` | Reads the exact bytes of a file at a **full pinned commit id** (refs, abbreviations and `HEAD` are refused), keeps the selected byte range in the state directory and binds it as a `writfold-citation/1` descriptor. Prints the binding digest; a Weft report cites it as `asset x = citation "<digest>";`. Equal text at two positions is two different bindings | — |
+| `evidence list` | Lists retained bindings as compact rows `binding12 path@commit7:line: text` (`--path PREFIX`, `--commit SHA`, `--limit N`, `--out NEW_FILE`), then a `# count=M shown=S omitted=O` trailer like Tuft's; entries whose descriptor or bytes fail verification are counted as `refused=R` and not shown | — |
+| `evidence show` | Prints one binding's **exact retained bytes**, verified first against its descriptor (re-fingerprint and selection digest; tampered evidence refuses). `BINDING` is the full digest, a unique 8+ hex prefix or a label. `--context-lines N --repo DIR` reads the pinned blob, checks its whole-file digest and the bytes at the retained range, and prints context in separately marked `L| text` sections, never inside the retained bytes. Writes nothing | — |
 | `approve` | With `--require CHECK` (repeatable), first reads the retained Weft report and refuses unless every named check is present and `entailed` (the proved `required_entailed`). Then signs an operator grant (Write on this run's worktree, one hour) and a prepared-edit approval binding the prepared-edit digest, report, procedure, resource generation and validity | `Approved` |
 | `apply` | Verifies both signatures strictly under the policy, every bound value and the validity window, and asks the kernel for a current grant covering Write; records a durable claim; checks the worktree file still holds the retained source bytes; installs the candidate through the staged installer | `Claimed`, then `Applied`, or `Abandoned` if the original was never replaced |
 | `recover` | For a claim with no outcome (a crash or error during install): observes the file without rewriting it. The candidate's exact bytes mean it was installed; the source's exact bytes mean it was not; anything else stays Unknown and refuses | `Applied` (reconciled) or `Abandoned` |
@@ -128,6 +130,36 @@ the run's history is replayed through the kernel and the edit-flow validator
 (exactly `Prepared` → `Approved` → `Claimed` → `Applied` or `Abandoned`, each
 carrying its material, with the claim and `Applied` naming the prepared
 candidate and an abandonment saying why) before the head moves.
+
+## Reusing evidence in a later session
+
+`retain` and Tuft's `retain` store each binding under
+`<state>/evidence/<digest>.{json,bytes}` (plus the start line in
+`<digest>.line`, a display hint `show` recomputes from the blob when given
+`--repo`). A later session reads them back without searching again:
+
+```sh
+writfold trial retain --repo R --commit <sha> --file src/a.rs --bytes 0..40 --label entry
+writfold trial evidence list --path src/
+# 29aa4846bd82 src/a.rs@81071d8:1: fn connect(url: &str) -> Result<Conn> {
+# count=1 shown=1 omitted=0
+writfold trial evidence show entry --context-lines 2 --repo R
+writfold trial evidence labels
+```
+
+A **label** (`retain --label NAME`) is a mutable, local, per-state name kept in
+`<state>/labels/`, apart from the immutable evidence. Setting it again moves it.
+As the [shared-client rule for scoped aliases](shared-client-references.md)
+requires, it is an interaction convenience only: it is never written into a
+descriptor or report, and `show` prints the full digest it resolved to. The
+same holds for the 12-hex abbreviation in `list` rows. Cite the full digest.
+Tuft's `retain` does not take a label yet.
+
+`evidence list/show` are CLI-only: `writfold.trial/1` advertises exactly three
+methods through the pinned `contracts/agent-stdio/1/trial-methods.json`, so new
+serve methods need a contract revision rather than an in-place addition.
+Latency with 1,001 retained bindings on the 100,000-file repository:
+[`bench/2026-11-10-evidence-latency`](../../bench/2026-11-10-evidence-latency/README.md).
 
 ## Through serve
 

@@ -91,7 +91,7 @@ impl Args {
 }
 
 /// Write `view` to a file that must not exist yet; never overwrite.
-fn write_new(path: &Path, view: &str) -> Result<()> {
+pub(crate) fn write_new(path: &Path, view: &str) -> Result<()> {
     use std::io::Write as _;
     let mut file = std::fs::OpenOptions::new()
         .write(true)

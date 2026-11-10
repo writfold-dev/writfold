@@ -13,7 +13,16 @@ writfold trial run --repo DIR --file PATH --recipe FILE [--tuft QUERY.tuft]
                                         retained row), then prepare; stops before approval
 writfold trial retain --repo DIR --commit SHA --file PATH --bytes LO..HI
                                         retain exact bytes at a pinned commit; prints the
-                                        binding digest a Weft report cites as evidence
+                                        binding digest a Weft report cites as evidence.
+                                        --label NAME also points a local label at it
+writfold trial evidence list [--path PREFIX] [--commit SHA] [--limit N] [--out NEW_FILE]
+                                        retained bindings as `binding12 path@commit7:line: text`
+                                        rows plus a `# count= shown= omitted=` trailer
+writfold trial evidence show BINDING [--context-lines N --repo DIR]
+                                        the verified exact retained bytes; BINDING is a digest,
+                                        a unique 8+ hex prefix or a label; context lines come
+                                        from the pinned blob, in separately marked sections
+writfold trial evidence labels          local labels and the digests they name
 writfold trial approve RUN [--require CHECK]...
                                         sign a grant and an approval; records Approved.
                                         Each --require names a Weft check that must be entailed
@@ -132,6 +141,9 @@ pub fn main(args: &[String]) -> Result<String> {
         }
         Some("run") => trial_run(&parsed, &state),
         Some("retain") => {
+            if let Some(name) = parsed.option("label") {
+                super::evidence::label::check(name)?;
+            }
             let (lo, hi) = parsed
                 .required("bytes")?
                 .split_once("..")
@@ -143,10 +155,15 @@ pub fn main(args: &[String]) -> Result<String> {
                 parsed.required("file")?,
                 (lo.parse()?, hi.parse()?),
             )?;
-            Ok(format!(
+            let mut out = format!(
                 "retained binding {}\n  {} at {} bytes [{},{})\n  cite in Weft: asset excerpt = citation \"{}\";",
                 r.binding, r.path, r.commit, r.range.0, r.range.1, r.binding
-            ))
+            );
+            if let Some(name) = parsed.option("label") {
+                super::evidence::label::set(&state, name, &r.binding)?;
+                out.push_str(&format!("\n  local label {name} (not a citation)"));
+            }
+            Ok(out)
         }
         Some("approve") => {
             let run = parsed.run()?;
@@ -168,6 +185,7 @@ pub fn main(args: &[String]) -> Result<String> {
             Ok(format!("run {run}: {}", recover(&state, run)?))
         }
         Some("show") => show(&state, parsed.run()?),
+        Some("evidence") => super::evidence::main(&parsed.positional[1..], &parsed.options, &state),
         _ => Ok(USAGE.to_owned()),
     }
 }
