@@ -36,15 +36,22 @@
   "receipt_status": {
     "fresh_receipt_required": false,
     "current_receipt": {
-      "path": "~/.local/share/writfold/evidence/cursor-serve-IN3JTNJz/stdio-control-003.json",
-      "sha256": "e53657238e3f5c71c57deb3e31e31cc384da316b39d99d71077b229f11d20655",
-      "bytes": 453429,
-      "executable_sha256": "3087e467328fd9eb6e4764a77295a98bfa43c9e1ab71d34d6a2297a460f16e41",
+      "path": "~/.local/share/writfold/evidence/state-dir-cP8Nh8d8/stdio-control-002.json",
+      "sha256": "0521fa7f717f573bdfbecbfb588e3f8e3424d8e01569e403be5bfbbe1720fb7c",
+      "bytes": 503506,
+      "executable_sha256": "2fdf09edbde1db6af0f7e160cdfdd2927cde4dcd70894e62e0d3d2997390a381",
       "contract_sha256": "bfa436bac90a97a38b5b70d8a20713cfbd38a12ce35283637d5ac9fa235f3f4a"
     },
-    "reason": "Refreshed 2026-11-10 for the writfold.trial/1 revision adding trial/run, trial/evidence-list and trial/evidence-show (contract bfa436ba…, executable 3087e467…). The 2026-11-09 receipt (contract 0baf69b2…) and the 2026-11-05 receipt (contract b673d10f…) are preserved for their own sources and not relabelled. Two attempts on 2026-11-10 (stdio-control-001/002 in the same directory) were refused by preflight for insufficient storage headroom before any build.",
+    "reason": "Refreshed 2026-11-10 for source 604347a: trial next: lines carry an absolute --state and refusals name the searched state (contract unchanged, bfa436ba\u2026; executable 2fdf09ed\u2026). stdio-control-001 in the same directory passed for 044d475, whose quality gate failed, and is not current. Earlier receipts are preserved for their own sources and not relabelled. Two attempts on 2026-11-10 (cursor-serve-IN3JTNJz stdio-control-001/002) were refused by preflight for insufficient storage headroom before any build.",
     "vector_scope": "The stdio-control vectors run without a trial state, so they exercise writfold.trial/1 negotiation refusals and Method not found for approve/apply/recover, not the trial methods. The trial methods are covered by crates/writfold/tests/serve_trial.rs, crates/writfold/tests/serve_trial_run.rs and the writfold-app engine tests, which are not a gate receipt.",
     "previous_receipts": [
+      {
+        "path": "~/.local/share/writfold/evidence/cursor-serve-IN3JTNJz/stdio-control-003.json",
+        "sha256": "e53657238e3f5c71c57deb3e31e31cc384da316b39d99d71077b229f11d20655",
+        "bytes": 453429,
+        "executable_sha256": "3087e467328fd9eb6e4764a77295a98bfa43c9e1ab71d34d6a2297a460f16e41",
+        "contract_sha256": "bfa436bac90a97a38b5b70d8a20713cfbd38a12ce35283637d5ac9fa235f3f4a"
+      },
       {
         "path": "~/.local/share/writfold/evidence/serve-trial-cVqclyxI/stdio-control-002.json",
         "sha256": "efb5726d5cf20e5cfe58cc876d9d3d7783de36fb54af8ebcd319e8c7bb00da62",

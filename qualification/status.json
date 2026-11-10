@@ -1225,6 +1225,50 @@
     "gate_note": "The unit gate on merged main ran all four tests/publication.rs tests against real Dolt 2.6.1, including the kill sweep (757 s). This is a scoped component pass of the first DINT02 slice only; DINT02, M11/V15 and WF10/WF11/WF14 remain open."
   },
 
+  "trial_state_dir": {
+    "status": "pass",
+    "scope": "Trial state directory resolution (10 November 2026): one resolver for trial and tuft (--state, else a non-empty WRITFOLD_STATE, else the default); every next: line carries an absolute --state; approve/apply/recover/show refuse an uninitialized directory or an unknown run by naming the state searched and its source. Refusals of prepare, retain and run stay identical to serve's. Addresses the reliability pilot's main arm-B trip.",
+    "source_commit": "604347a",
+    "receipts": {
+      "quality": {
+        "path": "~/.local/share/writfold/evidence/state-dir-cP8Nh8d8/quality-002.json",
+        "sha256": "f87a713ff17037b840c9b75720aabd20596a9039cac8a3e2bd5753e912ba815a",
+        "bytes": 931717
+      },
+      "unit": {
+        "path": "~/.local/share/writfold/evidence/state-dir-cP8Nh8d8/unit-002.json",
+        "sha256": "19f534e79305b0f03916b74c4e0e7f2c975b147e969c59466f10cddc8711cb0e",
+        "bytes": 466924
+      },
+      "stdio_control": {
+        "path": "~/.local/share/writfold/evidence/state-dir-cP8Nh8d8/stdio-control-002.json",
+        "sha256": "0521fa7f717f573bdfbecbfb588e3f8e3424d8e01569e403be5bfbbe1720fb7c",
+        "bytes": 503506
+      }
+    },
+    "executable_sha256": "2fdf09edbde1db6af0f7e160cdfdd2927cde4dcd70894e62e0d3d2997390a381",
+    "failed_attempts": [
+      {
+        "path": "~/.local/share/writfold/evidence/state-dir-cP8Nh8d8/quality-001.json",
+        "source_commit": "044d475",
+        "reason": "rustfmt and the 80-line function budget"
+      }
+    ],
+    "superseded_passes": [
+      {
+        "path": "~/.local/share/writfold/evidence/state-dir-cP8Nh8d8/unit-001.json",
+        "source_commit": "044d475"
+      },
+      {
+        "path": "~/.local/share/writfold/evidence/state-dir-cP8Nh8d8/stdio-control-001.json",
+        "source_commit": "044d475"
+      }
+    ],
+    "tests": [
+      "crates/writfold/tests/trial_state_dir.rs",
+      "crates/writfold-app/src/trial/state_dir.rs"
+    ]
+  },
   "publication_history_audit": {
     "status": "inspected_not_cleared_for_publication",
     "record": {
