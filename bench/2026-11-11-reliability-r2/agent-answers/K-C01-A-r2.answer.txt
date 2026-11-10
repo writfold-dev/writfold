@@ -1,0 +1,3 @@
+httpx/_client.py:1978: async def aclose(self) -> None:
+httpx/_client.py:1990: async def __aenter__(self: U) -> U:
+httpx/_client.py:2008: async def __aexit__(

@@ -1,0 +1,11 @@
+{
+ "before_sha256": "28e1c465997aa28860f663da2b2caedf8e6aab5ac92e0df94d41b7600cd70776",
+ "after_sha256": "de207b74210b226703f917e856becc86e83c9cf80c06e82f549d9a8b5df646fe",
+ "before_was_pinned": true,
+ "applied": true,
+ "triggered": true,
+ "tool_use_id": "toolu_01UiyGVfKc5xAcKXQS5YFxZG",
+ "result_event_timestamp": "2026-11-10T21:59:21.918Z",
+ "mutated_at": "2026-11-10T21:59:21.950314+00:00",
+ "transcript": "agent-a963a978cf48e9494.jsonl"
+}

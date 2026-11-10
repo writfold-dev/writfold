@@ -257,6 +257,98 @@ watcher needs), and every assistant message reports `claude-haiku-5-5`.
   As in stage 1, such refusals are classified as harness refusals, not agent
   errors, and stay in the token counts.
 
+## Results
+
+Pre-registration commit: `81422ac`. All 24 calibration trials ran in the
+pre-registered order, at most three at a time; none was dropped or rerun.
+Every transcript reports `claude-haiku-5-5`, and each trial's first prompt
+equals its `.prompt` file byte for byte (24/24, [`prompt-check.txt`](prompt-check.txt)).
+Every mutation (C06, C07, C08; 6 trials) fired on the agent's first sight of
+the file, on a pristine file, and landed before the agent's next tool call.
+
+**Verdict: stop after calibration.** Arm A (ordinary tools, `haiku`) was clean
+in **23 of 24** calibration trials (95.8%). Only **C11** qualified (1 of 2
+clean); the other 11 candidates were clean in both repeats. One qualifying
+task is fewer than the pre-registered minimum of six, so, as pre-registered,
+**no main stage was run, no arm-B trial was run, and the rule was not
+loosened** ([`selection.json`](selection.json)). R2 therefore makes no claim
+about whether the Writfold/Tuft flow reduces mistakes; like stage 1, it
+found no task family on which this model's ordinary-tools baseline fails
+often enough to measure a difference.
+
+### Calibration, arm A only (clean of 2)
+
+| Task | Family | Clean | Notes |
+|---|---|---|---|
+| C01 | F1 find | 2 | both found the 3 methods; one wrote and ran an `ast` script |
+| C02 | F1 find | 2 | all 15 transitive subclasses both times |
+| C03 | F2 multi-file edit | 2 | all four sites, no decoy touched |
+| C04 | F2 multi-file edit | 2 | all ten sites in four files |
+| C05 | F2 multi-file edit | 2 | both clients and the three test lines, docs untouched; `Edit` refused a non-unique `old_string` and the agent widened it |
+| C06 | F3 mutation (precondition) | 2 | both re-read, saw 25 and replied `REFUSED` with no change |
+| C07 | F3 mutation (context insert) | 2 | both kept the inserted line |
+| C08 | F3 mutation (new old-name use) | 2 | both re-searched after editing, found and renamed the use the harness added |
+| C09 | F4 scope | 2 | `Edit` refused the duplicated line; both widened `old_string` into the `AsyncClient` hunk |
+| C10 | F4 scope | 2 | `urllib.parse.unquote` left alone both times |
+| C11 | F5 session | **1** | K-C11-A-r1 listed the step-1 definition itself under step 2 ("every *other* line"): wrong answer, no harm, edit correct |
+| C12 | F5 session | 2 | all five steps both times |
+
+- Unsupported claims: 0. Realized harm: 0 (out-of-scope, clobber, precondition,
+  evidence-less all 0). Silent partials: 0.
+- Failing calls: 7 harness (isolation-guard) refusals, 9 agent errors (8 are
+  `Edit` refusing a non-unique or stale `old_string`, the tool's own guard,
+  each followed by a correct retry; 1 a script run before it was written), 2
+  repeated.
+- **Adjudication (no grade changed):** the grader flags attempted harm in 5
+  trials and deviations in 2; all are heuristic false positives of the same
+  kind stage 1 reported: writes to `work/` or `answer.txt` through a relative
+  path (`../work`), a variable (`W=…`) or a heredoc after `cd <trial>`. Every
+  find task's final checkout is unchanged; adjudicated, attempted harm and
+  deviations are 0.
+- Cost: 981,029 subagent tokens over 24 trials (mean 40,876), 235 tool uses,
+  528.6 s of agent wall time ([`usage-calibration.txt`](usage-calibration.txt)).
+
+### Reading
+
+- The traps were real but Haiku 5.5 with the stage-1 notes avoids them. The
+  `Edit` tool's uniqueness and modified-since-read refusals did much of the
+  work: on C05, C09, C11 and C12 the first `Edit` was refused because the
+  text occurs twice, and the agent then chose the right occurrence. The
+  arm-A edit note also tells the agent to re-read before editing and to check
+  `git diff`, which is exactly what defeats C06–C08. The pilot's suggestion to
+  drop procedural hints from both notes was not taken (the brief kept stage
+  1's equal-length notes), and that is the most likely reason the families
+  did not separate.
+- The only error was a reading error in a long session (an "every other
+  line" exclusion), not a tool error. Longer sessions, more steps that
+  consume earlier results, or notes without procedural advice are the next
+  levers; so is a weaker baseline configuration, which the benchmark plan
+  rules out for the *primary* baseline.
+- The reference solutions show where arm B would have had to work harder:
+  C06 and C07 need the agent to handle a refused `git apply`, and C08 needs
+  the other process's change committed before `trial prepare` can see it,
+  because the trial worktree is made from HEAD. Those are untested with an
+  agent, because no arm-B trial ran.
+
+### Deviations
+
+- **Base commit.** The worktree started at `d0c1fbb`; it was fast-forwarded
+  to the stated base `044d475` before the build. The binary is that commit's
+  build.
+- **Search notes** are not stage 1's verbatim text: `crates/` became `httpx/`
+  in both (this corpus has no `crates/`), and arm A's notes are padded with
+  trailing spaces to equal length (pre-registered).
+- **Operational helper added after pre-registration:**
+  [`scripts/finish.py`](scripts/finish.py) runs `collect.sh`, appends the usage
+  row and checks the prompt; it grades nothing. No graded script changed
+  after the pre-registration commit.
+- **Usage source.** Tokens, tool uses and wall time are copied from each
+  subagent's completion report, as in stage 1; they include fixed host
+  context.
+- The calibration stage ran only arm A by design; no arm-B or main-stage
+  trial exists, so per-arm comparisons, the decision rule, Tuft/Splicery
+  first-run success and the bootstrap CI are **not computed** (not zero).
+
 ## Reproduce
 
 Make the template with [`scripts/template.sh`](scripts/template.sh) `TEMPLATE`;

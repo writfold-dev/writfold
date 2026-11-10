@@ -1,0 +1,118 @@
+{
+ "rule": "Apply the pre-registered selection rule to the calibration grades.\n\nA candidate qualifies if (a) arm A was clean in at most 75% of its\ncalibration trials (with 2 repeats: 0 or 1 of 2) and (b) its reference\nsolution (reference.py) is graded clean. If fewer than 6 qualify: stop. If\n6-8 qualify: all go to the main stage. If more than 8 qualify, choose 8:\nsort the qualifying tasks by (arm-A clean count ascending, task id); take the\nfirst task of each family in that order (family coverage), then fill the\nremaining slots from the same sorted list.",
+ "candidates": [
+  {
+   "task": "C01",
+   "family": "F1",
+   "trials": 2,
+   "clean": 2,
+   "clean_rate": 1.0,
+   "hard_enough": false,
+   "reference_clean": true
+  },
+  {
+   "task": "C02",
+   "family": "F1",
+   "trials": 2,
+   "clean": 2,
+   "clean_rate": 1.0,
+   "hard_enough": false,
+   "reference_clean": true
+  },
+  {
+   "task": "C03",
+   "family": "F2",
+   "trials": 2,
+   "clean": 2,
+   "clean_rate": 1.0,
+   "hard_enough": false,
+   "reference_clean": true
+  },
+  {
+   "task": "C04",
+   "family": "F2",
+   "trials": 2,
+   "clean": 2,
+   "clean_rate": 1.0,
+   "hard_enough": false,
+   "reference_clean": true
+  },
+  {
+   "task": "C05",
+   "family": "F2",
+   "trials": 2,
+   "clean": 2,
+   "clean_rate": 1.0,
+   "hard_enough": false,
+   "reference_clean": true
+  },
+  {
+   "task": "C06",
+   "family": "F3",
+   "trials": 2,
+   "clean": 2,
+   "clean_rate": 1.0,
+   "hard_enough": false,
+   "reference_clean": true
+  },
+  {
+   "task": "C07",
+   "family": "F3",
+   "trials": 2,
+   "clean": 2,
+   "clean_rate": 1.0,
+   "hard_enough": false,
+   "reference_clean": true
+  },
+  {
+   "task": "C08",
+   "family": "F3",
+   "trials": 2,
+   "clean": 2,
+   "clean_rate": 1.0,
+   "hard_enough": false,
+   "reference_clean": true
+  },
+  {
+   "task": "C09",
+   "family": "F4",
+   "trials": 2,
+   "clean": 2,
+   "clean_rate": 1.0,
+   "hard_enough": false,
+   "reference_clean": true
+  },
+  {
+   "task": "C10",
+   "family": "F4",
+   "trials": 2,
+   "clean": 2,
+   "clean_rate": 1.0,
+   "hard_enough": false,
+   "reference_clean": true
+  },
+  {
+   "task": "C11",
+   "family": "F5",
+   "trials": 2,
+   "clean": 1,
+   "clean_rate": 0.5,
+   "hard_enough": true,
+   "reference_clean": true
+  },
+  {
+   "task": "C12",
+   "family": "F5",
+   "trials": 2,
+   "clean": 2,
+   "clean_rate": 1.0,
+   "hard_enough": false,
+   "reference_clean": true
+  }
+ ],
+ "qualified": [
+  "C11"
+ ],
+ "chosen": [],
+ "decision": "stop: only 1 tasks qualified (fewer than 6); no main stage"
+}

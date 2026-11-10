@@ -1,0 +1,38 @@
+diff --git a/httpx/_config.py b/httpx/_config.py
+index 467a6c9..cd65bbc 100644
+--- a/httpx/_config.py
++++ b/httpx/_config.py
+@@ -243,6 +243,6 @@ class Proxy:
+         return f"Proxy({url_str}{auth_str}{headers_str})"
+ 
+ 
+-DEFAULT_TIMEOUT_CONFIG = Timeout(timeout=5.0)
++DEFAULT_TIMEOUT_CONFIG = Timeout(timeout=8.0)
+ DEFAULT_LIMITS = Limits(max_connections=100, max_keepalive_connections=20)
+ DEFAULT_MAX_REDIRECTS = 20
+diff --git a/httpx/_main.py b/httpx/_main.py
+index cffa4bb..02f1df1 100644
+--- a/httpx/_main.py
++++ b/httpx/_main.py
+@@ -81,7 +81,7 @@ def print_help() -> None:
+     table.add_row(
+         "--timeout [cyan]FLOAT",
+         "Timeout value to use for network operations, such as establishing the"
+-        " connection, reading some data, etc... [Default: 5.0]",
++        " connection, reading some data, etc... [Default: 8.0]",
+     )
+ 
+     table.add_row("--follow-redirects", "Automatically follow redirects.")
+@@ -400,10 +400,10 @@ def handle_help(
+     "--timeout",
+     "timeout",
+     type=float,
+-    default=5.0,
++    default=8.0,
+     help=(
+         "Timeout value to use for network operations, such as establishing the "
+-        "connection, reading some data, etc... [Default: 5.0]"
++        "connection, reading some data, etc... [Default: 8.0]"
+     ),
+ )
+ @click.option(

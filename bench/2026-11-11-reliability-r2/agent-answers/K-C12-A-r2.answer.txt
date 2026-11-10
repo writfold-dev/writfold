@@ -1,0 +1,6 @@
+S1 httpx/_exceptions.py:249: class TooManyRedirects(RequestError):
+S2 httpx/_exceptions.py:107: class RequestError(HTTPError):
+S3 httpx/_exceptions.py:123: class TransportError(RequestError):
+S3 httpx/_exceptions.py:243: class DecodingError(RequestError):
+S3 httpx/_exceptions.py:249: class TooManyRedirects(RequestError):
+S5 httpx/_client.py:1688:                    "Exceeded maximum allowed redirects (async client).", request=request

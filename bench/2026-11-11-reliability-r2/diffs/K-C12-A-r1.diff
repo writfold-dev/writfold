@@ -1,0 +1,13 @@
+diff --git a/httpx/_client.py b/httpx/_client.py
+index 13cd933..323f1ba 100644
+--- a/httpx/_client.py
++++ b/httpx/_client.py
+@@ -1685,7 +1685,7 @@ class AsyncClient(BaseClient):
+         while True:
+             if len(history) > self.max_redirects:
+                 raise TooManyRedirects(
+-                    "Exceeded maximum allowed redirects.", request=request
++                    "Exceeded maximum allowed redirects (async client).", request=request
+                 )
+ 
+             for hook in self._event_hooks["request"]:
