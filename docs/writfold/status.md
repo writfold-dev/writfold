@@ -226,8 +226,13 @@ claim and does not authorize publication.
 
    Quality and unit gates pass on main, the kill sweep included (`dolt_publication_component`;
    [order and recovery](dolt-integration.md#publication-order-and-recovery)).
-   Next: a signed candidate binding, bootstrap publication and the remaining
-   DINT02 owners and gates.
+   A TLC model of the order (`spec/DoltPublication.tla`, `dolt_publication_model`)
+   passes its positive and wide runs, and its mutants each fail as expected.
+   It found an open gap: rival operations with the same base and candidate
+   share one Dolt request identity
+   ([same-request rival gap](dolt-integration.md#the-same-request-rival-gap)).
+   Next: an owner decision on that gap and on a signed candidate binding,
+   then bootstrap publication and the remaining DINT02 owners and gates.
    Continue exact-candidate Omnigraph qualification; its Rust adapter must pass
    the same conformance suite before it replaces Dolt.
    The source-built PR #1235 trial is an authorized development unblocker, not

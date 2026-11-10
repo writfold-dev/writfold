@@ -341,6 +341,19 @@ configurations complete with no violation; its two calibrated negatives
 after expiry, an ABA outside writer) each produce their expected
 counterexample.
 
+`spec/DoltPublication.tla` models the DINT02 first-slice publication order
+over the Dolt writer: `publish`, `observe`, `complete`, a direct writer,
+and a kill at every step boundary. It is not one of M01–M11, refines nothing
+and carries no TLAPS proof. Its positive configuration (232 distinct states,
+depth 17) and wide configuration (361 states, depth 18) complete with no
+violation. Eleven calibrated negatives each produce a counterexample to
+their target invariant. One of them drops two guards, and the docs explain
+why. The unmodified model also has a probe counterexample: a real gap
+where two operations with the same base and candidate share one Dolt
+request identity. It is open
+([dolt-integration.md](dolt-integration.md#the-same-request-rival-gap);
+`dolt_publication_model`).
+
 All twenty selected semantic negatives now have actual invariant
 counterexamples. Seven use directed witnesses that preserve canonical
 initial states/constants and conjoin every controlled successor with the

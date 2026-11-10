@@ -482,20 +482,125 @@ The four tests are:
 
   Exact numbers are indexed at `dolt_publication_component`.
 
+### Model
+
+`spec/DoltPublication.tla` models the order with TLC. It covers `publish`,
+`observe` (as the pure `resolve` over the facts `observed` gathers), `complete`
+and a direct Dolt writer. It runs signed operations from a fixture table:
+
+- rivals over the same base with distinct candidates;
+- a successor signed over another operation's release and commit;
+- in the wide fixture, an operation whose signed pin its base release does not
+  name (`Misinterpreted`).
+
+An invocation may be killed between any two steps, during `complete` as well.
+A Dolt write may be killed after `DOLT_COMMIT` and before its retention branch.
+One invocation holds both leases at a time. A direct write runs only while no
+invocation holds them.
+
+Checked invariants:
+
+- no double publication: one CAS and one Dolt commit per operation, and no
+  Dolt commit is named by two releases;
+- visibility only through a completed CAS;
+- a published release names exactly the commit its own Dolt write made, and
+  that commit and the candidate blob are retained;
+- `observe` agrees with ground truth whenever it can run, and refuses
+  `Diverged` only after a direct write moved the head past an interrupted
+  attempt;
+- an `Interrupted` attempt satisfies every guard of the Git-only completion,
+  and no accepted invocation is refused after its first write;
+- `complete` never issues a Dolt write;
+- an attempt whose Dolt write never happened leaves the approval unspent;
+- a published approval is never accepted again.
+
+The positive configuration (232 distinct states, depth 17) and the wide one
+(361 states, depth 18) complete with no violation. Every action fires except
+the mutant-only one. Single-deviation mutants each produce a counterexample
+to their target invariant:
+
+| Mutant | Invariant violated |
+| --- | --- |
+| Dolt write without its expected-old check | no double publication |
+| readers follow the Dolt head | visibility only through the CAS |
+| Git CAS before the Dolt write | the published pin is the committed head |
+| finish skips retaining the new head | the published pin is the committed head |
+| `resolve` calls an applied, unprepared attempt `NotPublished` | `observe` agrees with ground truth |
+| `resolve` ignores the head | the Git-only completion |
+| `complete` re-enters before the Dolt write | `complete` never writes Dolt |
+| prepared ref written with the candidate blob | the approval stays unspent |
+| `complete` accepts `Published` | a spent approval is never accepted again |
+| `admit` without the Git expected-old check | `observe` agrees with ground truth |
+
+Without the Git check, a successor signed over a prepared but unpublished
+release commits on Dolt over the interrupted attempt. Both are then
+`Diverged`, so that check is not redundant.
+
+The already-prepared check alone is redundant under the leases: its probe
+passes. So replaying a spent approval through `publish` needs both `admit`
+guards dropped, and that two-deviation mutant is the counterexample for that
+path. A reachability probe shows the successor publishing.
+
+This is bounded model evidence of the documented order. It is not a
+refinement of the Rust code: the model's `resolve` and `admit` are
+transcriptions, and candidates are opaque values. Exact runs are indexed at
+`dolt_publication_model`.
+
+### The same-request rival gap
+
+The model found a gap in the implementation. The Dolt write's identity (the
+`writfold-dolt-write/1` marker) covers the expected-old pin and the changes,
+but not the operation. The `applied` probe matches only that marker. The
+approval digest follows it in the commit message, and nothing reads it.
+
+Two distinct signed operations `a` and `d` over the same base release and base
+pin, with identical candidate changes, therefore make the same request. This
+sequence is reachable (`probe-SameCandidateRival` and
+`probe-SameCandidatePublish`):
+
+1. `publish(d)` commits on Dolt and is killed before its prepared commit.
+2. `observe(a)` finds `d`'s commit and resolves `Interrupted`, although `a`
+   never wrote to Dolt. It does the same if `publish(a)` had just returned
+   `Stale`.
+3. `complete(a)` prepares and CASes a release for `a` that names `d`'s commit.
+4. `d` is then `Diverged` for good. Release `a` names a Dolt commit whose
+   message records approval `d`.
+
+Nothing is published twice, and the visible rows are the candidate `a`
+carries. But the release attributes the commit to the wrong approval, and
+`observe` reports a write that `a` never made. After `a` publishes normally,
+`observe(d)` for the same request is `Diverged` instead of `NotPublished`.
+
+It is not fixed here. The documented design makes the candidate request the
+write identity, so binding the operation into it is a design change. The
+options include:
+
+- a `writfold-dolt-write/2` marker over the plan digest;
+- passing the authority to `StorageBackend::observe` so that it matches the
+  approval too;
+- `complete` refusing an unprepared attempt whose commit records another
+  approval.
+
+It is recorded for an owner decision, next to the signed candidate binding.
+
 ### What this slice does not cover
 
 DINT02 stays open. In particular:
 
 - a signed candidate binding;
+- the same-request rival gap above;
 - live policy, target or tool admission;
 - bootstrap publication (the tests' genesis release is fixture-owned);
 - power-loss durability, and writers that bypass the leases;
-- kills during `complete` (resolved by the same `observe`, but not swept);
+- kills during `complete` in the native kill sweep (the TLA+ model covers
+  them; the sweep does not);
 - a Dolt `main` left ahead by a direct B0 write outside publication, which
   blocks publication until an owner decision;
 - an RPC/CLI surface;
 - the WF10/WF11/WF14 gates;
-- the M11/V15 refinement and the TLA+ or TLAPS model of this order.
+- the M11/V15 refinement, a TLAPS proof of this order, and any refinement
+  from `spec/DoltPublication.tla` to the Rust code. That model is bounded TLC
+  evidence only.
 
 ## Work after native onboarding
 
