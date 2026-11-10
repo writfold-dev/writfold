@@ -215,7 +215,7 @@ claim and does not authorize publication.
    baseline explorations still reached their deadlines; further justified
    state-space work is required, not smaller bounds or relabelled timeouts.
 2. Build on Dolt behind the B0 storage boundary. The native conditional writer
-   with uncertain-write reconciliation is built (its gate receipts are pending).
+   with uncertain-write reconciliation is built; quality and unit gates pass, including the writer suite against real Dolt 2.6.1 (`dolt_writer_component`).
    Next: DINT02 candidate preparation, release closure and Git CAS over it.
    Continue exact-candidate Omnigraph qualification; its Rust adapter must pass
    the same conformance suite before it replaces Dolt.

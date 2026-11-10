@@ -138,18 +138,19 @@ Each row's evidence is the `qualification/status.json` entry named here:
 | S3 | done | `serve_trial_component` (incl. WF13 `stdio-control` and Weft's `control` re-pin) |
 | S4 | done | `trial_adversarial_campaign`. Not covered: expired approval, a kill between claim and install, and an agent writing the checkout itself |
 | T0 | done | `tuft_v0_component` |
-| B0 | done | `storage_backend_component`. The Dolt conditional writer is built (`dolt_writer_component`; local checks pass against real Dolt 2.6.1, gate receipts pending) |
+| B0 | done | `storage_backend_component`. The Dolt conditional writer is built (`dolt_writer_component`; quality and unit gates pass, including the writer suite against real Dolt 2.6.1) |
 | S5 | done | tag `v0.1.0-dev.1`; the fresh-clone flow was reproduced |
 | T2 | done: no token win | `bench/2026-11-09-projection-pilot`. Correctness was 12/12 in both arms; Tuft used 5.3% more tokens, more on all six tasks. The tasks had 1–9 matches, so the budget and omissions never engaged. Agents also retyped Tuft's quoted rows by hand instead of piping them, and its header lines doubled tool output |
 | T2b | done: no token win | `bench/2026-11-10-projection-pilot-2`. Lean output, tasks with 50–297 matches. Correctness 12/12 in both arms; Tuft used 3.1% more tokens, more on all six tasks. Transcription and output volume no longer cost anything (arm-B tool output was 5.6% lower); the gap is the agent writing longer programs and making more calls. Budget and cursor still never engaged |
 | T1 | done | `trial_run_component`; `writfold trial run` ([one command](trial-profile.md#one-command)); `bench/2026-11-10-trial-run-latency` (median 319 ms on the 100k-file repository with a stub Weft, within 10 ms of its parts) |
-| T2c | done: no token win | `bench/2026-11-10-reuse-pilot`. A later session reads evidence an earlier one retained (`trial evidence list/show`) against that session's notes plus grep. Correctness 12/12 in both arms; read-back used 1.7% more tokens (+642 per task, range −1,971 to +2,461), fewer on 2 of 6 tasks (a path filter and a few context lookups). Arm A re-grepped instead of reusing its notes |
+| T2c | done: no token win (`trial_evidence_reuse`) | `bench/2026-11-10-reuse-pilot`. A later session reads evidence an earlier one retained (`trial evidence list/show`) against that session's notes plus grep. Correctness 12/12 in both arms; read-back used 1.7% more tokens (+642 per task, range −1,971 to +2,461), fewer on 2 of 6 tasks (a path filter and a few context lookups). Arm A re-grepped instead of reusing its notes |
 
 Next after T1. T2 suggested a compact Tuft row format and an `--out` flag. Both are built: `path:line: text` rows with a one-line coverage trailer, `--out` that writes the rows to a new file, and a 594-byte [agent note](../tuft/agent-note.md). T2b measured them on larger result sets and found no token win. Next:
 
-- the TLA+ trial-stream model;
-- the edit-flow validator in `writfold-core`;
-- the cursor moved onto `NoticeCursor`.
+- ~~the TLA+ trial-stream model~~ and ~~the edit-flow validator in `writfold-core`~~: done (`trial_formal_component`);
+- the cursor moved onto `NoticeCursor`;
+- serve methods for `trial/run` and `trial/evidence-*` (a `writfold.trial/1` contract revision);
+- DINT02 publication over the Dolt writer.
 
 ## Website wording after the slice
 
