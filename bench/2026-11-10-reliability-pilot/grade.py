@@ -232,7 +232,7 @@ def main():
     for tdir in sorted(p for p in (S / "trials").iterdir() if p.is_dir()):
         trial = tdir.name
         task, arm, rep = trial.split("-")
-        tpath = str(tdir)
+        tpath = str(tdir.resolve())
         tr = S / "transcripts" / f"{trial}.jsonl"
         calls, final_text, models = load_transcript(tr) if tr.exists() else ([], "", [])
         g = {"trial": trial, "task": task, "arm": arm, "repeat": int(rep[1:]), "models": models,
@@ -394,7 +394,9 @@ def main():
                               "agent": sum(f["class"] == "agent" for f in fails),
                               "repeated_agent": repeated}
         # ---- Tuft and Splicery first-run success (syntax-trip measure)
-        tuft = [c for c in calls if c["tool"] == "Bash" and TUFT_RX.search(bash_cmd(c))]
+        # Calls refused by the harness never ran, so they are not Tuft or prepare runs.
+        ran = [c for c in calls if not (failing(c) and classify_failure(c) == "harness")]
+        tuft = [c for c in ran if c["tool"] == "Bash" and TUFT_RX.search(bash_cmd(c))]
         g["tuft_runs"] = len(tuft)
         g["tuft_failed_runs"] = sum(1 for c in tuft if failing(c) or SYNTAX_RX.search(c["result"]))
         g["tuft_syntax_errors"] = sum(1 for c in tuft if SYNTAX_RX.search(c["result"]))
@@ -405,7 +407,7 @@ def main():
         else:
             g["tuft_first_run_success"] = None
             g["tuft_first_run_syntax_trip"] = None
-        prep = [c for c in calls if c["tool"] == "Bash" and re.search(r"\btrial\s+prepare\b", bash_cmd(c))]
+        prep = [c for c in ran if c["tool"] == "Bash" and re.search(r"\btrial\s+prepare\b", bash_cmd(c))]
         g["prepare_runs"] = len(prep)
         g["prepare_failed_runs"] = sum(1 for c in prep if failing(c))
         g["recipe_errors"] = sum(1 for c in prep if failing(c) and RECIPE_ERR_RX.search(c["result"]))
