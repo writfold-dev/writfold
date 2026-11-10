@@ -1,0 +1,13 @@
+You are working in a Git repository checked out at <trial>/repo, at commit <commit>.
+
+Task: Which files under `crates/` mention `serde_json::`? For each such file, list only its first line (lowest line number) that contains `serde_json::`. Exactly one line per file, for every such file.
+
+Answer: write the answer to <trial>/answer.txt, one line per piece of evidence, in the form
+  <path>:<line>: <the full text of that source line, exactly as in the file>
+where <path> is relative to the repository root and <line> is 1-based. Include every line the task asks for and nothing else. Leading indentation may be omitted.
+
+Rules:
+- Put any scratch files in <trial>/work, never in the repository.
+- Use your ordinary tools: Bash (grep, rg, git grep, sed and similar) and Read. Do not modify the repository.
+- Do not read anything else outside <trial> except where stated above.
+- When finished, reply with exactly one line: `DONE`.

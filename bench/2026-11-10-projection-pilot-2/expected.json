@@ -1,0 +1,1160 @@
+{
+ "commit": "c568505742d00859cad758924c98d8d0a6e98648",
+ "matching_lines_of_the_obvious_search": {
+  "P1": 50,
+  "P2": 297,
+  "P3": 52,
+  "P4": 224,
+  "P5": 50,
+  "P6": 5
+ },
+ "answers": {
+  "P1": [
+   {
+    "path": "crates/writfold-domain/src/knowledge.rs",
+    "line": 114,
+    "text": "        None => forall|i: int| 0 <= i < claims.len() ==> !claim_matches_spec(claims[i], reference),"
+   },
+   {
+    "path": "crates/writfold-domain/src/knowledge.rs",
+    "line": 116,
+    "text": "            && claim == claims[i] && claim_matches_spec(claims[i], reference)"
+   },
+   {
+    "path": "crates/writfold-domain/src/knowledge.rs",
+    "line": 117,
+    "text": "            && forall|j: int| 0 <= j < i ==> !claim_matches_spec(claims[j], reference),"
+   },
+   {
+    "path": "crates/writfold-domain/src/knowledge.rs",
+    "line": 132,
+    "text": "            forall|i: int| 0 <= i < index ==> !claim_matches_spec(kb@.claims[i], reference@),"
+   },
+   {
+    "path": "crates/writfold-domain/src/language.rs",
+    "line": 130,
+    "text": "        ensures matches == claim_matches_spec(self@, reference@),"
+   },
+   {
+    "path": "crates/writfold-kernel/src/checker/evaluation.rs",
+    "line": 293,
+    "text": "                && claim_matches_spec(claim@, kb@.corrections[i].target)"
+   },
+   {
+    "path": "crates/writfold-kernel/src/checker/evaluation_model.rs",
+    "line": 158,
+    "text": "    if !claim_matches_spec(claim, derivation.claim) { None }"
+   },
+   {
+    "path": "crates/writfold-kernel/src/checker/lookup.rs",
+    "line": 42,
+    "text": "    first_matching(kb.claims, |claim: ClaimView| claim_matches_spec(claim, reference))"
+   },
+   {
+    "path": "crates/writfold-kernel/src/checker/lookup.rs",
+    "line": 58,
+    "text": "    let predicate = |claim: ClaimView| claim_matches_spec(claim, reference);"
+   },
+   {
+    "path": "crates/writfold-kernel/src/checker/lookup.rs",
+    "line": 63,
+    "text": "                && claim_matches_spec(kb.claims[i], reference)"
+   },
+   {
+    "path": "crates/writfold-kernel/src/checker/lookup.rs",
+    "line": 64,
+    "text": "                && forall|j: int| 0 <= j < i ==> !claim_matches_spec(kb.claims[j], reference);"
+   },
+   {
+    "path": "crates/writfold-kernel/src/checker/lookup.rs",
+    "line": 150,
+    "text": "            forall|i: int| 0 <= i < index ==> !claim_matches_spec(kb@.claims[i], reference),"
+   },
+   {
+    "path": "crates/writfold-kernel/src/checker/lookup.rs",
+    "line": 157,
+    "text": "                assert(claim_matches_spec(kb@.claims[index as int], reference));"
+   },
+   {
+    "path": "crates/writfold-kernel/src/checker/lookup.rs",
+    "line": 158,
+    "text": "                first_matching_at(kb@.claims, |c: ClaimView| claim_matches_spec(c, reference), index as int);"
+   },
+   {
+    "path": "crates/writfold-kernel/src/checker/lookup.rs",
+    "line": 164,
+    "text": "    proof { first_matching_absent(kb@.claims, |c: ClaimView| claim_matches_spec(c, reference)); }"
+   },
+   {
+    "path": "crates/writfold-kernel/src/portfolio.rs",
+    "line": 66,
+    "text": "                && other == candidate@.claims[i] && claim_matches_spec(other, assignment@.claim)"
+   },
+   {
+    "path": "crates/writfold-kernel/src/portfolio.rs",
+    "line": 67,
+    "text": "                && forall|j: int| 0 <= j < i ==> !claim_matches_spec(candidate@.claims[j], assignment@.claim);"
+   },
+   {
+    "path": "crates/writfold-kernel/src/portfolio.rs",
+    "line": 69,
+    "text": "                && claim@ == candidate@.claims[k] && claim_matches_spec(claim@, assignment@.claim)"
+   },
+   {
+    "path": "crates/writfold-kernel/src/portfolio.rs",
+    "line": 70,
+    "text": "                && forall|j: int| 0 <= j < k ==> !claim_matches_spec(candidate@.claims[j], assignment@.claim);"
+   },
+   {
+    "path": "crates/writfold-kernel/src/portfolio.rs",
+    "line": 165,
+    "text": "            forall|j: int| 0 <= j < i ==> claim_matches_spec(plan@.candidate.claims[start + j], plan@.assignments[j].claim),"
+   },
+   {
+    "path": "crates/writfold-kernel/src/portfolio.rs",
+    "line": 176,
+    "text": "                assert(claim_matches_spec(plan@.candidate.claims[start + i], plan@.assignments[i as int].claim));"
+   },
+   {
+    "path": "crates/writfold-kernel/src/portfolio.rs",
+    "line": 190,
+    "text": "                ==> claim_matches_spec(plan@.candidate.claims[start + j], plan@.assignments[j].claim),"
+   },
+   {
+    "path": "crates/writfold-kernel/src/portfolio.rs",
+    "line": 222,
+    "text": "                ==> !claim_matches_spec(plan@.candidate.claims[a], state@.selected[b]),"
+   },
+   {
+    "path": "crates/writfold-kernel/src/portfolio.rs",
+    "line": 234,
+    "text": "                    ==> !claim_matches_spec(plan@.candidate.claims[a], state@.selected[b]),"
+   },
+   {
+    "path": "crates/writfold-kernel/src/portfolio.rs",
+    "line": 235,
+    "text": "                forall|b: int| 0 <= b < j ==> !claim_matches_spec(claim@, state@.selected[b]),"
+   },
+   {
+    "path": "crates/writfold-kernel/src/portfolio.rs",
+    "line": 242,
+    "text": "                    assert(!claim_matches_spec(plan@.candidate.claims[i as int], state@.selected[j as int]));"
+   },
+   {
+    "path": "crates/writfold-kernel/src/portfolio/model.rs",
+    "line": 75,
+    "text": "            claim_matches_spec(plan.candidate.claims[state.kb.claims.len() + i], plan.assignments[i].claim)"
+   },
+   {
+    "path": "crates/writfold-kernel/src/portfolio/projection.rs",
+    "line": 15,
+    "text": "        && 0 <= j < state.selected.len() ==> !claim_matches_spec(plan.candidate.claims[i], state.selected[j])"
+   },
+   {
+    "path": "crates/writfold-kernel/src/portfolio/projection.rs",
+    "line": 28,
+    "text": "        claim_matches_spec(plan.candidate.claims[start + i], added[i]) by {}"
+   },
+   {
+    "path": "crates/writfold-kernel/src/portfolio/projection.rs",
+    "line": 34,
+    "text": "                && claim_matches_spec(state.kb.claims[j], state.selected[i]);"
+   },
+   {
+    "path": "crates/writfold-kernel/src/portfolio/projection.rs",
+    "line": 37,
+    "text": "            assert(claim_matches_spec(plan.candidate.claims[start + i - n], selected[i]));"
+   },
+   {
+    "path": "crates/writfold-kernel/src/portfolio/projection.rs",
+    "line": 46,
+    "text": "                assert(!claim_matches_spec(plan.candidate.claims[start + j - n], state.selected[i]));"
+   },
+   {
+    "path": "crates/writfold-kernel/src/portfolio/projection.rs",
+    "line": 48,
+    "text": "                assert(!claim_matches_spec(plan.candidate.claims[start + i - n], state.selected[j]));"
+   },
+   {
+    "path": "crates/writfold-kernel/src/portfolio/projection.rs",
+    "line": 57,
+    "text": "            implies !claim_matches_spec(plan.candidate.claims[i], state.selected[j]) by {"
+   },
+   {
+    "path": "crates/writfold-kernel/src/wellformed/graph.rs",
+    "line": 55,
+    "text": "        let j = choose|j: int| 0 <= j < kb.claims.len() && claim_matches_spec(kb.claims[j], replacement);"
+   },
+   {
+    "path": "crates/writfold-kernel/src/wellformed/lookups.rs",
+    "line": 11,
+    "text": "    let i = choose|i: int| 0 <= i < claims.len() && a == claims[i] && claim_matches_spec(claims[i], reference)"
+   },
+   {
+    "path": "crates/writfold-kernel/src/wellformed/lookups.rs",
+    "line": 12,
+    "text": "        && forall|j: int| 0 <= j < i ==> !claim_matches_spec(claims[j], reference);"
+   },
+   {
+    "path": "crates/writfold-kernel/src/wellformed/lookups.rs",
+    "line": 13,
+    "text": "    let j = choose|j: int| 0 <= j < claims.len() && b == claims[j] && claim_matches_spec(claims[j], reference)"
+   },
+   {
+    "path": "crates/writfold-kernel/src/wellformed/lookups.rs",
+    "line": 14,
+    "text": "        && forall|i: int| 0 <= i < j ==> !claim_matches_spec(claims[i], reference);"
+   },
+   {
+    "path": "crates/writfold-kernel/src/wellformed/spec.rs",
+    "line": 26,
+    "text": "    exists|i: int| 0 <= i < kb.claims.len() && claim_matches_spec(kb.claims[i], reference)"
+   },
+   {
+    "path": "crates/writfold-kernel/src/workflow.rs",
+    "line": 100,
+    "text": "                && other == plan@.candidate.claims[i] && claim_matches_spec(other, plan@.claim)"
+   },
+   {
+    "path": "crates/writfold-kernel/src/workflow.rs",
+    "line": 101,
+    "text": "                && forall|j: int| 0 <= j < i ==> !claim_matches_spec(plan@.candidate.claims[j], plan@.claim);"
+   },
+   {
+    "path": "crates/writfold-kernel/src/workflow.rs",
+    "line": 103,
+    "text": "                && claim@ == plan@.candidate.claims[k] && claim_matches_spec(claim@, plan@.claim)"
+   },
+   {
+    "path": "crates/writfold-kernel/src/workflow.rs",
+    "line": 104,
+    "text": "                && forall|j: int| 0 <= j < k ==> !claim_matches_spec(plan@.candidate.claims[j], plan@.claim);"
+   },
+   {
+    "path": "crates/writfold-kernel/src/workflow/admission_model.rs",
+    "line": 30,
+    "text": "    claim_matches_spec(claim, derivation.claim)"
+   },
+   {
+    "path": "crates/writfold-kernel/src/workflow/admission_model.rs",
+    "line": 97,
+    "text": "        && (forall|i: int| 0 <= i < plan.selected.len() ==> claim_matches_spec(target.claims[i], plan.selected[i]))"
+   },
+   {
+    "path": "crates/writfold-kernel/src/workflow/selection_scan.rs",
+    "line": 110,
+    "text": "        && forall|i: int| 0 <= i < selected.len() ==> claim_matches_spec(target@.claims[i], selected.deep_view()[i])),"
+   },
+   {
+    "path": "crates/writfold-kernel/src/workflow/selection_scan.rs",
+    "line": 122,
+    "text": "            forall|j: int| 0 <= j < i ==> claim_matches_spec(target@.claims[j], selected.deep_view()[j]),"
+   },
+   {
+    "path": "crates/writfold-kernel/src/workflow/selection_scan.rs",
+    "line": 130,
+    "text": "            proof { assert(!claim_matches_spec(target@.claims[i as int], selected.deep_view()[i as int])); }"
+   }
+  ],
+  "P2": [
+   {
+    "path": "crates/writfold-app/src/engine_tests.rs",
+    "line": 48,
+    "text": "    Ok(serde_json::from_slice(&bytes)?)"
+   },
+   {
+    "path": "crates/writfold-app/src/engine_trial_tests.rs",
+    "line": 55,
+    "text": "    let parsed: BTreeMap<String, IgnoredAny> = serde_json::from_str(schemas)?;"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/rpc_tests.rs",
+    "line": 106,
+    "text": "    let value: Observed = serde_json::from_slice(&bytes)?;"
+   },
+   {
+    "path": "crates/writfold-app/src/tuft/json_tests.rs",
+    "line": 46,
+    "text": "    Ok(serde_json::from_str(&tuft("
+   },
+   {
+    "path": "crates/writfold-runtime/src/omnigraph/admission.rs",
+    "line": 172,
+    "text": "        let mut tokens = serde_json::Map::new();"
+   },
+   {
+    "path": "crates/writfold-runtime/src/omnigraph/bootstrap.rs",
+    "line": 161,
+    "text": "        let graph_key = serde_json::to_string(graph_id)?;"
+   },
+   {
+    "path": "crates/writfold-runtime/src/omnigraph/mod.rs",
+    "line": 33,
+    "text": "    Json(#[from] serde_json::Error),"
+   },
+   {
+    "path": "crates/writfold-runtime/src/omnigraph/request.rs",
+    "line": 65,
+    "text": "        serde_json::to_writer(&mut body, parameter.name)?;"
+   },
+   {
+    "path": "crates/writfold-runtime/src/omnigraph/server.rs",
+    "line": 243,
+    "text": "            serde_json::to_writer(&mut body, name)?;"
+   },
+   {
+    "path": "crates/writfold-runtime/src/omnigraph/tests.rs",
+    "line": 95,
+    "text": "    let value: serde_json::Value = serde_json::from_slice(&body)?;"
+   },
+   {
+    "path": "crates/writfold-runtime/src/omnigraph/tests/chunked.rs",
+    "line": 50,
+    "text": "    let value: serde_json::Value = serde_json::from_slice(&response.body)?;"
+   },
+   {
+    "path": "crates/writfold-sources/src/material.rs",
+    "line": 62,
+    "text": "    let mut serializer = serde_json::Serializer::with_formatter(DigestWriter(&mut hash), Spaced);"
+   },
+   {
+    "path": "crates/writfold-store/examples/dolt_read.rs",
+    "line": 185,
+    "text": "    serde_json::to_writer(output, value)?;"
+   },
+   {
+    "path": "crates/writfold-store/examples/support/mod.rs",
+    "line": 21,
+    "text": "    serde_json::to_writer(&mut stderr, &diagnostic).map_err(io::Error::other)?;"
+   },
+   {
+    "path": "crates/writfold-store/tests/dolt_realm/mod.rs",
+    "line": 39,
+    "text": "    let profile: Profile = serde_json::from_slice(&fs::read(profile)?)?;"
+   },
+   {
+    "path": "crates/writfold-wire/examples/dolt_approval.rs",
+    "line": 3,
+    "text": "use serde_json::json;"
+   },
+   {
+    "path": "crates/writfold-wire/src/approval.rs",
+    "line": 2,
+    "text": "use serde_json::Value;"
+   },
+   {
+    "path": "crates/writfold-wire/src/bin/writfold-ref.rs",
+    "line": 47,
+    "text": "        serde_json::to_writer(&mut output, &response).map_err(io::Error::other)?;"
+   },
+   {
+    "path": "crates/writfold-wire/src/canonical.rs",
+    "line": 2,
+    "text": "use serde_json::Value;"
+   },
+   {
+    "path": "crates/writfold-wire/src/citation/codec.rs",
+    "line": 5,
+    "text": "use serde_json::{Map, Value};"
+   },
+   {
+    "path": "crates/writfold-wire/src/dolt.rs",
+    "line": 3,
+    "text": "use serde_json::{Map, Value};"
+   },
+   {
+    "path": "crates/writfold-wire/src/dolt/pin.rs",
+    "line": 3,
+    "text": "use serde_json::{Map, Value};"
+   },
+   {
+    "path": "crates/writfold-wire/src/dolt/rows.rs",
+    "line": 5,
+    "text": "use serde_json::Value;"
+   },
+   {
+    "path": "crates/writfold-wire/src/dolt_operation/codec.rs",
+    "line": 7,
+    "text": "use serde_json::Value;"
+   },
+   {
+    "path": "crates/writfold-wire/src/engineering/dependency.rs",
+    "line": 6,
+    "text": "use serde_json::{Map, Value};"
+   },
+   {
+    "path": "crates/writfold-wire/src/engineering/objects.rs",
+    "line": 4,
+    "text": "use serde_json::Value;"
+   },
+   {
+    "path": "crates/writfold-wire/src/lib.rs",
+    "line": 25,
+    "text": "use serde_json::Value;"
+   },
+   {
+    "path": "crates/writfold-wire/src/omnigraph/change.rs",
+    "line": 3,
+    "text": "use serde_json::Value;"
+   },
+   {
+    "path": "crates/writfold-wire/src/omnigraph/history.rs",
+    "line": 3,
+    "text": "use serde_json::Value;"
+   },
+   {
+    "path": "crates/writfold-wire/src/omnigraph/mod.rs",
+    "line": 19,
+    "text": "use serde_json::{Map, Value};"
+   },
+   {
+    "path": "crates/writfold-wire/src/omnigraph/rows.rs",
+    "line": 3,
+    "text": "use serde_json::Value;"
+   },
+   {
+    "path": "crates/writfold-wire/src/operation/codec.rs",
+    "line": 3,
+    "text": "use serde_json::Value;"
+   },
+   {
+    "path": "crates/writfold-wire/src/operation/prepare.rs",
+    "line": 6,
+    "text": "use serde_json::{Value, json};"
+   },
+   {
+    "path": "crates/writfold-wire/src/parser.rs",
+    "line": 2,
+    "text": "use serde_json::{Map, Number, Value};"
+   },
+   {
+    "path": "crates/writfold-wire/src/reference.rs",
+    "line": 4,
+    "text": "use serde_json::{Value, json};"
+   },
+   {
+    "path": "crates/writfold-wire/src/rpc.rs",
+    "line": 15,
+    "text": "use serde_json::Value;"
+   },
+   {
+    "path": "crates/writfold-wire/src/rpc/initialize.rs",
+    "line": 4,
+    "text": "use serde_json::Value;"
+   },
+   {
+    "path": "crates/writfold-wire/src/rpc/response/bounded.rs",
+    "line": 41,
+    "text": "        serde_json::to_writer(&mut *self, value)"
+   },
+   {
+    "path": "crates/writfold-wire/src/rpc/trial.rs",
+    "line": 13,
+    "text": "use serde_json::{Map, Value};"
+   },
+   {
+    "path": "crates/writfold-wire/src/semantic/codec.rs",
+    "line": 2,
+    "text": "use serde_json::{Map, Number, Value};"
+   },
+   {
+    "path": "crates/writfold-wire/src/semantic/context.rs",
+    "line": 5,
+    "text": "use serde_json::{Value, json};"
+   },
+   {
+    "path": "crates/writfold-wire/src/semantic/formula.rs",
+    "line": 3,
+    "text": "use serde_json::{Value, json};"
+   },
+   {
+    "path": "crates/writfold-wire/src/semantic/identity.rs",
+    "line": 2,
+    "text": "use serde_json::{Value, json};"
+   },
+   {
+    "path": "crates/writfold-wire/src/semantic/kb.rs",
+    "line": 6,
+    "text": "use serde_json::{Value, json};"
+   },
+   {
+    "path": "crates/writfold-wire/src/semantic/request.rs",
+    "line": 3,
+    "text": "use serde_json::{Value, json};"
+   },
+   {
+    "path": "crates/writfold-wire/src/semantic/request3.rs",
+    "line": 4,
+    "text": "use serde_json::{Value, json};"
+   },
+   {
+    "path": "crates/writfold-wire/src/semantic/response.rs",
+    "line": 7,
+    "text": "use serde_json::{Value, json};"
+   },
+   {
+    "path": "crates/writfold-wire/src/semantic/selection.rs",
+    "line": 3,
+    "text": "use serde_json::{Value, json};"
+   },
+   {
+    "path": "crates/writfold-wire/src/semantic/witness.rs",
+    "line": 4,
+    "text": "use serde_json::{Value, json};"
+   },
+   {
+    "path": "crates/writfold-wire/src/semantic/workflow.rs",
+    "line": 3,
+    "text": "use serde_json::{Value, json};"
+   },
+   {
+    "path": "crates/writfold-wire/src/semantic/workflow3.rs",
+    "line": 3,
+    "text": "use serde_json::{Value, json};"
+   },
+   {
+    "path": "crates/writfold-wire/src/signatures.rs",
+    "line": 15,
+    "text": "use serde_json::json;"
+   },
+   {
+    "path": "crates/writfold-wire/src/signatures/dolt.rs",
+    "line": 12,
+    "text": "use serde_json::json;"
+   },
+   {
+    "path": "crates/writfold-wire/src/signatures/storage.rs",
+    "line": 12,
+    "text": "use serde_json::json;"
+   },
+   {
+    "path": "crates/writfold-wire/src/storage.rs",
+    "line": 5,
+    "text": "use serde_json::{Map, Value};"
+   },
+   {
+    "path": "crates/writfold-wire/src/storage_operation/codec.rs",
+    "line": 7,
+    "text": "use serde_json::Value;"
+   },
+   {
+    "path": "crates/writfold-wire/src/storage_operation/encode.rs",
+    "line": 3,
+    "text": "use serde_json::{Value, json};"
+   },
+   {
+    "path": "crates/writfold-wire/src/weft_report.rs",
+    "line": 6,
+    "text": "use serde_json::Value;"
+   },
+   {
+    "path": "crates/writfold-wire/src/worktree/decode.rs",
+    "line": 3,
+    "text": "use serde_json::{Map, Value};"
+   },
+   {
+    "path": "crates/writfold-wire/src/worktree/json.rs",
+    "line": 2,
+    "text": "use serde_json::{Value, json};"
+   },
+   {
+    "path": "crates/writfold-wire/tests/citation.rs",
+    "line": 17,
+    "text": "fn changed(field: &str, value: serde_json::Value) -> TestResult<CitationDescriptor> {"
+   },
+   {
+    "path": "crates/writfold-wire/tests/dependency_lock.rs",
+    "line": 1,
+    "text": "use serde_json::{Value, json};"
+   },
+   {
+    "path": "crates/writfold-wire/tests/dolt_operation.rs",
+    "line": 1,
+    "text": "use serde_json::{Value, json};"
+   },
+   {
+    "path": "crates/writfold-wire/tests/dolt_operation/binding.rs",
+    "line": 66,
+    "text": "        let mut value: Value = serde_json::from_slice(original.canonical_bytes())?;"
+   },
+   {
+    "path": "crates/writfold-wire/tests/dolt_operation/boundaries.rs",
+    "line": 6,
+    "text": "    let original: Value = serde_json::from_slice(wrapped(\"selection\")?.canonical_bytes())?;"
+   },
+   {
+    "path": "crates/writfold-wire/tests/dolt_operation/signatures.rs",
+    "line": 21,
+    "text": "        let old: Value = serde_json::from_slice(&old)?;"
+   },
+   {
+    "path": "crates/writfold-wire/tests/dolt_read.rs",
+    "line": 3,
+    "text": "use serde_json::{Value, json};"
+   },
+   {
+    "path": "crates/writfold-wire/tests/edit_approval.rs",
+    "line": 3,
+    "text": "use serde_json::{Value, json};"
+   },
+   {
+    "path": "crates/writfold-wire/tests/engineering_fingerprints.rs",
+    "line": 39,
+    "text": "    row: &serde_json::Value,"
+   },
+   {
+    "path": "crates/writfold-wire/tests/engineering_objects.rs",
+    "line": 1,
+    "text": "use serde_json::{Value, json};"
+   },
+   {
+    "path": "crates/writfold-wire/tests/grant_lean.rs",
+    "line": 6,
+    "text": "use serde_json::Value;"
+   },
+   {
+    "path": "crates/writfold-wire/tests/grant_signatures.rs",
+    "line": 5,
+    "text": "use serde_json::json;"
+   },
+   {
+    "path": "crates/writfold-wire/tests/ledger_lean.rs",
+    "line": 5,
+    "text": "use serde_json::Value;"
+   },
+   {
+    "path": "crates/writfold-wire/tests/omnigraph.rs",
+    "line": 1,
+    "text": "use serde_json::{Value, json};"
+   },
+   {
+    "path": "crates/writfold-wire/tests/omnigraph_history.rs",
+    "line": 1,
+    "text": "use serde_json::{Value, json};"
+   },
+   {
+    "path": "crates/writfold-wire/tests/procedure_lean.rs",
+    "line": 12,
+    "text": "use serde_json::Value;"
+   },
+   {
+    "path": "crates/writfold-wire/tests/procedure_lean/embed.rs",
+    "line": 8,
+    "text": "use serde_json::Value;"
+   },
+   {
+    "path": "crates/writfold-wire/tests/raw_boundary.rs",
+    "line": 22,
+    "text": "        r#\"{\"$serde_json::private::Number\":1,\"$serde_json::private::Number\":2}\"#,"
+   },
+   {
+    "path": "crates/writfold-wire/tests/reference.rs",
+    "line": 1,
+    "text": "use serde_json::{Value, json};"
+   },
+   {
+    "path": "crates/writfold-wire/tests/result_decoders.rs",
+    "line": 1,
+    "text": "use serde_json::{Value, json};"
+   },
+   {
+    "path": "crates/writfold-wire/tests/rpc_response.rs",
+    "line": 1,
+    "text": "use serde_json::{Value, json};"
+   },
+   {
+    "path": "crates/writfold-wire/tests/rpc_trial.rs",
+    "line": 3,
+    "text": "use serde_json::{Value, json};"
+   },
+   {
+    "path": "crates/writfold-wire/tests/signatures.rs",
+    "line": 1,
+    "text": "use serde_json::{Value, json};"
+   },
+   {
+    "path": "crates/writfold-wire/tests/signatures/policy.rs",
+    "line": 4,
+    "text": "    let original: Value = serde_json::from_slice(&fixture(\"v3-admission.policy.json\")?)?;"
+   },
+   {
+    "path": "crates/writfold-wire/tests/storage.rs",
+    "line": 1,
+    "text": "use serde_json::Value;"
+   },
+   {
+    "path": "crates/writfold-wire/tests/storage/boundaries.rs",
+    "line": 51,
+    "text": "            serde_json::from_str(\"18446744073709551616\")?,"
+   },
+   {
+    "path": "crates/writfold-wire/tests/storage_operation.rs",
+    "line": 1,
+    "text": "use serde_json::{Value, json};"
+   },
+   {
+    "path": "crates/writfold-wire/tests/storage_operation/binding.rs",
+    "line": 63,
+    "text": "        let mut pin: Value = serde_json::from_slice(&encode_pin(base.pin(), 4096)?)?;"
+   },
+   {
+    "path": "crates/writfold-wire/tests/storage_operation/boundaries.rs",
+    "line": 6,
+    "text": "    let original: Value = serde_json::from_slice(wrapped(\"selection\")?.canonical_bytes())?;"
+   },
+   {
+    "path": "crates/writfold-wire/tests/storage_operation/signatures.rs",
+    "line": 21,
+    "text": "        let old: Value = serde_json::from_slice(&old)?;"
+   },
+   {
+    "path": "crates/writfold-wire/tests/support/ledger_heads.rs",
+    "line": 1,
+    "text": "use serde_json::Value;"
+   },
+   {
+    "path": "crates/writfold-wire/tests/worktree_identity.rs",
+    "line": 1,
+    "text": "use serde_json::Value;"
+   },
+   {
+    "path": "crates/writfold-xtask/src/graph.rs",
+    "line": 1,
+    "text": "use serde_json::{Value, json};"
+   },
+   {
+    "path": "crates/writfold-xtask/src/main.rs",
+    "line": 21,
+    "text": "use serde_json::json;"
+   },
+   {
+    "path": "crates/writfold-xtask/src/safety.rs",
+    "line": 59,
+    "text": "    ) && (path == \"serde_json::Value\" || path.starts_with(\"serde_json::value::Value\"))"
+   },
+   {
+    "path": "crates/writfold-xtask/src/source.rs",
+    "line": 2,
+    "text": "use serde_json::{Value, json};"
+   },
+   {
+    "path": "crates/writfold-xtask/src/syntax.rs",
+    "line": 2,
+    "text": "use serde_json::{Value, json};"
+   },
+   {
+    "path": "crates/writfold-xtask/src/trust.rs",
+    "line": 46,
+    "text": "            serde_json::from_slice(&bytes).map_err(|error| error.to_string())?;"
+   },
+   {
+    "path": "crates/writfold-xtask/src/vendored.rs",
+    "line": 3,
+    "text": "use serde_json::Value;"
+   },
+   {
+    "path": "crates/writfold-xtask/src/vendored_tests.rs",
+    "line": 2,
+    "text": "use serde_json::json;"
+   },
+   {
+    "path": "crates/writfold/tests/serve_trial.rs",
+    "line": 5,
+    "text": "use serde_json::{Value, json};"
+   }
+  ],
+  "P3": [
+   {
+    "path": "crates/writfold-wire/tests/dolt_read.rs",
+    "line": 91,
+    "text": "                dolt::decode_pin(&changed(field, Value::Null)?, limits()?),"
+   },
+   {
+    "path": "crates/writfold-wire/tests/dolt_read.rs",
+    "line": 97,
+    "text": "        dolt::decode_pin(&changed(\"extra\", json!(1))?, limits()?),"
+   },
+   {
+    "path": "crates/writfold-wire/tests/dolt_read.rs",
+    "line": 112,
+    "text": "            dolt::decode_pin(&changed(field, json!(\"\"))?, limits()?),"
+   },
+   {
+    "path": "crates/writfold-wire/tests/dolt_read.rs",
+    "line": 122,
+    "text": "            dolt::decode_pin(&changed(\"commit\", json!(invalid))?, limits()?),"
+   },
+   {
+    "path": "crates/writfold-wire/tests/dolt_read.rs",
+    "line": 127,
+    "text": "        dolt::decode_pin("
+   },
+   {
+    "path": "crates/writfold-wire/tests/dolt_read.rs",
+    "line": 134,
+    "text": "        dolt::decode_pin(&changed(\"kind\", json!(\"release\"))?, limits()?),"
+   },
+   {
+    "path": "crates/writfold-wire/tests/dolt_read.rs",
+    "line": 145,
+    "text": "        dolt::decode_pin(&changed(\"schema\", json!(2))?, limits()?),"
+   },
+   {
+    "path": "crates/writfold-wire/tests/storage.rs",
+    "line": 107,
+    "text": "    let first = decode_pin(&changed(OMNI, \"commit\", Value::from(ULID))?, limits()?)?;"
+   },
+   {
+    "path": "crates/writfold-wire/tests/storage.rs",
+    "line": 108,
+    "text": "    let second = decode_pin("
+   },
+   {
+    "path": "crates/writfold-wire/tests/storage/boundaries.rs",
+    "line": 71,
+    "text": "            let decoded = decode_pin(&changed(fixture, field, value.clone())?, limits()?);"
+   },
+   {
+    "path": "crates/writfold-wire/tests/storage/boundaries.rs",
+    "line": 99,
+    "text": "            decode_pin(&changed(fixture, field, value)?, limits()?),"
+   },
+   {
+    "path": "crates/writfold-wire/tests/storage/boundaries.rs",
+    "line": 126,
+    "text": "                        decode_pin(&changed(fixture, field, wrong)?, limits()?),"
+   },
+   {
+    "path": "crates/writfold-wire/tests/storage/boundaries.rs",
+    "line": 139,
+    "text": "                    decode_pin(&changed(fixture, field, wrong)?, limits()?),"
+   },
+   {
+    "path": "crates/writfold-wire/tests/storage/identities.rs",
+    "line": 38,
+    "text": "            decode_pin("
+   },
+   {
+    "path": "crates/writfold-wire/tests/storage/identities.rs",
+    "line": 70,
+    "text": "            decode_pin(&changed(OMNI, field, Value::from(value))?, limits()?),"
+   },
+   {
+    "path": "crates/writfold-wire/tests/storage/identities.rs",
+    "line": 82,
+    "text": "                decode_pin(&changed(OMNI, field, Value::from(invalid))?, limits()?),"
+   },
+   {
+    "path": "crates/writfold-wire/tests/storage/identities.rs",
+    "line": 89,
+    "text": "            decode_pin(&changed(LEGACY, field, Value::from(\"\"))?, limits()?),"
+   },
+   {
+    "path": "crates/writfold-wire/tests/storage/identities.rs",
+    "line": 101,
+    "text": "            decode_pin("
+   },
+   {
+    "path": "crates/writfold-wire/tests/storage/identities.rs",
+    "line": 121,
+    "text": "        let pin = decode_pin("
+   },
+   {
+    "path": "crates/writfold-wire/tests/storage/identities.rs",
+    "line": 131,
+    "text": "        decode_pin("
+   }
+  ],
+  "P4": [
+   {
+    "path": "crates/writfold-xtask/src/syntax.rs",
+    "line": 164,
+    "text": "                source: self.path.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-xtask/src/trust.rs",
+    "line": 118,
+    "text": "            _ => Err(\"invalid proof trust hexadecimal digest\".to_owned()),"
+   },
+   {
+    "path": "crates/writfold/tests/serve_trial.rs",
+    "line": 43,
+    "text": "    Ok(String::from_utf8(out.stdout)?.trim_end().to_owned())"
+   },
+   {
+    "path": "crates/writfold/tests/serve_trial.rs",
+    "line": 160,
+    "text": "        .to_owned();"
+   },
+   {
+    "path": "crates/writfold/tests/serve_trial.rs",
+    "line": 169,
+    "text": "    let run = payload[\"run\"].as_str().ok_or(\"run\")?.to_owned();"
+   },
+   {
+    "path": "crates/writfold/tests/serve_trial.rs",
+    "line": 207,
+    "text": "        (\"garbage.json\", \"{\\\"schema\\\":\\\"not-a-report\\\"}\".to_owned()),"
+   }
+  ],
+  "P5": [
+   {
+    "path": "crates/tuft/src/emit.rs",
+    "line": 59,
+    "text": "pub enum CursorError {"
+   },
+   {
+    "path": "crates/writfold-app/src/ledger.rs",
+    "line": 20,
+    "text": "pub enum LedgerError {"
+   },
+   {
+    "path": "crates/writfold-app/src/lib.rs",
+    "line": 24,
+    "text": "pub enum ServeError {"
+   },
+   {
+    "path": "crates/writfold-domain/src/citation/selector.rs",
+    "line": 8,
+    "text": "pub enum SelectorError { ReversedBounds }"
+   },
+   {
+    "path": "crates/writfold-domain/src/engineering/dependency.rs",
+    "line": 263,
+    "text": "pub enum LockError {"
+   },
+   {
+    "path": "crates/writfold-kernel/src/citation/handles.rs",
+    "line": 6,
+    "text": "pub enum AliasIssueError { Denied, Foreign, Expired, InvalidLifetime, AlreadyIssued }"
+   },
+   {
+    "path": "crates/writfold-kernel/src/citation/presentation.rs",
+    "line": 6,
+    "text": "pub enum PresentationError { CursorMismatch, ZeroBudget, InvalidOffset }"
+   },
+   {
+    "path": "crates/writfold-kernel/src/citation/resolution.rs",
+    "line": 13,
+    "text": "pub enum RetainError { AlreadyRetained }"
+   },
+   {
+    "path": "crates/writfold-protocol/src/session.rs",
+    "line": 85,
+    "text": "pub enum SessionError { InitializationRequired, AlreadyInitialized, ShutDown }"
+   },
+   {
+    "path": "crates/writfold-protocol/src/storage.rs",
+    "line": 146,
+    "text": "pub enum ProfileError {"
+   },
+   {
+    "path": "crates/writfold-protocol/src/storage.rs",
+    "line": 189,
+    "text": "pub enum ReadPinError {"
+   },
+   {
+    "path": "crates/writfold-runtime/src/dolt/error.rs",
+    "line": 5,
+    "text": "pub enum DoltError {"
+   },
+   {
+    "path": "crates/writfold-runtime/src/fs/error.rs",
+    "line": 6,
+    "text": "pub enum PathError {"
+   },
+   {
+    "path": "crates/writfold-runtime/src/fs/error.rs",
+    "line": 28,
+    "text": "pub enum FsError {"
+   },
+   {
+    "path": "crates/writfold-runtime/src/fs/error.rs",
+    "line": 84,
+    "text": "pub enum WriteError {"
+   },
+   {
+    "path": "crates/writfold-runtime/src/fs/staged/types.rs",
+    "line": 59,
+    "text": "pub enum StageError {"
+   },
+   {
+    "path": "crates/writfold-runtime/src/fs/staged/types.rs",
+    "line": 89,
+    "text": "pub enum InstallError {"
+   },
+   {
+    "path": "crates/writfold-runtime/src/git/error.rs",
+    "line": 6,
+    "text": "pub enum GitError {"
+   },
+   {
+    "path": "crates/writfold-runtime/src/git/writer.rs",
+    "line": 16,
+    "text": "pub enum GitWriteError {"
+   },
+   {
+    "path": "crates/writfold-runtime/src/omnigraph/mod.rs",
+    "line": 25,
+    "text": "pub enum NativeError {"
+   },
+   {
+    "path": "crates/writfold-runtime/src/process/error.rs",
+    "line": 4,
+    "text": "pub enum ProcessError {"
+   },
+   {
+    "path": "crates/writfold-runtime/src/stdio/frame.rs",
+    "line": 9,
+    "text": "pub enum FrameReadError {"
+   },
+   {
+    "path": "crates/writfold-runtime/src/stdio/identity.rs",
+    "line": 10,
+    "text": "pub enum IdentityError {"
+   },
+   {
+    "path": "crates/writfold-runtime/src/worktrunk/mod.rs",
+    "line": 54,
+    "text": "pub enum WorktrunkError {"
+   },
+   {
+    "path": "crates/writfold-runtime/src/worktrunk/mod.rs",
+    "line": 77,
+    "text": "pub enum CreateError {"
+   },
+   {
+    "path": "crates/writfold-sources/src/splicery.rs",
+    "line": 42,
+    "text": "pub enum ReplayError {"
+   },
+   {
+    "path": "crates/writfold-store/src/dolt/error.rs",
+    "line": 13,
+    "text": "pub enum Error {"
+   },
+   {
+    "path": "crates/writfold-store/src/objects/error.rs",
+    "line": 6,
+    "text": "pub enum ObjectError {"
+   },
+   {
+    "path": "crates/writfold-wire/src/citation/mod.rs",
+    "line": 25,
+    "text": "pub enum CitationWireError {"
+   },
+   {
+    "path": "crates/writfold-wire/src/dolt.rs",
+    "line": 12,
+    "text": "pub enum Error {"
+   },
+   {
+    "path": "crates/writfold-wire/src/dolt_operation/mod.rs",
+    "line": 19,
+    "text": "pub enum DoltOperationError {"
+   },
+   {
+    "path": "crates/writfold-wire/src/engineering/cbor.rs",
+    "line": 33,
+    "text": "pub enum Error {"
+   },
+   {
+    "path": "crates/writfold-wire/src/engineering/cbor/decode.rs",
+    "line": 9,
+    "text": "pub enum DecodeError {"
+   },
+   {
+    "path": "crates/writfold-wire/src/engineering/dependency.rs",
+    "line": 26,
+    "text": "pub enum Error {"
+   },
+   {
+    "path": "crates/writfold-wire/src/engineering/edit_approval.rs",
+    "line": 20,
+    "text": "pub enum Error {"
+   },
+   {
+    "path": "crates/writfold-wire/src/engineering/grant.rs",
+    "line": 29,
+    "text": "pub enum Error {"
+   },
+   {
+    "path": "crates/writfold-wire/src/engineering/ledger.rs",
+    "line": 16,
+    "text": "pub enum Error {"
+   },
+   {
+    "path": "crates/writfold-wire/src/engineering/ledger_record.rs",
+    "line": 22,
+    "text": "pub enum Error {"
+   },
+   {
+    "path": "crates/writfold-wire/src/engineering/objects.rs",
+    "line": 13,
+    "text": "pub enum ObjectError {"
+   },
+   {
+    "path": "crates/writfold-wire/src/lib.rs",
+    "line": 83,
+    "text": "pub enum Error {"
+   },
+   {
+    "path": "crates/writfold-wire/src/omnigraph/mod.rs",
+    "line": 24,
+    "text": "pub enum NativeError {"
+   },
+   {
+    "path": "crates/writfold-wire/src/operation/codec.rs",
+    "line": 7,
+    "text": "pub enum BoundaryError {"
+   },
+   {
+    "path": "crates/writfold-wire/src/rpc.rs",
+    "line": 21,
+    "text": "pub enum FrameError {"
+   },
+   {
+    "path": "crates/writfold-wire/src/rpc.rs",
+    "line": 136,
+    "text": "pub enum EnvelopeError {"
+   },
+   {
+    "path": "crates/writfold-wire/src/rpc/initialize.rs",
+    "line": 64,
+    "text": "pub enum ParamsError {"
+   },
+   {
+    "path": "crates/writfold-wire/src/rpc/response/mod.rs",
+    "line": 82,
+    "text": "pub enum ResponseError {"
+   },
+   {
+    "path": "crates/writfold-wire/src/storage.rs",
+    "line": 16,
+    "text": "pub enum StorageWireError {"
+   },
+   {
+    "path": "crates/writfold-wire/src/storage_operation/mod.rs",
+    "line": 19,
+    "text": "pub enum StorageOperationError {"
+   },
+   {
+    "path": "crates/writfold-wire/src/weft_report.rs",
+    "line": 20,
+    "text": "pub enum ReportError {"
+   },
+   {
+    "path": "crates/writfold-wire/src/worktree/mod.rs",
+    "line": 11,
+    "text": "pub enum Error {"
+   }
+  ],
+  "P6": [
+   {
+    "path": "crates/writfold-store/examples/dolt_read.rs",
+    "line": 20,
+    "text": "const PIN_BYTES: usize = 65_536;"
+   }
+  ]
+ }
+}

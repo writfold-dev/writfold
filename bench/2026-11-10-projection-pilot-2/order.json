@@ -1,0 +1,30 @@
+{
+ "seed": 20261110,
+ "method": "random.Random(seed).shuffle per repeat block; launched three at a time in this order",
+ "order": [
+  "P2-B-r1",
+  "P5-A-r1",
+  "P1-A-r1",
+  "P4-A-r1",
+  "P6-B-r1",
+  "P1-B-r1",
+  "P5-B-r1",
+  "P3-B-r1",
+  "P4-B-r1",
+  "P2-A-r1",
+  "P6-A-r1",
+  "P3-A-r1",
+  "P1-A-r2",
+  "P1-B-r2",
+  "P5-B-r2",
+  "P2-B-r2",
+  "P3-A-r2",
+  "P3-B-r2",
+  "P4-B-r2",
+  "P2-A-r2",
+  "P6-A-r2",
+  "P4-A-r2",
+  "P6-B-r2",
+  "P5-A-r2"
+ ]
+}

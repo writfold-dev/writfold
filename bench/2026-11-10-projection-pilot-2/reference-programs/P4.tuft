@@ -1,0 +1,4 @@
+@h := find text ".to_owned()" in "crates/" at "c568505742d00859cad758924c98d8d0a6e98648" limit 1000;
+@e := retain @h around lines 0;
+@v := project @e [path, line, excerpt(max_chars: 400)] sort [path asc, line asc];
+emit @v budget_tokens 100000;
