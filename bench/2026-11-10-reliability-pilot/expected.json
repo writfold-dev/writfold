@@ -1,0 +1,1485 @@
+{
+ "commit": "e56621f7acf0d3392add5d814c35134b66c872a7",
+ "answers": {
+  "T1": [
+   {
+    "path": "crates/writfold-kernel/src/checker/assessment.rs",
+    "line": 123,
+    "text": "    *assess(kb, context, reference).usable()"
+   },
+   {
+    "path": "crates/writfold-kernel/src/checker/assessment.rs",
+    "line": 134,
+    "text": "    *assess_frame(kb, Frame { base: context, snapshot }, reference).usable()"
+   },
+   {
+    "path": "crates/writfold-kernel/tests/core.rs",
+    "line": 122,
+    "text": "    assert!(*assessment.usable());"
+   },
+   {
+    "path": "crates/writfold-kernel/tests/core.rs",
+    "line": 265,
+    "text": "        assert!(!result.usable());"
+   },
+   {
+    "path": "crates/writfold-kernel/tests/core.rs",
+    "line": 282,
+    "text": "    assert!(!verdict.usable());"
+   },
+   {
+    "path": "crates/writfold-kernel/tests/core/first_match.rs",
+    "line": 111,
+    "text": "        assert!(!assessment.usable());"
+   },
+   {
+    "path": "crates/writfold-kernel/tests/workflows.rs",
+    "line": 290,
+    "text": "    assert!(assessment.is_some_and(|assessment| !assessment.usable()));"
+   },
+   {
+    "path": "crates/writfold-wire/src/semantic/request.rs",
+    "line": 100,
+    "text": "                json!(result.usable())"
+   },
+   {
+    "path": "crates/writfold-wire/src/semantic/response.rs",
+    "line": 32,
+    "text": "    json!({\"support\": enc_support(value.support()), \"applicable\": value.applicable(), \"freshness\": enc_freshness(value.freshness()), \"validated\": value.validated(), \"contested\": value.contested(), \"available\": value.available(), \"usable\": value.usable()})"
+   },
+   {
+    "path": "crates/writfold-wire/tests/result_decoders.rs",
+    "line": 24,
+    "text": "    assert!(result.usable());"
+   }
+  ],
+  "T2": [
+   {
+    "path": "crates/writfold-app/src/trial/flow.rs",
+    "line": 89,
+    "text": "    [C::Bytes(blob.digest.as_digest()), C::Unsigned(blob.bytes)]"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/prepare.rs",
+    "line": 136,
+    "text": "        prepared: *writfold_domain::worktree::WorktreeDigest::as_digest(&digest),"
+   },
+   {
+    "path": "crates/writfold-domain/src/engineering/dependency.rs",
+    "line": 364,
+    "text": "        .then_with(|| left.payload.as_digest().cmp(right.payload.as_digest()))"
+   },
+   {
+    "path": "crates/writfold-kernel/src/authority.rs",
+    "line": 165,
+    "text": "        let retained: Vec<[u8; 32]> = retained.iter().map(|d| *d.as_digest()).collect();"
+   },
+   {
+    "path": "crates/writfold-kernel/src/authority.rs",
+    "line": 170,
+    "text": "            envelope: *authorization.envelope.as_digest(),"
+   },
+   {
+    "path": "crates/writfold-kernel/src/ledger.rs",
+    "line": 105,
+    "text": "        closure: record.closure.iter().map(|d| *d.as_digest()).collect(),"
+   },
+   {
+    "path": "crates/writfold-kernel/src/ledger.rs",
+    "line": 119,
+    "text": "    blobs.iter().map(|d| *d.as_digest()).collect()"
+   },
+   {
+    "path": "crates/writfold-kernel/src/ledger.rs",
+    "line": 183,
+    "text": "        writfold_core::bytes::contains_digest(&self.inner.material, blob.as_digest())"
+   },
+   {
+    "path": "crates/writfold-kernel/src/trial.rs",
+    "line": 148,
+    "text": "        digest: *blob.digest.as_digest(),"
+   },
+   {
+    "path": "crates/writfold-kernel/src/trial.rs",
+    "line": 190,
+    "text": "    let closure: Vec<[u8; 32]> = closure.iter().map(|d| *d.as_digest()).collect();"
+   },
+   {
+    "path": "crates/writfold-store/src/objects/retention.rs",
+    "line": 162,
+    "text": "    for byte in digest.as_digest() {"
+   },
+   {
+    "path": "crates/writfold-wire/src/engineering/dependency.rs",
+    "line": 176,
+    "text": "                C::Bytes(package.reference().payload().as_digest()),"
+   },
+   {
+    "path": "crates/writfold-wire/src/engineering/dependency.rs",
+    "line": 188,
+    "text": "                C::Bytes(edge.source().package().payload().as_digest()),"
+   },
+   {
+    "path": "crates/writfold-wire/src/engineering/dependency.rs",
+    "line": 192,
+    "text": "                C::Bytes(edge.target().package().payload().as_digest()),"
+   },
+   {
+    "path": "crates/writfold-wire/src/engineering/edit_approval.rs",
+    "line": 53,
+    "text": "        C::Bytes(prepared.as_digest()),"
+   },
+   {
+    "path": "crates/writfold-wire/src/engineering/edit_approval.rs",
+    "line": 54,
+    "text": "        C::Bytes(report.as_digest()),"
+   },
+   {
+    "path": "crates/writfold-wire/src/engineering/edit_approval.rs",
+    "line": 55,
+    "text": "        C::Bytes(procedure.as_digest()),"
+   },
+   {
+    "path": "crates/writfold-wire/src/engineering/grant.rs",
+    "line": 128,
+    "text": "        C::Bytes(material.as_digest()),"
+   },
+   {
+    "path": "crates/writfold-wire/src/engineering/ledger.rs",
+    "line": 43,
+    "text": "        (\"event\", C::Bytes(material.event().as_digest())),"
+   },
+   {
+    "path": "crates/writfold-wire/src/engineering/ledger.rs",
+    "line": 44,
+    "text": "        (\"blob\", C::Bytes(material.blob().as_digest())),"
+   },
+   {
+    "path": "crates/writfold-wire/src/engineering/ledger_record.rs",
+    "line": 53,
+    "text": "        .map(|d| C::Bytes(d.as_digest()))"
+   }
+  ],
+  "T3": [
+   {
+    "path": "crates/tuft/src/check.rs",
+    "line": 230,
+    "text": "            binding: name.to_owned(),"
+   },
+   {
+    "path": "crates/tuft/src/check.rs",
+    "line": 244,
+    "text": "            binding: name.to_owned(),"
+   },
+   {
+    "path": "crates/tuft/src/check.rs",
+    "line": 296,
+    "text": "            binding: name.to_owned(),"
+   },
+   {
+    "path": "crates/tuft/src/compact.rs",
+    "line": 18,
+    "text": "        path.to_owned()"
+   },
+   {
+    "path": "crates/tuft/src/compact.rs",
+    "line": 59,
+    "text": "                    .map_or(\"-\".to_owned(), |e| e.binding.clone()),"
+   },
+   {
+    "path": "crates/tuft/src/compact.rs",
+    "line": 62,
+    "text": "                text = Some(cut(row, max_chars).map_or(\"-\".to_owned(), |x| excerpt(&x, lines)));"
+   },
+   {
+    "path": "crates/tuft/src/emit.rs",
+    "line": 182,
+    "text": "        .to_owned()"
+   },
+   {
+    "path": "crates/tuft/src/envelope.rs",
+    "line": 36,
+    "text": "        let around = retain.around.map_or(\"range=match\".to_owned(), |n| {"
+   },
+   {
+    "path": "crates/tuft/src/envelope.rs",
+    "line": 82,
+    "text": "        .map_or(\"null\".to_owned(), |_| quote(\"hit-limit\"));"
+   },
+   {
+    "path": "crates/tuft/src/envelope.rs",
+    "line": 87,
+    "text": "            r.around.map_or(\"null\".to_owned(), |n| n.to_string())"
+   },
+   {
+    "path": "crates/tuft/src/envelope.rs",
+    "line": 89,
+    "text": "        _ => \"null\".to_owned(),"
+   },
+   {
+    "path": "crates/tuft/src/envelope.rs",
+    "line": 127,
+    "text": "        page.cursor.as_deref().map_or(\"null\".to_owned(), quote),"
+   },
+   {
+    "path": "crates/tuft/src/lexer.rs",
+    "line": 175,
+    "text": "        self.text[lo..self.at].to_owned()"
+   },
+   {
+    "path": "crates/tuft/src/lexer.rs",
+    "line": 255,
+    "text": "                    let source = self.text[body..self.at].to_owned();"
+   },
+   {
+    "path": "crates/tuft/src/locate.rs",
+    "line": 40,
+    "text": "                _ => \"regex outside the admitted dialect\".to_owned(),"
+   },
+   {
+    "path": "crates/tuft/src/locate.rs",
+    "line": 43,
+    "text": "            source: source.to_owned(),"
+   },
+   {
+    "path": "crates/tuft/src/render.rs",
+    "line": 38,
+    "text": "        path.to_owned()"
+   },
+   {
+    "path": "crates/tuft/src/render.rs",
+    "line": 55,
+    "text": "                .map_or(\"-\".to_owned(), |e| e.binding.clone()),"
+   },
+   {
+    "path": "crates/tuft/src/render.rs",
+    "line": 65,
+    "text": "                None => \"-\".to_owned(),"
+   },
+   {
+    "path": "crates/tuft/src/render.rs",
+    "line": 82,
+    "text": "                .map_or(\"null\".to_owned(), |e| quote(&e.binding)),"
+   },
+   {
+    "path": "crates/tuft/src/render.rs",
+    "line": 84,
+    "text": "                excerpt(row, max_chars).map_or(\"null\".to_owned(), |x| {"
+   },
+   {
+    "path": "crates/tuft/src/view.rs",
+    "line": 110,
+    "text": "    let text = valid.get(..shown)?.to_owned();"
+   },
+   {
+    "path": "crates/tuft/tests/compact.rs",
+    "line": 19,
+    "text": "        path: path.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-app/src/engine_trial_tests.rs",
+    "line": 190,
+    "text": "        (\"trial/show\", r#\"{}\"#.to_owned()),"
+   },
+   {
+    "path": "crates/writfold-app/src/engine_trial_tests.rs",
+    "line": 191,
+    "text": "        (\"trial/show\", r#\"{\"run\":\"r\",\"extra\":1}\"#.to_owned()),"
+   },
+   {
+    "path": "crates/writfold-app/src/engine_trial_tests.rs",
+    "line": 192,
+    "text": "        (\"trial/show\", r#\"{\"run\":7}\"#.to_owned()),"
+   },
+   {
+    "path": "crates/writfold-app/src/engine_trial_tests.rs",
+    "line": 193,
+    "text": "        (\"trial/show\", r#\"{\"run\":\"\"}\"#.to_owned()),"
+   },
+   {
+    "path": "crates/writfold-app/src/engine_trial_tests.rs",
+    "line": 194,
+    "text": "        (\"trial/show\", r#\"null\"#.to_owned()),"
+   },
+   {
+    "path": "crates/writfold-app/src/engine_trial_tests.rs",
+    "line": 203,
+    "text": "            r#\"{\"repo\":\"rel\",\"commit\":\"c\",\"file\":\"f\",\"start\":0,\"end\":1}\"#.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-app/src/engine_trial_tests.rs",
+    "line": 205,
+    "text": "        (\"trial/prepare\", r#\"{\"repo\":\"/r\",\"file\":\"f\"}\"#.to_owned()),"
+   },
+   {
+    "path": "crates/writfold-app/src/engine_trial_tests.rs",
+    "line": 208,
+    "text": "            r#\"{\"repo\":\"/r\",\"file\":\"f\",\"recipe\":\"r.spl\"}\"#.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-app/src/engine_trial_tests.rs",
+    "line": 212,
+    "text": "            r#\"{\"repo\":\"/r\",\"file\":\"f\",\"recipe\":\"/r.spl\",\"state\":\"/s\"}\"#.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/approve.rs",
+    "line": 95,
+    "text": "            return Ok(\"no Weft report bound\".to_owned());"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/assessment_tests.rs",
+    "line": 80,
+    "text": "    names.iter().map(|n| (*n).to_owned()).collect()"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/assessment_tests.rs",
+    "line": 140,
+    "text": "        \"not json\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/cli.rs",
+    "line": 53,
+    "text": "            parsed.options.push((name.to_owned(), value.clone()));"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/cli.rs",
+    "line": 189,
+    "text": "        _ => Ok(USAGE.to_owned()),"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/evidence/label.rs",
+    "line": 64,
+    "text": "        Ok(text) if is_digest(text.trim_end()) => Ok(Some(text.trim_end().to_owned())),"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/evidence/mod.rs",
+    "line": 70,
+    "text": "        binding: binding.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/evidence/mod.rs",
+    "line": 72,
+    "text": "        commit: reference.revision().as_str().to_owned(),"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/evidence/mod.rs",
+    "line": 95,
+    "text": "            out.push(binding.to_owned());"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/evidence/mod.rs",
+    "line": 107,
+    "text": "        return Ok((text.to_owned(), None));"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/evidence/mod.rs",
+    "line": 170,
+    "text": "    let line = entry.line.map_or(\"?\".to_owned(), |l| l.to_string());"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/evidence/show.rs",
+    "line": 83,
+    "text": "    let line = entry.line.map_or(\"?\".to_owned(), |l| l.to_string());"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/evidence/tests.rs",
+    "line": 39,
+    "text": "    Ok(String::from_utf8(out.stdout)?.trim_end().to_owned())"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/flow.rs",
+    "line": 153,
+    "text": "                path: d.text()?.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/flow.rs",
+    "line": 154,
+    "text": "                base: d.text()?.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/flow.rs",
+    "line": 173,
+    "text": "                reason: d.text()?.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/prepare.rs",
+    "line": 53,
+    "text": "    Ok(Capture::new(scope, path.to_owned(), source, metadata)?)"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/prepare.rs",
+    "line": 77,
+    "text": "    let artifact = Artifact::new(identity.profile().to_owned(), sha)?;"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/prepare.rs",
+    "line": 120,
+    "text": "        replayed.identity().profile().to_owned(),"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/prepare.rs",
+    "line": 130,
+    "text": "        path: path.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/prepare.rs",
+    "line": 131,
+    "text": "        base: base.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/prepare.rs",
+    "line": 204,
+    "text": "        path: path.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/prepare.rs",
+    "line": 205,
+    "text": "        base: base.as_str().to_owned(),"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/recover.rs",
+    "line": 52,
+    "text": "            let reason = \"recovered: the original was never replaced\".to_owned();"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/retain.rs",
+    "line": 40,
+    "text": "    Ok(GitObjectId::new(format, text.to_owned())?)"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/retain.rs",
+    "line": 55,
+    "text": "        path.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/retain.rs",
+    "line": 134,
+    "text": "        path: path.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/retain.rs",
+    "line": 162,
+    "text": "                    .to_owned();"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/retain.rs",
+    "line": 186,
+    "text": "            commit: file.commit.as_str().to_owned(),"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/retain_tests.rs",
+    "line": 39,
+    "text": "        Ok(String::from_utf8(out.stdout)?.trim_end().to_owned())"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/rpc_tests.rs",
+    "line": 83,
+    "text": "            \"entity not found\".to_owned()"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/run/placeholder.rs",
+    "line": 88,
+    "text": "        placeholder: placeholder.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/run/tests.rs",
+    "line": 52,
+    "text": "    Ok(String::from_utf8(out.stdout)?.trim_end().to_owned())"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/run/tests.rs",
+    "line": 161,
+    "text": "    let refused = approve(&f.state, &ran.prepared.run, &[\"bad\".to_owned()]);"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/run/tests.rs",
+    "line": 163,
+    "text": "    approve(&f.state, &ran.prepared.run, &[\"ok\".to_owned()])?;"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/run/tests.rs",
+    "line": 224,
+    "text": "    args.extend([\"--state\".to_owned(), f.state.display().to_string()]);"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/show.rs",
+    "line": 23,
+    "text": "        Event::Approved { .. } => \"approved  operator grant + signed approval retained\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/show.rs",
+    "line": 24,
+    "text": "        Event::Claimed { .. } => \"claimed   durable claim before touching the file\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/show.rs",
+    "line": 42,
+    "text": "            \"none cited\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/show.rs",
+    "line": 43,
+    "text": "            \"none (no Weft report bound)\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/show.rs",
+    "line": 48,
+    "text": "        0 => \"none cited\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/show.rs",
+    "line": 86,
+    "text": "    let (mut evidence, mut assessed) = (\"none cited\".to_owned(), \"none\".to_owned());"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/show.rs",
+    "line": 87,
+    "text": "    let mut approved = \"none\".to_owned();"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/show.rs",
+    "line": 88,
+    "text": "    let (mut claim, mut effect) = (\"none\", \"none\".to_owned());"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/show.rs",
+    "line": 101,
+    "text": "                effect = \"unknown (claimed, no outcome yet; see recover)\".to_owned();"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/show.rs",
+    "line": 109,
+    "text": "                .to_owned();"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/sparse_tests.rs",
+    "line": 80,
+    "text": "        materialized(&p.worktree)? == [edited.to_owned()],"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/sparse_tests.rs",
+    "line": 112,
+    "text": "        path.to_owned()"
+   },
+   {
+    "path": "crates/writfold-app/src/trial/state.rs",
+    "line": 144,
+    "text": "            root: root.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-app/src/tuft/backend_tests.rs",
+    "line": 19,
+    "text": "    Ok(RecordKey::new(path.to_owned())?)"
+   },
+   {
+    "path": "crates/writfold-app/src/tuft/backend_tests.rs",
+    "line": 27,
+    "text": "        needle.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-app/src/tuft/backend_tests.rs",
+    "line": 41,
+    "text": "    let scope = \"src/\".to_owned();"
+   },
+   {
+    "path": "crates/writfold-app/src/tuft/cli.rs",
+    "line": 57,
+    "text": "            parsed.options.push((name.to_owned(), value.clone()));"
+   },
+   {
+    "path": "crates/writfold-app/src/tuft/cli.rs",
+    "line": 145,
+    "text": "                plan.retain.as_ref().map_or(\"none\".to_owned(), |r| format!("
+   },
+   {
+    "path": "crates/writfold-app/src/tuft/cli.rs",
+    "line": 159,
+    "text": "        Some(\"help\") | None => Ok(USAGE.to_owned()),"
+   },
+   {
+    "path": "crates/writfold-app/src/tuft/mod.rs",
+    "line": 115,
+    "text": "    Ok(GitObjectId::new(format, text.to_owned())?)"
+   },
+   {
+    "path": "crates/writfold-app/src/tuft/mod.rs",
+    "line": 203,
+    "text": "                path: path.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-app/src/tuft/search.rs",
+    "line": 66,
+    "text": "                path: key.as_str().to_owned(),"
+   },
+   {
+    "path": "crates/writfold-app/src/tuft/search.rs",
+    "line": 72,
+    "text": "            self.files.insert(key.as_str().to_owned(), content.to_vec());"
+   },
+   {
+    "path": "crates/writfold-app/src/tuft/search.rs",
+    "line": 112,
+    "text": "        needle.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-app/src/tuft/search.rs",
+    "line": 157,
+    "text": "        \"blob\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-app/src/tuft/tests.rs",
+    "line": 44,
+    "text": "    Ok(String::from_utf8(out.stdout)?.trim_end().to_owned())"
+   },
+   {
+    "path": "crates/writfold-app/src/tuft/tests.rs",
+    "line": 131,
+    "text": "            Some(next) => cursor = Some(next.to_owned()),"
+   },
+   {
+    "path": "crates/writfold-domain/src/engineering/dependency.rs",
+    "line": 54,
+    "text": "                    Ok(Self(value.to_owned()))"
+   },
+   {
+    "path": "crates/writfold-domain/src/ids.rs",
+    "line": 80,
+    "text": "                if grammar::$grammar(value) { Ok(Self(value.to_owned())) }"
+   },
+   {
+    "path": "crates/writfold-domain/src/ids.rs",
+    "line": 222,
+    "text": "        if grammar::release(value) { Ok(Self { format, hex: value.to_owned() }) }"
+   },
+   {
+    "path": "crates/writfold-domain/src/ids/inventory.rs",
+    "line": 109,
+    "text": "        let mut output = \"inventory:\".to_owned();"
+   },
+   {
+    "path": "crates/writfold-domain/src/language.rs",
+    "line": 261,
+    "text": "                members[index].clone(), predicate.to_owned(), arguments,"
+   },
+   {
+    "path": "crates/writfold-domain/src/worktree/effect_id.rs",
+    "line": 31,
+    "text": "        Ok(Self(value.to_owned()))"
+   },
+   {
+    "path": "crates/writfold-domain/src/worktree/references.rs",
+    "line": 35,
+    "text": "                Ok(Self(value.to_owned()))"
+   },
+   {
+    "path": "crates/writfold-domain/tests/engineering.rs",
+    "line": 114,
+    "text": "        HEX.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-domain/tests/engineering.rs",
+    "line": 127,
+    "text": "        valid[..valid.len() - 1].to_owned(),"
+   },
+   {
+    "path": "crates/writfold-domain/tests/identities.rs",
+    "line": 91,
+    "text": "        assert_eq!(LedgerRecordId::try_from(value.to_owned())?.as_str(), value);"
+   },
+   {
+    "path": "crates/writfold-domain/tests/identities.rs",
+    "line": 95,
+    "text": "        assert!(LedgerRecordId::try_from(value.to_owned()).is_err());"
+   },
+   {
+    "path": "crates/writfold-domain/tests/model.rs",
+    "line": 61,
+    "text": "    let members = vec![\"first\".to_owned(), \"second\".to_owned()];"
+   },
+   {
+    "path": "crates/writfold-domain/tests/model.rs",
+    "line": 64,
+    "text": "            \"first\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-domain/tests/model.rs",
+    "line": 65,
+    "text": "            \"p\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-domain/tests/model.rs",
+    "line": 70,
+    "text": "                \"second\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-domain/tests/model.rs",
+    "line": 71,
+    "text": "                \"p\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-domain/tests/storage.rs",
+    "line": 40,
+    "text": "        BLOCK.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-domain/tests/storage.rs",
+    "line": 41,
+    "text": "        \"00000000000000000000000000\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-domain/tests/storage.rs",
+    "line": 42,
+    "text": "        \"7ZZZZZZZZZZZZZZZZZZZZZZZZZ\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-domain/tests/storage.rs",
+    "line": 59,
+    "text": "        \"main\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-domain/tests/storage.rs",
+    "line": 60,
+    "text": "        \"HEAD\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-domain/tests/storage.rs",
+    "line": 61,
+    "text": "        \"hb1\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-domain/tests/storage.rs",
+    "line": 62,
+    "text": "        \"\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-domain/tests/storage.rs",
+    "line": 64,
+    "text": "        \"8ZZZZZZZZZZZZZZZZZZZZZZZZZ\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-domain/tests/storage.rs",
+    "line": 65,
+    "text": "        \"01ARZ3NDEKTSV4RRFFQ69G5FAI\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-domain/tests/storage.rs",
+    "line": 66,
+    "text": "        \"01ARZ3NDEKTSV4RRFFQ69G5FAO\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-domain/tests/storage.rs",
+    "line": 67,
+    "text": "        \"01ARZ3NDEKTSV4RRFFQ69G5FAL\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-domain/tests/storage.rs",
+    "line": 68,
+    "text": "        \"01ARZ3NDEKTSV4RRFFQ69G5FAU\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-kernel/src/checker/assessment.rs",
+    "line": 151,
+    "text": "        gaps.push(\"claim is not applicable to the context target\".to_owned());"
+   },
+   {
+    "path": "crates/writfold-kernel/src/checker/assessment.rs",
+    "line": 173,
+    "text": "        gaps.push(\"no reusable validation receipt\".to_owned());"
+   },
+   {
+    "path": "crates/writfold-kernel/src/checker/assessment.rs",
+    "line": 176,
+    "text": "        gaps.push(\"claim is contested by contrary evidence or dispute\".to_owned());"
+   },
+   {
+    "path": "crates/writfold-kernel/src/checker/evaluation.rs",
+    "line": 200,
+    "text": "            enumeration: enumeration.id().clone(), predicate: value.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-kernel/tests/procedure/fixture.rs",
+    "line": 104,
+    "text": "            export: ExportName::try_from(\"apply\".to_owned())?,"
+   },
+   {
+    "path": "crates/writfold-protocol/tests/dolt.rs",
+    "line": 9,
+    "text": "            Some((changed, replacement)) if key == changed => replacement.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-protocol/tests/dolt.rs",
+    "line": 10,
+    "text": "            _ => original.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-runtime/examples/worktrunk_smoke.rs",
+    "line": 84,
+    "text": "            .to_owned(),"
+   },
+   {
+    "path": "crates/writfold-runtime/examples/worktrunk_smoke.rs",
+    "line": 226,
+    "text": "            .to_owned(),"
+   },
+   {
+    "path": "crates/writfold-runtime/examples/worktrunk_smoke/fixture.rs",
+    "line": 36,
+    "text": "                result.insert(path.strip_prefix(&root)?.to_owned(), fs::read(path)?);"
+   },
+   {
+    "path": "crates/writfold-runtime/src/dolt/write.rs",
+    "line": 194,
+    "text": "        return \"''\".to_owned();"
+   },
+   {
+    "path": "crates/writfold-runtime/src/fs/directories.rs",
+    "line": 23,
+    "text": "            bindings: vec![(parent, name.to_owned(), identity)],"
+   },
+   {
+    "path": "crates/writfold-runtime/src/fs/lock.rs",
+    "line": 25,
+    "text": "        Ok(Self(key.to_owned()))"
+   },
+   {
+    "path": "crates/writfold-runtime/src/fs/path.rs",
+    "line": 26,
+    "text": "        Ok(Self(path.to_owned()))"
+   },
+   {
+    "path": "crates/writfold-runtime/src/fs/root.rs",
+    "line": 40,
+    "text": "                bindings.push((directory, name.to_owned(), identity));"
+   },
+   {
+    "path": "crates/writfold-runtime/src/fs/root.rs",
+    "line": 64,
+    "text": "        bindings.push((parent.directory, name.to_owned(), identity));"
+   },
+   {
+    "path": "crates/writfold-runtime/src/fs/root.rs",
+    "line": 78,
+    "text": "                    name: component.as_os_str().to_owned(),"
+   },
+   {
+    "path": "crates/writfold-runtime/src/fs/root.rs",
+    "line": 96,
+    "text": "            bindings.push((directory, name.to_owned(), identity));"
+   },
+   {
+    "path": "crates/writfold-runtime/src/git/ledger.rs",
+    "line": 140,
+    "text": "    let tree = GitObjectId::new(session.repository.format(), tree.to_owned())"
+   },
+   {
+    "path": "crates/writfold-runtime/src/git/ledger.rs",
+    "line": 148,
+    "text": "                GitObjectId::new(session.repository.format(), id.to_owned())"
+   },
+   {
+    "path": "crates/writfold-runtime/src/git/publication.rs",
+    "line": 179,
+    "text": "    GitObjectId::new(session.repository.format(), text.to_owned())"
+   },
+   {
+    "path": "crates/writfold-runtime/src/git/traversal.rs",
+    "line": 19,
+    "text": "    let mut object = GitObjectId::new(commit.format(), text.to_owned())"
+   },
+   {
+    "path": "crates/writfold-runtime/src/git/tree.rs",
+    "line": 121,
+    "text": "    let blob = GitObjectId::new(commit.format(), id.to_owned())"
+   },
+   {
+    "path": "crates/writfold-runtime/src/git/tree.rs",
+    "line": 124,
+    "text": "        path: path.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-runtime/src/git/trial.rs",
+    "line": 109,
+    "text": "    GitObjectId::new(format, text.to_owned()).map_err(|_| GitError::Malformed(\"HEAD commit\"))"
+   },
+   {
+    "path": "crates/writfold-runtime/src/git/trial.rs",
+    "line": 190,
+    "text": "    let blob = GitObjectId::new(commit.format(), text.to_owned())"
+   },
+   {
+    "path": "crates/writfold-runtime/src/git/write_objects.rs",
+    "line": 193,
+    "text": "    GitObjectId::new(session.repository.format(), text.to_owned())"
+   },
+   {
+    "path": "crates/writfold-runtime/src/git/writer_profile.rs",
+    "line": 102,
+    "text": "    let object = GitObjectId::new(repository.format(), text.to_owned())"
+   },
+   {
+    "path": "crates/writfold-runtime/src/omnigraph/admission.rs",
+    "line": 151,
+    "text": "            actor: actor.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-runtime/src/omnigraph/admission.rs",
+    "line": 152,
+    "text": "            token: token.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-runtime/src/worktrunk/mod.rs",
+    "line": 97,
+    "text": "        Ok(Self(value.to_owned()))"
+   },
+   {
+    "path": "crates/writfold-runtime/src/worktrunk/mod.rs",
+    "line": 177,
+    "text": "            path: path.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-runtime/src/worktrunk/mod.rs",
+    "line": 204,
+    "text": "            path: path.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-runtime/src/worktrunk/profile.rs",
+    "line": 300,
+    "text": "        entries.push(name.to_owned());"
+   },
+   {
+    "path": "crates/writfold-runtime/src/worktrunk/tools.rs",
+    "line": 51,
+    "text": "            controls: controls.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-runtime/tests/git/ledger.rs",
+    "line": 127,
+    "text": "        Ok(String::from_utf8(out.stdout)?.trim().to_owned())"
+   },
+   {
+    "path": "crates/writfold-sources/src/frontmatter.rs",
+    "line": 37,
+    "text": "    let mut normalized = unicode::without_line_end(first).to_owned();"
+   },
+   {
+    "path": "crates/writfold-sources/src/splicery.rs",
+    "line": 141,
+    "text": "        relative_path: expected_relative_path.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-sources/tests/material.rs",
+    "line": 46,
+    "text": "    let before = document.text().to_owned();"
+   },
+   {
+    "path": "crates/writfold-sources/tests/splicery.rs",
+    "line": 194,
+    "text": "        name: \"captured\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-store/src/backend/conformance.rs",
+    "line": 215,
+    "text": "    RecordKey::new(value.to_owned()).map_err(|error| fail(check, error.to_string()))"
+   },
+   {
+    "path": "crates/writfold-store/src/backend/conformance/lookups.rs",
+    "line": 43,
+    "text": "        LookupRequest::new(field, mode, Order::Key, needle.to_owned(), limit),"
+   },
+   {
+    "path": "crates/writfold-store/src/backend/conformance/lookups.rs",
+    "line": 228,
+    "text": "            LookupRequest::new(LookupField::Content, mode, order, \"service\".to_owned(), 10),"
+   },
+   {
+    "path": "crates/writfold-store/src/backend/conformance/reads.rs",
+    "line": 144,
+    "text": "        kind: RecordKind::new(\"document\".to_owned()).map_err(|e| fail(CHECK, e.to_string()))?,"
+   },
+   {
+    "path": "crates/writfold-store/src/backend/conformance/reads.rs",
+    "line": 148,
+    "text": "        head: HeadName::new(\"main\".to_owned()).map_err(|e| fail(CHECK, e.to_string()))?,"
+   },
+   {
+    "path": "crates/writfold-store/src/backend/conformance/writes.rs",
+    "line": 28,
+    "text": "        head: HeadName::new(\"main\".to_owned()).map_err(|e| fail(check, e.to_string()))?,"
+   },
+   {
+    "path": "crates/writfold-store/src/backend/conformance/writes.rs",
+    "line": 32,
+    "text": "            kind: RecordKind::new(KIND.to_owned()).map_err(|e| fail(check, e.to_string()))?,"
+   },
+   {
+    "path": "crates/writfold-store/src/backend/dolt.rs",
+    "line": 158,
+    "text": "            RecordKey::new(node.id().as_str().to_owned())"
+   },
+   {
+    "path": "crates/writfold-store/src/backend/dolt.rs",
+    "line": 160,
+    "text": "            RecordKind::new(node.kind().as_str().to_owned())"
+   },
+   {
+    "path": "crates/writfold-store/src/backend/dolt/write.rs",
+    "line": 336,
+    "text": "            if id.chars().count() > KEY_CHARS || GraphNodeId::try_from(id.to_owned()).is_err() {"
+   },
+   {
+    "path": "crates/writfold-store/src/backend/dolt/write.rs",
+    "line": 339,
+    "text": "            if GraphNodeKind::try_from(kind.to_owned()).is_err() {"
+   },
+   {
+    "path": "crates/writfold-store/src/backend/git.rs",
+    "line": 224,
+    "text": "    RecordKind::new(KIND.to_owned())"
+   },
+   {
+    "path": "crates/writfold-store/src/backend/git.rs",
+    "line": 244,
+    "text": "    RecordKey::new(path.to_owned())"
+   },
+   {
+    "path": "crates/writfold-store/src/backend/scan.rs",
+    "line": 132,
+    "text": "    let kind = RecordKind::new(record.kind.to_owned())"
+   },
+   {
+    "path": "crates/writfold-store/src/backend/scan.rs",
+    "line": 138,
+    "text": "    RecordKey::new(key.to_owned())"
+   },
+   {
+    "path": "crates/writfold-store/tests/backend_conformance.rs",
+    "line": 94,
+    "text": "                needle.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-store/tests/backend_dolt.rs",
+    "line": 91,
+    "text": "            let owner = WriterId::new(\"conformance-writer\".to_owned())?;"
+   },
+   {
+    "path": "crates/writfold-store/tests/backend_dolt.rs",
+    "line": 134,
+    "text": "        let owner = WriterId::new(\"w\".to_owned())?;"
+   },
+   {
+    "path": "crates/writfold-store/tests/backend_dolt.rs",
+    "line": 167,
+    "text": "        let owner = WriterId::new(\"w\".to_owned())?;"
+   },
+   {
+    "path": "crates/writfold-store/tests/backend_dolt.rs",
+    "line": 170,
+    "text": "            head: HeadName::new(\"main\".to_owned())?,"
+   },
+   {
+    "path": "crates/writfold-store/tests/backend_dolt.rs",
+    "line": 173,
+    "text": "                key: RecordKey::new(\"doc:x\".to_owned())?,"
+   },
+   {
+    "path": "crates/writfold-store/tests/backend_dolt.rs",
+    "line": 174,
+    "text": "                kind: RecordKind::new(\"document\".to_owned())?,"
+   },
+   {
+    "path": "crates/writfold-store/tests/dolt_realm/mod.rs",
+    "line": 58,
+    "text": "            dolt: dolt.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-store/tests/dolt_realm/mod.rs",
+    "line": 170,
+    "text": "        Ok(lines.next().ok_or(\"missing HEAD row\")?.trim().to_owned())"
+   },
+   {
+    "path": "crates/writfold-store/tests/dolt_realm/mod.rs",
+    "line": 175,
+    "text": "            \"DELETE FROM wf_edges\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-store/tests/dolt_realm/mod.rs",
+    "line": 176,
+    "text": "            \"DELETE FROM wf_nodes\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-store/tests/dolt_realm/mod.rs",
+    "line": 251,
+    "text": "    let mut values = vec![\"1\".to_owned()];"
+   },
+   {
+    "path": "crates/writfold-store/tests/memory_backend/mod.rs",
+    "line": 68,
+    "text": "                r.key.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-store/tests/memory_backend/mod.rs",
+    "line": 69,
+    "text": "                r.kind.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-store/tests/memory_backend/mod.rs",
+    "line": 217,
+    "text": "                    request.needle().to_owned(),"
+   },
+   {
+    "path": "crates/writfold-store/tests/memory_backend/mod.rs",
+    "line": 329,
+    "text": "                    change.key.as_str().to_owned(),"
+   },
+   {
+    "path": "crates/writfold-store/tests/memory_backend/mod.rs",
+    "line": 330,
+    "text": "                    change.kind.as_str().to_owned(),"
+   },
+   {
+    "path": "crates/writfold-wire/src/parser.rs",
+    "line": 112,
+    "text": "            reason: reason.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-wire/src/semantic/response.rs",
+    "line": 18,
+    "text": "        .to_owned(),"
+   },
+   {
+    "path": "crates/writfold-wire/src/semantic/response.rs",
+    "line": 28,
+    "text": "        .to_owned(),"
+   },
+   {
+    "path": "crates/writfold-wire/src/semantic/workflow.rs",
+    "line": 267,
+    "text": "        .to_owned(),"
+   },
+   {
+    "path": "crates/writfold-wire/src/semantic/workflow.rs",
+    "line": 293,
+    "text": "        .to_owned(),"
+   },
+   {
+    "path": "crates/writfold-wire/src/semantic/workflow.rs",
+    "line": 315,
+    "text": "        .to_owned(),"
+   },
+   {
+    "path": "crates/writfold-wire/src/semantic/workflow.rs",
+    "line": 349,
+    "text": "        .to_owned(),"
+   },
+   {
+    "path": "crates/writfold-wire/src/semantic/workflow.rs",
+    "line": 367,
+    "text": "        .to_owned(),"
+   },
+   {
+    "path": "crates/writfold-wire/src/semantic/workflow.rs",
+    "line": 387,
+    "text": "        .to_owned(),"
+   },
+   {
+    "path": "crates/writfold-wire/src/semantic/workflow.rs",
+    "line": 407,
+    "text": "        .to_owned(),"
+   },
+   {
+    "path": "crates/writfold-wire/src/weft_report.rs",
+    "line": 49,
+    "text": "        return Err(ReportError::Incomplete(execution.to_owned()));"
+   },
+   {
+    "path": "crates/writfold-wire/src/weft_report.rs",
+    "line": 64,
+    "text": "                name: text(check, \"name\")?.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-wire/src/weft_report.rs",
+    "line": 81,
+    "text": "        kind: text(root, \"kind\")?.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-wire/src/weft_report.rs",
+    "line": 82,
+    "text": "        scope: text(root, \"scope\")?.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-wire/src/worktree/decode.rs",
+    "line": 45,
+    "text": "    Ok(text(v)?.to_owned())"
+   },
+   {
+    "path": "crates/writfold-wire/tests/grant_lean.rs",
+    "line": 109,
+    "text": "        .map(|g| (g.grant().id().as_str().to_owned(), g.revoked()))"
+   },
+   {
+    "path": "crates/writfold-wire/tests/grant_lean.rs",
+    "line": 147,
+    "text": "        .map(|g| g.id().as_str().to_owned());"
+   },
+   {
+    "path": "crates/writfold-wire/tests/procedure_lean/embed.rs",
+    "line": 241,
+    "text": "                export: ExportName::try_from(\"apply\".to_owned())?,"
+   },
+   {
+    "path": "crates/writfold-wire/tests/rpc.rs",
+    "line": 36,
+    "text": "        \"0\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-wire/tests/rpc.rs",
+    "line": 37,
+    "text": "        \"-1\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-wire/tests/rpc_response.rs",
+    "line": 57,
+    "text": "        \"0\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-wire/tests/rpc_response.rs",
+    "line": 58,
+    "text": "        \"-1\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-wire/tests/rpc_response.rs",
+    "line": 61,
+    "text": "        \"\\\"123\\\"\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-wire/tests/rpc_response.rs",
+    "line": 62,
+    "text": "        \"\\\"\\\"\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-wire/tests/rpc_response.rs",
+    "line": 63,
+    "text": "        \"null\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-wire/tests/rpc_response.rs",
+    "line": 64,
+    "text": "        \"-0\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-wire/tests/signatures/policy.rs",
+    "line": 42,
+    "text": "        json!(\"01\".to_owned() + &\"00\".repeat(31));"
+   },
+   {
+    "path": "crates/writfold-wire/tests/storage.rs",
+    "line": 90,
+    "text": "        ULID.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-wire/tests/storage.rs",
+    "line": 91,
+    "text": "        \"00000000000000000000000000\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-wire/tests/storage.rs",
+    "line": 92,
+    "text": "        \"7ZZZZZZZZZZZZZZZZZZZZZZZZZ\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-wire/tests/storage.rs",
+    "line": 95,
+    "text": "        COMMIT.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-wire/tests/storage/identities.rs",
+    "line": 6,
+    "text": "        \"\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-wire/tests/storage/identities.rs",
+    "line": 7,
+    "text": "        \"HEAD\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-wire/tests/storage/identities.rs",
+    "line": 9,
+    "text": "        \"0123456789abcdefghijklmnopqrstuv\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-wire/tests/storage/identities.rs",
+    "line": 13,
+    "text": "        \"8ZZZZZZZZZZZZZZZZZZZZZZZZZ\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-wire/tests/storage/identities.rs",
+    "line": 14,
+    "text": "        \"01ARZ3NDEKTSV4RRFFQ69G5FAI\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-wire/tests/storage/identities.rs",
+    "line": 15,
+    "text": "        \"01ARZ3NDEKTSV4RRFFQ69G5FAO\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-wire/tests/storage/identities.rs",
+    "line": 16,
+    "text": "        \"01ARZ3NDEKTSV4RRFFQ69G5FAL\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-wire/tests/storage/identities.rs",
+    "line": 17,
+    "text": "        \"01ARZ3NDEKTSV4RRFFQ69G5FAU\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-wire/tests/storage/identities.rs",
+    "line": 18,
+    "text": "        ULID[..25].to_owned(),"
+   },
+   {
+    "path": "crates/writfold-wire/tests/storage/identities.rs",
+    "line": 94,
+    "text": "        ULID.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-wire/tests/storage/identities.rs",
+    "line": 116,
+    "text": "        \"a\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-wire/tests/storage/identities.rs",
+    "line": 117,
+    "text": "        \"-\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-wire/tests/storage/identities.rs",
+    "line": 119,
+    "text": "        \"Policies\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-wire/tests/support/ledger_heads.rs",
+    "line": 59,
+    "text": "                name: text(row, \"name\")?.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-wire/tests/support/ledger_heads.rs",
+    "line": 72,
+    "text": "                name: text(row, \"name\")?.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-xtask/src/macro_audit.rs",
+    "line": 269,
+    "text": "                    \"clone\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-xtask/src/macro_audit.rs",
+    "line": 281,
+    "text": "                    source: self.path.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-xtask/src/syntax.rs",
+    "line": 138,
+    "text": "                    source: self.path.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-xtask/src/syntax.rs",
+    "line": 139,
+    "text": "                    name: \"clone\".to_owned(),"
+   },
+   {
+    "path": "crates/writfold-xtask/src/syntax.rs",
+    "line": 164,
+    "text": "                source: self.path.to_owned(),"
+   },
+   {
+    "path": "crates/writfold-xtask/src/trust.rs",
+    "line": 118,
+    "text": "            _ => Err(\"invalid proof trust hexadecimal digest\".to_owned()),"
+   },
+   {
+    "path": "crates/writfold/tests/serve_trial.rs",
+    "line": 43,
+    "text": "    Ok(String::from_utf8(out.stdout)?.trim_end().to_owned())"
+   },
+   {
+    "path": "crates/writfold/tests/serve_trial.rs",
+    "line": 160,
+    "text": "        .to_owned();"
+   },
+   {
+    "path": "crates/writfold/tests/serve_trial.rs",
+    "line": 169,
+    "text": "    let run = payload[\"run\"].as_str().ok_or(\"run\")?.to_owned();"
+   },
+   {
+    "path": "crates/writfold/tests/serve_trial.rs",
+    "line": 207,
+    "text": "        (\"garbage.json\", \"{\\\"schema\\\":\\\"not-a-report\\\"}\".to_owned()),"
+   }
+  ],
+  "T4": [],
+  "T7": [
+   {
+    "path": "crates/writfold-app/src/trial/run/weft.rs",
+    "line": 68,
+    "text": "        std::thread::sleep(Duration::from_millis(2));"
+   },
+   {
+    "path": "crates/writfold-runtime/src/process/runner.rs",
+    "line": 148,
+    "text": "                std::thread::sleep(Duration::from_millis(100));"
+   },
+   {
+    "path": "crates/writfold-store/examples/support/native_flow.rs",
+    "line": 341,
+    "text": "        std::thread::sleep(Duration::from_millis(50));"
+   },
+   {
+    "path": "crates/writfold-store/src/backend/conformance/races.rs",
+    "line": 119,
+    "text": "                std::thread::sleep(KILL_STEP * attempt);"
+   },
+   {
+    "path": "crates/writfold-store/tests/memory_backend/mod.rs",
+    "line": 320,
+    "text": "            std::thread::sleep(Duration::from_millis(50));"
+   }
+  ],
+  "T8": [
+   {
+    "path": "crates/writfold-runtime/src/worktrunk/mod.rs",
+    "line": 51,
+    "text": "pub const WORKTRUNK_BYTES: u64 = 29_099_264;"
+   }
+  ]
+ },
+ "edits": {
+  "T5": {
+   "path": "crates/tuft/src/ir.rs",
+   "decoy": "crates/writfold-app/src/tuft/mod.rs",
+   "accepted": [
+    "//! Typed IR: one checked pipeline `find → [retain] → project → emit`.\n//!\n//! The IR names no storage engine. An adapter lowers `find` onto a backend\n//! (B0 `StorageBackend` in Writfold) and `retain` onto its evidence store.\nuse crate::locate::Pattern;\nuse writfold_domain::citation::SearchBudget;\n\npub const DEFAULT_FIND_LIMIT: u64 = 100;\npub const MAX_FIND_LIMIT: u64 = 10_000;\npub const MAX_AROUND_LINES: u64 = 1_000;\npub const MAX_EXCERPT_CHARS: u64 = 4_096;\npub const MAX_VIEW_LIMIT: u64 = 100_000;\npub const DEFAULT_BUDGET_TOKENS: u64 = 1_000;\npub const MAX_BUDGET_TOKENS: u64 = 1_000_000;\npub const MAX_NEEDLE_BYTES: usize = 4_096;\npub const MAX_SCOPE_BYTES: usize = 2_048;\n\n#[derive(Clone, Debug)]\npub struct Plan {\n    /// SHA-256 of the exact program bytes, lowercase hexadecimal.\n    pub program: String,\n    pub find: FindPlan,\n    pub retain: Option<RetainPlan>,\n    pub view: ViewPlan,\n    pub emit: EmitPlan,\n}\n\n#[derive(Clone, Debug)]\npub enum MatcherPlan {\n    /// Exact bytes; every occurrence, including overlapping starts.\n    Text(String),\n    /// Bounded regex; leftmost-first, non-overlapping; zero-width refuses.\n    Rx(Pattern),\n}\n\nimpl MatcherPlan {\n    pub fn describe(&self) -> (&'static str, &str) {\n        match self {\n            Self::Text(needle) => (\"text\", needle),\n            Self::Rx(pattern) => (\"rx\", pattern.source()),\n        }\n    }\n}\n\n#[derive(Clone, Debug)]\npub struct FindPlan {\n    pub binding: String,\n    pub matcher: MatcherPlan,\n    /// Byte prefix of repository paths; empty means the whole tree.\n    pub scope: String,\n    /// Full lowercase commit id (40 or 64 hex digits).\n    pub commit: String,\n    /// `positions` bounds match positions (the `limit`); `candidates` bounds\n    /// the files that contribute them, which can never exceed the positions.\n    pub budget: SearchBudget,\n}\n\n#[derive(Clone, Debug, Eq, PartialEq)]\npub struct RetainPlan {\n    pub binding: String,\n    /// `None`: exactly the match bytes. `Some(n)`: the match's whole lines\n    /// plus `n` whole lines before and after.\n    pub around: Option<usize>,\n}\n\n#[derive(Clone, Copy, Debug, Eq, PartialEq)]\npub enum Field {\n    Path,\n    Line,\n    Range,\n    Binding,\n    Excerpt { max_chars: usize },\n}\n\nimpl Field {\n    pub fn name(self) -> &'static str {\n        match self {\n            Self::Path => \"path\",\n            Self::Line => \"line\",\n            Self::Range => \"range\",\n            Self::Binding => \"binding\",\n            Self::Excerpt { .. } => \"excerpt\",\n        }\n    }\n}\n\npub use crate::ast::{Direction, SortField};\n\n#[derive(Clone, Debug, Eq, PartialEq)]\npub struct ViewPlan {\n    pub binding: String,\n    /// Projecting retained evidence (`true`) or bare hits (`false`).\n    pub evidence: bool,\n    pub fields: Vec<Field>,\n    pub sort: Vec<(SortField, Direction)>,\n    pub limit: Option<usize>,\n}\n\n#[derive(Clone, Copy, Debug, Eq, PartialEq)]\npub struct EmitPlan {\n    pub budget_tokens: usize,\n}\n",
+    "//! Typed IR: one checked pipeline `find → [retain] → project → emit`.\n//!\n//! The IR names no storage engine. An adapter lowers `find` onto a backend\n//! (B0 `StorageBackend` in Writfold) and `retain` onto its evidence store.\nuse crate::locate::Pattern;\nuse writfold_domain::citation::SearchBudget;\n\npub const DEFAULT_FIND_LIMIT: u64 = 100;\npub const MAX_FIND_LIMIT: u64 = 10_000;\npub const MAX_AROUND_LINES: u64 = 1_000;\npub const MAX_EXCERPT_CHARS: u64 = 4_096;\npub const MAX_VIEW_LIMIT: u64 = 100_000;\npub const DEFAULT_BUDGET_TOKENS: u64 = 1_000;\npub const MAX_BUDGET_TOKENS: u64 = 1_000_000;\npub const MAX_NEEDLE_BYTES: usize = 4_096;\npub const MAX_SCOPE_BYTES: usize = 2048;\n\n#[derive(Clone, Debug)]\npub struct Plan {\n    /// SHA-256 of the exact program bytes, lowercase hexadecimal.\n    pub program: String,\n    pub find: FindPlan,\n    pub retain: Option<RetainPlan>,\n    pub view: ViewPlan,\n    pub emit: EmitPlan,\n}\n\n#[derive(Clone, Debug)]\npub enum MatcherPlan {\n    /// Exact bytes; every occurrence, including overlapping starts.\n    Text(String),\n    /// Bounded regex; leftmost-first, non-overlapping; zero-width refuses.\n    Rx(Pattern),\n}\n\nimpl MatcherPlan {\n    pub fn describe(&self) -> (&'static str, &str) {\n        match self {\n            Self::Text(needle) => (\"text\", needle),\n            Self::Rx(pattern) => (\"rx\", pattern.source()),\n        }\n    }\n}\n\n#[derive(Clone, Debug)]\npub struct FindPlan {\n    pub binding: String,\n    pub matcher: MatcherPlan,\n    /// Byte prefix of repository paths; empty means the whole tree.\n    pub scope: String,\n    /// Full lowercase commit id (40 or 64 hex digits).\n    pub commit: String,\n    /// `positions` bounds match positions (the `limit`); `candidates` bounds\n    /// the files that contribute them, which can never exceed the positions.\n    pub budget: SearchBudget,\n}\n\n#[derive(Clone, Debug, Eq, PartialEq)]\npub struct RetainPlan {\n    pub binding: String,\n    /// `None`: exactly the match bytes. `Some(n)`: the match's whole lines\n    /// plus `n` whole lines before and after.\n    pub around: Option<usize>,\n}\n\n#[derive(Clone, Copy, Debug, Eq, PartialEq)]\npub enum Field {\n    Path,\n    Line,\n    Range,\n    Binding,\n    Excerpt { max_chars: usize },\n}\n\nimpl Field {\n    pub fn name(self) -> &'static str {\n        match self {\n            Self::Path => \"path\",\n            Self::Line => \"line\",\n            Self::Range => \"range\",\n            Self::Binding => \"binding\",\n            Self::Excerpt { .. } => \"excerpt\",\n        }\n    }\n}\n\npub use crate::ast::{Direction, SortField};\n\n#[derive(Clone, Debug, Eq, PartialEq)]\npub struct ViewPlan {\n    pub binding: String,\n    /// Projecting retained evidence (`true`) or bare hits (`false`).\n    pub evidence: bool,\n    pub fields: Vec<Field>,\n    pub sort: Vec<(SortField, Direction)>,\n    pub limit: Option<usize>,\n}\n\n#[derive(Clone, Copy, Debug, Eq, PartialEq)]\npub struct EmitPlan {\n    pub budget_tokens: usize,\n}\n"
+   ]
+  },
+  "T6": {
+   "path": "crates/writfold-wire/src/rpc.rs",
+   "decoy": "crates/writfold-wire/src/rpc/response/mod.rs",
+   "trigger": "writfold-wire/src/rpc.rs",
+   "insert_after_line": 5,
+   "mutation_lines": [
+    "//!",
+    "//! The request ceiling below is shared with the response codec; keep them in step."
+   ],
+   "mutated": "//! Pure protocol-2 request boundary, from `engine/protocol.py::Engine.request`.\n//! This is not a dispatcher, server, method implementation or IO capability.\n//! Parse one bounded frame, then borrow its validated request; the retained\n//! `RawJson` owns every value and destroys even rejected deep trees iteratively.\n//! Missing IDs are notifications only after envelope validation succeeds.\n//!\n//! The request ceiling below is shared with the response codec; keep them in step.\n\nmod initialize;\npub mod response;\npub mod trial;\npub use initialize::{\n    Capability, Initialize, InitializeParams, PROTOCOL_VERSION, ParamsError, StorageProfileVersion,\n};\n\nuse crate::{Error, Limits, RawJson};\nuse serde_json::Value;\n\n/// Reference transport frame ceiling, including any framing whitespace/newline.\npub const MAX_REQUEST_BYTES: usize = 65_536;\n\n#[derive(Debug, thiserror::Error, Eq, PartialEq)]\npub enum FrameError {\n    #[error(transparent)]\n    Json(#[from] Error),\n    #[error(\"nonfinite JSON floating-point number\")]\n    NonfiniteNumber,\n}\n\n/// Owns a duplicate-aware UTF-8 JSON frame. Caller limits may be stricter than\n/// the reference byte ceiling; depth/entry/node budgets have no hidden defaults.\n#[derive(Debug)]\npub struct Frame {\n    raw: RawJson,\n}\n\nimpl Frame {\n    pub fn parse(bytes: &[u8], limits: Limits) -> Result<Self, FrameError> {\n        let limits = Limits::new(\n            limits.bytes().min(MAX_REQUEST_BYTES),\n            limits.depth(),\n            limits.container_entries(),\n            limits.nodes(),\n        )?;\n        let raw = RawJson::parse(bytes, limits)?;\n        // Python decode_frame rejects overflowing floats anywhere, not merely\n        // in envelope fields. Integer tokens remain arbitrary precision.\n        let mut pending = vec![raw.value()];\n        while let Some(value) = pending.pop() {\n            match value {\n                Value::Array(values) => pending.extend(values),\n                Value::Object(values) => pending.extend(values.values()),\n                Value::Number(number)\n                    if !integer_token(number.as_str())\n                        && !number.as_str().parse::<f64>().is_ok_and(f64::is_finite) =>\n                {\n                    return Err(FrameError::NonfiniteNumber);\n                }\n                _ => {}\n            }\n        }\n        Ok(Self { raw })\n    }\n\n    pub fn request(&self) -> Result<Request<'_>, InvalidRequest<'_>> {\n        let invalid = |reason, response_id| InvalidRequest {\n            reason,\n            response_id,\n        };\n        let object = self\n            .raw\n            .value()\n            .as_object()\n            .ok_or_else(|| invalid(EnvelopeError::ExpectedObject, RequestId::Null))?;\n        let id = match object.get(\"id\") {\n            None => RequestId::Absent,\n            Some(Value::Null) => RequestId::Null,\n            Some(Value::String(value)) => RequestId::String(value),\n            Some(Value::Number(value)) if integer_token(value.as_str()) => {\n                RequestId::Integer(IntegerId {\n                    decimal: value.as_str(),\n                })\n            }\n            _ => return Err(invalid(EnvelopeError::InvalidId, RequestId::Null)),\n        };\n        let response_id = match id {\n            RequestId::Absent => RequestId::Null,\n            id => id,\n        };\n        if object\n            .keys()\n            .any(|key| !matches!(key.as_str(), \"jsonrpc\" | \"id\" | \"method\" | \"params\"))\n        {\n            return Err(invalid(EnvelopeError::UnknownField, response_id));\n        }\n        if object.get(\"jsonrpc\").and_then(Value::as_str) != Some(\"2.0\") {\n            return Err(invalid(EnvelopeError::InvalidVersion, response_id));\n        }\n        let method = object\n            .get(\"method\")\n            .and_then(Value::as_str)\n            .ok_or_else(|| invalid(EnvelopeError::InvalidMethod, response_id))?;\n        Ok(Request {\n            id,\n            method,\n            params: object.get(\"params\"),\n        })\n    }\n}\n\nfn integer_token(token: &str) -> bool {\n    !token.bytes().any(|byte| matches!(byte, b'.' | b'e' | b'E'))\n}\n\n/// An integer JSON token, never narrowed through a machine integer or float.\n/// Like Python's decoder, integral-looking float tokens (`1.0`, `1e0`) are\n/// not integer IDs. The underlying parser normalizes integer `-0` to `0`.\n#[derive(Clone, Copy, Debug, Eq, PartialEq)]\npub struct IntegerId<'a> {\n    decimal: &'a str,\n}\n\nimpl<'a> IntegerId<'a> {\n    pub fn as_decimal(self) -> &'a str {\n        self.decimal\n    }\n}\n\n#[derive(Clone, Copy, Debug, Eq, PartialEq)]\npub enum RequestId<'a> {\n    Absent,\n    Null,\n    String(&'a str),\n    Integer(IntegerId<'a>),\n}\n\n#[derive(Clone, Copy, Debug, Eq, PartialEq)]\npub enum EnvelopeError {\n    ExpectedObject,\n    InvalidId,\n    UnknownField,\n    InvalidVersion,\n    InvalidMethod,\n}\n\n/// Invalid envelopes always receive an Invalid Request response, including\n/// those without an ID. A valid ID survives other envelope errors; a bad ID\n/// or non-object root yields null, matching the reference's validation order.\n#[derive(Clone, Copy, Debug, Eq, PartialEq)]\npub struct InvalidRequest<'a> {\n    reason: EnvelopeError,\n    response_id: RequestId<'a>,\n}\n\nimpl<'a> InvalidRequest<'a> {\n    pub fn reason(self) -> EnvelopeError {\n        self.reason\n    }\n\n    pub fn response_id(self) -> RequestId<'a> {\n        self.response_id\n    }\n\n    pub fn code(self) -> i32 {\n        -32600\n    }\n}\n\n/// A valid envelope, not a known or implemented method. Any string method,\n/// including an empty or unknown name, reaches the future adapter's lookup.\n/// For notifications that adapter must suppress method/params/state failures.\n#[derive(Clone, Copy, Debug)]\npub struct Request<'a> {\n    id: RequestId<'a>,\n    method: &'a str,\n    params: Option<&'a Value>,\n}\n\nimpl<'a> Request<'a> {\n    pub fn id(self) -> RequestId<'a> {\n        self.id\n    }\n\n    pub fn is_notification(self) -> bool {\n        matches!(self.id, RequestId::Absent)\n    }\n\n    pub fn method(self) -> &'a str {\n        self.method\n    }\n\n    /// A borrowed raw boundary value; absent params differ from explicit null.\n    /// Method-specific validation must precede passing data to the domain.\n    pub fn params(self) -> Option<&'a Value> {\n        self.params\n    }\n\n    /// Validate the reference's closed empty `Params` schema for shutdown.\n    /// Does not invoke shutdown or inspect initialization state.\n    pub fn shutdown_params(self) -> Result<(), ParamsError> {\n        match self.params {\n            None => Ok(()),\n            Some(Value::Object(object)) if object.is_empty() => Ok(()),\n            Some(Value::Object(_)) => Err(ParamsError::UnknownField),\n            Some(_) => Err(ParamsError::ExpectedObject),\n        }\n    }\n}\n",
+   "accepted": [
+    "//! Pure protocol-2 request boundary, from `engine/protocol.py::Engine.request`.\n//! This is not a dispatcher, server, method implementation or IO capability.\n//! Parse one bounded frame, then borrow its validated request; the retained\n//! `RawJson` owns every value and destroys even rejected deep trees iteratively.\n//! Missing IDs are notifications only after envelope validation succeeds.\n//!\n//! The request ceiling below is shared with the response codec; keep them in step.\n\nmod initialize;\npub mod response;\npub mod trial;\npub use initialize::{\n    Capability, Initialize, InitializeParams, PROTOCOL_VERSION, ParamsError, StorageProfileVersion,\n};\n\nuse crate::{Error, Limits, RawJson};\nuse serde_json::Value;\n\n/// Reference transport frame ceiling, including any framing whitespace/newline.\npub const MAX_REQUEST_BYTES: usize = 131_072;\n\n#[derive(Debug, thiserror::Error, Eq, PartialEq)]\npub enum FrameError {\n    #[error(transparent)]\n    Json(#[from] Error),\n    #[error(\"nonfinite JSON floating-point number\")]\n    NonfiniteNumber,\n}\n\n/// Owns a duplicate-aware UTF-8 JSON frame. Caller limits may be stricter than\n/// the reference byte ceiling; depth/entry/node budgets have no hidden defaults.\n#[derive(Debug)]\npub struct Frame {\n    raw: RawJson,\n}\n\nimpl Frame {\n    pub fn parse(bytes: &[u8], limits: Limits) -> Result<Self, FrameError> {\n        let limits = Limits::new(\n            limits.bytes().min(MAX_REQUEST_BYTES),\n            limits.depth(),\n            limits.container_entries(),\n            limits.nodes(),\n        )?;\n        let raw = RawJson::parse(bytes, limits)?;\n        // Python decode_frame rejects overflowing floats anywhere, not merely\n        // in envelope fields. Integer tokens remain arbitrary precision.\n        let mut pending = vec![raw.value()];\n        while let Some(value) = pending.pop() {\n            match value {\n                Value::Array(values) => pending.extend(values),\n                Value::Object(values) => pending.extend(values.values()),\n                Value::Number(number)\n                    if !integer_token(number.as_str())\n                        && !number.as_str().parse::<f64>().is_ok_and(f64::is_finite) =>\n                {\n                    return Err(FrameError::NonfiniteNumber);\n                }\n                _ => {}\n            }\n        }\n        Ok(Self { raw })\n    }\n\n    pub fn request(&self) -> Result<Request<'_>, InvalidRequest<'_>> {\n        let invalid = |reason, response_id| InvalidRequest {\n            reason,\n            response_id,\n        };\n        let object = self\n            .raw\n            .value()\n            .as_object()\n            .ok_or_else(|| invalid(EnvelopeError::ExpectedObject, RequestId::Null))?;\n        let id = match object.get(\"id\") {\n            None => RequestId::Absent,\n            Some(Value::Null) => RequestId::Null,\n            Some(Value::String(value)) => RequestId::String(value),\n            Some(Value::Number(value)) if integer_token(value.as_str()) => {\n                RequestId::Integer(IntegerId {\n                    decimal: value.as_str(),\n                })\n            }\n            _ => return Err(invalid(EnvelopeError::InvalidId, RequestId::Null)),\n        };\n        let response_id = match id {\n            RequestId::Absent => RequestId::Null,\n            id => id,\n        };\n        if object\n            .keys()\n            .any(|key| !matches!(key.as_str(), \"jsonrpc\" | \"id\" | \"method\" | \"params\"))\n        {\n            return Err(invalid(EnvelopeError::UnknownField, response_id));\n        }\n        if object.get(\"jsonrpc\").and_then(Value::as_str) != Some(\"2.0\") {\n            return Err(invalid(EnvelopeError::InvalidVersion, response_id));\n        }\n        let method = object\n            .get(\"method\")\n            .and_then(Value::as_str)\n            .ok_or_else(|| invalid(EnvelopeError::InvalidMethod, response_id))?;\n        Ok(Request {\n            id,\n            method,\n            params: object.get(\"params\"),\n        })\n    }\n}\n\nfn integer_token(token: &str) -> bool {\n    !token.bytes().any(|byte| matches!(byte, b'.' | b'e' | b'E'))\n}\n\n/// An integer JSON token, never narrowed through a machine integer or float.\n/// Like Python's decoder, integral-looking float tokens (`1.0`, `1e0`) are\n/// not integer IDs. The underlying parser normalizes integer `-0` to `0`.\n#[derive(Clone, Copy, Debug, Eq, PartialEq)]\npub struct IntegerId<'a> {\n    decimal: &'a str,\n}\n\nimpl<'a> IntegerId<'a> {\n    pub fn as_decimal(self) -> &'a str {\n        self.decimal\n    }\n}\n\n#[derive(Clone, Copy, Debug, Eq, PartialEq)]\npub enum RequestId<'a> {\n    Absent,\n    Null,\n    String(&'a str),\n    Integer(IntegerId<'a>),\n}\n\n#[derive(Clone, Copy, Debug, Eq, PartialEq)]\npub enum EnvelopeError {\n    ExpectedObject,\n    InvalidId,\n    UnknownField,\n    InvalidVersion,\n    InvalidMethod,\n}\n\n/// Invalid envelopes always receive an Invalid Request response, including\n/// those without an ID. A valid ID survives other envelope errors; a bad ID\n/// or non-object root yields null, matching the reference's validation order.\n#[derive(Clone, Copy, Debug, Eq, PartialEq)]\npub struct InvalidRequest<'a> {\n    reason: EnvelopeError,\n    response_id: RequestId<'a>,\n}\n\nimpl<'a> InvalidRequest<'a> {\n    pub fn reason(self) -> EnvelopeError {\n        self.reason\n    }\n\n    pub fn response_id(self) -> RequestId<'a> {\n        self.response_id\n    }\n\n    pub fn code(self) -> i32 {\n        -32600\n    }\n}\n\n/// A valid envelope, not a known or implemented method. Any string method,\n/// including an empty or unknown name, reaches the future adapter's lookup.\n/// For notifications that adapter must suppress method/params/state failures.\n#[derive(Clone, Copy, Debug)]\npub struct Request<'a> {\n    id: RequestId<'a>,\n    method: &'a str,\n    params: Option<&'a Value>,\n}\n\nimpl<'a> Request<'a> {\n    pub fn id(self) -> RequestId<'a> {\n        self.id\n    }\n\n    pub fn is_notification(self) -> bool {\n        matches!(self.id, RequestId::Absent)\n    }\n\n    pub fn method(self) -> &'a str {\n        self.method\n    }\n\n    /// A borrowed raw boundary value; absent params differ from explicit null.\n    /// Method-specific validation must precede passing data to the domain.\n    pub fn params(self) -> Option<&'a Value> {\n        self.params\n    }\n\n    /// Validate the reference's closed empty `Params` schema for shutdown.\n    /// Does not invoke shutdown or inspect initialization state.\n    pub fn shutdown_params(self) -> Result<(), ParamsError> {\n        match self.params {\n            None => Ok(()),\n            Some(Value::Object(object)) if object.is_empty() => Ok(()),\n            Some(Value::Object(_)) => Err(ParamsError::UnknownField),\n            Some(_) => Err(ParamsError::ExpectedObject),\n        }\n    }\n}\n",
+    "//! Pure protocol-2 request boundary, from `engine/protocol.py::Engine.request`.\n//! This is not a dispatcher, server, method implementation or IO capability.\n//! Parse one bounded frame, then borrow its validated request; the retained\n//! `RawJson` owns every value and destroys even rejected deep trees iteratively.\n//! Missing IDs are notifications only after envelope validation succeeds.\n//!\n//! The request ceiling below is shared with the response codec; keep them in step.\n\nmod initialize;\npub mod response;\npub mod trial;\npub use initialize::{\n    Capability, Initialize, InitializeParams, PROTOCOL_VERSION, ParamsError, StorageProfileVersion,\n};\n\nuse crate::{Error, Limits, RawJson};\nuse serde_json::Value;\n\n/// Reference transport frame ceiling, including any framing whitespace/newline.\npub const MAX_REQUEST_BYTES: usize = 131072;\n\n#[derive(Debug, thiserror::Error, Eq, PartialEq)]\npub enum FrameError {\n    #[error(transparent)]\n    Json(#[from] Error),\n    #[error(\"nonfinite JSON floating-point number\")]\n    NonfiniteNumber,\n}\n\n/// Owns a duplicate-aware UTF-8 JSON frame. Caller limits may be stricter than\n/// the reference byte ceiling; depth/entry/node budgets have no hidden defaults.\n#[derive(Debug)]\npub struct Frame {\n    raw: RawJson,\n}\n\nimpl Frame {\n    pub fn parse(bytes: &[u8], limits: Limits) -> Result<Self, FrameError> {\n        let limits = Limits::new(\n            limits.bytes().min(MAX_REQUEST_BYTES),\n            limits.depth(),\n            limits.container_entries(),\n            limits.nodes(),\n        )?;\n        let raw = RawJson::parse(bytes, limits)?;\n        // Python decode_frame rejects overflowing floats anywhere, not merely\n        // in envelope fields. Integer tokens remain arbitrary precision.\n        let mut pending = vec![raw.value()];\n        while let Some(value) = pending.pop() {\n            match value {\n                Value::Array(values) => pending.extend(values),\n                Value::Object(values) => pending.extend(values.values()),\n                Value::Number(number)\n                    if !integer_token(number.as_str())\n                        && !number.as_str().parse::<f64>().is_ok_and(f64::is_finite) =>\n                {\n                    return Err(FrameError::NonfiniteNumber);\n                }\n                _ => {}\n            }\n        }\n        Ok(Self { raw })\n    }\n\n    pub fn request(&self) -> Result<Request<'_>, InvalidRequest<'_>> {\n        let invalid = |reason, response_id| InvalidRequest {\n            reason,\n            response_id,\n        };\n        let object = self\n            .raw\n            .value()\n            .as_object()\n            .ok_or_else(|| invalid(EnvelopeError::ExpectedObject, RequestId::Null))?;\n        let id = match object.get(\"id\") {\n            None => RequestId::Absent,\n            Some(Value::Null) => RequestId::Null,\n            Some(Value::String(value)) => RequestId::String(value),\n            Some(Value::Number(value)) if integer_token(value.as_str()) => {\n                RequestId::Integer(IntegerId {\n                    decimal: value.as_str(),\n                })\n            }\n            _ => return Err(invalid(EnvelopeError::InvalidId, RequestId::Null)),\n        };\n        let response_id = match id {\n            RequestId::Absent => RequestId::Null,\n            id => id,\n        };\n        if object\n            .keys()\n            .any(|key| !matches!(key.as_str(), \"jsonrpc\" | \"id\" | \"method\" | \"params\"))\n        {\n            return Err(invalid(EnvelopeError::UnknownField, response_id));\n        }\n        if object.get(\"jsonrpc\").and_then(Value::as_str) != Some(\"2.0\") {\n            return Err(invalid(EnvelopeError::InvalidVersion, response_id));\n        }\n        let method = object\n            .get(\"method\")\n            .and_then(Value::as_str)\n            .ok_or_else(|| invalid(EnvelopeError::InvalidMethod, response_id))?;\n        Ok(Request {\n            id,\n            method,\n            params: object.get(\"params\"),\n        })\n    }\n}\n\nfn integer_token(token: &str) -> bool {\n    !token.bytes().any(|byte| matches!(byte, b'.' | b'e' | b'E'))\n}\n\n/// An integer JSON token, never narrowed through a machine integer or float.\n/// Like Python's decoder, integral-looking float tokens (`1.0`, `1e0`) are\n/// not integer IDs. The underlying parser normalizes integer `-0` to `0`.\n#[derive(Clone, Copy, Debug, Eq, PartialEq)]\npub struct IntegerId<'a> {\n    decimal: &'a str,\n}\n\nimpl<'a> IntegerId<'a> {\n    pub fn as_decimal(self) -> &'a str {\n        self.decimal\n    }\n}\n\n#[derive(Clone, Copy, Debug, Eq, PartialEq)]\npub enum RequestId<'a> {\n    Absent,\n    Null,\n    String(&'a str),\n    Integer(IntegerId<'a>),\n}\n\n#[derive(Clone, Copy, Debug, Eq, PartialEq)]\npub enum EnvelopeError {\n    ExpectedObject,\n    InvalidId,\n    UnknownField,\n    InvalidVersion,\n    InvalidMethod,\n}\n\n/// Invalid envelopes always receive an Invalid Request response, including\n/// those without an ID. A valid ID survives other envelope errors; a bad ID\n/// or non-object root yields null, matching the reference's validation order.\n#[derive(Clone, Copy, Debug, Eq, PartialEq)]\npub struct InvalidRequest<'a> {\n    reason: EnvelopeError,\n    response_id: RequestId<'a>,\n}\n\nimpl<'a> InvalidRequest<'a> {\n    pub fn reason(self) -> EnvelopeError {\n        self.reason\n    }\n\n    pub fn response_id(self) -> RequestId<'a> {\n        self.response_id\n    }\n\n    pub fn code(self) -> i32 {\n        -32600\n    }\n}\n\n/// A valid envelope, not a known or implemented method. Any string method,\n/// including an empty or unknown name, reaches the future adapter's lookup.\n/// For notifications that adapter must suppress method/params/state failures.\n#[derive(Clone, Copy, Debug)]\npub struct Request<'a> {\n    id: RequestId<'a>,\n    method: &'a str,\n    params: Option<&'a Value>,\n}\n\nimpl<'a> Request<'a> {\n    pub fn id(self) -> RequestId<'a> {\n        self.id\n    }\n\n    pub fn is_notification(self) -> bool {\n        matches!(self.id, RequestId::Absent)\n    }\n\n    pub fn method(self) -> &'a str {\n        self.method\n    }\n\n    /// A borrowed raw boundary value; absent params differ from explicit null.\n    /// Method-specific validation must precede passing data to the domain.\n    pub fn params(self) -> Option<&'a Value> {\n        self.params\n    }\n\n    /// Validate the reference's closed empty `Params` schema for shutdown.\n    /// Does not invoke shutdown or inspect initialization state.\n    pub fn shutdown_params(self) -> Result<(), ParamsError> {\n        match self.params {\n            None => Ok(()),\n            Some(Value::Object(object)) if object.is_empty() => Ok(()),\n            Some(Value::Object(_)) => Err(ParamsError::UnknownField),\n            Some(_) => Err(ParamsError::ExpectedObject),\n        }\n    }\n}\n"
+   ],
+   "accepted_without_mutation": [
+    "//! Pure protocol-2 request boundary, from `engine/protocol.py::Engine.request`.\n//! This is not a dispatcher, server, method implementation or IO capability.\n//! Parse one bounded frame, then borrow its validated request; the retained\n//! `RawJson` owns every value and destroys even rejected deep trees iteratively.\n//! Missing IDs are notifications only after envelope validation succeeds.\n\nmod initialize;\npub mod response;\npub mod trial;\npub use initialize::{\n    Capability, Initialize, InitializeParams, PROTOCOL_VERSION, ParamsError, StorageProfileVersion,\n};\n\nuse crate::{Error, Limits, RawJson};\nuse serde_json::Value;\n\n/// Reference transport frame ceiling, including any framing whitespace/newline.\npub const MAX_REQUEST_BYTES: usize = 131_072;\n\n#[derive(Debug, thiserror::Error, Eq, PartialEq)]\npub enum FrameError {\n    #[error(transparent)]\n    Json(#[from] Error),\n    #[error(\"nonfinite JSON floating-point number\")]\n    NonfiniteNumber,\n}\n\n/// Owns a duplicate-aware UTF-8 JSON frame. Caller limits may be stricter than\n/// the reference byte ceiling; depth/entry/node budgets have no hidden defaults.\n#[derive(Debug)]\npub struct Frame {\n    raw: RawJson,\n}\n\nimpl Frame {\n    pub fn parse(bytes: &[u8], limits: Limits) -> Result<Self, FrameError> {\n        let limits = Limits::new(\n            limits.bytes().min(MAX_REQUEST_BYTES),\n            limits.depth(),\n            limits.container_entries(),\n            limits.nodes(),\n        )?;\n        let raw = RawJson::parse(bytes, limits)?;\n        // Python decode_frame rejects overflowing floats anywhere, not merely\n        // in envelope fields. Integer tokens remain arbitrary precision.\n        let mut pending = vec![raw.value()];\n        while let Some(value) = pending.pop() {\n            match value {\n                Value::Array(values) => pending.extend(values),\n                Value::Object(values) => pending.extend(values.values()),\n                Value::Number(number)\n                    if !integer_token(number.as_str())\n                        && !number.as_str().parse::<f64>().is_ok_and(f64::is_finite) =>\n                {\n                    return Err(FrameError::NonfiniteNumber);\n                }\n                _ => {}\n            }\n        }\n        Ok(Self { raw })\n    }\n\n    pub fn request(&self) -> Result<Request<'_>, InvalidRequest<'_>> {\n        let invalid = |reason, response_id| InvalidRequest {\n            reason,\n            response_id,\n        };\n        let object = self\n            .raw\n            .value()\n            .as_object()\n            .ok_or_else(|| invalid(EnvelopeError::ExpectedObject, RequestId::Null))?;\n        let id = match object.get(\"id\") {\n            None => RequestId::Absent,\n            Some(Value::Null) => RequestId::Null,\n            Some(Value::String(value)) => RequestId::String(value),\n            Some(Value::Number(value)) if integer_token(value.as_str()) => {\n                RequestId::Integer(IntegerId {\n                    decimal: value.as_str(),\n                })\n            }\n            _ => return Err(invalid(EnvelopeError::InvalidId, RequestId::Null)),\n        };\n        let response_id = match id {\n            RequestId::Absent => RequestId::Null,\n            id => id,\n        };\n        if object\n            .keys()\n            .any(|key| !matches!(key.as_str(), \"jsonrpc\" | \"id\" | \"method\" | \"params\"))\n        {\n            return Err(invalid(EnvelopeError::UnknownField, response_id));\n        }\n        if object.get(\"jsonrpc\").and_then(Value::as_str) != Some(\"2.0\") {\n            return Err(invalid(EnvelopeError::InvalidVersion, response_id));\n        }\n        let method = object\n            .get(\"method\")\n            .and_then(Value::as_str)\n            .ok_or_else(|| invalid(EnvelopeError::InvalidMethod, response_id))?;\n        Ok(Request {\n            id,\n            method,\n            params: object.get(\"params\"),\n        })\n    }\n}\n\nfn integer_token(token: &str) -> bool {\n    !token.bytes().any(|byte| matches!(byte, b'.' | b'e' | b'E'))\n}\n\n/// An integer JSON token, never narrowed through a machine integer or float.\n/// Like Python's decoder, integral-looking float tokens (`1.0`, `1e0`) are\n/// not integer IDs. The underlying parser normalizes integer `-0` to `0`.\n#[derive(Clone, Copy, Debug, Eq, PartialEq)]\npub struct IntegerId<'a> {\n    decimal: &'a str,\n}\n\nimpl<'a> IntegerId<'a> {\n    pub fn as_decimal(self) -> &'a str {\n        self.decimal\n    }\n}\n\n#[derive(Clone, Copy, Debug, Eq, PartialEq)]\npub enum RequestId<'a> {\n    Absent,\n    Null,\n    String(&'a str),\n    Integer(IntegerId<'a>),\n}\n\n#[derive(Clone, Copy, Debug, Eq, PartialEq)]\npub enum EnvelopeError {\n    ExpectedObject,\n    InvalidId,\n    UnknownField,\n    InvalidVersion,\n    InvalidMethod,\n}\n\n/// Invalid envelopes always receive an Invalid Request response, including\n/// those without an ID. A valid ID survives other envelope errors; a bad ID\n/// or non-object root yields null, matching the reference's validation order.\n#[derive(Clone, Copy, Debug, Eq, PartialEq)]\npub struct InvalidRequest<'a> {\n    reason: EnvelopeError,\n    response_id: RequestId<'a>,\n}\n\nimpl<'a> InvalidRequest<'a> {\n    pub fn reason(self) -> EnvelopeError {\n        self.reason\n    }\n\n    pub fn response_id(self) -> RequestId<'a> {\n        self.response_id\n    }\n\n    pub fn code(self) -> i32 {\n        -32600\n    }\n}\n\n/// A valid envelope, not a known or implemented method. Any string method,\n/// including an empty or unknown name, reaches the future adapter's lookup.\n/// For notifications that adapter must suppress method/params/state failures.\n#[derive(Clone, Copy, Debug)]\npub struct Request<'a> {\n    id: RequestId<'a>,\n    method: &'a str,\n    params: Option<&'a Value>,\n}\n\nimpl<'a> Request<'a> {\n    pub fn id(self) -> RequestId<'a> {\n        self.id\n    }\n\n    pub fn is_notification(self) -> bool {\n        matches!(self.id, RequestId::Absent)\n    }\n\n    pub fn method(self) -> &'a str {\n        self.method\n    }\n\n    /// A borrowed raw boundary value; absent params differ from explicit null.\n    /// Method-specific validation must precede passing data to the domain.\n    pub fn params(self) -> Option<&'a Value> {\n        self.params\n    }\n\n    /// Validate the reference's closed empty `Params` schema for shutdown.\n    /// Does not invoke shutdown or inspect initialization state.\n    pub fn shutdown_params(self) -> Result<(), ParamsError> {\n        match self.params {\n            None => Ok(()),\n            Some(Value::Object(object)) if object.is_empty() => Ok(()),\n            Some(Value::Object(_)) => Err(ParamsError::UnknownField),\n            Some(_) => Err(ParamsError::ExpectedObject),\n        }\n    }\n}\n",
+    "//! Pure protocol-2 request boundary, from `engine/protocol.py::Engine.request`.\n//! This is not a dispatcher, server, method implementation or IO capability.\n//! Parse one bounded frame, then borrow its validated request; the retained\n//! `RawJson` owns every value and destroys even rejected deep trees iteratively.\n//! Missing IDs are notifications only after envelope validation succeeds.\n\nmod initialize;\npub mod response;\npub mod trial;\npub use initialize::{\n    Capability, Initialize, InitializeParams, PROTOCOL_VERSION, ParamsError, StorageProfileVersion,\n};\n\nuse crate::{Error, Limits, RawJson};\nuse serde_json::Value;\n\n/// Reference transport frame ceiling, including any framing whitespace/newline.\npub const MAX_REQUEST_BYTES: usize = 131072;\n\n#[derive(Debug, thiserror::Error, Eq, PartialEq)]\npub enum FrameError {\n    #[error(transparent)]\n    Json(#[from] Error),\n    #[error(\"nonfinite JSON floating-point number\")]\n    NonfiniteNumber,\n}\n\n/// Owns a duplicate-aware UTF-8 JSON frame. Caller limits may be stricter than\n/// the reference byte ceiling; depth/entry/node budgets have no hidden defaults.\n#[derive(Debug)]\npub struct Frame {\n    raw: RawJson,\n}\n\nimpl Frame {\n    pub fn parse(bytes: &[u8], limits: Limits) -> Result<Self, FrameError> {\n        let limits = Limits::new(\n            limits.bytes().min(MAX_REQUEST_BYTES),\n            limits.depth(),\n            limits.container_entries(),\n            limits.nodes(),\n        )?;\n        let raw = RawJson::parse(bytes, limits)?;\n        // Python decode_frame rejects overflowing floats anywhere, not merely\n        // in envelope fields. Integer tokens remain arbitrary precision.\n        let mut pending = vec![raw.value()];\n        while let Some(value) = pending.pop() {\n            match value {\n                Value::Array(values) => pending.extend(values),\n                Value::Object(values) => pending.extend(values.values()),\n                Value::Number(number)\n                    if !integer_token(number.as_str())\n                        && !number.as_str().parse::<f64>().is_ok_and(f64::is_finite) =>\n                {\n                    return Err(FrameError::NonfiniteNumber);\n                }\n                _ => {}\n            }\n        }\n        Ok(Self { raw })\n    }\n\n    pub fn request(&self) -> Result<Request<'_>, InvalidRequest<'_>> {\n        let invalid = |reason, response_id| InvalidRequest {\n            reason,\n            response_id,\n        };\n        let object = self\n            .raw\n            .value()\n            .as_object()\n            .ok_or_else(|| invalid(EnvelopeError::ExpectedObject, RequestId::Null))?;\n        let id = match object.get(\"id\") {\n            None => RequestId::Absent,\n            Some(Value::Null) => RequestId::Null,\n            Some(Value::String(value)) => RequestId::String(value),\n            Some(Value::Number(value)) if integer_token(value.as_str()) => {\n                RequestId::Integer(IntegerId {\n                    decimal: value.as_str(),\n                })\n            }\n            _ => return Err(invalid(EnvelopeError::InvalidId, RequestId::Null)),\n        };\n        let response_id = match id {\n            RequestId::Absent => RequestId::Null,\n            id => id,\n        };\n        if object\n            .keys()\n            .any(|key| !matches!(key.as_str(), \"jsonrpc\" | \"id\" | \"method\" | \"params\"))\n        {\n            return Err(invalid(EnvelopeError::UnknownField, response_id));\n        }\n        if object.get(\"jsonrpc\").and_then(Value::as_str) != Some(\"2.0\") {\n            return Err(invalid(EnvelopeError::InvalidVersion, response_id));\n        }\n        let method = object\n            .get(\"method\")\n            .and_then(Value::as_str)\n            .ok_or_else(|| invalid(EnvelopeError::InvalidMethod, response_id))?;\n        Ok(Request {\n            id,\n            method,\n            params: object.get(\"params\"),\n        })\n    }\n}\n\nfn integer_token(token: &str) -> bool {\n    !token.bytes().any(|byte| matches!(byte, b'.' | b'e' | b'E'))\n}\n\n/// An integer JSON token, never narrowed through a machine integer or float.\n/// Like Python's decoder, integral-looking float tokens (`1.0`, `1e0`) are\n/// not integer IDs. The underlying parser normalizes integer `-0` to `0`.\n#[derive(Clone, Copy, Debug, Eq, PartialEq)]\npub struct IntegerId<'a> {\n    decimal: &'a str,\n}\n\nimpl<'a> IntegerId<'a> {\n    pub fn as_decimal(self) -> &'a str {\n        self.decimal\n    }\n}\n\n#[derive(Clone, Copy, Debug, Eq, PartialEq)]\npub enum RequestId<'a> {\n    Absent,\n    Null,\n    String(&'a str),\n    Integer(IntegerId<'a>),\n}\n\n#[derive(Clone, Copy, Debug, Eq, PartialEq)]\npub enum EnvelopeError {\n    ExpectedObject,\n    InvalidId,\n    UnknownField,\n    InvalidVersion,\n    InvalidMethod,\n}\n\n/// Invalid envelopes always receive an Invalid Request response, including\n/// those without an ID. A valid ID survives other envelope errors; a bad ID\n/// or non-object root yields null, matching the reference's validation order.\n#[derive(Clone, Copy, Debug, Eq, PartialEq)]\npub struct InvalidRequest<'a> {\n    reason: EnvelopeError,\n    response_id: RequestId<'a>,\n}\n\nimpl<'a> InvalidRequest<'a> {\n    pub fn reason(self) -> EnvelopeError {\n        self.reason\n    }\n\n    pub fn response_id(self) -> RequestId<'a> {\n        self.response_id\n    }\n\n    pub fn code(self) -> i32 {\n        -32600\n    }\n}\n\n/// A valid envelope, not a known or implemented method. Any string method,\n/// including an empty or unknown name, reaches the future adapter's lookup.\n/// For notifications that adapter must suppress method/params/state failures.\n#[derive(Clone, Copy, Debug)]\npub struct Request<'a> {\n    id: RequestId<'a>,\n    method: &'a str,\n    params: Option<&'a Value>,\n}\n\nimpl<'a> Request<'a> {\n    pub fn id(self) -> RequestId<'a> {\n        self.id\n    }\n\n    pub fn is_notification(self) -> bool {\n        matches!(self.id, RequestId::Absent)\n    }\n\n    pub fn method(self) -> &'a str {\n        self.method\n    }\n\n    /// A borrowed raw boundary value; absent params differ from explicit null.\n    /// Method-specific validation must precede passing data to the domain.\n    pub fn params(self) -> Option<&'a Value> {\n        self.params\n    }\n\n    /// Validate the reference's closed empty `Params` schema for shutdown.\n    /// Does not invoke shutdown or inspect initialization state.\n    pub fn shutdown_params(self) -> Result<(), ParamsError> {\n        match self.params {\n            None => Ok(()),\n            Some(Value::Object(object)) if object.is_empty() => Ok(()),\n            Some(Value::Object(_)) => Err(ParamsError::UnknownField),\n            Some(_) => Err(ParamsError::ExpectedObject),\n        }\n    }\n}\n"
+   ]
+  }
+ }
+}

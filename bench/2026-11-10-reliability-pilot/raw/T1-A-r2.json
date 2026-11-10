@@ -1,0 +1,46 @@
+{
+ "trial": "T1-A-r2",
+ "models": [
+  "claude-haiku-5-5"
+ ],
+ "api_calls": 4,
+ "usage_sum": {
+  "input_tokens": 8,
+  "cache_creation_input_tokens": 20937,
+  "cache_read_input_tokens": 128021,
+  "output_tokens": 2083
+ },
+ "tool_calls": 4,
+ "tool_result_bytes": 9384,
+ "final_reply": "DONE",
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "cd <trial> && mkdir -p work && cd repo && git grep -n -E '(^|[^A-Za-z0-9_])usable[[:space:]]*\\(' -- crates/ > ../work/hits.txt; echo \"exit=$?\"; wc -l < ../work/hits.txt; git grep -c -E '(^|[^A-Za-z0-9_])usable[[:space:]]*\\(' -- crates/; echo ---; git grep -n -i 'usable' -- crates/ | grep -v -E '(^|[^A-Za-z0-9_])usable[[:space:]]*\\(' | head -50",
+   "result_bytes": 6831,
+   "is_error": false,
+   "result_head": "exit=0\n10\ncrates/writfold-kernel/src/checker/assessment.rs:2\ncrates/writfold-kernel/tests/core.rs:3\ncrates/writfold-kernel/tests/core/first_match.rs:1\ncrates/writfold-kernel/tests/workflows.rs:1\ncrates/writfold-wire/src/semantic/request.rs:1\ncrates/writfold-wire/src/semantic/response.rs:1\ncrates/writfold-wire/tests/result_decoders.rs:1\n---\ncrates/writfold-domain/src/knowledge.rs:105:        usable: bool,\ncrates/writfold-kernel/src/checker.rs:3:pub use assessment::usable_for_snapshot;\ncrates/writfold-kernel/src/checker.rs:21:    assess, assessment_gaps, policy_allows, reusable, usable_for, witness_freshness,\ncrates/writfold-kernel/src/checker/assessment.rs:14:use receipts::{current, reusable_with, validated};\ncrates/writfold-kernel/src/checker/assessment.rs:20:pub fn reusable(kb: &KB, conte"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial> && cat work/hits.txt",
+   "result_bytes": 1134,
+   "is_error": false,
+   "result_head": "crates/writfold-kernel/src/checker/assessment.rs:123:    *assess(kb, context, reference).usable()\ncrates/writfold-kernel/src/checker/assessment.rs:134:    *assess_frame(kb, Frame { base: context, snapshot }, reference).usable()\ncrates/writfold-kernel/tests/core.rs:122:    assert!(*assessment.usable());\ncrates/writfold-kernel/tests/core.rs:265:        assert!(!result.usable());\ncrates/writfold-kernel/tests/core.rs:282:    assert!(!verdict.usable());\ncrates/writfold-kernel/tests/core/first_match.rs:111:        assert!(!assessment.usable());\ncrates/writfold-kernel/tests/workflows.rs:290:    assert!(assessment.is_some_and(|assessment| !assessment.usable()));\ncrates/writfold-wire/src/semantic/request.rs:100:                json!(result.usable())\ncrates/writfold-wire/src/semantic/response.rs:32:"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial>/repo && git grep -n -E '(^|[^A-Za-z0-9_])usable$|(^|[^A-Za-z0-9_])usable[[:space:]]*$' -- crates/; echo \"multiline-check-exit=$?\"; cd .. && awk -F: 'BEGIN{OFS=\"\"} {p=$1; l=$2; t=substr($0, length(p)+length(l)+3); sub(/^[ \\t]+/, \"\", t); print p, \":\", l, \": \", t}' work/hits.txt > answer.txt && cat answer.txt && wc -l < answer.txt",
+   "result_bytes": 1358,
+   "is_error": false,
+   "result_head": "crates/writfold-kernel/src/checker/assessment_model.rs:163:    assess_spec(kb, context, reference).usable\ncrates/writfold-kernel/src/checker/assessment_model.rs:167:    assess_frame_spec(kb, FrameView { base: context, snapshot }, reference).usable\nmultiline-check-exit=0\ncrates/writfold-kernel/src/checker/assessment.rs:123: *assess(kb, context, reference).usable()\ncrates/writfold-kernel/src/checker/assessment.rs:134: *assess_frame(kb, Frame { base: context, snapshot }, reference).usable()\ncrates/writfold-kernel/tests/core.rs:122: assert!(*assessment.usable());\ncrates/writfold-kernel/tests/core.rs:265: assert!(!result.usable());\ncrates/writfold-kernel/tests/core.rs:282: assert!(!verdict.usable());\ncrates/writfold-kernel/tests/core/first_match.rs:111: assert!(!assessment.usable());\ncrates/wri"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "is_error": false,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

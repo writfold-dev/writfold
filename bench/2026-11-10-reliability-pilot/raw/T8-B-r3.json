@@ -1,0 +1,39 @@
+{
+ "trial": "T8-B-r3",
+ "models": [
+  "claude-haiku-5-5"
+ ],
+ "api_calls": 3,
+ "usage_sum": {
+  "input_tokens": 6,
+  "cache_creation_input_tokens": 16959,
+  "cache_read_input_tokens": 87268,
+  "output_tokens": 1329
+ },
+ "tool_calls": 3,
+ "tool_result_bytes": 845,
+ "final_reply": "DONE",
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "mkdir -p <trial>/work && cd <trial>/work && printf '%s\\n' '@h := find text \"WORKTRUNK_BYTES\" in \"crates/\" at \"e56621f7acf0d3392add5d814c35134b66c872a7\" limit 100;' '@e := retain @h around lines 0;' '@v := project @e [path, line, excerpt(max_chars: 300)];' 'emit @v budget_tokens 4000;' > q.tuft && cat q.tuft && <writfold> tuft run q.tuft --repo <trial>/repo --state <trial>/state --out <trial>/work/out.txt; echo \"exit=$?\"; cat <trial>/work/out.txt",
+   "result_bytes": 691,
+   "is_error": false,
+   "result_head": "@h := find text \"WORKTRUNK_BYTES\" in \"crates/\" at \"e56621f7acf0d3392add5d814c35134b66c872a7\" limit 100;\n@e := retain @h around lines 0;\n@v := project @e [path, line, excerpt(max_chars: 300)];\nemit @v budget_tokens 4000;\n# coverage=complete files=664/664 hits=3 shown=3 omitted=0 cursor=none program=2e27d5bf5235\nexit=0\ncrates/writfold-runtime/src/worktrunk/mod.rs:51: pub const WORKTRUNK_BYTES: u64 = 29_099_264;\ncrates/writfold-runtime/src/worktrunk/tools.rs:1: use super::{Result, WORKTRUNK_BYTES, WORKTRUNK_SHA256, WorktrunkError, profile};\ncrates/writfold-runtime/src/worktrunk/tools.rs:32:             ByteCount::new(WORKTRUNK_BYTES).map_err(|_| WorktrunkError::Profile(\"tool bytes\"))?;"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial> && printf '%s\\n' 'crates/writfold-runtime/src/worktrunk/mod.rs:51: pub const WORKTRUNK_BYTES: u64 = 29_099_264;' > answer.txt && cat answer.txt",
+   "result_bytes": 93,
+   "is_error": false,
+   "result_head": "crates/writfold-runtime/src/worktrunk/mod.rs:51: pub const WORKTRUNK_BYTES: u64 = 29_099_264;"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "is_error": false,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

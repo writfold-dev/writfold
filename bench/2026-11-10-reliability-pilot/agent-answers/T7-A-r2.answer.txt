@@ -1,0 +1,5 @@
+crates/writfold-app/src/trial/run/weft.rs:68:         std::thread::sleep(Duration::from_millis(2));
+crates/writfold-runtime/src/process/runner.rs:148:                 std::thread::sleep(Duration::from_millis(100));
+crates/writfold-store/examples/support/native_flow.rs:341:         std::thread::sleep(Duration::from_millis(50));
+crates/writfold-store/src/backend/conformance/races.rs:119:                 std::thread::sleep(KILL_STEP * attempt);
+crates/writfold-store/tests/memory_backend/mod.rs:320:             std::thread::sleep(Duration::from_millis(50));

@@ -1,0 +1,165 @@
+{
+ "trial": "T2-B-r1",
+ "models": [
+  "claude-haiku-5-5"
+ ],
+ "api_calls": 12,
+ "usage_sum": {
+  "input_tokens": 24,
+  "cache_creation_input_tokens": 35036,
+  "cache_read_input_tokens": 482561,
+  "output_tokens": 14463
+ },
+ "tool_calls": 21,
+ "tool_result_bytes": 10844,
+ "final_reply": "DONE",
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "mkdir -p <trial>/work && cd <trial>/work && cat > q.tuft <<'EOF'\n@h := find text \"as_digest(\" in \"crates/\" at \"e56621f7acf0d3392add5d814c35134b66c872a7\" limit 100;\n@e := retain @h around lines 0;\n@v := project @e [path, line, excerpt(max_chars: 300)];\nemit @v budget_tokens 4000;\nEOF\n<writfold> tuft run q.tuft --repo <trial>/repo --state <trial>/state --out <trial>/work/out.txt; echo \"exit=$?\"; cat <trial>/work/out.txt",
+   "result_bytes": 416,
+   "is_error": true,
+   "result_head": "This agent is isolated in the worktree <home>/workspace/writfold/.claude/worktrees/agent-a42124a95fb2dcc3e, but this command is too complex to verify that it stays inside the worktree. Refusing to run it — a worktree-isolated agent's git operations must target its own worktree. Split it into plain, separate commands and run them from <home>/workspace/writfold/.claude/worktrees/agent-a42124a95fb2dcc3e."
+  },
+  {
+   "tool": "Bash",
+   "input": "mkdir -p <trial>/work",
+   "result_bytes": 31,
+   "is_error": false,
+   "result_head": "(Bash completed with no output)"
+  },
+  {
+   "tool": "Bash",
+   "input": "printf '%s\\n' '@h := find text \"as_digest(\" in \"crates/\" at \"e56621f7acf0d3392add5d814c35134b66c872a7\" limit 100;' '@e := retain @h around lines 0;' '@v := project @e [path, line, excerpt(max_chars: 300)];' 'emit @v budget_tokens 4000;' > <trial>/work/q.tuft",
+   "result_bytes": 31,
+   "is_error": false,
+   "result_head": "(Bash completed with no output)"
+  },
+  {
+   "tool": "Bash",
+   "input": "<writfold> tuft run <trial>/work/q.tuft --repo <trial>/repo --state <trial>/state --out <trial>/work/out.txt",
+   "result_bytes": 93,
+   "is_error": false,
+   "result_head": "# coverage=complete files=664/664 hits=33 shown=31 omitted=0 cursor=none program=ac70c7bef8ee"
+  },
+  {
+   "tool": "Bash",
+   "input": "cat <trial>/work/out.txt",
+   "result_bytes": 3361,
+   "is_error": false,
+   "result_head": "crates/writfold-app/src/trial/flow.rs:89:     [C::Bytes(blob.digest.as_digest()), C::Unsigned(blob.bytes)]\ncrates/writfold-app/src/trial/prepare.rs:136:         prepared: *writfold_domain::worktree::WorktreeDigest::as_digest(&digest),\ncrates/writfold-domain/src/engineering/dependency.rs:364:         .then_with(|| left.payload.as_digest().cmp(right.payload.as_digest()))\ncrates/writfold-domain/src/engineering/digests.rs:30:             fn as_digest(&self) -> (bytes: &[u8; 32])\ncrates/writfold-domain/src/engineering/mod.rs:24: //!     fn as_digest(&self) -> &[u8; 32] { &self.0 }\ncrates/writfold-domain/src/engineering/mod.rs:70:     fn as_digest(&self) -> &[u8; 32];\ncrates/writfold-domain/src/worktree/mod.rs:30:     fn as_digest(&self) -> &[u8; 32];\ncrates/writfold-domain/src/worktree/mod.rs:4"
+  },
+  {
+   "tool": "Bash",
+   "input": "printf '%s\\n' '@h := find text \"as_digest\" in \"crates/\" at \"e56621f7acf0d3392add5d814c35134b66c872a7\" limit 200;' '@e := retain @h around lines 0;' '@v := project @e [path, line, excerpt(max_chars: 300)];' 'emit @v budget_tokens 8000;' > <trial>/work/q2.tuft",
+   "result_bytes": 31,
+   "is_error": false,
+   "result_head": "(Bash completed with no output)"
+  },
+  {
+   "tool": "Bash",
+   "input": "<writfold> tuft run <trial>/work/q2.tuft --repo <trial>/repo --state <trial>/state --out <trial>/work/out2.txt",
+   "result_bytes": 93,
+   "is_error": false,
+   "result_head": "# coverage=complete files=664/664 hits=33 shown=31 omitted=0 cursor=none program=1f977b7a4e7d"
+  },
+  {
+   "tool": "Bash",
+   "input": "printf '%s\\n' '@h := find text \"as_digest\" in \"crates/\" at \"e56621f7acf0d3392add5d814c35134b66c872a7\" limit 200;' 'emit @h budget_tokens 8000;' > <trial>/work/q3.tuft",
+   "result_bytes": 31,
+   "is_error": false,
+   "result_head": "(Bash completed with no output)"
+  },
+  {
+   "tool": "Bash",
+   "input": "<writfold> tuft run <trial>/work/q3.tuft --repo <trial>/repo --state <trial>/state --out <trial>/work/out3.txt",
+   "result_bytes": 207,
+   "is_error": true,
+   "result_head": "Exit code 1\nwritfold: <trial>/work/q3.tuft:2:6: error[T203]: @h is hits, expected a view"
+  },
+  {
+   "tool": "Bash",
+   "input": "cat <trial>/work/out3.txt",
+   "result_bytes": 184,
+   "is_error": true,
+   "result_head": "Exit code 1\ncat: <trial>/work/out3.txt: No such file or directory"
+  },
+  {
+   "tool": "Bash",
+   "input": "printf '%s\\n' '@h := find text \"as_digest\" in \"crates/\" at \"e56621f7acf0d3392add5d814c35134b66c872a7\" limit 200;' '@v := project @h [path, line, excerpt(max_chars: 300)];' 'emit @v budget_tokens 8000;' > <trial>/work/q3.tuft",
+   "result_bytes": 31,
+   "is_error": false,
+   "result_head": "(Bash completed with no output)"
+  },
+  {
+   "tool": "Bash",
+   "input": "<writfold> tuft run <trial>/work/q3.tuft --repo <trial>/repo --state <trial>/state --out <trial>/work/out3.txt",
+   "result_bytes": 237,
+   "is_error": true,
+   "result_head": "Exit code 1\nwritfold: <trial>/work/q3.tuft:2:31: error[T203]: field `excerpt` needs retained evidence; retain @h first"
+  },
+  {
+   "tool": "Bash",
+   "input": "cat <trial>/work/out3.txt",
+   "result_bytes": 184,
+   "is_error": true,
+   "result_head": "Exit code 1\ncat: <trial>/work/out3.txt: No such file or directory"
+  },
+  {
+   "tool": "Bash",
+   "input": "printf '%s\\n' '@h := find text \"as_digest\" in \"crates/\" at \"e56621f7acf0d3392add5d814c35134b66c872a7\" limit 200;' '@e := retain @h around lines 0;' '@v := project @e [path, line];' 'emit @v budget_tokens 8000;' > <trial>/work/q3.tuft && <writfold> tuft run <trial>/work/q3.tuft --repo <trial>/repo --state <trial>/state --out <trial>/work/out3.txt; cat <trial>/work/out3.txt",
+   "result_bytes": 1627,
+   "is_error": false,
+   "result_head": "# coverage=complete files=664/664 hits=33 shown=31 omitted=0 cursor=none program=e3847032468b\ncrates/writfold-app/src/trial/flow.rs:89\ncrates/writfold-app/src/trial/prepare.rs:136\ncrates/writfold-domain/src/engineering/dependency.rs:364\ncrates/writfold-domain/src/engineering/digests.rs:30\ncrates/writfold-domain/src/engineering/mod.rs:24\ncrates/writfold-domain/src/engineering/mod.rs:70\ncrates/writfold-domain/src/worktree/mod.rs:30\ncrates/writfold-domain/src/worktree/mod.rs:40\ncrates/writfold-domain/tests/engineering.rs:99\ncrates/writfold-domain/tests/engineering.rs:103\ncrates/writfold-kernel/src/authority.rs:165\ncrates/writfold-kernel/src/authority.rs:170\ncrates/writfold-kernel/src/ledger.rs:105\ncrates/writfold-kernel/src/ledger.rs:119\ncrates/writfold-kernel/src/ledger.rs:183\ncrates/writfol"
+  },
+  {
+   "tool": "Bash",
+   "input": "printf '%s\\n' '@h := find text \"as_digest\" in \"crates/writfold-store/\" at \"e56621f7acf0d3392add5d814c35134b66c872a7\" limit 200;' '@e := retain @h around lines 0;' '@v := project @e [path, line];' 'emit @v budget_tokens 8000;' > <trial>/work/q4.tuft && <writfold> tuft run <trial>/work/q4.tuft --repo <trial>/repo --state <trial>/state",
+   "result_bytes": 249,
+   "is_error": false,
+   "result_head": "crates/writfold-store/examples/support/object_smoke.rs:111\ncrates/writfold-store/src/objects/retention.rs:162\ncrates/writfold-store/tests/objects/support.rs:72\n# coverage=complete files=43/43 hits=3 shown=3 omitted=0 cursor=none program=67cc0551b411"
+  },
+  {
+   "tool": "Bash",
+   "input": "printf '%s\\n' '@h := find text \"as_digest\" in \"crates/writfold-wire/\" at \"e56621f7acf0d3392add5d814c35134b66c872a7\" limit 200;' '@e := retain @h around lines 0;' '@v := project @e [path, line];' 'emit @v budget_tokens 8000;' > <trial>/work/q5.tuft && <writfold> tuft run <trial>/work/q5.tuft --repo <trial>/repo --state <trial>/state",
+   "result_bytes": 695,
+   "is_error": false,
+   "result_head": "crates/writfold-wire/src/engineering/dependency.rs:176\ncrates/writfold-wire/src/engineering/dependency.rs:188\ncrates/writfold-wire/src/engineering/dependency.rs:192\ncrates/writfold-wire/src/engineering/edit_approval.rs:53\ncrates/writfold-wire/src/engineering/edit_approval.rs:54\ncrates/writfold-wire/src/engineering/edit_approval.rs:55\ncrates/writfold-wire/src/engineering/grant.rs:128\ncrates/writfold-wire/src/engineering/ledger.rs:43\ncrates/writfold-wire/src/engineering/ledger.rs:44\ncrates/writfold-wire/src/engineering/ledger_record.rs:53\ncrates/writfold-wire/tests/engineering_fingerprints.rs:157\n# coverage=complete files=203/203 hits=12 shown=11 omitted=0 cursor=none program=fb2b1ab66583"
+  },
+  {
+   "tool": "Bash",
+   "input": "printf '%s\\n' '@h := find text \"as_digest\" in \"crates/writfold-kernel/\" at \"e56621f7acf0d3392add5d814c35134b66c872a7\" limit 200;' '@e := retain @h around lines 0;' '@v := project @e [path, line];' 'emit @v budget_tokens 8000;' > <trial>/work/q6.tuft && <writfold> tuft run <trial>/work/q6.tuft --repo <trial>/repo --state <trial>/state",
+   "result_bytes": 380,
+   "is_error": false,
+   "result_head": "crates/writfold-kernel/src/authority.rs:165\ncrates/writfold-kernel/src/authority.rs:170\ncrates/writfold-kernel/src/ledger.rs:105\ncrates/writfold-kernel/src/ledger.rs:119\ncrates/writfold-kernel/src/ledger.rs:183\ncrates/writfold-kernel/src/trial.rs:148\ncrates/writfold-kernel/src/trial.rs:190\n# coverage=complete files=78/78 hits=7 shown=7 omitted=0 cursor=none program=045e4c52bd03"
+  },
+  {
+   "tool": "Bash",
+   "input": "printf '%s\\n' '@h := find rx\"as_digest\\\\(.*as_digest\" in \"crates/\" at \"e56621f7acf0d3392add5d814c35134b66c872a7\" limit 100;' '@e := retain @h around lines 0;' '@v := project @e [path, line, excerpt(max_chars: 300)];' 'emit @v budget_tokens 4000;' > <trial>/work/q7.tuft && <writfold> tuft run <trial>/work/q7.tuft --repo <trial>/repo --state <trial>/state",
+   "result_bytes": 215,
+   "is_error": true,
+   "result_head": "Exit code 1\nwritfold: <trial>/work/q7.tuft:1:12: error[T208]: regex outside the admitted dialect"
+  },
+  {
+   "tool": "Bash",
+   "input": "printf '%s\\n' '@h := find rx\"as_digest.*as_digest\" in \"crates/\" at \"e56621f7acf0d3392add5d814c35134b66c872a7\" limit 100;' '@e := retain @h around lines 0;' '@v := project @e [path, line, excerpt(max_chars: 300)];' 'emit @v budget_tokens 4000;' > <trial>/work/q7.tuft && <writfold> tuft run <trial>/work/q7.tuft --repo <trial>/repo --state <trial>/state",
+   "result_bytes": 346,
+   "is_error": false,
+   "result_head": "crates/writfold-domain/src/engineering/dependency.rs:364:         .then_with(|| left.payload.as_digest().cmp(right.payload.as_digest()))\ncrates/writfold-wire/tests/engineering_fingerprints.rs:157:     assert_ne!(skill.as_digest(), procedure.as_digest());\n# coverage=complete files=664/664 hits=2 shown=2 omitted=0 cursor=none program=e1cfd180b84f"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial> && awk '!/^#/' work/out.txt | awk '{ p=$0; sub(/:.*/,\"\",p); if (p ~ /(^|\\/)(tests|examples)\\//) next; if (index($0,\"fn as_digest\")>0) next; t=$0; sub(/^[^:]*:[0-9]+: /,\"\",t); if (t ~ /^[ \\t]*\\/\\//) next; print }' > answer.txt; wc -l answer.txt; cat answer.txt",
+   "result_bytes": 2341,
+   "is_error": false,
+   "result_head": "21 answer.txt\ncrates/writfold-app/src/trial/flow.rs:89:     [C::Bytes(blob.digest.as_digest()), C::Unsigned(blob.bytes)]\ncrates/writfold-app/src/trial/prepare.rs:136:         prepared: *writfold_domain::worktree::WorktreeDigest::as_digest(&digest),\ncrates/writfold-domain/src/engineering/dependency.rs:364:         .then_with(|| left.payload.as_digest().cmp(right.payload.as_digest()))\ncrates/writfold-kernel/src/authority.rs:165:         let retained: Vec<[u8; 32]> = retained.iter().map(|d| *d.as_digest()).collect();\ncrates/writfold-kernel/src/authority.rs:170:             envelope: *authorization.envelope.as_digest(),\ncrates/writfold-kernel/src/ledger.rs:105:         closure: record.closure.iter().map(|d| *d.as_digest()).collect(),\ncrates/writfold-kernel/src/ledger.rs:119:     blobs.iter().m"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "is_error": false,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

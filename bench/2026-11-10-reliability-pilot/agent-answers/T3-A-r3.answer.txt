@@ -1,0 +1,251 @@
+crates/writfold-app/src/trial/assessment_tests.rs:80:    names.iter().map(|n| (*n).to_owned()).collect()
+crates/writfold-app/src/trial/assessment_tests.rs:140:        "not json".to_owned(),
+crates/writfold-store/tests/backend_dolt.rs:91:            let owner = WriterId::new("conformance-writer".to_owned())?;
+crates/writfold-store/tests/backend_dolt.rs:134:        let owner = WriterId::new("w".to_owned())?;
+crates/writfold-store/tests/backend_dolt.rs:167:        let owner = WriterId::new("w".to_owned())?;
+crates/writfold-store/tests/backend_dolt.rs:170:            head: HeadName::new("main".to_owned())?,
+crates/writfold-store/tests/backend_dolt.rs:173:                key: RecordKey::new("doc:x".to_owned())?,
+crates/writfold-store/tests/backend_dolt.rs:174:                kind: RecordKind::new("document".to_owned())?,
+crates/writfold-app/src/trial/state.rs:144:            root: root.to_owned(),
+crates/writfold-app/src/trial/flow.rs:153:                path: d.text()?.to_owned(),
+crates/writfold-app/src/trial/flow.rs:154:                base: d.text()?.to_owned(),
+crates/writfold-app/src/trial/flow.rs:173:                reason: d.text()?.to_owned(),
+crates/writfold-app/src/trial/evidence/mod.rs:70:        binding: binding.to_owned(),
+crates/writfold-app/src/trial/evidence/mod.rs:72:        commit: reference.revision().as_str().to_owned(),
+crates/writfold-app/src/trial/evidence/mod.rs:95:            out.push(binding.to_owned());
+crates/writfold-app/src/trial/evidence/mod.rs:107:        return Ok((text.to_owned(), None));
+crates/writfold-app/src/trial/evidence/mod.rs:170:    let line = entry.line.map_or("?".to_owned(), |l| l.to_string());
+crates/writfold-app/src/trial/recover.rs:52:            let reason = "recovered: the original was never replaced".to_owned();
+crates/writfold-store/src/backend/conformance/reads.rs:144:        kind: RecordKind::new("document".to_owned()).map_err(|e| fail(CHECK, e.to_string()))?,
+crates/writfold-store/src/backend/conformance/reads.rs:148:        head: HeadName::new("main".to_owned()).map_err(|e| fail(CHECK, e.to_string()))?,
+crates/writfold-app/src/tuft/search.rs:66:                path: key.as_str().to_owned(),
+crates/writfold-app/src/tuft/search.rs:72:            self.files.insert(key.as_str().to_owned(), content.to_vec());
+crates/writfold-app/src/tuft/search.rs:112:        needle.to_owned(),
+crates/writfold-app/src/tuft/search.rs:157:        "blob".to_owned(),
+crates/writfold-app/src/trial/sparse_tests.rs:80:        materialized(&p.worktree)? == [edited.to_owned()],
+crates/writfold-app/src/trial/sparse_tests.rs:112:        path.to_owned()
+crates/writfold-store/src/backend/dolt.rs:158:            RecordKey::new(node.id().as_str().to_owned())
+crates/writfold-store/src/backend/dolt.rs:160:            RecordKind::new(node.kind().as_str().to_owned())
+crates/writfold-app/src/trial/retain.rs:40:    Ok(GitObjectId::new(format, text.to_owned())?)
+crates/writfold-app/src/trial/retain.rs:55:        path.to_owned(),
+crates/writfold-app/src/trial/retain.rs:134:        path: path.to_owned(),
+crates/writfold-app/src/trial/retain.rs:162:                    .to_owned();
+crates/writfold-app/src/trial/retain.rs:186:            commit: file.commit.as_str().to_owned(),
+crates/writfold-app/src/trial/run/tests.rs:52:    Ok(String::from_utf8(out.stdout)?.trim_end().to_owned())
+crates/writfold-app/src/trial/run/tests.rs:161:    let refused = approve(&f.state, &ran.prepared.run, &["bad".to_owned()]);
+crates/writfold-app/src/trial/run/tests.rs:163:    approve(&f.state, &ran.prepared.run, &["ok".to_owned()])?;
+crates/writfold-app/src/trial/run/tests.rs:224:    args.extend(["--state".to_owned(), f.state.display().to_string()]);
+crates/writfold-xtask/src/trust.rs:118:            _ => Err("invalid proof trust hexadecimal digest".to_owned()),
+crates/writfold-app/src/trial/evidence/show.rs:83:    let line = entry.line.map_or("?".to_owned(), |l| l.to_string());
+crates/writfold-kernel/src/checker/assessment.rs:151:        gaps.push("claim is not applicable to the context target".to_owned());
+crates/writfold-kernel/src/checker/assessment.rs:173:        gaps.push("no reusable validation receipt".to_owned());
+crates/writfold-kernel/src/checker/assessment.rs:176:        gaps.push("claim is contested by contrary evidence or dispute".to_owned());
+crates/writfold-app/src/trial/rpc_tests.rs:83:            "entity not found".to_owned()
+crates/writfold-app/src/trial/approve.rs:95:            return Ok("no Weft report bound".to_owned());
+crates/writfold-app/src/tuft/mod.rs:115:    Ok(GitObjectId::new(format, text.to_owned())?)
+crates/writfold-app/src/tuft/mod.rs:203:                path: path.to_owned(),
+crates/writfold-app/src/trial/show.rs:23:        Event::Approved { .. } => "approved  operator grant + signed approval retained".to_owned(),
+crates/writfold-app/src/trial/show.rs:24:        Event::Claimed { .. } => "claimed   durable claim before touching the file".to_owned(),
+crates/writfold-app/src/trial/show.rs:42:            "none cited".to_owned(),
+crates/writfold-app/src/trial/show.rs:43:            "none (no Weft report bound)".to_owned(),
+crates/writfold-app/src/trial/show.rs:48:        0 => "none cited".to_owned(),
+crates/writfold-app/src/trial/show.rs:86:    let (mut evidence, mut assessed) = ("none cited".to_owned(), "none".to_owned());
+crates/writfold-app/src/trial/show.rs:87:    let mut approved = "none".to_owned();
+crates/writfold-app/src/trial/show.rs:88:    let (mut claim, mut effect) = ("none", "none".to_owned());
+crates/writfold-app/src/trial/show.rs:101:                effect = "unknown (claimed, no outcome yet; see recover)".to_owned();
+crates/writfold-app/src/trial/show.rs:109:                .to_owned();
+crates/writfold-app/src/trial/cli.rs:53:            parsed.options.push((name.to_owned(), value.clone()));
+crates/writfold-app/src/trial/cli.rs:189:        _ => Ok(USAGE.to_owned()),
+crates/writfold-xtask/src/macro_audit.rs:269:                    "clone".to_owned(),
+crates/writfold-xtask/src/macro_audit.rs:281:                    source: self.path.to_owned(),
+crates/writfold-app/src/trial/run/placeholder.rs:88:        placeholder: placeholder.to_owned(),
+crates/writfold-store/src/backend/dolt/write.rs:336:            if id.chars().count() > KEY_CHARS || GraphNodeId::try_from(id.to_owned()).is_err() {
+crates/writfold-store/src/backend/dolt/write.rs:339:            if GraphNodeKind::try_from(kind.to_owned()).is_err() {
+crates/writfold-xtask/src/syntax.rs:138:                    source: self.path.to_owned(),
+crates/writfold-xtask/src/syntax.rs:139:                    name: "clone".to_owned(),
+crates/writfold-xtask/src/syntax.rs:164:                source: self.path.to_owned(),
+crates/writfold-app/src/engine_trial_tests.rs:190:        ("trial/show", r#"{}"#.to_owned()),
+crates/writfold-app/src/engine_trial_tests.rs:191:        ("trial/show", r#"{"run":"r","extra":1}"#.to_owned()),
+crates/writfold-app/src/engine_trial_tests.rs:192:        ("trial/show", r#"{"run":7}"#.to_owned()),
+crates/writfold-app/src/engine_trial_tests.rs:193:        ("trial/show", r#"{"run":""}"#.to_owned()),
+crates/writfold-app/src/engine_trial_tests.rs:194:        ("trial/show", r#"null"#.to_owned()),
+crates/writfold-app/src/engine_trial_tests.rs:203:            r#"{"repo":"rel","commit":"c","file":"f","start":0,"end":1}"#.to_owned(),
+crates/writfold-app/src/engine_trial_tests.rs:205:        ("trial/prepare", r#"{"repo":"/r","file":"f"}"#.to_owned()),
+crates/writfold-app/src/engine_trial_tests.rs:208:            r#"{"repo":"/r","file":"f","recipe":"r.spl"}"#.to_owned(),
+crates/writfold-app/src/engine_trial_tests.rs:212:            r#"{"repo":"/r","file":"f","recipe":"/r.spl","state":"/s"}"#.to_owned(),
+crates/writfold-app/src/tuft/tests.rs:44:    Ok(String::from_utf8(out.stdout)?.trim_end().to_owned())
+crates/writfold-app/src/tuft/tests.rs:131:            Some(next) => cursor = Some(next.to_owned()),
+crates/writfold-app/src/tuft/cli.rs:57:            parsed.options.push((name.to_owned(), value.clone()));
+crates/writfold-app/src/tuft/cli.rs:145:                plan.retain.as_ref().map_or("none".to_owned(), |r| format!(
+crates/writfold-app/src/tuft/cli.rs:159:        Some("help") | None => Ok(USAGE.to_owned()),
+crates/writfold-store/tests/memory_backend/mod.rs:68:                r.key.to_owned(),
+crates/writfold-store/tests/memory_backend/mod.rs:69:                r.kind.to_owned(),
+crates/writfold-store/tests/memory_backend/mod.rs:217:                    request.needle().to_owned(),
+crates/writfold-store/tests/memory_backend/mod.rs:329:                    change.key.as_str().to_owned(),
+crates/writfold-store/tests/memory_backend/mod.rs:330:                    change.kind.as_str().to_owned(),
+crates/writfold-app/src/trial/prepare.rs:53:    Ok(Capture::new(scope, path.to_owned(), source, metadata)?)
+crates/writfold-app/src/trial/prepare.rs:77:    let artifact = Artifact::new(identity.profile().to_owned(), sha)?;
+crates/writfold-app/src/trial/prepare.rs:120:        replayed.identity().profile().to_owned(),
+crates/writfold-app/src/trial/prepare.rs:130:        path: path.to_owned(),
+crates/writfold-app/src/trial/prepare.rs:131:        base: base.to_owned(),
+crates/writfold-app/src/trial/prepare.rs:204:        path: path.to_owned(),
+crates/writfold-app/src/trial/prepare.rs:205:        base: base.as_str().to_owned(),
+crates/writfold-domain/src/language.rs:261:                members[index].clone(), predicate.to_owned(), arguments,
+crates/writfold-store/src/backend/conformance.rs:215:    RecordKey::new(value.to_owned()).map_err(|error| fail(check, error.to_string()))
+crates/writfold-runtime/src/fs/directories.rs:23:            bindings: vec![(parent, name.to_owned(), identity)],
+crates/writfold-store/src/backend/git.rs:224:    RecordKind::new(KIND.to_owned())
+crates/writfold-store/src/backend/git.rs:244:    RecordKey::new(path.to_owned())
+crates/writfold-store/tests/dolt_realm/mod.rs:58:            dolt: dolt.to_owned(),
+crates/writfold-store/tests/dolt_realm/mod.rs:170:        Ok(lines.next().ok_or("missing HEAD row")?.trim().to_owned())
+crates/writfold-store/tests/dolt_realm/mod.rs:175:            "DELETE FROM wf_edges".to_owned(),
+crates/writfold-store/tests/dolt_realm/mod.rs:176:            "DELETE FROM wf_nodes".to_owned(),
+crates/writfold-store/tests/dolt_realm/mod.rs:251:    let mut values = vec!["1".to_owned()];
+crates/writfold-runtime/src/git/trial.rs:109:    GitObjectId::new(format, text.to_owned()).map_err(|_| GitError::Malformed("HEAD commit"))
+crates/writfold-runtime/src/git/trial.rs:190:    let blob = GitObjectId::new(commit.format(), text.to_owned())
+crates/writfold-runtime/src/git/traversal.rs:19:    let mut object = GitObjectId::new(commit.format(), text.to_owned())
+crates/writfold-app/src/trial/retain_tests.rs:39:        Ok(String::from_utf8(out.stdout)?.trim_end().to_owned())
+crates/writfold-store/src/backend/scan.rs:132:    let kind = RecordKind::new(record.kind.to_owned())
+crates/writfold-store/src/backend/scan.rs:138:    RecordKey::new(key.to_owned())
+crates/writfold-sources/tests/splicery.rs:194:        name: "captured".to_owned(),
+crates/writfold-app/src/tuft/backend_tests.rs:19:    Ok(RecordKey::new(path.to_owned())?)
+crates/writfold-app/src/tuft/backend_tests.rs:27:        needle.to_owned(),
+crates/writfold-app/src/tuft/backend_tests.rs:41:    let scope = "src/".to_owned();
+crates/writfold-kernel/tests/procedure/fixture.rs:104:            export: ExportName::try_from("apply".to_owned())?,
+crates/writfold-app/src/trial/evidence/label.rs:64:        Ok(text) if is_digest(text.trim_end()) => Ok(Some(text.trim_end().to_owned())),
+crates/writfold-runtime/src/worktrunk/mod.rs:97:        Ok(Self(value.to_owned()))
+crates/writfold-runtime/src/worktrunk/mod.rs:177:            path: path.to_owned(),
+crates/writfold-runtime/src/worktrunk/mod.rs:204:            path: path.to_owned(),
+crates/writfold-domain/tests/identities.rs:91:        assert_eq!(LedgerRecordId::try_from(value.to_owned())?.as_str(), value);
+crates/writfold-domain/tests/identities.rs:95:        assert!(LedgerRecordId::try_from(value.to_owned()).is_err());
+crates/writfold-kernel/src/checker/evaluation.rs:200:            enumeration: enumeration.id().clone(), predicate: value.to_owned(),
+crates/writfold-store/tests/backend_conformance.rs:94:                needle.to_owned(),
+crates/writfold-runtime/src/fs/root.rs:40:                bindings.push((directory, name.to_owned(), identity));
+crates/writfold-runtime/src/fs/root.rs:64:        bindings.push((parent.directory, name.to_owned(), identity));
+crates/writfold-runtime/src/fs/root.rs:78:                    name: component.as_os_str().to_owned(),
+crates/writfold-runtime/src/fs/root.rs:96:            bindings.push((directory, name.to_owned(), identity));
+crates/writfold-domain/src/worktree/effect_id.rs:31:        Ok(Self(value.to_owned()))
+crates/writfold-domain/src/worktree/references.rs:35:                Ok(Self(value.to_owned()))
+crates/writfold-domain/src/ids.rs:80:                if grammar::$grammar(value) { Ok(Self(value.to_owned())) }
+crates/writfold-domain/src/ids.rs:222:        if grammar::release(value) { Ok(Self { format, hex: value.to_owned() }) }
+crates/tuft/src/view.rs:110:    let text = valid.get(..shown)?.to_owned();
+crates/writfold-runtime/src/worktrunk/tools.rs:51:            controls: controls.to_owned(),
+crates/writfold-store/src/backend/conformance/writes.rs:28:        head: HeadName::new("main".to_owned()).map_err(|e| fail(check, e.to_string()))?,
+crates/writfold-store/src/backend/conformance/writes.rs:32:            kind: RecordKind::new(KIND.to_owned()).map_err(|e| fail(check, e.to_string()))?,
+crates/writfold-runtime/tests/git/ledger.rs:127:        Ok(String::from_utf8(out.stdout)?.trim().to_owned())
+crates/writfold-app/src/trial/evidence/tests.rs:39:    Ok(String::from_utf8(out.stdout)?.trim_end().to_owned())
+crates/writfold-runtime/src/git/ledger.rs:140:    let tree = GitObjectId::new(session.repository.format(), tree.to_owned())
+crates/writfold-runtime/src/git/ledger.rs:148:                GitObjectId::new(session.repository.format(), id.to_owned())
+crates/writfold-store/src/backend/conformance/lookups.rs:43:        LookupRequest::new(field, mode, Order::Key, needle.to_owned(), limit),
+crates/writfold-store/src/backend/conformance/lookups.rs:228:            LookupRequest::new(LookupField::Content, mode, order, "service".to_owned(), 10),
+crates/writfold-runtime/src/git/write_objects.rs:193:    GitObjectId::new(session.repository.format(), text.to_owned())
+crates/writfold-runtime/src/git/tree.rs:121:    let blob = GitObjectId::new(commit.format(), id.to_owned())
+crates/writfold-runtime/src/git/tree.rs:124:        path: path.to_owned(),
+crates/writfold-runtime/src/fs/path.rs:26:        Ok(Self(path.to_owned()))
+crates/writfold/tests/serve_trial.rs:43:    Ok(String::from_utf8(out.stdout)?.trim_end().to_owned())
+crates/writfold/tests/serve_trial.rs:160:        .to_owned();
+crates/writfold/tests/serve_trial.rs:169:    let run = payload["run"].as_str().ok_or("run")?.to_owned();
+crates/writfold/tests/serve_trial.rs:207:        ("garbage.json", "{\"schema\":\"not-a-report\"}".to_owned()),
+crates/tuft/src/check.rs:230:            binding: name.to_owned(),
+crates/tuft/src/check.rs:244:            binding: name.to_owned(),
+crates/tuft/src/check.rs:296:            binding: name.to_owned(),
+crates/writfold-sources/tests/material.rs:46:    let before = document.text().to_owned();
+crates/writfold-domain/tests/storage.rs:40:        BLOCK.to_owned(),
+crates/writfold-domain/tests/storage.rs:41:        "00000000000000000000000000".to_owned(),
+crates/writfold-domain/tests/storage.rs:42:        "7ZZZZZZZZZZZZZZZZZZZZZZZZZ".to_owned(),
+crates/writfold-domain/tests/storage.rs:59:        "main".to_owned(),
+crates/writfold-domain/tests/storage.rs:60:        "HEAD".to_owned(),
+crates/writfold-domain/tests/storage.rs:61:        "hb1".to_owned(),
+crates/writfold-domain/tests/storage.rs:62:        "".to_owned(),
+crates/writfold-domain/tests/storage.rs:64:        "8ZZZZZZZZZZZZZZZZZZZZZZZZZ".to_owned(),
+crates/writfold-domain/tests/storage.rs:65:        "01ARZ3NDEKTSV4RRFFQ69G5FAI".to_owned(),
+crates/writfold-domain/tests/storage.rs:66:        "01ARZ3NDEKTSV4RRFFQ69G5FAO".to_owned(),
+crates/writfold-domain/tests/storage.rs:67:        "01ARZ3NDEKTSV4RRFFQ69G5FAL".to_owned(),
+crates/writfold-domain/tests/storage.rs:68:        "01ARZ3NDEKTSV4RRFFQ69G5FAU".to_owned(),
+crates/writfold-sources/src/splicery.rs:141:        relative_path: expected_relative_path.to_owned(),
+crates/writfold-wire/tests/rpc_response.rs:57:        "0".to_owned(),
+crates/writfold-wire/tests/rpc_response.rs:58:        "-1".to_owned(),
+crates/writfold-wire/tests/rpc_response.rs:61:        "\"123\"".to_owned(),
+crates/writfold-wire/tests/rpc_response.rs:62:        "\"\"".to_owned(),
+crates/writfold-wire/tests/rpc_response.rs:63:        "null".to_owned(),
+crates/writfold-wire/tests/rpc_response.rs:64:        "-0".to_owned(),
+crates/writfold-domain/src/ids/inventory.rs:109:        let mut output = "inventory:".to_owned();
+crates/writfold-wire/tests/rpc.rs:36:        "0".to_owned(),
+crates/writfold-wire/tests/rpc.rs:37:        "-1".to_owned(),
+crates/writfold-domain/tests/model.rs:61:    let members = vec!["first".to_owned(), "second".to_owned()];
+crates/writfold-domain/tests/model.rs:64:            "first".to_owned(),
+crates/writfold-domain/tests/model.rs:65:            "p".to_owned(),
+crates/writfold-domain/tests/model.rs:70:                "second".to_owned(),
+crates/writfold-domain/tests/model.rs:71:                "p".to_owned(),
+crates/writfold-domain/tests/engineering.rs:114:        HEX.to_owned(),
+crates/writfold-domain/tests/engineering.rs:127:        valid[..valid.len() - 1].to_owned(),
+crates/writfold-wire/tests/storage/identities.rs:6:        "".to_owned(),
+crates/writfold-wire/tests/storage/identities.rs:7:        "HEAD".to_owned(),
+crates/writfold-wire/tests/storage/identities.rs:9:        "0123456789abcdefghijklmnopqrstuv".to_owned(),
+crates/writfold-wire/tests/storage/identities.rs:13:        "8ZZZZZZZZZZZZZZZZZZZZZZZZZ".to_owned(),
+crates/writfold-wire/tests/storage/identities.rs:14:        "01ARZ3NDEKTSV4RRFFQ69G5FAI".to_owned(),
+crates/writfold-wire/tests/storage/identities.rs:15:        "01ARZ3NDEKTSV4RRFFQ69G5FAO".to_owned(),
+crates/writfold-wire/tests/storage/identities.rs:16:        "01ARZ3NDEKTSV4RRFFQ69G5FAL".to_owned(),
+crates/writfold-wire/tests/storage/identities.rs:17:        "01ARZ3NDEKTSV4RRFFQ69G5FAU".to_owned(),
+crates/writfold-wire/tests/storage/identities.rs:18:        ULID[..25].to_owned(),
+crates/writfold-wire/tests/storage/identities.rs:94:        ULID.to_owned(),
+crates/writfold-wire/tests/storage/identities.rs:116:        "a".to_owned(),
+crates/writfold-wire/tests/storage/identities.rs:117:        "-".to_owned(),
+crates/writfold-wire/tests/storage/identities.rs:119:        "Policies".to_owned(),
+crates/writfold-domain/src/engineering/dependency.rs:54:                    Ok(Self(value.to_owned()))
+crates/writfold-runtime/src/dolt/write.rs:194:        return "''".to_owned();
+crates/writfold-runtime/src/omnigraph/admission.rs:151:            actor: actor.to_owned(),
+crates/writfold-runtime/src/omnigraph/admission.rs:152:            token: token.to_owned(),
+crates/writfold-runtime/src/worktrunk/profile.rs:300:        entries.push(name.to_owned());
+crates/writfold-runtime/src/git/publication.rs:179:    GitObjectId::new(session.repository.format(), text.to_owned())
+crates/writfold-runtime/src/git/writer_profile.rs:102:    let object = GitObjectId::new(repository.format(), text.to_owned())
+crates/writfold-wire/src/semantic/response.rs:18:        .to_owned(),
+crates/writfold-wire/src/semantic/response.rs:28:        .to_owned(),
+crates/writfold-runtime/src/fs/lock.rs:25:        Ok(Self(key.to_owned()))
+crates/tuft/src/emit.rs:182:        .to_owned()
+crates/writfold-runtime/examples/worktrunk_smoke/fixture.rs:36:                result.insert(path.strip_prefix(&root)?.to_owned(), fs::read(path)?);
+crates/writfold-sources/src/frontmatter.rs:37:    let mut normalized = unicode::without_line_end(first).to_owned();
+crates/writfold-wire/src/parser.rs:112:            reason: reason.to_owned(),
+crates/writfold-runtime/examples/worktrunk_smoke.rs:84:            .to_owned(),
+crates/writfold-runtime/examples/worktrunk_smoke.rs:226:            .to_owned(),
+crates/writfold-wire/tests/storage.rs:90:        ULID.to_owned(),
+crates/writfold-wire/tests/storage.rs:91:        "00000000000000000000000000".to_owned(),
+crates/writfold-wire/tests/storage.rs:92:        "7ZZZZZZZZZZZZZZZZZZZZZZZZZ".to_owned(),
+crates/writfold-wire/tests/storage.rs:95:        COMMIT.to_owned(),
+crates/writfold-wire/tests/grant_lean.rs:109:        .map(|g| (g.grant().id().as_str().to_owned(), g.revoked()))
+crates/writfold-wire/tests/grant_lean.rs:147:        .map(|g| g.id().as_str().to_owned());
+crates/tuft/src/render.rs:38:        path.to_owned()
+crates/tuft/src/render.rs:55:                .map_or("-".to_owned(), |e| e.binding.clone()),
+crates/tuft/src/render.rs:65:                None => "-".to_owned(),
+crates/tuft/src/render.rs:82:                .map_or("null".to_owned(), |e| quote(&e.binding)),
+crates/tuft/src/render.rs:84:                excerpt(row, max_chars).map_or("null".to_owned(), |x| {
+crates/writfold-wire/tests/support/ledger_heads.rs:59:                name: text(row, "name")?.to_owned(),
+crates/writfold-wire/tests/support/ledger_heads.rs:72:                name: text(row, "name")?.to_owned(),
+crates/writfold-wire/tests/signatures/policy.rs:42:        json!("01".to_owned() + &"00".repeat(31));
+crates/writfold-wire/src/weft_report.rs:49:        return Err(ReportError::Incomplete(execution.to_owned()));
+crates/writfold-wire/src/weft_report.rs:64:                name: text(check, "name")?.to_owned(),
+crates/writfold-wire/src/weft_report.rs:81:        kind: text(root, "kind")?.to_owned(),
+crates/writfold-wire/src/weft_report.rs:82:        scope: text(root, "scope")?.to_owned(),
+crates/writfold-wire/tests/procedure_lean/embed.rs:241:                export: ExportName::try_from("apply".to_owned())?,
+crates/tuft/src/compact.rs:18:        path.to_owned()
+crates/tuft/src/compact.rs:59:                    .map_or("-".to_owned(), |e| e.binding.clone()),
+crates/tuft/src/compact.rs:62:                text = Some(cut(row, max_chars).map_or("-".to_owned(), |x| excerpt(&x, lines)));
+crates/writfold-wire/src/worktree/decode.rs:45:    Ok(text(v)?.to_owned())
+crates/writfold-wire/src/semantic/workflow.rs:267:        .to_owned(),
+crates/writfold-wire/src/semantic/workflow.rs:293:        .to_owned(),
+crates/writfold-wire/src/semantic/workflow.rs:315:        .to_owned(),
+crates/writfold-wire/src/semantic/workflow.rs:349:        .to_owned(),
+crates/writfold-wire/src/semantic/workflow.rs:367:        .to_owned(),
+crates/writfold-wire/src/semantic/workflow.rs:387:        .to_owned(),
+crates/writfold-wire/src/semantic/workflow.rs:407:        .to_owned(),
+crates/tuft/tests/compact.rs:19:        path: path.to_owned(),
+crates/tuft/src/locate.rs:40:                _ => "regex outside the admitted dialect".to_owned(),
+crates/tuft/src/locate.rs:43:            source: source.to_owned(),
+crates/tuft/src/lexer.rs:175:        self.text[lo..self.at].to_owned()
+crates/tuft/src/lexer.rs:255:                    let source = self.text[body..self.at].to_owned();
+crates/tuft/src/envelope.rs:36:        let around = retain.around.map_or("range=match".to_owned(), |n| {
+crates/tuft/src/envelope.rs:82:        .map_or("null".to_owned(), |_| quote("hit-limit"));
+crates/tuft/src/envelope.rs:87:            r.around.map_or("null".to_owned(), |n| n.to_string())
+crates/tuft/src/envelope.rs:89:        _ => "null".to_owned(),
+crates/tuft/src/envelope.rs:127:        page.cursor.as_deref().map_or("null".to_owned(), quote),
+crates/writfold-protocol/tests/dolt.rs:9:            Some((changed, replacement)) if key == changed => replacement.to_owned(),
+crates/writfold-protocol/tests/dolt.rs:10:            _ => original.to_owned(),

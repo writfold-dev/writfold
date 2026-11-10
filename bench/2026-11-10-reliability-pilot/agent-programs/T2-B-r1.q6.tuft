@@ -1,0 +1,4 @@
+@h := find text "as_digest" in "crates/writfold-kernel/" at "e56621f7acf0d3392add5d814c35134b66c872a7" limit 200;
+@e := retain @h around lines 0;
+@v := project @e [path, line];
+emit @v budget_tokens 8000;

@@ -1,0 +1,67 @@
+{
+ "trial": "T6-A-r1",
+ "models": [
+  "claude-haiku-5-5"
+ ],
+ "api_calls": 6,
+ "usage_sum": {
+  "input_tokens": 12,
+  "cache_creation_input_tokens": 20743,
+  "cache_read_input_tokens": 204478,
+  "output_tokens": 1530
+ },
+ "tool_calls": 7,
+ "tool_result_bytes": 7777,
+ "final_reply": "DONE",
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "cd <trial>/repo && mkdir -p ../work && git grep -n -i -E \"request.*(max|limit|ceiling)|(max|limit|ceiling).*request\" -- crates/ | head -50",
+   "result_bytes": 5436,
+   "is_error": false,
+   "result_head": "crates/writfold-app/src/engine.rs:12:        Capability, Frame, InitializeParams, MAX_REQUEST_BYTES, Request, RequestId,\ncrates/writfold-app/src/engine.rs:63:                MAX_REQUEST_BYTES,\ncrates/writfold-app/src/engine.rs:65:                MAX_REQUEST_BYTES,\ncrates/writfold-app/src/engine.rs:66:                MAX_REQUEST_BYTES,\ncrates/writfold-app/src/engine_tests.rs:188:    engine.generation = RequestGeneration::from_u64(u64::MAX);\ncrates/writfold-app/src/lib.rs:18:use writfold_wire::rpc::{MAX_REQUEST_BYTES, response::ResponseError};\ncrates/writfold-app/src/lib.rs:79:    let maximum = ByteCount::new(MAX_REQUEST_BYTES as u64)?;\ncrates/writfold-app/src/trial/rpc.rs:25:use writfold_wire::rpc::{Request, RequestId, response::MAX_RESPONSE_BYTES};\ncrates/writfold-app/src/tuft/backend_test"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial>/repo && sed -n 14,22p crates/writfold-wire/src/rpc.rs && git grep -n -E \"pub const MAX_(REQUEST|RESPONSE)_BYTES\" -- crates/ && git status --short",
+   "result_bytes": 450,
+   "is_error": false,
+   "result_head": "};\n\nuse crate::{Error, Limits, RawJson};\nuse serde_json::Value;\n\n/// Reference transport frame ceiling, including any framing whitespace/newline.\npub const MAX_REQUEST_BYTES: usize = 65_536;\n\n#[derive(Debug, thiserror::Error, Eq, PartialEq)]\ncrates/writfold-wire/src/rpc.rs:20:pub const MAX_REQUEST_BYTES: usize = 65_536;\ncrates/writfold-wire/src/rpc/response/mod.rs:21:pub const MAX_RESPONSE_BYTES: usize = 65_536;\n M crates/writfold-wire/src/rpc.rs"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial>/repo && git diff",
+   "result_bytes": 565,
+   "is_error": false,
+   "result_head": "diff --git a/crates/writfold-wire/src/rpc.rs b/crates/writfold-wire/src/rpc.rs\nindex ec2de14..78fe1cf 100644\n--- a/crates/writfold-wire/src/rpc.rs\n+++ b/crates/writfold-wire/src/rpc.rs\n@@ -3,6 +3,8 @@\n //! Parse one bounded frame, then borrow its validated request; the retained\n //! `RawJson` owns every value and destroys even rejected deep trees iteratively.\n //! Missing IDs are notifications only after envelope validation succeeds.\n+//!\n+//! The request ceiling below is shared with the response codec; keep them in step.\n \n mod initialize;\n pub mod response;"
+  },
+  {
+   "tool": "Read",
+   "input": "<trial>/repo/crates/writfold-wire/src/rpc.rs",
+   "result_bytes": 165,
+   "is_error": false,
+   "result_head": "17\tuse serde_json::Value;\n18\t\n19\t/// Reference transport frame ceiling, including any framing whitespace/newline.\n20\tpub const MAX_REQUEST_BYTES: usize = 65_536;\n21\t"
+  },
+  {
+   "tool": "Edit",
+   "input": "<trial>/repo/crates/writfold-wire/src/rpc.rs: 'pub const MAX_REQUEST_BYTES: usize = 65_536;' -> 'pub const MAX_REQUEST_BYTES: usize = 131_072;'",
+   "result_bytes": 203,
+   "is_error": false,
+   "result_head": "The file <trial>/repo/crates/writfold-wire/src/rpc.rs has been updated successfully."
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial>/repo && git diff",
+   "result_bytes": 897,
+   "is_error": false,
+   "result_head": "diff --git a/crates/writfold-wire/src/rpc.rs b/crates/writfold-wire/src/rpc.rs\nindex ec2de14..dc6d0d7 100644\n--- a/crates/writfold-wire/src/rpc.rs\n+++ b/crates/writfold-wire/src/rpc.rs\n@@ -3,6 +3,8 @@\n //! Parse one bounded frame, then borrow its validated request; the retained\n //! `RawJson` owns every value and destroys even rejected deep trees iteratively.\n //! Missing IDs are notifications only after envelope validation succeeds.\n+//!\n+//! The request ceiling below is shared with the response codec; keep them in step.\n \n mod initialize;\n pub mod response;\n@@ -15,7 +17,7 @@ use crate::{Error, Limits, RawJson};\n use serde_json::Value;\n \n /// Reference transport frame ceiling, including any framing whitespace/newline.\n-pub const MAX_REQUEST_BYTES: usize = 65_536;\n+pub const MAX_REQUEST_BY"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "is_error": false,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

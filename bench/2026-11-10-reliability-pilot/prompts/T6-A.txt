@@ -1,0 +1,33 @@
+You are working in a Git repository checked out at <trial>/repo, at commit <commit>.
+
+Task: The JSON-RPC transport refuses any request frame larger than a fixed byte ceiling. Raise that request ceiling to `131_072` bytes by changing the value of the constant that defines it. Change only that one definition line; leave every other limit (for example the response limit) as it is.
+
+Make the change in the checkout <trial>/repo; its final state is graded with `git diff`. Another process may also be editing files in this checkout while you work; keep any change it makes.
+
+Rules:
+- Put any scratch files in <trial>/work, never in the repository.
+- Use your ordinary tools: Bash (grep, rg, git grep, sed and similar) and Read. Make the edit as the edit note below says.
+  Search with grep. For example, from <trial>/repo:
+    git grep -n -F "exact bytes" -- crates/ > <trial>/work/hits.txt
+    git grep -c -F "exact bytes" -- crates/    (lines per file)
+    wc -l < <trial>/work/hits.txt              (total; must equal -c sum)
+  (`-E` for regex, `-w` for whole words; omit `-- crates/` for all.)
+  Rows are: `path:line:text`. Write long results to a file.
+  Long tool output is truncated: if a listing looks cut, count it with -c or
+  wc -l and read it in parts. Before editing, re-read the exact lines you will
+  change; edit by their exact text, never by an earlier line number.
+- Edit note:
+  Edit with your ordinary tools, directly in <trial>/repo.
+  First locate the definition by search and read the lines around it. Then,
+  immediately before changing the file, Read it again: what you saw earlier may
+  be stale. Use the Edit tool with an old_string copied from that fresh read,
+  long enough to occur exactly once in the file (Edit refuses otherwise, and
+  also refuses if the file changed since your last Read: then Read it again
+  and retry). Do not rewrite the whole file, do not use sed -i or a script to
+  edit, and never edit by a line number taken from earlier output.
+  Afterwards check the result:
+    cd <trial>/repo && git diff
+  It must show your one-line change, plus any change another process made,
+  which you must keep. If it shows anything else, fix that before you finish it.
+- Do not read anything else outside <trial> except where stated above.
+- When finished, reply with exactly one line: `DONE`, or `REFUSED: <reason>` if you made no change.

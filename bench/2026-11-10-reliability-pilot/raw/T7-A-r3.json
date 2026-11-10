@@ -1,0 +1,39 @@
+{
+ "trial": "T7-A-r3",
+ "models": [
+  "claude-haiku-5-5"
+ ],
+ "api_calls": 3,
+ "usage_sum": {
+  "input_tokens": 6,
+  "cache_creation_input_tokens": 16630,
+  "cache_read_input_tokens": 86205,
+  "output_tokens": 1558
+ },
+ "tool_calls": 3,
+ "tool_result_bytes": 1128,
+ "final_reply": "DONE\n\nWrote <trial>/answer.txt with 5 lines (leading indentation omitted):\n\ncrates/writfold-app/src/trial/run/weft.rs:68: std::thread::sleep(Duration::from_millis(2));\ncrates/writfold-runtime/src/process/runner.rs:148: std::thread::sleep(Duration::from_millis(100));\ncrates/writfold-store/examples/support/native_flow.rs:341: std::thread::sleep(Duration::from_millis(50));\ncrates/writfold-store/src/backend/conformance/races.rs:119: std::thread::sleep(KILL_STEP * attempt);\ncrates/writfold-store/test",
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "cd <trial>/repo && git rev-parse --short HEAD && mkdir -p ../work && git grep -n -F \"thread::sleep(\" -- crates/ > ../work/hits.txt; wc -l < ../work/hits.txt; git grep -c -F \"thread::sleep(\" -- crates/ | awk -F: '{s+=$NF} END{print s}'; grep -v -F \"thread::sleep(Duration::from_millis(1))\" ../work/hits.txt",
+   "result_bytes": 568,
+   "is_error": false,
+   "result_head": "e56621f\n21\n21\ncrates/writfold-app/src/trial/run/weft.rs:68:        std::thread::sleep(Duration::from_millis(2));\ncrates/writfold-runtime/src/process/runner.rs:148:                std::thread::sleep(Duration::from_millis(100));\ncrates/writfold-store/examples/support/native_flow.rs:341:        std::thread::sleep(Duration::from_millis(50));\ncrates/writfold-store/src/backend/conformance/races.rs:119:                std::thread::sleep(KILL_STEP * attempt);\ncrates/writfold-store/tests/memory_backend/mod.rs:320:            std::thread::sleep(Duration::from_millis(50));"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial> && grep -v -F \"thread::sleep(Duration::from_millis(1))\" work/hits.txt | sed -E 's/^([^:]+:[0-9]+):[ \\t]*/\\1: /' > answer.txt && cat answer.txt",
+   "result_bytes": 499,
+   "is_error": false,
+   "result_head": "crates/writfold-app/src/trial/run/weft.rs:68: std::thread::sleep(Duration::from_millis(2));\ncrates/writfold-runtime/src/process/runner.rs:148: std::thread::sleep(Duration::from_millis(100));\ncrates/writfold-store/examples/support/native_flow.rs:341: std::thread::sleep(Duration::from_millis(50));\ncrates/writfold-store/src/backend/conformance/races.rs:119: std::thread::sleep(KILL_STEP * attempt);\ncrates/writfold-store/tests/memory_backend/mod.rs:320: std::thread::sleep(Duration::from_millis(50));"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\\n\\nWrote <trial>/answer.txt with 5 lines (leading indentation omitted):\\n\\ncrates/writfold-app/src/trial/run/weft.rs:68: std::thread::sleep(Duration::from_millis(2));\\ncrates/writfold-runtime/src/process/runner.rs:148: std::thread::sleep(Duration::from_millis(100));\\ncrates/writfold-store/examples/support/native_flow.rs:341: std::thread::sleep(Duration::from_millis(50));\\ncrates/writfold-store/src/backend/conformance/races.rs:119: std::thread::sleep(KILL_STEP * attempt);\\ncrates/writfold-store/tests/memory_backend/mod.rs:320: std::thread::sleep(Duration::from_millis(50));\\n\\nMethod: git grep -n -F \\\"thread::sleep(\\\" -- crates/ found 21 hits (per-file count sums to 21). Filtering out lines containing \\\"thread::sleep(Duration::from_millis(1))\\\" left these 5. Repository was not modified; scratch files are in the work directory.\"}",
+   "result_bytes": 61,
+   "is_error": false,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

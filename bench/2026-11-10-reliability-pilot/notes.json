@@ -1,0 +1,29 @@
+{
+ "search": {
+  "A_grep_note": {
+   "bytes": 594,
+   "sha256": "7bddc579e4f4b9fc4a5fe850f544d841d06a2ebefbe3df46058f72cff3ca3f51"
+  },
+  "B_tuft_note": {
+   "bytes": 594,
+   "sha256": "f257301d4a9a0160bea4e2ea77616ed27f1ad5b80eff1b41014811d87b7d0169",
+   "source": "docs/tuft/agent-note.md fenced text, verbatim"
+  }
+ },
+ "edit": {
+  "A_edit_note": {
+   "bytes": 786,
+   "sha256": "d608f25c78a3c53f37134422f5a1120a884116aea7fee0c52a91f25f2174f04b"
+  },
+  "B_writfold_edit_note": {
+   "bytes": 786,
+   "sha256": "74bd7d3888947a1ef7372eb48b8b1fcf4e6c286335e7fcaeb63790693e565994"
+  }
+ },
+ "texts": {
+  "A_grep_note": "Search with grep. For example, from <trial>/repo:\n  git grep -n -F \"exact bytes\" -- crates/ > <trial>/work/hits.txt\n  git grep -c -F \"exact bytes\" -- crates/    (lines per file)\n  wc -l < <trial>/work/hits.txt              (total; must equal -c sum)\n(`-E` for regex, `-w` for whole words; omit `-- crates/` for all.)\nRows are: `path:line:text`. Write long results to a file.\nLong tool output is truncated: if a listing looks cut, count it with -c or\nwc -l and read it in parts. Before editing, re-read the exact lines you will\nchange; edit by their exact text, never by an earlier line number.\n",
+  "B_tuft_note": "Search with Tuft. Write <trial>/work/q.tuft:\n  @h := find text \"exact bytes\" in \"crates/\" at \"<commit>\" limit 100;\n  @e := retain @h around lines 0;\n  @v := project @e [path, line, excerpt(max_chars: 300)];\n  emit @v budget_tokens 4000;\n(`find rx\"...\"`: Rust regex over ASCII; omit `in` for the whole tree.)\nRun <writfold> tuft run q.tuft --repo <trial>/repo --state <trial>/state\nRows are `path:line: text`; --out FILE writes them to a new file.\nThe last line `# coverage=complete ... omitted=0 cursor=none` means none\nare missing; else raise limit or budget_tokens, or rerun with --cursor C.\n",
+  "A_edit_note": "Edit with your ordinary tools, directly in <trial>/repo.\nFirst locate the definition by search and read the lines around it. Then,\nimmediately before changing the file, Read it again: what you saw earlier may\nbe stale. Use the Edit tool with an old_string copied from that fresh read,\nlong enough to occur exactly once in the file (Edit refuses otherwise, and\nalso refuses if the file changed since your last Read: then Read it again\nand retry). Do not rewrite the whole file, do not use sed -i or a script to\nedit, and never edit by a line number taken from earlier output.\nAfterwards check the result:\n  cd <trial>/repo && git diff\nIt must show your one-line change, plus any change another process made,\nwhich you must keep. If it shows anything else, fix that before you finish it.\n",
+  "B_writfold_edit_note": "Edit through Writfold. Write a Splicery recipe <trial>/work/e.spl:\n  edit \"path/in/repo.rs\" {\n    @x := one text \"exact old bytes\"\n    replace @x with \"new bytes\"\n  }\n(`one` refuses unless the text occurs exactly once in the file.) Then run:\n  export WRITFOLD_STATE=<trial>/state\n  <writfold> trial prepare --repo <trial>/repo --file path/in/repo.rs --recipe <trial>/work/e.spl\n  <writfold> trial approve RUN    (RUN is the run id prepare prints)\n  <writfold> trial apply RUN\nThis edits a worktree at <trial>/state/worktrees/RUN, not the checkout.\nBring the change into the checkout as a patch:\n  cd <trial>/state/worktrees/RUN && git diff > <trial>/work/e.patch\n  cd <trial>/repo && git apply <trial>/work/e.patch\nIf a step refuses, read its message, fix the cause and redo that step.\n"
+ }
+}

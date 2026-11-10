@@ -1,0 +1,109 @@
+{
+ "trial": "T2-B-r2",
+ "models": [
+  "claude-haiku-5-5"
+ ],
+ "api_calls": 11,
+ "usage_sum": {
+  "input_tokens": 22,
+  "cache_creation_input_tokens": 31137,
+  "cache_read_input_tokens": 421757,
+  "output_tokens": 7972
+ },
+ "tool_calls": 13,
+ "tool_result_bytes": 16005,
+ "final_reply": "DONE. Wrote 21 lines to <trial>/answer.txt. Tuft (pinned commit e56621f, crates/) reported 33 hits over 31 distinct lines, and I checked that count against an extracted copy of crates/ because a Tuft row carried only one of two calls on the same line. Two lines contain two calls each: writfold-domain/src/engineering/dependency.rs:364 and writfold-wire/tests/engineering_fingerprints.rs:157. Excluded: fn as_digest declarations/definitions (digests.rs:30, mod.rs:30/70, worktree/mod.rs:30/40), doc-c",
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "W=<trial>; mkdir -p $W/work && cd $W/work && cat > q.tuft <<'EOF'\n@h := find text \"as_digest(\" in \"crates/\" at \"e56621f7acf0d3392add5d814c35134b66c872a7\" limit 100;\n@e := retain @h around lines 0;\n@v := project @e [path, line, excerpt(max_chars: 300)];\nemit @v budget_tokens 4000;\nEOF\n<writfold> tuft run q.tuft --repo <trial>/repo --state $W/state --out $W/work/out.txt; echo \"exit=$?\"; cat $W/work/out.txt",
+   "result_bytes": 416,
+   "is_error": true,
+   "result_head": "This agent is isolated in the worktree <home>/workspace/writfold/.claude/worktrees/agent-a42124a95fb2dcc3e, but this command is too complex to verify that it stays inside the worktree. Refusing to run it — a worktree-isolated agent's git operations must target its own worktree. Split it into plain, separate commands and run them from <home>/workspace/writfold/.claude/worktrees/agent-a42124a95fb2dcc3e."
+  },
+  {
+   "tool": "Write",
+   "input": "<trial>/work/q.tuft <= @h := find text \"as_digest(\" in \"crates/\" at \"e56621f7acf0d3392add5d814c35134b66c872a7\" limit 100;\n@e := retain @h around lines 0;\n@v := project @e [path, line, excerpt(max_chars: 300)];\nemit @v budget_tokens 4000;\n",
+   "result_bytes": 236,
+   "is_error": false,
+   "result_head": "File created successfully at: <trial>/work/q.tuft (file state is current in your context — no need to Read it back)"
+  },
+  {
+   "tool": "Bash",
+   "input": "<writfold> tuft run <trial>/work/q.tuft --repo <trial>/repo --state <trial>/state --out <trial>/work/out.txt",
+   "result_bytes": 93,
+   "is_error": false,
+   "result_head": "# coverage=complete files=664/664 hits=33 shown=31 omitted=0 cursor=none program=ac70c7bef8ee"
+  },
+  {
+   "tool": "Read",
+   "input": "<trial>/work/out.txt",
+   "result_bytes": 3449,
+   "is_error": false,
+   "result_head": "1\tcrates/writfold-app/src/trial/flow.rs:89:     [C::Bytes(blob.digest.as_digest()), C::Unsigned(blob.bytes)]\n2\tcrates/writfold-app/src/trial/prepare.rs:136:         prepared: *writfold_domain::worktree::WorktreeDigest::as_digest(&digest),\n3\tcrates/writfold-domain/src/engineering/dependency.rs:364:         .then_with(|| left.payload.as_digest().cmp(right.payload.as_digest()))\n4\tcrates/writfold-domain/src/engineering/digests.rs:30:             fn as_digest(&self) -> (bytes: &[u8; 32])\n5\tcrates/writfold-domain/src/engineering/mod.rs:24: //!     fn as_digest(&self) -> &[u8; 32] { &self.0 }\n6\tcrates/writfold-domain/src/engineering/mod.rs:70:     fn as_digest(&self) -> &[u8; 32];\n7\tcrates/writfold-domain/src/worktree/mod.rs:30:     fn as_digest(&self) -> &[u8; 32];\n8\tcrates/writfold-domain/src/w"
+  },
+  {
+   "tool": "Write",
+   "input": "<trial>/work/q2.tuft <= @h := find rx\"as_digest\\(\" in \"crates/\" at \"e56621f7acf0d3392add5d814c35134b66c872a7\" limit 200;\n@e := retain @h around lines 0;\n@v := project @e [path, line, excerpt(max_chars: 300)];\nemit @v budget_tokens 8000;\n",
+   "result_bytes": 237,
+   "is_error": false,
+   "result_head": "File created successfully at: <trial>/work/q2.tuft (file state is current in your context — no need to Read it back)"
+  },
+  {
+   "tool": "Bash",
+   "input": "<writfold> tuft run <trial>/work/q2.tuft --repo <trial>/repo --state <trial>/state --out <trial>/work/out2.txt",
+   "result_bytes": 93,
+   "is_error": false,
+   "result_head": "# coverage=complete files=664/664 hits=33 shown=31 omitted=0 cursor=none program=1ecf5f4912a9"
+  },
+  {
+   "tool": "Bash",
+   "input": "mkdir -p <trial>/work/snap",
+   "result_bytes": 31,
+   "is_error": false,
+   "result_head": "(Bash completed with no output)"
+  },
+  {
+   "tool": "Bash",
+   "input": "git -C <trial>/repo archive e56621f7acf0d3392add5d814c35134b66c872a7 crates | tar -x -C <trial>/work/snap",
+   "result_bytes": 31,
+   "is_error": false,
+   "result_head": "(Bash completed with no output)"
+  },
+  {
+   "tool": "Bash",
+   "input": "awk '/as_digest\\(/ {n=gsub(/as_digest\\(/,\"&\"); t+=n; print FILENAME\":\"FNR\": occurrences=\"n} END {print \"total=\"t}' $(find <trial>/work/snap/crates -type f -name '*.rs' -o -type f -name '*.md' -o -type f -name '*.toml' | sort)",
+   "result_bytes": 6254,
+   "is_error": false,
+   "result_head": "<trial>/work/snap/crates/writfold-app/src/trial/flow.rs:89: occurrences=1\n<trial>/work/snap/crates/writfold-app/src/trial/prepare.rs:136: occurrences=1\n<trial>/work/snap/crates/writfold-domain/src/engineering/dependency.rs:364: occurrences=2\n<trial>/work/snap/crates/writfold-domain/src/engineering/digests.rs:30: occurrences=1\n<trial>/work/snap/crates/writfold-domain/src/engineering/mod.rs:24: occurrences=1\n<trial>/work/snap/crates/writfold-domain/src/engineering/mod.rs:70: occurrences=1\n<trial>/work/snap/crates/writfold-domain/src/worktree/mod.rs:30: occurrences=1\n<trial>/work/snap/crates/writfold-domain/src/worktree/mod.rs:40: occurrences=1\n<trial>/work/snap/crates/writfold-domain/tests/engineering.rs:99: occurrences=1\n<trial>/work/snap/crates/writfold-domain/tests/engineering.rs:103: occ"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial>/work && awk '/as_digest\\(/ && !/fn as_digest/ && !/^[ \\t]*\\/\\// && !/(^|\\/)(tests|examples)\\// {p=FILENAME; sub(/.*\\/snap\\//,\"\",p); sub(/^[ \\t]+/,\"\",$0); print p\":\"FNR\": \"$0}' $(find snap/crates -type f -name '*.rs' | sort) | sed 's/ *$//' > answer_raw.txt; cat answer_raw.txt; echo count=$(wc -l < answer_raw.txt)",
+   "result_bytes": 2808,
+   "is_error": false,
+   "result_head": "snap/crates/writfold-app/src/trial/flow.rs:89: [C::Bytes(blob.digest.as_digest()), C::Unsigned(blob.bytes)]\nsnap/crates/writfold-app/src/trial/prepare.rs:136: prepared: *writfold_domain::worktree::WorktreeDigest::as_digest(&digest),\nsnap/crates/writfold-domain/src/engineering/dependency.rs:364: .then_with(|| left.payload.as_digest().cmp(right.payload.as_digest()))\nsnap/crates/writfold-domain/tests/engineering.rs:99: assert_eq!(digest.as_digest(), &BYTES);\nsnap/crates/writfold-domain/tests/engineering.rs:103: assert_eq!(expected.parse::<BlobDigest>()?.as_digest(), &[byte; 32]);\nsnap/crates/writfold-kernel/src/authority.rs:165: let retained: Vec<[u8; 32]> = retained.iter().map(|d| *d.as_digest()).collect();\nsnap/crates/writfold-kernel/src/authority.rs:170: envelope: *authorization.envelope.a"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial>/work && awk '{ f=FILENAME; sub(/^snap\\//,\"\",f); if ($0 ~ /as_digest\\(/ && $0 !~ /fn as_digest/ && $0 !~ /^[ \\t]*\\/\\// && f !~ /(^|\\/)(tests|examples)\\//) { sub(/^[ \\t]+/,\"\",$0); sub(/[ \\t]+$/,\"\",$0); print f\":\"FNR\": \"$0 } }' $(find snap/crates -type f -name '*.rs' | sort) > answer_final.txt; cat answer_final.txt; echo count=$(wc -l < answer_final.txt)",
+   "result_bytes": 2156,
+   "is_error": false,
+   "result_head": "crates/writfold-app/src/trial/flow.rs:89: [C::Bytes(blob.digest.as_digest()), C::Unsigned(blob.bytes)]\ncrates/writfold-app/src/trial/prepare.rs:136: prepared: *writfold_domain::worktree::WorktreeDigest::as_digest(&digest),\ncrates/writfold-domain/src/engineering/dependency.rs:364: .then_with(|| left.payload.as_digest().cmp(right.payload.as_digest()))\ncrates/writfold-kernel/src/authority.rs:165: let retained: Vec<[u8; 32]> = retained.iter().map(|d| *d.as_digest()).collect();\ncrates/writfold-kernel/src/authority.rs:170: envelope: *authorization.envelope.as_digest(),\ncrates/writfold-kernel/src/ledger.rs:105: closure: record.closure.iter().map(|d| *d.as_digest()).collect(),\ncrates/writfold-kernel/src/ledger.rs:119: blobs.iter().map(|d| *d.as_digest()).collect()\ncrates/writfold-kernel/src/ledger"
+  },
+  {
+   "tool": "Bash",
+   "input": "cp <trial>/work/answer_final.txt <trial>/answer.txt && wc -l <trial>/answer.txt",
+   "result_bytes": 140,
+   "is_error": false,
+   "result_head": "21 <trial>/answer.txt"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE. Wrote 21 lines to <trial>/answer.txt. Tuft (pinned commit e56621f, crates/) reported 33 hits over 31 distinct lines, and I checked that count against an extracted copy of crates/ because a Tuft row carried only one of two calls on the same line. Two lines contain two calls each: writfold-domain/src/engineering/dependency.rs:364 and writfold-wire/tests/engineering_fingerprints.rs:157. Excluded: fn as_digest declarations/definitions (digests.rs:30, mod.rs:30/70, worktree/mod.rs:30/40), doc-comment line mod.rs:24, and files under tests/ or examples/ (domain/tests/engineering.rs, store/examples/support/object_smoke.rs, store/tests/objects/support.rs, wire/tests/engineering_fingerprints.rs). Two Bash commands were refused as too complex to verify inside the worktree, so I split them into separate calls. The repository was not modified.\"}",
+   "result_bytes": 61,
+   "is_error": false,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

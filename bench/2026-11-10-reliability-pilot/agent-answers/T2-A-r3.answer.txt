@@ -1,0 +1,21 @@
+crates/writfold-app/src/trial/flow.rs:89: [C::Bytes(blob.digest.as_digest()), C::Unsigned(blob.bytes)]
+crates/writfold-app/src/trial/prepare.rs:136: prepared: *writfold_domain::worktree::WorktreeDigest::as_digest(&digest),
+crates/writfold-domain/src/engineering/dependency.rs:364: .then_with(|| left.payload.as_digest().cmp(right.payload.as_digest()))
+crates/writfold-kernel/src/authority.rs:165: let retained: Vec<[u8; 32]> = retained.iter().map(|d| *d.as_digest()).collect();
+crates/writfold-kernel/src/authority.rs:170: envelope: *authorization.envelope.as_digest(),
+crates/writfold-kernel/src/ledger.rs:105: closure: record.closure.iter().map(|d| *d.as_digest()).collect(),
+crates/writfold-kernel/src/ledger.rs:119: blobs.iter().map(|d| *d.as_digest()).collect()
+crates/writfold-kernel/src/ledger.rs:183: writfold_core::bytes::contains_digest(&self.inner.material, blob.as_digest())
+crates/writfold-kernel/src/trial.rs:148: digest: *blob.digest.as_digest(),
+crates/writfold-kernel/src/trial.rs:190: let closure: Vec<[u8; 32]> = closure.iter().map(|d| *d.as_digest()).collect();
+crates/writfold-store/src/objects/retention.rs:162: for byte in digest.as_digest() {
+crates/writfold-wire/src/engineering/dependency.rs:176: C::Bytes(package.reference().payload().as_digest()),
+crates/writfold-wire/src/engineering/dependency.rs:188: C::Bytes(edge.source().package().payload().as_digest()),
+crates/writfold-wire/src/engineering/dependency.rs:192: C::Bytes(edge.target().package().payload().as_digest()),
+crates/writfold-wire/src/engineering/edit_approval.rs:53: C::Bytes(prepared.as_digest()),
+crates/writfold-wire/src/engineering/edit_approval.rs:54: C::Bytes(report.as_digest()),
+crates/writfold-wire/src/engineering/edit_approval.rs:55: C::Bytes(procedure.as_digest()),
+crates/writfold-wire/src/engineering/grant.rs:128: C::Bytes(material.as_digest()),
+crates/writfold-wire/src/engineering/ledger.rs:43: ("event", C::Bytes(material.event().as_digest())),
+crates/writfold-wire/src/engineering/ledger.rs:44: ("blob", C::Bytes(material.blob().as_digest())),
+crates/writfold-wire/src/engineering/ledger_record.rs:53: .map(|d| C::Bytes(d.as_digest()))

@@ -1,0 +1,4 @@
+@h := find text "unwrap()" in "crates/" at "e56621f7acf0d3392add5d814c35134b66c872a7" limit 5;
+@e := retain @h around lines 0;
+@v := project @e [path, line, excerpt(max_chars: 200)];
+emit @v budget_tokens 1000;
