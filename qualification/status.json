@@ -1225,6 +1225,43 @@
     "gate_note": "The unit gate on merged main ran all four tests/publication.rs tests against real Dolt 2.6.1, including the kill sweep (757 s). This is a scoped component pass of the first DINT02 slice only; DINT02, M11/V15 and WF10/WF11/WF14 remain open."
   },
 
+  "dolt_publication_model": {
+    "status": "scoped_model_evidence",
+    "scope": "spec/DoltPublication.tla: TLC model of the DINT02 first-slice publication order (docs/writfold/dolt-integration.md#model). publish (Git expected-old check, retained candidate blob, Dolt conditional commit that may be killed between DOLT_COMMIT and its retention branch, head retention, read-back and prepared commit, Git expected-old CAS), observe as a transcription of writfold_core::publication::resolve over the facts the Rust observed gathers, complete with Git steps only, a direct Dolt writer outside the leases, and a kill between any two steps of publish and complete. One invocation holds both leases at a time. Invariants: no double publication; visibility only via a completed CAS; a published release names exactly the commit its own Dolt write made, retained, with its candidate blob retained; observe agrees with ground truth and refuses Diverged only after a direct write moved the head past an interrupted attempt; an Interrupted attempt satisfies every guard of the Git-only completion and no accepted invocation is refused after its first write; complete never issues a Dolt write; an attempt whose Dolt write never happened leaves the approval unspent; a published approval is never accepted again. Bounded model evidence of the documented order only: not a refinement of the Rust, no TLAPS proof, no gate receipt, not M11/V15, WF10/WF11/WF14 or DINT02.",
+    "spec_sha256": "22fd51ea51bd4b4d6ceb34ba3344ab80bffa4ccb0293c82d61280b2599f782e8",
+    "tool": "TLC 2.19 (tla2tools.jar v1.7.4, sha256 936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88) in writfold-tools@sha256:c854889f19c83174e69600ee28f0d4d35a0d2de1a23b3a35b1ecf4c4a88e0fc6, docker run --network none, -workers 1, spec mounted read-only; not scripts/gate",
+    "conventions": "Breadth-first, no symmetry reduction, CHECK_DEADLOCK FALSE (stuttering is the terminal convention), safety only: no fairness or progress claim. Bounds: the fixture table, MaxDirect direct writes, Dolt history at most |Ops| + MaxDirect + 1 commits.",
+    "positive": {
+      "DoltPublication.cfg": "PositiveTable (rivals a, b over genesis with distinct candidates; successor c over a), MaxDirect 1: 473 states generated, 232 distinct, depth 17, no violation of TypeOK or Safety; every action fires except the mutant-only LateDolt",
+      "DoltPublication.wide.cfg": "WideTable (adds Misinterpreted m and successor e over b), MaxDirect 2: 737 generated, 361 distinct, depth 18, no violation"
+    },
+    "mutants": {
+      "NoDoltGuard": "NoDoublePublication violated",
+      "VisibleViaHead": "VisibleOnlyViaCas violated",
+      "GitFirst": "PublishedPinIsCommittedHead violated",
+      "NoRetainHead": "PublishedPinIsCommittedHead violated",
+      "ForgetsUnprepared": "ObserveAgrees violated",
+      "IgnoresHead": "InterruptedCompletable violated",
+      "ReissuesDolt": "CompleteGitOnly violated",
+      "RetainAsPrepared": "NotPublishedKeepsApproval violated",
+      "CompleteAcceptsPublished": "SpentCannotRepublish violated",
+      "NoGitGuard": "ObserveAgrees violated (a successor over a prepared, unpublished release commits over the interrupted attempt)",
+      "NoReplayGuards": "SpentCannotRepublish violated (two deviations: replay through publish is excluded by either admit guard)"
+    },
+    "probes": {
+      "NoPreparedGuard": "no violation of Safety (256 distinct states): the already-prepared check is redundant under the leases",
+      "SuccessorReach": "witness reached: the successor c publishes",
+      "SameCandidateRival": "ObserveAgrees violated in the unmodified model: implementation gap",
+      "SameCandidatePublish": "PublishedPinIsCommittedHead violated in the unmodified model: implementation gap"
+    },
+    "implementation_gap": "Open, not fixed: the Dolt write identity (writfold-dolt-write/1 marker) covers the expected-old pin and changes but not the operation, and the applied probe matches only the marker. Two distinct signed operations over the same base release and pin with identical candidate changes share one request: after publish(d) is killed past its Dolt commit, observe(a) resolves Interrupted although a never wrote, and complete(a) publishes d's commit under a's release, leaving d Diverged. A design change (operation in the write identity, or authority-aware observe, or complete checking the commit's recorded approval) is an owner decision.",
+    "retained_failed_attempts": [
+      "First positive run refused at semantic analysis (an operator named Head clashed with Sequences); renamed, not a model result.",
+      "First mutant-VisibleViaHead run ended in a TLC StackOverflowError (the substitute referenced the substituted operator); fixed, not a counterexample.",
+      "First mutant-ReissuesDolt run found no violation because CompleteGitOnly recorded only committed Dolt writes, and a reissued write is Stale; the history now records any Dolt write complete issues.",
+      "First NoGitGuard run, configured as a probe expected to hold, violated Safety; it was reclassified as a mutant (the Git check is load-bearing)."
+    ]
+  },
   "trial_state_dir": {
     "status": "pass",
     "scope": "Trial state directory resolution (10 November 2026): one resolver for trial and tuft (--state, else a non-empty WRITFOLD_STATE, else the default); every next: line carries an absolute --state; approve/apply/recover/show refuse an uninitialized directory or an unknown run by naming the state searched and its source. Refusals of prepare, retain and run stay identical to serve's. Addresses the reliability pilot's main arm-B trip.",
