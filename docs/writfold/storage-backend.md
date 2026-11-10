@@ -42,6 +42,7 @@ pub trait StorageBackend {
         -> Result<WriteOutcome<Self::Pin>, Refusal>;
     fn observe(&self, request: &WriteRequest<Self::Pin>, cancelled: &AtomicBool)
         -> Result<WriteObservation<Self::Pin>, Refusal>;
+    fn retain(&mut self, pin: &Self::Pin, cancelled: &AtomicBool) -> Result<(), Refusal>;
 }
 ```
 
@@ -108,6 +109,14 @@ request, if one is on the head's history. The request's content (head,
 canonical expected-old pin and ordered changes) is its identity; the backend
 records it with the commit. After `Unknown` the caller calls `observe`. It never
 replays the write, retries it, or falls back to another backend.
+
+`retain(pin)` makes sure the current head `pin` has its retention root, so the
+exact reader admits it. A write killed after its commit but before its
+retention root leaves the head unretained. Before `retain`, only the next write
+retained it. `retain` writes no record and never moves the head; on Dolt it is a
+guarded `DOLT_BRANCH` under the same coordination lease. A reconciler such as
+[publication recovery](dolt-integration.md#publication-order-and-recovery)
+calls it before reading such a head.
 
 One writer instance per realm holds the realm's exclusive writer lease; a second
 writer is refused `NotOwner` while the first is live. A committed head is
@@ -403,8 +412,10 @@ B0 claims:
 
 B0 does not claim:
 
-- DINT02: authenticated candidate preparation, a release envelope, retained
-  release closure or completed Git CAS. A Dolt commit is not publication;
+- DINT02. A Dolt commit is not publication. The first DINT02 slice, an
+  approved publication with a completed Git CAS and recovery, is a separate
+  component ([publication order](dolt-integration.md#publication-order-and-recovery),
+  `dolt_publication_component`);
 - Omnigraph admission or an Omnigraph adapter;
 - a corpus, citation or effect service;
 - RPC exposure;
@@ -412,7 +423,8 @@ B0 does not claim:
 - power-loss durability, or concurrent-writer safety against processes that
   bypass Writfold's leases;
 - writes to `home_path` or `wf_edges`;
-- re-establishing a missing retained root without a further write;
+- re-establishing a missing retained root of any commit other than the current
+  head;
 - any WF gate.
 
 Exact evidence is indexed at `storage_backend_component` in

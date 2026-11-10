@@ -29,8 +29,10 @@ writes and no fallback after an uncertain write. The invariants below still
 apply. The DINT evidence retains its original scope. The B0 Dolt adapter reads
 through the DINT01 reader. Its [conditional writer](storage-backend.md#the-dolt-conditional-writer)
 requires a verified signed Dolt approval (below) for every write and holds an
-exclusive, recorded writer lease. A writer commit is storage state, not DINT02
-publication: candidate preparation, release closure and Git CAS remain open.
+exclusive, recorded writer lease. A writer commit is storage state, not
+publication. The [first DINT02 slice](#publication-order-and-recovery)
+publishes one approved candidate over it with a completed Git CAS; the rest of
+DINT02 remains open.
 
 This supplement permits **separate disposable local integration realms** to use
 one deliberately selected Dolt backend, with profile-specific evidence. It does
@@ -279,16 +281,221 @@ wrong-realm/toolchain and missing-mapping refusals. Exact receipts and retained
 failed attempts are indexed under `dolt_approval_admission` in
 `qualification/status.json`.
 
-This completes only DINT02's signed-input prerequisite. Actual target/tool and
-live-policy admission, authenticated candidate preparation, retained release
-closure, completed Git CAS, conflict and lost-response/crash recovery remain
-open. The authorization value cannot perform IO, publish or turn a read pin into
-a completed release. No full V15/M11, WF10/WF11/WF14 or DINT02 pass is claimed.
+This completes only DINT02's signed-input prerequisite. The authorization value
+cannot perform IO, publish or turn a read pin into a completed release. The
+[first publication slice](#publication-order-and-recovery) below consumes it.
+No full V15/M11, WF10/WF11/WF14 or DINT02 pass is claimed.
 
 The separate [toolchain regression scenarios](../../fixtures/qualification/toolchain-smoke.yaml)
 exercise real concurrent control sessions, byte-exact local artifact handoff and
 adverse cases. [Their evidence and reproduction](shared-client-references.md#expanded-real-process-regressions)
 do not skip these publication prerequisites or enable a corpus/effect service.
+
+## Publication order and recovery
+
+This is the **first DINT02 slice**: one verified signed `DoltOperation`
+approval authorizes one publication of one prepared candidate through the
+[Dolt conditional writer](storage-backend.md#the-dolt-conditional-writer), and
+the completed Git CAS makes it visible. It is a scoped component, not a DINT02,
+V15/M11 or WF pass.
+
+| Part | Where |
+| --- | --- |
+| Orchestration, generic over `StorageBackend` | `crates/writfold-app/src/publication/` |
+| Pure decisions (`admit`, `resolve`) | `crates/writfold-core/src/publication.rs`, typed adapter `writfold_kernel::publication` |
+| Stale Git reference-lock reconciliation | `GitWriterLease::clear_stale_ref_locks` (`writfold-runtime/src/git/reconcile.rs`) |
+| Retention of an unretained write head | `StorageBackend::retain`; Dolt: `DoltSql::retain_head` (`writfold-store/src/backend/dolt/retain.rs`) |
+| Real Dolt and Git tests | `crates/writfold-app/tests/publication.rs` |
+
+The publication is generic over the storage trait. The release manifest names
+a backend pin through `ReleasePin`, and the approval's checked fields come
+through `PublicationAuthority`. An Omnigraph adapter would implement the same
+two traits; nothing in the order is Dolt-specific.
+
+### The order
+
+The publisher holds the realm's exclusive Git writer lease (`Releases`) and the
+Dolt writer instance, with its exclusive writer lease, for the whole call.
+
+1. **Git expected-old check.** The completed ref `refs/kctx/knowledge` must be
+   exactly the approval's signed base release. That release's retained
+   manifest must name exactly the approval's signed base pin. No prepared
+   commit may exist for this operation. Failures, checked in this order, are
+   `Conflict`, `Misinterpreted` and `AlreadyPrepared`. Nothing is written.
+2. **Retain the candidate.** Its canonical bytes (domain
+   `writfold-dolt-candidate-v1`, then length-prefixed changes) become a Git blob
+   with a permanent `refs/kctx/objects/` root. This step is invisible and
+   idempotent.
+3. **Dolt conditional commit** from the base pin (`admit_write`). A moved Dolt
+   head is `Stale`, and nothing is visible. A killed write is `Unknown`.
+4. **Prepare.** Retain the new Dolt head (`retain`), then read every change back
+   at the new pin through the exact reader. Then write a Git prepared commit
+   `refs/kctx/prepared/<operation>`, parented on the base release. Its manifest
+   (`writfold-dolt-release/1`) names the operation, the candidate digest, the
+   candidate blob and the canonical new pin.
+5. **Git expected-old CAS** of the completed ref, from the base release to the
+   prepared commit. This is the only visibility point.
+
+Dolt commits before Git, for two reasons. A release must name the exact Dolt
+commit, which does not exist until the write. And a Git ref that names an
+unwritten Dolt commit would make visible something that might never exist.
+
+The Git expected-old check runs before the Dolt write, under the exclusive Git
+lease. So a competing publication cannot interleave. It is a typed `Conflict`
+with nothing written, not a split. After the Dolt commit, a Git conflict can
+only come from a writer outside the lease, and recovery refuses it as
+`Diverged`.
+
+There is no roll-back. Moving Dolt `main` back would rewrite native history.
+Instead, after an interruption the realm cannot publish anything else:
+
+- a new publication from the same base is `Stale` on Dolt;
+- an approval naming the unpublished commit is `Misinterpreted`, because the
+  current release does not name it.
+
+The interrupted publication must be completed first.
+
+```mermaid
+stateDiagram-v2
+    [*] --> Checked: Git ref = base release, manifest names base pin
+    [*] --> Conflict: Git ref moved (nothing written)
+    Checked --> Retained: candidate blob retained (invisible)
+    Retained --> Stale: Dolt head moved (nothing visible)
+    Retained --> Committed: Dolt commit from base pin
+    Committed --> Prepared: head retained, read back, prepared commit names new pin
+    Prepared --> Published: Git CAS base -> prepared (visible)
+    Checked --> NotPublished: crash
+    Retained --> NotPublished: crash
+    Committed --> Interrupted: crash
+    Prepared --> Interrupted: crash
+    Interrupted --> Published: complete (Git steps only)
+```
+
+### Recovery
+
+After `Unknown`, or any error, the caller calls `observe`. It is read-only and
+runs under the same two leases, so no step of the publication can still be in
+flight. It gathers these facts:
+
+- the Git completed ref;
+- the prepared commit for the operation, if any, and the pin its manifest names;
+- whether that commit is on the completed ref's history;
+- the Dolt head;
+- the Dolt commit carrying exactly this request, found by the writer's request
+  digest.
+
+The pure `resolve` maps the facts to one of four results:
+
+| Facts | Resolution | What follows |
+| --- | --- | --- |
+| prepared commit on the completed history, Dolt commit present, manifest names it | `Published` | nothing |
+| no Dolt commit and no prepared commit | `NotPublished` | the request can never become visible |
+| Dolt commit is the head, Git ref still the base, any prepared commit names it | `Interrupted` | `complete` |
+| anything else (excluded by the order and the leases) | `Diverged` | refuse; a person decides |
+
+`complete` accepts only `Interrupted`. It issues the remaining Git steps:
+
+1. clear stale reference locks;
+2. retain the blob;
+3. retain the Dolt head, read back and prepare, if the prepared commit is
+   absent;
+4. the Git CAS.
+
+It never reissues the Dolt write, and it never retries a step whose outcome it
+has not first observed as not applied. If it is interrupted again, the result
+is again `Unknown` → `observe`. There is no double publish:
+
+- the Dolt step is never repeated;
+- each operation has at most one prepared commit;
+- every Git ref update is conditional on its expected old value.
+
+`resolve` and `admit` are small, pure and total. They are **proof candidates**:
+they are not yet in the Charon `start_from` list and no theorem is claimed. A
+kernel test checks the no-split properties over all 64 fact combinations.
+
+### Bugs the kill sweep found
+
+The kill sweep found two real crash-recovery bugs below the publication. Both
+are fixed in this slice:
+
+- **Abandoned Git reference locks.** `git update-ref` writes `<ref>.lock`, then
+  renames it. A process killed between the two leaves the lock behind, and every
+  later update of that ref fails with "File exists". Under the exclusive
+  cooperating-writer lease, after the supervisor has reaped the killed group,
+  such a lock is provably abandoned and its update never happened.
+  `clear_stale_ref_locks` removes `refs/**/*.lock`; `complete` calls it first.
+- **Unretained Dolt head.** A write killed after `DOLT_COMMIT` but before its
+  in-transaction `DOLT_BRANCH('wf-retained/…')` leaves a head that the exact
+  reader rightly refuses. Until now only the next write retained it.
+  `retain` creates the root for the current head, guarded in the same process
+  on head and clean working set, and never moves the head.
+
+### Candidate binding
+
+The signed `DoltOperation` has no candidate field: it binds the base release,
+base pin and target, not the rows. Writfold binds the candidate to the
+operation in three ways:
+
+- the retained manifest names the candidate's digest under the operation;
+- a second preparation of the operation is refused;
+- recovery requires the exact candidate, whose digest is the write identity.
+
+An attempt that resolves `NotPublished` does not consume the approval. A
+**signed** candidate binding needs a new signed schema or domain, which is an
+owner decision. It is open.
+
+### Tests and how to run them
+
+The tests need the admitted Dolt 2.6.1 (path and digest from
+`qualification/dolt-integration-profile.json`) and the profiled `/usr/bin/git`.
+These are present in the admitted tool image, so `scripts/gate unit` runs them.
+A host Dolt with another digest fails them; they are never skipped. To run them
+alone without the shared gate cargo volume, use a private target directory:
+
+```sh
+docker run --rm --network none --user "$(id -u):$(id -g)" --init \
+  -e HOME=/tmp -e CARGO_TARGET_DIR=/cache/target \
+  -v "$PWD:/work/writfold" -v "$PWD/target/gate:/cache/target" \
+  -v writfold-rust-1.98.0-registry:/opt/cargo/registry:ro \
+  -v writfold-rust-1.98.0-git:/opt/cargo/git:ro \
+  -w /work/writfold writfold-tools@sha256:c854889f19c83174e69600ee28f0d4d35a0d2de1a23b3a35b1ecf4c4a88e0fc6 \
+  cargo test -p writfold-app --test publication --locked --offline -- --nocapture --test-threads 1
+```
+
+The four tests are:
+
+- **publish:** a publication with complete retained closure (manifest, candidate
+  blob and digest, Dolt retained root). A second publication follows. The first
+  release still interprets to its own pin and bytes, and replaying the spent
+  approval is a `Conflict`.
+- **conflict:** a Git CAS conflict from a rival signed operation over the same
+  base, and a `Misinterpreted` base pin. Nothing is written in either case.
+- **stale:** a Dolt head moved by a direct B0 write is `Stale` and is observed
+  `NotPublished`.
+- **kill sweep:** publications are cancelled after 0, 20, 40, … ms, which kills
+  their native processes, until one completes uncancelled. Each attempt is its
+  own signed operation and candidate. Every outcome must agree with `observe`.
+  `Interrupted` attempts are completed. At the end:
+  - there is exactly one Dolt commit and one release per published attempt;
+  - the release chain ends at the last one;
+  - the Dolt head is exactly its pin.
+
+  Exact numbers are indexed at `dolt_publication_component`.
+
+### What this slice does not cover
+
+DINT02 stays open. In particular:
+
+- a signed candidate binding;
+- live policy, target or tool admission;
+- bootstrap publication (the tests' genesis release is fixture-owned);
+- power-loss durability, and writers that bypass the leases;
+- kills during `complete` (resolved by the same `observe`, but not swept);
+- a Dolt `main` left ahead by a direct B0 write outside publication, which
+  blocks publication until an owner decision;
+- an RPC/CLI surface;
+- the WF10/WF11/WF14 gates;
+- the M11/V15 refinement and the TLA+ or TLAPS model of this order.
 
 ## Work after native onboarding
 
