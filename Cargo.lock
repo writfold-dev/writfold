@@ -519,8 +519,12 @@ name = "splicery-kernel"
 version = "0.1.0-dev.0"
 dependencies = [
  "splicery-domain",
- "vstd",
+ "splicery-splice",
 ]
+
+[[package]]
+name = "splicery-splice"
+version = "0.1.0-dev.0"
 
 [[package]]
 name = "splicery-syntax"

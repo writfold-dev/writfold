@@ -115,3 +115,31 @@ fn refused_recipes_and_paths_leave_no_worktree() -> Result {
     }
     Ok(())
 }
+
+fn prepare_and_apply(recipe: &str) -> Result<(Setup, String)> {
+    let s = Setup::new()?;
+    let p = prepare(&s.state, &s.repo, "src/client.rs", &s.recipe(recipe)?, None)?;
+    assert_eq!(p.edits.len(), 1);
+    approve(&s.state, &p.run, &[])?;
+    let edited = fs::read_to_string(apply(&s.state, &p.run)?.join("src/client.rs"))?;
+    Ok((s, edited))
+}
+
+#[test]
+fn a_whole_line_recipe_removes_the_line_and_its_terminator() -> Result {
+    let (_s, edited) = prepare_and_apply("whole")?;
+    let expected = support::CLIENT.replace("    conn.handshake()?;\n", "");
+    assert_eq!(edited, expected);
+    Ok(())
+}
+
+#[test]
+fn a_from_to_recipe_replaces_the_span_between_two_captures() -> Result {
+    let (_s, edited) = prepare_and_apply("from-to")?;
+    let expected = support::CLIENT.replace(
+        "    let fresh = open(url)?;\n    *conn = fresh;\n",
+        "    *conn = open(url)?;\n",
+    );
+    assert_eq!(edited, expected);
+    Ok(())
+}

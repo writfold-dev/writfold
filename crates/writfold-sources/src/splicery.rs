@@ -32,8 +32,8 @@ impl ReplayIdentity {
 }
 
 static IDENTITY: ReplayIdentity = ReplayIdentity {
-    commit: "c696b6e3e60938c2b19081c38801e0d67ced8df2",
-    source_artifact_sha256: "e3b17b937a916b5b65c47b4f2ab40445c51d63fafdff59413fff7813ce0f9995",
+    commit: "b14c67a7aca9f416c4facdf189ef340d5666351f",
+    source_artifact_sha256: "b4c3574a1874f8441b871b1b901eb5ef51f8829a760237adfd1b2df11a1827e0",
     profile: "writfold-splicery-literal-edit/1",
 };
 

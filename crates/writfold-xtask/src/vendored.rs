@@ -7,8 +7,8 @@ use std::io::{self, BufReader, Write};
 use std::os::unix::fs::MetadataExt;
 use std::path::{Path, PathBuf};
 
-const COMMIT: &str = "c696b6e3e60938c2b19081c38801e0d67ced8df2";
-const ARTIFACT: &str = "e3b17b937a916b5b65c47b4f2ab40445c51d63fafdff59413fff7813ce0f9995";
+const COMMIT: &str = "b14c67a7aca9f416c4facdf189ef340d5666351f";
+const ARTIFACT: &str = "b4c3574a1874f8441b871b1b901eb5ef51f8829a760237adfd1b2df11a1827e0";
 const ENCODING: &str = "SHA256 of UTF-8 JSON files array, sorted object keys, separators comma/colon, no trailing newline; entries in git ls-tree order";
 
 #[derive(Deserialize)]
@@ -32,14 +32,59 @@ struct SourceFile {
     sha256: String,
 }
 
+/// Every Splicery package admitted from the export, wherever it resolves.
 pub fn directory(name: &str) -> Option<&'static Path> {
-    Some(Path::new(match name {
-        "splicery-domain" => "crates/splicery-domain",
-        "splicery-syntax" => "crates/splicery-syntax",
-        "splicery-compile" => "crates/splicery-compile",
-        "splicery-kernel" => "crates/splicery-kernel",
+    admitted(name).map(|package| Path::new(package.directory))
+}
+
+struct Admitted {
+    directory: &'static str,
+    /// `writfold-sources` may declare it; otherwise it is reachable only
+    /// through another admitted Splicery package.
+    direct: bool,
+    /// Exact declared dependency names (all kinds). Justification:
+    /// domain hashes captures (sha2); syntax parses into domain types;
+    /// compile lowers syntax into domain plans (regex selectors); splice is
+    /// the dependency-free byte-splice kernel proved over its Aeneas
+    /// translation upstream; kernel is the checked domain facade over splice.
+    dependencies: &'static [&'static str],
+}
+
+fn admitted(name: &str) -> Option<Admitted> {
+    let (directory, direct, dependencies): (_, _, &'static [&'static str]) = match name {
+        "splicery-domain" => ("crates/splicery-domain", true, &["sha2"]),
+        "splicery-syntax" => ("crates/splicery-syntax", true, &["splicery-domain"]),
+        "splicery-compile" => (
+            "crates/splicery-compile",
+            true,
+            &["regex", "splicery-domain", "splicery-syntax"],
+        ),
+        "splicery-splice" => ("crates/splicery-splice", false, &[]),
+        "splicery-kernel" => (
+            "crates/splicery-kernel",
+            true,
+            &["splicery-domain", "splicery-splice"],
+        ),
         _ => return None,
-    }))
+    };
+    Some(Admitted {
+        directory,
+        direct,
+        dependencies,
+    })
+}
+
+fn declared_dependencies_match(package: &Value, expected: &[&str]) -> bool {
+    package["dependencies"].as_array().is_some_and(|declared| {
+        let mut names: Vec<_> = declared.iter().map(|d| d["name"].as_str()).collect();
+        names.sort_unstable();
+        names.dedup();
+        names.len() == expected.len()
+            && names
+                .iter()
+                .zip(expected)
+                .all(|(name, wanted)| *name == Some(*wanted))
+    })
 }
 
 pub struct SpliceryExport {
@@ -94,11 +139,13 @@ impl SpliceryExport {
         owner == "writfold-sources"
             && dependency["name"]
                 .as_str()
-                .and_then(directory)
+                .and_then(admitted)
                 .is_some_and(|expected| {
-                    dependency["source"].is_null()
+                    expected.direct
+                        && dependency["source"].is_null()
                         && dependency["path"].as_str().is_some_and(|path| {
-                            Path::new(path).strip_prefix(&self.root).ok() == Some(expected)
+                            Path::new(path).strip_prefix(&self.root).ok()
+                                == Some(Path::new(expected.directory))
                         })
                 })
     }
@@ -106,14 +153,15 @@ impl SpliceryExport {
     pub fn matches_package(&self, package: &Value) -> bool {
         package["name"]
             .as_str()
-            .and_then(directory)
+            .and_then(admitted)
             .is_some_and(|expected| {
                 package["source"].is_null()
+                    && declared_dependencies_match(package, expected.dependencies)
                     && package["manifest_path"].as_str().is_some_and(|path| {
                         let path = Path::new(path);
                         path.file_name().is_some_and(|name| name == "Cargo.toml")
                             && path.parent().and_then(|p| p.strip_prefix(&self.root).ok())
-                                == Some(expected)
+                                == Some(Path::new(expected.directory))
                     })
             })
     }

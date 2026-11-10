@@ -121,9 +121,17 @@ Splicery's SG08 proposal is not silently reinterpreted as this owner contract.
 
 `writfold_sources::splicery::replay` runs the actual pinned parser, lowerer and
 kernel against host-supplied retained bytes. The in-repository product-source
-export is commit `c696b6e3e60938c2b19081c38801e0d67ced8df2`, artifact
-`e3b17b937a916b5b65c47b4f2ab40445c51d63fafdff59413fff7813ce0f9995`;
-54 exported files match their original modes, Git blobs and SHA256 values.
+export is commit `b14c67a7aca9f416c4facdf189ef340d5666351f`, artifact
+`b4c3574a1874f8441b871b1b901eb5ef51f8829a760237adfd1b2df11a1827e0`;
+71 exported files (`Cargo.toml`, `Cargo.lock`, `LICENSE`, every file under
+`crates/` and the top-level `examples/*.spl`) match their original modes, Git
+blobs and SHA256 values. At that commit the byte-splice decision lives in the
+dependency-free `splicery-splice` crate, which Splicery proves over its
+Charon/Aeneas translation; its Verus kernel family is retired. Those proofs are
+Splicery's own qualification and are not rerun or renewed by Writfold. The
+earlier export at `c696b6e3e60938c2b19081c38801e0d67ced8df2` (artifact
+`e3b17b937a916b5b65c47b4f2ab40445c51d63fafdff59413fff7813ce0f9995`, 54 files)
+is superseded, not erased; the smoke and review receipts above stay bound to it.
 No mutable sibling checkout is used during compilation. This profile accepts
 only an exact literal-path content edit, not unresolved handles or file
 create/rename/remove. Candidate bytes and original-coordinate edit origins remain
@@ -339,13 +347,16 @@ records the supplied worktree-edit /1 archive and selected requirements. It does
 not adopt Splicery's SG registry as Writfold gates or enable a write capability.
 
 The earlier owner review at `06028bc1083d2cc1bd1367d6babce10fc9943f06` is
-preserved in the inventory. The current sibling at
-`c696b6e3e60938c2b19081c38801e0d67ced8df2` reports offline SG00–SG07 passes,
-including its cold offline reproduction, while full `/1` remains `not_qualified`
-and SG08–SG14 remain host-blocked. The component smoke above consumes that final
+preserved in the inventory. The sibling reviewed at
+`c696b6e3e60938c2b19081c38801e0d67ced8df2` reported offline SG00–SG07 passes,
+including its cold offline reproduction, while full `/1` remained `not_qualified`
+and SG08–SG14 remained host-blocked. The component smoke above consumes that final
 reproduced artifact, matches its declared source inputs and exercises its exact
 preview-to-Weft handoff. This does not rerun or renew Splicery's formal gates,
-enable native target writes, or satisfy Writfold's host obligations.
+enable native target writes, or satisfy Writfold's host obligations. The embedded
+replay export has since moved to `b14c67a7aca9f416c4facdf189ef340d5666351f`;
+Splicery's own gate reports at that commit have not been reviewed here, and the
+smoke has not been rerun against it.
 
 Splicery owns its language, lowering, normalized IR and pure checked kernel.
 Writfold owns the pinned adapter, actual IO, authenticated run/principal/grant,

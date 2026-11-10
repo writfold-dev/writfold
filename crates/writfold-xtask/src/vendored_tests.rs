@@ -69,3 +69,28 @@ fn identical_directory_alias_is_not_a_closed_source_export() -> Result {
     fs::remove_dir_all(root)?;
     Ok(())
 }
+
+#[test]
+fn proved_splice_kernel_is_transitive_only_and_dependency_free() -> Result {
+    let root = fixture()?;
+    let export = SpliceryExport::admit(&root)?;
+    let crate_dir = root.join("vendor/splicery/crates/splicery-splice");
+    let direct = json!({"name":"splicery-splice","source":null,"path":crate_dir});
+    assert!(!export.permits("writfold-sources", &direct));
+    let manifest = crate_dir.join("Cargo.toml");
+    let package = |dependencies: serde_json::Value| {
+        json!({"name":"splicery-splice","source":null,
+            "manifest_path":manifest,"dependencies":dependencies})
+    };
+    assert!(export.matches_package(&package(json!([]))));
+    assert!(!export.matches_package(&package(json!([{"name":"regex"}]))));
+    let kernel = json!({"name":"splicery-kernel","source":null,
+        "manifest_path":root.join("vendor/splicery/crates/splicery-kernel/Cargo.toml"),
+        "dependencies":[{"name":"splicery-splice"},{"name":"splicery-domain"}]});
+    assert!(export.matches_package(&kernel));
+    let mut legacy = kernel.clone();
+    legacy["dependencies"] = json!([{"name":"splicery-domain"},{"name":"vstd"}]);
+    assert!(!export.matches_package(&legacy));
+    fs::remove_dir_all(root)?;
+    Ok(())
+}

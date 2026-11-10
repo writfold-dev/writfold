@@ -58,12 +58,16 @@ Integration tests, examples and benches are development contexts for the syntax 
 
 The crate dependency table follows `handover/plan/02-architecture.md`. Unknown workspace members require classification. Renamed, optional, build, dev and target dependencies are checked by Cargo package identity, not import spelling. Resolved edges are traversed from every workspace member. Product crates cannot depend on tooling. Domain/kernel/protocol use an exact admitted pure arithmetic/proof/compiler-support closure; a newly introduced external dependency requires classification rather than slipping past an IO-name denylist. OpenSSL/native-tls packages are rejected in the active graph and in direct declarations.
 
-The only new local third-party exception is the four pure Splicery libraries used
-by `writfold-sources`. Admission checks the exact in-tree source export at commit
-`c696b6e3e60938c2b19081c38801e0d67ced8df2`, artifact
-`e3b17b937a916b5b65c47b4f2ab40445c51d63fafdff59413fff7813ce0f9995`.
+The only new local third-party exception is the pure Splicery libraries used
+by `writfold-sources`: domain, syntax, compile and kernel directly, and the
+dependency-free `splicery-splice` byte-splice kernel only through
+`splicery-kernel`. Admission checks the exact in-tree source export at commit
+`b14c67a7aca9f416c4facdf189ef340d5666351f`, artifact
+`b4c3574a1874f8441b871b1b901eb5ef51f8829a760237adfd1b2df11a1827e0`.
 The canonical manifest, complete regular-file inventory, modes and every byte
-digest must match; declared and resolved Cargo paths must use that export.
+digest must match; declared and resolved Cargo paths must use that export, and
+each resolved Splicery package must declare exactly its admitted dependency
+names (`splicery-splice` none; `splicery-kernel` only domain and splice).
 Matching package names, a self-rehashed manifest or a mutable sibling path do
 not suffice. Other crates cannot gain this dependency by reusing its name.
 The export is not subjected to a misleading Writfold source-proof claim: its own

@@ -24,7 +24,12 @@ git -C "$WRITFOLD_STATE/worktrees/<run>" diff
 ```
 
 Recipes are [Splicery](https://github.com/writfold-dev/splicery) recipes; see its
-`examples/try/` for one that works on a small Rust file.
+`examples/try/` for one that works on a small Rust file. The pinned Splicery
+(`b14c67a`) accepts `whole @line` (a line with its terminator) and
+`from @a to @b` (both captures and everything between); replay refusals carry
+its bounded selector detail (match count and sites) in the error text.
+Splicery's own `--diff`, stdin-recipe and `--out` CLI options are not part of
+this path: Writfold replays recipe files through the library, not the CLI.
 
 ## What each step does
 

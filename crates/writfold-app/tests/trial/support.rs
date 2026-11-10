@@ -40,6 +40,21 @@ const AMBIGUOUS: &str = r#"edit "src/client.rs" {
 }
 "#;
 
+// `whole @line` selects the line with its terminator, so deleting it leaves no blank line.
+const WHOLE: &str = r#"edit "src/client.rs" {
+  @handshake := one line "    conn.handshake()?;"
+  delete whole @handshake
+}
+"#;
+// `from @a to @b` spans both captures and the bytes between them.
+const FROM_TO: &str = r#"edit "src/client.rs" {
+  @first := one text "let fresh = open(url)?;"
+  @last := one text "*conn = fresh;"
+  @swap := from @first to @last
+  replace @swap with ["*conn = open(url)?;"]
+}
+"#;
+
 pub fn git(dir: &Path, args: &[&str]) -> Result<String> {
     let out = Command::new("git")
         .current_dir(dir)
@@ -82,7 +97,13 @@ impl Setup {
 
     pub fn recipe(&self, name: &str) -> Result<PathBuf> {
         let path = self.root.join(format!("{name}.spl"));
-        fs::write(&path, if name == "wrap" { WRAP } else { AMBIGUOUS })?;
+        let body = match name {
+            "wrap" => WRAP,
+            "whole" => WHOLE,
+            "from-to" => FROM_TO,
+            _ => AMBIGUOUS,
+        };
+        fs::write(&path, body)?;
         Ok(path)
     }
 }

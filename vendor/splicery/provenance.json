@@ -1,20 +1,20 @@
 {
   "schema": "writfold-splicery-source-export/1",
-  "commit": "c696b6e3e60938c2b19081c38801e0d67ced8df2",
-  "source_artifact_sha256": "e3b17b937a916b5b65c47b4f2ab40445c51d63fafdff59413fff7813ce0f9995",
+  "commit": "b14c67a7aca9f416c4facdf189ef340d5666351f",
+  "source_artifact_sha256": "b4c3574a1874f8441b871b1b901eb5ef51f8829a760237adfd1b2df11a1827e0",
   "digest_encoding": "SHA256 of UTF-8 JSON files array, sorted object keys, separators comma/colon, no trailing newline; entries in git ls-tree order",
   "files": [
     {
       "path": "Cargo.lock",
       "git_mode": "100644",
-      "git_blob": "30685094fa7371cf50220fddd774bc86de1d9ef1",
-      "sha256": "cb9e08bf8bf13f464240ccf943f731d58d57eb2c0f625aa2d78e56414b1e40ef"
+      "git_blob": "afb18753a9a79aea0a1fd29afce7ea51fff11b68",
+      "sha256": "2b3c08dc246544e0f63abecaf863d4c944ee7657568f841079168fe692505b32"
     },
     {
       "path": "Cargo.toml",
       "git_mode": "100644",
-      "git_blob": "009525410c1d2b9864ad10aee33946a51abe1674",
-      "sha256": "85d2111629b217d52a84eead95b8c685395dea078c9d54c3b31f9979225fd1d6"
+      "git_blob": "1a6dd63bc5ead19e92fe3c35d583acf925b2a30f",
+      "sha256": "aed295db2b3d8cd15e54be8d1df77bb4fe194819faf0951a2b8bd84a6f1775dd"
     },
     {
       "path": "LICENSE",
@@ -29,10 +29,16 @@
       "sha256": "37b3beba49f79302d093a9fd0dd743bfcd9651c26281a9b5e2a47b739f2f0c7e"
     },
     {
+      "path": "crates/splicery-cli/src/args.rs",
+      "git_mode": "100644",
+      "git_blob": "68d59c853a4e0155a8e06d01f6ebad569659ef40",
+      "sha256": "2a79694ca1daa688749b9865553b277426b8e4bb1e9b7a969171a2680b7f352c"
+    },
+    {
       "path": "crates/splicery-cli/src/lib.rs",
       "git_mode": "100644",
-      "git_blob": "7df854dabbe13413a3cd85adb8b519eddd2bd70d",
-      "sha256": "1870c3666fd9dbf8b53d110656d3f14bfa5f9b70493a8dadaf02b60ec6a42db6"
+      "git_blob": "daec5c70b4d1598e9d260cf2580ae4e3878de0c5",
+      "sha256": "c1cd185e9adb37c1d807f16f99a6c33fd86481d809c1d4b614ef3d8586356131"
     },
     {
       "path": "crates/splicery-cli/src/main.rs",
@@ -41,10 +47,46 @@
       "sha256": "2c237a18d30ed889f3ee9f88f961186b9934526c8baf97624da7dece245d8443"
     },
     {
+      "path": "crates/splicery-cli/src/preview.rs",
+      "git_mode": "100644",
+      "git_blob": "37be952772407a54d1069bb5bc214f2d3b91f2eb",
+      "sha256": "844c58fa3e7926be58d1a1f4e18a257fc6bf73a1f12efcee9684e99ee7097d0c"
+    },
+    {
+      "path": "crates/splicery-cli/src/refusal.rs",
+      "git_mode": "100644",
+      "git_blob": "e3c65d792c27c2874e38337b12f26edf55249737",
+      "sha256": "f9e8ec28d9526924fcb7f40b58031cf276652120eba31b24b0cb74aa007f8c81"
+    },
+    {
+      "path": "crates/splicery-cli/src/tests.rs",
+      "git_mode": "100644",
+      "git_blob": "37c6d5d770f69b36ff97f5e1274c6639e1aea25e",
+      "sha256": "4695ec99888c2d1d1284456c898246374977c6ad9ec0fad0074dfb13fd1b3648"
+    },
+    {
       "path": "crates/splicery-compile/Cargo.toml",
       "git_mode": "100644",
       "git_blob": "a03475c527f0e9d4edd6000fa37dfc3b9a354896",
       "sha256": "c6df728913b1335c3098583529ac78c2b3757bae73233bb1b7a7e4bc7a5cfbdb"
+    },
+    {
+      "path": "crates/splicery-compile/src/advisory.rs",
+      "git_mode": "100644",
+      "git_blob": "ff1e59797af00bbd9ac002935ca877ceee9e75b4",
+      "sha256": "d94bc035deee5980ffebb7f656e22066373f639e49ba1737a331047f3ac86be1"
+    },
+    {
+      "path": "crates/splicery-compile/src/anchors.rs",
+      "git_mode": "100644",
+      "git_blob": "3f35166fbd59361a5585fc6a5295109dcb249f44",
+      "sha256": "f050efcccbf81ee61f7f4a5d681ac32af221b1f859f99563fead063283288a18"
+    },
+    {
+      "path": "crates/splicery-compile/src/detail.rs",
+      "git_mode": "100644",
+      "git_blob": "e95c2147d99407f708831eb6ae744628d80b12d1",
+      "sha256": "82a7149c5a02bcaf0f2d797f88b6a5cac923b451276dfb34b365f43b2e38af29"
     },
     {
       "path": "crates/splicery-compile/src/environment.rs",
@@ -67,8 +109,8 @@
     {
       "path": "crates/splicery-compile/src/lib.rs",
       "git_mode": "100644",
-      "git_blob": "bfece46287cd440971232be4b56fb1e7ad42dd4a",
-      "sha256": "45c5073d11fff77e325e3654c4839714be717157c2334040d61d194599f372c4"
+      "git_blob": "8ac9b8506bde5823c318ae2a6b331000bbbdee94",
+      "sha256": "f9c3bb418a51c81530d0102b9a015a33526240da630bf38cb9dac595378094ee"
     },
     {
       "path": "crates/splicery-compile/src/payload.rs",
@@ -91,14 +133,26 @@
     {
       "path": "crates/splicery-compile/src/selector.rs",
       "git_mode": "100644",
-      "git_blob": "01824e0a66357132a532e2c73538bf5d1a92a5d1",
-      "sha256": "fb6e90eb2efad8473f7bb090c75756ca90bc2cdd9dcbfdf398b879b292389d10"
+      "git_blob": "4418910406dac1571dea591188c64a992a513835",
+      "sha256": "c7237f1a3342bbf41be0563b4f598e47f07caf11f4fdf68ce4ac6beede0ee913"
     },
     {
       "path": "crates/splicery-compile/src/tests.rs",
       "git_mode": "100644",
-      "git_blob": "55df4aeabbc5ce5710ac450aac554f66d04c7262",
-      "sha256": "6182334690dd0f157b9c98dc8cb7005429a8d9949b949804507beb0bf2a29501"
+      "git_blob": "c326760bdb718c3bb12410a66e2f1e3d8c314782",
+      "sha256": "244175fa52292f33085010c2f364655222fe793604dec081ffd5e94a7c27c057"
+    },
+    {
+      "path": "crates/splicery-compile/src/tests/advisory.rs",
+      "git_mode": "100644",
+      "git_blob": "25aaf3ec0397c849c6dc68dd866fb0c6f9e47fbe",
+      "sha256": "080e48741c50c34ce63a3440509965b6b100577b33ae192dc5a3261ea6d088e3"
+    },
+    {
+      "path": "crates/splicery-compile/src/tests/anchors.rs",
+      "git_mode": "100644",
+      "git_blob": "e19904063a39a23a5025ef048c88db7a619c7bad",
+      "sha256": "99f8faf86946df70ed971252b220b3c2f0a24e80083450a23c641121f09436e6"
     },
     {
       "path": "crates/splicery-compile/src/tests/common.rs",
@@ -109,32 +163,32 @@
     {
       "path": "crates/splicery-compile/src/tests/file_plan.rs",
       "git_mode": "100644",
-      "git_blob": "d8329edbbc5356868deabbd6036b0e85acbf47fa",
-      "sha256": "81d566a8aff0973ceafb3cabcf7fa47636ac28c20245c999ac739f80bfff774c"
+      "git_blob": "c8f7424af5cc7c4c7edb47da1cbe345ed865d7f0",
+      "sha256": "e4e7bc1d9a02a03be310dc4f0116f6a60d2fbff4859462796652286362e747bc"
     },
     {
       "path": "crates/splicery-compile/src/tests/frozen.rs",
       "git_mode": "100644",
-      "git_blob": "28368cc7287e7760aec20ff7cada5523f7022604",
-      "sha256": "5f8c87fc61639ca87f735a38959cc5e8430bbcfb8aa0953ec94f2125e1c87250"
+      "git_blob": "218b7e8eff4d5562baa7a989b52dfe1e788ceff7",
+      "sha256": "d7611d1ce20e0f0884a498d34ae9636f6256feed9c90e01f2f01a3e65a987aa8"
     },
     {
       "path": "crates/splicery-compile/src/tests/payload.rs",
       "git_mode": "100644",
-      "git_blob": "bf15bba69a9051a7ee5e1235154a099dcd7b7040",
-      "sha256": "b4aa0b02a4c962be78c0961905a7c769fb66fe1942968cc956d37964fa4dca54"
+      "git_blob": "728afd1ee2e5a35486693685376902d0374ec978",
+      "sha256": "c85349578bc75171c09fbadbf3a7a5381d409c21e52c1011fdfcffd9f7db395e"
     },
     {
       "path": "crates/splicery-compile/src/tests/selectors.rs",
       "git_mode": "100644",
-      "git_blob": "87afee44c8d8f1385a7ddc2b4ef5b07140c9c181",
-      "sha256": "6402664b11c1af888b707c66e131fd36e7630ecda2af1adea0ecf1f6fa0d9ae4"
+      "git_blob": "3f7e452aed67e0d20381f803596d699745908cfe",
+      "sha256": "c01dc93fd8f4ed434c02c8f18529c68d7b138a211d269d2decebf80198f3dc86"
     },
     {
       "path": "crates/splicery-compile/src/tests/validation.rs",
       "git_mode": "100644",
-      "git_blob": "9b61fb805921db4f689d7650273948708b1944ef",
-      "sha256": "1857f264e90102560c7e0855533e33bdd26ab81d757d1d5e5673ce7ea9e6b8ae"
+      "git_blob": "3d118cca8439e807178e1d7906552d8e9d9665f3",
+      "sha256": "1ecc8a8c12b031901f0afbd1e5188f24e0902faae8175d5fbc9cef09970a1e23"
     },
     {
       "path": "crates/splicery-compile/src/tests/vectors.rs",
@@ -157,20 +211,38 @@
     {
       "path": "crates/splicery-kernel/Cargo.toml",
       "git_mode": "100644",
-      "git_blob": "b0c9c32e95360687c4d6ec10919d862e67083357",
-      "sha256": "0db52990c0ba1eaa71449ff160ba9ef476330d3139d6ccb9e8e62110f8a84e53"
+      "git_blob": "383ac2603414d349be9ef9f3c9dc24832363a70e",
+      "sha256": "5e38d0354937f72ed38ac1a788971f589b00a5e920b8ebf4a12be002e9263f66"
     },
     {
       "path": "crates/splicery-kernel/src/lib.rs",
       "git_mode": "100644",
-      "git_blob": "6b55c32f1c6e6828b2fca76bc88101eac4205084",
-      "sha256": "503c6a1ea4e3c8e41c44e8c5c83848ec00e1c84b038531acdf3fcb45d236a677"
+      "git_blob": "5d55dc1e516b40a37cae48ca06145651e501da28",
+      "sha256": "db5a7946279f342c423982c457d881e9118d2ecaa40ab97dfc7b2cd0b723ee45"
     },
     {
-      "path": "crates/splicery-kernel/src/spec.rs",
+      "path": "crates/splicery-splice/Cargo.toml",
       "git_mode": "100644",
-      "git_blob": "e28e4b348a65bfd6e8a2c8b9580b069d11ce736a",
-      "sha256": "7ccc7bf266ade2c2bdd3049c541d9af0f32e7df53eb433a080c94ec920b13034"
+      "git_blob": "db330026adcc014e31791dc84ccd2ff0f09b9df5",
+      "sha256": "f3deddb24a246c822c1f551950dc1dd03a357abff3a5dfdbe568eb75cea64ef8"
+    },
+    {
+      "path": "crates/splicery-splice/src/convenience.rs",
+      "git_mode": "100644",
+      "git_blob": "660947fe8871fa2b5fd8aa7562def658edf1fdec",
+      "sha256": "674b29c285e6a47d49820c6773b03d4bb9a688008c550f9c469ea8584163b002"
+    },
+    {
+      "path": "crates/splicery-splice/src/lib.rs",
+      "git_mode": "100644",
+      "git_blob": "b8880c76cda854cbd653103513426b41dec027e0",
+      "sha256": "6962c6cc003f2b63cac957253ab98751579680ed6d98633f2d66857658dd0af1"
+    },
+    {
+      "path": "crates/splicery-splice/src/splice.rs",
+      "git_mode": "100644",
+      "git_blob": "d6dd9a401f439f50a9ff86bee38a075e2a2b4648",
+      "sha256": "c17bb22064f60ba1e9107a7da078de6ae830ee415afa70182a7f836cd7461c48"
     },
     {
       "path": "crates/splicery-syntax/Cargo.toml",
@@ -179,16 +251,22 @@
       "sha256": "294652e8faa43519e26dfd6142cb0959a68c3dc9e10f885530b2fb44d5142630"
     },
     {
+      "path": "crates/splicery-syntax/src/anchor_tests.rs",
+      "git_mode": "100644",
+      "git_blob": "caa8a0d90f8a00da58ab67870eea9f546b749597",
+      "sha256": "39c815f14edf6b2da0ef5575afd7280572449b8f9c72bef53e8917fc21b6ca4b"
+    },
+    {
       "path": "crates/splicery-syntax/src/ast.rs",
       "git_mode": "100644",
-      "git_blob": "26e19da7c4d396c112d97c96c27baaaeb818eae7",
-      "sha256": "a2f616e72994008bda785c4df7465545ebf531bd394a6f2c8434afc6af14af43"
+      "git_blob": "a2bad9dc9d312393c9661fc49e7f13ad5675d441",
+      "sha256": "03d2500153203d583a8c17db70494321381f3bb23b44efc60ea4174ae5215429"
     },
     {
       "path": "crates/splicery-syntax/src/lexer.rs",
       "git_mode": "100644",
-      "git_blob": "b74ad0d7f5025f65c423348161dcffd23040610b",
-      "sha256": "4046d2f9af88d6f795265b3f59f72987136d89785cc2aff977ffc9857aaa5e48"
+      "git_blob": "317c124019c09ec1622b33ad8023ac59a8c3b3a5",
+      "sha256": "e22e7dc2ca8265deef5a5685e65b309cf53d1b00fb759f7ffd59e72b59e318ed"
     },
     {
       "path": "crates/splicery-syntax/src/lexer/literal.rs",
@@ -199,8 +277,8 @@
     {
       "path": "crates/splicery-syntax/src/lib.rs",
       "git_mode": "100644",
-      "git_blob": "a4143788fad69aa907ba19be88ed8107135c0c78",
-      "sha256": "0ec3b78e08e16b3d3d66d5f789b9d51fc0f3838e7e08b44c0fda0b5cfd88ced5"
+      "git_blob": "cc9c0945177a4fc4d3f4fd8e32781a1083fe9978",
+      "sha256": "bf3cec66d5a3266e1d401c5e3f07d27e7cbf63e54bba866d1518e86d28ac14da"
     },
     {
       "path": "crates/splicery-syntax/src/parser.rs",
@@ -211,8 +289,8 @@
     {
       "path": "crates/splicery-syntax/src/parser/selector.rs",
       "git_mode": "100644",
-      "git_blob": "28dcea7e3fe623952c57fc7336aab9dda4cd1422",
-      "sha256": "465a614f27e192fc2be6409d061eef4daa0b41581b5e5f960af3932d83469c70"
+      "git_blob": "8aa196a6e85dac8e68d6bf80198e4eae333ecc67",
+      "sha256": "4a8a6947ac368007ef3c6c78754473d8401bc08040cd2faabe6b963af1dd89d8"
     },
     {
       "path": "crates/splicery-syntax/src/tests.rs",
@@ -225,6 +303,18 @@
       "git_mode": "100644",
       "git_blob": "15a68127d13b7404b9c26a81f2fbf49bbab23f7f",
       "sha256": "6a69d63a569147a7cf0fda2060eb4d266dc16b2a315803a99804664e7cdfa038"
+    },
+    {
+      "path": "crates/splicery-wire/src/diff.rs",
+      "git_mode": "100644",
+      "git_blob": "0ade67d4ab8d32079b5193bf3c0e7976ac1c4547",
+      "sha256": "eaf789460343b4f3b4bc05dd6b2694b53c34dcfa97c4a87ea74b542ad098e260"
+    },
+    {
+      "path": "crates/splicery-wire/src/diff_tests.rs",
+      "git_mode": "100644",
+      "git_blob": "0998bcd86180db3377ba435a7db4facf69c78e82",
+      "sha256": "38cb1028055f93e05fd084778b8c8295a20dab81d5ab3fc376d610ef36b64691"
     },
     {
       "path": "crates/splicery-wire/src/file_plan.rs",
@@ -253,8 +343,8 @@
     {
       "path": "crates/splicery-wire/src/lib.rs",
       "git_mode": "100644",
-      "git_blob": "d33b73812ad9f1ae48471535bbf6eb8a349eabe3",
-      "sha256": "0fd889c3dedb96affb6017bf896bd13f202dc4dadabf834d054e4553d35c1cb6"
+      "git_blob": "d250cbad9879a771a95a64cd33213086524872de",
+      "sha256": "2209ff30172f2219b4eabee6947dc741b2a8fd54f9436fdbd93385dc4c2d4ba2"
     },
     {
       "path": "crates/splicery-wire/src/tests.rs",
@@ -327,6 +417,18 @@
       "git_mode": "100644",
       "git_blob": "ce89839b54f0270ce8b57eec3a95e62165e447ee",
       "sha256": "5a67b91ab78bf095560fe78e6c15b04565afb8570619648e280d5dd5fc172f1a"
+    },
+    {
+      "path": "examples/12-whole.spl",
+      "git_mode": "100644",
+      "git_blob": "f2295b422ada106fcdd2e034b952d28ed1338386",
+      "sha256": "c3e1d086693a2ad6e0cf4ff87e52e5b98f49423890699988c0d7c9fe2341a99c"
+    },
+    {
+      "path": "examples/13-from-to.spl",
+      "git_mode": "100644",
+      "git_blob": "0bccb46e97ea195dfbe332493f928c891108f08d",
+      "sha256": "e08712c12bea16ee2e9739daa9cd9bb78bfef2eca5f4cece74ddca4060db9bb7"
     }
   ]
 }
