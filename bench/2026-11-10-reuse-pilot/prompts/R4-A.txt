@@ -1,0 +1,16 @@
+You are working in a Git repository checked out at <trial>/repo, at commit <commit>.
+
+An earlier agent session gathered evidence for this task:
+For each file under `crates/` that mentions `serde_json::`, find its first line (lowest line number) containing `serde_json::`.
+
+Follow-up task: Of the first lines found in the earlier session, list those whose text contains `serde_json::Value`.
+
+Answer: write the answer to <trial>/answer.txt, one line per piece of evidence, in the form
+  <path>:<line>: <the full text of that source line, exactly as in the file>
+where <path> is relative to the repository root and <line> is 1-based. Include every line the task asks for and nothing else. Leading indentation may be omitted.
+
+Rules:
+- Put any scratch files in <trial>/work, never in the repository.
+- The earlier session's plain-text notes are in <trial>/notes.txt. Use them and your ordinary tools: Bash (grep, rg, git grep, sed and similar) and Read. Do not modify the repository.
+- Do not read anything else outside <trial> except where stated above.
+- When finished, reply with exactly one line: `DONE`.

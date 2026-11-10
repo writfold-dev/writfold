@@ -1,0 +1,38 @@
+{
+ "seed": 20261111,
+ "method": "random.Random(seed).shuffle per repeat block; session 2 launched three at a time in this order, after all six session-1 runs",
+ "session1": [
+  "S1-R1",
+  "S1-R2",
+  "S1-R3",
+  "S1-R4",
+  "S1-R5",
+  "S1-R6"
+ ],
+ "order": [
+  "R1-B-r1",
+  "R4-A-r1",
+  "R2-B-r1",
+  "R1-A-r1",
+  "R6-A-r1",
+  "R5-B-r1",
+  "R5-A-r1",
+  "R6-B-r1",
+  "R2-A-r1",
+  "R3-B-r1",
+  "R3-A-r1",
+  "R4-B-r1",
+  "R2-B-r2",
+  "R1-B-r2",
+  "R5-A-r2",
+  "R6-B-r2",
+  "R3-B-r2",
+  "R5-B-r2",
+  "R4-A-r2",
+  "R2-A-r2",
+  "R3-A-r2",
+  "R6-A-r2",
+  "R4-B-r2",
+  "R1-A-r2"
+ ]
+}

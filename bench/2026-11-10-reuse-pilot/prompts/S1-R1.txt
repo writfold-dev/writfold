@@ -1,0 +1,26 @@
+You are working in a Git repository checked out at <trial>/repo, at commit <commit>.
+
+Task: gather evidence for a later agent session, which will not be able to see this conversation.
+Find every line under `crates/` that calls `claim_matches_spec(` (not the line that defines it).
+
+Do both of these:
+1. Retain every piece of evidence with Tuft (`retain @h around lines 0`, so each evidence line is its own retained binding in <trial>/state).
+2. Write plain-text notes to <trial>/notes.txt for that later session: the evidence as lines of the form
+  <path>:<line>: <the full text of that source line, exactly as in the file>
+plus anything else you think it will need.
+
+Rules:
+- Put any scratch files in <trial>/work, never in the repository.
+- Search the repository with Tuft, as the note below says. Do not use grep, rg, git grep, find or other search commands on the repository; you may post-process Tuft's own output with ordinary shell tools. Read a file directly (Read, or sed on a line range) only when the Tuft output is not enough. Do not modify the repository.
+  Search with Tuft. Write <trial>/work/q.tuft:
+    @h := find text "exact bytes" in "crates/" at "<commit>" limit 100;
+    @e := retain @h around lines 0;
+    @v := project @e [path, line, excerpt(max_chars: 300)];
+    emit @v budget_tokens 4000;
+  (`find rx"..."`: Rust regex over ASCII; omit `in` for the whole tree.)
+  Run <writfold> tuft run q.tuft --repo <trial>/repo --state <trial>/state
+  Rows are `path:line: text`; --out FILE writes them to a new file.
+  The last line `# coverage=complete ... omitted=0 cursor=none` means none
+  are missing; else raise limit or budget_tokens, or rerun with --cursor C.
+- Do not read anything else outside <trial> except where stated above.
+- When finished, reply with exactly one line: `DONE`.

@@ -1,0 +1,23 @@
+You are working in a Git repository checked out at <trial>/repo, at commit <commit>.
+
+An earlier agent session gathered evidence for this task:
+Find every `#[test]` attribute line under `crates/writfold-app/src/trial/`.
+
+Follow-up task: For each `#[test]` attribute found in the earlier session in `retain_tests.rs` or `recovery_tests.rs`, give the line immediately after it.
+
+Answer: write the answer to <trial>/answer.txt, one line per piece of evidence, in the form
+  <path>:<line>: <the full text of that source line, exactly as in the file>
+where <path> is relative to the repository root and <line> is 1-based. Include every line the task asks for and nothing else. Leading indentation may be omitted.
+
+Rules:
+- Put any scratch files in <trial>/work, never in the repository.
+- The earlier session's evidence is retained in <trial>/state; read it as the note below says. Do not use grep, rg, git grep, find or other search commands on the repository; you may post-process the evidence commands' own output with ordinary shell tools. Read a repository file directly (Read, or sed on a line range) only when the evidence output is not enough. Do not modify the repository.
+  Earlier evidence, retained as exact bytes at the pinned commit:
+    <writfold> trial evidence list --state <trial>/state [--path PREFIX] [--limit N] [--out NEW_FILE]
+  Rows are `binding12 path@commit7:line: text` (line = first retained line); the
+  last line `# count=M shown=S omitted=O` means O rows are not shown.
+    <writfold> trial evidence show BINDING --state <trial>/state [--context-lines N --repo <trial>/repo]
+  prints the exact retained bytes; context lines, numbered `L| text`, come from
+  the pinned commit in separately marked sections.
+- Do not read anything else outside <trial> except where stated above.
+- When finished, reply with exactly one line: `DONE`.
