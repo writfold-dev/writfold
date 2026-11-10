@@ -166,6 +166,8 @@ Next after T1. T2 suggested a compact Tuft row format and an `--out` flag. Both 
   - bootstrap publication;
   - a TLA+ model of the publication order;
   - proving `writfold_core::publication`.
+- ~~R1's operational trip~~: fixed (`trial_state_dir`). `next:` lines carry an absolute `--state`, so they work from a fresh shell. A command on an existing run, given an uninitialized directory or a run it never prepared, refuses naming the directory it searched and how it was chosen ([trial-profile.md](trial-profile.md#try-it)). No cwd-based discovery was added: the printed command is the fix, and it adds no new resolution rule;
+- R2, a harder reliability round: next. Tasks that arm A gets wrong at least 25% of the time in a calibration run: an unfamiliar repository, edits across several files, a file mutated between prepare and apply, ambiguous scope, long sessions.
 
 ## Website wording after the slice
 

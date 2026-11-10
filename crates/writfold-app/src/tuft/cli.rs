@@ -1,7 +1,8 @@
 //! Argument handling for `writfold tuft ...`; returns the text to print.
 use super::{Invocation, compile, run};
 use crate::trial::Result;
-use std::path::{Path, PathBuf};
+use crate::trial::state_dir::{StateDir, Uses};
+use std::path::Path;
 use tuft::emit::{Cursor, Format};
 
 pub const USAGE: &str = "\
@@ -77,16 +78,10 @@ impl Args {
         }
     }
 
-    fn state(&self) -> Result<PathBuf> {
-        if let Some(state) = self
-            .option("state")
-            .map(PathBuf::from)
-            .or_else(|| std::env::var_os("WRITFOLD_STATE").map(PathBuf::from))
-        {
-            return Ok(state);
-        }
-        let home = std::env::var_os("HOME").ok_or("HOME is not set; pass --state")?;
-        Ok(Path::new(&home).join(".local/share/writfold/trial"))
+    fn state(&self) -> Result<StateDir> {
+        let dir = StateDir::resolve(self.option("state"))?;
+        dir.require_initialized(Uses::AnyState)?;
+        Ok(dir)
     }
 }
 
@@ -108,7 +103,7 @@ pub fn main(args: &[String]) -> Result<String> {
         Some("run") => {
             let file = parsed.file()?;
             let source = std::fs::read(file)?;
-            let state = parsed.state()?;
+            let dir = parsed.state()?;
             let repo = parsed.option("repo").ok_or("missing --repo")?;
             if let Some(out) = parsed.option("out").filter(|o| Path::new(o).exists()) {
                 return Err(format!("--out {out}: file exists (refusing to overwrite)").into());
@@ -118,7 +113,7 @@ pub fn main(args: &[String]) -> Result<String> {
                 source: &source,
                 name: file,
                 repo: Path::new(repo),
-                state: &state,
+                state: &dir.path,
                 cursor: cursor.as_ref(),
                 format: parsed.format,
             })?;

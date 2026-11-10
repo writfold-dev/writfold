@@ -38,6 +38,7 @@ mod show;
 #[cfg(test)]
 mod sparse_tests;
 mod state;
+pub mod state_dir;
 #[cfg(test)]
 mod tests;
 

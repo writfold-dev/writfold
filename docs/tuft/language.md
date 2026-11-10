@@ -339,7 +339,8 @@ writfold tuft check FILE
 
 `--state` defaults to the trial state (`$WRITFOLD_STATE`, else
 `~/.local/share/writfold/trial`), which holds the admitted Git executable and
-the retained evidence. Create it once with `writfold trial init`. `--repo`
+the retained evidence. Create it once with `writfold trial init`; an
+uninitialized directory is refused with its absolute path and how it was chosen. `--repo`
 must be an ordinary repository (`DIR/.git` a directory). A whole-tree
 `find` loads every blob in scope once, in parallel, bounded at 1 GiB. A larger
 scope refuses and asks to be narrowed.

@@ -79,6 +79,9 @@ pub fn show(state: &Path, run: &str) -> Result<String> {
     let loaded = trial
         .ledger(&lease, &executable)?
         .load::<Event, Premises>(&stream(run)?)?;
+    if loaded.records.is_empty() {
+        return Err(super::state_dir::not_prepared(run));
+    }
     let mut out = format!(
         "run {run}: {} record(s), history validated\n",
         loaded.records.len()

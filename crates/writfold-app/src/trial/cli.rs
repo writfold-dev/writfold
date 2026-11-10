@@ -1,7 +1,8 @@
 //! Argument handling for `writfold trial ...`; returns the text to print.
 use super::show::show;
+use super::state_dir::{StateDir, Uses};
 use super::{Result, Trial, apply, approve, prepare, recover};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 pub const USAGE: &str = "\
 writfold trial init                     create the private trial state directory
@@ -31,6 +32,7 @@ writfold trial recover RUN              resolve a claim left without an outcome 
 writfold trial show RUN                 print the run's validated ledger history
 
 Options: --state DIR (default: $WRITFOLD_STATE, else ~/.local/share/writfold/trial).
+`next:` lines carry an absolute --state, so they work in a fresh shell.
 Profile writfold-trial-worktree/1: a cooperating single-user trial. Edits land only
 in Writfold's own worktree of your repository, never in your checkout.";
 
@@ -82,20 +84,13 @@ impl Args {
             _ => Err("expected exactly one RUN".into()),
         }
     }
-    fn state(&self) -> Result<PathBuf> {
-        if let Some(state) = self
-            .option("state")
-            .map(PathBuf::from)
-            .or_else(|| std::env::var_os("WRITFOLD_STATE").map(PathBuf::from))
-        {
-            return Ok(state);
-        }
-        let home = std::env::var_os("HOME").ok_or("HOME is not set; pass --state")?;
-        Ok(Path::new(&home).join(".local/share/writfold/trial"))
+    fn state(&self) -> Result<StateDir> {
+        StateDir::resolve(self.option("state"))
     }
 }
 
-fn trial_run(parsed: &Args, state: &Path) -> Result<String> {
+fn trial_run(parsed: &Args, dir: &StateDir) -> Result<String> {
+    let state = dir.path.as_path();
     let weft = match (parsed.option("weft"), parsed.option("weft-bin")) {
         (Some(review), Some(bin)) => Some((Path::new(review), Path::new(bin))),
         (None, None) => None,
@@ -110,12 +105,41 @@ fn trial_run(parsed: &Args, state: &Path) -> Result<String> {
         weft,
         weft_sha256: None,
     })?;
-    Ok(super::run::render(&ran))
+    // `render` ends with the `next:` line; make it work in a fresh shell.
+    Ok(format!("{}{}", super::run::render(&ran), dir.flag()))
 }
 
 pub fn main(args: &[String]) -> Result<String> {
     let parsed = parse(args)?;
-    let state = parsed.state()?;
+    let dir = parsed.state()?;
+    let command = parsed.positional.first().map(String::as_str);
+    const COMMANDS: [&str; 10] = [
+        "init", "prepare", "run", "retain", "approve", "apply", "recover", "show", "evidence",
+        "help",
+    ];
+    if command.is_none_or(|c| c == "help" || !COMMANDS.contains(&c)) {
+        return Ok(USAGE.to_owned());
+    }
+    let uses = match command {
+        Some("approve" | "apply" | "recover" | "show") => Uses::ExistingRun,
+        _ => Uses::AnyState,
+    };
+    if command != Some("init") {
+        dir.require_initialized(uses)?;
+    }
+    let result = dispatch(&parsed, &dir);
+    // A RUN lives in one state directory: say which one was searched. Other
+    // commands' refusals stay identical to `serve`'s.
+    match uses {
+        Uses::ExistingRun => {
+            result.map_err(|error| format!("{error}\n  in {}", dir.describe()).into())
+        }
+        Uses::AnyState => result,
+    }
+}
+
+fn dispatch(parsed: &Args, dir: &StateDir) -> Result<String> {
+    let state = dir.path.clone();
     match parsed.positional.first().map(String::as_str) {
         Some("init") => {
             Trial::init(&state)?;
@@ -137,10 +161,14 @@ pub fn main(args: &[String]) -> Result<String> {
             for (lo, hi, inserted) in &p.edits {
                 out.push_str(&format!("  splice [{lo},{hi}) -> {inserted} bytes\n"));
             }
-            out.push_str(&format!("next: writfold trial approve {}", p.run));
+            out.push_str(&format!(
+                "next: writfold trial approve {}{}",
+                p.run,
+                dir.flag()
+            ));
             Ok(out)
         }
-        Some("run") => trial_run(&parsed, &state),
+        Some("run") => trial_run(parsed, dir),
         Some("retain") => {
             if let Some(name) = parsed.option("label") {
                 super::evidence::label::check(name)?;
@@ -170,7 +198,8 @@ pub fn main(args: &[String]) -> Result<String> {
             let run = parsed.run()?;
             let (expires, summary) = approve(&state, run, &parsed.all("require"))?;
             Ok(format!(
-                "approved run {run} until {expires} (unix seconds)\n  {summary}\nnext: writfold trial apply {run}"
+                "approved run {run} until {expires} (unix seconds)\n  {summary}\nnext: writfold trial apply {run}{}",
+                dir.flag()
             ))
         }
         Some("apply") => {

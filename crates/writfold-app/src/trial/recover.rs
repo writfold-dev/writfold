@@ -21,6 +21,9 @@ pub fn recover(state: &Path, run: &str) -> Result<&'static str> {
     let lease = trial.writer.try_lease()?;
     let ledger = trial.ledger(&lease, &executable)?;
     let loaded = ledger.load::<Event, Premises>(&stream(run)?)?;
+    if loaded.records.is_empty() {
+        return Err(super::state_dir::not_prepared(run));
+    }
     let [first, _, claimed] = loaded.records.as_slice() else {
         return Err(format!("run {run} has no claim awaiting an outcome").into());
     };

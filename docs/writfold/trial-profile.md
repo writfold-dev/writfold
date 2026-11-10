@@ -23,6 +23,18 @@ target/release/writfold trial recover <run>   # only after an interrupted apply
 git -C "$WRITFOLD_STATE/worktrees/<run>" diff
 ```
 
+The state directory is `--state DIR`, else a non-empty `WRITFOLD_STATE`, else
+`~/.local/share/writfold/trial`. Every `next:` line a step prints ends with
+`--state` and the absolute directory, so it works when copied into a fresh
+shell where an earlier `export` no longer applies. A command on an existing
+run (`approve`, `apply`, `recover`, `show`) given a directory that holds no
+state, or a run that directory never prepared, refuses with the directory it
+searched and how it was chosen (`from --state`, `from WRITFOLD_STATE` or the
+default), and says to pass the `--state` from prepare's `next:` line. Other
+commands given an uninitialized directory name it and the `trial init`
+command that creates it. (The 10 November reliability pilot's main trip was
+exactly this: `approve` from a new shell without the variable.)
+
 Recipes are [Splicery](https://github.com/writfold-dev/splicery) recipes; see its
 `examples/try/` for one that works on a small Rust file. The pinned Splicery
 (`b14c67a`) accepts `whole @line` (a line with its terminator) and

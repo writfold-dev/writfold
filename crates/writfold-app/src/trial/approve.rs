@@ -127,6 +127,9 @@ pub fn approve(state: &Path, run: &str, required: &[String]) -> Result<(u64, Str
     let lease = trial.writer.try_lease()?;
     let ledger = trial.ledger(&lease, &executable)?;
     let loaded = ledger.load::<Event, Premises>(&stream(run)?)?;
+    if loaded.records.is_empty() {
+        return Err(super::state_dir::not_prepared(run));
+    }
     let [prepared_record] = loaded.records.as_slice() else {
         return Err(format!("run {run} is not awaiting approval").into());
     };

@@ -134,6 +134,9 @@ pub fn apply(state: &Path, run: &str) -> Result<PathBuf> {
     let lease = trial.writer.try_lease()?;
     let ledger = trial.ledger(&lease, &executable)?;
     let loaded = ledger.load::<Event, Premises>(&stream(run)?)?;
+    if loaded.records.is_empty() {
+        return Err(super::state_dir::not_prepared(run));
+    }
     if loaded.records.len() == 3 {
         return Err(format!(
             "run {run} is claimed without an outcome; run: writfold trial recover {run}"
