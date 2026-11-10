@@ -1034,6 +1034,43 @@
     },
     "retained_failed_attempts": []
   },
+  "trial_formal_component": {
+    "status": "scoped_component_pass",
+    "scope": "Trial edit flow formalised. (1) spec/TrialEditStream.tla: one run's stream with apply, recover, an external writer, crash points between Claimed append, stage, install and Applied append, and expected-old head CAS; TLC 2.19: 690 distinct states (positive), 21,613 (wide), no violation of at most one outcome, Applied implies installed, no second dispatch after Claimed, install replaces only the exact source, Unknown only when the file is neither, recover never writes, claims only under valid authority, stream always validator-accepted; calibrated negatives (no preimage guard; apply on a three-record run) produce counterexamples. Owner-recorded authority-timing decision: authority is checked once before Claimed; an install completing after expiry or revocation is that claim's single dispatch. Assumes the external writer never writes the source or candidate bytes or inside install's re-check-and-rename. (2) The edit-flow validator moved into writfold_core::flow and proved over its Aeneas translation (validate_spec, carried_spec, follows_spec, same_blob_spec, follows_closed); 22 required claims, 26/26 mutants. TLC was run through the compose dev service, not a gate receipt.",
+    "source_commit": "bf807b9",
+    "receipts": {
+      "proofs_gate_log": {
+        "path": "~/.local/share/writfold/evidence/formal-trial-qlZzA3TW/proofs-gate.log",
+        "sha256": "86fdf72836d9d144734056b46fc506ee139f6fc99d0e5f91be2771b9b19f5fe4",
+        "bytes": 30878
+      },
+      "quality": {
+        "path": "~/.local/share/writfold/evidence/formal-trial-qlZzA3TW/quality-001.json",
+        "sha256": "d631d45c3b205444531f979b3bf59c9594638ad28d52fad6e25f42c0371c1387",
+        "bytes": 859831
+      },
+      "unit": {
+        "path": "~/.local/share/writfold/evidence/formal-trial-qlZzA3TW/unit-001.json",
+        "sha256": "b75cf5c9363328442a95f0981a9d1f1ef0e5f20477b59096816169a8cd15350d",
+        "bytes": 389295
+      },
+      "verus": {
+        "path": "~/.local/share/writfold/evidence/formal-trial-qlZzA3TW/verus-001.json",
+        "sha256": "d9204642ab7f954dbd1934752784d30eb2830f54d45a1538655d19b31be748aa",
+        "bytes": 4706406
+      }
+    },
+    "proofs": {
+      "required_claims": 22,
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "mutants_rejected": "26/26"
+    },
+    "retained_failed_attempts": []
+  },
   "publication_history_audit": {
     "status": "inspected_not_cleared_for_publication",
     "record": {
