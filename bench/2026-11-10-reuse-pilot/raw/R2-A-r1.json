@@ -1,0 +1,92 @@
+{
+ "trial": "R2-A-r1",
+ "batch": 3,
+ "models": [
+  "claude-sonnet-5-5"
+ ],
+ "api_calls": 6,
+ "usage_sum": {
+  "input_tokens": 12,
+  "cache_creation_input_tokens": 19305,
+  "cache_read_input_tokens": 197864,
+  "output_tokens": 1330
+ },
+ "per_call_usage": [
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 12663,
+   "cache_read_input_tokens": 19086,
+   "output_tokens": 174
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 4347,
+   "cache_read_input_tokens": 31749,
+   "output_tokens": 235
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 408,
+   "cache_read_input_tokens": 36096,
+   "output_tokens": 243
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 431,
+   "cache_read_input_tokens": 36504,
+   "output_tokens": 277
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 559,
+   "cache_read_input_tokens": 36935,
+   "output_tokens": 325
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 897,
+   "cache_read_input_tokens": 37494,
+   "output_tokens": 76
+  }
+ ],
+ "tool_calls": 6,
+ "tool_result_bytes": 7572,
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "cd <trial>; cat notes.txt | head -50; cd repo; git grep -n -E 'pub enum \\w*Error\\b' -- crates/writfold-runtime/",
+   "result_bytes": 4630,
+   "result_head": "crates/tuft/src/emit.rs:59: pub enum CursorError {\ncrates/writfold-app/src/ledger.rs:20: pub enum LedgerError {\ncrates/writfold-app/src/lib.rs:24: pub enum ServeError {\ncrates/writfold-domain/src/citation/selector.rs:8: pub enum SelectorError { ReversedBounds }\ncrates/writfold-domain/src/engineering/dependency.rs:263: pub enum LockError {\ncrates/writfold-kernel/src/citation/handles.rs:6: pub enum AliasIssueError { Denied, Foreign, Expired, InvalidLifetime, AlreadyIssued }\ncrates/writfold-kernel/src/citation/presentation.rs:6: pub enum PresentationError { CursorMismatch, ZeroBudget, InvalidOffs"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial>/repo; git grep -n -E 'pub enum \\w*Error\\b' -- crates/writfold-runtime/ | while IFS=: read f l rest; do n=$((l+1)); printf '%s:%s: %s\\n' \"$f\" \"$n\" \"$(sed -n \"${n}p\" $f)\"; done | tee ../answer.txt",
+   "result_bytes": 433,
+   "result_head": "This agent is isolated in the worktree <parent-worktree>, but this command names git in a form too complex to verify that it stays inside the worktree. Refusing to run it — a worktree-isolated agent's git operations must target its own worktree. Split it into plain, separate commands and run them from <parent-worktree>."
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial>/repo; grep -rn -E 'pub enum \\w*Error\\b' crates/writfold-runtime/ | while IFS=: read f l rest; do n=$((l+1)); printf '%s:%s: %s\\n' \"$f\" \"$n\" \"$(sed -n \"${n}p\" $f)\"; done | tee ../answer.txt",
+   "result_bytes": 479,
+   "result_head": "This agent is isolated in the worktree <parent-worktree>, but this command evaluates l arithmetically inside a construct too complex to verify, which can run a command hidden in a variable's value. Refusing to run it — a worktree-isolated agent's git operations must target its own worktree. Split it into plain, separate commands and run them from <parent-worktree>."
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial>/repo; grep -rl -E 'pub enum \\w*Error\\b' crates/writfold-runtime/ | sort | xargs awk 'prev { sub(/^/, \"\"); print FILENAME \":\" FNR \": \" $0; prev=0 } /pub enum [A-Za-z0-9_]*Error([^A-Za-z0-9_]|$)/ { prev=1 }' > ../answer.txt; cat ../answer.txt",
+   "result_bytes": 724,
+   "result_head": "This agent is isolated in the worktree <parent-worktree>, but this command runs awk with a | after print/printf or before getline in its program, which awk can run as a pipe to a command, whatever the command is (a | in a regex, string or comment at such a spot is refused too: pass the pattern with -v re='a|b', doubling any backslash in it, and use $0 ~ re or gsub(re, \"x\"); print a literal | as \"\\174\") in a plain command, so what it runs cannot be shown not to be git. Refusing to run it — a worktree-isolated agent's git operations must target i"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial>/repo; grep -rn -A1 -E 'pub enum [A-Za-z0-9_]*Error\\b' crates/writfold-runtime/ > ../work/raw.txt; grep -E '^crates/[^:]*-[0-9]+-' ../work/raw.txt | sed -E 's/^(crates\\/.*\\.rs)-([0-9]+)-/\\1:\\2: /' > ../answer.txt; cat ../answer.txt",
+   "result_bytes": 1245,
+   "result_head": "crates/writfold-runtime/src/git/writer.rs:17:     #[error(\"native mutation was not issued: {0}\")]\ncrates/writfold-runtime/src/stdio/frame.rs:10:     #[error(\"frame byte budget is not representable on this platform\")]\ncrates/writfold-runtime/src/fs/error.rs:7:     #[error(\"a contained path must be relative\")]\ncrates/writfold-runtime/src/fs/error.rs:29:     #[error(transparent)]\ncrates/writfold-runtime/src/fs/error.rs:85:     #[error(\"the operation did not publish: {0}\")]\ncrates/writfold-runtime/src/worktrunk/mod.rs:55:     #[error(transparent)]\ncrates/writfold-runtime/src/worktrunk/mod.rs:78:  "
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

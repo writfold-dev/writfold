@@ -1,0 +1,27 @@
+crates/writfold-runtime/src/omnigraph/tests.rs:95: let value: serde_json::Value = serde_json::from_slice(&body)?;
+crates/writfold-runtime/src/omnigraph/tests/chunked.rs:50: let value: serde_json::Value = serde_json::from_slice(&response.body)?;
+crates/writfold-wire/src/approval.rs:2:use serde_json::Value;
+crates/writfold-wire/src/canonical.rs:2:use serde_json::Value;
+crates/writfold-wire/src/dolt/rows.rs:5:use serde_json::Value;
+crates/writfold-wire/src/dolt_operation/codec.rs:7:use serde_json::Value;
+crates/writfold-wire/src/engineering/objects.rs:4:use serde_json::Value;
+crates/writfold-wire/src/lib.rs:25:use serde_json::Value;
+crates/writfold-wire/src/omnigraph/change.rs:3:use serde_json::Value;
+crates/writfold-wire/src/omnigraph/history.rs:3:use serde_json::Value;
+crates/writfold-wire/src/omnigraph/rows.rs:3:use serde_json::Value;
+crates/writfold-wire/src/operation/codec.rs:3:use serde_json::Value;
+crates/writfold-wire/src/rpc.rs:15:use serde_json::Value;
+crates/writfold-wire/src/rpc/initialize.rs:4:use serde_json::Value;
+crates/writfold-wire/src/storage_operation/codec.rs:7:use serde_json::Value;
+crates/writfold-wire/src/weft_report.rs:6:use serde_json::Value;
+crates/writfold-wire/tests/citation.rs:17:fn changed(field: &str, value: serde_json::Value) -> TestResult<CitationDescriptor> {
+crates/writfold-wire/tests/engineering_fingerprints.rs:39: row: &serde_json::Value,
+crates/writfold-wire/tests/grant_lean.rs:6:use serde_json::Value;
+crates/writfold-wire/tests/ledger_lean.rs:5:use serde_json::Value;
+crates/writfold-wire/tests/procedure_lean.rs:12:use serde_json::Value;
+crates/writfold-wire/tests/procedure_lean/embed.rs:8:use serde_json::Value;
+crates/writfold-wire/tests/storage.rs:1:use serde_json::Value;
+crates/writfold-wire/tests/support/ledger_heads.rs:1:use serde_json::Value;
+crates/writfold-wire/tests/worktree_identity.rs:1:use serde_json::Value;
+crates/writfold-xtask/src/safety.rs:59: ) && (path == "serde_json::Value" || path.starts_with("serde_json::value::Value"))
+crates/writfold-xtask/src/vendored.rs:3:use serde_json::Value;

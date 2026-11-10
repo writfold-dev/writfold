@@ -1,0 +1,98 @@
+{
+ "trial": "S1-R5",
+ "batch": 3,
+ "models": [
+  "claude-sonnet-5-5"
+ ],
+ "api_calls": 6,
+ "usage_sum": {
+  "input_tokens": 12,
+  "cache_creation_input_tokens": 17689,
+  "cache_read_input_tokens": 194734,
+  "output_tokens": 1525
+ },
+ "per_call_usage": [
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 13192,
+   "cache_read_input_tokens": 19086,
+   "output_tokens": 315
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 2863,
+   "cache_read_input_tokens": 32278,
+   "output_tokens": 301
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 470,
+   "cache_read_input_tokens": 35141,
+   "output_tokens": 365
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 489,
+   "cache_read_input_tokens": 35611,
+   "output_tokens": 249
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 418,
+   "cache_read_input_tokens": 36100,
+   "output_tokens": 242
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 257,
+   "cache_read_input_tokens": 36518,
+   "output_tokens": 53
+  }
+ ],
+ "tool_calls": 7,
+ "tool_result_bytes": 2328,
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "B=<scratch>; R=$B/s1/R5; mkdir -p $R/work; cd $R/work; cat > q.tuft <<'E'\n@h := find text \"#[test]\" in \"crates/writfold-app/src/trial/\" at \"c568505742d00859cad758924c98d8d0a6e98648\" limit 200;\n@e := retain @h around lines 0;\n@v := project @e [path, line, excerpt(max_chars: 300)];\nemit @v budget_tokens 8000;\nE\n$B/bin/writfold tuft run q.tuft --repo $R/repo --state $R/state | tee out.txt | tail -50",
+   "result_bytes": 1271,
+   "result_head": "crates/writfold-app/src/trial/assessment_tests.rs:83: #[test]\ncrates/writfold-app/src/trial/assessment_tests.rs:95: #[test]\ncrates/writfold-app/src/trial/assessment_tests.rs:109: #[test]\ncrates/writfold-app/src/trial/assessment_tests.rs:126: #[test]\ncrates/writfold-app/src/trial/assessment_tests.rs:136: #[test]\ncrates/writfold-app/src/trial/assessment_tests.rs:168: #[test]\ncrates/writfold-app/src/trial/assessment_tests.rs:179: #[test]\ncrates/writfold-app/src/trial/recovery_tests.rs:106: #[test]\ncrates/writfold-app/src/trial/recovery_tests.rs:126: #[test]\ncrates/writfold-app/src/trial/recovery_"
+  },
+  {
+   "tool": "Bash",
+   "input": "R=<scratch>/s1/R5; cd $R/work; grep -v '^#' out.txt | sed -E 's/^([^:]+:[0-9]+): /\\1:/' > ev.txt; head -3 ev.txt | cat -A | head -3\n{ echo \"Task: every #[test] attribute line under crates/writfold-app/src/trial/ at commit c568505742d00859cad758924c98d8d0a6e98648 (20 hits, 19 files searched, coverage complete). Retained in Tuft state.\"; echo; cat ev.txt; } > $R/notes.txt",
+   "result_bytes": 416,
+   "result_head": "This agent is isolated in the worktree <parent-worktree>, but this command is too complex to verify that it stays inside the worktree. Refusing to run it — a worktree-isolated agent's git operations must target its own worktree. Split it into plain, separate commands and run them from <parent-worktree>."
+  },
+  {
+   "tool": "Bash",
+   "input": "head -2 <scratch>/s1/R5/work/out.txt | cat -A",
+   "result_bytes": 125,
+   "result_head": "crates/writfold-app/src/trial/assessment_tests.rs:83: #[test]$\ncrates/writfold-app/src/trial/assessment_tests.rs:95: #[test]$"
+  },
+  {
+   "tool": "Bash",
+   "input": "sed -n 83p <scratch>/s1/R5/repo/crates/writfold-app/src/trial/assessment_tests.rs | cat -A",
+   "result_bytes": 8,
+   "result_head": "#[test]$"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <scratch>/s1/R5 && { echo \"# Every #[test] line under crates/writfold-app/src/trial/ at commit c568505742d00859cad758924c98d8d0a6e98648 (20 hits, coverage complete, retained in Tuft state).\"; grep -v '^#' work/out.txt; } > notes.txt; wc -l notes.txt",
+   "result_bytes": 416,
+   "result_head": "This agent is isolated in the worktree <parent-worktree>, but this command is too complex to verify that it stays inside the worktree. Refusing to run it — a worktree-isolated agent's git operations must target its own worktree. Split it into plain, separate commands and run them from <parent-worktree>."
+  },
+  {
+   "tool": "Bash",
+   "input": "cp <scratch>/s1/R5/work/out.txt <scratch>/s1/R5/notes.txt",
+   "result_bytes": 31,
+   "result_head": "(Bash completed with no output)"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

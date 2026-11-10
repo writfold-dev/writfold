@@ -1,0 +1,56 @@
+{
+ "trial": "R1-B-r1",
+ "batch": 1,
+ "models": [
+  "claude-sonnet-5-5"
+ ],
+ "api_calls": 3,
+ "usage_sum": {
+  "input_tokens": 6,
+  "cache_creation_input_tokens": 17002,
+  "cache_read_input_tokens": 86622,
+  "output_tokens": 565
+ },
+ "per_call_usage": [
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 13251,
+   "cache_read_input_tokens": 19086,
+   "output_tokens": 218
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 2862,
+   "cache_read_input_tokens": 32337,
+   "output_tokens": 294
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 889,
+   "cache_read_input_tokens": 35199,
+   "output_tokens": 53
+  }
+ ],
+ "tool_calls": 3,
+ "tool_result_bytes": 2887,
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "<writfold> trial evidence list --state <trial>/state --path crates/writfold-kernel/src/checker/",
+   "result_bytes": 1587,
+   "result_head": "77fdad8a5919 crates/writfold-kernel/src/checker/evaluation.rs@c568505:293:                 && claim_matches_spec(claim@, kb@.corrections[i].target)\n13644e65cf20 crates/writfold-kernel/src/checker/evaluation_model.rs@c568505:158:     if !claim_matches_spec(claim, derivation.claim) { None }\n56554b63a9d7 crates/writfold-kernel/src/checker/lookup.rs@c568505:42:     first_matching(kb.claims, |claim: ClaimView| claim_matches_spec(claim, reference))\nd9adca8dc119 crates/writfold-kernel/src/checker/lookup.rs@c568505:58:     let predicate = |claim: ClaimView| claim_matches_spec(claim, reference);\n6208d6"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial>\n./../../bin/writfold trial evidence list --state state --path crates/writfold-kernel/src/checker/ | grep -v '^#' | sed -E 's/^[0-9a-f]{12} ([^@]+)@[0-9a-f]{7}:([0-9]+): +/\\1:\\2: /' > answer.txt; cat answer.txt",
+   "result_bytes": 1239,
+   "result_head": "crates/writfold-kernel/src/checker/evaluation.rs:293: && claim_matches_spec(claim@, kb@.corrections[i].target)\ncrates/writfold-kernel/src/checker/evaluation_model.rs:158: if !claim_matches_spec(claim, derivation.claim) { None }\ncrates/writfold-kernel/src/checker/lookup.rs:42: first_matching(kb.claims, |claim: ClaimView| claim_matches_spec(claim, reference))\ncrates/writfold-kernel/src/checker/lookup.rs:58: let predicate = |claim: ClaimView| claim_matches_spec(claim, reference);\ncrates/writfold-kernel/src/checker/lookup.rs:63: && claim_matches_spec(kb.claims[i], reference)\ncrates/writfold-kernel"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

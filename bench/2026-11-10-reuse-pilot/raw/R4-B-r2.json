@@ -1,0 +1,68 @@
+{
+ "trial": "R4-B-r2",
+ "batch": 8,
+ "models": [
+  "claude-sonnet-5-5"
+ ],
+ "api_calls": 4,
+ "usage_sum": {
+  "input_tokens": 8,
+  "cache_creation_input_tokens": 18338,
+  "cache_read_input_tokens": 122993,
+  "output_tokens": 1091
+ },
+ "per_call_usage": [
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 13254,
+   "cache_read_input_tokens": 19086,
+   "output_tokens": 211
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 3182,
+   "cache_read_input_tokens": 32340,
+   "output_tokens": 420
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 523,
+   "cache_read_input_tokens": 35522,
+   "output_tokens": 356
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 1379,
+   "cache_read_input_tokens": 36045,
+   "output_tokens": 104
+  }
+ ],
+ "tool_calls": 4,
+ "tool_result_bytes": 4536,
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "<writfold> trial evidence list --state <trial>/state --limit 100000 | head -300",
+   "result_bytes": 2158,
+   "result_head": "<persisted-output>\nOutput too large (37.5KB). Full output saved to: <harness-tool-results>/bkkbdcs7i.txt\n\nPreview (first 2KB):\neea1fcc13100 crates/writfold-app/src/engine_tests.rs@c568505:48:     Ok(serde_json::from_slice(&bytes)?)\n857b4346367e crates/writfold-app/src/engine_trial_tests.rs@c568505:55:     let parsed: BTreeMap<String, IgnoredAny> = serde_json::from_str(schemas)?;\ncbc66f9e4f5a crates/writfold-app/src/engine_trial_tests.rs@c568505:63:         .map(|bytes| serde_json::from_slice(&bytes).unwrap_or_def"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial>; tail -2 <harness-tool-results>/bkkbdcs7i.txt; mkdir -p work; ../../bin/writfold trial evidence list --state state --limit 100000 > work/all.txt; tail -1 work/all.txt\n# first line per path\nsed -E 's/^[0-9a-f]{12} //' work/all.txt | grep -v '^#' | awk '{p=$1; sub(/@c568505:.*/,\"\",p); if(!(p in s)){s[p]=1; print}}' > work/first.txt\nwc -l work/first.txt; grep -c 'serde_json::Value' work/first.txt; awk -F'@c568505:' '{print $1}' work/first.txt | sort | uniq -d | head",
+   "result_bytes": 205,
+   "result_head": "1b92279c8066 crates/writfold/tests/serve_trial.rs@c568505:126:         let reply: Value = serde_json::from_str(&line)?;\n# count=297 shown=297 omitted=0\n# count=297 shown=297 omitted=0\n101 work/first.txt\n27"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial>; sed -E 's/^[0-9a-f]{12} //' work/all.txt | grep -v '^#' | sed -E 's/^(\\S+)@c568505:([0-9]+): ?/\\1\\t\\2\\t/' | sort -t$'\\t' -k1,1 -k2,2n | awk -F'\\t' '!s[$1]++' | awk -F'\\t' '$3 ~ /serde_json::Value/ {print $1\":\"$2\": \"$3}' > answer.txt; cat answer.txt",
+   "result_bytes": 2112,
+   "result_head": "crates/writfold-runtime/src/omnigraph/tests.rs:95:     let value: serde_json::Value = serde_json::from_slice(&body)?;\ncrates/writfold-runtime/src/omnigraph/tests/chunked.rs:50:     let value: serde_json::Value = serde_json::from_slice(&response.body)?;\ncrates/writfold-wire/src/approval.rs:2: use serde_json::Value;\ncrates/writfold-wire/src/canonical.rs:2: use serde_json::Value;\ncrates/writfold-wire/src/dolt/rows.rs:5: use serde_json::Value;\ncrates/writfold-wire/src/dolt_operation/codec.rs:7: use serde_json::Value;\ncrates/writfold-wire/src/engineering/objects.rs:4: use serde_json::Value;\ncrates/"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

@@ -1,0 +1,6 @@
+crates/writfold-app/src/trial/recovery_tests.rs:107: fn a_claim_whose_install_happened_reconciles_to_applied() -> Result<()> {
+crates/writfold-app/src/trial/recovery_tests.rs:127: fn a_claim_whose_install_never_happened_is_abandoned() -> Result<()> {
+crates/writfold-app/src/trial/recovery_tests.rs:136: fn a_claim_over_unexpected_bytes_stays_unknown() -> Result<()> {
+crates/writfold-app/src/trial/retain_tests.rs:92: fn equal_text_at_two_positions_is_two_bindings() -> Result<()> {
+crates/writfold-app/src/trial/retain_tests.rs:107: fn only_a_full_pinned_commit_and_an_in_range_selection_are_accepted() -> Result<()> {
+crates/writfold-app/src/trial/retain_tests.rs:123: fn a_report_may_cite_only_retained_untampered_evidence() -> Result<()> {

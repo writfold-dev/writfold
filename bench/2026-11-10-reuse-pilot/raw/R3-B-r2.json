@@ -1,0 +1,68 @@
+{
+ "trial": "R3-B-r2",
+ "batch": 6,
+ "models": [
+  "claude-sonnet-5-5"
+ ],
+ "api_calls": 4,
+ "usage_sum": {
+  "input_tokens": 8,
+  "cache_creation_input_tokens": 19438,
+  "cache_read_input_tokens": 125117,
+  "output_tokens": 1089
+ },
+ "per_call_usage": [
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 13314,
+   "cache_read_input_tokens": 19086,
+   "output_tokens": 141
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 3336,
+   "cache_read_input_tokens": 32400,
+   "output_tokens": 278
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 2159,
+   "cache_read_input_tokens": 35736,
+   "output_tokens": 617
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 629,
+   "cache_read_input_tokens": 37895,
+   "output_tokens": 53
+  }
+ ],
+ "tool_calls": 4,
+ "tool_result_bytes": 6695,
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "cd <trial>; ../../bin/writfold trial evidence list --state state",
+   "result_bytes": 2710,
+   "result_head": "7d302d4555b8 crates/writfold-wire/tests/dolt_read.rs@c568505:91:                 dolt::decode_pin(&changed(field, Value::Null)?, limits()?),\n068e05948630 crates/writfold-wire/tests/dolt_read.rs@c568505:97:         dolt::decode_pin(&changed(\"extra\", json!(1))?, limits()?),\n9a0e4f958ade crates/writfold-wire/tests/dolt_read.rs@c568505:112:             dolt::decode_pin(&changed(field, json!(\"\"))?, limits()?),\ncd0d21c72929 crates/writfold-wire/tests/dolt_read.rs@c568505:122:             dolt::decode_pin(&changed(\"commit\", json!(invalid))?, limits()?),\nfac48fba8ae0 crates/writfold-wire/tests/dolt_re"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial>; for b in fac48fba8ae0 608c7fa0cadc 9ef10813ae6a f743006a8180 5da28f8aa8c8 0ebbfd248559; do ../../bin/writfold trial evidence show $b --state state --context-lines 2 --repo repo; echo ----; done",
+   "result_bytes": 3911,
+   "result_head": "# prefix fac48fba8ae0 resolved to fac48fba8ae0fcd0761f5372a9002c696f90c8cf0db3e760ad2ece253fdd05a1 (local; cite the digest)\nbinding fac48fba8ae0fcd0761f5372a9002c696f90c8cf0db3e760ad2ece253fdd05a1\nsource crates/writfold-wire/tests/dolt_read.rs@c568505742d00859cad758924c98d8d0a6e98648 bytes 4344..4437 line 127\n--- context before (pinned blob, not retained)\n125|     }\n126|     assert_eq!(\n--- retained (exact bytes, verified)\n        dolt::decode_pin(\n            &changed(\"namespace\", json!(\"writfold-storage-pin\"))?,\n--- context after (pinned blob, not retained)\n129|             limits()?\n130|   "
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial>; ../../bin/writfold trial evidence list --state state | grep -v '…' | grep -v '^#' | sed 's/^[0-9a-f]* //; s/@c568505//' > work/a.txt\ncat >> work/a.txt <<'E'\ncrates/writfold-wire/tests/dolt_read.rs:128: &changed(\"namespace\", json!(\"writfold-storage-pin\"))?,\ncrates/writfold-wire/tests/storage.rs:109: &changed(OMNI, \"commit\", Value::from(format!(\"hb1.{ULID}.0.{ULID}\")))?,\ncrates/writfold-wire/tests/storage/identities.rs:39: &changed(OMNI, \"commit\", Value::from(commit.as_str()))?,\ncrates/writfold-wire/tests/storage/identities.rs:102: &changed(LEGACY, \"dolt_commit\", Value::from(invalid))?,\ncrates/writfold-wire/tests/storage/identities.rs:122: &changed(OMNI, \"graph\", Value::from(graph.as_str()))?,\ncrates/writfold-wire/tests/storage/identities.rs:132: &changed(OMNI, \"graph\", Value::from(\"a\".repeat(65)))?,\nE\nsed -E 's/^([^:]+:[0-9]+): +/\\1: /' work/a.txt > answer.txt; wc -l answer.txt",
+   "result_bytes": 13,
+   "result_head": "20 answer.txt"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

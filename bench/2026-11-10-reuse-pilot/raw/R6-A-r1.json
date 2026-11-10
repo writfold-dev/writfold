@@ -1,0 +1,56 @@
+{
+ "trial": "R6-A-r1",
+ "batch": 2,
+ "models": [
+  "claude-sonnet-5-5"
+ ],
+ "api_calls": 3,
+ "usage_sum": {
+  "input_tokens": 6,
+  "cache_creation_input_tokens": 15635,
+  "cache_read_input_tokens": 85269,
+  "output_tokens": 503
+ },
+ "per_call_usage": [
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 12658,
+   "cache_read_input_tokens": 19086,
+   "output_tokens": 174
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 2695,
+   "cache_read_input_tokens": 31744,
+   "output_tokens": 276
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 282,
+   "cache_read_input_tokens": 34439,
+   "output_tokens": 53
+  }
+ ],
+ "tool_calls": 3,
+ "tool_result_bytes": 1248,
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "cd <trial>/repo && grep -rn MAX_RESPONSE_BYTES crates | grep -v '/tests/' | grep -v '_tests\\.rs:'",
+   "result_bytes": 1185,
+   "result_head": "crates/writfold-app/src/engine.rs:14:            Fault, MAX_RESPONSE_BYTES, ServerMetadata, Success, encode_error, encode_success,\ncrates/writfold-app/src/engine.rs:68:            maximum_response: MAX_RESPONSE_BYTES,\ncrates/writfold-app/src/trial/rpc.rs:25:use writfold_wire::rpc::{Request, RequestId, response::MAX_RESPONSE_BYTES};\ncrates/writfold-app/src/trial/rpc.rs:119:        \"{} result exceeds the {MAX_RESPONSE_BYTES}-byte response budget; nothing was truncated\",\ncrates/writfold-wire/src/rpc/response/codec.rs:2:    Fault, MAX_RESPONSE_BYTES, METHOD_SCHEMAS, PROFILE, ResponseError, ServerM"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial> && cd repo && grep -rn MAX_RESPONSE_BYTES crates | grep -v '/tests/' | grep -v '_tests\\.rs:' | sed -E 's/^([^:]+:[0-9]+:)[ \\t]+/\\1 /' > ../answer.txt; cat ../answer.txt | wc -l",
+   "result_bytes": 2,
+   "result_head": "10"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

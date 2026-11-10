@@ -1,0 +1,74 @@
+{
+ "trial": "R5-B-r2",
+ "batch": 6,
+ "models": [
+  "claude-sonnet-5-5"
+ ],
+ "api_calls": 4,
+ "usage_sum": {
+  "input_tokens": 8,
+  "cache_creation_input_tokens": 18734,
+  "cache_read_input_tokens": 122477,
+  "output_tokens": 1406
+ },
+ "per_call_usage": [
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 13263,
+   "cache_read_input_tokens": 19086,
+   "output_tokens": 167
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 2929,
+   "cache_read_input_tokens": 32349,
+   "output_tokens": 296
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 486,
+   "cache_read_input_tokens": 35278,
+   "output_tokens": 398
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 2056,
+   "cache_read_input_tokens": 35764,
+   "output_tokens": 545
+  }
+ ],
+ "tool_calls": 5,
+ "tool_result_bytes": 5485,
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "B=<scratch>; $B/bin/writfold trial evidence list --state $B/trials/R5-B-r2/state --path crates/writfold-app/src/trial/ --limit 1000",
+   "result_bytes": 1629,
+   "result_head": "f3d2b9ed9f2e crates/writfold-app/src/trial/assessment_tests.rs@c568505:83: #[test]\n62842e86bacc crates/writfold-app/src/trial/assessment_tests.rs@c568505:95: #[test]\nb2b9990be426 crates/writfold-app/src/trial/assessment_tests.rs@c568505:109: #[test]\nff441d286364 crates/writfold-app/src/trial/assessment_tests.rs@c568505:126: #[test]\n67bd52c0cb78 crates/writfold-app/src/trial/assessment_tests.rs@c568505:136: #[test]\n06535fa97e18 crates/writfold-app/src/trial/assessment_tests.rs@c568505:168: #[test]\nce6966e88fe2 crates/writfold-app/src/trial/assessment_tests.rs@c568505:179: #[test]\n9624420e947b c"
+  },
+  {
+   "tool": "Bash",
+   "input": "B=<scratch>; for b in 9624420e947b 382c5117d2a3 84688f2ce180 254e296af47c 3acb74d9e891 90d880c5644a; do $B/bin/writfold trial evidence show $b --state $B/trials/R5-B-r2/state --context-lines 1 --repo $B/trials/R5-B-r2/repo; done",
+   "result_bytes": 484,
+   "result_head": "This agent is isolated in the worktree <parent-worktree>, but this command runs a command whose name is computed at runtime inside a construct too complex to verify, so it cannot be shown not to be git. Refusing to run it — a worktree-isolated agent's git operations must target its own worktree. Split it into plain, separate commands and run them from <parent-worktree>."
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <parent-worktree>; for b in 9624420e947b 382c5117d2a3 84688f2ce180 254e296af47c 3acb74d9e891 90d880c5644a; do <writfold> trial evidence show $b --state <trial>/state --context-lines 1 --repo <trial>/repo; done",
+   "result_bytes": 3280,
+   "result_head": "# prefix 9624420e947b resolved to 9624420e947b718c277aabb90e69c6f5d4e2e35234d5bc308b9f37582a4c7348 (local; cite the digest)\nbinding 9624420e947b718c277aabb90e69c6f5d4e2e35234d5bc308b9f37582a4c7348\nsource crates/writfold-app/src/trial/recovery_tests.rs@c568505742d00859cad758924c98d8d0a6e98648 bytes 3197..3205 line 106\n--- context before (pinned blob, not retained)\n105| \n--- retained (exact bytes, verified)\n#[test]\n--- context after (pinned blob, not retained)\n107| fn a_claim_whose_install_happened_reconciles_to_applied() -> Result<()> {\n--- end\n# prefix 382c5117d2a3 resolved to 382c5117d2a34b6b"
+  },
+  {
+   "tool": "Bash",
+   "input": "cat > <trial>/answer.txt <<'E'\ncrates/writfold-app/src/trial/recovery_tests.rs:107: fn a_claim_whose_install_happened_reconciles_to_applied() -> Result<()> {\ncrates/writfold-app/src/trial/recovery_tests.rs:127: fn a_claim_whose_install_never_happened_is_abandoned() -> Result<()> {\ncrates/writfold-app/src/trial/recovery_tests.rs:136: fn a_claim_over_unexpected_bytes_stays_unknown() -> Result<()> {\ncrates/writfold-app/src/trial/retain_tests.rs:92: fn equal_text_at_two_positions_is_two_bindings() -> Result<()> {\ncrates/writfold-app/src/trial/retain_tests.rs:107: fn only_a_full_pinned_commit_and_an_in_range_selection_are_accepted() -> Result<()> {\ncrates/writfold-app/src/trial/retain_tests.rs:123: fn a_report_may_cite_only_retained_untampered_evidence() -> Result<()> {\nE",
+   "result_bytes": 31,
+   "result_head": "(Bash completed with no output)"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

@@ -1,0 +1,10 @@
+crates/writfold-app/src/engine.rs:14: Fault, MAX_RESPONSE_BYTES, ServerMetadata, Success, encode_error, encode_success,
+crates/writfold-app/src/engine.rs:68: maximum_response: MAX_RESPONSE_BYTES,
+crates/writfold-app/src/trial/rpc.rs:25: use writfold_wire::rpc::{Request, RequestId, response::MAX_RESPONSE_BYTES};
+crates/writfold-app/src/trial/rpc.rs:119: "{} result exceeds the {MAX_RESPONSE_BYTES}-byte response budget; nothing was truncated",
+crates/writfold-wire/src/rpc/response/codec.rs:2: Fault, MAX_RESPONSE_BYTES, METHOD_SCHEMAS, PROFILE, ResponseError, ServerMetadata, Success,
+crates/writfold-wire/src/rpc/response/codec.rs:95: let mut output = Bounded::new(maximum.min(MAX_RESPONSE_BYTES));
+crates/writfold-wire/src/rpc/response/codec.rs:163: output.json(&MAX_RESPONSE_BYTES)?;
+crates/writfold-wire/src/rpc/response/mod.rs:21: pub const MAX_RESPONSE_BYTES: usize = 65_536;
+crates/writfold-wire/src/rpc/response/trial.rs:7: use super::{MAX_RESPONSE_BYTES, ResponseError, ServerMetadata, bounded::Bounded, codec::Session};
+crates/writfold-wire/src/rpc/response/trial.rs:134: let mut output = Bounded::new(maximum.min(MAX_RESPONSE_BYTES));

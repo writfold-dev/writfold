@@ -1,0 +1,22 @@
+crates/writfold-wire/tests/dolt_read.rs:91:                 dolt::decode_pin(&changed(field, Value::Null)?, limits()?),
+crates/writfold-wire/tests/dolt_read.rs:97:         dolt::decode_pin(&changed("extra", json!(1))?, limits()?),
+crates/writfold-wire/tests/dolt_read.rs:112:             dolt::decode_pin(&changed(field, json!(""))?, limits()?),
+crates/writfold-wire/tests/dolt_read.rs:122:             dolt::decode_pin(&changed("commit", json!(invalid))?, limits()?),
+crates/writfold-wire/tests/dolt_read.rs:134:         dolt::decode_pin(&changed("kind", json!("release"))?, limits()?),
+crates/writfold-wire/tests/dolt_read.rs:145:         dolt::decode_pin(&changed("schema", json!(2))?, limits()?),
+crates/writfold-wire/tests/storage.rs:107:     let first = decode_pin(&changed(OMNI, "commit", Value::from(ULID))?, limits()?)?;
+crates/writfold-wire/tests/storage/boundaries.rs:71:             let decoded = decode_pin(&changed(fixture, field, value.clone())?, limits()?);
+crates/writfold-wire/tests/storage/boundaries.rs:99:             decode_pin(&changed(fixture, field, value)?, limits()?),
+crates/writfold-wire/tests/storage/boundaries.rs:126:                         decode_pin(&changed(fixture, field, wrong)?, limits()?),
+crates/writfold-wire/tests/storage/boundaries.rs:139:                     decode_pin(&changed(fixture, field, wrong)?, limits()?),
+crates/writfold-wire/tests/storage/identities.rs:70:             decode_pin(&changed(OMNI, field, Value::from(value))?, limits()?),
+crates/writfold-wire/tests/storage/identities.rs:82:                 decode_pin(&changed(OMNI, field, Value::from(invalid))?, limits()?),
+crates/writfold-wire/tests/storage/identities.rs:89:             decode_pin(&changed(LEGACY, field, Value::from(""))?, limits()?),
+crates/writfold-wire/tests/dolt_read.rs:127:         dolt::decode_pin(
+crates/writfold-wire/tests/storage.rs:108:     let second = decode_pin(
+crates/writfold-wire/tests/storage/identities.rs:38:             decode_pin(
+crates/writfold-wire/tests/storage/identities.rs:101:             decode_pin(
+crates/writfold-wire/tests/storage/identities.rs:121:         let pin = decode_pin(
+crates/writfold-wire/tests/storage/identities.rs:131:         decode_pin(
+
+Notes: 20 call sites total, all under crates/writfold-wire/tests/, at commit c568505742d00859cad758924c98d8d0a6e98648 (Tuft coverage=complete, 644/644 files). The last six entries are multi-line calls; the &changed(...) first argument is on the following line (e.g. dolt_read.rs:128). Lines were taken from Tuft output; the indentation of the multi-line ones was checked with cat -A. Evidence is retained in the Tuft state with "retain around lines 0".

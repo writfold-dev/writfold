@@ -1,0 +1,56 @@
+{
+ "trial": "R4-A-r1",
+ "batch": 1,
+ "models": [
+  "claude-sonnet-5-5"
+ ],
+ "api_calls": 3,
+ "usage_sum": {
+  "input_tokens": 6,
+  "cache_creation_input_tokens": 16672,
+  "cache_read_input_tokens": 85313,
+  "output_tokens": 444
+ },
+ "per_call_usage": [
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 12648,
+   "cache_read_input_tokens": 19086,
+   "output_tokens": 145
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 2759,
+   "cache_read_input_tokens": 31734,
+   "output_tokens": 246
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 1265,
+   "cache_read_input_tokens": 34493,
+   "output_tokens": 53
+  }
+ ],
+ "tool_calls": 3,
+ "tool_result_bytes": 3670,
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "cd <trial>; head -c 1500 notes.txt; wc -l notes.txt",
+   "result_bytes": 1513,
+   "result_head": "crates/writfold-app/src/engine_tests.rs:48:     Ok(serde_json::from_slice(&bytes)?)\ncrates/writfold-app/src/engine_trial_tests.rs:55:     let parsed: BTreeMap<String, IgnoredAny> = serde_json::from_str(schemas)?;\ncrates/writfold-app/src/trial/rpc_tests.rs:106:     let value: Observed = serde_json::from_slice(&bytes)?;\ncrates/writfold-app/src/tuft/json_tests.rs:46:     Ok(serde_json::from_str(&tuft(\ncrates/writfold-runtime/src/omnigraph/admission.rs:172:         let mut tokens = serde_json::Map::new();\ncrates/writfold-runtime/src/omnigraph/bootstrap.rs:161:         let graph_key = serde_json::t"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial>/repo; git grep -n 'serde_json::' -- crates | awk -F: '!s[$1]++' | grep -F 'serde_json::Value' | sed 's/^\\([^:]*:[0-9]*\\):\\s*/\\1: /' | tee ../answer.txt",
+   "result_bytes": 2096,
+   "result_head": "crates/writfold-runtime/src/omnigraph/tests.rs:95: let value: serde_json::Value = serde_json::from_slice(&body)?;\ncrates/writfold-runtime/src/omnigraph/tests/chunked.rs:50: let value: serde_json::Value = serde_json::from_slice(&response.body)?;\ncrates/writfold-wire/src/approval.rs:2: use serde_json::Value;\ncrates/writfold-wire/src/canonical.rs:2: use serde_json::Value;\ncrates/writfold-wire/src/dolt/rows.rs:5: use serde_json::Value;\ncrates/writfold-wire/src/dolt_operation/codec.rs:7: use serde_json::Value;\ncrates/writfold-wire/src/engineering/objects.rs:4: use serde_json::Value;\ncrates/writfold"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

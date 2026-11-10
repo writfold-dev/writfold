@@ -1,0 +1,56 @@
+{
+ "R1": {
+  "expected": 49,
+  "retained_rows": 50,
+  "retained_expected": 49,
+  "notes_present": true,
+  "noted_rows": 49,
+  "noted_expected": 49,
+  "trailer": "# count=50 shown=50 omitted=0"
+ },
+ "R2": {
+  "expected": 50,
+  "retained_rows": 50,
+  "retained_expected": 50,
+  "notes_present": true,
+  "noted_rows": 50,
+  "noted_expected": 50,
+  "trailer": "# count=50 shown=50 omitted=0"
+ },
+ "R3": {
+  "expected": 20,
+  "retained_rows": 20,
+  "retained_expected": 20,
+  "notes_present": true,
+  "noted_rows": 20,
+  "noted_expected": 20,
+  "trailer": "# count=20 shown=20 omitted=0"
+ },
+ "R4": {
+  "expected": 101,
+  "retained_rows": 297,
+  "retained_expected": 101,
+  "notes_present": true,
+  "noted_rows": 101,
+  "noted_expected": 101,
+  "trailer": "# count=297 shown=297 omitted=0"
+ },
+ "R5": {
+  "expected": 20,
+  "retained_rows": 20,
+  "retained_expected": 20,
+  "notes_present": true,
+  "noted_rows": 20,
+  "noted_expected": 20,
+  "trailer": "# count=20 shown=20 omitted=0"
+ },
+ "R6": {
+  "expected": 39,
+  "retained_rows": 39,
+  "retained_expected": 39,
+  "notes_present": true,
+  "noted_rows": 39,
+  "noted_expected": 39,
+  "trailer": "# count=39 shown=39 omitted=0"
+ }
+}

@@ -1,0 +1,140 @@
+{
+ "trial": "S1-R6",
+ "batch": 2,
+ "models": [
+  "claude-sonnet-5-5"
+ ],
+ "api_calls": 9,
+ "usage_sum": {
+  "input_tokens": 18,
+  "cache_creation_input_tokens": 20976,
+  "cache_read_input_tokens": 315411,
+  "output_tokens": 2949
+ },
+ "per_call_usage": [
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 13166,
+   "cache_read_input_tokens": 19086,
+   "output_tokens": 382
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 2445,
+   "cache_read_input_tokens": 32252,
+   "output_tokens": 689
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 889,
+   "cache_read_input_tokens": 34697,
+   "output_tokens": 123
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 2308,
+   "cache_read_input_tokens": 35586,
+   "output_tokens": 423
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 534,
+   "cache_read_input_tokens": 37894,
+   "output_tokens": 365
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 534,
+   "cache_read_input_tokens": 38428,
+   "output_tokens": 208
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 223,
+   "cache_read_input_tokens": 38962,
+   "output_tokens": 130
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 136,
+   "cache_read_input_tokens": 39185,
+   "output_tokens": 576
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 741,
+   "cache_read_input_tokens": 39321,
+   "output_tokens": 53
+  }
+ ],
+ "tool_calls": 11,
+ "tool_result_bytes": 5676,
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "cd <scratch>/s1/R6 && mkdir -p work && cd work && cat > q.tuft <<'EOF'\n@h := find text \"MAX_RESPONSE_BYTES\" in \"crates/\" at \"c568505742d00859cad758924c98d8d0a6e98648\" limit 100;\n@e := retain @h around lines 0;\n@v := project @e [path, line, excerpt(max_chars: 300)];\nemit @v budget_tokens 4000;\nEOF\nR=<scratch>\n$R/bin/writfold tuft run q.tuft --repo $R/s1/R6/repo --state $R/s1/R6/state | tee out.txt",
+   "result_bytes": 416,
+   "result_head": "This agent is isolated in the worktree <parent-worktree>, but this command is too complex to verify that it stays inside the worktree. Refusing to run it — a worktree-isolated agent's git operations must target its own worktree. Split it into plain, separate commands and run them from <parent-worktree>."
+  },
+  {
+   "tool": "Write",
+   "input": "<scratch>/s1/R6/work/q.tuft <= @h := find text \"MAX_RESPONSE_BYTES\" in \"crates/\" at \"c568505742d00859cad758924c98d8d0a6e98648\" limit 100;\n@e := retain @h around lines 0;\n@v := project @e [path, line, excerpt(max_chars: 300)];\nemit @v budget_tokens 4000;\n",
+   "result_bytes": 217,
+   "result_head": "File created successfully at: <scratch>/s1/R6/work/q.tuft (file state is current in your context — no need to Read it back)"
+  },
+  {
+   "tool": "Bash",
+   "input": "<writfold> tuft run <scratch>/s1/R6/work/q.tuft --repo <scratch>/s1/R6/repo --state <scratch>/s1/R6/state --out <scratch>/s1/R6/work/out.txt",
+   "result_bytes": 93,
+   "result_head": "# coverage=complete files=644/644 hits=39 shown=39 omitted=0 cursor=none program=d9b901ff8f28"
+  },
+  {
+   "tool": "Read",
+   "input": "<scratch>/s1/R6/work/out.txt",
+   "result_bytes": 3961,
+   "result_head": "1\tcrates/writfold-app/src/engine.rs:14:             Fault, MAX_RESPONSE_BYTES, ServerMetadata, Success, encode_error, encode_success,\n2\tcrates/writfold-app/src/engine.rs:68:             maximum_response: MAX_RESPONSE_BYTES,\n3\tcrates/writfold-app/src/engine_tests.rs:176:     engine.maximum_response = MAX_RESPONSE_BYTES;\n4\tcrates/writfold-app/src/trial/rpc.rs:25: use writfold_wire::rpc::{Request, RequestId, response::MAX_RESPONSE_BYTES};\n5\tcrates/writfold-app/src/trial/rpc.rs:119:         \"{} result exceeds the {MAX_RESPONSE_BYTES}-byte response budget; nothing was truncated\",\n6\tcrates/writfold-"
+  },
+  {
+   "tool": "Bash",
+   "input": "sed -n '14p' <scratch>/s1/R6/repo/crates/writfold-app/src/engine.rs | cat -A | head -2; sed -n '1p' <scratch>/s1/R6/work/out.txt | cat -A",
+   "result_bytes": 227,
+   "result_head": "            Fault, MAX_RESPONSE_BYTES, ServerMetadata, Success, encode_error, encode_success,$\ncrates/writfold-app/src/engine.rs:14:             Fault, MAX_RESPONSE_BYTES, ServerMetadata, Success, encode_error, encode_success,$"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <scratch>/s1/R6 && { echo \"Search: Tuft find text MAX_RESPONSE_BYTES in crates/ at c568505742d00859cad758924c98d8d0a6e98648; coverage=complete, 39 hits in 644 files, none omitted. Definition: crates/writfold-wire/src/rpc/response/mod.rs:21 (65_536). Hits are retained in Tuft state.\"; echo; grep -v '^#' work/out.txt; } > notes.txt; wc -l notes.txt",
+   "result_bytes": 416,
+   "result_head": "This agent is isolated in the worktree <parent-worktree>, but this command is too complex to verify that it stays inside the worktree. Refusing to run it — a worktree-isolated agent's git operations must target its own worktree. Split it into plain, separate commands and run them from <parent-worktree>."
+  },
+  {
+   "tool": "Bash",
+   "input": "grep -v '^#' <scratch>/s1/R6/work/out.txt > <scratch>/s1/R6/work/rows.txt",
+   "result_bytes": 31,
+   "result_head": "(Bash completed with no output)"
+  },
+  {
+   "tool": "Bash",
+   "input": "cat <scratch>/s1/R6/work/rows.txt | wc -l",
+   "result_bytes": 2,
+   "result_head": "39"
+  },
+  {
+   "tool": "Write",
+   "input": "<scratch>/s1/R6/work/header.txt <= Search: Tuft find text MAX_RESPONSE_BYTES in crates/ at c568505742d00859cad758924c98d8d0a6e98648; coverage=complete, 39 hits in 644 files, none omitted. Definition: crates/writfold-wire/src/rpc/response/mod.rs:21 (65_536). Each hit is retained in the Tuft state dir.\nEvidence lines (path:line: full source line):\n",
+   "result_bytes": 221,
+   "result_head": "File created successfully at: <scratch>/s1/R6/work/header.txt (file state is current in your context — no need to Read it back)"
+  },
+  {
+   "tool": "Bash",
+   "input": "cat <scratch>/s1/R6/work/header.txt <scratch>/s1/R6/work/rows.txt > <scratch>/s1/R6/notes.txt",
+   "result_bytes": 31,
+   "result_head": "(Bash completed with no output)"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

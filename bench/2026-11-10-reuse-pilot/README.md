@@ -101,4 +101,142 @@ pilots'; what differs is the two-session design below.
 
 ## Results
 
-Pending.
+All 24 session-2 trials ran in the pre-registered order, three at a time;
+none was dropped or rerun. Every answer in both arms was exactly right.
+
+### Session 1 (shared)
+
+| Task | Tokens | Tool calls | Evidence retained (of complete) | Notes rows (of complete) |
+|---|---|---|---|---|
+| R1 | 43,989 | 9 | 50 bindings (49 + the definition) | 49 / 49 |
+| R2 | 39,021 | 8 | 50 / 50 | 50 / 50 |
+| R3 | 41,842 | 10 | 20 / 20 | 20 / 20 |
+| R4 | 38,019 | 9 | 297 bindings (every `serde_json::` line; 101 first lines among them) | 101 / 101 |
+| R5 | 36,941 | 7 | 20 / 20 | 20 / 20 |
+| R6 | 40,356 | 11 | 39 / 39 | 39 / 39 |
+
+240,168 tokens in all ([`session1/`](session1/): notes, Tuft programs,
+[`check.json`](session1/check.json), usage; transcripts summarized in
+[`raw-session1/`](raw-session1/)). Session 1 retained every base row of every
+task, so arm B could answer every follow-up, and the notes held every base
+row for arm A.
+
+### Session 2 (measured)
+
+| | Arm A: notes + ordinary tools | Arm B: `trial evidence list/show` |
+|---|---|---|
+| Correct (exact lines and text) | 12 / 12 | 12 / 12 |
+| Total tokens (12 trials) | 449,673 | 457,375 (+1.7%) |
+| Mean tokens per trial | 37,473 | 38,115 |
+| Tool calls, excluding hand-back | 32 | 51 |
+| Tool output returned to the model | 73,695 B | 57,332 B (−22%) |
+| Model output tokens | 10,908 | 17,505 |
+| Cache-read input tokens | 1,268,708 | 1,453,087 |
+| Wall time | 172.7 s | 236.9 s |
+
+Paired by task (mean of each cell's two repeats, B − A; tool calls include
+the hand-back):
+
+| Task | Kind | Tokens A | Tokens B | B − A | Tool calls A / B | Output bytes A / B | Output tokens A / B | Wall s A / B |
+|---|---|---|---|---|---|---|---|---|
+| R1 checker calls (10 of 49) | filter | 38,124 | 36,153 | −1,971 | 3 / 3 | 8,833 / 2,887 | 528 / 575 | 10.5 / 12.9 |
+| R2 line after runtime `…Error` enums (14) | context | 38,090 | 39,425 | +1,335 | 5 / 12.5 | 6,994 / 3,434 | 1,046 / 3,356 | 16.5 / 36.0 |
+| R3 `&changed(` lines (20) | context | 41,037 | 39,143 | −1,895 | 4.5 / 4 | 11,519 / 6,982 | 1,850 / 1,520 | 21.7 / 17.5 |
+| R4 first lines with `serde_json::Value` (27) | filter | 36,078 | 38,539 | +2,461 | 3 / 4 | 3,820 / 5,823 | 633 / 1,345 | 12.0 / 21.3 |
+| R5 line after `#[test]` (6) | context | 35,540 | 37,291 | +1,751 | 3.5 / 5 | 2,347 / 3,635 | 836 / 1,313 | 13.9 / 19.3 |
+| R6 non-test `MAX_RESPONSE_BYTES` lines (10) | filter | 35,968 | 38,137 | +2,170 | 3 / 3 | 3,337 / 5,906 | 562 / 645 | 11.7 / 11.4 |
+
+Mean paired token difference: **+642 tokens per task (range −1,971 to
++2,461); arm B used fewer tokens on 2 of 6 tasks (R1, R3).** Per-trial
+numbers are in [`results.json`](results.json), each trial's tool calls with
+scrubbed output heads in [`raw/`](raw/), the grades in
+[`grades.json`](grades.json) and every answer in
+[`agent-answers/`](agent-answers/).
+
+**Verdict: no token win.** Correctness was equal (both perfect), so the
+pre-registered rule applies to tokens alone: arm B used 1.7% more.
+
+## Reading
+
+- **Arm A did not reuse the notes either; it searched again.** All 12 arm-A
+  trials answered with `grep`/`git grep` pipelines over the repository (with
+  `-A1` or `sed -n` for the next line); 10 of them first printed the head of
+  `notes.txt`, which accounts for much of arm A's tool output. Re-searching this repository costs one short command,
+  so the earlier session's work saved neither arm much. The pilot therefore
+  compares *retained-evidence read-back* against *re-grep*, not against
+  reading notes.
+- **Where arm B saved tokens.** When the follow-up was a filter that `list
+  --path` expresses directly (R1) or a context lookup that `show
+  --context-lines` answers for a few bindings (R3), arm B read less: R1-B used
+  2,887 bytes of tool output against 8,833 (arm A printed 50 lines of notes
+  first), and R3-B read only the six multi-line calls with context instead of
+  `grep -A3` over every `decode_pin(`.
+- **Where it cost tokens.**
+  - Filters that are not a path prefix (R4, R6) mean listing *every* binding
+    and filtering in the shell; R4's session 1 retained all 297 `serde_json::`
+    lines, so arm B first had to redo the first-per-file reduction. A
+    `list` with a text filter, or session 1 retaining only the answer rows,
+    would remove that.
+  - Rows carry a 12-hex binding and `@c568505` that the agent must strip
+    with `sed` before answering, and the longer command lines (absolute state
+    paths) add output tokens: 17,505 against 10,908.
+  - `show` takes one binding per call. Only half the context trials used it
+    (R3-B both, R5-B-r2); R2-B and R5-B-r1 read the next line with `sed -n` or
+    `Read` instead, and R2-B-r1 opened 14 files one `Read` at a time after
+    three refused shell commands (19 tool calls, 41,364 tokens, the costliest
+    session-2 trial).
+- **Fixed host context dominates again.** About 34,000 tokens of every trial
+  are the subagent's own context; the per-task differences are 5% or less.
+
+## Deviations
+
+- **Session 1 for R4 and R5 was run twice.** In the first runs the agents'
+  single shell command that wrote `notes.txt` was refused by the harness's
+  worktree-isolation guard (an environment check on command shape, not a task
+  rule), and both agents handed back `DONE` without notes. The pre-registration
+  said session 1 is not rerun, but these were tool refusals, not content gaps,
+  and an arm A with no notes would not test the design. Both failed attempts
+  are kept (`S1-R4-failed`, `S1-R5-failed` in
+  [`raw-session1/`](raw-session1/) and [`session1/usage.txt`](session1/usage.txt),
+  72,000 tokens, not counted above); the reruns used identical prompts in fresh
+  directories, and `scripts/setup_s1.sh` gained an optional task list for that.
+- **The same guard refused some session-2 commands** in both arms: 7 refusals
+  in 4 arm-A trials and 6 in 5 arm-B trials. Every refused trial recovered and
+  answered correctly; the refusals and retries stay in the token counts.
+- **R5-B-r2** changed directory outside its trial directory (to the
+  coordinating worktree) to retry a refused command; it ran only the evidence
+  commands there, with absolute `--state` and `--repo` paths. **R4-B-r2** read
+  the harness's own saved copy of its previous `list` output. Both stay in both
+  denominators. No arm-B trial searched the repository.
+
+## Limits
+
+Two repeats, six tasks, one repository and one model: no statistical power.
+The model alias does not pin a backend revision, although every transcript
+reports `claude-sonnet-5-5`. Token totals are Claude Code's per-subagent usage
+reports and include fixed host context. Trials ran three at a time. The tasks
+are cheap to re-search with grep, which is exactly what arm A did; the pilot
+does not test evidence that is expensive to find again (a judgement across
+many files, a corpus outside the checkout, a commit no longer checked out),
+or a hand-over that must carry citations (a Weft report).
+
+## Next
+
+Three pilots now agree that on this repository, with grep available and
+cheap, Tuft and its retained evidence cost a few percent more tokens than
+grep at equal correctness. The read-back saved tokens only where its own
+filters fit the question (path prefix, a few bindings with context). Two
+small changes would test that more fairly: a text filter on `evidence list`
+and a multi-binding `show`. A token advantage remains a hypothesis for
+evidence that is expensive to re-derive, not a result.
+
+Reproduce: make the template with [`scripts/template.sh`](scripts/template.sh),
+build `writfold` at the binary commit, run
+[`scripts/setup_s1.sh`](scripts/setup_s1.sh) `SCRATCH TEMPLATE`, give each
+agent `SCRATCH/s1/S1-<task>.prompt`, run
+[`scripts/check_session1.py`](scripts/check_session1.py), then
+[`scripts/setup_s2.sh`](scripts/setup_s2.sh) `SCRATCH TEMPLATE`, give each
+agent `SCRATCH/trials/<trial>.prompt` in [`order.json`](order.json) order,
+`python3 grade.py expected.json SCRATCH/trials`, and rebuild
+`results.json` with [`scripts/analyze.py`](scripts/analyze.py) from the
+grades, [`usage.txt`](usage.txt) and [`raw/`](raw/).

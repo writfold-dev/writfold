@@ -1,0 +1,56 @@
+{
+ "trial": "R6-B-r1",
+ "batch": 3,
+ "models": [
+  "claude-sonnet-5-5"
+ ],
+ "api_calls": 3,
+ "usage_sum": {
+  "input_tokens": 6,
+  "cache_creation_input_tokens": 18988,
+  "cache_read_input_tokens": 88511,
+  "output_tokens": 638
+ },
+ "per_call_usage": [
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 13264,
+   "cache_read_input_tokens": 19086,
+   "output_tokens": 206
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 4725,
+   "cache_read_input_tokens": 32350,
+   "output_tokens": 379
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 999,
+   "cache_read_input_tokens": 37075,
+   "output_tokens": 53
+  }
+ ],
+ "tool_calls": 3,
+ "tool_result_bytes": 5906,
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "<writfold> trial evidence list --state <trial>/state --limit 100000",
+   "result_bytes": 4698,
+   "result_head": "f891fa0cacc2 crates/writfold-app/src/engine.rs@c568505:14:             Fault, MAX_RESPONSE_BYTES, ServerMetadata, Success, encode_error, encode_success,\nd5e9fe61f858 crates/writfold-app/src/engine.rs@c568505:68:             maximum_response: MAX_RESPONSE_BYTES,\n3da0611ce74d crates/writfold-app/src/engine_tests.rs@c568505:176:     engine.maximum_response = MAX_RESPONSE_BYTES;\n6ab477759702 crates/writfold-app/src/trial/rpc.rs@c568505:25: use writfold_wire::rpc::{Request, RequestId, response::MAX_RESPONSE_BYTES};\n17806d4f9c58 crates/writfold-app/src/trial/rpc.rs@c568505:119:         \"{} result ex"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial> && ./../../bin/writfold trial evidence list --state state --limit 100000 | grep -v '^#' | grep -v '/tests/' | grep -v '_tests.rs@' | sed -E 's/^[0-9a-f]{12} ([^@]+)@[0-9a-f]{7}:([0-9]+): +/\\1:\\2: /' > answer.txt; cat answer.txt",
+   "result_bytes": 1147,
+   "result_head": "crates/writfold-app/src/engine.rs:14: Fault, MAX_RESPONSE_BYTES, ServerMetadata, Success, encode_error, encode_success,\ncrates/writfold-app/src/engine.rs:68: maximum_response: MAX_RESPONSE_BYTES,\ncrates/writfold-app/src/trial/rpc.rs:25: use writfold_wire::rpc::{Request, RequestId, response::MAX_RESPONSE_BYTES};\ncrates/writfold-app/src/trial/rpc.rs:119: \"{} result exceeds the {MAX_RESPONSE_BYTES}-byte response budget; nothing was truncated\",\ncrates/writfold-wire/src/rpc/response/codec.rs:2: Fault, MAX_RESPONSE_BYTES, METHOD_SCHEMAS, PROFILE, ResponseError, ServerMetadata, Success,\ncrates/writfo"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

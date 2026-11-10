@@ -1,0 +1,74 @@
+{
+ "trial": "R5-B-r1",
+ "batch": 2,
+ "models": [
+  "claude-sonnet-5-5"
+ ],
+ "api_calls": 4,
+ "usage_sum": {
+  "input_tokens": 8,
+  "cache_creation_input_tokens": 16628,
+  "cache_read_input_tokens": 121434,
+  "output_tokens": 1220
+ },
+ "per_call_usage": [
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 13263,
+   "cache_read_input_tokens": 19086,
+   "output_tokens": 173
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 2339,
+   "cache_read_input_tokens": 32349,
+   "output_tokens": 357
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 623,
+   "cache_read_input_tokens": 34688,
+   "output_tokens": 191
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 403,
+   "cache_read_input_tokens": 35311,
+   "output_tokens": 499
+  }
+ ],
+ "tool_calls": 5,
+ "tool_result_bytes": 1785,
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "B=<scratch>; $B/bin/writfold trial evidence list --state $B/trials/R5-B-r1/state --limit 500 | grep -E 'retain_tests|recovery_tests|^#'",
+   "result_bytes": 514,
+   "result_head": "9624420e947b crates/writfold-app/src/trial/recovery_tests.rs@c568505:106: #[test]\n382c5117d2a3 crates/writfold-app/src/trial/recovery_tests.rs@c568505:126: #[test]\n84688f2ce180 crates/writfold-app/src/trial/recovery_tests.rs@c568505:135: #[test]\n254e296af47c crates/writfold-app/src/trial/retain_tests.rs@c568505:91: #[test]\n3acb74d9e891 crates/writfold-app/src/trial/retain_tests.rs@c568505:106: #[test]\n90d880c5644a crates/writfold-app/src/trial/retain_tests.rs@c568505:122: #[test]\n# count=20 shown=20 omitted=0"
+  },
+  {
+   "tool": "Bash",
+   "input": "R=<trial>; mkdir -p $R/work; cd $R/repo/crates/writfold-app/src/trial; for p in \"recovery_tests.rs 107 127 136\" \"retain_tests.rs 92 107 123\"; do set -- $p; f=$1; shift; for n in \"$@\"; do echo \"crates/writfold-app/src/trial/$f:$n: $(sed -n ${n}p $f)\"; done; done | tee $R/answer.txt",
+   "result_bytes": 742,
+   "result_head": "This agent is isolated in the worktree <parent-worktree>, but this command runs sed with a value computed at runtime (the variable n) where an option may stand (a value that is not double-quoted, or whose first character is matched or computed rather than spelled out, may begin with -; spell it out, or put -- before it if it is an operand rather than an option's value) inside a construct too complex to verify, so what it runs cannot be shown not to be git. Refusing to run it — a worktree-isolated agent's git operations must target its own workt"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial>/repo/crates/writfold-app/src/trial; sed -n '107p;127p;136p' recovery_tests.rs; echo ---; sed -n '92p;107p;123p' retain_tests.rs",
+   "result_bytes": 437,
+   "result_head": "fn a_claim_whose_install_happened_reconciles_to_applied() -> Result<()> {\nfn a_claim_whose_install_never_happened_is_abandoned() -> Result<()> {\nfn a_claim_over_unexpected_bytes_stays_unknown() -> Result<()> {\n---\nfn equal_text_at_two_positions_is_two_bindings() -> Result<()> {\nfn only_a_full_pinned_commit_and_an_in_range_selection_are_accepted() -> Result<()> {\nfn a_report_may_cite_only_retained_untampered_evidence() -> Result<()> {"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial>; P=crates/writfold-app/src/trial\ncat > answer.txt <<EOF\n$P/recovery_tests.rs:107: fn a_claim_whose_install_happened_reconciles_to_applied() -> Result<()> {\n$P/recovery_tests.rs:127: fn a_claim_whose_install_never_happened_is_abandoned() -> Result<()> {\n$P/recovery_tests.rs:136: fn a_claim_over_unexpected_bytes_stays_unknown() -> Result<()> {\n$P/retain_tests.rs:92: fn equal_text_at_two_positions_is_two_bindings() -> Result<()> {\n$P/retain_tests.rs:107: fn only_a_full_pinned_commit_and_an_in_range_selection_are_accepted() -> Result<()> {\n$P/retain_tests.rs:123: fn a_report_may_cite_only_retained_untampered_evidence() -> Result<()> {\nEOF",
+   "result_bytes": 31,
+   "result_head": "(Bash completed with no output)"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

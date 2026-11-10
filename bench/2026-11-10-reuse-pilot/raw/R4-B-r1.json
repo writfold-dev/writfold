@@ -1,0 +1,68 @@
+{
+ "trial": "R4-B-r1",
+ "batch": 4,
+ "models": [
+  "claude-sonnet-5-5"
+ ],
+ "api_calls": 4,
+ "usage_sum": {
+  "input_tokens": 8,
+  "cache_creation_input_tokens": 20057,
+  "cache_read_input_tokens": 126066,
+  "output_tokens": 1598
+ },
+ "per_call_usage": [
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 13254,
+   "cache_read_input_tokens": 19086,
+   "output_tokens": 559
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 4682,
+   "cache_read_input_tokens": 32340,
+   "output_tokens": 406
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 596,
+   "cache_read_input_tokens": 37022,
+   "output_tokens": 498
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 1525,
+   "cache_read_input_tokens": 37618,
+   "output_tokens": 135
+  }
+ ],
+ "tool_calls": 4,
+ "tool_result_bytes": 7110,
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "<writfold> trial evidence list --state <trial>/state --limit 100000 | grep -c . ; <writfold> trial evidence list --state <trial>/state --limit 100000 | grep -F 'serde_json::Value' ; <writfold> trial evidence list --state <trial>/state --limit 100000 | tail -2",
+   "result_bytes": 4534,
+   "result_head": "298\ndd74f0861496 crates/writfold-runtime/src/omnigraph/admission.rs@c568505:178:                         serde_json::Value::String(entry.token.clone()),\n0842f9e21292 crates/writfold-runtime/src/omnigraph/bootstrap.rs@c568505:175: fn completed_json(observation: &ShutdownObservation) -> Result<serde_json::Value, NativeError> {\n77a475d14f4e crates/writfold-runtime/src/omnigraph/bootstrap.rs@c568505:184:     if value.get(\"status\").and_then(serde_json::Value::as_str) != Some(\"complete\")\nd0000fa72da4 crates/writfold-runtime/src/omnigraph/bootstrap.rs@c568505:188:             .and_then(serde_json::Va"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial>; ../../bin/writfold trial evidence list --state state --limit 100000 | grep -F 'serde_json::Value' | sed -E 's/^[0-9a-f]{12} ([^@]+)@[0-9a-f]{7}:([0-9]+): ?/\\1:\\2: /' | sed -E 's/^([^ ]+: )\\s+/\\1/' > answer.txt; wc -l answer.txt; head -3 answer.txt",
+   "result_bytes": 405,
+   "result_head": "39 answer.txt\ncrates/writfold-runtime/src/omnigraph/admission.rs:178: serde_json::Value::String(entry.token.clone()),\ncrates/writfold-runtime/src/omnigraph/bootstrap.rs:175: fn completed_json(observation: &ShutdownObservation) -> Result<serde_json::Value, NativeError> {\ncrates/writfold-runtime/src/omnigraph/bootstrap.rs:184: if value.get(\"status\").and_then(serde_json::Value::as_str) != Some(\"complete\")"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial>; ../../bin/writfold trial evidence list --state state --limit 100000 | grep -v '^#' | sed -E 's/^[0-9a-f]{12} ([^@]+)@[0-9a-f]{7}:([0-9]+): ?(.*)$/\\1\\t\\2\\t\\3/' | sort -t$'\\t' -k1,1 -k2,2n | awk -F'\\t' '!s[$1]++' | grep -F 'serde_json::Value' | awk -F'\\t' '{sub(/^[ \\t]+/,\"\",$3); print $1\":\"$2\": \"$3}' > answer.txt; wc -l answer.txt; cat answer.txt | cut -c1-150",
+   "result_bytes": 2110,
+   "result_head": "27 answer.txt\ncrates/writfold-runtime/src/omnigraph/tests.rs:95: let value: serde_json::Value = serde_json::from_slice(&body)?;\ncrates/writfold-runtime/src/omnigraph/tests/chunked.rs:50: let value: serde_json::Value = serde_json::from_slice(&response.body)?;\ncrates/writfold-wire/src/approval.rs:2: use serde_json::Value;\ncrates/writfold-wire/src/canonical.rs:2: use serde_json::Value;\ncrates/writfold-wire/src/dolt/rows.rs:5: use serde_json::Value;\ncrates/writfold-wire/src/dolt_operation/codec.rs:7: use serde_json::Value;\ncrates/writfold-wire/src/engineering/objects.rs:4: use serde_json::Value;\nc"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

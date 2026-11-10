@@ -1,0 +1,56 @@
+{
+ "trial": "R6-A-r2",
+ "batch": 8,
+ "models": [
+  "claude-sonnet-5-5"
+ ],
+ "api_calls": 3,
+ "usage_sum": {
+  "input_tokens": 6,
+  "cache_creation_input_tokens": 18006,
+  "cache_read_input_tokens": 87530,
+  "output_tokens": 621
+ },
+ "per_call_usage": [
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 12658,
+   "cache_read_input_tokens": 19086,
+   "output_tokens": 190
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 4956,
+   "cache_read_input_tokens": 31744,
+   "output_tokens": 378
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 392,
+   "cache_read_input_tokens": 36700,
+   "output_tokens": 53
+  }
+ ],
+ "tool_calls": 3,
+ "tool_result_bytes": 5425,
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "cd <trial>; cat notes.txt | head -50; cd repo; git grep -n MAX_RESPONSE_BYTES -- crates | grep -v '/tests/' | grep -v '_tests\\.rs:'",
+   "result_bytes": 5348,
+   "result_head": "Search: Tuft find text MAX_RESPONSE_BYTES in crates/ at c568505742d00859cad758924c98d8d0a6e98648; coverage=complete, 39 hits in 644 files, none omitted. Definition: crates/writfold-wire/src/rpc/response/mod.rs:21 (65_536). Each hit is retained in the Tuft state dir.\nEvidence lines (path:line: full source line):\ncrates/writfold-app/src/engine.rs:14:             Fault, MAX_RESPONSE_BYTES, ServerMetadata, Success, encode_error, encode_success,\ncrates/writfold-app/src/engine.rs:68:             maximum_response: MAX_RESPONSE_BYTES,\ncrates/writfold-app/src/engine_tests.rs:176:     engine.maximum_res"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial>/repo; git grep -n MAX_RESPONSE_BYTES -- crates | grep -v '/tests/' | grep -v '_tests\\.rs:' > ../answer.txt; wc -l ../answer.txt",
+   "result_bytes": 16,
+   "result_head": "10 ../answer.txt"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

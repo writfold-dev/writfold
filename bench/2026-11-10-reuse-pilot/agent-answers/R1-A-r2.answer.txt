@@ -1,0 +1,10 @@
+crates/writfold-kernel/src/checker/evaluation_model.rs:158: if !claim_matches_spec(claim, derivation.claim) { None }
+crates/writfold-kernel/src/checker/evaluation.rs:293: && claim_matches_spec(claim@, kb@.corrections[i].target)
+crates/writfold-kernel/src/checker/lookup.rs:42: first_matching(kb.claims, |claim: ClaimView| claim_matches_spec(claim, reference))
+crates/writfold-kernel/src/checker/lookup.rs:58: let predicate = |claim: ClaimView| claim_matches_spec(claim, reference);
+crates/writfold-kernel/src/checker/lookup.rs:63: && claim_matches_spec(kb.claims[i], reference)
+crates/writfold-kernel/src/checker/lookup.rs:64: && forall|j: int| 0 <= j < i ==> !claim_matches_spec(kb.claims[j], reference);
+crates/writfold-kernel/src/checker/lookup.rs:150: forall|i: int| 0 <= i < index ==> !claim_matches_spec(kb@.claims[i], reference),
+crates/writfold-kernel/src/checker/lookup.rs:157: assert(claim_matches_spec(kb@.claims[index as int], reference));
+crates/writfold-kernel/src/checker/lookup.rs:158: first_matching_at(kb@.claims, |c: ClaimView| claim_matches_spec(c, reference), index as int);
+crates/writfold-kernel/src/checker/lookup.rs:164: proof { first_matching_absent(kb@.claims, |c: ClaimView| claim_matches_spec(c, reference)); }

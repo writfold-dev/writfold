@@ -1,0 +1,62 @@
+{
+ "trial": "R5-A-r2",
+ "batch": 5,
+ "models": [
+  "claude-sonnet-5-5"
+ ],
+ "api_calls": 3,
+ "usage_sum": {
+  "input_tokens": 6,
+  "cache_creation_input_tokens": 16418,
+  "cache_read_input_tokens": 85875,
+  "output_tokens": 1063
+ },
+ "per_call_usage": [
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 12657,
+   "cache_read_input_tokens": 19086,
+   "output_tokens": 205
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 3303,
+   "cache_read_input_tokens": 31743,
+   "output_tokens": 266
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 458,
+   "cache_read_input_tokens": 35046,
+   "output_tokens": 592
+  }
+ ],
+ "tool_calls": 4,
+ "tool_result_bytes": 3150,
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "cd <trial>; cat notes.txt | head -50; cd repo; grep -n -A1 '#\\[test\\]' crates/writfold-app/src/trial/retain_tests.rs crates/writfold-app/src/trial/recovery_tests.rs | head -80",
+   "result_bytes": 2375,
+   "result_head": "crates/writfold-app/src/trial/assessment_tests.rs:83: #[test]\ncrates/writfold-app/src/trial/assessment_tests.rs:95: #[test]\ncrates/writfold-app/src/trial/assessment_tests.rs:109: #[test]\ncrates/writfold-app/src/trial/assessment_tests.rs:126: #[test]\ncrates/writfold-app/src/trial/assessment_tests.rs:136: #[test]\ncrates/writfold-app/src/trial/assessment_tests.rs:168: #[test]\ncrates/writfold-app/src/trial/assessment_tests.rs:179: #[test]\ncrates/writfold-app/src/trial/recovery_tests.rs:106: #[test]\ncrates/writfold-app/src/trial/recovery_tests.rs:126: #[test]\ncrates/writfold-app/src/trial/recovery_"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial>; cd repo; for f in retain recovery; do grep -n -A1 '#\\[test\\]' crates/writfold-app/src/trial/${f}_tests.rs | grep -v '#\\[test\\]' | grep -v '^--' | sed -E \"s#^([0-9]+)-#crates/writfold-app/src/trial/${f}_tests.rs:\\1: #\"; done > ../answer.txt; cat ../answer.txt",
+   "result_bytes": 489,
+   "result_head": "This agent is isolated in the worktree <parent-worktree>, but this command runs sed with a program computed at runtime inside a construct too complex to verify, so what it runs cannot be shown not to be git. Refusing to run it — a worktree-isolated agent's git operations must target its own worktree. Split it into plain, separate commands and run them from <parent-worktree>."
+  },
+  {
+   "tool": "Write",
+   "input": "<trial>/answer.txt <= crates/writfold-app/src/trial/retain_tests.rs:92: fn equal_text_at_two_positions_is_two_bindings() -> Result<()> {\ncrates/writfold-app/src/trial/retain_tests.rs:107: fn only_a_full_pinned_commit_and_an_in_range_selection_are_accepted() -> Result<()> {\ncrates/writfold-app/src/trial/retain_tests.rs:123: fn a_report_may_cite_only_retained_untampered_evidence() -> Result<()> {\ncrates/writfold-app/src/trial/recovery_tests.rs:107: fn a_claim_whose_install_happened_reconciles_to_applied() -> Result<()> {\ncrates/writfold-app/src/trial/recovery_tests.rs:127: fn a_claim_whose_install_never_happened_is_abandoned() -> Result<()> {\ncrates/writfold-app/src/trial/recovery_tests.rs:136: fn a_claim_over_unexpected_bytes_stays_unknown() -> Result<()> {\n",
+   "result_bytes": 225,
+   "result_head": "File created successfully at: <trial>/answer.txt (file state is current in your context — no need to Read it back)"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}
