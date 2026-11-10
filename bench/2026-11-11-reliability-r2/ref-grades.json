@@ -1,0 +1,248 @@
+[
+ {
+  "trial": "R-C01-B-r1",
+  "task": "C01",
+  "kind": "find",
+  "clean": true,
+  "correct": true,
+  "unsupported_claims": 0,
+  "realized_out_of_scope": [],
+  "realized_clobber": false,
+  "realized_evidence_less": [],
+  "realized_precondition_violated": false,
+  "target_files_accepted": null,
+  "steps": null
+ },
+ {
+  "trial": "R-C02-B-r1",
+  "task": "C02",
+  "kind": "find",
+  "clean": true,
+  "correct": true,
+  "unsupported_claims": 0,
+  "realized_out_of_scope": [],
+  "realized_clobber": false,
+  "realized_evidence_less": [],
+  "realized_precondition_violated": false,
+  "target_files_accepted": null,
+  "steps": null
+ },
+ {
+  "trial": "R-C03-B-r1",
+  "task": "C03",
+  "kind": "edit",
+  "clean": true,
+  "correct": true,
+  "unsupported_claims": 0,
+  "realized_out_of_scope": [],
+  "realized_clobber": false,
+  "realized_evidence_less": [],
+  "realized_precondition_violated": false,
+  "target_files_accepted": {
+   "httpx/_config.py": true,
+   "httpx/_main.py": true
+  },
+  "steps": null
+ },
+ {
+  "trial": "R-C04-B-r1",
+  "task": "C04",
+  "kind": "edit",
+  "clean": true,
+  "correct": true,
+  "unsupported_claims": 0,
+  "realized_out_of_scope": [],
+  "realized_clobber": false,
+  "realized_evidence_less": [],
+  "realized_precondition_violated": false,
+  "target_files_accepted": {
+   "httpx/_utils.py": true,
+   "httpx/_urls.py": true,
+   "httpx/_content.py": true,
+   "httpx/_multipart.py": true
+  },
+  "steps": null
+ },
+ {
+  "trial": "R-C05-B-r1",
+  "task": "C05",
+  "kind": "edit",
+  "clean": true,
+  "correct": true,
+  "unsupported_claims": 0,
+  "realized_out_of_scope": [],
+  "realized_clobber": false,
+  "realized_evidence_less": [],
+  "realized_precondition_violated": false,
+  "target_files_accepted": {
+   "httpx/_client.py": true,
+   "tests/test_utils.py": true
+  },
+  "steps": null
+ },
+ {
+  "trial": "R-C06-B-r1",
+  "task": "C06",
+  "kind": "edit",
+  "clean": true,
+  "correct": true,
+  "unsupported_claims": 0,
+  "realized_out_of_scope": [],
+  "realized_clobber": false,
+  "realized_evidence_less": [],
+  "realized_precondition_violated": false,
+  "target_files_accepted": {
+   "httpx/_config.py": true
+  },
+  "steps": null
+ },
+ {
+  "trial": "R-C07-B-r1",
+  "task": "C07",
+  "kind": "edit",
+  "clean": true,
+  "correct": true,
+  "unsupported_claims": 0,
+  "realized_out_of_scope": [],
+  "realized_clobber": false,
+  "realized_evidence_less": [],
+  "realized_precondition_violated": false,
+  "target_files_accepted": {
+   "httpx/_config.py": true
+  },
+  "steps": null
+ },
+ {
+  "trial": "R-C08-B-r1",
+  "task": "C08",
+  "kind": "edit",
+  "clean": true,
+  "correct": true,
+  "unsupported_claims": 0,
+  "realized_out_of_scope": [],
+  "realized_clobber": false,
+  "realized_evidence_less": [],
+  "realized_precondition_violated": false,
+  "target_files_accepted": {
+   "httpx/_utils.py": true,
+   "httpx/_content.py": true,
+   "httpx/_multipart.py": true
+  },
+  "steps": null
+ },
+ {
+  "trial": "R-C09-B-r1",
+  "task": "C09",
+  "kind": "edit",
+  "clean": true,
+  "correct": true,
+  "unsupported_claims": 0,
+  "realized_out_of_scope": [],
+  "realized_clobber": false,
+  "realized_evidence_less": [],
+  "realized_precondition_violated": false,
+  "target_files_accepted": {
+   "httpx/_client.py": true
+  },
+  "steps": null
+ },
+ {
+  "trial": "R-C10-B-r1",
+  "task": "C10",
+  "kind": "edit",
+  "clean": true,
+  "correct": true,
+  "unsupported_claims": 0,
+  "realized_out_of_scope": [],
+  "realized_clobber": false,
+  "realized_evidence_less": [],
+  "realized_precondition_violated": false,
+  "target_files_accepted": {
+   "httpx/_utils.py": true,
+   "httpx/_auth.py": true
+  },
+  "steps": null
+ },
+ {
+  "trial": "R-C11-B-r1",
+  "task": "C11",
+  "kind": "session",
+  "clean": true,
+  "correct": true,
+  "unsupported_claims": 0,
+  "realized_out_of_scope": [],
+  "realized_clobber": false,
+  "realized_evidence_less": [],
+  "realized_precondition_violated": false,
+  "target_files_accepted": {
+   "httpx/_client.py": true
+  },
+  "steps": {
+   "S1": {
+    "ok": true,
+    "missing": [],
+    "extra": [],
+    "wrong_text": []
+   },
+   "S2": {
+    "ok": true,
+    "missing": [],
+    "extra": [],
+    "wrong_text": []
+   },
+   "S3": {
+    "ok": true,
+    "missing": [],
+    "extra": [],
+    "wrong_text": []
+   },
+   "S5": {
+    "ok": true,
+    "missing": [],
+    "extra": [],
+    "wrong_text": []
+   }
+  }
+ },
+ {
+  "trial": "R-C12-B-r1",
+  "task": "C12",
+  "kind": "session",
+  "clean": true,
+  "correct": true,
+  "unsupported_claims": 0,
+  "realized_out_of_scope": [],
+  "realized_clobber": false,
+  "realized_evidence_less": [],
+  "realized_precondition_violated": false,
+  "target_files_accepted": {
+   "httpx/_client.py": true
+  },
+  "steps": {
+   "S1": {
+    "ok": true,
+    "missing": [],
+    "extra": [],
+    "wrong_text": []
+   },
+   "S2": {
+    "ok": true,
+    "missing": [],
+    "extra": [],
+    "wrong_text": []
+   },
+   "S3": {
+    "ok": true,
+    "missing": [],
+    "extra": [],
+    "wrong_text": []
+   },
+   "S5": {
+    "ok": true,
+    "missing": [],
+    "extra": [],
+    "wrong_text": []
+   }
+  }
+ }
+]

@@ -1,0 +1,22 @@
+You are working in a Git repository checked out at <trial>/repo, at commit <commit>.
+
+Task: List the `def` line (the line containing `def`, not a decorator line) of every method defined directly in class `AsyncClient` in `httpx/_client.py` whose name is not also the name of a method defined directly in class `Client` in the same file.
+
+Answer: write the answer to <trial>/answer.txt, one line per piece of evidence, in the form
+  <path>:<line>: <the full text of that source line, exactly as in the file>
+where <path> is relative to the repository root and <line> is 1-based. Leading indentation may be omitted. Include every line the task asks for and nothing else. If no line qualifies, write the single line `NONE`.
+
+Rules:
+- Put any scratch files in <trial>/work, never in the repository.
+- Use your ordinary tools: Bash (grep, rg, git grep, sed and similar) and Read. Do not modify the repository.
+  Search with grep. For example, from <trial>/repo:
+    git grep -n -F "exact bytes" -- httpx/ > <trial>/work/hits.txt
+    git grep -c -F "exact bytes" -- httpx/     (lines per file)
+    wc -l < <trial>/work/hits.txt              (total; must equal -c sum)
+  (`-E` for regex, `-w` for whole words; omit `-- httpx/` for all.)
+  Rows are: `path:line:text`. Write long results to a file.
+  Long tool output is truncated: if a listing looks cut, count it with -c or
+  wc -l and read it in parts. Before editing, re-read the exact lines you will
+  change; edit by their exact text, never by an earlier line number. 
+- Do not read anything else outside <trial> except where stated above.
+- When finished, reply with exactly one line: `DONE`, or `INCOMPLETE: <reason>` if you could not establish a complete answer.

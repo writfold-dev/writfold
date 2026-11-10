@@ -1,0 +1,65 @@
+diff --git a/httpx/_content.py b/httpx/_content.py
+index 6f479a0..38ef433 100644
+--- a/httpx/_content.py
++++ b/httpx/_content.py
+@@ -23,7 +23,7 @@ from ._types import (
+     ResponseContent,
+     SyncByteStream,
+ )
+-from ._utils import peek_filelike_length, primitive_value_to_str
++from ._utils import peek_length, primitive_value_to_str
+ 
+ __all__ = ["ByteStream"]
+ 
+@@ -118,7 +118,7 @@ def encode_content(
+         # catches a case that's easy for users to make in error, and would
+         # otherwise pass through here, like any other bytes-iterable,
+         # because `dict` happens to be iterable. See issue #2491.
+-        content_length_or_none = peek_filelike_length(content)
++        content_length_or_none = peek_length(content)
+ 
+         if content_length_or_none is None:
+             headers = {"Transfer-Encoding": "chunked"}
+diff --git a/httpx/_multipart.py b/httpx/_multipart.py
+index b4761af..13046e5 100644
+--- a/httpx/_multipart.py
++++ b/httpx/_multipart.py
+@@ -16,7 +16,7 @@ from ._types import (
+     SyncByteStream,
+ )
+ from ._utils import (
+-    peek_filelike_length,
++    peek_length,
+     primitive_value_to_str,
+     to_bytes,
+ )
+@@ -174,7 +174,7 @@ class FileField:
+         if isinstance(self.file, (str, bytes)):
+             return len(headers) + len(to_bytes(self.file))
+ 
+-        file_length = peek_filelike_length(self.file)
++        file_length = peek_length(self.file)
+ 
+         # If we can't determine the filesize without reading it into memory,
+         # then return `None` here, to indicate an unknown file length.
+@@ -298,3 +298,7 @@ class MultipartStream(SyncByteStream, AsyncByteStream):
+     async def __aiter__(self) -> typing.AsyncIterator[bytes]:
+         for chunk in self.iter_chunks():
+             yield chunk
++
++
++def _file_length(file: typing.Any) -> int | None:
++    return peek_length(file)
+diff --git a/httpx/_utils.py b/httpx/_utils.py
+index 7fe827d..00d24f6 100644
+--- a/httpx/_utils.py
++++ b/httpx/_utils.py
+@@ -92,7 +92,7 @@ def unquote(value: str) -> str:
+     return value[1:-1] if value[0] == value[-1] == '"' else value
+ 
+ 
+-def peek_filelike_length(stream: typing.Any) -> int | None:
++def peek_length(stream: typing.Any) -> int | None:
+     """
+     Given a file-like stream object, return its length in number of bytes
+     without reading it into memory.

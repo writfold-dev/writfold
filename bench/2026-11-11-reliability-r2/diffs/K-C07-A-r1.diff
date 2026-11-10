@@ -1,0 +1,13 @@
+diff --git a/httpx/_config.py b/httpx/_config.py
+index 467a6c9..f282085 100644
+--- a/httpx/_config.py
++++ b/httpx/_config.py
+@@ -243,6 +243,7 @@ class Proxy:
+         return f"Proxy({url_str}{auth_str}{headers_str})"
+ 
+ 
++# Defaults below are shared by Client, AsyncClient and the transports.
+ DEFAULT_TIMEOUT_CONFIG = Timeout(timeout=5.0)
+-DEFAULT_LIMITS = Limits(max_connections=100, max_keepalive_connections=20)
++DEFAULT_LIMITS = Limits(max_connections=100, max_keepalive_connections=40)
+ DEFAULT_MAX_REDIRECTS = 20

@@ -1,0 +1,46 @@
+{
+ "calibration": {
+  "seed": 20261111,
+  "tasks": [
+   "C01",
+   "C02",
+   "C03",
+   "C04",
+   "C05",
+   "C06",
+   "C07",
+   "C08",
+   "C09",
+   "C10",
+   "C11",
+   "C12"
+  ],
+  "method": "random.Random(seed).shuffle per repeat block; trials launched at most three at a time in this order, each next trial launched as soon as a running one finishes",
+  "order": [
+   "K-C02-A-r1",
+   "K-C07-A-r1",
+   "K-C04-A-r1",
+   "K-C01-A-r1",
+   "K-C11-A-r1",
+   "K-C10-A-r1",
+   "K-C09-A-r1",
+   "K-C12-A-r1",
+   "K-C03-A-r1",
+   "K-C06-A-r1",
+   "K-C05-A-r1",
+   "K-C08-A-r1",
+   "K-C04-A-r2",
+   "K-C02-A-r2",
+   "K-C09-A-r2",
+   "K-C12-A-r2",
+   "K-C06-A-r2",
+   "K-C10-A-r2",
+   "K-C07-A-r2",
+   "K-C03-A-r2",
+   "K-C05-A-r2",
+   "K-C11-A-r2",
+   "K-C08-A-r2",
+   "K-C01-A-r2"
+  ]
+ }
+}

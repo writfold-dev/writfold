@@ -1,0 +1,8 @@
+S1 httpx/_config.py:248: DEFAULT_MAX_REDIRECTS = 20
+S2 httpx/_client.py:16: DEFAULT_MAX_REDIRECTS,
+S2 httpx/_client.py:198: max_redirects: int = DEFAULT_MAX_REDIRECTS,
+S2 httpx/_client.py:656: max_redirects: int = DEFAULT_MAX_REDIRECTS,
+S2 httpx/_client.py:1369: max_redirects: int = DEFAULT_MAX_REDIRECTS,
+S2 httpx/_config.py:248: DEFAULT_MAX_REDIRECTS = 20
+S3 httpx/_client.py:1369: max_redirects: int = DEFAULT_MAX_REDIRECTS,
+S5 httpx/_client.py:1686: if len(history) >= self.max_redirects:

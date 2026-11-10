@@ -1,0 +1,51 @@
+diff --git a/httpx/_client.py b/httpx/_client.py
+index 13cd933..54f0cff 100644
+--- a/httpx/_client.py
++++ b/httpx/_client.py
+@@ -1023,7 +1023,7 @@ class Client(BaseClient):
+         response.default_encoding = self._default_encoding
+ 
+         logger.info(
+-            'HTTP Request: %s %s "%s %d %s"',
++            'HTTP Exchange: %s %s "%s %d %s"',
+             request.method,
+             request.url,
+             response.http_version,
+@@ -1738,7 +1738,7 @@ class AsyncClient(BaseClient):
+         response.default_encoding = self._default_encoding
+ 
+         logger.info(
+-            'HTTP Request: %s %s "%s %d %s"',
++            'HTTP Exchange: %s %s "%s %d %s"',
+             request.method,
+             request.url,
+             response.http_version,
+diff --git a/tests/test_utils.py b/tests/test_utils.py
+index f9c215f..07c2114 100644
+--- a/tests/test_utils.py
++++ b/tests/test_utils.py
+@@ -60,7 +60,7 @@ def test_logging_request(server, caplog):
+         (
+             "httpx",
+             logging.INFO,
+-            'HTTP Request: GET http://127.0.0.1:8000/ "HTTP/1.1 200 OK"',
++            'HTTP Exchange: GET http://127.0.0.1:8000/ "HTTP/1.1 200 OK"',
+         )
+     ]
+ 
+@@ -75,13 +75,13 @@ def test_logging_redirect_chain(server, caplog):
+         (
+             "httpx",
+             logging.INFO,
+-            "HTTP Request: GET http://127.0.0.1:8000/redirect_301"
++            "HTTP Exchange: GET http://127.0.0.1:8000/redirect_301"
+             ' "HTTP/1.1 301 Moved Permanently"',
+         ),
+         (
+             "httpx",
+             logging.INFO,
+-            'HTTP Request: GET http://127.0.0.1:8000/ "HTTP/1.1 200 OK"',
++            'HTTP Exchange: GET http://127.0.0.1:8000/ "HTTP/1.1 200 OK"',
+         ),
+     ]
+ 

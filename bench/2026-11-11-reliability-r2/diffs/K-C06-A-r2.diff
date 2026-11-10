@@ -1,0 +1,10 @@
+diff --git a/httpx/_config.py b/httpx/_config.py
+index 467a6c9..53ccab8 100644
+--- a/httpx/_config.py
++++ b/httpx/_config.py
+@@ -245,4 +245,4 @@ class Proxy:
+ 
+ DEFAULT_TIMEOUT_CONFIG = Timeout(timeout=5.0)
+ DEFAULT_LIMITS = Limits(max_connections=100, max_keepalive_connections=20)
+-DEFAULT_MAX_REDIRECTS = 20
++DEFAULT_MAX_REDIRECTS = 25

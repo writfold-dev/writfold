@@ -1,0 +1,15 @@
+httpx/_exceptions.py:132: class TimeoutException(TransportError):
+httpx/_exceptions.py:140: class ConnectTimeout(TimeoutException):
+httpx/_exceptions.py:146: class ReadTimeout(TimeoutException):
+httpx/_exceptions.py:152: class WriteTimeout(TimeoutException):
+httpx/_exceptions.py:158: class PoolTimeout(TimeoutException):
+httpx/_exceptions.py:167: class NetworkError(TransportError):
+httpx/_exceptions.py:175: class ReadError(NetworkError):
+httpx/_exceptions.py:181: class WriteError(NetworkError):
+httpx/_exceptions.py:187: class ConnectError(NetworkError):
+httpx/_exceptions.py:193: class CloseError(NetworkError):
+httpx/_exceptions.py:202: class ProxyError(TransportError):
+httpx/_exceptions.py:208: class UnsupportedProtocol(TransportError):
+httpx/_exceptions.py:216: class ProtocolError(TransportError):
+httpx/_exceptions.py:222: class LocalProtocolError(ProtocolError):
+httpx/_exceptions.py:232: class RemoteProtocolError(ProtocolError):

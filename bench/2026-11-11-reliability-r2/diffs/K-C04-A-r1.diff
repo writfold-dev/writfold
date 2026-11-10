@@ -1,0 +1,100 @@
+diff --git a/httpx/_content.py b/httpx/_content.py
+index 6f479a0..35c8563 100644
+--- a/httpx/_content.py
++++ b/httpx/_content.py
+@@ -23,7 +23,7 @@ from ._types import (
+     ResponseContent,
+     SyncByteStream,
+ )
+-from ._utils import peek_filelike_length, primitive_value_to_str
++from ._utils import peek_filelike_length, primitive_to_str
+ 
+ __all__ = ["ByteStream"]
+ 
+@@ -139,9 +139,9 @@ def encode_urlencoded_data(
+     plain_data = []
+     for key, value in data.items():
+         if isinstance(value, (list, tuple)):
+-            plain_data.extend([(key, primitive_value_to_str(item)) for item in value])
++            plain_data.extend([(key, primitive_to_str(item)) for item in value])
+         else:
+-            plain_data.append((key, primitive_value_to_str(value)))
++            plain_data.append((key, primitive_to_str(value)))
+     body = urlencode(plain_data, doseq=True).encode("utf-8")
+     content_length = str(len(body))
+     content_type = "application/x-www-form-urlencoded"
+diff --git a/httpx/_multipart.py b/httpx/_multipart.py
+index b4761af..978d216 100644
+--- a/httpx/_multipart.py
++++ b/httpx/_multipart.py
+@@ -17,7 +17,7 @@ from ._types import (
+ )
+ from ._utils import (
+     peek_filelike_length,
+-    primitive_value_to_str,
++    primitive_to_str,
+     to_bytes,
+ )
+ 
+@@ -84,7 +84,7 @@ class DataField:
+             )
+         self.name = name
+         self.value: str | bytes = (
+-            value if isinstance(value, bytes) else primitive_value_to_str(value)
++            value if isinstance(value, bytes) else primitive_to_str(value)
+         )
+ 
+     def render_headers(self) -> bytes:
+diff --git a/httpx/_urls.py b/httpx/_urls.py
+index 301d087..ba276ca 100644
+--- a/httpx/_urls.py
++++ b/httpx/_urls.py
+@@ -7,7 +7,7 @@ import idna
+ 
+ from ._types import QueryParamTypes
+ from ._urlparse import urlparse
+-from ._utils import primitive_value_to_str
++from ._utils import primitive_to_str
+ 
+ __all__ = ["URL", "QueryParams"]
+ 
+@@ -456,7 +456,7 @@ class QueryParams(typing.Mapping[str, str]):
+             # We coerce values `True` and `False` to JSON-like "true" and "false"
+             # representations, and coerce `None` values to the empty string.
+             self._dict = {
+-                str(k): [primitive_value_to_str(item) for item in v]
++                str(k): [primitive_to_str(item) for item in v]
+                 for k, v in dict_value.items()
+             }
+ 
+@@ -546,7 +546,7 @@ class QueryParams(typing.Mapping[str, str]):
+         """
+         q = QueryParams()
+         q._dict = dict(self._dict)
+-        q._dict[str(key)] = [primitive_value_to_str(value)]
++        q._dict[str(key)] = [primitive_to_str(value)]
+         return q
+ 
+     def add(self, key: str, value: typing.Any = None) -> QueryParams:
+@@ -561,7 +561,7 @@ class QueryParams(typing.Mapping[str, str]):
+         """
+         q = QueryParams()
+         q._dict = dict(self._dict)
+-        q._dict[str(key)] = q.get_list(key) + [primitive_value_to_str(value)]
++        q._dict[str(key)] = q.get_list(key) + [primitive_to_str(value)]
+         return q
+ 
+     def remove(self, key: str) -> QueryParams:
+diff --git a/httpx/_utils.py b/httpx/_utils.py
+index 7fe827d..c9514c9 100644
+--- a/httpx/_utils.py
++++ b/httpx/_utils.py
+@@ -12,7 +12,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
+     from ._urls import URL
+ 
+ 
+-def primitive_value_to_str(value: PrimitiveData) -> str:
++def primitive_to_str(value: PrimitiveData) -> str:
+     """
+     Coerce a primitive data type into a string value.
+ 
