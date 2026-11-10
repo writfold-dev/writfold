@@ -1,0 +1,49 @@
+crates/writfold-kernel/src/wellformed/lookups.rs:11: let i = choose|i: int| 0 <= i < claims.len() && a == claims[i] && claim_matches_spec(claims[i], reference)
+crates/writfold-kernel/src/wellformed/lookups.rs:12: && forall|j: int| 0 <= j < i ==> !claim_matches_spec(claims[j], reference);
+crates/writfold-kernel/src/wellformed/lookups.rs:13: let j = choose|j: int| 0 <= j < claims.len() && b == claims[j] && claim_matches_spec(claims[j], reference)
+crates/writfold-kernel/src/wellformed/lookups.rs:14: && forall|i: int| 0 <= i < j ==> !claim_matches_spec(claims[i], reference);
+crates/writfold-kernel/src/portfolio/model.rs:75: claim_matches_spec(plan.candidate.claims[state.kb.claims.len() + i], plan.assignments[i].claim)
+crates/writfold-domain/src/language.rs:130: ensures matches == claim_matches_spec(self@, reference@),
+crates/writfold-kernel/src/checker/evaluation_model.rs:158: if !claim_matches_spec(claim, derivation.claim) { None }
+crates/writfold-kernel/src/wellformed/spec.rs:26: exists|i: int| 0 <= i < kb.claims.len() && claim_matches_spec(kb.claims[i], reference)
+crates/writfold-kernel/src/workflow/selection_scan.rs:110: && forall|i: int| 0 <= i < selected.len() ==> claim_matches_spec(target@.claims[i], selected.deep_view()[i])),
+crates/writfold-kernel/src/workflow/selection_scan.rs:122: forall|j: int| 0 <= j < i ==> claim_matches_spec(target@.claims[j], selected.deep_view()[j]),
+crates/writfold-kernel/src/workflow/selection_scan.rs:130: proof { assert(!claim_matches_spec(target@.claims[i as int], selected.deep_view()[i as int])); }
+crates/writfold-kernel/src/portfolio.rs:66: && other == candidate@.claims[i] && claim_matches_spec(other, assignment@.claim)
+crates/writfold-kernel/src/portfolio.rs:67: && forall|j: int| 0 <= j < i ==> !claim_matches_spec(candidate@.claims[j], assignment@.claim);
+crates/writfold-kernel/src/portfolio.rs:69: && claim@ == candidate@.claims[k] && claim_matches_spec(claim@, assignment@.claim)
+crates/writfold-kernel/src/portfolio.rs:70: && forall|j: int| 0 <= j < k ==> !claim_matches_spec(candidate@.claims[j], assignment@.claim);
+crates/writfold-kernel/src/portfolio.rs:165: forall|j: int| 0 <= j < i ==> claim_matches_spec(plan@.candidate.claims[start + j], plan@.assignments[j].claim),
+crates/writfold-kernel/src/portfolio.rs:176: assert(claim_matches_spec(plan@.candidate.claims[start + i], plan@.assignments[i as int].claim));
+crates/writfold-kernel/src/portfolio.rs:190: ==> claim_matches_spec(plan@.candidate.claims[start + j], plan@.assignments[j].claim),
+crates/writfold-kernel/src/portfolio.rs:222: ==> !claim_matches_spec(plan@.candidate.claims[a], state@.selected[b]),
+crates/writfold-kernel/src/portfolio.rs:234: ==> !claim_matches_spec(plan@.candidate.claims[a], state@.selected[b]),
+crates/writfold-kernel/src/portfolio.rs:235: forall|b: int| 0 <= b < j ==> !claim_matches_spec(claim@, state@.selected[b]),
+crates/writfold-kernel/src/portfolio.rs:242: assert(!claim_matches_spec(plan@.candidate.claims[i as int], state@.selected[j as int]));
+crates/writfold-kernel/src/checker/evaluation.rs:293: && claim_matches_spec(claim@, kb@.corrections[i].target)
+crates/writfold-domain/src/knowledge.rs:114: None => forall|i: int| 0 <= i < claims.len() ==> !claim_matches_spec(claims[i], reference),
+crates/writfold-domain/src/knowledge.rs:116: && claim == claims[i] && claim_matches_spec(claims[i], reference)
+crates/writfold-domain/src/knowledge.rs:117: && forall|j: int| 0 <= j < i ==> !claim_matches_spec(claims[j], reference),
+crates/writfold-domain/src/knowledge.rs:132: forall|i: int| 0 <= i < index ==> !claim_matches_spec(kb@.claims[i], reference@),
+crates/writfold-kernel/src/wellformed/graph.rs:55: let j = choose|j: int| 0 <= j < kb.claims.len() && claim_matches_spec(kb.claims[j], replacement);
+crates/writfold-kernel/src/workflow.rs:100: && other == plan@.candidate.claims[i] && claim_matches_spec(other, plan@.claim)
+crates/writfold-kernel/src/workflow.rs:101: && forall|j: int| 0 <= j < i ==> !claim_matches_spec(plan@.candidate.claims[j], plan@.claim);
+crates/writfold-kernel/src/workflow.rs:103: && claim@ == plan@.candidate.claims[k] && claim_matches_spec(claim@, plan@.claim)
+crates/writfold-kernel/src/workflow.rs:104: && forall|j: int| 0 <= j < k ==> !claim_matches_spec(plan@.candidate.claims[j], plan@.claim);
+crates/writfold-kernel/src/portfolio/projection.rs:15: && 0 <= j < state.selected.len() ==> !claim_matches_spec(plan.candidate.claims[i], state.selected[j])
+crates/writfold-kernel/src/portfolio/projection.rs:28: claim_matches_spec(plan.candidate.claims[start + i], added[i]) by {}
+crates/writfold-kernel/src/portfolio/projection.rs:34: && claim_matches_spec(state.kb.claims[j], state.selected[i]);
+crates/writfold-kernel/src/portfolio/projection.rs:37: assert(claim_matches_spec(plan.candidate.claims[start + i - n], selected[i]));
+crates/writfold-kernel/src/portfolio/projection.rs:46: assert(!claim_matches_spec(plan.candidate.claims[start + j - n], state.selected[i]));
+crates/writfold-kernel/src/portfolio/projection.rs:48: assert(!claim_matches_spec(plan.candidate.claims[start + i - n], state.selected[j]));
+crates/writfold-kernel/src/portfolio/projection.rs:57: implies !claim_matches_spec(plan.candidate.claims[i], state.selected[j]) by {
+crates/writfold-kernel/src/checker/lookup.rs:42: first_matching(kb.claims, |claim: ClaimView| claim_matches_spec(claim, reference))
+crates/writfold-kernel/src/checker/lookup.rs:58: let predicate = |claim: ClaimView| claim_matches_spec(claim, reference);
+crates/writfold-kernel/src/checker/lookup.rs:63: && claim_matches_spec(kb.claims[i], reference)
+crates/writfold-kernel/src/checker/lookup.rs:64: && forall|j: int| 0 <= j < i ==> !claim_matches_spec(kb.claims[j], reference);
+crates/writfold-kernel/src/checker/lookup.rs:150: forall|i: int| 0 <= i < index ==> !claim_matches_spec(kb@.claims[i], reference),
+crates/writfold-kernel/src/checker/lookup.rs:157: assert(claim_matches_spec(kb@.claims[index as int], reference));
+crates/writfold-kernel/src/checker/lookup.rs:158: first_matching_at(kb@.claims, |c: ClaimView| claim_matches_spec(c, reference), index as int);
+crates/writfold-kernel/src/checker/lookup.rs:164: proof { first_matching_absent(kb@.claims, |c: ClaimView| claim_matches_spec(c, reference)); }
+crates/writfold-kernel/src/workflow/admission_model.rs:30: claim_matches_spec(claim, derivation.claim)
+crates/writfold-kernel/src/workflow/admission_model.rs:97: && (forall|i: int| 0 <= i < plan.selected.len() ==> claim_matches_spec(target.claims[i], plan.selected[i]))

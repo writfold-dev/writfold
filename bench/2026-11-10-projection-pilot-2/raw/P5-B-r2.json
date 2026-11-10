@@ -1,0 +1,68 @@
+{
+ "trial": "P5-B-r2",
+ "batch": 5,
+ "models": [
+  "claude-sonnet-5-5"
+ ],
+ "api_calls": 4,
+ "usage_sum": {
+  "input_tokens": 8,
+  "cache_creation_input_tokens": 18054,
+  "cache_read_input_tokens": 123792,
+  "output_tokens": 1338
+ },
+ "per_call_usage": [
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 12815,
+   "cache_read_input_tokens": 19086,
+   "output_tokens": 535
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 4264,
+   "cache_read_input_tokens": 31901,
+   "output_tokens": 425
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 475,
+   "cache_read_input_tokens": 36165,
+   "output_tokens": 325
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 500,
+   "cache_read_input_tokens": 36640,
+   "output_tokens": 53
+  }
+ ],
+ "tool_calls": 4,
+ "tool_result_bytes": 4233,
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "mkdir -p <trial>/work && cd <trial> && cat > work/q.tuft <<'EOF'\n@h := find rx\"pub enum [A-Za-z0-9_]*Error\\b\" in \"crates/\" at \"c568505742d00859cad758924c98d8d0a6e98648\" limit 500;\n@e := retain @h around lines 0;\n@v := project @e [path, line, excerpt(max_chars: 300)];\nemit @v budget_tokens 20000;\nEOF\ncd work && ../../../bin/writfold tuft run q.tuft --repo <trial>/repo --state <trial>/state",
+   "result_bytes": 3758,
+   "result_head": "crates/tuft/src/emit.rs:59: pub enum CursorError {\ncrates/writfold-app/src/ledger.rs:20: pub enum LedgerError {\ncrates/writfold-app/src/lib.rs:24: pub enum ServeError {\ncrates/writfold-domain/src/citation/selector.rs:8: pub enum SelectorError { ReversedBounds }\ncrates/writfold-domain/src/engineering/dependency.rs:263: pub enum LockError {\ncrates/writfold-kernel/src/citation/handles.rs:6: pub enum AliasIssueError { Denied, Foreign, Expired, InvalidLifetime, AlreadyIssued }\ncrates/writfold-kernel/src/citation/presentation.rs:6: pub enum PresentationError { CursorMismatch, ZeroBudget, InvalidOffs"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial>/work && ../../../bin/writfold tuft run q.tuft --repo ../repo --state ../state --out o.txt >/dev/null; grep -v '^#' o.txt | sed 's/^\\([^ ]*\\): */\\1: /' > ../answer.txt; wc -l ../answer.txt; head -3 ../answer.txt",
+   "result_bytes": 114,
+   "result_head": "writfold: dot and parent components are forbidden\nugrep: warning: o.txt: No such file or directory\n0 ../answer.txt"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial>/work && B=<trial>; $B/../../bin/writfold tuft run q.tuft --repo $B/repo --state $B/state --out $B/work/o.txt >/dev/null; grep -v '^#' o.txt | sed 's/^\\([^ ]*\\): */\\1: /' > $B/answer.txt; wc -l $B/answer.txt; head -3 $B/answer.txt",
+   "result_bytes": 300,
+   "result_head": "50 <trial>/answer.txt\ncrates/tuft/src/emit.rs:59: pub enum CursorError {\ncrates/writfold-app/src/ledger.rs:20: pub enum LedgerError {\ncrates/writfold-app/src/lib.rs:24: pub enum ServeError {"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

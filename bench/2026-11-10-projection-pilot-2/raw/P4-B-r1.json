@@ -1,0 +1,68 @@
+{
+ "trial": "P4-B-r1",
+ "batch": 3,
+ "models": [
+  "claude-sonnet-5-5"
+ ],
+ "api_calls": 4,
+ "usage_sum": {
+  "input_tokens": 8,
+  "cache_creation_input_tokens": 16394,
+  "cache_read_input_tokens": 120262,
+  "output_tokens": 979
+ },
+ "per_call_usage": [
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 12829,
+   "cache_read_input_tokens": 19086,
+   "output_tokens": 333
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 2417,
+   "cache_read_input_tokens": 31915,
+   "output_tokens": 315
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 597,
+   "cache_read_input_tokens": 34332,
+   "output_tokens": 278
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 551,
+   "cache_read_input_tokens": 34929,
+   "output_tokens": 53
+  }
+ ],
+ "tool_calls": 4,
+ "tool_result_bytes": 1569,
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "B=<trial>; mkdir -p $B/work; cd $B/work; cat > q.tuft <<'E'\n@h := find text \".to_owned()\" in \"crates/\" at \"c568505742d00859cad758924c98d8d0a6e98648\" limit 2000;\n@e := retain @h around lines 0;\n@v := project @e [path, line, excerpt(max_chars: 300)];\nemit @v budget_tokens 60000;\nE\n$B/../../bin/writfold tuft run q.tuft --repo $B/repo --state $B/state --out $B/work/out.txt | tail -3; wc -l out.txt; tail -3 out.txt",
+   "result_bytes": 388,
+   "result_head": "# coverage=complete files=644/644 hits=226 shown=224 omitted=0 cursor=none program=eb613acb2090\n224 out.txt\ncrates/writfold/tests/serve_trial.rs:160:         .to_owned();\ncrates/writfold/tests/serve_trial.rs:169:     let run = payload[\"run\"].as_str().ok_or(\"run\")?.to_owned();\ncrates/writfold/tests/serve_trial.rs:207:         (\"garbage.json\", \"{\\\"schema\\\":\\\"not-a-report\\\"}\".to_owned()),"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial>/work; grep -c '^crates' out.txt; grep -v '^crates' out.txt|head; LC_ALL=C sort -t: -k1,1 -k2,2n -s out.txt | grep '^crates' | tail -6",
+   "result_bytes": 588,
+   "result_head": "224\ncrates/writfold-xtask/src/syntax.rs:164:                 source: self.path.to_owned(),\ncrates/writfold-xtask/src/trust.rs:118:             _ => Err(\"invalid proof trust hexadecimal digest\".to_owned()),\ncrates/writfold/tests/serve_trial.rs:43:     Ok(String::from_utf8(out.stdout)?.trim_end().to_owned())\ncrates/writfold/tests/serve_trial.rs:160:         .to_owned();\ncrates/writfold/tests/serve_trial.rs:169:     let run = payload[\"run\"].as_str().ok_or(\"run\")?.to_owned();\ncrates/writfold/tests/serve_trial.rs:207:         (\"garbage.json\", \"{\\\"schema\\\":\\\"not-a-report\\\"}\".to_owned()),"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial>; LC_ALL=C sort -t: -k1,1 -k2,2n -s work/out.txt | tail -6 | sed -E 's/^([^:]+:[0-9]+): +/\\1: /' > answer.txt; cat answer.txt",
+   "result_bytes": 532,
+   "result_head": "crates/writfold-xtask/src/syntax.rs:164: source: self.path.to_owned(),\ncrates/writfold-xtask/src/trust.rs:118: _ => Err(\"invalid proof trust hexadecimal digest\".to_owned()),\ncrates/writfold/tests/serve_trial.rs:43: Ok(String::from_utf8(out.stdout)?.trim_end().to_owned())\ncrates/writfold/tests/serve_trial.rs:160: .to_owned();\ncrates/writfold/tests/serve_trial.rs:169: let run = payload[\"run\"].as_str().ok_or(\"run\")?.to_owned();\ncrates/writfold/tests/serve_trial.rs:207: (\"garbage.json\", \"{\\\"schema\\\":\\\"not-a-report\\\"}\".to_owned()),"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

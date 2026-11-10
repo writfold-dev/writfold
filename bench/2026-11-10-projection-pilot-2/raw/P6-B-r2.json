@@ -1,0 +1,56 @@
+{
+ "trial": "P6-B-r2",
+ "batch": 8,
+ "models": [
+  "claude-sonnet-5-5"
+ ],
+ "api_calls": 3,
+ "usage_sum": {
+  "input_tokens": 6,
+  "cache_creation_input_tokens": 15265,
+  "cache_read_input_tokens": 85122,
+  "output_tokens": 528
+ },
+ "per_call_usage": [
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 12788,
+   "cache_read_input_tokens": 19086,
+   "output_tokens": 301
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 2288,
+   "cache_read_input_tokens": 31874,
+   "output_tokens": 174
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 189,
+   "cache_read_input_tokens": 34162,
+   "output_tokens": 53
+  }
+ ],
+ "tool_calls": 3,
+ "tool_result_bytes": 264,
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "B=<trial>; mkdir -p $B/work; cd $B/work; cat > q.tuft <<'E'\n@h := find rx\"const PIN_BYTES\" in \"crates/\" at \"c568505742d00859cad758924c98d8d0a6e98648\" limit 100;\n@e := retain @h around lines 0;\n@v := project @e [path, line, excerpt(max_chars: 300)];\nemit @v budget_tokens 4000;\nE\n$B/../../bin/writfold tuft run q.tuft --repo $B/repo --state $B/state",
+   "result_bytes": 172,
+   "result_head": "crates/writfold-store/examples/dolt_read.rs:20: const PIN_BYTES: usize = 65_536;\n# coverage=complete files=644/644 hits=1 shown=1 omitted=0 cursor=none program=e5b5b73b12a7"
+  },
+  {
+   "tool": "Bash",
+   "input": "echo 'crates/writfold-store/examples/dolt_read.rs:20: const PIN_BYTES: usize = 65_536;' > <trial>/answer.txt",
+   "result_bytes": 31,
+   "result_head": "(Bash completed with no output)"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

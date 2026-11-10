@@ -1,0 +1,50 @@
+crates/tuft/src/emit.rs:59: pub enum CursorError {
+crates/writfold-app/src/ledger.rs:20: pub enum LedgerError {
+crates/writfold-app/src/lib.rs:24: pub enum ServeError {
+crates/writfold-domain/src/citation/selector.rs:8: pub enum SelectorError { ReversedBounds }
+crates/writfold-domain/src/engineering/dependency.rs:263: pub enum LockError {
+crates/writfold-kernel/src/citation/handles.rs:6: pub enum AliasIssueError { Denied, Foreign, Expired, InvalidLifetime, AlreadyIssued }
+crates/writfold-kernel/src/citation/presentation.rs:6: pub enum PresentationError { CursorMismatch, ZeroBudget, InvalidOffset }
+crates/writfold-kernel/src/citation/resolution.rs:13: pub enum RetainError { AlreadyRetained }
+crates/writfold-protocol/src/session.rs:85: pub enum SessionError { InitializationRequired, AlreadyInitialized, ShutDown }
+crates/writfold-protocol/src/storage.rs:146: pub enum ProfileError {
+crates/writfold-protocol/src/storage.rs:189: pub enum ReadPinError {
+crates/writfold-runtime/src/dolt/error.rs:5: pub enum DoltError {
+crates/writfold-runtime/src/fs/error.rs:6: pub enum PathError {
+crates/writfold-runtime/src/fs/error.rs:28: pub enum FsError {
+crates/writfold-runtime/src/fs/error.rs:84: pub enum WriteError {
+crates/writfold-runtime/src/fs/staged/types.rs:59: pub enum StageError {
+crates/writfold-runtime/src/fs/staged/types.rs:89: pub enum InstallError {
+crates/writfold-runtime/src/git/error.rs:6: pub enum GitError {
+crates/writfold-runtime/src/git/writer.rs:16: pub enum GitWriteError {
+crates/writfold-runtime/src/omnigraph/mod.rs:25: pub enum NativeError {
+crates/writfold-runtime/src/process/error.rs:4: pub enum ProcessError {
+crates/writfold-runtime/src/stdio/frame.rs:9: pub enum FrameReadError {
+crates/writfold-runtime/src/stdio/identity.rs:10: pub enum IdentityError {
+crates/writfold-runtime/src/worktrunk/mod.rs:54: pub enum WorktrunkError {
+crates/writfold-runtime/src/worktrunk/mod.rs:77: pub enum CreateError {
+crates/writfold-sources/src/splicery.rs:42: pub enum ReplayError {
+crates/writfold-store/src/dolt/error.rs:13: pub enum Error {
+crates/writfold-store/src/objects/error.rs:6: pub enum ObjectError {
+crates/writfold-wire/src/citation/mod.rs:25: pub enum CitationWireError {
+crates/writfold-wire/src/dolt.rs:12: pub enum Error {
+crates/writfold-wire/src/dolt_operation/mod.rs:19: pub enum DoltOperationError {
+crates/writfold-wire/src/engineering/cbor.rs:33: pub enum Error {
+crates/writfold-wire/src/engineering/cbor/decode.rs:9: pub enum DecodeError {
+crates/writfold-wire/src/engineering/dependency.rs:26: pub enum Error {
+crates/writfold-wire/src/engineering/edit_approval.rs:20: pub enum Error {
+crates/writfold-wire/src/engineering/grant.rs:29: pub enum Error {
+crates/writfold-wire/src/engineering/ledger.rs:16: pub enum Error {
+crates/writfold-wire/src/engineering/ledger_record.rs:22: pub enum Error {
+crates/writfold-wire/src/engineering/objects.rs:13: pub enum ObjectError {
+crates/writfold-wire/src/lib.rs:83: pub enum Error {
+crates/writfold-wire/src/omnigraph/mod.rs:24: pub enum NativeError {
+crates/writfold-wire/src/operation/codec.rs:7: pub enum BoundaryError {
+crates/writfold-wire/src/rpc.rs:21: pub enum FrameError {
+crates/writfold-wire/src/rpc.rs:136: pub enum EnvelopeError {
+crates/writfold-wire/src/rpc/initialize.rs:64: pub enum ParamsError {
+crates/writfold-wire/src/rpc/response/mod.rs:82: pub enum ResponseError {
+crates/writfold-wire/src/storage.rs:16: pub enum StorageWireError {
+crates/writfold-wire/src/storage_operation/mod.rs:19: pub enum StorageOperationError {
+crates/writfold-wire/src/weft_report.rs:20: pub enum ReportError {
+crates/writfold-wire/src/worktree/mod.rs:11: pub enum Error {

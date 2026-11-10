@@ -1,0 +1,56 @@
+{
+ "trial": "P1-B-r1",
+ "batch": 2,
+ "models": [
+  "claude-sonnet-5-5"
+ ],
+ "api_calls": 3,
+ "usage_sum": {
+  "input_tokens": 6,
+  "cache_creation_input_tokens": 18969,
+  "cache_read_input_tokens": 88398,
+  "output_tokens": 732
+ },
+ "per_call_usage": [
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 12813,
+   "cache_read_input_tokens": 19086,
+   "output_tokens": 300
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 5514,
+   "cache_read_input_tokens": 31899,
+   "output_tokens": 379
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 642,
+   "cache_read_input_tokens": 37413,
+   "output_tokens": 53
+  }
+ ],
+ "tool_calls": 3,
+ "tool_result_bytes": 7897,
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "B=<trial>; mkdir -p $B/work; cd $B/work; cat > q.tuft <<'E'\n@h := find text \"claim_matches_spec(\" in \"crates/\" at \"c568505742d00859cad758924c98d8d0a6e98648\" limit 100;\n@e := retain @h around lines 0;\n@v := project @e [path, line, excerpt(max_chars: 300)];\nemit @v budget_tokens 4000;\nE\n$B/../../bin/writfold tuft run q.tuft --repo $B/repo --state $B/state",
+   "result_bytes": 7336,
+   "result_head": "crates/writfold-domain/src/knowledge.rs:114:         None => forall|i: int| 0 <= i < claims.len() ==> !claim_matches_spec(claims[i], reference),\ncrates/writfold-domain/src/knowledge.rs:116:             && claim == claims[i] && claim_matches_spec(claims[i], reference)\ncrates/writfold-domain/src/knowledge.rs:117:             && forall|j: int| 0 <= j < i ==> !claim_matches_spec(claims[j], reference),\ncrates/writfold-domain/src/knowledge.rs:132:             forall|i: int| 0 <= i < index ==> !claim_matches_spec(kb@.claims[i], reference@),\ncrates/writfold-domain/src/language.rs:120: pub open spec fn"
+  },
+  {
+   "tool": "Bash",
+   "input": "B=<trial>; cd $B/work; rm -f o.txt; $B/../../bin/writfold tuft run q.tuft --repo $B/repo --state $B/state --out o.txt >/dev/null; grep -v '^#' o.txt | grep -v 'language.rs:120:' | sed -E 's/^([^:]+:[0-9]+:) +/\\1 /' > $B/answer.txt; wc -l $B/answer.txt; head -3 $B/answer.txt",
+   "result_bytes": 500,
+   "result_head": "49 <trial>/answer.txt\ncrates/writfold-domain/src/knowledge.rs:114: None => forall|i: int| 0 <= i < claims.len() ==> !claim_matches_spec(claims[i], reference),\ncrates/writfold-domain/src/knowledge.rs:116: && claim == claims[i] && claim_matches_spec(claims[i], reference)\ncrates/writfold-domain/src/knowledge.rs:117: && forall|j: int| 0 <= j < i ==> !claim_matches_spec(claims[j], reference),"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

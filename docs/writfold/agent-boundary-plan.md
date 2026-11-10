@@ -141,9 +141,10 @@ Each row's evidence is the `qualification/status.json` entry named here:
 | B0 | done | `storage_backend_component`. Dolt writes are not built |
 | S5 | done | tag `v0.1.0-dev.1`; the fresh-clone flow was reproduced |
 | T2 | done: no token win | `bench/2026-11-09-projection-pilot`. Correctness was 12/12 in both arms; Tuft used 5.3% more tokens, more on all six tasks. The tasks had 1–9 matches, so the budget and omissions never engaged. Agents also retyped Tuft's quoted rows by hand instead of piping them, and its header lines doubled tool output |
+| T2b | done: no token win | `bench/2026-11-10-projection-pilot-2`. Lean output, tasks with 50–297 matches. Correctness 12/12 in both arms; Tuft used 3.1% more tokens, more on all six tasks. Transcription and output volume no longer cost anything (arm-B tool output was 5.6% lower); the gap is the agent writing longer programs and making more calls. Budget and cursor still never engaged |
 | T1 | next | — |
 
-Next after T1. T2 suggested a compact Tuft row format and an `--out` flag. Both are now built, unmeasured: `path:line: text` rows with a one-line coverage trailer, `--out` that writes the rows to a new file, and a 594-byte [agent note](../tuft/agent-note.md). A pilot whose tasks have enough hits for the budget to bind comes first, then:
+Next after T1. T2 suggested a compact Tuft row format and an `--out` flag. Both are built: `path:line: text` rows with a one-line coverage trailer, `--out` that writes the rows to a new file, and a 594-byte [agent note](../tuft/agent-note.md). T2b measured them on larger result sets and found no token win. Next:
 
 - the TLA+ trial-stream model;
 - the edit-flow validator in `writfold-core`;

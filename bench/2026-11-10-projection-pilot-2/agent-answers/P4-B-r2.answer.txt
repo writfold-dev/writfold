@@ -1,0 +1,6 @@
+crates/writfold-xtask/src/syntax.rs:164:                 source: self.path.to_owned(),
+crates/writfold-xtask/src/trust.rs:118:             _ => Err("invalid proof trust hexadecimal digest".to_owned()),
+crates/writfold/tests/serve_trial.rs:43:     Ok(String::from_utf8(out.stdout)?.trim_end().to_owned())
+crates/writfold/tests/serve_trial.rs:160:         .to_owned();
+crates/writfold/tests/serve_trial.rs:169:     let run = payload["run"].as_str().ok_or("run")?.to_owned();
+crates/writfold/tests/serve_trial.rs:207:         ("garbage.json", "{\"schema\":\"not-a-report\"}".to_owned()),

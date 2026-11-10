@@ -1,0 +1,44 @@
+{
+ "trial": "P5-A-r2",
+ "batch": 8,
+ "models": [
+  "claude-sonnet-5-5"
+ ],
+ "api_calls": 2,
+ "usage_sum": {
+  "input_tokens": 4,
+  "cache_creation_input_tokens": 16071,
+  "cache_read_input_tokens": 50348,
+  "output_tokens": 384
+ },
+ "per_call_usage": [
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 12176,
+   "cache_read_input_tokens": 19086,
+   "output_tokens": 210
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 3895,
+   "cache_read_input_tokens": 31262,
+   "output_tokens": 174
+  }
+ ],
+ "tool_calls": 2,
+ "tool_result_bytes": 3725,
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "cd <trial>/repo && mkdir -p ../work && grep -rnE '^\\s*pub enum \\w*Error\\b' crates --include=*.rs | sed -E 's/^([^:]+:[0-9]+):\\s*/\\1: /' | tee ../answer.txt",
+   "result_bytes": 3664,
+   "result_head": "crates/writfold-app/src/lib.rs:24: pub enum ServeError {\ncrates/writfold-app/src/ledger.rs:20: pub enum LedgerError {\ncrates/writfold-store/src/objects/error.rs:6: pub enum ObjectError {\ncrates/writfold-store/src/dolt/error.rs:13: pub enum Error {\ncrates/writfold-kernel/src/citation/resolution.rs:13: pub enum RetainError { AlreadyRetained }\ncrates/writfold-kernel/src/citation/handles.rs:6: pub enum AliasIssueError { Denied, Foreign, Expired, InvalidLifetime, AlreadyIssued }\ncrates/writfold-kernel/src/citation/presentation.rs:6: pub enum PresentationError { CursorMismatch, ZeroBudget, InvalidOf"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

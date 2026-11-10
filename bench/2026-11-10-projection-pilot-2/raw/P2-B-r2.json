@@ -1,0 +1,56 @@
+{
+ "trial": "P2-B-r2",
+ "batch": 6,
+ "models": [
+  "claude-sonnet-5-5"
+ ],
+ "api_calls": 3,
+ "usage_sum": {
+  "input_tokens": 6,
+  "cache_creation_input_tokens": 15639,
+  "cache_read_input_tokens": 85267,
+  "output_tokens": 696
+ },
+ "per_call_usage": [
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 12822,
+   "cache_read_input_tokens": 19086,
+   "output_tokens": 335
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 2365,
+   "cache_read_input_tokens": 31908,
+   "output_tokens": 276
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 452,
+   "cache_read_input_tokens": 34273,
+   "output_tokens": 85
+  }
+ ],
+ "tool_calls": 3,
+ "tool_result_bytes": 674,
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "B=<scratch>; T=$B/trials/P2-B-r2; mkdir -p $T/work; cd $T/work\ncat > q.tuft <<'E'\n@h := find text \"serde_json::\" in \"crates/\" at \"c568505742d00859cad758924c98d8d0a6e98648\" limit 1000;\n@e := retain @h around lines 0;\n@v := project @e [path, line, excerpt(max_chars: 300)];\nemit @v budget_tokens 100000;\nE\n$B/bin/writfold tuft run q.tuft --repo $T/repo --state $T/state --out $T/work/out.txt | tail -3; wc -l out.txt; tail -2 out.txt",
+   "result_bytes": 277,
+   "result_head": "# coverage=complete files=644/644 hits=309 shown=297 omitted=0 cursor=none program=5e6b44ad2c21\n297 out.txt\ncrates/writfold/tests/serve_trial.rs:5: use serde_json::{Value, json};\ncrates/writfold/tests/serve_trial.rs:126:         let reply: Value = serde_json::from_str(&line)?;"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial>; grep -v '^#' work/out.txt | sort -t: -k1,1 -k2,2n | awk -F: '!s[$1]++' > answer.txt; wc -l answer.txt; head -3 answer.txt; grep -c '^#' work/out.txt",
+   "result_bytes": 336,
+   "result_head": "101 answer.txt\ncrates/writfold-app/src/engine_tests.rs:48:     Ok(serde_json::from_slice(&bytes)?)\ncrates/writfold-app/src/engine_trial_tests.rs:55:     let parsed: BTreeMap<String, IgnoredAny> = serde_json::from_str(schemas)?;\ncrates/writfold-app/src/trial/rpc_tests.rs:106:     let value: Observed = serde_json::from_slice(&bytes)?;\n0"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

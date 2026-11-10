@@ -1,0 +1,101 @@
+crates/writfold-app/src/engine_tests.rs:48: Ok(serde_json::from_slice(&bytes)?)
+crates/writfold-app/src/trial/rpc_tests.rs:106: let value: Observed = serde_json::from_slice(&bytes)?;
+crates/writfold-app/src/tuft/json_tests.rs:46: Ok(serde_json::from_str(&tuft(
+crates/writfold-store/tests/dolt_realm/mod.rs:39: let profile: Profile = serde_json::from_slice(&fs::read(profile)?)?;
+crates/writfold-app/src/engine_trial_tests.rs:55: let parsed: BTreeMap<String, IgnoredAny> = serde_json::from_str(schemas)?;
+crates/writfold-store/examples/dolt_read.rs:185: serde_json::to_writer(output, value)?;
+crates/writfold-xtask/src/main.rs:21: use serde_json::json;
+crates/writfold-xtask/src/vendored.rs:3: use serde_json::Value;
+crates/writfold-store/examples/support/mod.rs:21: serde_json::to_writer(&mut stderr, &diagnostic).map_err(io::Error::other)?;
+crates/writfold-xtask/src/vendored_tests.rs:2: use serde_json::json;
+crates/writfold-xtask/src/trust.rs:46: serde_json::from_slice(&bytes).map_err(|error| error.to_string())?;
+crates/writfold-xtask/src/safety.rs:59: ) && (path == "serde_json::Value" || path.starts_with("serde_json::value::Value"))
+crates/writfold-xtask/src/graph.rs:1: use serde_json::{Value, json};
+crates/writfold-xtask/src/syntax.rs:2: use serde_json::{Value, json};
+crates/writfold-xtask/src/source.rs:2: use serde_json::{Value, json};
+crates/writfold-runtime/src/omnigraph/server.rs:243: serde_json::to_writer(&mut body, name)?;
+crates/writfold-runtime/src/omnigraph/tests.rs:95: let value: serde_json::Value = serde_json::from_slice(&body)?;
+crates/writfold-runtime/src/omnigraph/mod.rs:33: Json(#[from] serde_json::Error),
+crates/writfold-runtime/src/omnigraph/bootstrap.rs:161: let graph_key = serde_json::to_string(graph_id)?;
+crates/writfold-runtime/src/omnigraph/tests/chunked.rs:50: let value: serde_json::Value = serde_json::from_slice(&response.body)?;
+crates/writfold-runtime/src/omnigraph/admission.rs:172: let mut tokens = serde_json::Map::new();
+crates/writfold-wire/tests/result_decoders.rs:1: use serde_json::{Value, json};
+crates/writfold-runtime/src/omnigraph/request.rs:65: serde_json::to_writer(&mut body, parameter.name)?;
+crates/writfold-wire/tests/procedure_lean.rs:12: use serde_json::Value;
+crates/writfold-wire/tests/dolt_operation/signatures.rs:21: let old: Value = serde_json::from_slice(&old)?;
+crates/writfold-wire/tests/storage_operation/binding.rs:63: let mut pin: Value = serde_json::from_slice(&encode_pin(base.pin(), 4096)?)?;
+crates/writfold-wire/tests/dolt_read.rs:3: use serde_json::{Value, json};
+crates/writfold-wire/tests/grant_signatures.rs:5: use serde_json::json;
+crates/writfold-sources/src/material.rs:62: let mut serializer = serde_json::Serializer::with_formatter(DigestWriter(&mut hash), Spaced);
+crates/writfold-wire/tests/omnigraph.rs:1: use serde_json::{Value, json};
+crates/writfold-wire/tests/rpc_trial.rs:3: use serde_json::{Value, json};
+crates/writfold/tests/serve_trial.rs:5: use serde_json::{Value, json};
+crates/writfold-wire/src/rpc.rs:15: use serde_json::Value;
+crates/writfold-wire/tests/storage_operation/signatures.rs:21: let old: Value = serde_json::from_slice(&old)?;
+crates/writfold-wire/tests/dolt_operation/boundaries.rs:6: let original: Value = serde_json::from_slice(wrapped("selection")?.canonical_bytes())?;
+crates/writfold-wire/tests/dependency_lock.rs:1: use serde_json::{Value, json};
+crates/writfold-wire/tests/signatures.rs:1: use serde_json::{Value, json};
+crates/writfold-wire/tests/dolt_operation.rs:1: use serde_json::{Value, json};
+crates/writfold-wire/tests/rpc_response.rs:1: use serde_json::{Value, json};
+crates/writfold-wire/tests/ledger_lean.rs:5: use serde_json::Value;
+crates/writfold-wire/tests/storage.rs:1: use serde_json::Value;
+crates/writfold-wire/tests/storage_operation/boundaries.rs:6: let original: Value = serde_json::from_slice(wrapped("selection")?.canonical_bytes())?;
+crates/writfold-wire/tests/omnigraph_history.rs:1: use serde_json::{Value, json};
+crates/writfold-wire/tests/engineering_fingerprints.rs:39: row: &serde_json::Value,
+crates/writfold-wire/tests/reference.rs:1: use serde_json::{Value, json};
+crates/writfold-wire/tests/support/ledger_heads.rs:1: use serde_json::Value;
+crates/writfold-wire/tests/storage_operation.rs:1: use serde_json::{Value, json};
+crates/writfold-wire/tests/engineering_objects.rs:1: use serde_json::{Value, json};
+crates/writfold-wire/src/signatures.rs:15: use serde_json::json;
+crates/writfold-wire/tests/storage/boundaries.rs:51: serde_json::from_str("18446744073709551616")?,
+crates/writfold-wire/src/omnigraph/change.rs:3: use serde_json::Value;
+crates/writfold-wire/tests/grant_lean.rs:6: use serde_json::Value;
+crates/writfold-wire/src/storage.rs:5: use serde_json::{Map, Value};
+crates/writfold-wire/src/canonical.rs:2: use serde_json::Value;
+crates/writfold-wire/tests/procedure_lean/embed.rs:8: use serde_json::Value;
+crates/writfold-wire/tests/edit_approval.rs:3: use serde_json::{Value, json};
+crates/writfold-wire/tests/signatures/policy.rs:4: let original: Value = serde_json::from_slice(&fixture("v3-admission.policy.json")?)?;
+crates/writfold-wire/tests/worktree_identity.rs:1: use serde_json::Value;
+crates/writfold-wire/src/dolt/rows.rs:5: use serde_json::Value;
+crates/writfold-wire/src/parser.rs:2: use serde_json::{Map, Number, Value};
+crates/writfold-wire/src/dolt_operation/codec.rs:7: use serde_json::Value;
+crates/writfold-wire/src/approval.rs:2: use serde_json::Value;
+crates/writfold-wire/src/lib.rs:25: use serde_json::Value;
+crates/writfold-wire/src/reference.rs:4: use serde_json::{Value, json};
+crates/writfold-wire/src/omnigraph/history.rs:3: use serde_json::Value;
+crates/writfold-wire/src/semantic/workflow3.rs:3: use serde_json::{Value, json};
+crates/writfold-wire/src/worktree/json.rs:2: use serde_json::{Value, json};
+crates/writfold-wire/tests/dolt_operation/binding.rs:66: let mut value: Value = serde_json::from_slice(original.canonical_bytes())?;
+crates/writfold-wire/tests/raw_boundary.rs:22: r#"{"$serde_json::private::Number":1,"$serde_json::private::Number":2}"#,
+crates/writfold-wire/src/weft_report.rs:6: use serde_json::Value;
+crates/writfold-wire/src/semantic/selection.rs:3: use serde_json::{Value, json};
+crates/writfold-wire/src/storage_operation/encode.rs:3: use serde_json::{Value, json};
+crates/writfold-wire/src/semantic/kb.rs:6: use serde_json::{Value, json};
+crates/writfold-wire/src/dolt.rs:3: use serde_json::{Map, Value};
+crates/writfold-wire/tests/citation.rs:17: fn changed(field: &str, value: serde_json::Value) -> TestResult<CitationDescriptor> {
+crates/writfold-wire/src/semantic/witness.rs:4: use serde_json::{Value, json};
+crates/writfold-wire/src/dolt/pin.rs:3: use serde_json::{Map, Value};
+crates/writfold-wire/src/semantic/context.rs:5: use serde_json::{Value, json};
+crates/writfold-wire/src/operation/prepare.rs:6: use serde_json::{Value, json};
+crates/writfold-wire/src/omnigraph/rows.rs:3: use serde_json::Value;
+crates/writfold-wire/src/bin/writfold-ref.rs:47: serde_json::to_writer(&mut output, &response).map_err(io::Error::other)?;
+crates/writfold-wire/src/omnigraph/mod.rs:19: use serde_json::{Map, Value};
+crates/writfold-wire/src/rpc/response/bounded.rs:41: serde_json::to_writer(&mut *self, value)
+crates/writfold-wire/src/engineering/dependency.rs:6: use serde_json::{Map, Value};
+crates/writfold-wire/src/semantic/identity.rs:2: use serde_json::{Value, json};
+crates/writfold-wire/src/operation/codec.rs:3: use serde_json::Value;
+crates/writfold-wire/src/citation/codec.rs:5: use serde_json::{Map, Value};
+crates/writfold-wire/src/rpc/initialize.rs:4: use serde_json::Value;
+crates/writfold-wire/src/semantic/response.rs:7: use serde_json::{Value, json};
+crates/writfold-wire/src/signatures/storage.rs:12: use serde_json::json;
+crates/writfold-wire/src/engineering/objects.rs:4: use serde_json::Value;
+crates/writfold-wire/src/semantic/request.rs:3: use serde_json::{Value, json};
+crates/writfold-wire/examples/dolt_approval.rs:3: use serde_json::json;
+crates/writfold-wire/src/semantic/codec.rs:2: use serde_json::{Map, Number, Value};
+crates/writfold-wire/src/worktree/decode.rs:3: use serde_json::{Map, Value};
+crates/writfold-wire/src/rpc/trial.rs:13: use serde_json::{Map, Value};
+crates/writfold-wire/src/semantic/formula.rs:3: use serde_json::{Value, json};
+crates/writfold-wire/src/semantic/workflow.rs:3: use serde_json::{Value, json};
+crates/writfold-wire/src/storage_operation/codec.rs:7: use serde_json::Value;
+crates/writfold-wire/src/semantic/request3.rs:4: use serde_json::{Value, json};
+crates/writfold-wire/src/signatures/dolt.rs:12: use serde_json::json;

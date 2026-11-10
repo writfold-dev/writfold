@@ -1,0 +1,44 @@
+{
+ "trial": "P2-A-r1",
+ "batch": 4,
+ "models": [
+  "claude-sonnet-5-5"
+ ],
+ "api_calls": 2,
+ "usage_sum": {
+  "input_tokens": 4,
+  "cache_creation_input_tokens": 14486,
+  "cache_read_input_tokens": 50355,
+  "output_tokens": 286
+ },
+ "per_call_usage": [
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 12183,
+   "cache_read_input_tokens": 19086,
+   "output_tokens": 233
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 2303,
+   "cache_read_input_tokens": 31269,
+   "output_tokens": 53
+  }
+ ],
+ "tool_calls": 2,
+ "tool_result_bytes": 395,
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "cd <trial>/repo && git grep -n 'serde_json::' -- crates | awk -F: '!s[$1]++{p=$1;l=$2;sub(/^[^:]*:[^:]*:/,\"\");print p\":\"l\":\"$0}' > ../answer.txt; wc -l ../answer.txt; head -3 ../answer.txt",
+   "result_bytes": 334,
+   "result_head": "101 ../answer.txt\ncrates/writfold-app/src/engine_tests.rs:48:    Ok(serde_json::from_slice(&bytes)?)\ncrates/writfold-app/src/engine_trial_tests.rs:55:    let parsed: BTreeMap<String, IgnoredAny> = serde_json::from_str(schemas)?;\ncrates/writfold-app/src/trial/rpc_tests.rs:106:    let value: Observed = serde_json::from_slice(&bytes)?;"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

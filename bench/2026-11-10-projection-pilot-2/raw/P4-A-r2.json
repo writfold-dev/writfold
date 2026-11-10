@@ -1,0 +1,56 @@
+{
+ "trial": "P4-A-r2",
+ "batch": 8,
+ "models": [
+  "claude-sonnet-5-5"
+ ],
+ "api_calls": 3,
+ "usage_sum": {
+  "input_tokens": 6,
+  "cache_creation_input_tokens": 15127,
+  "cache_read_input_tokens": 83995,
+  "output_tokens": 544
+ },
+ "per_call_usage": [
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 12190,
+   "cache_read_input_tokens": 19086,
+   "output_tokens": 184
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 2357,
+   "cache_read_input_tokens": 31276,
+   "output_tokens": 307
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 580,
+   "cache_read_input_tokens": 33633,
+   "output_tokens": 53
+  }
+ ],
+ "tool_calls": 3,
+ "tool_result_bytes": 1171,
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "cd <trial>/repo && git ls-files -z crates | LC_ALL=C sort -z | xargs -0 grep -nF '.to_owned()' -I 2>/dev/null | tail -6",
+   "result_bytes": 578,
+   "result_head": "crates/writfold-xtask/src/syntax.rs:164:                source: self.path.to_owned(),\ncrates/writfold-xtask/src/trust.rs:118:            _ => Err(\"invalid proof trust hexadecimal digest\".to_owned()),\ncrates/writfold/tests/serve_trial.rs:43:    Ok(String::from_utf8(out.stdout)?.trim_end().to_owned())\ncrates/writfold/tests/serve_trial.rs:160:        .to_owned();\ncrates/writfold/tests/serve_trial.rs:169:    let run = payload[\"run\"].as_str().ok_or(\"run\")?.to_owned();\ncrates/writfold/tests/serve_trial.rs:207:        (\"garbage.json\", \"{\\\"schema\\\":\\\"not-a-report\\\"}\".to_owned()),"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial>/repo && git ls-files -z crates | LC_ALL=C sort -z | xargs -0 grep -nIF '.to_owned()' | tail -6 | sed -E 's/^([^:]+:[0-9]+:)[ \\t]+/\\1 /' > ../answer.txt; cat ../answer.txt",
+   "result_bytes": 532,
+   "result_head": "crates/writfold-xtask/src/syntax.rs:164: source: self.path.to_owned(),\ncrates/writfold-xtask/src/trust.rs:118: _ => Err(\"invalid proof trust hexadecimal digest\".to_owned()),\ncrates/writfold/tests/serve_trial.rs:43: Ok(String::from_utf8(out.stdout)?.trim_end().to_owned())\ncrates/writfold/tests/serve_trial.rs:160: .to_owned();\ncrates/writfold/tests/serve_trial.rs:169: let run = payload[\"run\"].as_str().ok_or(\"run\")?.to_owned();\ncrates/writfold/tests/serve_trial.rs:207: (\"garbage.json\", \"{\\\"schema\\\":\\\"not-a-report\\\"}\".to_owned()),"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

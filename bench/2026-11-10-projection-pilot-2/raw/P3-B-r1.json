@@ -1,0 +1,56 @@
+{
+ "trial": "P3-B-r1",
+ "batch": 3,
+ "models": [
+  "claude-sonnet-5-5"
+ ],
+ "api_calls": 3,
+ "usage_sum": {
+  "input_tokens": 6,
+  "cache_creation_input_tokens": 17066,
+  "cache_read_input_tokens": 86538,
+  "output_tokens": 910
+ },
+ "per_call_usage": [
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 12896,
+   "cache_read_input_tokens": 19086,
+   "output_tokens": 303
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 3488,
+   "cache_read_input_tokens": 31982,
+   "output_tokens": 554
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 682,
+   "cache_read_input_tokens": 35470,
+   "output_tokens": 53
+  }
+ ],
+ "tool_calls": 3,
+ "tool_result_bytes": 3099,
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "cd <trial> && mkdir -p work && cat > work/q.tuft <<'E'\n@h := find rx\"decode_pin\\(\\s*&changed\\(\" in \"crates/\" at \"c568505742d00859cad758924c98d8d0a6e98648\" limit 200;\n@e := retain @h around lines 0;\n@v := project @e [path, line, excerpt(max_chars: 300)];\nemit @v budget_tokens 8000;\nE\n../../bin/writfold tuft run work/q.tuft --repo $PWD/repo --state $PWD/state",
+   "result_bytes": 2786,
+   "result_head": "crates/writfold-wire/tests/dolt_read.rs:91:                 dolt::decode_pin(&changed(field, Value::Null)?, limits()?),\ncrates/writfold-wire/tests/dolt_read.rs:97:         dolt::decode_pin(&changed(\"extra\", json!(1))?, limits()?),\ncrates/writfold-wire/tests/dolt_read.rs:112:             dolt::decode_pin(&changed(field, json!(\"\"))?, limits()?),\ncrates/writfold-wire/tests/dolt_read.rs:122:             dolt::decode_pin(&changed(\"commit\", json!(invalid))?, limits()?),\ncrates/writfold-wire/tests/dolt_read.rs:127: \"        dolt::decode_pin(\\n            &changed(\\\"namespace\\\", json!(\\\"writfold-stora"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial> && ../../bin/writfold tuft run work/q.tuft --repo $PWD/repo --state $PWD/state | grep -v '^#' | python3 -c '\nimport sys,re\nfor l in sys.stdin:\n    l=l.rstrip(\"\\n\")\n    m=re.match(r\"(\\S+?:\\d+): (.*)$\",l)\n    p,t=m.groups()\n    if t.startswith(\"\\\"\"):\n        t=t[1:-1].split(\"\\\\n\")[0]\n    print(p+\": \"+t.strip())\n' > answer.txt; cat answer.txt | sed -n '5p;9p;16p'",
+   "result_bytes": 252,
+   "result_head": "crates/writfold-wire/tests/dolt_read.rs:127: dolt::decode_pin(\ncrates/writfold-wire/tests/storage.rs:108: let second = decode_pin(\ncrates/writfold-wire/tests/storage/identities.rs:82: decode_pin(&changed(OMNI, field, Value::from(invalid))?, limits()?),"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

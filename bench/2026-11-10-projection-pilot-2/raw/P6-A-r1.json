@@ -1,0 +1,56 @@
+{
+ "trial": "P6-A-r1",
+ "batch": 4,
+ "models": [
+  "claude-sonnet-5-5"
+ ],
+ "api_calls": 3,
+ "usage_sum": {
+  "input_tokens": 6,
+  "cache_creation_input_tokens": 14494,
+  "cache_read_input_tokens": 83670,
+  "output_tokens": 435
+ },
+ "per_call_usage": [
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 12149,
+   "cache_read_input_tokens": 19086,
+   "output_tokens": 174
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 2114,
+   "cache_read_input_tokens": 31235,
+   "output_tokens": 208
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 231,
+   "cache_read_input_tokens": 33349,
+   "output_tokens": 53
+  }
+ ],
+ "tool_calls": 3,
+ "tool_result_bytes": 172,
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "cd <trial>/repo && git grep -nE '\\bPIN_BYTES\\b' | grep -E 'const|static|define|PIN_BYTES *[:=]'",
+   "result_bytes": 79,
+   "result_head": "crates/writfold-store/examples/dolt_read.rs:20:const PIN_BYTES: usize = 65_536;"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial> && echo 'crates/writfold-store/examples/dolt_read.rs:20: const PIN_BYTES: usize = 65_536;' > answer.txt && sed -n 20p repo/crates/writfold-store/examples/dolt_read.rs",
+   "result_bytes": 32,
+   "result_head": "const PIN_BYTES: usize = 65_536;"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

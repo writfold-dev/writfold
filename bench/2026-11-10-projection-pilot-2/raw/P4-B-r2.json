@@ -1,0 +1,56 @@
+{
+ "trial": "P4-B-r2",
+ "batch": 7,
+ "models": [
+  "claude-sonnet-5-5"
+ ],
+ "api_calls": 3,
+ "usage_sum": {
+  "input_tokens": 6,
+  "cache_creation_input_tokens": 15827,
+  "cache_read_input_tokens": 85332,
+  "output_tokens": 686
+ },
+ "per_call_usage": [
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 12829,
+   "cache_read_input_tokens": 19086,
+   "output_tokens": 331
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 2416,
+   "cache_read_input_tokens": 31915,
+   "output_tokens": 302
+  },
+  {
+   "input_tokens": 2,
+   "cache_creation_input_tokens": 582,
+   "cache_read_input_tokens": 34331,
+   "output_tokens": 53
+  }
+ ],
+ "tool_calls": 3,
+ "tool_result_bytes": 1033,
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "B=<trial>; mkdir -p $B/work; cd $B/work; cat > q.tuft <<'E'\n@h := find text \".to_owned()\" in \"crates/\" at \"c568505742d00859cad758924c98d8d0a6e98648\" limit 5000;\n@e := retain @h around lines 0;\n@v := project @e [path, line, excerpt(max_chars: 300)];\nemit @v budget_tokens 200000;\nE\n../../../bin/writfold tuft run q.tuft --repo $B/repo --state $B/state --out $B/work/out.txt | tail -3; wc -l out.txt; tail -3 out.txt",
+   "result_bytes": 388,
+   "result_head": "# coverage=complete files=644/644 hits=226 shown=224 omitted=0 cursor=none program=2942cc5150c2\n224 out.txt\ncrates/writfold/tests/serve_trial.rs:160:         .to_owned();\ncrates/writfold/tests/serve_trial.rs:169:     let run = payload[\"run\"].as_str().ok_or(\"run\")?.to_owned();\ncrates/writfold/tests/serve_trial.rs:207:         (\"garbage.json\", \"{\\\"schema\\\":\\\"not-a-report\\\"}\".to_owned()),"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial>; grep -v '^#' work/out.txt | LC_ALL=C sort -t: -k1,1 -s -k2,2n | tail -6 | tee answer.txt",
+   "result_bytes": 584,
+   "result_head": "crates/writfold-xtask/src/syntax.rs:164:                 source: self.path.to_owned(),\ncrates/writfold-xtask/src/trust.rs:118:             _ => Err(\"invalid proof trust hexadecimal digest\".to_owned()),\ncrates/writfold/tests/serve_trial.rs:43:     Ok(String::from_utf8(out.stdout)?.trim_end().to_owned())\ncrates/writfold/tests/serve_trial.rs:160:         .to_owned();\ncrates/writfold/tests/serve_trial.rs:169:     let run = payload[\"run\"].as_str().ok_or(\"run\")?.to_owned();\ncrates/writfold/tests/serve_trial.rs:207:         (\"garbage.json\", \"{\\\"schema\\\":\\\"not-a-report\\\"}\".to_owned()),"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

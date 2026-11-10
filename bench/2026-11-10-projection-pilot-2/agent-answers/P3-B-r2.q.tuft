@@ -1,0 +1,4 @@
+@h := find text "decode_pin(" in "crates/" at "c568505742d00859cad758924c98d8d0a6e98648" limit 500;
+@e := retain @h around lines 1;
+@v := project @e [path, line, excerpt(max_chars: 300)];
+emit @v budget_tokens 30000;
