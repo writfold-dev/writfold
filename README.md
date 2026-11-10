@@ -76,9 +76,22 @@ each hit as a citation a Weft report can cite, and prints a compact view
 under a token budget, with explicit omissions and a resume cursor:
 
 ```sh
-printf '@h := find text "trial_blob(" in "crates/" at "%s";\n@e := retain @h around lines 0;\n@v := project @e [path, line, binding, excerpt(max_chars: 72)] limit 6;\nemit @v budget_tokens 300;\n' "$(git rev-parse HEAD)" > q.tuft
+printf '@h := find text "trial_blob(" in "crates/" at "%s";\n@e := retain @h around lines 0;\n@v := project @e [path, line, excerpt(max_chars: 200)];\nemit @v budget_tokens 300;\n' "$(git rev-parse HEAD)" > q.tuft
 target/release/writfold tuft run q.tuft --repo .
 ```
+
+It prints one `path:line: text` row per hit, as `grep -n` would, and a
+trailer that says whether anything is missing:
+
+```text
+crates/writfold-app/src/trial/retain.rs:131:     let (blob, content) = trial_blob(executable, &git_dir, &commit, path, budgets()?, &CANCELLED)?;
+crates/writfold-runtime/src/git/trial.rs:145: pub fn trial_blob(
+# coverage=complete files=640/640 hits=2 shown=2 omitted=0 cursor=none program=3ff0993dee6a
+```
+
+`--out hits.txt` writes the rows to a new file and prints only the trailer.
+Add `binding` to the projection for each row's citation, or pass `--verbose`
+or `--json` for the full envelope.
 
 Search is exact text or a bounded regex; semantic, fuzzy and ranked search
 are refused until the Omnigraph backend exists.

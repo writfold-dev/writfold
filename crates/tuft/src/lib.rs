@@ -13,8 +13,10 @@
 
 pub mod ast;
 pub mod check;
+mod compact;
 pub mod diag;
 pub mod emit;
+mod envelope;
 pub mod ir;
 pub mod lexer;
 pub mod locate;

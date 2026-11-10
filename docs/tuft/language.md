@@ -28,14 +28,23 @@ not a claim that the bytes are true, and it grants no authority.
 emit @view budget_tokens 300;
 ```
 
-`writfold tuft run examples/tuft/trial-blob.tuft --repo .` prints (bindings
-depend only on the realm, commit, path and range, so they are reproducible):
+`writfold tuft run examples/tuft/trial-blob.tuft --repo .` prints one
+`path:line: …` row per hit and a trailer (bindings depend only on the realm,
+commit, path and range, so they are reproducible):
 
 ```text
-tuft/0 program=sha256:62539951f4af1345b03a3f5cd37885128b1c10bc4cf5c231893365328b9763db commit=a853c87ef689ad99fc6d0fb225b0374fdc91b9cc
+crates/writfold-app/src/trial/retain.rs:90:d7fa5172…262d:     let (blob, content) = trial_blob(&executable, &git_dir, &commit, pat…+29B
+crates/writfold-runtime/src/git/trial.rs:145:ccd646fc…1865: pub fn trial_blob(
+# coverage=complete files=540/540 hits=2 shown=2 omitted=0 cursor=none program=9558f72e5876
+```
+
+With `--verbose` it prints the full envelope instead:
+
+```text
+tuft/0 program=sha256:9558f72e5876a4cbb5aa94911901f939ddb93feb15415d10397cca8ff3abc700 commit=a853c87ef689ad99fc6d0fb225b0374fdc91b9cc
 find @hits text "trial_blob(" in "crates/" limit=20: coverage=complete files=540/540 hits=2
 retain @ev range=lines(around=0) bindings=2 schema=writfold-citation/1
-view @view rows=2 merged=0 limited=0 from=0 shown=2 omitted=0 budget_tokens=300 used=96 estimate=ceil((bytes+1)/4) per text line
+view @view rows=2 merged=0 limited=0 from=0 shown=2 omitted=0 budget_tokens=300 used=81 estimate=ceil((bytes+1)/4) per compact row
 cursor=none
 columns path line binding excerpt
 crates/writfold-app/src/trial/retain.rs 90 d7fa5172…262d 2819..2891:"    let (blob, content) = trial_blob(&executable, &git_dir, &commit, pat"…+29B
@@ -154,16 +163,15 @@ The fields form a closed set:
 
 | Field | Value |
 |---|---|
-| `path` | Repository path. It prints bare unless it holds whitespace, quotes, backslashes or controls, which force a JSON-quoted form. |
+| `path` | Repository path (escaping: see [`emit`](#emit)) |
 | `line` | 1-based line of the row's first byte (for evidence, the first retained line) |
 | `range` | Half-open file byte range `LO..HI` (for evidence, the retained range) |
 | `binding` | 64-hex `writfold-citation/1` binding digest |
-| `excerpt(max_chars: N)` | A prefix of the retained bytes, `LO..HI:"text"` |
+| `excerpt(max_chars: N)` | A prefix of the retained bytes |
 
 `N` is 1..=4096. The excerpt shows at most `N` Unicode scalars of the longest
 valid UTF-8 prefix of the retained bytes. `LO..HI` is the exact file byte range
 shown. A truncated excerpt ends with `…+NB`, the retained bytes not shown.
-Text is quoted as a JSON string literal.
 
 Rows sort by the declared keys (`asc` by default), then by `(path, range)`
 ascending, so the order never depends on a backend. Identical rows, with the
@@ -173,35 +181,90 @@ resume them, because they are the program's own choice.
 
 ## `emit`
 
-Output is a mandatory envelope followed by the rows, one per line.
+Three renderings page the same rows under the same budget and share cursors.
+
+### Compact view (default)
+
+One row per line, then one trailer line:
+
+```text
+<path>:<line>: <text>
+# coverage=<complete|partial> files=<E>/<T> hits=<n>[ stopped=hit-limit] shown=<n> omitted=<n>[ limited=<n>][ needs=<t>] cursor=<TAG.OFFSET|none> program=<12 hex>
+```
+
+- **Rows.** The projection's fields other than `excerpt` print in projection
+  order joined by `:` (`range` as `LO..HI`, `binding` as 64 hex digits).
+  Then, if projected, come `: ` and the excerpt text. So
+  `[path, line, excerpt(…)]` prints `src/lib.rs:12: let a = 1;`, as
+  `grep -n` would. `binding` and byte ranges appear only when the projection
+  names them.
+- **Escaping.** Only what must be escaped is:
+  - a path prints raw unless it is empty, starts with `"`, or holds `:` or a
+    control character;
+  - excerpt text prints raw unless it holds a control character other than
+    tab, starts with `"` or holds `…`;
+  - after `retain … around lines`, an untruncated excerpt is whole lines,
+    and its one final LF is the row end, so it is not printed. If such an
+    excerpt has no final LF (the end of a file), it is escaped. After
+    `retain @h` (match bytes) nothing is dropped.
+
+  An escaped value prints as a JSON string literal of the exact shown bytes
+  (`\" \\ \n \r \t`, `\u00XX`). A raw value never starts with `"`, so the
+  shown bytes are always recoverable. A truncated excerpt ends with `…+NB`,
+  the retained bytes not shown.
+- **Trailer.** Always the last line, and never without coverage or cursor:
+  it is the completeness signal. `coverage=complete` with
+  `omitted=0 cursor=none` means every match in scope is shown.
+  - `stopped=hit-limit`: `find`'s `limit` cut the search;
+  - `omitted=N`: rows that did not fit the budget; `--cursor` resumes them;
+  - `limited=N` (only when nonzero): rows dropped by the projection's own
+    `limit`;
+  - `needs=T` (only when no row fits): the next row's cost;
+  - `program`: the first 12 hex digits of the program digest.
+- **`--out FILE`** writes the shown rows (each ending in LF, no trailer) to
+  `FILE` and prints only the trailer. `FILE` must not exist: it is created,
+  never overwritten. With `--verbose` or `--json` it writes that document
+  instead.
+
+### Verbose envelope (`--verbose`)
 
 ```text
 tuft/0 program=sha256:<program digest> commit=<commit>
 find @<name> <text|rx> "<pattern>" in "<scope>" limit=<n>: coverage=<complete|partial> files=<E>/<T> hits=<n>[ stopped=hit-limit]
 retain @<name> range=<match|lines(around=N)> bindings=<distinct> schema=writfold-citation/1
-view @<name> rows=<n> merged=<n> limited=<n> from=<i> shown=<n> omitted=<n> budget_tokens=<b> used=<u> estimate=ceil((bytes+1)/4) per text line
+view @<name> rows=<n> merged=<n> limited=<n> from=<i> shown=<n> omitted=<n> budget_tokens=<b> used=<u> estimate=ceil((bytes+1)/4) per compact row
 [notice next row needs <t> tokens; raise budget_tokens]
 cursor=<TAG.OFFSET|none>
 columns <field> ...
 <row>
 ```
 
-- **Budget.** `budget_tokens` (default 1000, 1..=1000000) bounds the `columns`
-  line plus the rows. Each line costs `ceil((bytes + 1) / 4)` estimated tokens,
-  counting its LF. This is a conservative byte estimate, not a tokenizer. The
-  envelope is always printed and sits outside the budget. Rows stop at a row
-  boundary. `omitted` counts the rows not shown. If not even one row fits,
-  the envelope says so and shows zero rows.
+Verbose rows print every projected field, separated by one space. A path
+prints bare unless it holds whitespace, quotes, backslashes or controls,
+which force a JSON-quoted form. An excerpt prints as `LO..HI:"text"`: its
+exact shown file range and its text as a JSON string literal.
+
+### Budget, cursor and determinism
+
+- **Budget.** `budget_tokens` (default 1000, 1..=1000000) bounds the compact
+  rows, whatever the rendering. Each row costs `ceil((bytes + 1) / 4)`
+  estimated tokens, counting its LF. This is a conservative byte estimate,
+  not a tokenizer. The trailer and envelope are always printed and sit
+  outside the budget. Rows stop at a row boundary. `omitted` counts the rows
+  not shown. If not even one row fits, the trailer or envelope says so and
+  shows zero rows.
 - **Cursor.** `TAG` is the first 16 hex digits of SHA-256 over the program
-  digest, commit, budget and every rendered row. `--cursor TAG.OFFSET` reruns
-  the same program and resumes at `OFFSET`. A cursor from a different program,
-  commit, budget or result refuses. It is a continuation, not a capability.
+  digest, commit, budget and every compact row. `--cursor TAG.OFFSET` reruns
+  the same program and resumes at `OFFSET`, in any rendering. A cursor from
+  a different program, commit, budget or result refuses. It is a
+  continuation, not a capability.
 - **Determinism.** The same program bytes and commit give byte-identical
-  output in both formats.
-- **`--json`** emits the same envelope and rows as one JSON object, with
+  output in every rendering.
+- **`--json`** emits the verbose envelope and rows as one JSON object, with
   fields `tuft`, `program`, `commit`, `find`, `retain`, `view`, `budget`,
-  `cursor` and `rows`. The budget is computed over the text rendering, so text
-  and JSON pages show the same rows and share cursors.
+  `cursor` and `rows`.
+
+An agent's tool note for Tuft is in [agent-note.md](agent-note.md).
 
 ## Lowering and backends
 
@@ -259,7 +322,7 @@ in source order. The golden cases are in
 ## Command line
 
 ```text
-writfold tuft run FILE --repo DIR [--state DIR] [--cursor C] [--json]
+writfold tuft run FILE --repo DIR [--state DIR] [--cursor C] [--verbose|--json] [--out NEW_FILE]
 writfold tuft check FILE
 ```
 

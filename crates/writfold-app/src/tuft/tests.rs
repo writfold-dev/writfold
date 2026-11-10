@@ -87,9 +87,10 @@ pub(super) fn tuft(
         cursor,
         format,
     })
+    .map(|emitted| emitted.printed())
 }
 
-fn envelope<'a>(output: &'a str, key: &str) -> Option<&'a str> {
+pub(super) fn envelope<'a>(output: &'a str, key: &str) -> Option<&'a str> {
     output
         .split([' ', '\n'])
         .find_map(|word| word.strip_prefix(key)?.strip_prefix('='))
@@ -112,14 +113,14 @@ pub(super) fn pipeline(f: &Fixture, budget: u64) -> String {
 #[test]
 fn budget_overflow_reports_omissions_and_the_cursor_resumes() -> Result<()> {
     let f = fixture()?;
-    let whole = tuft(&f, &pipeline(&f, 100_000), None, Format::Text)?;
+    let whole = tuft(&f, &pipeline(&f, 100_000), None, Format::Verbose)?;
     let all = rows(&whole);
     assert_eq!(all.len(), 8, "{whole}");
     assert_eq!(envelope(&whole, "cursor"), Some("none"));
     let mut seen = Vec::new();
     let mut cursor: Option<String> = None;
     for _ in 0..all.len() {
-        let page = tuft(&f, &pipeline(&f, 60), cursor.as_deref(), Format::Text)?;
+        let page = tuft(&f, &pipeline(&f, 60), cursor.as_deref(), Format::Verbose)?;
         let shown = rows(&page);
         assert!(!shown.is_empty() && shown.len() < all.len(), "{page}");
         let omitted: usize = envelope(&page, "omitted").ok_or("omitted")?.parse()?;
@@ -133,7 +134,7 @@ fn budget_overflow_reports_omissions_and_the_cursor_resumes() -> Result<()> {
     }
     assert_eq!(seen, all);
     let other = pipeline(&f, 61);
-    let refused = tuft(&f, &other, cursor.as_deref(), Format::Text);
+    let refused = tuft(&f, &other, cursor.as_deref(), Format::Verbose);
     assert!(refused.is_err_and(|e| e.to_string().contains("different program")));
     Ok(())
 }
@@ -141,7 +142,7 @@ fn budget_overflow_reports_omissions_and_the_cursor_resumes() -> Result<()> {
 #[test]
 fn same_program_and_commit_give_byte_identical_output() -> Result<()> {
     let f = fixture()?;
-    for format in [Format::Text, Format::Json] {
+    for format in [Format::Compact, Format::Verbose, Format::Json] {
         let first = tuft(&f, &pipeline(&f, 120), None, format)?;
         let second = tuft(&f, &pipeline(&f, 120), None, format)?;
         assert_eq!(first, second);
@@ -156,12 +157,14 @@ fn zero_results_over_a_complete_scope_are_reported_complete() -> Result<()> {
         "@h := find text \"absent needle\" in \"src/\" at \"{}\";\n@v := project @h [path, line];\nemit @v;\n",
         f.commit
     );
-    let output = tuft(&f, &program, None, Format::Text)?;
-    assert!(
-        output.contains("coverage=complete files=6/6 hits=0"),
-        "{output}"
+    let output = tuft(&f, &program, None, Format::Compact)?;
+    assert_eq!(
+        output,
+        format!(
+            "# coverage=complete files=6/6 hits=0 shown=0 omitted=0 cursor=none program={}",
+            &tuft::digest_hex(program.as_bytes())[..12]
+        )
     );
-    assert!(rows(&output).is_empty());
     Ok(())
 }
 
@@ -173,12 +176,13 @@ fn the_hit_limit_stops_the_search_explicitly() -> Result<()> {
             "@h := find {matcher} at \"{}\" limit 3;\n@v := project @h [path, range];\nemit @v;\n",
             f.commit
         );
-        let output = tuft(&f, &program, None, Format::Text)?;
+        let output = tuft(&f, &program, None, Format::Compact)?;
+        let (rows, trailer) = output.rsplit_once('\n').ok_or("no rows")?;
         assert!(
-            output.contains("coverage=partial files=2/7 hits=3 stopped=hit-limit"),
+            trailer.starts_with("# coverage=partial files=2/7 hits=3 stopped=hit-limit "),
             "{label}: {output}"
         );
-        assert_eq!(rows(&output).len(), 3);
+        assert_eq!(rows.lines().count(), 3);
     }
     Ok(())
 }
@@ -188,12 +192,12 @@ fn only_a_full_existing_commit_is_accepted() -> Result<()> {
     let f = fixture()?;
     for pin in ["HEAD", "main", &f.commit[..12]] {
         let program = pipeline(&f, 100).replace(&f.commit, pin);
-        assert!(tuft(&f, &program, None, Format::Text).is_err(), "{pin}");
+        assert!(tuft(&f, &program, None, Format::Verbose).is_err(), "{pin}");
     }
     let tree = git(&f.repo, &["rev-parse", "HEAD^{tree}"])?;
     for pin in ["0".repeat(40), tree] {
         let program = pipeline(&f, 100).replace(&f.commit, &pin);
-        let refused = tuft(&f, &program, None, Format::Text)
+        let refused = tuft(&f, &program, None, Format::Verbose)
             .err()
             .ok_or("accepted")?;
         let refusal = refused.downcast_ref::<Refusal>().ok_or("untyped refusal")?;
@@ -209,7 +213,7 @@ fn deferred_operators_refuse_as_unsupported_capabilities() -> Result<()> {
         "@h := find similar \"x\" at \"{}\";\n@v := project @h [path];\nemit @v;\n",
         f.commit
     );
-    let refused = tuft(&f, &program, None, Format::Text)
+    let refused = tuft(&f, &program, None, Format::Verbose)
         .err()
         .ok_or("accepted")?;
     let program_error = refused.downcast_ref::<ProgramError>().ok_or("untyped")?;

@@ -143,7 +143,7 @@ Each row's evidence is the `qualification/status.json` entry named here:
 | T2 | done: no token win | `bench/2026-11-09-projection-pilot`. Correctness was 12/12 in both arms; Tuft used 5.3% more tokens, more on all six tasks. The tasks had 1–9 matches, so the budget and omissions never engaged. Agents also retyped Tuft's quoted rows by hand instead of piping them, and its header lines doubled tool output |
 | T1 | next | — |
 
-Next after T1. T2 suggests these first: a compact Tuft row format (no byte ranges or headers unless asked), an `--out` that writes the view straight into an answer file, and a pilot whose tasks have enough hits for the budget to bind:
+Next after T1. T2 suggested a compact Tuft row format and an `--out` flag. Both are now built, unmeasured: `path:line: text` rows with a one-line coverage trailer, `--out` that writes the rows to a new file, and a 594-byte [agent note](../tuft/agent-note.md). A pilot whose tasks have enough hits for the budget to bind comes first, then:
 
 - the TLA+ trial-stream model;
 - the edit-flow validator in `writfold-core`;

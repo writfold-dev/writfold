@@ -11,6 +11,8 @@
 mod backend_tests;
 pub mod cli;
 #[cfg(test)]
+mod compact_tests;
+#[cfg(test)]
 mod json_tests;
 mod search;
 #[cfg(test)]
@@ -22,7 +24,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 use std::sync::atomic::AtomicBool;
 use std::time::Duration;
-use tuft::emit::{Format, Run, emit};
+use tuft::emit::{Emitted, Format, Run, emit};
 use tuft::locate::{around, line_at};
 use tuft::view::{Evidence, Row, project};
 use tuft::{Deferred, Diagnostic, Plan};
@@ -113,8 +115,8 @@ fn commit(text: &str) -> Result<GitObjectId> {
     Ok(GitObjectId::new(format, text.to_owned())?)
 }
 
-/// Compile and run one program; returns the emitted view.
-pub fn run(invocation: &Invocation<'_>) -> Result<String> {
+/// Compile and run one program; returns the emitted page.
+pub fn run(invocation: &Invocation<'_>) -> Result<Emitted> {
     let plan = compile(invocation.source, invocation.name)?;
     let trial = Trial::open(invocation.state)?;
     let executable = trial.executable()?;

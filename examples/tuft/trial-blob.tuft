@@ -1,7 +1,9 @@
 # Where does Writfold read a pinned blob? Run from a clone of this repository:
 #   writfold trial init
 #   writfold tuft run examples/tuft/trial-blob.tuft --repo .
-# The commit is pinned, so the answer never drifts with your checkout.
+# The commit is pinned, so the answer never drifts with your checkout. It
+# prints `path:line:binding: text` rows and a `# coverage=...` trailer; add
+# --out FILE to write the rows to a new file, or --verbose for the envelope.
 @hits := find text "trial_blob(" in "crates/"
            at "a853c87ef689ad99fc6d0fb225b0374fdc91b9cc" limit 20;
 @ev   := retain @hits around lines 0;        # each hit's whole line

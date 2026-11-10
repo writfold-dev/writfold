@@ -5,9 +5,13 @@ use std::path::{Path, PathBuf};
 use tuft::emit::Format;
 
 pub const USAGE: &str = "\
-writfold tuft run FILE --repo DIR [--state DIR] [--cursor C] [--json]
+writfold tuft run FILE --repo DIR [--state DIR] [--cursor C] [--verbose|--json]
+                  [--out NEW_FILE]
                      run a Tuft v0 program over the pinned commit it names: exact
-                     find, retained citation bindings, a budgeted projection
+                     find, retained citation bindings, a budgeted projection.
+                     Default rows are `path:line: text` plus one `# coverage=...`
+                     trailer; --out writes the view to a new file and prints
+                     only the trailer
 writfold tuft check FILE
                      compile only; print diagnostics or the checked pipeline
 
@@ -19,21 +23,29 @@ are refused until the Omnigraph backend exists.";
 struct Args {
     positional: Vec<String>,
     options: Vec<(String, String)>,
-    json: bool,
+    format: Format,
 }
 
 fn parse(args: &[String]) -> Result<Args> {
     let mut parsed = Args {
         positional: Vec::new(),
         options: Vec::new(),
-        json: false,
+        format: Format::Compact,
     };
     let mut iter = args.iter();
     while let Some(arg) = iter.next() {
-        if arg == "--json" {
-            parsed.json = true;
+        let format = match arg.as_str() {
+            "--json" => Some(Format::Json),
+            "--verbose" => Some(Format::Verbose),
+            _ => None,
+        };
+        if let Some(format) = format {
+            if parsed.format != Format::Compact {
+                return Err("give at most one of --verbose and --json".into());
+            }
+            parsed.format = format;
         } else if let Some(name) = arg.strip_prefix("--") {
-            if !matches!(name, "repo" | "state" | "cursor") {
+            if !matches!(name, "repo" | "state" | "cursor" | "out") {
                 return Err(format!("unknown option --{name}").into());
             }
             let value = iter
@@ -78,6 +90,18 @@ impl Args {
     }
 }
 
+/// Write `view` to a file that must not exist yet; never overwrite.
+fn write_new(path: &Path, view: &str) -> Result<()> {
+    use std::io::Write as _;
+    let mut file = std::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(path)
+        .map_err(|e| format!("--out {}: {e} (refusing to overwrite)", path.display()))?;
+    file.write_all(view.as_bytes())?;
+    Ok(file.sync_all()?)
+}
+
 pub fn main(args: &[String]) -> Result<String> {
     let parsed = parse(args)?;
     match parsed.positional.first().map(String::as_str) {
@@ -86,18 +110,24 @@ pub fn main(args: &[String]) -> Result<String> {
             let source = std::fs::read(file)?;
             let state = parsed.state()?;
             let repo = parsed.option("repo").ok_or("missing --repo")?;
-            run(&Invocation {
+            if let Some(out) = parsed.option("out").filter(|o| Path::new(o).exists()) {
+                return Err(format!("--out {out}: file exists (refusing to overwrite)").into());
+            }
+            let emitted = run(&Invocation {
                 source: &source,
                 name: file,
                 repo: Path::new(repo),
                 state: &state,
                 cursor: parsed.option("cursor"),
-                format: if parsed.json {
-                    Format::Json
-                } else {
-                    Format::Text
-                },
-            })
+                format: parsed.format,
+            })?;
+            match parsed.option("out") {
+                None => Ok(emitted.printed()),
+                Some(out) => {
+                    write_new(Path::new(out), &emitted.view)?;
+                    Ok(emitted.trailer)
+                }
+            }
         }
         Some("check") => {
             let file = parsed.file()?;
