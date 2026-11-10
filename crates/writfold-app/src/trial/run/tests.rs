@@ -121,6 +121,7 @@ fn trial_run(f: &Fixture, tuft: &Path, review: Option<&Path>, bin: &Path) -> Res
         recipe: &f.root.join("edit.spl"),
         tuft: Some(tuft),
         weft: review.map(|r| (r, bin)),
+        weft_sha256: None,
     })
 }
 

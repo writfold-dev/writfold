@@ -86,6 +86,44 @@ fn refusals_are_typed_and_writing_failures_are_unknown() {
 }
 
 #[test]
+fn run_refusals_are_unknown_and_classified_by_the_step_cause() {
+    use crate::trial::run::StepError;
+    let step = |cause: Boxed| -> Boxed {
+        Box::new(StepError {
+            step: "prepare",
+            cause,
+        })
+    };
+    // A step's own pre-effect marker does not prove the run wrote nothing.
+    let decided = step(Box::new(BeforeEffects(Box::new(std::io::Error::from(
+        std::io::ErrorKind::NotFound,
+    )))));
+    let (category, outcome, message) = refusal(TrialMethod::Run, &*decided);
+    assert_eq!(
+        (category, outcome),
+        (TrialCategory::NotFound, TrialOutcome::Unknown)
+    );
+    assert_eq!(message, "step prepare refused: entity not found");
+    let conflict = step(Box::new(crate::ledger::LedgerError::Conflict));
+    assert_eq!(
+        refusal(TrialMethod::Run, &*conflict).0,
+        TrialCategory::Conflict
+    );
+    // The evidence reads write nothing: every refusal is rejected.
+    let tampered: Boxed = "binding b: retained bytes do not match (tampered); refusing".into();
+    for method in [TrialMethod::EvidenceList, TrialMethod::EvidenceShow] {
+        assert_eq!(
+            refusal(method, &*tampered),
+            (
+                TrialCategory::Malformed,
+                TrialOutcome::Rejected,
+                "binding b: retained bytes do not match (tampered); refusing".to_owned()
+            )
+        );
+    }
+}
+
+#[test]
 fn an_oversized_result_refuses_cleanly_and_is_never_truncated() -> TestResult {
     let instance: InstanceId = "stdio-instance".parse()?;
     let incarnation: SessionIncarnation = "stdio-session".parse()?;

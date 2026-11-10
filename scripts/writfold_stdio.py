@@ -170,7 +170,9 @@ class Producer:
         # writfold.trial/1's refusals are exercised here; its methods are not.
         require(contract["implementation_scope"] == "transport-control-only" and
                 contract["implemented_methods"] == ["initialize", "shutdown", "trial/show",
-                                                    "trial/retain", "trial/prepare"] and
+                                                    "trial/retain", "trial/prepare", "trial/run",
+                                                    "trial/evidence-list",
+                                                    "trial/evidence-show"] and
                 contract["advertised_capabilities"] == ["notifications", "writfold.trial/1"],
                 "Unexpected contract scope")
         require(set(blobs) == {"contract.json", "LICENSE", *(item["path"] for item in contract["files"])},

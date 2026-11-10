@@ -25,7 +25,10 @@
     "shutdown",
     "trial/show",
     "trial/retain",
-    "trial/prepare"
+    "trial/prepare",
+    "trial/run",
+    "trial/evidence-list",
+    "trial/evidence-show"
   ],
   "advertised_capabilities": [
     "notifications",
@@ -38,7 +41,10 @@
       "methods": [
         "trial/show",
         "trial/retain",
-        "trial/prepare"
+        "trial/prepare",
+        "trial/run",
+        "trial/evidence-list",
+        "trial/evidence-show"
       ],
       "method_schemas": "trial-methods.json is the complete methods advertisement of a session that negotiated this capability; methods.json is the advertisement without it.",
       "cli_only": {
@@ -49,8 +55,8 @@
         ],
         "rule": "Not registered: each is Method not found (-32601) in every session state. The operator key decides an approval and an agent session must not approve its own edit; apply and recover stay with the operator's CLI too."
       },
-      "state": "Fixed at server startup by `writfold serve --state DIR` or WRITFOLD_STATE; never a request parameter. Without it, initialize requesting writfold.trial/1 refuses as an unsupported capability.",
-      "parameters": "Closed objects; unknown, missing or mistyped fields are Invalid params (-32602). repo, recipe and report are absolute host paths; file is a plain repository-relative path; start/end are u64 integer tokens selecting bytes [start, end).",
+      "state": "Fixed at server startup by `writfold serve --state DIR` or WRITFOLD_STATE; never a request parameter. Without it, initialize requesting writfold.trial/1 refuses as an unsupported capability. The Weft binary trial/run may execute is likewise fixed at startup by `--weft PATH` (canonicalized and sha256-recorded before any request), never named by a client; a run whose binary no longer has that digest refuses its Weft step.",
+      "parameters": "Closed objects; unknown, missing or mistyped fields are Invalid params (-32602), including any client-supplied binary field such as weft_bin. repo, recipe, report, tuft and weft are absolute host paths; file is a plain repository-relative path; start/end/limit/context_lines are u64 integer tokens, start/end selecting bytes [start, end).",
       "refusal_order": [
         "method lookup (approve/apply/recover and any unregistered name: -32601)",
         "session state (before initialize or after shutdown: -32002)",
@@ -59,11 +65,12 @@
         "parameters (-32602)",
         "the same application function as the CLI"
       ],
-      "results": "Shutdown-shaped envelope: exit_code 0, complete true, generation, session and the method payload. trial/show's text is exactly the CLI's output; trial/prepare does not report the worktree path.",
-      "refusals": "Application refusals are -32000 Operation failed with category not-found/E101, malformed/E102, conflict/E104 (ledger step refused or head moved), incomplete/E105 (Git/IO/ledger failure, or result over the frame budget) or permission/E106, chosen by error type. data.message is exactly the text the CLI prints after `writfold: `.",
-      "outcomes": "rejected: trial/show, or a refusal decided before any write. unknown (exit_code null): trial/retain or trial/prepare failed after it may have written; observe with trial/show or the CLI before retrying.",
-      "budget": "A result that would exceed max_response_bytes refuses with incomplete/E105; it is never truncated. For prepare/retain the refusal names the run or binding and reports outcome unknown.",
-      "latency": "Agent-facing budget: p95 at most 1 s per call and at most 250 ms for trial/show; hard ceiling 5 s."
+      "results": "Shutdown-shaped envelope: exit_code 0, complete true, generation, session and the method payload. trial/show's, trial/run's and trial/evidence-show's text and trial/evidence-list's rows and trailer are exactly the CLI's output; trial/prepare and trial/run do not report the worktree path. trial/run stops at a prepared edit: it never approves or applies.",
+      "refusals": "Application refusals are -32000 Operation failed with category not-found/E101, malformed/E102, conflict/E104 (ledger step refused or head moved), incomplete/E105 (Git/IO/ledger failure, or result over the frame budget) or permission/E106, chosen by error type. data.message is exactly the text the CLI prints after `writfold: `. trial/run with weft on a server started without --weft refuses not-found/E101, outcome rejected, before any step runs.",
+      "outcomes": "rejected: trial/show, trial/evidence-list, trial/evidence-show, or a refusal decided before any write (including trial/run with weft and no server --weft). unknown (exit_code null): trial/retain, trial/prepare or trial/run failed after it may have written; a trial/run step refusal is always unknown because an earlier step may already have retained evidence or written the substituted Weft source and report. Observe with trial/show, trial/evidence-list or the CLI before retrying.",
+      "budget": "A result that would exceed max_response_bytes refuses with incomplete/E105; it is never truncated. For prepare/run/retain the refusal names the run or binding and reports outcome unknown; for evidence-list it asks for a narrower path, commit or limit.",
+      "latency": "Agent-facing budget: p95 at most 1 s per call and at most 250 ms for trial/show, trial/evidence-list and trial/evidence-show; hard ceiling 5 s. trial/run's Weft step runs the server's pinned Weft binary for up to its 30 s step limit, which is outside this budget; no durable handle is returned for it yet.",
+      "revision": "Revision 2 of this capability (10 November 2026) adds trial/run, trial/evidence-list and trial/evidence-show; trial/show, trial/retain and trial/prepare and every refusal are unchanged, so a client of the first revision keeps working. Clients pin the contract digest, which changes."
     }
   },
   "identity": {
@@ -71,7 +78,7 @@
     "incarnation": "Independent ephemeral session label, not a grant.",
     "generation": "Unsigned 64-bit invocation counter; first admitted envelope is 1, every valid envelope including notifications/refusals consumes one, malformed JSON/envelopes consume none. Exhaustion refuses and closes; no wrap/reuse. Not CitationTableGeneration.",
     "integer_request_ids": "Preserve arbitrary-precision signed integer lexical tokens. Fraction/exponent tokens are invalid even when mathematically integral. Parsed integer -0 normalizes to 0. Strings and explicit null remain distinct; missing id is a notification only after envelope admission.",
-    "durable_citations": "The included writfold-citation/1 descriptor schema names candidate immutable material only; it does not expose a citation reader RPC, acquire corpus bytes, authenticate a release, or grant access. trial/retain binds exact bytes in the cooperating trial state only."
+    "durable_citations": "The included writfold-citation/1 descriptor schema names candidate immutable material only; it does not expose a corpus citation reader, acquire corpus bytes, authenticate a release, or grant access. trial/retain and trial/run bind exact bytes in the cooperating trial state only; trial/evidence-list and trial/evidence-show read back and verify those bytes."
   },
   "lifecycle": {
     "precedence": [
@@ -102,7 +109,7 @@
     "oversized": "Drain through LF/EOF with bounded memory, report Invalid Request with null id/generation, then continue if input remains.",
     "encoding_failure": "Terminate without emitting a partial reply, truncating or substituting the ID; no successful lifecycle change precedes successful complete encoding.",
     "notifications": "Well-formed notifications execute lifecycle; method/param/state failures emit nothing. A trial method sent as a notification is not run, because it could not report its outcome. Invalid JSON/envelopes still receive errors.",
-    "effects": "Without writfold.trial/1 no corpus, retained-release, grounding, publication, ledger or effect service exists and no child process is launched. With it, trial/retain and trial/prepare write the configured trial state and launch the state's admitted Git executable exactly as the CLI does; nothing writes the user's checkout, and no approval, apply or recovery is reachable."
+    "effects": "Without writfold.trial/1 no corpus, retained-release, grounding, publication, ledger or effect service exists and no child process is launched. With it, trial/retain, trial/prepare and trial/run write the configured trial state and launch the state's admitted Git executable exactly as the CLI does; trial/run with weft also runs the Weft binary the operator fixed at startup with --weft, never one a client names. Nothing writes the user's checkout, and no approval, apply or recovery is reachable."
   },
   "validation": {
     "schema_dialect": "https://json-schema.org/draft/2020-12/schema",
@@ -131,8 +138,8 @@
     },
     {
       "path": "trial-methods.json",
-      "sha256": "f0d41cbb2ea22f482749f32b30a349e4ff9a91fc63d7fd1be636019b45b73d40",
-      "bytes": 2070
+      "sha256": "d3faded7e17e9f77408e8c5116eeb357b01b8b992abfae7add5b13a6bc8873c6",
+      "bytes": 4226
     },
     {
       "path": "request.schema.json",
@@ -141,8 +148,8 @@
     },
     {
       "path": "response.schema.json",
-      "sha256": "c0228ecf6dd5944440817ffdcafec2ea4a429243dd60b669a2d338afd4398237",
-      "bytes": 25443
+      "sha256": "a7f8214d0f74f040ff666cd1cfb90b67d0b3af8091bd7604b9816928261173ca",
+      "bytes": 33481
     },
     {
       "path": "citation-binding.schema.json",

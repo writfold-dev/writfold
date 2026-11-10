@@ -180,6 +180,9 @@ pub fn row(entry: &Entry) -> String {
     )
 }
 
+/// The page size of a `list` that names none (CLI and `serve` alike).
+pub const DEFAULT_LIMIT: usize = 100;
+
 /// The filters and page of one `list`.
 pub struct Query<'a> {
     pub path: Option<&'a str>,

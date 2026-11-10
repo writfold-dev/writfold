@@ -54,6 +54,9 @@ pub struct Request<'a> {
     pub tuft: Option<&'a Path>,
     /// The Weft review source and the Weft binary to run it with.
     pub weft: Option<(&'a Path, &'a Path)>,
+    /// The sha256 the Weft binary must have (pinned when `serve` started);
+    /// `None` on the CLI, where the operator names the binary per command.
+    pub weft_sha256: Option<&'a str>,
 }
 
 pub struct WeftStep {
@@ -102,7 +105,7 @@ fn run_weft(
     std::fs::create_dir_all(&dir)?;
     let source_path = dir.join(format!("{source_sha256}.weft"));
     std::fs::write(&source_path, &source)?;
-    let assessed = weft::assess(bin, &source_path)?;
+    let assessed = weft::assess(bin, &source_path, request.weft_sha256)?;
     let report_path = dir.join(format!(
         "{}.report.json",
         weft::sha256_hex(&assessed.report)

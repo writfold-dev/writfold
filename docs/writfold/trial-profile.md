@@ -54,7 +54,8 @@ It runs, in order, exactly what the separate commands run:
 
 The first failure stops the run and names its step (`step weft refused: ...`).
 A refused `prepare` leaves no worktree, as it always does. `approve`, `apply`
-and `recover` stay separate commands.
+and `recover` stay separate commands. An agent can make the same call over
+`serve` as [`trial/run`](#through-serve); it stops at the same place.
 
 **Citation template.** Inside the Weft source given to `trial run` only,
 `citation "tuft:@VIEW#N"` stands for the N-th row (from 1) of the Tuft view
@@ -155,27 +156,31 @@ descriptor or report, and `show` prints the full digest it resolved to. The
 same holds for the 12-hex abbreviation in `list` rows. Cite the full digest.
 Tuft's `retain` does not take a label yet.
 
-`evidence list/show` are CLI-only: `writfold.trial/1` advertises exactly three
-methods through the pinned `contracts/agent-stdio/1/trial-methods.json`, so new
-serve methods need a contract revision rather than an in-place addition.
-Latency with 1,001 retained bindings on the 100,000-file repository:
+`evidence list/show` are also served as `trial/evidence-list` and
+`trial/evidence-show` ([through serve](#through-serve)); `labels` and `list
+--out` stay CLI-only. Latency with 1,001 retained bindings on the 100,000-file repository:
 [`bench/2026-11-10-evidence-latency`](../../bench/2026-11-10-evidence-latency/README.md).
 
 ## Through serve
 
-An agent can run `show`, `retain` and `prepare` over `writfold serve`
-(JSON-RPC 2.0 over bounded stdio, profile `writfold.agent/1`) by negotiating the
-`writfold.trial/1` capability. Each method calls exactly the function the CLI
-calls (`crates/writfold-app/src/trial/{show,retain,prepare}.rs`), so the same
-input gets the same decision and the same message.
+An agent can run `show`, `retain`, `prepare`, `run`, `evidence list` and
+`evidence show` over `writfold serve` (JSON-RPC 2.0 over bounded stdio, profile
+`writfold.agent/1`) by negotiating the `writfold.trial/1` capability. Each
+method calls exactly the function the CLI calls
+(`crates/writfold-app/src/trial/{show,retain,prepare}.rs`, `run::run` and
+`run::render`, `evidence::list` and `evidence::show`), so the same input gets
+the same decision and the same message.
 
 ```sh
-writfold serve --state "$WRITFOLD_STATE"     # or set WRITFOLD_STATE and run: writfold serve
+writfold serve --state "$WRITFOLD_STATE" --weft /abs/weft   # --weft only for trial/run Weft checks
 {"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocol_version":"2","capabilities":["writfold.trial/1"]}}
 {"jsonrpc":"2.0","id":2,"method":"trial/retain","params":{"repo":"/abs/repo","commit":"<full-sha>","file":"src/client.rs","start":0,"end":120}}
 {"jsonrpc":"2.0","id":3,"method":"trial/prepare","params":{"repo":"/abs/repo","file":"src/client.rs","recipe":"/abs/add-retry.spl","report":"/abs/report.json"}}
 {"jsonrpc":"2.0","id":4,"method":"trial/show","params":{"run":"run.1794262902.0f9dfb"}}
-{"jsonrpc":"2.0","id":5,"method":"shutdown"}
+{"jsonrpc":"2.0","id":5,"method":"trial/run","params":{"repo":"/abs/repo","file":"src/client.rs","recipe":"/abs/edit.spl","tuft":"/abs/q.tuft","weft":"/abs/review.weft"}}
+{"jsonrpc":"2.0","id":6,"method":"trial/evidence-list","params":{"path":"src/"}}
+{"jsonrpc":"2.0","id":7,"method":"trial/evidence-show","params":{"binding":"29aa4846bd82","context_lines":2,"repo":"/abs/repo"}}
+{"jsonrpc":"2.0","id":8,"method":"shutdown"}
 ```
 
 The state directory is fixed when the server starts (`--state DIR`, else
@@ -189,15 +194,34 @@ advertises exactly the control methods and `notifications`, as before.
 | `trial/show` | `run` | `run`, `text`: exactly what `writfold trial show` prints |
 | `trial/retain` | `repo` (absolute), `commit` (full id), `file` (relative), `start`, `end` (u64, bytes `[start, end)`) | `binding`, `file`, `commit`, `start`, `end` |
 | `trial/prepare` | `repo`, `recipe` (absolute), `file` (relative), optional `report` (absolute) | `run`, `file`, `base`, `prepared`, `splices` (`start`, `end`, `inserted`) |
+| `trial/run` | `repo`, `recipe` (absolute), `file` (relative), optional `tuft` (absolute), optional `weft` (absolute review source; checked with the server's `--weft` binary) | `prepare`'s fields, `resolved` (`placeholder`, `binding`, `path`, `line`), `checks` (`name`, `result`, as Weft states them), `text`: exactly what `writfold trial run` prints |
+| `trial/evidence-list` | optional `path`, `commit` (prefixes), `limit` (u64, default 100) | `rows`, `trailer`: exactly the CLI's rows and `# count=… shown=… omitted=…[ refused=…]` trailer |
+| `trial/evidence-show` | `binding` (full digest, unique 8+ hex prefix or label), optional `context_lines` (u64) with `repo` (absolute) | `binding` (the full digest it resolved to), `file`, `commit`, `start`, `end`, `line` (or null), `text`: exactly what `writfold trial evidence show` prints |
 
 Results use the shutdown-shaped envelope (`exit_code` 0, `complete`,
-`generation`, `session`, `payload`). `prepare` does not report the worktree
-path, because the CLI does not print it either.
+`generation`, `session`, `payload`). `prepare` and `run` do not report the
+worktree path, because the CLI does not print it either.
+
+**`trial/run` stops at a prepared edit.** It runs the same steps as
+[`writfold trial run`](#one-command) and never approves or applies: afterwards
+the run holds exactly its `Prepared` record, and its `text` ends with the CLI
+command to approve.
+
+**The client never names a binary.** The Weft binary `trial/run` may execute is
+fixed when the server starts, `writfold serve --weft PATH`: canonicalized and
+its sha256 recorded before any request, as `--state` is. A request has no
+binary parameter; `weft_bin` (or any such field) is an unknown field, -32602.
+Over stdio the client is the agent, and letting it choose a program for the
+server to execute would cross the boundary the operator controls. Before the
+Weft step runs, the pinned binary is read again and must still have its
+recorded digest, or the step refuses (`step weft refused: the Weft binary …
+changed since it was pinned`). A server started without `--weft` refuses a
+`trial/run` that names `weft` (below); runs without `weft` need no binary.
 
 **Approve, apply and recover stay CLI-only.** There is no `trial/approve`,
 `trial/apply` or `trial/recover` method; each is Method not found (-32601) in
-every session state. The operator key decides an approval, and an agent session
-must not approve its own edit. Apply and recover also stay with the operator's
+every session state, and no parameter of `trial/run` reaches them. The operator
+key decides an approval, and an agent session must not approve its own edit. Apply and recover also stay with the operator's
 CLI for now: apply installs into the worktree under the operator's grant, and
 recovery decides an Unknown outcome that a person may need to resolve. Moving
 either behind `serve` would need its own owner decision and tests.
@@ -210,33 +234,84 @@ Refusals are checked in this order, with the existing typed faults:
 | Trial method before `initialize` (or after `shutdown`) | -32002 | conflict | Initialization required (or shut down) |
 | Session did not negotiate `writfold.trial/1` | -32000 | malformed | Unsupported requested capability |
 | Sent as a notification | — | — | Not run; nothing is emitted, since it could not report its outcome |
-| Unknown, missing or mistyped parameter; relative host path | -32602 | malformed | Invalid params |
+| Unknown, missing or mistyped parameter (including a client-supplied binary such as `weft_bin`); relative host path | -32602 | malformed | Invalid params |
 | The trial function refused | -32000 | by error type | `data.message` is exactly the text the CLI prints after `writfold: ` |
+
+The application refusals of the six methods, by `data.category`, diagnostic
+code and `data.outcome` (`exit_code` 1 when `rejected`, null when `unknown`):
+
+| Method | Refusal | Category / code | Outcome |
+|---|---|---|---|
+| `trial/show`, `trial/evidence-list`, `trial/evidence-show` | any | by error type | `rejected` (read-only) |
+| `trial/evidence-show` | tampered evidence (retained bytes or descriptor fail verification) | `malformed` / E102 | `rejected` |
+| `trial/evidence-show` | binding not retained, ambiguous or unknown prefix or label | `malformed` / E102 | `rejected` |
+| `trial/evidence-list` | result over the frame budget | `incomplete` / E105 | `rejected`; narrow `path`, `commit` or `limit` |
+| `trial/retain`, `trial/prepare` | decided before any write | by error type | `rejected` |
+| `trial/retain`, `trial/prepare` | failed after it may have written | by error type | `unknown` |
+| `trial/run` | `weft` given, but the server was started without `--weft` (typed `WeftNotConfigured`, decided before any step) | `not-found` / E101 | `rejected` |
+| `trial/run` | the pinned Weft binary changed since startup | `malformed` / E102 (`step weft refused: …`) | `unknown` |
+| `trial/run` | any step (`step S refused: …`) | by the step's own error type | `unknown` (see below) |
+| `trial/prepare`, `trial/run` | result over the frame budget | `incomplete` / E105 | `unknown`; the message names the run |
+
+`trial/evidence-list` never shows an entry that fails verification; it counts
+it as `refused=R` in the trailer, as the CLI does.
+
+**Why a refused `trial/run` is `unknown`.** The steps write as they go: `tuft`
+retains its hits as evidence, `weft` writes the substituted source and Weft's
+report into the state, and `prepare` may create and then remove a worktree.
+A step that refuses before its own writes (a `prepare` report refusal, say) can
+follow a step that already wrote, and the run cannot tell from the refusal
+alone, so it never claims `rejected`. Observe with `trial/evidence-list` or
+`trial/show` before retrying. The only `rejected` run refusals are those
+decided before the first step: invalid parameters and a missing `--weft`.
 
 Trial refusal categories come from the error's type, never its text:
 `conflict`/E104 for a ledger refusal or moved head, `not-found`/E101 and
 `permission`/E106 for those host errors, `incomplete`/E105 for other Git, IO or
 ledger failures and for a result over the 65,536-byte frame budget, and
 `malformed`/E102 for the application's own input refusals (bad report, recipe,
-path, range or commit). The outcome is `rejected` for `trial/show` and for a
-refusal decided before anything was written (the CLI-side marker
-`BeforeEffects`, displayed exactly as its cause). A `retain` or `prepare` that
-fails after it may have written reports `unknown` with `exit_code` null:
-observe with `trial/show` before retrying. An oversized result is refused, never
-truncated; for `prepare` the refusal names the run.
+path, range or commit, tampered or unresolved evidence). For a `trial/run`
+step the category comes from the step's own cause. The outcome is `rejected`
+for the read-only methods and for a refusal decided before anything was written
+(the CLI-side marker `BeforeEffects`, displayed exactly as its cause). A
+`retain`, `prepare` or `run` that fails after it may have written reports
+`unknown` with `exit_code` null: observe with `trial/show` or
+`trial/evidence-list` before retrying. An oversized result is refused, never
+truncated; for `prepare` and `run` the refusal names the run.
 
 Measured through one `serve` session per repository (release host build, WSL2,
 10 calls each; [`bench/2026-11-09-serve-latency`](../../bench/2026-11-09-serve-latency/results.json),
 `bench/latency/serve.py`): on the 100,000-file repository `trial/retain` p95
 27 ms, `trial/prepare` p95 166 ms, `trial/show` p95 53 ms; on the small one
 41, 184 and 53 ms. All are within the 1 s p95 target (250 ms for `show`).
+For the revision adding `trial/run` and `trial/evidence-*`
+([`bench/2026-11-10-serve-run-evidence-latency`](../../bench/2026-11-10-serve-run-evidence-latency/README.md),
+`bench/latency/serve_run_evidence.py`, a stub Weft fixed by `serve --weft`,
+1,001 retained bindings on the 100,000-file repository): p95 393 ms for
+`trial/run`, 29 ms for `trial/evidence-list` (26 ms with a path filter), 0.3 ms
+for `trial/evidence-show` and 12 ms with three context lines. The real Weft is
+not timed: its step may take up to 30 s, outside the 5 s ceiling, and
+`trial/run` does not yet return a durable handle for such work.
 
 The published contract (`crates/writfold-wire/contracts/agent-stdio/1/`) carries
 the trial method schemas (`trial-methods.json`), result and refusal schemas, and
-state-free negotiation vectors. A fresh WF13 `stdio-control` receipt binds this
-contract and the executable Weft's `control` gate now pins (`91a1924f…`); its
-vectors exercise negotiation and the CLI-only refusals, while the trial methods
-themselves are covered by tests, not a gate receipt.
+state-free negotiation vectors. A WF13 `stdio-control` receipt binds the first
+revision's contract (`0baf69b2…`) and the executable Weft's `control` gate pins
+(`91a1924f…`); its vectors exercise negotiation and the CLI-only refusals, while
+the trial methods themselves are covered by tests, not a gate receipt.
+
+**Revision, not a new capability.** `trial/run` and `trial/evidence-*` were
+added on 10 November 2026 as a revision of `writfold.trial/1`, not as
+`writfold.trial/2`: the existing three methods, their parameters, results and
+refusals are unchanged, so a client of the first revision keeps working with the
+same capability spelling. The contract records this in the capability's
+`revision` field. The contract digest changes to `bfa436ba…` (archive
+`eb5f4114…`); a client that pins the digest must re-pin, as it would for any
+contract change. No fresh WF13 receipt binds the new contract yet. Tests:
+`crates/writfold/tests/serve_trial_run.rs` (a real-process round trip per method
+compared with the CLI, a run left in the prepared state, tampered evidence,
+an unnegotiated session, a client-supplied binary refused, a missing `--weft`
+and a pinned binary changed after startup) and the engine, wire and refusal-mapping unit tests.
 
 ## What it does not do
 

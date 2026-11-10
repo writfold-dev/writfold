@@ -13,7 +13,7 @@ pub fn main(args: &[String], options: &[(String, String)], state: &Path) -> Resu
     };
     match args {
         [cmd] if cmd == "list" => {
-            let limit = option("limit").map_or(Ok(100), str::parse)?;
+            let limit = option("limit").map_or(Ok(super::DEFAULT_LIMIT), str::parse)?;
             let query = Query {
                 path: option("path"),
                 commit: option("commit"),

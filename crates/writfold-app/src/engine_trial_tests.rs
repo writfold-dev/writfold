@@ -113,8 +113,11 @@ fn trial_is_admitted_only_when_requested_and_a_state_is_configured() -> TestResu
         [
             "initialize",
             "shutdown",
+            "trial/evidence-list",
+            "trial/evidence-show",
             "trial/prepare",
             "trial/retain",
+            "trial/run",
             "trial/show"
         ]
     );
@@ -142,6 +145,11 @@ fn lifecycle_and_negotiation_refuse_before_any_trial_function() -> TestResult {
     let (code, category, message) = fault(send(&mut engine, &show)?)?;
     assert_eq!((code, category.as_str()), (-32000, "malformed"));
     assert_eq!(message, "unsupported requested capability");
+    for method in ["trial/run", "trial/evidence-list", "trial/evidence-show"] {
+        let refused = fault(send(&mut engine, &call(method, "{}"))?)?;
+        assert_eq!(refused.0, -32000, "{method}");
+        assert_eq!(refused.2, "unsupported requested capability", "{method}");
+    }
     // The capability cannot be negotiated late.
     let (code, category, _) = fault(send(&mut engine, INIT)?)?;
     assert_eq!((code, category.as_str()), (-32000, "conflict"));
@@ -210,6 +218,15 @@ fn parameters_are_strict_and_notifications_do_not_run() -> TestResult {
         (
             "trial/prepare",
             r#"{"repo":"/r","file":"f","recipe":"/r.spl","state":"/s"}"#.to_owned(),
+        ),
+        (
+            "trial/run",
+            r#"{"repo":"/r","file":"f","recipe":"/r.spl","weft":"/w","weft_bin":"/b"}"#.to_owned(),
+        ),
+        ("trial/evidence-list", r#"{"out":"/f"}"#.to_owned()),
+        (
+            "trial/evidence-show",
+            r#"{"binding":"b","repo":"r"}"#.to_owned(),
         ),
     ] {
         let (code, _, _) = fault(send(&mut engine, &call(method, &params))?)?;

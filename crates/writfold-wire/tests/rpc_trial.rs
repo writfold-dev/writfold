@@ -8,7 +8,10 @@ use writfold_wire::rpc::response::{
     Success, TRIAL_METHOD_SCHEMAS, TrialCategory, TrialOutcome, TrialRefusal, encode_success,
     encode_trial_refusal, encode_trial_success,
 };
-use writfold_wire::rpc::trial::{PrepareParams, RetainParams, ShowParams, TrialMethod};
+use writfold_wire::rpc::trial::{
+    EvidenceListParams, EvidenceShowParams, PrepareParams, RetainParams, RunParams, ShowParams,
+    TrialMethod,
+};
 use writfold_wire::rpc::{Capability, Initialize, ParamsError, RequestId};
 
 type TestResult<T = (), E = Box<dyn std::error::Error>> = Result<T, E>;
@@ -18,11 +21,16 @@ fn value(text: &str) -> TestResult<Value> {
 }
 
 #[test]
-fn only_show_retain_and_prepare_are_registered() {
+fn only_the_six_trial_methods_are_registered() {
     for (name, method) in [
         ("trial/show", Some(TrialMethod::Show)),
         ("trial/retain", Some(TrialMethod::Retain)),
         ("trial/prepare", Some(TrialMethod::Prepare)),
+        ("trial/run", Some(TrialMethod::Run)),
+        ("trial/evidence-list", Some(TrialMethod::EvidenceList)),
+        ("trial/evidence-show", Some(TrialMethod::EvidenceShow)),
+        ("trial/evidence-labels", None),
+        ("trial/evidence", None),
         ("trial/approve", None),
         ("trial/apply", None),
         ("trial/recover", None),
@@ -30,9 +38,89 @@ fn only_show_retain_and_prepare_are_registered() {
         ("trial/show ", None),
     ] {
         assert_eq!(TrialMethod::lookup(name), method, "{name}");
+        if let Some(method) = method {
+            assert_eq!(method.as_str(), name);
+        }
     }
     assert!(!TrialMethod::Show.writes());
+    assert!(!TrialMethod::EvidenceList.writes() && !TrialMethod::EvidenceShow.writes());
     assert!(TrialMethod::Retain.writes() && TrialMethod::Prepare.writes());
+    assert!(TrialMethod::Run.writes());
+}
+
+#[test]
+fn run_and_evidence_parameters_are_closed_typed_and_absolute() -> TestResult {
+    let run =
+        value(r#"{"repo":"/r","file":"f","recipe":"/x.spl","tuft":"/q.tuft","weft":"/w.weft"}"#)?;
+    let parsed = RunParams::parse(Some(&run))?;
+    assert_eq!(parsed.weft, Some("/w.weft"));
+    assert_eq!(parsed.tuft, Some("/q.tuft"));
+    let bare = value(r#"{"repo":"/r","file":"f","recipe":"/x"}"#)?;
+    let bare = RunParams::parse(Some(&bare))?;
+    assert_eq!((bare.tuft, bare.weft), (None, None));
+    for (text, error) in [
+        // The client never names a binary: the server's is fixed at startup.
+        (
+            r#"{"repo":"/r","file":"f","recipe":"/x","weft":"/w","weft_bin":"/b"}"#,
+            ParamsError::UnknownField,
+        ),
+        (
+            r#"{"repo":"/r","file":"f","recipe":"/x","weft_bin":"/b"}"#,
+            ParamsError::UnknownField,
+        ),
+        (
+            r#"{"repo":"/r","file":"f","recipe":"/x","weft-bin":"/b"}"#,
+            ParamsError::UnknownField,
+        ),
+        (
+            r#"{"repo":"/r","file":"f","recipe":"/x","weft":"w.weft"}"#,
+            ParamsError::InvalidField,
+        ),
+        (
+            r#"{"repo":"/r","file":"f","recipe":"/x","tuft":"q.tuft"}"#,
+            ParamsError::InvalidField,
+        ),
+        (
+            r#"{"repo":"/r","file":"f","recipe":"/x","approve":true}"#,
+            ParamsError::UnknownField,
+        ),
+        (
+            r#"{"repo":"/r","file":"f","recipe":"/x","state":"/s"}"#,
+            ParamsError::UnknownField,
+        ),
+    ] {
+        assert_eq!(RunParams::parse(Some(&value(text)?)), Err(error), "{text}");
+    }
+    let empty = value(r#"{}"#)?;
+    let list = EvidenceListParams::parse(Some(&empty))?;
+    assert_eq!((list.path, list.commit, list.limit), (None, None, None));
+    let list = value(r#"{"path":"src/","commit":"81071d8","limit":3}"#)?;
+    assert_eq!(EvidenceListParams::parse(Some(&list))?.limit, Some(3));
+    for text in [
+        r#"{"limit":-1}"#,
+        r#"{"limit":1.0}"#,
+        r#"{"out":"/f"}"#,
+        r#"{"path":""}"#,
+    ] {
+        assert!(
+            EvidenceListParams::parse(Some(&value(text)?)).is_err(),
+            "{text}"
+        );
+    }
+    let show = value(r#"{"binding":"entry","context_lines":2,"repo":"/r"}"#)?;
+    let parsed = EvidenceShowParams::parse(Some(&show))?;
+    assert_eq!((parsed.context_lines, parsed.repo), (Some(2), Some("/r")));
+    for text in [
+        r#"{}"#,
+        r#"{"binding":"b","repo":"r"}"#,
+        r#"{"binding":"b","x":1}"#,
+    ] {
+        assert!(
+            EvidenceShowParams::parse(Some(&value(text)?)).is_err(),
+            "{text}"
+        );
+    }
+    Ok(())
 }
 
 #[test]
@@ -118,7 +206,7 @@ fn the_trial_advertisement_extends_the_control_one() -> TestResult {
     let trial: Value = serde_json::from_str(TRIAL_METHOD_SCHEMAS)?;
     assert_eq!(trial["initialize"], control["initialize"]);
     assert_eq!(trial["shutdown"], control["shutdown"]);
-    assert_eq!(trial.as_object().ok_or("methods")?.len(), 5);
+    assert_eq!(trial.as_object().ok_or("methods")?.len(), 8);
     let metadata = Metadata::new()?;
     let bytes = encode_success(
         RequestId::Null,

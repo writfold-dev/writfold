@@ -33,14 +33,42 @@ pub fn sha256_hex(bytes: &[u8]) -> String {
         .collect()
 }
 
-/// Run `bin prove --json -- source` and read its report.
-pub fn assess(bin: &Path, source: &Path) -> Result<Assessed> {
-    let bin =
-        std::fs::canonicalize(bin).map_err(|e| format!("--weft-bin {}: {e}", bin.display()))?;
-    if !bin.is_file() {
-        return Err(format!("--weft-bin {} is not a file", bin.display()).into());
+/// A Weft binary fixed by the operator before any request: its canonical path
+/// and the sha256 it had then (`writfold serve --weft PATH`).
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Pinned {
+    pub bin: PathBuf,
+    pub sha256: String,
+}
+
+fn canonical(bin: &Path) -> Result<PathBuf> {
+    let canonical =
+        std::fs::canonicalize(bin).map_err(|e| format!("Weft binary {}: {e}", bin.display()))?;
+    if !canonical.is_file() {
+        return Err(format!("Weft binary {} is not a file", canonical.display()).into());
     }
+    Ok(canonical)
+}
+
+/// Resolve and digest `bin` once, at startup.
+pub fn pin(bin: &Path) -> Result<Pinned> {
+    let bin = canonical(bin)?;
+    let sha256 = sha256_hex(&std::fs::read(&bin)?);
+    Ok(Pinned { bin, sha256 })
+}
+
+/// Run `bin prove --json -- source` and read its report. With `pinned`, the
+/// binary must still have that digest when it is read just before running.
+pub fn assess(bin: &Path, source: &Path, pinned: Option<&str>) -> Result<Assessed> {
+    let bin = canonical(bin)?;
     let bin_sha256 = sha256_hex(&std::fs::read(&bin)?);
+    if let Some(pinned) = pinned.filter(|p| *p != bin_sha256) {
+        return Err(format!(
+            "the Weft binary {} changed since it was pinned (sha256 {bin_sha256}, pinned {pinned})",
+            bin.display()
+        )
+        .into());
+    }
     let mut child = Command::new(&bin)
         .args(["prove", "--json", "--"])
         .arg(source)

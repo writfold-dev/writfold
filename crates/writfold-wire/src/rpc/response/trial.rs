@@ -125,6 +125,59 @@ pub struct PreparePayload<'a> {
     pub splices: &'a [SpliceSummary],
 }
 
+/// One `citation "tuft:@VIEW#N"` template `trial/run` replaced.
+#[derive(Serialize)]
+pub struct ResolvedCitation<'a> {
+    pub placeholder: &'a str,
+    pub binding: &'a str,
+    pub path: &'a str,
+    pub line: u64,
+}
+
+/// One check of the Weft report `trial/run` produced, as Weft states it
+/// (local and hypothetical, never grounded).
+#[derive(Serialize)]
+pub struct CheckSummary<'a> {
+    pub name: &'a str,
+    pub result: &'a str,
+}
+
+/// `trial/run` payload: the prepared edit (as `trial/prepare` reports it), the
+/// resolved citation templates and Weft checks (empty without a Weft step),
+/// and `text`, exactly what `writfold trial run` prints. The run stops before
+/// approval; the next step is the CLI's `writfold trial approve`.
+#[derive(Serialize)]
+pub struct RunPayload<'a> {
+    pub run: &'a str,
+    pub file: &'a str,
+    pub base: &'a str,
+    pub prepared: &'a str,
+    pub splices: &'a [SpliceSummary],
+    pub resolved: &'a [ResolvedCitation<'a>],
+    pub checks: &'a [CheckSummary<'a>],
+    pub text: &'a str,
+}
+
+/// `trial/evidence-list` payload: exactly the CLI's rows and trailer.
+#[derive(Serialize)]
+pub struct EvidenceListPayload<'a> {
+    pub rows: &'a [String],
+    pub trailer: &'a str,
+}
+
+/// `trial/evidence-show` payload: the full digest the request resolved to,
+/// its verified source, and `text`, exactly what the CLI prints.
+#[derive(Serialize)]
+pub struct EvidenceShowPayload<'a> {
+    pub binding: &'a str,
+    pub file: &'a str,
+    pub commit: &'a str,
+    pub start: u64,
+    pub end: u64,
+    pub line: Option<u64>,
+    pub text: &'a str,
+}
+
 fn envelope<T: Serialize>(
     id: RequestId<'_>,
     member: &[u8],
