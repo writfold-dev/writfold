@@ -9,6 +9,7 @@ pub mod design_workflow;
 pub mod ledger;
 pub mod portfolio;
 pub mod procedure;
+pub mod publication;
 pub mod time;
 pub mod trial;
 pub mod wellformed;

@@ -101,4 +101,12 @@ pub trait StorageBackend {
         let _ = (request, cancelled);
         Err(Refusal::Unavailable(Capability::Write))
     }
+
+    /// Ensure the retention root of `pin`, the current head, so an exact read
+    /// of a head left by an interrupted write is admitted. Idempotent; writes
+    /// no record and never moves the head. Writer instances only.
+    fn retain(&mut self, pin: &Self::Pin, cancelled: &AtomicBool) -> Result<(), Refusal> {
+        let _ = (pin, cancelled);
+        Err(Refusal::Unavailable(Capability::Write))
+    }
 }

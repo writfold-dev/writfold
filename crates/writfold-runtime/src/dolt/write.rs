@@ -93,6 +93,20 @@ impl DoltSql {
         )))
     }
 
+    /// Create the retention root `wf-retained/<head>` for the current write
+    /// head, guarded in the same process: the head must still be `head` and
+    /// the working set clean. Changes no row and does not move the head. The
+    /// caller first observes that the root is absent, under the same lease.
+    pub fn retain_head(head: &DoltIntegrationCommitId) -> Self {
+        let head = head.as_str();
+        Self(format!(
+            "SELECT IF(ACTIVE_BRANCH() = '{WRITE_HEAD}' AND HASHOF('{WRITE_HEAD}') = '{head}' \
+             AND (SELECT COUNT(*) FROM dolt_status) = 0, 1, \
+             JSON_EXTRACT('writfold-head-guard', '$')) AS guard; \
+             CALL DOLT_BRANCH('wf-retained/{head}', '{head}');"
+        ))
+    }
+
     /// The single-transaction conditional commit. Oversized scripts refuse.
     pub fn write(write: &DoltWrite<'_>) -> Result<Self, DoltError> {
         let expected = write.expected.as_str();

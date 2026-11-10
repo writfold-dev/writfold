@@ -223,7 +223,7 @@ fn classify(
     })
 }
 
-fn head(
+pub(super) fn head(
     backend: &DoltBackend<'_>,
     lease: &DoltLease<'_>,
     deadline: Instant,
@@ -234,7 +234,7 @@ fn head(
         .map_err(|error| Refusal::Backend(error.to_string()))
 }
 
-fn execute(
+pub(super) fn execute(
     backend: &DoltBackend<'_>,
     lease: &DoltLease<'_>,
     sql: &DoltSql,
@@ -254,7 +254,7 @@ fn execute(
         .map_err(runtime)
 }
 
-fn deadline(backend: &DoltBackend<'_>) -> Result<Instant, Refusal> {
+pub(super) fn deadline(backend: &DoltBackend<'_>) -> Result<Instant, Refusal> {
     Instant::now()
         .checked_add(backend.budgets.timeout())
         .ok_or(Refusal::InvalidRequest(
@@ -354,7 +354,7 @@ fn rows(changes: &[RecordChange]) -> Result<Vec<DoltNodeChange<'_>>, Refusal> {
         .collect()
 }
 
-fn runtime(error: DoltError) -> Refusal {
+pub(super) fn runtime(error: DoltError) -> Refusal {
     match error {
         DoltError::Process(ProcessError::Cancelled) => Refusal::Cancelled,
         DoltError::Process(ProcessError::Deadline) => Refusal::Deadline,

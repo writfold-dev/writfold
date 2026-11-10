@@ -12,6 +12,7 @@
 //! holds the realm's exclusive writer lease and adds the conditional commit in
 //! `dolt/write.rs`; a reader instance refuses writes as `Unavailable`.
 mod ownership;
+mod retain;
 mod write;
 
 pub use ownership::{DoltWriteApproval, WriterId};
@@ -206,6 +207,10 @@ impl StorageBackend for DoltBackend<'_> {
         cancelled: &AtomicBool,
     ) -> Result<WriteObservation<DoltReadPin>, Refusal> {
         write::observe(self, request, cancelled)
+    }
+
+    fn retain(&mut self, pin: &DoltReadPin, cancelled: &AtomicBool) -> Result<(), Refusal> {
+        retain::retain(self, pin, cancelled)
     }
 }
 
