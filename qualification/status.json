@@ -998,6 +998,24 @@
     },
     "retained_failed_attempts": []
   },
+  "tuft_lean_output": {
+    "status": "scoped_component_pass",
+    "scope": "Lean Tuft output after the projection pilot: compact grep-like rows (path:line: text) with one trailer line that always carries coverage, shown/omitted counts, cursor and a program digest; bindings and byte ranges only when projected; verbose and JSON envelopes behind flags; --out FILE writes the view to a new file and prints only the trailer; a 594-byte agent note (docs/tuft/agent-note.md). Same program: 768 -> 352 bytes. p95 on a 100k-file repository at load average ~11: text find 460 ms, regex over every file 824 ms, retain of 50 hits 772 ms; trial operations unchanged (<0.5 s).",
+    "source_commit": "a9e7ef5",
+    "receipts": {
+      "quality": {
+        "path": "~/.local/share/writfold/evidence/tuft-lean-EOJz7DkH/quality-001.json",
+        "sha256": "5bdc07af6e0dd3a0ce9092d329271951da8e65538edf2250982f1bee34a13ed9",
+        "bytes": 830833
+      },
+      "unit": {
+        "path": "~/.local/share/writfold/evidence/tuft-lean-EOJz7DkH/unit-001.json",
+        "sha256": "de6068b9dfdda4376383be6ad5a324ceca3e9faba901d76393630032a01918a8",
+        "bytes": 366039
+      }
+    },
+    "retained_failed_attempts": []
+  },
   "publication_history_audit": {
     "status": "inspected_not_cleared_for_publication",
     "record": {
