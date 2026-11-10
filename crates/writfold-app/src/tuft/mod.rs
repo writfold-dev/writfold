@@ -24,7 +24,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 use std::sync::atomic::AtomicBool;
 use std::time::Duration;
-use tuft::emit::{Emitted, Format, Run, emit};
+use tuft::emit::{Cursor, Emitted, Format, Run, emit};
 use tuft::locate::{around, line_at};
 use tuft::view::{Evidence, Projected, Row, project};
 use tuft::{Deferred, Diagnostic, Plan};
@@ -93,7 +93,7 @@ pub struct Invocation<'a> {
     pub name: &'a str,
     pub repo: &'a Path,
     pub state: &'a Path,
-    pub cursor: Option<&'a str>,
+    pub cursor: Option<&'a Cursor>,
     pub format: Format,
 }
 

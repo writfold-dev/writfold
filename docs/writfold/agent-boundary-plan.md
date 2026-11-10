@@ -148,7 +148,7 @@ Each row's evidence is the `qualification/status.json` entry named here:
 Next after T1. T2 suggested a compact Tuft row format and an `--out` flag. Both are built: `path:line: text` rows with a one-line coverage trailer, `--out` that writes the rows to a new file, and a 594-byte [agent note](../tuft/agent-note.md). T2b measured them on larger result sets and found no token win. Next:
 
 - ~~the TLA+ trial-stream model~~ and ~~the edit-flow validator in `writfold-core`~~: done (`trial_formal_component`);
-- the cursor moved onto `NoticeCursor`;
+- ~~the cursor moved onto `NoticeCursor`~~: assessed, not a fit. `NoticeCursor` is a borrowed, in-process position over a `NoticeQuery` with no serialized form, and Tuft's cursor crosses processes. It is now a nominal `tuft::cursor::Cursor` with a versioned `v2.P.C.OFFSET.K` encoding bound to program, commit, offset and result, refusing with typed errors ([language](../tuft/language.md#revision-9-vocabulary));
 - serve methods for `trial/run` and `trial/evidence-*` (a `writfold.trial/1` contract revision);
 - DINT02 publication over the Dolt writer.
 
