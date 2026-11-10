@@ -1,0 +1,74 @@
+{
+ "trial": "T7-B-r3",
+ "models": [
+  "claude-haiku-5-5"
+ ],
+ "api_calls": 7,
+ "usage_sum": {
+  "input_tokens": 14,
+  "cache_creation_input_tokens": 20603,
+  "cache_read_input_tokens": 237199,
+  "output_tokens": 3956
+ },
+ "tool_calls": 8,
+ "tool_result_bytes": 4303,
+ "final_reply": "DONE\n\nWrote <trial>/answer.txt with 5 lines:\n\ncrates/writfold-app/src/trial/run/weft.rs:68: std::thread::sleep(Duration::from_millis(2));\ncrates/writfold-runtime/src/process/runner.rs:148: std::thread::sleep(Duration::from_millis(100));\ncrates/writfold-store/examples/support/native_flow.rs:341: std::thread::sleep(Duration::from_millis(50));\ncrates/writfold-store/src/backend/conformance/races.rs:119: std::thread::sleep(KILL_STEP * attempt);\ncrates/writfold-store/tests/memory_backend/mod.rs:320: s",
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "mkdir -p <trial>/work && cd <trial>/work && cat > q.tuft <<'EOF'\n@h := find text \"thread::sleep(\" in \"crates/\" at \"e56621f7acf0d3392add5d814c35134b66c872a7\" limit 100;\n@e := retain @h around lines 0;\n@v := project @e [path, line, excerpt(max_chars: 300)];\nemit @v budget_tokens 4000;\nEOF\n<writfold> tuft run q.tuft --repo <trial>/repo --state <trial>/state --out <trial>/work/out.txt; echo \"exit=$?\"; cat <trial>/work/out.txt",
+   "result_bytes": 416,
+   "is_error": true,
+   "result_head": "This agent is isolated in the worktree <home>/workspace/writfold/.claude/worktrees/agent-a42124a95fb2dcc3e, but this command is too complex to verify that it stays inside the worktree. Refusing to run it — a worktree-isolated agent's git operations must target its own worktree. Split it into plain, separate commands and run them from <home>/workspace/writfold/.claude/worktrees/agent-a42124a95fb2dcc3e."
+  },
+  {
+   "tool": "Bash",
+   "input": "mkdir -p <trial>/work",
+   "result_bytes": 31,
+   "is_error": false,
+   "result_head": "(Bash completed with no output)"
+  },
+  {
+   "tool": "Write",
+   "input": "<trial>/work/q.tuft <= @h := find text \"thread::sleep(\" in \"crates/\" at \"e56621f7acf0d3392add5d814c35134b66c872a7\" limit 100;\n@e := retain @h around lines 0;\n@v := project @e [path, line, excerpt(max_chars: 300)];\nemit @v budget_tokens 4000;\n",
+   "result_bytes": 236,
+   "is_error": false,
+   "result_head": "File created successfully at: <trial>/work/q.tuft (file state is current in your context — no need to Read it back)"
+  },
+  {
+   "tool": "Bash",
+   "input": "<writfold> tuft run <trial>/work/q.tuft --repo <trial>/repo --state <trial>/state --out <trial>/work/out.txt",
+   "result_bytes": 93,
+   "is_error": false,
+   "result_head": "# coverage=complete files=664/664 hits=21 shown=21 omitted=0 cursor=none program=185195b93951"
+  },
+  {
+   "tool": "Bash",
+   "input": "cat <trial>/work/out.txt",
+   "result_bytes": 2468,
+   "is_error": false,
+   "result_head": "crates/writfold-app/src/trial/run/weft.rs:68:         std::thread::sleep(Duration::from_millis(2));\ncrates/writfold-runtime/src/omnigraph/bootstrap.rs:238:         std::thread::sleep(Duration::from_millis(1));\ncrates/writfold-runtime/src/omnigraph/chunked.rs:101:                     std::thread::sleep(Duration::from_millis(1));\ncrates/writfold-runtime/src/omnigraph/http.rs:82:                 Err(error) if pending(&error) => std::thread::sleep(Duration::from_millis(1)),\ncrates/writfold-runtime/src/omnigraph/http.rs:105:             Err(error) if pending(&error) => std::thread::sleep(Duration::from_millis(1)),\ncrates/writfold-runtime/src/omnigraph/http.rs:131:                     Err(error) if pending(&error) => std::thread::sleep(Duration::from_millis(1)),\ncrates/writfold-runtime/src/omnig"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial>/work && awk -F: 'BEGIN{OFS=\":\"} { path=$1; line=$2; text=substr($0, length(path)+length(line)+3); sub(/^[ \\t]+/, \"\", text); print path\":\"line\": \"text }' out.txt | grep -vF 'thread::sleep(Duration::from_millis(1))' > filtered.txt; cat filtered.txt",
+   "result_bytes": 499,
+   "is_error": false,
+   "result_head": "crates/writfold-app/src/trial/run/weft.rs:68: std::thread::sleep(Duration::from_millis(2));\ncrates/writfold-runtime/src/process/runner.rs:148: std::thread::sleep(Duration::from_millis(100));\ncrates/writfold-store/examples/support/native_flow.rs:341: std::thread::sleep(Duration::from_millis(50));\ncrates/writfold-store/src/backend/conformance/races.rs:119: std::thread::sleep(KILL_STEP * attempt);\ncrates/writfold-store/tests/memory_backend/mod.rs:320: std::thread::sleep(Duration::from_millis(50));"
+  },
+  {
+   "tool": "Bash",
+   "input": "cp <trial>/work/filtered.txt <trial>/answer.txt && cat <trial>/answer.txt",
+   "result_bytes": 499,
+   "is_error": false,
+   "result_head": "crates/writfold-app/src/trial/run/weft.rs:68: std::thread::sleep(Duration::from_millis(2));\ncrates/writfold-runtime/src/process/runner.rs:148: std::thread::sleep(Duration::from_millis(100));\ncrates/writfold-store/examples/support/native_flow.rs:341: std::thread::sleep(Duration::from_millis(50));\ncrates/writfold-store/src/backend/conformance/races.rs:119: std::thread::sleep(KILL_STEP * attempt);\ncrates/writfold-store/tests/memory_backend/mod.rs:320: std::thread::sleep(Duration::from_millis(50));"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\\n\\nWrote <trial>/answer.txt with 5 lines:\\n\\ncrates/writfold-app/src/trial/run/weft.rs:68: std::thread::sleep(Duration::from_millis(2));\\ncrates/writfold-runtime/src/process/runner.rs:148: std::thread::sleep(Duration::from_millis(100));\\ncrates/writfold-store/examples/support/native_flow.rs:341: std::thread::sleep(Duration::from_millis(50));\\ncrates/writfold-store/src/backend/conformance/races.rs:119: std::thread::sleep(KILL_STEP * attempt);\\ncrates/writfold-store/tests/memory_backend/mod.rs:320: std::thread::sleep(Duration::from_millis(50));\\n\\nMethod: Tuft query (q.tuft in the work directory, at commit e56621f7) for the literal text \\\"thread::sleep(\\\" under crates/ returned 21 hits with coverage=complete (files=664/664, omitted=0). I filtered those with an exact fixed-string exclusion of `thread::sleep(Duration::from_millis(1))`, which removed 16 lines. Scratch files are in the work directory under the trial folder.\"}",
+   "result_bytes": 61,
+   "is_error": false,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

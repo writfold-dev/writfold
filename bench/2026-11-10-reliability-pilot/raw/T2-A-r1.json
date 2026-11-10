@@ -1,0 +1,67 @@
+{
+ "trial": "T2-A-r1",
+ "models": [
+  "claude-haiku-5-5"
+ ],
+ "api_calls": 7,
+ "usage_sum": {
+  "input_tokens": 14,
+  "cache_creation_input_tokens": 22012,
+  "cache_read_input_tokens": 238180,
+  "output_tokens": 4277
+ },
+ "tool_calls": 7,
+ "tool_result_bytes": 6761,
+ "final_reply": "DONE",
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "mkdir -p <trial>/work && git -C <trial>/repo grep -n -F \"as_digest(\" -- crates/ > <trial>/work/all.txt; echo rc=$?; wc -l < <trial>/work/all.txt; cat <trial>/work/all.txt",
+   "result_bytes": 433,
+   "is_error": true,
+   "result_head": "This agent is isolated in the worktree <home>/workspace/writfold/.claude/worktrees/agent-a42124a95fb2dcc3e, but this command names git in a form too complex to verify that it stays inside the worktree. Refusing to run it — a worktree-isolated agent's git operations must target its own worktree. Split it into plain, separate commands and run them from <home>/workspace/writfold/.claude/worktrees/agent-a42124a95fb2dcc3e."
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial>/repo && git rev-parse --show-toplevel && git rev-parse HEAD",
+   "result_bytes": 172,
+   "is_error": false,
+   "result_head": "<trial>/repo\ne56621f7acf0d3392add5d814c35134b66c872a7"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial>/repo && git grep -n -F \"as_digest(\" -- crates/",
+   "result_bytes": 3330,
+   "is_error": false,
+   "result_head": "crates/writfold-app/src/trial/flow.rs:89:    [C::Bytes(blob.digest.as_digest()), C::Unsigned(blob.bytes)]\ncrates/writfold-app/src/trial/prepare.rs:136:        prepared: *writfold_domain::worktree::WorktreeDigest::as_digest(&digest),\ncrates/writfold-domain/src/engineering/dependency.rs:364:        .then_with(|| left.payload.as_digest().cmp(right.payload.as_digest()))\ncrates/writfold-domain/src/engineering/digests.rs:30:            fn as_digest(&self) -> (bytes: &[u8; 32])\ncrates/writfold-domain/src/engineering/mod.rs:24://!     fn as_digest(&self) -> &[u8; 32] { &self.0 }\ncrates/writfold-domain/src/engineering/mod.rs:70:    fn as_digest(&self) -> &[u8; 32];\ncrates/writfold-domain/src/worktree/mod.rs:30:    fn as_digest(&self) -> &[u8; 32];\ncrates/writfold-domain/src/worktree/mod.rs:40:     "
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial>/repo && W=<trial>; git grep -n -F \"as_digest(\" -- crates/ | awk -F: -v OFS=: '{ p=$1; n=$2; t=substr($0, length(p)+length(n)+3); if (p ~ /(^|\\/)(tests|examples)\\//) next; if (t ~ /fn as_digest/) next; s=t; sub(/^[ \\t]+/, \"\", s); if (s ~ /^\\/\\//) next; print p, n, \" \" t }' > $W/work/filtered.txt; wc -l < $W/work/filtered.txt; cat $W/work/filtered.txt",
+   "result_bytes": 433,
+   "is_error": true,
+   "result_head": "This agent is isolated in the worktree <home>/workspace/writfold/.claude/worktrees/agent-a42124a95fb2dcc3e, but this command names git in a form too complex to verify that it stays inside the worktree. Refusing to run it — a worktree-isolated agent's git operations must target its own worktree. Split it into plain, separate commands and run them from <home>/workspace/writfold/.claude/worktrees/agent-a42124a95fb2dcc3e."
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial>/repo && git grep -n -F \"as_digest(\" -- crates/ > <trial>/work/all.txt; wc -l < <trial>/work/all.txt",
+   "result_bytes": 2,
+   "is_error": false,
+   "result_head": "31"
+  },
+  {
+   "tool": "Bash",
+   "input": "W=<trial>; awk '{ i=index($0,\":\"); p=substr($0,1,i-1); r=substr($0,i+1); j=index(r,\":\"); n=substr(r,1,j-1); t=substr(r,j+1); if (p ~ /(^|\\/)(tests|examples)\\//) next; if (t ~ /fn as_digest/) next; s=t; sub(/^[ \\t]+/, \"\", s); if (s ~ /^\\/\\//) next; print p \":\" n \": \" t }' $W/work/all.txt > $W/answer.txt; wc -l < $W/answer.txt; cat $W/answer.txt",
+   "result_bytes": 2330,
+   "is_error": false,
+   "result_head": "21\ncrates/writfold-app/src/trial/flow.rs:89:     [C::Bytes(blob.digest.as_digest()), C::Unsigned(blob.bytes)]\ncrates/writfold-app/src/trial/prepare.rs:136:         prepared: *writfold_domain::worktree::WorktreeDigest::as_digest(&digest),\ncrates/writfold-domain/src/engineering/dependency.rs:364:         .then_with(|| left.payload.as_digest().cmp(right.payload.as_digest()))\ncrates/writfold-kernel/src/authority.rs:165:         let retained: Vec<[u8; 32]> = retained.iter().map(|d| *d.as_digest()).collect();\ncrates/writfold-kernel/src/authority.rs:170:             envelope: *authorization.envelope.as_digest(),\ncrates/writfold-kernel/src/ledger.rs:105:         closure: record.closure.iter().map(|d| *d.as_digest()).collect(),\ncrates/writfold-kernel/src/ledger.rs:119:     blobs.iter().map(|d| *d.a"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "is_error": false,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

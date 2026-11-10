@@ -1,0 +1,10 @@
+crates/writfold-kernel/tests/workflows.rs:290:     assert!(assessment.is_some_and(|assessment| !assessment.usable()));
+crates/writfold-kernel/tests/core.rs:122:     assert!(*assessment.usable());
+crates/writfold-kernel/tests/core.rs:265:         assert!(!result.usable());
+crates/writfold-kernel/tests/core.rs:282:     assert!(!verdict.usable());
+crates/writfold-kernel/tests/core/first_match.rs:111:         assert!(!assessment.usable());
+crates/writfold-wire/tests/result_decoders.rs:24:     assert!(result.usable());
+crates/writfold-wire/src/semantic/request.rs:100:                 json!(result.usable())
+crates/writfold-wire/src/semantic/response.rs:32:     json!({"support": enc_support(value.support()), "applicable": value.applicable(), "freshness": enc_freshness(value.freshness()), "validated": value.validated(), "contested": value.contested(), "available": value.available(), "usable": value.usable()})
+crates/writfold-kernel/src/checker/assessment.rs:123:     *assess(kb, context, reference).usable()
+crates/writfold-kernel/src/checker/assessment.rs:134:     *assess_frame(kb, Frame { base: context, snapshot }, reference).usable()

@@ -1,0 +1,60 @@
+{
+ "trial": "T1-A-r1",
+ "models": [
+  "claude-haiku-5-5"
+ ],
+ "api_calls": 6,
+ "usage_sum": {
+  "input_tokens": 12,
+  "cache_creation_input_tokens": 39733,
+  "cache_read_input_tokens": 181591,
+  "output_tokens": 3246
+ },
+ "tool_calls": 6,
+ "tool_result_bytes": 5108,
+ "final_reply": "DONE",
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "mkdir -p <trial>/work && cd <trial>/repo && git rev-parse HEAD && git grep -n -E '(^|[^A-Za-z0-9_])usable[[:space:]]*\\(' -- crates/ > <trial>/work/hits.txt; echo rc=$?; wc -l < <trial>/work/hits.txt; cat <trial>/work/hits.txt",
+   "result_bytes": 433,
+   "is_error": true,
+   "result_head": "This agent is isolated in the worktree <home>/workspace/writfold/.claude/worktrees/agent-a42124a95fb2dcc3e, but this command names git in a form too complex to verify that it stays inside the worktree. Refusing to run it — a worktree-isolated agent's git operations must target its own worktree. Split it into plain, separate commands and run them from <home>/workspace/writfold/.claude/worktrees/agent-a42124a95fb2dcc3e."
+  },
+  {
+   "tool": "Bash",
+   "input": "grep -rn -E '(^|[^A-Za-z0-9_])usable[[:space:]]*\\(' <trial>/repo/crates/ > <trial>/work/hits.txt; echo rc=$?; wc -l < <trial>/work/hits.txt; cat <trial>/work/hits.txt",
+   "result_bytes": 2462,
+   "is_error": false,
+   "result_head": "rc=0\n10\n<trial>/repo/crates/writfold-kernel/tests/workflows.rs:290:    assert!(assessment.is_some_and(|assessment| !assessment.usable()));\n<trial>/repo/crates/writfold-kernel/tests/core.rs:122:    assert!(*assessment.usable());\n<trial>/repo/crates/writfold-kernel/tests/core.rs:265:        assert!(!result.usable());\n<trial>/repo/crates/writfold-kernel/tests/core.rs:282:    assert!(!verdict.usable());\n<trial>/repo/crates/writfold-kernel/tests/core/first_match.rs:111:        assert!(!assessment.usable());\n<trial>/repo/crates/writfold-wire/tests/result_decoders.rs:24:    assert!(result.usable());\n<trial>/repo/crates/writfold-wire/src/semantic/request.rs:100:                json!(result.usable())\n<trial>/repo/crates/writfold-wire/src/semantic/response.rs:32:    json!({\"support\": enc_support(val"
+  },
+  {
+   "tool": "Bash",
+   "input": "grep -rn -E '(^|[^A-Za-z0-9_])usable($|::|[[:space:]]*$)' <trial>/repo/crates/ ; echo rc=$?",
+   "result_bytes": 516,
+   "is_error": false,
+   "result_head": "<trial>/repo/crates/writfold-kernel/src/checker/assessment_model.rs:163:    assess_spec(kb, context, reference).usable\n<trial>/repo/crates/writfold-kernel/src/checker/assessment_model.rs:167:    assess_frame_spec(kb, FrameView { base: context, snapshot }, reference).usable\nrc=0"
+  },
+  {
+   "tool": "Bash",
+   "input": "W=<trial>; P=\"$W/repo/\"; sed -E \"s#^${P}##; s#^([^:]+):([0-9]+):#\\1:\\2: #\" \"$W/work/hits.txt\" > \"$W/answer.txt\"; cat \"$W/answer.txt\"; wc -l < \"$W/answer.txt\"",
+   "result_bytes": 489,
+   "is_error": true,
+   "result_head": "This agent is isolated in the worktree <home>/workspace/writfold/.claude/worktrees/agent-a42124a95fb2dcc3e, but this command runs sed with a program computed at runtime inside a construct too complex to verify, so what it runs cannot be shown not to be git. Refusing to run it — a worktree-isolated agent's git operations must target its own worktree. Split it into plain, separate commands and run them from <home>/workspace/writfold/.claude/worktrees/agent-a42124a95fb2dcc3e."
+  },
+  {
+   "tool": "Bash",
+   "input": "sed -E 's#^<trial>/repo/##; s#^([^:]+):([0-9]+):#\\1:\\2: #' <trial>/work/hits.txt > <trial>/answer.txt; cat <trial>/answer.txt; wc -l < <trial>/answer.txt",
+   "result_bytes": 1147,
+   "is_error": false,
+   "result_head": "crates/writfold-kernel/tests/workflows.rs:290:     assert!(assessment.is_some_and(|assessment| !assessment.usable()));\ncrates/writfold-kernel/tests/core.rs:122:     assert!(*assessment.usable());\ncrates/writfold-kernel/tests/core.rs:265:         assert!(!result.usable());\ncrates/writfold-kernel/tests/core.rs:282:     assert!(!verdict.usable());\ncrates/writfold-kernel/tests/core/first_match.rs:111:         assert!(!assessment.usable());\ncrates/writfold-wire/tests/result_decoders.rs:24:     assert!(result.usable());\ncrates/writfold-wire/src/semantic/request.rs:100:                 json!(result.usable())\ncrates/writfold-wire/src/semantic/response.rs:32:     json!({\"support\": enc_support(value.support()), \"applicable\": value.applicable(), \"freshness\": enc_freshness(value.freshness()), \"validat"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "is_error": false,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

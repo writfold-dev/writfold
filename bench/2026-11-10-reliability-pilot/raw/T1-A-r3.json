@@ -1,0 +1,39 @@
+{
+ "trial": "T1-A-r3",
+ "models": [
+  "claude-haiku-5-5"
+ ],
+ "api_calls": 3,
+ "usage_sum": {
+  "input_tokens": 6,
+  "cache_creation_input_tokens": 20587,
+  "cache_read_input_tokens": 89885,
+  "output_tokens": 1785
+ },
+ "tool_calls": 3,
+ "tool_result_bytes": 8798,
+ "final_reply": "DONE",
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "mkdir -p <trial>/work && cd <trial>/repo && git rev-parse --short HEAD && git grep -n -E '(^|[^A-Za-z0-9_])usable\\(' -- crates/ > <trial>/work/hits.txt; echo \"exit $?\"; wc -l < <trial>/work/hits.txt; cat <trial>/work/hits.txt; echo ---; git grep -n -i 'usable' -- crates/ | head -50",
+   "result_bytes": 7660,
+   "is_error": false,
+   "result_head": "e56621f\nexit 0\n10\ncrates/writfold-kernel/src/checker/assessment.rs:123:    *assess(kb, context, reference).usable()\ncrates/writfold-kernel/src/checker/assessment.rs:134:    *assess_frame(kb, Frame { base: context, snapshot }, reference).usable()\ncrates/writfold-kernel/tests/core.rs:122:    assert!(*assessment.usable());\ncrates/writfold-kernel/tests/core.rs:265:        assert!(!result.usable());\ncrates/writfold-kernel/tests/core.rs:282:    assert!(!verdict.usable());\ncrates/writfold-kernel/tests/core/first_match.rs:111:        assert!(!assessment.usable());\ncrates/writfold-kernel/tests/workflows.rs:290:    assert!(assessment.is_some_and(|assessment| !assessment.usable()));\ncrates/writfold-wire/src/semantic/request.rs:100:                json!(result.usable())\ncrates/writfold-wire/src/semant"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial> && sed -E 's/^([^:]+:[0-9]+:)[[:space:]]*/\\1/' work/hits.txt > answer.txt && cat answer.txt && wc -l < answer.txt",
+   "result_bytes": 1077,
+   "is_error": false,
+   "result_head": "crates/writfold-kernel/src/checker/assessment.rs:123:*assess(kb, context, reference).usable()\ncrates/writfold-kernel/src/checker/assessment.rs:134:*assess_frame(kb, Frame { base: context, snapshot }, reference).usable()\ncrates/writfold-kernel/tests/core.rs:122:assert!(*assessment.usable());\ncrates/writfold-kernel/tests/core.rs:265:assert!(!result.usable());\ncrates/writfold-kernel/tests/core.rs:282:assert!(!verdict.usable());\ncrates/writfold-kernel/tests/core/first_match.rs:111:assert!(!assessment.usable());\ncrates/writfold-kernel/tests/workflows.rs:290:assert!(assessment.is_some_and(|assessment| !assessment.usable()));\ncrates/writfold-wire/src/semantic/request.rs:100:json!(result.usable())\ncrates/writfold-wire/src/semantic/response.rs:32:json!({\"support\": enc_support(value.support()), \"app"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "is_error": false,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

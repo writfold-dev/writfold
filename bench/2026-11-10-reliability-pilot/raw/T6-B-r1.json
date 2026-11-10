@@ -1,0 +1,116 @@
+{
+ "trial": "T6-B-r1",
+ "models": [
+  "claude-haiku-5-5"
+ ],
+ "api_calls": 10,
+ "usage_sum": {
+  "input_tokens": 20,
+  "cache_creation_input_tokens": 24507,
+  "cache_read_input_tokens": 375772,
+  "output_tokens": 5404
+ },
+ "tool_calls": 14,
+ "tool_result_bytes": 5164,
+ "final_reply": "DONE",
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "mkdir -p <trial>/work && cat > <trial>/work/q.tuft <<'EOF'\n@h := find text \"REQUEST\" in \"crates/\" at \"e56621f7acf0d3392add5d814c35134b66c872a7\" limit 100;\n@e := retain @h around lines 0;\n@v := project @e [path, line, excerpt(max_chars: 300)];\nemit @v budget_tokens 4000;\nEOF\n<writfold> tuft run <trial>/work/q.tuft --repo <trial>/repo --state <trial>/state 2>&1 | head -150",
+   "result_bytes": 416,
+   "is_error": true,
+   "result_head": "This agent is isolated in the worktree <home>/workspace/writfold/.claude/worktrees/agent-a42124a95fb2dcc3e, but this command is too complex to verify that it stays inside the worktree. Refusing to run it — a worktree-isolated agent's git operations must target its own worktree. Split it into plain, separate commands and run them from <home>/workspace/writfold/.claude/worktrees/agent-a42124a95fb2dcc3e."
+  },
+  {
+   "tool": "Write",
+   "input": "<trial>/work/q.tuft <= @h := find text \"REQUEST\" in \"crates/\" at \"e56621f7acf0d3392add5d814c35134b66c872a7\" limit 100;\n@e := retain @h around lines 0;\n@v := project @e [path, line, excerpt(max_chars: 300)];\nemit @v budget_tokens 4000;\n",
+   "result_bytes": 236,
+   "is_error": false,
+   "result_head": "File created successfully at: <trial>/work/q.tuft (file state is current in your context — no need to Read it back)"
+  },
+  {
+   "tool": "Bash",
+   "input": "<writfold> tuft run <trial>/work/q.tuft --repo <trial>/repo --state <trial>/state",
+   "result_bytes": 1984,
+   "is_error": false,
+   "result_head": "crates/writfold-app/src/engine.rs:12:         Capability, Frame, InitializeParams, MAX_REQUEST_BYTES, Request, RequestId,\ncrates/writfold-app/src/engine.rs:63:                 MAX_REQUEST_BYTES,\ncrates/writfold-app/src/engine.rs:65:                 MAX_REQUEST_BYTES,\ncrates/writfold-app/src/engine.rs:66:                 MAX_REQUEST_BYTES,\ncrates/writfold-app/src/lib.rs:18: use writfold_wire::rpc::{MAX_REQUEST_BYTES, response::ResponseError};\ncrates/writfold-app/src/lib.rs:79:     let maximum = ByteCount::new(MAX_REQUEST_BYTES as u64)?;\ncrates/writfold-wire/src/rpc.rs:18: pub const MAX_REQUEST_BYTES: usize = 65_536;\ncrates/writfold-wire/src/rpc.rs:38:             limits.bytes().min(MAX_REQUEST_BYTES),\ncrates/writfold-wire/src/rpc/response/codec.rs:7: use crate::rpc::{MAX_REQUEST_BYTES, PROT"
+  },
+  {
+   "tool": "Write",
+   "input": "<trial>/work/e.spl <= edit \"crates/writfold-wire/src/rpc.rs\" {\n  @x := one text \"pub const MAX_REQUEST_BYTES: usize = 65_536;\"\n  replace @x with \"pub const MAX_REQUEST_BYTES: usize = 131_072;\"\n}\n",
+   "result_bytes": 235,
+   "is_error": false,
+   "result_head": "File created successfully at: <trial>/work/e.spl (file state is current in your context — no need to Read it back)"
+  },
+  {
+   "tool": "Bash",
+   "input": "export WRITFOLD_STATE=<trial>/state",
+   "result_bytes": 31,
+   "is_error": false,
+   "result_head": "(Bash completed with no output)"
+  },
+  {
+   "tool": "Bash",
+   "input": "<writfold> trial prepare --repo <trial>/repo --file crates/writfold-wire/src/rpc.rs --recipe <trial>/work/e.spl",
+   "result_bytes": 60,
+   "is_error": true,
+   "result_head": "Exit code 1\nwritfold: No such file or directory (os error 2)"
+  },
+  {
+   "tool": "Bash",
+   "input": "WRITFOLD_STATE=<trial>/state <writfold> trial prepare --repo <trial>/repo --file crates/writfold-wire/src/rpc.rs --recipe <trial>/work/e.spl",
+   "result_bytes": 307,
+   "is_error": false,
+   "result_head": "prepared run run.1794293169.eb2fce\n  file crates/writfold-wire/src/rpc.rs at e56621f7acf0d3392add5d814c35134b66c872a7\n  prepared edit wfwt1:prepared-edit:sha256:641c98bef01c20d05c5d04210545c7fef8741ec3fa23271ebe288dc82e15373c\n  splice [711,755) -> 45 bytes\nnext: writfold trial approve run.1794293169.eb2fce"
+  },
+  {
+   "tool": "Bash",
+   "input": "WRITFOLD_STATE=<trial>/state <writfold> trial approve run.1794293169.eb2fce",
+   "result_bytes": 138,
+   "is_error": false,
+   "result_head": "approved run run.1794293169.eb2fce until 1794296773 (unix seconds)\n  no Weft report bound\nnext: writfold trial apply run.1794293169.eb2fce"
+  },
+  {
+   "tool": "Bash",
+   "input": "WRITFOLD_STATE=<trial>/state <writfold> trial apply run.1794293169.eb2fce",
+   "result_bytes": 221,
+   "is_error": false,
+   "result_head": "applied run run.1794293169.eb2fce\n  inspect: git -C <trial>/state/worktrees/run.1794293169.eb2fce diff"
+  },
+  {
+   "tool": "Bash",
+   "input": "git -C <trial>/state/worktrees/run.1794293169.eb2fce diff",
+   "result_bytes": 516,
+   "is_error": false,
+   "result_head": "diff --git a/crates/writfold-wire/src/rpc.rs b/crates/writfold-wire/src/rpc.rs\nindex ec2de14..f97a6af 100644\n--- a/crates/writfold-wire/src/rpc.rs\n+++ b/crates/writfold-wire/src/rpc.rs\n@@ -15,7 +15,7 @@ use crate::{Error, Limits, RawJson};\n use serde_json::Value;\n \n /// Reference transport frame ceiling, including any framing whitespace/newline.\n-pub const MAX_REQUEST_BYTES: usize = 65_536;\n+pub const MAX_REQUEST_BYTES: usize = 131_072;\n \n #[derive(Debug, thiserror::Error, Eq, PartialEq)]\n pub enum FrameError {"
+  },
+  {
+   "tool": "Bash",
+   "input": "git -C <trial>/state/worktrees/run.1794293169.eb2fce diff > <trial>/work/e.patch",
+   "result_bytes": 31,
+   "is_error": false,
+   "result_head": "(Bash completed with no output)"
+  },
+  {
+   "tool": "Bash",
+   "input": "git -C <trial>/repo apply <trial>/work/e.patch",
+   "result_bytes": 31,
+   "is_error": false,
+   "result_head": "(Bash completed with no output)"
+  },
+  {
+   "tool": "Bash",
+   "input": "git -C <trial>/repo diff",
+   "result_bytes": 897,
+   "is_error": false,
+   "result_head": "diff --git a/crates/writfold-wire/src/rpc.rs b/crates/writfold-wire/src/rpc.rs\nindex ec2de14..dc6d0d7 100644\n--- a/crates/writfold-wire/src/rpc.rs\n+++ b/crates/writfold-wire/src/rpc.rs\n@@ -3,6 +3,8 @@\n //! Parse one bounded frame, then borrow its validated request; the retained\n //! `RawJson` owns every value and destroys even rejected deep trees iteratively.\n //! Missing IDs are notifications only after envelope validation succeeds.\n+//!\n+//! The request ceiling below is shared with the response codec; keep them in step.\n \n mod initialize;\n pub mod response;\n@@ -15,7 +17,7 @@ use crate::{Error, Limits, RawJson};\n use serde_json::Value;\n \n /// Reference transport frame ceiling, including any framing whitespace/newline.\n-pub const MAX_REQUEST_BYTES: usize = 65_536;\n+pub const MAX_REQUEST_BY"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "is_error": false,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

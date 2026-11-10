@@ -1,0 +1,60 @@
+{
+ "trial": "T5-A-r2",
+ "models": [
+  "claude-haiku-5-5"
+ ],
+ "api_calls": 5,
+ "usage_sum": {
+  "input_tokens": 10,
+  "cache_creation_input_tokens": 21085,
+  "cache_read_input_tokens": 167615,
+  "output_tokens": 1669
+ },
+ "tool_calls": 6,
+ "tool_result_bytes": 8092,
+ "final_reply": "DONE",
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "cd <trial> && mkdir -p work && cd repo && git status --short && git grep -n -i -E \"in.?scope|scope.*(max|limit|bytes)|MAX_.*(SCOPE|IN)\" -- crates/ > ../work/hits.txt; wc -l < ../work/hits.txt; head -50 ../work/hits.txt",
+   "result_bytes": 5719,
+   "is_error": false,
+   "result_head": "58\ncrates/tuft/src/check.rs:226:            ir::MAX_FIND_LIMIT,\ncrates/tuft/src/check.rs:242:            around.map(|n| self.bounded(Some(n), 0, 0, ir::MAX_AROUND_LINES, \"around lines\"));\ncrates/tuft/src/check.rs:359:    if scope.len() > ir::MAX_SCOPE_BYTES {\ncrates/tuft/src/check.rs:361:            \"scope must be at most {} bytes\",\ncrates/tuft/src/check.rs:362:            ir::MAX_SCOPE_BYTES\ncrates/tuft/src/compact.rs:62:                text = Some(cut(row, max_chars).map_or(\"-\".to_owned(), |x| excerpt(&x, lines)));\ncrates/tuft/src/envelope.rs:102:\\\"find\\\":{{\\\"binding\\\":{},\\\"matcher\\\":{},\\\"pattern\\\":{},\\\"scope\\\":{},\\\"limit\\\":{},\\\"coverage\\\":{},\\\"stopped\\\":{stop},\\\"hits\\\":{}}},\\\ncrates/tuft/src/ir.rs:9:pub const MAX_FIND_LIMIT: u64 = 10_000;\ncrates/tuft/src/ir.rs:10:pub const MAX_AROUND_LI"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial>/repo && sed -n 1,20p crates/tuft/src/ir.rs && echo ---- && sed -n 352,366p crates/tuft/src/check.rs && echo ---- && git grep -n \"MAX_SCOPE_BYTES\" -- crates/tuft/ && git status --short",
+   "result_bytes": 1503,
+   "is_error": false,
+   "result_head": "//! Typed IR: one checked pipeline `find → [retain] → project → emit`.\n//!\n//! The IR names no storage engine. An adapter lowers `find` onto a backend\n//! (B0 `StorageBackend` in Writfold) and `retain` onto its evidence store.\nuse crate::locate::Pattern;\nuse writfold_domain::citation::SearchBudget;\n\npub const DEFAULT_FIND_LIMIT: u64 = 100;\npub const MAX_FIND_LIMIT: u64 = 10_000;\npub const MAX_AROUND_LINES: u64 = 1_000;\npub const MAX_EXCERPT_CHARS: u64 = 4_096;\npub const MAX_VIEW_LIMIT: u64 = 100_000;\npub const DEFAULT_BUDGET_TOKENS: u64 = 1_000;\npub const MAX_BUDGET_TOKENS: u64 = 1_000_000;\npub const MAX_NEEDLE_BYTES: usize = 4_096;\npub const MAX_SCOPE_BYTES: usize = 1_024;\n\n#[derive(Clone, Debug)]\npub struct Plan {\n    /// SHA-256 of the exact program bytes, lowercase hexadecimal.\n----\n  "
+  },
+  {
+   "tool": "Read",
+   "input": "<trial>/repo/crates/tuft/src/ir.rs",
+   "result_bytes": 143,
+   "is_error": false,
+   "result_head": "14\tpub const MAX_BUDGET_TOKENS: u64 = 1_000_000;\n15\tpub const MAX_NEEDLE_BYTES: usize = 4_096;\n16\tpub const MAX_SCOPE_BYTES: usize = 1_024;\n17\t"
+  },
+  {
+   "tool": "Edit",
+   "input": "<trial>/repo/crates/tuft/src/ir.rs: 'pub const MAX_SCOPE_BYTES: usize = 1_024;' -> 'pub const MAX_SCOPE_BYTES: usize = 2_048;'",
+   "result_bytes": 193,
+   "is_error": false,
+   "result_head": "The file <trial>/repo/crates/tuft/src/ir.rs has been updated successfully."
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial>/repo && git diff",
+   "result_bytes": 473,
+   "is_error": false,
+   "result_head": "diff --git a/crates/tuft/src/ir.rs b/crates/tuft/src/ir.rs\nindex 38ad807..c39c499 100644\n--- a/crates/tuft/src/ir.rs\n+++ b/crates/tuft/src/ir.rs\n@@ -13,7 +13,7 @@ pub const MAX_VIEW_LIMIT: u64 = 100_000;\n pub const DEFAULT_BUDGET_TOKENS: u64 = 1_000;\n pub const MAX_BUDGET_TOKENS: u64 = 1_000_000;\n pub const MAX_NEEDLE_BYTES: usize = 4_096;\n-pub const MAX_SCOPE_BYTES: usize = 1_024;\n+pub const MAX_SCOPE_BYTES: usize = 2_048;\n \n #[derive(Clone, Debug)]\n pub struct Plan {"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "is_error": false,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

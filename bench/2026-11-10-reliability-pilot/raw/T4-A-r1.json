@@ -1,0 +1,46 @@
+{
+ "trial": "T4-A-r1",
+ "models": [
+  "claude-haiku-5-5"
+ ],
+ "api_calls": 4,
+ "usage_sum": {
+  "input_tokens": 8,
+  "cache_creation_input_tokens": 18624,
+  "cache_read_input_tokens": 123054,
+  "output_tokens": 1590
+ },
+ "tool_calls": 4,
+ "tool_result_bytes": 4742,
+ "final_reply": "DONE",
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "cd <trial>/repo && git rev-parse HEAD && mkdir -p ../work && git grep -n -F \".expect(\" -- crates/ > ../work/hits.txt; echo \"exit $?\"; wc -l < ../work/hits.txt; git grep -c -F \".expect(\" -- crates/ | awk -F: '{s+=$NF} END {print \"sum\", s}'",
+   "result_bytes": 53,
+   "is_error": false,
+   "result_head": "e56621f7acf0d3392add5d814c35134b66c872a7\nexit 1\n0\nsum"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial>/repo && ls crates | head; git ls-files crates | wc -l; git ls-files crates | grep -c '\\.rs$'; git grep -n -E \"expect\\s*\\(\" -- crates/ | head -20; echo \"---\"; git grep -n -E \"\\.\\s*expect\" -- crates/ | head -20; echo \"---\"; git grep -n \"expect\" -- crates/ | head -20",
+   "result_bytes": 4624,
+   "is_error": false,
+   "result_head": "tuft\nwritfold\nwritfold-app\nwritfold-core\nwritfold-domain\nwritfold-kernel\nwritfold-protocol\nwritfold-runtime\nwritfold-sources\nwritfold-store\n664\n501\n---\ncrates/tuft/tests/grammar.rs:2://! pipeline in its `.expected`; every `cases/invalid/*.tuft` is refused with\ncrates/tuft/tests/grammar.rs:3://! exactly the diagnostics in its `.expected`. `TUFT_BLESS=1` rewrites the\ncrates/writfold-domain/src/citation/binding.rs:30:            selector: self.selector@, expected: self.expected@ }\ncrates/writfold-domain/src/citation/binding.rs:60:        ensures value@ == self@.expected,\ncrates/writfold-domain/src/citation/binding.rs:61:    { self.expected }\ncrates/writfold-domain/src/citation/binding.rs:68:            && bytes_equal(self.expected, other.expected)\ncrates/writfold-kernel/src/citation/compare.r"
+  },
+  {
+   "tool": "Bash",
+   "input": "printf 'NONE\\n' > <trial>/answer.txt && cat <trial>/answer.txt",
+   "result_bytes": 4,
+   "is_error": false,
+   "result_head": "NONE"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "is_error": false,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

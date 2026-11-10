@@ -1,0 +1,144 @@
+{
+ "trial": "T5-B-r3",
+ "models": [
+  "claude-haiku-5-5"
+ ],
+ "api_calls": 14,
+ "usage_sum": {
+  "input_tokens": 28,
+  "cache_creation_input_tokens": 26157,
+  "cache_read_input_tokens": 542475,
+  "output_tokens": 6710
+ },
+ "tool_calls": 18,
+ "tool_result_bytes": 5495,
+ "final_reply": "DONE",
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "mkdir -p <trial>/work && cd <trial>/work && cat > q.tuft <<'EOF'\n@h := find text \"in scope\" in \"crates/\" at \"e56621f7acf0d3392add5d814c35134b66c872a7\" limit 100;\n@e := retain @h around lines 0;\n@v := project @e [path, line, excerpt(max_chars: 300)];\nemit @v budget_tokens 4000;\nEOF\n<writfold> tuft run q.tuft --repo <trial>/repo --state <trial>/state",
+   "result_bytes": 416,
+   "is_error": true,
+   "result_head": "This agent is isolated in the worktree <home>/workspace/writfold/.claude/worktrees/agent-a42124a95fb2dcc3e, but this command is too complex to verify that it stays inside the worktree. Refusing to run it — a worktree-isolated agent's git operations must target its own worktree. Split it into plain, separate commands and run them from <home>/workspace/writfold/.claude/worktrees/agent-a42124a95fb2dcc3e."
+  },
+  {
+   "tool": "Bash",
+   "input": "mkdir -p <trial>/work",
+   "result_bytes": 31,
+   "is_error": false,
+   "result_head": "(Bash completed with no output)"
+  },
+  {
+   "tool": "Bash",
+   "input": "printf '%s\\n' '@h := find text \"in scope\" in \"crates/\" at \"e56621f7acf0d3392add5d814c35134b66c872a7\" limit 100;' '@e := retain @h around lines 0;' '@v := project @e [path, line, excerpt(max_chars: 300)];' 'emit @v budget_tokens 4000;' > <trial>/work/q.tuft",
+   "result_bytes": 31,
+   "is_error": false,
+   "result_head": "(Bash completed with no output)"
+  },
+  {
+   "tool": "Bash",
+   "input": "<writfold> tuft run <trial>/work/q.tuft --repo <trial>/repo --state <trial>/state",
+   "result_bytes": 675,
+   "is_error": false,
+   "result_head": "crates/tuft/src/view.rs:16:     /// Files fully searched over files in scope at the pinned commit.\ncrates/writfold-app/src/tuft/search.rs:6: //! match mode: it enumerates every record in scope with an exact kind lookup\ncrates/writfold-store/src/backend/git.rs:7: //! files in scope. Every lookup runs the shared pure `scan` over the complete\ncrates/writfold-store/src/backend/git.rs:53:     /// `max_bytes` bounds the bytes of all blobs in scope; a larger scope\ncrates/writfold-store/src/backend/git.rs:93:     /// Load every blob in scope at `pin` now (one parallel read) instead of\n# coverage=complete files=664/664 hits=5 shown=5 omitted=0 cursor=none program=5505a8bf986b"
+  },
+  {
+   "tool": "Bash",
+   "input": "printf '%s\\n' '@h := find rx\"const [A-Z_]*(SCOPE|IN)[A-Z_]*: usize\" in \"crates/\" at \"e56621f7acf0d3392add5d814c35134b66c872a7\" limit 100;' '@e := retain @h around lines 0;' '@v := project @e [path, line, excerpt(max_chars: 300)];' 'emit @v budget_tokens 4000;' > <trial>/work/q.tuft",
+   "result_bytes": 31,
+   "is_error": false,
+   "result_head": "(Bash completed with no output)"
+  },
+  {
+   "tool": "Bash",
+   "input": "<writfold> tuft run <trial>/work/q.tuft --repo <trial>/repo --state <trial>/state",
+   "result_bytes": 409,
+   "is_error": false,
+   "result_head": "crates/tuft/src/ir.rs:16: pub const MAX_SCOPE_BYTES: usize = 1_024;\ncrates/writfold-store/examples/dolt_read.rs:20: const PIN_BYTES: usize = 65_536;\ncrates/writfold-store/src/backend/types.rs:6: const KIND_BYTES: usize = 64;\ncrates/writfold-wire/src/reference.rs:7: pub const MAX_LINE_BYTES: usize = 16 * 1024 * 1024;\n# coverage=complete files=664/664 hits=4 shown=4 omitted=0 cursor=none program=df3fce694bd6"
+  },
+  {
+   "tool": "Bash",
+   "input": "printf '%s\\n' '@h := find text \"MAX_SCOPE_BYTES\" in \"crates/\" at \"e56621f7acf0d3392add5d814c35134b66c872a7\" limit 100;' '@e := retain @h around lines 3;' '@v := project @e [path, line, excerpt(max_chars: 300)];' 'emit @v budget_tokens 4000;' > <trial>/work/q2.tuft",
+   "result_bytes": 31,
+   "is_error": false,
+   "result_head": "(Bash completed with no output)"
+  },
+  {
+   "tool": "Bash",
+   "input": "<writfold> tuft run <trial>/work/q2.tuft --repo <trial>/repo --state <trial>/state",
+   "result_bytes": 2401,
+   "is_error": false,
+   "result_head": "crates/tuft/src/check.rs:356: \"}\\n\\nfn admit_scope(scope: &str) -> Result<(), String> {\\n    if scope.len() > ir::MAX_SCOPE_BYTES {\\n        return Err(format!(\\n            \\\"scope must be at most {} bytes\\\",\\n            ir::MAX_SCOPE_BYTES\\n\"\ncrates/tuft/src/check.rs:359: \"    if scope.len() > ir::MAX_SCOPE_BYTES {\\n        return Err(format!(\\n            \\\"scope must be at most {} bytes\\\",\\n            ir::MAX_SCOPE_BYTES\\n        ));\\n    }\\n    if scope.starts_with('/') {\\n\"\ncrates/tuft/src/ir.rs:13: \"pub const DEFAULT_BUDGET_TOKENS: u64 = 1_000;\\npub const MAX_BUDGET_TOKENS: u64 = 1_000_000;\\npub const MAX_NEEDLE_BYTES: usize = 4_096;\\npub const MAX_SCOPE_BYTES: usize = 1_024;\\n\\n#[derive(Clone, Debug)]\\npub struct Plan {\\n\"\ncrates/writfold-app/src/tuft/backend_tests.rs:2: \"//! pin"
+  },
+  {
+   "tool": "Bash",
+   "input": "printf '%s\\n' 'edit \"crates/tuft/src/ir.rs\" {' '  @x := one text \"pub const MAX_SCOPE_BYTES: usize = 1_024;\"' '  replace @x with \"pub const MAX_SCOPE_BYTES: usize = 2_048;\"' '}' > <trial>/work/e.spl",
+   "result_bytes": 31,
+   "is_error": false,
+   "result_head": "(Bash completed with no output)"
+  },
+  {
+   "tool": "Bash",
+   "input": "export WRITFOLD_STATE=<trial>/state; <writfold> trial prepare --repo <trial>/repo --file crates/tuft/src/ir.rs --recipe <trial>/work/e.spl",
+   "result_bytes": 297,
+   "is_error": false,
+   "result_head": "prepared run run.1794293966.9990aa\n  file crates/tuft/src/ir.rs at e56621f7acf0d3392add5d814c35134b66c872a7\n  prepared edit wfwt1:prepared-edit:sha256:55c53506ca729b080cd2429a1b11d340d2d0837e00867ea9a686cb85b98631df\n  splice [647,688) -> 41 bytes\nnext: writfold trial approve run.1794293966.9990aa"
+  },
+  {
+   "tool": "Bash",
+   "input": "<writfold> trial approve run.1794293966.9990aa",
+   "result_bytes": 60,
+   "is_error": true,
+   "result_head": "Exit code 1\nwritfold: No such file or directory (os error 2)"
+  },
+  {
+   "tool": "Bash",
+   "input": "WRITFOLD_STATE=<trial>/state <writfold> trial apply run.1794293966.9990aa",
+   "result_bytes": 82,
+   "is_error": true,
+   "result_head": "Exit code 1\nwritfold: run run.1794293966.9990aa is not approved and awaiting apply"
+  },
+  {
+   "tool": "Bash",
+   "input": "WRITFOLD_STATE=<trial>/state <writfold> trial approve run.1794293966.9990aa",
+   "result_bytes": 138,
+   "is_error": false,
+   "result_head": "approved run run.1794293966.9990aa until 1794297573 (unix seconds)\n  no Weft report bound\nnext: writfold trial apply run.1794293966.9990aa"
+  },
+  {
+   "tool": "Bash",
+   "input": "WRITFOLD_STATE=<trial>/state <writfold> trial apply run.1794293966.9990aa",
+   "result_bytes": 221,
+   "is_error": false,
+   "result_head": "applied run run.1794293966.9990aa\n  inspect: git -C <trial>/state/worktrees/run.1794293966.9990aa diff"
+  },
+  {
+   "tool": "Bash",
+   "input": "git -C <trial>/state/worktrees/run.1794293966.9990aa diff > <trial>/work/e.patch && cat <trial>/work/e.patch",
+   "result_bytes": 473,
+   "is_error": false,
+   "result_head": "diff --git a/crates/tuft/src/ir.rs b/crates/tuft/src/ir.rs\nindex 38ad807..c39c499 100644\n--- a/crates/tuft/src/ir.rs\n+++ b/crates/tuft/src/ir.rs\n@@ -13,7 +13,7 @@ pub const MAX_VIEW_LIMIT: u64 = 100_000;\n pub const DEFAULT_BUDGET_TOKENS: u64 = 1_000;\n pub const MAX_BUDGET_TOKENS: u64 = 1_000_000;\n pub const MAX_NEEDLE_BYTES: usize = 4_096;\n-pub const MAX_SCOPE_BYTES: usize = 1_024;\n+pub const MAX_SCOPE_BYTES: usize = 2_048;\n \n #[derive(Clone, Debug)]\n pub struct Plan {"
+  },
+  {
+   "tool": "Bash",
+   "input": "git -C <trial>/repo apply <trial>/work/e.patch",
+   "result_bytes": 31,
+   "is_error": false,
+   "result_head": "(Bash completed with no output)"
+  },
+  {
+   "tool": "Bash",
+   "input": "git -C <trial>/repo diff --stat",
+   "result_bytes": 76,
+   "is_error": false,
+   "result_head": " crates/tuft/src/ir.rs | 2 +-\n 1 file changed, 1 insertion(+), 1 deletion(-)"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "is_error": false,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

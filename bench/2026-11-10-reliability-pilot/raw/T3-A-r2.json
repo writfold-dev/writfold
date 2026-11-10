@@ -1,0 +1,60 @@
+{
+ "trial": "T3-A-r2",
+ "models": [
+  "claude-haiku-5-5"
+ ],
+ "api_calls": 4,
+ "usage_sum": {
+  "input_tokens": 8,
+  "cache_creation_input_tokens": 19850,
+  "cache_read_input_tokens": 126286,
+  "output_tokens": 2317
+ },
+ "tool_calls": 6,
+ "tool_result_bytes": 5251,
+ "final_reply": "DONE",
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "mkdir -p <trial>/work && cd <trial>/repo && git grep -n -F \".to_owned()\" -- crates/ > <trial>/work/hits.txt; echo \"exit=$?\"; wc -l < <trial>/work/hits.txt; git grep -c -F \".to_owned()\" -- crates/ | head -100",
+   "result_bytes": 4418,
+   "is_error": false,
+   "result_head": "exit=0\n251\ncrates/tuft/src/check.rs:3\ncrates/tuft/src/compact.rs:3\ncrates/tuft/src/emit.rs:1\ncrates/tuft/src/envelope.rs:5\ncrates/tuft/src/lexer.rs:2\ncrates/tuft/src/locate.rs:2\ncrates/tuft/src/render.rs:5\ncrates/tuft/src/view.rs:1\ncrates/tuft/tests/compact.rs:1\ncrates/writfold-app/src/engine_trial_tests.rs:9\ncrates/writfold-app/src/trial/approve.rs:1\ncrates/writfold-app/src/trial/assessment_tests.rs:2\ncrates/writfold-app/src/trial/cli.rs:2\ncrates/writfold-app/src/trial/evidence/label.rs:1\ncrates/writfold-app/src/trial/evidence/mod.rs:5\ncrates/writfold-app/src/trial/evidence/show.rs:1\ncrates/writfold-app/src/trial/evidence/tests.rs:1\ncrates/writfold-app/src/trial/flow.rs:3\ncrates/writfold-app/src/trial/prepare.rs:7\ncrates/writfold-app/src/trial/recover.rs:1\ncrates/writfold-app/src/trial/re"
+  },
+  {
+   "tool": "Bash",
+   "input": "W=<trial>; cd $W/repo && git grep -c -F \".to_owned()\" -- crates/ | awk -F: '{s+=$NF} END{print \"sum=\"s}'; git grep -c -F \".to_owned()\" -- crates/ | wc -l; sed -E 's/^([^:]+):([0-9]+):[ \\t]*/\\1:\\2: /' $W/work/hits.txt > $W/answer.txt; wc -l < $W/answer.txt; head -3 $W/answer.txt; grep -c -v -E '^[^:]+:[0-9]+: ' $W/answer.txt; git grep -n -F \".to_owned()\" -- crates/ | grep -c '^' ; file $W/answer.txt",
+   "result_bytes": 433,
+   "is_error": true,
+   "result_head": "This agent is isolated in the worktree <home>/workspace/writfold/.claude/worktrees/agent-a42124a95fb2dcc3e, but this command names git in a form too complex to verify that it stays inside the worktree. Refusing to run it — a worktree-isolated agent's git operations must target its own worktree. Split it into plain, separate commands and run them from <home>/workspace/writfold/.claude/worktrees/agent-a42124a95fb2dcc3e."
+  },
+  {
+   "tool": "Bash",
+   "input": "sed -E 's/^([^:]+):([0-9]+):[ \t]*/\\1:\\2: /' <trial>/work/hits.txt > <trial>/answer.txt",
+   "result_bytes": 31,
+   "is_error": false,
+   "result_head": "(Bash completed with no output)"
+  },
+  {
+   "tool": "Bash",
+   "input": "wc -l <trial>/answer.txt",
+   "result_bytes": 141,
+   "is_error": false,
+   "result_head": "251 <trial>/answer.txt"
+  },
+  {
+   "tool": "Bash",
+   "input": "head -3 <trial>/answer.txt",
+   "result_bytes": 167,
+   "is_error": false,
+   "result_head": "crates/tuft/src/check.rs:230: binding: name.to_owned(),\ncrates/tuft/src/check.rs:244: binding: name.to_owned(),\ncrates/tuft/src/check.rs:296: binding: name.to_owned(),"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "is_error": false,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

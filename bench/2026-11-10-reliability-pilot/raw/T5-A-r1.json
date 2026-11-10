@@ -1,0 +1,60 @@
+{
+ "trial": "T5-A-r1",
+ "models": [
+  "claude-haiku-5-5"
+ ],
+ "api_calls": 6,
+ "usage_sum": {
+  "input_tokens": 14,
+  "cache_creation_input_tokens": 28427,
+  "cache_read_input_tokens": 237559,
+  "output_tokens": 1635
+ },
+ "tool_calls": 6,
+ "tool_result_bytes": 20895,
+ "final_reply": "DONE",
+ "tools": [
+  {
+   "tool": "Bash",
+   "input": "cd <trial>/repo && mkdir -p ../work && git grep -n -i -E \"in.?scope|scope.*(max|limit)|MAX_.*SCOPE|SCOPE.*(BYTES|LEN)\" -- crates/ > ../work/hits.txt; wc -l < ../work/hits.txt; head -50 ../work/hits.txt",
+   "result_bytes": 19078,
+   "is_error": false,
+   "result_head": "59\ncrates/tuft/src/check.rs:359:    if scope.len() > ir::MAX_SCOPE_BYTES {\ncrates/tuft/src/check.rs:361:            \"scope must be at most {} bytes\",\ncrates/tuft/src/check.rs:362:            ir::MAX_SCOPE_BYTES\ncrates/tuft/src/envelope.rs:102:\\\"find\\\":{{\\\"binding\\\":{},\\\"matcher\\\":{},\\\"pattern\\\":{},\\\"scope\\\":{},\\\"limit\\\":{},\\\"coverage\\\":{},\\\"stopped\\\":{stop},\\\"hits\\\":{}}},\\\ncrates/tuft/src/ir.rs:16:pub const MAX_SCOPE_BYTES: usize = 1_024;\ncrates/tuft/src/view.rs:16:    /// Files fully searched over files in scope at the pinned commit.\ncrates/writfold-app/src/trial/prepare.rs:98:    validate_prepared(&prepared, recipe, capture, &candidate, scope, limits)?;\ncrates/writfold-app/src/tuft/backend_tests.rs:5:use super::{CANCELLED, MAX_SCOPE_BYTES, budgets, commit};\ncrates/writfold-app/src/tuft/b"
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial>/repo && sed -n 10,20p crates/tuft/src/ir.rs; echo ---; sed -n 350,366p crates/tuft/src/check.rs",
+   "result_bytes": 947,
+   "is_error": false,
+   "result_head": "pub const MAX_AROUND_LINES: u64 = 1_000;\npub const MAX_EXCERPT_CHARS: u64 = 4_096;\npub const MAX_VIEW_LIMIT: u64 = 100_000;\npub const DEFAULT_BUDGET_TOKENS: u64 = 1_000;\npub const MAX_BUDGET_TOKENS: u64 = 1_000_000;\npub const MAX_NEEDLE_BYTES: usize = 4_096;\npub const MAX_SCOPE_BYTES: usize = 1_024;\n\n#[derive(Clone, Debug)]\npub struct Plan {\n    /// SHA-256 of the exact program bytes, lowercase hexadecimal.\n---\n\nfn full_commit(text: &str) -> bool {\n    matches!(text.len(), 40 | 64)\n        && text\n            .bytes()\n            .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))\n}\n\nfn admit_scope(scope: &str) -> Result<(), String> {\n    if scope.len() > ir::MAX_SCOPE_BYTES {\n        return Err(format!(\n            \"scope must be at most {} bytes\",\n            ir::MAX_SCOPE_BYTES\n "
+  },
+  {
+   "tool": "Read",
+   "input": "<trial>/repo/crates/tuft/src/ir.rs",
+   "result_bytes": 143,
+   "is_error": false,
+   "result_head": "14\tpub const MAX_BUDGET_TOKENS: u64 = 1_000_000;\n15\tpub const MAX_NEEDLE_BYTES: usize = 4_096;\n16\tpub const MAX_SCOPE_BYTES: usize = 1_024;\n17\t"
+  },
+  {
+   "tool": "Edit",
+   "input": "<trial>/repo/crates/tuft/src/ir.rs: 'pub const MAX_SCOPE_BYTES: usize = 1_024;' -> 'pub const MAX_SCOPE_BYTES: usize = 2_048;'",
+   "result_bytes": 193,
+   "is_error": false,
+   "result_head": "The file <trial>/repo/crates/tuft/src/ir.rs has been updated successfully."
+  },
+  {
+   "tool": "Bash",
+   "input": "cd <trial>/repo && git diff",
+   "result_bytes": 473,
+   "is_error": false,
+   "result_head": "diff --git a/crates/tuft/src/ir.rs b/crates/tuft/src/ir.rs\nindex 38ad807..c39c499 100644\n--- a/crates/tuft/src/ir.rs\n+++ b/crates/tuft/src/ir.rs\n@@ -13,7 +13,7 @@ pub const MAX_VIEW_LIMIT: u64 = 100_000;\n pub const DEFAULT_BUDGET_TOKENS: u64 = 1_000;\n pub const MAX_BUDGET_TOKENS: u64 = 1_000_000;\n pub const MAX_NEEDLE_BYTES: usize = 4_096;\n-pub const MAX_SCOPE_BYTES: usize = 1_024;\n+pub const MAX_SCOPE_BYTES: usize = 2_048;\n \n #[derive(Clone, Debug)]\n pub struct Plan {"
+  },
+  {
+   "tool": "SubagentHandback",
+   "input": "{\"message\": \"DONE\"}",
+   "result_bytes": 61,
+   "is_error": false,
+   "result_head": "{\"success\":true,\"message\":\"Report delivered to your caller.\"}"
+  }
+ ]
+}

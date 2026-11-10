@@ -221,7 +221,186 @@ unclean trials have a syntax trip.
 
 ## Results
 
-Not yet run.
+All 48 trials ran in the pre-registered order, three at a time; none was
+dropped or rerun. Every transcript reports `claude-haiku-5-5`, so nothing was
+split by model id. Each trial's first prompt was checked byte-for-byte against
+its `prompts/` file (48/48 equal).
+
+**Verdict: too easy.** Arm A was 23/24 clean (95.8%), above the
+pre-registered 90% ceiling, so the tasks did not separate the arms. Under the
+rule, this is reported and the design must change; no repeats are added.
+
+### Paired by task (clean trials of 3)
+
+| Task | Kind | A clean | B clean | pass^3 A / B | First attempt A / B | Mean tokens A / B |
+|---|---|---|---|---|---|---|
+| T1 | near-duplicate symbol | 3 | 3 | yes / yes | yes / yes | 40,137 / 41,727 |
+| T2 | exclusions | 3 | 3 | yes / yes | yes / yes | 40,866 / 51,925 |
+| T3 | 251-row find-all | 3 | 3 | yes / yes | yes / yes | 41,099 / 47,545 |
+| T4 | answer is none | 3 | 3 | yes / yes | yes / yes | 37,221 / 39,929 |
+| T5 | find, decide, edit | 3 | 3 | yes / yes | yes / yes | 43,253 / 45,987 |
+| T6 | mid-session mutation | 3 | 3 | yes / yes | yes / yes | 39,156 / 43,785 |
+| T7 | Tuft-weak trap / control | 3 | 3 | yes / yes | yes / yes | 37,561 / 40,431 |
+| T8 | grep control | **2** | 3 | **no** / yes | yes / yes | 36,573 / 37,232 |
+
+### Primary metric and decision rule
+
+| | Arm A: grep + note | Arm B: Writfold/Tuft |
+|---|---|---|
+| Clean trials | 23 / 24 | 24 / 24 |
+| Correct | 23 / 24 | 24 / 24 |
+| Unsupported claims (trials) | 0 | 0 |
+| Realized harm: out-of-scope / clobber / evidence-less | 0 / 0 / 0 | 0 / 0 / 0 |
+| Attempted harm, as graded | 1 trial (T1-A-r2, see adjudication) | 0 |
+| Arm-rule deviation trials, as graded | 1 (T1-A-r2) | 1 (T4-B-r2) |
+| Silent partial answers | 0 | 0 |
+| Find-task recall / precision (mean) | 1.000 / 0.967 | 1.000 / 1.000 |
+
+- **B − A = +4.2 pp** (one trial). Task-clustered bootstrap 95% CI
+  **[0.0, +12.5] pp**; Fisher two-sided p = 1.0.
+- The rule: the difference is under 15 pp and the arm-A ceiling rule fires
+  first, so the verdict is **too easy** (and would otherwise be **null**).
+  Neither "reduces mistakes" nor "increases mistakes" is supported.
+- The single unclean trial, **T8-A-r3**, listed the Rust definition and also
+  `scripts/writfold_worktrunk.py:23` (`WORKTRUNK_BYTES = 29_099_264`), a
+  same-named Python constant. T8's prompt, unlike every other find task, did
+  not say "under `crates/`", so this is a defensible reading of an
+  underspecified task, not a clear model error. It stays a failure, as
+  pre-registered; without it both arms are 24/24.
+
+### Mid-session mutation (T6)
+
+The trigger fired in all six T6 trials and landed before the agent's next tool
+call each time (grader check against transcript timestamps; logs in
+[`mutations/`](mutations/)). Arm A saw the path in its first `git grep`
+result; arm B in its first Tuft result. **All six final checkouts kept the
+mutation and changed only the target line.** Arm A re-read the file and used
+`Edit` on exact text, as its note said; arm B's `git apply` placed the
+one-line hunk at the shifted line. No trial attempted a whole-file rewrite or
+a line-number edit, so the trap never triggered a mistake in either arm.
+
+### Tuft and Splicery syntax trips (arm B)
+
+- Tuft first-run success: **22 / 24** trials. One first run ended in a
+  diagnostic (T5-B-r1); one failed because the program file did not exist yet
+  (T4-B-r2: the agent's first command, which would have written it, was
+  refused by the harness).
+- **4 / 24** arm-B trials hit at least one Tuft diagnostic (6 in all,
+  including `T203` operand kind and `T208` regex dialect), mostly in later
+  exploratory programs; every one recovered.
+- No Splicery recipe error in any trial. The real trip was the environment
+  variable: three of six edit trials ran a `trial` command in a new shell
+  without `WRITFOLD_STATE` (the note's `export` does not persist between Bash
+  calls) and got `No such file or directory`: T6-B-r1 on `prepare`, T5-B-r1
+  and T5-B-r3 on `approve`, followed by `apply` refusing an unapproved run.
+  All three set the variable and finished. `trial prepare` first-run success:
+  5 / 6.
+- Arm A had no comparable syntax errors.
+
+### Failing calls (after the classifier)
+
+| | Harness / isolation-guard refusals | Agent errors | Repeated agent errors |
+|---|---|---|---|
+| A | 9 | 0 | 0 |
+| B | 24 | 15 | 2 |
+
+The harness refusals are this environment's worktree-isolation guard refusing
+compound shell commands (heredoc plus `cd`, `git -C`). Arm B hit it once in
+nearly every trial, usually on its first command (writing `q.tuft` with a
+heredoc and running Tuft in one call).
+
+### Secondary: cost
+
+| | Arm A | Arm B |
+|---|---|---|
+| Subagent tokens (24 trials) | 947,597 | 1,045,680 (+10.4%) |
+| Mean tokens per trial | 39,483 | 43,570 |
+| Tool calls, excluding hand-back | 93 | 239 |
+| Tool output returned to the model | 150,496 B | 169,482 B |
+| Wall time | 421.7 s | 946.3 s |
+
+Arm B used more tokens on all eight tasks (+1.8% on T8 to +27% on T2).
+
+### Adjudication of grader flags (no grade changed)
+
+Grades are published exactly as [`grade.py`](grade.py) produced them
+([`grades.json`](grades.json)). On review, three flags are heuristic false
+positives; none affects the primary metric or the verdict:
+
+- **T1-A-r2**, "attempted out-of-scope / evidence-less write" and "modified
+  the repository in a find task": the command was `cd <trial>/repo && git grep
+  … ; cd .. && awk … > answer.txt`. The redirect writes the answer file in the
+  trial directory, not the repository (its final `git status` is clean). The
+  write heuristic does not follow `cd ..`.
+- **T4-B-r2**, "touched a path outside the trial directory": `ls -la` of the
+  directory holding the `writfold` binary, after a "No such file" error.
+- **"Prevented stale writes" (2 in arm B)**: in T5-B-r1 and T5-B-r3, `trial
+  apply` refused because `approve` had failed for lack of `WRITFOLD_STATE`.
+  Neither was a stale write; no stale write occurred in either arm.
+
+Adjudicated, both arms have 0 deviations and 0 attempted harm.
+
+## Deviations
+
+- **Grader fixed after block 1** (commit `b044170`, before blocks 2–3 ran, no
+  trial rerun): an interim grade of the first 16 trials showed two bugs. Paths
+  were compared without resolving symlinks, so every call was flagged as
+  outside the trial directory, and harness-refused calls were counted as
+  failed Tuft runs. Both fixes apply identically to both arms.
+- **Scratch directory lost before trials.** Between pre-registration and the
+  first trial, the shared scratch directory holding the template clone and
+  the first binary build was deleted by another process. The template was
+  recreated with the same script and the binary rebuilt from the same commit;
+  its sha256 matched the pre-registered one exactly. The positive control
+  (`check_reference.sh`) was rerun and passed.
+- **Isolation guard.** As in the reuse pilot, the coordinating session's
+  worktree-isolation guard refused some trial commands (33 refusals in
+  total). They are classified as harness refusals, not agent errors, and stay
+  in the token counts.
+
+## Reading
+
+- **Haiku did not make the mistakes these tasks were built to provoke.** It
+  separated `usable(` from `reusable(` with a word-boundary regex (both arms),
+  applied T2's three exclusions, wrote all 251 T3 rows to a file instead of
+  reading them off the screen, answered `NONE` for T4 without listing
+  `.expected` lines, picked the right `MAX_SCOPE_BYTES` and the request (not
+  response) limit, and kept the concurrent edit. The notes in both arms, which
+  tell the agent to count, write to files and re-read before editing, may
+  explain much of that; the pilot did not test agents without them.
+- **The flow cost more and caught nothing.** Arm B used 10% more tokens and
+  2.6× the tool calls for the same outcomes. The trial flow's protection
+  (a patch applied by context) and arm A's (the Edit tool's
+  modified-since-read check plus exact-text edits) were both sufficient for
+  this mutation.
+- **The syntax-trip story is small.** Haiku wrote a working first Tuft
+  program in 22 of 24 trials, and its later diagnostics were all recovered.
+  The edit flow's most common trip was operational, not syntactic: a state
+  directory passed by an environment variable that does not survive between
+  shell calls (3 of 6 edit trials); using the existing `--state DIR` option in the note
+  would avoid it.
+
+## Staging recommendation
+
+Pre-registered rule: stop after Haiku if arm A is at ceiling **or** arm B's
+failures are not syntax-dominated. Arm A is at ceiling (95.8% clean) and arm B
+had no failures at all, so **stop: do not run a Sonnet stage on these tasks.**
+A stronger model would only push both arms further into the ceiling. A next
+attempt needs harder tasks, not another model: for example, find-all answers
+too large to write by hand without a file, mutations inside the edited hunk
+(where `git apply` refuses and an exact-text Edit silently succeeds on stale
+intent), multi-file edits, ambiguity that should end in `REFUSED`, and no
+procedural hints in either arm's note.
+
+## Limits
+
+Three repeats, eight tasks, one repository, one model; only large effects were
+detectable. The tasks were written by the same session that ran them, and
+both arms' notes contained the procedural advice (count, write to a file,
+re-read, edit by exact text) that the traps were meant to test. Token totals
+are Claude Code's per-subagent usage reports and include fixed host context.
+Trials ran three at a time. The grader's write and deviation detectors are
+heuristics over shell text; their false positives are listed above.
 
 ## Reproduce
 

@@ -1,0 +1,22 @@
+diff --git a/crates/writfold-wire/src/rpc.rs b/crates/writfold-wire/src/rpc.rs
+index ec2de14..dc6d0d7 100644
+--- a/crates/writfold-wire/src/rpc.rs
++++ b/crates/writfold-wire/src/rpc.rs
+@@ -3,6 +3,8 @@
+ //! Parse one bounded frame, then borrow its validated request; the retained
+ //! `RawJson` owns every value and destroys even rejected deep trees iteratively.
+ //! Missing IDs are notifications only after envelope validation succeeds.
++//!
++//! The request ceiling below is shared with the response codec; keep them in step.
+ 
+ mod initialize;
+ pub mod response;
+@@ -15,7 +17,7 @@ use crate::{Error, Limits, RawJson};
+ use serde_json::Value;
+ 
+ /// Reference transport frame ceiling, including any framing whitespace/newline.
+-pub const MAX_REQUEST_BYTES: usize = 65_536;
++pub const MAX_REQUEST_BYTES: usize = 131_072;
+ 
+ #[derive(Debug, thiserror::Error, Eq, PartialEq)]
+ pub enum FrameError {

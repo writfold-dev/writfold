@@ -1,0 +1,4 @@
+edit "crates/tuft/src/ir.rs" {
+  @x := one text "pub const MAX_SCOPE_BYTES: usize = 1_024;"
+  replace @x with "pub const MAX_SCOPE_BYTES: usize = 2_048;"
+}
