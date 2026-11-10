@@ -2,7 +2,7 @@
 //! omission count and cursor, cursors bind to the view, and a budget too
 //! small for one row says so instead of printing nothing silently. The
 //! budget is counted over compact rows (`src/f0.rs: 0123…+6B`, 6 tokens).
-use tuft::emit::{CursorError, Format, Run, emit};
+use tuft::emit::{Cursor, CursorError, Format, Run, emit};
 use tuft::view::{Evidence, Row, SearchReport, project};
 use writfold_domain::citation::Coverage;
 
@@ -39,6 +39,10 @@ fn render_as(
     cursor: Option<&str>,
     format: Format,
 ) -> Result<std::result::Result<String, CursorError>> {
+    let cursor = match cursor.map(Cursor::parse).transpose() {
+        Ok(cursor) => cursor,
+        Err(refused) => return Ok(Err(refused)),
+    };
     let plan = plan(budget)?;
     let projected = project(rows(), &plan.view);
     let run = Run {
@@ -54,7 +58,7 @@ fn render_as(
         retained: Some(5),
         projected: &projected,
     };
-    Ok(emit(run, cursor, format).map(|e| e.printed()))
+    Ok(emit(run, cursor.as_ref(), format).map(|e| e.printed()))
 }
 
 fn field<'a>(text: &'a str, key: &str) -> Option<&'a str> {
@@ -72,8 +76,11 @@ fn budget_stops_at_a_row_boundary_and_the_cursor_resumes() -> Result {
     let second = render(12, Some(cursor))??;
     assert_eq!(field(&second, "from"), Some("2"));
     assert!(second.contains("\nsrc/f2.rs "), "{second}");
-    assert_eq!(render(13, Some(cursor))?, Err(CursorError::Mismatch));
+    assert_eq!(render(13, Some(cursor))?, Err(CursorError::ForeignProgram));
     assert_eq!(render(12, Some("zz"))?, Err(CursorError::Malformed));
+    let edited = cursor.replacen(".2.", ".3.", 1);
+    assert_ne!(edited, cursor);
+    assert_eq!(render(12, Some(&edited))?, Err(CursorError::Tampered));
     Ok(())
 }
 

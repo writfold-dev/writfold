@@ -2,7 +2,7 @@
 use super::{Invocation, compile, run};
 use crate::trial::Result;
 use std::path::{Path, PathBuf};
-use tuft::emit::Format;
+use tuft::emit::{Cursor, Format};
 
 pub const USAGE: &str = "\
 writfold tuft run FILE --repo DIR [--state DIR] [--cursor C] [--verbose|--json]
@@ -113,12 +113,13 @@ pub fn main(args: &[String]) -> Result<String> {
             if let Some(out) = parsed.option("out").filter(|o| Path::new(o).exists()) {
                 return Err(format!("--out {out}: file exists (refusing to overwrite)").into());
             }
+            let cursor = parsed.option("cursor").map(Cursor::parse).transpose()?;
             let emitted = run(&Invocation {
                 source: &source,
                 name: file,
                 repo: Path::new(repo),
                 state: &state,
-                cursor: parsed.option("cursor"),
+                cursor: cursor.as_ref(),
                 format: parsed.format,
             })?;
             match parsed.option("out") {

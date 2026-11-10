@@ -9,7 +9,7 @@ use std::os::unix::fs::DirBuilderExt;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::atomic::{AtomicU64, Ordering};
-use tuft::emit::Format;
+use tuft::emit::{Cursor, CursorError, Format};
 use writfold_store::backend::{Capability, Refusal};
 
 static NEXT: AtomicU64 = AtomicU64::new(0);
@@ -79,12 +79,13 @@ pub(super) fn tuft(
     cursor: Option<&str>,
     format: Format,
 ) -> Result<String> {
+    let cursor = cursor.map(Cursor::parse).transpose()?;
     run(&Invocation {
         source: program.as_bytes(),
         name: "test.tuft",
         repo: &f.repo,
         state: &f.state,
-        cursor,
+        cursor: cursor.as_ref(),
         format,
     })
     .map(|emitted| emitted.printed())
@@ -136,6 +137,25 @@ fn budget_overflow_reports_omissions_and_the_cursor_resumes() -> Result<()> {
     let other = pipeline(&f, 61);
     let refused = tuft(&f, &other, cursor.as_deref(), Format::Verbose);
     assert!(refused.is_err_and(|e| e.to_string().contains("different program")));
+    Ok(())
+}
+
+#[test]
+fn a_cursor_from_another_commit_refuses_as_stale() -> Result<()> {
+    let f = fixture()?;
+    let page = tuft(&f, &pipeline(&f, 60), None, Format::Compact)?;
+    let cursor = envelope(&page, "cursor")
+        .filter(|c| *c != "none")
+        .ok_or("no cursor")?;
+    fs::write(f.repo.join("src/m0.rs"), "let a = 9;\n")?;
+    git(&f.repo, &["commit", "-qam", "next"])?;
+    let next = git(&f.repo, &["rev-parse", "HEAD"])?;
+    let moved = pipeline(&f, 60).replace(&f.commit, &next);
+    let refused = tuft(&f, &moved, Some(cursor), Format::Compact)
+        .err()
+        .ok_or("resumed")?;
+    let typed = refused.downcast_ref::<CursorError>().ok_or("untyped")?;
+    assert_eq!(*typed, CursorError::OtherCommit);
     Ok(())
 }
 

@@ -189,7 +189,7 @@ One row per line, then one trailer line:
 
 ```text
 <path>:<line>: <text>
-# coverage=<complete|partial> files=<E>/<T> hits=<n>[ stopped=hit-limit] shown=<n> omitted=<n>[ limited=<n>][ needs=<t>] cursor=<TAG.OFFSET|none> program=<12 hex>
+# coverage=<complete|partial> files=<E>/<T> hits=<n>[ stopped=hit-limit] shown=<n> omitted=<n>[ limited=<n>][ needs=<t>] cursor=<v2.P.C.OFFSET.K|none> program=<12 hex>
 ```
 
 - **Rows.** The projection's fields other than `excerpt` print in projection
@@ -234,7 +234,7 @@ find @<name> <text|rx> "<pattern>" in "<scope>" limit=<n>: coverage=<complete|pa
 retain @<name> range=<match|lines(around=N)> bindings=<distinct> schema=writfold-citation/1
 view @<name> rows=<n> merged=<n> limited=<n> from=<i> shown=<n> omitted=<n> budget_tokens=<b> used=<u> estimate=ceil((bytes+1)/4) per compact row
 [notice next row needs <t> tokens; raise budget_tokens]
-cursor=<TAG.OFFSET|none>
+cursor=<v2.P.C.OFFSET.K|none>
 columns <field> ...
 <row>
 ```
@@ -253,11 +253,22 @@ exact shown file range and its text as a JSON string literal.
   outside the budget. Rows stop at a row boundary. `omitted` counts the rows
   not shown. If not even one row fits, the trailer or envelope says so and
   shows zero rows.
-- **Cursor.** `TAG` is the first 16 hex digits of SHA-256 over the program
-  digest, commit, budget and every compact row. `--cursor TAG.OFFSET` reruns
-  the same program and resumes at `OFFSET`, in any rendering. A cursor from
-  a different program, commit, budget or result refuses. It is a
-  continuation, not a capability.
+- **Cursor.** A resume cursor is `v2.P.C.OFFSET.K`: the cursor version,
+  the first 8 hex digits of the program digest (`P`) and of the commit
+  (`C`), the first row to show (`OFFSET`, decimal) and an 8-hex check (`K`),
+  the first 8 hex digits of SHA-256 over
+  `tuft-cursor/2\n<program digest>\n<commit>\n<offset>\n<view digest>`.
+  The view digest covers every compact row, so the cursor binds program,
+  commit, offset and result; the budget is part of the program. Only the
+  canonical text parses. `--cursor` reruns the same program and resumes at
+  `OFFSET`, in any rendering. Refusals are typed, checked in this order:
+  `Malformed`, `UnsupportedVersion` (including the earlier unversioned
+  `TAG.OFFSET` form), `OtherCommit` (a stale cursor; a new pin is also a new
+  program, and the commit is what is reported), `ForeignProgram`, `Tampered`
+  (the check fails: the offset was edited or the result changed) and
+  `OutOfRange`. It is a continuation, not a capability: the check is not a
+  secret, it only turns a wrong cursor into a refusal instead of a wrong
+  page.
 - **Determinism.** The same program bytes and commit give byte-identical
   output in every rendering.
 - **`--json`** emits the verbose envelope and rows as one JSON object, with
@@ -337,8 +348,22 @@ scope refuses and asks to be narrowed.
 
 v0 uses the domain's `Coverage` and `SearchBudget` directly.
 `CandidateHandle` and `ScopeCut` exist only as planned names, with no code
-yet. The domain's `NoticeCursor` is a borrowed, session-scoped value over a
-`NoticeQuery` with an `AliasScope`. A CLI run has no session, so Tuft's
-serialized `TAG.OFFSET` continuation is bound to program, commit, budget and
-result instead. When a session layer (S3) exists, the cursor should move onto
-`NoticeCursor`.
+yet. The resume cursor is deliberately not the domain's `NoticeCursor`:
+
+- `NoticeCursor` borrows a live `NoticeQuery` (`&'a NoticeQuery<'a>` plus an
+  offset). Its Verus spec is stated over that in-memory query view, it has no
+  serialized form, and no wire encoding exists for it. It is a position
+  inside one process.
+- Tuft's cursor crosses processes as text (`--cursor`, a later CLI run or
+  an agent's next tool call), so it must carry its own binding: program
+  digest, commit, offset and a digest of the result.
+- `NoticeCursor` positions a notice stream (Run Watch); Tuft's cursor
+  positions the rows of one pinned, deterministic view. Moving onto it would
+  mean either a parallel serialized `NoticeQuery` or a borrowed value that
+  cannot be resumed after the process exits.
+
+So Tuft's cursor is its own nominal type, `tuft::cursor::Cursor`, with the
+canonical versioned encoding above. If a session layer later serves Tuft
+views as notice streams, that layer can map a resumed `Cursor` onto a
+`NoticeCursor` over its own query; the text form stays the handoff.
+

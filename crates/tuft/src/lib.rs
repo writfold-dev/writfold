@@ -14,6 +14,7 @@
 pub mod ast;
 pub mod check;
 mod compact;
+pub mod cursor;
 pub mod diag;
 pub mod emit;
 mod envelope;
@@ -27,7 +28,7 @@ pub mod view;
 pub use diag::{Code, Deferred, Diagnostic, Span};
 pub use ir::Plan;
 
-/// Output and cursor format version.
+/// Output format version (the cursor carries its own, see [`cursor`]).
 pub const VERSION: &str = "tuft/0";
 
 /// Lex, parse and check a program. On failure every diagnostic is returned

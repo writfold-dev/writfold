@@ -8,6 +8,7 @@
 //! the verbose envelope and JSON. The trailer and envelope sit outside the
 //! budget and are always produced.
 use crate::compact;
+pub use crate::cursor::{Binding, Cursor, CursorError};
 use crate::digest_hex;
 use crate::envelope;
 use crate::ir::Plan;
@@ -55,26 +56,6 @@ impl Emitted {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub enum CursorError {
-    Malformed,
-    /// Issued for a different program, commit, budget or result.
-    Mismatch,
-    OutOfRange,
-}
-
-impl std::fmt::Display for CursorError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(match self {
-            Self::Malformed => "cursor is malformed (expected TAG.OFFSET)",
-            Self::Mismatch => "cursor was issued for a different program, commit, budget or result",
-            Self::OutOfRange => "cursor offset is beyond the view",
-        })
-    }
-}
-
-impl std::error::Error for CursorError {}
-
 fn estimate(line: &str) -> usize {
     (line.len() + 1).div_ceil(4)
 }
@@ -90,7 +71,7 @@ pub(crate) struct Page {
 }
 
 /// Render the view from `cursor` (or the first row) in `format`.
-pub fn emit(run: Run<'_>, cursor: Option<&str>, format: Format) -> Result<Emitted, CursorError> {
+pub fn emit(run: Run<'_>, cursor: Option<&Cursor>, format: Format) -> Result<Emitted, CursorError> {
     let lines_mode = run.plan.retain.as_ref().is_some_and(|r| r.around.is_some());
     let lines: Vec<String> = run
         .projected
@@ -98,8 +79,13 @@ pub fn emit(run: Run<'_>, cursor: Option<&str>, format: Format) -> Result<Emitte
         .iter()
         .map(|r| compact::row(r, &run.plan.view.fields, lines_mode))
         .collect();
-    let tag = cursor_tag(run.plan, &digest_hex(lines.join("\n").as_bytes()));
-    let from = start(cursor, &tag, lines.len())?;
+    let view = digest_hex(lines.join("\n").as_bytes());
+    let binding = Binding {
+        program: &run.plan.program,
+        commit: &run.plan.find.commit,
+        view: &view,
+    };
+    let from = cursor.map_or(Ok(0), |c| c.resume(&binding, lines.len()))?;
     let budget = run.plan.emit.budget_tokens;
     let (mut used, mut shown) = (0, 0);
     for line in lines.iter().skip(from) {
@@ -116,7 +102,7 @@ pub fn emit(run: Run<'_>, cursor: Option<&str>, format: Format) -> Result<Emitte
         shown,
         omitted: lines.len() - next,
         used,
-        cursor: (next < lines.len()).then(|| format!("{tag}.{next}")),
+        cursor: (next < lines.len()).then(|| Cursor::issue(&binding, next).to_string()),
         blocked: (shown == 0)
             .then(|| lines.get(from).map(|l| estimate(l)))
             .flatten(),
@@ -169,30 +155,4 @@ fn trailer(run: Run<'_>, page: &Page) -> String {
         run.plan.program.get(..12).unwrap_or_default()
     );
     out
-}
-
-fn cursor_tag(plan: &Plan, view_digest: &str) -> String {
-    let material = format!(
-        "tuft-cursor/1\n{}\n{}\n{}\n{view_digest}",
-        plan.program, plan.find.commit, plan.emit.budget_tokens
-    );
-    digest_hex(material.as_bytes())
-        .get(..16)
-        .unwrap_or_default()
-        .to_owned()
-}
-
-fn start(cursor: Option<&str>, tag: &str, rows: usize) -> Result<usize, CursorError> {
-    let Some(cursor) = cursor else {
-        return Ok(0);
-    };
-    let (given, offset) = cursor.split_once('.').ok_or(CursorError::Malformed)?;
-    let offset: usize = offset.parse().map_err(|_| CursorError::Malformed)?;
-    if given != tag {
-        return Err(CursorError::Mismatch);
-    }
-    if offset >= rows {
-        return Err(CursorError::OutOfRange);
-    }
-    Ok(offset)
 }
