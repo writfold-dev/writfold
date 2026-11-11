@@ -1,0 +1,7 @@
+asset tide-dashboard [active] Tide latency dashboard @inventory/assets/tide-dashboard.json:8
+  via: same locator https://example.invalid/acme/harbor-api.git
+ticket HBR-101 [in-progress] Slow ledger flush at month end @ktlo/2026/hbr-101-slow-ledger-flush.md:5
+  via: concerns (from) harbor-api @ktlo/2026/hbr-101-slow-ledger-flush.md:4
+# note: 1 citation(s) in the home files have no cached verdict; run `writfold kb stale inventory/assets/harbor-api.json`
+# coverage=complete records=28/28 shown=2 omitted=11 frontier=1 kb=d5db758bda80 index=fresh cursor=v2.2b35b6ce.3dbb1366.3.69294436 q=2b35b6ce5ee9
+# exit=0

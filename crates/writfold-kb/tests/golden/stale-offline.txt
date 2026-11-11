@@ -1,0 +1,6 @@
+cite web:https://example.invalid/wiki/harbor [due] at offline @harbor/STATUS.md:10 !due
+asset harbor-api [active] verified_at 2026-01-05 ttl 30d @inventory/assets/harbor-api.json:10 !past-ttl
+investigation inv:2026/2026-06-01-flush-stalls-again [open] opened after sig:fsync-stall was marked fixed @investigations/2026/2026-06-01-flush-stalls-again/README.md:7 !regression
+# note: offline: only authored stale marks and due TTLs are reported
+# coverage=complete records=28/28 shown=3 omitted=0 checked=9 stale=3 unverifiable=0 kb=d5db758bda80 index=fresh cursor=none q=68ceb8ee9ff8
+# exit=2

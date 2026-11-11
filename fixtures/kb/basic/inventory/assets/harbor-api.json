@@ -1,0 +1,19 @@
+{
+  "id": "harbor-api",
+  "kind": "service",
+  "name": "Harbor billing API",
+  "aliases": [
+    "hapi"
+  ],
+  "owner": "team-quay",
+  "owner_source": "fixture",
+  "lifecycle": "active",
+  "projects": [
+    "harbor"
+  ],
+  "schema_version": 1,
+  "locator": "https://example.invalid/acme/harbor-api.git",
+  "verified_at": "2026-01-05",
+  "ttl": "30d",
+  "notes": "Accepts invoices and writes the ledger."
+}

@@ -1,0 +1,20 @@
+index d5db758bda80 [rebuilt] <WORLD>/kb/.git/writfold/kb-index-e3b0c44298fc.sqlite
+  records: asset=5
+  records: correction=1
+  records: decision=4
+  records: dossier=1
+  records: evidence=1
+  records: investigation=2
+  records: project=2
+  records: relationship=4
+  records: run=1
+  records: runbook=1
+  records: signature=1
+  records: ticket=2
+  count: files=28
+  count: citations=9
+  count: edges=30
+  count: unresolved=3
+  count: cached-verdicts=0
+# coverage=complete records=28/28 shown=1 omitted=0 kb=d5db758bda80 index=rebuilt cursor=none q=b5b35f624ce5
+# exit=0

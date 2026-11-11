@@ -14,6 +14,15 @@ fn allowed(name: &str) -> Option<&'static [&'static str]> {
             &["writfold-domain", "writfold-wire"]
         }
         "writfold-runtime" => &["writfold-domain", "writfold-protocol"],
+        // KB v1: continuity reads over a derived SQLite index. It uses the
+        // runtime's native reads and never the store (or Dolt) path.
+        "writfold-kb" => &[
+            "writfold-domain",
+            "writfold-sources",
+            "writfold-runtime",
+            "writfold-core",
+            "tuft",
+        ],
         "writfold-store" => &[
             "writfold-domain",
             "writfold-protocol",
@@ -33,6 +42,7 @@ fn allowed(name: &str) -> Option<&'static [&'static str]> {
             "writfold-runtime",
             // The `writfold tuft` adapter compiles programs with the pure crate.
             "tuft",
+            "writfold-kb",
         ],
         "writfold" => &["writfold-app", "writfold-wire", "writfold-domain"],
         "writfold-xtask" => &[],
@@ -171,6 +181,14 @@ fn walk<'a>(
     if forbidden_tls(name) {
         issue(diagnostics, "tls", owner, name);
     }
+    if sqlite_closure(name) && !matches!(owner, "writfold-kb" | "writfold-app" | "writfold") {
+        issue(
+            diagnostics,
+            "native-dependency",
+            owner,
+            &format!("{name} compiles native code and is admitted only for writfold-kb"),
+        );
+    }
     if matches!(
         owner,
         "writfold-domain" | "writfold-kernel" | "writfold-protocol"
@@ -214,6 +232,26 @@ fn forbidden_tls(name: &str) -> bool {
         || name == "hyper-tls"
         || name == "openssl"
         || name.starts_with("openssl-")
+}
+
+/// The reviewed closure that compiles the bundled SQLite amalgamation (C,
+/// through `cc`) into the static binary, with its Rust wrapper. It is
+/// admitted only where the KB index needs it; anywhere else it is an
+/// unclassified change.
+fn sqlite_closure(name: &str) -> bool {
+    matches!(
+        name,
+        "rusqlite"
+            | "libsqlite3-sys"
+            | "cc"
+            | "find-msvc-tools"
+            | "shlex"
+            | "pkg-config"
+            | "vcpkg"
+            | "hashlink"
+            | "fallible-iterator"
+            | "fallible-streaming-iterator"
+    )
 }
 
 fn pure_dependency(name: &str) -> bool {

@@ -1,0 +1,17 @@
+{
+  "id": "harbor-db",
+  "kind": "store",
+  "name": "Harbor ledger store",
+  "aliases": [
+    "ledger"
+  ],
+  "owner": "team-quay",
+  "owner_source": "fixture",
+  "lifecycle": "active",
+  "projects": [
+    "harbor"
+  ],
+  "schema_version": 1,
+  "ttl": "none",
+  "verified_at": "2026-10-01"
+}

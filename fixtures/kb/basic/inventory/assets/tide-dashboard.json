@@ -1,0 +1,14 @@
+{
+  "id": "tide-dashboard",
+  "kind": "dashboard",
+  "name": "Tide latency dashboard",
+  "aliases": [],
+  "owner": "team-quay",
+  "owner_source": "fixture",
+  "lifecycle": "active",
+  "projects": [
+    "harbor"
+  ],
+  "schema_version": 1,
+  "locator": "https://example.invalid/acme/harbor-api.git"
+}

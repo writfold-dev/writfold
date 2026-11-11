@@ -1,0 +1,5 @@
+asset harbor-db [active] Harbor ledger store @inventory/assets/harbor-db.json:10
+asset lantern-ui [active] Lantern console @inventory/assets/lantern-ui.json:10
+# note: "ledger" names 2 records; pass one ID
+# coverage=complete records=28/28 shown=2 omitted=0 kb=d5db758bda80 index=fresh cursor=none q=2c943fb932fa
+# exit=3

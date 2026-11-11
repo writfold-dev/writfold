@@ -1,0 +1,11 @@
+asset harbor-api [active] Harbor billing API @inventory/assets/harbor-api.json:10 !past-ttl
+  field: kind=service
+  field: owner=team-quay
+  field: locator=https://example.invalid/acme/harbor-api.git
+  field: projects=[harbor]
+  field: verified_at=2026-01-05
+  field: ttl=30d
+  summary: Accepts invoices and writes the ledger.
+# note: 1 citation(s) in the home files have no cached verdict; run `writfold kb stale inventory/assets/harbor-api.json`
+# coverage=complete records=28/28 shown=1 omitted=13 frontier=1 kb=d5db758bda80 index=fresh cursor=v2.2b35b6ce.3dbb1366.1.3fd03088 q=2b35b6ce5ee9
+# exit=0

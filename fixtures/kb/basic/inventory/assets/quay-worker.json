@@ -1,0 +1,15 @@
+{
+  "id": "quay-worker",
+  "kind": "deployment",
+  "name": "Quay batch worker",
+  "aliases": [],
+  "owner": "team-quay",
+  "owner_source": "fixture",
+  "lifecycle": "sunsetting",
+  "projects": [
+    "harbor",
+    "lantern"
+  ],
+  "schema_version": 1,
+  "site_tier": "gold"
+}

@@ -1,0 +1,15 @@
+{
+  "id": "lantern-ui",
+  "kind": "service",
+  "name": "Lantern console",
+  "aliases": [
+    "ledger"
+  ],
+  "owner": "team-quay",
+  "owner_source": "fixture",
+  "lifecycle": "active",
+  "projects": [
+    "lantern"
+  ],
+  "schema_version": 1
+}

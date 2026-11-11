@@ -1,0 +1,4 @@
+decision proposal/decision/2026-04-01-shard-ledger [draft] Shard the ledger by tenant @proposals/decision/2026-04-01-shard-ledger/proposal.md:5 !draft
+# note: absence in the KB is not evidence of absence in the world; check the sources, then record what you find
+# coverage=partial records=28/28 shown=1 omitted=0 answer=unknown reason=no-accepted-decision kb=d5db758bda80 index=fresh cursor=none q=fb9316d867d5
+# exit=2

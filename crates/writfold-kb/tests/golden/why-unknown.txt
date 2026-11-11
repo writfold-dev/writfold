@@ -1,0 +1,3 @@
+# note: absence in the KB is not evidence of absence in the world; check the sources, then record what you find
+# coverage=partial records=28/28 shown=0 omitted=0 answer=unknown reason=no-accepted-decision kb=d5db758bda80 index=fresh cursor=none q=96ae7d929001
+# exit=2
