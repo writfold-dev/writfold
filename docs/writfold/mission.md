@@ -94,7 +94,7 @@ multi-party need appears.
 
 ## Roadmap
 
-The v1 design follows in `kb-v1-design.md`.
+The v1 design is [kb-v1-design.md](kb-v1-design.md).
 
 1. Read an existing project knowledge base: `brief`, `context`, `why`, `stale`.
 2. The index and search: `find`, `status`, `timeline`, `uses`.
