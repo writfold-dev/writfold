@@ -22,7 +22,8 @@
 //! coordination lease, never from exit status alone. A killed, cancelled or
 //! timed-out write is `Unknown`; it is never retried, and `observe` resolves it.
 use super::DoltBackend;
-use super::ownership::{DoltWriteApproval, WriterId, authorizes, owns};
+use super::origin::first_parent;
+use super::ownership::{DoltWriteApproval, Expected, WriterId, authorizes, owns};
 use crate::backend::{
     Capability, RecordChange, Refusal, WriteObservation, WriteOutcome, WriteRequest,
 };
@@ -42,6 +43,8 @@ use writfold_wire::dolt_operation::DoltTarget;
 const MAX_CHANGES: usize = 1024;
 /// `wf_nodes.id` is `VARCHAR(600)`: a character bound, checked before IO.
 const KEY_CHARS: usize = 600;
+/// Every commit the writer makes starts with this marker family.
+pub(super) const FAMILY: &str = "writfold-dolt-write/1 ";
 const MARKER: &str = "writfold-dolt-write/1 write=";
 const DOMAIN: &[u8] = b"writfold-dolt-write-v1\0";
 
@@ -69,7 +72,7 @@ pub(super) fn admit(
         ));
     }
     let marker = marker(request)?;
-    authorizes(authority, &writer.target, &request.expected_old)?;
+    let expected = authorizes(authority, &writer.target, &request.expected_old)?;
     let plan = authority
         .map(|approval| approval.plan().as_str())
         .unwrap_or("");
@@ -83,14 +86,15 @@ pub(super) fn admit(
         message: &message,
     };
     writer.claim.check_current().map_err(runtime)?;
-    commit(backend, request, &marker, write, cancelled)
+    commit(backend, request, (&marker, expected), write, cancelled)
 }
 
-/// The IO half of `admit`, under one coordination lease and one deadline.
+/// The IO half of `admit`, under one coordination lease and one deadline. A
+/// bootstrap additionally requires an unwritten origin under the same lease.
 fn commit(
     backend: &DoltBackend<'_>,
     request: &WriteRequest<DoltReadPin>,
-    marker: &str,
+    (marker, expected): (&str, Expected),
     mut write: DoltWrite<'_>,
     cancelled: &AtomicBool,
 ) -> Result<WriteOutcome<DoltReadPin>, Refusal> {
@@ -109,6 +113,12 @@ fn commit(
     if before.pending != 0 {
         return Err(Refusal::Backend(
             "working set has uncommitted changes; the writer never commits them".into(),
+        ));
+    }
+    if expected == Expected::Origin && first_parent(backend, &lease, deadline, cancelled)?.is_some()
+    {
+        return Err(Refusal::Unauthorized(
+            "a bootstrap approval cannot write over an existing Writfold write",
         ));
     }
     write.retain_expected = !before.retained;

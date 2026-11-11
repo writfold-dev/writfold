@@ -1,10 +1,13 @@
-//! DINT02 first slice end to end: approved publication of a prepared candidate
-//! over the real Dolt conditional writer and a real Git release repository.
+//! DINT02 publication end to end: signed bootstrap and ordinary publication of
+//! prepared candidates over the real Dolt conditional writer and a real Git
+//! release repository. Every world's first release is a real bootstrap.
 //!
 //! The admitted Dolt executable (path and SHA-256 from
 //! `qualification/dolt-integration-profile.json`) and the admitted Git must be
 //! present, as they are in the qualified tool image. A different or missing
 //! Dolt fails these tests; they are never skipped.
+#[path = "publication/bootstrap.rs"]
+mod bootstrap;
 #[path = "publication/kill.rs"]
 mod kill;
 #[path = "publication/realm.rs"]
@@ -23,9 +26,7 @@ use writfold_store::backend::{StorageBackend, WriteOutcome};
 fn publishes_with_retained_closure_and_preserved_history() -> Result {
     with_world(|world| {
         let first = candidate("doc:c", "first publication")?;
-        let approval = world
-            .signer
-            .approve(&world.genesis, &world.realm.after, 1)?;
+        let approval = world.signer.approve(&world.genesis, &world.base, 1)?;
         let Publication::Published { release, pin } =
             publish(world.backend, world.releases, &approval, &first, &STOP)?
         else {
@@ -63,15 +64,19 @@ fn publishes_with_retained_closure_and_preserved_history() -> Result {
         let old = world.releases.interpret::<DoltReadPin>(&release, &STOP)?;
         assert_eq!(old.manifest.pin, pin);
         assert_eq!(
-            reads(world, &old.manifest.pin, "doc:c")?,
+            reads(world.backend, &old.manifest.pin, "doc:c")?,
             b"first publication"
         );
-        assert_eq!(reads(world, &newer, "doc:c")?, b"second publication");
+        assert_eq!(
+            reads(world.backend, &newer, "doc:c")?,
+            b"second publication"
+        );
         assert_eq!(world.releases.completed(&STOP)?, Some(later));
         // The first approval is spent: its base release is no longer current.
         let replay = publish(world.backend, world.releases, &approval, &first, &STOP)?;
         assert!(matches!(replay, Publication::Conflict { .. }), "{replay:?}");
-        assert_eq!(world.realm.commits_mentioning("writfold-dolt-write/1")?, 2);
+        // The bootstrap write and two publications.
+        assert_eq!(world.realm.commits_mentioning("writfold-dolt-write/1")?, 3);
         Ok(())
     })
 }
@@ -80,18 +85,14 @@ fn publishes_with_retained_closure_and_preserved_history() -> Result {
 fn git_conflict_and_misinterpretation_write_nothing() -> Result {
     with_world(|world| {
         let winner = candidate("doc:c", "winner")?;
-        let approval = world
-            .signer
-            .approve(&world.genesis, &world.realm.after, 1)?;
+        let approval = world.signer.approve(&world.genesis, &world.base, 1)?;
         let won = publish(world.backend, world.releases, &approval, &winner, &STOP)?;
         let Publication::Published { release, pin } = won else {
             return Err("expected Published".into());
         };
         // A different signed operation over the same base: Git CAS conflict.
         let loser = candidate("doc:c", "loser")?;
-        let rival = world
-            .signer
-            .approve(&world.genesis, &world.realm.after, 2)?;
+        let rival = world.signer.approve(&world.genesis, &world.base, 2)?;
         let lost = publish(world.backend, world.releases, &rival, &loser, &STOP)?;
         assert_eq!(
             lost,
@@ -111,8 +112,9 @@ fn git_conflict_and_misinterpretation_write_nothing() -> Result {
             "{refused:?}"
         );
         assert_eq!(world.releases.completed(&STOP)?, Some(release));
-        assert_eq!(reads(world, &pin, "doc:c")?, b"winner");
-        assert_eq!(world.realm.commits_mentioning("writfold-dolt-write/1")?, 1);
+        assert_eq!(reads(world.backend, &pin, "doc:c")?, b"winner");
+        // The bootstrap write and the winner.
+        assert_eq!(world.realm.commits_mentioning("writfold-dolt-write/1")?, 2);
         Ok(())
     })
 }
@@ -122,20 +124,16 @@ fn a_moved_storage_head_is_stale_and_never_published() -> Result {
     with_world(|world| {
         // A B0 storage write outside publication moves the Dolt head only.
         let direct = candidate("doc:d", "storage only")?;
-        let grant = world
-            .signer
-            .approve(&world.genesis, &world.realm.after, 1)?;
+        let grant = world.signer.approve(&world.genesis, &world.base, 1)?;
         let moved =
             world
                 .backend
-                .admit_write(&direct.request(&world.realm.after)?, Some(&grant), &STOP)?;
+                .admit_write(&direct.request(&world.base)?, Some(&grant), &STOP)?;
         let WriteOutcome::Committed { new } = moved else {
             return Err("expected the direct write to commit".into());
         };
         let next = candidate("doc:c", "after a moved head")?;
-        let approval = world
-            .signer
-            .approve(&world.genesis, &world.realm.after, 2)?;
+        let approval = world.signer.approve(&world.genesis, &world.base, 2)?;
         let stale = publish(world.backend, world.releases, &approval, &next, &STOP)?;
         assert_eq!(stale, Publication::Stale { observed: new });
         assert_eq!(

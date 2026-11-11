@@ -20,6 +20,14 @@
 //! pure kernel calls `Interrupted` (storage committed, Git ref still the base)
 //! may be completed, and completion issues only the Git steps.
 //!
+//! A bootstrap approval names no predecessor. It creates the realm's first
+//! release through the same steps: its Git expected-old state is an absent
+//! completed ref, its storage base is the realm's origin (a head with no
+//! Writfold write on its history, `StorageBackend::origin`), and the prepared
+//! commit has no parent. A bootstrap over an existing release is a `Conflict`;
+//! over storage that already carries a write it refuses `Initialized`. Either
+//! way nothing is written.
+//!
 //! The approval's signature does not cover the candidate: the signed Dolt
 //! operation has no candidate field. Writfold binds the candidate digest to the
 //! operation in the retained manifest and refuses a second preparation of the
@@ -34,11 +42,12 @@ pub use publish::publish;
 pub use recover::{complete, observe};
 pub use release::{Manifest, Released, Releases};
 
+use std::sync::atomic::AtomicBool;
 use writfold_domain::dolt::DoltReadPin;
 use writfold_domain::{GitObjectId, PlanDigest, ReleaseId};
 use writfold_runtime::git::GitError;
-use writfold_store::backend::Refusal;
 use writfold_store::backend::dolt::DoltWriteApproval;
+use writfold_store::backend::{Refusal, StorageBackend};
 use writfold_wire::Limits;
 use writfold_wire::dolt::{decode_pin, encode_pin};
 
@@ -54,10 +63,10 @@ pub trait ReleasePin: Clone + Eq + std::fmt::Debug + Sized {
 pub trait PublicationAuthority<P> {
     /// The signed operation identity; one prepared commit per operation.
     fn operation(&self) -> &PlanDigest;
-    /// The signed predecessor release: the Git expected-old value.
-    fn release(&self) -> &ReleaseId;
-    /// The signed base pin: the storage expected-old head.
-    fn base(&self) -> &P;
+    /// The signed predecessor release (the Git expected-old value) and base
+    /// pin (the storage expected-old head). `None` for a bootstrap: the
+    /// completed ref must be absent, and the storage base is the realm's origin.
+    fn base(&self) -> Option<(&ReleaseId, &P)>;
 }
 
 impl ReleasePin for DoltReadPin {
@@ -75,11 +84,8 @@ impl PublicationAuthority<DoltReadPin> for DoltWriteApproval {
     fn operation(&self) -> &PlanDigest {
         self.plan()
     }
-    fn release(&self) -> &ReleaseId {
-        DoltWriteApproval::release(self)
-    }
-    fn base(&self) -> &DoltReadPin {
-        DoltWriteApproval::base(self)
+    fn base(&self) -> Option<(&ReleaseId, &DoltReadPin)> {
+        self.release().zip(DoltWriteApproval::base(self))
     }
 }
 
@@ -124,6 +130,8 @@ pub enum PublicationError {
     Manifest(&'static str),
     #[error("the base release does not name the approval's base pin")]
     Misinterpreted,
+    #[error("the realm's storage already carries a write; a bootstrap is refused")]
+    Initialized,
     #[error("this operation is already prepared; reconcile with observe")]
     AlreadyPrepared,
     #[error("observed facts are excluded by the publication order; a person decides")]
@@ -132,7 +140,45 @@ pub enum PublicationError {
     NotInterrupted,
 }
 
-/// A Git release identity as the signed `ReleaseId` names it.
-fn same_release(release: &ReleaseId, commit: Option<&GitObjectId>) -> bool {
-    commit.is_some_and(|commit| commit.as_str() == release.as_str())
+/// The Git expected-old state as the signed `ReleaseId` names it: an absent
+/// completed ref for a bootstrap (`release` is `None`).
+fn same_release(release: Option<&ReleaseId>, commit: Option<&GitObjectId>) -> bool {
+    match (release, commit) {
+        (None, None) => true,
+        (Some(release), Some(commit)) => commit.as_str() == release.as_str(),
+        _ => false,
+    }
+}
+
+/// The storage expected-old head a publication starts from.
+struct Base<P> {
+    pin: P,
+    /// Bootstrap only: a write is already on the storage history.
+    written: bool,
+}
+
+/// The signed base pin, or for a bootstrap the realm's origin (read-only).
+/// Recovery recomputes the same origin, and so the same storage request.
+fn storage_base<B>(
+    backend: &B,
+    authority: &B::WriteAuthority,
+    cancelled: &AtomicBool,
+) -> Result<Base<B::Pin>, PublicationError>
+where
+    B: StorageBackend,
+    B::WriteAuthority: PublicationAuthority<B::Pin>,
+{
+    Ok(match authority.base() {
+        Some((_, pin)) => Base {
+            pin: pin.clone(),
+            written: false,
+        },
+        None => {
+            let origin = backend.origin(cancelled)?;
+            Base {
+                pin: origin.pin,
+                written: origin.written,
+            }
+        }
+    })
 }

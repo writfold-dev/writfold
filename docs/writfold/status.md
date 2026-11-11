@@ -231,8 +231,9 @@ claim and does not authorize publication.
    It found an open gap: rival operations with the same base and candidate
    share one Dolt request identity
    ([same-request rival gap](dolt-integration.md#the-same-request-rival-gap)).
-   Next: an owner decision on that gap and on a signed candidate binding,
-   then bootstrap publication and the remaining DINT02 owners and gates.
+   Bootstrap publication of a realm's first release is built
+   ([bootstrap publication](dolt-integration.md#bootstrap-publication)), with
+   its own kill sweep.
    Continue exact-candidate Omnigraph qualification; its Rust adapter must pass
    the same conformance suite before it replaces Dolt.
    The source-built PR #1235 trial is an authorized development unblocker, not

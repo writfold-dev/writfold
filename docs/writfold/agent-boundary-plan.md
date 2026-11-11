@@ -164,7 +164,7 @@ Next after T1. T2 suggested a compact Tuft row format and an `--out` flag. Both 
   re-pinned and passing (`serve_trial_run_evidence`);
 - DINT02 publication over the Dolt writer: first slice built (`dolt_publication_component`; [order and recovery](dolt-integration.md#publication-order-and-recovery)). Quality and unit gates pass on main, including the kill sweep against real Dolt 2.6.1. Next for DINT02:
   - a signed candidate binding (owner decision on a new signed schema);
-  - bootstrap publication;
+  - ~~bootstrap publication~~: built ([bootstrap publication](dolt-integration.md#bootstrap-publication)), with its own kill sweep;
   - ~~a TLA+ model of the publication order~~: done (`dolt_publication_model`, TLC only). It found the [same-request rival gap](dolt-integration.md#the-same-request-rival-gap), which is open for an owner decision;
   - proving `writfold_core::publication`.
 - ~~R1's operational trip~~: fixed (`trial_state_dir`). `next:` lines carry an absolute `--state`, so they work from a fresh shell. A command on an existing run, given an uninitialized directory or a run it never prepared, refuses naming the directory it searched and how it was chosen ([trial-profile.md](trial-profile.md#try-it)). No cwd-based discovery was added: the printed command is the fix, and it adds no new resolution rule;

@@ -39,3 +39,13 @@ pub struct WriteObservation<P> {
     pub head: P,
     pub applied: Option<P>,
 }
+
+/// The realm's storage origin: the head before the first write this boundary
+/// made, read-only. `written` says whether such a write is on the head's
+/// history. A bootstrap publication writes only from an unwritten origin, and
+/// its recovery finds its request from the origin again.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Origin<P> {
+    pub pin: P,
+    pub written: bool,
+}

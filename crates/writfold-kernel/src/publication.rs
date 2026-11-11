@@ -11,6 +11,7 @@ pub enum Admission {
     Proceed,
     Conflict,
     Misinterpreted,
+    Initialized,
     AlreadyPrepared,
 }
 
@@ -19,6 +20,7 @@ pub fn admit(before: &Before) -> Admission {
         core::Admission::Proceed => Admission::Proceed,
         core::Admission::Conflict => Admission::Conflict,
         core::Admission::Misinterpreted => Admission::Misinterpreted,
+        core::Admission::Initialized => Admission::Initialized,
         core::Admission::AlreadyPrepared => Admission::AlreadyPrepared,
     }
 }
@@ -85,16 +87,31 @@ mod tests {
         }
     }
 
+    /// Over every combination: only all guards proceed; a Git conflict is
+    /// checked first; a failed base check is `Initialized` exactly for a
+    /// bootstrap and `Misinterpreted` otherwise.
     #[test]
     fn admission_checks_conflict_first() {
-        let before = |completed_is_base, base_pin_matches, prepared| Before {
-            completed_is_base,
-            base_pin_matches,
-            prepared,
-        };
-        assert_eq!(admit(&before(false, false, true)), Admission::Conflict);
-        assert_eq!(admit(&before(true, false, true)), Admission::Misinterpreted);
-        assert_eq!(admit(&before(true, true, true)), Admission::AlreadyPrepared);
-        assert_eq!(admit(&before(true, true, false)), Admission::Proceed);
+        for bits in 0..16u8 {
+            let bit = |n: u8| bits & (1 << n) != 0;
+            let before = Before {
+                bootstrap: bit(0),
+                completed_is_base: bit(1),
+                base_pin_matches: bit(2),
+                prepared: bit(3),
+            };
+            let expected = if !before.completed_is_base {
+                Admission::Conflict
+            } else if !before.base_pin_matches && before.bootstrap {
+                Admission::Initialized
+            } else if !before.base_pin_matches {
+                Admission::Misinterpreted
+            } else if before.prepared {
+                Admission::AlreadyPrepared
+            } else {
+                Admission::Proceed
+            };
+            assert_eq!(admit(&before), expected);
+        }
     }
 }

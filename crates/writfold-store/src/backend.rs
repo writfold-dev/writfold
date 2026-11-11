@@ -22,7 +22,7 @@ pub use types::{
     ExactRead, ExactRecord, HeadName, LookupCursor, LookupField, LookupHit, LookupPage,
     LookupRequest, MatchMode, Order, RecordKey, RecordKind,
 };
-pub use write::{RecordChange, WriteObservation, WriteOutcome, WriteRequest};
+pub use write::{Origin, RecordChange, WriteObservation, WriteOutcome, WriteRequest};
 
 use std::fmt;
 use std::sync::atomic::AtomicBool;
@@ -99,6 +99,14 @@ pub trait StorageBackend {
         cancelled: &AtomicBool,
     ) -> Result<WriteObservation<Self::Pin>, Refusal> {
         let _ = (request, cancelled);
+        Err(Refusal::Unavailable(Capability::Write))
+    }
+
+    /// The realm's origin, read-only: the head before the first write through
+    /// this boundary, and whether any such write is on the head's history.
+    /// Writer instances only.
+    fn origin(&self, cancelled: &AtomicBool) -> Result<Origin<Self::Pin>, Refusal> {
+        let _ = cancelled;
         Err(Refusal::Unavailable(Capability::Write))
     }
 
