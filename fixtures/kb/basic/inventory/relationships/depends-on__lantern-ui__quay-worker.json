@@ -1,0 +1,8 @@
+{
+  "type": "depends-on",
+  "from": "lantern-ui",
+  "to": "quay-worker",
+  "status": "inferred",
+  "evidence": [],
+  "applicability": "all"
+}

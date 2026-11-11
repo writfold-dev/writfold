@@ -1,0 +1,6 @@
+nearest inv:2026/2026-06-01-flush-stalls-again Flush stalls return @investigations/2026/2026-06-01-flush-stalls-again/README.md
+nearest inv:2026/2026-02-10-flush-stalls Flush stalls on the ledger store @investigations/2026/2026-02-10-flush-stalls/README.md
+nearest HBR-99 Ledger flush stalls on slow disk @ktlo/2026/hbr-99-flush-stall.md
+# note: absence in the KB is not evidence of absence in the world; check the sources, then record what you find
+# coverage=partial records=28/28 shown=3 omitted=0 answer=unknown reason=unresolved-id kb=d5db758bda80 index=fresh cursor=none q=197cf15c1008
+# exit=2

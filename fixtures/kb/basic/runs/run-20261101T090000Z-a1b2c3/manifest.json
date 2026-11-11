@@ -1,0 +1,8 @@
+{
+  "run_id": "run-20261101T090000Z-a1b2c3",
+  "task": "Batch ledger writes rollout",
+  "project": "harbor",
+  "mode": "authoring",
+  "created": "2026-11-01T09:00:00Z",
+  "state": "open"
+}

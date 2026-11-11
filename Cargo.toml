@@ -10,6 +10,7 @@ members = [
     "crates/writfold-runtime",
     "crates/writfold-sources",
     "crates/writfold-store",
+    "crates/writfold-kb",
     "crates/writfold-app",
     "crates/writfold",
 ]
@@ -35,6 +36,9 @@ thiserror = "=2.0.20"
 # already locked through the vendored Splicery compiler; no new crate enters.
 regex = { version = "=1.11.1", default-features = false, features = ["std", "perf"] }
 memchr = { version = "=2.8.3", default-features = false, features = ["std"] }
+# Derived, rebuildable KB index (KB v1). `bundled` compiles the SQLite
+# amalgamation (with FTS5) into the static musl binary; no system library.
+rusqlite = { version = "=0.37.0", features = ["bundled"] }
 ed25519-dalek = { version = "=2.2.0", features = ["pkcs8", "pem"] }
 verus_syn = { version = "=0.0.0-2026-09-06-0133", features = ["full", "visit"] }
 proc-macro2 = { version = "=1.0.107", features = ["span-locations"] }

@@ -1,0 +1,8 @@
+{
+  "type": "consumes",
+  "from": "quay-worker",
+  "to": "harbor-api",
+  "status": "explicit",
+  "evidence": [],
+  "applicability": "all"
+}

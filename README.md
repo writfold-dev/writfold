@@ -32,10 +32,49 @@ first build):
 cargo build --release -p writfold
 ```
 
+### Project continuity with `writfold kb`
+
+`writfold kb` reads a knowledge base of plain records in Git (assets,
+relationships, decisions, ticket records, investigations, signatures, runs and
+project folders) and answers where a project stands, what surrounds a record,
+why something was decided, and which citations have moved. It writes nothing
+you track: a derived SQLite index lives under the repository's Git directory
+and is rebuilt whenever HEAD or a KB file changes.
+
+```sh
+cd /path/to/kb/some-project            # or pass --kb DIR, or set WRITFOLD_KB
+target/release/writfold kb brief       # project inferred from the directory
+target/release/writfold kb context HBR-101
+target/release/writfold kb why "batch ledger writes"
+target/release/writfold kb stale       # code citations need local clones (below)
+target/release/writfold kb index status
+```
+
+Every row read from a file ends with its path and line, flags (`!moved→5-7`,
+`!past-ttl`, `!draft` …) mark what to re-check, and the trailer is always last:
+
+```text
+decision proposal/decision/2026-03-02-batch-ledger-writes [accepted] Batch ledger writes in the API @proposals/decision/2026-03-02-batch-ledger-writes/proposal.md:5
+  decided: by ops-review on 2026-03-09 @proposals/decision/2026-03-02-batch-ledger-writes/proposal.md:11
+  why: Group ledger writes into batches of up to 500 rows per transaction. @proposals/decision/2026-03-02-batch-ledger-writes/proposal.md:24
+  cite: code:demo-service:src/batch.rs:2-4 [moved] @proposals/decision/2026-03-02-batch-ledger-writes/proposal.md:31 !moved→5-7
+# coverage=complete records=28/28 shown=3 omitted=0 stale=1 kb=d5db758bda80 index=fresh cursor=none q=206e21d1c60f
+```
+
+`--budget-tokens N` (default 1000) bounds the rows and `--cursor` resumes the
+rest; `--json` prints the same rows as one object. Exit codes: 0 complete,
+2 partial, unknown or stale, 3 refused (such as an ambiguous name), 1 error.
+`stale` checks code citations against local clones only and never fetches:
+list them in `.git/writfold/repos` of the KB repository (`<repo-name> <path>`
+per line) or point `WRITFOLD_KB_REPOS` at directories holding them. The
+invented example KB the tests use is in [`fixtures/kb/basic`](fixtures/kb/basic);
+the format and plan are in the [KB v1 design](docs/writfold/kb-v1-design.md).
+
 ### What works today
 
 | Command | What it does | Evidence |
 |---|---|---|
+| `writfold kb brief / context / why / stale / index` | Reads a Git KB of plain records; every row pinned to its file and line, moved citations flagged | [KB v1 design](docs/writfold/kb-v1-design.md#11-m1-as-built), golden tests in `crates/writfold-kb/tests` |
 | `writfold trial prepare / approve / apply / recover / show` | One edit through a durable, validated ledger in Writfold's own sparse worktree; never your checkout | [trial profile](docs/writfold/trial-profile.md), [adversarial campaign](bench/2026-11-09-adversarial/) |
 | `writfold trial approve --require CHECK` | Refuses unless each named check of the bound Weft report is `entailed` (recorded as hypothetical, never as grounded) | proved: `required_entailed_spec` |
 | `writfold trial retain` | Keeps exact bytes of a file at a full commit id as a citation; reports citing anything else are refused | [trial profile](docs/writfold/trial-profile.md) |

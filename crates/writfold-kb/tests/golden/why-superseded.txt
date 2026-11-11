@@ -1,0 +1,13 @@
+decision proposal/decision/2026-03-02-batch-ledger-writes [accepted] Batch ledger writes in the API @proposals/decision/2026-03-02-batch-ledger-writes/proposal.md:5
+  decided: by ops-review on 2026-03-09 @proposals/decision/2026-03-02-batch-ledger-writes/proposal.md:11
+  via: supersedes proposal/decision/2026-01-10-single-writer
+  why: Group ledger writes into batches of up to 500 rows per transaction. @proposals/decision/2026-03-02-batch-ledger-writes/proposal.md:24
+  why: Batching keeps the flush under the store's fsync budget. @proposals/decision/2026-03-02-batch-ledger-writes/proposal.md:25
+  cite: code:demo-service:src/ledger.rs:3-5 [unchecked] @proposals/decision/2026-03-02-batch-ledger-writes/proposal.md:31 !unchecked
+  cite: code:demo-service:src/batch.rs:2-4 [unchecked] @proposals/decision/2026-03-02-batch-ledger-writes/proposal.md:31 !unchecked
+investigation inv:2026/2026-02-10-flush-stalls [concluded] Flush stalls on the ledger store @investigations/2026/2026-02-10-flush-stalls/README.md:8
+  outcome: The ledger flush stalled on a slow volume; batch writes were proposed. @investigations/2026/2026-02-10-flush-stalls/README.md:19
+ticket HBR-99 [done] Ledger flush stalls on slow disk @ktlo/2026/hbr-99-flush-stall.md:5
+  outcome: Flush stalls stopped after the volume move; batch ledger writes keep it stable. @ktlo/2026/hbr-99-flush-stall.md:29
+# coverage=complete records=28/28 shown=3 omitted=0 kb=d5db758bda80 index=fresh cursor=none q=789f5654a86b
+# exit=0

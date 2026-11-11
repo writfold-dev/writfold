@@ -7,6 +7,7 @@
 
 mod contract;
 mod engine;
+pub mod kb;
 pub mod ledger;
 pub mod publication;
 pub mod trial;

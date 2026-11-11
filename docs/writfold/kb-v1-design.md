@@ -1,6 +1,6 @@
 # Writfold KB v1: design
 
-Status: proposal, 11 November 2026. Scope: the `writfold kb` product core for Git-native project continuity. Git text is the source of truth; a local SQLite file is a derived, rebuildable index. No server, no companion process.
+Status: proposal, 11 November 2026; M1 implemented (see [section 11](#11-m1-as-built) for what was built and where it differs). Scope: the `writfold kb` product core for Git-native project continuity. Git text is the source of truth; a local SQLite file is a derived, rebuildable index. No server, no companion process.
 
 A cold session must be able to answer four questions, each pinned to a source and flagged when the source has moved:
 - why did we decide X;
@@ -8,7 +8,7 @@ A cold session must be able to answer four questions, each pinned to a source an
 - what is the tracker item for Z;
 - what does changing X touch.
 
-Note for the repository: `AGENTS.md` still binds sessions to the earlier plan and says fuzzy search is "refused by type". The owner decision of 11 November supersedes both. `AGENTS.md` and the `writfold-xtask` crate allowlist need the matching edit before M1 merges.
+Note for the repository: `AGENTS.md` now points at the mission, and the `writfold-xtask` allowlist admits `writfold-kb` and classifies the SQLite closure (M1).
 
 ## 1. On-disk record format
 
@@ -636,6 +636,63 @@ Each is about one agent day and merges independently.
 5. **Transition.** Will the prototype run alongside Writfold on the same KB? Assumed yes, so every written file stays valid for it.
 6. **Stop hook.** Silent local draft (assumed) or an opt-in once-per-session nudge?
 7. **Tracker vocabulary.** Ticket-ID patterns, tracker URL forms and commit-trailer keys to treat as tracker links. These are configuration.
+
+## 11. M1 as built
+
+M1 landed as the crate `crates/writfold-kb`, the reads in `crates/writfold-runtime/src/git/kb.rs`, the adapter `crates/writfold-app/src/kb/` and the `kb` branch of `crates/writfold/src/main.rs`. Where it differs from sections 1 to 9, this section is the record.
+
+### 11.1 Build and dependencies
+
+- `rusqlite` 0.37.0 with `bundled` (`libsqlite3-sys` 0.35.0, SQLite compiled by `cc`). The static musl binary builds in the admitted tools image with `cargo build -p writfold --release --target x86_64-unknown-linux-musl --locked --offline`; `file` reports `static-pie linked` and `ldd` reports `statically linked`. FTS5 with the `trigram` tokenizer works in that build (a unit test ran under musl).
+- `writfold-xtask`: `writfold-kb` is admitted with `[writfold-domain, writfold-sources, writfold-runtime, writfold-core, tuft]` and added to `writfold-app`'s list. A new `native-dependency` rule admits the SQLite closure (`rusqlite`, `libsqlite3-sys`, `cc`, `find-msvc-tools`, `shlex`, `pkg-config`, `vcpkg`, `hashlink`, `fallible-iterator`, `fallible-streaming-iterator`) only in `writfold-kb`, `writfold-app` and `writfold`; anywhere else it is an error.
+- `writfold-core` is not yet a dependency: M1 has no kernel to host. The citation verdict's span search is a small pure module (`stale/span.rs`) ready to move there.
+- The crate uses no `rusqlite` macro: the xtask refuses unaudited macros, so parameters are tuples or `&[&dyn ToSql]`.
+
+### 11.2 Records and identities
+
+- Record IDs are namespaced so one table holds every kind: `proposal/<front-matter id>`, `inv:<id>`, `sig:<stem>`, `project:<directory>`, `ev:<home>/<stem>`, `dossier:<asset>`, `runbook:<group>/<name>`, `correction:<stem>`, `rel:<stem>`. Assets, ticket records (`LETTERS-digits`) and runs keep their own IDs. The bare forms (`decision/2026-…`, `fsync-stall`, `harbor`) are aliases, so a user types them unchanged.
+- Resolution order: exact ID; the normalised ticket; each typed prefix; aliases; then an asset whose locator contains the text. More than one candidate is a refusal listing them (exit 3).
+- A project is every top-level directory that is not reserved; `corrections/` holds correction records and is not a project. A project without `STATUS.md` still gets a record (titled from its `README.md`).
+- Unreadable means: not UTF-8, invalid JSON, malformed front matter (duplicate keys, unclosed block) on a record kind, a missing identity (no decision `id`, an unrecognisable `ticket`, a relationship without `type`/`from`/`to`), or a duplicate record ID. Each is a `files` row with `parse_status = unreadable` and its reason, counted in `unreadable=` on every trailer and listed by `index status`. Plain documents with broken front matter are still indexed as documents.
+- Field edges (section 5, planned for M2) are built in M1, because `context` needs a ticket's assets, a decision's references and an asset's projects. Citation and mention edges remain M2.
+
+### 11.3 Index
+
+- One file per KB root at `<git dir>/writfold/kb-index-<12 hex of the root's path in the work tree>.sqlite`, built in a temporary file in the same directory and renamed into place. It uses the rollback journal, not WAL, because the file is replaced by rename.
+- The pin is SHA-256 over HEAD and the sorted `(path, content digest)` of every dirty or untracked file that is a KB input. A dirty file the layout ignores does not rebuild the index. A matching pin, schema and extractor version opens the index as is (`index=fresh`); anything else rebuilds it in full (`index=rebuilt`). Incremental refresh is M2.
+- Cached citation verdicts (`cite_checks`) survive a rebuild for every citation whose token text is unchanged.
+- A KB outside Git is indexed in memory on every call, with `kb=none`.
+- Schema differences from 4.2: `records.line` (the line of the status field, for row positions), `citations.malformed` and `citations.fields` (every token field as JSON), no `files.blob_oid`. The `tri` table is populated but unused until M2's search.
+
+### 11.4 Output contract
+
+- The status is printed in brackets: `<kind> <id> [<status>] <text> @<path>:<line> !<flag>`. Continuation labels used: `field`, `summary`, `via`, `note`, `why`, `decided`, `cite`, `section`, `outcome`. Notes print as `# note:` lines before the trailer, outside the budget.
+- `records=<readable input files>/<input files>`.
+- `coverage=partial` means the examined scope was incomplete: an unknown answer, or any unreadable file. Truncation by the budget is reported by `omitted=` and the cursor and does not by itself make coverage partial (as in Tuft), so it exits 0.
+- A row group (a row and its continuation lines) is the budget and cursor unit. When not even the first group fits, zero rows print with `needs=<tokens>` and `cursor=none`.
+- The query digest covers the verb, its arguments (for `brief`, the resolved project) and the budget.
+- Exit 2 also follows any `stale=` count, which `brief`, `context` and `why` report from cached verdicts.
+
+### 11.5 Verbs
+
+- `brief`: shares are header 10%, checkpoint 25%, open 25%, decisions 20%, commits 10%, stale 10%. A section's first row may exceed its share while the whole budget has room, so no section is starved. Accepted decisions are listed once, under decisions (open items hold draft, proposed and landing ones). The commit section lists up to ten KB commits touching the project since the last checkpoint's date. Project inference uses the KB directory containing the working directory, then the origin of the enclosing repository against asset locators (it must yield exactly one project). Local drafts are M4.
+- `context`: the walk follows authored and field edges whose status is explicit or confirmed, both directions, to `--depth` (default 2, at most 8); it stops at project records (a home, not a dependency) and skips closed ticket records and investigations. `frontier=` counts edges left at the boundary.
+- `why`: candidates are an exact decision, then decisions whose ID, title or `target` contains the text, then full-text matches. Superseded and rejected records are followed through `superseded_by` to the live record. Rationale is the first present section of `Decision`, `Rationale`, `Why`, `Why general / justification`, `Context`, `Proposed change` (override with `WRITFOLD_KB_WHY_SECTIONS`, comma-separated), its first paragraph up to three lines, else the summary.
+- `stale`: as 6.2, except that rename following through `log --follow` (M4) is not done, so a path renamed with edits is `gone` with that note; a pure rename is found by blob. `gate` citations (`rev=<repo>@<sha>`) are checked against the repository's target commit. Repositories are found through a hand-written map at `<git dir>/writfold/repos` (`<name> <path>` per line, until `repo add` exists), the search roots in `$WRITFOLD_KB_REPOS` (`<root>/<repo>` or `<root>/<name>`), a `repo=` that is an absolute path, or a `file://` `url=`. `--offline` reports only authored marks and due TTLs.
+- KB discovery adds a fourth step after the working directory: `root` from the prototype's configuration file (`$KCTX_CONFIG`, else `$XDG_CONFIG_HOME` or `~/.config`, then `kctx/config.toml`).
+- `--at COMMIT` is refused (M4).
+
+### 11.6 Tests and latency
+
+- Fixtures: `fixtures/kb/basic` (invented content, every record kind, both decision layouts, unknown fields and an unknown lifecycle value) and `fixtures/kb/malformed`, an overlay with one unreadable file per family, kept apart so the golden cases over `basic` show complete coverage. The test harness builds a companion code repository whose second commit shifts, edits, deletes and renames cited files, and fills the citations' commit, blob and span placeholders from its first commit.
+- Golden outputs: `crates/writfold-kb/tests/golden/*.txt` and `why-text.json` (`WRITFOLD_KB_BLESS=1` rewrites them). Also tested: joined cursor pages equal the unpaged rows; a cursor from another query is refused; a dirty edit rebuilds and an unrelated dirty file does not; a KB outside Git; all five unreadable files counted and listed.
+- Latency (`cargo run --release -p writfold-kb --example kb_latency`, 4,130 generated records in 20 projects, 21 runs each, WSL2 x86_64 workstation): cold rebuild 133 ms; warm medians 16 to 31 ms and p95 at most 32 ms for every M1 verb (`brief` 20 ms, `context` 16 ms, `why` by text 31 ms, `stale` of one project 25 ms, `index status` 18 ms). Each includes Git admission and one `status` spawn.
+
+### 11.7 Open questions answered by assumption
+
+- Q1: rationale section names are not known, so the list above is the default and is configurable.
+- Q3: code citations are checked against local refs only (`origin/HEAD`, else `HEAD`); nothing is fetched.
+- Q4 to Q6 concern writes and hooks, which M1 does not include. Q7: no tracker vocabulary is used in M1.
 
 ---
 

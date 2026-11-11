@@ -1,0 +1,10 @@
+{
+  "type": "depends-on",
+  "from": "harbor-api",
+  "to": "harbor-db",
+  "status": "confirmed",
+  "evidence": [
+    "demo-service@{{REV}}:src/ledger.rs:3-5"
+  ],
+  "applicability": "all"
+}

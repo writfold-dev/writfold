@@ -1,0 +1,25 @@
+index de9905cf8bf4 [rebuilt] <WORLD>/kb/.git/writfold/kb-index-e3b0c44298fc.sqlite
+  records: asset=5
+  records: correction=1
+  records: decision=4
+  records: dossier=1
+  records: evidence=1
+  records: investigation=2
+  records: project=2
+  records: relationship=4
+  records: run=1
+  records: runbook=1
+  records: signature=1
+  records: ticket=2
+  count: files=33
+  count: citations=9
+  count: edges=30
+  count: unresolved=3
+  count: cached-verdicts=0
+unreadable asset invalid JSON: EOF while parsing a value at line 2 column 0 @inventory/assets/broken.json !unreadable
+unreadable relationship relationship needs type, from and to @inventory/relationships/depends-on__broken__harbor-db.json !unreadable
+unreadable ticket unrecognised ticket "???" @ktlo/2026/unknown-ticket.md !unreadable
+unreadable decision decision has no id @proposals/decision/2026-05-05-no-id.md !unreadable
+unreadable signature duplicate frontmatter key "title" @signatures/dup-keys.md !unreadable
+# coverage=partial records=28/33 shown=6 omitted=0 unreadable=5 kb=de9905cf8bf4 index=rebuilt cursor=none q=b5b35f624ce5
+# exit=2

@@ -1,0 +1,22 @@
+ticket HBR-101 [in-progress] Slow ledger flush at month end @ktlo/2026/hbr-101-slow-ledger-flush.md:5
+  summary: Flush takes minutes under month-end load.
+asset harbor-api [active] Harbor billing API @inventory/assets/harbor-api.json:10 !past-ttl
+  via: concerns HBR-101 @ktlo/2026/hbr-101-slow-ledger-flush.md:4
+asset harbor-db [active] Harbor ledger store @inventory/assets/harbor-db.json:10
+  via: concerns HBR-101 @ktlo/2026/hbr-101-slow-ledger-flush.md:4
+project project:harbor [build] Harbor status @harbor/STATUS.md:2
+  via: promoted-to HBR-101 @ktlo/2026/hbr-101-slow-ledger-flush.md:10
+investigation inv:2026/2026-06-01-flush-stalls-again [open] Flush stalls return @investigations/2026/2026-06-01-flush-stalls-again/README.md:7 !depth=2
+  via: concerns (from) harbor-db @investigations/2026/2026-06-01-flush-stalls-again/README.md:6
+signature sig:fsync-stall [fixed] Fsync stall on the ledger store @signatures/fsync-stall.md:3 !depth=2
+  via: concerns (from) harbor-db @signatures/fsync-stall.md:6
+runbook runbook:ops/restart-harbor Restart the Harbor API @runbooks/ops/restart-harbor.md:1 !depth=2
+  via: concerns (from) harbor-api @runbooks/ops/restart-harbor.md:3
+decision proposal/decision/2026-03-02-batch-ledger-writes [accepted] Batch ledger writes in the API @proposals/decision/2026-03-02-batch-ledger-writes/proposal.md:5 !depth=2
+  via: references (from) harbor-api @proposals/decision/2026-03-02-batch-ledger-writes/proposal.md:9
+asset quay-worker [sunsetting] Quay batch worker @inventory/assets/quay-worker.json:8 !vocab=unknown !depth=2
+  via: consumes (from) harbor-api @inventory/relationships/consumes__quay-worker__harbor-api.json:4
+run run-20261101T090000Z-a1b2c3 [open] Batch ledger writes rollout @runs/run-20261101T090000Z-a1b2c3/manifest.json:7
+  via: mentions @runs/run-20261101T090000Z-a1b2c3/checkpoint.md
+# coverage=complete records=28/28 shown=10 omitted=0 frontier=3 kb=d5db758bda80 index=fresh cursor=none q=04b590779f9e
+# exit=0

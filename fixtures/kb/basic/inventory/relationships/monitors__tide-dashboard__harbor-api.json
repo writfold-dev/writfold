@@ -1,0 +1,8 @@
+{
+  "type": "monitors",
+  "from": "tide-dashboard",
+  "to": "harbor-api",
+  "status": "disputed",
+  "evidence": [],
+  "applicability": "all"
+}
