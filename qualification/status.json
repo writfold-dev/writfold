@@ -1306,6 +1306,23 @@
       "crates/writfold-app/src/trial/state_dir.rs"
     ]
   },
+  "dint02_bootstrap_publication": {
+    "status": "scoped_component_pass",
+    "scope": "DINT02 bootstrap publication (docs/writfold/dolt-integration.md#bootstrap-publication): a verified signed bootstrap DoltOperation creates a realm's first release through the ordinary order (Git ref absent as expected-old, retained candidate, Dolt conditional commit from the observed origin, retained head + read-back + parentless prepared commit, Git CAS creating the release ref). observe/complete unchanged. Fixture-owned genesis replaced by a real signed bootstrap in every publication test; bootstrap kill sweep (69 attempts in the merge run: 26 refused/stale, 13 NotPublished, 29 Interrupted then completed, 0 double publication). Also covers the merged TLC model (dolt_publication_model). Not claimed: signed origin commit, signed candidate binding, the same-request rival gap, full DINT02. Final entry: Dolt work is paused by the 11 November 2026 mission decision (docs/writfold/mission.md).",
+    "source_commit": "b316c5d",
+    "receipts": {
+      "quality": {
+        "path": "~/.local/share/writfold/evidence/dint02-bootstrap-zmerqj83/quality-001.json",
+        "sha256": "3ed6842258bc66fe6bb93b34a25b7f6a58ad51f47df8116c2b7722dd51f6c73d",
+        "bytes": 972610
+      },
+      "unit": {
+        "path": "~/.local/share/writfold/evidence/dint02-bootstrap-zmerqj83/unit-001.json",
+        "sha256": "1b0c28f480e123c1ddd4f75986b9b4ae87b9b9e9d19523412813f8e61e8778cb",
+        "bytes": 494419
+      }
+    }
+  },
   "publication_history_audit": {
     "status": "inspected_not_cleared_for_publication",
     "record": {

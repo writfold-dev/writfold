@@ -3,7 +3,9 @@
 Detailed status, evidence and qualification notes for Writfold. Start with the
 [README](../../README.md) for what you can try today.
 
-The current implementation authority is the [revision-5 handover](../../handovers/revision-5/writfold/README.md): **25 stages, 32 mandatory gates (WF00–WF31), 37 V/M entries, 12 engineering theorems (E01–E12), and 148 scenarios**. The [adoption delta](handover-adoption.md) records exact archive/manifest/registry identities and retains earlier-scope evidence without requalification. Full calculus proofs take priority before production engineering implementation; WF31 is final composed qualification, not a scoped Lean pass.
+**Since 11 November 2026 the current authority is [mission.md](mission.md)** (project continuity for agents; Git as the store; the trial flow, Weft, Splicery, Dolt and Omnigraph frozen). The text below records the earlier programme and its evidence; its gates and stages are history, not live obligations.
+
+The earlier implementation authority was the [revision-5 handover](../../handovers/revision-5/writfold/README.md): **25 stages, 32 mandatory gates (WF00–WF31), 37 V/M entries, 12 engineering theorems (E01–E12), and 148 scenarios**. The [adoption delta](handover-adoption.md) records exact archive/manifest/registry identities and retains earlier-scope evidence without requalification. Full calculus proofs take priority before production engineering implementation; WF31 is final composed qualification, not a scoped Lean pass.
 
 A [scoped revision-9 feature supplement](revision-9-features.md)
 admits citation integrity and compact operations, Run Watch/session handoff,

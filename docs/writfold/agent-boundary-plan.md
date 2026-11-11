@@ -1,5 +1,7 @@
 # Agent boundary and latency plan (9 November 2026)
 
+> **Superseded as a delivery plan on 11 November 2026.** The current authority is [mission.md](mission.md): project continuity for agents, Git as the store, and the trial flow, Weft, Splicery, Dolt and Omnigraph frozen. This document stays as the record of what was built.
+
 Owner input: a design supplement, "Unified languages, review sessions and
 enforced agent boundary". This document records what Writfold takes from it, what it
 declines, and the delivery plan. It is a scoped current plan in the sense of
