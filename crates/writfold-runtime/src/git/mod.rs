@@ -54,7 +54,10 @@ pub use writer::{GitWriteError, GitWriter, GitWriterLease};
 mod traversal;
 pub use admission::{GitExecutable, GitRepository};
 pub use error::GitError;
-pub use gate::{GateEntry, gate_hash_paths, gate_ls_tree, gate_worktree_add, gate_worktree_remove};
+pub use gate::{
+    GateEntry, edit_hash_bytes, gate_hash_paths, gate_ls_tree, gate_worktree_add,
+    gate_worktree_remove,
+};
 pub use kb::{
     KbCommit, KbDirty, KbRepository, KbStatus, kb_batch_check, kb_commit, kb_config, kb_diff_tree,
     kb_log, kb_ls_files, kb_status,

@@ -107,6 +107,33 @@ shows an edited or hand-written one, and a receipt whose digest does not match
 reads as invalid, but nothing is signed. See the
 [G1 design as built](docs/writfold/kb-v1-design.md#16-g1-as-built).
 
+Splicery recipes apply in a run's worktree. `kb edit apply` replays one or
+more [Splicery](https://github.com/writfold-dev/splicery) recipes (each
+`edit "<path>" { … }` names one file) through the pinned kernel against the
+worktree's current bytes, uncommitted edits included, and writes the results
+there: each file atomically, after checking it still holds the bytes the
+recipe was replayed against. A refused recipe (with Splicery's match sites
+and counts) or a file changed in the meantime writes nothing. The recipe,
+its splice sites, the before and after blob IDs and the preview diff are kept
+as a receipt in `runs/<id>/edits/`, and `resume` shows it. The change is an
+ordinary uncommitted Git change: gates whose scope covers it go stale until
+they run again. `--dry-run` prints the preview diff and writes nothing; a run
+that records no worktree needs `--worktree DIR` once, which is then recorded.
+
+```sh
+writfold kb edit apply rename.spl docs.spl --dry-run   # the preview diff; nothing written
+writfold kb edit apply rename.spl docs.spl             # apply both files, record the receipt
+writfold kb edit recover                               # after a crash between two files: finish the batch
+```
+
+Use Splicery for repeated or structural edits (every matching line, a block
+between two anchors, an exact expected count); ordinary edits are simpler for
+one small change. This is a cooperating, single-user tool: nothing stops the
+agent's shell from editing the worktree directly, and nothing is signed or
+approved. The edit trial's signing, approval and own-worktree flow is
+separate and frozen. See the
+[adapter as built](docs/writfold/kb-v1-design.md#17-splicery-adapter-as-built).
+
 Every row read from a file ends with its path and line, flags (`!moved→5-7`,
 `!past-ttl`, `!draft` …) mark what to re-check, and the trailer is always last:
 
@@ -190,6 +217,7 @@ error. See [Tuft's KB adapter](docs/tuft/language.md#kb-adapter).
 | `writfold kb checkpoint / resume / runs / record / status --set / cite make` | Writes checkpoints, runs, tickets, decisions, links and status changes atomically (old or new bytes after a kill at any step); prints citation tokens | [KB v1 design](docs/writfold/kb-v1-design.md#13-m3-as-built) (section 13), kill and fault tests in `crates/writfold-kb/tests/faults.rs`, TLC model `spec/KbWrite.tla` |
 | Claude Code plugin (`plugins/writfold`), `writfold kb hook`, `checkpoint --from-draft` | A KB brief at session start with no tool call; local checkpoint drafts at compaction, stop and session end; one skill teaching the verbs | [KB v1 design](docs/writfold/kb-v1-design.md#14-m4a-as-built) (section 14), golden tests in `crates/writfold-kb/tests/hook.rs`, `crates/writfold/tests/kb_hook.rs` |
 | `writfold kb gate run / status / verify / lines` | Runs a gate's argv on a repository and records one receipt in the KB run; derives open, satisfied, stale, failed or unknown from definitions and receipts; re-runs a receipt at its commit; prints receipt lines for a commit message | [KB v1 design](docs/writfold/kb-v1-design.md#16-g1-as-built) (section 16), golden, stale-transition and kill tests in `crates/writfold-kb/tests/gate.rs` and `gate_faults.rs`; the real `scripts/gate` has not yet been run through it |
+| `writfold kb edit apply / recover` | Replays Splicery recipes against a KB run's recorded worktree and writes each file atomically after re-checking its bytes; keeps the recipes, splice sites, blob IDs and preview as a receipt in the run; a crash between files is finished by `recover` from a local journal | [KB v1 design](docs/writfold/kb-v1-design.md#17-splicery-adapter-as-built) (section 17), golden, refusal, gate-staleness and kill tests in `crates/writfold-kb/tests/edit.rs` and `edit_faults.rs` |
 | `writfold trial prepare / approve / apply / recover / show` | One edit through a durable, validated ledger in Writfold's own sparse worktree; never your checkout | [trial profile](docs/writfold/trial-profile.md), [adversarial campaign](bench/2026-11-09-adversarial/) |
 | `writfold trial approve --require CHECK` | Refuses unless each named check of the bound Weft report is `entailed` (recorded as hypothetical, never as grounded) | proved: `required_entailed_spec` |
 | `writfold trial retain` | Keeps exact bytes of a file at a full commit id as a citation; reports citing anything else are refused | [trial profile](docs/writfold/trial-profile.md) |

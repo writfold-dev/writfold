@@ -86,6 +86,37 @@ pub fn gate_hash_paths(
     Ok(ids)
 }
 
+/// The blob ID Git would store for `bytes` at `path` of the work tree
+/// (`hash-object --stdin --path`, applying that path's filters and writing
+/// nothing). `writfold kb edit` records the before and after blob of each
+/// file it edits this way.
+pub fn edit_hash_bytes(
+    executable: &GitExecutable<'_>,
+    git_dir: &Path,
+    work_tree: &Path,
+    path: &str,
+    bytes: &[u8],
+    budgets: GitBudgets,
+    cancelled: &AtomicBool,
+) -> Result<String, GitError> {
+    if path.is_empty() || path.contains(['\n', '\0']) {
+        return Err(GitError::Malformed("unusable path for hash-object"));
+    }
+    let repository = KbRepository {
+        git_dir,
+        work_tree: Some(work_tree),
+    };
+    let named = format!("--path={path}");
+    let args = ["hash-object", "--stdin", named.as_str()];
+    let output = run(executable, repository, &args, bytes, budgets, cancelled)?;
+    let text = std::str::from_utf8(&output).map_err(|_| GitError::Malformed("hash-object"))?;
+    let id = text.trim_end();
+    if object_id(id).is_none() {
+        return Err(GitError::Malformed("hash-object answer"));
+    }
+    Ok(id.to_owned())
+}
+
 /// Add a detached worktree of `commit` at `destination`, which must not
 /// exist, with every file checked out.
 pub fn gate_worktree_add(

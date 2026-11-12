@@ -12,6 +12,7 @@
 #![forbid(unsafe_code)]
 
 pub mod draft;
+pub mod edit;
 pub mod emit;
 pub mod error;
 pub mod gate;
@@ -92,6 +93,8 @@ pub enum Verb {
     Write(write::Write),
     /// `gate run|status|verify|lines`.
     Gate(gate::GateVerb),
+    /// `edit apply|recover` (the Splicery adapter).
+    Edit(edit::EditVerb),
 }
 
 /// One invocation.
@@ -119,6 +122,9 @@ pub fn run(request: &Request) -> Result<Output> {
     }
     if let Verb::Gate(verb) = &request.verb {
         return gate::execute(&ws, request, verb, now);
+    }
+    if let Verb::Edit(verb) = &request.verb {
+        return edit::execute(&ws, request, verb, now);
     }
     let tool = match &ws.repo {
         Some(_) => Some(GitTool::locate()?),

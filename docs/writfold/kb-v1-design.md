@@ -1230,6 +1230,81 @@ The static musl binary builds offline in the tools image (`cargo build -p writfo
 - Counting catches and waivers for the two-week pause (the receipts hold what is needed: a `fail` followed by a `pass` of the same gate is a catch).
 - The real `scripts/gate` through `gate run` (16.8).
 
+## 17. Splicery adapter as built
+
+Owner decision, 12 November 2026: Splicery stays frozen as a language and gains one adapter. A recipe applies directly in the current KB run's recorded worktree; the result is an ordinary Git change there, judged afterwards by gates; the recipe and its preview are kept as a receipt in the run. The edit trial's signing, approval and own-worktree flow is not used and is not extended. Agents choose by task: Splicery for repeated or structural edits, ordinary tools for small ones. No grammar, selector or kernel behaviour changed; the vendored Splicery is untouched. New code: `crates/writfold-kb/src/edit/{mod,target,plan,diff,receipt,journal,apply}.rs`, `crates/writfold-sources/src/splicery_refusal.rs` (with `recipe_path` and `identity` in `splicery.rs`), `edit_hash_bytes` in `crates/writfold-runtime/src/git/gate.rs`, `atomic::apply_held` and two probe steps in the M3 writer, and the arguments in `crates/writfold-app/src/kb/edit.rs`.
+
+### 17.1 Verbs
+
+```text
+writfold kb edit apply RECIPE.spl [RECIPE.spl ...] [--run ID] [--worktree DIR] [--dry-run]
+writfold kb edit recover [--run ID] [--abandon]
+```
+
+- **The run** is `--run`, else the current-run pointer; a closed run is refused. **The worktree** is the run sidecar's `worktree` (13.3). A run that records none needs `--worktree DIR`; the apply then records it in the sidecar with the repository, branch and base observed there (in the same KB write as the receipt). A `--worktree` that differs from a recorded one is refused. The worktree must exist here, be the top of a Git work tree (not a directory inside one), and, when the run records a repository name, carry that name (the origin's last path segment, else the directory name, as `checkpoint --new-run` records it). Exit codes follow 3.1: 0 on success, 3 for every refusal.
+- **One recipe, one file.** A Splicery recipe is `edit "<path>" { … }`; fragments, `create`, `rename` and `remove` are refused. A batch is several recipe files on one command line, each naming a different file (two recipes for one file are refused: combine them). The path must be a canonical relative path naming a regular file in the worktree, reached without a symbolic link, outside `.git/` and outside the KB.
+- **`--dry-run`** prints the preview diff, then one row per file, and writes nothing (no receipt, no sidecar, no journal).
+- **Output.** One row per file: `edit <path> [preview|applied] recipe=<name> splices=N -<removed> +<inserted> bytes before=<blob12> after=<blob12>`, at the file's line in the receipt once applied, with one `site:` line per splice (`line L bytes [lo,hi) -> N bytes, recipe [a,b)`, the first eight). Notes name the receipt, a recorded worktree, and the next steps (review, `gate status`, commit).
+- **`resume`** shows the run's newest three edit receipts between the retrieval receipts and the gate rows: `edit <name> splicery files=N splices=N at <repo>@<head12>`, then up to five `file: <path> <before12>-><after12> splices=N recipe=<name>` lines, each at its line in the receipt.
+
+### 17.2 Replay
+
+Each recipe is parsed once for its path, then replayed through `writfold_sources::splicery::replay`, the same pinned kernel the trial uses (export `b14c67a7aca9`, profile `writfold-splicery-literal-edit/1`), against the file's **current worktree bytes**, not HEAD: uncommitted edits by the agent count. Every recipe of a batch is replayed against the original bytes before anything is written, and the refusals of all recipes are collected into one answer that begins `nothing was written`. A result equal to the current bytes is refused.
+
+A refusal keeps Splicery's typed kind and recipe span, and its bounded selector detail as line numbers and byte ranges, with the start of each site's line: `AmbiguousSelector … matched 4 sites: line 2 bytes [16,19); …`, near misses after trimming whitespace or swapping line endings, and matches outside a `within` window. Splicery drops the count found when `line_matches … expect N` does not hold; for a top-level `line_matches` without `within`, the adapter recounts with Splicery's own matcher and adds `expected N matching lines, found M: line … bytes […)` and the sites.
+
+The before and after blob IDs are Git's own (`hash-object --stdin --path=<path>`, applying that path's filters, writing nothing), so they compare directly with `ls-tree` and with gate scope digests (16.3).
+
+### 17.3 Writing, and a crash between files
+
+Under the KB write lock (13.2; it serialises Writfold's writers, and nothing more):
+
+1. every file must still hold the replayed bytes (SHA-256), else the batch is refused and nothing is written;
+2. the **journal** `<KB git dir>/writfold/edits/<run>.json` (local, untracked) is written through a synced temporary, renamed, and its directory synced (`journaled`). It names the worktree, each file with the SHA-256 of its before and after bytes, the after bytes (hex), the temporary name each file is written through, and the KB writes (the receipt, and the sidecar when recording `--worktree`);
+3. each file's after bytes go to a dot-named temporary beside it, `.writfold-edit-<pid>-<n>.tmp`, with the file's permissions, and are synced (`temp-written`, `temp-synced`);
+4. per file, in recipe order: the file is read again and must still hold the replayed bytes (`rechecked`); the temporary is renamed over it (`published`) and the directory synced (`dir-synced`);
+5. the receipt (and sidecar) are written with `atomic::apply_held`, the M3 protocol without taking the lock again;
+6. the journal is removed (`journal-cleared`), then the lock released.
+
+**Each file is replaced atomically; the batch is all-or-nothing except across a crash.** If step 4 finds a file changed (by the agent's shell, an editor, another tool), the temporaries are removed, the files already renamed are put back to their before bytes (each through the same temporary, re-check and rename, and only if it still holds the after bytes), the journal is removed, and the apply is refused with `nothing was written (N file(s) already replaced were restored)`. The other writer's change is kept. If a restored file changed again, the refusal says so and keeps the journal.
+
+A crash (or kill) between two renames leaves some files applied and the journal in place. While a journal exists for the run, `edit apply` is refused and names `edit recover`. **`edit recover`** reads the journal and classifies each file by its SHA-256: `applied` (after bytes), `unapplied` (before bytes) or `changed` (neither). It removes leftover temporaries, writes the unapplied files through steps 3 and 4 (`completed`), writes whichever KB writes are not already present byte for byte, and removes the journal; the receipt is the one planned at apply time. A `changed` file is refused (`… hold neither the replayed nor the edited bytes`); `edit recover --abandon` then removes the temporaries and the journal and writes no receipt, leaving the files as they are. A crash before `journaled` leaves nothing applied; a crash after `journal-cleared` leaves the edit complete.
+
+Not done: a crash after a file's temporary is renamed but before its directory is synced may, after a power loss, lose that rename; recovery then sees the file unapplied and writes it again. There is no TLC model of this protocol (the M3 model, 13.8, covers the KB writes it reuses).
+
+### 17.4 Receipts
+
+One Markdown file per applied batch, `runs/<run>/edits/<UTC compact time>-<6 hex>.md`, written create-new through the 13.2 protocol (one `Op::Create`; no new operation kind). It is a log: every apply adds a file. The prototype never reads `edits/`; Writfold indexes the file as a document.
+
+- **Front matter:** `kind: edit`, `tool: splicery`, `profile`, `kernel` (the export commit), `run`, `repo`, `worktree`, `base` (the run's), `head` (the worktree's HEAD at apply), counts of `recipes`, `files` and `splices`, `recorded`.
+- **`## Files`:** one entry per file, ``- `<path>` before=<blob> after=<blob> splices=N removed=B inserted=B recipe=<name>``, then one line per splice as Splicery reports it (the original byte range, the bytes inserted, the recipe span) with its line.
+- **`## Recipe <name>`:** the recipe's SHA-256 and its exact text in a fenced block (the recipe file's name is kept; its directory is not).
+- **`## Preview`:** the unified diff, built from the kernel's splices in original coordinates (each block covers the lines its splices touch, trimmed to the lines that differ, three lines of context). It is a view; the after blob is the record.
+
+### 17.5 Gates
+
+An edit is an ordinary uncommitted change in the worktree, so G1 needs nothing new: a gate whose scope covers an edited path goes `stale` on the next `gate status` or `resume` (its scope digest includes the dirty file's blob, 16.3), names the path, and is satisfied again only by a new `gate run`. Tested.
+
+### 17.6 What is claimed
+
+- A cooperating, single-user tool. The agent's own shell (or anything else) can edit the worktree directly, before, during or after an apply; the re-check before each rename narrows the window in which such an edit is overwritten and does not close it (like the KB writes, 13.8).
+- The receipt says what Splicery did: which recipe, which bytes before and after, which sites. It is a tracked file whose history Git keeps; it is not signed, approved or bound to an identity, and it does not prove the worktree was not changed afterwards (the blob IDs let anyone compare).
+- No approval, signing or ledger: those stay with the frozen trial.
+
+### 17.7 Tests
+
+- `crates/writfold-kb/tests/edit.rs`: a two-recipe batch (a literal replace, and a `line_matches … expect 1` with an insertion) as a golden dry run (`edit-preview.txt`: nothing written, no receipt, no sidecar), a golden apply (`edit-apply.txt`) and the golden receipt (`edit-receipt.md`); the sidecar records the worktree, `resume` shows the receipt and its files, `index verify` is equal; a later apply needs no `--worktree` and another directory is refused. Refusals: an ambiguous selector (`matched 4 sites: line 2 bytes …`) and an unmet `expect` (`expected 2 matching lines, found 1: line 4 bytes …`) in the second recipe of a batch write nothing; two recipes for one file; a path outside the worktree. Worktree refusals: none recorded, missing, not the top of a work tree. A file changed at `locked` refuses before the journal; a file changed after the first file's temporary is synced refuses at its re-check and restores the first file, keeping the other writer's bytes, with no journal, receipt or temporary left. Removing the re-check before the rename fails this test (checked by hand). A gate `[satisfied]` before an edit of `src/retry.rs` is `[stale]` after it, naming the path.
+- `crates/writfold-kb/tests/edit_faults.rs`: the test binary re-runs itself as a child that applies a two-file batch with `--worktree` (so the sidecar write is covered) and aborts at the Nth probe call, for every N until it completes (24 steps: `locked`, `journaled`, four temporary steps, three steps per rename, five per KB write, `journal-cleared`, `unlocked`). After each death every file holds its complete before or after bytes; with no journal, nothing or everything is applied with zero or one receipt; with a journal, `edit apply` is refused and `edit recover` completes both files, one receipt, the recorded worktree, no temporary, `index verify` equal. Three deaths land between the two renames. A second test changes the unapplied file after such a crash: `recover` refuses, and `--abandon` drops the journal, reports `applied` and `changed`, and writes no receipt.
+- Unit tests: the diff (hunks, merged context, no final newline, insertion at the end), the journal round trip, the refusal text, and the arguments.
+
+### 17.8 Deviations and not done
+
+- **The verb** is `kb edit apply` with `kb edit recover`, not `--recover`, like `gate run|status`.
+- **Multi-file means several recipe files.** Splicery's grammar has one file per recipe and is frozen, so a batch is formed on the command line.
+- **The receipt is Markdown**, like retrieval receipts (15.2), so the recipe and diff read as text; gate receipts are JSON because their fields are re-verified.
+- **No latency was measured.** An apply costs one index open, two `hash-object` spawns per file, the journal and the file writes, one KB write, and the answer from the refreshed index.
+- Not built: `create`, `rename` and `remove` recipes; `--capture` and `--frozen` inputs (the trial does not take them either); a `--within` recount; pruning of `edits/` receipts.
+
 ---
 
 ### Critical Files for Implementation

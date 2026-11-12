@@ -1,0 +1,11 @@
+edit src/retry.rs [applied] recipe=retry.spl splices=1 -12 +12 bytes before=1dc692bcea05 after=0dcc64bb0039 @runs/run-20261101T090000Z-a1b2c3/edits/20261111T000000Z-XXXXXX.md:23
+  site: line 2 bytes [25,37) -> 12 bytes, recipe [24,75)
+edit src/ledger.rs [applied] recipe=ledger.spl splices=2 -20 +51 bytes before=fbbd140bd832 after=8e221df69098 @runs/run-20261101T090000Z-a1b2c3/edits/20261111T000000Z-XXXXXX.md:25
+  site: line 1 bytes [16,16) -> 30 bytes, recipe [191,242)
+  site: line 4 bytes [68,88) -> 21 bytes, recipe [98,146)
+# note: recorded runs/run-20261101T090000Z-a1b2c3/edits/20261111T000000Z-XXXXXX.md
+# note: recorded the worktree <WORLD>/demo-service in the run
+# note: applied in <WORLD>/demo-service: an ordinary uncommitted change; review it, run its gates (writfold kb gate status), commit it
+# note: the receipt is written to the KB work tree; commit it to share it
+# coverage=complete records=30/30 shown=2 omitted=0 kb=d5db758bda80+dirty:2 index=refreshed:2 cursor=none q=e939c84349ec
+# exit=0

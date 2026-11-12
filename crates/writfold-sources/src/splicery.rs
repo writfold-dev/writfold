@@ -37,6 +37,11 @@ static IDENTITY: ReplayIdentity = ReplayIdentity {
     profile: "writfold-splicery-literal-edit/1",
 };
 
+/// The identity of the pinned replay, for receipts.
+pub fn identity() -> &'static ReplayIdentity {
+    &IDENTITY
+}
+
 /// Parser, lowering and kernel refusals remain distinguishable and attributed.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum ReplayError {
@@ -108,6 +113,17 @@ impl ReplayedEdit {
     pub fn into_candidate(self) -> Vec<u8> {
         self.candidate.into_bytes()
     }
+}
+
+/// The literal path an `edit "<path>" { … }` recipe names. Fragments (no
+/// path), and create, rename and remove recipes are refused.
+pub fn recipe_path(recipe: &[u8]) -> Result<String, ReplayError> {
+    let parsed = splicery_syntax::parse_recipe(recipe, None).map_err(ReplayError::Parse)?;
+    let Recipe::Edit { path, .. } = &parsed else {
+        return Err(ReplayError::UnsupportedFileOperation);
+    };
+    validate_path(path)?;
+    Ok(path.clone())
 }
 
 /// Replay exact recipe bytes without IO, aliases, capture discovery or authority.
