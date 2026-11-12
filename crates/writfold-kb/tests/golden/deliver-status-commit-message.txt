@@ -1,0 +1,9 @@
+delivery 20261111T000000Z-XXXXXX [blocked] commit-message audience=external destination=harbor main candidate=3f43975f3ff3 bytes=104 @runs/run-20261101T090000Z-a1b2c3/deliveries/20261111T000000Z-XXXXXX/candidate.md:1 !blocked
+  check: references.denied [failed] mechanical fail for 3f43975f3ff3: line 1 internal-host (column 37); line 2 ticket (column 5) @runs/run-20261101T090000Z-a1b2c3/deliveries/20261111T000000Z-XXXXXX/checks/references.denied-20261111T000100Z-XXXXXX.json:1 !failed
+  check: commit-format [failed] mechanical fail for 3f43975f3ff3: line 1 commit-format (subject has 89 characters; at most 72); line 2 commit-format (the second line must be blank) @runs/run-20261101T090000Z-a1b2c3/deliveries/20261111T000000Z-XXXXXX/checks/commit-format-20261111T000100Z-XXXXXX.json:1 !failed
+  check: language-guidelines [open] attested needs: writfold kb deliver attest 20261111T000000Z-XXXXXX --check language-guidelines --statement TEXT --by WHO !open
+  read: instructions for language-guidelines @.writfold/gates/language-guidelines.md:1
+# note: mode commit-message: checked before git commit; nothing binds the checked bytes to the commit that is made
+# note: standing is derived on every read; checks are mechanical, attestations are statements, and nothing is sent
+# coverage=complete records=32/32 shown=1 omitted=0 candidates=1 ready=0 satisfied=0 attested=0 waived=0 open=1 stale=0 failed=2 unknown=0 invalid=0 kb=9ce9e4cd6fd0+dirty:4 index=fresh cursor=none q=05cee12b9acf
+# exit=2

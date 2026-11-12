@@ -8,7 +8,7 @@ use writfold_kb::deliver::DeliverVerb;
 use writfold_kb::deliver::candidate::Prepare;
 use writfold_kb::gate::statement::Kind;
 
-pub const USAGE: &str = "usage: deliver prepare --mode pr-comment|slack-summary --from FILE [--audience internal|external] [--destination NAME] [--run ID] | deliver check [CANDIDATE] [--check NAME] [--run ID] | deliver attest [CANDIDATE] --check NAME --statement TEXT --by WHO [--run ID] | deliver waive [CANDIDATE] --check NAME --reason TEXT --by WHO [--run ID] | deliver status [CANDIDATE] [--run ID]";
+pub const USAGE: &str = "usage: deliver prepare --mode MODE --from FILE [--audience internal|external] [--destination NAME] [--run ID] | deliver check [CANDIDATE] [--check NAME] [--run ID] | deliver attest [CANDIDATE] --check NAME --statement TEXT --by WHO [--run ID] | deliver waive [CANDIDATE] --check NAME --reason TEXT --by WHO [--run ID] | deliver status [CANDIDATE] [--run ID]";
 
 /// The flags each deliver verb takes, beyond `--run`.
 fn flags(sub: &str) -> &'static [&'static str] {

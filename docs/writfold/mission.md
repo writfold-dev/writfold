@@ -114,7 +114,7 @@ The v1 design is [kb-v1-design.md](kb-v1-design.md).
 6. ~~G1: checks with pinned receipts~~ (below; `gate run`, `gate status`, `gate verify`, `gate lines`; [as built](kb-v1-design.md#16-g1-as-built)).
 7. ~~Splicery adapter~~: a recipe applies directly in a run's recorded worktree; the result is an ordinary Git change judged by a gate, with the recipe and preview kept as a receipt (`edit apply`, `edit recover`; [as built](kb-v1-design.md#17-splicery-adapter-as-built)).
 8. ~~T1: `writfold watch`, a read-only TUI~~ ([as built](kb-v1-design.md#18-t1-as-built)).
-9. ~~G2: offline delivery candidates; G2b: an optional guard hook~~ (`deliver prepare|check|attest|waive|status`, `gate attest|waive`, `hook pre-tool-use`; [as built](kb-v1-design.md#19-g2-as-built)).
+9. ~~G2: offline delivery candidates; G2b: an optional guard hook~~ (`deliver prepare|check|attest|waive|status`, `gate attest|waive`, `hook pre-tool-use`; [as built](kb-v1-design.md#19-g2-as-built)). Then, from the order of work below, ~~instruction gates and user-defined delivery modes~~ (`instructions`, `{gate}`, `.writfold/deliveries/<mode>.toml`; [as built](kb-v1-design.md#20-instruction-gates-and-delivery-modes-as-built)).
 10. A two-week pause: count real catches and waivers from the receipts. If no catch mattered, keep G1 and drop the rest.
 11. M4b: MCP, trailer and tracker edges, `--at`. G3 only if the pause justifies it.
 
@@ -153,7 +153,7 @@ After a fourth independent review, the owner adopted:
 - **Hooks stay model-free.** Session start shows the plan position, an inbox (drafts, proposals, sessions that ended without evaluation) and whether the KB clone is behind its remote, from local refs only; after compaction it re-injects the plan position. Evaluation is a `writfold:evaluate` skill and a template's last wrap-up step, not a hook that runs a model. Proposals are `record` calls not yet made, kept in a local queue (`kb proposals list|show|accept|drop`), accepted through the normal write path.
 - **MCP is deferred**; the CLI and the Claude Code plugin are the interface. MCP returns only if another harness needs it.
 - **Proved and modelled later:** `writfold_core::plan` (current, advance check, splice) and the existing gate standing kernels move into the Aeneas-translated set; `spec/RunGraph.tla` models two sessions, merges, drift and crashes. Receipt ordering must not depend on a wall clock where it decides state.
-- **Order of work:** (1) these records, the site slimmed with the full skeletons moved to `docs/guide/*.md`; (2) instruction gates and user-defined delivery modes; (3) the linear run graph (`plan set|status|advance`); (4) splicing; (5) deterministic hooks; (6) one week of real use; then proofs, `RunGraph.tla`, `kb check` and proposals, the evaluation skill, and the Weft assessed gate.
+- **Order of work:** (1) these records, the site slimmed with the full skeletons moved to `docs/guide/*.md`; (2) ~~instruction gates and user-defined delivery modes~~ ([as built](kb-v1-design.md#20-instruction-gates-and-delivery-modes-as-built)); (3) the linear run graph (`plan set|status|advance`); (4) splicing; (5) deterministic hooks; (6) one week of real use; then proofs, `RunGraph.tla`, `kb check` and proposals, the evaluation skill, and the Weft assessed gate.
 
 ### Required steps and run-record checks (owner, 12 November 2026)
 

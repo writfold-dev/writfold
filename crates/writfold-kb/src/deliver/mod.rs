@@ -13,7 +13,9 @@ pub mod checks;
 pub mod config;
 mod evaluate;
 pub mod markdown;
+pub mod mode;
 pub mod receipt;
+pub mod script;
 pub mod status;
 
 use crate::Request;
@@ -220,8 +222,24 @@ fn status_answer(session: &Session<'_>, rec: &Rec, named: Option<&str>) -> Resul
     };
     let mut answer = Answer::default();
     let mut tally = Tally::default();
+    let mut modes: Vec<&str> = Vec::new();
     for c in chosen {
         tally.add(&mut answer.rows, root, c, &rec.id)?;
+        if let Ok(m) = &c.manifest
+            && !modes.contains(&m.mode.as_str())
+        {
+            modes.push(&m.mode);
+        }
+    }
+    // What a mode file says about itself (its limits) travels with it.
+    for name in modes {
+        if let Ok(config::Mode {
+            description: Some(d),
+            ..
+        }) = config::mode(root, name)
+        {
+            answer.notes.push(format!("mode {name}: {d}"));
+        }
     }
     if answer.rows.is_empty() {
         answer.unknown = Some("no-candidates");

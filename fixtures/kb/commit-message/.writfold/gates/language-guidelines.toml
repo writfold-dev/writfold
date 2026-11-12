@@ -1,0 +1,12 @@
+# An attested candidate gate with instructions: no script can judge
+# language, so the agent reads the file named below and attests that the
+# draft follows it. The file's bytes are part of the definition digest, so
+# editing the guidelines makes an earlier attestation stale. An attestation
+# is shown as attested, never as satisfied.
+schema = "writfold-gate/1"
+id = "language-guidelines"
+version = 1
+class = "attested"
+subject = "candidate"
+instructions = "language-guidelines.md"
+description = "the message follows the language guidelines"

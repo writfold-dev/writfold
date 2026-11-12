@@ -1,5 +1,7 @@
-//! `deliver check`: evaluate the candidate's built-in checks against its
-//! current bytes and record one receipt per check, all in one write.
+//! `deliver check`: evaluate the candidate's built-in checks and its
+//! mode's script gates against its current bytes and record one receipt
+//! per check, all in one write (the same `Op::Create` receipts as before;
+//! a script gate adds no write path).
 use super::candidate::{self, Candidate};
 use super::checks::{self, Evaluated};
 use super::config::{self, CLAIMS, PARAGRAPHS, REFERENCES};
@@ -50,7 +52,7 @@ pub(super) fn run(
     let mut ops = Vec::new();
     let mut notes = Vec::new();
     for ob in &wanted {
-        let evaluated = evaluate(session, c, &text, &ob.name, (&mode, &deny))?;
+        let evaluated = evaluate(session, c, &text, ob, (&mode, &deny))?;
         let path = format!(
             "{}/{}/{}-{}.json",
             c.dir,
@@ -81,10 +83,13 @@ fn evaluate(
     session: &Session<'_>,
     c: &Candidate,
     text: &str,
-    check: &str,
+    ob: &config::Obligation,
     (mode, deny): (&config::Mode, &config::Deny),
 ) -> Result<Evaluated> {
-    Ok(match check {
+    if let Some(gate) = &ob.gate {
+        return Ok(super::script::evaluate(&session.ws.root, c, gate));
+    }
+    Ok(match ob.name.as_str() {
         PARAGRAPHS => checks::paragraphs(text, mode),
         REFERENCES => checks::references(text, deny),
         CLAIMS => checks::claims(session, text, &c.payload_path())?,

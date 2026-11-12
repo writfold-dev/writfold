@@ -55,10 +55,11 @@ gates (checks with pinned receipts; definitions in .writfold/gates/<id>.toml):
                                    receipt lines for a commit message (exit 0 only if all are met)
 
 deliveries (offline candidates: the exact payload, checked mechanically; nothing is sent):
-  deliver prepare --mode pr-comment|slack-summary --from FILE [--audience internal|external]
+  deliver prepare --mode MODE --from FILE [--audience internal|external]
                   [--destination NAME] [--run ID]
+                                   MODE: pr-comment, slack-summary, or .writfold/deliveries/MODE.toml
   deliver check [CANDIDATE] [--check NAME] [--run ID]
-                                   run the mode's checks on the candidate's bytes, one receipt each
+                                   run the mode's checks and script gates on the candidate's bytes
   deliver attest|waive [CANDIDATE] --check NAME --statement TEXT|--reason TEXT --by WHO
   deliver status [CANDIDATE] [--run ID]
                                    each candidate's checks (exit 0 only if all are met)

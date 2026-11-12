@@ -49,7 +49,7 @@ pub(super) fn record(
             KbError::Refused("no subject repository: run inside one, or pass --repo DIR".into())
         })?;
     drop(session);
-    let definition = def::find(&ws.root, Some(&subject.top), &say.id)?;
+    let definition = def::find_repository(&ws.root, Some(&subject.top), &say.id)?;
     if say.kind == Kind::Attested && !definition.attested() {
         return Err(KbError::Refused(format!(
             "gate {} is a {} check: only a passing gate run satisfies it (gate waive sets it aside, with a reason)",

@@ -116,6 +116,8 @@ pub struct Receipt {
     pub gate: String,
     pub class: String,
     pub definition: String,
+    /// `kb` or `repo`: where the definition was read from.
+    pub origin: String,
     /// The definition's scope patterns when the receipt was written.
     pub patterns: Vec<String>,
     pub run: String,
@@ -237,6 +239,7 @@ pub fn parse(text: &str, run: &str, name: &str) -> Result<Receipt, String> {
         gate,
         class: s(&value, &["class"])?,
         definition: s(&value, &["definition", "digest"])?,
+        origin: s(&value, &["definition", "origin"])?,
         patterns,
         run: receipt_run,
         repo: s(&value, &["subject", "repo"])?,

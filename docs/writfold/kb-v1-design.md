@@ -1466,7 +1466,7 @@ commands = ["gh pr comment", "gh pr review", "gh issue comment"]
 tools = ["mcp__slack__post_message"]
 ```
 
-The built-in modes are `pr-comment` (all three checks, 150 words per paragraph) and `slack-summary` (all three, 60). A mode file may narrow the checks, change the bound and add attested obligations.
+The built-in modes are `pr-comment` (all three checks, 150 words per paragraph) and `slack-summary` (all three, 60). A mode file may narrow the checks, change the bound and add attested obligations. (Section 20 opens the set: any mode file defines a mode, and a mode may list candidate gates.)
 
 Each obligation has a digest of what it means: `paragraphs.bounded` the bound, `references.denied` the audience and every rule (or the absence of a deny list), `claims.cited-fresh` its name, an attested obligation its name. A receipt or statement about another digest is stale, so tightening the bound or editing the deny list makes the matching receipts stale and leaves the others standing (tested).
 
@@ -1557,6 +1557,126 @@ The kernel's `state` (16.6) still derives a check's state from its receipts. The
 - A `deliver show` or `diff` against the source; pruning candidates.
 - The two-week count of catches and waivers (mission item 10): the receipts and statements hold what it needs (a `fail` followed by a `pass` of the same check on a candidate is a catch; every statement of kind `waived` is a waiver).
 - An interactive Claude Code smoke test of the guard; it was exercised through the binary and the shell form only.
+
+## 20. Instruction gates and delivery modes as built
+
+The second item of the order of work adopted on 12 November 2026 (mission, "The run graph, hooks and order of work"): a gate may name the instructions it holds the agent to and ship its own scripts, and a KB may define its own delivery modes from gates. No TOML crate, no new write path and no new protocol step entered. New code: `crates/writfold-kb/src/gate/{places,discover}.rs` (with `def.rs` extended), `src/deliver/{mode,script}.rs` (with `config.rs`, `evaluate.rs`, `status.rs` and `mod.rs` extended), the fixture overlay `fixtures/kb/commit-message/`, and the tests in 20.6.
+
+### 20.1 Definitions: `instructions` and `subject`
+
+Two optional keys join the gate schema (`writfold-gate/1`; still strict, unknown keys still refused):
+
+```toml
+instructions = "language-guidelines.md"   # a .md file beside the definition
+subject = "candidate"                      # repository (the default) | candidate
+```
+
+- **`instructions`** names a Markdown file the agent reads: the guideline a check enforces or, on an attested gate, the thing being attested to. It is valid on every class. It is resolved against the directory holding the definition (`.writfold/gates/` of the KB root or of the subject repository), must end in `.md`, may use subdirectories (`review/checklist.md`), and is refused when it is absolute, has an empty or `..` segment, a backslash, does not exist, or resolves (symbolic links followed) outside that directory.
+- **`subject`** says what the gate judges. A repository gate is what G1 built: `gate run`, `gate status`, `gate attest|waive`, `resume`. A candidate gate judges a delivery candidate's bytes: it is owed only through a delivery mode, never by `gate status`, and `gate run`, `gate attest` and `gate waive` refuse it, naming `deliver`. A candidate gate lives in the KB root (where modes read it), takes no `scope` (its subject is the candidate's bytes), and, when it has a command, must pass `{candidate}` to it.
+- **Rows.** A gate with instructions adds `read: instructions for <id> @<path>:1` to its row in `gate status`, `gate run`, `gate attest|waive` and `resume`, before any `why:` or `next:` line; a repository definition's path reads `<repo>:.writfold/gates/…`. In `deliver status` the same line follows the gate's `check:` line.
+- **The digest** (16.2) now also covers the instructions' path and the SHA-256 of their bytes, and the path and SHA-256 of every file the argv names through `{gate}/…`. The lines for these (and `subject=candidate`) are appended only when present, so a definition without the new keys keeps its G1 digest and no existing receipt goes stale on upgrade (tested). Editing the instructions or a shipped script makes receipts and attestations about the definition stale, with `why: the definition changed since this receipt`; a comment or layout change in the TOML still does not.
+
+### 20.2 Placeholders and their resolution
+
+| Placeholder | Expands to | Where |
+|---|---|---|
+| `{artifacts}` | a fresh local directory for the command's output files (16.4) | repository gates only |
+| `{gate}` | the absolute directory holding the definition | every gate with a command |
+| `{candidate}` | the absolute path of the candidate's `candidate.md` | candidate gates only, and required there |
+
+- **`{gate}`** is followed by nothing or by `/` and a path inside the definition's directory, to the end of the argument (`{gate}/check.sh`, `--config={gate}/rules.txt`). The path follows the `instructions` rules: no `..` or empty segment, no further placeholder, and a named file must exist and stay inside the directory once symbolic links are followed. For a KB definition `{gate}` is in the KB clone, so one script serves every subject repository (tested on two); for a repository definition it is in that repository, versioned with the code.
+- **Any other `{name}`** of lower-case letters and `_` is refused when the definition is read; braces around anything else (`{}`, `{1}`) are literal text, as in G1.
+- **Expansion is one pass**: text a placeholder expands to is never expanded again. The receipt records the argv as written, so no local path is tracked. The command's environment also carries `WRITFOLD_GATE_DIR`, and `WRITFOLD_GATE_ARTIFACTS` or `WRITFOLD_CANDIDATE` where they apply.
+- **The working directory** of a repository gate is `workdir` under the subject repository (16.2); of a candidate gate, `workdir` under the KB root. A first argv element containing `/` is resolved against it; `{gate}/…` expands to an absolute path, so it is used as is.
+- **`gate verify`** expands `{gate}` from the receipt's recorded origin: a repository definition's directory in the verification worktree at the recorded commit, a KB definition's directory in the KB as it stands.
+- **Nothing runs from discovery.** Reading definitions (for `gate status`, `resume`, `watch`, a mode load, the guard hook) only reads files and hashes them. A command runs only on an explicit `gate run`, `gate verify` or `deliver check`.
+
+### 20.3 Delivery modes
+
+Any `.writfold/deliveries/<name>.toml` in the KB root defines the mode `<name>`; `pr-comment` and `slack-summary` stay built in and keep their G2 defaults when no file names them. A mode name is `[a-z0-9.-]`, and `guard` and `deny-*` are reserved for the files already there. An unknown mode with no file is refused, naming the file to add.
+
+```toml
+schema = "writfold-delivery-mode/1"
+mode = "commit-message"                  # must equal the file name
+description = "…"                        # optional; one line, printed with deliver status
+checks = ["references.denied"]           # built-in checks; default all three for a built-in mode, none otherwise
+gates = ["commit-format", "language-guidelines"]   # candidate gates from the KB root's .writfold/gates/
+attest = []                              # plain attested names, as in G2
+paragraph_words = 150                    # as in G2
+```
+
+- **Obligations** are the built-in checks, then the gates in the order listed, then the `attest` names. A script gate's class is its definition's (`mechanical` or `observed`); an attested gate is `attested`. A gate obligation's digest is taken over its ID and its definition digest, so an edited command, script or instructions file makes that gate's receipts or statements stale and leaves the others standing (tested).
+- **Refused when the mode is loaded** (by `prepare`, `check`, `attest`, `waive`, `status`, `resume` and the guard), with the file and the reason: an unknown key; a check that is not built in; an unknown gate (with a hint when the name is a mode: a mode cannot name a mode); a gate whose definition does not parse (its own reason); a repository gate; a name listed twice across `checks`, `gates` and `attest`. Modes cannot name modes and gates cannot name gates, so no cycle can form; there is no include mechanism to refuse cycles in.
+- **`deliver check`** runs the built-in checks and the script gates (or the one `--check` names) against the candidate's current bytes and writes one receipt each, in the one locked write G2 already makes. The receipt format (`writfold-delivery-receipt/1`) is unchanged; `class` is the gate's.
+- **`deliver attest --check <gate>`** is the only way to meet an attested gate; the statement binds the obligation digest (so the instructions' bytes) and the candidate digest. Attesting a script gate is refused, as for a built-in check.
+
+### 20.4 Script gates on a candidate
+
+The script runs under G1's supervision (16.4): its own process group, stdin at end of file, the definition's timeout, TERM then KILL, bounded tails. It reports findings on standard output, one per line, as `<line>: <text>` or `line <line>: <text>`; any other non-empty line is a finding about the whole candidate (line 0); each finding's rule is the gate's ID, and its text is kept to 200 characters. The outcome:
+
+- exit 0: `pass`, with no findings (any output is ignored);
+- any other exit status: `fail`, with the printed findings, or one `line 0 … exit=N with no finding printed`;
+- a signal, a timeout, a failure to start, or the candidate's bytes changing while the script ran: `unknown`, with the reason as the note. Never a pass (tested).
+
+The output tails are not kept: a candidate receipt holds findings, not logs.
+
+### 20.5 The worked `commit-message` mode
+
+`fixtures/kb/commit-message/` is a KB overlay that defines the mode from files alone; no code names it.
+
+- `.writfold/deliveries/commit-message.toml`: `checks = ["references.denied"]`, `gates = ["commit-format", "language-guidelines"]`, and a description stating the limit.
+- `.writfold/deliveries/deny-external.toml`: internal hosts, ticket numbers and a codename, for "obfuscate the messages" before an external audience sees them.
+- `.writfold/gates/commit-format.toml` with `commit_format.sh` beside it (`argv = ["sh", "{gate}/commit_format.sh", "{candidate}"]`): a subject of 1 to 72 characters, a blank second line, body lines of at most 72.
+- `.writfold/gates/language-guidelines.toml` (`class = "attested"`, `subject = "candidate"`, `instructions = "language-guidelines.md"`) with the guidelines beside it.
+
+```sh
+writfold kb deliver prepare --mode commit-message --audience external --from MSG
+writfold kb deliver check            # references.denied and commit-format; line N findings
+writfold kb deliver attest --check language-guidelines --statement "…" --by agent
+writfold kb deliver status           # exit 0 once ready
+git commit -F runs/<run>/deliveries/<id>/candidate.md
+```
+
+From the golden `tests/golden/deliver-status-commit-message.txt`:
+
+```text
+delivery 20261111T000000Z-XXXXXX [blocked] commit-message audience=external destination=harbor main candidate=3f43975f3ff3 bytes=104 @…/candidate.md:1 !blocked
+  check: references.denied [failed] mechanical fail for 3f43975f3ff3: line 1 internal-host (column 37); line 2 ticket (column 5) @…:1 !failed
+  check: commit-format [failed] mechanical fail for 3f43975f3ff3: line 1 commit-format (subject has 89 characters; at most 72); line 2 commit-format (the second line must be blank) @…:1 !failed
+  check: language-guidelines [open] attested needs: writfold kb deliver attest 20261111T000000Z-XXXXXX --check language-guidelines --statement TEXT --by WHO !open
+  read: instructions for language-guidelines @.writfold/gates/language-guidelines.md:1
+# note: mode commit-message: checked before git commit; nothing binds the checked bytes to the commit that is made
+```
+
+**The honest limit.** The draft is checked before `git commit`. Nothing binds the checked bytes to the commit that is then made: the agent may commit other text, and the guard hook (19.6) is configured and tested for publishing commands, not for `git commit`. The mode's description says so on every status, and the skill tells the agent to commit with `-F` on the candidate itself. The language gate is an attestation: it records that someone said the message follows the guidelines, and is shown as attested, never as satisfied.
+
+### 20.6 Tests
+
+- **Goldens:** `gate-status-instructions.txt` (a satisfied script gate and an open attested gate, each with its `read:` line) and `deliver-status-commit-message.txt` (above). The existing goldens for `gate status`, `gate lines`, `pr-comment` and `slack-summary` are unchanged.
+- **Staleness** (`tests/gate_instructions.rs`, `tests/deliver_modes.rs`, `gate/def_tests.rs`): an instructions edit makes a gate receipt stale (with its `why:`), an attestation of a repository gate stale, and a mode's attestation stale while its script receipt stands; a shipped-script edit makes the receipt stale; a TOML comment does not; a plain definition keeps its G1 digest.
+- **Resolution:** a KB gate runs its own script against three subject repositories (two pass, one fails); a repository gate runs its own script and `gate verify` agrees in a worktree at the recorded commit; `instructions` with `..`, an absolute path or a symbolic link leaving the directory, `{gate}/..` and `{candidate}` on a repository gate show as invalid definition rows naming the reason and are refused by `gate run`; unit tests (`gate/places.rs`, `gate/def_tests.rs`) cover one-pass expansion, a missing shipped script, a non-`.md` instructions file, `{artifacts}` or `scope` on a candidate gate, a candidate gate without `{candidate}`, and a candidate gate in a repository.
+- **A user mode:** `commit-message` from the fixture files alone; its script gate fails naming lines 1 and 2, the edited candidate makes both receipts stale, and a recheck satisfies them; the attested gate is open until `deliver attest`, then `attested` with `satisfied=2 attested=1`, never `[satisfied]`; attesting the script gate is refused.
+- **A built-in mode unchanged:** `pr-comment` in the same KB has its three checks and no gate or `read:` line.
+- **Refusals at load:** an unknown mode (naming the file), a check that is not built in, an unknown gate, a repository gate, a candidate gate without `{candidate}`, the mode itself and a built-in mode named as gates, a name listed twice, an unknown key; `gate run` and `gate attest` of a candidate gate.
+- **Never a pass:** a script gate that times out, is killed or does not exist records `unknown`; one that exits 3 silently records `fail` with `line 0`; no receipt holds `"outcome": "pass"`.
+- **Kill tests** (`tests/deliver_faults.rs`): a `commit-message` check aborted at each of the seven protocol steps leaves only complete, valid receipts (the script gate's among them), `index verify` equal, and a rerun adds both. There is no new write path: script receipts are G2's `Op::Create` receipts in G2's one apply.
+- **Removing the check fails a test:** with the instructions line removed from `def::digest`, `def_tests::instructions_and_shipped_scripts_enter_the_digest`, `gate_instructions::instructions_are_read_lines_and_their_edits_make_receipts_stale` and `deliver_modes::a_mode_file_alone_defines_commit_message` fail (checked by hand; three tests).
+
+### 20.7 Deviations
+
+- **`subject = "candidate"` is a new key.** The review proposed telling the kinds apart by whether argv uses `{candidate}`; an attested gate has no argv, so the kind is stated instead and checked against the placeholders (a repository gate may not use `{candidate}`; a candidate script gate must).
+- **Attested gates go in `gates`, not `attest`.** `attest` keeps G2's meaning (a plain name with no definition); a name may not appear in both.
+- **`{gate}`-named scripts enter the digest** as well as the instructions, so editing a shipped script makes receipts stale; a script reached another way (`PATH`, `workdir`) is covered only by `scope`.
+- **"Cycles" cannot occur**: neither modes nor gates can name their own kind. A mode that names a mode is refused with that reason.
+- **Mode descriptions** were added so that a mode's limit (here: the commit is not bound) is printed with its candidates rather than kept only in documentation.
+- **The fixture script is POSIX `sh`**, not Python, so the tests need nothing beyond the shell G1's tests already use.
+
+### 20.8 Not done
+
+- Plans and `advance` (the next item of the order of work); gates owed per step.
+- Binding a checked commit message to the commit (a `commit-msg` hook or trailer check); guarding `git commit` with the PreToolUse hook.
+- Keeping a candidate gate's output tails; `deliver check` keeps findings only.
+- A real commit made through the `commit-message` mode; a real instruction gate written by the owner.
 
 ---
 

@@ -10,7 +10,11 @@
 //! receipt is a tracked file whose history Git keeps, and anyone can
 //! re-run it. Nothing here signs anything or stops a determined forger.
 pub mod def;
+#[cfg(test)]
+mod def_tests;
+mod discover;
 pub mod exec;
+pub mod places;
 pub mod receipt;
 mod run;
 mod say;
@@ -185,7 +189,7 @@ pub fn resume_rows(session: &Session<'_>, rec: &Rec, cwd: &Path) -> (Vec<Row>, V
     };
     let Some(subject) = subject else {
         let (defined, _) = def::all(&session.ws.root, None);
-        return match defined.is_empty() {
+        return match defined.iter().all(def::Definition::on_candidate) {
             true => (Vec::new(), Vec::new()),
             false => (
                 Vec::new(),
@@ -197,7 +201,7 @@ pub fn resume_rows(session: &Session<'_>, rec: &Rec, cwd: &Path) -> (Vec<Row>, V
         };
     };
     let (defined, problems) = def::all(&session.ws.root, Some(&subject.top));
-    if defined.is_empty() && problems.is_empty() {
+    if defined.iter().all(def::Definition::on_candidate) && problems.is_empty() {
         return (Vec::new(), Vec::new());
     }
     match gate_rows(session, rec, &subject) {
