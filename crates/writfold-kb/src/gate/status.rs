@@ -18,23 +18,58 @@ use writfold_runtime::git::GitExecutable;
 
 pub use super::receipt::{Filed, filed};
 
-/// A run's receipts, statements and assessed receipts.
+/// What a run's plan does to its gates: which gates it owes (all defined
+/// gates when the run has no plan) and the run-record digest its
+/// run-record gates are judged against ([`crate::plan::records`]).
+#[derive(Clone, Debug, Default)]
+pub struct Owed {
+    /// `Some` when the run has a plan: only these gates are owed.
+    pub gates: Option<Vec<String>>,
+    /// The run-record digest of the current step's window (the whole run
+    /// without a plan); `None` when the records could not be read.
+    pub records: Option<String>,
+}
+
+/// A run's receipts, statements and assessed receipts, and what its plan
+/// owes.
 pub struct Filings {
     pub receipts: Vec<Filed>,
     pub statements: Vec<statement::Filed>,
     pub assessed: Vec<super::assessed::Filed>,
     /// `runs/<run>`.
     pub run_dir: String,
+    pub owed: Owed,
 }
 
 impl Filings {
+    /// The filings alone: every defined gate owed, no run-record digest.
     pub fn read(root: &Path, run_dir: &str, run: &str) -> Self {
         Self {
             receipts: filed(root, run_dir, run),
             statements: statement::filed(root, run_dir, run),
             assessed: super::assessed::filed(root, run_dir, run),
             run_dir: run_dir.to_owned(),
+            owed: Owed::default(),
         }
+    }
+
+    /// The filings of a run with what its plan owes.
+    pub fn for_run(session: &crate::session::Session<'_>, rec: &crate::index::query::Rec) -> Self {
+        let mut filings = Self::read(&session.ws.root, &crate::runs::dir(rec), &rec.id);
+        filings.owed = crate::plan::owed(session, rec);
+        filings
+    }
+
+    /// The valid receipts about `repo`, in judging order ([`receipt::order`]).
+    pub fn valid(&self, repo: &str) -> Vec<(&Filed, &Receipt)> {
+        let mut valid: Vec<(&Filed, &Receipt)> = self
+            .receipts
+            .iter()
+            .filter_map(|f| f.parsed.as_ref().ok().map(|r| (f, r)))
+            .filter(|(_, r)| r.repo == repo)
+            .collect();
+        valid.sort_by(|a, b| receipt::order((&a.0.name, a.1), (&b.0.name, b.1)));
+        valid
     }
 
     /// Receipts and statements that do not read as valid.
@@ -89,52 +124,29 @@ pub fn judge<'a>(
     // Candidate gates judge delivery drafts, never a repository: a run
     // owes them only through a delivery mode (`deliver status`).
     definitions.retain(|d| !d.on_candidate());
+    if let Some(owed) = &filings.owed.gates {
+        definitions.retain(|d| owed.contains(&d.id));
+    }
     let assessed: Vec<Definition>;
     (assessed, definitions) = definitions.into_iter().partition(|d| d.assessed.is_some());
     let patterns: Vec<Vec<&str>> = definitions.iter().map(Definition::patterns).collect();
     let wanted = |p: &str| patterns.iter().any(|scope| in_scope(scope, p));
     let snapshot = snapshot(git, subject, &wanted)?;
-    let mut valid: Vec<(&Filed, &Receipt)> = filings
-        .receipts
-        .iter()
-        .filter_map(|f| f.parsed.as_ref().ok().map(|r| (f, r)))
-        .filter(|(_, r)| r.repo == subject.name)
-        .collect();
-    valid.sort_by(|a, b| (&a.1.recorded, &a.0.name).cmp(&(&b.1.recorded, &b.0.name)));
+    let valid = filings.valid(&subject.name);
+    let records = filings.owed.records.clone().unwrap_or_default();
     let mut gates = Vec::new();
     for definition in definitions {
-        let scoped = snapshot.scoped(&definition.patterns());
-        let mine: Vec<(&Filed, &Receipt)> = valid
-            .iter()
-            .filter(|(_, r)| r.gate == definition.id)
-            .copied()
-            .collect();
-        let evidence: Vec<Evidence> = mine
-            .iter()
-            .map(|(_, r)| Evidence {
-                outcome: r.outcome,
-                same_definition: r.definition == definition.digest,
-                same_scope: r.scope == scoped.digest,
-            })
-            .collect();
-        let (state, at) = state(&evidence);
-        let receipt = at.and_then(|i| mine.get(i).copied());
-        let statements = statement::summary(
-            &filings.statements,
-            &definition.id,
-            &subject.name,
-            &definition.digest,
-            &scoped.digest,
-        );
-        gates.push(Judged {
-            same_definition: receipt.is_none_or(|(_, r)| r.definition == definition.digest),
-            standing: standing(definition.attested(), state, statements.statements),
+        let content = match definition.run_record() {
+            true => records.clone(),
+            false => snapshot.scoped(&definition.patterns()).digest,
+        };
+        gates.push(judge_gate(
             definition,
-            state,
-            receipt,
-            statements,
-            assessment: None,
-        });
+            &valid,
+            filings,
+            &subject.name,
+            &content,
+        ));
     }
     let mut report = Report {
         gates,
@@ -144,6 +156,49 @@ pub fn judge<'a>(
     let more = super::assessed::judge(session, subject, filings, &report, assessed)?;
     report.gates.extend(more);
     Ok(report)
+}
+
+/// Judge one gate from the valid receipts (in judging order) against the
+/// present `content`: the scope digest of a repository gate, the
+/// run-record digest of a run-record gate.
+pub fn judge_gate<'a>(
+    definition: Definition,
+    valid: &[(&'a Filed, &'a Receipt)],
+    filings: &'a Filings,
+    repo: &str,
+    content: &str,
+) -> Judged<'a> {
+    let mine: Vec<(&Filed, &Receipt)> = valid
+        .iter()
+        .filter(|(_, r)| r.gate == definition.id)
+        .copied()
+        .collect();
+    let evidence: Vec<Evidence> = mine
+        .iter()
+        .map(|(_, r)| Evidence {
+            outcome: r.outcome,
+            same_definition: r.definition == definition.digest,
+            same_scope: !content.is_empty() && r.scope == content,
+        })
+        .collect();
+    let (state, at) = state(&evidence);
+    let receipt = at.and_then(|i| mine.get(i).copied());
+    let statements = statement::summary(
+        &filings.statements,
+        &definition.id,
+        repo,
+        &definition.digest,
+        content,
+    );
+    Judged {
+        same_definition: receipt.is_none_or(|(_, r)| r.definition == definition.digest),
+        standing: standing(definition.attested(), state, statements.statements),
+        definition,
+        state,
+        receipt,
+        statements,
+        assessment: None,
+    }
 }
 
 fn short(text: &str) -> &str {
@@ -339,6 +394,11 @@ fn stale_why(
 ) -> Result<String> {
     if !judged.same_definition {
         return Ok("the definition changed since this receipt".into());
+    }
+    if judged.definition.run_record() {
+        return Ok(
+            "the run's records changed since this receipt, or it is about another step".into(),
+        );
     }
     let patterns = judged.definition.patterns();
     Ok(

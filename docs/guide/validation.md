@@ -1,6 +1,6 @@
 # Is what I am reading still true?
 
-> **Status:** built in v0.3.0-dev.1; `kb check` built in v0.4.0-dev.1, except its plan line, which is planned.
+> **Status:** built in v0.3.0-dev.1; `kb check` built in v0.4.0-dev.1, with its plan line.
 
 Four things can drift: a cited source, the index, a gate's evidence, and a delivery draft. Each has its own command, and `kb check` runs the first three together. All of them only read; none fetches from a network.
 
@@ -102,4 +102,4 @@ check gates [skipped] no current run
 
 It exits with the worst of the three codes: 0 only when all are clean, then 2, then 3, then 1. It writes nothing beyond what `index verify` writes. Delivery drafts are not included; `deliver status` reports them.
 
-*Planned:* a `plan` row with the run's plan position, once the [run graph](run-graph.md) is built.
+When the current run holds a plan, a fourth row, `check plan`, carries `plan status`'s trailer: `attention` when a done step is `!stale` or an event is invalid ([run graph](run-graph.md)).

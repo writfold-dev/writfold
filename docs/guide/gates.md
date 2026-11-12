@@ -1,6 +1,6 @@
 # Gates
 
-> **Status:** built in v0.3.0-dev.1; instruction gates, gate scripts and the Weft assessed gate built in v0.4.0-dev.1; the section marked *Planned* (run-record checks) is not built.
+> **Status:** built in v0.3.0-dev.1; instruction gates, gate scripts, the Weft assessed gate, run-record checks and plan-owed gates built in v0.4.0-dev.1.
 
 A gate is one small check with a path scope. `gate run` runs its command and keeps a receipt pinned to the exact bytes checked. `gate status` then says, on every read, whether that evidence still holds. Gates report; they block nothing.
 
@@ -12,7 +12,7 @@ One file per gate, `.writfold/gates/<id>.toml`. It lives in the KB root (shared 
 schema = "writfold-gate/1"         # required
 id = "unit"                        # required; a slug equal to the file name
 version = 1                        # required; your own revision number
-class = "mechanical"               # required; mechanical | observed | attested
+class = "mechanical"               # required; mechanical | observed | attested | run-record
 argv = ["cargo", "test", "--locked"]   # required for a command gate; never a shell string
 workdir = "."                      # optional; relative to the repository's top
 timeout_seconds = 600              # required for a command gate; 1 to 86400
@@ -31,6 +31,7 @@ description = "the unit tests"     # optional; one line
 | `mechanical` | a deterministic check of the repository's bytes: build, tests, lint | a passing receipt from `gate run` |
 | `observed` | a command whose result also depends on the world: a service answering | a passing receipt from `gate run` |
 | `attested` | a statement someone must make; it runs nothing | `gate attest` |
+| `run-record` | a check over the run's own records, not code ([below](#run-record-checks)) | a passing receipt from `gate run` |
 | `assessed` | a plan step verified by Weft from cited evidence ([below](#weft-assessed-gates)) | a passing receipt from `gate run`: every required check entailed from grounded assumptions |
 
 An attested gate has no `argv`, `workdir` or `timeout_seconds`:
@@ -74,7 +75,7 @@ The receipt is one JSON file, `runs/<run>/gates/<gate>-<UTC time>-<6 hex>.json` 
   "result": { "outcome": "pass", "exit_code": 0, "signal": null, "timed_out": false,
               "error": null, "subject_moved": false, "duration_ms": 6 },
   "evaluator": "writfold 0.3.0-dev.1",
-  "recorded": "2026-11-12T21:10:36Z",
+  "recorded": "2026-11-12T21:10:36Z", "seq": 1,
   "digest": "sha256:f4dc7a4b…"
 }
 ```
@@ -86,7 +87,7 @@ Receipts are a log: a rerun adds a file. Only `gate run` writes them. A hand-edi
 | Standing | When | Met? |
 |---|---|---|
 | `open` | no receipt for this repository in this run | owed |
-| `satisfied` | the newest receipt about the current definition and bytes passed | met |
+| `satisfied` | the newest receipt about the current definition and bytes passed (newest by the receipt's `seq`, never by its clock) | met |
 | `failed` | that receipt failed | owed |
 | `unknown` | that receipt is a timeout, crash or moved subject | owed |
 | `stale` | there are receipts, but none about the current definition and bytes | owed |
@@ -118,7 +119,9 @@ A statement is a file in `runs/<run>/statements/`, bound to the same definition 
 
 ## Which gates a run owes
 
-Today every gate defined for a repository is owed by every run on it.
+A run without a plan owes every gate defined for its repository. A run with a plan ([run-graph](run-graph.md)) owes only the gates its steps name: `gate status`, `gate lines` and `resume` list those, and `plan advance` judges the current step's.
+
+Receipts are judged in the order of their `seq` field, one more than the highest of the run's receipts of that gate on that subject when it was written; `recorded` is shown, never compared, so a clock that is wrong on one machine cannot change which receipt decides. Receipts written before `seq` existed count as 0 and keep their file-name order; two clones that wrote the same `seq` are ordered by file name.
 
 ## Instruction gates and gate scripts
 
@@ -228,14 +231,37 @@ gate ship [failed] assessed fail met=0/1 weft=f463cf9c4a50 bin=8b46349b5622 at d
 
 The receipt, `runs/<run>/assessed/<gate>-<time>-<hex>.json`, binds the definition digest, the Weft source's digest, the pinned and actual binary digests, the report's digest (the report itself stays local), every citation with what it stood on, and every check's Weft result, Weft's own basis and Writfold's basis. Reading it re-derives every basis and the outcome, so a hypothetical check relabelled grounded reads as `[invalid]`. It goes `stale` when the source changes or any cited evidence moves (`why: cited evidence moved: stall_done (…) was fresh, now changed`), and is satisfied again if the evidence returns.
 
-## Planned: run-record checks
+## Run-record checks
 
-A mechanical gate kind evaluated over the run's own records instead of code. Two examples from the mission:
+A gate of class `run-record` runs no command: `gate run` judges the run's own records against the built-in requirements its `require` list names, and records a receipt like any other (exit status 0 for met, 1 for not met, with the reason as a note).
 
-- `research.backfilled`: the step wrote at least one KB record, citation or retrieval receipt.
-- `run.reflected`: the run holds a reflection entry, and either a proposal or an explicit "no proposal".
+```toml
+# .writfold/gates/backfilled.toml
+schema = "writfold-gate/1"
+id = "backfilled"
+version = 1
+class = "run-record"
+require = ["research.backfilled"]    # research.backfilled | run.reflected
+description = "the research step wrote something back to the KB"
+```
 
-A run-record check can be paired with an attested gate whose instructions say what a good reflection covers: the check shows that something was written, the statement that someone read it against the guideline. Together with required steps ([run-graph](run-graph.md)) this is how "every research step backfills the KB" would be expressed. None of it is built.
+- **`research.backfilled`**: since the step began, the KB's files outside `runs/` changed (a record was written or edited), a retrieval receipt was recorded in the run, or a checkpoint entry holds a citation token.
+- **`run.reflected`**: a checkpoint entry starts with `reflection:`, and the run has a pending proposal, a KB record written in the step (an accepted proposal), or a line starting `no proposal`.
+
+A run-record gate takes no `scope`, `subject`, `argv`, `workdir` or `timeout_seconds`. Its receipt binds the run-record digest of the window it judged: the current plan step's, from the event that began the step to now (the whole run when the run has no plan). Any change to the run's records in that window (a new checkpoint entry, a retrieval receipt, a KB file) makes it `stale`; once the step is done, its window is closed and the receipt keeps standing. `gate waive` sets one aside like any check; `gate attest` is refused, and `gate verify` answers `unverifiable` (there is no commit to re-run it at).
+
+These checks show that something was written, not that it is good. Pair one with an attested gate whose instructions say what a good backfill or reflection covers: the check shows the record exists, the statement that someone read it against the guideline.
+
+```toml
+# .writfold/gates/reflection-reviewed.toml: what a good reflection covers
+schema = "writfold-gate/1"
+id = "reflection-reviewed"
+version = 1
+class = "attested"
+instructions = "reflection.md"
+scope = ["**"]
+description = "the reflection names what went wrong and what to change"
+```
 
 ## What is claimed
 

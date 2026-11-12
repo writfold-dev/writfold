@@ -43,6 +43,7 @@ pub mod convenience;
 pub mod flow;
 pub mod gate;
 pub mod ledger;
+pub mod plan;
 pub mod publication;
 pub mod trial;
 pub mod verdict;

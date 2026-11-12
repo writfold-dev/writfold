@@ -60,6 +60,28 @@ pub struct Facts<'a> {
     pub evaluation: &'a Evaluation,
     pub subject_moved: bool,
     pub recorded: &'a str,
+    /// One more than the highest `seq` among the run's receipts of this
+    /// gate on this subject: the order receipts are judged in ([`order`]).
+    pub seq: u64,
+}
+
+/// The argv a receipt records: the definition's, or for a run-record gate
+/// (which runs no command) `run-record` and its requirements.
+pub fn command(d: &Definition) -> Vec<String> {
+    match d.run_record() {
+        true => std::iter::once("run-record".to_owned())
+            .chain(d.require.iter().cloned())
+            .collect(),
+        false => d.argv.clone(),
+    }
+}
+
+/// The order receipts are judged in, oldest first: by `seq`, then by file
+/// name. No clock enters: `recorded` is shown, never compared. Receipts
+/// written before `seq` existed read as 0 and keep their name order; two
+/// clones that each wrote the same `seq` are ordered by name.
+pub fn order(a: (&str, &Receipt), b: (&str, &Receipt)) -> std::cmp::Ordering {
+    (a.1.seq, a.0).cmp(&(b.1.seq, b.0))
 }
 
 /// The receipt's bytes: two-space JSON ending in a line break.
@@ -87,7 +109,7 @@ pub fn bytes(f: &Facts<'_>) -> Vec<u8> {
             "dirty": f.scoped.dirty,
             "dirty_digest": f.scoped.dirty_digest,
         },
-        "command": {"argv": d.argv, "workdir": d.workdir, "timeout_seconds": d.timeout_seconds},
+        "command": {"argv": command(d), "workdir": d.workdir, "timeout_seconds": d.timeout_seconds},
         "result": {
             "outcome": outcome(e.ending, f.subject_moved).name(),
             "exit_code": e.exit_code,
@@ -100,6 +122,7 @@ pub fn bytes(f: &Facts<'_>) -> Vec<u8> {
         "output": {"stdout": stream(&e.stdout), "stderr": stream(&e.stderr)},
         "evaluator": evaluator(),
         "recorded": f.recorded,
+        "seq": f.seq,
     });
     let digest = sha(canonical(&value).as_bytes());
     if let Value::Object(map) = &mut value {
@@ -134,6 +157,8 @@ pub struct Receipt {
     pub ending: Ending,
     pub duration_ms: u64,
     pub recorded: String,
+    /// The judging order ([`order`]); 0 for a receipt that predates it.
+    pub seq: u64,
 }
 
 fn at<'a>(value: &'a Value, path: &[&str]) -> Option<&'a Value> {
@@ -234,10 +259,15 @@ pub fn parse(text: &str, run: &str, name: &str) -> Result<Receipt, String> {
         return Err("its outcome disagrees with how the command ended".into());
     }
     let argv = strings(&value, &["command", "argv"])?;
-    let patterns = strings(&value, &["definition", "scope"])?;
+    let class = s(&value, &["class"])?;
+    // A run-record gate has no scope: its subject is the run's records.
+    let patterns = match (class.as_str(), at(&value, &["definition", "scope"])) {
+        (super::def::RUN_RECORD, Some(Value::Array(items))) if items.is_empty() => Vec::new(),
+        _ => strings(&value, &["definition", "scope"])?,
+    };
     Ok(Receipt {
         gate,
-        class: s(&value, &["class"])?,
+        class,
         definition: s(&value, &["definition", "digest"])?,
         origin: s(&value, &["definition", "origin"])?,
         patterns,
@@ -255,6 +285,10 @@ pub fn parse(text: &str, run: &str, name: &str) -> Result<Receipt, String> {
         ending,
         duration_ms: n(&value, &["result", "duration_ms"])?,
         recorded: s(&value, &["recorded"])?,
+        seq: match at(&value, &["seq"]) {
+            None => 0,
+            Some(v) => v.as_u64().filter(|n| *n > 0).ok_or("seq is not a count")?,
+        },
     })
 }
 

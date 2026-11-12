@@ -135,6 +135,9 @@ pub fn resume(session: &Session<'_>, named: Option<&str>, cwd: &Path) -> Result<
     let mut rows = runs::rows(session, &rec)?;
     let tail = (rows.len() > 1).then(|| rows.remove(1));
     answer.rows.extend(rows);
+    answer
+        .rows
+        .extend(crate::plan::resume_row(session, &rec, cwd));
     answer.rows.extend(coverage(session, &rec));
     let (receipts, total) = crate::write::retrieval::rows(session, &rec)?;
     if total > receipts.len() {

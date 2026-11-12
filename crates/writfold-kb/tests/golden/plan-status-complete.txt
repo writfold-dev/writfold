@@ -1,0 +1,11 @@
+step change#1/research [done] backfilled [satisfied] @runs/run-20261101T090000Z-a1b2c3/plan/done-change.1~research.json:1
+  done: recorded 2026-11-11T00:00:00Z
+step change#1/implement [done] unit [satisfied] @runs/run-20261101T090000Z-a1b2c3/plan/done-change.1~implement.json:1
+  done: recorded 2026-11-11T00:00:00Z
+step change#1/review [done] review [attested] @runs/run-20261101T090000Z-a1b2c3/plan/done-change.1~review.json:1
+  done: recorded 2026-11-11T00:00:00Z
+step change#1/reflect [done] reflected [satisfied] @runs/run-20261101T090000Z-a1b2c3/plan/done-change.1~reflect.json:1
+  done: recorded 2026-11-11T00:00:00Z
+# note: plan change @1d3b333a27e8 from .writfold/plans/change.toml; steps are derived from runs/run-20261101T090000Z-a1b2c3/plan/ on every read, never stored
+# coverage=complete records=40/40 shown=4 omitted=0 steps=4 done=4 skipped=0 stale=0 invalid=0 kb=d5db758bda80+dirty:13 index=fresh cursor=none q=0d053770d172
+# exit=0
