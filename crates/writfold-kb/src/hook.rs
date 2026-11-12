@@ -7,7 +7,8 @@
 //! writes a tracked file; drafts are local ([`crate::draft`]).
 //!
 //! - `session-start` prints JSON whose `additionalContext` holds `brief`,
-//!   `resume` when a current run exists, and the unconfirmed drafts, cut
+//!   `resume` when a current run exists, the unconfirmed drafts and the
+//!   pending proposals ([`crate::proposal`]) `resume` did not show, cut
 //!   to [`CONTEXT_LIMIT`] characters (Claude Code caps it at 10,000).
 //! - `pre-compact` records where the work is (repository, branch, HEAD,
 //!   dirty count) in the session's draft and prints plain instructions,
@@ -173,6 +174,9 @@ fn session_start(ws: &Workspace, cwd: &Path, now: i64) -> Result<HookOutput, Str
         if drafts.len() > DRAFTS_SHOWN {
             text.push_str(&format!("(+{} more)\n", drafts.len() - DRAFTS_SHOWN));
         }
+    }
+    if let Some(local) = &local {
+        text.push_str(&crate::proposal::inbox(local, current.as_deref()));
     }
     if text.is_empty() {
         return Err("no brief, run or draft to inject".into());

@@ -1,0 +1,6 @@
+proposal 16a41fbba45340f7 [pending] ticket HBR-130: Replay is slow after a restart @<WORLD>/kb/.git/writfold/proposals/16a41fbba45340f7.json !proposal
+  field: created=2026-11-11T00:00:00Z session=s1 run=run-20261101T090000Z-a1b2c3
+  accept: writfold kb proposals accept 16a41fbba45340f7
+# note: queued locally (untracked; lost with this clone). Accept with `writfold kb proposals accept 16a41fbba45340f7` when the user asks
+# coverage=complete records=28/28 shown=1 omitted=0 kb=d5db758bda80 index=rebuilt cursor=none q=f5cff019a27d
+# exit=0

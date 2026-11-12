@@ -6,7 +6,8 @@
 //! coverage counts, the items needing a recheck, its newest retrieval
 //! receipts (from `writfold tuft run`), its newest edit receipts (from
 //! `writfold kb edit apply`), the state of each defined gate
-//! (`writfold kb gate`), and the newest checkpoint entry. With no run
+//! (`writfold kb gate`), the newest checkpoint entry, and the local
+//! drafts and pending proposals of the run (or of no run). With no run
 //! named it takes the current-run pointer, then the newest run of the
 //! project inferred from the working directory, then the newest open run.
 //! No liveness is claimed: there is no daemon.
@@ -159,6 +160,7 @@ pub fn resume(session: &Session<'_>, named: Option<&str>, cwd: &Path) -> Result<
     answer.notes.extend(notes);
     answer.rows.extend(tail);
     answer.rows.extend(drafts(session, &rec));
+    answer.rows.extend(crate::proposal::rows(session, &rec.id));
     if runs::state(session, &rec) == "closed" {
         answer.notes.push(format!("{} is closed", rec.id));
     }

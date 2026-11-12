@@ -34,6 +34,30 @@ pub struct Cite {
 }
 
 impl Cite {
+    /// A token read from text (not from the index), at `path`, `ord`.
+    pub fn from_citation(path: &str, ord: usize, c: crate::model::Citation) -> Self {
+        Self {
+            path: path.to_owned(),
+            ord: u32::try_from(ord).unwrap_or(u32::MAX),
+            line: c.line,
+            kind: c.kind,
+            repo: c.repo,
+            rev: c.rev,
+            cpath: c.path,
+            first: c.first,
+            last: c.last,
+            blob: c.blob,
+            span: c.span,
+            seen: c.seen,
+            ttl: c.ttl,
+            state: c.state,
+            marked: c.marked,
+            malformed: c.malformed,
+            fields: c.fields,
+            raw: c.raw,
+        }
+    }
+
     pub fn field(&self, key: &str) -> Option<String> {
         let value: serde_json::Value = serde_json::from_str(&self.fields).ok()?;
         value.get(key)?.as_str().map(str::to_owned)
