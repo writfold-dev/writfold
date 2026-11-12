@@ -50,6 +50,11 @@ benchmark is planned; benchmarking is paused (owner, 10 November 2026).
   model of publication and the DINT02 slices stay as they are. This reverses
   the 9 November interim-backend decision. Fuzzy search no longer waits on
   Omnigraph.
+- Why they stay frozen (owner, 12 November 2026): both were only ever
+  projections of the Git records, so their versioning and branching
+  duplicated what Git already provides. The index needs no history of its
+  own: it is rebuilt from Git at any commit, and SQLite gives the queries,
+  full-text and typo-tolerant search it needs in one file inside the binary.
 
 ### Available tools, not a priority for expansion (owner, 12 November 2026)
 
