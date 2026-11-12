@@ -1678,6 +1678,82 @@ delivery 20261111T000000Z-XXXXXX [blocked] commit-message audience=external dest
 - Keeping a candidate gate's output tails; `deliver check` keeps findings only.
 - A real commit made through the `commit-message` mode; a real instruction gate written by the owner.
 
+## 22. Proposals and kb check as built
+
+Two items from the end of the order of work adopted on 12 November 2026 (mission, "The run graph, hooks and order of work"): the proposal queue, and one command that composes the existing checks. No new crate, record kind or tracked write path entered. New code: `crates/writfold-kb/src/proposal/{mod,codec,inbox,verb}.rs`, `src/check.rs`, `crates/writfold-app/src/kb/proposals.rs`, and the tests in 22.4. `stale::Cite::from_citation` now builds a checkable citation from a token read out of text (G2's `claims.cited-fresh` uses it too).
+
+### 22.1 Verbs
+
+```text
+writfold kb propose ticket <ID> | decision | link <type> <from> <to>  [the flags of record]
+                    [--session S] [--run ID]
+writfold kb proposals [list]
+writfold kb proposals show|accept|drop <id>
+writfold kb check [<project>|<path>]
+```
+
+- **A proposal is a `record` call not yet made.** `propose` takes exactly `record`'s arguments, plans the write as `record` would (vocabularies, assets, a taken ID: exit 3), writes nothing tracked, and queues the call. Only `record ticket|decision|link` can be proposed; the `status --set` and `checkpoint` proposals the review also listed are not built.
+- **Where:** `<git dir>/writfold/proposals/<id>.json` (`schema: "writfold-proposal/1"`; `id`, `kind`, `args` by flag name, `session`, `run`, `created`), beside drafts and the index. Local and untracked: the queue is lost with an ephemeral clone, deliberately, as drafts are. So evaluation belongs before the work is committed and pushed, not after the session.
+- **Identity:** the ID is the first 16 hex digits of the SHA-256 of the kind and the arguments (trimmed, empty values left out) in key order. Session, run and time are not part of it, so proposing the same call twice, from any session, leaves one file and answers "already proposed; nothing was written" (exit 0).
+- **Session and run.** The session is `--session`, else `$WRITFOLD_SESSION`, else none; a session ID follows the draft rule (1 to 128 of `[A-Za-z0-9._-]`, no leading dot). The run is `--run` (which must name a run in the KB), else the current-run pointer when it names one.
+- **Cap:** at most 10 pending proposals per session; proposals with no session share one bucket. The eleventh is refused (exit 3) with the count and the command that lists them. A repeat of a queued call is still a no-op success at the cap. The count is read without the write lock, so two processes racing in one session can reach 11: the cap bounds an evaluator's noise; it is not a quota.
+- **`accept`** reads every argument for citation tokens (and, in a link's evidence, `<repo>@<commit>:<path>[:a-b]` locators) and checks them as `stale` does, locally. Any verdict other than fresh, unverifiable included, refuses (exit 3), naming each, and keeps the proposal. Otherwise it replays the call through the ordinary write path (13.1, 13.2) with the same request, so a taken ID, an unknown asset or a busy lock refuses there and the proposal is kept. Only after the record is published is the proposal file removed; the answer then gains `# note: proposal <id> accepted and removed from the queue` before its trailer. A proposal with no citation is accepted; the `!uncited` flag the review proposed is not shown.
+- **`drop`** removes the file and writes nothing to the KB. No reason is kept: the queue is local, and a dropped call leaves no record.
+- **Rows:** `proposal <id> [pending] <ticket ID: title | decision: title | link type from → to> @<file> !proposal`, a `field:` line (`created`, `session`, `run`) and an `accept:` line. `show` adds `call:`, the equivalent `writfold kb record …` command quoted for a POSIX shell. `list` counts `proposals=N` in the trailer.
+- **Who accepts** is a convention, as for waivers: the skill says to accept only when the user asks. It is not a separation of duties.
+
+### 22.2 Where proposals are shown, and `for_run`
+
+- **`resume`** lists the pending proposals of the run, or of no run, after its drafts.
+- **The SessionStart hook** adds up to three `proposal <id> <created> [run=<id>] <summary>` lines (then `(+N more)`) under "Pending proposals" for those the injected `resume` did not show, inside the same 9,000-character cut. Nothing is added when the queue is empty, so the existing hook goldens are unchanged.
+- **`writfold_kb::proposal::for_run(ws: &Workspace, run: &str) -> usize`** counts the pending proposals that recorded `run`. It is the public seam for the `run.reflected` run-record check ("the run holds a proposal"). It reads the local queue only (0 for a KB outside Git), so an accepted proposal stops counting: by then it is a record the check can find in the KB. A check that must hold on a fresh clone has to look at records, not at the queue.
+
+### 22.3 `kb check`
+
+`check` runs, each as its own invocation at the default budget:
+
+1. `stale [<project>|<path>]` (the scope given, else the whole KB);
+2. `index verify`;
+3. `gate status --run <current>` when the current-run pointer is set (the subject repository is the working directory, as for `gate status`), else a `skipped` row;
+4. the plan's status when a plan exists: **not built**. `check::plan` returns nothing today; it is the seam where the run graph adds a `plan` part.
+
+It prints one row per area, `check <area> [clean|attention|refused|error|skipped] <that verb's own trailer, or its error>`, with a `next:` line naming the command that shows the detail whenever the area is not clean, then its own trailer (`checks=<ran> not_clean=<n>`). The exit code is the worst of the parts, in the order 0, 2, 3, 1 (an error is worst). Nothing is written beyond what `index verify` already writes. From `tests/golden/check.txt`:
+
+```text
+check stale [attention] # coverage=complete records=28/28 shown=8 omitted=0 checked=9 stale=8 unverifiable=0 kb=d5db758bda80 index=rebuilt cursor=none q=4b50c68a7933 !attention
+  next: writfold kb stale
+check index [clean] # coverage=complete records=28/28 shown=13 omitted=0 kb=d5db758bda80 index=fresh cursor=none q=a5a6a505dff3
+check gates [skipped] no current run
+  next: writfold kb gate status
+# coverage=complete records=28/28 shown=3 omitted=0 checks=2 not_clean=1 kb=d5db758bda80 index=fresh cursor=none q=2523ace45f1f
+```
+
+Delivery candidates are not part of `check`: `deliver status` already reports them per run.
+
+### 22.4 Tests
+
+- **Goldens** (`tests/proposals.rs`): `proposals-propose.txt`, `proposals-list.txt`, `proposals-show.txt` and `check.txt`.
+- **Queue:** the same call from two sessions is one file; `propose` refuses an unknown asset, a taken ticket ID and an unknown `--run`, and an unsafe session ID is a usage error; nothing tracked changes. `accept` writes the ticket through `record`, adds the note and removes the proposal; `drop` removes and writes nothing; an unknown ID is refused. A ticket written directly after its proposal makes `accept` refuse, with the proposal kept.
+- **Stale citation:** a decision whose evidence carries an expired web citation is refused at `accept`; the message names `expired web:…` and says the proposal is kept; the queue still holds it and the KB is clean. The same call with a fresh citation is accepted. **Removing the check fails this test:** with the refusal disabled, `accept_refuses_a_stale_citation_and_keeps_the_proposal` fails (checked by hand).
+- **Cap:** ten proposals in one session, the eleventh refused naming the cap, a repeat still exit 0, another session unaffected.
+- **`for_run`, `resume` and the inbox:** `for_run` counts an explicit `--run` and the current-run pointer, and not another run; `resume` shows both rows; the session-start context lists them once (through `resume` when the run is current, under "Pending proposals" when it is not).
+- **`check` exit codes:** 2 over the fixture (stale citations; no current run, so `gates` is skipped); 3 when the pointer names a run the KB does not hold (`gate status` refuses); 0 once the stale sources are removed and a gate is satisfied in the current run. The KB stays clean throughout.
+- **Kill tests** (`tests/proposal_faults.rs`): `propose` aborted after the temporary is written, after it is synced and after it is linked leaves no proposal or one complete one, only dot-named `.tmp` leftovers and a clean KB, and a rerun leaves exactly one. `accept` aborted at each of the seven protocol steps of the record write never loses the proposal; the ticket is absent or complete; `index verify` is equal; a rerun accepts (death before publication) or is refused with the proposal kept (death after).
+- **Arguments** (`writfold-app`): `propose` with `--session` and `--run`; `--session` refused on `record` and `proposals`; `proposals` defaulting to `list`; `check` with at most one scope.
+
+### 22.5 Deviations
+
+- **The queue is written by temporary, sync and `link`**, not under the KB write lock: it is local state, like drafts, and `link` makes the create-new atomic (an existing file is the same call).
+- **A crash between the record's publication and the proposal's removal** leaves both. A rerun of `accept` is then refused as a write conflict with the proposal kept, and the user drops it. The review's "or the record is unchanged since proposed" is not built.
+- **The session ID is not filled in automatically.** Claude Code gives it to hooks, not to the Bash tool. A SessionStart hook could export `WRITFOLD_SESSION` through `CLAUDE_ENV_FILE`; that is not built. Until then, proposals the agent makes share the no-session bucket unless it passes `--session`.
+- **`kb check` takes `[<project>|<path>]`** as `stale` does, and passes it to `stale` only.
+
+### 22.6 Not done
+
+- `propose status|note`, `--because`, `proposals drop --older` and a `proposals:` line in `brief`.
+- The plan part of `kb check` (the seam above) and the `run.reflected` check that calls `for_run`.
+- An evaluation skill that fills the queue.
+
 ---
 
 ### Critical Files for Implementation

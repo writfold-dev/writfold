@@ -1,6 +1,6 @@
 # Feeding the knowledge base
 
-> **Status:** built in v0.3.0-dev.1, except the sections marked *Planned*.
+> **Status:** built in v0.3.0-dev.1; proposals built in v0.4.0-dev.1; the section marked *Planned* is not built.
 
 Reading the knowledge base (KB) is half of the loop. The other half is what each stage of the work writes back, so that the next session starts from more than this one did. This page follows one piece of work through the four stages and says, for each thing written: which verb writes it, where it lands, and who commits it.
 
@@ -33,8 +33,9 @@ Each write is atomic: after a kill at any step the file holds its old bytes or i
 | Execute | a statement | `gate attest`, `gate waive` | `runs/<id>/statements/` | you |
 | Deliver | the exact draft, and a receipt per check | `deliver prepare`, `deliver check` | `runs/<id>/deliveries/<id>/` | you |
 | Wrap up | a state change | `status <id> --set STATE` | the record's front matter, or the run's `writfold-run.json` | you |
+| Wrap up | a proposal: a `record` call not yet made | `propose ticket\|decision\|link …` | the local queue, `<git dir>/writfold/proposals/` | nobody until accepted; `proposals accept` then writes the record |
 
-Two things are local and never committed: checkpoint drafts kept by the Claude Code hooks, until `checkpoint --from-draft <session>` turns one into an entry ([hooks](hooks.md)), and command output tails from `gate run`.
+Three things are local and never committed: checkpoint drafts kept by the Claude Code hooks, until `checkpoint --from-draft <session>` turns one into an entry ([hooks](hooks.md)); pending proposals, until one is accepted (below); and command output tails from `gate run`.
 
 ## Research: from a search to a record
 
@@ -78,10 +79,35 @@ The first command starts the run and makes it the current one; later `checkpoint
 
 `proposed` requires the decision's Research, two Alternatives and an Acceptance gates table to be filled. Writfold v1 reads `accepted`, `landing`, `applied`, `verified` and `regressed` but refuses to set them: they carry extra fields it does not compute. `--by` is recorded as given; the Git commit that adds the change is the record of who made it.
 
+## Proposals
+
+A proposal is a `record` call that has not been made yet. `propose` takes exactly the arguments of `record ticket|decision|link`, checks them as `record` would, writes nothing tracked, and queues the call locally:
+
+```sh
+writfold kb propose ticket HBR-130 --title "Replay is slow after a restart" --assets harbor-api
+writfold kb proposals                      # list: id, what it would write, session, run
+writfold kb proposals show 16a41fbba45340f7    # adds the equivalent record command
+writfold kb proposals accept 16a41fbba45340f7  # runs that record call through the write path above
+writfold kb proposals drop 16a41fbba45340f7    # removes it; nothing is written
+```
+
+```text
+proposal 16a41fbba45340f7 [pending] ticket HBR-130: Replay is slow after a restart @…/.git/writfold/proposals/16a41fbba45340f7.json !proposal
+  field: created=2026-11-11T00:00:00Z session=s1 run=run-20261101T090000Z-a1b2c3
+  accept: writfold kb proposals accept 16a41fbba45340f7
+  call: writfold kb record ticket HBR-130 --assets harbor-api --title 'Replay is slow after a restart'
+```
+
+- **Local, like drafts.** The queue lives in `<git dir>/writfold/proposals/` and is lost with the clone, deliberately: on an ephemeral machine, review proposals before the work is pushed.
+- **One file per call.** The ID is a digest of the call, so proposing the same thing twice leaves one proposal.
+- **At most ten per session.** The session is `--session`, else `$WRITFOLD_SESSION`; proposals with neither share one bucket of ten. The eleventh is refused (exit 3).
+- **Linked to the run.** A proposal records `--run`, else the current run, and `resume` and the session-start context list it.
+- **Accept is the ordinary write.** It is refused (exit 3), and the proposal kept, when a citation token in it is not fresh under `kb stale`, when the record's ID is already taken, or for any reason `record` itself refuses. The proposal is removed only after the record is written.
+- **Who accepts** is a convention: the skill tells the agent to accept only when you ask.
+
 ## Planned
 
 - **Backfill as a required step.** A run-record check, `research.backfilled`, would be met only when the research step wrote at least one KB record, citation or retrieval receipt. See [run-graph](run-graph.md).
 - **Reflection at the end of every run.** A closing `reflect` step whose check, `run.reflected`, is met by a reflection entry plus a proposal or an explicit "no proposal".
-- **Proposals.** A proposal is a `record` call not yet made, kept in a local queue (`kb proposals list|show|accept|drop`). Accepting one goes through the same write path as above.
 
-None of these is built. Today the agent writes back because the skill tells it to, and nothing checks that it did.
+Neither is built. Today the agent writes back because the skill tells it to, and nothing checks that it did.

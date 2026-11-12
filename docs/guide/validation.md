@@ -1,8 +1,8 @@
 # Is what I am reading still true?
 
-> **Status:** built in v0.3.0-dev.1, except `kb check`, marked *Planned*.
+> **Status:** built in v0.3.0-dev.1; `kb check` built in v0.4.0-dev.1, except its plan line, which is planned.
 
-Four things can drift: a cited source, the index, a gate's evidence, and a delivery draft. Each has its own command. All of them only read; none fetches from a network.
+Four things can drift: a cited source, the index, a gate's evidence, and a delivery draft. Each has its own command, and `kb check` runs the first three together. All of them only read; none fetches from a network.
 
 ## Citations: `kb stale`
 
@@ -81,15 +81,25 @@ A draft's checks are tied to its bytes. Editing `candidate.md` makes its receipt
 
 | Code | Meaning |
 |---|---|
-| 0 | complete; for `gate status`, `gate lines` and `deliver status`, everything is satisfied, attested or waived |
+| 0 | complete; for `gate status`, `gate lines` and `deliver status`, everything is satisfied, attested or waived; for `kb check`, every area is clean |
 | 2 | partial, unknown or stale, or something is still owed. The answer is still usable: read the trailer |
 | 3 | refused: an ambiguous target, a write conflict, no current run |
 | 1 | an error, including a usage error |
 
-## Planned: `kb check`
+## All at once: `kb check`
 
-One verb that runs `stale` for the project, `index verify`, `gate status` and, later, the plan's status, prints one row per area and exits 0 only when all are clean. It is not built. Today the three commands are run separately:
+`kb check [<project>|<path>]` runs `stale` (for the scope given, else the whole KB), `index verify` and, when a run is current, `gate status` for it, and prints one row per area with that command's own trailer. An area that is not clean gets a `next:` line with the command that shows the detail:
 
-```sh
-writfold kb stale && writfold kb index verify && writfold kb gate status
+```text
+$ writfold kb check
+check stale [attention] # coverage=complete records=28/28 shown=8 omitted=0 checked=9 stale=8 unverifiable=0 kb=d5db758bda80 index=rebuilt cursor=none q=4b50c68a7933 !attention
+  next: writfold kb stale
+check index [clean] # coverage=complete records=28/28 shown=13 omitted=0 kb=d5db758bda80 index=fresh cursor=none q=a5a6a505dff3
+check gates [skipped] no current run
+  next: writfold kb gate status
+# coverage=complete records=28/28 shown=3 omitted=0 checks=2 not_clean=1 kb=d5db758bda80 index=fresh cursor=none q=2523ace45f1f
 ```
+
+It exits with the worst of the three codes: 0 only when all are clean, then 2, then 3, then 1. It writes nothing beyond what `index verify` writes. Delivery drafts are not included; `deliver status` reports them.
+
+*Planned:* a `plan` row with the run's plan position, once the [run graph](run-graph.md) is built.

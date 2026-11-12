@@ -58,6 +58,7 @@ target/release/writfold kb uses demo-service@<commit>:src/ledger.rs:3-5
 target/release/writfold kb timeline harbor-db
 target/release/writfold kb stale       # code citations need local clones (below)
 target/release/writfold kb index status    # or: index verify, index rebuild
+target/release/writfold kb check           # stale, index verify, gate status: one summary, worst exit
 target/release/writfold kb runs --open      # runs: state, branch/worktree, last checkpoint
 target/release/writfold kb resume           # the current run: checkpoint tail, rechecks
 ```
@@ -75,6 +76,13 @@ writfold kb status HBR-102 --set done
 writfold kb status <run-id> --set closed
 writfold kb cite make demo-service src/batch.rs 2-4    # prints a citation token; writes nothing
 ```
+
+A record call can also wait for review as a proposal: `writfold kb propose
+ticket|decision|link …` takes the same arguments, writes nothing tracked and
+queues the call in the KB's Git directory (local, lost with the clone; at most
+ten per session). `writfold kb proposals [list] | show | accept | drop <id>`
+reviews the queue; `accept` replays the call through `record`, and refuses,
+keeping the proposal, when a citation in it is no longer fresh.
 
 The files keep the layout the KB already uses, so tools that read it keep
 working: a run's repository, branch, worktree (recorded, never created), base
@@ -243,7 +251,7 @@ without a tool call:
 
 - **Session start:** the hook injects `brief` for the project inferred from
   the session's directory, `resume` when a run is current, and any unconfirmed
-  checkpoint drafts. It is cut to 9,000 characters (Claude Code's limit is 10,000).
+  checkpoint drafts and pending proposals. It is cut to 9,000 characters (Claude Code's limit is 10,000).
 - **Compaction, stop and session end:** the hooks keep a local checkpoint
   draft per session in the KB's Git directory. It holds the repository, branch
   and HEAD, the compaction summary and your last message. Before compaction the
@@ -298,6 +306,7 @@ error. See [Tuft's KB adapter](docs/tuft/language.md#kb-adapter).
 | `writfold kb gate run / status / verify / lines` | Runs a gate's argv on a repository and records one receipt in the KB run; derives open, satisfied, stale, failed or unknown from definitions and receipts; re-runs a receipt at its commit; prints receipt lines for a commit message | [KB v1 design](docs/writfold/kb-v1-design.md#16-g1-as-built) (section 16), golden, stale-transition and kill tests in `crates/writfold-kb/tests/gate.rs` and `gate_faults.rs`; the real `scripts/gate` has not yet been run through it |
 | `writfold kb gate attest / waive`, `writfold kb deliver prepare / check / attest / waive / status`, `writfold kb hook pre-tool-use` | Statements recorded as attested or waived, never shown as satisfied; offline delivery candidates (the exact payload, never sent) checked mechanically for paragraph length, denied references and stale citations, with receipts bound to the candidate's bytes; an optional guard hook, off by default | [KB v1 design](docs/writfold/kb-v1-design.md#19-g2-as-built) (section 19), golden, repair, staleness, statement, guard and kill tests in `crates/writfold-kb/tests/deliver.rs`, `deliver_faults.rs`, `gate_statements.rs` and `guard.rs`; no real PR comment or Slack summary has gone through it yet |
 | Instruction gates and user-defined delivery modes | A gate's `instructions` file and `{gate}`-shipped scripts are part of its digest and shown as `read:` lines; any `.writfold/deliveries/<name>.toml` defines a delivery mode whose script gates run on the candidate through `{candidate}` and whose attested gates show their instructions | [KB v1 design](docs/writfold/kb-v1-design.md#20-instruction-gates-and-delivery-modes-as-built) (section 20), golden, staleness, escape, refusal, never-a-pass and kill tests in `crates/writfold-kb/tests/gate_instructions.rs`, `deliver_modes.rs` and `deliver_faults.rs`; the `commit-message` mode is a fixture and has not yet checked a real commit |
+| `writfold kb propose`, `writfold kb proposals list / show / accept / drop`, `writfold kb check` | Queues `record ticket\|decision\|link` calls locally (one file per call, at most ten per session, linked to the run) and accepts one through the ordinary write path, refusing a stale citation or a taken ID with the proposal kept; runs `stale`, `index verify` and the current run's `gate status` as one summary exiting with the worst code | [KB v1 design](docs/writfold/kb-v1-design.md#22-proposals-and-kb-check-as-built) (section 22), golden, dedup, cap, stale-refusal and kill tests in `crates/writfold-kb/tests/proposals.rs` and `proposal_faults.rs`; no evaluation skill fills the queue yet |
 | `writfold kb edit apply / recover` | Replays Splicery recipes against a KB run's recorded worktree and writes each file atomically after re-checking its bytes; keeps the recipes, splice sites, blob IDs and preview as a receipt in the run; a crash between files is finished by `recover` from a local journal | [KB v1 design](docs/writfold/kb-v1-design.md#17-splicery-adapter-as-built) (section 17), golden, refusal, gate-staleness and kill tests in `crates/writfold-kb/tests/edit.rs` and `edit_faults.rs` |
 | `writfold watch [--kb DIR] [--run ID] [--once]` | A read-only terminal view of runs, gate states, receipts and checkpoints, each pane the answer of one `kb` verb; one plain-text frame when piped | [KB v1 design](docs/writfold/kb-v1-design.md#18-t1-as-built) (section 18), golden, layout and projection tests in `crates/writfold-tui/tests/watch.rs` |
 | `writfold trial prepare / approve / apply / recover / show` | One edit through a durable, validated ledger in Writfold's own sparse worktree; never your checkout | [trial profile](docs/writfold/trial-profile.md), [adversarial campaign](bench/2026-11-09-adversarial/) |
