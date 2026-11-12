@@ -1,5 +1,6 @@
 //! `writfold kb` arguments into one typed request.
-use super::verbs;
+use super::{verbs, writes};
+use std::collections::BTreeMap;
 use std::path::PathBuf;
 use writfold_kb::{DEFAULT_BUDGET, MAX_BUDGET, Request, Verb};
 
@@ -18,6 +19,9 @@ pub struct Common {
     pub signatures: bool,
     pub direction: Option<String>,
     pub include: Option<String>,
+    /// The write verbs' value flags (`--note`, `--title` …) and switches.
+    pub values: BTreeMap<String, String>,
+    pub switches: Vec<String>,
 }
 
 fn number(flag: &str, value: Option<&String>, low: usize, high: usize) -> Result<usize, String> {
@@ -67,6 +71,14 @@ fn split(args: &[String]) -> Result<(Common, Vec<String>), String> {
             "--direction" => common.direction = Some(value(arg, items.next())?),
             "--include" => common.include = Some(value(arg, items.next())?),
             "--at" => return Err("--at COMMIT is not built in v1 (planned for M4)".into()),
+            other if writes::VALUES.contains(&&other[2..]) => {
+                common
+                    .values
+                    .insert(other[2..].to_owned(), value(arg, items.next())?);
+            }
+            other if writes::SWITCHES.contains(&&other[2..]) => {
+                common.switches.push(other[2..].to_owned());
+            }
             other => return Err(format!("unknown option {other}")),
         }
     }
@@ -82,6 +94,7 @@ fn allowed(verb: &str) -> &'static [&'static str] {
         "find" => &["kind", "project", "signatures"],
         "match" => &["kind", "project"],
         "impact" => &["depth", "direction", "include"],
+        "runs" | "checkpoint" | "record" => &["project"],
         _ => &[],
     }
 }
@@ -99,6 +112,12 @@ fn check_flags(verb: &str, common: &Common) -> Result<(), String> {
         ("include", common.include.is_some()),
     ] {
         if set && !allowed.contains(&flag) {
+            return Err(format!("--{flag} does not apply to {verb}"));
+        }
+    }
+    let extra = writes::allowed(verb);
+    for flag in common.values.keys().chain(common.switches.iter()) {
+        if !extra.contains(&flag.as_str()) {
             return Err(format!("--{flag} does not apply to {verb}"));
         }
     }
@@ -124,6 +143,7 @@ pub fn parse(args: &[String], cwd: PathBuf) -> Result<Option<Request>, String> {
         cursor: common.cursor,
         json: common.json,
         now: None,
+        probe: writfold_kb::write::no_probe,
     }))
 }
 

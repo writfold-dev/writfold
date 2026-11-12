@@ -1,6 +1,6 @@
 # Writfold KB v1: design
 
-Status: proposal, 11 November 2026; M1 and M2 implemented (see [section 11](#11-m1-as-built) and [section 12](#12-m2-as-built) for what was built and where it differs). Scope: the `writfold kb` product core for Git-native project continuity. Git text is the source of truth; a local SQLite file is a derived, rebuildable index. No server, no companion process.
+Status: proposal, 11 November 2026; M1, M2 and M3 implemented (see [section 11](#11-m1-as-built), [section 12](#12-m2-as-built) and [section 13](#13-m3-as-built) for what was built and where it differs). Scope: the `writfold kb` product core for Git-native project continuity. Git text is the source of truth; a local SQLite file is a derived, rebuildable index. No server, no companion process.
 
 A cold session must be able to answer four questions, each pinned to a source and flagged when the source has moved:
 - why did we decide X;
@@ -781,7 +781,129 @@ M2 adds incremental refresh, `index verify`, citation and mention edges, `find`/
 
 ### 12.6 Not done in M2
 
-- Rename following (`log --follow`), trailer and tracker edges, and `--at` remain M4. Writes and the two kernels' move into `writfold-core` remain M3: `walk.rs` is the bounded-walk kernel, kept pure and ready to move.
+- Rename following (`log --follow`), trailer and tracker edges, and `--at` remain M4. Writes and the two kernels' move into `writfold-core` were M3 (section 13).
+
+## 13. M3 as built
+
+M3 adds the writes: `checkpoint`, `record ticket|decision|link`, `status --set` and `cite make`, the read verbs `resume` and `runs`, the write protocol with kill and fault tests, `spec/KbWrite.tla`, and the two kernels in `writfold-core`. New code: `crates/writfold-kb/src/write/{mod,atomic,json,record,run,status,cite}.rs`, `src/runs.rs`, `src/verbs/runs.rs`, `crates/writfold-core/src/{walk,verdict}.rs` and `crates/writfold-app/src/kb/writes.rs`. Where it differs from sections 1 to 9 and from the review that added runs (`kb runs`, run place fields, `closed`), this section is the record.
+
+### 13.1 Verbs
+
+```text
+writfold kb checkpoint [--run ID | --new-run --project P --task T [--mode M]] --note TEXT
+writfold kb record ticket <ID> --title T [--assets a,b] [--status S] [--summary S] [--prs p,q]
+writfold kb record decision --title T --target-source S [--project P] [--references a,b]
+                            [--context ..] [--evidence ..] [--change ..] [--why ..] [--origin O]
+writfold kb record link <type> <from> <to> [--status S] [--evidence e1,e2] [--applicability A]
+writfold kb status <id> --set STATE [--by WHO] [--superseded-by ID] [--note TEXT]
+writfold kb cite make <repo> <path> <a-b> [--allow-dirty] [--sym S] [--ttl T]
+writfold kb resume [<run>]
+writfold kb runs [--open] [--project P]
+```
+
+- **Every write** plans from the index at the current snapshot, applies its changes through the protocol in 13.2, then opens the index again and answers with the written record's row (for a run, the run row and its newest checkpoint entry), a note that the work tree is now dirty, and the usual trailer at the new pin (`kb=<commit>+dirty:<n> index=refreshed:<n>`). Nothing is committed (open question 4, as assumed).
+- **Refusals (exit 3):** an existing ID or path, a file changed since it was read, a closed run, an unknown asset, a transition v1 does not write, an ambiguous target, a busy write lock. Usage errors (an unknown vocabulary value, a missing flag) exit 1.
+- **`checkpoint`.** An entry is a blank line, `## <UTC YYYY-MM-DDTHH:MM:SSZ>`, a blank line and the note, appended to `runs/<id>/checkpoint.md` (created if absent). With no `--run` it uses the local current-run pointer `<git dir>/writfold/current-run`, which `--new-run` and every checkpoint set. A note equal to the last entry's body is refused, so re-running after a crash never duplicates an entry. `--from-draft` is not built: drafts come with the hooks (M4).
+- **`--new-run`** creates `runs/run-<UTC compact time>-<6 hex>/` with `manifest.json`, the first checkpoint entry, the sidecar (13.3) and empty `observations/` and `receipts/` directories. `--mode` is `advice`, `authoring` (default) or `review`. An unknown project is written with a note, not refused.
+- **`status --set`.** Tickets: any state of their vocabulary, plus `updated`. Investigations: `open`, `monitoring`, `abandoned`; `concluded` is refused, because the prototype then requires filled conclusion sections that v1 does not check. Decisions: only records with `workflow_version: 3`, and only `draft`↔`proposed`, `proposed`→`rejected` (needs `--by`; sets `decided_by` when empty), `accepted`→`deferred`, and any→`superseded` (needs `--superseded-by` naming an existing decision whose chain does not come back). `proposed` requires the prototype's review readiness: Research filled, two Alternatives, and an Acceptance gates table with `id | when | claim | check | by`. `accepted`, `landing`, `applied`, `verified` and `regressed` are refused: they carry design-binding fields (`accepted_revision` and others) that only the prototype computes. Each decision change sets `updated` and `last_actor` and appends `- <date>: <state>[ by WHO][ — note]` to the Decision log. Runs: `open` or `closed`, in the sidecar. Every other kind is refused.
+- **`resume`** prints the run (effective state, project, mode, created, and the sidecar's repository, branch, worktree and base), the outcome counts of `coverage.json` and one `recheck` row per `needs-recheck` item, then the newest checkpoint entry. With no run it takes the current-run pointer, then the newest run of the project inferred from the working directory, then the newest run that is not closed. Unknown: `reason=no-record` and the command that starts a run.
+- **`runs`** lists every run, newest activity first (last checkpoint heading, else `created`): state, project and place, and the last checkpoint's first line at its position. `!current` marks the pointer's run. No liveness is claimed.
+
+### 13.2 Write protocol
+
+1. **Plan** (outside the lock): read the files and the index, compute the new bytes and the SHA-256 of every file to be replaced.
+2. **Lock**: an advisory lock (`File::try_lock`) on `<git dir>/writfold/kb-write.lock`, waiting up to 2 s, then a refusal. The kernel releases it if the process dies.
+3. **Guards**, re-checked under the lock: a create-new path is absent; a replaced file still has the planned digest; for a ticket, no `ktlo/<year>/<id>-*` file exists (another spelling of the same ID).
+4. **Temporary**: `.writfold-kb-<pid>-<n>.tmp` beside the target, written and synced. Dot names are never KB inputs, and the `.tmp` suffix keeps them out of the prototype's `*.md` and `*.json` globs.
+5. **Re-check and publish**: create-new by `link` (an existing name is a conflict), replace by `rename` after reading the target again and comparing its digest.
+6. **Directory sync**, then unlock.
+
+New directories (a run, a decision) are staged complete under `<git dir>/writfold/staging/` and renamed into place, so the KB holds no directory or all of it. They are not staged beside the target: the prototype reads dot-named directories one level inside `proposals/<kind>/`.
+
+**Deviation from 2.2.** The runtime's `Temporary` and `compare_and_write` are not reused. `Temporary` is private to the runtime, its publication cannot be stopped at named steps for the fault tests without changing the runtime, and it creates files `0600` and directories `0700`. The KB writer uses `std::fs` (link, rename, `sync_all`, `File::lock`), so tracked files get the user's umask. A fault point is a `probe: fn(Step)` field of the request, called after each step; production passes a no-op. This replaces the `fault-points` cargo feature of 8.4, because the unit gate runs `cargo test --workspace` without features and the tests must run there.
+
+### 13.3 Shapes, and what the prototype accepts
+
+The prototype is read for behaviour only. Its rules decided these shapes:
+
+- **Ticket**: front matter `ticket, title, assets, status, prs, summary, created, updated, promoted_to` (empty values written as `key: `), then `# <ID>: <title>` and empty `Symptom`, `Evidence`, `Change`, `Outcome` sections. Path `ktlo/<year>/<id lower>-<slug>.md`. Every asset must exist; the prototype's validator requires it.
+- **Decision**: `proposals/decision/<date>-<slug>/proposal.md` with the prototype's full front-matter key order, `status: draft`, `workflow_version: 3`, `profile: modern`; the eleven sections in its order; `gates.json` holding `[]`; empty `research/` and `evidence/` (Git keeps neither). `--target-source` is stored as given; the prototype resolves a bare name to an absolute path or a locator, and its validator checks only that the value is present and not `unknown`. The first Decision-log line is Writfold's own wording.
+- **Relationship**: `schema_version, id, type, from, to, status, evidence, applicability` as two-space JSON with every non-ASCII character escaped, in the prototype's vocabularies; both ends must be assets; evidence is `ev:<home>/<slug>` or `<repo>@<commit>:<path>[:a-b]`.
+- **Run manifest**: `schema_version, run_id, task, project, mode, created, state` with `state: open`.
+- **Dates** are UTC. The prototype stamps tickets and decisions with the local date, so near midnight the two can differ by a day.
+
+**Deviation from the review (run place and `closed`).** The prototype's run decoder rejects unknown manifest keys and knows only the state `open`; its `context` and `stale` read every manifest and would fail. So `repo`, `branch`, `worktree` (recorded, never created), `base` and the `open`/`closed` state (with a `closed` time) live in a sidecar, `runs/<id>/writfold-run.json`, which the prototype never reads. `runs`, `resume` and `checkpoint` read the state there first; the index keeps the manifest's `state` as the run record's status, so `brief` still shows a closed run's manifest state. The place is the repository enclosing the working directory: its origin's last path segment (else the directory name), branch, work tree path and HEAD.
+
+**Validator check.** `tests/cite_parity.rs` (with `WRITFOLD_KB_PARITY_DIR` set) leaves the fixture before and after one ticket, link, two decisions, a supersession, a ticket status change, a new run and three checkpoints. The prototype's validator reports the same 15 problems before and after, all pre-existing in the invented fixture (its deliberately unknown fields and vocabulary), and no new problem; its `resume` reads both runs. Linking from `quay-worker`, an asset the prototype rejects for the fixture's unknown `site_tier` field, is one new problem, because Writfold's tolerant index accepts that asset; the export links other assets. This check needs the private prototype and is not in the gate.
+
+### 13.4 `cite make`
+
+- The repository is a name from the local map or `$WRITFOLD_KB_REPOS`, or a path (relative to the working directory). The cited commit is `origin/HEAD`, else `HEAD`; only committed bytes are cited.
+- Fields in the KB's order: `kind=code repo rev path L blob span [sym] seen [ttl] url [dirty]`; `seen` to the minute; `url` is the origin URL, else the repository's path; `repo` is the name given, or the directory name for a path.
+- A work-tree file that differs from `HEAD` (or is missing) is refused unless `--allow-dirty`. **Deviation:** `dirty=` then holds the first 12 hex digits of the SHA-256 of the work-tree bytes, not of a diff, because v1 spawns no `diff`.
+- The token is parsed back before it is printed. It is a row (`cite code:<repo>:<path>:<a-b> <token>`) with the trailer; nothing is written.
+
+### 13.5 Index: the pin re-check
+
+Writing the model found a race in M2's refresh. The pin is observed first (one `status` spawn and the digests of dirty files), and the files are read again later for Phase A. A write landing in between left the index storing pin P over bytes of a later snapshot, and a reader at P reported `index=fresh`. A later refresh repaired it.
+
+Refresh and rebuild now observe the snapshot again before they store anything. If it moved, nothing is stored (the refresh transaction is rolled back, the rebuilt file deleted) and the invocation observes afresh, up to three times, then refuses ("the KB kept changing"). The cost is one more `status` spawn on a refresh or rebuild that changed something, never on a fresh read. A user who reverts a file to its earlier bytes between the two observations (ABA) is not detected; Writfold's own writes only add bytes.
+
+### 13.6 Kernels
+
+- `writfold_core::walk` is M2's bounded walk, moved unchanged with its reference-BFS property test.
+- `writfold_core::verdict` is the citation verdict. `locate` slides the window over a match predicate (the caller supplies the span digest of a window), `observed` maps what a check saw (blob equal, other blob with the span located, path missing with or without a rename by blob, gate commit, record state, expiry) to exactly one verdict, and `with_mark` applies an authored mark, which never hides changed, gone or expired. `writfold-kb`'s `stale` gathers the facts and asks the kernel.
+- Neither is in Charon's `start_from` yet; no theorem is claimed. They keep `no_std` and no dependencies, but use closures and derives, which the translated modules avoid.
+
+### 13.7 Tests
+
+- **Writes** (`tests/writes.rs`): exact bytes of a ticket, relationship, manifest, checkpoint and decision front matter; conflicts for an existing ticket, link and duplicate note; an unknown asset; a run's lifecycle (current pointer, close, refused checkpoint, `runs --open`, reopen); ticket status bytes; the decision transitions; and `index verify` equal after each group.
+- **`cite make`** (`tests/cite_parity.rs`): the token parses, `stale` checks it once and finds it fresh, a dirty file is refused, and `--allow-dirty` records it.
+- **Kill and fault** (`tests/faults.rs`): the test binary re-runs itself as a child that aborts at each of the seven steps (`locked`, `temp-written`, `temp-synced`, `rechecked`, `published`, `dir-synced`, `unlocked`) for a checkpoint append, a new run, a ticket and a status change. After each of the 28 deaths: the target holds the old or the new complete bytes (new exactly from `published` on); leftovers are only `.tmp` names; `index verify` is equal and nothing is unreadable; a rerun succeeds before publication and is refused (or, for a status change, is a no-op success) after; the checkpoint has exactly one new entry. A second test SIGKILLs a checkpoint loop at random moments (40 rounds in the gate; `WRITFOLD_KB_KILL_ROUNDS=300` ran clean) and checks the entries are a gap-free sequence of complete notes. A third makes an edit land after the temporary is synced: the write is refused and the edit kept. Removing the publish-time digest re-check fails that test.
+- **Citation property** (`tests/verdict.rs`): 3,000 random files, ranges and edits; fresh means unchanged cited lines after normalisation, moved names a range of the same height carrying the span digest, and changed lines are never fresh.
+- **Not built** from 8.4: the fault tests for a read-only index location, a full disk on index write, and a Git spawn timeout; `doctor` (leftover temporary files are dot-named, never indexed, and counted only by the tests).
+
+### 13.8 Model: `spec/KbWrite.tla`
+
+Two appenders and a creator writing through the protocol, two refreshers, a reader, and one power loss at any moment (unsynced inode contents and directory entries revert; every process dies; the SQLite commit is atomic and durable). Invariants: a published record is complete; no acknowledged write is lost; create-new never overwrites; the stored index is the derivation of its pin; a reader reporting `index=fresh` at P sees exactly the derivation of P.
+
+Run with TLC 2.19 (`tla2tools.jar` v1.7.4) in the admitted tools image, `docker run --network none`, spec mounted read-only, not `scripts/gate`. The positive configuration completes with no violation: 18,151,108 distinct states, depth 52, every action fires. Each single-deviation mutant fails its target invariant:
+
+| Configuration | Deviation | Invariant violated | States to the counterexample |
+| --- | --- | --- | --- |
+| `KbWrite.mutant-NoRecheck` | no digest re-check before publish | no acknowledged write lost | 29,304 |
+| `KbWrite.mutant-PublishBeforeSync` | rename and directory sync before the temporary's sync | a published record is complete | 629 |
+| `KbWrite.mutant-SkipPhaseB` | refresh keeps the old Phase B | the index is its pin's derivation | 1,684 |
+| `KbWrite.mutant-NoPinRecheck` | refresh stores without re-observing (M2's refresh) | `index=fresh` at P is P's derivation | 243,458 |
+| `KbWrite.mutant-NoLock` | no write lock (re-check kept) | no acknowledged write lost | 24,672 |
+
+The last row shows the lock is not redundant with the re-check: without it two writers can both pass their re-check before either renames. Not modelled: other tools editing a file without the lock (the re-check narrows that window and does not close it), ABA reverts, Git commits (HEAD is part of the observed snapshot like the dirty files).
+
+### 13.9 Latency
+
+`cargo run --release -p writfold-kb --example kb_latency` (4,130 generated records, WSL2 x86_64 workstation, 21 runs; each sample a whole invocation: plan, write, and the answer from the refreshed index):
+
+| Verb | Median ms | p95 ms | Target |
+| --- | --- | --- | --- |
+| `checkpoint --new-run` | 128.6 | 134.2 | 100 |
+| `checkpoint` (append) | 121.1 | 125.1 | 100 |
+| `record ticket` | 122.8 | 124.2 | 150 |
+| `record decision` | 128.1 | 132.0 | 150 |
+| `record link` | 123.9 | 127.3 | 150 |
+| `status --set` | 125.5 | 128.6 | — |
+| `cite make` | 29.9 | 32.0 | 150 |
+| `resume` | 17.4 | 19.3 | 50 |
+| `runs --open` | 18.5 | 19.4 | — |
+
+`checkpoint` misses its 100 ms target by about 25 ms. Most of a write is the second index open: a refresh whose Phase B is recomputed in full (about 45 ms at this size, 12.5), plus the pin re-check's extra `status` spawn. Recomputing Phase B only when a changed file can add or remove an edge would bring it under. The M2 read latencies are unchanged by the pin re-check except where a refresh does work (50-file refresh 112 ms dirty and 113 ms committed, against 103 and 106 in M2).
+
+The static musl binary still builds offline in the tools image (`static-pie linked`, `statically linked`). No new crate entered.
+
+### 13.10 Not done in M3
+
+- `checkpoint --from-draft`, local drafts and the hooks (M4); `doctor`; `record --commit`.
+- Proofs of the two kernels (they may trail, 8.5).
+- The read-only index, full-disk and Git-timeout fault tests (13.7).
 
 ---
 

@@ -6,8 +6,9 @@
 //! digests of dirty KB files) differs from the one it was built at. Every
 //! verb returns budgeted rows, each ending in its source position, and a
 //! trailer stating coverage, the KB pin and a resume cursor. Unreadable
-//! files are counted and listed, never dropped. Nothing here writes a
-//! tracked file.
+//! files are counted and listed, never dropped. The write verbs (`write`)
+//! change tracked files only through the atomic protocol and leave the
+//! work tree dirty for the user to commit.
 #![forbid(unsafe_code)]
 
 pub mod emit;
@@ -16,12 +17,13 @@ pub mod index;
 pub mod layout;
 pub mod model;
 pub mod parse;
+pub mod runs;
 pub mod session;
 pub mod stale;
 pub mod time;
 pub mod verbs;
-pub mod walk;
 pub mod workspace;
+pub mod write;
 
 use emit::{Answer, Frame, Output};
 use error::Result;
@@ -76,6 +78,15 @@ pub enum Verb {
     IndexStatus,
     IndexRebuild,
     IndexVerify,
+    Runs {
+        open: bool,
+        project: Option<String>,
+    },
+    Resume {
+        run: Option<String>,
+    },
+    /// A write verb (`checkpoint`, `record`, `status --set`, `cite make`).
+    Write(write::Write),
 }
 
 /// One invocation.
@@ -89,17 +100,23 @@ pub struct Request {
     pub json: bool,
     /// Seconds since the epoch; `None` reads the clock.
     pub now: Option<i64>,
+    /// Called after each step of the write protocol; fault tests stop the
+    /// process there. Production passes [`write::no_probe`].
+    pub probe: write::Probe,
 }
 
 /// Locate the KB, open its index at the current snapshot, answer, render.
 pub fn run(request: &Request) -> Result<Output> {
     let ws = discover(request.kb.as_deref(), &request.cwd)?;
+    let now = request.now.unwrap_or_else(time::now);
+    if let Verb::Write(write) = &request.verb {
+        return write::execute(&ws, request, write, now);
+    }
     let tool = match &ws.repo {
         Some(_) => Some(GitTool::locate()?),
         None => None,
     };
     let rebuild = matches!(request.verb, Verb::IndexRebuild);
-    let now = request.now.unwrap_or_else(time::now);
     let session = Session::open(&ws, tool.as_ref(), rebuild, now)?;
     let (answer, name, args) = answer(&session, request)?;
     let frame = Frame {
@@ -152,6 +169,10 @@ fn answer(session: &Session<'_>, request: &Request) -> Result<(Answer, &'static 
                 format!("offline={offline}"),
             ],
         ),
+        Verb::Resume { run } => {
+            let (answer, id) = verbs::runs::resume(session, run.as_deref(), &request.cwd)?;
+            (answer, "resume", vec![id])
+        }
         other => graph(session, other)?,
     })
 }
@@ -204,6 +225,15 @@ fn graph(session: &Session<'_>, verb: &Verb) -> Result<(Answer, &'static str, Ve
             vec![target.clone()],
         ),
         Verb::IndexVerify => (verbs::index::verify(session)?, "index-verify", Vec::new()),
+        Verb::Runs { open, project } => {
+            let mut args = vec![format!("open={open}")];
+            args.extend(project.iter().map(|p| format!("project={p}")));
+            (
+                verbs::runs::list(session, *open, project.as_deref())?,
+                "runs",
+                args,
+            )
+        }
         Verb::IndexRebuild => (verbs::index::status(session)?, "index-rebuild", Vec::new()),
         _ => (verbs::index::status(session)?, "index-status", Vec::new()),
     })

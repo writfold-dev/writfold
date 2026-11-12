@@ -43,3 +43,5 @@ pub mod flow;
 pub mod ledger;
 pub mod publication;
 pub mod trial;
+pub mod verdict;
+pub mod walk;

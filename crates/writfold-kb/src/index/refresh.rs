@@ -24,6 +24,9 @@ pub enum Outcome {
     Behind(Pin, usize),
     /// The stored head is unknown here (or there is none): rebuild.
     Rebuild,
+    /// A KB file changed while the refresh read it: nothing was stored;
+    /// observe again.
+    Moved,
 }
 
 /// The snapshot an index was derived at, from its `meta` rows.
@@ -158,6 +161,12 @@ pub fn refresh(
     }
     if count > 0 {
         derive::phase_b(&tx)?;
+    }
+    // The files were read after the snapshot was observed. Store the
+    // derivation only if the snapshot still holds, so a reader that reports
+    // this pin sees exactly its derivation (spec/KbWrite.tla, RecheckPin).
+    if super::observe(ws, repo, git)?.pin.digest != now.pin.digest {
+        return Ok(Outcome::Moved);
     }
     for (key, value) in snapshot_meta(now) {
         tx.prepare_cached("INSERT OR REPLACE INTO meta(key, value) VALUES (?1, ?2)")?

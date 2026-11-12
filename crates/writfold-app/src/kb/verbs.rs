@@ -17,6 +17,9 @@ fn why_sections() -> Vec<String> {
 
 /// The typed verb, or why the arguments do not name one.
 pub fn verb(name: &str, common: &Common, positional: &[String]) -> Result<Verb, String> {
+    if let Some(verb) = super::writes::runs_and_writes(name, common, positional) {
+        return verb;
+    }
     let one = |what: &str| -> Result<String, String> {
         match positional {
             [single] => Ok(single.clone()),

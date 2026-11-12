@@ -2,6 +2,7 @@
 //! parsing and exit codes only; every decision lives in `writfold-kb`.
 pub mod args;
 mod verbs;
+mod writes;
 
 use writfold_kb::Request;
 
@@ -24,10 +25,21 @@ verbs:
   stale [<project>|<path>] [--offline]
                                    which citations have moved (local repositories only)
   index status|rebuild|verify      what the derived index holds; rebuild it; check it equals a rebuild
+  runs [--open] [--project P]      every run: state, where it works, last checkpoint
+  resume [<run>]                   one run: manifest, coverage, rechecks, checkpoint tail
+
+writes (atomic; they leave the work tree dirty for you to commit):
+  checkpoint [--run ID | --new-run --project P --task T [--mode M]] --note TEXT
+  record ticket <ID> --title T [--assets a,b] [--status S] [--summary S] [--prs p,q]
+  record decision --title T --target-source S [--project P] [--references a,b]
+                  [--context ..] [--evidence ..] [--change ..] [--why ..] [--origin O]
+  record link <type> <from> <to> [--status S] [--evidence e1,e2] [--applicability A]
+  status <id> --set STATE [--by WHO] [--superseded-by ID] [--note TEXT]
+  cite make <repo> <path> <a-b> [--allow-dirty] [--sym S] [--ttl T]   (prints a token)
 
 The KB root is --kb, else $WRITFOLD_KB, else the nearest directory above the
 working directory holding inventory/assets/. Git is $WRITFOLD_GIT or git on PATH.
-Exit codes: 0 complete, 2 partial/unknown/stale, 3 refused, 1 error.";
+Exit codes: 0 complete, 2 partial/unknown/stale, 3 refused (or write conflict), 1 error.";
 
 /// The process outcome: text for stdout, text for stderr, exit code.
 pub struct Outcome {
