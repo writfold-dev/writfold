@@ -105,26 +105,7 @@ pub fn claims(session: &Session<'_>, text: &str, path: &str) -> Result<Evaluated
         .into_iter()
         .filter(|c| !c.illustrative)
         .enumerate()
-        .map(|(ord, c)| Cite {
-            path: path.to_owned(),
-            ord: u32::try_from(ord).unwrap_or(u32::MAX),
-            line: c.line,
-            kind: c.kind,
-            repo: c.repo,
-            rev: c.rev,
-            cpath: c.path,
-            first: c.first,
-            last: c.last,
-            blob: c.blob,
-            span: c.span,
-            seen: c.seen,
-            ttl: c.ttl,
-            state: c.state,
-            marked: c.marked,
-            malformed: c.malformed,
-            fields: c.fields,
-            raw: c.raw,
-        })
+        .map(|(ord, c)| Cite::from_citation(path, ord, c))
         .collect();
     let checked = stale::check(session, &cites, false)?;
     let mut findings = Vec::new();

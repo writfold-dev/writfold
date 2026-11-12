@@ -138,6 +138,7 @@ kb-index-<hex>.sqlite   the derived index
 current-run             the run that checkpoint and gate use by default
 repos                   "<name> <path>" lines: where local clones are
 drafts/<session>.json   checkpoint drafts kept by the hooks
+proposals/<id>.json     pending proposals: record calls not yet made
 gates/, edits/          command output tails, artifacts and edit journals
 staging/, kb-write.lock the write protocol's working files
 ```

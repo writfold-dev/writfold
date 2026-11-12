@@ -11,6 +11,7 @@
 //! work tree dirty for the user to commit.
 #![forbid(unsafe_code)]
 
+pub mod check;
 pub mod deliver;
 pub mod draft;
 pub mod edit;
@@ -23,6 +24,7 @@ pub mod index;
 pub mod layout;
 pub mod model;
 pub mod parse;
+pub mod proposal;
 pub mod runs;
 pub mod session;
 pub mod shell;
@@ -100,6 +102,12 @@ pub enum Verb {
     Edit(edit::EditVerb),
     /// `deliver prepare|check|attest|waive|status` (G2; nothing is sent).
     Deliver(deliver::DeliverVerb),
+    /// `propose …` and `proposals list|show|accept|drop` (the local queue).
+    Proposal(proposal::ProposalVerb),
+    /// `check [<project>|<path>]`: the existing checks composed.
+    Check {
+        scope: Option<String>,
+    },
 }
 
 /// One invocation.
@@ -133,6 +141,12 @@ pub fn run(request: &Request) -> Result<Output> {
     }
     if let Verb::Deliver(verb) = &request.verb {
         return deliver::execute(&ws, request, verb, now);
+    }
+    if let Verb::Proposal(verb) = &request.verb {
+        return proposal::execute(&ws, request, verb, now);
+    }
+    if let Verb::Check { scope } = &request.verb {
+        return check::execute(&ws, request, scope.as_deref(), now);
     }
     let tool = match &ws.repo {
         Some(_) => Some(GitTool::locate()?),

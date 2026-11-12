@@ -8,8 +8,9 @@ use writfold_kb::write::record::{Decision, Link, Ticket};
 use writfold_kb::write::status::SetStatus;
 
 /// Flags that take a value.
-pub const VALUES: [&str; 31] = [
+pub const VALUES: [&str; 32] = [
     "from",
+    "session",
     "audience",
     "destination",
     "check",
@@ -79,7 +80,7 @@ pub fn allowed(verb: &str) -> &'static [&'static str] {
             "by",
         ],
         "edit" => &["run", "worktree", "dry-run", "abandon"],
-        _ => &[],
+        _ => super::proposals::allowed(verb),
     }
 }
 
@@ -106,7 +107,8 @@ pub fn switch(common: &Common, name: &str) -> bool {
     common.switches.iter().any(|s| s == name)
 }
 
-/// `runs`, `resume` and the write verbs; `None` for every other verb.
+/// `runs`, `resume`, the write verbs, then `propose`, `proposals` and
+/// `check`; `None` for every other verb.
 pub fn runs_and_writes(
     name: &str,
     common: &Common,
@@ -128,7 +130,7 @@ pub fn runs_and_writes(
         ("checkpoint" | "record" | "cite", _) => verb(name, common, positional).map(Verb::Write),
         ("edit", _) => super::edit::verb(common, positional),
         ("deliver", _) => super::deliver::verb(common, positional),
-        _ => return None,
+        _ => return super::proposals::verb(name, common, positional),
     })
 }
 
@@ -154,7 +156,7 @@ pub fn verb(name: &str, common: &Common, positional: &[String]) -> Result<Write,
     }
 }
 
-fn record(kind: &str, common: &Common, rest: &[String]) -> Result<Write, String> {
+pub fn record(kind: &str, common: &Common, rest: &[String]) -> Result<Write, String> {
     Ok(match (kind, rest) {
         ("ticket", [ticket]) => Write::Ticket(Ticket {
             ticket: ticket.clone(),

@@ -18,9 +18,11 @@ The project KB is plain records in Git. `writfold kb <verb>` answers from it in 
 | Find a record by words, a partial ID or a typo | `find <text>` (`match <text>` also tests signature patterns) |
 | What does changing X touch? | `impact <id> [--depth N] [--direction in\|out\|both]` |
 | Which citations have moved? | `stale [<project>\|<path>]` |
+| Is everything still valid: citations, the index, the run's gates? | `check [<project>\|<path>]` (one row per area; worst exit code) |
 | Pick up a run: its checkpoint, coverage and rechecks | `resume [<run>]` (list runs with `runs --open`) |
 | Save where the work stands | `checkpoint --note TEXT` (or `--new-run --project P --task T --note TEXT`) |
 | Write down a ticket, decision or link | `record ticket\|decision\|link …` (see `writfold kb help`) |
+| Suggest a record for the user to review, without writing it | `propose ticket\|decision\|link …` (same arguments); `proposals [list]`, `proposals show <id>` |
 | Run a check and record its receipt in the run | `gate run <id>` (definitions in `.writfold/gates/`) |
 | Are the run's checks done, and still valid? | `gate status` (`open`, `satisfied`, `stale`, `failed`, `unknown`) |
 | Does a receipt reproduce at its commit? | `gate verify <receipt>` |
@@ -78,3 +80,7 @@ Run `--dry-run` first and read the diff. A refusal names the recipe, the match s
 ## Checkpoint drafts
 
 The plugin's hooks keep a local draft per session: the compaction summary, else your last message, plus the repository, branch and HEAD. A draft is never committed. Before ending a long task, checkpoint with a short note: the task, decisions with reasons, open questions and the exact next step. To keep a draft instead, ask the user first, then run `writfold kb checkpoint --from-draft <session>`. `resume` and the session-start brief list drafts (`!draft`) with their session IDs.
+
+## Proposals
+
+When you find something worth recording but the user has not asked you to write it, `propose` it: the same arguments as `record`, kept in a local queue (never committed, lost with the clone), one file per call, at most ten per session (pass `--session` or set `WRITFOLD_SESSION`). `resume` and the session-start context list pending proposals. Accept (`proposals accept <id>`) or drop one only when the user asks. Accept runs the real `record`; it is refused, keeping the proposal, when a citation in it is no longer fresh or the ID is taken: re-cite and propose again, or drop it.

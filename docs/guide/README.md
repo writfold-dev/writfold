@@ -7,8 +7,8 @@ These pages hold the full skeletons the website only sketches: file layouts, com
 | Page | What it covers | Status |
 |---|---|---|
 | [kb-layout](kb-layout.md) | The knowledge base directory, records, citation tokens, the trailer, `.writfold/`, tracked and local state | built |
-| [feeding-back](feeding-back.md) | What each stage writes, with which verb, where it lands and who commits | built; proposals planned |
-| [validation](validation.md) | Checking that what you read still holds: `stale`, `index`, `gate status`, `deliver check` | built; `kb check` planned |
+| [feeding-back](feeding-back.md) | What each stage writes, with which verb, where it lands and who commits | built, with proposals; backfill and reflection checks planned |
+| [validation](validation.md) | Checking that what you read still holds: `stale`, `index`, `gate status`, `deliver check`, and `kb check` for all at once | built; the plan line of `kb check` planned |
 | [gates](gates.md) | Gate definitions, receipts, standing, waivers and attestations | built; instruction gates planned |
 | [delivery-modes](delivery-modes.md) | Delivery candidates, mode files, deny lists and the guard hook | built; your own modes planned |
 | [run-graph](run-graph.md) | Plans as a spine of steps that owe gates | planned |

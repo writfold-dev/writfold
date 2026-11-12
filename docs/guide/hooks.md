@@ -8,7 +8,7 @@
 
 | Claude Code event | Reads from the event | Writes | Prints | Timeout |
 |---|---|---|---|---|
-| `SessionStart` | `cwd` | nothing | JSON `additionalContext`: `brief` for the project inferred from `cwd` (budget 1,200 tokens), `resume` of the current run (budget 500), and up to three checkpoint drafts. Cut at a line to 9,000 characters | 30 s |
+| `SessionStart` | `cwd` | nothing | JSON `additionalContext`: `brief` for the project inferred from `cwd` (budget 1,200 tokens), `resume` of the current run (budget 500), up to three checkpoint drafts, and up to three pending proposals that `resume` did not show (built in v0.4.0-dev.1). Cut at a line to 9,000 characters | 30 s |
 | `PreCompact` | `session_id`, `cwd`, `trigger` | the draft's place: repository, branch, worktree, HEAD, dirty count | plain-text instructions for the compaction summary: keep the task, decisions with reasons, what failed, open questions, the next step | 15 s |
 | `PostCompact` | `session_id`, `compact_summary` | the draft's summary | nothing | 15 s |
 | `Stop` | `session_id`, `last_assistant_message` | the draft's last message | nothing | 10 s |
@@ -72,7 +72,7 @@ All model-free, inside the same 9,000-character cut, and failing open as now. No
 
 - **Plan position at session start:** the current step of the run's plan and what it owes, with the `next:` command.
 - **After compaction:** the plan position is injected again, so the plan survives the context being rewritten.
-- **An inbox:** drafts (shown today), open proposals, and sessions that ended without an evaluation.
+- **An inbox:** drafts and pending proposals (both shown today), and sessions that ended without an evaluation.
 - **KB behind its remote:** one line when the KB clone is behind, from local refs only. No network call in a hook.
 
 Evaluation of a session is planned as a skill and a closing plan step ([skills](skills.md)), not as a hook that runs a model.

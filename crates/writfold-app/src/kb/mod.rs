@@ -6,6 +6,7 @@ mod deliver;
 mod edit;
 mod gate;
 mod hook;
+mod proposals;
 mod verbs;
 mod writes;
 
@@ -30,6 +31,8 @@ verbs:
   stale [<project>|<path>] [--offline]
                                    which citations have moved (local repositories only)
   index status|rebuild|verify      what the derived index holds; rebuild it; check it equals a rebuild
+  check [<project>|<path>]         stale, index verify and the current run's gate status in one
+                                   summary (the worst exit code of the three)
   runs [--open] [--project P]      every run: state, where it works, last checkpoint
   resume [<run>]                   one run: manifest, coverage, rechecks, checkpoint tail
 
@@ -41,6 +44,12 @@ writes (atomic; they leave the work tree dirty for you to commit):
   record link <type> <from> <to> [--status S] [--evidence e1,e2] [--applicability A]
   status <id> --set STATE [--by WHO] [--superseded-by ID] [--note TEXT]
   cite make <repo> <path> <a-b> [--allow-dirty] [--sym S] [--ttl T]   (prints a token)
+
+proposals (record calls not yet made, in a local untracked queue; at most 10 per session):
+  propose ticket|decision|link … [--session S] [--run ID]
+                                   the arguments of record; session: --session, else $WRITFOLD_SESSION
+  proposals [list] | proposals show|accept|drop <id>
+                                   accept replays it through record (refused on a stale citation)
 
 gates (checks with pinned receipts; definitions in .writfold/gates/<id>.toml):
   gate run <id> [--run ID] [--repo DIR]

@@ -102,4 +102,4 @@ A step may require a Weft assessment. The agent submits a Weft file stating the 
 3. Splicing.
 4. The session-start and compaction hooks showing the plan position ([hooks](hooks.md)).
 5. One week of real use.
-6. Then: proofs of the plan kernel, a TLA+ model of two sessions on one run, `kb check`, proposals, the evaluation skill and the Weft assessed gate.
+6. Then: proofs of the plan kernel, a TLA+ model of two sessions on one run, ~~`kb check`, proposals~~ (built in v0.4.0-dev.1: [validation](validation.md), [feeding-back](feeding-back.md)), the evaluation skill and the Weft assessed gate.

@@ -1,0 +1,6 @@
+proposal 16a41fbba45340f7 [pending] ticket HBR-130: Replay is slow after a restart @<WORLD>/kb/.git/writfold/proposals/16a41fbba45340f7.json !proposal
+  field: created=2026-11-11T00:00:00Z session=s1 run=run-20261101T090000Z-a1b2c3
+  accept: writfold kb proposals accept 16a41fbba45340f7
+  call: writfold kb record ticket HBR-130 --assets harbor-api --title 'Replay is slow after a restart'
+# coverage=complete records=28/28 shown=1 omitted=0 kb=d5db758bda80 index=fresh cursor=none q=1f88f51920a1
+# exit=0
