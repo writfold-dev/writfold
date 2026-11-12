@@ -1,6 +1,6 @@
 # Writfold KB v1: design
 
-Status: proposal, 11 November 2026; M1, M2 and M3 implemented (see [section 11](#11-m1-as-built), [section 12](#12-m2-as-built) and [section 13](#13-m3-as-built) for what was built and where it differs). Scope: the `writfold kb` product core for Git-native project continuity. Git text is the source of truth; a local SQLite file is a derived, rebuildable index. No server, no companion process.
+Status: proposal, 11 November 2026; M1, M2, M3 and M4a implemented (see [section 11](#11-m1-as-built), [section 12](#12-m2-as-built), [section 13](#13-m3-as-built) and [section 14](#14-m4a-as-built) for what was built and where it differs). Scope: the `writfold kb` product core for Git-native project continuity. Git text is the source of truth; a local SQLite file is a derived, rebuildable index. No server, no companion process.
 
 A cold session must be able to answer four questions, each pinned to a source and flagged when the source has moved:
 - why did we decide X;
@@ -904,6 +904,130 @@ The static musl binary still builds offline in the tools image (`static-pie link
 - `checkpoint --from-draft`, local drafts and the hooks (M4); `doctor`; `record --commit`.
 - Proofs of the two kernels (they may trail, 8.5).
 - The read-only index, full-disk and Git-timeout fault tests (13.7).
+
+## 14. M4a as built
+
+M4a adds the Claude Code plugin: a SessionStart brief, checkpoint drafts kept by the PreCompact, PostCompact, Stop and SessionEnd hooks, one skill, and `checkpoint --from-draft` to confirm a draft. New code: `crates/writfold-kb/src/{hook,draft}.rs`, `crates/writfold-app/src/kb/{hook,checkpoint}.rs`, and the plugin under `plugins/writfold/` with a marketplace file at `.claude-plugin/marketplace.json`. Where it differs from section 7.1, this section is the record. MCP and the derived history are M4b.
+
+### 14.1 Layout
+
+```text
+.claude-plugin/marketplace.json      marketplace "writfold", one plugin, source ./plugins/writfold
+plugins/writfold/
+  .claude-plugin/plugin.json         name, description, author, homepage, repository, license,
+                                     userConfig { kb_root: directory, optional }
+  hooks/hooks.json                   five command hooks
+  skills/kb/SKILL.md                 the skill, invoked as writfold:kb
+```
+
+- **No `bin/`.** As planned, the plugin expects `writfold` on `PATH`; the docs still say claude.ai and Cowork do not install a plugin with `bin/`.
+- **No `version`.** For a plugin inside its marketplace's repository, the version is then the commit, so users follow the repository without a version bump. `claude plugin validate` warns about it and passes.
+- **Shell-form hooks with a guard.** Each command is `command -v writfold >/dev/null 2>&1 || exit 0; exec writfold kb hook <event>`. Exec form (`command` + `args`) would make a missing binary a failed spawn. Claude Code reports that as a hook error on every turn. The guard makes it a silent exit 0.
+- **Timeouts.** SessionStart 30 s, PreCompact and PostCompact 15 s, Stop 10 s. SessionEnd keeps Claude Code's 1.5 s budget: a timeout on a plugin hook does not raise it, and the hook spawns nothing.
+- **`kb_root`** reaches the hook as `CLAUDE_PLUGIN_OPTION_KB_ROOT` and takes the place of `--kb`. Without it, discovery is as for every verb: `$WRITFOLD_KB`, then the nearest KB above the event's `cwd`, then the prototype configuration's `root`.
+
+### 14.2 `writfold kb hook <event>`
+
+Events: `session-start`, `pre-compact`, `post-compact`, `stop` and `session-end`. Each one reads the event JSON on stdin (up to 8 MiB). The logic is in `writfold_kb::hook::run(event, input, env) -> HookOutput`, a function from text to text with no process state, so the tests call it directly; the app module only reads stdin and the option variable.
+
+**Always exit 0.** No input is required, and nothing can fail the session. An unknown event, empty or non-object input, a `hook_event_name` that names another event, no KB, a KB outside Git (for drafts), no Git, a missing or unsafe `session_id`, an empty message or summary, or an error inside a verb: each leaves stdout empty and writes one `writfold kb hook: <why>` line on stderr. Claude Code keeps exit-0 stderr out of the context.
+
+| Event | Reads | Writes | Prints |
+|---|---|---|---|
+| `session-start` | `cwd` | nothing | `{"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": …}}`: `brief` (project inferred from `cwd`, budget 1,200 tokens); `resume` of the current run (budget 500) when the pointer is set; then up to three drafts that `resume` did not show. Cut at a line to 9,000 characters with a closing marker. Nothing when all three are empty. |
+| `pre-compact` | `session_id`, `cwd`, `trigger` | draft `place` (repository, branch, worktree, HEAD, dirty count of the repository enclosing `cwd`; two Git spawns) | plain-text instructions for the compaction summary: keep the task, decisions with reasons, what failed, open questions, the next step, and the files, commits and record IDs. They say that the summary becomes a local draft, confirmed only through `--from-draft`. |
+| `post-compact` | `session_id`, `compact_summary` | draft `summary`: the `<summary>` block when there is one (the `<analysis>` preamble is dropped) | nothing |
+| `stop` | `session_id`, `last_assistant_message` | draft `last_message` (no Git spawn: it runs every turn) | nothing |
+| `session-end` | `session_id`, `reason` | draft `ended` when a draft exists; it never creates one | nothing |
+
+Every write also sets `run` (the current-run pointer, when set), `trigger`, `updated`, and on creation `schema`, `session`, `created` and `cwd`. Texts are clipped to 4,000 characters at a line break, with a marker. No hook calls a model, blocks, or asks Claude to continue.
+
+### 14.3 Drafts
+
+- **Where:** `<git dir>/writfold/drafts/<session>.json`, beside the index and the current-run pointer. Untracked, never committed; gone with the clone. Written whole through a dot-named temporary and a rename. A session ID is 1 to 128 of `[A-Za-z0-9._-]`, not starting with a dot (Claude Code's are UUIDs). Anything else is refused, so a session ID cannot name a path.
+- **Shape:** a JSON object, `schema: "writfold-draft/1"`. It may hold local absolute paths (`cwd`, `place.worktree`). Those never leave the draft.
+- **Shown:** `resume` adds one `draft <session> [open|ended] <first line> @<draft path> !draft` row, with a `confirm:` line, for each draft of that run or of no run. `session-start` lists the drafts of other runs. `brief` does not show drafts (3.2 planned it; the session-start hook covers that use).
+- **Confirm:** `writfold kb checkpoint --from-draft <session> [--run ID | --new-run --project P --task T [--mode M]]`. The note is the draft's summary, else its last message. A `## ` or `# ` line is demoted to `### ` or `## `, so it cannot start a new checkpoint entry, and an unclosed fence is closed. The note ends with `(draft from session <id> repo=… branch=… head=<12 hex>)`; the local paths are left out. The run is the one named, else the draft's run if the KB still has it, else the current-run pointer. The entry goes through the write protocol of 13.2. The draft is removed only after the entry is published, so re-running after a crash is refused by the duplicate-note check, never duplicated. A draft with no text yet is refused (exit 3). `--note` and `--from-draft` cannot be given together.
+- **Not built:** pruning old drafts and a discard command. Delete the file to discard a draft.
+
+### 14.4 Skill
+
+`skills/kb/SKILL.md` is about fifty lines. Its `description` names the four questions. The body covers:
+- a table of the verbs: which question each answers (`brief`, `why`, `context`, `status`, `find`/`match`, `impact`, `stale`, `resume`/`runs`, `checkpoint`, `record`);
+- that writes never commit;
+- how to read the trailer: `coverage=partial`, `answer=unknown`, `stale=`/`unverifiable=` with the `!` flags, `omitted=` with the cursor, and `+dirty`;
+- the exit codes;
+- the three rules of 7.1;
+- drafts, with confirmation left to the user.
+
+It tells Claude not to re-run `brief` just to orient itself, since the hook has already injected it.
+
+### 14.5 Tests
+
+- **Goldens** (`crates/writfold-kb/tests/hook.rs`, files `tests/golden/hook-*`):
+  - the injected context for a session starting in `harbor/log`;
+  - the same with a current run, drafts of that run, of no run and of another run;
+  - the PreCompact instructions;
+  - a draft after PreCompact, Stop, PostCompact (with `<analysis>` and `<summary>`) and SessionEnd.
+  - Confirming that draft appends exactly the summary and its origin line and removes the draft. A second confirmation is refused, a draft with only mechanical facts is refused, and `index verify` stays equal.
+- **Failure modes,** each asserting empty stdout and a diagnostic on stderr only: unknown event, empty stdin, malformed JSON, a non-object, an event-name mismatch, a KB path that is not a KB (for session-start and for a draft), no `session_id`, `../escape` as a session ID, no message, a blank summary, ending a session with no draft, and a KB outside Git. No failure leaves a draft behind. The context cap is tested on its own: it cuts at a line, stays within 9,000 characters and adds the marker.
+- **Through the binary** (`crates/writfold/tests/kb_hook.rs`): `writfold kb hook` with no event, no input, no KB (clean `HOME` and environment), `kb_root` naming no KB, and `WRITFOLD_GIT` pointing nowhere each exits 0 with empty stdout. With a KB, `stop` writes the draft and `session-start` injects the brief and lists it. Every command in `hooks.json` also runs under `/bin/sh -c`. With `PATH` lacking `writfold` each exits 0 silently; with it, each exits 0 and SessionStart injects a brief.
+- **Arguments** (`writfold-app`): `--from-draft` with `--run`, the refusal of `--note` together with `--from-draft`, and neither.
+
+### 14.6 Manual smoke test
+
+Claude Code 2.1.322 on the WSL2 workstation. The fixture KB was copied and committed into a scratch repository, and the debug `writfold` was symlinked onto `PATH`:
+
+```sh
+claude plugin validate ./plugins/writfold     # passed with warnings: no version; no icon (directory listing)
+claude plugin validate .                      # the marketplace: passed with the same version warning
+cd <scratch>/kb/harbor
+PATH=<scratch>/bin:$PATH claude -p --plugin-dir <repo>/plugins/writfold --debug-file <scratch>/debug.log \
+  --output-format json "Without using any tools: (1) quote verbatim the first line of the Writfold KB brief \
+  that a hook placed in your context, and the trailer line of that brief, or say NONE; (2) list the skills \
+  you have whose name contains 'kb'."
+PATH=… claude -p --plugin-dir … --resume <session> "/compact"
+<scratch>/bin/writfold kb checkpoint --from-draft <session> --run run-20261101T090000Z-a1b2c3
+```
+
+- **The session** quoted the brief's first line and its trailer (`… kb=0dd646d26b12 index=rebuilt …`) with no tool call, and listed `writfold:kb` as its only KB skill. The debug log records the hooks:
+  - SessionStart finished with status 0 and "provided additionalContext (1534 chars)";
+  - Stop finished with status 0 in 4 ms;
+  - SessionEnd completed with status 0.
+  - The draft held `last_message` and `ended: other`.
+- **`/compact` in the resumed session** ran PreCompact and PostCompact, both with status 0. The draft gained `place` (branch `main`, HEAD, dirty 0), `trigger: manual` and the summary.
+- **Confirming** wrote entry 3 to the run's `checkpoint.md` and removed the draft. The answer's trailer was `kb=0dd646d26b12+dirty:1 index=refreshed:1`.
+- **The fix it prompted:** that summary began with the model's `<analysis>` block, so PostCompact and the confirmation now keep only the `<summary>` block.
+- **Not covered:** an interactive session, and the marketplace install path (`claude plugin marketplace add`, `claude plugin install`). The install path needs the plugin on the default branch of a published repository.
+
+### 14.7 Latency
+
+The static musl release binary on the warm smoke KB (28 records, current run set), five runs each, each a whole process: `session-start` 18 to 21 ms, `pre-compact` 9 to 10 ms, `stop` 2 ms. A first session start on a KB with no index pays for the rebuild; in the smoke run the debug build took 388 ms.
+
+The static musl binary still builds offline in the tools image (`cargo build -p writfold --release --target x86_64-unknown-linux-musl --locked --offline`; `file`: `static-pie linked`; `ldd`: `statically linked`). There, `kb hook session-start` with no KB exits 0 with empty stdout. No new crate entered.
+
+### 14.8 Deviations from 7.1
+
+- **SessionStart prints JSON** `additionalContext` rather than plain stdout. The docs treat both as context, and both have the same 10,000-character cap. The JSON form names the event explicitly. The budget is a 9,000-character cut, not 2,000 tokens. After `compact`, the hook lists drafts instead of printing the current one.
+- **PreCompact prints plain text.** The docs define its stdout as instructions for the compaction summary. They define no JSON form for it.
+- **PostCompact** keeps only the `<summary>` block (14.6).
+- **SessionEnd** only marks an existing draft. It never creates one. **Stop** has no opt-in nudge mode (open question 6 is answered silent, as assumed).
+- **Shell form with a guard** instead of a bare command (14.1).
+- **The skill** teaches ten verbs and the trailer, not five verbs, because the task asked for it.
+- **Drafts are JSON**, not Markdown. `brief` does not show them (14.3).
+
+### 14.9 Documentation checked (12 November 2026)
+
+- https://code.claude.com/docs/en/hooks: common input fields; the SessionStart `source` and `additionalContext` (with the 10,000-character cap and the 2,000-character preview); PreCompact `trigger` and `custom_instructions`, with stdout becoming the compaction instructions; PostCompact `compact_summary`; Stop `stop_hook_active`, `last_assistant_message` and the 8-continuation cap; SessionEnd `reason` and its 1.5 s budget, which plugin timeouts do not raise; exec form and shell form; exit-code semantics, including a failure to start counting as a non-blocking error with a notice.
+- https://code.claude.com/docs/en/plugins-reference (now titled "Plugin manifest reference"): manifest fields; the strict `userConfig` schema (`type`, `title` and `description` required; `directory` type); `CLAUDE_PLUGIN_OPTION_<KEY>` exported to hooks; the standard layout; the `bin/` caveat; `claude plugin validate`.
+- https://code.claude.com/docs/en/skills: frontmatter (`name`, `description`), the 1,536-character listing cap, the advice to stay under 500 lines, and `plugin:skill` naming.
+- https://code.claude.com/docs/en/plugins/marketplace-reference: `marketplace.json` (`name`, `owner`, `plugins`), relative `./` sources, reserved names.
+
+### 14.10 Not done in M4a
+
+- `writfold mcp`, trailer and tracker edges, rename following, `--at` (M4b).
+- Draft pruning and a discard command; drafts in `brief`.
+- An interactive-session and marketplace-install smoke test (14.6).
 
 ---
 

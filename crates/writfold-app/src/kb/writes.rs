@@ -5,12 +5,12 @@ use writfold_kb::Verb;
 use writfold_kb::write::Write;
 use writfold_kb::write::cite::CiteMake;
 use writfold_kb::write::record::{Decision, Link, Ticket};
-use writfold_kb::write::run::{Checkpoint, NewRun};
 use writfold_kb::write::status::SetStatus;
 
 /// Flags that take a value.
-pub const VALUES: [&str; 22] = [
+pub const VALUES: [&str; 23] = [
     "note",
+    "from-draft",
     "run",
     "task",
     "mode",
@@ -40,7 +40,7 @@ pub const SWITCHES: [&str; 3] = ["open", "new-run", "allow-dirty"];
 pub fn allowed(verb: &str) -> &'static [&'static str] {
     match verb {
         "runs" => &["open"],
-        "checkpoint" => &["note", "run", "task", "mode", "new-run"],
+        "checkpoint" => &["note", "from-draft", "run", "task", "mode", "new-run"],
         "record" => &[
             "title",
             "assets",
@@ -62,11 +62,11 @@ pub fn allowed(verb: &str) -> &'static [&'static str] {
     }
 }
 
-fn get(common: &Common, key: &str) -> Option<String> {
+pub fn get(common: &Common, key: &str) -> Option<String> {
     common.values.get(key).cloned()
 }
 
-fn need(common: &Common, verb: &str, key: &str) -> Result<String, String> {
+pub fn need(common: &Common, verb: &str, key: &str) -> Result<String, String> {
     get(common, key).ok_or(format!("{verb} needs --{key}"))
 }
 
@@ -81,7 +81,7 @@ fn items(common: &Common, key: &str) -> Vec<String> {
         .unwrap_or_default()
 }
 
-fn switch(common: &Common, name: &str) -> bool {
+pub fn switch(common: &Common, name: &str) -> bool {
     common.switches.iter().any(|s| s == name)
 }
 
@@ -122,37 +122,13 @@ pub fn status(common: &Common, target: String) -> Result<Write, String> {
 
 pub fn verb(name: &str, common: &Common, positional: &[String]) -> Result<Write, String> {
     match (name, positional) {
-        ("checkpoint", []) => checkpoint(common),
+        ("checkpoint", []) => super::checkpoint::checkpoint(common),
         ("checkpoint", _) => Err("checkpoint takes flags only (--run, --new-run, --note)".into()),
         ("record", [kind, rest @ ..]) => record(kind, common, rest),
         ("cite", [make, repo, path, range]) if make == "make" => cite(common, repo, path, range),
         ("cite", _) => Err("usage: cite make <repo> <path> <a-b>".into()),
         _ => Err("usage: record ticket|decision|link …".into()),
     }
-}
-
-fn checkpoint(common: &Common) -> Result<Write, String> {
-    let note = need(common, "checkpoint", "note")?;
-    let new_run = if switch(common, "new-run") {
-        if common.values.contains_key("run") {
-            return Err("checkpoint takes --run or --new-run, not both".into());
-        }
-        Some(NewRun {
-            project: common.project.clone().ok_or("--new-run needs --project")?,
-            task: need(common, "--new-run", "task")?,
-            mode: get(common, "mode"),
-        })
-    } else {
-        if common.project.is_some() || common.values.contains_key("task") {
-            return Err("--project and --task go with --new-run".into());
-        }
-        None
-    };
-    Ok(Write::Checkpoint(Checkpoint {
-        run: get(common, "run"),
-        new_run,
-        note,
-    }))
 }
 
 fn record(kind: &str, common: &Common, rest: &[String]) -> Result<Write, String> {

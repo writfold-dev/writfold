@@ -1,0 +1,59 @@
+{
+  "description": "Writfold KB: a brief at session start; local checkpoint drafts at compaction, stop and session end. Each hook exits 0 and prints nothing when writfold is not on PATH or there is no KB.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "command -v writfold >/dev/null 2>&1 || exit 0; exec writfold kb hook session-start",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "command -v writfold >/dev/null 2>&1 || exit 0; exec writfold kb hook pre-compact",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "command -v writfold >/dev/null 2>&1 || exit 0; exec writfold kb hook post-compact",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "command -v writfold >/dev/null 2>&1 || exit 0; exec writfold kb hook stop",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "command -v writfold >/dev/null 2>&1 || exit 0; exec writfold kb hook session-end"
+          }
+        ]
+      }
+    ]
+  }
+}

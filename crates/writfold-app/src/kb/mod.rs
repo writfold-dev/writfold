@@ -1,6 +1,8 @@
 //! `writfold kb`: Git-native project continuity reads (KB v1). Argument
 //! parsing and exit codes only; every decision lives in `writfold-kb`.
 pub mod args;
+mod checkpoint;
+mod hook;
 mod verbs;
 mod writes;
 
@@ -29,13 +31,18 @@ verbs:
   resume [<run>]                   one run: manifest, coverage, rechecks, checkpoint tail
 
 writes (atomic; they leave the work tree dirty for you to commit):
-  checkpoint [--run ID | --new-run --project P --task T [--mode M]] --note TEXT
+  checkpoint [--run ID | --new-run --project P --task T [--mode M]] --note TEXT|--from-draft SESSION
   record ticket <ID> --title T [--assets a,b] [--status S] [--summary S] [--prs p,q]
   record decision --title T --target-source S [--project P] [--references a,b]
                   [--context ..] [--evidence ..] [--change ..] [--why ..] [--origin O]
   record link <type> <from> <to> [--status S] [--evidence e1,e2] [--applicability A]
   status <id> --set STATE [--by WHO] [--superseded-by ID] [--note TEXT]
   cite make <repo> <path> <a-b> [--allow-dirty] [--sym S] [--ttl T]   (prints a token)
+
+harness:
+  hook session-start|pre-compact|post-compact|stop|session-end
+                                   a Claude Code hook: event JSON on stdin; always exits 0;
+                                   checkpoint drafts stay local until --from-draft confirms one
 
 The KB root is --kb, else $WRITFOLD_KB, else the nearest directory above the
 working directory holding inventory/assets/. Git is $WRITFOLD_GIT or git on PATH.
@@ -50,6 +57,11 @@ pub struct Outcome {
 
 /// Run `writfold kb <args>` in `cwd`.
 pub fn main(args: &[String], cwd: std::path::PathBuf) -> Outcome {
+    if let Some((first, rest)) = args.split_first()
+        && first == "hook"
+    {
+        return hook::main(rest, cwd);
+    }
     let request: Request = match args::parse(args, cwd) {
         Ok(Some(request)) => request,
         Ok(None) => {

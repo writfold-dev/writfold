@@ -98,8 +98,8 @@ The v1 design is [kb-v1-design.md](kb-v1-design.md).
 
 1. ~~Read an existing project knowledge base~~ (M1): `brief`, `context`, `why`, `stale`.
 2. ~~The index, search and graph verbs~~ (M2): `find`, `match`, `status`, `impact`, `uses`, `timeline`.
-3. Writes (M3): `record`, `checkpoint`, `resume`, `runs`.
-4. M4a: the Claude Code plugin (SessionStart brief, checkpoint drafts, one skill).
+3. ~~Writes~~ (M3): `record`, `checkpoint`, `resume`, `runs`.
+4. ~~M4a: the Claude Code plugin~~ (SessionStart brief, checkpoint drafts, one skill; `plugins/writfold`).
 5. G1: checks with pinned receipts (below).
 6. T1: `writfold watch`, a read-only TUI.
 7. G2: offline delivery candidates; G2b: an optional guard hook.

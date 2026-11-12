@@ -133,10 +133,51 @@ pub fn resume(session: &Session<'_>, named: Option<&str>, cwd: &Path) -> Result<
     answer.rows.extend(rows);
     answer.rows.extend(coverage(session, &rec));
     answer.rows.extend(tail);
+    answer.rows.extend(drafts(session, &rec));
     if runs::state(session, &rec) == "closed" {
         answer.notes.push(format!("{} is closed", rec.id));
     }
     Ok((answer, rec.id))
+}
+
+/// The unconfirmed local drafts of this run, or of no run, marked `!draft`.
+fn drafts(session: &Session<'_>, rec: &Rec) -> Vec<Row> {
+    let Some(repo) = &session.ws.repo else {
+        return Vec::new();
+    };
+    let state = repo.git_dir.join("writfold");
+    crate::draft::all(&state)
+        .into_iter()
+        .filter(|(_, d)| crate::draft::text(d, "run").is_none_or(|run| run == rec.id))
+        .map(|(id, d)| {
+            let first = crate::draft::body(&d)
+                .and_then(|b| b.lines().find(|l| !l.trim().is_empty()).map(str::to_owned))
+                .unwrap_or_else(|| "(no text yet)".into());
+            Row {
+                kind: "draft",
+                status: Some(
+                    if d.contains_key("ended") {
+                        "ended"
+                    } else {
+                        "open"
+                    }
+                    .into(),
+                ),
+                text: first.trim().chars().take(120).collect(),
+                path: crate::draft::path(&state, &id)
+                    .ok()
+                    .map(|p| p.display().to_string()),
+                flags: vec!["draft".into()],
+                more: vec![More {
+                    label: "confirm",
+                    text: format!("writfold kb checkpoint --from-draft {id}"),
+                    ..More::default()
+                }],
+                id,
+                ..Row::default()
+            }
+        })
+        .collect()
 }
 
 /// Outcome counts from `coverage.json`, then one row per item whose

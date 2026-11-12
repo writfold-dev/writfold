@@ -106,12 +106,55 @@ per line) or point `WRITFOLD_KB_REPOS` at directories holding them. The
 invented example KB the tests use is in [`fixtures/kb/basic`](fixtures/kb/basic);
 the format and plan are in the [KB v1 design](docs/writfold/kb-v1-design.md).
 
+### The Claude Code plugin
+
+[`plugins/writfold`](plugins/writfold) gives a Claude Code session the KB
+without a tool call:
+
+- **Session start:** the hook injects `brief` for the project inferred from
+  the session's directory, `resume` when a run is current, and any unconfirmed
+  checkpoint drafts. It is cut to 9,000 characters (Claude Code's limit is 10,000).
+- **Compaction, stop and session end:** the hooks keep a local checkpoint
+  draft per session in the KB's Git directory. It holds the repository, branch
+  and HEAD, the compaction summary and your last message. Before compaction the
+  hook also asks the summary to keep decisions, open questions and the next
+  step. A draft is never committed. `writfold kb checkpoint --from-draft
+  <session>` turns it into a checkpoint entry and removes it.
+- **Skill `writfold:kb`:** which verb answers which question, and how to read
+  the trailer and exit codes.
+
+Each hook runs `writfold kb hook <event>` and always exits 0. With no
+`writfold` on `PATH`, no KB, no Git or unreadable input, it prints nothing.
+
+Try it from a clone, with the binary on `PATH`:
+
+```sh
+cargo build --release -p writfold && export PATH="$PWD/target/release:$PATH"
+cd /path/to/kb/some-project            # or set WRITFOLD_KB
+claude --plugin-dir /path/to/writfold/plugins/writfold
+```
+
+To install it for every session, add this repository as a plugin
+marketplace, then install the plugin:
+
+```sh
+claude plugin marketplace add writfold-dev/writfold   # or a local clone's path
+claude plugin install writfold@writfold
+```
+
+The plugin has one optional setting, `kb_root`: Claude Code asks for it when
+it enables the plugin, or pass `--config kb_root=/path/to/kb` to `install`.
+Set it when your sessions start in code repositories rather than in the KB. Without
+it, the hooks use `$WRITFOLD_KB`, then the nearest KB above the session's
+directory, then the prototype configuration's `root`.
+
 ### What works today
 
 | Command | What it does | Evidence |
 |---|---|---|
 | `writfold kb brief / context / why / status / find / match / impact / uses / timeline / stale / index` | Reads a Git KB of plain records; every row pinned to its file and line, moved citations flagged; the index is refreshed incrementally and verified equal to a rebuild | [KB v1 design](docs/writfold/kb-v1-design.md#11-m1-as-built) (sections 11 and 12), golden and property tests in `crates/writfold-kb/tests` |
 | `writfold kb checkpoint / resume / runs / record / status --set / cite make` | Writes checkpoints, runs, tickets, decisions, links and status changes atomically (old or new bytes after a kill at any step); prints citation tokens | [KB v1 design](docs/writfold/kb-v1-design.md#13-m3-as-built) (section 13), kill and fault tests in `crates/writfold-kb/tests/faults.rs`, TLC model `spec/KbWrite.tla` |
+| Claude Code plugin (`plugins/writfold`), `writfold kb hook`, `checkpoint --from-draft` | A KB brief at session start with no tool call; local checkpoint drafts at compaction, stop and session end; one skill teaching the verbs | [KB v1 design](docs/writfold/kb-v1-design.md#14-m4a-as-built) (section 14), golden tests in `crates/writfold-kb/tests/hook.rs`, `crates/writfold/tests/kb_hook.rs` |
 | `writfold trial prepare / approve / apply / recover / show` | One edit through a durable, validated ledger in Writfold's own sparse worktree; never your checkout | [trial profile](docs/writfold/trial-profile.md), [adversarial campaign](bench/2026-11-09-adversarial/) |
 | `writfold trial approve --require CHECK` | Refuses unless each named check of the bound Weft report is `entailed` (recorded as hypothetical, never as grounded) | proved: `required_entailed_spec` |
 | `writfold trial retain` | Keeps exact bytes of a file at a full commit id as a citation; reports citing anything else are refused | [trial profile](docs/writfold/trial-profile.md) |
