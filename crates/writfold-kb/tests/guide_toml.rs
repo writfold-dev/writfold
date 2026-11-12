@@ -112,8 +112,12 @@ fn stub_gates(root: &Path, names: &[String]) -> Result<(), String> {
 /// Read a delivery configuration file the way the product does: from
 /// `.writfold/deliveries/<file>` under a KB root.
 fn delivery(file: &str, text: &str, read: impl Fn(&Path) -> Result<bool, String>) -> TestResult {
+    // Unique per call: tests run in parallel and two of them read a file
+    // of the same name (a guide block and the self-check).
+    static NEXT: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+    let n = NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     let root = std::env::temp_dir().join(format!(
-        "writfold-guide-toml-{}-{}",
+        "writfold-guide-toml-{}-{n}-{}",
         std::process::id(),
         file.replace('.', "-")
     ));

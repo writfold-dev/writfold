@@ -267,3 +267,35 @@ pub fn ended(r: &Receipt) -> String {
         Ending::Error => "error".into(),
     }
 }
+
+/// One receipt file of a run.
+pub struct Filed {
+    /// KB-relative path.
+    pub path: String,
+    pub name: String,
+    pub parsed: Result<Receipt, String>,
+}
+
+/// Every receipt file of the run whose directory is `run_dir`, by name.
+pub fn filed(root: &std::path::Path, run_dir: &str, run: &str) -> Vec<Filed> {
+    let dir = root.join(run_dir).join(DIR);
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return Vec::new();
+    };
+    let mut names: Vec<String> = entries
+        .flatten()
+        .map(|e| e.file_name().to_string_lossy().into_owned())
+        .filter(|n| n.ends_with(".json") && !n.starts_with('.'))
+        .collect();
+    names.sort();
+    names
+        .into_iter()
+        .map(|name| {
+            let path = format!("{run_dir}/{DIR}/{name}");
+            let parsed = std::fs::read_to_string(root.join(&path))
+                .map_err(|e| format!("unreadable ({e})"))
+                .and_then(|text| parse(&text, run, &name));
+            Filed { path, name, parsed }
+        })
+        .collect()
+}

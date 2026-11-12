@@ -1,6 +1,6 @@
 # Gates
 
-> **Status:** built in v0.3.0-dev.1; instruction gates and gate scripts built in v0.4.0-dev.1; the section marked *Planned* (run-record checks) is not built.
+> **Status:** built in v0.3.0-dev.1; instruction gates, gate scripts and the Weft assessed gate built in v0.4.0-dev.1; the section marked *Planned* (run-record checks) is not built.
 
 A gate is one small check with a path scope. `gate run` runs its command and keeps a receipt pinned to the exact bytes checked. `gate status` then says, on every read, whether that evidence still holds. Gates report; they block nothing.
 
@@ -31,6 +31,7 @@ description = "the unit tests"     # optional; one line
 | `mechanical` | a deterministic check of the repository's bytes: build, tests, lint | a passing receipt from `gate run` |
 | `observed` | a command whose result also depends on the world: a service answering | a passing receipt from `gate run` |
 | `attested` | a statement someone must make; it runs nothing | `gate attest` |
+| `assessed` | a plan step verified by Weft from cited evidence ([below](#weft-assessed-gates)) | a passing receipt from `gate run`: every required check entailed from grounded assumptions |
 
 An attested gate has no `argv`, `workdir` or `timeout_seconds`:
 
@@ -149,6 +150,83 @@ description = "subject at most 72 characters, a blank second line, body wrapped 
 ```
 
 A script gate reports findings as `<line>: <text>` on stdout; only a clean exit 0 passes. A timeout, a signal or a draft that changed while it ran is `unknown`. A worked example is in `fixtures/kb/commit-message/`.
+
+## Weft assessed gates
+
+A gate of class `assessed` is met by a [Weft](https://github.com/writfold-dev/weft) assessment of a plan step instead of a command's exit status. The agent states the step's assumptions and checks in a Weft file, cites the evidence for each assumption, and runs the gate. Writfold resolves every citation, runs the pinned `weft` binary, and records which checks Weft entails and whether each rests on grounded evidence.
+
+```toml
+# .writfold/gates/ship-batching.toml: the step is verified by Weft
+schema = "writfold-gate/1"
+id = "ship-batching"
+version = 1
+class = "assessed"
+weft = "{run}/plan/ship.weft"       # submitted by the agent in the run; or "{gate}/<file>.weft" beside this file
+checks = ["ready"]                  # the Weft checks that must be met
+weft_sha256 = "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"   # sha256sum of your weft binary
+timeout_seconds = 60
+description = "the batched ledger writes are ready to ship"
+```
+
+- **`weft`** is `{gate}/<path>.weft` (a source shipped beside the definition) or `{run}/<path>.weft` (a file the agent writes under `runs/<run>/`). Either must stay inside its directory.
+- **`weft_sha256`** pins the binary. Its path is never in the definition or on the command line: it is `$WRITFOLD_WEFT`, else `weft = "<path>"` in `~/.config/writfold/config.toml`. A binary with another digest is refused before it runs; no binary at all records `unknown`, never a pass.
+- An assessed gate has no `argv`, `workdir` or `scope`: what it judges is its Weft source and the evidence the source cites. `gate attest` and `gate waive` refuse it.
+
+The Weft file is ordinary Weft. Each assumption cites its evidence with Weft's own binding, `claim <name> = citation "<reference>";`, declared **directly above** the `assume` it supports (a citation followed by a check, or by nothing, is refused):
+
+```weft
+// runs/<run>/plan/ship.weft: plan step "ship the batched ledger writes"
+review ship_batching {
+    context "kb" at "run";
+    profile "weft.symbolic/1";
+    target change = proposal "batch-ledger-writes";
+
+    claim unit_green = citation "gate:unit";
+    assume tests_pass: passes("unit");
+
+    claim stall_done = citation "⟦cite kind=record path=ktlo/2026/hbr-99-flush-stall.md state=done⟧";
+    assume stall_fixed: fixed("hbr-99");
+
+    check ready: passes("unit") and fixed("hbr-99");
+    check rolled_back: not passes("unit");
+    check deployed: deployed("production");
+}
+```
+
+A reference may be:
+
+| Reference | Grounded when |
+|---|---|
+| a KB citation token `⟦cite …⟧` or a locator `repo@commit:path[:a-b]` | `stale` says it is fresh |
+| `gate:<id>` | the gate is `satisfied` (or `attested`, kept as attested) |
+| a gate receipt of this run, by path or name | it passed, about the gate's current definition and bytes |
+| an attestation of this run, by path | it is the gate's current attestation (attested) |
+| a retrieval receipt, by path or name | every citation in it is fresh |
+| an edit receipt, by path or name | every file it edited still holds the bytes it wrote |
+
+An assumption with no citation, or with any citation that is not grounded, is ungrounded. Weft's report lists, for each check, the assumptions it used (every assumption declared above the check). A check **meets** the gate only when Weft's result is `entailed` and every one of those assumptions is grounded. Weft's results are kept in its own words, `entailed`, `refuted`, `undetermined` or `inconsistent-premises`; the basis is `grounded`, or `hypothetical` when any assumption it used is ungrounded. A hypothetical check is flagged `!hypothetical` and is never counted as met, whatever its result. The gate passes when every required check is met; Weft unable to finish (no binary, a timeout, an incomplete report) is `unknown`.
+
+The output below is from `crates/writfold-kb/tests/gate_assessed.rs`, where this source is shipped as `{gate}/step.weft` for a gate named `ship` and `bin=` is the test double's digest. With `unit` satisfied and the record fresh, `ready` is entailed on a grounded basis and the gate is satisfied:
+
+```text
+gate ship [satisfied] assessed pass met=1/1 weft=f463cf9c4a50 bin=8b46349b5622 at demo-service@bcacd8cac84e @runs/run-…/assessed/ship-20261111T000100Z-….json:1
+  check: ready [entailed grounded] met
+  check: rolled_back [refuted grounded] (not required)
+  check: deployed [undetermined grounded] (not required)
+```
+
+The same source after an in-scope file changed, so `gate:unit` is stale: Weft still entails `ready`, but from an ungrounded assumption, and the gate fails:
+
+```text
+gate ship [failed] assessed fail met=0/1 weft=f463cf9c4a50 bin=8b46349b5622 at demo-service@bcacd8cac84e @runs/run-…/assessed/ship-20261111T000100Z-….json:1 !failed
+  check: ready [entailed hypothetical] not met; rests on ungrounded tests_pass !hypothetical
+  check: rolled_back [refuted hypothetical] (not required); rests on ungrounded tests_pass !hypothetical
+  check: deployed [undetermined hypothetical] (not required); rests on ungrounded tests_pass !hypothetical
+  cite: tests_pass unit_green [ungrounded] stale @runs/run-…/gates/unit-20261111T000000Z-….json:1
+  next: writfold kb gate run ship (Weft source {gate}/step.weft)
+```
+
+The receipt, `runs/<run>/assessed/<gate>-<time>-<hex>.json`, binds the definition digest, the Weft source's digest, the pinned and actual binary digests, the report's digest (the report itself stays local), every citation with what it stood on, and every check's Weft result, Weft's own basis and Writfold's basis. Reading it re-derives every basis and the outcome, so a hypothetical check relabelled grounded reads as `[invalid]`. It goes `stale` when the source changes or any cited evidence moves (`why: cited evidence moved: stall_done (…) was fresh, now changed`), and is satisfied again if the evidence returns.
 
 ## Planned: run-record checks
 

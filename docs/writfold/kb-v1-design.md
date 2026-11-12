@@ -1754,6 +1754,105 @@ Delivery candidates are not part of `check`: `deliver status` already reports th
 - The plan part of `kb check` (the seam above) and the `run.reflected` check that calls `for_run`.
 - An evaluation skill that fills the queue.
 
+## 23. Weft assessed gate as built
+
+Item 4 of the owner's 12 November decision ("Weft verifies plans"), built ahead of its place in the order of work as the gate alone: a gate of class `assessed` is met by a Weft assessment, grounded by Writfold, of a plan step. Naming it on a step waits for the run graph (`plan …`); until then it is owed like any repository gate. Weft is unchanged: its report already says which assumptions each check used. No crate, write path or protocol step was added. New code: the kernel `crates/writfold-core/src/assess.rs`; `crates/writfold-kb/src/gate/assessed/{mod,spec,weft,report,ground,judge,receipt,run,show}.rs`; `Cite::from_citation` in `stale/mod.rs`; small changes to `gate/{def,status,run,say,mod,receipt}.rs` (`status::judge` now takes the session, since grounding reads the index); the tests in 23.9.
+
+### 23.1 Definition
+
+```toml
+schema = "writfold-gate/1"
+id = "ship"
+version = 1
+class = "assessed"
+weft = "{gate}/step.weft"          # or "{run}/<path>.weft", submitted in the run
+checks = ["ready"]                 # Weft check names that must be met
+weft_sha256 = "sha256:<64 hex>"    # the pinned binary
+timeout_seconds = 60
+```
+
+- **`weft`** is `{gate}/<path>.weft`, resolved beside the definition when it is read (it must exist), or `{run}/<path>.weft`, resolved under `runs/<run>/` when the gate runs (a missing file refuses `gate run`, naming the path to submit). Either follows the `instructions` rules (20.1): relative, no `..` or empty segment, inside its directory once symbolic links are followed.
+- **`checks`** are Weft identifiers, at least one, none twice. **`weft_sha256`** is 64 hex digits, with or without `sha256:`. The three keys are refused on any other class.
+- **Refused:** `argv`, `workdir`, `scope` and `subject = "candidate"`. `timeout_seconds` is required. The definition digest (16.2) appends `weft=`, `checks=` and `weft_sha256=` lines, so changing the source location, the checks or the pin makes receipts stale; a definition of another class keeps its digest.
+- `gate attest` and `gate waive` refuse an assessed gate (23.10); `gate verify` refuses its receipts (they are not under `gates/`).
+
+### 23.2 The binary
+
+The path is never the agent's: `$WRITFOLD_WEFT`, else `weft = "<path>"` in `$XDG_CONFIG_HOME/writfold/config.toml` (else `~/.config/writfold/config.toml`); `PATH` is never searched, following the trial's `--weft` pin. `gate run` reads the canonical file and hashes it: another digest than `weft_sha256` is refused (exit 3, nothing written); no path, no file or an unreadable one records a receipt with outcome `unknown` and the reason. Weft runs as `weft prove --json -- <source>` under G1's supervision (16.4): its own process group, stdin at end of file, the definition's timeout, TERM then KILL. Exit statuses 0, 1 and 2 hand the report on (a complete Weft proof exits 1 even when entailed); a signal, a timeout, another status, or a report over 16 MiB (Weft's own output budget) is `unknown`. As in the trial, the digest is checked immediately before the binary is started, not by executing the hashed bytes.
+
+### 23.3 Citations and grounding
+
+Weft's language has evidence bindings (`claim`, `asset`, `rule` `<name> = citation "<reference>"`) but no way for an assumption to name one; its local reports leave every binding `unresolved` and every basis `hypothetical`. Writfold therefore reads the source order from the report's `review.declarations`: the bindings declared after the previous assumption or check and directly above an `assume` are that assumption's citations. A binding followed by a check or by the end of the review is refused as citing nothing (the receipt is `unknown`, naming it). No grammar was added and the source stays valid Weft.
+
+Each reference is resolved now, by `gate/assessed/ground.rs`:
+
+| Reference | Grounding | Standing recorded |
+|---|---|---|
+| `⟦cite …⟧`, or `repo@commit:path[:a-b]` | grounded when `stale` (6) says `fresh` | the verdict |
+| `gate:<id>` | grounded when the run's gate is `satisfied`; attested when `attested` | the gate's standing |
+| `runs/<run>/gates/….json` (or its name), this run only | grounded when valid, `pass`, about the gate's current definition digest and the present scope digest, and the gate is met | `satisfied`, `stale`, `fail`, `unknown`, `other-subject`, … |
+| `runs/<run>/statements/….json`, this run only | attested when it is the gate's current attestation; a waiver never grounds | `attested` or `not-a-current-attestation` |
+| `runs/<any>/retrievals/….md` (or its name) | grounded when every token in it is fresh | `fresh`, `not-fresh:<n>` |
+| `runs/<any>/edits/….md` (or its name) | grounded when every file it lists still hashes to its `after` blob in the subject | `holds`, `changed:<path>` |
+| anything else | ungrounded | `unresolved` |
+
+An assumption's grounding is the kernel's `assess::assumption`: ungrounded with no citation or any ungrounded one, attested when any is attested (kept distinct), else grounded. Gate citations are resolved against the run's non-assessed gates only, so an assessed gate cannot ground another and no cycle can form. Citations are read from the report of the exact source bytes and resolved after Weft has run, in the same `gate run`.
+
+### 23.4 Premises and the decision
+
+Weft's report gives each check a `hypotheses` list: every assumption declared before the check, "conservatively included" (Weft's report contract). Writfold takes that list as the check's premises; no narrower use is claimed, so an ungrounded assumption makes every later check hypothetical. A check's verdicts, from the kernel `writfold_core::assess`:
+
+- **result:** Weft's, verbatim: `entailed`, `refuted`, `undetermined`, `inconsistent-premises` (or `unknown`, `not-evaluated`);
+- **basis:** `grounded` when no premise is ungrounded, else `hypothetical` (`assess::basis`); Weft's own basis is recorded beside it as `weft_basis` and never rewritten;
+- **met:** `entailed` and `grounded` (`assess::met`);
+- **outcome** (`assess::outcome`): `unknown` when Weft did not complete (or a required check is `unknown` or `not-evaluated`); `pass` when every required check is met; `fail` otherwise, including a required check the source lacks.
+
+The report must be `weft.report/1`, `execution: complete`, `writfold_grounded: false`, `effect_authority: false`, and its `source.sha256` must equal the bytes Writfold read; anything else is `unknown` with the reason.
+
+### 23.5 Receipts
+
+One JSON file per assessment, `runs/<run>/assessed/<gate>-<UTC compact time>-<6 hex>.json`, schema `writfold-assessed-receipt/1`, written create-new as one `Op::Create` through the 13.2 protocol. It binds the gate, version and definition (digest, origin, path); the run; the subject's name and HEAD; `weft.source` (as written, and the SHA-256 of the bytes), `weft.binary` (`pin` and the actual `digest`, `null` when there was none) and `weft.report` (its SHA-256; the report itself stays local and untracked under `<KB git dir>/writfold/gates/<run>/<receipt>/weft-report.json`); every assumption with its grounding and its citations (binding, reference, grounding, standing, path); every check with `required`, `result`, `weft_basis`, `basis`, `premises` and `met`; `missing` required checks; `result.outcome`, `error`, `duration_ms`; the evaluator and time; and `digest` over the rest in canonical form.
+
+**Reading** checks the schema, digest, evaluator and filing, then re-derives every assumption's grounding from its citations, every check's basis and met flag from its premises, and the outcome from the checks, with the kernel; any disagreement, or a pass from a binary other than the pin, reads as `[invalid]` and counts for nothing. A hypothetical check cannot be relabelled grounded by editing the file, even with a recomputed digest (tested).
+
+### 23.6 Standing
+
+The state is G1's kernel (16.6) over the gate's valid receipts for the subject, where a receipt is "about the present" when its definition digest is the current one, its source digest equals the source's bytes now, and every citation's recorded standing equals its standing now. So the receipt goes `stale` when the source changes (`why: the Weft source changed`), the definition changes, or any cited evidence moves (`why: cited evidence moved: stall_done (⟦cite kind=record …⟧) was fresh, now changed`); when the evidence returns to what was recorded, it is current again. An assessed gate's standing is never `attested` or `waived`.
+
+### 23.7 Display
+
+`gate status`, `gate run` and `resume` show one row per assessed gate, `assessed <outcome> met=N/M weft=<12> bin=<12> at <repo>@<commit12>`, then a `check:` line per check, `<name> [<result> <basis>] met | not met | (not required)`. A hypothetical check adds `; rests on ungrounded <assumptions>` and the flag `!hypothetical`; a grounded one resting on an attestation adds `; rests on attested <assumptions>`. Each citation that is not grounded gets a `cite:` line (`<assumption> <binding> [<grounding>] <standing> @<path>`), an assumption citing nothing gets one too, and owed rows end with `why:` and `next: writfold kb gate run <id> (Weft source <weft>)`. `gate lines` prints `<id>: <standing> assessed <outcome> met=N/M <receipt>`. The golden is `tests/golden/gate-status-assessed.txt`.
+
+### 23.8 What is claimed
+
+- A check is met only when Weft entails it and Writfold found every assumption Weft used grounded at that moment, and the receipt stops standing when any of that moves. It says nothing about whether the predicates name the right things: `passes("unit")` is a symbol Weft reasons about, and the citation above it is what Writfold checks. Choosing a citation that supports the assumption is the agent's statement, visible in the source and the receipt.
+- Weft's results are its own and hypothetical on its side (`writfold_grounded: false`); "grounded" is Writfold's judgement of the citations, recorded beside Weft's basis, not a change to Weft's report.
+- Mistakes, not adversaries, as for every gate (16.9): nothing is signed, and the binary is pinned by digest, not sandboxed.
+
+### 23.9 Tests
+
+- **Kernel** (`writfold-core/src/assess.rs`): over every list of up to three groundings and every result, a check is met exactly when entailed with no ungrounded premise; over every pair of required checks the outcome is `pass` exactly when both are met, `unknown` when either is unfinished or Weft did not complete; hypothetical entailment is never a pass; names round-trip.
+- **Definitions and reports** (unit tests in `spec.rs`, `report.rs`): `{gate}` and `{run}` sources, escapes, a missing shipped source, a non-`.weft` file, repeated or invalid check names, a bad pin, the keys on another class; citations attached to the assumption below them, a dangling citation refused, a report about other bytes refused.
+- **Over the fixture world** (`tests/gate_assessed.rs`, with the shared `tests/assessed/`): a grounded entailed check meets the gate (golden, `gate lines`, `resume`, the receipt keeping Weft's `hypothetical` beside Writfold's `grounded`); the same check with its cited gate stale, and with the gate never run, is `[entailed hypothetical] !hypothetical`, not met, the gate `failed`; `refuted` and `undetermined` checks fail; an attested citation grounds and is named; a `{run}` source is refused until submitted, then passes; a cited record changing state, a cited gate going stale and an edited source each make the receipt stale with their `why:`, and reverting the evidence restores it.
+- **Refusals and faults** (`tests/gate_assessed_faults.rs`): a binary with another digest is refused and writes nothing; no binary, or a path that does not exist, records `unknown` and no receipt says `pass`; a hypothetical check relabelled grounded and met with a recomputed digest reads as invalid; waivers are refused; `gate run` aborted at each of the seven protocol steps leaves no receipt or one valid receipt, only `.tmp` leftovers, `index verify` equal, and a rerun that passes.
+- **The binary.** Most tests use a TEST DOUBLE, `tests/weft/weft-double.sh`, labelled in its header: it prints the report the real Weft printed for `tests/weft/step.weft` (recorded with `weft prove --json`), with the source digest of the bytes it is given. `the_real_weft_binary_meets_and_refuses` runs a real Weft build named by `$WRITFOLD_TEST_WEFT` (the grounded pass, then the same check hypothetical once its cited gate is stale); it is `#[ignore]`d without that variable and was run for this slice against Weft built from source at its current main.
+- **Removing the check fails a test:** with the premise test removed from `assess::basis`, `assess::tests::a_check_is_met_only_when_entailed_from_grounded_premises`, `gate_assessed::a_stale_citation_makes_the_same_check_hypothetical` and `a_relabelled_receipt_is_invalid` fail (checked by hand; three tests).
+
+### 23.10 Deviations
+
+- **No Weft change.** The task allowed a minimal one (a per-check premises list) if the report lacked it; it does not: `checks[].hypotheses` is that list. Weft has no input for marking an assumption grounded, so grounding is done in Writfold over the report, as the task's fallback describes.
+- **Citations by position.** Weft cannot attach a binding to an assumption; "directly above" is Writfold's convention over Weft's own syntax, read from the report's declaration order rather than by parsing Weft source.
+- **Premises are conservative.** Every assumption declared before a check counts, as Weft reports it; an agent can declare unrelated assumptions after the checks that do not need them.
+- **`gate:<id>`** is accepted besides receipt paths and names, for "this gate holds now"; the receipt records the deciding receipt's path.
+- **No statements.** `gate attest` and `gate waive` refuse an assessed gate: a waiver would have to bind the source and the cited evidence, which statements do not record. `plan advance` can still accept a waived gate once the run graph exists; that waits.
+- **Citations are resolved after Weft runs**, from its report, rather than before: the report is what places them. Both happen inside one `gate run` and nothing is written in between.
+
+### 23.11 Not done
+
+- Naming an assessed gate on a plan step (the run graph); waivers of assessed gates; `gate verify` of an assessed receipt (re-running the pinned binary on the recorded source).
+- Grounding a Weft `rule` binding as a rule (it is resolved like any other citation); Weft-side resolution of bindings, which waits for Weft's own grounded profile.
+- A real plan step assessed by the owner.
+
 ---
 
 ### Critical Files for Implementation

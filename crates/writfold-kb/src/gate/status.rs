@@ -10,47 +10,21 @@ use super::receipt::{self, Receipt};
 use super::statement;
 use super::subject::{Snapshot, Subject, snapshot};
 use crate::emit::{More, Row};
-use crate::error::Result;
+use crate::error::{KbError, Result};
+use crate::session::Session;
 use std::path::Path;
 use writfold_core::gate::{Evidence, Standing, State, in_scope, standing, state};
 use writfold_runtime::git::GitExecutable;
 
-/// One receipt file of a run.
-pub struct Filed {
-    /// KB-relative path.
-    pub path: String,
-    pub name: String,
-    pub parsed: std::result::Result<Receipt, String>,
-}
+pub use super::receipt::{Filed, filed};
 
-/// Every receipt file of the run whose directory is `run_dir`, by name.
-pub fn filed(root: &Path, run_dir: &str, run: &str) -> Vec<Filed> {
-    let dir = root.join(run_dir).join(receipt::DIR);
-    let Ok(entries) = std::fs::read_dir(dir) else {
-        return Vec::new();
-    };
-    let mut names: Vec<String> = entries
-        .flatten()
-        .map(|e| e.file_name().to_string_lossy().into_owned())
-        .filter(|n| n.ends_with(".json") && !n.starts_with('.'))
-        .collect();
-    names.sort();
-    names
-        .into_iter()
-        .map(|name| {
-            let path = format!("{run_dir}/{}/{name}", receipt::DIR);
-            let parsed = std::fs::read_to_string(root.join(&path))
-                .map_err(|e| format!("unreadable ({e})"))
-                .and_then(|text| receipt::parse(&text, run, &name));
-            Filed { path, name, parsed }
-        })
-        .collect()
-}
-
-/// A run's receipts and statements.
+/// A run's receipts, statements and assessed receipts.
 pub struct Filings {
     pub receipts: Vec<Filed>,
     pub statements: Vec<statement::Filed>,
+    pub assessed: Vec<super::assessed::Filed>,
+    /// `runs/<run>`.
+    pub run_dir: String,
 }
 
 impl Filings {
@@ -58,6 +32,8 @@ impl Filings {
         Self {
             receipts: filed(root, run_dir, run),
             statements: statement::filed(root, run_dir, run),
+            assessed: super::assessed::filed(root, run_dir, run),
+            run_dir: run_dir.to_owned(),
         }
     }
 
@@ -65,6 +41,7 @@ impl Filings {
     pub fn invalid(&self) -> usize {
         self.receipts.iter().filter(|f| f.parsed.is_err()).count()
             + self.statements.iter().filter(|f| f.parsed.is_err()).count()
+            + self.assessed.iter().filter(|f| f.parsed.is_err()).count()
     }
 }
 
@@ -79,6 +56,8 @@ pub struct Judged<'a> {
     pub receipt: Option<(&'a Filed, &'a Receipt)>,
     pub same_definition: bool,
     pub statements: statement::Summary<'a>,
+    /// An assessed gate's receipt and checks (its `receipt` is `None`).
+    pub assessment: Option<super::assessed::Assessment<'a>>,
 }
 
 /// The whole picture for one run and subject.
@@ -95,17 +74,23 @@ impl Report<'_> {
     }
 }
 
-/// Judge every defined gate on `subject` from the run's filings.
+/// Judge every defined gate on `subject` from the run's filings. Assessed
+/// gates are judged last, against the others ([`super::assessed::judge`]).
 pub fn judge<'a>(
-    git: &GitExecutable<'_>,
-    root: &Path,
+    session: &Session<'_>,
     subject: &Subject,
     filings: &'a Filings,
 ) -> Result<Report<'a>> {
-    let (mut definitions, problems) = def::all(root, Some(&subject.top));
+    let git = session
+        .git
+        .as_ref()
+        .ok_or_else(|| KbError::Refused("gates need Git".into()))?;
+    let (mut definitions, problems) = def::all(&session.ws.root, Some(&subject.top));
     // Candidate gates judge delivery drafts, never a repository: a run
     // owes them only through a delivery mode (`deliver status`).
     definitions.retain(|d| !d.on_candidate());
+    let assessed: Vec<Definition>;
+    (assessed, definitions) = definitions.into_iter().partition(|d| d.assessed.is_some());
     let patterns: Vec<Vec<&str>> = definitions.iter().map(Definition::patterns).collect();
     let wanted = |p: &str| patterns.iter().any(|scope| in_scope(scope, p));
     let snapshot = snapshot(git, subject, &wanted)?;
@@ -148,13 +133,17 @@ pub fn judge<'a>(
             state,
             receipt,
             statements,
+            assessment: None,
         });
     }
-    Ok(Report {
+    let mut report = Report {
         gates,
         problems,
         snapshot,
-    })
+    };
+    let more = super::assessed::judge(session, subject, filings, &report, assessed)?;
+    report.gates.extend(more);
+    Ok(report)
 }
 
 fn short(text: &str) -> &str {
@@ -219,7 +208,10 @@ pub fn rows(
 ) -> Result<Vec<Row>> {
     let mut out = Vec::new();
     for judged in &report.gates {
-        out.push(gate_row(git, subject, report, judged)?);
+        out.push(match &judged.assessment {
+            Some(assessment) => super::assessed::row(subject, judged, assessment),
+            None => gate_row(git, subject, report, judged)?,
+        });
     }
     for f in &filings.receipts {
         if let Err(why) = &f.parsed {
@@ -229,6 +221,11 @@ pub fn rows(
     for f in &filings.statements {
         if let Err(why) = &f.parsed {
             out.push(invalid_row("statement", &f.name, &f.path, why));
+        }
+    }
+    for f in &filings.assessed {
+        if let Err(why) = &f.parsed {
+            out.push(invalid_row("receipt", &f.name, &f.path, why));
         }
     }
     for (origin, path, why) in &report.problems {

@@ -131,6 +131,23 @@ not. `gate status`, `gate run` and `resume` print the file in a `read:` line.
 Paths that leave the definition's directory are refused, and nothing is run
 when definitions are read.
 
+A gate of class `assessed` is met by a [Weft](https://github.com/writfold-dev/weft)
+assessment of a plan step. Its definition names a Weft source (`weft =
+"{gate}/step.weft"`, or `"{run}/<path>.weft"` for a file the agent submits
+in the run), the checks that must hold, and the SHA-256 of the `weft`
+binary; the binary's path comes only from `$WRITFOLD_WEFT` or
+`~/.config/writfold/config.toml`, and one with another digest is refused.
+Each assumption cites its evidence with Weft's own `claim <name> = citation
+"…";` declared directly above it: a KB citation token, `gate:<id>`, or a
+gate, retrieval or edit receipt of the run. `gate run` resolves every
+citation (a token must be fresh, a gate satisfied or attested), runs Weft,
+and records a receipt with each check's Weft result and basis. A check is
+met only when Weft entails it and every assumption it rests on is grounded;
+one resting on an ungrounded assumption is shown `hypothetical` and never
+counted as met. The receipt goes stale when the source or any cited
+evidence moves; no binary is `unknown`, never a pass. See the
+[Weft assessed gate as built](docs/writfold/kb-v1-design.md#23-weft-assessed-gate-as-built).
+
 Delivery candidates are offline. `kb deliver prepare --mode
 MODE --from FILE [--audience internal|external]
 [--destination NAME]` copies a draft into the run as `candidate.md`, the exact
@@ -307,6 +324,7 @@ error. See [Tuft's KB adapter](docs/tuft/language.md#kb-adapter).
 | `writfold kb gate attest / waive`, `writfold kb deliver prepare / check / attest / waive / status`, `writfold kb hook pre-tool-use` | Statements recorded as attested or waived, never shown as satisfied; offline delivery candidates (the exact payload, never sent) checked mechanically for paragraph length, denied references and stale citations, with receipts bound to the candidate's bytes; an optional guard hook, off by default | [KB v1 design](docs/writfold/kb-v1-design.md#19-g2-as-built) (section 19), golden, repair, staleness, statement, guard and kill tests in `crates/writfold-kb/tests/deliver.rs`, `deliver_faults.rs`, `gate_statements.rs` and `guard.rs`; no real PR comment or Slack summary has gone through it yet |
 | Instruction gates and user-defined delivery modes | A gate's `instructions` file and `{gate}`-shipped scripts are part of its digest and shown as `read:` lines; any `.writfold/deliveries/<name>.toml` defines a delivery mode whose script gates run on the candidate through `{candidate}` and whose attested gates show their instructions | [KB v1 design](docs/writfold/kb-v1-design.md#20-instruction-gates-and-delivery-modes-as-built) (section 20), golden, staleness, escape, refusal, never-a-pass and kill tests in `crates/writfold-kb/tests/gate_instructions.rs`, `deliver_modes.rs` and `deliver_faults.rs`; the `commit-message` mode is a fixture and has not yet checked a real commit |
 | `writfold kb propose`, `writfold kb proposals list / show / accept / drop`, `writfold kb check` | Queues `record ticket\|decision\|link` calls locally (one file per call, at most ten per session, linked to the run) and accepts one through the ordinary write path, refusing a stale citation or a taken ID with the proposal kept; runs `stale`, `index verify` and the current run's `gate status` as one summary exiting with the worst code | [KB v1 design](docs/writfold/kb-v1-design.md#22-proposals-and-kb-check-as-built) (section 22), golden, dedup, cap, stale-refusal and kill tests in `crates/writfold-kb/tests/proposals.rs` and `proposal_faults.rs`; no evaluation skill fills the queue yet |
+| `writfold kb gate run` on a gate of class `assessed` | Grounds each Weft assumption's citations (fresh KB tokens, satisfied or attested gates and receipts), runs the pinned `weft` binary on the step's source, and records each check's Weft result with a grounded or hypothetical basis; met only when every required check is entailed from grounded assumptions | [KB v1 design](docs/writfold/kb-v1-design.md#23-weft-assessed-gate-as-built) (section 23), kernel property tests in `writfold-core/src/assess.rs`, golden, staleness, refusal and kill tests in `crates/writfold-kb/tests/gate_assessed.rs` and `gate_assessed_faults.rs` (a labelled test double, plus one test against a real Weft build); no real plan step has been assessed yet |
 | `writfold kb edit apply / recover` | Replays Splicery recipes against a KB run's recorded worktree and writes each file atomically after re-checking its bytes; keeps the recipes, splice sites, blob IDs and preview as a receipt in the run; a crash between files is finished by `recover` from a local journal | [KB v1 design](docs/writfold/kb-v1-design.md#17-splicery-adapter-as-built) (section 17), golden, refusal, gate-staleness and kill tests in `crates/writfold-kb/tests/edit.rs` and `edit_faults.rs` |
 | `writfold watch [--kb DIR] [--run ID] [--once]` | A read-only terminal view of runs, gate states, receipts and checkpoints, each pane the answer of one `kb` verb; one plain-text frame when piped | [KB v1 design](docs/writfold/kb-v1-design.md#18-t1-as-built) (section 18), golden, layout and projection tests in `crates/writfold-tui/tests/watch.rs` |
 | `writfold trial prepare / approve / apply / recover / show` | One edit through a durable, validated ledger in Writfold's own sparse worktree; never your checkout | [trial profile](docs/writfold/trial-profile.md), [adversarial campaign](bench/2026-11-09-adversarial/) |

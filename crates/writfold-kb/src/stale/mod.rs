@@ -34,7 +34,8 @@ pub struct Cite {
 }
 
 impl Cite {
-    /// A token read from text (not from the index), at `path`, `ord`.
+    /// A token read from text that is not indexed (a draft, a Weft
+    /// citation), filed under `path` at position `ord`.
     pub fn from_citation(path: &str, ord: usize, c: crate::model::Citation) -> Self {
         Self {
             path: path.to_owned(),

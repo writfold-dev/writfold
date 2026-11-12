@@ -23,7 +23,7 @@ The project KB is plain records in Git. `writfold kb <verb>` answers from it in 
 | Save where the work stands | `checkpoint --note TEXT` (or `--new-run --project P --task T --note TEXT`) |
 | Write down a ticket, decision or link | `record ticket\|decision\|link …` (see `writfold kb help`) |
 | Suggest a record for the user to review, without writing it | `propose ticket\|decision\|link …` (same arguments); `proposals [list]`, `proposals show <id>` |
-| Run a check and record its receipt in the run | `gate run <id>` (definitions in `.writfold/gates/`) |
+| Run a check and record its receipt in the run | `gate run <id>` (definitions in `.writfold/gates/`; an `assessed` gate runs Weft on the step's source) |
 | Are the run's checks done, and still valid? | `gate status` (`open`, `satisfied`, `stale`, `failed`, `unknown`) |
 | Does a receipt reproduce at its commit? | `gate verify <receipt>` |
 | Receipt lines for a commit message | `gate lines` |
@@ -61,6 +61,8 @@ Exit codes: 0 complete; 2 partial, unknown or stale (still a usable answer; read
 A gate is a command with a path scope. Only `gate run` writes a receipt; never write or edit one by hand (a hand-written receipt reads as invalid). Say a check passed only when `gate status` shows the gate `[satisfied]`: `!stale` means an in-scope file changed since the receipt, `!failed` means the newest receipt for these bytes failed, and `!unknown` (a timeout or crash) is never a pass. Each such row has a `next:` line with the command to run. `[waived]` (with a reason) and `[attested]` (a statement, for gates of class `attested`) are statements, not checks: report them as waived or attested, never as passed. Waive or attest only when the user asks you to, and use `--by` honestly (`--by agent` when it is you). `gate status` and `gate lines` exit 0 only when every gate is satisfied, attested or waived.
 
 A row with a `read:` line names the gate's instructions file. Read it before you run, repair or attest that gate: it is what the gate checks, and on an attested gate it is what your statement says you followed. Editing it (or a script the gate ships beside itself) makes earlier receipts and attestations stale, so they must be earned again.
+
+A gate of class `assessed` is met by a Weft assessment of a plan step. Write the step's assumptions and checks in the Weft file its definition names (its `next:` line shows where; `{run}/…` is under the run's directory). Cite each assumption's evidence with `claim <name> = citation "<reference>";` directly above its `assume`: a KB citation token, `gate:<id>`, or a receipt of the run (path or name). Then `gate run <id>`. Each check shows `[<Weft result> <basis>]`: only `entailed grounded` counts as met. `!hypothetical` means it rests on an assumption whose citation is stale, failed, missing or absent; a `cite:` line names it. Fix the evidence (rerun the gate, refresh the citation), never the wording of the check, and do not report a hypothetical check as passed. You cannot choose the Weft binary; if the row says there is none or its digest is refused, tell the user.
 
 ## Delivery candidates
 

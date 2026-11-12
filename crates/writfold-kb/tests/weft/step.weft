@@ -1,0 +1,16 @@
+// Plan step: ship the batched ledger writes.
+review ship_batching {
+    context "kb" at "run";
+    profile "weft.symbolic/1";
+    target change = proposal "batch-ledger-writes";
+
+    claim unit_green = citation "gate:unit";
+    assume tests_pass: passes("unit");
+
+    claim stall_done = citation "⟦cite kind=record path=ktlo/2026/hbr-99-flush-stall.md state=done⟧";
+    assume stall_fixed: fixed("hbr-99");
+
+    check ready: passes("unit") and fixed("hbr-99");
+    check rolled_back: not passes("unit");
+    check deployed: deployed("production");
+}
