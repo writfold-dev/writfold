@@ -26,7 +26,7 @@ The project KB is plain records in Git. `writfold kb <verb>` answers from it in 
 | Does a receipt reproduce at its commit? | `gate verify <receipt>` |
 | Receipt lines for a commit message | `gate lines` |
 | Set a gate aside, or state an attested gate | `gate waive <id> --reason TEXT --by WHO`, `gate attest <id> --statement TEXT --by WHO` |
-| Prepare a PR comment or Slack summary for review (nothing is sent) | `deliver prepare --mode pr-comment\|slack-summary --from FILE [--audience external]` |
+| Prepare a PR comment, Slack summary or other draft for review (nothing is sent) | `deliver prepare --mode MODE --from FILE [--audience external]` (built in: `pr-comment`, `slack-summary`; others from `.writfold/deliveries/<mode>.toml`) |
 | Check a delivery candidate, and see what it still owes | `deliver check [CANDIDATE]`, `deliver status` |
 | Apply a Splicery recipe in the run's worktree, keeping a receipt | `edit apply RECIPE.spl… [--dry-run]` (`--worktree DIR` once if the run records none) |
 
@@ -58,9 +58,13 @@ Exit codes: 0 complete; 2 partial, unknown or stale (still a usable answer; read
 
 A gate is a command with a path scope. Only `gate run` writes a receipt; never write or edit one by hand (a hand-written receipt reads as invalid). Say a check passed only when `gate status` shows the gate `[satisfied]`: `!stale` means an in-scope file changed since the receipt, `!failed` means the newest receipt for these bytes failed, and `!unknown` (a timeout or crash) is never a pass. Each such row has a `next:` line with the command to run. `[waived]` (with a reason) and `[attested]` (a statement, for gates of class `attested`) are statements, not checks: report them as waived or attested, never as passed. Waive or attest only when the user asks you to, and use `--by` honestly (`--by agent` when it is you). `gate status` and `gate lines` exit 0 only when every gate is satisfied, attested or waived.
 
+A row with a `read:` line names the gate's instructions file. Read it before you run, repair or attest that gate: it is what the gate checks, and on an attested gate it is what your statement says you followed. Editing it (or a script the gate ships beside itself) makes earlier receipts and attestations stale, so they must be earned again.
+
 ## Delivery candidates
 
 `deliver prepare` copies your draft into the run as the exact payload that would be posted; Writfold never sends it. `deliver check` runs the mode's mechanical checks on those bytes: paragraph length, an audience deny list (`.writfold/deliveries/deny-<audience>.toml`), and whether every citation token is fresh. A failing check names the line and rule: fix the candidate (edit `candidate.md` in place, or prepare a new one) and run `deliver check` again, since any edit makes earlier receipts stale. Say a candidate is ready only when `deliver status` shows it `[ready]`. Checks are mechanical: they don't judge tone or truth, and they miss claims made without a citation token. The optional guard hook may deny a configured publishing command (such as `gh pr comment`) until a ready candidate holds the bytes being posted; it is a guard, not enforcement.
+
+A KB may define its own modes (a commit message, a release note) in `.writfold/deliveries/<mode>.toml`. Their script gates run on the candidate during `deliver check` and report `line N` findings like the built-in checks; their attested gates show a `read:` line and are met only by `deliver attest`, after you have read that file and checked the draft against it. For a commit message, prepare and check the draft, then commit with exactly those bytes (`git commit -F` the candidate); nothing ties the checked draft to the commit you make.
 
 ## Splicery or Edit
 

@@ -113,8 +113,18 @@ WHO`; `gate waive <id> --reason TEXT --by WHO` sets any gate aside. Both are
 shown as `attested` and `waived`, never as `satisfied`, and stop standing when
 the content in the gate's scope moves.
 
+A gate may name an `instructions` Markdown file beside its definition (the
+guideline it checks, or, on an attested gate, what is being attested to) and
+ship its own script through the `{gate}` placeholder, which is the
+definition's directory: `argv = ["sh", "{gate}/check.sh"]`. Both files' bytes
+are part of the definition digest, so editing the guideline or the script
+makes earlier receipts and attestations stale; a comment in the TOML does
+not. `gate status`, `gate run` and `resume` print the file in a `read:` line.
+Paths that leave the definition's directory are refused, and nothing is run
+when definitions are read.
+
 Delivery candidates are offline. `kb deliver prepare --mode
-pr-comment|slack-summary --from FILE [--audience internal|external]
+MODE --from FILE [--audience internal|external]
 [--destination NAME]` copies a draft into the run as `candidate.md`, the exact
 payload that would be posted, with a manifest of its mode, audience,
 destination and digests. Nothing is ever sent: there is no network and no
@@ -134,6 +144,19 @@ writfold kb deliver prepare --mode pr-comment --from comment.md --audience exter
 writfold kb deliver check             # the run's only candidate (or name it)
 writfold kb deliver status            # [ready] or [blocked], with each check's line and rule
 ```
+
+`pr-comment` and `slack-summary` are built in; any
+`.writfold/deliveries/<name>.toml` defines another mode, listing built-in
+`checks` and `gates`. A mode's gates declare `subject = "candidate"`: a
+script gate gets the payload file as `{candidate}` and reports findings as
+`<line>: <text>` on standard output; an attested gate shows its instructions
+and is met only by `deliver attest`. Unknown keys and gates are refused when
+the mode is loaded. The fixture KB's worked `commit-message` mode
+(`fixtures/kb/commit-message/`) checks a subject and body layout with a
+shipped script, denied references for an external audience, and an attested
+language guideline. Its limit is printed with every status: nothing binds the
+checked message to the commit that is then made. See
+[instruction gates and delivery modes as built](docs/writfold/kb-v1-design.md#20-instruction-gates-and-delivery-modes-as-built).
 
 The plugin's optional `PreToolUse` hook (`writfold kb hook pre-tool-use`) is
 a guard, not enforcement. It is off unless the KB has
@@ -270,6 +293,7 @@ error. See [Tuft's KB adapter](docs/tuft/language.md#kb-adapter).
 | Claude Code plugin (`plugins/writfold`), `writfold kb hook`, `checkpoint --from-draft` | A KB brief at session start with no tool call; local checkpoint drafts at compaction, stop and session end; one skill teaching the verbs | [KB v1 design](docs/writfold/kb-v1-design.md#14-m4a-as-built) (section 14), golden tests in `crates/writfold-kb/tests/hook.rs`, `crates/writfold/tests/kb_hook.rs` |
 | `writfold kb gate run / status / verify / lines` | Runs a gate's argv on a repository and records one receipt in the KB run; derives open, satisfied, stale, failed or unknown from definitions and receipts; re-runs a receipt at its commit; prints receipt lines for a commit message | [KB v1 design](docs/writfold/kb-v1-design.md#16-g1-as-built) (section 16), golden, stale-transition and kill tests in `crates/writfold-kb/tests/gate.rs` and `gate_faults.rs`; the real `scripts/gate` has not yet been run through it |
 | `writfold kb gate attest / waive`, `writfold kb deliver prepare / check / attest / waive / status`, `writfold kb hook pre-tool-use` | Statements recorded as attested or waived, never shown as satisfied; offline delivery candidates (the exact payload, never sent) checked mechanically for paragraph length, denied references and stale citations, with receipts bound to the candidate's bytes; an optional guard hook, off by default | [KB v1 design](docs/writfold/kb-v1-design.md#19-g2-as-built) (section 19), golden, repair, staleness, statement, guard and kill tests in `crates/writfold-kb/tests/deliver.rs`, `deliver_faults.rs`, `gate_statements.rs` and `guard.rs`; no real PR comment or Slack summary has gone through it yet |
+| Instruction gates and user-defined delivery modes | A gate's `instructions` file and `{gate}`-shipped scripts are part of its digest and shown as `read:` lines; any `.writfold/deliveries/<name>.toml` defines a delivery mode whose script gates run on the candidate through `{candidate}` and whose attested gates show their instructions | [KB v1 design](docs/writfold/kb-v1-design.md#20-instruction-gates-and-delivery-modes-as-built) (section 20), golden, staleness, escape, refusal, never-a-pass and kill tests in `crates/writfold-kb/tests/gate_instructions.rs`, `deliver_modes.rs` and `deliver_faults.rs`; the `commit-message` mode is a fixture and has not yet checked a real commit |
 | `writfold kb edit apply / recover` | Replays Splicery recipes against a KB run's recorded worktree and writes each file atomically after re-checking its bytes; keeps the recipes, splice sites, blob IDs and preview as a receipt in the run; a crash between files is finished by `recover` from a local journal | [KB v1 design](docs/writfold/kb-v1-design.md#17-splicery-adapter-as-built) (section 17), golden, refusal, gate-staleness and kill tests in `crates/writfold-kb/tests/edit.rs` and `edit_faults.rs` |
 | `writfold watch [--kb DIR] [--run ID] [--once]` | A read-only terminal view of runs, gate states, receipts and checkpoints, each pane the answer of one `kb` verb; one plain-text frame when piped | [KB v1 design](docs/writfold/kb-v1-design.md#18-t1-as-built) (section 18), golden, layout and projection tests in `crates/writfold-tui/tests/watch.rs` |
 | `writfold trial prepare / approve / apply / recover / show` | One edit through a durable, validated ledger in Writfold's own sparse worktree; never your checkout | [trial profile](docs/writfold/trial-profile.md), [adversarial campaign](bench/2026-11-09-adversarial/) |
