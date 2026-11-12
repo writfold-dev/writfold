@@ -420,3 +420,57 @@ fn export_for_prototype_parity() -> TestResult {
     )?;
     copy(&w.kb, &dir.join("after"))
 }
+
+fn cite(allow_dirty: bool) -> Write {
+    Write::CiteMake(writfold_kb::write::cite::CiteMake {
+        repo: "demo-service".into(),
+        path: "src/batch.rs".into(),
+        first: 4,
+        last: 6,
+        allow_dirty,
+        ..Default::default()
+    })
+}
+
+/// A token from `cite make` parses, and `stale` finds it fresh.
+#[test]
+fn cite_make_round_trips_through_stale() -> TestResult {
+    let w = world(&[])?;
+    let (text, exit) = write(&w, cite(false))?;
+    assert_eq!(exit, 0, "{text}");
+    let token = text
+        .lines()
+        .next()
+        .and_then(|l| l.split_once(' ').map(|(_, rest)| rest))
+        .and_then(|rest| rest.split_once(' ').map(|(_, token)| token))
+        .ok_or("no token")?;
+    assert!(token.starts_with("\u{27e6}cite kind=code repo=demo-service rev="));
+    assert!(
+        token.contains(" path=src/batch.rs L=4-6 blob=")
+            && token.contains(" seen=2026-11-11T00:00Z url=")
+    );
+    std::fs::write(
+        w.kb.join("harbor/evidence/batching.md"),
+        format!("# Batching\n\nThe batcher {token}.\n"),
+    )?;
+    let (text, exit) = w.run(&w.request(Verb::Stale {
+        scope: Some("harbor/evidence/batching.md".into()),
+        offline: false,
+    }))?;
+    // Checked once, and not listed: fresh (the other rows are the
+    // fixture's own past-TTL asset and regression).
+    assert!(
+        text.contains(" checked=1 ") && !text.contains("batching.md"),
+        "{text}"
+    );
+    let _ = exit;
+    // A work-tree edit is refused unless --allow-dirty, which records it.
+    std::fs::write(w.code.join("src/batch.rs"), "changed\n")?;
+    match writfold_kb::run(&w.request(Verb::Write(cite(false)))) {
+        Err(error) => assert_eq!(error.exit_code(), 3),
+        Ok(output) => return Err(format!("dirty path cited:\n{}", output.text).into()),
+    }
+    let (text, _) = write(&w, cite(true))?;
+    assert!(text.contains(" dirty="), "{text}");
+    Ok(())
+}

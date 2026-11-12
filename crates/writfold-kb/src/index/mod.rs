@@ -153,38 +153,66 @@ pub fn open(ws: &Workspace, git: Option<&GitExecutable<'_>>, force: bool) -> Res
             file: None,
         });
     };
-    let snapshot = observe(ws, repo, git)?;
     let file = index_file(repo)?;
-    if !force && let Some(mut conn) = existing(&file)? {
+    for _ in 0..ATTEMPTS {
+        if let Some(opened) = attempt(ws, repo, git, &file, force)? {
+            return Ok(opened);
+        }
+    }
+    Err(KbError::Refused(
+        "the KB kept changing while the index was refreshed; try again".into(),
+    ))
+}
+
+/// Observations before an invocation gives up on a moving KB.
+const ATTEMPTS: usize = 3;
+
+/// One observe-derive-recheck round; `None` when the KB moved meanwhile.
+fn attempt(
+    ws: &Workspace,
+    repo: &Repo,
+    git: &GitExecutable<'_>,
+    file: &Path,
+    force: bool,
+) -> Result<Option<Opened>> {
+    let snapshot = observe(ws, repo, git)?;
+    if !force && let Some(mut conn) = existing(file)? {
         let opened = |conn, pin, state| Opened {
             conn,
             pin,
             state,
-            file: Some(file.clone()),
+            file: Some(file.to_path_buf()),
         };
         match refresh::refresh(&mut conn, ws, repo, git, &snapshot)? {
             refresh::Outcome::Current => {
-                return Ok(opened(conn, snapshot.pin, IndexState::Fresh));
+                return Ok(Some(opened(conn, snapshot.pin, IndexState::Fresh)));
             }
             refresh::Outcome::Done(n) => {
                 if std::env::var_os("WRITFOLD_KB_VERIFY").is_some_and(|v| v == "1") {
-                    shadow(ws, repo, git, &conn, &file, &snapshot)?;
+                    shadow(ws, repo, git, &conn, file, &snapshot)?;
                 }
-                return Ok(opened(conn, snapshot.pin, IndexState::Refreshed(n)));
+                return Ok(Some(opened(conn, snapshot.pin, IndexState::Refreshed(n))));
             }
             refresh::Outcome::Behind(pin, n) => {
-                return Ok(opened(conn, pin, IndexState::Behind(n)));
+                return Ok(Some(opened(conn, pin, IndexState::Behind(n))));
             }
+            refresh::Outcome::Moved => return Ok(None),
             refresh::Outcome::Rebuild => {}
         }
     }
-    rebuild(&file, inputs(&ws.root, listed(repo, git)?), &snapshot)?;
-    Ok(Opened {
-        conn: connect(&file)?,
+    let temporary = file.with_file_name(format!(".kb-rebuild-{}.tmp", std::process::id()));
+    build_file(&temporary, inputs(&ws.root, listed(repo, git)?), &snapshot)?;
+    if observe(ws, repo, git)?.pin.digest != snapshot.pin.digest {
+        let _ = std::fs::remove_file(&temporary);
+        return Ok(None);
+    }
+    replace(file, &temporary)?;
+    Ok(Some(Opened {
+        conn: connect(file)?,
         pin: snapshot.pin,
         state: IndexState::Rebuilt,
-        file: Some(file),
-    })
+        file: Some(file.to_path_buf()),
+    }))
 }
 
 /// `WRITFOLD_KB_VERIFY=1`: compare every refresh with a rebuild; on a
@@ -271,14 +299,6 @@ pub fn build_file(target: &Path, inputs: Vec<Input>, snapshot: &Snapshot) -> Res
     build::build(&mut conn, inputs, &snapshot_meta(snapshot))?;
     conn.execute_batch("PRAGMA journal_mode = DELETE;")?;
     Ok(())
-}
-
-/// Build into a temporary file beside the index, keep cached citation
-/// verdicts whose token is unchanged, then rename it into place.
-fn rebuild(file: &Path, inputs: Vec<Input>, snapshot: &Snapshot) -> Result<()> {
-    let temporary = file.with_file_name(format!(".kb-rebuild-{}.tmp", std::process::id()));
-    build_file(&temporary, inputs, snapshot)?;
-    replace(file, &temporary)
 }
 
 /// Move a freshly built index at `temporary` over `file`, carrying over
