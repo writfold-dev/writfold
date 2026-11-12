@@ -77,8 +77,12 @@ fn string(map: &std::collections::BTreeMap<String, Value>, key: &str) -> Result<
 /// `instructions` file it names so the real resolution rules apply.
 fn gate(text: &str, map: &std::collections::BTreeMap<String, Value>) -> TestResult {
     let id = string(map, "id")?;
-    let root =
-        std::env::temp_dir().join(format!("writfold-guide-gate-{}-{id}", std::process::id()));
+    static NEXT: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+    let n = NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    let root = std::env::temp_dir().join(format!(
+        "writfold-guide-gate-{}-{n}-{id}",
+        std::process::id()
+    ));
     let dir = root.join(".writfold/gates");
     std::fs::create_dir_all(&dir)?;
     if let Some(Value::Str(name)) = map.get("instructions") {
@@ -223,7 +227,8 @@ fn the_block_check_refuses_what_the_product_refuses() {
     // A misspelt key, an escaping path, an unknown schema and an unknown mode key.
     let gate = "schema = \"writfold-gate/1\"\nid = \"unit\"\nversion = 1\nclass = \"attested\"\nscope = [\"**\"]\n";
     assert!(accept(gate).is_ok());
-    assert!(accept(&format!("{gate}instructions = \"unit.md\"\n")).is_ok());
+    let with = accept(&format!("{gate}instructions = \"unit.md\"\n"));
+    assert!(with.is_ok(), "{with:?}");
     assert!(accept(&format!("{gate}instructions = \"../escape.md\"\n")).is_err());
     assert!(accept(&format!("{gate}colour = \"blue\"\n")).is_err());
     assert!(accept("schema = \"writfold-plan/1\"\nname = \"change\"\n").is_err());
