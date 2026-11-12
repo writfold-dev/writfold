@@ -1,6 +1,6 @@
 # Writfold KB v1: design
 
-Status: proposal, 11 November 2026; M1 implemented (see [section 11](#11-m1-as-built) for what was built and where it differs). Scope: the `writfold kb` product core for Git-native project continuity. Git text is the source of truth; a local SQLite file is a derived, rebuildable index. No server, no companion process.
+Status: proposal, 11 November 2026; M1 and M2 implemented (see [section 11](#11-m1-as-built) and [section 12](#12-m2-as-built) for what was built and where it differs). Scope: the `writfold kb` product core for Git-native project continuity. Git text is the source of truth; a local SQLite file is a derived, rebuildable index. No server, no companion process.
 
 A cold session must be able to answer four questions, each pinned to a source and flagged when the source has moved:
 - why did we decide X;
@@ -693,6 +693,95 @@ M1 landed as the crate `crates/writfold-kb`, the reads in `crates/writfold-runti
 - Q1: rationale section names are not known, so the list above is the default and is configurable.
 - Q3: code citations are checked against local refs only (`origin/HEAD`, else `HEAD`); nothing is fetched.
 - Q4 to Q6 concern writes and hooks, which M1 does not include. Q7: no tracker vocabulary is used in M1.
+
+## 12. M2 as built
+
+M2 adds incremental refresh, `index verify`, citation and mention edges, `find`/`match`, `status` (read), `impact`, `uses` and `timeline`. New code: `index/{derive,refresh,search,verify}.rs`, `parse/mention.rs`, `walk.rs`, `verbs/{find,status,impact,uses,timeline}.rs`, `kb_diff_tree` in `crates/writfold-runtime/src/git/kb.rs`, and `crates/writfold-app/src/kb/verbs.rs`. Where it differs from sections 1 to 9 (and from section 11), this section is the record.
+
+### 12.1 Index and refresh
+
+- **Schema 2, extractor `/2`** (an M1 index rebuilds once). Phase A is now strictly per file: each file's record goes to `claims` and its aliases to `claim_aliases`. Phase B recomputes `records` (first claimant of an ID in path order wins), `aliases`, `dups` (later claimants), project synthesis and `edges`. So Phase B covers more than edges, unlike 4.3. This removes the two cross-file cases M1 had in Phase A: duplicate IDs and projects without `STATUS.md`. A duplicate is counted in `unreadable=` and listed by `index status` as `duplicate id <id>`. When the first claimant goes, the duplicate becomes the record.
+- **`files.heading`** stores a Markdown file's first heading (a README's title for its project). **`text_rows(path, row)`** maps a file to its full-text row ID, so a refresh deletes FTS rows by row ID. Deleting by the unindexed `path` scanned the table and doubled refresh time. Like `meta` and `cite_checks`, `text_rows` is outside the equality claim. `edges` and `aliases` are `WITHOUT ROWID`.
+- **Refresh (4.3).**
+  - It takes the changed paths: `diff-tree` paths between the stored and current HEAD, plus the stored and current dirty sets. The stored dirty set is `meta.dirty_set`.
+  - When anything changed, it runs one `ls-files` spawn so that input membership is decided exactly as a rebuild decides it (newly ignored, deleted or renamed files).
+  - A path whose digest equals its `files` row is skipped. The rest have Phase A replaced or removed. Phase B then runs, and `meta` moves, all inside one `BEGIN IMMEDIATE`.
+  - A missing or unknown stored head rebuilds.
+  - Cached verdicts of a re-derived file survive only for ordinals whose token text is unchanged, as in a rebuild.
+- The trailer prints `index=fresh|refreshed:<n>|rebuilt|behind:<n>`. `refreshed:0` means only HEAD or the dirty set moved and no KB input changed.
+- **Concurrency.** The index keeps the rollback journal from M1 (a full rebuild still replaces the file by rename), not WAL. A refresher that cannot get the write lock within 500 ms (busy timeout) answers from the stored index. Its trailer then shows `index=behind:<n>`, the stored pin and `coverage=partial`.
+- **`index verify`** rebuilds the current snapshot into a temporary file beside the index. It then compares 12 derived tables, selected in primary-key order, row by row, and runs FTS5 `integrity-check` on both full-text tables of both databases. It prints one row per table (`[equal]`/`[differs]`, rows, SHA-256 prefix) and the first differing key. On a difference the rebuild replaces the index and the exit code is 1. `WRITFOLD_KB_VERIFY=1` runs this comparison after every refresh. A difference is then an error, and the index is replaced.
+
+### 12.2 Edges
+
+- **Field edges** are as in M1.
+- **Citation edges.** Origin `cite`, status explicit, relation `cites`, with the citation's ordinal.
+  - Targets: `code:<repo>:<path>` (also from relationship evidence and signature `fix` locators), `commit:<repo>@<rev>` and `pr:<repo>#<n>`. These are nodes outside the KB.
+  - A ticket ID, `ev:`, `proposal/` (from `proposal` and `gate` kinds) and a `deploy` asset resolve to records.
+  - `record` citations resolve by `path:<file>` to that file's records.
+  - Web, doc, query and similar kinds make no edge.
+- **Mention edges.** Origin `mention`, status inferred. Phase A keeps every ID-shaped token of the body, outside the front matter; record JSON (assets, relationships, run manifests) is not scanned, because its fields are already edges. Phase B keeps the tokens that resolve; a mention of the file's own record is dropped.
+  - **ID-boundary rule.** A token is a maximal run of `[A-Za-z0-9_./-]` with trailing dots removed. A run directly after `ev:`, `sig:`, `inv:`, `project:` and the other typed prefixes keeps that prefix.
+  - **Deviation.** A token must hold a letter and a digit or separator, so plain words are not kept. Purely alphabetic aliases such as `ledger` are therefore never matched in prose; matching them would mean storing every word of every file, and a common word is weak evidence of reliance.
+- **Where each verb looks.**
+  - `context` still follows only authored and field edges, so its M1 outputs are unchanged.
+  - `stale`'s regression check uses only the investigation's `signatures` field.
+  - `index status` adds `count: mentions=`, and counts `unresolved` without mentions.
+
+### 12.3 Search (`find`, `match`)
+
+- **Trigram table.** Under `detail = none` FTS5 refuses phrase queries, which was confirmed, so a multi-trigram `MATCH` is unavailable.
+  - Substring search uses `LIKE` on `id`, `title` and `body`; the trigram index answers it for three or more characters. Each hit is then re-checked as a literal case-insensitive substring, because `%` and `_` in the text widen the pattern.
+  - Typo candidates OR the query's single trigrams (top 200 by `bm25`). They are kept when the ID or title (whole, a word, or a run of as many words as the query has) is within one edit (two for queries over eight characters, transpositions counting once). Queries of four characters or more only.
+- **Tiers.** `find` merges the tiers in order, each record once, each labelled in a `match:` line with the first matching line as its position:
+  1. `signature` (only `match` or `--signatures`), from substring and `re:` patterns. Patterns are compiled with the workspace's `regex`, case-insensitive with a 1 MiB size limit; an invalid pattern matches nothing.
+  2. `exact`.
+  3. `text`: BM25 (weights ID 10, title 5, summary 2, body 1) requiring every word.
+  4. `substring`.
+  5. `typo`.
+  6. `text-any`: BM25 hits holding only some words. This tier was added so that a misspelt word does not bury the typo match.
+- At most 50 rows; the budget pages them. `--kind K[,K]` and `--project P` narrow (a plain document has kind `doc`).
+- Unknown: `reason=no-record`, the boundary note, and for signatures "no matching signature is not proof that the symptom is new".
+
+### 12.4 Graph and status verbs
+
+- **`status`** prints the record and its lifecycle fields as `field:` lines at their line. The fields shown depend on the kind; a project shows every `STATUS.md` field. A superseded decision gets a `via: live successor` line.
+  - Records that point at the target follow: by field, citation or authored link (section `tracked-by`), then mentions flagged `!inferred`.
+  - Unknown: up to three ticket IDs within two edits, else nearest full-text matches.
+- **`impact`** is a pure bounded walk (`walk.rs`) over a neighbour function.
+  - **What it follows.** Edges whose status is explicit or confirmed. Mentions and inferred links are followed only with `--include inferred`, and their rows are flagged `!inferred`. Retired and disputed edges, and statuses outside the vocabulary (`skipped_other=`), are not followed.
+  - **What it counts.** Skipped edges are counted once each, among the nodes expanded. `frontier=` counts distinct followable edges from the last level to unvisited nodes. The trailer always prints `frontier`, `skipped_retired`, `skipped_disputed` and `skipped_inferred`. `coverage=complete` (exit 0) only when all are zero; otherwise `coverage=partial` (exit 2).
+  - **Deviation.** Project records are homes: they are reached but not walked through, as in `context`. A note says so.
+  - **Rows.** Each row is the reached node, `depth=<d> <src> <rel> <dst> (<origin>)`, the edge's provenance, and freshness flags. Freshness is the worst cached verdict of the edge's citation, or of an authored edge's evidence locators, plus `!stale` when the source is superseded, rejected or retired. A citation never checked adds no flag; run `stale` first.
+  - A `code:<repo>:<path>` start is accepted.
+- **`uses`** accepts a record target or a code target: a compact locator, or `code:<repo>:<path>[:a-b]`.
+  - With a range, it keeps citations overlapping the range.
+  - It prints one row per referrer, grouped by kind, with up to three `via:` lines. The record's own home files are flagged `!self`: its dossier, files in its own directory, and an evidence note's home README or project.
+  - The note says uncited reliance is not traced.
+- **`timeline`** shows the target's own `created`/`updated` events (an asset's `verified_at` as `verified`). It adds the same events of linked investigations, ticket records and decisions (either direction, any origin), and checkpoint entries whose text mentions the target, timed by the entry heading. Rows are in date order; undated linked records are counted in `undated=`. Commits are M4.
+
+### 12.5 Tests and latency
+
+- **Golden outputs** for every new verb: `tests/graph.rs` and `tests/golden/{find,match,status,impact,uses,timeline,index-verify}-*.txt`. Also tested:
+  - substring (`dger sto`) and one-typo (`harbr-api`, `Lantren`) queries find their targets;
+  - joined cursor pages equal the unpaged rows for the new verbs;
+  - a duplicate ID is unreadable until the first claimant is deleted.
+- **Index equals rebuild** (`tests/refresh.rs`). Four seeds of 24 random steps each: create a ticket, asset or document; edit; delete; rename; alias change, including ambiguous aliases; duplicate ID; stage; commit; reset to the previous commit; leave dirty.
+  - After every step a read must refresh in place, never rebuild, and `index verify` must find all tables equal.
+  - Mutation check: removing Phase B from the refresh fails this test at the second step.
+  - A held write lock gives `index=behind:1` and `coverage=partial`.
+  - `tests/shadow.rs` tampers with a stored row and checks that `WRITFOLD_KB_VERIFY=1` catches the difference and replaces the index.
+- **Walk against a reference.** A unit test in `walk.rs` compares 400 random graphs, with random terminal nodes, depths and skipped edges, against an independent level-set BFS. Reached nodes with depths, frontier and skipped counts must be equal.
+- **Latency** (`cargo run --release -p writfold-kb --example kb_latency`; 4,130 generated records, 7,870 edges and 3,200 mentions; WSL2 x86_64 workstation, 21 runs):
+  - cold rebuild 157 ms;
+  - warm medians 15 to 43 ms for every verb (p95 at most 45 ms). `find` tiers take 32 to 43 ms, `match` 17 ms, `status`, `impact`, `uses` and `timeline` 15 to 18 ms.
+  - Refresh of 50 changed files, measured with `index status` (whose query is small): dirty, 103 ms median and 123 ms p95; committed through `diff-tree`, 106 ms median and 111 ms p95. `index verify` after either kind: equal, about 380 ms.
+  - Of a refresh, Phase B is about 45 ms. It was kept as a full recompute, as 4.3 intends.
+- The static musl binary still builds in the tools image (`static-pie linked`). No new crate entered: `regex` was already locked through Tuft.
+
+### 12.6 Not done in M2
+
+- Rename following (`log --follow`), trailer and tracker edges, and `--at` remain M4. Writes and the two kernels' move into `writfold-core` remain M3: `walk.rs` is the bounded-walk kernel, kept pure and ready to move.
 
 ---
 
