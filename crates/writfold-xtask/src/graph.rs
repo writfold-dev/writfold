@@ -44,7 +44,16 @@ fn allowed(name: &str) -> Option<&'static [&'static str]> {
             "tuft",
             "writfold-kb",
         ],
-        "writfold" => &["writfold-app", "writfold-wire", "writfold-domain"],
+        // `writfold watch` (T1): a read-only projection of the KB verbs. It
+        // asks `writfold-kb` only, so the terminal stack stays out of the
+        // KB, the application and every core crate.
+        "writfold-tui" => &["writfold-kb"],
+        "writfold" => &[
+            "writfold-app",
+            "writfold-tui",
+            "writfold-wire",
+            "writfold-domain",
+        ],
         "writfold-xtask" => &[],
         _ => return None,
     })
@@ -181,12 +190,25 @@ fn walk<'a>(
     if forbidden_tls(name) {
         issue(diagnostics, "tls", owner, name);
     }
-    if sqlite_closure(name) && !matches!(owner, "writfold-kb" | "writfold-app" | "writfold") {
+    if sqlite_closure(name)
+        && !matches!(
+            owner,
+            "writfold-kb" | "writfold-app" | "writfold-tui" | "writfold"
+        )
+    {
         issue(
             diagnostics,
             "native-dependency",
             owner,
             &format!("{name} compiles native code and is admitted only for writfold-kb"),
+        );
+    }
+    if terminal_closure(name) && !matches!(owner, "writfold-tui" | "writfold") {
+        issue(
+            diagnostics,
+            "terminal-dependency",
+            owner,
+            &format!("{name} is the terminal stack, admitted only for writfold-tui"),
         );
     }
     if matches!(
@@ -252,6 +274,56 @@ fn sqlite_closure(name: &str) -> bool {
             | "fallible-iterator"
             | "fallible-streaming-iterator"
     )
+}
+
+/// The reviewed closure of ratatui 0.29 with only its crossterm backend:
+/// crossterm 0.28 with its signal, event-loop and platform crates,
+/// ratatui's layout solver and text-width crates, and the proc-macro
+/// crates they build with. Crates the rest of the workspace already
+/// resolves by name (`libc`, `bitflags`, `rustix`, `hashbrown`,
+/// `allocator-api2`, `wasi`, …) are not listed. Admitted only for
+/// `writfold watch`; anywhere else it is an unclassified change.
+fn terminal_closure(name: &str) -> bool {
+    [
+        "ratatui",
+        "crossterm",
+        "signal-hook",
+        "winapi",
+        "windows_",
+        "windows-targets",
+        "darling",
+        "strum",
+    ]
+    .iter()
+    .any(|prefix| name.starts_with(prefix))
+        || matches!(
+            name,
+            "cassowary"
+                | "castaway"
+                | "compact_str"
+                | "either"
+                | "heck"
+                | "ident_case"
+                | "indoc"
+                | "instability"
+                | "itertools"
+                | "lock_api"
+                | "log"
+                | "lru"
+                | "mio"
+                | "parking_lot"
+                | "parking_lot_core"
+                | "paste"
+                | "redox_syscall"
+                | "rustversion"
+                | "ryu"
+                | "scopeguard"
+                | "static_assertions"
+                | "strsim"
+                | "unicode-segmentation"
+                | "unicode-truncate"
+                | "unicode-width"
+        )
 }
 
 fn pure_dependency(name: &str) -> bool {

@@ -2,11 +2,11 @@
 
 use std::{
     env,
-    io::{self, Write},
+    io::{self, IsTerminal, Write},
     process::ExitCode,
 };
 
-const USAGE: &str = "Usage: writfold kb <verb> (see: writfold kb help)\n       writfold serve [--state DIR] [--weft PATH]\n       writfold trial <command> (see: writfold trial help)\n       writfold tuft <command> (see: writfold tuft help)\n       writfold --version\n       writfold --help\n\nserve: bounded JSON-RPC 2.0 over newline-delimited stdio; initialize/shutdown, plus\n       trial/show|retain|prepare|run|evidence-list|evidence-show when writfold.trial/1\n       is negotiated (state: --state or $WRITFOLD_STATE; trial/run Weft checks use the\n       binary fixed by --weft). Approve, apply and recover are CLI-only.\ntrial: prepare, approve and apply one Splicery edit in a Writfold-owned worktree\n       (cooperating single-user profile writfold-trial-worktree/1).\ntuft: run a Tuft v0 retrieval and projection program over one pinned Git commit.\nkb: Git-native project continuity (brief, why, find, impact, resume, checkpoint, record …)\n    and the Claude Code plugin hooks (writfold kb hook <event>).";
+const USAGE: &str = "Usage: writfold kb <verb> (see: writfold kb help)\n       writfold watch [--kb DIR] [--run ID] [--once]\n       writfold serve [--state DIR] [--weft PATH]\n       writfold trial <command> (see: writfold trial help)\n       writfold tuft <command> (see: writfold tuft help)\n       writfold --version\n       writfold --help\n\nserve: bounded JSON-RPC 2.0 over newline-delimited stdio; initialize/shutdown, plus\n       trial/show|retain|prepare|run|evidence-list|evidence-show when writfold.trial/1\n       is negotiated (state: --state or $WRITFOLD_STATE; trial/run Weft checks use the\n       binary fixed by --weft). Approve, apply and recover are CLI-only.\ntrial: prepare, approve and apply one Splicery edit in a Writfold-owned worktree\n       (cooperating single-user profile writfold-trial-worktree/1).\ntuft: run a Tuft v0 retrieval and projection program over one pinned Git commit.\nkb: Git-native project continuity (brief, why, find, impact, resume, checkpoint, record …)\n    and the Claude Code plugin hooks (writfold kb hook <event>).\nwatch: a read-only terminal view of KB runs, gates and receipts (plain text when piped).";
 
 fn main() -> ExitCode {
     let Some(all) = env::args_os()
@@ -35,6 +35,9 @@ fn main() -> ExitCode {
     }
     if all.first().map(String::as_str) == Some("kb") {
         return kb(&all[1..]);
+    }
+    if all.first().map(String::as_str) == Some("watch") {
+        return watch(&all[1..]);
     }
     let mut arguments = env::args_os().skip(1);
     let command = arguments.next();
@@ -105,6 +108,22 @@ fn kb(args: &[String]) -> ExitCode {
     let _ = io::stdout().lock().write_all(outcome.stdout.as_bytes());
     let _ = io::stderr().lock().write_all(outcome.stderr.as_bytes());
     ExitCode::from(outcome.code)
+}
+
+/// `watch` prints one frame when stdout is not a terminal (or `--once`).
+fn watch(args: &[String]) -> ExitCode {
+    let cwd = match env::current_dir() {
+        Ok(cwd) => cwd,
+        Err(error) => return failure(&format!("working directory: {error}")),
+    };
+    match writfold_tui::main(args, cwd, io::stdout().is_terminal()) {
+        Ok(Some(text)) => {
+            let _ = writeln!(io::stdout().lock(), "{}", text.trim_end());
+            ExitCode::SUCCESS
+        }
+        Ok(None) => ExitCode::SUCCESS,
+        Err(error) => failure(&format!("watch: {error}")),
+    }
 }
 
 fn failure(message: &str) -> ExitCode {

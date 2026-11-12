@@ -10,6 +10,7 @@ publish.workspace = true
 
 [dependencies]
 writfold-app = { path = "../writfold-app" }
+writfold-tui = { path = "../writfold-tui" }
 
 [dev-dependencies]
 serde_json.workspace = true

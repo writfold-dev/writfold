@@ -1305,6 +1305,94 @@ An edit is an ordinary uncommitted change in the worktree, so G1 needs nothing n
 - **No latency was measured.** An apply costs one index open, two `hash-object` spawns per file, the journal and the file writes, one KB write, and the answer from the refreshed index.
 - Not built: `create`, `rename` and `remove` recipes; `--capture` and `--frozen` inputs (the trial does not take them either); a `--within` recount; pruning of `edits/` receipts.
 
+## 18. T1 as built
+
+T1 adds `writfold watch`, a read-only terminal view of KB runs and their progress, as the gates review recommended and the owner adopted (12 November 2026). It is strictly a projection: every pane is the JSON answer of an existing verb, asked in-process through `writfold_kb::run` exactly as the CLI asks it. New code: the crate `crates/writfold-tui` (`source.rs` the verb calls and the pin poll, `app.rs` the selection, panes and keys, `lines.rs` the frame as toned lines shared by the terminal and `--once`, `view.rs` the ratatui layout, `term.rs` the event loop; about 960 lines with doc comments) and the `watch` branch of `crates/writfold/src/main.rs`.
+
+### 18.1 Verb and panes
+
+```text
+writfold watch [--kb DIR] [--run ID] [--once]
+```
+
+| Pane | Verb | Shown |
+|---|---|---|
+| Runs (left) | `kb runs` | every run, those not closed first (each group in the verb's newest-activity order): `[state] id !flags`, the task, the place fields, the last checkpoint's time and first line |
+| Run (right, default) | `kb resume <run>`, headed by `kb gate status --run <run>` | a `gates:` line with the status trailer's counts (`gates satisfied open stale failed unknown invalid`), then resume's rows as the CLI prints them: the run, coverage and rechecks, retrieval and edit receipts, one row per gate with its state, class, receipt and `next:` command, the checkpoint tail, local drafts, and the notes |
+| Stale | `kb stale <project>` | the run's project's citations, moved, changed, gone and expired flagged |
+| Brief | `kb brief <project>` | unchanged |
+| Bottom line | the trailer of `kb runs` | `kb=<pin> index=<state>`, and that the view is read-only with no daemon |
+
+- **Selection.** `--run`, else the run the current-run pointer names (`!current`), else the first listed.
+- **The project** of the stale and brief panes is the `project=` of the run's `kb runs` place line; with none, `brief` infers it from the working directory and `stale` covers the KB.
+- **The gate subject** is the verbs' own: the repository enclosing the working directory, else the run's recorded worktree, else the KB's repository (16.1). `watch` has no `--repo`; start it in the repository whose gates you want. A `gate status` refusal (no subject, no run) becomes the `gates:` line and never stops the view.
+- **Tones** only colour what the verbs flagged: a row with a `failed`, `stale`, `invalid`, `changed`, `gone`, `expired`, `moved`, `regression` or `disagree` flag in bold red, `open`, `unknown`, `unverifiable`, `draft` or `past-ttl` in yellow, `[satisfied]` in green, closed runs dimmed. The `gates:` line is red when any gate is failed or stale or a receipt is invalid.
+- **Not shown,** as the review asked: a progress percentage, any "running" or liveness claim (there is no daemon), and an uncertain-effects pane.
+
+### 18.2 Keys and refresh
+
+`j`/`k` or the arrows move the run selection, or scroll the right pane when it has the focus; Enter moves the focus between the panes and Esc returns it to the runs; Tab cycles the right pane (resume, stale, brief), and `g`, `s`, `b` pick one; `r` asks the verbs again now; `?` shows the help; `q` (or Ctrl-C) quits. No key writes anything.
+
+Every two seconds the view observes the KB pin (`writfold_kb::index::observe`: one `git status` and the digests of dirty KB files) and compares its digest with the one the answers were asked at. Only when it moved are `kb runs` and the open panes asked again (the selection is kept by run ID) and the frame redrawn; otherwise nothing is asked and nothing drawn. Answers are cached per run and pane until the pin moves. The pin covers only the KB, so a change in a gate's subject repository alone shows after `r` or the next KB change.
+
+### 18.3 `--once`
+
+With `--once`, or whenever stdout is not a terminal, one frame is printed as plain text and the command exits 0: the runs (the selected one marked `>`), the run pane with the `gates:` line, and the bottom line. A KB that cannot be found or read exits 1 with the verb's error. Over the test world (18.5):
+
+```text
+== runs (2 listed, 1 not closed) ==
+> [open] run-20261101T090000Z-a1b2c3
+    Batch ledger writes rollout
+    project=harbor
+    last: 2026-11-03T16:00:00Z Batching is live in staging.
+  [closed] run-20261104T080000Z-d4e5f6
+    Retire the legacy flush path
+    project=harbor
+    last: 2026-11-04T09:00:00Z Legacy path removed; nothing left to do.
+== resume run-20261101T090000Z-a1b2c3 ==
+gates: gates=4 satisfied=1 open=1 stale=1 failed=1 unknown=0 invalid=0
+run run-20261101T090000Z-a1b2c3 [open] Batch ledger writes rollout @runs/run-20261101T090000Z-a1b2c3/manifest.json:7
+  field: project=harbor @runs/run-20261101T090000Z-a1b2c3/manifest.json:4
+  …
+gate fail [failed] mechanical fail exit=1 at kb@be3c99236219 scope=1075e30643f2 paths=10 @runs/…/gates/fail-20261111T000100Z-XXXXXX.json:1 !failed
+  next: writfold kb gate run fail
+gate moved [stale] mechanical pass exit=0 at kb@be3c99236219 scope=e164c699d344 paths=4 @runs/…/gates/moved-20261111T000200Z-XXXXXX.json:1 !stale
+  why: changed in scope: harbor/STATUS.md
+  next: writfold kb gate run moved
+gate pass [satisfied] mechanical pass exit=0 at kb@be3c99236219 scope=1075e30643f2 paths=10 @runs/…/gates/pass-20261111T000000Z-XXXXXX.json:1
+gate todo [open] mechanical no receipt in this run for kb @.writfold/gates/todo.toml:1 !open
+  next: writfold kb gate run todo
+checkpoint 2026-11-03T16:00:00Z entry 2 of 2 @runs/run-20261101T090000Z-a1b2c3/checkpoint.md:6
+  note: Batching is live in staging. @runs/run-20261101T090000Z-a1b2c3/checkpoint.md:8
+  …
+== kb=be3c99236219+dirty:4 index=refreshed:1  read-only; no daemon, nothing here claims a run is live ==
+```
+
+### 18.4 Build and dependencies
+
+- **ratatui 0.29.0** (21 October 2024) with `default-features = false, features = ["crossterm"]`, which brings **crossterm 0.28.1**. Both crates, and every other new crate in the lock file, were published more than two weeks before this slice. The new closure (cassowary, compact_str, itertools 0.13, lru 0.12, strum 0.26, unicode-truncate, unicode-width, paste, instability, indoc, parking_lot, mio, signal-hook, rustix 0.38 and the Windows target crates) was fetched into the registry volume as the earlier milestones did (`cargo fetch --locked` in the tools image as root, with the network, the volume `writfold-rust-1.98.0-registry` mounted).
+- **Why not 0.30.** ratatui 0.30.2 (June 2026) splits into `ratatui-core`, which depends on hashbrown 0.17 with its default features. The core crates already resolve hashbrown 0.17.1 (featureless, under the Verus proc-macros), and `cargo metadata` resolves features workspace-wide, so the xtask's resolved graph would show `allocator-api2` and `foldhash` under `writfold-domain`, `writfold-kernel` and `writfold-protocol` and refuse them as unadmitted core dependencies. A real build does not link them there (Cargo keeps proc-macro features apart), but admitting them would widen the reviewed pure list of the core crates, which this slice must not do. ratatui 0.29's lru uses hashbrown 0.15, which only the KB's SQLite closure shares. Moving to 0.30 is a separate decision for that list.
+- **`writfold-xtask`** (`graph.rs`): `writfold-tui` is admitted with `[writfold-kb]` and added to `writfold`'s list; the SQLite closure is admitted for `writfold-tui` (through `writfold-kb`); a new `terminal-dependency` rule admits the terminal closure (ratatui, crossterm and the crates no other member resolves) only in `writfold-tui` and `writfold`. No rule for the workspace's own crates changed. The quality inspection passes on the whole workspace.
+- ratatui and crossterm contain `unsafe` (terminal and signal setup); the xtask audits only workspace sources, and `writfold-tui` itself is `#![forbid(unsafe_code)]` with no `unwrap` or `expect`.
+- The static musl binary builds offline in the tools image (`cargo build -p writfold --release --target x86_64-unknown-linux-musl --locked --offline`; `file`: `static-pie linked`; `ldd`: `statically linked`; 7.3 MB), and that binary's `watch` was driven through a pseudo-terminal (`script`): it draws, takes `j`, Tab, `b`, `?` and `q`, and leaves the alternate screen.
+
+### 18.5 Tests
+
+`crates/writfold-tui/tests/watch.rs` over a world built by `tests/support`: the fixture KB committed with fixed dates, a second run closed in its sidecar (newer than the open one), and four gates over the KB repository itself recorded by `gate run`: `pass` satisfied, `fail` failed, `moved` stale (its scope edited after the receipt), `todo` open.
+
+- **`--once` golden** (`tests/golden/watch-once.txt`): the frame above; the open run comes before the newer closed one; no "running" and no `%`.
+- **Layout** (ratatui's `TestBackend`, 160×40): the runs block on the left and the resume block on the right, the selected open run above the closed one, the `gates:` line and the `[failed]` row in red, the `[satisfied]` row in green, the bottom line holding `kb=` and `index=`, and the help popup after `?`.
+- **Keys**: `--run` selects the closed run, `k` and Up stop at the top, Tab asks `stale` (rows of kind `cite`), `b` asks `brief` (the `project:harbor` row), Enter and `j` scroll; `poll` reports no change, then a new KB file moves the pin and the selection is kept; `q` quits; `kb runs` afterwards shows nothing was written.
+- **Projection equals the verbs**: the runs rows equal `kb runs --json`'s rows, the order is a permutation of them, and each `run <id> [<state>]` matches the text output; the run pane's gate rows have exactly the states `kb gate status` prints (four gates), the `gates:` line's counts all appear in its trailer, and `kb resume`'s text has the same gate states.
+- **A pipe** gets one plain frame with no terminal codes; an unknown argument (`--write`) is refused.
+
+### 18.6 Not done
+
+- A `--repo` for the gate subject, and polling the subject repository's state (gate staleness from a subject change alone shows after `r`).
+- Per-run obligation counts in the runs list: `kb runs` does not print them, and the view does not compute them.
+- `c` to promote a draft (the review's one candidate write key) and any other write.
+- Cross-project or cross-KB views; a run list filter.
+
 ---
 
 ### Critical Files for Implementation
