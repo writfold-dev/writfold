@@ -5,14 +5,18 @@
 //! 1. every event is parsed and checked; an invalid one is listed, never
 //!    used;
 //! 2. splices are sorted by a total key (parent, ordinal, template name,
-//!    digest) and each is expanded from its template snapshot;
+//!    digest) and each is expanded from its template snapshots (the
+//!    template's, and those of the templates it includes);
 //! 3. the tree is flattened post-order: a splice's steps go immediately
 //!    before the step they were spliced under (the root's go in order), so
-//!    a step's children come before it;
+//!    a step's children come before it. A step that includes a template
+//!    (`use=`) has that template's steps first, as `<step>/<name>#1/…`,
+//!    then the splices made under it, in key order;
 //! 4. `done-` and `skip-` events close the steps they name.
 //!
 //! A step's identity is its path, `<template>#<n>/<step>` under the root
-//! (`change#1/implement`), longer under a spliced step. Each step's
+//! (`change#1/implement`), longer under a spliced step
+//! (`change#1/review/review#1/read-diff`). Each step's
 //! window for run-record checks begins at the event that began it: its
 //! splice for the first step of a splice, else the event that closed the
 //! step before it.
@@ -20,7 +24,21 @@ use super::event::{self, Baseline, Done, Event, Skip, Splice};
 use super::template::{self, Template};
 
 /// A splice nested deeper than this is not expanded.
-pub const MAX_DEPTH: usize = 4;
+pub const MAX_DEPTH: usize = writfold_core::plan::MAX_DEPTH;
+
+/// One use of a template under a parent: a splice or a static include.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Use {
+    pub parent: String,
+    pub template: String,
+    pub digest: String,
+    pub ordinal: u64,
+}
+
+/// How many splices deep a node path is: one per `#`.
+pub fn depth(path: &str) -> usize {
+    path.matches('#').count()
+}
 
 /// One step of the folded list.
 #[derive(Clone, Debug)]
@@ -28,8 +46,11 @@ pub struct Step {
     pub path: String,
     pub id: String,
     pub gates: Vec<String>,
-    /// The template it came from and the splice file that added it.
+    /// The template it came from (name, digest and where it was read
+    /// from) and the splice file that added it.
     pub template: String,
+    pub digest: String,
+    pub source: String,
     pub splice: String,
     pub done: Option<(String, Done)>,
     pub skipped: Option<(String, Skip)>,
@@ -58,6 +79,8 @@ pub struct Graph {
     /// Valid splices in key order, with their templates.
     pub splices: Vec<(String, Splice, Template)>,
     pub steps: Vec<Step>,
+    /// Every template use that was expanded, splices and includes.
+    pub uses: Vec<Use>,
     /// Event files that are unreadable, invalid or name no step: (path, why).
     pub invalid: Vec<(String, String)>,
 }
@@ -82,6 +105,17 @@ impl Graph {
     /// The current step's index.
     pub fn current(&self) -> Option<usize> {
         writfold_core::plan::current(&self.nodes())
+    }
+
+    /// The ordinal the next splice under `parent` takes.
+    pub fn next_ordinal(&self, parent: &str) -> u64 {
+        let used = self.uses.iter().filter(|u| u.parent == parent);
+        let ordinals = self.splices.iter().filter(|(_, s, _)| s.parent == parent);
+        used.map(|u| u.ordinal)
+            .chain(ordinals.map(|(_, s, _)| s.ordinal))
+            .max()
+            .unwrap_or(0)
+            + 1
     }
 
     /// Every gate any step names, in first-named order.
@@ -125,20 +159,14 @@ pub fn fold(run: &str, dir: &str, files: Vec<(String, String)>, snapshot: Snapsh
     let mut graph = Graph::default();
     let mut splices = Vec::new();
     let mut closes: Vec<(String, Event)> = Vec::new();
+    let mut library: Vec<Template> = Vec::new();
     for (name, text) in files {
         let path = format!("{dir}/{name}");
         match event::parse(&text, run, &name) {
             Err(why) => graph.invalid.push((path, why)),
-            Ok(Event::Splice(s)) => match snapshot(&s.digest) {
-                Some(bytes) if template::digest(&bytes) == s.digest => {
-                    match template::parse(&bytes, Some(&s.template)) {
-                        Ok(t) => splices.push((path, s, t)),
-                        Err(why) => graph.invalid.push((path, format!("its snapshot: {why}"))),
-                    }
-                }
-                _ => graph
-                    .invalid
-                    .push((path, "its template snapshot is missing or altered".into())),
+            Ok(Event::Splice(s)) => match load(&s, snapshot, &mut library) {
+                Ok(t) => splices.push((path, s, t)),
+                Err(why) => graph.invalid.push((path, why)),
             },
             Ok(other) => closes.push((path, other)),
         }
@@ -154,8 +182,17 @@ pub fn fold(run: &str, dir: &str, files: Vec<(String, String)>, snapshot: Snapsh
         };
         (key(&a.1), &a.0).cmp(&(key(&b.1), &b.0))
     });
-    let mut used = vec![false; splices.len()];
-    expand(&splices, &mut used, "", 0, &mut graph.steps);
+    let mut tree = Tree {
+        splices: &splices,
+        library: &library,
+        used: vec![false; splices.len()],
+        steps: Vec::new(),
+        uses: Vec::new(),
+    };
+    expand(&mut tree, "", 0);
+    let (used, steps, uses) = (tree.used, tree.steps, tree.uses);
+    graph.steps = steps;
+    graph.uses = uses;
     for (i, (path, s, _)) in splices.iter().enumerate() {
         if !used[i] {
             let why = format!(
@@ -172,37 +209,120 @@ pub fn fold(run: &str, dir: &str, files: Vec<(String, String)>, snapshot: Snapsh
     graph
 }
 
+/// A snapshot's template, checked against its digest and name.
+fn snapshot_of(snapshot: Snapshot<'_>, name: &str, digest: &str) -> Result<Template, String> {
+    match snapshot(digest) {
+        Some(bytes) if template::digest(&bytes) == digest => {
+            template::parse(&bytes, Some(name)).map_err(|why| format!("its snapshot: {why}"))
+        }
+        _ => Err(format!(
+            "the template snapshot of {name} is missing or altered"
+        )),
+    }
+}
+
+/// A splice's template, with every template it includes added to
+/// `library`; every `use=` in the closure must be recorded in it.
+fn load(
+    s: &Splice,
+    snapshot: Snapshot<'_>,
+    library: &mut Vec<Template>,
+) -> Result<Template, String> {
+    let top = snapshot_of(snapshot, &s.template, &s.digest)?;
+    let mut closure = vec![top.clone()];
+    for include in &s.includes {
+        closure.push(snapshot_of(snapshot, &include.name, &include.digest)?);
+    }
+    for t in &closure {
+        for name in t.steps.iter().filter_map(|step| step.include.as_deref()) {
+            if !s.includes.iter().any(|i| i.name == name) {
+                return Err(format!(
+                    "{} includes {name}, which its closure does not record",
+                    t.name
+                ));
+            }
+        }
+    }
+    for t in closure.into_iter().skip(1) {
+        if !library.iter().any(|l| l.digest == t.digest) {
+            library.push(t);
+        }
+    }
+    Ok(top)
+}
+
+/// The expansion in progress.
+struct Tree<'a> {
+    splices: &'a [(String, Splice, Template)],
+    library: &'a [Template],
+    used: Vec<bool>,
+    steps: Vec<Step>,
+    uses: Vec<Use>,
+}
+
 /// Post-order expansion of the splices under `parent`.
-fn expand(
-    splices: &[(String, Splice, Template)],
-    used: &mut [bool],
-    parent: &str,
-    depth: usize,
-    out: &mut Vec<Step>,
-) {
+fn expand(tree: &mut Tree<'_>, parent: &str, depth: usize) {
     if depth >= MAX_DEPTH {
         return;
     }
-    for (i, (path, s, t)) in splices.iter().enumerate() {
-        if s.parent != parent || used[i] {
+    let splices = tree.splices;
+    for (i, (_, s, t)) in splices.iter().enumerate() {
+        if s.parent != parent || tree.used[i] {
             continue;
         }
-        used[i] = true;
+        tree.used[i] = true;
+        tree.uses.push(Use {
+            parent: s.parent.clone(),
+            template: s.template.clone(),
+            digest: s.digest.clone(),
+            ordinal: s.ordinal,
+        });
         let prefix = event::prefix(&s.parent, &s.template, s.ordinal);
-        for step in &t.steps {
-            let node = format!("{prefix}/{}", step.id);
-            expand(splices, used, &node, depth + 1, out);
-            out.push(Step {
-                path: node,
-                id: step.id.clone(),
-                gates: step.gates.clone(),
-                template: s.template.clone(),
-                splice: path.clone(),
-                done: None,
-                skipped: None,
-                begin: s.records.clone(),
+        steps_of(tree, i, (t, &s.source), &prefix, depth);
+    }
+}
+
+/// The steps of `t` (the template of splice `i`, or one it includes)
+/// under `prefix`, each after its include and the splices under it.
+fn steps_of(
+    tree: &mut Tree<'_>,
+    i: usize,
+    (t, source): (&Template, &str),
+    prefix: &str,
+    depth: usize,
+) {
+    let (splices, library) = (tree.splices, tree.library);
+    let (path, s, _) = &splices[i];
+    for step in &t.steps {
+        let node = format!("{prefix}/{}", step.id);
+        let include = step.include.as_deref().and_then(|name| {
+            let recorded = s.includes.iter().find(|i| i.name == name)?;
+            let found = library.iter().find(|l| l.digest == recorded.digest)?;
+            Some((found, recorded.source.as_str()))
+        });
+        if let (Some(included), true) = (include, depth + 1 < MAX_DEPTH) {
+            let inner = event::prefix(&node, &included.0.name, 1);
+            tree.uses.push(Use {
+                parent: node.clone(),
+                template: included.0.name.clone(),
+                digest: included.0.digest.clone(),
+                ordinal: 1,
             });
+            steps_of(tree, i, included, &inner, depth + 1);
         }
+        expand(tree, &node, depth + 1);
+        tree.steps.push(Step {
+            path: node,
+            id: step.id.clone(),
+            gates: step.gates.clone(),
+            template: t.name.clone(),
+            digest: t.digest.clone(),
+            source: source.to_owned(),
+            splice: path.clone(),
+            done: None,
+            skipped: None,
+            begin: s.records.clone(),
+        });
     }
 }
 

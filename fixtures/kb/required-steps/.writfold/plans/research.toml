@@ -1,0 +1,4 @@
+schema = "writfold-plan/1"
+name = "research"
+description = "look before changing, and leave what was found in the KB"
+steps = ["research: backfilled"]

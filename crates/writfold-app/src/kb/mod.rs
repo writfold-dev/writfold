@@ -74,12 +74,16 @@ deliveries (offline candidates: the exact payload, checked mechanically; nothing
   deliver status [CANDIDATE] [--run ID]
                                    each candidate's checks (exit 0 only if all are met)
 
-plans (the run graph, linear; templates in .writfold/plans/<name>.toml; Writfold records, the agent walks):
+plans (the run graph; templates in .writfold/plans/<name>.toml; Writfold records, the agent walks):
   plan set <template>|--from FILE [--run ID] [--repo DIR]
-                                   splice a template's steps at the run's root (keeps a snapshot)
+                                   splice a template's steps at the run's root (keeps a snapshot;
+                                   adds the required steps of .writfold/plans/required.toml)
+  plan use <template> [--again] [--run ID] [--repo DIR]
+                                   splice its steps before the current step, as its children;
+                                   a repeat is a no-op (exit 0), --again adds another copy
   plan status [--run ID] [--repo DIR]
                                    each step: done (!stale if a gate no longer holds), current with
-                                   what it owes, later
+                                   what it owes, later; !template-moved if its template changed
   plan advance [--run ID] [--repo DIR]
                                    record the current step as done, or refuse (exit 3) naming what it owes
   plan skip --reason TEXT --by WHO [--run ID]

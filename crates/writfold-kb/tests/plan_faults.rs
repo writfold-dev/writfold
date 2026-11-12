@@ -1,5 +1,6 @@
-//! Kill tests of the plan's three writes: the test binary re-runs itself
-//! as a child that runs `plan set`, `plan advance` or `plan skip` and
+//! Kill tests of the plan's four writes: the test binary re-runs itself
+//! as a child that runs `plan set`, `plan use`, `plan advance` or `plan
+//! skip` and
 //! aborts at each step of the write protocol. After every death each event
 //! file is absent or complete and valid (a splice never without its
 //! snapshot), leftovers are only dot-named `.tmp` files, the index equals
@@ -19,6 +20,7 @@ const CHILD: &str = "WRITFOLD_KB_PLAN_FAULT_CHILD";
 const VERB: &str = "WRITFOLD_KB_PLAN_FAULT_VERB";
 const TEMPLATE: &str =
     "schema = \"writfold-plan/1\"\nname = \"two\"\nsteps = [\"first:\", \"second:\"]\n";
+const SIDE: &str = "schema = \"writfold-plan/1\"\nname = \"side\"\nsteps = [\"only:\"]\n";
 
 fn verb(name: &str) -> PlanVerb {
     let run = Some(RUN.to_owned());
@@ -26,6 +28,12 @@ fn verb(name: &str) -> PlanVerb {
         "set" => PlanVerb::Set {
             template: Some("two".into()),
             from: None,
+            run,
+            repo: None,
+        },
+        "use" => PlanVerb::Use {
+            template: "side".into(),
+            again: false,
             run,
             repo: None,
         },
@@ -72,7 +80,7 @@ fn child() -> TestResult {
     Ok(())
 }
 
-/// Every event file is valid, every snapshot matches its name; returns
+/// Every event file is valid and every splice's snapshot exists; returns
 /// the event file names.
 fn valid_events(kb: &Path) -> TestResult<Vec<String>> {
     let dir = kb.join(format!("runs/{RUN}/plan"));
@@ -88,25 +96,27 @@ fn valid_events(kb: &Path) -> TestResult<Vec<String>> {
             continue;
         }
         let text = std::fs::read_to_string(entry.path())?;
-        event::parse(&text, RUN, &name).map_err(|why| format!("{name}: {why}"))?;
+        let parsed = event::parse(&text, RUN, &name).map_err(|why| format!("{name}: {why}"))?;
+        if let event::Event::Splice(s) = parsed {
+            let hex = s.digest.trim_start_matches("sha256:");
+            let snapshot = dir.join(event::TEMPLATES).join(format!("{hex}.toml"));
+            assert!(snapshot.is_file(), "{name}: a splice without its snapshot");
+        }
         found.push(name);
     }
     found.sort();
-    if found.iter().any(|n| n.starts_with("splice-")) {
-        let snapshots = std::fs::read_dir(dir.join(event::TEMPLATES))?.count();
-        assert_eq!(snapshots, 1, "a splice without its snapshot");
-    }
     Ok(found)
 }
 
 #[test]
 fn every_fault_point_leaves_no_event_or_a_valid_one() -> TestResult {
-    for name in ["set", "advance", "skip"] {
+    for name in ["set", "use", "advance", "skip"] {
         for step in Step::ALL {
             let w = world(&[])?;
             let plans = w.kb.join(".writfold/plans");
             std::fs::create_dir_all(&plans)?;
             std::fs::write(plans.join("two.toml"), TEMPLATE)?;
+            std::fs::write(plans.join("side.toml"), SIDE)?;
             if name != "set" {
                 assert_eq!(w.run(&request(&w.kb, "set"))?.1, 0);
             }
@@ -123,10 +133,10 @@ fn every_fault_point_leaves_no_event_or_a_valid_one() -> TestResult {
             assert!(!status.success(), "{at} did not stop");
             let after = valid_events(&w.kb)?.len();
             let published = matches!(step, Step::Published | Step::DirSynced | Step::Unlocked);
-            // `plan set` publishes its snapshot first, so the first
-            // occurrence of every step but `unlocked` is the snapshot's.
+            // `plan set` and `plan use` publish the snapshot first, so the
+            // first occurrence of every step but `unlocked` is the snapshot's.
             let expected = match name {
-                "set" => step == Step::Unlocked,
+                "set" | "use" => step == Step::Unlocked,
                 _ => published,
             };
             assert_eq!(after, before + usize::from(expected), "{at}");
@@ -139,6 +149,12 @@ fn every_fault_point_leaves_no_event_or_a_valid_one() -> TestResult {
             assert_eq!(exit, 0, "rerun after {at}:\n{text}");
             let (text, _) = w.run(&request(&w.kb, "status"))?;
             assert!(text.contains("step two#1/second ["), "{at}: {text}");
+            if name == "use" {
+                assert!(
+                    text.contains("step two#1/first/side#1/only [current]"),
+                    "{at}: {text}"
+                );
+            }
             assert!(!text.contains("!invalid"), "{at}: {text}");
         }
     }

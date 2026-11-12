@@ -80,7 +80,7 @@ pub fn allowed(verb: &str) -> &'static [&'static str] {
             "by",
         ],
         "edit" => &["run", "worktree", "dry-run", "abandon"],
-        "plan" => &["run", "repo", "from", "reason", "by"],
+        "plan" => &["run", "repo", "from", "reason", "by", "again"],
         _ => super::proposals::allowed(verb),
     }
 }

@@ -1,0 +1,6 @@
+step reflect#3/reflect [current] owes: reflected [open], reflection [open] @runs/run-20261101T090000Z-a1b2c3/plan/splice-reflect.3.json:1
+  read: instructions for reflection @.writfold/gates/reflection.md:1
+  next: writfold kb gate run reflected
+# note: not advanced: reflect#3/reflect owes reflected [open], reflection [open] (first owed: reflected); nothing written
+# coverage=complete records=36/36 shown=1 omitted=0 kb=ba64b3d585e8+dirty:8 index=fresh cursor=none q=344986924523
+# exit=3

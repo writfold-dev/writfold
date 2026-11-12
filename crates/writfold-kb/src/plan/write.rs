@@ -1,13 +1,11 @@
-//! The plan's three writes, each one create-new event through the write
-//! protocol ([`crate::write::atomic`]): `plan set` (the template snapshot,
-//! then the root splice, so a splice never exists without its snapshot),
-//! `plan advance` (a `done-` record naming what met each gate) and `plan
-//! skip` (a `skip-` record with a reason). An event's file name follows
+//! The plan's closing writes, each one create-new event through the write
+//! protocol ([`crate::write::atomic`]): `plan advance` (a `done-` record naming what met each gate) and `plan
+//! skip` (a `skip-` record with a reason); the splices are in
+//! [`super::splice`]. An event's file name follows
 //! from what it is about, so two sessions cannot both advance one step:
 //! the second finds the file and is refused as a write conflict.
-use super::event::{self, Done, Event, Met, Skip, Splice};
-use super::template::{self, Template};
-use super::{Loaded, PlanVerb, judge, show};
+use super::event::{self, Done, Event, Met, Skip};
+use super::{Loaded, PlanVerb, judge, required, show};
 use crate::Request;
 use crate::emit::{Answer, Output};
 use crate::error::{KbError, Result};
@@ -17,7 +15,7 @@ use crate::write::{Op, atomic};
 use crate::{runs, time};
 use writfold_core::plan::{Refusal, advance_check};
 
-fn open_run(loaded: &Loaded, session: &Session<'_>) -> Result<()> {
+pub(super) fn open_run(loaded: &Loaded, session: &Session<'_>) -> Result<()> {
     match runs::state(session, &loaded.rec) == "closed" {
         true => Err(KbError::Refused(format!(
             "run {} is closed; reopen it with status {} --set open",
@@ -27,7 +25,7 @@ fn open_run(loaded: &Loaded, session: &Session<'_>) -> Result<()> {
     }
 }
 
-fn apply(ws: &Workspace, request: &Request, ops: &[Op]) -> Result<()> {
+pub(super) fn apply(ws: &Workspace, request: &Request, ops: &[Op]) -> Result<()> {
     let state = ws
         .repo
         .as_ref()
@@ -37,7 +35,7 @@ fn apply(ws: &Workspace, request: &Request, ops: &[Op]) -> Result<()> {
 }
 
 /// Answer after a write: the plan as it now stands.
-fn answer(
+pub(super) fn answer(
     ws: &Workspace,
     tool: &GitTool,
     request: &Request,
@@ -54,140 +52,6 @@ fn answer(
         .push("written to the KB work tree; commit it to share it".into());
     let frame = crate::gate::frame(request, verb, vec![run.to_owned()]);
     session.emit(&answer, &frame)
-}
-
-/// The template a `plan set` names, and where it came from.
-fn chosen(
-    loaded: &Loaded,
-    ws: &Workspace,
-    request: &Request,
-    verb: &PlanVerb,
-) -> Result<(Template, String)> {
-    let PlanVerb::Set { template, from, .. } = verb else {
-        return Err(KbError::Usage("plan set".into()));
-    };
-    let repo = loaded
-        .subject
-        .as_ref()
-        .map(|s| (s.top.as_path(), s.name.as_str()));
-    match (template, from) {
-        (Some(name), None) => template::find(&ws.root, repo, name),
-        (None, Some(file)) => {
-            let bytes = std::fs::read(request.cwd.join(file))?;
-            let shown = file
-                .file_name()
-                .map_or_else(String::new, |n| n.to_string_lossy().into_owned());
-            Ok((template::parse(&bytes, None)?, format!("--from {shown}")))
-        }
-        _ => Err(KbError::Usage(
-            "plan set takes a template name or --from FILE".into(),
-        )),
-    }
-}
-
-/// Refuse a template that names a gate no definition provides.
-fn defined(ws: &Workspace, loaded: &Loaded, t: &Template) -> Result<()> {
-    let top = loaded.subject.as_ref().map(|s| s.top.as_path());
-    let (found, problems) = crate::gate::def::all(&ws.root, top);
-    for gate in t.steps.iter().flat_map(|s| &s.gates) {
-        let file = format!("{}/{gate}.toml", crate::gate::def::DIR);
-        if let Some((_, path, why)) = problems.iter().find(|(_, p, _)| *p == file) {
-            return Err(KbError::Refused(format!("gate {gate}: {path}: {why}")));
-        }
-        match found.iter().find(|d| &d.id == gate) {
-            Some(d) if d.on_candidate() => {
-                return Err(KbError::Refused(format!(
-                    "gate {gate} judges delivery candidates; a plan step owes repository and run-record gates"
-                )));
-            }
-            Some(_) => {}
-            None => {
-                return Err(KbError::Refused(format!(
-                    "plan {} names gate {gate}, which is not defined: add {file} to the KB root or the repository",
-                    t.name
-                )));
-            }
-        }
-    }
-    Ok(())
-}
-
-pub(super) fn set(
-    ws: &Workspace,
-    tool: &GitTool,
-    request: &Request,
-    verb: &PlanVerb,
-    now: i64,
-) -> Result<Output> {
-    let PlanVerb::Set { run, repo, .. } = verb else {
-        return Err(KbError::Usage("plan set".into()));
-    };
-    let session = Session::open(ws, Some(tool), false, now)?;
-    let loaded = Loaded::open(&session, run.as_deref(), repo.as_deref(), &request.cwd)?;
-    open_run(&loaded, &session)?;
-    let (t, source) = chosen(&loaded, ws, request, verb)?;
-    let run_id = loaded.rec.id.clone();
-    let place = (("plan-set"), run_id.as_str(), repo.as_deref());
-    if let Some((_, s, _)) = loaded
-        .graph
-        .splices
-        .iter()
-        .find(|(_, s, _)| s.parent.is_empty())
-    {
-        if s.template == t.name && s.digest == t.digest {
-            drop(session);
-            let note = format!(
-                "plan {} is already set on this run; nothing written",
-                t.name
-            );
-            return answer(ws, tool, request, place, vec![note], now);
-        }
-        return Err(KbError::Refused(format!(
-            "run {run_id} already has a plan ({}); a second plan at the root is not built: skip the remaining steps with plan skip, or start another run",
-            s.template
-        )));
-    }
-    defined(ws, &loaded, &t)?;
-    let dir = format!("{}/{}", runs::dir(&loaded.rec), event::DIR);
-    let hex = t.digest.trim_start_matches("sha256:");
-    let snapshot = format!("{dir}/{}/{hex}.toml", event::TEMPLATES);
-    let mut ops = Vec::new();
-    match std::fs::read(ws.root.join(&snapshot)) {
-        Ok(bytes) if bytes == t.bytes => {}
-        Ok(_) => {
-            return Err(KbError::Refused(format!(
-                "{snapshot} exists with other bytes"
-            )));
-        }
-        Err(_) => ops.push(Op::Create {
-            path: snapshot,
-            bytes: t.bytes.clone(),
-        }),
-    }
-    let splice = Event::Splice(Splice {
-        parent: String::new(),
-        template: t.name.clone(),
-        digest: t.digest.clone(),
-        ordinal: 1,
-        source,
-        records: loaded.records.baseline(),
-        recorded: time::stamp(now),
-    });
-    let path = format!("{dir}/{}", event::name(&splice));
-    ops.push(Op::Create {
-        path: path.clone(),
-        bytes: event::bytes(&run_id, &splice),
-    });
-    drop(session);
-    apply(ws, request, &ops)?;
-    answer(
-        ws,
-        tool,
-        request,
-        place,
-        vec![format!("recorded {path}")],
-        now,
-    )
 }
 
 /// `plan advance`: the current step's gates, judged now, each met, or a
@@ -232,6 +96,7 @@ pub(super) fn advance(
             )));
         }
     };
+    complete_guard(ws, &loaded, at)?;
     let done = done(step, &gates, &loaded, now);
     let path = format!(
         "{}/{}/{}",
@@ -255,6 +120,31 @@ pub(super) fn advance(
         notes,
         now,
     )
+}
+
+/// Refuse to close the plan's last open step while a required end
+/// template is missing from it (the required file changed after the plan
+/// was set).
+pub(super) fn complete_guard(ws: &Workspace, loaded: &Loaded, at: usize) -> Result<()> {
+    let mut nodes = loaded.graph.nodes();
+    if let Some(node) = nodes.get_mut(at) {
+        node.done = true;
+    }
+    if writfold_core::plan::current(&nodes).is_some() {
+        return Ok(());
+    }
+    let repo = loaded
+        .subject
+        .as_ref()
+        .map(|s| (s.top.as_path(), s.name.as_str()));
+    let required = required::find(&ws.root, repo)?;
+    match required::missing_end(&required, &loaded.graph).first() {
+        None => Ok(()),
+        Some(name) => Err(KbError::Refused(format!(
+            "not advanced: the plan cannot complete without its required end step {name} ({}); add it with writfold kb plan use {name}",
+            required.source.as_deref().unwrap_or("required.toml")
+        ))),
+    }
 }
 
 /// The answer of a refused advance (exit 3): the step and what it owes.
@@ -314,12 +204,14 @@ pub(super) fn skip(
     let session = Session::open(ws, Some(tool), false, now)?;
     let loaded = Loaded::open(&session, run.as_deref(), repo.as_deref(), &request.cwd)?;
     open_run(&loaded, &session)?;
-    let Some(step) = loaded.graph.current().map(|i| &loaded.graph.steps[i]) else {
+    let Some(at) = loaded.graph.current() else {
         return Err(KbError::Refused(format!(
             "run {} has no current step to skip",
             loaded.rec.id
         )));
     };
+    complete_guard(ws, &loaded, at)?;
+    let step = &loaded.graph.steps[at];
     let skip = Event::Skip(Skip {
         node: step.path.clone(),
         reason,

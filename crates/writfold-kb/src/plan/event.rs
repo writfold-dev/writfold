@@ -34,7 +34,16 @@ pub struct Baseline {
     pub proposals: u64,
 }
 
+/// One template a splice's template includes (`use=`), directly or not.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Include {
+    pub name: String,
+    pub digest: String,
+    pub source: String,
+}
+
 /// A splice: `template`'s steps added under `parent` (`""` is the root).
+/// `ordinal` is the splice's place among the splices under `parent`.
 #[derive(Clone, Debug)]
 pub struct Splice {
     pub parent: String,
@@ -44,6 +53,10 @@ pub struct Splice {
     /// Where the template was read from (`.writfold/plans/<name>.toml`,
     /// `<repo>:.writfold/plans/…`, or `--from`).
     pub source: String,
+    /// The closure of `use=` includes, each snapshotted; empty when the
+    /// template includes none (and then not written, so events written
+    /// before includes existed keep their bytes).
+    pub includes: Vec<Include>,
     pub records: Baseline,
     pub recorded: String,
 }
@@ -117,11 +130,21 @@ fn baseline_json(b: &Baseline) -> Value {
 
 fn body(event: &Event) -> Value {
     match event {
-        Event::Splice(s) => json!({
-            "event": "splice", "parent": s.parent, "ordinal": s.ordinal,
-            "template": {"name": s.template, "digest": s.digest, "source": s.source},
-            "records": baseline_json(&s.records), "recorded": s.recorded,
-        }),
+        Event::Splice(s) => {
+            let mut value = json!({
+                "event": "splice", "parent": s.parent, "ordinal": s.ordinal,
+                "template": {"name": s.template, "digest": s.digest, "source": s.source},
+                "records": baseline_json(&s.records), "recorded": s.recorded,
+            });
+            if let (false, Value::Object(map)) = (s.includes.is_empty(), &mut value) {
+                let includes = s
+                    .includes
+                    .iter()
+                    .map(|i| json!({"name": i.name, "digest": i.digest, "source": i.source}));
+                map.insert("includes".into(), Value::Array(includes.collect()));
+            }
+            value
+        }
         Event::Done(d) => {
             let met: Vec<Value> = d
                 .met
@@ -212,6 +235,21 @@ fn met(v: &Value) -> Parsed<Met> {
     })
 }
 
+fn includes(v: &Value) -> Parsed<Vec<Include>> {
+    let include = |i: &Value| {
+        Ok(Include {
+            name: text(i, "name")?,
+            digest: text(i, "digest")?,
+            source: text(i, "source")?,
+        })
+    };
+    match v.get("includes") {
+        None => Ok(Vec::new()),
+        Some(Value::Array(items)) if !items.is_empty() => items.iter().map(include).collect(),
+        Some(_) => Err("includes is not a non-empty list".into()),
+    }
+}
+
 fn event(v: &Value) -> Parsed<Event> {
     let records = baseline(v)?;
     let recorded = text(v, "recorded")?;
@@ -224,6 +262,7 @@ fn event(v: &Value) -> Parsed<Event> {
                 digest: text(t, "digest")?,
                 ordinal: count(v, "ordinal")?,
                 source: text(t, "source")?,
+                includes: includes(v)?,
                 records,
                 recorded,
             })
@@ -280,7 +319,7 @@ pub fn parse(text_in: &str, run: &str, file: &str) -> Parsed<Event> {
 
 #[cfg(test)]
 mod tests {
-    use super::{Baseline, Done, Event, Met, Splice, bytes, name, parse};
+    use super::{Baseline, Done, Event, Include, Met, Splice, bytes, name, parse};
 
     #[test]
     fn events_round_trip_and_edits_are_invalid() -> Result<(), String> {
@@ -290,11 +329,30 @@ mod tests {
             digest: "sha256:aa".into(),
             ordinal: 1,
             source: ".writfold/plans/change.toml".into(),
+            includes: Vec::new(),
             records: Baseline::default(),
             recorded: "2026-11-12T00:00:00Z".into(),
         });
         assert_eq!(name(&splice), "splice-change.1.json");
         let text = String::from_utf8(bytes("run-1", &splice)).map_err(|e| e.to_string())?;
+        assert!(!text.contains("includes"), "no includes, no key: {text}");
+        let mut nested = match &splice {
+            Event::Splice(s) => s.clone(),
+            _ => return Err("a splice".into()),
+        };
+        nested.parent = "change#1/review".into();
+        nested.ordinal = 2;
+        nested.includes = vec![Include {
+            name: "read".into(),
+            digest: "sha256:bb".into(),
+            source: ".writfold/plans/read.toml".into(),
+        }];
+        let nested = Event::Splice(nested);
+        assert_eq!(name(&nested), "splice-change.1~review~change.2.json");
+        let back = String::from_utf8(bytes("run-1", &nested)).map_err(|e| e.to_string())?;
+        assert!(
+            matches!(parse(&back, "run-1", &name(&nested))?, Event::Splice(s) if s.includes.len() == 1 && s.parent == "change#1/review")
+        );
         assert!(
             matches!(parse(&text, "run-1", "splice-change.1.json")?, Event::Splice(s) if s.template == "change")
         );

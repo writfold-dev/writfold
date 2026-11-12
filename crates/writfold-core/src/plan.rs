@@ -9,9 +9,11 @@
 //! claimed. It is written to the translation rules (owned data, no derives,
 //! explicit `while` loops, one early return per loop) so the theorems of
 //! the plan kernel can be stated over this code. The exhaustive tests
-//! below state them for every list of up to four steps. A `splice`
-//! function (insert a template's steps before the current step, as its
-//! children) belongs here next, under the same rules.
+//! below state them for every list of up to four steps, and for `splice`
+//! (insert a template's steps before the current step, as its children)
+//! over every insertion of up to three steps.
+
+use alloc::vec::Vec;
 
 /// One step of the folded list: whether a `done-` or a `skip-` record
 /// closes it. A step may carry both after a merge; either closes it.
@@ -30,6 +32,27 @@ pub enum Refusal {
     NotCurrent(usize),
     /// The current step owes this gate (its index in the step's list).
     Owed(usize),
+}
+
+/// A splice nested deeper than this (counting `use=` includes) is refused.
+pub const MAX_DEPTH: usize = 4;
+
+/// Why a splice is refused.
+pub enum SpliceRefusal {
+    /// Every step is done or skipped: there is no current step to splice under.
+    Complete,
+    /// The new steps would sit deeper than [`MAX_DEPTH`].
+    TooDeep,
+}
+
+/// What an admitted splice does.
+pub enum Spliced {
+    /// The same template at the same digest is already spliced at the
+    /// current step or one of its ancestors: nothing changes.
+    Already,
+    /// Insert the new steps at this index: before the current step (the
+    /// start of an empty list for a root splice).
+    Insert(usize),
 }
 
 /// Whether a step is closed: done or skipped.
@@ -84,9 +107,97 @@ pub fn stale(node: &Node, met: &[bool]) -> bool {
     node.done && first_owed(met).is_some()
 }
 
+/// Whether two keys are the same bytes.
+pub fn same(a: &[u8], b: &[u8]) -> bool {
+    if a.len() != b.len() {
+        return false;
+    }
+    let mut index = 0;
+    while index < a.len() {
+        if a[index] != b[index] {
+            return false;
+        }
+        index += 1;
+    }
+    true
+}
+
+/// Whether `key` is one of `keys`.
+pub fn contains(keys: &[Vec<u8>], key: &[u8]) -> bool {
+    let mut index = 0;
+    while index < keys.len() {
+        if same(&keys[index], key) {
+            return true;
+        }
+        index += 1;
+    }
+    false
+}
+
+/// Whether a splice of the template `key` (its name and digest) may be
+/// written, in the fixed order it is checked: `spliced` holds the keys
+/// already spliced at the current step or its ancestors (empty for
+/// `--again`), and a match is [`Spliced::Already`]; then `depth`, the
+/// depth of the deepest new step, must be at most [`MAX_DEPTH`]; then an
+/// empty list takes a root splice at 0, and otherwise the steps go before
+/// the current step, which must exist.
+pub fn splice_check(
+    nodes: &[Node],
+    spliced: &[Vec<u8>],
+    key: &[u8],
+    depth: usize,
+) -> Result<Spliced, SpliceRefusal> {
+    if contains(spliced, key) {
+        return Ok(Spliced::Already);
+    }
+    if depth > MAX_DEPTH {
+        return Err(SpliceRefusal::TooDeep);
+    }
+    if nodes.is_empty() {
+        return Ok(Spliced::Insert(0));
+    }
+    match current(nodes) {
+        None => Err(SpliceRefusal::Complete),
+        Some(at) => Ok(Spliced::Insert(at)),
+    }
+}
+
+/// The list after inserting `count` open steps at `at`: every existing
+/// step keeps its state and relative order. `at` past the end appends.
+pub fn splice(nodes: &[Node], at: usize, count: usize) -> Vec<Node> {
+    let mut out: Vec<Node> = Vec::new();
+    let mut index = 0;
+    while index < nodes.len() && index < at {
+        out.push(Node {
+            done: nodes[index].done,
+            skipped: nodes[index].skipped,
+        });
+        index += 1;
+    }
+    let mut added = 0;
+    while added < count {
+        out.push(Node {
+            done: false,
+            skipped: false,
+        });
+        added += 1;
+    }
+    while index < nodes.len() {
+        out.push(Node {
+            done: nodes[index].done,
+            skipped: nodes[index].skipped,
+        });
+        index += 1;
+    }
+    out
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{Node, Refusal, advance_check, closed, current, first_owed, stale};
+    use super::{
+        MAX_DEPTH, Node, Refusal, SpliceRefusal, Spliced, advance_check, closed, current,
+        first_owed, splice, splice_check, stale,
+    };
     use alloc::vec::Vec;
 
     /// Every list of up to `max` steps, each open, done, skipped or both.
@@ -190,6 +301,72 @@ mod tests {
                     assert_eq!(stale(&node, &met), expected);
                     // A stale step is still closed: it never becomes current again.
                     assert!(!stale(&node, &met) || closed(&node));
+                }
+            }
+        }
+    }
+
+    fn states(list: &[Node]) -> Vec<(bool, bool)> {
+        list.iter().map(|n| (n.done, n.skipped)).collect()
+    }
+
+    #[test]
+    fn splice_keeps_every_existing_step_and_the_done_prefix() {
+        for before in lists(4) {
+            let list = nodes(&before);
+            for count in 0..=3usize {
+                let admitted = splice_check(&list, &[], b"t", 1);
+                // No keys: never already; depth 1: never too deep.
+                assert!(!matches!(
+                    admitted,
+                    Ok(Spliced::Already) | Err(SpliceRefusal::TooDeep)
+                ));
+                let Ok(Spliced::Insert(at)) = admitted else {
+                    assert!(!list.is_empty() && current(&list).is_none());
+                    continue;
+                };
+                assert_eq!(Some(at), current(&list).or(Some(0)));
+                let after = splice(&list, at, count);
+                let after_states = states(&after);
+                assert_eq!(after.len(), list.len() + count);
+                // The prefix (all closed) and the suffix are unchanged.
+                assert_eq!(after_states[..at], before[..at]);
+                assert_eq!(after_states[at + count..], before[at..]);
+                assert!(after[at..at + count].iter().all(|n| !closed(n)));
+                // The current step is the first new one, or unchanged.
+                let expected = if count > 0 { Some(at) } else { current(&list) };
+                assert_eq!(current(&after), expected, "{before:?} +{count}");
+            }
+        }
+    }
+
+    #[test]
+    fn splice_is_idempotent_on_its_key_and_bounded_in_depth() {
+        let keys = [b"review@1".to_vec(), b"change@2".to_vec()];
+        for before in lists(3) {
+            let list = nodes(&before);
+            for key in [&b"review@1"[..], b"change@2"] {
+                for depth in 0..=MAX_DEPTH + 2 {
+                    // A key already spliced is a no-op, whatever else holds.
+                    assert!(matches!(
+                        splice_check(&list, &keys, key, depth),
+                        Ok(Spliced::Already)
+                    ));
+                }
+            }
+            for key in [&b"review@2"[..], b"review", b"other@1", b""] {
+                for depth in 0..=MAX_DEPTH + 2 {
+                    let admitted = splice_check(&list, &keys, key, depth);
+                    assert!(!matches!(admitted, Ok(Spliced::Already)), "{key:?}");
+                    match admitted {
+                        Ok(Spliced::Already) => {}
+                        Err(SpliceRefusal::TooDeep) => assert!(depth > MAX_DEPTH),
+                        Err(SpliceRefusal::Complete) => assert!(current(&list).is_none()),
+                        Ok(Spliced::Insert(at)) => {
+                            assert!(depth <= MAX_DEPTH);
+                            assert_eq!(Some(at), current(&list).or(Some(0)));
+                        }
+                    }
                 }
             }
         }

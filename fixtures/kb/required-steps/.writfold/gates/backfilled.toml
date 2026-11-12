@@ -1,0 +1,8 @@
+# A run-record check: since the step began, a KB record was written, a
+# retrieval receipt was recorded, or a checkpoint entry cites a source.
+schema = "writfold-gate/1"
+id = "backfilled"
+version = 1
+class = "run-record"
+require = ["research.backfilled"]
+description = "the research step left what it found in the KB"

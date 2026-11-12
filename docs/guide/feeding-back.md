@@ -1,6 +1,6 @@
 # Feeding the knowledge base
 
-> **Status:** built in v0.3.0-dev.1; proposals and the backfill and reflection checks built in v0.4.0-dev.1; required steps spliced into every run are planned.
+> **Status:** built in v0.3.0-dev.1; proposals, the backfill and reflection checks, and required steps spliced into every run built in v0.4.0-dev.1.
 
 Reading the knowledge base (KB) is half of the loop. The other half is what each stage of the work writes back, so that the next session starts from more than this one did. This page follows one piece of work through the four stages and says, for each thing written: which verb writes it, where it lands, and who commits it.
 
@@ -112,4 +112,4 @@ Two run-record checks ([gates](gates.md#run-record-checks)) judge the run's own 
 - **`research.backfilled`**: since the step began, a KB record was written or changed, a retrieval receipt was recorded, or a checkpoint entry holds a citation token.
 - **`run.reflected`**: a checkpoint entry starts with `reflection:`, and the run has a pending proposal, a KB record written in the step (an accepted proposal), or a line starting `no proposal`.
 
-They show that something was written, not that it is good; pair each with an attested gate whose instructions say what a good backfill or reflection covers. *Planned:* a required template spliced into every run, so these steps are owed without the agent choosing a plan that names them.
+They show that something was written, not that it is good; pair each with an attested gate whose instructions say what a good backfill or reflection covers. A required template ([run-graph](run-graph.md#required-steps), `.writfold/plans/required.toml`) is spliced into every new plan, so these steps are owed without the agent choosing a plan that names them; `fixtures/kb/required-steps` is a worked example.

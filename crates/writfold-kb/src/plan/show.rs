@@ -2,6 +2,7 @@
 //! line `resume` shows, and what a refused `plan advance` owes.
 use super::fold::{Graph, Step};
 use super::judge::Gate;
+use super::moved::Moved;
 use crate::emit::{More, Row};
 
 fn line(label: &'static str, text: String) -> More {
@@ -123,8 +124,13 @@ pub fn step_row(step: &Step, current: bool, gates: &[Gate], judged: bool) -> Row
     row
 }
 
-/// The plan status rows: each step, then each invalid event.
-pub fn rows(graph: &Graph, gates: Option<&[Vec<Gate>]>) -> Vec<Row> {
+fn has_moved(step: &Step, moved: &[Moved]) -> bool {
+    moved.iter().any(|m| m.covers(&step.template, &step.digest))
+}
+
+/// The plan status rows: each step, then each invalid event. A step whose
+/// template has moved is flagged `!template-moved`.
+pub fn rows(graph: &Graph, gates: Option<&[Vec<Gate>]>, moved: &[Moved]) -> Vec<Row> {
     let current = graph.current();
     let mut out: Vec<Row> = graph
         .steps
@@ -132,12 +138,16 @@ pub fn rows(graph: &Graph, gates: Option<&[Vec<Gate>]>) -> Vec<Row> {
         .enumerate()
         .map(|(i, s)| {
             let judged = gates.and_then(|g| g.get(i));
-            step_row(
+            let mut row = step_row(
                 s,
                 current == Some(i),
                 judged.map_or(&[], Vec::as_slice),
                 judged.is_some(),
-            )
+            );
+            if has_moved(s, moved) {
+                row.flags.push("template-moved".into());
+            }
+            row
         })
         .collect();
     for (path, why) in &graph.invalid {
@@ -162,7 +172,7 @@ pub fn rows(graph: &Graph, gates: Option<&[Vec<Gate>]>) -> Vec<Row> {
 }
 
 /// The one line `resume` shows: the current step and what it still owes.
-pub fn resume_row(graph: &Graph, gates: Option<&[Vec<Gate>]>) -> Row {
+pub fn resume_row(graph: &Graph, gates: Option<&[Vec<Gate>]>, moved: &[Moved]) -> Row {
     let total = graph.steps.len();
     let Some(i) = graph.current() else {
         return Row {
@@ -202,6 +212,13 @@ pub fn resume_row(graph: &Graph, gates: Option<&[Vec<Gate>]>) -> Row {
     });
     if stale {
         row.flags.push("stale".into());
+    }
+    if graph
+        .steps
+        .iter()
+        .any(|s| !s.closed() && has_moved(s, moved))
+    {
+        row.flags.push("template-moved".into());
     }
     row
 }

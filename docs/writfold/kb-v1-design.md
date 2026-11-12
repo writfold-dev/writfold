@@ -1695,7 +1695,7 @@ writfold kb plan skip --reason TEXT --by WHO [--run ID] [--repo DIR]
 - **`plan set`** reads `.writfold/plans/<template>.toml` from the KB root, else the subject repository (the same name in both is refused), or `--from FILE`. Every gate it names must have a usable definition that is not a candidate gate; otherwise it is refused (exit 3), never taken as "not applicable". Setting the same template with the same bytes again writes nothing and exits 0; a different second root plan is refused.
 - **`plan advance`** judges the current step's gates now. In the fixed order of the kernel: no current step (refused, exit 3, as an error); then the first owed gate. An owed gate gives an answer with `refused` set (exit 3): the step's row with `owes: <gate> [<standing>], …`, `read:` lines and the `next:` command for the first owed gate, and the note `nothing written`. Otherwise it writes the `done-` event.
 - **`plan skip`** closes the current step with a reason and `--by` (one line each, as statements). A skipped step is shown `[skipped]`, never done.
-- **Exit codes** follow 3.1. `plan status` exits 2 when the run has no plan (`answer=unknown reason=no-plan`), a done step is `!stale`, or an event is invalid; else 0. Its trailer counts `steps= done= skipped= stale= invalid=`.
+- **Exit codes** follow 3.1. `plan status` exits 2 when the run has no plan (`answer=unknown reason=no-plan`), a done step is `!stale`, or an event is invalid; else 0. Its trailer counts `steps= done= skipped= stale= invalid=` (and `moved=` since §24).
 
 ### 21.2 Templates
 
@@ -1708,7 +1708,7 @@ description = "…"               # optional; one line
 steps = ["research: backfilled", "implement: quality unit", "review: review", "reflect: reflected"]
 ```
 
-A step is `id: gate gate …`: a slug, a colon and zero or more gate IDs. A repeated step ID, a repeated gate within a step, a non-slug and more than 64 steps are refused. `use=<template>` is refused with "splicing is not built yet" (the next slice). The template digest is the SHA-256 of its exact bytes, so a comment edit is a new template; the run keeps its own snapshot (21.3), so an edit never rewrites a run.
+A step is `id: gate gate …`: a slug, a colon and zero or more gate IDs. A repeated step ID, a repeated gate within a step, a non-slug and more than 64 steps are refused. `use=<template>` was refused in this slice; it is built in §24.3. The template digest is the SHA-256 of its exact bytes, so a comment edit is a new template; the run keeps its own snapshot (21.3), so an edit never rewrites a run.
 
 ### 21.3 The event log
 
@@ -1776,7 +1776,7 @@ A gate of class `run-record` takes `require = [...]` (built-ins only: `research.
 
 ### 21.10 Not done
 
-- Splicing under a step (`plan use`, `--again`, `use=` includes), `!template-moved`, required steps spliced into every run, and a skill's dynamic-injection line (the next slice). The fold, node paths and splice key already take nested splices.
+- ~~Splicing under a step (`plan use`, `--again`, `use=` includes), `!template-moved`, required steps spliced into every run, and a skill's dynamic-injection line~~: built, [§24](#24-splicing-and-required-steps-as-built).
 - ~~The session-start and compaction hooks showing the plan position~~ (built since, §25).
 - Proofs of `writfold_core::plan`; `spec/RunGraph.tla`.
 - `seq` for delivery receipts (19.4), which still order by `recorded`; deliveries are not plan gates in this slice.
@@ -1956,6 +1956,89 @@ The state is G1's kernel (16.6) over the gate's valid receipts for the subject, 
 - Naming an assessed gate on a plan step (the run graph); waivers of assessed gates; `gate verify` of an assessed receipt (re-running the pinned binary on the recorded source).
 - Grounding a Weft `rule` binding as a rule (it is resolved like any other citation); Weft-side resolution of bindings, which waits for Weft's own grounded profile.
 - A real plan step assessed by the owner.
+
+## 24. Splicing and required steps as built
+
+The fourth item of the order of work adopted on 12 November 2026 (mission, "The run graph, hooks and order of work"), with the required steps of "Required steps and run-record checks". A plan now grows under the current step; templates include templates; a template edited after it was spliced is flagged; templates named in one file are spliced into every new plan. No crate, record kind or protocol step entered, and the event schema stayed `writfold-plan-event/1`. New code: `splice_check` and `splice` in the kernel `crates/writfold-core/src/plan.rs`; `crates/writfold-kb/src/plan/{splice,required,moved}.rs`; `use=` and the closure in `plan/template.rs`; includes in `plan/event.rs` and `plan/fold.rs`; the required-end guard in `plan/write.rs`; the `plan use` arguments and the `--again` switch in `crates/writfold-app/src/kb/{plan,writes}.rs`; the fixture `fixtures/kb/required-steps`; and the tests in 24.8.
+
+### 24.1 Verb
+
+```text
+writfold kb plan use <template> [--again] [--run ID] [--repo DIR]
+```
+
+- **On a run without a plan** it is a root splice, exactly as `plan set <template>` (with the required steps, 24.5), and says so in a note.
+- **Otherwise** the template's steps are spliced before the current step, as its children: the splice event's `parent` is the current step's path and its `ordinal` is one more than the highest ordinal used under that parent. The answer is the plan as it now stands with `spliced <t> under <parent> as <prefix>` and `recorded <file>` notes.
+- **In the kernel's fixed order** (`writfold_core::plan::splice_check`): the same key already spliced is `Already`; a depth beyond 4 is `TooDeep` (exit 3, nothing written); an empty list takes a root splice; a list with no current step is `Complete` (exit 3: there is nothing to splice under); otherwise the steps go before the current step.
+- **The key** is the template's name and digest. It is matched against every template use (splice or include, 24.3) whose parent is the current step, one of its ancestors, or the root. So a repeat at the same step, from a step the splice itself made current, or of a template the root plan already is, answers `<t> is already spliced under <parent> at this digest; nothing written (--again adds another)` and exits as `plan status` would (0 on a clean plan). `--again` passes no keys, so the same template is spliced again under the current step at the next ordinal. Another step is another parent: a review template used under two different steps needs no flag. A changed template (another digest) is a new splice.
+- **Every gate** of every template in the closure must be defined and not a candidate gate, as for `plan set` (21.1).
+
+The kernel's `splice(nodes, at, count)` is the list operation: `count` open steps inserted at `at`, every existing step keeping its state and relative order. The fold does not call it (the fold expands the tree), and the tests check that the two agree (24.8).
+
+### 24.2 Ordinals and node paths
+
+An ordinal is a splice's place among the splices under the same parent, not a count of one template's uses. Root splices of a new plan with required steps take 1, 2, 3 … in order (`research#1`, `fix#2`, `reflect#3`); a plan without required steps keeps `change#1`, so existing runs and goldens are unchanged. With the fold's sort key (parent, ordinal, template, digest), the order of siblings is the order they were made. Two clones that splice different templates under the same step concurrently both take the same ordinal; the fold orders them by template name, a total key on the files.
+
+### 24.3 Includes: `use=`
+
+A step string may carry at most one `use=<name>` beside its gates (`"review: lint use=review"`); the name must be a slug other than `required`, and a template including itself directly is refused when parsed. `template::closure` resolves the includes when a template is spliced, each by `template::find` (KB root, else the subject repository), depth first: a name already on the path is a cycle (`loop-a includes itself: loop-a → loop-b → loop-a`), and a path of more than four templates is refused. The closure's `height` (1 without includes) is the number of levels the splice adds; `depth(parent) + height` must be at most 4, where a path's depth is its number of `#`.
+
+The splice event records the closure as `includes`, a list of `{name, digest, source}` for every template included directly or not, each written to `templates/<hex>.toml` before the event. The key is absent when there are no includes, so events written before this slice keep their bytes and digests. The fold reads every included snapshot and refuses the splice as invalid if one is missing or altered, or if a template in the closure names a `use=` the closure does not record. An include expands under its step as `<step>/<name>#1/…`, before the splices made under that step later (which therefore start at ordinal 2); it counts as a use for idempotence and for ordinals, and its levels count towards the depth bound in the fold as in the splice.
+
+### 24.4 `!template-moved`
+
+Each folded step now carries its template's `digest` and `source`. `plan/moved.rs` re-finds every distinct (template, digest) a run's steps come from by name, as the splice found it. If the file now has another digest it is moved (`now @<hex>`); if it is gone or unreadable, it is moved (`now absent or unreadable`). A template given with `--from FILE` is never compared. In `plan status`, every step of a moved template is flagged `!template-moved`; one note per template names both digests and says that nothing migrates; and the trailer counts the flagged steps as `moved=` (the count is shown for every plan, so 21.1's trailer is now `steps= done= skipped= stale= moved= invalid=`). `resume`'s plan line carries the flag when an open step comes from a moved template. The exit code is not raised: `moved` is not among the counts that make an answer partial (3.1), because the run's record is complete and correct; the flag says the source has moved on, not that an answer is incomplete.
+
+### 24.5 Required steps
+
+`.writfold/plans/required.toml`, schema `writfold-plan-required/1`, in the gate TOML subset (16.2):
+
+```toml
+schema = "writfold-plan-required/1"
+start = ["research"]
+end = ["reflect"]
+```
+
+- **Both lists** are optional; a name must be a template slug other than `required`, and must not repeat or appear in both lists. Unknown keys are refused. The file is read from the KB root, else the subject repository; both is refused, as for templates. `required` is reserved: `template::find`, `template::parse` and `use=` refuse it as a template name.
+- **When a plan is first set**, `plan set` and the root case of `plan use` splice, at the root and in one write, each start template, then the plan's template, then each end template, at root ordinals 1, 2, 3 … (`required::order`; the plan's template once, in its own place, if the file names it too). Every named template must exist; every gate in every closure must be defined.
+- **A required end template added after a plan was set:** `plan advance` and `plan skip` refuse (exit 3, as an error) to close the last open step while any end template has no root splice in the run, naming it and the command. `plan use <that template>` then splices it at the root, at the next root ordinal, after every existing step, not under the current step (`required::missing_end`). Start templates added later are not retrofitted: a run's start has passed.
+- **A required step is an ordinary step:** it may be skipped with a reason and `--by`, and is shown `[skipped]`, never done.
+
+The worked example, `fixtures/kb/required-steps`, holds the file above, the templates `research` (`"research: backfilled"`), `reflect` (`"reflect: reflected reflection"`) and `fix`, and three gates: `backfilled` and `reflected`, run-record checks of `research.backfilled` and `run.reflected` (21.6), and `reflection`, an attested gate with `scope = ["**"]` and `instructions = "reflection.md"`, which lists what a good reflection covers (outcome, surprises, evidence, what the KB lacked with a proposal or `no proposal:`, one change for next time). The run-record check shows a reflection was written; the attestation states it covers the instructions; the scope makes a code change after the reflection stale it.
+
+### 24.6 A skill that splices itself
+
+Writfold does not parse `SKILL.md`. Claude Code's dynamic context injection runs a command when a skill loads and puts its output in the skill text; the documented form, `` !`<command>` `` at the start of a line or after whitespace (or a ` ```! ` block for several), was read from https://code.claude.com/docs/en/skills ("Inject dynamic context") on 12 November 2026. The same page says a failing command aborts the whole invocation, injected commands are checked against the permission rules (pre-approve with `allowed-tools`), and `disableSkillShellExecution` turns them off. The guide ([skills](../guide/skills.md)) therefore recommends `` !`writfold kb plan use review || true` `` with `allowed-tools: Bash(writfold kb plan use *)`: the skill loads even when `plan use` exits 2 or 3, and the model reads the plan's current step or the refusal. Idempotence (24.1) makes a reload after compaction a no-op. Not exercised in a live Claude Code session.
+
+### 24.7 Writes and crashes
+
+`plan use` and `plan set` build one operation list: every snapshot of every closure not yet present (an existing snapshot with other bytes is refused), then one `splice-` event per template, all `Op::Create` through the 13.2 protocol in one `atomic::apply`. A splice never exists without its snapshots; a crash between them leaves snapshots, which a rerun skips when their bytes match; a crash after the event is published leaves a complete splice, and the rerun answers "already spliced".
+
+### 24.8 Tests
+
+- **Kernel** (`writfold-core/src/plan.rs`): for every list of up to four steps and every insertion of 0 to 3 steps, `splice_check` admits the current step (0 for an empty list) or refuses `Complete` exactly when every step is closed; `splice` keeps the prefix and the suffix unchanged, inserts only open steps, and makes the first new step current (or leaves the current step when nothing is inserted). For every list of up to three steps, a spliced key is `Already` at every depth, and an unspliced key is `TooDeep` exactly beyond 4.
+- **Units:** `use=` parsing and refusals (`plan/template.rs`); the `includes` round trip and its absence when empty (`plan/event.rs`); the required file's parsing, refusals and order (`plan/required.rs`); the `plan use` arguments and `--again` only on `use` (`writfold-app`).
+- **Splicing** (`tests/plan_splice.rs`; goldens `plan-use.txt`, `plan-use-repeat.txt`, `plan-set-includes.txt`, `plan-status-moved.txt`): `plan use` with no plan is a root splice; under `implement` it agrees step for step with the kernel's `splice`; a repeat from the child step it made current writes nothing and exits 0; back at `implement`, a repeat is still a no-op and `--again` splices `review#2`. Includes expand three levels deep with one snapshot per template; a `plan use` of an included template is already spliced; editing an included template flags only its steps. A cycle and a five-level chain are refused writing nothing; a four-level chain is admitted; splicing under a four-level step is refused. An edited template flags every step `!template-moved`, changes no step, state or event file, flags `resume`'s plan line, and clears when reverted. With an include, nested splices, a skip and `--again`, every rotation and reversal of the event listing folds to the same steps, windows, invalid list, current step and uses, and a Git clone answers `plan status` with the same rows.
+- **Required steps** (`tests/plan_required.rs`, over `fixtures/kb/required-steps`; goldens `plan-set-required.txt`, `plan-advance-reflect.txt`): `plan set fix` splices `research#1`, `fix#2`, `reflect#3`; the walk meets `backfilled` with a ticket; `reflect` is refused while it owes `reflected` and `reflection` (with the instructions' `read:` line), then while it owes the attestation, then advances and the plan is complete. A required end template added after the plan was set blocks completion until `plan use reflect` splices `reflect#2` at the root's end.
+- **Kill tests** (`tests/plan_faults.rs`): `plan use` joins `set`, `advance` and `skip`, aborted at each of the seven protocol steps; every splice's snapshots exist after every death, and a rerun completes.
+- **Removing the check fails a test:** with the key check removed from `splice_check`, `plan::tests::splice_is_idempotent_on_its_key_and_bounded_in_depth`, `plan_splice::use_splices_before_the_current_step_once` and `includes_expand_with_their_closure` fail (checked by hand).
+- **Guide:** `guide_toml.rs` reads the required file's schema; the `use=` block in `run-graph.md` lost its planned marker and parses; the remaining planned block (`deliver:<mode>` as a step's gate) is still refused.
+
+### 24.9 Deviations
+
+- **The required-steps format** is `start = [...]` and `end = [...]` lists rather than per-template `at = "start"` entries: the TOML subset has no tables. One file in `.writfold/plans/`, so the name `required` is reserved there.
+- **Ordinals are per parent,** not per template. The task's key (parent, template, digest, ordinal) is kept; counting per parent is what makes sibling splices fold in the order they were made (a per-template ordinal would sort a later `alpha#1` before an earlier `review#1`).
+- **Idempotence looks up the ancestors.** Matching the current step alone would splice a skill again under its own first step when it is reloaded after compaction; the key is therefore matched at the current step, every ancestor and the root.
+- **`!template-moved` does not raise the exit code,** and is shown on every step of the moved template, done steps included.
+- **A required end template missing from a run** is refused at completion and spliced at the root's end by `plan use`; a missing start template is not retrofitted.
+
+### 24.10 Not done
+
+- The deterministic hooks showing the plan position (the next item; built separately).
+- Delivery modes as a step's gates (`deliver:<mode>`).
+- A live Claude Code session loading a skill with the injection line (the review's manual smoke test).
+- `!late-splice` for a splice under a step that another clone has meanwhile closed: such a splice's steps fold in as open children of a done step and are owed like any other open step, but are not flagged.
+- Proofs of `splice` and `spec/RunGraph.tla`.
 
 ---
 

@@ -1,4 +1,4 @@
-//! The run graph, linear (`writfold kb plan set|status|advance|skip`).
+//! The run graph (`writfold kb plan set|use|status|advance|skip`).
 //!
 //! Writfold records the graph and the agent walks it; nothing here
 //! schedules anything. A plan is a template's steps spliced at the run's
@@ -10,14 +10,19 @@
 //! are the pure kernel [`writfold_core::plan`]. Gate checks over the run's
 //! own records live in [`records`].
 //!
-//! Splicing a template under a step (`plan use`, `use=` includes) is the
-//! next slice; the event log, the node paths and the post-order fold
-//! already have room for it.
+//! `plan use` splices a template before the current step, as its
+//! children ([`splice`]); `use=` includes are expanded when a template is
+//! spliced; required start and end templates are spliced into every new
+//! plan ([`required`]); a spliced template whose file has since changed
+//! is shown `!template-moved` ([`moved`]).
 pub mod event;
 pub mod fold;
 pub mod judge;
+pub mod moved;
 pub mod records;
+pub mod required;
 mod show;
+mod splice;
 pub mod template;
 mod write;
 
@@ -41,6 +46,14 @@ pub enum PlanVerb {
     Set {
         template: Option<String>,
         from: Option<PathBuf>,
+        run: Option<String>,
+        repo: Option<PathBuf>,
+    },
+    /// Splice a template before the current step, as its children (at
+    /// the root when the run has no plan); `again` splices another copy.
+    Use {
+        template: String,
+        again: bool,
         run: Option<String>,
         repo: Option<PathBuf>,
     },
@@ -76,7 +89,8 @@ pub fn execute(ws: &Workspace, request: &Request, verb: &PlanVerb, now: i64) -> 
             let frame = crate::gate::frame(request, "plan-status", vec![loaded.rec.id.clone()]);
             session.emit(&answer, &frame)
         }
-        PlanVerb::Set { .. } => write::set(ws, &tool, request, verb, now),
+        PlanVerb::Set { .. } => splice::set(ws, &tool, request, verb, now),
+        PlanVerb::Use { .. } => splice::use_template(ws, &tool, request, verb, now),
         PlanVerb::Advance { run, repo } => {
             write::advance(ws, &tool, request, (run.as_deref(), repo.as_deref()), now)
         }
@@ -90,6 +104,8 @@ pub(crate) struct Loaded {
     pub graph: Graph,
     pub records: Records,
     pub subject: Option<Subject>,
+    /// Spliced templates whose file has changed since.
+    pub moved: Vec<moved::Moved>,
 }
 
 impl Loaded {
@@ -103,11 +119,14 @@ impl Loaded {
         let graph = fold::read(&session.ws.root, &runs::dir(&rec), &rec.id);
         let records = records::observe(session, &rec)?;
         let subject = crate::gate::locate(session, &rec, repo, cwd)?;
+        let top = subject.as_ref().map(|s| (s.top.as_path(), s.name.as_str()));
+        let moved = moved::find(&session.ws.root, top, &graph);
         Ok(Self {
             rec,
             graph,
             records,
             subject,
+            moved,
         })
     }
 
@@ -147,7 +166,7 @@ fn status(session: &Session<'_>, loaded: &Loaded) -> Result<Answer> {
             .notes
             .push("no subject repository here: gates are not judged; pass --repo DIR".into());
     }
-    answer.rows = show::rows(graph, judged.as_deref());
+    answer.rows = show::rows(graph, judged.as_deref(), &loaded.moved);
     let count = |status: &str| {
         answer
             .rows
@@ -160,25 +179,44 @@ fn status(session: &Session<'_>, loaded: &Loaded) -> Result<Answer> {
         .iter()
         .filter(|r| r.flags.iter().any(|f| f == "stale"))
         .count();
+    let flagged = |flag: &str| {
+        answer
+            .rows
+            .iter()
+            .filter(|r| r.flags.iter().any(|f| f == flag))
+            .count()
+    };
+    let moved = flagged("template-moved");
     answer.counts = vec![
         ("steps", graph.steps.len()),
         ("done", count("done")),
         ("skipped", count("skipped")),
         ("stale", stale),
+        ("moved", moved),
         ("invalid", graph.invalid.len()),
     ];
-    for (_, s, t) in &graph.splices {
+    let spliced: Vec<String> = graph
+        .splices
+        .iter()
+        .map(|(_, s, t)| {
+            let under = match s.parent.as_str() {
+                "" => String::new(),
+                parent => format!(" under {parent}"),
+            };
+            let short = moved::short(&s.digest);
+            format!("{} @{short}{under} from {}", t.name, s.source)
+        })
+        .collect();
+    if !spliced.is_empty() {
         answer.notes.push(format!(
-            "plan {} @{} from {}; steps are derived from runs/{}/plan/ on every read, never stored",
-            t.name,
-            s.digest
-                .trim_start_matches("sha256:")
-                .get(..12)
-                .unwrap_or_default(),
-            s.source,
+            "plan {}; steps are derived from runs/{}/plan/ on every read, never stored",
+            spliced.join(", "),
             loaded.rec.id
         ));
     }
+    answer
+        .notes
+        .extend(loaded.moved.iter().map(moved::Moved::note));
     Ok(answer)
 }
 
@@ -218,5 +256,9 @@ pub fn resume_row(session: &Session<'_>, rec: &Rec, cwd: &Path) -> Option<Row> {
         return None;
     }
     let judged = loaded.judged(session).ok().flatten();
-    Some(show::resume_row(&loaded.graph, judged.as_deref()))
+    Some(show::resume_row(
+        &loaded.graph,
+        judged.as_deref(),
+        &loaded.moved,
+    ))
 }
