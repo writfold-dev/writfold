@@ -87,9 +87,53 @@ pub fn expired(observed: &str, ttl_text: Option<&str>, now: i64) -> Option<bool>
     }
 }
 
+/// `YYYY-MM-DDTHH:MM:SSZ` for an instant (the form checkpoint headings,
+/// run IDs and manifests use).
+pub fn stamp(at: i64) -> String {
+    let (days, secs) = (at.div_euclid(86_400), at.rem_euclid(86_400));
+    let (year, month, day) = civil(days);
+    format!(
+        "{year:04}-{month:02}-{day:02}T{:02}:{:02}:{:02}Z",
+        secs / 3600,
+        secs % 3600 / 60,
+        secs % 60
+    )
+}
+
+/// `YYYY-MM-DD` (UTC) for an instant.
+pub fn date(at: i64) -> String {
+    stamp(at)[..10].to_owned()
+}
+
+/// The proleptic Gregorian date of a day count since the epoch.
+fn civil(days: i64) -> (i64, i64, i64) {
+    let z = days + 719_468;
+    let era = z.div_euclid(146_097);
+    let of_era = z - era * 146_097;
+    let year_of_era = (of_era - of_era / 1460 + of_era / 36_524 - of_era / 146_096) / 365;
+    let of_year = of_era - (365 * year_of_era + year_of_era / 4 - year_of_era / 100);
+    let shifted = (5 * of_year + 2) / 153;
+    let day = of_year - (153 * shifted + 2) / 5 + 1;
+    let month = if shifted < 10 {
+        shifted + 3
+    } else {
+        shifted - 9
+    };
+    let year = year_of_era + era * 400 + i64::from(month <= 2);
+    (year, month, day)
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{Ttl, expired, parse, ttl};
+    use super::{Ttl, expired, parse, stamp, ttl};
+
+    #[test]
+    fn stamps_round_trip() {
+        for at in [0, 951_868_800, 1_794_393_005, 1_709_164_800, 4_107_542_399] {
+            assert_eq!(parse(&stamp(at)), Some(at), "{at}");
+        }
+        assert_eq!(stamp(1_794_393_005), "2026-11-11T10:30:05Z");
+    }
 
     #[test]
     fn dates_and_ttls() {

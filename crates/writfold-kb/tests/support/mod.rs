@@ -188,6 +188,7 @@ impl World {
             cursor: None,
             json: false,
             now: Some(NOW),
+            probe: writfold_kb::write::no_probe,
         }
     }
 

@@ -58,6 +58,7 @@ fn main() -> Result {
         cursor: None,
         json: false,
         now: None,
+        probe: writfold_kb::write::no_probe,
     };
     let started = Instant::now();
     let status = writfold_kb::run(&request(Verb::IndexRebuild))?;

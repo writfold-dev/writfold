@@ -54,6 +54,7 @@ fn child() -> TestResult {
         cursor: None,
         json: false,
         now: Some(support::NOW),
+        probe: writfold_kb::write::no_probe,
     };
     match writfold_kb::run(&request) {
         Err(error) => println!("shadow: {error}"),

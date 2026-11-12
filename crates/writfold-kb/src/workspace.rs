@@ -109,7 +109,7 @@ fn configured_root() -> Option<PathBuf> {
 
 /// The nearest enclosing work tree and its Git directory (a `.git`
 /// directory, or the one a `.git` file points at).
-fn find_repo(root: &Path) -> Result<Option<Repo>> {
+pub fn find_repo(root: &Path) -> Result<Option<Repo>> {
     for dir in root.ancestors() {
         let dot = dir.join(".git");
         let git_dir = if dot.is_dir() {

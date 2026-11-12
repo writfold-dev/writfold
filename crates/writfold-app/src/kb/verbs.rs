@@ -68,6 +68,9 @@ pub fn verb(name: &str, common: &Common, positional: &[String]) -> Result<Verb, 
             },
             signatures: common.signatures || name == "match",
         },
+        "status" if common.values.contains_key("set") => {
+            Verb::Write(super::writes::status(common, one("ID")?)?)
+        }
         "status" => Verb::Status {
             target: one("ID or project")?,
         },
@@ -84,6 +87,14 @@ pub fn verb(name: &str, common: &Common, positional: &[String]) -> Result<Verb, 
             "verify" => Verb::IndexVerify,
             other => return Err(format!("unknown index subcommand {other}")),
         },
+        "runs" => Verb::Runs {
+            open: common.switches.iter().any(|s| s == "open"),
+            project: common.project.clone(),
+        },
+        "resume" => Verb::Resume { run: optional()? },
+        "checkpoint" | "record" | "cite" => {
+            Verb::Write(super::writes::verb(name, common, positional)?)
+        }
         other => return Err(format!("unknown verb {other}")),
     })
 }

@@ -48,6 +48,17 @@ fn searched(repo: &str) -> Option<PathBuf> {
         .find(|candidate| git_dir(candidate).is_some())
 }
 
+/// The directory (work tree or bare) a repository name or path names: a
+/// mapped or searched name, else a path (relative to `cwd`).
+pub fn locate(session: &Session<'_>, repo: &str, cwd: &Path) -> Option<PathBuf> {
+    let direct = cwd.join(repo);
+    [mapped(session, repo), searched(repo), Some(direct)]
+        .into_iter()
+        .flatten()
+        .find(|path| git_dir(path).is_some())
+        .and_then(|path| std::fs::canonicalize(path).ok())
+}
+
 /// The Git directory for a citation's `repo=` (and optional `url=`).
 pub fn resolve(session: &Session<'_>, repo: &str, url: Option<&str>) -> Option<PathBuf> {
     if repo.is_empty() || repo.contains("..") {
