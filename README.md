@@ -209,6 +209,10 @@ per line) or point `WRITFOLD_KB_REPOS` at directories holding them. The
 invented example KB the tests use is in [`fixtures/kb/basic`](fixtures/kb/basic);
 the format and plan are in the [KB v1 design](docs/writfold/kb-v1-design.md).
 
+The [guides](docs/guide/README.md) hold the full skeletons: the KB layout,
+what each stage writes back, validation, gates, delivery modes, hooks and
+what is planned next, each marked built or planned.
+
 ### The Claude Code plugin
 
 [`plugins/writfold`](plugins/writfold) gives a Claude Code session the KB
