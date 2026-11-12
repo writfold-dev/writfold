@@ -1,12 +1,9 @@
-//! `writfold tuft`: run a Tuft v0 program over one pinned Git commit.
-//!
-//! The pure `tuft` crate compiles the program. This adapter lowers `find`
-//! onto the B0 storage boundary through the read-only pinned-Git-tree
-//! backend, retains evidence through the trial retain path (the same
-//! `writfold-citation/1` bindings `writfold trial retain` produces, stored in
-//! the same trial state, so a Weft report can cite them and `trial prepare`
-//! accepts them), then projects and emits. It writes nothing outside the
-//! trial state's evidence and objects, and grants no authority.
+//! `writfold tuft`: run a Tuft v0 program over one pinned Git commit. The
+//! pure `tuft` crate compiles it; this adapter lowers `find` onto the B0
+//! boundary's read-only pinned-Git-tree backend, retains evidence through
+//! the trial retain path (`writfold trial retain`'s bindings, in the trial
+//! state, so a Weft report can cite them), then projects and emits. It
+//! writes only there and in a KB run's receipts (`kb`); it grants nothing.
 #[cfg(test)]
 mod backend_tests;
 pub mod cli;
@@ -14,6 +11,9 @@ pub mod cli;
 mod compact_tests;
 #[cfg(test)]
 mod json_tests;
+pub mod kb;
+#[cfg(test)]
+mod kb_tests;
 mod search;
 #[cfg(test)]
 mod tests;

@@ -334,6 +334,7 @@ in source order. The golden cases are in
 
 ```text
 writfold tuft run FILE --repo DIR [--state DIR] [--cursor C] [--verbose|--json] [--out NEW_FILE]
+                  [--cite] [--kb DIR] [--run ID]
 writfold tuft check FILE
 ```
 
@@ -344,6 +345,38 @@ uninitialized directory is refused with its absolute path and how it was chosen.
 must be an ordinary repository (`DIR/.git` a directory). A whole-tree
 `find` loads every blob in scope once, in parallel, bounded at 1 GiB. A larger
 scope refuses and asks to be narrowed.
+
+## KB adapter
+
+The language stays at v0; this is an output adapter (owner decision,
+12 November 2026) so Tuft results share the vocabulary of
+[`writfold kb`](../writfold/kb-v1-design.md#15-tuft-adapter-as-built). It adds
+no grammar, operator or field, and without `--cite` and without a KB run the
+output is byte-for-byte what it was.
+
+- **`--cite`** prints, under each shown row, one continuation line
+  `  cite: ⟦cite kind=code repo=… rev=<pinned commit> path=… L=a-b blob=… span=… seen=… url=…⟧`.
+  It is the token `writfold kb cite make` prints for the same lines at the
+  same commit, made by the same code, so pasted into a KB record it checks
+  `fresh` under `writfold kb stale` until the lines move (`!moved→a-b`) or
+  change. `L` covers the lines of the row's range: the retained lines after
+  `retain … around lines`, else the lines the match touches. `repo=` is the
+  name the KB's repository map gives `--repo`, else its directory name (a
+  note on standard error says when `stale` could not find it from that
+  name). In the verbose envelope the line follows each row; `--json` adds a
+  `cites` array beside `rows`, one token per row. The cite lines sit outside
+  the budget, like the trailer, and the trailer stays the last line.
+- **Retrieval receipts.** When the KB (found as `writfold kb` finds it) has
+  an open current run, or with `--kb DIR` or `--run ID`, the run also
+  records one receipt: a new file
+  `runs/<id>/retrievals/<UTC time>-<6 hex>.md` holding the tool, program
+  digest, repository, commit, row counts, the compact trailer and one token
+  per distinct cited span, written through the KB's write protocol (lock,
+  re-check, create-new publish). `writfold kb resume` shows the newest three.
+  The receipt's path goes to standard error; standard output is unchanged.
+  Without `--kb`/`--run`, a problem recording (a busy lock, say) is a note
+  and the run still succeeds; with them it fails the command. A closed
+  current run takes no receipt.
 
 ## Revision-9 vocabulary
 

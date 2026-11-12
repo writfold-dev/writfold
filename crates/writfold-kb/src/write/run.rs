@@ -125,7 +125,7 @@ pub fn plan(session: &Session<'_>, request: &Checkpoint, cwd: &Path) -> Result<P
 }
 
 /// The run named, else the current-run pointer.
-fn target(session: &Session<'_>, named: Option<&str>) -> Result<Rec> {
+pub(crate) fn target(session: &Session<'_>, named: Option<&str>) -> Result<Rec> {
     let id = match named {
         Some(id) => id.to_owned(),
         None => runs::current_of(session).ok_or_else(|| {

@@ -1,6 +1,7 @@
 //! Tracked-file writes (M3): `checkpoint`, `record ticket|decision|link`,
-//! `status --set` and `cite make`. Each verb first plans its writes from
-//! the index at the current snapshot (validating IDs, vocabularies and
+//! `status --set`, `cite make`, and the Tuft adapter's retrieval receipts.
+//! Each verb first plans its writes from the index at the current
+//! snapshot (validating IDs, vocabularies and
 //! targets, refusing conflicts with exit 3), then applies them through
 //! the atomic protocol in [`atomic`], then answers from the index at the
 //! new snapshot. Files are written in the shapes the KB already uses, so
@@ -10,7 +11,9 @@ pub mod atomic;
 pub mod cite;
 pub mod json;
 pub mod record;
+pub mod retrieval;
 pub mod run;
+pub mod span;
 pub mod status;
 
 use crate::emit::{Answer, Frame, Output};
@@ -110,6 +113,8 @@ pub enum Write {
     Link(record::Link),
     SetStatus(status::SetStatus),
     CiteMake(cite::CiteMake),
+    /// A retrieval receipt in a run (the Tuft adapter).
+    Retrieval(retrieval::Retrieval),
 }
 
 /// Plan, apply and answer one write.
@@ -136,6 +141,7 @@ pub fn execute(ws: &Workspace, request: &Request, write: &Write, now: i64) -> Re
             Write::Decision(d) => record::decision(&session, d)?,
             Write::Link(l) => record::link(&session, l)?,
             Write::SetStatus(s) => status::plan(&session, s)?,
+            Write::Retrieval(r) => retrieval::plan(&session, r)?,
             Write::CiteMake(_) => return Err(KbError::Usage("unreachable".into())),
         }
     };

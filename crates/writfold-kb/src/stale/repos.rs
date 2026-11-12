@@ -5,6 +5,7 @@
 //! directories holding `<name>` or `<org>/<name>`), a `repo=` that is itself
 //! a path, and a `file://` URL.
 use crate::session::Session;
+use crate::workspace::Workspace;
 use std::path::{Path, PathBuf};
 
 /// The Git directory of a repository directory (work tree or bare).
@@ -23,21 +24,26 @@ pub fn git_dir(path: &Path) -> Option<PathBuf> {
         .flatten()
 }
 
-fn mapped(session: &Session<'_>, repo: &str) -> Option<PathBuf> {
-    let map = session
-        .ws
-        .repo
-        .as_ref()?
-        .git_dir
-        .join("writfold")
-        .join("repos");
-    let text = std::fs::read_to_string(map).ok()?;
+/// The `(name, path)` entries of the KB's local repository map.
+fn map(ws: Option<&Workspace>) -> Vec<(String, PathBuf)> {
+    let Some(repo) = ws.and_then(|ws| ws.repo.as_ref()) else {
+        return Vec::new();
+    };
+    let file = repo.git_dir.join("writfold").join("repos");
+    let text = std::fs::read_to_string(file).unwrap_or_default();
     text.lines()
         .filter(|line| !line.trim_start().starts_with('#'))
-        .find_map(|line| {
+        .filter_map(|line| {
             let (name, path) = line.trim().split_once(char::is_whitespace)?;
-            (name == repo).then(|| PathBuf::from(path.trim()))
+            Some((name.to_owned(), PathBuf::from(path.trim())))
         })
+        .collect()
+}
+
+fn mapped(ws: Option<&Workspace>, repo: &str) -> Option<PathBuf> {
+    map(ws)
+        .into_iter()
+        .find_map(|(name, path)| (name == repo).then_some(path))
 }
 
 fn searched(repo: &str) -> Option<PathBuf> {
@@ -52,7 +58,7 @@ fn searched(repo: &str) -> Option<PathBuf> {
 /// mapped or searched name, else a path (relative to `cwd`).
 pub fn locate(session: &Session<'_>, repo: &str, cwd: &Path) -> Option<PathBuf> {
     let direct = cwd.join(repo);
-    [mapped(session, repo), searched(repo), Some(direct)]
+    [mapped(Some(session.ws), repo), searched(repo), Some(direct)]
         .into_iter()
         .flatten()
         .find(|path| git_dir(path).is_some())
@@ -61,11 +67,15 @@ pub fn locate(session: &Session<'_>, repo: &str, cwd: &Path) -> Option<PathBuf> 
 
 /// The Git directory for a citation's `repo=` (and optional `url=`).
 pub fn resolve(session: &Session<'_>, repo: &str, url: Option<&str>) -> Option<PathBuf> {
+    resolve_in(Some(session.ws), repo, url)
+}
+
+fn resolve_in(ws: Option<&Workspace>, repo: &str, url: Option<&str>) -> Option<PathBuf> {
     if repo.is_empty() || repo.contains("..") {
         return None;
     }
     let candidates = [
-        mapped(session, repo),
+        mapped(ws, repo),
         searched(repo),
         Path::new(repo).is_absolute().then(|| PathBuf::from(repo)),
         url.and_then(|u| u.strip_prefix("file://"))
@@ -75,4 +85,21 @@ pub fn resolve(session: &Session<'_>, repo: &str, url: Option<&str>) -> Option<P
         .into_iter()
         .flatten()
         .find_map(|path| git_dir(&path))
+}
+
+/// The `repo=` name to cite the repository in `dir` by: a name in the KB's
+/// map that points at it, else its directory name. The flag says whether
+/// `stale` finds `dir` again from that name (and `url`); when it does not,
+/// the citation checks as unverifiable until the name is mapped.
+pub fn name_for(ws: Option<&Workspace>, dir: &Path, url: &str) -> (String, bool) {
+    let target = git_dir(dir);
+    let same = |path: &Path| target.is_some() && git_dir(path) == target;
+    if let Some((name, _)) = map(ws).into_iter().find(|(_, path)| same(path)) {
+        return (name, true);
+    }
+    let name = dir
+        .file_name()
+        .map_or_else(|| "repo".to_owned(), |n| n.to_string_lossy().into_owned());
+    let found = resolve_in(ws, &name, Some(url)).is_some_and(|found| Some(found) == target);
+    (name, found)
 }

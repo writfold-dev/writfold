@@ -148,6 +148,16 @@ Set it when your sessions start in code repositories rather than in the KB. With
 it, the hooks use `$WRITFOLD_KB`, then the nearest KB above the session's
 directory, then the prototype configuration's `root`.
 
+Tuft results share this vocabulary. `writfold tuft run … --cite` prints,
+under each shown row, the token `kb cite make` would print for those lines
+at the program's pinned commit, so a token pasted into a record checks
+`fresh` under `kb stale` until the lines move or change. While the KB has an
+open current run (or with `--kb DIR` / `--run ID`), each `tuft run` also
+records a retrieval receipt in `runs/<id>/retrievals/` (program digest,
+commit, trailer, row counts and tokens), and `kb resume` shows the newest
+ones. Standard output stays as it was; the receipt's path goes to standard
+error. See [Tuft's KB adapter](docs/tuft/language.md#kb-adapter).
+
 ### What works today
 
 | Command | What it does | Evidence |
@@ -159,7 +169,7 @@ directory, then the prototype configuration's `root`.
 | `writfold trial approve --require CHECK` | Refuses unless each named check of the bound Weft report is `entailed` (recorded as hypothetical, never as grounded) | proved: `required_entailed_spec` |
 | `writfold trial retain` | Keeps exact bytes of a file at a full commit id as a citation; reports citing anything else are refused | [trial profile](docs/writfold/trial-profile.md) |
 | `writfold trial evidence list/show` | Reads retained evidence back in a later session: compact rows, and exact bytes verified against their digest before printing (tampered evidence refuses); context lines come from the pinned blob, marked apart | [trial profile](docs/writfold/trial-profile.md#reusing-evidence-in-a-later-session) |
-| `writfold tuft run` | Exact find, retain, project and emit over one pinned commit | [Tuft v0](docs/tuft/language.md) |
+| `writfold tuft run` | Exact find, retain, project and emit over one pinned commit; `--cite` adds KB citation tokens, and a run with a current KB run records a retrieval receipt there | [Tuft v0](docs/tuft/language.md), [adapter as built](docs/writfold/kb-v1-design.md#15-tuft-adapter-as-built) |
 | `writfold trial run` | Tuft evidence → a Weft report from the binary you name → `prepare`, in one command; stops at approval | [one command](docs/writfold/trial-profile.md#one-command) |
 | `writfold serve` | JSON-RPC 2.0 on stdio; with `writfold.trial/1`, `trial/show`, `trial/retain` and `trial/prepare`. Approval stays CLI-only | [trial profile](docs/writfold/trial-profile.md#through-serve) |
 
