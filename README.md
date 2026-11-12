@@ -38,10 +38,12 @@ cargo build --release -p writfold
 relationships, decisions, ticket records, investigations, signatures, runs and
 project folders) and answers where a project stands, what surrounds a record,
 why something was decided, what state a record is in, what changing it
-touches, who relies on it, and which citations have moved. It writes nothing
-you track: a derived SQLite index lives under the repository's Git directory
-and is refreshed in place for the files that changed since the commit (and
-dirty files) it was built at; `index verify` checks it equals a rebuild.
+touches, who relies on it, and which citations have moved. A derived SQLite
+index lives under the repository's Git directory and is refreshed in place for
+the files that changed since the commit (and dirty files) it was built at;
+`index verify` checks it equals a rebuild. The write verbs record checkpoints,
+tickets, decisions, links and status changes as ordinary files and leave them
+uncommitted for you (or your agent) to review and commit.
 
 ```sh
 cd /path/to/kb/some-project            # or pass --kb DIR, or set WRITFOLD_KB
@@ -56,7 +58,30 @@ target/release/writfold kb uses demo-service@<commit>:src/ledger.rs:3-5
 target/release/writfold kb timeline harbor-db
 target/release/writfold kb stale       # code citations need local clones (below)
 target/release/writfold kb index status    # or: index verify, index rebuild
+target/release/writfold kb runs --open      # runs: state, branch/worktree, last checkpoint
+target/release/writfold kb resume           # the current run: checkpoint tail, rechecks
 ```
+
+Writes (each one file, or one directory, published atomically; an existing
+ID or a file changed since it was read is a conflict, exit 3):
+
+```sh
+writfold kb checkpoint --new-run --project harbor --task "Close HBR-101" --note "Start: replay numbers."
+writfold kb checkpoint --note "Replay takes 41 s; next: batch size 250."   # the current run
+writfold kb record ticket HBR-102 --title "Replay too slow" --assets harbor-api,harbor-db
+writfold kb record decision --title "Replay in batches" --target-source harbor-api --project harbor
+writfold kb record link depends-on quay-worker harbor-db --evidence demo-service@<commit>:src/ledger.rs:3-5
+writfold kb status HBR-102 --set done
+writfold kb status <run-id> --set closed
+writfold kb cite make demo-service src/batch.rs 2-4    # prints a citation token; writes nothing
+```
+
+The files keep the layout the KB already uses, so tools that read it keep
+working: a run's repository, branch, worktree (recorded, never created), base
+commit and `closed` state are kept in `runs/<id>/writfold-run.json` beside the
+manifest; a decision starts as a draft, and `status --set` refuses the
+decision transitions that need design-binding fields it does not compute
+(accepted, landing, applied, verified, regressed).
 
 Every row read from a file ends with its path and line, flags (`!moved→5-7`,
 `!past-ttl`, `!draft` …) mark what to re-check, and the trailer is always last:
@@ -86,6 +111,7 @@ the format and plan are in the [KB v1 design](docs/writfold/kb-v1-design.md).
 | Command | What it does | Evidence |
 |---|---|---|
 | `writfold kb brief / context / why / status / find / match / impact / uses / timeline / stale / index` | Reads a Git KB of plain records; every row pinned to its file and line, moved citations flagged; the index is refreshed incrementally and verified equal to a rebuild | [KB v1 design](docs/writfold/kb-v1-design.md#11-m1-as-built) (sections 11 and 12), golden and property tests in `crates/writfold-kb/tests` |
+| `writfold kb checkpoint / resume / runs / record / status --set / cite make` | Writes checkpoints, runs, tickets, decisions, links and status changes atomically (old or new bytes after a kill at any step); prints citation tokens | [KB v1 design](docs/writfold/kb-v1-design.md#13-m3-as-built) (section 13), kill and fault tests in `crates/writfold-kb/tests/faults.rs`, TLC model `spec/KbWrite.tla` |
 | `writfold trial prepare / approve / apply / recover / show` | One edit through a durable, validated ledger in Writfold's own sparse worktree; never your checkout | [trial profile](docs/writfold/trial-profile.md), [adversarial campaign](bench/2026-11-09-adversarial/) |
 | `writfold trial approve --require CHECK` | Refuses unless each named check of the bound Weft report is `entailed` (recorded as hypothetical, never as grounded) | proved: `required_entailed_spec` |
 | `writfold trial retain` | Keeps exact bytes of a file at a full commit id as a citation; reports citing anything else are refused | [trial profile](docs/writfold/trial-profile.md) |

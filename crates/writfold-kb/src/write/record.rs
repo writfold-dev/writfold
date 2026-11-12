@@ -43,6 +43,47 @@ pub const ORIGINS: [&str; 7] = [
     "user-request",
 ];
 
+/// A decision's front-matter keys, in the order the KB's decisions use;
+/// the ones Writfold does not set are written empty.
+const DECISION_KEYS: [&str; 36] = [
+    "id",
+    "kind",
+    "type",
+    "title",
+    "status",
+    "created",
+    "updated",
+    "origin",
+    "proposed_by",
+    "requested_by",
+    "source_session",
+    "project",
+    "swept_at",
+    "target",
+    "references",
+    "landed",
+    "decided_by",
+    "superseded_by",
+    "profile",
+    "target_revision",
+    "acceptor",
+    "executor",
+    "verifier",
+    "accepted_revision",
+    "environment",
+    "scope",
+    "last_actor",
+    "regression_note",
+    "workflow_version",
+    "target_source",
+    "schema_version",
+    "binding_design_revision",
+    "binding_source",
+    "binding_target_revision",
+    "binding_actor",
+    "binding_observed_at",
+];
+
 #[derive(Clone, Debug, Default)]
 pub struct Ticket {
     pub ticket: String,
@@ -112,12 +153,13 @@ fn assets(session: &Session<'_>, names: &[String]) -> Result<()> {
     Ok(())
 }
 
-fn rendered(
+fn rendered<S: AsRef<str>>(
     fields: &[(&str, Option<&str>)],
-    sections: &[(&str, &str)],
+    sections: &[(&str, S)],
     title: &str,
 ) -> Result<Vec<u8>> {
-    render_document(fields, sections, title)
+    let sections: Vec<(&str, &str)> = sections.iter().map(|(n, c)| (*n, c.as_ref())).collect();
+    render_document(fields, &sections, title)
         .map(|doc| doc.as_bytes().to_vec())
         .map_err(|error| KbError::Usage(format!("cannot render the record: {error}")))
 }
@@ -190,79 +232,31 @@ pub fn decision(session: &Session<'_>, d: &Decision) -> Result<Plan> {
     let project = d.project.as_deref().unwrap_or_default();
     let references = list(&d.references);
     let bullets: Vec<String> = d.references.iter().map(|r| format!("- {r}")).collect();
-    let mut fields: Vec<(&str, Option<&str>)> = vec![
-        ("id", Some(&id)),
-        ("kind", Some("decision")),
-        ("type", Some("")),
-        ("title", Some(&title)),
-        ("status", Some("draft")),
-        ("created", Some(&date)),
-        ("updated", Some(&date)),
-        ("origin", Some(&origin)),
+    let given = [
+        ("id", id.as_str()),
+        ("kind", "decision"),
+        ("title", title.as_str()),
+        ("status", "draft"),
+        ("created", date.as_str()),
+        ("updated", date.as_str()),
+        ("origin", origin.as_str()),
+        ("project", project),
+        ("target", "[]"),
+        ("references", references.as_str()),
+        ("landed", "[]"),
+        ("profile", "modern"),
+        ("workflow_version", "3"),
+        ("target_source", target.as_str()),
+        ("schema_version", "1"),
     ];
-    for key in ["proposed_by", "requested_by", "source_session"] {
-        fields.push((key, Some("")));
-    }
-    fields.extend([
-        ("project", Some(project)),
-        ("swept_at", Some("")),
-        ("target", Some("[]")),
-        ("references", Some(references.as_str())),
-        ("landed", Some("[]")),
-        ("decided_by", Some("")),
-        ("superseded_by", Some("")),
-        ("profile", Some("modern")),
-    ]);
-    for key in [
-        "target_revision",
-        "acceptor",
-        "executor",
-        "verifier",
-        "accepted_revision",
-        "environment",
-        "scope",
-        "last_actor",
-        "regression_note",
-    ] {
-        fields.push((key, Some("")));
-    }
-    fields.extend([
-        ("workflow_version", Some("3")),
-        ("target_source", Some(target.as_str())),
-        ("schema_version", Some("1")),
-    ]);
-    for key in [
-        "binding_design_revision",
-        "binding_source",
-        "binding_target_revision",
-        "binding_actor",
-        "binding_observed_at",
-    ] {
-        fields.push((key, Some("")));
-    }
-    let text = |v: &Option<String>| v.as_deref().map(str::trim).unwrap_or_default().to_owned();
-    let (context, evidence, change, why) = (
-        text(&d.context),
-        text(&d.evidence),
-        text(&d.change),
-        text(&d.why),
-    );
-    let log = format!("- {date}: draft (recorded with writfold kb record decision)");
-    let refs = bullets.join("\n");
-    let sections = [
-        ("Context", context.as_str()),
-        ("Evidence", evidence.as_str()),
-        ("Proposed change", change.as_str()),
-        ("Research", ""),
-        ("Alternatives considered", ""),
-        ("Acceptance gates", ""),
-        ("Impact", ""),
-        ("Landing plan", ""),
-        ("References", refs.as_str()),
-        ("Why general / justification", why.as_str()),
-        ("Decision log", log.as_str()),
-    ];
-    let bytes = rendered(&fields, &sections, &title)?;
+    let fields: Vec<(&str, Option<&str>)> = DECISION_KEYS
+        .iter()
+        .map(|key| {
+            let value = given.iter().find(|(k, _)| k == key).map_or("", |(_, v)| *v);
+            (*key, Some(value))
+        })
+        .collect();
+    let bytes = rendered(&fields, &body(d, &date, &bullets), &title)?;
     let files = vec![
         ("proposal.md".to_owned(), bytes),
         ("gates.json".to_owned(), b"[]\n".to_vec()),
@@ -280,6 +274,27 @@ pub fn decision(session: &Session<'_>, d: &Decision) -> Result<Plan> {
         verb: "record-decision",
         args: vec![id, title],
     })
+}
+
+/// A new decision's sections, in the order the KB's decisions use.
+fn body(d: &Decision, date: &str, bullets: &[String]) -> Vec<(&'static str, String)> {
+    let text = |v: &Option<String>| v.as_deref().map(str::trim).unwrap_or_default().to_owned();
+    vec![
+        ("Context", text(&d.context)),
+        ("Evidence", text(&d.evidence)),
+        ("Proposed change", text(&d.change)),
+        ("Research", String::new()),
+        ("Alternatives considered", String::new()),
+        ("Acceptance gates", String::new()),
+        ("Impact", String::new()),
+        ("Landing plan", String::new()),
+        ("References", bullets.join("\n")),
+        ("Why general / justification", text(&d.why)),
+        (
+            "Decision log",
+            format!("- {date}: draft (recorded with writfold kb record decision)"),
+        ),
+    ]
 }
 
 /// `ev:<home>/<slug>`, or a code locator `<repo>@<7-40 hex>:<path>[:a[-b]]`.

@@ -1,6 +1,7 @@
 //! The write verbs' arguments: `checkpoint`, `record ticket|decision|link`,
 //! `status --set` and `cite make`. Parsing only; `writfold-kb` decides.
 use super::args::Common;
+use writfold_kb::Verb;
 use writfold_kb::write::Write;
 use writfold_kb::write::cite::CiteMake;
 use writfold_kb::write::record::{Decision, Link, Ticket};
@@ -82,6 +83,30 @@ fn items(common: &Common, key: &str) -> Vec<String> {
 
 fn switch(common: &Common, name: &str) -> bool {
     common.switches.iter().any(|s| s == name)
+}
+
+/// `runs`, `resume` and the write verbs; `None` for every other verb.
+pub fn runs_and_writes(
+    name: &str,
+    common: &Common,
+    positional: &[String],
+) -> Option<Result<Verb, String>> {
+    Some(match (name, positional) {
+        ("runs", []) => Ok(Verb::Runs {
+            open: switch(common, "open"),
+            project: common.project.clone(),
+        }),
+        ("resume", []) => Ok(Verb::Resume { run: None }),
+        ("resume", [run]) => Ok(Verb::Resume {
+            run: Some(run.clone()),
+        }),
+        ("runs" | "resume", _) => Err(format!("{name}: too many arguments")),
+        ("status", [target]) if common.values.contains_key("set") => {
+            status(common, target.clone()).map(Verb::Write)
+        }
+        ("checkpoint" | "record" | "cite", _) => verb(name, common, positional).map(Verb::Write),
+        _ => return None,
+    })
 }
 
 /// `status <id> --set STATE …`.

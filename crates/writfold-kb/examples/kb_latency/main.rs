@@ -6,7 +6,8 @@
 //! index once (cold), then times each verb `RUNS` times through the same
 //! entry point the CLI uses (Git admission, one `status` spawn, the index
 //! and the query), and finally times incremental refreshes of 50 changed
-//! files, left dirty and committed, each followed by an `index verify`.
+//! files, left dirty and committed, each followed by an `index verify`,
+//! and last the write verbs (M3), each a whole invocation.
 //! Prints median and p95 in milliseconds.
 use std::error::Error;
 use std::path::{Path, PathBuf};
@@ -18,6 +19,7 @@ use writfold_kb::{Request, Verb};
 type Result<T = ()> = std::result::Result<T, Box<dyn Error>>;
 
 mod generate;
+mod writes;
 
 use generate::{generate, git, write};
 
@@ -75,7 +77,9 @@ fn main() -> Result {
             .map(|l| format!("  {l}\n"))
             .collect::<String>()
     );
-    let result = report(&request, runs).and_then(|()| refreshes(&kb, &request, runs));
+    let result = report(&request, runs)
+        .and_then(|()| refreshes(&kb, &request, runs))
+        .and_then(|()| writes::writes(&kb, &request, runs));
     std::fs::remove_dir_all(&base)?;
     result
 }

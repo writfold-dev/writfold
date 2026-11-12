@@ -68,50 +68,34 @@ fn blob(
     Ok(bytes.into_iter().next().map(|b| (id, b)))
 }
 
-pub fn make(
-    ws: &Workspace,
-    tool: &GitTool,
-    request: &Request,
-    make: &CiteMake,
-    now: i64,
-) -> Result<Output> {
-    let session = Session::open(ws, Some(tool), false, now)?;
-    let git = tool.admit()?;
-    let path = make.path.trim_start_matches("./");
-    if path.is_empty() || path.starts_with('/') || path.split('/').any(|p| p == "..") {
-        return Err(KbError::Usage(format!(
-            "{path:?} is not a path inside the repository"
-        )));
-    }
-    if make.first == 0 || make.last < make.first {
-        return Err(KbError::Usage(
-            "the range must be a-b with 1 <= a <= b".into(),
-        ));
-    }
-    let dir = repos::locate(&session, &make.repo, &request.cwd).ok_or_else(|| {
-        KbError::Refused(format!(
-            "no local repository {:?} (map it in <git dir>/writfold/repos)",
-            make.repo
-        ))
-    })?;
-    let git_dir = repos::git_dir(&dir)
+/// The committed lines a citation pins: commit, blob, span digest, and the
+/// work-tree digest when the file differs from `HEAD`.
+struct Pinned {
+    rev: GitObjectId,
+    blob: GitObjectId,
+    span: String,
+    dirty: Option<String>,
+}
+
+fn pinned(git: &GitExecutable<'_>, dir: &Path, path: &str, make: &CiteMake) -> Result<Pinned> {
+    let git_dir = repos::git_dir(dir)
         .ok_or_else(|| KbError::Refused(format!("{} is not a repository", dir.display())))?;
     let reads = KbRepository {
         git_dir: &git_dir,
         work_tree: None,
     };
     let rev = match kb_commit(
-        &git,
+        git,
         reads,
         "refs/remotes/origin/HEAD",
         budgets()?,
         &CANCELLED,
     )? {
         Some(rev) => rev,
-        None => kb_commit(&git, reads, "HEAD", budgets()?, &CANCELLED)?
+        None => kb_commit(git, reads, "HEAD", budgets()?, &CANCELLED)?
             .ok_or_else(|| KbError::Refused("the repository has no commit".into()))?,
     };
-    let (blob_id, bytes) = blob(&git, &git_dir, rev.as_str(), path)?
+    let (blob_id, bytes) = blob(git, &git_dir, rev.as_str(), path)?
         .ok_or_else(|| KbError::Refused(format!("{path} is not a file at {}", rev.as_str())))?;
     let text = String::from_utf8_lossy(&bytes);
     let lines: Vec<&str> = text.lines().collect();
@@ -124,47 +108,24 @@ pub fn make(
         ))
     })?;
     let span = normalize_span(window);
-    let dirty = dirty(&git, &git_dir, &dir, path)?;
+    let dirty = dirty(git, &git_dir, dir, path)?;
     if dirty.is_some() && !make.allow_dirty {
         return Err(KbError::Refused(format!(
             "{path} differs from HEAD in the work tree; commit it, or pass --allow-dirty to cite the committed bytes"
         )));
     }
-    let name = if make.repo.contains('/') || make.repo.starts_with('.') {
-        dir.file_name()
-            .map_or_else(|| make.repo.clone(), |n| n.to_string_lossy().into_owned())
-    } else {
-        make.repo.clone()
-    };
-    let url = kb_config(&git, reads, "remote.origin.url", budgets()?, &CANCELLED)?
-        .unwrap_or_else(|| dir.to_string_lossy().into_owned());
-    let seen = time::stamp(now);
-    let seen = format!("{}Z", &seen[..16]);
-    let mut fields = vec![
-        ("kind", "code".to_owned()),
-        ("repo", name.clone()),
-        ("rev", rev.as_str().to_owned()),
-        ("path", path.to_owned()),
-        ("L", format!("{a}-{b}")),
-        ("blob", blob_id.as_str().to_owned()),
-        ("span", span),
-    ];
-    if let Some(sym) = &make.sym {
-        fields.push(("sym", sym.clone()));
-    }
-    fields.push(("seen", seen));
-    if let Some(ttl) = &make.ttl {
-        if crate::time::ttl(Some(ttl)).is_none() {
-            return Err(KbError::Usage("--ttl is <N>d, <N>h or none".into()));
-        }
-        fields.push(("ttl", ttl.clone()));
-    }
-    fields.push(("url", url));
-    if let Some(dirty) = dirty.filter(|_| make.allow_dirty) {
-        fields.push(("dirty", dirty));
-    }
+    Ok(Pinned {
+        rev,
+        blob: blob_id,
+        span,
+        dirty,
+    })
+}
+
+/// The token, in the field order the KB's tokens use, checked to parse back.
+fn token(fields: &[(&str, String)]) -> Result<String> {
     let mut parts = Vec::new();
-    for (key, text) in &fields {
+    for (key, text) in fields {
         parts.push(format!("{key}={}", value(key, text)?));
     }
     let token = format!("\u{27e6}cite {}\u{27e7}", parts.join(" "));
@@ -174,16 +135,85 @@ pub fn make(
     if parsed != Some(true) {
         return Err(KbError::Usage("the token does not parse back".into()));
     }
+    Ok(token)
+}
+
+fn checked(make: &CiteMake) -> Result<&str> {
+    let path = make.path.trim_start_matches("./");
+    if path.is_empty() || path.starts_with('/') || path.split('/').any(|p| p == "..") {
+        return Err(KbError::Usage(format!(
+            "{path:?} is not a path inside the repository"
+        )));
+    }
+    if make.first == 0 || make.last < make.first {
+        return Err(KbError::Usage(
+            "the range must be a-b with 1 <= a <= b".into(),
+        ));
+    }
+    if let Some(ttl) = &make.ttl
+        && crate::time::ttl(Some(ttl)).is_none()
+    {
+        return Err(KbError::Usage("--ttl is <N>d, <N>h or none".into()));
+    }
+    Ok(path)
+}
+
+pub fn make(
+    ws: &Workspace,
+    tool: &GitTool,
+    request: &Request,
+    make: &CiteMake,
+    now: i64,
+) -> Result<Output> {
+    let session = Session::open(ws, Some(tool), false, now)?;
+    let git = tool.admit()?;
+    let path = checked(make)?;
+    let dir = repos::locate(&session, &make.repo, &request.cwd).ok_or_else(|| {
+        KbError::Refused(format!(
+            "no local repository {:?} (map it in <git dir>/writfold/repos)",
+            make.repo
+        ))
+    })?;
+    let pin = pinned(&git, &dir, path, make)?;
+    let name = if make.repo.contains('/') || make.repo.starts_with('.') {
+        dir.file_name()
+            .map_or_else(|| make.repo.clone(), |n| n.to_string_lossy().into_owned())
+    } else {
+        make.repo.clone()
+    };
+    let git_dir = repos::git_dir(&dir).unwrap_or_else(|| dir.clone());
+    let reads = KbRepository {
+        git_dir: &git_dir,
+        work_tree: None,
+    };
+    let url = kb_config(&git, reads, "remote.origin.url", budgets()?, &CANCELLED)?
+        .unwrap_or_else(|| dir.to_string_lossy().into_owned());
+    let seen = time::stamp(now);
+    let (a, b) = (make.first, make.last);
+    let mut fields = vec![
+        ("kind", "code".to_owned()),
+        ("repo", name.clone()),
+        ("rev", pin.rev.as_str().to_owned()),
+        ("path", path.to_owned()),
+        ("L", format!("{a}-{b}")),
+        ("blob", pin.blob.as_str().to_owned()),
+        ("span", pin.span),
+    ];
+    fields.extend(make.sym.iter().map(|s| ("sym", s.clone())));
+    fields.push(("seen", format!("{}Z", &seen[..16])));
+    fields.extend(make.ttl.iter().map(|t| ("ttl", t.clone())));
+    fields.push(("url", url));
+    fields.extend(pin.dirty.map(|d| ("dirty", d)));
     let answer = Answer {
         rows: vec![Row {
             kind: "cite",
             id: format!("code:{name}:{path}:{a}-{b}"),
-            text: token,
+            text: token(&fields)?,
             ..Row::default()
         }],
         notes: vec![format!(
             "cites {name}@{}:{path}:{a}-{b}",
-            &rev.as_str()[..12]
+            &pin.rev.as_str()[..12]
         )],
         ..Answer::default()
     };
