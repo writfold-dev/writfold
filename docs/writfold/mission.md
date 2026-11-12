@@ -100,11 +100,13 @@ The v1 design is [kb-v1-design.md](kb-v1-design.md).
 2. ~~The index, search and graph verbs~~ (M2): `find`, `match`, `status`, `impact`, `uses`, `timeline`.
 3. Writes (M3): `record`, `checkpoint`, `resume`, `runs`.
 4. M4a: the Claude Code plugin (SessionStart brief, checkpoint drafts, one skill).
-5. G1: checks with pinned receipts (below).
-6. T1: `writfold watch`, a read-only TUI.
-7. G2: offline delivery candidates; G2b: an optional guard hook.
-8. A two-week pause: count real catches and waivers from the receipts. If no catch mattered, keep G1 and drop the rest.
-9. M4b: MCP, trailer and tracker edges, `--at`. G3 only if the pause justifies it.
+5. Tuft adapter: `tuft run` rows can carry KB citation tokens, and a search is recorded as a retrieval receipt in the current run.
+6. G1: checks with pinned receipts (below).
+7. Splicery adapter: a recipe applies directly in a run's recorded worktree; the result is an ordinary Git change judged by a gate, with the recipe and preview kept as a receipt.
+8. T1: `writfold watch`, a read-only TUI.
+9. G2: offline delivery candidates; G2b: an optional guard hook.
+10. A two-week pause: count real catches and waivers from the receipts. If no catch mattered, keep G1 and drop the rest.
+11. M4b: MCP, trailer and tracker edges, `--at`. G3 only if the pause justifies it.
 
 ## Gates, runs and progress (owner decision, 12 November 2026)
 
@@ -121,6 +123,10 @@ The owner proposed reusable gates, skills and delivery modes. After an independe
 - **Not now:** a governed profile, real Slack or PR adapters, effect reconciliation, profile composition and gate groups, authority levels, exception routes, snapshot migration, a Writfold skill format, Weft as an evaluator, a Tuft grammar, Splicery as the edit boundary, signing, and proofs or TLC for gates.
 
 The proposal and review are kept with the session notes; the decision above is the authority.
+
+### Narrow adapters for Tuft and Splicery (owner decision, 12 November 2026)
+
+Tuft and Splicery stay frozen as languages, but each gains one narrow adapter so agents have two interfaces and can choose by task: Splicery for repeated or structural edits, ordinary tools for small ones; `kb` verbs or Tuft for retrieval. The Tuft adapter emits KB citations and run receipts. The Splicery adapter applies in a run's worktree without the trial's signing and approval flow, which stays frozen. Weft contributes only its four-way vocabulary for plan assumptions; making it read KB citations as premises waits for the two-week pause.
 
 ## Adopted and declined from the review
 
