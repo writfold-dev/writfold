@@ -11,11 +11,13 @@
 //! work tree dirty for the user to commit.
 #![forbid(unsafe_code)]
 
+pub mod deliver;
 pub mod draft;
 pub mod edit;
 pub mod emit;
 pub mod error;
 pub mod gate;
+pub mod guard;
 pub mod hook;
 pub mod index;
 pub mod layout;
@@ -23,6 +25,7 @@ pub mod model;
 pub mod parse;
 pub mod runs;
 pub mod session;
+pub mod shell;
 pub mod stale;
 pub mod time;
 pub mod verbs;
@@ -95,6 +98,8 @@ pub enum Verb {
     Gate(gate::GateVerb),
     /// `edit apply|recover` (the Splicery adapter).
     Edit(edit::EditVerb),
+    /// `deliver prepare|check|attest|waive|status` (G2; nothing is sent).
+    Deliver(deliver::DeliverVerb),
 }
 
 /// One invocation.
@@ -125,6 +130,9 @@ pub fn run(request: &Request) -> Result<Output> {
     }
     if let Verb::Edit(verb) = &request.verb {
         return edit::execute(&ws, request, verb, now);
+    }
+    if let Verb::Deliver(verb) = &request.verb {
+        return deliver::execute(&ws, request, verb, now);
     }
     let tool = match &ws.repo {
         Some(_) => Some(GitTool::locate()?),

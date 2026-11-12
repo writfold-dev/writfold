@@ -8,7 +8,7 @@
     project=harbor
     last: 2026-11-04T09:00:00Z Legacy path removed; nothing left to do.
 == resume run-20261101T090000Z-a1b2c3 ==
-gates: gates=4 satisfied=1 open=1 stale=1 failed=1 unknown=0 invalid=0
+gates: gates=4 satisfied=1 open=1 stale=1 failed=1 unknown=0 attested=0 waived=0 invalid=0
 run run-20261101T090000Z-a1b2c3 [open] Batch ledger writes rollout @runs/run-20261101T090000Z-a1b2c3/manifest.json:7
   field: project=harbor @runs/run-20261101T090000Z-a1b2c3/manifest.json:4
   field: mode=authoring @runs/run-20261101T090000Z-a1b2c3/manifest.json:5

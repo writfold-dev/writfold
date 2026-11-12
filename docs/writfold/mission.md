@@ -104,7 +104,7 @@ The v1 design is [kb-v1-design.md](kb-v1-design.md).
 6. ~~G1: checks with pinned receipts~~ (below; `gate run`, `gate status`, `gate verify`, `gate lines`; [as built](kb-v1-design.md#16-g1-as-built)).
 7. ~~Splicery adapter~~: a recipe applies directly in a run's recorded worktree; the result is an ordinary Git change judged by a gate, with the recipe and preview kept as a receipt (`edit apply`, `edit recover`; [as built](kb-v1-design.md#17-splicery-adapter-as-built)).
 8. ~~T1: `writfold watch`, a read-only TUI~~ ([as built](kb-v1-design.md#18-t1-as-built)).
-9. G2: offline delivery candidates; G2b: an optional guard hook.
+9. ~~G2: offline delivery candidates; G2b: an optional guard hook~~ (`deliver prepare|check|attest|waive|status`, `gate attest|waive`, `hook pre-tool-use`; [as built](kb-v1-design.md#19-g2-as-built)).
 10. A two-week pause: count real catches and waivers from the receipts. If no catch mattered, keep G1 and drop the rest.
 11. M4b: MCP, trailer and tracker edges, `--at`. G3 only if the pause justifies it.
 

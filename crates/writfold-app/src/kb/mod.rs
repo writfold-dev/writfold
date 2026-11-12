@@ -2,6 +2,7 @@
 //! parsing and exit codes only; every decision lives in `writfold-kb`.
 pub mod args;
 mod checkpoint;
+mod deliver;
 mod edit;
 mod gate;
 mod hook;
@@ -48,8 +49,19 @@ gates (checks with pinned receipts; definitions in .writfold/gates/<id>.toml):
                                    open, satisfied, stale, failed or unknown, per gate
   gate verify <receipt> [--repo DIR]
                                    re-run the recorded argv at the recorded commit: agree or disagree
+  gate attest <id> --statement TEXT --by WHO | gate waive <id> --reason TEXT --by WHO
+                                   a statement (attested gates) or a waiver: never shown as satisfied
   gate lines [--run ID] [--repo DIR]
-                                   receipt lines for a commit message (exit 0 only if all satisfied)
+                                   receipt lines for a commit message (exit 0 only if all are met)
+
+deliveries (offline candidates: the exact payload, checked mechanically; nothing is sent):
+  deliver prepare --mode pr-comment|slack-summary --from FILE [--audience internal|external]
+                  [--destination NAME] [--run ID]
+  deliver check [CANDIDATE] [--check NAME] [--run ID]
+                                   run the mode's checks on the candidate's bytes, one receipt each
+  deliver attest|waive [CANDIDATE] --check NAME --statement TEXT|--reason TEXT --by WHO
+  deliver status [CANDIDATE] [--run ID]
+                                   each candidate's checks (exit 0 only if all are met)
 
 edits (the Splicery adapter; Splicery for repeated or structural edits, ordinary tools for small ones):
   edit apply RECIPE.spl [RECIPE.spl ...] [--run ID] [--worktree DIR] [--dry-run]
@@ -59,9 +71,11 @@ edits (the Splicery adapter; Splicery for repeated or structural edits, ordinary
                                    finish (or drop) an edit a crash interrupted between files
 
 harness:
-  hook session-start|pre-compact|post-compact|stop|session-end
+  hook session-start|pre-compact|post-compact|stop|session-end|pre-tool-use
                                    a Claude Code hook: event JSON on stdin; always exits 0;
-                                   checkpoint drafts stay local until --from-draft confirms one
+                                   checkpoint drafts stay local until --from-draft confirms one;
+                                   pre-tool-use is the optional delivery guard (off without
+                                   .writfold/deliveries/guard.toml)
 
 The KB root is --kb, else $WRITFOLD_KB, else the nearest directory above the
 working directory holding inventory/assets/. Git is $WRITFOLD_GIT or git on PATH.

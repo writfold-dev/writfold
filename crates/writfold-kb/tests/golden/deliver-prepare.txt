@@ -1,0 +1,9 @@
+delivery 20261111T000000Z-XXXXXX [blocked] pr-comment audience=external destination=harbor#42 candidate=b912f41a0cc3 bytes=1871 @runs/run-20261101T090000Z-a1b2c3/deliveries/20261111T000000Z-XXXXXX/candidate.md:1 !blocked
+  check: paragraphs.bounded [open] mechanical needs: writfold kb deliver check 20261111T000000Z-XXXXXX !open
+  check: references.denied [open] mechanical needs: writfold kb deliver check 20261111T000000Z-XXXXXX !open
+  check: claims.cited-fresh [open] observed needs: writfold kb deliver check 20261111T000000Z-XXXXXX !open
+# note: prepared runs/run-20261101T090000Z-a1b2c3/deliveries/20261111T000000Z-XXXXXX/candidate.md: the exact payload; nothing is sent
+# note: standing is derived on every read; checks are mechanical, attestations are statements, and nothing is sent
+# note: written to the KB work tree; commit it to share it
+# coverage=complete records=30/30 shown=1 omitted=0 candidates=1 kb=d5db758bda80+dirty:2 index=refreshed:2 cursor=none q=ea1971838463
+# exit=0

@@ -189,6 +189,25 @@ pub fn execute(ws: &Workspace, request: &Request, write: &Write, now: i64) -> Re
     session.emit(&answer, &frame)
 }
 
+/// A new file or directory name for a log entry: `<UTC compact time>-<6
+/// hex>`, the hex from the time, the process, `salt` and the clock's
+/// nanoseconds, so two clones (or two writers) never pick the same name.
+pub fn unique(now: i64, salt: &str) -> String {
+    use sha2::{Digest, Sha256};
+    let stamp = crate::time::stamp(now);
+    let compact: String = stamp.chars().filter(|c| *c != '-' && *c != ':').collect();
+    let mut hash = Sha256::new();
+    hash.update(format!("{stamp}\0{}\0{salt}", std::process::id()).as_bytes());
+    hash.update(
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map_or(0, |d| d.as_nanos())
+            .to_le_bytes(),
+    );
+    let hex = crate::index::hex(&hash.finalize());
+    format!("{compact}-{}", hex.get(..6).unwrap_or(&hex))
+}
+
 /// `[a, b]`, the list form of front matter.
 pub fn list(items: &[String]) -> String {
     format!("[{}]", items.join(", "))

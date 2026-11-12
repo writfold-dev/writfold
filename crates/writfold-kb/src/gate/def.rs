@@ -27,6 +27,8 @@ const KEYS: [&str; 9] = [
     "description",
 ];
 const MAX_TIMEOUT: i64 = 86_400;
+/// The class of a gate that is a statement, not a check.
+pub const ATTESTED: &str = "attested";
 
 /// Which root a definition was read from.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -49,7 +51,7 @@ impl Origin {
 pub struct Definition {
     pub id: String,
     pub version: i64,
-    /// `mechanical` or `observed`.
+    /// `mechanical`, `observed` or `attested` (no command).
     pub class: String,
     pub argv: Vec<String>,
     pub workdir: String,
@@ -66,6 +68,11 @@ pub struct Definition {
 impl Definition {
     pub fn patterns(&self) -> Vec<&str> {
         self.scope.iter().map(String::as_str).collect()
+    }
+
+    /// An attested gate runs no command; only `gate attest` meets it.
+    pub fn attested(&self) -> bool {
+        self.class == ATTESTED
     }
 }
 
@@ -117,6 +124,39 @@ fn placeholders_ok(arg: &str) -> bool {
     })
 }
 
+/// The command fields: `argv`, `workdir` and `timeout_seconds`, required
+/// for a check and refused for an attested gate (which runs nothing; it is
+/// met only by `gate attest`).
+fn command(map: &BTreeMap<String, Value>, class: &str) -> Result<(Vec<String>, String, u64)> {
+    if class == ATTESTED {
+        if let Some(key) = ["argv", "workdir", "timeout_seconds"]
+            .into_iter()
+            .find(|k| map.contains_key(*k))
+        {
+            return Err(bad(format!("an attested gate runs nothing: remove {key}")));
+        }
+        return Ok((Vec::new(), ".".into(), 0));
+    }
+    let argv = list(map, "argv")?;
+    if argv
+        .iter()
+        .any(|a| a.is_empty() || a.contains('\0') || !placeholders_ok(a))
+    {
+        return Err(bad(format!(
+            "argv entries must be non-empty, and {ARTIFACTS} is the only placeholder"
+        )));
+    }
+    let workdir = text(map, "workdir")?.unwrap_or_else(|| ".".into());
+    if workdir != "." && !contained(&workdir) {
+        return Err(bad(
+            "workdir must be a relative path inside the repository".into()
+        ));
+    }
+    let timeout_seconds = u64::try_from(int(map, "timeout_seconds", 1, MAX_TIMEOUT)?)
+        .map_err(|_| bad("timeout_seconds".into()))?;
+    Ok((argv, workdir, timeout_seconds))
+}
+
 /// Parse and check one definition file's text.
 pub fn parse(text_in: &str, stem: &str, origin: Origin) -> Result<Definition> {
     let map = toml::parse(text_in).map_err(bad)?;
@@ -133,24 +173,10 @@ pub fn parse(text_in: &str, stem: &str, origin: Origin) -> Result<Definition> {
         )));
     }
     let class = need(&map, "class")?;
-    if !matches!(class.as_str(), "mechanical" | "observed") {
-        return Err(bad("class must be mechanical or observed".into()));
+    if !matches!(class.as_str(), "mechanical" | "observed" | ATTESTED) {
+        return Err(bad("class must be mechanical, observed or attested".into()));
     }
-    let argv = list(&map, "argv")?;
-    if argv
-        .iter()
-        .any(|a| a.is_empty() || a.contains('\0') || !placeholders_ok(a))
-    {
-        return Err(bad(format!(
-            "argv entries must be non-empty, and {ARTIFACTS} is the only placeholder"
-        )));
-    }
-    let workdir = text(&map, "workdir")?.unwrap_or_else(|| ".".into());
-    if workdir != "." && !contained(&workdir) {
-        return Err(bad(
-            "workdir must be a relative path inside the repository".into()
-        ));
-    }
+    let (argv, workdir, timeout_seconds) = command(&map, &class)?;
     let scope = list(&map, "scope")?;
     for pattern in &scope {
         let bare = pattern.strip_prefix('!').unwrap_or(pattern);
@@ -168,8 +194,6 @@ pub fn parse(text_in: &str, stem: &str, origin: Origin) -> Result<Definition> {
         return Err(bad("description must be one line".into()));
     }
     let version = int(&map, "version", 1, i64::from(u32::MAX))?;
-    let timeout_seconds = u64::try_from(int(&map, "timeout_seconds", 1, MAX_TIMEOUT)?)
-        .map_err(|_| bad("timeout_seconds".into()))?;
     let mut definition = Definition {
         path: format!("{DIR}/{id}.toml"),
         id,
@@ -302,12 +326,16 @@ mod tests {
             ("version = 1", "version = 1\nshell = \"sh -c\""),
             ("version = 1", "version = 1\nworkdir = \"../up\""),
             ("writfold-gate/1", "writfold-gate/2"),
+            ("class = \"mechanical\"", "class = \"attested\""),
         ] {
             assert!(
                 parse(&UNIT.replace(from, to), "unit", Origin::Kb).is_err(),
                 "{to}"
             );
         }
+        let attested = "schema = \"writfold-gate/1\"\nid = \"review\"\nversion = 1\nclass = \"attested\"\nscope = [\"src/**\"]\n";
+        let d = parse(attested, "review", Origin::Kb).map_err(|e| e.to_string())?;
+        assert!(d.attested() && d.argv.is_empty());
         Ok(())
     }
 }

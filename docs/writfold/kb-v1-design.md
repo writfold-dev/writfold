@@ -1393,6 +1393,171 @@ checkpoint 2026-11-03T16:00:00Z entry 2 of 2 @runs/run-20261101T090000Z-a1b2c3/c
 - `c` to promote a draft (the review's one candidate write key) and any other write.
 - Cross-project or cross-KB views; a run list filter.
 
+## 19. G2 as built
+
+G2 adds offline delivery candidates and the two obligation classes that are statements rather than checks; G2b adds an optional guard hook. This is the scope the owner adopted on 12 November 2026, smaller than the original proposal's delivery modes: a candidate is a file in the run, the checks are mechanical, and nothing is ever sent (there is no network and no adapter). New code: `crates/writfold-kb/src/deliver/{mod,candidate,config,markdown,checks,evaluate,receipt,status}.rs`, `src/gate/{statement,say}.rs`, `src/guard.rs`, `src/shell.rs`, the kernel addition `standing` in `crates/writfold-core/src/gate.rs`, the arguments in `crates/writfold-app/src/kb/deliver.rs` (and `gate attest|waive` in `kb/gate.rs`), and the `PreToolUse` entry in `plugins/writfold/hooks/hooks.json`.
+
+### 19.1 Verbs
+
+```text
+writfold kb deliver prepare --mode pr-comment|slack-summary --from FILE
+                            [--audience internal|external] [--destination NAME] [--run ID]
+writfold kb deliver check [CANDIDATE] [--check NAME] [--run ID]
+writfold kb deliver attest [CANDIDATE] --check NAME --statement TEXT --by WHO [--run ID]
+writfold kb deliver waive [CANDIDATE] --check NAME --reason TEXT --by WHO [--run ID]
+writfold kb deliver status [CANDIDATE] [--run ID]
+writfold kb gate attest <id> --statement TEXT --by WHO [--run ID] [--repo DIR]
+writfold kb gate waive <id> --reason TEXT --by WHO [--run ID] [--repo DIR]
+writfold kb hook pre-tool-use
+```
+
+- **The run** is `--run`, else the current-run pointer; the writes refuse a closed run. **A candidate** is named by its ID or by the six hex digits that end it; with none named, the run's only candidate is taken, and two or more are refused with their IDs.
+- **`prepare`** reads `FILE` (relative to the working directory; non-empty UTF-8, at most 1 MiB) and copies it byte for byte. `--audience` defaults to `internal`; `--destination` is a free one-line name (`harbor#42`, `#team-updates`) and is optional. It answers with the candidate's row (every obligation `open`) and exits 0. One artifact can be prepared several times: once per mode, audience or destination, each a separate candidate with its own receipts.
+- **`check`** evaluates the mode's checks (or the one `--check` names) against the candidate's current bytes and writes one receipt per check in one locked write. It exits 0 when the candidate is ready and 2 otherwise.
+- **`status`** shows each candidate of the run (or the one named) and exits 0 only when every obligation of every shown candidate is satisfied, attested or waived and no receipt is invalid; with no candidate it answers `answer=unknown reason=no-candidates`. Trailer counts: `candidates= ready= satisfied= attested= waived= open= stale= failed= unknown= invalid=`.
+- **`resume`** shows the run's newest three candidates, in the same form, after the gate rows.
+
+A status row, from the golden `tests/golden/deliver-status.txt`:
+
+```text
+delivery 20261111T000000Z-XXXXXX [blocked] pr-comment audience=external destination=harbor#42 candidate=b912f41a0cc3 bytes=1871 @runs/…/deliveries/20261111T000000Z-XXXXXX/candidate.md:1 !blocked
+  check: paragraphs.bounded [satisfied] mechanical pass for b912f41a0cc3 (at most 150 words per paragraph) @…/checks/paragraphs.bounded-….json:1
+  check: references.denied [failed] mechanical fail for b912f41a0cc3: line 5 internal-host (column 23); line 5 ticket (column 48) @…/checks/references.denied-….json:1 !failed
+  check: claims.cited-fresh [failed] observed fail for b912f41a0cc3: line 3 moved (code:demo-service:src/batch.rs:2-4) @…/checks/claims.cited-fresh-….json:1 !failed
+```
+
+A candidate edited after `prepare` carries `!edited`. A waived check reads `[waived] mechanical by owner: <reason> (check: failed)`, and an attested obligation `[attested] attested by owner: <statement>`, each at its statement file.
+
+### 19.2 Layout
+
+```text
+runs/<run>/deliveries/<UTC compact time>-<6 hex>/
+  candidate.md                         the exact payload; may be edited in place to repair it
+  delivery.json                        the manifest
+  checks/<check>-<time>-<hex>.json     one receipt per evaluation (deliver check only)
+  statements/<name>-<time>-<hex>.json  attestations and waivers
+runs/<run>/statements/<gate>-<time>-<hex>.json   gate attestations and waivers
+```
+
+- **The manifest** (`writfold-delivery/1`): `id`, `run`, `mode`, `audience`, `destination` (or null), `source` (`name`: the file name only, never a local path; `digest`), `candidate` (`file`, `digest` as prepared, `bytes`), `rendering: verbatim`, `recorded`. The candidate directory is one `Op::CreateDir` through the 13.2 protocol: staged complete under `<git dir>/writfold/staging/` and renamed into place, so the run holds no candidate or a whole one. No protocol step or operation kind was added.
+- **The candidate is the record; the manifest keeps the prepared digest.** Editing `candidate.md` is the expected repair; checks bind the bytes they read, so earlier receipts go stale, and the row shows `!edited`.
+- The prototype never reads `deliveries/` or `statements/`; Writfold indexes `candidate.md` as a document, so its citation tokens also appear in a KB-wide `stale`.
+
+### 19.3 Configuration and checks
+
+Configuration lives in the KB root's `.writfold/deliveries/`, in the gate definitions' TOML subset (16.2), with unknown keys refused:
+
+```toml
+# .writfold/deliveries/slack-summary.toml (optional; built-in defaults otherwise)
+schema = "writfold-delivery-mode/1"
+mode = "slack-summary"
+checks = ["paragraphs.bounded", "references.denied", "claims.cited-fresh"]
+paragraph_words = 60
+attest = ["tone.reviewed"]          # attested obligations: met only by deliver attest
+
+# .writfold/deliveries/deny-external.toml
+schema = "writfold-deny/1"
+audience = "external"
+rules = ["internal-host: \\.corp\\.example\\.com", "ticket: \\bOPS-[0-9]+"]
+
+# .writfold/deliveries/guard.toml (G2b; absent means the guard is off)
+schema = "writfold-guard/1"
+commands = ["gh pr comment", "gh pr review", "gh issue comment"]
+tools = ["mcp__slack__post_message"]
+```
+
+The built-in modes are `pr-comment` (all three checks, 150 words per paragraph) and `slack-summary` (all three, 60). A mode file may narrow the checks, change the bound and add attested obligations.
+
+Each obligation has a digest of what it means: `paragraphs.bounded` the bound, `references.denied` the audience and every rule (or the absence of a deny list), `claims.cited-fresh` its name, an attested obligation its name. A receipt or statement about another digest is stale, so tightening the bound or editing the deny list makes the matching receipts stale and leaves the others standing (tested).
+
+- **`paragraphs.bounded`** (mechanical): no prose paragraph has more words than the bound. The Markdown rules, line-based and deliberately simple (`deliver/markdown.rs`):
+  - a blank line ends a paragraph;
+  - fenced code (three or more backticks or tildes, to the matching fence or the end) is skipped;
+  - an indented line (four spaces or a tab) that does not continue an open paragraph is indented code, skipped;
+  - a table row (a line starting with `|`), a heading (`#`) and a thematic break (`---`, `***`, `___`) end a paragraph and are skipped; a table without leading pipes is read as prose;
+  - each list item (`-`, `*`, `+`, `1.` or `1)` and a space) starts its own paragraph, and its continuation lines belong to it;
+  - block quotes have their `>` markers removed and are measured like any other text (they are part of the payload); a line holding only `>` ends a paragraph;
+  - a word is a whitespace-separated token with at least one letter or digit.
+  A finding names the paragraph's first line, `max-<N>-words` and the count.
+- **`references.denied`** (mechanical): every line of the candidate, code blocks included, is matched against every rule of the audience's deny list. A rule is `name: pattern`; the pattern is a regular expression in ASCII mode (`\b`, `\w` and case folding are ASCII; the workspace's `regex` has no Unicode tables), matched case-insensitively. A finding names the line, the rule and the column; the receipt does not copy the matched text. With no deny list for the audience the outcome is `unknown` and the note says which file to add, so an unconfigured audience is never a pass.
+- **`claims.cited-fresh`** (class `observed`): every citation token in the candidate, illustrative tokens excepted, is checked by `stale`'s machinery (local repositories only; nothing is fetched). Any `moved`, `changed`, `gone`, `expired` or marked token fails it, naming the line, the verdict and the target; a token `stale` cannot check makes it `unknown`. A candidate with no tokens passes, and the note says `0 citation tokens`: claims made in prose without a token are not detected.
+
+### 19.4 Receipts and statements
+
+- **A check receipt** (`writfold-delivery-receipt/1`): `check`, `class`, `definition` (the obligation digest), `run`, `candidate` (`id`, `content`: the SHA-256 of the bytes checked), `result` (`outcome`, up to 20 `findings` of `line`, `rule`, `detail`, `findings_total`, `note`), `evaluator`, `recorded`, and `digest` over the canonical form, as in 16.5. Reading one checks the schema, the digest, the evaluator, that run, candidate and check match where it is filed, and that the outcome agrees with the findings (a pass has none, a fail has some). An invalid receipt is listed with `!invalid` and counts for nothing.
+- **A statement** (`writfold-statement/1`, shared by gates and deliveries): `kind` (`attested` or `waived`), `obligation`, `run`, `subject` (`name`: the repository or candidate; `commit` for gates; `content`: the scope digest or the candidate digest), `definition`, `text` (the statement or reason, one line, at most 2,000 characters), `by` (as given; required), `recorded`, `digest`. Writfold cannot check `by`; the Git commit that adds the file records who committed it.
+- Both are written create-new through the 13.2 protocol; both are logs.
+
+### 19.5 Standing
+
+The kernel's `state` (16.6) still derives a check's state from its receipts. The new kernel function `writfold_core::gate::standing(attested_class, state, statements)` then adds the statements:
+
+| Obligation | Current statements | Standing |
+|---|---|---|
+| a check whose state is `satisfied` | any | `satisfied` |
+| a check otherwise | a current waiver | `waived` |
+| a check otherwise | none current | its state (`open`, `stale`, `failed`, `unknown`) |
+| attested | a current attestation | `attested` |
+| attested | a current waiver, no current attestation | `waived` |
+| attested | only attestations about other content | `stale` |
+| attested | none | `open` |
+
+"Current" means the statement's definition digest and content digest equal the present ones. `satisfied`, `attested` and `waived` are met; the rest are owed. An attestation is refused for a check (`gate attest` of a mechanical gate, `deliver attest` of a built-in check): only its own passing receipt satisfies a check, and a waiver is the way to set one aside. `gate run` refuses an attested gate. The kernel test enumerates every input and checks that no statement ever yields `satisfied`, that `waived` needs a current waiver and `attested` a current attestation of an attested obligation, and which standings are met.
+
+**For gates** (G1's `class` now also accepts `attested`, with no `argv`, `workdir` or `timeout_seconds`), `gate status` rows read `[waived]` or `[attested]` with a `waived:` or `attested:` line (text, by, time) at the statement file and the flag `!waived` or `!attested`; a waiver for other content adds `why: a waiver exists, but for other content or another definition`. The trailer adds `attested=` and `waived=`, `gate lines` names them (`unit: waived by owner: <reason> <path>`, and `…, 1 attested, 1 waived` in the heading), and `gate status` and `gate lines` exit 0 when every gate is met. `gate run` still exits 2 for a failing run of a waived gate. `writfold watch`'s `gates:` line shows the two new counts.
+
+### 19.6 G2b: the guard hook
+
+`writfold kb hook pre-tool-use` reads Claude Code's PreToolUse event and is listed in the plugin's `hooks.json` with the matcher `^(Bash|mcp__.*)$`, a 10 s timeout and the same shell guard as the other hooks (14.1). It is a guard, not enforcement: it sees only the calls the harness shows it, reads a command line instead of running it, and passes anything outside its configuration.
+
+- **Off by default, and fails open.** Without `.writfold/deliveries/guard.toml` in the KB, without a KB, or with an unreadable configuration, it prints nothing (a diagnostic on stderr where something is wrong) and exits 0, so the call goes on through Claude Code's normal permission flow. Claude Code also lets a timed-out PreToolUse hook's call proceed.
+- **Matching.** For `Bash`, the command line is split into simple commands (`;`, `&`, `|`, newlines, quotes and backslashes understood by `src/shell.rs`; nothing expanded), leading `NAME=value` words are skipped, and a configured command matches when its words begin a simple command (`gh pr comment` matches `cd x && GH_REPO=a/b gh pr comment 42 …`). Any tool named in `tools` matches as a whole.
+- **The body.** From the matched command: `--body TEXT`, `--body=TEXT`, `-b TEXT` (the text) or `--body-file PATH`, `--body-file=PATH`, `-F PATH` (the file, relative to the event's `cwd`). A value holding `$` or a backquote outside single quotes, `-` (standard input), an unreadable file or no such flag leaves the body unknown.
+- **The decision**, against the current run's candidates (`deliver status`'s derivation):
+  - body known: allowed when a ready candidate holds those bytes (trailing whitespace ignored); otherwise denied, naming the candidate with those bytes and what it owes, or saying no candidate holds them (with their digest);
+  - body unknown: allowed when the run has at least one candidate and every candidate is ready; otherwise denied, listing what each blocked candidate owes;
+  - no current run, or the KB unreadable: denied, saying so.
+- **Output.** Allowing prints nothing: the hook never answers `allow`, which would skip Claude Code's permission prompt. Denying prints `{"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": "writfold delivery guard (a guard, not enforcement): …"}}` and exits 0.
+- **Cost.** A call that matches nothing reads the event, finds the KB and reads one small file, with no Git spawn and no index: under 10 ms for the debug binary on a copy of the fixture KB (below `time`'s resolution in three runs). A matched call opens the index like any verb.
+
+**Contract checked (12 November 2026)** against https://code.claude.com/docs/en/hooks: the PreToolUse input carries `tool_name`, `tool_input` (for Bash: `command`, `description`, `timeout`, `run_in_background`) and `tool_use_id` beside the common fields; the decision goes in `hookSpecificOutput` with `permissionDecision` `allow`, `deny`, `ask` or `defer` and `permissionDecisionReason` (shown to Claude for `deny`); the top-level `decision`/`reason` fields are deprecated for this event; exit 0 with no output is no decision and the call continues through the normal permission flow; a matcher with characters other than letters, digits, `_`, `-`, spaces, `,` and `|` is an unanchored JavaScript regular expression, and MCP tools are named `mcp__<server>__<tool>`; a timed-out PreToolUse command hook does not block the call.
+
+### 19.7 What is claimed
+
+- **Cooperating, and nothing is sent.** Writfold prepares and checks the payload; posting it stays with the agent or the person, with their own tools.
+- **Checks are mechanical.** They count words, match patterns and run `stale`. They do not judge tone, truth or audience fit, and a claim made without a citation token is not seen.
+- **Attestations are attestations.** A statement records that someone (named by `--by`, unverified) said something; it is shown as such and never counted as a passing check. A waiver needs a reason and is shown as waived.
+- **Mistake resistance, not adversary resistance,** as in 16.9: receipts and statements are tracked files with digests; Git history shows an edited or hand-written one.
+- **The guard is a guard.** It denies the configured commands it can recognise. A post through another command, an alias, a script, or a tool it is not configured for passes, and nothing stops posting outside Claude Code.
+
+### 19.8 Tests
+
+- **Goldens** (`crates/writfold-kb/tests/deliver.rs`; `tests/golden/deliver-prepare.txt`, `deliver-status.txt`, `deliver-status-said.txt`): a PR comment for an external audience and a Slack summary for an internal one prepared from one artifact; the PR comment checked in full and the Slack summary for paragraphs only. The PR comment's paragraph check is satisfied while the Slack summary's fails on the same bytes (separate candidates never share receipts), the Slack summary's unrun checks stay `open`, and `resume` shows the candidates. The manifest holds the destination and no local path; the payload equals the source byte for byte; `index verify` is equal.
+- **Each check failing, then passing after a repair, and staleness:** with a 50-word bound, all three checks fail on one candidate, each naming its line and rule (`line 5 internal-host (column 23)`, `line 7 max-50-words (70 words)`, `line 3 moved (code:demo-service:src/batch.rs:2-4)`); editing `candidate.md` makes all three `stale` and the row `!edited`; checking again satisfies all three and `status` exits 0; a tighter bound makes only the paragraph receipt stale, and a deny-list change only the reference receipt.
+- **Statements:** an attestation of a built-in check is refused; a waiver and an attestation make a candidate ready, shown `[waived]` and `[attested]` with `satisfied=0 attested=1 waived=1` and no `[satisfied]` anywhere; after an edit neither stands. `tests/gate_statements.rs` does the same for gates: `gate run` of an attested gate and `gate attest` of a mechanical one are refused; the waived and attested gates appear as such in `gate status`, `gate lines` and `resume`; an in-scope change makes both stale with the waiver's `why:`.
+- **Guard** (`tests/guard.rs`): no configuration is silent for a publishing command and a guarded tool; no KB is silent with a diagnostic; with a configuration, other commands and tools pass; a post is denied with no current run, with no candidate, and with an unchecked candidate (naming `paragraphs.bounded [open]`); once checked it is allowed for `--body-file`, an inline `--body` behind an assignment and `&&`, a `$(…)` body and a guarded tool; other bytes are denied; a second, failing candidate blocks the run-level cases but not the ready candidate's own bytes; an edit after the check is denied (`[stale]`). Through the binary (`crates/writfold/tests/kb_hook.rs`), the `hooks.json` command exits 0 silently with no configuration and prints the denial JSON with one.
+- **Kill tests** (`tests/deliver_faults.rs`): `deliver prepare` aborts at each of the seven protocol steps; afterwards the run holds no candidate (before `published`) or one whole candidate whose payload equals the source and whose manifest reads back, no leftover in the run, `index verify` equal, and a rerun prepares another. `deliver check` aborts at each step; only complete, valid receipts remain (a death between two of its three receipts leaves the earlier ones, which is a log, not a transaction), and a rerun adds three.
+- **Units:** the Markdown rules (`deliver/markdown.rs`), the shell reader (`shell.rs`), the statement round trip and its edits read as invalid (`gate/statement.rs`), an attested gate definition (`gate/def.rs`), and the arguments (`writfold-app`).
+- **Removing the check fails a test:** with the candidate-digest comparison removed from `deliver/status.rs` (`same_scope: true`), the repair and the statement tests fail (checked by hand).
+
+### 19.9 Deviations
+
+- **The verb set.** The task named `prepare` and `status`; `check`, `attest` and `waive` were added because receipts and statements need a writer, and `gate attest|waive` because the task asks for both classes in `gate status`. Without `check` a candidate's checks would have no receipt to bind its digest.
+- **`claims.cited-fresh` is class `observed`, not `mechanical`.** Its result depends on the cited repositories as well as the candidate, which is G1's definition of `observed` (16.2). Its receipt does not go stale when a cited source moves later (only when the candidate or the obligation changes): run `deliver check` again before posting.
+- **The manifest is `delivery.json`,** not `manifest.json`, so it is never confused with a run manifest (`runs/<id>/manifest.json`).
+- **A missing deny list is `unknown`,** not a pass; add an empty `rules = []` to say an audience has none.
+- **`deliver check` writes its receipts in one locked write but not atomically as a set:** a crash between two receipts leaves the earlier ones (tested).
+- **No `deliver show`.** `status` gives the payload's path, size and digest; the file is the exact bytes.
+- **The guard's matcher is `^(Bash|mcp__.*)$`,** so a guarded built-in tool other than Bash would need a matcher change; MCP posting tools are covered.
+
+### 19.10 Not done
+
+- Any sending, adapter or effect reconciliation (not planned).
+- Re-checking `claims.cited-fresh` at status time; checks on rendered forms (Slack mrkdwn, GitHub's own rendering).
+- A `deliver show` or `diff` against the source; pruning candidates.
+- The two-week count of catches and waivers (mission item 10): the receipts and statements hold what it needs (a `fail` followed by a `pass` of the same check on a candidate is a catch; every statement of kind `waived` is a waiver).
+- An interactive Claude Code smoke test of the guard; it was exercised through the binary and the shell form only.
+
 ---
 
 ### Critical Files for Implementation

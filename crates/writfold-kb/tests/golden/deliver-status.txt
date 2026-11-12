@@ -1,0 +1,11 @@
+delivery 20261111T000000Z-XXXXXX [blocked] pr-comment audience=external destination=harbor#42 candidate=b912f41a0cc3 bytes=1871 @runs/run-20261101T090000Z-a1b2c3/deliveries/20261111T000000Z-XXXXXX/candidate.md:1 !blocked
+  check: paragraphs.bounded [satisfied] mechanical pass for b912f41a0cc3 (at most 150 words per paragraph) @runs/run-20261101T090000Z-a1b2c3/deliveries/20261111T000000Z-XXXXXX/checks/paragraphs.bounded-20261111T000200Z-XXXXXX.json:1
+  check: references.denied [failed] mechanical fail for b912f41a0cc3: line 5 internal-host (column 23); line 5 ticket (column 48) @runs/run-20261101T090000Z-a1b2c3/deliveries/20261111T000000Z-XXXXXX/checks/references.denied-20261111T000200Z-XXXXXX.json:1 !failed
+  check: claims.cited-fresh [failed] observed fail for b912f41a0cc3: line 3 moved (code:demo-service:src/batch.rs:2-4) @runs/run-20261101T090000Z-a1b2c3/deliveries/20261111T000000Z-XXXXXX/checks/claims.cited-fresh-20261111T000200Z-XXXXXX.json:1 !failed
+delivery 20261111T000100Z-XXXXXX [blocked] slack-summary audience=internal destination=(unstated) candidate=b912f41a0cc3 bytes=1871 @runs/run-20261101T090000Z-a1b2c3/deliveries/20261111T000100Z-XXXXXX/candidate.md:1 !blocked
+  check: paragraphs.bounded [failed] mechanical fail for b912f41a0cc3: line 7 max-60-words (70 words) @runs/run-20261101T090000Z-a1b2c3/deliveries/20261111T000100Z-XXXXXX/checks/paragraphs.bounded-20261111T000300Z-XXXXXX.json:1 !failed
+  check: references.denied [open] mechanical needs: writfold kb deliver check 20261111T000100Z-XXXXXX !open
+  check: claims.cited-fresh [open] observed needs: writfold kb deliver check 20261111T000100Z-XXXXXX !open
+# note: standing is derived on every read; checks are mechanical, attestations are statements, and nothing is sent
+# coverage=complete records=36/36 shown=2 omitted=0 candidates=2 ready=0 satisfied=1 attested=0 waived=0 open=2 stale=0 failed=3 unknown=0 invalid=0 kb=d5db758bda80+dirty:8 index=fresh cursor=none q=05cee12b9acf
+# exit=2

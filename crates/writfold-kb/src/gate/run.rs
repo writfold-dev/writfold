@@ -68,6 +68,11 @@ pub(super) fn run(
     let run_dir = runs::dir(&rec);
     drop(session);
     let definition = def::find(&ws.root, Some(&subject.top), id)?;
+    if definition.attested() {
+        return Err(KbError::Refused(format!(
+            "gate {id} is attested: it runs nothing; record a statement with gate attest {id} --statement TEXT --by WHO"
+        )));
+    }
     let git = tool.admit()?;
     let patterns = definition.patterns();
     let wanted = |p: &str| writfold_core::gate::in_scope(&patterns, p);
@@ -146,7 +151,7 @@ fn answer(
         .git
         .as_ref()
         .ok_or_else(|| KbError::Refused("gates need Git".into()))?;
-    let filed = status::filed(&ws.root, &runs::dir(rec), &rec.id);
+    let filed = status::Filings::read(&ws.root, &runs::dir(rec), &rec.id);
     let report = status::judge(git, &ws.root, subject, &filed)?;
     let mut answer = Answer::default();
     let rows = status::rows(git, subject, &report, &filed)?;
