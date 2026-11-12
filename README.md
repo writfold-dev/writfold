@@ -37,17 +37,25 @@ cargo build --release -p writfold
 `writfold kb` reads a knowledge base of plain records in Git (assets,
 relationships, decisions, ticket records, investigations, signatures, runs and
 project folders) and answers where a project stands, what surrounds a record,
-why something was decided, and which citations have moved. It writes nothing
+why something was decided, what state a record is in, what changing it
+touches, who relies on it, and which citations have moved. It writes nothing
 you track: a derived SQLite index lives under the repository's Git directory
-and is rebuilt whenever HEAD or a KB file changes.
+and is refreshed in place for the files that changed since the commit (and
+dirty files) it was built at; `index verify` checks it equals a rebuild.
 
 ```sh
 cd /path/to/kb/some-project            # or pass --kb DIR, or set WRITFOLD_KB
 target/release/writfold kb brief       # project inferred from the directory
 target/release/writfold kb context HBR-101
 target/release/writfold kb why "batch ledger writes"
+target/release/writfold kb status HBR-101
+target/release/writfold kb find "harbr-api"          # exact, BM25, substring, one typo
+target/release/writfold kb match "fsync took 30s"    # signature patterns first
+target/release/writfold kb impact harbor-api --depth 2 --direction both
+target/release/writfold kb uses demo-service@<commit>:src/ledger.rs:3-5
+target/release/writfold kb timeline harbor-db
 target/release/writfold kb stale       # code citations need local clones (below)
-target/release/writfold kb index status
+target/release/writfold kb index status    # or: index verify, index rebuild
 ```
 
 Every row read from a file ends with its path and line, flags (`!moved→5-7`,
@@ -61,8 +69,11 @@ decision proposal/decision/2026-03-02-batch-ledger-writes [accepted] Batch ledge
 # coverage=complete records=28/28 shown=3 omitted=0 stale=1 kb=d5db758bda80 index=fresh cursor=none q=206e21d1c60f
 ```
 
-`--budget-tokens N` (default 1000) bounds the rows and `--cursor` resumes the
-rest; `--json` prints the same rows as one object. Exit codes: 0 complete,
+`impact` states the edges it left unwalked (`frontier=`) and the ones it
+skipped as retired, disputed or inferred; it prints `coverage=complete` only
+when both are zero. Prose mentions of IDs are inferred links, followed only
+with `--include inferred`. `--budget-tokens N` (default 1000) bounds the rows
+and `--cursor` resumes the rest; `--json` prints the same rows as one object. Exit codes: 0 complete,
 2 partial, unknown or stale, 3 refused (such as an ambiguous name), 1 error.
 `stale` checks code citations against local clones only and never fetches:
 list them in `.git/writfold/repos` of the KB repository (`<repo-name> <path>`
@@ -74,7 +85,7 @@ the format and plan are in the [KB v1 design](docs/writfold/kb-v1-design.md).
 
 | Command | What it does | Evidence |
 |---|---|---|
-| `writfold kb brief / context / why / stale / index` | Reads a Git KB of plain records; every row pinned to its file and line, moved citations flagged | [KB v1 design](docs/writfold/kb-v1-design.md#11-m1-as-built), golden tests in `crates/writfold-kb/tests` |
+| `writfold kb brief / context / why / status / find / match / impact / uses / timeline / stale / index` | Reads a Git KB of plain records; every row pinned to its file and line, moved citations flagged; the index is refreshed incrementally and verified equal to a rebuild | [KB v1 design](docs/writfold/kb-v1-design.md#11-m1-as-built) (sections 11 and 12), golden and property tests in `crates/writfold-kb/tests` |
 | `writfold trial prepare / approve / apply / recover / show` | One edit through a durable, validated ledger in Writfold's own sparse worktree; never your checkout | [trial profile](docs/writfold/trial-profile.md), [adversarial campaign](bench/2026-11-09-adversarial/) |
 | `writfold trial approve --require CHECK` | Refuses unless each named check of the bound Weft report is `entailed` (recorded as hypothetical, never as grounded) | proved: `required_entailed_spec` |
 | `writfold trial retain` | Keeps exact bytes of a file at a full commit id as a citation; reports citing anything else are refused | [trial profile](docs/writfold/trial-profile.md) |

@@ -1,0 +1,22 @@
+asset harbor-api [active] Harbor billing API @inventory/assets/harbor-api.json:10 !past-ttl
+  match: typo d=1 harbor-api
+dossier dossier:harbor-api Harbor billing API @inventory/dossiers/harbor-api.md:1
+  match: typo d=1 harbor-api
+relationship rel:consumes__quay-worker__harbor-api [explicit] quay-worker consumes harbor-api @inventory/relationships/consumes__quay-worker__harbor-api.json:2
+  match: typo d=1 harbor-api
+relationship rel:depends-on__harbor-api__harbor-db [confirmed] harbor-api depends-on harbor-db @inventory/relationships/depends-on__harbor-api__harbor-db.json:2
+  match: typo d=1 harbor-api
+relationship rel:monitors__tide-dashboard__harbor-api [disputed] tide-dashboard monitors harbor-api @inventory/relationships/monitors__tide-dashboard__harbor-api.json:2
+  match: typo d=1 harbor-api
+runbook runbook:ops/restart-harbor Restart the Harbor API @runbooks/ops/restart-harbor.md:1
+  match: text-any assets: [harbor-api] @runbooks/ops/restart-harbor.md:3
+decision proposal/decision/2026-03-02-batch-ledger-writes [accepted] Batch ledger writes in the API @proposals/decision/2026-03-02-batch-ledger-writes/proposal.md:5
+  match: text-any title: Batch ledger writes in the API @proposals/decision/2026-03-02-batch-ledger-writes/proposal.md:4
+ticket HBR-101 [in-progress] Slow ledger flush at month end @ktlo/2026/hbr-101-slow-ledger-flush.md:5
+  match: text-any assets: [harbor-api, harbor-db] @ktlo/2026/hbr-101-slow-ledger-flush.md:4
+asset tide-dashboard [active] Tide latency dashboard @inventory/assets/tide-dashboard.json:8
+  match: text-any "locator": "https://example.invalid/acme/harbor-api.git" @inventory/assets/tide-dashboard.json:13
+doc doc:runs/run-20261101T090000Z-a1b2c3/checkpoint.md @runs/run-20261101T090000Z-a1b2c3/checkpoint.md
+  match: text-any Started the rollout plan for harbor-api. @runs/run-20261101T090000Z-a1b2c3/checkpoint.md:4
+# coverage=complete records=28/28 shown=10 omitted=0 kb=d5db758bda80 index=fresh cursor=none q=26db5b4bebd2
+# exit=0

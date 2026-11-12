@@ -1,0 +1,29 @@
+signature sig:fsync-stall [fixed] Fsync stall on the ledger store @signatures/fsync-stall.md:3
+  match: signature fsync took @signatures/fsync-stall.md:4
+  match: signature re:flush stalled for \d+s @signatures/fsync-stall.md:4
+investigation inv:2026/2026-02-10-flush-stalls [concluded] Flush stalls on the ledger store @investigations/2026/2026-02-10-flush-stalls/README.md:8
+  match: text-any id: 2026/2026-02-10-flush-stalls @investigations/2026/2026-02-10-flush-stalls/README.md:2
+ticket HBR-101 [in-progress] Slow ledger flush at month end @ktlo/2026/hbr-101-slow-ledger-flush.md:5
+  match: text-any title: Slow ledger flush at month end @ktlo/2026/hbr-101-slow-ledger-flush.md:3
+decision proposal/decision/2026-01-10-single-writer [superseded] One writer process for the ledger @proposals/decision/2026-01-10-single-writer.md:5 !superseded→decision/2026-03-02-batch-ledger-writes
+  match: text-any title: One writer process for the ledger @proposals/decision/2026-01-10-single-writer.md:4
+investigation inv:2026/2026-06-01-flush-stalls-again [open] Flush stalls return @investigations/2026/2026-06-01-flush-stalls-again/README.md:7
+  match: text-any id: 2026/2026-06-01-flush-stalls-again @investigations/2026/2026-06-01-flush-stalls-again/README.md:2
+doc doc:runs/run-20261101T090000Z-a1b2c3/checkpoint.md @runs/run-20261101T090000Z-a1b2c3/checkpoint.md
+  match: text-any Started the rollout plan for harbor-api. @runs/run-20261101T090000Z-a1b2c3/checkpoint.md:4
+ticket HBR-99 [done] Ledger flush stalls on slow disk @ktlo/2026/hbr-99-flush-stall.md:5
+  match: text-any title: Ledger flush stalls on slow disk @ktlo/2026/hbr-99-flush-stall.md:3
+decision proposal/decision/2026-03-02-batch-ledger-writes [accepted] Batch ledger writes in the API @proposals/decision/2026-03-02-batch-ledger-writes/proposal.md:5
+  match: text-any Batching keeps the flush under the store's fsync budget. @proposals/decision/2026-03-02-batch-ledger-writes/proposal.md:25
+evidence ev:harbor/flush-latency Flush latency evidence @harbor/evidence/flush-latency.md:1
+  match: text-any # Flush latency evidence @harbor/evidence/flush-latency.md:1
+decision proposal/decision/2026-02-01-drop-retries [rejected] Drop client retries on flush @proposals/decision/2026-02-01-drop-retries/proposal.md:5
+  match: text-any title: Drop client retries on flush @proposals/decision/2026-02-01-drop-retries/proposal.md:4
+decision proposal/decision/2026-04-01-shard-ledger [draft] Shard the ledger by tenant @proposals/decision/2026-04-01-shard-ledger/proposal.md:5
+  match: text-any Large tenants dominate the flush. @proposals/decision/2026-04-01-shard-ledger/proposal.md:13
+dossier dossier:harbor-api Harbor billing API @inventory/dossiers/harbor-api.md:1
+  match: text-any Flush stalls when the store's disk is slow. ⟦cite kind=code repo=demo-service rev=0bb94c03d11fcae64e @inventory/dossiers/harbor-api.md:9
+project project:harbor [build] Harbor status @harbor/STATUS.md:2
+  match: text-any ⟦cite kind=record path=ktlo/2026/hbr-101-slow-ledger-flush.md state=todo⟧ moved on. A sketch: @harbor/STATUS.md:11
+# coverage=complete records=28/28 shown=13 omitted=0 kb=d5db758bda80 index=fresh cursor=none q=6c7a0cb1c866
+# exit=0

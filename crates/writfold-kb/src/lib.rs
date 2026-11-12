@@ -20,6 +20,7 @@ pub mod session;
 pub mod stale;
 pub mod time;
 pub mod verbs;
+pub mod walk;
 pub mod workspace;
 
 use emit::{Answer, Frame, Output};
@@ -52,8 +53,29 @@ pub enum Verb {
         scope: Option<String>,
         offline: bool,
     },
+    Find {
+        text: String,
+        filter: verbs::find::Filter,
+        signatures: bool,
+    },
+    Status {
+        target: String,
+    },
+    Impact {
+        target: String,
+        depth: usize,
+        direction: verbs::impact::Direction,
+        inferred: bool,
+    },
+    Uses {
+        target: String,
+    },
+    Timeline {
+        target: String,
+    },
     IndexStatus,
     IndexRebuild,
+    IndexVerify,
 }
 
 /// One invocation.
@@ -130,7 +152,59 @@ fn answer(session: &Session<'_>, request: &Request) -> Result<(Answer, &'static 
                 format!("offline={offline}"),
             ],
         ),
-        Verb::IndexStatus => (verbs::index::status(session)?, "index-status", Vec::new()),
+        other => graph(session, other)?,
+    })
+}
+
+/// The search, graph and housekeeping verbs.
+fn graph(session: &Session<'_>, verb: &Verb) -> Result<(Answer, &'static str, Vec<String>)> {
+    Ok(match verb {
+        Verb::Find {
+            text,
+            filter,
+            signatures,
+        } => {
+            let mut args = vec![text.clone(), format!("signatures={signatures}")];
+            args.extend(filter.kinds.iter().map(|k| format!("kind={k}")));
+            args.extend(filter.project.iter().map(|p| format!("project={p}")));
+            (
+                verbs::find::find(session, text, filter, *signatures)?,
+                "find",
+                args,
+            )
+        }
+        Verb::Status { target } => (
+            verbs::status::status(session, target)?,
+            "status",
+            vec![target.clone()],
+        ),
+        Verb::Impact {
+            target,
+            depth,
+            direction,
+            inferred,
+        } => (
+            verbs::impact::impact(session, target, *depth, *direction, *inferred)?,
+            "impact",
+            vec![
+                target.clone(),
+                format!("depth={depth}"),
+                format!("direction={}", direction.name()),
+                format!("inferred={inferred}"),
+            ],
+        ),
+        Verb::Uses { target } => (
+            verbs::uses::uses(session, target)?,
+            "uses",
+            vec![target.clone()],
+        ),
+        Verb::Timeline { target } => (
+            verbs::timeline::timeline(session, target)?,
+            "timeline",
+            vec![target.clone()],
+        ),
+        Verb::IndexVerify => (verbs::index::verify(session)?, "index-verify", Vec::new()),
         Verb::IndexRebuild => (verbs::index::status(session)?, "index-rebuild", Vec::new()),
+        _ => (verbs::index::status(session)?, "index-status", Vec::new()),
     })
 }

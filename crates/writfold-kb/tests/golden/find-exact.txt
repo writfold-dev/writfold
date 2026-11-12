@@ -1,0 +1,12 @@
+ticket HBR-101 [in-progress] Slow ledger flush at month end @ktlo/2026/hbr-101-slow-ledger-flush.md:5
+  match: exact
+doc doc:runs/run-20261101T090000Z-a1b2c3/checkpoint.md @runs/run-20261101T090000Z-a1b2c3/checkpoint.md
+  match: text Next: measure flush time on the month-end replay, then HBR-101 can close. @runs/run-20261101T090000Z-a1b2c3/checkpoint.md:9
+project project:harbor [build] Harbor status @harbor/STATUS.md:2
+  match: text ⟦cite kind=record path=ktlo/2026/hbr-101-slow-ledger-flush.md state=todo⟧ moved on. A sketch: @harbor/STATUS.md:11
+ticket HBR-99 [done] Ledger flush stalls on slow disk @ktlo/2026/hbr-99-flush-stall.md:5
+  match: text-any ticket: HBR-99 @ktlo/2026/hbr-99-flush-stall.md:2
+investigation inv:2026/2026-02-10-flush-stalls [concluded] Flush stalls on the ledger store @investigations/2026/2026-02-10-flush-stalls/README.md:8
+  match: text-any tickets: [HBR-99] @investigations/2026/2026-02-10-flush-stalls/README.md:5
+# coverage=complete records=28/28 shown=5 omitted=0 kb=d5db758bda80 index=rebuilt cursor=none q=0711fa1dff17
+# exit=0

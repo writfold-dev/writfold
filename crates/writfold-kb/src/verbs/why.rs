@@ -54,7 +54,7 @@ fn candidates(session: &Session<'_>, text: &str) -> Result<Vec<Rec>> {
 }
 
 /// Follow `superseded_by` to the live record; returns it and the chain.
-fn follow(session: &Session<'_>, rec: Rec) -> Result<(Rec, Vec<String>)> {
+pub(crate) fn follow(session: &Session<'_>, rec: Rec) -> Result<(Rec, Vec<String>)> {
     let mut chain = Vec::new();
     let mut current = rec;
     while matches!(current.status.as_deref(), Some("superseded" | "rejected")) && chain.len() < 16 {

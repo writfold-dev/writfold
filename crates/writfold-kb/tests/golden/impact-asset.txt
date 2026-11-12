@@ -1,0 +1,19 @@
+ticket HBR-101 [in-progress] depth=1 HBR-101 concerns harbor-api (field) @ktlo/2026/hbr-101-slow-ledger-flush.md:4
+dossier dossier:harbor-api depth=1 dossier:harbor-api dossier-of harbor-api (field) @inventory/dossiers/harbor-api.md:1
+asset harbor-db [active] depth=1 harbor-api depends-on harbor-db (authored) @inventory/relationships/depends-on__harbor-api__harbor-db.json:4
+project project:harbor [build] depth=1 harbor-api project project:harbor (field) @inventory/assets/harbor-api.json:11
+decision proposal/decision/2026-03-02-batch-ledger-writes [accepted] depth=1 proposal/decision/2026-03-02-batch-ledger-writes references harbor-api (field) @proposals/decision/2026-03-02-batch-ledger-writes/proposal.md:9
+asset quay-worker [sunsetting] depth=1 quay-worker consumes harbor-api (authored) @inventory/relationships/consumes__quay-worker__harbor-api.json:4 !vocab=unknown
+runbook runbook:ops/restart-harbor depth=1 runbook:ops/restart-harbor concerns harbor-api (field) @runbooks/ops/restart-harbor.md:3
+ticket HBR-99 [done] depth=2 HBR-99 concerns harbor-db (field) @ktlo/2026/hbr-99-flush-stall.md:4
+code code:demo-service:src/batch.rs depth=2 proposal/decision/2026-03-02-batch-ledger-writes cites code:demo-service:src/batch.rs (cite) @proposals/decision/2026-03-02-batch-ledger-writes/proposal.md:31 !moved→5-7
+code code:demo-service:src/ledger.rs depth=2 proposal/decision/2026-03-02-batch-ledger-writes cites code:demo-service:src/ledger.rs (cite) @proposals/decision/2026-03-02-batch-ledger-writes/proposal.md:31
+code code:demo-service:src/retry.rs depth=2 dossier:harbor-api cites code:demo-service:src/retry.rs (cite) @inventory/dossiers/harbor-api.md:9 !changed
+investigation inv:2026/2026-02-10-flush-stalls [concluded] depth=2 inv:2026/2026-02-10-flush-stalls concerns harbor-db (field) @investigations/2026/2026-02-10-flush-stalls/README.md:7
+investigation inv:2026/2026-06-01-flush-stalls-again [open] depth=2 inv:2026/2026-06-01-flush-stalls-again concerns harbor-db (field) @investigations/2026/2026-06-01-flush-stalls-again/README.md:6
+project project:lantern depth=2 quay-worker project project:lantern (field) @inventory/assets/quay-worker.json:9
+decision proposal/decision/2026-01-10-single-writer [superseded] depth=2 proposal/decision/2026-01-10-single-writer superseded-by proposal/decision/2026-03-02-batch-ledger-writes (field) @proposals/decision/2026-01-10-single-writer.md:9 !superseded→decision/2026-03-02-batch-ledger-writes !stale
+signature sig:fsync-stall [fixed] depth=2 sig:fsync-stall concerns harbor-db (field) @signatures/fsync-stall.md:6
+# note: walked from harbor-api: depth 2, direction both; project records are homes and are not walked through
+# coverage=partial records=28/28 shown=16 omitted=0 frontier=1 skipped_retired=0 skipped_disputed=1 skipped_inferred=3 stale=3 kb=d5db758bda80 index=fresh cursor=none q=4fb409e78c27
+# exit=2

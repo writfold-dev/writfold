@@ -244,7 +244,7 @@ fn unreadable_files_are_counted_and_listed() -> TestResult {
 }
 
 #[test]
-fn snapshot_changes_rebuild_and_equal_snapshots_reuse() -> TestResult {
+fn snapshot_changes_refresh_and_equal_snapshots_reuse() -> TestResult {
     let w = world(&[])?;
     let trailer = |text: &str| text.lines().last().unwrap_or_default().to_owned();
     let (first, _) = w.run(&w.request(Verb::IndexStatus))?;
@@ -256,7 +256,7 @@ fn snapshot_changes_rebuild_and_equal_snapshots_reuse() -> TestResult {
     std::fs::write(&ticket, text)?;
     let (dirty, _) = w.run(&w.request(context("HBR-101")))?;
     assert!(
-        trailer(&dirty).contains("+dirty:1 index=rebuilt"),
+        trailer(&dirty).contains("+dirty:1 index=refreshed:1"),
         "{dirty}"
     );
     assert!(dirty.starts_with("ticket HBR-101 [done]"), "{dirty}");
@@ -268,9 +268,16 @@ fn snapshot_changes_rebuild_and_equal_snapshots_reuse() -> TestResult {
     );
     support::git(&w.kb, &["commit", "-qam", "close HBR-101"])?;
     let (committed, _) = w.run(&w.request(context("HBR-101")))?;
+    // The commit moves HEAD; the file it holds is the one already indexed
+    // dirty, so nothing is re-derived.
     assert!(
-        trailer(&committed).contains("index=rebuilt") && !trailer(&committed).contains("dirty")
+        trailer(&committed).contains("index=refreshed:0") && !trailer(&committed).contains("dirty"),
+        "{committed}"
     );
+    support::git(&w.kb, &["reset", "-q", "--hard", "HEAD~1"])?;
+    let (reset, _) = w.run(&w.request(context("HBR-101")))?;
+    assert!(trailer(&reset).contains("index=refreshed:1"), "{reset}");
+    assert!(reset.starts_with("ticket HBR-101 [in-progress]"), "{reset}");
     Ok(())
 }
 

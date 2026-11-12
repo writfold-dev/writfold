@@ -1,0 +1,9 @@
+decision proposal/decision/2026-03-02-batch-ledger-writes [accepted] Batch ledger writes in the API @proposals/decision/2026-03-02-batch-ledger-writes/proposal.md:5
+  via: cites (cite) @proposals/decision/2026-03-02-batch-ledger-writes/proposal.md:31
+signature sig:fsync-stall [fixed] Fsync stall on the ledger store @signatures/fsync-stall.md:3
+  via: cites (cite) @signatures/fsync-stall.md:11
+relationship rel:depends-on__harbor-api__harbor-db [confirmed] harbor-api depends-on harbor-db @inventory/relationships/depends-on__harbor-api__harbor-db.json:2
+  via: cites (cite) @inventory/relationships/depends-on__harbor-api__harbor-db.json:6
+# note: referrers of code:demo-service:src/ledger.rs lines 4-4; reliance that no record cites or mentions is not traced
+# coverage=complete records=28/28 shown=3 omitted=0 kb=d5db758bda80 index=fresh cursor=none q=84b36a0b5e1c
+# exit=0

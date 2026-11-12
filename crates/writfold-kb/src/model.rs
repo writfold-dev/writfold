@@ -74,6 +74,8 @@ pub struct Facts {
     pub references: Vec<Reference>,
     /// Text for full-text search.
     pub body: String,
+    /// The first `# ` heading of a Markdown file (a project README's title).
+    pub heading: Option<String>,
 }
 
 /// A file the index could not read, with the reason. It is counted and

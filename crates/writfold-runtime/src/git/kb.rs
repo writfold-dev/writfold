@@ -193,6 +193,46 @@ pub fn kb_ls_files(
         .collect())
 }
 
+/// Paths under the pathspec that differ between commits `old` and `new`
+/// (`diff-tree -r --name-only -z --no-renames`), relative to the top of the
+/// work tree. `None` when either commit is unknown to the repository.
+pub fn kb_diff_tree(
+    executable: &GitExecutable<'_>,
+    repository: KbRepository<'_>,
+    old: &str,
+    new: &str,
+    pathspec: &str,
+    budgets: GitBudgets,
+    cancelled: &AtomicBool,
+) -> Result<Option<Vec<String>>, GitError> {
+    if [old, new].iter().any(|id| object_id(id).is_none()) {
+        return Ok(None);
+    }
+    let args = [
+        "diff-tree",
+        "-r",
+        "--no-commit-id",
+        "--name-only",
+        "--no-renames",
+        "-z",
+        old,
+        new,
+        "--",
+        pathspec,
+    ];
+    match run(executable, repository, &args, &[], budgets, cancelled) {
+        Ok(output) => Ok(Some(
+            output
+                .split(|&b| b == 0)
+                .filter(|r| !r.is_empty())
+                .map(|r| String::from_utf8_lossy(r).into_owned())
+                .collect(),
+        )),
+        Err(GitError::Process(process::ProcessError::Command { .. })) => Ok(None),
+        Err(error) => Err(error),
+    }
+}
+
 /// The full commit `spec` names, or `None` when it names none.
 pub fn kb_commit(
     executable: &GitExecutable<'_>,

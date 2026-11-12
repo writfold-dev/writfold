@@ -1,16 +1,22 @@
 //! One typed query per verb, each returning an [`Answer`].
 pub mod brief;
 pub mod context;
+pub mod find;
+pub mod impact;
 pub mod index;
 pub mod stale;
+pub mod status;
+pub mod timeline;
+pub mod uses;
 pub mod why;
 
 use crate::emit::{Answer, More, Row};
 use crate::error::Result;
-use crate::index::query::{self, Rec};
+use crate::index::query::{self, Edge, Rec};
 use crate::layout::Kind;
 use crate::session::Session;
 use crate::time;
+use rusqlite::OptionalExtension;
 
 /// Shared by every unknown answer.
 pub const BOUNDARY: &str = "absence in the KB is not evidence of absence in the world; check the sources, then record what you find";
@@ -98,6 +104,18 @@ pub fn via(rel: &str, other: &str, path: &str, line: u32) -> More {
         text: format!("{rel} {other}"),
         path: Some(path.to_owned()),
         line: Some(line),
+        flags: Vec::new(),
+    }
+}
+
+/// A continuation line naming an edge by relation and origin, at its
+/// provenance: `via: <rel> (<origin>)`.
+pub fn link(edge: &Edge) -> More {
+    More {
+        label: "via",
+        text: format!("{} ({})", edge.rel, edge.origin),
+        path: Some(edge.path.clone()),
+        line: Some(edge.line),
         flags: Vec::new(),
     }
 }
@@ -191,4 +209,83 @@ pub fn cached_verdicts(
     rows.sort_by_key(|row| stale::severity(row.status.as_deref().unwrap_or_default()));
     rows.truncate(limit);
     Ok((rows, unchecked))
+}
+
+/// A row for any graph node: a record, a plain document (`doc:<path>`), or
+/// a node outside the KB (`code:`, `commit:`, `pr:`).
+pub fn node_row(session: &Session<'_>, id: &str) -> Result<Row> {
+    if let Some(rec) = query::record(&session.conn, id)? {
+        return Ok(record_row(session, &rec));
+    }
+    if let Some(path) = id.strip_prefix("doc:") {
+        let heading: Option<Option<String>> = session
+            .conn
+            .query_row("SELECT heading FROM files WHERE path = ?1", [path], |r| {
+                r.get(0)
+            })
+            .optional()?;
+        return Ok(Row {
+            kind: "doc",
+            id: id.to_owned(),
+            text: heading.flatten().unwrap_or_default(),
+            path: Some(path.to_owned()),
+            ..Row::default()
+        });
+    }
+    let kind = match id.split_once(':').map(|(k, _)| k) {
+        Some("code") => "code",
+        Some("commit") => "commit",
+        Some("pr") => "pr",
+        _ => "node",
+    };
+    Ok(Row {
+        kind,
+        id: id.to_owned(),
+        ..Row::default()
+    })
+}
+
+type Cached = (String, Option<u32>, Option<u32>, Option<String>);
+
+/// The freshness of an edge, as flags: the worst cached verdict of its
+/// provenance citation (or, for an authored relationship, of its evidence
+/// locators), and `stale` when its source record is superseded, rejected
+/// or retired. A citation never checked adds no flag.
+pub fn edge_flags(session: &Session<'_>, edge: &Edge) -> Result<Vec<String>> {
+    let sql = match (edge.origin.as_str(), edge.cite) {
+        ("cite", Some(_)) => {
+            "SELECT verdict, new_first, new_last, new_path FROM cite_checks WHERE path = ?1 AND ord = ?2"
+        }
+        ("authored", _) => {
+            "SELECT verdict, new_first, new_last, new_path FROM cite_checks WHERE path = ?1 AND ?2 IS NULL"
+        }
+        _ => return lifecycle(session, edge, Vec::new()),
+    };
+    let mut statement = session.conn.prepare_cached(sql)?;
+    let mut verdicts = statement
+        .query_map((&edge.path, &edge.cite), |r| {
+            Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?))
+        })?
+        .collect::<rusqlite::Result<Vec<Cached>>>()?;
+    verdicts.retain(|(verdict, ..)| verdict != "fresh");
+    verdicts.sort_by_key(|(verdict, ..)| stale::severity(verdict));
+    let flags = verdicts
+        .into_iter()
+        .next()
+        .map(|(verdict, a, b, p)| vec![stale::flag(&verdict, (a, b, p))])
+        .unwrap_or_default();
+    lifecycle(session, edge, flags)
+}
+
+fn lifecycle(session: &Session<'_>, edge: &Edge, mut flags: Vec<String>) -> Result<Vec<String>> {
+    let retired = query::record(&session.conn, &edge.src)?.is_some_and(|r| {
+        matches!(
+            r.status.as_deref(),
+            Some("superseded" | "rejected" | "retired")
+        )
+    });
+    if retired && !flags.iter().any(|f| f == "stale") {
+        flags.push("stale".into());
+    }
+    Ok(flags)
 }

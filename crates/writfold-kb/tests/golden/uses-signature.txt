@@ -1,0 +1,7 @@
+investigation inv:2026/2026-02-10-flush-stalls [concluded] Flush stalls on the ledger store @investigations/2026/2026-02-10-flush-stalls/README.md:8
+  via: signature (field) @investigations/2026/2026-02-10-flush-stalls/README.md:9
+investigation inv:2026/2026-06-01-flush-stalls-again [open] Flush stalls return @investigations/2026/2026-06-01-flush-stalls-again/README.md:7
+  via: signature (field) @investigations/2026/2026-06-01-flush-stalls-again/README.md:8
+# note: referrers of sig:fsync-stall; reliance that no record cites or mentions is not traced
+# coverage=complete records=28/28 shown=2 omitted=0 kb=d5db758bda80 index=fresh cursor=none q=7675bd2403ca
+# exit=0

@@ -13,7 +13,8 @@ index de9905cf8bf4 [rebuilt] <WORLD>/kb/.git/writfold/kb-index-e3b0c44298fc.sqli
   records: ticket=2
   count: files=33
   count: citations=9
-  count: edges=30
+  count: edges=38
+  count: mentions=2
   count: unresolved=3
   count: cached-verdicts=0
 unreadable asset invalid JSON: EOF while parsing a value at line 2 column 0 @inventory/assets/broken.json !unreadable

@@ -1,12 +1,12 @@
-//! Full rebuild: Phase A (facts per file) and Phase B (edges), in one
-//! transaction, inserted in path order.
-use super::schema::{DDL, EXTRACTOR, PHASE_B, SCHEMA};
-use crate::layout::{Kind, first_segment, project_name};
+//! Phase A (facts per file) and the full build: every file's facts, then
+//! Phase B, in one transaction, inserted in path order.
+use super::derive;
+use super::schema::{DDL, DELETE_FILE, EXTRACTOR, SCHEMA};
+use crate::layout::Kind;
 use crate::model::{Facts, Record};
 use crate::parse;
 use rusqlite::{Connection, Transaction};
 use sha2::{Digest, Sha256};
-use std::collections::BTreeMap;
 
 /// One input file: its root-relative path, kind, and bytes or the reason
 /// they could not be read.
@@ -14,12 +14,6 @@ pub struct Input {
     pub path: String,
     pub kind: Kind,
     pub bytes: Result<Vec<u8>, String>,
-}
-
-#[derive(Default)]
-struct Projects {
-    /// Project name to (README path, its title) or the first file seen.
-    seen: BTreeMap<String, (String, Option<String>)>,
 }
 
 /// Create the schema and derive every table from `inputs` (sorted by path).
@@ -30,15 +24,10 @@ pub fn build(
 ) -> rusqlite::Result<()> {
     conn.execute_batch(DDL)?;
     let tx = conn.transaction()?;
-    let mut projects = Projects::default();
     for input in inputs {
-        if let Some(name) = first_segment(&input.path).and_then(project_name) {
-            note_project(&mut projects, name, &input);
-        }
         insert_file(&tx, input)?;
     }
-    synthesize_projects(&tx, &projects)?;
-    tx.execute_batch(PHASE_B)?;
+    derive::phase_b(&tx)?;
     let mut statement = tx.prepare("INSERT INTO meta(key, value) VALUES (?1, ?2)")?;
     for (key, value) in [("schema", SCHEMA), ("extractor", EXTRACTOR)] {
         statement.execute((&key, &value))?;
@@ -50,63 +39,52 @@ pub fn build(
     tx.commit()
 }
 
-fn note_project(projects: &mut Projects, name: &str, input: &Input) {
-    let readme = input.path == format!("{name}/README.md");
-    let title = match (&input.bytes, readme) {
-        (Ok(bytes), true) => std::str::from_utf8(bytes)
-            .ok()
-            .and_then(parse::first_heading),
-        _ => None,
-    };
-    let entry = projects
-        .seen
-        .entry(name.to_owned())
-        .or_insert_with(|| (input.path.clone(), None));
-    if readme {
-        *entry = (input.path.clone(), title);
-    }
-}
-
-/// A project directory without `STATUS.md` still names a project.
-fn synthesize_projects(tx: &Transaction<'_>, projects: &Projects) -> rusqlite::Result<()> {
-    for (name, (path, title)) in &projects.seen {
-        let id = format!("project:{name}");
-        let record = Record {
-            id: id.clone(),
-            kind: Some(Kind::Project),
-            line: 1,
-            title: title.clone(),
-            project: Some(name.clone()),
-            extra: "{}".into(),
-            ..Record::default()
-        };
-        if insert_record(tx, path, &record)? {
-            tx.prepare_cached("INSERT OR IGNORE INTO aliases VALUES (?1, ?2, 'id')")?
-                .execute((&name, &id))?;
-        } else if let Some(title) = title {
-            tx.prepare_cached("UPDATE records SET title = ?2 WHERE id = ?1 AND title IS NULL")?
-                .execute((&id, &title))?;
-        }
+/// Remove every Phase A row of `path`.
+pub fn delete_file(tx: &Transaction<'_>, path: &str) -> rusqlite::Result<()> {
+    for sql in DELETE_FILE {
+        tx.prepare_cached(sql)?.execute([path])?;
     }
     Ok(())
 }
 
-fn insert_file(tx: &Transaction<'_>, input: Input) -> rusqlite::Result<()> {
+/// The content digest stored for a file (empty when it could not be read).
+pub fn digest(bytes: &Result<Vec<u8>, String>) -> Vec<u8> {
+    bytes
+        .as_ref()
+        .map(|b| Sha256::digest(b).to_vec())
+        .unwrap_or_default()
+}
+
+/// Derive and insert every Phase A row of one file.
+pub fn insert_file(tx: &Transaction<'_>, input: Input) -> rusqlite::Result<()> {
     let Input { path, kind, bytes } = input;
-    let (digest, size, parsed) = match &bytes {
-        Ok(bytes) => (
-            Sha256::digest(bytes).to_vec(),
-            bytes.len(),
-            parse::parse(&path, kind, bytes),
-        ),
-        Err(reason) => (Vec::new(), 0, Err(reason.clone())),
+    let digest = digest(&bytes);
+    let (size, parsed) = match &bytes {
+        Ok(bytes) => (bytes.len(), parse::parse(&path, kind, bytes)),
+        Err(reason) => (0, Err(reason.clone())),
     };
     let (status, error, facts) = match parsed {
         Ok(facts) => ("ok", None, facts),
         Err(reason) => ("unreadable", Some(reason), Facts::default()),
     };
-    tx.prepare_cached("INSERT INTO files VALUES (?1, ?2, ?3, ?4, ?5, ?6)")?
-        .execute((&path, &digest, &size, &kind.as_str(), &status, &error))?;
+    // A README's title names its project even when the file is a plain
+    // document (or could not be parsed as one).
+    let heading = facts.heading.clone().or_else(|| match &bytes {
+        Ok(bytes) if path.ends_with(".md") => std::str::from_utf8(bytes)
+            .ok()
+            .and_then(parse::first_heading),
+        _ => None,
+    });
+    tx.prepare_cached("INSERT INTO files VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)")?
+        .execute((
+            &path,
+            &digest,
+            &size,
+            &kind.as_str(),
+            &status,
+            &error,
+            &heading,
+        ))?;
     if status == "ok" {
         insert_facts(tx, &path, facts)?;
     }
@@ -117,18 +95,20 @@ fn insert_facts(tx: &Transaction<'_>, path: &str, facts: Facts) -> rusqlite::Res
     let mut source = format!("doc:{path}");
     let (mut title, mut summary) = (None, None);
     if let Some(record) = &facts.record {
-        if insert_record(tx, path, record)? {
-            source.clone_from(&record.id);
-            title.clone_from(&record.title);
-            summary.clone_from(&record.summary);
-            insert_links(tx, path, &facts)?;
-        } else {
-            let reason = format!("duplicate id {}", record.id);
-            tx.prepare_cached(
-                "UPDATE files SET parse_status = 'unreadable', parse_error = ?2 WHERE path = ?1",
-            )?
-            .execute((&path, &reason))?;
+        insert_claim(tx, path, record)?;
+        source.clone_from(&record.id);
+        title.clone_from(&record.title);
+        summary.clone_from(&record.summary);
+        for (alias, origin) in &facts.aliases {
+            tx.prepare_cached("INSERT OR IGNORE INTO claim_aliases VALUES (?1, ?2, ?3)")?
+                .execute((&path, &alias, &origin))?;
         }
+    }
+    for (ord, r) in facts.references.iter().enumerate() {
+        tx.prepare_cached("INSERT INTO refs VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)")?
+            .execute((
+                &path, &r.line, &ord, &r.src, &r.rel, &r.token, &r.origin, &r.status, &r.cite,
+            ))?;
     }
     for (ord, section) in facts.sections.iter().enumerate() {
         tx.prepare_cached("INSERT INTO sections VALUES (?1, ?2, ?3, ?4, ?5)")?
@@ -142,37 +122,21 @@ fn insert_facts(tx: &Transaction<'_>, path: &str, facts: Facts) -> rusqlite::Res
     }
     tx.prepare_cached("INSERT INTO fts VALUES (?1, ?2, ?3, ?4, ?5)")?
         .execute((&source, &title, &summary, &facts.body, &path))?;
-    tx.prepare_cached("INSERT INTO tri VALUES (?1, ?2, ?3, ?4)")?
-        .execute((&source, &title, &facts.body, &path))?;
+    let row = tx.last_insert_rowid();
+    tx.prepare_cached("INSERT INTO tri(rowid, id, title, body, path) VALUES (?1, ?2, ?3, ?4, ?5)")?
+        .execute((&row, &source, &title, &facts.body, &path))?;
+    tx.prepare_cached("INSERT INTO text_rows VALUES (?1, ?2)")?
+        .execute((&path, &row))?;
     Ok(())
 }
 
-/// Insert one record; `false` when its ID is already taken.
-fn insert_record(tx: &Transaction<'_>, path: &str, r: &Record) -> rusqlite::Result<bool> {
+/// The record this file claims; Phase B decides whether it wins its ID.
+fn insert_claim(tx: &Transaction<'_>, path: &str, r: &Record) -> rusqlite::Result<()> {
     let kind = r.kind.map_or("doc", Kind::as_str);
-    let changed = tx
-        .prepare_cached(
-            "INSERT OR IGNORE INTO records VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
-        )?
+    tx.prepare_cached("INSERT INTO claims VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)")?
         .execute((
-            &r.id, &kind, &path, &r.line, &r.title, &r.status, &r.project, &r.created, &r.updated,
+            &path, &r.id, &kind, &r.line, &r.title, &r.status, &r.project, &r.created, &r.updated,
             &r.summary, &r.extra,
         ))?;
-    Ok(changed == 1)
-}
-
-fn insert_links(tx: &Transaction<'_>, path: &str, facts: &Facts) -> rusqlite::Result<()> {
-    if let Some(record) = &facts.record {
-        for (alias, source) in &facts.aliases {
-            tx.prepare_cached("INSERT OR IGNORE INTO aliases VALUES (?1, ?2, ?3)")?
-                .execute((&alias, &record.id, &source))?;
-        }
-    }
-    for (ord, r) in facts.references.iter().enumerate() {
-        tx.prepare_cached("INSERT INTO refs VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)")?
-            .execute((
-                &path, &r.line, &ord, &r.src, &r.rel, &r.token, &r.origin, &r.status, &r.cite,
-            ))?;
-    }
     Ok(())
 }

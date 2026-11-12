@@ -192,13 +192,15 @@ pub struct Edge {
     pub status: String,
     pub path: String,
     pub line: u32,
+    /// The provenance citation's ordinal in `path`, for a `cite` edge.
+    pub cite: Option<u32>,
 }
 
 /// Edges leaving (`outgoing`) or reaching `id`, in key order.
 pub fn edges(conn: &Connection, id: &str, outgoing: bool) -> Result<Vec<Edge>> {
     let column = if outgoing { "src" } else { "dst" };
     let sql = format!(
-        "SELECT src, rel, dst, origin, status, prov_path, prov_line FROM edges WHERE {column} = ?1 \
+        "SELECT src, rel, dst, origin, status, prov_path, prov_line, cite_ord FROM edges WHERE {column} = ?1 \
          ORDER BY src, rel, dst, origin, prov_path, prov_line"
     );
     let mut statement = conn.prepare_cached(&sql)?;
@@ -212,17 +214,20 @@ pub fn edges(conn: &Connection, id: &str, outgoing: bool) -> Result<Vec<Edge>> {
                 status: r.get(4)?,
                 path: r.get(5)?,
                 line: r.get(6)?,
+                cite: r.get(7)?,
             })
         })?
         .collect::<rusqlite::Result<Vec<_>>>()?;
     Ok(found)
 }
 
-/// Readable input files, all input files, unreadable files.
+/// Readable input files, all input files, unreadable files (a file whose
+/// record ID an earlier file already claims is unreadable).
 pub fn scope(conn: &Connection) -> Result<(usize, usize, usize)> {
     Ok(conn.query_row(
-        "SELECT COUNT(*) FILTER (WHERE parse_status = 'ok'), COUNT(*), \
-         COUNT(*) FILTER (WHERE parse_status <> 'ok') FROM files",
+        "SELECT COUNT(*) FILTER (WHERE parse_status = 'ok' AND path NOT IN (SELECT path FROM dups)), \
+         COUNT(*), \
+         COUNT(*) FILTER (WHERE parse_status <> 'ok' OR path IN (SELECT path FROM dups)) FROM files",
         [],
         |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)),
     )?)

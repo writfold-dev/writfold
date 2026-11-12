@@ -1,16 +1,23 @@
 //! `writfold kb` arguments into one typed request.
+use super::verbs;
 use std::path::PathBuf;
 use writfold_kb::{DEFAULT_BUDGET, MAX_BUDGET, Request, Verb};
 
+/// Every flag, parsed once; `verbs` checks which apply.
 #[derive(Default)]
-struct Common {
-    kb: Option<PathBuf>,
-    budget: Option<usize>,
-    cursor: Option<String>,
-    json: bool,
-    depth: Option<usize>,
-    all: bool,
-    offline: bool,
+pub struct Common {
+    pub kb: Option<PathBuf>,
+    pub budget: Option<usize>,
+    pub cursor: Option<String>,
+    pub json: bool,
+    pub depth: Option<usize>,
+    pub all: bool,
+    pub offline: bool,
+    pub kinds: Vec<String>,
+    pub project: Option<String>,
+    pub signatures: bool,
+    pub direction: Option<String>,
+    pub include: Option<String>,
 }
 
 fn number(flag: &str, value: Option<&String>, low: usize, high: usize) -> Result<usize, String> {
@@ -19,6 +26,10 @@ fn number(flag: &str, value: Option<&String>, low: usize, high: usize) -> Result
         Ok(n) if (low..=high).contains(&n) => Ok(n),
         _ => Err(format!("{flag} must be an integer from {low} to {high}")),
     }
+}
+
+fn value(flag: &str, value: Option<&String>) -> Result<String, String> {
+    value.cloned().ok_or(format!("{flag} needs a value"))
 }
 
 /// Split flags from positionals. Every flag may appear once.
@@ -37,17 +48,24 @@ fn split(args: &[String]) -> Result<(Common, Vec<String>), String> {
         }
         seen.push(arg.clone());
         match arg.as_str() {
-            "--kb" => {
-                common.kb = Some(PathBuf::from(items.next().ok_or("--kb needs a directory")?))
-            }
+            "--kb" => common.kb = Some(PathBuf::from(value(arg, items.next())?)),
             "--budget-tokens" => common.budget = Some(number(arg, items.next(), 1, MAX_BUDGET)?),
-            "--cursor" => {
-                common.cursor = Some(items.next().ok_or("--cursor needs a value")?.clone())
-            }
+            "--cursor" => common.cursor = Some(value(arg, items.next())?),
             "--depth" => common.depth = Some(number(arg, items.next(), 1, 8)?),
             "--json" => common.json = true,
             "--all" => common.all = true,
             "--offline" => common.offline = true,
+            "--signatures" => common.signatures = true,
+            "--kind" => {
+                common.kinds = value(arg, items.next())?
+                    .split(',')
+                    .map(|k| k.trim().to_owned())
+                    .filter(|k| !k.is_empty())
+                    .collect();
+            }
+            "--project" => common.project = Some(value(arg, items.next())?),
+            "--direction" => common.direction = Some(value(arg, items.next())?),
+            "--include" => common.include = Some(value(arg, items.next())?),
             "--at" => return Err("--at COMMIT is not built in v1 (planned for M4)".into()),
             other => return Err(format!("unknown option {other}")),
         }
@@ -55,15 +73,36 @@ fn split(args: &[String]) -> Result<(Common, Vec<String>), String> {
     Ok((common, positional))
 }
 
-fn why_sections() -> Vec<String> {
-    std::env::var("WRITFOLD_KB_WHY_SECTIONS")
-        .map(|v| {
-            v.split(',')
-                .map(|s| s.trim().to_owned())
-                .filter(|s| !s.is_empty())
-                .collect()
-        })
-        .unwrap_or_default()
+/// The flags each verb accepts beyond the shared ones.
+fn allowed(verb: &str) -> &'static [&'static str] {
+    match verb {
+        "brief" => &["all"],
+        "context" => &["depth"],
+        "stale" => &["offline"],
+        "find" => &["kind", "project", "signatures"],
+        "match" => &["kind", "project"],
+        "impact" => &["depth", "direction", "include"],
+        _ => &[],
+    }
+}
+
+fn check_flags(verb: &str, common: &Common) -> Result<(), String> {
+    let allowed = allowed(verb);
+    for (flag, set) in [
+        ("all", common.all),
+        ("depth", common.depth.is_some()),
+        ("offline", common.offline),
+        ("kind", !common.kinds.is_empty()),
+        ("project", common.project.is_some()),
+        ("signatures", common.signatures),
+        ("direction", common.direction.is_some()),
+        ("include", common.include.is_some()),
+    ] {
+        if set && !allowed.contains(&flag) {
+            return Err(format!("--{flag} does not apply to {verb}"));
+        }
+    }
+    Ok(())
 }
 
 /// `None` for `help`; an error message for anything unusable.
@@ -75,70 +114,10 @@ pub fn parse(args: &[String], cwd: PathBuf) -> Result<Option<Request>, String> {
         return Ok(None);
     }
     let (common, positional) = split(rest)?;
-    let one = |what: &str| -> Result<String, String> {
-        match positional.as_slice() {
-            [single] => Ok(single.clone()),
-            _ => Err(format!("{verb} takes exactly one {what}")),
-        }
-    };
-    let optional = || -> Result<Option<String>, String> {
-        match positional.as_slice() {
-            [] => Ok(None),
-            [single] => Ok(Some(single.clone())),
-            _ => Err(format!("{verb} takes at most one argument")),
-        }
-    };
-    let allowed: &[&str] = match verb.as_str() {
-        "brief" => &["all"],
-        "context" => &["depth"],
-        "stale" => &["offline"],
-        _ => &[],
-    };
-    for (flag, set) in [
-        ("all", common.all),
-        ("depth", common.depth.is_some()),
-        ("offline", common.offline),
-    ] {
-        if set && !allowed.contains(&flag) {
-            return Err(format!("--{flag} does not apply to {verb}"));
-        }
-    }
-    let verb = match verb.as_str() {
-        "brief" => Verb::Brief {
-            project: optional()?,
-            all: common.all,
-        },
-        "context" => Verb::Context {
-            target: one("target")?,
-            depth: common.depth.unwrap_or(2),
-        },
-        "why" if !positional.is_empty() => Verb::Why {
-            text: positional.join(" "),
-            sections: why_sections(),
-        },
-        "why" => return Err("why takes an ID or some text".into()),
-        "stale" => Verb::Stale {
-            scope: optional()?,
-            offline: common.offline,
-        },
-        "index" => match one("subcommand (status or rebuild)")?.as_str() {
-            "status" => Verb::IndexStatus,
-            "rebuild" => Verb::IndexRebuild,
-            other => return Err(format!("unknown index subcommand {other}")),
-        },
-        other => return Err(format!("unknown verb {other}")),
-    };
-    if matches!(
-        &verb,
-        Verb::Brief {
-            project: Some(_),
-            all: true
-        }
-    ) {
-        return Err("brief takes a project or --all, not both".into());
-    }
+    check_flags(verb, &common)?;
+    let built: Verb = verbs::verb(verb, &common, &positional)?;
     Ok(Some(Request {
-        verb,
+        verb: built,
         kb: common.kb,
         cwd,
         budget: common.budget.unwrap_or(DEFAULT_BUDGET),
@@ -173,9 +152,29 @@ mod tests {
         assert!(parse(&args("brief x --all"), cwd.clone()).is_err());
         assert!(parse(&args("brief --budget-tokens 0"), cwd.clone()).is_err());
         assert!(parse(&args("stale --at abc"), cwd.clone()).is_err());
+        assert!(parse(&args("impact x --direction sideways"), cwd.clone()).is_err());
+        assert!(parse(&args("impact x --include everything"), cwd.clone()).is_err());
+        assert!(parse(&args("status x --kind ticket"), cwd.clone()).is_err());
+        let found = parse(&args("match fsync took --kind signature"), cwd.clone())?;
+        assert!(found.is_some_and(|r| matches!(
+            r.verb,
+            Verb::Find { signatures: true, ref text, .. } if text == "fsync took"
+        )));
+        let impact = parse(
+            &args("impact harbor-api --depth 3 --direction in --include inferred"),
+            cwd.clone(),
+        )?;
+        assert!(impact.is_some_and(|r| matches!(
+            r.verb,
+            Verb::Impact {
+                depth: 3,
+                inferred: true,
+                ..
+            }
+        )));
         assert!(
-            parse(&args("index rebuild"), cwd.clone())
-                .is_ok_and(|r| r.is_some_and(|r| matches!(r.verb, Verb::IndexRebuild)))
+            parse(&args("index verify"), cwd.clone())
+                .is_ok_and(|r| r.is_some_and(|r| matches!(r.verb, Verb::IndexVerify)))
         );
         assert!(parse(&args("help"), cwd).is_ok_and(|r| r.is_none()));
         Ok(())

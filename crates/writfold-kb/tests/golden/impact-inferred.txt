@@ -1,0 +1,10 @@
+ticket HBR-101 [in-progress] depth=1 HBR-101 concerns harbor-db (field) @ktlo/2026/hbr-101-slow-ledger-flush.md:4
+ticket HBR-99 [done] depth=1 HBR-99 concerns harbor-db (field) @ktlo/2026/hbr-99-flush-stall.md:4
+asset harbor-api [active] depth=1 harbor-api depends-on harbor-db (authored) @inventory/relationships/depends-on__harbor-api__harbor-db.json:4 !past-ttl
+investigation inv:2026/2026-02-10-flush-stalls [concluded] depth=1 inv:2026/2026-02-10-flush-stalls concerns harbor-db (field) @investigations/2026/2026-02-10-flush-stalls/README.md:7
+investigation inv:2026/2026-06-01-flush-stalls-again [open] depth=1 inv:2026/2026-06-01-flush-stalls-again concerns harbor-db (field) @investigations/2026/2026-06-01-flush-stalls-again/README.md:6
+decision proposal/decision/2026-03-02-batch-ledger-writes [accepted] depth=1 proposal/decision/2026-03-02-batch-ledger-writes references harbor-db (field) @proposals/decision/2026-03-02-batch-ledger-writes/proposal.md:9
+signature sig:fsync-stall [fixed] depth=1 sig:fsync-stall concerns harbor-db (field) @signatures/fsync-stall.md:6
+# note: walked from harbor-db: depth 1, direction in, inferred edges included; project records are homes and are not walked through
+# coverage=partial records=28/28 shown=7 omitted=0 frontier=7 skipped_retired=0 skipped_disputed=0 skipped_inferred=0 kb=d5db758bda80 index=fresh cursor=none q=bbbf4b43c67e
+# exit=2
