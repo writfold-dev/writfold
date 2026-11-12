@@ -1,0 +1,21 @@
+asset harbor-api [active] Harbor billing API @inventory/assets/harbor-api.json:10 !past-ttl
+  field: lifecycle=active @inventory/assets/harbor-api.json:10
+  field: owner=team-quay @inventory/assets/harbor-api.json:8
+  field: verified_at=2026-01-05 @inventory/assets/harbor-api.json:16
+  field: ttl=30d @inventory/assets/harbor-api.json:17
+ticket HBR-101 [in-progress] Slow ledger flush at month end @ktlo/2026/hbr-101-slow-ledger-flush.md:5
+  via: concerns (field) @ktlo/2026/hbr-101-slow-ledger-flush.md:4
+dossier dossier:harbor-api Harbor billing API @inventory/dossiers/harbor-api.md:1
+  via: dossier-of (field) @inventory/dossiers/harbor-api.md:1
+decision proposal/decision/2026-03-02-batch-ledger-writes [accepted] Batch ledger writes in the API @proposals/decision/2026-03-02-batch-ledger-writes/proposal.md:5
+  via: references (field) @proposals/decision/2026-03-02-batch-ledger-writes/proposal.md:9
+asset quay-worker [sunsetting] Quay batch worker @inventory/assets/quay-worker.json:8 !vocab=unknown
+  via: consumes (authored) @inventory/relationships/consumes__quay-worker__harbor-api.json:4
+runbook runbook:ops/restart-harbor Restart the Harbor API @runbooks/ops/restart-harbor.md:1
+  via: concerns (field) @runbooks/ops/restart-harbor.md:3
+asset tide-dashboard [active] Tide latency dashboard @inventory/assets/tide-dashboard.json:8
+  via: monitors (authored) @inventory/relationships/monitors__tide-dashboard__harbor-api.json:4
+doc doc:runs/run-20261101T090000Z-a1b2c3/checkpoint.md @runs/run-20261101T090000Z-a1b2c3/checkpoint.md
+  via: mentions (mention) @runs/run-20261101T090000Z-a1b2c3/checkpoint.md:4 !inferred
+# coverage=complete records=28/28 shown=8 omitted=0 kb=d5db758bda80 index=fresh cursor=none q=684e80fee6ec
+# exit=0

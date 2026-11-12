@@ -14,6 +14,7 @@ writfold-sources = { path = "../writfold-sources" }
 writfold-runtime = { path = "../writfold-runtime" }
 tuft = { path = "../tuft" }
 rusqlite.workspace = true
+regex.workspace = true
 serde_json.workspace = true
 sha2.workspace = true
 thiserror.workspace = true

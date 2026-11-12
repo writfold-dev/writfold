@@ -13,7 +13,8 @@ index d5db758bda80 [rebuilt] <WORLD>/kb/.git/writfold/kb-index-e3b0c44298fc.sqli
   records: ticket=2
   count: files=28
   count: citations=9
-  count: edges=30
+  count: edges=38
+  count: mentions=2
   count: unresolved=3
   count: cached-verdicts=0
 # coverage=complete records=28/28 shown=1 omitted=0 kb=d5db758bda80 index=rebuilt cursor=none q=b5b35f624ce5

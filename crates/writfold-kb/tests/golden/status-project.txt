@@ -1,0 +1,26 @@
+project project:harbor [build] Harbor status @harbor/STATUS.md:2
+  field: next=month-end replay @harbor/STATUS.md:4
+  field: owner=team-quay @harbor/STATUS.md:3
+  field: phase=build @harbor/STATUS.md:2
+ticket HBR-101 [in-progress] Slow ledger flush at month end @ktlo/2026/hbr-101-slow-ledger-flush.md:5
+  via: promoted-to (field) @ktlo/2026/hbr-101-slow-ledger-flush.md:10
+asset harbor-api [active] Harbor billing API @inventory/assets/harbor-api.json:10 !past-ttl
+  via: project (field) @inventory/assets/harbor-api.json:11
+asset harbor-db [active] Harbor ledger store @inventory/assets/harbor-db.json:10
+  via: project (field) @inventory/assets/harbor-db.json:11
+decision proposal/decision/2026-01-10-single-writer [superseded] One writer process for the ledger @proposals/decision/2026-01-10-single-writer.md:5 !superseded→decision/2026-03-02-batch-ledger-writes
+  via: project (field) @proposals/decision/2026-01-10-single-writer.md:8
+decision proposal/decision/2026-02-01-drop-retries [rejected] Drop client retries on flush @proposals/decision/2026-02-01-drop-retries/proposal.md:5
+  via: project (field) @proposals/decision/2026-02-01-drop-retries/proposal.md:8
+decision proposal/decision/2026-03-02-batch-ledger-writes [accepted] Batch ledger writes in the API @proposals/decision/2026-03-02-batch-ledger-writes/proposal.md:5
+  via: project (field) @proposals/decision/2026-03-02-batch-ledger-writes/proposal.md:8
+decision proposal/decision/2026-04-01-shard-ledger [draft] Shard the ledger by tenant @proposals/decision/2026-04-01-shard-ledger/proposal.md:5
+  via: project (field) @proposals/decision/2026-04-01-shard-ledger/proposal.md:8
+asset quay-worker [sunsetting] Quay batch worker @inventory/assets/quay-worker.json:8 !vocab=unknown
+  via: project (field) @inventory/assets/quay-worker.json:9
+run run-20261101T090000Z-a1b2c3 [open] Batch ledger writes rollout @runs/run-20261101T090000Z-a1b2c3/manifest.json:7
+  via: project (field) @runs/run-20261101T090000Z-a1b2c3/manifest.json:4
+asset tide-dashboard [active] Tide latency dashboard @inventory/assets/tide-dashboard.json:8
+  via: project (field) @inventory/assets/tide-dashboard.json:9
+# coverage=complete records=28/28 shown=11 omitted=0 kb=d5db758bda80 index=fresh cursor=none q=44aa4060e4e0
+# exit=0

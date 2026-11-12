@@ -36,7 +36,7 @@ fn strings(map: &Map<String, Value>, key: &str) -> Vec<String> {
 }
 
 /// The 1-based line of the first `"key"` in the raw text, or 1.
-fn line_of(raw: &str, key: &str) -> u32 {
+pub(crate) fn line_of(raw: &str, key: &str) -> u32 {
     let needle = format!("\"{key}\"");
     raw.lines()
         .position(|line| line.contains(&needle))

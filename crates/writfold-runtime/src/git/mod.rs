@@ -54,8 +54,8 @@ mod traversal;
 pub use admission::{GitExecutable, GitRepository};
 pub use error::GitError;
 pub use kb::{
-    KbCommit, KbDirty, KbRepository, KbStatus, kb_batch_check, kb_commit, kb_config, kb_log,
-    kb_ls_files, kb_status,
+    KbCommit, KbDirty, KbRepository, KbStatus, kb_batch_check, kb_commit, kb_config, kb_diff_tree,
+    kb_log, kb_ls_files, kb_status,
 };
 pub use ledger::{LedgerCommit, ledger_ref};
 pub use objects::{GitBlob, GitEntry};

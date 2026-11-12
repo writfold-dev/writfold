@@ -1,0 +1,6 @@
+nearest rel:consumes__quay-worker__harbor-api quay-worker consumes harbor-api @inventory/relationships/consumes__quay-worker__harbor-api.json
+nearest rel:monitors__tide-dashboard__harbor-api tide-dashboard monitors harbor-api @inventory/relationships/monitors__tide-dashboard__harbor-api.json
+nearest rel:depends-on__harbor-api__harbor-db harbor-api depends-on harbor-db @inventory/relationships/depends-on__harbor-api__harbor-db.json
+# note: absence in the KB is not evidence of absence in the world; check the sources, then record what you find
+# coverage=partial records=28/28 shown=3 omitted=0 answer=unknown reason=unresolved-id kb=d5db758bda80 index=fresh cursor=none q=8da0f4af3e4c
+# exit=2

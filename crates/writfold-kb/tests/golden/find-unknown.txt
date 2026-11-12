@@ -1,0 +1,4 @@
+# note: absence in the KB is not evidence of absence in the world; check the sources, then record what you find
+# note: no matching signature is not proof that the symptom is new
+# coverage=partial records=28/28 shown=0 omitted=0 answer=unknown reason=no-record kb=d5db758bda80 index=fresh cursor=none q=c07b8bb1b567
+# exit=2

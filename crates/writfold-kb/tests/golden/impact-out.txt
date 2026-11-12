@@ -1,0 +1,5 @@
+asset harbor-db [active] depth=1 HBR-99 concerns harbor-db (field) @ktlo/2026/hbr-99-flush-stall.md:4
+project project:harbor [build] depth=2 harbor-db project project:harbor (field) @inventory/assets/harbor-db.json:11
+# note: walked from HBR-99: depth 3, direction out; project records are homes and are not walked through
+# coverage=complete records=28/28 shown=2 omitted=0 frontier=0 skipped_retired=0 skipped_disputed=0 skipped_inferred=0 kb=d5db758bda80 index=fresh cursor=none q=d4fe5258782e
+# exit=0

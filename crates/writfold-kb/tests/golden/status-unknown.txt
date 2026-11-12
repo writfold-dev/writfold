@@ -1,0 +1,4 @@
+nearest HBR-101 [in-progress] Slow ledger flush at month end (d=1) @ktlo/2026/hbr-101-slow-ledger-flush.md:5
+# note: absence in the KB is not evidence of absence in the world; check the sources, then record what you find
+# coverage=partial records=28/28 shown=1 omitted=0 answer=unknown reason=no-record kb=d5db758bda80 index=fresh cursor=none q=a790f115bcab
+# exit=2

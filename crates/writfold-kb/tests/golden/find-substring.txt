@@ -1,0 +1,8 @@
+asset harbor-db [active] Harbor ledger store @inventory/assets/harbor-db.json:10
+  match: substring "name": "Harbor ledger store", @inventory/assets/harbor-db.json:4
+investigation inv:2026/2026-02-10-flush-stalls [concluded] Flush stalls on the ledger store @investigations/2026/2026-02-10-flush-stalls/README.md:8
+  match: substring title: Flush stalls on the ledger store @investigations/2026/2026-02-10-flush-stalls/README.md:3
+signature sig:fsync-stall [fixed] Fsync stall on the ledger store @signatures/fsync-stall.md:3
+  match: substring title: Fsync stall on the ledger store @signatures/fsync-stall.md:2
+# coverage=complete records=28/28 shown=3 omitted=0 kb=d5db758bda80 index=fresh cursor=none q=63ddf6b456f3
+# exit=0

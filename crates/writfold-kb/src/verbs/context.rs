@@ -134,6 +134,7 @@ fn neighbours(
                 let other = if outgoing { &edge.dst } else { &edge.src };
                 if shown.contains(other)
                     || !matches!(edge.status.as_str(), "explicit" | "confirmed")
+                    || !matches!(edge.origin.as_str(), "authored" | "field")
                 {
                     continue;
                 }

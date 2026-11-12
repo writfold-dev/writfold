@@ -1,0 +1,5 @@
+ticket HBR-101 [in-progress] 2026-10-28 created Slow ledger flush at month end @ktlo/2026/hbr-101-slow-ledger-flush.md:8
+ticket HBR-101 [in-progress] 2026-11-03 updated Slow ledger flush at month end @ktlo/2026/hbr-101-slow-ledger-flush.md:9
+checkpoint run-20261101T090000Z-a1b2c3 2026-11-03T16:00:00Z checkpoint Next: measure flush time on the month-end replay, then HBR-101 can close. @runs/run-20261101T090000Z-a1b2c3/checkpoint.md:9
+# coverage=complete records=28/28 shown=3 omitted=0 kb=d5db758bda80 index=fresh cursor=none q=e999e1e782a3
+# exit=0

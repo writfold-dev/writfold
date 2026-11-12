@@ -52,6 +52,17 @@ fn target(raw: &str) -> String {
     format!("{kind}:{}", key.unwrap_or_default())
 }
 
+/// The flag a non-fresh verdict prints: `moved→a-b` (with the new path
+/// when the file moved), `stale` for an authored mark, else its name.
+pub fn flag(verdict: &str, moved: (Option<u32>, Option<u32>, Option<String>)) -> String {
+    match (verdict, moved) {
+        ("moved", (Some(a), Some(b), Some(p))) => format!("moved→{p}:{a}-{b}"),
+        ("moved", (Some(a), Some(b), None)) => format!("moved→{a}-{b}"),
+        ("marked", _) => "stale".to_owned(),
+        (other, _) => other.to_owned(),
+    }
+}
+
 /// The row for one non-fresh verdict (also used for cached verdicts).
 pub fn verdict_row(
     path: &str,
@@ -61,12 +72,7 @@ pub fn verdict_row(
     head: Option<&str>,
     moved: (Option<u32>, Option<u32>, Option<String>),
 ) -> Row {
-    let flag = match (verdict, moved) {
-        ("moved", (Some(a), Some(b), Some(p))) => format!("moved→{p}:{a}-{b}"),
-        ("moved", (Some(a), Some(b), None)) => format!("moved→{a}-{b}"),
-        ("marked", _) => "stale".to_owned(),
-        (other, _) => other.to_owned(),
-    };
+    let flag = flag(verdict, moved);
     let at = head.map(|h| match h.split_once(':') {
         Some((commit, named)) if commit.len() >= 12 => format!("at {} ({named})", &commit[..12]),
         _ => format!("at {h}"),
@@ -241,6 +247,9 @@ fn regressions(session: &Session<'_>) -> Result<Vec<Row>> {
             continue;
         };
         for edge in query::edges(&session.conn, &signature.id, false)? {
+            if edge.origin != "field" {
+                continue;
+            }
             let Some(inv) =
                 query::record(&session.conn, &edge.src)?.filter(|r| r.kind == "investigation")
             else {

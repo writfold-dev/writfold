@@ -1,0 +1,12 @@
+ticket HBR-101 [in-progress] Slow ledger flush at month end @ktlo/2026/hbr-101-slow-ledger-flush.md:5
+  field: status=in-progress @ktlo/2026/hbr-101-slow-ledger-flush.md:5
+  field: prs=[acme/harbor-api#42] @ktlo/2026/hbr-101-slow-ledger-flush.md:6
+  field: created=2026-10-28 @ktlo/2026/hbr-101-slow-ledger-flush.md:8
+  field: updated=2026-11-03 @ktlo/2026/hbr-101-slow-ledger-flush.md:9
+  field: promoted_to=harbor @ktlo/2026/hbr-101-slow-ledger-flush.md:10
+project project:harbor [build] Harbor status @harbor/STATUS.md:2
+  via: cites (cite) @harbor/STATUS.md:11
+doc doc:runs/run-20261101T090000Z-a1b2c3/checkpoint.md @runs/run-20261101T090000Z-a1b2c3/checkpoint.md
+  via: mentions (mention) @runs/run-20261101T090000Z-a1b2c3/checkpoint.md:9 !inferred
+# coverage=complete records=28/28 shown=3 omitted=0 kb=d5db758bda80 index=rebuilt cursor=none q=a668b212156b
+# exit=0

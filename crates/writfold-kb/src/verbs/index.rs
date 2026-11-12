@@ -1,7 +1,13 @@
-//! `index status|rebuild`: what the index holds, and every unreadable file.
+//! `index status|rebuild|verify`: what the index holds, every unreadable
+//! file, and whether the index equals a rebuild.
 use crate::emit::{Answer, More, Row};
 use crate::error::Result;
+use crate::index::{
+    self, build,
+    verify::{self, Report},
+};
 use crate::session::Session;
+use rusqlite::Connection;
 
 pub fn status(session: &Session<'_>) -> Result<Answer> {
     let mut answer = Answer::default();
@@ -35,10 +41,17 @@ pub fn status(session: &Session<'_>) -> Result<Answer> {
             "citations",
             "SELECT COUNT(*) FROM citations WHERE illustrative = 0",
         ),
-        ("edges", "SELECT COUNT(*) FROM edges"),
+        (
+            "edges",
+            "SELECT COUNT(*) FROM edges WHERE origin <> 'mention'",
+        ),
+        (
+            "mentions",
+            "SELECT COUNT(*) FROM edges WHERE origin = 'mention'",
+        ),
         (
             "unresolved",
-            "SELECT COUNT(*) FROM refs WHERE NOT EXISTS (SELECT 1 FROM edges e WHERE e.prov_path = refs.path AND e.prov_line = refs.line AND e.src = refs.src AND e.rel = refs.rel)",
+            "SELECT COUNT(*) FROM refs WHERE origin <> 'mention' AND NOT EXISTS (SELECT 1 FROM edges e WHERE e.prov_path = refs.path AND e.prov_line = refs.line AND e.src = refs.src AND e.rel = refs.rel)",
         ),
         ("cached-verdicts", "SELECT COUNT(*) FROM cite_checks"),
     ] {
@@ -51,7 +64,8 @@ pub fn status(session: &Session<'_>) -> Result<Answer> {
     }
     answer.rows.push(head);
     let mut statement = session.conn.prepare(
-        "SELECT path, kind, coalesce(parse_error, '') FROM files WHERE parse_status <> 'ok' ORDER BY path",
+        "SELECT f.path, f.kind, coalesce(f.parse_error, 'duplicate id ' || d.id, '') FROM files f \
+         LEFT JOIN dups d ON d.path = f.path WHERE f.parse_status <> 'ok' OR d.path IS NOT NULL ORDER BY f.path",
     )?;
     let unreadable = statement
         .query_map([], |r| {
@@ -74,4 +88,71 @@ pub fn status(session: &Session<'_>) -> Result<Answer> {
         });
     }
     Ok(answer)
+}
+
+/// Rebuild the same snapshot and compare it with the index, table by
+/// table; a difference replaces the index with the rebuild and fails.
+pub fn verify(session: &Session<'_>) -> Result<Answer> {
+    let report = match (&session.ws.repo, &session.git, &session.file) {
+        (Some(repo), Some(git), Some(file)) => {
+            let snapshot = index::observe(session.ws, repo, git)?;
+            verify::against_rebuild(session.ws, repo, git, &session.conn, file, &snapshot)?
+        }
+        _ => {
+            let root = &session.ws.root;
+            let mut rebuilt = Connection::open_in_memory()?;
+            build::build(&mut rebuilt, index::inputs(root, index::walk(root)?), &[])?;
+            verify::compare(&session.conn, &rebuilt)?
+        }
+    };
+    Ok(render(&report))
+}
+
+fn render(report: &Report) -> Answer {
+    let mut answer = Answer::default();
+    for table in &report.tables {
+        let equal = table.difference.is_none() && table.digest == table.rebuilt_digest;
+        let mut row = Row {
+            kind: "table",
+            id: table.name.to_owned(),
+            status: Some(if equal { "equal" } else { "differs" }.to_owned()),
+            text: format!("rows={} sha256={}", table.rows, &table.digest[..12]),
+            ..Row::default()
+        };
+        if let Some(key) = &table.difference {
+            row.more.push(More {
+                label: "first-difference",
+                text: key.clone(),
+                ..More::default()
+            });
+            row.more.push(More {
+                label: "rebuilt",
+                text: format!("sha256={}", &table.rebuilt_digest[..12]),
+                ..More::default()
+            });
+        }
+        answer.rows.push(row);
+    }
+    let integrity = Row {
+        kind: "check",
+        id: "fts-integrity".into(),
+        status: Some(
+            if report.integrity.is_empty() {
+                "ok"
+            } else {
+                "failed"
+            }
+            .to_owned(),
+        ),
+        text: report.integrity.join("; "),
+        ..Row::default()
+    };
+    answer.rows.push(integrity);
+    if let Some(difference) = report.first_difference() {
+        answer.failed = true;
+        answer.notes.push(format!(
+            "the index differed from a rebuild at {difference}; the rebuild replaced it"
+        ));
+    }
+    answer
 }

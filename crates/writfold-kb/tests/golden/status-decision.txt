@@ -1,0 +1,8 @@
+decision proposal/decision/2026-01-10-single-writer [superseded] One writer process for the ledger @proposals/decision/2026-01-10-single-writer.md:5 !superseded→decision/2026-03-02-batch-ledger-writes
+  field: status=superseded @proposals/decision/2026-01-10-single-writer.md:5
+  field: created=2026-01-10 @proposals/decision/2026-01-10-single-writer.md:6
+  field: updated=2026-03-09 @proposals/decision/2026-01-10-single-writer.md:7
+  field: superseded_by=decision/2026-03-02-batch-ledger-writes @proposals/decision/2026-01-10-single-writer.md:9
+  via: live successor proposal/decision/2026-03-02-batch-ledger-writes [accepted] @proposals/decision/2026-03-02-batch-ledger-writes/proposal.md:5
+# coverage=complete records=28/28 shown=1 omitted=0 kb=d5db758bda80 index=fresh cursor=none q=1acbba84e167
+# exit=0

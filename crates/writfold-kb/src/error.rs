@@ -24,6 +24,8 @@ pub enum KbError {
     Process(#[from] ProcessError),
     #[error("git: {0}")]
     Fs(#[from] FsError),
+    #[error("index: {0}")]
+    Mismatch(String),
     #[error("limit: {0}")]
     Quantity(#[from] writfold_domain::QuantityError),
 }

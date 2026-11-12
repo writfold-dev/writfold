@@ -1,0 +1,15 @@
+table files [equal] rows=28 sha256=578ddc404544
+table claims [equal] rows=24 sha256=9e7242a3d117
+table claim_aliases [equal] rows=13 sha256=221b1b1bc4a3
+table records [equal] rows=25 sha256=264f70f25459
+table aliases [equal] rows=14 sha256=52e9d635c3aa
+table dups [equal] rows=0 sha256=e3b0c44298fc
+table sections [equal] rows=22 sha256=a304f43aa98a
+table citations [equal] rows=10 sha256=9bcd3546b51e
+table refs [equal] rows=82 sha256=8560df81e31a
+table edges [equal] rows=40 sha256=e2496bf969f2
+table fts [equal] rows=28 sha256=ce2a3fbd5446
+table tri [equal] rows=28 sha256=ee35df7ef4ea
+check fts-integrity [ok]
+# coverage=complete records=28/28 shown=13 omitted=0 kb=d5db758bda80 index=rebuilt cursor=none q=a5a6a505dff3
+# exit=0

@@ -45,6 +45,9 @@ pub struct Answer {
     pub refused: bool,
     /// The examined scope was incomplete for a verb-specific reason.
     pub partial: bool,
+    /// The verb found a fault it reports in its rows (exit 1), such as an
+    /// index that differs from a rebuild.
+    pub failed: bool,
     /// Extra trailer counts such as `stale=` and `unverifiable=`.
     pub counts: Vec<(&'static str, usize)>,
 }
@@ -197,12 +200,17 @@ pub fn emit(answer: &Answer, frame: &Frame, scope: &Scope<'_>) -> Result<Output>
             None => omitted_by.push((name, 1)),
         }
     }
-    let partial = answer.partial || answer.unknown.is_some() || scope.unreadable > 0;
+    let partial = answer.partial
+        || answer.unknown.is_some()
+        || scope.unreadable > 0
+        || matches!(scope.index, IndexState::Behind(_));
     let flagged = answer
         .counts
         .iter()
         .any(|(name, n)| *n > 0 && matches!(*name, "stale" | "unverifiable"));
-    let exit = if answer.refused {
+    let exit = if answer.failed {
+        1
+    } else if answer.refused {
         3
     } else if partial || flagged {
         2

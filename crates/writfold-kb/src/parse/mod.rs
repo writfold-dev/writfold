@@ -3,7 +3,8 @@
 //! unknown vocabulary are kept, never rejected.
 pub mod cite;
 mod document;
-mod json;
+pub(crate) mod json;
+pub mod mention;
 
 use crate::layout::Kind;
 use crate::model::{Facts, Reference, Section};
@@ -16,9 +17,48 @@ pub fn parse(path: &str, kind: Kind, bytes: &[u8]) -> Result<Facts, String> {
         _ if path.ends_with(".json") => json::document(path, text)?,
         _ => document::parse(path, kind, text)?,
     };
-    if path.ends_with(".md") {
+    let markdown = path.ends_with(".md");
+    if markdown {
         facts.sections = sections(text);
         facts.citations.extend(cite::tokens(text));
+        facts.heading = first_heading(text);
+    }
+    let src = facts
+        .record
+        .as_ref()
+        .map_or_else(|| format!("doc:{path}"), |r| r.id.clone());
+    for (ord, citation) in facts.citations.iter().enumerate() {
+        if let Some(token) = cite::target(citation) {
+            facts.references.push(Reference {
+                line: citation.line,
+                src: src.clone(),
+                rel: "cites".into(),
+                token,
+                origin: "cite",
+                status: "explicit".into(),
+                cite: u32::try_from(ord).ok(),
+            });
+        }
+    }
+    // Record JSON is structured: its fields are already field edges.
+    let from = match kind {
+        Kind::Asset | Kind::Relationship | Kind::Run => None,
+        _ if markdown => Some(mention::body_start(text)),
+        _ => Some(1),
+    };
+    for (token, line) in from
+        .map(|from| mention::scan(text, from))
+        .unwrap_or_default()
+    {
+        facts.references.push(Reference {
+            line,
+            src: src.clone(),
+            rel: "mentions".into(),
+            token,
+            origin: "mention",
+            status: "inferred".into(),
+            cite: None,
+        });
     }
     facts.body = text.to_owned();
     Ok(facts)
