@@ -154,6 +154,9 @@ pub fn resume(session: &Session<'_>, named: Option<&str>, cwd: &Path) -> Result<
     let (gates, notes) = crate::gate::resume_rows(session, &rec, cwd);
     answer.rows.extend(gates);
     answer.notes.extend(notes);
+    let (deliveries, notes) = crate::deliver::resume_rows(session, &rec);
+    answer.rows.extend(deliveries);
+    answer.notes.extend(notes);
     answer.rows.extend(tail);
     answer.rows.extend(drafts(session, &rec));
     if runs::state(session, &rec) == "closed" {

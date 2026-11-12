@@ -107,6 +107,41 @@ shows an edited or hand-written one, and a receipt whose digest does not match
 reads as invalid, but nothing is signed. See the
 [G1 design as built](docs/writfold/kb-v1-design.md#16-g1-as-built).
 
+Two obligation classes are statements, not checks. A gate of class
+`attested` runs nothing and is met by `gate attest <id> --statement TEXT --by
+WHO`; `gate waive <id> --reason TEXT --by WHO` sets any gate aside. Both are
+shown as `attested` and `waived`, never as `satisfied`, and stop standing when
+the content in the gate's scope moves.
+
+Delivery candidates are offline. `kb deliver prepare --mode
+pr-comment|slack-summary --from FILE [--audience internal|external]
+[--destination NAME]` copies a draft into the run as `candidate.md`, the exact
+payload that would be posted, with a manifest of its mode, audience,
+destination and digests. Nothing is ever sent: there is no network and no
+adapter. `kb deliver check` runs the mode's built-in checks on the candidate's
+bytes and records one receipt per check: `paragraphs.bounded` (words per
+prose paragraph), `references.denied` (the audience's deny list in
+`.writfold/deliveries/deny-<audience>.toml`, reporting line and rule) and
+`claims.cited-fresh` (every citation token fresh under `stale`). `kb deliver
+status` shows each candidate's checks and exits 0 only when all are
+satisfied, attested or waived; editing the candidate makes its receipts
+stale, and one candidate's checks never count for another. The checks are
+mechanical: they do not judge tone or truth, and a claim made without a
+citation token is not seen.
+
+```sh
+writfold kb deliver prepare --mode pr-comment --from comment.md --audience external --destination harbor#42
+writfold kb deliver check             # the run's only candidate (or name it)
+writfold kb deliver status            # [ready] or [blocked], with each check's line and rule
+```
+
+The plugin's optional `PreToolUse` hook (`writfold kb hook pre-tool-use`) is
+a guard, not enforcement. It is off unless the KB has
+`.writfold/deliveries/guard.toml` listing publishing commands (such as `gh pr
+comment`); then such a command is denied unless the current run has a ready
+candidate holding the bytes being posted. See
+[G2 as built](docs/writfold/kb-v1-design.md#19-g2-as-built).
+
 Splicery recipes apply in a run's worktree. `kb edit apply` replays one or
 more [Splicery](https://github.com/writfold-dev/splicery) recipes (each
 `edit "<path>" { … }` names one file) through the pinned kernel against the
@@ -234,6 +269,7 @@ error. See [Tuft's KB adapter](docs/tuft/language.md#kb-adapter).
 | `writfold kb checkpoint / resume / runs / record / status --set / cite make` | Writes checkpoints, runs, tickets, decisions, links and status changes atomically (old or new bytes after a kill at any step); prints citation tokens | [KB v1 design](docs/writfold/kb-v1-design.md#13-m3-as-built) (section 13), kill and fault tests in `crates/writfold-kb/tests/faults.rs`, TLC model `spec/KbWrite.tla` |
 | Claude Code plugin (`plugins/writfold`), `writfold kb hook`, `checkpoint --from-draft` | A KB brief at session start with no tool call; local checkpoint drafts at compaction, stop and session end; one skill teaching the verbs | [KB v1 design](docs/writfold/kb-v1-design.md#14-m4a-as-built) (section 14), golden tests in `crates/writfold-kb/tests/hook.rs`, `crates/writfold/tests/kb_hook.rs` |
 | `writfold kb gate run / status / verify / lines` | Runs a gate's argv on a repository and records one receipt in the KB run; derives open, satisfied, stale, failed or unknown from definitions and receipts; re-runs a receipt at its commit; prints receipt lines for a commit message | [KB v1 design](docs/writfold/kb-v1-design.md#16-g1-as-built) (section 16), golden, stale-transition and kill tests in `crates/writfold-kb/tests/gate.rs` and `gate_faults.rs`; the real `scripts/gate` has not yet been run through it |
+| `writfold kb gate attest / waive`, `writfold kb deliver prepare / check / attest / waive / status`, `writfold kb hook pre-tool-use` | Statements recorded as attested or waived, never shown as satisfied; offline delivery candidates (the exact payload, never sent) checked mechanically for paragraph length, denied references and stale citations, with receipts bound to the candidate's bytes; an optional guard hook, off by default | [KB v1 design](docs/writfold/kb-v1-design.md#19-g2-as-built) (section 19), golden, repair, staleness, statement, guard and kill tests in `crates/writfold-kb/tests/deliver.rs`, `deliver_faults.rs`, `gate_statements.rs` and `guard.rs`; no real PR comment or Slack summary has gone through it yet |
 | `writfold kb edit apply / recover` | Replays Splicery recipes against a KB run's recorded worktree and writes each file atomically after re-checking its bytes; keeps the recipes, splice sites, blob IDs and preview as a receipt in the run; a crash between files is finished by `recover` from a local journal | [KB v1 design](docs/writfold/kb-v1-design.md#17-splicery-adapter-as-built) (section 17), golden, refusal, gate-staleness and kill tests in `crates/writfold-kb/tests/edit.rs` and `edit_faults.rs` |
 | `writfold watch [--kb DIR] [--run ID] [--once]` | A read-only terminal view of runs, gate states, receipts and checkpoints, each pane the answer of one `kb` verb; one plain-text frame when piped | [KB v1 design](docs/writfold/kb-v1-design.md#18-t1-as-built) (section 18), golden, layout and projection tests in `crates/writfold-tui/tests/watch.rs` |
 | `writfold trial prepare / approve / apply / recover / show` | One edit through a durable, validated ledger in Writfold's own sparse worktree; never your checkout | [trial profile](docs/writfold/trial-profile.md), [adversarial campaign](bench/2026-11-09-adversarial/) |

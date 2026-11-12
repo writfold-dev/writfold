@@ -17,6 +17,8 @@
 //!   turn).
 //! - `session-end` records the end reason (no Git spawn: the budget is
 //!   1.5 s).
+//! - `pre-tool-use` is the optional delivery guard ([`crate::guard`]):
+//!   silent unless the KB configures it, and then it may print a denial.
 use crate::draft;
 use crate::workspace::{GitTool, Workspace, discover};
 use crate::{Request, Verb, runs, time};
@@ -31,8 +33,9 @@ pub const RESUME_BUDGET: usize = 500;
 /// Drafts listed at session start.
 const DRAFTS_SHOWN: usize = 3;
 
-pub const EVENTS: [&str; 5] = [
+pub const EVENTS: [&str; 6] = [
     "session-start",
+    "pre-tool-use",
     "pre-compact",
     "post-compact",
     "stop",
@@ -84,10 +87,10 @@ pub fn run(event: &str, input: &str, env: &HookEnv) -> HookOutput {
         Err(error) => return quiet(error.to_string()),
     };
     let now = env.now.unwrap_or_else(time::now);
-    let result = if event == "session-start" {
-        session_start(&ws, &cwd, now)
-    } else {
-        record(event, &ws, &input, &cwd, now)
+    let result = match event {
+        "session-start" => session_start(&ws, &cwd, now),
+        "pre-tool-use" => crate::guard::pre_tool_use(&ws, &input, &cwd, now),
+        _ => record(event, &ws, &input, &cwd, now),
     };
     result.unwrap_or_else(quiet)
 }

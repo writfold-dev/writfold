@@ -4,9 +4,10 @@ use super::args::Common;
 use super::writes::get;
 use std::path::PathBuf;
 use writfold_kb::Verb;
-use writfold_kb::gate::GateVerb;
+use writfold_kb::gate::statement::Kind;
+use writfold_kb::gate::{GateVerb, Say};
 
-pub const USAGE: &str = "usage: gate run <id> [--run ID] [--repo DIR] | gate status [--run ID] [--repo DIR] | gate verify <receipt> [--repo DIR] | gate lines [--run ID] [--repo DIR]";
+pub const USAGE: &str = "usage: gate run <id> [--run ID] [--repo DIR] | gate attest <id> --statement TEXT --by WHO | gate waive <id> --reason TEXT --by WHO | gate status [--run ID] [--repo DIR] | gate verify <receipt> [--repo DIR] | gate lines [--run ID] [--repo DIR]";
 
 /// The gate verb, or why the arguments do not name one.
 pub fn verb(common: &Common, positional: &[String]) -> Result<Verb, String> {
@@ -18,6 +19,29 @@ pub fn verb(common: &Common, positional: &[String]) -> Result<Verb, String> {
             run,
             repo,
         },
+        [sub, id] if sub == "attest" || sub == "waive" => {
+            let (kind, flag, other) = match sub.as_str() {
+                "attest" => (Kind::Attested, "statement", "reason"),
+                _ => (Kind::Waived, "reason", "statement"),
+            };
+            if get(common, other).is_some() {
+                return Err(format!("gate {sub} takes --{flag}, not --{other}"));
+            }
+            GateVerb::Say(Say {
+                kind,
+                id: id.clone(),
+                text: get(common, flag).ok_or(format!("gate {sub} needs --{flag}"))?,
+                by: get(common, "by").ok_or(format!("gate {sub} needs --by WHO"))?,
+                run,
+                repo,
+            })
+        }
+        _ if get(common, "statement").is_some()
+            || get(common, "reason").is_some()
+            || get(common, "by").is_some() =>
+        {
+            return Err("--statement, --reason and --by belong to gate attest|waive".into());
+        }
         [sub] if sub == "status" => GateVerb::Status { run, repo },
         [sub] if sub == "lines" => GateVerb::Lines { run, repo },
         [sub, receipt] if sub == "verify" => {
@@ -68,7 +92,18 @@ mod tests {
             verb("gate verify runs/r/gates/unit-x.json")?,
             Verb::Gate(GateVerb::Verify { .. })
         ));
+        assert!(matches!(
+            verb("gate waive unit --reason flaky --by me")?,
+            Verb::Gate(GateVerb::Say(ref s)) if s.id == "unit" && s.text == "flaky"
+        ));
+        assert!(matches!(
+            verb("gate attest review --statement read --by me --run r")?,
+            Verb::Gate(GateVerb::Say(_))
+        ));
         for bad in [
+            "gate attest review --reason x --by me",
+            "gate waive unit --reason x",
+            "gate status --by me",
             "gate",
             "gate run",
             "gate run a b",

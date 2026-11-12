@@ -126,6 +126,72 @@ pub fn state(receipts: &[Evidence]) -> (State, Option<usize>) {
     }
 }
 
+/// What stands for an obligation once statements are counted: a checked
+/// state, or one of the two statement classes. A statement is never a
+/// passing check: `Attested` and `Waived` are their own standings, and no
+/// statement ever yields `Checked(Satisfied)`.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Standing {
+    Checked(State),
+    /// An attested obligation with a statement about the current subject.
+    Attested,
+    /// A waiver, with a reason, about the current subject.
+    Waived,
+}
+
+impl Standing {
+    pub fn name(self) -> &'static str {
+        match self {
+            Standing::Checked(state) => state.name(),
+            Standing::Attested => "attested",
+            Standing::Waived => "waived",
+        }
+    }
+
+    /// Whether nothing more is owed: satisfied by a check, attested where
+    /// only an attestation is asked for, or waived with a reason.
+    pub fn met(self) -> bool {
+        !matches!(
+            self,
+            Standing::Checked(State::Open | State::Stale | State::Failed | State::Unknown)
+        )
+    }
+}
+
+/// The statements recorded for one obligation, compared with the present
+/// (the same definition and the same subject content).
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub struct Statements {
+    /// An attestation about the current subject exists.
+    pub attested_current: bool,
+    /// Some attestation exists (current or not).
+    pub attested_any: bool,
+    /// A waiver about the current subject exists.
+    pub waived_current: bool,
+}
+
+/// The standing of one obligation. An `attested_class` obligation has no
+/// check and is met only by a current attestation; every other obligation
+/// stands on its checked `state`. A current waiver stands for any
+/// obligation that is not already satisfied or attested.
+pub fn standing(attested_class: bool, state: State, statements: Statements) -> Standing {
+    if attested_class {
+        if statements.attested_current {
+            return Standing::Attested;
+        }
+    } else if state == State::Satisfied {
+        return Standing::Checked(State::Satisfied);
+    }
+    if statements.waived_current {
+        return Standing::Waived;
+    }
+    match (attested_class, statements.attested_any) {
+        (true, true) => Standing::Checked(State::Stale),
+        (true, false) => Standing::Checked(State::Open),
+        (false, _) => Standing::Checked(state),
+    }
+}
+
 /// Whether `path` (repository-relative, `/`-separated) is in a scope: some
 /// pattern matches it and no `!`-prefixed pattern does. Patterns are
 /// anchored at the top of the repository: `*` and `?` match within one
@@ -190,7 +256,46 @@ fn segment(pattern: &str, text: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::{Ending, Evidence, Outcome, State, glob, in_scope, outcome, state};
+    use super::{
+        Ending, Evidence, Outcome, Standing, State, Statements, glob, in_scope, outcome, standing,
+        state,
+    };
+
+    /// Over every input: an attested-class obligation is never satisfied,
+    /// a statement never makes anything `Satisfied`, a waiver stands only
+    /// when current, and a satisfied check is never shown as waived.
+    #[test]
+    fn statements_are_never_passing_checks() {
+        let states = [
+            State::Open,
+            State::Satisfied,
+            State::Stale,
+            State::Failed,
+            State::Unknown,
+        ];
+        for attested_class in [false, true] {
+            for state in states {
+                for bits in 0..8u8 {
+                    let s = Statements {
+                        attested_current: bits & 1 != 0,
+                        attested_any: bits & 3 != 0,
+                        waived_current: bits & 4 != 0,
+                    };
+                    let got = standing(attested_class, state, s);
+                    let satisfied = got == Standing::Checked(State::Satisfied);
+                    assert_eq!(satisfied, !attested_class && state == State::Satisfied);
+                    assert!(got != Standing::Waived || s.waived_current);
+                    assert!(got != Standing::Attested || (attested_class && s.attested_current));
+                    let expected = if attested_class {
+                        s.attested_current || s.waived_current
+                    } else {
+                        state == State::Satisfied || s.waived_current
+                    };
+                    assert_eq!(got.met(), expected, "{attested_class} {state:?} {s:?}");
+                }
+            }
+        }
+    }
 
     #[test]
     fn globs_are_anchored_segment_patterns() {

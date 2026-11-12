@@ -1,15 +1,18 @@
-//! Obligation state, derived on every read from the definitions and the
-//! run's receipts (never stored): `open`, `satisfied`, `stale`, `failed`,
-//! `unknown`. The comparison is the kernel's [`writfold_core::gate::state`];
+//! Obligation state, derived on every read from the definitions, the run's
+//! receipts and its statements (never stored): `open`, `satisfied`,
+//! `stale`, `failed`, `unknown`, and the two statement standings
+//! `attested` and `waived`. The comparisons are the kernel's
+//! [`writfold_core::gate::state`] and [`writfold_core::gate::standing`];
 //! this module gathers the facts and renders rows for `gate status`,
 //! `gate lines` and `resume`.
 use super::def::{self, Definition, Origin};
 use super::receipt::{self, Receipt};
+use super::statement;
 use super::subject::{Snapshot, Subject, snapshot};
 use crate::emit::{More, Row};
 use crate::error::Result;
 use std::path::Path;
-use writfold_core::gate::{Evidence, State, in_scope, state};
+use writfold_core::gate::{Evidence, Standing, State, in_scope, standing, state};
 use writfold_runtime::git::GitExecutable;
 
 /// One receipt file of a run.
@@ -44,13 +47,38 @@ pub fn filed(root: &Path, run_dir: &str, run: &str) -> Vec<Filed> {
         .collect()
 }
 
+/// A run's receipts and statements.
+pub struct Filings {
+    pub receipts: Vec<Filed>,
+    pub statements: Vec<statement::Filed>,
+}
+
+impl Filings {
+    pub fn read(root: &Path, run_dir: &str, run: &str) -> Self {
+        Self {
+            receipts: filed(root, run_dir, run),
+            statements: statement::filed(root, run_dir, run),
+        }
+    }
+
+    /// Receipts and statements that do not read as valid.
+    pub fn invalid(&self) -> usize {
+        self.receipts.iter().filter(|f| f.parsed.is_err()).count()
+            + self.statements.iter().filter(|f| f.parsed.is_err()).count()
+    }
+}
+
 /// One gate's derived state.
 pub struct Judged<'a> {
     pub definition: Definition,
+    /// The state from receipts alone.
     pub state: State,
+    /// What stands once statements are counted.
+    pub standing: Standing,
     /// The receipt that decides the state, if any.
     pub receipt: Option<(&'a Filed, &'a Receipt)>,
     pub same_definition: bool,
+    pub statements: statement::Summary<'a>,
 }
 
 /// The whole picture for one run and subject.
@@ -60,18 +88,26 @@ pub struct Report<'a> {
     pub snapshot: Snapshot,
 }
 
-/// Judge every defined gate on `subject` from the receipts `filed`.
+impl Report<'_> {
+    /// Whether every gate is met (satisfied, attested or waived).
+    pub fn all_met(&self) -> bool {
+        !self.gates.is_empty() && self.gates.iter().all(|j| j.standing.met())
+    }
+}
+
+/// Judge every defined gate on `subject` from the run's filings.
 pub fn judge<'a>(
     git: &GitExecutable<'_>,
     root: &Path,
     subject: &Subject,
-    filed: &'a [Filed],
+    filings: &'a Filings,
 ) -> Result<Report<'a>> {
     let (definitions, problems) = def::all(root, Some(&subject.top));
     let patterns: Vec<Vec<&str>> = definitions.iter().map(Definition::patterns).collect();
     let wanted = |p: &str| patterns.iter().any(|scope| in_scope(scope, p));
     let snapshot = snapshot(git, subject, &wanted)?;
-    let mut valid: Vec<(&Filed, &Receipt)> = filed
+    let mut valid: Vec<(&Filed, &Receipt)> = filings
+        .receipts
         .iter()
         .filter_map(|f| f.parsed.as_ref().ok().map(|r| (f, r)))
         .filter(|(_, r)| r.repo == subject.name)
@@ -95,11 +131,20 @@ pub fn judge<'a>(
             .collect();
         let (state, at) = state(&evidence);
         let receipt = at.and_then(|i| mine.get(i).copied());
+        let statements = statement::summary(
+            &filings.statements,
+            &definition.id,
+            &subject.name,
+            &definition.digest,
+            &scoped.digest,
+        );
         gates.push(Judged {
             same_definition: receipt.is_none_or(|(_, r)| r.definition == definition.digest),
+            standing: standing(definition.attested(), state, statements.statements),
             definition,
             state,
             receipt,
+            statements,
         });
     }
     Ok(Report {
@@ -130,30 +175,40 @@ pub fn shown_path(d: &Definition, subject: &Subject) -> String {
     }
 }
 
+fn invalid_row(kind: &'static str, name: &str, path: &str, why: &str) -> Row {
+    Row {
+        kind,
+        id: name.trim_end_matches(".json").to_owned(),
+        status: Some("invalid".into()),
+        text: why.to_owned(),
+        path: Some(path.to_owned()),
+        flags: vec!["invalid".into()],
+        section: Some("gates"),
+        ..Row::default()
+    }
+}
+
 /// The rows: one per gate (with why and the next command when it is not
-/// satisfied), one per invalid receipt, one per unusable definition.
+/// met), one per invalid receipt or statement, one per unusable
+/// definition.
 pub fn rows(
     git: &GitExecutable<'_>,
     subject: &Subject,
     report: &Report<'_>,
-    filed: &[Filed],
+    filings: &Filings,
 ) -> Result<Vec<Row>> {
     let mut out = Vec::new();
     for judged in &report.gates {
         out.push(gate_row(git, subject, report, judged)?);
     }
-    for f in filed {
+    for f in &filings.receipts {
         if let Err(why) = &f.parsed {
-            out.push(Row {
-                kind: "receipt",
-                id: f.name.trim_end_matches(".json").to_owned(),
-                status: Some("invalid".into()),
-                text: why.clone(),
-                path: Some(f.path.clone()),
-                flags: vec!["invalid".into()],
-                section: Some("gates"),
-                ..Row::default()
-            });
+            out.push(invalid_row("receipt", &f.name, &f.path, why));
+        }
+    }
+    for f in &filings.statements {
+        if let Err(why) = &f.parsed {
+            out.push(invalid_row("statement", &f.name, &f.path, why));
         }
     }
     for (origin, path, why) in &report.problems {
@@ -180,11 +235,19 @@ fn gate_row(
     let mut row = Row {
         kind: "gate",
         id: d.id.clone(),
-        status: Some(judged.state.name().into()),
+        status: Some(judged.standing.name().into()),
         section: Some("gates"),
         ..Row::default()
     };
     match judged.receipt {
+        None if d.attested() => {
+            row.text = format!(
+                "attested: statements only, no command, for {}",
+                subject.name
+            );
+            row.path = Some(shown_path(d, subject));
+            row.line = Some(1);
+        }
         None => {
             row.text = format!("{} no receipt in this run for {}", d.class, subject.name);
             row.path = Some(shown_path(d, subject));
@@ -210,60 +273,91 @@ fn gate_row(
             row.line = Some(1);
         }
     }
-    if judged.state == State::Satisfied {
+    let shown = match judged.standing {
+        Standing::Attested => judged.statements.attested,
+        Standing::Waived => judged.statements.waived,
+        Standing::Checked(_) => None,
+    };
+    if let Some((f, s)) = shown {
+        row.more.push(statement::more(f, s));
+    }
+    if judged.standing == Standing::Checked(State::Satisfied) {
         return Ok(row);
     }
-    row.flags.push(judged.state.name().into());
-    if let Some((_, r)) = judged.receipt
-        && judged.state == State::Stale
-    {
-        if !judged.same_definition {
-            row.more.push(line(
-                "why",
-                "the definition changed since this receipt".into(),
-            ));
-        } else {
-            let patterns = d.patterns();
-            let why = match report
-                .snapshot
-                .changed_since(git, subject, &r.commit, &patterns)?
-            {
-                None => format!(
-                    "in-scope paths changed; commit {} is not in this clone",
-                    short(&r.commit)
-                ),
-                Some(paths) if paths.is_empty() => "in-scope content differs".into(),
-                Some(paths) => {
-                    let first: Vec<&str> = paths.iter().take(5).map(String::as_str).collect();
-                    let more = paths.len().saturating_sub(5);
-                    let tail = if more > 0 {
-                        format!(" (+{more} more)")
-                    } else {
-                        String::new()
-                    };
-                    format!("changed in scope: {}{tail}", first.join(", "))
-                }
-            };
-            row.more.push(line("why", why));
-        }
+    row.flags.push(judged.standing.name().into());
+    if judged.standing.met() {
+        return Ok(row);
     }
-    row.more
-        .push(line("next", format!("writfold kb gate run {}", d.id)));
+    if judged.state == State::Stale
+        && let Some((_, r)) = judged.receipt
+    {
+        let why = stale_why(git, subject, report, judged, r)?;
+        row.more.push(line("why", why));
+    }
+    if judged.statements.waiver_moved {
+        row.more.push(line(
+            "why",
+            "a waiver exists, but for other content or another definition".into(),
+        ));
+    }
+    let next = match d.attested() {
+        true => format!("writfold kb gate attest {} --statement TEXT --by WHO", d.id),
+        false => format!("writfold kb gate run {}", d.id),
+    };
+    row.more.push(line("next", next));
     Ok(row)
 }
 
-/// Counts by state for the trailer, in a fixed order; invalid receipts and
-/// definitions are counted together.
-pub fn counts(report: &Report<'_>, filed: &[Filed]) -> Vec<(&'static str, usize)> {
-    let count = |s: State| report.gates.iter().filter(|j| j.state == s).count();
-    let invalid = filed.iter().filter(|f| f.parsed.is_err()).count() + report.problems.len();
+/// Why a stale receipt is stale: the definition changed, or which
+/// in-scope paths differ.
+fn stale_why(
+    git: &GitExecutable<'_>,
+    subject: &Subject,
+    report: &Report<'_>,
+    judged: &Judged<'_>,
+    r: &Receipt,
+) -> Result<String> {
+    if !judged.same_definition {
+        return Ok("the definition changed since this receipt".into());
+    }
+    let patterns = judged.definition.patterns();
+    Ok(
+        match report
+            .snapshot
+            .changed_since(git, subject, &r.commit, &patterns)?
+        {
+            None => format!(
+                "in-scope paths changed; commit {} is not in this clone",
+                short(&r.commit)
+            ),
+            Some(paths) if paths.is_empty() => "in-scope content differs".into(),
+            Some(paths) => {
+                let first: Vec<&str> = paths.iter().take(5).map(String::as_str).collect();
+                let more = paths.len().saturating_sub(5);
+                let tail = if more > 0 {
+                    format!(" (+{more} more)")
+                } else {
+                    String::new()
+                };
+                format!("changed in scope: {}{tail}", first.join(", "))
+            }
+        },
+    )
+}
+
+/// Counts by standing for the trailer, in a fixed order; invalid
+/// receipts, statements and definitions are counted together.
+pub fn counts(report: &Report<'_>, filings: &Filings) -> Vec<(&'static str, usize)> {
+    let count = |s: Standing| report.gates.iter().filter(|j| j.standing == s).count();
     vec![
         ("gates", report.gates.len()),
-        ("satisfied", count(State::Satisfied)),
-        ("open", count(State::Open)),
-        ("stale", count(State::Stale)),
-        ("failed", count(State::Failed)),
-        ("unknown", count(State::Unknown)),
-        ("invalid", invalid),
+        ("satisfied", count(Standing::Checked(State::Satisfied))),
+        ("open", count(Standing::Checked(State::Open))),
+        ("stale", count(Standing::Checked(State::Stale))),
+        ("failed", count(Standing::Checked(State::Failed))),
+        ("unknown", count(Standing::Checked(State::Unknown))),
+        ("attested", count(Standing::Attested)),
+        ("waived", count(Standing::Waived)),
+        ("invalid", filings.invalid() + report.problems.len()),
     ]
 }

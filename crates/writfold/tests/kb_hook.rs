@@ -170,6 +170,7 @@ fn plugin_commands_need_nothing_but_the_binary() -> Result {
         [
             "PostCompact",
             "PreCompact",
+            "PreToolUse",
             "SessionEnd",
             "SessionStart",
             "Stop"
@@ -202,6 +203,31 @@ fn plugin_commands_need_nothing_but_the_binary() -> Result {
         assert_eq!(present.status.code(), Some(0), "{event}");
         if event == "SessionStart" {
             assert!(context(&present)?.contains("kb="), "{event}");
+        }
+        if event == "PreToolUse" {
+            // Off by default: a KB with no guard configuration allows a
+            // publishing command by printing nothing.
+            let post = format!(
+                "{{\"cwd\": \"{kb}\", \"hook_event_name\": \"PreToolUse\", \"tool_name\": \"Bash\", \"tool_input\": {{\"command\": \"gh pr comment 1 --body x\"}}}}"
+            );
+            let output = run(&r.0, "/bin/sh", &["-c", command], &[("PATH", &with)], &post)?;
+            silent(&output, "PreToolUse with no guard configured")?;
+            assert!(output.stderr.is_empty(), "{event}");
+            // Configured: the same command is denied (no run, no candidate).
+            let guard = Path::new(&kb).join(".writfold/deliveries");
+            fs::create_dir_all(&guard)?;
+            fs::write(
+                guard.join("guard.toml"),
+                "schema = \"writfold-guard/1\"\ncommands = [\"gh pr comment\"]\n",
+            )?;
+            let output = run(&r.0, "/bin/sh", &["-c", command], &[("PATH", &with)], &post)?;
+            assert_eq!(output.status.code(), Some(0), "{event}");
+            let decision: Value = serde_json::from_slice(&output.stdout)?;
+            assert_eq!(
+                decision["hookSpecificOutput"]["permissionDecision"], "deny",
+                "{decision}"
+            );
+            fs::remove_dir_all(Path::new(&kb).join(".writfold"))?;
         }
     }
     Ok(())

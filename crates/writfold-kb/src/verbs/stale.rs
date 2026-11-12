@@ -24,7 +24,7 @@ pub fn severity(verdict: &str) -> u8 {
 }
 
 /// A stable name for what a citation points at.
-fn target(raw: &str) -> String {
+pub(crate) fn target(raw: &str) -> String {
     let Some(cite) = tokens(raw)
         .into_iter()
         .next()

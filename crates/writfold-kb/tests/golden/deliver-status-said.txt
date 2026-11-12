@@ -1,0 +1,6 @@
+delivery 20261111T000000Z-XXXXXX [ready] slack-summary audience=internal destination=#team candidate=ea4891b6c678 bytes=34 @runs/run-20261101T090000Z-a1b2c3/deliveries/20261111T000000Z-XXXXXX/candidate.md:1
+  check: paragraphs.bounded [waived] mechanical by owner: the channel accepts it (check: failed) @runs/run-20261101T090000Z-a1b2c3/deliveries/20261111T000000Z-XXXXXX/statements/paragraphs.bounded-20261111T000200Z-XXXXXX.json:1 !waived
+  check: tone.reviewed [attested] attested by owner: read for tone @runs/run-20261101T090000Z-a1b2c3/deliveries/20261111T000000Z-XXXXXX/statements/tone.reviewed-20261111T000300Z-XXXXXX.json:1 !attested
+# note: standing is derived on every read; checks are mechanical, attestations are statements, and nothing is sent
+# coverage=complete records=33/33 shown=1 omitted=0 candidates=1 ready=1 satisfied=0 attested=1 waived=1 open=0 stale=0 failed=0 unknown=0 invalid=0 kb=d5db758bda80+dirty:5 index=fresh cursor=none q=05cee12b9acf
+# exit=0

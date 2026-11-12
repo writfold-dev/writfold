@@ -187,6 +187,8 @@ pub fn gate_summary(status: &Reply) -> Line {
         "stale",
         "failed",
         "unknown",
+        "attested",
+        "waived",
         "invalid",
     ];
     let parts: Vec<String> = order

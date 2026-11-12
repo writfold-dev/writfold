@@ -13,6 +13,8 @@ pub mod def;
 pub mod exec;
 pub mod receipt;
 mod run;
+mod say;
+pub mod statement;
 pub mod status;
 pub mod subject;
 pub mod toml;
@@ -25,8 +27,12 @@ use crate::session::Session;
 use crate::workspace::{GitTool, Workspace};
 use crate::{Request, runs};
 use serde_json::Value;
+use status::Filings;
 use std::path::{Path, PathBuf};
 use subject::Subject;
+use writfold_core::gate::{Standing, State};
+
+pub use say::Say;
 
 /// One `gate` verb.
 #[derive(Clone, Debug)]
@@ -48,6 +54,8 @@ pub enum GateVerb {
         run: Option<String>,
         repo: Option<PathBuf>,
     },
+    /// `gate attest` or `gate waive`: a statement, not a check.
+    Say(Say),
 }
 
 /// Answer one gate verb.
@@ -62,6 +70,7 @@ pub fn execute(ws: &Workspace, request: &Request, verb: &GateVerb, now: i64) -> 
         GateVerb::Run { id, run, repo } => {
             run::run(ws, &tool, request, id, run.as_deref(), repo.as_deref(), now)
         }
+        GateVerb::Say(say) => say::record(ws, &tool, request, say, now),
         GateVerb::Verify { receipt, repo } => {
             verify::verify(ws, &tool, request, receipt, repo.as_deref(), now)
         }
@@ -161,10 +170,10 @@ fn gate_rows(session: &Session<'_>, rec: &Rec, subject: &Subject) -> Result<(Vec
         .git
         .as_ref()
         .ok_or_else(|| KbError::Refused("gates need Git".into()))?;
-    let filed = status::filed(&session.ws.root, &runs::dir(rec), &rec.id);
-    let report = status::judge(git, &session.ws.root, subject, &filed)?;
-    let rows = status::rows(git, subject, &report, &filed)?;
-    Ok((rows, status::counts(&report, &filed)))
+    let filings = Filings::read(&session.ws.root, &runs::dir(rec), &rec.id);
+    let report = status::judge(git, &session.ws.root, subject, &filings)?;
+    let rows = status::rows(git, subject, &report, &filings)?;
+    Ok((rows, status::counts(&report, &filings)))
 }
 
 /// The gate rows `resume` shows for a run, or why there are none. Quiet
@@ -198,7 +207,8 @@ pub fn resume_rows(session: &Session<'_>, rec: &Rec, cwd: &Path) -> (Vec<Row>, V
 }
 
 /// `gate lines`: plain lines to paste into a commit message, exit 0 only
-/// when every gate is satisfied.
+/// when every gate is met: satisfied, or attested or waived (each named as
+/// such, with its statement's file).
 fn lines(session: &Session<'_>, rec: &Rec, repo: Option<&Path>, cwd: &Path) -> Result<Output> {
     let Some(subject) = locate(session, rec, repo, cwd)? else {
         return Err(KbError::Refused(
@@ -209,16 +219,20 @@ fn lines(session: &Session<'_>, rec: &Rec, repo: Option<&Path>, cwd: &Path) -> R
         .git
         .as_ref()
         .ok_or_else(|| KbError::Refused("gates need Git".into()))?;
-    let filed = status::filed(&session.ws.root, &runs::dir(rec), &rec.id);
-    let report = status::judge(git, &session.ws.root, &subject, &filed)?;
-    let satisfied = report
-        .gates
-        .iter()
-        .filter(|j| j.state == writfold_core::gate::State::Satisfied)
-        .count();
+    let filings = Filings::read(&session.ws.root, &runs::dir(rec), &rec.id);
+    let report = status::judge(git, &session.ws.root, &subject, &filings)?;
+    let count = |s: Standing| report.gates.iter().filter(|j| j.standing == s).count();
+    let satisfied = count(Standing::Checked(State::Satisfied));
+    let mut said = String::new();
+    for standing in [Standing::Attested, Standing::Waived] {
+        let n = count(standing);
+        if n > 0 {
+            said.push_str(&format!(", {n} {}", standing.name()));
+        }
+    }
     let head = report.snapshot.commit.as_str();
     let mut text = format!(
-        "Gates for {}@{} (writfold kb gate, run {}): {satisfied} of {} satisfied\n",
+        "Gates for {}@{} (writfold kb gate, run {}): {satisfied} of {} satisfied{said}\n",
         subject.name,
         head.get(..12).unwrap_or(head),
         rec.id,
@@ -231,28 +245,47 @@ fn lines(session: &Session<'_>, rec: &Rec, repo: Option<&Path>, cwd: &Path) -> R
         .max()
         .unwrap_or(0);
     for judged in &report.gates {
-        let id = format!("{}:", judged.definition.id);
-        let state = judged.state.name();
-        match judged.receipt {
-            Some((f, r)) => text.push_str(&format!(
-                "{id:<w$} {state} {} {} {}\n",
-                r.outcome.name(),
-                receipt::ended(r),
-                f.path,
-                w = width + 1
-            )),
-            None => text.push_str(&format!("{id:<w$} {state}\n", w = width + 1)),
-        }
+        text.push_str(&gate_line(judged, width));
     }
-    let invalid = filed.iter().filter(|f| f.parsed.is_err()).count() + report.problems.len();
+    let invalid = filings.invalid() + report.problems.len();
     if invalid > 0 {
         text.push_str(&format!(
             "invalid receipts or definitions: {invalid} (see writfold kb gate status)\n"
         ));
     }
-    let all = satisfied == report.gates.len() && !report.gates.is_empty() && invalid == 0;
+    let all = report.all_met() && invalid == 0;
     Ok(Output {
         text,
         exit: if all { 0 } else { 2 },
     })
+}
+
+/// One `gate lines` line: the standing, then the receipt or statement.
+fn gate_line(judged: &status::Judged<'_>, width: usize) -> String {
+    let id = format!("{}:", judged.definition.id);
+    let standing = judged.standing.name();
+    let said = match judged.standing {
+        Standing::Attested => judged.statements.attested,
+        Standing::Waived => judged.statements.waived,
+        Standing::Checked(_) => None,
+    };
+    if let Some((f, s)) = said {
+        return format!(
+            "{id:<w$} {standing} by {}: {} {}\n",
+            s.by,
+            s.text,
+            f.path,
+            w = width + 1
+        );
+    }
+    match judged.receipt {
+        Some((f, r)) => format!(
+            "{id:<w$} {standing} {} {} {}\n",
+            r.outcome.name(),
+            receipt::ended(r),
+            f.path,
+            w = width + 1
+        ),
+        None => format!("{id:<w$} {standing}\n", w = width + 1),
+    }
 }

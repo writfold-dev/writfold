@@ -8,7 +8,13 @@ use writfold_kb::write::record::{Decision, Link, Ticket};
 use writfold_kb::write::status::SetStatus;
 
 /// Flags that take a value.
-pub const VALUES: [&str; 25] = [
+pub const VALUES: [&str; 31] = [
+    "from",
+    "audience",
+    "destination",
+    "check",
+    "statement",
+    "reason",
     "note",
     "worktree",
     "repo",
@@ -60,7 +66,18 @@ pub fn allowed(verb: &str) -> &'static [&'static str] {
         ],
         "status" => &["set", "by", "superseded-by", "note"],
         "cite" => &["allow-dirty", "sym", "ttl"],
-        "gate" => &["run", "repo"],
+        "gate" => &["run", "repo", "statement", "reason", "by"],
+        "deliver" => &[
+            "run",
+            "mode",
+            "from",
+            "audience",
+            "destination",
+            "check",
+            "statement",
+            "reason",
+            "by",
+        ],
         "edit" => &["run", "worktree", "dry-run", "abandon"],
         _ => &[],
     }
@@ -110,6 +127,7 @@ pub fn runs_and_writes(
         }
         ("checkpoint" | "record" | "cite", _) => verb(name, common, positional).map(Verb::Write),
         ("edit", _) => super::edit::verb(common, positional),
+        ("deliver", _) => super::deliver::verb(common, positional),
         _ => return None,
     })
 }
