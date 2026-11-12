@@ -132,6 +132,6 @@ A step may require a Weft assessment: it owes a gate of class `assessed`. The ag
 1. ~~Instruction gates and user-defined delivery modes.~~
 2. ~~The linear run graph: `plan set`, `plan status`, `plan advance`.~~
 3. Splicing.
-4. The session-start and compaction hooks showing the plan position ([hooks](hooks.md)).
+4. ~~The session-start and compaction hooks showing the plan position ([hooks](hooks.md)).~~
 5. One week of real use.
 6. Then: proofs of the plan kernel, a TLA+ model of two sessions on one run, the evaluation skill and the Weft assessed gate.

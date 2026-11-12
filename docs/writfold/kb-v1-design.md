@@ -1777,7 +1777,7 @@ A gate of class `run-record` takes `require = [...]` (built-ins only: `research.
 ### 21.10 Not done
 
 - Splicing under a step (`plan use`, `--again`, `use=` includes), `!template-moved`, required steps spliced into every run, and a skill's dynamic-injection line (the next slice). The fold, node paths and splice key already take nested splices.
-- The session-start and compaction hooks showing the plan position.
+- ~~The session-start and compaction hooks showing the plan position~~ (built since, §25).
 - Proofs of `writfold_core::plan`; `spec/RunGraph.tla`.
 - `seq` for delivery receipts (19.4), which still order by `recorded`; deliveries are not plan gates in this slice.
 - Delivery modes as a step's gates (a `deliver:<mode>` form); a candidate gate is refused on a step.
@@ -1966,3 +1966,186 @@ The state is G1's kernel (16.6) over the gate's valid receipts for the subject, 
 - `crates/writfold-xtask/src/graph.rs` (with `source.rs`): the crate allowlist and size budgets that must admit `writfold-kb` and `rusqlite`.
 - `crates/writfold/src/main.rs` (with `crates/writfold-app/src/tuft/cli.rs` as the adapter template): CLI wiring for `kb` and `mcp`.
 - `crates/tuft/src/cursor.rs` (with `docs/tuft/language.md`, lines 184-278): the cursor and budget contract the emit module reuses.
+
+## 25. Deterministic hooks as built
+
+This is the fifth item of the order of work adopted on 12 November 2026 (mission, "The run graph, hooks and order of work"). The SessionStart hook now shows:
+
+- the plan position;
+- an inbox;
+- whether the KB clone is behind its remote.
+
+After a compaction, it injects the plan position again. Hooks stay model-free and fail open.
+
+Nothing else entered: no hook event, crate, record kind or tracked write. Stop, SessionEnd, PreCompact, PostCompact and PreToolUse are unchanged.
+
+New code:
+
+- `crates/writfold-kb/src/hook.rs` became `src/hook/mod.rs`, with:
+  - `start.rs`: assembling the parts and the cut;
+  - `position.rs`: the plan position;
+  - `inbox.rs`: the inbox;
+  - `remote.rs`: behind remote.
+- `crates/writfold-runtime/src/git/kb_upstream.rs`: `kb_upstream`, one supervised `for-each-ref`.
+- `proposal::inbox` now returns lines rather than a block.
+
+### 25.1 Parts and order
+
+`session-start` prints the parts that have something to say, in this order:
+
+| Part | Source | Cost |
+|---|---|---|
+| Behind remote | 25.3 | one Git spawn |
+| Brief | `brief`, budget 1,200 tokens, as in 14.2 | unchanged |
+| Current run | `resume`, budget 500, when the current-run pointer is set | unchanged |
+| Plan position | `plan status --run <current>` (budget 600), cut down as described below the table | one `plan status` |
+| Inbox | 25.2 | directory listings and file reads |
+
+What the plan position keeps from `plan status`:
+
+- the `[current]` step, with its `read:` and `next:` lines;
+- every done step shown `!stale`, with its `why:` line.
+
+It drops the `done:` lines, later steps, notes and the trailer. Its header reads `Plan position (...) for run <id>: step i/n`. A plan whose steps are all closed is one `complete` line. A run without a plan prints nothing.
+
+When every new part is empty, the output is byte for byte what it was before this slice. That means no upstream ahead of the clone, no current run with a plan, and no drafts, proposals or unevaluated runs. `hook-session-start.txt` is unchanged.
+
+### 25.2 The inbox
+
+The inbox merges what used to be two blocks into one, headed `Inbox (local only; nothing here is in the KB until confirmed or accepted):`. Each kind shows up to three lines, then `(+N more …)`, then one hint line:
+
+| Kind | Listed | Hint line |
+|---|---|---|
+| Drafts | those the injected `resume` did not list | `confirm:` |
+| Pending proposals | those `resume` did not list | `review:` |
+| Runs left without an evaluation | `unevaluated <run> session <id> ended <stamp> (<reason>): <step> is not done` | `next:` |
+
+The rule for the third kind is deterministic and needs no model. Writfold knows a session ended only from its draft: `SessionEnd` marks the draft `ended`, and its `updated` stamp is then the end time. For each ended draft that names a run (the newest draft per run), the run is listed when all three hold:
+
+1. the run is open (the sidecar's `state`, else the manifest's, else `open`);
+2. its newest `checkpoint.md` entry is older than the session's end, or it has none;
+3. its plan has a step named `reflect`, and the last such step is neither done nor skipped.
+
+Everything is read from files: `runs/<id>/manifest.json`, the sidecar, `checkpoint.md`, and the plan's events through `plan::fold::read`. No index session or Git spawn is used. The run directory is taken to be `runs/<run id>/`, and a run ID outside the session-ID character set is ignored.
+
+A skipped step counts as evaluated, because `plan skip` records a reason and a name. A run is not listed when:
+
+- its draft was confirmed or deleted;
+- no `SessionEnd` ran (an interrupt or a crash);
+- its plan has no `reflect` step.
+
+The task allowed a simpler fallback ("open runs whose reflect step is not done"). It was not needed.
+
+### 25.3 Behind remote
+
+`hook/remote.rs` reads the branch that `HEAD` names from the file `<git dir>/HEAD`. A detached HEAD prints nothing. It then makes one spawn, through the supervised runtime path like every KB read:
+
+```text
+for-each-ref --format=%(refname)%09%(upstream:short)%09%(upstream:track,nobracket) refs/heads/<branch>
+```
+
+It keeps the line whose ref name is exactly the branch. From that line it reads `behind N` (and `ahead N` or `gone`), which is Git's own tracking count against the remote-tracking ref.
+
+Only local refs are used, and nothing fetches. A clone that has not fetched reports what it last knew, and the line says when that was: the newest `FETCH_HEAD` modification time, in the worktree's Git directory or the common one.
+
+```text
+KB is 2 commits behind origin/main (last fetched 2026-11-10T19:00:00Z, 5h ago); run git pull
+```
+
+Without a `FETCH_HEAD`, the line says `(never fetched)`. Nothing is printed when:
+
+- the branch is up to date, or only ahead;
+- it has no upstream, or its upstream is gone;
+- any step fails.
+
+### 25.4 After compaction
+
+Claude Code runs SessionStart again with `source = "compact"` after an automatic or manual compaction. Its documentation does not say that earlier context is dropped; the compaction summarises it. So the hook does not send the brief again.
+
+It injects only the plan position, headed `Plan position after compaction (...; writfold kb resume has the rest)`. That is the part a summary is most likely to blur.
+
+It prints nothing and exits 0 when there is no current run, when the pointer names a run the KB does not hold, or when the run has no plan.
+
+The other `source` values (`startup`, `resume`, `clear`, `fork`) get the full context.
+
+PostCompact cannot add context: the documentation gives it no decision control. It still only keeps the draft's summary.
+
+### 25.5 The cut
+
+The limit stays `CONTEXT_LIMIT`, 9,000 characters. `DROP_ORDER` lists the parts in the order they are cut:
+
+1. brief;
+2. current run;
+3. inbox;
+4. plan position;
+5. behind remote.
+
+`hook::fit` works through that list from the end, keeping each part whole while it fits. The first part that does not fit is cut at a line with the existing marker, if more than 120 characters are left. The parts after it are dropped. The result is printed in display order (25.1).
+
+The brief is cut first because it is the largest part and `brief` can be re-run. The behind-remote line is cut last because it is one line and tells the reader whether the rest is current.
+
+### 25.6 Tests
+
+- **Goldens** (`tests/hook_start.rs`, files `tests/golden/hook-session-start-*.txt`):
+  - `-plan`: a fresh session with a two-step plan, with gates judged in the code repository;
+  - `-compact`: the same session after compaction, with the position only and no brief;
+  - `-inbox`: two drafts, a proposal and an unevaluated run, with the current-run pointer cleared so that `resume` shows none of them;
+  - `-behind`: a local bare `origin`, advanced by two commits from another clone and then fetched, with `FETCH_HEAD`'s time set.
+
+  The unchanged `hook-session-start.txt` covers the empty case. `hook-session-start-run.txt` changed only where the old drafts block became the inbox.
+- **Rules:**
+  - A checkpoint written after the session's end removes the unevaluated line.
+  - After `origin` moves, and before any fetch, the output is identical to the output with no remote. This shows the hook never fetches.
+  - After `merge --ff-only`, the behind line goes.
+- **The cut** (`the_cut_follows_the_drop_order`):
+  - With five 3,000-character parts, behind, plan and inbox stay whole, and the run and the brief are dropped.
+  - With small other parts, a 12,000-character brief is cut at a line with the marker, and the total stays within 9,000.
+  - Parts that fit come back unchanged, in display order.
+- **Failing open:**
+  - Each of these prints nothing, with a diagnostic on stderr: `compact` with no current run, with a run that has no plan, and with a pointer to a run the KB lacks.
+  - The existing failure tests (`tests/hook.rs`) pass unchanged.
+  - Through the binary (`crates/writfold/tests/kb_hook.rs`), `compact` without a plan exits 0 with empty stdout.
+- **Unit tests:**
+  - the `for-each-ref` line parser (`kb_upstream.rs`);
+  - the behind line and its age (`remote.rs`);
+  - the position block (`position.rs`).
+- **Removing the check fails a test:** remove `upstream.behind == 0` from `hook/remote.rs` and `behind_remote_from_local_refs_only` fails, because the up-to-date clone then prints `KB is 0 commits behind origin/main`. This was checked by hand.
+- **Latency:** a temporary in-process measurement with the release profile, over the fixture KB with a plan, an upstream two commits ahead of the clone, and gates judged. Five runs each:
+
+  | Event | Time |
+  |---|---|
+  | start | 40 to 42 ms |
+  | after compaction | 10 to 12 ms |
+
+  This is not a whole-process timing. Both are far inside the 30 s SessionStart timeout. A start judges the plan's gates twice, once in `resume` and once in `plan status`; sharing that work is not done.
+
+### 25.7 Documentation checked (12 November 2026)
+
+From https://code.claude.com/docs/en/hooks:
+
+- **SessionStart `source`** is `startup`, `resume`, `clear`, `compact` ("after compaction") or `fork`. The page says SessionStart fires again "after `/clear` or a compaction". It does not say that earlier context is dropped.
+- **Output size:** `additionalContext` and plain stdout are each capped at 10,000 characters. Anything longer is saved to a file, and only a 2,000-character preview stays in context.
+- **PostCompact** "hooks have no decision control", and PostCompact is not among the events that accept `additionalContext`.
+- **Timeouts:**
+  - Command hooks default to 600 s; the plugin sets SessionStart to 30 s.
+  - SessionEnd has a 1.5 s budget. A per-hook `timeout` in a settings file raises it, up to 60 s, but "Timeouts set on plugin-provided hooks don't raise the budget".
+  - `CLAUDE_CODE_SESSIONEND_HOOKS_TIMEOUT_MS` overrides the SessionEnd budget.
+
+  This settles the discrepancy raised in section 3.1 of the fourth review. The review was right for hooks set in settings files, and 14.1 was right for plugin hooks.
+
+### 25.8 Deviations and not done
+
+**Deviations:**
+
+- **At start, the plan position repeats `resume`'s plan row**, and adds the `next:` and `!stale` lines. Both come from the same fold.
+- **"Ended without an evaluation" depends on a step named `reflect`** and on drafts (25.2), not on a gate kind. A template whose closing step has another name is not checked.
+
+**Not built:**
+
+- `transcript_path` in the draft;
+- exporting `WRITFOLD_SESSION` through `CLAUDE_ENV_FILE`;
+- a bounded stale-citation count at start;
+- an opt-in `fetch`;
+- an opt-in Stop nudge.
+
+**Not covered:** a manual smoke test in an interactive Claude Code session.

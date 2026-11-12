@@ -1,0 +1,24 @@
+Writfold KB brief (`writfold kb brief`). Rows end in their source; re-check any row with a ! flag before relying on it.
+project project:harbor [build] Harbor status @harbor/STATUS.md:2
+project project:lantern Lantern console @lantern/README.md:1
+run run-20261101T090000Z-a1b2c3 [open] Batch ledger writes rollout (checkpoint 2026-11-03T16:00:00Z) @runs/run-20261101T090000Z-a1b2c3/checkpoint.md:6
+  note: Batching is live in staging. @runs/run-20261101T090000Z-a1b2c3/checkpoint.md:8
+  note: Next: measure flush time on the month-end replay, then HBR-101 can close. @runs/run-20261101T090000Z-a1b2c3/checkpoint.md:9
+ticket HBR-101 [in-progress] Slow ledger flush at month end @ktlo/2026/hbr-101-slow-ledger-flush.md:5
+investigation inv:2026/2026-06-01-flush-stalls-again [open] Flush stalls return @investigations/2026/2026-06-01-flush-stalls-again/README.md:7
+decision proposal/decision/2026-04-01-shard-ledger [draft] Shard the ledger by tenant @proposals/decision/2026-04-01-shard-ledger/proposal.md:5
+decision proposal/decision/2026-03-02-batch-ledger-writes [accepted] Batch ledger writes in the API @proposals/decision/2026-03-02-batch-ledger-writes/proposal.md:5
+  why: Group ledger writes into batches of up to 500 rows per transaction. @proposals/decision/2026-03-02-batch-ledger-writes/proposal.md:24
+commit d5db758bda80 2026-11-05 fixture KB
+# note: 9 citation(s) have no cached verdict; run `writfold kb stale`
+# note: no project matched the working directory; showing a KB-wide brief (pass a project, or --all)
+# coverage=partial records=29/29 shown=8 omitted=0 answer=unknown reason=no-home kb=d5db758bda80+dirty:1 index=fresh cursor=none q=5fd1130d20a7
+
+Inbox (local only; nothing here is in the KB until confirmed or accepted):
+draft s-5 2026-11-11T00:00:00Z run=run-20261101T090000Z-a1b2c3 Batched the writes.
+draft s-6 2026-11-11T00:00:00Z run=run-20261101T090000Z-a1b2c3 Still reading.
+  confirm: writfold kb checkpoint --from-draft SESSION
+proposal b40d509b47d83426 2026-11-11T00:00:00Z run=run-20261101T090000Z-a1b2c3 ticket HBR-140: Replay is slow after a restart
+  review: writfold kb proposals show ID (accept only when the user asks)
+unevaluated run-20261101T090000Z-a1b2c3 session s-5 ended 2026-11-11T00:00:00Z (prompt_input_exit): change#1/reflect is not done
+  next: writfold kb plan status --run RUN, then do its reflect step

@@ -5,7 +5,7 @@ description: Answer why / status / tracker / impact questions about this project
 
 # Project continuity with `writfold kb`
 
-The project KB is plain records in Git. `writfold kb <verb>` answers from it in budgeted rows. Every row that states a fact ends in its source, `@path:line`. Run the verbs with Bash, from the code repository or the KB. Add `--kb DIR` when the KB lives elsewhere. At session start a hook has already injected `brief` (and `resume` when a run is current), so don't re-run them just to orient yourself.
+The project KB is plain records in Git. `writfold kb <verb>` answers from it in budgeted rows. Every row that states a fact ends in its source, `@path:line`. Run the verbs with Bash, from the code repository or the KB. Add `--kb DIR` when the KB lives elsewhere. At session start a hook has already injected `brief` (and `resume` and the plan position when a run is current, an inbox, and a line if the KB clone is behind its remote), so don't re-run them just to orient yourself. After a compaction the hook injects the plan position again.
 
 ## Which verb
 
