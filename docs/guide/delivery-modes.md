@@ -1,6 +1,6 @@
 # Delivery modes
 
-> **Status:** built in v0.3.0-dev.1, except the section marked *Planned* (your own modes).
+> **Status:** built in v0.3.0-dev.1; your own modes are built in v0.4.0-dev.1.
 
 A delivery candidate is the exact text of a PR comment or Slack summary, kept in the run and checked before anyone posts it. Writfold never sends it: there is no network code and no Slack or PR adapter. Posting stays with you or your agent.
 
@@ -97,14 +97,26 @@ A denial, as Claude Code receives it:
 
 When it lets a call through it prints nothing, so Claude Code's own permission prompt still applies. It is a guard, not enforcement: it sees only the calls the harness shows it, it passes any command or tool it is not configured for, and a missing KB, an unreadable configuration or a timeout lets the call proceed.
 
-## Planned: your own modes
+## Your own modes
 
-Any `.writfold/deliveries/<name>.toml` would define a mode that lists its gates, with a `{candidate}` placeholder for gates that check the draft. A `commit-message` mode would then need no code of its own. Not built: today `--mode` accepts only the two built-in names, and a mode file for any other name is not read.
+Any `.writfold/deliveries/<name>.toml` defines a mode. The two built-in modes (`pr-comment`, `slack-summary`) stay as defaults. A mode lists built-in `checks`, and `gates`: script gates run against the candidate through `{candidate}`, and attested gates whose instructions are shown. Unknown keys, unknown gates and repository gates are refused when the mode is loaded.
 
-<!-- planned -->
 ```toml
 # .writfold/deliveries/commit-message.toml
 schema = "writfold-delivery-mode/1"
-mode = "commit-message"            # planned: a mode that is not built in
-gates = ["subject-line", "receipt-lines"]
+mode = "commit-message"
+description = "checked before git commit; nothing binds the checked bytes to the commit that is made"
+checks = ["references.denied"]
+gates = ["commit-format", "language-guidelines"]
 ```
+
+```sh
+writfold kb deliver prepare --mode commit-message --audience external --from MSG
+writfold kb deliver check                  # references.denied and commit-format
+writfold kb deliver attest --check language-guidelines --statement TEXT --by WHO
+writfold kb deliver status                 # exit 0 only when every check is met
+git commit -F MSG
+```
+
+The limit is printed with every status: nothing ties the checked bytes to the commit that is then made. Commit with `-F` on the candidate file itself. The worked example, including the deny list that keeps internal hosts and ticket numbers out of public messages, is in `fixtures/kb/commit-message/`.
+

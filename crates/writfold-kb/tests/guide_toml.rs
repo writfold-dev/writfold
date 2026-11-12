@@ -73,6 +73,42 @@ fn string(map: &std::collections::BTreeMap<String, Value>, key: &str) -> Result<
     }
 }
 
+/// Parse a gate block in a scratch `.writfold/gates/` directory, creating the
+/// `instructions` file it names so the real resolution rules apply.
+fn gate(text: &str, map: &std::collections::BTreeMap<String, Value>) -> TestResult {
+    let id = string(map, "id")?;
+    let root =
+        std::env::temp_dir().join(format!("writfold-guide-gate-{}-{id}", std::process::id()));
+    let dir = root.join(".writfold/gates");
+    std::fs::create_dir_all(&dir)?;
+    if let Some(Value::Str(name)) = map.get("instructions") {
+        std::fs::write(dir.join(name), "guideline\n")?;
+    }
+    if let Some(Value::List(argv)) = map.get("argv") {
+        for script in argv.iter().filter_map(|arg| arg.strip_prefix("{gate}/")) {
+            std::fs::write(dir.join(script), "exit 0\n")?;
+        }
+    }
+    let parsed = def::parse(text, &id, Origin::Kb, &dir).map_err(|e| e.to_string());
+    std::fs::remove_dir_all(&root)?;
+    parsed?;
+    Ok(())
+}
+
+/// A mode block names gates defined elsewhere in the guide; give the scratch
+/// KB attested candidate gates of those names so only the mode is judged.
+fn stub_gates(root: &Path, names: &[String]) -> Result<(), String> {
+    let dir = root.join(".writfold/gates");
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    for name in names {
+        let body = format!(
+            "schema = \"writfold-gate/1\"\nid = \"{name}\"\nversion = 1\nclass = \"attested\"\nsubject = \"candidate\"\n"
+        );
+        std::fs::write(dir.join(format!("{name}.toml")), body).map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
 /// Read a delivery configuration file the way the product does: from
 /// `.writfold/deliveries/<file>` under a KB root.
 fn delivery(file: &str, text: &str, read: impl Fn(&Path) -> Result<bool, String>) -> TestResult {
@@ -97,16 +133,18 @@ fn delivery(file: &str, text: &str, read: impl Fn(&Path) -> Result<bool, String>
 fn accept(text: &str) -> TestResult {
     let map = toml::parse(text)?;
     match string(&map, "schema")?.as_str() {
-        "writfold-gate/1" => {
-            def::parse(text, &string(&map, "id")?, Origin::Kb).map_err(|e| e.to_string())?;
-            Ok(())
-        }
+        "writfold-gate/1" => gate(text, &map),
         "writfold-delivery-mode/1" => {
             let name = string(&map, "mode")?;
             if !config::is_name(&name) {
                 return Err(format!("mode {name:?} is not a name").into());
             }
+            let gates = match map.get("gates") {
+                Some(Value::List(gates)) => gates.clone(),
+                _ => Vec::new(),
+            };
             delivery(&format!("{name}.toml"), text, |root| {
+                stub_gates(root, &gates)?;
                 config::mode(root, &name)
                     .map(|mode| mode.source != "built-in")
                     .map_err(|e| e.to_string())
@@ -178,12 +216,16 @@ fn every_guide_page_opens_with_a_status_line() -> TestResult {
 
 #[test]
 fn the_block_check_refuses_what_the_product_refuses() {
-    // A misspelt key, an unknown schema and a mode that is not built in.
+    // A misspelt key, an escaping path, an unknown schema and an unknown mode key.
     let gate = "schema = \"writfold-gate/1\"\nid = \"unit\"\nversion = 1\nclass = \"attested\"\nscope = [\"**\"]\n";
     assert!(accept(gate).is_ok());
-    assert!(accept(&format!("{gate}instructions = \"unit.md\"\n")).is_err());
+    assert!(accept(&format!("{gate}instructions = \"unit.md\"\n")).is_ok());
+    assert!(accept(&format!("{gate}instructions = \"../escape.md\"\n")).is_err());
+    assert!(accept(&format!("{gate}colour = \"blue\"\n")).is_err());
     assert!(accept("schema = \"writfold-plan/1\"\nname = \"change\"\n").is_err());
-    assert!(accept("schema = \"writfold-delivery-mode/1\"\nmode = \"commit-message\"\n").is_err());
+    let mode = "schema = \"writfold-delivery-mode/1\"\nmode = \"commit-message\"\n";
+    assert!(accept(mode).is_ok());
+    assert!(accept(&format!("{mode}bogus = \"x\"\n")).is_err());
     let page = "<!-- planned -->\n```toml\na = 1\n```\n\ntext\n```toml\nb = 2\n```\n";
     let found = blocks("x", page);
     assert_eq!(found.len(), 2);

@@ -1,6 +1,6 @@
 # Gates
 
-> **Status:** built in v0.3.0-dev.1, except the sections marked *Planned* (instruction gates, run-record checks).
+> **Status:** built in v0.3.0-dev.1; instruction gates and gate scripts built in v0.4.0-dev.1; the section marked *Planned* (run-record checks) is not built.
 
 A gate is one small check with a path scope. `gate run` runs its command and keeps a receipt pinned to the exact bytes checked. `gate status` then says, on every read, whether that evidence still holds. Gates report; they block nothing.
 
@@ -20,7 +20,7 @@ scope = ["src/**", "Cargo.toml", "!src/**/*.md"]   # required; see below
 description = "the unit tests"     # optional; one line
 ```
 
-- **`argv`** is executed directly, with stdin closed. A first element containing `/` is resolved against `workdir`; otherwise `PATH` finds it. `{artifacts}` is the only placeholder: a fresh local directory for the command's own output files. Any other `{name}` is refused.
+- **`argv`** is executed directly, with stdin closed. A first element containing `/` is resolved against `workdir`; otherwise `PATH` finds it. Placeholders: `{artifacts}` (a fresh local directory for the command's own output files), `{gate}` and `{candidate}` (below). Any other `{name}` is refused.
 - **Unknown keys are refused,** so a misspelt field never silently changes a gate. The files use a small TOML subset: top-level `key = value`, comments, strings, integers and arrays of strings.
 - **Changing** the command, working directory, timeout, class, version or scope makes earlier receipts stale. Changing comments, layout or the description does not.
 
@@ -119,19 +119,36 @@ A statement is a file in `runs/<run>/statements/`, bound to the same definition 
 
 Today every gate defined for a repository is owed by every run on it.
 
-## Planned: instruction gates
+## Instruction gates and gate scripts
 
-A gate may name an `instructions` file. Its digest becomes part of the definition, so editing the instructions makes earlier evidence stale. A gate may also ship its own scripts, reached through a `{gate}` placeholder. Not built: today's parser refuses the `instructions` key and any placeholder other than `{artifacts}`.
+A gate may name an `instructions` file, a Markdown file beside the definition that the agent reads before running or attesting the gate. Its bytes are part of the definition digest, so editing the instructions makes earlier receipts and attestations stale. `gate status`, `gate run`, `resume` and `deliver status` print a `read:` line pointing at it.
 
-<!-- planned -->
+A gate may also ship its own script. `{gate}` expands to the directory holding the definition, so a gate kept in the shared KB carries its check with it; the script's bytes are hashed into the digest too. `{candidate}` is the draft file for gates that check a delivery candidate (`subject = "candidate"`). Paths that leave the definition's directory, including through a symlink, are refused.
+
 ```toml
+# .writfold/gates/language-guidelines.toml: read the guideline, then attest
 schema = "writfold-gate/1"
-id = "wording"
-version = 2
+id = "language-guidelines"
+version = 1
 class = "attested"
-instructions = "wording.md"        # planned: read before attesting
-scope = ["README.md", "docs/**"]
+subject = "candidate"
+instructions = "language-guidelines.md"
+description = "the message follows the language guidelines"
 ```
+
+```toml
+# .writfold/gates/commit-format.toml: a script shipped with the gate
+schema = "writfold-gate/1"
+id = "commit-format"
+version = 1
+class = "mechanical"
+subject = "candidate"
+argv = ["sh", "{gate}/commit_format.sh", "{candidate}"]
+timeout_seconds = 10
+description = "subject at most 72 characters, a blank second line, body wrapped at 72"
+```
+
+A script gate reports findings as `<line>: <text>` on stdout; only a clean exit 0 passes. A timeout, a signal or a draft that changed while it ran is `unknown`. A worked example is in `fixtures/kb/commit-message/`.
 
 ## Planned: run-record checks
 
