@@ -1,0 +1,9 @@
+# What an external reader must not see in a message ("obfuscate the
+# messages"): internal hosts, ticket numbers and internal codenames.
+schema = "writfold-deny/1"
+audience = "external"
+rules = [
+  "internal-host: \\.corp\\.example\\.com",
+  "ticket: \\bOPS-[0-9]+",
+  "codename: \\bproject-heron\\b",
+]

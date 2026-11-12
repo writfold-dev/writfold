@@ -149,6 +149,42 @@ fn every_fault_point_leaves_no_candidate_or_a_complete_one() -> TestResult {
     Ok(())
 }
 
+/// A user mode's script gate adds no write path: its receipt joins the
+/// built-in check's in the same locked apply, with the same guarantees.
+#[test]
+fn a_script_gate_receipt_survives_every_fault_point() -> TestResult {
+    for step in Step::ALL {
+        let w = world(&["commit-message"])?;
+        std::fs::write(w.kb.join("source.md"), BODY)?;
+        let p = DeliverVerb::Prepare(Prepare {
+            mode: "commit-message".into(),
+            from: w.kb.join("source.md"),
+            audience: Some("external".into()),
+            destination: None,
+            run: Some(RUN.into()),
+        });
+        w.run(&request(&w.kb, p))?;
+        child_at(&w.kb, "check", step)?;
+        let found = receipts(&w.kb)?;
+        assert!(found <= 2, "check at {}", step.name());
+        if matches!(step, Step::Unlocked) {
+            assert_eq!(found, 2);
+        }
+        let (verify, exit) = w.run(&w.request(Verb::IndexVerify))?;
+        assert!(exit == 0 && !verify.contains("unreadable"), "{verify}");
+        // The attested language gate stays open, so the candidate is not
+        // ready; the script gate is satisfied.
+        let (text, _) = w.run(&request(&w.kb, check()))?;
+        assert!(
+            text.contains("commit-format [satisfied]"),
+            "rerun after {}:\n{text}",
+            step.name()
+        );
+        assert_eq!(receipts(&w.kb)?, found + 2);
+    }
+    Ok(())
+}
+
 #[test]
 fn every_fault_point_leaves_only_complete_receipts() -> TestResult {
     for step in Step::ALL {

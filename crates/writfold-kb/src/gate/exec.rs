@@ -3,7 +3,8 @@
 //! `WRITFOLD_GATE` and `WRITFOLD_GATE_ARTIFACTS`, stdin at end of file, a
 //! timeout, and the last bytes of stdout and stderr kept. The process group
 //! is supervised by the runtime: nothing it starts outlives it.
-use super::def::{ARTIFACTS, Definition};
+use super::def::Definition;
+use super::places::{Places, expand};
 use std::path::Path;
 use std::process::Command;
 use std::time::Duration;
@@ -29,20 +30,15 @@ pub struct Evaluation {
     pub stderr: Tail,
 }
 
-/// The argv with `{artifacts}` replaced.
-pub fn expand(argv: &[String], artifacts: &Path) -> Vec<String> {
-    let dir = artifacts.to_string_lossy();
-    argv.iter().map(|a| a.replace(ARTIFACTS, &dir)).collect()
-}
-
-/// Run `argv` (as recorded) for `gate` in `workdir` under `top`.
+/// Run `argv` (as recorded) for `gate` in `workdir` under `top`, with its
+/// placeholders expanded from `places`.
 pub fn execute(
     gate: &str,
     argv: &[String],
     workdir: &str,
     timeout_seconds: u64,
     top: &Path,
-    artifacts: &Path,
+    places: &Places<'_>,
 ) -> Evaluation {
     let started = std::time::Instant::now();
     let failed = |why: String| Evaluation {
@@ -59,7 +55,7 @@ pub fn execute(
     if !dir.is_dir() {
         return failed(format!("working directory {workdir} does not exist"));
     }
-    let argv = expand(argv, artifacts);
+    let argv = expand(argv, places);
     let Some((program, args)) = argv.split_first() else {
         return failed("empty argv".into());
     };
@@ -73,7 +69,13 @@ pub fn execute(
         .args(args)
         .current_dir(&dir)
         .env("WRITFOLD_GATE", gate)
-        .env("WRITFOLD_GATE_ARTIFACTS", artifacts);
+        .env("WRITFOLD_GATE_DIR", places.gate);
+    if let Some(artifacts) = places.artifacts {
+        command.env("WRITFOLD_GATE_ARTIFACTS", artifacts);
+    }
+    if let Some(candidate) = places.candidate {
+        command.env("WRITFOLD_CANDIDATE", candidate);
+    }
     let limits = TailLimits {
         tail: TAIL,
         timeout: Duration::from_secs(timeout_seconds),
@@ -109,14 +111,23 @@ fn millis(d: Duration) -> u64 {
     u64::try_from(d.as_millis()).unwrap_or(u64::MAX)
 }
 
-/// Run a definition as it stands.
+/// Run a repository gate's definition as it stands on `top`.
 pub fn run(d: &Definition, top: &Path, artifacts: &Path) -> Evaluation {
-    execute(
-        &d.id,
-        &d.argv,
-        &d.workdir,
-        d.timeout_seconds,
-        top,
-        artifacts,
-    )
+    let places = Places {
+        gate: &d.dir,
+        artifacts: Some(artifacts),
+        candidate: None,
+    };
+    execute(&d.id, &d.argv, &d.workdir, d.timeout_seconds, top, &places)
+}
+
+/// Run a candidate gate's definition against the payload file
+/// `candidate`, in its working directory under the KB root `root`.
+pub fn run_on_candidate(d: &Definition, root: &Path, candidate: &Path) -> Evaluation {
+    let places = Places {
+        gate: &d.dir,
+        artifacts: None,
+        candidate: Some(candidate),
+    };
+    execute(&d.id, &d.argv, &d.workdir, d.timeout_seconds, root, &places)
 }

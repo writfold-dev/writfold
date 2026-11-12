@@ -1,0 +1,15 @@
+# A user-defined delivery mode: a commit message draft, checked before
+# `git commit`. No Writfold code names this mode; this file defines it.
+#
+#   writfold kb deliver prepare --mode commit-message --audience external --from MSG
+#   writfold kb deliver check            # references.denied and commit-format
+#   writfold kb deliver attest --check language-guidelines --statement TEXT --by WHO
+#   git commit -F MSG                    # only once deliver status exits 0
+#
+# The honest limit is in the description, which deliver status prints:
+# nothing ties the checked bytes to the commit that is made.
+schema = "writfold-delivery-mode/1"
+mode = "commit-message"
+description = "checked before git commit; nothing binds the checked bytes to the commit that is made"
+checks = ["references.denied"]
+gates = ["commit-format", "language-guidelines"]

@@ -1,5 +1,5 @@
 //! Delivery configuration under the KB root's `.writfold/deliveries/`:
-//! a mode file per mode (optional; built-in defaults otherwise), a deny
+//! a mode file per mode ([`super::mode`]; built-in defaults otherwise), a deny
 //! list per audience, and the guard hook's list of publishing commands.
 //! Every file is the gate definitions' TOML subset ([`crate::gate::toml`]);
 //! unknown keys are refused, so a misspelt field never silently changes a
@@ -12,7 +12,7 @@ use std::path::Path;
 
 /// Where delivery configuration lives, under the KB root.
 pub const DIR: &str = ".writfold/deliveries";
-pub const MODES: [&str; 2] = ["pr-comment", "slack-summary"];
+pub use super::mode::{MODES, Mode, mode};
 pub const AUDIENCES: [&str; 2] = ["internal", "external"];
 pub const PARAGRAPHS: &str = "paragraphs.bounded";
 pub const REFERENCES: &str = "references.denied";
@@ -20,37 +20,13 @@ pub const CLAIMS: &str = "claims.cited-fresh";
 /// The built-in checks, in the order they run and are shown.
 pub const BUILTIN: [&str; 3] = [PARAGRAPHS, REFERENCES, CLAIMS];
 
-/// One mode: which checks apply, the paragraph bound, and the attested
-/// obligations (statements a person or agent must make).
-#[derive(Clone, Debug)]
-pub struct Mode {
-    pub name: String,
-    pub checks: Vec<String>,
-    pub paragraph_words: usize,
-    pub attest: Vec<String>,
-    /// `built-in`, or the mode file's KB path.
-    pub source: String,
-}
-
-/// The built-in default of a mode: every check; 150 words per paragraph
-/// for a PR comment, 60 for a Slack summary.
-fn default(name: &str) -> Mode {
-    Mode {
-        name: name.to_owned(),
-        checks: BUILTIN.iter().map(|c| (*c).to_owned()).collect(),
-        paragraph_words: if name == "slack-summary" { 60 } else { 150 },
-        attest: Vec::new(),
-        source: "built-in".into(),
-    }
-}
-
-fn bad(path: &str, why: String) -> KbError {
+pub(super) fn bad(path: &str, why: String) -> KbError {
     KbError::Refused(format!("{path}: {why}"))
 }
 
 /// Parse a configuration file: its keys must be among `keys`, and its
 /// `schema` must be `schema`. `None` when the file does not exist.
-fn read(
+pub(super) fn read(
     root: &Path,
     name: &str,
     schema: &str,
@@ -72,7 +48,7 @@ fn read(
     Ok(Some((path, map)))
 }
 
-fn strings(map: &BTreeMap<String, Value>, key: &str, path: &str) -> Result<Vec<String>> {
+pub(super) fn strings(map: &BTreeMap<String, Value>, key: &str, path: &str) -> Result<Vec<String>> {
     match map.get(key) {
         None => Ok(Vec::new()),
         Some(Value::List(items)) => Ok(items.clone()),
@@ -87,57 +63,6 @@ pub fn is_name(name: &str) -> bool {
             .bytes()
             .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'.' || b == b'-')
         && !name.starts_with(['.', '-'])
-}
-
-/// The mode `name`: `.writfold/deliveries/<name>.toml` when present, else
-/// the built-in default.
-pub fn mode(root: &Path, name: &str) -> Result<Mode> {
-    if !MODES.contains(&name) {
-        return Err(KbError::Usage(format!(
-            "--mode must be one of {}",
-            MODES.join(", ")
-        )));
-    }
-    let keys = ["schema", "mode", "checks", "paragraph_words", "attest"];
-    let Some((path, map)) = read(
-        root,
-        &format!("{name}.toml"),
-        "writfold-delivery-mode/1",
-        &keys,
-    )?
-    else {
-        return Ok(default(name));
-    };
-    if map.get("mode") != Some(&Value::Str(name.into())) {
-        return Err(bad(&path, format!("mode must be {name}")));
-    }
-    let mut mode = default(name);
-    mode.source = path.clone();
-    if map.contains_key("checks") {
-        mode.checks = strings(&map, "checks", &path)?;
-    }
-    if let Some(check) = mode.checks.iter().find(|c| !BUILTIN.contains(&c.as_str())) {
-        return Err(bad(&path, format!("{check} is not a built-in check")));
-    }
-    mode.attest = strings(&map, "attest", &path)?;
-    if let Some(name) = mode
-        .attest
-        .iter()
-        .find(|n| !is_name(n) || BUILTIN.contains(&n.as_str()))
-    {
-        return Err(bad(
-            &path,
-            format!("attest name {name:?} must be a new name of [a-z0-9.-]"),
-        ));
-    }
-    match map.get("paragraph_words") {
-        None => {}
-        Some(Value::Int(n)) if (1..=10_000).contains(n) => {
-            mode.paragraph_words = usize::try_from(*n).unwrap_or(1);
-        }
-        Some(_) => return Err(bad(&path, "paragraph_words must be 1 to 10000".into())),
-    }
-    Ok(mode)
 }
 
 /// One deny rule: a name and an ASCII-mode, case-insensitive pattern.
@@ -217,6 +142,8 @@ pub struct Obligation {
     /// The digest of what the obligation means; a receipt or statement
     /// about another digest is stale.
     pub digest: String,
+    /// The candidate gate behind it, when it is one of the mode's gates.
+    pub gate: Option<crate::gate::def::Definition>,
 }
 
 fn sha(text: &str) -> String {
@@ -251,6 +178,21 @@ pub fn obligations(mode: &Mode, deny: &Deny) -> Vec<Obligation> {
             name: check.clone(),
             class,
             digest: sha(&format!("{base}{check}\n{material}")),
+            gate: None,
+        });
+    }
+    // A gate's obligation digest is its definition digest, which covers
+    // its command, its instructions' bytes and the scripts it ships.
+    for gate in &mode.gates {
+        out.push(Obligation {
+            name: gate.id.clone(),
+            class: match gate.class.as_str() {
+                "mechanical" => "mechanical",
+                "observed" => "observed",
+                _ => "attested",
+            },
+            digest: sha(&format!("{base}gate\n{}\n{}", gate.id, gate.digest)),
+            gate: Some(gate.clone()),
         });
     }
     for name in &mode.attest {
@@ -258,6 +200,7 @@ pub fn obligations(mode: &Mode, deny: &Deny) -> Vec<Obligation> {
             name: name.clone(),
             class: "attested",
             digest: sha(&format!("{base}attested\n{name}")),
+            gate: None,
         });
     }
     out

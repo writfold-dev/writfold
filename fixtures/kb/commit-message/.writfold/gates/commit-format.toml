@@ -1,0 +1,11 @@
+# A candidate gate that ships its own script: {gate} is this directory, so
+# the KB carries the check and any project can use it. The script's bytes
+# are part of the definition digest; editing it makes receipts stale.
+schema = "writfold-gate/1"
+id = "commit-format"
+version = 1
+class = "mechanical"
+subject = "candidate"
+argv = ["sh", "{gate}/commit_format.sh", "{candidate}"]
+timeout_seconds = 10
+description = "subject at most 72 characters, a blank second line, body wrapped at 72"

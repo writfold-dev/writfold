@@ -1,7 +1,11 @@
 //! Gate definitions: `.writfold/gates/<id>.toml`, in the KB root (shared by
 //! every project) or in the subject repository (versioned with the code it
 //! checks). The schema is `writfold-gate/1`; unknown keys are refused, so a
-//! misspelt field never silently changes what a gate means.
+//! misspelt field never silently changes what a gate means. A definition
+//! may name an `instructions` file and ship scripts beside itself
+//! ([`super::places`]); their bytes are part of its digest. Reading a
+//! definition never runs anything.
+use super::places;
 use super::toml::{self, Value};
 use crate::error::{KbError, Result};
 use crate::write::is_slug;
@@ -12,10 +16,8 @@ use std::path::{Path, PathBuf};
 pub const SCHEMA: &str = "writfold-gate/1";
 /// Where definitions live, under the KB root or the subject repository.
 pub const DIR: &str = ".writfold/gates";
-/// The one placeholder an argument may hold: a fresh local directory for
-/// the command's own output files.
-pub const ARTIFACTS: &str = "{artifacts}";
-const KEYS: [&str; 9] = [
+pub use places::ARTIFACTS;
+const KEYS: [&str; 11] = [
     "schema",
     "id",
     "version",
@@ -25,6 +27,8 @@ const KEYS: [&str; 9] = [
     "timeout_seconds",
     "scope",
     "description",
+    "instructions",
+    "subject",
 ];
 const MAX_TIMEOUT: i64 = 86_400;
 /// The class of a gate that is a statement, not a check.
@@ -46,6 +50,24 @@ impl Origin {
     }
 }
 
+/// What a gate judges: the subject repository (`gate run`, `gate status`)
+/// or a delivery candidate (a delivery mode's `gates`, `deliver check`).
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Judges {
+    Repository,
+    Candidate,
+}
+
+/// The Markdown file a gate names for the agent to read: the guideline it
+/// checks, or, on an attested gate, the thing being attested to.
+#[derive(Clone, Debug)]
+pub struct Instructions {
+    /// As written, relative to the definition's directory.
+    pub path: String,
+    /// `sha256:<hex>` of its bytes; part of the definition digest.
+    pub digest: String,
+}
+
 /// One parsed, checked definition.
 #[derive(Clone, Debug)]
 pub struct Definition {
@@ -59,6 +81,12 @@ pub struct Definition {
     pub scope: Vec<String>,
     pub description: Option<String>,
     pub origin: Origin,
+    pub judges: Judges,
+    pub instructions: Option<Instructions>,
+    /// Files named through `{gate}/…` in `argv`, with their digests.
+    pub files: Vec<(String, String)>,
+    /// The directory holding the definition: what `{gate}` expands to.
+    pub dir: PathBuf,
     /// `.writfold/gates/<id>.toml`, relative to its root.
     pub path: String,
     /// `sha256:<hex>` of the canonical form (comments and layout excluded).
@@ -73,6 +101,18 @@ impl Definition {
     /// An attested gate runs no command; only `gate attest` meets it.
     pub fn attested(&self) -> bool {
         self.class == ATTESTED
+    }
+
+    /// Whether it judges delivery candidates rather than a repository.
+    pub fn on_candidate(&self) -> bool {
+        self.judges == Judges::Candidate
+    }
+
+    /// The instructions file relative to its root (`.writfold/gates/…`).
+    pub fn instructions_path(&self) -> Option<String> {
+        self.instructions
+            .as_ref()
+            .map(|i| format!("{DIR}/{}", i.path))
     }
 }
 
@@ -108,26 +148,43 @@ fn int(map: &BTreeMap<String, Value>, key: &str, low: i64, high: i64) -> Result<
     }
 }
 
-/// A relative path that stays inside its root.
-fn contained(path: &str) -> bool {
-    !path.starts_with('/')
-        && !path.contains('\\')
-        && path.split('/').all(|part| part != ".." && !part.is_empty())
-}
-
-fn placeholders_ok(arg: &str) -> bool {
-    let rest = arg.replace(ARTIFACTS, "");
-    !rest.split('{').skip(1).any(|after| {
-        after.split_once('}').is_some_and(|(name, _)| {
-            !name.is_empty() && name.bytes().all(|b| b.is_ascii_lowercase() || b == b'_')
-        })
-    })
+/// Check each argument's placeholders against what the gate judges: a
+/// repository gate may not use `{candidate}`; a candidate gate must use it
+/// and may not use `{artifacts}` (its receipt keeps no local files).
+fn placeholders(argv: &[String], judges: Judges) -> Result<()> {
+    let mut all = Vec::new();
+    for arg in argv {
+        if arg.is_empty() || arg.contains('\0') {
+            return Err(bad("argv entries must be non-empty".into()));
+        }
+        all.extend(places::used(arg).map_err(bad)?);
+    }
+    let has = |p: &str| all.contains(&p);
+    match judges {
+        Judges::Repository if has(places::CANDIDATE) => Err(bad(format!(
+            "{} is for gates with subject = \"candidate\"",
+            places::CANDIDATE
+        ))),
+        Judges::Candidate if !has(places::CANDIDATE) => Err(bad(format!(
+            "a candidate gate must pass {} to its command",
+            places::CANDIDATE
+        ))),
+        Judges::Candidate if has(places::ARTIFACTS) => Err(bad(format!(
+            "{} is for repository gates",
+            places::ARTIFACTS
+        ))),
+        _ => Ok(()),
+    }
 }
 
 /// The command fields: `argv`, `workdir` and `timeout_seconds`, required
 /// for a check and refused for an attested gate (which runs nothing; it is
 /// met only by `gate attest`).
-fn command(map: &BTreeMap<String, Value>, class: &str) -> Result<(Vec<String>, String, u64)> {
+fn command(
+    map: &BTreeMap<String, Value>,
+    class: &str,
+    judges: Judges,
+) -> Result<(Vec<String>, String, u64)> {
     if class == ATTESTED {
         if let Some(key) = ["argv", "workdir", "timeout_seconds"]
             .into_iter()
@@ -138,16 +195,9 @@ fn command(map: &BTreeMap<String, Value>, class: &str) -> Result<(Vec<String>, S
         return Ok((Vec::new(), ".".into(), 0));
     }
     let argv = list(map, "argv")?;
-    if argv
-        .iter()
-        .any(|a| a.is_empty() || a.contains('\0') || !placeholders_ok(a))
-    {
-        return Err(bad(format!(
-            "argv entries must be non-empty, and {ARTIFACTS} is the only placeholder"
-        )));
-    }
+    placeholders(&argv, judges)?;
     let workdir = text(map, "workdir")?.unwrap_or_else(|| ".".into());
-    if workdir != "." && !contained(&workdir) {
+    if workdir != "." && !places::contained(&workdir) {
         return Err(bad(
             "workdir must be a relative path inside the repository".into()
         ));
@@ -157,8 +207,58 @@ fn command(map: &BTreeMap<String, Value>, class: &str) -> Result<(Vec<String>, S
     Ok((argv, workdir, timeout_seconds))
 }
 
-/// Parse and check one definition file's text.
-pub fn parse(text_in: &str, stem: &str, origin: Origin) -> Result<Definition> {
+/// `subject`: `repository` (the default) or `candidate`. A candidate gate
+/// lives in the KB root, where delivery modes look for it.
+fn judges(map: &BTreeMap<String, Value>, origin: Origin) -> Result<Judges> {
+    match text(map, "subject")?.as_deref() {
+        None | Some("repository") => Ok(Judges::Repository),
+        Some("candidate") if origin == Origin::Kb => Ok(Judges::Candidate),
+        Some("candidate") => Err(bad(
+            "a candidate gate belongs in the KB root's .writfold/gates/, where delivery modes read it".into(),
+        )),
+        Some(_) => Err(bad("subject must be repository or candidate".into())),
+    }
+}
+
+/// `scope`: required for a repository gate, refused for a candidate gate
+/// (whose subject is the candidate's bytes).
+fn scope(map: &BTreeMap<String, Value>, judges: Judges) -> Result<Vec<String>> {
+    if judges == Judges::Candidate {
+        if map.contains_key("scope") {
+            return Err(bad(
+                "a candidate gate judges the candidate's bytes: remove scope".into(),
+            ));
+        }
+        return Ok(Vec::new());
+    }
+    let scope = list(map, "scope")?;
+    for pattern in &scope {
+        let bare = pattern.strip_prefix('!').unwrap_or(pattern);
+        if bare.is_empty() || bare.starts_with('/') || bare.contains('\\') {
+            return Err(bad(format!(
+                "scope pattern {pattern:?} is not a relative glob"
+            )));
+        }
+    }
+    Ok(scope)
+}
+
+/// `instructions`: a Markdown file inside the definition's directory.
+fn instructions(map: &BTreeMap<String, Value>, dir: &Path) -> Result<Option<Instructions>> {
+    let Some(path) = text(map, "instructions")? else {
+        return Ok(None);
+    };
+    if !path.ends_with(".md") {
+        return Err(bad(format!("instructions {path:?} must name a .md file")));
+    }
+    let real = places::resolve(dir, &path).map_err(|why| bad(format!("instructions: {why}")))?;
+    let digest = places::digest_file(&real).map_err(bad)?;
+    Ok(Some(Instructions { path, digest }))
+}
+
+/// Parse and check one definition file's text; `dir` is the directory
+/// holding it, where `instructions` and `{gate}/…` files are read.
+pub fn parse(text_in: &str, stem: &str, origin: Origin, dir: &Path) -> Result<Definition> {
     let map = toml::parse(text_in).map_err(bad)?;
     if let Some(key) = map.keys().find(|k| !KEYS.contains(&k.as_str())) {
         return Err(bad(format!("unknown key {key}")));
@@ -176,16 +276,9 @@ pub fn parse(text_in: &str, stem: &str, origin: Origin) -> Result<Definition> {
     if !matches!(class.as_str(), "mechanical" | "observed" | ATTESTED) {
         return Err(bad("class must be mechanical, observed or attested".into()));
     }
-    let (argv, workdir, timeout_seconds) = command(&map, &class)?;
-    let scope = list(&map, "scope")?;
-    for pattern in &scope {
-        let bare = pattern.strip_prefix('!').unwrap_or(pattern);
-        if bare.is_empty() || bare.starts_with('/') || bare.contains('\\') {
-            return Err(bad(format!(
-                "scope pattern {pattern:?} is not a relative glob"
-            )));
-        }
-    }
+    let judges = judges(&map, origin)?;
+    let (argv, workdir, timeout_seconds) = command(&map, &class, judges)?;
+    let scope = scope(&map, judges)?;
     let description = text(&map, "description")?;
     if description
         .as_deref()
@@ -194,6 +287,7 @@ pub fn parse(text_in: &str, stem: &str, origin: Origin) -> Result<Definition> {
         return Err(bad("description must be one line".into()));
     }
     let version = int(&map, "version", 1, i64::from(u32::MAX))?;
+    let files = places::gate_files(&argv, dir).map_err(bad)?;
     let mut definition = Definition {
         path: format!("{DIR}/{id}.toml"),
         id,
@@ -205,6 +299,10 @@ pub fn parse(text_in: &str, stem: &str, origin: Origin) -> Result<Definition> {
         scope,
         description,
         origin,
+        judges,
+        instructions: instructions(&map, dir)?,
+        files,
+        dir: dir.to_path_buf(),
         digest: String::new(),
     };
     definition.digest = digest(&definition);
@@ -212,10 +310,13 @@ pub fn parse(text_in: &str, stem: &str, origin: Origin) -> Result<Definition> {
 }
 
 /// The digest of what the definition means: every field but the
-/// description, in a fixed form.
+/// description, in a fixed form, with the bytes of its instructions and
+/// of every file its `argv` names through `{gate}/…`. Lines for those
+/// (and for a candidate subject) are added only when present, so a
+/// definition without them keeps the digest it always had.
 pub fn digest(d: &Definition) -> String {
     let json = |items: &[String]| serde_json::to_string(items).unwrap_or_default();
-    let canonical = format!(
+    let mut canonical = format!(
         "{SCHEMA}\nid={}\nversion={}\nclass={}\nargv={}\nworkdir={}\ntimeout_seconds={}\nscope={}\n",
         d.id,
         d.version,
@@ -225,117 +326,19 @@ pub fn digest(d: &Definition) -> String {
         d.timeout_seconds,
         json(&d.scope)
     );
+    if d.on_candidate() {
+        canonical.push_str("subject=candidate\n");
+    }
+    if let Some(i) = &d.instructions {
+        canonical.push_str(&format!("instructions={} {}\n", i.path, i.digest));
+    }
+    for (path, file) in &d.files {
+        canonical.push_str(&format!("file={path} {file}\n"));
+    }
     format!(
         "sha256:{}",
         crate::index::hex(&Sha256::digest(canonical.as_bytes()))
     )
 }
 
-/// The roots definitions are read from: the KB root, then the subject
-/// repository's top when it is another directory.
-fn roots(kb: &Path, repo: Option<&Path>) -> Vec<(Origin, PathBuf)> {
-    let mut out = vec![(Origin::Kb, kb.join(DIR))];
-    if let Some(top) = repo {
-        let dir = top.join(DIR);
-        let same = match (
-            std::fs::canonicalize(&out[0].1),
-            std::fs::canonicalize(&dir),
-        ) {
-            (Ok(a), Ok(b)) => a == b,
-            _ => false,
-        };
-        if !same {
-            out.push((Origin::Repo, dir));
-        }
-    }
-    out
-}
-
-/// Every definition, and every file that does not parse (path, why).
-pub fn all(kb: &Path, repo: Option<&Path>) -> (Vec<Definition>, Vec<(Origin, String, String)>) {
-    let mut found: Vec<Definition> = Vec::new();
-    let mut problems = Vec::new();
-    for (origin, dir) in roots(kb, repo) {
-        let Ok(entries) = std::fs::read_dir(&dir) else {
-            continue;
-        };
-        let mut names: Vec<String> = entries
-            .flatten()
-            .map(|e| e.file_name().to_string_lossy().into_owned())
-            .filter(|n| n.ends_with(".toml") && !n.starts_with('.'))
-            .collect();
-        names.sort();
-        for name in names {
-            let stem = name.trim_end_matches(".toml");
-            let path = format!("{DIR}/{name}");
-            let parsed = std::fs::read_to_string(dir.join(&name))
-                .map_err(KbError::from)
-                .and_then(|text| parse(&text, stem, origin));
-            match parsed {
-                Ok(d) if found.iter().any(|f| f.id == d.id) => problems.push((
-                    origin,
-                    path,
-                    format!("gate {} is defined in both the KB and the repository", d.id),
-                )),
-                Ok(d) => found.push(d),
-                Err(error) => problems.push((origin, path, error.to_string())),
-            }
-        }
-    }
-    (found, problems)
-}
-
-/// The definition of `id`, refusing a missing, malformed or doubly defined
-/// gate.
-pub fn find(kb: &Path, repo: Option<&Path>, id: &str) -> Result<Definition> {
-    let (found, problems) = all(kb, repo);
-    let name = format!("{DIR}/{id}.toml");
-    if let Some((_, path, why)) = problems.iter().find(|(_, path, _)| *path == name) {
-        return Err(KbError::Refused(format!("{path}: {why}")));
-    }
-    found.into_iter().find(|d| d.id == id).ok_or_else(|| {
-        KbError::Refused(format!(
-            "no gate {id}: define {name} in the KB root or the repository"
-        ))
-    })
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{Origin, parse};
-
-    const UNIT: &str = "schema = \"writfold-gate/1\"\nid = \"unit\"\nversion = 1\nclass = \"mechanical\"\nargv = [\"scripts/gate\", \"unit\", \"--receipt\", \"{artifacts}/unit.json\"]\ntimeout_seconds = 60\nscope = [\"**\", \"!docs/**\"]\n";
-
-    #[test]
-    fn a_definition_parses_and_its_digest_ignores_layout() -> Result<(), String> {
-        let d = parse(UNIT, "unit", Origin::Repo).map_err(|e| e.to_string())?;
-        assert_eq!((d.workdir.as_str(), d.timeout_seconds), (".", 60));
-        let commented = UNIT.replace("version = 1\n", "# why\nversion   = 1 # first\n");
-        let again = parse(&commented, "unit", Origin::Kb).map_err(|e| e.to_string())?;
-        assert_eq!(d.digest, again.digest);
-        let changed =
-            parse(&UNIT.replace("60", "61"), "unit", Origin::Kb).map_err(|e| e.to_string())?;
-        assert_ne!(d.digest, changed.digest);
-        for (from, to) in [
-            ("id = \"unit\"", "id = \"other\""),
-            ("class = \"mechanical\"", "class = \"assessed\""),
-            ("\"unit\", \"--receipt\"", "\"{receipt}\", \"--receipt\""),
-            ("timeout_seconds = 60", "timeout_seconds = 0"),
-            ("scope = [\"**\", \"!docs/**\"]", "scope = []"),
-            ("scope = [\"**\", \"!docs/**\"]", "scope = [\"/abs\"]"),
-            ("version = 1", "version = 1\nshell = \"sh -c\""),
-            ("version = 1", "version = 1\nworkdir = \"../up\""),
-            ("writfold-gate/1", "writfold-gate/2"),
-            ("class = \"mechanical\"", "class = \"attested\""),
-        ] {
-            assert!(
-                parse(&UNIT.replace(from, to), "unit", Origin::Kb).is_err(),
-                "{to}"
-            );
-        }
-        let attested = "schema = \"writfold-gate/1\"\nid = \"review\"\nversion = 1\nclass = \"attested\"\nscope = [\"src/**\"]\n";
-        let d = parse(attested, "review", Origin::Kb).map_err(|e| e.to_string())?;
-        assert!(d.attested() && d.argv.is_empty());
-        Ok(())
-    }
-}
+pub use super::discover::{all, find, find_repository};

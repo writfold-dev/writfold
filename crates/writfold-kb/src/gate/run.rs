@@ -67,7 +67,7 @@ pub(super) fn run(
     })?;
     let run_dir = runs::dir(&rec);
     drop(session);
-    let definition = def::find(&ws.root, Some(&subject.top), id)?;
+    let definition = def::find_repository(&ws.root, Some(&subject.top), id)?;
     if definition.attested() {
         return Err(KbError::Refused(format!(
             "gate {id} is attested: it runs nothing; record a statement with gate attest {id} --statement TEXT --by WHO"

@@ -197,7 +197,18 @@ pub fn row(c: &Candidate, judged: &[Judged<'_>]) -> Row {
     if !ok {
         row.flags.push("blocked".into());
     }
-    row.more = judged.iter().map(|j| line(j, &c.id)).collect();
+    // A gate that names instructions adds a `read:` line under its own.
+    row.more = judged
+        .iter()
+        .flat_map(|j| {
+            let read = j
+                .obligation
+                .gate
+                .as_ref()
+                .and_then(|g| crate::gate::status::read_line(g, ""));
+            std::iter::once(line(j, &c.id)).chain(read)
+        })
+        .collect();
     row
 }
 

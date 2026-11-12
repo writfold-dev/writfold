@@ -190,13 +190,25 @@ fn rerun(
         .ok_or_else(|| KbError::Refused("gates need a KB under Git".into()))?;
     let artifacts = local.join("artifacts");
     std::fs::create_dir_all(&artifacts)?;
+    // `{gate}` is the definition's directory: in the verification worktree
+    // for a repository definition (as of the recorded commit), in the KB
+    // for a KB definition (as it stands now).
+    let gate_dir = match r.origin.as_str() {
+        "repo" => tree.join(super::def::DIR),
+        _ => ws.root.join(super::def::DIR),
+    };
+    let places = super::places::Places {
+        gate: &gate_dir,
+        artifacts: Some(&artifacts),
+        candidate: None,
+    };
     let e = exec::execute(
         &r.gate,
         &r.argv,
         &r.workdir,
         r.timeout_seconds,
         tree,
-        &artifacts,
+        &places,
     );
     std::fs::write(local.join("stdout.tail"), &e.stdout.bytes)?;
     std::fs::write(local.join("stderr.tail"), &e.stderr.bytes)?;

@@ -102,7 +102,10 @@ pub fn judge<'a>(
     subject: &Subject,
     filings: &'a Filings,
 ) -> Result<Report<'a>> {
-    let (definitions, problems) = def::all(root, Some(&subject.top));
+    let (mut definitions, problems) = def::all(root, Some(&subject.top));
+    // Candidate gates judge delivery drafts, never a repository: a run
+    // owes them only through a delivery mode (`deliver status`).
+    definitions.retain(|d| !d.on_candidate());
     let patterns: Vec<Vec<&str>> = definitions.iter().map(Definition::patterns).collect();
     let wanted = |p: &str| patterns.iter().any(|scope| in_scope(scope, p));
     let snapshot = snapshot(git, subject, &wanted)?;
@@ -173,6 +176,23 @@ pub fn shown_path(d: &Definition, subject: &Subject) -> String {
         Origin::Kb => d.path.clone(),
         Origin::Repo => format!("{}:{}", subject.name, d.path),
     }
+}
+
+/// The `read:` line of a gate that names instructions: the file the
+/// agent reads (on an attested gate, what is being attested to).
+/// A repository definition's path is shown as `<repo>:<path>`.
+pub fn read_line(d: &Definition, repo: &str) -> Option<More> {
+    let path = d.instructions_path()?;
+    Some(More {
+        label: "read",
+        text: format!("instructions for {}", d.id),
+        path: Some(match d.origin {
+            Origin::Kb => path,
+            Origin::Repo => format!("{repo}:{path}"),
+        }),
+        line: Some(1),
+        ..More::default()
+    })
 }
 
 fn invalid_row(kind: &'static str, name: &str, path: &str, why: &str) -> Row {
@@ -272,6 +292,9 @@ fn gate_row(
             row.path = Some(f.path.clone());
             row.line = Some(1);
         }
+    }
+    if let Some(more) = read_line(d, &subject.name) {
+        row.more.push(more);
     }
     let shown = match judged.standing {
         Standing::Attested => judged.statements.attested,
