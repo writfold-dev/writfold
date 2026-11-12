@@ -101,7 +101,7 @@ The v1 design is [kb-v1-design.md](kb-v1-design.md).
 3. ~~Writes~~ (M3): `record`, `checkpoint`, `resume`, `runs`.
 4. ~~M4a: the Claude Code plugin~~ (SessionStart brief, checkpoint drafts, one skill; `plugins/writfold`).
 5. Tuft adapter: `tuft run` rows can carry KB citation tokens, and a search is recorded as a retrieval receipt in the current run.
-6. G1: checks with pinned receipts (below).
+6. ~~G1: checks with pinned receipts~~ (below; `gate run`, `gate status`, `gate verify`, `gate lines`; [as built](kb-v1-design.md#16-g1-as-built)).
 7. Splicery adapter: a recipe applies directly in a run's recorded worktree; the result is an ordinary Git change judged by a gate, with the recipe and preview kept as a receipt.
 8. T1: `writfold watch`, a read-only TUI.
 9. G2: offline delivery candidates; G2b: an optional guard hook.

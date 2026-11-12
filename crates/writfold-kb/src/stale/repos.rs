@@ -70,7 +70,9 @@ pub fn resolve(session: &Session<'_>, repo: &str, url: Option<&str>) -> Option<P
     resolve_in(Some(session.ws), repo, url)
 }
 
-fn resolve_in(ws: Option<&Workspace>, repo: &str, url: Option<&str>) -> Option<PathBuf> {
+/// The Git directory a repository name (or absolute path) names, through
+/// the KB's map and `$WRITFOLD_KB_REPOS`.
+pub fn resolve_in(ws: Option<&Workspace>, repo: &str, url: Option<&str>) -> Option<PathBuf> {
     if repo.is_empty() || repo.contains("..") {
         return None;
     }
@@ -85,6 +87,14 @@ fn resolve_in(ws: Option<&Workspace>, repo: &str, url: Option<&str>) -> Option<P
         .into_iter()
         .flatten()
         .find_map(|path| git_dir(&path))
+}
+
+/// The name the KB's local map gives the repository in `dir`, if any.
+pub fn mapped_name(ws: Option<&Workspace>, dir: &Path) -> Option<String> {
+    let target = git_dir(dir)?;
+    map(ws)
+        .into_iter()
+        .find_map(|(name, path)| (git_dir(&path).as_ref() == Some(&target)).then_some(name))
 }
 
 /// The `repo=` name to cite the repository in `dir` by: a name in the KB's

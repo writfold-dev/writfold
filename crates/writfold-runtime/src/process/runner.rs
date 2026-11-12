@@ -16,6 +16,10 @@ pub(crate) struct Output {
 mod service;
 pub(crate) use service::Service;
 
+#[path = "tailed.rs"]
+mod tailed;
+pub use tailed::{Tail, TailLimits, Tailed, TailedEnd, run_tailed};
+
 struct OwnedChild<'a> {
     child: Child,
     group: Pid,

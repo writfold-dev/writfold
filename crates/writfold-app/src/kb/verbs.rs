@@ -20,6 +20,9 @@ pub fn verb(name: &str, common: &Common, positional: &[String]) -> Result<Verb, 
     if let Some(verb) = super::writes::runs_and_writes(name, common, positional) {
         return verb;
     }
+    if name == "gate" {
+        return super::gate::verb(common, positional);
+    }
     let one = |what: &str| -> Result<String, String> {
         match positional {
             [single] => Ok(single.clone()),

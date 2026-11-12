@@ -204,10 +204,13 @@ pub fn emit(answer: &Answer, frame: &Frame, scope: &Scope<'_>) -> Result<Output>
         || answer.unknown.is_some()
         || scope.unreadable > 0
         || matches!(scope.index, IndexState::Behind(_));
-    let flagged = answer
-        .counts
-        .iter()
-        .any(|(name, n)| *n > 0 && matches!(*name, "stale" | "unverifiable"));
+    let flagged = answer.counts.iter().any(|(name, n)| {
+        *n > 0
+            && matches!(
+                *name,
+                "stale" | "unverifiable" | "open" | "failed" | "unknown" | "invalid" | "disagree"
+            )
+    });
     let exit = if answer.failed {
         1
     } else if answer.refused {

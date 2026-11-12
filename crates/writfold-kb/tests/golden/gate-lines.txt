@@ -1,0 +1,9 @@
+Gates for demo-service@bcacd8cac84e (writfold kb gate, run run-20261101T090000Z-a1b2c3): 1 of 6 satisfied
+edits: stale pass exit=0 runs/run-20261101T090000Z-a1b2c3/gates/edits-20261111T000300Z-XXXXXX.json
+fail:  failed fail exit=3 runs/run-20261101T090000Z-a1b2c3/gates/fail-20261111T000100Z-XXXXXX.json
+fresh: open
+pass:  satisfied pass exit=0 runs/run-20261101T090000Z-a1b2c3/gates/pass-20261111T000000Z-XXXXXX.json
+slow:  unknown unknown timeout runs/run-20261101T090000Z-a1b2c3/gates/slow-20261111T000200Z-XXXXXX.json
+crash: unknown unknown signal runs/run-20261101T090000Z-a1b2c3/gates/crash-20261111T000400Z-XXXXXX.json
+invalid receipts or definitions: 1 (see writfold kb gate status)
+# exit=2
