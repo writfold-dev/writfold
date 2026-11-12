@@ -48,7 +48,6 @@ pub(super) fn record(
         super::locate(&session, &rec, say.repo.as_deref(), &request.cwd)?.ok_or_else(|| {
             KbError::Refused("no subject repository: run inside one, or pass --repo DIR".into())
         })?;
-    drop(session);
     let definition = def::find_repository(&ws.root, Some(&subject.top), &say.id)?;
     if definition.assessed.is_some() {
         return Err(KbError::Refused(format!(
@@ -56,6 +55,9 @@ pub(super) fn record(
             say.id
         )));
     }
+    // A run-record gate's statement binds the run-record digest it is judged by.
+    let records = crate::plan::owed(&session, &rec).records;
+    drop(session);
     if say.kind == Kind::Attested && !definition.attested() {
         return Err(KbError::Refused(format!(
             "gate {} is a {} check: only a passing gate run satisfies it (gate waive sets it aside, with a reason)",
@@ -66,7 +68,10 @@ pub(super) fn record(
     let patterns = definition.patterns();
     let wanted = |p: &str| writfold_core::gate::in_scope(&patterns, p);
     let snapshot = subject::snapshot(&git, &subject, &wanted)?;
-    let scoped = snapshot.scoped(&patterns);
+    let mut scoped = snapshot.scoped(&patterns);
+    if definition.run_record() {
+        scoped.digest = records.unwrap_or_default();
+    }
     let bytes = statement::bytes(&Statement {
         kind: say.kind,
         obligation: say.id.clone(),
@@ -113,7 +118,8 @@ fn answer(
         .git
         .as_ref()
         .ok_or_else(|| KbError::Refused("gates need Git".into()))?;
-    let filings = Filings::read(&ws.root, &runs::dir(rec), &rec.id);
+    let mut filings = Filings::for_run(&session, rec);
+    filings.owed.gates = None;
     let report = status::judge(&session, subject, &filings)?;
     let mut answer = Answer {
         rows: status::rows(git, subject, &report, &filings)?

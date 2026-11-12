@@ -30,6 +30,7 @@ The project KB is plain records in Git. `writfold kb <verb>` answers from it in 
 | Set a gate aside, or state an attested gate | `gate waive <id> --reason TEXT --by WHO`, `gate attest <id> --statement TEXT --by WHO` |
 | Prepare a PR comment, Slack summary or other draft for review (nothing is sent) | `deliver prepare --mode MODE --from FILE [--audience external]` (built in: `pr-comment`, `slack-summary`; others from `.writfold/deliveries/<mode>.toml`) |
 | Check a delivery candidate, and see what it still owes | `deliver check [CANDIDATE]`, `deliver status` |
+| Where does the run's plan stand, and may it move on? | `plan status`, `plan advance` (`plan set <template>` to start one) |
 | Apply a Splicery recipe in the run's worktree, keeping a receipt | `edit apply RECIPE.spl… [--dry-run]` (`--worktree DIR` once if the run records none) |
 
 Writes (`checkpoint`, `record`, `status --set`) change the work tree only. They never commit; commit the KB yourself when the user wants it shared.
@@ -63,6 +64,10 @@ A gate is a command with a path scope. Only `gate run` writes a receipt; never w
 A row with a `read:` line names the gate's instructions file. Read it before you run, repair or attest that gate: it is what the gate checks, and on an attested gate it is what your statement says you followed. Editing it (or a script the gate ships beside itself) makes earlier receipts and attestations stale, so they must be earned again.
 
 A gate of class `assessed` is met by a Weft assessment of a plan step. Write the step's assumptions and checks in the Weft file its definition names (its `next:` line shows where; `{run}/…` is under the run's directory). Cite each assumption's evidence with `claim <name> = citation "<reference>";` directly above its `assume`: a KB citation token, `gate:<id>`, or a receipt of the run (path or name). Then `gate run <id>`. Each check shows `[<Weft result> <basis>]`: only `entailed grounded` counts as met. `!hypothetical` means it rests on an assumption whose citation is stale, failed, missing or absent; a `cite:` line names it. Fix the evidence (rerun the gate, refresh the citation), never the wording of the check, and do not report a hypothetical check as passed. You cannot choose the Weft binary; if the row says there is none or its digest is refused, tell the user.
+
+## Plans
+
+When the run has a plan, `resume` shows one `plan` line: the current step and the gates it still owes. Work the current step, meet its gates (`gate run`, or `gate attest` for an attested gate), then `plan advance`. A refusal (exit 3) names what is still owed, first owed gate first, with the command to run; nothing is written. Start a plan with `plan set <template>` (templates in `.writfold/plans/`) when the user or a skill names one. `plan skip --reason TEXT --by WHO` closes a step without calling it done: only when the user asks. A done step shown `!stale` stays done; if the check matters now, run it again. Gates of class `run-record` judge what the run wrote: `research.backfilled` wants a KB record, a retrieval receipt or a citation in a checkpoint since the step began; `run.reflected` wants a checkpoint starting `reflection:` plus a proposal or a line starting `no proposal`.
 
 ## Delivery candidates
 

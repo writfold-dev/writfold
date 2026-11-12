@@ -6,6 +6,7 @@ mod deliver;
 mod edit;
 mod gate;
 mod hook;
+mod plan;
 mod proposals;
 mod verbs;
 mod writes;
@@ -72,6 +73,17 @@ deliveries (offline candidates: the exact payload, checked mechanically; nothing
   deliver attest|waive [CANDIDATE] --check NAME --statement TEXT|--reason TEXT --by WHO
   deliver status [CANDIDATE] [--run ID]
                                    each candidate's checks (exit 0 only if all are met)
+
+plans (the run graph, linear; templates in .writfold/plans/<name>.toml; Writfold records, the agent walks):
+  plan set <template>|--from FILE [--run ID] [--repo DIR]
+                                   splice a template's steps at the run's root (keeps a snapshot)
+  plan status [--run ID] [--repo DIR]
+                                   each step: done (!stale if a gate no longer holds), current with
+                                   what it owes, later
+  plan advance [--run ID] [--repo DIR]
+                                   record the current step as done, or refuse (exit 3) naming what it owes
+  plan skip --reason TEXT --by WHO [--run ID]
+                                   close the current step without calling it done
 
 edits (the Splicery adapter; Splicery for repeated or structural edits, ordinary tools for small ones):
   edit apply RECIPE.spl [RECIPE.spl ...] [--run ID] [--worktree DIR] [--dry-run]

@@ -1,0 +1,5 @@
+step change#1/research [current] owes: backfilled [open] @runs/run-20261101T090000Z-a1b2c3/plan/splice-change.1.json:1
+  next: writfold kb gate run backfilled
+# note: not advanced: change#1/research owes backfilled [open] (first owed: backfilled); nothing written
+# coverage=complete records=29/29 shown=1 omitted=0 kb=d5db758bda80+dirty:1 index=fresh cursor=none q=344986924523
+# exit=3

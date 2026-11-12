@@ -175,7 +175,7 @@ fn gate_rows(session: &Session<'_>, rec: &Rec, subject: &Subject) -> Result<(Vec
         .git
         .as_ref()
         .ok_or_else(|| KbError::Refused("gates need Git".into()))?;
-    let filings = Filings::read(&session.ws.root, &runs::dir(rec), &rec.id);
+    let filings = Filings::for_run(session, rec);
     let report = status::judge(session, subject, &filings)?;
     let rows = status::rows(git, subject, &report, &filings)?;
     Ok((rows, status::counts(&report, &filings)))
@@ -220,7 +220,7 @@ fn lines(session: &Session<'_>, rec: &Rec, repo: Option<&Path>, cwd: &Path) -> R
             "no subject repository: run inside one, or pass --repo DIR".into(),
         ));
     };
-    let filings = Filings::read(&session.ws.root, &runs::dir(rec), &rec.id);
+    let filings = Filings::for_run(session, rec);
     let report = status::judge(session, &subject, &filings)?;
     let count = |s: Standing| report.gates.iter().filter(|j| j.standing == s).count();
     let satisfied = count(Standing::Checked(State::Satisfied));

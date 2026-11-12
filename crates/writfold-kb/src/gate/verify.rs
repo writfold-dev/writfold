@@ -119,6 +119,12 @@ fn check(
     now: i64,
 ) -> Result<Checked> {
     let unverifiable = |why: String| Ok(("unverifiable", why, Some("unverifiable")));
+    if r.class == super::def::RUN_RECORD {
+        return unverifiable(
+            "a run-record receipt judges the run's records, not a commit; gate status re-judges it"
+                .into(),
+        );
+    }
     if r.dirty > 0 {
         return unverifiable(format!(
             "the receipt's subject had {} dirty in-scope paths; no commit reproduces it",

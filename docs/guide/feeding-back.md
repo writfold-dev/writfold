@@ -1,6 +1,6 @@
 # Feeding the knowledge base
 
-> **Status:** built in v0.3.0-dev.1; proposals built in v0.4.0-dev.1; the section marked *Planned* is not built.
+> **Status:** built in v0.3.0-dev.1; proposals and the backfill and reflection checks built in v0.4.0-dev.1; required steps spliced into every run are planned.
 
 Reading the knowledge base (KB) is half of the loop. The other half is what each stage of the work writes back, so that the next session starts from more than this one did. This page follows one piece of work through the four stages and says, for each thing written: which verb writes it, where it lands, and who commits it.
 
@@ -105,9 +105,11 @@ proposal 16a41fbba45340f7 [pending] ticket HBR-130: Replay is slow after a resta
 - **Accept is the ordinary write.** It is refused (exit 3), and the proposal kept, when a citation token in it is not fresh under `kb stale`, when the record's ID is already taken, or for any reason `record` itself refuses. The proposal is removed only after the record is written.
 - **Who accepts** is a convention: the skill tells the agent to accept only when you ask.
 
-## Planned
+## Checking that write-back happened
 
-- **Backfill as a required step.** A run-record check, `research.backfilled`, would be met only when the research step wrote at least one KB record, citation or retrieval receipt. See [run-graph](run-graph.md).
-- **Reflection at the end of every run.** A closing `reflect` step whose check, `run.reflected`, is met by a reflection entry plus a proposal or an explicit "no proposal".
+Two run-record checks ([gates](gates.md#run-record-checks)) judge the run's own records, and a plan step can owe them ([run-graph](run-graph.md)):
 
-Neither is built. Today the agent writes back because the skill tells it to, and nothing checks that it did.
+- **`research.backfilled`**: since the step began, a KB record was written or changed, a retrieval receipt was recorded, or a checkpoint entry holds a citation token.
+- **`run.reflected`**: a checkpoint entry starts with `reflection:`, and the run has a pending proposal, a KB record written in the step (an accepted proposal), or a line starting `no proposal`.
+
+They show that something was written, not that it is good; pair each with an attested gate whose instructions say what a good backfill or reflection covers. *Planned:* a required template spliced into every run, so these steps are owed without the agent choosing a plan that names them.

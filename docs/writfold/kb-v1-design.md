@@ -1673,10 +1673,114 @@ delivery 20261111T000000Z-XXXXXX [blocked] commit-message audience=external dest
 
 ### 20.8 Not done
 
-- Plans and `advance` (the next item of the order of work); gates owed per step.
+- (Built since: plans, `advance` and gates owed per step, section 21.)
 - Binding a checked commit message to the commit (a `commit-msg` hook or trailer check); guarding `git commit` with the PreToolUse hook.
 - Keeping a candidate gate's output tails; `deliver check` keeps findings only.
 - A real commit made through the `commit-message` mode; a real instruction gate written by the owner.
+
+## 21. Run graph (linear) as built
+
+The third item of the order of work adopted on 12 November 2026 (mission, "The run graph, hooks and order of work"), with the run-record checks of "Required steps and run-record checks": a run's plan is one ordered spine of steps spliced from a template, each owing gates; Writfold records it and the agent walks it. No crate, record kind or protocol step entered. New code: the kernel `crates/writfold-core/src/plan.rs`; `crates/writfold-kb/src/plan/{mod,template,event,fold,judge,records,show,write}.rs`; the class `run-record` in `src/gate/def.rs` with its evaluation in `src/gate/run.rs`; the plan narrowing and the `seq` order in `src/gate/{status,receipt}.rs`; the plan line in `resume` (`src/verbs/runs.rs`) and the plan part of `kb check` (`src/check.rs`); the arguments in `crates/writfold-app/src/kb/plan.rs`; and the tests in 21.8.
+
+### 21.1 Verbs
+
+```text
+writfold kb plan set <template> | --from FILE [--run ID] [--repo DIR]
+writfold kb plan status [--run ID] [--repo DIR]
+writfold kb plan advance [--run ID] [--repo DIR]
+writfold kb plan skip --reason TEXT --by WHO [--run ID] [--repo DIR]
+```
+
+- **The run** is `--run`, else the current-run pointer; the writes refuse a closed run. **The subject repository** is found as for `gate status` (16.1); without one, `plan status` lists the steps unjudged with a note, and `plan advance` refuses when the current step has gates.
+- **`plan set`** reads `.writfold/plans/<template>.toml` from the KB root, else the subject repository (the same name in both is refused), or `--from FILE`. Every gate it names must have a usable definition that is not a candidate gate; otherwise it is refused (exit 3), never taken as "not applicable". Setting the same template with the same bytes again writes nothing and exits 0; a different second root plan is refused.
+- **`plan advance`** judges the current step's gates now. In the fixed order of the kernel: no current step (refused, exit 3, as an error); then the first owed gate. An owed gate gives an answer with `refused` set (exit 3): the step's row with `owes: <gate> [<standing>], …`, `read:` lines and the `next:` command for the first owed gate, and the note `nothing written`. Otherwise it writes the `done-` event.
+- **`plan skip`** closes the current step with a reason and `--by` (one line each, as statements). A skipped step is shown `[skipped]`, never done.
+- **Exit codes** follow 3.1. `plan status` exits 2 when the run has no plan (`answer=unknown reason=no-plan`), a done step is `!stale`, or an event is invalid; else 0. Its trailer counts `steps= done= skipped= stale= invalid=`.
+
+### 21.2 Templates
+
+`writfold-plan/1`, in the TOML subset of 16.2; unknown keys are refused.
+
+```toml
+schema = "writfold-plan/1"
+name = "change"                 # a slug; equal to the file name for a .writfold/plans/ template
+description = "…"               # optional; one line
+steps = ["research: backfilled", "implement: quality unit", "review: review", "reflect: reflected"]
+```
+
+A step is `id: gate gate …`: a slug, a colon and zero or more gate IDs. A repeated step ID, a repeated gate within a step, a non-slug and more than 64 steps are refused. `use=<template>` is refused with "splicing is not built yet" (the next slice). The template digest is the SHA-256 of its exact bytes, so a comment edit is a new template; the run keeps its own snapshot (21.3), so an edit never rewrites a run.
+
+### 21.3 The event log
+
+`runs/<run>/plan/`, every file written create-new through the 13.2 protocol (`Op::Create`) and never changed:
+
+| File | Written by | Holds |
+|---|---|---|
+| `templates/<sha256 hex>.toml` | `plan set` | the template's exact bytes |
+| `splice-<prefix>.json` | `plan set` | `parent` (`""` for the root), `ordinal`, `template` (`name`, `digest`, `source`) |
+| `done-<node>.json` | `plan advance` | `node`, and `met`: per gate, its `standing`, the `evidence` file (receipt or statement), the definition digest and the content (scope or run-record) digest |
+| `skip-<node>.json` | `plan skip` | `node`, `reason`, `by` |
+
+Every event also carries `records`, the run's records at that moment (21.6), `recorded` (shown, never compared), `schema` (`writfold-plan-event/1`), `run`, and `digest` over the canonical form (as 16.5). A node path is written in a file name with `/` as `~` and `#` as `.` (`done-change.1~implement.json`); reading an event checks its schema, digest and run, and that its file name is the one its content implies, so a hand-edited or misfiled event reads as `!invalid` and counts for nothing. Because the name follows from what the event is about, two sessions cannot both advance one step: the second is a write conflict (exit 3). `plan set` publishes the snapshot before the splice, so a splice never exists without its snapshot; a crash between the two leaves the snapshot, and the rerun skips it when its bytes match.
+
+### 21.4 The fold
+
+`plan/fold.rs` derives the steps on every read:
+
+1. parse every `*.json` under `plan/`; invalid ones are listed;
+2. sort splices by (parent, ordinal, template name, digest, file name) and expand each from its snapshot (a missing or altered snapshot makes the splice invalid);
+3. flatten post-order: each splice's steps under its parent, children before the step they were spliced under (only root splices are written today; the expansion is general, to depth 4);
+4. close steps from `done-` and `skip-` events; an event naming no step is invalid.
+
+**Node identity** is `<template>#<ordinal>/<step>` under the root (`change#1/implement`), longer under a spliced step. **The current step** is the kernel's `current`: the first neither done nor skipped. The result depends only on the set of files: never on directory order, Git merge order or a clock (tested by rotating and reversing the listing, and by a clone). Two root plans from two clones fold in key order.
+
+### 21.5 Judging steps, `!stale`, and what a run owes
+
+- **Each done step and the current step** are judged (`plan/judge.rs`): a repository or assessed (§23) gate as `gate status` would judge it on the present bytes; a run-record gate against its step's own window (21.6). Later steps owe nothing yet.
+- **`!stale`**: a done step whose gate is no longer met (the kernel's `stale`) is shown `[done] … !stale` with a `why:` line. It stays done and the current step never moves back: done is history, owed is the present. A gate that must hold at delivery is listed again on a later step.
+- **Owed gates.** With a plan, `gate status`, `gate lines` and `resume`'s gate rows list only the gates the plan's steps name (`Filings::for_run` and `status::Owed`); a run without a plan owes every defined gate, as before. `gate run` and `gate attest|waive` still show the gate they wrote even when the plan does not name it.
+- **The plan line.** `resume` adds one row after the run row: `plan <node> [current] step i/n owes: <gate> [<standing>], …` with a `next:` line (`!stale` when a done step is), or `plan complete`. `writfold watch` shows it, since its right pane is `resume`'s rows. `kb check` adds a `check plan` row (`plan status --run <current>`) when the current run holds a plan.
+
+### 21.6 Run-record checks
+
+A gate of class `run-record` takes `require = [...]` (built-ins only: `research.backfilled`, `run.reflected`; an unknown or repeated name is refused) and no `scope`, `subject`, `argv`, `workdir` or `timeout_seconds`. The requirement list enters the definition digest.
+
+- **The run's records** (`plan/records.rs`): the checkpoint entries of `checkpoint.md` (each trimmed); the retrieval receipt names under `retrievals/`; a digest over the index's `files` rows outside `runs/` (path and SHA-256: any KB record written or edited); and the pending proposals that recorded the run (`proposal::for_run`, 22.2).
+- **A window** runs from the event that began a step (its splice for the first step of a splice, else the event that closed the step before it) to the event that closed it, or to now while it is current; without a plan, the whole run (no beginning). The **run-record digest** covers the window's two edges and the digest of every checkpoint entry up to its end.
+- **`research.backfilled`**: in the window, a retrieval receipt was added, the KB digest changed, or a new checkpoint entry holds a citation token that is not illustrative (`cite make`'s output placed in a note).
+- **`run.reflected`**: up to the window's end, an entry starts `reflection:` (any case); and there is a pending proposal, a KB change in the window (an accepted proposal is a record by then), or a line starting `no proposal`.
+- **`gate run`** evaluates the requirements over the current window and writes an ordinary receipt (`writfold-gate-receipt/1`): `class` `run-record`, `command.argv` `["run-record", <requirements>]`, exit status 0 when met and 1 otherwise (findings as notes), `subject.scope` the run-record digest, `subject.paths` the evidence count, `subject.commit` the subject's HEAD. It goes stale when the window's records change; a done step's window is closed, so its receipt keeps standing. `gate waive` binds the same digest; `gate attest` is refused; `gate verify` answers `unverifiable`.
+
+### 21.7 Receipt order without a clock
+
+`gate::state` takes "the newest receipt about the current subject". Receipts were ordered by `recorded` (a writer's clock), so two machines with skewed clocks could disagree. Receipts now carry `seq`: one more than the highest `seq` among the run's valid receipts of that gate on that subject when it was written. They are judged in (`seq`, file name) order; `recorded` is shown, never compared. A receipt without `seq` (written before this slice) reads as 0 and keeps its name order, so existing receipts stand unchanged; two clones that wrote the same `seq` concurrently are ordered by name, a total key on the files. The plan's own events need no order: each is about one node. Delivery receipts (19.4) still order by `recorded` (21.10).
+
+### 21.8 Tests
+
+- **Kernel** (`writfold-core/src/plan.rs`): over every list of up to four steps (open, done, skipped, both) and every met vector of up to three gates, `current` is the least open step; `advance_check` admits exactly the current step with every gate met, in the fixed refusal order (complete, not current, first owed gate); an admitted advance moves the current step strictly later; `stale` is exactly a done step with an owed gate.
+- **Units**: template parsing and refusals (`plan/template.rs`), event round trip and edits read as invalid (`plan/event.rs`), the requirements passing and failing and the digest moving with the records but not after the window (`plan/records.rs`), the `plan` arguments (`writfold-app`).
+- **Goldens and the walk** (`tests/plan.rs`; `tests/golden/plan-set.txt`, `plan-advance-refused.txt`, `plan-status-complete.txt`): before a plan `gate status` lists an extra gate, after `plan set` it does not; `plan set` twice writes nothing; `advance` is refused (exit 3, no file written) until `backfilled` passes, which fails before and passes after a ticket is written; `unit` open then satisfied; a code change makes the done `implement` step `[done] unit [stale] !stale` while `review` stays current and `research`'s run-record receipt still stands; `resume` shows `plan change#1/review [current] step 3/4 owes: review [open]`; an attestation, then `reflected` failing until a `reflection:` entry with a `no proposal` line; the complete status; a further advance is refused; `kb check` shows `check plan [clean]`.
+- **Order independence** (`tests/plan.rs`): with a done step, a skipped step and a hand-written invalid event, every rotation and reversal of the file listing folds to the same steps, windows, invalid list and current step; a Git clone of the KB answers `plan status` with the same rows.
+- **Receipt order**: an observed gate fails, then passes with a clock a day behind; it stands `satisfied`.
+- **Kill tests** (`tests/plan_faults.rs`): `plan set`, `plan advance` and `plan skip` each abort at each of the seven protocol steps; afterwards every event is absent or valid, a splice is never without its snapshot, leftovers are only `.tmp` names, `index verify` is equal, and a rerun completes (for `plan set`, over a leftover snapshot).
+- **Removing the check fails a test:** with `plan advance` judging every gate as met, `a_plan_is_walked_step_by_step` fails (checked by hand).
+
+### 21.9 Deviations
+
+- **`plan skip` is in this slice.** The review placed it with splicing; the task asked for `skip-` records, and it is a third create-new event of the same shape.
+- **Run-record gates are defined in files,** like other gates (`class = "run-record"`, `require = [...]`); `research.backfilled` and `run.reflected` are requirement names, not gate IDs (gate IDs are slugs). The guide's template names gates `backfilled` and `reflected`.
+- **"A KB record written"** is read as a change to the KB's files outside `runs/` within the window (the index's file digests), not attributed to the run: in a cooperating single-user KB another session's write in the same window also counts. Records carry no run ID.
+- **A citation counts once placed:** `cite make` writes nothing, so a citation is seen in a checkpoint entry (or as a KB change when placed in a record).
+- **No `kb reflect --note` verb:** a reflection is a checkpoint entry starting `reflection:`.
+- **The kernel is not yet in `start_from`**: it is written to the translation rules, and the proofs are a later slice.
+
+### 21.10 Not done
+
+- Splicing under a step (`plan use`, `--again`, `use=` includes), `!template-moved`, required steps spliced into every run, and a skill's dynamic-injection line (the next slice). The fold, node paths and splice key already take nested splices.
+- The session-start and compaction hooks showing the plan position.
+- Proofs of `writfold_core::plan`; `spec/RunGraph.tla`.
+- `seq` for delivery receipts (19.4), which still order by `recorded`; deliveries are not plan gates in this slice.
+- Delivery modes as a step's gates (a `deliver:<mode>` form); a candidate gate is refused on a step.
 
 ## 22. Proposals and kb check as built
 
@@ -1715,7 +1819,7 @@ writfold kb check [<project>|<path>]
 1. `stale [<project>|<path>]` (the scope given, else the whole KB);
 2. `index verify`;
 3. `gate status --run <current>` when the current-run pointer is set (the subject repository is the working directory, as for `gate status`), else a `skipped` row;
-4. the plan's status when a plan exists: **not built**. `check::plan` returns nothing today; it is the seam where the run graph adds a `plan` part.
+4. `plan status --run <current>` when the current run holds a plan (added by the run graph, 21.5); otherwise no row.
 
 It prints one row per area, `check <area> [clean|attention|refused|error|skipped] <that verb's own trailer, or its error>`, with a `next:` line naming the command that shows the detail whenever the area is not clean, then its own trailer (`checks=<ran> not_clean=<n>`). The exit code is the worst of the parts, in the order 0, 2, 3, 1 (an error is worst). Nothing is written beyond what `index verify` already writes. From `tests/golden/check.txt`:
 
@@ -1751,7 +1855,7 @@ Delivery candidates are not part of `check`: `deliver status` already reports th
 ### 22.6 Not done
 
 - `propose status|note`, `--because`, `proposals drop --older` and a `proposals:` line in `brief`.
-- The plan part of `kb check` (the seam above) and the `run.reflected` check that calls `for_run`.
+- (Built since, in 21.5 and 21.6: the plan part of `kb check` and the `run.reflected` check that calls `for_run`.)
 - An evaluation skill that fills the queue.
 
 ## 23. Weft assessed gate as built

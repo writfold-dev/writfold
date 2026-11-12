@@ -24,6 +24,7 @@ pub mod index;
 pub mod layout;
 pub mod model;
 pub mod parse;
+pub mod plan;
 pub mod proposal;
 pub mod runs;
 pub mod session;
@@ -102,6 +103,8 @@ pub enum Verb {
     Edit(edit::EditVerb),
     /// `deliver prepare|check|attest|waive|status` (G2; nothing is sent).
     Deliver(deliver::DeliverVerb),
+    /// `plan set|status|advance|skip` (the run graph, linear).
+    Plan(plan::PlanVerb),
     /// `propose …` and `proposals list|show|accept|drop` (the local queue).
     Proposal(proposal::ProposalVerb),
     /// `check [<project>|<path>]`: the existing checks composed.
@@ -141,6 +144,9 @@ pub fn run(request: &Request) -> Result<Output> {
     }
     if let Verb::Deliver(verb) = &request.verb {
         return deliver::execute(&ws, request, verb, now);
+    }
+    if let Verb::Plan(verb) = &request.verb {
+        return plan::execute(&ws, request, verb, now);
     }
     if let Verb::Proposal(verb) = &request.verb {
         return proposal::execute(&ws, request, verb, now);

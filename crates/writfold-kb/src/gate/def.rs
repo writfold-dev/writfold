@@ -17,7 +17,7 @@ pub const SCHEMA: &str = "writfold-gate/1";
 /// Where definitions live, under the KB root or the subject repository.
 pub const DIR: &str = ".writfold/gates";
 pub use places::ARTIFACTS;
-const KEYS: [&str; 14] = [
+const KEYS: [&str; 15] = [
     "schema",
     "id",
     "version",
@@ -32,12 +32,15 @@ const KEYS: [&str; 14] = [
     "weft",
     "checks",
     "weft_sha256",
+    "require",
 ];
 const MAX_TIMEOUT: i64 = 86_400;
 /// The class of a gate that is a statement, not a check.
 pub const ATTESTED: &str = "attested";
 /// The class of a gate met by a Weft assessment ([`super::assessed`]).
 pub const ASSESSED: &str = "assessed";
+/// The class of a check over the run's own records ([`crate::plan::records`]).
+pub const RUN_RECORD: &str = "run-record";
 
 /// Which root a definition was read from.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -88,6 +91,9 @@ pub struct Definition {
     pub origin: Origin,
     pub judges: Judges,
     pub instructions: Option<Instructions>,
+    /// A run-record gate's built-in requirements (`research.backfilled`,
+    /// `run.reflected`); empty for every other class.
+    pub require: Vec<String>,
     /// Files named through `{gate}/…` in `argv`, with their digests.
     pub files: Vec<(String, String)>,
     /// An assessed gate's Weft source, checks and binary pin.
@@ -108,6 +114,12 @@ impl Definition {
     /// An attested gate runs no command; only `gate attest` meets it.
     pub fn attested(&self) -> bool {
         self.class == ATTESTED
+    }
+
+    /// A run-record gate runs no command: `gate run` evaluates its
+    /// requirements over the run's own records.
+    pub fn run_record(&self) -> bool {
+        self.class == RUN_RECORD
     }
 
     /// Whether it judges delivery candidates rather than a repository.
@@ -192,10 +204,11 @@ fn command(
     class: &str,
     judges: Judges,
 ) -> Result<(Vec<String>, String, u64)> {
-    if class == ATTESTED || class == ASSESSED {
-        let runs = match class == ATTESTED {
-            true => "an attested gate runs nothing",
-            false => "an assessed gate runs only the pinned weft binary",
+    if class == ATTESTED || class == ASSESSED || class == RUN_RECORD {
+        let runs = match class {
+            ATTESTED => "an attested gate runs nothing",
+            ASSESSED => "an assessed gate runs only the pinned weft binary",
+            _ => "a run-record gate runs no command",
         };
         if let Some(key) = ["argv", "workdir", "timeout_seconds"]
             .into_iter()
@@ -222,6 +235,29 @@ fn command(
     let timeout_seconds = u64::try_from(int(map, "timeout_seconds", 1, MAX_TIMEOUT)?)
         .map_err(|_| bad("timeout_seconds".into()))?;
     Ok((argv, workdir, timeout_seconds))
+}
+
+/// `require`: the built-in requirements of a run-record gate, which judges
+/// the run's own records (so it takes no `scope` or `subject`); refused on
+/// every other class.
+fn require(map: &BTreeMap<String, Value>, class: &str) -> Result<Vec<String>> {
+    if class != RUN_RECORD {
+        return match map.contains_key("require") {
+            true => Err(bad(format!("require is for class = \"{RUN_RECORD}\""))),
+            false => Ok(Vec::new()),
+        };
+    }
+    if let Some(key) = ["scope", "subject"]
+        .into_iter()
+        .find(|k| map.contains_key(*k))
+    {
+        return Err(bad(format!(
+            "a run-record gate judges the run's own records: remove {key}"
+        )));
+    }
+    let require = list(map, "require")?;
+    crate::plan::records::known(&require).map_err(bad)?;
+    Ok(require)
 }
 
 /// `subject`: `repository` (the default) or `candidate`. A candidate gate
@@ -298,17 +334,17 @@ pub fn parse(text_in: &str, stem: &str, origin: Origin, dir: &Path) -> Result<De
         )));
     }
     let class = need(&map, "class")?;
-    if !matches!(
-        class.as_str(),
-        "mechanical" | "observed" | ATTESTED | ASSESSED
-    ) {
-        return Err(bad(
-            "class must be mechanical, observed, attested or assessed".into(),
-        ));
+    if !["mechanical", "observed", ATTESTED, ASSESSED, RUN_RECORD].contains(&class.as_str()) {
+        let why = "class must be mechanical, observed, attested, assessed or run-record";
+        return Err(bad(why.into()));
     }
+    let require = require(&map, &class)?;
     let judges = judges(&map, origin)?;
     let (argv, workdir, timeout_seconds) = command(&map, &class, judges)?;
-    let scope = scope(&map, judges, &class)?;
+    let scope = match class.as_str() {
+        RUN_RECORD => Vec::new(),
+        _ => scope(&map, judges, &class)?,
+    };
     let assessed = super::assessed::spec::parse(&map, &class, dir).map_err(bad)?;
     let description = text(&map, "description")?;
     if description
@@ -332,6 +368,7 @@ pub fn parse(text_in: &str, stem: &str, origin: Origin, dir: &Path) -> Result<De
         origin,
         judges,
         instructions: instructions(&map, dir)?,
+        require,
         files,
         assessed,
         dir: dir.to_path_buf(),
@@ -360,6 +397,9 @@ pub fn digest(d: &Definition) -> String {
     );
     if d.on_candidate() {
         canonical.push_str("subject=candidate\n");
+    }
+    if d.run_record() {
+        canonical.push_str(&format!("require={}\n", json(&d.require)));
     }
     if let Some(i) = &d.instructions {
         canonical.push_str(&format!("instructions={} {}\n", i.path, i.digest));

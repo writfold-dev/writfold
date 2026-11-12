@@ -97,12 +97,28 @@ fn parts(ws: &Workspace, request: &Request, scope: Option<&str>) -> Vec<Part> {
     parts
 }
 
-/// The plan's part. **Seam for the run graph:** when `plan status`
-/// exists, return its part here (area `plan`, command `writfold kb plan
-/// status`) when the current run holds a plan, and `None` when it holds
-/// none. Until then nothing is printed for the plan.
-pub fn plan(_ws: &Workspace, _request: &Request) -> Option<Part> {
-    None
+/// The plan's part: `plan status` of the current run when that run holds
+/// a plan (a `plan/` directory of events); `None` otherwise.
+pub fn plan(ws: &Workspace, request: &Request) -> Option<Part> {
+    let run = crate::proposal::state_of(ws).and_then(|state| runs::current(&state))?;
+    let events = ws
+        .root
+        .join("runs")
+        .join(&run)
+        .join(crate::plan::event::DIR);
+    if !events.is_dir() {
+        return None;
+    }
+    let verb = Verb::Plan(crate::plan::PlanVerb::Status {
+        run: Some(run.clone()),
+        repo: None,
+    });
+    Some(sub(
+        request,
+        "plan",
+        format!("writfold kb plan status --run {run}"),
+        verb,
+    ))
 }
 
 /// 0 best; then 2 (stale, partial, owed), 3 (refused), 1 (error) worst.
