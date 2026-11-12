@@ -14,6 +14,13 @@ static SUPERVISOR: LazyLock<std::result::Result<ProcessSupervisor, ProcessError>
     LazyLock::new(ProcessSupervisor::enable);
 const EXECUTABLE_LIMIT: u64 = 256 << 20;
 
+/// The process-wide supervisor every spawned command runs under.
+pub fn supervisor() -> Result<&'static ProcessSupervisor> {
+    SUPERVISOR
+        .as_ref()
+        .map_err(|error| KbError::Usage(format!("process supervision unavailable: {error}")))
+}
+
 /// The repository a KB root lives in. `prefix` is the root's path inside the
 /// work tree, empty or ending in `/`.
 #[derive(Clone, Debug)]
@@ -179,9 +186,7 @@ impl GitTool {
     }
 
     pub fn admit(&self) -> Result<GitExecutable<'_>> {
-        let supervisor = SUPERVISOR
-            .as_ref()
-            .map_err(|error| KbError::Usage(format!("process supervision unavailable: {error}")))?;
+        let supervisor = supervisor()?;
         Ok(GitExecutable::admit(
             &self.file,
             &self.digest,

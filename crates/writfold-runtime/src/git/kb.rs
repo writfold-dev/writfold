@@ -48,7 +48,7 @@ pub struct KbCommit {
     pub subject: String,
 }
 
-fn run(
+pub(super) fn run(
     executable: &GitExecutable<'_>,
     repository: KbRepository<'_>,
     args: &[&str],
@@ -78,7 +78,7 @@ fn run(
     Ok(output.stdout)
 }
 
-fn object_id(text: &str) -> Option<GitObjectId> {
+pub(super) fn object_id(text: &str) -> Option<GitObjectId> {
     let format = match text.len() {
         40 => GitObjectFormat::Sha1,
         64 => GitObjectFormat::Sha256,

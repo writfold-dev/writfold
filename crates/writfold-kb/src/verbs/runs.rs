@@ -4,10 +4,11 @@
 //! (the Writfold sidecar's `closed`, else the manifest's), where the work
 //! happens and its last checkpoint. `resume` shows one run: the run, its
 //! coverage counts, the items needing a recheck, its newest retrieval
-//! receipts (from `writfold tuft run`), and the newest checkpoint
-//! entry. With no run named it takes the current-run pointer, then the
-//! newest run of the project inferred from the working directory, then the
-//! newest open run. No liveness is claimed: there is no daemon.
+//! receipts (from `writfold tuft run`), the state of each defined gate
+//! (`writfold kb gate`), and the newest checkpoint entry. With no run
+//! named it takes the current-run pointer, then the newest run of the
+//! project inferred from the working directory, then the newest open run.
+//! No liveness is claimed: there is no daemon.
 use super::{BOUNDARY, brief, record_row};
 use crate::emit::{Answer, More, Row};
 use crate::error::Result;
@@ -141,6 +142,9 @@ pub fn resume(session: &Session<'_>, named: Option<&str>, cwd: &Path) -> Result<
         ));
     }
     answer.rows.extend(receipts);
+    let (gates, notes) = crate::gate::resume_rows(session, &rec, cwd);
+    answer.rows.extend(gates);
+    answer.notes.extend(notes);
     answer.rows.extend(tail);
     answer.rows.extend(drafts(session, &rec));
     if runs::state(session, &rec) == "closed" {

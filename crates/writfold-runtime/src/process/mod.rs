@@ -5,6 +5,7 @@ mod supervisor;
 
 pub use error::ProcessError;
 pub(crate) use runner::{Service, check_stop, run};
+pub use runner::{Tail, TailLimits, Tailed, TailedEnd, run_tailed};
 pub use supervisor::ProcessSupervisor;
 use writfold_domain::ByteCount;
 

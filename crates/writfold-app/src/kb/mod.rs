@@ -2,6 +2,7 @@
 //! parsing and exit codes only; every decision lives in `writfold-kb`.
 pub mod args;
 mod checkpoint;
+mod gate;
 mod hook;
 mod verbs;
 mod writes;
@@ -39,6 +40,16 @@ writes (atomic; they leave the work tree dirty for you to commit):
   status <id> --set STATE [--by WHO] [--superseded-by ID] [--note TEXT]
   cite make <repo> <path> <a-b> [--allow-dirty] [--sym S] [--ttl T]   (prints a token)
 
+gates (checks with pinned receipts; definitions in .writfold/gates/<id>.toml):
+  gate run <id> [--run ID] [--repo DIR]
+                                   run the command, record one receipt in the run
+  gate status [--run ID] [--repo DIR]
+                                   open, satisfied, stale, failed or unknown, per gate
+  gate verify <receipt> [--repo DIR]
+                                   re-run the recorded argv at the recorded commit: agree or disagree
+  gate lines [--run ID] [--repo DIR]
+                                   receipt lines for a commit message (exit 0 only if all satisfied)
+
 harness:
   hook session-start|pre-compact|post-compact|stop|session-end
                                    a Claude Code hook: event JSON on stdin; always exits 0;
@@ -46,7 +57,8 @@ harness:
 
 The KB root is --kb, else $WRITFOLD_KB, else the nearest directory above the
 working directory holding inventory/assets/. Git is $WRITFOLD_GIT or git on PATH.
-Exit codes: 0 complete, 2 partial/unknown/stale, 3 refused (or write conflict), 1 error.";
+Exit codes: 0 complete, 2 partial/unknown/stale (or a gate not satisfied), 3 refused
+(or write conflict), 1 error.";
 
 /// The process outcome: text for stdout, text for stderr, exit code.
 pub struct Outcome {

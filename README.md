@@ -83,6 +83,30 @@ manifest; a decision starts as a draft, and `status --set` refuses the
 decision transitions that need design-binding fields it does not compute
 (accepted, landing, applied, verified, regressed).
 
+Gates are checks with pinned receipts. A gate is a small TOML file,
+`.writfold/gates/<id>.toml`, in the KB root or in the repository it checks:
+an argv (never a shell string), a class (`mechanical` or `observed`), a
+timeout, and a path scope. `gate run` runs it on the repository and records
+one JSON receipt in the run, bound to the definition's digest, the commit and
+the content of the paths in scope. `gate status` derives each gate's state
+(`open`, `satisfied`, `stale`, `failed`, `unknown`) on every read; `resume`
+shows it too. A receipt goes stale when an in-scope path changes, so a docs
+edit leaves a test gate satisfied while a code edit does not. A timeout, crash
+or failure to start is `unknown`, never a pass.
+
+```sh
+writfold kb gate run unit             # this repository defines quality and unit (wrapping scripts/gate)
+writfold kb gate status               # exit 0 only when every gate is satisfied
+writfold kb gate verify runs/<run>/gates/<receipt>.json   # re-run at the recorded commit: agree or disagree
+writfold kb gate lines                # receipt lines for a commit message
+```
+
+This resists mistakes (a forgotten check, a check of other bytes, a stale
+"tests pass"), not adversaries: receipts are tracked files, so Git history
+shows an edited or hand-written one, and a receipt whose digest does not match
+reads as invalid, but nothing is signed. See the
+[G1 design as built](docs/writfold/kb-v1-design.md#16-g1-as-built).
+
 Every row read from a file ends with its path and line, flags (`!moved→5-7`,
 `!past-ttl`, `!draft` …) mark what to re-check, and the trailer is always last:
 
@@ -165,6 +189,7 @@ error. See [Tuft's KB adapter](docs/tuft/language.md#kb-adapter).
 | `writfold kb brief / context / why / status / find / match / impact / uses / timeline / stale / index` | Reads a Git KB of plain records; every row pinned to its file and line, moved citations flagged; the index is refreshed incrementally and verified equal to a rebuild | [KB v1 design](docs/writfold/kb-v1-design.md#11-m1-as-built) (sections 11 and 12), golden and property tests in `crates/writfold-kb/tests` |
 | `writfold kb checkpoint / resume / runs / record / status --set / cite make` | Writes checkpoints, runs, tickets, decisions, links and status changes atomically (old or new bytes after a kill at any step); prints citation tokens | [KB v1 design](docs/writfold/kb-v1-design.md#13-m3-as-built) (section 13), kill and fault tests in `crates/writfold-kb/tests/faults.rs`, TLC model `spec/KbWrite.tla` |
 | Claude Code plugin (`plugins/writfold`), `writfold kb hook`, `checkpoint --from-draft` | A KB brief at session start with no tool call; local checkpoint drafts at compaction, stop and session end; one skill teaching the verbs | [KB v1 design](docs/writfold/kb-v1-design.md#14-m4a-as-built) (section 14), golden tests in `crates/writfold-kb/tests/hook.rs`, `crates/writfold/tests/kb_hook.rs` |
+| `writfold kb gate run / status / verify / lines` | Runs a gate's argv on a repository and records one receipt in the KB run; derives open, satisfied, stale, failed or unknown from definitions and receipts; re-runs a receipt at its commit; prints receipt lines for a commit message | [KB v1 design](docs/writfold/kb-v1-design.md#16-g1-as-built) (section 16), golden, stale-transition and kill tests in `crates/writfold-kb/tests/gate.rs` and `gate_faults.rs`; the real `scripts/gate` has not yet been run through it |
 | `writfold trial prepare / approve / apply / recover / show` | One edit through a durable, validated ledger in Writfold's own sparse worktree; never your checkout | [trial profile](docs/writfold/trial-profile.md), [adversarial campaign](bench/2026-11-09-adversarial/) |
 | `writfold trial approve --require CHECK` | Refuses unless each named check of the bound Weft report is `entailed` (recorded as hypothetical, never as grounded) | proved: `required_entailed_spec` |
 | `writfold trial retain` | Keeps exact bytes of a file at a full commit id as a citation; reports citing anything else are refused | [trial profile](docs/writfold/trial-profile.md) |

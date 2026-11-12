@@ -1,0 +1,16 @@
+gate edits [stale] mechanical pass exit=0 at demo-service@bcacd8cac84e scope=bc90845b071e paths=1 @runs/run-20261101T090000Z-a1b2c3/gates/edits-20261111T000300Z-XXXXXX.json:1 !stale
+  why: changed in scope: src/retry.rs
+  next: writfold kb gate run edits
+gate fail [failed] mechanical fail exit=3 at demo-service@bcacd8cac84e scope=b16e7548f0cd paths=1 @runs/run-20261101T090000Z-a1b2c3/gates/fail-20261111T000100Z-XXXXXX.json:1 !failed
+  next: writfold kb gate run fail
+gate fresh [open] mechanical no receipt in this run for demo-service @.writfold/gates/fresh.toml:1 !open
+  next: writfold kb gate run fresh
+gate pass [satisfied] mechanical pass exit=0 at demo-service@bcacd8cac84e scope=2d91b0dbe7a9 paths=1 @runs/run-20261101T090000Z-a1b2c3/gates/pass-20261111T000000Z-XXXXXX.json:1
+gate slow [unknown] mechanical unknown timeout at demo-service@bcacd8cac84e scope=b16e7548f0cd paths=1 @runs/run-20261101T090000Z-a1b2c3/gates/slow-20261111T000200Z-XXXXXX.json:1 !unknown
+  next: writfold kb gate run slow
+gate crash [unknown] mechanical unknown signal at demo-service@bcacd8cac84e scope=b16e7548f0cd paths=1 @runs/run-20261101T090000Z-a1b2c3/gates/crash-20261111T000400Z-XXXXXX.json:1 !unknown
+  next: writfold kb gate run crash
+receipt fresh-20261111T010000Z-XXXXXX [invalid] not written by writfold gate run (its digest does not match its content) @runs/run-20261101T090000Z-a1b2c3/gates/fresh-20261111T010000Z-XXXXXX.json !invalid
+# note: receipts of run run-20261101T090000Z-a1b2c3 for demo-service; state is derived on every read, never stored
+# coverage=complete records=34/34 shown=7 omitted=0 gates=6 satisfied=1 open=1 stale=1 failed=1 unknown=2 invalid=1 kb=d5db758bda80+dirty:6 index=refreshed:1 cursor=none q=bfe0854a0d1f
+# exit=2

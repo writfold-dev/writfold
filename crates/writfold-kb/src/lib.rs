@@ -14,6 +14,7 @@
 pub mod draft;
 pub mod emit;
 pub mod error;
+pub mod gate;
 pub mod hook;
 pub mod index;
 pub mod layout;
@@ -89,6 +90,8 @@ pub enum Verb {
     },
     /// A write verb (`checkpoint`, `record`, `status --set`, `cite make`).
     Write(write::Write),
+    /// `gate run|status|verify|lines`.
+    Gate(gate::GateVerb),
 }
 
 /// One invocation.
@@ -113,6 +116,9 @@ pub fn run(request: &Request) -> Result<Output> {
     let now = request.now.unwrap_or_else(time::now);
     if let Verb::Write(write) = &request.verb {
         return write::execute(&ws, request, write, now);
+    }
+    if let Verb::Gate(verb) = &request.verb {
+        return gate::execute(&ws, request, verb, now);
     }
     let tool = match &ws.repo {
         Some(_) => Some(GitTool::locate()?),

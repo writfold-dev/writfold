@@ -1,0 +1,34 @@
+# Writfold's unit gate before pushing main (AGENTS.md): the workspace tests,
+# integration tests included, run by scripts/gate in the admitted tools
+# image. Its own receipt lands in the run's local artifacts directory,
+# outside the checkout as scripts/gate requires.
+#
+# Scope decision. scripts/gate binds the whole checkout while it runs: any
+# tracked or untracked file that changes during the run fails it, and
+# writfold kb gate records such a run as unknown. The scope below is only for
+# staleness afterwards. Tests read fixtures, handovers, specs and plugin
+# files as well as the crates, so the scope is everything except prose that
+# no test reads: docs/, the top-level Markdown files and LICENSE, the
+# plugin's skill text, the mutable qualification index, and the gate
+# definitions themselves (a changed definition makes its receipts stale
+# through the definition digest instead). scripts/gate's own definition
+# digest also covers two documents under docs/writfold/; they do not change
+# what the tests check, so they stay out of this scope. A docs-only change
+# leaves a unit receipt satisfied; a crate edit makes it stale.
+schema = "writfold-gate/1"
+id = "unit"
+version = 1
+class = "mechanical"
+argv = ["scripts/gate", "unit", "--receipt", "{artifacts}/unit.json"]
+workdir = "."
+timeout_seconds = 10800
+scope = [
+  "**",
+  "!docs/**",
+  "!*.md",
+  "!LICENSE",
+  "!plugins/writfold/skills/**",
+  "!qualification/status.json",
+  "!.writfold/**",
+]
+description = "cargo test over the workspace through scripts/gate"

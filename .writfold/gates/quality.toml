@@ -1,0 +1,37 @@
+# Writfold's quality gate before pushing main (AGENTS.md): rustfmt, clippy
+# with and without all features, and the xtask source, dependency-graph and
+# budget checks, run by scripts/gate in the admitted tools image. Its own
+# receipt lands in the run's local artifacts directory, outside the checkout
+# as scripts/gate requires.
+#
+# Scope decision. scripts/gate binds the whole checkout while it runs: any
+# tracked or untracked file that changes during the run fails it, and
+# writfold kb gate records such a run as unknown. The scope below is only for
+# staleness afterwards, and it is deliberately narrower: the inputs these
+# checks read. A change to docs/, README.md, AGENTS.md, the plugin's skill
+# text, the TLA+, Lean or bench trees leaves a quality receipt satisfied; a
+# change to a crate, the vendored Splicery source, a Cargo file, a toolchain
+# pin, the gate scripts, the Docker inputs or the qualification inputs makes
+# it stale. If quality starts reading another path, add it here.
+schema = "writfold-gate/1"
+id = "quality"
+version = 1
+class = "mechanical"
+argv = ["scripts/gate", "quality", "--receipt", "{artifacts}/quality.json"]
+workdir = "."
+timeout_seconds = 7200
+scope = [
+  "crates/**",
+  "vendor/**",
+  "Cargo.toml",
+  "Cargo.lock",
+  "rust-toolchain.toml",
+  "toolchains.lock.json",
+  "compose.yaml",
+  ".dockerignore",
+  "docker/**",
+  "scripts/**",
+  "qualification/**",
+  "!qualification/status.json",
+]
+description = "rustfmt, clippy and the xtask quality checks through scripts/gate"

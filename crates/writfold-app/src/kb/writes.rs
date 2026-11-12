@@ -8,8 +8,9 @@ use writfold_kb::write::record::{Decision, Link, Ticket};
 use writfold_kb::write::status::SetStatus;
 
 /// Flags that take a value.
-pub const VALUES: [&str; 23] = [
+pub const VALUES: [&str; 24] = [
     "note",
+    "repo",
     "from-draft",
     "run",
     "task",
@@ -58,6 +59,7 @@ pub fn allowed(verb: &str) -> &'static [&'static str] {
         ],
         "status" => &["set", "by", "superseded-by", "note"],
         "cite" => &["allow-dirty", "sym", "ttl"],
+        "gate" => &["run", "repo"],
         _ => &[],
     }
 }

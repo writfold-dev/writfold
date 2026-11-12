@@ -1,6 +1,6 @@
 # Writfold KB v1: design
 
-Status: proposal, 11 November 2026; M1, M2, M3, M4a and the Tuft adapter implemented (see [section 11](#11-m1-as-built), [section 12](#12-m2-as-built), [section 13](#13-m3-as-built), [section 14](#14-m4a-as-built) and [section 15](#15-tuft-adapter-as-built) for what was built and where it differs). Scope: the `writfold kb` product core for Git-native project continuity. Git text is the source of truth; a local SQLite file is a derived, rebuildable index. No server, no companion process.
+Status: proposal, 11 November 2026; M1, M2, M3, M4a, the Tuft adapter and G1 implemented (see [section 11](#11-m1-as-built), [section 12](#12-m2-as-built), [section 13](#13-m3-as-built), [section 14](#14-m4a-as-built), [section 15](#15-tuft-adapter-as-built) and [section 16](#16-g1-as-built) for what was built and where it differs). Scope: the `writfold kb` product core for Git-native project continuity. Git text is the source of truth; a local SQLite file is a derived, rebuildable index. No server, no companion process.
 
 A cold session must be able to answer four questions, each pinned to a source and flagged when the source has moved:
 - why did we decide X;
@@ -77,6 +77,7 @@ The compact locator form `<repo>@<commit>:<path>[:a-b]` appears in relationship 
 - a single front-matter field change (status, `updated`, `superseded_by`, `decided_by`);
 - a new run `manifest.json`;
 - an appended `checkpoint.md` entry: blank line, `## <UTC timestamp>`, blank line, note.
+- a new gate receipt, `runs/<id>/gates/<gate>-….json`, written only by `gate run` (G1, section 16).
 
 Citation tokens are written only by `cite make`; advisory fields only by `stale --mark` (later).
 
@@ -1059,6 +1060,175 @@ Owner decision, 12 November 2026: Tuft stays frozen at v0 as a language and gain
 - `tuft run` has no `--no-record`; leaving a run (`kb status <run> --set closed`) or running outside the KB stops receipts.
 - The receipt's citations are not re-checked when written; `stale` checks them later. Receipts from many runs accumulate in `stale`'s KB-wide pass.
 - No latency was measured for the adapter; a receipt costs one KB write (13.9) plus one blob read for the cited files.
+
+## 16. G1 as built
+
+G1 adds executable checks with pinned receipts, as the mission's "Gates, runs and progress" decision (12 November 2026) asks: definitions in TOML, `gate run` writing one receipt per evaluation into the run, `gate status` deriving each gate's obligation state, `gate verify` re-running a receipt, and a helper printing receipt lines for a commit message. The first customer is Writfold's own push to main. New code: `crates/writfold-kb/src/gate/{mod,def,toml,subject,exec,receipt,status,run,verify}.rs`, the pure kernel `crates/writfold-core/src/gate.rs`, the supervised runner `crates/writfold-runtime/src/process/tailed.rs`, the Git commands `crates/writfold-runtime/src/git/gate.rs`, the arguments in `crates/writfold-app/src/kb/gate.rs`, and this repository's `.writfold/gates/{quality,unit}.toml`.
+
+### 16.1 Verbs
+
+```text
+writfold kb gate run <id> [--run ID] [--repo DIR]      run the command, record one receipt
+writfold kb gate status [--run ID] [--repo DIR]        derive every gate's state
+writfold kb gate verify <receipt> [--repo DIR]         re-run it at its commit: agree or disagree
+writfold kb gate lines [--run ID] [--repo DIR]         receipt lines for a commit message
+```
+
+- **The run** is `--run`, else the current-run pointer; with neither, the verb refuses (exit 3) and names `checkpoint --new-run`. `gate run` refuses a closed run.
+- **The subject repository** is `--repo DIR`; else the repository enclosing the working directory, unless that is the KB's own; else the run's recorded worktree (13.3) when it exists on this machine; else the KB's repository. Its name is the KB repository map's name for it, else its origin URL's last path segment, else its directory name, so worktrees of one repository share a name. Receipts are matched to a subject by that name.
+- **Exit codes** follow 3.1. `gate status` exits 0 only when every gate is satisfied and nothing is invalid; otherwise 2, with counts in the trailer (`gates= satisfied= open= stale= failed= unknown= invalid=`). `gate run` exits 0 on a pass and 2 otherwise. `gate verify` exits 0 on agree and 2 on disagree, inconclusive or unverifiable. `gate lines` exits 0 only when every gate is satisfied.
+- **`resume`** shows one row per defined gate, the same rows as `gate status`, between the retrieval receipts and the checkpoint tail. With no gate defined anywhere it shows nothing, so KBs without gates read as before. A failure to evaluate gates becomes a note; it never fails `resume`.
+
+### 16.2 Definitions
+
+A definition is `.writfold/gates/<id>.toml`, in the KB root (shared by every project, and present on any machine that clones the KB) or in the subject repository (versioned with the code it checks). A dot directory is never a project (1.2), and the index ignores it. The same ID in both places is an error, reported as an invalid definition.
+
+```toml
+schema = "writfold-gate/1"         # required; the version of this schema
+id = "unit"                        # required; a slug equal to the file name
+version = 1                        # required; the author's own revision number
+class = "mechanical"               # required; mechanical | observed
+argv = ["scripts/gate", "unit", "--receipt", "{artifacts}/unit.json"]   # required; never a shell string
+workdir = "."                      # optional; relative to the subject repository's top
+timeout_seconds = 10800            # required; 1 to 86400
+scope = ["**", "!docs/**", "!*.md"]   # required; the paths whose changes make a receipt stale
+description = "…"                  # optional; one line, not part of the digest
+```
+
+- **Classes.** `mechanical` is a deterministic check of the subject's bytes (build, tests, lint). `observed` is a command whose result also depends on the world (a service answering, a file elsewhere). Both are run by Writfold itself; the class is recorded and shown on every row, so the two are never confused. `assessed` and `attested` are not in G1 and are refused.
+- **The TOML subset** (`gate/toml.rs`): top-level `key = value` lines, comments, basic and literal strings, decimal integers, and arrays of strings that may span lines. Tables, dotted or quoted keys, booleans, floats, dates, multi-line strings and inline tables are refused with their line. Unknown keys are refused, so a misspelt field never silently changes a gate. Every file in the subset is valid TOML with the same meaning. No TOML crate entered (16.12).
+- **`argv`** is executed directly. A first element containing `/` is resolved against `workdir`; otherwise `PATH` finds it. `{artifacts}` is the only placeholder: a fresh local directory for the command's own output files (16.4). Any other `{name}` is refused, so a typo cannot pass through as text.
+- **`scope`** patterns are anchored at the top of the subject repository: `*` and `?` match within one path segment, a `**` segment matches any number of segments (none included), and a leading `!` excludes. A path is in scope when some pattern matches it and no exclusion does. `README.md` names only the top-level file; `**/*.md` names every Markdown file.
+- **The definition digest** is SHA-256 over a fixed form of every field except `description`. Comments, layout and the description can change without making receipts stale; any change to the command, working directory, timeout, class, version or scope does.
+
+### 16.3 Subject and scope digest
+
+A gate's subject is the repository's HEAD commit plus the content of the paths in its scope. Observing it costs one `status --porcelain=v2` (HEAD and the dirty paths), one `ls-tree -r` of HEAD, and one `hash-object --stdin-paths` over the dirty files in some gate's scope (Git's own blob IDs, with the repository's filters, writing nothing).
+
+- **The scope digest** is SHA-256 over every in-scope path and its blob ID, where a dirty file counts as the blob Git would store for its work-tree bytes and a deleted file is absent. This is `stale`'s blob comparison (6.2, step 3) applied to a set of paths instead of one span. Two properties follow and are tested: committing the exact bytes a receipt was taken on leaves it satisfied, and reverting to them makes it satisfied again.
+- **The receipt also binds** the commit, the number of dirty in-scope paths, and a digest of those paths and their blob IDs, so a receipt taken on a dirty tree says so (`+dirty:N` in every row).
+- **Why a stale row is stale.** For a scope change, `gate status` names up to five in-scope paths that differ (`diff-tree` between the receipt's commit and HEAD, plus the dirty ones), or says the receipt's commit is not in this clone. For a definition change, it says so.
+
+### 16.4 Running
+
+- **Supervision** (`writfold-runtime`'s `process::run_tailed`): the command runs in its own process group under the KB's process supervisor (the same child-subreaper the Git reads use), with stdin at end of file and the user's environment plus `WRITFOLD_GATE` and `WRITFOLD_GATE_ARTIFACTS`. At the deadline the group gets TERM, then KILL after 5 s. When the leader exits, the rest of its group is killed and reaped, so nothing the command started outlives it. A non-zero exit, a signal or a timeout is a result, not an error.
+- **Output** is kept as bounded tails: the last 64 KiB of stdout and of stderr, with the total byte counts. The tails, and the `{artifacts}` directory, are local and untracked, under `<KB git dir>/writfold/gates/<run>/<receipt>/`. Logs can be large and can hold secrets, so the receipt records only their digests and sizes.
+- **The subject is observed before and after.** If the commit or the scope digest moved while the command ran, the outcome is `unknown`: the result is about no single subject.
+- **The outcome** is the kernel's `writfold_core::gate::outcome`: exit status 0 is `pass`, any other exit status is `fail`, and a signal, a timeout or a failure to start is `unknown`, never `pass`.
+
+### 16.5 Receipts
+
+One JSON file per evaluation, `runs/<run>/gates/<gate>-<UTC compact time>-<6 hex>.json`, written create-new as one `Op::Create` through the 13.2 protocol (lock, guard, synced temporary, `link` publish, directory sync). No protocol step or operation kind was added. Receipts are a log: a rerun adds a file, never replaces one. The prototype reads only `receipts/` (its own numbered JSON) and never `gates/`; Writfold's index scans the file as a JSON document.
+
+| Field | Content |
+|---|---|
+| `schema` | `writfold-gate-receipt/1` |
+| `gate`, `version`, `class` | from the definition |
+| `definition` | `digest`, `origin` (`kb` or `repo`), `path`, and the `scope` patterns |
+| `run` | the run ID |
+| `subject` | `repo` (name), `commit`, `scope` (digest), `paths` (count in scope), `dirty`, `dirty_digest` |
+| `command` | `argv` as written (with `{artifacts}`, so no local path is tracked), `workdir`, `timeout_seconds` |
+| `result` | `outcome`, `exit_code`, `signal`, `timed_out`, `error`, `subject_moved`, `duration_ms` |
+| `output` | for stdout and stderr: `bytes` written, `tail_bytes` kept, `tail` digest |
+| `evaluator` | `writfold <version>`: only `gate run` writes receipts; there is no verb for an agent to write one |
+| `recorded` | UTC time |
+| `digest` | SHA-256 of all the fields above in canonical JSON (sorted keys, no spaces) |
+
+**Reading a receipt** checks the schema, the digest, the evaluator, every field's type, that `run` and the file name's gate prefix match where the file is filed, that exactly one of exit status, signal, timeout or error is set, and that the stated outcome is the one the kernel derives from them. A receipt failing any check is listed as `receipt <name> [invalid] <why> !invalid` and counts for nothing. A hand-edited outcome, a hand-written file without the right digest, and a real receipt copied under another gate's name are all invalid (tested).
+
+### 16.6 Obligation state
+
+The kernel `writfold_core::gate::state` takes a gate's valid receipts for the subject, oldest first, each reduced to its outcome, whether its definition digest equals the current one, and whether its scope digest equals the present one:
+
+| Receipts | State |
+|---|---|
+| none | `open` |
+| the newest about the current definition and scope passed | `satisfied` |
+| the newest about the current definition and scope failed | `failed` |
+| the newest about the current definition and scope is unknown | `unknown` |
+| some, but none about the current definition and scope | `stale` |
+
+"Newest about the current subject" (rather than simply the newest) means a revert to bytes a receipt covered is satisfied again without a rerun. State is never stored: every read recomputes it. `waived` (in the mission's list) is G2's.
+
+### 16.7 `gate verify`
+
+`gate verify runs/<run>/gates/<receipt>.json` re-runs the receipt's recorded argv, working directory and timeout (not the current definition) at its recorded commit, in a temporary detached worktree of the subject (`git worktree add --detach` under the system temporary directory, removed afterwards, with a plain delete as a fallback). It recomputes the scope digest there with the receipt's patterns, runs the command with a fresh local `{artifacts}` directory, and compares:
+
+- **agree**: the same `pass` or `fail`, and the commit's in-scope content equals the receipt's;
+- **disagree**: a different `pass` or `fail`, or different in-scope content;
+- **inconclusive**: either outcome is `unknown`;
+- **unverifiable**: the receipt was taken on a dirty subject (no commit reproduces it), or its commit is not in this clone.
+
+The repository is `--repo`, else the KB's repository map or `$WRITFOLD_KB_REPOS`, else the repository here when its name matches. Nothing is written to the KB.
+
+### 16.8 First customer: Writfold's push to main
+
+This repository now carries `.writfold/gates/quality.toml` and `.writfold/gates/unit.toml`. Each wraps `scripts/gate quality|unit --receipt {artifacts}/<gate>.json`, so `scripts/gate`'s own receipt lands in the run's local artifacts directory, outside the checkout as `scripts/gate` requires.
+
+- **The scope decision is written in each file.** `scripts/gate` binds the whole checkout while it runs: any change fails it, and `gate run` records such a run as `unknown`. The definitions' scopes are only for staleness afterwards, and are deliberately narrower. `quality` covers the inputs its checks read (crates, the vendored source, Cargo files, toolchain pins, gate scripts, Docker and qualification inputs). `unit` covers everything except prose no test reads (`docs/`, top-level Markdown, `LICENSE`, the plugin's skill text, the mutable qualification index, and the gate definitions themselves). A docs-only change leaves both satisfied; a crate edit makes both stale.
+- **The flow:**
+
+  ```sh
+  writfold kb checkpoint --new-run --project writfold --task "Push <change>" --note "…"   # once per piece of work
+  git ls-files -z | xargs -0 touch          # as AGENTS.md says, from main
+  writfold kb gate run quality
+  writfold kb gate run unit
+  writfold kb gate status                   # exit 0 only when both are satisfied
+  writfold kb gate lines                    # paste into the commit message
+  ```
+
+  `gate lines` prints, for example:
+
+  ```text
+  Gates for writfold@3ae9a27f0c1d (writfold kb gate, run run-20261112T…): 2 of 2 satisfied
+  quality: satisfied pass exit=0 runs/run-20261112T…/gates/quality-20261112T120000Z-1a2b3c.json
+  unit:    satisfied pass exit=0 runs/run-20261112T…/gates/unit-20261112T130500Z-4d5e6f.json
+  ```
+
+  The KB receipts are tracked once the KB is committed; `scripts/gate`'s own receipt and logs stay in the local artifacts directory.
+- **Not run here.** The real `scripts/gate` was not run for this slice (the task forbids it from a worktree); the tests use fixture gates that run `true`, `false`, `sh -c`, `sleep` and `grep`.
+
+### 16.9 What is claimed
+
+- **Mistake resistance, not adversary resistance.** The gate catches a forgotten check, a check run on other bytes, and a "tests pass" that is stale. It does not stop someone who sets out to cheat: the receipt digest is computed by a program anyone can run, so a careful forger can write a receipt that reads as valid.
+- **Tamper evidence through Git.** Receipts and definitions are tracked text. A weakened definition or an edited or hand-written receipt appears in a diff the owner reviews, and the digest makes careless edits read as invalid.
+- **Reproducibility instead of signatures.** `gate verify` re-runs the recorded command at the recorded commit. CI doing that on the pushed commit is the one check the agent cannot forge; that is not built here.
+- **No signing**, no authority levels, and no guard hook (G2b).
+
+### 16.10 Tests
+
+- **Kernel** (`writfold-core/src/gate.rs`): glob semantics and exclusions; only a clean zero exit passes, and a moved subject is always unknown; and over every sequence of up to three receipts drawn from all outcome and match combinations, the state is satisfied exactly when the newest receipt about the current subject passed, and stale exactly when no receipt is about the current subject.
+- **Goldens** (`crates/writfold-kb/tests/gate.rs`, files `tests/golden/gate-status.txt` and `gate-lines.txt`): one status covering `satisfied`, `failed`, `unknown` (a timeout and a SIGSEGV), `stale` (with the changed path), `open` and an invalid hand-written receipt, with definitions from both the KB and the repository; the same run's `gate lines`; `resume` from inside the subject showing the gate rows; `index verify` equal afterwards.
+- **Stale transitions:** a dirty and then a committed docs change leaves `unit` satisfied; a dirty and then a committed code change makes it stale and names `src/ledger.rs`; reverting the bytes satisfies it again; a run on a dirty tree stays satisfied once those bytes are committed; a changed definition makes the receipt stale.
+- **Never satisfied:** a timeout (with a background child, checked to be stopped), a SIGKILL, a program that does not exist and an exit status of 1 each record `unknown` or `fail`, exit 2, and never `"outcome": "pass"`.
+- **Invalid receipts:** an edited outcome, a hand-written file and a misfiled real receipt are listed as invalid and change no state.
+- **`verify`:** agree, then disagree after the world changed, with no worktree left behind; a dirty-subject receipt is unverifiable.
+- **Kill tests** (`tests/gate_faults.rs`): `gate run` aborts at each of the seven protocol steps; afterwards a receipt is absent (before `published`) or present and valid, leftovers are only `.tmp` names, `index verify` is equal, and a rerun records a valid receipt that satisfies the gate.
+- **Removing the check fails a test.** With the scope comparison removed from `writfold_core::gate::state`, the kernel property test, the golden and the docs-versus-code test fail (checked by hand; three tests).
+- **Arguments** (`writfold-app/src/kb/gate.rs`): the four verbs, and the refusals.
+
+### 16.11 Latency and build
+
+On the WSL2 workstation, with the static musl release binary, a scratch KB, and this repository (2,542 tracked files) as the subject: `gate status` with three gates 30 ms, `resume` with gate rows 30 ms, `gate run` of a trivial gate 90 to 100 ms (two subject observations, the command, the KB write and the answer). A `gate verify` with a full worktree checkout of this repository took 1.0 s with the debug binary.
+
+The static musl binary builds offline in the tools image (`cargo build -p writfold --release --target x86_64-unknown-linux-musl --locked --offline`; `file`: `static-pie linked`; `ldd`: `statically linked`). No new crate entered.
+
+### 16.12 Deviations
+
+- **No TOML crate.** None is in the workspace or the lock file, and a full parser would bring a closure of new crates to fetch and classify. Definitions use the strict subset in 16.2, parsed by `gate/toml.rs` (about 250 lines with its tests); anything outside it is refused, never guessed.
+- **Definitions are read from the subject repository as well as the KB root.** The mission names the KB repository's `.writfold/`; the task places Writfold's own gates in this repository. Running a definition from a repository you cloned runs its command, as `make` would; G1 has no trust step (the review's `gate trust`), because `gate run` only ever runs a gate named on its command line.
+- **Receipt names** carry the UTC time and six random hex digits, like retrieval receipts, rather than a sequence number, so two clones never write the same path.
+- **Output tails stay local.** The review suggested a short tail in the receipt; it holds only digests and sizes, since logs can hold secrets and the receipt is shared.
+- **No `--checkpoint` requirement sets** (`checkpoints.toml`): every defined gate is an obligation of every run on that subject. `gate status` takes `--run`, not `--checkpoint`.
+- **`brief`** does not show gates; `resume` does.
+
+### 16.13 Not done
+
+- `waived` receipts and G2's delivery candidates; the G2b guard hook; CI running `gate verify` on pushed commits.
+- A trust step for repository-local definitions; requirement sets per checkpoint.
+- Pruning the local tails and artifacts directories (`<KB git dir>/writfold/gates/`); delete them by hand.
+- Counting catches and waivers for the two-week pause (the receipts hold what is needed: a `fail` followed by a `pass` of the same gate is a catch).
+- The real `scripts/gate` through `gate run` (16.8).
 
 ---
 

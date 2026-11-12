@@ -40,6 +40,7 @@ pub mod authority;
 pub mod bytes;
 pub mod convenience;
 pub mod flow;
+pub mod gate;
 pub mod ledger;
 pub mod publication;
 pub mod trial;
