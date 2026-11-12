@@ -294,12 +294,20 @@ fn sigkill_at_random_moments() -> TestResult {
         .ok()
         .and_then(|v| v.parse().ok())
         .unwrap_or(40);
-    for _ in 0..rounds {
+    for round in 0..rounds {
         rng ^= rng << 13;
         rng ^= rng >> 7;
         rng ^= rng << 17;
         let mut child = spawn(&w.kb, "loop", None)?;
-        std::thread::sleep(Duration::from_millis(20 + rng % 180));
+        // The last round waits long enough for at least one write to finish
+        // even on a loaded machine (the unit gate runs tests in parallel), so
+        // "some write completed" checks progress, not scheduling luck.
+        let wait = if round + 1 == rounds {
+            5_000
+        } else {
+            20 + rng % 180
+        };
+        std::thread::sleep(Duration::from_millis(wait));
         child.kill()?;
         child.wait()?;
         let text = read(&w.kb, &format!("runs/{RUN}/checkpoint.md")).ok_or("checkpoint")?;
