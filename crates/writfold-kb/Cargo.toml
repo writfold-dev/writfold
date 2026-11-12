@@ -22,3 +22,7 @@ thiserror.workspace = true
 
 [lints]
 workspace = true
+
+[features]
+# Manual check against a real Weft binary ($WRITFOLD_TEST_WEFT); not in the unit gate.
+real-weft = []

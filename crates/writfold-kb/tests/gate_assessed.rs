@@ -3,17 +3,17 @@
 //! SHA-256; `gate run` grounds each assumption's citations, runs Weft and
 //! records a receipt; a check is met only when entailed from grounded
 //! assumptions. Most tests use the labelled TEST DOUBLE (`assessed`); the
-//! test marked `#[ignore]` runs a real Weft binary named by
-//! `$WRITFOLD_TEST_WEFT`:
-//! `WRITFOLD_TEST_WEFT=/path/to/weft cargo test -p writfold-kb --test gate_assessed -- --ignored`.
+//! test behind the opt-in `real-weft` feature runs a real Weft binary named
+//! by `$WRITFOLD_TEST_WEFT`. It is a manual check, not part of the unit gate
+//! (which counts an ignored test as skipped, never as passed):
+//! `WRITFOLD_TEST_WEFT=/path/to/weft cargo test -p writfold-kb --features real-weft --test gate_assessed`.
 mod assessed;
 mod support;
 
 use assessed::{
     RUN, SOURCE, assess, define, double, gate, golden, put, receipts, sha, state_of, status, unit,
 };
-use std::path::PathBuf;
-use support::{NOW, TestResult, git, world};
+use support::{NOW, TestResult, world};
 use writfold_kb::Verb;
 use writfold_kb::gate::GateVerb;
 
@@ -277,9 +277,11 @@ fn a_source_submitted_in_the_run_is_read_from_the_run() -> TestResult {
 
 /// Against the real Weft binary: the grounded pass, then the same check
 /// hypothetical once its cited gate is stale.
+#[cfg(feature = "real-weft")]
 #[test]
-#[ignore = "needs WRITFOLD_TEST_WEFT, a built weft binary"]
 fn the_real_weft_binary_meets_and_refuses() -> TestResult {
+    use std::path::PathBuf;
+    use support::git;
     let weft = PathBuf::from(std::env::var("WRITFOLD_TEST_WEFT")?);
     let w = world(&[])?;
     define(&w, &sha(&weft)?, &[("ship", "{gate}/step.weft", "ready")])?;
