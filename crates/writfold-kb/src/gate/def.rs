@@ -17,7 +17,7 @@ pub const SCHEMA: &str = "writfold-gate/1";
 /// Where definitions live, under the KB root or the subject repository.
 pub const DIR: &str = ".writfold/gates";
 pub use places::ARTIFACTS;
-const KEYS: [&str; 11] = [
+const KEYS: [&str; 14] = [
     "schema",
     "id",
     "version",
@@ -29,10 +29,15 @@ const KEYS: [&str; 11] = [
     "description",
     "instructions",
     "subject",
+    "weft",
+    "checks",
+    "weft_sha256",
 ];
 const MAX_TIMEOUT: i64 = 86_400;
 /// The class of a gate that is a statement, not a check.
 pub const ATTESTED: &str = "attested";
+/// The class of a gate met by a Weft assessment ([`super::assessed`]).
+pub const ASSESSED: &str = "assessed";
 
 /// Which root a definition was read from.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -85,6 +90,8 @@ pub struct Definition {
     pub instructions: Option<Instructions>,
     /// Files named through `{gate}/…` in `argv`, with their digests.
     pub files: Vec<(String, String)>,
+    /// An assessed gate's Weft source, checks and binary pin.
+    pub assessed: Option<super::assessed::Spec>,
     /// The directory holding the definition: what `{gate}` expands to.
     pub dir: PathBuf,
     /// `.writfold/gates/<id>.toml`, relative to its root.
@@ -185,14 +192,24 @@ fn command(
     class: &str,
     judges: Judges,
 ) -> Result<(Vec<String>, String, u64)> {
-    if class == ATTESTED {
+    if class == ATTESTED || class == ASSESSED {
+        let runs = match class == ATTESTED {
+            true => "an attested gate runs nothing",
+            false => "an assessed gate runs only the pinned weft binary",
+        };
         if let Some(key) = ["argv", "workdir", "timeout_seconds"]
             .into_iter()
+            .filter(|k| class == ATTESTED || *k != "timeout_seconds")
             .find(|k| map.contains_key(*k))
         {
-            return Err(bad(format!("an attested gate runs nothing: remove {key}")));
+            return Err(bad(format!("{runs}: remove {key}")));
         }
-        return Ok((Vec::new(), ".".into(), 0));
+        let timeout = match class == ASSESSED {
+            true => u64::try_from(int(map, "timeout_seconds", 1, MAX_TIMEOUT)?)
+                .map_err(|_| bad("timeout_seconds".into()))?,
+            false => 0,
+        };
+        return Ok((Vec::new(), ".".into(), timeout));
     }
     let argv = list(map, "argv")?;
     placeholders(&argv, judges)?;
@@ -222,7 +239,15 @@ fn judges(map: &BTreeMap<String, Value>, origin: Origin) -> Result<Judges> {
 
 /// `scope`: required for a repository gate, refused for a candidate gate
 /// (whose subject is the candidate's bytes).
-fn scope(map: &BTreeMap<String, Value>, judges: Judges) -> Result<Vec<String>> {
+fn scope(map: &BTreeMap<String, Value>, judges: Judges, class: &str) -> Result<Vec<String>> {
+    if class == ASSESSED {
+        return match map.contains_key("scope") || judges == Judges::Candidate {
+            true => Err(bad(
+                "an assessed gate judges its Weft source and cited evidence: remove scope and subject".into(),
+            )),
+            false => Ok(Vec::new()),
+        };
+    }
     if judges == Judges::Candidate {
         if map.contains_key("scope") {
             return Err(bad(
@@ -273,12 +298,18 @@ pub fn parse(text_in: &str, stem: &str, origin: Origin, dir: &Path) -> Result<De
         )));
     }
     let class = need(&map, "class")?;
-    if !matches!(class.as_str(), "mechanical" | "observed" | ATTESTED) {
-        return Err(bad("class must be mechanical, observed or attested".into()));
+    if !matches!(
+        class.as_str(),
+        "mechanical" | "observed" | ATTESTED | ASSESSED
+    ) {
+        return Err(bad(
+            "class must be mechanical, observed, attested or assessed".into(),
+        ));
     }
     let judges = judges(&map, origin)?;
     let (argv, workdir, timeout_seconds) = command(&map, &class, judges)?;
-    let scope = scope(&map, judges)?;
+    let scope = scope(&map, judges, &class)?;
+    let assessed = super::assessed::spec::parse(&map, &class, dir).map_err(bad)?;
     let description = text(&map, "description")?;
     if description
         .as_deref()
@@ -302,6 +333,7 @@ pub fn parse(text_in: &str, stem: &str, origin: Origin, dir: &Path) -> Result<De
         judges,
         instructions: instructions(&map, dir)?,
         files,
+        assessed,
         dir: dir.to_path_buf(),
         digest: String::new(),
     };
@@ -334,6 +366,9 @@ pub fn digest(d: &Definition) -> String {
     }
     for (path, file) in &d.files {
         canonical.push_str(&format!("file={path} {file}\n"));
+    }
+    if let Some(spec) = &d.assessed {
+        canonical.push_str(&spec.canonical());
     }
     format!(
         "sha256:{}",

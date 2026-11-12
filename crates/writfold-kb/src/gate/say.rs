@@ -50,6 +50,12 @@ pub(super) fn record(
         })?;
     drop(session);
     let definition = def::find_repository(&ws.root, Some(&subject.top), &say.id)?;
+    if definition.assessed.is_some() {
+        return Err(KbError::Refused(format!(
+            "gate {} is assessed: only gate run, with every required Weft check entailed from grounded assumptions, meets it (statements about an assessed gate are not built)",
+            say.id
+        )));
+    }
     if say.kind == Kind::Attested && !definition.attested() {
         return Err(KbError::Refused(format!(
             "gate {} is a {} check: only a passing gate run satisfies it (gate waive sets it aside, with a reason)",
@@ -108,7 +114,7 @@ fn answer(
         .as_ref()
         .ok_or_else(|| KbError::Refused("gates need Git".into()))?;
     let filings = Filings::read(&ws.root, &runs::dir(rec), &rec.id);
-    let report = status::judge(git, &ws.root, subject, &filings)?;
+    let report = status::judge(&session, subject, &filings)?;
     let mut answer = Answer {
         rows: status::rows(git, subject, &report, &filings)?
             .into_iter()

@@ -93,7 +93,9 @@ These are gates, not Claude Code hooks. A run that never advances past `reflect`
 
 ## Weft on a step
 
-A step may require a Weft assessment. The agent submits a Weft file stating the step's assumptions and checks; each assumption may cite a Writfold receipt or citation. Writfold resolves those citations, runs the pinned `weft` binary and records an assessed receipt. A check counts as met only when Weft entails it from assumptions Writfold has confirmed; one that rests on an unconfirmed assumption is reported as hypothetical and does not meet the gate. To the advance decision this is one more gate: met or not met.
+> **Built:** the gate itself, class `assessed` ([gates](gates.md#weft-assessed-gates)). Naming it on a step waits for the run graph above.
+
+A step may require a Weft assessment: it owes a gate of class `assessed`. The agent submits a Weft file stating the step's assumptions and checks (at the `{run}/…` path the gate names); each assumption cites a Writfold receipt or citation with a Weft `claim … = citation "…";` directly above it. `gate run` resolves those citations (a KB citation must be fresh, a gate or receipt satisfied or attested), runs the pinned `weft` binary and records an assessed receipt. A check counts as met only when Weft entails it from assumptions Writfold has grounded; one that rests on an ungrounded assumption keeps Weft's result, is reported as hypothetical and does not meet the gate. The receipt goes stale when the source or any cited evidence moves. To the advance decision this is one more gate: met or not met.
 
 ## Order of work
 

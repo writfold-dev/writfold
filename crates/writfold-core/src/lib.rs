@@ -36,6 +36,7 @@
 
 extern crate alloc;
 
+pub mod assess;
 pub mod authority;
 pub mod bytes;
 pub mod convenience;

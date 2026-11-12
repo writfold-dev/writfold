@@ -9,6 +9,7 @@
 //! stored. The claims are mistake resistance and Git tamper evidence: a
 //! receipt is a tracked file whose history Git keeps, and anyone can
 //! re-run it. Nothing here signs anything or stops a determined forger.
+pub mod assessed;
 pub mod def;
 #[cfg(test)]
 mod def_tests;
@@ -175,7 +176,7 @@ fn gate_rows(session: &Session<'_>, rec: &Rec, subject: &Subject) -> Result<(Vec
         .as_ref()
         .ok_or_else(|| KbError::Refused("gates need Git".into()))?;
     let filings = Filings::read(&session.ws.root, &runs::dir(rec), &rec.id);
-    let report = status::judge(git, &session.ws.root, subject, &filings)?;
+    let report = status::judge(session, subject, &filings)?;
     let rows = status::rows(git, subject, &report, &filings)?;
     Ok((rows, status::counts(&report, &filings)))
 }
@@ -219,12 +220,8 @@ fn lines(session: &Session<'_>, rec: &Rec, repo: Option<&Path>, cwd: &Path) -> R
             "no subject repository: run inside one, or pass --repo DIR".into(),
         ));
     };
-    let git = session
-        .git
-        .as_ref()
-        .ok_or_else(|| KbError::Refused("gates need Git".into()))?;
     let filings = Filings::read(&session.ws.root, &runs::dir(rec), &rec.id);
-    let report = status::judge(git, &session.ws.root, &subject, &filings)?;
+    let report = status::judge(session, &subject, &filings)?;
     let count = |s: Standing| report.gates.iter().filter(|j| j.standing == s).count();
     let satisfied = count(Standing::Checked(State::Satisfied));
     let mut said = String::new();
@@ -266,6 +263,9 @@ fn lines(session: &Session<'_>, rec: &Rec, repo: Option<&Path>, cwd: &Path) -> R
 
 /// One `gate lines` line: the standing, then the receipt or statement.
 fn gate_line(judged: &status::Judged<'_>, width: usize) -> String {
+    if let Some(assessment) = &judged.assessment {
+        return assessed::line(judged, assessment, width);
+    }
     let id = format!("{}:", judged.definition.id);
     let standing = judged.standing.name();
     let said = match judged.standing {

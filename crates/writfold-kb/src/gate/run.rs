@@ -28,7 +28,7 @@ pub fn local_dir(ws: &Workspace, run: &str, stem: &str) -> Option<PathBuf> {
     )
 }
 
-fn name(id: &str, now: i64) -> String {
+pub(super) fn name(id: &str, now: i64) -> String {
     let stamp = time::stamp(now);
     let compact: String = stamp.chars().filter(|c| *c != '-' && *c != ':').collect();
     let mut salt = Sha256::new();
@@ -72,6 +72,9 @@ pub(super) fn run(
         return Err(KbError::Refused(format!(
             "gate {id} is attested: it runs nothing; record a statement with gate attest {id} --statement TEXT --by WHO"
         )));
+    }
+    if definition.assessed.is_some() {
+        return super::assessed::run(ws, tool, request, &rec, &subject, &definition, now);
     }
     let git = tool.admit()?;
     let patterns = definition.patterns();
@@ -152,7 +155,7 @@ fn answer(
         .as_ref()
         .ok_or_else(|| KbError::Refused("gates need Git".into()))?;
     let filed = status::Filings::read(&ws.root, &runs::dir(rec), &rec.id);
-    let report = status::judge(git, &ws.root, subject, &filed)?;
+    let report = status::judge(&session, subject, &filed)?;
     let mut answer = Answer::default();
     let rows = status::rows(git, subject, &report, &filed)?;
     answer.rows = rows
