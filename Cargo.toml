@@ -12,6 +12,7 @@ members = [
     "crates/writfold-store",
     "crates/writfold-kb",
     "crates/writfold-app",
+    "crates/writfold-tui",
     "crates/writfold",
 ]
 exclude = ["vendor/splicery"]
@@ -39,6 +40,11 @@ memchr = { version = "=2.8.3", default-features = false, features = ["std"] }
 # Derived, rebuildable KB index (KB v1). `bundled` compiles the SQLite
 # amalgamation (with FTS5) into the static musl binary; no system library.
 rusqlite = { version = "=0.37.0", features = ["bundled"] }
+# `writfold watch` (T1): a read-only terminal view over the KB verbs, with
+# the crossterm backend only. 0.29, not 0.30: 0.30's core needs hashbrown
+# 0.17 with default features, which Cargo's workspace-wide feature
+# resolution would add (allocator-api2, foldhash) to the core crates' graph.
+ratatui = { version = "=0.29.0", default-features = false, features = ["crossterm"] }
 ed25519-dalek = { version = "=2.2.0", features = ["pkcs8", "pem"] }
 verus_syn = { version = "=0.0.0-2026-09-06-0133", features = ["full", "visit"] }
 proc-macro2 = { version = "=1.0.107", features = ["span-locations"] }

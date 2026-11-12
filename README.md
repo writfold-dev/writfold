@@ -134,6 +134,23 @@ approved. The edit trial's signing, approval and own-worktree flow is
 separate and frozen. See the
 [adapter as built](docs/writfold/kb-v1-design.md#17-splicery-adapter-as-built).
 
+`writfold watch` keeps the runs in view in a terminal pane. It is read-only
+and only shows what the verbs print: the runs of `kb runs` on the left (open
+runs first, with their place and last checkpoint), the selected run's
+`kb resume` on the right (gate rows with their states, edit and retrieval
+receipts, drafts, the checkpoint tail) headed by `kb gate status`'s counts,
+and the KB pin and index state at the bottom. Failed, stale and invalid show
+in red. Tab (or `s`, `b`, `g`) switches the right pane to `kb stale` or
+`kb brief` for the run's project. It polls the KB pin every two seconds and
+asks the verbs again only when it moves. There is no daemon, so it never says
+a run is running and shows no progress percentage; no key writes anything.
+Gate states are for the repository you start it in, as with `gate status`.
+
+```sh
+writfold watch                    # j/k or arrows, Enter, Tab, ? for help, q to quit
+writfold watch --run <id> --once  # one frame as plain text (also when stdout is not a terminal)
+```
+
 Every row read from a file ends with its path and line, flags (`!moved→5-7`,
 `!past-ttl`, `!draft` …) mark what to re-check, and the trailer is always last:
 
@@ -218,6 +235,7 @@ error. See [Tuft's KB adapter](docs/tuft/language.md#kb-adapter).
 | Claude Code plugin (`plugins/writfold`), `writfold kb hook`, `checkpoint --from-draft` | A KB brief at session start with no tool call; local checkpoint drafts at compaction, stop and session end; one skill teaching the verbs | [KB v1 design](docs/writfold/kb-v1-design.md#14-m4a-as-built) (section 14), golden tests in `crates/writfold-kb/tests/hook.rs`, `crates/writfold/tests/kb_hook.rs` |
 | `writfold kb gate run / status / verify / lines` | Runs a gate's argv on a repository and records one receipt in the KB run; derives open, satisfied, stale, failed or unknown from definitions and receipts; re-runs a receipt at its commit; prints receipt lines for a commit message | [KB v1 design](docs/writfold/kb-v1-design.md#16-g1-as-built) (section 16), golden, stale-transition and kill tests in `crates/writfold-kb/tests/gate.rs` and `gate_faults.rs`; the real `scripts/gate` has not yet been run through it |
 | `writfold kb edit apply / recover` | Replays Splicery recipes against a KB run's recorded worktree and writes each file atomically after re-checking its bytes; keeps the recipes, splice sites, blob IDs and preview as a receipt in the run; a crash between files is finished by `recover` from a local journal | [KB v1 design](docs/writfold/kb-v1-design.md#17-splicery-adapter-as-built) (section 17), golden, refusal, gate-staleness and kill tests in `crates/writfold-kb/tests/edit.rs` and `edit_faults.rs` |
+| `writfold watch [--kb DIR] [--run ID] [--once]` | A read-only terminal view of runs, gate states, receipts and checkpoints, each pane the answer of one `kb` verb; one plain-text frame when piped | [KB v1 design](docs/writfold/kb-v1-design.md#18-t1-as-built) (section 18), golden, layout and projection tests in `crates/writfold-tui/tests/watch.rs` |
 | `writfold trial prepare / approve / apply / recover / show` | One edit through a durable, validated ledger in Writfold's own sparse worktree; never your checkout | [trial profile](docs/writfold/trial-profile.md), [adversarial campaign](bench/2026-11-09-adversarial/) |
 | `writfold trial approve --require CHECK` | Refuses unless each named check of the bound Weft report is `entailed` (recorded as hypothetical, never as grounded) | proved: `required_entailed_spec` |
 | `writfold trial retain` | Keeps exact bytes of a file at a full commit id as a citation; reports citing anything else are refused | [trial profile](docs/writfold/trial-profile.md) |
