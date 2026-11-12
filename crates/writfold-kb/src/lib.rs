@@ -11,8 +11,10 @@
 //! work tree dirty for the user to commit.
 #![forbid(unsafe_code)]
 
+pub mod draft;
 pub mod emit;
 pub mod error;
+pub mod hook;
 pub mod index;
 pub mod layout;
 pub mod model;

@@ -103,6 +103,8 @@ pub struct Plan {
 #[derive(Clone, Debug)]
 pub enum Write {
     Checkpoint(run::Checkpoint),
+    /// `checkpoint --from-draft`: confirm a hook's local draft.
+    FromDraft(run::FromDraft),
     Ticket(record::Ticket),
     Decision(record::Decision),
     Link(record::Link),
@@ -126,6 +128,10 @@ pub fn execute(ws: &Workspace, request: &Request, write: &Write, now: i64) -> Re
         let session = Session::open(ws, Some(&tool), false, now)?;
         match write {
             Write::Checkpoint(c) => run::plan(&session, c, &request.cwd)?,
+            Write::FromDraft(f) => {
+                let checkpoint = run::from_draft(&session, &state, f)?;
+                run::plan(&session, &checkpoint, &request.cwd)?
+            }
             Write::Ticket(t) => record::ticket(&session, t)?,
             Write::Decision(d) => record::decision(&session, d)?,
             Write::Link(l) => record::link(&session, l)?,
@@ -137,9 +143,14 @@ pub fn execute(ws: &Workspace, request: &Request, write: &Write, now: i64) -> Re
     if let Some(id) = &plan.current {
         crate::runs::set_current(&state, id)?;
     }
+    let mut notes = plan.notes.clone();
+    if let Write::FromDraft(f) = write {
+        crate::draft::remove(&state, &f.session)?;
+        notes.push(format!("draft {} confirmed and removed", f.session));
+    }
     let session = Session::open(ws, Some(&tool), false, now)?;
     let mut answer = Answer {
-        notes: plan.notes.clone(),
+        notes,
         ..Answer::default()
     };
     if let Some(id) = &plan.show {

@@ -1,0 +1,15 @@
+Writfold KB brief (`writfold kb brief`). Rows end in their source; re-check any row with a ! flag before relying on it.
+project project:harbor [build] Harbor status @harbor/STATUS.md:2
+  field: next=month-end replay
+  field: owner=team-quay
+run run-20261101T090000Z-a1b2c3 [open] Batch ledger writes rollout (checkpoint 2026-11-03T16:00:00Z) @runs/run-20261101T090000Z-a1b2c3/checkpoint.md:6
+  note: Batching is live in staging. @runs/run-20261101T090000Z-a1b2c3/checkpoint.md:8
+  note: Next: measure flush time on the month-end replay, then HBR-101 can close. @runs/run-20261101T090000Z-a1b2c3/checkpoint.md:9
+ticket HBR-101 [in-progress] Slow ledger flush at month end @ktlo/2026/hbr-101-slow-ledger-flush.md:5
+investigation inv:2026/2026-06-01-flush-stalls-again [open] Flush stalls return @investigations/2026/2026-06-01-flush-stalls-again/README.md:7
+decision proposal/decision/2026-04-01-shard-ledger [draft] Shard the ledger by tenant @proposals/decision/2026-04-01-shard-ledger/proposal.md:5
+decision proposal/decision/2026-03-02-batch-ledger-writes [accepted] Batch ledger writes in the API @proposals/decision/2026-03-02-batch-ledger-writes/proposal.md:5
+  why: Group ledger writes into batches of up to 500 rows per transaction. @proposals/decision/2026-03-02-batch-ledger-writes/proposal.md:24
+commit d5db758bda80 2026-11-05 fixture KB
+# note: 4 citation(s) have no cached verdict; run `writfold kb stale harbor`
+# coverage=complete records=28/28 shown=7 omitted=0 kb=d5db758bda80 index=rebuilt cursor=none q=bee89fa3786e

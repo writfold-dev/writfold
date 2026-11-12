@@ -17,7 +17,7 @@ use crate::time;
 use crate::workspace::{CANCELLED, budgets, find_repo};
 use sha2::{Digest, Sha256};
 use std::path::Path;
-use writfold_runtime::git::{KbRepository, kb_config, kb_status};
+use writfold_runtime::git::{GitExecutable, KbRepository, kb_config, kb_status};
 
 pub const MODES: [&str; 3] = ["advice", "authoring", "review"];
 
@@ -34,6 +34,40 @@ pub struct Checkpoint {
     pub run: Option<String>,
     pub new_run: Option<NewRun>,
     pub note: String,
+}
+
+/// `checkpoint --from-draft SESSION [--run ID | --new-run …]`: the note is
+/// the session's local draft, which is removed once the entry is written.
+#[derive(Clone, Debug)]
+pub struct FromDraft {
+    pub session: String,
+    pub run: Option<String>,
+    pub new_run: Option<NewRun>,
+}
+
+/// The checkpoint a draft becomes: the run named, else the draft's run when
+/// the KB still has it, else the current-run pointer.
+pub fn from_draft(session: &Session<'_>, state: &Path, request: &FromDraft) -> Result<Checkpoint> {
+    let draft = crate::draft::load(state, &request.session)?.ok_or_else(|| {
+        KbError::Refused(format!(
+            "no draft for session {} in this KB",
+            request.session
+        ))
+    })?;
+    let note = crate::draft::note(&request.session, &draft)?;
+    let mut run = request.run.clone();
+    if run.is_none()
+        && request.new_run.is_none()
+        && let Some(id) = crate::draft::text(&draft, "run")
+        && query::record(&session.conn, &id)?.is_some_and(|r| r.kind == "run")
+    {
+        run = Some(id);
+    }
+    Ok(Checkpoint {
+        run,
+        new_run: request.new_run.clone(),
+        note,
+    })
 }
 
 /// The bytes of one entry.
@@ -176,10 +210,29 @@ fn new_run(
 }
 
 /// Where the work happens: the repository enclosing `cwd`, its branch,
-/// worktree and HEAD. Recorded only; nothing is created.
+/// worktree and HEAD, and how many paths are dirty there. Recorded only;
+/// nothing is created.
+pub struct Place {
+    pub fields: Vec<(&'static str, String)>,
+    pub dirty: usize,
+}
+
 fn place(session: &Session<'_>, cwd: &Path) -> Result<Vec<(&'static str, Json)>> {
-    let (Some(git), Ok(Some(repo))) = (&session.git, find_repo(cwd)) else {
+    let Some(git) = &session.git else {
         return Ok(Vec::new());
+    };
+    Ok(observe_place(git, cwd)?
+        .map(|p| p.fields)
+        .unwrap_or_default()
+        .into_iter()
+        .map(|(k, v)| (k, Json::Text(v)))
+        .collect())
+}
+
+/// The [`Place`] of `cwd`, or `None` outside a repository.
+pub fn observe_place(git: &GitExecutable<'_>, cwd: &Path) -> Result<Option<Place>> {
+    let Ok(Some(repo)) = find_repo(cwd) else {
+        return Ok(None);
     };
     let reads = KbRepository {
         git_dir: &repo.git_dir,
@@ -197,16 +250,16 @@ fn place(session: &Session<'_>, cwd: &Path) -> Result<Vec<(&'static str, Json)>>
                 .map(|n| n.to_string_lossy().into_owned())
         })
         .unwrap_or_default();
-    let mut out = vec![("repo", Json::Text(name))];
+    let mut fields = vec![("repo", name)];
     if let Some(branch) = status.branch {
-        out.push(("branch", Json::Text(branch)));
+        fields.push(("branch", branch));
     }
-    out.push((
-        "worktree",
-        Json::Text(repo.work_tree.to_string_lossy().into_owned()),
-    ));
+    fields.push(("worktree", repo.work_tree.to_string_lossy().into_owned()));
     if let Some(head) = status.head {
-        out.push(("base", Json::Text(head.as_str().to_owned())));
+        fields.push(("base", head.as_str().to_owned()));
     }
-    Ok(out)
+    Ok(Some(Place {
+        fields,
+        dirty: status.dirty.len(),
+    }))
 }

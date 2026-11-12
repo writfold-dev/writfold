@@ -1,0 +1,19 @@
+{
+  "created": "2026-11-11T00:00:00Z",
+  "cwd": "<WORLD>/kb",
+  "ended": "logout",
+  "last_message": "## Done\nReplay measured at 41 s.\nNext: close HBR-101.",
+  "place": {
+    "branch": "main",
+    "dirty": 0,
+    "head": "<HEAD>",
+    "repo": "kb",
+    "worktree": "<WORLD>/kb"
+  },
+  "run": "run-20261101T090000Z-a1b2c3",
+  "schema": "writfold-draft/1",
+  "session": "s-1",
+  "summary": "Summary: replay is 41 s.",
+  "trigger": "auto",
+  "updated": "2026-11-11T00:00:00Z"
+}
