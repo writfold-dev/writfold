@@ -25,6 +25,7 @@ The project KB is plain records in Git. `writfold kb <verb>` answers from it in 
 | Are the run's checks done, and still valid? | `gate status` (`open`, `satisfied`, `stale`, `failed`, `unknown`) |
 | Does a receipt reproduce at its commit? | `gate verify <receipt>` |
 | Receipt lines for a commit message | `gate lines` |
+| Apply a Splicery recipe in the run's worktree, keeping a receipt | `edit apply RECIPE.spl… [--dry-run]` (`--worktree DIR` once if the run records none) |
 
 Writes (`checkpoint`, `record`, `status --set`) change the work tree only. They never commit; commit the KB yourself when the user wants it shared.
 
@@ -53,6 +54,15 @@ Exit codes: 0 complete; 2 partial, unknown or stale (still a usable answer; read
 ## Gates
 
 A gate is a command with a path scope. Only `gate run` writes a receipt; never write or edit one by hand (a hand-written receipt reads as invalid). Say a check passed only when `gate status` shows the gate `[satisfied]`: `!stale` means an in-scope file changed since the receipt, `!failed` means the newest receipt for these bytes failed, and `!unknown` (a timeout or crash) is never a pass. Each such row has a `next:` line with the command to run. `gate status` and `gate lines` exit 0 only when every gate is satisfied.
+
+## Splicery or Edit
+
+`edit apply` replays Splicery recipes against the run's worktree and keeps the recipe and preview as a receipt in the run. Choose by task:
+
+- **Splicery** for repeated or structural edits: every line matching a pattern (`each @r in line_matches rx"…" expect N`), a block between two anchors, the same change across several files in one batch. The `expect` count and exact selectors refuse instead of guessing, and the receipt records what changed.
+- **Ordinary Edit or sed** for one small change. Don't write a recipe for it.
+
+Run `--dry-run` first and read the diff. A refusal names the recipe, the match sites and counts; fix the recipe, don't loosen it blindly. A file you changed after the replay is refused, never overwritten. After a crash, `edit recover` finishes the batch. The result is an uncommitted change: review it, run `gate status` (in-scope gates are now stale), and commit it. Nothing stops ordinary edits to the same files; this records what Splicery did, it does not guard the worktree.
 
 ## Checkpoint drafts
 

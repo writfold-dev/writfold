@@ -68,7 +68,7 @@ fn temporary_name() -> String {
     format!(".writfold-kb-{}-{n}.tmp", std::process::id())
 }
 
-fn sync_dir(dir: &Path) -> Result<()> {
+pub fn sync_dir(dir: &Path) -> Result<()> {
     File::open(dir)?.sync_all()?;
     Ok(())
 }
@@ -238,6 +238,15 @@ fn create_dir(
 pub fn apply(root: &Path, state: &Path, ops: &[Op], probe: Probe) -> Result<()> {
     let lock = Lock::acquire(state)?;
     probe(Step::Locked);
+    apply_held(root, state, ops, probe, &lock)?;
+    drop(lock);
+    probe(Step::Unlocked);
+    Ok(())
+}
+
+/// Apply `ops` while the caller holds the KB write lock (the edit adapter
+/// holds it across its worktree writes and its receipt).
+pub fn apply_held(root: &Path, state: &Path, ops: &[Op], probe: Probe, _held: &Lock) -> Result<()> {
     for op in ops {
         check(root, op)?;
     }
@@ -245,7 +254,5 @@ pub fn apply(root: &Path, state: &Path, ops: &[Op], probe: Probe) -> Result<()> 
     for op in ops {
         publish(root, &staging, op, probe)?;
     }
-    drop(lock);
-    probe(Step::Unlocked);
     Ok(())
 }

@@ -1,0 +1,27 @@
+--- a/src/retry.rs
++++ b/src/retry.rs
+@@ -1,4 +1,4 @@
+ pub fn retry() {
+-    let attempts = 5;
++    let attempts = 7;
+     backoff(attempts);
+ }
+--- a/src/ledger.rs
++++ b/src/ledger.rs
+@@ -1,6 +1,7 @@
+ // ledger writes
++// every row is appended once
+ pub fn write(rows: &[Row]) {
+     for row in rows {
+-        append(row);
++        append(row)?;
+     }
+ }
+edit src/retry.rs [preview] recipe=retry.spl splices=1 -12 +12 bytes before=1dc692bcea05 after=0dcc64bb0039
+  site: line 2 bytes [25,37) -> 12 bytes, recipe [24,75)
+edit src/ledger.rs [preview] recipe=ledger.spl splices=2 -20 +51 bytes before=fbbd140bd832 after=8e221df69098
+  site: line 1 bytes [16,16) -> 30 bytes, recipe [191,242)
+  site: line 4 bytes [68,88) -> 21 bytes, recipe [98,146)
+# note: dry run: nothing was written; the diff above is the preview
+# coverage=complete records=28/28 shown=2 omitted=0 kb=d5db758bda80 index=rebuilt cursor=none q=98c72467afe8
+# exit=0

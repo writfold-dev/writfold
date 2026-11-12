@@ -34,6 +34,10 @@ pub enum Step {
     Published,
     DirSynced,
     Unlocked,
+    /// `kb edit`: the pre-apply journal is durable.
+    Journaled,
+    /// `kb edit`: the journal is removed (the edit and receipt are complete).
+    Cleared,
 }
 
 impl Step {
@@ -56,6 +60,8 @@ impl Step {
             Step::Published => "published",
             Step::DirSynced => "dir-synced",
             Step::Unlocked => "unlocked",
+            Step::Journaled => "journaled",
+            Step::Cleared => "journal-cleared",
         }
     }
 }

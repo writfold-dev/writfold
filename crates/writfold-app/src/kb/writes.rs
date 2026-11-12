@@ -8,8 +8,9 @@ use writfold_kb::write::record::{Decision, Link, Ticket};
 use writfold_kb::write::status::SetStatus;
 
 /// Flags that take a value.
-pub const VALUES: [&str; 24] = [
+pub const VALUES: [&str; 25] = [
     "note",
+    "worktree",
     "repo",
     "from-draft",
     "run",
@@ -35,7 +36,7 @@ pub const VALUES: [&str; 24] = [
     "ttl",
 ];
 /// Flags without a value.
-pub const SWITCHES: [&str; 3] = ["open", "new-run", "allow-dirty"];
+pub const SWITCHES: [&str; 5] = ["open", "new-run", "allow-dirty", "dry-run", "abandon"];
 
 /// The write flags each verb accepts.
 pub fn allowed(verb: &str) -> &'static [&'static str] {
@@ -60,6 +61,7 @@ pub fn allowed(verb: &str) -> &'static [&'static str] {
         "status" => &["set", "by", "superseded-by", "note"],
         "cite" => &["allow-dirty", "sym", "ttl"],
         "gate" => &["run", "repo"],
+        "edit" => &["run", "worktree", "dry-run", "abandon"],
         _ => &[],
     }
 }
@@ -107,6 +109,7 @@ pub fn runs_and_writes(
             status(common, target.clone()).map(Verb::Write)
         }
         ("checkpoint" | "record" | "cite", _) => verb(name, common, positional).map(Verb::Write),
+        ("edit", _) => super::edit::verb(common, positional),
         _ => return None,
     })
 }

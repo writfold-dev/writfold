@@ -2,6 +2,7 @@
 //! parsing and exit codes only; every decision lives in `writfold-kb`.
 pub mod args;
 mod checkpoint;
+mod edit;
 mod gate;
 mod hook;
 mod verbs;
@@ -49,6 +50,13 @@ gates (checks with pinned receipts; definitions in .writfold/gates/<id>.toml):
                                    re-run the recorded argv at the recorded commit: agree or disagree
   gate lines [--run ID] [--repo DIR]
                                    receipt lines for a commit message (exit 0 only if all satisfied)
+
+edits (the Splicery adapter; Splicery for repeated or structural edits, ordinary tools for small ones):
+  edit apply RECIPE.spl [RECIPE.spl ...] [--run ID] [--worktree DIR] [--dry-run]
+                                   replay recipes against the run's worktree bytes, write each file
+                                   atomically, keep recipe and preview as a receipt in the run
+  edit recover [--run ID] [--abandon]
+                                   finish (or drop) an edit a crash interrupted between files
 
 harness:
   hook session-start|pre-compact|post-compact|stop|session-end
