@@ -96,11 +96,31 @@ multi-party need appears.
 
 The v1 design is [kb-v1-design.md](kb-v1-design.md).
 
-1. Read an existing project knowledge base: `brief`, `context`, `why`, `stale`.
-2. The index and search: `find`, `status`, `timeline`, `uses`.
-3. Derived edges and `impact` with a stated frontier.
-4. Writes: `record`, `checkpoint`, `resume`.
-5. The Claude Code plugin, then MCP.
+1. ~~Read an existing project knowledge base~~ (M1): `brief`, `context`, `why`, `stale`.
+2. ~~The index, search and graph verbs~~ (M2): `find`, `match`, `status`, `impact`, `uses`, `timeline`.
+3. Writes (M3): `record`, `checkpoint`, `resume`, `runs`.
+4. M4a: the Claude Code plugin (SessionStart brief, checkpoint drafts, one skill).
+5. G1: checks with pinned receipts (below).
+6. T1: `writfold watch`, a read-only TUI.
+7. G2: offline delivery candidates; G2b: an optional guard hook.
+8. A two-week pause: count real catches and waivers from the receipts. If no catch mattered, keep G1 and drop the rest.
+9. M4b: MCP, trailer and tracker edges, `--at`. G3 only if the pause justifies it.
+
+## Gates, runs and progress (owner decision, 12 November 2026)
+
+The owner proposed reusable gates, skills and delivery modes. After an independent review, the owner adopted a smaller version, built after M3, with Writfold's own push-to-main flow as its first user.
+
+- **Gate definition:** a small TOML file under the KB repository's `.writfold/` (not `~/.writfold`, which an ephemeral machine lacks) naming a command, an evidence class and a path scope.
+- **Receipt:** one JSON record per evaluation in the run directory, pinned to the exact subject (commit or tree, and the paths in scope). It goes stale when its subject moves, using the same machinery as `stale`.
+- **Artifact or candidate:** a file or a Git tree. The edit candidate is a plain Git tree in a worktree, judged by a gate.
+- **Obligation state** (open, satisfied, stale, failed, waived): derived from definitions and receipts, never stored. `resume` shows it.
+- **Evidence classes in G1:** mechanical and observed (commands Writfold runs itself). `gate verify` re-runs the recorded command at the recorded commit; CI doing so is the one check the agent cannot forge.
+- **Honest claims:** this resists mistakes, not adversaries. Tamper evidence comes from Git history; a harness hook is a guard, labelled as such. No signing.
+- **Runs** are KB runs: they record repo, branch, worktree, base commit and an open or closed state. The worktree is recorded, not created; approval is a record state with the Git identity.
+- **Plan assumptions** may use Weft's four-way vocabulary (established, hypothetical, contradicted, unresolved), backed by receipts. Weft itself stays frozen.
+- **Not now:** a governed profile, real Slack or PR adapters, effect reconciliation, profile composition and gate groups, authority levels, exception routes, snapshot migration, a Writfold skill format, Weft as an evaluator, a Tuft grammar, Splicery as the edit boundary, signing, and proofs or TLC for gates.
+
+The proposal and review are kept with the session notes; the decision above is the authority.
 
 ## Adopted and declined from the review
 
