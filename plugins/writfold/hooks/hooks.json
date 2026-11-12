@@ -1,5 +1,5 @@
 {
-  "description": "Writfold KB: a brief at session start; local checkpoint drafts at compaction, stop and session end; an optional delivery guard before Bash and MCP tool calls, off unless the KB has .writfold/deliveries/guard.toml (a guard, not enforcement). Each hook exits 0 and prints nothing when writfold is not on PATH or there is no KB.",
+  "description": "Writfold KB: a brief, the plan position, an inbox and a behind-remote line (local refs only) at session start, and the plan position again after compaction; local checkpoint drafts at compaction, stop and session end; an optional delivery guard before Bash and MCP tool calls, off unless the KB has .writfold/deliveries/guard.toml (a guard, not enforcement). Each hook exits 0 and prints nothing when writfold is not on PATH or there is no KB.",
   "hooks": {
     "SessionStart": [
       {

@@ -276,7 +276,7 @@ fn for_run_resume_and_session_start() -> TestResult {
             .count(),
         2
     );
-    assert!(!started.stdout.contains("Pending proposals"));
+    assert!(!started.stdout.contains("Inbox (local only"));
     std::fs::remove_file(queue(&w).join("current-run"))?;
     let started = writfold_kb::hook::run(
         "session-start",
@@ -288,7 +288,7 @@ fn for_run_resume_and_session_start() -> TestResult {
         },
     );
     assert!(
-        started.stdout.contains("Pending proposals"),
+        started.stdout.contains("Inbox (local only"),
         "{}",
         started.stdout
     );

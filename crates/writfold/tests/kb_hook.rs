@@ -152,6 +152,16 @@ fn binary_hooks_fail_silently() -> Result {
     let text = context(&started)?;
     assert!(text.starts_with("Writfold KB brief"), "{text}");
     assert!(text.contains("draft s "), "{text}");
+    // After a compaction only a plan position is injected; with no current
+    // run there is none, so nothing is printed.
+    let compact = format!(
+        "{{\"session_id\": \"s\", \"source\": \"compact\", \"cwd\": \"{}\"}}",
+        r.0.display()
+    );
+    silent(
+        &hook(&["kb", "hook", "session-start"], &option, &compact)?,
+        "compact with no plan",
+    )?;
     Ok(())
 }
 

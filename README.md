@@ -279,8 +279,13 @@ what is planned next, each marked built or planned.
 without a tool call:
 
 - **Session start:** the hook injects `brief` for the project inferred from
-  the session's directory, `resume` when a run is current, and any unconfirmed
-  checkpoint drafts and pending proposals. It is cut to 9,000 characters (Claude Code's limit is 10,000).
+  the session's directory, `resume` when a run is current, the plan position
+  (the current step and the gates it still owes), and an inbox of unconfirmed
+  checkpoint drafts, pending proposals and runs that ended without their
+  `reflect` step. A line says when the KB clone is behind its upstream,
+  read from local refs only (the hook never fetches). After a compaction it
+  re-injects only the plan position. The whole is cut to 9,000 characters,
+  brief first (Claude Code's limit is 10,000). Nothing in it calls a model.
 - **Compaction, stop and session end:** the hooks keep a local checkpoint
   draft per session in the KB's Git directory. It holds the repository, branch
   and HEAD, the compaction summary and your last message. Before compaction the
@@ -331,7 +336,7 @@ error. See [Tuft's KB adapter](docs/tuft/language.md#kb-adapter).
 |---|---|---|
 | `writfold kb brief / context / why / status / find / match / impact / uses / timeline / stale / index` | Reads a Git KB of plain records; every row pinned to its file and line, moved citations flagged; the index is refreshed incrementally and verified equal to a rebuild | [KB v1 design](docs/writfold/kb-v1-design.md#11-m1-as-built) (sections 11 and 12), golden and property tests in `crates/writfold-kb/tests` |
 | `writfold kb checkpoint / resume / runs / record / status --set / cite make` | Writes checkpoints, runs, tickets, decisions, links and status changes atomically (old or new bytes after a kill at any step); prints citation tokens | [KB v1 design](docs/writfold/kb-v1-design.md#13-m3-as-built) (section 13), kill and fault tests in `crates/writfold-kb/tests/faults.rs`, TLC model `spec/KbWrite.tla` |
-| Claude Code plugin (`plugins/writfold`), `writfold kb hook`, `checkpoint --from-draft` | A KB brief at session start with no tool call; local checkpoint drafts at compaction, stop and session end; one skill teaching the verbs | [KB v1 design](docs/writfold/kb-v1-design.md#14-m4a-as-built) (section 14), golden tests in `crates/writfold-kb/tests/hook.rs`, `crates/writfold/tests/kb_hook.rs` |
+| Claude Code plugin (`plugins/writfold`), `writfold kb hook`, `checkpoint --from-draft` | A KB brief at session start with no tool call, with the plan position, an inbox and a behind-remote line from local refs; the plan position again after compaction; local checkpoint drafts at compaction, stop and session end; one skill teaching the verbs | [KB v1 design](docs/writfold/kb-v1-design.md#14-m4a-as-built) (sections 14 and [25](docs/writfold/kb-v1-design.md#25-deterministic-hooks-as-built)), golden tests in `crates/writfold-kb/tests/hook.rs`, `hook_start.rs`, `crates/writfold/tests/kb_hook.rs` |
 | `writfold kb gate run / status / verify / lines` | Runs a gate's argv on a repository and records one receipt in the KB run; derives open, satisfied, stale, failed or unknown from definitions and receipts; re-runs a receipt at its commit; prints receipt lines for a commit message | [KB v1 design](docs/writfold/kb-v1-design.md#16-g1-as-built) (section 16), golden, stale-transition and kill tests in `crates/writfold-kb/tests/gate.rs` and `gate_faults.rs`; the real `scripts/gate` has not yet been run through it |
 | `writfold kb gate attest / waive`, `writfold kb deliver prepare / check / attest / waive / status`, `writfold kb hook pre-tool-use` | Statements recorded as attested or waived, never shown as satisfied; offline delivery candidates (the exact payload, never sent) checked mechanically for paragraph length, denied references and stale citations, with receipts bound to the candidate's bytes; an optional guard hook, off by default | [KB v1 design](docs/writfold/kb-v1-design.md#19-g2-as-built) (section 19), golden, repair, staleness, statement, guard and kill tests in `crates/writfold-kb/tests/deliver.rs`, `deliver_faults.rs`, `gate_statements.rs` and `guard.rs`; no real PR comment or Slack summary has gone through it yet |
 | Instruction gates and user-defined delivery modes | A gate's `instructions` file and `{gate}`-shipped scripts are part of its digest and shown as `read:` lines; any `.writfold/deliveries/<name>.toml` defines a delivery mode whose script gates run on the candidate through `{candidate}` and whose attested gates show their instructions | [KB v1 design](docs/writfold/kb-v1-design.md#20-instruction-gates-and-delivery-modes-as-built) (section 20), golden, staleness, escape, refusal, never-a-pass and kill tests in `crates/writfold-kb/tests/gate_instructions.rs`, `deliver_modes.rs` and `deliver_faults.rs`; the `commit-message` mode is a fixture and has not yet checked a real commit |

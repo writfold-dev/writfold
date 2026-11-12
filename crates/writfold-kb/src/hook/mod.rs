@@ -6,10 +6,12 @@
 //! Code shows only in its debug log) and exits 0. Nothing here commits or
 //! writes a tracked file; drafts are local ([`crate::draft`]).
 //!
-//! - `session-start` prints JSON whose `additionalContext` holds `brief`,
-//!   `resume` when a current run exists, the unconfirmed drafts and the
-//!   pending proposals ([`crate::proposal`]) `resume` did not show, cut
-//!   to [`CONTEXT_LIMIT`] characters (Claude Code caps it at 10,000).
+//! - `session-start` prints JSON whose `additionalContext` holds a
+//!   behind-remote line, `brief`, `resume` when a current run exists, the
+//!   plan position and an inbox (drafts, pending proposals, runs left
+//!   without an evaluation), fitted to [`CONTEXT_LIMIT`] characters
+//!   (Claude Code caps it at 10,000); after a compaction, only the plan
+//!   position ([`start`]).
 //! - `pre-compact` records where the work is (repository, branch, HEAD,
 //!   dirty count) in the session's draft and prints plain instructions,
 //!   which Claude Code adds to the compaction prompt.
@@ -23,16 +25,15 @@
 use crate::draft;
 use crate::workspace::{GitTool, Workspace, discover};
 use crate::{Request, Verb, runs, time};
-use serde_json::{Map, Value, json};
+use serde_json::{Map, Value};
 use std::path::{Path, PathBuf};
 
-/// The most characters `session-start` injects.
-pub const CONTEXT_LIMIT: usize = 9000;
-/// Token budgets of the two verbs `session-start` runs.
-pub const BRIEF_BUDGET: usize = 1200;
-pub const RESUME_BUDGET: usize = 500;
-/// Drafts listed at session start.
-const DRAFTS_SHOWN: usize = 3;
+mod inbox;
+mod position;
+mod remote;
+mod start;
+
+pub use start::{BRIEF_BUDGET, CONTEXT_LIMIT, DROP_ORDER, PLAN_BUDGET, Part, RESUME_BUDGET, fit};
 
 pub const EVENTS: [&str; 6] = [
     "session-start",
@@ -89,7 +90,10 @@ pub fn run(event: &str, input: &str, env: &HookEnv) -> HookOutput {
     };
     let now = env.now.unwrap_or_else(time::now);
     let result = match event {
-        "session-start" => session_start(&ws, &cwd, now),
+        "session-start" => {
+            let source = input.get("source").and_then(Value::as_str);
+            start::session_start(&ws, &cwd, now, source)
+        }
         "pre-tool-use" => crate::guard::pre_tool_use(&ws, &input, &cwd, now),
         _ => record(event, &ws, &input, &cwd, now),
     };
@@ -132,64 +136,6 @@ fn verb(ws: &Workspace, cwd: &Path, now: i64, verb: Verb, budget: usize) -> Opti
         .ok()
         .filter(|output| matches!(output.exit, 0 | 2))
         .map(|output| output.text)
-}
-
-fn session_start(ws: &Workspace, cwd: &Path, now: i64) -> Result<HookOutput, String> {
-    let brief = Verb::Brief {
-        project: None,
-        all: false,
-    };
-    let mut text = String::new();
-    if let Some(found) = verb(ws, cwd, now, brief, BRIEF_BUDGET) {
-        text.push_str("Writfold KB brief (`writfold kb brief`). Rows end in their source; re-check any row with a ! flag before relying on it.\n");
-        text.push_str(&found);
-    }
-    let local = state(ws).ok();
-    let current = local.as_deref().and_then(runs::current);
-    if let Some(run) = &current {
-        let resume = Verb::Resume {
-            run: Some(run.clone()),
-        };
-        if let Some(found) = verb(ws, cwd, now, resume, RESUME_BUDGET) {
-            text.push_str("\nCurrent run (`writfold kb resume`):\n");
-            text.push_str(&found);
-        }
-    }
-    // `resume` already lists the drafts of the current run and of no run.
-    let shown_by_resume = |d: &Map<String, Value>| {
-        current.is_some() && draft::text(d, "run").is_none_or(|run| Some(run) == current)
-    };
-    let drafts: Vec<_> = local
-        .as_deref()
-        .map(draft::all)
-        .unwrap_or_default()
-        .into_iter()
-        .filter(|(_, d)| !shown_by_resume(d))
-        .collect();
-    if !drafts.is_empty() {
-        text.push_str("\nUnconfirmed checkpoint drafts (local only; confirm one with `writfold kb checkpoint --from-draft SESSION`):\n");
-        for (session, d) in drafts.iter().take(DRAFTS_SHOWN) {
-            text.push_str(&draft_line(session, d));
-        }
-        if drafts.len() > DRAFTS_SHOWN {
-            text.push_str(&format!("(+{} more)\n", drafts.len() - DRAFTS_SHOWN));
-        }
-    }
-    if let Some(local) = &local {
-        text.push_str(&crate::proposal::inbox(local, current.as_deref()));
-    }
-    if text.is_empty() {
-        return Err("no brief, run or draft to inject".into());
-    }
-    let context = cap(&text, CONTEXT_LIMIT);
-    let out = json!({"hookSpecificOutput": {
-        "hookEventName": "SessionStart",
-        "additionalContext": context,
-    }});
-    Ok(HookOutput {
-        stdout: format!("{out}\n"),
-        stderr: String::new(),
-    })
 }
 
 /// `draft <session> <updated> [run=<id>] <first line>`.
