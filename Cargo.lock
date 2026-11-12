@@ -857,6 +857,7 @@ dependencies = [
  "sha2 0.11.0",
  "thiserror",
  "tuft",
+ "writfold-core",
  "writfold-domain",
  "writfold-runtime",
  "writfold-sources",

@@ -20,7 +20,6 @@ pub mod session;
 pub mod stale;
 pub mod time;
 pub mod verbs;
-pub mod walk;
 pub mod workspace;
 
 use emit::{Answer, Frame, Output};

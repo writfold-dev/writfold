@@ -124,15 +124,33 @@ fn unverifiable(reason: String) -> Checked {
 }
 
 /// An authored mark wins over every verdict except changed, gone and
-/// expired, which say more.
+/// expired, which say more (decided by the kernel in `writfold-core`).
 fn marked(cite: &Cite, checked: Checked) -> Checked {
-    match (&cite.marked, &checked.verdict) {
-        (Some(_), Verdict::Changed { .. } | Verdict::Gone { .. } | Verdict::Expired)
-        | (None, _) => checked,
-        (Some(mark), _) => Checked {
+    let Some(mark) = &cite.marked else {
+        return checked;
+    };
+    match writfold_core::verdict::with_mark(kernel(&checked.verdict), true) {
+        writfold_core::verdict::Verdict::Marked => Checked {
             verdict: Verdict::Marked(mark.clone()),
             head: checked.head,
         },
+        _ => checked,
+    }
+}
+
+/// The kernel's name for a verdict.
+fn kernel(verdict: &Verdict) -> writfold_core::verdict::Verdict {
+    use writfold_core::verdict::Verdict as K;
+    match verdict {
+        Verdict::Fresh => K::Fresh,
+        Verdict::Moved { path: Some(_), .. } => K::Renamed,
+        Verdict::Moved { .. } => K::Moved,
+        Verdict::Changed { .. } => K::Changed,
+        Verdict::Gone { .. } => K::Gone,
+        Verdict::Expired => K::Expired,
+        Verdict::Unverifiable(_) => K::Unverifiable,
+        Verdict::Marked(_) => K::Marked,
+        Verdict::Due => K::Due,
     }
 }
 

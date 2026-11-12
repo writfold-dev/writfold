@@ -10,6 +10,7 @@ publish.workspace = true
 
 [dependencies]
 writfold-domain = { path = "../writfold-domain" }
+writfold-core = { path = "../writfold-core" }
 writfold-sources = { path = "../writfold-sources" }
 writfold-runtime = { path = "../writfold-runtime" }
 tuft = { path = "../tuft" }

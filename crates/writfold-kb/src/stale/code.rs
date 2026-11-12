@@ -9,6 +9,7 @@ use crate::session::Session;
 use crate::workspace::{CANCELLED, budgets};
 use std::collections::BTreeMap;
 use std::path::Path;
+use writfold_core::verdict::{Observed, Target, Verdict as Kernel, observed};
 use writfold_domain::GitObjectId;
 use writfold_runtime::git::{
     GitExecutable, KbRepository, kb_batch_check, kb_commit, pinned_blobs, pinned_tree,
@@ -224,14 +225,24 @@ fn by_span(cite: &Cite, text: &str) -> Verdict {
             detail: Some("blob differs; no span digest to search".into()),
         };
     };
-    match locate(text, first, last, span) {
-        Located::Same => Verdict::Fresh,
-        Located::At(first, last) => Verdict::Moved {
-            path: None,
-            first,
-            last,
+    let located = locate(text, first, last, span);
+    match observed(Observed::Code(Target::OtherBlob(Some(located)))) {
+        Kernel::Fresh => Verdict::Fresh,
+        Kernel::Moved => {
+            let (first, last) = match located {
+                Located::At(a, b) => (a, b),
+                _ => (first, last),
+            };
+            Verdict::Moved {
+                path: None,
+                first,
+                last,
+            }
+        }
+        _ if located == Located::Unsearched => Verdict::Changed {
+            detail: Some("unsearched: file too long".into()),
         },
-        Located::Absent => {
+        _ => {
             let symbol = cite.field("sym").and_then(|sym| {
                 let short = sym
                     .rsplit("::")
@@ -247,8 +258,5 @@ fn by_span(cite: &Cite, text: &str) -> Verdict {
             });
             Verdict::Changed { detail: symbol }
         }
-        Located::Unsearched => Verdict::Changed {
-            detail: Some("unsearched: file too long".into()),
-        },
     }
 }

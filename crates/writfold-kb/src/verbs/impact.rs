@@ -9,7 +9,7 @@ use crate::emit::Answer;
 use crate::error::Result;
 use crate::index::query::{self, Edge, Resolved};
 use crate::session::Session;
-use crate::walk::{Arc, Follow, walk};
+use writfold_core::walk::{Arc, Follow, walk};
 
 /// Which way edges are followed from a node.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

@@ -1,10 +1,19 @@
-//! The bounded breadth-first walk behind `impact`, as a pure function over
-//! a neighbour function: no IO, no index. It decides which nodes are
+//! The bounded breadth-first walk behind `writfold kb impact` (and the
+//! frontier accounting `context` relies on), as a pure function over a
+//! neighbour function: no IO, no index. It decides which nodes are
 //! reached (and by which edge first), which edges were skipped and why, and
 //! the frontier: followable edges from the last level that lead to nodes
 //! not visited. `coverage=complete` may be claimed only when both the
 //! frontier and the skipped counts are zero.
-use std::collections::{BTreeMap, BTreeSet};
+//!
+//! Proof candidate, not yet in the Charon `start_from` list: no theorem is
+//! claimed about it. Its property test compares it with an independent
+//! level-set search on random graphs.
+use alloc::borrow::ToOwned;
+use alloc::collections::{BTreeMap, BTreeSet};
+use alloc::string::String;
+use alloc::vec;
+use alloc::vec::Vec;
 
 /// Whether the walk may cross an edge.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -109,7 +118,11 @@ pub fn walk<E: Clone>(
 #[cfg(test)]
 mod tests {
     use super::{Arc, Follow, walk};
-    use std::collections::{BTreeMap, BTreeSet};
+    use alloc::borrow::ToOwned;
+    use alloc::collections::{BTreeMap, BTreeSet};
+    use alloc::format;
+    use alloc::string::String;
+    use alloc::vec::Vec;
 
     /// A deterministic generator (xorshift64*).
     struct Rng(u64);
