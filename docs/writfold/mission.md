@@ -124,6 +124,17 @@ The owner proposed reusable gates, skills and delivery modes. After an independe
 
 The proposal and review are kept with the session notes; the decision above is the authority.
 
+### Instruction gates, delivery modes, plans and Weft (owner decision, 12 November 2026)
+
+The owner's working flow: gates are atomic checks (instructions in `.md`, optionally with scripts); skills and delivery modes (commit message, PR, Slack) consume gates; evidence recorded by Writfold meets a gate and lets the agent advance to the next step of its plan. After an independent review, the owner adopted, ahead of the two-week pause:
+
+1. **Instruction gates and user-defined delivery modes.** A gate may name an `instructions` file whose digest is part of its definition, and ship its own scripts (a `{gate}` placeholder; `{candidate}` for delivery checks). Any `.writfold/deliveries/<name>.toml` defines a mode listing its gates; the two built-in modes stay as defaults; a `commit-message` mode needs no code of its own.
+2. **Plan and advance in the KB run.** `plan set` copies a plan into the run; `plan status` shows the current step; `plan advance` refuses until the step's gates are satisfied, attested or waived, and records which receipt or statement met each one. Steps are derived from records, never stored as state. Gates outside the plan stop being owed by runs that never reach them.
+3. **Plan templates** under `.writfold/plans/`, which a skill names in one line of its text. Writfold does not parse `SKILL.md`.
+4. **Weft verifies plans (owner decision, against the review's advice).** Weft is unfrozen for one job: a plan step may require a Weft assessment. The agent submits a Weft file stating the step's assumptions and checks; each assumption may cite a Writfold receipt or citation. Writfold resolves those citations (fresh, satisfied, or not), runs the pinned `weft` binary, and records an assessed receipt. A check counts as met only when Weft entails it from assumptions Writfold has grounded; a check that rests on an ungrounded assumption is reported as hypothetical and does not meet the gate. Weft's own vocabulary (entailed, refuted, undetermined, inconsistent; basis hypothetical or grounded) is kept as Weft's.
+
+The agent submits drafts, statements and plans; Writfold writes every receipt and every verdict. The trust model is unchanged: cooperating and single-user; receipts resist mistakes, not adversaries.
+
 ### Narrow adapters for Tuft and Splicery (owner decision, 12 November 2026)
 
 Tuft and Splicery stay frozen as languages, but each gains one narrow adapter so agents have two interfaces and can choose by task: Splicery for repeated or structural edits, ordinary tools for small ones; `kb` verbs or Tuft for retrieval. The Tuft adapter emits KB citations and run receipts. The Splicery adapter applies in a run's worktree without the trial's signing and approval flow, which stays frozen. Weft contributes only its four-way vocabulary for plan assumptions; making it read KB citations as premises waits for the two-week pause.
