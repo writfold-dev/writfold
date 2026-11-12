@@ -81,11 +81,18 @@ fn run(
         command.env(key, value);
     }
     let mut child = command.spawn()?;
-    child
+    // A hook that exits before reading its input (the `command -v` guard
+    // when writfold is absent) closes the pipe; hosts tolerate that, so the
+    // test does too. Any other write error still fails.
+    match child
         .stdin
         .take()
         .ok_or("stdin")?
-        .write_all(stdin.as_bytes())?;
+        .write_all(stdin.as_bytes())
+    {
+        Err(error) if error.kind() != std::io::ErrorKind::BrokenPipe => return Err(error.into()),
+        _ => {}
+    }
     Ok(child.wait_with_output()?)
 }
 
