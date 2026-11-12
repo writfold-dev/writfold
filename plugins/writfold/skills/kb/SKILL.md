@@ -30,7 +30,7 @@ The project KB is plain records in Git. `writfold kb <verb>` answers from it in 
 | Set a gate aside, or state an attested gate | `gate waive <id> --reason TEXT --by WHO`, `gate attest <id> --statement TEXT --by WHO` |
 | Prepare a PR comment, Slack summary or other draft for review (nothing is sent) | `deliver prepare --mode MODE --from FILE [--audience external]` (built in: `pr-comment`, `slack-summary`; others from `.writfold/deliveries/<mode>.toml`) |
 | Check a delivery candidate, and see what it still owes | `deliver check [CANDIDATE]`, `deliver status` |
-| Where does the run's plan stand, and may it move on? | `plan status`, `plan advance` (`plan set <template>` to start one) |
+| Where does the run's plan stand, and may it move on? | `plan status`, `plan advance` (`plan set <template>` to start one; `plan use <template>` splices a template's steps before the current step, once) |
 | Apply a Splicery recipe in the run's worktree, keeping a receipt | `edit apply RECIPE.spl… [--dry-run]` (`--worktree DIR` once if the run records none) |
 
 Writes (`checkpoint`, `record`, `status --set`) change the work tree only. They never commit; commit the KB yourself when the user wants it shared.
@@ -67,7 +67,7 @@ A gate of class `assessed` is met by a Weft assessment of a plan step. Write the
 
 ## Plans
 
-When the run has a plan, `resume` shows one `plan` line: the current step and the gates it still owes. Work the current step, meet its gates (`gate run`, or `gate attest` for an attested gate), then `plan advance`. A refusal (exit 3) names what is still owed, first owed gate first, with the command to run; nothing is written. Start a plan with `plan set <template>` (templates in `.writfold/plans/`) when the user or a skill names one. `plan skip --reason TEXT --by WHO` closes a step without calling it done: only when the user asks. A done step shown `!stale` stays done; if the check matters now, run it again. Gates of class `run-record` judge what the run wrote: `research.backfilled` wants a KB record, a retrieval receipt or a citation in a checkpoint since the step began; `run.reflected` wants a checkpoint starting `reflection:` plus a proposal or a line starting `no proposal`.
+When the run has a plan, `resume` shows one `plan` line: the current step and the gates it still owes. Work the current step, meet its gates (`gate run`, or `gate attest` for an attested gate), then `plan advance`. A refusal (exit 3) names what is still owed, first owed gate first, with the command to run; nothing is written. Start a plan with `plan set <template>` (templates in `.writfold/plans/`) when the user or a skill names one. `plan skip --reason TEXT --by WHO` closes a step without calling it done: only when the user asks. A done step shown `!stale` stays done; if the check matters now, run it again. A step shown `!template-moved` comes from a template edited since it was spliced: the run keeps its old steps; tell the user rather than re-splicing on your own. Required steps (`.writfold/plans/required.toml`, such as a closing `reflect`) are in the plan like any other: the plan is not complete until they are done. Gates of class `run-record` judge what the run wrote: `research.backfilled` wants a KB record, a retrieval receipt or a citation in a checkpoint since the step began; `run.reflected` wants a checkpoint starting `reflection:` plus a proposal or a line starting `no proposal`.
 
 ## Delivery candidates
 

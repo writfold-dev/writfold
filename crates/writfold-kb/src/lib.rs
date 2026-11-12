@@ -103,7 +103,7 @@ pub enum Verb {
     Edit(edit::EditVerb),
     /// `deliver prepare|check|attest|waive|status` (G2; nothing is sent).
     Deliver(deliver::DeliverVerb),
-    /// `plan set|status|advance|skip` (the run graph, linear).
+    /// `plan set|use|status|advance|skip` (the run graph).
     Plan(plan::PlanVerb),
     /// `propose …` and `proposals list|show|accept|drop` (the local queue).
     Proposal(proposal::ProposalVerb),

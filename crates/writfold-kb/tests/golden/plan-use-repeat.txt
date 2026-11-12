@@ -1,0 +1,12 @@
+step fix#1/reproduce [done] no gates @runs/run-20261101T090000Z-a1b2c3/plan/done-fix.1~reproduce.json:1
+  done: recorded 2026-11-11T00:00:00Z
+step fix#1/implement/review#1/read-diff [current] no gates @runs/run-20261101T090000Z-a1b2c3/plan/splice-fix.1~implement~review.1.json:1
+  next: writfold kb plan advance
+step fix#1/implement/review#1/findings [later] no gates @runs/run-20261101T090000Z-a1b2c3/plan/splice-fix.1~implement~review.1.json:1
+step fix#1/implement [later] no gates @runs/run-20261101T090000Z-a1b2c3/plan/splice-fix.1.json:1
+step fix#1/deliver [later] no gates @runs/run-20261101T090000Z-a1b2c3/plan/splice-fix.1.json:1
+# note: review is already spliced under fix#1/implement at this digest; nothing written (--again adds another)
+# note: plan fix @e0f21d29f071 from .writfold/plans/fix.toml, review @9218c075b8e7 under fix#1/implement from .writfold/plans/review.toml; steps are derived from runs/run-20261101T090000Z-a1b2c3/plan/ on every read, never stored
+# note: written to the KB work tree; commit it to share it
+# coverage=complete records=31/31 shown=5 omitted=0 steps=5 done=1 skipped=0 stale=0 moved=0 invalid=0 kb=d5db758bda80+dirty:3 index=fresh cursor=none q=f7904cda6432
+# exit=0

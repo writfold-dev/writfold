@@ -1,0 +1,7 @@
+step fix#1/reproduce [current] no gates @runs/run-20261101T090000Z-a1b2c3/plan/splice-fix.1.json:1 !template-moved
+  next: writfold kb plan advance
+step fix#1/implement [later] no gates @runs/run-20261101T090000Z-a1b2c3/plan/splice-fix.1.json:1 !template-moved
+# note: plan fix @94d8a4f70bc4 from .writfold/plans/fix.toml; steps are derived from runs/run-20261101T090000Z-a1b2c3/plan/ on every read, never stored
+# note: template fix moved since it was spliced (snapshot @94d8a4f70bc4, now @e0f21d29f071); the run keeps its snapshot, nothing migrates: to adopt the new version, skip the remaining old steps and splice it again
+# coverage=complete records=29/29 shown=2 omitted=0 steps=2 done=0 skipped=0 stale=0 moved=2 invalid=0 kb=d5db758bda80+dirty:1 index=fresh cursor=none q=0d053770d172
+# exit=0

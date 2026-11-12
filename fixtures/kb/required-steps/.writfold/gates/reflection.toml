@@ -1,0 +1,11 @@
+# The attested half of the pair: the agent reads the instructions below,
+# checks its reflection against them and attests. The scope is the whole
+# repository, so a code change after the reflection makes the attestation
+# stale: the reflection is about the change as it stands.
+schema = "writfold-gate/1"
+id = "reflection"
+version = 1
+class = "attested"
+scope = ["**"]
+instructions = "reflection.md"
+description = "the reflection covers what a good one should"

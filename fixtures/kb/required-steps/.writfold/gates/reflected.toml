@@ -1,0 +1,10 @@
+# A run-record check: a checkpoint entry starts "reflection:", and the run
+# has a proposal, an accepted one, or a line starting "no proposal". It
+# shows that a reflection was written, not that it is good: the attested
+# gate `reflection` carries what a good one covers.
+schema = "writfold-gate/1"
+id = "reflected"
+version = 1
+class = "run-record"
+require = ["run.reflected"]
+description = "the run holds a reflection entry and a proposal or an explicit none"

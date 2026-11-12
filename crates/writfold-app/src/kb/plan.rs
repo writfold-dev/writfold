@@ -1,4 +1,4 @@
-//! `writfold kb plan set|status|advance|skip`: arguments only; the run
+//! `writfold kb plan set|use|status|advance|skip`: arguments only; the run
 //! graph is in `writfold_kb::plan`.
 use super::args::Common;
 use super::writes::get;
@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use writfold_kb::Verb;
 use writfold_kb::plan::PlanVerb;
 
-pub const USAGE: &str = "usage: plan set <template>|--from FILE [--run ID] [--repo DIR] | plan status [--run ID] [--repo DIR] | plan advance [--run ID] [--repo DIR] | plan skip --reason TEXT --by WHO [--run ID] [--repo DIR]";
+pub const USAGE: &str = "usage: plan set <template>|--from FILE [--run ID] [--repo DIR] | plan use <template> [--again] [--run ID] [--repo DIR] | plan status [--run ID] [--repo DIR] | plan advance [--run ID] [--repo DIR] | plan skip --reason TEXT --by WHO [--run ID] [--repo DIR]";
 
 /// The plan verb, or why the arguments do not name one.
 pub fn verb(common: &Common, positional: &[String]) -> Result<Verb, String> {
@@ -15,6 +15,10 @@ pub fn verb(common: &Common, positional: &[String]) -> Result<Verb, String> {
     let from = get(common, "from").map(PathBuf::from);
     let (reason, by) = (get(common, "reason"), get(common, "by"));
     let sub = positional.first().map(String::as_str);
+    let again = common.switches.iter().any(|s| s == "again");
+    if again && sub != Some("use") {
+        return Err("--again belongs to plan use".into());
+    }
     if from.is_some() && sub != Some("set") {
         return Err("--from belongs to plan set".into());
     }
@@ -31,6 +35,12 @@ pub fn verb(common: &Common, positional: &[String]) -> Result<Verb, String> {
         [s] if s == "set" && from.is_some() => PlanVerb::Set {
             template: None,
             from,
+            run,
+            repo,
+        },
+        [s, name] if s == "use" => PlanVerb::Use {
+            template: name.clone(),
+            again,
             run,
             repo,
         },
@@ -74,6 +84,14 @@ mod tests {
             })
         ));
         assert!(matches!(
+            verb("plan use review --again")?,
+            Verb::Plan(PlanVerb::Use { ref template, again: true, .. }) if template == "review"
+        ));
+        assert!(matches!(
+            verb("plan use review")?,
+            Verb::Plan(PlanVerb::Use { again: false, .. })
+        ));
+        assert!(matches!(
             verb("plan status")?,
             Verb::Plan(PlanVerb::Status { .. })
         ));
@@ -90,6 +108,10 @@ mod tests {
             "plan set",
             "plan set a b",
             "plan set a --from f",
+            "plan use",
+            "plan use a b",
+            "plan use a --from f",
+            "plan set a --again",
             "plan status --from f",
             "plan advance --by me",
             "plan skip --reason x",

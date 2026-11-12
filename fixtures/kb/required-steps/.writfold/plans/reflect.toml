@@ -1,0 +1,4 @@
+schema = "writfold-plan/1"
+name = "reflect"
+description = "close the run with a reflection and a proposal or an explicit none"
+steps = ["reflect: reflected reflection"]

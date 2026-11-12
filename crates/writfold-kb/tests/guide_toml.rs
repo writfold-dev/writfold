@@ -1,7 +1,7 @@
 //! Keeps `docs/guide/` honest: every fenced `toml` block there is read by
 //! the parser that reads the real file (a gate definition, a delivery mode,
-//! a deny list, the guard configuration or a plan template). A block whose
-//! preceding line is `<!-- planned -->` sketches a format that is not
+//! a deny list, the guard configuration, a plan template or the required
+//! steps). A block whose preceding line is `<!-- planned -->` sketches a format that is not
 //! built; it must be refused today, so the marker cannot outlive the
 //! feature it labels.
 use std::error::Error;
@@ -180,6 +180,10 @@ fn accept(text: &str) -> TestResult {
             writfold_kb::plan::template::parse(text.as_bytes(), Some(&name))?;
             Ok(())
         }
+        "writfold-plan-required/1" => {
+            writfold_kb::plan::required::parse(text.as_bytes())?;
+            Ok(())
+        }
         other => Err(format!("no parser reads schema {other:?}").into()),
     }
 }
@@ -240,7 +244,12 @@ fn the_block_check_refuses_what_the_product_refuses() {
     assert!(accept("schema = \"writfold-plan/1\"\nname = \"change\"\n").is_err());
     let plan = "schema = \"writfold-plan/1\"\nname = \"change\"\nsteps = [\"implement: unit\"]\n";
     assert!(accept(plan).is_ok());
-    assert!(accept(&plan.replace("unit", "use=review")).is_err());
+    assert!(accept(&plan.replace("unit", "use=review")).is_ok());
+    assert!(accept(&plan.replace("unit", "use=Review")).is_err());
+    assert!(accept(&plan.replace("unit", "deliver:pr-comment")).is_err());
+    let required = "schema = \"writfold-plan-required/1\"\nend = [\"reflect\"]\n";
+    assert!(accept(required).is_ok());
+    assert!(accept(&format!("{required}at = \"end\"\n")).is_err());
     let mode = "schema = \"writfold-delivery-mode/1\"\nmode = \"commit-message\"\n";
     assert!(accept(mode).is_ok());
     assert!(accept(&format!("{mode}bogus = \"x\"\n")).is_err());

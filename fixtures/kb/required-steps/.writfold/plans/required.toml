@@ -1,0 +1,7 @@
+# Required steps: templates every new plan in this KB includes, spliced at
+# the run's root around the plan's own steps. A research step that must
+# backfill the KB comes first; a closing reflection comes last, and the
+# plan cannot complete until it is done.
+schema = "writfold-plan-required/1"
+start = ["research"]
+end = ["reflect"]

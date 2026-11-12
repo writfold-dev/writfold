@@ -1,0 +1,4 @@
+schema = "writfold-plan/1"
+name = "fix"
+description = "reproduce, then fix"
+steps = ["reproduce:", "implement:"]

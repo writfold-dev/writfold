@@ -6,5 +6,5 @@ step change#1/reflect [later] gates: reflected @runs/run-20261101T090000Z-a1b2c3
 # note: recorded runs/run-20261101T090000Z-a1b2c3/plan/splice-change.1.json
 # note: plan change @1d3b333a27e8 from .writfold/plans/change.toml; steps are derived from runs/run-20261101T090000Z-a1b2c3/plan/ on every read, never stored
 # note: written to the KB work tree; commit it to share it
-# coverage=complete records=29/29 shown=4 omitted=0 steps=4 done=0 skipped=0 stale=0 invalid=0 kb=d5db758bda80+dirty:1 index=refreshed:1 cursor=none q=e6ba4c4b79f1
+# coverage=complete records=29/29 shown=4 omitted=0 steps=4 done=0 skipped=0 stale=0 moved=0 invalid=0 kb=d5db758bda80+dirty:1 index=refreshed:1 cursor=none q=e6ba4c4b79f1
 # exit=0
