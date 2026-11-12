@@ -51,12 +51,17 @@ benchmark is planned; benchmarking is paused (owner, 10 November 2026).
   the 9 November interim-backend decision. Fuzzy search no longer waits on
   Omnigraph.
 
-### Frozen (working demos, no new development)
+### Available tools, not a priority for expansion (owner, 12 November 2026)
+
+Tuft, Weft and Splicery are available to the agent as alternatives within the
+flow, maintained and kept building, but not a priority for new language
+features. The agent chooses per task: Tuft or `kb find` for retrieval,
+Splicery recipes or ordinary Edit/sed for edits, Weft for plan verification.
+Common edit or query patterns may be added later if real use shows the need.
+
+### Frozen (no new development)
 
 - The edit trial flow (`writfold trial`), including `serve`'s trial methods.
-- Weft and Splicery, in their own repositories.
-- Tuft's query language at v0. Its output contract (budgeted rows, coverage
-  trailer, resumable cursor) carries forward into every read verb.
 - `writfold.agent/1` and the cross-repository contract pins.
 - Dolt publication: the open items (signed candidate binding, the
   same-request rival gap) stay open and are not pursued.
@@ -119,7 +124,7 @@ The owner proposed reusable gates, skills and delivery modes. After an independe
 - **Evidence classes in G1:** mechanical and observed (commands Writfold runs itself). `gate verify` re-runs the recorded command at the recorded commit; CI doing so is the one check the agent cannot forge.
 - **Honest claims:** this resists mistakes, not adversaries. Tamper evidence comes from Git history; a harness hook is a guard, labelled as such. No signing.
 - **Runs** are KB runs: they record repo, branch, worktree, base commit and an open or closed state. The worktree is recorded, not created; approval is a record state with the Git identity.
-- **Plan assumptions** may use Weft's four-way vocabulary (established, hypothetical, contradicted, unresolved), backed by receipts. Weft itself stays frozen.
+- **Plan assumptions** may use Weft's four-way vocabulary (established, hypothetical, contradicted, unresolved), backed by receipts. (Superseded: Weft verifies plans; see below.)
 - **Not now:** a governed profile, real Slack or PR adapters, effect reconciliation, profile composition and gate groups, authority levels, exception routes, snapshot migration, a Writfold skill format, Weft as an evaluator, a Tuft grammar, Splicery as the edit boundary, signing, and proofs or TLC for gates.
 
 The proposal and review are kept with the session notes; the decision above is the authority.
@@ -131,13 +136,13 @@ The owner's working flow: gates are atomic checks (instructions in `.md`, option
 1. **Instruction gates and user-defined delivery modes.** A gate may name an `instructions` file whose digest is part of its definition, and ship its own scripts (a `{gate}` placeholder; `{candidate}` for delivery checks). Any `.writfold/deliveries/<name>.toml` defines a mode listing its gates; the two built-in modes stay as defaults; a `commit-message` mode needs no code of its own.
 2. **Plan and advance in the KB run.** `plan set` copies a plan into the run; `plan status` shows the current step; `plan advance` refuses until the step's gates are satisfied, attested or waived, and records which receipt or statement met each one. Steps are derived from records, never stored as state. Gates outside the plan stop being owed by runs that never reach them.
 3. **Plan templates** under `.writfold/plans/`, which a skill names in one line of its text. Writfold does not parse `SKILL.md`.
-4. **Weft verifies plans (owner decision, against the review's advice).** Weft is unfrozen for one job: a plan step may require a Weft assessment. The agent submits a Weft file stating the step's assumptions and checks; each assumption may cite a Writfold receipt or citation. Writfold resolves those citations (fresh, satisfied, or not), runs the pinned `weft` binary, and records an assessed receipt. A check counts as met only when Weft entails it from assumptions Writfold has grounded; a check that rests on an ungrounded assumption is reported as hypothetical and does not meet the gate. Weft's own vocabulary (entailed, refuted, undetermined, inconsistent; basis hypothetical or grounded) is kept as Weft's.
+4. **Weft verifies plans (owner decision, against the review's advice).** A plan step may require a Weft assessment. The agent submits a Weft file stating the step's assumptions and checks; each assumption may cite a Writfold receipt or citation. Writfold resolves those citations (fresh, satisfied, or not), runs the pinned `weft` binary, and records an assessed receipt. A check counts as met only when Weft entails it from assumptions Writfold has grounded; a check that rests on an ungrounded assumption is reported as hypothetical and does not meet the gate. Weft's own vocabulary (entailed, refuted, undetermined, inconsistent; basis hypothetical or grounded) is kept as Weft's.
 
 The agent submits drafts, statements and plans; Writfold writes every receipt and every verdict. The trust model is unchanged: cooperating and single-user; receipts resist mistakes, not adversaries.
 
 ### Narrow adapters for Tuft and Splicery (owner decision, 12 November 2026)
 
-Tuft and Splicery stay frozen as languages, but each gains one narrow adapter so agents have two interfaces and can choose by task: Splicery for repeated or structural edits, ordinary tools for small ones; `kb` verbs or Tuft for retrieval. The Tuft adapter emits KB citations and run receipts. The Splicery adapter applies in a run's worktree without the trial's signing and approval flow, which stays frozen. Weft contributes only its four-way vocabulary for plan assumptions; making it read KB citations as premises waits for the two-week pause.
+Tuft and Splicery are not a priority for new language features, but each gains one narrow adapter so agents have two interfaces and can choose by task: Splicery for repeated or structural edits, ordinary tools for small ones; `kb` verbs or Tuft for retrieval. The Tuft adapter emits KB citations and run receipts. The Splicery adapter applies in a run's worktree without the trial's signing and approval flow, which stays frozen. Weft contributes only its four-way vocabulary for plan assumptions; making it read KB citations as premises waits for the two-week pause.
 
 ## Adopted and declined from the review
 
