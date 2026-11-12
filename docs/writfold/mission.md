@@ -155,6 +155,15 @@ After a fourth independent review, the owner adopted:
 - **Proved and modelled later:** `writfold_core::plan` (current, advance check, splice) and the existing gate standing kernels move into the Aeneas-translated set; `spec/RunGraph.tla` models two sessions, merges, drift and crashes. Receipt ordering must not depend on a wall clock where it decides state.
 - **Order of work:** (1) these records, the site slimmed with the full skeletons moved to `docs/guide/*.md`; (2) instruction gates and user-defined delivery modes; (3) the linear run graph (`plan set|status|advance`); (4) splicing; (5) deterministic hooks; (6) one week of real use; then proofs, `RunGraph.tla`, `kb check` and proposals, the evaluation skill, and the Weft assessed gate.
 
+### Required steps and run-record checks (owner, 12 November 2026)
+
+Writfold is a record keeper: it never schedules the agent or its subagents, and does not care how a step was achieved, only what the records show. The owner's "enforcement points" are expressed with gates, not harness hooks:
+
+- **Required steps:** a template under `.writfold/plans/` that every run includes is spliced in automatically at the start or end of each run, like any other step (for example a closing `reflect` step).
+- **Run-record checks:** a mechanical gate kind evaluated over the run's own records rather than code. Examples: `research.backfilled` (the step wrote at least one KB record, citation or retrieval receipt) and `run.reflected` (the run holds a reflection entry, and either a proposal or an explicit "no proposal"). A run-record check may be paired with an attested gate whose instructions say what a good reflection or backfill covers.
+
+So "every research step backfills the KB" and "every run ends with self-reflection" are required steps whose gates are run-record checks. The word "hook" is kept only for Claude Code hooks.
+
 ### Narrow adapters for Tuft and Splicery (owner decision, 12 November 2026)
 
 Tuft and Splicery are not a priority for new language features, but each gains one narrow adapter so agents have two interfaces and can choose by task: Splicery for repeated or structural edits, ordinary tools for small ones; `kb` verbs or Tuft for retrieval. The Tuft adapter emits KB citations and run receipts. The Splicery adapter applies in a run's worktree without the trial's signing and approval flow, which stays frozen. Weft contributes only its four-way vocabulary for plan assumptions; making it read KB citations as premises waits for the two-week pause.
