@@ -1,6 +1,6 @@
 # Writfold KB v1: design
 
-Status: proposal, 11 November 2026; M1, M2 and M3 implemented (see [section 11](#11-m1-as-built), [section 12](#12-m2-as-built) and [section 13](#13-m3-as-built) for what was built and where it differs). Scope: the `writfold kb` product core for Git-native project continuity. Git text is the source of truth; a local SQLite file is a derived, rebuildable index. No server, no companion process.
+Status: proposal, 11 November 2026; M1, M2 and M3 implemented, and the Tuft adapter (see [section 11](#11-m1-as-built), [section 12](#12-m2-as-built), [section 13](#13-m3-as-built) and [section 15](#15-tuft-adapter-as-built) for what was built and where it differs). Scope: the `writfold kb` product core for Git-native project continuity. Git text is the source of truth; a local SQLite file is a derived, rebuildable index. No server, no companion process.
 
 A cold session must be able to answer four questions, each pinned to a source and flagged when the source has moved:
 - why did we decide X;
@@ -904,6 +904,37 @@ The static musl binary still builds offline in the tools image (`static-pie link
 - `checkpoint --from-draft`, local drafts and the hooks (M4); `doctor`; `record --commit`.
 - Proofs of the two kernels (they may trail, 8.5).
 - The read-only index, full-disk and Git-timeout fault tests (13.7).
+
+## 15. Tuft adapter as built
+
+Owner decision, 12 November 2026: Tuft stays frozen at v0 as a language and gains one narrow adapter, so its results share the KB's vocabulary. No grammar, operator, field or query feature was added; the pure `tuft` crate is unchanged. New code: `crates/writfold-kb/src/write/{span,retrieval}.rs`, `crates/writfold-app/src/tuft/kb.rs`, and the `run` path of `crates/writfold-app/src/tuft/cli.rs`. The user-facing description is in [Tuft's language reference](../tuft/language.md#kb-adapter).
+
+### 15.1 Citations (`tuft run --cite`)
+
+- For each shown row (the page the budget and cursor select), the adapter asks `writfold_kb::write::retrieval::cite_spans` for a code citation at the program's pinned commit. The span is the row's byte range; `write::span` turns it into the lines of its first and last byte, reads every cited file with one `cat-file --batch-check` and one blob read, and digests the lines with `normalize_span`. `cite make` now uses the same `span::spans` and `cite::code_token`, so the two produce the same field order and the same `blob` and `span` for the same lines at the same commit; the M3 `cite make` tests pass unchanged.
+- Unlike `cite make`, the commit is the program's pin, not `origin/HEAD`, and no `dirty=` is recorded: Tuft read committed bytes. `repo=` is the name the KB's repository map gives the directory (`stale::repos::name_for`), else the directory name; when `stale` could not resolve that name back to the same repository, a note on standard error says so (the token would check as `unverifiable`).
+- Output: a `  cite: <token>` continuation line under each row (compact and verbose), or a `cites` array beside `rows` (JSON). The lines are outside the budget, like the trailer, and the compact trailer stays last. Without `--cite` (and with no KB run) the bytes printed are exactly what they were; a test compares the CLI path with the library path in all three renderings, and the existing Tuft goldens are untouched.
+
+### 15.2 Retrieval receipts
+
+- **When.** With `--kb DIR` or `--run ID`, always (a failure fails the command). Otherwise only when the KB found as `writfold kb` finds it (`$WRITFOLD_KB`, then the working directory's ancestors, then the prototype's configured root) has a current-run pointer naming a run that exists and is not closed; any failure then becomes a note on standard error and the run still prints. With no KB or no open current run nothing is read or written beyond today's run.
+- **What.** One new file per run of `tuft run`, `runs/<id>/retrievals/<UTC compact time>-<6 hex>.md`: front matter `kind: retrieval`, `tool` (`tuft/0`), `run`, `program` (`sha256:<digest>`), `repo`, `commit`, `rows` (the view's rows), `shown` (this page), `cites`, `recorded`; a `# Retrieval …` heading; `trailer:` with the compact trailer; and `## Citations` with one token per distinct cited span. Tuft's trailer carries `program=<12 hex>` where the KB's carries `q=`; both name the query.
+- **How.** A new write, `Write::Retrieval`, planned like the M3 writes (the run must exist and not be closed; every field one line; every cite exactly one token) and applied as one `Op::Create` through the 13.2 protocol (lock, guard, synced temporary, `link` publish, directory sync). It adds no protocol step and no operation kind. It does not move the current-run pointer.
+- **Where, and the prototype.** The prototype reads `runs/<id>/receipts/*.json` as its own numbered run receipts with a strict decoder, so Writfold does not write there. Under a run it reads only paths it names itself (manifest, coverage, checkpoint, observations, receipts and its own run inputs); only its backlink scan, which reads every tracked file as plain text, sees a receipt, and a Markdown file is what it expects there. Writfold indexes each receipt as a document: its tokens are citations, so `stale runs/<id>/retrievals/<file>.md` (and a KB-wide `stale`) checks them like any other.
+- **`resume`** shows the newest three receipts of the run between the coverage rows and the checkpoint tail: `retrieval <name> tuft/0 program=<12> <repo>@<commit12> rows=N shown=N cites=N`, then `trailer:` and up to five `cite: <path>:<a-b>` continuation lines, each at its line in the receipt, and a note when there are more receipts.
+
+### 15.3 Tests
+
+- `crates/writfold-app/src/tuft/kb_tests.rs`: default output byte-identical through the CLI path in compact, verbose and JSON; `--cite` lines align with the shown rows of a budgeted page; the round trip (a `--cite` token pasted into a KB note is fresh under `kb stale`, `!moved→5-5` after two lines are inserted above it and committed, `!changed` after the line is edited). `kb_tests/receipts.rs`: an explicit `--kb` records in the current run with standard output unchanged, `resume` shows the receipt and its citation, discovery from inside the KB records again, a closed run takes no receipt silently but refuses an explicit `--run`, and an explicit `--kb` that is not a KB fails. Discovery in these tests is enabled only from inside the test's own KB, so they can never write to the operator's KB.
+- `crates/writfold-kb/tests/retrieval.rs`: exact receipt bytes, tokens from byte and line ranges, `stale` of the receipt finding both tokens fresh, the `resume` row, `index verify` equal after the write; refusals for no current run, an unknown run and a closed run; a non-token cite is a usage error and writes nothing.
+- `crates/writfold-kb/tests/faults.rs` adds `retrieval` to the kill matrix: the child aborts at each of the seven steps; a receipt present is always complete, none appears before `published`, leftovers are only `.tmp`, `index verify` is equal, and a rerun records (a rerun after publication records a second receipt under a new name: receipts are a log, not an idempotent record).
+- `write::span` has a unit test for byte ranges to lines (a range ending after a line's LF stays on that line; an empty range sits on its line).
+
+### 15.4 Not done
+
+- `tuft run` has no `--no-record`; leaving a run (`kb status <run> --set closed`) or running outside the KB stops receipts.
+- The receipt's citations are not re-checked when written; `stale` checks them later. Receipts from many runs accumulate in `stale`'s KB-wide pass.
+- No latency was measured for the adapter; a receipt costs one KB write (13.9) plus one blob read for the cited files.
 
 ---
 

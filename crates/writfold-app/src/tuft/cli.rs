@@ -1,13 +1,14 @@
 //! Argument handling for `writfold tuft ...`; returns the text to print.
-use super::{Invocation, compile, run};
+use super::kb::{Options, adapt};
+use super::{Invocation, compile, execute};
 use crate::trial::Result;
 use crate::trial::state_dir::{StateDir, Uses};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use tuft::emit::{Cursor, Format};
 
 pub const USAGE: &str = "\
 writfold tuft run FILE --repo DIR [--state DIR] [--cursor C] [--verbose|--json]
-                  [--out NEW_FILE]
+                  [--out NEW_FILE] [--cite] [--kb DIR] [--run ID]
                      run a Tuft v0 program over the pinned commit it names: exact
                      find, retained citation bindings, a budgeted projection.
                      Default rows are `path:line: text` plus one `# coverage=...`
@@ -18,6 +19,11 @@ writfold tuft check FILE
 
 Options: --state DIR (default: $WRITFOLD_STATE, else ~/.local/share/writfold/trial),
 the trial state that holds the admitted Git executable and retained evidence.
+--cite prints, under each shown row, the code citation token `writfold kb cite make`
+would print for its lines at the pinned commit. When the KB (found as `writfold kb`
+finds it) has an open current run, or with --kb DIR / --run ID, the run also
+records a retrieval receipt (program, commit, trailer, row counts, tokens) in
+runs/<id>/retrievals/; `writfold kb resume` shows it. Notes go to standard error.
 Language: docs/tuft/language.md. Semantic, fuzzy and ranked search, and `follow`,
 are refused until the Omnigraph backend exists.";
 
@@ -25,6 +31,7 @@ struct Args {
     positional: Vec<String>,
     options: Vec<(String, String)>,
     format: Format,
+    cite: bool,
 }
 
 fn parse(args: &[String]) -> Result<Args> {
@@ -32,6 +39,7 @@ fn parse(args: &[String]) -> Result<Args> {
         positional: Vec::new(),
         options: Vec::new(),
         format: Format::Compact,
+        cite: false,
     };
     let mut iter = args.iter();
     while let Some(arg) = iter.next() {
@@ -45,8 +53,13 @@ fn parse(args: &[String]) -> Result<Args> {
                 return Err("give at most one of --verbose and --json".into());
             }
             parsed.format = format;
+        } else if arg == "--cite" {
+            if parsed.cite {
+                return Err("--cite given twice".into());
+            }
+            parsed.cite = true;
         } else if let Some(name) = arg.strip_prefix("--") {
-            if !matches!(name, "repo" | "state" | "cursor" | "out") {
+            if !matches!(name, "repo" | "state" | "cursor" | "out" | "kb" | "run") {
                 return Err(format!("unknown option --{name}").into());
             }
             let value = iter
@@ -97,33 +110,78 @@ pub(crate) fn write_new(path: &Path, view: &str) -> Result<()> {
     Ok(file.sync_all()?)
 }
 
+/// How the KB adapter runs: where to look for a KB, and the clock.
+pub(crate) struct Context {
+    pub cwd: PathBuf,
+    pub discover: bool,
+    pub now: Option<i64>,
+}
+
+/// `writfold tuft run`: the text to print and notes for standard error.
+pub(crate) fn run_command(args: &[String], context: Context) -> Result<(String, Vec<String>)> {
+    let parsed = parse(args)?;
+    let file = parsed.file()?;
+    let source = std::fs::read(file)?;
+    let dir = parsed.state()?;
+    let repo = parsed.option("repo").ok_or("missing --repo")?;
+    if let Some(out) = parsed.option("out").filter(|o| Path::new(o).exists()) {
+        return Err(format!("--out {out}: file exists (refusing to overwrite)").into());
+    }
+    let cursor = parsed.option("cursor").map(Cursor::parse).transpose()?;
+    let executed = execute(&Invocation {
+        source: &source,
+        name: file,
+        repo: Path::new(repo),
+        state: &dir.path,
+        cursor: cursor.as_ref(),
+        format: parsed.format,
+    })?;
+    let options = Options {
+        cite: parsed.cite,
+        kb: parsed.option("kb").map(PathBuf::from),
+        run: parsed.option("run").map(str::to_owned),
+        discover: context.discover,
+        cwd: context.cwd,
+        now: context.now,
+    };
+    let adapted = adapt(&executed, Path::new(repo), cursor.as_ref(), &options)?;
+    let printed = match parsed.option("out") {
+        None => adapted.printed,
+        Some(out) => {
+            let emitted = &executed.emitted;
+            let view = match emitted.format {
+                Format::Compact => adapted
+                    .printed
+                    .strip_suffix(emitted.trailer.as_str())
+                    .unwrap_or(&emitted.view)
+                    .to_owned(),
+                Format::Verbose | Format::Json => adapted.printed,
+            };
+            write_new(Path::new(out), &view)?;
+            emitted.trailer.clone()
+        }
+    };
+    Ok((printed, adapted.notes))
+}
+
 pub fn main(args: &[String]) -> Result<String> {
     let parsed = parse(args)?;
     match parsed.positional.first().map(String::as_str) {
         Some("run") => {
-            let file = parsed.file()?;
-            let source = std::fs::read(file)?;
-            let dir = parsed.state()?;
-            let repo = parsed.option("repo").ok_or("missing --repo")?;
-            if let Some(out) = parsed.option("out").filter(|o| Path::new(o).exists()) {
-                return Err(format!("--out {out}: file exists (refusing to overwrite)").into());
-            }
-            let cursor = parsed.option("cursor").map(Cursor::parse).transpose()?;
-            let emitted = run(&Invocation {
-                source: &source,
-                name: file,
-                repo: Path::new(repo),
-                state: &dir.path,
-                cursor: cursor.as_ref(),
-                format: parsed.format,
-            })?;
-            match parsed.option("out") {
-                None => Ok(emitted.printed()),
-                Some(out) => {
-                    write_new(Path::new(out), &emitted.view)?;
-                    Ok(emitted.trailer)
+            let context = Context {
+                cwd: std::env::current_dir()?,
+                discover: true,
+                now: None,
+            };
+            let (printed, notes) = run_command(args, context)?;
+            if !notes.is_empty() {
+                use std::io::Write as _;
+                let mut stderr = std::io::stderr().lock();
+                for note in notes {
+                    let _ = writeln!(stderr, "writfold tuft: {note}");
                 }
             }
+            Ok(printed)
         }
         Some("check") => {
             let file = parsed.file()?;

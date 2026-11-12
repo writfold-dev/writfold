@@ -15,6 +15,7 @@ use std::process::Command;
 use std::time::Duration;
 use support::{NOW, TestResult, World, world};
 use writfold_kb::write::record::Ticket;
+use writfold_kb::write::retrieval::Retrieval;
 use writfold_kb::write::run::{Checkpoint, NewRun};
 use writfold_kb::write::status::SetStatus;
 use writfold_kb::write::{Step, Write};
@@ -22,6 +23,8 @@ use writfold_kb::{Request, Verb};
 
 const RUN: &str = "run-20261101T090000Z-a1b2c3";
 const CHILD: &str = "WRITFOLD_KB_FAULT_CHILD";
+const RECEIPT_TRAILER: &str =
+    "# coverage=complete files=1/1 hits=1 shown=1 omitted=0 cursor=none program=abababababab";
 
 /// The writes under test, by name.
 fn write(name: &str, note: &str) -> Write {
@@ -45,6 +48,17 @@ fn write(name: &str, note: &str) -> Write {
             title: "Fault ticket".into(),
             assets: vec!["harbor-api".into()],
             ..Ticket::default()
+        }),
+        "retrieval" => Write::Retrieval(Retrieval {
+            run: Some(RUN.into()),
+            tool: "tuft/0".into(),
+            program: format!("sha256:{}", "ab".repeat(32)),
+            repo: "demo-service".into(),
+            commit: "0".repeat(40),
+            trailer: RECEIPT_TRAILER.into(),
+            rows: 1,
+            shown: 1,
+            cites: Vec::new(),
         }),
         _ => Write::SetStatus(SetStatus {
             target: "HBR-101".into(),
@@ -184,6 +198,25 @@ fn state(kb: &Path, what: &str, old: &str) -> TestResult<bool> {
             }
             Ok(!runs.is_empty())
         }
+        "retrieval" => {
+            // Receipts are create-new under fresh names: each one present
+            // is complete, and none means the write never published.
+            let dir = kb.join(format!("runs/{RUN}/retrievals"));
+            let mut found = 0;
+            for entry in std::fs::read_dir(&dir).into_iter().flatten() {
+                let entry = entry?;
+                if entry.file_name().to_string_lossy().starts_with('.') {
+                    continue;
+                }
+                let text = std::fs::read_to_string(entry.path())?;
+                let tail = format!("trailer: `{RECEIPT_TRAILER}`\n");
+                if !(text.starts_with("---\nkind: retrieval\n") && text.ends_with(&tail)) {
+                    return Err(format!("partial receipt:\n{text}").into());
+                }
+                found += 1;
+            }
+            Ok(found > 0)
+        }
         "ticket" => match read(kb, "ktlo/2026/hbr-120-fault-ticket.md") {
             None => Ok(false),
             Some(text) if text.ends_with("## Outcome\n\n\n") => Ok(true),
@@ -205,7 +238,7 @@ fn state(kb: &Path, what: &str, old: &str) -> TestResult<bool> {
 
 #[test]
 fn every_fault_point_leaves_old_or_new_bytes() -> TestResult {
-    for what in ["checkpoint", "new-run", "ticket", "status"] {
+    for what in ["checkpoint", "new-run", "ticket", "status", "retrieval"] {
         for step in Step::ALL {
             let w = world(&[])?;
             let old = match what {
@@ -227,7 +260,7 @@ fn every_fault_point_leaves_old_or_new_bytes() -> TestResult {
             match (&rerun, published, what) {
                 (Ok(_), false, _) | (Ok(_), true, "new-run") => {}
                 (Err(error), true, _) if error.exit_code() == 3 => {}
-                (Ok(_), true, "status") => {}
+                (Ok(_), true, "status" | "retrieval") => {}
                 _ => {
                     return Err(
                         format!("{what} at {}: rerun gave {:?}", step.name(), rerun.err()).into(),

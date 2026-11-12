@@ -3,7 +3,8 @@
 //! `runs` lists every run, newest activity first, with its effective state
 //! (the Writfold sidecar's `closed`, else the manifest's), where the work
 //! happens and its last checkpoint. `resume` shows one run: the run, its
-//! coverage counts, the items needing a recheck, and the newest checkpoint
+//! coverage counts, the items needing a recheck, its newest retrieval
+//! receipts (from `writfold tuft run`), and the newest checkpoint
 //! entry. With no run named it takes the current-run pointer, then the
 //! newest run of the project inferred from the working directory, then the
 //! newest open run. No liveness is claimed: there is no daemon.
@@ -132,6 +133,14 @@ pub fn resume(session: &Session<'_>, named: Option<&str>, cwd: &Path) -> Result<
     let tail = (rows.len() > 1).then(|| rows.remove(1));
     answer.rows.extend(rows);
     answer.rows.extend(coverage(session, &rec));
+    let (receipts, total) = crate::write::retrieval::rows(session, &rec)?;
+    if total > receipts.len() {
+        answer.notes.push(format!(
+            "{total} retrieval receipts; the newest {} are shown",
+            receipts.len()
+        ));
+    }
+    answer.rows.extend(receipts);
     answer.rows.extend(tail);
     if runs::state(session, &rec) == "closed" {
         answer.notes.push(format!("{} is closed", rec.id));

@@ -4,6 +4,9 @@
 //! `HEAD` is refused unless `--allow-dirty`, which adds `dirty=<digest of
 //! the work-tree bytes>`. Nothing is written; the token is printed for the
 //! caller to place.
+//!
+//! The span reading and token rendering are shared with the Tuft adapter
+//! (`code_token`, [`spans`]), so both produce the same tokens.
 use crate::emit::{Answer, Frame, Output, Row};
 use crate::error::{KbError, Result};
 use crate::session::Session;
@@ -13,10 +16,10 @@ use crate::workspace::{CANCELLED, GitTool, Workspace, budgets};
 use crate::{Request, write::atomic::digest};
 use std::path::Path;
 use writfold_domain::GitObjectId;
-use writfold_runtime::git::{
-    GitExecutable, KbRepository, kb_batch_check, kb_commit, kb_config, pinned_blobs,
-};
-use writfold_sources::citations::{iter_cite_tokens, normalize_span};
+use writfold_runtime::git::{GitExecutable, KbRepository, kb_commit, kb_config};
+use writfold_sources::citations::iter_cite_tokens;
+
+pub use super::span::{Lines, Span, Spanned, blobs, spans};
 
 #[derive(Clone, Debug, Default)]
 pub struct CiteMake {
@@ -45,69 +48,44 @@ fn value(key: &str, text: &str) -> Result<String> {
     })
 }
 
-/// The blob at `<commit>:<path>` and its bytes, if the path holds a blob.
-fn blob(
-    git: &GitExecutable<'_>,
-    dir: &Path,
-    commit: &str,
-    path: &str,
-) -> Result<Option<(GitObjectId, Vec<u8>)>> {
+/// The commit a citation pins: `origin/HEAD`, else `HEAD`.
+fn cited_commit(git: &GitExecutable<'_>, git_dir: &Path) -> Result<GitObjectId> {
     let reads = KbRepository {
-        git_dir: dir,
+        git_dir,
         work_tree: None,
     };
-    let names = [format!("{commit}:{path}")];
-    let found = kb_batch_check(git, reads, &names, budgets()?, &CANCELLED)?;
-    let Some(Some((id, kind))) = found.into_iter().next() else {
-        return Ok(None);
-    };
-    if kind != "blob" {
-        return Ok(None);
-    }
-    let bytes = pinned_blobs(git, dir, std::slice::from_ref(&id), budgets()?, &CANCELLED)?;
-    Ok(bytes.into_iter().next().map(|b| (id, b)))
-}
-
-/// The committed lines a citation pins: commit, blob, span digest, and the
-/// work-tree digest when the file differs from `HEAD`.
-struct Pinned {
-    rev: GitObjectId,
-    blob: GitObjectId,
-    span: String,
-    dirty: Option<String>,
-}
-
-fn pinned(git: &GitExecutable<'_>, dir: &Path, path: &str, make: &CiteMake) -> Result<Pinned> {
-    let git_dir = repos::git_dir(dir)
-        .ok_or_else(|| KbError::Refused(format!("{} is not a repository", dir.display())))?;
-    let reads = KbRepository {
-        git_dir: &git_dir,
-        work_tree: None,
-    };
-    let rev = match kb_commit(
+    match kb_commit(
         git,
         reads,
         "refs/remotes/origin/HEAD",
         budgets()?,
         &CANCELLED,
     )? {
-        Some(rev) => rev,
+        Some(rev) => Ok(rev),
         None => kb_commit(git, reads, "HEAD", budgets()?, &CANCELLED)?
-            .ok_or_else(|| KbError::Refused("the repository has no commit".into()))?,
+            .ok_or_else(|| KbError::Refused("the repository has no commit".into())),
+    }
+}
+
+/// The committed lines a citation pins: commit, the span read there, and
+/// the work-tree digest when the file differs from `HEAD`.
+struct Pinned {
+    rev: GitObjectId,
+    spanned: Spanned,
+    dirty: Option<String>,
+}
+
+fn pinned(git: &GitExecutable<'_>, dir: &Path, path: &str, make: &CiteMake) -> Result<Pinned> {
+    let git_dir = repos::git_dir(dir)
+        .ok_or_else(|| KbError::Refused(format!("{} is not a repository", dir.display())))?;
+    let rev = cited_commit(git, &git_dir)?;
+    let want = Span {
+        path: path.to_owned(),
+        lines: Lines::Range(make.first, make.last),
     };
-    let (blob_id, bytes) = blob(git, &git_dir, rev.as_str(), path)?
-        .ok_or_else(|| KbError::Refused(format!("{path} is not a file at {}", rev.as_str())))?;
-    let text = String::from_utf8_lossy(&bytes);
-    let lines: Vec<&str> = text.lines().collect();
-    let (a, b) = (make.first as usize, make.last as usize);
-    let window = lines.get(a - 1..b).ok_or_else(|| {
-        KbError::Usage(format!(
-            "{path} has {} lines at {}",
-            lines.len(),
-            rev.as_str()
-        ))
-    })?;
-    let span = normalize_span(window);
+    let spanned = spans(git, &git_dir, rev.as_str(), std::slice::from_ref(&want))?
+        .pop()
+        .ok_or_else(|| KbError::Usage("no span was read".into()))?;
     let dirty = dirty(git, &git_dir, dir, path)?;
     if dirty.is_some() && !make.allow_dirty {
         return Err(KbError::Refused(format!(
@@ -116,13 +94,63 @@ fn pinned(git: &GitExecutable<'_>, dir: &Path, path: &str, make: &CiteMake) -> R
     }
     Ok(Pinned {
         rev,
-        blob: blob_id,
-        span,
+        spanned,
         dirty,
     })
 }
 
-/// The token, in the field order the KB's tokens use, checked to parse back.
+/// The fields of one code citation.
+pub struct Fields<'a> {
+    pub repo: &'a str,
+    pub rev: &'a str,
+    pub spanned: &'a Spanned,
+    pub sym: Option<&'a str>,
+    pub seen: &'a str,
+    pub ttl: Option<&'a str>,
+    pub url: &'a str,
+    pub dirty: Option<&'a str>,
+}
+
+/// A code citation token in the field order the KB's tokens use
+/// (`kind=code repo rev path L blob span [sym] seen [ttl] url [dirty]`),
+/// checked to parse back.
+pub fn code_token(f: &Fields<'_>) -> Result<String> {
+    let s = f.spanned;
+    let mut fields = vec![
+        ("kind", "code".to_owned()),
+        ("repo", f.repo.to_owned()),
+        ("rev", f.rev.to_owned()),
+        ("path", s.path.clone()),
+        ("L", format!("{}-{}", s.first, s.last)),
+        ("blob", s.blob.clone()),
+        ("span", s.span.clone()),
+    ];
+    fields.extend(f.sym.map(|v| ("sym", v.to_owned())));
+    fields.push(("seen", f.seen.to_owned()));
+    fields.extend(f.ttl.map(|v| ("ttl", v.to_owned())));
+    fields.push(("url", f.url.to_owned()));
+    fields.extend(f.dirty.map(|v| ("dirty", v.to_owned())));
+    token(&fields)
+}
+
+/// `seen=`: the instant, to the minute.
+pub fn seen(now: i64) -> String {
+    format!("{}Z", &time::stamp(now)[..16])
+}
+
+/// `url=`: the repository's origin URL, else its directory.
+pub fn url(git: &GitExecutable<'_>, git_dir: &Path, dir: &Path) -> Result<String> {
+    let reads = KbRepository {
+        git_dir,
+        work_tree: None,
+    };
+    Ok(
+        kb_config(git, reads, "remote.origin.url", budgets()?, &CANCELLED)?
+            .unwrap_or_else(|| dir.to_string_lossy().into_owned()),
+    )
+}
+
+/// The token from its fields, checked to parse back.
 fn token(fields: &[(&str, String)]) -> Result<String> {
     let mut parts = Vec::new();
     for (key, text) in fields {
@@ -182,33 +210,23 @@ pub fn make(
         make.repo.clone()
     };
     let git_dir = repos::git_dir(&dir).unwrap_or_else(|| dir.clone());
-    let reads = KbRepository {
-        git_dir: &git_dir,
-        work_tree: None,
-    };
-    let url = kb_config(&git, reads, "remote.origin.url", budgets()?, &CANCELLED)?
-        .unwrap_or_else(|| dir.to_string_lossy().into_owned());
-    let seen = time::stamp(now);
+    let url = url(&git, &git_dir, &dir)?;
+    let text = code_token(&Fields {
+        repo: &name,
+        rev: pin.rev.as_str(),
+        spanned: &pin.spanned,
+        sym: make.sym.as_deref(),
+        seen: &seen(now),
+        ttl: make.ttl.as_deref(),
+        url: &url,
+        dirty: pin.dirty.as_deref(),
+    })?;
     let (a, b) = (make.first, make.last);
-    let mut fields = vec![
-        ("kind", "code".to_owned()),
-        ("repo", name.clone()),
-        ("rev", pin.rev.as_str().to_owned()),
-        ("path", path.to_owned()),
-        ("L", format!("{a}-{b}")),
-        ("blob", pin.blob.as_str().to_owned()),
-        ("span", pin.span),
-    ];
-    fields.extend(make.sym.iter().map(|s| ("sym", s.clone())));
-    fields.push(("seen", format!("{}Z", &seen[..16])));
-    fields.extend(make.ttl.iter().map(|t| ("ttl", t.clone())));
-    fields.push(("url", url));
-    fields.extend(pin.dirty.map(|d| ("dirty", d)));
     let answer = Answer {
         rows: vec![Row {
             kind: "cite",
             id: format!("code:{name}:{path}:{a}-{b}"),
-            text: token(&fields)?,
+            text,
             ..Row::default()
         }],
         notes: vec![format!(
@@ -238,7 +256,10 @@ fn dirty(
     if repos::git_dir(dir).as_deref() == Some(dir) {
         return Ok(None);
     }
-    let committed = blob(git, git_dir, "HEAD", path)?.map(|(_, b)| b);
+    let committed = blobs(git, git_dir, "HEAD", &[path])?
+        .pop()
+        .flatten()
+        .map(|(_, b)| b);
     let current = std::fs::read(dir.join(path)).ok();
     Ok(match (committed, current) {
         (Some(a), Some(b)) if a == b => None,
