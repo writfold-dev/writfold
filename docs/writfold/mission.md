@@ -94,7 +94,7 @@ Dropped as live obligations:
 1. Claude Code plugin: a SessionStart brief, PreCompact and Stop checkpoint
    drafts, and a short skill teaching the verbs.
 2. The `writfold kb` CLI, which works on a bare machine.
-3. A thin MCP server over the same verbs, for other harnesses.
+3. ~~A thin MCP server~~: deferred (12 November 2026) until another harness needs it.
 
 ### Record states instead of signatures
 
@@ -144,6 +144,16 @@ The owner's working flow: gates are atomic checks (instructions in `.md`, option
 4. **Weft verifies plans (owner decision, against the review's advice).** A plan step may require a Weft assessment. The agent submits a Weft file stating the step's assumptions and checks; each assumption may cite a Writfold receipt or citation. Writfold resolves those citations (fresh, satisfied, or not), runs the pinned `weft` binary, and records an assessed receipt. A check counts as met only when Weft entails it from assumptions Writfold has grounded; a check that rests on an ungrounded assumption is reported as hypothetical and does not meet the gate. Weft's own vocabulary (entailed, refuted, undetermined, inconsistent; basis hypothetical or grounded) is kept as Weft's.
 
 The agent submits drafts, statements and plans; Writfold writes every receipt and every verdict. The trust model is unchanged: cooperating and single-user; receipts resist mistakes, not adversaries.
+
+### The run graph, hooks and order of work (owner decision, 12 November 2026)
+
+After a fourth independent review, the owner adopted:
+
+- **The run graph is the form plan/advance takes.** Writfold records the graph and the agent walks it; Writfold does not schedule. v1 is one ordered spine of steps, each owing gates. Templates live in `.writfold/plans/` (steps written as `id: gates…`, optional `use=` includes). Loading a skill splices its template's steps before the current step as its children, recording the template snapshot by digest so later edits cannot rewrite the run; a splice is idempotent on (parent, template, digest, ordinal), `--again` adds another. Node identity is a path; the current node is the first neither done nor skipped; a done node whose gate no longer holds shows `!stale` and never moves the current node back. A changed template shows `!template-moved`; there is no migration. No branching or general DAG in v1. Weft verification is one gate kind on a node; the advance decision only sees met or not met.
+- **Hooks stay model-free.** Session start shows the plan position, an inbox (drafts, proposals, sessions that ended without evaluation) and whether the KB clone is behind its remote, from local refs only; after compaction it re-injects the plan position. Evaluation is a `writfold:evaluate` skill and a template's last wrap-up step, not a hook that runs a model. Proposals are `record` calls not yet made, kept in a local queue (`kb proposals list|show|accept|drop`), accepted through the normal write path.
+- **MCP is deferred**; the CLI and the Claude Code plugin are the interface. MCP returns only if another harness needs it.
+- **Proved and modelled later:** `writfold_core::plan` (current, advance check, splice) and the existing gate standing kernels move into the Aeneas-translated set; `spec/RunGraph.tla` models two sessions, merges, drift and crashes. Receipt ordering must not depend on a wall clock where it decides state.
+- **Order of work:** (1) these records, the site slimmed with the full skeletons moved to `docs/guide/*.md`; (2) instruction gates and user-defined delivery modes; (3) the linear run graph (`plan set|status|advance`); (4) splicing; (5) deterministic hooks; (6) one week of real use; then proofs, `RunGraph.tla`, `kb check` and proposals, the evaluation skill, and the Weft assessed gate.
 
 ### Narrow adapters for Tuft and Splicery (owner decision, 12 November 2026)
 
