@@ -17,7 +17,7 @@ use writfold_domain::GitObjectId;
 use writfold_domain::citation::Coverage;
 use writfold_store::backend::git::GitTreeBackend;
 use writfold_store::backend::{
-    ExactRead, LookupField, LookupRequest, MatchMode, Order, RecordKey, StorageBackend,
+    ExactRead, LookupField, LookupRequest, MatchMode, Order, StorageBackend,
 };
 
 /// One match: a file range and the 1-based line of its first byte.
@@ -33,6 +33,8 @@ pub struct Found {
     pub report: SearchReport,
     /// Exact bytes of every file with a hit, as `read_exact` returned them.
     pub files: BTreeMap<String, Vec<u8>>,
+    /// Working-tree paths whose searched bytes differ from the pinned blob.
+    pub dirty: std::collections::BTreeSet<String>,
 }
 
 impl Found {
@@ -50,39 +52,50 @@ impl Found {
     }
 }
 
-struct Collector<'a> {
+pub(super) struct Collector<'a> {
     plan: &'a FindPlan,
     hits: Vec<Hit>,
     files: BTreeMap<String, Vec<u8>>,
 }
 
 impl Collector<'_> {
+    pub(super) fn new(plan: &FindPlan) -> Collector<'_> {
+        Collector {
+            plan,
+            hits: Vec::new(),
+            files: BTreeMap::new(),
+        }
+    }
+
     /// Add one file's matches. Returns `false` when the limit cut this file.
-    fn add(&mut self, key: &RecordKey, content: &[u8], matches: &[(usize, usize)]) -> bool {
+    pub(super) fn add(&mut self, key: &str, content: &[u8], matches: &[(usize, usize)]) -> bool {
         let room = self.plan.budget.positions() - self.hits.len();
         let take = matches.len().min(room);
         for &(lo, hi) in matches.iter().take(take) {
             self.hits.push(Hit {
-                path: key.as_str().to_owned(),
+                path: key.to_owned(),
                 range: (lo, hi),
                 line: line_at(content, lo),
             });
         }
         if take > 0 {
-            self.files.insert(key.as_str().to_owned(), content.to_vec());
+            self.files.insert(key.to_owned(), content.to_vec());
         }
         take == matches.len()
     }
 
-    fn finish(self, coverage: Coverage, stop: Option<Stop>) -> Found {
+    pub(super) fn finish(self, coverage: Coverage, stop: Option<Stop>) -> Found {
         Found {
             report: SearchReport {
                 coverage,
                 stop,
                 hits: self.hits.len(),
+                index: None,
+                snapshot: None,
             },
             hits: self.hits,
             files: self.files,
+            dirty: Default::default(),
         }
     }
 }
@@ -96,6 +109,7 @@ pub fn find(backend: &GitTreeBackend<'_>, pin: &GitObjectId, plan: &FindPlan) ->
     match &plan.matcher {
         MatcherPlan::Text(needle) => text(backend, pin, needle, collector),
         MatcherPlan::Rx(_) => rx(backend, pin, collector),
+        MatcherPlan::Symbol { .. } => Err("symbol search needs --index FILE".into()),
     }
 }
 
@@ -122,7 +136,7 @@ fn text(
             if matches.is_empty() {
                 return Err("backend reported a file without the needle".into());
             }
-            if !collector.add(hit.key(), record.content(), &matches) {
+            if !collector.add(hit.key().as_str(), record.content(), &matches) {
                 let coverage = match page.coverage() {
                     Coverage::Measured { examined, total } => Coverage::Measured {
                         examined: examined.saturating_sub(1),
@@ -175,7 +189,7 @@ fn rx(
                     zero.offset
                 )
             })?;
-            if !collector.add(hit.key(), record.content(), &matches) {
+            if !collector.add(hit.key().as_str(), record.content(), &matches) {
                 let coverage = Coverage::Measured { examined, total };
                 return Ok(collector.finish(coverage, Some(Stop::HitLimit)));
             }

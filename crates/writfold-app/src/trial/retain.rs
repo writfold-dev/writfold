@@ -149,7 +149,8 @@ pub fn read_pinned(
     commit: &str,
     path: &str,
 ) -> Result<PinnedBlob> {
-    let git_dir = fs::canonicalize(repo.join(".git"))?;
+    let git_dir = writfold_kb::stale::repos::git_dir(repo)
+        .ok_or("repository has no readable Git directory")?;
     let commit = commit_id(commit)?;
     let (blob, content) = trial_blob(executable, &git_dir, &commit, path, budgets()?, &CANCELLED)?;
     Ok(PinnedBlob {

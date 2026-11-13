@@ -20,6 +20,8 @@ pub enum Tok {
     RParen,
     Comma,
     Colon,
+    /// A malformed token already diagnosed by the lexer.
+    Invalid,
     Eof,
 }
 
@@ -39,6 +41,7 @@ impl Tok {
             Self::RParen => "`)`".into(),
             Self::Comma => "`,`".into(),
             Self::Colon => "`:`".into(),
+            Self::Invalid => "an invalid token".into(),
             Self::Eof => "end of program".into(),
         }
     }
@@ -50,33 +53,69 @@ pub struct Token {
     pub span: Span,
 }
 
-pub fn lex(source: &[u8]) -> Result<Vec<Token>, Diagnostic> {
+/// Tokens and independent lexical diagnostics; invalid statements can still
+/// be skipped while the parser checks the remaining statements.
+pub struct Lexed {
+    pub tokens: Vec<Token>,
+    pub diagnostics: Vec<Diagnostic>,
+}
+
+pub fn lex(source: &[u8]) -> Lexed {
+    let mut result = Lexed {
+        tokens: Vec::new(),
+        diagnostics: Vec::new(),
+    };
+    let text = match std::str::from_utf8(source) {
+        Ok(text) => text,
+        Err(error) => {
+            let at = error.valid_up_to();
+            result.diagnostics.push(Diagnostic::new(
+                Code::Encoding,
+                Span::new(at, at + 1),
+                "invalid UTF-8",
+            ));
+            return result;
+        }
+    };
+    result.diagnostics.extend(
+        text.match_indices('\0')
+            .map(|(at, _)| Diagnostic::new(Code::Encoding, Span::new(at, at + 1), "NUL refused")),
+    );
+    let mut lexer = Lexer { text, at: 0 };
     if source.starts_with(b"\xEF\xBB\xBF") {
-        return Err(Diagnostic::new(
+        result.diagnostics.push(Diagnostic::new(
             Code::Encoding,
             Span::new(0, 3),
             "byte-order mark refused",
         ));
+        lexer.at = 3;
+        result.tokens.push(Token {
+            tok: Tok::Invalid,
+            span: Span::new(0, 3),
+        });
     }
-    let text = std::str::from_utf8(source).map_err(|e| {
-        let at = e.valid_up_to();
-        Diagnostic::new(Code::Encoding, Span::new(at, at + 1), "invalid UTF-8")
-    })?;
-    if let Some(at) = text.find('\0') {
-        return Err(Diagnostic::new(
-            Code::Encoding,
-            Span::new(at, at + 1),
-            "NUL refused",
-        ));
-    }
-    let mut lexer = Lexer { text, at: 0 };
-    let mut tokens = Vec::new();
     loop {
-        let token = lexer.next()?;
-        let end = token.tok == Tok::Eof;
-        tokens.push(token);
-        if end {
-            return Ok(tokens);
+        let before = lexer.at;
+        match lexer.next() {
+            Ok(token) => {
+                let end = token.tok == Tok::Eof;
+                result.tokens.push(token);
+                if end {
+                    return result;
+                }
+            }
+            Err(diagnostic) => {
+                lexer.recover(before, &diagnostic);
+                result.tokens.push(Token {
+                    tok: Tok::Invalid,
+                    span: diagnostic.span,
+                });
+                if !result.diagnostics.iter().any(|existing| {
+                    existing.code == Code::Encoding && existing.span == diagnostic.span
+                }) {
+                    result.diagnostics.push(diagnostic);
+                }
+            }
         }
     }
 }
@@ -93,6 +132,31 @@ fn word_byte(b: u8) -> bool {
 impl Lexer<'_> {
     fn peek(&self, ahead: usize) -> Option<u8> {
         self.text.as_bytes().get(self.at + ahead).copied()
+    }
+
+    fn recover(&mut self, before: usize, diagnostic: &Diagnostic) {
+        if diagnostic.code == Code::Literal {
+            while let Some(byte) = self.peek(0) {
+                if matches!(byte, b'\n' | b'\r') {
+                    break;
+                }
+                self.at += 1;
+                if byte == b'"' {
+                    break;
+                }
+                if byte == b'\\' && self.peek(0).is_some() {
+                    self.at += 1;
+                }
+            }
+        } else {
+            self.at = self.at.max(diagnostic.span.hi).min(self.text.len());
+        }
+        if self.at <= before && self.at < self.text.len() {
+            self.at += 1;
+        }
+        while !self.text.is_char_boundary(self.at) {
+            self.at += 1;
+        }
     }
 
     fn skip_trivia(&mut self) -> Result<(), Diagnostic> {
@@ -147,6 +211,13 @@ impl Lexer<'_> {
             b'(' => self.punct(1, Tok::LParen),
             b')' => self.punct(1, Tok::RParen),
             b',' => self.punct(1, Tok::Comma),
+            0 => {
+                return Err(Diagnostic::new(
+                    Code::Encoding,
+                    Span::new(lo, lo + 1),
+                    "NUL refused",
+                ));
+            }
             _ => {
                 let width = self.text[lo..].chars().next().map_or(1, char::len_utf8);
                 return Err(Diagnostic::new(
@@ -233,7 +304,13 @@ impl Lexer<'_> {
                         Some(b'n') => '\n',
                         Some(b'r') => '\r',
                         Some(b't') => '\t',
-                        _ => return Err(literal(here, self.at + 1, "unsupported escape")),
+                        _ => {
+                            return Err(literal(
+                                here,
+                                (self.at + 1).min(self.text.len()),
+                                "unsupported escape",
+                            ));
+                        }
                     };
                     self.at += 1;
                     out.push(decoded);

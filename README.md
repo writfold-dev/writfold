@@ -19,7 +19,7 @@ rebuilt. A new machine needs `git clone` and one binary.
 | Tool | Job | Try it |
 |---|---|---|
 | **Writfold** (this repo) | Answers continuity questions from a Git knowledge base; runs, checkpoints, gates with receipts, plans and delivery checks | [Try it](#try-it), below |
-| **Tuft** (this repo, `crates/tuft`) | Finds and projects exact evidence from a pinned commit under a token budget | [Tuft](#find-and-cite-exact-evidence-with-tuft), below |
+| **Tuft** (this repo, `crates/tuft`) | Searches pinned repositories with coverage and citations; imports ctags symbols with partial coverage | [Tuft](#find-and-cite-exact-evidence-with-tuft), below |
 | [**Weft**](https://github.com/writfold-dev/weft) | Checks what declared assumptions actually support: entailed, refuted or open | [Weft: Try it](https://github.com/writfold-dev/weft#try-it) |
 | [**Splicery**](https://github.com/writfold-dev/splicery) | Describes byte-exact edits and previews the result without touching the file | [Splicery: Try it](https://github.com/writfold-dev/splicery#try-it) |
 
@@ -392,7 +392,7 @@ error. See [Tuft's KB adapter](docs/tuft/language.md#kb-adapter).
 | `writfold trial approve --require CHECK` | Refuses unless each named check of the bound Weft report is `entailed` (recorded as hypothetical, never as grounded) | proved: `required_entailed_spec` |
 | `writfold trial retain` | Keeps exact bytes of a file at a full commit id as a citation; reports citing anything else are refused | [trial profile](docs/writfold/trial-profile.md) |
 | `writfold trial evidence list/show` | Reads retained evidence back in a later session: compact rows, and exact bytes verified against their digest before printing (tampered evidence refuses); context lines come from the pinned blob, marked apart | [trial profile](docs/writfold/trial-profile.md#reusing-evidence-in-a-later-session) |
-| `writfold tuft run` | Exact find, retain, project and emit over one pinned commit; `--cite` adds KB citation tokens, and a run with a current KB run records a retrieval receipt there | [Tuft v0](docs/tuft/language.md), [adapter as built](docs/writfold/kb-v1-design.md#15-tuft-adapter-as-built) |
+| `writfold tuft run/grep/check` | One-line searches, resolved refs, mapped repositories, spanned JSON diagnostics, dirty working-tree citations and commit-checked ctags symbols; saved programs and receipts stay pinned | [Tuft v0 and JSON contract](docs/tuft/language.md) |
 | `writfold trial run` | Tuft evidence → a Weft report from the binary you name → `prepare`, in one command; stops at approval | [one command](docs/writfold/trial-profile.md#one-command) |
 | `writfold serve` | JSON-RPC 2.0 on stdio; with `writfold.trial/1`, `trial/show`, `trial/retain` and `trial/prepare`. Approval stays CLI-only | [trial profile](docs/writfold/trial-profile.md#through-serve) |
 
@@ -425,13 +425,12 @@ the hardened alpha path.
 
 ### Find and cite exact evidence with Tuft
 
-[Tuft v0](docs/tuft/language.md) searches one pinned commit exactly, retains
-each hit as a citation a Weft report can cite, and prints a compact view
-under a token budget, with explicit omissions and a resume cursor:
+[Tuft v0](docs/tuft/language.md) searches exact bytes at resolved commits and
+prints a compact, budgeted view with coverage, omissions and a resume cursor:
 
 ```sh
-printf '@h := find text "trial_blob(" in "crates/" at "%s";\n@e := retain @h around lines 0;\n@v := project @e [path, line, excerpt(max_chars: 200)];\nemit @v budget_tokens 300;\n' "$(git rev-parse HEAD)" > q.tuft
-WRITFOLD_KB=/path/to/kb target/release/writfold tuft run q.tuft --repo .
+WRITFOLD_KB=/path/to/kb target/release/writfold tuft grep 'trial_blob(' \
+    --repo . --at HEAD --in 'crates/**/*.rs' --cite
 ```
 
 No setup is needed. With a KB found (from inside it, `$WRITFOLD_KB`, or
@@ -440,6 +439,13 @@ keeps its retained evidence in the KB's Git directory,
 `writfold/tuft-state/`, created on first use. Pass `--state DIR` instead to
 retain into a trial state made by `writfold trial init`, which a Weft report
 for `trial prepare` can cite.
+
+`--print-program` shows the pinned lowering on stderr. Saved `tuft run FILE`
+programs and `tuft check FILE --json` remain strict. Repeat `--repo NAME@REF`
+for the KB's mapped repositories, each with its own coverage and citations.
+`--working-tree` explicitly marks uncommitted bytes dirty.
+`find def|refs "NAME"` imports a user-generated ctags index only at its declared
+commit, with partial coverage. See the [language and output contract](docs/tuft/language.md).
 
 It prints one `path:line: text` row per hit, as `grep -n` would, and a
 trailer that says whether anything is missing:

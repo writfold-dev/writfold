@@ -196,7 +196,7 @@ pub fn make(
     let session = Session::open(ws, Some(tool), false, now)?;
     let git = tool.admit()?;
     let path = checked(make)?;
-    let dir = repos::locate(&session, &make.repo, &request.cwd).ok_or_else(|| {
+    let dir = repos::locate(Some(session.ws), &make.repo, &request.cwd).ok_or_else(|| {
         KbError::Refused(format!(
             "no local repository {:?} (map it in <git dir>/writfold/repos)",
             make.repo

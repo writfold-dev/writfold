@@ -40,6 +40,7 @@ struct Checker {
     names: BTreeMap<String, Entry>,
     diagnostics: Vec<Diagnostic>,
     plans: BTreeMap<usize, Lowered>,
+    allow_refs: bool,
 }
 
 enum Lowered {
@@ -49,7 +50,18 @@ enum Lowered {
 }
 
 pub fn check(program: &Program, source: &[u8]) -> Result<Plan, Vec<Diagnostic>> {
-    let mut checker = Checker::default();
+    check_mode(program, source, false)
+}
+
+pub(crate) fn check_mode(
+    program: &Program,
+    source: &[u8],
+    allow_refs: bool,
+) -> Result<Plan, Vec<Diagnostic>> {
+    let mut checker = Checker {
+        allow_refs,
+        ..Checker::default()
+    };
     for (index, binding) in program.bindings.iter().enumerate() {
         checker.binding(index, binding);
     }
@@ -202,6 +214,19 @@ impl Checker {
                     return Kind::Hits;
                 }
             },
+            Matcher::Symbol { kind, name } => {
+                if name.is_empty() || name.len() > ir::MAX_NEEDLE_BYTES {
+                    self.error(
+                        Code::Needle,
+                        find.matcher_span,
+                        "symbol name must be 1..=4096 bytes",
+                    );
+                }
+                MatcherPlan::Symbol {
+                    kind: *kind,
+                    name: name.clone(),
+                }
+            }
         };
         let scope = find
             .scope
@@ -212,16 +237,7 @@ impl Checker {
         {
             self.error(Code::Scope, text.span, message);
         }
-        if !full_commit(&find.at.value) {
-            let base = "`at` needs a full 40- or 64-digit lowercase commit id; refs, abbreviations and HEAD are refused";
-            let value = &find.at.value;
-            let message = if value.is_empty() || value.contains(['\'', '\n']) {
-                base.to_owned()
-            } else {
-                format!("{base}; pin it with `git rev-parse '{value}^{{commit}}'`")
-            };
-            self.error(Code::Pin, find.at.span, message);
-        }
+        self.pin(&find.at);
         let limit = self.bounded(
             find.limit,
             ir::DEFAULT_FIND_LIMIT,
@@ -238,6 +254,22 @@ impl Checker {
         };
         self.plans.insert(index, Lowered::Find(plan));
         Kind::Hits
+    }
+
+    fn pin(&mut self, at: &ast::Text) {
+        if self.allow_refs && !at.value.is_empty() {
+            return;
+        }
+        if !full_commit(&at.value) {
+            let base = "`at` needs a full 40- or 64-digit lowercase commit id; refs, abbreviations and HEAD are refused";
+            let value = &at.value;
+            let message = if value.is_empty() || value.contains(['\'', '\n']) {
+                base.to_owned()
+            } else {
+                format!("{base}; pin it with `git rev-parse '{value}^{{commit}}'`")
+            };
+            self.error(Code::Pin, at.span, message);
+        }
     }
 
     fn retain(&mut self, index: usize, name: &str, source: &Name, around: Option<Number>) -> Kind {
@@ -277,7 +309,7 @@ impl Checker {
             }
             if !evidence && matches!(lowered, Field::Binding | Field::Excerpt { .. }) {
                 let message = format!(
-                    "field `{}` needs retained evidence; retain @{} first",
+                    "field `{}` needs retained evidence; add `@e := retain @{};` before `@{name} := project` and project @e instead",
                     lowered.name(),
                     project.source.text
                 );
@@ -351,7 +383,7 @@ fn plan(
     }
 }
 
-fn full_commit(text: &str) -> bool {
+pub(crate) fn full_commit(text: &str) -> bool {
     matches!(text.len(), 40 | 64)
         && text
             .bytes()

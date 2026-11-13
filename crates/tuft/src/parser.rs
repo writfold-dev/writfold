@@ -1,5 +1,5 @@
 //! Recursive-descent parser for the grammar in `docs/tuft/language.md`.
-//! It stops at the first syntax error; the checker reports the rest.
+//! Reports independent syntax errors, recovering at statement boundaries.
 use crate::ast::{
     Binding, Direction, Emit, Field, FieldKind, Find, Matcher, Name, Number, Operation, Program,
     Project, SortField, SortKey, Text,
@@ -7,21 +7,45 @@ use crate::ast::{
 use crate::diag::{Code, Diagnostic, Span};
 use crate::lexer::{Tok, Token};
 
-pub fn parse(tokens: &[Token]) -> Result<Program, Diagnostic> {
+pub fn parse(tokens: &[Token]) -> Result<Program, Vec<Diagnostic>> {
     let mut parser = Parser { tokens, at: 0 };
     let mut bindings = Vec::new();
-    loop {
-        match &parser.current().tok {
-            Tok::Handle(_) => bindings.push(parser.binding()?),
-            Tok::Word(w) if w == "emit" => break,
-            _ => return Err(parser.unexpected("a binding `@name := ...` or `emit`")),
+    let mut emit = None;
+    let mut diagnostics = Vec::new();
+    let mut invalid = false;
+    let mut after_emit = false;
+    while parser.current().tok != Tok::Eof {
+        if emit.is_some() && !after_emit {
+            diagnostics
+                .push(parser.unexpected("end of program: `emit` must be the last statement"));
+            after_emit = true;
+        }
+        if parser.invalid_statement() {
+            invalid = true;
+            parser.recover();
+            continue;
+        }
+        let result = match &parser.current().tok {
+            Tok::Handle(_) => parser.binding().map(|binding| bindings.push(binding)),
+            Tok::Word(w) if w == "emit" => parser.emit().map(|value| {
+                emit = Some(value);
+            }),
+            _ => Err(parser.unexpected("a binding `@name := ...` or `emit`")),
+        };
+        if let Err(diagnostic) = result {
+            diagnostics.push(diagnostic);
+            parser.recover();
         }
     }
-    let emit = parser.emit()?;
-    if parser.current().tok != Tok::Eof {
-        return Err(parser.unexpected("end of program: `emit` must be the last statement"));
+    if emit.is_none() && diagnostics.is_empty() && !invalid {
+        diagnostics.push(parser.unexpected("a binding `@name := ...` or `emit`"));
     }
-    Ok(Program { bindings, emit })
+    if diagnostics.is_empty()
+        && let Some(emit) = emit
+    {
+        return Ok(Program { bindings, emit });
+    }
+    Err(diagnostics)
 }
 
 struct Parser<'a> {
@@ -35,6 +59,22 @@ const EOF: Token = Token {
 };
 
 impl Parser<'_> {
+    fn invalid_statement(&self) -> bool {
+        self.tokens[self.at..]
+            .iter()
+            .take_while(|token| !matches!(token.tok, Tok::Semi | Tok::Eof))
+            .any(|token| token.tok == Tok::Invalid)
+    }
+
+    fn recover(&mut self) {
+        while !matches!(self.current().tok, Tok::Semi | Tok::Eof) {
+            self.bump();
+        }
+        if self.current().tok == Tok::Semi {
+            self.bump();
+        }
+    }
+
     fn current(&self) -> &Token {
         self.tokens.get(self.at).unwrap_or(&EOF)
     }
@@ -163,7 +203,22 @@ impl Parser<'_> {
                 self.bump();
                 Matcher::Rx(source)
             }
-            _ => return Err(self.unexpected("`text \"...\"`, `rx\"...\"` or `similar \"...\"`")),
+            Tok::Word(w) if w == "def" || w == "refs" => {
+                self.bump();
+                Matcher::Symbol {
+                    kind: if w == "def" {
+                        crate::ir::SymbolKind::Def
+                    } else {
+                        crate::ir::SymbolKind::Refs
+                    },
+                    name: self.text()?.value,
+                }
+            }
+            _ => {
+                return Err(self.unexpected(
+                    "`text \"...\"`, `rx\"...\"`, `def`, `refs` or `similar \"...\"`",
+                ));
+            }
         };
         let matcher_span = lo.to(self
             .tokens

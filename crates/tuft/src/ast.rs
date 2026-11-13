@@ -56,6 +56,10 @@ pub enum Operation {
 pub enum Matcher {
     Text(String),
     Rx(String),
+    Symbol {
+        kind: crate::ir::SymbolKind,
+        name: String,
+    },
     /// Parsed so it can be refused by type (`T301`).
     Similar(String),
 }

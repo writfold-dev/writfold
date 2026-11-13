@@ -7,6 +7,7 @@
 //! as fresh under `writfold kb stale` while the cited lines are unchanged.
 //! The receipt goes through the KB write protocol. With no KB and no run,
 //! and without `--cite`, nothing here runs and the output is today's.
+mod dirty;
 use super::Executed;
 use crate::trial::Result;
 use std::path::{Path, PathBuf};
@@ -111,14 +112,17 @@ pub fn adapt(
         .collect();
     let now = options.now.unwrap_or_else(writfold_kb::time::now);
     let commit = &executed.plan.find.commit;
-    let ws = target.as_ref().map(|t| &t.ws);
-    let cited = match retrieval::cite_spans(ws, repo, commit, &spans, now) {
+    let discovered = (target.is_none() && options.discover)
+        .then(|| discover(None, &options.cwd).ok())
+        .flatten();
+    let ws = target.as_ref().map(|t| &t.ws).or(discovered.as_ref());
+    let cited = match dirty::cite_spans(executed, ws, repo, &spans, now) {
         Ok(cited) => cited,
         Err(error) if !options.cite && target.as_ref().is_some_and(|t| !t.explicit) => {
             adapted.notes.push(format!("not recorded: {error}"));
             return Ok(adapted);
         }
-        Err(error) => return Err(error.into()),
+        Err(error) => return Err(error),
     };
     if !cited.resolvable && !cited.tokens.is_empty() {
         adapted.notes.push(format!(
@@ -182,7 +186,7 @@ fn record(target: &Target, receipt: Retrieval, options: &Options) -> Result<Stri
 /// The output with one `  cite: <token>` line under each shown row
 /// (compact and verbose), or a `cites` array beside `rows` (JSON).
 pub fn with_cites(format: Format, printed: &str, tokens: &[String]) -> String {
-    if tokens.is_empty() {
+    if tokens.is_empty() && format != Format::Json {
         return printed.to_owned();
     }
     match format {

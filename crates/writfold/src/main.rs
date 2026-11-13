@@ -16,9 +16,23 @@ fn main() -> ExitCode {
     else {
         return failure("arguments must be valid UTF-8");
     };
+    if all.first().map(String::as_str) == Some("tuft") {
+        let outcome = writfold_app::tuft::cli::outcome(&all[1..]);
+        if io::stdout()
+            .lock()
+            .write_all(outcome.stdout.as_bytes())
+            .is_err()
+            || io::stderr()
+                .lock()
+                .write_all(outcome.stderr.as_bytes())
+                .is_err()
+        {
+            return ExitCode::FAILURE;
+        }
+        return ExitCode::from(outcome.code);
+    }
     let subcommand: Option<fn(&[String]) -> _> = match all.first().map(String::as_str) {
         Some("trial") => Some(writfold_app::trial::cli::main),
-        Some("tuft") => Some(writfold_app::tuft::cli::main),
         _ => None,
     };
     if let Some(subcommand) = subcommand {

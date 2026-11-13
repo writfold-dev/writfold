@@ -87,6 +87,8 @@ pub(super) fn tuft(
         state: &f.state,
         cursor: cursor.as_ref(),
         format,
+        working_tree: false,
+        index: None,
     })
     .map(|emitted| emitted.printed())
 }

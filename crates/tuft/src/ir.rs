@@ -25,12 +25,21 @@ pub struct Plan {
     pub emit: EmitPlan,
 }
 
+/// The indexed relationship requested by a symbol search.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum SymbolKind {
+    Def,
+    Refs,
+}
+
 #[derive(Clone, Debug)]
 pub enum MatcherPlan {
     /// Exact bytes; every occurrence, including overlapping starts.
     Text(String),
     /// Bounded regex; leftmost-first, non-overlapping; zero-width refuses.
     Rx(Pattern),
+    /// An external index supplies these locations, with partial coverage.
+    Symbol { kind: SymbolKind, name: String },
 }
 
 impl MatcherPlan {
@@ -38,6 +47,13 @@ impl MatcherPlan {
         match self {
             Self::Text(needle) => ("text", needle),
             Self::Rx(pattern) => ("rx", pattern.source()),
+            Self::Symbol { kind, name } => (
+                match kind {
+                    SymbolKind::Def => "def",
+                    SymbolKind::Refs => "refs",
+                },
+                name,
+            ),
         }
     }
 }
@@ -46,9 +62,9 @@ impl MatcherPlan {
 pub struct FindPlan {
     pub binding: String,
     pub matcher: MatcherPlan,
-    /// Byte prefix of repository paths; empty means the whole tree.
+    /// Literal byte prefix or repository-relative glob; see [`crate::scope`].
     pub scope: String,
-    /// Full lowercase commit id (40 or 64 hex digits).
+    /// Full lowercase commit id, or an unresolved ref from `compile_unpinned`.
     pub commit: String,
     /// `positions` bounds match positions (the `limit`); `candidates` bounds
     /// the files that contribute them, which can never exceed the positions.
