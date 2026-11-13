@@ -1,6 +1,6 @@
 # Writfold guides
 
-> **Status:** built in v0.4.0-dev.1. Each page below says what is built and what is planned.
+> **Status:** built in v0.5.0-dev.1 (guard rules, checklist gates, kind declarations, the `--json` page and concluding investigations are new). Each page below says what is built and what is planned.
 
 These pages hold the full skeletons the website only sketches: file layouts, complete configuration files and real command output. The output comes from an invented demo knowledge base (`harbor`); run IDs and digests are real, local paths are cut to `…`.
 

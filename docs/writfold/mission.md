@@ -117,11 +117,21 @@ The v1 design is [kb-v1-design.md](kb-v1-design.md).
 9. ~~G2: offline delivery candidates; G2b: an optional guard hook~~ (`deliver prepare|check|attest|waive|status`, `gate attest|waive`, `hook pre-tool-use`; [as built](kb-v1-design.md#19-g2-as-built)). Then, from the order of work below, ~~instruction gates and user-defined delivery modes~~ (`instructions`, `{gate}`, `.writfold/deliveries/<mode>.toml`; [as built](kb-v1-design.md#20-instruction-gates-and-delivery-modes-as-built)).
 10. A two-week pause: count real catches and waivers from the receipts. If no catch mattered, keep G1 and drop the rest.
 11. M4b: MCP, trailer and tracker edges, `--at`. G3 only if the pause justifies it.
-- ~~Guard rules and the Stop nudge~~ (v0.5.0-dev.1; `.writfold/guards/<id>.toml`; [as built](kb-v1-design.md#30-guard-rules-and-the-stop-nudge-as-built)): a rule can refuse a named command, such as `git commit`, until the run's gates are met. The rule reads gates; it is a guard, not enforcement.
 
-Since then: ~~kind declarations (a default lifetime, `immutable`, required fields per citation kind), the stale-citation count at session start, and the documented `--json` envelope~~ (v0.5.0-dev.1; [as built](kb-v1-design.md#29-kind-declarations-the-stale-count-at-start-and-the-json-envelope-v050-dev1)).
+**v0.5.0-dev.1** (13 November 2026): enforcement and evidence that a team configures, not code it writes.
 
-Since v0.4.0-dev.1: ~~checklist gates and `gate cover`~~ (built in v0.5.0-dev.1: items covered with grounded evidence or a reason, re-grounded on every read; [as built](kb-v1-design.md#31-checklist-gates-and-gate-cover-as-built-v050-dev1)).
+- ~~Guard rules and the Stop nudge~~ (`.writfold/guards/<id>.toml`; [as built](kb-v1-design.md#30-guard-rules-and-the-stop-nudge-as-built)): a rule can refuse a named command, such as `git commit`, until the run's gates are met. The rule reads gates; it is a guard, not enforcement.
+- ~~Checklist gates and `gate cover`~~ (items covered with grounded evidence or a reason, re-grounded on every read; [as built](kb-v1-design.md#31-checklist-gates-and-gate-cover-as-built-v050-dev1)).
+- ~~Kind declarations (a default lifetime, `immutable`, required fields per citation kind), the stale-citation count at session start, and the documented `--json` envelope~~ ([as built](kb-v1-design.md#29-kind-declarations-the-stale-count-at-start-and-the-json-envelope-v050-dev1)).
+- ~~Concluding an investigation~~ once its write-up is complete ([record states](../guide/feeding-back.md#record-states)).
+
+Considered for this release and deferred, with the reason:
+
+- **External source checkers** (a command Writfold runs to check a citation kind it cannot check from Git, such as a tracker item's state). Deferred: it is the first non-Git process on the read path, so `kb stale` would answer differently on a machine without the checker and its credentials; it needs a cache and receipts designed first. Kind declarations are the registry it would attach to. Until then, a fact that must hold before shipping can be an `observed` gate.
+- **A separate observation record** (what was looked at, by which command, with what result, including failed lookups) as evidence for checklist items. Deferred until real cover rows show evidence a citation, locator or receipt cannot express.
+- **Writing a decision's `accepted`, `applied` and `verified` states.** Deferred: each binds the decision to a reviewed revision and an implementation, and that binding is not designed yet. `record decision` already gives a durable, reviewable draft.
+- **Following a rename with edits** for code citations (exact renames are already followed).
+- **Not planned:** user-declared record lifecycles, path globs and origin matching on guard rules, per-audience render and redaction templates for citations, fetching cited repositories, and bulk inventory import (a loop over `record` reviewed as a Git diff does this).
 
 ## Gates, runs and progress (owner decision, 12 November 2026)
 
