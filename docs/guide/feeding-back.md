@@ -1,6 +1,6 @@
 # Feeding the knowledge base
 
-> **Status:** built in v0.3.0-dev.1; proposals, the backfill and reflection checks, required steps spliced into every run and the `writfold:evaluate` skill built in v0.4.0-dev.1; concluding an investigation built in v0.5.0-dev.1.
+> **Status:** built in v0.3.0-dev.1; proposals, the backfill and reflection checks, required steps spliced into every run and the `writfold:evaluate` skill built in v0.4.0-dev.1; concluding an investigation built in v0.5.0-dev.1; a decision's `accepted`, `applied` and `verified` states built in v0.5.0-dev.2.
 
 Reading the knowledge base (KB) is half of the loop. The other half is what each stage of the work writes back, so that the next session starts from more than this one did. This page follows one piece of work through the four stages and says, for each thing written: which verb writes it, where it lands, and who commits it.
 
@@ -75,10 +75,26 @@ The first command starts the run and makes it the current one; later `checkpoint
 |---|---|
 | ticket | any state of its vocabulary |
 | investigation | `open`, `monitoring`, `abandoned`, and `concluded` once the write-up is complete (below) |
-| decision | `draft`↔`proposed`, `proposed`→`rejected` (needs `--by`), `accepted`→`deferred`, any→`superseded` (needs `--superseded-by`) |
+| decision | `draft`↔`proposed`, `proposed`→`accepted` (needs `--by`), `proposed`→`rejected` (needs `--by`), `accepted`→`deferred`, `accepted`→`applied` (needs `--commit`), `applied`→`verified` (needs `--evidence`), any→`superseded` (needs `--superseded-by`) |
 | run | `open`, `closed` |
 
-`proposed` requires the decision's Research, two Alternatives and an Acceptance gates table to be filled. Writfold v1 reads `accepted`, `landing`, `applied`, `verified` and `regressed` but refuses to set them: they carry extra fields it does not compute. `--by` is recorded as given; the Git commit that adds the change is the record of who made it.
+`proposed` requires the decision's Research, two Alternatives and an Acceptance gates table to be filled. `--by` is recorded as given; the Git commit that adds the change is the record of who made it. Every decision change sets `updated` and `last_actor` and adds a line to the Decision log.
+
+The three later states (built in v0.5.0-dev.2) each need one thing, and are refused with exit 3 and nothing written without it. No state can be skipped: `applied` only follows `accepted`, `verified` only follows `applied`.
+
+```sh
+writfold kb status decision/2026-11-11-replay-in-batches --set accepted --by ops-review
+writfold kb status decision/2026-11-11-replay-in-batches --set applied --commit demo-service@4f2a91c
+writfold kb status decision/2026-11-11-replay-in-batches --set verified --evidence gate:unit
+```
+
+| State | Needs | Writes |
+|---|---|---|
+| `accepted` | `--by WHO`, and the same review readiness `proposed` checks, again | `decided_by` and `acceptor` (the actor), `accepted_revision` (the record's design revision, which ignores status fields and the Decision log, so later state changes keep it) |
+| `applied` | `--commit REPO@SHA`: a full commit ID or a unique prefix of at least four hex digits, in a local clone of `REPO` (found as `kb stale` finds cited repositories), and in the history of that clone's `origin/HEAD`, else `HEAD` | the full `REPO@<commit>` appended to `landed`; `executor` when `--by` is given |
+| `verified` | `--evidence REF`: a gate receipt of the run (a path under `runs/<run>/gates/` or a receipt name) or `gate:<id>`, that grounds now as a passing check; `--run` and `--repo` pick the run and subject as `gate status` does | `verifier` when `--by` is given, and the evidence, its standing and the subject commit in the Decision log line |
+
+A `verified` line, such as `- 2026-11-12: verified; evidence gate:unit satisfied (runs/<run>/gates/unit-….json) on demo-service@3c1d09a8e4b2`, is a fact about the moment it was written: Writfold does not re-check it later, so a decision stays `verified` after its gate goes stale. An attested or waived gate is not a passing check and is refused, as is a stale receipt or one from another run. `landing` and `regressed` are read but never written.
 
 `concluded` (built in v0.5.0-dev.1) is refused, with exit 3 and nothing written, until the investigation has text under `## Checked against` and `## Scope and limits`, and every hypothesis under `## Hypotheses` has an outcome. A hypothesis is a bullet `- H<n>: <outcome> …` whose outcome is `open`, `supported`, `refuted` or `unk`; a bullet that starts `- H<n>` without one is refused as unreadable. Concluding records that the write-up is complete, not that its findings are true.
 

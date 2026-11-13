@@ -1,11 +1,15 @@
-//! How far a KB branch is from its upstream, from local refs only.
+//! How far a KB branch is from its upstream, and whether one commit is in
+//! another's history, from local refs only.
 //!
 //! One `for-each-ref` spawn: the branch's configured upstream and Git's own
 //! ahead/behind count against the remote-tracking ref as last fetched.
-//! Nothing here fetches or contacts a remote.
+//! One `merge-base --is-ancestor` spawn for ancestry. Nothing here fetches
+//! or contacts a remote.
 use super::kb::{KbRepository, run};
 use super::{GitBudgets, GitError, GitExecutable};
+use crate::process;
 use std::sync::atomic::AtomicBool;
+use writfold_domain::GitObjectId;
 
 /// A branch's upstream and the commits each side has that the other lacks.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -38,6 +42,32 @@ pub fn kb_upstream(
     let output = run(executable, repository, &args, &[], budgets, cancelled)?;
     let text = String::from_utf8(output).map_err(|_| GitError::Malformed("for-each-ref output"))?;
     Ok(text.lines().find_map(|line| parse(line, branch)))
+}
+
+/// Whether `ancestor` is `descendant` or in its history. Both must be
+/// commits that exist (resolve them first): Git's exit 1 means "no", and
+/// any other failure is an error.
+pub fn kb_is_ancestor(
+    executable: &GitExecutable<'_>,
+    repository: KbRepository<'_>,
+    ancestor: &GitObjectId,
+    descendant: &GitObjectId,
+    budgets: GitBudgets,
+    cancelled: &AtomicBool,
+) -> Result<bool, GitError> {
+    let args = [
+        "merge-base",
+        "--is-ancestor",
+        ancestor.as_str(),
+        descendant.as_str(),
+    ];
+    match run(executable, repository, &args, &[], budgets, cancelled) {
+        Ok(_) => Ok(true),
+        Err(GitError::Process(process::ProcessError::Command {
+            status: Some(1), ..
+        })) => Ok(false),
+        Err(error) => Err(error),
+    }
 }
 
 /// One `<ref>\t<upstream>\t<track>` line, if it is `branch`'s and names

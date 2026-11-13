@@ -5,10 +5,9 @@ use writfold_kb::Verb;
 use writfold_kb::write::Write;
 use writfold_kb::write::cite::CiteMake;
 use writfold_kb::write::record::{Decision, Link, Ticket};
-use writfold_kb::write::status::SetStatus;
 
 /// Flags that take a value.
-pub const VALUES: [&str; 32] = [
+pub const VALUES: [&str; 33] = [
     "from",
     "session",
     "audience",
@@ -41,6 +40,7 @@ pub const VALUES: [&str; 32] = [
     "superseded-by",
     "sym",
     "ttl",
+    "commit",
 ];
 /// Flags without a value.
 pub const SWITCHES: [&str; 5] = ["open", "new-run", "allow-dirty", "dry-run", "abandon"];
@@ -65,7 +65,7 @@ pub fn allowed(verb: &str) -> &'static [&'static str] {
             "references",
             "applicability",
         ],
-        "status" => &["set", "by", "superseded-by", "note"],
+        "status" => super::set::FLAGS,
         "cite" => &["allow-dirty", "sym", "ttl"],
         "gate" => &["run", "repo", "statement", "reason", "by", "note"],
         "deliver" => &[
@@ -126,7 +126,7 @@ pub fn runs_and_writes(
         }),
         ("runs" | "resume", _) => Err(format!("{name}: too many arguments")),
         ("status", [target]) if common.values.contains_key("set") => {
-            status(common, target.clone()).map(Verb::Write)
+            super::set::status(common, target.clone()).map(Verb::Write)
         }
         ("checkpoint" | "record" | "cite", _) => verb(name, common, positional).map(Verb::Write),
         ("edit", _) => super::edit::verb(common, positional),
@@ -134,17 +134,6 @@ pub fn runs_and_writes(
         ("plan", _) => super::plan::verb(common, positional),
         _ => return super::proposals::verb(name, common, positional),
     })
-}
-
-/// `status <id> --set STATE …`.
-pub fn status(common: &Common, target: String) -> Result<Write, String> {
-    Ok(Write::SetStatus(SetStatus {
-        target,
-        state: need(common, "status", "set")?,
-        by: get(common, "by"),
-        superseded_by: get(common, "superseded-by"),
-        note: get(common, "note"),
-    }))
 }
 
 pub fn verb(name: &str, common: &Common, positional: &[String]) -> Result<Write, String> {
