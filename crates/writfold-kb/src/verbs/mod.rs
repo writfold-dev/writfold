@@ -4,6 +4,7 @@ pub mod context;
 pub mod find;
 pub mod impact;
 pub mod index;
+pub mod repos;
 pub mod runs;
 pub mod stale;
 pub mod status;

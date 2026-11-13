@@ -84,6 +84,7 @@ pub fn verb(name: &str, common: &Common, positional: &[String]) -> Result<Verb, 
         "timeline" => Verb::Timeline {
             target: one("target")?,
         },
+        "repos" => repos(common, positional)?,
         "index" => match one("subcommand (status, rebuild or verify)")?.as_str() {
             "status" => Verb::IndexStatus,
             "rebuild" => Verb::IndexRebuild,
@@ -92,6 +93,15 @@ pub fn verb(name: &str, common: &Common, positional: &[String]) -> Result<Verb, 
         },
         other => return Err(format!("unknown verb {other}")),
     })
+}
+
+fn repos(common: &Common, positional: &[String]) -> Result<Verb, String> {
+    match positional {
+        [] => Ok(Verb::Repos {
+            missing: common.missing,
+        }),
+        _ => Err("repos takes no arguments".into()),
+    }
 }
 
 fn impact(common: &Common, target: String) -> Result<Verb, String> {

@@ -19,6 +19,7 @@ pub struct Common {
     pub signatures: bool,
     pub direction: Option<String>,
     pub include: Option<String>,
+    pub missing: bool,
     /// The write verbs' value flags (`--note`, `--title` …) and switches.
     pub values: BTreeMap<String, String>,
     pub switches: Vec<String>,
@@ -60,6 +61,7 @@ fn split(args: &[String]) -> Result<(Common, Vec<String>), String> {
             "--all" => common.all = true,
             "--offline" => common.offline = true,
             "--signatures" => common.signatures = true,
+            "--missing" => common.missing = true,
             "--kind" => {
                 common.kinds = value(arg, items.next())?
                     .split(',')
@@ -99,6 +101,7 @@ fn allowed(verb: &str) -> &'static [&'static str] {
         "brief" => &["all"],
         "context" => &["depth"],
         "stale" => &["offline"],
+        "repos" => &["missing"],
         "find" => &["kind", "project", "signatures"],
         "match" => &["kind", "project"],
         "cite" => &["kind"],
@@ -119,6 +122,7 @@ fn check_flags(verb: &str, common: &Common) -> Result<(), String> {
         ("signatures", common.signatures),
         ("direction", common.direction.is_some()),
         ("include", common.include.is_some()),
+        ("missing", common.missing),
     ] {
         if set && !allowed.contains(&flag) {
             return Err(format!("--{flag} does not apply to {verb}"));
