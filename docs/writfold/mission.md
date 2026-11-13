@@ -118,6 +118,8 @@ The v1 design is [kb-v1-design.md](kb-v1-design.md).
 10. A two-week pause: count real catches and waivers from the receipts. If no catch mattered, keep G1 and drop the rest.
 11. M4b: MCP, trailer and tracker edges, `--at`. G3 only if the pause justifies it.
 
+Since v0.4.0-dev.1: ~~checklist gates and `gate cover`~~ (built in v0.5.0-dev.1: items covered with grounded evidence or a reason, re-grounded on every read; [as built](kb-v1-design.md#29-checklist-gates-and-gate-cover-as-built-v050-dev1)).
+
 ## Gates, runs and progress (owner decision, 12 November 2026)
 
 The owner proposed reusable gates, skills and delivery modes. After an independent review, the owner adopted a smaller version, built after M3, with Writfold's own push-to-main flow as its first user.

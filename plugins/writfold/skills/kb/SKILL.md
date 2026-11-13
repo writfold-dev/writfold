@@ -28,6 +28,7 @@ The project KB is plain records in Git. `writfold kb <verb>` answers from it in 
 | Does a receipt reproduce at its commit? | `gate verify <receipt>` |
 | Receipt lines for a commit message | `gate lines` |
 | Set a gate aside, or state an attested gate | `gate waive <id> --reason TEXT --by WHO`, `gate attest <id> --statement TEXT --by WHO` |
+| Cover one item of a checklist gate | `gate cover <id> <item> supported REF… --by WHO`, or `unsupported\|not-applicable --reason TEXT --by WHO` |
 | Prepare a PR comment, Slack summary or other draft for review (nothing is sent) | `deliver prepare --mode MODE --from FILE [--audience external]` (built in: `pr-comment`, `slack-summary`; others from `.writfold/deliveries/<mode>.toml`) |
 | Check a delivery candidate, and see what it still owes | `deliver check [CANDIDATE]`, `deliver status` |
 | Where does the run's plan stand, and may it move on? | `plan status`, `plan advance` (`plan set <template>` to start one; `plan use <template>` splices a template's steps before the current step, once) |
@@ -64,6 +65,8 @@ A gate is a command with a path scope. Only `gate run` writes a receipt; never w
 A row with a `read:` line names the gate's instructions file. Read it before you run, repair or attest that gate: it is what the gate checks, and on an attested gate it is what your statement says you followed. Editing it (or a script the gate ships beside itself) makes earlier receipts and attestations stale, so they must be earned again.
 
 A gate of class `assessed` is met by a Weft assessment of a plan step. Write the step's assumptions and checks in the Weft file its definition names (its `next:` line shows where; `{run}/…` is under the run's directory). Cite each assumption's evidence with `claim <name> = citation "<reference>";` directly above its `assume`: a KB citation token, `gate:<id>`, or a receipt of the run (path or name). Then `gate run <id>`. Each check shows `[<Weft result> <basis>]`: only `entailed grounded` counts as met. `!hypothetical` means it rests on an assumption whose citation is stale, failed, missing or absent; a `cite:` line names it. Fix the evidence (rerun the gate, refresh the citation), never the wording of the check, and do not report a hypothetical check as passed. You cannot choose the Weft binary; if the row says there is none or its digest is refused, tell the user.
+
+A gate of class `checklist` shows one `item:` line per item. Cover an item only after you checked it: `supported` with the references you relied on (a citation token, `gate:<id>`, a receipt of the run), each one argument; `not-applicable` or `unsupported` with a reason. A reference that is not grounded now is refused; fix the evidence, not the row. A covered checklist reads `[attested]`: report it as covered by you, never as passed. An item shown `[stale]` lost its evidence or its content moved; check it again before covering it again.
 
 ## Plans
 

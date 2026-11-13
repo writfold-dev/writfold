@@ -78,6 +78,7 @@ runs/run-20261112T211025Z-7fe148/
   edits/               one receipt per edit apply
   gates/               one receipt per gate run
   statements/          gate attestations and waivers
+  covers/              one row per checklist item judgement (gate cover; v0.5.0-dev.1)
   deliveries/<id>/     candidate.md, delivery.json, checks/, statements/
 ```
 
