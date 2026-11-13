@@ -18,7 +18,11 @@ def allowedAxioms : List Name := [``propext, ``Classical.choice, ``Quot.sound]
 /-- The headline claims: byte identity, Lean `historyCheck`, the complete
 `AppendReady` refusal order, `Store::ready` over the current selection,
 "a refusal changes nothing", and the trial edit-flow validator (`Valid`: order,
-material and candidate bindings; nothing follows an outcome). -/
+material and candidate bindings; nothing follows an outcome), the run graph
+(the current step, the advance check's refusal order, staleness, splicing),
+gate obligations (only a clean current pass satisfies; a statement never
+does) and the assessed gate's basis (a hypothetical entailment never
+passes). -/
 def claims : List Name := [
   ``Writfold.Core.same_spec,
   ``Writfold.Core.history_check_spec,
@@ -42,6 +46,41 @@ def claims : List Name := [
   ``Writfold.Core.Flow.follows_spec,
   ``Writfold.Core.Flow.validate_spec,
   ``Writfold.Core.Flow.follows_closed,
+  -- the run graph (writfold_core::plan)
+  ``Writfold.Core.Plan.current_spec,
+  ``Writfold.Core.Plan.current_least,
+  ``Writfold.Core.Plan.advance_check_spec,
+  ``Writfold.Core.Plan.advance_ok_iff,
+  ``Writfold.Core.Plan.stale_spec,
+  ``Writfold.Core.Plan.stale_never_current,
+  ``Writfold.Core.Plan.splice_spec,
+  ``Writfold.Core.Plan.splice_keeps_existing,
+  ``Writfold.Core.Plan.splice_keeps_prefix,
+  ``Writfold.Core.Plan.splice_new_open,
+  ``Writfold.Core.Plan.splice_current,
+  ``Writfold.Core.Plan.splice_check_spec,
+  ``Writfold.Core.Plan.splice_check_already_iff,
+  ``Writfold.Core.Plan.splice_idempotent,
+  ``Writfold.Core.Plan.splice_check_depth,
+  ``Writfold.Core.Plan.splice_admitted,
+  -- gate obligations (writfold_core::gate)
+  ``Writfold.Core.Gate.outcome_pass_iff,
+  ``Writfold.Core.Gate.outcome_fail_iff,
+  ``Writfold.Core.Gate.state_spec,
+  ``Writfold.Core.Gate.state_satisfied_iff,
+  ``Writfold.Core.Gate.state_other_subject,
+  ``Writfold.Core.Gate.standing_satisfied_iff,
+  ``Writfold.Core.Gate.standing_attested_iff,
+  ``Writfold.Core.Gate.standing_waived_iff,
+  ``Writfold.Core.Gate.met_spec,
+  ``Writfold.Core.Gate.standing_met_iff,
+  ``Writfold.Core.Gate.satisfied_only_by_current_pass,
+  -- the Weft assessed gate's basis (writfold_core::assess)
+  ``Writfold.Core.Assess.assumption_spec,
+  ``Writfold.Core.Assess.basis_spec,
+  ``Writfold.Core.Assess.met_spec,
+  ``Writfold.Core.Assess.outcome_pass_iff,
+  ``Writfold.Core.Assess.hypothetical_never_passes,
 ]
 
 /-- Every theorem under `Writfold.Core`, sorted by name. -/

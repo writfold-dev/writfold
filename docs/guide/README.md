@@ -14,7 +14,7 @@ These pages hold the full skeletons the website only sketches: file layouts, com
 | [run-graph](run-graph.md) | Plans as a spine of steps that owe gates | built (splicing and required steps included) |
 | [skills](skills.md) | The bundled `writfold:kb` and `writfold:evaluate` skills, and skills that splice a plan template | built |
 | [hooks](hooks.md) | What each Claude Code hook reads, writes and prints | built |
-| [assurance](assurance.md) | What is proved, model-checked, tested and trusted | built; KB kernel proofs planned |
+| [assurance](assurance.md) | What is proved, model-checked, tested and trusted | built; run-graph, gate and assess kernels proved |
 
 A `toml` block in these pages is parsed by the real parser in a test (`crates/writfold-kb/tests/guide_toml.rs`). A block under a `<!-- planned -->` marker is a sketch of a format that is not built; the same test checks that today's parser still refuses it, so the marker cannot outlive the feature.
 

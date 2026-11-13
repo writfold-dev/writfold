@@ -245,4 +245,4 @@ A step may require a Weft assessment: it owes a gate of class `assessed`. The ag
 3. ~~Splicing and required steps.~~
 4. ~~The session-start and compaction hooks showing the plan position ([hooks](hooks.md)).~~
 5. One week of real use.
-6. Then: proofs of the plan kernel, a TLA+ model of two sessions on one run, ~~the evaluation skill~~ and the Weft assessed gate.
+6. Then: ~~proofs of the plan kernel~~ ([assurance](assurance.md)), a TLA+ model of two sessions on one run, ~~the evaluation skill~~ and ~~the Weft assessed gate~~.

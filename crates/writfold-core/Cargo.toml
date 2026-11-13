@@ -19,6 +19,17 @@ start_from = [
     "writfold_core::trial",
     "writfold_core::flow",
     "writfold_core::ledger",
+    "writfold_core::plan",
+    "writfold_core::gate::outcome",
+    "writfold_core::gate::state",
+    "writfold_core::gate::standing",
+    "writfold_core::gate::Standing::met",
+    "writfold_core::assess::assumption",
+    "writfold_core::assess::basis",
+    "writfold_core::assess::met",
+    "writfold_core::assess::unfinished",
+    "writfold_core::assess::found_met",
+    "writfold_core::assess::outcome",
 ]
 
 
