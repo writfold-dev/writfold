@@ -76,6 +76,10 @@ fn split(args: &[String]) -> Result<(Common, Vec<String>), String> {
                     .values
                     .insert(other[2..].to_owned(), value(arg, items.next())?);
             }
+            // `--tracked` and `--local` are `propose`'s switches.
+            other if super::proposals::SWITCHES.contains(&&other[2..]) => {
+                common.switches.push(other[2..].to_owned());
+            }
             // `--again` is `plan use`'s switch.
             other if writes::SWITCHES.contains(&&other[2..]) || other == "--again" => {
                 common.switches.push(other[2..].to_owned());

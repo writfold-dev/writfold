@@ -1,6 +1,6 @@
 # Feeding the knowledge base
 
-> **Status:** built in v0.3.0-dev.1; proposals, the backfill and reflection checks, required steps spliced into every run and the `writfold:evaluate` skill built in v0.4.0-dev.1; concluding an investigation built in v0.5.0-dev.1; a decision's `accepted`, `applied` and `verified` states built in v0.5.0-dev.2.
+> **Status:** built in v0.3.0-dev.1; proposals, the backfill and reflection checks, required steps spliced into every run and the `writfold:evaluate` skill built in v0.4.0-dev.1; concluding an investigation built in v0.5.0-dev.1; a decision's `accepted`, `applied` and `verified` states built in v0.5.0-dev.2; tracked proposals built in v0.5.0-dev.3.
 
 Reading the knowledge base (KB) is half of the loop. The other half is what each stage of the work writes back, so that the next session starts from more than this one did. This page follows one piece of work through the four stages and says, for each thing written: which verb writes it, where it lands, and who commits it.
 
@@ -34,9 +34,9 @@ Each write is atomic: after a kill at any step the file holds its old bytes or i
 | Execute | a checklist item's cover row (v0.5.0-dev.1) | `gate cover <gate> <item> …` | `runs/<id>/covers/` | you |
 | Deliver | the exact draft, and a receipt per check | `deliver prepare`, `deliver check` | `runs/<id>/deliveries/<id>/` | you |
 | Wrap up | a state change | `status <id> --set STATE` | the record's front matter, or the run's `writfold-run.json` | you |
-| Wrap up | a proposal: a `record` call not yet made | `propose ticket\|decision\|link …` | the local queue, `<git dir>/writfold/proposals/` | nobody until accepted; `proposals accept` then writes the record |
+| Wrap up | a proposal: a `record` call not yet made | `propose ticket\|decision\|link …` | the local queue, `<git dir>/writfold/proposals/`, or with `--tracked` the work tree's `.writfold/proposals/` | nobody until accepted; `proposals accept` then writes the record |
 
-Three things are local and never committed: checkpoint drafts kept by the Claude Code hooks, until `checkpoint --from-draft <session>` turns one into an entry ([hooks](hooks.md)); pending proposals, until one is accepted (below); and command output tails from `gate run`.
+Three things are local and never committed: checkpoint drafts kept by the Claude Code hooks, until `checkpoint --from-draft <session>` turns one into an entry ([hooks](hooks.md)); pending proposals, until one is accepted (below), unless they are tracked; and command output tails from `gate run`.
 
 ## Research: from a search to a record
 
@@ -111,18 +111,34 @@ writfold kb proposals drop 16a41fbba45340f7    # removes it; nothing is written
 ```
 
 ```text
-proposal 16a41fbba45340f7 [pending] ticket HBR-130: Replay is slow after a restart @…/.git/writfold/proposals/16a41fbba45340f7.json !proposal
+proposal 16a41fbba45340f7 [pending] ticket HBR-130: Replay is slow after a restart @…/.git/writfold/proposals/16a41fbba45340f7.json !proposal !local
   field: created=2026-11-11T00:00:00Z session=s1 run=run-20261101T090000Z-a1b2c3
   accept: writfold kb proposals accept 16a41fbba45340f7
   call: writfold kb record ticket HBR-130 --assets harbor-api --title 'Replay is slow after a restart'
 ```
 
-- **Local, like drafts.** The queue lives in `<git dir>/writfold/proposals/` and is lost with the clone, deliberately: on an ephemeral machine, review proposals before the work is pushed.
+- **Local, like drafts, by default.** The queue lives in `<git dir>/writfold/proposals/` and is lost with the clone, deliberately: on an ephemeral machine, review proposals before the work is pushed, or track them (below).
 - **One file per call.** The ID is a digest of the call, so proposing the same thing twice leaves one proposal.
 - **At most ten per session.** The session is `--session`, else `$WRITFOLD_SESSION`; proposals with neither share one bucket of ten. The eleventh is refused (exit 3).
 - **Linked to the run.** A proposal records `--run`, else the current run, and `resume` and the session-start context list it.
 - **Accept is the ordinary write.** It is refused (exit 3), and the proposal kept, when a citation token in it is not fresh under `kb stale`, when the record's ID is already taken, or for any reason `record` itself refuses. The proposal is removed only after the record is written.
 - **Who accepts** is a convention: the skill tells the agent to accept only when you ask.
+
+### Tracked proposals (built in v0.5.0-dev.3)
+
+When proposals must outlive the clone (an agent on an ephemeral machine, a reviewer on another machine), track them:
+
+```sh
+writfold kb propose ticket HBR-130 --title "Replay is slow after a restart" --assets harbor-api --tracked
+git add .writfold/proposals && git commit -m "Propose HBR-130"   # commit it with the rest of the work
+```
+
+- **Where.** The same `writfold-proposal/1` JSON goes to `.writfold/proposals/<id>-<session8>.json` at the KB root, where `<session8>` is the first eight characters of the session (`none` without one). It is a dot path, so it is never a record and the index does not change; like a `record` write it is left in the work tree for you to commit.
+- **The default, without a flag.** An empty marker file `.writfold/proposals/.tracked`, committed once, makes every `propose` tracked, so agents need no flag. `--local` still forces the local queue; `--tracked` and `--local` together are refused.
+- **One queue.** `proposals list|show|accept|drop`, `resume` and the session-start context read both stores. Copies of the same call (the same ID) are one proposal: proposed locally and tracked, or by two sessions in two clones and then merged. A row is flagged `!local` or `!tracked` (tracked when any copy is), and the session-start line says `tracked`.
+- **Accept and drop remove every copy**, local and tracked. A removed tracked file is a deletion in the work tree, committed with the accepted record.
+- **The cap of ten per session counts both stores**, one per ID.
+- Proposing a call the chosen store already holds writes nothing; proposing it into the other store adds a copy (to promote a local proposal to a tracked one, propose it again with `--tracked`).
 
 ## Checking that write-back happened
 

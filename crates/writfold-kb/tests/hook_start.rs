@@ -134,6 +134,7 @@ fn inbox_lists_drafts_proposals_and_unevaluated_runs() -> TestResult {
         write: ticket,
         session: Some("s-5".into()),
         run: Some(RUN.into()),
+        store: None,
     })));
     w.run(&w.request(propose))?;
     let text = start(&w, "startup")?;
@@ -172,6 +173,7 @@ fn inbox_lists_the_current_runs_proposal_that_resume_cut() -> TestResult {
         write: ticket,
         session: Some("s-00".into()),
         run: Some(RUN.into()),
+        store: None,
     })));
     w.run(&w.request(propose))?;
     let text = start(&w, "startup")?;
