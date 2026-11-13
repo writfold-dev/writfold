@@ -70,6 +70,20 @@ writfold kb checkpoint --note "Retry applied in ledger.rs and audit.rs. Next: co
 
 The first command starts the run and makes it the current one; later `checkpoint`, `gate` and `deliver` calls use it without `--run`. A note equal to the previous entry is refused, so re-running after a crash never duplicates an entry.
 
+Every run write needs a run. `edit apply`, `checkpoint --note`, `gate run|cover|attest|waive`, `observe` and `deliver` without `--run` use the current run; with no current run they are refused (exit 3, nothing written) with `no current run: pass --run ID, or start one`. A closed run is refused the same way.
+
+`edit apply` runs through Bash, so Claude Code's `Edit` and `Write` hooks never see it. A guard rule covers it by command:
+
+```toml
+# .writfold/guards/edits-need-a-run.toml
+schema = "writfold-guard-rule/1"
+id = "edits-need-a-run"
+event = "pre-tool-use"
+commands = ["writfold kb edit"]
+require = ["run.current"]
+action = "deny"
+```
+
 ## Record states
 
 | Kind | What `status --set` writes in v1 |

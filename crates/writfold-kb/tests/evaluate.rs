@@ -77,7 +77,11 @@ impl Log {
                 run,
                 repo,
             },
-            "status" => PlanVerb::Status { run, repo },
+            "status" => PlanVerb::Status {
+                gates: false,
+                run,
+                repo,
+            },
             _ => PlanVerb::Advance { run, repo },
         };
         let shown = format!("plan {verb} {name}");

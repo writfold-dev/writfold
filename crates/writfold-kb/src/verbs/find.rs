@@ -77,6 +77,7 @@ fn snippet(session: &Session<'_>, tier: &str, path: &str, hit: &dyn Fn(&str) -> 
         .map(|(index, line)| (u32::try_from(index + 1).unwrap_or(1), line.trim()));
     match found {
         Some((line, shown)) => More {
+            status: None,
             label: "match",
             text: format!("{tier} {}", shown.chars().take(100).collect::<String>()),
             path: Some(path.to_owned()),
@@ -189,6 +190,7 @@ fn signature_tier(session: &Session<'_>, text: &str, found: &mut Found<'_, '_>) 
         let line = crate::parse::field_line(&session.text(&rec.path).unwrap_or_default(), "match");
         for pattern in &matched {
             row.more.push(More {
+                status: None,
                 label: "match",
                 text: format!("signature {pattern}"),
                 path: Some(rec.path.clone()),

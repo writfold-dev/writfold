@@ -46,7 +46,7 @@ pub(super) fn answer(
 ) -> Result<Output> {
     let session = Session::open(ws, Some(tool), false, now)?;
     let loaded = Loaded::open(&session, Some(run), repo, &request.cwd)?;
-    let mut answer = super::status(&session, &loaded)?;
+    let mut answer = super::status::status(&session, &loaded, false)?;
     answer.notes.splice(0..0, notes);
     answer
         .notes

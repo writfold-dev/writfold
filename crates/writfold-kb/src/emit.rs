@@ -17,6 +17,7 @@ pub struct More {
     pub path: Option<String>,
     pub line: Option<u32>,
     pub flags: Vec<String>,
+    pub status: Option<String>,
 }
 
 /// One fact: `<kind> <id> [<status>] <text> @<path>[:<line>] [!<flag>…]`.
@@ -339,7 +340,13 @@ fn row_json(row: &Row) -> Value {
     let more: Vec<Value> = row
         .more
         .iter()
-        .map(|m| json!({"label": m.label, "text": m.text, "path": m.path, "line": m.line, "flags": m.flags}))
+        .map(|m| {
+            let mut value = json!({"label": m.label, "text": m.text, "path": m.path, "line": m.line, "flags": m.flags});
+            if let Some(status) = &m.status {
+                value["status"] = json!(status);
+            }
+            value
+        })
         .collect();
     json!({"kind": row.kind, "id": row.id, "status": row.status, "text": row.text,
            "path": row.path, "line": row.line, "flags": row.flags, "more": more,

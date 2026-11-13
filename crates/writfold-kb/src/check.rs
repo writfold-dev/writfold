@@ -153,6 +153,7 @@ pub fn plan(ws: &Workspace, request: &Request) -> Option<Part> {
         return None;
     }
     let verb = Verb::Plan(crate::plan::PlanVerb::Status {
+        gates: false,
         run: Some(run.clone()),
         repo: None,
     });

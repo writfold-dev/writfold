@@ -34,7 +34,11 @@ $ writfold kb why "batch ledger" --json
 | `more` | array | the indented lines under the row |
 | `section` | string or null | the output section, used for `omitted_by` |
 
-Each entry of `more` has `label` (`why`, `note`, `cite`, `next` and so on), `text`, `path`, `line` and `flags`, with the same meanings.
+Each entry of `more` has `label` (`why`, `note`, `cite`, `next` and so on), `text`, `path`, `line` and `flags`, with the same meanings. It may also have `status` (a string): the continuation's state. This key is absent, not null, when the verb does not supply a state.
+
+`plan status --gates` supplies `status` on its `gate` and `item` continuations. Their `text` starts with `<id> [<state>]`, where the ID has no space and the state has no `]`; readers should use `status`, not parse the brackets. Judged gates append their class (except undefined gates), and checklist gates append `<covered>/<required> required covered`. Evidence locations and unmet-gate flags accompany the gate; checklist items retain the same text, location and flags as `gate status`. Later gates say `[later]` without evidence or flags; skipped steps have no gate continuations.
+
+With `--gates` and a subject repository, `counts` includes `current` (the 1-based step position), `current_gates` and `current_owed`. Once every step is closed, only `current=0` is added. Without a subject none of these counts is present. Without `--gates`, plan status keeps its ordinary output and query digest.
 
 The command that would move a row forward is a `more` entry with `label` `next`, its `text` the command line (`writfold kb gate run lint`). A script that wants it reads that entry rather than parsing the text form.
 

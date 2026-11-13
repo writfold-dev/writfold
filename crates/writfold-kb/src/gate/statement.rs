@@ -231,6 +231,7 @@ pub fn summary<'a>(
 /// by <who>` or `waived: <reason> by <who>`, at the statement's file.
 pub fn more(f: &Filed, s: &Statement) -> crate::emit::More {
     crate::emit::More {
+        status: None,
         label: s.kind.name(),
         text: format!("{} (by {}, {})", s.text, s.by, s.recorded),
         path: Some(f.path.clone()),

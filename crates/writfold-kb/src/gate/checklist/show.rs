@@ -52,13 +52,14 @@ fn item_text(e: &Entry<'_>) -> (String, Option<String>) {
     }
 }
 
-fn item_line(e: &Entry<'_>) -> More {
+pub(crate) fn item_line(e: &Entry<'_>) -> More {
     let (text, path) = item_text(e);
     let flags = match e.item {
         Item::Stale | Item::Unsupported => vec![e.item.name().to_owned()],
         _ => Vec::new(),
     };
     More {
+        status: None,
         label: "item",
         text,
         line: path.as_ref().map(|_| 1),

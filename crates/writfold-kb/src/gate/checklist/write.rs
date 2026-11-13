@@ -4,7 +4,11 @@
 //! subject. Every reference of a `supported` row is grounded now
 //! ([`crate::gate::ground`]), against the same gates a later read grounds
 //! it against; one that is not is refused, so a row never starts out
-//! false.
+//! false. An `unsupported` or `not-applicable` row gives a reason and may
+//! also cite observations of this run (`runs/<run>/observed/…`, any
+//! status), to record that someone looked; nothing else.
+//! The batch form ([`super::batch`]) records several rows through
+//! the same plan ([`record_all`]): one snapshot, all rows or none.
 use super::cover::{self, Cited};
 use crate::Request;
 use crate::emit::{Answer, Output};
@@ -27,7 +31,8 @@ pub struct Cover {
     pub gate: String,
     pub item: String,
     pub outcome: Outcome,
-    /// The references a `supported` row cites.
+    /// The references a `supported` row cites; for the other outcomes,
+    /// observations of this run only.
     pub references: Vec<String>,
     pub reason: Option<String>,
     pub note: Option<String>,
@@ -37,7 +42,8 @@ pub struct Cover {
 }
 
 /// The arguments each outcome takes: references for `supported`, a
-/// reason for the others.
+/// reason for the others (whose references, if any, [`observations`]
+/// checks).
 fn shaped(c: &Cover) -> Result<(Option<String>, Option<String>)> {
     let reason = c
         .reason
@@ -61,11 +67,7 @@ fn shaped(c: &Cover) -> Result<(Option<String>, Option<String>)> {
             "gate cover … {} needs --reason TEXT",
             c.outcome.name()
         ))),
-        (_, Some(_), false) => Err(KbError::Usage(format!(
-            "gate cover … {} takes a reason, not references",
-            c.outcome.name()
-        ))),
-        (_, Some(_), true) => Ok((reason, note)),
+        (_, Some(_), _) => Ok((reason, note)),
     }
 }
 
@@ -90,14 +92,52 @@ fn grounded(cx: &Context<'_, '_>, references: &[String]) -> Result<Vec<Cited>> {
     Ok(out)
 }
 
+/// The references of an `unsupported` or `not-applicable` row: each must
+/// be a readable observation of this run, whatever its status. They are
+/// recorded as resolved now and never ground the item.
+fn observations(cx: &Context<'_, '_>, c: &Cover) -> Result<Vec<Cited>> {
+    let mut out = Vec::new();
+    for reference in &c.references {
+        let r = ground::resolve(cx, reference)?;
+        let observed = r.path.as_deref().is_some_and(|p| {
+            p.strip_prefix(&format!("{}/observed/", cx.run_dir))
+                .is_some_and(|name| !name.contains('/'))
+        });
+        if !observed || r.standing == "not-a-valid-observation" {
+            return Err(KbError::Refused(format!(
+                "gate cover … {} takes a reason, not references other than observations of this run: {reference:?} is not one (runs/<run>/observed/…)",
+                c.outcome.name()
+            )));
+        }
+        out.push(Cited {
+            reference: reference.clone(),
+            grounding: r.grounding,
+            standing: r.standing,
+            path: r.path,
+        });
+    }
+    Ok(out)
+}
+
 /// The checklist definition of `c.gate` on `subject`, refusing any other
-/// class and an item it does not declare.
+/// class.
 fn definition(ws: &Workspace, subject: &subject::Subject, c: &Cover) -> Result<def::Definition> {
     let d = def::find_repository(&ws.root, Some(&subject.top), &c.gate)?;
-    let Some(spec) = d.checklist.as_ref() else {
+    if d.checklist.is_none() {
         return Err(KbError::Refused(format!(
             "gate {} is a {} gate: gate cover records items of checklist gates",
             c.gate, d.class
+        )));
+    }
+    Ok(d)
+}
+
+/// Refuse an item the checklist does not declare.
+fn item(d: &def::Definition, c: &Cover) -> Result<()> {
+    let Some(spec) = d.checklist.as_ref() else {
+        return Err(KbError::Refused(format!(
+            "gate {} is not a checklist",
+            c.gate
         )));
     };
     if spec.item(&c.item).is_none() {
@@ -109,20 +149,22 @@ fn definition(ws: &Workspace, subject: &subject::Subject, c: &Cover) -> Result<d
             ids.join(", ")
         )));
     }
-    Ok(d)
+    Ok(())
 }
 
-/// The row's bytes: its evidence grounded against the run's other gates
-/// now, its `seq` one more than the highest of this gate and item.
-fn row(
+/// Turns an error about the row at an index into one that names it.
+pub(super) type Blame<'a> = &'a dyn Fn(usize, KbError) -> KbError;
+
+/// Each row's bytes, in order: every row's evidence grounded against the
+/// run's other gates on one subject snapshot, its `seq` one more than the
+/// highest of its gate and item. `blame` names the row an error is about.
+fn rows(
     session: &Session<'_>,
     (rec, subject): (&Rec, &subject::Subject),
     d: &def::Definition,
-    c: &Cover,
-    now: i64,
-) -> Result<Vec<u8>> {
-    let (reason, note) = shaped(c)?;
-    let by = check_text("--by", &c.by)?;
+    covers: &[Cover],
+    (now, blame): (i64, Blame<'_>),
+) -> Result<Vec<Vec<u8>>> {
     let mut filings = Filings::for_run(session, rec);
     filings.owed.gates = None;
     let (plain, _) = status::judge_plain(session, subject, &filings)?;
@@ -133,25 +175,40 @@ fn row(
         filings: &filings,
         run_dir: &filings.run_dir,
     };
-    let evidence = grounded(&cx, &c.references)?;
-    let rows = super::rows_of(&filings.covers, &c.gate, &c.item, &subject.name);
-    let seq = rows.iter().map(|(_, r)| r.seq).max().unwrap_or(0) + 1;
-    Ok(cover::bytes(&cover::Cover {
-        gate: c.gate.clone(),
-        item: c.item.clone(),
-        outcome: c.outcome,
-        reason,
-        note,
-        by,
-        run: rec.id.clone(),
-        repo: subject.name.clone(),
-        commit: plain.snapshot.commit.as_str().to_owned(),
-        content: plain.snapshot.scoped(&d.patterns()).digest,
-        definition: d.digest.clone(),
-        evidence,
-        seq,
-        recorded: time::stamp(now),
-    }))
+    let content = plain.snapshot.scoped(&d.patterns()).digest;
+    let commit = plain.snapshot.commit.as_str().to_owned();
+    let mut out = Vec::new();
+    for (index, c) in covers.iter().enumerate() {
+        let one = || -> Result<Vec<u8>> {
+            item(d, c)?;
+            let (reason, note) = shaped(c)?;
+            let by = check_text("--by", &c.by)?;
+            let evidence = match c.outcome {
+                Outcome::Supported => grounded(&cx, &c.references)?,
+                _ => observations(&cx, c)?,
+            };
+            let rows = super::rows_of(&filings.covers, &c.gate, &c.item, &subject.name);
+            let seq = rows.iter().map(|(_, r)| r.seq).max().unwrap_or(0) + 1;
+            Ok(cover::bytes(&cover::Cover {
+                gate: c.gate.clone(),
+                item: c.item.clone(),
+                outcome: c.outcome,
+                reason,
+                note,
+                by,
+                run: rec.id.clone(),
+                repo: subject.name.clone(),
+                commit: commit.clone(),
+                content: content.clone(),
+                definition: d.digest.clone(),
+                evidence,
+                seq,
+                recorded: time::stamp(now),
+            }))
+        };
+        out.push(one().map_err(|e| blame(index, e))?);
+    }
+    Ok(out)
 }
 
 pub fn record(
@@ -163,37 +220,55 @@ pub fn record(
 ) -> Result<Output> {
     shaped(c)?;
     check_text("--by", &c.by)?;
+    record_all(ws, tool, request, std::slice::from_ref(c), (now, &|_, e| e))
+}
+
+/// Record `covers`, all of one gate, run and repository, as one write
+/// plan: every row is shaped and grounded on one subject snapshot before
+/// any file is written, so one refused row writes nothing.
+pub(super) fn record_all(
+    ws: &Workspace,
+    tool: &GitTool,
+    request: &Request,
+    covers: &[Cover],
+    (now, blame): (i64, Blame<'_>),
+) -> Result<Output> {
+    let first = covers
+        .first()
+        .ok_or_else(|| KbError::Refused("no cover rows to record".into()))?;
     let session = Session::open(ws, Some(tool), false, now)?;
-    let rec = crate::gate::target(&session, c.run.as_deref())?;
+    let rec = crate::gate::target(&session, first.run.as_deref())?;
     if runs::state(&session, &rec) == "closed" {
         return Err(KbError::Refused(format!("run {} is closed", rec.id)));
     }
-    let subject = crate::gate::locate(&session, &rec, c.repo.as_deref(), &request.cwd)?
+    let subject = crate::gate::locate(&session, &rec, first.repo.as_deref(), &request.cwd)?
         .ok_or_else(|| {
             KbError::Refused("no subject repository: run inside one, or pass --repo DIR".into())
         })?;
-    let d = definition(ws, &subject, c)?;
-    let bytes = row(&session, (&rec, &subject), &d, c, now)?;
+    let d = definition(ws, &subject, first)?;
+    let bytes = rows(&session, (&rec, &subject), &d, covers, (now, blame))?;
     drop(session);
-    let path = format!(
-        "{}/{}/{}.{}-{}.json",
-        runs::dir(&rec),
-        cover::DIR,
-        c.gate,
-        c.item,
-        unique(now, &c.gate)
-    );
+    let mut ops = Vec::new();
+    let mut paths = Vec::new();
+    for (c, bytes) in covers.iter().zip(bytes) {
+        let path = format!(
+            "{}/{}/{}.{}-{}.json",
+            runs::dir(&rec),
+            cover::DIR,
+            c.gate,
+            c.item,
+            unique(now, &format!("{}.{}", c.gate, c.item))
+        );
+        paths.push(path.clone());
+        ops.push(Op::Create { path, bytes });
+    }
     let state = ws
         .repo
         .as_ref()
         .map(|r| r.git_dir.join("writfold"))
         .ok_or_else(|| KbError::Refused("gates need a KB under Git".into()))?;
-    let ops = [Op::Create {
-        path: path.clone(),
-        bytes,
-    }];
     atomic::apply(&ws.root, &state, &ops, request.probe)?;
-    answer(ws, tool, request, (&rec, &subject), c, &path, now)
+    answer(ws, tool, request, (&rec, &subject), (covers, &paths), now)
 }
 
 fn answer(
@@ -201,8 +276,7 @@ fn answer(
     tool: &GitTool,
     request: &Request,
     (rec, subject): (&Rec, &subject::Subject),
-    c: &Cover,
-    path: &str,
+    (covers, paths): (&[Cover], &[String]),
     now: i64,
 ) -> Result<Output> {
     let session = Session::open(ws, Some(tool), false, now)?;
@@ -210,24 +284,27 @@ fn answer(
         .git
         .as_ref()
         .ok_or_else(|| KbError::Refused("gates need Git".into()))?;
+    let gate = covers.first().map(|c| c.gate.clone()).unwrap_or_default();
     let mut filings = Filings::for_run(&session, rec);
     filings.owed.gates = None;
     let report = status::judge(&session, subject, &filings)?;
     let mut answer = Answer {
         rows: status::rows(git, subject, &report, &filings)?
             .into_iter()
-            .filter(|r| r.kind == "gate" && r.id == c.gate)
+            .filter(|r| r.kind == "gate" && r.id == gate)
             .collect(),
         ..Answer::default()
     };
-    answer.notes.push(format!(
-        "recorded {path} ({} {}: a judgement with checked evidence, not a check)",
-        c.item,
-        c.outcome.name()
-    ));
+    for (c, path) in covers.iter().zip(paths) {
+        answer.notes.push(format!(
+            "recorded {path} ({} {}: a judgement with checked evidence, not a check)",
+            c.item,
+            c.outcome.name()
+        ));
+    }
     answer
         .notes
         .push("written to the KB work tree; commit it to share it".into());
-    let frame = crate::gate::frame(request, "gate-cover", vec![c.gate.clone(), rec.id.clone()]);
+    let frame = crate::gate::frame(request, "gate-cover", vec![gate, rec.id.clone()]);
     session.emit(&answer, &frame)
 }

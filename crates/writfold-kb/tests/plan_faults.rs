@@ -43,7 +43,11 @@ fn verb(name: &str) -> PlanVerb {
             run,
             repo: None,
         },
-        "status" => PlanVerb::Status { run, repo: None },
+        "status" => PlanVerb::Status {
+            gates: false,
+            run,
+            repo: None,
+        },
         _ => PlanVerb::Advance { run, repo: None },
     }
 }

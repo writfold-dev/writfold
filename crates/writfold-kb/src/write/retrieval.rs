@@ -279,6 +279,7 @@ fn row(session: &Session<'_>, path: &str) -> Row {
 
 fn more(label: &'static str, text: String, path: &str, line: Option<u32>) -> More {
     More {
+        status: None,
         label,
         text,
         path: Some(path.to_owned()),

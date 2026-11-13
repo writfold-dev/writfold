@@ -15,6 +15,7 @@
 //! spliced; required start and end templates are spliced into every new
 //! plan ([`required`]); a spliced template whose file has since changed
 //! is shown `!template-moved` ([`moved`]).
+mod detail;
 pub mod disorder;
 pub mod event;
 pub mod fold;
@@ -26,10 +27,11 @@ pub mod records;
 pub mod required;
 pub(crate) mod show;
 mod splice;
+mod status;
 pub mod template;
 mod write;
 
-use crate::emit::{Answer, Output, Row};
+use crate::emit::{Output, Row};
 use crate::error::{KbError, Result};
 use crate::gate::status::Owed;
 use crate::gate::subject::Subject;
@@ -63,6 +65,7 @@ pub enum PlanVerb {
     Status {
         run: Option<String>,
         repo: Option<PathBuf>,
+        gates: bool,
     },
     Advance {
         run: Option<String>,
@@ -85,11 +88,15 @@ pub fn execute(ws: &Workspace, request: &Request, verb: &PlanVerb, now: i64) -> 
     }
     let tool = GitTool::locate()?;
     match verb {
-        PlanVerb::Status { run, repo } => {
+        PlanVerb::Status { run, repo, gates } => {
             let session = Session::open(ws, Some(&tool), false, now)?;
             let loaded = Loaded::open(&session, run.as_deref(), repo.as_deref(), &request.cwd)?;
-            let answer = status(&session, &loaded)?;
-            let frame = crate::gate::frame(request, "plan-status", vec![loaded.rec.id.clone()]);
+            let answer = status::status(&session, &loaded, *gates)?;
+            let mut args = vec![loaded.rec.id.clone()];
+            if *gates {
+                args.push("gates=true".into());
+            }
+            let frame = crate::gate::frame(request, "plan-status", args);
             session.emit(&answer, &frame)
         }
         PlanVerb::Set { .. } => splice::set(ws, &tool, request, verb, now),
@@ -149,84 +156,6 @@ impl Loaded {
         )
         .map(Some)
     }
-}
-
-/// The `plan status` answer.
-fn status(session: &Session<'_>, loaded: &Loaded) -> Result<Answer> {
-    let mut answer = Answer::default();
-    let graph = &loaded.graph;
-    if !graph.planned() {
-        answer.unknown = Some("no-plan");
-        answer.notes.push(format!(
-            "run {} has no plan: writfold kb plan set <template> (templates in {}/)",
-            loaded.rec.id,
-            template::DIR
-        ));
-    }
-    let judged = loaded.judged(session)?;
-    if judged.is_none() && graph.planned() {
-        answer
-            .notes
-            .push("no subject repository here: gates are not judged; pass --repo DIR".into());
-    }
-    answer.rows = show::rows(graph, judged.as_deref(), &loaded.moved);
-    let disorder = disorder::find(graph);
-    disorder.mark(&mut answer.rows);
-    let count = |status: &str| {
-        answer
-            .rows
-            .iter()
-            .filter(|r| r.status.as_deref() == Some(status))
-            .count()
-    };
-    let stale = answer
-        .rows
-        .iter()
-        .filter(|r| r.flags.iter().any(|f| f == "stale"))
-        .count();
-    let flagged = |flag: &str| {
-        answer
-            .rows
-            .iter()
-            .filter(|r| r.flags.iter().any(|f| f == flag))
-            .count()
-    };
-    let moved = flagged("template-moved");
-    answer.counts = vec![
-        ("steps", graph.steps.len()),
-        ("done", count("done")),
-        ("skipped", count("skipped")),
-        ("stale", stale),
-        ("moved", moved),
-        ("invalid", graph.invalid.len()),
-    ];
-    if disorder.count() > 0 {
-        answer.counts.push(("disorder", disorder.count()));
-    }
-    let spliced: Vec<String> = graph
-        .splices
-        .iter()
-        .map(|(_, s, t)| {
-            let under = match s.parent.as_str() {
-                "" => String::new(),
-                parent => format!(" under {parent}"),
-            };
-            let short = moved::short(&s.digest);
-            format!("{} @{short}{under} from {}", t.name, s.source)
-        })
-        .collect();
-    if !spliced.is_empty() {
-        answer.notes.push(format!(
-            "plan {}; steps are derived from runs/{}/plan/ on every read, never stored",
-            spliced.join(", "),
-            loaded.rec.id
-        ));
-    }
-    answer
-        .notes
-        .extend(loaded.moved.iter().map(moved::Moved::note));
-    answer.notes.extend(disorder.notes);
-    Ok(answer)
 }
 
 /// What a run owes for `gate status`: the plan's gates (every defined gate

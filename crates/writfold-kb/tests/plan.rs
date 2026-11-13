@@ -87,7 +87,11 @@ fn plan(w: &World, verb: &str) -> TestResult<(String, u8)> {
             run,
             repo,
         },
-        "status" => PlanVerb::Status { run, repo },
+        "status" => PlanVerb::Status {
+            gates: false,
+            run,
+            repo,
+        },
         _ => PlanVerb::Advance { run, repo },
     };
     call(w, Verb::Plan(verb))
@@ -369,6 +373,7 @@ fn same_rows_in_a_clone(w: &World) -> TestResult {
     )?;
     let rows = |kb: &Path| -> TestResult<Vec<String>> {
         let mut request = w.request(Verb::Plan(PlanVerb::Status {
+            gates: false,
             run: Some(RUN.into()),
             repo: Some(w.code.clone()),
         }));

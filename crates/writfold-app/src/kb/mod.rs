@@ -39,7 +39,8 @@ verbs:
   index status|rebuild|verify      what the derived index holds; rebuild it; check it equals a rebuild
   check [<project>|<path>]         stale, index verify and the current run's gate status in one
                                    summary (the worst exit code of the three)
-  runs [--open] [--project P]      every run: state, where it works, last checkpoint
+  runs [--open] [--project P] [--plan]
+                                   every run: state, place, last checkpoint; --plan adds its position
   resume [<run>]                   one run: manifest, coverage, rechecks, checkpoint tail
 
 writes (atomic; they leave the work tree dirty for you to commit):
@@ -78,6 +79,8 @@ gates (checks with pinned receipts; definitions in .writfold/gates/<id>.toml):
                                    a statement (attested gates) or a waiver: never shown as satisfied
   gate cover <id> <item> supported REF… | unsupported|not-applicable --reason TEXT, with --by WHO
                                    one checklist item: cited evidence re-grounded on every read
+  gate cover <id> --from FILE|- --by WHO
+                                   several items from JSON lines, one plan: all rows or none
   gate lines [--run ID] [--repo DIR]
                                    receipt lines for a commit message (exit 0 only if all are met)
 
@@ -98,9 +101,9 @@ plans (the run graph; templates in .writfold/plans/<name>.toml; Writfold records
   plan use <template> [--again] [--run ID] [--repo DIR]
                                    splice its steps before the current step, as its children;
                                    a repeat is a no-op (exit 0), --again adds another copy
-  plan status [--run ID] [--repo DIR]
+  plan status [--run ID] [--repo DIR] [--gates]
                                    each step: done (!stale if a gate no longer holds), current with
-                                   what it owes, later; !template-moved if its template changed
+                                   what it owes, later; --gates lists gate and checklist item standings
   plan advance [--run ID] [--repo DIR]
                                    record the current step as done, or refuse (exit 3) naming what it owes
   plan skip --reason TEXT --by WHO [--run ID]

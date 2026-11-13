@@ -14,7 +14,7 @@ const TOP: [&str; 5] = ["writfold_kb", "verb", "rows", "notes", "trailer"];
 const ROW: [&str; 9] = [
     "kind", "id", "status", "text", "path", "line", "flags", "more", "section",
 ];
-const MORE: [&str; 5] = ["label", "text", "path", "line", "flags"];
+const MORE: [&str; 6] = ["label", "text", "path", "line", "flags", "status"];
 const TRAILER: [&str; 15] = [
     "coverage",
     "records_examined",
@@ -74,7 +74,12 @@ fn the_json_envelope_has_the_documented_keys() -> TestResult {
             assert_eq!(keys(row), set(&ROW), "{row}");
             for more in row["more"].as_array().ok_or("more")? {
                 with_more += 1;
-                assert_eq!(keys(more), set(&MORE), "{more}");
+                let required = set(&MORE[..5]);
+                assert!(required.is_subset(&keys(more)), "{more}");
+                assert!(keys(more).is_subset(&set(&MORE)), "{more}");
+                if let Some(status) = more.get("status") {
+                    assert!(status.is_string(), "{more}");
+                }
             }
         }
     }

@@ -93,6 +93,7 @@ pub enum Verb {
     Runs {
         open: bool,
         project: Option<String>,
+        plan: bool,
     },
     /// `repos [--missing]`: the cited repositories and their local clones.
     Repos {
@@ -288,11 +289,18 @@ fn graph(session: &Session<'_>, verb: &Verb) -> Result<(Answer, &'static str, Ve
             vec![target.clone()],
         ),
         Verb::IndexVerify => (verbs::index::verify(session)?, "index-verify", Vec::new()),
-        Verb::Runs { open, project } => {
+        Verb::Runs {
+            open,
+            project,
+            plan,
+        } => {
             let mut args = vec![format!("open={open}")];
             args.extend(project.iter().map(|p| format!("project={p}")));
+            if *plan {
+                args.push("plan=true".into());
+            }
             (
-                verbs::runs::list(session, *open, project.as_deref())?,
+                verbs::runs::list(session, *open, project.as_deref(), *plan)?,
                 "runs",
                 args,
             )

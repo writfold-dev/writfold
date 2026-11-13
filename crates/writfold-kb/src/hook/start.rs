@@ -117,6 +117,7 @@ fn with_inbox(parts: Vec<(Part, String)>, root: &Path, local: &Path) -> Vec<(Par
 /// The plan position block of the current run, if it has a plan.
 fn plan_block(ws: &Workspace, cwd: &Path, now: i64, run: &str, header: &str) -> Option<String> {
     let status = Verb::Plan(PlanVerb::Status {
+        gates: false,
         run: Some(run.to_owned()),
         repo: None,
     });

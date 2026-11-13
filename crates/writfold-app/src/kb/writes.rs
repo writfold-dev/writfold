@@ -42,12 +42,20 @@ pub const VALUES: [&str; 33] = [
     "commit",
 ];
 /// Flags without a value.
-pub const SWITCHES: [&str; 5] = ["open", "new-run", "allow-dirty", "dry-run", "abandon"];
+pub const SWITCHES: [&str; 7] = [
+    "open",
+    "new-run",
+    "allow-dirty",
+    "dry-run",
+    "abandon",
+    "plan",
+    "gates",
+];
 
 /// The write flags each verb accepts.
 pub fn allowed(verb: &str) -> &'static [&'static str] {
     match verb {
-        "runs" => &["open"],
+        "runs" => &["open", "plan"],
         "checkpoint" => &["note", "from-draft", "run", "task", "mode", "new-run"],
         "record" => &[
             "title",
@@ -66,7 +74,7 @@ pub fn allowed(verb: &str) -> &'static [&'static str] {
         ],
         "status" => super::set::FLAGS,
         "cite" => &["allow-dirty", "sym", "ttl"],
-        "gate" => &["run", "repo", "statement", "reason", "by", "note"],
+        "gate" => &["run", "repo", "statement", "reason", "by", "note", "from"],
         "deliver" => &[
             "run",
             "mode",
@@ -79,7 +87,7 @@ pub fn allowed(verb: &str) -> &'static [&'static str] {
             "by",
         ],
         "edit" => &["run", "worktree", "dry-run", "abandon"],
-        "plan" => &["run", "repo", "from", "reason", "by", "again"],
+        "plan" => &["run", "repo", "from", "reason", "by", "again", "gates"],
         "observe" => super::observe::FLAGS,
         _ => super::proposals::allowed(verb),
     }
@@ -119,6 +127,7 @@ pub fn runs_and_writes(
         ("runs", []) => Ok(Verb::Runs {
             open: switch(common, "open"),
             project: common.project.clone(),
+            plan: switch(common, "plan"),
         }),
         ("resume", []) => Ok(Verb::Resume { run: None }),
         ("resume", [run]) => Ok(Verb::Resume {
@@ -217,6 +226,17 @@ mod tests {
             Verb::Runs { open: true, .. }
         ));
         assert!(matches!(verb("resume")?, Verb::Resume { run: None }));
+        Ok(())
+    }
+
+    #[test]
+    fn run_positions_compose_with_filters_not_other_verbs() -> Result<(), String> {
+        assert!(matches!(
+            verb("runs --plan --open --project harbor")?,
+            Verb::Runs { open: true, plan: true, project: Some(p) } if p == "harbor"
+        ));
+        assert!(verb("resume --plan").is_err());
+        assert!(verb("runs --gates").is_err());
         Ok(())
     }
 }

@@ -139,6 +139,7 @@ fn keys_only_move_the_view() -> TestResult {
         Verb::Runs {
             open: false,
             project: None,
+            plan: false,
         },
         false,
     )?;
@@ -169,6 +170,7 @@ fn the_projection_equals_the_verbs() -> TestResult {
         Verb::Runs {
             open: false,
             project: None,
+            plan: false,
         },
         true,
     )?;
@@ -181,6 +183,7 @@ fn the_projection_equals_the_verbs() -> TestResult {
         Verb::Runs {
             open: false,
             project: None,
+            plan: false,
         },
         false,
     )?;

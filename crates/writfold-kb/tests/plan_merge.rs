@@ -68,7 +68,11 @@ fn plan(w: &World, kb: &Path, command: &str) -> TestResult<(String, u8)> {
             run,
             repo: None,
         },
-        "status" => PlanVerb::Status { run, repo: None },
+        "status" => PlanVerb::Status {
+            gates: false,
+            run,
+            repo: None,
+        },
         _ => PlanVerb::Advance { run, repo: None },
     };
     let mut request = w.request(Verb::Plan(verb));

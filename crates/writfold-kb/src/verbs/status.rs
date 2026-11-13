@@ -60,6 +60,7 @@ fn fields(session: &Session<'_>, rec: &Rec) -> Vec<More> {
                 field_line(&text, key)
             };
             Some(More {
+                status: None,
                 label: "field",
                 text: format!("{key}={value}"),
                 path: Some(rec.path.clone()),
@@ -82,6 +83,7 @@ pub fn status(session: &Session<'_>, target: &str) -> Result<Answer> {
         let (live, _) = super::why::follow(session, rec.clone())?;
         if live.id != rec.id {
             row.more.push(More {
+                status: None,
                 label: "via",
                 text: format!(
                     "live successor {} [{}]",

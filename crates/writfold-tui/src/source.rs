@@ -109,6 +109,7 @@ impl Source {
         self.call(Verb::Runs {
             open: false,
             project: None,
+            plan: false,
         })
     }
 

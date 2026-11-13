@@ -32,7 +32,7 @@ Every gate a template names must be defined (`.writfold/gates/<id>.toml`) when t
 ```text
 writfold kb plan set <template> | --from FILE    splice the template's steps at the run's root
 writfold kb plan use <template> [--again]        splice its steps before the current step, as its children
-writfold kb plan status                          each step: done, current with what it owes, later
+writfold kb plan status [--gates]               each step; --gates adds gate and checklist item standings
 writfold kb plan advance                         record the current step as done, or refuse (exit 3)
 writfold kb plan skip --reason TEXT --by WHO     close the current step without calling it done
 ```
@@ -42,6 +42,15 @@ All five take `--run ID` (else the current run) and `--repo DIR` (the subject re
 - **`plan set`** is idempotent: setting the same template with the same bytes again writes nothing and exits 0. A second, different plan on the same run is refused.
 - **`plan advance`** refuses until every gate of the current step is satisfied, attested or waived. The refusal exits 3, writes nothing, and names what is owed in the step's order, with the command for the first. When it succeeds it records which receipt or statement met each gate. A step that owes a [checklist gate](gates.md#checklist-gates) advances once every required item is covered (the gate stands as `attested`); its refusal's `next:` line is the `gate cover` command for the first owed item, and the done event names a covering row (built in v0.5.0-dev.1).
 - **`plan skip`** closes the current step with a reason and a name. A skipped step is never shown as done.
+
+`plan status --gates` lists every judged step's gates in template order, with
+their classes, evidence paths and checklist items. Later gates are labelled
+`[later]`, not judged; skipped steps have no gate detail. The trailer adds the
+current step's position, named gates and owed gates when a subject is available.
+
+`writfold kb runs --plan [--open] [--project P]` adds each planned run's
+position and its done/skipped counts. It folds the run's recorded plan without
+locating a subject or judging gates; it never prints owed-gate counts.
 
 ## A worked run
 

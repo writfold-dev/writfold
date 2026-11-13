@@ -135,6 +135,7 @@ fn runs_and_resume_over_the_fixture() -> TestResult {
     let (text, exit) = w.run(&w.request(Verb::Runs {
         open: false,
         project: None,
+        plan: false,
     }))?;
     assert_eq!(exit, 0);
     assert_eq!(
@@ -322,6 +323,7 @@ fn close_and_reopen(w: &World, id: &str, manifest: &str) -> TestResult {
     let open = w.request(Verb::Runs {
         open: true,
         project: None,
+        plan: false,
     });
     let (listed, exit) = w.run(&open)?;
     assert_eq!(exit, 0);
@@ -332,6 +334,7 @@ fn close_and_reopen(w: &World, id: &str, manifest: &str) -> TestResult {
     let (all, _) = w.run(&w.request(Verb::Runs {
         open: false,
         project: Some("harbor".into()),
+        plan: false,
     }))?;
     assert!(all.contains(&format!("run {id} [closed]")), "{all}");
     write(w, close("open"))?;

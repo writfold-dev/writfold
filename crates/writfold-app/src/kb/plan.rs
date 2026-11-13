@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use writfold_kb::Verb;
 use writfold_kb::plan::PlanVerb;
 
-pub const USAGE: &str = "usage: plan set <template>|--from FILE [--run ID] [--repo DIR] | plan use <template> [--again] [--run ID] [--repo DIR] | plan status [--run ID] [--repo DIR] | plan advance [--run ID] [--repo DIR] | plan skip --reason TEXT --by WHO [--run ID] [--repo DIR]";
+pub const USAGE: &str = "usage: plan set <template>|--from FILE [--run ID] [--repo DIR] | plan use <template> [--again] [--run ID] [--repo DIR] | plan status [--run ID] [--repo DIR] [--gates] | plan advance [--run ID] [--repo DIR] | plan skip --reason TEXT --by WHO [--run ID] [--repo DIR]";
 
 /// The plan verb, or why the arguments do not name one.
 pub fn verb(common: &Common, positional: &[String]) -> Result<Verb, String> {
@@ -16,6 +16,10 @@ pub fn verb(common: &Common, positional: &[String]) -> Result<Verb, String> {
     let (reason, by) = (get(common, "reason"), get(common, "by"));
     let sub = positional.first().map(String::as_str);
     let again = common.switches.iter().any(|s| s == "again");
+    let gates = common.switches.iter().any(|s| s == "gates");
+    if gates && sub != Some("status") {
+        return Err("--gates belongs to plan status".into());
+    }
     if again && sub != Some("use") {
         return Err("--again belongs to plan use".into());
     }
@@ -44,7 +48,7 @@ pub fn verb(common: &Common, positional: &[String]) -> Result<Verb, String> {
             run,
             repo,
         },
-        [s] if s == "status" => PlanVerb::Status { run, repo },
+        [s] if s == "status" => PlanVerb::Status { run, repo, gates },
         [s] if s == "advance" => PlanVerb::Advance { run, repo },
         [s] if s == "skip" => PlanVerb::Skip {
             reason: reason.ok_or("plan skip needs --reason TEXT")?,
@@ -93,7 +97,11 @@ mod tests {
         ));
         assert!(matches!(
             verb("plan status")?,
-            Verb::Plan(PlanVerb::Status { .. })
+            Verb::Plan(PlanVerb::Status { gates: false, .. })
+        ));
+        assert!(matches!(
+            verb("plan status --gates")?,
+            Verb::Plan(PlanVerb::Status { gates: true, .. })
         ));
         assert!(matches!(
             verb("plan advance --repo .")?,
@@ -119,6 +127,8 @@ mod tests {
             "plan advance x",
             "plan status --note x",
             "plan sing",
+            "plan advance --gates",
+            "plan set change --gates",
         ] {
             assert!(verb(bad).is_err(), "{bad}");
         }

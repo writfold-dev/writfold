@@ -112,7 +112,7 @@ gate unit [waived] mechanical pass exit=0 at harbor-api@4be03f7897b6+dirty:2 sco
   waived: flaky on this machine; rerun in CI (by owner, 2026-11-12T21:47:40Z) @runs/run-…/statements/unit-20261112T214740Z-180ac5.json:1
 ```
 
-A statement is a file in `runs/<run>/statements/`, bound to the same definition and bytes as a receipt, so it goes stale the same way. It is never shown as satisfied. `attest` is refused for a command gate, and `gate run` is refused for an attested gate. `--by` is required and recorded as given; Writfold cannot check it.
+A statement is a file in `runs/<run>/statements/`, bound to the same definition and bytes as a receipt, so it goes stale the same way. It is never shown as satisfied. `attest` is refused for a command gate, and `gate run` is refused for an attested gate. `--by` is required and recorded as given; Writfold cannot check it. A convention that keeps agents and people apart: an agent passes `--by agent:<model>@<session>` (`agent:claude-opus-5-5@3f9c…`), a person their name. To keep `attest` or `waive` for people, ask before the command runs: in Claude Code, `"permissions": {"ask": ["Bash(writfold kb gate attest:*)", "Bash(writfold kb gate waive:*)"]}`; the Git author of the statement file is the record of who made it.
 
 ## Re-running a receipt: `gate verify`
 
@@ -293,6 +293,16 @@ writfold kb gate cover <gate> <item> not-applicable --reason TEXT --by WHO
 
 Each `REF` is one argument, any reference an assessed gate may cite ([the table above](#weft-assessed-gates)): a citation token, a locator, `gate:<id>`, or a gate receipt, attestation, retrieval receipt, edit receipt or observation of this run. `supported` needs at least one, and is refused (exit 3, nothing written) when any is not grounded now, so a row never starts out false. A waiver is never evidence. A checklist and an assessed gate are both judged against the other gates only, so a reference to either class is not grounded.
 
+**Several items at once** (built in v0.5.0-dev.3): `gate cover <gate> --from FILE --by WHO [--run ID] [--repo DIR]`, or `--from -` to read standard input, takes one JSON object per line:
+
+```text
+{"item":"errors","outcome":"supported","refs":["gate:unit"],"note":"read every call site"}
+{"item":"record","outcome":"supported","refs":["⟦cite kind=record path=ktlo/2026/hbr-99-flush-stall.md state=done⟧"]}
+{"item":"perf","outcome":"not-applicable","reason":"no hot path is touched"}
+```
+
+`item` and `outcome` are required; `refs` (a list, one reference per string), `reason` and `note` are optional and follow the single-item rules; any other key is refused, blank lines are skipped, and `--by` applies to every row (`--reason` and `--note` are refused as flags). Every row is checked exactly as the single-item form checks its arguments, on one snapshot of the subject, and the rows are written as one write plan: one refused row (malformed JSON, an unknown item, a missing reason, a reference that is not grounded, an item named twice in the batch) refuses the whole batch, exit 3, naming its line and item (`--from line 2: item perf: …`), and nothing is written. Each row written is the file the single-item form would write. A crash part-way through the write can leave the first rows of the batch, each complete and valid; rerunning the batch records every item again, and each item's newest row decides it.
+
 A row is a file, `runs/<run>/covers/<gate>.<item>-<time>-<hex>.json` (schema `writfold-cover/1`): the outcome, the reason or note, `by`, the subject's commit and scope content digest, the definition digest, every reference with what it stood on when written, a `seq` one more than the highest of that gate and item in the run, and a digest over the rest. An edited row, or one filed under another gate's or item's name, reads as `[invalid]` and counts for nothing.
 
 Each item stands on its newest row by `seq` (file name on ties; never the clock), judged on every read:
@@ -348,7 +358,7 @@ The file is `runs/<run>/observed/<time>-<hex>.json` (schema `writfold-observatio
 
 Cite the file (or its bare name in this run) as a `REF` of a `supported` row. It is grounded only while its status is `ok` and its citation is fresh; otherwise its standing is `not-fresh:<n>` or the status, and `gate cover` refuses it. When an `ok` look's citation ages, the item turns `stale` like any moved evidence.
 
-A look that could not tell is still worth keeping. Record it with `--for GATE.ITEM`, cover the item `unsupported` (or `not-applicable`) with a reason that names the file, and every look made for that item shows under it in `gate status`, `gate cover`'s answer and `resume`, newest file last:
+A look that could not tell is still worth keeping. Record it with `--for GATE.ITEM`, cover the item `unsupported` (or `not-applicable`) with a reason that names the file, and every look made for that item shows under it in `gate status`, `gate cover`'s answer and `resume`, newest file last. The row may also cite the file itself (built in v0.5.0-dev.3): `gate cover review perf unsupported runs/<run>/observed/<file>.json --reason TEXT --by WHO`, or `"refs":["<file>"]` in a `--from` row. An `unsupported` or `not-applicable` row still needs its reason and may cite only observations of this run (by path or bare name, any status, refused when not a readable observation); they are recorded with their standing at write time and never change how the item stands:
 
 ```text
   item: perf [unsupported] (optional) the dashboard did not answer: runs/run-…/observed/20261111T000002Z-….json by agent @runs/run-…/covers/review.perf-20261111T000000Z-….json:1 !unsupported

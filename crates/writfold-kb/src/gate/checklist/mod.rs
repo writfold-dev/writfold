@@ -11,17 +11,21 @@
 //! kernel is [`writfold_core::checklist`]. A covered checklist stands as
 //! `attested` through the gate kernel ([`writfold_core::gate::standing`]):
 //! a cover row is a judgement with checked evidence, never a passing
-//! check. `gate waive` sets a whole checklist aside as for any gate.
+//! check. `gate cover --from` records several rows in one plan
+//! ([`batch`]). `gate waive` sets a whole checklist aside as for any gate.
 //!
 //! Checklist and assessed gates are both judged after the other gates and
 //! against them only, so neither can cite the other.
+pub mod batch;
 pub mod cover;
 mod judge;
 mod show;
 pub mod spec;
 pub mod write;
 
+pub use batch::{Batch, Rows};
 pub use judge::{Entry, View, judge};
+pub(crate) use show::item_line;
 pub use show::{line, next, row};
 pub use spec::Spec;
 pub use write::Cover;
