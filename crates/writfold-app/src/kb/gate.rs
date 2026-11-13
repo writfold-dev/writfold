@@ -4,11 +4,11 @@ use super::args::Common;
 use super::writes::get;
 use std::path::PathBuf;
 use writfold_kb::Verb;
-use writfold_kb::gate::checklist::{Cover, Outcome};
+use writfold_kb::gate::checklist::{Batch, Cover, Outcome, Rows};
 use writfold_kb::gate::statement::Kind;
 use writfold_kb::gate::{GateVerb, Say};
 
-pub const USAGE: &str = "usage: gate run <id> [--run ID] [--repo DIR] | gate attest <id> --statement TEXT --by WHO | gate waive <id> --reason TEXT --by WHO | gate cover <id> <item> supported REF… [--note TEXT] | gate cover <id> <item> unsupported|not-applicable --reason TEXT (each with --by WHO) | gate status [--run ID] [--repo DIR] | gate verify <receipt> [--repo DIR] | gate lines [--run ID] [--repo DIR]";
+pub const USAGE: &str = "usage: gate run <id> [--run ID] [--repo DIR] | gate attest <id> --statement TEXT --by WHO | gate waive <id> --reason TEXT --by WHO | gate cover <id> <item> supported REF… [--note TEXT] | gate cover <id> <item> unsupported|not-applicable --reason TEXT | gate cover <id> --from FILE|- (JSON lines; each with --by WHO) | gate status [--run ID] [--repo DIR] | gate verify <receipt> [--repo DIR] | gate lines [--run ID] [--repo DIR]";
 
 /// The gate verb, or why the arguments do not name one.
 pub fn verb(common: &Common, positional: &[String]) -> Result<Verb, String> {
@@ -20,6 +20,7 @@ pub fn verb(common: &Common, positional: &[String]) -> Result<Verb, String> {
             run,
             repo,
         },
+        _ if get(common, "from").is_some() => return batch(common, positional, run, repo),
         [sub, _, _, _, ..] if sub == "cover" && get(common, "statement").is_some() => {
             return Err("gate cover takes --reason or references, not --statement".into());
         }
@@ -77,12 +78,51 @@ pub fn verb(common: &Common, positional: &[String]) -> Result<Verb, String> {
     Ok(Verb::Gate(verb))
 }
 
+/// `gate cover <id> --from FILE|- --by WHO`: the rows come from the input,
+/// so the per-row flags do not apply.
+fn batch(
+    common: &Common,
+    positional: &[String],
+    run: Option<String>,
+    repo: Option<PathBuf>,
+) -> Result<Verb, String> {
+    let [sub, id] = positional else {
+        return Err("--from belongs to gate cover <id> (rows as JSON lines)".into());
+    };
+    if sub != "cover" {
+        return Err("--from belongs to gate cover <id> (rows as JSON lines)".into());
+    }
+    if get(common, "statement").is_some() {
+        return Err("gate cover takes --reason or references, not --statement".into());
+    }
+    if let Some(flag) = ["reason", "note"]
+        .into_iter()
+        .find(|f| get(common, f).is_some())
+    {
+        return Err(format!(
+            "gate cover --from takes --{flag} per row in the input, not as a flag"
+        ));
+    }
+    let from = get(common, "from").unwrap_or_default();
+    Ok(Verb::Gate(GateVerb::CoverBatch(Batch {
+        gate: id.clone(),
+        from: match from.as_str() {
+            "-" => Rows::Stdin,
+            path => Rows::File(PathBuf::from(path)),
+        },
+        by: get(common, "by").ok_or("gate cover needs --by WHO")?,
+        run,
+        repo,
+    })))
+}
+
 #[cfg(test)]
 mod tests {
     use super::super::args::parse;
     use std::path::PathBuf;
     use writfold_kb::Verb;
     use writfold_kb::gate::GateVerb;
+    use writfold_kb::gate::checklist::Rows;
 
     fn verb(args: &str) -> Result<Verb, String> {
         let args: Vec<String> = args.split(' ').map(str::to_owned).collect();
@@ -127,7 +167,21 @@ mod tests {
             verb("gate cover review perf not-applicable --reason none --by me")?,
             Verb::Gate(GateVerb::Cover(ref c)) if c.references.is_empty() && c.reason.as_deref() == Some("none")
         ));
+        assert!(matches!(
+            verb("gate cover review --from rows.jsonl --by me --run r")?,
+            Verb::Gate(GateVerb::CoverBatch(ref b)) if b.from == Rows::File("rows.jsonl".into()) && b.run.as_deref() == Some("r")
+        ));
+        assert!(matches!(
+            verb("gate cover review --from - --by me")?,
+            Verb::Gate(GateVerb::CoverBatch(ref b)) if b.from == Rows::Stdin && b.gate == "review"
+        ));
         for bad in [
+            "gate cover review --from -",
+            "gate cover review errors --from - --by me",
+            "gate cover review --from - --by me --reason x",
+            "gate cover review --from - --by me --note x",
+            "gate cover review --from - --by me --statement x",
+            "gate status --from x",
             "gate attest review --reason x --by me",
             "gate waive unit --reason x",
             "gate status --by me",

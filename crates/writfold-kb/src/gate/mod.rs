@@ -67,6 +67,8 @@ pub enum GateVerb {
     Say(Say),
     /// `gate cover`: one row about one item of a checklist gate.
     Cover(checklist::Cover),
+    /// `gate cover --from`: several rows of one checklist gate, all or none.
+    CoverBatch(checklist::Batch),
 }
 
 /// Answer one gate verb.
@@ -83,6 +85,7 @@ pub fn execute(ws: &Workspace, request: &Request, verb: &GateVerb, now: i64) -> 
         }
         GateVerb::Say(say) => say::record(ws, &tool, request, say, now),
         GateVerb::Cover(cover) => checklist::write::record(ws, &tool, request, cover, now),
+        GateVerb::CoverBatch(b) => checklist::batch::record(ws, &tool, request, b, now),
         GateVerb::Verify { receipt, repo } => {
             verify::verify(ws, &tool, request, receipt, repo.as_deref(), now)
         }

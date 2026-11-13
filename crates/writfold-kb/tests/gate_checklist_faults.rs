@@ -3,7 +3,9 @@
 //! protocol. After every death a cover row is either absent or complete
 //! and valid, none appears before `published`, leftovers are only
 //! dot-named `.tmp` files, the index equals a rebuild, and a rerun
-//! records a valid row that covers the item.
+//! records a valid row that covers the item. A batch (`gate cover
+//! --from`) killed at any step leaves a prefix of its rows, each complete
+//! and valid, and rerunning it covers every item.
 mod checklist;
 mod support;
 
@@ -12,11 +14,24 @@ use std::path::PathBuf;
 use std::process::Command;
 use support::{TestResult, world};
 use writfold_kb::Verb;
-use writfold_kb::gate::checklist::{Outcome, cover};
+use writfold_kb::gate::GateVerb;
+use writfold_kb::gate::checklist::{Batch, Outcome, Rows, cover};
 use writfold_kb::write::Step;
 
 const CHILD: &str = "WRITFOLD_KB_COVER_FAULT_CHILD";
 const CODE: &str = "WRITFOLD_KB_COVER_FAULT_CODE";
+const BATCH: &str = "WRITFOLD_KB_COVER_FAULT_BATCH";
+const ROWS: &str = "{\"item\":\"errors\",\"outcome\":\"supported\",\"refs\":[\"gate:unit\"]}\n{\"item\":\"perf\",\"outcome\":\"not-applicable\",\"reason\":\"none\"}\n";
+
+fn batch_verb(code: &std::path::Path, file: PathBuf) -> GateVerb {
+    GateVerb::CoverBatch(Batch {
+        gate: "review".into(),
+        from: Rows::File(file),
+        by: "agent".into(),
+        run: Some(RUN.into()),
+        repo: Some(code.to_path_buf()),
+    })
+}
 
 fn abort_at(step: Step) {
     if std::env::var("WRITFOLD_KB_FAULT_STEP").ok().as_deref() == Some(step.name()) {
@@ -32,7 +47,10 @@ fn child() -> TestResult {
         return Ok(());
     };
     let (kb, code) = (PathBuf::from(kb), PathBuf::from(code));
-    let verb = cover_verb(&code, "errors", Outcome::Supported, &["gate:unit"]);
+    let verb = match std::env::var(BATCH) {
+        Ok(file) => batch_verb(&code, file.into()),
+        Err(_) => cover_verb(&code, "errors", Outcome::Supported, &["gate:unit"]),
+    };
     let mut req = request(&kb, Verb::Gate(verb));
     req.probe = abort_at;
     writfold_kb::run(&req)?;
@@ -90,6 +108,49 @@ fn every_fault_point_leaves_no_row_or_a_valid_one() -> TestResult {
             item(&text, "errors"),
             "supported",
             "after {}:\n{text}",
+            step.name()
+        );
+    }
+    Ok(())
+}
+
+#[test]
+fn a_killed_batch_leaves_a_prefix_of_valid_rows() -> TestResult {
+    for step in Step::ALL {
+        let w = world(&[])?;
+        define(&w.kb)?;
+        run_unit(&w)?;
+        let file = w.base.join("rows.jsonl");
+        std::fs::write(&file, ROWS)?;
+        let status_code = Command::new(std::env::current_exe()?)
+            .args(["--exact", "child", "--nocapture", "--test-threads", "1"])
+            .env(CHILD, &w.kb)
+            .env(CODE, &w.code)
+            .env(BATCH, &file)
+            .env("WRITFOLD_KB_FAULT_STEP", step.name())
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .status()?;
+        assert!(
+            !status_code.success(),
+            "batch at {} did not stop",
+            step.name()
+        );
+        let published = valid_rows(&w.kb)?;
+        // The first row's publication is the first `published` step.
+        let before = !matches!(step, Step::Published | Step::DirSynced | Step::Unlocked);
+        assert_eq!(published == 0, before, "at {}", step.name());
+        assert!(published <= 2, "at {}", step.name());
+        let (verify, exit) = w.run(&w.request(Verb::IndexVerify))?;
+        assert!(exit == 0 && !verify.contains("unreadable"), "{verify}");
+        writfold_kb::run(&w.request(Verb::Gate(batch_verb(&w.code, file))))?;
+        assert_eq!(valid_rows(&w.kb)?, published + 2);
+        let (text, _) = status(&w)?;
+        assert_eq!(item(&text, "errors"), "supported", "after {}", step.name());
+        assert_eq!(
+            item(&text, "perf"),
+            "not-applicable",
+            "after {}",
             step.name()
         );
     }
