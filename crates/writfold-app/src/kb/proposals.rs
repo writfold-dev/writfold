@@ -1,13 +1,16 @@
 //! `propose …`, `proposals list|show|accept|drop` and `check`: parsing
 //! only; the queue and the composed check live in `writfold-kb`.
 use super::args::Common;
-use super::writes::{get, record};
+use super::writes::{get, record, switch};
 use writfold_kb::Verb;
-use writfold_kb::proposal::{ProposalVerb, Propose};
+use writfold_kb::proposal::{ProposalVerb, Propose, Store};
 
 /// The environment variable naming the session when `--session` is not
 /// given.
 pub const SESSION_ENV: &str = "WRITFOLD_SESSION";
+
+/// `propose`'s switches: which store to write.
+pub const SWITCHES: [&str; 2] = ["tracked", "local"];
 
 /// The write flags each verb here accepts.
 pub fn allowed(verb: &str) -> &'static [&'static str] {
@@ -28,6 +31,8 @@ pub fn allowed(verb: &str) -> &'static [&'static str] {
             "applicability",
             "session",
             "run",
+            "tracked",
+            "local",
         ],
         _ => &[],
     }
@@ -37,14 +42,17 @@ pub fn allowed(verb: &str) -> &'static [&'static str] {
 /// other verb.
 pub fn verb(name: &str, common: &Common, positional: &[String]) -> Option<Result<Verb, String>> {
     let verb = match (name, positional) {
-        ("propose", [kind, rest @ ..]) => record(kind, common, rest).map(|write| {
-            ProposalVerb::Propose(Box::new(Propose {
-                write,
-                session: get(common, "session")
-                    .or_else(|| std::env::var(SESSION_ENV).ok())
-                    .filter(|s| !s.is_empty()),
-                run: get(common, "run"),
-            }))
+        ("propose", [kind, rest @ ..]) => store(common).and_then(|store| {
+            record(kind, common, rest).map(|write| {
+                ProposalVerb::Propose(Box::new(Propose {
+                    write,
+                    session: get(common, "session")
+                        .or_else(|| std::env::var(SESSION_ENV).ok())
+                        .filter(|s| !s.is_empty()),
+                    run: get(common, "run"),
+                    store,
+                }))
+            })
         }),
         ("propose", []) => Err("usage: propose ticket|decision|link … (as record)".into()),
         ("proposals", [] | [_]) => {
@@ -73,12 +81,22 @@ pub fn verb(name: &str, common: &Common, positional: &[String]) -> Option<Result
     Some(verb.map(Verb::Proposal))
 }
 
+/// `--tracked` or `--local` (not both); neither: the KB's default.
+fn store(common: &Common) -> Result<Option<Store>, String> {
+    match (switch(common, "tracked"), switch(common, "local")) {
+        (true, true) => Err("propose takes --tracked or --local, not both".into()),
+        (true, false) => Ok(Some(Store::Tracked)),
+        (false, true) => Ok(Some(Store::Local)),
+        (false, false) => Ok(None),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::super::args::parse;
     use std::path::PathBuf;
     use writfold_kb::Verb;
-    use writfold_kb::proposal::ProposalVerb;
+    use writfold_kb::proposal::{ProposalVerb, Store};
     use writfold_kb::write::Write;
 
     fn verb(args: &str) -> Result<Verb, String> {
@@ -91,7 +109,16 @@ mod tests {
         let made = verb("propose ticket AB-1 --title t --assets a --session s1 --run r")?;
         assert!(matches!(&made, Verb::Proposal(ProposalVerb::Propose(p))
             if p.session.as_deref() == Some("s1") && p.run.as_deref() == Some("r")
+                && p.store.is_none()
                 && matches!(&p.write, Write::Ticket(t) if t.assets == ["a"])));
+        let tracked = verb("propose ticket AB-1 --title t --assets a --tracked")?;
+        assert!(matches!(&tracked, Verb::Proposal(ProposalVerb::Propose(p))
+            if p.store == Some(Store::Tracked)));
+        let local = verb("propose ticket AB-1 --title t --assets a --local")?;
+        assert!(matches!(&local, Verb::Proposal(ProposalVerb::Propose(p))
+            if p.store == Some(Store::Local)));
+        assert!(verb("propose ticket AB-1 --title t --tracked --local").is_err());
+        assert!(verb("record ticket AB-1 --title t --tracked").is_err());
         let decision = verb("propose decision --title t --target-source s --project p")?;
         assert!(matches!(&decision, Verb::Proposal(ProposalVerb::Propose(p))
             if matches!(&p.write, Write::Decision(d) if d.project.as_deref() == Some("p"))));

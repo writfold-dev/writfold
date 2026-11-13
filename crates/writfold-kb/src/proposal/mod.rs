@@ -1,9 +1,12 @@
 //! The proposal queue: `record` calls not yet made.
 //!
 //! A proposal holds exactly the arguments of `record ticket|decision|link`
-//! ([`codec`]). It lives in `<git dir>/writfold/proposals/<id>.json`,
+//! ([`codec`]). By default it lives in `<git dir>/writfold/proposals/<id>.json`,
 //! beside drafts: local, untracked, never committed, and lost with an
-//! ephemeral clone, deliberately (an evaluator's output is noisy). The ID
+//! ephemeral clone, deliberately (an evaluator's output is noisy). With
+//! `--tracked`, or by default under the marker `.writfold/proposals/.tracked`,
+//! the same JSON goes to the KB work tree instead, to be committed
+//! ([`store`]); readers see both stores as one queue. The ID
 //! is a digest of the kind and the normalised arguments, so proposing the
 //! same call twice leaves one file. Accepting one replays it through the
 //! ordinary write path ([`crate::write::execute`]) after refusing a stale
@@ -14,6 +17,7 @@
 //! uses to ask "does this run hold a proposal?".
 pub mod codec;
 mod inbox;
+mod store;
 mod verb;
 
 use crate::error::{KbError, Result};
@@ -25,6 +29,7 @@ use std::io::Write as _;
 use std::path::{Path, PathBuf};
 
 pub use inbox::{inbox, rows};
+pub use store::{Copy, MARKER, Pending, Store, Stores, TRACKED_DIR};
 pub use verb::{ProposalVerb, Propose, execute};
 
 pub const SCHEMA: &str = "writfold-proposal/1";
@@ -104,8 +109,12 @@ pub fn path(state: &Path, id: &str) -> Result<PathBuf> {
 
 /// A proposal, if present.
 pub fn load(state: &Path, id: &str) -> Result<Option<Proposal>> {
-    let file = path(state, id)?;
-    let text = match std::fs::read_to_string(&file) {
+    read(&path(state, id)?, id)
+}
+
+/// The proposal `id` in `file`, if present.
+fn read(file: &Path, id: &str) -> Result<Option<Proposal>> {
+    let text = match std::fs::read_to_string(file) {
         Ok(text) => text,
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(None),
         Err(error) => return Err(error.into()),
@@ -150,12 +159,16 @@ pub enum Saved {
 /// After a crash the queue holds the proposal whole or not at all; a
 /// leftover is a dot-named `.tmp` file, never read.
 pub fn save(state: &Path, proposal: &Proposal, probe: Probe) -> Result<Saved> {
-    let file = path(state, &proposal.id)?;
-    std::fs::create_dir_all(dir(state))?;
+    save_at(&dir(state), &path(state, &proposal.id)?, proposal, probe)
+}
+
+/// [`save`] into `file` in directory `dir`.
+fn save_at(dir: &Path, file: &Path, proposal: &Proposal, probe: Probe) -> Result<Saved> {
+    std::fs::create_dir_all(dir)?;
     if file.exists() {
         return Ok(Saved::Existing);
     }
-    let temporary = dir(state).join(format!(".{}-{}.tmp", proposal.id, std::process::id()));
+    let temporary = dir.join(format!(".{}-{}.tmp", proposal.id, std::process::id()));
     let text = serde_json::to_string_pretty(&proposal.to_json())
         .map_err(|e| KbError::Usage(format!("proposal: {e}")))?;
     let mut handle = std::fs::File::create(&temporary)?;
@@ -163,7 +176,7 @@ pub fn save(state: &Path, proposal: &Proposal, probe: Probe) -> Result<Saved> {
     probe(Step::TempWritten);
     handle.sync_all()?;
     probe(Step::TempSynced);
-    let linked = std::fs::hard_link(&temporary, &file);
+    let linked = std::fs::hard_link(&temporary, file);
     let saved = match linked {
         Ok(()) => Saved::New,
         Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => Saved::Existing,
@@ -190,24 +203,30 @@ pub fn state_of(ws: &Workspace) -> Option<PathBuf> {
 
 /// How many pending proposals record `run`: the public hook for a
 /// run-record check such as `run.reflected` ("the run holds a proposal").
-/// Reads the local queue only; 0 for a KB outside Git. A proposal stops
-/// counting once it is accepted (it is then a record the check can see)
-/// or dropped.
+/// Reads both stores, one count per ID; 0 for a KB outside Git. A
+/// proposal stops counting once it is accepted (it is then a record the
+/// check can see) or dropped.
 pub fn for_run(ws: &Workspace, run: &str) -> usize {
-    state_of(ws).map_or(0, |state| {
-        all(&state)
+    Stores::of(ws).map_or(0, |stores| {
+        stores
+            .pending()
             .iter()
-            .filter(|p| p.run.as_deref() == Some(run))
+            .filter(|p| {
+                p.copies
+                    .iter()
+                    .any(|c| c.proposal.run.as_deref() == Some(run))
+            })
             .count()
     })
 }
 
-/// Pending proposals of one session (`None`: proposals made with no
-/// session, which share one bucket).
-pub fn of_session(state: &Path, session: Option<&str>) -> usize {
-    all(state)
+/// Pending proposals of one session in both stores, one per ID (`None`:
+/// proposals made with no session, which share one bucket).
+pub fn of_session(stores: &Stores, session: Option<&str>) -> usize {
+    stores
+        .pending()
         .iter()
-        .filter(|p| p.session.as_deref() == session)
+        .filter(|p| p.of_session(session))
         .count()
 }
 

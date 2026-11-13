@@ -54,8 +54,10 @@ checkers (kinds declared freshness = \"checked\"; writfold-check-<name> on PATH;
   checker list                     each checked kind: its checker found or absent, and its describe
 
 proposals (record calls not yet made, in a local untracked queue; at most 10 per session):
-  propose ticket|decision|link … [--session S] [--run ID]
+  propose ticket|decision|link … [--session S] [--run ID] [--tracked|--local]
                                    the arguments of record; session: --session, else $WRITFOLD_SESSION
+                                   --tracked: .writfold/proposals/ in the work tree, to commit
+                                   (the default when .writfold/proposals/.tracked exists)
   proposals [list] | proposals show|accept|drop <id>
                                    accept replays it through record (refused on a stale citation)
 

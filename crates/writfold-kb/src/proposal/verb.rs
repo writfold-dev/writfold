@@ -1,5 +1,5 @@
 //! `propose ticket|decision|link …` and `proposals list|show|accept|drop`.
-use super::{CAP, Proposal, Saved, codec, inbox};
+use super::{CAP, Pending, Proposal, Saved, Store, Stores, codec, inbox};
 use crate::emit::{Answer, Frame, More, Output};
 use crate::error::{KbError, Result};
 use crate::parse::cite::{locator, tokens};
@@ -8,7 +8,6 @@ use crate::stale::{self, Cite, Verdict};
 use crate::workspace::{GitTool, Workspace};
 use crate::write::{self, Write};
 use crate::{Request, Verb, runs};
-use std::path::Path;
 
 /// `propose`: a `record` call to queue.
 #[derive(Clone, Debug)]
@@ -18,6 +17,9 @@ pub struct Propose {
     pub session: Option<String>,
     /// `--run`, else the current-run pointer.
     pub run: Option<String>,
+    /// `--tracked` or `--local`; `None`: tracked when the marker
+    /// `.writfold/proposals/.tracked` exists, else local.
+    pub store: Option<Store>,
 }
 
 #[derive(Clone, Debug)]
@@ -31,25 +33,25 @@ pub enum ProposalVerb {
 
 /// Answer one proposal verb.
 pub fn execute(ws: &Workspace, request: &Request, verb: &ProposalVerb, now: i64) -> Result<Output> {
-    let state = super::state_of(ws).ok_or_else(|| {
+    let stores = Stores::of(ws).ok_or_else(|| {
         KbError::Refused(
             "proposals need a KB under Git (the queue lives in its Git directory)".into(),
         )
     })?;
     let tool = GitTool::locate()?;
     if let ProposalVerb::Accept { id } = verb {
-        return accept(ws, &tool, request, &state, id, now);
+        return accept(ws, &tool, request, &stores, id, now);
     }
     let session = Session::open(ws, Some(&tool), false, now)?;
     let mut answer = Answer::default();
     let (name, args) = match verb {
         ProposalVerb::Propose(p) => {
-            answer = propose(&session, &state, p, request.probe, now)?;
+            answer = propose(&session, &stores, p, request.probe, now)?;
             ("propose", Vec::new())
         }
         ProposalVerb::List => {
-            let all = super::all(&state);
-            answer.rows = all.iter().map(|p| inbox::row(&state, p)).collect();
+            let all = stores.pending();
+            answer.rows = all.iter().map(inbox::row).collect();
             if all.is_empty() {
                 answer.notes.push("no pending proposals".into());
             }
@@ -57,22 +59,23 @@ pub fn execute(ws: &Workspace, request: &Request, verb: &ProposalVerb, now: i64)
             ("proposals-list", Vec::new())
         }
         ProposalVerb::Show { id } => {
-            let found = existing(&state, id)?;
-            let mut row = inbox::row(&state, &found);
+            let found = existing(&stores, id)?;
+            let mut row = inbox::row(&found);
             row.more.push(More {
                 label: "call",
-                text: codec::command(&found.kind, &found.args),
+                text: codec::command(&found.proposal.kind, &found.proposal.args),
                 ..More::default()
             });
             answer.rows.push(row);
             ("proposals-show", vec![id.clone()])
         }
         ProposalVerb::Drop { id } => {
-            let found = existing(&state, id)?;
-            answer.rows.push(inbox::row(&state, &found));
-            super::remove(&state, id)?;
+            let found = existing(&stores, id)?;
+            answer.rows.push(inbox::row(&found));
+            stores.remove(&found)?;
             answer.notes.push(format!(
-                "proposal {id} dropped; nothing was written to the KB"
+                "proposal {id} dropped; nothing was written to the KB ({} removed)",
+                copies(&found)
             ));
             ("proposals-drop", vec![id.clone()])
         }
@@ -92,8 +95,16 @@ fn frame(request: &Request, verb: &str, args: Vec<String>) -> Frame {
     }
 }
 
-fn existing(state: &Path, id: &str) -> Result<Proposal> {
-    super::load(state, id)?.ok_or_else(|| {
+/// What removing `found` removes: its one copy, or all of them.
+fn copies(found: &Pending) -> String {
+    match found.copies.as_slice() {
+        [one] => format!("its {} copy", one.store.label()),
+        all => format!("all {} copies", all.len()),
+    }
+}
+
+fn existing(stores: &Stores, id: &str) -> Result<Pending> {
+    stores.find(id)?.ok_or_else(|| {
         KbError::Refused(format!(
             "no pending proposal {id} (see `writfold kb proposals list`)"
         ))
@@ -101,11 +112,11 @@ fn existing(state: &Path, id: &str) -> Result<Proposal> {
 }
 
 /// Validate the call as `record` would (planning only: nothing is
-/// written), then queue it unless the same call is queued, or the
-/// session is at [`CAP`].
+/// written), then queue it unless the chosen store already holds the same
+/// call, or the session is at [`CAP`] (counted over both stores).
 fn propose(
     session: &Session<'_>,
-    state: &Path,
+    stores: &Stores,
     p: &Propose,
     probe: write::Probe,
     now: i64,
@@ -139,33 +150,43 @@ fn propose(
         run,
         created: crate::time::stamp(now),
     };
+    let store = p.store.unwrap_or(if stores.tracked_by_default() {
+        Store::Tracked
+    } else {
+        Store::Local
+    });
     let mut answer = Answer::default();
-    if let Some(found) = super::load(state, &proposal.id)? {
-        answer.rows.push(inbox::row(state, &found));
+    if stores.holds(store, &proposal.id) {
+        if let Some(found) = stores.find(&proposal.id)? {
+            answer.rows.push(inbox::row(&found));
+        }
         answer
             .notes
             .push("the same call is already proposed; nothing was written".into());
         return Ok(answer);
     }
-    let held = super::of_session(state, p.session.as_deref());
+    let held = super::of_session(stores, p.session.as_deref());
     if held >= CAP {
         let who = p.session.as_deref().unwrap_or("(no session)");
         return Err(KbError::Refused(format!(
             "session {who} already holds {held} pending proposals, the cap is {CAP}: accept or drop one first (`writfold kb proposals list`)"
         )));
     }
-    let saved = super::save(state, &proposal, probe)?;
-    answer.rows.push(inbox::row(state, &proposal));
-    if saved == Saved::Existing {
-        answer
-            .notes
-            .push("the same call is already proposed; nothing was written".into());
-    } else {
-        answer.notes.push(format!(
-            "queued locally (untracked; lost with this clone). Accept with `writfold kb proposals accept {}` when the user asks",
-            proposal.id
-        ));
+    let (saved, file) = stores.save(store, &proposal, probe)?;
+    if let Some(found) = stores.find(&proposal.id)? {
+        answer.rows.push(inbox::row(&found));
     }
+    let id = &proposal.id;
+    answer.notes.push(match (saved, store) {
+        (Saved::Existing, _) => "the same call is already proposed; nothing was written".into(),
+        (Saved::New, Store::Local) => format!(
+            "queued locally (untracked; lost with this clone). Accept with `writfold kb proposals accept {id}` when the user asks"
+        ),
+        (Saved::New, Store::Tracked) => format!(
+            "queued in the work tree at {} (tracked: commit it with the KB; it is not a record). Accept with `writfold kb proposals accept {id}` when the user asks",
+            file.display()
+        ),
+    });
     Ok(answer)
 }
 
@@ -203,21 +224,23 @@ fn not_fresh(session: &Session<'_>, proposal: &Proposal) -> Result<Vec<String>> 
 }
 
 /// Replay a proposal through the ordinary write path. A stale citation or
-/// any refusal of the write keeps the proposal; it is removed only after
-/// the record is published.
+/// any refusal of the write keeps the proposal; every copy (local and
+/// tracked) is removed only after the record is published. A removed
+/// tracked copy is left for the user to commit, like the record.
 fn accept(
     ws: &Workspace,
     tool: &GitTool,
     request: &Request,
-    state: &Path,
+    stores: &Stores,
     id: &str,
     now: i64,
 ) -> Result<Output> {
-    let proposal = existing(state, id)?;
+    let found = existing(stores, id)?;
+    let proposal = &found.proposal;
     let write = codec::decode(&proposal.kind, &proposal.args)?;
     let stale = {
         let session = Session::open(ws, Some(tool), false, now)?;
-        not_fresh(&session, &proposal)?
+        not_fresh(&session, proposal)?
     };
     if !stale.is_empty() {
         return Err(KbError::Refused(format!(
@@ -230,9 +253,12 @@ fn accept(
         ..request.clone()
     };
     let mut output = write::execute(ws, &replay, &write, now)?;
-    super::remove(state, id)?;
+    stores.remove(&found)?;
     if !request.json {
-        let note = format!("# note: proposal {id} accepted and removed from the queue\n");
+        let note = format!(
+            "# note: proposal {id} accepted and removed from the queue ({})\n",
+            copies(&found)
+        );
         let at = output
             .text
             .trim_end_matches('\n')
