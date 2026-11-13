@@ -8,7 +8,9 @@
 //! 2. **Brief** (`brief`, budget [`BRIEF_BUDGET`] tokens), as before.
 //! 3. **Stale citations** ([`stale_line`]): one line counting the
 //!    non-fresh verdicts `writfold kb stale` last cached, when there are
-//!    any; no repository is read and nothing is spawned.
+//!    any, and one line naming each declared checker not on `PATH`
+//!    ([`crate::stale::checker::absent_line`]); no repository is read and
+//!    nothing is spawned.
 //! 4. **Current run** (`resume`, budget [`RESUME_BUDGET`]), when the
 //!    current-run pointer is set.
 //! 5. **Plan position** ([`super::position`]): the current step and what
@@ -170,8 +172,10 @@ fn startup(
     if let Some(found) = verb(ws, cwd, now, brief, BRIEF_BUDGET) {
         parts.push((Part::Brief, format!("Writfold KB brief (`writfold kb brief`). Rows end in their source; re-check any row with a ! flag before relying on it.\n{found}")));
     }
-    if let Some(line) = stale_line(ws) {
-        parts.push((Part::Stale, line));
+    let absent = crate::stale::checker::absent_line(&ws.root);
+    let lines: Vec<String> = stale_line(ws).into_iter().chain(absent).collect();
+    if !lines.is_empty() {
+        parts.push((Part::Stale, lines.concat()));
     }
     if let Some(run) = current {
         let resume = Verb::Resume {

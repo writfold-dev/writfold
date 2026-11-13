@@ -157,6 +157,69 @@ fn declarations_take_effect_at_the_next_stale() -> TestResult {
 }
 
 #[test]
+fn checked_declarations_name_a_checker_and_its_fields() -> TestResult {
+    let refused = [
+        (
+            format!("{WEB}checker = \"acme\"\n"),
+            "web",
+            "need freshness = \"checked\"",
+        ),
+        (
+            format!("{WEB}fields = [\"id\"]\n"),
+            "web",
+            "need freshness = \"checked\"",
+        ),
+        (
+            WEB.replace("\"ttl\"", "\"checked\""),
+            "web",
+            "default_ttl cannot",
+        ),
+        (
+            DATASET.replace("immutable", "checked"),
+            "dataset",
+            "needs checker",
+        ),
+        (
+            format!(
+                "{}checker = \"acme src\"\nfields = [\"id\"]\n",
+                DATASET.replace("immutable", "checked")
+            ),
+            "dataset",
+            "must be a name",
+        ),
+        (
+            format!(
+                "{}checker = \"acme\"\n",
+                DATASET.replace("immutable", "checked")
+            ),
+            "dataset",
+            "needs fields",
+        ),
+        (
+            format!(
+                "{}checker = \"acme\"\nfields = [\"seen\"]\n",
+                DATASET.replace("immutable", "checked")
+            ),
+            "dataset",
+            "may not list seen",
+        ),
+    ];
+    for (text, name, why) in &refused {
+        let error = kinds::parse(text, name).err().unwrap_or_default();
+        assert!(error.contains(why), "{name}: {error:?} lacks {why:?}");
+    }
+    let checked = DATASET.replace("immutable", "checked");
+    let ok = kinds::parse(
+        &format!("{checked}checker = \"acme-src\"\nfields = [\"rev\", \"L\"]\n"),
+        "dataset",
+    )?;
+    assert_eq!(ok.freshness, Freshness::Checked);
+    assert_eq!(ok.checker.as_deref(), Some("acme-src"));
+    assert_eq!(ok.fields, ["rev", "L"]);
+    Ok(())
+}
+
+#[test]
 fn bad_declarations_are_refused_and_reported_by_check() -> TestResult {
     let refused = [
         (WEB.replace("web", "code"), "code", "cannot be declared"),
@@ -292,6 +355,8 @@ fn the_verdict_is_the_kernels_over_the_effective_lifetime() -> TestResult {
             },
             required: Vec::new(),
             description: None,
+            checker: None,
+            fields: Vec::new(),
         });
         let cite = Cite {
             kind: Some("pages".into()),

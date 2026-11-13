@@ -93,6 +93,32 @@ pub enum Observed {
     Offline { due: bool },
     /// A kind declared immutable: what it cites never changes.
     Immutable,
+    /// A kind declared `checked`: what its external checker said.
+    Checked(Checker),
+}
+
+/// The status an external checker gave one token.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Said {
+    Fresh,
+    Moved,
+    Changed,
+    Gone,
+    Unverifiable,
+}
+
+/// What became of one token sent to (or meant for) an external checker.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Checker {
+    /// No helper for the kind was found.
+    Absent,
+    /// The helper failed: a timeout, a non-zero exit, a malformed, missing
+    /// or duplicate reply, an unknown status, or a refused handshake.
+    Failed,
+    /// The token's format version is not one the helper reads.
+    Version,
+    /// A well-formed reply to this token.
+    Said(Said),
 }
 
 /// Exactly one verdict per citation.
@@ -138,6 +164,73 @@ pub fn observed(fact: Observed) -> Verdict {
         Observed::Offline { due: true } => Verdict::Due,
         Observed::Offline { due: false } => Verdict::Fresh,
         Observed::Immutable => Verdict::Fresh,
+        Observed::Checked(checker) => match checker {
+            Checker::Said(Said::Fresh) => Verdict::Fresh,
+            Checker::Said(Said::Moved) => Verdict::Moved,
+            Checker::Said(Said::Changed) => Verdict::Changed,
+            Checker::Said(Said::Gone) => Verdict::Gone,
+            Checker::Said(Said::Unverifiable)
+            | Checker::Absent
+            | Checker::Failed
+            | Checker::Version => Verdict::Unverifiable,
+        },
+    }
+}
+
+/// What a checker's `describe` reply claims, as far as one kind needs.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct Described {
+    /// It speaks the protocol version Writfold sent.
+    pub protocol: bool,
+    /// It lists the kind among its `kinds`.
+    pub lists_kind: bool,
+    /// It lists the operation Writfold needs (`check` or `make`).
+    pub has_op: bool,
+}
+
+/// The handshake's outcome for one kind.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Handshake {
+    Agreed,
+    /// Another protocol version (or no describe reply at all).
+    Protocol,
+    /// The kind is not listed.
+    Kind,
+    /// The operation is not listed.
+    Op,
+}
+
+/// Whether a helper may be asked about a kind: the protocol first, then
+/// the kind, then the operation. Only [`Handshake::Agreed`] lets a reply
+/// count; every other outcome makes each token [`Checker::Failed`].
+pub fn handshake(described: Option<Described>) -> Handshake {
+    match described {
+        None
+        | Some(Described {
+            protocol: false, ..
+        }) => Handshake::Protocol,
+        Some(Described {
+            lists_kind: false, ..
+        }) => Handshake::Kind,
+        Some(Described { has_op: false, .. }) => Handshake::Op,
+        Some(_) => Handshake::Agreed,
+    }
+}
+
+/// What one token's exchange came to: the batch's handshake and ending,
+/// whether the token's version is readable, and the replies to its id.
+/// A reply counts only after an agreed handshake, a clean exit, a
+/// readable version and exactly one well-formed reply.
+pub fn exchange(
+    handshake: Handshake,
+    clean_exit: bool,
+    readable: bool,
+    replies: &[Option<Said>],
+) -> Checker {
+    match (handshake, clean_exit, readable, replies) {
+        (Handshake::Agreed, true, false, _) => Checker::Version,
+        (Handshake::Agreed, true, true, [Some(said)]) => Checker::Said(*said),
+        _ => Checker::Failed,
     }
 }
 
@@ -182,7 +275,10 @@ pub fn with_mark(verdict: Verdict, marked: bool) -> Verdict {
 
 #[cfg(test)]
 mod tests {
-    use super::{Lifetime, Located, Observed, Target, Verdict, decide, lifetime, locate};
+    use super::{
+        Checker, Described, Handshake, Lifetime, Located, Observed, Said, Target, Verdict, decide,
+        exchange, handshake, lifetime, locate,
+    };
 
     #[test]
     fn locate_tries_the_cited_lines_first() {
@@ -223,6 +319,7 @@ mod tests {
         }
         facts.push(Observed::Timed(None));
         facts.push(Observed::Immutable);
+        facts.extend(CHECKERS.iter().map(|c| Observed::Checked(*c)));
         facts.extend(
             located
                 .iter()
@@ -269,6 +366,101 @@ mod tests {
                     // Without a declaration nothing changes: the token, else never.
                     if !immutable && default.is_none() {
                         assert_eq!(chosen, token.map_or(Lifetime::Never, Lifetime::Token));
+                    }
+                }
+            }
+        }
+    }
+
+    const SAID: [Said; 5] = [
+        Said::Fresh,
+        Said::Moved,
+        Said::Changed,
+        Said::Gone,
+        Said::Unverifiable,
+    ];
+    const CHECKERS: [Checker; 8] = [
+        Checker::Absent,
+        Checker::Failed,
+        Checker::Version,
+        Checker::Said(Said::Fresh),
+        Checker::Said(Said::Moved),
+        Checker::Said(Said::Changed),
+        Checker::Said(Said::Gone),
+        Checker::Said(Said::Unverifiable),
+    ];
+
+    #[test]
+    fn only_a_checker_saying_fresh_is_fresh() {
+        for checker in CHECKERS {
+            let verdict = decide(Observed::Checked(checker), false);
+            assert_eq!(
+                verdict == Verdict::Fresh,
+                checker == Checker::Said(Said::Fresh),
+                "{checker:?}"
+            );
+            if !matches!(checker, Checker::Said(_)) {
+                assert_eq!(verdict, Verdict::Unverifiable, "{checker:?}");
+            }
+        }
+    }
+
+    #[test]
+    fn the_handshake_checks_protocol_then_kind_then_op() {
+        assert_eq!(handshake(None), Handshake::Protocol);
+        for bits in 0..8u8 {
+            let d = Described {
+                protocol: bits & 1 != 0,
+                lists_kind: bits & 2 != 0,
+                has_op: bits & 4 != 0,
+            };
+            let want = if !d.protocol {
+                Handshake::Protocol
+            } else if !d.lists_kind {
+                Handshake::Kind
+            } else if !d.has_op {
+                Handshake::Op
+            } else {
+                Handshake::Agreed
+            };
+            assert_eq!(handshake(Some(d)), want, "{d:?}");
+        }
+    }
+
+    #[test]
+    fn a_reply_counts_only_after_everything_else_held() {
+        let shakes = [
+            Handshake::Agreed,
+            Handshake::Protocol,
+            Handshake::Kind,
+            Handshake::Op,
+        ];
+        let mut replies: alloc::vec::Vec<alloc::vec::Vec<Option<Said>>> =
+            alloc::vec![alloc::vec![], alloc::vec![None], alloc::vec![None, None]];
+        for said in SAID {
+            replies.push(alloc::vec![Some(said)]);
+            replies.push(alloc::vec![Some(said), Some(said)]);
+            replies.push(alloc::vec![Some(said), None]);
+        }
+        for shake in shakes {
+            for clean in [true, false] {
+                for readable in [true, false] {
+                    for r in &replies {
+                        let got = exchange(shake, clean, readable, r);
+                        let want = match (shake, clean, readable, r.as_slice()) {
+                            (Handshake::Agreed, true, false, _) => Checker::Version,
+                            (Handshake::Agreed, true, true, [Some(s)]) => Checker::Said(*s),
+                            _ => Checker::Failed,
+                        };
+                        assert_eq!(got, want, "{shake:?} {clean} {readable} {r:?}");
+                        let fresh = decide(Observed::Checked(got), false) == Verdict::Fresh;
+                        assert_eq!(
+                            fresh,
+                            shake == Handshake::Agreed
+                                && clean
+                                && readable
+                                && r.as_slice() == [Some(Said::Fresh)],
+                        );
                     }
                 }
             }

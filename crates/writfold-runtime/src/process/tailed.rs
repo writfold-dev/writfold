@@ -1,14 +1,16 @@
 //! One supervised command whose output is kept as bounded tails: the gate
-//! runner of `writfold kb gate`. Unlike [`super::run`], a non-zero exit, a
-//! signal or a timeout is a result, not an error, and output beyond the
-//! limit drops its oldest bytes instead of failing. The command runs in its
-//! own process group with stdin at end of file; when the leader exits, or
+//! runner of `writfold kb gate`, and (with [`run_tailed_input`]) the
+//! external checkers of `writfold kb stale`. Unlike [`super::run`], a
+//! non-zero exit, a signal or a timeout is a result, not an error, and
+//! output beyond the limit drops its oldest bytes instead of failing. The
+//! command runs in its own process group with stdin at end of file (or fed
+//! the given bytes, then closed); when the leader exits, or
 //! the deadline passes (TERM, a grace period, then KILL), the whole group
 //! is killed and reaped, so nothing the command started outlives it.
 use super::{OwnedChild, retryable};
 use crate::process::{ProcessError, ProcessSupervisor};
 use rustix::process::Signal;
-use std::io::Read;
+use std::io::{Read, Write};
 use std::os::unix::process::ExitStatusExt;
 use std::process::Command;
 use std::time::{Duration, Instant};
@@ -59,17 +61,30 @@ pub fn run_tailed(
     limits: TailLimits,
     supervisor: &ProcessSupervisor,
 ) -> Result<Tailed, ProcessError> {
+    run_tailed_input(command, &[], limits, supervisor)
+}
+
+/// [`run_tailed`], with `input` written to the command's stdin (which is
+/// then closed) while its output is read. A command that closes its stdin
+/// early simply receives less; that is not an error.
+pub fn run_tailed_input(
+    command: &mut Command,
+    input: &[u8],
+    limits: TailLimits,
+    supervisor: &ProcessSupervisor,
+) -> Result<Tailed, ProcessError> {
     let started = Instant::now();
     let deadline = started
         .checked_add(limits.timeout)
         .ok_or(ProcessError::UnsupportedProfile("deadline overflow"))?;
     let mut child = OwnedChild::spawn(command, supervisor)?;
-    child.stdin.take();
+    let mut sent = 0;
     let mut out = (Tail::default(), Tail::default());
     let mut timed_out = false;
     let mut termed: Option<Instant> = None;
     loop {
-        let progressed = pump(&mut child, &mut out, limits.tail)?;
+        let fed = feed(&mut child, input, &mut sent)?;
+        let progressed = pump(&mut child, &mut out, limits.tail)? || fed;
         if child.exited()? {
             break;
         }
@@ -111,6 +126,30 @@ pub fn run_tailed(
         stderr: out.1,
         elapsed: started.elapsed(),
     })
+}
+
+/// Write what stdin takes now; close it once everything is written (or
+/// the command closed its end). Returns whether anything moved.
+fn feed(child: &mut OwnedChild<'_>, input: &[u8], sent: &mut usize) -> Result<bool, ProcessError> {
+    let Some(pipe) = &mut child.stdin else {
+        return Ok(false);
+    };
+    if *sent >= input.len() {
+        child.stdin.take();
+        return Ok(true);
+    }
+    match pipe.write(&input[*sent..]) {
+        Ok(count) => {
+            *sent += count;
+            Ok(count > 0)
+        }
+        Err(error) if retryable(&error) => Ok(false),
+        Err(error) if error.kind() == std::io::ErrorKind::BrokenPipe => {
+            child.stdin.take();
+            Ok(true)
+        }
+        Err(error) => Err(error.into()),
+    }
 }
 
 /// Read what both pipes hold now. Returns whether anything moved.

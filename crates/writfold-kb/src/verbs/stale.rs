@@ -127,6 +127,16 @@ fn load(session: &Session<'_>, scope: Option<&str>) -> Result<Vec<Cite>> {
     Ok(found)
 }
 
+/// The reason or detail a verdict carries.
+fn detail(verdict: &Verdict) -> Option<String> {
+    match verdict {
+        Verdict::Unverifiable(reason) => Some(reason.clone()),
+        Verdict::Changed { detail } | Verdict::Gone { detail } => detail.clone(),
+        Verdict::Marked(mark) => Some(format!("marked stale={mark}")),
+        _ => None,
+    }
+}
+
 fn remember(session: &Session<'_>, cite: &Cite, checked: &Checked) -> Result<()> {
     let (first, last, path) = match &checked.verdict {
         Verdict::Moved { path, first, last } => (Some(*first), Some(*last), path.clone()),
@@ -134,7 +144,9 @@ fn remember(session: &Session<'_>, cite: &Cite, checked: &Checked) -> Result<()>
     };
     session
         .conn
-        .prepare_cached("INSERT OR REPLACE INTO cite_checks VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)")?
+        .prepare_cached(
+            "INSERT OR REPLACE INTO cite_checks VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+        )?
         .execute((
             &cite.path,
             &cite.ord,
@@ -143,15 +155,17 @@ fn remember(session: &Session<'_>, cite: &Cite, checked: &Checked) -> Result<()>
             &first,
             &last,
             &path,
+            &detail(&checked.verdict),
+            &time::stamp(session.now),
         ))?;
     Ok(())
 }
 
 pub fn stale(session: &Session<'_>, scope: Option<&str>, offline: bool) -> Result<Answer> {
     let cites = load(session, scope)?;
-    let checked = stale::check(session, &cites, offline)?;
+    let checked = stale::check_asking(session, &cites, offline)?;
     let mut answer = Answer::default();
-    let (mut flagged, mut unverifiable) = (0, 0);
+    let (mut flagged, mut unverifiable, mut absent) = (0, 0, 0);
     let mut rows = Vec::new();
     for (cite, checked) in cites.iter().zip(&checked) {
         if !offline {
@@ -160,7 +174,10 @@ pub fn stale(session: &Session<'_>, scope: Option<&str>, offline: bool) -> Resul
         let name = checked.verdict.name();
         match &checked.verdict {
             Verdict::Fresh => continue,
-            Verdict::Unverifiable(_) => unverifiable += 1,
+            Verdict::Unverifiable(reason) => {
+                unverifiable += 1;
+                absent += usize::from(reason.starts_with("checker-absent"));
+            }
             _ => flagged += 1,
         }
         let moved = match &checked.verdict {
@@ -175,13 +192,7 @@ pub fn stale(session: &Session<'_>, scope: Option<&str>, offline: bool) -> Resul
             Some(&checked.head),
             moved,
         );
-        let detail = match &checked.verdict {
-            Verdict::Unverifiable(reason) => Some(reason.clone()),
-            Verdict::Changed { detail } | Verdict::Gone { detail } => detail.clone(),
-            Verdict::Marked(mark) => Some(format!("marked stale={mark}")),
-            _ => None,
-        };
-        if let Some(detail) = detail {
+        if let Some(detail) = detail(&checked.verdict) {
             row.text = if row.text.is_empty() {
                 detail
             } else {
@@ -202,6 +213,12 @@ pub fn stale(session: &Session<'_>, scope: Option<&str>, offline: bool) -> Resul
         ("stale", flagged),
         ("unverifiable", unverifiable),
     ];
+    if absent > 0 {
+        answer.counts.push(("checker-absent", absent));
+        answer.notes.push(
+            "a checked kind's checker is not on PATH; `writfold kb checker list` names it".into(),
+        );
+    }
     if offline {
         answer
             .notes
