@@ -1,6 +1,6 @@
 # Claude Code hooks
 
-> **Status:** built in v0.3.0-dev.1; the plan position, the inbox, the behind-remote line and the re-injection after compaction were added on 12 November 2026 ([design §25](../writfold/kb-v1-design.md#25-deterministic-hooks-as-built)).
+> **Status:** built in v0.3.0-dev.1; the plan position, the inbox, the behind-remote line and the re-injection after compaction were added on 12 November 2026 ([design §25](../writfold/kb-v1-design.md#25-deterministic-hooks-as-built)); the stale-citation line built in v0.5.0-dev.1.
 
 "Hook" here means a Claude Code hook: a command the harness runs at a session event. The plugin registers six, and each one runs `writfold kb hook <event>` with the event's JSON on stdin. No hook calls a model, and none asks Claude to continue. Rules about what a run must contain (a reflection, a backfill) are not hooks; they are gates (run-record checks), on the [run-graph](run-graph.md) and [gates](gates.md) pages.
 
@@ -8,7 +8,7 @@
 
 | Claude Code event | Reads from the event | Writes | Prints | Timeout |
 |---|---|---|---|---|
-| `SessionStart` | `cwd`, `source` | nothing | JSON `additionalContext`, built from local files and refs only: a behind-remote line; `brief` for the project inferred from `cwd` (budget 1,200 tokens); `resume` of the current run (budget 500); the plan position; an inbox of drafts, proposals and runs left without an evaluation. After a compaction (`source` `compact`), only the plan position. Fitted to 9,000 characters ([below](#what-session-start-injects)) | 30 s |
+| `SessionStart` | `cwd`, `source` | nothing | JSON `additionalContext`, built from local files and refs only: a behind-remote line; `brief` for the project inferred from `cwd` (budget 1,200 tokens); a count of stale citations from the verdict cache; `resume` of the current run (budget 500); the plan position; an inbox of drafts, proposals and runs left without an evaluation. After a compaction (`source` `compact`), only the plan position. Fitted to 9,000 characters ([below](#what-session-start-injects)) | 30 s |
 | `PreCompact` | `session_id`, `cwd`, `trigger` | the draft's place: repository, branch, worktree, HEAD, dirty count | plain-text instructions for the compaction summary: keep the task, decisions with reasons, what failed, open questions, the next step | 15 s |
 | `PostCompact` | `session_id`, `compact_summary` | the draft's summary | nothing | 15 s |
 | `Stop` | `session_id`, `last_assistant_message` | the draft's last message | nothing | 10 s |
@@ -35,8 +35,9 @@ Each part is printed only when it has something to say, in this order:
 
 1. **Behind remote.** One line when the KB clone's branch is behind its upstream: `KB is 2 commits behind origin/main (last fetched 2026-11-10T19:00:00Z, 5h ago); run git pull`. It compares `HEAD`'s branch with its configured upstream using local refs only (one `git for-each-ref`), and never fetches, so it reports what the clone last fetched. The fetch time is the newest `FETCH_HEAD`. Nothing is printed when the branch is up to date or only ahead, has no upstream, its upstream is gone, or `HEAD` is detached.
 2. **Brief**, as before.
-3. **Current run** (`resume`), when the current-run pointer is set.
-4. **Plan position**, when the current run has a plan: the current step and what it still owes, with its `next:` line, plus any done step that has gone `!stale`. The lines are taken from `plan status`:
+3. **Stale citations.** One line counting the citations that were not fresh when `writfold kb stale` last ran, worst first: ``Citations: 1 gone, 2 changed, 2 moved, 1 expired as of the last `writfold kb stale`; run it to re-check``. It reads only the verdict cache in the local index: no repository is read and nothing is spawned, so a source that moved since then is not counted until `stale` runs again. Nothing is printed when the cache is empty or every cached verdict is fresh.
+4. **Current run** (`resume`), when the current-run pointer is set.
+5. **Plan position**, when the current run has a plan: the current step and what it still owes, with its `next:` line, plus any done step that has gone `!stale`. The lines are taken from `plan status`:
 
    ```text
    Plan position (`writfold kb plan status`) for run run-20261101T090000Z-a1b2c3: step 1/2
@@ -45,7 +46,7 @@ Each part is printed only when it has something to say, in this order:
    ```
 
    A plan whose steps are all closed is one `complete` line.
-5. **Inbox**: what is waiting on someone, all of it local:
+6. **Inbox**: what is waiting on someone, all of it local:
 
    ```text
    Inbox (local only; nothing here is in the KB until confirmed or accepted):
@@ -69,7 +70,7 @@ All three are read from files: the run's manifest and sidecar, `checkpoint.md` a
 
 **After compaction.** `SessionStart` fires again with `source` `compact`. The earlier context was summarised by the compaction, not dropped, so the brief is not sent again. Only the plan position is re-injected, as one block headed `Plan position after compaction`, because the exact step and its owed gates are what a summary is most likely to blur. With no current run, or a run without a plan, nothing is printed.
 
-**The 9,000-character cut.** When the parts together exceed 9,000 characters, they are cut in this order: the brief first, then the current run, the inbox, the plan position, and the behind-remote line last. The parts are kept whole from the last of that list backwards while they fit. The first that does not fit is cut at a line, with a `[… cut to fit the session-start limit …]` marker, and the rest are dropped.
+**The 9,000-character cut.** When the parts together exceed 9,000 characters, they are cut in this order: the brief first, then the current run, the inbox, the plan position, the stale-citations line, and the behind-remote line last. The parts are kept whole from the last of that list backwards while they fit. The first that does not fit is cut at a line, with a `[… cut to fit the session-start limit …]` marker, and the rest are dropped.
 
 **Cost.** One Git spawn for the behind-remote line, on top of those the verbs already make. On the fixture KB with a plan and an upstream, the in-process release build took about 41 ms at start (the gates are judged twice, once by `resume` and once by `plan status`) and about 11 ms after a compaction. That is well inside the 30 s timeout.
 
@@ -113,7 +114,6 @@ The hook uses the plugin's optional `kb_root` setting, then `$WRITFOLD_KB`, then
 ## Not built
 
 - Writing `transcript_path` into the draft, and exporting `WRITFOLD_SESSION` through `CLAUDE_ENV_FILE`.
-- A stale-citation count at session start; run `writfold kb stale`.
 - A `fetch` option; the hook never touches the network.
 - A Stop nudge: the Stop hook does not mark the reflect step as open in the draft. The inbox already derives it from the plan when the session ends, and a session that ends without `SessionEnd` is not listed.
 

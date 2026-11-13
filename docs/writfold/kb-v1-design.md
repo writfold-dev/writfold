@@ -465,7 +465,7 @@ fresh, moved, changed, gone, expired, unverifiable. Two authored states pass thr
    - If neither finds it, the verdict is **gone**.
 6. **Locators without a digest** (relationship evidence, signature fixes) can only be fresh (blob at `T` equals blob at the cited commit), changed or gone.
 
-Record and proposal citations compare the cited `state` with the record's current status in the index. All other kinds use `seen + ttl`.
+Record and proposal citations compare the cited `state` with the record's current status in the index. All other kinds use `seen + ttl`; a token without `ttl=` never expires unless a kind declaration gives a default (section 29).
 
 ### 6.3 Cost
 
@@ -2098,6 +2098,7 @@ New code:
 |---|---|---|
 | Behind remote | 25.3 | one Git spawn |
 | Brief | `brief`, budget 1,200 tokens, as in 14.2 | unchanged |
+| Stale citations (v0.5.0-dev.1, section 29) | the `cite_checks` cache | one read-only SQLite query |
 | Current run | `resume`, budget 500, when the current-run pointer is set | unchanged |
 | Plan position | `plan status --run <current>` (budget 600), cut down as described below the table | one `plan status` |
 | Inbox | 25.2 | directory listings and file reads |
@@ -2181,7 +2182,8 @@ The limit stays `CONTEXT_LIMIT`, 9,000 characters. `DROP_ORDER` lists the parts 
 2. current run;
 3. inbox;
 4. plan position;
-5. behind remote.
+5. stale citations (v0.5.0-dev.1, section 29);
+6. behind remote.
 
 `hook::fit` works through that list from the end, keeping each part whole while it fits. The first part that does not fit is cut at a line with the existing marker, if more than 120 characters are left. The parts after it are dropped. The result is printed in display order (25.1).
 
@@ -2247,7 +2249,7 @@ From https://code.claude.com/docs/en/hooks:
 
 - `transcript_path` in the draft;
 - exporting `WRITFOLD_SESSION` through `CLAUDE_ENV_FILE`;
-- a bounded stale-citation count at start;
+- ~~a bounded stale-citation count at start~~ (built in v0.5.0-dev.1, section 29);
 - an opt-in `fetch`;
 - an opt-in Stop nudge.
 
@@ -2538,3 +2540,54 @@ The flags never change the fold, the current step or what `plan advance` judges.
 
 - `!repeated` for a template included (`use=`) on one side and spliced on the other: includes carry no `again` and are not compared.
 - The TLA+ model is not re-run against the Rust: the tests above are the link.
+
+## 29. Kind declarations, the stale count at start and the JSON envelope (v0.5.0-dev.1)
+
+Three changes to reading, none to writing: a citation kind can be declared with a lifetime, a freshness rule and required fields; the session-start hook counts stale citations from the verdict cache; and the `--json` envelope is documented and pinned. No TLA+ model changes: all three are pure reads.
+
+### Kind declarations
+
+Before this, every kind other than `code`, `gate`, `record` and `proposal` was fresh until `seen + ttl`, and `time::ttl(None)` is `Never`: a `web`, `pr` or `ticket` token without `ttl=` was fresh for ever. That stays the behaviour of an undeclared kind. A declaration changes it for one kind:
+
+```toml
+# .writfold/sources/ticket.toml   (KB root only)
+schema = "writfold-source/1"
+kind = "ticket"
+freshness = "ttl"
+default_ttl = "3d"
+required = ["id"]
+description = "tracker items"
+```
+
+- **Format.** The gate definitions' TOML subset; keys `schema`, `kind`, `freshness`, `default_ttl`, `required`, `description`, anything else refused. `kind` must equal the file name and be `[a-z0-9._-]`. `freshness` is `ttl` or `immutable` and must be given. `default_ttl` is `<N>d` or `<N>h` (not `none`) and is refused with `immutable`. Declaring `code`, `gate`, `record` or `proposal` is refused: they are checked against Git and the index.
+- **Kernel.** `writfold_core::verdict` gains `Observed::Immutable` (→ `Fresh`) and `lifetime(immutable, token, default) -> Lifetime` (`Immutable`, else the token's `ttl=`, else the kind's default, else `Never`). The module stays a proof candidate outside the Charon list; its exhaustive test now covers both.
+- **`writfold-kb`.** `stale/kinds.rs` reads `.writfold/sources/*.toml` once per `stale::check` call (each verb makes one) and judges every time-based citation: a missing required field is `unverifiable`, naming the field and the file; then the kernel's lifetime decides between `Observed::Immutable` and `Observed::Timed`. `offline_verdict` uses the same lifetime for `due`. An unreadable declaration refuses the check (exit 3, naming the file), so `stale`, `deliver check`'s `claims.cited-fresh`, an assessed gate's grounding and `proposals` all refuse rather than judge with a misread rule; `kb check` shows it on its `stale` row.
+- **The cache.** `brief`, `context`, `why` and the edge flags show what `cite_checks` holds, and only `stale` rewrites it, so a new or changed declaration takes effect at the next `stale`, as a moved repository head does. This is kept on purpose: the read verbs stay free of repository reads.
+
+### The stale count at session start
+
+A sixth part, `Part::Stale`, shown after the brief: ``Citations: 1 gone, 2 changed, 2 moved, 1 expired as of the last `writfold kb stale`; run it to re-check``. It is one read-only query over `cite_checks` joined with `citations` (so verdicts of citations the index no longer holds are not counted), grouped by verdict and ordered by `stale`'s severity; `marked` reads `marked stale`. Nothing is printed when the cache is empty, all fresh, or the KB is outside Git (no index file). No repository is read and nothing is spawned. In `DROP_ORDER` it comes after the plan position and before the behind-remote line: it is one line and says whether the brief's flags are current.
+
+### The JSON envelope
+
+`emit.rs` has written `{"writfold_kb": 1, "verb", "rows", "notes", "trailer"}` since M1; it was not documented. `docs/guide/json.md` now lists the top-level, row, `more` and trailer keys, the exit codes (a refusal or error prints nothing on stdout) and the rule: `writfold_kb` increases on a breaking change, otherwise keys are only added. JSON is for reading; blocking on a standing is a gate's job.
+
+### Tests
+
+- `tests/kinds.rs`: an undeclared `web` token without `ttl=` is fresh, and an unknown kind is `unverifiable` without `seen=`, never malformed; after declaring `web` with `default_ttl = "30d"`, the same token is `expired` at the next `stale` but not before (`brief` still shows the old cache), and `brief` then flags it; a token's own `ttl=90d` wins over a `3d` default; `immutable` is fresh without `seen=`; a missing required field is `unverifiable` naming it; offline, the default gives `due` and `immutable` never; lengthening the default clears the verdict at the next `stale`. Every refusal (the four built-in kinds, `default_ttl` with `immutable`, a bad lifetime, an unknown key, a wrong schema, a name mismatch, a bad `freshness`, a non-array `required`), `stale`'s exit 3 and `kb check`'s refused row. Unknown fields round-trip byte for byte through `replace_field` and `remove_field`. A property test: for random `seen`, token lifetime, default, immutability and `now`, the verdict equals the kernel's over the lifetime the kernel chooses.
+- `writfold-core`: `Observed::Immutable` in the exhaustive verdict test, and `lifetime` over all eight input shapes.
+- `tests/hook_start.rs`: no line before any `stale`; the counted line after it, shown after the brief; unchanged after the code repository moves (the cache, not a new check); gone when every cached verdict is fresh; the cut order with six parts.
+- `tests/json.rs`: the key sets of `why --json` and `stale --json`, `writfold_kb` = 1, and every key named in `json.md`.
+- `layout.rs`: a run directory not named `run-<stamp>-<hex>` is a run, its ID is the manifest's `run_id` else the directory name, its unknown state and fields are kept, and its `observations/` and `receipts/` are skipped.
+- `tests/guide_toml.rs`: the `toml` block in `kb-layout.md` is read by `stale::kinds::parse`; `json.md` is among the checked pages.
+
+### Deviations
+
+- **An unreadable declaration refuses every citation check**, not only `stale`, because the declarations are read inside `stale::check`. A misread rule would otherwise give silently different verdicts in a delivery check.
+- **`freshness` is required**, so a file never relies on an implied rule.
+- **`immutable` wins over a token's own `ttl=`.**
+
+### Not done
+
+- An external check command per kind, fetching, refresh candidates and bulk `stale=` marks.
+- The `cite_checks` cache records no digest of the declarations it was computed under; a changed declaration is picked up only by the next `stale`, as documented.
