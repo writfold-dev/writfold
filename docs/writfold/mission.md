@@ -133,6 +133,8 @@ Considered for this release and deferred, with the reason:
 - ~~**Following a rename with edits** for code citations.~~ Built in v0.5.0-dev.2 ([as built](kb-v1-design.md#62-algorithm-for-a-code-citation)).
 - **Not planned:** user-declared record lifecycles, path globs and origin matching on guard rules, per-audience render and redaction templates for citations, fetching cited repositories, and bulk inventory import (a loop over `record` reviewed as a Git diff does this).
 
+**v0.5.0-dev.2** (13 November 2026): three of the deferred items above are built (external checkers as phase 1, the later decision states, following a rename with edits). The observation record stays deferred. Checker phase 2 (tracked check receipts readable on a machine without the checker, a flag that requires checkers, an explicit refresh that proposes new tokens as a diff) waits on real use of phase 1.
+
 ## Gates, runs and progress (owner decision, 12 November 2026)
 
 The owner proposed reusable gates, skills and delivery modes. After an independent review, the owner adopted a smaller version, built after M3, with Writfold's own push-to-main flow as its first user.
