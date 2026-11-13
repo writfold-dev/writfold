@@ -1194,10 +1194,11 @@ This repository now carries `.writfold/gates/quality.toml` and `.writfold/gates/
 - **Tamper evidence through Git.** Receipts and definitions are tracked text. A weakened definition or an edited or hand-written receipt appears in a diff the owner reviews, and the digest makes careless edits read as invalid.
 - **Reproducibility instead of signatures.** `gate verify` re-runs the recorded command at the recorded commit. CI doing that on the pushed commit is the one check the agent cannot forge; that is not built here.
 - **No signing**, no authority levels, and no guard hook (G2b).
+- **Proved since 13 November 2026** ([aeneas.md](aeneas.md#the-run-graph-and-gate-kernels-13-november-2026)): `outcome`, `state` and `standing` over their Aeneas translation, for every input: only a clean zero exit on an unmoved subject passes; the state is satisfied exactly when the newest receipt about the current definition and scope passed; no attestation or waiver ever yields `satisfied`. Glob matching moved to `writfold_core::scope` and is tested, not proved; which receipts are valid and how they are ordered is `writfold-kb`'s, tested.
 
 ### 16.10 Tests
 
-- **Kernel** (`writfold-core/src/gate.rs`): glob semantics and exclusions; only a clean zero exit passes, and a moved subject is always unknown; and over every sequence of up to three receipts drawn from all outcome and match combinations, the state is satisfied exactly when the newest receipt about the current subject passed, and stale exactly when no receipt is about the current subject.
+- **Kernel** (`writfold-core/src/gate.rs`; globs in `scope.rs` since 13 November 2026): glob semantics and exclusions; only a clean zero exit passes, and a moved subject is always unknown; and over every sequence of up to three receipts drawn from all outcome and match combinations, the state is satisfied exactly when the newest receipt about the current subject passed, and stale exactly when no receipt is about the current subject.
 - **Goldens** (`crates/writfold-kb/tests/gate.rs`, files `tests/golden/gate-status.txt` and `gate-lines.txt`): one status covering `satisfied`, `failed`, `unknown` (a timeout and a SIGSEGV), `stale` (with the changed path), `open` and an invalid hand-written receipt, with definitions from both the KB and the repository; the same run's `gate lines`; `resume` from inside the subject showing the gate rows; `index verify` equal afterwards.
 - **Stale transitions:** a dirty and then a committed docs change leaves `unit` satisfied; a dirty and then a committed code change makes it stale and names `src/ledger.rs`; reverting the bytes satisfies it again; a run on a dirty tree stays satisfied once those bytes are committed; a changed definition makes the receipt stale.
 - **Never satisfied:** a timeout (with a background child, checked to be stopped), a SIGKILL, a program that does not exist and an exit status of 1 each record `unknown` or `fail`, exit 2, and never `"outcome": "pass"`.
@@ -1772,15 +1773,19 @@ A gate of class `run-record` takes `require = [...]` (built-ins only: `research.
 - **"A KB record written"** is read as a change to the KB's files outside `runs/` within the window (the index's file digests), not attributed to the run: in a cooperating single-user KB another session's write in the same window also counts. Records carry no run ID.
 - **A citation counts once placed:** `cite make` writes nothing, so a citation is seen in a checkpoint entry (or as a KB change when placed in a record).
 - **No `kb reflect --note` verb:** a reflection is a checkpoint entry starting `reflection:`.
-- **The kernel is not yet in `start_from`**: it is written to the translation rules, and the proofs are a later slice.
+- ~~**The kernel is not yet in `start_from`**: it is written to the translation rules, and the proofs are a later slice.~~ Proved since 13 November 2026 (21.11).
 
 ### 21.10 Not done
 
 - ~~Splicing under a step (`plan use`, `--again`, `use=` includes), `!template-moved`, required steps spliced into every run, and a skill's dynamic-injection line~~: built, [§24](#24-splicing-and-required-steps-as-built).
 - ~~The session-start and compaction hooks showing the plan position~~ (built since, §25).
-- Proofs of `writfold_core::plan`; `spec/RunGraph.tla`.
+- ~~Proofs of `writfold_core::plan`~~ (21.11); `spec/RunGraph.tla`.
 - `seq` for delivery receipts (19.4), which still order by `recorded`; deliveries are not plan gates in this slice.
 - Delivery modes as a step's gates (a `deliver:<mode>` form); a candidate gate is refused on a step.
+
+### 21.11 Proofs (13 November 2026)
+
+`writfold_core::plan` is in Charon's `start_from`, translated to Lean by Aeneas (`proofs/Extracted/`) and proved in `proofs/Writfold/Plan.lean` for every input ([aeneas.md](aeneas.md#the-run-graph-and-gate-kernels-13-november-2026)): `current` is the least step neither done nor skipped; `advance_check` admits exactly the current step with every gate met and otherwise refuses in the fixed order of 21.1; `stale` is a done step with an owed gate and is never the current step; and the splice theorems of 24.10. The gate decisions `plan advance` sees are proved with them (16.9). Nine mutants of `plan.rs` each break their theorem. Not proved: the fold (21.4), the template parser, the event files and the judging of each gate (`plan/judge.rs`), which produce the kernel's inputs; they are tested (21.8). The only rewrite was `plan::contains` calling `bytes::same` instead of a private copy.
 
 ## 22. Proposals and kb check as built
 
@@ -1932,6 +1937,7 @@ The state is G1's kernel (16.6) over the gate's valid receipts for the subject, 
 - A check is met only when Weft entails it and Writfold found every assumption Weft used grounded at that moment, and the receipt stops standing when any of that moves. It says nothing about whether the predicates name the right things: `passes("unit")` is a symbol Weft reasons about, and the citation above it is what Writfold checks. Choosing a citation that supports the assumption is the agent's statement, visible in the source and the receipt.
 - Weft's results are its own and hypothetical on its side (`writfold_grounded: false`); "grounded" is Writfold's judgement of the citations, recorded beside Weft's basis, not a change to Weft's report.
 - Mistakes, not adversaries, as for every gate (16.9): nothing is signed, and the binary is pinned by digest, not sandboxed.
+- **Proved since 13 November 2026** ([aeneas.md](aeneas.md#the-run-graph-and-gate-kernels-13-november-2026)): `assumption`, `basis`, `met` and `outcome` over their Aeneas translation: a check is met exactly when entailed on a grounded basis, and a hypothetical entailment is never a pass. `outcome`'s loop was rewritten with two helpers (`unfinished`, `found_met`) to translate; its behaviour and tests are unchanged. Reading the report and resolving citations are tested, not proved.
 
 ### 23.9 Tests
 
@@ -2038,7 +2044,9 @@ Writfold does not parse `SKILL.md`. Claude Code's dynamic context injection runs
 - Delivery modes as a step's gates (`deliver:<mode>`).
 - A live Claude Code session loading a skill with the injection line (the review's manual smoke test).
 - `!late-splice` for a splice under a step that another clone has meanwhile closed: such a splice's steps fold in as open children of a done step and are owed like any other open step, but are not flagged.
-- Proofs of `splice` and `spec/RunGraph.tla`.
+- ~~Proofs of `splice`~~ (below); `spec/RunGraph.tla`.
+
+Proved since 13 November 2026 (21.11, [aeneas.md](aeneas.md#the-run-graph-and-gate-kernels-13-november-2026)): `splice` is `take at ++ count open steps ++ drop at` (for plans whose new length fits in `usize`), so every existing step keeps its state and order, the steps before the insertion point are unchanged, the new steps are open, and inserted before the current step the first of them becomes current; `splice_check` is `Already` exactly when the key is already spliced, so a repeat changes nothing, and an admitted splice is never deeper than 4. The fold's expansion of splices (24.1) is not proved; the tests check it agrees with `splice` (24.8).
 
 ---
 

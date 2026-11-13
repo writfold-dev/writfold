@@ -255,8 +255,8 @@ MUTANTS = (
            ("Writfold.Core.Assess.outcome_loop_spec",)),
     # assessed gate: an attested citation makes the assumption attested
     Mutant("assumption-ignores-attested", "assess.rs",
-           "            Grounding::Attested => attested = true,",
-           "            Grounding::Attested => {}",
+           "        true => Grounding::Attested,",
+           "        true => Grounding::Grounded,",
            ("Writfold.Core.Assess.assumption_loop_spec",)),
 )
 
