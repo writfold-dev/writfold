@@ -1,6 +1,6 @@
 # Writfold guides
 
-> **Status:** built in v0.5.0-dev.3 (`kb repos`, `kb observe`, batch `gate cover`, tracked proposals, guard `paths` and per-turn stop rules, and checker `max_age` are new). Each page below says what is built and what is planned.
+> **Status:** built in v0.5.0-dev.4 (the Tuft expansion: refs, `tuft grep`, several repositories, working-tree mode and ctags symbols; see [Tuft](../tuft/language.md)). Each page below says what is built and what is planned.
 
 These pages hold the full skeletons the website only sketches: file layouts, complete configuration files and real command output. The output comes from an invented demo knowledge base (`harbor`); run IDs and digests are real, local paths are cut to `…`.
 

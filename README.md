@@ -7,7 +7,7 @@ and line it came from, flagged when that source has moved. The knowledge base
 is plain text in Git; a local SQLite index is derived from it and can always be
 rebuilt. A new machine needs `git clone` and one binary.
 
-> **Pre-release (`v0.5.0-dev.3`).** Built in public; formats and verbs may still
+> **Pre-release (`v0.5.0-dev.4`).** Built in public; formats and verbs may still
 > change. The [release page](https://github.com/writfold-dev/writfold/releases)
 > carries a static Linux x86_64 binary, `writfold-x86_64-linux-musl`, with its
 > `.sha256`. See [writfold.dev](https://writfold.dev/) and the
