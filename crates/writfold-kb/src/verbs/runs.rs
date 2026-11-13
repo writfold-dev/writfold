@@ -155,6 +155,8 @@ pub fn resume(session: &Session<'_>, named: Option<&str>, cwd: &Path) -> Result<
         ));
     }
     answer.rows.extend(edits);
+    let observed = crate::observe::summary(&session.ws.root, &runs::dir(&rec));
+    answer.notes.extend(observed);
     let (gates, notes) = crate::gate::resume_rows(session, &rec, cwd);
     answer.rows.extend(gates);
     answer.notes.extend(notes);

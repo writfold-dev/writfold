@@ -25,6 +25,8 @@ pub struct Entry<'a> {
     pub row: Option<(&'a Filed, &'a Cover)>,
     /// Why that row is stale, when it is.
     pub why: Option<String>,
+    /// The run's observations made for this item (`observe --for`).
+    pub looked: Option<crate::emit::More>,
 }
 
 /// What a checklist gate's row shows besides its standing.
@@ -153,6 +155,7 @@ pub fn judge<'a>(
         cx: &cx,
         seen: BTreeMap::new(),
     };
+    let observed = crate::observe::filed(&session.ws.root, &filings.run_dir);
     let mut out = Vec::new();
     for d in definitions {
         let content = plain.snapshot.scoped(&d.patterns()).digest;
@@ -166,6 +169,7 @@ pub fn judge<'a>(
                 item,
                 row: newest,
                 why,
+                looked: crate::observe::looked(&observed, &d.id, &spec.id),
             });
         }
         let cells: Vec<(Item, bool)> = entries.iter().map(|e| (e.item, e.spec.required)).collect();

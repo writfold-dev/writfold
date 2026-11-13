@@ -1,7 +1,8 @@
 //! The rows `gate status`, `gate cover` and `resume` show for a checklist
 //! gate, and its `gate lines` lines: one `item:` line per declared item
-//! with its standing and the row behind it, and a `next:` line naming the
-//! first required item still owed.
+//! with its standing and the row behind it (and a `looked:` line under it
+//! when the run holds observations made for it), and a `next:` line naming
+//! the first required item still owed.
 use super::View;
 use super::judge::Entry;
 use crate::emit::{More, Row};
@@ -94,7 +95,10 @@ pub fn row(subject: &Subject, judged: &Judged<'_>, view: &View<'_>) -> Row {
         line: Some(1),
         ..Row::default()
     };
-    row.more.extend(view.entries.iter().map(item_line));
+    for e in &view.entries {
+        row.more.push(item_line(e));
+        row.more.extend(e.looked.clone());
+    }
     if let Some(read) = crate::gate::status::read_line(d, &subject.name) {
         row.more.push(read);
     }

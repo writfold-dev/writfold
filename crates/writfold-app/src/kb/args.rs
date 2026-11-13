@@ -71,7 +71,10 @@ fn split(args: &[String]) -> Result<(Common, Vec<String>), String> {
             "--direction" => common.direction = Some(value(arg, items.next())?),
             "--include" => common.include = Some(value(arg, items.next())?),
             "--at" => return Err("--at COMMIT is not built in v1 (planned for M4)".into()),
-            other if writes::VALUES.contains(&&other[2..]) => {
+            other
+                if writes::VALUES.contains(&&other[2..])
+                    || super::observe::VALUES.contains(&&other[2..]) =>
+            {
                 common
                     .values
                     .insert(other[2..].to_owned(), value(arg, items.next())?);
