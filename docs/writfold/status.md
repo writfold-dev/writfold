@@ -5,6 +5,8 @@ Detailed status, evidence and qualification notes for Writfold. Start with the
 
 **Since 11 November 2026 the current authority is [mission.md](mission.md)** (project continuity for agents; Git as the store; the trial flow, Weft, Splicery, Dolt and Omnigraph frozen). The text below records the earlier programme and its evidence; its gates and stages are history, not live obligations.
 
+**Current facts (13 November 2026), which supersede the present-tense sentences below:** the repository is public under the MIT license; pre-releases on the [release page](https://github.com/writfold-dev/writfold/releases) carry a static `writfold-x86_64-linux-musl` binary and its `.sha256`; and `writfold kb` (plus `writfold watch` and `writfold tuft`) is the registered command surface, alongside the frozen `trial` and `serve` commands. The [README](../../README.md) and the [guides](../guide/README.md) describe what is built.
+
 The earlier implementation authority was the [revision-5 handover](../../handovers/revision-5/writfold/README.md): **25 stages, 32 mandatory gates (WF00–WF31), 37 V/M entries, 12 engineering theorems (E01–E12), and 148 scenarios**. The [adoption delta](handover-adoption.md) records exact archive/manifest/registry identities and retains earlier-scope evidence without requalification. Full calculus proofs take priority before production engineering implementation; WF31 is final composed qualification, not a scoped Lean pass.
 
 A [scoped revision-9 feature supplement](revision-9-features.md)
@@ -27,7 +29,7 @@ The Rust implementation lives in `crates/`:
 - `writfold-store`: immutable realm-bound raw object retention, typed exact Dolt inventory/navigation reads under DINT01, and the B0 [storage-backend boundary](storage-backend.md) with its Dolt adapter and conformance suite; no authenticated release writer or corpus/effect service.
 - `writfold-xtask`: development-only syntax, dependency and nominal-type qualification.
 - `writfold-app`: typed application orchestration for the control-only agent profile.
-- `writfold`: native `serve`, version and help commands; no corpus/effect commands are registered in this profile.
+- `writfold`: native `serve`, version and help commands; no corpus/effect commands are registered in this profile (as of the earlier programme; see the current facts above).
 
 `writfold serve` now implements the ordinary **transport-control-only** stdio
 profile: initialized JSON-RPC, capability refusal, correlated bounded replies,
@@ -167,7 +169,7 @@ The [baseline contract](baseline-contract.md) links exact CLI/RPC/envelope, eval
 
 Start with [`AGENTS.md`](../../AGENTS.md) and the [25-stage handover](../../handovers/revision-5/writfold/plan/08-execution-and-acceptance.md), including normative plans 17–23. Preserve failures and source-bound replacements. The private playbook is consumed at its adopted pin, never copied into the public website.
 
-The development-preview website is live at [writfold.dev](https://writfold.dev/), with HTTPS enforced, a public project guide and explicit planned-versus-implemented boundaries. The [website repository](https://github.com/writfold-dev/writfold-dev.github.io) publishes reviewed static commits through a manifest-checked Pages workflow. This website does not complete product stage P13 or advertise an installable Rust release. The Rust repository remains private.
+The development-preview website is live at [writfold.dev](https://writfold.dev/), with HTTPS enforced, a public project guide and explicit planned-versus-implemented boundaries. The [website repository](https://github.com/writfold-dev/writfold-dev.github.io) publishes reviewed static commits through a manifest-checked Pages workflow. This website does not complete product stage P13. (As of the earlier programme, it did not advertise an installable Rust release and the Rust repository was private; both have since changed, see the current facts above.)
 
 The published [Weft](https://writfold.dev/weft.html) and
 [Splicery](https://writfold.dev/splicery.html) guides now include executed,

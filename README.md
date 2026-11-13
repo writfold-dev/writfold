@@ -1,32 +1,40 @@
 # Writfold
 
-A local knowledge engine for coding agents: exact evidence, explicit approval,
-reproducible context.
+Project continuity for coding agents. A fresh session on any machine can ask
+why something was decided, where a piece of work stands, which tracker item it
+belongs to and what changing it touches, and every answer points at the file
+and line it came from, flagged when that source has moved. The knowledge base
+is plain text in Git; a local SQLite index is derived from it and can always be
+rebuilt. A new machine needs `git clone` and one binary.
 
-**Finding something is not proof. A citation is not approval. A database join is
-not inference.** Writfold keeps evidence, support, freshness and permission to act
-as separate, recorded steps, so an agent cannot quietly turn "I found a document"
-into "I am allowed to change the code".
-
-> **Preview (`v0.1.0-dev.1`).** Writfold is built in public. A cooperating,
-> single-user trial runs end to end today: find and retain exact evidence, bind a
-> Weft report, prepare a Splicery edit, approve, apply and recover. It is not a
-> sandbox, not an installable release and not a knowledge service yet. See
-> [writfold.dev](https://writfold.dev/) and [status](https://writfold.dev/status.html).
+> **Pre-release (`v0.4.0-dev.1`).** Built in public; formats and verbs may still
+> change. The [release page](https://github.com/writfold-dev/writfold/releases)
+> carries a static Linux x86_64 binary, `writfold-x86_64-linux-musl`, with its
+> `.sha256`. See [writfold.dev](https://writfold.dev/) and the
+> [guides](docs/guide/README.md). The earlier trial flow (`writfold trial`,
+> `serve`'s trial methods) still builds and is tested, but is frozen.
 
 ## The family
 
 | Tool | Job | Try it |
 |---|---|---|
-| **Writfold** (this repo) | Holds exact evidence and the approval policy; the only part that may write files | trial flow, below |
+| **Writfold** (this repo) | Answers continuity questions from a Git knowledge base; runs, checkpoints, gates with receipts, plans and delivery checks | [Try it](#try-it), below |
 | **Tuft** (this repo, `crates/tuft`) | Finds and projects exact evidence from a pinned commit under a token budget | [Tuft](#find-and-cite-exact-evidence-with-tuft), below |
 | [**Weft**](https://github.com/writfold-dev/weft) | Checks what declared assumptions actually support: entailed, refuted or open | [Weft: Try it](https://github.com/writfold-dev/weft#try-it) |
 | [**Splicery**](https://github.com/writfold-dev/splicery) | Describes byte-exact edits and previews the result without touching the file | [Splicery: Try it](https://github.com/writfold-dev/splicery#try-it) |
 
 ## Try it
 
-Linux x86_64 with [rustup](https://rustup.rs) (the pinned toolchain installs on
-first build):
+Download the binary from the
+[release page](https://github.com/writfold-dev/writfold/releases) and check it:
+
+```sh
+sha256sum -c writfold-x86_64-linux-musl.sha256
+install -m 0755 writfold-x86_64-linux-musl ~/.local/bin/writfold
+```
+
+Or build it on Linux x86_64 with [rustup](https://rustup.rs) (the pinned
+toolchain installs on first build):
 
 ```sh
 cargo build --release -p writfold
