@@ -121,6 +121,8 @@ The v1 design is [kb-v1-design.md](kb-v1-design.md).
 
 Since then: ~~kind declarations (a default lifetime, `immutable`, required fields per citation kind), the stale-citation count at session start, and the documented `--json` envelope~~ (v0.5.0-dev.1; [as built](kb-v1-design.md#29-kind-declarations-the-stale-count-at-start-and-the-json-envelope-v050-dev1)).
 
+Since v0.4.0-dev.1: ~~checklist gates and `gate cover`~~ (built in v0.5.0-dev.1: items covered with grounded evidence or a reason, re-grounded on every read; [as built](kb-v1-design.md#31-checklist-gates-and-gate-cover-as-built-v050-dev1)).
+
 ## Gates, runs and progress (owner decision, 12 November 2026)
 
 The owner proposed reusable gates, skills and delivery modes. After an independent review, the owner adopted a smaller version, built after M3, with Writfold's own push-to-main flow as its first user.

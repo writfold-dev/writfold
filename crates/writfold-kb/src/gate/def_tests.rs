@@ -126,3 +126,46 @@ fn instructions_and_shipped_scripts_enter_the_digest() -> Result<(), String> {
     assert!(repo.is_err_and(|e| e.to_string().contains("KB root")));
     Ok(())
 }
+
+const REVIEW: &str = "schema = \"writfold-gate/1\"\nid = \"review\"\nversion = 1\nclass = \"checklist\"\nscope = [\"src/**\"]\nitems = [\"errors: errors are handled\", \"perf: no new allocation\"]\noptional = [\"perf\"]\n";
+
+/// A checklist gate takes a scope and its items; it runs nothing and
+/// judges no candidate. Its items and optional list enter the digest.
+#[test]
+fn a_checklist_definition_takes_items_and_no_command() -> Result<(), String> {
+    let nowhere = Path::new(NOWHERE);
+    let d = read(REVIEW, "review", nowhere)?;
+    assert!(d.is_checklist() && !d.attested() && d.argv.is_empty());
+    let spec = d.checklist.as_ref().ok_or("no items")?;
+    assert_eq!(spec.items.len(), 2);
+    for (from, to) in [
+        ("perf: no new allocation", "perf: no new allocations"),
+        ("optional = [\"perf\"]\n", ""),
+        ("[\"errors: errors are handled\", ", "["),
+    ] {
+        let other = read(&REVIEW.replace(from, to), "review", nowhere)?;
+        assert_ne!(d.digest, other.digest, "{to}");
+    }
+    for (from, to) in [
+        ("scope = [\"src/**\"]\n", ""),
+        ("version = 1", "version = 1\nargv = [\"true\"]"),
+        ("version = 1", "version = 1\ntimeout_seconds = 5"),
+        ("version = 1", "version = 1\nsubject = \"candidate\""),
+        ("version = 1", "version = 1\nrequire = [\"run.reflected\"]"),
+        ("version = 1", "version = 1\nweft = \"{gate}/x.weft\""),
+        (
+            "items = [\"errors: errors are handled\", \"perf: no new allocation\"]\n",
+            "",
+        ),
+        ("optional = [\"perf\"]", "optional = [\"speed\"]"),
+    ] {
+        let bad = REVIEW.replace(from, to);
+        assert!(read(&bad, "review", nowhere).is_err(), "{to}");
+    }
+    let attested = REVIEW.replace("class = \"checklist\"", "class = \"attested\"");
+    assert!(
+        read(&attested, "review", nowhere).is_err(),
+        "items on an attested gate"
+    );
+    Ok(())
+}

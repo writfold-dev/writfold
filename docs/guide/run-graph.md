@@ -40,7 +40,7 @@ writfold kb plan skip --reason TEXT --by WHO     close the current step without 
 All five take `--run ID` (else the current run) and `--repo DIR` (the subject repository, found as for `gate status`).
 
 - **`plan set`** is idempotent: setting the same template with the same bytes again writes nothing and exits 0. A second, different plan on the same run is refused.
-- **`plan advance`** refuses until every gate of the current step is satisfied, attested or waived. The refusal exits 3, writes nothing, and names what is owed in the step's order, with the command for the first. When it succeeds it records which receipt or statement met each gate.
+- **`plan advance`** refuses until every gate of the current step is satisfied, attested or waived. The refusal exits 3, writes nothing, and names what is owed in the step's order, with the command for the first. When it succeeds it records which receipt or statement met each gate. A step that owes a [checklist gate](gates.md#checklist-gates) advances once every required item is covered (the gate stands as `attested`); its refusal's `next:` line is the `gate cover` command for the first owed item, and the done event names a covering row (built in v0.5.0-dev.1).
 - **`plan skip`** closes the current step with a reason and a name. A skipped step is never shown as done.
 
 ## A worked run

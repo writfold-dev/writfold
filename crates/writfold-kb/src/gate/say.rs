@@ -55,6 +55,12 @@ pub(super) fn record(
             say.id
         )));
     }
+    if say.kind == Kind::Attested && definition.is_checklist() {
+        return Err(KbError::Refused(format!(
+            "gate {} is a checklist: record each item with gate cover {} <item> supported REF…|not-applicable --reason TEXT --by WHO (gate waive sets the whole gate aside)",
+            say.id, say.id
+        )));
+    }
     // A run-record gate's statement binds the run-record digest it is judged by.
     let records = crate::plan::owed(&session, &rec).records;
     drop(session);

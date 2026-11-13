@@ -5,8 +5,8 @@
 //! may name an `instructions` file and ship scripts beside itself
 //! ([`super::places`]); their bytes are part of its digest. Reading a
 //! definition never runs anything.
-use super::places;
 use super::toml::{self, Value};
+use super::{def_class, places};
 use crate::error::{KbError, Result};
 use crate::write::is_slug;
 use sha2::{Digest, Sha256};
@@ -17,7 +17,7 @@ pub const SCHEMA: &str = "writfold-gate/1";
 /// Where definitions live, under the KB root or the subject repository.
 pub const DIR: &str = ".writfold/gates";
 pub use places::ARTIFACTS;
-const KEYS: [&str; 15] = [
+const KEYS: [&str; 17] = [
     "schema",
     "id",
     "version",
@@ -33,14 +33,18 @@ const KEYS: [&str; 15] = [
     "checks",
     "weft_sha256",
     "require",
+    "items",
+    "optional",
 ];
-const MAX_TIMEOUT: i64 = 86_400;
+pub(super) const MAX_TIMEOUT: i64 = 86_400;
 /// The class of a gate that is a statement, not a check.
 pub const ATTESTED: &str = "attested";
 /// The class of a gate met by a Weft assessment ([`super::assessed`]).
 pub const ASSESSED: &str = "assessed";
 /// The class of a check over the run's own records ([`crate::plan::records`]).
 pub const RUN_RECORD: &str = "run-record";
+/// The class of a gate met by covering its items ([`super::checklist`]).
+pub const CHECKLIST: &str = "checklist";
 
 /// Which root a definition was read from.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -98,6 +102,8 @@ pub struct Definition {
     pub files: Vec<(String, String)>,
     /// An assessed gate's Weft source, checks and binary pin.
     pub assessed: Option<super::assessed::Spec>,
+    /// A checklist gate's items.
+    pub checklist: Option<super::checklist::Spec>,
     /// The directory holding the definition: what `{gate}` expands to.
     pub dir: PathBuf,
     /// `.writfold/gates/<id>.toml`, relative to its root.
@@ -114,6 +120,11 @@ impl Definition {
     /// An attested gate runs no command; only `gate attest` meets it.
     pub fn attested(&self) -> bool {
         self.class == ATTESTED
+    }
+
+    /// A checklist gate runs no command: `gate cover` records its items.
+    pub fn is_checklist(&self) -> bool {
+        self.class == CHECKLIST
     }
 
     /// A run-record gate runs no command: `gate run` evaluates its
@@ -135,7 +146,7 @@ impl Definition {
     }
 }
 
-fn text(map: &BTreeMap<String, Value>, key: &str) -> Result<Option<String>> {
+pub(super) fn text(map: &BTreeMap<String, Value>, key: &str) -> Result<Option<String>> {
     match map.get(key) {
         None => Ok(None),
         Some(Value::Str(s)) => Ok(Some(s.clone())),
@@ -143,7 +154,7 @@ fn text(map: &BTreeMap<String, Value>, key: &str) -> Result<Option<String>> {
     }
 }
 
-fn bad(why: String) -> KbError {
+pub(super) fn bad(why: String) -> KbError {
     KbError::Refused(format!("gate definition: {why}"))
 }
 
@@ -151,113 +162,20 @@ fn need(map: &BTreeMap<String, Value>, key: &str) -> Result<String> {
     text(map, key)?.ok_or_else(|| bad(format!("{key} is required")))
 }
 
-fn list(map: &BTreeMap<String, Value>, key: &str) -> Result<Vec<String>> {
+pub(super) fn list(map: &BTreeMap<String, Value>, key: &str) -> Result<Vec<String>> {
     match map.get(key) {
         Some(Value::List(items)) if !items.is_empty() => Ok(items.clone()),
         _ => Err(bad(format!("{key} must be a non-empty array of strings"))),
     }
 }
 
-fn int(map: &BTreeMap<String, Value>, key: &str, low: i64, high: i64) -> Result<i64> {
+pub(super) fn int(map: &BTreeMap<String, Value>, key: &str, low: i64, high: i64) -> Result<i64> {
     match map.get(key) {
         Some(Value::Int(n)) if (low..=high).contains(n) => Ok(*n),
         _ => Err(bad(format!(
             "{key} must be an integer from {low} to {high}"
         ))),
     }
-}
-
-/// Check each argument's placeholders against what the gate judges: a
-/// repository gate may not use `{candidate}`; a candidate gate must use it
-/// and may not use `{artifacts}` (its receipt keeps no local files).
-fn placeholders(argv: &[String], judges: Judges) -> Result<()> {
-    let mut all = Vec::new();
-    for arg in argv {
-        if arg.is_empty() || arg.contains('\0') {
-            return Err(bad("argv entries must be non-empty".into()));
-        }
-        all.extend(places::used(arg).map_err(bad)?);
-    }
-    let has = |p: &str| all.contains(&p);
-    match judges {
-        Judges::Repository if has(places::CANDIDATE) => Err(bad(format!(
-            "{} is for gates with subject = \"candidate\"",
-            places::CANDIDATE
-        ))),
-        Judges::Candidate if !has(places::CANDIDATE) => Err(bad(format!(
-            "a candidate gate must pass {} to its command",
-            places::CANDIDATE
-        ))),
-        Judges::Candidate if has(places::ARTIFACTS) => Err(bad(format!(
-            "{} is for repository gates",
-            places::ARTIFACTS
-        ))),
-        _ => Ok(()),
-    }
-}
-
-/// The command fields: `argv`, `workdir` and `timeout_seconds`, required
-/// for a check and refused for an attested gate (which runs nothing; it is
-/// met only by `gate attest`).
-fn command(
-    map: &BTreeMap<String, Value>,
-    class: &str,
-    judges: Judges,
-) -> Result<(Vec<String>, String, u64)> {
-    if class == ATTESTED || class == ASSESSED || class == RUN_RECORD {
-        let runs = match class {
-            ATTESTED => "an attested gate runs nothing",
-            ASSESSED => "an assessed gate runs only the pinned weft binary",
-            _ => "a run-record gate runs no command",
-        };
-        if let Some(key) = ["argv", "workdir", "timeout_seconds"]
-            .into_iter()
-            .filter(|k| class == ATTESTED || *k != "timeout_seconds")
-            .find(|k| map.contains_key(*k))
-        {
-            return Err(bad(format!("{runs}: remove {key}")));
-        }
-        let timeout = match class == ASSESSED {
-            true => u64::try_from(int(map, "timeout_seconds", 1, MAX_TIMEOUT)?)
-                .map_err(|_| bad("timeout_seconds".into()))?,
-            false => 0,
-        };
-        return Ok((Vec::new(), ".".into(), timeout));
-    }
-    let argv = list(map, "argv")?;
-    placeholders(&argv, judges)?;
-    let workdir = text(map, "workdir")?.unwrap_or_else(|| ".".into());
-    if workdir != "." && !places::contained(&workdir) {
-        return Err(bad(
-            "workdir must be a relative path inside the repository".into()
-        ));
-    }
-    let timeout_seconds = u64::try_from(int(map, "timeout_seconds", 1, MAX_TIMEOUT)?)
-        .map_err(|_| bad("timeout_seconds".into()))?;
-    Ok((argv, workdir, timeout_seconds))
-}
-
-/// `require`: the built-in requirements of a run-record gate, which judges
-/// the run's own records (so it takes no `scope` or `subject`); refused on
-/// every other class.
-fn require(map: &BTreeMap<String, Value>, class: &str) -> Result<Vec<String>> {
-    if class != RUN_RECORD {
-        return match map.contains_key("require") {
-            true => Err(bad(format!("require is for class = \"{RUN_RECORD}\""))),
-            false => Ok(Vec::new()),
-        };
-    }
-    if let Some(key) = ["scope", "subject"]
-        .into_iter()
-        .find(|k| map.contains_key(*k))
-    {
-        return Err(bad(format!(
-            "a run-record gate judges the run's own records: remove {key}"
-        )));
-    }
-    let require = list(map, "require")?;
-    crate::plan::records::known(&require).map_err(bad)?;
-    Ok(require)
 }
 
 /// `subject`: `repository` (the default) or `candidate`. A candidate gate
@@ -334,18 +252,28 @@ pub fn parse(text_in: &str, stem: &str, origin: Origin, dir: &Path) -> Result<De
         )));
     }
     let class = need(&map, "class")?;
-    if !["mechanical", "observed", ATTESTED, ASSESSED, RUN_RECORD].contains(&class.as_str()) {
-        let why = "class must be mechanical, observed, attested, assessed or run-record";
+    let classes = [
+        "mechanical",
+        "observed",
+        ATTESTED,
+        ASSESSED,
+        RUN_RECORD,
+        CHECKLIST,
+    ];
+    if !classes.contains(&class.as_str()) {
+        let why = "class must be mechanical, observed, attested, assessed, run-record or checklist";
         return Err(bad(why.into()));
     }
-    let require = require(&map, &class)?;
+    let require = def_class::require(&map, &class)?;
+    def_class::checklist_subject(&map, &class)?;
     let judges = judges(&map, origin)?;
-    let (argv, workdir, timeout_seconds) = command(&map, &class, judges)?;
+    let (argv, workdir, timeout_seconds) = def_class::command(&map, &class, judges)?;
     let scope = match class.as_str() {
         RUN_RECORD => Vec::new(),
         _ => scope(&map, judges, &class)?,
     };
     let assessed = super::assessed::spec::parse(&map, &class, dir).map_err(bad)?;
+    let checklist = super::checklist::spec::parse(&map, &class).map_err(bad)?;
     let description = text(&map, "description")?;
     if description
         .as_deref()
@@ -371,6 +299,7 @@ pub fn parse(text_in: &str, stem: &str, origin: Origin, dir: &Path) -> Result<De
         require,
         files,
         assessed,
+        checklist,
         dir: dir.to_path_buf(),
         digest: String::new(),
     };
@@ -408,6 +337,9 @@ pub fn digest(d: &Definition) -> String {
         canonical.push_str(&format!("file={path} {file}\n"));
     }
     if let Some(spec) = &d.assessed {
+        canonical.push_str(&spec.canonical());
+    }
+    if let Some(spec) = &d.checklist {
         canonical.push_str(&spec.canonical());
     }
     format!(

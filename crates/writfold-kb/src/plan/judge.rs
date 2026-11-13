@@ -25,6 +25,8 @@ pub struct Gate {
     pub read: Option<String>,
     pub attested: bool,
     pub run_record: bool,
+    /// A checklist gate's command for its first owed item.
+    pub cover: Option<String>,
 }
 
 impl Gate {
@@ -45,8 +47,8 @@ pub fn window(step: &Step, records: &Records) -> String {
 }
 
 /// The evidence path of a judged gate: the statement that stands, else
-/// the receipt (or Weft assessment) that decides its state; and the
-/// content digest it is about.
+/// the receipt (or Weft assessment) that decides its state, or a
+/// checklist's newest covering row; and the content digest it is about.
 fn evidence(j: &Judged<'_>) -> (Option<String>, String) {
     let said = match j.standing {
         Standing::Attested => j.statements.attested,
@@ -58,6 +60,9 @@ fn evidence(j: &Judged<'_>) -> (Option<String>, String) {
     }
     if let Some((f, r)) = j.receipt {
         return (Some(f.path.clone()), r.scope.clone());
+    }
+    if let Some(view) = &j.checklist {
+        return (view.newest().map(|f| f.path.clone()), view.content.clone());
     }
     match j.assessment.as_ref().and_then(|a| a.receipt) {
         Some((f, r)) => (Some(f.path.clone()), r.source.clone()),
@@ -75,6 +80,7 @@ fn undefined(id: &str) -> Gate {
         read: None,
         attested: false,
         run_record: false,
+        cover: None,
     }
 }
 
@@ -90,6 +96,7 @@ fn gate(j: &Judged<'_>, repo: &str) -> Gate {
         read: status::read_line(d, repo).and_then(|m| m.path),
         attested: d.attested(),
         run_record: d.run_record(),
+        cover: (j.checklist.as_ref()).and_then(|v| crate::gate::checklist::next(&d.id, v)),
     }
 }
 

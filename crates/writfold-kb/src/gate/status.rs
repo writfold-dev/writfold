@@ -37,6 +37,7 @@ pub struct Filings {
     pub receipts: Vec<Filed>,
     pub statements: Vec<statement::Filed>,
     pub assessed: Vec<super::assessed::Filed>,
+    pub covers: Vec<super::checklist::Filed>,
     /// `runs/<run>`.
     pub run_dir: String,
     pub owed: Owed,
@@ -49,6 +50,7 @@ impl Filings {
             receipts: filed(root, run_dir, run),
             statements: statement::filed(root, run_dir, run),
             assessed: super::assessed::filed(root, run_dir, run),
+            covers: super::checklist::filed(root, run_dir, run),
             run_dir: run_dir.to_owned(),
             owed: Owed::default(),
         }
@@ -78,6 +80,7 @@ impl Filings {
         self.receipts.iter().filter(|f| f.parsed.is_err()).count()
             + self.statements.iter().filter(|f| f.parsed.is_err()).count()
             + self.assessed.iter().filter(|f| f.parsed.is_err()).count()
+            + self.covers.iter().filter(|f| f.parsed.is_err()).count()
     }
 }
 
@@ -94,6 +97,8 @@ pub struct Judged<'a> {
     pub statements: statement::Summary<'a>,
     /// An assessed gate's receipt and checks (its `receipt` is `None`).
     pub assessment: Option<super::assessed::Assessment<'a>>,
+    /// A checklist gate's items (its `receipt` is `None`).
+    pub checklist: Option<super::checklist::View<'a>>,
 }
 
 /// The whole picture for one run and subject.
@@ -111,12 +116,34 @@ impl Report<'_> {
 }
 
 /// Judge every defined gate on `subject` from the run's filings. Assessed
-/// gates are judged last, against the others ([`super::assessed::judge`]).
+/// and checklist gates are judged last, against the others
+/// ([`super::assessed::judge`], [`super::checklist::judge`]).
 pub fn judge<'a>(
     session: &Session<'_>,
     subject: &Subject,
     filings: &'a Filings,
 ) -> Result<Report<'a>> {
+    let (mut report, later) = judge_plain(session, subject, filings)?;
+    let (assessed, lists) = later.into_iter().partition(|d| d.assessed.is_some());
+    let more = super::assessed::judge(session, subject, filings, &report, assessed)?;
+    let lists = super::checklist::judge(session, subject, filings, &report, lists)?;
+    report.gates.extend(more);
+    report.gates.extend(lists);
+    // Every gate is judged, so evidence grounds the same with or without
+    // a plan; only the gates the plan owes are reported.
+    if let Some(owed) = &filings.owed.gates {
+        report.gates.retain(|j| owed.contains(&j.definition.id));
+    }
+    Ok(report)
+}
+
+/// Judge the command, attested and run-record gates; return the assessed
+/// and checklist definitions, which are judged against this report.
+pub fn judge_plain<'a>(
+    session: &Session<'_>,
+    subject: &Subject,
+    filings: &'a Filings,
+) -> Result<(Report<'a>, Vec<Definition>)> {
     let git = session
         .git
         .as_ref()
@@ -125,12 +152,12 @@ pub fn judge<'a>(
     // Candidate gates judge delivery drafts, never a repository: a run
     // owes them only through a delivery mode (`deliver status`).
     definitions.retain(|d| !d.on_candidate());
-    if let Some(owed) = &filings.owed.gates {
-        definitions.retain(|d| owed.contains(&d.id));
-    }
-    let assessed: Vec<Definition>;
-    (assessed, definitions) = definitions.into_iter().partition(|d| d.assessed.is_some());
-    let patterns: Vec<Vec<&str>> = definitions.iter().map(Definition::patterns).collect();
+    let later: Vec<Definition>;
+    (later, definitions) =
+        (definitions.into_iter()).partition(|d| d.assessed.is_some() || d.is_checklist());
+    let patterns: Vec<Vec<&str>> = (definitions.iter().chain(&later))
+        .map(Definition::patterns)
+        .collect();
     let wanted = |p: &str| patterns.iter().any(|scope| in_scope(scope, p));
     let snapshot = snapshot(git, subject, &wanted)?;
     let valid = filings.valid(&subject.name);
@@ -149,14 +176,12 @@ pub fn judge<'a>(
             &content,
         ));
     }
-    let mut report = Report {
+    let report = Report {
         gates,
         problems,
         snapshot,
     };
-    let more = super::assessed::judge(session, subject, filings, &report, assessed)?;
-    report.gates.extend(more);
-    Ok(report)
+    Ok((report, later))
 }
 
 /// Judge one gate from the valid receipts (in judging order) against the
@@ -199,6 +224,7 @@ pub fn judge_gate<'a>(
         receipt,
         statements,
         assessment: None,
+        checklist: None,
     }
 }
 
@@ -264,9 +290,10 @@ pub fn rows(
 ) -> Result<Vec<Row>> {
     let mut out = Vec::new();
     for judged in &report.gates {
-        out.push(match &judged.assessment {
-            Some(assessment) => super::assessed::row(subject, judged, assessment),
-            None => gate_row(git, subject, report, judged)?,
+        out.push(match (&judged.assessment, &judged.checklist) {
+            (Some(assessment), _) => super::assessed::row(subject, judged, assessment),
+            (_, Some(view)) => super::checklist::row(subject, judged, view),
+            _ => gate_row(git, subject, report, judged)?,
         });
     }
     for f in &filings.receipts {
@@ -282,6 +309,11 @@ pub fn rows(
     for f in &filings.assessed {
         if let Err(why) = &f.parsed {
             out.push(invalid_row("receipt", &f.name, &f.path, why));
+        }
+    }
+    for f in &filings.covers {
+        if let Err(why) = &f.parsed {
+            out.push(invalid_row("cover", &f.name, &f.path, why));
         }
     }
     for (origin, path, why) in &report.problems {
@@ -424,21 +456,4 @@ fn stale_why(
             }
         },
     )
-}
-
-/// Counts by standing for the trailer, in a fixed order; invalid
-/// receipts, statements and definitions are counted together.
-pub fn counts(report: &Report<'_>, filings: &Filings) -> Vec<(&'static str, usize)> {
-    let count = |s: Standing| report.gates.iter().filter(|j| j.standing == s).count();
-    vec![
-        ("gates", report.gates.len()),
-        ("satisfied", count(Standing::Checked(State::Satisfied))),
-        ("open", count(Standing::Checked(State::Open))),
-        ("stale", count(Standing::Checked(State::Stale))),
-        ("failed", count(Standing::Checked(State::Failed))),
-        ("unknown", count(Standing::Checked(State::Unknown))),
-        ("attested", count(Standing::Attested)),
-        ("waived", count(Standing::Waived)),
-        ("invalid", filings.invalid() + report.problems.len()),
-    ]
 }

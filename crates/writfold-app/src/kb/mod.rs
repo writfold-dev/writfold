@@ -61,6 +61,8 @@ gates (checks with pinned receipts; definitions in .writfold/gates/<id>.toml):
                                    re-run the recorded argv at the recorded commit: agree or disagree
   gate attest <id> --statement TEXT --by WHO | gate waive <id> --reason TEXT --by WHO
                                    a statement (attested gates) or a waiver: never shown as satisfied
+  gate cover <id> <item> supported REF… | unsupported|not-applicable --reason TEXT, with --by WHO
+                                   one checklist item: cited evidence re-grounded on every read
   gate lines [--run ID] [--repo DIR]
                                    receipt lines for a commit message (exit 0 only if all are met)
 

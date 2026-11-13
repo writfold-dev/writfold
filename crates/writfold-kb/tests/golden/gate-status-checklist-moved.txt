@@ -1,0 +1,11 @@
+gate unit [stale] mechanical pass exit=0 at demo-service@bcacd8cac84e scope=2d91b0dbe7a9 paths=1 @runs/run-20261101T090000Z-a1b2c3/gates/unit-20261111T010000Z-XXXXXX.json:1 !stale
+  why: changed in scope: src/ledger.rs
+  next: writfold kb gate run unit
+gate review [stale] checklist 1/2 required covered at demo-service@bcacd8cac84e scope=b16e7548f0cd @.writfold/gates/review.toml:1 !stale
+  item: errors [stale] 1 reference by agent; cited evidence moved: gate:unit was satisfied, now stale @runs/run-20261101T090000Z-a1b2c3/covers/review.errors-20261111T000000Z-XXXXXX.json:1 !stale
+  item: record [supported] 1 reference by agent @runs/run-20261101T090000Z-a1b2c3/covers/review.record-20261111T000000Z-XXXXXX.json:1
+  item: perf [not-applicable] (optional) no hot path is touched by agent @runs/run-20261101T090000Z-a1b2c3/covers/review.perf-20261111T000000Z-XXXXXX.json:1
+  next: writfold kb gate cover review errors supported REF… --by WHO
+# note: receipts of run run-20261101T090000Z-a1b2c3 for demo-service; state is derived on every read, never stored
+# coverage=complete records=32/32 shown=2 omitted=0 gates=2 satisfied=0 open=0 stale=2 failed=0 unknown=0 attested=0 waived=0 invalid=0 kb=d5db758bda80+dirty:4 index=fresh cursor=none q=bfe0854a0d1f
+# exit=2

@@ -4,7 +4,6 @@
 //! through the write protocol. Weft's report stays local and untracked,
 //! under `<KB git dir>/writfold/gates/<run>/<receipt>/weft-report.json`;
 //! the receipt holds its digest.
-use super::ground::{self, Context};
 use super::receipt::{self, Assessed, Assumed, Cited, Judged as Check};
 use super::report::{self, Report};
 use super::spec::Spec;
@@ -13,6 +12,7 @@ use crate::Request;
 use crate::emit::{Answer, Output};
 use crate::error::{KbError, Result};
 use crate::gate::def::Definition;
+use crate::gate::ground::{self, Context};
 use crate::gate::status::{self, Filings};
 use crate::gate::subject::Subject;
 use crate::index::query::Rec;

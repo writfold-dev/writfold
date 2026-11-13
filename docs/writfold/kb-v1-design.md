@@ -2649,3 +2649,47 @@ Measured on 13 November 2026 with the release binary, process start included, on
 
 - A covered checklist gate meeting `gates.met` is not tested here; it depends on the checklist gate class.
 - The `cwd` is the session's, not that of a `cd` inside the command line.
+
+## 31. Checklist gates and `gate cover` as built (v0.5.0-dev.1)
+
+A gate of class `checklist` declares items; each is covered by a row someone records with `gate cover`. The guide page is [gates § Checklist gates](../guide/gates.md#checklist-gates).
+
+### 31.1 Definition
+
+`items` (1 to 64 strings, each `id: text`, IDs unique slugs) and `optional` (declared item IDs) are the class's own keys, refused on every other class; both enter the definition digest as two extra canonical lines, so a definition of any other class keeps its digest. A checklist takes `scope`, `instructions` and `description`; `argv`, `workdir`, `timeout_seconds`, `subject`, `require` and the Weft keys are refused. The per-class rules moved out of `gate/def.rs` into `gate/def_class.rs`; the item keys are `gate/checklist/spec.rs`.
+
+### 31.2 The row
+
+`runs/<run>/covers/<gate>.<item>-<UTC>-<6 hex>.json`, schema `writfold-cover/1`, written create-new through the write protocol (`gate/checklist/cover.rs`, `write.rs`): gate, item, outcome (`supported`, `unsupported`, `not-applicable`), reason, note, by, run, subject (repo, commit, scope content digest), definition digest, `evidence: [{reference, grounding, standing, path}]` as grounded at write time, `seq` and `recorded`, then `digest` over the canonical form. `supported` needs at least one reference and no reason; the others need a reason and cite nothing. A row that fails its digest, does not have its outcome's shape, or is filed under a name other than exactly `<its gate>.<its item>-<stamp>-<hex>.json` reads `[invalid]` and counts for nothing.
+
+`seq` is one more than the highest of the run's valid rows of that gate and item on that repository; rows are ordered by (`seq`, file name), never by `recorded`.
+
+### 31.3 Grounding
+
+References are resolved by `gate/ground.rs` (moved from `gate/assessed/ground.rs`, shared by both classes): the table of [§23](#23-weft-assessed-gate-as-built). At write time every reference must be grounded (`grounded` or `attested`), else the write is refused, exit 3. On every read, each `supported` row's references are resolved again: the row stands only while each is still grounded with the standing it recorded.
+
+Checklist and assessed gates are judged after the other gates and against them only (`status::judge_plain`), so neither class can cite the other. To make grounding independent of the plan, every gate is now judged and only then narrowed to the gates the plan owes; before, the narrowing came first, so an assessed gate citing a gate its plan did not name read `no-such-gate`.
+
+### 31.4 Standing
+
+The kernel is `writfold_core::checklist`: `item(newest)` is `Open` with no row, `Stale` when the row is not about the current definition and scope content, `Stale` when a `Supported` row cites nothing or a reference moved, else the row's outcome; `rollup` says whether every required item is `Supported` or `NotApplicable`, whether a required item is `Stale`, and the first required item not covered. The roll-up feeds the proved gate kernel unchanged: `gate::standing(attested_class = true, …, Statements { attested_current: covered, attested_any: stale, waived_current })`. A covered checklist therefore stands as `attested` (met), one with a stale required item as `stale`, any other as `open`, and a current waiver as `waived`; nothing is ever `satisfied`, so `proofs/Writfold/Gate.lean` is untouched.
+
+### 31.5 Surfaces
+
+- `gate status`, `resume`, `gate cover`'s answer: one `item:` line per item (`[standing]`, the row's reference count or reason, `by`, `(optional)`, `; <why>` when stale, `!stale`/`!unsupported`), a `read:` line when there are instructions, and, when not met, `next: writfold kb gate cover <gate> <first owed item> supported REF… --by WHO`. Invalid rows are `cover … [invalid]` rows and count under `invalid=`.
+- `gate lines`: the gate's line (`attested checklist N/M required covered`, or its waiver), then one line per item.
+- Plans: a step owing a checklist advances once it is met; the refusal's `next:` is the `gate cover` command; the done event's evidence is the newest covering row (by `recorded`, a pointer only) and its content the scope digest.
+- `gate attest` and `gate run` are refused and name `gate cover`; `gate waive` works as for any gate; `gate verify` on a row answers `unverifiable`.
+
+### 31.6 Tests
+
+- Kernel (`crates/writfold-core/src/checklist.rs`), exhaustive: every row shape for `item`; every list of up to four (item, required) cells for `rollup`, including that dropping optional items never changes it.
+- Rows (`gate/checklist/cover.rs`): round trip; an edited outcome, another run, and five wrong file names are invalid; each outcome's shape; a property test over random row sequences that the newest is decided by `seq` and file name whatever `recorded` says.
+- Definitions (`gate/def_tests.rs`, `gate/checklist/spec.rs`): items and optional enter the digest; command keys, `subject`, `require`, Weft keys, a missing scope and an unknown optional item are refused.
+- `tests/gate_checklist.rs` (goldens `gate-status-checklist.txt`, `gate-status-checklist.json`, `gate-status-checklist-moved.txt`): covered stands as attested; references and reasons required; an ungrounded reference, a waived gate and a waiver file are refused at write; an in-scope edit makes every item stale; a moved citation makes only its item stale and reverting restores it; a hand-edited row and a row copied under another item's name are invalid; the newest row by `seq` decides; `attest`/`run` refused, `waive` works; `verify` unverifiable; a plan step advances once covered and its done event names a cover row.
+- `tests/gate_checklist_faults.rs`: a kill at every write step leaves no row or one complete valid row, the index equals a rebuild, and a rerun covers the item.
+
+### 31.7 Not done
+
+- Evidence other than the existing reference kinds, provenance chains, support policies across distinct sources, a subject pinned to a pull request head, and gate-level or plan-step `not-applicable`.
+- A Lean proof of the checklist kernel: the Aeneas toolchain was not run for this change; the kernel is written in the translatable subset and covered by exhaustive tests.

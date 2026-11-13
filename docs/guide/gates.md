@@ -1,6 +1,6 @@
 # Gates
 
-> **Status:** built in v0.3.0-dev.1; instruction gates, gate scripts, the Weft assessed gate, run-record checks and plan-owed gates built in v0.4.0-dev.1.
+> **Status:** built in v0.3.0-dev.1; instruction gates, gate scripts, the Weft assessed gate, run-record checks and plan-owed gates built in v0.4.0-dev.1; checklist gates and `gate cover` built in v0.5.0-dev.1.
 
 A gate is one small check with a path scope. `gate run` runs its command and keeps a receipt pinned to the exact bytes checked. `gate status` then says, on every read, whether that evidence still holds. Gates report; they block nothing unless a [guard rule](hooks.md#guard-rules) names them.
 
@@ -12,7 +12,7 @@ One file per gate, `.writfold/gates/<id>.toml`. It lives in the KB root (shared 
 schema = "writfold-gate/1"         # required
 id = "unit"                        # required; a slug equal to the file name
 version = 1                        # required; your own revision number
-class = "mechanical"               # required; mechanical | observed | attested | run-record
+class = "mechanical"               # required; mechanical | observed | attested | run-record | assessed | checklist
 argv = ["cargo", "test", "--locked"]   # required for a command gate; never a shell string
 workdir = "."                      # optional; relative to the repository's top
 timeout_seconds = 600              # required for a command gate; 1 to 86400
@@ -33,6 +33,7 @@ description = "the unit tests"     # optional; one line
 | `attested` | a statement someone must make; it runs nothing | `gate attest` |
 | `run-record` | a check over the run's own records, not code ([below](#run-record-checks)) | a passing receipt from `gate run` |
 | `assessed` | a plan step verified by Weft from cited evidence ([below](#weft-assessed-gates)) | a passing receipt from `gate run`: every required check entailed from grounded assumptions |
+| `checklist` | items someone covers, each with cited evidence or a reason ([below](#checklist-gates)) | `gate cover` on every required item: stands as `attested` |
 
 An attested gate has no `argv`, `workdir` or `timeout_seconds`:
 
@@ -92,7 +93,7 @@ Receipts are a log: a rerun adds a file. Only `gate run` writes them. A hand-edi
 | `unknown` | that receipt is a timeout, crash or moved subject | owed |
 | `stale` | there are receipts, but none about the current definition and bytes | owed |
 | `waived` | a check that is not satisfied, with a current waiver | met |
-| `attested` | an attested gate with a current attestation | met |
+| `attested` | an attested gate with a current attestation, or a checklist with every required item covered | met |
 
 Every owed row carries a `why:` line where there is one and a `next:` line with the command to run. `gate status` and `gate lines` exit 0 only when every gate is met. `gate lines` prints the same facts as lines for a commit message:
 
@@ -262,6 +263,69 @@ instructions = "reflection.md"
 scope = ["**"]
 description = "the reflection names what went wrong and what to change"
 ```
+
+## Checklist gates
+
+A gate of class `checklist` declares items, and someone covers each one with `gate cover`: `supported`, citing evidence Writfold grounds; `not-applicable`, with a reason; or `unsupported`, with a reason, to record that an item does not hold. It runs nothing.
+
+```toml
+# .writfold/gates/review.toml
+schema = "writfold-gate/1"
+id = "review"
+version = 1
+class = "checklist"
+scope = ["src/**"]
+items = ["errors: errors are handled or propagated", "tests: changed behaviour has a test", "perf: no new hot-path allocation"]
+optional = ["perf"]
+instructions = "review.md"
+description = "code review checklist"
+```
+
+- **`items`**: one to 64 strings, each `id: text`, the ID a slug unique in the gate. **`optional`** names items that never hold the gate open. Both are part of the definition digest, so adding, removing or rewording an item makes every row stale.
+- A checklist gate takes `scope` (the content its rows are about) and optionally `instructions` and `description`; it takes no `argv`, `workdir`, `timeout_seconds`, `subject`, `require` or Weft keys.
+
+```text
+writfold kb gate cover <gate> <item> supported REF… --by WHO [--note TEXT] [--run ID] [--repo DIR]
+writfold kb gate cover <gate> <item> unsupported --reason TEXT --by WHO
+writfold kb gate cover <gate> <item> not-applicable --reason TEXT --by WHO
+```
+
+Each `REF` is one argument, any reference an assessed gate may cite ([the table above](#weft-assessed-gates)): a citation token, a locator, `gate:<id>`, or a gate receipt, attestation, retrieval receipt or edit receipt of this run. `supported` needs at least one, and is refused (exit 3, nothing written) when any is not grounded now, so a row never starts out false. A waiver is never evidence. A checklist and an assessed gate are both judged against the other gates only, so a reference to either class is not grounded.
+
+A row is a file, `runs/<run>/covers/<gate>.<item>-<time>-<hex>.json` (schema `writfold-cover/1`): the outcome, the reason or note, `by`, the subject's commit and scope content digest, the definition digest, every reference with what it stood on when written, a `seq` one more than the highest of that gate and item in the run, and a digest over the rest. An edited row, or one filed under another gate's or item's name, reads as `[invalid]` and counts for nothing.
+
+Each item stands on its newest row by `seq` (file name on ties; never the clock), judged on every read:
+
+| Item | When |
+|---|---|
+| `open` | no row |
+| `supported` | the row is about the current definition and scope content, and every reference it cites still stands as recorded and is grounded |
+| `not-applicable` | the row is current and says so, with a reason |
+| `unsupported` | the row is current and says so, with a reason |
+| `stale` | the row is about another definition or other content, or a reference it cites moved |
+
+A checklist with every required item `supported` or `not-applicable` stands as **`attested`**: a cover row is someone's judgement with checked evidence, never a passing check, so a checklist is never `satisfied`. A required item that is `stale` makes the gate `stale`; otherwise an uncovered one keeps it `open`. `gate waive` sets the whole gate aside as for any gate; `gate attest` and `gate run` are refused and name `gate cover`, and `gate verify` answers `unverifiable` for a row.
+
+The output below is from `crates/writfold-kb/tests/gate_checklist.rs`, where `review` covers `src/batch.rs`, `errors` cites `gate:unit` and `record` cites a record token:
+
+```text
+gate review [attested] checklist 2/2 required covered at demo-service@bcacd8cac84e scope=b16e7548f0cd @.writfold/gates/review.toml:1 !attested
+  item: errors [supported] 1 reference by agent @runs/run-…/covers/review.errors-20261111T000000Z-….json:1
+  item: record [supported] 1 reference by agent @runs/run-…/covers/review.record-20261111T000000Z-….json:1
+  item: perf [not-applicable] (optional) no hot path is touched by agent @runs/run-…/covers/review.perf-20261111T000000Z-….json:1
+```
+
+After a file in `unit`'s scope changes, only the item citing it moves, and the gate's `next:` line names it; reverting the file restores it:
+
+```text
+gate review [stale] checklist 1/2 required covered at demo-service@bcacd8cac84e scope=b16e7548f0cd @.writfold/gates/review.toml:1 !stale
+  item: errors [stale] 1 reference by agent; cited evidence moved: gate:unit was satisfied, now stale @runs/run-…/covers/review.errors-20261111T000000Z-….json:1 !stale
+  item: record [supported] 1 reference by agent @runs/run-…/covers/review.record-20261111T000000Z-….json:1
+  item: perf [not-applicable] (optional) no hot path is touched by agent @runs/run-…/covers/review.perf-20261111T000000Z-….json:1
+  next: writfold kb gate cover review errors supported REF… --by WHO
+```
+
+`gate lines` prints the gate, then one line per item. A plan step that owes a checklist advances once it stands as `attested`, and its done event names a covering row.
 
 ## What is claimed
 

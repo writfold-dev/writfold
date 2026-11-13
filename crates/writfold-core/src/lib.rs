@@ -39,6 +39,7 @@ extern crate alloc;
 pub mod assess;
 pub mod authority;
 pub mod bytes;
+pub mod checklist;
 pub mod convenience;
 pub mod flow;
 pub mod gate;
