@@ -1746,7 +1746,7 @@ Every event also carries `records`, the run's records at that moment (21.6), `re
 A gate of class `run-record` takes `require = [...]` (built-ins only: `research.backfilled`, `run.reflected`; an unknown or repeated name is refused) and no `scope`, `subject`, `argv`, `workdir` or `timeout_seconds`. The requirement list enters the definition digest.
 
 - **The run's records** (`plan/records.rs`): the checkpoint entries of `checkpoint.md` (each trimmed); the retrieval receipt names under `retrievals/`; a digest over the index's `files` rows outside `runs/` (path and SHA-256: any KB record written or edited); and the pending proposals that recorded the run (`proposal::for_run`, 22.2).
-- **A window** runs from the event that began a step (its splice for the first step of a splice, else the event that closed the step before it) to the event that closed it, or to now while it is current; without a plan, the whole run (no beginning). The **run-record digest** covers the window's two edges and the digest of every checkpoint entry up to its end.
+- **A window** runs from the event that began a step (its splice for the first step of a splice, else the event that closed the step before it) to the event that closed it, or to now while it is current; without a plan, the whole run (no beginning). Since §26, the first step of a root splice other than the first also begins where the step before it ended (26.3). The **run-record digest** covers the window's two edges and the digest of every checkpoint entry up to its end.
 - **`research.backfilled`**: in the window, a retrieval receipt was added, the KB digest changed, or a new checkpoint entry holds a citation token that is not illustrative (`cite make`'s output placed in a note).
 - **`run.reflected`**: up to the window's end, an entry starts `reflection:` (any case); and there is a pending proposal, a KB change in the window (an accepted proposal is a record by then), or a line starting `no proposal`.
 - **`gate run`** evaluates the requirements over the current window and writes an ordinary receipt (`writfold-gate-receipt/1`): `class` `run-record`, `command.argv` `["run-record", <requirements>]`, exit status 0 when met and 1 otherwise (findings as notes), `subject.scope` the run-record digest, `subject.paths` the evidence count, `subject.commit` the subject's HEAD. It goes stale when the window's records change; a done step's window is closed, so its receipt keeps standing. `gate waive` binds the same digest; `gate attest` is refused; `gate verify` answers `unverifiable`.
@@ -1856,7 +1856,7 @@ Delivery candidates are not part of `check`: `deliver status` already reports th
 
 - `propose status|note`, `--because`, `proposals drop --older` and a `proposals:` line in `brief`.
 - (Built since, in 21.5 and 21.6: the plan part of `kb check` and the `run.reflected` check that calls `for_run`.)
-- An evaluation skill that fills the queue.
+- ~~An evaluation skill that fills the queue~~ (built, §26).
 
 ## 23. Weft assessed gate as built
 
@@ -2036,7 +2036,7 @@ Writfold does not parse `SKILL.md`. Claude Code's dynamic context injection runs
 
 - The deterministic hooks showing the plan position (the next item; built separately).
 - Delivery modes as a step's gates (`deliver:<mode>`).
-- A live Claude Code session loading a skill with the injection line (the review's manual smoke test).
+- A live Claude Code session loading a skill with the injection line (the review's manual smoke test): run once since, without a KB (26.6).
 - `!late-splice` for a splice under a step that another clone has meanwhile closed: such a splice's steps fold in as open children of a done step and are owed like any other open step, but are not flagged.
 - Proofs of `splice` and `spec/RunGraph.tla`.
 
@@ -2232,3 +2232,150 @@ From https://code.claude.com/docs/en/hooks:
 - an opt-in Stop nudge.
 
 **Not covered:** a manual smoke test in an interactive Claude Code session.
+
+## 26. Evaluation skill as built
+
+This is the evaluation skill from the order of work adopted on 12 November 2026 (mission, "The run graph, hooks and order of work": "Evaluation is a `writfold:evaluate` skill and a template's last wrap-up step, not a hook that runs a model"). It builds on the required steps of §24 and the run-record checks of 21.6. No crate, verb, record kind, hook event or protocol step entered. New or changed:
+
+- `plugins/writfold/skills/evaluate/SKILL.md`, the skill;
+- `fixtures/kb/required-steps/.writfold/gates/reflection.md`, the reflection gate's instructions, rewritten around four questions (26.2);
+- `crates/writfold-kb/src/plan/fold.rs`: the window of a later root splice's first step (26.3), and `Step::root`;
+- `crates/writfold-kb/src/hook/inbox.rs`: the unevaluated line's hint names the skill;
+- the tests in 26.5.
+
+### 26.1 The skill
+
+`writfold:evaluate` is the plugin's second skill. Its front matter:
+
+| Key | Value | Why |
+|---|---|---|
+| `description` | evaluate the session that is ending from the run's records; use as a run's last step, when the current step is `reflect`, or for a run the inbox lists as unevaluated | Claude Code loads it on that cue, or the user types `/writfold:evaluate` |
+| `argument-hint` | what the session did and learned | the caller's account reaches the evaluator as `$ARGUMENTS` |
+| `context` | `fork` | a subagent (`general-purpose`, the default `agent`) receives the skill as its prompt and not the conversation, so it judges from the records and the session's context is not spent |
+| `background` | `false` | the session waits for the evaluation; a backgrounded fork would also get the narrower tool set of background subagents |
+| `allowed-tools` | `Bash(writfold kb <verb> *)` for `resume`, `plan status`, `plan use`, `plan advance`, `checkpoint`, `propose`, `proposals list`, `cite make`, `gate run`, `gate status` and `gate attest` | only those are pre-approved; `record`, `proposals accept\|drop`, `gate waive` and `plan skip` stay with the user |
+
+The body opens with the caller's account and the injection line `` !`writfold kb plan use reflect || true` `` (§24.6). The line's output replaces it:
+
+- When the run already uses `reflect` at the current step, an ancestor or the root (a required end step, or an earlier splice), `plan use` writes nothing and prints the plan (24.1).
+- Otherwise it splices `reflect` before the current step.
+- Without a run, a KB or a `reflect` template, it prints the refusal, and `|| true` keeps the skill loading.
+
+The steps then say:
+
+1. Read `resume` and `plan status`. With no current run, stop and say so.
+2. Locate the reflect step:
+   - current: go on;
+   - behind an open earlier step: reflect anyway and report what it waits behind; never skip or waive;
+   - absent, because the KB has no template: reflect anyway and say how to add one;
+   - already done, with later work since: `plan use reflect --again`.
+3. Write one checkpoint entry starting `reflection:`. Follow the reflection gate's `read:` file when there is one; otherwise cover what was done, what was learned, what should change and what was backfilled, quoting `@path:line`.
+4. Propose at most three records, each with a citation, or add a line starting `no proposal:` with the reason.
+5. Run `gate run` for each run-record or repository gate of the step. For an attested gate, check the entry against its instructions, then `gate attest <id> --by agent`. Never waive.
+6. Run `plan advance`. Report a refusal rather than skipping.
+7. Report the entry, the proposals (or the none), each gate's standing and the plan's position. Say that the user reviews the proposals and commits the KB.
+
+The skill says to run one `writfold kb` command per Bash call, because a prefix rule does not cover a compound command (26.6). The `writfold:kb` skill's Plans section now points to it for closing a run.
+
+### 26.2 The wrap-up template
+
+The worked example (`fixtures/kb/required-steps`, §24.5) is the shipped template. The guides show it ([run-graph](../guide/run-graph.md#worked-example-research-and-reflection), [skills](../guide/skills.md#the-bundled-skill-writfoldevaluate)):
+
+```text
+.writfold/plans/reflect.toml     steps = ["reflect: reflected reflection"]
+.writfold/plans/required.toml    start = ["research"]   end = ["reflect"]
+.writfold/gates/reflected.toml   class = "run-record", require = ["run.reflected"]
+.writfold/gates/reflection.toml  class = "attested", scope = ["**"], instructions = "reflection.md"
+```
+
+`reflection.md` now asks for four things:
+
+- **what was done**: the commits or files, the gates and citations the result rests on, and anything waived or skipped;
+- **what was learned**;
+- **what should change**: a change to the KB is a proposal, not an edit;
+- **what was backfilled**: the records written or proposed, by ID, and either a proposal for what the KB lacked or `no proposal:` with the reason.
+
+Editing it changes the gate's definition digest (§20), so attestations made against the earlier text are stale. None exist outside tests.
+
+### 26.3 The window of a later root splice
+
+The loop with a proposal exposed a gap in 21.6. The first step of a splice began its window at the splice. With required steps, `plan set` makes every root splice at once, so the window of `reflect#3/reflect` began at `plan set`. A ticket written during `research` then changed the KB digest inside that window. `run.reflected` counted it as "a KB record written in the step" and passed with a reflection alone: no proposal and no `no proposal` line.
+
+`fold::windows` now begins the first step of every root splice except the first where the step before it ended (or began, while that step is open). This is the later baseline, because a root splice after the first is made in one of two ways:
+
+- with the plan, by `plan set`;
+- for a required end template added later (24.5), while the step before it is still open, since completion is refused until it is spliced.
+
+A splice under a step keeps its own baseline. It is made while that step is current, after every earlier step has closed.
+
+No event changed. Existing runs fold to new windows only for those steps. A done step's run-record receipt binds its window's digest, so a done `reflect#n` step whose receipt was judged under the old window reads `!stale`; none exist outside tests.
+
+**Removing the change fails a test:** with the old rule, `evaluation_loop_with_a_proposal` sees `gate run reflected` pass before any proposal (checked by hand).
+
+### 26.4 The inbox and the reflect step
+
+The session-start rule of 25.2 compares each folded step's `id` (the template's step name), not a path segment. So `reflect#3/reflect` and `fix#1/implement/reflect#1/reflect` both match, and nothing needed fixing. The hint line now reads `next: writfold kb plan status --run RUN, then its reflect step (the writfold:evaluate skill)`.
+
+The Stop hook is unchanged. Marking the step open in the draft at every stop would repeat what the inbox already derives from the plan when the session ends (26.8).
+
+### 26.5 Tests
+
+- **The loop** (`crates/writfold-kb/tests/evaluate.rs`; golden `evaluate-loop.txt`, a transcript of each command and its answer), over the worked example:
+  1. `plan set fix` splices `research#1`, `fix#2` and `reflect#3`;
+  2. a ticket meets `backfilled`, and three advances reach `reflect`;
+  3. the skill's `plan use reflect` answers "already spliced" and writes nothing;
+  4. the session stops and ends; the next session start lists `unevaluated … reflect#3/reflect is not done` and names the skill;
+  5. the `reflection:` entry with a `no proposal:` line is written, and the run is still listed;
+  6. `reflected` passes; `advance` is refused, owing `reflection`; the attestation is made;
+  7. `advance` completes (`steps=4 done=4`), and the inbox lists nothing.
+- **With a proposal** (same file):
+  - a reflection alone fails `reflected`;
+  - a decision proposed with a fresh citation and the run makes it pass;
+  - the plan completes and the inbox is empty;
+  - `proposals list` still holds the proposal: nothing was recorded.
+- **A nested reflect step** (same file): without `required.toml`, `plan use reflect` at `fix#1/implement` splices `fix#1/implement/reflect#1/reflect`. The inbox lists that path, and drops it once the step is done, though `implement` is still open.
+- **The skill files** (`crates/writfold/tests/plugin_skills.rs`):
+  - each `SKILL.md` opens with `key: value` front matter; its keys are among those documented, none repeated, and values are quoted where YAML needs it;
+  - `name` equals the directory;
+  - `allowed-tools` holds only `Bash(writfold kb … *)` prefix rules with no shell operator, and every injected command is covered by one of them;
+  - `evaluate` has `context: fork`, `background: false`, the injection line `writfold kb plan use reflect || true`, `reflection:`, `no proposal:`, `writfold kb propose` and `$ARGUMENTS`;
+  - refusal cases for the parser.
+- **Changed goldens:**
+  - `hook-session-start-inbox.txt`: the hint;
+  - `plan-set-required.txt` and `plan-advance-reflect.txt`: the fixture KB's commit, after `reflection.md` changed.
+
+### 26.6 Documentation checked, and a `claude -p` run
+
+From https://code.claude.com/docs/en/skills, read on 13 November 2026:
+
+- the front matter keys `description`, `argument-hint`, `allowed-tools` (a space- or comma-separated string, or a YAML list), `context`, `agent` and `background`; unknown keys are ignored without an error;
+- `context: fork` runs the skill as the prompt of a new subagent, which "doesn't see your conversation history";
+- a forked skill runs in the background unless `background: false`, and always waits in `-p` mode;
+- a skill with `context: fork` needs an explicit task;
+- `$ARGUMENTS`, and plugin skills named `<plugin>:<skill>`.
+
+From https://code.claude.com/docs/en/permissions: `Bash(x *)` also matches a bare `x`, and a prefix rule does not approve a compound command.
+
+The skills page does not say whether `allowed-tools` reaches the forked subagent. A run settled it. The setup: Claude Code 2.1.323, `claude -p --plugin-dir plugins/writfold "/writfold:evaluate smoke test: …"`, with the debug binary on `PATH` and `WRITFOLD_KB` naming an empty directory. What it showed:
+
+- `claude plugin details` listed both skills;
+- the skill content was the prompt of messages whose parent is `forked-command-writfold:evaluate`, with the injection line replaced by `plan use`'s refusal and the argument substituted;
+- `writfold kb resume` and `plan status` ran without a prompt;
+- a compound `…; echo` command was held for approval (hence the one-command-per-call line, 26.1);
+- the evaluator stopped at step 1 and reported that there was nothing to evaluate.
+
+The run had no KB, because the environment it ran in could not create a Git repository outside its worktree. It cost about $0.12.
+
+### 26.7 Deviations
+
+- **No `wrap-up: evaluate` attested gate.** The review proposed a closing `wrap-up` step owing an attested `evaluate` gate. The task and the worked example name the step `reflect`, owing the run-record gate `reflected` and the attested gate `reflection`; the skill is what walks it.
+- **The attestation is the evaluator's own** (`--by agent`). Invoking the skill is taken as the request that the `writfold:kb` skill requires before attesting. The run-record check is the mechanical part. The attestation states that the instructions were followed, and is shown `[attested]`, never satisfied.
+- **The window rule changed** (26.3), in `writfold-kb`'s fold, not in the kernel.
+- **No Stop-hook change** (26.4).
+
+### 26.8 Not done
+
+- A full `claude -p` run over a KB with a run and a plan (26.6), and an interactive session.
+- The opt-in Stop nudge and `transcript_path` in the draft (25.8).
+- `WRITFOLD_SESSION` for the fork: proposals it makes fall into the no-session bucket unless it passes `--session`.
+- A Writfold check that a reflection is good: only the attestation speaks to that.

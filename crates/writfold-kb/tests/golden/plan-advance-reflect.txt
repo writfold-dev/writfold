@@ -2,5 +2,5 @@ step reflect#3/reflect [current] owes: reflected [open], reflection [open] @runs
   read: instructions for reflection @.writfold/gates/reflection.md:1
   next: writfold kb gate run reflected
 # note: not advanced: reflect#3/reflect owes reflected [open], reflection [open] (first owed: reflected); nothing written
-# coverage=complete records=36/36 shown=1 omitted=0 kb=ba64b3d585e8+dirty:8 index=fresh cursor=none q=344986924523
+# coverage=complete records=36/36 shown=1 omitted=0 kb=263f683f2614+dirty:8 index=fresh cursor=none q=344986924523
 # exit=3

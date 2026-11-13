@@ -1,8 +1,8 @@
 # Skills
 
-> **Status:** the bundled `writfold:kb` skill is built in v0.3.0-dev.1; a skill that splices its plan template (`writfold kb plan use`) is built in v0.4.0-dev.1; the `writfold:evaluate` skill is planned.
+> **Status:** the bundled `writfold:kb` skill is built in v0.3.0-dev.1; a skill that splices its plan template (`writfold kb plan use`) and the `writfold:evaluate` skill are built in v0.4.0-dev.1.
 
-A skill is a Markdown file of instructions that Claude Code loads when a task calls for it. Writfold ships one, and does not define a skill format of its own.
+A skill is a Markdown file of instructions that Claude Code loads when a task calls for it. Writfold ships two, and does not define a skill format of its own.
 
 ## The bundled skill: `writfold:kb`
 
@@ -83,8 +83,38 @@ In another harness, or when injection is turned off, write the line as an instru
 Start by running `writfold kb plan use review`, and follow the steps it prints.
 ```
 
-The injection line has been checked against the documentation and by the `plan use` tests (an idempotent repeat from a child step, exit codes). It has not yet been exercised in a live Claude Code session.
+The injection line has been checked against the documentation and by the `plan use` tests (an idempotent repeat from a child step, exit codes). A `claude -p` run of `/writfold:evaluate` (below) confirmed that the line runs when the skill loads, that its output (here a refusal) replaces it, and that `|| true` keeps the skill loading.
 
-## Planned: `writfold:evaluate`
+## The bundled skill: `writfold:evaluate`
 
-A second bundled skill for the wrap-up step of a run: look back over the session, write a reflection entry, and draft proposals for the KB. It is a skill, not a hook that runs a model, and its result is checked by the `run.reflected` run-record check ([gates](gates.md)). Not built.
+[`plugins/writfold/skills/evaluate/SKILL.md`](../../plugins/writfold/skills/evaluate/SKILL.md) closes a run. It is a skill, not a hook: no hook runs a model. The agent invokes it as the run's last step (the plan's current step is `reflect`), the user types `/writfold:evaluate`, or the session-start inbox names it for a run left `unevaluated` ([hooks](hooks.md#what-session-start-injects)). Pass a few lines on what the session did as its argument; they reach the evaluator as `$ARGUMENTS`.
+
+Its front matter:
+
+| Key | Value | Why |
+|---|---|---|
+| `context` | `fork` | the evaluation runs in a subagent with a fresh context, so it judges from the records, not from the conversation, and does not spend the session's context |
+| `background` | `false` | the session waits for the result, and the subagent keeps the full tool set (a backgrounded fork has a narrower one) |
+| `allowed-tools` | `Bash(writfold kb resume *)`, `plan status`, `plan use`, `plan advance`, `checkpoint`, `propose`, `proposals list`, `cite make`, `gate run`, `gate status`, `gate attest` (each as `Bash(writfold kb … *)`) | only `writfold kb` commands are pre-approved; `record`, `proposals accept`, `gate waive` and `plan skip` are not |
+| `argument-hint` | what the session did and learned | |
+
+The body splices its own template with the injection line `` !`writfold kb plan use reflect || true` ``. When the run already has a reflect step (the KB's [required end step](run-graph.md#required-steps), or an earlier splice), the line writes nothing and prints the plan; otherwise it splices the `reflect` template before the current step. Then the evaluator:
+
+1. reads `writfold kb resume` and `writfold kb plan status`, and stops if there is no current run;
+2. writes one checkpoint entry starting `reflection:`, covering what the reflection gate's instructions ask (by default: what was done, what was learned, what should change, what was backfilled);
+3. proposes at most three records, each with a citation (`writfold kb propose …`), or writes a line starting `no proposal:` with the reason;
+4. runs the step's run-record gate (`gate run reflected`) and attests its attested gate (`gate attest reflection --by agent`) after checking the entry against the instructions;
+5. runs `plan advance`, and reports the entry, the proposals, each gate's standing and what the user must do: review the proposals (only the user accepts one) and commit the KB.
+
+The template it splices, from the worked example ([run-graph](run-graph.md#worked-example-research-and-reflection)):
+
+```toml
+schema = "writfold-plan/1"
+name = "reflect"
+description = "close the run with a reflection and a proposal or an explicit none"
+steps = ["reflect: reflected reflection"]
+```
+
+What the records must show is checked by gates, not by the skill: `reflected` (`run.reflected`) passes only with a `reflection:` entry and a proposal or a `no proposal` line, and the plan cannot complete while the step is open. The skill is instructions to a model; nothing checks how good the reflection is beyond the attestation it makes.
+
+**Checked against** https://code.claude.com/docs/en/skills on 13 November 2026: `description`, `argument-hint`, `allowed-tools` (a space-separated string; granted for the invoking turn), `context: fork` (a subagent that receives the skill as its prompt and does not see the conversation), `background` (only with `context: fork`; forks wait anyway in `-p` mode) and `$ARGUMENTS`. A `claude -p "/writfold:evaluate …"` run with Claude Code 2.1.323 and the plugin loaded by `--plugin-dir` showed the skill listed as `writfold:evaluate`, the injection line's output and the argument substituted into the prompt, the work running in a forked subagent, and `writfold kb resume` running there without a prompt (so the `allowed-tools` grant reaches the fork) while a compound command was held for approval. That run had no KB (the test environment could not create one), so the evaluator stopped at step 1 as instructed; the full loop is covered by `crates/writfold-kb/tests/evaluate.rs`.

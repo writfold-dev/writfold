@@ -12,7 +12,7 @@ These pages hold the full skeletons the website only sketches: file layouts, com
 | [gates](gates.md) | Gate definitions, receipts, standing, waivers and attestations, run-record checks | built |
 | [delivery-modes](delivery-modes.md) | Delivery candidates, mode files, deny lists and the guard hook | built; your own modes planned |
 | [run-graph](run-graph.md) | Plans as a spine of steps that owe gates | built (splicing and required steps included) |
-| [skills](skills.md) | The bundled `writfold:kb` skill, and skills that splice a plan template | built; `writfold:evaluate` planned |
+| [skills](skills.md) | The bundled `writfold:kb` and `writfold:evaluate` skills, and skills that splice a plan template | built |
 | [hooks](hooks.md) | What each Claude Code hook reads, writes and prints | built |
 | [assurance](assurance.md) | What is proved, model-checked, tested and trusted | built; KB kernel proofs planned |
 

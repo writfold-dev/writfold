@@ -1,0 +1,167 @@
+$ writfold kb plan set fix
+step research#1/research [current] owes: backfilled [open] @runs/run-20261101T090000Z-a1b2c3/plan/splice-research.1.json:1
+  next: writfold kb gate run backfilled
+step fix#2/reproduce [later] no gates @runs/run-20261101T090000Z-a1b2c3/plan/splice-fix.2.json:1
+step fix#2/implement [later] no gates @runs/run-20261101T090000Z-a1b2c3/plan/splice-fix.2.json:1
+step reflect#3/reflect [later] gates: reflected, reflection @runs/run-20261101T090000Z-a1b2c3/plan/splice-reflect.3.json:1
+# note: recorded runs/run-20261101T090000Z-a1b2c3/plan/splice-research.1.json
+# note: recorded runs/run-20261101T090000Z-a1b2c3/plan/splice-fix.2.json
+# note: recorded runs/run-20261101T090000Z-a1b2c3/plan/splice-reflect.3.json
+# note: plan research @840ecf7b8871 from .writfold/plans/research.toml, fix @85ada0234ad7 from .writfold/plans/fix.toml, reflect @495181dbfbd5 from .writfold/plans/reflect.toml; steps are derived from runs/run-20261101T090000Z-a1b2c3/plan/ on every read, never stored
+# note: written to the KB work tree; commit it to share it
+# coverage=complete records=31/31 shown=4 omitted=0 steps=4 done=0 skipped=0 stale=0 moved=0 invalid=0 kb=263f683f2614+dirty:3 index=refreshed:3 cursor=none q=e6ba4c4b79f1
+# exit=0
+
+$ writfold kb record ticket HBR-310 …
+ticket HBR-310 [todo] Replay drops the last batch @ktlo/2026/hbr-310-replay-drops-the-last-batch.md:5
+# note: written to the work tree; commit it to share it
+# coverage=complete records=32/32 shown=1 omitted=0 kb=263f683f2614+dirty:4 index=refreshed:1 cursor=none q=c4d6d6b94bac
+# exit=0
+
+$ writfold kb gate run backfilled
+gate backfilled [satisfied] run-record pass exit=0 at demo-service@bcacd8cac84e scope=1308036c9c92 paths=1 @runs/run-20261101T090000Z-a1b2c3/gates/backfilled-20261111T000000Z-XXXXXX.json:1
+# note: recorded runs/run-20261101T090000Z-a1b2c3/gates/backfilled-20261111T000000Z-XXXXXX.json (pass in 0 ms)
+# note: judged over the run's own records (1 counted); the receipt goes stale when they change
+# note: written to the KB work tree; commit it to share it
+# coverage=complete records=33/33 shown=1 omitted=0 kb=263f683f2614+dirty:5 index=refreshed:1 cursor=none q=b851b4a9cdf3
+# exit=0
+
+$ writfold kb plan advance
+step research#1/research [done] backfilled [satisfied] @runs/run-20261101T090000Z-a1b2c3/plan/done-research.1~research.json:1
+  done: recorded 2026-11-11T00:00:00Z
+step fix#2/reproduce [current] no gates @runs/run-20261101T090000Z-a1b2c3/plan/splice-fix.2.json:1
+  next: writfold kb plan advance
+step fix#2/implement [later] no gates @runs/run-20261101T090000Z-a1b2c3/plan/splice-fix.2.json:1
+step reflect#3/reflect [later] gates: reflected, reflection @runs/run-20261101T090000Z-a1b2c3/plan/splice-reflect.3.json:1
+# note: recorded runs/run-20261101T090000Z-a1b2c3/plan/done-research.1~research.json
+# note: plan research @840ecf7b8871 from .writfold/plans/research.toml, fix @85ada0234ad7 from .writfold/plans/fix.toml, reflect @495181dbfbd5 from .writfold/plans/reflect.toml; steps are derived from runs/run-20261101T090000Z-a1b2c3/plan/ on every read, never stored
+# note: written to the KB work tree; commit it to share it
+# coverage=complete records=34/34 shown=4 omitted=0 steps=4 done=1 skipped=0 stale=0 moved=0 invalid=0 kb=263f683f2614+dirty:6 index=refreshed:1 cursor=none q=344986924523
+# exit=0
+
+$ writfold kb plan advance
+step research#1/research [done] backfilled [satisfied] @runs/run-20261101T090000Z-a1b2c3/plan/done-research.1~research.json:1
+  done: recorded 2026-11-11T00:00:00Z
+step fix#2/reproduce [done] no gates @runs/run-20261101T090000Z-a1b2c3/plan/done-fix.2~reproduce.json:1
+  done: recorded 2026-11-11T00:00:00Z
+step fix#2/implement [current] no gates @runs/run-20261101T090000Z-a1b2c3/plan/splice-fix.2.json:1
+  next: writfold kb plan advance
+step reflect#3/reflect [later] gates: reflected, reflection @runs/run-20261101T090000Z-a1b2c3/plan/splice-reflect.3.json:1
+# note: recorded runs/run-20261101T090000Z-a1b2c3/plan/done-fix.2~reproduce.json
+# note: plan research @840ecf7b8871 from .writfold/plans/research.toml, fix @85ada0234ad7 from .writfold/plans/fix.toml, reflect @495181dbfbd5 from .writfold/plans/reflect.toml; steps are derived from runs/run-20261101T090000Z-a1b2c3/plan/ on every read, never stored
+# note: written to the KB work tree; commit it to share it
+# coverage=complete records=35/35 shown=4 omitted=0 steps=4 done=2 skipped=0 stale=0 moved=0 invalid=0 kb=263f683f2614+dirty:7 index=refreshed:1 cursor=none q=344986924523
+# exit=0
+
+$ writfold kb plan advance
+step research#1/research [done] backfilled [satisfied] @runs/run-20261101T090000Z-a1b2c3/plan/done-research.1~research.json:1
+  done: recorded 2026-11-11T00:00:00Z
+step fix#2/reproduce [done] no gates @runs/run-20261101T090000Z-a1b2c3/plan/done-fix.2~reproduce.json:1
+  done: recorded 2026-11-11T00:00:00Z
+step fix#2/implement [done] no gates @runs/run-20261101T090000Z-a1b2c3/plan/done-fix.2~implement.json:1
+  done: recorded 2026-11-11T00:00:00Z
+step reflect#3/reflect [current] owes: reflected [open], reflection [open] @runs/run-20261101T090000Z-a1b2c3/plan/splice-reflect.3.json:1
+  read: instructions for reflection @.writfold/gates/reflection.md:1
+  next: writfold kb gate run reflected
+# note: recorded runs/run-20261101T090000Z-a1b2c3/plan/done-fix.2~implement.json
+# note: plan research @840ecf7b8871 from .writfold/plans/research.toml, fix @85ada0234ad7 from .writfold/plans/fix.toml, reflect @495181dbfbd5 from .writfold/plans/reflect.toml; steps are derived from runs/run-20261101T090000Z-a1b2c3/plan/ on every read, never stored
+# note: written to the KB work tree; commit it to share it
+# coverage=complete records=36/36 shown=4 omitted=0 steps=4 done=3 skipped=0 stale=0 moved=0 invalid=0 kb=263f683f2614+dirty:8 index=refreshed:1 cursor=none q=344986924523
+# exit=0
+
+$ writfold kb plan use reflect
+step research#1/research [done] backfilled [satisfied] @runs/run-20261101T090000Z-a1b2c3/plan/done-research.1~research.json:1
+  done: recorded 2026-11-11T00:00:00Z
+step fix#2/reproduce [done] no gates @runs/run-20261101T090000Z-a1b2c3/plan/done-fix.2~reproduce.json:1
+  done: recorded 2026-11-11T00:00:00Z
+step fix#2/implement [done] no gates @runs/run-20261101T090000Z-a1b2c3/plan/done-fix.2~implement.json:1
+  done: recorded 2026-11-11T00:00:00Z
+step reflect#3/reflect [current] owes: reflected [open], reflection [open] @runs/run-20261101T090000Z-a1b2c3/plan/splice-reflect.3.json:1
+  read: instructions for reflection @.writfold/gates/reflection.md:1
+  next: writfold kb gate run reflected
+# note: reflect is already spliced under the root at this digest; nothing written (--again adds another)
+# note: plan research @840ecf7b8871 from .writfold/plans/research.toml, fix @85ada0234ad7 from .writfold/plans/fix.toml, reflect @495181dbfbd5 from .writfold/plans/reflect.toml; steps are derived from runs/run-20261101T090000Z-a1b2c3/plan/ on every read, never stored
+# note: written to the KB work tree; commit it to share it
+# coverage=complete records=36/36 shown=4 omitted=0 steps=4 done=3 skipped=0 stale=0 moved=0 invalid=0 kb=263f683f2614+dirty:8 index=fresh cursor=none q=f7904cda6432
+# exit=0
+
+$ (session s-1 stops and ends)
+
+$ (session start) inbox: runs left without an evaluation
+unevaluated run-20261101T090000Z-a1b2c3 session s-1 ended 2026-11-11T01:00:00Z (prompt_input_exit): reflect#3/reflect is not done
+  next: writfold kb plan status --run RUN, then its reflect step (the writfold:evaluate skill)
+
+$ writfold kb checkpoint --note …
+run run-20261101T090000Z-a1b2c3 [open] Batch ledger writes rollout @runs/run-20261101T090000Z-a1b2c3/manifest.json:7 !current
+  field: project=harbor @runs/run-20261101T090000Z-a1b2c3/manifest.json:4
+  field: mode=authoring @runs/run-20261101T090000Z-a1b2c3/manifest.json:5
+  field: created=2026-11-01T09:00:00Z @runs/run-20261101T090000Z-a1b2c3/manifest.json:6
+checkpoint 2026-11-11T00:00:00Z entry 3 of 3 @runs/run-20261101T090000Z-a1b2c3/checkpoint.md:11
+  note: reflection: the replay bug was in batching, as HBR-310 guessed. @runs/run-20261101T090000Z-a1b2c3/checkpoint.md:13
+  note: Learned: the last batch is dropped when the count is a multiple of 500. @runs/run-20261101T090000Z-a1b2c3/checkpoint.md:14
+  note: Change: none. @runs/run-20261101T090000Z-a1b2c3/checkpoint.md:15
+  note: Backfilled: ticket HBR-310. @runs/run-20261101T090000Z-a1b2c3/checkpoint.md:16
+  note: no proposal: the ticket records what the KB lacked. @runs/run-20261101T090000Z-a1b2c3/checkpoint.md:17
+# note: written to the work tree; commit it to share it
+# coverage=complete records=36/36 shown=2 omitted=0 kb=263f683f2614+dirty:9 index=refreshed:1 cursor=none q=3d980888e3aa
+# exit=0
+
+$ (session start) inbox: runs left without an evaluation
+unevaluated run-20261101T090000Z-a1b2c3 session s-1 ended 2026-11-11T01:00:00Z (prompt_input_exit): reflect#3/reflect is not done
+  next: writfold kb plan status --run RUN, then its reflect step (the writfold:evaluate skill)
+
+$ writfold kb gate run reflected
+gate reflected [satisfied] run-record pass exit=0 at demo-service@bcacd8cac84e scope=e9531cc1ef4f paths=1 @runs/run-20261101T090000Z-a1b2c3/gates/reflected-20261111T000000Z-XXXXXX.json:1
+# note: recorded runs/run-20261101T090000Z-a1b2c3/gates/reflected-20261111T000000Z-XXXXXX.json (pass in 0 ms)
+# note: judged over the run's own records (1 counted); the receipt goes stale when they change
+# note: written to the KB work tree; commit it to share it
+# coverage=complete records=37/37 shown=1 omitted=0 kb=263f683f2614+dirty:10 index=refreshed:1 cursor=none q=6d85cdd2ca7c
+# exit=0
+
+$ writfold kb plan advance
+step reflect#3/reflect [current] owes: reflection [open] @runs/run-20261101T090000Z-a1b2c3/plan/splice-reflect.3.json:1
+  read: instructions for reflection @.writfold/gates/reflection.md:1
+  next: writfold kb gate attest reflection --statement TEXT --by WHO
+# note: not advanced: reflect#3/reflect owes reflection [open] (first owed: reflection); nothing written
+# coverage=complete records=37/37 shown=1 omitted=0 kb=263f683f2614+dirty:10 index=fresh cursor=none q=344986924523
+# exit=3
+
+$ writfold kb gate attest reflection --by agent
+gate reflection [attested] attested: statements only, no command, for demo-service @.writfold/gates/reflection.toml:1 !attested
+  read: instructions for reflection @.writfold/gates/reflection.md:1
+  attested: checked the entry against reflection.md: done, learned, change, backfilled (by agent, 2026-11-11T00:00:00Z) @runs/run-20261101T090000Z-a1b2c3/statements/reflection-20261111T000000Z-XXXXXX.json:1
+# note: recorded runs/run-20261101T090000Z-a1b2c3/statements/reflection-20261111T000000Z-XXXXXX.json (attested: a statement, not a check)
+# note: written to the KB work tree; commit it to share it
+# coverage=complete records=38/38 shown=1 omitted=0 kb=263f683f2614+dirty:11 index=refreshed:1 cursor=none q=87cf7c389ec2
+# exit=0
+
+$ writfold kb plan advance
+step research#1/research [done] backfilled [satisfied] @runs/run-20261101T090000Z-a1b2c3/plan/done-research.1~research.json:1
+  done: recorded 2026-11-11T00:00:00Z
+step fix#2/reproduce [done] no gates @runs/run-20261101T090000Z-a1b2c3/plan/done-fix.2~reproduce.json:1
+  done: recorded 2026-11-11T00:00:00Z
+step fix#2/implement [done] no gates @runs/run-20261101T090000Z-a1b2c3/plan/done-fix.2~implement.json:1
+  done: recorded 2026-11-11T00:00:00Z
+step reflect#3/reflect [done] reflected [satisfied], reflection [attested] @runs/run-20261101T090000Z-a1b2c3/plan/done-reflect.3~reflect.json:1
+  done: recorded 2026-11-11T00:00:00Z
+# note: recorded runs/run-20261101T090000Z-a1b2c3/plan/done-reflect.3~reflect.json
+# note: plan research @840ecf7b8871 from .writfold/plans/research.toml, fix @85ada0234ad7 from .writfold/plans/fix.toml, reflect @495181dbfbd5 from .writfold/plans/reflect.toml; steps are derived from runs/run-20261101T090000Z-a1b2c3/plan/ on every read, never stored
+# note: written to the KB work tree; commit it to share it
+# coverage=complete records=39/39 shown=4 omitted=0 steps=4 done=4 skipped=0 stale=0 moved=0 invalid=0 kb=263f683f2614+dirty:12 index=refreshed:1 cursor=none q=344986924523
+# exit=0
+
+$ writfold kb plan status
+step research#1/research [done] backfilled [satisfied] @runs/run-20261101T090000Z-a1b2c3/plan/done-research.1~research.json:1
+  done: recorded 2026-11-11T00:00:00Z
+step fix#2/reproduce [done] no gates @runs/run-20261101T090000Z-a1b2c3/plan/done-fix.2~reproduce.json:1
+  done: recorded 2026-11-11T00:00:00Z
+step fix#2/implement [done] no gates @runs/run-20261101T090000Z-a1b2c3/plan/done-fix.2~implement.json:1
+  done: recorded 2026-11-11T00:00:00Z
+step reflect#3/reflect [done] reflected [satisfied], reflection [attested] @runs/run-20261101T090000Z-a1b2c3/plan/done-reflect.3~reflect.json:1
+  done: recorded 2026-11-11T00:00:00Z
+# note: plan research @840ecf7b8871 from .writfold/plans/research.toml, fix @85ada0234ad7 from .writfold/plans/fix.toml, reflect @495181dbfbd5 from .writfold/plans/reflect.toml; steps are derived from runs/run-20261101T090000Z-a1b2c3/plan/ on every read, never stored
+# coverage=complete records=39/39 shown=4 omitted=0 steps=4 done=4 skipped=0 stale=0 moved=0 invalid=0 kb=263f683f2614+dirty:12 index=fresh cursor=none q=0d053770d172
+# exit=0
+
+$ (session start) inbox: runs left without an evaluation
+
