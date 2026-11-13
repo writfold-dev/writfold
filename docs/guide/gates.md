@@ -112,7 +112,7 @@ gate unit [waived] mechanical pass exit=0 at harbor-api@4be03f7897b6+dirty:2 sco
   waived: flaky on this machine; rerun in CI (by owner, 2026-11-12T21:47:40Z) @runs/run-…/statements/unit-20261112T214740Z-180ac5.json:1
 ```
 
-A statement is a file in `runs/<run>/statements/`, bound to the same definition and bytes as a receipt, so it goes stale the same way. It is never shown as satisfied. `attest` is refused for a command gate, and `gate run` is refused for an attested gate. `--by` is required and recorded as given; Writfold cannot check it.
+A statement is a file in `runs/<run>/statements/`, bound to the same definition and bytes as a receipt, so it goes stale the same way. It is never shown as satisfied. `attest` is refused for a command gate, and `gate run` is refused for an attested gate. `--by` is required and recorded as given; Writfold cannot check it. A convention that keeps agents and people apart: an agent passes `--by agent:<model>@<session>` (`agent:claude-opus-5-5@3f9c…`), a person their name. To keep `attest` or `waive` for people, ask before the command runs: in Claude Code, `"permissions": {"ask": ["Bash(writfold kb gate attest:*)", "Bash(writfold kb gate waive:*)"]}`; the Git author of the statement file is the record of who made it.
 
 ## Re-running a receipt: `gate verify`
 
