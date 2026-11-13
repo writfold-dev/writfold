@@ -1055,7 +1055,17 @@ Owner decision, 12 November 2026: Tuft stays frozen at v0 as a language and gain
 - `crates/writfold-kb/tests/faults.rs` adds `retrieval` to the kill matrix: the child aborts at each of the seven steps; a receipt present is always complete, none appears before `published`, leftovers are only `.tmp`, `index verify` is equal, and a rerun records (a rerun after publication records a second receipt under a new name: receipts are a log, not an idempotent record).
 - `write::span` has a unit test for byte ranges to lines (a range ending after a line's LF stays on that line; an empty range sits on its line).
 
-### 15.4 Not done
+### 15.4 State without `trial init` (fixed for v0.4.0-dev.1)
+
+Until v0.4.0-dev.1, `tuft run` refused with "no trial state" unless `--state` or `WRITFOLD_STATE` named a directory made by `writfold trial init`. Of that state Tuft used two things: the admitted Git executable (`git.path`, `git.sha256`) and the evidence directory where `retain` writes each binding (`evidence/<binding>.{json,bytes,line}`, plus a copy in the trial's object store). It never used the operator key, the policy, the ledger or the worktrees; `Trial::open` merely required them.
+
+- **Order** (`crates/writfold-app/src/tuft/state.rs`): `--state`, else `WRITFOLD_STATE`, chooses a trial state exactly as before (same resolution, same refusal, same bytes; the KB is not even looked for). Otherwise, when a KB under Git is found the way the adapter finds it (`--kb`/`--run`, else discovery), Tuft uses `<KB git dir>/writfold/tuft-state/`. Otherwise the default trial state when `trial init` made it, as before. Otherwise a refusal naming `--kb DIR` (or running inside a KB) and `--state DIR` / `WRITFOLD_STATE`.
+- **The KB-owned state** holds only `evidence/`, created owner-only on first use and reused after. Git is the executable the `kb` verbs use (`GitTool`: `$WRITFOLD_GIT`, else `git` on `PATH`), observed per run, so no digest is kept and a Git upgrade does not strand the state. No key, policy, ledger, object store or worktree is created. The bytes are kept only in `evidence/<binding>.bytes`.
+- **Bindings** keep the trial realm, so the same bytes bind to the same digest in either state. `writfold trial` commands do not read this state, and `trial prepare` still accepts only reports citing evidence retained in a trial state.
+- **Code:** `trial::retain::retain_read` now writes through an `EvidenceStore` (realm, evidence directory, extra copy), implemented by `Trial` with exactly its previous effects and by `TuftState`. `tuft::execute` is unchanged for callers (the trial run and `serve` still pass a trial state); `tuft::execute_kb` is the KB path.
+- **Tests** (`crates/writfold-app/src/tuft/kb_tests/state.rs`): `--cite` inside a fresh KB with an open run and no setup prints tokens and records its receipt; the state is `evidence/` only, mode 0700, holds the same binding files as the trial state for the same run, and has no `operator.pem` anywhere in the KB; a second run reuses the same directory (same inode, same files) and records a second receipt; `--kb` from outside the KB chooses the KB's state; no KB and no state gives the refusal naming both ways; a given `--state` or `WRITFOLD_STATE` chooses the trial state without looking for a KB. The existing Tuft tests, which all pass `--state`, are unchanged.
+
+### 15.5 Not done
 
 - `tuft run` has no `--no-record`; leaving a run (`kb status <run> --set closed`) or running outside the KB stops receipts.
 - The receipt's citations are not re-checked when written; `stale` checks them later. Receipts from many runs accumulate in `stale`'s KB-wide pass.
@@ -2107,9 +2117,11 @@ The inbox merges what used to be two blocks into one, headed `Inbox (local only;
 
 | Kind | Listed | Hint line |
 |---|---|---|
-| Drafts | those the injected `resume` did not list | `confirm:` |
-| Pending proposals | those `resume` did not list | `review:` |
+| Drafts | those whose row the injected `resume` text does not contain | `confirm:` |
+| Pending proposals | those whose row the injected `resume` text does not contain | `review:` |
 | Runs left without an evaluation | `unevaluated <run> session <id> ended <stamp> (<reason>): <step> is not done` | `next:` |
+
+**Fixed for v0.4.0-dev.1: decided from what was injected.** The inbox used to skip every draft and proposal of the current run (and of no run), assuming the injected `resume` showed them. `resume` is cut by its 500-token budget, so a busy run's proposal could be omitted from both. Now a draft or proposal is skipped only when the run part, as finally kept, holds its row (a line starting `draft <session> [` or `proposal <id> [`). The run part kept depends on the cut (25.5), and the inbox is cut after the run's turn comes, so `hook/start.rs` repeats: build the inbox from the run part as kept, fit, and stop when the run part kept is unchanged. A longer inbox can only shorten the run part, so each further round keeps strictly less of it and the loop ends. (With today's budgets the run part is never cut by the 9,000-character limit, so in practice one round decides.) The 9,000-character limit and `DROP_ORDER` are unchanged. When nothing is cut, the rows are the same as before and every existing golden is unchanged. `proposal::inbox` now takes a predicate on the proposal ID instead of the current run. Test: `inbox_lists_the_current_runs_proposal_that_resume_cut` (`tests/hook_start.rs`, golden `hook-session-start-cut.txt`) fills `resume`'s budget with twelve drafts of the current run, so its proposal and eight of the drafts are omitted from `resume`; the proposal and the omitted drafts (three, then `(+5 more drafts)`) appear in the inbox, and the drafts `resume` kept do not. A `resume` that failed now leaves its drafts and proposals to the inbox as well.
 
 The rule for the third kind is deterministic and needs no model. Writfold knows a session ended only from its draft: `SessionEnd` marks the draft `ended`, and its `updated` stamp is then the end time. For each ended draft that names a run (the newest draft per run), the run is listed when all three hold:
 

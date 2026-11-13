@@ -33,7 +33,11 @@ impl StateDir {
         )
     }
 
-    fn choose(option: Option<&str>, env: Option<&Path>, home: Option<&Path>) -> Result<Self> {
+    pub(crate) fn choose(
+        option: Option<&str>,
+        env: Option<&Path>,
+        home: Option<&Path>,
+    ) -> Result<Self> {
         let (path, source) = match (option, env) {
             (Some(dir), _) => (PathBuf::from(dir), Source::Option),
             (None, Some(dir)) => (dir.to_owned(), Source::Environment),
