@@ -64,6 +64,7 @@ fn stale(w: &World, offline: bool) -> TestResult<(String, u8)> {
     w.run(&w.request(Verb::Stale {
         scope: None,
         offline,
+        cached: false,
     }))
 }
 
@@ -322,6 +323,7 @@ fn bad_declarations_are_refused_and_reported_by_check() -> TestResult {
     let request = w.request(Verb::Stale {
         scope: None,
         offline: false,
+        cached: false,
     });
     let error = writfold_kb::run(&request).err().ok_or("stale answered")?;
     assert_eq!(error.exit_code(), 3);

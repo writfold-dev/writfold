@@ -117,6 +117,7 @@ fn impact_states_frontier_and_coverage() -> TestResult {
     w.run(&w.request(Verb::Stale {
         scope: None,
         offline: false,
+        cached: false,
     }))?;
     let both = golden(
         &w,

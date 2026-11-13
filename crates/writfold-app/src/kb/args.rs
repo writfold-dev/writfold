@@ -14,6 +14,7 @@ pub struct Common {
     pub depth: Option<usize>,
     pub all: bool,
     pub offline: bool,
+    pub cached: bool,
     pub kinds: Vec<String>,
     pub project: Option<String>,
     pub signatures: bool,
@@ -60,6 +61,7 @@ fn split(args: &[String]) -> Result<(Common, Vec<String>), String> {
             "--json" => common.json = true,
             "--all" => common.all = true,
             "--offline" => common.offline = true,
+            "--cached" => common.cached = true,
             "--signatures" => common.signatures = true,
             "--missing" => common.missing = true,
             "--kind" => {
@@ -100,7 +102,7 @@ fn allowed(verb: &str) -> &'static [&'static str] {
     match verb {
         "brief" => &["all"],
         "context" => &["depth"],
-        "stale" => &["offline"],
+        "stale" => &["offline", "cached"],
         "repos" => &["missing"],
         "find" => &["kind", "project", "signatures"],
         "match" => &["kind", "project"],
@@ -117,6 +119,7 @@ fn check_flags(verb: &str, common: &Common) -> Result<(), String> {
         ("all", common.all),
         ("depth", common.depth.is_some()),
         ("offline", common.offline),
+        ("cached", common.cached),
         ("kind", !common.kinds.is_empty()),
         ("project", common.project.is_some()),
         ("signatures", common.signatures),
@@ -147,6 +150,9 @@ pub fn parse(args: &[String], cwd: PathBuf) -> Result<Option<Request>, String> {
     }
     let (common, positional) = split(rest)?;
     check_flags(verb, &common)?;
+    if common.cached && common.offline {
+        return Err("stale takes --offline or --cached, not both".into());
+    }
     let built: Verb = verbs::verb(verb, &common, &positional)?;
     Ok(Some(Request {
         verb: built,

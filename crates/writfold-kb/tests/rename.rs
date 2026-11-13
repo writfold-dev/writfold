@@ -75,6 +75,7 @@ fn renamed() -> TestResult<(World, String)> {
     let (text, _) = w.run(&w.request(Verb::Stale {
         scope: None,
         offline: false,
+        cached: false,
     }))?;
     Ok((w, text))
 }

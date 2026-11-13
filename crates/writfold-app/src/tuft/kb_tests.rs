@@ -164,6 +164,7 @@ fn cited_rows_are_fresh_then_moved_then_changed() -> Result<()> {
             Verb::Stale {
                 scope: scope.clone(),
                 offline: false,
+                cached: false,
             },
         )
     };

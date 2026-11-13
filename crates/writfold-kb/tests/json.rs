@@ -55,6 +55,7 @@ fn the_json_envelope_has_the_documented_keys() -> TestResult {
         Verb::Stale {
             scope: None,
             offline: false,
+            cached: false,
         },
     ];
     let mut with_more = 0;

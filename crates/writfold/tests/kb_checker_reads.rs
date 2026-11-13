@@ -62,6 +62,48 @@ fn only_kb_stale_runs_a_checker() -> Result {
     Ok(())
 }
 
+fn cached_rows(w: &checker::Root) -> Result<Vec<u8>> {
+    let script = "import pathlib,sqlite3,sys,json\n\
+        files=list(pathlib.Path(sys.argv[1]).rglob('kb-index-*.sqlite'))\n\
+        assert len(files)==1, files\n\
+        db=sqlite3.connect('file:'+str(files[0])+'?mode=ro',uri=True)\n\
+        print(json.dumps(db.execute('SELECT * FROM cite_checks ORDER BY path,ord').fetchall()))";
+    let out = std::process::Command::new("python3")
+        .args(["-c", script])
+        .arg(w.kb().join(".git"))
+        .output()?;
+    assert!(
+        out.status.success(),
+        "{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    Ok(out.stdout)
+}
+
+#[test]
+fn cached_stale_never_starts_a_checker_or_changes_its_cache() -> Result {
+    let w = world("cached", &[TOKEN], true)?;
+    kb(&w, &["index", "status"], &[])?;
+    let empty = cached_rows(&w)?;
+    let (text, exit) = kb(&w, &["stale", "--cached"], &[])?;
+    assert_eq!(exit, 2, "{text}");
+    assert!(text.contains("not-checked"), "{text}");
+    assert!(text.contains("cached: no checker was started"), "{text}");
+    assert_eq!(w.spawns(), 0);
+    assert_eq!(cached_rows(&w)?, empty);
+    let (text, exit) = kb(&w, &["stale"], &[])?;
+    assert_eq!((exit, w.spawns()), (0, 1), "{text}");
+    let checked = cached_rows(&w)?;
+    assert_ne!(checked, empty);
+    let (text, exit) = kb(&w, &["stale", "--cached"], &[])?;
+    assert_eq!((exit, w.spawns()), (0, 1), "{text}");
+    assert_eq!(cached_rows(&w)?, checked);
+    let (text, exit) = kb(&w, &["stale", "--cached", "--offline"], &[])?;
+    assert_eq!(exit, 1, "{text}");
+    assert!(text.contains("not both"), "{text}");
+    Ok(())
+}
+
 #[test]
 fn session_start_names_an_absent_checker_without_running_anything() -> Result {
     let w = world("start", &[TOKEN], false)?;

@@ -92,6 +92,14 @@ fn find(text: &str, signatures: bool) -> Verb {
     }
 }
 
+fn stale(scope: Option<&str>, offline: bool) -> Verb {
+    Verb::Stale {
+        scope: scope.map(str::to_owned),
+        offline,
+        cached: false,
+    }
+}
+
 fn verbs() -> Vec<(&'static str, Verb)> {
     let brief = |project: Option<&str>| Verb::Brief {
         project: project.map(str::to_owned),
@@ -121,20 +129,8 @@ fn verbs() -> Vec<(&'static str, Verb)> {
             "why decision/2026-01-01-choice-2",
             why("decision/2026-01-01-choice-2"),
         ),
-        (
-            "stale --offline",
-            Verb::Stale {
-                scope: None,
-                offline: true,
-            },
-        ),
-        (
-            "stale proj3",
-            Verb::Stale {
-                scope: Some("proj3".into()),
-                offline: false,
-            },
-        ),
+        ("stale --offline", stale(None, true)),
+        ("stale proj3", stale(Some("proj3"), false)),
         ("find BEN-12 (exact)", find("BEN-12", false)),
         ("find queue sizing (text)", find("queue sizing", false)),
         (

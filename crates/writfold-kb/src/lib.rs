@@ -65,6 +65,7 @@ pub enum Verb {
     Stale {
         scope: Option<String>,
         offline: bool,
+        cached: bool,
     },
     Find {
         text: String,
@@ -213,14 +214,24 @@ fn answer(session: &Session<'_>, request: &Request) -> Result<(Answer, &'static 
             "why",
             vec![text.clone()],
         ),
-        Verb::Stale { scope, offline } => (
-            verbs::stale::stale(session, scope.as_deref(), *offline)?,
-            "stale",
-            vec![
+        Verb::Stale {
+            scope,
+            offline,
+            cached,
+        } => {
+            let mut args = vec![
                 scope.clone().unwrap_or_default(),
                 format!("offline={offline}"),
-            ],
-        ),
+            ];
+            if *cached {
+                args.push("cached=true".into());
+            }
+            (
+                verbs::stale::stale(session, scope.as_deref(), *offline, *cached)?,
+                "stale",
+                args,
+            )
+        }
         Verb::Resume { run } => {
             let (answer, id) = verbs::runs::resume(session, run.as_deref(), &request.cwd)?;
             (answer, "resume", vec![id])

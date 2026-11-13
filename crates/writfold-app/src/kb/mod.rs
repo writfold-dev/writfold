@@ -32,8 +32,8 @@ verbs:
                                    what does changing X touch (bounded walk, frontier stated)
   uses <target>                    who relies on a record or a code locator
   timeline <id>                    linked investigations, tickets, decisions, checkpoints by date
-  stale [<project>|<path>] [--offline]
-                                   which citations have moved (local repositories only)
+  stale [<project>|<path>] [--offline|--cached]
+                                   which citations have moved; --cached never starts a checker
   repos [--missing]                each cited repository: local, partial or missing, how its clone
                                    was found, its target commit, when it last fetched (exit 2 if missing)
   index status|rebuild|verify      what the derived index holds; rebuild it; check it equals a rebuild

@@ -345,6 +345,7 @@ fn stale(w: &World) -> TestResult {
     let verb = Verb::Stale {
         scope: None,
         offline: false,
+        cached: false,
     };
     let (text, exit) = w.run(&w.request(verb))?;
     assert_eq!(exit, 2, "{text}");

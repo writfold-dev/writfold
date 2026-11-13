@@ -100,6 +100,7 @@ fn verbs_over_the_fixture() -> TestResult {
         &w.request(Verb::Stale {
             scope: None,
             offline: true,
+            cached: false,
         }),
     )?;
     check(
@@ -108,6 +109,7 @@ fn verbs_over_the_fixture() -> TestResult {
         &w.request(Verb::Stale {
             scope: None,
             offline: false,
+            cached: false,
         }),
     )?;
     check(
@@ -116,6 +118,7 @@ fn verbs_over_the_fixture() -> TestResult {
         &w.request(Verb::Stale {
             scope: Some("harbor".into()),
             offline: false,
+            cached: false,
         }),
     )?;
     check(
@@ -182,6 +185,7 @@ fn budget_cut_off_and_cursor_resume() -> TestResult {
         Verb::Stale {
             scope: None,
             offline: true,
+            cached: false,
         },
     ] {
         let mut whole = w.request(verb.clone());

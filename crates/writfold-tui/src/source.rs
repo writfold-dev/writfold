@@ -127,11 +127,12 @@ impl Source {
         }))
     }
 
-    /// `writfold kb stale <project>`.
+    /// `writfold kb stale <project> --cached`: never starts a checker.
     pub fn stale(&self, project: Option<&str>) -> Reply {
         self.call(Verb::Stale {
             scope: project.map(str::to_owned),
             offline: false,
+            cached: true,
         })
     }
 
