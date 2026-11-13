@@ -100,7 +100,20 @@ fn undeclared_kinds_are_unchanged() -> TestResult {
     assert_eq!(text.matches("cite zeppelin:").count(), 1, "{text}");
     let dataset = row(&text, "dataset:snap-2026-10").ok_or(text.clone())?;
     assert!(dataset.contains("missing seen="), "{dataset}");
+    // A note (not a verdict) names the undeclared kinds whose tokens
+    // without ttl= never expire; a token with its own ttl= is not counted.
+    let note = never_note(&text).ok_or(text.clone())?;
+    let ages = "a .writfold/sources/<kind>.toml with default_ttl ages them";
+    for want in ["dataset (1)", "ticket (1)", "web (1)", "zeppelin (2)", ages] {
+        assert!(note.contains(want), "{note} lacks {want}");
+    }
     Ok(())
+}
+
+/// The `kb stale` note naming kinds that never expire.
+fn never_note(text: &str) -> Option<&str> {
+    text.lines()
+        .find(|l| l.starts_with("# note: undeclared kinds whose tokens lack ttl= never expire: "))
 }
 
 #[test]
@@ -113,6 +126,12 @@ fn declarations_take_effect_at_the_next_stale() -> TestResult {
     assert!(!before.contains(FLUSH), "{before}");
     let (text, exit) = stale(&w, false)?;
     assert_eq!(exit, 2, "{text}");
+    // Declared kinds leave the never-expires note; undeclared ones stay.
+    let note = never_note(&text).ok_or(text.clone())?;
+    assert!(note.contains("zeppelin (2)"), "{note}");
+    for kind in ["dataset", "ticket", "web"] {
+        assert!(!note.contains(&format!(" {kind} (")), "{note} names {kind}");
+    }
     // The declared default applies to a token without ttl=.
     let flush = row(&text, FLUSH).ok_or(text.clone())?;
     assert!(
@@ -216,6 +235,40 @@ fn checked_declarations_name_a_checker_and_its_fields() -> TestResult {
     assert_eq!(ok.freshness, Freshness::Checked);
     assert_eq!(ok.checker.as_deref(), Some("acme-src"));
     assert_eq!(ok.fields, ["rev", "L"]);
+    assert_eq!(ok.max_age, None);
+    Ok(())
+}
+
+#[test]
+fn max_age_needs_a_checked_kind_and_a_duration() -> TestResult {
+    let checked = format!(
+        "{}checker = \"acme-src\"\nfields = [\"rev\"]\n",
+        DATASET.replace("immutable", "checked")
+    );
+    let refused = [
+        (
+            format!("{WEB}max_age = \"7d\"\n"),
+            "web",
+            "max_age needs freshness = \"checked\"",
+        ),
+        (
+            format!("{checked}max_age = \"1w\"\n"),
+            "dataset",
+            "max_age \"1w\" must be <N>d or <N>h",
+        ),
+        (
+            format!("{checked}max_age = 7\n"),
+            "dataset",
+            "max_age must be a string",
+        ),
+    ];
+    for (text, name, why) in &refused {
+        let error = kinds::parse(text, name).err().unwrap_or_default();
+        assert!(error.contains(why), "{name}: {error:?} lacks {why:?}");
+    }
+    let aged = kinds::parse(&format!("{checked}max_age = \"36h\"\n"), "dataset")?;
+    assert_eq!(aged.max_age.as_deref(), Some("36h"));
+    assert_eq!(Kinds::new([aged]).max_age("dataset"), Some(36 * 3600));
     Ok(())
 }
 
@@ -357,6 +410,7 @@ fn the_verdict_is_the_kernels_over_the_effective_lifetime() -> TestResult {
             description: None,
             checker: None,
             fields: Vec::new(),
+            max_age: None,
         });
         let cite = Cite {
             kind: Some("pages".into()),

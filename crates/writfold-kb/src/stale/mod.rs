@@ -147,7 +147,7 @@ fn judge(
         if let Some(reason) = &cite.malformed {
             out[index] = Some(unverifiable(format!("malformed: {reason}")));
         } else if offline {
-            out[index] = Some(offline_verdict(&kinds, cite, session.now));
+            out[index] = Some(offline_verdict(session, &kinds, cite)?);
         } else {
             match cite.kind.as_deref() {
                 Some("code" | "gate") => code.push(index),
@@ -206,13 +206,20 @@ fn kernel(verdict: &Verdict) -> writfold_core::verdict::Verdict {
     }
 }
 
-fn offline_verdict(kinds: &kinds::Kinds, cite: &Cite, now: i64) -> Checked {
-    let due = kinds::due(kinds, cite, now);
+/// Offline: a due TTL, or a checked kind's cached verdict older than its
+/// `max_age`; else fresh.
+fn offline_verdict(session: &Session<'_>, kinds: &kinds::Kinds, cite: &Cite) -> Result<Checked> {
+    if let Some(kind) = cite.kind.as_deref().filter(|k| kinds.checker(k).is_some())
+        && let Some(expired) = checker::expired(session, kinds, kind, cite)?
+    {
+        return Ok(expired);
+    }
+    let due = kinds::due(kinds, cite, session.now);
     let verdict = if due { Verdict::Due } else { Verdict::Fresh };
-    Checked {
+    Ok(Checked {
         verdict,
         head: "offline".into(),
-    }
+    })
 }
 
 /// Record, decision and time-based citations.

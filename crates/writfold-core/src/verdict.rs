@@ -119,6 +119,9 @@ pub enum Checker {
     Version,
     /// A well-formed reply to this token.
     Said(Said),
+    /// A cached reply older than the kind's declared `max_age` (or whose
+    /// age cannot be read): no longer evidence of anything.
+    Expired,
 }
 
 /// Exactly one verdict per citation.
@@ -172,7 +175,8 @@ pub fn observed(fact: Observed) -> Verdict {
             Checker::Said(Said::Unverifiable)
             | Checker::Absent
             | Checker::Failed
-            | Checker::Version => Verdict::Unverifiable,
+            | Checker::Version
+            | Checker::Expired => Verdict::Unverifiable,
         },
     }
 }
@@ -234,6 +238,17 @@ pub fn exchange(
     }
 }
 
+/// A cached checker reply as a cache reader sees it: unchanged without a
+/// `max_age`, else [`Checker::Expired`] once its age in seconds exceeds
+/// it or cannot be read (`None`).
+pub fn aged(cached: Checker, age: Option<i64>, max_age: Option<i64>) -> Checker {
+    match (max_age, age) {
+        (None, _) => cached,
+        (Some(max), Some(age)) if age <= max => cached,
+        (Some(_), _) => Checker::Expired,
+    }
+}
+
 /// The lifetime a time-based citation is judged by.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Lifetime<T> {
@@ -276,8 +291,8 @@ pub fn with_mark(verdict: Verdict, marked: bool) -> Verdict {
 #[cfg(test)]
 mod tests {
     use super::{
-        Checker, Described, Handshake, Lifetime, Located, Observed, Said, Target, Verdict, decide,
-        exchange, handshake, lifetime, locate,
+        Checker, Described, Handshake, Lifetime, Located, Observed, Said, Target, Verdict, aged,
+        decide, exchange, handshake, lifetime, locate,
     };
 
     #[test]
@@ -379,8 +394,9 @@ mod tests {
         Said::Gone,
         Said::Unverifiable,
     ];
-    const CHECKERS: [Checker; 8] = [
+    const CHECKERS: [Checker; 9] = [
         Checker::Absent,
+        Checker::Expired,
         Checker::Failed,
         Checker::Version,
         Checker::Said(Said::Fresh),
@@ -401,6 +417,26 @@ mod tests {
             );
             if !matches!(checker, Checker::Said(_)) {
                 assert_eq!(verdict, Verdict::Unverifiable, "{checker:?}");
+            }
+        }
+    }
+
+    #[test]
+    fn only_a_fresh_reply_within_its_max_age_is_fresh() {
+        let ages = [-5, 0, 6, 7, 8, i64::MAX].map(Some);
+        for checker in CHECKERS {
+            for age in ages.into_iter().chain([None]) {
+                for max in [None, Some(0), Some(7)] {
+                    let got = aged(checker, age, max);
+                    let within = max.is_none_or(|m| age.is_some_and(|a| a <= m));
+                    assert_eq!(got, if within { checker } else { Checker::Expired });
+                    let fresh = decide(Observed::Checked(got), false) == Verdict::Fresh;
+                    assert_eq!(
+                        fresh,
+                        checker == Checker::Said(Said::Fresh) && within,
+                        "{checker:?} {age:?} {max:?}"
+                    );
+                }
             }
         }
     }

@@ -122,8 +122,9 @@ description = "tracker items"
 | `required` | fields every token of the kind must carry; a token without one is `unverifiable`, naming the field |
 | `description` | free text |
 | `checker`, `fields` | `checked` only: the checker's name (`writfold-check-<name>` on `PATH`) and the fields its `make` may write |
+| `max_age` | `checked` only, optional, `<N>d` or `<N>h`: a cached checker verdict older than this reads `unverifiable: check-expired` ([checkers](checkers.md#how-old-a-cached-verdict-may-be-max_age), built in v0.5.0-dev.3) |
 
-A token's own `ttl=` wins over `default_ttl`. A kind without a file behaves as described above. Unknown keys, a wrong `schema` and bad values are refused: `stale` (and every check that judges citations) then exits 3 naming the file, and `kb check` shows it on its `stale` row. Declarations are read from the KB root only, never from a code repository.
+A token's own `ttl=` wins over `default_ttl`. A kind without a file behaves as described above; `writfold kb stale` adds a note naming each such kind that holds tokens without `ttl=`, with their count, for example `# note: undeclared kinds whose tokens lack ttl= never expire: web (3), wiki (1); a .writfold/sources/<kind>.toml with default_ttl ages them` (built in v0.5.0-dev.3; a note only, verdicts are unchanged). Unknown keys, a wrong `schema` and bad values are refused: `stale` (and every check that judges citations) then exits 3 naming the file, and `kb check` shows it on its `stale` row. Declarations are read from the KB root only, never from a code repository.
 
 `brief`, `context` and `why` show cached verdicts, which only `stale` rewrites, so a new or changed declaration takes effect at the next `writfold kb stale`.
 
