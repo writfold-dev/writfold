@@ -3,9 +3,11 @@
 //! `code`, `gate`, `record` and `proposal`, which are checked against Git
 //! and the index and cannot be declared).
 //!
-//! A declaration gives the kind's freshness rule (`ttl`, or `immutable`:
-//! fresh at any age), a default lifetime for tokens without `ttl=`, and
-//! the fields every token of the kind must carry. A kind without a file
+//! A declaration gives the kind's freshness rule (`ttl`; `immutable`:
+//! fresh at any age; or `checked`: asked of an external checker named by
+//! `checker`, see [`super::checker`]), a default lifetime for tokens
+//! without `ttl=`, the fields every token of the kind must carry, and for
+//! a checked kind the fields its checker's `make` may write. A kind without a file
 //! behaves as before: fresh until `seen + ttl`, and fresh for ever when the
 //! token has no `ttl=`. Files use the gate definitions' TOML subset
 //! ([`crate::gate::toml`]); an unknown key, a wrong schema or a bad value
@@ -25,14 +27,18 @@ pub const DIR: &str = ".writfold/sources";
 pub const SCHEMA: &str = "writfold-source/1";
 /// Kinds checked against Git or the index, which a file may not declare.
 pub const BUILT_IN: [&str; 4] = ["code", "gate", "record", "proposal"];
-const KEYS: [&str; 6] = [
+const KEYS: [&str; 8] = [
     "schema",
     "kind",
     "freshness",
     "default_ttl",
     "required",
     "description",
+    "checker",
+    "fields",
 ];
+/// Fields Writfold writes itself, which a checker may never return.
+pub const OWNED: [&str; 5] = ["kind", "seen", "ttl", "stale", "v"];
 
 /// How a declared kind ages.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -41,6 +47,8 @@ pub enum Freshness {
     Ttl,
     /// Fresh at any age: what it cites never changes.
     Immutable,
+    /// Asked of the external checker the declaration names.
+    Checked,
 }
 
 /// One declaration.
@@ -53,6 +61,10 @@ pub struct Kind {
     /// Fields a token of this kind must carry.
     pub required: Vec<String>,
     pub description: Option<String>,
+    /// A checked kind's checker: `writfold-check-<checker>` on `PATH`.
+    pub checker: Option<String>,
+    /// The fields a checked kind's `make` may write.
+    pub fields: Vec<String>,
 }
 
 /// Every declaration of a KB, by kind.
@@ -75,9 +87,21 @@ impl Kinds {
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
+
+    /// Every declaration, by kind name.
+    pub fn iter(&self) -> impl Iterator<Item = &Kind> {
+        self.0.values()
+    }
+
+    /// The checker of `kind` when it is declared `checked`.
+    pub fn checker(&self, kind: &str) -> Option<&str> {
+        self.get(kind)
+            .filter(|k| k.freshness == Freshness::Checked)
+            .and_then(|k| k.checker.as_deref())
+    }
 }
 
-fn is_word(text: &str) -> bool {
+pub(crate) fn is_word(text: &str) -> bool {
     !text.is_empty()
         && text
             .bytes()
@@ -119,32 +143,77 @@ pub fn parse(text: &str, name: &str) -> std::result::Result<Kind, String> {
     let freshness = match string(&map, "freshness")?.as_deref() {
         Some("ttl") => Freshness::Ttl,
         Some("immutable") => Freshness::Immutable,
-        _ => return Err("freshness must be \"ttl\" or \"immutable\"".into()),
+        Some("checked") => Freshness::Checked,
+        _ => return Err("freshness must be \"ttl\", \"immutable\" or \"checked\"".into()),
     };
     let default_ttl = string(&map, "default_ttl")?;
     if let Some(ttl) = &default_ttl {
-        if freshness == Freshness::Immutable {
-            return Err("default_ttl cannot be given with freshness = \"immutable\"".into());
+        match freshness {
+            Freshness::Immutable => {
+                return Err("default_ttl cannot be given with freshness = \"immutable\"".into());
+            }
+            Freshness::Checked => {
+                return Err("default_ttl cannot be given with freshness = \"checked\"".into());
+            }
+            Freshness::Ttl => {}
         }
         if !matches!(time::ttl(Some(ttl)), Some(time::Ttl::Seconds(_))) {
             return Err(format!("default_ttl {ttl:?} must be <N>d or <N>h"));
         }
     }
-    let required = match map.get("required") {
-        None => Vec::new(),
-        Some(Value::List(fields)) => fields.clone(),
-        Some(_) => return Err("required must be an array of strings".into()),
-    };
-    if let Some(field) = required.iter().find(|f| !is_word(f) && f.as_str() != "L") {
-        return Err(format!("required field {field:?} is not a field name"));
-    }
+    let required = names(&map, "required")?;
+    let (checker, fields) = checked(&map, freshness)?;
     Ok(Kind {
         name: kind,
         freshness,
         default_ttl,
         required,
         description: string(&map, "description")?,
+        checker,
+        fields,
     })
+}
+
+/// An optional array of field names.
+fn names(map: &BTreeMap<String, Value>, key: &str) -> std::result::Result<Vec<String>, String> {
+    let list = match map.get(key) {
+        None => Vec::new(),
+        Some(Value::List(fields)) => fields.clone(),
+        Some(_) => return Err(format!("{key} must be an array of strings")),
+    };
+    if let Some(field) = list.iter().find(|f| !is_word(f) && f.as_str() != "L") {
+        return Err(format!("{key} field {field:?} is not a field name"));
+    }
+    Ok(list)
+}
+
+/// `checker` and `fields`: both required with `freshness = "checked"`,
+/// refused otherwise. A checker is a name, never a command.
+fn checked(
+    map: &BTreeMap<String, Value>,
+    freshness: Freshness,
+) -> std::result::Result<(Option<String>, Vec<String>), String> {
+    let checker = string(map, "checker")?;
+    let fields = names(map, "fields")?;
+    if freshness != Freshness::Checked {
+        if checker.is_some() || map.contains_key("fields") {
+            return Err("checker and fields need freshness = \"checked\"".into());
+        }
+        return Ok((None, fields));
+    }
+    let checker = checker.ok_or("freshness = \"checked\" needs checker = \"<name>\"")?;
+    if !is_word(&checker) {
+        return Err(format!("checker {checker:?} must be a name [a-z0-9._-]"));
+    }
+    if fields.is_empty() {
+        return Err("freshness = \"checked\" needs fields = [...]".into());
+    }
+    if let Some(field) = fields.iter().find(|f| OWNED.contains(&f.as_str())) {
+        return Err(format!(
+            "fields may not list {field}, which Writfold writes"
+        ));
+    }
+    Ok((Some(checker), fields))
 }
 
 /// Every declaration under the KB root, or a refusal naming the first file
@@ -186,10 +255,8 @@ fn lifetime<'a>(kinds: &'a Kinds, cite: &'a Cite, kind: &str) -> Lifetime<&'a st
 
 /// The verdict of a time-based citation of `kind` (not a built-in kind).
 pub fn judge(kinds: &Kinds, cite: &Cite, kind: &str, now: i64) -> Checked {
-    if let Some(declared) = kinds.get(kind)
-        && let Some(field) = declared.required.iter().find(|f| cite.field(f).is_none())
-    {
-        return unverifiable(format!("missing {field}= (required by {DIR}/{kind}.toml)"));
+    if let Some(missing) = missing(kinds, cite, kind) {
+        return missing;
     }
     let ttl = match lifetime(kinds, cite, kind) {
         Lifetime::Immutable => {
@@ -215,8 +282,26 @@ pub fn judge(kinds: &Kinds, cite: &Cite, kind: &str, now: i64) -> Checked {
     }
 }
 
-/// Offline: whether `seen` plus the effective lifetime has passed.
+/// Unverifiable when the token lacks a field its declaration requires.
+pub fn missing(kinds: &Kinds, cite: &Cite, kind: &str) -> Option<Checked> {
+    let declared = kinds.get(kind)?;
+    let field = declared.required.iter().find(|f| cite.field(f).is_none())?;
+    Some(unverifiable(format!(
+        "missing {field}= (required by {DIR}/{kind}.toml)"
+    )))
+}
+
+/// Offline: whether `seen` plus the effective lifetime has passed. A
+/// checked kind has no lifetime: it is never due.
 pub fn due(kinds: &Kinds, cite: &Cite, now: i64) -> bool {
+    if cite
+        .kind
+        .as_deref()
+        .and_then(|k| kinds.checker(k))
+        .is_some()
+    {
+        return false;
+    }
     let ttl = match cite.kind.as_deref().map(|kind| lifetime(kinds, cite, kind)) {
         Some(Lifetime::Immutable) => return false,
         Some(Lifetime::Token(ttl) | Lifetime::Default(ttl)) => Some(ttl),

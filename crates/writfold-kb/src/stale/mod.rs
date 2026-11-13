@@ -3,7 +3,9 @@
 //! Record and decision citations compare the cited state with the index;
 //! every other kind is fresh until `seen + ttl`, with the lifetime, the
 //! freshness rule and required fields a kind declaration may give
-//! ([`kinds`]).
+//! ([`kinds`]). A kind declared `checked` is asked of an external checker,
+//! by `kb stale` only ([`checker`]).
+pub mod checker;
 mod code;
 pub mod kinds;
 pub mod repos;
@@ -114,8 +116,29 @@ pub struct Checked {
 }
 
 /// Classify every citation. `offline` reads no repository and reports only
-/// authored marks and due TTLs.
+/// authored marks and due TTLs. Checked kinds read the verdict `kb stale`
+/// cached; nothing here runs a checker.
 pub fn check(session: &Session<'_>, cites: &[Cite], offline: bool) -> Result<Vec<Checked>> {
+    judge(session, cites, offline, &checker::Answers::new())
+}
+
+/// [`check`], first asking each declared checker about its kind's tokens
+/// (unless `offline`). `writfold kb stale` is its only caller.
+pub fn check_asking(session: &Session<'_>, cites: &[Cite], offline: bool) -> Result<Vec<Checked>> {
+    let kinds = kinds::read(&session.ws.root)?;
+    let answers = match offline {
+        true => checker::Answers::new(),
+        false => checker::ask(&session.ws.root, &kinds, cites),
+    };
+    judge(session, cites, offline, &answers)
+}
+
+fn judge(
+    session: &Session<'_>,
+    cites: &[Cite],
+    offline: bool,
+    answers: &checker::Answers,
+) -> Result<Vec<Checked>> {
     let kinds = kinds::read(&session.ws.root)?;
     let mut out: Vec<Option<Checked>> = vec![None; cites.len()];
     let mut code = Vec::new();
@@ -127,7 +150,7 @@ pub fn check(session: &Session<'_>, cites: &[Cite], offline: bool) -> Result<Vec
         } else {
             match cite.kind.as_deref() {
                 Some("code" | "gate") => code.push(index),
-                _ => out[index] = Some(other(session, &kinds, cite)?),
+                _ => out[index] = Some(other(session, &kinds, cite, answers)?),
             }
         }
     }
@@ -192,7 +215,12 @@ fn offline_verdict(kinds: &kinds::Kinds, cite: &Cite, now: i64) -> Checked {
 }
 
 /// Record, decision and time-based citations.
-fn other(session: &Session<'_>, kinds: &kinds::Kinds, cite: &Cite) -> Result<Checked> {
+fn other(
+    session: &Session<'_>,
+    kinds: &kinds::Kinds,
+    cite: &Cite,
+    answers: &checker::Answers,
+) -> Result<Checked> {
     let head = session.pin.label();
     let state_of = |id: Option<String>, by_path: bool| -> Result<Checked> {
         let Some(id) = id else {
@@ -228,6 +256,9 @@ fn other(session: &Session<'_>, kinds: &kinds::Kinds, cite: &Cite) -> Result<Che
         None => Ok(unverifiable("missing kind=".into())),
         Some("record") => state_of(cite.cpath.clone(), true),
         Some("proposal") => state_of(cite.field("id"), false),
+        Some(kind) if kinds.checker(kind).is_some() => {
+            checker::verdict(session, kinds, kind, cite, answers)
+        }
         Some(kind) => Ok(kinds::judge(kinds, cite, kind, session.now)),
     }
 }

@@ -3,7 +3,6 @@
 use super::args::Common;
 use writfold_kb::Verb;
 use writfold_kb::write::Write;
-use writfold_kb::write::cite::CiteMake;
 use writfold_kb::write::record::{Decision, Link, Ticket};
 use writfold_kb::write::status::SetStatus;
 
@@ -128,7 +127,8 @@ pub fn runs_and_writes(
         ("status", [target]) if common.values.contains_key("set") => {
             status(common, target.clone()).map(Verb::Write)
         }
-        ("checkpoint" | "record" | "cite", _) => verb(name, common, positional).map(Verb::Write),
+        ("checkpoint" | "record", _) => verb(name, common, positional).map(Verb::Write),
+        ("cite" | "checker", _) => super::cite::verb(name, common, positional),
         ("edit", _) => super::edit::verb(common, positional),
         ("deliver", _) => super::deliver::verb(common, positional),
         ("plan", _) => super::plan::verb(common, positional),
@@ -152,8 +152,6 @@ pub fn verb(name: &str, common: &Common, positional: &[String]) -> Result<Write,
         ("checkpoint", []) => super::checkpoint::checkpoint(common),
         ("checkpoint", _) => Err("checkpoint takes flags only (--run, --new-run, --note)".into()),
         ("record", [kind, rest @ ..]) => record(kind, common, rest),
-        ("cite", [make, repo, path, range]) if make == "make" => cite(common, repo, path, range),
-        ("cite", _) => Err("usage: cite make <repo> <path> <a-b>".into()),
         _ => Err("usage: record ticket|decision|link …".into()),
     }
 }
@@ -194,22 +192,6 @@ pub fn record(kind: &str, common: &Common, rest: &[String]) -> Result<Write, Str
             );
         }
     })
-}
-
-fn cite(common: &Common, repo: &str, path: &str, range: &str) -> Result<Write, String> {
-    let (a, b) = range.split_once('-').unwrap_or((range, range));
-    let (Ok(first), Ok(last)) = (a.parse::<u32>(), b.parse::<u32>()) else {
-        return Err(format!("{range:?} is not a line range a-b"));
-    };
-    Ok(Write::CiteMake(CiteMake {
-        repo: repo.to_owned(),
-        path: path.to_owned(),
-        first,
-        last,
-        allow_dirty: switch(common, "allow-dirty"),
-        sym: get(common, "sym"),
-        ttl: get(common, "ttl"),
-    }))
 }
 
 #[cfg(test)]

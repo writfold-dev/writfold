@@ -117,10 +117,11 @@ description = "tracker items"
 | Key | Meaning |
 |---|---|
 | `kind` | the kind, equal to the file name; `code`, `gate`, `record` and `proposal` cannot be declared |
-| `freshness` | `ttl`: fresh until `seen` plus the lifetime; `immutable`: fresh at any age, without `seen=` |
-| `default_ttl` | the lifetime of a token without `ttl=`, as `<N>d` or `<N>h`; not allowed with `immutable` |
+| `freshness` | `ttl`: fresh until `seen` plus the lifetime; `immutable`: fresh at any age, without `seen=`; `checked`: asked of an external checker by `stale` ([checkers](checkers.md), built in v0.5.0-dev.2) |
+| `default_ttl` | the lifetime of a token without `ttl=`, as `<N>d` or `<N>h`; not allowed with `immutable` or `checked` |
 | `required` | fields every token of the kind must carry; a token without one is `unverifiable`, naming the field |
 | `description` | free text |
+| `checker`, `fields` | `checked` only: the checker's name (`writfold-check-<name>` on `PATH`) and the fields its `make` may write |
 
 A token's own `ttl=` wins over `default_ttl`. A kind without a file behaves as described above. Unknown keys, a wrong `schema` and bad values are refused: `stale` (and every check that judges citations) then exits 3 naming the file, and `kb check` shows it on its `stale` row. Declarations are read from the KB root only, never from a code repository.
 
@@ -154,7 +155,7 @@ Every answer ends with one line:
 | `.writfold/deliveries/guard.toml` | publishing commands the guard hook watches | [delivery-modes](delivery-modes.md) |
 | `.writfold/guards/<id>.toml` | one guard rule (built in v0.5.0-dev.1); in the KB root for every project, or in a repository for that repository only | [hooks](hooks.md#guard-rules) |
 | `.writfold/plans/` | plan templates | [run-graph](run-graph.md) |
-| `.writfold/sources/<kind>.toml` | a citation kind's freshness rule, default lifetime and required fields; KB root only | [above](#a-citation-token) |
+| `.writfold/sources/<kind>.toml` | a citation kind's freshness rule, default lifetime and required fields, or its external checker; KB root only | [above](#a-citation-token) |
 
 ## Knowledge bases not written by Writfold
 

@@ -13,9 +13,10 @@ use writfold_kb::gate::toml::{self, Value};
 type TestResult<T = ()> = Result<T, Box<dyn Error>>;
 
 const PLANNED: &str = "<!-- planned -->";
-const PAGES: [&str; 11] = [
+const PAGES: [&str; 12] = [
     "README",
     "kb-layout",
+    "checkers",
     "feeding-back",
     "validation",
     "gates",

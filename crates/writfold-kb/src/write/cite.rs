@@ -151,7 +151,7 @@ pub fn url(git: &GitExecutable<'_>, git_dir: &Path, dir: &Path) -> Result<String
 }
 
 /// The token from its fields, checked to parse back.
-fn token(fields: &[(&str, String)]) -> Result<String> {
+pub(crate) fn token(fields: &[(&str, String)]) -> Result<String> {
     let mut parts = Vec::new();
     for (key, text) in fields {
         parts.push(format!("{key}={}", value(key, text)?));

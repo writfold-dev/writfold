@@ -18,7 +18,7 @@ pub(crate) use service::Service;
 
 #[path = "tailed.rs"]
 mod tailed;
-pub use tailed::{Tail, TailLimits, Tailed, TailedEnd, run_tailed};
+pub use tailed::{Tail, TailLimits, Tailed, TailedEnd, run_tailed, run_tailed_input};
 
 struct OwnedChild<'a> {
     child: Child,

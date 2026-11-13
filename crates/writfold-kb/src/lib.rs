@@ -111,6 +111,8 @@ pub enum Verb {
     Check {
         scope: Option<String>,
     },
+    /// `checker list` and `cite make --kind <kind> key=value …`.
+    Checker(stale::checker::verb::CheckerVerb),
 }
 
 /// One invocation.
@@ -150,6 +152,9 @@ pub fn run(request: &Request) -> Result<Output> {
     }
     if let Verb::Proposal(verb) = &request.verb {
         return proposal::execute(&ws, request, verb, now);
+    }
+    if let Verb::Checker(verb) = &request.verb {
+        return stale::checker::verb::execute(&ws, request, verb, now);
     }
     if let Verb::Check { scope } = &request.verb {
         return check::execute(&ws, request, scope.as_deref(), now);

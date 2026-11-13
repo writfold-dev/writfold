@@ -2,6 +2,7 @@
 //! parsing and exit codes only; every decision lives in `writfold-kb`.
 pub mod args;
 mod checkpoint;
+mod cite;
 mod deliver;
 mod edit;
 mod gate;
@@ -45,6 +46,10 @@ writes (atomic; they leave the work tree dirty for you to commit):
   record link <type> <from> <to> [--status S] [--evidence e1,e2] [--applicability A]
   status <id> --set STATE [--by WHO] [--superseded-by ID] [--note TEXT]
   cite make <repo> <path> <a-b> [--allow-dirty] [--sym S] [--ttl T]   (prints a token)
+  cite make --kind K key=value …   a checked kind's token from its checker's make (prints it)
+
+checkers (kinds declared freshness = \"checked\"; writfold-check-<name> on PATH; only stale runs them):
+  checker list                     each checked kind: its checker found or absent, and its describe
 
 proposals (record calls not yet made, in a local untracked queue; at most 10 per session):
   propose ticket|decision|link … [--session S] [--run ID]

@@ -351,3 +351,25 @@ fn service_shutdown_escalates_for_term_resistant_group() -> TestResult {
     reaped(leaf)?;
     Ok(())
 }
+
+#[test]
+fn tailed_input_is_fed_whole_and_an_early_close_is_not_an_error() -> TestResult {
+    let supervisor = ProcessSupervisor::enable()?;
+    let input: Vec<u8> = (0..300_000_usize).map(|n| b"abc"[n % 3]).collect();
+    let limits = TailLimits {
+        tail: 1 << 20,
+        timeout: Duration::from_secs(20),
+        grace: Duration::from_secs(1),
+    };
+    let mut cat = Command::new("sh");
+    cat.args(["-c", "cat; exit 3"]);
+    let done = run_tailed_input(&mut cat, &input, limits, &supervisor)?;
+    assert_eq!(done.end, TailedEnd::Exited(3));
+    assert!(done.stdout.bytes == input);
+    let mut early = Command::new("sh");
+    early.args(["-c", "exec 0<&-; echo closed"]);
+    let done = run_tailed_input(&mut early, &input, limits, &supervisor)?;
+    assert_eq!(done.end, TailedEnd::Exited(0));
+    assert_eq!(done.stdout.bytes, b"closed\n");
+    Ok(())
+}

@@ -94,6 +94,7 @@ fn allowed(verb: &str) -> &'static [&'static str] {
         "stale" => &["offline"],
         "find" => &["kind", "project", "signatures"],
         "match" => &["kind", "project"],
+        "cite" => &["kind"],
         "impact" => &["depth", "direction", "include"],
         "runs" | "checkpoint" | "record" | "propose" => &["project"],
         _ => &[],

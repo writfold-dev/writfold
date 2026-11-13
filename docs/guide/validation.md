@@ -35,6 +35,8 @@ The read verbs (`brief`, `why`, `context`) show the same flags from cached verdi
 
 Kinds other than `code`, `gate`, `record` and `proposal` are checked by time, and a token without `ttl=` never expires unless its kind declares a default. Declare a kind's lifetime, an `immutable` rule or required fields in `.writfold/sources/<kind>.toml` ([kb-layout](kb-layout.md#a-citation-token)). A declaration that cannot be read makes `stale` exit 3 naming the file; `kb check` shows that on its `stale` row. `stale --offline` reports a token as `due` by the same lifetime, and never an `immutable` one.
 
+A kind declared `checked` is asked of an external checker, `writfold-check-<name>` on `PATH`, and only `stale` (without `--offline`) runs it: one process per kind per run. Every other reader, `gate status` and `kb check`'s gate row among them, uses the verdict `stale` cached. A checker that is absent, fails or times out leaves its tokens `unverifiable` with the reason, never fresh; the trailer counts `checker-absent=` when one is missing. See [checkers](checkers.md) (built in v0.5.0-dev.2).
+
 ## The index: `kb index status | verify | rebuild`
 
 The index is a local SQLite file derived from the tracked files. Every read compares it with the KB's current commit and dirty files and refreshes it in place; the trailer says `index=fresh`, `index=refreshed:N` or `index=rebuilt`. There is no sync step to remember.

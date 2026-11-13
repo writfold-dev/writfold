@@ -11,12 +11,12 @@
 //! row ID (an FTS5 delete by an unindexed column scans the whole table).
 
 /// Bumped when the schema changes; a different stored value rebuilds.
-pub const SCHEMA: &str = "2";
+pub const SCHEMA: &str = "3";
 /// Bumped when derivation changes; a different stored value rebuilds.
 pub const EXTRACTOR: &str = "writfold-kb-extract/2";
 
 pub const DDL: &str = "
-PRAGMA user_version = 2;
+PRAGMA user_version = 3;
 CREATE TABLE meta(key TEXT PRIMARY KEY, value TEXT NOT NULL);
 CREATE TABLE files(path TEXT PRIMARY KEY, sha256 BLOB NOT NULL, size INTEGER NOT NULL,
                    kind TEXT NOT NULL, parse_status TEXT NOT NULL, parse_error TEXT,
@@ -59,7 +59,8 @@ CREATE VIRTUAL TABLE tri USING fts5(id, title, body, path UNINDEXED,
 CREATE TABLE text_rows(path TEXT PRIMARY KEY, row INTEGER NOT NULL);
 CREATE TABLE cite_checks(path TEXT NOT NULL, ord INTEGER NOT NULL, repo_head TEXT NOT NULL,
                          verdict TEXT NOT NULL, new_first INTEGER, new_last INTEGER,
-                         new_path TEXT, PRIMARY KEY(path, ord));
+                         new_path TEXT, detail TEXT, checked_at TEXT NOT NULL,
+                         PRIMARY KEY(path, ord));
 ";
 
 /// Phase A rows of one file, deleted before it is re-derived.
