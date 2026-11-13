@@ -7,8 +7,9 @@
 //! matched call passes only when every requirement is [`Fact::Met`]; an
 //! [`Fact::Unknown`] requirement (the KB could not be read after the rule
 //! matched) never passes, so a rule cannot be bypassed by breaking the
-//! index. The Stop nudge fires at most once per session and never while
-//! Claude Code is already continuing because of a stop hook.
+//! index. The Stop nudge never fires while Claude Code is already
+//! continuing because of a stop hook, and fires at most once per session
+//! ([`Repeat::Session`]) or once per user turn ([`Repeat::Turn`]).
 //!
 //! Each function is a few lines over a tiny domain; the tests below
 //! enumerate it, and that enumeration is the proof (no Lean translation).
@@ -88,6 +89,50 @@ pub fn combine(a: Decision, b: Decision) -> Decision {
     }
 }
 
+/// How often a stop rule may nudge.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Repeat {
+    /// Once per session (the default).
+    Session,
+    /// Once per user turn: every stop that is not itself a stop hook's
+    /// continuation.
+    Turn,
+}
+
+impl Repeat {
+    pub fn name(self) -> &'static str {
+        match self {
+            Repeat::Session => "session",
+            Repeat::Turn => "turn",
+        }
+    }
+
+    pub fn parse(text: &str) -> Option<Self> {
+        match text {
+            "session" => Some(Repeat::Session),
+            "turn" => Some(Repeat::Turn),
+            _ => None,
+        }
+    }
+}
+
+/// Whether a stop rule with `repeat` nudges now, given whether this
+/// session was already nudged: the session flag holds back only a
+/// [`Repeat::Session`] rule. Never while `stop_hook_active` is set, so a
+/// [`Repeat::Turn`] rule continues a user turn at most once.
+pub fn nudge_with(
+    repeat: Repeat,
+    stop_hook_active: bool,
+    already_nudged: bool,
+    facts: &[Fact],
+) -> bool {
+    nudge(
+        stop_hook_active,
+        already_nudged && repeat == Repeat::Session,
+        facts,
+    )
+}
+
 /// Whether a stop rule nudges now: not while Claude Code is already
 /// continuing because of a stop hook, at most once per session, and only
 /// when some requirement is not met.
@@ -97,7 +142,7 @@ pub fn nudge(stop_hook_active: bool, already_nudged: bool, facts: &[Fact]) -> bo
 
 #[cfg(test)]
 mod tests {
-    use super::{Action, Decision, Fact, all_met, combine, decide, nudge};
+    use super::{Action, Decision, Fact, Repeat, all_met, combine, decide, nudge, nudge_with};
     use alloc::vec::Vec;
 
     const FACTS: [Fact; 3] = [Fact::Met, Fact::Unmet, Fact::Unknown];
@@ -152,6 +197,29 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn nudge_with_repeat_never_while_active_and_once_a_session_only_for_session() {
+        for facts in lists() {
+            let owed = !facts.iter().all(|f| *f == Fact::Met);
+            for active in [false, true] {
+                for nudged in [false, true] {
+                    let session = nudge_with(Repeat::Session, active, nudged, &facts);
+                    assert_eq!(session, nudge(active, nudged, &facts), "{facts:?}");
+                    let turn = nudge_with(Repeat::Turn, active, nudged, &facts);
+                    assert_eq!(turn, !active && owed, "{facts:?}");
+                    // A continuation never nudges, whatever the repeat.
+                    if active {
+                        assert!(!session && !turn);
+                    }
+                }
+            }
+        }
+        for repeat in [Repeat::Session, Repeat::Turn] {
+            assert_eq!(Repeat::parse(repeat.name()), Some(repeat));
+        }
+        assert_eq!(Repeat::parse("always"), None);
     }
 
     #[test]

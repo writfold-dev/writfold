@@ -9,10 +9,14 @@
 //!   `deny` or `ask`, decided by [`writfold_core::guard::decide`]. With no
 //!   rule directory nothing is opened (the fast path); an unparsable rule
 //!   file is skipped with a diagnostic; a matched rule whose requirement
-//!   cannot be evaluated takes its action.
-//! - A `stop` rule adds context once per session ([`stop`]), never while
-//!   `stop_hook_active` is set; the flag is the session's local draft.
+//!   cannot be evaluated takes its action. A rule with `paths` matches
+//!   only a call whose file they admit ([`paths`]), decided before the
+//!   index is opened.
+//! - A `stop` rule adds context ([`stop`]) once per session, or with
+//!   `repeat = "turn"` once per user turn, and never while
+//!   `stop_hook_active` is set; the session flag is its local draft.
 pub mod delivery;
+pub mod paths;
 pub mod require;
 pub mod rules;
 
@@ -23,7 +27,7 @@ use require::Owed;
 use rules::{Event, Rule};
 use serde_json::{Map, Value, json};
 use std::path::Path;
-use writfold_core::guard::{Decision, Fact, combine, decide, nudge};
+use writfold_core::guard::{Decision, Fact, Repeat, combine, decide, nudge_with};
 
 /// The draft field that records this session's Stop nudge.
 pub const NUDGED: &str = "nudged";
@@ -86,10 +90,18 @@ pub fn pre_tool_use(
         .and_then(|t| t.get("command"))
         .and_then(Value::as_str)
         .unwrap_or("");
+    let file = found
+        .iter()
+        .any(|r| !r.paths.is_empty())
+        .then(|| paths::target(input, cwd))
+        .flatten();
     let matched: Vec<&Rule> = found
         .iter()
         .filter(|r| r.event == Event::PreToolUse)
-        .filter(|r| r.tools.iter().any(|t| t == tool) || (tool == "Bash" && r.matches_line(line)))
+        .filter(|r| {
+            (r.tools.iter().any(|t| t == tool) && paths::admits(&r.paths, file.as_deref()))
+                || (tool == "Bash" && r.matches_line(line))
+        })
         .collect();
     if matched.is_empty() {
         return Ok(quiet_with(stderr));
@@ -125,7 +137,8 @@ pub fn pre_tool_use(
 }
 
 /// The Stop nudge: when a `stop` rule exists and its requirements are not
-/// all met, add context once per session. Called after the Stop draft is
+/// all met, add context once per session (or, with `repeat = "turn"`,
+/// once per user turn). Called after the Stop draft is
 /// saved; with no stop rule it opens nothing and spawns nothing.
 pub fn stop(
     ws: &Workspace,
@@ -159,22 +172,29 @@ pub fn stop(
         return Ok(quiet_with(stderr));
     };
     let nudged = d.contains_key(NUDGED);
-    // Nothing is evaluated once the session was nudged or while a stop
-    // hook is already continuing the turn.
-    if !nudge(active, nudged, &[Fact::Unmet]) {
+    // Only the rules that may still nudge are evaluated: none while a stop
+    // hook is already continuing the turn, and no once-a-session rule
+    // after the session's nudge.
+    let due: Vec<&Rule> = stops
+        .into_iter()
+        .filter(|r| nudge_with(r.repeat, active, nudged, &[Fact::Unmet]))
+        .collect();
+    if due.is_empty() {
         return Ok(quiet_with(stderr));
     }
-    let evaluated = require::evaluate(ws, cwd, now, &stops);
+    let evaluated = require::evaluate(ws, cwd, now, &due);
     let mut texts = Vec::new();
-    for (rule, owed) in stops.iter().zip(evaluated) {
+    let mut again = false;
+    for (rule, owed) in due.iter().zip(evaluated) {
         let Some(owed) = owed else { continue };
         let facts: Vec<Fact> = owed.iter().map(|o| o.fact).collect();
-        if nudge(active, nudged, &facts) {
-            texts.push(reason(
-                rule,
-                &owed,
-                "a guard, not enforcement; once this session",
-            ));
+        if nudge_with(rule.repeat, active, nudged, &facts) {
+            let tail = match rule.repeat {
+                Repeat::Session => "a guard, not enforcement; once this session",
+                Repeat::Turn => "a guard, not enforcement; once a turn",
+            };
+            again |= rule.repeat == Repeat::Turn;
+            texts.push(reason(rule, &owed, tail));
         }
     }
     if texts.is_empty() {
@@ -182,7 +202,13 @@ pub fn stop(
     }
     d.insert(NUDGED.into(), crate::time::stamp(now).into());
     draft::save(&local, session, &d).map_err(|e| e.to_string())?;
-    texts.push("Act on this or say why not; Writfold will not raise it again this session.".into());
+    texts.push(
+        match again {
+            false => "Act on this or say why not; Writfold will not raise it again this session.",
+            true => "Act on this or say why not; Writfold will not raise it again this turn.",
+        }
+        .into(),
+    );
     let value = json!({
         "hookSpecificOutput": {
             "hookEventName": "Stop",
