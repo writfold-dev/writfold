@@ -242,3 +242,54 @@ fn plugin_commands_need_nothing_but_the_binary() -> Result {
     }
     Ok(())
 }
+
+/// Guard rules through the binary: the plugin's widened PreToolUse
+/// matcher, a denial naming what is owed, and the Stop nudge once.
+#[test]
+fn guard_rules_through_the_binary() -> Result {
+    let r = root("rules")?;
+    let file =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../plugins/writfold/hooks/hooks.json");
+    let config: Value = serde_json::from_str(&fs::read_to_string(file)?)?;
+    assert_eq!(
+        config["hooks"]["PreToolUse"][0]["matcher"],
+        "^(Bash|Edit|Write|MultiEdit|NotebookEdit|mcp__.*)$"
+    );
+    let kb = kb(&r.0)?;
+    let option = kb.display().to_string();
+    let env = [("CLAUDE_PLUGIN_OPTION_KB_ROOT", option.as_str())];
+    let hook = |event: &str, stdin: &str| run(&r.0, WRITFOLD, &["kb", "hook", event], &env, stdin);
+    let edit = format!(
+        "{{\"session_id\": \"s\", \"cwd\": \"{option}\", \"hook_event_name\": \"PreToolUse\", \"tool_name\": \"Edit\", \"tool_input\": {{\"file_path\": \"a\"}}}}"
+    );
+    silent(&hook("pre-tool-use", &edit)?, "Edit with no rule")?;
+    let rules = kb.join(".writfold/guards");
+    fs::create_dir_all(&rules)?;
+    fs::write(
+        rules.join("edit-in-a-run.toml"),
+        "schema = \"writfold-guard-rule/1\"\nid = \"edit-in-a-run\"\nevent = \"pre-tool-use\"\ntools = [\"Edit\"]\nrequire = [\"run.current\"]\naction = \"deny\"\n",
+    )?;
+    fs::write(
+        rules.join("record-a-run.toml"),
+        "schema = \"writfold-guard-rule/1\"\nid = \"record-a-run\"\nevent = \"stop\"\nrequire = [\"run.current\"]\ndescription = \"work inside a KB run\"\n",
+    )?;
+    let output = hook("pre-tool-use", &edit)?;
+    assert_eq!(output.status.code(), Some(0));
+    let decision: Value = serde_json::from_slice(&output.stdout)?;
+    let specific = &decision["hookSpecificOutput"];
+    assert_eq!(specific["permissionDecision"], "deny", "{decision}");
+    let reason = specific["permissionDecisionReason"].as_str().unwrap_or("");
+    assert!(
+        reason.starts_with("writfold guard rule edit-in-a-run (a guard, not enforcement)")
+            && reason.contains("no current KB run"),
+        "{reason}"
+    );
+    let stop = format!(
+        "{{\"session_id\": \"s\", \"cwd\": \"{option}\", \"hook_event_name\": \"Stop\", \"stop_hook_active\": false, \"last_assistant_message\": \"done\"}}"
+    );
+    let first = hook("stop", &stop)?;
+    assert_eq!(first.status.code(), Some(0));
+    assert!(context(&first)?.contains("work inside a KB run"));
+    silent(&hook("stop", &stop)?, "a second stop in one session")?;
+    Ok(())
+}
