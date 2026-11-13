@@ -1,9 +1,11 @@
 //! `writfold tuft`: run a Tuft v0 program over one pinned Git commit. The
 //! pure `tuft` crate compiles it; this adapter lowers `find` onto the B0
 //! boundary's read-only pinned-Git-tree backend, retains evidence through
-//! the trial retain path (`writfold trial retain`'s bindings, in the trial
-//! state, so a Weft report can cite them), then projects and emits. It
-//! writes only there and in a KB run's receipts (`kb`); it grants nothing.
+//! the trial retain path (`writfold trial retain`'s bindings), then
+//! projects and emits. Evidence goes to the trial state named by `--state`
+//! or `WRITFOLD_STATE` (so a Weft report can cite it), else to the state
+//! Tuft keeps in the KB's Git directory ([`state`]). It writes only there
+//! and in a KB run's receipts (`kb`); it grants nothing.
 #[cfg(test)]
 mod backend_tests;
 pub mod cli;
@@ -14,19 +16,19 @@ mod json_tests;
 pub mod kb;
 #[cfg(test)]
 mod kb_tests;
+mod retain;
 mod search;
+pub mod state;
 #[cfg(test)]
 mod tests;
 
-use crate::trial::retain::{PinnedBlob, read_pinned, retain_read};
+use crate::trial::retain::EvidenceStore;
 use crate::trial::{Result, Trial};
-use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 use std::sync::atomic::AtomicBool;
 use std::time::Duration;
 use tuft::emit::{Cursor, Emitted, Format, Run, emit};
-use tuft::locate::{around, line_at};
-use tuft::view::{Evidence, Projected, Row, project};
+use tuft::view::{Projected, project};
 use tuft::{Deferred, Diagnostic, Plan};
 use writfold_domain::{ByteCount, GitObjectFormat, GitObjectId};
 use writfold_runtime::git::{GitBudgets, GitExecutable};
@@ -126,15 +128,32 @@ pub struct Executed {
 pub fn run(invocation: &Invocation<'_>) -> Result<Emitted> {
     execute(invocation).map(|executed| executed.emitted)
 }
-/// Compile and run one program, keeping the projected rows.
+/// Compile and run one program in the trial state `invocation.state`,
+/// keeping the projected rows.
 pub fn execute(invocation: &Invocation<'_>) -> Result<Executed> {
-    let plan = compile(invocation.source, invocation.name)?;
     let trial = Trial::open(invocation.state)?;
     let executable = trial.executable()?;
+    execute_in(invocation, &trial, &executable)
+}
+
+/// The same in Tuft's KB-owned state `invocation.state` ([`state`]), with
+/// the Git executable the `kb` verbs use.
+pub fn execute_kb(invocation: &Invocation<'_>) -> Result<Executed> {
+    let store = state::TuftState::open(invocation.state)?;
+    let git = writfold_kb::workspace::GitTool::locate()?;
+    execute_in(invocation, &store, &git.admit()?)
+}
+
+fn execute_in(
+    invocation: &Invocation<'_>,
+    store: &dyn EvidenceStore,
+    executable: &GitExecutable<'_>,
+) -> Result<Executed> {
+    let plan = compile(invocation.source, invocation.name)?;
     let git_dir = std::fs::canonicalize(invocation.repo.join(".git"))?;
     let pin = commit(&plan.find.commit)?;
     let backend = GitTreeBackend::new(
-        &executable,
+        executable,
         git_dir,
         plan.find.scope.clone(),
         budgets()?,
@@ -145,7 +164,8 @@ pub fn execute(invocation: &Invocation<'_>) -> Result<Executed> {
         None => (found.rows(), None),
         Some(retain) => {
             let source = (invocation.repo, plan.find.commit.as_str());
-            let (rows, count) = retain_rows(&trial, &executable, source, &found, retain.around)?;
+            let (rows, count) =
+                retain::retain_rows(store, executable, source, &found, retain.around)?;
             (rows, Some(count))
         }
     };
@@ -162,89 +182,4 @@ pub fn execute(invocation: &Invocation<'_>) -> Result<Executed> {
         projected,
         emitted,
     })
-}
-
-/// Retain every hit (or its whole lines `around`), one pinned blob read per
-/// file, and check the retained bytes against the bytes the search read.
-fn retain_rows(
-    trial: &Trial,
-    executable: &GitExecutable<'_>,
-    (repo, commit): (&Path, &str),
-    found: &search::Found,
-    widen: Option<usize>,
-) -> Result<(Vec<Row>, usize)> {
-    let mut by_path: BTreeMap<&str, Vec<(u64, u64)>> = BTreeMap::new();
-    for hit in &found.hits {
-        let content = found.files.get(&hit.path).ok_or("hit without file bytes")?;
-        let (lo, hi) = match widen {
-            None => hit.range,
-            Some(n) => around(content, hit.range.0, hit.range.1, n),
-        };
-        by_path
-            .entry(&hit.path)
-            .or_default()
-            .push((lo as u64, hi as u64));
-    }
-    let paths: Vec<&str> = by_path.keys().copied().collect();
-    let reads = read_all(executable, repo, commit, &paths)?;
-    let mut rows = Vec::new();
-    let mut bindings = BTreeSet::new();
-    for ((path, ranges), read) in by_path.into_iter().zip(reads) {
-        let content = found.files.get(path).ok_or("hit without file bytes")?;
-        if &read.content != content {
-            return Err(
-                format!("{path} read for retention differs from the searched bytes").into(),
-            );
-        }
-        for retained in retain_read(trial, &read, &ranges)? {
-            let lo = retained.range.0 as usize;
-            bindings.insert(retained.binding.clone());
-            rows.push(Row {
-                path: path.to_owned(),
-                range: retained.range,
-                line: line_at(content, lo),
-                evidence: Some(Evidence {
-                    binding: retained.binding,
-                    bytes: retained.bytes,
-                }),
-            });
-        }
-    }
-    Ok((rows, bindings.len()))
-}
-
-/// Read each pinned file through the trial retain path, a few concurrently;
-/// results keep the order of `paths`.
-fn read_all(
-    executable: &GitExecutable<'_>,
-    repo: &Path,
-    commit: &str,
-    paths: &[&str],
-) -> Result<Vec<PinnedBlob>> {
-    const READERS: usize = 8;
-    let chunk = paths.len().div_ceil(READERS).max(1);
-    let parts: Vec<Result<Vec<PinnedBlob>>> = std::thread::scope(|scope| {
-        let handles: Vec<_> = paths
-            .chunks(chunk)
-            .map(|part| {
-                scope.spawn(move || {
-                    part.iter()
-                        .map(|path| read_pinned(executable, repo, commit, path))
-                        .collect::<Result<Vec<_>>>()
-                })
-            })
-            .collect();
-        handles
-            .into_iter()
-            .map(|h| {
-                h.join()
-                    .unwrap_or_else(|_| Err("pinned read thread failed".into()))
-            })
-            .collect()
-    });
-    let mut out = Vec::with_capacity(paths.len());
-    for part in parts {
-        out.extend(part?);
-    }
-    Ok(out)
 }

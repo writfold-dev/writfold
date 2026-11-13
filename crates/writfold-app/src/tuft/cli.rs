@@ -1,10 +1,11 @@
 //! Argument handling for `writfold tuft ...`; returns the text to print.
 use super::kb::{Options, adapt};
-use super::{Invocation, compile, execute};
+use super::state::{self, Chosen};
+use super::{Invocation, compile, execute, execute_kb};
 use crate::trial::Result;
-use crate::trial::state_dir::{StateDir, Uses};
 use std::path::{Path, PathBuf};
 use tuft::emit::{Cursor, Format};
+use writfold_kb::workspace::{Workspace, discover};
 
 pub const USAGE: &str = "\
 writfold tuft run FILE --repo DIR [--state DIR] [--cursor C] [--verbose|--json]
@@ -17,8 +18,10 @@ writfold tuft run FILE --repo DIR [--state DIR] [--cursor C] [--verbose|--json]
 writfold tuft check FILE
                      compile only; print diagnostics or the checked pipeline
 
-Options: --state DIR (default: $WRITFOLD_STATE, else ~/.local/share/writfold/trial),
-the trial state that holds the admitted Git executable and retained evidence.
+State (retained evidence): --state DIR, else $WRITFOLD_STATE, names a trial state
+made by `writfold trial init`. Without either, inside a KB under Git (or with
+--kb DIR) Tuft keeps its own state in <KB git dir>/writfold/tuft-state/, created
+on first use; else ~/.local/share/writfold/trial if `trial init` made it.
 --cite prints, under each shown row, the code citation token `writfold kb cite make`
 would print for its lines at the pinned commit. When the KB (found as `writfold kb`
 finds it) has an open current run, or with --kb DIR / --run ID, the run also
@@ -91,10 +94,21 @@ impl Args {
         }
     }
 
-    fn state(&self) -> Result<StateDir> {
-        let dir = StateDir::resolve(self.option("state"))?;
-        dir.require_initialized(Uses::AnyState)?;
-        Ok(dir)
+    /// The state ([`state::choose`]); the KB is looked for as the adapter
+    /// looks for it, and only when no trial state is given.
+    fn state(&self, context: &Context) -> Result<Chosen> {
+        let kb = self.option("kb").map(Path::new);
+        let named = kb.is_some() || self.option("run").is_some();
+        let find = || -> Result<Option<Workspace>> {
+            if named {
+                return Ok(Some(discover(kb, &context.cwd)?));
+            }
+            Ok(context
+                .discover
+                .then(|| discover(None, &context.cwd).ok())
+                .flatten())
+        };
+        state::choose(self.option("state"), &find)
     }
 }
 
@@ -122,20 +136,25 @@ pub(crate) fn run_command(args: &[String], context: Context) -> Result<(String, 
     let parsed = parse(args)?;
     let file = parsed.file()?;
     let source = std::fs::read(file)?;
-    let dir = parsed.state()?;
+    let chosen = parsed.state(&context)?;
     let repo = parsed.option("repo").ok_or("missing --repo")?;
     if let Some(out) = parsed.option("out").filter(|o| Path::new(o).exists()) {
         return Err(format!("--out {out}: file exists (refusing to overwrite)").into());
     }
     let cursor = parsed.option("cursor").map(Cursor::parse).transpose()?;
-    let executed = execute(&Invocation {
+    let (Chosen::Trial(dir) | Chosen::Kb(dir)) = &chosen;
+    let invocation = Invocation {
         source: &source,
         name: file,
         repo: Path::new(repo),
-        state: &dir.path,
+        state: dir,
         cursor: cursor.as_ref(),
         format: parsed.format,
-    })?;
+    };
+    let executed = match chosen {
+        Chosen::Trial(_) => execute(&invocation)?,
+        Chosen::Kb(_) => execute_kb(&invocation)?,
+    };
     let options = Options {
         cite: parsed.cite,
         kb: parsed.option("kb").map(PathBuf::from),

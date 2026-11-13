@@ -338,10 +338,27 @@ writfold tuft run FILE --repo DIR [--state DIR] [--cursor C] [--verbose|--json] 
 writfold tuft check FILE
 ```
 
-`--state` defaults to the trial state (`$WRITFOLD_STATE`, else
-`~/.local/share/writfold/trial`), which holds the admitted Git executable and
-the retained evidence. Create it once with `writfold trial init`; an
-uninitialized directory is refused with its absolute path and how it was chosen. `--repo`
+A run needs a state: the Git executable it runs, and a directory where
+`retain` keeps its bindings (`evidence/<binding>.json`, `.bytes` and
+`.line`). It is chosen in this order:
+
+1. `--state DIR`, else `$WRITFOLD_STATE`: a trial state made by
+   `writfold trial init`, exactly as before. An uninitialized directory is
+   refused with its absolute path and how it was chosen.
+2. Inside a KB under Git (found as `writfold kb` finds it, `$WRITFOLD_KB`
+   included), or with `--kb DIR` (which also records a receipt, so it needs
+   an open current run; [below](#kb-adapter)): Tuft's own state, `<KB git dir>/writfold/tuft-state/`. It is
+   created on first use, owner-only, with only `evidence/`, and reused after
+   that. Git is the executable the `kb` verbs use (`$WRITFOLD_GIT`, else
+   `git` on `PATH`). No signing key, policy, ledger or worktree is made, so
+   `writfold trial` commands cannot use this state, and a Weft report for
+   `trial prepare` must cite evidence retained in a trial state.
+3. `~/.local/share/writfold/trial`, when `writfold trial init` made it.
+4. Otherwise the run is refused, naming both ways forward: run inside a KB
+   or pass `--kb DIR`, or pass `--state DIR` (or set `WRITFOLD_STATE`).
+
+Bindings keep the trial realm in either state, so the same bytes bind to
+the same digest. `--repo`
 must be an ordinary repository (`DIR/.git` a directory). A whole-tree
 `find` loads every blob in scope once, in parallel, bounded at 1 GiB. A larger
 scope refuses and asks to be narrowed.

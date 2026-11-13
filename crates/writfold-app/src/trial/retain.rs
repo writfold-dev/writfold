@@ -10,7 +10,7 @@ use super::{Result, budgets, limits};
 use std::fs;
 use std::path::{Path, PathBuf};
 use writfold_domain::citation::{CoordinateUnit, Selector};
-use writfold_domain::{ByteOffset, GitObjectFormat, GitObjectId};
+use writfold_domain::{ByteOffset, GitObjectFormat, GitObjectId, RealmId};
 use writfold_runtime::git::{GitExecutable, trial_blob};
 use writfold_wire::citation::{
     CitationDescriptor, GitSource, binding_fingerprint, decode_descriptor, encode_descriptor,
@@ -31,6 +31,29 @@ fn evidence_dir(trial: &Trial) -> PathBuf {
     trial.root.join("evidence")
 }
 
+/// Where [`retain_read`] keeps bindings: a realm for the descriptor, an
+/// `evidence/` directory for the descriptor, bytes and line files, and
+/// any further copy of the bytes. The trial state is one; Tuft's
+/// KB-owned state (`crate::tuft::state`) is the other.
+pub trait EvidenceStore {
+    fn realm(&self) -> &RealmId;
+    fn evidence_dir(&self) -> PathBuf;
+    /// Keep `bytes` beyond `evidence/` (the trial's object store).
+    fn keep(&self, bytes: &[u8]) -> Result<()>;
+}
+
+impl EvidenceStore for Trial {
+    fn realm(&self) -> &RealmId {
+        &self.realm
+    }
+    fn evidence_dir(&self) -> PathBuf {
+        evidence_dir(self)
+    }
+    fn keep(&self, bytes: &[u8]) -> Result<()> {
+        self.retain(bytes).map(drop)
+    }
+}
+
 fn commit_id(text: &str) -> Result<GitObjectId> {
     let format = match text.len() {
         40 => GitObjectFormat::Sha1,
@@ -41,7 +64,7 @@ fn commit_id(text: &str) -> Result<GitObjectId> {
 }
 
 fn descriptor(
-    trial: &Trial,
+    realm: &RealmId,
     commit: &GitObjectId,
     path: &str,
     blob: GitObjectId,
@@ -49,7 +72,7 @@ fn descriptor(
     range: (u64, u64),
 ) -> Result<CitationDescriptor> {
     let source = GitSource::new(
-        trial.realm.clone(),
+        realm.clone(),
         "repo".parse()?,
         commit.clone(),
         path.to_owned(),
@@ -140,8 +163,8 @@ pub fn read_pinned(
 /// Retain `ranges` of a blob read by `read_pinned`, one binding per range.
 /// Every selection is bound first; nothing is written unless all bind, and
 /// a binding refusal is marked as decided before any write.
-pub fn retain_read(
-    trial: &Trial,
+pub fn retain_read<S: EvidenceStore + ?Sized>(
+    store: &S,
     file: &PinnedBlob,
     ranges: &[(u64, u64)],
 ) -> Result<Vec<Retained>> {
@@ -150,7 +173,7 @@ pub fn retain_read(
             .iter()
             .map(|&range| {
                 let descriptor = descriptor(
-                    trial,
+                    store.realm(),
                     &file.commit,
                     &file.path,
                     file.blob.clone(),
@@ -164,7 +187,7 @@ pub fn retain_read(
             })
             .collect::<Result<Vec<_>>>(),
     )?;
-    let dir = evidence_dir(trial);
+    let dir = store.evidence_dir();
     fs::create_dir_all(&dir)?;
     let mut out = Vec::with_capacity(bound.len());
     for (range, descriptor, binding) in bound {
@@ -172,7 +195,7 @@ pub fn retain_read(
             .content
             .get(range.0 as usize..range.1 as usize)
             .ok_or("byte range is outside the file")?;
-        trial.retain(selected)?;
+        store.keep(selected)?;
         fs::write(dir.join(format!("{binding}.bytes")), selected)?;
         let line = tuft::locate::line_at(&file.content, range.0 as usize);
         fs::write(dir.join(format!("{binding}.line")), format!("{line}\n"))?;

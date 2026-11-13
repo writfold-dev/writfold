@@ -406,8 +406,15 @@ under a token budget, with explicit omissions and a resume cursor:
 
 ```sh
 printf '@h := find text "trial_blob(" in "crates/" at "%s";\n@e := retain @h around lines 0;\n@v := project @e [path, line, excerpt(max_chars: 200)];\nemit @v budget_tokens 300;\n' "$(git rev-parse HEAD)" > q.tuft
-target/release/writfold tuft run q.tuft --repo .
+WRITFOLD_KB=/path/to/kb target/release/writfold tuft run q.tuft --repo .
 ```
+
+No setup is needed. With a KB found (from inside it, `$WRITFOLD_KB`, or
+`--kb DIR`, which also requires an open current run to record into), Tuft
+keeps its retained evidence in the KB's Git directory,
+`writfold/tuft-state/`, created on first use. Pass `--state DIR` instead to
+retain into a trial state made by `writfold trial init`, which a Weft report
+for `trial prepare` can cite.
 
 It prints one `path:line: text` row per hit, as `grep -n` would, and a
 trailer that says whether anything is missing:

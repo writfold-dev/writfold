@@ -151,6 +151,61 @@ fn inbox_lists_drafts_proposals_and_unevaluated_runs() -> TestResult {
     Ok(())
 }
 
+#[test]
+fn inbox_lists_the_current_runs_proposal_that_resume_cut() -> TestResult {
+    let w = planned()?;
+    // Sessions on the current run fill `resume`'s token budget with their
+    // drafts, so the run's proposal, listed after them, is cut from it.
+    for n in 0..12 {
+        let message = format!("Measured the month-end flush on replay {n}; batching holds.");
+        let stop = json!({"session_id": format!("s-{n:02}"), "last_assistant_message": message});
+        assert_eq!(hook(&w, "stop", &stop), HookOutput::default());
+    }
+    let ticket = Write::Ticket(Ticket {
+        ticket: "HBR-141".into(),
+        title: "Flush time regressed on replay".into(),
+        assets: vec!["harbor-api".into()],
+        ..Ticket::default()
+    });
+    let propose = Verb::Proposal(ProposalVerb::Propose(Box::new(Propose {
+        write: ticket,
+        session: Some("s-00".into()),
+        run: Some(RUN.into()),
+    })));
+    w.run(&w.request(propose))?;
+    let text = start(&w, "startup")?;
+    let (head, inbox) = text.split_once("\nInbox (").ok_or("no inbox")?;
+    let resume = head.split_once("Current run (").ok_or("no run part")?.1;
+    assert!(
+        !resume.contains("omitted=0 "),
+        "resume was not cut: {resume}"
+    );
+    assert!(!resume.contains("\nproposal "), "{resume}");
+    let listed: Vec<&str> = inbox
+        .lines()
+        .filter(|l| l.starts_with("proposal "))
+        .collect();
+    assert_eq!(listed.len(), 1, "{inbox}");
+    assert!(
+        listed[0].contains(&format!("run={RUN} ticket HBR-141")),
+        "{inbox}"
+    );
+    // Drafts follow the same rule: the ones `resume` kept are not repeated.
+    for line in inbox.lines().filter(|l| l.starts_with("draft ")) {
+        let session = line.split(' ').nth(1).ok_or("draft line")?;
+        assert!(!resume.contains(&format!("\ndraft {session} [")), "{text}");
+    }
+    // The resume cursor digests rows that name the temporary directory.
+    let masked: Vec<String> = text
+        .split(' ')
+        .map(|word| match word.strip_prefix("cursor=v2.") {
+            Some(_) => "cursor=<CURSOR>".to_owned(),
+            None => word.to_owned(),
+        })
+        .collect();
+    golden("hook-session-start-cut.txt", &masked.join(" "))
+}
+
 /// Clone the KB as a bare `origin`, track it, and return the bare path.
 fn origin(w: &World) -> TestResult<std::path::PathBuf> {
     let bare = w.base.join("origin.git");

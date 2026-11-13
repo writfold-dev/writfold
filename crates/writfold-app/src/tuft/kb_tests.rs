@@ -2,6 +2,7 @@
 //! fresh under `writfold kb stale` and then move or change after a code
 //! edit, and (in `receipts`) retrieval receipts in the current run.
 mod receipts;
+mod state;
 
 use super::cli::{Context, run_command};
 use super::tests::{Fixture, fixture, git, pipeline, tuft};

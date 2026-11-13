@@ -10,7 +10,7 @@ use writfold_kb::write::Write;
 use writfold_kb::write::run::{Checkpoint, NewRun};
 use writfold_kb::write::status::SetStatus;
 
-fn start_run(kb: &Path) -> Result<String> {
+pub(super) fn start_run(kb: &Path) -> Result<String> {
     let new_run = Some(NewRun {
         project: "notes".into(),
         task: "Tuft receipts".into(),

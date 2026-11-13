@@ -1,0 +1,52 @@
+Writfold KB brief (`writfold kb brief`). Rows end in their source; re-check any row with a ! flag before relying on it.
+project project:harbor [build] Harbor status @harbor/STATUS.md:2
+project project:lantern Lantern console @lantern/README.md:1
+run run-20261101T090000Z-a1b2c3 [open] Batch ledger writes rollout (checkpoint 2026-11-03T16:00:00Z) @runs/run-20261101T090000Z-a1b2c3/checkpoint.md:6
+  note: Batching is live in staging. @runs/run-20261101T090000Z-a1b2c3/checkpoint.md:8
+  note: Next: measure flush time on the month-end replay, then HBR-101 can close. @runs/run-20261101T090000Z-a1b2c3/checkpoint.md:9
+ticket HBR-101 [in-progress] Slow ledger flush at month end @ktlo/2026/hbr-101-slow-ledger-flush.md:5
+investigation inv:2026/2026-06-01-flush-stalls-again [open] Flush stalls return @investigations/2026/2026-06-01-flush-stalls-again/README.md:7
+decision proposal/decision/2026-04-01-shard-ledger [draft] Shard the ledger by tenant @proposals/decision/2026-04-01-shard-ledger/proposal.md:5
+decision proposal/decision/2026-03-02-batch-ledger-writes [accepted] Batch ledger writes in the API @proposals/decision/2026-03-02-batch-ledger-writes/proposal.md:5
+  why: Group ledger writes into batches of up to 500 rows per transaction. @proposals/decision/2026-03-02-batch-ledger-writes/proposal.md:24
+commit d5db758bda80 2026-11-05 fixture KB
+# note: 9 citation(s) have no cached verdict; run `writfold kb stale`
+# note: no project matched the working directory; showing a KB-wide brief (pass a project, or --all)
+# coverage=partial records=29/29 shown=8 omitted=0 answer=unknown reason=no-home kb=d5db758bda80+dirty:1 index=fresh cursor=none q=5fd1130d20a7
+
+Current run (`writfold kb resume`):
+run run-20261101T090000Z-a1b2c3 [open] Batch ledger writes rollout @runs/run-20261101T090000Z-a1b2c3/manifest.json:7 !current
+  field: project=harbor @runs/run-20261101T090000Z-a1b2c3/manifest.json:4
+  field: mode=authoring @runs/run-20261101T090000Z-a1b2c3/manifest.json:5
+  field: created=2026-11-01T09:00:00Z @runs/run-20261101T090000Z-a1b2c3/manifest.json:6
+plan change#1/implement [current] step 1/2 owes: unit [open] @runs/run-20261101T090000Z-a1b2c3/plan/splice-change.1.json:1
+  next: writfold kb gate run unit
+gate reflected [open] run-record no receipt in this run for demo-service @.writfold/gates/reflected.toml:1 !open
+  next: writfold kb gate run reflected
+gate unit [open] mechanical no receipt in this run for demo-service @.writfold/gates/unit.toml:1 !open
+  next: writfold kb gate run unit
+checkpoint 2026-11-03T16:00:00Z entry 2 of 2 @runs/run-20261101T090000Z-a1b2c3/checkpoint.md:6
+  note: Batching is live in staging. @runs/run-20261101T090000Z-a1b2c3/checkpoint.md:8
+  note: Next: measure flush time on the month-end replay, then HBR-101 can close. @runs/run-20261101T090000Z-a1b2c3/checkpoint.md:9
+draft s-00 [open] Measured the month-end flush on replay 0; batching holds. @<WORLD>/kb/.git/writfold/drafts/s-00.json !draft
+  confirm: writfold kb checkpoint --from-draft s-00
+draft s-01 [open] Measured the month-end flush on replay 1; batching holds. @<WORLD>/kb/.git/writfold/drafts/s-01.json !draft
+  confirm: writfold kb checkpoint --from-draft s-01
+draft s-02 [open] Measured the month-end flush on replay 2; batching holds. @<WORLD>/kb/.git/writfold/drafts/s-02.json !draft
+  confirm: writfold kb checkpoint --from-draft s-02
+draft s-03 [open] Measured the month-end flush on replay 3; batching holds. @<WORLD>/kb/.git/writfold/drafts/s-03.json !draft
+  confirm: writfold kb checkpoint --from-draft s-03
+# coverage=complete records=29/29 shown=9 omitted=9 kb=d5db758bda80+dirty:1 index=fresh cursor=<CURSOR> q=0d2c88940cf6
+
+Plan position (`writfold kb plan status`) for run run-20261101T090000Z-a1b2c3: step 1/2
+step change#1/implement [current] owes: unit [open] @runs/run-20261101T090000Z-a1b2c3/plan/splice-change.1.json:1
+  next: writfold kb gate run unit
+
+Inbox (local only; nothing here is in the KB until confirmed or accepted):
+draft s-04 2026-11-11T00:00:00Z run=run-20261101T090000Z-a1b2c3 Measured the month-end flush on replay 4; batching holds.
+draft s-05 2026-11-11T00:00:00Z run=run-20261101T090000Z-a1b2c3 Measured the month-end flush on replay 5; batching holds.
+draft s-06 2026-11-11T00:00:00Z run=run-20261101T090000Z-a1b2c3 Measured the month-end flush on replay 6; batching holds.
+(+5 more drafts)
+  confirm: writfold kb checkpoint --from-draft SESSION
+proposal a6470ec00739d070 2026-11-11T00:00:00Z run=run-20261101T090000Z-a1b2c3 ticket HBR-141: Flush time regressed on replay
+  review: writfold kb proposals show ID (accept only when the user asks)
