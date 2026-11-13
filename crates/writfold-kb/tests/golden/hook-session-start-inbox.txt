@@ -21,4 +21,4 @@ draft s-6 2026-11-11T00:00:00Z run=run-20261101T090000Z-a1b2c3 Still reading.
 proposal b40d509b47d83426 2026-11-11T00:00:00Z run=run-20261101T090000Z-a1b2c3 ticket HBR-140: Replay is slow after a restart
   review: writfold kb proposals show ID (accept only when the user asks)
 unevaluated run-20261101T090000Z-a1b2c3 session s-5 ended 2026-11-11T00:00:00Z (prompt_input_exit): change#1/reflect is not done
-  next: writfold kb plan status --run RUN, then do its reflect step
+  next: writfold kb plan status --run RUN, then its reflect step (the writfold:evaluate skill)

@@ -1,7 +1,7 @@
 {
   "name": "writfold",
   "displayName": "Writfold",
-  "description": "Git-native project continuity: a KB brief at session start, local checkpoint drafts at compaction and stop, and a skill teaching the writfold kb verbs. Needs the writfold binary on PATH.",
+  "description": "Git-native project continuity: a KB brief at session start, local checkpoint drafts at compaction and stop, a skill teaching the writfold kb verbs, and a writfold:evaluate skill that closes a run with a reflection. Needs the writfold binary on PATH.",
   "author": {
     "name": "Writfold",
     "url": "https://writfold.dev"

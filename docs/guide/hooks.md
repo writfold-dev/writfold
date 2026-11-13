@@ -54,7 +54,7 @@ Each part is printed only when it has something to say, in this order:
    proposal b40d509b47d83426 2026-11-11T00:00:00Z run=run-… ticket HBR-140: Replay is slow after a restart
      review: writfold kb proposals show ID (accept only when the user asks)
    unevaluated run-… session s-5 ended 2026-11-11T00:00:00Z (prompt_input_exit): change#1/reflect is not done
-     next: writfold kb plan status --run RUN, then do its reflect step
+     next: writfold kb plan status --run RUN, then its reflect step (the writfold:evaluate skill)
    ```
 
    Drafts and proposals that the injected `resume` already lists are not repeated. Up to three lines of each kind are shown, then `(+N more …)`.
@@ -63,7 +63,7 @@ Each part is printed only when it has something to say, in this order:
 
 - the run is open;
 - its newest checkpoint entry is older than the session's end, or it has none;
-- its plan has a step named `reflect`, and the last such step is neither done nor skipped.
+- its plan has a step named `reflect`, and the last such step is neither done nor skipped. The step's own name is compared, not its path, so a required end step (`reflect#3/reflect`) and one spliced under another step (`fix#1/implement/reflect#1/reflect`) both count.
 
 All three are read from files: the run's manifest and sidecar, `checkpoint.md` and the plan's event files. The answer never depends on a model. A run is not listed if its draft was confirmed or deleted, if no `SessionEnd` ran, or if its plan has no `reflect` step.
 
@@ -115,8 +115,9 @@ The hook uses the plugin's optional `kb_root` setting, then `$WRITFOLD_KB`, then
 - Writing `transcript_path` into the draft, and exporting `WRITFOLD_SESSION` through `CLAUDE_ENV_FILE`.
 - A stale-citation count at session start; run `writfold kb stale`.
 - A `fetch` option; the hook never touches the network.
+- A Stop nudge: the Stop hook does not mark the reflect step as open in the draft. The inbox already derives it from the plan when the session ends, and a session that ends without `SessionEnd` is not listed.
 
-Evaluation of a session is planned as a skill and a closing plan step ([skills](skills.md)), not as a hook that runs a model.
+Evaluation of a session is a skill, [`writfold:evaluate`](skills.md#the-bundled-skill-writfoldevaluate), and a closing plan step, not a hook that runs a model. The inbox line above names it; the next session (or the user) invokes it.
 
 ## Checked against
 

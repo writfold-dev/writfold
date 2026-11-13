@@ -1,6 +1,6 @@
 # The run graph
 
-> **Status:** the run graph (`plan set|use|status|advance|skip`), run-record checks, splicing a template under a step (`use=` includes, `!template-moved`) and required steps are built in v0.4.0-dev.1; delivery modes as a step's gates are planned. The adopted decisions are in [`mission.md`](../writfold/mission.md); the as-built records are [design §21](../writfold/kb-v1-design.md#21-run-graph-linear-as-built) and [§24](../writfold/kb-v1-design.md#24-splicing-and-required-steps-as-built).
+> **Status:** the run graph (`plan set|use|status|advance|skip`), run-record checks, splicing a template under a step (`use=` includes, `!template-moved`), required steps and the `writfold:evaluate` wrap-up skill are built in v0.4.0-dev.1; delivery modes as a step's gates are planned. The adopted decisions are in [`mission.md`](../writfold/mission.md); the as-built records are [design §21](../writfold/kb-v1-design.md#21-run-graph-linear-as-built), [§24](../writfold/kb-v1-design.md#24-splicing-and-required-steps-as-built) and [§26](../writfold/kb-v1-design.md#26-evaluation-skill-as-built).
 
 A run without a plan owes every gate defined for its repository. A run with a plan owes the gates its steps name: the plan is an ordered list of steps, each step names the gates it owes, and Writfold records which step the work has reached and what met each gate.
 
@@ -169,7 +169,16 @@ The fixture [`fixtures/kb/required-steps`](../../fixtures/kb/required-steps/.wri
 
 - `backfilled`, a run-record check requiring `research.backfilled`;
 - `reflected`, a run-record check requiring `run.reflected`;
-- `reflection`, an attested gate whose instructions (`reflection.md`) say what a good reflection covers: the outcome, surprises, the evidence relied on, what the KB lacked (with a proposal or an explicit `no proposal:`), and one change for next time.
+- `reflection`, an attested gate whose instructions (`reflection.md`) say what a good reflection covers: what was done (with the gates and citations it rests on), what was learned, what should change, and what was backfilled (with a proposal for what the KB lacked, or an explicit `no proposal:`).
+
+The `reflect` template is one step owing both gates:
+
+```toml
+schema = "writfold-plan/1"
+name = "reflect"
+description = "close the run with a reflection and a proposal or an explicit none"
+steps = ["reflect: reflected reflection"]
+```
 
 ```toml
 schema = "writfold-gate/1"
@@ -205,6 +214,10 @@ The run-record check shows that a reflection was written. The attestation states
 
 These are gates, not Claude Code hooks. A run that never advances past `reflect` is shown as owing it; nothing forces the agent to get there.
 
+The bundled [`writfold:evaluate`](skills.md#the-bundled-skill-writfoldevaluate) skill walks this step: it writes the reflection, proposes or writes `no proposal:`, runs `reflected`, attests `reflection` and advances. Its injection line, `writfold kb plan use reflect`, writes nothing when the run already has this required step, and splices the template before the current step when it has none. A session that ends with the step open is listed in the next session start's inbox as `unevaluated`; once the step is done it is not ([hooks](hooks.md)).
+
+A root splice after the first (the plan's own template, a required end template) is made with the plan, not when its turn comes, so its first step's window begins where the step before it ended, not at the splice. Otherwise a ticket written during `research` would also answer `run.reflected`'s "a KB record written in the step" at `reflect`.
+
 ## Planned: delivery modes as a step's gates
 
 A step will be able to owe a delivery, written `deliver:<mode>`. Today a step names only repository, assessed and run-record gates, and a candidate gate is refused:
@@ -232,4 +245,4 @@ A step may require a Weft assessment: it owes a gate of class `assessed`. The ag
 3. ~~Splicing and required steps.~~
 4. ~~The session-start and compaction hooks showing the plan position ([hooks](hooks.md)).~~
 5. One week of real use.
-6. Then: proofs of the plan kernel, a TLA+ model of two sessions on one run, the evaluation skill and the Weft assessed gate.
+6. Then: proofs of the plan kernel, a TLA+ model of two sessions on one run, ~~the evaluation skill~~ and the Weft assessed gate.

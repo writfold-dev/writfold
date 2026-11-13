@@ -55,7 +55,9 @@ pub fn block(root: &Path, state: &Path, current: Option<&str>) -> String {
             text.push_str(line);
         }
         more(&mut text, runs.len(), "runs");
-        text.push_str("  next: writfold kb plan status --run RUN, then do its reflect step\n");
+        text.push_str(
+            "  next: writfold kb plan status --run RUN, then its reflect step (the writfold:evaluate skill)\n",
+        );
     }
     if text.is_empty() {
         return text;

@@ -9,7 +9,7 @@
     {
       "name": "writfold",
       "source": "./plugins/writfold",
-      "description": "A KB brief at session start, local checkpoint drafts at compaction and stop, and a skill teaching the writfold kb verbs."
+      "description": "A KB brief at session start, local checkpoint drafts at compaction and stop, a skill teaching the writfold kb verbs, and a wrap-up skill (writfold:evaluate)."
     }
   ]
 }
