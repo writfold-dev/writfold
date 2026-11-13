@@ -1,6 +1,6 @@
 # Gates
 
-> **Status:** built in v0.3.0-dev.1; instruction gates, gate scripts, the Weft assessed gate, run-record checks and plan-owed gates built in v0.4.0-dev.1; checklist gates and `gate cover` built in v0.5.0-dev.1.
+> **Status:** built in v0.3.0-dev.1; instruction gates, gate scripts, the Weft assessed gate, run-record checks and plan-owed gates built in v0.4.0-dev.1; checklist gates and `gate cover` built in v0.5.0-dev.1; observations as evidence built in v0.5.0-dev.3.
 
 A gate is one small check with a path scope. `gate run` runs its command and keeps a receipt pinned to the exact bytes checked. `gate status` then says, on every read, whether that evidence still holds. Gates report; they block nothing unless a [guard rule](hooks.md#guard-rules) names them.
 
@@ -207,6 +207,7 @@ A reference may be:
 | an attestation of this run, by path | it is the gate's current attestation (attested) |
 | a retrieval receipt, by path or name | every citation in it is fresh |
 | an edit receipt, by path or name | every file it edited still holds the bytes it wrote |
+| an observation (`runs/<run>/observed/…json`), by path or name (built in v0.5.0-dev.3) | its status is `ok` and its embedded citation is fresh ([observations](#observations-as-evidence-built-in-v050-dev3)) |
 
 An assumption with no citation, or with any citation that is not grounded, is ungrounded. Weft's report lists, for each check, the assumptions it used (every assumption declared above the check). A check **meets** the gate only when Weft's result is `entailed` and every one of those assumptions is grounded. Weft's results are kept in its own words, `entailed`, `refuted`, `undetermined` or `inconsistent-premises`; the basis is `grounded`, or `hypothetical` when any assumption it used is ungrounded. A hypothetical check is flagged `!hypothetical` and is never counted as met, whatever its result. The gate passes when every required check is met; Weft unable to finish (no binary, a timeout, an incomplete report) is `unknown`.
 
@@ -290,7 +291,7 @@ writfold kb gate cover <gate> <item> unsupported --reason TEXT --by WHO
 writfold kb gate cover <gate> <item> not-applicable --reason TEXT --by WHO
 ```
 
-Each `REF` is one argument, any reference an assessed gate may cite ([the table above](#weft-assessed-gates)): a citation token, a locator, `gate:<id>`, or a gate receipt, attestation, retrieval receipt or edit receipt of this run. `supported` needs at least one, and is refused (exit 3, nothing written) when any is not grounded now, so a row never starts out false. A waiver is never evidence. A checklist and an assessed gate are both judged against the other gates only, so a reference to either class is not grounded.
+Each `REF` is one argument, any reference an assessed gate may cite ([the table above](#weft-assessed-gates)): a citation token, a locator, `gate:<id>`, or a gate receipt, attestation, retrieval receipt, edit receipt or observation of this run. `supported` needs at least one, and is refused (exit 3, nothing written) when any is not grounded now, so a row never starts out false. A waiver is never evidence. A checklist and an assessed gate are both judged against the other gates only, so a reference to either class is not grounded.
 
 **Several items at once** (built in v0.5.0-dev.3): `gate cover <gate> --from FILE --by WHO [--run ID] [--repo DIR]`, or `--from -` to read standard input, takes one JSON object per line:
 
@@ -336,6 +337,35 @@ gate review [stale] checklist 1/2 required covered at demo-service@bcacd8cac84e 
 ```
 
 `gate lines` prints the gate, then one line per item. A plan step that owes a checklist advances once it stands as `attested`, and its done event names a covering row.
+
+### Observations as evidence (built in v0.5.0-dev.3)
+
+Some items are checked by looking somewhere outside Git: a dashboard, a ticket tracker, a log search. `observe` records one such look, and how it went, in the run:
+
+```text
+writfold kb observe --source KIND --locator TEXT --status STATUS [--revision R] [--for GATE.ITEM]
+                    [--note TEXT] [--cite TOKEN] [--run ID]
+```
+
+| `--status` | Meaning | Embeds a citation | Grounds `supported` |
+|---|---|---|---|
+| `ok` | the source answered in full | yes | while the citation is fresh |
+| `partial` | it answered in part | yes | never |
+| `no-data`, `not-found` | it answered, with nothing for the question, or the thing is not there | no | never |
+| `timeout`, `denied`, `error` | it did not answer | no | never |
+
+The file is `runs/<run>/observed/<time>-<hex>.json` (schema `writfold-observation/1`), written create-new and never changed; with no run it is refused (exit 3). An `ok` or `partial` look embeds one ordinary citation token: the one `--cite` passes (its `kind=` must be `--source`), else `⟦cite kind=KIND locator=TEXT [rev=R] seen=<now>⟧`. Its freshness is that token's, so a kind declaration in `.writfold/sources/KIND.toml` decides how long it holds ([kind declarations](kb-layout.md)); a kind without one and without `ttl=` never ages. A built-in kind such as `code`, or a kind declared `checked`, needs `--cite` with the token `cite make` prints.
+
+Cite the file (or its bare name in this run) as a `REF` of a `supported` row. It is grounded only while its status is `ok` and its citation is fresh; otherwise its standing is `not-fresh:<n>` or the status, and `gate cover` refuses it. When an `ok` look's citation ages, the item turns `stale` like any moved evidence.
+
+A look that could not tell is still worth keeping. Record it with `--for GATE.ITEM`, cover the item `unsupported` (or `not-applicable`) with a reason that names the file, and every look made for that item shows under it in `gate status`, `gate cover`'s answer and `resume`, newest file last:
+
+```text
+  item: perf [unsupported] (optional) the dashboard did not answer: runs/run-…/observed/20261111T000002Z-….json by agent @runs/run-…/covers/review.perf-20261111T000000Z-….json:1 !unsupported
+  looked: 3 (timeout, no-data) @runs/run-…/observed/20261111T000002Z-….json:1
+```
+
+`resume` also counts the run's observations: `observations: 4 (timeout, no-data, ok) in runs/<run>/observed/`.
 
 ## What is claimed
 

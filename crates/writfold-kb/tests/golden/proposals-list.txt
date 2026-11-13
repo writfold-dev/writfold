@@ -1,7 +1,7 @@
-proposal 16a41fbba45340f7 [pending] ticket HBR-130: Replay is slow after a restart @<WORLD>/kb/.git/writfold/proposals/16a41fbba45340f7.json !proposal
+proposal 16a41fbba45340f7 [pending] ticket HBR-130: Replay is slow after a restart @<WORLD>/kb/.git/writfold/proposals/16a41fbba45340f7.json !proposal !local
   field: created=2026-11-11T00:00:00Z session=s1 run=run-20261101T090000Z-a1b2c3
   accept: writfold kb proposals accept 16a41fbba45340f7
-proposal e491f7d5217860e1 [pending] decision: Flush the ledger in batches @<WORLD>/kb/.git/writfold/proposals/e491f7d5217860e1.json !proposal
+proposal e491f7d5217860e1 [pending] decision: Flush the ledger in batches @<WORLD>/kb/.git/writfold/proposals/e491f7d5217860e1.json !proposal !local
   field: created=2026-11-11T00:00:00Z
   accept: writfold kb proposals accept e491f7d5217860e1
 # coverage=complete records=28/28 shown=2 omitted=0 proposals=2 kb=d5db758bda80 index=fresh cursor=none q=49d321ce1b83

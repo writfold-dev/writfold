@@ -7,6 +7,7 @@ mod deliver;
 mod edit;
 mod gate;
 mod hook;
+mod observe;
 mod plan;
 mod proposals;
 mod set;
@@ -49,13 +50,18 @@ writes (atomic; they leave the work tree dirty for you to commit):
                   [--commit REPO@SHA] [--evidence REF [--run ID] [--repo DIR]]
   cite make <repo> <path> <a-b> [--allow-dirty] [--sym S] [--ttl T]   (prints a token)
   cite make --kind K key=value …   a checked kind's token from its checker's make (prints it)
+  observe --source KIND --locator TEXT --status ok|partial|no-data|not-found|timeout|denied|error
+          [--revision R] [--for GATE.ITEM] [--note TEXT] [--cite TOKEN] [--run ID]
+                                   one look at an outside source, in the run (ok/partial embed a token)
 
 checkers (kinds declared freshness = \"checked\"; writfold-check-<name> on PATH; only stale runs them):
   checker list                     each checked kind: its checker found or absent, and its describe
 
 proposals (record calls not yet made, in a local untracked queue; at most 10 per session):
-  propose ticket|decision|link … [--session S] [--run ID]
+  propose ticket|decision|link … [--session S] [--run ID] [--tracked|--local]
                                    the arguments of record; session: --session, else $WRITFOLD_SESSION
+                                   --tracked: .writfold/proposals/ in the work tree, to commit
+                                   (the default when .writfold/proposals/.tracked exists)
   proposals [list] | proposals show|accept|drop <id>
                                    accept replays it through record (refused on a stale citation)
 

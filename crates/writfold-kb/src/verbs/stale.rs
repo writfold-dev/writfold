@@ -219,12 +219,28 @@ pub fn stale(session: &Session<'_>, scope: Option<&str>, offline: bool) -> Resul
             "a checked kind's checker is not on PATH; `writfold kb checker list` names it".into(),
         );
     }
+    answer.notes.extend(never_note(session, &cites)?);
     if offline {
         answer
             .notes
-            .push("offline: only authored stale marks and due TTLs are reported".into());
+            .push("offline: only authored stale marks, due TTLs and expired checker verdicts are reported".into());
     }
     Ok(answer)
+}
+
+/// The note naming undeclared kinds whose tokens without `ttl=` never
+/// expire, with their counts. Verdicts are unchanged.
+fn never_note(session: &Session<'_>, cites: &[Cite]) -> Result<Option<String>> {
+    let never = stale::kinds::never_expiring(&stale::kinds::read(&session.ws.root)?, cites);
+    if never.is_empty() {
+        return Ok(None);
+    }
+    let listed: Vec<String> = never.iter().map(|(k, n)| format!("{k} ({n})")).collect();
+    Ok(Some(format!(
+        "undeclared kinds whose tokens lack ttl= never expire: {}; a {}/<kind>.toml with default_ttl ages them",
+        listed.join(", "),
+        stale::kinds::DIR
+    )))
 }
 
 /// Assets whose `verified_at + ttl` has passed.

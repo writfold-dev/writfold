@@ -273,6 +273,7 @@ fn evaluation_loop_with_a_proposal() -> TestResult {
         write: decision,
         session: Some("s-1".into()),
         run: Some(RUN.into()),
+        store: None,
     })));
     let (text, exit) = log.call("propose decision …", propose)?;
     assert_eq!(exit, 0, "{text}");

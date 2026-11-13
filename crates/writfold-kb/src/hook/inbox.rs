@@ -2,8 +2,8 @@
 //! none of it in the KB yet.
 //!
 //! - **Drafts** whose row the injected `resume` text does not contain.
-//! - **Pending proposals** whose row the injected `resume` text does not
-//!   contain ([`crate::proposal::inbox`]). This is decided from the text
+//! - **Pending proposals**, local or tracked, whose row the injected
+//!   `resume` text does not contain ([`crate::proposal::inbox`]). This is decided from the text
 //!   as injected, after `resume`'s token budget and the session-start cut,
 //!   not from what `resume` would list at an unlimited budget.
 //! - **Runs left without an evaluation.** A session is known to have
@@ -50,7 +50,11 @@ pub fn block(root: &Path, state: &Path, resume: &str) -> String {
         more(&mut text, drafts.len(), "drafts");
         text.push_str("  confirm: writfold kb checkpoint --from-draft SESSION\n");
     }
-    let proposals = crate::proposal::inbox(state, &|id| listed(resume, "proposal", id));
+    let stores = crate::proposal::Stores {
+        state: state.to_path_buf(),
+        tracked: root.join(crate::proposal::TRACKED_DIR),
+    };
+    let proposals = crate::proposal::inbox(&stores, &|id| listed(resume, "proposal", id));
     if !proposals.is_empty() {
         for line in &proposals {
             text.push_str(line);
