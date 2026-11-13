@@ -127,6 +127,7 @@ Every answer ends with one line:
 | `.writfold/deliveries/<mode>.toml` | changes to a built-in delivery mode | [delivery-modes](delivery-modes.md) |
 | `.writfold/deliveries/deny-<audience>.toml` | references a draft for that audience must not hold | [delivery-modes](delivery-modes.md) |
 | `.writfold/deliveries/guard.toml` | publishing commands the guard hook watches | [delivery-modes](delivery-modes.md) |
+| `.writfold/guards/<id>.toml` | one guard rule (built in v0.5.0-dev.1); in the KB root for every project, or in a repository for that repository only | [hooks](hooks.md#guard-rules) |
 | `.writfold/plans/` | plan templates | [run-graph](run-graph.md) |
 
 ## Tracked and local
@@ -137,7 +138,7 @@ Everything above is tracked text. Local state lives in the KB repository's Git d
 kb-index-<hex>.sqlite   the derived index
 current-run             the run that checkpoint and gate use by default
 repos                   "<name> <path>" lines: where local clones are
-drafts/<session>.json   checkpoint drafts kept by the hooks
+drafts/<session>.json   checkpoint drafts kept by the hooks (and the Stop nudge's `nudged` flag)
 proposals/<id>.json     pending proposals: record calls not yet made
 gates/, edits/          command output tails, artifacts and edit journals
 staging/, kb-write.lock the write protocol's working files

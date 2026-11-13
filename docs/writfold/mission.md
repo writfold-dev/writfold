@@ -117,6 +117,7 @@ The v1 design is [kb-v1-design.md](kb-v1-design.md).
 9. ~~G2: offline delivery candidates; G2b: an optional guard hook~~ (`deliver prepare|check|attest|waive|status`, `gate attest|waive`, `hook pre-tool-use`; [as built](kb-v1-design.md#19-g2-as-built)). Then, from the order of work below, ~~instruction gates and user-defined delivery modes~~ (`instructions`, `{gate}`, `.writfold/deliveries/<mode>.toml`; [as built](kb-v1-design.md#20-instruction-gates-and-delivery-modes-as-built)).
 10. A two-week pause: count real catches and waivers from the receipts. If no catch mattered, keep G1 and drop the rest.
 11. M4b: MCP, trailer and tracker edges, `--at`. G3 only if the pause justifies it.
+- ~~Guard rules and the Stop nudge~~ (v0.5.0-dev.1; `.writfold/guards/<id>.toml`; [as built](kb-v1-design.md#29-guard-rules-and-the-stop-nudge-as-built)): a rule can refuse a named command, such as `git commit`, until the run's gates are met. The rule reads gates; it is a guard, not enforcement.
 
 ## Gates, runs and progress (owner decision, 12 November 2026)
 
