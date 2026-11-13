@@ -4,7 +4,10 @@
 //! subject. Every reference of a `supported` row is grounded now
 //! ([`crate::gate::ground`]), against the same gates a later read grounds
 //! it against; one that is not is refused, so a row never starts out
-//! false. The batch form ([`super::batch`]) records several rows through
+//! false. An `unsupported` or `not-applicable` row gives a reason and may
+//! also cite observations of this run (`runs/<run>/observed/…`, any
+//! status), to record that someone looked; nothing else.
+//! The batch form ([`super::batch`]) records several rows through
 //! the same plan ([`record_all`]): one snapshot, all rows or none.
 use super::cover::{self, Cited};
 use crate::Request;
@@ -28,7 +31,8 @@ pub struct Cover {
     pub gate: String,
     pub item: String,
     pub outcome: Outcome,
-    /// The references a `supported` row cites.
+    /// The references a `supported` row cites; for the other outcomes,
+    /// observations of this run only.
     pub references: Vec<String>,
     pub reason: Option<String>,
     pub note: Option<String>,
@@ -38,7 +42,8 @@ pub struct Cover {
 }
 
 /// The arguments each outcome takes: references for `supported`, a
-/// reason for the others.
+/// reason for the others (whose references, if any, [`observations`]
+/// checks).
 fn shaped(c: &Cover) -> Result<(Option<String>, Option<String>)> {
     let reason = c
         .reason
@@ -62,11 +67,7 @@ fn shaped(c: &Cover) -> Result<(Option<String>, Option<String>)> {
             "gate cover … {} needs --reason TEXT",
             c.outcome.name()
         ))),
-        (_, Some(_), false) => Err(KbError::Usage(format!(
-            "gate cover … {} takes a reason, not references",
-            c.outcome.name()
-        ))),
-        (_, Some(_), true) => Ok((reason, note)),
+        (_, Some(_), _) => Ok((reason, note)),
     }
 }
 
@@ -79,6 +80,33 @@ fn grounded(cx: &Context<'_, '_>, references: &[String]) -> Result<Vec<Cited>> {
             return Err(KbError::Refused(format!(
                 "reference {reference:?} is not grounded ({}): a cover row cites only evidence that stands now (a waiver is never evidence)",
                 r.standing
+            )));
+        }
+        out.push(Cited {
+            reference: reference.clone(),
+            grounding: r.grounding,
+            standing: r.standing,
+            path: r.path,
+        });
+    }
+    Ok(out)
+}
+
+/// The references of an `unsupported` or `not-applicable` row: each must
+/// be a readable observation of this run, whatever its status. They are
+/// recorded as resolved now and never ground the item.
+fn observations(cx: &Context<'_, '_>, c: &Cover) -> Result<Vec<Cited>> {
+    let mut out = Vec::new();
+    for reference in &c.references {
+        let r = ground::resolve(cx, reference)?;
+        let observed = r.path.as_deref().is_some_and(|p| {
+            p.strip_prefix(&format!("{}/observed/", cx.run_dir))
+                .is_some_and(|name| !name.contains('/'))
+        });
+        if !observed || r.standing == "not-a-valid-observation" {
+            return Err(KbError::Refused(format!(
+                "gate cover … {} takes a reason, not references other than observations of this run: {reference:?} is not one (runs/<run>/observed/…)",
+                c.outcome.name()
             )));
         }
         out.push(Cited {
@@ -155,7 +183,10 @@ fn rows(
             item(d, c)?;
             let (reason, note) = shaped(c)?;
             let by = check_text("--by", &c.by)?;
-            let evidence = grounded(&cx, &c.references)?;
+            let evidence = match c.outcome {
+                Outcome::Supported => grounded(&cx, &c.references)?,
+                _ => observations(&cx, c)?,
+            };
             let rows = super::rows_of(&filings.covers, &c.gate, &c.item, &subject.name);
             let seq = rows.iter().map(|(_, r)| r.seq).max().unwrap_or(0) + 1;
             Ok(cover::bytes(&cover::Cover {

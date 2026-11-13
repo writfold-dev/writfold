@@ -147,9 +147,20 @@ fn evidence(value: &Value) -> Result<Vec<Cited>, String> {
         .collect()
 }
 
+/// Whether a cited reference is an observation file
+/// (`runs/<run>/observed/<file>`).
+fn observation(c: &Cited) -> bool {
+    c.path.as_deref().is_some_and(|p| {
+        matches!(
+            p.split('/').collect::<Vec<_>>().as_slice(),
+            ["runs", _, "observed", _]
+        )
+    })
+}
+
 /// What each outcome must carry: `supported` cites at least one grounded
 /// reference and gives no reason; the others give a reason and cite
-/// nothing.
+/// nothing but observations.
 fn shaped(c: &Cover) -> Result<(), String> {
     match c.outcome {
         Outcome::Supported if c.evidence.is_empty() => Err("supported, but cites nothing".into()),
@@ -163,7 +174,10 @@ fn shaped(c: &Cover) -> Result<(), String> {
         }
         Outcome::Supported => Ok(()),
         _ if c.reason.is_none() => Err(format!("{} without a reason", c.outcome.name())),
-        _ if !c.evidence.is_empty() => Err(format!("{} cites evidence", c.outcome.name())),
+        _ if !c.evidence.iter().all(observation) => Err(format!(
+            "{} cites evidence other than observations",
+            c.outcome.name()
+        )),
         _ => Ok(()),
     }
 }
@@ -285,6 +299,20 @@ mod tests {
         assert!(check(&c)?);
         c.outcome = Outcome::Unsupported;
         assert!(check(&c)?);
+        // A reason may come with observations, and only observations.
+        c.evidence = vec![Cited {
+            reference: "20261111T000000Z-a1b2c3".into(),
+            grounding: Grounding::Ungrounded,
+            standing: "timeout".into(),
+            path: Some("runs/run-1/observed/20261111T000000Z-a1b2c3.json".into()),
+        }];
+        assert!(check(&c)?);
+        c.outcome = Outcome::NotApplicable;
+        assert!(check(&c)?);
+        c.evidence.push(sample().evidence[0].clone());
+        assert!(!check(&c)?, "not-applicable citing a gate");
+        c.evidence[1].path = Some("runs/run-1/gates/unit-x.json".into());
+        assert!(!check(&c)?, "not-applicable citing a receipt");
         Ok(())
     }
 

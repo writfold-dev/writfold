@@ -358,7 +358,7 @@ The file is `runs/<run>/observed/<time>-<hex>.json` (schema `writfold-observatio
 
 Cite the file (or its bare name in this run) as a `REF` of a `supported` row. It is grounded only while its status is `ok` and its citation is fresh; otherwise its standing is `not-fresh:<n>` or the status, and `gate cover` refuses it. When an `ok` look's citation ages, the item turns `stale` like any moved evidence.
 
-A look that could not tell is still worth keeping. Record it with `--for GATE.ITEM`, cover the item `unsupported` (or `not-applicable`) with a reason that names the file, and every look made for that item shows under it in `gate status`, `gate cover`'s answer and `resume`, newest file last:
+A look that could not tell is still worth keeping. Record it with `--for GATE.ITEM`, cover the item `unsupported` (or `not-applicable`) with a reason that names the file, and every look made for that item shows under it in `gate status`, `gate cover`'s answer and `resume`, newest file last. The row may also cite the file itself (built in v0.5.0-dev.3): `gate cover review perf unsupported runs/<run>/observed/<file>.json --reason TEXT --by WHO`, or `"refs":["<file>"]` in a `--from` row. An `unsupported` or `not-applicable` row still needs its reason and may cite only observations of this run (by path or bare name, any status, refused when not a readable observation); they are recorded with their standing at write time and never change how the item stands:
 
 ```text
   item: perf [unsupported] (optional) the dashboard did not answer: runs/run-…/observed/20261111T000002Z-….json by agent @runs/run-…/covers/review.perf-20261111T000000Z-….json:1 !unsupported

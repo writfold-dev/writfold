@@ -167,3 +167,83 @@ fn a_batch_equals_the_single_item_form() -> TestResult {
     );
     Ok(())
 }
+
+/// Record a `timeout` observation for `review.perf`; its KB path.
+fn looked(w: &support::World) -> TestResult<String> {
+    use writfold_kb::write::{Write, observe::Observe};
+    checklist::put(
+        &w.kb.join(".writfold/sources/probe.toml"),
+        "schema = \"writfold-source/1\"\nkind = \"probe\"\nfreshness = \"ttl\"\ndefault_ttl = \"1d\"\n",
+    )?;
+    let o = Observe {
+        source: "probe".into(),
+        locator: "p99 latency, checkout".into(),
+        status: "timeout".into(),
+        revision: None,
+        item: Some("review.perf".into()),
+        note: None,
+        cite: None,
+        run: Some(RUN.into()),
+    };
+    let out = writfold_kb::run(&w.request(Verb::Write(Write::Observe(o))))?;
+    let path = out
+        .text
+        .lines()
+        .find_map(|l| l.split("recorded ").nth(1))
+        .and_then(|rest| rest.split(' ').next())
+        .map(str::to_owned);
+    Ok(path.ok_or_else(|| format!("no path in {}", out.text))?)
+}
+
+/// `unsupported` and `not-applicable` rows may cite observations of the
+/// run (any status) beside their reason, to record that someone looked;
+/// nothing else, and the item stands as it would without them.
+#[test]
+fn a_reasoned_row_may_cite_observations_only() -> TestResult {
+    let w = world(&[])?;
+    define(&w.kb)?;
+    run_unit(&w)?;
+    let path = looked(&w)?;
+    let name = path
+        .rsplit('/')
+        .next()
+        .and_then(|n| n.strip_suffix(".json"))
+        .unwrap_or_default()
+        .to_owned();
+    let mut verb = checklist::cover_verb(&w.code, "perf", Outcome::Unsupported, &[&path]);
+    if let GateVerb::Cover(c) = &mut verb {
+        c.reason = Some("the probe timed out".into());
+    }
+    writfold_kb::run(&w.request(Verb::Gate(verb)))?;
+    let (text, _) = status(&w)?;
+    assert_eq!(checklist::item(&text, "perf"), "unsupported", "{text}");
+    let row = contents(&w.kb)?;
+    assert!(row[0].1.contains("\"standing\": \"timeout\""), "{row:?}");
+    // The batch form takes the bare file name too.
+    batch(
+        &w,
+        &format!(
+            "{{\"item\":\"perf\",\"outcome\":\"not-applicable\",\"refs\":[\"{name}\"],\"reason\":\"no hot path\"}}\n"
+        ),
+    )?;
+    let (text, _) = status(&w)?;
+    assert_eq!(checklist::item(&text, "perf"), "not-applicable", "{text}");
+    // Never anything but an observation; never one that is not there.
+    let missing = format!("runs/{RUN}/observed/20261111T000000Z-000000.json");
+    for bad in ["gate:unit", STALL, missing.as_str()] {
+        let line = format!(
+            "{{\"item\":\"perf\",\"outcome\":\"unsupported\",\"refs\":[{}],\"reason\":\"r\"}}\n",
+            serde_json::Value::String(bad.into())
+        );
+        let (why, exit) = refusal(batch(&w, &line));
+        assert!(
+            why.contains("not references other than observations of this run") && exit == 3,
+            "{bad}: {why}"
+        );
+    }
+    // A timed-out look never supports an item.
+    let (why, _) = refusal(cover(&w, "perf", Outcome::Supported, &[&path]));
+    assert!(why.contains("is not grounded (timeout)"), "{why}");
+    assert_eq!(rows(&w.kb)?.len(), 2);
+    Ok(())
+}
