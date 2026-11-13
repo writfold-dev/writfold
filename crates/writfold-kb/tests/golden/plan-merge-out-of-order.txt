@@ -1,0 +1,10 @@
+step two#1/first/side#1/only [current] no gates @runs/run-20261101T090000Z-a1b2c3/plan/splice-two.1~first~side.1.json:1
+step two#1/first [done] no gates @runs/run-20261101T090000Z-a1b2c3/plan/done-two.1~first.json:1 !out-of-order
+  done: recorded 2026-11-11T00:00:00Z
+  why: done, but two#1/first/side#1/only before it is open: do or skip it (plan advance, or plan skip --reason --by)
+step two#1/second [later] no gates @runs/run-20261101T090000Z-a1b2c3/plan/splice-two.1.json:1
+# note: no subject repository here: gates are not judged; pass --repo DIR
+# note: plan two @a88609c0ddf7 from .writfold/plans/two.toml, side @5066b79ce0ee under two#1/first from .writfold/plans/side.toml; steps are derived from runs/run-20261101T090000Z-a1b2c3/plan/ on every read, never stored
+# note: 1 done step(s) follow open steps, as a merge of two clones leaves when one spliced under a step the other closed: the plan is still usable (the current step is the first open one); do or skip the open steps
+# coverage=complete records=31/31 shown=3 omitted=0 steps=3 done=1 skipped=0 stale=0 moved=0 invalid=0 disorder=1 kb=6f238c467182 index=refreshed:1 cursor=none q=0d053770d172
+# exit=2

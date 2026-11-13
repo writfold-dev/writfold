@@ -94,6 +94,14 @@ pub enum Op {
         prefix: String,
         what: String,
     },
+    /// Refuse unless the plan of the run filed under `run_dir`, folded
+    /// again under the lock, still supports what a plan write decided
+    /// ([`crate::plan::recheck`]).
+    Plan {
+        run_dir: String,
+        run: String,
+        decided: crate::plan::recheck::Decided,
+    },
 }
 
 /// What a write verb will do, and what it shows afterwards.

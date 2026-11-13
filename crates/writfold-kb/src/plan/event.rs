@@ -50,6 +50,10 @@ pub struct Splice {
     pub template: String,
     pub digest: String,
     pub ordinal: u64,
+    /// An intended repeat (`plan use --again`): written as `"again": true`
+    /// only when set, so other splices keep their bytes; a merge-made
+    /// repeat lacks it and is flagged `!repeated` ([`super::disorder`]).
+    pub again: bool,
     /// Where the template was read from (`.writfold/plans/<name>.toml`,
     /// `<repo>:.writfold/plans/…`, or `--from`).
     pub source: String,
@@ -142,6 +146,9 @@ fn body(event: &Event) -> Value {
                     .iter()
                     .map(|i| json!({"name": i.name, "digest": i.digest, "source": i.source}));
                 map.insert("includes".into(), Value::Array(includes.collect()));
+            }
+            if let (true, Value::Object(map)) = (s.again, &mut value) {
+                map.insert("again".into(), Value::Bool(true));
             }
             value
         }
@@ -261,6 +268,11 @@ fn event(v: &Value) -> Parsed<Event> {
                 template: text(t, "name")?,
                 digest: text(t, "digest")?,
                 ordinal: count(v, "ordinal")?,
+                again: match v.get("again") {
+                    None => false,
+                    Some(Value::Bool(true)) => true,
+                    Some(_) => return Err("again is not true".into()),
+                },
                 source: text(t, "source")?,
                 includes: includes(v)?,
                 records,
@@ -328,6 +340,7 @@ mod tests {
             template: "change".into(),
             digest: "sha256:aa".into(),
             ordinal: 1,
+            again: false,
             source: ".writfold/plans/change.toml".into(),
             includes: Vec::new(),
             records: Baseline::default(),
@@ -336,12 +349,14 @@ mod tests {
         assert_eq!(name(&splice), "splice-change.1.json");
         let text = String::from_utf8(bytes("run-1", &splice)).map_err(|e| e.to_string())?;
         assert!(!text.contains("includes"), "no includes, no key: {text}");
+        assert!(!text.contains("again"), "no repeat, no key: {text}");
         let mut nested = match &splice {
             Event::Splice(s) => s.clone(),
             _ => return Err("a splice".into()),
         };
         nested.parent = "change#1/review".into();
         nested.ordinal = 2;
+        nested.again = true;
         nested.includes = vec![Include {
             name: "read".into(),
             digest: "sha256:bb".into(),
@@ -351,7 +366,7 @@ mod tests {
         assert_eq!(name(&nested), "splice-change.1~review~change.2.json");
         let back = String::from_utf8(bytes("run-1", &nested)).map_err(|e| e.to_string())?;
         assert!(
-            matches!(parse(&back, "run-1", &name(&nested))?, Event::Splice(s) if s.includes.len() == 1 && s.parent == "change#1/review")
+            matches!(parse(&back, "run-1", &name(&nested))?, Event::Splice(s) if s.includes.len() == 1 && s.again && s.parent == "change#1/review")
         );
         assert!(
             matches!(parse(&text, "run-1", "splice-change.1.json")?, Event::Splice(s) if s.template == "change")
