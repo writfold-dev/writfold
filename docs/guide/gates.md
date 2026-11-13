@@ -2,7 +2,7 @@
 
 > **Status:** built in v0.3.0-dev.1; instruction gates, gate scripts, the Weft assessed gate, run-record checks and plan-owed gates built in v0.4.0-dev.1.
 
-A gate is one small check with a path scope. `gate run` runs its command and keeps a receipt pinned to the exact bytes checked. `gate status` then says, on every read, whether that evidence still holds. Gates report; they block nothing.
+A gate is one small check with a path scope. `gate run` runs its command and keeps a receipt pinned to the exact bytes checked. `gate status` then says, on every read, whether that evidence still holds. Gates report; they block nothing unless a [guard rule](hooks.md#guard-rules) names them.
 
 ## A definition, every key
 
@@ -267,4 +267,4 @@ description = "the reflection names what went wrong and what to change"
 
 - **Mistakes, not adversaries.** A gate catches a forgotten check, a check run on other bytes, and a "tests pass" that is stale. A careful forger can still write a receipt that reads as valid; nothing is signed.
 - **Git is the tamper evidence.** Definitions, receipts and statements are tracked text, so a weakened definition or an edited receipt shows in a diff.
-- **A gate does not stop anything.** An agent can skip `gate run`. `gate status` and `resume` will show the gate as open.
+- **A gate does not stop anything** unless you add a guard rule. An agent can skip `gate run`. `gate status` and `resume` will show the gate as open. A [guard rule](hooks.md#guard-rules) (built in v0.5.0-dev.1) can refuse a named command, such as `git commit`, until the run's gates are met; it is a guard, not enforcement.

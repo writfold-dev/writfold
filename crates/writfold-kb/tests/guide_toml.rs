@@ -1,7 +1,7 @@
 //! Keeps `docs/guide/` honest: every fenced `toml` block there is read by
 //! the parser that reads the real file (a gate definition, a delivery mode,
-//! a deny list, the guard configuration, a plan template, the required
-//! steps or a kind declaration). A block whose preceding line is `<!-- planned -->` sketches a format that is not
+//! a deny list, the guard configuration, a guard rule, a plan template,
+//! the required steps or a kind declaration). A block whose preceding line is `<!-- planned -->` sketches a format that is not
 //! built; it must be refused today, so the marker cannot outlive the
 //! feature it labels.
 use std::error::Error;
@@ -176,6 +176,12 @@ fn accept(text: &str) -> TestResult {
                 .map(|guard| guard.is_some())
                 .map_err(|e| e.to_string())
         }),
+        "writfold-guard-rule/1" => {
+            let id = string(&map, "id")?;
+            let path = format!("{}/{id}.toml", writfold_kb::guard::rules::DIR);
+            writfold_kb::guard::rules::parse(text, &id, &path)?;
+            Ok(())
+        }
         "writfold-plan/1" => {
             let name = string(&map, "name")?;
             writfold_kb::plan::template::parse(text.as_bytes(), Some(&name))?;
@@ -265,6 +271,9 @@ fn the_block_check_refuses_what_the_product_refuses() {
     assert!(accept(&source.replace("\"ttl\"", "\"immutable\"")).is_ok());
     assert!(accept(&format!("{source}default_ttl = \"7\"\n")).is_err());
     assert!(accept(&source.replace("web", "code")).is_err());
+    let rule = "schema = \"writfold-guard-rule/1\"\nid = \"commit\"\nevent = \"pre-tool-use\"\ncommands = [\"git commit\"]\nrequire = [\"gates.met\"]\naction = \"deny\"\n";
+    assert!(accept(rule).is_ok());
+    assert!(accept(&rule.replace("\"deny\"", "\"warn\"")).is_err());
     let page = "<!-- planned -->\n```toml\na = 1\n```\n\ntext\n```toml\nb = 2\n```\n";
     let found = blocks("x", page);
     assert_eq!(found.len(), 2);

@@ -24,7 +24,7 @@ mod place;
 pub mod recheck;
 pub mod records;
 pub mod required;
-mod show;
+pub(crate) mod show;
 mod splice;
 pub mod template;
 mod write;

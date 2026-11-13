@@ -17,11 +17,13 @@
 //!   which Claude Code adds to the compaction prompt.
 //! - `post-compact` keeps the compaction summary as the draft's body.
 //! - `stop` keeps the last assistant message (no Git spawn: it runs every
-//!   turn).
+//!   turn), then, only when a `stop` guard rule exists, may add context
+//!   once per session ([`crate::guard::stop`]).
 //! - `session-end` records the end reason (no Git spawn: the budget is
 //!   1.5 s).
-//! - `pre-tool-use` is the optional delivery guard ([`crate::guard`]):
-//!   silent unless the KB configures it, and then it may print a denial.
+//! - `pre-tool-use` is the optional delivery guard and the guard rules
+//!   ([`crate::guard`]): silent unless the KB or the repository configures
+//!   them, and then it may print a denial or a question.
 use crate::draft;
 use crate::workspace::{GitTool, Workspace, discover};
 use crate::{Request, Verb, runs, time};
@@ -95,6 +97,8 @@ pub fn run(event: &str, input: &str, env: &HookEnv) -> HookOutput {
             start::session_start(&ws, &cwd, now, source)
         }
         "pre-tool-use" => crate::guard::pre_tool_use(&ws, &input, &cwd, now),
+        "stop" => record(event, &ws, &input, &cwd, now)
+            .and_then(|_| crate::guard::stop(&ws, &input, &cwd, now)),
         _ => record(event, &ws, &input, &cwd, now),
     };
     result.unwrap_or_else(quiet)

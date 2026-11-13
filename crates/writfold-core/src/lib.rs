@@ -42,6 +42,7 @@ pub mod bytes;
 pub mod convenience;
 pub mod flow;
 pub mod gate;
+pub mod guard;
 pub mod investigation;
 pub mod ledger;
 pub mod plan;

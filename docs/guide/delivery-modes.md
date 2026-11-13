@@ -95,7 +95,7 @@ A denial, as Claude Code receives it:
 {"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"writfold delivery guard (a guard, not enforcement): no delivery candidate of run run-20261112T211025Z-7fe148 holds the bytes being posted (sha256:2221aeb6…); prepare and check one with writfold kb deliver"}}
 ```
 
-When it lets a call through it prints nothing, so Claude Code's own permission prompt still applies. It is a guard, not enforcement: it sees only the calls the harness shows it, it passes any command or tool it is not configured for, and a missing KB, an unreadable configuration or a timeout lets the call proceed.
+When it lets a call through it prints nothing, so Claude Code's own permission prompt still applies. It is a guard, not enforcement: it sees only the calls the harness shows it, and it passes any command or tool it is not configured for. A missing KB, an unreadable configuration or a timeout lets the call proceed. Once a call matches, though, a KB it cannot read denies the call ("cannot read the KB") rather than letting it through. The same hook also evaluates [guard rules](hooks.md#guard-rules) (built in v0.5.0-dev.1), after this guard; a denial here wins.
 
 ## Your own modes
 

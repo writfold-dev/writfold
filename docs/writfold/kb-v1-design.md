@@ -941,7 +941,7 @@ Events: `session-start`, `pre-compact`, `post-compact`, `stop` and `session-end`
 | `stop` | `session_id`, `last_assistant_message` | draft `last_message` (no Git spawn: it runs every turn) | nothing |
 | `session-end` | `session_id`, `reason` | draft `ended` when a draft exists; it never creates one | nothing |
 
-Every write also sets `run` (the current-run pointer, when set), `trigger`, `updated`, and on creation `schema`, `session`, `created` and `cwd`. Texts are clipped to 4,000 characters at a line break, with a marker. No hook calls a model, blocks, or asks Claude to continue.
+Every write also sets `run` (the current-run pointer, when set), `trigger`, `updated`, and on creation `schema`, `session`, `created` and `cwd`. Texts are clipped to 4,000 characters at a line break, with a marker. No hook calls a model, blocks, or asks Claude to continue (until the opt-in guard rules of section 30).
 
 ### 14.3 Drafts
 
@@ -1559,7 +1559,7 @@ The kernel's `state` (16.6) still derives a check's state from its receipts. The
 - **A missing deny list is `unknown`,** not a pass; add an empty `rules = []` to say an audience has none.
 - **`deliver check` writes its receipts in one locked write but not atomically as a set:** a crash between two receipts leaves the earlier ones (tested).
 - **No `deliver show`.** `status` gives the payload's path, size and digest; the file is the exact bytes.
-- **The guard's matcher is `^(Bash|mcp__.*)$`,** so a guarded built-in tool other than Bash would need a matcher change; MCP posting tools are covered.
+- **The guard's matcher is `^(Bash|mcp__.*)$`,** so a guarded built-in tool other than Bash would need a matcher change; MCP posting tools are covered. (v0.5.0-dev.1 widens it to `^(Bash|Edit|Write|MultiEdit|NotebookEdit|mcp__.*)$` for guard rules, section 30.)
 
 ### 19.10 Not done
 
@@ -2251,7 +2251,7 @@ From https://code.claude.com/docs/en/hooks:
 - exporting `WRITFOLD_SESSION` through `CLAUDE_ENV_FILE`;
 - ~~a bounded stale-citation count at start~~ (built in v0.5.0-dev.1, section 29);
 - an opt-in `fetch`;
-- an opt-in Stop nudge.
+- an opt-in Stop nudge (built in v0.5.0-dev.1, 30.4).
 
 **Not covered:** a manual smoke test in an interactive Claude Code session.
 
@@ -2591,3 +2591,61 @@ A sixth part, `Part::Stale`, shown after the brief: ``Citations: 1 gone, 2 chang
 
 - An external check command per kind, fetching, refresh candidates and bulk `stale=` marks.
 - The `cite_checks` cache records no digest of the declarations it was computed under; a changed declaration is picked up only by the next `stale`, as documented.
+
+## 30. Guard rules and the Stop nudge as built
+
+Built in v0.5.0-dev.1. A guard rule refuses a named command or tool until facts about the run hold, through the same PreToolUse hook as the delivery guard (19.6), and the same rule files give the opt-in Stop nudge that 7.1 sketched and 25.8 listed as not built. User documentation: [docs/guide/hooks.md](../guide/hooks.md#guard-rules). New code: the kernel `crates/writfold-core/src/guard.rs`; `crates/writfold-kb/src/guard/{mod,rules,require}.rs`, with the delivery guard moved unchanged from `guard.rs` to `guard/delivery.rs`; the `stop` dispatch in `hook/mod.rs`; the `guards` part of `kb check` (`check.rs`); the matcher in `plugins/writfold/hooks/hooks.json`.
+
+### 30.1 Rule files
+
+`.writfold/guards/<id>.toml`, schema `writfold-guard-rule/1` (`writfold-guard/1` is `guard.toml`'s), in the gate definitions' TOML subset with unknown keys refused. Keys: `id` (a slug equal to the file name), `event` (`pre-tool-use` or `stop`), `commands` (word prefixes of a simple command, matched as `guard.toml`'s are), `tools` (exact names), `repos` (optional repository-name patterns with `!` exclusions, matched by `writfold_core::scope::in_scope`; a `/` is refused), `require`, `action` (`deny` or `ask`, required for `pre-tool-use`, refused for `stop`) and `description`. A `pre-tool-use` rule names at least one command or tool; a `stop` rule names none. `require` is one or more of a fixed vocabulary, refused if unknown or repeated: `run.current`, `gates.met`, `gate:<id>`, `step.met`. There are no path globs, gate-ID globs, per-gate standing sets or origin-URL scopes.
+
+Rules are read from the KB root's `.writfold/guards/` (every project) and from the nearest `.writfold/guards/` at or above the event's `cwd` when that is another directory (that repository only), found by walking the filesystem. An ID defined in both keeps the KB root's and reports the other as a problem.
+
+### 30.2 Requirements
+
+Gathered once per event (`guard/require.rs`), after a rule matched:
+
+- `run.current`: the current-run pointer names a run in the index whose effective state is `open`.
+- `gates.met`: every gate is judged on the subject repository as `gate status` judges it (`status::judge` with the plan's run-record digest), and each gate the run owes (the plan's gates, or every defined gate without a plan) must be met (`Standing::met`). A gate the plan names but nothing defines is unmet, as is any invalid receipt, statement or definition. The unmet lines carry `gate status`'s own `next:` text.
+- `gate:<id>`: that gate, judged the same way, whether or not the plan names it.
+- `step.met`: the plan's current step owes nothing (`plan::judge`), with `plan advance`'s `next:` text; met with no plan or when every step is closed.
+
+The subject is `gate status`'s: the repository enclosing `cwd` unless it is the KB's own, else the run's recorded worktree. A rule with `repos` is skipped outside a repository.
+
+### 30.3 The decision
+
+`writfold_core::guard` holds three total functions over `Fact = Met | Unmet | Unknown`: `decide(matched, action, facts)` passes iff the rule did not match or every fact is `Met`, else gives the action; `combine` keeps the strictest of several rules' decisions (deny, then ask, then pass); `nudge(stop_hook_active, already_nudged, facts)` is true only when neither flag is set and some fact is not `Met`. They are not translated by Aeneas: the domain is a few values, and the unit tests enumerate every input up to three facts.
+
+`Unknown` means the KB, the index or Git could not be read after a rule matched (every requirement is then `Unknown`, with "cannot read the KB"), or a run or subject the requirement needs is missing. It never passes, matching the delivery guard, which denies when it cannot read the KB after a match. No KB, an unreadable rule file (skipped, with a stderr line) and a timeout still let the call through.
+
+`pre_tool_use` runs the delivery guard first, unchanged; its denial is returned as it was. An error in the delivery guard's configuration no longer ends the hook: it becomes a stderr line and the rules are still evaluated. Then the rules: with no rule directory nothing more happens; otherwise the rule files are read, and only when one matches are the index opened and Git spawned. A refusal is `permissionDecision` `deny` or `ask` with `writfold guard rule <id> (a guard, not enforcement): <description>; owes: … (rule: <path>)`, one line per refusing rule.
+
+### 30.4 The Stop nudge
+
+After `record` saves the Stop draft, `guard::stop` reads the rule directories; with no `stop` rule it returns, so the Stop hook still spawns nothing by default. Otherwise, when `stop_hook_active` is false and the session's draft has no `nudged` field, the stop rules' requirements are evaluated; if any rule's are not all met, the draft gets `nudged` (a timestamp; local, like the rest of the draft) and the hook prints `hookSpecificOutput.additionalContext` for `Stop` naming what is owed.
+
+**Contract checked (13 November 2026)** against https://code.claude.com/docs/en/hooks, Stop decision control: `decision: "block"` with a `reason`, or `hookSpecificOutput.additionalContext`, "non-error feedback for Claude. The conversation continues so Claude can act on it"; both pass through the `stop_hook_active` input and the 8-continuation cap. There is no Stop output that adds context without continuing, so the nudge, though it uses the non-error form, does continue the turn once per session. `docs/guide/hooks.md`'s "none asks Claude to continue" now says that this one opt-in rule does. Plain stdout from Stop reaches only the debug log.
+
+### 30.5 Cost
+
+Measured on 13 November 2026 with the release binary, process start included, on a one-asset KB: about 1.4 ms per `Edit` event with no rule directory, about 1.5 ms with a rule directory whose rule did not match, about 9 ms for a matched `git commit` that opens the index (no current run). Widening the matcher to `^(Bash|Edit|Write|MultiEdit|NotebookEdit|mcp__.*)$` costs one such process per edit call.
+
+### 30.6 Tests
+
+- Kernel (`writfold-core`, `guard::tests`): `decide`, `nudge` and `combine` over every input up to three facts; `Unknown` never passes.
+- `crates/writfold-kb/tests/guard_rules.rs`, on the fixture world: silent with no rule and no index file created, then still none for unmatched calls (fast path); `git commit` matched inside `cargo test && git commit -m x` and after `FOO=1`, not inside `echo "git commit"` or as `git commits`; exact tool names; gates named while `open`, `stale`, `failed` and `unknown`, passing when `satisfied`, `attested` or `waived`; `ask`; `repos` exclusion and a repository-placed rule applying only under it; an unreadable local state directory after a match denying, or asking under `ask`; a malformed rule skipped with a stderr line and reported by `kb check`; the Stop nudge silent with only a pre-tool-use rule, silent while `stop_hook_active`, once with the plan step's owed gate and `next:`, then never again; the rule parser's refusals.
+- `crates/writfold/tests/kb_hook.rs`: the plugin's matcher, a denial for `Edit` and the Stop nudge once, through the binary.
+- `tests/guard.rs` (the delivery guard) is unchanged and passes.
+- **Removing the check fails a test** (checked by hand): evaluating with no matched rule, ignoring the `nudged` flag, ignoring `stop_hook_active`, and treating `Unknown` as met each fail one of the tests above.
+
+### 30.7 Deviations
+
+- **`combine`** is in the kernel beside `decide` and `nudge`: with several matched rules, a denial wins over a question.
+- **`gates.met` counts invalid filings and undefined owed gates as unmet**, as `gate lines` does, rather than only judged standings.
+- **The delivery guard's configuration error** no longer silences the rules (30.3); the delivery guard's own decisions are unchanged.
+
+### 30.8 Not done
+
+- A covered checklist gate meeting `gates.met` is not tested here; it depends on the checklist gate class.
+- The `cwd` is the session's, not that of a `cd` inside the command line.
