@@ -1,8 +1,8 @@
 # Assurance
 
-> **Status:** describes v0.3.0-dev.1. The run-graph and gate kernels are proved; a run-graph model is planned and marked so.
+> **Status:** describes v0.4.0-dev.1. The run-graph, gate and assess kernels are proved over the shipped Rust, and the run graph is model-checked with TLC.
 
-What stands behind `writfold kb`, sorted by how strong the claim is. The short version: the write protocol is model-checked and kill-tested; the decisions about plans and gates (which step is current, whether a step may be recorded as done, how a splice changes the plan, what a gate's receipts and statements add up to) are proved for every input over the shipped Rust; everything that turns files into those decisions' inputs is tested.
+What stands behind `writfold kb`, sorted by how strong the claim is. The short version: the write protocol and the run graph are model-checked, the write protocol is kill-tested; the decisions about plans and gates (which step is current, whether a step may be recorded as done, how a splice changes the plan, what a gate's receipts and statements add up to) are proved for every input over the shipped Rust; everything that turns files into those decisions' inputs is tested.
 
 ## Tested
 
@@ -22,7 +22,14 @@ What stands behind `writfold kb`, sorted by how strong the claim is. The short v
 
 [`spec/KbWrite.tla`](../../spec/KbWrite.tla) models the write protocol and the index refresh: two appenders and a creator, two refreshers, a reader, and a power loss at any moment. TLC checks five invariants over about 18 million states: a published record is complete, no acknowledged write is lost, create-new never overwrites, the stored index is the derivation of its pin, and a reader told `index=fresh` sees exactly that derivation. Five mutants, each dropping one protocol step, each fail their invariant.
 
-The model is hand-written and bounded. It is tied to the code by the kill tests at the same steps, not by proof.
+[`spec/RunGraph.tla`](../../spec/RunGraph.tla) models the run graph (`plan set|use|advance|skip`): two sessions, either in two clones that merge or in one clone, a crash between any two writes, the subject's bytes moving under a gate, and a template edited mid-run. TLC checks that a step has at most one `done-` record, that every done record names a receipt about the bytes it judged, that every splice has its snapshot, that two clones holding the same files agree on the plan, that the current step is the first neither done nor skipped, that a splice repeats no template already spliced on its chain unless `--again` asked, that the done set only grows, that a step adds nodes only before the current step, and that a stale step never becomes current again. The bounds are small (two templates, splices two levels deep, two or three decisions per session): with drift and a crash the check is complete for two sessions in one clone (about 44 million states), and for two merging clones it is complete without them (about 2 million states) and was stopped unfinished with them. Ten mutants, each changing one rule, each fail their property. Details and numbers: [design §27](../writfold/kb-v1-design.md#27-model-specrungraphtla).
+
+The run-graph model found two gaps, recorded and not yet fixed:
+
+- **Within one clone,** a plan write decides from a fold read outside the write lock and only checks, under the lock, that its file name is new. Two sessions in one clone can interleave so that a step is done while steps spliced before it are open. The model shows that re-checking the decision under the lock (and, for `plan use`, that nothing was spliced under the step meanwhile) closes this.
+- **Across clones,** a merge can put open steps before a done one (a splice under a step another clone has closed, or two different plans set on one run). Nothing is lost and both clones agree, but `plan status` does not flag it.
+
+The models are hand-written and bounded. They are evidence about the design, not a refinement of the Rust: `KbWrite.tla` is tied to the code by the kill tests at the same steps, and `RunGraph.tla` by the plan tests (order independence, kill tests, the kernel's exhaustive tests), not by proof.
 
 ## Proved
 
@@ -57,11 +64,10 @@ Model output, the quality of a statement or a reflection, whether a recorded dec
 
 ## What "derived" buys
 
-Gate standing, delivery standing and the index are recomputed from tracked files on every read and never stored. Two clones at the same commit with the same local repositories give the same answer, and there is no state to migrate or repair. Where several receipts cover the same bytes, gate receipts are ordered by their `seq` and file name, not by a clock; delivery receipts are still ordered by their recorded time.
+Gate standing, delivery standing and the index are recomputed from tracked files on every read and never stored. Two clones at the same commit with the same local repositories give the same answer, and there is no state to migrate or repair. Where several gate receipts cover the same bytes, the newest is chosen by a `seq` counter and the file name, never the clock ([design 21.7](../writfold/kb-v1-design.md#217-receipt-order-without-a-clock)). One caveat today: delivery receipts are still ordered by their recorded time, which comes from the machine's clock.
 
 ## Planned
 
-- **A model:** `spec/RunGraph.tla`, covering two sessions on one run, merges, drift and crashes.
 - **Ordering without a clock for delivery receipts**, which still order by recorded time.
 
 Until the model lands, describe concurrent sessions and merges on one run as tested, not model-checked.

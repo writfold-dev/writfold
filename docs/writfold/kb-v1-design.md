@@ -1789,7 +1789,7 @@ A gate of class `run-record` takes `require = [...]` (built-ins only: `research.
 
 - ~~Splicing under a step (`plan use`, `--again`, `use=` includes), `!template-moved`, required steps spliced into every run, and a skill's dynamic-injection line~~: built, [§24](#24-splicing-and-required-steps-as-built).
 - ~~The session-start and compaction hooks showing the plan position~~ (built since, §25).
-- ~~Proofs of `writfold_core::plan`~~ (21.11); `spec/RunGraph.tla`.
+- ~~Proofs of `writfold_core::plan`~~ (21.11); ~~`spec/RunGraph.tla`~~ (§27).
 - `seq` for delivery receipts (19.4), which still order by `recorded`; deliveries are not plan gates in this slice.
 - Delivery modes as a step's gates (a `deliver:<mode>` form); a candidate gate is refused on a step.
 
@@ -2399,3 +2399,86 @@ The run had no KB, because the environment it ran in could not create a Git repo
 - The opt-in Stop nudge and `transcript_path` in the draft (25.8).
 - `WRITFOLD_SESSION` for the fork: proposals it makes fall into the no-session bucket unless it passes `--session`.
 - A Writfold check that a reflection is good: only the attestation speaks to that.
+
+## 27. Model: `spec/RunGraph.tla`
+
+The model the mission names under "Proved and modelled later". It checks the run graph as built through splicing (§21 and §24: `plan set|use|advance|skip`, per-parent ordinals, the idempotence key looked up at the current step, its ancestors and the root, `--again`). It is **model evidence about the design, not a refinement of the Rust**: the model is hand-written and bounded, and it is tied to the code only by the tests in 21.8 and 24.8, not by proof. It takes from `KbWrite.tla` (13.8) that an event file is published create-new and atomically, and does not model the write protocol, power loss or checkpoints again.
+
+### 27.1 What is modelled
+
+- **Event files.** A template snapshot (named by digest), a splice (named by parent, template and ordinal; carrying the digest), a `done-` record (named by its node; naming, per gate, the receipt and the content judged) and a `skip-` record. Each clone holds its files in listing (arrival) order, so a fold that depends on that order can be caught.
+- **Sessions.** Two, in one of two topologies: `separate` (one session in each of two clones that merge) and `same` (both in one clone). A session folds outside the write lock and decides, then takes the clone's lock, re-checks (`Recheck`), and publishes its files one at a time.
+- **Environment.** A receipt passing on the subject's present bytes; drift of the subject's bytes (a gate goes stale); a template edited mid-run (a new digest); a merge (a set union of files and receipts, refused like Git's add/add conflict when two clones hold different bytes under one name, and run between Writfold invocations in the clone it enters); a crash that kills every session of a clone between any two publishes.
+- **The fold.** Splices expanded from their snapshots in key order (parent, ordinal, template), post-order; a splice without its snapshot is invalid; the current node is the first neither done nor skipped.
+- **Bounds.** Two templates (of one or two steps, two versions each), one gate, splices nested two levels (the Rust allows four), ordinals up to 2, and per configuration: decisions per session (`MaxWrites`), drifts per clone (`MaxDrift`) and crashes (`MaxCrashes`), as in the table of 26.3.
+- **Not modelled.** `use=` includes and their closure, required start and end templates, `!template-moved` (a flag only), gate definitions changing, attested and waived gates (to the decision they are met or not), run-record windows, closed runs, hand-edited events.
+
+### 27.2 Properties
+
+| Property | Statement |
+|---|---|
+| `OneDonePerNode` | at most one `done-` record per node |
+| `EvidenceNamed` | every done record of a gated node names a receipt present in the same clone |
+| `AdvanceOnlyWhenMet` | the receipt a done record names is about the bytes it judged |
+| `SnapshotsExist` | every splice has its snapshot |
+| `FoldOrderIndependent` | two clones with the same set of files agree on the steps, the done set and the current node |
+| `CurrentIsFirstOpen` | the current node, as computed, is the first neither done nor skipped |
+| `SpliceIdempotentLocal` | a splice written without `--again` never repeats a (template, digest) already spliced, earlier in the same clone, under its parent, an ancestor or the root |
+| `DoneOnlyGrows` (action) | no step removes a node from the done set |
+| `SplicePreserves` (action) | every step keeps every existing node in its order; every step but a merge leaves the fold up to the current node unchanged |
+| `CurrentNeverBack` (action) | the current node never becomes a node that was already in the fold before it (so a stale step is never reopened) |
+| `DonePrefix` | within a clone, no node is done while an earlier node is open |
+
+Two reachability witnesses keep the positive runs honest: two clones reach the same file set holding a done record (`FoldOrderIndependent` is not vacuous), and a spliced child step is done.
+
+### 27.3 Results
+
+TLC 2.19 (`tla2tools.jar` v1.7.4) in the admitted tools image `writfold-tools@sha256:c854889f19c83174e69600ee28f0d4d35a0d2de1a23b3a35b1ecf4c4a88e0fc6`, `docker run --network none`, `spec/` mounted read-only, the image's default user, not `scripts/gate`.
+
+| Configuration | Topology, re-check | Result |
+|---|---|---|
+| `RunGraph` | separate, as built; `MaxWrites = 2`, no drift, no crash | **complete**, every property but `DonePrefix` holds: 2,090,568 distinct states, depth 25 (7,233,287 generated) |
+| `RunGraph.same` | same, re-checked (27.4); `MaxWrites = 3`, one drift, one crash | **complete**, every property, `DonePrefix` included, holds: 44,263,328 distinct states, depth 28 (126,066,445 generated, 35 minutes with 12 workers) |
+| `RunGraph.wide` | separate, as built; `MaxWrites = 3`, one drift per clone, one crash | **did not finish**: stopped after about 65 minutes at 73,753,982 distinct states, depth 21, 32 million states still queued, no violation found |
+| (not kept) | separate, as built; `MaxWrites = 2`, one drift per clone, one crash | **did not finish**: stopped after about 38 minutes at 30,645,147 distinct states, depth 21, 8 million queued, no violation found |
+
+So drift under a done step and a crash between a snapshot and its splice are checked exhaustively with two sessions in one clone, and across two merging clones only up to depth 21. The witnesses `probe-MergeAgrees` and `probe-NestedDone` are reached at `RunGraph`'s bounds (7,366 and 84,738 states).
+
+Each mutant changes one thing and fails its target (separate topology, as built; distinct states found before the counterexample, which vary a little between runs with several workers):
+
+| Mutant | Deviation | Fails | States | Depth |
+|---|---|---|---|---|
+| `NoIdempotence` | `plan use` without the key lookup | `SpliceIdempotentLocal` | 8,733 | 9 |
+| `AdvanceIgnoresGates` | advance whatever the gate, naming the newest receipt | `AdvanceOnlyWhenMet` | 51,566 | 10 |
+| `DoneWithoutEvidence` | a done record naming no receipt | `EvidenceNamed` | 11,093 | 9 |
+| `FoldByListingOrder` | sibling splices in listing order, not key order | `FoldOrderIndependent` | 66,117 | 11 |
+| `CurrentMovesBack` | a done step whose gate went stale is current again | `CurrentNeverBack` | 38,434 | 10 |
+| `CurrentAfterLastDone` | the current step is the one after the last done step | `CurrentIsFirstOpen` | 4,975 | 8 |
+| `FoldFromLiveTemplate` | splices expanded from the template file, not the snapshot | `SplicePreserves` | 453 | 6 |
+| `SpliceBeforeSnapshot` | the splice published before its snapshot | `SnapshotsExist` | 75 | 4 |
+| `TimeNamedDone` | `done-` files named by writer and time, not by node | `OneDonePerNode` | 969,227 | 14 |
+| `LastEventWins` | a step done and skipped takes the event listed last | `DoneOnlyGrows` | 824,137 | 14 |
+
+### 27.4 What the model found
+
+**1. Within one clone, a decision is not re-checked under the write lock (as built).** Every `plan` write folds the run outside the lock and checks only create-new under it (`atomic::apply`: `Op::Create`). Two sessions in one clone (two agents, or an agent and its subagent) can therefore interleave:
+
+- `probe-SameCloneAsBuilt` (`DonePrefix`, 168,897 states, depth 13): session 1 decides `plan use chg` under step `sk#1/k`; session 2, which read `k` as current with its gate met, decides `plan advance`; session 1 publishes the splice, then session 2 publishes `done-sk.1~k.json`. `k` is done while its new children before it are open.
+- `probe-SameCloneAsBuiltPreserves` (`SplicePreserves`, 83,199 states, depth 12): the same race in the other order: a splice published under a step that another session closed after the splice was decided, so open steps appear before the current step.
+- `plan set` and `plan skip` decide the same way (a fold outside the lock, create-new under it), so two `plan set`s of different templates in one clone can both land, giving two root plans.
+
+The splices' steps are still listed and owed, and nothing is lost (`DoneOnlyGrows`, `CurrentNeverBack` and `FoldOrderIndependent` hold), but the plan shows a done step after open ones, and `plan advance` never checked the new children. **Remedy (modelled as `Recheck = "all"`, which `RunGraph.same` checks):** under the lock, fold again and refuse (exit 3, nothing written) unless the decision still stands: `plan set`, no splice exists; `plan advance` and `plan skip`, the step is still current; `plan use`, the step is still current *and* no splice was added under it since (its ordinal is still the next). The last clause is needed: re-checking only the current step is not enough (`probe-RecheckCurrentOnly`, `SplicePreserves`, 1,375,592 states, depth 16): session 2 splices `sk` under `a` and skips its step, `a` is current again, and session 1's `chg` splice, decided earlier at the same ordinal 1, is published and sorts by template name before the skipped `sk` step. Not fixed here: the write path is `plan/splice.rs` and `plan/write.rs`, built in the same slice as splicing, and the fix belongs with it (a re-fold in `atomic::apply_held`'s check phase, or an `Op` guard that compares the plan directory's listing with the one decided on).
+
+**2. Across clones, a merge can put open steps before a done one, and nothing flags it.** No lock spans clones, so the re-check cannot help:
+
+- `probe-LateSplice` (`DonePrefixOneRoot`, 1,921,841 states, depth 15): both clones hold plan `chg`; clone 1 splices under `a` (in the trace `plan use chg --again`; any template not yet on that chain behaves the same); clone 2 advances `a`; after the merge `a` is done and its children, before it, are open. This is the `!late-splice` case of 24.10, now shown to arise from ordinary use.
+- `probe-MergeDisorder` (`DonePrefix`, 1,134,679 states, depth 14): two clones each set a different plan on one run (`plan set`, or `plan use` on a run without a plan), each starting at root ordinal 1; after the merge the two root plans fold by template name, so clone 1's done `sk#1/k` follows clone 2's open `chg#1/a`. With required steps (24.5) the root splices collide by name instead (a Git conflict).
+- `probe-MergeRepeatsSplice` (`SpliceIdempotent`, 757,830 states, depth 14): the same two root plans also repeat a template on one ancestor chain (`sk` at the root from one clone, under `chg#1/a` from the other), which neither clone's key lookup could see.
+
+In each case the merged fold is still a function of the files (`FoldOrderIndependent` holds in both clones) and the current step is the first open one, so the plan stays usable; what is missing is a flag. **Suggested:** `plan status` flags a done step that follows an open one (`!late-splice`, or a more general `!out-of-order`) and `kb check` counts it, so a merge that produced it is seen. Two clones advancing or skipping the same step, or splicing under one step at the same ordinal, write the same file name with other bytes, which Git reports as a conflict: Writfold never reads two `done-` records for one node (`OneDonePerNode`).
+
+### 27.5 Not done
+
+- `use=` includes, required steps, `!template-moved` and run-record windows in the model.
+- The re-check of 26.4 item 1 and the flag of item 2 in the Rust.
+- Proofs of `writfold_core::plan` (current, the advance check, splice).
