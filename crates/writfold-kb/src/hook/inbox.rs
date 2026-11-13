@@ -1,9 +1,11 @@
 //! The session-start inbox: what waits on someone, all of it local and
 //! none of it in the KB yet.
 //!
-//! - **Drafts** that the injected `resume` did not already list.
-//! - **Pending proposals** that the injected `resume` did not already list
-//!   ([`crate::proposal::inbox`]).
+//! - **Drafts** whose row the injected `resume` text does not contain.
+//! - **Pending proposals** whose row the injected `resume` text does not
+//!   contain ([`crate::proposal::inbox`]). This is decided from the text
+//!   as injected, after `resume`'s token budget and the session-start cut,
+//!   not from what `resume` would list at an unlimited budget.
 //! - **Runs left without an evaluation.** A session is known to have
 //!   ended only through its draft (`SessionEnd` marks it `ended`; its
 //!   `updated` stamp is then the end). Such a session's run is listed when
@@ -26,14 +28,20 @@ const SHOWN: usize = 3;
 
 type Draft = (String, Map<String, Value>);
 
-/// The inbox block, or an empty string when nothing waits.
-pub fn block(root: &Path, state: &Path, current: Option<&str>) -> String {
+/// Whether `resume` (as injected) holds the row `<kind> <id> [...`.
+fn listed(resume: &str, kind: &str, id: &str) -> bool {
+    let head = format!("{kind} {id} [");
+    resume.lines().any(|line| line.starts_with(&head))
+}
+
+/// The inbox block, or an empty string when nothing waits. `resume` is
+/// the current run's part exactly as injected (empty when there is none).
+pub fn block(root: &Path, state: &Path, resume: &str) -> String {
     let all = draft::all(state);
-    // `resume` already lists the drafts of the current run and of no run.
-    let shown_by_resume = |d: &Map<String, Value>| {
-        current.is_some() && draft::text(d, "run").is_none_or(|run| Some(run.as_str()) == current)
-    };
-    let drafts: Vec<&Draft> = all.iter().filter(|(_, d)| !shown_by_resume(d)).collect();
+    let drafts: Vec<&Draft> = all
+        .iter()
+        .filter(|(session, _)| !listed(resume, "draft", session))
+        .collect();
     let mut text = String::new();
     if !drafts.is_empty() {
         for (session, d) in drafts.iter().take(SHOWN) {
@@ -42,7 +50,7 @@ pub fn block(root: &Path, state: &Path, current: Option<&str>) -> String {
         more(&mut text, drafts.len(), "drafts");
         text.push_str("  confirm: writfold kb checkpoint --from-draft SESSION\n");
     }
-    let proposals = crate::proposal::inbox(state, current);
+    let proposals = crate::proposal::inbox(state, &|id| listed(resume, "proposal", id));
     if !proposals.is_empty() {
         for line in &proposals {
             text.push_str(line);

@@ -51,15 +51,13 @@ pub fn rows(session: &Session<'_>, run: &str) -> Vec<Row> {
         .collect()
 }
 
-/// The session-start inbox lines for the proposals `resume` did not show
-/// (`current` is the run whose `resume` was injected), then `(+N more
+/// The session-start inbox lines for the proposals the injected text does
+/// not contain (`shown` answers that for an ID), then `(+N more
 /// proposals)`; empty when there are none.
-pub fn inbox(state: &Path, current: Option<&str>) -> Vec<String> {
-    let shown_by_resume =
-        |p: &Proposal| current.is_some() && p.run.as_deref().is_none_or(|r| Some(r) == current);
+pub fn inbox(state: &Path, shown: &dyn Fn(&str) -> bool) -> Vec<String> {
     let pending: Vec<Proposal> = super::all(state)
         .into_iter()
-        .filter(|p| !shown_by_resume(p))
+        .filter(|p| !shown(&p.id))
         .collect();
     let mut lines: Vec<String> = pending
         .iter()

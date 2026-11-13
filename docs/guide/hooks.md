@@ -57,7 +57,7 @@ Each part is printed only when it has something to say, in this order:
      next: writfold kb plan status --run RUN, then its reflect step (the writfold:evaluate skill)
    ```
 
-   Drafts and proposals that the injected `resume` already lists are not repeated. Up to three lines of each kind are shown, then `(+N more …)`.
+   A draft or proposal is listed here unless its row is in the `resume` text actually injected. `resume` is cut by its 500-token budget (and, in principle, by the 9,000-character cut below), so a busy run's own drafts and proposals can appear here rather than there; none is left out of both. Up to three lines of each kind are shown, then `(+N more …)`.
 
 **Runs left without an evaluation.** Writfold knows a session ended only from its draft, which `SessionEnd` marks as ended. The draft's last update is then the end time. The session's run is listed when all three hold:
 

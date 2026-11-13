@@ -60,6 +60,11 @@ pub const DROP_ORDER: [Part; 5] = [
 /// the first that does not is cut at a line with a marker, and the rest
 /// get what remains (nothing, once too little is left for a marker).
 pub fn fit(parts: &[(Part, String)], limit: usize) -> String {
+    kept(parts, limit).concat()
+}
+
+/// What [`fit`] keeps of each part, in the order of `parts`.
+fn kept(parts: &[(Part, String)], limit: usize) -> Vec<String> {
     let mut kept: Vec<String> = vec![String::new(); parts.len()];
     let mut left = limit;
     for part in DROP_ORDER.iter().rev() {
@@ -77,7 +82,29 @@ pub fn fit(parts: &[(Part, String)], limit: usize) -> String {
         };
         left = left.saturating_sub(kept[i].chars().count());
     }
-    kept.concat()
+    kept
+}
+
+/// Add the inbox to `parts`. It lists what the injected `resume` text does
+/// not contain, so it is decided from the run part as [`fit`] keeps it.
+/// A longer inbox can only shorten that part, and so only add to the
+/// inbox; this repeats until the run part kept no longer changes. It ends:
+/// each further round keeps strictly less of the run part.
+fn with_inbox(parts: Vec<(Part, String)>, root: &Path, local: &Path) -> Vec<(Part, String)> {
+    let run_at = parts.iter().position(|(p, _)| *p == Part::Run);
+    let mut resume = run_at.map_or_else(String::new, |i| parts[i].1.clone());
+    loop {
+        let block = inbox::block(root, local, &resume);
+        let mut trial = parts.clone();
+        if !block.is_empty() {
+            trial.push((Part::Inbox, block));
+        }
+        let shown = run_at.map_or_else(String::new, |i| kept(&trial, CONTEXT_LIMIT)[i].clone());
+        if shown == resume {
+            return trial;
+        }
+        resume = shown;
+    }
 }
 
 /// The plan position block of the current run, if it has a plan.
@@ -154,10 +181,7 @@ fn startup(
         }
     }
     if let Some(local) = local {
-        let block = inbox::block(&ws.root, local, current);
-        if !block.is_empty() {
-            parts.push((Part::Inbox, block));
-        }
+        parts = with_inbox(parts, &ws.root, local);
     }
     // Without a brief the first part must not open with a blank line.
     if let Some((_, first)) = parts.first_mut() {
