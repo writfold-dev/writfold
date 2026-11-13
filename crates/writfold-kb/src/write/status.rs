@@ -63,9 +63,9 @@ pub fn plan(session: &Session<'_>, s: &SetStatus) -> Result<Plan> {
             fields(session, &rec, &state, &[])?
         }
         "investigation" if state == "concluded" => {
-            return Err(refused(
-                "concluding an investigation needs its conclusion sections checked; v1 does not write it".into(),
-            ));
+            let (_, doc) = document(session, &rec)?;
+            super::conclude::check(&rec.id, &doc)?;
+            fields(session, &rec, &state, &[])?
         }
         "decision" => decision(session, &rec, &state, s)?,
         "ticket" | "investigation" => {

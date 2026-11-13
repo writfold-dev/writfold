@@ -73,11 +73,13 @@ The first command starts the run and makes it the current one; later `checkpoint
 | Kind | What `status --set` writes in v1 |
 |---|---|
 | ticket | any state of its vocabulary |
-| investigation | `open`, `monitoring`, `abandoned`; `concluded` is refused |
+| investigation | `open`, `monitoring`, `abandoned`, and `concluded` once the write-up is complete (below) |
 | decision | `draft`↔`proposed`, `proposed`→`rejected` (needs `--by`), `accepted`→`deferred`, any→`superseded` (needs `--superseded-by`) |
 | run | `open`, `closed` |
 
 `proposed` requires the decision's Research, two Alternatives and an Acceptance gates table to be filled. Writfold v1 reads `accepted`, `landing`, `applied`, `verified` and `regressed` but refuses to set them: they carry extra fields it does not compute. `--by` is recorded as given; the Git commit that adds the change is the record of who made it.
+
+`concluded` (built in v0.5.0-dev.1) is refused, with exit 3 and nothing written, until the investigation has text under `## Checked against` and `## Scope and limits`, and every hypothesis under `## Hypotheses` has an outcome. A hypothesis is a bullet `- H<n>: <outcome> …` whose outcome is `open`, `supported`, `refuted` or `unk`; a bullet that starts `- H<n>` without one is refused as unreadable. Concluding records that the write-up is complete, not that its findings are true.
 
 ## Proposals
 

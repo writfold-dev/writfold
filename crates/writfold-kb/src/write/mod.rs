@@ -9,6 +9,7 @@
 //! dirty; committing is the user's (or agent's) step.
 pub mod atomic;
 pub mod cite;
+pub mod conclude;
 pub mod json;
 pub mod record;
 pub mod retrieval;
