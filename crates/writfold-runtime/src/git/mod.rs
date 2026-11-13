@@ -37,6 +37,7 @@ mod command;
 mod error;
 mod gate;
 mod kb;
+mod kb_renames;
 mod kb_upstream;
 mod ledger;
 mod objects;
@@ -63,6 +64,7 @@ pub use kb::{
     KbCommit, KbDirty, KbRepository, KbStatus, kb_batch_check, kb_commit, kb_config, kb_diff_tree,
     kb_log, kb_ls_files, kb_status,
 };
+pub use kb_renames::kb_renames;
 pub use kb_upstream::{KbUpstream, kb_is_ancestor, kb_upstream};
 pub use ledger::{LedgerCommit, ledger_ref};
 pub use objects::{GitBlob, GitEntry};

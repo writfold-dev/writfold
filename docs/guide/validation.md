@@ -1,6 +1,6 @@
 # Is what I am reading still true?
 
-> **Status:** built in v0.3.0-dev.1; `kb check` built in v0.4.0-dev.1, with its plan line; kind declarations built in v0.5.0-dev.1.
+> **Status:** built in v0.3.0-dev.1; `kb check` built in v0.4.0-dev.1, with its plan line; kind declarations built in v0.5.0-dev.1; renames with edits followed in v0.5.0-dev.2.
 
 Four things can drift: a cited source, the index, a gate's evidence, and a delivery draft. Each has its own command, and `kb check` runs the first three together. All of them only read; none fetches from a network.
 
@@ -30,6 +30,8 @@ investigation inv:2026/2026-06-01-flush-stalls-again [open] opened after sig:fsy
 | `!regression` | an investigation opened after its signature was marked fixed | the fix may not have held |
 
 Code citations are checked against local clones only. Tell Writfold where they are with `<name> <path>` lines in the file `writfold/repos` inside the KB's Git directory, or point `WRITFOLD_KB_REPOS` at directories that hold them.
+
+A cited file that is no longer at its path is followed (built in v0.5.0-dev.2). An unchanged file found at another path is `!moved→<path>:a-b`. A file renamed with edits is found by Git's rename detection from the cited `rev=` to the checked commit, and is `!moved→<path>:a-b` only when the cited lines are found intact in the new file; otherwise it is `!gone` with the detail `renamed to <path>; span not found`. A renamed file is never reported fresh, even when the cited lines kept their numbers. A token without `rev=`, or whose commit is not in the local clone, stays `!gone` and the detail says why. At most 64 distinct cited commits are followed per `stale` run; citations of the rest are `!gone` with `rename-unchecked`.
 
 The read verbs (`brief`, `why`, `context`) show the same flags from cached verdicts and count them in the trailer (`stale=N`), so a stale source is visible without running `stale` first. The session-start hook prints one line counting the same cache ([hooks](hooks.md#what-session-start-injects)). Only `stale` rewrites the cache: a moved repository head, or a new or changed kind declaration, shows in the read verbs after the next `stale`.
 
