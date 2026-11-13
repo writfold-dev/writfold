@@ -33,6 +33,8 @@ verbs:
   timeline <id>                    linked investigations, tickets, decisions, checkpoints by date
   stale [<project>|<path>] [--offline]
                                    which citations have moved (local repositories only)
+  repos [--missing]                each cited repository: local, partial or missing, how its clone
+                                   was found, its target commit, when it last fetched (exit 2 if missing)
   index status|rebuild|verify      what the derived index holds; rebuild it; check it equals a rebuild
   check [<project>|<path>]         stale, index verify and the current run's gate status in one
                                    summary (the worst exit code of the three)

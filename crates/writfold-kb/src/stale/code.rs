@@ -3,18 +3,23 @@
 //! `--batch` for the files whose blob differs, and one tree listing when a
 //! path is missing (to find an exact rename by blob). A missing path whose
 //! blob is not in the tree is followed as a rename with edits ([`rename`]).
+//! A partial clone's code citations are unverifiable (`partial-clone`): its
+//! blobs may need a fetch. A Git failure in one repository makes that
+//! repository's citations unverifiable (`git-error: …`), not the run fail.
 use super::span::{Located, locate};
 use super::{Checked, Cite, Verdict, rename, repos};
-use crate::error::Result;
+use crate::error::{KbError, Result};
 use crate::session::Session;
 use crate::workspace::{CANCELLED, budgets};
 use std::collections::BTreeMap;
 use std::path::Path;
+use std::sync::atomic::Ordering;
 use writfold_core::verdict::{Observed, Target, Verdict as Kernel, observed};
 use writfold_domain::GitObjectId;
 use writfold_runtime::git::{
-    GitExecutable, KbRepository, kb_batch_check, kb_commit, pinned_blobs, pinned_tree,
+    GitError, GitExecutable, KbRepository, kb_batch_check, pinned_blobs, pinned_tree,
 };
+use writfold_runtime::process::ProcessError;
 
 pub fn check(
     session: &Session<'_>,
@@ -54,9 +59,56 @@ pub fn check(
             out.extend(members.iter().map(|&i| (i, missing("repo-not-local"))));
             continue;
         };
-        out.extend(check_repo(git, &dir, cites, &members, &mut remaining)?);
+        let (gates, members): (Vec<usize>, Vec<usize>) = members
+            .into_iter()
+            .partition(|&i| cites[i].kind.as_deref() == Some("gate"));
+        let members = if repos::partial(&dir) {
+            out.extend(members.iter().map(|&i| (i, missing("partial-clone"))));
+            gates
+        } else {
+            [gates, members].concat()
+        };
+        match check_repo(git, &dir, cites, &members, &mut remaining) {
+            Ok(found) => out.extend(found),
+            Err(error) if !CANCELLED.load(Ordering::Relaxed) && per_repo(&error) => {
+                let reason = format!("git-error: {}", brief(&error));
+                out.extend(members.iter().map(|&i| (i, missing(&reason))));
+            }
+            Err(error) => return Err(error),
+        }
     }
     Ok(out)
+}
+
+/// A Git failure confined to one repository: its citations read as
+/// unverifiable with the reason, and the other repositories are still
+/// checked.
+fn per_repo(error: &KbError) -> bool {
+    matches!(
+        error,
+        KbError::Git(_) | KbError::Process(_) | KbError::Fs(_)
+    )
+}
+
+/// The first line of an error (of Git's stderr when it exited non-zero),
+/// at most 160 characters.
+fn brief(error: &KbError) -> String {
+    let failed = match error {
+        KbError::Process(ProcessError::Command { status, stderr })
+        | KbError::Git(GitError::Process(ProcessError::Command { status, stderr })) => {
+            let said = String::from_utf8_lossy(stderr);
+            let line = said.lines().find(|l| !l.trim().is_empty()).unwrap_or("");
+            Some(format!(
+                "exit {} {}",
+                status.map_or_else(|| "?".to_owned(), |s| s.to_string()),
+                line.trim()
+            ))
+        }
+        _ => None,
+    };
+    let text = failed.unwrap_or_else(|| error.to_string());
+    let line = text.lines().next().unwrap_or_default();
+    line.trim().chars().take(160).collect()
 }
 
 fn missing(reason: &str) -> Checked {
@@ -84,17 +136,7 @@ fn check_repo(
         git_dir: dir,
         work_tree: None,
     };
-    let target = match kb_commit(
-        git,
-        reads,
-        "refs/remotes/origin/HEAD",
-        budgets()?,
-        &CANCELLED,
-    )? {
-        Some(commit) => Some((commit, "origin/HEAD")),
-        None => kb_commit(git, reads, "HEAD", budgets()?, &CANCELLED)?.map(|c| (c, "HEAD")),
-    };
-    let Some((target, named)) = target else {
+    let Some((target, named)) = repos::target(git, dir)? else {
         return Ok(members
             .iter()
             .map(|&i| (i, missing("repository has no commit")))

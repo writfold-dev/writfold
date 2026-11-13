@@ -92,6 +92,10 @@ pub enum Verb {
         open: bool,
         project: Option<String>,
     },
+    /// `repos [--missing]`: the cited repositories and their local clones.
+    Repos {
+        missing: bool,
+    },
     Resume {
         run: Option<String>,
     },
@@ -281,6 +285,11 @@ fn graph(session: &Session<'_>, verb: &Verb) -> Result<(Answer, &'static str, Ve
                 args,
             )
         }
+        Verb::Repos { missing } => (
+            verbs::repos::repos(session, *missing)?,
+            "repos",
+            vec![format!("missing={missing}")],
+        ),
         Verb::IndexRebuild => (verbs::index::status(session)?, "index-rebuild", Vec::new()),
         _ => (verbs::index::status(session)?, "index-status", Vec::new()),
     })
