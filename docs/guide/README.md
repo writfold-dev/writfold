@@ -1,6 +1,6 @@
 # Writfold guides
 
-> **Status:** built in v0.3.0-dev.1. Each page below says what is built and what is planned.
+> **Status:** built in v0.4.0-dev.1. Each page below says what is built and what is planned.
 
 These pages hold the full skeletons the website only sketches: file layouts, complete configuration files and real command output. The output comes from an invented demo knowledge base (`harbor`); run IDs and digests are real, local paths are cut to `…`.
 
@@ -10,7 +10,7 @@ These pages hold the full skeletons the website only sketches: file layouts, com
 | [feeding-back](feeding-back.md) | What each stage writes, with which verb, where it lands and who commits | built, with proposals and the backfill and reflection checks |
 | [validation](validation.md) | Checking that what you read still holds: `stale`, `index`, `gate status`, `deliver check`, and `kb check` for all at once | built, with the plan line of `kb check` |
 | [gates](gates.md) | Gate definitions, receipts, standing, waivers and attestations, run-record checks | built |
-| [delivery-modes](delivery-modes.md) | Delivery candidates, mode files, deny lists and the guard hook | built; your own modes planned |
+| [delivery-modes](delivery-modes.md) | Delivery candidates, mode files, deny lists and the guard hook | built, with your own modes |
 | [run-graph](run-graph.md) | Plans as a spine of steps that owe gates | built (splicing and required steps included) |
 | [skills](skills.md) | The bundled `writfold:kb` and `writfold:evaluate` skills, and skills that splice a plan template | built |
 | [hooks](hooks.md) | What each Claude Code hook reads, writes and prints | built |

@@ -127,7 +127,7 @@ Every answer ends with one line:
 | `.writfold/deliveries/<mode>.toml` | changes to a built-in delivery mode | [delivery-modes](delivery-modes.md) |
 | `.writfold/deliveries/deny-<audience>.toml` | references a draft for that audience must not hold | [delivery-modes](delivery-modes.md) |
 | `.writfold/deliveries/guard.toml` | publishing commands the guard hook watches | [delivery-modes](delivery-modes.md) |
-| `.writfold/plans/` | plan templates (planned) | [run-graph](run-graph.md) |
+| `.writfold/plans/` | plan templates | [run-graph](run-graph.md) |
 
 ## Tracked and local
 
