@@ -2805,3 +2805,7 @@ A checked kind may declare `max_age` (`<N>d` or `<N>h`, parsed as `default_ttl` 
 `kb stale` adds a note (`verbs/stale.rs::never_note`, over `stale::kinds::never_expiring`) naming each kind that is neither built in nor declared and holds well-formed tokens without `ttl=`, with their counts, and suggesting a declaration with `default_ttl`. Verdicts and exit codes are unchanged.
 
 Tests: the kernel test above; `crates/writfold-kb/tests/checker_cache.rs` ages a checker's cached fresh row to 6, 7 and 8 days under `max_age = "7d"` (fresh, fresh, `check-expired (8d)`), shows it fresh at 8 days without `max_age`, shows `stale --offline` reporting it and online `stale` asking again; making `aged` ignore the age fails both. `tests/kinds.rs` covers the `max_age` refusals and the note's kinds and counts before and after declarations. The guide's checker template (`docs/guide/checkers.md`) was run through the binary: `cite make --kind`, `kb stale`, a refused `make` for a missing file, `stale --offline` after ageing the cache eight days (`check-expired (8d)`), and online `stale` again.
+
+## 34. T2: run progress in `writfold watch` (planned)
+
+Not built. The specification is [tui-t2-spec.md](tui-t2-spec.md); this section is written from what is built when T2 lands, including deviations and Not done.
