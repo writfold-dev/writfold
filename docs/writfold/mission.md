@@ -130,7 +130,7 @@ Considered for this release and deferred, with the reason:
 - **External source checkers** (a command Writfold runs to check a citation kind it cannot check from Git, such as a tracker item's state). Deferred: it is the first non-Git process on the read path, so `kb stale` would answer differently on a machine without the checker and its credentials; it needs a cache and receipts designed first. Kind declarations are the registry it would attach to. Until then, a fact that must hold before shipping can be an `observed` gate.
 - **A separate observation record** (what was looked at, by which command, with what result, including failed lookups) as evidence for checklist items. Deferred until real cover rows show evidence a citation, locator or receipt cannot express.
 - **Writing a decision's `accepted`, `applied` and `verified` states.** Deferred: each binds the decision to a reviewed revision and an implementation, and that binding is not designed yet. `record decision` already gives a durable, reviewable draft.
-- **Following a rename with edits** for code citations (exact renames are already followed).
+- ~~Following a rename with edits for code citations~~ (built in v0.5.0-dev.2; [as built](kb-v1-design.md#62-algorithm-for-a-code-citation)).
 - **Not planned:** user-declared record lifecycles, path globs and origin matching on guard rules, per-audience render and redaction templates for citations, fetching cited repositories, and bulk inventory import (a loop over `record` reviewed as a Git diff does this).
 
 ## Gates, runs and progress (owner decision, 12 November 2026)

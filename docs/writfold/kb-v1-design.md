@@ -461,8 +461,9 @@ fresh, moved, changed, gone, expired, unverifiable. Two authored states pass thr
 4. **Search for the span** when the path exists with a different blob. Read the file, slide a window of the cited height, and compare the span digest of each window. A match at the same lines is **fresh**; elsewhere it is **moved**, reported with the new range. No match is **changed**, reported with the line of `sym` if one was given.
 5. **Handle a missing path.**
    - Look for the cited blob ID elsewhere in `T`'s tree. A hit is an exact rename: **moved** with the new path.
-   - Otherwise ask Git for the rename chain of that one path between `rev` and `T` (`log --follow -M`) and repeat step 4 on the new path.
+   - Otherwise ask Git which paths were renamed between `rev` and `T` and repeat step 4 on the new path, with one difference: a renamed path is never **fresh**. A span found anywhere in the new file, its cited lines included, is **moved** with the new path and range; no match is **gone** with the detail `renamed to <path>; span not found`.
    - If neither finds it, the verdict is **gone**.
+   - As built (v0.5.0-dev.2): one `diff-tree -r -M --diff-filter=R --name-status -z <rev> <T>` per distinct cited `rev` rather than `log --follow` per path. Git's whole-tree rename detection at its default similarity threshold reads a chain of renames between the two commits as one. A token without `rev=`, a `rev=` that is not hex or not in the clone, and a path Git does not report as renamed stay **gone**, each with its own detail. The module is `crates/writfold-kb/src/stale/rename.rs`; the Git read is `kb_renames` in `writfold-runtime`. Tested in `crates/writfold-kb/tests/rename.rs` (shifted, in place, edited, deleted, unknown revision) and the module's own tests (no input yields fresh; the cap).
 6. **Locators without a digest** (relationship evidence, signature fixes) can only be fresh (blob at `T` equals blob at the cited commit), changed or gone.
 
 Record and proposal citations compare the cited `state` with the record's current status in the index. All other kinds use `seen + ttl`; a token without `ttl=` never expires unless a kind declaration gives a default (section 29).
@@ -478,7 +479,7 @@ Per cited repository:
 That is three or four spawns regardless of citation count.
 
 - The window search is linear in file lines times window height. Files above fifty thousand lines are reported `changed(unsearched)`.
-- Rename following costs one spawn per missing path, capped at twenty per run. The remainder is reported `gone(rename-unchecked)` and counted.
+- Rename following costs one `diff-tree` spawn per distinct cited `rev` with a missing path, capped at 64 per run, and at most one more `cat-file --batch` per repository for the renamed files. Citations of revisions past the cap are reported `gone` with `rename-unchecked` (v0.5.0-dev.2; the first design said one spawn per missing path, capped at twenty).
 - Verdicts are cached in `cite_checks` keyed by the repository head. `brief` and `context` read the cache and print the head it was computed at; `stale` recomputes when a head has moved.
 
 ## 7. Harness integration

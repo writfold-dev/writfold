@@ -1,9 +1,10 @@
 //! Code and gate citations, three or four Git spawns per cited repository:
 //! the target commit, one `--batch-check` for every cited path, one
 //! `--batch` for the files whose blob differs, and one tree listing when a
-//! path is missing (to find an exact rename by blob).
+//! path is missing (to find an exact rename by blob). A missing path whose
+//! blob is not in the tree is followed as a rename with edits ([`rename`]).
 use super::span::{Located, locate};
-use super::{Checked, Cite, Verdict, repos};
+use super::{Checked, Cite, Verdict, rename, repos};
 use crate::error::Result;
 use crate::session::Session;
 use crate::workspace::{CANCELLED, budgets};
@@ -46,13 +47,14 @@ pub fn check(
         );
         return Ok(out);
     };
+    let mut remaining = rename::REV_CAP;
     for (repo, members) in groups {
         let url = members.iter().find_map(|&i| cites[i].field("url"));
         let Some(dir) = repos::resolve(session, &repo, url.as_deref()) else {
             out.extend(members.iter().map(|&i| (i, missing("repo-not-local"))));
             continue;
         };
-        out.extend(check_repo(git, &dir, cites, &members)?);
+        out.extend(check_repo(git, &dir, cites, &members, &mut remaining)?);
     }
     Ok(out)
 }
@@ -76,6 +78,7 @@ fn check_repo(
     dir: &Path,
     cites: &[Cite],
     members: &[usize],
+    remaining: &mut usize,
 ) -> Result<Vec<(usize, Checked)>> {
     let reads = KbRepository {
         git_dir: dir,
@@ -134,7 +137,11 @@ fn check_repo(
         asked.push(index);
     }
     let answers = kb_batch_check(git, reads, &names, budgets()?, &CANCELLED)?;
-    let verdicts = settle(git, dir, &target, cites, &asked, &answers)?;
+    let asked = Asked {
+        indices: &asked,
+        answers: &answers,
+    };
+    let verdicts = settle(git, dir, &target, cites, asked, remaining)?;
     out.extend(verdicts.into_iter().map(|(i, verdict)| {
         (
             i,
@@ -149,6 +156,13 @@ fn check_repo(
 
 type Answer = Option<(GitObjectId, String)>;
 
+/// The citations asked about, with two batch-check answers each.
+#[derive(Clone, Copy)]
+struct Asked<'a> {
+    indices: &'a [usize],
+    answers: &'a [Answer],
+}
+
 /// Decide each asked citation from the blob answers, reading contents and
 /// the tree only where needed.
 fn settle(
@@ -156,13 +170,14 @@ fn settle(
     dir: &Path,
     target: &GitObjectId,
     cites: &[Cite],
-    asked: &[usize],
-    answers: &[Answer],
+    asked: Asked<'_>,
+    remaining: &mut usize,
 ) -> Result<Vec<(usize, Verdict)>> {
+    let answers = asked.answers;
     let mut decided = Vec::new();
     let mut read: Vec<(usize, GitObjectId)> = Vec::new();
     let mut absent = Vec::new();
-    for (n, &index) in asked.iter().enumerate() {
+    for (n, &index) in asked.indices.iter().enumerate() {
         let cite = &cites[index];
         let now = answers
             .get(2 * n)
@@ -197,23 +212,28 @@ fn settle(
     }
     if !absent.is_empty() {
         let tree = pinned_tree(git, dir, target, budgets()?, &CANCELLED)?;
+        let mut edited = Vec::new();
         for index in absent {
             let cite = &cites[index];
             let renamed = cite
                 .blob
                 .as_deref()
                 .and_then(|blob| tree.iter().find(|entry| entry.blob.as_str() == blob));
-            let verdict = match (renamed, cite.first, cite.last) {
-                (Some(entry), first, last) => Verdict::Moved {
-                    path: Some(entry.path.clone()),
-                    first: first.unwrap_or(1),
-                    last: last.unwrap_or(1),
-                },
-                _ => Verdict::Gone {
-                    detail: Some("path absent; rename with edits is not followed in v1".into()),
-                },
-            };
-            decided.push((index, verdict));
+            match renamed {
+                Some(entry) => decided.push((
+                    index,
+                    Verdict::Moved {
+                        path: Some(entry.path.clone()),
+                        first: cite.first.unwrap_or(1),
+                        last: cite.last.unwrap_or(1),
+                    },
+                )),
+                None => edited.push(index),
+            }
+        }
+        if !edited.is_empty() {
+            let followed = rename::follow(git, dir, target, &tree, cites, &edited, remaining)?;
+            decided.extend(followed);
         }
     }
     Ok(decided)

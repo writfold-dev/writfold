@@ -6,6 +6,7 @@
 //! ([`kinds`]).
 mod code;
 pub mod kinds;
+mod rename;
 pub mod repos;
 pub mod span;
 
