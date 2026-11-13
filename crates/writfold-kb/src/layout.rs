@@ -181,4 +181,34 @@ mod tests {
             assert_eq!(classify(path), kind, "{path}");
         }
     }
+
+    /// A run directory not named `run-<stamp>-<hex>` is still a run: the
+    /// name is not parsed, and the ID is the manifest's `run_id`, else the
+    /// directory name. Unknown states and fields are kept.
+    #[test]
+    fn run_directories_of_any_name() -> Result<(), String> {
+        let dir = "runs/2026-03-flush-replay";
+        let manifest = format!("{dir}/manifest.json");
+        assert_eq!(classify(&manifest), Some(Kind::Run));
+        assert_eq!(
+            classify(&format!("{dir}/checkpoint.md")),
+            Some(Kind::Checkpoint)
+        );
+        assert_eq!(classify(&format!("{dir}/observations/o1.json")), None);
+        assert_eq!(classify(&format!("{dir}/receipts/r1.json")), None);
+        let text = br#"{"task": "Replay", "state": "parked", "owner_team": "quay"}"#;
+        let facts = crate::parse::parse(&manifest, Kind::Run, text)?;
+        let record = facts.record.ok_or("no record")?;
+        assert_eq!(record.id, "2026-03-flush-replay");
+        assert_eq!(record.status.as_deref(), Some("parked"));
+        assert!(
+            record.extra.contains("\"owner_team\":\"quay\""),
+            "{}",
+            record.extra
+        );
+        let named = br#"{"run_id": "replay-7", "state": "open"}"#;
+        let facts = crate::parse::parse(&manifest, Kind::Run, named)?;
+        assert_eq!(facts.record.ok_or("no record")?.id, "replay-7");
+        Ok(())
+    }
 }

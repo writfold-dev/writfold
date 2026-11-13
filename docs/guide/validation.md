@@ -1,6 +1,6 @@
 # Is what I am reading still true?
 
-> **Status:** built in v0.3.0-dev.1; `kb check` built in v0.4.0-dev.1, with its plan line.
+> **Status:** built in v0.3.0-dev.1; `kb check` built in v0.4.0-dev.1, with its plan line; kind declarations built in v0.5.0-dev.1.
 
 Four things can drift: a cited source, the index, a gate's evidence, and a delivery draft. Each has its own command, and `kb check` runs the first three together. All of them only read; none fetches from a network.
 
@@ -23,15 +23,17 @@ investigation inv:2026/2026-06-01-flush-stalls-again [open] opened after sig:fsy
 | `!moved→a-b` | the cited lines are intact at a new range or path | usually nothing; re-cite when convenient |
 | `!changed` | the cited lines were edited, or a cited record changed state | read the source again before relying on the row |
 | `!gone` | the file or lines no longer exist | find what replaced them |
-| `!expired` | a time-limited citation (`ttl`) ran out | look again and re-cite |
-| `!unverifiable` | no local clone of the cited repository | add the clone (below) |
+| `!expired` | a time-limited citation (`ttl`, or its kind's `default_ttl`) ran out | look again and re-cite |
+| `!unverifiable` | no local clone of the cited repository; or a token without `seen=`, or without a field its kind declaration requires (the reason names it) | add the clone (below), or complete the token |
 | `!superseded→<id>` | a decision was replaced | follow the arrow |
 | `!past-ttl` | an asset's `verified_at` plus `ttl` has passed | verify the asset |
 | `!regression` | an investigation opened after its signature was marked fixed | the fix may not have held |
 
 Code citations are checked against local clones only. Tell Writfold where they are with `<name> <path>` lines in the file `writfold/repos` inside the KB's Git directory, or point `WRITFOLD_KB_REPOS` at directories that hold them.
 
-The read verbs (`brief`, `why`, `context`) show the same flags from cached verdicts and count them in the trailer (`stale=N`), so a stale source is visible without running `stale` first.
+The read verbs (`brief`, `why`, `context`) show the same flags from cached verdicts and count them in the trailer (`stale=N`), so a stale source is visible without running `stale` first. The session-start hook prints one line counting the same cache ([hooks](hooks.md#what-session-start-injects)). Only `stale` rewrites the cache: a moved repository head, or a new or changed kind declaration, shows in the read verbs after the next `stale`.
+
+Kinds other than `code`, `gate`, `record` and `proposal` are checked by time, and a token without `ttl=` never expires unless its kind declares a default. Declare a kind's lifetime, an `immutable` rule or required fields in `.writfold/sources/<kind>.toml` ([kb-layout](kb-layout.md#a-citation-token)). A declaration that cannot be read makes `stale` exit 3 naming the file; `kb check` shows that on its `stale` row. `stale --offline` reports a token as `due` by the same lifetime, and never an `immutable` one.
 
 ## The index: `kb index status | verify | rebuild`
 

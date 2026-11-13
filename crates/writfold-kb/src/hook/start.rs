@@ -6,17 +6,20 @@
 //! 1. **Behind remote** ([`super::remote`]): one line when the KB's branch
 //!    lags its upstream as last fetched; one Git spawn, no fetch.
 //! 2. **Brief** (`brief`, budget [`BRIEF_BUDGET`] tokens), as before.
-//! 3. **Current run** (`resume`, budget [`RESUME_BUDGET`]), when the
+//! 3. **Stale citations** ([`stale_line`]): one line counting the
+//!    non-fresh verdicts `writfold kb stale` last cached, when there are
+//!    any; no repository is read and nothing is spawned.
+//! 4. **Current run** (`resume`, budget [`RESUME_BUDGET`]), when the
 //!    current-run pointer is set.
-//! 4. **Plan position** ([`super::position`]): the current step and what
+//! 5. **Plan position** ([`super::position`]): the current step and what
 //!    it owes, from `plan status`, when the current run has a plan.
-//! 5. **Inbox** ([`super::inbox`]): drafts, pending proposals and runs left
+//! 6. **Inbox** ([`super::inbox`]): drafts, pending proposals and runs left
 //!    without an evaluation.
 //!
 //! The whole stays within [`CONTEXT_LIMIT`] characters. When it would not,
 //! parts are cut (each at a line, with a marker) in [`DROP_ORDER`]: the
-//! brief first, then the run, the inbox, the plan position, and the
-//! behind-remote line last.
+//! brief first, then the run, the inbox, the plan position, the stale
+//! citations line, and the behind-remote line last.
 //!
 //! After a compaction (`source` = `"compact"`) only the plan position is
 //! injected again: the earlier context was summarised, not dropped, so the
@@ -41,17 +44,19 @@ pub const PLAN_BUDGET: usize = 600;
 pub enum Part {
     Behind,
     Brief,
+    Stale,
     Run,
     Plan,
     Inbox,
 }
 
 /// Which part is cut first when the whole is over the limit.
-pub const DROP_ORDER: [Part; 5] = [
+pub const DROP_ORDER: [Part; 6] = [
     Part::Brief,
     Part::Run,
     Part::Inbox,
     Part::Plan,
+    Part::Stale,
     Part::Behind,
 ];
 
@@ -165,6 +170,9 @@ fn startup(
     if let Some(found) = verb(ws, cwd, now, brief, BRIEF_BUDGET) {
         parts.push((Part::Brief, format!("Writfold KB brief (`writfold kb brief`). Rows end in their source; re-check any row with a ! flag before relying on it.\n{found}")));
     }
+    if let Some(line) = stale_line(ws) {
+        parts.push((Part::Stale, line));
+    }
     if let Some(run) = current {
         let resume = Verb::Resume {
             run: Some(run.to_owned()),
@@ -188,4 +196,44 @@ fn startup(
         *first = first.trim_start_matches('\n').to_owned();
     }
     parts
+}
+
+/// `Citations: 4 changed, 2 gone as of the last writfold kb stale; …`:
+/// the non-fresh verdicts in the index's verdict cache, worst first, for
+/// citations the index still holds. `None` when the cache is empty, all
+/// fresh, or there is no index file (a KB outside Git).
+pub fn stale_line(ws: &Workspace) -> Option<String> {
+    let file = crate::index::index_file(ws.repo.as_ref()?).ok()?;
+    if !file.is_file() {
+        return None;
+    }
+    let flags = rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY;
+    let conn = rusqlite::Connection::open_with_flags(&file, flags).ok()?;
+    let mut statement = conn
+        .prepare(
+            "SELECT k.verdict, COUNT(*) FROM cite_checks k \
+             JOIN citations c ON c.path = k.path AND c.ord = k.ord \
+             WHERE k.verdict != 'fresh' GROUP BY k.verdict",
+        )
+        .ok()?;
+    let mut counts: Vec<(String, i64)> = statement
+        .query_map([], |r| Ok((r.get(0)?, r.get(1)?)))
+        .ok()?
+        .collect::<rusqlite::Result<_>>()
+        .ok()?;
+    if counts.is_empty() {
+        return None;
+    }
+    counts.sort_by_key(|(verdict, _)| (crate::verbs::stale::severity(verdict), verdict.clone()));
+    let said: Vec<String> = counts
+        .iter()
+        .map(|(verdict, n)| match verdict.as_str() {
+            "marked" => format!("{n} marked stale"),
+            _ => format!("{n} {verdict}"),
+        })
+        .collect();
+    Some(format!(
+        "\nCitations: {} as of the last `writfold kb stale`; run it to re-check\n",
+        said.join(", ")
+    ))
 }

@@ -1,7 +1,7 @@
 //! Keeps `docs/guide/` honest: every fenced `toml` block there is read by
 //! the parser that reads the real file (a gate definition, a delivery mode,
-//! a deny list, the guard configuration, a plan template or the required
-//! steps). A block whose preceding line is `<!-- planned -->` sketches a format that is not
+//! a deny list, the guard configuration, a plan template, the required
+//! steps or a kind declaration). A block whose preceding line is `<!-- planned -->` sketches a format that is not
 //! built; it must be refused today, so the marker cannot outlive the
 //! feature it labels.
 use std::error::Error;
@@ -13,7 +13,7 @@ use writfold_kb::gate::toml::{self, Value};
 type TestResult<T = ()> = Result<T, Box<dyn Error>>;
 
 const PLANNED: &str = "<!-- planned -->";
-const PAGES: [&str; 10] = [
+const PAGES: [&str; 11] = [
     "README",
     "kb-layout",
     "feeding-back",
@@ -24,6 +24,7 @@ const PAGES: [&str; 10] = [
     "skills",
     "hooks",
     "assurance",
+    "json",
 ];
 
 struct Block {
@@ -180,6 +181,11 @@ fn accept(text: &str) -> TestResult {
             writfold_kb::plan::template::parse(text.as_bytes(), Some(&name))?;
             Ok(())
         }
+        "writfold-source/1" => {
+            let kind = string(&map, "kind")?;
+            writfold_kb::stale::kinds::parse(text, &kind)?;
+            Ok(())
+        }
         "writfold-plan-required/1" => {
             writfold_kb::plan::required::parse(text.as_bytes())?;
             Ok(())
@@ -253,6 +259,12 @@ fn the_block_check_refuses_what_the_product_refuses() {
     let mode = "schema = \"writfold-delivery-mode/1\"\nmode = \"commit-message\"\n";
     assert!(accept(mode).is_ok());
     assert!(accept(&format!("{mode}bogus = \"x\"\n")).is_err());
+    let source = "schema = \"writfold-source/1\"\nkind = \"web\"\nfreshness = \"ttl\"\n";
+    assert!(accept(source).is_ok());
+    assert!(accept(&format!("{source}default_ttl = \"7d\"\n")).is_ok());
+    assert!(accept(&source.replace("\"ttl\"", "\"immutable\"")).is_ok());
+    assert!(accept(&format!("{source}default_ttl = \"7\"\n")).is_err());
+    assert!(accept(&source.replace("web", "code")).is_err());
     let page = "<!-- planned -->\n```toml\na = 1\n```\n\ntext\n```toml\nb = 2\n```\n";
     let found = blocks("x", page);
     assert_eq!(found.len(), 2);

@@ -1,6 +1,6 @@
 # The knowledge base on disk
 
-> **Status:** built in v0.3.0-dev.1.
+> **Status:** built in v0.3.0-dev.1; kind declarations (`.writfold/sources/`) built in v0.5.0-dev.1.
 
 A knowledge base (KB) is a directory holding `inventory/assets/`, normally a Git repository. Writfold finds it from `--kb DIR`, then `$WRITFOLD_KB`, then the nearest such directory above the working directory. Outside Git, reads still work and writes are refused.
 
@@ -101,6 +101,30 @@ The worktree is recorded, not created. `writfold-run.json` holds its local path;
 
 Other kinds (`web`, `record`, `ticket` and so on) carry a `seen` time and `ttl`, or a record `state` that is compared with the record's current status. A token starting `⟦cite illus` is illustrative and never checked.
 
+Every kind other than `code`, `gate`, `record` and `proposal` is checked by time: fresh until `seen` plus its lifetime, `expired` after. **A token without `ttl=` never expires** unless its kind is declared with a default. A KB whose tokens leave out `ttl=` should declare its kinds, one file per kind at the KB root:
+
+```toml
+# .writfold/sources/ticket.toml
+schema = "writfold-source/1"
+kind = "ticket"
+freshness = "ttl"
+default_ttl = "3d"
+required = ["id"]
+description = "tracker items"
+```
+
+| Key | Meaning |
+|---|---|
+| `kind` | the kind, equal to the file name; `code`, `gate`, `record` and `proposal` cannot be declared |
+| `freshness` | `ttl`: fresh until `seen` plus the lifetime; `immutable`: fresh at any age, without `seen=` |
+| `default_ttl` | the lifetime of a token without `ttl=`, as `<N>d` or `<N>h`; not allowed with `immutable` |
+| `required` | fields every token of the kind must carry; a token without one is `unverifiable`, naming the field |
+| `description` | free text |
+
+A token's own `ttl=` wins over `default_ttl`. A kind without a file behaves as described above. Unknown keys, a wrong `schema` and bad values are refused: `stale` (and every check that judges citations) then exits 3 naming the file, and `kb check` shows it on its `stale` row. Declarations are read from the KB root only, never from a code repository.
+
+`brief`, `context` and `why` show cached verdicts, which only `stale` rewrites, so a new or changed declaration takes effect at the next `writfold kb stale`.
+
 ## The trailer
 
 Every answer ends with one line:
@@ -128,6 +152,17 @@ Every answer ends with one line:
 | `.writfold/deliveries/deny-<audience>.toml` | references a draft for that audience must not hold | [delivery-modes](delivery-modes.md) |
 | `.writfold/deliveries/guard.toml` | publishing commands the guard hook watches | [delivery-modes](delivery-modes.md) |
 | `.writfold/plans/` | plan templates | [run-graph](run-graph.md) |
+| `.writfold/sources/<kind>.toml` | a citation kind's freshness rule, default lifetime and required fields; KB root only | [above](#a-citation-token) |
+
+## Knowledge bases not written by Writfold
+
+Writfold reads a KB it did not write, as long as it is Git text in this layout. What that means in practice:
+
+- Any directory under `runs/` holding a `manifest.json` is a run. The directory name is not parsed; the run's ID is the manifest's `run_id`, else the directory name. Runs Writfold creates are named `run-<YYYYMMDDTHHMMSSZ>-<6 hex>`.
+- `runs/*/observations/` and `runs/*/receipts/` are skipped.
+- Unknown fields, citation kinds and `status` or `state` values are kept and shown as they are, never rejected or rewritten. A file that matches none of the shapes above is still indexed as a document and scanned for citations.
+- Records and citations come only from `.md` and `.json` files that Git lists (tracked, or untracked and not ignored); a path with any part starting with `.` is never a record. Writfold reads no database that comes with a KB: its only database is its own index, built from that text, so whatever lives only in another store is not seen.
+- A citation of a kind Writfold does not check against Git or the index, without `ttl=`, never expires, unless a kind declaration gives it a default ([above](#a-citation-token)).
 
 ## Tracked and local
 

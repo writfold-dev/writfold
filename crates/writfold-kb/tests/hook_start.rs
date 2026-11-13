@@ -1,7 +1,8 @@
 //! The deterministic session-start parts: the plan position (at start and
 //! after compaction), the inbox (drafts, proposals, runs left without an
-//! evaluation), the KB behind its remote from local refs only, the cut
-//! order, and every new failure staying silent. `WRITFOLD_KB_BLESS=1`
+//! evaluation), the KB behind its remote from local refs only, the
+//! stale-citation count from the verdict cache, the cut order, and every
+//! new failure staying silent. `WRITFOLD_KB_BLESS=1`
 //! rewrites the goldens.
 mod support;
 
@@ -288,9 +289,10 @@ fn the_cut_follows_the_drop_order() {
     let parts = vec![
         (Part::Behind, block('b', 3000)),
         (Part::Brief, block('r', 3000)),
+        (Part::Stale, block('s', 100)),
         (Part::Run, block('u', 3000)),
         (Part::Plan, block('p', 3000)),
-        (Part::Inbox, block('i', 3000)),
+        (Part::Inbox, block('i', 2900)),
     ];
     assert_eq!(
         DROP_ORDER,
@@ -299,29 +301,33 @@ fn the_cut_follows_the_drop_order() {
             Part::Run,
             Part::Inbox,
             Part::Plan,
+            Part::Stale,
             Part::Behind
         ]
     );
-    // 15,000 characters into 9,000: the behind line, plan and inbox stay
-    // whole; the run and the brief are dropped.
+    // 15,000 characters into 9,000: the behind line, the stale line, plan
+    // and inbox stay whole; the run and the brief are dropped.
     let fitted = fit(&parts, CONTEXT_LIMIT);
     assert_eq!(
         fitted,
-        [&parts[0].1, &parts[3].1, &parts[4].1]
+        [&parts[0].1, &parts[2].1, &parts[4].1, &parts[5].1]
             .map(String::as_str)
             .concat()
     );
+    // The stale line is dropped before the behind line.
+    assert_eq!(fit(&parts[..3], 3050), parts[0].1);
     // With room left over, the brief is cut at a line with the marker.
     let mut small = parts.clone();
-    for (i, size) in [(0, 100), (2, 1000), (3, 100), (4, 100)] {
-        small[i].1 = block(['b', 'r', 'u', 'p', 'i'][i], size);
+    for (i, size) in [(0, 100), (2, 100), (3, 1000), (4, 100), (5, 100)] {
+        small[i].1 = block(['b', 'r', 's', 'u', 'p', 'i'][i], size);
     }
     small[1].1 = "row\n".repeat(3000);
     let fitted = fit(&small, CONTEXT_LIMIT);
     assert!(fitted.chars().count() <= CONTEXT_LIMIT);
     assert!(fitted.starts_with(&small[0].1));
     assert!(fitted.contains("row\n[… cut to fit the session-start limit"));
-    assert!(fitted.contains(&small[2].1) && fitted.ends_with(&small[4].1));
+    assert!(fitted.contains(&small[2].1) && fitted.contains(&small[3].1));
+    assert!(fitted.ends_with(&small[5].1));
     // Everything fits: unchanged and in display order.
     let few: Vec<(Part, String)> = parts
         .iter()
@@ -329,6 +335,64 @@ fn the_cut_follows_the_drop_order() {
         .collect();
     assert_eq!(
         fit(&few, CONTEXT_LIMIT),
-        "Behind\nBrief\nRun\nPlan\nInbox\n"
+        "Behind\nBrief\nStale\nRun\nPlan\nInbox\n"
     );
+}
+
+fn stale(w: &World) -> TestResult {
+    let verb = Verb::Stale {
+        scope: None,
+        offline: false,
+    };
+    let (text, exit) = w.run(&w.request(verb))?;
+    assert_eq!(exit, 2, "{text}");
+    Ok(())
+}
+
+/// Rewrite every cached verdict, as a later `kb stale` might.
+fn cache_all(w: &World, verdict: &str) -> TestResult {
+    for entry in std::fs::read_dir(state(w))? {
+        let path = entry?.path();
+        if path.extension().is_some_and(|e| e == "sqlite") {
+            let conn = rusqlite::Connection::open(&path)?;
+            conn.execute("UPDATE cite_checks SET verdict = ?1", [verdict])?;
+        }
+    }
+    Ok(())
+}
+
+const STALE_LINE: &str = "Citations: 1 gone, 2 changed, 2 moved, 1 expired as of the last `writfold kb stale`; run it to re-check";
+
+#[test]
+fn stale_citations_are_counted_from_the_cache_only() -> TestResult {
+    let w = world(&[])?;
+    // Nothing cached yet: no line, and the hook never checks citations.
+    let before = start(&w, "startup")?;
+    assert!(!before.contains("Citations:"), "{before}");
+    stale(&w)?;
+    let text = start(&w, "startup")?;
+    let lines: Vec<&str> = text
+        .lines()
+        .filter(|l| l.starts_with("Citations:"))
+        .collect();
+    assert_eq!(lines, [STALE_LINE], "{text}");
+    // Shown after the brief.
+    let brief = text.find("Writfold KB brief").ok_or("no brief")?;
+    assert!(text.find(STALE_LINE).ok_or("no line")? > brief, "{text}");
+    // The count is the cache's, not a new check: a new commit in the code
+    // repository changes nothing until the next `kb stale`.
+    put(&w.code.join("src/retry.rs"), "pub fn retry() {}\n")?;
+    git(&w.code, &["commit", "-qam", "retry"])?;
+    assert!(start(&w, "startup")?.contains(STALE_LINE));
+    // All fresh: no line.
+    cache_all(&w, "fresh")?;
+    assert!(!start(&w, "startup")?.contains("Citations:"));
+    // Fresh rows count once marked (three of the nine were fresh).
+    cache_all(&w, "marked")?;
+    let marked = start(&w, "startup")?;
+    assert!(
+        marked.contains("\nCitations: 9 marked stale as of the last"),
+        "{marked}"
+    );
+    Ok(())
 }

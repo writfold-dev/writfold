@@ -11,6 +11,8 @@ What stands behind `writfold kb`, sorted by how strong the claim is. The short v
 | Gate scopes (`writfold_core::scope`) | glob semantics and exclusions; not proved (it uses closures and iterators the translation does not take) |
 | The plan fold (`writfold-kb`) | every rotation and reversal of the event listing folds to the same steps and current step; a Git clone answers the same; the kernel's `splice` agrees with the fold step for step |
 | Citation verdicts (`writfold_core::verdict`) | 3,000 random files, ranges and edits: fresh means unchanged lines, moved names a range carrying the same digest, changed lines are never fresh |
+| Citation lifetimes (`writfold_core::verdict::lifetime`, v0.5.0-dev.1) | every combination of an immutable kind, a token `ttl=` and a declared default; 4,000 random `seen`, lifetimes and clocks: the verdict `stale` gives equals the kernel's over the lifetime it chooses |
+| The `--json` envelope | its top-level, row and trailer keys are pinned, and each is named in [json](json.md) |
 | Bounded walk (`writfold_core::walk`) | compared with a reference breadth-first search |
 | Writes | the test binary kills itself at each of the seven protocol steps for a checkpoint, a new run, a ticket and a status change; afterwards the file holds the old or the complete new bytes and `index verify` is equal. The same for gate receipts, edits and delivery candidates |
 | The index | `index verify` equals a rebuild after each group of writes |
