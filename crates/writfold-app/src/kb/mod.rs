@@ -70,6 +70,8 @@ gates (checks with pinned receipts; definitions in .writfold/gates/<id>.toml):
                                    a statement (attested gates) or a waiver: never shown as satisfied
   gate cover <id> <item> supported REF… | unsupported|not-applicable --reason TEXT, with --by WHO
                                    one checklist item: cited evidence re-grounded on every read
+  gate cover <id> --from FILE|- --by WHO
+                                   several items from JSON lines, one plan: all rows or none
   gate lines [--run ID] [--repo DIR]
                                    receipt lines for a commit message (exit 0 only if all are met)
 

@@ -292,6 +292,16 @@ writfold kb gate cover <gate> <item> not-applicable --reason TEXT --by WHO
 
 Each `REF` is one argument, any reference an assessed gate may cite ([the table above](#weft-assessed-gates)): a citation token, a locator, `gate:<id>`, or a gate receipt, attestation, retrieval receipt or edit receipt of this run. `supported` needs at least one, and is refused (exit 3, nothing written) when any is not grounded now, so a row never starts out false. A waiver is never evidence. A checklist and an assessed gate are both judged against the other gates only, so a reference to either class is not grounded.
 
+**Several items at once** (built in v0.5.0-dev.3): `gate cover <gate> --from FILE --by WHO [--run ID] [--repo DIR]`, or `--from -` to read standard input, takes one JSON object per line:
+
+```text
+{"item":"errors","outcome":"supported","refs":["gate:unit"],"note":"read every call site"}
+{"item":"record","outcome":"supported","refs":["⟦cite kind=record path=ktlo/2026/hbr-99-flush-stall.md state=done⟧"]}
+{"item":"perf","outcome":"not-applicable","reason":"no hot path is touched"}
+```
+
+`item` and `outcome` are required; `refs` (a list, one reference per string), `reason` and `note` are optional and follow the single-item rules; any other key is refused, blank lines are skipped, and `--by` applies to every row (`--reason` and `--note` are refused as flags). Every row is checked exactly as the single-item form checks its arguments, on one snapshot of the subject, and the rows are written as one write plan: one refused row (malformed JSON, an unknown item, a missing reason, a reference that is not grounded, an item named twice in the batch) refuses the whole batch, exit 3, naming its line and item (`--from line 2: item perf: …`), and nothing is written. Each row written is the file the single-item form would write. A crash part-way through the write can leave the first rows of the batch, each complete and valid; rerunning the batch records every item again, and each item's newest row decides it.
+
 A row is a file, `runs/<run>/covers/<gate>.<item>-<time>-<hex>.json` (schema `writfold-cover/1`): the outcome, the reason or note, `by`, the subject's commit and scope content digest, the definition digest, every reference with what it stood on when written, a `seq` one more than the highest of that gate and item in the run, and a digest over the rest. An edited row, or one filed under another gate's or item's name, reads as `[invalid]` and counts for nothing.
 
 Each item stands on its newest row by `seq` (file name on ties; never the clock), judged on every read:

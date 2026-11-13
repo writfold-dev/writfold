@@ -29,6 +29,7 @@ The project KB is plain records in Git. `writfold kb <verb>` answers from it in 
 | Receipt lines for a commit message | `gate lines` |
 | Set a gate aside, or state an attested gate | `gate waive <id> --reason TEXT --by WHO`, `gate attest <id> --statement TEXT --by WHO` |
 | Cover one item of a checklist gate | `gate cover <id> <item> supported REF… --by WHO`, or `unsupported\|not-applicable --reason TEXT --by WHO` |
+| Cover several items of a checklist gate at once (all or none) | `gate cover <id> --from FILE\|- --by WHO`, one JSON object per line: `{"item":…,"outcome":…,"refs":[…],"reason":…,"note":…}` |
 | Prepare a PR comment, Slack summary or other draft for review (nothing is sent) | `deliver prepare --mode MODE --from FILE [--audience external]` (built in: `pr-comment`, `slack-summary`; others from `.writfold/deliveries/<mode>.toml`) |
 | Check a delivery candidate, and see what it still owes | `deliver check [CANDIDATE]`, `deliver status` |
 | Where does the run's plan stand, and may it move on? | `plan status`, `plan advance` (`plan set <template>` to start one; `plan use <template>` splices a template's steps before the current step, once) |
