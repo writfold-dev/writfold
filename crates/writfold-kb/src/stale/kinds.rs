@@ -7,7 +7,8 @@
 //! fresh at any age; or `checked`: asked of an external checker named by
 //! `checker`, see [`super::checker`]), a default lifetime for tokens
 //! without `ttl=`, the fields every token of the kind must carry, and for
-//! a checked kind the fields its checker's `make` may write. A kind without a file
+//! a checked kind the fields its checker's `make` may write and the oldest
+//! cached verdict a reader may use (`max_age`). A kind without a file
 //! behaves as before: fresh until `seen + ttl`, and fresh for ever when the
 //! token has no `ttl=`. Files use the gate definitions' TOML subset
 //! ([`crate::gate::toml`]); an unknown key, a wrong schema or a bad value
@@ -27,7 +28,7 @@ pub const DIR: &str = ".writfold/sources";
 pub const SCHEMA: &str = "writfold-source/1";
 /// Kinds checked against Git or the index, which a file may not declare.
 pub const BUILT_IN: [&str; 4] = ["code", "gate", "record", "proposal"];
-const KEYS: [&str; 8] = [
+const KEYS: [&str; 9] = [
     "schema",
     "kind",
     "freshness",
@@ -36,6 +37,7 @@ const KEYS: [&str; 8] = [
     "description",
     "checker",
     "fields",
+    "max_age",
 ];
 /// Fields Writfold writes itself, which a checker may never return.
 pub const OWNED: [&str; 5] = ["kind", "seen", "ttl", "stale", "v"];
@@ -65,6 +67,8 @@ pub struct Kind {
     pub checker: Option<String>,
     /// The fields a checked kind's `make` may write.
     pub fields: Vec<String>,
+    /// A checked kind's oldest usable cached verdict (`<N>d` or `<N>h`).
+    pub max_age: Option<String>,
 }
 
 /// Every declaration of a KB, by kind.
@@ -91,6 +95,14 @@ impl Kinds {
     /// Every declaration, by kind name.
     pub fn iter(&self) -> impl Iterator<Item = &Kind> {
         self.0.values()
+    }
+
+    /// The declared `max_age` of `kind` in seconds, when it has one.
+    pub fn max_age(&self, kind: &str) -> Option<i64> {
+        match time::ttl(self.get(kind)?.max_age.as_deref())? {
+            time::Ttl::Seconds(seconds) => Some(seconds),
+            time::Ttl::Never => None,
+        }
     }
 
     /// The checker of `kind` when it is declared `checked`.
@@ -163,6 +175,15 @@ pub fn parse(text: &str, name: &str) -> std::result::Result<Kind, String> {
     }
     let required = names(&map, "required")?;
     let (checker, fields) = checked(&map, freshness)?;
+    let max_age = string(&map, "max_age")?;
+    if let Some(age) = &max_age {
+        if freshness != Freshness::Checked {
+            return Err("max_age needs freshness = \"checked\"".into());
+        }
+        if !matches!(time::ttl(Some(age)), Some(time::Ttl::Seconds(_))) {
+            return Err(format!("max_age {age:?} must be <N>d or <N>h"));
+        }
+    }
     Ok(Kind {
         name: kind,
         freshness,
@@ -171,6 +192,7 @@ pub fn parse(text: &str, name: &str) -> std::result::Result<Kind, String> {
         description: string(&map, "description")?,
         checker,
         fields,
+        max_age,
     })
 }
 
@@ -311,6 +333,24 @@ pub fn due(kinds: &Kinds, cite: &Cite, now: i64) -> bool {
         .as_deref()
         .and_then(|seen| time::expired(seen, ttl, now))
         == Some(true)
+}
+
+/// Undeclared kinds (not built in, no declaration file) holding tokens
+/// without `ttl=`, which therefore never expire, with their token counts.
+pub fn never_expiring(kinds: &Kinds, cites: &[Cite]) -> BTreeMap<String, usize> {
+    let mut found = BTreeMap::new();
+    for cite in cites
+        .iter()
+        .filter(|c| c.malformed.is_none() && c.ttl.is_none())
+    {
+        let Some(kind) = cite.kind.as_deref() else {
+            continue;
+        };
+        if !BUILT_IN.contains(&kind) && kinds.get(kind).is_none() {
+            *found.entry(kind.to_owned()).or_insert(0) += 1;
+        }
+    }
+    found
 }
 
 /// The kernel verdicts a time-based check can reach.

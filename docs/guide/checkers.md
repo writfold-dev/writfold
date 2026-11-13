@@ -1,6 +1,6 @@
 # External checkers
 
-> **Status:** built in v0.5.0-dev.2 (phase 1: `check` and `make`, run by `stale` only). Not built: built-in kinds through the protocol, fetching, rendering or redaction, a server mode, an SDK, token migration, a checker together with a TTL, tracked check receipts, and a flag that fails when a checker is missing.
+> **Status:** built in v0.5.0-dev.2 (phase 1: `check` and `make`, run by `stale` only); `max_age` built in v0.5.0-dev.3. Not built: built-in kinds through the protocol, fetching, rendering or redaction, a server mode, an SDK, token migration, a checker together with a TTL, tracked check receipts, and a flag that fails when a checker is missing.
 
 Writfold checks `code`, `gate`, `record` and `proposal` citations itself, from Git and the index. A citation of anything else (a file in another source-control system, a tracker item, a wiki page) is checked by time unless its kind names an external checker: a small program you install that Writfold asks whether each token still holds.
 
@@ -25,6 +25,7 @@ description = "files in the acme-src depot"
 | `checker` | a name, never a command: Writfold runs `writfold-check-<name>` found on `PATH` |
 | `fields` | the fields the checker's `make` may write; `kind`, `seen`, `ttl`, `stale` and `v` belong to Writfold and cannot be listed |
 | `required` | as for any kind: a token without one is `unverifiable` and is not sent |
+| `max_age` | optional, `<N>d` or `<N>h` (built in v0.5.0-dev.3): the oldest cached verdict a reader may use; [below](#how-old-a-cached-verdict-may-be-max_age) |
 
 The checker is found the way Git finds credential helpers: by name on `PATH`. The KB holds no command line, no URL and no secret; the checker brings its own configuration and credentials.
 
@@ -49,6 +50,17 @@ cite src:lib/fresh.c [unverifiable] at checker:acme-src checker-absent (src) @no
 # note: a checked kind's checker is not on PATH; `writfold kb checker list` names it
 # coverage=complete records=4/4 shown=1 omitted=0 checked=1 stale=0 unverifiable=1 checker-absent=1 kb=… index=fresh cursor=none q=4b50c68a7933
 ```
+
+### How old a cached verdict may be: `max_age`
+
+Without `max_age`, a cached verdict is read at any age: a token `stale` found fresh a month ago still grounds a gate today. With `max_age = "7d"`, a cached verdict whose check is more than seven days old reads `unverifiable: check-expired (<age>)` for every reader of the cache (`gate status`, `gate cover`, guard rules, `deliver check`, `proposals accept`), so the gate waits until `writfold kb stale` asks the checker again. Exactly seven days old is still within it. `stale --offline` reads the cache and reports the expired ones:
+
+```text
+$ writfold kb stale --offline
+cite doc:a.md [unverifiable] at checker:shared-docs@0.2.0:9f2c… check-expired (8d) @notes/sources.md:3 !unverifiable
+```
+
+`kb stale` without `--offline` asks the checker regardless and rewrites the cache, so its verdicts are never `check-expired`. `max_age` is refused with any freshness but `checked`. `brief`, `context` and `why` show the cached verdict as stored, without ageing it.
 
 The session-start hook names a missing checker in one line (a `PATH` lookup; nothing is run). `writfold kb checker list` shows one row per checked kind, running each checker's `describe`:
 
@@ -94,36 +106,95 @@ Writfold sends `{"v":1,"op":"make","id":"0","kind":"src","fields":{"L":"3-9","de
 
 Built-in kinds carry no `v=`: their format is pinned by Writfold's token codec and index schema. A checked kind's token may carry `v=<n>` (absent means 1), the format version of the checker's own fields. The checker's `make` sets it, and `describe` lists the `token_versions` it reads; a token outside that list is `unverifiable: token-version`. Writfold never rewrites a tracked token: migrating is running `cite make` again and committing the diff.
 
-## A minimal checker
+## A checker template (built in v0.5.0-dev.3)
 
-A checker for a kind `doc` that cites files on a shared documentation tree by content digest. Install it as `writfold-check-shared-docs` on `PATH` and declare the kind with `checker = "shared-docs"` and `fields = ["path", "digest"]`.
+A complete checker for a kind `doc` that cites files on a shared documentation tree by content digest. Copy it, change `NAME`, `KINDS`, `check` and `make`, install it as `writfold-check-<name>` on `PATH` (executable), and declare the kind:
+
+```toml
+# .writfold/sources/doc.toml
+schema = "writfold-source/1"
+kind = "doc"
+freshness = "checked"
+checker = "shared-docs"
+fields = ["path", "digest"]
+required = ["path"]
+max_age = "7d"
+```
 
 ```python
 #!/usr/bin/env python3
-"""writfold-check-shared-docs: kind=doc tokens against files under $DOCS_ROOT."""
+"""writfold-check-shared-docs: kind=doc tokens against files under $DOCS_ROOT.
+
+Speaks writfold-checker/1: one JSON object per line on stdin and stdout.
+"""
 import hashlib, json, os, sys
 
+NAME, VERSION, KINDS, READS = "shared-docs", "0.2.0", ["doc"], [1]
 ROOT = os.environ.get("DOCS_ROOT", "/srv/docs")
 
 def digest(path):
-    with open(os.path.join(ROOT, path), "rb") as f:
+    """What a token pins: here, a short content digest of one file."""
+    full = os.path.normpath(os.path.join(ROOT, path))
+    if not full.startswith(os.path.join(ROOT, "")):
+        raise ValueError(f"path {path!r} leaves {ROOT}")
+    with open(full, "rb") as f:
         return hashlib.sha256(f.read()).hexdigest()[:16]
 
-def answer(req):
-    if req["op"] == "describe":
-        return {"v": 1, "name": "shared-docs", "version": "0.1.0", "kinds": ["doc"],
-                "ops": ["check", "make"], "token_versions": [1]}
-    reply, fields = {"v": 1, "id": req["id"]}, req["fields"]
-    try:
-        now = digest(fields["path"])
-    except (KeyError, FileNotFoundError):
-        return {**reply, "status": "gone"} if req["op"] == "check" else reply
-    if req["op"] == "make":
-        return {**reply, "fields": {"path": fields["path"], "digest": now}}
-    return {**reply, "status": "fresh" if fields.get("digest") == now else "changed", "at": now}
+def check(fields, at):
+    """One token's reply fields. `at` caches digests across the batch."""
+    path = fields["path"]
+    if path not in at:
+        at[path] = digest(path)
+    now = at[path]
+    status = "fresh" if fields.get("digest") == now else "changed"
+    return {"status": status, "at": now}
 
-for line in sys.stdin:
-    print(json.dumps(answer(json.loads(line))), flush=True)
+def make(fields):
+    return {"fields": {"path": fields["path"], "digest": digest(fields["path"]), "v": "1"}}
+
+def answer(req, at):
+    reply = {"v": 1, "id": req["id"]}
+    try:
+        if req.get("kind") not in KINDS:
+            raise ValueError(f"kind {req.get('kind')!r} is not mine")
+        if req["op"] == "check":
+            return {**reply, **check(req["fields"], at)}
+        if req["op"] == "make":
+            return {**reply, **make(req["fields"])}
+        raise ValueError(f"op {req['op']!r} is not mine")
+    except FileNotFoundError:
+        # Writfold refuses a make reply without fields, so make fails here.
+        return {**reply, "status": "gone", "detail": "no such file"}
+    except Exception as e:  # anything else: say so, never "fresh"
+        return {**reply, "status": "unverifiable", "detail": f"{type(e).__name__}: {e}"}
+
+def main():
+    requests = [json.loads(line) for line in sys.stdin if line.strip()]
+    at = {}  # the whole batch arrives before stdin closes: share lookups
+    for req in requests:
+        if req.get("op") == "describe":
+            out = {"v": 1, "name": NAME, "version": VERSION, "kinds": KINDS,
+                   "ops": ["check", "make"], "token_versions": READS}
+        else:
+            out = answer(req, at)
+        print(json.dumps(out), flush=True)
+
+if __name__ == "__main__":
+    main()
 ```
 
-A `make` for a missing file answers without `fields`, which Writfold refuses.
+What it shows:
+
+- **Batching.** Writfold writes `describe` and every request of the run, then closes stdin, so the template reads the whole batch first and shares lookups across it (`at`, one digest per path). A checker for a remote service would make one query for the batch here.
+- **Ids.** Each reply carries the request's `id` as a string, unchanged; replies may come in any order, but exactly one per id.
+- **Errors.** Any exception becomes `"status": "unverifiable"` with the exception as `detail`, so one bad token never fails the batch and nothing is reported fresh by accident. A missing file is `gone`.
+- **`make`.** It returns only fields the kind lists in `fields`, plus `v`, as strings. When it cannot (here, a missing file) it answers without `fields`, which `cite make` refuses (exit 3).
+- **Exit.** It exits 0 after the last reply; a non-zero exit fails every token of the batch.
+
+Try it by hand before installing it:
+
+```text
+$ printf '%s\n' '{"v":1,"op":"describe"}' '{"v":1,"op":"check","id":"0","kind":"doc","fields":{"path":"a.md","digest":"0"}}' | DOCS_ROOT=. ./writfold-check-shared-docs
+{"v": 1, "name": "shared-docs", "version": "0.2.0", "kinds": ["doc"], "ops": ["check", "make"], "token_versions": [1]}
+{"v": 1, "id": "0", "status": "changed", "at": "…"}
+```
