@@ -62,7 +62,9 @@ fn op_json(op: &Op) -> Value {
             expected,
             bytes,
         } => json!({"op": "replace", "path": path, "expected": expected, "bytes": hex(bytes)}),
-        Op::CreateDir { path, .. } | Op::AbsentPrefix { dir: path, .. } => {
+        Op::CreateDir { path, .. }
+        | Op::AbsentPrefix { dir: path, .. }
+        | Op::Plan { run_dir: path, .. } => {
             json!({"op": "unsupported", "path": path})
         }
     }

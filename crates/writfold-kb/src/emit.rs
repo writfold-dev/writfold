@@ -208,7 +208,14 @@ pub fn emit(answer: &Answer, frame: &Frame, scope: &Scope<'_>) -> Result<Output>
         *n > 0
             && matches!(
                 *name,
-                "stale" | "unverifiable" | "open" | "failed" | "unknown" | "invalid" | "disagree"
+                "stale"
+                    | "unverifiable"
+                    | "open"
+                    | "failed"
+                    | "unknown"
+                    | "invalid"
+                    | "disagree"
+                    | "disorder"
             )
     });
     let exit = if answer.failed {

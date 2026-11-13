@@ -2043,7 +2043,7 @@ Writfold does not parse `SKILL.md`. Claude Code's dynamic context injection runs
 - The deterministic hooks showing the plan position (the next item; built separately).
 - Delivery modes as a step's gates (`deliver:<mode>`).
 - A live Claude Code session loading a skill with the injection line (the review's manual smoke test): run once since, without a KB (26.6).
-- `!late-splice` for a splice under a step that another clone has meanwhile closed: such a splice's steps fold in as open children of a done step and are owed like any other open step, but are not flagged.
+- ~~`!late-splice` for a splice under a step that another clone has meanwhile closed: such a splice's steps fold in as open children of a done step and are owed like any other open step, but are not flagged.~~ Flagged since as `!out-of-order` ("Plan write re-check and merge-disorder flags").
 - ~~Proofs of `splice`~~ (below); `spec/RunGraph.tla`.
 
 Proved since 13 November 2026 (21.11, [aeneas.md](aeneas.md#the-run-graph-and-gate-kernels-13-november-2026)): `splice` is `take at ++ count open steps ++ drop at` (for plans whose new length fits in `usize`), so every existing step keeps its state and order, the steps before the insertion point are unchanged, the new steps are open, and inserted before the current step the first of them becomes current; `splice_check` is `Already` exactly when the key is already spliced, so a repeat changes nothing, and an admitted splice is never deeper than 4. The fold's expansion of splices (24.1) is not proved; the tests check it agrees with `splice` (24.8).
@@ -2387,3 +2387,59 @@ The run had no KB, because the environment it ran in could not create a Git repo
 - The opt-in Stop nudge and `transcript_path` in the draft (25.8).
 - `WRITFOLD_SESSION` for the fork: proposals it makes fall into the no-session bucket unless it passes `--session`.
 - A Writfold check that a reflection is good: only the attestation speaks to that.
+
+## Plan write re-check and merge-disorder flags (v0.4.0-dev.1)
+
+The two gaps the run-graph model found (`spec/RunGraph.tla`, "What the model found"): within one clone, a plan write's decision was not re-checked under the KB write lock; across clones, a merge could leave open steps before a done one, unflagged. Both are fixed in `writfold-kb`; the proved kernel `crates/writfold-core/src/plan.rs` is unchanged. New code: `crates/writfold-kb/src/plan/{recheck,disorder,place}.rs` (`place.rs` holds `plan use`'s placement, moved out of `splice.rs` unchanged but for the decision it returns); the guard `Op::Plan` in `src/write/mod.rs`, checked in `src/write/atomic.rs`; the `again` key in `plan/event.rs`; the flags in `plan/mod.rs` (`plan status`, `resume`'s plan line) and `src/check.rs`; the tests below. The event schema stays `writfold-plan-event/1`.
+
+### Re-check under the lock
+
+Every plan write folds the run, decides, and only then takes the KB write lock (13.2). Under the lock it used to check only that its file names were new (`Op::Create`), so two sessions in one clone (two agents, or an agent and its subagent) could interleave: a splice under step `k` decided by one, `done-k` by the other, both published, leaving `k` done with open children before it.
+
+Each plan write now carries one more operation, `Op::Plan { run_dir, run, decided }`. It publishes nothing; like `Op::AbsentPrefix` and `Op::Replace`'s digest, it is a guard, checked under the lock with every other guard before any byte is written (`atomic::apply_held`'s check phase), so the existing protocol is reused rather than a second one added. The guard folds the run's events again and requires the decision (`plan::recheck::Decided`) to still stand:
+
+| Write | Decided | Still stands when |
+|---|---|---|
+| `plan set`, and `plan use` on a run without a plan | `Unplanned` | no valid splice exists |
+| `plan advance`, `plan skip` | `Current(step)` | the step is still the current one |
+| `plan use` under the current step | `Splice { parent, ordinal, current: true }` | `parent` is still current and its next ordinal is still `ordinal` |
+| `plan use` of a missing required end template (24.5) | `Splice { parent: "", ordinal, current: false }` | the root's next ordinal is still `ordinal` |
+
+The ordinal clause is needed: re-checking only the current step lets a session splice `other` under `first` and skip its one step, so `first` is current again, while another session's splice decided earlier at the same ordinal 1 still lands and folds, by template name, before the skipped step (the model's `probe-RecheckCurrentOnly`). A failed guard is refused, exit 3, nothing written: `the plan changed since this command read it (<why>); nothing written; rerun`, where `<why>` is `a plan was set meanwhile`, `<step> is no longer the current step (now <step>)` or `another splice under <parent> took ordinal <n>`. A rerun decides again from the new fold. This is the model's `Recheck = "all"`, which `RunGraph.same` checks.
+
+### Merge-disorder flags
+
+No lock spans clones, so a merge can still combine decisions each clone made correctly. The fold stays a function of the set of files and the current step stays the first open one; nothing is lost. What was missing is a flag. `plan::disorder` finds three kinds, from the fold alone:
+
+- **`!out-of-order`**: a done step with an open step (neither done nor skipped) before it: a splice made under a step that another clone has meanwhile closed (the model's `probe-LateSplice`, the `!late-splice` of 24.10). The flagged row's `why:` line names up to three open steps before it and says `do or skip it|them (plan advance, or plan skip --reason --by)`.
+- **`!two-plans`**: two root splices at one ordinal: a plan set in each of two clones (`probe-MergeDisorder`). With required steps the identical start splices merge cleanly and the two plans' own splices share ordinal 2. Every step of those splices is flagged.
+- **`!repeated`**: a splice not made with `--again` whose (template, digest) is already spliced on its ancestor chain where one clone's idempotence lookup (24.1) would have seen it (`probe-MergeRepeatsSplice`). Not every repeat on a chain is one: a clone may splice a template under a deep step and later, once back at an ancestor, splice it there again, because the lookup only looks up the chain. So the earlier splice `E` (under `P1`) makes the later splice `L` (under `P2`) a repeat only when `P1` is `P2` and `E`'s ordinal is lower, or `P1` is a strict ancestor of `P2` and the branch of `P1` that holds `P2` (its `<template>#<n>` segment) has an ordinal of at least `E`'s: that branch was spliced after `E`, or is `E` itself. Every step of `L` is flagged.
+
+An `--again` splice is an intended repeat and is never flagged. To tell it from a merge-made repeat, a splice made with `--again` now records `"again": true`; the key is absent otherwise, so every other splice keeps its bytes and digest, and an older binary reads the key as an ignored member (it is covered by the event's digest).
+
+Where the flags show:
+
+- **`plan status`**: on the step rows, with one note per kind (the open steps, the two plans' names, the repeated template's two node prefixes) and the trailer count `disorder=<flagged steps>`, written only when it is not zero so that every existing golden is unchanged. `disorder` is among the counts that raise the exit to 2 (attention), never 3.
+- **`resume`'s plan line** (and so the session-start hook): each kind present, once.
+- **`kb check`'s plan row**: each kind present, beside `!attention`.
+
+The flags never change the fold, the current step or what `plan advance` judges. Resolving is ordinary use: do or skip the open steps, or skip the steps of the unwanted plan or copy, each with a reason.
+
+### Tests
+
+- **Re-check** (`tests/plan_recheck.rs`): session B's write is run first to learn its files, which are taken back out; session A then runs with the write protocol's probe publishing B's files at `locked`, the first point under the lock, before any guard. For a splice against a done record (both orders), two splices decided at one ordinal (B splicing `other` and skipping it, which only the ordinal clause catches, and B splicing `other` alone), two advances, a skip against a splice (both orders) and two plans set, A is refused with exit 3 and the message above, the plan directory holds exactly B's files, and `plan status` shows no `!out-of-order`. An undisturbed write passes the guard.
+- **Removing the check fails a test** (checked by hand): with the guard always passing, six of the seven re-check tests fail; with the ordinal clause removed, `two_splices_decided_at_one_ordinal_are_refused` fails.
+- **Merges** (`tests/plan_merge.rs`; goldens `plan-merge-out-of-order.txt`, `plan-merge-two-plans.txt`, `plan-merge-repeated.txt`): each case writes in a KB and a Git clone of it and pulls the clone into the KB. A late splice flags the done step `!out-of-order` (exit 2), `resume`'s plan line and `kb check`'s plan row carry the flag, and advancing the open step clears it. Two plans set in the two clones flag `!two-plans`. A template spliced in one clone and spliced again lower on the same chain in the other flags only the second copy `!repeated`. In one clone, a template used deep and then again at an ancestor, and an `--again` copy, are not flagged and `plan status` exits 0.
+- **Units**: the `again` key's round trip and its absence when not set (`plan/event.rs`).
+- **Existing goldens** are unchanged.
+
+### Deviations
+
+- **A recorded `again` key.** The task did not ask for an event change; without one a merge-made repeat at one parent cannot be told from `--again`.
+- **`!two-plans` is "two root splices at one ordinal"**, so it also covers two clones adding a missing required end template under different names at one root ordinal.
+- **`!out-of-order` flags done steps only;** a skipped step after an open one is not flagged, as in the model's `DonePrefix`.
+
+### Not done
+
+- `!repeated` for a template included (`use=`) on one side and spliced on the other: includes carry no `again` and are not compared.
+- The TLA+ model is not re-run against the Rust: the tests above are the link.

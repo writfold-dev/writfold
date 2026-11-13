@@ -1,6 +1,6 @@
 # The run graph
 
-> **Status:** the run graph (`plan set|use|status|advance|skip`), run-record checks, splicing a template under a step (`use=` includes, `!template-moved`), required steps and the `writfold:evaluate` wrap-up skill are built in v0.4.0-dev.1; delivery modes as a step's gates are planned. The adopted decisions are in [`mission.md`](../writfold/mission.md); the as-built records are [design §21](../writfold/kb-v1-design.md#21-run-graph-linear-as-built), [§24](../writfold/kb-v1-design.md#24-splicing-and-required-steps-as-built) and [§26](../writfold/kb-v1-design.md#26-evaluation-skill-as-built).
+> **Status:** the run graph (`plan set|use|status|advance|skip`), run-record checks, splicing a template under a step (`use=` includes, `!template-moved`), required steps, the `writfold:evaluate` wrap-up skill, and the write re-check and merge-disorder flags are built in v0.4.0-dev.1; delivery modes as a step's gates are planned. The adopted decisions are in [`mission.md`](../writfold/mission.md); the as-built records are [design §21](../writfold/kb-v1-design.md#21-run-graph-linear-as-built), [§24](../writfold/kb-v1-design.md#24-splicing-and-required-steps-as-built) and [§26](../writfold/kb-v1-design.md#26-evaluation-skill-as-built).
 
 A run without a plan owes every gate defined for its repository. A run with a plan owes the gates its steps name: the plan is an ordered list of steps, each step names the gates it owes, and Writfold records which step the work has reached and what met each gate.
 
@@ -148,6 +148,24 @@ step fix#1/reproduce [current] no gates @runs/run-…/plan/splice-fix.1.json:1 !
 ```
 
 A template given with `plan set --from FILE` has no file to compare and is never flagged.
+
+### Two sessions and two clones
+
+Every plan write decides from the plan as it read it, then checks under the KB write lock that the decision still stands: `plan set` that no plan was set meanwhile, `plan advance` and `plan skip` that the step is still current, `plan use` that the step is still current and nothing was spliced under it since. If another session in the same clone wrote first, the command is refused (exit 3) and writes nothing: `the plan changed since this command read it (…); nothing written; rerun`. Rerunning decides again from the new plan.
+
+No lock spans two clones, so a merge can combine decisions that were each right in their own clone. Nothing is lost, and the current step is still the first open one. `plan status` flags what the merge left, and exits 2:
+
+- `!out-of-order`: a done step with open steps before it, as when one clone spliced under a step the other closed. The `why:` line names the open steps; do or skip them.
+- `!two-plans`: two plans set on one run, one in each clone. Do the steps you want and skip the others.
+- `!repeated`: a template spliced again on one chain of steps without `--again`. Skip the copy you do not need. An `--again` copy is never flagged.
+
+```text
+step two#1/first/side#1/only [current] no gates @runs/run-…/plan/splice-two.1~first~side.1.json:1
+step two#1/first [done] no gates @runs/run-…/plan/done-two.1~first.json:1 !out-of-order
+  why: done, but two#1/first/side#1/only before it is open: do or skip it (plan advance, or plan skip --reason --by)
+```
+
+`resume`'s plan line and `kb check`'s plan row carry the same flags.
 
 ## Required steps
 

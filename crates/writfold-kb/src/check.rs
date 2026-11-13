@@ -21,6 +21,8 @@ pub struct Part {
     /// `None`: skipped, with the reason.
     pub outcome: Option<(String, u8)>,
     pub skipped: Option<String>,
+    /// Extra flags for its row (the plan's merge disorder).
+    pub flags: Vec<String>,
 }
 
 /// Run every part, then answer at the KB's snapshot.
@@ -91,6 +93,7 @@ fn parts(ws: &Workspace, request: &Request, scope: Option<&str>) -> Vec<Part> {
             command: "writfold kb gate status".into(),
             outcome: None,
             skipped: Some("no current run".into()),
+            flags: Vec::new(),
         },
     });
     parts.extend(plan(ws, request));
@@ -98,7 +101,8 @@ fn parts(ws: &Workspace, request: &Request, scope: Option<&str>) -> Vec<Part> {
 }
 
 /// The plan's part: `plan status` of the current run when that run holds
-/// a plan (a `plan/` directory of events); `None` otherwise.
+/// a plan (a `plan/` directory of events), its row flagged with any merge
+/// disorder ([`crate::plan::disorder`]); `None` otherwise.
 pub fn plan(ws: &Workspace, request: &Request) -> Option<Part> {
     let run = crate::proposal::state_of(ws).and_then(|state| runs::current(&state))?;
     let events = ws
@@ -113,12 +117,16 @@ pub fn plan(ws: &Workspace, request: &Request) -> Option<Part> {
         run: Some(run.clone()),
         repo: None,
     });
-    Some(sub(
+    let mut part = sub(
         request,
         "plan",
         format!("writfold kb plan status --run {run}"),
         verb,
-    ))
+    );
+    let graph = crate::plan::fold::read(&ws.root, &format!("runs/{run}"), &run);
+    let kinds = crate::plan::disorder::find(&graph).kinds();
+    part.flags = kinds.into_iter().map(str::to_owned).collect();
+    Some(part)
 }
 
 /// 0 best; then 2 (stale, partial, owed), 3 (refused), 1 (error) worst.
@@ -159,6 +167,7 @@ pub fn sub(request: &Request, area: &'static str, command: String, verb: Verb) -
         command,
         outcome: Some(outcome),
         skipped: None,
+        flags: Vec::new(),
     }
 }
 
@@ -188,6 +197,7 @@ fn row(part: &Part) -> Row {
         flags,
         ..Row::default()
     };
+    row.flags.extend(part.flags.iter().cloned());
     if status != "clean" {
         row.more.push(More {
             label: "next",

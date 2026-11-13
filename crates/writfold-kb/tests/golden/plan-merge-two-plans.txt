@@ -1,0 +1,9 @@
+step other#1/x [done] no gates @runs/run-20261101T090000Z-a1b2c3/plan/done-other.1~x.json:1 !two-plans
+  done: recorded 2026-11-11T00:00:00Z
+step two#1/first [current] no gates @runs/run-20261101T090000Z-a1b2c3/plan/splice-two.1.json:1 !two-plans
+step two#1/second [later] no gates @runs/run-20261101T090000Z-a1b2c3/plan/splice-two.1.json:1 !two-plans
+# note: no subject repository here: gates are not judged; pass --repo DIR
+# note: plan other @5c174e199bf4 from .writfold/plans/other.toml, two @a88609c0ddf7 from .writfold/plans/two.toml; steps are derived from runs/run-20261101T090000Z-a1b2c3/plan/ on every read, never stored
+# note: two plans at root ordinal 1 (other, two), as a merge of two clones that each set a plan leaves: their steps fold by template name; do the steps you want and skip the others (plan skip --reason --by)
+# coverage=complete records=31/31 shown=3 omitted=0 steps=3 done=1 skipped=0 stale=0 moved=0 invalid=0 disorder=3 kb=f52621aa3bb6 index=refreshed:2 cursor=none q=0d053770d172
+# exit=2

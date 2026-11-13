@@ -12,8 +12,10 @@
 //! load, loaded again (after compaction, or by a retry), adds its steps
 //! once. `--again` splices another copy, at the next ordinal.
 use super::event::{self, Event, Include, Splice};
-use super::fold::{self, Graph};
-use super::required::{self, Required};
+use super::fold;
+use super::place::{decided, place};
+use super::recheck::{Decided, guard};
+use super::required;
 use super::template::{self, Closure};
 use super::write::{answer, apply, open_run};
 use super::{Loaded, PlanVerb};
@@ -24,13 +26,14 @@ use crate::session::Session;
 use crate::workspace::{GitTool, Workspace};
 use crate::write::Op;
 use crate::{runs, time};
-use writfold_core::plan::{SpliceRefusal, Spliced, splice_check};
 
-/// One splice to write: a template's closure under `parent`.
-struct Planned {
-    parent: String,
-    ordinal: u64,
-    closure: Closure,
+/// One splice to write: a template's closure under `parent`; `again`:
+/// an intended repeat (`plan use --again`), recorded in the event.
+pub(super) struct Planned {
+    pub parent: String,
+    pub ordinal: u64,
+    pub closure: Closure,
+    pub again: bool,
 }
 
 type Repo<'a> = Option<(&'a std::path::Path, &'a str)>;
@@ -95,7 +98,7 @@ fn defined(ws: &Workspace, loaded: &Loaded, closure: &Closure) -> Result<()> {
     Ok(())
 }
 
-fn too_deep(name: &str, parent: &str) -> KbError {
+pub(super) fn too_deep(name: &str, parent: &str) -> KbError {
     KbError::Refused(format!(
         "plan {name} under {} would nest deeper than {} levels; nothing written",
         shown(parent),
@@ -103,7 +106,7 @@ fn too_deep(name: &str, parent: &str) -> KbError {
     ))
 }
 
-fn shown(parent: &str) -> &str {
+pub(super) fn shown(parent: &str) -> &str {
     match parent {
         "" => "the root",
         _ => parent,
@@ -133,22 +136,24 @@ fn root(ws: &Workspace, loaded: &Loaded, main: Closure) -> Result<Vec<Planned>> 
             parent: String::new(),
             ordinal: out.len() as u64 + 1,
             closure,
+            again: false,
         });
     }
     Ok(out)
 }
 
 /// Write the planned splices: every snapshot not yet present, then each
-/// splice event. Returns the events' paths.
+/// splice event, guarded by what was decided (re-checked under the
+/// lock). Returns the events' paths.
 fn write(
     ws: &Workspace,
     request: &Request,
     loaded: &Loaded,
-    planned: &[Planned],
+    (planned, decided): (&[Planned], Decided),
     now: i64,
 ) -> Result<Vec<String>> {
     let dir = format!("{}/{}", runs::dir(&loaded.rec), event::DIR);
-    let mut ops = Vec::new();
+    let mut ops = vec![guard(&runs::dir(&loaded.rec), &loaded.rec.id, decided)];
     let mut seen: Vec<String> = Vec::new();
     for t in planned.iter().flat_map(|p| p.closure.all()) {
         let hex = t.digest.trim_start_matches("sha256:");
@@ -177,6 +182,7 @@ fn write(
             template: p.closure.top.name.clone(),
             digest: p.closure.top.digest.clone(),
             ordinal: p.ordinal,
+            again: p.again,
             source: p.closure.source.clone(),
             includes: p
                 .closure
@@ -207,7 +213,7 @@ fn checked_write(
     ws: &Workspace,
     request: &Request,
     loaded: &Loaded,
-    planned: &[Planned],
+    (planned, decided): (&[Planned], Decided),
     now: i64,
 ) -> Result<Vec<String>> {
     for p in planned {
@@ -216,7 +222,7 @@ fn checked_write(
         }
         defined(ws, loaded, &p.closure)?;
     }
-    write(ws, request, loaded, planned, now)
+    write(ws, request, loaded, (planned, decided), now)
 }
 
 fn recorded(paths: Vec<String>) -> Vec<String> {
@@ -265,82 +271,8 @@ pub(super) fn set(
     }
     let planned = root(ws, &loaded, closure)?;
     drop(session);
-    let paths = checked_write(ws, request, &loaded, &planned, now)?;
+    let paths = checked_write(ws, request, &loaded, (&planned, Decided::Unplanned), now)?;
     answer(ws, tool, request, place, recorded(paths), now)
-}
-
-/// The node paths a splice at `at` is idempotent against: `at`, each of
-/// its ancestors, and the root.
-fn ancestors(at: &str) -> Vec<&str> {
-    let mut out = vec![""];
-    for (i, c) in at.char_indices() {
-        if c == '/' {
-            out.push(&at[..i]);
-        }
-    }
-    if !at.is_empty() {
-        out.push(at);
-    }
-    out
-}
-
-/// The kernel's key of a template use: `<name>@<digest>`.
-fn key(name: &str, digest: &str) -> Vec<u8> {
-    format!("{name}@{digest}").into_bytes()
-}
-
-/// Where `plan use` splices `closure` on a planned run, or the note of an
-/// idempotent repeat.
-fn place(
-    graph: &Graph,
-    required: &Required,
-    closure: Closure,
-    again: bool,
-) -> Result<std::result::Result<Planned, String>> {
-    let name = closure.top.name.clone();
-    if required::missing_end(required, graph).contains(&name) {
-        // A required end template the plan lacks goes at the root's end.
-        let ordinal = graph.next_ordinal("");
-        return Ok(Ok(Planned {
-            parent: String::new(),
-            ordinal,
-            closure,
-        }));
-    }
-    let parent = graph
-        .current()
-        .map_or_else(String::new, |i| graph.steps[i].path.clone());
-    let under = ancestors(&parent);
-    let spliced: Vec<(&fold::Use, Vec<u8>)> = graph
-        .uses
-        .iter()
-        .filter(|u| !again && under.contains(&u.parent.as_str()))
-        .map(|u| (u, key(&u.template, &u.digest)))
-        .collect();
-    let keys: Vec<Vec<u8>> = spliced.iter().map(|(_, k)| k.clone()).collect();
-    let mine = key(&name, &closure.top.digest);
-    let depth = fold::depth(&parent) + closure.height;
-    match splice_check(&graph.nodes(), &keys, &mine, depth) {
-        Ok(Spliced::Already) => {
-            let at = spliced
-                .iter()
-                .find(|(_, k)| *k == mine)
-                .map_or("", |(u, _)| u.parent.as_str());
-            Ok(Err(format!(
-                "{name} is already spliced under {} at this digest; nothing written (--again adds another)",
-                shown(at)
-            )))
-        }
-        Ok(Spliced::Insert(_)) => Ok(Ok(Planned {
-            ordinal: graph.next_ordinal(&parent),
-            parent,
-            closure,
-        })),
-        Err(SpliceRefusal::TooDeep) => Err(too_deep(&name, &parent)),
-        Err(SpliceRefusal::Complete) => Err(KbError::Refused(
-            "every step is done or skipped: there is no current step to splice under".into(),
-        )),
-    }
 }
 
 /// `plan use <template> [--again]`.
@@ -368,16 +300,19 @@ pub(super) fn use_template(
     let r = repo_of(&loaded);
     let (t, source) = template::find(&ws.root, r, name)?;
     let closure = template::closure(&ws.root, r, t, source)?;
-    let (planned, mut notes) = match loaded.graph.planned() {
+    let (planned, mut notes, decision) = match loaded.graph.planned() {
         false => {
             let note =
                 format!("run {run_id} had no plan: {name} is spliced at the root, as plan set");
-            (root(ws, &loaded, closure)?, vec![note])
+            (root(ws, &loaded, closure)?, vec![note], Decided::Unplanned)
         }
         true => {
             let required = required::find(&ws.root, r)?;
             match place(&loaded.graph, &required, closure, *again)? {
-                Ok(p) => (vec![p], Vec::new()),
+                Ok(p) => {
+                    let decision = decided(&loaded.graph, &p);
+                    (vec![p], Vec::new(), decision)
+                }
                 Err(note) => {
                     drop(session);
                     return answer(ws, tool, request, frame, vec![note], now);
@@ -393,7 +328,7 @@ pub(super) fn use_template(
         ));
     }
     drop(session);
-    let paths = checked_write(ws, request, &loaded, &planned, now)?;
+    let paths = checked_write(ws, request, &loaded, (&planned, decision), now)?;
     notes.extend(recorded(paths));
     answer(ws, tool, request, frame, notes, now)
 }

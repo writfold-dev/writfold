@@ -5,6 +5,7 @@
 //! from what it is about, so two sessions cannot both advance one step:
 //! the second finds the file and is refused as a write conflict.
 use super::event::{self, Done, Event, Met, Skip};
+use super::recheck::{Decided, guard};
 use super::{Loaded, PlanVerb, judge, required, show};
 use crate::Request;
 use crate::emit::{Answer, Output};
@@ -104,10 +105,14 @@ pub(super) fn advance(
         event::DIR,
         event::name(&done)
     );
-    let ops = [Op::Create {
-        path: path.clone(),
-        bytes: event::bytes(&loaded.rec.id, &done),
-    }];
+    let decided = Decided::Current(step.path.clone());
+    let ops = [
+        guard(&runs::dir(&loaded.rec), &loaded.rec.id, decided),
+        Op::Create {
+            path: path.clone(),
+            bytes: event::bytes(&loaded.rec.id, &done),
+        },
+    ];
     let run_id = loaded.rec.id.clone();
     drop(session);
     apply(ws, request, &ops)?;
@@ -225,10 +230,14 @@ pub(super) fn skip(
         event::DIR,
         event::name(&skip)
     );
-    let ops = [Op::Create {
-        path: path.clone(),
-        bytes: event::bytes(&loaded.rec.id, &skip),
-    }];
+    let decided = Decided::Current(step.path.clone());
+    let ops = [
+        guard(&runs::dir(&loaded.rec), &loaded.rec.id, decided),
+        Op::Create {
+            path: path.clone(),
+            bytes: event::bytes(&loaded.rec.id, &skip),
+        },
+    ];
     let run_id = loaded.rec.id.clone();
     drop(session);
     apply(ws, request, &ops)?;

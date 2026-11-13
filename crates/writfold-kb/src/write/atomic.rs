@@ -136,6 +136,11 @@ fn check(root: &Path, op: &Op) -> Result<()> {
                 }
             }
         }
+        Op::Plan {
+            run_dir,
+            run,
+            decided,
+        } => crate::plan::recheck::check(root, run_dir, run, decided)?,
     }
     Ok(())
 }
@@ -143,7 +148,7 @@ fn check(root: &Path, op: &Op) -> Result<()> {
 /// Publish one operation.
 fn publish(root: &Path, staging: &Path, op: &Op, probe: Probe) -> Result<()> {
     match op {
-        Op::AbsentPrefix { .. } => Ok(()),
+        Op::AbsentPrefix { .. } | Op::Plan { .. } => Ok(()),
         Op::Create { path, bytes } => {
             let target = root.join(path);
             directories(root, &target)?;

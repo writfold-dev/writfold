@@ -15,10 +15,13 @@
 //! spliced; required start and end templates are spliced into every new
 //! plan ([`required`]); a spliced template whose file has since changed
 //! is shown `!template-moved` ([`moved`]).
+pub mod disorder;
 pub mod event;
 pub mod fold;
 pub mod judge;
 pub mod moved;
+mod place;
+pub mod recheck;
 pub mod records;
 pub mod required;
 mod show;
@@ -167,6 +170,8 @@ fn status(session: &Session<'_>, loaded: &Loaded) -> Result<Answer> {
             .push("no subject repository here: gates are not judged; pass --repo DIR".into());
     }
     answer.rows = show::rows(graph, judged.as_deref(), &loaded.moved);
+    let disorder = disorder::find(graph);
+    disorder.mark(&mut answer.rows);
     let count = |status: &str| {
         answer
             .rows
@@ -195,6 +200,9 @@ fn status(session: &Session<'_>, loaded: &Loaded) -> Result<Answer> {
         ("moved", moved),
         ("invalid", graph.invalid.len()),
     ];
+    if disorder.count() > 0 {
+        answer.counts.push(("disorder", disorder.count()));
+    }
     let spliced: Vec<String> = graph
         .splices
         .iter()
@@ -217,6 +225,7 @@ fn status(session: &Session<'_>, loaded: &Loaded) -> Result<Answer> {
     answer
         .notes
         .extend(loaded.moved.iter().map(moved::Moved::note));
+    answer.notes.extend(disorder.notes);
     Ok(answer)
 }
 
@@ -256,9 +265,8 @@ pub fn resume_row(session: &Session<'_>, rec: &Rec, cwd: &Path) -> Option<Row> {
         return None;
     }
     let judged = loaded.judged(session).ok().flatten();
-    Some(show::resume_row(
-        &loaded.graph,
-        judged.as_deref(),
-        &loaded.moved,
-    ))
+    let mut row = show::resume_row(&loaded.graph, judged.as_deref(), &loaded.moved);
+    let kinds = disorder::find(&loaded.graph).kinds();
+    row.flags.extend(kinds.into_iter().map(str::to_owned));
+    Some(row)
 }
