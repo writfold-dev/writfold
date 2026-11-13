@@ -3,10 +3,10 @@
 //! the present when its definition digest, its Weft source digest and the
 //! standing of every citation it recorded all equal what is read now.
 use super::Filed;
-use super::ground::{self, Context};
 use super::receipt::Assessed;
 use crate::error::Result;
 use crate::gate::def::Definition;
+use crate::gate::ground::{self, Context};
 use crate::gate::statement;
 use crate::gate::status::{Filings, Judged, Report};
 use crate::gate::subject::Subject;
@@ -130,6 +130,7 @@ pub fn judge<'a>(
             standing: standing(false, state, Statements::default()),
             statements: statement::summary(&[], &d.id, &subject.name, &d.digest, ""),
             assessment: Some(Assessment { receipt, why }),
+            checklist: None,
             receipt: None,
             definition: d,
             state,

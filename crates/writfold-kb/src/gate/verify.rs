@@ -73,6 +73,9 @@ pub(super) fn verify(
     repo: Option<&Path>,
     now: i64,
 ) -> Result<Output> {
+    if given.contains(&format!("/{}/", super::checklist::cover::DIR)) {
+        return cover_row(ws, tool, request, given, now);
+    }
     let (path, run, name) = file(ws, &request.cwd, given)?;
     let text = std::fs::read_to_string(&path)?;
     let r = receipt::parse(&text, &run, &name)
@@ -102,6 +105,43 @@ pub(super) fn verify(
         "re-run in a temporary worktree at the recorded commit; nothing was written to the KB"
             .into(),
     );
+    let session = Session::open(ws, Some(tool), false, now)?;
+    let frame = super::frame(request, "gate-verify", vec![stem.to_owned()]);
+    session.emit(&answer, &frame)
+}
+
+/// A cover row is a judgement with evidence, not a command: nothing can
+/// re-run it. `gate status` re-grounds its evidence on every read.
+fn cover_row(
+    ws: &Workspace,
+    tool: &GitTool,
+    request: &Request,
+    given: &str,
+    now: i64,
+) -> Result<Output> {
+    if ![ws.root.join(given), request.cwd.join(given)]
+        .iter()
+        .any(|p| p.is_file())
+    {
+        return Err(KbError::Refused(format!("no cover row file {given}")));
+    }
+    let stem = given
+        .rsplit('/')
+        .next()
+        .unwrap_or(given)
+        .trim_end_matches(".json");
+    let mut answer = Answer::default();
+    answer.rows.push(Row {
+        kind: "verify",
+        id: stem.to_owned(),
+        status: Some("unverifiable".into()),
+        text: "a cover row is a judgement with cited evidence, not a command; gate status re-grounds its evidence".into(),
+        path: Some(given.to_owned()),
+        line: Some(1),
+        flags: vec!["unverifiable".into()],
+        ..Row::default()
+    });
+    answer.counts.push(("unverifiable", 1));
     let session = Session::open(ws, Some(tool), false, now)?;
     let frame = super::frame(request, "gate-verify", vec![stem.to_owned()]);
     session.emit(&answer, &frame)

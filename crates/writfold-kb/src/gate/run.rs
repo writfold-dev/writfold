@@ -93,6 +93,11 @@ pub(super) fn run(
             "gate {id} is attested: it runs nothing; record a statement with gate attest {id} --statement TEXT --by WHO"
         )));
     }
+    if definition.is_checklist() {
+        return Err(KbError::Refused(format!(
+            "gate {id} is a checklist: it runs nothing; record each item with gate cover {id} <item> supported REF…|not-applicable --reason TEXT --by WHO"
+        )));
+    }
     if definition.assessed.is_some() {
         drop(session);
         return super::assessed::run(ws, tool, request, &rec, &subject, &definition, now);

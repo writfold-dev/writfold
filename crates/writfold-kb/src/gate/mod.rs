@@ -5,16 +5,20 @@
 //! KB run ([`receipt`]); `gate status` derives each gate's obligation state
 //! from the definitions and the receipts ([`status`]); `gate verify`
 //! re-runs a receipt's command at its commit in a temporary worktree; `gate
-//! lines` prints the receipt lines for a commit message. State is never
+//! lines` prints the receipt lines for a commit message; `gate cover`
+//! records one item of a checklist gate ([`checklist`]). State is never
 //! stored. The claims are mistake resistance and Git tamper evidence: a
 //! receipt is a tracked file whose history Git keeps, and anyone can
 //! re-run it. Nothing here signs anything or stops a determined forger.
 pub mod assessed;
+pub mod checklist;
 pub mod def;
+mod def_class;
 #[cfg(test)]
 mod def_tests;
 mod discover;
 pub mod exec;
+pub(crate) mod ground;
 pub mod places;
 pub mod receipt;
 mod run;
@@ -61,6 +65,8 @@ pub enum GateVerb {
     },
     /// `gate attest` or `gate waive`: a statement, not a check.
     Say(Say),
+    /// `gate cover`: one row about one item of a checklist gate.
+    Cover(checklist::Cover),
 }
 
 /// Answer one gate verb.
@@ -76,6 +82,7 @@ pub fn execute(ws: &Workspace, request: &Request, verb: &GateVerb, now: i64) -> 
             run::run(ws, &tool, request, id, run.as_deref(), repo.as_deref(), now)
         }
         GateVerb::Say(say) => say::record(ws, &tool, request, say, now),
+        GateVerb::Cover(cover) => checklist::write::record(ws, &tool, request, cover, now),
         GateVerb::Verify { receipt, repo } => {
             verify::verify(ws, &tool, request, receipt, repo.as_deref(), now)
         }
@@ -178,7 +185,7 @@ fn gate_rows(session: &Session<'_>, rec: &Rec, subject: &Subject) -> Result<(Vec
     let filings = Filings::for_run(session, rec);
     let report = status::judge(session, subject, &filings)?;
     let rows = status::rows(git, subject, &report, &filings)?;
-    Ok((rows, status::counts(&report, &filings)))
+    Ok((rows, counts(&report, &filings)))
 }
 
 /// The gate rows `resume` shows for a run, or why there are none. Quiet
@@ -266,6 +273,9 @@ fn gate_line(judged: &status::Judged<'_>, width: usize) -> String {
     if let Some(assessment) = &judged.assessment {
         return assessed::line(judged, assessment, width);
     }
+    if let Some(view) = &judged.checklist {
+        return checklist::line(judged, view, width);
+    }
     let id = format!("{}:", judged.definition.id);
     let standing = judged.standing.name();
     let said = match judged.standing {
@@ -292,4 +302,21 @@ fn gate_line(judged: &status::Judged<'_>, width: usize) -> String {
         ),
         None => format!("{id:<w$} {standing}\n", w = width + 1),
     }
+}
+
+/// Counts by standing for the trailer, in a fixed order; invalid
+/// receipts, statements and definitions are counted together.
+fn counts(report: &status::Report<'_>, filings: &Filings) -> Vec<(&'static str, usize)> {
+    let count = |s: Standing| report.gates.iter().filter(|j| j.standing == s).count();
+    vec![
+        ("gates", report.gates.len()),
+        ("satisfied", count(Standing::Checked(State::Satisfied))),
+        ("open", count(Standing::Checked(State::Open))),
+        ("stale", count(Standing::Checked(State::Stale))),
+        ("failed", count(Standing::Checked(State::Failed))),
+        ("unknown", count(Standing::Checked(State::Unknown))),
+        ("attested", count(Standing::Attested)),
+        ("waived", count(Standing::Waived)),
+        ("invalid", filings.invalid() + report.problems.len()),
+    ]
 }

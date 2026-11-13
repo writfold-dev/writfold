@@ -24,6 +24,9 @@ pub fn listed(gates: &[&Gate]) -> String {
 
 /// The command that would meet `gate`.
 pub fn next(gate: &Gate) -> String {
+    if let Some(cover) = &gate.cover {
+        return cover.clone();
+    }
     match (gate.standing.is_some(), gate.attested) {
         (false, _) => format!(
             "define {}/{}.toml in the KB root or the repository",

@@ -5,7 +5,7 @@
 //! ([`spec`]: shipped beside the definition, or submitted in the run). An
 //! assumption cites its evidence with Weft's own binding,
 //! `claim <name> = citation "<reference>";`, declared directly above it
-//! ([`report`]). `gate run` resolves every citation ([`ground`]: a KB
+//! ([`report`]). `gate run` resolves every citation ([`crate::gate::ground`]: a KB
 //! citation must be fresh, a receipt satisfied or attested), runs the
 //! pinned `weft` binary ([`weft`]), and records one receipt
 //! ([`receipt`]). A required check is met only when Weft entails it and
@@ -17,7 +17,6 @@
 //! receipt is about the present when the definition, the Weft source's
 //! bytes and the standing of every cited piece of evidence are what it
 //! recorded. Waivers and attestations of an assessed gate are not built.
-mod ground;
 mod judge;
 pub mod receipt;
 pub mod report;

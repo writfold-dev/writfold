@@ -1,4 +1,5 @@
-//! Grounding: what each citation an assumption makes stands on now.
+//! Grounding: what each cited reference stands on now, for an assessed
+//! gate's assumptions and a checklist gate's cover rows alike.
 //!
 //! | Reference | Grounded when | Standing recorded |
 //! |---|---|---|
@@ -10,11 +11,14 @@
 //! | an edit receipt (`runs/<run>/edits/….md`) | every file still has the bytes the edit wrote | `holds` or `changed:<path>` |
 //!
 //! Gate receipts and statements are read from the current run only; a
-//! waiver is never evidence. Anything else is `unresolved`. The standing
-//! is recorded in the assessed receipt; when it differs on a later read,
-//! the cited evidence has moved and the receipt is stale.
-use super::super::status::{Filings, Report};
-use super::super::subject::Subject;
+//! waiver is never evidence. Both later-judged classes (assessed and
+//! checklist gates) resolve against the other gates only, so neither can
+//! cite the other: such a reference is not grounded. Anything else is
+//! `unresolved`. The standing is recorded in the assessed receipt or the
+//! cover row; when it differs on a later read, the cited evidence has
+//! moved and the record is stale.
+use super::status::{Filings, Report};
+use super::subject::Subject;
 use crate::error::Result;
 use crate::model::Citation;
 use crate::parse::cite::{locator, tokens};
