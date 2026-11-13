@@ -507,7 +507,7 @@ Hooks are all `type: "command"`, all calling `writfold kb hook <event>` with the
 | `SessionStart` (matcher `startup\|resume\|clear\|compact\|fork`) | Prints `brief` for the project inferred from `cwd` as plain text. After `compact` it also prints the current checkpoint draft. With no KB it prints nothing and exits 0. | Plain stdout on exit 0 is added to context before the first prompt. Each injected string is capped at 10,000 characters, beyond which only a preview is passed. The hook therefore budgets at most 2,000 estimated tokens. |
 | `PreCompact` (`manual\|auto`) | Records mechanical facts in a local draft: repository, branch, head, dirty paths, session ID. Prints a short instruction asking the summary to keep the task, decisions with reasons, open questions and next step. Never exits 2. | Stdout becomes instructions for the compaction summary. Blocking an automatic compaction can fail the request. |
 | `PostCompact` | Stores `compact_summary` as the draft body. | Input carries `trigger` and `compact_summary`. No decision control. |
-| `Stop` | Updates the rolling draft from `last_assistant_message`; exits 0 silently. Opt-in nudge mode returns `hookSpecificOutput.additionalContext` once per session, and only when `stop_hook_active` is false. | Stop fires at the end of each turn, not at session end. Input carries `stop_hook_active` and `last_assistant_message`. Continuations are capped at eight in a row. |
+| `Stop` | Updates the rolling draft from `last_assistant_message`; exits 0 silently. Opt-in nudge mode returns `hookSpecificOutput.additionalContext` once per session (once per turn for a rule with `repeat = "turn"`, §30.9), and only when `stop_hook_active` is false. | Stop fires at the end of each turn, not at session end. Input carries `stop_hook_active` and `last_assistant_message`. Continuations are capped at eight in a row. |
 | `SessionEnd` | Finalises the draft with a local write only. | Default budget is 1.5 s, and timeouts on plugin hooks do not raise it. |
 
 - **Drafts stay local.** They live in the KB's Git directory until `writfold kb checkpoint --from-draft <session>` promotes one into the tracked run. `resume` and `brief` show unconfirmed drafts marked `!draft`.
@@ -1827,7 +1827,7 @@ writfold kb check [<project>|<path>]
 
 - **`resume`** lists the pending proposals of the run, or of no run, after its drafts.
 - **The SessionStart hook** adds up to three `proposal <id> <created> [run=<id>] <summary>` lines (then `(+N more)`) under "Pending proposals" for those the injected `resume` did not show, inside the same 9,000-character cut. Nothing is added when the queue is empty, so the existing hook goldens are unchanged.
-- **`writfold_kb::proposal::for_run(ws: &Workspace, run: &str) -> usize`** counts the pending proposals that recorded `run`. It is the public seam for the `run.reflected` run-record check ("the run holds a proposal"). It reads the local queue only (0 for a KB outside Git), so an accepted proposal stops counting: by then it is a record the check can find in the KB. A check that must hold on a fresh clone has to look at records, not at the queue.
+- **`writfold_kb::proposal::for_run(ws: &Workspace, run: &str) -> usize`** counts the pending proposals that recorded `run`. It is the public seam for the `run.reflected` run-record check ("the run holds a proposal"). It reads the local queue and, since v0.5.0-dev.3, the tracked queue under `.writfold/proposals/` (0 for a KB outside Git), so an accepted proposal stops counting: by then it is a record the check can find in the KB. A tracked proposal is seen on a fresh clone; a local one is not.
 
 **As built (v0.5.0-dev.3): tracked proposals.** `propose … --tracked` writes the same `writfold-proposal/1` JSON, create-new by the same temporary, sync and `link`, to `<KB root>/.writfold/proposals/<id>-<session8>.json` (`<session8>`: the first eight characters of the session, `none` without one). A dot path is never classified as a record (section 1), so the index and every verdict are unchanged; the file is left in the work tree to commit, as `record` leaves its writes. The session in the name means two sessions proposing the same call in two clones add two files that merge without conflict. An empty marker `.writfold/proposals/.tracked` makes tracked the default when neither `--tracked` nor `--local` is given (both: usage error, exit 1). New code: `crates/writfold-kb/src/proposal/store.rs` (`Store`, `Stores`, `Pending`); `Propose` gains `store: Option<Store>`.
 - **One queue over two stores.** `Stores::pending` reads both, skips dot-named and unreadable files and any tracked file whose name does not start with its own ID, sorts by `created` then ID, and keeps one pending proposal per ID holding every copy (the oldest copy's content is shown). `list`, `show`, `resume`, the session-start inbox, `for_run` (so `run.reflected` holds on a fresh clone when the proposal was tracked and committed) and the cap all read it. Rows gain a second flag, `!local` or `!tracked` (tracked when any copy is); `@<file>` names the tracked copy when there is one. The session-start line adds ` tracked` after the timestamp. The existing goldens changed only by the `!local` flag.
@@ -2757,37 +2757,37 @@ All three set `status`, `updated` and `last_actor` and append `- <date>: <state>
 
 A citation kind Writfold cannot check from Git or the index can name an external checker. The guide page is [checkers](../guide/checkers.md).
 
-### 32.1 Declaration and discovery
+### 33.1 Declaration and discovery
 
 `stale/kinds.rs` gains `freshness = "checked"` and two keys, `checker` (a name, `[a-z0-9._-]`) and `fields` (the field names `make` may write; `kind`, `seen`, `ttl`, `stale` and `v` are Writfold's and refused). Both are required with `checked` and refused with any other freshness; `default_ttl` is refused with `checked`, so a checked kind never also ages by TTL (offline, it is never `due`). Built-in kinds stay undeclarable and unknown keys still refuse. The checker is `writfold-check-<checker>` found by a `PATH` lookup (`stale/checker/spawn.rs::find`): the KB holds no argv and no secret.
 
-### 32.2 Who runs it
+### 33.2 Who runs it
 
 `stale::check` never runs a checker. `stale::check_asking` first calls `checker::ask` (one exchange per checked kind among the citations, every token of the kind in one batch) and then judges as `check` does; its only caller is `verbs/stale.rs`, so `kb stale` without `--offline` (and `kb check`, which runs that verb) is the only path that spawns. `gate/ground.rs` (and with it `gate status`, `gate cover`, `gate lines`, assessed and checklist gates, guard rules, the Stop and session-start hooks through `plan status`), `deliver check`, `proposals accept`, `why` and `brief` read the cache. In `stale/mod.rs::other` the one new branch sends a checked kind to `checker::verdict`: a missing required field first, then this run's answer, then the cached row, else `unverifiable: not-checked`.
 
 The cached row is found by token text: a `cite_checks` row joined to a `citations` row with the same `raw`, whose `repo_head` is `checker:<name>` or `checker:<name>@…` (so a verdict cached before the kind was declared checked, or from another checker, is never read as this checker's), this citation's own row first.
 
-### 32.3 The exchange
+### 33.3 The exchange
 
 `stale/checker/proto.rs` is the `writfold-checker/1` wire format and `spawn.rs` runs it: `writfold_runtime::process::run_tailed_input` (new; `run_tailed` is now that with empty input) writes the requests to the child's stdin while reading its output, closes stdin, and supervises the process group as gate commands are supervised: TERM at the deadline (60 s, `WRITFOLD_CHECKER_TIMEOUT` seconds from 1 to 3600), KILL after 2 s, every descendant reaped. The working directory is the KB root; the environment is the user's. Replies beyond 16 MiB fail the exchange. Requests carry only the token's fields; no clock is sent.
 
 Writfold writes `describe` and all requests at once (the checker cannot shape the batch). The first reply line is the `describe` reply; a later line that is not a JSON object with `"v":1` and a string `id`, or that answers an id never sent, fails the whole exchange, as do a timeout, a signal and a non-zero exit.
 
-### 32.4 Kernel
+### 33.4 Kernel
 
 `writfold_core::verdict` gains `Said` (`Fresh`, `Moved`, `Changed`, `Gone`, `Unverifiable`), `Checker` (`Absent`, `Failed`, `Version`, `Said(Said)`) and `Observed::Checked(Checker)`: only `Said(Fresh)` is fresh, `Absent`, `Failed`, `Version` and `Said(Unverifiable)` are unverifiable. `handshake(Option<Described>)` decides the protocol, then the kind, then the operation; `exchange(handshake, clean, readable, replies)` gives `Version` for an unreadable token version after an agreed, clean exchange, `Said(s)` for exactly one well-formed reply, and `Failed` otherwise. Exhaustive tests cover every case, including that a fresh verdict needs every condition.
 
 The `writfold-kb` mapping goes through `kernel::observed`: `moved` carries the reply's range and its path (dropped when it equals the token's `path=`); the reasons are `checker-absent (<kind>)`, `checker-failed (<kind>): <why>` (`timed out after N s`, `exit N`, `line N: …`, `describe does not list kind …`, `no reply`, `more than one reply`, `unknown status "…"`), `token-version (v=N; <program> reads [..])` and `checker: <detail>` for a checker's own `unverifiable`. The head is `checker:<name>@<version>:<at>`.
 
-### 32.5 Cache
+### 33.5 Cache
 
 `cite_checks` gains `detail` (the reason or detail a verdict carries) and `checked_at` (when `kb stale` wrote the row); schema 3, so an older index is rebuilt and its cache dropped once. Both stay outside the equality claim. `kb stale` counts `checker-absent=` in its trailer when a checker is missing, with a note naming `checker list`; the exit codes are unchanged (an unverifiable token is exit 2, as before). The session-start stale part gains a line naming each declared checker not on `PATH` (a `PATH` stat; nothing is run).
 
-### 32.6 `cite make --kind` and `checker list`
+### 33.6 `cite make --kind` and `checker list`
 
 `cite make --kind <kind> key=value …` sends one `make` and prints the token: a returned field outside `fields` (other than `v`), a non-string value, a missing `required` field or a `v` outside `token_versions` is refused (exit 3); Writfold adds `kind=` and `seen=`, orders the fields as `fields` lists them, and formats the token through the code citation's codec (`write/cite.rs::token`, which checks it parses back). `checker list` runs each checked kind's `describe` and shows `found`, `absent` or `failed`; the trailer counts `unknown=` for the last two (exit 2). Both are `Verb::Checker` (`stale/checker/verb.rs`), outside the write protocol: nothing is written.
 
-### 32.7 Tests
+### 33.7 Tests
 
 - Kernel (`crates/writfold-core/src/verdict.rs`): only `Said(Fresh)` is fresh; the handshake order over all eight `Described`; `exchange` over every handshake, ending, readability and reply list.
 - Runtime (`process/tests.rs`): 300 kB fed whole to `cat`; a child that closes stdin early is not an error.
@@ -2795,7 +2795,7 @@ The `writfold-kb` mapping goes through `kernel::observed`: `moved` carries the r
 - Through the binary with a fake checker on `PATH` (`crates/writfold/tests/kb_checker.rs`, `kb_checker_reads.rs`): each status, `moved` carrying path and range, an unknown status, a duplicate and a missing reply, an unreadable token version and a missing required field, one process for ten tokens; an absent checker (`checker-absent`, `checker list`, offline exit 0, the session-start line); a garbage line, exit 1 and a kind not listed fail every token; a hung checker is stopped at a 1 s deadline and its child is gone; a counter file shows `gate cover`, `gate status`, the session-start, Stop and SessionEnd hooks, `stale --offline` and `why` start no checker while each `kb stale` starts one; `cite make --kind` round-trips to a fresh token, and an undeclared returned field and an unchecked kind are refused.
 - `crates/writfold-kb/tests/checker_cache.rs`: a verdict cached while the kind was time-based is not read once it is declared checked (`not-checked`; removing the `repo_head` filter makes it read `fresh` and fails the test), and a row the checker wrote is read back with its detail.
 
-### 32.8 Not done
+### 33.8 Not done
 
 Built-in kinds through the protocol, fetching, render and redaction, a server mode, an SDK, `migrate`, a checker together with a TTL, tracked check receipts, `--require-checkers`, and an interactive exchange in which `describe` is answered before the tokens are sent (tokens of an unreadable version are sent and their replies ignored). The hook test does not set up a Stop guard rule or a current run with a plan, so it shows the hooks start no checker but not that they reach gate grounding; `gate status` covers that path.
 

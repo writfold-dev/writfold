@@ -132,7 +132,7 @@ Considered for this release and deferred, with the reason:
 - **A separate observation record** (what was looked at, by which command, with what result, including failed lookups) as evidence for checklist items. Deferred until real cover rows show evidence a citation, locator or receipt cannot express.
 - ~~**Writing a decision's `accepted`, `applied` and `verified` states.**~~ Built in v0.5.0-dev.2: `accepted` records the reviewed design revision, `applied` a commit on the target ref, `verified` a passing gate receipt of the run ([as built](kb-v1-design.md#32-decision-states-as-built-v050-dev2)).
 - ~~**Following a rename with edits** for code citations.~~ Built in v0.5.0-dev.2 ([as built](kb-v1-design.md#62-algorithm-for-a-code-citation)).
-- **Not planned:** user-declared record lifecycles, path globs and origin matching on guard rules, per-audience render and redaction templates for citations, fetching cited repositories, and bulk inventory import (a loop over `record` reviewed as a Git diff does this).
+- **Not planned:** user-declared record lifecycles, origin-URL matching on guard rules (path globs were built in v0.5.0-dev.3), per-audience render and redaction templates for citations, fetching cited repositories, and bulk inventory import (a loop over `record` reviewed as a Git diff does this).
 
 **v0.5.0-dev.2** (13 November 2026): three of the deferred items above are built (external checkers as phase 1, the later decision states, following a rename with edits). The observation record stays deferred. Checker phase 2 (tracked check receipts readable on a machine without the checker, a flag that requires checkers, an explicit refresh that proposes new tokens as a diff) waits on real use of phase 1.
 
@@ -148,7 +148,7 @@ The owner proposed reusable gates, skills and delivery modes. After an independe
 - **Honest claims:** this resists mistakes, not adversaries. Tamper evidence comes from Git history; a harness hook is a guard, labelled as such. No signing.
 - **Runs** are KB runs: they record repo, branch, worktree, base commit and an open or closed state. The worktree is recorded, not created; approval is a record state with the Git identity.
 - **Plan assumptions** may use Weft's four-way vocabulary (established, hypothetical, contradicted, unresolved), backed by receipts. (Superseded: Weft verifies plans; see below.)
-- **Not now:** a governed profile, real Slack or PR adapters, effect reconciliation, profile composition and gate groups, authority levels, exception routes, snapshot migration, a Writfold skill format, Weft as an evaluator, a Tuft grammar, Splicery as the edit boundary, signing, and proofs or TLC for gates.
+- **Not now:** a governed profile, real Slack or PR adapters, effect reconciliation, profile composition and gate groups, authority levels, exception routes, snapshot migration, a Writfold skill format, Weft beyond the assessed gate and plan checks, a Tuft grammar, Splicery as the edit boundary, signing, and proofs or TLC for gates.
 
 The proposal and review are kept with the session notes; the decision above is the authority.
 
@@ -184,7 +184,11 @@ So "every research step backfills the KB" and "every run ends with self-reflecti
 
 ### Narrow adapters for Tuft and Splicery (owner decision, 12 November 2026)
 
-Tuft and Splicery are not a priority for new language features, but each gains one narrow adapter so agents have two interfaces and can choose by task: Splicery for repeated or structural edits, ordinary tools for small ones; `kb` verbs or Tuft for retrieval. The Tuft adapter emits KB citations and run receipts. The Splicery adapter applies in a run's worktree without the trial's signing and approval flow, which stays frozen. Weft contributes only its four-way vocabulary for plan assumptions; making it read KB citations as premises waits for the two-week pause.
+Splicery is not a priority for new language features (Tuft is, since 13 November 2026: see "Tuft expansion" below), but each gains one narrow adapter so agents have two interfaces and can choose by task: Splicery for repeated or structural edits, ordinary tools for small ones; `kb` verbs or Tuft for retrieval. The Tuft adapter emits KB citations and run receipts. The Splicery adapter applies in a run's worktree without the trial's signing and approval flow, which stays frozen. Weft contributes only its four-way vocabulary for plan assumptions; making it read KB citations as premises waits for the two-week pause.
+
+### Tuft expansion (owner decision, 13 November 2026)
+
+Tuft is taken off the "not a priority" list. Retrieval is where an agent spends most of its reads, and Tuft's value is the citation and the coverage line, not token counts: a search that says it was complete, and rows that arrive as KB citations. The expansion makes that cheap to reach: refs accepted where a person would type them (resolved to a commit and echoed), a one-line form for the common search, one program over several repositories of the KB's repo map, symbol-aware finds with honest partial coverage, diagnostics that name the fix, and a documented, pinned `--json` and exit codes. Stored programs and receipts stay pinned to full commit IDs; the binary stays static and network-free. Weft and Splicery stay as the section above says.
 
 ## Adopted and declined from the review
 

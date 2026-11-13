@@ -1,6 +1,6 @@
 # Assurance
 
-> **Status:** built in v0.4.0-dev.1. The run-graph, gate and assess kernels are proved over the shipped Rust, and the run graph is model-checked with TLC.
+> **Status:** built in v0.4.0-dev.1. The run-graph, gate and assess kernels are proved over the shipped Rust, and the run graph is model-checked with TLC. Kernels added since (investigation, checklist and guard in v0.5.0-dev.1; decision states and checker verdicts in v0.5.0-dev.2; observations in v0.5.0-dev.3) are tested exhaustively and not proved.
 
 What stands behind `writfold kb`, sorted by how strong the claim is. The short version: the write protocol and the run graph are model-checked, the write protocol is kill-tested; the decisions about plans and gates (which step is current, whether a step may be recorded as done, how a splice changes the plan, what a gate's receipts and statements add up to) are proved for every input over the shipped Rust; everything that turns files into those decisions' inputs is tested.
 

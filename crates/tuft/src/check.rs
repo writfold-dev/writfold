@@ -213,11 +213,14 @@ impl Checker {
             self.error(Code::Scope, text.span, message);
         }
         if !full_commit(&find.at.value) {
-            self.error(
-                Code::Pin,
-                find.at.span,
-                "`at` needs a full 40- or 64-digit lowercase commit id; refs, abbreviations and HEAD are refused",
-            );
+            let base = "`at` needs a full 40- or 64-digit lowercase commit id; refs, abbreviations and HEAD are refused";
+            let value = &find.at.value;
+            let message = if value.is_empty() || value.contains(['\'', '\n']) {
+                base.to_owned()
+            } else {
+                format!("{base}; pin it with `git rev-parse '{value}^{{commit}}'`")
+            };
+            self.error(Code::Pin, find.at.span, message);
         }
         let limit = self.bounded(
             find.limit,

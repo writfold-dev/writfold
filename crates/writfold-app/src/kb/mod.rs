@@ -117,8 +117,9 @@ harness:
   hook session-start|pre-compact|post-compact|stop|session-end|pre-tool-use
                                    a Claude Code hook: event JSON on stdin; always exits 0;
                                    checkpoint drafts stay local until --from-draft confirms one;
-                                   pre-tool-use is the optional delivery guard (off without
-                                   .writfold/deliveries/guard.toml)
+                                   pre-tool-use and stop apply guard rules in .writfold/guards/
+                                   and the delivery guard (.writfold/deliveries/guard.toml);
+                                   with neither, they open nothing
 
 The KB root is --kb, else $WRITFOLD_KB, else the nearest directory above the
 working directory holding inventory/assets/. Git is $WRITFOLD_GIT or git on PATH.

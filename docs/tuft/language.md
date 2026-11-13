@@ -118,7 +118,8 @@ may not repeat (`T210`).
 ## `find`
 
 - **`at`** must be a full 40- or 64-digit lowercase commit id. Refs, `HEAD`
-  and abbreviations are refused at check time (`T206`). At run time the id must
+  and abbreviations are refused at check time (`T206`; the message gives the
+  `git rev-parse` command that pins the value). At run time the id must
   name a commit in the repository and resolve to exactly itself. Otherwise the
   run refuses with the storage boundary's `Refusal::Pin`, never an empty
   result.

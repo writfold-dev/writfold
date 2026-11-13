@@ -101,7 +101,7 @@ A `verified` line, such as `- 2026-11-12: verified; evidence gate:unit satisfied
 
 ## Proposals
 
-A proposal is a `record` call that has not been made yet. `propose` takes exactly the arguments of `record ticket|decision|link`, checks them as `record` would, writes nothing tracked, and queues the call locally:
+A proposal is a `record` call that has not been made yet. `propose` takes exactly the arguments of `record ticket|decision|link`, checks them as `record` would, writes no record, and queues the call: locally by default, or in the KB's work tree with `--tracked` (below):
 
 ```sh
 writfold kb propose ticket HBR-130 --title "Replay is slow after a restart" --assets harbor-api

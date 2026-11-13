@@ -3,7 +3,7 @@
 Detailed status, evidence and qualification notes for Writfold. Start with the
 [README](../../README.md) for what you can try today.
 
-**Since 11 November 2026 the current authority is [mission.md](mission.md)** (project continuity for agents; Git as the store; the trial flow, Weft, Splicery, Dolt and Omnigraph frozen). The text below records the earlier programme and its evidence; its gates and stages are history, not live obligations.
+**Since 11 November 2026 the current authority is [mission.md](mission.md)** (project continuity for agents; Git as the store; Tuft being expanded (13 November 2026); Weft and Splicery available but not a priority for expansion; the trial flow, Dolt and Omnigraph frozen). The text below records the earlier programme and its evidence; its gates and stages are history, not live obligations.
 
 **Current facts (13 November 2026), which supersede the present-tense sentences below:** the repository is public under the MIT license; pre-releases on the [release page](https://github.com/writfold-dev/writfold/releases) carry a static `writfold-x86_64-linux-musl` binary and its `.sha256`; and `writfold kb` (plus `writfold watch` and `writfold tuft`) is the registered command surface, alongside the frozen `trial` and `serve` commands. The [README](../../README.md) and the [guides](../guide/README.md) describe what is built.
 

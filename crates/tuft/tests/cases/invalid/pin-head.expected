@@ -1,1 +1,1 @@
-pin-head.tuft:1:24: error[T206]: `at` needs a full 40- or 64-digit lowercase commit id; refs, abbreviations and HEAD are refused
+pin-head.tuft:1:24: error[T206]: `at` needs a full 40- or 64-digit lowercase commit id; refs, abbreviations and HEAD are refused; pin it with `git rev-parse 'HEAD^{commit}'`

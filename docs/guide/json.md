@@ -36,6 +36,8 @@ $ writfold kb why "batch ledger" --json
 
 Each entry of `more` has `label` (`why`, `note`, `cite`, `next` and so on), `text`, `path`, `line` and `flags`, with the same meanings.
 
+The command that would move a row forward is a `more` entry with `label` `next`, its `text` the command line (`writfold kb gate run lint`). A script that wants it reads that entry rather than parsing the text form.
+
 ## The trailer
 
 | Key | Type | Meaning |
@@ -70,4 +72,11 @@ The meanings are those of the text trailer ([kb-layout](kb-layout.md#the-trailer
 
 The key sets above are pinned by a test (`crates/writfold-kb/tests/json.rs`), which also reads this page: a key added to the output without a row here fails it.
 
-The hook commands (`writfold kb hook <event>`) print the JSON Claude Code expects, not this envelope.
+## Which commands use it
+
+Every `writfold kb` verb, including the writes and the run verbs: `record`, `status --set`, `checkpoint`, `propose` and `proposals`, `observe`, `repos`, `checker list`, `cite make`, `gate run|status|cover|attest|waive|lines`, `plan`, `deliver`, `edit apply` and `edit recover`. A write answers with the rows of what it wrote and its notes.
+
+Two outputs are not this envelope:
+
+- The hook commands (`writfold kb hook <event>`) print the JSON Claude Code expects.
+- `writfold tuft run --json` prints Tuft's own result object, described in the [Tuft language reference](../tuft/language.md). Inside a run, a search with `--cite` is also kept as a retrieval receipt that `kb resume` lists.
