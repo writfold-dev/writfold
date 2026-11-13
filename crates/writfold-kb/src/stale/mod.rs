@@ -1,14 +1,16 @@
 //! Citation freshness. Code citations are checked against a local clone of
 //! the cited repository at `origin/HEAD` (else `HEAD`); v1 never fetches.
 //! Record and decision citations compare the cited state with the index;
-//! every other kind is fresh until `seen + ttl`.
+//! every other kind is fresh until `seen + ttl`, with the lifetime, the
+//! freshness rule and required fields a kind declaration may give
+//! ([`kinds`]).
 mod code;
+pub mod kinds;
 pub mod repos;
 pub mod span;
 
 use crate::error::Result;
 use crate::session::Session;
-use crate::time;
 
 /// One stored citation, as the index holds it.
 #[derive(Clone, Debug, Default)]
@@ -114,17 +116,18 @@ pub struct Checked {
 /// Classify every citation. `offline` reads no repository and reports only
 /// authored marks and due TTLs.
 pub fn check(session: &Session<'_>, cites: &[Cite], offline: bool) -> Result<Vec<Checked>> {
+    let kinds = kinds::read(&session.ws.root)?;
     let mut out: Vec<Option<Checked>> = vec![None; cites.len()];
     let mut code = Vec::new();
     for (index, cite) in cites.iter().enumerate() {
         if let Some(reason) = &cite.malformed {
             out[index] = Some(unverifiable(format!("malformed: {reason}")));
         } else if offline {
-            out[index] = Some(offline_verdict(cite, session.now));
+            out[index] = Some(offline_verdict(&kinds, cite, session.now));
         } else {
             match cite.kind.as_deref() {
                 Some("code" | "gate") => code.push(index),
-                _ => out[index] = Some(other(session, cite)?),
+                _ => out[index] = Some(other(session, &kinds, cite)?),
             }
         }
     }
@@ -179,12 +182,8 @@ fn kernel(verdict: &Verdict) -> writfold_core::verdict::Verdict {
     }
 }
 
-fn offline_verdict(cite: &Cite, now: i64) -> Checked {
-    let due = cite
-        .seen
-        .as_deref()
-        .and_then(|seen| time::expired(seen, cite.ttl.as_deref(), now))
-        == Some(true);
+fn offline_verdict(kinds: &kinds::Kinds, cite: &Cite, now: i64) -> Checked {
+    let due = kinds::due(kinds, cite, now);
     let verdict = if due { Verdict::Due } else { Verdict::Fresh };
     Checked {
         verdict,
@@ -193,7 +192,7 @@ fn offline_verdict(cite: &Cite, now: i64) -> Checked {
 }
 
 /// Record, decision and time-based citations.
-fn other(session: &Session<'_>, cite: &Cite) -> Result<Checked> {
+fn other(session: &Session<'_>, kinds: &kinds::Kinds, cite: &Cite) -> Result<Checked> {
     let head = session.pin.label();
     let state_of = |id: Option<String>, by_path: bool| -> Result<Checked> {
         let Some(id) = id else {
@@ -229,19 +228,6 @@ fn other(session: &Session<'_>, cite: &Cite) -> Result<Checked> {
         None => Ok(unverifiable("missing kind=".into())),
         Some("record") => state_of(cite.cpath.clone(), true),
         Some("proposal") => state_of(cite.field("id"), false),
-        Some(_) => {
-            let Some(seen) = &cite.seen else {
-                return Ok(unverifiable("missing seen=".into()));
-            };
-            let verdict = match time::expired(seen, cite.ttl.as_deref(), session.now) {
-                Some(true) => Verdict::Expired,
-                Some(false) => Verdict::Fresh,
-                None => Verdict::Unverifiable("unreadable seen= or ttl=".into()),
-            };
-            Ok(Checked {
-                verdict,
-                head: format!("seen:{seen}"),
-            })
-        }
+        Some(kind) => Ok(kinds::judge(kinds, cite, kind, session.now)),
     }
 }

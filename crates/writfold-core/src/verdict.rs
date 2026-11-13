@@ -91,6 +91,8 @@ pub enum Observed {
     Timed(Option<bool>),
     /// Offline: only whether `seen + ttl` passed.
     Offline { due: bool },
+    /// A kind declared immutable: what it cites never changes.
+    Immutable,
 }
 
 /// Exactly one verdict per citation.
@@ -135,6 +137,31 @@ pub fn observed(fact: Observed) -> Verdict {
         Observed::Timed(None) => Verdict::Unverifiable,
         Observed::Offline { due: true } => Verdict::Due,
         Observed::Offline { due: false } => Verdict::Fresh,
+        Observed::Immutable => Verdict::Fresh,
+    }
+}
+
+/// The lifetime a time-based citation is judged by.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Lifetime<T> {
+    /// Its kind is declared immutable: fresh at any age.
+    Immutable,
+    /// The token's own `ttl=`.
+    Token(T),
+    /// No `ttl=` on the token: its kind's declared default.
+    Default(T),
+    /// Neither: it never expires.
+    Never,
+}
+
+/// Choose the lifetime: an immutable kind first, then the token's own
+/// `ttl=`, then the kind's default, else never.
+pub fn lifetime<T>(immutable: bool, token: Option<T>, default: Option<T>) -> Lifetime<T> {
+    match (immutable, token, default) {
+        (true, _, _) => Lifetime::Immutable,
+        (false, Some(ttl), _) => Lifetime::Token(ttl),
+        (false, None, Some(ttl)) => Lifetime::Default(ttl),
+        (false, None, None) => Lifetime::Never,
     }
 }
 
@@ -155,7 +182,7 @@ pub fn with_mark(verdict: Verdict, marked: bool) -> Verdict {
 
 #[cfg(test)]
 mod tests {
-    use super::{Located, Observed, Target, Verdict, decide, locate};
+    use super::{Lifetime, Located, Observed, Target, Verdict, decide, lifetime, locate};
 
     #[test]
     fn locate_tries_the_cited_lines_first() {
@@ -195,6 +222,7 @@ mod tests {
             facts.push(Observed::Offline { due: flag });
         }
         facts.push(Observed::Timed(None));
+        facts.push(Observed::Immutable);
         facts.extend(
             located
                 .iter()
@@ -216,6 +244,33 @@ mod tests {
             );
             if let Observed::Code(_) = fact {
                 assert_eq!(plain == Verdict::Fresh, fresh_code, "{fact:?}");
+            }
+        }
+    }
+
+    #[test]
+    fn the_lifetime_is_immutable_then_the_token_then_the_default() {
+        assert_eq!(decide(Observed::Immutable, false), Verdict::Fresh);
+        for immutable in [true, false] {
+            for token in [Some(1), None] {
+                for default in [Some(2), None] {
+                    let chosen = lifetime(immutable, token, default);
+                    let expected = match (immutable, token, default) {
+                        (true, _, _) => Lifetime::Immutable,
+                        (false, Some(t), _) => Lifetime::Token(t),
+                        (false, None, Some(d)) => Lifetime::Default(d),
+                        (false, None, None) => Lifetime::Never,
+                    };
+                    assert_eq!(chosen, expected, "{immutable} {token:?} {default:?}");
+                    // A token's own ttl= always wins over a declared default.
+                    if !immutable && token.is_some() {
+                        assert_eq!(chosen, Lifetime::Token(1));
+                    }
+                    // Without a declaration nothing changes: the token, else never.
+                    if !immutable && default.is_none() {
+                        assert_eq!(chosen, token.map_or(Lifetime::Never, Lifetime::Token));
+                    }
+                }
             }
         }
     }
