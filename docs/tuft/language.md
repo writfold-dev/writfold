@@ -6,10 +6,11 @@ finds exact evidence, retains it as citations and shows it compactly under a
 token budget. Milestone T0 of
 [the agent-boundary plan](../writfold/agent-boundary-plan.md) defines v0.
 
-**What v0 is:** exact search over **one pinned Git commit**, retention of the
-matched bytes as `writfold-citation/1` bindings through the trial retain path,
-and a deterministic, source-mapped projection with explicit omissions and a
-resume cursor.
+**What v0 is:** exact text/regex search, or partial symbol lookup from a
+user-generated ctags index, over pinned Git commits. One CLI invocation can
+apply a program to several mapped repositories. Retention and projection are
+deterministic at a commit; an explicit working-tree mode labels changed bytes
+dirty rather than inventing committed evidence.
 
 **What v0 is not:** it is not corpus search, semantic search, ranking or
 grounding. `similar`, `rank` and `follow` parse but are refused by type until
@@ -84,7 +85,7 @@ binding   = HANDLE ":=" operation ";" ;
 operation = find | retain | project | rank | follow ;
 
 find      = "find" matcher [ "in" STRING ] "at" STRING [ "limit" NAT ] ;
-matcher   = "text" STRING | RX | "similar" STRING ;
+matcher   = "text" STRING | RX | "def" STRING | "refs" STRING | "similar" STRING ;
 retain    = "retain" HANDLE [ "around" "lines" NAT ] ;
 project   = "project" HANDLE "[" field { "," field } "]"
             [ "sort" "[" key { "," key } "]" ] [ "limit" NAT ] ;
@@ -117,15 +118,22 @@ may not repeat (`T210`).
 
 ## `find`
 
-- **`at`** must be a full 40- or 64-digit lowercase commit id. Refs, `HEAD`
-  and abbreviations are refused at check time (`T206`; the message gives the
-  `git rev-parse` command that pins the value). At run time the id must
-  name a commit in the repository and resolve to exactly itself. Otherwise the
-  run refuses with the storage boundary's `Refusal::Pin`, never an empty
-  result.
-- **`in`** is a byte prefix of repository paths. Write `"src/"` for a
-  directory, since `"src"` also matches `srcfoo`. Empty or absent means the
-  whole tree. A leading `/` and `.`/`..` segments are refused (`T211`).
+- **`at`** in a saved FILE, `tuft check`, the library's `compile`, and
+  `--pinned` mode must be a full 40- or 64-digit lowercase commit ID (`T206`,
+  with the `git rev-parse '<value>^{commit}'` fix). `grep` and one-shot
+  `run -` programs accept `HEAD`, branches, tags and abbreviations. The CLI
+  resolves each repository's ref once through Git, substitutes the full ID
+  into the actual program, then runs the strict compiler. The displayed
+  trailer echoes `at="HEAD"→<full ID>`; JSON carries `at`.
+  Receipts and citation tokens use only full commits; the program digest is
+  of the substituted source, not the ref-bearing input. Unknown refs, tree
+  objects and full IDs that do not name the commit itself refuse.
+- **`in`** without wildcards remains a byte prefix of repository paths.
+  Write `"src/"`, since `"src"` also matches `srcfoo`. With wildcards it is
+  a whole-path glob: `*` and `?` match bytes other than `/`, `**` crosses `/`,
+  and `**/` also matches zero directories. There are no character classes or
+  shell expansion. Quote CLI globs. Empty or absent means the whole tree.
+  Leading `/` and `.`/`..` segments are refused (`T211`).
 - **`text "..."`** matches exact bytes, 1..=4096 bytes. It reports every
   occurrence, including overlapping starts.
 - **`rx"..."`** uses the dialect `rust-regex-1.11.1/bytes-ascii-multiline-v0`:
@@ -146,6 +154,37 @@ may not repeat (`T210`).
 - **Files** are every Git blob in the tree: regular, executable and symlink
   entries. Submodule gitlinks have no bytes in this repository, so they are
   not files. A non-UTF-8 path refuses the run.
+
+### Symbols from an existing index
+
+`find def "NAME"` and `find refs "NAME"` require `--index FILE`. Tuft imports
+universal-ctags JSON lines; it does not execute ctags. Each tag needs `_type`
+`tag`, `name`, a repository-relative `path`, and a positive numeric `line`.
+An optional numeric `end` is inclusive. Pseudo-tag (`ptag`) metadata is
+ignored. Absent roles, or the role `def`, identify definitions; non-definition
+roles identify references. Only references the selected ctags language emits
+can be found. A missing result is never proof that no caller exists.
+
+`FILE.meta.json` must contain `{"commit":"<full ID>","sha256":"<64 hex>"}`.
+The digest covers the exact index bytes, and the commit must equal the
+resolved query commit. A mismatch refuses with a rebuild instruction.
+Metadata is the index producer's declaration, not a proof of its completeness.
+Generate it from a clean detached worktree, not edited source:
+
+```sh
+pin=$(git rev-parse 'HEAD^{commit}')
+index=/absolute/path/tags.jsonl
+git worktree add --detach /tmp/tuft-index "$pin"
+(cd /tmp/tuft-index && ctags --output-format=json --fields=+nr --extras=+r -R -f "$index" .)
+printf '{"commit":"%s","sha256":"%s"}\n' "$pin" "$(sha256sum "$index" | cut -d' ' -f1)" > "$index.meta.json"
+git worktree remove /tmp/tuft-index
+```
+
+Symbol coverage is always `partial`, including zero results, and records
+`index_commit` and `index_sha256` in the coverage line/object. Reported spans
+are checked against pinned file bytes. Symbol queries cannot be combined
+with `--working-tree`: the index describes committed bytes only.
+SCIP, tree-sitter and new dependencies are not included.
 
 ## `retain`
 
@@ -260,8 +299,9 @@ exact shown file range and its text as a JSON string literal.
   the first 8 hex digits of SHA-256 over
   `tuft-cursor/2\n<program digest>\n<commit>\n<offset>\n<view digest>`.
   The view digest covers every compact row, so the cursor binds program,
-  commit, offset and result; the budget is part of the program. Only the
-  canonical text parses. `--cursor` reruns the same program and resumes at
+  commit, offset and result; index identity and the working-tree byte snapshot
+  also bind it in those modes, even without excerpts. The budget is part of
+  the program. Only the canonical text parses. `--cursor` reruns the same program and resumes at
   `OFFSET`, in any rendering. Refusals are typed, checked in this order:
   `Malformed`, `UnsupportedVersion` (including the earlier unversioned
   `TAG.OFFSET` form), `OtherCommit` (a stale cursor; a new pin is also a new
@@ -271,12 +311,67 @@ exact shown file range and its text as a JSON string literal.
   secret, it only turns a wrong cursor into a refusal instead of a wrong
   page.
 - **Determinism.** The same program bytes and commit give byte-identical
-  output in every rendering.
+  output in every rendering; symbol lookup also requires the same index,
+  and working-tree mode the same byte snapshot. Ref labels describe the
+  invocation and are not included in the pinned program digest.
 - **`--json`** emits the verbose envelope and rows as one JSON object, with
   fields `tuft`, `program`, `commit`, `find`, `retain`, `view`, `budget`,
   `cursor` and `rows`.
 
 An agent's tool note for Tuft is in [agent-note.md](agent-note.md).
+
+### JSON contract
+
+`run --json` and `grep --json` emit one object, not the KB envelope. Unknown
+additive keys should be ignored; incompatible meaning/type changes require
+a new `tuft` version. The contract test reads this page and pins the key sets.
+
+| Key | Type and meaning |
+|---|---|
+| `tuft` | String, currently `tuft/0` |
+| `program` | `sha256:` plus the digest of the exact pinned program |
+| `commit` | Full commit ID |
+| `find` | Object: `binding`, `matcher`, `pattern`, `scope` strings; `limit`, `hits` integers; `coverage` object; `stopped` null or `hit-limit` |
+| `coverage` | `state` (`complete`, `partial`, `unavailable`); measured coverage also has `examined_files`, `total_files`. Symbols add `index_commit`, `index_sha256` and are always partial |
+| `retain` | Null, or object with `binding` string, `around_lines` integer/null, `bindings` integer, `schema` string |
+| `view` | `binding` string, `columns` string array, and integer `rows`, `merged`, `limited`, `from`, `shown`, `omitted` |
+| `budget` | Integer `tokens`, `used`; string `estimate` |
+| `cursor` | Continuation string or null |
+| `rows` | Ordered array; each row contains only projected fields |
+| `at` | Only when resolving a ref: object with `requested` input and full `commit` |
+| `cites` | With `--cite`: one token string per shown row, including an empty array for no rows |
+| `working_tree` | Only in that mode: integer `dirty_files`, `skipped_files` |
+
+Row fields are `path` (string), `line` (one-based integer), `range` (two
+integers, half-open byte offsets), `binding` (string/null), and `excerpt`
+(object/null). An excerpt holds `range`, `text`, `truncated` (boolean), and
+`hidden_bytes` (integer). Dirty bindings start `dirty:sha256:` and are not
+`writfold-citation/1` bindings.
+
+With several repositories, the top level instead has `tuft`, `repositories`
+and `overall`. Each entry of `repositories` is `{"repo":"<map name>",
+"result":<single-repository object>}`, sorted by name then local path.
+`overall` has `coverage`, `repositories` (count), `examined_files`,
+`total_files`, `hits`, `shown`, `omitted`. Overall coverage is complete only
+if every repository is complete. Limits and token budgets apply per repository.
+
+`check FILE --json` emits `tuft`, `ok` (boolean), `file`, `program`
+(digest/null), and `diagnostics` (array). Each diagnostic has `code`,
+`message`, `span` (`lo`, `hi` half-open source byte offsets), `line` and
+`column` (one-based byte coordinates). Invalid programs still produce this
+object on stdout at exit 1; filesystem/argument failures use stderr instead.
+
+### Exit codes
+
+| Code | Meaning |
+|---|---|
+| 0 | Successful query or check, including no matches, partial search coverage, or omitted rows; inspect the coverage, limits and cursor |
+| 1 | Invalid arguments or program, a refusal, or an IO error; normally stderr only, except invalid `check --json` programs as above |
+
+Tuft does not use grep's “1 means no match” convention or KB's exit 2/3.
+Notes and receipt paths go to stderr; `--print-program` also sends the exact
+pinned program executed for each repository there.
+
 
 ## Lowering and backends
 
@@ -308,8 +403,11 @@ paging, cursor binding and typed refusals) in
 ## Diagnostics
 
 `file:line:column: error[Tnnn]: message`, with a 1-based line and byte column.
-The lexer and parser stop at the first error. The checker reports every error,
-in source order. The golden cases are in
+Recoverable lexical and parse errors are collected in source order, recovering
+at statement boundaries instead of stopping at the first malformed statement.
+Unrecoverable encoding errors stop decoding. Once syntax is valid, the checker
+reports all semantic errors. T203 names the missing `retain @h` step when an
+excerpt or binding is projected from hits. The golden cases are in
 [`crates/tuft/tests/cases`](../../crates/tuft/tests/cases).
 
 | Code | Meaning |
@@ -334,10 +432,30 @@ in source order. The golden cases are in
 ## Command line
 
 ```text
-writfold tuft run FILE --repo DIR [--state DIR] [--cursor C] [--verbose|--json] [--out NEW_FILE]
-                  [--cite] [--kb DIR] [--run ID]
-writfold tuft check FILE
+writfold tuft run FILE|- [--repo DIR|NAME[@COMMIT] ...] [--pinned]
+writfold tuft grep PATTERN [--in PATH-GLOB] [--at REF] [--regex] [--limit N]
+                         [--repo DIR|NAME[@REF] ...] [--pinned]
+writfold tuft check FILE [--json]
+# run/grep: --state DIR --cursor C --verbose|--json --out NEW_FILE
+#           --cite --kb DIR --run ID --working-tree --index FILE --print-program
 ```
+
+`grep` lowers to ordinary `find → retain around lines 0 → project → emit`:
+path, line and a 300-character excerpt, sorted by path/line, with 4,000
+budget tokens. Its default hit limit is 100 and default `--at` is `HEAD`.
+`--regex` selects the same bounded regex dialect as `find rx`.
+`--print-program` shows the exact pinned lowering on stderr after execution.
+`--at` is accepted only by `grep` and `run -`; edit a saved program's pin
+instead. `--pinned` refuses any ref, including the default `HEAD`.
+
+`--repo` defaults to `.`. Repeat it to run the same query over multiple
+repositories; `NAME@REF` supplies each repository's revision. FILE input and
+`--pinned` require full IDs in those selectors too. Names and paths use
+exactly the KB map/search-root resolution used by `kb repos` and `kb stale`.
+Duplicate repositories refuse. Text output groups each repository's rows and
+coverage and ends with overall coverage. Each repository gets its own pinned
+receipt. Resume one repository with its own `--cursor`, not the whole group.
+There is no `repos [...]` grammar addition.
 
 A run needs a state: the Git executable it runs, and a directory where
 `retain` keeps its bindings (`evidence/<binding>.json`, `.bytes` and
@@ -358,19 +476,34 @@ A run needs a state: the Git executable it runs, and a directory where
 4. Otherwise the run is refused, naming both ways forward: run inside a KB
    or pass `--kb DIR`, or pass `--state DIR` (or set `WRITFOLD_STATE`).
 
-Bindings keep the trial realm in either state, so the same bytes bind to
-the same digest. `--repo`
-must be an ordinary repository (`DIR/.git` a directory). A whole-tree
-`find` loads every blob in scope once, in parallel, bounded at 1 GiB. A larger
-scope refuses and asks to be narrowed.
+Bindings keep the trial realm in either state, so the same committed bytes
+bind to the same digest. `--repo` accepts ordinary repositories, linked
+worktrees and submodule checkouts where `.git` is a file. Gitlinks are not
+recursed into automatically: select the submodule itself as a repository.
+A whole-tree `find` is bounded at 1 GiB; narrow a larger scope.
+
+`--working-tree` is a read-only source mode over tracked and nonignored
+untracked files. It never stages, commits, or changes source files. State and
+optional receipts still use their normal locations. Missing, unsafe (including
+symlink traversal), unreadable or oversized files are skipped and force partial
+coverage; `source=working-tree dirty=N skipped=N` states the mode and counts.
+The bytes searched are snapshotted and used for excerpts and tokens; files
+identical to the requested commit remain pinned. Changed/untracked bytes have
+`dirty:sha256:` evidence bindings, with no trial evidence descriptor, and code
+tokens with `dirty=<file SHA256>` and `blob=dirty:sha256:<file SHA256>`.
+Their `rev` names the base commit, not a claim those bytes occur there.
+`kb stale` reports these uncommitted tokens unverifiable, even offline.
+
+Enclosing-function/block windows are deliberately not added: language-agnostic
+brace and indentation scans cannot distinguish strings, comments, data and
+continuations exactly. Use the existing explicit `around lines N`.
 
 ## KB adapter
 
-The language stays at v0; this is an output adapter (owner decision,
-12 November 2026) so Tuft results share the vocabulary of
-[`writfold kb`](../writfold/kb-v1-design.md#15-tuft-adapter-as-built). It adds
-no grammar, operator or field, and without `--cite` and without a KB run the
-output is byte-for-byte what it was.
+The output adapter (owner decision, 12 November 2026) shares the vocabulary of
+[`writfold kb`](../writfold/kb-v1-design.md#15-tuft-adapter-as-built).
+Existing pinned text queries keep their output; expansion metadata appears
+only when the relevant mode is selected.
 
 - **`--cite`** prints, under each shown row, one continuation line
   `  cite: ⟦cite kind=code repo=… rev=<pinned commit> path=… L=a-b blob=… span=… seen=… url=…⟧`.
