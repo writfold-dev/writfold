@@ -66,7 +66,7 @@ pub(super) fn record(
     }
     let git = tool.admit()?;
     let patterns = definition.patterns();
-    let wanted = |p: &str| writfold_core::gate::in_scope(&patterns, p);
+    let wanted = |p: &str| writfold_core::scope::in_scope(&patterns, p);
     let snapshot = subject::snapshot(&git, &subject, &wanted)?;
     let mut scoped = snapshot.scoped(&patterns);
     if definition.run_record() {

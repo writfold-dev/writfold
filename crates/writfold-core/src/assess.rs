@@ -11,10 +11,12 @@
 //! could not finish); bases `grounded` and `hypothetical`. Nothing here
 //! reads a report or a citation; the caller gathers the facts.
 //!
-//! Proof candidate, not in the Charon `start_from` list: no theorem is
-//! claimed. The property tests below check, over every combination, that
-//! a gate passes exactly when every required check is entailed with every
-//! premise grounded.
+//! The decisions `assumption`, `basis`, `met` and `outcome` (with its
+//! helpers `unfinished` and `found_met`) are in the Charon `start_from`
+//! list, named one by one so the derived trait impls and the text
+//! conveniences are never translated; `proofs/Writfold/Assess.lean` proves
+//! them for every input (docs/writfold/aeneas.md). The property tests
+//! below check the same, over every combination, for small inputs.
 use crate::gate::Outcome;
 
 /// What Writfold found for one cited piece of evidence, or for one
@@ -140,7 +142,7 @@ pub fn assumption(citations: &[Grounding]) -> Grounding {
 pub fn basis(premises: &[Grounding]) -> Basis {
     let mut index = 0;
     while index < premises.len() {
-        if premises[index] == Grounding::Ungrounded {
+        if matches!(premises[index], Grounding::Ungrounded) {
             return Basis::Hypothetical;
         }
         index += 1;
@@ -150,7 +152,7 @@ pub fn basis(premises: &[Grounding]) -> Basis {
 
 /// Whether one check meets the gate: entailed, on a grounded basis.
 pub fn met(verdict: Verdict, basis: Basis) -> bool {
-    verdict == Verdict::Entailed && basis == Basis::Grounded
+    matches!(verdict, Verdict::Entailed) && matches!(basis, Basis::Grounded)
 }
 
 /// What the assessment found for one required check.
@@ -174,22 +176,37 @@ pub fn outcome(complete: bool, required: &[Required]) -> Outcome {
     let mut all = true;
     let mut index = 0;
     while index < required.len() {
-        match required[index] {
-            Required::Missing => all = false,
-            Required::Found(Verdict::Unknown | Verdict::NotEvaluated, _) => {
-                return Outcome::Unknown;
-            }
-            Required::Found(verdict, basis) => {
-                if !met(verdict, basis) {
-                    all = false;
-                }
-            }
+        if unfinished(required[index]) {
+            return Outcome::Unknown;
+        }
+        if !found_met(required[index]) {
+            all = false;
         }
         index += 1;
     }
     match all {
         true => Outcome::Pass,
         false => Outcome::Fail,
+    }
+}
+
+/// Whether Weft could not finish this required check (unknown or not
+/// evaluated). Its own function so the translation sees one flat match.
+pub fn unfinished(required: Required) -> bool {
+    match required {
+        Required::Missing => false,
+        Required::Found(verdict, _) => match verdict {
+            Verdict::Unknown | Verdict::NotEvaluated => true,
+            _ => false,
+        },
+    }
+}
+
+/// Whether this required check is present and meets the gate.
+pub fn found_met(required: Required) -> bool {
+    match required {
+        Required::Missing => false,
+        Required::Found(verdict, basis) => met(verdict, basis),
     }
 }
 

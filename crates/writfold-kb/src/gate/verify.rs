@@ -186,7 +186,7 @@ fn rerun(
         name: r.repo.clone(),
     };
     let patterns: Vec<&str> = r.patterns.iter().map(String::as_str).collect();
-    let wanted = |p: &str| writfold_core::gate::in_scope(&patterns, p);
+    let wanted = |p: &str| writfold_core::scope::in_scope(&patterns, p);
     let scoped = subject::snapshot(git, &at, &wanted)?.scoped(&patterns);
     let compact: String = time::stamp(now)
         .chars()

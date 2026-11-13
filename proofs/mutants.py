@@ -163,6 +163,101 @@ MUTANTS = (
            "            prefix.len() == 3 && is_claimed(&prefix[2]) && !reason.is_empty()",
            "            prefix.len() == 3 && is_claimed(&prefix[2])",
            ("Writfold.Core.Flow.follows_spec",)),
+    # run graph: a skipped step is closed, so it is never current
+    Mutant("closed-ignores-skip", "plan.rs",
+           "    node.done || node.skipped",
+           "    node.done",
+           ("Writfold.Core.Plan.closed_spec",)),
+    # run graph: only the current step may be recorded as done
+    Mutant("advance-without-current-check", "plan.rs",
+           "    if now != at {",
+           "    if false {",
+           ("Writfold.Core.Plan.advance_check_spec",)),
+    # run graph: every gate of the step must be met
+    Mutant("advance-ignores-gates", "plan.rs",
+           "        Some(gate) => Err(Refusal::Owed(gate)),",
+           "        Some(_) => Ok(()),",
+           ("Writfold.Core.Plan.advance_check_spec",)),
+    # run graph: a stale step is a done step with an owed gate
+    Mutant("stale-ignores-done", "plan.rs",
+           "    node.done && first_owed(met).is_some()",
+           "    !node.skipped && first_owed(met).is_some()",
+           ("Writfold.Core.Plan.stale_spec",)),
+    # splice: the new steps go before the current step, not after it
+    Mutant("splice-inserts-after-current", "plan.rs",
+           "    while index < nodes.len() && index < at {",
+           "    while index < nodes.len() && index <= at {",
+           ("Writfold.Core.Plan.splice_loop0_spec",)),
+    # splice: the new steps are open
+    Mutant("splice-new-steps-done", "plan.rs",
+           "            done: false,\n            skipped: false,",
+           "            done: true,\n            skipped: false,",
+           ("Writfold.Core.Plan.splice_loop1_spec",)),
+    # splice: every existing step is kept, the last one included
+    Mutant("splice-drops-last-step", "plan.rs",
+           "    while index < nodes.len() {\n        out.push(Node {",
+           "    while index + 1 < nodes.len() {\n        out.push(Node {",
+           ("Writfold.Core.Plan.splice_loop2_spec",)),
+    # splice: idempotent on the template key
+    Mutant("splice-ignores-key", "plan.rs",
+           "    if contains(spliced, key) {",
+           "    if false {",
+           ("Writfold.Core.Plan.splice_check_spec",)),
+    # splice: depth is bounded by MAX_DEPTH
+    Mutant("splice-depth-off-by-one", "plan.rs",
+           "    if depth > MAX_DEPTH {",
+           "    if depth > MAX_DEPTH + 1 {",
+           ("Writfold.Core.Plan.splice_check_spec",)),
+    # gate: a subject that moved while the command ran is never a pass
+    Mutant("outcome-ignores-moved", "gate.rs",
+           "    if subject_moved {\n        return Outcome::Unknown;",
+           "    if false {\n        return Outcome::Unknown;",
+           ("Writfold.Core.Gate.outcome_spec",)),
+    # gate: only exit status 0 passes
+    Mutant("outcome-any-exit-passes", "gate.rs",
+           "        Ending::Exited(0) => Outcome::Pass,",
+           "        Ending::Exited(_) => Outcome::Pass,",
+           ("Writfold.Core.Gate.outcome_spec",)),
+    # gate: a receipt about other bytes in scope never decides the state
+    Mutant("state-ignores-scope", "gate.rs",
+           "        if evidence.same_definition && evidence.same_scope {",
+           "        if evidence.same_definition {",
+           ("Writfold.Core.Gate.state_loop_spec",)),
+    # gate: a waiver is never a passing check
+    Mutant("waiver-satisfies", "gate.rs",
+           "        return Standing::Waived;",
+           "        return Standing::Checked(State::Satisfied);",
+           ("Writfold.Core.Gate.standing_spec",)),
+    # gate: an attestation is never a passing check
+    Mutant("attestation-satisfies", "gate.rs",
+           "            return Standing::Attested;",
+           "            return Standing::Checked(State::Satisfied);",
+           ("Writfold.Core.Gate.standing_spec",)),
+    # gate: a stale obligation is owed
+    Mutant("met-counts-stale", "gate.rs",
+           "Standing::Checked(State::Open | State::Stale | State::Failed | State::Unknown)",
+           "Standing::Checked(State::Open | State::Failed | State::Unknown)",
+           ("Writfold.Core.Gate.met_spec",)),
+    # assessed gate: one ungrounded premise makes the basis hypothetical
+    Mutant("basis-ignores-premises", "assess.rs",
+           "        if matches!(premises[index], Grounding::Ungrounded) {",
+           "        if false {",
+           ("Writfold.Core.Assess.basis_loop_spec",)),
+    # assessed gate: a hypothetical entailment never meets the gate
+    Mutant("met-accepts-hypothetical", "assess.rs",
+           "    matches!(verdict, Verdict::Entailed) && matches!(basis, Basis::Grounded)",
+           "    matches!(verdict, Verdict::Entailed) || matches!(basis, Basis::Grounded)",
+           ("Writfold.Core.Assess.met_spec",)),
+    # assessed gate: a check Weft could not finish is unknown, never a pass
+    Mutant("outcome-passes-unfinished", "assess.rs",
+           "        if unfinished(required[index]) {",
+           "        if false {",
+           ("Writfold.Core.Assess.outcome_loop_spec",)),
+    # assessed gate: an attested citation makes the assumption attested
+    Mutant("assumption-ignores-attested", "assess.rs",
+           "            Grounding::Attested => attested = true,",
+           "            Grounding::Attested => {}",
+           ("Writfold.Core.Assess.assumption_loop_spec",)),
 )
 
 # lake reports `error: <path>.lean:<line>:<col>: <message>`

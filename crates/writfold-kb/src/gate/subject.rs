@@ -10,7 +10,7 @@ use crate::workspace::{CANCELLED, Workspace, budgets, find_repo};
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
-use writfold_core::gate::in_scope;
+use writfold_core::scope::in_scope;
 use writfold_domain::GitObjectId;
 use writfold_runtime::git::{
     GitExecutable, KbRepository, gate_hash_paths, gate_ls_tree, kb_config, kb_diff_tree, kb_status,

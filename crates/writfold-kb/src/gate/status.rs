@@ -13,7 +13,8 @@ use crate::emit::{More, Row};
 use crate::error::{KbError, Result};
 use crate::session::Session;
 use std::path::Path;
-use writfold_core::gate::{Evidence, Standing, State, in_scope, standing, state};
+use writfold_core::gate::{Evidence, Standing, State, standing, state};
+use writfold_core::scope::in_scope;
 use writfold_runtime::git::GitExecutable;
 
 pub use super::receipt::{Filed, filed};

@@ -45,6 +45,7 @@ pub mod gate;
 pub mod ledger;
 pub mod plan;
 pub mod publication;
+pub mod scope;
 pub mod trial;
 pub mod verdict;
 pub mod walk;

@@ -223,7 +223,7 @@ fn command(
     let (rec, subject, definition) = (t.rec, t.subject, t.definition);
     let git = tool.admit()?;
     let patterns = definition.patterns();
-    let wanted = |p: &str| writfold_core::gate::in_scope(&patterns, p);
+    let wanted = |p: &str| writfold_core::scope::in_scope(&patterns, p);
     let before = subject::snapshot(&git, subject, &wanted)?;
     let scoped = before.scoped(&patterns);
     let stem = name(&definition.id, now);

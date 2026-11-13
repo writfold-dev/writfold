@@ -5,13 +5,14 @@
 //! come before it) and supplies, for each gate of a step, whether it is met
 //! (satisfied, attested or waived).
 //!
-//! Proof candidate, not yet in the Charon `start_from` list: no theorem is
-//! claimed. It is written to the translation rules (owned data, no derives,
-//! explicit `while` loops, one early return per loop) so the theorems of
-//! the plan kernel can be stated over this code. The exhaustive tests
-//! below state them for every list of up to four steps, and for `splice`
-//! (insert a template's steps before the current step, as its children)
-//! over every insertion of up to three steps.
+//! In the Charon `start_from` list: the proofs gate translates this module
+//! to Lean and `proofs/Writfold/Plan.lean` proves its theorems for every
+//! input (docs/writfold/aeneas.md): `current` is the least open step,
+//! `advance_check` admits exactly the current step with every gate met in
+//! the fixed refusal order, `stale` never moves the current step, `splice`
+//! keeps every existing step in order with the done prefix, and
+//! `splice_check` is idempotent on its key and bounded in depth. The
+//! exhaustive tests below state the same properties for small inputs.
 
 use alloc::vec::Vec;
 
@@ -107,26 +108,11 @@ pub fn stale(node: &Node, met: &[bool]) -> bool {
     node.done && first_owed(met).is_some()
 }
 
-/// Whether two keys are the same bytes.
-pub fn same(a: &[u8], b: &[u8]) -> bool {
-    if a.len() != b.len() {
-        return false;
-    }
-    let mut index = 0;
-    while index < a.len() {
-        if a[index] != b[index] {
-            return false;
-        }
-        index += 1;
-    }
-    true
-}
-
 /// Whether `key` is one of `keys`.
 pub fn contains(keys: &[Vec<u8>], key: &[u8]) -> bool {
     let mut index = 0;
     while index < keys.len() {
-        if same(&keys[index], key) {
+        if crate::bytes::same(&keys[index], key) {
             return true;
         }
         index += 1;
