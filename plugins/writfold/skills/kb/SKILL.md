@@ -74,7 +74,7 @@ When the run has a plan, `resume` shows one `plan` line: the current step and th
 
 ## Guard denials
 
-A denial or question that starts `writfold guard rule <id> (a guard, not enforcement)` comes from a rule in `.writfold/guards/<id>.toml`. It names each unmet requirement: a gate with its standing and its `next:` command, no current run, or a plan step that still owes gates. Do what the `next:` lines say (run or attest the gate, start a run, finish the step), then retry the call. Do not route around it with another command, and do not edit or delete the rule unless the user asks; if you think the rule is wrong, say so. "cannot read the KB" means the rule could not be checked: tell the user. At stop, the same rules may add context once a session: act on it, or say why not.
+A denial or question that starts `writfold guard rule <id> (a guard, not enforcement)` comes from a rule in `.writfold/guards/<id>.toml`. It names each unmet requirement: a gate with its standing and its `next:` command, no current run, or a plan step that still owes gates. Do what the `next:` lines say (run or attest the gate, start a run, finish the step), then retry the call. Do not route around it with another command, and do not edit or delete the rule unless the user asks; if you think the rule is wrong, say so. "cannot read the KB" means the rule could not be checked: tell the user. At stop, the same rules may add context once a session (or once a turn): act on it, or say why not.
 
 ## Delivery candidates
 

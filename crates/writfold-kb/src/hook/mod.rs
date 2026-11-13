@@ -18,7 +18,7 @@
 //! - `post-compact` keeps the compaction summary as the draft's body.
 //! - `stop` keeps the last assistant message (no Git spawn: it runs every
 //!   turn), then, only when a `stop` guard rule exists, may add context
-//!   once per session ([`crate::guard::stop`]).
+//!   once per session or once per turn ([`crate::guard::stop`]).
 //! - `session-end` records the end reason (no Git spawn: the budget is
 //!   1.5 s).
 //! - `pre-tool-use` is the optional delivery guard and the guard rules

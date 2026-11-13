@@ -8,21 +8,23 @@ use crate::gate::toml::{self, Value};
 use crate::shell::{self, Word};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
-use writfold_core::guard::Action;
+use writfold_core::guard::{Action, Repeat};
 
 pub const SCHEMA: &str = "writfold-guard-rule/1";
 /// Where rules live, under the KB root or a repository.
 pub const DIR: &str = ".writfold/guards";
-const KEYS: [&str; 9] = [
+const KEYS: [&str; 11] = [
     "schema",
     "id",
     "event",
     "commands",
     "tools",
+    "paths",
     "repos",
     "require",
     "action",
     "description",
+    "repeat",
 ];
 /// The requirement names a rule may use; `gate:<id>` names one gate.
 pub const REQUIREMENTS: [&str; 4] = ["run.current", "gates.met", "gate:<id>", "step.met"];
@@ -73,10 +75,15 @@ pub struct Rule {
     /// command.
     pub commands: Vec<Vec<String>>,
     pub tools: Vec<String>,
+    /// File-path globs with `!` exclusions ([`writfold_core::scope`]),
+    /// relative to the file's repository; empty: any call of `tools`.
+    pub paths: Vec<String>,
     /// Repository-name patterns with `!` exclusions; empty: every one.
     pub repos: Vec<String>,
     pub require: Vec<Require>,
     pub action: Action,
+    /// How often a stop rule nudges; `Session` for a pre-tool-use rule.
+    pub repeat: Repeat,
     pub description: String,
 }
 
@@ -112,6 +119,44 @@ fn need(map: &BTreeMap<String, Value>, key: &str) -> Result<String, String> {
     text(map, key)?.ok_or_else(|| format!("{key} is required"))
 }
 
+/// The `paths` key: globs over the edited file, for a rule that names
+/// tools and no commands, with at least one pattern that is not an
+/// exclusion.
+fn paths(
+    map: &BTreeMap<String, Value>,
+    commands: &[Vec<String>],
+    tools: &[String],
+) -> Result<Vec<String>, String> {
+    let paths = strings(map, "paths")?;
+    if paths.is_empty() {
+        return Ok(paths);
+    }
+    if !commands.is_empty() || tools.is_empty() {
+        return Err("paths apply to a rule that names tools and no commands".into());
+    }
+    if let Some(bad) = paths.iter().find(|p| {
+        let bare = p.strip_prefix('!').unwrap_or(p);
+        bare.is_empty() || bare.starts_with('/') || bare.contains('\\')
+    }) {
+        return Err(format!("paths pattern {bad:?} is not a relative glob"));
+    }
+    if paths.iter().all(|p| p.starts_with('!')) {
+        return Err("paths names at least one pattern without !".into());
+    }
+    Ok(paths)
+}
+
+/// The `repeat` key: how often a stop rule nudges (default `session`).
+fn repeat(map: &BTreeMap<String, Value>, event: Event) -> Result<Repeat, String> {
+    match (event, text(map, "repeat")?) {
+        (Event::Stop, Some(r)) => {
+            Repeat::parse(&r).ok_or_else(|| "repeat must be session or turn".into())
+        }
+        (Event::PreToolUse, Some(_)) => Err("repeat applies to a stop rule only".into()),
+        (_, None) => Ok(Repeat::Session),
+    }
+}
+
 /// Parse one rule file whose name is `<stem>.toml`.
 pub fn parse(text_in: &str, stem: &str, path: &str) -> Result<Rule, String> {
     let map = toml::parse(text_in)?;
@@ -144,7 +189,7 @@ pub fn parse(text_in: &str, stem: &str, path: &str) -> Result<Rule, String> {
         (Event::PreToolUse, Some(a)) => Action::parse(&a).ok_or("action must be deny or ask")?,
         (Event::PreToolUse, None) => return Err("action is required (deny or ask)".into()),
         (Event::Stop, Some(_)) => {
-            return Err("a stop rule takes no action: it adds context once a session".into());
+            return Err("a stop rule takes no action: it only adds context".into());
         }
         (Event::Stop, None) => Action::Ask,
     };
@@ -157,6 +202,8 @@ pub fn parse(text_in: &str, stem: &str, path: &str) -> Result<Rule, String> {
         }
         _ => {}
     }
+    let paths = paths(&map, &commands, &tools)?;
+    let repeat = repeat(&map, event)?;
     let repos = strings(&map, "repos")?;
     if let Some(bad) = repos.iter().find(|r| {
         let bare = r.strip_prefix('!').unwrap_or(r);
@@ -183,9 +230,11 @@ pub fn parse(text_in: &str, stem: &str, path: &str) -> Result<Rule, String> {
         event,
         commands,
         tools,
+        paths,
         repos,
         require,
         action,
+        repeat,
         description: text(&map, "description")?.unwrap_or_default(),
     })
 }
