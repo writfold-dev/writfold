@@ -1,20 +1,20 @@
 //! Responsive terminal panes; all content is projected by `frame` and `side`.
 use crate::app::{App, Focus, View};
-use crate::frame as content;
 use crate::layout::{self, Areas, Class};
 use crate::lines::{self, Tone};
-use crate::paint::{block, initial_scroll, style, text};
-use crate::side;
+use crate::paint::{block, initial_scroll, text};
+use crate::{chrome, frame as content};
+use crate::{side, style};
 use ratatui::Frame;
 use ratatui::layout::Rect;
-use ratatui::style::{Modifier, Style};
 use ratatui::text::Line;
-use ratatui::widgets::{Clear, List, ListItem, ListState, Paragraph, Wrap};
+use ratatui::widgets::{Block, List, ListItem, ListState, Paragraph, Wrap};
 
 /// Load visible answers and draw the whole frame.
 pub fn draw(frame: &mut Frame<'_>, app: &mut App) {
     let size = frame.area();
     app.resize(size.width, size.height);
+    frame.render_widget(Block::default().style(style::base(app.look)), size);
     let class = layout::class(size.width, size.height);
     if class == Class::TooSmall {
         let message = format!(
@@ -25,7 +25,7 @@ pub fn draw(frame: &mut Frame<'_>, app: &mut App) {
         return;
     }
     let areas = layout::areas(size.width, size.height);
-    bars(frame, app, &areas, class == Class::Narrow);
+    chrome::bars(frame, app, &areas, class == Class::Narrow);
     if let Some(area) = areas.runs {
         runs(frame, app, area);
     }
@@ -36,28 +36,8 @@ pub fn draw(frame: &mut Frame<'_>, app: &mut App) {
     }
     sides(frame, app, &areas);
     if app.help {
-        help(frame);
+        chrome::help(frame, app.look);
     }
-}
-
-fn bars(frame: &mut Frame<'_>, app: &App, areas: &Areas, narrow: bool) {
-    let header = Line::styled(content::header(app, narrow), style(Tone::Head));
-    let tabs = Line::styled(content::tabs(app, narrow), style(Tone::Key));
-    frame.render_widget(Paragraph::new(header), areas.header);
-    frame.render_widget(Paragraph::new(tabs), areas.tabs);
-    if let Some(area) = areas.summary {
-        frame.render_widget(Paragraph::new(side::summary(app)), area);
-    }
-    let footer = if narrow {
-        let pin = app.runs.trailer_text("kb");
-        let pin = pin.as_deref().map_or("?", |pin| pin);
-        let notice = app.notice.as_deref().map_or("", |notice| notice);
-        format!("kb={pin} ? q {notice}")
-    } else {
-        content::footer(app, true)
-    };
-    let footer = Line::styled(footer, style(Tone::Dim));
-    frame.render_widget(Paragraph::new(footer), areas.footer);
 }
 
 fn detail(frame: &mut Frame<'_>, app: &mut App, area: Rect) {
@@ -68,17 +48,21 @@ fn detail(frame: &mut Frame<'_>, app: &mut App, area: Rect) {
         app.scroll = initial_scroll(&detail.lines, detail.current, inner.width, inner.height);
         app.anchor = false;
     }
-    let pane = Paragraph::new(text(detail.lines))
-        .block(block(detail.title, app.focus == Focus::Detail))
+    let pane = Paragraph::new(text(detail.lines, app.look))
+        .block(block(detail.title, app.focus == Focus::Detail, app.look))
         .wrap(Wrap { trim: false })
         .scroll((app.scroll, 0));
     frame.render_widget(pane, area);
 }
 
 fn runs(frame: &mut Frame<'_>, app: &App, area: Rect) {
-    let border = block(app.runs_title(), app.focus == Focus::Runs);
+    let border = block(app.runs_title(), app.focus == Focus::Runs, app.look);
     if let Some(error) = &app.runs.error {
-        let message = Paragraph::new(Line::styled(error.as_str(), style(Tone::Bad))).block(border);
+        let message = Paragraph::new(Line::styled(
+            error.as_str(),
+            style::style(app.look, Tone::Bad),
+        ))
+        .block(border);
         frame.render_widget(message, area);
         return;
     }
@@ -86,11 +70,11 @@ fn runs(frame: &mut Frame<'_>, app: &App, area: Rect) {
         .order
         .iter()
         .filter_map(|index| app.runs.rows.get(*index))
-        .map(|row| ListItem::new(text(lines::run_item(row))))
+        .map(|row| ListItem::new(text(lines::run_item(row), app.look)))
         .collect();
     let list = List::new(items)
         .block(border)
-        .highlight_style(Style::default().add_modifier(Modifier::REVERSED))
+        .highlight_style(style::selected(app.look))
         .highlight_symbol("> ");
     let mut state = ListState::default().with_selected(Some(app.selected));
     frame.render_stateful_widget(list, area, &mut state);
@@ -117,9 +101,9 @@ fn sides(frame: &mut Frame<'_>, app: &App, areas: &Areas) {
 }
 
 fn side(frame: &mut Frame<'_>, app: &App, view: View, area: Rect) {
-    let border = block(view.name().into(), false);
+    let border = block(view.name().into(), false, app.look);
     let inner = border.inner(area);
-    let pane = Paragraph::new(text(side::compact(app, view)));
+    let pane = Paragraph::new(text(side::compact(app, view), app.look));
     let scroll = if view == View::Timeline {
         let offset = pane
             .line_count(inner.width)
@@ -129,20 +113,4 @@ fn side(frame: &mut Frame<'_>, app: &App, view: View, area: Rect) {
         0
     };
     frame.render_widget(pane.block(border).scroll((scroll, 0)), area);
-}
-
-fn help(frame: &mut Frame<'_>) {
-    let area = frame.area();
-    let width = area.width.min(100);
-    let body = Paragraph::new(text(content::help())).wrap(Wrap { trim: false });
-    let rows = body.line_count(width.saturating_sub(2)).saturating_add(2);
-    let height = area.height.min(u16::try_from(rows).unwrap_or(u16::MAX));
-    let popup = Rect::new(
-        area.x + (area.width - width) / 2,
-        area.y + (area.height - height) / 2,
-        width,
-        height,
-    );
-    frame.render_widget(Clear, popup);
-    frame.render_widget(body.block(block("help".into(), true)), popup);
 }

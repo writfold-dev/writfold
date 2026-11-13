@@ -1,6 +1,7 @@
 //! Read-only watch state. Queries and refresh live in `state`, keys in `keys`.
 use crate::poll::{Stamps, Subject};
 use crate::source::{Reply, Source, field, flags};
+use crate::style::Look;
 use serde_json::Value;
 use std::collections::BTreeMap;
 use writfold_kb::workspace::GitTool;
@@ -118,6 +119,7 @@ pub struct App {
     pub asked: String,
     pub runs_view: bool,
     pub anchor: bool,
+    pub look: Look,
     pub(crate) width: u16,
     pub(crate) height: u16,
     pub(crate) main_height: u16,
@@ -146,6 +148,7 @@ impl App {
             asked: String::new(),
             runs_view: false,
             anchor: true,
+            look: Look::default(),
             width: 0,
             height: 0,
             main_height: 1,

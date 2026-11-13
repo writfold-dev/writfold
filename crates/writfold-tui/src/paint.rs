@@ -1,44 +1,25 @@
-//! ANSI roles, pane borders, and ratatui's wrapped-line measurements.
+//! Pane borders, text styles, and ratatui's wrapped-line measurements.
 use crate::lines::{self, Tone};
-use ratatui::style::{Color, Modifier, Style};
+use crate::style::{self, Look};
 use ratatui::text::{Line, Text};
 use ratatui::widgets::{Block, Borders, Paragraph, Wrap};
 
-pub fn style(tone: Tone) -> Style {
-    match tone {
-        Tone::Plain | Tone::Done => Style::default(),
-        Tone::Dim | Tone::Skipped | Tone::Later => Style::default().fg(Color::DarkGray),
-        Tone::Head | Tone::Key => Style::default().add_modifier(Modifier::BOLD),
-        Tone::Good => Style::default().fg(Color::Green),
-        Tone::Vouched => Style::default().fg(Color::Magenta),
-        Tone::Info => Style::default().fg(Color::Blue),
-        Tone::Warn => Style::default().fg(Color::Yellow),
-        Tone::Current => Style::default()
-            .fg(Color::Cyan)
-            .add_modifier(Modifier::BOLD),
-        Tone::Bad => Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
-    }
-}
-
-pub fn text(lines: Vec<lines::Line>) -> Text<'static> {
+pub fn text(lines: Vec<lines::Line>, look: Look) -> Text<'static> {
     Text::from(
         lines
             .into_iter()
-            .map(|line| Line::styled(line.text, style(line.tone)))
+            .map(|line| Line::styled(line.text, style::style(look, line.tone)))
             .collect::<Vec<_>>(),
     )
 }
 
-pub fn block(title: String, focused: bool) -> Block<'static> {
-    let border = if focused {
-        Color::Cyan
-    } else {
-        Color::DarkGray
-    };
+pub fn block(title: String, focused: bool, look: Look) -> Block<'static> {
+    let tone = if focused { Tone::Current } else { Tone::Head };
     Block::default()
         .borders(Borders::ALL)
-        .border_style(Style::default().fg(border))
-        .title(Line::styled(format!(" {title} "), style(Tone::Head)))
+        .style(style::base(look))
+        .border_style(style::border(look, focused))
+        .title(Line::styled(format!(" {title} "), style::style(look, tone)))
 }
 
 /// Put the current head on the third visible row only when scrolling is needed.
@@ -70,8 +51,9 @@ pub fn initial_scroll(
 
 #[cfg(test)]
 mod tests {
-    use super::{initial_scroll, style};
+    use super::initial_scroll;
     use crate::lines::{Line, Tone};
+    use crate::style::{Look, style};
     use ratatui::style::{Color, Modifier};
     use ratatui::widgets::{Paragraph, Wrap};
 
@@ -90,7 +72,7 @@ mod tests {
         assert_eq!(initial_scroll(&lines, Some(2), 80, 20), 0);
         assert_eq!(initial_scroll(&lines, None, 10, 3), 0);
         assert_eq!(initial_scroll(&lines, Some(0), 10, 3), 0);
-        let pane = Paragraph::new(super::text(lines))
+        let pane = Paragraph::new(super::text(lines, Look::default()))
             .wrap(Wrap { trim: false })
             .scroll((offset, 0));
         let mut terminal = ratatui::Terminal::new(ratatui::backend::TestBackend::new(10, 3))?;
@@ -119,10 +101,17 @@ mod tests {
             Tone::Plain,
             Tone::Key,
         ] {
-            assert_eq!(style(tone).bg, None);
+            assert_eq!(style(Look::default(), tone).bg, None);
         }
-        assert_eq!(style(Tone::Vouched).fg, Some(Color::Magenta));
-        assert_eq!(style(Tone::Bad).fg, Some(Color::Red));
-        assert!(style(Tone::Bad).add_modifier.contains(Modifier::BOLD));
+        assert_eq!(
+            style(Look::default(), Tone::Vouched).fg,
+            Some(Color::Magenta)
+        );
+        assert_eq!(style(Look::default(), Tone::Bad).fg, Some(Color::Red));
+        assert!(
+            style(Look::default(), Tone::Bad)
+                .add_modifier
+                .contains(Modifier::BOLD)
+        );
     }
 }

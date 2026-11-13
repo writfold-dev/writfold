@@ -62,6 +62,7 @@ impl App {
             '[' => self.select(false),
             ']' => self.select(true),
             'r' => self.reload(self.run(), None),
+            'T' => self.cycle_theme(),
             'x' if self.view == View::Progress && !self.runs_view => {
                 self.expand_all = !self.expand_all;
                 self.anchor = true;
@@ -79,6 +80,15 @@ impl App {
                     self.show(view);
                 }
             }
+        }
+    }
+
+    fn cycle_theme(&mut self) {
+        if self.look.depth == crate::style::Depth::Truecolor {
+            self.look.theme = self.look.theme.next();
+        } else {
+            self.notice =
+                Some("themes need 24-bit colour: COLORTERM=truecolor or --color truecolor".into());
         }
     }
 

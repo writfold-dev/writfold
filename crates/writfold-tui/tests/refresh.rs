@@ -9,6 +9,7 @@ use writfold_kb::workspace::discover;
 use writfold_kb::{Verb, write};
 use writfold_tui::app::App;
 use writfold_tui::source::{Source, field};
+use writfold_tui::style::Environment;
 
 #[test]
 fn a_local_proposal_refreshes_the_inbox_and_keeps_selection() -> TestResult {
@@ -103,7 +104,9 @@ fn repo_is_a_subject_override_not_a_kb_discovery_override() -> TestResult {
         source.cwd.display().to_string(),
         "--once".into(),
     ];
-    let text = writfold_tui::main(&args, w.kb.clone(), false)?.ok_or("frame")?;
+    let text = writfold_tui::main(&args, w.kb.clone(), false, Environment::default())?
+        .stdout
+        .ok_or("frame")?;
     assert!(text.contains("subject=subject@"), "{text}");
     assert!(text.contains("gate subject [satisfied]"), "{text}");
     for dir in [w.base.clone(), w.base.join("missing")] {

@@ -6,6 +6,7 @@
 #![forbid(unsafe_code)]
 
 pub mod app;
+mod chrome;
 pub mod frame;
 mod keys;
 pub mod layout;
@@ -16,15 +17,20 @@ pub mod progress;
 pub mod side;
 pub mod source;
 mod state;
+pub mod style;
 mod term;
+pub mod theme;
+#[cfg(test)]
+mod theme_tests;
 pub mod view;
 
 use app::{App, View};
 use source::Source;
 use std::path::PathBuf;
+use style::{Environment, Look};
 
 pub const USAGE: &str = "usage: writfold watch [--kb DIR] [--repo DIR] [--run ID]
-                      [--view NAME] [--once]
+                      [--view NAME] [--theme NAME] [--color auto|truecolor|ansi|none] [--once]
 
 Views: progress (default), gates, timeline, inbox, stale, brief, resume.
 --once or a pipe prints one plain frame; --view selects just one section.";
@@ -36,6 +42,8 @@ pub struct Options {
     pub repo: Option<PathBuf>,
     pub run: Option<String>,
     pub view: Option<View>,
+    pub theme: Option<String>,
+    pub color: Option<String>,
     pub once: bool,
     pub help: bool,
 }
@@ -54,6 +62,8 @@ pub fn parse(args: &[String]) -> Result<Options, String> {
             "--kb" => options.kb = Some(PathBuf::from(value("--kb")?)),
             "--repo" => options.repo = Some(PathBuf::from(value("--repo")?)),
             "--run" => options.run = Some(value("--run")?),
+            "--theme" => options.theme = Some(value("--theme")?),
+            "--color" => options.color = Some(value("--color")?),
             "--view" => {
                 let name = value("--view")?;
                 options.view = Some(View::from_name(&name).ok_or_else(|| {
@@ -74,16 +84,47 @@ pub fn once(source: Source, run: Option<&str>, view: Option<View>) -> String {
     frame::once(&mut App::new(source, run), view)
 }
 
-/// Run `writfold watch <args>` in `cwd`: the text to print (for `--once`,
-/// a pipe or `--help`), or `None` after an interactive session.
-pub fn main(args: &[String], cwd: PathBuf, terminal: bool) -> Result<Option<String>, String> {
+/// The plain result and its optional warning; interactive warnings use the footer.
+#[derive(Debug, PartialEq, Eq)]
+pub struct Outcome {
+    pub stdout: Option<String>,
+    pub warning: Option<String>,
+}
+
+fn look(options: &Options, env: &Environment) -> Result<(Look, Option<String>), String> {
+    let depth = style::depth(options.color.as_deref(), env)?;
+    let config = if options.theme.is_none() && env.theme.is_none() {
+        writfold_kb::workspace::user_config("theme")
+    } else {
+        None
+    };
+    let (theme, warning) = style::choose_theme(
+        options.theme.as_deref(),
+        env.theme.as_deref(),
+        config.as_deref(),
+    );
+    Ok((Look { theme, depth }, warning))
+}
+
+/// Run `watch` with the environment captured once by the binary.
+pub fn main(
+    args: &[String],
+    cwd: PathBuf,
+    terminal: bool,
+    env: Environment,
+) -> Result<Outcome, String> {
     let options = parse(args)?;
     if options.help {
         let help: Vec<_> = frame::help().into_iter().map(|line| line.text).collect();
-        return Ok(Some(format!("{USAGE}\n\n{}", help.join("\n"))));
+        return Ok(Outcome {
+            stdout: Some(format!("{USAGE}\n\n{}", help.join("\n"))),
+            warning: None,
+        });
     }
+    let (look, warning) = look(&options, &env)?;
     let source = Source::located(options.kb, cwd, options.repo, None)?;
     let mut app = App::new(source, options.run.as_deref());
+    app.look = look;
     if let Some(view) = options.view {
         app.show(view);
     }
@@ -91,8 +132,15 @@ pub fn main(args: &[String], cwd: PathBuf, terminal: bool) -> Result<Option<Stri
         return Err(error.clone());
     }
     if options.once || !terminal {
-        return Ok(Some(frame::once(&mut app, options.view)));
+        return Ok(Outcome {
+            stdout: Some(frame::once(&mut app, options.view)),
+            warning,
+        });
     }
+    app.notice = warning;
     term::run(&mut app).map_err(|e| format!("terminal: {e}"))?;
-    Ok(None)
+    Ok(Outcome {
+        stdout: None,
+        warning: None,
+    })
 }

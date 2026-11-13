@@ -13,6 +13,7 @@ use writfold_kb::Verb;
 use writfold_kb::gate::GateVerb;
 use writfold_tui::app::{App, Focus, Key, View};
 use writfold_tui::source::field;
+use writfold_tui::style::Environment;
 
 #[test]
 fn once_prints_the_frame() -> TestResult {
@@ -224,13 +225,20 @@ fn the_projection_equals_the_verbs() -> TestResult {
 fn a_pipe_gets_one_plain_frame() -> TestResult {
     let w = world("pipe")?;
     let args = ["--kb".to_owned(), w.kb.display().to_string()];
-    let frame = writfold_tui::main(&args, w.kb.clone(), false)?.ok_or("no frame")?;
+    let frame = writfold_tui::main(&args, w.kb.clone(), false, Environment::default())?
+        .stdout
+        .ok_or("no frame")?;
     assert!(
         frame.starts_with("== runs (2 listed, 1 not closed) =="),
         "{frame}"
     );
     assert!(!frame.contains('\u{1b}'), "plain text, no terminal codes");
-    let bad = writfold_tui::main(&["--write".to_owned()], w.kb.clone(), false);
+    let bad = writfold_tui::main(
+        &["--write".to_owned()],
+        w.kb.clone(),
+        false,
+        Environment::default(),
+    );
     assert_eq!(bad, Err("unknown argument --write".to_owned()));
     let bad = writfold_tui::parse(&["--view".into(), "missing".into()])
         .err()

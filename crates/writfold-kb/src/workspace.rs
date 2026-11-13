@@ -205,3 +205,17 @@ pub fn budgets() -> Result<GitBudgets> {
         Duration::from_secs(60),
     ))
 }
+
+/// A quoted value from the existing Writfold user configuration.
+pub fn user_config(wanted: &str) -> Option<String> {
+    let base = std::env::var_os("XDG_CONFIG_HOME")
+        .map(PathBuf::from)
+        .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".config")))?;
+    let text = std::fs::read_to_string(base.join("writfold/config.toml")).ok()?;
+    text.lines().find_map(|line| {
+        let (key, value) = line.split_once('=')?;
+        let value = value.trim();
+        (key.trim() == wanted && value.len() > 1 && value.starts_with('"') && value.ends_with('"'))
+            .then(|| value[1..value.len() - 1].to_owned())
+    })
+}

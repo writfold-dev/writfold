@@ -80,6 +80,9 @@ pub fn header(app: &App, narrow: bool) -> String {
 }
 
 pub fn footer(app: &App, interactive: bool) -> String {
+    if interactive && let Some(notice) = &app.notice {
+        return format!("theme={}  {notice}", app.look.label());
+    }
     let at = |key| {
         app.runs
             .trailer_text(key)
@@ -93,12 +96,10 @@ pub fn footer(app: &App, interactive: bool) -> String {
     );
     if interactive {
         out.push_str(&format!(
-            "  asked {}  theme=ansi  read-only; no daemon  ? help  q quit",
-            app.asked
+            "  asked {}  theme={}  read-only; no daemon  ? help  q quit",
+            app.asked,
+            app.look.label()
         ));
-        if let Some(notice) = &app.notice {
-            out.push_str(&format!("  {notice}"));
-        }
     } else {
         out.push_str("  read-only; no daemon, nothing here claims a run is live");
     }
@@ -137,6 +138,7 @@ pub fn help() -> Vec<Line> {
         "6/s stale; 7/b brief; 8/e resume",
         "x: expand / collapse Progress; o: open runs; P: selected project",
         "r: ask again; ?: help (any key closes); q / Ctrl-C: quit",
+        "T: next theme (24-bit colour only); the choice is not written.",
         "c is unbound; no key writes. Inbox prints confirm: and accept: commands.",
     ];
     let verbs = [
@@ -149,10 +151,18 @@ pub fn help() -> Vec<Line> {
         "Brief: writfold kb brief P --json",
         "KB and local state are polled every 2 s; the subject every 10 s.",
         "--repo selects the gate subject. No checker is started; no daemon.",
+        "Theme: --theme, else WRITFOLD_THEME, else theme in config.toml, else hone.",
+        "Colour: --color auto|truecolor|ansi|none; NO_COLOR / TERM=dumb disable auto colour.",
     ];
     keys.into_iter()
         .map(|s| line(s, Tone::Key))
-        .chain(verbs.into_iter().map(|s| line(s, Tone::Info)))
+        .chain(verbs.into_iter().map(|s| line(s, Tone::Plain)))
+        .chain(crate::theme::ThemeId::ALL.into_iter().map(|theme| {
+            line(
+                format!("{}: {}", theme.name(), theme.description()),
+                Tone::Plain,
+            )
+        }))
         .collect()
 }
 
