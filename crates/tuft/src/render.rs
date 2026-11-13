@@ -98,7 +98,14 @@ pub fn row_json(row: &Row, fields: &[Field]) -> String {
     format!("{{{}}}", parts.join(","))
 }
 
-pub fn coverage_text(coverage: Coverage) -> String {
+pub fn coverage_text(search: &crate::view::SearchReport) -> String {
+    if let Some(index) = &search.index {
+        return format!(
+            "coverage=partial index_commit={} index_sha256={}",
+            index.commit, index.sha256
+        );
+    }
+    let coverage = search.coverage;
     match coverage {
         Coverage::Unavailable => "coverage=unavailable".into(),
         Coverage::Measured { examined, total } => format!(
@@ -112,7 +119,15 @@ pub fn coverage_text(coverage: Coverage) -> String {
     }
 }
 
-pub fn coverage_json(coverage: Coverage) -> String {
+pub fn coverage_json(search: &crate::view::SearchReport) -> String {
+    if let Some(index) = &search.index {
+        return format!(
+            "{{\"state\":\"partial\",\"index_commit\":{},\"index_sha256\":{}}}",
+            quote(&index.commit),
+            quote(&index.sha256)
+        );
+    }
+    let coverage = search.coverage;
     match coverage {
         Coverage::Unavailable => "{\"state\":\"unavailable\"}".into(),
         Coverage::Measured { examined, total } => format!(

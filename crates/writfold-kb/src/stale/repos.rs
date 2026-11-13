@@ -84,9 +84,9 @@ fn searched(repo: &str) -> Option<PathBuf> {
 
 /// The directory (work tree or bare) a repository name or path names: a
 /// mapped or searched name, else a path (relative to `cwd`).
-pub fn locate(session: &Session<'_>, repo: &str, cwd: &Path) -> Option<PathBuf> {
+pub fn locate(ws: Option<&Workspace>, repo: &str, cwd: &Path) -> Option<PathBuf> {
     let direct = cwd.join(repo);
-    [mapped(Some(session.ws), repo), searched(repo), Some(direct)]
+    [mapped(ws, repo), searched(repo), Some(direct)]
         .into_iter()
         .flatten()
         .find(|path| git_dir(path).is_some())

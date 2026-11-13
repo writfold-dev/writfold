@@ -10,13 +10,24 @@ pub enum Stop {
     HitLimit,
 }
 
+/// Provenance of the external index, not a claim that it covers every symbol.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct IndexCoverage {
+    pub commit: String,
+    pub sha256: String,
+}
+
 /// What `find` searched, measured by the adapter that ran it.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SearchReport {
     /// Files fully searched over files in scope at the pinned commit.
     pub coverage: Coverage,
     pub stop: Option<Stop>,
     pub hits: usize,
+    /// When present, coverage is always partial, even if every index row was read.
+    pub index: Option<IndexCoverage>,
+    /// Digest of the observed working files, binding cursors to their bytes.
+    pub snapshot: Option<String>,
 }
 
 /// Retained evidence for a row: its `writfold-citation/1` binding digest and

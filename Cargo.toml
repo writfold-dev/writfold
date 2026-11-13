@@ -19,7 +19,7 @@ exclude = ["vendor/splicery"]
 resolver = "3"
 
 [workspace.package]
-version = "0.5.0-dev.3"
+version = "0.5.0-dev.4"
 edition = "2024"
 rust-version = "1.98"
 repository = "https://github.com/writfold-dev/writfold"
@@ -44,7 +44,7 @@ rusqlite = { version = "=0.37.0", features = ["bundled"] }
 # the crossterm backend only. 0.29, not 0.30: 0.30's core needs hashbrown
 # 0.17 with default features, which Cargo's workspace-wide feature
 # resolution would add (allocator-api2, foldhash) to the core crates' graph.
-ratatui = { version = "=0.29.0", default-features = false, features = ["crossterm"] }
+ratatui = { version = "=0.29.0", default-features = false, features = ["crossterm", "unstable-rendered-line-info"] }
 ed25519-dalek = { version = "=2.2.0", features = ["pkcs8", "pem"] }
 verus_syn = { version = "=0.0.0-2026-09-06-0133", features = ["full", "visit"] }
 proc-macro2 = { version = "=1.0.107", features = ["span-locations"] }

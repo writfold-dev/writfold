@@ -1,37 +1,33 @@
-//! `writfold watch` (T1): a read-only terminal view of KB runs and their
-//! progress.
+//! `writfold watch`: a read-only projection of the KB verbs.
 //!
-//! It is strictly a projection. Each pane is the JSON answer of one
-//! existing verb, asked in-process through [`writfold_kb::run`]: the runs
-//! list is `kb runs`, the run pane is `kb resume <run>` headed by `kb gate
-//! status --run <run>`'s counts, and the other panes are `kb stale` and
-//! `kb brief` for the run's project. Nothing here derives a state, counts
-//! an obligation or reads a KB file, and no key writes anything. There is
-//! no daemon, so the view never claims that a run is live and shows no
-//! progress percentage. The KB pin is polled every two seconds and the
-//! verbs are asked again only when it moves. When stdout is not a terminal
-//! (or with `--once`) one frame is printed as plain text.
+//! The viewer displays recorded plan steps, gate standings, local inbox entries
+//! and checkpoint history. It never judges a gate, starts a checker or writes.
+//! A pipe or `--once` receives a plain, sectioned frame.
 #![forbid(unsafe_code)]
 
 pub mod app;
+pub mod frame;
+mod keys;
+pub mod layout;
 pub mod lines;
+mod paint;
 pub mod poll;
+pub mod progress;
+pub mod side;
 pub mod source;
+mod state;
 mod term;
 pub mod view;
 
-use app::App;
+use app::{App, View};
 use source::Source;
 use std::path::PathBuf;
 
-pub const USAGE: &str = "usage: writfold watch [--kb DIR] [--repo DIR] [--run ID] [--once]
+pub const USAGE: &str = "usage: writfold watch [--kb DIR] [--repo DIR] [--run ID]
+                      [--view NAME] [--once]
 
-A read-only view of the KB: runs on the left (open first), the selected run's
-resume on the right (gates, receipts, drafts, checkpoint tail), the KB pin at
-the bottom. Keys: j/k or arrows, Enter, Tab (resume, stale, brief), g s b,
-r, ? for help, q to quit. KB and local state are polled every 2 s; the gate
-subject every 10 s. --repo selects that subject without changing KB discovery.
---once (automatic when stdout is not a terminal) prints one plain frame.";
+Views: progress (default), gates, timeline, inbox, stale, brief, resume.
+--once or a pipe prints one plain frame; --view selects just one section.";
 
 /// The parsed arguments.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -39,6 +35,7 @@ pub struct Options {
     pub kb: Option<PathBuf>,
     pub repo: Option<PathBuf>,
     pub run: Option<String>,
+    pub view: Option<View>,
     pub once: bool,
     pub help: bool,
 }
@@ -57,6 +54,13 @@ pub fn parse(args: &[String]) -> Result<Options, String> {
             "--kb" => options.kb = Some(PathBuf::from(value("--kb")?)),
             "--repo" => options.repo = Some(PathBuf::from(value("--repo")?)),
             "--run" => options.run = Some(value("--run")?),
+            "--view" => {
+                let name = value("--view")?;
+                options.view = Some(View::from_name(&name).ok_or_else(|| {
+                    let names: Vec<_> = View::ALL.iter().map(|v| v.name()).collect();
+                    format!("unknown view {name:?}; views: {}", names.join(", "))
+                })?);
+            }
             "--once" => options.once = true,
             "--help" | "-h" | "help" => options.help = true,
             other => return Err(format!("unknown argument {other}")),
@@ -66,8 +70,8 @@ pub fn parse(args: &[String]) -> Result<Options, String> {
 }
 
 /// One frame as plain text.
-pub fn once(source: Source, run: Option<&str>) -> String {
-    lines::once(&App::new(source, run))
+pub fn once(source: Source, run: Option<&str>, view: Option<View>) -> String {
+    frame::once(&mut App::new(source, run), view)
 }
 
 /// Run `writfold watch <args>` in `cwd`: the text to print (for `--once`,
@@ -75,15 +79,19 @@ pub fn once(source: Source, run: Option<&str>) -> String {
 pub fn main(args: &[String], cwd: PathBuf, terminal: bool) -> Result<Option<String>, String> {
     let options = parse(args)?;
     if options.help {
-        return Ok(Some(USAGE.into()));
+        let help: Vec<_> = frame::help().into_iter().map(|line| line.text).collect();
+        return Ok(Some(format!("{USAGE}\n\n{}", help.join("\n"))));
     }
     let source = Source::located(options.kb, cwd, options.repo, None)?;
     let mut app = App::new(source, options.run.as_deref());
+    if let Some(view) = options.view {
+        app.show(view);
+    }
     if let Some(error) = &app.runs.error {
         return Err(error.clone());
     }
     if options.once || !terminal {
-        return Ok(Some(lines::once(&app)));
+        return Ok(Some(frame::once(&mut app, options.view)));
     }
     term::run(&mut app).map_err(|e| format!("terminal: {e}"))?;
     Ok(None)

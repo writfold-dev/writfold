@@ -1,0 +1,40 @@
+run-20261101T090000Z-a1b2c3 [open] !current  Add --plan to kb runs  project=harbor  subject=kb
+[1 progress] 2 gates 3 timeline 4 inbox 6 stale 7 brief 8 resume
+┌ runs (3) ────────────────────────────┐┌ progress run-20261101T090000Z-a1b2c3 ────────────────────────────────┐┌ gates ───────────────────────────────────────┐
+│> [open] run-20261101T090000Z-a1b2c3 !││plan 2 done, 1 skipped of 6 steps; current step 4/6; owes 2 of 2 gates││gates=6 satisfied=2 open=2 stale=2 failed=0   │
+│    Add --plan to kb runs             ││stale=1                                                               ││unknown=0 attested=0 waived=0 invalid=0       │
+│    project=harbor                    ││     [x] [!] [-] [>] [ ] [ ]                                          ││bench [open] !open                            │
+│    plan: step 4/6 done=2 skipped=1 cu││ x change#1/research [done] notes [satisfied]                         ││lint [stale] !stale                           │
+│    last: 2026-11-10T14:10:00Z Review ││     done: recorded 2026-11-10T23:47:00Z                              ││notes [satisfied]                             │
+│  [open] run-20261102T080000Z-b1c2d3  ││ x change#1/implement [done] unit [satisfied], lint [stale] !stale    ││signoff [open] !open                          │
+│    Review the lantern guide          ││     why: no longer holds: lint [stale] (done stays done; list the    ││unit [satisfied]                              │
+│    project=lantern                   ││gate again on a later step if it must hold there)                     │└──────────────────────────────────────────────┘
+│    last: 2026-11-02T08:30:00Z Read th││     gate unit [satisfied] mechanical                                 │┌ inbox ───────────────────────────────────────┐
+│  [closed] run-20261104T080000Z-d4e5f6││     gate lint [stale] mechanical !stale                              ││drafts=1 proposals=2 (local; not in the KB)   │
+│    Retire the legacy flush path      ││     done: recorded 2026-11-10T23:50:00Z                              ││draft s-progress [open]                       │
+│    project=harbor                    ││ - change#1/benchmarks [skipped] no hot path touched (by owner,       ││  Review started; lint went stale after the re│
+│    plan: complete steps=2 done=2 skip││2026-11-10T23:51:00Z) !skipped                                        ││proposal 2c6ba260f2cde3fa [pending]           │
+│    last: 2026-11-04T09:00:00Z Legacy ││ > change#1/review [current] owes: review-list [stale], signoff [open]││  ticket HBR-210: Lint gate scope misses the c│
+│                                      ││     gate review-list [stale] checklist 2/4 required covered !stale   ││proposal 2c9a051ffe807243 [pending]           │
+│                                      ││       item errors [supported] 1 reference by agent                   ││  link mentions run-20261101T090000Z-a1b2c3 → │
+│                                      ││       item tests [stale] 1 reference by agent; cited evidence moved: │└──────────────────────────────────────────────┘
+│                                      ││gate:lint was satisfied, now stale !stale                             │┌ timeline ────────────────────────────────────┐
+│                                      ││       item docs [open] The guide names every new flag                ││decision proposal/decision/2026-03-02-batch-le│
+│                                      ││       item perf [not-applicable] no hot path touched by agent        ││decision proposal/decision/2026-03-02-batch-le│
+│                                      ││       item style [open] (optional) Names follow the module           ││run run-20261101T090000Z-a1b2c3 [open] 2026-11│
+│                                      ││     gate signoff [open] attested !open                               ││checkpoint 2026-11-10T09:00:00Z entry 1 of 3: │
+│                                      ││     read: instructions for signoff @.writfold/gates/signoff.md:1     ││checkpoint 2026-11-10T12:45:00Z entry 2 of 3: │
+│                                      ││     next: writfold kb gate cover review-list tests supported REF…    ││checkpoint 2026-11-10T14:10:00Z entry 3 of 3: │
+│                                      ││--by WHO                                                              ││                                              │
+│                                      ││   change#1/deliver [later] gates: unit                               ││                                              │
+│                                      ││   change#1/reflect [later] no gates                                  ││                                              │
+│                                      ││# note: plan change @83c2cc9efde7 from .writfold/plans/change.toml;   ││                                              │
+│                                      ││steps are derived from runs/run-20261101T090000Z-a1b2c3/plan/ on every││                                              │
+│                                      ││read, never stored                                                    ││                                              │
+│                                      ││                                                                      ││                                              │
+│                                      ││                                                                      ││                                              │
+│                                      ││                                                                      ││                                              │
+│                                      ││                                                                      ││                                              │
+│                                      ││                                                                      ││                                              │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────┘
+kb=XXXXXXXXXXXX+dirty:14 index=refreshed:1  subject=kb@0ea3a743bfef+dirty:17  asked 00:00:00Z  theme=ansi  read-only; no daemon  ? help  q quit

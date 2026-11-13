@@ -146,6 +146,14 @@ fn judge(
     for (index, cite) in cites.iter().enumerate() {
         if let Some(reason) = &cite.malformed {
             out[index] = Some(unverifiable(format!("malformed: {reason}")));
+        } else if cite
+            .blob
+            .as_deref()
+            .is_some_and(|blob| blob.starts_with("dirty:sha256:"))
+        {
+            out[index] = Some(unverifiable(
+                "dirty working-tree bytes are not pinned to a commit".into(),
+            ));
         } else if offline {
             out[index] = Some(offline_verdict(session, &kinds, cite)?);
         } else {

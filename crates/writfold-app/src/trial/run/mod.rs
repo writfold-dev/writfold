@@ -84,6 +84,8 @@ fn run_tuft(request: &Request<'_>, program: &Path) -> Result<Executed> {
         state: request.state,
         cursor: None,
         format: Format::Compact,
+        working_tree: false,
+        index: None,
     })
 }
 

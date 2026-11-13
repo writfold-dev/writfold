@@ -6,7 +6,7 @@ use std::{
     process::ExitCode,
 };
 
-const USAGE: &str = "Usage: writfold kb <verb> (see: writfold kb help)\n       writfold watch [--kb DIR] [--repo DIR] [--run ID] [--once]\n       writfold serve [--state DIR] [--weft PATH]\n       writfold trial <command> (see: writfold trial help)\n       writfold tuft <command> (see: writfold tuft help)\n       writfold --version\n       writfold --help\n\nserve: bounded JSON-RPC 2.0 over newline-delimited stdio; initialize/shutdown, plus\n       trial/show|retain|prepare|run|evidence-list|evidence-show when writfold.trial/1\n       is negotiated (state: --state or $WRITFOLD_STATE; trial/run Weft checks use the\n       binary fixed by --weft). Approve, apply and recover are CLI-only.\ntrial: prepare, approve and apply one Splicery edit in a Writfold-owned worktree\n       (cooperating single-user profile writfold-trial-worktree/1).\ntuft: run a Tuft v0 retrieval and projection program over one pinned Git commit.\nkb: Git-native project continuity (brief, why, find, impact, resume, checkpoint, record …)\n    and the Claude Code plugin hooks (writfold kb hook <event>).\nwatch: a read-only terminal view of KB runs, gates and receipts (plain text when piped).";
+const USAGE: &str = "Usage: writfold kb <verb> (see: writfold kb help)\n       writfold watch [--kb DIR] [--repo DIR] [--run ID] [--view NAME] [--once]\n       writfold serve [--state DIR] [--weft PATH]\n       writfold trial <command> (see: writfold trial help)\n       writfold tuft <command> (see: writfold tuft help)\n       writfold --version\n       writfold --help\n\nserve: bounded JSON-RPC 2.0 over newline-delimited stdio; initialize/shutdown, plus\n       trial/show|retain|prepare|run|evidence-list|evidence-show when writfold.trial/1\n       is negotiated (state: --state or $WRITFOLD_STATE; trial/run Weft checks use the\n       binary fixed by --weft). Approve, apply and recover are CLI-only.\ntrial: prepare, approve and apply one Splicery edit in a Writfold-owned worktree\n       (cooperating single-user profile writfold-trial-worktree/1).\ntuft: run a Tuft v0 retrieval and projection program over one pinned Git commit.\nkb: Git-native project continuity (brief, why, find, impact, resume, checkpoint, record …)\n    and the Claude Code plugin hooks (writfold kb hook <event>).\nwatch: a read-only terminal view of KB runs, gates and receipts (plain text when piped).";
 
 fn main() -> ExitCode {
     let Some(all) = env::args_os()
@@ -16,9 +16,23 @@ fn main() -> ExitCode {
     else {
         return failure("arguments must be valid UTF-8");
     };
+    if all.first().map(String::as_str) == Some("tuft") {
+        let outcome = writfold_app::tuft::cli::outcome(&all[1..]);
+        if io::stdout()
+            .lock()
+            .write_all(outcome.stdout.as_bytes())
+            .is_err()
+            || io::stderr()
+                .lock()
+                .write_all(outcome.stderr.as_bytes())
+                .is_err()
+        {
+            return ExitCode::FAILURE;
+        }
+        return ExitCode::from(outcome.code);
+    }
     let subcommand: Option<fn(&[String]) -> _> = match all.first().map(String::as_str) {
         Some("trial") => Some(writfold_app::trial::cli::main),
-        Some("tuft") => Some(writfold_app::tuft::cli::main),
         _ => None,
     };
     if let Some(subcommand) = subcommand {

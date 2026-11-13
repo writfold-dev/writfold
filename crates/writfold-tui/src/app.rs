@@ -1,45 +1,102 @@
-//! Selection, cached verb answers, and the KB, local-state and subject stamps.
+//! Read-only watch state. Queries and refresh live in `state`, keys in `keys`.
 use crate::poll::{Stamps, Subject};
-use crate::source::{Reply, Source, field};
+use crate::source::{Reply, Source, field, flags};
 use serde_json::Value;
 use std::collections::BTreeMap;
 use writfold_kb::workspace::GitTool;
 
-/// What the right-hand pane shows for the selected run.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum View {
-    /// `kb resume <run>` with `kb gate status --run <run>`'s counts.
-    Resume,
-    /// `kb stale <project>`.
+    Progress,
+    Gates,
+    Timeline,
+    Inbox,
     Stale,
-    /// `kb brief <project>`.
     Brief,
+    Resume,
 }
 
 impl View {
-    fn next(self) -> Self {
+    pub const ALL: [Self; 7] = [
+        Self::Progress,
+        Self::Gates,
+        Self::Timeline,
+        Self::Inbox,
+        Self::Stale,
+        Self::Brief,
+        Self::Resume,
+    ];
+
+    pub fn name(self) -> &'static str {
         match self {
-            Self::Resume => Self::Stale,
-            Self::Stale => Self::Brief,
-            Self::Brief => Self::Resume,
+            Self::Progress => "progress",
+            Self::Gates => "gates",
+            Self::Timeline => "timeline",
+            Self::Inbox => "inbox",
+            Self::Stale => "stale",
+            Self::Brief => "brief",
+            Self::Resume => "resume",
+        }
+    }
+
+    pub fn key(self) -> char {
+        match self {
+            Self::Progress => 'p',
+            Self::Gates => 'g',
+            Self::Timeline => 't',
+            Self::Inbox => 'i',
+            Self::Stale => 's',
+            Self::Brief => 'b',
+            Self::Resume => 'e',
+        }
+    }
+
+    pub fn digit(self) -> char {
+        match self {
+            Self::Progress => '1',
+            Self::Gates => '2',
+            Self::Timeline => '3',
+            Self::Inbox => '4',
+            Self::Stale => '6',
+            Self::Brief => '7',
+            Self::Resume => '8',
+        }
+    }
+
+    pub fn from_name(name: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|v| v.name() == name)
+    }
+
+    pub(crate) fn next(self, back: bool) -> Self {
+        let at = Self::ALL.iter().position(|v| *v == self).unwrap_or(0);
+        let offset = if back { Self::ALL.len() - 1 } else { 1 };
+        Self::ALL[(at + offset) % Self::ALL.len()]
+    }
+
+    pub(crate) fn cache_key(self) -> Self {
+        if self == Self::Inbox {
+            Self::Resume
+        } else {
+            self
         }
     }
 }
 
-/// Which pane the arrow keys move.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Focus {
     Runs,
     Detail,
 }
 
-/// A key, independent of the terminal library.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Key {
     Up,
     Down,
     Enter,
     Tab,
+    BackTab,
+    PageUp,
+    PageDown,
     Esc,
     Char(char),
 }
@@ -47,27 +104,30 @@ pub enum Key {
 pub struct App {
     pub source: Source,
     pub stamps: Stamps,
-    /// `kb runs`.
     pub runs: Reply,
-    /// Indices into `runs.rows`: runs that are not closed first, each
-    /// group in the verb's order (newest activity first).
     pub order: Vec<usize>,
-    /// A position in `order`.
     pub selected: usize,
     pub view: View,
     pub focus: Focus,
     pub scroll: u16,
     pub help: bool,
-    answers: BTreeMap<(String, View), Reply>,
-    gates: BTreeMap<String, Reply>,
-    tool: Option<GitTool>,
-    ticks: u8,
-    subjects: BTreeMap<String, Subject>,
+    pub expand_all: bool,
+    pub open_only: bool,
+    pub project_only: Option<String>,
+    pub notice: Option<String>,
+    pub asked: String,
+    pub runs_view: bool,
+    pub anchor: bool,
+    pub(crate) width: u16,
+    pub(crate) height: u16,
+    pub(crate) main_height: u16,
+    pub(crate) answers: BTreeMap<String, BTreeMap<View, Reply>>,
+    pub(crate) tool: Option<GitTool>,
+    pub(crate) ticks: u8,
+    pub(crate) subjects: BTreeMap<String, Subject>,
 }
 
 impl App {
-    /// Ask the verbs once; select `run`, else the current run, else the
-    /// first listed.
     pub fn new(source: Source, run: Option<&str>) -> Self {
         let mut app = Self {
             source,
@@ -75,77 +135,63 @@ impl App {
             runs: Reply::default(),
             order: Vec::new(),
             selected: 0,
-            view: View::Resume,
+            view: View::Progress,
             focus: Focus::Runs,
             scroll: 0,
             help: false,
+            expand_all: false,
+            open_only: false,
+            project_only: None,
+            notice: None,
+            asked: String::new(),
+            runs_view: false,
+            anchor: true,
+            width: 0,
+            height: 0,
+            main_height: 1,
             answers: BTreeMap::new(),
-            gates: BTreeMap::new(),
             tool: None,
             ticks: 0,
             subjects: BTreeMap::new(),
         };
-        app.reload(run.map(str::to_owned));
+        app.reload(run.map(str::to_owned), None);
         app
     }
 
-    fn reload(&mut self, keep: Option<String>) {
-        self.stamps.pin = self.source.pin(&mut self.tool);
-        self.stamps.local = self.source.local();
-        self.runs = self.source.runs();
-        self.answers.clear();
-        self.gates.clear();
-        self.subjects.clear();
-        let closed = |i: &usize| field(&self.runs.rows[*i], "status") == "closed";
-        let (mut order, last): (Vec<usize>, Vec<usize>) =
-            (0..self.runs.rows.len()).partition(|i| !closed(i));
-        order.extend(last);
-        self.order = order;
-        let position = |pick: &dyn Fn(&Value) -> bool| {
-            self.order.iter().position(|i| pick(&self.runs.rows[*i]))
-        };
-        self.selected = keep
-            .and_then(|id| position(&|row| field(row, "id") == id))
-            .or_else(|| position(&|row| crate::source::flags(row).contains(&"current")))
-            .unwrap_or(0);
-        self.refresh_subject();
-        self.load();
+    pub fn row(&self) -> Option<&Value> {
+        self.order
+            .get(self.selected)
+            .and_then(|i| self.runs.rows.get(*i))
     }
 
-    /// Re-ask after a KB/local change, or a subject change on its 10 s tick.
-    pub fn poll(&mut self) -> bool {
-        self.ticks = (self.ticks + 1) % 5;
-        let subject_moved = self.ticks == 0 && {
-            let recorded = self.worktree();
-            self.source.subject(&mut self.tool, recorded.as_deref()) != self.stamps.subject
-        };
-        if self.source.pin(&mut self.tool) == self.stamps.pin
-            && self.source.local() == self.stamps.local
-            && !subject_moved
-        {
-            return false;
-        }
-        self.reload(self.run());
-        true
+    pub fn run_id(&self) -> Option<&str> {
+        self.row().map(|row| field(row, "id"))
     }
 
-    fn refresh_subject(&mut self) {
-        let recorded = self.worktree();
-        self.stamps.subject = self.source.subject(&mut self.tool, recorded.as_deref());
-        if let Some(run) = self.run() {
-            if self
-                .subjects
-                .get(&run)
-                .is_some_and(|s| s != &self.stamps.subject)
-            {
-                self.answers.retain(|(id, _), _| id != &run);
-                self.gates.remove(&run);
-            }
-            self.subjects.insert(run, self.stamps.subject.clone());
-        }
+    pub fn run(&self) -> Option<String> {
+        self.run_id().map(str::to_owned)
     }
 
-    fn worktree(&self) -> Option<String> {
+    pub fn current_run(&self) -> Option<&str> {
+        self.runs
+            .rows
+            .iter()
+            .find(|r| flags(r).contains(&"current"))
+            .map(|r| field(r, "id"))
+    }
+
+    pub fn project(&self) -> Option<String> {
+        self.row()?
+            .get("more")?
+            .as_array()?
+            .iter()
+            .filter(|m| field(m, "label") == "field")
+            .flat_map(|m| field(m, "text").split(' '))
+            .find_map(|part| part.strip_prefix("project="))
+            .map(str::to_owned)
+    }
+
+    pub(crate) fn worktree(&self) -> Option<String> {
         self.row()?
             .get("more")?
             .as_array()?
@@ -159,114 +205,26 @@ impl App {
             })
     }
 
-    /// The selected run's ID.
-    pub fn run(&self) -> Option<String> {
-        self.row().map(|row| field(row, "id").to_owned())
-    }
-
-    fn row(&self) -> Option<&Value> {
-        self.order
-            .get(self.selected)
-            .and_then(|i| self.runs.rows.get(*i))
-    }
-
-    /// The selected run's project, from its `kb runs` place line.
-    pub fn project(&self) -> Option<String> {
-        let more = self.row()?.get("more")?.as_array()?;
-        more.iter()
-            .filter(|m| field(m, "label") == "field")
-            .flat_map(|m| field(m, "text").split(' '))
-            .find_map(|part| part.strip_prefix("project="))
-            .map(str::to_owned)
-    }
-
-    /// Ask the verbs the current pane needs, unless already answered at
-    /// this pin.
-    pub fn load(&mut self) {
-        let Some(run) = self.run() else {
-            return;
-        };
-        let key = (run.clone(), self.view);
-        if !self.answers.contains_key(&key) {
-            let project = self.project();
-            let reply = match self.view {
-                View::Resume => self.source.resume(&run),
-                View::Stale => self.source.stale(project.as_deref()),
-                View::Brief => self.source.brief(project.as_deref()),
-            };
-            self.answers.insert(key, reply);
+    pub fn runs_title(&self) -> String {
+        let mut title = format!("runs ({})", self.order.len());
+        if self.open_only {
+            title.push_str(" open");
         }
-        if self.view == View::Resume && !self.gates.contains_key(&run) {
-            let reply = self.source.gates(&run);
-            self.gates.insert(run, reply);
+        if let Some(project) = &self.project_only {
+            title.push_str(&format!(" project={project}"));
         }
+        title
     }
 
-    /// The current pane's answer, if asked.
+    pub fn answer(&self, view: View) -> Option<&Reply> {
+        self.answers.get(self.run_id()?)?.get(&view.cache_key())
+    }
+
     pub fn detail(&self) -> Option<&Reply> {
-        self.answers.get(&(self.run()?, self.view))
+        self.answer(self.view)
     }
 
-    /// `kb gate status` for the selected run, if asked.
     pub fn gate_status(&self) -> Option<&Reply> {
-        self.gates.get(&self.run()?)
-    }
-
-    /// Apply one key; false means quit. Every key only moves the view.
-    pub fn key(&mut self, key: Key) -> bool {
-        if self.help && key != Key::Char('q') {
-            self.help = !matches!(key, Key::Esc | Key::Char('?'));
-            return true;
-        }
-        match key {
-            Key::Char('q') => return false,
-            Key::Esc => self.focus = Focus::Runs,
-            Key::Char('?') => self.help = true,
-            Key::Up | Key::Char('k') => self.step(false),
-            Key::Down | Key::Char('j') => self.step(true),
-            Key::Enter => {
-                self.focus = match self.focus {
-                    Focus::Runs => Focus::Detail,
-                    Focus::Detail => Focus::Runs,
-                };
-            }
-            Key::Tab => self.show(self.view.next()),
-            Key::Char('b') => self.show(View::Brief),
-            Key::Char('s') => self.show(View::Stale),
-            Key::Char('g') => self.show(View::Resume),
-            Key::Char('r') => self.reload(self.run()),
-            Key::Char(_) => {}
-        }
-        true
-    }
-
-    fn show(&mut self, view: View) {
-        self.view = view;
-        self.scroll = 0;
-        self.load();
-    }
-
-    fn step(&mut self, down: bool) {
-        if self.focus == Focus::Detail {
-            self.scroll = if down {
-                self.scroll.saturating_add(1)
-            } else {
-                self.scroll.saturating_sub(1)
-            };
-            return;
-        }
-        let last = self.order.len().saturating_sub(1);
-        let previous = self.selected;
-        self.selected = if down {
-            (self.selected + 1).min(last)
-        } else {
-            self.selected.saturating_sub(1)
-        };
-        if self.selected == previous {
-            return;
-        }
-        self.scroll = 0;
-        self.refresh_subject();
-        self.load();
+        self.answer(View::Gates)
     }
 }

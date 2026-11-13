@@ -47,13 +47,15 @@ fn render_as(
     let projected = project(rows(), &plan.view);
     let run = Run {
         plan: &plan,
-        search: SearchReport {
+        search: &SearchReport {
             coverage: Coverage::Measured {
                 examined: 5,
                 total: 5,
             },
             stop: None,
             hits: 5,
+            index: None,
+            snapshot: None,
         },
         retained: Some(5),
         projected: &projected,

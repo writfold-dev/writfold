@@ -100,9 +100,15 @@ fn file(cx: &Context<'_, '_>, r: &str) -> Option<String> {
     if r.contains('/') || r.is_empty() {
         return None;
     }
+    // A bare name with or without its extension (`<stamp>-<hex>` or
+    // `<stamp>-<hex>.json`), as `ls` prints it.
+    let stem = r
+        .strip_suffix(".json")
+        .or_else(|| r.strip_suffix(".md"))
+        .unwrap_or(r);
     ["gates", "statements", "retrievals", "edits", "observed"]
         .iter()
-        .flat_map(|dir| ["json", "md"].map(|ext| format!("{}/{dir}/{r}.{ext}", cx.run_dir)))
+        .flat_map(|dir| ["json", "md"].map(|ext| format!("{}/{dir}/{stem}.{ext}", cx.run_dir)))
         .find(|p| root.join(p).is_file())
 }
 

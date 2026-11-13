@@ -31,11 +31,18 @@ pub(super) fn retain_rows(
             .or_default()
             .push((lo as u64, hi as u64));
     }
-    let paths: Vec<&str> = by_path.keys().copied().collect();
+    let paths: Vec<&str> = by_path
+        .keys()
+        .copied()
+        .filter(|path| !found.dirty.contains(*path))
+        .collect();
     let reads = read_all(executable, repo, commit, &paths)?;
-    let mut rows = Vec::new();
+    let mut rows = dirty_rows(found, &by_path)?;
     let mut bindings = BTreeSet::new();
-    for ((path, ranges), read) in by_path.into_iter().zip(reads) {
+    let pinned = by_path
+        .into_iter()
+        .filter(|(path, _)| !found.dirty.contains(*path));
+    for ((path, ranges), read) in pinned.zip(reads) {
         let content = found.files.get(path).ok_or("hit without file bytes")?;
         if &read.content != content {
             return Err(
@@ -57,6 +64,33 @@ pub(super) fn retain_rows(
         }
     }
     Ok((rows, bindings.len()))
+}
+
+/// Dirty evidence has an explicit non-binding marker and is never written as
+/// a pinned citation descriptor. The caller carries the searched bytes to KB.
+fn dirty_rows(found: &search::Found, paths: &BTreeMap<&str, Vec<(u64, u64)>>) -> Result<Vec<Row>> {
+    let mut rows = Vec::new();
+    for (path, ranges) in paths
+        .iter()
+        .filter(|(path, _)| found.dirty.contains(**path))
+    {
+        let content = found.files.get(*path).ok_or("dirty hit without bytes")?;
+        for &(lo, hi) in ranges {
+            let bytes = content
+                .get(lo as usize..hi as usize)
+                .ok_or("dirty range outside bytes")?;
+            rows.push(Row {
+                path: (*path).to_owned(),
+                range: (lo, hi),
+                line: line_at(content, lo as usize),
+                evidence: Some(Evidence {
+                    binding: format!("dirty:sha256:{}", tuft::digest_hex(bytes)),
+                    bytes: bytes.to_vec(),
+                }),
+            });
+        }
+    }
+    Ok(rows)
 }
 
 /// Read each pinned file through the trial retain path, a few concurrently;

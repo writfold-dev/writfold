@@ -1,118 +1,47 @@
-//! Argument handling for `writfold tuft ...`; returns the text to print.
+//! Argument handling for `writfold tuft`; all executions use a pinned program.
+mod args;
+mod check;
+mod output;
+mod program;
+mod repos;
+#[cfg(test)]
+mod tests;
+
 use super::kb::{Options, adapt};
-use super::state::{self, Chosen};
-use super::{Invocation, compile, execute, execute_kb};
+use super::state::Chosen;
+use super::{Invocation, execute, execute_kb};
 use crate::trial::Result;
+use args::{Args, parse};
 use std::path::{Path, PathBuf};
 use tuft::emit::{Cursor, Format};
-use writfold_kb::workspace::{Workspace, discover};
 
 pub const USAGE: &str = "\
-writfold tuft run FILE --repo DIR [--state DIR] [--cursor C] [--verbose|--json]
-                  [--out NEW_FILE] [--cite] [--kb DIR] [--run ID]
-                     run a Tuft v0 program over the pinned commit it names: exact
-                     find, retained citation bindings, a budgeted projection.
-                     Default rows are `path:line: text` plus one `# coverage=...`
-                     trailer; --out writes the view to a new file and prints
-                     only the trailer
-writfold tuft check FILE
-                     compile only; print diagnostics or the checked pipeline
+writfold tuft run FILE|- [--repo DIR|NAME[@COMMIT] ...] [--pinned]
+writfold tuft grep PATTERN [--in PATH-GLOB] [--at REF] [--regex] [--limit N]
+                         [--repo DIR|NAME[@REF] ...] [--pinned]
+writfold tuft check FILE [--json]
 
-State (retained evidence): --state DIR, else $WRITFOLD_STATE, names a trial state
-made by `writfold trial init`. Without either, inside a KB under Git (or with
---kb DIR) Tuft keeps its own state in <KB git dir>/writfold/tuft-state/, created
-on first use; else ~/.local/share/writfold/trial if `trial init` made it.
---cite prints, under each shown row, the code citation token `writfold kb cite make`
-would print for its lines at the pinned commit. When the KB (found as `writfold kb`
-finds it) has an open current run, or with --kb DIR / --run ID, the run also
-records a retrieval receipt (program, commit, trailer, row counts, tokens) in
-runs/<id>/retrievals/; `writfold kb resume` shows it. Notes go to standard error.
-Language: docs/tuft/language.md. Semantic, fuzzy and ranked search, and `follow`,
-are refused until the Omnigraph backend exists.";
+Run/grep options: --state DIR --cursor C --verbose|--json --out NEW_FILE
+                  --cite --kb DIR --run ID --working-tree --index FILE
+                  --print-program (also print the pinned program to stderr)
+Saved FILEs and check stay strict: at must be a full lowercase commit ID.
+grep and run - accept refs, resolved once and echoed; --pinned forbids refs.
+--at is for grep or run - only. Repeated --repo uses the KB repository map;
+each repository has its own coverage and cursor, followed by overall coverage.
+--working-tree searches tracked and nonignored untracked bytes; changed bytes
+are explicitly dirty, never pinned evidence. --index reads universal-ctags JSON
+with FILE.meta.json carrying its full commit and sha256; symbols are partial.
 
-struct Args {
-    positional: Vec<String>,
-    options: Vec<(String, String)>,
-    format: Format,
-    cite: bool,
-}
+State: --state, else $WRITFOLD_STATE, is an initialized trial state. Otherwise
+inside a KB Tuft uses <KB git dir>/writfold/tuft-state/; outside a KB it falls
+back to ~/.local/share/writfold/trial only when initialized.
+--cite emits KB code tokens. An open KB run records pinned retrieval receipts;
+--kb/--run require recording to succeed. Notes and programs go to stderr.
+Exit codes: 0 successful query/check (including zero hits or partial coverage),
+1 invalid arguments/program, refusal or IO error. Always inspect coverage.
+Language and JSON contract: docs/tuft/language.md.";
 
-fn parse(args: &[String]) -> Result<Args> {
-    let mut parsed = Args {
-        positional: Vec::new(),
-        options: Vec::new(),
-        format: Format::Compact,
-        cite: false,
-    };
-    let mut iter = args.iter();
-    while let Some(arg) = iter.next() {
-        let format = match arg.as_str() {
-            "--json" => Some(Format::Json),
-            "--verbose" => Some(Format::Verbose),
-            _ => None,
-        };
-        if let Some(format) = format {
-            if parsed.format != Format::Compact {
-                return Err("give at most one of --verbose and --json".into());
-            }
-            parsed.format = format;
-        } else if arg == "--cite" {
-            if parsed.cite {
-                return Err("--cite given twice".into());
-            }
-            parsed.cite = true;
-        } else if let Some(name) = arg.strip_prefix("--") {
-            if !matches!(name, "repo" | "state" | "cursor" | "out" | "kb" | "run") {
-                return Err(format!("unknown option --{name}").into());
-            }
-            let value = iter
-                .next()
-                .ok_or_else(|| format!("--{name} needs a value"))?;
-            if parsed.options.iter().any(|(n, _)| n == name) {
-                return Err(format!("--{name} given twice").into());
-            }
-            parsed.options.push((name.to_owned(), value.clone()));
-        } else {
-            parsed.positional.push(arg.clone());
-        }
-    }
-    Ok(parsed)
-}
-
-impl Args {
-    fn option(&self, name: &str) -> Option<&str> {
-        self.options
-            .iter()
-            .find(|(n, _)| n == name)
-            .map(|(_, v)| v.as_str())
-    }
-
-    fn file(&self) -> Result<&str> {
-        match self.positional.as_slice() {
-            [_, file] => Ok(file),
-            _ => Err("expected exactly one program FILE".into()),
-        }
-    }
-
-    /// The state ([`state::choose`]); the KB is looked for as the adapter
-    /// looks for it, and only when no trial state is given.
-    fn state(&self, context: &Context) -> Result<Chosen> {
-        let kb = self.option("kb").map(Path::new);
-        let named = kb.is_some() || self.option("run").is_some();
-        let find = || -> Result<Option<Workspace>> {
-            if named {
-                return Ok(Some(discover(kb, &context.cwd)?));
-            }
-            Ok(context
-                .discover
-                .then(|| discover(None, &context.cwd).ok())
-                .flatten())
-        };
-        state::choose(self.option("state"), &find)
-    }
-}
-
-/// Write `view` to a file that must not exist yet; never overwrite.
+/// Write to a new file, never overwrite.
 pub(crate) fn write_new(path: &Path, view: &str) -> Result<()> {
     use std::io::Write as _;
     let mut file = std::fs::OpenOptions::new()
@@ -124,112 +53,142 @@ pub(crate) fn write_new(path: &Path, view: &str) -> Result<()> {
     Ok(file.sync_all()?)
 }
 
-/// How the KB adapter runs: where to look for a KB, and the clock.
+/// Where the KB is discovered, and an optional fixed clock.
 pub(crate) struct Context {
     pub cwd: PathBuf,
     pub discover: bool,
     pub now: Option<i64>,
 }
 
-/// `writfold tuft run`: the text to print and notes for standard error.
-pub(crate) fn run_command(args: &[String], context: Context) -> Result<(String, Vec<String>)> {
-    let parsed = parse(args)?;
-    let file = parsed.file()?;
-    let source = std::fs::read(file)?;
-    let chosen = parsed.state(&context)?;
-    let repo = parsed.option("repo").ok_or("missing --repo")?;
-    if let Some(out) = parsed.option("out").filter(|o| Path::new(o).exists()) {
-        return Err(format!("--out {out}: file exists (refusing to overwrite)").into());
-    }
+fn one(
+    parsed: &Args,
+    prepared: &repos::Prepared,
+    program: &program::Program,
+    chosen: &Chosen,
+    options: &Options,
+) -> Result<(output::Part, Vec<String>)> {
     let cursor = parsed.option("cursor").map(Cursor::parse).transpose()?;
-    let (Chosen::Trial(dir) | Chosen::Kb(dir)) = &chosen;
+    let (Chosen::Trial(dir) | Chosen::Kb(dir)) = chosen;
     let invocation = Invocation {
-        source: &source,
-        name: file,
-        repo: Path::new(repo),
+        source: &prepared.source,
+        name: &program.name,
+        repo: &prepared.repo,
         state: dir,
         cursor: cursor.as_ref(),
         format: parsed.format,
+        working_tree: parsed.flag("working-tree"),
+        index: parsed.option("index").map(Path::new),
     };
-    let executed = match chosen {
+    let mut executed = match chosen {
         Chosen::Trial(_) => execute(&invocation)?,
         Chosen::Kb(_) => execute_kb(&invocation)?,
     };
+    let mut adapted = adapt(&executed, &prepared.repo, cursor.as_ref(), options)?;
+    output::resolved(&mut executed, &mut adapted.printed, prepared)?;
+    if parsed.flag("print-program") {
+        adapted.notes.push(format!(
+            "program repo={} at={}:\n{}",
+            prepared.name,
+            executed.plan.find.commit,
+            std::str::from_utf8(&prepared.source)?
+        ));
+    }
+    Ok((
+        output::Part {
+            name: prepared.name.clone(),
+            printed: adapted.printed,
+            trailer: executed.emitted.trailer,
+        },
+        adapted.notes,
+    ))
+}
+
+/// Run the language or grep lowering, returning stdout and stderr notes.
+pub(crate) fn run_command(args: &[String], context: Context) -> Result<(String, Vec<String>)> {
+    let parsed = parse(args)?;
+    let program = program::load(&parsed)?;
+    if let Some(out) = parsed.option("out").filter(|p| Path::new(p).exists()) {
+        return Err(format!("--out {out}: file exists (refusing to overwrite)").into());
+    }
+    let prepared = repos::prepare(&parsed, &program, &context)?;
+    let chosen = parsed.state(&context)?;
     let options = Options {
-        cite: parsed.cite,
+        cite: parsed.flag("cite"),
         kb: parsed.option("kb").map(PathBuf::from),
         run: parsed.option("run").map(str::to_owned),
         discover: context.discover,
         cwd: context.cwd,
         now: context.now,
     };
-    let adapted = adapt(&executed, Path::new(repo), cursor.as_ref(), &options)?;
+    let (mut parts, mut notes) = (Vec::new(), Vec::new());
+    for repo in prepared {
+        let (part, messages) = one(&parsed, &repo, &program, &chosen, &options)?;
+        parts.push(part);
+        notes.extend(messages);
+    }
+    let (printed, trailer) = output::combine(parts, parsed.format)?;
     let printed = match parsed.option("out") {
-        None => adapted.printed,
+        None => printed,
         Some(out) => {
-            let emitted = &executed.emitted;
-            let view = match emitted.format {
-                Format::Compact => adapted
-                    .printed
-                    .strip_suffix(emitted.trailer.as_str())
-                    .unwrap_or(&emitted.view)
-                    .to_owned(),
-                Format::Verbose | Format::Json => adapted.printed,
+            let view = if parsed.format == Format::Compact {
+                printed.strip_suffix(&trailer).unwrap_or(&printed)
+            } else {
+                &printed
             };
-            write_new(Path::new(out), &view)?;
-            emitted.trailer.clone()
+            write_new(Path::new(out), view)?;
+            trailer
         }
     };
-    Ok((printed, adapted.notes))
+    Ok((printed, notes))
 }
 
 pub fn main(args: &[String]) -> Result<String> {
     let parsed = parse(args)?;
     match parsed.positional.first().map(String::as_str) {
-        Some("run") => {
+        Some("run" | "grep") => {
             let context = Context {
                 cwd: std::env::current_dir()?,
                 discover: true,
                 now: None,
             };
             let (printed, notes) = run_command(args, context)?;
-            if !notes.is_empty() {
-                use std::io::Write as _;
-                let mut stderr = std::io::stderr().lock();
-                for note in notes {
-                    let _ = writeln!(stderr, "writfold tuft: {note}");
-                }
+            use std::io::Write as _;
+            let mut stderr = std::io::stderr().lock();
+            for note in notes {
+                writeln!(stderr, "writfold tuft: {note}")?;
             }
             Ok(printed)
         }
-        Some("check") => {
-            let file = parsed.file()?;
-            let plan = compile(&std::fs::read(file)?, file)?;
-            let (matcher, pattern) = plan.find.matcher.describe();
-            Ok(format!(
-                "ok {} program=sha256:{}\n  find @{} {matcher} {:?} in {:?} at {} limit={}\n  retain {}\n  project @{} [{}]\n  emit budget_tokens={}",
-                tuft::VERSION,
-                plan.program,
-                plan.find.binding,
-                pattern,
-                plan.find.scope,
-                plan.find.commit,
-                plan.find.budget.positions(),
-                plan.retain.as_ref().map_or("none".to_owned(), |r| format!(
-                    "@{} around={:?}",
-                    r.binding, r.around
-                )),
-                plan.view.binding,
-                plan.view
-                    .fields
-                    .iter()
-                    .map(|f| f.name())
-                    .collect::<Vec<_>>()
-                    .join(", "),
-                plan.emit.budget_tokens
-            ))
-        }
-        Some("help") | None => Ok(USAGE.to_owned()),
-        Some(other) => Err(format!("unknown tuft command {other}; see: writfold tuft help").into()),
+        Some("check") => check::check(&parsed),
+        _ => Ok(USAGE.to_owned()),
+    }
+}
+
+/// Process output keeps failed structured checks on stdout, at exit 1.
+pub struct Outcome {
+    pub stdout: String,
+    pub stderr: String,
+    pub code: u8,
+}
+
+pub fn outcome(args: &[String]) -> Outcome {
+    match main(args) {
+        Ok(text) => Outcome {
+            stdout: format!("{text}\n"),
+            stderr: String::new(),
+            code: 0,
+        },
+        Err(error) => match error.downcast_ref::<check::InvalidJson>() {
+            Some(json) => Outcome {
+                stdout: format!("{}\n", json.0),
+                stderr: String::new(),
+                code: 1,
+            },
+            None => Outcome {
+                stdout: String::new(),
+                stderr: format!("writfold tuft: {error}\n"),
+                code: 1,
+            },
+        },
     }
 }

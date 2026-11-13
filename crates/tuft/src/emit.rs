@@ -31,7 +31,7 @@ pub enum Format {
 #[derive(Clone, Copy, Debug)]
 pub struct Run<'a> {
     pub plan: &'a Plan,
-    pub search: SearchReport,
+    pub search: &'a SearchReport,
     /// Distinct citation bindings retained, when the plan retains.
     pub retained: Option<usize>,
     pub projected: &'a Projected,
@@ -79,7 +79,7 @@ pub fn emit(run: Run<'_>, cursor: Option<&Cursor>, format: Format) -> Result<Emi
         .iter()
         .map(|r| compact::row(r, &run.plan.view.fields, lines_mode))
         .collect();
-    let view = digest_hex(lines.join("\n").as_bytes());
+    let view = view_digest(&lines, run.search);
     let binding = Binding {
         program: &run.plan.program,
         commit: &run.plan.find.commit,
@@ -130,13 +130,28 @@ pub fn emit(run: Run<'_>, cursor: Option<&Cursor>, format: Format) -> Result<Emi
     })
 }
 
+fn view_digest(lines: &[String], search: &SearchReport) -> String {
+    let mut material = lines.join("\n");
+    if let Some(snapshot) = &search.snapshot {
+        material.push_str("\nworking-tree:");
+        material.push_str(snapshot);
+    }
+    if let Some(index) = &search.index {
+        material.push_str("\nindex:");
+        material.push_str(&index.commit);
+        material.push(':');
+        material.push_str(&index.sha256);
+    }
+    digest_hex(material.as_bytes())
+}
+
 /// `# coverage=… files=E/T hits=N[ stopped=hit-limit] shown=S omitted=O
 /// [limited=L ][needs=T ]cursor=C program=<12 hex>`: never without coverage
 /// or cursor, the completeness signal.
 fn trailer(run: Run<'_>, page: &Page) -> String {
     let mut out = format!(
         "# {} hits={}{} shown={} omitted={}",
-        coverage_text(run.search.coverage),
+        coverage_text(run.search),
         run.search.hits,
         envelope::stop_text(run.search.stop),
         page.shown,

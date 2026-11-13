@@ -45,6 +45,10 @@ impl Reply {
             .map(str::to_owned)
     }
 
+    pub fn count(&self, name: &str) -> Option<u64> {
+        self.trailer.get("counts")?.get(name)?.as_u64()
+    }
+
     /// The trailer's extra counts (`gates=4 stale=1 …`), by name.
     pub fn counts(&self) -> Vec<(String, u64)> {
         self.trailer
@@ -134,12 +138,12 @@ impl Source {
         }
     }
 
-    /// `writfold kb runs`.
-    pub fn runs(&self) -> Reply {
+    /// `writfold kb runs --plan`, with the verb's own filters.
+    pub fn runs(&self, open: bool, project: Option<&str>) -> Reply {
         self.call(Verb::Runs {
-            open: false,
-            project: None,
-            plan: false,
+            open,
+            project: project.map(str::to_owned),
+            plan: true,
         })
     }
 
@@ -156,6 +160,25 @@ impl Source {
             run: Some(run.to_owned()),
             repo: None,
         }))
+    }
+
+    pub fn plan(&self, run: &str) -> Reply {
+        self.call(Verb::Plan(writfold_kb::plan::PlanVerb::Status {
+            run: Some(run.to_owned()),
+            repo: None,
+            gates: true,
+        }))
+    }
+
+    pub fn timeline(&self, run: &str) -> Reply {
+        self.call(Verb::Timeline {
+            target: run.to_owned(),
+        })
+    }
+
+    pub fn clock(&self) -> String {
+        let stamp = writfold_kb::time::stamp(self.now.unwrap_or_else(writfold_kb::time::now));
+        stamp.get(11..).unwrap_or(&stamp).to_owned()
     }
 
     /// `writfold kb stale <project> --cached`: never starts a checker.

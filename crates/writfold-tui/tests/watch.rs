@@ -7,34 +7,17 @@ use ratatui::Terminal;
 use ratatui::backend::TestBackend;
 use ratatui::style::Color;
 use std::collections::BTreeMap;
-use std::path::Path;
+use support::projection::golden;
 use support::{CLOSED, RUN, TestResult, stable, world};
 use writfold_kb::Verb;
 use writfold_kb::gate::GateVerb;
 use writfold_tui::app::{App, Focus, Key, View};
 use writfold_tui::source::field;
 
-fn golden(name: &str, actual: &str) -> TestResult {
-    let file = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("tests/golden")
-        .join(name);
-    if std::env::var_os("WRITFOLD_KB_BLESS").is_some() {
-        std::fs::write(&file, actual)?;
-        return Ok(());
-    }
-    let expected = std::fs::read_to_string(&file).map_err(|e| format!("{name}: {e}"))?;
-    if expected != actual {
-        return Err(
-            format!("golden {name} differs\n--- expected\n{expected}--- actual\n{actual}").into(),
-        );
-    }
-    Ok(())
-}
-
 #[test]
 fn once_prints_the_frame() -> TestResult {
     let w = world("once")?;
-    let text = stable(&writfold_tui::once(w.source(), None));
+    let text = stable(&writfold_tui::once(w.source(), None, Some(View::Resume)));
     golden("watch-once.txt", &text)?;
     // Open runs come first although the closed run is newer.
     let open = text.find(&format!("[open] {RUN}")).ok_or("no open run")?;
@@ -46,7 +29,7 @@ fn once_prints_the_frame() -> TestResult {
     Ok(())
 }
 
-fn render(app: &App) -> TestResult<ratatui::buffer::Buffer> {
+fn render(app: &mut App) -> TestResult<ratatui::buffer::Buffer> {
     let mut terminal = Terminal::new(TestBackend::new(160, 40))?;
     terminal.draw(|frame| writfold_tui::view::draw(frame, app))?;
     Ok(terminal.backend().buffer().clone())
@@ -77,18 +60,19 @@ fn find(rows: &[String], needle: &str) -> Option<(u16, u16)> {
 }
 
 #[test]
-fn the_layout_has_runs_left_resume_right_and_the_pin_below() -> TestResult {
+fn the_layout_has_runs_left_gates_right_and_the_pin_below() -> TestResult {
     let w = world("layout")?;
     let mut app = App::new(w.source(), None);
-    let buffer = render(&app)?;
+    app.show(View::Gates);
+    let buffer = render(&mut app)?;
     let screen = rows(&buffer);
     let text = screen.join("\n");
     let (runs_x, _) = find(&screen, " runs (2) ").ok_or(text.clone())?;
-    let (resume_x, _) = find(&screen, &format!(" resume {RUN}")).ok_or(text.clone())?;
-    assert!(runs_x < 10 && resume_x > 50, "{text}");
-    let (x, y) = find(&screen, &format!("> [open] {RUN}")).ok_or(text.clone())?;
-    assert!(find(&screen, &format!("[closed] {CLOSED}")).is_some_and(|(_, c)| c > y));
-    assert!(x < resume_x);
+    let (gates_x, _) = find(&screen, &format!(" gates {RUN}")).ok_or(text.clone())?;
+    assert!(runs_x < 10 && gates_x > 30, "{text}");
+    let (x, y) = find(&screen, "> [open] run-").ok_or(text.clone())?;
+    assert!(find(&screen, "[closed] run-20261104").is_some_and(|(_, c)| c > y));
+    assert!(x < gates_x);
     let summary = "gates: gates=4 satisfied=1 open=1 stale=1 failed=1";
     let (x, y) = find(&screen, summary).ok_or(text.clone())?;
     assert_eq!(buffer[(x, y)].fg, Color::Red, "stale and failed are red");
@@ -97,9 +81,9 @@ fn the_layout_has_runs_left_resume_right_and_the_pin_below() -> TestResult {
     let (x, y) = find(&screen, "gate pass [satisfied]").ok_or(text.clone())?;
     assert_eq!(buffer[(x, y)].fg, Color::Green);
     let last = screen.last().ok_or("empty screen")?;
-    assert!(last.contains(" kb=") && last.contains(" index="), "{last}");
+    assert!(last.contains("kb=") && last.contains("index="), "{last}");
     assert!(app.key(Key::Char('?')));
-    let screen = rows(&render(&app)?);
+    let screen = rows(&render(&mut app)?);
     assert!(find(&screen, " help ").is_some(), "{}", screen.join("\n"));
     Ok(())
 }
@@ -113,7 +97,7 @@ fn keys_only_move_the_view() -> TestResult {
     assert_eq!(app.run().as_deref(), Some(RUN));
     assert!(app.key(Key::Up));
     assert_eq!(app.run().as_deref(), Some(RUN), "stops at the top");
-    assert!(app.key(Key::Tab));
+    assert!(app.key(Key::Char('s')));
     assert_eq!(app.view, View::Stale);
     let stale = app.detail().ok_or("stale not asked")?;
     assert!(stale.rows.iter().any(|r| field(r, "kind") == "cite"));
@@ -161,16 +145,12 @@ fn states(text: &str) -> BTreeMap<String, String> {
         .collect()
 }
 
-#[test]
-fn the_projection_equals_the_verbs() -> TestResult {
-    let w = world("projection")?;
-    let app = App::new(w.source(), Some(RUN));
-    // Runs: the same rows, every one shown once, with the verb's states.
+fn run_projection(w: &support::World, app: &App) -> TestResult {
     let (runs, _) = w.verb(
         Verb::Runs {
             open: false,
             project: None,
-            plan: false,
+            plan: true,
         },
         true,
     )?;
@@ -183,7 +163,7 @@ fn the_projection_equals_the_verbs() -> TestResult {
         Verb::Runs {
             open: false,
             project: None,
-            plan: false,
+            plan: true,
         },
         false,
     )?;
@@ -195,6 +175,16 @@ fn the_projection_equals_the_verbs() -> TestResult {
             "{line}\n{text}"
         );
     }
+    Ok(())
+}
+
+#[test]
+fn the_projection_equals_the_verbs() -> TestResult {
+    let w = world("projection")?;
+    let mut app = App::new(w.source(), Some(RUN));
+    app.show(View::Resume);
+    app.load_view(View::Gates);
+    run_projection(&w, &app)?;
     // Gates: the run pane's rows have the states `gate status` prints, and
     // the summary has its counts.
     let resume = app.detail().ok_or("resume not asked")?;
@@ -213,7 +203,7 @@ fn the_projection_equals_the_verbs() -> TestResult {
     assert_eq!(shown, states(&printed));
     assert_eq!(shown.len(), 4);
     let trailer = printed.lines().last().ok_or("no trailer")?;
-    let summary = writfold_tui::lines::gate_summary(app.gate_status().ok_or("no gates")?);
+    let summary = writfold_tui::side::gate_summary(app.gate_status().ok_or("no gates")?);
     for part in summary.text.trim_start_matches("gates: ").split(' ') {
         assert!(
             trailer.contains(&format!(" {part} ")),
@@ -242,5 +232,11 @@ fn a_pipe_gets_one_plain_frame() -> TestResult {
     assert!(!frame.contains('\u{1b}'), "plain text, no terminal codes");
     let bad = writfold_tui::main(&["--write".to_owned()], w.kb.clone(), false);
     assert_eq!(bad, Err("unknown argument --write".to_owned()));
+    let bad = writfold_tui::parse(&["--view".into(), "missing".into()])
+        .err()
+        .ok_or("unknown view accepted")?;
+    for view in View::ALL {
+        assert!(bad.contains(view.name()), "{bad}");
+    }
     Ok(())
 }

@@ -193,3 +193,21 @@ pub fn row<'a>(text: &'a str, path: &str) -> &'a str {
         .find(|l| l.starts_with(&format!("cite src:{path} ")))
         .unwrap_or("")
 }
+
+pub fn cached_rows(w: &Root) -> Result<Vec<u8>> {
+    let script = "import pathlib,sqlite3,sys,json\n\
+        files=list(pathlib.Path(sys.argv[1]).rglob('kb-index-*.sqlite'))\n\
+        assert len(files)==1, files\n\
+        db=sqlite3.connect('file:'+str(files[0])+'?mode=ro',uri=True)\n\
+        print(json.dumps(db.execute('SELECT * FROM cite_checks ORDER BY path,ord').fetchall()))";
+    let out = std::process::Command::new("python3")
+        .args(["-c", script])
+        .arg(w.kb().join(".git"))
+        .output()?;
+    assert!(
+        out.status.success(),
+        "{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    Ok(out.stdout)
+}

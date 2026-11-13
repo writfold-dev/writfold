@@ -6,7 +6,7 @@
 //! field.
 mod checker;
 
-use checker::{RUN, Result, kb, run, world};
+use checker::{RUN, Result, cached_rows, kb, run, world};
 
 const TOKEN: &str = "⟦cite kind=src depot=main path=lib/fresh.c L=3-9 want=fresh⟧";
 
@@ -60,24 +60,6 @@ fn only_kb_stale_runs_a_checker() -> Result {
     kb(&w, &["stale"], &[])?;
     assert_eq!(w.spawns(), 2);
     Ok(())
-}
-
-fn cached_rows(w: &checker::Root) -> Result<Vec<u8>> {
-    let script = "import pathlib,sqlite3,sys,json\n\
-        files=list(pathlib.Path(sys.argv[1]).rglob('kb-index-*.sqlite'))\n\
-        assert len(files)==1, files\n\
-        db=sqlite3.connect('file:'+str(files[0])+'?mode=ro',uri=True)\n\
-        print(json.dumps(db.execute('SELECT * FROM cite_checks ORDER BY path,ord').fetchall()))";
-    let out = std::process::Command::new("python3")
-        .args(["-c", script])
-        .arg(w.kb().join(".git"))
-        .output()?;
-    assert!(
-        out.status.success(),
-        "{}",
-        String::from_utf8_lossy(&out.stderr)
-    );
-    Ok(out.stdout)
 }
 
 #[test]

@@ -192,6 +192,19 @@ Splicery is not a priority for new language features (Tuft is, since 13 November
 
 Tuft is taken off the "not a priority" list. Retrieval is where an agent spends most of its reads, and Tuft's value is the citation and the coverage line, not token counts: a search that says it was complete, and rows that arrive as KB citations. The expansion makes that cheap to reach: refs accepted where a person would type them (resolved to a commit and echoed), a one-line form for the common search, one program over several repositories of the KB's repo map, symbol-aware finds with honest partial coverage, diagnostics that name the fix, and a documented, pinned `--json` and exit codes. Stored programs and receipts stay pinned to full commit IDs; the binary stays static and network-free. Weft and Splicery stay as the section above says.
 
+**As built (Tuft expansion):** one-shot stdin and `grep` resolve refs and echo
+the full commits; files/check/`--pinned` remain strict. `grep` lowers to the
+ordinary language, with glob scopes and printable pinned programs. Repeated
+`--repo NAME@REF` uses the KB map, with per-repository and overall coverage and
+pinned receipts. Diagnostics collect recoverable parse errors and name fixes;
+`check --json`, the result JSON and exit codes have contract tests. Worktrees
+and submodule checkouts are accepted. Working-tree search labels uncommitted
+bytes dirty and never retains them as pinned evidence. `find def|refs` imports
+universal-ctags JSON with a verified commit/digest sidecar and always-partial
+coverage, without new crates. Not included: SCIP, tree-sitter, enclosing-block
+windows (not exact without language-specific parsing), parameters, grouping,
+set operations and a recipes page. [Language and CLI](../tuft/language.md).
+
 ## Adopted and declined from the review
 
 | Review point | Decision |

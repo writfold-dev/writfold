@@ -14,6 +14,7 @@ use writfold_tui::source::{Source, field};
 fn a_local_proposal_refreshes_the_inbox_and_keeps_selection() -> TestResult {
     let w = world("local-refresh")?;
     let mut app = App::new(w.source(), Some(RUN));
+    app.show(writfold_tui::app::View::Resume);
     assert!(!app.poll());
     let ws = discover(Some(&w.kb), &w.kb)?;
     let state = proposal::state_of(&ws).ok_or("state")?;

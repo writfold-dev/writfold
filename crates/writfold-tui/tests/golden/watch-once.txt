@@ -24,4 +24,4 @@ gate todo [open] mechanical no receipt in this run for kb @.writfold/gates/todo.
 checkpoint 2026-11-03T16:00:00Z entry 2 of 2 @runs/run-20261101T090000Z-a1b2c3/checkpoint.md:6
   note: Batching is live in staging. @runs/run-20261101T090000Z-a1b2c3/checkpoint.md:8
   note: Next: measure flush time on the month-end replay, then HBR-101 can close. @runs/run-20261101T090000Z-a1b2c3/checkpoint.md:9
-== kb=be3c99236219+dirty:4 index=refreshed:1 subject=kb@be3c99236219+dirty:4  read-only; no daemon, nothing here claims a run is live ==
+== kb=be3c99236219+dirty:4 index=refreshed:1  subject=kb@be3c99236219+dirty:4  read-only; no daemon, nothing here claims a run is live ==

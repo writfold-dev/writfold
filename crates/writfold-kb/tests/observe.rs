@@ -134,6 +134,9 @@ fn a_non_ok_observation_never_grounds_supported() -> TestResult {
         .unwrap_or_default()
         .trim_end_matches(".json");
     cover(&w, "errors", Outcome::Supported, &[name])?;
+    // And with its extension, as `ls` prints it.
+    let file = ok.rsplit('/').next().unwrap_or_default();
+    cover(&w, "errors", Outcome::Supported, &[file])?;
     Ok(())
 }
 

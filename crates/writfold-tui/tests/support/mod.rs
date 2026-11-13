@@ -3,6 +3,8 @@
 //! itself (satisfied, failed, stale and open) with receipts recorded by
 //! `gate run`.
 #![allow(dead_code)]
+pub mod plan;
+pub mod projection;
 use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::process::Command;

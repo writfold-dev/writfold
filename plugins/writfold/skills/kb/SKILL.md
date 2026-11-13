@@ -59,6 +59,23 @@ Exit codes: 0 complete; 2 partial, unknown or stale (still a usable answer; read
 - Re-check any row carrying a `!` flag before acting on it.
 - On `answer=unknown`, look in the sources, then `record` what you found.
 
+## Source retrieval with Tuft
+
+For exact source evidence, use `writfold tuft grep "needle" --repo . --at HEAD
+--in 'src/**/*.rs' --cite`. The ref resolves once; results show the full commit
+and coverage. An open KB run records a pinned retrieval receipt. Repeat
+`--repo NAME@REF` for repositories in the KB map, with coverage per repository
+and overall. `--print-program` shows the pinned program on stderr.
+
+Saved `tuft run FILE` and `tuft check FILE --json` require full commits;
+one-shot `tuft run -` accepts refs unless `--pinned`. `--json` is Tuft's own
+documented envelope, not the KB envelope. Exit 0 includes partial/empty results:
+inspect coverage, omissions, limits and cursors. `--working-tree` marks
+uncommitted citations dirty; never describe them as committed evidence.
+`find def|refs "NAME"` with `--index FILE` imports commit-checked ctags JSON;
+symbol coverage is always partial, so absence is not proof of no callers.
+
+
 ## Gates
 
 A gate is a command with a path scope. Only `gate run` writes a receipt; never write or edit one by hand (a hand-written receipt reads as invalid). Say a check passed only when `gate status` shows the gate `[satisfied]`: `!stale` means an in-scope file changed since the receipt, `!failed` means the newest receipt for these bytes failed, and `!unknown` (a timeout or crash) is never a pass. Each such row has a `next:` line with the command to run. `[waived]` (with a reason) and `[attested]` (a statement, for gates of class `attested`) are statements, not checks: report them as waived or attested, never as passed. Waive or attest only when the user asks you to, and use `--by` honestly (`--by agent` when it is you). `gate status` and `gate lines` exit 0 only when every gate is satisfied, attested or waived.
