@@ -5,7 +5,7 @@
 use serde_json::Value;
 use std::path::PathBuf;
 use writfold_kb::gate::GateVerb;
-use writfold_kb::workspace::{GitTool, discover};
+use writfold_kb::workspace::{discover, find_repo};
 use writfold_kb::{Request, Verb};
 
 /// Where the verbs run: the KB (`--kb`, else the CLI's discovery from the
@@ -73,6 +73,36 @@ pub fn flags(row: &Value) -> Vec<&str> {
 }
 
 impl Source {
+    /// Discover the KB before applying an optional gate-subject working directory.
+    pub fn located(
+        kb: Option<PathBuf>,
+        cwd: PathBuf,
+        repo: Option<PathBuf>,
+        now: Option<i64>,
+    ) -> Result<Self, String> {
+        let ws = discover(kb.as_deref(), &cwd).map_err(|e| e.to_string())?;
+        let cwd = match repo {
+            None => cwd,
+            Some(repo) => {
+                let named = cwd.join(repo);
+                let dir = std::fs::canonicalize(&named)
+                    .map_err(|e| format!("--repo {}: {e}", named.display()))?;
+                if !dir.is_dir() || find_repo(&dir).map_err(|e| e.to_string())?.is_none() {
+                    return Err(format!(
+                        "--repo {} is not in a Git work tree",
+                        named.display()
+                    ));
+                }
+                dir
+            }
+        };
+        Ok(Self {
+            kb: Some(ws.root),
+            cwd,
+            now,
+        })
+    }
+
     /// Answer one verb with the whole answer on one page.
     pub fn call(&self, verb: Verb) -> Reply {
         let request = Request {
@@ -144,36 +174,6 @@ impl Source {
             project: project.map(str::to_owned),
             all: false,
         })
-    }
-
-    /// The KB pin's digest (HEAD plus the digests of dirty KB files), from
-    /// one `git status`; `none` outside Git. Polled to decide whether to
-    /// ask the verbs again.
-    pub fn pin(&self, tool: &mut Option<GitTool>) -> String {
-        let ws = match discover(self.kb.as_deref(), &self.cwd) {
-            Ok(ws) => ws,
-            Err(error) => return format!("error: {error}"),
-        };
-        let Some(repo) = &ws.repo else {
-            return "none".into();
-        };
-        if tool.is_none() {
-            match GitTool::locate() {
-                Ok(found) => *tool = Some(found),
-                Err(error) => return format!("error: {error}"),
-            }
-        }
-        let observed = tool
-            .as_ref()
-            .ok_or_else(|| "git unavailable".to_owned())
-            .and_then(|t| t.admit().map_err(|e| e.to_string()))
-            .and_then(|git| {
-                writfold_kb::index::observe(&ws, repo, &git).map_err(|e| e.to_string())
-            });
-        match observed {
-            Ok(snapshot) => snapshot.pin.digest,
-            Err(error) => format!("error: {error}"),
-        }
     }
 }
 

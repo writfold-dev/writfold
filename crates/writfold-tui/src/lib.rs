@@ -15,6 +15,7 @@
 
 pub mod app;
 pub mod lines;
+pub mod poll;
 pub mod source;
 mod term;
 pub mod view;
@@ -23,18 +24,20 @@ use app::App;
 use source::Source;
 use std::path::PathBuf;
 
-pub const USAGE: &str = "usage: writfold watch [--kb DIR] [--run ID] [--once]
+pub const USAGE: &str = "usage: writfold watch [--kb DIR] [--repo DIR] [--run ID] [--once]
 
 A read-only view of the KB: runs on the left (open first), the selected run's
 resume on the right (gates, receipts, drafts, checkpoint tail), the KB pin at
 the bottom. Keys: j/k or arrows, Enter, Tab (resume, stale, brief), g s b,
-r, ? for help, q to quit. --once (automatic when stdout is not a terminal)
-prints one frame as plain text and exits.";
+r, ? for help, q to quit. KB and local state are polled every 2 s; the gate
+subject every 10 s. --repo selects that subject without changing KB discovery.
+--once (automatic when stdout is not a terminal) prints one plain frame.";
 
 /// The parsed arguments.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Options {
     pub kb: Option<PathBuf>,
+    pub repo: Option<PathBuf>,
     pub run: Option<String>,
     pub once: bool,
     pub help: bool,
@@ -52,6 +55,7 @@ pub fn parse(args: &[String]) -> Result<Options, String> {
         };
         match arg.as_str() {
             "--kb" => options.kb = Some(PathBuf::from(value("--kb")?)),
+            "--repo" => options.repo = Some(PathBuf::from(value("--repo")?)),
             "--run" => options.run = Some(value("--run")?),
             "--once" => options.once = true,
             "--help" | "-h" | "help" => options.help = true,
@@ -73,11 +77,7 @@ pub fn main(args: &[String], cwd: PathBuf, terminal: bool) -> Result<Option<Stri
     if options.help {
         return Ok(Some(USAGE.into()));
     }
-    let source = Source {
-        kb: options.kb,
-        cwd,
-        now: None,
-    };
+    let source = Source::located(options.kb, cwd, options.repo, None)?;
     let mut app = App::new(source, options.run.as_deref());
     if let Some(error) = &app.runs.error {
         return Err(error.clone());

@@ -1,6 +1,5 @@
-//! The watch state: which run is selected, which pane shows, and the
-//! verbs' answers. Answers are asked once per KB pin and kept until the
-//! pin moves; no key writes anything.
+//! Selection, cached verb answers, and the KB, local-state and subject stamps.
+use crate::poll::{Stamps, Subject};
 use crate::source::{Reply, Source, field};
 use serde_json::Value;
 use std::collections::BTreeMap;
@@ -47,8 +46,7 @@ pub enum Key {
 
 pub struct App {
     pub source: Source,
-    /// The KB pin digest the answers below were asked at.
-    pub pin: String,
+    pub stamps: Stamps,
     /// `kb runs`.
     pub runs: Reply,
     /// Indices into `runs.rows`: runs that are not closed first, each
@@ -63,6 +61,8 @@ pub struct App {
     answers: BTreeMap<(String, View), Reply>,
     gates: BTreeMap<String, Reply>,
     tool: Option<GitTool>,
+    ticks: u8,
+    subjects: BTreeMap<String, Subject>,
 }
 
 impl App {
@@ -71,7 +71,7 @@ impl App {
     pub fn new(source: Source, run: Option<&str>) -> Self {
         let mut app = Self {
             source,
-            pin: String::new(),
+            stamps: Stamps::default(),
             runs: Reply::default(),
             order: Vec::new(),
             selected: 0,
@@ -82,16 +82,20 @@ impl App {
             answers: BTreeMap::new(),
             gates: BTreeMap::new(),
             tool: None,
+            ticks: 0,
+            subjects: BTreeMap::new(),
         };
         app.reload(run.map(str::to_owned));
         app
     }
 
     fn reload(&mut self, keep: Option<String>) {
-        self.pin = self.source.pin(&mut self.tool);
+        self.stamps.pin = self.source.pin(&mut self.tool);
+        self.stamps.local = self.source.local();
         self.runs = self.source.runs();
         self.answers.clear();
         self.gates.clear();
+        self.subjects.clear();
         let closed = |i: &usize| field(&self.runs.rows[*i], "status") == "closed";
         let (mut order, last): (Vec<usize>, Vec<usize>) =
             (0..self.runs.rows.len()).partition(|i| !closed(i));
@@ -104,16 +108,55 @@ impl App {
             .and_then(|id| position(&|row| field(row, "id") == id))
             .or_else(|| position(&|row| crate::source::flags(row).contains(&"current")))
             .unwrap_or(0);
+        self.refresh_subject();
         self.load();
     }
 
-    /// Re-ask every verb when the KB pin moved; true when it did.
+    /// Re-ask after a KB/local change, or a subject change on its 10 s tick.
     pub fn poll(&mut self) -> bool {
-        if self.source.pin(&mut self.tool) == self.pin {
+        self.ticks = (self.ticks + 1) % 5;
+        let subject_moved = self.ticks == 0 && {
+            let recorded = self.worktree();
+            self.source.subject(&mut self.tool, recorded.as_deref()) != self.stamps.subject
+        };
+        if self.source.pin(&mut self.tool) == self.stamps.pin
+            && self.source.local() == self.stamps.local
+            && !subject_moved
+        {
             return false;
         }
         self.reload(self.run());
         true
+    }
+
+    fn refresh_subject(&mut self) {
+        let recorded = self.worktree();
+        self.stamps.subject = self.source.subject(&mut self.tool, recorded.as_deref());
+        if let Some(run) = self.run() {
+            if self
+                .subjects
+                .get(&run)
+                .is_some_and(|s| s != &self.stamps.subject)
+            {
+                self.answers.retain(|(id, _), _| id != &run);
+                self.gates.remove(&run);
+            }
+            self.subjects.insert(run, self.stamps.subject.clone());
+        }
+    }
+
+    fn worktree(&self) -> Option<String> {
+        self.row()?
+            .get("more")?
+            .as_array()?
+            .iter()
+            .filter(|m| field(m, "label") == "field")
+            .find_map(|m| field(m, "text").split_once("worktree="))
+            .map(|(_, rest)| {
+                rest.split_once(" base=")
+                    .map_or(rest, |(path, _)| path)
+                    .to_owned()
+            })
     }
 
     /// The selected run's ID.
@@ -213,12 +256,17 @@ impl App {
             return;
         }
         let last = self.order.len().saturating_sub(1);
+        let previous = self.selected;
         self.selected = if down {
             (self.selected + 1).min(last)
         } else {
             self.selected.saturating_sub(1)
         };
+        if self.selected == previous {
+            return;
+        }
         self.scroll = 0;
+        self.refresh_subject();
         self.load();
     }
 }

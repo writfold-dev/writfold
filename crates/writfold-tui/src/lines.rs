@@ -238,9 +238,10 @@ pub fn footer(app: &App) -> String {
             .unwrap_or_else(|| "unknown".into())
     };
     format!(
-        "kb={} index={}  read-only; no daemon, nothing here claims a run is live",
+        "kb={} index={} {}  read-only; no daemon, nothing here claims a run is live",
         at("kb"),
-        at("index")
+        at("index"),
+        crate::poll::subject_text(&app.stamps.subject)
     )
 }
 
@@ -254,8 +255,8 @@ pub const HELP: &[&str] = &[
     "  r         ask the verbs again now",
     "  ?         this help      q  quit",
     "",
-    "The KB pin is polled every 2 s; the verbs are asked again only",
-    "when it moves. Nothing here writes to the KB.",
+    "KB and local state are polled every 2 s; the subject every 10 s.",
+    "--repo selects the gate subject. Nothing here writes to the KB.",
 ];
 
 /// The whole frame as plain text (`--once`).

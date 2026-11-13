@@ -28,7 +28,7 @@ impl Drop for World {
     }
 }
 
-fn git(dir: &Path, args: &[&str]) -> TestResult {
+pub fn git(dir: &Path, args: &[&str]) -> TestResult {
     let output = Command::new("git")
         .current_dir(dir)
         .env("GIT_CONFIG_GLOBAL", "/dev/null")
