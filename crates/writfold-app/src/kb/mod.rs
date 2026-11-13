@@ -8,6 +8,7 @@ mod gate;
 mod hook;
 mod plan;
 mod proposals;
+mod set;
 mod verbs;
 mod writes;
 
@@ -44,6 +45,7 @@ writes (atomic; they leave the work tree dirty for you to commit):
                   [--context ..] [--evidence ..] [--change ..] [--why ..] [--origin O]
   record link <type> <from> <to> [--status S] [--evidence e1,e2] [--applicability A]
   status <id> --set STATE [--by WHO] [--superseded-by ID] [--note TEXT]
+                  [--commit REPO@SHA] [--evidence REF [--run ID] [--repo DIR]]
   cite make <repo> <path> <a-b> [--allow-dirty] [--sym S] [--ttl T]   (prints a token)
 
 proposals (record calls not yet made, in a local untracked queue; at most 10 per session):

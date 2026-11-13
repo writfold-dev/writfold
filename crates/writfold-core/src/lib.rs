@@ -41,6 +41,7 @@ pub mod authority;
 pub mod bytes;
 pub mod checklist;
 pub mod convenience;
+pub mod decision;
 pub mod flow;
 pub mod gate;
 pub mod guard;

@@ -10,6 +10,7 @@
 pub mod atomic;
 pub mod cite;
 pub mod conclude;
+pub mod decide;
 pub mod json;
 pub mod record;
 pub mod retrieval;
@@ -155,7 +156,7 @@ pub fn execute(ws: &Workspace, request: &Request, write: &Write, now: i64) -> Re
             Write::Ticket(t) => record::ticket(&session, t)?,
             Write::Decision(d) => record::decision(&session, d)?,
             Write::Link(l) => record::link(&session, l)?,
-            Write::SetStatus(s) => status::plan(&session, s)?,
+            Write::SetStatus(s) => status::plan(&session, s, &request.cwd)?,
             Write::Retrieval(r) => retrieval::plan(&session, r)?,
             Write::CiteMake(_) => return Err(KbError::Usage("unreachable".into())),
         }
