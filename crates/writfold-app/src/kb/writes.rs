@@ -80,6 +80,7 @@ pub fn allowed(verb: &str) -> &'static [&'static str] {
         ],
         "edit" => &["run", "worktree", "dry-run", "abandon"],
         "plan" => &["run", "repo", "from", "reason", "by", "again"],
+        "observe" => super::observe::FLAGS,
         _ => super::proposals::allowed(verb),
     }
 }
@@ -132,6 +133,7 @@ pub fn runs_and_writes(
         ("edit", _) => super::edit::verb(common, positional),
         ("deliver", _) => super::deliver::verb(common, positional),
         ("plan", _) => super::plan::verb(common, positional),
+        ("observe", _) => super::observe::verb(common, positional),
         _ => return super::proposals::verb(name, common, positional),
     })
 }

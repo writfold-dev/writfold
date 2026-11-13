@@ -32,6 +32,7 @@ Each write is atomic: after a kill at any step the file holds its old bytes or i
 | Execute | a gate receipt | `gate run <id>` | `runs/<id>/gates/` | you |
 | Execute | a statement | `gate attest`, `gate waive` | `runs/<id>/statements/` | you |
 | Execute | a checklist item's cover row (v0.5.0-dev.1) | `gate cover <gate> <item> …` | `runs/<id>/covers/` | you |
+| Execute | an observation: one look at an outside source and how it went (built in v0.5.0-dev.3) | `observe --source KIND --locator TEXT --status STATUS [--for GATE.ITEM]` | `runs/<id>/observed/` | you |
 | Deliver | the exact draft, and a receipt per check | `deliver prepare`, `deliver check` | `runs/<id>/deliveries/<id>/` | you |
 | Wrap up | a state change | `status <id> --set STATE` | the record's front matter, or the run's `writfold-run.json` | you |
 | Wrap up | a proposal: a `record` call not yet made | `propose ticket\|decision\|link …` | the local queue, `<git dir>/writfold/proposals/`, or with `--tracked` the work tree's `.writfold/proposals/` | nobody until accepted; `proposals accept` then writes the record |

@@ -9,6 +9,7 @@
 //! | an attestation (`runs/<run>/statements/….json`) | it is the gate's current attestation | `attested` or `stale` |
 //! | a retrieval receipt (`runs/<run>/retrievals/….md`) | every citation in it is fresh | `fresh` or `not-fresh:<n>` |
 //! | an edit receipt (`runs/<run>/edits/….md`) | every file still has the bytes the edit wrote | `holds` or `changed:<path>` |
+//! | an observation (`runs/<run>/observed/….json`) | its status is `ok` and its citation is fresh | `ok`, `not-fresh:<n>`, or the status (`timeout` …) |
 //!
 //! Gate receipts and statements are read from the current run only; a
 //! waiver is never evidence. Both later-judged classes (assessed and
@@ -27,6 +28,7 @@ use crate::stale::{self, Cite, Verdict};
 use crate::workspace::{CANCELLED, budgets};
 use writfold_core::assess::Grounding;
 use writfold_core::gate::{Outcome, Standing, State};
+use writfold_core::observe::{self, Status};
 use writfold_runtime::git::edit_hash_bytes;
 
 /// What one citation stands on now.
@@ -79,6 +81,7 @@ pub fn resolve(cx: &Context<'_, '_>, reference: &str) -> Result<Resolved> {
             ["runs", _, "statements", _] => Ok(statement(cx, reference, &path)),
             ["runs", _, "retrievals", _] => retrieval(cx, reference, &path),
             ["runs", _, "edits", _] => edit(cx, reference, &path),
+            ["runs", _, "observed", _] => observed(cx, reference, &path),
             _ => Ok(ungrounded(reference, "unresolved", Some(&path))),
         };
     }
@@ -97,7 +100,7 @@ fn file(cx: &Context<'_, '_>, r: &str) -> Option<String> {
     if r.contains('/') || r.is_empty() {
         return None;
     }
-    ["gates", "statements", "retrievals", "edits"]
+    ["gates", "statements", "retrievals", "edits", "observed"]
         .iter()
         .flat_map(|dir| ["json", "md"].map(|ext| format!("{}/{dir}/{r}.{ext}", cx.run_dir)))
         .find(|p| root.join(p).is_file())
@@ -203,6 +206,32 @@ fn retrieval(cx: &Context<'_, '_>, reference: &str, path: &str) -> Result<Resolv
         (true, _) => ungrounded(reference, "no-citations", Some(path)),
         (false, 0) => found(reference, Grounding::Grounded, "fresh", Some(path)),
         (false, n) => ungrounded(reference, &format!("not-fresh:{n}"), Some(path)),
+    })
+}
+
+/// An observation: grounded only while it is `ok` and its embedded
+/// citation is fresh ([`writfold_core::observe::grounds`]). Any other
+/// status never grounds; its standing is the status.
+fn observed(cx: &Context<'_, '_>, reference: &str, path: &str) -> Result<Resolved> {
+    let parsed = cx
+        .session
+        .text(path)
+        .ok_or_else(|| "unreadable".to_owned())
+        .and_then(|text| crate::observe::parse(&text));
+    let Ok(o) = parsed else {
+        return Ok(ungrounded(reference, "not-a-valid-observation", Some(path)));
+    };
+    let all = match &o.cite {
+        Some(cite) => verdicts(cx, tokens(cite), path)?,
+        None => Vec::new(),
+    };
+    let moved = all.iter().filter(|v| **v != Verdict::Fresh).count();
+    let fresh = !all.is_empty() && moved == 0;
+    Ok(match (observe::grounds(o.status, fresh), o.status, moved) {
+        (true, _, _) => found(reference, Grounding::Grounded, "ok", Some(path)),
+        (false, Status::Ok, 0) => ungrounded(reference, "no-citations", Some(path)),
+        (false, Status::Ok, n) => ungrounded(reference, &format!("not-fresh:{n}"), Some(path)),
+        (false, status, _) => ungrounded(reference, status.name(), Some(path)),
     })
 }
 

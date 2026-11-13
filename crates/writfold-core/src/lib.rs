@@ -47,6 +47,7 @@ pub mod gate;
 pub mod guard;
 pub mod investigation;
 pub mod ledger;
+pub mod observe;
 pub mod plan;
 pub mod publication;
 pub mod scope;

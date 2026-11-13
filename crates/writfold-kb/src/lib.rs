@@ -23,6 +23,7 @@ pub mod hook;
 pub mod index;
 pub mod layout;
 pub mod model;
+pub mod observe;
 pub mod parse;
 pub mod plan;
 pub mod proposal;

@@ -12,6 +12,7 @@ pub mod cite;
 pub mod conclude;
 pub mod decide;
 pub mod json;
+pub mod observe;
 pub mod record;
 pub mod retrieval;
 pub mod run;
@@ -131,6 +132,8 @@ pub enum Write {
     CiteMake(cite::CiteMake),
     /// A retrieval receipt in a run (the Tuft adapter).
     Retrieval(retrieval::Retrieval),
+    /// `observe`: one look at an outside source, in a run.
+    Observe(observe::Observe),
 }
 
 /// Plan, apply and answer one write.
@@ -158,6 +161,7 @@ pub fn execute(ws: &Workspace, request: &Request, write: &Write, now: i64) -> Re
             Write::Link(l) => record::link(&session, l)?,
             Write::SetStatus(s) => status::plan(&session, s, &request.cwd)?,
             Write::Retrieval(r) => retrieval::plan(&session, r)?,
+            Write::Observe(o) => observe::plan(&session, o)?,
             Write::CiteMake(_) => return Err(KbError::Usage("unreachable".into())),
         }
     };
