@@ -31,13 +31,15 @@ fn render(source: &str, rows: Vec<Row>, stop: Option<Stop>) -> Result<String> {
     let projected = project(rows, &plan.view);
     let run = Run {
         plan: &plan,
-        search: SearchReport {
+        search: &SearchReport {
             coverage: Coverage::Measured {
                 examined: 3,
                 total: 4,
             },
             stop,
             hits: 6,
+            index: None,
+            snapshot: None,
         },
         retained: Some(6),
         projected: &projected,

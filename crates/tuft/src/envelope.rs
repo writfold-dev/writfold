@@ -28,7 +28,7 @@ pub(crate) fn text(run: Run<'_>, page: &Page) -> String {
         quote(pattern),
         quote(&find.scope),
         find.budget.positions(),
-        coverage_text(run.search.coverage),
+        coverage_text(run.search),
         run.search.hits,
         stop_text(run.search.stop)
     );
@@ -111,7 +111,7 @@ pub(crate) fn json(run: Run<'_>, page: &Page) -> String {
         quote(pattern),
         quote(&find.scope),
         find.budget.positions(),
-        coverage_json(run.search.coverage),
+        coverage_json(run.search),
         run.search.hits,
         quote(&plan.view.binding),
         columns.join(","),

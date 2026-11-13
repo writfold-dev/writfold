@@ -12,6 +12,9 @@ pub mod cli;
 #[cfg(test)]
 mod compact_tests;
 #[cfg(test)]
+mod expansion_tests;
+mod files;
+#[cfg(test)]
 mod json_tests;
 pub mod kb;
 #[cfg(test)]
@@ -20,7 +23,11 @@ mod retain;
 mod search;
 pub mod state;
 #[cfg(test)]
+mod symbol_tests;
+mod symbols;
+#[cfg(test)]
 mod tests;
+mod working;
 
 use crate::trial::retain::EvidenceStore;
 use crate::trial::{Result, Trial};
@@ -97,6 +104,8 @@ pub struct Invocation<'a> {
     pub state: &'a Path,
     pub cursor: Option<&'a Cursor>,
     pub format: Format,
+    pub working_tree: bool,
+    pub index: Option<&'a Path>,
 }
 
 fn budgets() -> Result<GitBudgets> {
@@ -122,6 +131,9 @@ pub struct Executed {
     pub plan: Plan,
     pub projected: Projected,
     pub emitted: Emitted,
+    /// Exact searched bytes for changed/untracked rows, never pinned evidence.
+    pub dirty_files: std::collections::BTreeMap<String, Vec<u8>>,
+    pub index: Option<tuft::view::IndexCoverage>,
 }
 
 /// Compile and run one program; returns the emitted page.
@@ -150,16 +162,12 @@ fn execute_in(
     executable: &GitExecutable<'_>,
 ) -> Result<Executed> {
     let plan = compile(invocation.source, invocation.name)?;
-    let git_dir = std::fs::canonicalize(invocation.repo.join(".git"))?;
-    let pin = commit(&plan.find.commit)?;
-    let backend = GitTreeBackend::new(
-        executable,
-        git_dir,
-        plan.find.scope.clone(),
-        budgets()?,
-        MAX_SCOPE_BYTES,
-    );
-    let found = search::find(&backend, &pin, &plan.find)?;
+    let git_dir = writfold_kb::stale::repos::git_dir(invocation.repo)
+        .ok_or("repository has no readable Git directory")?;
+    if invocation.working_tree {
+        working::ensure_external_state(invocation.repo, &git_dir, invocation.state)?;
+    }
+    let (found, skipped) = find(invocation, executable, &git_dir, &plan)?;
     let (rows, retained) = match &plan.retain {
         None => (found.rows(), None),
         Some(retain) => {
@@ -172,14 +180,57 @@ fn execute_in(
     let projected = project(rows, &plan.view);
     let run = Run {
         plan: &plan,
-        search: found.report,
+        search: &found.report,
         retained,
         projected: &projected,
     };
-    let emitted = emit(run, invocation.cursor, invocation.format)?;
+    let mut emitted = emit(run, invocation.cursor, invocation.format)?;
+    if invocation.working_tree {
+        working::annotate(&mut emitted, found.dirty.len(), skipped)?;
+    }
+    let index = found.report.index.clone();
+    let dirty_files = found
+        .files
+        .into_iter()
+        .filter(|(path, _)| found.dirty.contains(path))
+        .collect();
     Ok(Executed {
         plan,
         projected,
         emitted,
+        dirty_files,
+        index,
     })
+}
+
+fn find(
+    invocation: &Invocation<'_>,
+    executable: &GitExecutable<'_>,
+    git_dir: &Path,
+    plan: &Plan,
+) -> Result<(search::Found, usize)> {
+    if invocation.working_tree {
+        if matches!(plan.find.matcher, tuft::ir::MatcherPlan::Symbol { .. }) {
+            return Err("symbol indexes are pinned; --working-tree cannot use them".into());
+        }
+        return working::find(executable, invocation.repo, git_dir, &plan.find);
+    }
+    let pin = commit(&plan.find.commit)?;
+    if matches!(plan.find.matcher, tuft::ir::MatcherPlan::Symbol { .. }) {
+        let index = invocation.index.ok_or("symbol search needs --index FILE")?;
+        let files = files::snapshot(executable, git_dir, &pin, &plan.find.scope)?;
+        return symbols::find(index, &plan.find, files).map(|found| (found, 0));
+    }
+    if tuft::scope::prefix(&plan.find.scope) != plan.find.scope {
+        let files = files::snapshot(executable, git_dir, &pin, &plan.find.scope)?;
+        return files::find(files, &plan.find).map(|found| (found, 0));
+    }
+    let backend = GitTreeBackend::new(
+        executable,
+        git_dir.to_owned(),
+        plan.find.scope.clone(),
+        budgets()?,
+        MAX_SCOPE_BYTES,
+    );
+    search::find(&backend, &pin, &plan.find).map(|found| (found, 0))
 }

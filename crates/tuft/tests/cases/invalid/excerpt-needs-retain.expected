@@ -1,2 +1,2 @@
-excerpt-needs-retain.tuft:2:25: error[T203]: field `binding` needs retained evidence; retain @h first
-excerpt-needs-retain.tuft:2:34: error[T203]: field `excerpt` needs retained evidence; retain @h first
+excerpt-needs-retain.tuft:2:25: error[T203]: field `binding` needs retained evidence; add `@e := retain @h;` before `@v := project` and project @e instead
+excerpt-needs-retain.tuft:2:34: error[T203]: field `excerpt` needs retained evidence; add `@e := retain @h;` before `@v := project` and project @e instead
