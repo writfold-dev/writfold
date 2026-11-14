@@ -42,6 +42,26 @@ Each entry of `more` has `label` (`why`, `note`, `cite`, `next` and so on), `tex
 
 With `--gates` and a subject repository, `counts` includes `current` (the 1-based step position), `current_gates` and `current_owed`. Once every step is closed, only `current=0` is added; a run with no plan gets none of them. Without a subject none of these counts is present. Without `--gates`, plan status keeps its ordinary output and query digest.
 
+Detailed steps also carry a `splice` continuation, then `under` for non-root
+steps, after any existing `why` group and before gates. `splice.text` is
+`<template>#<ordinal> @<digest12> from <source>`; its `path` is the recorded splice
+file and `line` is 1. Static includes retain their containing splice file.
+`under.text` is the parent's exact row ID and has no path. Both have empty flags
+and omit `status`. Group by splice text within its parent; follow `under` links
+for nesting rather than splitting IDs. These labels appear only with `--gates`.
+
+Checklist item text marks optional items immediately after the state:
+`<id> [<state>] (optional) …`, whether covered or open. A later occurrence of
+`(optional)` in authored prose is not that marker.
+
+Run timelines additionally emit `kind: "plan"` rows for splice, done and skip
+events accepted by the fold. Their `status` is `spliced`, `done` or `skipped`;
+`text` starts `<recorded time> <status> <id>`, with `(by WHO)` and the reason on
+a skip. A splice ID is its recorded template-use prefix; done/skip IDs are step
+IDs. Each row points to its event file at line 1. Invalid events are omitted.
+These rows share the existing date order, with equal-time plan events ordered
+by event filename. Non-run timelines and the envelope/key sets are unchanged.
+
 `runs --plan` adds a `plan` continuation and `counts.planned`; its text holds the
 recorded position and done/skipped counts, never owed-gate counts. `timeline`
 on a run adds `checkpoint` rows with timestamp IDs, preview text and source

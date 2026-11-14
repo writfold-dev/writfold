@@ -1,6 +1,6 @@
 # Watching a run
 
-> **Status:** built (T2). Implementation, tests and deviations: [design §34](../writfold/kb-v1-design.md#34-t2-as-built).
+> **Status:** built (T3). Implementation, tests and deviations: [design §35](../writfold/kb-v1-design.md#35-t3-as-built); the earlier text view is recorded in [§34](../writfold/kb-v1-design.md#34-t2-as-built).
 
 `writfold watch` is a read-only view of the KB verbs. It shows recorded steps,
 gate standings, checklist items, pending drafts and proposals, guard rules and
@@ -26,9 +26,9 @@ budget. The viewer formats the answer; it does not read records or judge gates.
 | View | Key | JSON source | Scope |
 |---|---|---|---|
 | Runs | left column; `0` in narrow layouts | `writfold kb runs --plan [--open] [--project P] --json` | Listed runs, including recorded plan positions |
-| Progress | `p`, `1` | `writfold kb plan status --run R --gates --json` | Selected run's steps, gates and checklist items |
+| Progress | `p`, `1` | `writfold kb plan status --run R --gates --json` | Plan map and selected-node inspector; `x` switches to the text list |
 | Gates | `g`, `2` | `writfold kb gate status --run R --json` | Selected run's gate counts, receipts and next commands |
-| Timeline | `t`, `3` | `writfold kb timeline R --json` | Own checkpoint entries and mentioned records with their present states |
+| Timeline | `t`, `3` | `writfold kb timeline R --json` | Checkpoints, folded plan events and mentioned records with their present states |
 | Inbox | `i`, `4` | `writfold kb resume R --json` | Draft and proposal rows, including confirm/accept commands |
 | Guards | `u`, `5` | `writfold kb guard status --json` | **Current run**, not the selected run; rules judged as if matched |
 | Stale | `s`, `6` | `writfold kb stale P --cached --json` | Selected run's project; the whole KB when it names none |
@@ -45,27 +45,51 @@ Failure to discover the KB or obtain the runs list exits with an error.
 
 ## Recorded progress, not estimates
 
-The fixture's facts and strip are:
+Progress defaults to a bracket-rail map: one step per row in the verb's order.
+Group headings quote `splice`; nesting follows `under`, never the spelling of
+an ID. Children precede their parent. Each step retains its own recorded state,
+including a done step after open children following a merge.
 
-```text
-plan 2 done, 1 skipped of 6 steps; current step 4/6; owes 2 of 2 gates stale=1
-     [x] [!] [-] [>] [ ] [ ]
-```
+| Step state | Unicode | ASCII |
+|---|---|---|
+| Done | `✓` | `[x]` |
+| Done with stale evidence | `!` | `[!]` |
+| Skipped | `–` | `[-]` |
+| Recorded current | `▶` | `[>]` |
+| Later | `○` | `[ ]` |
+| Invalid flag | `×` | `[#]` |
 
-Every number comes from `plan status --gates`. Strip cells mean done, done with a
-stale gate, skipped, current, and later. They are one cell per step, never a
-width-scaled completion bar. The strip disappears when it would not fit.
+Gate chips follow each gate continuation's `status`: `●` satisfied, `◆` attested
+or waived, `○` open, `!` stale, `×` failed, `?` unknown, and `·` later, not judged.
+ASCII chips are `o` satisfied/open, `*` attested/waived, `!`, `x`, `?`, and `.`;
+the inspector retains the exact state words. ASCII rails use `|`, `+`, `\`, `/`.
+`--color none`, automatic `NO_COLOR`, and `TERM=dumb` select ASCII map shapes;
+`TERM=dumb` keeps those shapes even when colour is explicitly enabled.
 
-A clean done step collapses to its heading and recorded completion time; a later
-step collapses to its heading. Flagged, current and skipped steps retain their
-detail. `x` expands everything. When long content opens, the current step is
-positioned on the third visible line using the renderer's wrapping rules.
+The marker means **recorded current step, not a liveness claim**. The block below
+the rail shows `step N/M` from the trailer, the newest plan event from Timeline,
+and the run list's last checkpoint. Missing subject counts stay missing; the
+verb's no-subject note is shown instead of inventing a position count.
+Done stays done when its evidence becomes stale; the marker never moves back.
 
-Done stays done when evidence goes stale. The view shows the stale standing; it
-does not move the current step backwards. Checked satisfaction differs in colour
-from an attestation, waiver or not-applicable item, and the state words remain
-visible without colour. The interactive Progress view saves width by omitting
-step/gate/item evidence positions; Gates, Resume and `--once` retain them.
+Selection starts at the recorded current step, survives refresh by ID, and falls
+back to the current step or first row if its ID disappears. The rail keeps it
+visible with two rows of context where space permits. IDs truncate from the
+left; group headings and trailing rail text clip to the available width.
+
+The inspector quotes the selected step's splice, parent, reasons, gates, items,
+read/next commands and event evidence. Paths wrap with a hanging indent.
+Checklist segments are one per required item, in source order: `■` supported,
+`◆` not-applicable/attested, `!` stale, `□` open, then `(+N optional)`.
+Their count never scales with width. The inspector also wraps the last plan
+event and checkpoint; `g` opens full gate receipts. No gate-status rows are
+joined into it.
+
+`x` switches to the earlier text list. There, a clean done step collapses to its
+heading and completion time, and a later step to its heading; flagged, current
+and skipped steps retain detail. `X` expands or collapses all text steps.
+The text strip remains one cell per recorded step, never a completion bar.
+Gates, Resume, the inspector and `--once` retain evidence positions.
 
 The viewer adds no progress percentage, ETA, elapsed/relative time, spinner or
 run-liveness claim. Authored text and verb states are not censored or rewritten.
@@ -76,13 +100,16 @@ asked a verb, not an activity timestamp for the run.
 
 | Key | Action |
 |---|---|
-| `j` / `k`, arrows | Select a run, or scroll when the main pane has focus |
+| `j` / `k`, Up / Down | Select a run or map node; scroll text or a focused inspector |
 | `[` / `]` | Previous/next run regardless of focus |
-| Enter / Esc | Switch focus / return focus to runs |
+| `h` / `l`, Left / Right | Move focus left/right: runs → map → inspector |
+| Enter / Esc | Cycle focus forward / step left; from the wide map, Esc restores the side stack |
 | Tab / Shift-Tab | Next/previous view |
-| PgDn / PgUp | Scroll the main pane by its height less one |
+| PgDn / PgUp | Page map nodes, or scroll text by the pane's height less one |
 | `0` | Show the full-frame runs list in a narrow layout; paging does not change selection |
-| `x` | Expand/collapse Progress detail |
+| `.` | Select the recorded current step |
+| `n` / `N` | Next/previous flagged step, wrapping |
+| `x` / `X` | In Progress: map/text toggle / expand or collapse the text list |
 | `o` | Toggle `kb runs --open` |
 | `P` | Toggle the selected project's `kb runs --project`; without a project, show a notice and change nothing |
 | `r` | Drop cached answers and ask again |
@@ -100,15 +127,18 @@ that the file has been committed.
 
 | Class | Minimum size | Layout |
 |---|---|---|
-| Wide | 140×32 | Runs, main view and compact Gates/Inbox/Timeline stack; Guards joins the stack at height 38 |
-| Medium | 90×16, when not wide | Runs and main view, with a gate/inbox/guard summary |
-| Narrow | 60×12, when not medium | Main view only; `0` reveals runs |
+| Wide | 140×32 | Runs, map and side stack; map/inspector focus replaces the stack with the inspector |
+| Medium | 90×16, when not wide | With a map: runs 24 columns, map 32, inspector in the remainder; summary above |
+| Narrow | 60×12, when not medium | Map or inspector alone; `l`/Enter opens the inspector, `h`/Esc returns; `0` reveals runs |
 | Too small | Otherwise | `writfold watch needs 60x12 …`; controls still work |
 
-Main content wraps; lists and compact panes truncate. The footer carries the KB
-pin/index, subject observation, last ask time and effective theme when space
-allows; narrow layouts keep the KB pin and quit/help hints. The two committed
-buffer frames are in [§34.3](../writfold/kb-v1-design.md#343-layout-classes).
+Without a plan, or in another view, the earlier layouts remain. The wide stack
+contains Gates/Inbox/Timeline, plus Guards from height 38; its panes are not
+focusable. Text and evidence wrap with hanging indentation; maps and lists
+truncate. The map reserves recorded facts below the rail and omits legends first
+when space is insufficient. The footer clips metadata to preserve the ask time,
+theme and map hints; narrow layouts retain the KB pin and quit/help hints.
+[§35](../writfold/kb-v1-design.md#35-t3-as-built) links the committed map frames.
 
 Every two seconds the viewer compares the KB pin and a stat-only stamp of the
 current-run pointer, drafts and **both** proposal stores. Tracked proposals need
@@ -162,7 +192,9 @@ Runs, Progress, Gates, Inbox, Guards, Timeline, then the footer. It contains no
 view clock or terminal colour/style sequences, regardless of theme or depth.
 `--view NAME` prints Runs, only that section, and the footer. `--view resume`
 retains the gate-count heading of the earlier plain resume frame.
+Progress gains only the verb's `splice:`/`under:` continuations, and Timeline its
+plan event rows. No map rails or new graphical glyphs enter plain frames.
 
 `watch --json` is not a second API. Ask the JSON verb listed beside the pane above.
 Not built: write keys, text search over runs, cross-KB views, mouse interaction,
-focusable side panes, user-defined themes, or persistence of the theme choice.
+focusable side-stack panes, user-defined themes, or persistence of the theme choice.
