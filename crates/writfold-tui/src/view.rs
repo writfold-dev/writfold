@@ -24,17 +24,24 @@ pub fn draw(frame: &mut Frame<'_>, app: &mut App) {
         frame.render_widget(Paragraph::new(message), size);
         return;
     }
-    let areas = layout::areas(size.width, size.height);
+    let inspect =
+        app.focus != Focus::Runs && (class != Class::Narrow || app.focus == Focus::Inspector);
+    let areas = layout::focused(size.width, size.height, app.map_visible(), inspect);
     chrome::bars(frame, app, &areas, class == Class::Narrow);
     if let Some(area) = areas.runs {
         runs(frame, app, area);
     }
+    if let Some(area) = areas.inspector {
+        crate::inspect_view::draw(frame, app, area);
+    }
     if class == Class::Narrow && app.runs_view {
         crate::list_view::draw(frame, app, areas.main);
-    } else if app.map_visible() {
-        crate::map_view::draw(frame, app, areas.main);
-    } else {
-        detail(frame, app, areas.main);
+    } else if class != Class::Narrow || areas.inspector.is_none() {
+        if app.map_visible() {
+            crate::map_view::draw(frame, app, areas.main);
+        } else {
+            detail(frame, app, areas.main);
+        }
     }
     sides(frame, app, &areas);
     if app.help {

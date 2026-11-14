@@ -159,6 +159,9 @@ impl App {
                 self.load_view(View::Inbox);
                 self.load_view(View::Guards);
             }
+            Class::Narrow if self.focus == Focus::Runs && self.map_visible() => {
+                self.focus = Focus::Detail;
+            }
             _ => {}
         }
     }
@@ -178,13 +181,6 @@ impl App {
             self.runs_view = false;
         }
         self.load();
-        if layout::class(width, height) == Class::Narrow
-            && self.focus == Focus::Runs
-            && !self.runs_view
-            && self.map_visible()
-        {
-            self.focus = Focus::Detail;
-        }
     }
 
     pub fn show(&mut self, view: View) {

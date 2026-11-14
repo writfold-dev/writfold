@@ -11,6 +11,8 @@ mod chrome;
 pub mod frame;
 pub mod graph;
 pub mod guards;
+pub mod inspect;
+mod inspect_view;
 mod keys;
 pub mod layout;
 pub mod lines;

@@ -1,0 +1,20 @@
+run 1/3 run-20261101T090000Z-a1b2c3 [open]
+progress 1/8
+┌ progress: map run-20261101T090000Z-a1b2c3 ───────────────────────────┐
+│plan 5 done, 1 skipped of 11 steps; current step 7/11; owes 2 of 2 gat│
+│ │ ├─╮ notes#1 @e42e7a4ac404 from .writfold/plans/notes.toml          │
+│ │ │ ✓ …iew/review#1/read-diff/notes#1/read ● recorded 2026-11-10T23: │
+│ │ ├─╯                                                                │
+│ │ ✓ change#1/review/review#1/read-diff   ● recorded 2026-11-10T23:59 │
+│ │ ├─╮ findings#1 @6ec817d3031a from .writfold/plans/findings.toml    │
+│ │ │ ✓ …eview#1/findings/findings#1/prepare ● recorded 2026-11-10T23: │
+│ │ │ ▶ …/review#1/findings/findings#1/check !○ owes: review-list [sta │
+│ │ ├─╯                                                                │
+│ │ ○ change#1/review/review#1/findings    ·· gates: review-list, sign │
+│recorded position: step 7/11 (first step neither done nor skipped)    │
+│last plan event: 2026-11-10T23:59:50Z done change#1/review/review#1/fi│
+│last checkpoint: 2026-11-10T14:10:00Z Review started.                 │
+│● satisfied ◆ attested/waived ○ open ! stale × failed ? unknown       │
+│· later, not judged; ▶ recorded current step, not a liveness claim    │
+└──────────────────────────────────────────────────────────────────────┘
+kb=XXXXXXXXXXXX+dirty:19 ? q

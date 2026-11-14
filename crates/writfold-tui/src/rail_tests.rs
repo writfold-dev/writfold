@@ -9,6 +9,7 @@ fn nested_headers_close_before_their_parent_without_repeating_root() {
             json!({"kind":"step","id":"first","status":"skipped","more":[{"label":"splice","text":"root group"}]}),
             json!({"kind":"step","id":"child","status":"current","more":[{"label":"splice","text":"nested group"},{"label":"under","text":"parent"}]}),
             json!({"kind":"step","id":"parent","status":"done","flags":["out-of-order"],"more":[{"label":"splice","text":"root group"}]}),
+            json!({"kind":"step","id":"end","status":"later","more":[{"label":"splice","text":"ending group"}]}),
         ],
         ..Reply::default()
     };
@@ -26,6 +27,7 @@ fn nested_headers_close_before_their_parent_without_repeating_root() {
     assert!(text[rail.node_lines[2] - 1].contains("├─╯"));
     assert!(text[rail.node_lines[2]].contains("✓ parent"));
     assert!(text[rail.node_lines[2]].ends_with("!out-of-order"));
+    assert!(text.iter().any(|line| line.contains("┼ ending group")));
 }
 
 #[test]

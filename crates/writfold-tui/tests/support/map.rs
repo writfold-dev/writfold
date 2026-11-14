@@ -157,6 +157,10 @@ fn fresh(name: &str) -> TestResult<World> {
         &Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/kb/basic"),
         &w.kb,
     )?;
+    write(
+        &w.kb.join(format!("runs/{RUN}/checkpoint.md")),
+        "## 2026-11-03T16:00:00Z\n\nRecorded the plan fixture.\n",
+    )?;
     git(&w.kb, &["init", "-q"])?;
     commit(&w.kb, "map fixture KB")?;
     Ok(w)

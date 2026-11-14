@@ -126,11 +126,33 @@ fn all_watch_panes_leave_records_local_state_and_checker_cache_unchanged() -> Re
             }
         }
     }
+    terminal_keys(&w)?;
     assert_eq!(w.spawns(), 0);
     assert_eq!(records, files(&w.kb())?);
     assert_eq!(local, files(&w.kb().join(".git/writfold"))?);
     assert_eq!(cache, cached_rows(&w)?);
     let (text, exit) = kb(&w, &["stale"], &[])?;
     assert_eq!((exit, w.spawns()), (0, 1), "{text}");
+    Ok(())
+}
+
+fn terminal_keys(w: &Root) -> Result {
+    let path = format!("{}:{}", w.bin().display(), std::env::var("PATH")?);
+    let output = std::process::Command::new("python3")
+        .args(["-c", include_str!("watch_pty.py"), checker::WRITFOLD, RUN])
+        .current_dir(w.kb())
+        .env("PATH", path)
+        .env("HOME", &w.0)
+        .env("XDG_CONFIG_HOME", &w.0)
+        .env("FAKE_COUNTER", w.counter())
+        .env("TERM", "xterm-256color")
+        .env("NO_COLOR", "1")
+        .env_remove("WRITFOLD_KB")
+        .output()?;
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
     Ok(())
 }
