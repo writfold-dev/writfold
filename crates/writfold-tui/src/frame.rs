@@ -139,12 +139,13 @@ pub fn tabs(app: &App, narrow: bool) -> String {
 pub fn help() -> Vec<Line> {
     let keys = [
         "writfold watch: a read-only view of the KB verbs",
-        "j k ↑ ↓: select run / scroll main pane; [ ]: previous / next run",
-        "Enter: switch focus; Esc: runs; PgUp PgDn: scroll main pane",
+        "j k ↑ ↓: select run / node / scroll inspector; [ ]: previous / next run",
+        "h l / Left Right: focus left/right; Enter cycles; Esc steps left",
+        "PgUp PgDn: page nodes / scroll text; .: current; n N: next/previous flagged step",
         "Tab / Shift-Tab: next / previous view; 0: runs (narrow)",
         "1/p progress; 2/g gates; 3/t timeline; 4/i inbox",
         "5/u guards; 6/s stale; 7/b brief; 8/e resume",
-        "x: expand / collapse Progress; o: open runs; P: selected project",
+        "x: map / text Progress; X: expand / collapse text; o: open runs; P: selected project",
         "r: ask again; ?: help (any key closes); q / Ctrl-C: quit",
         "T: next theme (24-bit colour only); the choice is not written.",
         "c is unbound; no key writes. Inbox prints confirm: and accept: commands.",

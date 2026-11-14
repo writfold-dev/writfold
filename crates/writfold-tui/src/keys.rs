@@ -13,10 +13,11 @@ impl App {
             return true;
         }
         match key {
-            Key::Esc => self.focus = Focus::Runs,
+            Key::Esc | Key::Left => self.focus_move(false, false),
+            Key::Right => self.focus_move(true, false),
             Key::Up => self.motion(false),
             Key::Down => self.motion(true),
-            Key::Enter => self.focus_next(),
+            Key::Enter => self.focus_move(true, true),
             Key::Tab => self.show(self.view.next(false)),
             Key::BackTab => self.show(self.view.next(true)),
             Key::PageUp => self.scroll_by(false, self.main_height.saturating_sub(1)),
@@ -26,46 +27,20 @@ impl App {
         true
     }
 
-    fn focus_next(&mut self) {
-        self.focus = match self.focus {
-            Focus::Runs => Focus::Detail,
-            Focus::Detail => Focus::Runs,
-        };
-        if self.focus == Focus::Detail && self.runs_view {
-            self.runs_view = false;
-            self.scroll = 0;
-            self.anchor = true;
-            self.load();
-        }
-    }
-
-    fn motion(&mut self, down: bool) {
-        if self.focus == Focus::Detail && !self.runs_view {
-            self.scroll_by(down, 1);
-        } else {
-            self.select(down);
-        }
-    }
-
-    fn scroll_by(&mut self, down: bool, amount: u16) {
-        self.anchor = false;
-        self.scroll = if down {
-            self.scroll.saturating_add(amount)
-        } else {
-            self.scroll.saturating_sub(amount)
-        };
-    }
-
     fn character(&mut self, c: char) {
         match c {
             '?' => self.help = true,
             'j' => self.motion(true),
             'k' => self.motion(false),
             '[' => self.select(false),
+            'h' => self.focus_move(false, false),
+            'l' => self.focus_move(true, false),
+            '.' | 'n' | 'N' => self.jump_node(c),
             ']' => self.select(true),
             'r' => self.reload(self.run(), None),
             'T' => self.cycle_theme(),
-            'x' if self.view == View::Progress && !self.runs_view => {
+            'x' if self.view == View::Progress && !self.runs_view => self.toggle_map(),
+            'X' if self.view == View::Progress && !self.map && !self.runs_view => {
                 self.expand_all = !self.expand_all;
                 self.anchor = true;
             }
@@ -85,6 +60,16 @@ impl App {
                 }
             }
         }
+    }
+
+    fn toggle_map(&mut self) {
+        self.map = !self.map;
+        self.scroll = 0;
+        self.anchor = true;
+        if self.focus == Focus::Inspector {
+            self.focus = Focus::Detail;
+        }
+        self.load();
     }
 
     fn cycle_theme(&mut self) {

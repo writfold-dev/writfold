@@ -3145,3 +3145,188 @@ Release gates were deliberately not run from this worktree. The integrator still
 reviews and merges the branch, runs `scripts/gate quality` and `scripts/gate unit`
 from main, records their receipt paths and releases. Their outcome is not claimed
 by these local checks.
+
+## 35. T3 as built
+
+T3 makes the plan map the default Progress presentation and adds a selected-node
+inspector. The [specification](tui-t3-spec.md) remains the design record; the
+[watch guide](../guide/watch.md) documents the exercised interface. This extends
+§34 without changing its read-only, recorded-facts or checker policies.
+
+### 35.1 Verb projections
+
+`plan status --gates` now adds `splice`, followed by `under` for a nested step,
+after existing reasons and before gate detail. The splice text names the
+template, ordinal, digest prefix and source; its location is the splice event
+at line 1. An include retains its containing event location. `under` is the
+parent's exact row ID, without a location. Neither continuation sets a status
+or flag. The fold retains a template-use index on each step, so these fields
+come from expansion metadata, not new parsing of node paths.
+
+`timeline <run>` includes accepted splice, done and skip events with recorded
+times and event locations. Splices identify their template-use prefix;
+done/skip rows identify their step. Skips retain the recorded name and reason.
+Equal-time plan events sort by filename. Unreadable, altered and unexpanded
+events rejected by the fold are not listed.
+
+Ordinary `plan status`, its query digest, and non-run timelines retain their
+existing goldens. The envelope and row/more key sets remain unchanged. The
+[JSON guide](../guide/json.md#labels-the-views-rely-on) documents the additions.
+Plain watch frames gain only these continuation/event lines, never map drawing.
+
+### 35.2 Map, inspector and navigation
+
+`graph` borrows the step rows and preserves their order. Nesting follows
+`under`; splice text groups nodes within the same parent. IDs are opaque to
+the viewer. `cells` maps each supplied status to its shape and tone. A stale
+done step stays history, a later gate stays unjudged, and a merged done step
+does not change the glyphs of preceding open or skipped steps.
+
+`rail` records each node's line index and renders a selected window with two
+rows of context when possible. Its offset is `usize`, not a paragraph's `u16`
+scroll offset. Selection is an ID: current by default, retained across re-asks
+and inserted steps, falling back to current then first when absent.
+`.` selects current; `n`/`N` wrap through every flagged step.
+
+The inspector projects only the selected detailed plan row: structure, reasons,
+gates, checklist items, read/next commands and completion/skip evidence.
+Required-item segments retain source order and never scale to width. The
+existing item-text prefix identifies optional items; no gate is re-judged or
+joined from `gate status`. Evidence paths wrap with hanging indentation, as
+does the text list. `g` opens the Gates view for full receipts. The inspector
+also wraps the recorded last plan event and checkpoint, and pins its command
+hint below the scrollable content.
+
+| Class | Planned Progress |
+|---|---|
+| Wide, at least 140×32 | Runs 40 columns, map, side stack 48; map/inspector focus replaces the stack with the inspector |
+| Medium, at least 90×16 | Summary, runs 24, map 32, inspector in the remaining columns |
+| Narrow, at least 60×12 | Map or inspector alone; `0` shows runs |
+
+Focus moves runs → map → inspector with `l`/Right and back with `h`/Left/Esc;
+Enter cycles forward. In a narrow layout the visible map has focus, including
+after returning from the runs view. `j`/`k` select nodes or scroll the inspector.
+`x` switches to the retained text list; `X` expands/collapses that list.
+No-plan Progress and other views retain their prior content and layouts.
+`c` remains unbound and no key writes.
+
+The recorded-position block uses the plan trailer, newest timeline plan row
+and run-list checkpoint. Missing subject counts remain absent and the verb's
+note is visible. Legends are omitted first when space is insufficient.
+The footer keeps the view's ask time, theme and map hints visible, clipping
+metadata as needed. There is no presence inference.
+
+Unicode and ASCII are both exercised. ASCII step shapes are six distinct
+strings; its allowed chip set uses `o` for both satisfied and open, with exact
+status words retained in the inspector. `TERM=dumb` forces ASCII shapes even
+when colour is explicitly selected. Attestations and waivers retain their
+distinct tone rather than looking like checked satisfaction.
+
+### 35.3 Fixtures and buffer evidence
+
+The six-step linear world is retained. New worlds use recorded KB operations:
+an eleven-step nested plan with a static include and a second dynamic splice;
+two real clones merged to leave a skipped prefix, current child and done
+`!out-of-order` parent; the same plan without a subject; and forty steps with
+step 20 current. No fixture hand-writes a successful plan event.
+
+Committed symbols-only frames, reviewed after generation:
+
+- Nested map: [160×40](../../crates/writfold-tui/tests/golden/t3-nested-160x40.txt),
+  [100×30](../../crates/writfold-tui/tests/golden/t3-nested-100x30.txt),
+  [72×20](../../crates/writfold-tui/tests/golden/t3-nested-72x20.txt).
+- Merged out-of-order map:
+  [160×40](../../crates/writfold-tui/tests/golden/t3-out-of-order-160x40.txt),
+  [100×30](../../crates/writfold-tui/tests/golden/t3-out-of-order-100x30.txt),
+  [72×20](../../crates/writfold-tui/tests/golden/t3-out-of-order-72x20.txt).
+- Focused checklist inspector:
+  [160×40](../../crates/writfold-tui/tests/golden/t3-checklist-inspector-160x40.txt).
+
+Receipt suffixes are normalized across wrapped inspector rows only in golden
+buffers; real paths are never rewritten by the viewer. The minimum 60×12
+map/inspector transition is also rendered and checked. Tests cover opaque IDs,
+groups, status-only chips, non-monotonic states, long scrolling, refreshed
+selection, all new focus keys, colourless shapes and missing-subject notes.
+Recorded-position text is compared with its verb fields at a width where it
+fits. The forbidden-language assertions cover the generated fixture frames;
+authored text is still projected verbatim, not censored.
+
+The extended binary key tour uses a real terminal. It visits map and inspector,
+arrows, text toggle, expansion and re-asks, then checks unchanged KB/local
+records and `cite_checks`, zero checker starts, and terminal restoration.
+Its control asks ordinary `stale` and observes one checker start.
+
+### 35.4 Mutation checks
+
+Each change below was applied alone, compiled, and produced the named assertion
+failure with Cargo exit 101. Each was restored before the final positive checks.
+Commands used `cargo test -p writfold-tui --locked --offline` with the indicated
+test target and filter. Logs are retained as `target/t3-mutant-1.log` through
+`target/t3-mutant-6.log`, with commands summarized in `target/t3-mutations.json`.
+
+| Mutation | Failing target and test |
+|---|---|
+| Later chip mapped to open | `map_frames::recorded_marker_and_later_chips_match_verb_rows_in_actual_map` — the rendered later row lacks `·` |
+| Stale done mapped to current, current to later | The same buffer test — the stale implement row has `▶` |
+| Every node before current mapped to done | `map_navigation::disorder_nodes_project_each_own_state_not_position` — the merged fixture's skipped prefix becomes done |
+| `under` discarded | Library `graph::tests::opaque_ids_follow_postorder_under_links_and_exact_splice_text` — depths become `[0,0,0,0]` instead of `[2,1,0,0]` |
+| Required segment glyphs repeated by inspector width | `map_frames::checklist_segments_do_not_scale_with_inspector_width` — eight rendered cells instead of four |
+| Existing-ID retention removed on re-ask | `map_selection::selection_survives_reask_and_insert_then_falls_back` — selection returns to step 20 instead of keeping step 19 |
+
+### 35.5 Decisions and deviations
+
+- Small `wrap`, `map_view`, `inspect_view` and fold helper modules keep the
+  implementation within budgets. The existing fold's expansion, snapshot and
+  window logic was split without changing its decisions.
+- Page keys move the node selection by a page in map mode, rather than leaving
+  a selected node off-screen. Text and inspector modes retain scrolling.
+- The inspector repeats the last plan event/checkpoint as wrapped paragraphs,
+  as in the medium-layout example, so the complete fields remain accessible
+  when their fixed map lines clip.
+- The schematic's sample counts are not substituted for recorded facts: the
+  nested fixture has eleven steps and the stale checklist the verbs report.
+- No new dependency, JSON key, record format or write operation was added.
+
+### 35.6 Checks, static build and terminal exercise
+
+The implementation slices passed `cargo fmt --all --check`, workspace/all-target/
+all-feature clippy with warnings denied and `--locked --offline`, the touched
+crate tests, and the xtask quality inspection. Full suites were run for
+`writfold-kb`, `writfold-tui` and `writfold` in their respective slices.
+The final code report has zero errors and 398 pre-existing warnings, against
+400 at the base; no new finding. The existing 51-line TUI progress test warning
+predates T3. T3 modules stay within 250 lines and functions within 80.
+`Cargo.lock` and the JSON-envelope contract test are byte-identical to the base.
+
+Builds used the admitted tools image through Compose and the worktree-private
+`CARGO_TARGET_DIR`. The operator's storage binding and floors were checked;
+no storage was relocated or pruned. The static build also disabled container
+networking and ran:
+
+```sh
+cargo build -p writfold --release --target x86_64-unknown-linux-musl --locked --offline
+```
+
+`file` reported a stripped x86-64 static PIE, `ldd` reported statically linked,
+and the ELF program headers contain no interpreter. The retained binary's
+SHA-256 is `16277ca2f384184b64fa171c81fd9640ac4e308bf38bf3e3f9889f1239e6a43e`.
+
+That binary's watch was driven through pseudo-terminals at 160×40 and 100×30,
+each in truecolor and with `NO_COLOR=1`, over the recorded nested fixture.
+All four final sessions exited 0 and restored the alternate screen; truecolor
+sequences appeared only in truecolor. The captured map/inspector surfaces were
+read, including ASCII states and the four checklist segments. The fixture keeps
+its recorded repository name so its receipts retain the same subject identity.
+Results and raw/text captures are in `target/t3-pty-results.json` and
+`target/t3-pty-*`; the disposable exporter and capture script were removed.
+
+### 35.7 Not done
+
+No write keys, mouse, search, cross-KB view, presence/duration display, flowchart,
+width-scaled progress display, gate-status join or second JSON API. These remain
+outside T3. The side stack itself is not focusable; the node inspector is.
+
+The website was not edited. No push or release was performed, and neither
+`scripts/gate` nor `writfold kb gate run` was run. The integrator still reviews,
+merges, runs the quality/unit gates from main and releases; no gate pass is
+claimed by these local checks.

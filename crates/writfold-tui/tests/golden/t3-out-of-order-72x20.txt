@@ -1,0 +1,20 @@
+run 1/1 run-20261101T090000Z-a1b2c3 [open]
+progress 1/8
+┌ progress: map run-20261101T090000Z-a1b2c3 ───────────────────────────┐
+│plan 1 done, 1 skipped of 4 steps; current step 2/4; owes 0 of 0 gates│
+│ ┬ merge#1 @8ee8a893f113 from .writfold/plans/merge.toml              │
+│ – merge#1/prefix                        prefix not needed ( !skipped │
+│ ├─╮ side#1 @20d37b2daa99 from .writfold/plans/side.toml              │
+│ │ ▶ merge#1/finish/side#1/child           no gates                   │
+│ ├─╯                                                                  │
+│ ✓ merge#1/finish                        recorded 2026- !out-of-order │
+│ ○ merge#1/later                         no gates                     │
+│ ┴                                                                    │
+│                                                                      │
+│recorded position: step 2/4 (first step neither done nor skipped)     │
+│last plan event: 2026-11-10T23:58:50Z spliced merge#1/finish/side#1   │
+│last checkpoint: 2026-11-03T16:00:00Z Recorded the plan fixture.      │
+│● satisfied ◆ attested/waived ○ open ! stale × failed ? unknown       │
+│· later, not judged; ▶ recorded current step, not a liveness claim    │
+└──────────────────────────────────────────────────────────────────────┘
+kb=XXXXXXXXXXXX ? q

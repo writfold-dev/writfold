@@ -34,11 +34,17 @@ fn title(buffer: &Buffer, area: Rect, expected: &str) {
     assert!(text.contains(expected), "{expected}: {text}");
 }
 
+fn text_app(w: &support::World) -> App {
+    let mut app = App::new(w.source(), Some(RUN));
+    app.map = false;
+    app
+}
+
 #[test]
 fn wide_and_medium_buffer_goldens() -> TestResult {
     let w = world("frames")?;
     for (width, height, name) in [(160, 40, "frame-160x40.txt"), (100, 30, "frame-100x30.txt")] {
-        let mut app = App::new(w.source(), Some(RUN));
+        let mut app = text_app(&w);
         let buffer = render(&mut app, width, height)?;
         golden(name, &normalize(&w, &symbols(&buffer))?)?;
         let a = layout::areas(width, height);
@@ -54,7 +60,7 @@ fn wide_and_medium_buffer_goldens() -> TestResult {
 fn all_sizes_render_their_real_panes() -> TestResult {
     let w = world("sizes")?;
     for (width, height) in [(160, 40), (150, 34), (100, 30), (70, 20), (50, 10)] {
-        let mut app = App::new(w.source(), Some(RUN));
+        let mut app = text_app(&w);
         let buffer = render(&mut app, width, height)?;
         let a = layout::areas(width, height);
         let screen = rows(&buffer);
@@ -105,7 +111,7 @@ fn all_sizes_render_their_real_panes() -> TestResult {
 #[test]
 fn initial_current_head_uses_wrapped_lines_and_manual_scroll_stays() -> TestResult {
     let w = world("scroll")?;
-    let mut app = App::new(w.source(), Some(RUN));
+    let mut app = text_app(&w);
     let buffer = render(&mut app, 100, 30)?;
     let a = layout::areas(100, 30).main;
     let current_y = a.y + 3;

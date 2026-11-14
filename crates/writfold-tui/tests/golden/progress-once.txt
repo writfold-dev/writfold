@@ -17,15 +17,19 @@
 plan 2 done, 1 skipped of 6 steps; current step 4/6; owes 2 of 2 gates stale=1
      [x] [!] [-] [>] [ ] [ ]
  x step change#1/research [done] notes [satisfied] @runs/run-20261101T090000Z-a1b2c3/plan/done-change.1~research.json:1
+     splice: change#1 @83c2cc9efde7 from .writfold/plans/change.toml @runs/run-20261101T090000Z-a1b2c3/plan/splice-change.1.json:1
      gate notes [satisfied] mechanical @runs/run-20261101T090000Z-a1b2c3/gates/notes-20261110T234600Z-XXXXXX.json:1
      done: recorded 2026-11-10T23:47:00Z
  x step change#1/implement [done] unit [satisfied], lint [stale] @runs/run-20261101T090000Z-a1b2c3/plan/done-change.1~implement.json:1 !stale
      why: no longer holds: lint [stale] (done stays done; list the gate again on a later step if it must hold there)
+     splice: change#1 @83c2cc9efde7 from .writfold/plans/change.toml @runs/run-20261101T090000Z-a1b2c3/plan/splice-change.1.json:1
      gate unit [satisfied] mechanical @runs/run-20261101T090000Z-a1b2c3/gates/unit-20261110T234800Z-XXXXXX.json:1
      gate lint [stale] mechanical @runs/run-20261101T090000Z-a1b2c3/gates/lint-20261110T234900Z-XXXXXX.json:1 !stale
      done: recorded 2026-11-10T23:50:00Z
  - step change#1/benchmarks [skipped] no hot path touched (by owner, 2026-11-10T23:51:00Z) @runs/run-20261101T090000Z-a1b2c3/plan/skip-change.1~benchmarks.json:1 !skipped
+     splice: change#1 @83c2cc9efde7 from .writfold/plans/change.toml @runs/run-20261101T090000Z-a1b2c3/plan/splice-change.1.json:1
  > step change#1/review [current] owes: review-list [stale], signoff [open] @runs/run-20261101T090000Z-a1b2c3/plan/splice-change.1.json:1
+     splice: change#1 @83c2cc9efde7 from .writfold/plans/change.toml @runs/run-20261101T090000Z-a1b2c3/plan/splice-change.1.json:1
      gate review-list [stale] checklist 2/4 required covered @runs/run-20261101T090000Z-a1b2c3/covers/review-list.perf-20261110T235400Z-XXXXXX.json:1 !stale
        item errors [supported] 1 reference by agent @runs/run-20261101T090000Z-a1b2c3/covers/review-list.errors-20261110T235200Z-XXXXXX.json:1
        item tests [stale] 1 reference by agent; cited evidence moved: gate:lint was satisfied, now stale @runs/run-20261101T090000Z-a1b2c3/covers/review-list.tests-20261110T235300Z-XXXXXX.json:1 !stale
@@ -36,8 +40,10 @@ plan 2 done, 1 skipped of 6 steps; current step 4/6; owes 2 of 2 gates stale=1
      read: instructions for signoff @.writfold/gates/signoff.md:1
      next: writfold kb gate cover review-list tests supported REF… --by WHO
    step change#1/deliver [later] gates: unit @runs/run-20261101T090000Z-a1b2c3/plan/splice-change.1.json:1
+     splice: change#1 @83c2cc9efde7 from .writfold/plans/change.toml @runs/run-20261101T090000Z-a1b2c3/plan/splice-change.1.json:1
      gate unit [later]
    step change#1/reflect [later] no gates @runs/run-20261101T090000Z-a1b2c3/plan/splice-change.1.json:1
+     splice: change#1 @83c2cc9efde7 from .writfold/plans/change.toml @runs/run-20261101T090000Z-a1b2c3/plan/splice-change.1.json:1
 # note: plan change @83c2cc9efde7 from .writfold/plans/change.toml; steps are derived from runs/run-20261101T090000Z-a1b2c3/plan/ on every read, never stored
 == gates run-20261101T090000Z-a1b2c3 ==
 gates: gates=6 satisfied=2 open=2 stale=2 failed=0 unknown=0 attested=0 waived=0 invalid=0
@@ -83,4 +89,8 @@ run run-20261101T090000Z-a1b2c3 [open] 2026-11-01T09:00:00Z created Add --plan t
 checkpoint 2026-11-10T09:00:00Z entry 1 of 3: Started; read the runs verb. @runs/run-20261101T090000Z-a1b2c3/checkpoint.md:2
 checkpoint 2026-11-10T12:45:00Z entry 2 of 3: Implemented --plan; see proposal/decision/2026-03-02-batch-ledger-writes. @runs/run-20261101T090000Z-a1b2c3/checkpoint.md:6
 checkpoint 2026-11-10T14:10:00Z entry 3 of 3: Review started. @runs/run-20261101T090000Z-a1b2c3/checkpoint.md:10
+plan change#1 [spliced] 2026-11-10T23:45:00Z spliced change#1 @runs/run-20261101T090000Z-a1b2c3/plan/splice-change.1.json:1
+plan change#1/research [done] 2026-11-10T23:47:00Z done change#1/research @runs/run-20261101T090000Z-a1b2c3/plan/done-change.1~research.json:1
+plan change#1/implement [done] 2026-11-10T23:50:00Z done change#1/implement @runs/run-20261101T090000Z-a1b2c3/plan/done-change.1~implement.json:1
+plan change#1/benchmarks [skipped] 2026-11-10T23:51:00Z skipped change#1/benchmarks (by owner) no hot path touched @runs/run-20261101T090000Z-a1b2c3/plan/skip-change.1~benchmarks.json:1
 == kb=XXXXXXXXXXXX+dirty:14 index=refreshed:1  subject=kb@0ea3a743bfef+dirty:17  read-only; no daemon, nothing here claims a run is live ==

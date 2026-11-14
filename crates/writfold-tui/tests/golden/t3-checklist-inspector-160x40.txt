@@ -1,0 +1,40 @@
+run-20261101T090000Z-a1b2c3 [open] !current  Add --plan to kb runs  project=harbor  subject=kb
+[1 progress] 2 gates 3 timeline 4 inbox 5 guards 6 stale 7 brief 8 resume
+┌ runs (3) ────────────────────────────┐┌ progress: map run-20261101T090000Z-a1b2c3 ───────────────────────────┐┌ step 7/11 (Esc: back) ───────────────────────┐
+│> [open] run-20261101T090000Z-a1b2c3 !││plan 5 done, 1 skipped of 11 steps; current step 7/11; owes 2 of 2 gat││step 7/11 ·                                   │
+│    Add --plan to kb runs             ││ ┬ change#1 @83c2cc9efde7 from .writfold/plans/change.toml            ││change#1/review/review#1/findings/findings#1/c│
+│    project=harbor                    ││ ✓ change#1/research                    ● recorded 2026-11-10T23:47:0 ││heck [current]                                │
+│    plan: step 7/11 done=5 skipped=1 c││ ! change#1/implement                   ●! recorded 2026-11-10 !stale ││splice: findings#1 @6ec817d3031a from         │
+│    last: 2026-11-10T14:10:00Z Review ││ – change#1/benchmarks                   no hot path touched !skipped ││.writfold/plans/findings.toml                 │
+│  [open] run-20261102T080000Z-b1c2d3  ││ ├─╮ review#1 @932e0ad862a8 from .writfold/plans/review.toml          ││  @runs/run-20261101T090000Z-a1b2c3/plan/splic│
+│    Review the lantern guide          ││ │ ├─╮ notes#1 @e42e7a4ac404 from .writfold/plans/notes.toml          ││  e-change.1~review~review.1~findings~findings│
+│    project=lantern                   ││ │ │ ✓ …iew/review#1/read-diff/notes#1/read ● recorded 2026-11-10T23: ││  .1.json:1                                   │
+│    last: 2026-11-02T08:30:00Z Read th││ │ ├─╯                                                                ││under: change#1/review/review#1/findings      │
+│  [closed] run-20261104T080000Z-d4e5f6││ │ ✓ change#1/review/review#1/read-diff   ● recorded 2026-11-10T23:59 ││owes: review-list [stale], signoff [open]     │
+│    Retire the legacy flush path      ││ │ ├─╮ findings#1 @6ec817d3031a from .writfold/plans/findings.toml    ││gates (2)  !○                                 │
+│    project=harbor                    ││ │ │ ✓ …eview#1/findings/findings#1/prepare ● recorded 2026-11-10T23: ││  gate review-list [stale] checklist 2/4      │
+│    plan: complete steps=2 done=2 skip││ │ │ ▶ …/review#1/findings/findings#1/check !○ owes: review-list [sta ││  required covered !stale                     │
+│    last: 2026-11-04T09:00:00Z Legacy ││ │ ├─╯                                                                ││    @runs/run-20261101T090000Z-a1b2c3/covers/r│
+│                                      ││ │ ○ change#1/review/review#1/findings    ·· gates: review-list, sign ││    eview-list.perf-20261110T235400Z-XXXXXX.js│
+│                                      ││ ├─╯                                                                  ││    on:1                                      │
+│                                      ││ ○ change#1/review                      ·· gates: review-list, signof ││    2/4 required covered  ■ ! □ ◆ (+1         │
+│                                      ││ ○ change#1/deliver                     · gates: unit                 ││    optional)                                 │
+│                                      ││ ○ change#1/reflect                      no gates                     ││    item errors [supported] 1 reference by    │
+│                                      ││ ┴                                                                    ││    agent                                     │
+│                                      ││                                                                      ││      @runs/run-20261101T090000Z-a1b2c3/covers│
+│                                      ││                                                                      ││      /review-list.errors-20261110T235200Z-XXX│
+│                                      ││                                                                      ││      XXX.json:1                              │
+│                                      ││                                                                      ││    item tests [stale] 1 reference by agent;  │
+│                                      ││                                                                      ││    cited evidence moved: gate:lint was       │
+│                                      ││                                                                      ││    satisfied, now stale !stale               │
+│                                      ││                                                                      ││      @runs/run-20261101T090000Z-a1b2c3/covers│
+│                                      ││                                                                      ││      /review-list.tests-20261110T235300Z-XXXX│
+│                                      ││                                                                      ││      XX.json:1                               │
+│                                      ││                                                                      ││    item docs [open] The guide names every new│
+│                                      ││recorded position: step 7/11 (first step neither done nor skipped)    ││    flag                                      │
+│                                      ││last plan event: 2026-11-10T23:59:50Z done change#1/review/review#1/fi││    item perf [not-applicable] no hot path    │
+│                                      ││last checkpoint: 2026-11-10T14:10:00Z Review started.                 ││    touched by agent                          │
+│                                      ││● satisfied ◆ attested/waived ○ open ! stale × failed ? unknown       ││      @runs/run-20261101T090000Z-a1b2c3/covers│
+│                                      ││· later, not judged; ▶ recorded current step, not a liveness claim    ││full receipts: g   all steps as text: x       │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────┘
+kb=XXXXXXXXXXXX+dirty:19 index=fresh  subject=kb@0ea3a743bfef+dirty:28          asked 00:00:00Z theme=ansi read-only  jk node  l inspect  . current  n flag  ? q

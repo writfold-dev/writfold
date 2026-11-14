@@ -27,7 +27,11 @@ pub fn bars(frame: &mut Frame<'_>, app: &App, areas: &Areas, narrow: bool) {
             area,
         );
     }
-    let footer = if app.notice.is_some() || !narrow {
+    footer(frame, app, areas, narrow);
+}
+
+fn footer(frame: &mut Frame<'_>, app: &App, areas: &Areas, narrow: bool) {
+    let mut footer = if app.notice.is_some() || !narrow {
         content::footer(app, true)
     } else {
         format!(
@@ -35,6 +39,13 @@ pub fn bars(frame: &mut Frame<'_>, app: &App, areas: &Areas, narrow: bool) {
             app.runs.trailer_text("kb").unwrap_or_else(|| "?".into())
         )
     };
+    if app.notice.is_none()
+        && app.map_visible()
+        && !narrow
+        && let Some(at) = footer.find("  asked ")
+    {
+        footer.truncate(at);
+    }
     let tone = if app.notice.is_some() {
         Tone::Warn
     } else {
@@ -59,6 +70,20 @@ pub fn bars(frame: &mut Frame<'_>, app: &App, areas: &Areas, narrow: bool) {
             }
         }
     }
+    if app.notice.is_none() && app.map_visible() && !narrow {
+        map_hints(frame, app, areas.footer);
+    }
+}
+
+fn map_hints(frame: &mut Frame<'_>, app: &App, footer: Rect) {
+    let hints = format!(
+        " asked {} theme={} read-only  jk node  l inspect  . current  n flag  ? q",
+        app.asked,
+        app.look.label()
+    );
+    let width = (hints.len() as u16).min(footer.width);
+    let area = Rect::new(footer.right() - width, footer.y, width, 1);
+    frame.render_widget(Paragraph::new(hints).style(style::bar(app.look)), area);
 }
 
 fn tabs(frame: &mut Frame<'_>, app: &App, area: Rect, narrow: bool) {

@@ -76,7 +76,7 @@ step change#1/review [current] owes: review [open] @runs/run-…/plan/splice-cha
 step change#1/reflect [later] gates: reflected @runs/run-…/plan/splice-change.1.json:1
 ```
 
-`resume` keeps one line for the plan: `plan change#1/review [current] step 3/4 owes: review [open]`. [`writfold watch`](watch.md) now shows every step, its recorded state and its gate/checklist detail through `plan status --gates`; its runs list uses `runs --plan`. `gate status` and `gate lines` list only the plan's gates; `kb check` adds a `plan` row when the current run holds a plan.
+`resume` keeps one line for the plan: `plan change#1/review [current] step 3/4 owes: review [open]`. [`writfold watch`](watch.md) projects `plan status --gates` as a nested plan map and selected-node inspector; `x` retains the text list, and its runs list uses `runs --plan`. `gate status` and `gate lines` list only the plan's gates; `kb check` adds a `plan` row when the current run holds a plan.
 
 - **Node identity is a path,** such as `change#1/implement` or `change#1/review/review#1/read-diff`: the template, which splice of it, and the step, repeated for each level. It is never a counter or a time, so the same records always give the same names.
 - **The current step** is the first one that is neither done nor skipped. There is exactly one, or none when the plan is complete.

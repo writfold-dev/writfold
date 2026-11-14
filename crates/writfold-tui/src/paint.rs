@@ -2,7 +2,7 @@
 use crate::lines::{self, Tone};
 use crate::style::{self, Look};
 use ratatui::text::{Line, Text};
-use ratatui::widgets::{Block, Borders, Paragraph, Wrap};
+use ratatui::widgets::{Block, Borders};
 
 pub fn text(lines: Vec<lines::Line>, look: Look) -> Text<'static> {
     Text::from(
@@ -35,9 +35,7 @@ pub fn initial_scroll(
     let mut total = 0;
     let mut prefix = 0;
     for (index, line) in lines.iter().enumerate() {
-        let count = Paragraph::new(Line::raw(line.text.as_str()))
-            .wrap(Wrap { trim: false })
-            .line_count(width);
+        let count = crate::wrap::height(line, width);
         total += count;
         if index < current {
             prefix += count;
@@ -55,7 +53,6 @@ mod tests {
     use crate::lines::{Line, Tone};
     use crate::style::{Look, style};
     use ratatui::style::{Color, Modifier};
-    use ratatui::widgets::{Paragraph, Wrap};
 
     #[test]
     fn anchor_uses_rendered_unicode_and_indented_prefix() -> Result<(), Box<dyn std::error::Error>>
@@ -72,11 +69,10 @@ mod tests {
         assert_eq!(initial_scroll(&lines, Some(2), 80, 20), 0);
         assert_eq!(initial_scroll(&lines, None, 10, 3), 0);
         assert_eq!(initial_scroll(&lines, Some(0), 10, 3), 0);
-        let pane = Paragraph::new(super::text(lines, Look::default()))
-            .wrap(Wrap { trim: false })
-            .scroll((offset, 0));
         let mut terminal = ratatui::Terminal::new(ratatui::backend::TestBackend::new(10, 3))?;
-        terminal.draw(|frame| frame.render_widget(pane, frame.area()))?;
+        terminal.draw(|frame| {
+            crate::wrap::draw(frame, &lines, frame.area(), Look::default(), offset);
+        })?;
         let bottom: String = (0..10)
             .map(|x| terminal.backend().buffer()[(x, 2)].symbol())
             .collect();

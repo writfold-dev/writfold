@@ -3,6 +3,8 @@
 //! itself (satisfied, failed, stale and open) with receipts recorded by
 //! `gate run`.
 #![allow(dead_code)]
+pub mod buffers;
+pub mod map;
 pub mod plan;
 pub mod projection;
 use std::error::Error;

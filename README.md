@@ -253,21 +253,24 @@ separate and frozen. See the
 [adapter as built](docs/writfold/kb-v1-design.md#17-splicery-adapter-as-built).
 
 `writfold watch` shows recorded run progress, not an estimate of work left.
-Its eight read-only views project the KB verbs: plan steps with their gates
-and checklist items, Gates, Timeline, Inbox, Guards, Stale, Brief and Resume.
+Its eight read-only views project the KB verbs: a nested plan map and node
+inspector, Gates, Timeline, Inbox, Guards, Stale, Brief and Resume.
 The runs list includes each plan's position. Guards concern the current-run
 pointer, not whichever run is selected. No key writes or starts a checker;
 the Inbox prints the existing confirm/accept commands instead.
 
-`g` selects Gates; Resume is now `e`. `o` filters open runs and `P` filters
-the selected project. The view polls KB and queue/pointer changes every two
+`h`/`l` move between runs, map and inspector; `j`/`k` select a node or scroll.
+`.` selects the recorded current step, `n`/`N` the next/previous flag. `x` switches
+to the text list, where `X` expands detail. `g` selects Gates and `e` Resume.
+`o` filters open runs and `P` the selected project. The view polls KB and
+queue/pointer changes every two
 seconds, and the selected subject every ten seconds; `--repo` selects that
 subject without changing KB discovery. Wide, medium and narrow layouts share
 six themes, with ANSI and no-colour modes. See [Watching a run](docs/guide/watch.md)
 for the views, keys, refresh limits and colour selection.
 
 ```sh
-writfold watch                            # j/k, Enter, Tab, ? for help, q to quit
+writfold watch                            # h/l focus, j/k selection, ? help, q quit
 writfold watch --repo /path/to/repository # gate subject
 writfold watch --run RUN_ID --once        # one expanded plain frame; also automatic in a pipe
 writfold watch --view gates --theme paper # one view at start; --once limits the printed sections

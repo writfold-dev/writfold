@@ -22,12 +22,15 @@ pub enum View {
 pub enum Focus {
     Runs,
     Detail,
+    Inspector,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Key {
     Up,
     Down,
+    Left,
+    Right,
     Enter,
     Tab,
     BackTab,
@@ -48,6 +51,11 @@ pub struct App {
     pub scroll: u16,
     pub help: bool,
     pub expand_all: bool,
+    pub map: bool,
+    pub node: Option<String>,
+    pub rail_offset: usize,
+    pub inspect_scroll: u16,
+    pub dumb: bool,
     pub open_only: bool,
     pub project_only: Option<String>,
     pub notice: Option<String>,
@@ -78,6 +86,11 @@ impl App {
             scroll: 0,
             help: false,
             expand_all: false,
+            map: true,
+            node: None,
+            rail_offset: 0,
+            inspect_scroll: 0,
+            dumb: false,
             open_only: false,
             project_only: None,
             notice: None,

@@ -21,7 +21,12 @@
 //! splice for the first step of a splice, else the event that closed the
 //! step before it.
 use super::event::{self, Baseline, Done, Event, Skip, Splice};
-use super::template::{self, Template};
+use super::template::Template;
+mod snapshots;
+mod tree;
+mod windows;
+use tree::{Tree, expand};
+use windows::windows;
 
 /// A splice nested deeper than this is not expanded.
 pub const MAX_DEPTH: usize = writfold_core::plan::MAX_DEPTH;
@@ -52,6 +57,8 @@ pub struct Step {
     pub digest: String,
     pub source: String,
     pub splice: String,
+    /// The expanded template use, including static includes.
+    pub usage: usize,
     /// Whether that splice is at the root (rather than under a step).
     pub root: bool,
     pub done: Option<(String, Done)>,
@@ -166,7 +173,7 @@ pub fn fold(run: &str, dir: &str, files: Vec<(String, String)>, snapshot: Snapsh
         let path = format!("{dir}/{name}");
         match event::parse(&text, run, &name) {
             Err(why) => graph.invalid.push((path, why)),
-            Ok(Event::Splice(s)) => match load(&s, snapshot, &mut library) {
+            Ok(Event::Splice(s)) => match snapshots::load(&s, snapshot, &mut library) {
                 Ok(t) => splices.push((path, s, t)),
                 Err(why) => graph.invalid.push((path, why)),
             },
@@ -211,124 +218,6 @@ pub fn fold(run: &str, dir: &str, files: Vec<(String, String)>, snapshot: Snapsh
     graph
 }
 
-/// A snapshot's template, checked against its digest and name.
-fn snapshot_of(snapshot: Snapshot<'_>, name: &str, digest: &str) -> Result<Template, String> {
-    match snapshot(digest) {
-        Some(bytes) if template::digest(&bytes) == digest => {
-            template::parse(&bytes, Some(name)).map_err(|why| format!("its snapshot: {why}"))
-        }
-        _ => Err(format!(
-            "the template snapshot of {name} is missing or altered"
-        )),
-    }
-}
-
-/// A splice's template, with every template it includes added to
-/// `library`; every `use=` in the closure must be recorded in it.
-fn load(
-    s: &Splice,
-    snapshot: Snapshot<'_>,
-    library: &mut Vec<Template>,
-) -> Result<Template, String> {
-    let top = snapshot_of(snapshot, &s.template, &s.digest)?;
-    let mut closure = vec![top.clone()];
-    for include in &s.includes {
-        closure.push(snapshot_of(snapshot, &include.name, &include.digest)?);
-    }
-    for t in &closure {
-        for name in t.steps.iter().filter_map(|step| step.include.as_deref()) {
-            if !s.includes.iter().any(|i| i.name == name) {
-                return Err(format!(
-                    "{} includes {name}, which its closure does not record",
-                    t.name
-                ));
-            }
-        }
-    }
-    for t in closure.into_iter().skip(1) {
-        if !library.iter().any(|l| l.digest == t.digest) {
-            library.push(t);
-        }
-    }
-    Ok(top)
-}
-
-/// The expansion in progress.
-struct Tree<'a> {
-    splices: &'a [(String, Splice, Template)],
-    library: &'a [Template],
-    used: Vec<bool>,
-    steps: Vec<Step>,
-    uses: Vec<Use>,
-}
-
-/// Post-order expansion of the splices under `parent`.
-fn expand(tree: &mut Tree<'_>, parent: &str, depth: usize) {
-    if depth >= MAX_DEPTH {
-        return;
-    }
-    let splices = tree.splices;
-    for (i, (_, s, t)) in splices.iter().enumerate() {
-        if s.parent != parent || tree.used[i] {
-            continue;
-        }
-        tree.used[i] = true;
-        tree.uses.push(Use {
-            parent: s.parent.clone(),
-            template: s.template.clone(),
-            digest: s.digest.clone(),
-            ordinal: s.ordinal,
-        });
-        let prefix = event::prefix(&s.parent, &s.template, s.ordinal);
-        steps_of(tree, i, (t, &s.source), &prefix, depth);
-    }
-}
-
-/// The steps of `t` (the template of splice `i`, or one it includes)
-/// under `prefix`, each after its include and the splices under it.
-fn steps_of(
-    tree: &mut Tree<'_>,
-    i: usize,
-    (t, source): (&Template, &str),
-    prefix: &str,
-    depth: usize,
-) {
-    let (splices, library) = (tree.splices, tree.library);
-    let (path, s, _) = &splices[i];
-    for step in &t.steps {
-        let node = format!("{prefix}/{}", step.id);
-        let include = step.include.as_deref().and_then(|name| {
-            let recorded = s.includes.iter().find(|i| i.name == name)?;
-            let found = library.iter().find(|l| l.digest == recorded.digest)?;
-            Some((found, recorded.source.as_str()))
-        });
-        if let (Some(included), true) = (include, depth + 1 < MAX_DEPTH) {
-            let inner = event::prefix(&node, &included.0.name, 1);
-            tree.uses.push(Use {
-                parent: node.clone(),
-                template: included.0.name.clone(),
-                digest: included.0.digest.clone(),
-                ordinal: 1,
-            });
-            steps_of(tree, i, included, &inner, depth + 1);
-        }
-        expand(tree, &node, depth + 1);
-        tree.steps.push(Step {
-            path: node,
-            id: step.id.clone(),
-            gates: step.gates.clone(),
-            template: t.name.clone(),
-            digest: t.digest.clone(),
-            source: source.to_owned(),
-            splice: path.clone(),
-            root: s.parent.is_empty(),
-            done: None,
-            skipped: None,
-            begin: s.records.clone(),
-        });
-    }
-}
-
 fn close(graph: &mut Graph, closes: Vec<(String, Event)>) {
     for (path, e) in closes {
         let node = match &e {
@@ -346,33 +235,5 @@ fn close(graph: &mut Graph, closes: Vec<(String, Event)>) {
             Event::Skip(s) => step.skipped = Some((path, s)),
             Event::Splice(_) => {}
         }
-    }
-}
-
-/// Each step's window begins at its splice when it is the first step of
-/// that splice, else where the step before it ended (or began, when that
-/// one is still open). A root splice after the first is the exception: it
-/// was made with the plan (the required steps) or, for a required end
-/// template added later, while the step before it was still open, so its
-/// first step also begins where the step before it ended. (A splice under
-/// a step is made while that step is current, after every step before it
-/// closed, so its own baseline is the later one.)
-fn windows(graph: &mut Graph) {
-    let mut previous: Option<Baseline> = None;
-    let mut first_of: Vec<String> = Vec::new();
-    let mut root_seen = false;
-    for step in &mut graph.steps {
-        let first = !first_of.contains(&step.splice);
-        let later_root = first && step.root && root_seen;
-        root_seen |= step.root;
-        if first {
-            first_of.push(step.splice.clone());
-        }
-        if (!first || later_root)
-            && let Some(begin) = previous.take()
-        {
-            step.begin = begin;
-        }
-        previous = Some(step.end().cloned().unwrap_or_else(|| step.begin.clone()));
     }
 }

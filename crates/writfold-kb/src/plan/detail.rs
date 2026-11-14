@@ -1,5 +1,5 @@
 //! Gate and checklist continuations requested by `plan status --gates`.
-use super::fold::Graph;
+use super::fold::{Graph, Step};
 use super::judge::Gate;
 use crate::emit::{Answer, More};
 
@@ -30,7 +30,7 @@ fn gate_line(gate: &Gate) -> More {
 /// Enrich only the requested projection; ordinary plan readers stay unchanged.
 pub fn add(answer: &mut Answer, graph: &Graph, judged: Option<&[Vec<Gate>]>) {
     for (i, (step, row)) in graph.steps.iter().zip(&mut answer.rows).enumerate() {
-        let lines: Vec<More> = match row.status.as_deref() {
+        let gates: Vec<More> = match row.status.as_deref() {
             Some("skipped") => Vec::new(),
             Some("later") => step
                 .gates
@@ -54,7 +54,7 @@ pub fn add(answer: &mut Answer, graph: &Graph, judged: Option<&[Vec<Gate>]>) {
             .iter()
             .position(|m| m.label != "why")
             .unwrap_or(row.more.len());
-        row.more.splice(at..at, lines);
+        row.more.splice(at..at, structure(step, graph).chain(gates));
     }
     if let Some(gates) = judged.filter(|_| !graph.steps.is_empty()) {
         match graph.current() {
@@ -70,4 +70,28 @@ pub fn add(answer: &mut Answer, graph: &Graph, judged: Option<&[Vec<Gate>]>) {
             None => answer.counts.push(("current", 0)),
         }
     }
+}
+
+fn structure<'a>(step: &'a Step, graph: &'a Graph) -> impl Iterator<Item = More> + 'a {
+    let usage = &graph.uses[step.usage];
+    let digest = step.digest.strip_prefix("sha256:").unwrap_or(&step.digest);
+    let splice = More {
+        label: "splice",
+        text: format!(
+            "{}#{} @{} from {}",
+            step.template,
+            usage.ordinal,
+            digest.get(..12).unwrap_or(digest),
+            step.source
+        ),
+        path: Some(step.splice.clone()),
+        line: Some(1),
+        ..More::default()
+    };
+    let under = (!usage.parent.is_empty()).then(|| More {
+        label: "under",
+        text: usage.parent.clone(),
+        ..More::default()
+    });
+    std::iter::once(splice).chain(under)
 }

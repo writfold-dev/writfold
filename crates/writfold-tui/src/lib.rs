@@ -6,16 +6,23 @@
 #![forbid(unsafe_code)]
 
 pub mod app;
+pub mod cells;
 mod chrome;
 pub mod frame;
+pub mod graph;
 pub mod guards;
+pub mod inspect;
+mod inspect_view;
 mod keys;
 pub mod layout;
 pub mod lines;
 mod list_view;
+mod map_view;
+mod nav;
 mod paint;
 pub mod poll;
 pub mod progress;
+pub mod rail;
 pub mod side;
 pub mod source;
 mod state;
@@ -26,6 +33,7 @@ pub mod theme;
 mod theme_tests;
 pub mod view;
 mod views;
+mod wrap;
 
 use app::{App, View};
 use source::Source;
@@ -128,6 +136,7 @@ pub fn main(
     let source = Source::located(options.kb, cwd, options.repo, None)?;
     let mut app = App::new(source, options.run.as_deref());
     app.look = look;
+    app.dumb = env.term.as_deref() == Some("dumb");
     if let Some(view) = options.view {
         app.show(view);
     }

@@ -43,6 +43,7 @@ fn foreground(buffer: &Buffer, needle: &str, color: Color, bold: bool) -> TestRe
 fn truecolor_gate_and_step_roles_reach_the_surface() -> TestResult {
     let w = world("look-roles")?;
     let mut app = App::new(w.source(), Some(RUN));
+    app.map = false;
     app.look = Look {
         theme: ThemeId::Hone,
         depth: Depth::Truecolor,

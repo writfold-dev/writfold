@@ -33,6 +33,7 @@ pub struct Areas {
     pub inbox: Option<Rect>,
     pub guards: Option<Rect>,
     pub timeline: Option<Rect>,
+    pub inspector: Option<Rect>,
 }
 
 pub fn areas(width: u16, height: u16) -> Areas {
@@ -58,6 +59,32 @@ pub fn areas(width: u16, height: u16) -> Areas {
             areas.main.width -= 30;
         }
         Class::Narrow | Class::TooSmall => {}
+    }
+    areas
+}
+
+/// The map's inspector shares the side stack or occupies the narrow main pane.
+pub fn focused(width: u16, height: u16, map: bool, inspector: bool) -> Areas {
+    let mut areas = areas(width, height);
+    if !map {
+        return areas;
+    }
+    match class(width, height) {
+        Class::Wide if inspector => {
+            areas.inspector = Some(Rect::new(width - 48, areas.main.y, 48, areas.main.height));
+            areas.gates = None;
+            areas.inbox = None;
+            areas.guards = None;
+            areas.timeline = None;
+        }
+        Class::Medium => {
+            areas.runs = Some(Rect::new(0, areas.main.y, 24, areas.main.height));
+            areas.main.x = 24;
+            areas.main.width = 32;
+            areas.inspector = Some(Rect::new(56, areas.main.y, width - 56, areas.main.height));
+        }
+        Class::Narrow if inspector => areas.inspector = Some(areas.main),
+        _ => {}
     }
     areas
 }
