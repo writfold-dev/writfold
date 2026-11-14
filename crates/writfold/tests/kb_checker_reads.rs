@@ -46,6 +46,16 @@ fn only_kb_stale_runs_a_checker() -> Result {
     let status = ["gate", "status", "--run", RUN, "--repo", &repo];
     let (text, _) = kb(&w, &status, &[])?;
     assert!(text.starts_with("gate review [attested]"), "{text}");
+    std::fs::write(w.kb().join(".git/writfold/current-run"), RUN)?;
+    let guards = w.kb().join(".writfold/guards");
+    std::fs::create_dir_all(&guards)?;
+    std::fs::write(
+        guards.join("cached.toml"),
+        "schema = \"writfold-guard-rule/1\"\nid = \"cached\"\nevent = \"pre-tool-use\"\ncommands = [\"git commit\"]\nrequire = [\"gates.met\"]\naction = \"deny\"\n",
+    )?;
+    let (text, exit) = kb(&w, &["guard", "status"], &[])?;
+    assert_eq!((exit, w.spawns()), (0, 1), "{text}");
+    assert!(text.contains("guard cached [would-pass]"), "{text}");
     let start = format!(
         "{{\"session_id\": \"s\", \"cwd\": \"{}\"}}",
         w.kb().display()

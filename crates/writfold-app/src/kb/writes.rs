@@ -142,6 +142,7 @@ pub fn runs_and_writes(
         ("edit", _) => super::edit::verb(common, positional),
         ("deliver", _) => super::deliver::verb(common, positional),
         ("plan", _) => super::plan::verb(common, positional),
+        ("guard", _) => super::guard::verb(positional),
         ("observe", _) => super::observe::verb(common, positional),
         _ => return super::proposals::verb(name, common, positional),
     })

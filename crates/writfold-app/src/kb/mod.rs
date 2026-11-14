@@ -6,6 +6,7 @@ mod cite;
 mod deliver;
 mod edit;
 mod gate;
+mod guard;
 mod hook;
 mod observe;
 mod plan;
@@ -42,6 +43,8 @@ verbs:
   runs [--open] [--project P] [--plan]
                                    every run: state, place, last checkpoint; --plan adds its position
   resume [<run>]                   one run: manifest, coverage, rechecks, checkpoint tail
+  guard status                    would guard rules pass, deny, ask or nudge for the current run?
+                                   a read-only judgment, not enforcement; no command is run
 
 writes (atomic; they leave the work tree dirty for you to commit):
   checkpoint [--run ID | --new-run --project P --task T [--mode M]] --note TEXT|--from-draft SESSION

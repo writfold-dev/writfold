@@ -19,6 +19,13 @@ pub mod delivery;
 pub mod paths;
 pub mod require;
 pub mod rules;
+pub mod status;
+
+/// One read-only guard verb.
+#[derive(Clone, Debug)]
+pub enum GuardVerb {
+    Status,
+}
 
 use crate::draft;
 use crate::hook::HookOutput;

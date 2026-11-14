@@ -1,0 +1,11 @@
+guard a-first [would-ask] pre-tool-use git commit git push Edit requires run.current gates.met @<WORLD>/demo-service/.writfold/guards/a-first.toml:1 !ask
+  owes: no current KB run; start one: writfold kb checkpoint --new-run --project P --task T --note TEXT
+  owes: no current KB run; start one: writfold kb checkpoint --new-run --project P --task T --note TEXT !unknown
+guard finish [would-nudge] stop requires step.met @.writfold/guards/finish.toml:1 !nudge
+  owes: no current KB run; start one: writfold kb checkpoint --new-run --project P --task T --note TEXT
+guard z-last [would-deny] pre-tool-use git commit git push Edit requires run.current gates.met @.writfold/guards/z-last.toml:1 !deny
+  owes: no current KB run; start one: writfold kb checkpoint --new-run --project P --task T --note TEXT
+  owes: no current KB run; start one: writfold kb checkpoint --new-run --project P --task T --note TEXT !unknown
+# note: judged for the current run none in <WORLD>/demo-service as if each rule had matched; a guard, not enforcement; nothing was run
+# coverage=complete records=28/28 shown=3 omitted=0 rules=3 deny=1 ask=1 nudge=1 invalid=0 kb=d5db758bda80 index=fresh cursor=none q=<QUERY>
+# exit=2

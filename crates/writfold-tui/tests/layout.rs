@@ -67,17 +67,27 @@ fn all_sizes_render_their_real_panes() -> TestResult {
                 for (area, name) in [
                     (a.gates, "gates"),
                     (a.inbox, "inbox"),
-                    (a.guards.or(a.timeline), "timeline"),
+                    (a.timeline, "timeline"),
                 ] {
                     title(&buffer, area.ok_or(name)?, name);
                 }
-                assert!(!symbols(&buffer).contains(" guards "));
+                if let Some(area) = a.guards {
+                    title(&buffer, area, "guards");
+                } else {
+                    assert!(!symbols(&buffer).contains("┌ guards "));
+                }
             }
             Class::Medium => {
                 assert_eq!(a.runs.ok_or("runs")?, Rect::new(0, 3, 30, height - 4));
                 assert_eq!(a.main, Rect::new(30, 3, width - 30, height - 4));
                 let summary = &screen[usize::from(a.summary.ok_or("summary")?.y)];
-                for label in ["gates:", "inbox:", "drafts=1", "proposals=2"] {
+                for label in [
+                    "gates:",
+                    "inbox:",
+                    "drafts=1",
+                    "proposals=2",
+                    "guards: deny=1 ask=0",
+                ] {
                     assert!(summary.contains(label));
                 }
             }
@@ -139,5 +149,26 @@ fn narrow_runs_view_and_short_strip_are_real_content() -> TestResult {
             present
         );
     }
+    Ok(())
+}
+
+#[test]
+fn paging_the_narrow_run_list_keeps_selection_and_reveals_later_runs() -> TestResult {
+    let w = world("narrow-pages")?;
+    let mut app = App::new(w.source(), Some(RUN));
+    render(&mut app, 70, 12)?;
+    app.key(Key::Char('0'));
+    render(&mut app, 70, 12)?;
+    app.key(Key::PageDown);
+    let shown = symbols(&render(&mut app, 70, 12)?);
+    assert!(shown.contains(support::CLOSED), "{shown}");
+    assert_eq!(app.run_id(), Some(RUN));
+    assert!(app.scroll > 0);
+    app.key(Key::PageUp);
+    let shown = symbols(&render(&mut app, 70, 12)?);
+    assert!(shown.contains(&format!("> [open] {RUN}")), "{shown}");
+    assert_eq!(app.scroll, 0);
+    app.key(Key::Enter);
+    assert!(!app.runs_view && app.anchor);
     Ok(())
 }

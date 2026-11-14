@@ -8,9 +8,11 @@
 pub mod app;
 mod chrome;
 pub mod frame;
+pub mod guards;
 mod keys;
 pub mod layout;
 pub mod lines;
+mod list_view;
 mod paint;
 pub mod poll;
 pub mod progress;
@@ -23,6 +25,7 @@ pub mod theme;
 #[cfg(test)]
 mod theme_tests;
 pub mod view;
+mod views;
 
 use app::{App, View};
 use source::Source;
@@ -32,7 +35,7 @@ use style::{Environment, Look};
 pub const USAGE: &str = "usage: writfold watch [--kb DIR] [--repo DIR] [--run ID]
                       [--view NAME] [--theme NAME] [--color auto|truecolor|ansi|none] [--once]
 
-Views: progress (default), gates, timeline, inbox, stale, brief, resume.
+Views: progress (default), gates, timeline, inbox, guards, stale, brief, resume.
 --once or a pipe prints one plain frame; --view selects just one section.";
 
 /// The parsed arguments.

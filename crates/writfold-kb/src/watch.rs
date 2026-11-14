@@ -60,12 +60,14 @@ fn files(hash: &mut Sha256, root: &Path, dir: &Path) {
     }
 }
 
-/// Current-run bytes and names, lengths and mtimes under drafts and proposals.
-/// The derived index and unrelated local state do not move this stamp.
+/// Current-run bytes and metadata under drafts and both proposal stores.
+/// The tracked queue is not an index input. Neither the derived index nor
+/// unrelated local state moves this stamp.
 pub fn local(ws: &Workspace) -> String {
     let mut hash = Sha256::new();
     hash.update(b"writfold-watch-local/1\0");
-    if let Some(state) = crate::proposal::state_of(ws) {
+    if let Some(stores) = crate::proposal::Stores::of(ws) {
+        let state = &stores.state;
         match std::fs::read(state.join("current-run")) {
             Ok(bytes) => {
                 hash.update([1]);
@@ -76,10 +78,18 @@ pub fn local(ws: &Workspace) -> String {
                 hash.update(error.raw_os_error().unwrap_or_default().to_le_bytes());
             }
         }
-        for dir in [crate::draft::dir(&state), crate::proposal::dir(&state)] {
-            name(&mut hash, dir.strip_prefix(&state).unwrap_or(&dir));
-            files(&mut hash, &state, &dir);
+        for dir in [crate::draft::dir(state), crate::proposal::dir(state)] {
+            name(&mut hash, dir.strip_prefix(state).unwrap_or(&dir));
+            files(&mut hash, state, &dir);
         }
+        name(
+            &mut hash,
+            stores
+                .tracked
+                .strip_prefix(&ws.root)
+                .unwrap_or(&stores.tracked),
+        );
+        files(&mut hash, &ws.root, &stores.tracked);
     }
     crate::index::hex(&hash.finalize())
 }

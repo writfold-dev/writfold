@@ -17,6 +17,7 @@ pub fn verb(view: View, run: &str, project: Option<&str>) -> Verb {
             repo: None,
         }),
         View::Timeline => Verb::Timeline { target: run.into() },
+        View::Guards => Verb::Guard(writfold_kb::guard::GuardVerb::Status),
         View::Inbox | View::Resume => Verb::Resume {
             run: Some(run.into()),
         },

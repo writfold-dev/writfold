@@ -10,6 +10,18 @@ pub struct Content {
     pub current: Option<usize>,
 }
 
+fn title(app: &App, view: View) -> String {
+    if view == View::Guards {
+        return crate::guards::title(app);
+    }
+    let scope = if matches!(view, View::Stale | View::Brief) {
+        app.project().unwrap_or_else(|| "(inferred)".into())
+    } else {
+        app.run().unwrap_or_default()
+    };
+    format!("{} {scope}", view.name())
+}
+
 pub fn detail(
     app: &App,
     view: View,
@@ -17,13 +29,8 @@ pub fn detail(
     expanded: bool,
     positions: bool,
 ) -> Content {
-    let scope = if matches!(view, View::Stale | View::Brief) {
-        app.project().unwrap_or_else(|| "(inferred)".into())
-    } else {
-        app.run().unwrap_or_default()
-    };
     let mut content = Content {
-        title: format!("{} {scope}", view.name()),
+        title: title(app, view),
         lines: Vec::new(),
         current: None,
     };
@@ -43,6 +50,7 @@ pub fn detail(
         }
         View::Gates => content.lines = side::gates(answer),
         View::Inbox => content.lines = side::inbox(answer),
+        View::Guards => content.lines = crate::guards::content(app, answer, false),
         _ => content.lines = lines::reply(answer),
     }
     content
@@ -135,7 +143,7 @@ pub fn help() -> Vec<Line> {
         "Enter: switch focus; Esc: runs; PgUp PgDn: scroll main pane",
         "Tab / Shift-Tab: next / previous view; 0: runs (narrow)",
         "1/p progress; 2/g gates; 3/t timeline; 4/i inbox",
-        "6/s stale; 7/b brief; 8/e resume",
+        "5/u guards; 6/s stale; 7/b brief; 8/e resume",
         "x: expand / collapse Progress; o: open runs; P: selected project",
         "r: ask again; ?: help (any key closes); q / Ctrl-C: quit",
         "T: next theme (24-bit colour only); the choice is not written.",
@@ -147,6 +155,7 @@ pub fn help() -> Vec<Line> {
         "Gates: writfold kb gate status --run R --json",
         "Timeline: writfold kb timeline R --json",
         "Inbox / Resume: writfold kb resume R --json",
+        "Guards: writfold kb guard status --json (the current run, not the selection)",
         "Stale: writfold kb stale P --cached --json",
         "Brief: writfold kb brief P --json",
         "KB and local state are polled every 2 s; the subject every 10 s.",
@@ -206,7 +215,15 @@ pub fn once(app: &mut App, only: Option<View>) -> String {
     let mut out = String::new();
     runs(app, &mut out);
     let views = only.map_or_else(
-        || vec![View::Progress, View::Gates, View::Inbox, View::Timeline],
+        || {
+            vec![
+                View::Progress,
+                View::Gates,
+                View::Inbox,
+                View::Guards,
+                View::Timeline,
+            ]
+        },
         |view| vec![view],
     );
     for view in views {

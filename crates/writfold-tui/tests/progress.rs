@@ -16,7 +16,7 @@ fn progress_once_goldens() -> TestResult {
     let text = normalize(&w, &frame::once(&mut app, None))?;
     golden("progress-once.txt", &text)?;
     let mut previous = 0;
-    for section in ["runs", "progress", "gates", "inbox", "timeline"] {
+    for section in ["runs", "progress", "gates", "inbox", "guards", "timeline"] {
         let at = text.find(&format!("== {section} ")).ok_or(section)?;
         assert!(at >= previous, "{text}");
         previous = at;
@@ -37,7 +37,7 @@ fn progress_once_goldens() -> TestResult {
     let text = normalize(&w, &frame::once(&mut app, Some(View::Gates)))?;
     golden("progress-once-view-gates.txt", &text)?;
     assert!(text.contains("== gates "));
-    for absent in ["== progress ", "== inbox ", "== timeline "] {
+    for absent in ["== progress ", "== inbox ", "== guards ", "== timeline "] {
         assert!(!text.contains(absent));
     }
     Ok(())

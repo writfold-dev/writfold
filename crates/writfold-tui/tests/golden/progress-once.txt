@@ -69,6 +69,13 @@ proposal 2c6ba260f2cde3fa [pending] ticket HBR-210: Lint gate scope misses the c
 proposal 2c9a051ffe807243 [pending] link mentions run-20261101T090000Z-a1b2c3 → proposal/decision/2026-03-02-batch-ledger-writes @<WORLD>/kb/.git/writfold/proposals/2c9a051ffe807243.json !proposal !local
   field: created=2026-11-10T23:59:00Z session=s-progress
   accept: writfold kb proposals accept 2c9a051ffe807243
+== guards (current run run-20261101T090000Z-a1b2c3) ==
+rules=2 deny=1 ask=0 nudge=1 invalid=0
+guard commit-needs-gates [would-deny] pre-tool-use git commit requires gates.met @.writfold/guards/commit-needs-gates.toml:1 !deny
+  owes: gate lint [stale]; next: writfold kb gate run lint; gate bench [open]; next: writfold kb gate run bench; gate review-list [stale]; next: writfold kb gate cover review-list tests supported REF… --by WHO; gate signoff [open]; next: writfold kb gate attest signoff --statement TEXT --by WHO
+guard stop-reflect [would-nudge] stop requires step.met @.writfold/guards/stop-reflect.toml:1 !nudge
+  owes: step review owes review-list [stale], signoff [open]; next: writfold kb gate cover review-list tests supported REF… --by WHO
+# note: judged for the current run run-20261101T090000Z-a1b2c3 in <WORLD>/kb as if each rule had matched; a guard, not enforcement; nothing was run
 == timeline run-20261101T090000Z-a1b2c3 ==
 decision proposal/decision/2026-03-02-batch-ledger-writes [accepted] 2026-03-02 created Batch ledger writes in the API @proposals/decision/2026-03-02-batch-ledger-writes/proposal.md:6
 decision proposal/decision/2026-03-02-batch-ledger-writes [accepted] 2026-03-09 updated Batch ledger writes in the API @proposals/decision/2026-03-02-batch-ledger-writes/proposal.md:7

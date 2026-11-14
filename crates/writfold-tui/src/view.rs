@@ -30,7 +30,7 @@ pub fn draw(frame: &mut Frame<'_>, app: &mut App) {
         runs(frame, app, area);
     }
     if class == Class::Narrow && app.runs_view {
-        runs(frame, app, areas.main);
+        crate::list_view::draw(frame, app, areas.main);
     } else {
         detail(frame, app, areas.main);
     }
@@ -48,9 +48,13 @@ fn detail(frame: &mut Frame<'_>, app: &mut App, area: Rect) {
         app.scroll = initial_scroll(&detail.lines, detail.current, inner.width, inner.height);
         app.anchor = false;
     }
-    let pane = Paragraph::new(text(detail.lines, app.look))
+    let pane = Paragraph::new(text(detail.lines, app.look)).wrap(Wrap { trim: false });
+    if app.scroll > 0 {
+        let last = pane.line_count(inner.width).saturating_sub(1);
+        app.scroll = app.scroll.min(u16::try_from(last).unwrap_or(u16::MAX));
+    }
+    let pane = pane
         .block(block(detail.title, app.focus == Focus::Detail, app.look))
-        .wrap(Wrap { trim: false })
         .scroll((app.scroll, 0));
     frame.render_widget(pane, area);
 }
@@ -81,18 +85,11 @@ fn runs(frame: &mut Frame<'_>, app: &App, area: Rect) {
 }
 
 fn sides(frame: &mut Frame<'_>, app: &App, areas: &Areas) {
-    let timeline = areas.timeline.map(|mut area| {
-        // Until the guards pane is available, timeline uses its space as well.
-        if let Some(guards) = areas.guards {
-            area.y = guards.y;
-            area.height += guards.height;
-        }
-        area
-    });
     for (view, area) in [
         (View::Gates, areas.gates),
         (View::Inbox, areas.inbox),
-        (View::Timeline, timeline),
+        (View::Guards, areas.guards),
+        (View::Timeline, areas.timeline),
     ] {
         if let Some(area) = area {
             side(frame, app, view, area);
@@ -101,7 +98,12 @@ fn sides(frame: &mut Frame<'_>, app: &App, areas: &Areas) {
 }
 
 fn side(frame: &mut Frame<'_>, app: &App, view: View, area: Rect) {
-    let border = block(view.name().into(), false, app.look);
+    let title = if view == View::Guards {
+        "guards (current run)"
+    } else {
+        view.name()
+    };
+    let border = block(title.into(), false, app.look);
     let inner = border.inner(area);
     let pane = Paragraph::new(text(side::compact(app, view), app.look));
     let scroll = if view == View::Timeline {

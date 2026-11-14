@@ -12,75 +12,10 @@ pub enum View {
     Gates,
     Timeline,
     Inbox,
+    Guards,
     Stale,
     Brief,
     Resume,
-}
-
-impl View {
-    pub const ALL: [Self; 7] = [
-        Self::Progress,
-        Self::Gates,
-        Self::Timeline,
-        Self::Inbox,
-        Self::Stale,
-        Self::Brief,
-        Self::Resume,
-    ];
-
-    pub fn name(self) -> &'static str {
-        match self {
-            Self::Progress => "progress",
-            Self::Gates => "gates",
-            Self::Timeline => "timeline",
-            Self::Inbox => "inbox",
-            Self::Stale => "stale",
-            Self::Brief => "brief",
-            Self::Resume => "resume",
-        }
-    }
-
-    pub fn key(self) -> char {
-        match self {
-            Self::Progress => 'p',
-            Self::Gates => 'g',
-            Self::Timeline => 't',
-            Self::Inbox => 'i',
-            Self::Stale => 's',
-            Self::Brief => 'b',
-            Self::Resume => 'e',
-        }
-    }
-
-    pub fn digit(self) -> char {
-        match self {
-            Self::Progress => '1',
-            Self::Gates => '2',
-            Self::Timeline => '3',
-            Self::Inbox => '4',
-            Self::Stale => '6',
-            Self::Brief => '7',
-            Self::Resume => '8',
-        }
-    }
-
-    pub fn from_name(name: &str) -> Option<Self> {
-        Self::ALL.into_iter().find(|v| v.name() == name)
-    }
-
-    pub(crate) fn next(self, back: bool) -> Self {
-        let at = Self::ALL.iter().position(|v| *v == self).unwrap_or(0);
-        let offset = if back { Self::ALL.len() - 1 } else { 1 };
-        Self::ALL[(at + offset) % Self::ALL.len()]
-    }
-
-    pub(crate) fn cache_key(self) -> Self {
-        if self == Self::Inbox {
-            Self::Resume
-        } else {
-            self
-        }
-    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -124,6 +59,7 @@ pub struct App {
     pub(crate) height: u16,
     pub(crate) main_height: u16,
     pub(crate) answers: BTreeMap<String, BTreeMap<View, Reply>>,
+    pub(crate) guards: Option<Reply>,
     pub(crate) tool: Option<GitTool>,
     pub(crate) ticks: u8,
     pub(crate) subjects: BTreeMap<String, Subject>,
@@ -153,6 +89,7 @@ impl App {
             height: 0,
             main_height: 1,
             answers: BTreeMap::new(),
+            guards: None,
             tool: None,
             ticks: 0,
             subjects: BTreeMap::new(),
@@ -176,6 +113,9 @@ impl App {
     }
 
     pub fn current_run(&self) -> Option<&str> {
+        if let Some(current) = self.guards.as_ref().and_then(crate::guards::current) {
+            return (current != "none").then_some(current);
+        }
         self.runs
             .rows
             .iter()
@@ -220,6 +160,9 @@ impl App {
     }
 
     pub fn answer(&self, view: View) -> Option<&Reply> {
+        if view == View::Guards {
+            return self.guards.as_ref();
+        }
         self.answers.get(self.run_id()?)?.get(&view.cache_key())
     }
 

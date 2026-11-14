@@ -162,6 +162,10 @@ impl Source {
         }))
     }
 
+    pub fn guards(&self) -> Reply {
+        self.call(Verb::Guard(writfold_kb::guard::GuardVerb::Status))
+    }
+
     pub fn plan(&self, run: &str) -> Reply {
         self.call(Verb::Plan(writfold_kb::plan::PlanVerb::Status {
             run: Some(run.to_owned()),

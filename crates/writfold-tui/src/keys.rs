@@ -33,6 +33,8 @@ impl App {
         };
         if self.focus == Focus::Detail && self.runs_view {
             self.runs_view = false;
+            self.scroll = 0;
+            self.anchor = true;
             self.load();
         }
     }
@@ -71,6 +73,8 @@ impl App {
             '0' if layout::class(self.width, self.height) == Class::Narrow => {
                 self.runs_view = true;
                 self.focus = Focus::Runs;
+                self.scroll = 0;
+                self.anchor = true;
             }
             _ => {
                 if let Some(view) = View::ALL

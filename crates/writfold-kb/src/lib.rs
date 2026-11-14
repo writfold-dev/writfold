@@ -107,6 +107,8 @@ pub enum Verb {
     Write(write::Write),
     /// `gate run|status|verify|lines`.
     Gate(gate::GateVerb),
+    /// `guard status`: rules judged for the current run, as if matched.
+    Guard(guard::GuardVerb),
     /// `edit apply|recover` (the Splicery adapter).
     Edit(edit::EditVerb),
     /// `deliver prepare|check|attest|waive|status` (G2; nothing is sent).
@@ -148,6 +150,9 @@ pub fn run(request: &Request) -> Result<Output> {
     }
     if let Verb::Gate(verb) = &request.verb {
         return gate::execute(&ws, request, verb, now);
+    }
+    if let Verb::Guard(guard::GuardVerb::Status) = &request.verb {
+        return guard::status::execute(&ws, request, now);
     }
     if let Verb::Edit(verb) = &request.verb {
         return edit::execute(&ws, request, verb, now);

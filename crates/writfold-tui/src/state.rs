@@ -19,6 +19,7 @@ impl App {
             .runs(self.open_only, self.project_only.as_deref());
         self.asked = self.source.clock();
         self.answers.clear();
+        self.guards = None;
         self.subjects.clear();
         self.order_runs(keep.as_deref());
         if self.run_id() != keep.as_deref() {
@@ -99,6 +100,11 @@ impl App {
         if self.answer(view).is_some() {
             return;
         }
+        if view == View::Guards {
+            self.guards = Some(self.source.guards());
+            self.asked = self.source.clock();
+            return;
+        }
         let Some(run) = self.run() else {
             return;
         };
@@ -109,6 +115,7 @@ impl App {
             View::Inbox | View::Resume => self.source.resume(&run),
             View::Stale => self.source.stale(self.project().as_deref()),
             View::Brief => self.source.brief(self.project().as_deref()),
+            View::Guards => self.source.guards(),
         };
         let no_plan = view == View::Progress && field(&answer.trailer, "reason") == "no-plan";
         self.answers
@@ -130,10 +137,14 @@ impl App {
                 self.load_view(View::Gates);
                 self.load_view(View::Inbox);
                 self.load_view(View::Timeline);
+                if self.height >= 38 {
+                    self.load_view(View::Guards);
+                }
             }
             Class::Medium => {
                 self.load_view(View::Gates);
                 self.load_view(View::Inbox);
+                self.load_view(View::Guards);
             }
             _ => {}
         }

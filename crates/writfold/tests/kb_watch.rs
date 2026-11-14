@@ -7,8 +7,8 @@ use std::path::{Path, PathBuf};
 const TOKEN: &str = "⟦cite kind=src depot=main path=lib/fresh.c L=3-9 want=fresh⟧";
 const B: &str = "run-20261102T090000Z-b1c2d3";
 const C: &str = "run-20261103T090000Z-c1d2e3";
-const VIEWS: [&str; 7] = [
-    "progress", "gates", "timeline", "inbox", "stale", "brief", "resume",
+const VIEWS: [&str; 8] = [
+    "progress", "gates", "timeline", "inbox", "guards", "stale", "brief", "resume",
 ];
 
 fn put(path: &Path, text: &str) -> Result {

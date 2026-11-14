@@ -15,7 +15,7 @@ const GATE_COUNTS: &[&str] = &[
     "invalid",
 ];
 
-fn count_parts(answer: &Reply, names: &[&str]) -> String {
+pub(crate) fn count_parts(answer: &Reply, names: &[&str]) -> String {
     names
         .iter()
         .filter_map(|n| answer.count(n).map(|v| format!("{n}={v}")))
@@ -62,14 +62,20 @@ fn inbox_rows(answer: &Reply) -> impl Iterator<Item = &serde_json::Value> {
         .filter(|r| matches!(field(r, "kind"), "draft" | "proposal"))
 }
 
+fn has_tracked(answer: &Reply) -> bool {
+    inbox_rows(answer).any(|row| crate::source::flags(row).contains(&"tracked"))
+}
+
 pub fn inbox(answer: &Reply) -> Vec<Line> {
     if answer.error.is_some() {
         return lines::reply(answer);
     }
-    let mut out = vec![line(
-        "local; not in the KB until confirmed or accepted",
-        Tone::Dim,
-    )];
+    let caption = if has_tracked(answer) {
+        "drafts and proposals; not records until confirmed or accepted"
+    } else {
+        "local; not in the KB until confirmed or accepted"
+    };
+    let mut out = vec![line(caption, Tone::Dim)];
     let rows: Vec<_> = inbox_rows(answer).flat_map(lines::row).collect();
     if rows.is_empty() {
         out.push(line("(none)", Tone::Dim));
@@ -114,8 +120,13 @@ fn compact_gates(answer: &Reply) -> Vec<Line> {
 }
 
 fn compact_inbox(answer: &Reply) -> Vec<Line> {
+    let caption = if has_tracked(answer) {
+        "pending records"
+    } else {
+        "local; not in the KB"
+    };
     let mut out = vec![line(
-        format!("{} (local; not in the KB)", inbox_counts(answer)),
+        format!("{} ({caption})", inbox_counts(answer)),
         Tone::Dim,
     )];
     for row in inbox_rows(answer) {
@@ -149,6 +160,7 @@ pub fn compact(app: &App, view: View) -> Vec<Line> {
     match view {
         View::Gates => compact_gates(answer),
         View::Inbox => compact_inbox(answer),
+        View::Guards => crate::guards::content(app, answer, true),
         View::Timeline => {
             let mut out: Vec<_> = answer
                 .rows
@@ -185,5 +197,5 @@ pub fn summary(app: &App) -> String {
         Some(answer) => inbox_counts(answer),
         None => "no run selected".into(),
     };
-    format!("{gates} | inbox: {inbox}")
+    format!("{gates} | inbox: {inbox} | {}", crate::guards::summary(app))
 }
