@@ -8,7 +8,7 @@ use crate::{side, style};
 use ratatui::Frame;
 use ratatui::layout::Rect;
 use ratatui::text::Line;
-use ratatui::widgets::{Block, List, ListItem, ListState, Paragraph, Wrap};
+use ratatui::widgets::{Block, List, ListItem, ListState, Paragraph};
 
 /// Load visible answers and draw the whole frame.
 pub fn draw(frame: &mut Frame<'_>, app: &mut App) {
@@ -48,15 +48,20 @@ fn detail(frame: &mut Frame<'_>, app: &mut App, area: Rect) {
         app.scroll = initial_scroll(&detail.lines, detail.current, inner.width, inner.height);
         app.anchor = false;
     }
-    let pane = Paragraph::new(text(detail.lines, app.look)).wrap(Wrap { trim: false });
     if app.scroll > 0 {
-        let last = pane.line_count(inner.width).saturating_sub(1);
+        let last = detail
+            .lines
+            .iter()
+            .map(|l| crate::wrap::height(l, inner.width))
+            .sum::<usize>()
+            .saturating_sub(1);
         app.scroll = app.scroll.min(u16::try_from(last).unwrap_or(u16::MAX));
     }
-    let pane = pane
-        .block(block(detail.title, app.focus == Focus::Detail, app.look))
-        .scroll((app.scroll, 0));
-    frame.render_widget(pane, area);
+    frame.render_widget(
+        block(detail.title, app.focus == Focus::Detail, app.look),
+        area,
+    );
+    crate::wrap::draw(frame, &detail.lines, inner, app.look, app.scroll);
 }
 
 fn runs(frame: &mut Frame<'_>, app: &App, area: Rect) {

@@ -26,6 +26,7 @@ pub mod theme;
 mod theme_tests;
 pub mod view;
 mod views;
+mod wrap;
 
 use app::{App, View};
 use source::Source;
