@@ -118,6 +118,7 @@ The v1 design is [kb-v1-design.md](kb-v1-design.md).
 10. A two-week pause: count real catches and waivers from the receipts. If no catch mattered, keep G1 and drop the rest.
 11. M4b: MCP, trailer and tracker edges, `--at`. G3 only if the pause justifies it.
 12. ~~T2: run progress in `writfold watch`~~: plan steps, owed gates, checklist items, guards, inbox and timeline; responsive layouts, subject/queue polling and six themes; read-only and never starting a checker ([as built](kb-v1-design.md#34-t2-as-built)).
+13. T3: the plan map and node inspector in `writfold watch` ([specification](tui-t3-spec.md)): the run's spine of steps with spliced steps nested, state glyphs and gate chips per step, the recorded current step marked, and an inspector for the selected step. Read-only; the marker is the recorded position, never a liveness claim.
 
 **v0.5.0-dev.1** (13 November 2026): enforcement and evidence that a team configures, not code it writes.
 
