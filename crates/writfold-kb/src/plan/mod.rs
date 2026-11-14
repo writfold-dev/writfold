@@ -29,6 +29,7 @@ pub(crate) mod show;
 mod splice;
 mod status;
 pub mod template;
+pub(crate) mod timeline;
 mod write;
 
 use crate::emit::{Output, Row};

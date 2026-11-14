@@ -1,4 +1,6 @@
 //! Run entries, mentioned records and literal run-directory matching.
+#[path = "timeline_run/plan.rs"]
+mod plan;
 mod support;
 
 use serde_json::Value;
@@ -24,6 +26,7 @@ fn run_world() -> TestResult<World> {
         "é".repeat(105)
     );
     std::fs::write(w.kb.join(format!("runs/{RUN}/checkpoint.md")), text)?;
+    plan::record(&w)?;
     git(&w.kb, &["add", "-A"])?;
     git(&w.kb, &["commit", "-q", "-m", "timeline entries"])?;
     Ok(w)

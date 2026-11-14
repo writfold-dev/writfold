@@ -155,6 +155,8 @@ pub fn timeline(session: &Session<'_>, target: &str) -> Result<Answer> {
     )?);
     if let Some((_, entries)) = own {
         events.extend(entries);
+        let graph = crate::plan::fold::read(&session.ws.root, &runs::dir(&rec), &rec.id);
+        events.extend(crate::plan::timeline::rows(&graph));
     }
     events.sort_by(|a, b| (&a.0, &a.1, &a.2.text).cmp(&(&b.0, &b.1, &b.2.text)));
     let mut answer = Answer {

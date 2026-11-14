@@ -89,4 +89,8 @@ run run-20261101T090000Z-a1b2c3 [open] 2026-11-01T09:00:00Z created Add --plan t
 checkpoint 2026-11-10T09:00:00Z entry 1 of 3: Started; read the runs verb. @runs/run-20261101T090000Z-a1b2c3/checkpoint.md:2
 checkpoint 2026-11-10T12:45:00Z entry 2 of 3: Implemented --plan; see proposal/decision/2026-03-02-batch-ledger-writes. @runs/run-20261101T090000Z-a1b2c3/checkpoint.md:6
 checkpoint 2026-11-10T14:10:00Z entry 3 of 3: Review started. @runs/run-20261101T090000Z-a1b2c3/checkpoint.md:10
+plan change#1 [spliced] 2026-11-10T23:45:00Z spliced change#1 @runs/run-20261101T090000Z-a1b2c3/plan/splice-change.1.json:1
+plan change#1/research [done] 2026-11-10T23:47:00Z done change#1/research @runs/run-20261101T090000Z-a1b2c3/plan/done-change.1~research.json:1
+plan change#1/implement [done] 2026-11-10T23:50:00Z done change#1/implement @runs/run-20261101T090000Z-a1b2c3/plan/done-change.1~implement.json:1
+plan change#1/benchmarks [skipped] 2026-11-10T23:51:00Z skipped change#1/benchmarks (by owner) no hot path touched @runs/run-20261101T090000Z-a1b2c3/plan/skip-change.1~benchmarks.json:1
 == kb=XXXXXXXXXXXX+dirty:14 index=refreshed:1  subject=kb@0ea3a743bfef+dirty:17  read-only; no daemon, nothing here claims a run is live ==

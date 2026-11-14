@@ -32,9 +32,9 @@ run-20261101T090000Z-a1b2c3 [open] !current  Add --plan to kb runs  project=harb
 │                                      ││   change#1/deliver [later] gates: unit                               ││checkpoint 2026-11-10T09:00:00Z entry 1 of 3: │
 │                                      ││   change#1/reflect [later] no gates                                  ││checkpoint 2026-11-10T12:45:00Z entry 2 of 3: │
 │                                      ││# note: plan change @83c2cc9efde7 from .writfold/plans/change.toml;   ││checkpoint 2026-11-10T14:10:00Z entry 3 of 3: │
-│                                      ││steps are derived from runs/run-20261101T090000Z-a1b2c3/plan/ on every││                                              │
-│                                      ││read, never stored                                                    ││                                              │
-│                                      ││                                                                      ││                                              │
-│                                      ││                                                                      ││                                              │
+│                                      ││steps are derived from runs/run-20261101T090000Z-a1b2c3/plan/ on every││plan change#1 [spliced] 2026-11-10T23:45:00Z s│
+│                                      ││read, never stored                                                    ││plan change#1/research [done] 2026-11-10T23:47│
+│                                      ││                                                                      ││plan change#1/implement [done] 2026-11-10T23:5│
+│                                      ││                                                                      ││plan change#1/benchmarks [skipped] 2026-11-10T│
 └──────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────┘
 kb=XXXXXXXXXXXX+dirty:14 index=refreshed:1  subject=kb@0ea3a743bfef+dirty:17  asked 00:00:00Z  theme=ansi  read-only; no daemon  ? help  q quit
