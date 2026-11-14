@@ -6,8 +6,10 @@
 #![forbid(unsafe_code)]
 
 pub mod app;
+pub mod cells;
 mod chrome;
 pub mod frame;
+pub mod graph;
 pub mod guards;
 mod keys;
 pub mod layout;
