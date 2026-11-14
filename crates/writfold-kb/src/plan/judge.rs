@@ -115,11 +115,7 @@ fn gate(j: &Judged<'_>, repo: &str, detail: bool) -> Gate {
             j.checklist.as_ref().map_or_else(Vec::new, |v| {
                 v.entries
                     .iter()
-                    .map(|e| {
-                        let mut line = crate::gate::checklist::item_line(e);
-                        line.status = Some(e.item.name().into());
-                        line
-                    })
+                    .map(crate::gate::checklist::item_line)
                     .collect()
             })
         } else {

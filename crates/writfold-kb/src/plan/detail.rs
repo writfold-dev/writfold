@@ -56,7 +56,7 @@ pub fn add(answer: &mut Answer, graph: &Graph, judged: Option<&[Vec<Gate>]>) {
             .unwrap_or(row.more.len());
         row.more.splice(at..at, lines);
     }
-    if let Some(gates) = judged {
+    if let Some(gates) = judged.filter(|_| !graph.steps.is_empty()) {
         match graph.current() {
             Some(i) => {
                 answer.counts.push(("current", i + 1));

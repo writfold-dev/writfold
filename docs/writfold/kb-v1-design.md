@@ -2868,9 +2868,9 @@ to pending records and retains `!tracked` (34.9).
   subject; a complete plan has `current=0`. Done run-record gates are judged
   against their own closed windows.
 - **Optional `more.status`.** The version-1 envelope is unchanged. Detailed plan
-  gate/item continuations emit this optional string; ordinary continuations omit
-  it. The viewer reads it rather than parsing brackets. The shared item fields
-  equal `gate status`; its existing JSON is unchanged. The grammar and counts are
+  gate/item continuations and `gate status` checklist item continuations emit
+  this optional string; other continuations omit it. The viewer reads it rather
+  than parsing brackets. Item continuations are the same in both verbs. The grammar and counts are
   documented in [JSON](../guide/json.md#labels-the-views-rely-on).
 - **`runs --plan`.** Folds each listed run's plan without a subject or gate
   judgment. The `plan` continuation gives position, done/skipped counts, current
@@ -3101,11 +3101,20 @@ sequences only in truecolor. The real tracked-inbox caption was checked too.
 
 ### 34.9 Deviations from the specification
 
+- **Fixed at integration.** A run with no plan printed a facts line ending
+  "every step is done or skipped"; `plan status --gates` now adds no `current`
+  counts for an empty graph and the viewer prints no facts line for zero steps.
+  A subject change first observed when a different run was selected now drops
+  the cached Guards answer, which the fifth-tick poll could otherwise miss
+  (`a_subject_change_seen_on_selection_drops_the_cached_guards` fails without
+  it). An empty `WRITFOLD_THEME` is ignored like other empty `WRITFOLD_*`
+  variables.
+
 - **Compatibility wins over contradictory digest wording.** False new flags
   preserve existing query digests; true flags add discriminating arguments.
-  `more.status` is added only to detailed plan output. Existing gate-status item
-  JSON remains byte-identical; the equality test compares its shared fields and
-  separately checks the additive status. `tests/json.rs` permits that optional
+  `more.status` was first added only to detailed plan output; at integration it
+  was added to `gate status` checklist items too (an additive key; one JSON
+  golden gained it), so the two verbs' item continuations are equal. `tests/json.rs` permits that optional
   key as owner decision 0a.1 requires, rather than remaining literally unchanged.
 - **Both proposal stores are observed.** Tracked proposals landed on main and
   their dot directory is deliberately outside the KB index pin. A regression

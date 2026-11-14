@@ -79,7 +79,13 @@ impl App {
 
     pub(crate) fn refresh_subject(&mut self) {
         let recorded = self.worktree();
-        self.stamps.subject = self.source.subject(&mut self.tool, recorded.as_deref());
+        let subject = self.source.subject(&mut self.tool, recorded.as_deref());
+        // Guards judge the current run, not the selection; a subject change
+        // absorbed here would otherwise never reach the fifth-tick poll.
+        if subject != self.stamps.subject {
+            self.guards = None;
+        }
+        self.stamps.subject = subject;
         self.remember_subject();
     }
 

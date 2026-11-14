@@ -59,7 +59,7 @@ pub(crate) fn item_line(e: &Entry<'_>) -> More {
         _ => Vec::new(),
     };
     More {
-        status: None,
+        status: Some(e.item.name().into()),
         label: "item",
         text,
         line: path.as_ref().map(|_| 1),

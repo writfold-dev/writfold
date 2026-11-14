@@ -233,6 +233,12 @@ fn run_positions_and_unplanned_fallback_keep_verb_facts() -> TestResult {
     app.load();
     let fallback = content(&app, true);
     assert!(fallback.contains("has no plan"));
+    // No invented "all done" line for a run that has no plan.
+    assert!(
+        !fallback.contains("every step is done or skipped"),
+        "{fallback}"
+    );
+    assert!(!fallback.contains("plan 0 done"), "{fallback}");
     let gates = app.gate_status().ok_or("fallback gates")?;
     assert_eq!(gates.count("gates"), Some(6));
     for row in &gates.rows {

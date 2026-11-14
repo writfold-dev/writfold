@@ -120,3 +120,29 @@ fn repo_is_a_subject_override_not_a_kb_discovery_override() -> TestResult {
     }
     Ok(())
 }
+
+#[test]
+fn a_subject_change_seen_on_selection_drops_the_cached_guards() -> TestResult {
+    let w = world("guards-refresh")?;
+    let source = subject_source(&w)?;
+    let repo = source.cwd.clone();
+    std::fs::create_dir_all(w.kb.join(".writfold/guards"))?;
+    std::fs::write(
+        w.kb.join(".writfold/guards/commit.toml"),
+        "schema = \"writfold-guard-rule/1\"\nid = \"commit\"\nevent = \"pre-tool-use\"\ncommands = [\"git commit\"]\nrequire = [\"gates.met\"]\naction = \"deny\"\n",
+    )?;
+    let ws = discover(Some(&w.kb), &w.kb)?;
+    let state = proposal::state_of(&ws).ok_or("state")?;
+    std::fs::write(state.join("current-run"), format!("{RUN}\n"))?;
+    let mut app = App::new(source, Some(RUN));
+    app.show(writfold_tui::app::View::Guards);
+    let before = format!("{:?}", app.detail().ok_or("guards")?.rows);
+    std::fs::write(repo.join("tracked.txt"), "edited since the receipt\n")?;
+    // Selecting another run observes the subject at once; the guards
+    // answer is asked again rather than kept until the fifth tick.
+    app.key(writfold_tui::app::Key::Char(']'));
+    app.key(writfold_tui::app::Key::Char('['));
+    let after = format!("{:?}", app.detail().ok_or("guards")?.rows);
+    assert_ne!(before, after);
+    Ok(())
+}

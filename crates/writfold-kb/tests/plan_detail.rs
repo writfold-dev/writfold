@@ -207,10 +207,9 @@ fn same_items(w: &World, current: &Value) -> TestResult {
             .cloned()
             .collect())
     };
-    let mut actual = items(current)?;
-    for item in &mut actual {
-        item.as_object_mut().ok_or("object")?.remove("status");
-    }
+    // Item continuations are `gate status`'s own, `status` key included.
+    let actual = items(current)?;
+    assert!(actual.iter().all(|i| i["status"].is_string()), "{actual:?}");
     assert_eq!(actual, items(review)?);
     Ok(())
 }

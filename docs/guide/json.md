@@ -38,9 +38,9 @@ Each entry of `more` has `label` (`why`, `note`, `cite`, `next` and so on), `tex
 
 ### Labels the views rely on
 
-`plan status --gates` supplies `status` on its `gate` and `item` continuations. Their `text` starts with `<id> [<state>]`, where the ID has no space and the state has no `]`; readers should use `status`, not parse the brackets. Judged gates append their class (except undefined gates), and checklist gates append `<covered>/<required> required covered`. Evidence locations and unmet-gate flags accompany the gate; checklist items retain the same text, location and flags as `gate status`. Later gates say `[later]` without evidence or flags; skipped steps have no gate continuations.
+`plan status --gates` supplies `status` on its `gate` and `item` continuations, and `gate status` on its checklist `item` continuations. Their `text` starts with `<id> [<state>]`, where the ID has no space and the state has no `]`; readers should use `status`, not parse the brackets. Judged gates append their class (except undefined gates), and checklist gates append `<covered>/<required> required covered`. Evidence locations and unmet-gate flags accompany the gate; checklist items retain the same text, location and flags as `gate status`. Later gates say `[later]` without evidence or flags; skipped steps have no gate continuations.
 
-With `--gates` and a subject repository, `counts` includes `current` (the 1-based step position), `current_gates` and `current_owed`. Once every step is closed, only `current=0` is added. Without a subject none of these counts is present. Without `--gates`, plan status keeps its ordinary output and query digest.
+With `--gates` and a subject repository, `counts` includes `current` (the 1-based step position), `current_gates` and `current_owed`. Once every step is closed, only `current=0` is added; a run with no plan gets none of them. Without a subject none of these counts is present. Without `--gates`, plan status keeps its ordinary output and query digest.
 
 `runs --plan` adds a `plan` continuation and `counts.planned`; its text holds the
 recorded position and done/skipped counts, never owed-gate counts. `timeline`

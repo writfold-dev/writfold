@@ -134,7 +134,7 @@ fn watch(args: &[String]) -> ExitCode {
         colorterm: env::var("COLORTERM").ok(),
         no_color: env::var_os("NO_COLOR").is_some(),
         term: env::var("TERM").ok(),
-        theme: env::var("WRITFOLD_THEME").ok(),
+        theme: env::var("WRITFOLD_THEME").ok().filter(|t| !t.is_empty()),
     };
     match writfold_tui::main(args, cwd, io::stdout().is_terminal(), environment) {
         Ok(outcome) => {

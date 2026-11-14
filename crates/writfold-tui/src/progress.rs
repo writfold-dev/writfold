@@ -4,7 +4,9 @@ use crate::source::{Reply, field, flags};
 use serde_json::Value;
 
 pub fn facts(answer: &Reply) -> Option<Line> {
-    let steps = answer.count("steps")?;
+    // An unplanned run has no progress to state: its pane shows the
+    // verb's no-plan note and the gates, never an "all done" line.
+    let steps = answer.count("steps").filter(|n| *n > 0)?;
     let done = answer.count("done")?;
     let skipped = answer.count("skipped")?;
     let mut text = format!("plan {done} done, {skipped} skipped of {steps} steps");
