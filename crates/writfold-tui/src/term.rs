@@ -13,6 +13,8 @@ fn key(code: KeyCode, modifiers: KeyModifiers) -> Option<Key> {
         KeyCode::Char('c') if modifiers.contains(KeyModifiers::CONTROL) => Key::Char('q'),
         KeyCode::Up => Key::Up,
         KeyCode::Down => Key::Down,
+        KeyCode::Left => Key::Left,
+        KeyCode::Right => Key::Right,
         KeyCode::Enter => Key::Enter,
         KeyCode::Tab => Key::Tab,
         KeyCode::BackTab => Key::BackTab,

@@ -1,5 +1,5 @@
 //! Cached projections and stamp-driven refresh, independent of rendering.
-use crate::app::{App, View};
+use crate::app::{App, Focus, View};
 use crate::layout::{self, Class};
 use crate::poll::Stamps;
 use crate::source::{field, flags};
@@ -25,6 +25,7 @@ impl App {
         if self.run_id() != keep.as_deref() {
             self.scroll = 0;
             self.anchor = true;
+            self.node = None;
         }
         if reuse && self.run_id() == keep.as_deref() && old_recorded == self.worktree() {
             self.remember_subject();
@@ -138,6 +139,12 @@ impl App {
         if !self.runs_view {
             self.load_view(self.view);
         }
+        self.sync_node();
+        if self.map_visible() {
+            self.load_view(View::Timeline);
+        } else if self.focus == Focus::Inspector {
+            self.focus = Focus::Detail;
+        }
         match layout::class(self.width, self.height) {
             Class::Wide => {
                 self.load_view(View::Gates);
@@ -171,6 +178,13 @@ impl App {
             self.runs_view = false;
         }
         self.load();
+        if layout::class(width, height) == Class::Narrow
+            && self.focus == Focus::Runs
+            && !self.runs_view
+            && self.map_visible()
+        {
+            self.focus = Focus::Detail;
+        }
     }
 
     pub fn show(&mut self, view: View) {
@@ -178,6 +192,9 @@ impl App {
         self.runs_view = false;
         self.scroll = 0;
         self.anchor = true;
+        if self.focus == Focus::Inspector {
+            self.focus = Focus::Detail;
+        }
         self.load();
     }
 
@@ -194,6 +211,7 @@ impl App {
         self.selected = next;
         self.scroll = 0;
         self.anchor = true;
+        self.node = None;
         self.refresh_subject();
         self.load();
     }

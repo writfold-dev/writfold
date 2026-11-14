@@ -39,6 +39,7 @@ fn every_letter_digit_and_tab_reaches_its_view() -> TestResult {
 fn focus_arrows_brackets_and_pages_follow_control_semantics() -> TestResult {
     let w = world("navigation")?;
     let mut app = App::new(w.source(), Some(RUN));
+    app.map = false;
     render(&mut app, 100, 30)?;
     for focus in [Focus::Runs, Focus::Detail] {
         app.focus = focus;
@@ -77,13 +78,15 @@ fn expansion_help_and_unbound_letters_do_not_change_records() -> TestResult {
     let w = world("toggles")?;
     let mut app = App::new(w.source(), Some(RUN));
     app.key(Key::Char('x'));
+    assert!(!app.map);
+    app.key(Key::Char('X'));
     assert!(app.expand_all);
-    app.key(Key::Char('x'));
+    app.key(Key::Char('X'));
     assert!(!app.expand_all);
     app.show(View::Gates);
     app.key(Key::Char('x'));
     assert!(!app.expand_all);
-    for key in ['a', 'c', 'd', 'f', 'h', 'l', 'm', 'n', 'v', 'w', 'y', 'z'] {
+    for key in ['a', 'c', 'd', 'f', 'm', 'n', 'v', 'w', 'y', 'z'] {
         let before = (app.run(), app.view, app.focus, app.scroll, app.runs.clone());
         assert!(app.key(Key::Char(key)));
         assert_eq!(

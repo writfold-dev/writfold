@@ -27,6 +27,10 @@ pub fn bars(frame: &mut Frame<'_>, app: &App, areas: &Areas, narrow: bool) {
             area,
         );
     }
+    footer(frame, app, areas, narrow);
+}
+
+fn footer(frame: &mut Frame<'_>, app: &App, areas: &Areas, narrow: bool) {
     let footer = if app.notice.is_some() || !narrow {
         content::footer(app, true)
     } else {
@@ -58,6 +62,16 @@ pub fn bars(frame: &mut Frame<'_>, app: &App, areas: &Areas, narrow: bool) {
                 );
             }
         }
+    }
+    if app.notice.is_none() && app.map_visible() && !narrow {
+        let hints = format!(
+            " asked {} theme={} read-only  jk node  l inspect  . current  n flag  ? q",
+            app.asked,
+            app.look.label()
+        );
+        let width = (hints.len() as u16).min(areas.footer.width);
+        let area = Rect::new(areas.footer.right() - width, areas.footer.y, width, 1);
+        frame.render_widget(Paragraph::new(hints).style(style::bar(app.look)), area);
     }
 }
 

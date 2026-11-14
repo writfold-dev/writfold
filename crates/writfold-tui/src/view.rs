@@ -31,6 +31,8 @@ pub fn draw(frame: &mut Frame<'_>, app: &mut App) {
     }
     if class == Class::Narrow && app.runs_view {
         crate::list_view::draw(frame, app, areas.main);
+    } else if app.map_visible() {
+        crate::map_view::draw(frame, app, areas.main);
     } else {
         detail(frame, app, areas.main);
     }

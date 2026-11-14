@@ -15,9 +15,12 @@ mod keys;
 pub mod layout;
 pub mod lines;
 mod list_view;
+mod map_view;
+mod nav;
 mod paint;
 pub mod poll;
 pub mod progress;
+pub mod rail;
 pub mod side;
 pub mod source;
 mod state;
@@ -131,6 +134,7 @@ pub fn main(
     let source = Source::located(options.kb, cwd, options.repo, None)?;
     let mut app = App::new(source, options.run.as_deref());
     app.look = look;
+    app.dumb = env.term.as_deref() == Some("dumb");
     if let Some(view) = options.view {
         app.show(view);
     }
