@@ -13,6 +13,7 @@ These pages hold the full skeletons the website only sketches: file layouts, com
 | [gates](gates.md) | Gate definitions, receipts, standing, waivers and attestations, run-record checks | built |
 | [delivery-modes](delivery-modes.md) | Delivery candidates, mode files, deny lists and the guard hook | built, with your own modes |
 | [run-graph](run-graph.md) | Plans as a spine of steps that owe gates | built (splicing and required steps included) |
+| [watch](watch.md) | Recorded run progress in eight read-only views, layouts, controls, refresh and colour themes | built (T2) |
 | [skills](skills.md) | The bundled `writfold:kb` and `writfold:evaluate` skills, and skills that splice a plan template | built |
 | [hooks](hooks.md) | What each Claude Code hook reads, writes and prints | built |
 | [json](json.md) | The `--json` envelope: keys, exit codes and the compatibility rule | built in v0.5.0-dev.1 |

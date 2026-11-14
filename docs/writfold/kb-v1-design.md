@@ -1401,6 +1401,8 @@ checkpoint 2026-11-03T16:00:00Z entry 2 of 2 @runs/run-20261101T090000Z-a1b2c3/c
 
 ### 18.6 Not done
 
+T2 (§34) closes the subject override/poll, adds plan positions and run filters, and deliberately keeps `c` unbound; this section remains the T1 record.
+
 - A `--repo` for the gate subject, and polling the subject repository's state (gate staleness from a subject change alone shows after `r`).
 - Per-run obligation counts in the runs list: `kb runs` does not print them, and the view does not compute them.
 - `c` to promote a draft (the review's one candidate write key) and any other write.
@@ -2605,6 +2607,8 @@ A sixth part, `Part::Stale`, shown after the brief: ``Citations: 1 gone, 2 chang
 
 Built in v0.5.0-dev.1. A guard rule refuses a named command or tool until facts about the run hold, through the same PreToolUse hook as the delivery guard (19.6), and the same rule files give the opt-in Stop nudge that 7.1 sketched and 25.8 listed as not built. User documentation: [docs/guide/hooks.md](../guide/hooks.md#guard-rules). New code: the kernel `crates/writfold-core/src/guard.rs`; `crates/writfold-kb/src/guard/{mod,rules,require}.rs`, with the delivery guard moved unchanged from `guard.rs` to `guard/delivery.rs`; the `stop` dispatch in `hook/mod.rs`; the `guards` part of `kb check` (`check.rs`); the matcher in `plugins/writfold/hooks/hooks.json`.
 
+T2 adds the read-only `guard status` projection, including cached-checker grounding coverage; see [§34.2](#342-verb-additions) and the [guard guide](../guide/hooks.md#inspecting-rules-without-a-hook).
+
 ### 30.1 Rule files
 
 `.writfold/guards/<id>.toml`, schema `writfold-guard-rule/1` (`writfold-guard/1` is `guard.toml`'s), in the gate definitions' TOML subset with unknown keys refused. Keys: `id` (a slug equal to the file name), `event` (`pre-tool-use` or `stop`), `commands` (word prefixes of a simple command, matched as `guard.toml`'s are), `tools` (exact names), `repos` (optional repository-name patterns with `!` exclusions, matched by `writfold_core::scope::in_scope`; a `/` is refused), `require`, `action` (`deny` or `ask`, required for `pre-tool-use`, refused for `stop`) and `description`. A `pre-tool-use` rule names at least one command or tool; a `stop` rule names none. `require` is one or more of a fixed vocabulary, refused if unknown or repeated: `run.current`, `gates.met`, `gate:<id>`, `step.met`. There are no path globs (added in v0.5.0-dev.3, 30.9), gate-ID globs, per-gate standing sets or origin-URL scopes.
@@ -2761,6 +2765,8 @@ All three set `status`, `updated` and `last_actor` and append `- <date>: <state>
 
 A citation kind Writfold cannot check from Git or the index can name an external checker. The guide page is [checkers](../guide/checkers.md).
 
+T2 adds `stale --cached` and uses it in `watch`, so the viewer never starts a checker or writes the verdict cache; see [§34.2](#342-verb-additions).
+
 ### 33.1 Declaration and discovery
 
 `stale/kinds.rs` gains `freshness = "checked"` and two keys, `checker` (a name, `[a-z0-9._-]`) and `fields` (the field names `make` may write; `kind`, `seen`, `ttl`, `stale` and `v` are Writfold's and refused). Both are required with `checked` and refused with any other freshness; `default_ttl` is refused with `checked`, so a checked kind never also ages by TTL (offline, it is never `due`). Built-in kinds stay undeclarable and unknown keys still refuse. The checker is `writfold-check-<checker>` found by a `PATH` lookup (`stale/checker/spawn.rs::find`): the KB holds no argv and no secret.
@@ -2811,6 +2817,322 @@ A checked kind may declare `max_age` (`<N>d` or `<N>h`, parsed as `default_ttl` 
 
 Tests: the kernel test above; `crates/writfold-kb/tests/checker_cache.rs` ages a checker's cached fresh row to 6, 7 and 8 days under `max_age = "7d"` (fresh, fresh, `check-expired (8d)`), shows it fresh at 8 days without `max_age`, shows `stale --offline` reporting it and online `stale` asking again; making `aged` ignore the age fails both. `tests/kinds.rs` covers the `max_age` refusals and the note's kinds and counts before and after declarations. The guide's checker template (`docs/guide/checkers.md`) was run through the binary: `cite make --kind`, `kb stale`, a refused `make` for a missing file, `stale --offline` after ageing the cache eight days (`check-expired (8d)`), and online `stale` again.
 
-## 34. T2: run progress in `writfold watch` (planned)
+## 34. T2 as built
 
-Not built. The specification is [tui-t2-spec.md](tui-t2-spec.md); this section is written from what is built when T2 lands, including deviations and Not done.
+T2 extends the read-only terminal projection of §18. Every pane is an in-process
+JSON answer from `writfold_kb::run`; the viewer neither parses KB records nor
+judges gates. The [specification](tui-t2-spec.md) remains the design record;
+owner decisions in its §0a are reflected here. The user guide is
+[Watching a run](../guide/watch.md).
+
+### 34.1 Verb and panes
+
+```text
+writfold watch [--kb DIR] [--repo DIR] [--run ID] [--view NAME]
+               [--theme NAME] [--color auto|truecolor|ansi|none] [--once]
+```
+
+| Pane | Key | Answer projected |
+|---|---|---|
+| Runs | Left column, or narrow `0` view | `runs --plan`, with `--open` / `--project` filters |
+| Progress | `p`, `1` | `plan status --run R --gates` |
+| Gates | `g`, `2` | `gate status --run R` |
+| Timeline | `t`, `3` | `timeline R` |
+| Inbox | `i`, `4` | Draft/proposal rows of `resume R` |
+| Guards | `u`, `5` | `guard status`, for the current-run pointer and working directory |
+| Stale | `s`, `6` | `stale P --cached` |
+| Brief | `b`, `7` | `brief P` |
+| Resume | `e`, `8` | Complete `resume R` answer |
+
+Progress prints only the verb's done/skipped/step/current/owed counts and recorded
+states. Its strip has one cell per step: `[x] [!] [-] [>] [ ]`. A clean done step
+collapses to its head and recorded completion time, later steps to their heads;
+flagged, current and skipped steps retain detail. `x` expands all. Done history
+never rewinds when its evidence becomes stale. Without a plan, the verb's note
+is followed by Gates content. A pane's refusal remains visible without ending
+watch; failure to obtain the runs list is an error.
+
+The run list contains plan position, not per-run owed-gate counts. Guards remains
+about the current run even when another run is selected or filters hide the
+current run; the pane says so. Inbox retains the verb's confirm/accept commands.
+Local-only queues use the local caption; a tracked proposal changes the caption
+to pending records and retains `!tracked` (34.9).
+
+### 34.2 Verb additions
+
+- **`plan status --gates`.** Gate continuations follow each judged step's existing
+  reasons and precede its read/next/done lines. They carry standing, class,
+  evidence position, unmet flags and checklist coverage; item continuations keep
+  `gate status`'s text, positions and flags. Later gates are `[later]`, not judged;
+  skipped steps have none. Current-position/gate/owed counts exist only with a
+  subject; a complete plan has `current=0`. Done run-record gates are judged
+  against their own closed windows.
+- **Optional `more.status`.** The version-1 envelope is unchanged. Detailed plan
+  gate/item continuations emit this optional string; ordinary continuations omit
+  it. The viewer reads it rather than parsing brackets. The shared item fields
+  equal `gate status`; its existing JSON is unchanged. The grammar and counts are
+  documented in [JSON](../guide/json.md#labels-the-views-rely-on).
+- **`runs --plan`.** Folds each listed run's plan without a subject or gate
+  judgment. The `plan` continuation gives position, done/skipped counts, current
+  splice position and invalid/disorder flags; `counts.planned` counts listed
+  planned runs. Default `runs` output is unchanged.
+- **`stale --cached`.** Git-backed citations are judged normally; checked kinds
+  read the cached verdict or `not-checked`. No checker starts and `cite_checks`
+  is not written. It refuses combination with `--offline`. Watch uses this form;
+  ordinary `stale` and the stale part of `kb check` retain their existing policy.
+- **`timeline <run>`.** Adds each own checkpoint entry, its timestamp, entry
+  number, first non-empty line (up to 100 characters) and source position. Edges
+  from the run's directory also contribute related records, whose present states
+  remain visible. `counts.checkpoints` counts the entries. Non-run targets keep
+  their existing output.
+- **`guard status`.** Reads the same rules and facts as the hooks and calls the
+  guard kernel as if each rule matched. It emits would-pass/deny/ask/nudge,
+  quiet, not-here and invalid-file rows, plus owes/unknown lines. Counts are
+  rules/deny/ask/nudge/invalid; any of the last four gives exit 2, otherwise 0.
+  No rule files is `answer=unknown reason=no-guards`, exit 0. The context note
+  names the current run and cwd. The separate delivery guard is not evaluated.
+  Stop status does not apply a session's already-nudged suppression.
+- **`watch::{local,subject}`.** Read-only observation, no index construction.
+  Local observation reads current-run bytes and stats drafts plus both proposal
+  stores. Subject observation locates the same repository as the verbs, then
+  combines HEAD with dirty path names, lengths and mtimes from one Git status.
+  No dirty contents are hashed by the subject poll.
+- **`workspace::user_config`.** The existing quoted-line configuration reader is
+  shared by `weft` and `theme`; its file lookup and Weft behaviour stay unchanged.
+
+### 34.3 Layout classes
+
+| Class | Boundary | Arrangement |
+|---|---|---|
+| Wide | Width ≥140 and height ≥32 | Header, tabs, runs 40, main view, side stack 48, footer; Guards side pane at height ≥38 |
+| Medium | Width ≥90 and height ≥16, not wide | Header, tabs, one summary line, runs 30, main view, footer |
+| Narrow | Width ≥60 and height ≥12, not medium | Main view only, short header/tabs/footer; `0` shows runs |
+| Too small | Otherwise | One needs-60x12 line; controls remain available |
+
+Main content wraps without trimming; side panes and run lists truncate. Initial
+Progress positioning uses ratatui's actual wrapped-line count so the current head
+is third when scrolling is needed; manual scroll is preserved. Narrow run-list
+paging scrolls content without moving selection. The side Timeline shows its end.
+
+These are the committed symbols-only buffer goldens, with a fixed clock and ANSI
+look; colour cells are tested separately. They replace the schematic examples.
+Long header/footer and side text is clipped to the available terminal cells.
+
+**160×40** (`crates/writfold-tui/tests/golden/frame-160x40.txt`):
+
+```text
+run-20261101T090000Z-a1b2c3 [open] !current  Add --plan to kb runs  project=harbor  subject=kb
+[1 progress] 2 gates 3 timeline 4 inbox 5 guards 6 stale 7 brief 8 resume
+┌ runs (3) ────────────────────────────┐┌ progress run-20261101T090000Z-a1b2c3 ────────────────────────────────┐┌ gates ───────────────────────────────────────┐
+│> [open] run-20261101T090000Z-a1b2c3 !││plan 2 done, 1 skipped of 6 steps; current step 4/6; owes 2 of 2 gates││gates=6 satisfied=2 open=2 stale=2 failed=0   │
+│    Add --plan to kb runs             ││stale=1                                                               ││unknown=0 attested=0 waived=0 invalid=0       │
+│    project=harbor                    ││     [x] [!] [-] [>] [ ] [ ]                                          ││bench [open] !open                            │
+│    plan: step 4/6 done=2 skipped=1 cu││ x change#1/research [done] notes [satisfied]                         ││lint [stale] !stale                           │
+│    last: 2026-11-10T14:10:00Z Review ││     done: recorded 2026-11-10T23:47:00Z                              ││notes [satisfied]                             │
+│  [open] run-20261102T080000Z-b1c2d3  ││ x change#1/implement [done] unit [satisfied], lint [stale] !stale    ││signoff [open] !open                          │
+│    Review the lantern guide          ││     why: no longer holds: lint [stale] (done stays done; list the    ││unit [satisfied]                              │
+│    project=lantern                   ││gate again on a later step if it must hold there)                     │└──────────────────────────────────────────────┘
+│    last: 2026-11-02T08:30:00Z Read th││     gate unit [satisfied] mechanical                                 │┌ inbox ───────────────────────────────────────┐
+│  [closed] run-20261104T080000Z-d4e5f6││     gate lint [stale] mechanical !stale                              ││drafts=1 proposals=2 (local; not in the KB)   │
+│    Retire the legacy flush path      ││     done: recorded 2026-11-10T23:50:00Z                              ││draft s-progress [open]                       │
+│    project=harbor                    ││ - change#1/benchmarks [skipped] no hot path touched (by owner,       ││  Review started; lint went stale after the re│
+│    plan: complete steps=2 done=2 skip││2026-11-10T23:51:00Z) !skipped                                        ││proposal 2c6ba260f2cde3fa [pending]           │
+│    last: 2026-11-04T09:00:00Z Legacy ││ > change#1/review [current] owes: review-list [stale], signoff [open]││  ticket HBR-210: Lint gate scope misses the c│
+│                                      ││     gate review-list [stale] checklist 2/4 required covered !stale   ││proposal 2c9a051ffe807243 [pending]           │
+│                                      ││       item errors [supported] 1 reference by agent                   ││  link mentions run-20261101T090000Z-a1b2c3 → │
+│                                      ││       item tests [stale] 1 reference by agent; cited evidence moved: │└──────────────────────────────────────────────┘
+│                                      ││gate:lint was satisfied, now stale !stale                             │┌ guards (current run) ────────────────────────┐
+│                                      ││       item docs [open] The guide names every new flag                ││rules=2 deny=1 ask=0 nudge=1 invalid=0        │
+│                                      ││       item perf [not-applicable] no hot path touched by agent        ││commit-needs-gates [would-deny] pre-tool-use g│
+│                                      ││       item style [open] (optional) Names follow the module           ││  owes: gate lint [stale]; next: writfold kb g│
+│                                      ││     gate signoff [open] attested !open                               ││stop-reflect [would-nudge] stop requires step.│
+│                                      ││     read: instructions for signoff @.writfold/gates/signoff.md:1     ││  owes: step review owes review-list [stale], │
+│                                      ││     next: writfold kb gate cover review-list tests supported REF…    │└──────────────────────────────────────────────┘
+│                                      ││--by WHO                                                              │┌ timeline ────────────────────────────────────┐
+│                                      ││   change#1/deliver [later] gates: unit                               ││decision proposal/decision/2026-03-02-batch-le│
+│                                      ││   change#1/reflect [later] no gates                                  ││decision proposal/decision/2026-03-02-batch-le│
+│                                      ││# note: plan change @83c2cc9efde7 from .writfold/plans/change.toml;   ││run run-20261101T090000Z-a1b2c3 [open] 2026-11│
+│                                      ││steps are derived from runs/run-20261101T090000Z-a1b2c3/plan/ on every││checkpoint 2026-11-10T09:00:00Z entry 1 of 3: │
+│                                      ││read, never stored                                                    ││checkpoint 2026-11-10T12:45:00Z entry 2 of 3: │
+│                                      ││                                                                      ││checkpoint 2026-11-10T14:10:00Z entry 3 of 3: │
+│                                      ││                                                                      ││                                              │
+│                                      ││                                                                      ││                                              │
+│                                      ││                                                                      ││                                              │
+│                                      ││                                                                      ││                                              │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────┘
+kb=XXXXXXXXXXXX+dirty:14 index=refreshed:1  subject=kb@0ea3a743bfef+dirty:17  asked 00:00:00Z  theme=ansi  read-only; no daemon  ? help  q quit
+```
+
+**100×30** (`crates/writfold-tui/tests/golden/frame-100x30.txt`):
+
+```text
+run-20261101T090000Z-a1b2c3 [open] !current  Add --plan to kb runs  project=harbor  subject=kb
+[1 progress] 2 gates 3 timeline 4 inbox 5 guards 6 stale 7 brief 8 resume
+gates: open=2 stale=2 of 6 | inbox: drafts=1 proposals=2 | guards: deny=1 ask=0 of 2
+┌ runs (3) ──────────────────┐┌ progress run-20261101T090000Z-a1b2c3 ──────────────────────────────┐
+│> [open] run-20261101T090000││ - change#1/benchmarks [skipped] no hot path touched (by owner,     │
+│    Add --plan to kb runs   ││2026-11-10T23:51:00Z) !skipped                                      │
+│    project=harbor          ││ > change#1/review [current] owes: review-list [stale], signoff     │
+│    plan: step 4/6 done=2 sk││[open]                                                              │
+│    last: 2026-11-10T14:10:0││     gate review-list [stale] checklist 2/4 required covered !stale │
+│  [open] run-20261102T080000││       item errors [supported] 1 reference by agent                 │
+│    Review the lantern guide││       item tests [stale] 1 reference by agent; cited evidence      │
+│    project=lantern         ││moved: gate:lint was satisfied, now stale !stale                    │
+│    last: 2026-11-02T08:30:0││       item docs [open] The guide names every new flag              │
+│  [closed] run-20261104T0800││       item perf [not-applicable] no hot path touched by agent      │
+│    Retire the legacy flush ││       item style [open] (optional) Names follow the module         │
+│    project=harbor          ││     gate signoff [open] attested !open                             │
+│    plan: complete steps=2 d││     read: instructions for signoff @.writfold/gates/signoff.md:1   │
+│    last: 2026-11-04T09:00:0││     next: writfold kb gate cover review-list tests supported REF…  │
+│                            ││--by WHO                                                            │
+│                            ││   change#1/deliver [later] gates: unit                             │
+│                            ││   change#1/reflect [later] no gates                                │
+│                            ││# note: plan change @83c2cc9efde7 from .writfold/plans/change.toml; │
+│                            ││steps are derived from runs/run-20261101T090000Z-a1b2c3/plan/ on    │
+│                            ││every read, never stored                                            │
+│                            ││                                                                    │
+│                            ││                                                                    │
+│                            ││                                                                    │
+│                            ││                                                                    │
+└────────────────────────────┘└────────────────────────────────────────────────────────────────────┘
+kb=XXXXXXXXXXXX+dirty:14 index=fresh  subject=kb@0ea3a743bfef+dirty:17  asked 00:00:00Z  theme=ansi
+```
+
+### 34.4 Keys and refresh
+
+The [guide's control table](../guide/watch.md#controls) is the complete mapping.
+`g` now selects Gates and `e` Resume; Tab/Shift-Tab cycle eight views. Brackets
+select a run regardless of focus. `o` and `P` are arguments to `runs`, not local
+search. A missing project produces a notice. `c` is deliberately unbound: no key
+promotes, accepts or writes. `T` changes the in-memory truecolor theme only.
+
+The KB pin and pointer/queue metadata are polled every two seconds; the selected
+subject every fifth tick (ten seconds). Selection immediately observes its
+subject. A changed stamp drops answers and retains selection by ID; scroll is
+kept when the view does not change. `r` forces a re-ask. Answers are cached per
+run/view, with Inbox sharing Resume; Guards is per stamp, independent of selection.
+`--repo` is canonicalised after KB discovery and supplies every verb's cwd.
+The footer's ask time is a view fact, not evidence of run activity.
+
+### 34.5 `--once`
+
+A non-terminal stdout or `--once` receives one expanded plain frame: Runs,
+Progress, Gates, Inbox, Guards, Timeline, footer. No width limit, clock or terminal
+colour/style sequences enter it. `--view` limits it to Runs, the named section
+and the footer; `--view resume` retains the earlier gate-count heading. Step
+headings and gate/item continuations retain source positions in this form.
+`progress-once.txt`, `progress-once-view-gates.txt` and the updated T1
+`watch-once.txt` are committed goldens and were read after generation.
+There is no `watch --json`: the pane verbs remain the machine interface.
+
+### 34.6 Themes and colour depth
+
+Hone, slate, carbide, vellum, paper and paper-dark are built; vellum and paper are
+light. Palette provenance is credited in `theme.rs`'s module documentation. Role
+mapping is Writfold's: bad, warning, checked satisfaction, vouched statements,
+current, done, skipped, later, command/info and dim text remain distinct where
+structured state is supplied. State is also printed in words. Selected entries
+use text on selection for all their lines, including padding.
+
+Selection is flag, then `WRITFOLD_THEME`, then `theme = "…"` in the existing user
+configuration, then hone. An unknown highest-precedence name keeps hone and
+names the source and all six choices; overridden sources produce no warning.
+The warning is a footer notice interactively and stderr for plain output.
+
+Auto depth gives NO_COLOR (any value) and TERM=dumb priority, then truecolor for
+COLORTERM=truecolor/24bit, otherwise named ANSI colours. Explicit truecolor/ansi/
+none overrides detection. ANSI paints no background; none emits no foreground or
+background colour, retaining emphasis/reversed selection. A non-truecolor `T`
+explains the requirement without changing the theme. Nothing persists a choice.
+
+All six pass the specified WCAG tests: text ≥10:1, secondary ≥7:1 and other inks
+≥4.5:1 on base and surface; accent/raised and on-accent ≥4.5:1; the 1.07–1.30
+surface ladder; and visible selection with selected text ≥7:1. The source
+selection surfaces therefore needed no raised-surface fallback.
+
+### 34.7 Build and dependencies
+
+No crate dependency was added for T2. ratatui stays pinned at 0.29 with its
+crossterm backend. Its existing `unstable-rendered-line-info` feature is enabled
+for exact wrapping measurements rather than a second Unicode wrapping algorithm.
+No server, companion or network access entered the product path; Git remains an
+explicit native dependency.
+
+All builds/checks used the admitted tools image through Compose and a private
+`CARGO_TARGET_DIR` inside the worktree, not the shared target volume. The static
+musl build succeeded offline with:
+
+```sh
+cargo build -p writfold --release --target x86_64-unknown-linux-musl --locked --offline
+```
+
+`file` reported a stripped x86-64 static PIE and `ldd` reported statically linked.
+That binary was driven through PTYs at 160×40 and 100×30, each with truecolor and
+NO_COLOR. All four exited 0, restored the alternate screen, and emitted colour
+sequences only in truecolor. The real tracked-inbox caption was checked too.
+
+### 34.8 Tests and checks
+
+- KB: `plan_detail`, `runs_plan`, `timeline_run`, `watch_stamps`, `guard_status`,
+  optional-more-status compatibility, and all existing KB goldens. Detailed
+  run-record gates retain their step windows; item text/positions/flags agree
+  with gate status; non-run timelines are unchanged.
+- TUI: realistic six-step/three-run fixture; plain/buffer goldens; every layout
+  boundary and requested size; wrapping/current-step position; view keys,
+  filters and narrow paging; per-run/per-view JSON/text projection; local and
+  tracked proposal refresh, subject staleness, guard context when filtered, and
+  read-only KB/local-state snapshots.
+- Colour: all palette contrast/registry tests, real TestBackend roles and whole
+  selected entries, real signoff attestation, depth degradation, selection
+  precedence, unknown-name warnings, theme cycling and isolated binary config
+  tests. Plain output is identical across themes/depths.
+- Binary `kb_watch`: all eight views of three runs across three fresh tours
+  leave KB/local records and `cite_checks` unchanged and start no checker. Plain
+  `stale` then starts the same counter-file checker once. `kb_checker_reads`
+  also exercises guard grounding over an already cached checked citation.
+- Four intentional mutations failed their regression tests: allowing watch to
+  ask a checker, collapsing flagged done steps, a wrong unknown-theme fallback,
+  and ignoring NO_COLOR. Each was restored before the positive checks.
+- Before each implementation commit: format check, workspace/all-target/all-
+  feature clippy with warnings denied, touched-crate tests and the xtask quality
+  report. The final TUI inspection has no error or warning; files/functions meet
+  the requested budgets. The requested publication integration exception was
+  excluded. No historical qualification receipt was relabelled.
+
+### 34.9 Deviations from the specification
+
+- **Compatibility wins over contradictory digest wording.** False new flags
+  preserve existing query digests; true flags add discriminating arguments.
+  `more.status` is added only to detailed plan output. Existing gate-status item
+  JSON remains byte-identical; the equality test compares its shared fields and
+  separately checks the additive status. `tests/json.rs` permits that optional
+  key as owner decision 0a.1 requires, rather than remaining literally unchanged.
+- **Both proposal stores are observed.** Tracked proposals landed on main and
+  their dot directory is deliberately outside the KB index pin. A regression
+  demonstrated that the specified local-only stamp missed their next-tick
+  update. The stamp now stats both stores, and a mixed/tracked Inbox no longer
+  claims the queue is only local. Neither change parses records in the viewer.
+- **The schematic is not a gate judgment.** The exercised fixture has three
+  runs, six listed gates (including the skipped step's bench gate), and a stale
+  checklist after its lint reference moves. The view preserves those verb facts
+  rather than forcing the mockup's four runs/five gates/open checklist.
+- **Small helper modules** (`state`, `views`, `paint`, `chrome`, `guards`,
+  `list_view`) keep the TUI within its budgets. Wrapping uses the existing
+  renderer feature noted above. Narrow list paging was exercised explicitly.
+- **No invented progress language, not censorship.** The fixture's forbidden-
+  language assertion passes. Authored text and verb states, including an asset's
+  `active` state or a recorded percentage, are still projected verbatim; they are
+  not new claims that a run is working or a percentage complete.
+
+### 34.10 Not done
+
+No write keys, run-text search, cross-KB view, mouse, focusable side panes,
+user-defined themes, 256-colour quantisation, saved theme choice or watch JSON
+API. The session-start unevaluated-run notices and separate delivery guard are
+not added to these panes. Polling is not a daemon or a transactional snapshot:
+time-only expiry, metadata-preserving edits and unstamped changes can need `r`.
+
+Release gates were deliberately not run from this worktree. The integrator still
+reviews and merges the branch, runs `scripts/gate quality` and `scripts/gate unit`
+from main, records their receipt paths and releases. Their outcome is not claimed
+by these local checks.

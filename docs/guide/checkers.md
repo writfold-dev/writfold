@@ -31,7 +31,7 @@ The checker is found the way Git finds credential helpers: by name on `PATH`. Th
 
 ## Who runs it
 
-Only `writfold kb stale` (without `--offline` or `--cached`) runs checkers: one process per kind per run, with every token of that kind in one batch. Every other reader, `gate status`, `gate cover`, guard rules, `why`, `brief`, the hooks, `proposals accept` and `writfold watch`, uses the verdict `stale` cached. A token `stale` has not checked yet reads `unverifiable: not-checked` there, so a gate cannot be covered by a citation nobody checked.
+Only `writfold kb stale` (without `--offline` or `--cached`) runs the citation checks: one process per kind per run, with every token of that kind in one batch. This includes the stale part of `kb check`. Readers such as `gate status`, `gate cover`, `guard status`, guard rules, `why`, `brief`, the hooks, `proposals accept` and `writfold watch` use the verdict `stale` cached. A token `stale` has not checked yet reads `unverifiable: not-checked` there, so a gate cannot be covered by a citation nobody checked. The explicit `checker list` and `cite make --kind` operations start their checker for describe/make, not to refresh this verdict cache.
 
 `stale --cached` still checks Git-backed citations, but never starts an external checker or writes the `cite_checks` cache. It cannot be combined with `--offline`. The watch stale pane uses this read-only form.
 

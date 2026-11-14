@@ -117,7 +117,7 @@ The v1 design is [kb-v1-design.md](kb-v1-design.md).
 9. ~~G2: offline delivery candidates; G2b: an optional guard hook~~ (`deliver prepare|check|attest|waive|status`, `gate attest|waive`, `hook pre-tool-use`; [as built](kb-v1-design.md#19-g2-as-built)). Then, from the order of work below, ~~instruction gates and user-defined delivery modes~~ (`instructions`, `{gate}`, `.writfold/deliveries/<mode>.toml`; [as built](kb-v1-design.md#20-instruction-gates-and-delivery-modes-as-built)).
 10. A two-week pause: count real catches and waivers from the receipts. If no catch mattered, keep G1 and drop the rest.
 11. M4b: MCP, trailer and tracker edges, `--at`. G3 only if the pause justifies it.
-12. T2: run progress in `writfold watch`: plan steps with their gates and checklist items, inbox, guard rules, timeline, a subject-repository poll and six colour themes; read-only and never starting a checker ([specification](tui-t2-spec.md), planned).
+12. ~~T2: run progress in `writfold watch`~~: plan steps, owed gates, checklist items, guards, inbox and timeline; responsive layouts, subject/queue polling and six themes; read-only and never starting a checker ([as built](kb-v1-design.md#34-t2-as-built)).
 
 **v0.5.0-dev.1** (13 November 2026): enforcement and evidence that a team configures, not code it writes.
 

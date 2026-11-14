@@ -252,25 +252,29 @@ approved. The edit trial's signing, approval and own-worktree flow is
 separate and frozen. See the
 [adapter as built](docs/writfold/kb-v1-design.md#17-splicery-adapter-as-built).
 
-`writfold watch` keeps the runs in view in a terminal pane. It is read-only
-and only shows what the verbs print: the runs of `kb runs` on the left (open
-runs first, with their place and last checkpoint), the selected run's
-`kb resume` on the right (gate rows with their states, edit and retrieval
-receipts, drafts, the checkpoint tail) headed by `kb gate status`'s counts,
-and the KB pin and index state at the bottom. Failed, stale and invalid show
-in red. Tab (or `s`, `b`, `g`) switches the right pane to `kb stale` or
-`kb brief` for the run's project. It polls the KB pin every two seconds and
-asks the verbs again only when it moves. There is no daemon, so it never says
-a run is running and shows no progress percentage; no key writes anything.
-Gate states are for the repository you start it in, as with `gate status`.
+`writfold watch` shows recorded run progress, not an estimate of work left.
+Its eight read-only views project the KB verbs: plan steps with their gates
+and checklist items, Gates, Timeline, Inbox, Guards, Stale, Brief and Resume.
+The runs list includes each plan's position. Guards concern the current-run
+pointer, not whichever run is selected. No key writes or starts a checker;
+the Inbox prints the existing confirm/accept commands instead.
+
+`g` selects Gates; Resume is now `e`. `o` filters open runs and `P` filters
+the selected project. The view polls KB and queue/pointer changes every two
+seconds, and the selected subject every ten seconds; `--repo` selects that
+subject without changing KB discovery. Wide, medium and narrow layouts share
+six themes, with ANSI and no-colour modes. See [Watching a run](docs/guide/watch.md)
+for the views, keys, refresh limits and colour selection.
 
 ```sh
-writfold watch                    # j/k or arrows, Enter, Tab, ? for help, q to quit
-writfold watch --run <id> --once  # one frame as plain text (also when stdout is not a terminal)
+writfold watch                            # j/k, Enter, Tab, ? for help, q to quit
+writfold watch --repo /path/to/repository # gate subject
+writfold watch --run RUN_ID --once        # one expanded plain frame; also automatic in a pipe
+writfold watch --view gates --theme paper # one view at start; --once limits the printed sections
 ```
 
-Every row read from a file ends with its path and line, flags (`!moved→5-7`,
-`!past-ttl`, `!draft` …) mark what to re-check, and the trailer is always last:
+KB read answers keep their source positions; flags (`!moved→5-7`,
+`!past-ttl`, `!draft` …) mark what to re-check, and their trailer is always last:
 
 ```text
 decision proposal/decision/2026-03-02-batch-ledger-writes [accepted] Batch ledger writes in the API @proposals/decision/2026-03-02-batch-ledger-writes/proposal.md:5
@@ -387,7 +391,7 @@ error. See [Tuft's KB adapter](docs/tuft/language.md#kb-adapter).
 | `writfold kb propose`, `writfold kb proposals list / show / accept / drop`, `writfold kb check` | Queues `record ticket\|decision\|link` calls locally (one file per call, at most ten per session, linked to the run) and accepts one through the ordinary write path, refusing a stale citation or a taken ID with the proposal kept; runs `stale`, `index verify` and the current run's `gate status` as one summary exiting with the worst code | [KB v1 design](docs/writfold/kb-v1-design.md#22-proposals-and-kb-check-as-built) (section 22), golden, dedup, cap, stale-refusal and kill tests in `crates/writfold-kb/tests/proposals.rs` and `proposal_faults.rs`; `writfold:evaluate` fills it at the end of a run; no real run has yet |
 | `writfold kb gate run` on a gate of class `assessed` | Grounds each Weft assumption's citations (fresh KB tokens, satisfied or attested gates and receipts), runs the pinned `weft` binary on the step's source, and records each check's Weft result with a grounded or hypothetical basis; met only when every required check is entailed from grounded assumptions | [KB v1 design](docs/writfold/kb-v1-design.md#23-weft-assessed-gate-as-built) (section 23), kernel property tests in `writfold-core/src/assess.rs`, golden, staleness, refusal and kill tests in `crates/writfold-kb/tests/gate_assessed.rs` and `gate_assessed_faults.rs` (a labelled test double, plus one test against a real Weft build); no real plan step has been assessed yet |
 | `writfold kb edit apply / recover` | Replays Splicery recipes against a KB run's recorded worktree and writes each file atomically after re-checking its bytes; keeps the recipes, splice sites, blob IDs and preview as a receipt in the run; a crash between files is finished by `recover` from a local journal | [KB v1 design](docs/writfold/kb-v1-design.md#17-splicery-adapter-as-built) (section 17), golden, refusal, gate-staleness and kill tests in `crates/writfold-kb/tests/edit.rs` and `edit_faults.rs` |
-| `writfold watch [--kb DIR] [--run ID] [--once]` | A read-only terminal view of runs, gate states, receipts and checkpoints, each pane the answer of one `kb` verb; one plain-text frame when piped | [KB v1 design](docs/writfold/kb-v1-design.md#18-t1-as-built) (section 18), golden, layout and projection tests in `crates/writfold-tui/tests/watch.rs` |
+| `writfold watch [--kb DIR] [--repo DIR] [--run ID] [--view NAME] [--theme NAME] [--color MODE] [--once]` | Read-only recorded progress: steps, gates, checklist items, timeline, pending drafts/proposals and current-run guards; responsive layouts, six themes, cached checker verdicts and plain frames | [Watching a run](docs/guide/watch.md), [as built](docs/writfold/kb-v1-design.md#34-t2-as-built) (section 34); projection, layout, colour, refresh and read-only tests in `crates/writfold-tui/tests/` and binary checker-counter tests |
 | `writfold trial prepare / approve / apply / recover / show` | One edit through a durable, validated ledger in Writfold's own sparse worktree; never your checkout | [trial profile](docs/writfold/trial-profile.md), [adversarial campaign](bench/2026-11-09-adversarial/) |
 | `writfold trial approve --require CHECK` | Refuses unless each named check of the bound Weft report is `entailed` (recorded as hypothetical, never as grounded) | proved: `required_entailed_spec` |
 | `writfold trial retain` | Keeps exact bytes of a file at a full commit id as a citation; reports citing anything else are refused | [trial profile](docs/writfold/trial-profile.md) |
