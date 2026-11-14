@@ -52,6 +52,7 @@ fn stale(w: &World, scope: &str) -> TestResult<String> {
     let (text, _) = w.run(&w.request(Verb::Stale {
         scope: Some(scope.into()),
         offline: false,
+        cached: false,
     }))?;
     Ok(text)
 }

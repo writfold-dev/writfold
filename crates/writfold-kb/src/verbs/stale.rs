@@ -1,4 +1,4 @@
-//! `stale [<project>|<path>] [--offline]`: which pins have moved.
+//! `stale [<project>|<path>] [--offline|--cached]`: which pins have moved.
 use super::record_row;
 use crate::emit::{Answer, Row};
 use crate::error::Result;
@@ -161,14 +161,23 @@ fn remember(session: &Session<'_>, cite: &Cite, checked: &Checked) -> Result<()>
     Ok(())
 }
 
-pub fn stale(session: &Session<'_>, scope: Option<&str>, offline: bool) -> Result<Answer> {
+pub fn stale(
+    session: &Session<'_>,
+    scope: Option<&str>,
+    offline: bool,
+    cached: bool,
+) -> Result<Answer> {
     let cites = load(session, scope)?;
-    let checked = stale::check_asking(session, &cites, offline)?;
+    let checked = if cached {
+        stale::check(session, &cites, false)?
+    } else {
+        stale::check_asking(session, &cites, offline)?
+    };
     let mut answer = Answer::default();
     let (mut flagged, mut unverifiable, mut absent) = (0, 0, 0);
     let mut rows = Vec::new();
     for (cite, checked) in cites.iter().zip(&checked) {
-        if !offline {
+        if !offline && !cached {
             remember(session, cite, checked)?;
         }
         let name = checked.verdict.name();
@@ -220,6 +229,11 @@ pub fn stale(session: &Session<'_>, scope: Option<&str>, offline: bool) -> Resul
         );
     }
     answer.notes.extend(never_note(session, &cites)?);
+    if cached {
+        answer.notes.push(
+            "cached: no checker was started; a checked kind shows the verdict the last kb stale cached".into(),
+        );
+    }
     if offline {
         answer
             .notes

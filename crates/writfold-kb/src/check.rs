@@ -68,6 +68,7 @@ fn parts(ws: &Workspace, request: &Request, scope: Option<&str>) -> Vec<Part> {
     let stale = Verb::Stale {
         scope: scope.map(str::to_owned),
         offline: false,
+        cached: false,
     };
     let mut parts = vec![
         sub(request, "stale", stale_command(scope), stale),
@@ -152,6 +153,7 @@ pub fn plan(ws: &Workspace, request: &Request) -> Option<Part> {
         return None;
     }
     let verb = Verb::Plan(crate::plan::PlanVerb::Status {
+        gates: false,
         run: Some(run.clone()),
         repo: None,
     });

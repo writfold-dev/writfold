@@ -48,6 +48,7 @@ fn only_the_checkers_own_cached_row_is_read() -> TestResult {
     let (text, _) = w.run(&w.request(Verb::Stale {
         scope: Some("lantern".into()),
         offline: false,
+        cached: false,
     }))?;
     assert!(
         text.contains("checked=1 ") && !text.contains("cite web:"),
@@ -92,6 +93,7 @@ fn stale_text(w: &support::World, offline: bool) -> TestResult<String> {
     let (text, _) = w.run(&w.request(Verb::Stale {
         scope: Some("lantern".into()),
         offline,
+        cached: false,
     }))?;
     Ok(text)
 }

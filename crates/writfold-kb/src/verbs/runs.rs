@@ -1,4 +1,4 @@
-//! `runs [--open] [--project P]` and `resume [<run>]`.
+//! `runs [--open] [--project P] [--plan]` and `resume [<run>]`.
 //!
 //! `runs` lists every run, newest activity first, with its effective state
 //! (the Writfold sidecar's `closed`, else the manifest's), where the work
@@ -11,6 +11,8 @@
 //! named it takes the current-run pointer, then the newest run of the
 //! project inferred from the working directory, then the newest open run.
 //! No liveness is claimed: there is no daemon.
+mod plan;
+
 use super::{BOUNDARY, brief, record_row};
 use crate::emit::{Answer, More, Row};
 use crate::error::Result;
@@ -21,9 +23,15 @@ use serde_json::Value;
 use std::collections::BTreeMap;
 use std::path::Path;
 
-pub fn list(session: &Session<'_>, open: bool, project: Option<&str>) -> Result<Answer> {
+pub fn list(
+    session: &Session<'_>,
+    open: bool,
+    project: Option<&str>,
+    plan: bool,
+) -> Result<Answer> {
     let mut answer = Answer::default();
     let current = runs::current_of(session);
+    let mut planned = 0;
     for (rec, at) in runs::all(session)? {
         let state = runs::state(session, &rec);
         if (open && state == "closed") || project.is_some_and(|p| rec.project.as_deref() != Some(p))
@@ -57,6 +65,10 @@ pub fn list(session: &Session<'_>, open: bool, project: Option<&str>) -> Result<
             text: place.join(" "),
             ..More::default()
         });
+        if plan && let Some(position) = plan::position(&session.ws.root, &rec) {
+            row.more.push(position);
+            planned += 1;
+        }
         let (path, entries) = runs::entries(session, &rec);
         if let Some(entry) = entries.last() {
             let first = session
@@ -69,10 +81,13 @@ pub fn list(session: &Session<'_>, open: bool, project: Option<&str>) -> Result<
                 text: format!("{at} {}", first.trim()),
                 path: Some(path),
                 line: Some(entry.first),
-                flags: Vec::new(),
+                ..More::default()
             });
         }
         answer.rows.push(row);
+    }
+    if plan {
+        answer.counts.push(("planned", planned));
     }
     if answer.rows.is_empty() {
         answer.unknown = Some("no-record");

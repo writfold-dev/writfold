@@ -6,7 +6,7 @@
 //! field.
 mod checker;
 
-use checker::{RUN, Result, kb, run, world};
+use checker::{RUN, Result, cached_rows, kb, run, world};
 
 const TOKEN: &str = "⟦cite kind=src depot=main path=lib/fresh.c L=3-9 want=fresh⟧";
 
@@ -46,6 +46,16 @@ fn only_kb_stale_runs_a_checker() -> Result {
     let status = ["gate", "status", "--run", RUN, "--repo", &repo];
     let (text, _) = kb(&w, &status, &[])?;
     assert!(text.starts_with("gate review [attested]"), "{text}");
+    std::fs::write(w.kb().join(".git/writfold/current-run"), RUN)?;
+    let guards = w.kb().join(".writfold/guards");
+    std::fs::create_dir_all(&guards)?;
+    std::fs::write(
+        guards.join("cached.toml"),
+        "schema = \"writfold-guard-rule/1\"\nid = \"cached\"\nevent = \"pre-tool-use\"\ncommands = [\"git commit\"]\nrequire = [\"gates.met\"]\naction = \"deny\"\n",
+    )?;
+    let (text, exit) = kb(&w, &["guard", "status"], &[])?;
+    assert_eq!((exit, w.spawns()), (0, 1), "{text}");
+    assert!(text.contains("guard cached [would-pass]"), "{text}");
     let start = format!(
         "{{\"session_id\": \"s\", \"cwd\": \"{}\"}}",
         w.kb().display()
@@ -59,6 +69,30 @@ fn only_kb_stale_runs_a_checker() -> Result {
     assert_eq!(w.spawns(), 1, "only kb stale starts the checker");
     kb(&w, &["stale"], &[])?;
     assert_eq!(w.spawns(), 2);
+    Ok(())
+}
+
+#[test]
+fn cached_stale_never_starts_a_checker_or_changes_its_cache() -> Result {
+    let w = world("cached", &[TOKEN], true)?;
+    kb(&w, &["index", "status"], &[])?;
+    let empty = cached_rows(&w)?;
+    let (text, exit) = kb(&w, &["stale", "--cached"], &[])?;
+    assert_eq!(exit, 2, "{text}");
+    assert!(text.contains("not-checked"), "{text}");
+    assert!(text.contains("cached: no checker was started"), "{text}");
+    assert_eq!(w.spawns(), 0);
+    assert_eq!(cached_rows(&w)?, empty);
+    let (text, exit) = kb(&w, &["stale"], &[])?;
+    assert_eq!((exit, w.spawns()), (0, 1), "{text}");
+    let checked = cached_rows(&w)?;
+    assert_ne!(checked, empty);
+    let (text, exit) = kb(&w, &["stale", "--cached"], &[])?;
+    assert_eq!((exit, w.spawns()), (0, 1), "{text}");
+    assert_eq!(cached_rows(&w)?, checked);
+    let (text, exit) = kb(&w, &["stale", "--cached", "--offline"], &[])?;
+    assert_eq!(exit, 1, "{text}");
+    assert!(text.contains("not both"), "{text}");
     Ok(())
 }
 

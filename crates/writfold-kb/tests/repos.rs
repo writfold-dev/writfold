@@ -139,6 +139,7 @@ fn stale(w: &World) -> TestResult<(String, u8)> {
     w.run(&w.request(Verb::Stale {
         scope: None,
         offline: false,
+        cached: false,
     }))
 }
 

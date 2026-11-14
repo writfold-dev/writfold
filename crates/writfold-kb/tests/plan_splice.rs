@@ -69,7 +69,11 @@ pub fn plan(w: &World, verb: &str, name: &str) -> TestResult<(String, u8)> {
             run,
             repo,
         },
-        "status" => PlanVerb::Status { run, repo },
+        "status" => PlanVerb::Status {
+            gates: false,
+            run,
+            repo,
+        },
         "skip" => PlanVerb::Skip {
             reason: name.into(),
             by: "owner".into(),
@@ -337,20 +341,22 @@ fn the_fold_with_splices_depends_only_on_the_set_of_files() -> TestResult {
         w.kb.join(".git/writfold/repos"),
         clone.join(".git/writfold/repos"),
     )?;
-    let rows = |kb: &Path| -> TestResult<Vec<String>> {
-        let mut request = w.request(Verb::Plan(PlanVerb::Status {
-            run: Some(RUN.into()),
-            repo: Some(w.code.clone()),
-        }));
-        request.kb = Some(kb.to_path_buf());
-        let out = writfold_kb::run(&request)?;
-        Ok(out
-            .text
-            .lines()
-            .filter(|l| !l.starts_with('#'))
-            .map(str::to_owned)
-            .collect())
-    };
-    assert_eq!(rows(&clone)?, rows(&w.kb)?);
+    assert_eq!(status_rows(&w, &clone)?, status_rows(&w, &w.kb)?);
     Ok(())
+}
+
+fn status_rows(w: &World, kb: &Path) -> TestResult<Vec<String>> {
+    let mut request = w.request(Verb::Plan(PlanVerb::Status {
+        gates: false,
+        run: Some(RUN.into()),
+        repo: Some(w.code.clone()),
+    }));
+    request.kb = Some(kb.to_path_buf());
+    let out = writfold_kb::run(&request)?;
+    Ok(out
+        .text
+        .lines()
+        .filter(|l| !l.starts_with('#'))
+        .map(str::to_owned)
+        .collect())
 }

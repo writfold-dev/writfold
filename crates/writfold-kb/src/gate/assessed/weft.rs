@@ -22,26 +22,12 @@ pub const ENV: &str = "WRITFOLD_WEFT";
 const REPORT_LIMIT: usize = 16 << 20;
 const GRACE: Duration = Duration::from_secs(5);
 
-/// The binary's path from the machine's configuration, if any.
-fn configured() -> Option<PathBuf> {
-    let base = std::env::var_os("XDG_CONFIG_HOME")
-        .map(PathBuf::from)
-        .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".config")))?;
-    let text = std::fs::read_to_string(base.join("writfold").join("config.toml")).ok()?;
-    text.lines().find_map(|line| {
-        let (key, value) = line.split_once('=')?;
-        let value = value.trim();
-        (key.trim() == "weft" && value.len() > 1 && value.starts_with('"') && value.ends_with('"'))
-            .then(|| PathBuf::from(&value[1..value.len() - 1]))
-    })
-}
-
 /// Where the binary is said to be, or why there is none.
 pub fn locate() -> std::result::Result<PathBuf, String> {
     std::env::var_os(ENV)
         .filter(|v| !v.is_empty())
         .map(PathBuf::from)
-        .or_else(configured)
+        .or_else(|| crate::workspace::user_config("weft").map(PathBuf::from))
         .ok_or_else(|| {
             format!(
                 "no Weft binary: set {ENV} or weft = \"<path>\" in ~/.config/writfold/config.toml"

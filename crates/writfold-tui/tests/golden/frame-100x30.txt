@@ -1,0 +1,30 @@
+run-20261101T090000Z-a1b2c3 [open] !current  Add --plan to kb runs  project=harbor  subject=kb
+[1 progress] 2 gates 3 timeline 4 inbox 5 guards 6 stale 7 brief 8 resume
+gates: open=2 stale=2 of 6 | inbox: drafts=1 proposals=2 | guards: deny=1 ask=0 of 2
+┌ runs (3) ──────────────────┐┌ progress run-20261101T090000Z-a1b2c3 ──────────────────────────────┐
+│> [open] run-20261101T090000││ - change#1/benchmarks [skipped] no hot path touched (by owner,     │
+│    Add --plan to kb runs   ││2026-11-10T23:51:00Z) !skipped                                      │
+│    project=harbor          ││ > change#1/review [current] owes: review-list [stale], signoff     │
+│    plan: step 4/6 done=2 sk││[open]                                                              │
+│    last: 2026-11-10T14:10:0││     gate review-list [stale] checklist 2/4 required covered !stale │
+│  [open] run-20261102T080000││       item errors [supported] 1 reference by agent                 │
+│    Review the lantern guide││       item tests [stale] 1 reference by agent; cited evidence      │
+│    project=lantern         ││moved: gate:lint was satisfied, now stale !stale                    │
+│    last: 2026-11-02T08:30:0││       item docs [open] The guide names every new flag              │
+│  [closed] run-20261104T0800││       item perf [not-applicable] no hot path touched by agent      │
+│    Retire the legacy flush ││       item style [open] (optional) Names follow the module         │
+│    project=harbor          ││     gate signoff [open] attested !open                             │
+│    plan: complete steps=2 d││     read: instructions for signoff @.writfold/gates/signoff.md:1   │
+│    last: 2026-11-04T09:00:0││     next: writfold kb gate cover review-list tests supported REF…  │
+│                            ││--by WHO                                                            │
+│                            ││   change#1/deliver [later] gates: unit                             │
+│                            ││   change#1/reflect [later] no gates                                │
+│                            ││# note: plan change @83c2cc9efde7 from .writfold/plans/change.toml; │
+│                            ││steps are derived from runs/run-20261101T090000Z-a1b2c3/plan/ on    │
+│                            ││every read, never stored                                            │
+│                            ││                                                                    │
+│                            ││                                                                    │
+│                            ││                                                                    │
+│                            ││                                                                    │
+└────────────────────────────┘└────────────────────────────────────────────────────────────────────┘
+kb=XXXXXXXXXXXX+dirty:14 index=fresh  subject=kb@0ea3a743bfef+dirty:17  asked 00:00:00Z  theme=ansi

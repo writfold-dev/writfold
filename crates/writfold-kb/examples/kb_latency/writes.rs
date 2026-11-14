@@ -133,6 +133,7 @@ fn records(kb: String) -> Vec<Case> {
             Box::new(|_| Verb::Runs {
                 open: true,
                 project: None,
+                plan: false,
             }),
         ),
     ]

@@ -102,6 +102,7 @@ pub fn record_row(session: &Session<'_>, rec: &Rec) -> Row {
 /// A continuation line for an edge: `via: <rel> <other>` at its provenance.
 pub fn via(rel: &str, other: &str, path: &str, line: u32) -> More {
     More {
+        status: None,
         label: "via",
         text: format!("{rel} {other}"),
         path: Some(path.to_owned()),
@@ -114,6 +115,7 @@ pub fn via(rel: &str, other: &str, path: &str, line: u32) -> More {
 /// provenance: `via: <rel> (<origin>)`.
 pub fn link(edge: &Edge) -> More {
     More {
+        status: None,
         label: "via",
         text: format!("{} ({})", edge.rel, edge.origin),
         path: Some(edge.path.clone()),

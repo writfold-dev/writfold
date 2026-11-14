@@ -151,6 +151,7 @@ fn cite_make_round_trips_through_stale() -> TestResult {
     let (text, exit) = w.run(&w.request(Verb::Stale {
         scope: Some("harbor/evidence/batching.md".into()),
         offline: false,
+        cached: false,
     }))?;
     // Checked once, and not listed: fresh (the other rows are the
     // fixture's own past-TTL asset and regression).

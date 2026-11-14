@@ -156,6 +156,7 @@ fn decision(
         .unwrap_or_else(|| "undated".into());
     let line = crate::parse::field_line(&session.text(&rec.path).unwrap_or_default(), "decided_by");
     row.more.push(More {
+        status: None,
         label: "decided",
         text: format!("by {decided} on {when}"),
         path: Some(rec.path.clone()),
@@ -195,6 +196,7 @@ fn decision(
             shown.flags
         };
         row.more.push(More {
+            status: None,
             label: "cite",
             text: format!("{} [{verdict}]", shown.id),
             path: Some(rec.path.clone()),
@@ -240,6 +242,7 @@ pub(crate) fn rationale(session: &Session<'_>, rec: &Rec, names: &[String]) -> R
             started = true;
             let line = first + 1 + u32::try_from(offset).unwrap_or(0);
             out.push(More {
+                status: None,
                 label: "why",
                 text,
                 path: Some(rec.path.clone()),
@@ -255,6 +258,7 @@ pub(crate) fn rationale(session: &Session<'_>, rec: &Rec, names: &[String]) -> R
         && let Some(summary) = &rec.summary
     {
         out.push(More {
+            status: None,
             label: "why",
             text: summary.clone(),
             path: Some(rec.path.clone()),
@@ -300,6 +304,7 @@ fn outcome(session: &Session<'_>, rec: &Rec) -> Result<Option<More>> {
         .enumerate()
         .find(|(_, l)| !l.trim().is_empty())
         .map(|(offset, text)| More {
+            status: None,
             label: "outcome",
             text: text.trim().to_owned(),
             path: Some(rec.path.clone()),

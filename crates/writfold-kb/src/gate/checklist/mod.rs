@@ -25,6 +25,7 @@ pub mod write;
 
 pub use batch::{Batch, Rows};
 pub use judge::{Entry, View, judge};
+pub(crate) use show::item_line;
 pub use show::{line, next, row};
 pub use spec::Spec;
 pub use write::Cover;

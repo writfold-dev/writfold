@@ -1,0 +1,86 @@
+== runs (3 listed, 2 not closed) ==
+> [open] run-20261101T090000Z-a1b2c3 !current
+    Add --plan to kb runs
+    project=harbor
+    plan: step 4/6 done=2 skipped=1 current=change#1/review
+    last: 2026-11-10T14:10:00Z Review started.
+  [open] run-20261102T080000Z-b1c2d3
+    Review the lantern guide
+    project=lantern
+    last: 2026-11-02T08:30:00Z Read the guide.
+  [closed] run-20261104T080000Z-d4e5f6
+    Retire the legacy flush path
+    project=harbor
+    plan: complete steps=2 done=2 skipped=0
+    last: 2026-11-04T09:00:00Z Legacy path removed; nothing left to do.
+== progress run-20261101T090000Z-a1b2c3 ==
+plan 2 done, 1 skipped of 6 steps; current step 4/6; owes 2 of 2 gates stale=1
+     [x] [!] [-] [>] [ ] [ ]
+ x step change#1/research [done] notes [satisfied] @runs/run-20261101T090000Z-a1b2c3/plan/done-change.1~research.json:1
+     gate notes [satisfied] mechanical @runs/run-20261101T090000Z-a1b2c3/gates/notes-20261110T234600Z-XXXXXX.json:1
+     done: recorded 2026-11-10T23:47:00Z
+ x step change#1/implement [done] unit [satisfied], lint [stale] @runs/run-20261101T090000Z-a1b2c3/plan/done-change.1~implement.json:1 !stale
+     why: no longer holds: lint [stale] (done stays done; list the gate again on a later step if it must hold there)
+     gate unit [satisfied] mechanical @runs/run-20261101T090000Z-a1b2c3/gates/unit-20261110T234800Z-XXXXXX.json:1
+     gate lint [stale] mechanical @runs/run-20261101T090000Z-a1b2c3/gates/lint-20261110T234900Z-XXXXXX.json:1 !stale
+     done: recorded 2026-11-10T23:50:00Z
+ - step change#1/benchmarks [skipped] no hot path touched (by owner, 2026-11-10T23:51:00Z) @runs/run-20261101T090000Z-a1b2c3/plan/skip-change.1~benchmarks.json:1 !skipped
+ > step change#1/review [current] owes: review-list [stale], signoff [open] @runs/run-20261101T090000Z-a1b2c3/plan/splice-change.1.json:1
+     gate review-list [stale] checklist 2/4 required covered @runs/run-20261101T090000Z-a1b2c3/covers/review-list.perf-20261110T235400Z-XXXXXX.json:1 !stale
+       item errors [supported] 1 reference by agent @runs/run-20261101T090000Z-a1b2c3/covers/review-list.errors-20261110T235200Z-XXXXXX.json:1
+       item tests [stale] 1 reference by agent; cited evidence moved: gate:lint was satisfied, now stale @runs/run-20261101T090000Z-a1b2c3/covers/review-list.tests-20261110T235300Z-XXXXXX.json:1 !stale
+       item docs [open] The guide names every new flag
+       item perf [not-applicable] no hot path touched by agent @runs/run-20261101T090000Z-a1b2c3/covers/review-list.perf-20261110T235400Z-XXXXXX.json:1
+       item style [open] (optional) Names follow the module
+     gate signoff [open] attested !open
+     read: instructions for signoff @.writfold/gates/signoff.md:1
+     next: writfold kb gate cover review-list tests supported REF… --by WHO
+   step change#1/deliver [later] gates: unit @runs/run-20261101T090000Z-a1b2c3/plan/splice-change.1.json:1
+     gate unit [later]
+   step change#1/reflect [later] no gates @runs/run-20261101T090000Z-a1b2c3/plan/splice-change.1.json:1
+# note: plan change @83c2cc9efde7 from .writfold/plans/change.toml; steps are derived from runs/run-20261101T090000Z-a1b2c3/plan/ on every read, never stored
+== gates run-20261101T090000Z-a1b2c3 ==
+gates: gates=6 satisfied=2 open=2 stale=2 failed=0 unknown=0 attested=0 waived=0 invalid=0
+gate bench [open] mechanical no receipt in this run for kb @.writfold/gates/bench.toml:1 !open
+  next: writfold kb gate run bench
+gate lint [stale] mechanical pass exit=0 at kb@0ea3a743bfef scope=a61da1b21345 paths=1 @runs/run-20261101T090000Z-a1b2c3/gates/lint-20261110T234900Z-XXXXXX.json:1 !stale
+  why: changed in scope: harbor/lint.txt
+  next: writfold kb gate run lint
+gate notes [satisfied] mechanical pass exit=0 at kb@0ea3a743bfef scope=1075e30643f2 paths=10 @runs/run-20261101T090000Z-a1b2c3/gates/notes-20261110T234600Z-XXXXXX.json:1
+gate signoff [open] attested: statements only, no command, for kb @.writfold/gates/signoff.toml:1 !open
+  read: instructions for signoff @.writfold/gates/signoff.md:1
+  next: writfold kb gate attest signoff --statement TEXT --by WHO
+gate unit [satisfied] mechanical pass exit=0 at kb@0ea3a743bfef scope=b7e787e397de paths=1 @runs/run-20261101T090000Z-a1b2c3/gates/unit-20261110T234800Z-XXXXXX.json:1
+gate review-list [stale] checklist 2/4 required covered at kb@0ea3a743bfef scope=b7e787e397de @.writfold/gates/review-list.toml:1 !stale
+  item: errors [supported] 1 reference by agent @runs/run-20261101T090000Z-a1b2c3/covers/review-list.errors-20261110T235200Z-XXXXXX.json:1
+  item: tests [stale] 1 reference by agent; cited evidence moved: gate:lint was satisfied, now stale @runs/run-20261101T090000Z-a1b2c3/covers/review-list.tests-20261110T235300Z-XXXXXX.json:1 !stale
+  item: docs [open] The guide names every new flag
+  item: perf [not-applicable] no hot path touched by agent @runs/run-20261101T090000Z-a1b2c3/covers/review-list.perf-20261110T235400Z-XXXXXX.json:1
+  item: style [open] (optional) Names follow the module
+  next: writfold kb gate cover review-list tests supported REF… --by WHO
+# note: receipts of run run-20261101T090000Z-a1b2c3 for kb; state is derived on every read, never stored
+== inbox run-20261101T090000Z-a1b2c3 ==
+local; not in the KB until confirmed or accepted
+draft s-progress [open] Review started; lint went stale after the rename. @<WORLD>/kb/.git/writfold/drafts/s-progress.json !draft
+  confirm: writfold kb checkpoint --from-draft s-progress
+proposal 2c6ba260f2cde3fa [pending] ticket HBR-210: Lint gate scope misses the command module @<WORLD>/kb/.git/writfold/proposals/2c6ba260f2cde3fa.json !proposal !local
+  field: created=2026-11-10T23:59:00Z session=s-progress run=run-20261101T090000Z-a1b2c3
+  accept: writfold kb proposals accept 2c6ba260f2cde3fa
+proposal 2c9a051ffe807243 [pending] link mentions run-20261101T090000Z-a1b2c3 → proposal/decision/2026-03-02-batch-ledger-writes @<WORLD>/kb/.git/writfold/proposals/2c9a051ffe807243.json !proposal !local
+  field: created=2026-11-10T23:59:00Z session=s-progress
+  accept: writfold kb proposals accept 2c9a051ffe807243
+== guards (current run run-20261101T090000Z-a1b2c3) ==
+rules=2 deny=1 ask=0 nudge=1 invalid=0
+guard commit-needs-gates [would-deny] pre-tool-use git commit requires gates.met @.writfold/guards/commit-needs-gates.toml:1 !deny
+  owes: gate lint [stale]; next: writfold kb gate run lint; gate bench [open]; next: writfold kb gate run bench; gate review-list [stale]; next: writfold kb gate cover review-list tests supported REF… --by WHO; gate signoff [open]; next: writfold kb gate attest signoff --statement TEXT --by WHO
+guard stop-reflect [would-nudge] stop requires step.met @.writfold/guards/stop-reflect.toml:1 !nudge
+  owes: step review owes review-list [stale], signoff [open]; next: writfold kb gate cover review-list tests supported REF… --by WHO
+# note: judged for the current run run-20261101T090000Z-a1b2c3 in <WORLD>/kb as if each rule had matched; a guard, not enforcement; nothing was run
+== timeline run-20261101T090000Z-a1b2c3 ==
+decision proposal/decision/2026-03-02-batch-ledger-writes [accepted] 2026-03-02 created Batch ledger writes in the API @proposals/decision/2026-03-02-batch-ledger-writes/proposal.md:6
+decision proposal/decision/2026-03-02-batch-ledger-writes [accepted] 2026-03-09 updated Batch ledger writes in the API @proposals/decision/2026-03-02-batch-ledger-writes/proposal.md:7
+run run-20261101T090000Z-a1b2c3 [open] 2026-11-01T09:00:00Z created Add --plan to kb runs @runs/run-20261101T090000Z-a1b2c3/manifest.json:1
+checkpoint 2026-11-10T09:00:00Z entry 1 of 3: Started; read the runs verb. @runs/run-20261101T090000Z-a1b2c3/checkpoint.md:2
+checkpoint 2026-11-10T12:45:00Z entry 2 of 3: Implemented --plan; see proposal/decision/2026-03-02-batch-ledger-writes. @runs/run-20261101T090000Z-a1b2c3/checkpoint.md:6
+checkpoint 2026-11-10T14:10:00Z entry 3 of 3: Review started. @runs/run-20261101T090000Z-a1b2c3/checkpoint.md:10
+== kb=XXXXXXXXXXXX+dirty:14 index=refreshed:1  subject=kb@0ea3a743bfef+dirty:17  read-only; no daemon, nothing here claims a run is live ==

@@ -140,6 +140,7 @@ fn dirty_untracked_citations_never_claim_a_git_blob_or_freshness() -> Result<()>
         verb: Verb::Stale {
             scope: None,
             offline: false,
+            cached: false,
         },
         kb: Some(kb.clone()),
         cwd: kb,

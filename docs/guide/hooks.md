@@ -165,6 +165,31 @@ writfold guard rule commit-needs-gates (a guard, not enforcement): commit only w
 
 Like a guard, a permission rule reads the command line; it is not enforcement either.
 
+### Inspecting rules without a hook
+
+```sh
+writfold kb guard status
+writfold kb guard status --json
+```
+
+This read asks what each rule would decide **as if it had matched**, for the
+current-run pointer and working directory. It takes no `--run`. PreToolUse rules
+show `would-pass`, `would-deny` or `would-ask`; Stop rules show `would-nudge` or
+`quiet`; a repository exclusion shows `not-here`. Each unmet requirement has an
+`owes:` line with the existing next command. Unknown facts are flagged, and
+unparsable files are separate `guard-rule … [invalid]` rows.
+
+The trailer counts `rules`, `deny`, `ask`, `nudge` and `invalid`. Any non-zero
+count in the last four gives exit 2; otherwise exit 0. No rule files gives
+`answer=unknown reason=no-guards`, with the directory named, and exit 0.
+
+No command, checker or hook is run and no nudge is recorded; ordinary Git/index
+reads still occur. This is a guard, not enforcement. Stop status uses fresh
+evaluation flags, not a particular session's already-nudged suppression. The
+separate delivery guard is not evaluated, and an existing delivery configuration
+is noted. The [watch Guards view](watch.md) shows this same answer even when a
+different run is selected.
+
 ### Paths
 
 `paths` narrows a `tools` rule to the files it edits:

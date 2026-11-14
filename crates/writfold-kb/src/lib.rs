@@ -33,6 +33,7 @@ pub mod shell;
 pub mod stale;
 pub mod time;
 pub mod verbs;
+pub mod watch;
 pub mod workspace;
 pub mod write;
 
@@ -65,6 +66,7 @@ pub enum Verb {
     Stale {
         scope: Option<String>,
         offline: bool,
+        cached: bool,
     },
     Find {
         text: String,
@@ -92,6 +94,7 @@ pub enum Verb {
     Runs {
         open: bool,
         project: Option<String>,
+        plan: bool,
     },
     /// `repos [--missing]`: the cited repositories and their local clones.
     Repos {
@@ -104,6 +107,8 @@ pub enum Verb {
     Write(write::Write),
     /// `gate run|status|verify|lines`.
     Gate(gate::GateVerb),
+    /// `guard status`: rules judged for the current run, as if matched.
+    Guard(guard::GuardVerb),
     /// `edit apply|recover` (the Splicery adapter).
     Edit(edit::EditVerb),
     /// `deliver prepare|check|attest|waive|status` (G2; nothing is sent).
@@ -145,6 +150,9 @@ pub fn run(request: &Request) -> Result<Output> {
     }
     if let Verb::Gate(verb) = &request.verb {
         return gate::execute(&ws, request, verb, now);
+    }
+    if let Verb::Guard(guard::GuardVerb::Status) = &request.verb {
+        return guard::status::execute(&ws, request, now);
     }
     if let Verb::Edit(verb) = &request.verb {
         return edit::execute(&ws, request, verb, now);
@@ -213,14 +221,24 @@ fn answer(session: &Session<'_>, request: &Request) -> Result<(Answer, &'static 
             "why",
             vec![text.clone()],
         ),
-        Verb::Stale { scope, offline } => (
-            verbs::stale::stale(session, scope.as_deref(), *offline)?,
-            "stale",
-            vec![
+        Verb::Stale {
+            scope,
+            offline,
+            cached,
+        } => {
+            let mut args = vec![
                 scope.clone().unwrap_or_default(),
                 format!("offline={offline}"),
-            ],
-        ),
+            ];
+            if *cached {
+                args.push("cached=true".into());
+            }
+            (
+                verbs::stale::stale(session, scope.as_deref(), *offline, *cached)?,
+                "stale",
+                args,
+            )
+        }
         Verb::Resume { run } => {
             let (answer, id) = verbs::runs::resume(session, run.as_deref(), &request.cwd)?;
             (answer, "resume", vec![id])
@@ -277,11 +295,18 @@ fn graph(session: &Session<'_>, verb: &Verb) -> Result<(Answer, &'static str, Ve
             vec![target.clone()],
         ),
         Verb::IndexVerify => (verbs::index::verify(session)?, "index-verify", Vec::new()),
-        Verb::Runs { open, project } => {
+        Verb::Runs {
+            open,
+            project,
+            plan,
+        } => {
             let mut args = vec![format!("open={open}")];
             args.extend(project.iter().map(|p| format!("project={p}")));
+            if *plan {
+                args.push("plan=true".into());
+            }
             (
-                verbs::runs::list(session, *open, project.as_deref())?,
+                verbs::runs::list(session, *open, project.as_deref(), *plan)?,
                 "runs",
                 args,
             )

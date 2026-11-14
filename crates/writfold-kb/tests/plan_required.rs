@@ -59,7 +59,11 @@ fn plan(w: &World, verb: &str, name: &str) -> TestResult<(String, u8)> {
             run,
             repo,
         },
-        "status" => PlanVerb::Status { run, repo },
+        "status" => PlanVerb::Status {
+            gates: false,
+            run,
+            repo,
+        },
         _ => PlanVerb::Advance { run, repo },
     };
     call(w, Verb::Plan(verb))

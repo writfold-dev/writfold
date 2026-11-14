@@ -27,6 +27,9 @@ pub struct Gate {
     pub run_record: bool,
     /// A checklist gate's command for its first owed item.
     pub cover: Option<String>,
+    pub class: String,
+    pub counts: Option<(usize, usize)>,
+    pub items: Vec<crate::emit::More>,
 }
 
 impl Gate {
@@ -81,10 +84,13 @@ fn undefined(id: &str) -> Gate {
         attested: false,
         run_record: false,
         cover: None,
+        class: String::new(),
+        counts: None,
+        items: Vec::new(),
     }
 }
 
-fn gate(j: &Judged<'_>, repo: &str) -> Gate {
+fn gate(j: &Judged<'_>, repo: &str, detail: bool) -> Gate {
     let (evidence, content) = evidence(j);
     let d = &j.definition;
     Gate {
@@ -97,6 +103,28 @@ fn gate(j: &Judged<'_>, repo: &str) -> Gate {
         attested: d.attested(),
         run_record: d.run_record(),
         cover: (j.checklist.as_ref()).and_then(|v| crate::gate::checklist::next(&d.id, v)),
+        class: if detail {
+            d.class.clone()
+        } else {
+            String::new()
+        },
+        counts: detail
+            .then(|| j.checklist.as_ref().map(|v| v.counts()))
+            .flatten(),
+        items: if detail {
+            j.checklist.as_ref().map_or_else(Vec::new, |v| {
+                v.entries
+                    .iter()
+                    .map(|e| {
+                        let mut line = crate::gate::checklist::item_line(e);
+                        line.status = Some(e.item.name().into());
+                        line
+                    })
+                    .collect()
+            })
+        } else {
+            Vec::new()
+        },
     }
 }
 
@@ -111,6 +139,30 @@ pub fn steps(
     graph: &Graph,
     subject: &Subject,
     records: &Records,
+) -> Result<Vec<Vec<Gate>>> {
+    judge_steps(session, run_dir, run, graph, subject, records, false)
+}
+
+/// Like `steps`, with checklist continuations for detailed plan status.
+pub fn steps_detailed(
+    session: &Session<'_>,
+    run_dir: &str,
+    run: &str,
+    graph: &Graph,
+    subject: &Subject,
+    records: &Records,
+) -> Result<Vec<Vec<Gate>>> {
+    judge_steps(session, run_dir, run, graph, subject, records, true)
+}
+
+fn judge_steps(
+    session: &Session<'_>,
+    run_dir: &str,
+    run: &str,
+    graph: &Graph,
+    subject: &Subject,
+    records: &Records,
+    detail: bool,
 ) -> Result<Vec<Vec<Gate>>> {
     let mut filings = Filings::read(&session.ws.root, run_dir, run);
     filings.owed.gates = Some(graph.gates());
@@ -131,12 +183,12 @@ pub fn steps(
                 continue;
             };
             if !j.definition.run_record() {
-                gates.push(gate(j, &subject.name));
+                gates.push(gate(j, &subject.name, detail));
                 continue;
             }
             let d = j.definition.clone();
             let judged = status::judge_gate(d, &valid, &filings, &subject.name, &digest);
-            gates.push(gate(&judged, &subject.name));
+            gates.push(gate(&judged, &subject.name, detail));
             // A run-record gate's content is its window, receipt or not.
             if let Some(last) = gates.last_mut() {
                 last.content = digest.clone();

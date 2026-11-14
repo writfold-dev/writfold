@@ -1,224 +1,176 @@
-//! The watch state: which run is selected, which pane shows, and the
-//! verbs' answers. Answers are asked once per KB pin and kept until the
-//! pin moves; no key writes anything.
-use crate::source::{Reply, Source, field};
+//! Read-only watch state. Queries and refresh live in `state`, keys in `keys`.
+use crate::poll::{Stamps, Subject};
+use crate::source::{Reply, Source, field, flags};
+use crate::style::Look;
 use serde_json::Value;
 use std::collections::BTreeMap;
 use writfold_kb::workspace::GitTool;
 
-/// What the right-hand pane shows for the selected run.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum View {
-    /// `kb resume <run>` with `kb gate status --run <run>`'s counts.
-    Resume,
-    /// `kb stale <project>`.
+    Progress,
+    Gates,
+    Timeline,
+    Inbox,
+    Guards,
     Stale,
-    /// `kb brief <project>`.
     Brief,
+    Resume,
 }
 
-impl View {
-    fn next(self) -> Self {
-        match self {
-            Self::Resume => Self::Stale,
-            Self::Stale => Self::Brief,
-            Self::Brief => Self::Resume,
-        }
-    }
-}
-
-/// Which pane the arrow keys move.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Focus {
     Runs,
     Detail,
 }
 
-/// A key, independent of the terminal library.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Key {
     Up,
     Down,
     Enter,
     Tab,
+    BackTab,
+    PageUp,
+    PageDown,
     Esc,
     Char(char),
 }
 
 pub struct App {
     pub source: Source,
-    /// The KB pin digest the answers below were asked at.
-    pub pin: String,
-    /// `kb runs`.
+    pub stamps: Stamps,
     pub runs: Reply,
-    /// Indices into `runs.rows`: runs that are not closed first, each
-    /// group in the verb's order (newest activity first).
     pub order: Vec<usize>,
-    /// A position in `order`.
     pub selected: usize,
     pub view: View,
     pub focus: Focus,
     pub scroll: u16,
     pub help: bool,
-    answers: BTreeMap<(String, View), Reply>,
-    gates: BTreeMap<String, Reply>,
-    tool: Option<GitTool>,
+    pub expand_all: bool,
+    pub open_only: bool,
+    pub project_only: Option<String>,
+    pub notice: Option<String>,
+    pub asked: String,
+    pub runs_view: bool,
+    pub anchor: bool,
+    pub look: Look,
+    pub(crate) width: u16,
+    pub(crate) height: u16,
+    pub(crate) main_height: u16,
+    pub(crate) answers: BTreeMap<String, BTreeMap<View, Reply>>,
+    pub(crate) guards: Option<Reply>,
+    pub(crate) tool: Option<GitTool>,
+    pub(crate) ticks: u8,
+    pub(crate) subjects: BTreeMap<String, Subject>,
 }
 
 impl App {
-    /// Ask the verbs once; select `run`, else the current run, else the
-    /// first listed.
     pub fn new(source: Source, run: Option<&str>) -> Self {
         let mut app = Self {
             source,
-            pin: String::new(),
+            stamps: Stamps::default(),
             runs: Reply::default(),
             order: Vec::new(),
             selected: 0,
-            view: View::Resume,
+            view: View::Progress,
             focus: Focus::Runs,
             scroll: 0,
             help: false,
+            expand_all: false,
+            open_only: false,
+            project_only: None,
+            notice: None,
+            asked: String::new(),
+            runs_view: false,
+            anchor: true,
+            look: Look::default(),
+            width: 0,
+            height: 0,
+            main_height: 1,
             answers: BTreeMap::new(),
-            gates: BTreeMap::new(),
+            guards: None,
             tool: None,
+            ticks: 0,
+            subjects: BTreeMap::new(),
         };
-        app.reload(run.map(str::to_owned));
+        app.reload(run.map(str::to_owned), None);
         app
     }
 
-    fn reload(&mut self, keep: Option<String>) {
-        self.pin = self.source.pin(&mut self.tool);
-        self.runs = self.source.runs();
-        self.answers.clear();
-        self.gates.clear();
-        let closed = |i: &usize| field(&self.runs.rows[*i], "status") == "closed";
-        let (mut order, last): (Vec<usize>, Vec<usize>) =
-            (0..self.runs.rows.len()).partition(|i| !closed(i));
-        order.extend(last);
-        self.order = order;
-        let position = |pick: &dyn Fn(&Value) -> bool| {
-            self.order.iter().position(|i| pick(&self.runs.rows[*i]))
-        };
-        self.selected = keep
-            .and_then(|id| position(&|row| field(row, "id") == id))
-            .or_else(|| position(&|row| crate::source::flags(row).contains(&"current")))
-            .unwrap_or(0);
-        self.load();
-    }
-
-    /// Re-ask every verb when the KB pin moved; true when it did.
-    pub fn poll(&mut self) -> bool {
-        if self.source.pin(&mut self.tool) == self.pin {
-            return false;
-        }
-        self.reload(self.run());
-        true
-    }
-
-    /// The selected run's ID.
-    pub fn run(&self) -> Option<String> {
-        self.row().map(|row| field(row, "id").to_owned())
-    }
-
-    fn row(&self) -> Option<&Value> {
+    pub fn row(&self) -> Option<&Value> {
         self.order
             .get(self.selected)
             .and_then(|i| self.runs.rows.get(*i))
     }
 
-    /// The selected run's project, from its `kb runs` place line.
+    pub fn run_id(&self) -> Option<&str> {
+        self.row().map(|row| field(row, "id"))
+    }
+
+    pub fn run(&self) -> Option<String> {
+        self.run_id().map(str::to_owned)
+    }
+
+    pub fn current_run(&self) -> Option<&str> {
+        if let Some(current) = self.guards.as_ref().and_then(crate::guards::current) {
+            return (current != "none").then_some(current);
+        }
+        self.runs
+            .rows
+            .iter()
+            .find(|r| flags(r).contains(&"current"))
+            .map(|r| field(r, "id"))
+    }
+
     pub fn project(&self) -> Option<String> {
-        let more = self.row()?.get("more")?.as_array()?;
-        more.iter()
+        self.row()?
+            .get("more")?
+            .as_array()?
+            .iter()
             .filter(|m| field(m, "label") == "field")
             .flat_map(|m| field(m, "text").split(' '))
             .find_map(|part| part.strip_prefix("project="))
             .map(str::to_owned)
     }
 
-    /// Ask the verbs the current pane needs, unless already answered at
-    /// this pin.
-    pub fn load(&mut self) {
-        let Some(run) = self.run() else {
-            return;
-        };
-        let key = (run.clone(), self.view);
-        if !self.answers.contains_key(&key) {
-            let project = self.project();
-            let reply = match self.view {
-                View::Resume => self.source.resume(&run),
-                View::Stale => self.source.stale(project.as_deref()),
-                View::Brief => self.source.brief(project.as_deref()),
-            };
-            self.answers.insert(key, reply);
-        }
-        if self.view == View::Resume && !self.gates.contains_key(&run) {
-            let reply = self.source.gates(&run);
-            self.gates.insert(run, reply);
-        }
+    pub(crate) fn worktree(&self) -> Option<String> {
+        self.row()?
+            .get("more")?
+            .as_array()?
+            .iter()
+            .filter(|m| field(m, "label") == "field")
+            .find_map(|m| field(m, "text").split_once("worktree="))
+            .map(|(_, rest)| {
+                rest.split_once(" base=")
+                    .map_or(rest, |(path, _)| path)
+                    .to_owned()
+            })
     }
 
-    /// The current pane's answer, if asked.
+    pub fn runs_title(&self) -> String {
+        let mut title = format!("runs ({})", self.order.len());
+        if self.open_only {
+            title.push_str(" open");
+        }
+        if let Some(project) = &self.project_only {
+            title.push_str(&format!(" project={project}"));
+        }
+        title
+    }
+
+    pub fn answer(&self, view: View) -> Option<&Reply> {
+        if view == View::Guards {
+            return self.guards.as_ref();
+        }
+        self.answers.get(self.run_id()?)?.get(&view.cache_key())
+    }
+
     pub fn detail(&self) -> Option<&Reply> {
-        self.answers.get(&(self.run()?, self.view))
+        self.answer(self.view)
     }
 
-    /// `kb gate status` for the selected run, if asked.
     pub fn gate_status(&self) -> Option<&Reply> {
-        self.gates.get(&self.run()?)
-    }
-
-    /// Apply one key; false means quit. Every key only moves the view.
-    pub fn key(&mut self, key: Key) -> bool {
-        if self.help && key != Key::Char('q') {
-            self.help = !matches!(key, Key::Esc | Key::Char('?'));
-            return true;
-        }
-        match key {
-            Key::Char('q') => return false,
-            Key::Esc => self.focus = Focus::Runs,
-            Key::Char('?') => self.help = true,
-            Key::Up | Key::Char('k') => self.step(false),
-            Key::Down | Key::Char('j') => self.step(true),
-            Key::Enter => {
-                self.focus = match self.focus {
-                    Focus::Runs => Focus::Detail,
-                    Focus::Detail => Focus::Runs,
-                };
-            }
-            Key::Tab => self.show(self.view.next()),
-            Key::Char('b') => self.show(View::Brief),
-            Key::Char('s') => self.show(View::Stale),
-            Key::Char('g') => self.show(View::Resume),
-            Key::Char('r') => self.reload(self.run()),
-            Key::Char(_) => {}
-        }
-        true
-    }
-
-    fn show(&mut self, view: View) {
-        self.view = view;
-        self.scroll = 0;
-        self.load();
-    }
-
-    fn step(&mut self, down: bool) {
-        if self.focus == Focus::Detail {
-            self.scroll = if down {
-                self.scroll.saturating_add(1)
-            } else {
-                self.scroll.saturating_sub(1)
-            };
-            return;
-        }
-        let last = self.order.len().saturating_sub(1);
-        self.selected = if down {
-            (self.selected + 1).min(last)
-        } else {
-            self.selected.saturating_sub(1)
-        };
-        self.scroll = 0;
-        self.load();
+        self.answer(View::Gates)
     }
 }

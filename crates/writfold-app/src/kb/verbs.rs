@@ -65,6 +65,7 @@ pub fn verb(name: &str, common: &Common, positional: &[String]) -> Result<Verb, 
         "stale" => Verb::Stale {
             scope: optional()?,
             offline: common.offline,
+            cached: common.cached,
         },
         "find" | "match" => Verb::Find {
             text: text("some text")?,

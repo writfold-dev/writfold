@@ -1,0 +1,19 @@
+step detail#1/done [done] unit [stale] @runs/run-20261101T090000Z-a1b2c3/plan/done-detail.1~done.json:1 !stale
+  why: no longer holds: unit [stale] (done stays done; list the gate again on a later step if it must hold there)
+  gate: unit [stale] mechanical @runs/run-20261101T090000Z-a1b2c3/gates/unit-20261111T010000Z-XXXXXX.json:1 !stale
+  done: recorded 2026-11-11T00:00:00Z
+step detail#1/skip [skipped] not needed (by owner, 2026-11-11T00:00:00Z) @runs/run-20261101T090000Z-a1b2c3/plan/skip-detail.1~skip.json:1 !skipped
+step detail#1/review [current] owes: review [stale], missing [undefined] @runs/run-20261101T090000Z-a1b2c3/plan/splice-detail.1.json:1
+  gate: ready [satisfied] mechanical @runs/run-20261101T090000Z-a1b2c3/gates/ready-20261111T000000Z-XXXXXX.json:1
+  gate: review [stale] checklist 1/2 required covered @runs/run-20261101T090000Z-a1b2c3/covers/review.record-20261111T000000Z-XXXXXX.json:1 !stale
+  item: errors [stale] 1 reference by agent; cited evidence moved: gate:unit was satisfied, now stale @runs/run-20261101T090000Z-a1b2c3/covers/review.errors-20261111T000000Z-XXXXXX.json:1 !stale
+  item: record [supported] 1 reference by agent @runs/run-20261101T090000Z-a1b2c3/covers/review.record-20261111T000000Z-XXXXXX.json:1
+  item: perf [not-applicable] (optional) no hot path is touched by agent @runs/run-20261101T090000Z-a1b2c3/covers/review.perf-20261111T000000Z-XXXXXX.json:1
+  gate: missing [undefined] !undefined
+  read: instructions for review @.writfold/gates/review.md:1
+  next: writfold kb gate cover review errors supported REF… --by WHO
+step detail#1/later [later] gates: unit @runs/run-20261101T090000Z-a1b2c3/plan/splice-detail.1.json:1
+  gate: unit [later]
+# note: plan detail @b9af91b3c6a0 from .writfold/plans/detail.toml; steps are derived from runs/run-20261101T090000Z-a1b2c3/plan/ on every read, never stored
+# coverage=complete records=36/36 shown=4 omitted=0 steps=4 done=1 skipped=1 stale=1 moved=0 invalid=0 current=3 current_gates=3 current_owed=2 kb=d5db758bda80+dirty:8 index=fresh cursor=none q=6c0a6600533b
+# exit=2

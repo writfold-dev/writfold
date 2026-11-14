@@ -175,6 +175,7 @@ pub fn looked(filed: &[Filed], gate: &str, item: &str) -> Option<More> {
     let (newest, _) = mine.last()?;
     let statuses: Vec<Status> = mine.iter().map(|(_, s)| *s).collect();
     Some(More {
+        status: None,
         label: "looked",
         text: tally(&statuses),
         path: Some((*newest).to_owned()),

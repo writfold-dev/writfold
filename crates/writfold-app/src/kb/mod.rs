@@ -6,6 +6,7 @@ mod cite;
 mod deliver;
 mod edit;
 mod gate;
+mod guard;
 mod hook;
 mod observe;
 mod plan;
@@ -32,15 +33,18 @@ verbs:
                                    what does changing X touch (bounded walk, frontier stated)
   uses <target>                    who relies on a record or a code locator
   timeline <id>                    linked investigations, tickets, decisions, checkpoints by date
-  stale [<project>|<path>] [--offline]
-                                   which citations have moved (local repositories only)
+  stale [<project>|<path>] [--offline|--cached]
+                                   which citations have moved; --cached never starts a checker
   repos [--missing]                each cited repository: local, partial or missing, how its clone
                                    was found, its target commit, when it last fetched (exit 2 if missing)
   index status|rebuild|verify      what the derived index holds; rebuild it; check it equals a rebuild
   check [<project>|<path>]         stale, index verify and the current run's gate status in one
                                    summary (the worst exit code of the three)
-  runs [--open] [--project P]      every run: state, where it works, last checkpoint
+  runs [--open] [--project P] [--plan]
+                                   every run: state, place, last checkpoint; --plan adds its position
   resume [<run>]                   one run: manifest, coverage, rechecks, checkpoint tail
+  guard status                    would guard rules pass, deny, ask or nudge for the current run?
+                                   a read-only judgment, not enforcement; no command is run
 
 writes (atomic; they leave the work tree dirty for you to commit):
   checkpoint [--run ID | --new-run --project P --task T [--mode M]] --note TEXT|--from-draft SESSION
@@ -100,9 +104,9 @@ plans (the run graph; templates in .writfold/plans/<name>.toml; Writfold records
   plan use <template> [--again] [--run ID] [--repo DIR]
                                    splice its steps before the current step, as its children;
                                    a repeat is a no-op (exit 0), --again adds another copy
-  plan status [--run ID] [--repo DIR]
+  plan status [--run ID] [--repo DIR] [--gates]
                                    each step: done (!stale if a gate no longer holds), current with
-                                   what it owes, later; !template-moved if its template changed
+                                   what it owes, later; --gates lists gate and checklist item standings
   plan advance [--run ID] [--repo DIR]
                                    record the current step as done, or refuse (exit 3) naming what it owes
   plan skip --reason TEXT --by WHO [--run ID]

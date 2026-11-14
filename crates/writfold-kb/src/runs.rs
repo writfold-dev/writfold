@@ -109,6 +109,7 @@ pub fn rows(session: &Session<'_>, rec: &Rec) -> Result<Vec<Row>> {
         for (offset, line) in lines.iter().enumerate() {
             if !line.trim().is_empty() && tail.more.len() < 12 {
                 tail.more.push(More {
+                    status: None,
                     label: "note",
                     text: line.trim().to_owned(),
                     path: Some(path.clone()),
@@ -124,6 +125,7 @@ pub fn rows(session: &Session<'_>, rec: &Rec) -> Result<Vec<Row>> {
 
 fn field(key: &str, value: &str, path: &str, line: u32) -> More {
     More {
+        status: None,
         label: "field",
         text: format!("{key}={value}"),
         path: Some(path.to_owned()),

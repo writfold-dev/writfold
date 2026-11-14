@@ -3,6 +3,8 @@
 //! itself (satisfied, failed, stale and open) with receipts recorded by
 //! `gate run`.
 #![allow(dead_code)]
+pub mod plan;
+pub mod projection;
 use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -28,7 +30,7 @@ impl Drop for World {
     }
 }
 
-fn git(dir: &Path, args: &[&str]) -> TestResult {
+pub fn git(dir: &Path, args: &[&str]) -> TestResult {
     let output = Command::new("git")
         .current_dir(dir)
         .env("GIT_CONFIG_GLOBAL", "/dev/null")

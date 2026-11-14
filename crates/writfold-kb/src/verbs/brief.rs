@@ -212,6 +212,7 @@ fn checkpoint(session: &Session<'_>, scope: Option<&str>) -> Result<(Vec<Row>, O
             if !line.trim().is_empty() && row.more.len() < 12 {
                 let at = entry.first + 1 + u32::try_from(offset).unwrap_or(0);
                 row.more.push(More {
+                    status: None,
                     label: "note",
                     text: line.trim().to_owned(),
                     path: Some(path.clone()),

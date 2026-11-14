@@ -64,6 +64,7 @@ fn cited(session: &Session<'_>) -> Result<BTreeMap<String, Cited>> {
 
 fn more(label: &'static str, text: String, path: Option<String>) -> More {
     More {
+        status: None,
         label,
         text,
         path,

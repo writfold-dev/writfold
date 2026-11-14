@@ -221,6 +221,20 @@ pub fn edges(conn: &Connection, id: &str, outgoing: bool) -> Result<Vec<Edge>> {
     Ok(found)
 }
 
+/// Destinations mentioned by files inside one run's directory.
+pub fn run_destinations(conn: &Connection, id: &str) -> Result<Vec<String>> {
+    let prefix = format!("doc:runs/{id}/");
+    // '/' and '0' are adjacent in the source key's binary ordering.
+    let end = format!("doc:runs/{id}0");
+    let mut statement = conn.prepare_cached(
+        "SELECT DISTINCT dst FROM edges WHERE src >= ?1 AND src < ?2 ORDER BY dst",
+    )?;
+    let found = statement
+        .query_map((&prefix, &end), |r| r.get(0))?
+        .collect::<rusqlite::Result<Vec<_>>>()?;
+    Ok(found)
+}
+
 /// Readable input files, all input files, unreadable files (a file whose
 /// record ID an earlier file already claims is unreadable).
 pub fn scope(conn: &Connection) -> Result<(usize, usize, usize)> {
