@@ -85,7 +85,7 @@ pub fn inbox(answer: &Reply) -> Vec<Line> {
     out
 }
 
-fn inbox_counts(answer: &Reply) -> String {
+pub(crate) fn inbox_counts(answer: &Reply) -> String {
     let drafts = inbox_rows(answer)
         .filter(|r| field(r, "kind") == "draft")
         .count();
@@ -174,28 +174,7 @@ pub fn compact(app: &App, view: View) -> Vec<Line> {
     }
 }
 
-pub fn summary(app: &App) -> String {
-    let gates = match app.answer(View::Gates) {
-        Some(answer) if answer.error.is_some() => "gates: refused".into(),
-        Some(answer) => {
-            let parts = answer
-                .counts()
-                .into_iter()
-                .filter(|(n, v)| n != "satisfied" && n != "gates" && *v > 0)
-                .map(|(n, v)| format!("{n}={v}"))
-                .collect::<Vec<_>>()
-                .join(" ");
-            match answer.count("gates") {
-                Some(n) => format!("gates: {parts} of {n}"),
-                None => gate_summary(answer).text,
-            }
-        }
-        None => "gates: no run selected".into(),
-    };
-    let inbox = match app.answer(View::Inbox) {
-        Some(answer) if answer.error.is_some() => "refused".into(),
-        Some(answer) => inbox_counts(answer),
-        None => "no run selected".into(),
-    };
-    format!("{gates} | inbox: {inbox} | {}", crate::guards::summary(app))
+/// Drafts plus proposals: the inbox tab's one number (view 4 keeps the breakdown).
+pub(crate) fn inbox_total(answer: &Reply) -> usize {
+    inbox_rows(answer).count()
 }

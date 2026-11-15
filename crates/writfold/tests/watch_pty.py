@@ -41,7 +41,7 @@ def receive(first=False):
 try:
     receive(True)
     for key in [b"l", b"j", b"k", b"n", b"N", b".", b"l", b"j", b"k",
-                b"h", b"\x1b[C", b"\x1b[D", b"\r", b"\x1b", b"x", b"X",
+                b"d", b"d", b"h", b"d", b"\x1b[C", b"\x1b[D", b"\r", b"\x1b", b"x", b"X",
                 b"x", b"c", b"?", b"\x1b", b"r", b"r", b"r", b"q"]:
         os.write(master, key)
         receive()
@@ -49,8 +49,10 @@ try:
     receive()
     plain = re.sub(rb"\x1b\[[0-?]*[ -/]*[@-~]", b"", seen)
     compact = b"".join(plain.split())
-    assert b"recordedposition" in compact, plain.decode("utf-8", "replace")
-    assert b"fullreceipts" in compact, plain.decode("utf-8", "replace")
+    assert b"nextsteptopickup,asrecorded" in compact, plain.decode("utf-8", "replace")
+    assert b"ggatesxtext" in compact, plain.decode("utf-8", "replace")
+    assert b"dlessggates" in compact, plain.decode("utf-8", "replace")
+    assert b"lastcheckpoint:" in compact, plain.decode("utf-8", "replace")
     assert b"\x1b[?1049l" in seen
 finally:
     if child.poll() is None:

@@ -1,5 +1,5 @@
 //! The selected node's styled, hanging-indent paragraphs.
-use crate::app::{App, Focus, View};
+use crate::app::{App, Detail, Focus, View};
 use crate::{graph, inspect, map_view, paint};
 use ratatui::{
     Frame,
@@ -15,13 +15,16 @@ pub(crate) fn draw(frame: &mut Frame<'_>, app: &mut App, area: Rect) {
     let Some(index) = nodes.iter().position(|n| Some(n.id) == app.node.as_deref()) else {
         return;
     };
-    let title = format!("step {}/{} (Esc: back)", index + 1, nodes.len());
+    let title = format!("step {}/{}", index + 1, nodes.len());
     let border = paint::block(title, app.focus == Focus::Inspector, app.look);
     let inner = border.inner(area);
     frame.render_widget(border, area);
-    let mut lines = inspect::content(&nodes[index], map_view::glyphs(app), app.look);
-    let hint = lines.pop();
-    lines.extend(recorded(app));
+    let mut lines = inspect::content(&nodes[index], map_view::glyphs(app), app.look, app.level);
+    lines.pop();
+    if app.level == Detail::Full {
+        lines.extend(recorded(app));
+    }
+    let hint = inspect::hint(app.level, inner.width, app.look);
     let body = Rect::new(
         inner.x,
         inner.y,
@@ -33,19 +36,16 @@ pub(crate) fn draw(frame: &mut Frame<'_>, app: &mut App, area: Rect) {
     let scroll =
         usize::from(app.inspect_scroll).min(total.saturating_sub(usize::from(body.height)));
     render(frame, panes, body, scroll);
-    if let Some(hint) = hint {
-        frame.render_widget(
-            Paragraph::new(hint.text),
-            Rect::new(inner.x, inner.bottom().saturating_sub(1), inner.width, 1),
-        );
-    }
+    frame.render_widget(
+        Paragraph::new(hint),
+        Rect::new(inner.x, inner.bottom().saturating_sub(1), inner.width, 1),
+    );
     app.inspect_scroll = scroll.min(usize::from(u16::MAX)) as u16;
 }
 
 fn recorded(app: &App) -> impl Iterator<Item = inspect::InspectLine> + '_ {
     map_view::records(app)
         .into_iter()
-        .skip(1)
         .map(move |line| inspect::InspectLine {
             indent: 0,
             text: ratatui::text::Line::styled(line.text, crate::style::style(app.look, line.tone)),

@@ -35,8 +35,8 @@ pub fn verb(view: View, run: &str, project: Option<&str>) -> Verb {
 
 pub fn normalize(w: &World, text: &str) -> TestResult<String> {
     let text = super::stable(text).replace(&w.base.display().to_string(), "<WORLD>");
-    let pin = regex::Regex::new(r"kb=[0-9a-f]{12,64}")?;
-    Ok(pin.replace_all(&text, "kb=XXXXXXXXXXXX").into_owned())
+    let pin = regex::Regex::new(r"kb([= ])[0-9a-f]{12,64}")?;
+    Ok(pin.replace_all(&text, "kb${1}XXXXXXXXXXXX").into_owned())
 }
 
 pub fn golden(name: &str, actual: &str) -> TestResult {

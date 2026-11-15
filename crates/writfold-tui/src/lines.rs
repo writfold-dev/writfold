@@ -2,6 +2,8 @@
 use crate::source::{Reply, field, flags};
 use serde_json::Value;
 
+pub use crate::run_item::run_item;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Tone {
     Plain,
@@ -179,33 +181,6 @@ pub fn reply(answer: &Reply) -> Vec<Line> {
     out.extend(notes(answer));
     if out.is_empty() {
         out.push(line("(no rows)", Tone::Dim));
-    }
-    out
-}
-
-/// Run-list fields stay in the verb's order, including its plan position.
-pub fn run_item(row: &Value) -> Vec<Line> {
-    let state = field(row, "status");
-    let role = if flags(row).contains(&"current") {
-        Tone::Current
-    } else {
-        tone(row)
-    };
-    let mut out = vec![
-        line(
-            format!("[{state}] {}{}", field(row, "id"), suffix(row, false)),
-            role,
-        ),
-        line(format!("  {}", field(row, "text")), tone(row)),
-    ];
-    for m in more(row) {
-        let text = field(m, "text");
-        match field(m, "label") {
-            "field" if !text.is_empty() => out.push(line(format!("  {text}"), Tone::Dim)),
-            "checkpoint" => out.push(line(format!("  last: {text}"), Tone::Dim)),
-            "plan" => out.push(continuation(m, role, false, false)),
-            _ => {}
-        }
     }
     out
 }

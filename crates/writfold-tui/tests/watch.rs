@@ -64,6 +64,7 @@ fn find(rows: &[String], needle: &str) -> Option<(u16, u16)> {
 fn the_layout_has_runs_left_gates_right_and_the_pin_below() -> TestResult {
     let w = world("layout")?;
     let mut app = App::new(w.source(), None);
+    app.level = writfold_tui::app::Detail::Full;
     app.show(View::Gates);
     let buffer = render(&mut app)?;
     let screen = rows(&buffer);
@@ -82,7 +83,7 @@ fn the_layout_has_runs_left_gates_right_and_the_pin_below() -> TestResult {
     let (x, y) = find(&screen, "gate pass [satisfied]").ok_or(text.clone())?;
     assert_eq!(buffer[(x, y)].fg, Color::Green);
     let last = screen.last().ok_or("empty screen")?;
-    assert!(last.contains("kb=") && last.contains("index="), "{last}");
+    assert!(last.contains(" kb ") && last.contains(" index "), "{last}");
     assert!(app.key(Key::Char('?')));
     let screen = rows(&render(&mut app)?);
     assert!(find(&screen, " help ").is_some(), "{}", screen.join("\n"));

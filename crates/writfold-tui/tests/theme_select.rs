@@ -114,12 +114,13 @@ fn truecolor_key_cycles_every_theme_and_wraps_with_effective_footer() -> TestRes
     for expected in ThemeId::ALL.into_iter().skip(1).chain([ThemeId::Clay]) {
         assert!(app.key(Key::Char('T')));
         assert_eq!(app.look.theme, expected);
+        // The cycle notice names the effective theme for one keypress.
         let buffer = render(&mut app, 160, 40)?;
         assert!(
             rows(&buffer)
                 .last()
                 .ok_or("footer")?
-                .contains(&format!("theme={}", expected.name()))
+                .contains(&format!("theme={} (not written)", expected.name()))
         );
     }
     Ok(())
@@ -134,13 +135,15 @@ fn degraded_theme_key_keeps_theme_and_explains_truecolor_requirement() -> TestRe
             theme: ThemeId::Paper,
             depth,
         };
+        // The effective colour depth is stated in the help overlay.
+        assert!(app.key(Key::Char('?')));
         let buffer = render(&mut app, 200, 40)?;
         assert!(
             rows(&buffer)
-                .last()
-                .ok_or("footer")?
-                .contains(&format!("theme={name}"))
+                .join("\n")
+                .contains(&format!("colour {name} (themes need truecolor)"))
         );
+        assert!(app.key(Key::Esc));
         assert!(app.key(Key::Char('T')));
         assert_eq!(
             app.look,

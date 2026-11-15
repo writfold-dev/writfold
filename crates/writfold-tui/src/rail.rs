@@ -2,6 +2,8 @@
 use crate::cells::{self, Glyphs};
 use crate::graph::Node;
 use crate::lines::Tone;
+use crate::rail_text::{clip, id_column, left, mark, shown_id, splice_name, width as cells_of};
+use crate::source::field;
 use crate::style::{self, Look};
 use ratatui::text::{Line, Span};
 use std::collections::HashMap;
@@ -9,14 +11,6 @@ use std::collections::HashMap;
 pub struct Rail<'a> {
     pub lines: Vec<Line<'a>>,
     pub node_lines: Vec<usize>,
-}
-
-fn mark(glyphs: Glyphs, unicode: &'static str, ascii: &'static str) -> &'static str {
-    if glyphs == Glyphs::Unicode {
-        unicode
-    } else {
-        ascii
-    }
 }
 
 fn group_path<'a>(index: usize, nodes: &[Node<'a>], ids: &HashMap<&str, usize>) -> Vec<usize> {
@@ -40,7 +34,7 @@ fn same_group(a: &Node<'_>, b: &Node<'_>) -> bool {
     a.group == b.group && a.parent == b.parent
 }
 
-pub fn build<'a>(nodes: &[Node<'a>], width: u16, glyphs: Glyphs, look: Look) -> Rail<'a> {
+pub fn build<'a>(nodes: &[Node<'a>], width: u16, show: Show) -> Rail<'a> {
     let ids: HashMap<&str, usize> = nodes.iter().enumerate().map(|(i, n)| (n.id, i)).collect();
     let mut rail = Rail {
         lines: Vec::new(),
@@ -48,8 +42,11 @@ pub fn build<'a>(nodes: &[Node<'a>], width: u16, glyphs: Glyphs, look: Look) -> 
     };
     let mut stack: Vec<usize> = Vec::new();
     let mut root_seen = false;
-    let chips = nodes.iter().map(|n| n.chips.len()).max().unwrap_or(0);
-    let column = id_column(nodes);
+    let shape = Shape {
+        chips: nodes.iter().map(|n| n.chips.len()).max().unwrap_or(0),
+        ids: id_column(nodes, show.full),
+        show,
+    };
     for (index, node) in nodes.iter().enumerate() {
         let path = group_path(index, nodes, &ids);
         let common = stack
@@ -57,157 +54,117 @@ pub fn build<'a>(nodes: &[Node<'a>], width: u16, glyphs: Glyphs, look: Look) -> 
             .zip(&path)
             .take_while(|(a, b)| same_group(&nodes[**a], &nodes[**b]))
             .count();
-        close(&mut rail.lines, &stack, common, glyphs, look);
+        close(&mut rail.lines, &stack, common, show);
         stack.truncate(common);
         for ancestor in path.into_iter().skip(common) {
             let depth = stack.len();
-            let shape = if depth > 0 {
-                mark(glyphs, "├─╮", "+-\\")
-            } else if root_seen {
-                mark(glyphs, "┼", "+")
-            } else {
-                root_seen = true;
-                mark(glyphs, "┬", "+")
-            };
-            rail.lines.push(Line::from(vec![
-                Span::styled(
-                    format!(
-                        " {}{shape} ",
-                        mark(glyphs, "│ ", "| ").repeat(depth.saturating_sub(1))
-                    ),
-                    style::style(look, Tone::Dim),
-                ),
-                Span::styled(nodes[ancestor].group, style::style(look, Tone::Head)),
-            ]));
+            let first = !root_seen;
+            root_seen = true;
+            let group = nodes[ancestor].group;
+            rail.lines.push(header(group, depth, first, width, show));
             stack.push(ancestor);
         }
         rail.node_lines.push(rail.lines.len());
-        let shape = Shape {
-            chips,
-            ids: column,
-            glyphs,
-        };
-        rail.lines.push(node_line(node, width, shape, look));
+        let current = field(node.row, "status") == "current";
+        let text = show.full || current || show.selected == Some(index);
+        rail.lines.push(node_line(node, width, shape, text));
     }
-    close(&mut rail.lines, &stack, 0, glyphs, look);
+    close(&mut rail.lines, &stack, 0, show);
     rail.lines.push(Line::styled(
-        format!(" {}", mark(glyphs, "┴", "+")),
-        style::style(look, Tone::Dim),
+        format!(" {}", mark(show.glyphs, "┴", "+")),
+        style::style(show.look, Tone::Dim),
     ));
     rail
 }
 
-fn close(lines: &mut Vec<Line<'_>>, stack: &[usize], common: usize, glyphs: Glyphs, look: Look) {
+/// A group header: dim rail, then the splice name (calm) or the whole
+/// splice text (detailed), clipped with a marker at the pane edge.
+fn header<'a>(group: &'a str, depth: usize, first: bool, width: u16, show: Show) -> Line<'a> {
+    let glyphs = show.glyphs;
+    let shape = if depth > 0 {
+        mark(glyphs, "├─╮", "+-\\")
+    } else if first {
+        mark(glyphs, "┬", "+")
+    } else {
+        mark(glyphs, "┼", "+")
+    };
+    let rail = format!(
+        " {}{shape} ",
+        mark(glyphs, "│ ", "| ").repeat(depth.saturating_sub(1))
+    );
+    let text = if show.full { group } else { splice_name(group) };
+    let room = usize::from(width).saturating_sub(cells_of(&rail));
+    Line::from(vec![
+        Span::styled(rail, style::style(show.look, Tone::Dim)),
+        Span::styled(
+            clip(text, room, glyphs),
+            style::style(show.look, Tone::Head),
+        ),
+    ])
+}
+
+fn close(lines: &mut Vec<Line<'_>>, stack: &[usize], common: usize, show: Show) {
     for depth in (common..stack.len()).rev().filter(|d| *d > 0) {
         lines.push(Line::styled(
             format!(
                 " {}{}",
-                mark(glyphs, "│ ", "| ").repeat(depth - 1),
-                mark(glyphs, "├─╯", "+-/")
+                mark(show.glyphs, "│ ", "| ").repeat(depth - 1),
+                mark(show.glyphs, "├─╯", "+-/")
             ),
-            style::style(look, Tone::Dim),
+            style::style(show.look, Tone::Dim),
         ));
     }
-}
-
-fn left(text: &str, width: usize, glyphs: Glyphs) -> String {
-    if Span::raw(text).width() <= width {
-        return text.into();
-    }
-    let marker = mark(glyphs, "…", "...");
-    let available = width.saturating_sub(Span::raw(marker).width());
-    let mut taken = 0;
-    let mut start = text.len();
-    let mut bytes = [0; 4];
-    for (at, ch) in text.char_indices().rev() {
-        let size = Span::raw(&*ch.encode_utf8(&mut bytes)).width();
-        if taken + size > available {
-            break;
-        }
-        taken += size;
-        start = at;
-    }
-    format!("{marker}{}", &text[start..])
 }
 
 /// Rail flags repeat only what the state glyph cannot say: disorder and invalid.
 const ROW_FLAGS: [&str; 4] = ["out-of-order", "two-plans", "repeated", "invalid"];
 
+/// What the rail shows: glyph set, colours, the detail level and the
+/// selected node (whose text the calm level shows beside the current one).
+#[derive(Clone, Copy)]
+pub struct Show {
+    pub glyphs: Glyphs,
+    pub look: Look,
+    pub full: bool,
+    pub selected: Option<usize>,
+}
+
 #[derive(Clone, Copy)]
 struct Shape {
     chips: usize,
     ids: usize,
-    glyphs: Glyphs,
+    show: Show,
 }
 
-/// The widest id as shown (group-relative, plus its depth rail), capped so
-/// rail text keeps room; ids are aligned to the deepest one.
-fn id_column(nodes: &[Node<'_>]) -> usize {
-    nodes
-        .iter()
-        .map(|n| Span::raw(shown_id(n.id, n.group)).width() + 2 * n.depth)
-        .max()
-        .unwrap_or(0)
-        .min(36)
-}
-
-/// Inside a group, the id is shown from the group's own splice name; the
-/// header above already names the ancestors (presentation only).
-fn shown_id<'a>(id: &'a str, group: &str) -> &'a str {
-    let name = group.split(' ').next().unwrap_or_default();
-    if name.is_empty() {
-        return id;
-    }
-    let prefix = format!("{name}/");
-    if id.starts_with(&prefix) {
-        return id;
-    }
-    id.rfind(&format!("/{prefix}"))
-        .map_or(id, |at| &id[at + 1..])
-}
-
-fn clip(text: &str, width: usize, glyphs: Glyphs) -> String {
-    if Span::raw(text).width() <= width {
-        return text.into();
-    }
-    let marker = mark(glyphs, "…", "...");
-    let keep = width.saturating_sub(Span::raw(marker).width());
-    let end = text
-        .char_indices()
-        .nth(keep)
-        .map_or(text.len(), |(at, _)| at);
-    if keep == 0 {
-        return String::new();
-    }
-    format!("{}{marker}", &text[..end])
-}
-
-fn node_line<'a>(node: &Node<'a>, width: u16, shape: Shape, look: Look) -> Line<'a> {
-    let Shape { chips, ids, glyphs } = shape;
+/// One step row: dim rail bars, the state glyph in its tone, the shown id,
+/// aligned chips, then (when `text`) the verb's rail text and row flags.
+fn node_line<'a>(node: &Node<'a>, width: u16, shape: Shape, text: bool) -> Line<'a> {
+    let Shape { chips, ids, show } = shape;
+    let (glyphs, look) = (show.glyphs, show.look);
     let flags: Vec<_> = node
         .flags
         .iter()
         .filter(|f| ROW_FLAGS.contains(f))
         .collect();
     let state = node.state.cell(glyphs);
-    let prefix = format!(
-        " {}{} ",
-        mark(glyphs, "│ ", "| ").repeat(node.depth),
-        state.glyph
-    );
+    let bars = format!(" {}", mark(glyphs, "│ ", "| ").repeat(node.depth));
     let flags_width: usize = flags.iter().map(|f| f.len() + 2).sum();
-    let fixed = Span::raw(&prefix).width() + chips + 2 + flags_width;
+    let fixed = cells_of(&bars) + cells_of(state.glyph) + 1 + chips + 2 + flags_width;
     let available = usize::from(width).saturating_sub(fixed);
-    let column = ids.saturating_sub(2 * node.depth).max(8);
+    // Every row's id column ends at the same cell; only a capped column
+    // (very deep nesting) can leave a row less than one cell.
+    let column = ids.saturating_sub(2 * node.depth).max(1);
     let id_width = if available > column + 8 {
         column
     } else {
         available
     };
-    let id = left(shown_id(node.id, node.group), id_width, glyphs);
-    let pad = id_width.saturating_sub(Span::raw(&id).width());
+    let id = left(shown_id(node.id, node.group, show.full), id_width, glyphs);
+    let pad = id_width.saturating_sub(cells_of(&id));
     let mut spans = vec![
-        Span::styled(prefix, style::style(look, state.tone)),
+        Span::styled(bars, style::style(look, Tone::Dim)),
+        Span::styled(state.glyph, style::style(look, state.tone)),
+        Span::raw(" "),
         Span::raw(id),
         Span::raw(" ".repeat(pad + 1)),
     ];
@@ -215,22 +172,18 @@ fn node_line<'a>(node: &Node<'a>, width: u16, shape: Shape, look: Look) -> Line<
         let cell = cells::chip(status, glyphs);
         Span::styled(cell.glyph, style::style(look, cell.tone))
     }));
-    spans.push(Span::raw(
-        " ".repeat(chips.saturating_sub(node.chips.len())),
-    ));
     let text_width = available.saturating_sub(id_width);
-    if text_width > 1 {
-        spans.push(Span::styled(
-            format!(" {}", clip(node.rail_text, text_width - 1, glyphs)),
-            style::style(look, Tone::Dim),
-        ));
+    let text = text && text_width > 1;
+    if text || !flags.is_empty() {
+        let pad = chips.saturating_sub(node.chips.len());
+        spans.push(Span::raw(" ".repeat(pad)));
     }
-    for flag in flags {
-        spans.push(Span::styled(
-            format!(" !{flag}"),
-            style::style(look, Tone::Bad),
-        ));
+    if text {
+        let text = format!(" {}", clip(node.rail_text, text_width - 1, glyphs));
+        spans.push(Span::styled(text, style::style(look, Tone::Dim)));
     }
+    let bad = style::style(look, Tone::Bad);
+    spans.extend(flags.iter().map(|f| Span::styled(format!(" !{f}"), bad)));
     Line::from(spans)
 }
 

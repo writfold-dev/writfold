@@ -79,6 +79,7 @@ fn selected_run_uses_text_on_selection_for_every_entry_line() -> TestResult {
         theme: ThemeId::Hone,
         depth: Depth::Truecolor,
     };
+    app.level = writfold_tui::app::Detail::Full;
     let buffer = render(&mut app, 160, 40)?;
     let area = writfold_tui::layout::areas(160, 40)
         .runs
@@ -157,8 +158,12 @@ fn degraded_depths_have_no_background_or_unwanted_colours() -> TestResult {
                 assert_eq!(cell.fg, Color::Reset);
             }
         }
+        // The bars' chips are brackets here, never a painted surface.
+        let screen = rows(&buffer);
+        assert!(screen[1].contains("[2 gates]"), "{}", screen[1]);
+        assert!(screen[39].contains("[read-only]"), "{}", screen[39]);
         assert!(
-            cells(&buffer, "> [open]")?
+            cells(&buffer, "> Add --plan to kb runs")?
                 .iter()
                 .all(|cell| cell.modifier.contains(Modifier::REVERSED))
         );

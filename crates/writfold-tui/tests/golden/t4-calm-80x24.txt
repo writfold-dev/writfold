@@ -1,0 +1,24 @@
+ Add --plan to kb runs  [open] [current] [harbor]  subject kb           run 1/3
+ [1 progress]   2 gates !2 ○2    4 inbox 3    5 guards deny 1               1/8
+╭ plan ────────────────────────────────────────────────────────────────────────╮
+│step 7 of 11    5 done  1 skipped  1 stale                                    │
+│ ┬ change#1                                                                   │
+│ ✓ research    ●                                                              │
+│ ! implement   ●!                                                             │
+│ – benchmarks                                                                 │
+│ ├─╮ review#1                                                                 │
+│ │ ├─╮ notes#1                                                                │
+│ │ │ ✓ read    ●                                                              │
+│ │ ├─╯                                                                        │
+│ │ ✓ read-diff ●                                                              │
+│ │ ├─╮ findings#1                                                             │
+│ │ │ ✓ prepare ●                                                              │
+│ │ │ ▶ check   !○ owes: review-list [stale], signoff [open]                   │
+│ │ ├─╯                                                                        │
+│ │ ○ findings  ··                                                             │
+│ ├─╯                                                                          │
+│ ○ review      ··                                                             │
+│last plan event  2026-11-10T23:59:50Z done change#1/review/review#1/findings/…│
+│▶ next step to pick up, as recorded                                           │
+╰──────────────────────────────────────────────────────────────────────────────╯
+ [read-only]  kb XXXXXXXXXXXX+dirty:19   l inspect   d detail   ? help   q quit

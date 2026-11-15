@@ -1,4 +1,5 @@
 //! Width-independent inspector paragraphs; indentation also applies to wrapped rows.
+use crate::app::Detail;
 use crate::cells::{self, Cell, Glyphs};
 use crate::graph::Node;
 use crate::lines::{self, Tone};
@@ -36,7 +37,7 @@ fn evidence(out: &mut Vec<InspectLine>, value: &Value, indent: u16, look: Look) 
     out.push(plain(indent, text, Tone::Dim, look));
 }
 
-fn continuation(out: &mut Vec<InspectLine>, value: &Value, look: Look) {
+fn continuation(out: &mut Vec<InspectLine>, value: &Value, look: Look, full: bool) {
     let label = field(value, "label");
     let indent = match label {
         "gate" => 2,
@@ -63,7 +64,9 @@ fn continuation(out: &mut Vec<InspectLine>, value: &Value, look: Look) {
         tone,
         look,
     ));
-    evidence(out, value, indent + 2, look);
+    if full {
+        evidence(out, value, indent + 2, look);
+    }
 }
 
 // The producer prints the marker directly after the id and authoritative state.
@@ -77,11 +80,22 @@ fn optional(item: &Value) -> bool {
         .is_some_and(|rest| rest.is_empty() || rest.starts_with(' '))
 }
 
-fn checklist(gate: &Value, items: &[&Value], glyphs: Glyphs, look: Look) -> Option<InspectLine> {
+/// The segment strip, one cell per required item in source order. The
+/// detailed form leads with the count, which the calm gate line already has.
+fn checklist(
+    gate: &Value,
+    items: &[&Value],
+    glyphs: Glyphs,
+    look: Look,
+    full: bool,
+) -> Option<Vec<Span<'static>>> {
     let text = field(gate, "text");
     let (_, count) = text.split_once(" checklist ")?;
     let (count, _) = count.split_once(" required covered")?;
-    let mut spans = vec![Span::raw(format!("{count} required covered  "))];
+    let mut spans = Vec::new();
+    if full {
+        spans.push(Span::raw(format!("{count} required covered  ")));
+    }
     let mut optional_count = 0;
     for item in items.iter().filter(|item| field(item, "label") == "item") {
         if optional(item) {
@@ -97,10 +111,17 @@ fn checklist(gate: &Value, items: &[&Value], glyphs: Glyphs, look: Look) -> Opti
     if optional_count > 0 {
         spans.push(Span::raw(format!("(+{optional_count} optional)")));
     }
-    Some(InspectLine {
-        indent: 4,
-        text: Line::from(spans),
-    })
+    Some(spans)
+}
+
+/// The items of the gate at `index`: rows up to the next gate.
+fn items<'v>(more: &[&'v Value], index: usize) -> Vec<&'v Value> {
+    let rest = &more[index + 1..];
+    let end = rest
+        .iter()
+        .position(|item| field(item, "label") == "gate")
+        .unwrap_or(rest.len());
+    rest[..end].to_vec()
 }
 
 fn gates(out: &mut Vec<InspectLine>, node: &Node<'_>, glyphs: Glyphs, look: Look) {
@@ -126,31 +147,41 @@ fn gates(out: &mut Vec<InspectLine>, node: &Node<'_>, glyphs: Glyphs, look: Look
         ) {
             continue;
         }
-        continuation(out, value, look);
-        if label == "gate" {
-            let rest = &more[index + 1..];
-            let end = rest
-                .iter()
-                .position(|item| field(item, "label") == "gate")
-                .unwrap_or(rest.len());
-            out.extend(checklist(value, &rest[..end], glyphs, look));
+        continuation(out, value, look, true);
+        if label == "gate"
+            && let Some(spans) = checklist(value, &items(&more, index), glyphs, look, true)
+        {
+            out.push(InspectLine {
+                indent: 4,
+                text: Line::from(spans),
+            });
         }
     }
 }
 
-fn labelled(out: &mut Vec<InspectLine>, node: &Node<'_>, labels: &[&str], look: Look) {
+fn labelled(out: &mut Vec<InspectLine>, node: &Node<'_>, labels: &[&str], look: Look, full: bool) {
     for label in labels {
         for value in lines::more(node.row).filter(|value| field(value, "label") == *label) {
-            continuation(out, value, look);
+            continuation(out, value, look, full);
         }
     }
 }
 
-/// `index` is zero-based. Text excludes `indent`; render in a narrowed rectangle.
-pub fn content(node: &Node<'_>, glyphs: Glyphs, look: Look) -> Vec<InspectLine> {
+/// Text excludes `indent`; render in a narrowed rectangle. The calm level
+/// keeps what needs attention; `d` restores splice, parent, covered items
+/// and every receipt. The last line is the command hint.
+pub fn content(node: &Node<'_>, glyphs: Glyphs, look: Look, detail: Detail) -> Vec<InspectLine> {
+    let full = detail == Detail::Full;
     let status = field(node.row, "status");
-    let mut out = vec![header(node, look)];
-    labelled(&mut out, node, &["splice", "under", "why", "owes"], look);
+    let (mut out, first): (_, &[&str]) = if full {
+        (
+            vec![header(node, look)],
+            &["splice", "under", "why", "owes"],
+        )
+    } else {
+        (calm::header(node, look), &["why", "owes"])
+    };
+    labelled(&mut out, node, first, look, full);
     if status != "skipped" && !field(node.row, "text").is_empty() {
         out.push(plain(
             0,
@@ -159,8 +190,18 @@ pub fn content(node: &Node<'_>, glyphs: Glyphs, look: Look) -> Vec<InspectLine> 
             look,
         ));
     }
-    gates(&mut out, node, glyphs, look);
-    labelled(&mut out, node, &["read", "next", "done", "skip"], look);
+    if full {
+        gates(&mut out, node, glyphs, look);
+    } else {
+        calm::gates(&mut out, node, glyphs, look);
+    }
+    labelled(
+        &mut out,
+        node,
+        &["read", "next", "done", "skip"],
+        look,
+        full,
+    );
     if status == "skipped" {
         out.push(plain(
             0,
@@ -169,15 +210,13 @@ pub fn content(node: &Node<'_>, glyphs: Glyphs, look: Look) -> Vec<InspectLine> 
             look,
         ));
     }
-    if matches!(status, "done" | "skipped") {
+    if full && matches!(status, "done" | "skipped") {
         evidence(&mut out, node.row, 2, look);
     }
-    out.push(plain(
-        0,
-        "full receipts: g   all steps as text: x",
-        Tone::Dim,
-        look,
-    ));
+    out.push(InspectLine {
+        indent: 0,
+        text: hint(detail, u16::MAX, look),
+    });
     out
 }
 
@@ -197,6 +236,10 @@ fn header(node: &Node<'_>, look: Look) -> InspectLine {
         look,
     )
 }
+
+#[path = "inspect_calm.rs"]
+mod calm;
+pub use calm::hint;
 
 #[cfg(test)]
 #[path = "inspect_tests.rs"]

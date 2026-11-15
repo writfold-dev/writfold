@@ -45,14 +45,21 @@ pub fn draw(frame: &mut Frame<'_>, app: &mut App) {
     }
     sides(frame, app, &areas);
     if app.help {
-        chrome::help(frame, app.look);
+        chrome::help(frame, app);
     }
 }
 
 fn detail(frame: &mut Frame<'_>, app: &mut App, area: Rect) {
     let border = ratatui::widgets::Block::bordered();
     let inner = border.inner(area);
-    let detail = content::detail(app, app.view, Some(inner.width), app.expand_all, false);
+    let mut detail = content::detail(app, app.view, Some(inner.width), app.expand_all, false);
+    // The inbox tab badge is one number; the view leads with its breakdown.
+    if app.view == View::Inbox
+        && let Some(answer) = app.answer(View::Inbox).filter(|a| a.error.is_none())
+    {
+        let counts = side::inbox_counts(answer);
+        detail.lines.insert(0, lines::line(counts, Tone::Dim));
+    }
     if app.anchor {
         app.scroll = initial_scroll(&detail.lines, detail.current, inner.width, inner.height);
         app.anchor = false;
@@ -84,11 +91,20 @@ fn runs(frame: &mut Frame<'_>, app: &App, area: Rect) {
         frame.render_widget(message, area);
         return;
     }
+    // Entries clip with a marker inside the pane, after the "> " gutter.
+    let room = usize::from(area.width.saturating_sub(4));
+    let glyphs = crate::map_view::glyphs(app);
     let items: Vec<ListItem<'static>> = app
         .order
         .iter()
         .filter_map(|index| app.runs.rows.get(*index))
-        .map(|row| ListItem::new(text(lines::run_item(row), app.look)))
+        .map(|row| {
+            let mut entry = lines::run_item(row, app.level);
+            for line in &mut entry {
+                line.text = crate::rail_text::clip(&line.text, room, glyphs);
+            }
+            ListItem::new(text(entry, app.look))
+        })
         .collect();
     let list = List::new(items)
         .block(border)

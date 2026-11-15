@@ -1,5 +1,5 @@
 //! Keys only change presentation or re-ask read verbs.
-use crate::app::{App, Focus, Key, View};
+use crate::app::{App, Detail, Focus, Key, View};
 use crate::layout::{self, Class};
 
 impl App {
@@ -39,6 +39,7 @@ impl App {
             ']' => self.select(true),
             'r' => self.reload(self.run(), None),
             'T' => self.cycle_theme(),
+            'd' => self.toggle_detail(),
             'x' if self.view == View::Progress && !self.runs_view => self.toggle_map(),
             'X' if self.view == View::Progress && !self.map && !self.runs_view => {
                 self.expand_all = !self.expand_all;
@@ -72,9 +73,18 @@ impl App {
         self.load();
     }
 
+    fn toggle_detail(&mut self) {
+        self.level = match self.level {
+            Detail::Calm => Detail::Full,
+            Detail::Full => Detail::Calm,
+        };
+        self.inspect_scroll = 0;
+    }
+
     fn cycle_theme(&mut self) {
         if self.look.depth == crate::style::Depth::Truecolor {
             self.look.theme = self.look.theme.next();
+            self.notice = Some(format!("theme={} (not written)", self.look.theme.name()));
         } else {
             self.notice =
                 Some("themes need 24-bit colour: COLORTERM=truecolor or --color truecolor".into());

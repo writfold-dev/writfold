@@ -1,20 +1,20 @@
-run 1/3 run-20261101T090000Z-a1b2c3 [open]
-progress 1/8
-╭ progress: map run-20261101T090000Z-a1b2c3 ───────────────────────────╮
-│plan 5 done, 1 skipped of 11 steps; current step 7/11; owes 2 of 2    │
-│gates stale=1                                                         │
-│ │ │ ✓ notes#1/read       ●  recorded 2026-11-10T23:59:20Z            │
+ Add --plan to kb runs  [open] [current] [harbor]  subject kb   run 1/3
+ [1 progress]   2 gates !2 ○2    4 inbox 3    5 guards deny 1       1/8
+╭ plan ────────────────────────────────────────────────────────────────╮
+│step 7 of 11    5 done  1 skipped  1 stale                            │
+│ ! implement   ●!                                                     │
+│ – benchmarks                                                         │
+│ ├─╮ review#1                                                         │
+│ │ ├─╮ notes#1                                                        │
+│ │ │ ✓ read    ●                                                      │
 │ │ ├─╯                                                                │
-│ │ ✓ review#1/read-diff   ●  recorded 2026-11-10T23:59:30Z            │
-│ │ ├─╮ findings#1 @6ec817d3031a from .writfold/plans/findings.toml    │
-│ │ │ ✓ findings#1/prepare ●  recorded 2026-11-10T23:59:50Z            │
-│ │ │ ▶ findings#1/check   !○ owes: review-list [stale], signoff [ope… │
+│ │ ✓ read-diff ●                                                      │
+│ │ ├─╮ findings#1                                                     │
+│ │ │ ✓ prepare ●                                                      │
+│ │ │ ▶ check   !○ owes: review-list [stale], signoff [open]           │
 │ │ ├─╯                                                                │
-│ │ ○ review#1/findings    ·· gates: review-list, signoff              │
-│recorded position: step 7/11 (first step neither done nor skipped)    │
-│last plan event: 2026-11-10T23:59:50Z done                            │
-│change#1/review/review#1/findings/findings#1/prepare                  │
-│last checkpoint: 2026-11-10T14:10:00Z Review started.                 │
-│● satisfied ◆ attested/waived ○ open ! stale × failed ? unknown       │
+│ │ ○ findings  ··                                                     │
+│last plan event  2026-11-10T23:59:50Z done change#1/review/review#1/f…│
+│▶ next step to pick up, as recorded                                   │
 ╰──────────────────────────────────────────────────────────────────────╯
-kb=XXXXXXXXXXXX+dirty:19 ? q
+ [read-only]                     l inspect   d detail   ? help   q quit

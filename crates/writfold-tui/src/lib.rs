@@ -6,11 +6,14 @@
 #![forbid(unsafe_code)]
 
 pub mod app;
+mod bar_content;
+pub mod bars;
 pub mod cells;
 mod chrome;
 pub mod frame;
 pub mod graph;
 pub mod guards;
+pub mod help;
 pub mod inspect;
 mod inspect_view;
 mod keys;
@@ -24,6 +27,8 @@ mod palettes;
 pub mod poll;
 pub mod progress;
 pub mod rail;
+mod rail_text;
+mod run_item;
 pub mod side;
 pub mod source;
 mod state;
@@ -127,7 +132,12 @@ pub fn main(
 ) -> Result<Outcome, String> {
     let options = parse(args)?;
     if options.help {
-        let help: Vec<_> = frame::help().into_iter().map(|line| line.text).collect();
+        let marks = help::marks(cells::Glyphs::Unicode);
+        let help: Vec<_> = marks
+            .into_iter()
+            .chain(frame::help())
+            .map(|line| line.text)
+            .collect();
         return Ok(Outcome {
             stdout: Some(format!("{USAGE}\n\n{}", help.join("\n"))),
             warning: None,

@@ -1,30 +1,30 @@
-run-20261101T090000Z-a1b2c3 [open] !current  Add --plan to kb runs  project=harbor  subject=kb
-[1 progress] 2 gates 3 timeline 4 inbox 5 guards 6 stale 7 brief 8 resume
-gates: open=2 stale=2 of 6 | inbox: drafts=1 proposals=2 | guards: deny=1 ask=0 of 2
-╭ runs (3) ──────────╮╭ progress: map run-20261101T090000Z-a╮╭ step 7/11 (Esc: back) ──────────────╮
-│> [open] run-2026110││plan 5 done, 1 skipped of 11 steps;  ││change#1/review/review#1/findings/fin│
-│    Add --plan to kb││current step 7/11; owes 2 of 2 gates ││dings#1/check [current]              │
-│    project=harbor  ││stale=1                              ││splice: findings#1 @6ec817d3031a from│
-│    plan: step 7/11 ││ ✓ change#1/research              ●  ││.writfold/plans/findings.toml        │
-│    last: 2026-11-10││ ! change#1/implement             ●! ││  @runs/run-20261101T090000Z-a1b2c3/p│
-│  [open] run-2026110││ – change#1/benchmarks               ││  lan/splice-change.1~review~review.1│
-│    Review the lante││ ├─╮ review#1 @932e0ad862a8 from .wri││  ~findings~findings.1.json:1        │
-│    project=lantern ││ │ ├─╮ notes#1 @e42e7a4ac404 from .wr││under:                               │
-│    last: 2026-11-02││ │ │ ✓ notes#1/read               ●  ││change#1/review/review#1/findings    │
-│  [closed] run-20261││ │ ├─╯                               ││owes: review-list [stale], signoff   │
-│    Retire the legac││ │ ✓ review#1/read-diff           ●  ││[open]                               │
-│    project=harbor  ││ │ ├─╮ findings#1 @6ec817d3031a from ││gates (2)  !○                        │
-│    plan: complete s││ │ │ ✓ findings#1/prepare         ●  ││  gate review-list [stale] checklist │
-│    last: 2026-11-04││ │ │ ▶ findings#1/check           !○ ││  2/4 required covered !stale        │
-│                    ││ │ ├─╯                               ││    @runs/run-20261101T090000Z-a1b2c3│
-│                    ││ │ ○ review#1/findings            ·· ││    /covers/review-list.perf-20261110│
-│                    ││recorded position: step 7/11 (first  ││    T235400Z-XXXXXX.json:1           │
-│                    ││step neither done nor skipped)       ││    2/4 required covered  ■ ! □ ◆ (+1│
-│                    ││last plan event: 2026-11-10T23:59:50Z││    optional)                        │
-│                    ││done                                 ││    item errors [supported] 1        │
-│                    ││change#1/review/review#1/findings/fin││    reference by agent               │
-│                    ││dings#1/prepare                      ││      @runs/run-20261101T090000Z-a1b2│
-│                    ││last checkpoint: 2026-11-10T14:10:00Z││      c3/covers/review-list.errors-20│
-│                    ││Review started.                      ││full receipts: g   all steps as text:│
+ Add --plan to kb runs  [open] [current] [harbor]  subject kb           run-20261101T090000Z-a1b2c3
+ [1 progress] 2 gates !2 ○2  3 timeline  4 inbox 3  5 guards deny 1  6 stale  7 brief  8 resume
+╭ runs (3) ──────────╮╭ plan ───────────────────────────────╮╭ step 7/11 ──────────────────────────╮
+│> Add --plan to kb …││step 7 of 11    5 done  1 skipped    ││check [current]                      │
+│  harbor  step 7/11 ││1 stale                              ││change#1/review/review#1/findings/fin│
+│  Review the lanter…││                                     ││dings#1/check                        │
+│  lantern           ││ ┬ change#1                          ││                                     │
+│  Retire the legacy…││ ✓ research    ●                     ││owes: review-list [stale], signoff   │
+│  closed  harbor  c…││ ! implement   ●!                    ││[open]                               │
+│                    ││ – benchmarks                        ││                                     │
+│                    ││ ├─╮ review#1                        ││gate review-list [stale] checklist   │
+│                    ││ │ ├─╮ notes#1                       ││2/4 required covered                 │
+│                    ││ │ │ ✓ read    ●                     ││  ■ ! □ ◆ (+1 optional)              │
+│                    ││ │ ├─╯                               ││  ! tests [stale] 1 reference by     │
+│                    ││ │ ✓ read-diff ●                     ││  agent; cited evidence moved:       │
+│                    ││ │ ├─╮ findings#1                    ││  gate:lint was satisfied, now stale │
+│                    ││ │ │ ✓ prepare ●                     ││  □ docs [open] The guide names every│
+│                    ││ │ │ ▶ check   !○ owes: review-list… ││  new flag                           │
+│                    ││ │ ├─╯                               ││  □ style [open] (optional) Names    │
+│                    ││ │ ○ findings  ··                    ││  follow the module                  │
+│                    ││ ├─╯                                 ││gate signoff [open] attested         │
+│                    ││ ○ review      ··                    ││                                     │
+│                    ││ ○ deliver     ·                     ││read: instructions for signoff       │
+│                    ││ ○ reflect                           ││next: writfold kb gate cover         │
+│                    ││ ┴                                   ││review-list tests supported REF… --by│
+│                    ││                                     ││WHO                                  │
+│                    ││last plan event  2026-11-10T23:59:50…││                                     │
+│                    ││▶ next step to pick up, as recorded  ││d more   g gates   x text            │
 ╰────────────────────╯╰─────────────────────────────────────╯╰─────────────────────────────────────╯
-kb=XXXXXXXXXXXX+dir asked 00:00:00Z theme=ansi read-only  jk node  l inspect  . current  n flag  ? q
+ [read-only]  kb XXXXXXXXXXXX+dirty:19            j/k step   l inspect   d detail   ? help   q quit

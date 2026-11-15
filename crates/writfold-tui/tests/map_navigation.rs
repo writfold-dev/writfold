@@ -30,6 +30,8 @@ fn long_map_keeps_selection_and_two_neighbor_rows_visible() -> TestResult {
     let w = map::long("viewport")?;
     let mut app = App::new(w.source(), Some(RUN));
     app.focus = Focus::Detail;
+    // Group-relative ids, so whole ids can be matched on screen.
+    app.level = writfold_tui::app::Detail::Full;
     let order = ids(&app)?;
     for key in [Key::Char('j'), Key::Char('k')] {
         for _ in 0..25 {

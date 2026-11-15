@@ -119,7 +119,7 @@ fn no_subject_keeps_notes_without_claiming_completion() -> TestResult {
         honest(&text)?;
         if width == 160 {
             // The verb still marks a current row without a subject to judge.
-            assert!(text.contains("recorded position: step 7/11"), "{text}");
+            assert!(text.contains("step 7 of 11"), "{text}");
         }
         assert!(!text.contains("every step is done or skipped"));
         assert!(!text.contains("all steps done"));
@@ -150,9 +150,11 @@ fn recorded_marker_and_later_chips_match_verb_rows_in_actual_map() -> TestResult
         .collect();
     let nodes = graph::nodes(app.detail().ok_or("plan")?);
     for node in nodes {
+        // Calm rows show the id after its group name: its last component.
+        let tail = node.id.rsplit('/').next().unwrap_or(node.id);
         let row = rendered
             .iter()
-            .find(|row| row.contains(node.id))
+            .find(|row| row.contains(&format!(" {tail} ")))
             .ok_or("map row")?;
         assert_eq!(
             row.contains('▶'),

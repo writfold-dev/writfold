@@ -1,12 +1,14 @@
 //! The narrow full-frame run list supports scrolling without changing selection.
 use crate::app::{App, Focus};
 use crate::lines::{self, Line, Tone, line};
+use crate::rail_text::clip;
 use crate::{paint, style};
 use ratatui::Frame;
 use ratatui::layout::Rect;
 use ratatui::widgets::Paragraph;
 
-fn rows(app: &App) -> (Vec<Line>, Option<(usize, usize)>) {
+fn rows(app: &App, width: u16) -> (Vec<Line>, Option<(usize, usize)>) {
+    let glyphs = crate::map_view::glyphs(app);
     if app.runs.error.is_some() {
         return (lines::reply(&app.runs), None);
     }
@@ -14,13 +16,15 @@ fn rows(app: &App) -> (Vec<Line>, Option<(usize, usize)>) {
     let mut selected = None;
     for (n, i) in app.order.iter().enumerate() {
         let start = out.len();
-        for (at, mut item) in lines::run_item(&app.runs.rows[*i]).into_iter().enumerate() {
+        let entry = lines::run_item(&app.runs.rows[*i], app.level);
+        for (at, mut item) in entry.into_iter().enumerate() {
             let mark = if n == app.selected && at == 0 {
                 "> "
             } else {
                 "  "
             };
             item.text.insert_str(0, mark);
+            item.text = clip(&item.text, usize::from(width), glyphs);
             out.push(item);
         }
         if n == app.selected {
@@ -36,7 +40,7 @@ fn rows(app: &App) -> (Vec<Line>, Option<(usize, usize)>) {
 pub fn draw(frame: &mut Frame<'_>, app: &mut App, area: Rect) {
     let border = paint::block(app.runs_title(), app.focus == Focus::Runs, app.look);
     let inner = border.inner(area);
-    let (rows, selected) = rows(app);
+    let (rows, selected) = rows(app, inner.width);
     let height = usize::from(inner.height);
     let mut scroll = usize::from(app.scroll);
     if app.anchor

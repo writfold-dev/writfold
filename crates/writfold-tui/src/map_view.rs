@@ -1,10 +1,13 @@
 //! Draw only the visible rail window, followed by recorded verb facts.
-use crate::app::{App, Focus, View};
+use crate::app::{App, Detail, Focus, View};
 use crate::cells::Glyphs;
 use crate::lines::{self, Tone};
+use crate::rail_text::clip;
 use crate::source::field;
-use crate::{graph, paint, progress, rail, style, wrap};
-use ratatui::{Frame, layout::Rect, style::Style, widgets::Paragraph};
+use crate::{graph, paint, progress, rail, style};
+use ratatui::text::Line as Row;
+use ratatui::widgets::{Paragraph, Wrap};
+use ratatui::{Frame, layout::Rect, style::Style};
 
 pub(crate) fn glyphs(app: &App) -> Glyphs {
     if app.dumb || app.look.depth == style::Depth::None {
@@ -14,71 +17,63 @@ pub(crate) fn glyphs(app: &App) -> Glyphs {
     }
 }
 
+/// The run's newest plan event and checkpoint, quoted from their verbs.
 pub(crate) fn records(app: &App) -> Vec<lines::Line> {
-    let mut out = Vec::new();
-    if let Some(answer) = app.answer(View::Progress) {
-        // The row the verb marks current is the position, judged or not.
-        let nodes = graph::nodes(answer);
-        let current = nodes
-            .iter()
-            .position(|n| field(n.row, "status") == "current");
-        let position = match current {
-            Some(at) => format!(
-                "step {}/{} (first step neither done nor skipped)",
-                at + 1,
-                nodes.len()
-            ),
-            None if nodes.is_empty() => "no plan steps recorded".into(),
-            None => "every step is done or skipped".into(),
-        };
-        out.push(lines::line(
-            format!("recorded position: {position}"),
-            Tone::Dim,
-        ));
-    }
     let event = app
         .answer(View::Timeline)
         .and_then(|a| a.rows.iter().rev().find(|r| field(r, "kind") == "plan"));
-    out.push(lines::line(
-        format!(
-            "last plan event: {}",
-            event.map_or("(none recorded)", |r| field(r, "text"))
-        ),
-        Tone::Dim,
-    ));
     let checkpoint = app
         .row()
         .and_then(|r| lines::more(r).find(|m| field(m, "label") == "checkpoint"));
-    out.push(lines::line(
-        format!(
-            "last checkpoint: {}",
-            checkpoint.map_or("(none recorded)", |r| field(r, "text"))
-        ),
-        Tone::Dim,
-    ));
-    out
+    [("last plan event", event), ("last checkpoint", checkpoint)]
+        .into_iter()
+        .map(|(label, row)| {
+            let text = row.map_or("(none recorded)", |r| field(r, "text"));
+            lines::line(format!("{label}: {text}"), Tone::Dim)
+        })
+        .collect()
 }
 
-fn legend(glyphs: Glyphs) -> [&'static str; 2] {
+/// The one-row caption for the marker; the full legend lives in help.
+pub(crate) fn caption(glyphs: Glyphs) -> &'static str {
     if glyphs == Glyphs::Unicode {
-        [
-            "● satisfied ◆ attested/waived ○ open ! stale × failed ? unknown",
-            "· later, not judged; ▶ next step to pick up (recorded, not a liveness claim)",
-        ]
+        "▶ next step to pick up, as recorded"
     } else {
-        [
-            "+ satisfied * attested/waived o open ! stale x failed ? unknown",
-            ". later, not judged; [>] next step to pick up (recorded, not a liveness claim)",
-        ]
+        "[>] next step to pick up, as recorded"
     }
 }
 
+/// Calm: the last plan event on one clipped row. Detailed: the event and
+/// checkpoint, wrapped. Both end with the marker caption.
+fn below(app: &App, width: u16, glyphs: Glyphs) -> Vec<Row<'static>> {
+    let dim = style::style(app.look, Tone::Dim);
+    let mut records = records(app);
+    let mut out: Vec<Row<'static>> = if app.level == Detail::Full {
+        records
+            .drain(..)
+            .map(|l| Row::styled(l.text, dim))
+            .collect()
+    } else {
+        let event = records.swap_remove(0).text.replacen(": ", "  ", 1);
+        vec![Row::styled(clip(&event, usize::from(width), glyphs), dim)]
+    };
+    out.push(Row::styled(caption(glyphs), dim));
+    out
+}
+
+fn rows_of(lines: &[Row<'static>], width: u16) -> u16 {
+    let count = Paragraph::new(lines.to_vec())
+        .wrap(Wrap { trim: false })
+        .line_count(width);
+    u16::try_from(count).unwrap_or(u16::MAX)
+}
+
+fn put(frame: &mut Frame<'_>, lines: Vec<Row<'static>>, area: Rect) {
+    frame.render_widget(Paragraph::new(lines).wrap(Wrap { trim: false }), area);
+}
+
 pub(crate) fn draw(frame: &mut Frame<'_>, app: &mut App, area: Rect) {
-    let border = paint::block(
-        format!("progress: map {}", app.run_id().unwrap_or_default()),
-        app.focus == Focus::Detail,
-        app.look,
-    );
+    let border = paint::block("plan".into(), app.focus == Focus::Detail, app.look);
     let inner = border.inner(area);
     frame.render_widget(border, area);
     let Some(answer) = app.answer(View::Progress) else {
@@ -90,42 +85,64 @@ pub(crate) fn draw(frame: &mut Frame<'_>, app: &mut App, area: Rect) {
         .position(|n| Some(n.id) == app.node.as_deref())
         .unwrap_or(0);
     let glyphs = glyphs(app);
-    let rail = rail::build(&nodes, inner.width, glyphs, app.look);
-    let mut records = records(app);
-    records.extend(legend(glyphs).map(|s| lines::line(s, Tone::Dim)));
-    let top = prelude(answer);
-    // Facts and records wrap; the rail keeps at least four rows, so the
-    // legend goes first, then the oldest record lines, when space is short.
-    let budget = usize::from(inner.height.saturating_sub(4).min(inner.height / 2));
-    let tall = |set: &[lines::Line]| {
-        set.iter()
-            .map(|l| wrap::height(l, inner.width))
-            .sum::<usize>()
+    let show = rail::Show {
+        glyphs,
+        look: app.look,
+        full: app.level == Detail::Full,
+        selected: Some(selected),
     };
-    while !records.is_empty() && tall(&top) + tall(&records) > budget {
-        records.pop();
-    }
-    let top_height = tall(&top).min(budget) as u16;
-    let records_height = tall(&records) as u16;
-    wrap::draw(
+    let rail = rail::build(&nodes, inner.width, show);
+    let top = prelude(answer, app, inner.width);
+    let mut bottom = below(app, inner.width, glyphs);
+    let (top_height, spacer, bottom_height) = heights(&top, &mut bottom, inner, rail.lines.len());
+    put(
         frame,
-        &top,
-        Rect {
-            height: top_height,
-            ..inner
-        },
-        app.look,
-        0,
+        top,
+        Rect::new(inner.x, inner.y, inner.width, top_height),
     );
-    let top = top_height;
-    let height = inner.height.saturating_sub(top + records_height);
+    let top = top_height + spacer;
+    let height = inner.height.saturating_sub(top + bottom_height);
     let window = rail::window(&rail, selected, usize::from(height), app.rail_offset);
+    let area = Rect::new(inner.x, inner.y + top, inner.width, height);
+    draw_rail(frame, app, rail, window.clone(), area, selected);
+    let at = Rect::new(inner.x, inner.y + top + height, inner.width, bottom_height);
+    put(frame, bottom, at);
+    app.rail_offset = window.start;
+}
+
+/// Rows for the summary, a spacer (only when the whole rail fits) and the
+/// block below. The rail keeps at least four rows; the caption goes first,
+/// then the oldest record line, when space is short.
+fn heights(
+    top: &[Row<'static>],
+    bottom: &mut Vec<Row<'static>>,
+    inner: Rect,
+    rail: usize,
+) -> (u16, u16, u16) {
+    let budget = inner.height.saturating_sub(4).min(inner.height / 2);
+    let top_height = rows_of(top, inner.width).min(budget);
+    while !bottom.is_empty() && top_height + rows_of(bottom, inner.width) > budget {
+        bottom.pop();
+    }
+    let bottom_height = rows_of(bottom, inner.width);
+    let fits = rail + usize::from(top_height + bottom_height) < usize::from(inner.height);
+    (top_height, u16::from(fits), bottom_height)
+}
+
+fn draw_rail(
+    frame: &mut Frame<'_>,
+    app: &App,
+    rail: rail::Rail<'_>,
+    window: std::ops::Range<usize>,
+    area: Rect,
+    selected: usize,
+) {
     let selected_line = rail.node_lines.get(selected).copied();
     for (y, line) in rail
         .lines
         .into_iter()
         .skip(window.start)
-        .take(usize::from(height))
+        .take(usize::from(area.height))
         .enumerate()
     {
         // The selected row takes the theme's selection surface across the
@@ -138,22 +155,19 @@ pub(crate) fn draw(frame: &mut Frame<'_>, app: &mut App, area: Rect) {
         };
         frame.render_widget(
             Paragraph::new(line).style(row),
-            Rect::new(inner.x, inner.y + top + y as u16, inner.width, 1),
+            Rect::new(area.x, area.y + y as u16, area.width, 1),
         );
     }
-    let below = Rect::new(inner.x, inner.y + top + height, inner.width, records_height);
-    wrap::draw(frame, &records, below, app.look, 0);
-    app.rail_offset = window.start;
 }
 
-fn prelude(answer: &crate::source::Reply) -> Vec<lines::Line> {
-    let mut lines: Vec<_> = progress::facts(answer).into_iter().collect();
+fn prelude(answer: &crate::source::Reply, app: &App, width: u16) -> Vec<Row<'static>> {
+    let mut lines = progress::summary(answer, app.level == Detail::Full, app.look, width);
     if answer.count("current").is_none() {
         lines.extend(
             answer
                 .notes
                 .first()
-                .map(|n| lines::line(format!("# note: {n}"), Tone::Warn)),
+                .map(|n| Row::styled(format!("# note: {n}"), style::style(app.look, Tone::Warn))),
         );
     }
     lines

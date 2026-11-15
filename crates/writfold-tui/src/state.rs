@@ -145,24 +145,18 @@ impl App {
         } else if self.focus == Focus::Inspector {
             self.focus = Focus::Detail;
         }
-        match layout::class(self.width, self.height) {
-            Class::Wide => {
-                self.load_view(View::Gates);
-                self.load_view(View::Inbox);
-                self.load_view(View::Timeline);
-                if self.height >= 38 {
-                    self.load_view(View::Guards);
-                }
-            }
-            Class::Medium => {
-                self.load_view(View::Gates);
-                self.load_view(View::Inbox);
-                self.load_view(View::Guards);
-            }
-            Class::Narrow if self.focus == Focus::Runs && self.map_visible() => {
-                self.focus = Focus::Detail;
-            }
-            _ => {}
+        let class = layout::class(self.width, self.height);
+        if class != Class::TooSmall {
+            // The tab badges quote these verbs' counts in every layout.
+            self.load_view(View::Gates);
+            self.load_view(View::Inbox);
+            self.load_view(View::Guards);
+        }
+        if class == Class::Wide {
+            self.load_view(View::Timeline);
+        }
+        if class == Class::Narrow && self.focus == Focus::Runs && self.map_visible() {
+            self.focus = Focus::Detail;
         }
     }
 

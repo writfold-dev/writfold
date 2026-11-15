@@ -18,6 +18,11 @@ fn honest(text: &str) -> TestResult {
     Ok(())
 }
 
+/// Calm rows show an id after its group name: its last component.
+fn tail(id: &str) -> String {
+    format!(" {} ", id.rsplit('/').next().unwrap_or(id))
+}
+
 fn ascii_buffer(app: &mut App, width: u16, height: u16) -> TestResult {
     let buffer = render(app, width, height)?;
     let text = symbols(&buffer);
@@ -54,7 +59,7 @@ fn ascii_buffer(app: &mut App, width: u16, height: u16) -> TestResult {
         // Node lines, unlike pane borders, must use only ASCII map glyphs.
         let line = rendered
             .iter()
-            .find(|line| line.contains(node.id))
+            .find(|line| line.contains(&tail(node.id)))
             .ok_or("visible node")?;
         assert!(
             line.contains(node.state.cell(Glyphs::Ascii).glyph),
@@ -122,6 +127,39 @@ fn selected_map_row_sits_on_the_selection_surface_across_the_pane() -> TestResul
         let cell = &buffer[(x, y as u16)];
         assert_eq!(cell.bg, expected, "{x},{y}");
         assert!(!cell.modifier.contains(ratatui::style::Modifier::REVERSED));
+    }
+    Ok(())
+}
+
+#[test]
+fn rail_bars_never_take_a_state_colour() -> TestResult {
+    let w = support::map::nested("map-dim-rail")?;
+    let mut app = App::new(w.source(), Some(RUN));
+    app.focus = Focus::Detail;
+    let theme = writfold_tui::theme::ThemeId::Clay;
+    app.look = writfold_tui::style::Look {
+        theme,
+        depth: Depth::Truecolor,
+    };
+    for detail in [false, true] {
+        if detail {
+            app.key(writfold_tui::app::Key::Char('d'));
+        }
+        let buffer = render(&mut app, 160, 40)?;
+        let area = writfold_tui::layout::focused(160, 40, true, true).main;
+        let muted = theme.palette().muted;
+        let dim = Color::Rgb(muted.0, muted.1, muted.2);
+        let mut seen = 0;
+        for y in area.y + 1..area.bottom() - 1 {
+            for x in area.x + 1..area.right() - 1 {
+                let cell = &buffer[(x, y)];
+                if ["│", "├", "╮", "╯", "┬", "┼", "┴"].contains(&cell.symbol()) {
+                    assert_eq!(cell.fg, dim, "{x},{y} detail={detail}");
+                    seen += 1;
+                }
+            }
+        }
+        assert!(seen > 20, "the nested rail has bars: {seen}");
     }
     Ok(())
 }
