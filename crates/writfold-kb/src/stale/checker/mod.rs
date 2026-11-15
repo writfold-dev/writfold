@@ -14,6 +14,7 @@
 mod cache;
 pub mod proto;
 pub mod receipt;
+pub mod record;
 pub mod spawn;
 pub mod verb;
 
@@ -29,7 +30,18 @@ use std::path::Path;
 use writfold_core::verdict::{self as kernel, Checker, Handshake, Observed, Said};
 
 /// Verdicts of this run, by citation (path, ordinal).
-pub type Answers = BTreeMap<(String, u32), Checked>;
+pub type Answers = BTreeMap<(String, u32), Answered>;
+
+/// What this run's checker said about one token, before any authored mark:
+/// the verdict, the kernel's reading of the exchange (which decides whether
+/// it may be recorded), and the reply's `at` and the checker's version.
+#[derive(Clone, Debug)]
+pub struct Answered {
+    pub checked: Checked,
+    pub checker: Checker,
+    pub at: Option<String>,
+    pub version: Option<String>,
+}
 
 /// One exchange with a checker about one kind.
 #[derive(Clone, Debug)]
@@ -96,7 +108,7 @@ pub fn exchange(
 }
 
 /// The verdict of one token from its exchange.
-fn judged(name: &str, kind: &str, x: &Exchange, id: &str, cite: &Cite) -> Checked {
+fn judged(name: &str, kind: &str, x: &Exchange, id: &str, cite: &Cite) -> Answered {
     let fields: Value = serde_json::from_str(&cite.fields).unwrap_or_default();
     let version = proto::token_version(&fields);
     let reads = x.description.as_ref().map(|d| d.token_versions.as_slice());
@@ -145,10 +157,15 @@ fn judged(name: &str, kind: &str, x: &Exchange, id: &str, cite: &Cite) -> Checke
             }
         }),
     };
-    Checked {
-        verdict,
-        head,
-        recorded: None,
+    Answered {
+        checked: Checked {
+            verdict,
+            head,
+            recorded: None,
+        },
+        checker,
+        at: reply.and_then(|r| r.at.clone()),
+        version: x.description.as_ref().map(|d| d.version.clone()),
     }
 }
 
@@ -188,10 +205,15 @@ pub fn ask(root: &Path, kinds: &Kinds, cites: &[Cite]) -> Answers {
             };
             let checked = match &x {
                 Some(x) => judged(name, kind, x, id, cite),
-                None => Checked {
-                    verdict: Verdict::Unverifiable(absent(kind)),
-                    head: format!("checker:{name}"),
-                    recorded: None,
+                None => Answered {
+                    checked: Checked {
+                        verdict: Verdict::Unverifiable(absent(kind)),
+                        head: format!("checker:{name}"),
+                        recorded: None,
+                    },
+                    checker: Checker::Absent,
+                    at: None,
+                    version: None,
                 },
             };
             answers.insert((cite.path.clone(), cite.ord), checked);
@@ -216,11 +238,11 @@ pub fn verdict(
         return Ok(missing);
     }
     if let Some(answer) = answers.get(&(cite.path.clone(), cite.ord)) {
-        let absent = matches!(&answer.verdict, Verdict::Unverifiable(why) if why.starts_with("checker-absent"));
+        let absent = answer.checker == Checker::Absent;
         if absent && let Some(recorded) = cache::recorded(session, kinds, kind, cite, receipts) {
             return Ok(recorded);
         }
-        return Ok(answer.clone());
+        return Ok(answer.checked.clone());
     }
     let found = cache::pick(session, kinds, kind, cite, receipts)?;
     Ok(found.unwrap_or_else(|| unverifiable("not-checked".into())))

@@ -15,6 +15,7 @@ pub struct Common {
     pub all: bool,
     pub offline: bool,
     pub cached: bool,
+    pub record: bool,
     pub kinds: Vec<String>,
     pub project: Option<String>,
     pub signatures: bool,
@@ -62,6 +63,7 @@ fn split(args: &[String]) -> Result<(Common, Vec<String>), String> {
             "--all" => common.all = true,
             "--offline" => common.offline = true,
             "--cached" => common.cached = true,
+            "--record" => common.record = true,
             "--signatures" => common.signatures = true,
             "--missing" => common.missing = true,
             "--kind" => {
@@ -102,7 +104,7 @@ fn allowed(verb: &str) -> &'static [&'static str] {
     match verb {
         "brief" => &["all"],
         "context" => &["depth"],
-        "stale" => &["offline", "cached"],
+        "stale" => &["offline", "cached", "record"],
         "repos" => &["missing"],
         "find" => &["kind", "project", "signatures"],
         "match" => &["kind", "project"],
@@ -120,6 +122,7 @@ fn check_flags(verb: &str, common: &Common) -> Result<(), String> {
         ("depth", common.depth.is_some()),
         ("offline", common.offline),
         ("cached", common.cached),
+        ("record", common.record),
         ("kind", !common.kinds.is_empty()),
         ("project", common.project.is_some()),
         ("signatures", common.signatures),
@@ -152,6 +155,9 @@ pub fn parse(args: &[String], cwd: PathBuf) -> Result<Option<Request>, String> {
     check_flags(verb, &common)?;
     if common.cached && common.offline {
         return Err("stale takes --offline or --cached, not both".into());
+    }
+    if common.record && (common.offline || common.cached) {
+        return Err("--record needs the checkers to be asked; it cannot be combined with --offline or --cached".into());
     }
     let built: Verb = verbs::verb(verb, &common, &positional)?;
     Ok(Some(Request {

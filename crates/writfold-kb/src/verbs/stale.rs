@@ -167,16 +167,24 @@ pub fn stale(
     offline: bool,
     cached: bool,
 ) -> Result<Answer> {
+    Ok(report(session, scope, offline, cached)?.0)
+}
+
+/// [`stale`]'s answer with the citations it judged and the judgement
+/// (this run's checker answers and the receipts read), for `--record`.
+pub fn report(
+    session: &Session<'_>,
+    scope: Option<&str>,
+    offline: bool,
+    cached: bool,
+) -> Result<(Answer, Vec<Cite>, stale::Judged)> {
     let cites = load(session, scope)?;
-    let checked = if cached {
-        stale::check(session, &cites, false)?
-    } else {
-        stale::check_asking(session, &cites, offline)?.checked
-    };
+    let judged = stale::judged(session, &cites, offline, !offline && !cached)?;
+    let checked = &judged.checked;
     let mut answer = Answer::default();
     let (mut flagged, mut unverifiable, mut absent) = (0, 0, 0);
     let mut rows = Vec::new();
-    for (cite, checked) in cites.iter().zip(&checked) {
+    for (cite, checked) in cites.iter().zip(checked) {
         // A verdict read from a check receipt is never cached here: that
         // would stamp it with this machine's time and restart its lifetime.
         if !offline && !cached && checked.recorded.is_none() {
@@ -241,7 +249,7 @@ pub fn stale(
             .notes
             .push("offline: only authored stale marks, due TTLs and expired checker verdicts are reported".into());
     }
-    Ok(answer)
+    Ok((answer, cites, judged))
 }
 
 /// The note naming undeclared kinds whose tokens without `ttl=` never

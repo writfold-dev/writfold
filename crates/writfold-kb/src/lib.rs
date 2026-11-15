@@ -68,6 +68,11 @@ pub enum Verb {
         offline: bool,
         cached: bool,
     },
+    /// `stale [<project>|<path>] --record`: `stale`, then what the checkers
+    /// said written to check receipts.
+    StaleRecord {
+        scope: Option<String>,
+    },
     Find {
         text: String,
         filter: verbs::find::Filter,
@@ -168,6 +173,9 @@ pub fn run(request: &Request) -> Result<Output> {
     }
     if let Verb::Checker(verb) = &request.verb {
         return stale::checker::verb::execute(&ws, request, verb, now);
+    }
+    if let Verb::StaleRecord { scope } = &request.verb {
+        return stale::checker::record::execute(&ws, request, scope.as_deref(), now);
     }
     if let Verb::Check { scope } = &request.verb {
         return check::execute(&ws, request, scope.as_deref(), now);

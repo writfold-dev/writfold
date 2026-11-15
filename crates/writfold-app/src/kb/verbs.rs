@@ -62,6 +62,7 @@ pub fn verb(name: &str, common: &Common, positional: &[String]) -> Result<Verb, 
             text: text("an ID or some text")?,
             sections: why_sections(),
         },
+        "stale" if common.record => Verb::StaleRecord { scope: optional()? },
         "stale" => Verb::Stale {
             scope: optional()?,
             offline: common.offline,
