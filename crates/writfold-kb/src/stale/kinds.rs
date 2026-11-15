@@ -289,6 +289,7 @@ pub fn judge(kinds: &Kinds, cite: &Cite, kind: &str, now: i64) -> Checked {
             return Checked {
                 verdict: from_kernel(kernel::observed(Observed::Immutable)),
                 head,
+                recorded: None,
             };
         }
         Lifetime::Token(ttl) | Lifetime::Default(ttl) => Some(ttl),
@@ -301,6 +302,7 @@ pub fn judge(kinds: &Kinds, cite: &Cite, kind: &str, now: i64) -> Checked {
     Checked {
         verdict: from_kernel(kernel::observed(fact)),
         head: format!("seen:{seen}"),
+        recorded: None,
     }
 }
 

@@ -11,7 +11,9 @@
 //! handshake and an unreadable token version each leave the token
 //! unverifiable with the reason (decided by the kernel,
 //! [`writfold_core::verdict::exchange`]).
+mod cache;
 pub mod proto;
+pub mod receipt;
 pub mod spawn;
 pub mod verb;
 
@@ -19,8 +21,8 @@ use super::kinds::{self, Kinds};
 use super::{Checked, Cite, Verdict, unverifiable};
 use crate::error::Result;
 use crate::session::Session;
-use crate::time;
 use proto::{Description, Reply};
+pub use receipt::Receipts;
 use serde_json::Value;
 use std::collections::BTreeMap;
 use std::path::Path;
@@ -132,7 +134,7 @@ fn judged(name: &str, kind: &str, x: &Exchange, id: &str, cite: &Cite) -> Checke
                 reads.unwrap_or_default()
             ),
             Checker::Said(_) => format!("checker: {}", detail.as_deref().unwrap_or("unverifiable")),
-            Checker::Expired => EXPIRED.into(),
+            Checker::Expired => cache::EXPIRED.into(),
             Checker::Failed => {
                 let why = x.refused(kind, "check").unwrap_or_else(|| match replies {
                     [] => "no reply".into(),
@@ -143,7 +145,11 @@ fn judged(name: &str, kind: &str, x: &Exchange, id: &str, cite: &Cite) -> Checke
             }
         }),
     };
-    Checked { verdict, head }
+    Checked {
+        verdict,
+        head,
+        recorded: None,
+    }
 }
 
 fn absent(kind: &str) -> String {
@@ -185,6 +191,7 @@ pub fn ask(root: &Path, kinds: &Kinds, cites: &[Cite]) -> Answers {
                 None => Checked {
                     verdict: Verdict::Unverifiable(absent(kind)),
                     head: format!("checker:{name}"),
+                    recorded: None,
                 },
             };
             answers.insert((cite.path.clone(), cite.ord), checked);
@@ -194,7 +201,8 @@ pub fn ask(root: &Path, kinds: &Kinds, cites: &[Cite]) -> Answers {
 }
 
 /// The verdict of a token of the checked `kind`: this run's answer when
-/// `kb stale` asked, else the cached one (`check-expired` once older than
+/// `kb stale` asked (a recorded verdict replaces only `checker-absent`),
+/// else the newest of the cached row and the check receipts (aged against
 /// the kind's `max_age`), else `not-checked`.
 pub fn verdict(
     session: &Session<'_>,
@@ -202,120 +210,38 @@ pub fn verdict(
     kind: &str,
     cite: &Cite,
     answers: &Answers,
+    receipts: &Receipts,
 ) -> Result<Checked> {
     if let Some(missing) = kinds::missing(kinds, cite, kind) {
         return Ok(missing);
     }
     if let Some(answer) = answers.get(&(cite.path.clone(), cite.ord)) {
+        let absent = matches!(&answer.verdict, Verdict::Unverifiable(why) if why.starts_with("checker-absent"));
+        if absent && let Some(recorded) = cache::recorded(session, kinds, kind, cite, receipts) {
+            return Ok(recorded);
+        }
         return Ok(answer.clone());
     }
-    let name = kinds.checker(kind).unwrap_or_default();
-    let found = cached(session, name, kinds.max_age(kind), cite)?;
+    let found = cache::pick(session, kinds, kind, cite, receipts)?;
     Ok(found.unwrap_or_else(|| unverifiable("not-checked".into())))
 }
 
-/// Offline: the cached verdict of a token of the checked `kind` when it is
-/// older than the kind's `max_age`, else `None` (offline reports nothing
+/// Offline: the verdict a cache reader would give a token of the checked
+/// `kind` when it is `check-expired`, else `None` (offline reports nothing
 /// else about checked kinds).
 pub fn expired(
     session: &Session<'_>,
     kinds: &Kinds,
     kind: &str,
     cite: &Cite,
+    receipts: &Receipts,
 ) -> Result<Option<Checked>> {
-    let Some(max_age) = kinds.max_age(kind) else {
+    if kinds.max_age(kind).is_none() {
         return Ok(None);
-    };
-    let name = kinds.checker(kind).unwrap_or_default();
-    Ok(cached(session, name, Some(max_age), cite)?
-        .filter(|c| matches!(&c.verdict, Verdict::Unverifiable(why) if why.starts_with(EXPIRED))))
-}
-
-const EXPIRED: &str = "check-expired";
-
-/// One cached row: the verdict, the moved range and path, the head, the
-/// detail and when it was checked.
-struct Row {
-    said: String,
-    first: Option<u32>,
-    last: Option<u32>,
-    path: Option<String>,
-    head: String,
-    detail: Option<String>,
-    checked_at: String,
-}
-
-/// The cached reply as the kernel names it.
-fn said(verdict: &str) -> Checker {
-    match verdict {
-        "fresh" => Checker::Said(Said::Fresh),
-        "moved" => Checker::Said(Said::Moved),
-        "changed" => Checker::Said(Said::Changed),
-        "gone" => Checker::Said(Said::Gone),
-        "unverifiable" => Checker::Said(Said::Unverifiable),
-        _ => Checker::Failed,
     }
-}
-
-/// `<N>d` or `<N>h` (whole units, rounded down) for an age in seconds.
-fn age_text(age: Option<i64>) -> String {
-    match age {
-        Some(a) if a >= 86_400 => format!("{}d", a / 86_400),
-        Some(a) => format!("{}h", a.max(0) / 3600),
-        None => "unreadable checked_at".into(),
-    }
-}
-
-/// The verdict `kb stale` last cached for the same token text from the same
-/// checker (this citation's row first), aged against `max_age` seconds.
-fn cached(
-    session: &Session<'_>,
-    name: &str,
-    max_age: Option<i64>,
-    cite: &Cite,
-) -> Result<Option<Checked>> {
-    let head = format!("checker:{name}");
-    let row = rusqlite::OptionalExtension::optional(session.conn.query_row(
-        "SELECT k.verdict, k.new_first, k.new_last, k.new_path, k.repo_head, k.detail, k.checked_at \
-         FROM cite_checks k JOIN citations c ON c.path = k.path AND c.ord = k.ord \
-         WHERE c.raw = ?1 AND (k.repo_head = ?2 OR k.repo_head GLOB ?2 || '@*') \
-         ORDER BY (k.path = ?3 AND k.ord = ?4) DESC, k.path, k.ord LIMIT 1",
-        (&cite.raw, &head, &cite.path, cite.ord),
-        |r| {
-            Ok(Row {
-                said: r.get(0)?,
-                first: r.get(1)?,
-                last: r.get(2)?,
-                path: r.get(3)?,
-                head: r.get(4)?,
-                detail: r.get(5)?,
-                checked_at: r.get(6)?,
-            })
-        },
-    ))?;
-    let Some(row) = row else {
-        return Ok(None);
-    };
-    let age = time::parse(&row.checked_at).map(|at| session.now.saturating_sub(at));
-    let verdict = match (row.said.as_str(), row.first, row.last) {
-        _ if kernel::aged(said(&row.said), age, max_age) == Checker::Expired => {
-            Verdict::Unverifiable(format!("{EXPIRED} ({})", age_text(age)))
-        }
-        ("fresh", _, _) => Verdict::Fresh,
-        ("moved", Some(first), Some(last)) => Verdict::Moved {
-            path: row.path,
-            first,
-            last,
-        },
-        ("changed", _, _) => Verdict::Changed { detail: row.detail },
-        ("gone", _, _) => Verdict::Gone { detail: row.detail },
-        ("unverifiable", _, _) => Verdict::Unverifiable(row.detail.unwrap_or(row.said)),
-        _ => Verdict::Unverifiable("not-checked".into()),
-    };
-    Ok(Some(Checked {
-        verdict,
-        head: row.head,
-    }))
+    Ok(cache::pick(session, kinds, kind, cite, receipts)?.filter(
+        |c| matches!(&c.verdict, Verdict::Unverifiable(why) if why.starts_with(cache::EXPIRED)),
+    ))
 }
 
 /// The session-start line naming each declared checker not on `PATH`

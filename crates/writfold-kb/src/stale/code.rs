@@ -115,6 +115,7 @@ fn missing(reason: &str) -> Checked {
     Checked {
         verdict: Verdict::Unverifiable(reason.into()),
         head: "none".into(),
+        recorded: None,
     }
 }
 
@@ -165,6 +166,7 @@ fn check_repo(
                 Checked {
                     verdict,
                     head: head.clone(),
+                    recorded: None,
                 },
             ));
             continue;
@@ -190,6 +192,7 @@ fn check_repo(
             Checked {
                 verdict,
                 head: head.clone(),
+                recorded: None,
             },
         )
     }));

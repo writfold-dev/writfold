@@ -171,13 +171,15 @@ pub fn stale(
     let checked = if cached {
         stale::check(session, &cites, false)?
     } else {
-        stale::check_asking(session, &cites, offline)?
+        stale::check_asking(session, &cites, offline)?.checked
     };
     let mut answer = Answer::default();
     let (mut flagged, mut unverifiable, mut absent) = (0, 0, 0);
     let mut rows = Vec::new();
     for (cite, checked) in cites.iter().zip(&checked) {
-        if !offline && !cached {
+        // A verdict read from a check receipt is never cached here: that
+        // would stamp it with this machine's time and restart its lifetime.
+        if !offline && !cached && checked.recorded.is_none() {
             remember(session, cite, checked)?;
         }
         let name = checked.verdict.name();
