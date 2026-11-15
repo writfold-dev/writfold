@@ -1,6 +1,6 @@
 # Writfold guides
 
-> **Status:** built after v0.5.0-dev.7 (`writfold watch` gains a knowledge-base mode, `m`: decisions, status, tracker, impact tree and stale citations of a project in the same calm frame, with a record inspector and `f` to follow between runs and records; `find --kind` lists records by kind and `impact --json` rows carry a structured `edge`; see [Watching a run](watch.md#the-knowledge-base) and [JSON](json.md)). Each page below says what is built and what is planned.
+> **Status:** built in v0.5.0-dev.8 (`writfold watch` gains a knowledge-base mode, `m`: decisions, status, tracker, impact tree and stale citations of a project in the same calm frame, with a record inspector and `f` to follow between runs and records; `find --kind` lists records by kind and `impact --json` rows carry a structured `edge`; see [Watching a run](watch.md#the-knowledge-base) and [JSON](json.md)). Each page below says what is built and what is planned.
 
 These pages hold the full skeletons the website only sketches: file layouts, complete configuration files and real command output. The output comes from an invented demo knowledge base (`harbor`); run IDs and digests are real, local paths are cut to `…`.
 
