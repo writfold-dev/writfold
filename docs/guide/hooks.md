@@ -147,6 +147,8 @@ description = "commit only when the run's gates are met"
 | `gate:<id>` | that gate is met |
 | `step.met` | the plan's current step owes nothing (met with no plan, or when every step is closed) |
 
+`step.met` is a statement about a plan step, so a run without a plan meets it: a Stop rule built on it stays quiet when there is nothing to finish. When a missing plan, or a missing run, should not pass, put `run.current` or `gates.met` beside it in `require`.
+
 A refusal names each unmet requirement and the command that would meet it, taken from `gate status`'s `next:` lines:
 
 ```text
@@ -164,6 +166,32 @@ writfold guard rule commit-needs-gates (a guard, not enforcement): commit only w
 ```
 
 Like a guard, a permission rule reads the command line; it is not enforcement either.
+
+### Past a guard
+
+A refusal names what is owed. Each kind of refusal has one way past, and each way leaves a record:
+
+| The refusal names | The way past, and the record it leaves |
+|---|---|
+| a gate that is `open`, `stale`, `failed` or `unknown` | meet it, or `writfold kb gate waive <id> --reason TEXT --by WHO`: a tracked file in `runs/<run>/statements/`, bound to the gate's definition and the bytes in its scope, so it lapses when either changes; shown as `[waived]` by `gate status`, `resume` and the session-start context, and as a `waived by … : reason` line by `gate lines`, so it reaches the commit message |
+| no current run, or a closed one | start a run; there is nothing to waive |
+| an undefined gate | define the gate, or narrow the rule with `repos` |
+
+There is no rule-level waiver. A refusal does not name a waive command, and an agent that is refused is not told how to excuse itself: the way past is in this guide. To keep `gate waive` and `gate attest` for people, make Claude Code ask before they run, and before a rule file is edited, in `.claude/settings.json`:
+
+```json
+{
+  "permissions": {
+    "ask": [
+      "Bash(writfold kb gate waive:*)",
+      "Bash(writfold kb gate attest:*)",
+      "Edit(**/.writfold/guards/**)"
+    ]
+  }
+}
+```
+
+A permission rule, like a guard, reads what the harness shows it; it is not enforcement either.
 
 ### A hard stop at the end of a turn (recipe)
 

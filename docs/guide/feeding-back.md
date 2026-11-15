@@ -74,7 +74,7 @@ The first command starts the run and makes it the current one; later `checkpoint
 
 Every run write needs a run. `edit apply`, `checkpoint --note`, `gate run|cover|attest|waive`, `observe` and `deliver` without `--run` use the current run; with no current run they are refused (exit 3, nothing written) with `no current run: pass --run ID, or start one`. A closed run is refused the same way.
 
-`edit apply -` reads one recipe from stdin (at most 4 MiB; built in v0.5.0-dev.9), so a recipe need not be written to a file first: `printf '%s\n' 'edit "src/retry.rs" {' '  replace one text "attempts = 5" with "attempts = 7"' '}' | writfold kb edit apply -`. `-` may appear once, beside recipe files; one recipe edits one file, so a batch from stdin is not built (pass several files). The receipt names the recipe `stdin` and keeps its bytes and digest as for a file.
+`edit apply` is Writfold's adapter for Splicery recipes. Splicery is frozen: the adapter keeps building and its tests keep passing, with no new development. `edit apply -` reads one recipe from stdin (at most 4 MiB; built in v0.5.0-dev.9), so a recipe need not be written to a file first: `printf '%s\n' 'edit "src/retry.rs" {' '  replace one text "attempts = 5" with "attempts = 7"' '}' | writfold kb edit apply -`. `-` may appear once, beside recipe files; one recipe edits one file, so a batch from stdin is not built (pass several files). The receipt names the recipe `stdin` and keeps its bytes and digest as for a file.
 
 `edit apply` runs through Bash, so Claude Code's `Edit` and `Write` hooks never see it. A guard rule covers it by command:
 
@@ -185,6 +185,10 @@ git add .writfold/proposals && git commit -m "Propose HBR-130"   # commit it wit
 - **Accept and drop remove every copy**, local and tracked. A removed tracked file is a deletion in the work tree, committed with the accepted record.
 - **The cap of ten per session counts both stores**, one per ID.
 - Proposing a call the chosen store already holds writes nothing; proposing it into the other store adds a copy (to promote a local proposal to a tracked one, propose it again with `--tracked`).
+
+## Closing runs
+
+A run stays open until it is closed: `writfold kb status RUN --set closed` writes `closed` to the run's `writfold-run.json`, and later run writes to it are refused. Nothing closes a run on its own: Writfold records and never schedules, and every gate being met is not the same as the work being done. Close a run when its work is finished, and review the change as a Git diff like any other write. `writfold kb runs --open` lists the runs that are still open.
 
 ## Checking that write-back happened
 

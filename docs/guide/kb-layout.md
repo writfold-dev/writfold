@@ -176,6 +176,21 @@ Every answer ends with one line:
 | `index` | `fresh`, `refreshed:N` or `rebuilt` |
 | `answer=unknown reason=…` | the KB has no answer; that is not evidence about the world |
 
+## What a lookup matches
+
+`writfold kb find TEXT` (and `match`, which adds signatures) tries every tier below on every query, merges the rows in this order, and shows each record once, under the first tier that found it. The tier is the first word of the row's `match:` line; a text hit's `match:` line is the first line of the file holding a query word, with its path and line, so the hit can be cited.
+
+| Tier | Over | Notes |
+|---|---|---|
+| `signature` | signature `match` patterns | with `match`, or `find --signatures` |
+| `exact` | record ID, ticket form (`HBR 101`, `hbr101`), typed prefix, alias, asset locator | assets carry `aliases`; signatures, investigations and projects answer to their bare names |
+| `text` | SQLite FTS5 over ID, title, summary and body, ranked by BM25 (weights 10, 5, 2, 1); every word of the query | diacritics removed |
+| `substring` | an FTS5 trigram table over ID, title and body; the whole query as a substring | three characters or more |
+| `typo` | trigram candidates re-ranked by edit distance | ID and title only; one edit, two for queries longer than eight characters |
+| `text-any` | BM25 again, any word of the query | |
+
+All of it is computed from the derived index, which holds every file's body and each Markdown section's name and line range. A query that finds nothing answers `answer=unknown reason=no-record` with exit 2: absence from the KB is not evidence of absence.
+
 ## `.writfold/`
 
 | File | Defines | Guide |

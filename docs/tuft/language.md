@@ -1,5 +1,7 @@
 # Tuft v0 language
 
+> **Status:** frozen. Tuft keeps building and its tests keep passing, with no new development; the `writfold kb` verbs cover each stage of the flow.
+
 Tuft is the retrieval and projection language of the Writfold family. Weft
 checks what assumptions support, Splicery describes byte-exact edits, and Tuft
 finds exact evidence, retains it as citations and shows it compactly under a

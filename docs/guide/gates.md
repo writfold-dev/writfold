@@ -52,6 +52,8 @@ Patterns are anchored at the top of the repository. `*` and `?` match within one
 
 The scope decides staleness. A receipt is about the HEAD commit plus the content of the in-scope paths, uncommitted edits included. Committing the exact bytes a receipt was taken on leaves it satisfied; reverting to them makes it satisfied again.
 
+**A gate about the KB itself.** When the subject is the KB's own repository and the scope admits `runs/` (`**`, say), every statement, cover row and receipt the run files is inside the scope: writing it changes the content it is bound to, and the gate reads `open` again (`why: a waiver exists, but for other content or another definition`). Exclude the run's own files with `!runs/**`.
+
 ## Running, and the receipt
 
 ```text
@@ -156,6 +158,8 @@ description = "subject at most 72 characters, a blank second line, body wrapped 
 A script gate reports findings as `<line>: <text>` on stdout; only a clean exit 0 passes. A timeout, a signal or a draft that changed while it ran is `unknown`. A worked example is in `fixtures/kb/commit-message/`.
 
 ## Weft assessed gates
+
+> **Status:** built in v0.4.0-dev.1. Weft is frozen: the assessed gate keeps building and its tests keep passing, with no new development.
 
 A gate of class `assessed` is met by a [Weft](https://github.com/writfold-dev/weft) assessment of a plan step instead of a command's exit status. The agent states the step's assumptions and checks in a Weft file, cites the evidence for each assumption, and runs the gate. Writfold resolves every citation, runs the pinned `weft` binary, and records which checks Weft entails and whether each rests on grounded evidence.
 
