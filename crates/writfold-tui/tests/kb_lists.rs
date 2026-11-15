@@ -202,3 +202,40 @@ fn marks_come_from_flags_and_the_path_join() -> TestResult {
     );
     Ok(())
 }
+
+#[test]
+fn a_recorded_flag_sets_no_mark_in_the_stale_view() -> TestResult {
+    // A verdict read from a check receipt reaches the view as one more
+    // flag on a `stale --cached` row: the rows and their marks are drawn
+    // exactly as without it, and the flag itself marks nothing.
+    let w = atlas("recorded-flag")?;
+    let mut app = kb_app(&w);
+    app.key(writfold_tui::app::Key::Char('5'));
+    let plain = symbols(&render(&mut app, 136, 38)?);
+    let reply = app.kb.stale.as_mut().ok_or("no stale reply")?;
+    assert!(!reply.rows.is_empty(), "the atlas has stale rows");
+    for row in &mut reply.rows {
+        if let Some(flags) = row["flags"].as_array_mut() {
+            flags.push(Value::from("recorded"));
+        }
+    }
+    let labelled = symbols(&render(&mut app, 136, 38)?);
+    // The list rows and marks are the same; only the inspector's flag
+    // line names it.
+    let changed: Vec<(&str, &str)> = plain
+        .lines()
+        .zip(labelled.lines())
+        .filter(|(a, b)| a != b)
+        .collect();
+    assert_eq!(changed.len(), 1, "{labelled}");
+    let (before, after) = changed[0];
+    assert!(
+        before.contains("│expired ") && after.contains("│expired recorded "),
+        "{after}"
+    );
+    let list = |line: &str| line.chars().take(78).collect::<String>();
+    assert_eq!(list(before), list(after));
+    let none = writfold_tui::kb_entry::flag_marks(["recorded"]);
+    assert_eq!(none, writfold_tui::kb_entry::Marks::default());
+    Ok(())
+}

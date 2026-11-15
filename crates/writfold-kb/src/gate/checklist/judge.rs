@@ -27,6 +27,8 @@ pub struct Entry<'a> {
     pub why: Option<String>,
     /// The run's observations made for this item (`observe --for`).
     pub looked: Option<crate::emit::More>,
+    /// How many of the row's references are grounded by a check receipt.
+    pub recorded: usize,
 }
 
 /// What a checklist gate's row shows besides its standing.
@@ -66,6 +68,8 @@ impl View<'_> {
 struct Present<'c, 's, 'r> {
     cx: &'c Context<'s, 'r>,
     seen: BTreeMap<String, (Grounding, String)>,
+    /// References grounded by a verdict read from a check receipt.
+    recorded: std::collections::BTreeSet<String>,
 }
 
 impl Present<'_, '_, '_> {
@@ -77,6 +81,9 @@ impl Present<'_, '_, '_> {
                 Some(now) => now.clone(),
                 None => {
                     let r = ground::resolve(self.cx, &e.reference)?;
+                    if r.recorded {
+                        self.recorded.insert(e.reference.clone());
+                    }
                     let now = (r.grounding, r.standing);
                     self.seen.insert(e.reference.clone(), now.clone());
                     now
@@ -87,6 +94,14 @@ impl Present<'_, '_, '_> {
             }
         }
         Ok(None)
+    }
+
+    /// How many of the row's references were grounded by a receipt.
+    fn recorded(&self, c: &Cover) -> usize {
+        let cited = c.evidence.iter();
+        cited
+            .filter(|e| self.recorded.contains(&e.reference))
+            .count()
     }
 }
 
@@ -154,6 +169,7 @@ pub fn judge<'a>(
     let mut present = Present {
         cx: &cx,
         seen: BTreeMap::new(),
+        recorded: std::collections::BTreeSet::new(),
     };
     let observed = crate::observe::filed(&session.ws.root, &filings.run_dir);
     let mut out = Vec::new();
@@ -164,7 +180,12 @@ pub fn judge<'a>(
             let rows = rows_of(&filings.covers, &d.id, &spec.id, &subject.name);
             let newest = rows.last().copied();
             let (item, why) = entry(&d, &content, newest, &mut present)?;
+            let recorded = match (item, newest) {
+                (Item::Supported, Some((_, c))) => present.recorded(c),
+                _ => 0,
+            };
             entries.push(Entry {
+                recorded,
                 spec: spec.clone(),
                 item,
                 row: newest,

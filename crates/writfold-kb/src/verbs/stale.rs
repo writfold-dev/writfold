@@ -1,6 +1,6 @@
 //! `stale [<project>|<path>] [--offline|--cached]`: which pins have moved.
 use super::record_row;
-use crate::emit::{Answer, Row};
+use crate::emit::{Answer, More, Row};
 use crate::error::Result;
 use crate::index::query;
 use crate::layout::project_name;
@@ -184,6 +184,7 @@ pub fn report(
     let mut answer = Answer::default();
     let (mut flagged, mut unverifiable, mut absent) = (0, 0, 0);
     let mut rows = Vec::new();
+    let mut recorded: Vec<&str> = Vec::new();
     for (cite, checked) in cites.iter().zip(checked) {
         // A verdict read from a check receipt is never cached here: that
         // would stamp it with this machine's time and restart its lifetime.
@@ -191,6 +192,9 @@ pub fn report(
             remember(session, cite, checked)?;
         }
         let name = checked.verdict.name();
+        if let Some(r) = &checked.recorded {
+            recorded.push(&r.checked_at);
+        }
         match &checked.verdict {
             Verdict::Fresh => continue,
             Verdict::Unverifiable(reason) => {
@@ -211,6 +215,9 @@ pub fn report(
             Some(&checked.head),
             moved,
         );
+        if let Some(r) = &checked.recorded {
+            label(&mut row, r);
+        }
         if let Some(detail) = detail(&checked.verdict) {
             row.text = if row.text.is_empty() {
                 detail
@@ -232,6 +239,11 @@ pub fn report(
         ("stale", flagged),
         ("unverifiable", unverifiable),
     ];
+    answer.notes.extend(judged.receipts.notes.iter().cloned());
+    if let Some(note) = recorded_note(&mut recorded) {
+        answer.counts.push(("recorded", recorded.len()));
+        answer.notes.push(note);
+    }
     if absent > 0 {
         answer.counts.push(("checker-absent", absent));
         answer.notes.push(
@@ -250,6 +262,40 @@ pub fn report(
             .push("offline: only authored stale marks, due TTLs and expired checker verdicts are reported".into());
     }
     Ok((answer, cites, judged))
+}
+
+/// Label a row whose verdict was read from a check receipt: when it was
+/// checked, the `recorded` flag, and a `check:` line naming the receipt.
+fn label(row: &mut Row, r: &stale::Recorded) {
+    row.text = format!("{} recorded {}", row.text, r.checked_at);
+    row.flags.push("recorded".into());
+    let version = r.version.as_deref().map(|v| format!(" {v}"));
+    row.more.push(More {
+        label: "check",
+        text: format!(
+            "recorded {} by {}{}",
+            r.checked_at,
+            r.checker,
+            version.unwrap_or_default()
+        ),
+        path: Some(r.path.clone()),
+        line: Some(1),
+        ..More::default()
+    });
+}
+
+/// The note dating the verdicts read from check receipts, if any.
+fn recorded_note(dates: &mut [&str]) -> Option<String> {
+    dates.sort_unstable();
+    let (first, last) = (dates.first()?, dates.last()?);
+    let when = match first == last {
+        true => format!("at {first}"),
+        false => format!("between {first} and {last}"),
+    };
+    Some(format!(
+        "{} verdicts were read from check receipts: checked elsewhere, {when}; no checker was started for them",
+        dates.len()
+    ))
 }
 
 /// The note naming undeclared kinds whose tokens without `ttl=` never

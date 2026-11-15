@@ -338,6 +338,8 @@ gate review [stale] checklist 1/2 required covered at demo-service@bcacd8cac84e 
 
 `gate lines` prints the gate, then one line per item. A plan step that owes a checklist advances once it stands as `attested`, and its done event names a covering row.
 
+**Grounded by a check receipt** (built in v0.5.0-dev.9). A cited token of a checked kind may be fresh because a committed [check receipt](checkers.md#sharing-verdicts-check-receipts) says so, not because this machine asked the checker. Its standing is still `fresh`, so stored rows compare as before, but the item line carries `!recorded`, and `gate status`, `gate cover`, `gate lines` and `deliver check` add one note: `1 reference is fresh by a check receipt (checked elsewhere); writfold kb stale --cached dates them`.
+
 ### Observations as evidence (built in v0.5.0-dev.3)
 
 Some items are checked by looking somewhere outside Git: a dashboard, a ticket tracker, a log search. `observe` records one such look, and how it went, in the run:

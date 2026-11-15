@@ -109,6 +109,14 @@ pub struct Report<'a> {
 }
 
 impl Report<'_> {
+    /// The note naming how many cited references stand on a verdict read
+    /// from a check receipt, if any.
+    pub fn recorded_note(&self) -> Option<String> {
+        let views = self.gates.iter().filter_map(|j| j.checklist.as_ref());
+        let n: usize = views.flat_map(|v| &v.entries).map(|e| e.recorded).sum();
+        super::ground::recorded_note(n)
+    }
+
     /// Whether every gate is met (satisfied, attested or waived).
     pub fn all_met(&self) -> bool {
         !self.gates.is_empty() && self.gates.iter().all(|j| j.standing.met())

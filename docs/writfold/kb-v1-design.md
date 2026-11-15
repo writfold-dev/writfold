@@ -3741,3 +3741,43 @@ writes nothing cannot see a process start (a Git-backed full `stale` leaves the
 cache as it was); the binary tour's counting checker does. The website's KB
 frame waits for the merge. `scripts/gate` and `writfold kb gate run` were not
 run; no push, merge or release was performed.
+
+## 38. Check receipts as built (v0.5.0-dev.9)
+
+A checked kind's verdicts can be shared through Git: `kb stale --record` writes what the checkers said to tracked, write-once files, and every clone reads them where it has no newer statement of its own, for as long as the kind's `max_age` allows. The guide is [checkers](../guide/checkers.md#sharing-verdicts-check-receipts); the specification was [dev9-spec.md](dev9-spec.md) §2.1.
+
+### 38.1 Kernel
+
+`writfold_core::verdict` gains, in `verdict/recorded.rs` (the module's existing tests moved to `verdict/tests.rs` to keep the 400-line budget): `recordable(Checker)` (only `Said(Fresh | Moved | Changed | Gone)`), `recorded_age(now, checked_at)` (`None` more than `CLOCK_SKEW` = 3600 s ahead, else never below zero), and `newest(local, recorded, max_age) -> Option<Pick>` over `Statement { said, age, recorded }`: a local `Unverifiable` is dropped, every recorded statement is dropped without `max_age`, the smallest age wins, a tie goes to a receipt, then to the worst verdict (`gone`, `changed`, `moved`, `fresh`), then to file order. `aged` is applied to the pick unchanged. The exhaustive test runs every local statement (or none) against every list of up to two recorded statements, with and without `max_age`, and holds that the pick is usable, that nothing usable is newer, the tie rules, and that the result is fresh exactly when the pick says fresh within its age.
+
+### 38.2 Format and reading
+
+`stale/checker/receipt.rs`: `.writfold/checks/<kind>/<compact UTC>-<6 hex>.json` (`write::unique`), schema `writfold-check-receipt/1`, keys `schema`, `kind`, `checker {name, version?, protocol?}`, `checked_at` (`YYYY-MM-DDTHH:MM:SSZ`) and `verdicts`, each `{token, status, at?, moved?, detail?}` on one line, sorted by token. `token` is `sha256:` and the hex digest of the citation's exact text (the `raw` column). Reading is strict: an unknown key at any level, a wrong `schema`, a `kind` other than the directory, an unreadable `checked_at`, a malformed token, a status outside the four, `moved` missing beside `moved` or present beside another status, a range that is not `1 <= first <= last`, a duplicate token, or more than 4 MiB skips the whole file with a note; a receipt naming another checker than the kind declares is left out silently. `Receipts::load` reads only the checked kinds among the citations, once per `stale::judged` call, and only when `.writfold/checks/` exists; lookup is by `(kind, digest)`.
+
+`stale/checker/cache.rs` (the cache reading moved out of `checker/mod.rs`): `pick` reads this citation's cached row as before, turns it into a local statement when its verdict is one of the five words, collects the receipt entries for the digest whose `recorded_age` is usable, and asks `newest`. A recorded pick becomes a `Checked` with the head `checker:<name>@<version>:<at>` and `recorded: Some(Recorded { checked_at, path, checker, version })`; a moved range drops its path when it equals the token's `path=`, as a live answer does. `checker::verdict` keeps this run's answer except where it is `Checker::Absent` and `cache::recorded` finds a usable (unexpired) recorded verdict; `checker::expired` (offline) uses the same pick. `Answers` now carry the kernel's `Checker`, the reply's `at` and the checker's version beside the verdict (`Answered`). `verbs/stale.rs::remember` skips a recorded verdict, so `cite_checks` never holds one. An authored `stale=` mark applies over a recorded verdict as over any other, keeping the `recorded` label.
+
+### 38.3 Writing
+
+`stale/checker/record.rs`, reached as `Verb::StaleRecord { scope }` (a separate variant keeps every `Verb::Stale` literal unchanged). It runs `verbs::stale::report` (the old `stale`, now also returning the citations and the `Judged` answers and receipts), then `plan`: per citation with an answer, an entry when `recordable` holds (a `moved` answer without a range is no statement), grouped by kind; a digest answered with two different statuses is dropped with a note; a kind without `max_age` is noted and skipped. Each receipt goes through `write::atomic::apply` as one `Op::Create` (lock, temp, sync, rename, directory sync), then `prune` removes, with `remove_file`, each other readable receipt of the same kind and checker whose entries are all held by the new file or whose `checked_at` is older than `max_age`. A failed write sets `refused` (exit 3) with the conflict text after the verdicts. The trailer adds `recorded-now=` and `receipts=`. `--record` beside `--offline` or `--cached` is a usage error in `writfold-app/src/kb/args.rs`.
+
+### 38.4 Presentation
+
+`stale` rows read from a receipt get ` recorded <checked_at>` after the head, the flag `recorded` and a `check:` continuation at the receipt's line 1; the trailer counts `recorded=` when non-zero and a note dates them. `gate/ground.rs::Resolved` gains `recorded` (set when a fresh grounding rests on a recorded verdict; the standing word stays `fresh`); checklist entries count recorded references and their `item` line carries `!recorded`; `Report::recorded_note` adds one note to `gate status` and `gate cover`, a `note:` line to `gate lines`, and `deliver check`'s `claims.cited-fresh` note names the count. `checker list` adds a `receipts:` continuation per kind. `writfold watch` needed no code: `kb_lists.rs::a_recorded_flag_sets_no_mark_in_the_stale_view` shows the list rows unchanged and the inspector naming the flag.
+
+### 38.5 Tests
+
+- Kernel: `verdict/recorded.rs` (above); strict reading and the encoder round trip in `stale/checker/receipt_tests.rs`.
+- Through the binary with the fake checker, a recording clone and a reading clone with no checker on `PATH` and no index: `crates/writfold/tests/kb_checker_record.rs` (sharing and grounding with `!recorded`, the gate note and `gate lines`, `kb check`'s count; only recordable answers and the pre-mark answer recorded and an older receipt kept; refusals and the no-`max_age` note; scoped recording and supersession; two clones merging cleanly; JSON and `checker list`) and `kb_checker_receipts.rs` (token text and checker binding; ageing at `max_age` ± 60 s, `--offline`, never caching, two hours ahead, an hour ahead, no `max_age`; newest and the tie; local fresh newer than a recorded gone, a failing checker not replaced, a local unverifiable not masking; strict skipping and never removing; readers starting no checker).
+- Kill: `crates/writfold-kb/tests/check_receipt_faults.rs` aborts a recording at each write step: no receipt or one strictly readable receipt, and recording again leaves one.
+- `ttl=` on a checked token changes no verdict (`kb_checker.rs`).
+- Every check above was removed or broken once and a test failed; the log is kept with the round's handover.
+
+### 38.6 Deviations
+
+- The ageing test uses `max_age ± 60 s` rather than one second past, because the binary reads the real clock; the exact boundary is the kernel's (`aged`, `recorded_age`) and its tests.
+- "The evidence line" of a grounded reference: gate answers show checklist items, not one line per reference, so the `item` line carries `!recorded`. Assessed gates record `Resolved` standings in their receipts unchanged; their rows do not yet show `!recorded`.
+- The check receipt's `checker` object is written with its keys in alphabetical order (`name`, `protocol`, `version`).
+
+### 38.7 Not built
+
+Recorded verdicts for built-in kinds; showing recorded verdicts in `brief`, `context`, `why` and the session-start line; a required checker version; a flag that fails when a checker is missing; signing.

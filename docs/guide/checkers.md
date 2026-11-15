@@ -1,6 +1,6 @@
 # External checkers
 
-> **Status:** built in v0.5.0-dev.2 (phase 1: `check` and `make`, run by `stale` only); `max_age` built in v0.5.0-dev.3. Not built: built-in kinds through the protocol, fetching, rendering or redaction, a server mode, an SDK, token migration, a checked kind that also ages by `ttl=` or `default_ttl` (`max_age` limits how old a cached verdict may be, not how old the token is), tracked check receipts, and a flag that fails when a checker is missing.
+> **Status:** built in v0.5.0-dev.2 (phase 1: `check` and `make`, run by `stale` only); `max_age` built in v0.5.0-dev.3; check receipts (`kb stale --record`, [below](#sharing-verdicts-check-receipts)) built in v0.5.0-dev.9. Not built: built-in kinds through the protocol, fetching, rendering or redaction, a server mode, an SDK, token migration, a checked kind that also ages by `ttl=` or `default_ttl` (`max_age` limits how old a cached verdict may be, not how old the token is), recorded verdicts for built-in kinds, and a flag that fails when a checker is missing.
 
 Writfold checks `code`, `gate`, `record` and `proposal` citations itself, from Git and the index. A citation of anything else (a file in another source-control system, a tracker item, a wiki page) is checked by time unless its kind names an external checker: a small program you install that Writfold asks whether each token still holds.
 
@@ -31,7 +31,7 @@ The checker is found the way Git finds credential helpers: by name on `PATH`. Th
 
 ## Who runs it
 
-Only `writfold kb stale` (without `--offline` or `--cached`) runs the citation checks: one process per kind per run, with every token of that kind in one batch. This includes the stale part of `kb check`. Readers such as `gate status`, `gate cover`, `guard status`, guard rules, `why`, `brief`, the hooks, `proposals accept` and `writfold watch` use the verdict `stale` cached. A token `stale` has not checked yet reads `unverifiable: not-checked` there, so a gate cannot be covered by a citation nobody checked. The explicit `checker list` and `cite make --kind` operations start their checker for describe/make, not to refresh this verdict cache.
+Only `writfold kb stale` (without `--offline` or `--cached`) runs the citation checks: one process per kind per run, with every token of that kind in one batch. This includes the stale part of `kb check`. Readers such as `gate status`, `gate cover`, `guard status`, guard rules, `why`, `brief`, the hooks, `proposals accept` and `writfold watch` use the verdict `stale` cached. A token `stale` has not checked yet reads `unverifiable: not-checked` there (unless a committed [check receipt](#sharing-verdicts-check-receipts) holds its verdict), so a gate cannot be covered by a citation nobody checked. The explicit `checker list` and `cite make --kind` operations start their checker for describe/make, not to refresh this verdict cache.
 
 `stale --cached` still checks Git-backed citations, but never starts an external checker or writes the `cite_checks` cache. It cannot be combined with `--offline`. The watch stale pane uses this read-only form.
 
@@ -70,6 +70,59 @@ The session-start hook names a missing checker in one line (a `PATH` lookup; not
 $ writfold kb checker list
 checker src [found] writfold-check-acme-src acme-src 1.4.0 ops check,make token versions [1]
 ```
+
+## Sharing verdicts: check receipts
+
+> Built in v0.5.0-dev.9.
+
+A checked kind's verdicts otherwise live only in the local index, so a fresh clone, a second machine or a CI job reads `unverifiable: not-checked` (or `checker-absent` from `kb stale`) until it installs every checker and holds its credentials. A gate that rests on such a citation cannot be met there. A check receipt carries the verdicts to them in Git.
+
+**Who records.** Whoever runs `writfold kb stale --record` (one deliberate recorder: a scheduled job, or a person before handing over). It runs `stale` as usual and then writes what the checkers said in this run to a new tracked file per checked kind, `.writfold/checks/<kind>/<UTC time>-<6 hex>.json`, left in the work tree for you to commit. There is no setting: `stale` stays a read verb everywhere else. `--record` with `--offline` or `--cached` is refused (exit 1); `kb check` does not take it, so run `kb stale --record` before `kb check`.
+
+```text
+$ writfold kb stale --record
+cite src:lib/gone.c [gone] at checker:acme-src@1.4.0:r42 said gone @notes/sources.md:9 !gone
+# note: recorded 14 verdicts of kind src in .writfold/checks/src/20261115T020000Z-ab12cd.json (2 superseded receipts removed)
+# note: written to the work tree; commit it to share it
+# coverage=complete records=4/4 shown=1 omitted=0 checked=31 stale=2 unverifiable=1 recorded-now=14 receipts=1 kb=… index=fresh cursor=none q=…
+```
+
+**What is recorded.** Only what a checker said about a token: `fresh`, `moved`, `changed` or `gone`, as it answered, before any authored `stale=` mark. `checker-absent`, `checker-failed`, `token-version` and a checker's own `unverifiable` describe one machine at one moment and are left out. A kind without `max_age` is not recorded (`# note: not recorded: kind src declares no max_age (a recorded verdict needs a lifetime)`), and two identical tokens that received different statuses in one run are left out, with a note. Each verdict is filed under the SHA-256 of the token's exact text, so any edit to the token (`seen=` included) makes it a different token, and under the checker's name.
+
+**Superseded receipts.** A receipt is never edited. After the new file is written, each older receipt of the kind from the same checker is removed from the work tree when every token in it is held by the new file or is older than `max_age`; a scoped run (`kb stale <project> --record`) keeps receipts that hold tokens outside its scope. Git history keeps the removed files. Two clones recording at once add two files, which Git merges without conflict.
+
+**Who reads.** Every clone, automatically, when a receipt exists and the kind declares `max_age`. Every reader of the cache (`stale --cached`, `stale --offline`, `gate status`, `gate cover`, `gate lines`, guard rules, `deliver check`, `proposals accept`) takes, for each token, the newest of its own cached verdict and the recorded ones, and ages it against the kind's `max_age` as before: past it, `unverifiable: check-expired`. Online `kb stale` uses a recorded verdict only where this machine's checker is absent; a present checker that fails is shown failing. Details:
+
+- The newest statement wins, local or recorded. At equal times a receipt wins over the local cache, and between receipts the worse verdict (`gone`, `changed`, `moved`, `fresh`).
+- A local `unverifiable` (say, from a `kb stale` on a machine without the checker) never hides a recorded verdict.
+- `max_age` is not stored in the receipt: tightening it in the kind file takes effect on every clone at once. A kind without `max_age` reads no receipt.
+- A receipt dated more than an hour ahead of this machine's clock is not used; up to an hour ahead counts as age 0.
+- A receipt from another checker than the kind now declares is ignored. The checker's version is shown, not matched.
+- A verdict read from a receipt is never written to this machine's cache, so its lifetime runs from when it was checked.
+- A file with anything unexpected (an unknown key, a wrong `schema` or `kind`, an unreadable `checked_at`, a bad token, status or `moved` range, a duplicate token, more than 4 MiB) is skipped whole, with `# note: check receipt <path> skipped: <why>`, is never evidence, and is never removed.
+
+**What a reader sees.** A reused verdict always says it was checked elsewhere, and when:
+
+```text
+cite src:lib/moved.c [moved] at checker:acme-src@1.4.0:r42 recorded 2026-11-14T02:00:00Z @notes/sources.md:5 !moved→lib/new.c:12-18 !recorded
+  check: recorded 2026-11-14T02:00:00Z by acme-src 1.4.0 @.writfold/checks/src/20261114T020000Z-ab12cd.json:1
+# note: 12 verdicts were read from check receipts: checked elsewhere, between 2026-11-12T02:00:00Z and 2026-11-14T02:00:00Z; no checker was started for them
+# coverage=… checked=31 stale=1 unverifiable=0 recorded=12 …
+```
+
+`recorded=` appears only when it is not zero. A checklist item grounded by such a citation carries `!recorded` in `gate status` and `gate cover`, and those answers, `gate lines` and `deliver check` add one note: `2 references are fresh by a check receipt (checked elsewhere); writfold kb stale --cached dates them`. The item still stands `fresh`, so stored cover rows compare as before. `checker list` adds `receipts: 14 verdicts in 2 files, newest …, oldest …, max_age 7d` (or `receipts: 2 files, not read: no max_age`). `brief`, `context`, `why`, edge flags and the session-start stale line read this machine's cache only, so they show nothing from a receipt.
+
+**What it claims.** A check receipt is a statement, by whoever committed it, that a named checker gave these answers at that time; Git history says who. It resists mistakes, not adversaries, like every tracked file.
+
+**A scheduled recorder in CI.** On a runner that has the checkers and their credentials:
+
+```sh
+writfold kb stale --record || test $? -eq 2   # 2: some citation is not fresh; still record
+git add .writfold/checks
+git commit -m "Record check receipts" && git push
+```
+
+Other clones, and CI jobs without the checkers, then pass a gate that cites those tokens for as long as `max_age` allows.
 
 ## The protocol: `writfold-checker/1`
 

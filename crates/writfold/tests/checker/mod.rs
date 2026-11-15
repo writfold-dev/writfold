@@ -5,6 +5,8 @@
 //! field says, appends a line to `$FAKE_COUNTER` each time it starts, and
 //! misbehaves as `$FAKE_MODE` says.
 #![allow(dead_code)]
+pub mod receipts;
+
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
@@ -78,7 +80,7 @@ impl Root {
     }
 }
 
-fn put(path: &Path, text: &str) -> Result {
+pub fn put(path: &Path, text: &str) -> Result {
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent)?;
     }
@@ -86,7 +88,7 @@ fn put(path: &Path, text: &str) -> Result {
     Ok(())
 }
 
-fn git(dir: &Path, args: &[&str]) -> Result {
+pub fn git(dir: &Path, args: &[&str]) -> Result {
     let ok = Command::new("git")
         .current_dir(dir)
         .env("GIT_CONFIG_GLOBAL", "/dev/null")

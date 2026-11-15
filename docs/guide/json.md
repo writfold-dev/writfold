@@ -83,6 +83,8 @@ rows and the counts `rules`, `deny`, `ask`, `nudge`, `invalid`. Its context note
 names the current run and working directory. These additions keep the envelope
 at version 1; `watch` does not introduce another JSON envelope.
 
+A citation verdict read from a check receipt (built in v0.5.0-dev.9) carries the flag `recorded` on its `cite` row and a `more` entry with `label` `check`, `path` the receipt and `line` 1; `trailer.counts.recorded` counts such verdicts when it is not zero, and `stale --record` adds `counts["recorded-now"]` and `counts.receipts`. A checklist `item` continuation grounded that way carries the flag `recorded`. `checker list` rows may carry a `more` entry with `label` `receipts`.
+
 The command that would move a row forward is a `more` entry with `label` `next`, its `text` the command line (`writfold kb gate run lint`). A script that wants it reads that entry rather than parsing the text form.
 
 ## The trailer
