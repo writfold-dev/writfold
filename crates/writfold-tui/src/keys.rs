@@ -84,6 +84,7 @@ impl App {
     fn cycle_theme(&mut self) {
         if self.look.depth == crate::style::Depth::Truecolor {
             self.look.theme = self.look.theme.next();
+            self.notice = Some(format!("theme={} (not written)", self.look.theme.name()));
         } else {
             self.notice =
                 Some("themes need 24-bit colour: COLORTERM=truecolor or --color truecolor".into());

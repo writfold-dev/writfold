@@ -1,6 +1,5 @@
-run-20261101T090000Z-a1b2c3 [open] !current  Add --plan to kb runs  project=harbor  subject=kb
-[1 progress] 2 gates 3 timeline 4 inbox 5 guards 6 stale 7 brief 8 resume
-gates: open=2 stale=2 of 6 | inbox: drafts=1 proposals=2 | guards: deny=1 ask=0 of 2
+ Add --plan to kb runs  [open] [current] [harbor]  subject kb           run-20261101T090000Z-a1b2c3
+ [1 progress] 2 gates !2 ○2  3 timeline  4 inbox 3  5 guards deny 1  6 stale  7 brief  8 resume
 ╭ runs (3) ──────────────────╮╭ progress run-20261101T090000Z-a1b2c3 ──────────────────────────────╮
 │> Add --plan to kb runs     ││ 2026-11-10T23:51:00Z) !skipped                                     │
 │  harbor  step 4/6          ││     splice: change#1 @83c2cc9efde7 from .writfold/plans/change.toml│
@@ -26,5 +25,6 @@ gates: open=2 stale=2 of 6 | inbox: drafts=1 proposals=2 | guards: deny=1 ask=0 
 │                            ││                                                                    │
 │                            ││                                                                    │
 │                            ││                                                                    │
+│                            ││                                                                    │
 ╰────────────────────────────╯╰────────────────────────────────────────────────────────────────────╯
-kb=XXXXXXXXXXXX+dirty:14 index=fresh  subject=kb@0ea3a743bfef+dirty:17  asked 00:00:00Z  theme=ansi
+ [read-only]  kb XXXXXXXXXXXX+dirty:14   index fresh             j/k run   l plan   ? help   q quit

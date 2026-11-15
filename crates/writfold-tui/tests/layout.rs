@@ -51,7 +51,7 @@ fn wide_and_medium_buffer_goldens() -> TestResult {
         title(&buffer, a.runs.ok_or("runs area")?, "runs");
         title(&buffer, a.main, "progress");
         assert!(rows(&buffer)[0].contains(RUN));
-        assert!(rows(&buffer)[usize::from(height - 1)].contains("kb="));
+        assert!(rows(&buffer)[usize::from(height - 1)].contains(" kb "));
     }
     Ok(())
 }
@@ -84,21 +84,15 @@ fn all_sizes_render_their_real_panes() -> TestResult {
                 }
             }
             Class::Medium => {
-                assert_eq!(a.runs.ok_or("runs")?, Rect::new(0, 3, 30, height - 4));
-                assert_eq!(a.main, Rect::new(30, 3, width - 30, height - 4));
-                let summary = &screen[usize::from(a.summary.ok_or("summary")?.y)];
-                for label in [
-                    "gates:",
-                    "inbox:",
-                    "drafts=1",
-                    "proposals=2",
-                    "guards: deny=1 ask=0",
-                ] {
-                    assert!(summary.contains(label));
+                assert_eq!(a.runs.ok_or("runs")?, Rect::new(0, 2, 30, height - 3));
+                assert_eq!(a.main, Rect::new(30, 2, width - 30, height - 3));
+                // The summary row is gone; its non-zero counts are tab badges.
+                for label in ["2 gates !2 ○2", "4 inbox 3", "5 guards deny 1"] {
+                    assert!(screen[1].contains(label), "{label}: {}", screen[1]);
                 }
             }
             Class::Narrow => {
-                assert!(a.runs.is_none() && a.summary.is_none());
+                assert!(a.runs.is_none());
                 assert!(screen[0].contains("run 1/3"));
                 title(&buffer, a.main, "progress");
             }
@@ -144,6 +138,7 @@ fn narrow_runs_view_and_short_strip_are_real_content() -> TestResult {
     let text = symbols(&render(&mut app, 70, 20)?);
     // Calm entries lead with the title; `d` restores the id line.
     assert!(text.contains("runs") && text.contains("> Add --plan to kb runs"));
+    assert!(!text.contains(RUN), "{text}");
     app.key(Key::Char('d'));
     assert!(symbols(&render(&mut app, 70, 20)?).contains(&format!("> [open] {RUN}")));
     app.key(Key::Char('p'));

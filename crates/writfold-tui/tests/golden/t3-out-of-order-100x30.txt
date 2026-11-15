@@ -1,6 +1,5 @@
-run-20261101T090000Z-a1b2c3 [open]  Batch ledger writes rollout  project=harbor  subject=kb
-[1 progress] 2 gates 3 timeline 4 inbox 5 guards 6 stale 7 brief 8 resume
-gates:  of 0 | inbox: drafts=0 proposals=0 | guards: deny=0 ask=0 of 0
+ Batch ledger writes rollout  [open] [harbor]  subject kb               run-20261101T090000Z-a1b2c3
+ [1 progress]   2 gates    3 timeline    4 inbox    5 guards    6 stale    7 brief    8 resume
 ╭ runs (1) ──────────╮╭ plan ───────────────────────────────╮╭ step 2/4 ───────────────────────────╮
 │> Batch ledger writ…││step 2 of 4    1 done  1 skipped     ││child [current]                      │
 │  harbor  step 2/4  ││1 disorder                           ││merge#1/finish/side#1/child          │
@@ -24,7 +23,8 @@ gates:  of 0 | inbox: drafts=0 proposals=0 | guards: deny=0 ask=0 of 0
 │                    ││                                     ││                                     │
 │                    ││                                     ││                                     │
 │                    ││                                     ││                                     │
+│                    ││                                     ││                                     │
 │                    ││last plan event  2026-11-10T23:58:50…││                                     │
 │                    ││▶ next step to pick up, as recorded  ││d more   g gates   x text            │
 ╰────────────────────╯╰─────────────────────────────────────╯╰─────────────────────────────────────╯
-kb=XXXXXXXXXXXX ind asked 00:00:00Z theme=ansi read-only  jk node  l inspect  . current  n flag  ? q
+ [read-only]  kb XXXXXXXXXXXX   index fresh       j/k step   l inspect   d detail   ? help   q quit

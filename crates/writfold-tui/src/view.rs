@@ -52,7 +52,14 @@ pub fn draw(frame: &mut Frame<'_>, app: &mut App) {
 fn detail(frame: &mut Frame<'_>, app: &mut App, area: Rect) {
     let border = ratatui::widgets::Block::bordered();
     let inner = border.inner(area);
-    let detail = content::detail(app, app.view, Some(inner.width), app.expand_all, false);
+    let mut detail = content::detail(app, app.view, Some(inner.width), app.expand_all, false);
+    // The inbox tab badge is one number; the view leads with its breakdown.
+    if app.view == View::Inbox
+        && let Some(answer) = app.answer(View::Inbox).filter(|a| a.error.is_none())
+    {
+        let counts = side::inbox_counts(answer);
+        detail.lines.insert(0, lines::line(counts, Tone::Dim));
+    }
     if app.anchor {
         app.scroll = initial_scroll(&detail.lines, detail.current, inner.width, inner.height);
         app.anchor = false;

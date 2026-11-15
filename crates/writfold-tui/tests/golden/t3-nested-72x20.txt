@@ -1,5 +1,5 @@
-run 1/3 run-20261101T090000Z-a1b2c3 [open]
-progress 1/8
+ Add --plan to kb runs  [open] [current] [harbor]  subject kb   run 1/3
+ [1 progress]   2 gates !2 ○2    4 inbox 3    5 guards deny 1       1/8
 ╭ plan ────────────────────────────────────────────────────────────────╮
 │step 7 of 11    5 done  1 skipped  1 stale                            │
 │ ! implement   ●!                                                     │
@@ -17,4 +17,4 @@ progress 1/8
 │last plan event  2026-11-10T23:59:50Z done change#1/review/review#1/f…│
 │▶ next step to pick up, as recorded                                   │
 ╰──────────────────────────────────────────────────────────────────────╯
-kb=XXXXXXXXXXXX+dirty:19 ? q
+ [read-only]                     l inspect   d detail   ? help   q quit

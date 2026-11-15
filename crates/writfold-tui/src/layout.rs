@@ -25,7 +25,6 @@ pub fn class(width: u16, height: u16) -> Class {
 pub struct Areas {
     pub header: Rect,
     pub tabs: Rect,
-    pub summary: Option<Rect>,
     pub runs: Option<Rect>,
     pub main: Rect,
     pub footer: Rect,
@@ -48,12 +47,11 @@ pub fn areas(width: u16, height: u16) -> Areas {
     areas.header = Rect::new(0, 0, width, 1);
     areas.tabs = Rect::new(0, 1, width, 1);
     areas.footer = Rect::new(0, height - 1, width, 1);
-    let top = if class == Class::Medium { 3 } else { 2 };
+    let top = 2;
     areas.main = Rect::new(0, top, width, height - top - 1);
     match class {
         Class::Wide => wide(&mut areas, width, height),
         Class::Medium => {
-            areas.summary = Some(Rect::new(0, 2, width, 1));
             areas.runs = Some(Rect::new(0, top, 30, areas.main.height));
             areas.main.x = 30;
             areas.main.width -= 30;
@@ -166,9 +164,8 @@ mod tests {
         let medium = areas(90, 16);
         assert_eq!(medium.header, Rect::new(0, 0, 90, 1));
         assert_eq!(medium.tabs, Rect::new(0, 1, 90, 1));
-        assert_eq!(medium.summary, Some(Rect::new(0, 2, 90, 1)));
-        assert_eq!(medium.runs, Some(Rect::new(0, 3, 30, 12)));
-        assert_eq!(medium.main, Rect::new(30, 3, 60, 12));
+        assert_eq!(medium.runs, Some(Rect::new(0, 2, 30, 13)));
+        assert_eq!(medium.main, Rect::new(30, 2, 60, 13));
         assert_eq!(medium.footer, Rect::new(0, 15, 90, 1));
         assert_eq!(medium.timeline, None);
         let narrow = areas(60, 12);
@@ -176,7 +173,6 @@ mod tests {
         assert_eq!(narrow.tabs, Rect::new(0, 1, 60, 1));
         assert_eq!(narrow.main, Rect::new(0, 2, 60, 9));
         assert_eq!(narrow.footer, Rect::new(0, 11, 60, 1));
-        assert_eq!(narrow.summary, None);
         assert_eq!(narrow.runs, None);
         assert_eq!(narrow.gates, None);
     }
@@ -189,7 +185,6 @@ mod tests {
                 let all = [
                     Some(a.header),
                     Some(a.tabs),
-                    a.summary,
                     a.runs,
                     Some(a.main),
                     Some(a.footer),

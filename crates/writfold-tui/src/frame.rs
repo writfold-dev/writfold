@@ -56,84 +56,19 @@ pub fn detail(
     content
 }
 
-pub fn header(app: &App, narrow: bool) -> String {
-    let Some(row) = app.row() else {
-        return "writfold watch — no run selected".into();
-    };
-    if narrow {
-        return format!(
-            "run {}/{} {} [{}]",
-            app.selected + 1,
-            app.order.len(),
-            field(row, "id"),
-            field(row, "status")
-        );
-    }
-    let mut text = format!(
-        "{} [{}]{}  {}",
-        field(row, "id"),
-        field(row, "status"),
-        lines::suffix(row, false),
-        field(row, "text")
-    );
-    if let Some(project) = app.project() {
-        text.push_str(&format!("  project={project}"));
-    }
-    match &app.stamps.subject {
-        Ok(Some(subject)) => text.push_str(&format!("  subject={}", subject.name)),
-        Ok(None) => text.push_str("  subject=none"),
-        Err(error) => text.push_str(&format!("  subject=error: {error}")),
-    }
-    text
-}
-
-pub fn footer(app: &App, interactive: bool) -> String {
-    if interactive && let Some(notice) = &app.notice {
-        return format!("theme={}  {notice}", app.look.label());
-    }
+/// The plain frame's closing stamps; the terminal footer is `bars::footer`.
+pub fn footer(app: &App) -> String {
     let at = |key| {
         app.runs
             .trailer_text(key)
             .unwrap_or_else(|| "unknown".into())
     };
-    let mut out = format!(
-        "kb={} index={}  {}",
+    format!(
+        "kb={} index={}  {}  read-only; no daemon, nothing here claims a run is live",
         at("kb"),
         at("index"),
         crate::poll::subject_text(&app.stamps.subject)
-    );
-    if interactive {
-        out.push_str(&format!(
-            "  asked {}  theme={}  read-only; no daemon  ? help  q quit",
-            app.asked,
-            app.look.label()
-        ));
-    } else {
-        out.push_str("  read-only; no daemon, nothing here claims a run is live");
-    }
-    out
-}
-
-pub fn tabs(app: &App, narrow: bool) -> String {
-    if narrow {
-        let index = View::ALL
-            .iter()
-            .position(|v| *v == app.view)
-            .map_or(1, |i| i + 1);
-        return format!("{} {index}/{}", app.view.name(), View::ALL.len());
-    }
-    View::ALL
-        .iter()
-        .map(|view| {
-            let tab = format!("{} {}", view.digit(), view.name());
-            if *view == app.view {
-                format!("[{tab}]")
-            } else {
-                tab
-            }
-        })
-        .collect::<Vec<_>>()
-        .join(" ")
+    )
 }
 
 pub fn help() -> Vec<Line> {
@@ -245,6 +180,6 @@ pub fn once(app: &mut App, only: Option<View>) -> String {
         }
         append(&mut out, content.lines);
     }
-    out.push_str(&format!("== {} ==\n", footer(app, false)));
+    out.push_str(&format!("== {} ==\n", footer(app)));
     out
 }

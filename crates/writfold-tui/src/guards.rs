@@ -73,20 +73,3 @@ pub fn content(app: &App, answer: &Reply, compact: bool) -> Vec<Line> {
     }
     out
 }
-
-pub fn summary(app: &App) -> String {
-    let Some(answer) = app.answer(View::Guards) else {
-        return "guards: not asked".into();
-    };
-    if answer.error.is_some() {
-        return "guards: refused".into();
-    }
-    match (
-        answer.count("deny"),
-        answer.count("ask"),
-        answer.count("rules"),
-    ) {
-        (Some(deny), Some(ask), Some(rules)) => format!("guards: deny={deny} ask={ask} of {rules}"),
-        _ => "guards: unknown".into(),
-    }
-}

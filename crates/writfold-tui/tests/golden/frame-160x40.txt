@@ -1,5 +1,5 @@
-run-20261101T090000Z-a1b2c3 [open] !current  Add --plan to kb runs  project=harbor  subject=kb
-[1 progress] 2 gates 3 timeline 4 inbox 5 guards 6 stale 7 brief 8 resume
+ Add --plan to kb runs  [open] [current] [harbor]  subject kb                                                                       run-20261101T090000Z-a1b2c3
+ [1 progress]   2 gates !2 ○2    3 timeline    4 inbox 3    5 guards deny 1    6 stale    7 brief    8 resume
 ╭ runs (3) ────────────────────────────╮╭ progress run-20261101T090000Z-a1b2c3 ────────────────────────────────╮╭ gates ───────────────────────────────────────╮
 │> Add --plan to kb runs               ││plan 2 done, 1 skipped of 6 steps; current step 4/6; owes 2 of 2 gates││gates=6 satisfied=2 open=2 stale=2 failed=0   │
 │  harbor  step 4/6                    ││stale=1                                                               ││unknown=0 attested=0 waived=0 invalid=0       │
@@ -37,4 +37,4 @@ run-20261101T090000Z-a1b2c3 [open] !current  Add --plan to kb runs  project=harb
 │                                      ││                                                                      ││plan change#1/implement [done] 2026-11-10T23:5│
 │                                      ││                                                                      ││plan change#1/benchmarks [skipped] 2026-11-10T│
 ╰──────────────────────────────────────╯╰──────────────────────────────────────────────────────────────────────╯╰──────────────────────────────────────────────╯
-kb=XXXXXXXXXXXX+dirty:14 index=refreshed:1  subject=kb@0ea3a743bfef+dirty:17  asked 00:00:00Z  theme=ansi  read-only; no daemon  ? help  q quit
+ [read-only]  kb XXXXXXXXXXXX+dirty:14   index refreshed:1   asked 00:00:00Z                                                 j/k run   l plan   ? help   q quit
