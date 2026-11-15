@@ -126,9 +126,10 @@ fn propose(
         Write::Ticket(t) => write::record::ticket(session, t).map(drop)?,
         Write::Decision(d) => write::record::decision(session, d).map(drop)?,
         Write::Link(l) => write::record::link(session, l).map(drop)?,
+        Write::Investigation(i) => write::investigation::plan(session, i).map(drop)?,
         _ => {
             return Err(KbError::Usage(
-                "propose takes ticket, decision or link".into(),
+                "propose takes ticket, decision, link or investigation".into(),
             ));
         }
     }

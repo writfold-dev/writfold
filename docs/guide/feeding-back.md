@@ -1,6 +1,6 @@
 # Feeding the knowledge base
 
-> **Status:** built in v0.3.0-dev.1; proposals, the backfill and reflection checks, required steps spliced into every run and the `writfold:evaluate` skill built in v0.4.0-dev.1; concluding an investigation built in v0.5.0-dev.1; a decision's `accepted`, `applied` and `verified` states built in v0.5.0-dev.2; tracked proposals built in v0.5.0-dev.3.
+> **Status:** built in v0.3.0-dev.1; `record investigation` and check receipts built in v0.5.0-dev.9; proposals, the backfill and reflection checks, required steps spliced into every run and the `writfold:evaluate` skill built in v0.4.0-dev.1; concluding an investigation built in v0.5.0-dev.1; a decision's `accepted`, `applied` and `verified` states built in v0.5.0-dev.2; tracked proposals built in v0.5.0-dev.3.
 
 Reading the knowledge base (KB) is half of the loop. The other half is what each stage of the work writes back, so that the next session starts from more than this one did. This page follows one piece of work through the four stages and says, for each thing written: which verb writes it, where it lands, and who commits it.
 
@@ -25,6 +25,7 @@ Each write is atomic: after a kill at any step the file holds its old bytes or i
 | Research | a retrieval receipt per code search | `writfold tuft run Q.tuft --repo DIR --cite`, inside an open run | `runs/<id>/retrievals/` | you |
 | Research | a link between two assets, with its evidence | `record link <type> <from> <to> --evidence …` | `inventory/relationships/` | you |
 | Research | a ticket | `record ticket <ID> --title …` | `ktlo/<year>/` | you |
+| Research | an investigation, `open`, with empty Question, Hypotheses, Checked against, Scope and limits and Conclusion sections (built in v0.5.0-dev.9) | `record investigation --title T [--trigger TEXT] [--tickets a,b] [--assets a,b] [--alerts a,b] [--signatures a,b] [--summary S] [--question TEXT]` | `investigations/<year>/<date>-<slug>/` | you |
 | Plan | a run: task, project, repository, branch, worktree, base commit | `checkpoint --new-run --project P --task T --note TEXT` | `runs/<id>/` | you |
 | Plan | a decision, as a draft | `record decision --title … --target-source …` | `proposals/decision/<date>-<slug>/` | you |
 | Execute | a checkpoint entry | `checkpoint --note TEXT` | `runs/<id>/checkpoint.md` | you |
@@ -33,9 +34,10 @@ Each write is atomic: after a kill at any step the file holds its old bytes or i
 | Execute | a statement | `gate attest`, `gate waive` | `runs/<id>/statements/` | you |
 | Execute | a checklist item's cover row (v0.5.0-dev.1) | `gate cover <gate> <item> …` | `runs/<id>/covers/` | you |
 | Execute | an observation: one look at an outside source and how it went (built in v0.5.0-dev.3) | `observe --source KIND --locator TEXT --status STATUS [--for GATE.ITEM]` | `runs/<id>/observed/` | you |
+| Execute | a check receipt: what a checked kind's checker said, readable by clones without it (built in v0.5.0-dev.9) | `stale --record` | `.writfold/checks/<kind>/` | you |
 | Deliver | the exact draft, and a receipt per check | `deliver prepare`, `deliver check` | `runs/<id>/deliveries/<id>/` | you |
 | Wrap up | a state change | `status <id> --set STATE` | the record's front matter, or the run's `writfold-run.json` | you |
-| Wrap up | a proposal: a `record` call not yet made | `propose ticket\|decision\|link …` | the local queue, `<git dir>/writfold/proposals/`, or with `--tracked` the work tree's `.writfold/proposals/` | nobody until accepted; `proposals accept` then writes the record |
+| Wrap up | a proposal: a `record` call not yet made | `propose ticket\|decision\|link\|investigation …` | the local queue, `<git dir>/writfold/proposals/`, or with `--tracked` the work tree's `.writfold/proposals/` | nobody until accepted; `proposals accept` then writes the record |
 
 Three things are local and never committed: checkpoint drafts kept by the Claude Code hooks, until `checkpoint --from-draft <session>` turns one into an entry ([hooks](hooks.md)); pending proposals, until one is accepted (below), unless they are tracked; and command output tails from `gate run`.
 
@@ -89,7 +91,7 @@ action = "deny"
 | Kind | What `status --set` writes in v1 |
 |---|---|
 | ticket | any state of its vocabulary |
-| investigation | `open`, `monitoring`, `abandoned`, and `concluded` once the write-up is complete (below) |
+| investigation | created `open` by `record investigation` (built in v0.5.0-dev.9); `open`, `monitoring`, `abandoned`, and `concluded` once the write-up is complete (below) |
 | decision | `draft`↔`proposed`, `proposed`→`accepted` (needs `--by`), `proposed`→`rejected` (needs `--by`), `accepted`→`deferred`, `accepted`→`applied` (needs `--commit`), `applied`→`verified` (needs `--evidence`), any→`superseded` (needs `--superseded-by`) |
 | run | `open`, `closed` |
 
@@ -111,6 +113,8 @@ writfold kb status decision/2026-11-11-replay-in-batches --set verified --eviden
 
 A `verified` line, such as `- 2026-11-12: verified; evidence gate:unit satisfied (runs/<run>/gates/unit-….json) on demo-service@3c1d09a8e4b2`, is a fact about the moment it was written: Writfold does not re-check it later, so a decision stays `verified` after its gate goes stale. An attested or waived gate is not a passing check and is refused, as is a stale receipt or one from another run. `landing` and `regressed` are read but never written.
 
+`record investigation` writes `investigations/<year>/<date>-<slug(title)>/README.md` and an empty `evidence/` beside it, as one directory; the record's ID is `inv:<year>/<date>-<slug>`. Its front matter is `id`, `title`, `trigger` (default `manual`), `tickets`, `alerts`, `assets`, `status: open`, `signatures`, `created`, `updated` and `summary`; its body holds the sections `concluded` checks, empty except `Question` (`--question`), so filling them is all concluding needs. The same title on the same day is the same ID and is refused (exit 3), as is an unknown asset. A `--tickets` entry that is not a ticket ID, a `--signatures` entry that is not a slug and a multi-line title are usage errors (exit 1). Tickets and signatures need not exist yet: an investigation often comes first. `propose investigation …` takes the same arguments.
+
 `concluded` (built in v0.5.0-dev.1) is refused, with exit 3 and nothing written, until the investigation has text under `## Checked against` and `## Scope and limits`, and every hypothesis under `## Hypotheses` has an outcome. A hypothesis is a bullet `- H<n>: <outcome> …` whose outcome is `open`, `supported`, `refuted` or `unk`; a bullet that starts `- H<n>` without one is refused as unreadable. Concluding records that the write-up is complete, not that its findings are true.
 
 ### A verification no command can make
@@ -126,7 +130,7 @@ Many verifications are a person seeing something happen: a dashboard back to nor
 
 ## Proposals
 
-A proposal is a `record` call that has not been made yet. `propose` takes exactly the arguments of `record ticket|decision|link`, checks them as `record` would, writes no record, and queues the call: locally by default, or in the KB's work tree with `--tracked` (below):
+A proposal is a `record` call that has not been made yet. `propose` takes exactly the arguments of `record ticket|decision|link|investigation`, checks them as `record` would, writes no record, and queues the call: locally by default, or in the KB's work tree with `--tracked` (below):
 
 ```sh
 writfold kb propose ticket HBR-130 --title "Replay is slow after a restart" --assets harbor-api

@@ -79,7 +79,8 @@ fn split(args: &[String]) -> Result<(Common, Vec<String>), String> {
             "--at" => return Err("--at COMMIT is not built in v1 (planned for M4)".into()),
             other
                 if writes::VALUES.contains(&&other[2..])
-                    || super::observe::VALUES.contains(&&other[2..]) =>
+                    || super::observe::VALUES.contains(&&other[2..])
+                    || super::investigation::VALUES.contains(&&other[2..]) =>
             {
                 common
                     .values

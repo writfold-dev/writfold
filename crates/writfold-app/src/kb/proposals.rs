@@ -15,25 +15,7 @@ pub const SWITCHES: [&str; 2] = ["tracked", "local"];
 /// The write flags each verb here accepts.
 pub fn allowed(verb: &str) -> &'static [&'static str] {
     match verb {
-        "propose" => &[
-            "title",
-            "assets",
-            "status",
-            "summary",
-            "prs",
-            "origin",
-            "context",
-            "evidence",
-            "change",
-            "why",
-            "target-source",
-            "references",
-            "applicability",
-            "session",
-            "run",
-            "tracked",
-            "local",
-        ],
+        "propose" => super::investigation::PROPOSE,
         _ => &[],
     }
 }
@@ -54,7 +36,9 @@ pub fn verb(name: &str, common: &Common, positional: &[String]) -> Option<Result
                 }))
             })
         }),
-        ("propose", []) => Err("usage: propose ticket|decision|link … (as record)".into()),
+        ("propose", []) => {
+            Err("usage: propose ticket|decision|link|investigation … (as record)".into())
+        }
         ("proposals", [] | [_]) => {
             let sub = positional.first().map_or("list", String::as_str);
             match sub {

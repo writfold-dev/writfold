@@ -1,6 +1,6 @@
 # The knowledge base on disk
 
-> **Status:** built in v0.3.0-dev.1; kind declarations (`.writfold/sources/`) built in v0.5.0-dev.1.
+> **Status:** built in v0.3.0-dev.1; kind declarations (`.writfold/sources/`) built in v0.5.0-dev.1; check receipts (`.writfold/checks/`) and the investigation template of `record investigation` built in v0.5.0-dev.9.
 
 A knowledge base (KB) is a directory holding `inventory/assets/`, normally a Git repository. Writfold finds it from `--kb DIR`, then `$WRITFOLD_KB`, then the nearest such directory above the working directory. Outside Git, reads still work and writes are refused.
 
@@ -63,6 +63,35 @@ A relationship, from `record link depends-on quay-worker harbor-db --evidence â€
   ],
   "applicability": ""
 }
+```
+
+An investigation, as `writfold kb record investigation --title "Flush stalls on replicas" --tickets HBR-99 --assets harbor-db --question "Why do replicas stall?"` wrote it in `investigations/2026/2026-11-11-flush-stalls-on-replicas/README.md`, beside an empty `evidence/` (the four empty sections are shortened here):
+
+```text
+---
+id: 2026/2026-11-11-flush-stalls-on-replicas
+title: Flush stalls on replicas
+trigger: manual
+tickets: [HBR-99]
+alerts: []
+assets: [harbor-db]
+status: open
+signatures: []
+created: 2026-11-11
+updated: 2026-11-11
+summary: 
+---
+
+# Flush stalls on replicas
+
+## Question
+
+Why do replicas stall?
+
+## Hypotheses
+## Checked against
+## Scope and limits
+## Conclusion
 ```
 
 A decision is `proposal.md` with front matter (`id`, `kind`, `title`, `status`, `project`, `references`, `decided_by`, `superseded_by` and more) and `##` sections such as Research, Alternatives and Decision log.
@@ -158,6 +187,7 @@ Every answer ends with one line:
 | `.writfold/guards/<id>.toml` | one guard rule (built in v0.5.0-dev.1); in the KB root for every project, or in a repository for that repository only | [hooks](hooks.md#guard-rules) |
 | `.writfold/plans/` | plan templates | [run-graph](run-graph.md) |
 | `.writfold/sources/<kind>.toml` | a citation kind's freshness rule, default lifetime and required fields, or its external checker; KB root only | [above](#a-citation-token) |
+| `.writfold/checks/<kind>/<time>-<hex>.json` | a check receipt: what a checked kind's checker said about each token in one `kb stale --record` run (built in v0.5.0-dev.9); written once, superseded files removed | [checkers](checkers.md#sharing-verdicts-check-receipts) |
 
 ## Knowledge bases not written by Writfold
 

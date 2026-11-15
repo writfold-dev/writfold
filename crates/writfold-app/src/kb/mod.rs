@@ -8,6 +8,7 @@ mod edit;
 mod gate;
 mod guard;
 mod hook;
+mod investigation;
 mod observe;
 mod plan;
 mod proposals;
@@ -34,8 +35,9 @@ verbs:
                                    what does changing X touch (bounded walk, frontier stated)
   uses <target>                    who relies on a record or a code locator
   timeline <id>                    linked investigations, tickets, decisions, checkpoints by date
-  stale [<project>|<path>] [--offline|--cached]
-                                   which citations have moved; --cached never starts a checker
+  stale [<project>|<path>] [--offline|--cached|--record]
+                                   which citations have moved; --cached never starts a checker;
+                                   --record writes the checkers' answers to .writfold/checks/
   repos [--missing]                each cited repository: local, partial or missing, how its clone
                                    was found, its target commit, when it last fetched (exit 2 if missing)
   index status|rebuild|verify      what the derived index holds; rebuild it; check it equals a rebuild
@@ -53,6 +55,8 @@ writes (atomic; they leave the work tree dirty for you to commit):
   record decision --title T --target-source S [--project P] [--references a,b]
                   [--context ..] [--evidence ..] [--change ..] [--why ..] [--origin O]
   record link <type> <from> <to> [--status S] [--evidence e1,e2] [--applicability A]
+  record investigation --title T [--trigger TEXT] [--tickets a,b] [--assets a,b]
+                  [--alerts a,b] [--signatures a,b] [--summary S] [--question TEXT]
   status <id> --set STATE [--by WHO] [--superseded-by ID] [--note TEXT]
                   [--commit REPO@SHA] [--evidence REF [--run ID] [--repo DIR]]
   cite make <repo> <path> <a-b> [--allow-dirty] [--sym S] [--ttl T]   (prints a token)
@@ -65,7 +69,7 @@ checkers (kinds declared freshness = \"checked\"; writfold-check-<name> on PATH;
   checker list                     each checked kind: its checker found or absent, and its describe
 
 proposals (record calls not yet made, in a local untracked queue; at most 10 per session):
-  propose ticket|decision|link … [--session S] [--run ID] [--tracked|--local]
+  propose ticket|decision|link|investigation … [--session S] [--run ID] [--tracked|--local]
                                    the arguments of record; session: --session, else $WRITFOLD_SESSION
                                    --tracked: .writfold/proposals/ in the work tree, to commit
                                    (the default when .writfold/proposals/.tracked exists)
