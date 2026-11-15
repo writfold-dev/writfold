@@ -3684,7 +3684,7 @@ within 80. The run-mode goldens were re-blessed and differ on row 2 only (the
 `m kb` unit); their earlier copies are kept in `tests/golden/pre-t5/` for the
 test that proves it. The debug binary was driven in tmux with the session's
 working directory inside the capture KB (`target/t5-pty/kb`, built by the
-ignored `capture_world` test) at 80×24, 100×30, 136×38 and 160×40, in
+`capture_world` test under `--features capture-world`) at 80×24, 100×30, 136×38 and 160×40, in
 truecolor, `--color none` and `TERM=dumb`, in run mode and in KB mode (calm
 and `d`, why, status, tracker, impact, stale, inspector, help, `f`); captures
 (raw with colour and plain text) are in `target/t5-frames/`.

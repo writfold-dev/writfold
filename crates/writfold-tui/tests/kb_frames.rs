@@ -1,13 +1,13 @@
 //! Knowledge-base mode as whole frames: goldens at the sizes the guide
 //! shows, the plain `--once` form, no world path on screen, honest words,
-//! and the capture world for the website (an ignored test).
+//! and the capture world for the website (only with `--features capture-world`).
 mod support;
 
 use support::kb_app::{honest, kb_app, press};
-use support::kb_world::{atlas, atlas_at};
+use support::kb_world::atlas;
 use support::projection::{golden, normalize, render, symbols};
 use support::{RUN, TestResult};
-use writfold_tui::app::{App, Focus, Key};
+use writfold_tui::app::{App, Key};
 use writfold_tui::kb_state::KbView;
 
 #[test]
@@ -107,10 +107,14 @@ fn view_names_parse_with_their_kb_prefix() -> TestResult {
     Ok(())
 }
 
-/// Builds the capture world under `target/t5-pty/kb` and leaves it.
+/// Builds the capture world under `target/t5-pty/kb` and leaves it. A manual
+/// step for the website frames, not a check: it compiles only with
+/// `--features capture-world`, so the unit gate neither runs nor claims it.
+#[cfg(feature = "capture-world")]
 #[test]
-#[ignore]
 fn capture_world() -> TestResult {
+    use support::kb_world::atlas_at;
+    use writfold_tui::app::Focus;
     let base = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../target/t5-pty");
     let w = atlas_at(base)?;
     let mut app = kb_app(&w);

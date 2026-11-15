@@ -18,3 +18,7 @@ regex.workspace = true
 
 [lints]
 workspace = true
+
+[features]
+# Builds the website capture world under target/t5-pty; not in the unit gate.
+capture-world = []

@@ -447,7 +447,7 @@ written by that verb; assets, projects, dossiers and the older decisions come fr
 
 Tokens hold the code repository's local path in `url=`; no calm or detailed frame prints a token,
 and a test asserts that no buffer contains the world's base path. For website captures an ignored
-test `capture_world` builds the same world under `target/t5-pty/kb` and leaves it; the frames are
+test `capture_world` (run with `--features capture-world`) builds the same world under `target/t5-pty/kb` and leaves it; the frames are
 taken with `writfold watch --kb target/t5-pty/kb --view kb:why` at 136×38 after T5 is merged.
 
 ## 7. Decisions (15 November 2026)
