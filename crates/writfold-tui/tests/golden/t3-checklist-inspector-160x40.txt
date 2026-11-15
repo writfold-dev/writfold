@@ -1,6 +1,6 @@
 run-20261101T090000Z-a1b2c3 [open] !current  Add --plan to kb runs  project=harbor  subject=kb
 [1 progress] 2 gates 3 timeline 4 inbox 5 guards 6 stale 7 brief 8 resume
-┌ runs (3) ────────────────────────────┐┌ progress: map run-20261101T090000Z-a1b2c3 ───────────────────────────┐┌ step 7/11 (Esc: back) ───────────────────────┐
+╭ runs (3) ────────────────────────────╮╭ progress: map run-20261101T090000Z-a1b2c3 ───────────────────────────╮╭ step 7/11 (Esc: back) ───────────────────────╮
 │> [open] run-20261101T090000Z-a1b2c3 !││plan 5 done, 1 skipped of 11 steps; current step 7/11; owes 2 of 2    ││change#1/review/review#1/findings/findings#1/c│
 │    Add --plan to kb runs             ││gates stale=1                                                         ││heck [current]                                │
 │    project=harbor                    ││ ┬ change#1 @83c2cc9efde7 from .writfold/plans/change.toml            ││splice: findings#1 @6ec817d3031a from         │
@@ -36,5 +36,5 @@ run-20261101T090000Z-a1b2c3 [open] !current  Add --plan to kb runs  project=harb
 │                                      ││● satisfied ◆ attested/waived ○ open ! stale × failed ? unknown       ││      @runs/run-20261101T090000Z-a1b2c3/covers│
 │                                      ││· later, not judged; ▶ next step to pick up (recorded, not a liveness ││      /review-list.perf-20261110T235400Z-XXXXX│
 │                                      ││claim)                                                                ││full receipts: g   all steps as text: x       │
-└──────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────┘
+╰──────────────────────────────────────╯╰──────────────────────────────────────────────────────────────────────╯╰──────────────────────────────────────────────╯
 kb=XXXXXXXXXXXX+dirty:19 index=fresh  subject=kb@0ea3a743bfef+dirty:28          asked 00:00:00Z theme=ansi read-only  jk node  l inspect  . current  n flag  ? q

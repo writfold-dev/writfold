@@ -81,7 +81,8 @@ pub fn choose_theme(
         None => (
             ThemeId::default(),
             Some(format!(
-                "watch: unknown theme {name:?} ({source}); using hone; themes: {}",
+                "watch: unknown theme {name:?} ({source}); using {}; themes: {}",
+                ThemeId::default().name(),
                 ThemeId::choices()
             )),
         ),

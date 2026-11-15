@@ -4,7 +4,7 @@ use crate::cells::Glyphs;
 use crate::lines::{self, Tone};
 use crate::source::field;
 use crate::{graph, paint, progress, rail, style, wrap};
-use ratatui::{Frame, layout::Rect, style::Modifier, widgets::Paragraph};
+use ratatui::{Frame, layout::Rect, style::Style, widgets::Paragraph};
 
 pub(crate) fn glyphs(app: &App) -> Glyphs {
     if app.dumb || app.look.depth == style::Depth::None {
@@ -121,18 +121,23 @@ pub(crate) fn draw(frame: &mut Frame<'_>, app: &mut App, area: Rect) {
     let height = inner.height.saturating_sub(top + records_height);
     let window = rail::window(&rail, selected, usize::from(height), app.rail_offset);
     let selected_line = rail.node_lines.get(selected).copied();
-    for (y, mut line) in rail
+    for (y, line) in rail
         .lines
         .into_iter()
         .skip(window.start)
         .take(usize::from(height))
         .enumerate()
     {
-        if selected_line == Some(window.start + y) {
-            line = line.style(style::style(app.look, Tone::Plain).add_modifier(Modifier::REVERSED));
-        }
+        // The selected row takes the theme's selection surface across the
+        // pane width; glyph colours stay legible on it (reverse video at
+        // degraded depths).
+        let row = if selected_line == Some(window.start + y) {
+            style::selected(app.look)
+        } else {
+            Style::default()
+        };
         frame.render_widget(
-            Paragraph::new(line),
+            Paragraph::new(line).style(row),
             Rect::new(inner.x, inner.y + top + y as u16, inner.width, 1),
         );
     }

@@ -3,7 +3,16 @@ mod checker;
 use checker::{RUN, Result, Root, WRITFOLD, world};
 use std::process::{Command, Output, Stdio};
 
-const THEMES: [&str; 6] = ["hone", "slate", "carbide", "vellum", "paper", "paper-dark"];
+const THEMES: [&str; 8] = [
+    "clay",
+    "clay-light",
+    "hone",
+    "slate",
+    "carbide",
+    "vellum",
+    "paper",
+    "paper-dark",
+];
 
 fn invoke(w: &Root, args: &[&str], env: &[(&str, &str)], xdg: bool) -> Result<Output> {
     let mut command = Command::new(WRITFOLD);
@@ -64,8 +73,8 @@ fn warning(output: &Output, name: &str, source: &str) -> Result {
     for part in [
         name,
         source,
-        "using hone",
-        "hone, slate, carbide, vellum, paper, paper-dark",
+        "using clay",
+        "clay, clay-light, hone, slate, carbide, vellum, paper, paper-dark",
     ] {
         assert!(text.contains(part), "{text}");
     }

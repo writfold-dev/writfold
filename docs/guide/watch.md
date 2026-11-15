@@ -61,21 +61,30 @@ including a done step after open children following a merge.
 
 Gate chips follow each gate continuation's `status`: `●` satisfied, `◆` attested
 or waived, `○` open, `!` stale, `×` failed, `?` unknown, and `·` later, not judged.
-ASCII chips are `o` satisfied/open, `*` attested/waived, `!`, `x`, `?`, and `.`;
-the inspector retains the exact state words. ASCII rails use `|`, `+`, `\`, `/`.
+ASCII chips are `+` satisfied, `*` attested/waived, `o` open, `!` stale, `x`
+failed, `?` unknown and `.` later; every chip shape differs, and the inspector
+retains the exact state words. ASCII rails use `|`, `+`, `\`, `/`.
 `--color none`, automatic `NO_COLOR`, and `TERM=dumb` select ASCII map shapes;
 `TERM=dumb` keeps those shapes even when colour is explicitly enabled.
 
-The marker means **recorded current step, not a liveness claim**. The block below
-the rail shows `step N/M` from the trailer, the newest plan event from Timeline,
-and the run list's last checkpoint. Missing subject counts stay missing; the
-verb's no-subject note is shown instead of inventing a position count.
+The marker means **the next step to pick up**: the recorded current step (the
+first step neither done nor skipped), not a liveness claim. Nothing records
+whether an agent is working; a run whose agent stopped shows the same marker.
+The block below the rail shows `step N/M` from the row the verb marks current,
+the newest plan event from Timeline, and the run list's last checkpoint. Without
+a subject repository the gate counts stay missing and the verb's note is shown;
+the position still comes from the current row.
 Done stays done when its evidence becomes stale; the marker never moves back.
 
 Selection starts at the recorded current step, survives refresh by ID, and falls
 back to the current step or first row if its ID disappears. The rail keeps it
-visible with two rows of context where space permits. IDs truncate from the
-left; group headings and trailing rail text clip to the available width.
+visible with two rows of context where space permits. Inside a splice group a
+row shows its id from the group's own name (`findings#1/check`); the group
+headers above name the ancestors and the inspector shows the full id. Chips are
+aligned, IDs truncate from the left, and rail text that does not fit ends in
+`…`. The row end repeats only disorder and invalid flags; the state glyph already
+says stale or skipped. The facts line and legend wrap; the legend goes first when
+the pane is short.
 
 The inspector quotes the selected step's splice, parent, reasons, gates, items,
 read/next commands and event evidence. Paths wrap with a hanging indent.
@@ -159,18 +168,20 @@ an ordinary read session may refresh the rebuildable index.
 
 ## Themes and colour
 
-Themes cycle in this order: **hone**, **slate**, **carbide**, **vellum**, **paper**,
-**paper-dark**. Vellum and paper are light; the others are dark. The selected name
-comes from `--theme`, then `WRITFOLD_THEME`, then the existing user configuration,
-then hone. The configuration is `$XDG_CONFIG_HOME/writfold/config.toml`, otherwise
+Themes cycle in this order: **clay** (the default), **clay-light**, **hone**,
+**slate**, **carbide**, **vellum**, **paper**, **paper-dark**. Clay is neutral
+charcoal with a terracotta accent; clay-light is its ivory counterpart. Clay-light,
+vellum and paper are light; the others are dark. Panes have rounded corners
+except under `--color none`. The selected name comes from `--theme`, then
+`WRITFOLD_THEME`, then the existing user configuration, then clay. The configuration is `$XDG_CONFIG_HOME/writfold/config.toml`, otherwise
 `~/.config/writfold/config.toml`; its quoted line is:
 
 ```text
 theme = "paper"
 ```
 
-An unknown highest-precedence name keeps hone and warns with the source and all
-six choices. A lower-precedence name that was overridden produces no warning.
+An unknown highest-precedence name keeps clay and warns with the source and all
+eight choices. A lower-precedence name that was overridden produces no warning.
 The interactive warning occupies the footer until the next key; plain output
 sends it to stderr. Cycling never writes the configuration.
 

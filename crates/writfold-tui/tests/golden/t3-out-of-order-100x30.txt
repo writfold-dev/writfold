@@ -1,7 +1,7 @@
 run-20261101T090000Z-a1b2c3 [open]  Batch ledger writes rollout  project=harbor  subject=kb
 [1 progress] 2 gates 3 timeline 4 inbox 5 guards 6 stale 7 brief 8 resume
 gates:  of 0 | inbox: drafts=0 proposals=0 | guards: deny=0 ask=0 of 0
-┌ runs (1) ──────────┐┌ progress: map run-20261101T090000Z-a┐┌ step 2/4 (Esc: back) ───────────────┐
+╭ runs (1) ──────────╮╭ progress: map run-20261101T090000Z-a╮╭ step 2/4 (Esc: back) ───────────────╮
 │> [open] run-2026110││plan 1 done, 1 skipped of 4 steps;   ││merge#1/finish/side#1/child [current]│
 │    Batch ledger wri││current step 2/4; owes 0 of 0 gates  ││splice: side#1 @20d37b2daa99 from    │
 │    project=harbor  ││disorder=1                           ││.writfold/plans/side.toml            │
@@ -26,5 +26,5 @@ gates:  of 0 | inbox: drafts=0 proposals=0 | guards: deny=0 ask=0 of 0
 │                    ││Recorded the plan fixture.           ││                                     │
 │                    ││● satisfied ◆ attested/waived ○ open ││                                     │
 │                    ││! stale × failed ? unknown           ││full receipts: g   all steps as text:│
-└────────────────────┘└─────────────────────────────────────┘└─────────────────────────────────────┘
+╰────────────────────╯╰─────────────────────────────────────╯╰─────────────────────────────────────╯
 kb=XXXXXXXXXXXX ind asked 00:00:00Z theme=ansi read-only  jk node  l inspect  . current  n flag  ? q

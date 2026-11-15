@@ -1,6 +1,6 @@
 run 1/3 run-20261101T090000Z-a1b2c3 [open]
 progress 1/8
-┌ progress: map run-20261101T090000Z-a1b2c3 ───────────────────────────┐
+╭ progress: map run-20261101T090000Z-a1b2c3 ───────────────────────────╮
 │plan 5 done, 1 skipped of 11 steps; current step 7/11; owes 2 of 2    │
 │gates stale=1                                                         │
 │ │ │ ✓ notes#1/read       ●  recorded 2026-11-10T23:59:20Z            │
@@ -16,5 +16,5 @@ progress 1/8
 │change#1/review/review#1/findings/findings#1/prepare                  │
 │last checkpoint: 2026-11-10T14:10:00Z Review started.                 │
 │● satisfied ◆ attested/waived ○ open ! stale × failed ? unknown       │
-└──────────────────────────────────────────────────────────────────────┘
+╰──────────────────────────────────────────────────────────────────────╯
 kb=XXXXXXXXXXXX+dirty:19 ? q

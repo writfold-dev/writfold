@@ -2,7 +2,7 @@
 use crate::lines::{self, Tone};
 use crate::style::{self, Look};
 use ratatui::text::{Line, Text};
-use ratatui::widgets::{Block, Borders};
+use ratatui::widgets::{Block, BorderType, Borders};
 
 pub fn text(lines: Vec<lines::Line>, look: Look) -> Text<'static> {
     Text::from(
@@ -17,6 +17,11 @@ pub fn block(title: String, focused: bool, look: Look) -> Block<'static> {
     let tone = if focused { Tone::Current } else { Tone::Head };
     Block::default()
         .borders(Borders::ALL)
+        .border_type(if look.depth == style::Depth::None {
+            BorderType::Plain
+        } else {
+            BorderType::Rounded
+        })
         .style(style::base(look))
         .border_style(style::border(look, focused))
         .title(Line::styled(format!(" {title} "), style::style(look, tone)))

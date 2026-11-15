@@ -3028,7 +3028,8 @@ There is no `watch --json`: the pane verbs remain the machine interface.
 ### 34.6 Themes and colour depth
 
 Hone, slate, carbide, vellum, paper and paper-dark are built; vellum and paper are
-light. Palette provenance is credited in `theme.rs`'s module documentation. Role
+light. (T3 integration added clay and clay-light and made clay the default; see
+35.8.) Palette provenance is credited in `theme.rs`'s module documentation. Role
 mapping is Writfold's: bad, warning, checked satisfaction, vouched statements,
 current, done, skipped, later, command/info and dim text remain distinct where
 structured state is supplied. State is also printed in words. Selected entries
@@ -3330,3 +3331,36 @@ The website was not edited. No push or release was performed, and neither
 `scripts/gate` nor `writfold kb gate run` was run. The integrator still reviews,
 merges, runs the quality/unit gates from main and releases; no gate pass is
 claimed by these local checks.
+
+### 35.8 Fixed at integration
+
+Review of the branch found no defect in the verb output; these presentation
+changes landed on merge, each covered by a test or a reviewed golden:
+
+- Rows inside a splice group show their id from the group's own name; headers
+  name the ancestors and the inspector keeps the full id. Chips pad to the
+  widest step, the id column fits the shown ids, and cut rail text ends in `…`
+  rather than a truncated timestamp.
+- The row end repeats only `out-of-order`, `two-plans`, `repeated` and
+  `invalid`; stale and skipped are already the state glyph.
+- The facts line (with `stale=N`) and the legend wrap; records and legend take
+  at most half the pane, legend dropped first. The legend names the marker
+  "next step to pick up (recorded, not a liveness claim)".
+- ASCII chips: `+` satisfied, `o` open. The specified set gave both `o`; a test
+  now requires all seven chip shapes to differ.
+- The inspector body leads with the id (the pane title carries `step N/M`) and
+  omits `gates (0)` for a step whose text already says "no gates".
+- The recorded position comes from the row the verb marks current, so a run
+  without a subject repository still shows `step N/M`.
+- Medium layout: runs 22 columns, map and inspector split the rest (map ≥32).
+- The selected map row uses the theme's selection surface across the pane
+  instead of reverse video, which painted coloured glyphs as blocks; degraded
+  depths keep reverse video.
+- Themes: clay (neutral charcoal, terracotta accent) and clay-light are added
+  first in the registry, and clay is the default. Both pass the existing
+  contrast, ladder and selection tests. Palette values moved to `palettes.rs`.
+  Pane borders are rounded except under `--color none`.
+- Buffer goldens normalise receipt suffixes that a pane edge clips.
+
+Known and left (suspected in review, not reproduced): if a merge ever yields
+two rows with the same id, selection resolves to the first.

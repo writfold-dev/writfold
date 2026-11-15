@@ -55,7 +55,7 @@ fn theme_precedence_and_overridden_unknowns() {
         ),
         (None, Some("carbide"), Some("paper"), ThemeId::Carbide),
         (None, None, Some("paper"), ThemeId::Paper),
-        (None, None, None, ThemeId::Hone),
+        (None, None, None, ThemeId::Clay),
         (
             Some("vellum"),
             Some("bad-env"),
@@ -94,9 +94,9 @@ fn unknown_highest_source_falls_back_without_consulting_lower_sources() -> TestR
         (None, None, Some("bad-config"), "bad-config", "config.toml"),
     ] {
         let (theme, warning) = choose_theme(flag, env, config);
-        assert_eq!(theme, ThemeId::Hone);
+        assert_eq!(theme, ThemeId::Clay);
         let warning = warning.ok_or("missing warning")?;
-        for text in [name, source, "using hone", ThemeId::choices()] {
+        for text in [name, source, "using clay", ThemeId::choices()] {
             assert!(warning.contains(text), "{warning}");
         }
     }
@@ -108,10 +108,10 @@ fn truecolor_key_cycles_every_theme_and_wraps_with_effective_footer() -> TestRes
     let w = world("theme-cycle")?;
     let mut app = App::new(w.source(), Some(RUN));
     app.look = Look {
-        theme: ThemeId::Hone,
+        theme: ThemeId::Clay,
         depth: Depth::Truecolor,
     };
-    for expected in ThemeId::ALL.into_iter().skip(1).chain([ThemeId::Hone]) {
+    for expected in ThemeId::ALL.into_iter().skip(1).chain([ThemeId::Clay]) {
         assert!(app.key(Key::Char('T')));
         assert_eq!(app.look.theme, expected);
         let buffer = render(&mut app, 160, 40)?;

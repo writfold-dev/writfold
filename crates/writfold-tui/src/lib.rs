@@ -20,6 +20,7 @@ mod list_view;
 mod map_view;
 mod nav;
 mod paint;
+mod palettes;
 pub mod poll;
 pub mod progress;
 pub mod rail;

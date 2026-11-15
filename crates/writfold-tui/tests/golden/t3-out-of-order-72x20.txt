@@ -1,6 +1,6 @@
 run 1/1 run-20261101T090000Z-a1b2c3 [open]
 progress 1/8
-┌ progress: map run-20261101T090000Z-a1b2c3 ───────────────────────────┐
+╭ progress: map run-20261101T090000Z-a1b2c3 ───────────────────────────╮
 │plan 1 done, 1 skipped of 4 steps; current step 2/4; owes 0 of 0 gates│
 │disorder=1                                                            │
 │ ┬ merge#1 @8ee8a893f113 from .writfold/plans/merge.toml              │
@@ -16,5 +16,5 @@ progress 1/8
 │last plan event: 2026-11-10T23:58:50Z spliced merge#1/finish/side#1   │
 │last checkpoint: 2026-11-03T16:00:00Z Recorded the plan fixture.      │
 │● satisfied ◆ attested/waived ○ open ! stale × failed ? unknown       │
-└──────────────────────────────────────────────────────────────────────┘
+╰──────────────────────────────────────────────────────────────────────╯
 kb=XXXXXXXXXXXX ? q

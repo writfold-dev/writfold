@@ -95,9 +95,18 @@ mod tests {
     }
 
     #[test]
-    fn registry_names_round_trip_and_default_is_hone() {
-        let names = ["hone", "slate", "carbide", "vellum", "paper", "paper-dark"];
-        assert_eq!(ThemeId::default(), ThemeId::Hone);
+    fn registry_names_round_trip_and_default_is_clay() {
+        let names = [
+            "clay",
+            "clay-light",
+            "hone",
+            "slate",
+            "carbide",
+            "vellum",
+            "paper",
+            "paper-dark",
+        ];
+        assert_eq!(ThemeId::default(), ThemeId::Clay);
         assert_eq!(ThemeId::choices(), names.join(", "));
         for (id, name) in ThemeId::ALL.into_iter().zip(names) {
             assert_eq!(id.name(), name);
@@ -110,7 +119,7 @@ mod tests {
             );
             assert_eq!(
                 id.is_light(),
-                matches!(id, ThemeId::Vellum | ThemeId::Paper)
+                matches!(id, ThemeId::ClayLight | ThemeId::Vellum | ThemeId::Paper)
             );
         }
         for name in ["nord", "dark", "", " \t\n", "paper dark", "hone-extra"] {
@@ -125,6 +134,6 @@ mod tests {
             assert_eq!(current, id);
             current = current.next();
         }
-        assert_eq!(current, ThemeId::Hone);
+        assert_eq!(current, ThemeId::Clay);
     }
 }

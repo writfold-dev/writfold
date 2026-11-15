@@ -1,7 +1,7 @@
 run-20261101T090000Z-a1b2c3 [open] !current  Add --plan to kb runs  project=harbor  subject=kb
 [1 progress] 2 gates 3 timeline 4 inbox 5 guards 6 stale 7 brief 8 resume
 gates: open=2 stale=2 of 6 | inbox: drafts=1 proposals=2 | guards: deny=1 ask=0 of 2
-┌ runs (3) ──────────┐┌ progress: map run-20261101T090000Z-a┐┌ step 7/11 (Esc: back) ──────────────┐
+╭ runs (3) ──────────╮╭ progress: map run-20261101T090000Z-a╮╭ step 7/11 (Esc: back) ──────────────╮
 │> [open] run-2026110││plan 5 done, 1 skipped of 11 steps;  ││change#1/review/review#1/findings/fin│
 │    Add --plan to kb││current step 7/11; owes 2 of 2 gates ││dings#1/check [current]              │
 │    project=harbor  ││stale=1                              ││splice: findings#1 @6ec817d3031a from│
@@ -26,5 +26,5 @@ gates: open=2 stale=2 of 6 | inbox: drafts=1 proposals=2 | guards: deny=1 ask=0 
 │                    ││dings#1/prepare                      ││      @runs/run-20261101T090000Z-a1b2│
 │                    ││last checkpoint: 2026-11-10T14:10:00Z││      c3/covers/review-list.errors-20│
 │                    ││Review started.                      ││full receipts: g   all steps as text:│
-└────────────────────┘└─────────────────────────────────────┘└─────────────────────────────────────┘
+╰────────────────────╯╰─────────────────────────────────────╯╰─────────────────────────────────────╯
 kb=XXXXXXXXXXXX+dir asked 00:00:00Z theme=ansi read-only  jk node  l inspect  . current  n flag  ? q

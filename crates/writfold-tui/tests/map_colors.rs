@@ -99,3 +99,29 @@ fn no_color_and_dumb_terminal_render_ascii_state_evidence() -> TestResult {
     assert!(glyphs.contains("[#]"));
     Ok(())
 }
+
+#[test]
+fn selected_map_row_sits_on_the_selection_surface_across_the_pane() -> TestResult {
+    let w = support::plan::world("map-selected")?;
+    let mut app = App::new(w.source(), Some(RUN));
+    app.focus = Focus::Detail;
+    app.look = writfold_tui::style::Look {
+        theme: writfold_tui::theme::ThemeId::Clay,
+        depth: Depth::Truecolor,
+    };
+    let buffer = render(&mut app, 160, 40)?;
+    let area = writfold_tui::layout::focused(160, 40, true, true).main;
+    // Selection starts on the recorded current step, the only ▶ row.
+    let y = rows(&buffer)
+        .iter()
+        .position(|line| line.contains('▶'))
+        .ok_or("selected row")?;
+    let selection = writfold_tui::theme::ThemeId::Clay.palette().selection;
+    let expected = Color::Rgb(selection.0, selection.1, selection.2);
+    for x in area.x + 1..area.right() - 1 {
+        let cell = &buffer[(x, y as u16)];
+        assert_eq!(cell.bg, expected, "{x},{y}");
+        assert!(!cell.modifier.contains(ratatui::style::Modifier::REVERSED));
+    }
+    Ok(())
+}

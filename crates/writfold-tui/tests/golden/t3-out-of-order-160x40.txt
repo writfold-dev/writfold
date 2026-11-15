@@ -1,6 +1,6 @@
 run-20261101T090000Z-a1b2c3 [open]  Batch ledger writes rollout  project=harbor  subject=kb
 [1 progress] 2 gates 3 timeline 4 inbox 5 guards 6 stale 7 brief 8 resume
-┌ runs (1) ────────────────────────────┐┌ progress: map run-20261101T090000Z-a1b2c3 ───────────────────────────┐┌ step 2/4 (Esc: back) ────────────────────────┐
+╭ runs (1) ────────────────────────────╮╭ progress: map run-20261101T090000Z-a1b2c3 ───────────────────────────╮╭ step 2/4 (Esc: back) ────────────────────────╮
 │> [open] run-20261101T090000Z-a1b2c3  ││plan 1 done, 1 skipped of 4 steps; current step 2/4; owes 0 of 0 gates││merge#1/finish/side#1/child [current]         │
 │    Batch ledger writes rollout       ││disorder=1                                                            ││splice: side#1 @20d37b2daa99 from             │
 │    project=harbor                    ││ ┬ merge#1 @8ee8a893f113 from .writfold/plans/merge.toml              ││.writfold/plans/side.toml                     │
@@ -36,5 +36,5 @@ run-20261101T090000Z-a1b2c3 [open]  Batch ledger writes rollout  project=harbor 
 │                                      ││● satisfied ◆ attested/waived ○ open ! stale × failed ? unknown       ││                                              │
 │                                      ││· later, not judged; ▶ next step to pick up (recorded, not a liveness ││                                              │
 │                                      ││claim)                                                                ││full receipts: g   all steps as text: x       │
-└──────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────┘
+╰──────────────────────────────────────╯╰──────────────────────────────────────────────────────────────────────╯╰──────────────────────────────────────────────╯
 kb=XXXXXXXXXXXX index=refreshed:1  subject=kb@4cb712cd81b9+dirty:0              asked 00:00:00Z theme=ansi read-only  jk node  l inspect  . current  n flag  ? q

@@ -80,7 +80,7 @@ fn all_sizes_render_their_real_panes() -> TestResult {
                 if let Some(area) = a.guards {
                     title(&buffer, area, "guards");
                 } else {
-                    assert!(!symbols(&buffer).contains("┌ guards "));
+                    assert!(!symbols(&buffer).contains("╭ guards "));
                 }
             }
             Class::Medium => {
