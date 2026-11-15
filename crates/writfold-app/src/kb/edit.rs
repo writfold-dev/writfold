@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use writfold_kb::Verb;
 use writfold_kb::edit::EditVerb;
 
-pub const USAGE: &str = "usage: edit apply RECIPE.spl [RECIPE.spl ...] [--run ID] [--worktree DIR] [--dry-run] | edit recover [--run ID] [--abandon]";
+pub const USAGE: &str = "usage: edit apply RECIPE.spl|- [RECIPE.spl ...] [--run ID] [--worktree DIR] [--dry-run] | edit recover [--run ID] [--abandon]";
 
 /// The edit verb, or why the arguments do not name one.
 pub fn verb(common: &Common, positional: &[String]) -> Result<Verb, String> {
@@ -15,6 +15,9 @@ pub fn verb(common: &Common, positional: &[String]) -> Result<Verb, String> {
         [sub, recipes @ ..] if sub == "apply" && !recipes.is_empty() => {
             if switch(common, "abandon") {
                 return Err("--abandon belongs to edit recover".into());
+            }
+            if recipes.iter().filter(|r| *r == "-").count() > 1 {
+                return Err("edit apply: - (a recipe on stdin) may appear once".into());
             }
             EditVerb::Apply {
                 recipes: recipes.iter().map(PathBuf::from).collect(),
@@ -57,6 +60,11 @@ mod tests {
             Verb::Edit(EditVerb::Apply { ref recipes, run: Some(_), worktree: Some(_), dry_run: true })
                 if recipes.len() == 2
         ));
+        let piped = verb("edit apply - b.spl")?;
+        assert!(matches!(
+            piped,
+            Verb::Edit(EditVerb::Apply { ref recipes, .. }) if recipes[0] == PathBuf::from("-")
+        ));
         assert!(matches!(
             verb("edit recover --abandon")?,
             Verb::Edit(EditVerb::Recover {
@@ -72,6 +80,8 @@ mod tests {
             "edit recover x",
             "edit apply a.spl --note n",
             "edit fold",
+            "edit apply - -",
+            "edit apply - a.spl -",
         ] {
             assert!(verb(bad).is_err(), "{bad}");
         }

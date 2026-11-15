@@ -1318,6 +1318,10 @@ An edit is an ordinary uncommitted change in the worktree, so G1 needs nothing n
 - **No latency was measured.** An apply costs one index open, two `hash-object` spawns per file, the journal and the file writes, one KB write, and the answer from the refreshed index.
 - Not built: `create`, `rename` and `remove` recipes; `--capture` and `--frozen` inputs (the trial does not take them either); a `--within` recount; pruning of `edits/` receipts.
 
+### 17.9 As built (v0.5.0-dev.9): a recipe on stdin
+
+`edit apply -` reads one recipe from stdin (`edit/plan.rs::recipes_from`, at most 4 MiB, a larger input a usage error). `-` may appear once among the recipe arguments, beside files; a second is a usage error, both in `writfold-app/src/kb/edit.rs` and in the kb. The recipe's name in the receipt is `stdin`; its bytes and SHA-256 are kept as for a file, so the receipt is complete without the original input. Empty stdin is refused with the recipe parser's own message, as an empty file is. Replay, the journal, `--dry-run` and refusals are unchanged; no language feature is added. Tests: `crates/writfold-kb/tests/edit_stdin.rs` (a child process fed the recipe on stdin writes the same file bytes and, apart from the name, the same receipt as the recipe from a file; `- -`; empty stdin gives the file's message with the name changed; more than 4 MiB) and the parser test in `writfold-app/src/kb/edit.rs`.
+
 ## 18. T1 as built
 
 T1 adds `writfold watch`, a read-only terminal view of KB runs and their progress, as the gates review recommended and the owner adopted (12 November 2026). It is strictly a projection: every pane is the JSON answer of an existing verb, asked in-process through `writfold_kb::run` exactly as the CLI asks it. New code: the crate `crates/writfold-tui` (`source.rs` the verb calls and the pin poll, `app.rs` the selection, panes and keys, `lines.rs` the frame as toned lines shared by the terminal and `--once`, `view.rs` the ratatui layout, `term.rs` the event loop; about 960 lines with doc comments) and the `watch` branch of `crates/writfold/src/main.rs`.

@@ -82,22 +82,61 @@ fn contained(top: &Path, kb: &Path, path: &str) -> Result<PathBuf> {
     Ok(real)
 }
 
-/// Read every recipe, refusing duplicates of one target path.
+/// The largest recipe read from stdin.
+pub const STDIN_LIMIT: u64 = 4 * 1024 * 1024;
+
+/// Read every recipe, refusing duplicates of one target path. A `-`
+/// reads one recipe from stdin.
 pub fn recipes(files: &[PathBuf], cwd: &Path) -> Result<(Vec<Recipe>, Vec<String>)> {
+    recipes_from(files, cwd, std::io::stdin().lock())
+}
+
+/// One recipe's bytes and name: the file (relative to `cwd`), or `stdin`.
+fn read(file: &Path, cwd: &Path, stdin: &mut impl std::io::Read) -> Result<(Vec<u8>, String)> {
+    if file == Path::new("-") {
+        let mut bytes = Vec::new();
+        std::io::Read::read_to_end(&mut std::io::Read::take(stdin, STDIN_LIMIT + 1), &mut bytes)?;
+        if bytes.len() as u64 > STDIN_LIMIT {
+            return Err(KbError::Usage(format!(
+                "the recipe on stdin is larger than {STDIN_LIMIT} bytes"
+            )));
+        }
+        return Ok((bytes, "stdin".into()));
+    }
+    let full = cwd.join(file);
+    let bytes = std::fs::read(&full)
+        .map_err(|e| KbError::Usage(format!("cannot read recipe {}: {e}", file.display())))?;
+    let name = full
+        .file_name()
+        .map_or_else(|| "recipe".into(), |n| n.to_string_lossy().into_owned());
+    Ok((bytes, name))
+}
+
+/// [`recipes`] with `stdin` given, so a test can feed it.
+pub fn recipes_from(
+    files: &[PathBuf],
+    cwd: &Path,
+    mut stdin: impl std::io::Read,
+) -> Result<(Vec<Recipe>, Vec<String>)> {
     if files.is_empty() {
         return Err(KbError::Usage(
             "edit apply needs at least one recipe".into(),
         ));
     }
+    if files
+        .iter()
+        .filter(|f| f.as_path() == Path::new("-"))
+        .count()
+        > 1
+    {
+        return Err(KbError::Usage(
+            "- (a recipe on stdin) may appear once; one recipe edits one file, so pass more recipes as files".into(),
+        ));
+    }
     let mut out = Vec::new();
     let mut paths: Vec<String> = Vec::new();
     for file in files {
-        let full = cwd.join(file);
-        let bytes = std::fs::read(&full)
-            .map_err(|e| KbError::Usage(format!("cannot read recipe {}: {e}", file.display())))?;
-        let name = full
-            .file_name()
-            .map_or_else(|| "recipe".into(), |n| n.to_string_lossy().into_owned());
+        let (bytes, name) = read(file, cwd, &mut stdin)?;
         let path = recipe_path(&bytes).map_err(|e| {
             KbError::Refused(format!("recipe {name}: {}", describe(&e, "", &[], &bytes)))
         })?;

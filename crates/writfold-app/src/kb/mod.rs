@@ -118,7 +118,8 @@ plans (the run graph; templates in .writfold/plans/<name>.toml; Writfold records
                                    close the current step without calling it done
 
 edits (the Splicery adapter; Splicery for repeated or structural edits, ordinary tools for small ones):
-  edit apply RECIPE.spl [RECIPE.spl ...] [--run ID] [--worktree DIR] [--dry-run]
+  edit apply RECIPE.spl|- [RECIPE.spl ...] [--run ID] [--worktree DIR] [--dry-run]
+                                   (- reads one recipe from stdin, at most 4 MiB)
                                    replay recipes against the run's worktree bytes, write each file
                                    atomically, keep recipe and preview as a receipt in the run
   edit recover [--run ID] [--abandon]
