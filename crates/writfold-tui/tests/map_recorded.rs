@@ -38,6 +38,10 @@ fn recorded_position_event_and_checkpoint_quote_their_verbs() -> TestResult {
     for exact in [position, event, checkpoint] {
         assert!(text.contains(&exact), "{exact}\n{text}");
     }
+    // What the position means lives in help, beside the marks.
+    app.key(Key::Char('?'));
+    let help = symbols(&render(&mut app, 320, 40)?);
+    assert!(help.contains("is the recorded position: the first step neither done nor skipped"));
     Ok(())
 }
 

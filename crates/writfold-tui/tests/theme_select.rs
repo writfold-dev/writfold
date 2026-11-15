@@ -130,11 +130,20 @@ fn truecolor_key_cycles_every_theme_and_wraps_with_effective_footer() -> TestRes
 fn degraded_theme_key_keeps_theme_and_explains_truecolor_requirement() -> TestResult {
     let w = world("theme-notice")?;
     let mut app = App::new(w.source(), Some(RUN));
-    for depth in [Depth::Ansi, Depth::None] {
+    for (depth, name) in [(Depth::Ansi, "ansi"), (Depth::None, "none")] {
         app.look = Look {
             theme: ThemeId::Paper,
             depth,
         };
+        // The effective colour depth is stated in the help overlay.
+        assert!(app.key(Key::Char('?')));
+        let buffer = render(&mut app, 200, 40)?;
+        assert!(
+            rows(&buffer)
+                .join("\n")
+                .contains(&format!("colour {name} (themes need truecolor)"))
+        );
+        assert!(app.key(Key::Esc));
         assert!(app.key(Key::Char('T')));
         assert_eq!(
             app.look,

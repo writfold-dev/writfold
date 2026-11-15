@@ -79,8 +79,7 @@ pub fn help() -> Vec<Line> {
         "d: calm / detailed frame (receipts, covered items, splice and stamps); not written",
         "PgUp PgDn: page nodes / scroll text; .: current; n N: next/previous flagged step",
         "Tab / Shift-Tab: next / previous view; 0: runs (narrow)",
-        "1/p progress; 2/g gates; 3/t timeline; 4/i inbox",
-        "5/u guards; 6/s stale; 7/b brief; 8/e resume",
+        "1/p progress; 2/g gates; 3/t timeline; 4/i inbox; 5/u guards; 6/s stale; 7/b brief; 8/e resume",
         "x: map / text Progress; X: expand / collapse text; o: open runs; P: selected project",
         "r: ask again; ?: help (any key closes); q / Ctrl-C: quit",
         "T: next theme (24-bit colour only); the choice is not written.",
@@ -97,7 +96,7 @@ pub fn help() -> Vec<Line> {
         "Brief: writfold kb brief P --json",
         "KB and local state are polled every 2 s; the subject every 10 s.",
         "--repo selects the gate subject. No checker is started; no daemon.",
-        "Theme: --theme, else WRITFOLD_THEME, else theme in config.toml, else hone.",
+        "Theme: --theme, else WRITFOLD_THEME, else theme in config.toml, else clay.",
         "Colour: --color auto|truecolor|ansi|none; NO_COLOR / TERM=dumb disable auto colour.",
     ];
     keys.into_iter()

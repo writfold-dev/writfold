@@ -45,7 +45,7 @@ pub fn draw(frame: &mut Frame<'_>, app: &mut App) {
     }
     sides(frame, app, &areas);
     if app.help {
-        chrome::help(frame, app.look);
+        chrome::help(frame, app);
     }
 }
 

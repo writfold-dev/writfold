@@ -4,7 +4,7 @@ use crate::bars;
 use crate::layout::Areas;
 use crate::lines::Tone;
 use crate::paint::{block, text};
-use crate::style::{self, Look};
+use crate::style;
 use ratatui::Frame;
 use ratatui::layout::Rect;
 use ratatui::widgets::{Clear, Paragraph, Wrap};
@@ -21,10 +21,11 @@ pub fn bars(frame: &mut Frame<'_>, app: &App, areas: &Areas, narrow: bool) {
     }
 }
 
-pub fn help(frame: &mut Frame<'_>, look: Look) {
+pub fn help(frame: &mut Frame<'_>, app: &App) {
+    let look = app.look;
     let area = frame.area();
-    let width = area.width.min(100);
-    let body = Paragraph::new(text(crate::frame::help(), look))
+    let width = area.width.min(112);
+    let body = Paragraph::new(text(crate::help::overlay(app), look))
         .style(style::raised(look))
         .wrap(Wrap { trim: false });
     let rows = body.line_count(width.saturating_sub(2)).saturating_add(2);
