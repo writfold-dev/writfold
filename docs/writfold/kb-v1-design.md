@@ -3541,3 +3541,199 @@ level, and the website's monospace face and recapture (separate repository).
 `scripts/gate` and `writfold kb gate run` were not run; no push, merge or
 release was performed. The integrator still runs the quality and unit gates
 from main.
+
+## 37. T5 as built
+
+T5 adds the knowledge base to `writfold watch` as a second mode of the same
+frame. The [specification](tui-t5-spec.md) remains the design record; its §7
+(decisions of 15 November 2026) overrides its earlier sections, and this
+section records what was built. The [watch guide](../guide/watch.md#the-knowledge-base)
+documents the exercised interface and the [JSON guide](../guide/json.md#keys-only-some-verbs-add)
+the two verb additions. Run mode is unchanged except the `m kb` unit at the end
+of its tab row; `--once` without a `kb:` view and the text form of every verb
+are byte-identical (their goldens did not change).
+
+### 37.1 Verb additions, built first
+
+- **`find --kind K[,K] [--project P]` with no text** lists every record of
+  those kinds in ID order, once each, each with a `match: listed`
+  continuation. The fifty-row cap of the search tiers does not apply; the
+  budget pages the answer. `--project` narrows as it does for a search (the
+  record's `project`, or a path under `P/`). Without `--kind`, and for `match`
+  or `--signatures`, text is still required; that call used to be an argument
+  error, so nothing that worked changed. `find_listing.rs` and the parser test
+  cover order, narrowing, the empty listing, budget paging and the arguments.
+- **`impact` rows gain two JSON-only keys.** `edge` is an object (`from`,
+  `rel`, `to`, `origin`, `depth`), `title` the reached record's title (absent
+  for a node without one, or a record labelled by its ID). Both are absent, not
+  null, on every other verb's rows; `Row` carries them as `edge: Option<Walked>`
+  and `title: Option<String>` and only `row_json` emits them. Decision 5's
+  title came for free: `node_row` already reads it. `tests/json.rs` pins the
+  key sets and checks the guide names them.
+
+### 37.2 Modes and keys
+
+`App` gains `mode: Mode { Runs, Kb }` and `kb: KbState` (view, focus, scope,
+per-view selected key, impact subject and direction, scrolls, list offset and
+the cached answers). The run mode's fields are never touched by KB keys, so
+`m` returns to the same run, node, view and scroll, and back. `App::key` sends
+every key to `kb_key` in KB mode after `q` and help. Keys follow spec §2.1:
+`m`, `f`, `a`, `v` are new; `1`–`5` and Tab choose KB views; a run view's
+letter leaves KB mode for that view; `x X o P .` do nothing; `[ ]` choose the
+project; `n N` the next marked entry; `0` the projects list when narrow. `d`,
+`?`, `r`, `T` and the poll are shared. Help is per mode (`kb_help.rs`).
+
+### 37.3 Sources per view
+
+`kb_load` asks, once per stamp: `brief --all` (projects and the footer's KB
+stamp), `stale --cached` for the whole KB (marks and the badge), the view's
+verbs (`kb_asks`) and the selected record's inspector. Keys of the cache name
+the call (`find|decision|harbor`, `walk|harbor-db|in`, …).
+
+| View | Project | All records |
+|---|---|---|
+| why | `find --kind decision --project NAME`, then decisions `status project:P` names that the listing lacks | `find --kind decision` |
+| status | `brief NAME` | `brief --all` |
+| tracker | `impact project:P --direction in --depth 2`, kept kinds `ticket`, `investigation`, `signature` | `find --kind ticket,investigation,signature` |
+| impact | `impact SUBJECT --direction D --depth 2` (subject: the record `a` chose, else the project) | the record `a` chose |
+| stale | `stale --cached` (the whole KB) | the same |
+
+The inspector asks `status ID`, `why ID` for a decision and `timeline ID`; a
+`code:` node or a `stale` code citation asks `uses ID`, and a non-code citation
+target has only its own row.
+
+### 37.4 Entries, glyphs and marks
+
+Every list is a `Vec<Entry>` (`kb_entry.rs`): key (the id, plus the position
+for `stale` rows, whose ids repeat), id, kind, status, label, whether the label
+is a title, dim word, path, line, flags, depth, header, edge origin and the
+row's text. The glyph is the fixed word table of spec §2.3 with `·` for any
+other word; the word is always printed. Marks come from flags only: the
+entry's own plus those of every `stale --cached` row whose `path` equals the
+entry's. Rows are drawn by `kb_rail.rs`: rail, glyph, label padded to the
+widest (capped at the pane less 20), the two mark cells, one dim word; ids are
+cut at the start and titles at the end; `d` adds a second dim row with the
+position (and the edge's origin in a tree).
+
+### 37.5 The tree
+
+`kb_tree.rs` reads each row's `edge`: the parent is the end that is not the
+row's id. Depth-1 rows whose parent is the root hang under it in verb order,
+each followed by the depth-2 rows whose parent it is. Any row without an edge,
+or whose parent is not placed, is drawn flat under `depth N` (`depth ?`
+without an edge); every row appears once. The tracker keeps its three kinds and
+groups them under their parent (`┼ harbor-db`). The trailer line quotes
+`shown`, the non-zero `skipped_*` counts and the frontier, in the warning tone
+when coverage is partial; it wraps at spaces rather than being cut. Labels in
+trees are the `title` key, else the id.
+
+### 37.6 Inspector, bars and degraded forms
+
+The inspector (`kb_inspect.rs`, `kb_ink.rs`, `kb_sections.rs`) builds pre-wrapped
+lines with hanging indents, in the order of spec §2.5, and draws the hint on the
+last row. Bars (`kb_bars.rs`) reuse the run mode's units, chips and drop rules:
+header (project heading, phase chip, `knowledge base`, the project id or
+`project N/M` when narrow), five tabs with the `stale` badge only, and the run
+mode's footer group with `kb` and `index` from `brief --all`. `mode_unit` is
+shared by both tab rows and has the highest drop priority. ASCII glyphs and
+rails, bracket chips and no background follow `--color none`, `NO_COLOR` and
+`TERM=dumb` as in run mode. `--once --view kb:NAME` prints the projects, the
+view's verb answers through `lines::reply`, and the plain footer.
+
+### 37.7 Tests and mutation checks
+
+New tests: `kb_tree_tests.rs` (unit), `kb_mode.rs`, `kb_lists.rs`, `kb_walk.rs`,
+`kb_inspect.rs`, `kb_writes.rs`, `kb_frames.rs` in `writfold-tui`;
+`find_listing.rs` and `json.rs` in `writfold-kb`; the binary tour
+(`kb_watch.rs`, `watch_pty.py`) now asks every `kb:` view with `--once` and
+drives KB keys in a real terminal with a counting fake checker. Each mutation
+below was applied, its test run, and the source restored (logs in
+`target/t5-mutants/`):
+
+| Test | Mutation | Result |
+|---|---|---|
+| find_listing | listing in kind order; no `listed` continuation; no listing branch; `match` may list | each killed |
+| find_listing, json | no `edge` key; edge ends swapped; title not filtered; `edge: null` on other rows | each killed |
+| run_mode_gains_only_the_mode_unit | a KB hint in the run footer; the mode unit never dropped | killed |
+| m_round_trips_each_modes_place | KB state reset on `m`; run view reset on entering KB mode | killed |
+| letters_keep_their_meaning | `t` mapped to tracker | killed |
+| why_lists_exactly_the_verbs_decisions | sorted by state | killed |
+| glyph_is_a_lookup_on_the_word | unknown words settled | killed |
+| marks_come_from_flags_and_the_path_join | join dropped; `unverifiable` treated as fresh | killed |
+| tree_parents_follow_the_edge (and the 200 generated answers) | nesting by id prefix | killed |
+| rows_without_an_edge_or_a_parent_are_drawn_flat | unplaced rows skipped | killed |
+| walk_limits_are_on_screen | a non-zero skipped count omitted; partial coverage not warned | killed |
+| inspector_calm_and_detail | `d` unbound in KB mode | killed |
+| draft_why_says_unknown | the unknown reason hidden | killed |
+| follow_both_ways | the first listed run taken instead of the checkpoint's | killed |
+| impact_of_a_file | `v` skipping `both` | killed |
+| stale_badge_equals_the_verb | badge from `checked` | killed |
+| kb_chips_degrade_to_brackets | Unicode glyphs at `--color none` | killed |
+| empty_kb_mode | the empty-state line removed | killed |
+| once_prints_the_projects_one_view_and_the_footer | projects added to the run-mode `--once` frame | killed |
+| kb_watch (binary) | `stale` asked without `--cached` | killed (the fake checker was started) |
+| kb_mode_starts_no_process_and_writes_nothing | `stale` asked without `--cached` | survived: a Git-backed full `stale` leaves the cached rows and work tree as they were, so only the binary tour's spawn count sees it |
+| kb_bars_never_cut_a_token | the mode unit never dropped | survived: five tabs and the unit fit from 60 columns, so the drop is unreachable in KB mode; the run-mode test kills it |
+
+Every commit passed `cargo fmt --all --check`, workspace clippy with all
+targets and features (`--locked --offline`, warnings denied), the `writfold-kb`
+and `writfold-tui` tests, the binary's `kb_watch`, `kb_watch_look`,
+`kb_checker`, `kb_checker_reads`, `kb_repos` and `kb_hook` tests, and the xtask
+quality report with no errors; T5 modules stay within 250 lines and functions
+within 80. The run-mode goldens were re-blessed and differ on row 2 only (the
+`m kb` unit); their earlier copies are kept in `tests/golden/pre-t5/` for the
+test that proves it. The debug binary was driven in tmux with the session's
+working directory inside the capture KB (`target/t5-pty/kb`, built by the
+ignored `capture_world` test) at 80×24, 100×30, 136×38 and 160×40, in
+truecolor, `--color none` and `TERM=dumb`, in run mode and in KB mode (calm
+and `d`, why, status, tracker, impact, stale, inspector, help, `f`); captures
+(raw with colour and plain text) are in `target/t5-frames/`.
+
+### 37.8 Deviations from the specification
+
+- **No verb text is parsed (decision 4).** The tree reads `edge`; the
+  text-splitting rule of spec §2.4 and its fallback are not built. A row
+  without an edge, or whose parent is not placed, is drawn flat under its
+  `depth N` header.
+- **`why` lists `find --kind decision --project P`** in ID order, then any
+  decision `status project:P` names that the listing lacks, so it always holds
+  at least what `status` gives. `--once --view kb:why` prints both answers.
+- **Tree labels are titles** (decision 5's `title` key), the id when a record
+  has none; the spec's mocks show ids. Two records can share a title (an asset
+  and its dossier); `d` and the inspector tell them apart.
+- **The calm inspector shows every `field` line.** Hiding empty values (`=[]`)
+  would mean reading the field's text.
+- **The detailed list row's second line is the position** (`@path:line`, with
+  the edge's origin in a tree); the id is in the inspector. The projects pane's
+  `d` adds the id and position as specified.
+- **Inspector additions:** `why` on a superseded decision answers with its
+  successor, and the inspector says `why answers with its successor:` above
+  it; a `stale` citation entry shows its own row text and flags, then `uses ID`
+  for a code target (other targets are not records). The header omits the id
+  line when the label is the id.
+- **`a` on a `stale` code citation** drops a trailing `:A-B` from the row's id,
+  because `impact` names the cited file's node without the range.
+- **Honesty check.** The KB frames quote authored text ("the flush stalled")
+  and recorded statuses (`active`); `kb_app::honest` accepts a listed word only
+  when a cached verb answer printed it. Percentages are never accepted.
+- **Atlas world.** The second code commit shifts `batch.rs` by two lines, so
+  its citation reads `moved→4-6` (the spec's scratch build had `5-7`). Run B
+  gains a checkpoint naming `sig:fsync-stall`, so a later listed run names a
+  record no other run names, and the current-run pointer is set back to the
+  harbor run so frames open on harbor.
+- **Run-mode help is unchanged.** Run mode stays as it was except the tab
+  row's `m kb`; `m` and `f` are listed in KB help and the guide, not in the
+  run-mode overlay.
+
+### 37.9 Not done
+
+Nothing on the spec's cut line was cut: the plain frame, the `status` view,
+`a` from a `stale` row and the `stale` view are built. Still not shown, as spec
+§3 says: relationships and plain documents as rows, mention edges in the tree,
+a depth other than two, history at a commit, record bodies and dossier
+sections, a jump from a plan step or gate to the record it cites, and opening a
+record by typing (`find` has no key). The test that visiting every KB view
+writes nothing cannot see a process start (a Git-backed full `stale` leaves the
+cache as it was); the binary tour's counting checker does. The website's KB
+frame waits for the merge. `scripts/gate` and `writfold kb gate run` were not
+run; no push, merge or release was performed.
