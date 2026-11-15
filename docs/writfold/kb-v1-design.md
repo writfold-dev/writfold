@@ -3809,3 +3809,13 @@ Deviation: the specification exported the tree with `git read-tree` into a tempo
 ### 39.3 Not done in this round
 
 The qualified `verified` state (`verified_basis`), render templates, `observe --from`, recorded verdicts for built-in kinds, and a configurable proposal cap ([dev9-spec.md](dev9-spec.md) §4).
+
+## 40. v0.5.0-dev.10 as built
+
+The specification was [dev10-spec.md](dev10-spec.md); its §7 decisions apply. Each check named below was removed or broken once and a test failed; the log is kept with the round's handover.
+
+### 40.1 Empty is not met
+
+`writfold_core::guard::gates_fact(owed, unmet, invalid)` is `Met` only when `owed > 0 && unmet == 0 && invalid == 0`, enumerated over `0..=2` for each argument. `guard/require.rs::gates_met` counts the owed gates (every judged gate without a plan, the plan's list with one) and calls it; an empty set adds `no gate is owed here: none is defined for <repo>` (or `the run's plan names none`) `; gates.met is not met by an empty set; next: …, or leave this repository out of the rule with repos`. `gate status` with no rows names the plan case (`no gate is owed: the run's plan names none (N defined)`, N from the definitions found for the subject); `gate lines` with no judged gate ends its header `: no gate is owed; nothing was checked`. Exits are unchanged (2).
+
+`gate/own.rs::staled` is asked by `gate waive`, `gate attest` (after re-judging, when the gate does not stand as the statement's kind) and `gate cover` (always): when the subject's top is the KB repository's work tree and the gate's scope admits a path just written (with the KB's prefix in its repository), the answer adds the self-staling note. No text golden changed: no existing golden covered a run that owes nothing. Tests: `crates/writfold-kb/tests/guard_empty.rs`.

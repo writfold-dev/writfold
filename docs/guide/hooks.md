@@ -143,7 +143,7 @@ description = "commit only when the run's gates are met"
 | Requirement | Met when |
 |---|---|
 | `run.current` | the current-run pointer names a run in the KB, and that run is open |
-| `gates.met` | every gate the run owes for this repository is satisfied, attested or waived, as `gate status` judges it (a plan narrows it to the plan's gates), and no receipt, statement or definition is invalid. A waiver counts, and so does a [checklist](gates.md) whose required items are all covered `supported` or `not-applicable`: it is attested |
+| `gates.met` | the run owes at least one gate for this repository, every gate it owes is satisfied, attested or waived, as `gate status` judges it (a plan narrows it to the plan's gates), and no receipt, statement or definition is invalid. A waiver counts, and so does a [checklist](gates.md) whose required items are all covered `supported` or `not-applicable`: it is attested. **An empty set is not met** (built in v0.5.0-dev.10): with no gate defined for the repository, or a plan whose steps name none, the rule takes its action with `no gate is owed here: none is defined for <repo>; gates.met is not met by an empty set; next: define .writfold/gates/<id>.toml, or leave this repository out of the rule with repos` |
 | `gate:<id>` | that gate is met |
 | `step.met` | the plan's current step owes nothing (met with no plan, or when every step is closed) |
 
@@ -175,7 +175,7 @@ A refusal names what is owed. Each kind of refusal has one way past, and each wa
 |---|---|
 | a gate that is `open`, `stale`, `failed` or `unknown` | meet it, or `writfold kb gate waive <id> --reason TEXT --by WHO`: a tracked file in `runs/<run>/statements/`, bound to the gate's definition and the bytes in its scope, so it lapses when either changes; shown as `[waived]` by `gate status`, `resume` and the session-start context, and as a `waived by … : reason` line by `gate lines`, so it reaches the commit message |
 | no current run, or a closed one | start a run; there is nothing to waive |
-| an undefined gate | define the gate, or narrow the rule with `repos` |
+| an undefined gate, or no gate owed | define the gate, or narrow the rule with `repos` |
 
 There is no rule-level waiver. A refusal does not name a waive command, and an agent that is refused is not told how to excuse itself: the way past is in this guide. To keep `gate waive` and `gate attest` for people, make Claude Code ask before they run, and before a rule file is edited, in `.claude/settings.json`:
 

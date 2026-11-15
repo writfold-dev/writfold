@@ -13,7 +13,7 @@ use crate::runs;
 use crate::session::Session;
 use crate::workspace::{GitTool, Workspace};
 use std::path::Path;
-use writfold_core::guard::Fact;
+use writfold_core::guard::{Fact, gates_fact};
 use writfold_core::scope::in_scope;
 
 /// One requirement's fact, and (when it is not met) what is owed and the
@@ -262,7 +262,8 @@ fn fact(facts: &Facts, require: &Require) -> Owed {
     }
 }
 
-/// Every owed gate met, and no invalid receipt, statement or definition.
+/// Every owed gate met, and no invalid receipt, statement or definition;
+/// a run that owes no gate here does not meet it ([`gates_fact`]).
 fn gates_met(facts: &Facts) -> Owed {
     let (lines, owed, invalid) = match &facts.gates {
         None => return Owed::unknown("the gates were not judged".into()),
@@ -270,8 +271,11 @@ fn gates_met(facts: &Facts) -> Owed {
         Some(Ok(judged)) => judged,
     };
     let mut unmet: Vec<String> = Vec::new();
-    match owed {
-        None => unmet.extend(lines.iter().filter(|g| !g.met).map(|g| g.line.clone())),
+    let count = match owed {
+        None => {
+            unmet.extend(lines.iter().filter(|g| !g.met).map(|g| g.line.clone()));
+            lines.len()
+        }
         Some(ids) => {
             for id in ids {
                 match lines.iter().find(|g| &g.id == id) {
@@ -280,15 +284,36 @@ fn gates_met(facts: &Facts) -> Owed {
                     None => unmet.push(undefined(id)),
                 }
             }
+            ids.len()
         }
+    };
+    let n = unmet.len();
+    if count == 0 {
+        unmet.push(empty(facts, owed.is_some()));
     }
     if *invalid > 0 {
         unmet.push(format!(
             "invalid receipts or definitions: {invalid}; next: writfold kb gate status"
         ));
     }
-    match unmet.is_empty() {
-        true => Owed::met(),
-        false => Owed::unmet(unmet.join("; ")),
+    match gates_fact(count, n, *invalid) {
+        Fact::Met => Owed::met(),
+        _ => Owed::unmet(unmet.join("; ")),
     }
+}
+
+/// Why an empty set of owed gates is not met, and the way past.
+fn empty(facts: &Facts, planned: bool) -> String {
+    let why = match (planned, &facts.subject) {
+        (true, _) => "the run's plan names none".to_owned(),
+        (false, Ok(Some(s))) => format!("none is defined for {}", s.name),
+        (false, _) => "none is defined here".to_owned(),
+    };
+    let next = match planned {
+        true => "name a gate in a plan step",
+        false => "define .writfold/gates/<id>.toml",
+    };
+    format!(
+        "no gate is owed here: {why}; gates.met is not met by an empty set; next: {next}, or leave this repository out of the rule with repos"
+    )
 }

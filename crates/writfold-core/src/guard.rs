@@ -89,6 +89,18 @@ pub fn combine(a: Decision, b: Decision) -> Decision {
     }
 }
 
+/// The `gates.met` fact from three counts: the gates the run owes here,
+/// how many of those are not met, and how many receipts, statements or
+/// definitions are invalid. `Met` only when something is owed and every
+/// owed gate is met with nothing invalid: an empty set is not met.
+pub fn gates_fact(owed: usize, unmet: usize, invalid: usize) -> Fact {
+    if owed > 0 && unmet == 0 && invalid == 0 {
+        Fact::Met
+    } else {
+        Fact::Unmet
+    }
+}
+
 /// How often a stop rule may nudge.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Repeat {
@@ -142,7 +154,9 @@ pub fn nudge(stop_hook_active: bool, already_nudged: bool, facts: &[Fact]) -> bo
 
 #[cfg(test)]
 mod tests {
-    use super::{Action, Decision, Fact, Repeat, all_met, combine, decide, nudge, nudge_with};
+    use super::{
+        Action, Decision, Fact, Repeat, all_met, combine, decide, gates_fact, nudge, nudge_with,
+    };
     use alloc::vec::Vec;
 
     const FACTS: [Fact; 3] = [Fact::Met, Fact::Unmet, Fact::Unknown];
@@ -234,6 +248,22 @@ mod tests {
                 let c = combine(a, b);
                 assert_eq!(c, combine(b, a));
                 assert_eq!(rank(c), rank(a).max(rank(b)));
+            }
+        }
+    }
+
+    #[test]
+    fn gates_are_met_only_when_some_are_owed_and_all_of_them_are_met() {
+        for owed in 0..=2 {
+            for unmet in 0..=2 {
+                for invalid in 0..=2 {
+                    let want = match (owed, unmet, invalid) {
+                        (0, _, _) => Fact::Unmet,
+                        (_, 0, 0) => Fact::Met,
+                        _ => Fact::Unmet,
+                    };
+                    assert_eq!(gates_fact(owed, unmet, invalid), want);
+                }
             }
         }
     }

@@ -19,6 +19,7 @@ mod def_tests;
 mod discover;
 pub mod exec;
 pub(crate) mod ground;
+pub(crate) mod own;
 pub mod places;
 pub mod receipt;
 mod run;
@@ -162,11 +163,7 @@ fn report(
     let (rows, counts, note) = gate_rows(session, rec, &subject)?;
     if rows.is_empty() {
         answer.unknown = Some("no-gates");
-        answer.notes.push(format!(
-            "no gates defined: add {}/<id>.toml to the KB root or {}",
-            def::DIR,
-            subject.name
-        ));
+        answer.notes.push(none_owed(session, rec, &subject));
     }
     answer.rows = rows;
     answer.counts = counts;
@@ -176,6 +173,23 @@ fn report(
         rec.id, subject.name
     ));
     Ok((answer, subject.name))
+}
+
+/// Why `gate status` shows no gate: none is defined, or the run's plan
+/// names none of those that are.
+fn none_owed(session: &Session<'_>, rec: &Rec, subject: &Subject) -> String {
+    let defined = def::all(&session.ws.root, Some(&subject.top)).0.len();
+    let planned_none = crate::plan::owed(session, rec)
+        .gates
+        .is_some_and(|ids| ids.is_empty());
+    match planned_none && defined > 0 {
+        true => format!("no gate is owed: the run's plan names none ({defined} defined)"),
+        false => format!(
+            "no gates defined: add {}/<id>.toml to the KB root or {}",
+            def::DIR,
+            subject.name
+        ),
+    }
 }
 
 /// Trailer counts by state.
@@ -247,12 +261,15 @@ fn lines(session: &Session<'_>, rec: &Rec, repo: Option<&Path>, cwd: &Path) -> R
         }
     }
     let head = report.snapshot.commit.as_str();
+    let tally = match report.gates.len() {
+        0 => "no gate is owed; nothing was checked".to_owned(),
+        n => format!("{satisfied} of {n} satisfied{said}"),
+    };
     let mut text = format!(
-        "Gates for {}@{} (writfold kb gate, run {}): {satisfied} of {} satisfied{said}\n",
+        "Gates for {}@{} (writfold kb gate, run {}): {tally}\n",
         subject.name,
         head.get(..12).unwrap_or(head),
         rec.id,
-        report.gates.len()
     );
     let width = report
         .gates
