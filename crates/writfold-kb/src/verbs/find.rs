@@ -7,6 +7,9 @@
 //! 4. `substring`: trigram substring of ID, title or body;
 //! 5. `typo`: ID or title within one edit (two for long queries);
 //! 6. `text-any`: BM25 hits holding only some of the words.
+//!
+//! With no text and `--kind`, `find` lists every record of those kinds in
+//! ID order (`match: listed`), narrowed by `--project`; the budget pages it.
 use super::{BOUNDARY, node_row, record_row};
 use crate::emit::{Answer, More, Row};
 use crate::error::Result;
@@ -31,12 +34,13 @@ struct Found<'s, 'a> {
     filter: &'s Filter,
     seen: BTreeSet<String>,
     rows: Vec<Row>,
+    limit: usize,
 }
 
 impl Found<'_, '_> {
     /// Add the node `id` once, if it passes the filter, with a `match:` line.
     fn add(&mut self, id: &str, more: More) -> Result<()> {
-        if self.rows.len() >= LIMIT || self.seen.contains(id) {
+        if self.rows.len() >= self.limit || self.seen.contains(id) {
             return Ok(());
         }
         let rec = query::record(&self.session.conn, id)?;
@@ -102,11 +106,15 @@ pub fn find(
     filter: &Filter,
     signatures: bool,
 ) -> Result<Answer> {
+    if text.trim().is_empty() && !signatures && !filter.kinds.is_empty() {
+        return listed(session, filter);
+    }
     let mut found = Found {
         session,
         filter,
         seen: BTreeSet::new(),
         rows: Vec::new(),
+        limit: LIMIT,
     };
     if signatures {
         signature_tier(session, text, &mut found)?;
@@ -155,6 +163,36 @@ pub fn find(
                 .notes
                 .push("no matching signature is not proof that the symptom is new".into());
         }
+    }
+    Ok(answer)
+}
+
+/// Every record of the filter's kinds, in ID order, each once; no cap, the
+/// budget pages the answer.
+fn listed(session: &Session<'_>, filter: &Filter) -> Result<Answer> {
+    let mut ids = BTreeSet::new();
+    for kind in &filter.kinds {
+        for rec in query::records(&session.conn, "kind = ?1", &[kind as &dyn rusqlite::ToSql])? {
+            ids.insert(rec.id);
+        }
+    }
+    let mut found = Found {
+        session,
+        filter,
+        seen: BTreeSet::new(),
+        rows: Vec::new(),
+        limit: usize::MAX,
+    };
+    for id in &ids {
+        found.add(id, tier_only("listed"))?;
+    }
+    let mut answer = Answer {
+        rows: found.rows,
+        ..Answer::default()
+    };
+    if answer.rows.is_empty() {
+        answer.unknown = Some("no-record");
+        answer.notes.push(BOUNDARY.to_owned());
     }
     Ok(answer)
 }

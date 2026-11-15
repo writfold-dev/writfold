@@ -27,7 +27,8 @@ verbs:
   why <id|text>                    why did we decide X (accepted decisions first)
   status <id|project>              the state of one record and what tracks it
   find <text> [--kind K[,K]] [--project P] [--signatures]
-                                   search: exact ID, BM25 text, substring, one-typo
+                                   search: exact ID, BM25 text, substring, one-typo;
+                                   with --kind and no text, every record of those kinds by ID
   match <text>                     find, testing signature patterns first
   impact <id> [--depth N] [--direction in|out|both] [--include inferred]
                                    what does changing X touch (bounded walk, frontier stated)

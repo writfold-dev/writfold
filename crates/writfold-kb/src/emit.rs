@@ -20,6 +20,17 @@ pub struct More {
     pub status: Option<String>,
 }
 
+/// The edge that reached an `impact` row, for JSON readers only; the text
+/// form keeps `depth=N SRC REL DST (ORIGIN)`.
+#[derive(Clone, Debug, Default)]
+pub struct Walked {
+    pub from: String,
+    pub rel: String,
+    pub to: String,
+    pub origin: String,
+    pub depth: usize,
+}
+
 /// One fact: `<kind> <id> [<status>] <text> @<path>[:<line>] [!<flag>…]`.
 #[derive(Clone, Debug, Default)]
 pub struct Row {
@@ -33,6 +44,10 @@ pub struct Row {
     pub more: Vec<More>,
     /// The output section, for per-section omission counts.
     pub section: Option<&'static str>,
+    /// JSON only: the walked edge (`edge`) and the record's title (`title`)
+    /// of an `impact` row; absent keys on every other row.
+    pub edge: Option<Walked>,
+    pub title: Option<String>,
 }
 
 /// What a verb found, before paging.
@@ -348,7 +363,15 @@ fn row_json(row: &Row) -> Value {
             value
         })
         .collect();
-    json!({"kind": row.kind, "id": row.id, "status": row.status, "text": row.text,
+    let mut value = json!({"kind": row.kind, "id": row.id, "status": row.status, "text": row.text,
            "path": row.path, "line": row.line, "flags": row.flags, "more": more,
-           "section": row.section})
+           "section": row.section});
+    if let Some(edge) = &row.edge {
+        value["edge"] = json!({"from": edge.from, "rel": edge.rel, "to": edge.to,
+                               "origin": edge.origin, "depth": edge.depth});
+    }
+    if let Some(title) = &row.title {
+        value["title"] = json!(title);
+    }
+    value
 }

@@ -135,7 +135,7 @@ pub fn repos(session: &Session<'_>, missing_only: bool) -> Result<Answer> {
             line,
             flags: Vec::new(),
             more: row_more,
-            section: None,
+            ..Row::default()
         });
     }
     if missing > 0 {
