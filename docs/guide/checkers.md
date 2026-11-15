@@ -1,6 +1,6 @@
 # External checkers
 
-> **Status:** built in v0.5.0-dev.2 (phase 1: `check` and `make`, run by `stale` only); `max_age` built in v0.5.0-dev.3. Not built: built-in kinds through the protocol, fetching, rendering or redaction, a server mode, an SDK, token migration, a checker together with a TTL, tracked check receipts, and a flag that fails when a checker is missing.
+> **Status:** built in v0.5.0-dev.2 (phase 1: `check` and `make`, run by `stale` only); `max_age` built in v0.5.0-dev.3. Not built: built-in kinds through the protocol, fetching, rendering or redaction, a server mode, an SDK, token migration, a checked kind that also ages by `ttl=` or `default_ttl` (`max_age` limits how old a cached verdict may be, not how old the token is), tracked check receipts, and a flag that fails when a checker is missing.
 
 Writfold checks `code`, `gate`, `record` and `proposal` citations itself, from Git and the index. A citation of anything else (a file in another source-control system, a tracker item, a wiki page) is checked by time unless its kind names an external checker: a small program you install that Writfold asks whether each token still holds.
 
@@ -62,7 +62,7 @@ $ writfold kb stale --offline
 cite doc:a.md [unverifiable] at checker:shared-docs@0.2.0:9f2c… check-expired (8d) @notes/sources.md:3 !unverifiable
 ```
 
-`kb stale` without `--offline` asks the checker regardless and rewrites the cache, so its verdicts are never `check-expired`. `max_age` is refused with any freshness but `checked`. `brief`, `context` and `why` show the cached verdict as stored, without ageing it.
+`kb stale` without `--offline` asks the checker regardless and rewrites the cache, so its verdicts are never `check-expired`. `max_age` is refused with any freshness but `checked`. `max_age` is not a lifetime for the token: a checked kind never ages by `ttl=` or `default_ttl` (`default_ttl` is refused beside `checked`, and a token's own `ttl=` changes no verdict of a checked kind); it limits only how old a cached verdict may be. `brief`, `context` and `why` show the cached verdict as stored, without ageing it.
 
 The session-start hook names a missing checker in one line (a `PATH` lookup; nothing is run). `writfold kb checker list` shows one row per checked kind, running each checker's `describe`:
 

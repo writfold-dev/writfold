@@ -165,6 +165,47 @@ writfold guard rule commit-needs-gates (a guard, not enforcement): commit only w
 
 Like a guard, a permission rule reads the command line; it is not enforcement either.
 
+### A hard stop at the end of a turn (recipe)
+
+Writfold's [Stop nudge](#the-stop-nudge) only adds context. A stop that blocks the end of a turn until the run's gates are met is your own hook, and it must tell three exit codes of `writfold kb gate status` apart:
+
+| Exit | Means | The hook |
+|---|---|---|
+| 0 | every gate the run owes is met | lets the turn end |
+| 2 | a gate is owed (open, stale, failed, unknown, or an invalid definition) | blocks, naming the gates |
+| 3 | no current run, or a refusal | lets the turn end; blocking here would wedge a session that has no run |
+
+It must also let the turn end when the hook input has `stop_hook_active` set, or it blocks the continuation it caused and loops. `jq` reads the input and lists the owed gates from `gate status --json`:
+
+```sh
+#!/bin/sh
+# Stop hook: do not end the turn while the current run owes a gate.
+input=$(cat)
+[ "$(printf '%s' "$input" | jq -r '.stop_hook_active')" = true ] && exit 0
+cd "$(printf '%s' "$input" | jq -r '.cwd')" || exit 0
+status=$(writfold kb gate status --json 2>/dev/null); code=$?
+[ "$code" -eq 2 ] || exit 0   # 0: every gate met; 3: no current run or a refusal
+owed=$(printf '%s' "$status" | jq -r '[.rows[] | select(.section == "gates")
+  | select(.status | IN("satisfied", "attested", "waived") | not)
+  | "\(.id) [\(.status)]"] | join(", ")')
+jq -n --arg owed "$owed" '{decision: "block",
+  reason: "The run owes gates: \($owed). writfold kb gate status names the next command for each."}'
+```
+
+Register it in `.claude/settings.json` (Stop takes no matcher):
+
+```json
+{
+  "hooks": {
+    "Stop": [
+      { "hooks": [ { "type": "command", "command": ".claude/hooks/writfold-stop.sh", "timeout": 30 } ] }
+    ]
+  }
+}
+```
+
+On a KB whose run owes `unit`, the hook prints `{"decision": "block", "reason": "The run owes gates: unit [open]. writfold kb gate status names the next command for each."}`; with `stop_hook_active` set, after `gate run unit` passes, and with no current run, it prints nothing and the turn ends. Claude Code also ends the turn after eight consecutive continuations, whatever the hook says. Like every hook, this one sees only one harness. The harness-neutral equivalent is CI running `writfold kb gate lines`, which exits 0 only when every gate is met.
+
 ### Inspecting rules without a hook
 
 ```sh
@@ -273,6 +314,7 @@ The event fields, output shapes, timeouts and exit-code rules above were checked
   - PreToolUse `permissionDecision` takes `allow`, `deny`, `ask` or `defer`, with `permissionDecisionReason`. The rules use `deny` and `ask` only; passing prints nothing, and "staying silent doesn't approve" the call.
   - Stop takes `decision: "block"` with a `reason`, or `hookSpecificOutput.additionalContext`, which is "non-error feedback": "The conversation continues so Claude can act on it", shown as `Stop hook feedback` rather than a hook error. Both pass through the same loop protections: the `stop_hook_active` input ("`true` when Claude Code is already continuing as a result of a stop hook") and a cap of 8 consecutive continuations. No Stop output adds context without continuing the turn, so the nudge uses `additionalContext`, once per session (or once per turn with `repeat = "turn"`), never while `stop_hook_active` is set.
   - Plain stdout from a Stop hook goes only to the debug log.
+- Re-checked on 15 November 2026 for the hard-stop recipe, at https://code.claude.com/docs/en/hooks: Stop input carries `stop_hook_active` ("`true` when Claude Code is already continuing as a result of a stop hook"); `decision: "block"` "prevents Claude from stopping" and its `reason` is required and "tells Claude why it should continue"; a Stop hook has no matcher; and the 8-consecutive-continuation cap still applies (it resets each time Claude calls a tool). The recipe was run against a fixture KB with one mechanical gate in four states: owed (blocks), `stop_hook_active` set (passes), met after `gate run` (passes) and no current run (`gate status` exit 3; passes).
 - https://code.claude.com/docs/en/plugins-reference (the plugin layout, `userConfig`, `CLAUDE_PLUGIN_OPTION_<KEY>`).
 
 A manual run with Claude Code 2.1.322 confirmed the session-start context, the draft through `/compact`, and `--from-draft`. An interactive session and the marketplace install path were not covered by that run.

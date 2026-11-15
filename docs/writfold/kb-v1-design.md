@@ -2817,6 +2817,10 @@ A checked kind may declare `max_age` (`<N>d` or `<N>h`, parsed as `default_ttl` 
 
 Tests: the kernel test above; `crates/writfold-kb/tests/checker_cache.rs` ages a checker's cached fresh row to 6, 7 and 8 days under `max_age = "7d"` (fresh, fresh, `check-expired (8d)`), shows it fresh at 8 days without `max_age`, shows `stale --offline` reporting it and online `stale` asking again; making `aged` ignore the age fails both. `tests/kinds.rs` covers the `max_age` refusals and the note's kinds and counts before and after declarations. The guide's checker template (`docs/guide/checkers.md`) was run through the binary: `cite make --kind`, `kb stale`, a refused `make` for a missing file, `stale --offline` after ageing the cache eight days (`check-expired (8d)`), and online `stale` again.
 
+### Clarification (v0.5.0-dev.9): "a checker together with a TTL"
+
+The phrase in §33.8 means a checked kind that also ages by `ttl=` or `default_ttl`; it is still not built. `max_age` (above) did not build it: `max_age` limits how old a cached verdict may be, not how old the token is. `default_ttl` stays refused beside `freshness = "checked"`, and a token's own `ttl=` changes no verdict of a checked kind, online or offline (`stale/kinds.rs::due` returns early for a checked kind). Test: `crates/writfold/tests/kb_checker.rs::a_tokens_own_ttl_changes_no_verdict_of_a_checked_kind` (a token seen in 2020 with `ttl=1h` reads fresh online and is not `due` offline; removing the early return fails it).
+
 ## 34. T2 as built
 
 T2 extends the read-only terminal projection of §18. Every pane is an in-process

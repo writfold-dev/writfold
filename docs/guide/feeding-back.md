@@ -113,6 +113,17 @@ A `verified` line, such as `- 2026-11-12: verified; evidence gate:unit satisfied
 
 `concluded` (built in v0.5.0-dev.1) is refused, with exit 3 and nothing written, until the investigation has text under `## Checked against` and `## Scope and limits`, and every hypothesis under `## Hypotheses` has an outcome. A hypothesis is a bullet `- H<n>: <outcome> …` whose outcome is `open`, `supported`, `refuted` or `unk`; a bullet that starts `- H<n>` without one is refused as unreadable. Concluding records that the write-up is complete, not that its findings are true.
 
+### A verification no command can make
+
+Many verifications are a person seeing something happen: a dashboard back to normal, a customer confirming a fix. `verified` needs a passing check, and an attested gate is not one, so such a decision stays `applied`. The pattern until a qualified state exists:
+
+1. Write a [checklist gate](gates.md#checklist-gates) whose items are what must be seen, such as `items = ["latency: p99 back under 200 ms", "alerts: no flush-stall alert for a day"]`.
+2. Record each look with `writfold kb observe --source KIND --locator TEXT --status ok --for GATE.ITEM --cite TOKEN` ([observations](gates.md#observations-as-evidence-built-in-v050-dev3)).
+3. Cover each item with it: `writfold kb gate cover GATE ITEM supported runs/<run>/observed/<file>.json --by WHO`. Once every required item is `supported` or `not-applicable`, the gate stands `attested`.
+4. Add a line to the decision's Decision log by hand, naming the run and the gate: `- 2026-11-15: seen in production; checklist gate:rollout-seen attested in run-20261115T090000Z-a1b2c3`.
+
+`applied` plus an attested checklist is the honest reading of that record: the change landed and people saw it work. `verified` means a passing check, and stays reserved for one.
+
 ## Proposals
 
 A proposal is a `record` call that has not been made yet. `propose` takes exactly the arguments of `record ticket|decision|link`, checks them as `record` would, writes no record, and queues the call: locally by default, or in the KB's work tree with `--tracked` (below):
@@ -135,6 +146,7 @@ proposal 16a41fbba45340f7 [pending] ticket HBR-130: Replay is slow after a resta
 - **Local, like drafts, by default.** The queue lives in `<git dir>/writfold/proposals/` and is lost with the clone, deliberately: on an ephemeral machine, review proposals before the work is pushed, or track them (below).
 - **One file per call.** The ID is a digest of the call, so proposing the same thing twice leaves one proposal.
 - **At most ten per session.** The session is `--session`, else `$WRITFOLD_SESSION`; proposals with neither share one bucket of ten. The eleventh is refused (exit 3).
+- **More than ten in one pass.** The cap counts per session label, not per run. A session that goes back over earlier sessions (a review of last week's work, say) passes each proposal's originating session as `--session`: that attributes the proposal correctly, and each label has its own ten. Unlabelled proposals all share one bucket.
 - **Linked to the run.** A proposal records `--run`, else the current run, and `resume` and the session-start context list it.
 - **Accept is the ordinary write.** It is refused (exit 3), and the proposal kept, when a citation token in it is not fresh under `kb stale`, when the record's ID is already taken, or for any reason `record` itself refuses. The proposal is removed only after the record is written.
 - **Who accepts** is a convention: the skill tells the agent to accept only when you ask.

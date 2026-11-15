@@ -169,6 +169,71 @@ Writfold reads a KB it did not write, as long as it is Git text in this layout. 
 - Records and citations come only from `.md` and `.json` files that Git lists (tracked, or untracked and not ignored); a path with any part starting with `.` is never a record. Writfold reads no database that comes with a KB: its only database is its own index, built from that text, so whatever lives only in another store is not seen.
 - A citation of a kind Writfold does not check against Git or the index, without `ttl=`, never expires, unless a kind declaration gives it a default ([above](#a-citation-token)).
 
+## Importing existing material
+
+`record` creates new records at the start of their lifecycle: a decision starts as a `draft`, a ticket as `todo`, and later states each need their evidence. History (accepted decisions, closed tickets, an asset list) is therefore imported by writing files in the layout this page documents, from any script, and then validating them:
+
+```sh
+writfold kb index status   # every unreadable file with its reason; exit 2 if any
+writfold kb check          # stale citations, the index against a rebuild, gates
+```
+
+Review the result as one Git diff and commit it. For new records in bulk (open tickets from a tracker export, say), loop over `record` in a clean work tree and discard the work tree on the first failure: Git is the transaction.
+
+The smallest file each kind needs (more fields are kept and shown; see the examples above):
+
+```text
+inventory/assets/harbor-api.json
+{"id": "harbor-api", "kind": "service", "name": "Harbor API"}
+
+inventory/relationships/depends-on__harbor-api__harbor-db.json
+{"schema_version": 1, "id": "depends-on__harbor-api__harbor-db", "type": "depends-on",
+ "from": "harbor-api", "to": "harbor-db", "status": "explicit", "evidence": []}
+
+ktlo/2025/hbr-7-cold-cache.md
+---
+ticket: HBR-7
+title: Cold cache after deploys
+assets: [harbor-api]
+status: done
+created: 2025-03-01
+updated: 2025-03-09
+---
+
+proposals/decision/2025-04-02-cache-in-front/proposal.md
+---
+id: decision/2025-04-02-cache-in-front
+kind: decision
+title: Put a cache in front of the ledger
+status: accepted
+project: harbor
+references: [harbor-api, harbor-db]
+decided_by: ops-review
+created: 2025-04-02
+updated: 2025-04-09
+---
+
+investigations/2025/2025-03-01-cold-cache/README.md
+---
+id: 2025/2025-03-01-cold-cache
+title: Cold cache after deploys
+tickets: [HBR-7]
+assets: [harbor-api]
+status: concluded
+created: 2025-03-01
+updated: 2025-03-09
+---
+
+signatures/cold-cache.md
+---
+title: Cold cache after a deploy
+status: confirmed
+assets: [harbor-api]
+---
+```
+
+A ticket's ID is its `ticket:` field; a decision's is `proposal/` and its `id:`; an investigation's is `inv:` and its `id:` (else its directory under `investigations/`); a signature's is `sig:` and its file name. A status outside a kind's vocabulary is kept and flagged `!vocab=unknown`. These six files, committed together, index as six records with no unreadable file and a clean `kb check`.
+
 ## Tracked and local
 
 Everything above is tracked text. Local state lives in the KB repository's Git directory under `writfold/` and is never committed:
