@@ -1,0 +1,394 @@
+# v0.5.0-dev.9 specification
+
+> **Status:** planned. Nothing on this page is built until its as-built section in [kb-v1-design.md](kb-v1-design.md) says so. Written against `main` at `80caece` (v0.5.0-dev.8). The authority is [mission.md](mission.md).
+
+This release takes eleven candidate needs and builds the ones that hold for any single user, team or CI job on any harness. The filter for each: would it work, unchanged, for someone with a different host, tracker, harness and team size? Where the candidate shape fails that test, a shape that passes is given instead.
+
+Each candidate's description of today's behaviour was checked against the code and guides at `80caece`. Corrections are in [section 6](#6-what-was-checked).
+
+## 1. Triage
+
+| # | Need | Verdict | Reason |
+|---|---|---|---|
+| 1 | A second clone or CI reads a checked kind's verdicts without running the checker | **Adopt** | The cold-session promise fails for every checked kind today: a fresh clone reads `not-checked` until it has the checker and its credentials |
+| 2 | Hand the built-in `code` check to an external checker | **Decline; alternative exists today, a follow-up is planned** | It trades the one freshness claim Writfold makes itself for a program's word. A declared checked kind already serves a host that cannot be cloned; recorded verdicts for `code` (after item 1 has been used) serve a missing clone |
+| 3 | Render templates per kind and `cite render` | **Defer (planned)** | Default permalinks are host-specific, and rendering a draft before `deliver check` removes the tokens that check counts. The shape that holds is rendering inside `deliver prepare`, after freshness is judged |
+| 4 | `record --from` and `observe --from` | **Decline `record --from`; defer `observe --from`** | `record` writes new records at the start of their lifecycle, so it cannot import history. Import is writing files in the documented layout, validated by `index status`; this release documents it |
+| 5 | `verified` from a covered checklist | **Adopt the documented pattern; defer the qualified state** | A decision file has no field for "verified by attestation" and every reader prints the bare state, so today it would read as a passing check. The qualified state needs a new front-matter key: an owner decision ([open question 1](#5-open-questions)) |
+| 6a | A verb that opens an investigation | **Adopt** | Three states and `concluded` can be written, but nothing creates the record |
+| 6b | A configurable proposal cap | **Decline; document what exists** | The cap is per session label, so a deliberate pass over earlier sessions already files ten per label, attributed correctly. A knob would remove the one bound on a looping agent |
+| 6c | `tuft index`: build the symbol index from a pinned commit | **Adopt, below the cut line** | The hand procedure registers a worktree in the user's repository and is easy to get wrong; `ctags` stays an optional program found on `PATH` |
+| 6d | A recipe on stdin for `kb edit apply` | **Adopt** | Adapter ergonomics, no language change; matches `tuft run -` and `gate cover --from -` |
+| 6e | Guard `paths` for `kb edit apply` | **Adopt an alternative, below the cut line** | A hook cannot know a recipe's targets from a command line (and not at all for a stdin recipe). The verb knows them exactly, so the verb consults the rules, on every harness |
+| 6f | Documentation drift: "a checker together with a TTL"; Weft's status | **Adopt** | Both are real; the fix is wording and one status table |
+| 7 | A hard stop at the end of a turn, as a recipe | **Adopt (documentation)** | It belongs to the user's own hook; the recipe shows the three exit codes it must tell apart |
+
+## 2. Adopted items
+
+### 2.1 Check receipts: sharing a checked kind's verdicts (item 1)
+
+**Need.** A checked kind's verdicts live only in the local index (`cite_checks`). A fresh clone, a second machine or a CI job reads `unverifiable: not-checked` (through `gate status`, `gate cover`, guard rules, `deliver check`, `proposals accept`) or `checker-absent` (through `kb stale`) until it installs every checker and holds its credentials. A gate that rests on such a citation cannot be met there.
+
+**Shape.** `kb stale --record` writes what the checkers said in this run to tracked, write-once files. Any clone that has those files reads a recorded verdict where it has no newer statement of its own, for as long as the kind's `max_age` allows, and says that the verdict was checked elsewhere and when.
+
+#### Decisions
+
+| Question | Decision | Why |
+|---|---|---|
+| Who records | Opt-in per invocation: `kb stale --record`. There is no KB setting | `stale` is a read verb. A setting would make every `kb stale` on every clone dirty the work tree. One deliberate recorder (a scheduled job, or a person before a hand-over) is the pattern; a team that wants it always adds the flag to that job |
+| Who reads | Every clone, automatically, when a receipt exists **and** the kind declares `max_age` | The committed file is the team's opt-in. A shared verdict with no lifetime would keep saying `fresh` on clones that never run the checker; a local cache at least belongs to the machine that made it |
+| What a verdict is bound to | The SHA-256 of the token's exact text (the `raw` column of `citations`), and the checker's name | Any edit to the token, including `seen=`, is a different token. A receipt from another checker than the kind now declares is not this checker's word |
+| The checker's version | Carried and shown, not matched | A clone without the checker has no version to compare, and the kind file pins none. A team that distrusts an old version's receipts deletes them |
+| `max_age` | Not stored. The reader applies its own declaration to the receipt's `checked_at` | Tightening `max_age` in the kind file then takes effect at once, on every clone |
+| Which statements are recorded | Only what a checker said about the token: `fresh`, `moved`, `changed`, `gone` | `checker-absent`, `checker-failed`, `token-version` and a checker's own `unverifiable` describe this machine or this moment; shared, they would overwrite a good verdict from another machine |
+| Several statements for one token | The newest `checked_at` wins, whether local or recorded. A tie goes to the receipt; between receipts, to the worst verdict (`gone`, `changed`, `moved`, `fresh`), then the file name | Deterministic, never optimistic, and no file needs to be rewritten |
+| A local row that is not a checker's statement (`unverifiable`) | Never outranks a usable recorded verdict | Otherwise one `kb stale` on a machine without the checker would mask every receipt |
+| Clocks | A receipt dated more than one hour after the reader's clock is not used. Up to one hour ahead counts as age 0 | A future date would outlive `max_age` |
+| The local cache | A verdict read from a receipt is never written to `cite_checks` | Writing it would stamp it with this machine's time and restart its lifetime |
+| Layout | One new file per kind per recording, never edited | Two clones recording at once add two files; Git merges them without conflict |
+
+#### CLI
+
+```text
+writfold kb stale [<project>|<path>] --record
+```
+
+- `--record` with `--offline` or `--cached` is a usage error (exit 1): `--record needs the checkers to be asked; it cannot be combined with --offline or --cached`.
+- The exit code is `stale`'s (0 all fresh, 2 otherwise). A write that cannot complete is exit 3 with the usual conflict text; the verdicts are still printed.
+- For each checked kind in scope that declares `max_age` and has at least one recordable answer, one file is written through the atomic write path (temp, sync, rename), then superseded receipts of that kind are removed (below).
+- A checked kind without `max_age` is not recorded: `# note: not recorded: kind src declares no max_age (a recorded verdict needs a lifetime)`.
+- Identical tokens that received different statuses in one run are not recorded, with a note naming the count.
+- Text added after the rows:
+
+```text
+# note: recorded 14 verdicts of kind src in .writfold/checks/src/20261115T020000Z-ab12cd.json (2 superseded receipts removed)
+# note: written to the work tree; commit it to share it
+# coverage=… checked=31 stale=2 unverifiable=1 recorded-now=14 receipts=1 kb=…+dirty:3 …
+```
+
+`kb check` does not take `--record`; run `kb stale --record` before it.
+
+#### File format
+
+`.writfold/checks/<kind>/<UTC compact time>-<6 hex>.json`, named by `write::unique(now, <kind>)`. A dot path, so it is never a record and the index does not change.
+
+```json
+{
+  "schema": "writfold-check-receipt/1",
+  "kind": "src",
+  "checker": {"name": "acme-src", "version": "1.4.0", "protocol": "writfold-checker/1"},
+  "checked_at": "2026-11-15T02:00:00Z",
+  "verdicts": [
+    {"token": "sha256:5c1f…", "status": "fresh", "at": "r42"},
+    {"token": "sha256:9a07…", "status": "moved", "at": "r42", "moved": {"path": "lib/new.c", "first": 12, "last": 18}, "detail": "file renamed"}
+  ]
+}
+```
+
+- `verdicts` is sorted by `token`, one entry per distinct token text, one entry per line in the file so a diff is readable.
+- `at`, `detail` and `moved.path` are optional. `moved` is required with `status: "moved"` and refused otherwise.
+- Reading is strict, as for kind and guard files. A file is skipped whole, with `# note: check receipt <path> skipped: <why>`, when: it is not a JSON object, has an unknown key, a wrong `schema`, a `kind` other than its directory, an unreadable `checked_at`, a `token` that is not `sha256:` and 64 hex digits, a status outside the four, a `moved` without a valid range, a duplicate token, or more than 4 MiB. A skipped file is never evidence and is never removed by Writfold.
+- A file whose `checker.name` differs from the kind's declared `checker` is ignored (not an error): the kind changed checkers.
+
+**Superseded receipts.** After a new file for kind K is published, each other readable receipt of K is removed (`remove_file`, as tracked proposals are removed) when every entry in it is either for a token the new file also holds, or older than K's `max_age` now. A scoped run (`kb stale <project> --record`) therefore keeps receipts that hold tokens outside its scope. A crash between the publish and a removal leaves an extra file, which changes no verdict because the newest statement wins. The removals show in the Git diff with the new file.
+
+#### Reading
+
+`stale/checker/mod.rs::verdict` and `cached` change; nothing else decides.
+
+1. A required field missing: unchanged.
+2. This run's answer, when `kb stale` asked: unchanged, with one exception. When the answer is `checker-absent` and a usable recorded verdict exists, the recorded verdict is used. `checker-failed` is not replaced: a checker that is present and failing should be seen.
+3. Otherwise the newest of: the local `cite_checks` row when its verdict is one of the four statements, and every recorded entry for the token's digest (only when the kind declares `max_age`; receipts dated in the future excluded). The pick is then aged against `max_age` exactly as today: past it reads `unverifiable: check-expired (<age>)`.
+4. No candidate: the local row as today (`unverifiable` with its detail), else `not-checked`.
+
+Receipts are read from the work tree, once per `stale::check` call, only for checked kinds among the citations, and only when `.writfold/checks/` exists.
+
+An authored `stale=` mark still wins over a recorded `fresh`, as over any other.
+
+Unchanged, and said so in the guide: `brief`, `context`, `why`, edge flags and the session-start stale line read `cite_checks` directly, so they still show this machine's last `kb stale` and nothing from a receipt.
+
+#### Kernel (`writfold_core::verdict`)
+
+Pure, exhaustively tested, no IO:
+
+- `recordable(Checker) -> bool`: true only for `Said(Fresh | Moved | Changed | Gone)`.
+- `recorded_age(now, checked_at) -> Option<i64>`: `None` when `checked_at > now + 3600`, else `max(0, now - checked_at)`.
+- `struct Statement { said: Said, age: i64, recorded: bool }` and `newest(local: Option<Statement>, recorded: &[Statement], max_age: Option<i64>) -> Option<Pick>` (`Pick::Local` or `Pick::Recorded(index)`): drops a local `Said::Unverifiable`, drops every recorded statement when `max_age` is `None`, takes the smallest age, breaks ties receipt first, then worst verdict.
+- `aged` is applied to the pick, unchanged.
+
+The existing exhaustive test ("only `Said(Fresh)` within its age is fresh") is extended over local and recorded statements.
+
+#### What a reader sees
+
+A reused verdict always says it was checked elsewhere and when.
+
+- `Checked` gains `recorded: Option<Recorded>` (`checked_at`, receipt path); `None` everywhere else.
+- A `stale` row (any form, including `--cached` and `--offline`) whose verdict came from a receipt:
+
+```text
+cite src:lib/moved.c [moved] at checker:acme-src@1.4.0:r42 recorded 2026-11-14T02:00:00Z @notes/sources.md:5 !moved→lib/new.c:12-18 !recorded
+  check: recorded 2026-11-14T02:00:00Z by acme-src 1.4.0 @.writfold/checks/src/20261114T020000Z-ab12cd.json:1
+```
+
+- Fresh citations print no row, so the trailer counts them and a note dates them:
+
+```text
+# note: 12 verdicts were read from check receipts: checked elsewhere, between 2026-11-12T02:00:00Z and 2026-11-14T02:00:00Z; no checker was started for them
+# coverage=… checked=31 stale=1 unverifiable=0 recorded=12 …
+```
+
+- `recorded=` appears only when it is not zero, so existing text goldens do not change.
+- `kb check` carries `stale`'s trailer, so it shows `recorded=`.
+- `gate status`, `gate cover`, `gate lines` and `deliver check`: the standing word of a grounded citation stays `fresh` (it is stored in cover rows and assessed receipts and compared on later reads; changing it would turn them stale). `Resolved` gains `recorded: bool`, and the evidence line of such a reference carries `!recorded`. Each of those answers adds one note when any reference was grounded that way: `# note: 2 references are fresh by a check receipt (checked elsewhere); writfold kb stale --cached dates them`.
+- `checker list` adds one continuation per kind: `receipts: 14 verdicts in 2 files, newest 2026-11-14T02:00:00Z, oldest 2026-11-12T02:00:00Z, max_age 7d`, or `receipts: 2 files, not read: no max_age`.
+- `writfold watch` needs no code: its stale view shows `stale --cached` rows with their flags, and `recorded` sets no mark. One buffer test pins that.
+
+#### JSON (additive, `writfold_kb: 1`)
+
+- `trailer.counts.recorded` (when not zero); with `--record`, `trailer.counts["recorded-now"]` and `trailer.counts.receipts`.
+- The flag `recorded` on `cite` rows and on evidence continuations.
+- A `more` entry with `label: "check"`, `path` the receipt, `line: 1`.
+- `checker list` rows: a `more` entry with `label: "receipts"`.
+
+#### What is claimed
+
+A check receipt is a statement by whoever committed it that a named checker gave these answers at that time. Git history says who. It resists mistakes, not adversaries, as every tracked file does. A recorded verdict is never shown without the `recorded` flag or count.
+
+#### Tests, with the mutation each one catches
+
+Through the binary with a fake checker (`crates/writfold/tests/kb_checker_record.rs`), a recording clone and a reading clone that has no checker on `PATH` and no index:
+
+| Test | Removing this makes it fail |
+|---|---|
+| The reading clone's `kb stale` exits 0 with `recorded=N`; `gate cover` grounds a citation and shows `!recorded` | the receipt lookup |
+| One character of the token changed: `checker-absent` / `not-checked` | the digest comparison |
+| Receipt aged to `max_age`, then one second past: fresh, then `check-expired` | ageing the pick |
+| The kind file without `max_age`: `not-checked`, with the `not read` line | the `max_age` requirement |
+| A receipt naming another checker: ignored | the checker-name filter |
+| After the reading clone's `kb stale`, `index status` shows the same `cached-verdicts`, and the verdict still expires on time | the rule that a recorded verdict is never cached locally |
+| Absent, failed, wrong-version and checker-said-`unverifiable` tokens are not in the file, and an older receipt holding them survives the prune | `recordable` |
+| Older `fresh` and newer `gone`: `gone`; swapped: `fresh`; equal times: `gone` | newest-wins and the tie rule |
+| A newer local `fresh` beats an older recorded `gone`; a newer local `unverifiable` does not beat a recorded `fresh` | the local-statement filter |
+| A receipt dated two hours ahead: unused | `recorded_age` |
+| An unknown key, a bad status, a `moved` without a range, a duplicate token: skipped with a note, never fresh, never removed | strict reading |
+| `--record --offline` and `--record --cached`: exit 1, nothing written | the refusal |
+| A `stale=` mark over a recorded `fresh` reads `marked`; the file holds `fresh` | recording the checker's answer, not the final verdict |
+| A scoped recording keeps a receipt with out-of-scope tokens and removes a fully covered one | the supersede rule |
+| Two clones record, both commit, `git merge`: clean, two files | create-new naming |
+| A checker present and failing with a receipt on disk: `checker-failed` | the absent-only fallback |
+| The counter-file test of `kb_checker_reads.rs` with receipts present: readers still start no checker | (regression) |
+| A kill at each write step: no file or the whole file | (existing fault harness) |
+
+Kernel tests in `crates/writfold-core/src/verdict.rs`; strict-reading unit tests beside the reader.
+
+#### Modules
+
+`stale/checker/receipt.rs` (format, strict reading, lookup by digest) and `stale/checker/record.rs` (collecting answers before marks are applied, writing, pruning). `stale::check_asking` returns the run's `Answers` beside the verdicts so `verbs/stale.rs` can record them. No schema change to the index.
+
+#### Documentation
+
+- `docs/guide/checkers.md`: status line; a section "Sharing verdicts: check receipts" (who records, who reads, the `max_age` rule, what is not recorded, the row and trailer, a CI example of a scheduled `kb stale --record` followed by a commit); the not-built list loses "tracked check receipts".
+- `docs/guide/kb-layout.md` (`.writfold/checks/<kind>/`), `feeding-back.md` (a stage row), `json.md` (the counts, flag and labels), `gates.md` (the `!recorded` evidence flag), `watch.md` (one sentence).
+- `kb-v1-design.md` §38 as built; `mission.md` roadmap (phase 2: check receipts built; a flag that requires checkers and an explicit refresh still wait); README command table; the `stale` usage line in `writfold kb` help, which today omits `--cached`.
+
+#### Not built
+
+Recorded verdicts for built-in kinds (see 4.1); showing recorded verdicts in `brief`, `context`, `why` and the session-start line; a required checker version; a flag that fails when a checker is missing; signing.
+
+### 2.2 `record investigation` (item 6a)
+
+**Need.** `status --set` writes `open`, `monitoring`, `abandoned` and `concluded` on an investigation, and `concluded` checks its sections, but no verb creates one.
+
+```text
+writfold kb record investigation --title T [--trigger TEXT] [--tickets a,b] [--assets a,b]
+        [--alerts a,b] [--signatures a,b] [--summary S] [--question TEXT]
+```
+
+- Writes `investigations/<year>/<date>-<slug(title)>/README.md` and an empty `evidence/` beside it, in one `Op::CreateDir`. The record ID is `inv:<year>/<date>-<slug>`.
+- Front matter, in the order existing investigations use: `id`, `title`, `trigger` (default `manual`, one line), `tickets`, `alerts`, `assets`, `status: open`, `signatures`, `created`, `updated`, `summary`.
+- Body sections, in this order, so that `concluded` can later be reached without restructuring: `Question` (from `--question`), `Hypotheses`, `Checked against`, `Scope and limits`, `Conclusion`. Empty sections are written empty.
+- Refused, exit 3, nothing written: the ID already exists; an unknown asset (as `record ticket`). Usage, exit 1: a `--tickets` entry that is not a ticket ID, a `--signatures` entry that is not a slug, a multi-line title. Tickets and signatures need not exist yet: an investigation often comes first.
+- `propose investigation …` takes the same arguments (`proposal/codec.rs` gains the kind; `KINDS` becomes four). The usage text of `propose` and `record` is updated.
+- JSON: the ordinary write answer; `verb` is `record-investigation`.
+- Tests: the written file parses back to an `open` investigation with its edges; a second call the same day with the same title is refused; filling the three sections then `--set concluded` succeeds on the unmodified template (removing a section from the template fails this); `propose` round-trips and `accept` writes the same bytes as `record`; the kill test of the write harness covers `CreateDir` already.
+- Docs: `feeding-back.md` (stage table and record states), `kb-layout.md`, help text, design as-built.
+
+### 2.3 A recipe on stdin: `kb edit apply -` (item 6d)
+
+`kb edit apply` is the Splicery adapter. It is separate from the frozen trial flow (no signing, approval or ledger), and this adds no language feature.
+
+- `-` among the recipe arguments reads one recipe from stdin, at most 4 MiB. `-` may appear once; it may be mixed with files. A second `-` is a usage error.
+- The receipt names it `stdin`; its bytes and digest are kept as for a file, so the receipt is complete without the original input.
+- One recipe edits one file, so stdin carries one recipe. A batch from stdin would need a framing format, which is not built; pass several files.
+- Everything else (replay, journal, `--dry-run`, refusals) is unchanged.
+- Tests: `edit apply - < r.spl` produces the same file bytes and the same receipt, apart from the name, as `edit apply r.spl`; `- -` is refused; empty stdin is refused with the recipe parser's own message; an argument-parsing test in `crates/writfold-app/src/kb/edit.rs`.
+- Docs: help text, `feeding-back.md`, design §17.
+
+### 2.4 Guard rules that see `edit apply`'s targets (item 6e; alternative shape)
+
+**Need.** "Edits under `deploy/` need gate X" can be said for a harness's edit tools (`tools` with `paths`) but not for edits made by `writfold kb edit apply`: `paths` is refused beside `commands`, correctly, because a command line names no file.
+
+**Shape.** The verb checks the rules itself. It knows each recipe's target before anything is written, and the check then holds on every harness, with or without hooks.
+
+- A `pre-tool-use` rule applies to `edit apply` when its `tools` lists the reserved name **`writfold:edit`**. No existing rule changes meaning; a rule that should cover every edit route lists it beside the harness's tools:
+
+```toml
+# .writfold/guards/deploy-needs-review.toml
+schema = "writfold-guard-rule/1"
+id = "deploy-needs-review"
+event = "pre-tool-use"
+tools = ["Edit", "Write", "MultiEdit", "writfold:edit"]
+paths = ["deploy/**"]
+require = ["gate:deploy-review"]
+action = "deny"
+```
+
+- In `edit::apply_verb`, after the recipes are read and the worktree is resolved, and before the replay: load the rules of the KB root and of the nearest `.writfold/guards/` at or above the worktree's top (`guard::rules::all`); keep the `pre-tool-use` rules naming `writfold:edit` whose `paths` admit at least one recipe target (a rule without `paths` admits all), targets being relative to the worktree's top as `paths` expects; evaluate them with `guard::require::evaluate` at the worktree's top; decide with `writfold_core::guard::decide`.
+- Any decision but pass refuses the whole batch, exit 3, nothing written, no journal: the hook's reason text, plus the matched targets. `action = "ask"` also refuses, and says so: `the rule asks, and edit apply cannot ask: meet the requirement or make the edit with a tool your harness can ask about`.
+- `--dry-run` is not refused; it adds `# note: guard rule <id> would refuse this edit: …`.
+- `edit recover` is not guarded: it finishes an edit that was admitted.
+- With no rule directory nothing is read. An unparsable rule file is skipped with the existing diagnostic on stderr. A matched rule whose requirement cannot be evaluated takes its action, as in the hook.
+- It stays a guard, not enforcement: other tools can still edit the file.
+- JSON: the ordinary refusal envelope.
+- Tests: a recipe under `deploy/` with the gate open is refused and the file is untouched (removing the call fails this); with the gate met it applies; a recipe outside `paths` applies; a rule without `writfold:edit` does not apply; a two-recipe batch with one guarded target refuses both; `ask` refuses with its sentence; `--dry-run` notes and writes nothing; an unreadable KB after a match refuses.
+- Docs: `hooks.md` (the `tools` row, a subsection under Paths, and "Not built" unchanged), `feeding-back.md` (the `edits-need-a-run` example gains the `writfold:edit` form, which needs no hook), design §30.
+
+### 2.5 `tuft index` (item 6c)
+
+**Need.** `find def|refs` needs a universal-ctags index and a sidecar binding it to a commit. The documented procedure is six shell lines that add a worktree to the user's repository.
+
+```text
+writfold tuft index [--repo DIR|NAME] [--at REF] [--out FILE] [--json]
+```
+
+- `ctags` is `$WRITFOLD_CTAGS`, else `ctags` on `PATH`. Its `--version` must say `Universal Ctags` and `--list-features` must list `json`; otherwise exit 1 naming what was found and what is needed. Writfold links nothing and the static binary is unchanged.
+- `REF` (default `HEAD`) is resolved once to a full commit and echoed, as `tuft grep` does.
+- The tree is exported to a new temporary directory under the Tuft state directory with a temporary index file (`git read-tree` into it, then `git checkout-index -a --prefix=<dir>/`). The user's work tree, index and worktree list are not touched, and uncommitted bytes cannot reach the index.
+- `ctags --options=NONE --output-format=json --fields=+nr --extras=+r -R -f <out>.tmp .` runs in that directory, supervised like a checker (process group, TERM then KILL; 300 s, `WRITFOLD_CTAGS_TIMEOUT` seconds overrides).
+- `<out>` is renamed into place, then `<out>.meta.json` is written with the commit and the SHA-256 of the index bytes. Default `<out>`: `<state>/symbols/<repo name>-<commit>.jsonl`. The temporary directory is removed on success and on failure.
+- stdout is the index path alone, so `tuft run q.tuft --index "$(writfold tuft index --at HEAD)"` composes; the commit, digest and tag count go to stderr. `--json` prints `{"path":…,"commit":…,"sha256":…,"tags":N,"ctags":"<version line>"}`.
+- Exit codes are Tuft's: 0 written, 1 otherwise.
+- What is claimed: the index was produced from the bytes of that commit. Completeness is still ctags's; symbol coverage stays `partial`.
+- Tests, with a fake `ctags` script so no real one is needed: the sidecar's commit and digest match; a dirty work-tree edit is absent from the index (exporting from the work tree fails this); `git status --porcelain` and `git worktree list` are byte-equal before and after; a non-universal `ctags` and an absent one are refused; a hung one is stopped and leaves no directory; the produced pair is accepted by `find def`.
+- Docs: `docs/tuft/language.md` (the procedure becomes the one command, with the manual form kept as what it does), `agent-note.md`, help text, `mission.md` "As built (Tuft expansion)".
+
+### 2.6 Documentation fixes (item 6f)
+
+**"A checker together with a TTL."** `max_age` did not build it. The phrase means a kind that is both checked and aged by lifetime; that is still refused (`default_ttl` with `freshness = "checked"`), and a token's own `ttl=` is ignored for a checked kind. Replace the phrase in `checkers.md`'s status line with: "a checked kind that also ages by `ttl=` or `default_ttl` (`max_age` limits how old a cached verdict may be, not how old the token is)". Add one sentence to the `max_age` section saying the same, and one test asserting that `ttl=` on a checked token changes no verdict. Use the same wording in the design's §33.8 as-built addendum and in `mission.md`'s dev.1 list (as a dated clarification, not a rewrite).
+
+**Weft's status.** The conflict is inside `mission.md`, not in `status.md` or `qualification/status.json`:
+
+| Place | Says | Current fact |
+|---|---|---|
+| "Adopted and declined" table | "Freeze trial, Weft, Splicery; Tuft as verbs: Adopted" | Weft and Splicery are available and maintained, not frozen; Tuft is being expanded |
+| "Available tools" (12 November) | lists Tuft as not a priority | superseded by "Tuft expansion" (13 November) |
+| "Narrow adapters" | "Weft contributes only its four-way vocabulary … reading KB citations as premises waits for the two-week pause" | the Weft assessed gate, which grounds citations, is built |
+
+Fix: add a short "Component status" table at the top of `mission.md`'s Decisions (Tuft: being expanded; Weft: available, the assessed gate built, no new language features; Splicery: available, the adapter built, no new language features; trial flow, `writfold.agent/1`, Dolt, Omnigraph: frozen), and mark each of the three sentences `(Superseded: see Component status)` in place, as the file already does elsewhere. `status.md`'s opening paragraph points at the table. `qualification/status.json` and `handovers/` are history and are not edited.
+
+### 2.7 Recipes and patterns (items 7, 5, 6b, 4; documentation only)
+
+**A hard stop at the end of a turn** (`hooks.md`, beside the `permissions.ask` recipe). Writfold's Stop rule only nudges. A stop that blocks is the user's own hook, and it must tell three exit codes of `writfold kb gate status` apart: 0 every gate met (let the turn end), 2 a gate is owed (block), 3 no current run or a refusal (let it end, or the session is wedged). It must also pass when the hook input has `stop_hook_active` set, or it loops. The recipe is a ten-line shell script and its settings entry, with `gate status --json` and `jq` shown as the way to list the owed gates in the reason. The implementer runs it against the current hook documentation and adds the date to "Checked against". One sentence states the harness-neutral equivalent: CI running `writfold kb gate lines`, which exits 0 only when every gate is met.
+
+**A verification no command can make** (`feeding-back.md`, under record states). Until the qualified state exists (4.3): the decision stays `applied`. The verification is a checklist gate whose items are what must be seen; each look is `kb observe --status ok --for GATE.ITEM --cite TOKEN`; the items are covered with `gate cover`; the gate stands `attested`. The decision's log gets a hand-written line naming the run and gate. The page says plainly that `applied` plus an attested checklist is the honest reading, and that `verified` means a passing check.
+
+**More than ten proposals** (`feeding-back.md`, under Proposals). The cap is ten per session label. A session that goes back over earlier sessions passes each proposal's originating session as `--session`, which also attributes it correctly; each label has its own ten. Unlabelled proposals share one bucket.
+
+**Importing existing material** (`kb-layout.md`, new section). `record` creates new records at the start of their lifecycle. History (accepted decisions, closed tickets, an asset list) is imported by writing files in the layout this page documents, from any script, then running `writfold kb index status` (every unreadable file with its reason; exit 2 if any) and `writfold kb check`. For new records in bulk, loop over `record` in a clean work tree and discard the work tree on the first failure; Git is the transaction. The section gives the minimal file for each kind.
+
+## 3. Build plan
+
+One implementer, one worktree, in this order. Each step ends with its tests and documentation; sizes are working days.
+
+| Step | Work | Size |
+|---|---|---|
+| 1 | 2.6 and 2.7: documentation fixes, recipes and patterns (the stop recipe is run for real) | 0.5 |
+| 2 | 2.1 kernel: `recordable`, `recorded_age`, `newest`, exhaustive tests | 0.5 |
+| 3 | 2.1 reading: `receipt.rs`, the pick in `cached`/`verdict`, the absent fallback, `Checked.recorded`, never caching a recorded verdict | 1 |
+| 4 | 2.1 writing: `--record`, the file, pruning, notes and counts, fault test | 1 |
+| 5 | 2.1 presentation: `stale` rows and trailer, `Resolved.recorded` in gate and delivery answers, `checker list`, JSON, the watch buffer test, guides and design §38 | 0.5–1 |
+| 6 | 2.2 `record investigation` and `propose investigation` | 0.5 |
+| 7 | 2.3 `edit apply -` | 0.25 |
+| | **Cut line: steps 1–7 are v0.5.0-dev.9** | **about 4.5** |
+| 8 | 2.4 guard rules in `edit apply` | 1 |
+| 9 | 2.5 `tuft index` | 1.5 |
+
+Steps 8 and 9 are independent of each other and of the rest; either may ship in dev.9 if finished, or move to dev.10 whole. Neither ships half-built. If step 5 runs long, the `checker list` line and the gate note may slip, but not the `recorded` flag, the trailer count or the `stale` note: a reused verdict must never be shown unlabelled.
+
+Release steps as usual: version and guide status lines, `scripts/gate quality` and `scripts/gate unit` from main with receipt paths in the commit message, website copy only for what was exercised.
+
+## 4. Alternatives and reasons for not building
+
+### 4.1 Handing `code` to a checker (item 2)
+
+Not built. A `code` verdict is the one freshness claim Writfold computes itself, from Git objects, with property tests behind "fresh means the cited lines are unchanged". An override would replace that with whatever a program answers, for every reader of the KB, by one line in a kind file.
+
+What serves the need:
+
+- **A host that cannot be cloned at all:** declare a checked kind of your own (say `hosted`) with a checker that asks the host, and cite with `cite make --kind hosted`. This works today and keeps `code` meaning "checked against Git".
+- **A sparse checkout:** already works. The check reads Git objects, not the work tree.
+- **A partial clone or a missing clone:** today `unverifiable: partial-clone`, or a missing repository that `kb repos --missing --json` feeds to a clone script. **Planned:** once check receipts have been used on checked kinds, extend them to `code` verdicts, read only where the clone is missing or partial, labelled `recorded` with the repository commit they were judged at. That gives the machine without the clone an answer without weakening the check on the machine that has it. It needs a lifetime rule for built-in kinds, which is why it is not in this release.
+
+### 4.2 Render templates (item 3)
+
+Deferred, labelled planned. Two parts of the candidate shape do not hold:
+
+- **Default permalinks for `code`** differ per host (`/blob/<rev>/<path>#L3-L5`, `/-/blob/…#L3-5`, and others with no line anchors). Built in, they would be right for one host and wrong for the rest. A template the KB declares, with field placeholders only, is host-neutral.
+- **A standalone `cite render`** invites rendering a draft before `deliver check`. The `claims.cited-fresh` check counts tokens; a rendered draft has none and passes with `0 citation tokens`. Rendering has to happen inside `deliver prepare`, after the tokens are judged, with the candidate keeping both forms.
+
+The planned shape is therefore: a `render` template per kind file (allowed for built-in kinds as the only key they may declare), applied by `deliver prepare --render`, with the existing deny lists run on the rendered bytes. It waits for the count of real deliveries the mission's pause calls for. Until then a token is `key=value` text in a documented format, and `kb stale --json` gives each citation's target for a script.
+
+### 4.3 `verified` by attestation (item 5)
+
+Not widened in this release. The need is real: many verifications are a person seeing something happen. But a decision's front matter has a fixed set of keys and none says how it was verified; `status`, `why`, `brief`, `find` and `watch` print the state alone. The qualifier would live only in a log line, and the record would read as a passing check everywhere else.
+
+The shape that would be honest, planned and waiting on [open question 1](#5-open-questions): `status --set verified --evidence gate:<checklist>` is accepted when the checklist stands `attested`, every required item is `supported` or `not-applicable` and at least one is `supported` by evidence that grounds now. It writes a new front-matter key, `verified_basis: attested`, and every row that shows the decision carries `!attested` (one place: `verbs::record_row`). A bare attestation and a waiver stay refused. Until then, the pattern in 2.7.
+
+### 4.4 A configurable proposal cap (item 6b)
+
+Not built. The cap is the only bound on an agent that proposes in a loop, and it is per session label, so deliberate work is not limited by it: label each proposal with the session it came from. A tracked setting would be one more file an agent could edit to remove its own limit.
+
+### 4.5 Batch `record` and `observe` (item 4)
+
+`record --from` is not built. `record` enforces a new record's starting state (a decision is a `draft`; later states need their evidence), so it cannot represent an already-accepted decision or a closed ticket, and it has no form for assets at all. The imports named as the need are therefore writes of files in the documented layout, which any script can do and `index status` validates. For new records in bulk, a loop reviewed as one Git diff is already all-or-nothing in the way that matters.
+
+`observe --from` is deferred: a checklist with many looks is plausible, but each look is one small create-new file and a loop loses nothing. It is planned if real checklists show the need.
+
+### 4.6 Guarding `edit apply` from the hook (item 6e, the hook-side shape)
+
+Evaluating a recipe's targets inside the `pre-tool-use` hook would mean finding recipe files from a shell command line (after `cd`, through variables, in a pipeline), reading them before the command runs, and giving up on a recipe passed on stdin. It would also work on one harness only. The verb-side check in 2.4 is exact and works everywhere.
+
+## 5. Open questions
+
+1. **May a decision gain a front-matter key (`verified_basis`)?** It is the only honest way to let an attested checklist reach `verified` (4.3), and it changes the decision file's shape for any other reader of the layout. Recommendation: yes, in dev.10, written only when the basis is `attested`, so existing files and every decision verified by a passing check are byte-identical to today.
+2. **May `mission.md` be annotated as 2.6 describes?** It is the authority document. Recommendation: yes; the edits add a status table and mark three sentences superseded, and change no decision.
+
+Everything else in this specification is decided.
+
+## 6. What was checked
+
+Each description of today's behaviour was compared with the code and guides at `80caece`.
+
+| Claim | Finding |
+|---|---|
+| Checked verdicts live only in the local index | Correct (`cite_checks`, written only by `kb stale`). The cached row is matched by token text and checker name; the checker's version is displayed, not matched |
+| `kb edit apply` reads stdin | It does not; it takes file paths only. It is the Splicery adapter, separate from the frozen trial flow |
+| Investigations can be created through `record` | They cannot: `record` takes `ticket`, `decision` and `link`. `status --set` writes four investigation states |
+| "A checker together with a TTL" was built as `max_age` | No. It means a checked kind that also ages by lifetime, which is still refused; `max_age` bounds the age of a cached verdict |
+| Weft's status conflicts across `status.md`, `mission.md` and `qualification/status.json` | The conflict is within `mission.md` (three places, 2.6). `status.md` agrees with the project instructions; `qualification/status.json` holds history only |
+| `paths` is refused beside `commands` | Correct, and a call with no file never matches a `paths` rule |
+| The proposal cap counts tracked proposals | Correct: ten per session label over both stores, one per ID |
+| `verified` refuses attested and waived gates | Correct; a checklist gate is also not resolvable as `--evidence` today |
+| Partial clones read `unverifiable: partial-clone` | Correct. Sparse checkouts are unaffected: the check reads Git objects |
+| The symbol index is built by hand | Correct: Tuft imports ctags JSON and its sidecar and never runs ctags |
+| `gate status` exit codes for a stop recipe | 0 met, 2 owed, 3 with no current run (run on a fixture KB) |
+
+## 7. Decisions (owner, 15 November 2026)
+
+These override the sections above where they differ.
+
+1. **Open question 1 (`verified_basis`):** planned, not in dev.9. The pattern in 2.7 is documented now; the qualified state waits until real checklists show how often it is needed.
+2. **Open question 2 (`mission.md`):** yes, as 2.6 describes: a component-status table and three in-place "Superseded" marks, no decision changed.
+3. **Cut line:** steps 1–7 must land. Steps 8 (guard rules in `edit apply`) and 9 (`tuft index`) are built in this round too and ship in dev.9 when each is complete and gated; either moves to dev.10 whole rather than half-built.
+4. **Pruning superseded check receipts** removes files from the work tree only; Git history keeps them. A receipt is never edited.
+5. Nothing in this round changes an existing text golden except where a step above names it.
