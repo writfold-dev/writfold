@@ -1,20 +1,19 @@
 run-20261101T090000Z-a1b2c3 [open]  Batch ledger writes rollout  project=harbor  subject=kb
 [1 progress] 2 gates 3 timeline 4 inbox 5 guards 6 stale 7 brief 8 resume
 ┌ runs (1) ────────────────────────────┐┌ progress: map run-20261101T090000Z-a1b2c3 ───────────────────────────┐┌ step 2/4 (Esc: back) ────────────────────────┐
-│> [open] run-20261101T090000Z-a1b2c3  ││plan 1 done, 1 skipped of 4 steps; current step 2/4; owes 0 of 0 gates││step 2/4 · merge#1/finish/side#1/child        │
-│    Batch ledger writes rollout       ││ ┬ merge#1 @8ee8a893f113 from .writfold/plans/merge.toml              ││[current]                                     │
-│    project=harbor                    ││ – merge#1/prefix                        prefix not needed ( !skipped ││splice: side#1 @20d37b2daa99 from             │
-│    plan: step 2/4 done=1 skipped=1 cu││ ├─╮ side#1 @20d37b2daa99 from .writfold/plans/side.toml              ││.writfold/plans/side.toml                     │
-│    last: 2026-11-03T16:00:00Z Recorde││ │ ▶ merge#1/finish/side#1/child           no gates                   ││  @runs/run-20261101T090000Z-a1b2c3/plan/splic│
-│                                      ││ ├─╯                                                                  ││  e-merge.1~finish~side.1.json:1              │
-│                                      ││ ✓ merge#1/finish                        recorded 2026- !out-of-order ││under: merge#1/finish                         │
-│                                      ││ ○ merge#1/later                         no gates                     ││no gates                                      │
-│                                      ││ ┴                                                                    ││gates (0)                                     │
-│                                      ││                                                                      ││next: writfold kb plan advance                │
-│                                      ││                                                                      ││last plan event: 2026-11-10T23:58:50Z spliced │
-│                                      ││                                                                      ││merge#1/finish/side#1                         │
+│> [open] run-20261101T090000Z-a1b2c3  ││plan 1 done, 1 skipped of 4 steps; current step 2/4; owes 0 of 0 gates││merge#1/finish/side#1/child [current]         │
+│    Batch ledger writes rollout       ││disorder=1                                                            ││splice: side#1 @20d37b2daa99 from             │
+│    project=harbor                    ││ ┬ merge#1 @8ee8a893f113 from .writfold/plans/merge.toml              ││.writfold/plans/side.toml                     │
+│    plan: step 2/4 done=1 skipped=1 cu││ – merge#1/prefix  prefix not needed (by owner, 2026-11-10T23:58:30Z) ││  @runs/run-20261101T090000Z-a1b2c3/plan/splic│
+│    last: 2026-11-03T16:00:00Z Recorde││ ├─╮ side#1 @20d37b2daa99 from .writfold/plans/side.toml              ││  e-merge.1~finish~side.1.json:1              │
+│                                      ││ │ ▶ side#1/child  no gates                                           ││under: merge#1/finish                         │
+│                                      ││ ├─╯                                                                  ││no gates                                      │
+│                                      ││ ✓ merge#1/finish  recorded 2026-11-10T23:58:40Z !out-of-order        ││next: writfold kb plan advance                │
+│                                      ││ ○ merge#1/later   no gates                                           ││last plan event: 2026-11-10T23:58:50Z spliced │
+│                                      ││ ┴                                                                    ││merge#1/finish/side#1                         │
 │                                      ││                                                                      ││last checkpoint: 2026-11-03T16:00:00Z Recorded│
 │                                      ││                                                                      ││the plan fixture.                             │
+│                                      ││                                                                      ││                                              │
 │                                      ││                                                                      ││                                              │
 │                                      ││                                                                      ││                                              │
 │                                      ││                                                                      ││                                              │
@@ -35,6 +34,7 @@ run-20261101T090000Z-a1b2c3 [open]  Batch ledger writes rollout  project=harbor 
 │                                      ││last plan event: 2026-11-10T23:58:50Z spliced merge#1/finish/side#1   ││                                              │
 │                                      ││last checkpoint: 2026-11-03T16:00:00Z Recorded the plan fixture.      ││                                              │
 │                                      ││● satisfied ◆ attested/waived ○ open ! stale × failed ? unknown       ││                                              │
-│                                      ││· later, not judged; ▶ recorded current step, not a liveness claim    ││full receipts: g   all steps as text: x       │
+│                                      ││· later, not judged; ▶ next step to pick up (recorded, not a liveness ││                                              │
+│                                      ││claim)                                                                ││full receipts: g   all steps as text: x       │
 └──────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────┘
 kb=XXXXXXXXXXXX index=refreshed:1  subject=kb@4cb712cd81b9+dirty:0              asked 00:00:00Z theme=ansi read-only  jk node  l inspect  . current  n flag  ? q

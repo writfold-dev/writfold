@@ -1,30 +1,30 @@
 run-20261101T090000Z-a1b2c3 [open]  Batch ledger writes rollout  project=harbor  subject=kb
 [1 progress] 2 gates 3 timeline 4 inbox 5 guards 6 stale 7 brief 8 resume
 gates:  of 0 | inbox: drafts=0 proposals=0 | guards: deny=0 ask=0 of 0
-┌ runs (1) ────────────┐┌ progress: map run-20261101T09┐┌ step 2/4 (Esc: back) ────────────────────┐
-│> [open] run-20261101T││plan 1 done, 1 skipped of 4 st││step 2/4 · merge#1/finish/side#1/child    │
-│    Batch ledger write││ ┬ merge#1 @8ee8a893f113 from ││[current]                                 │
-│    project=harbor    ││ – merge#1/prefix    !skipped ││splice: side#1 @20d37b2daa99 from         │
-│    plan: step 2/4 don││ ├─╮ side#1 @20d37b2daa99 from││.writfold/plans/side.toml                 │
-│    last: 2026-11-03T1││ │ ▶ …#1/finish/side#1/child  ││  @runs/run-20261101T090000Z-a1b2c3/plan/s│
-│                      ││ ├─╯                          ││  plice-merge.1~finish~side.1.json:1      │
-│                      ││ ✓ …e#1/finish  !out-of-order ││under: merge#1/finish                     │
-│                      ││ ○ merge#1/later              ││no gates                                  │
-│                      ││ ┴                            ││gates (0)                                 │
-│                      ││                              ││next: writfold kb plan advance            │
-│                      ││                              ││last plan event: 2026-11-10T23:58:50Z     │
-│                      ││                              ││spliced merge#1/finish/side#1             │
-│                      ││                              ││last checkpoint: 2026-11-03T16:00:00Z     │
-│                      ││                              ││Recorded the plan fixture.                │
-│                      ││                              ││                                          │
-│                      ││                              ││                                          │
-│                      ││                              ││                                          │
-│                      ││                              ││                                          │
-│                      ││                              ││                                          │
-│                      ││                              ││                                          │
-│                      ││                              ││                                          │
-│                      ││recorded position: step 2/4 (f││                                          │
-│                      ││last plan event: 2026-11-10T23││                                          │
-│                      ││last checkpoint: 2026-11-03T16││full receipts: g   all steps as text: x   │
-└──────────────────────┘└──────────────────────────────┘└──────────────────────────────────────────┘
+┌ runs (1) ──────────┐┌ progress: map run-20261101T090000Z-a┐┌ step 2/4 (Esc: back) ───────────────┐
+│> [open] run-2026110││plan 1 done, 1 skipped of 4 steps;   ││merge#1/finish/side#1/child [current]│
+│    Batch ledger wri││current step 2/4; owes 0 of 0 gates  ││splice: side#1 @20d37b2daa99 from    │
+│    project=harbor  ││disorder=1                           ││.writfold/plans/side.toml            │
+│    plan: step 2/4 d││ ┬ merge#1 @8ee8a893f113 from .writfo││  @runs/run-20261101T090000Z-a1b2c3/p│
+│    last: 2026-11-03││ – merge#1/prefix  prefix not neede… ││  lan/splice-merge.1~finish~side.1.js│
+│                    ││ ├─╮ side#1 @20d37b2daa99 from .writf││  on:1                               │
+│                    ││ │ ▶ side#1/child  no gates          ││under: merge#1/finish                │
+│                    ││ ├─╯                                 ││no gates                             │
+│                    ││ ✓ merge#1/finish      !out-of-order ││next: writfold kb plan advance       │
+│                    ││ ○ merge#1/later   no gates          ││last plan event: 2026-11-10T23:58:50Z│
+│                    ││ ┴                                   ││spliced merge#1/finish/side#1        │
+│                    ││                                     ││last checkpoint: 2026-11-03T16:00:00Z│
+│                    ││                                     ││Recorded the plan fixture.           │
+│                    ││                                     ││                                     │
+│                    ││                                     ││                                     │
+│                    ││                                     ││                                     │
+│                    ││recorded position: step 2/4 (first   ││                                     │
+│                    ││step neither done nor skipped)       ││                                     │
+│                    ││last plan event: 2026-11-10T23:58:50Z││                                     │
+│                    ││spliced merge#1/finish/side#1        ││                                     │
+│                    ││last checkpoint: 2026-11-03T16:00:00Z││                                     │
+│                    ││Recorded the plan fixture.           ││                                     │
+│                    ││● satisfied ◆ attested/waived ○ open ││                                     │
+│                    ││! stale × failed ? unknown           ││full receipts: g   all steps as text:│
+└────────────────────┘└─────────────────────────────────────┘└─────────────────────────────────────┘
 kb=XXXXXXXXXXXX ind asked 00:00:00Z theme=ansi read-only  jk node  l inspect  . current  n flag  ? q

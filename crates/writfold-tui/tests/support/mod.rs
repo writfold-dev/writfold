@@ -175,8 +175,24 @@ pub fn world(name: &str) -> TestResult<World> {
 /// Receipt names end in a UTC time and six random hex digits.
 pub fn stable(text: &str) -> String {
     let names = regex::Regex::new(r"-(\d{8}T\d{6}Z)-[0-9a-f]{6}\.json");
-    match names {
+    let text = match names {
         Ok(re) => re.replace_all(text, "-$1-XXXXXX.json").into_owned(),
         Err(_) => text.to_owned(),
+    };
+    // A suffix clipped by a pane edge keeps its width but not its value.
+    // Run ids are recorded fixture names and stay as they are.
+    match regex::Regex::new(r"(\w*-\d{8}T\d{6}Z-)([0-9a-f]{1,5})(│|\n|$)") {
+        Ok(re) => re
+            .replace_all(&text, |c: &regex::Captures<'_>| {
+                let keep = c[1].starts_with("run-");
+                let tail = if keep {
+                    c[2].to_owned()
+                } else {
+                    "X".repeat(c[2].len())
+                };
+                format!("{}{tail}{}", &c[1], &c[3])
+            })
+            .into_owned(),
+        Err(_) => text,
     }
 }

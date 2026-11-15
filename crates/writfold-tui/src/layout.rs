@@ -78,10 +78,18 @@ pub fn focused(width: u16, height: u16, map: bool, inspector: bool) -> Areas {
             areas.timeline = None;
         }
         Class::Medium => {
-            areas.runs = Some(Rect::new(0, areas.main.y, 24, areas.main.height));
-            areas.main.x = 24;
-            areas.main.width = 32;
-            areas.inspector = Some(Rect::new(56, areas.main.y, width - 56, areas.main.height));
+            // Map and inspector share what the runs list leaves, map first.
+            let map = (width - 22).div_ceil(2).max(32);
+            areas.runs = Some(Rect::new(0, areas.main.y, 22, areas.main.height));
+            areas.main.x = 22;
+            areas.main.width = map;
+            let right = 22 + map;
+            areas.inspector = Some(Rect::new(
+                right,
+                areas.main.y,
+                width - right,
+                areas.main.height,
+            ));
         }
         Class::Narrow if inspector => areas.inspector = Some(areas.main),
         _ => {}

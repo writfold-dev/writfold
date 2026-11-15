@@ -3,8 +3,8 @@ use crate::app::{App, Focus, View};
 use crate::cells::Glyphs;
 use crate::lines::{self, Tone};
 use crate::source::field;
-use crate::{graph, paint, progress, rail, style};
-use ratatui::{Frame, layout::Rect, style::Modifier, text::Line, widgets::Paragraph};
+use crate::{graph, paint, progress, rail, style, wrap};
+use ratatui::{Frame, layout::Rect, style::Modifier, widgets::Paragraph};
 
 pub(crate) fn glyphs(app: &App) -> Glyphs {
     if app.dumb || app.look.depth == style::Depth::None {
@@ -17,12 +17,19 @@ pub(crate) fn glyphs(app: &App) -> Glyphs {
 pub(crate) fn records(app: &App) -> Vec<lines::Line> {
     let mut out = Vec::new();
     if let Some(answer) = app.answer(View::Progress) {
-        let position = match (answer.count("current"), answer.count("steps")) {
-            (Some(0), _) => "every step is done or skipped".into(),
-            (Some(current), Some(total)) => {
-                format!("step {current}/{total} (first step neither done nor skipped)")
-            }
-            _ => "gates not judged (no subject repository)".into(),
+        // The row the verb marks current is the position, judged or not.
+        let nodes = graph::nodes(answer);
+        let current = nodes
+            .iter()
+            .position(|n| field(n.row, "status") == "current");
+        let position = match current {
+            Some(at) => format!(
+                "step {}/{} (first step neither done nor skipped)",
+                at + 1,
+                nodes.len()
+            ),
+            None if nodes.is_empty() => "no plan steps recorded".into(),
+            None => "every step is done or skipped".into(),
         };
         out.push(lines::line(
             format!("recorded position: {position}"),
@@ -56,12 +63,12 @@ fn legend(glyphs: Glyphs) -> [&'static str; 2] {
     if glyphs == Glyphs::Unicode {
         [
             "● satisfied ◆ attested/waived ○ open ! stale × failed ? unknown",
-            "· later, not judged; ▶ recorded current step, not a liveness claim",
+            "· later, not judged; ▶ next step to pick up (recorded, not a liveness claim)",
         ]
     } else {
         [
-            "o satisfied/open * attested/waived ! stale x failed ? unknown",
-            ". later, not judged; [>] recorded current step, not a liveness claim",
+            "+ satisfied * attested/waived o open ! stale x failed ? unknown",
+            ". later, not judged; [>] next step to pick up (recorded, not a liveness claim)",
         ]
     }
 }
@@ -85,12 +92,33 @@ pub(crate) fn draw(frame: &mut Frame<'_>, app: &mut App, area: Rect) {
     let glyphs = glyphs(app);
     let rail = rail::build(&nodes, inner.width, glyphs, app.look);
     let mut records = records(app);
-    if inner.width >= 64 {
-        records.extend(legend(glyphs).map(|s| lines::line(s, Tone::Dim)));
+    records.extend(legend(glyphs).map(|s| lines::line(s, Tone::Dim)));
+    let top = prelude(answer);
+    // Facts and records wrap; the rail keeps at least four rows, so the
+    // legend goes first, then the oldest record lines, when space is short.
+    let budget = usize::from(inner.height.saturating_sub(4).min(inner.height / 2));
+    let tall = |set: &[lines::Line]| {
+        set.iter()
+            .map(|l| wrap::height(l, inner.width))
+            .sum::<usize>()
+    };
+    while !records.is_empty() && tall(&top) + tall(&records) > budget {
+        records.pop();
     }
-    records.truncate(usize::from(inner.height.saturating_sub(4)));
-    let top = prelude(frame, answer, inner, app.look);
-    let height = inner.height.saturating_sub(top + records.len() as u16);
+    let top_height = tall(&top).min(budget) as u16;
+    let records_height = tall(&records) as u16;
+    wrap::draw(
+        frame,
+        &top,
+        Rect {
+            height: top_height,
+            ..inner
+        },
+        app.look,
+        0,
+    );
+    let top = top_height;
+    let height = inner.height.saturating_sub(top + records_height);
     let window = rail::window(&rail, selected, usize::from(height), app.rail_offset);
     let selected_line = rail.node_lines.get(selected).copied();
     for (y, mut line) in rail
@@ -108,21 +136,12 @@ pub(crate) fn draw(frame: &mut Frame<'_>, app: &mut App, area: Rect) {
             Rect::new(inner.x, inner.y + top + y as u16, inner.width, 1),
         );
     }
-    for (y, line) in records.into_iter().enumerate() {
-        frame.render_widget(
-            Paragraph::new(Line::styled(line.text, style::style(app.look, line.tone))),
-            Rect::new(inner.x, inner.y + top + height + y as u16, inner.width, 1),
-        );
-    }
+    let below = Rect::new(inner.x, inner.y + top + height, inner.width, records_height);
+    wrap::draw(frame, &records, below, app.look, 0);
     app.rail_offset = window.start;
 }
 
-fn prelude(
-    frame: &mut Frame<'_>,
-    answer: &crate::source::Reply,
-    area: Rect,
-    look: style::Look,
-) -> u16 {
+fn prelude(answer: &crate::source::Reply) -> Vec<lines::Line> {
     let mut lines: Vec<_> = progress::facts(answer).into_iter().collect();
     if answer.count("current").is_none() {
         lines.extend(
@@ -132,12 +151,5 @@ fn prelude(
                 .map(|n| lines::line(format!("# note: {n}"), Tone::Warn)),
         );
     }
-    let top = lines.len() as u16;
-    for (y, line) in lines.into_iter().enumerate() {
-        frame.render_widget(
-            Paragraph::new(Line::styled(line.text, style::style(look, line.tone))),
-            Rect::new(area.x, area.y + y as u16, area.width, 1),
-        );
-    }
-    top
+    lines
 }

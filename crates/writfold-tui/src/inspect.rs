@@ -104,16 +104,19 @@ fn checklist(gate: &Value, items: &[&Value], glyphs: Glyphs, look: Look) -> Opti
 }
 
 fn gates(out: &mut Vec<InspectLine>, node: &Node<'_>, glyphs: Glyphs, look: Look) {
-    let mut spans = vec![Span::raw(format!("gates ({})  ", node.chips.len()))];
-    spans.extend(
-        node.chips
-            .iter()
-            .map(|status| cell_span(cells::chip(status, glyphs), look)),
-    );
-    out.push(InspectLine {
-        indent: 0,
-        text: Line::from(spans),
-    });
+    // A step without gates already says "no gates" in its own text.
+    if !node.chips.is_empty() {
+        let mut spans = vec![Span::raw(format!("gates ({})  ", node.chips.len()))];
+        spans.extend(
+            node.chips
+                .iter()
+                .map(|status| cell_span(cells::chip(status, glyphs), look)),
+        );
+        out.push(InspectLine {
+            indent: 0,
+            text: Line::from(spans),
+        });
+    }
     let more: Vec<_> = lines::more(node.row).collect();
     for (index, value) in more.iter().enumerate() {
         let label = field(value, "label");
@@ -144,15 +147,9 @@ fn labelled(out: &mut Vec<InspectLine>, node: &Node<'_>, labels: &[&str], look: 
 }
 
 /// `index` is zero-based. Text excludes `indent`; render in a narrowed rectangle.
-pub fn content(
-    node: &Node<'_>,
-    index: usize,
-    total: usize,
-    glyphs: Glyphs,
-    look: Look,
-) -> Vec<InspectLine> {
+pub fn content(node: &Node<'_>, glyphs: Glyphs, look: Look) -> Vec<InspectLine> {
     let status = field(node.row, "status");
-    let mut out = vec![header(node, index, total, glyphs, look)];
+    let mut out = vec![header(node, look)];
     labelled(&mut out, node, &["splice", "under", "why", "owes"], look);
     if status != "skipped" && !field(node.row, "text").is_empty() {
         out.push(plain(
@@ -184,11 +181,9 @@ pub fn content(
     out
 }
 
-fn header(node: &Node<'_>, index: usize, total: usize, glyphs: Glyphs, look: Look) -> InspectLine {
-    let separator = match glyphs {
-        Glyphs::Unicode => "·",
-        Glyphs::Ascii => "-",
-    };
+// The pane title carries "step N/M"; the body leads with the id alone so a
+// long id wraps on its own line instead of stranding a prefix.
+fn header(node: &Node<'_>, look: Look) -> InspectLine {
     let status = field(node.row, "status");
     let standing = if status.is_empty() {
         String::new()
@@ -197,12 +192,7 @@ fn header(node: &Node<'_>, index: usize, total: usize, glyphs: Glyphs, look: Loo
     };
     plain(
         0,
-        format!(
-            "step {}/{total} {separator} {}{standing}{}",
-            index + 1,
-            node.id,
-            lines::suffix(node.row, false)
-        ),
+        format!("{}{standing}{}", node.id, lines::suffix(node.row, false)),
         Tone::Head,
         look,
     )

@@ -19,13 +19,7 @@ pub(crate) fn draw(frame: &mut Frame<'_>, app: &mut App, area: Rect) {
     let border = paint::block(title, app.focus == Focus::Inspector, app.look);
     let inner = border.inner(area);
     frame.render_widget(border, area);
-    let mut lines = inspect::content(
-        &nodes[index],
-        index,
-        nodes.len(),
-        map_view::glyphs(app),
-        app.look,
-    );
+    let mut lines = inspect::content(&nodes[index], map_view::glyphs(app), app.look);
     let hint = lines.pop();
     lines.extend(recorded(app));
     let body = Rect::new(

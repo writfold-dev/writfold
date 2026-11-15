@@ -49,7 +49,7 @@ fn cell(glyphs: Glyphs, unicode: &'static str, ascii: &'static str, tone: Tone) 
 
 pub fn chip(status: &str, glyphs: Glyphs) -> Cell {
     let (unicode, ascii, tone) = match status {
-        "satisfied" => ("●", "o", Tone::Good),
+        "satisfied" => ("●", "+", Tone::Good),
         "attested" | "waived" => ("◆", "*", Tone::Vouched),
         "open" => ("○", "o", Tone::Warn),
         "stale" => ("!", "!", Tone::Bad),

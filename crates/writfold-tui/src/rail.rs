@@ -41,13 +41,15 @@ fn same_group(a: &Node<'_>, b: &Node<'_>) -> bool {
 }
 
 pub fn build<'a>(nodes: &[Node<'a>], width: u16, glyphs: Glyphs, look: Look) -> Rail<'a> {
-    let ids = nodes.iter().enumerate().map(|(i, n)| (n.id, i)).collect();
+    let ids: HashMap<&str, usize> = nodes.iter().enumerate().map(|(i, n)| (n.id, i)).collect();
     let mut rail = Rail {
         lines: Vec::new(),
         node_lines: Vec::with_capacity(nodes.len()),
     };
     let mut stack: Vec<usize> = Vec::new();
     let mut root_seen = false;
+    let chips = nodes.iter().map(|n| n.chips.len()).max().unwrap_or(0);
+    let column = id_column(nodes);
     for (index, node) in nodes.iter().enumerate() {
         let path = group_path(index, nodes, &ids);
         let common = stack
@@ -80,7 +82,12 @@ pub fn build<'a>(nodes: &[Node<'a>], width: u16, glyphs: Glyphs, look: Look) -> 
             stack.push(ancestor);
         }
         rail.node_lines.push(rail.lines.len());
-        rail.lines.push(node_line(node, width, glyphs, look));
+        let shape = Shape {
+            chips,
+            ids: column,
+            glyphs,
+        };
+        rail.lines.push(node_line(node, width, shape, look));
     }
     close(&mut rail.lines, &stack, 0, glyphs, look);
     rail.lines.push(Line::styled(
@@ -123,18 +130,81 @@ fn left(text: &str, width: usize, glyphs: Glyphs) -> String {
     format!("{marker}{}", &text[start..])
 }
 
-fn node_line<'a>(node: &Node<'a>, width: u16, glyphs: Glyphs, look: Look) -> Line<'a> {
+/// Rail flags repeat only what the state glyph cannot say: disorder and invalid.
+const ROW_FLAGS: [&str; 4] = ["out-of-order", "two-plans", "repeated", "invalid"];
+
+#[derive(Clone, Copy)]
+struct Shape {
+    chips: usize,
+    ids: usize,
+    glyphs: Glyphs,
+}
+
+/// The widest id as shown (group-relative, plus its depth rail), capped so
+/// rail text keeps room; ids are aligned to the deepest one.
+fn id_column(nodes: &[Node<'_>]) -> usize {
+    nodes
+        .iter()
+        .map(|n| Span::raw(shown_id(n.id, n.group)).width() + 2 * n.depth)
+        .max()
+        .unwrap_or(0)
+        .min(36)
+}
+
+/// Inside a group, the id is shown from the group's own splice name; the
+/// header above already names the ancestors (presentation only).
+fn shown_id<'a>(id: &'a str, group: &str) -> &'a str {
+    let name = group.split(' ').next().unwrap_or_default();
+    if name.is_empty() {
+        return id;
+    }
+    let prefix = format!("{name}/");
+    if id.starts_with(&prefix) {
+        return id;
+    }
+    id.rfind(&format!("/{prefix}"))
+        .map_or(id, |at| &id[at + 1..])
+}
+
+fn clip(text: &str, width: usize, glyphs: Glyphs) -> String {
+    if Span::raw(text).width() <= width {
+        return text.into();
+    }
+    let marker = mark(glyphs, "…", "...");
+    let keep = width.saturating_sub(Span::raw(marker).width());
+    let end = text
+        .char_indices()
+        .nth(keep)
+        .map_or(text.len(), |(at, _)| at);
+    if keep == 0 {
+        return String::new();
+    }
+    format!("{}{marker}", &text[..end])
+}
+
+fn node_line<'a>(node: &Node<'a>, width: u16, shape: Shape, look: Look) -> Line<'a> {
+    let Shape { chips, ids, glyphs } = shape;
+    let flags: Vec<_> = node
+        .flags
+        .iter()
+        .filter(|f| ROW_FLAGS.contains(f))
+        .collect();
     let state = node.state.cell(glyphs);
     let prefix = format!(
         " {}{} ",
         mark(glyphs, "│ ", "| ").repeat(node.depth),
         state.glyph
     );
-    let flags_width: usize = node.flags.iter().map(|f| f.len() + 2).sum();
-    let fixed = Span::raw(&prefix).width() + node.chips.len() + 2 + flags_width;
+    let flags_width: usize = flags.iter().map(|f| f.len() + 2).sum();
+    let fixed = Span::raw(&prefix).width() + chips + 2 + flags_width;
     let available = usize::from(width).saturating_sub(fixed);
-    let id_width = if available > 44 { 36 } else { available };
-    let id = left(node.id, id_width, glyphs);
+    let column = ids.saturating_sub(2 * node.depth).max(8);
+    let id_width = if available > column + 8 {
+        column
+    } else {
+        available
+    };
+    let id = left(shown_id(node.id, node.group), id_width, glyphs);
     let pad = id_width.saturating_sub(Span::raw(&id).width());
     let mut spans = vec![
         Span::styled(prefix, style::style(look, state.tone)),
@@ -145,19 +215,17 @@ fn node_line<'a>(node: &Node<'a>, width: u16, glyphs: Glyphs, look: Look) -> Lin
         let cell = cells::chip(status, glyphs);
         Span::styled(cell.glyph, style::style(look, cell.tone))
     }));
+    spans.push(Span::raw(
+        " ".repeat(chips.saturating_sub(node.chips.len())),
+    ));
     let text_width = available.saturating_sub(id_width);
-    if text_width > 0 {
-        let end = node
-            .rail_text
-            .char_indices()
-            .nth(text_width.saturating_sub(1))
-            .map_or(node.rail_text.len(), |(at, _)| at);
+    if text_width > 1 {
         spans.push(Span::styled(
-            format!(" {}", &node.rail_text[..end]),
+            format!(" {}", clip(node.rail_text, text_width - 1, glyphs)),
             style::style(look, Tone::Dim),
         ));
     }
-    for flag in &node.flags {
+    for flag in flags {
         spans.push(Span::styled(
             format!(" !{flag}"),
             style::style(look, Tone::Bad),

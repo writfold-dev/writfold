@@ -117,6 +117,10 @@ fn no_subject_keeps_notes_without_claiming_completion() -> TestResult {
     for (width, height) in [(160, 40), (100, 30), (72, 20)] {
         let text = symbols(&render(&mut app, width, height)?);
         honest(&text)?;
+        if width == 160 {
+            // The verb still marks a current row without a subject to judge.
+            assert!(text.contains("recorded position: step 7/11"), "{text}");
+        }
         assert!(!text.contains("every step is done or skipped"));
         assert!(!text.contains("all steps done"));
         let prefix: String = subject_note.chars().take(20).collect();

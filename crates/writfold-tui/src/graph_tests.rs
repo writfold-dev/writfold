@@ -151,7 +151,7 @@ fn ascii_step_shapes_are_six_distinct_states() {
 #[test]
 fn chip_and_segment_shapes_and_tones_are_status_projections() {
     for (status, unicode, ascii, tone) in [
-        ("satisfied", "●", "o", Tone::Good),
+        ("satisfied", "●", "+", Tone::Good),
         ("attested", "◆", "*", Tone::Vouched),
         ("waived", "◆", "*", Tone::Vouched),
         ("open", "○", "o", Tone::Warn),
@@ -175,5 +175,18 @@ fn chip_and_segment_shapes_and_tones_are_status_projections() {
     ] {
         assert_eq!(segment(status, Glyphs::Unicode).glyph, shape);
     }
-    assert_ne!(chip("later", Glyphs::Ascii), chip("open", Glyphs::Ascii));
+    // Shapes alone distinguish every judged standing without colour.
+    let shapes: std::collections::HashSet<_> = [
+        "satisfied",
+        "attested",
+        "open",
+        "stale",
+        "failed",
+        "later",
+        "unknown",
+    ]
+    .map(|s| chip(s, Glyphs::Ascii).glyph)
+    .into_iter()
+    .collect();
+    assert_eq!(shapes.len(), 7);
 }

@@ -47,9 +47,9 @@ fn fixture() -> Value {
 #[test]
 fn preserves_continuations_and_separate_evidence() {
     let row = fixture();
-    let output = content(&node(&row), 1, 9, Glyphs::Unicode, Look::default());
+    let output = content(&node(&row), Glyphs::Unicode, Look::default());
     let text = texts(&output);
-    assert_eq!(text[0], "step 2/9 · plan#1/check [done] !stale");
+    assert_eq!(text[0], "plan#1/check [done] !stale");
     for value in lines::more(&row) {
         assert!(text.iter().any(|line| line.contains(field(value, "text"))));
         let path = field(value, "path");
@@ -73,7 +73,7 @@ fn preserves_continuations_and_separate_evidence() {
 fn segments_keep_order_and_source_count_without_judging() {
     let row = fixture();
     for (glyphs, expected) in [(Glyphs::Unicode, "■ ◆ ! □ "), (Glyphs::Ascii, "x * ! . ")] {
-        let output = content(&node(&row), 0, 1, glyphs, Look::default());
+        let output = content(&node(&row), glyphs, Look::default());
         assert!(
             texts(&output).contains(&format!("9/12 required covered  {expected}(+1 optional)"))
         );
@@ -100,10 +100,10 @@ fn optional_marker_must_be_exact_prefix() {
 fn no_gates_and_unjudged_text_do_not_invent_standing() {
     for text in ["no gates", "gates: review, unit"] {
         let row = json!({"id":"p#1/a", "status":"current", "text":text});
-        let output = texts(&content(&node(&row), 0, 1, Glyphs::Ascii, Look::default()));
-        assert_eq!(output[0], "step 1/1 - p#1/a [current]");
+        let output = texts(&content(&node(&row), Glyphs::Ascii, Look::default()));
+        assert_eq!(output[0], "p#1/a [current]");
         assert!(output.contains(&text.to_owned()));
-        assert!(output.contains(&"gates (0)  ".to_owned()));
+        assert!(!output.iter().any(|line| line.starts_with("gates (")));
         assert!(
             !output
                 .iter()
@@ -116,13 +116,7 @@ fn no_gates_and_unjudged_text_do_not_invent_standing() {
 fn skipped_event_path_follows_verbatim_reason() {
     let row = json!({"id":"p#1/a", "status":"skipped", "text":"not needed (by owner, DATE)",
         "path":"runs/r/plan/skip-a.json", "line":1});
-    let output = texts(&content(
-        &node(&row),
-        0,
-        1,
-        Glyphs::Unicode,
-        Look::default(),
-    ));
+    let output = texts(&content(&node(&row), Glyphs::Unicode, Look::default()));
     assert!(output.windows(2).any(|pair| pair
         == [
             "skip: not needed (by owner, DATE)",
