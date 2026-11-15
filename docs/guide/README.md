@@ -1,6 +1,6 @@
 # Writfold guides
 
-> **Status:** built in v0.5.0-dev.5 (`writfold watch` shows run progress: plan steps with their gates and checklist items, guard rules, the inbox and a run timeline, with six colour themes; see [Watching a run](watch.md)). Each page below says what is built and what is planned.
+> **Status:** built in v0.5.0-dev.6 (`writfold watch` draws the run's plan as a map: nested splice groups, a state glyph and gate chips per step, the next step to pick up, and an inspector for each node; the clay theme is the default; see [Watching a run](watch.md)). Each page below says what is built and what is planned.
 
 These pages hold the full skeletons the website only sketches: file layouts, complete configuration files and real command output. The output comes from an invented demo knowledge base (`harbor`); run IDs and digests are real, local paths are cut to `…`.
 
