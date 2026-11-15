@@ -1,0 +1,40 @@
+ Add --plan to kb runs  [open] [current] [harbor]  subject kb                                                                       run-20261101T090000Z-a1b2c3
+ [1 progress]   2 gates !2 ○2    3 timeline    4 inbox 3    5 guards deny 1    6 stale    7 brief    8 resume
+╭ runs (3) ────────────────────────────╮╭ plan ────────────────────────────────────────────────────────────────╮╭ step 7/11 ───────────────────────────────────╮
+│> Add --plan to kb runs               ││step 7 of 11    5 done  1 skipped  1 stale                            ││check [current]                               │
+│  harbor  step 7/11                   ││                                                                      ││change#1/review/review#1/findings/findings#1/c│
+│  Review the lantern guide            ││ ┬ change#1                                                           ││heck                                          │
+│  lantern                             ││ ✓ research    ●                                                      ││                                              │
+│  Retire the legacy flush path        ││ ! implement   ●!                                                     ││owes: review-list [stale], signoff [open]     │
+│  closed  harbor  complete            ││ – benchmarks                                                         ││                                              │
+│                                      ││ ├─╮ review#1                                                         ││gate review-list [stale] checklist 2/4        │
+│                                      ││ │ ├─╮ notes#1                                                        ││required covered                              │
+│                                      ││ │ │ ✓ read    ●                                                      ││  ■ ! □ ◆ (+1 optional)                       │
+│                                      ││ │ ├─╯                                                                ││  ! tests [stale] 1 reference by agent; cited │
+│                                      ││ │ ✓ read-diff ●                                                      ││  evidence moved: gate:lint was satisfied, now│
+│                                      ││ │ ├─╮ findings#1                                                     ││  stale                                       │
+│                                      ││ │ │ ✓ prepare ●                                                      ││  □ docs [open] The guide names every new flag│
+│                                      ││ │ │ ▶ check   !○ owes: review-list [stale], signoff [open]           ││  □ style [open] (optional) Names follow the  │
+│                                      ││ │ ├─╯                                                                ││  module                                      │
+│                                      ││ │ ○ findings  ··                                                     ││gate signoff [open] attested                  │
+│                                      ││ ├─╯                                                                  ││                                              │
+│                                      ││ ○ review      ··                                                     ││read: instructions for signoff                │
+│                                      ││ ○ deliver     ·                                                      ││next: writfold kb gate cover review-list tests│
+│                                      ││ ○ reflect                                                            ││supported REF… --by WHO                       │
+│                                      ││ ┴                                                                    ││                                              │
+│                                      ││                                                                      ││                                              │
+│                                      ││                                                                      ││                                              │
+│                                      ││                                                                      ││                                              │
+│                                      ││                                                                      ││                                              │
+│                                      ││                                                                      ││                                              │
+│                                      ││                                                                      ││                                              │
+│                                      ││                                                                      ││                                              │
+│                                      ││                                                                      ││                                              │
+│                                      ││                                                                      ││                                              │
+│                                      ││                                                                      ││                                              │
+│                                      ││                                                                      ││                                              │
+│                                      ││                                                                      ││                                              │
+│                                      ││last plan event  2026-11-10T23:59:50Z done change#1/review/review#1/f…││                                              │
+│                                      ││▶ next step to pick up, as recorded                                   ││d more   g gates   x text                     │
+╰──────────────────────────────────────╯╰──────────────────────────────────────────────────────────────────────╯╰──────────────────────────────────────────────╯
+ [read-only]  kb XXXXXXXXXXXX+dirty:19   index fresh   asked 00:00:00Z                                        j/k step   l inspect   d detail   ? help   q quit

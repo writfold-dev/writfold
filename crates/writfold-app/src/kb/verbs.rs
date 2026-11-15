@@ -67,14 +67,7 @@ pub fn verb(name: &str, common: &Common, positional: &[String]) -> Result<Verb, 
             offline: common.offline,
             cached: common.cached,
         },
-        "find" | "match" => Verb::Find {
-            text: text("some text")?,
-            filter: Filter {
-                kinds: common.kinds.clone(),
-                project: common.project.clone(),
-            },
-            signatures: common.signatures || name == "match",
-        },
+        "find" | "match" => find(name, common, positional)?,
         "status" => Verb::Status {
             target: one("ID or project")?,
         },
@@ -93,6 +86,22 @@ pub fn verb(name: &str, common: &Common, positional: &[String]) -> Result<Verb, 
             other => return Err(format!("unknown index subcommand {other}")),
         },
         other => return Err(format!("unknown verb {other}")),
+    })
+}
+
+/// `find TEXT` and `match TEXT`; `find --kind K` with no text lists records.
+fn find(name: &str, common: &Common, positional: &[String]) -> Result<Verb, String> {
+    let listing = name == "find" && !common.kinds.is_empty() && !common.signatures;
+    if positional.is_empty() && !listing {
+        return Err(format!("{name} takes some text"));
+    }
+    Ok(Verb::Find {
+        text: positional.join(" "),
+        filter: Filter {
+            kinds: common.kinds.clone(),
+            project: common.project.clone(),
+        },
+        signatures: common.signatures || name == "match",
     })
 }
 

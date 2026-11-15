@@ -24,6 +24,13 @@ pub fn draw(frame: &mut Frame<'_>, app: &mut App) {
         frame.render_widget(Paragraph::new(message), size);
         return;
     }
+    if app.mode == crate::kb_state::Mode::Kb {
+        crate::kb_view::draw(frame, app);
+        if app.help {
+            chrome::help(frame, app);
+        }
+        return;
+    }
     let inspect =
         app.focus != Focus::Runs && (class != Class::Narrow || app.focus == Focus::Inspector);
     let areas = layout::focused(size.width, size.height, app.map_visible(), inspect);

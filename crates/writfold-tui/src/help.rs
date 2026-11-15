@@ -59,6 +59,9 @@ pub fn this_frame(app: &App) -> Vec<Line> {
 
 /// The overlay's whole text.
 pub fn overlay(app: &App) -> Vec<Line> {
+    if app.mode == crate::kb_state::Mode::Kb {
+        return crate::kb_help::overlay(app);
+    }
     let mut out = marks(crate::map_view::glyphs(app));
     out.extend(this_frame(app));
     out.extend(crate::frame::help());

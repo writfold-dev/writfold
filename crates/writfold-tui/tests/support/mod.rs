@@ -4,6 +4,8 @@
 //! `gate run`.
 #![allow(dead_code)]
 pub mod buffers;
+pub mod kb_app;
+pub mod kb_world;
 pub mod map;
 pub mod plan;
 pub mod projection;

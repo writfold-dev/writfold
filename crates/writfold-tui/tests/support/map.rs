@@ -7,7 +7,11 @@ use writfold_tui::source::Source;
 
 /// The linear world plus static notes and a second dynamic splice.
 pub fn nested(name: &str) -> TestResult<World> {
-    let w = super::plan::world(&format!("map-nested-{name}"))?;
+    nested_on(super::plan::world(&format!("map-nested-{name}"))?)
+}
+
+/// Add the nested splices to a progress world.
+pub fn nested_on(w: World) -> TestResult<World> {
     template(&w, "notes", &["read: notes"])?;
     template(
         &w,

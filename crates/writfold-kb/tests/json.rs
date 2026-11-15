@@ -14,6 +14,9 @@ const TOP: [&str; 5] = ["writfold_kb", "verb", "rows", "notes", "trailer"];
 const ROW: [&str; 9] = [
     "kind", "id", "status", "text", "path", "line", "flags", "more", "section",
 ];
+/// Keys only `impact` rows add; absent (not null) on every other row.
+const IMPACT_ROW: [&str; 2] = ["edge", "title"];
+const EDGE: [&str; 5] = ["from", "rel", "to", "origin", "depth"];
 const MORE: [&str; 6] = ["label", "text", "path", "line", "flags", "status"];
 const TRAILER: [&str; 15] = [
     "coverage",
@@ -88,10 +91,42 @@ fn the_json_envelope_has_the_documented_keys() -> TestResult {
 }
 
 #[test]
+fn impact_rows_add_only_the_documented_keys() -> TestResult {
+    let w = world(&[])?;
+    let mut request = w.request(Verb::Impact {
+        target: "harbor-db".into(),
+        depth: 2,
+        direction: writfold_kb::verbs::impact::Direction::In,
+        inferred: false,
+    });
+    request.json = true;
+    let body: Value = serde_json::from_str(&writfold_kb::run(&request)?.text)?;
+    let rows = body["rows"].as_array().ok_or("rows")?;
+    assert!(!rows.is_empty());
+    let allowed: BTreeSet<String> = set(&ROW).union(&set(&IMPACT_ROW)).cloned().collect();
+    for row in rows {
+        assert!(set(&ROW).is_subset(&keys(row)), "{row}");
+        assert!(keys(row).is_subset(&allowed), "{row}");
+        assert_eq!(keys(&row["edge"]), set(&EDGE), "{row}");
+        if let Some(title) = row.get("title") {
+            assert!(title.is_string(), "{row}");
+        }
+    }
+    Ok(())
+}
+
+#[test]
 fn the_guide_page_names_every_key() -> TestResult {
     let page = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../docs/guide/json.md");
     let text = std::fs::read_to_string(page)?;
-    for key in TOP.iter().chain(&ROW).chain(&MORE).chain(&TRAILER) {
+    let impact = IMPACT_ROW.iter().chain(&EDGE);
+    for key in TOP
+        .iter()
+        .chain(&ROW)
+        .chain(&MORE)
+        .chain(&TRAILER)
+        .chain(impact)
+    {
         assert!(
             text.contains(&format!("`{key}`")),
             "json.md does not name {key}"

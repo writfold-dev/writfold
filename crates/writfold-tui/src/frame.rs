@@ -182,3 +182,40 @@ pub fn once(app: &mut App, only: Option<View>) -> String {
     out.push_str(&format!("== {} ==\n", footer(app)));
     out
 }
+
+/// `--once --view kb:NAME`: the projects, the view's verb answers as
+/// their text, and the footer line. No rail, glyph or mark is drawn.
+pub fn once_kb(app: &mut App, view: crate::kb_state::KbView) -> String {
+    app.kb_show(view);
+    let mut out = String::from("== projects ==\n");
+    let scope = app.kb_scope();
+    for row in app.kb_projects() {
+        let mark = if Some(field(row, "id")) == scope.id() {
+            "> "
+        } else {
+            "  "
+        };
+        for (n, line) in lines::row(row).into_iter().enumerate() {
+            out.push_str(if n == 0 { mark } else { "  " });
+            out.push_str(&line.text);
+            out.push('\n');
+        }
+    }
+    let all = if scope.id().is_none() { "> " } else { "  " };
+    out.push_str(&format!("{all}all records\n"));
+    let name = scope.name().unwrap_or("all records");
+    out.push_str(&format!("== kb:{} {name} ==\n", view.name()));
+    let replies: Vec<_> = match view {
+        crate::kb_state::KbView::Stale => app.kb.stale.iter().cloned().collect(),
+        _ => app
+            .kb_asks(view)
+            .iter()
+            .filter_map(|ask| app.kb_reply(ask).cloned())
+            .collect(),
+    };
+    for reply in &replies {
+        append(&mut out, lines::reply(reply));
+    }
+    out.push_str(&format!("== {} ==\n", footer(app)));
+    out
+}

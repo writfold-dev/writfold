@@ -119,6 +119,7 @@ The v1 design is [kb-v1-design.md](kb-v1-design.md).
 11. M4b: MCP, trailer and tracker edges, `--at`. G3 only if the pause justifies it.
 12. ~~T2: run progress in `writfold watch`~~: plan steps, owed gates, checklist items, guards, inbox and timeline; responsive layouts, subject/queue polling and six themes; read-only and never starting a checker ([as built](kb-v1-design.md#34-t2-as-built)).
 13. ~~T3: the plan map and node inspector in `writfold watch`~~ ([as built](kb-v1-design.md#35-t3-as-built)): the recorded spine, nested splices, per-step state glyphs and gate chips, persistent node selection, and an inspector with evidence and checklist segments. Read-only; the marker is the recorded position, never a liveness claim.
+14. ~~T5: the knowledge base as a second mode of `writfold watch`~~ ([as built](kb-v1-design.md#37-t5-as-built)): `m` shows a project's decisions, status, tracker, impact tree and stale citations with the run mode's look, a record inspector, and `f` between a run and the records its checkpoints name; built on `find --kind` and the JSON-only `edge` of `impact` rows. Read-only.
 
 **v0.5.0-dev.1** (13 November 2026): enforcement and evidence that a team configures, not code it writes.
 

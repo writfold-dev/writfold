@@ -10,6 +10,7 @@ const C: &str = "run-20261103T090000Z-c1d2e3";
 const VIEWS: [&str; 8] = [
     "progress", "gates", "timeline", "inbox", "guards", "stale", "brief", "resume",
 ];
+const KB_VIEWS: [&str; 5] = ["kb:why", "kb:status", "kb:tracker", "kb:impact", "kb:stale"];
 
 fn put(path: &Path, text: &str) -> Result {
     std::fs::create_dir_all(path.parent().ok_or("parent")?)?;
@@ -103,7 +104,12 @@ fn frame(w: &Root, id: &str, view: &str) -> Result {
         "{view}: {}",
         String::from_utf8_lossy(&out.stderr)
     );
-    assert!(text.contains(&format!("== {view} ")), "{text}");
+    if let Some(kb) = view.strip_prefix("kb:") {
+        assert!(text.starts_with("== projects ==\n"), "{text}");
+        assert!(text.contains(&format!("== kb:{kb} ")), "{text}");
+    } else {
+        assert!(text.contains(&format!("== {view} ")), "{text}");
+    }
     assert!(!text.contains('\u{1b}'), "{text}");
     if view == "stale" {
         assert!(text.contains("not-checked"), "{text}");
@@ -121,7 +127,7 @@ fn all_watch_panes_leave_records_local_state_and_checker_cache_unchanged() -> Re
     let cache = cached_rows(&w)?;
     for _ in 0..3 {
         for id in [RUN, B, C] {
-            for view in VIEWS {
+            for view in VIEWS.iter().chain(&KB_VIEWS) {
                 frame(&w, id, view)?;
             }
         }

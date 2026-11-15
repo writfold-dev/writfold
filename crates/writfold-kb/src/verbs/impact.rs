@@ -5,7 +5,7 @@
 //! retired and disputed edges never, but counted. Project records are homes,
 //! not dependencies: they are reached but not walked through.
 use super::{BOUNDARY, ambiguous, edge_flags, node_row, unknown};
-use crate::emit::Answer;
+use crate::emit::{Answer, Walked};
 use crate::error::Result;
 use crate::index::query::{self, Edge, Resolved};
 use crate::session::Session;
@@ -122,6 +122,16 @@ pub fn impact(
     for reached in &result.reached {
         let edge = &reached.edge;
         let mut row = node_row(session, &reached.node)?;
+        // The title the row would print elsewhere; a record without one
+        // labels itself by its ID, which is not a title.
+        row.title = Some(std::mem::take(&mut row.text)).filter(|t| !t.is_empty() && *t != row.id);
+        row.edge = Some(Walked {
+            from: edge.src.clone(),
+            rel: edge.rel.clone(),
+            to: edge.dst.clone(),
+            origin: edge.origin.clone(),
+            depth: reached.depth,
+        });
         row.text = format!(
             "depth={} {} {} {} ({})",
             reached.depth, edge.src, edge.rel, edge.dst, edge.origin

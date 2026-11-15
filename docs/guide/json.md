@@ -36,6 +36,19 @@ $ writfold kb why "batch ledger" --json
 
 Each entry of `more` has `label` (`why`, `note`, `cite`, `next` and so on), `text`, `path`, `line` and `flags`, with the same meanings. It may also have `status` (a string): the continuation's state. This key is absent, not null, when the verb does not supply a state.
 
+### Keys only some verbs add
+
+`impact` rows carry two more keys, both absent (not null) on the rows of every other verb:
+
+| Key | Type | Meaning |
+|---|---|---|
+| `edge` | object | the edge that reached this row: `from`, `rel`, `to` and `origin` (`authored`, `field`, `cite`, `mention`), and `depth` (an integer, 1 for an edge at the walk's start). The row's `id` is `from` or `to`; the other end is the record the walk came from |
+| `title` | string | the reached record's title; absent when the record has none (a code locator, a record labelled by its ID) |
+
+The text form of `impact` is unchanged (`depth=N SRC REL DST (ORIGIN)` in `text`); readers should use `edge`, not split that text.
+
+`find --kind K[,K] [--project P]` with no text lists every record of those kinds in ID order, each once, with a `match` continuation whose `text` is `listed`; there is no fifty-row cap, the budget pages the answer. Rows keep the record's title in `text`. Without `--kind`, `find` still requires text; `match` and `--signatures` always do.
+
 ### Labels the views rely on
 
 `plan status --gates` supplies `status` on its `gate` and `item` continuations, and `gate status` on its checklist `item` continuations. Their `text` starts with `<id> [<state>]`, where the ID has no space and the state has no `]`; readers should use `status`, not parse the brackets. Judged gates append their class (except undefined gates), and checklist gates append `<covered>/<required> required covered`. Evidence locations and unmet-gate flags accompany the gate; checklist items retain the same text, location and flags as `gate status`. Later gates say `[later]` without evidence or flags; skipped steps have no gate continuations.

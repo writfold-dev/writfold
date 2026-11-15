@@ -194,6 +194,19 @@ mod tests {
         assert!(parse(&args("impact x --direction sideways"), cwd.clone()).is_err());
         assert!(parse(&args("impact x --include everything"), cwd.clone()).is_err());
         assert!(parse(&args("status x --kind ticket"), cwd.clone()).is_err());
+        let listed = parse(
+            &args("find --kind decision,ticket --project harbor"),
+            cwd.clone(),
+        )?;
+        assert!(listed.is_some_and(|r| matches!(
+            r.verb,
+            Verb::Find { signatures: false, ref text, ref filter }
+                if text.is_empty() && filter.kinds == ["decision", "ticket"]
+        )));
+        assert!(parse(&args("find"), cwd.clone()).is_err());
+        assert!(parse(&args("find --project harbor"), cwd.clone()).is_err());
+        assert!(parse(&args("match --kind signature"), cwd.clone()).is_err());
+        assert!(parse(&args("find --kind signature --signatures"), cwd.clone()).is_err());
         let found = parse(&args("match fsync took --kind signature"), cwd.clone())?;
         assert!(found.is_some_and(|r| matches!(
             r.verb,

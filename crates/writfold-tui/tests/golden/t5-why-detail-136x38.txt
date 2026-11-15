@@ -1,0 +1,38 @@
+ Harbor status  [build]  knowledge base                                                                                  project:harbor
+ [1 why]   2 status    3 tracker    4 impact    5 stale !9                                                                       m runs
+╭ projects (2) ──────╮╭ why (5) ──────────────────────────────────────────────╮╭ decision 3/5 ─────────────────────────────────────────╮
+│> Harbor status     ││ ┬ decisions                                           ││Batch ledger writes in the API  [accepted]             │
+│  build  harbor     ││ – One writer process for the ledger    superseded     ││proposal/decision/2026-03-02-batch-ledger-writes       │
+│  project:harbor    ││   @proposals/decision/2026-01-10-single-writer.md:5   ││                                                       │
+│  …arbor/STATUS.md:2││ – Drop client retries on flush         rejected       ││decided by ops-review on 2026-03-09                    │
+│  Lantern console   ││   …sals/decision/2026-02-01-drop-retries/proposal.md:5││  …cision/2026-03-02-batch-ledger-writes/proposal.md:11│
+│  lantern           ││ ● Batch ledger writes in the API    !  accepted       ││                                                       │
+│  project:lantern   ││   …cision/2026-03-02-batch-ledger-writes/proposal.md:5││why  Group ledger writes into batches of up to 500 rows│
+│  …ntern/README.md:1││ ○ Shard the ledger by tenant           draft          ││     per transaction.                                  │
+│  all records       ││   …sals/decision/2026-04-01-shard-ledger/proposal.md:5││     …ion/2026-03-02-batch-ledger-writes/proposal.md:24│
+│  by kind           ││ ○ Cap replay batches at 500 rows    !  draft          ││                                                       │
+│                    ││   …-11-11-cap-replay-batches-at-500-rows/proposal.md:6││why  Batching keeps the flush under the store's fsync  │
+│                    ││ ┴                                                     ││     budget.                                           │
+│                    ││                                                       ││     …ion/2026-03-02-batch-ledger-writes/proposal.md:25│
+│                    ││                                                       ││                                                       │
+│                    ││                                                       ││cites 2  ● !                                           │
+│                    ││                                                       ││    code:demo-service:src/ledger.rs:3-5 [fresh]        │
+│                    ││                                                       ││    …sion/2026-03-02-batch-ledger-writes/proposal.md:31│
+│                    ││                                                       ││  ! code:demo-service:src/batch.rs:2-4 [moved]         │
+│                    ││                                                       ││    moved→4-6                                          │
+│                    ││                                                       ││    …sion/2026-03-02-batch-ledger-writes/proposal.md:31│
+│                    ││                                                       ││                                                       │
+│                    ││                                                       ││see also                                               │
+│                    ││                                                       ││  ● Flush stalls on the ledger store  concluded        │
+│                    ││                                                       ││    The ledger flush stalled on a slow volume; batch   │
+│                    ││                                                       ││    writes were proposed.                              │
+│                    ││                                                       ││    …tigations/2026/2026-02-10-flush-stalls/README.md:8│
+│                    ││                                                       ││  ● Ledger flush stalls on slow disk  done             │
+│                    ││                                                       ││    Flush stalls stopped after the volume move; batch  │
+│                    ││                                                       ││    ledger writes keep it stable.                      │
+│                    ││                                                       ││    @ktlo/2026/hbr-99-flush-stall.md:5                 │
+│                    ││                                                       ││                                                       │
+│                    ││                                                       ││linked from                                            │
+│                    ││decisions that name harbor as their project            ││d less   f run   a impact                              │
+╰────────────────────╯╰───────────────────────────────────────────────────────╯╰───────────────────────────────────────────────────────╯
+ [read-only]  kb XXXXXXXXXXXX   index fresh   asked 00:00:00Z                       j/k record   l inspect   a impact   ? help   q quit

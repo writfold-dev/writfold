@@ -1,0 +1,10 @@
+decision proposal/decision/2026-01-10-single-writer [superseded] One writer process for the ledger @proposals/decision/2026-01-10-single-writer.md:5 !superseded→decision/2026-03-02-batch-ledger-writes
+  match: listed
+decision proposal/decision/2026-02-01-drop-retries [rejected] Drop client retries on flush @proposals/decision/2026-02-01-drop-retries/proposal.md:5
+  match: listed
+decision proposal/decision/2026-03-02-batch-ledger-writes [accepted] Batch ledger writes in the API @proposals/decision/2026-03-02-batch-ledger-writes/proposal.md:5
+  match: listed
+decision proposal/decision/2026-04-01-shard-ledger [draft] Shard the ledger by tenant @proposals/decision/2026-04-01-shard-ledger/proposal.md:5
+  match: listed
+# coverage=complete records=28/28 shown=4 omitted=0 kb=d5db758bda80 index=rebuilt cursor=none q=4344e704603e
+# exit=0

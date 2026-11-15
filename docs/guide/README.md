@@ -1,6 +1,6 @@
 # Writfold guides
 
-> **Status:** built in v0.5.0-dev.7 (`writfold watch` opens on a calm frame: the plan map with text only on the next step and the selected row, chip-styled header, tabs and footer; `d` shows every detail and `?` holds the marks; see [Watching a run](watch.md)). Each page below says what is built and what is planned.
+> **Status:** built after v0.5.0-dev.7 (`writfold watch` gains a knowledge-base mode, `m`: decisions, status, tracker, impact tree and stale citations of a project in the same calm frame, with a record inspector and `f` to follow between runs and records; `find --kind` lists records by kind and `impact --json` rows carry a structured `edge`; see [Watching a run](watch.md#the-knowledge-base) and [JSON](json.md)). Each page below says what is built and what is planned.
 
 These pages hold the full skeletons the website only sketches: file layouts, complete configuration files and real command output. The output comes from an invented demo knowledge base (`harbor`); run IDs and digests are real, local paths are cut to `…`.
 
@@ -13,7 +13,7 @@ These pages hold the full skeletons the website only sketches: file layouts, com
 | [gates](gates.md) | Gate definitions, receipts, standing, waivers and attestations, run-record checks | built |
 | [delivery-modes](delivery-modes.md) | Delivery candidates, mode files, deny lists and the guard hook | built, with your own modes |
 | [run-graph](run-graph.md) | Plans as a spine of steps that owe gates | built (splicing and required steps included) |
-| [watch](watch.md) | Recorded run progress in eight read-only views, layouts, controls, refresh and colour themes | built (T2) |
+| [watch](watch.md) | Recorded run progress in eight read-only views, and the knowledge base (decisions, status, tracker, impact, stale) as a second mode; layouts, controls, refresh and colour themes | built (T5) |
 | [skills](skills.md) | The bundled `writfold:kb` and `writfold:evaluate` skills, and skills that splice a plan template | built |
 | [hooks](hooks.md) | What each Claude Code hook reads, writes and prints | built |
 | [json](json.md) | The `--json` envelope: keys, exit codes and the compatibility rule | built in v0.5.0-dev.1 |

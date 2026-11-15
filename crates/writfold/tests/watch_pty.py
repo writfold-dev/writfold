@@ -42,7 +42,9 @@ try:
     receive(True)
     for key in [b"l", b"j", b"k", b"n", b"N", b".", b"l", b"j", b"k",
                 b"d", b"d", b"h", b"d", b"\x1b[C", b"\x1b[D", b"\r", b"\x1b", b"x", b"X",
-                b"x", b"c", b"?", b"\x1b", b"r", b"r", b"r", b"q"]:
+                b"x", b"c", b"?", b"\x1b", b"r", b"r", b"r",
+                b"m", b"j", b"l", b"d", b"d", b"h", b"2", b"3", b"4", b"a", b"v", b"v",
+                b"5", b"n", b"N", b"1", b"?", b"\x1b", b"]", b"[", b"r", b"f", b"q"]:
         os.write(master, key)
         receive()
     assert child.wait(timeout=20) == 0
@@ -53,6 +55,8 @@ try:
     assert b"ggatesxtext" in compact, plain.decode("utf-8", "replace")
     assert b"dlessggates" in compact, plain.decode("utf-8", "replace")
     assert b"lastcheckpoint:" in compact, plain.decode("utf-8", "replace")
+    assert b"knowledgebase" in compact, plain.decode("utf-8", "replace")
+    assert b"mruns" in compact and b"mkb" in compact, plain.decode("utf-8", "replace")
     assert b"\x1b[?1049l" in seen
 finally:
     if child.poll() is None:

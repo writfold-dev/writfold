@@ -1,6 +1,6 @@
 # Watching a run
 
-> **Status:** built (T4). Implementation, tests and deviations: [design §36](../writfold/kb-v1-design.md#36-t4-as-built); the plan map is recorded in [§35](../writfold/kb-v1-design.md#35-t3-as-built) and the earlier text view in [§34](../writfold/kb-v1-design.md#34-t2-as-built).
+> **Status:** built (T5: the knowledge base as a second mode, `m`). Implementation, tests and deviations: [design §37](../writfold/kb-v1-design.md#37-t5-as-built); the calm frame is recorded in [§36](../writfold/kb-v1-design.md#36-t4-as-built), the plan map in [§35](../writfold/kb-v1-design.md#35-t3-as-built) and the earlier text view in [§34](../writfold/kb-v1-design.md#34-t2-as-built).
 
 `writfold watch` is a read-only view of the KB verbs. It shows recorded steps,
 gate standings, checklist items, pending drafts and proposals, guard rules and
@@ -11,6 +11,7 @@ writfold watch
 writfold watch --kb /path/to/kb --repo /path/to/repository
 writfold watch --run RUN_ID --view gates --once
 writfold watch --theme paper --color truecolor
+writfold watch --view kb:why
 ```
 
 The KB is discovered from the original working directory before `--repo` changes
@@ -184,12 +185,180 @@ run-liveness claim. Authored text and verb states are not censored or rewritten.
 Recorded times remain recorded times; `asked HH:MM:SSZ` is when the view last
 asked a verb, not an activity timestamp for the run.
 
+## The knowledge base
+
+`m` switches between two modes of the same frame. **Run mode** is everything
+above; **KB mode** shows the knowledge base's records with the same bars,
+rails, chips, calm and detailed levels and help. Each mode keeps its own view,
+selection, focus and scroll, so `m` twice returns to the same place. The tab row
+ends in the switch: `m kb` in run mode, `m runs` in KB mode (the first unit a
+short row drops). `--view kb:why|kb:status|kb:tracker|kb:impact|kb:stale`
+starts in KB mode on the project of `--run`, else of the current run, else the
+first project.
+
+The left pane lists the project records of `brief --all` (heading, then phase
+and name; `d` adds the id and position), then **all records**, whose `why` and
+`tracker` lists come from `find --kind` without a project.
+
+| View | Key | JSON source | List |
+|---|---|---|---|
+| why | `1` | `writfold kb find --kind decision --project P --json`, plus any decision `writfold kb status project:P --json` names that the listing does not | the project's decisions in ID order: title, state glyph, marks, status word |
+| status | `2` | `writfold kb brief P --json` (`brief --all` for all records) | the answer as text, scrolled; the inspector shows the project record |
+| tracker | `3` | `writfold kb impact project:P --direction in --depth 2 --json` | tickets, investigations and signatures within two links, under the record their edge came from (`┼ harbor-db`) |
+| impact | `4` | `writfold kb impact ID --direction D --depth 2 --json` | the walk as a tree: root, depth-1 records in verb order, each followed by its depth-2 records on a dim bar |
+| stale | `5` | `writfold kb stale --cached --json` (the whole KB) | stale citations, assets past their TTL and regressions, under the file that holds them |
+
+The views read structured fields only. The tree follows each `impact` row's
+`edge` key (its `from`, `to` and `depth`, see [JSON](json.md#keys-only-some-verbs-add));
+a row without an edge, or whose parent is not in the answer, is drawn flat
+under a `depth N` header, so nothing is dropped. A tree row's label is the
+`title` key when the record has one, else its id; the dim word is the relation.
+The last line quotes the walk's trailer: `N reached`, then
+`not followed: A retired, B disputed, C inferred` for non-zero counts and
+`frontier F`, in the warning tone when the verb's coverage is partial. Mention
+edges are not walked; the count says how many were skipped.
+
+### Entries, glyphs and marks
+
+A row is rail, state glyph, label, a two-cell mark column and one dim word.
+The glyph is a lookup on the exact status word, and the word is always shown:
+
+| Glyph | ASCII | Words |
+|---|---|---|
+| `●` settled | `[x]` | accepted, applied, verified, done, n/a, concluded, fixed, active, closed |
+| `○` open | `[ ]` | draft, proposed, landing, deferred, todo, in-progress, blocked, investigating, open, monitoring, suspected, known-error, fix-in-progress, regressed |
+| `–` set aside | `[-]` | rejected, superseded, retired, abandoned, deprecated |
+| `·` none | `[.]` | no status, or any other word (a project phase, `sunsetting`, `confirmed`) |
+
+Marks say that a source moved, from flags only: `!` for `stale`, `changed`,
+`gone`, `expired`, `past-ttl`, `regression`, `marked`, `due` or `moved…`; `?` for
+`unverifiable` or `unchecked`. The flags are the entry's own plus those of every
+`stale --cached` row about the same file (the row's `path`), so a decision whose
+cited lines moved carries `!` in `why`. `n`/`N` select the next or previous
+marked entry. `why` prints verdicts `kb stale` cached; `stale --cached` judges
+Git-backed citations when asked, so the two can differ until someone runs
+`writfold kb stale`. The KB tab carries a badge only on `stale`: `!N` and `?N`
+from that verb's own counts.
+
+### The inspector
+
+The inspector always describes the selected entry: `status ID`, `why ID` for a
+decision and `timeline ID` (for a code node, `uses ID`). Calm, top down: the
+title and a status chip, the full id; for a decision `decided …` and each `why`
+line, then `cites N` with one cell per citation (`●` fresh, `!` moved, `?`
+unknown; ASCII `+ ! ?`) and only the citations that carry a flag; for other
+records their `field` lines; `see also` (the decision's investigations and
+tickets), `linked from` (records whose link names this one, with the relation),
+`runs` (each listed run whose checkpoint names the record, by title), the verbs'
+notes, and the record's `@path:line`. `d` adds every position, fresh citations,
+outcome lines, inferred mentions, checkpoint text under `runs`, all flags as
+words and each verb's coverage. A draft decision's `why` prints its reason
+(`answer unknown: no-accepted-decision`) and the verb's boundary note. `why` on
+a superseded decision answers with its successor, and the inspector says so.
+
+### Following between runs and records
+
+`f` in run mode opens KB mode on the first record the run's checkpoints name
+(the first `timeline RUN` row that is not a run, checkpoint or plan event): in
+`why` when it is listed there, otherwise `impact` rooted on it. A run that names
+none opens KB mode with `this run's checkpoints name no record`. `f` in KB mode
+returns to the first listed run whose checkpoint names the selected record
+(`timeline ID`'s `checkpoint` rows carry the run's id), on its Timeline; on a
+`run` entry, its Progress. When no listed run names it (a filter hides it), the
+footer says `no listed run names this record` and nothing changes. Runs and
+records meet only through checkpoint text; the frame says `named`, never `cites`.
+
+`a` shows the impact of the selected record (in `impact` it re-roots; on a
+`stale` code citation it walks the cited file); `v` cycles the direction
+`in` → `out` → `both`, and the verb is asked again.
+
+The calm KB frame (136×38, list focused, the third decision selected):
+
+```text
+ Harbor status   build   knowledge base                                                                                  project:harbor
+  1 why    2 status    3 tracker    4 impact    5 stale !9                                                                       m runs
+╭ projects (2) ──────╮╭ why (5) ──────────────────────────────────────────────╮╭ decision 3/5 ─────────────────────────────────────────╮
+│> Harbor status     ││ ┬ decisions                                           ││Batch ledger writes in the API   accepted              │
+│  build  harbor     ││ – One writer process for the ledger    superseded     ││proposal/decision/2026-03-02-batch-ledger-writes       │
+│  Lantern console   ││ – Drop client retries on flush         rejected       ││                                                       │
+│  lantern           ││ ● Batch ledger writes in the API    !  accepted       ││decided by ops-review on 2026-03-09                    │
+│  all records       ││ ○ Shard the ledger by tenant           draft          ││                                                       │
+│  by kind           ││ ○ Cap replay batches at 500 rows    !  draft          ││why  Group ledger writes into batches of up to 500 rows│
+│                    ││ ┴                                                     ││     per transaction.                                  │
+│                    ││                                                       ││why  Batching keeps the flush under the store's fsync  │
+│                    ││                                                       ││     budget.                                           │
+│                    ││                                                       ││cites 2  ● !                                           │
+│                    ││                                                       ││  ! code:demo-service:src/batch.rs:2-4 [moved]         │
+│                    ││                                                       ││    moved→4-6                                          │
+│                    ││                                                       ││see also                                               │
+│                    ││                                                       ││  ● Flush stalls on the ledger store  concluded        │
+│                    ││                                                       ││  ● Ledger flush stalls on slow disk  done             │
+│                    ││                                                       ││linked from                                            │
+│                    ││                                                       ││  – One writer process for the ledger  superseded-by (…│
+│                    ││                                                       ││runs                                                   │
+│                    ││                                                       ││  Add --plan to kb runs                                │
+│                    ││                                                       ││…/decision/2026-03-02-batch-ledger-writes/proposal.md:5│
+│                    ││decisions that name harbor as their project            ││d sources and fresh cites   f run   a impact           │
+╰────────────────────╯╰───────────────────────────────────────────────────────╯╰───────────────────────────────────────────────────────╯
+  read-only   kb 20cd29c9466b   index fresh   asked 00:21:18Z                       j/k record   l inspect   a impact   ? help   q quit
+```
+
+(Blank pane rows and the blank lines between inspector sections are trimmed.)
+The impact pane after `a` on `harbor-db` (direction `in`), same size, blank rows trimmed:
+
+```text
+╭ impact ───────────────────────────────────────────────╮
+│in  what cites or links to harbor-db                   │
+│                                                       │
+│ ┬ harbor-db                                           │
+│ ○ Slow ledger flush at month end         concerns     │
+│ │ · Harbor status                     !  cites        │
+│ ○ Replay too slow                        concerns     │
+│ │ ○ Cap replay batches at 500 rows    !  references   │
+│ ● Ledger flush stalls on slow disk       concerns     │
+│ ● Harbor billing API                  !  depends-on   │
+│ │ · Harbor billing API                !  dossier-of   │
+│ │ · Restart the Harbor API               concerns     │
+│ ● Flush stalls on the ledger store       concerns     │
+│ ○ Flush stalls return                 !  concerns     │
+│ ● Batch ledger writes in the API      !  references   │
+│ │ – One writer process for the ledger !  superseded-by│
+│ · Quay batch worker                      depends-on   │
+│ ● Fsync stall on the ledger store        concerns     │
+│ ┴                                                     │
+│14 reached   not followed: 1 disputed, 6 inferred      │
+╰───────────────────────────────────────────────────────╯
+```
+
+The asset `harbor-api` and its dossier share the title "Harbor billing API";
+`d` shows each row's position, and the inspector its id.
+
+Committed buffers:
+[why 136×38](../../crates/writfold-tui/tests/golden/t5-why-136x38.txt),
+[why 80×24](../../crates/writfold-tui/tests/golden/t5-why-80x24.txt),
+[why detailed](../../crates/writfold-tui/tests/golden/t5-why-detail-136x38.txt),
+[impact](../../crates/writfold-tui/tests/golden/t5-impact-136x38.txt),
+[tracker 100×30](../../crates/writfold-tui/tests/golden/t5-tracker-100x30.txt) and the plain
+[`--once --view kb:why`](../../crates/writfold-tui/tests/golden/t5-once-kb-why.txt).
+
+KB footer hints: list `j/k record   l inspect   a impact`; inspector
+`j/k scroll   h back   d detail`; projects `j/k project   l records`; status
+`j/k scroll   Tab view`. A KB with no project shows only `all records`; an empty
+list says so in one dim line (`harbor names no decisions`, `nothing tracked
+within 2 links of harbor`, `nothing stale; N checked`) followed by the verb's
+notes. A refusal stays in its pane as `refused (exit N): …`.
+
+KB answers are cached per project and view, the inspector's per record id, and
+`stale --cached` once; the two-second poll drops them all with the run answers
+and keeps the selection by id. A cited code repository moving is not polled:
+press `r`.
+
 ## Controls
 
 | Key | Action |
 |---|---|
 | `j` / `k`, Up / Down | Select a run or map node; scroll text or a focused inspector |
-| `[` / `]` | Previous/next run regardless of focus |
+| `[` / `]` | Previous/next run regardless of focus; in KB mode, previous/next project |
 | `h` / `l`, Left / Right | Move focus left/right: runs → map → inspector |
 | Enter / Esc | Cycle focus forward / step left; from the wide map, Esc restores the side stack |
 | Tab / Shift-Tab | Next/previous view |
@@ -203,7 +372,11 @@ asked a verb, not an activity timestamp for the run.
 | `P` | Toggle the selected project's `kb runs --project`; without a project, show a notice and change nothing |
 | `r` | Drop cached answers and ask again |
 | `T` | Cycle the eight themes in truecolor (the footer names the new theme for one key); otherwise explain how to enable it |
-| `?` | Help: the marks, this frame's full stamps, keys and verbs; any key except `q` closes it |
+| `m` | Run mode ↔ KB mode; each keeps its own view, selection, focus and scroll |
+| `f` | Follow: from a run to the first record its checkpoints name; from a record to a listed run whose checkpoint names it |
+| `a` / `v` | KB mode: impact of the selected record / cycle its direction in → out → both |
+| `1`–`5` | KB mode: why, status, tracker, impact, stale; a run view's letter (`p g t i u s b e`) leaves KB mode for that view |
+| `?` | Help: the marks, this frame's full stamps, keys and verbs (per mode); any key except `q` closes it |
 | `q`, Ctrl-C | Quit and restore the terminal |
 
 No key writes. `c` is unbound. Copy the verb's `confirm:` or `accept:` command to
@@ -301,6 +474,10 @@ and selected-entry text.
 
 ## Plain frames and scripts
 
+`--once --view kb:NAME` prints `== projects ==` (the project rows, `>` on the
+selected one, then `all records`), the view's verb answers as their text under
+`== kb:NAME PROJECT ==`, and the footer line. No rail, glyph or mark enters it.
+
 `--once`, or a non-terminal stdout, prints one expanded, unwrapped plain frame:
 Runs, Progress, Gates, Inbox, Guards, Timeline, then the footer. It contains no
 view clock or terminal colour/style sequences, regardless of theme or depth.
@@ -310,5 +487,9 @@ Progress gains only the verb's `splice:`/`under:` continuations, and Timeline it
 plan event rows. No map rails or new graphical glyphs enter plain frames.
 
 `watch --json` is not a second API. Ask the JSON verb listed beside the pane above.
-Not built: write keys, text search over runs, cross-KB views, mouse interaction,
-focusable side-stack panes, user-defined themes, or persistence of the theme choice.
+Not built: write keys, text search over runs or records (`find` is not reachable
+from a key), cross-KB views, mouse interaction, focusable side-stack panes,
+user-defined themes, persistence of the theme choice; in KB mode, walking
+mention edges, a depth other than two, history at a commit, record bodies and
+dossier sections (open the path the inspector ends with), and a jump from a plan
+step or gate to the record it cites (their rows name receipts, not records).

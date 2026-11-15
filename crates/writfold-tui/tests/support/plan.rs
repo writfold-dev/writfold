@@ -13,8 +13,11 @@ pub const B: &str = "run-20261102T080000Z-b1c2d3";
 pub const DECISION: &str = "proposal/decision/2026-03-02-batch-ledger-writes";
 
 pub fn world(name: &str) -> TestResult<World> {
-    let base =
-        std::env::temp_dir().join(format!("writfold-tui-plan-{name}-{}", std::process::id()));
+    world_at(std::env::temp_dir().join(format!("writfold-tui-plan-{name}-{}", std::process::id())))
+}
+
+/// The same world under `base`, which is replaced.
+pub fn world_at(base: std::path::PathBuf) -> TestResult<World> {
     let _ = std::fs::remove_dir_all(&base);
     let kb = base.join("kb");
     copy(
