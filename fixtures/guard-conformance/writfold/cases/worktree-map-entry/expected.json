@@ -1,0 +1,10 @@
+{
+  "schema": "writfold-guard-expected/1",
+  "decision": "deny",
+  "decided_by": [
+    "ledger-review"
+  ],
+  "reason_has": [
+    "gate review [undefined]"
+  ]
+}

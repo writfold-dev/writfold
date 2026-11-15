@@ -1,0 +1,7 @@
+{
+  "hook_event_name": "Stop",
+  "cwd": "{home}/src/api",
+  "session_id": "s1",
+  "stop_hook_active": false,
+  "last_assistant_message": "Done."
+}

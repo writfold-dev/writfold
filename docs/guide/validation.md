@@ -165,3 +165,9 @@ check gates [skipped] no current run
 It exits with the worst of the three codes: 0 only when all are clean, then 2, then 3, then 1. It writes nothing beyond what `index verify` writes. Delivery drafts are not included; `deliver status` reports them.
 
 When the current run holds a plan, a fourth row, `check plan`, carries `plan status`'s trailer: `attention` when a done step is `!stale`, an event is invalid, or a merge left the plan out of order. In the last case the row also carries the flag, `!out-of-order`, `!two-plans` or `!repeated`, and the trailer counts `disorder=` ([run graph](run-graph.md#two-sessions-and-two-clones)).
+
+## Guard decisions: the conformance cases
+
+> Built in v0.5.0-dev.10.
+
+What a guard rule decides is also stated as data: `fixtures/guard-conformance/<suite>/cases/<case>/` holds the hook's input (`event.json`), the world it runs in (`world.json`: repositories, worktrees, the KB's rules, its run and its gates) and the decision expected (`expected.json`). `cargo test` builds each world in a temporary directory, sends the event through the real hook entry point with a fixed clock and compares, naming every case that differs; the unit gate runs it. The seed suite, `writfold`, states how a command is read, which repository a command is judged in, an empty set of owed gates, `repos` and `paths` exclusions, an unreadable KB, `ask`, and the Stop nudge's once-per-session and once-per-turn rules. A suite written elsewhere is accepted by converting it into this format, with its source revision and licence pinned and each difference from its own expectation recorded with the reason; the format and the rules of import are in the suite's [README](../../fixtures/guard-conformance/README.md).

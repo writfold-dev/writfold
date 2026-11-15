@@ -1,0 +1,23 @@
+{
+  "schema": "writfold-guard-world/1",
+  "home": "{root}/home",
+  "dirs": [
+    "{root}/tmp"
+  ],
+  "repos": [
+    {
+      "top": "{home}/src/api",
+      "origin": "git@host.example:acme/api.git",
+      "worktrees": [],
+      "rules": {}
+    }
+  ],
+  "kb": {
+    "rules": {
+      "finish": "schema = \"writfold-guard-rule/1\"\nid = \"finish\"\nevent = \"stop\"\nrequire = [\"run.current\"]\n"
+    },
+    "run": "none",
+    "map": {},
+    "gates": []
+  }
+}

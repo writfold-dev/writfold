@@ -1,0 +1,10 @@
+{
+  "schema": "writfold-guard-expected/1",
+  "decision": "ask",
+  "decided_by": [
+    "commit-needs-gates"
+  ],
+  "reason_has": [
+    "cannot read the KB"
+  ]
+}

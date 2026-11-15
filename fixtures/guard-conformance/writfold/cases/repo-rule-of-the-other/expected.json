@@ -1,0 +1,7 @@
+{
+  "schema": "writfold-guard-expected/1",
+  "decision": "deny",
+  "decided_by": [
+    "web-commit"
+  ]
+}

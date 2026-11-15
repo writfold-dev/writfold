@@ -1,0 +1,9 @@
+{
+  "hook_event_name": "PreToolUse",
+  "tool_name": "Bash",
+  "tool_input": {
+    "command": "time git commit"
+  },
+  "cwd": "{home}/src/api",
+  "session_id": "s1"
+}

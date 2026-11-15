@@ -19,6 +19,8 @@ What stands behind `writfold kb`, sorted by how strong the claim is. The short v
 | Receipts | a hand-edited outcome, a wrong digest and a receipt copied under another gate's name each read as invalid |
 | Output | golden files for every verb, the hooks and `watch --once` |
 | These guides | every `toml` block is parsed by the real parser (`crates/writfold-kb/tests/guide_toml.rs`) |
+| Guard decisions (v0.5.0-dev.10) | the conformance cases in `fixtures/guard-conformance/` (a world, an event and the expected decision each) run through the real hook entry point under `cargo test`; reading is strict, every failing case is named, and a difference from an imported suite's expectation must be recorded with its reason |
+| How a command is read (`writfold_core::command`, v0.5.0-dev.10) | one table per reading rule, and a fixed-seed corpus of text placed inside single quotes, double quotes and here-document bodies after `echo` or `cat`, which never yields a `git` invocation |
 
 ## Model-checked
 
