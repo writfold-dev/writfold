@@ -12,7 +12,7 @@ use crate::plan::{self, Loaded};
 use crate::runs;
 use crate::session::Session;
 use crate::workspace::{GitTool, Workspace};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use writfold_core::guard::{Fact, gates_fact};
 use writfold_core::scope::in_scope;
 
@@ -75,20 +75,40 @@ struct Facts {
     step: Option<Owed>,
 }
 
-/// Evaluate every rule's requirements.
+/// Where a group of matched rules is judged: a directory, or a command
+/// whose directory cannot be told (the text says why and what to do).
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum Place {
+    At(PathBuf),
+    Unknown(String),
+}
+
+/// Evaluate every rule's requirements at `cwd`.
 pub fn evaluate(ws: &Workspace, cwd: &Path, now: i64, rules: &[&Rule]) -> Evaluated {
-    let unknown = |why: String| -> Evaluated {
-        rules
-            .iter()
-            .map(|r| {
-                Some(
-                    r.require
-                        .iter()
-                        .map(|_| Owed::unknown(why.clone()))
-                        .collect(),
-                )
-            })
-            .collect()
+    let groups = [(Place::At(cwd.to_path_buf()), rules.to_vec())];
+    evaluate_at(ws, now, &groups)
+        .into_iter()
+        .next()
+        .unwrap_or_default()
+}
+
+/// Evaluate each group of rules at its place, opening the KB once.
+pub fn evaluate_at(ws: &Workspace, now: i64, groups: &[(Place, Vec<&Rule>)]) -> Vec<Evaluated> {
+    let unknown = |why: String| -> Vec<Evaluated> {
+        let all = |rules: &[&Rule]| -> Evaluated {
+            rules
+                .iter()
+                .map(|r| {
+                    Some(
+                        r.require
+                            .iter()
+                            .map(|_| Owed::unknown(why.clone()))
+                            .collect(),
+                    )
+                })
+                .collect()
+        };
+        groups.iter().map(|(_, rules)| all(rules)).collect()
     };
     let tool = match GitTool::locate() {
         Ok(tool) => tool,
@@ -98,7 +118,14 @@ pub fn evaluate(ws: &Workspace, cwd: &Path, now: i64, rules: &[&Rule]) -> Evalua
         Ok(session) => session,
         Err(e) => return unknown(format!("cannot read the KB ({e})")),
     };
-    let facts = gather(&session, cwd, rules);
+    groups
+        .iter()
+        .map(|(place, rules)| judged(&gather(&session, place, rules), rules))
+        .collect()
+}
+
+/// Each rule's facts, or `None` when its `repos` leave the subject out.
+fn judged(facts: &Facts, rules: &[&Rule]) -> Evaluated {
     rules
         .iter()
         .map(|rule| {
@@ -114,12 +141,12 @@ pub fn evaluate(ws: &Workspace, cwd: &Path, now: i64, rules: &[&Rule]) -> Evalua
                     return None;
                 }
             }
-            Some(rule.require.iter().map(|q| fact(&facts, q)).collect())
+            Some(rule.require.iter().map(|q| fact(facts, q)).collect())
         })
         .collect()
 }
 
-fn gather(session: &Session<'_>, cwd: &Path, rules: &[&Rule]) -> Facts {
+fn gather(session: &Session<'_>, place: &Place, rules: &[&Rule]) -> Facts {
     let run = match runs::current_of(session) {
         None => Err(format!("no current KB run; {START}")),
         Some(id) => match query::record(&session.conn, &id) {
@@ -130,9 +157,10 @@ fn gather(session: &Session<'_>, cwd: &Path, rules: &[&Rule]) -> Facts {
             Err(e) => Err(format!("cannot read the KB ({e})")),
         },
     };
-    let subject = match &session.git {
-        None => Err("the KB is not under Git".to_owned()),
-        Some(git) => {
+    let subject = match (&session.git, place) {
+        (_, Place::Unknown(why)) => Err(why.clone()),
+        (None, _) => Err("the KB is not under Git".to_owned()),
+        (Some(git), Place::At(cwd)) => {
             let recorded = run
                 .as_ref()
                 .ok()
@@ -154,10 +182,16 @@ fn gather(session: &Session<'_>, cwd: &Path, rules: &[&Rule]) -> Facts {
         step: None,
     };
     if wants(|q| matches!(q, Require::GatesMet | Require::Gate(_))) {
-        facts.gates = Some(judge(session, &facts));
+        facts.gates = Some(match place {
+            Place::At(_) => judge(session, &facts),
+            Place::Unknown(why) => Err(why.clone()),
+        });
     }
     if wants(|q| matches!(q, Require::StepMet)) {
-        facts.step = Some(step(session, &facts, cwd));
+        facts.step = Some(match place {
+            Place::At(cwd) => step(session, &facts, cwd),
+            Place::Unknown(why) => Owed::unknown(why.clone()),
+        });
     }
     facts
 }

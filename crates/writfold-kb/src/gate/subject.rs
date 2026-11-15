@@ -22,8 +22,9 @@ pub struct Subject {
     /// The top of its work tree.
     pub top: PathBuf,
     pub git_dir: PathBuf,
-    /// The KB map's name for it, else its origin's last path segment, else
-    /// its directory name: stable across worktrees of one repository.
+    /// The KB map's name for it (an entry for any of its work trees),
+    /// else its origin's last path segment, else its main work tree's
+    /// directory name: the same for every worktree of one repository.
     pub name: String,
 }
 
@@ -87,6 +88,7 @@ pub fn locate(
                 .map(|n| n.trim_end_matches(".git").to_owned())
                 .filter(|n| !n.is_empty())
         })
+        .or_else(|| repos::main_name(&repo.git_dir))
         .or_else(|| {
             repo.work_tree
                 .file_name()

@@ -131,10 +131,10 @@ description = "commit only when the run's gates are met"
 |---|---|
 | `id` | a slug equal to the file name |
 | `event` | `pre-tool-use`, or `stop` (the nudge below) |
-| `commands` | the first words of a simple command, as in `guard.toml`: `git commit` matches `git commit -m x`, `cargo test && git commit`, and `FOO=1 git commit`, but not `echo "git commit"` |
+| `commands` | the first words of a simple command, compared whole word by whole word once wrappers and `git`'s global options are set aside: `git commit` matches `git commit -m x`, `cargo test && git commit`, `FOO=1 git commit`, `sudo git commit` and `git -C ../api commit`, but not `echo "git commit"`, a here-document's body, `git commit-tree` or `git commit --help` ([how a command is read](#how-a-command-is-read)) |
 | `tools` | exact tool names, such as `Edit` or `mcp__slack__post_message`; the reserved name `writfold:edit` makes the rule apply to `writfold kb edit apply` itself ([below](#edits-made-by-writfold-kb-edit-apply)) |
 | `paths` | optional globs over the file a tool call edits, with `!` exclusions (built in v0.5.0-dev.3, [below](#paths)); only with `tools`, refused with `commands` |
-| `repos` | optional repository names ([how a repository is named](#how-repos-names-a-repository)), with `*` and `!` exclusions; default every repository. A rule with `repos` is skipped outside a repository |
+| `repos` | optional repository names ([how a repository is named](#how-repos-names-a-repository)), with `*` and `!` exclusions; default every repository. The repository is the one the matched command acts on ([below](#how-a-command-is-read)). A rule with `repos` is skipped outside a repository |
 | `require` | one or more of the fixed requirements below; anything else is refused |
 | `action` | `deny` or `ask` (`pre-tool-use` only; Claude Code then asks the user) |
 | `description` | shown first in the reason |
@@ -176,6 +176,7 @@ A refusal names what is owed. Each kind of refusal has one way past, and each wa
 | a gate that is `open`, `stale`, `failed` or `unknown` | meet it, or `writfold kb gate waive <id> --reason TEXT --by WHO`: a tracked file in `runs/<run>/statements/`, bound to the gate's definition and the bytes in its scope, so it lapses when either changes; shown as `[waived]` by `gate status`, `resume` and the session-start context, and as a `waived by … : reason` line by `gate lines`, so it reaches the commit message |
 | no current run, or a closed one | start a run; there is nothing to waive |
 | an undefined gate, or no gate owed | define the gate, or narrow the rule with `repos` |
+| "cannot tell which repository" | repeat the command with the directory written literally |
 
 There is no rule-level waiver. A refusal does not name a waive command, and an agent that is refused is not told how to excuse itself: the way past is in this guide. To keep `gate waive` and `gate attest` for people, make Claude Code ask before they run, and before a rule file is edited, in `.claude/settings.json`:
 
@@ -280,7 +281,7 @@ description = "open a run before editing source"
 - The globs are those of a gate's `scope`: anchored at the top of the repository, `*` and `?` within one segment, `**` across any number of segments. A path is matched when some pattern without `!` matches it and no `!` pattern does: **an exclusion wins wherever it appears**, so `["!**/*.md", "**"]` means the same as `["**", "!**/*.md"]`. At least one pattern must be an inclusion; a leading `/` or a `\` is refused.
 - **A call with no file does not match** a rule with `paths`: a tool that names none (an MCP tool, `Bash`), or a file in no repository. Such a rule never refuses them; write a second rule without `paths` if they matter.
 - `paths` is refused next to `commands`: a Bash command line names no single file.
-- `repos` and `paths` look at different things: `repos` names the repository of the event's `cwd` (as `gate status` does), `paths` the edited file's own repository.
+- `repos` and `paths` look at different things: for a `tools` rule `repos` names the repository of the event's `cwd` (as `gate status` does), `paths` the edited file's own repository.
 
 ### Edits made by `writfold kb edit apply`
 
@@ -305,19 +306,45 @@ action = "deny"
 - No rule directory: nothing is read. An unparsable rule file is skipped with the hook's diagnostic on stderr. A matched rule whose requirement cannot be evaluated takes its action, as in the hook.
 - A rule without `writfold:edit` keeps its meaning: it never applies to `edit apply`. It stays a guard, not enforcement: other tools can still edit the file.
 
+### How a command is read
+
+> Built in v0.5.0-dev.10.
+
+A `commands` rule reads the Bash command line the way the shell would split it, without running or expanding anything ([`writfold_core::command`](../../crates/writfold-core/src/command/mod.rs)). The delivery guard uses the same reader.
+
+1. **Simple commands.** Words are split on blanks, with quotes and escapes removed; `;`, `&&`, `||`, `|`, `&`, a newline, `(` and `)` end a simple command; `#` starts a comment. Text inside quotes is one word and is never a command, so `echo "git commit"` and `ssh host 'git push'` do not match.
+2. **Here-documents.** After `<<` or `<<-` and its delimiter word, quoted or not, the lines up to a line equal to the delimiter (leading tabs dropped for `<<-`) are data, not commands. Several on one line are read in order; `<<<` is an ordinary word; an unterminated here-document runs to the end.
+3. **Leading words set aside.** `NAME=value` assignments; the shell words `if`, `then`, `else`, `elif`, `do`, `while`, `until`, `!`, `{` and `time`; the wrappers `command`, `exec`, `nohup`, `builtin`, `env` and `sudo` when the next word does not begin with `-`. A wrapper used with options (`sudo -u x git commit`) is left as it is and does not match.
+4. **The command's name.** A first word holding `/` is compared by its last segment: `/usr/bin/git` is `git`.
+5. **`git`'s global options.** Between `git` and its subcommand, `-C`, `-c`, `--git-dir`, `--work-tree`, `--namespace`, `--super-prefix` and `--attr-source` are dropped with their value (also as `--name=value`), and any other word beginning with `-` alone. `git -C ../api --no-pager commit` is compared as `git commit`.
+6. **`--help`.** An invocation whose only word after the rule's words is `--help` does not match. `-h` and `--dry-run` do: their meaning differs from command to command.
+7. **The directory.** It starts as the event's `cwd`. A simple command that is exactly `cd DIR`, not in a pipeline and not in the background, sets it for the commands after it in the same group; a `( … )` or `$( … )` group starts from the directory outside it, and its `cd` ends with it. `cd` alone is the home directory. `git -C DIR` (repeatable, each relative to the last) and `--work-tree DIR` apply to that invocation only. A relative directory is joined by name, `.` and `..` resolved by name.
+8. **What is expanded.** A leading unquoted `~` or `~/`, and a word that begins `$HOME` or `${HOME}` followed by nothing or `/` and holds no other expansion, are the home directory (`HOME` in the hook's environment). `'~/b'` in quotes is a directory named `~`.
+9. **What is never guessed.** A directory word holding any other expansion (`"$REPO"`), an unquoted `*`, `?` or `[`, `~name`, a home directory that is needed and not known; `cd -`, `pushd`, `popd` or `cd` with an option, and every later command of its group; `--git-dir` without `--work-tree`, or a `GIT_DIR` or `GIT_WORK_TREE` assignment.
+
+**Where a rule is judged.** Each invocation a rule matches is judged at that invocation's directory: the repository is the one enclosing it, else the run's recorded worktree, else the KB's, as for the `cwd` before. `cd ../api && git commit` and `git -C ../api commit` are judged against `api`, and `(cd ../api && make); git commit` against the repository the call started in. The KB root's rules apply to every invocation; a repository's own rules (the nearest `.writfold/guards/` at or above a directory) only to the invocations whose directory is at or below it. A `tools` rule is judged at the event's `cwd`. Several matched invocations with different directories are judged separately and combined (a denial wins), with the index opened once. At most four distinct directories are judged per call.
+
+**A directory that cannot be told** is not a pass and not a guess. `run.current` is judged as usual; every requirement that needs a repository (`gates.met`, `gate:<id>`, `step.met`) cannot be evaluated, which takes the rule's action, with `cannot tell which repository this command acts on (git commit: a variable); name the directory literally`. A rule with `repos` applies, since the repository is not known. Only the KB root's rules apply to such an invocation. A fifth distinct directory in one call is treated the same way (`more directories than one call judges`). The way out costs one retry: repeat the command with the directory written literally.
+
+**Not followed.** The string given to `bash -c`, `sh -c` or `eval`; `xargs`, `find -exec`, `watch` and other programs that run their arguments; backquote substitution; aliases, functions, scripts and Makefile targets; the remote command of `ssh`, which acts on another machine. A rule is a guard: each of these is a miss, never a refusal.
+
+A rule never matches by working directory alone: a `pre-tool-use` rule names `commands` or `tools`, so `cat`, `grep` or a lookup verb inside a guarded repository passes unless a rule lists the tool `Bash` itself.
+
 ### How `repos` names a repository
 
 A repository's name, for `repos`, is the first of:
 
 1. its name in the KB clone's repository map (the map `kb stale` resolves `repo=` with; see [validation](validation.md));
 2. the last segment of its `remote.origin.url`, without `.git` (`git@host:acme/ledger.git` is `ledger`);
-3. its directory's name.
+3. its main work tree's directory name, so a linked worktree answers to its clone's name (built in v0.5.0-dev.10).
+
+A linked worktree is the same repository as its clone: a map entry for either names both (they share a Git directory), and so do the origin and the clone's directory name. Before v0.5.0-dev.10 a linked worktree without an origin or a map entry of its own was named by its own directory; receipts filed from one under that name are now about another repository name and read `open` until the gate is run again. Nothing is relabelled.
 
 A pattern with `/` is refused, so two clones with the same last segment (`acme/api` and `beta/api`) both answer to `api`. To tell them apart, map each clone under a unique name, or put the rule in that repository's own `.writfold/guards/` instead of the KB root.
 
 **When a call passes.** No rule directory, an unparsable rule file (skipped, with a `writfold kb hook:` line on stderr; `writfold kb check` lists it as `check guards [attention]`), a call no rule matches, and a timeout all let the call through. A **matched** rule whose requirement cannot be evaluated (the KB, the index or Git cannot be read) is not a pass: it takes the rule's action, with "cannot read the KB" as the reason, as the delivery guard does. The way out of a wedge is the rule's own `ask`, or deleting the file.
 
-**Cost.** With no rule directory, nothing is opened: the hook reads one configuration file and two directory names and exits. Once any rule applies here, each call still reads the rule files, and a rule with `paths` walks up from the edited file looking for `.git`; only a matched call opens the index and judges the gates. The widened matcher means one hook process per `Edit`, `Write`, `MultiEdit` or `NotebookEdit` call. Measured on 13 November 2026 on a one-asset KB, the release binary, process start included, answered an `Edit` event in about 1.4 ms with no rule directory and about 1.5 ms with a rule directory whose rule did not match (300 calls each). A matched `git commit` with no current run, which opens the index, took about 9 ms; one that judges gates costs, on top of that, what `gate status` costs. Re-measured on 13 November 2026 for `paths` (release binary, 300 calls each): about 1.4 ms with no rule directory, 1.3 ms with a `commands` rule that did not match, and 1.4 ms for an `Edit` of a `.md` file that `paths = ["**", "!**/*.md"]` leaves out; an `.rs` edit that rule matches, with no current run, took about 10.5 ms. All are far inside the 10 s timeout.
+**Cost.** With no rule directory, nothing is opened: the hook reads one configuration file and two directory names and exits. Once any rule applies here, each call still reads the rule files, and a rule with `paths` walks up from the edited file looking for `.git`; only a matched call opens the index and judges the gates. The widened matcher means one hook process per `Edit`, `Write`, `MultiEdit` or `NotebookEdit` call. Measured on 13 November 2026 on a one-asset KB, the release binary, process start included, answered an `Edit` event in about 1.4 ms with no rule directory and about 1.5 ms with a rule directory whose rule did not match (300 calls each). A matched `git commit` with no current run, which opens the index, took about 9 ms; one that judges gates costs, on top of that, what `gate status` costs. Re-measured on 13 November 2026 for `paths` (release binary, 300 calls each): about 1.4 ms with no rule directory, 1.3 ms with a `commands` rule that did not match, and 1.4 ms for an `Edit` of a `.md` file that `paths = ["**", "!**/*.md"]` leaves out; an `.rs` edit that rule matches, with no current run, took about 10.5 ms. All are far inside the 10 s timeout. Re-measured on 15 November 2026 for the command reader (release binaries of v0.5.0-dev.9 and of this release, process start included, on a scratch copy of the fixture KB): an unmatched Bash event took 1.42 and 1.44 ms with no rule directory, and 1.43 to 1.48 and 1.45 to 1.52 ms with a rule directory (300 calls each, two rounds); a matched `git commit` judging one gate took about 13 ms with either (50 calls), and `cd DIR && git -C DIR commit` about 13 ms. A matched call costs that once per distinct directory, at most four.
 
 ### The Stop nudge
 

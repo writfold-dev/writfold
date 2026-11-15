@@ -27,6 +27,7 @@ fn hook(w: &World, tool: &str, input: Value) -> HookOutput {
         "tool_use_id": "toolu_1",
     });
     let env = HookEnv {
+        home: None,
         kb: Some(w.kb.clone()),
         cwd: w.base.clone(),
         now: Some(NOW + 3600),
@@ -117,6 +118,7 @@ fn fails_open_without_configuration() -> TestResult {
     assert!(denied(&out)?.is_none());
     // No KB at all: silent, with a diagnostic only on stderr.
     let env = HookEnv {
+        home: None,
         kb: Some(w.base.join("nowhere")),
         cwd: w.base.clone(),
         now: Some(NOW),
@@ -192,5 +194,16 @@ fn denies_and_allows_the_right_calls() -> TestResult {
     std::fs::write(&body, "Batching is live in staging.\n\nAnd more.\n")?;
     let reason = denied(&bash(&w, &post))?.ok_or("expected a denial")?;
     assert!(reason.contains("[stale]"), "{reason}");
+    Ok(())
+}
+
+#[test]
+fn a_publishing_command_in_a_here_document_body_is_not_matched() -> TestResult {
+    let w = world(&[])?;
+    config(&w, "guard.toml", GUARD)?;
+    let body = "cat > notes.md <<'EOF'\ngh pr comment 42 --body 'draft'\nEOF";
+    assert!(denied(&bash(&w, body))?.is_none());
+    let after = format!("{body}\ngh pr comment 42 --body 'draft'");
+    assert!(denied(&bash(&w, &after))?.is_some());
     Ok(())
 }

@@ -240,6 +240,7 @@ fn resume_and_session_start_list_tracked_proposals() -> TestResult {
         "session-start",
         &format!("{{\"cwd\": \"{}\"}}", w.base.display()),
         &writfold_kb::hook::HookEnv {
+            home: None,
             kb: Some(w.kb.clone()),
             cwd: w.base.clone(),
             now: Some(support::NOW),

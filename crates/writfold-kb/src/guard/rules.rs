@@ -5,7 +5,7 @@
 //! that repository (it is found by walking up from the working directory,
 //! never by spawning Git). Finding rules only reads files.
 use crate::gate::toml::{self, Value};
-use crate::shell::{self, Word};
+use crate::shell;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use writfold_core::guard::{Action, Repeat};
@@ -88,14 +88,11 @@ pub struct Rule {
 }
 
 impl Rule {
-    /// Whether a Bash command line holds a simple command this rule names.
-    pub fn matches_line(&self, line: &str) -> bool {
-        shell::segments(line).iter().any(|segment| {
-            let words: &[Word] = shell::command(segment);
-            self.commands
-                .iter()
-                .any(|c| c.len() <= words.len() && c.iter().zip(words).all(|(a, w)| *a == w.text))
-        })
+    /// Whether one invocation's words are a command this rule names
+    /// ([`shell::matches`]: a whole-word prefix, not before a lone
+    /// `--help`).
+    pub fn names(&self, words: &[String]) -> bool {
+        self.commands.iter().any(|c| shell::matches(c, words))
     }
 }
 
@@ -239,29 +236,34 @@ pub fn parse(text_in: &str, stem: &str, path: &str) -> Result<Rule, String> {
     })
 }
 
+/// The KB root's rule directory, when it exists.
+pub fn root_dir(kb: &Path) -> Option<(PathBuf, String)> {
+    let root = kb.join(DIR);
+    root.is_dir().then(|| (root, DIR.to_owned()))
+}
+
+/// The nearest `.writfold/guards/` at or above `dir` when it is not the
+/// KB root's (found by `stat`, never by Git), with its shown path.
+pub fn near_dir(kb: &Path, dir: &Path) -> Option<(PathBuf, String)> {
+    let (top, found) = dir
+        .ancestors()
+        .map(|d| (d, d.join(DIR)))
+        .find(|(_, d)| d.is_dir())?;
+    let same = match (
+        std::fs::canonicalize(kb.join(DIR)),
+        std::fs::canonicalize(&found),
+    ) {
+        (Ok(a), Ok(b)) => a == b,
+        _ => false,
+    };
+    (!same).then(|| (found, format!("{}/{DIR}", top.display())))
+}
+
 /// The rule directories that apply at `cwd`: the KB root's, then the
 /// nearest `.writfold/guards/` at or above `cwd` when it is another one.
 /// Only directories that exist are returned, so no rule means no work.
 pub fn dirs(kb: &Path, cwd: &Path) -> Vec<(PathBuf, String)> {
-    let mut out = Vec::new();
-    let root = kb.join(DIR);
-    if root.is_dir() {
-        out.push((root.clone(), DIR.to_owned()));
-    }
-    let near = cwd
-        .ancestors()
-        .map(|dir| (dir, dir.join(DIR)))
-        .find(|(_, d)| d.is_dir());
-    if let Some((top, dir)) = near {
-        let same = match (std::fs::canonicalize(&root), std::fs::canonicalize(&dir)) {
-            (Ok(a), Ok(b)) => a == b,
-            _ => false,
-        };
-        if !same {
-            out.push((dir, format!("{}/{DIR}", top.display())));
-        }
-    }
-    out
+    root_dir(kb).into_iter().chain(near_dir(kb, cwd)).collect()
 }
 
 /// Every rule of `dirs`, and every file that does not parse (path, why).

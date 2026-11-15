@@ -30,6 +30,7 @@ fn rule(w: &World, id: &str, text: &str) -> TestResult {
 
 fn env(w: &World) -> HookEnv {
     HookEnv {
+        home: None,
         kb: Some(w.kb.clone()),
         cwd: w.base.clone(),
         now: Some(NOW + 3600),

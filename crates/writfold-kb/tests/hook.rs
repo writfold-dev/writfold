@@ -32,6 +32,7 @@ fn golden(name: &str, actual: &str) -> TestResult {
 
 fn env(w: &World) -> HookEnv {
     HookEnv {
+        home: None,
         kb: Some(w.kb.clone()),
         cwd: w.kb.clone(),
         now: Some(NOW),

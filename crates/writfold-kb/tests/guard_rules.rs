@@ -56,6 +56,7 @@ fn hook_at(w: &World, cwd: &Path, tool: &str, input: Value) -> HookOutput {
         json!({"tool_name": tool, "tool_input": input}),
     );
     let env = HookEnv {
+        home: None,
         kb: Some(w.kb.clone()),
         cwd: w.base.clone(),
         now: Some(NOW + 3600),
@@ -294,6 +295,7 @@ fn stop(w: &World, active: bool) -> HookOutput {
         json!({"stop_hook_active": active, "last_assistant_message": "Done."}),
     );
     let env = HookEnv {
+        home: None,
         kb: Some(w.kb.clone()),
         cwd: w.base.clone(),
         now: Some(NOW + 3600),

@@ -147,6 +147,7 @@ impl Log {
 
     fn env(&self) -> HookEnv {
         HookEnv {
+            home: None,
             kb: Some(self.w.kb.clone()),
             cwd: self.w.kb.clone(),
             now: Some(NOW + 3600),

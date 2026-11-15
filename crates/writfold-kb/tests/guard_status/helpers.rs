@@ -63,6 +63,7 @@ pub fn hook(w: &World, stop: bool, session: &str) -> HookOutput {
         if stop { "stop" } else { "pre-tool-use" },
         &input.to_string(),
         &HookEnv {
+            home: None,
             kb: Some(w.kb.clone()),
             cwd: w.base.clone(),
             now: Some(NOW + 3600),

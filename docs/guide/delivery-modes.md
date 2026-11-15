@@ -83,7 +83,7 @@ commands = ["gh pr comment", "gh pr review", "gh issue comment"]
 tools = ["mcp__slack__post_message"]
 ```
 
-When a Bash call begins with a listed command, or a listed tool is called, the hook reads the body from `--body`, `-b`, `--body-file` or `-F`:
+When a Bash call begins with a listed command, or a listed tool is called, the hook reads the body from `--body`, `-b`, `--body-file` or `-F`. The command line is read as guard rules read it, so a listed command quoted in a here-document's body is data and is not matched (built in v0.5.0-dev.10; [how a command is read](hooks.md#how-a-command-is-read)):
 
 - body readable: the call goes on when a ready candidate of the current run holds exactly those bytes; otherwise it is denied, with the reason;
 - body not readable: the call goes on only when the run has a candidate and every candidate is ready;

@@ -207,12 +207,31 @@ pub fn target(
     Ok(None)
 }
 
-/// The name the KB's local map gives the repository in `dir`, if any.
+/// The shared Git directory of the repository in `dir`: the same for a
+/// clone and each of its linked worktrees.
+fn shared(dir: &Path) -> Option<PathBuf> {
+    std::fs::canonicalize(common_dir(&git_dir(dir)?)).ok()
+}
+
+/// The name the KB's local map gives the repository in `dir`, if any: an
+/// entry for any work tree of the same repository (its clone or one of
+/// its linked worktrees) names them all.
 pub fn mapped_name(ws: Option<&Workspace>, dir: &Path) -> Option<String> {
-    let target = git_dir(dir)?;
+    let target = shared(dir)?;
     map(ws)
         .into_iter()
-        .find_map(|(name, path)| (git_dir(&path).as_ref() == Some(&target)).then_some(name))
+        .find_map(|(name, path)| (shared(&path).as_ref() == Some(&target)).then_some(name))
+}
+
+/// The directory name of the main work tree of the repository whose Git
+/// directory is `git_dir`: for a linked worktree, its clone's.
+pub fn main_name(git_dir: &Path) -> Option<String> {
+    let common = std::fs::canonicalize(common_dir(git_dir)).ok()?;
+    let top = match common.file_name()? == ".git" {
+        true => common.parent()?.to_path_buf(),
+        false => return None,
+    };
+    top.file_name().map(|n| n.to_string_lossy().into_owned())
 }
 
 /// The `repo=` name to cite the repository in `dir` by: a name in the KB's
