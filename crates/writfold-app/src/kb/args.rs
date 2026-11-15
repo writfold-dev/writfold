@@ -40,7 +40,7 @@ fn value(flag: &str, value: Option<&String>) -> Result<String, String> {
 }
 
 /// Split flags from positionals. Every flag may appear once.
-fn split(args: &[String]) -> Result<(Common, Vec<String>), String> {
+fn split(verb: &str, args: &[String]) -> Result<(Common, Vec<String>), String> {
     let mut common = Common::default();
     let mut positional = Vec::new();
     let mut seen = Vec::new();
@@ -64,7 +64,8 @@ fn split(args: &[String]) -> Result<(Common, Vec<String>), String> {
             "--offline" => common.offline = true,
             "--cached" => common.cached = true,
             "--record" => common.record = true,
-            "--signatures" => common.signatures = true,
+            // `record|propose investigation --signatures a,b` takes a value.
+            "--signatures" if !matches!(verb, "record" | "propose") => common.signatures = true,
             "--missing" => common.missing = true,
             "--kind" => {
                 common.kinds = value(arg, items.next())?
@@ -152,7 +153,7 @@ pub fn parse(args: &[String], cwd: PathBuf) -> Result<Option<Request>, String> {
     if matches!(verb.as_str(), "help" | "--help" | "-h") {
         return Ok(None);
     }
-    let (common, positional) = split(rest)?;
+    let (common, positional) = split(verb, rest)?;
     check_flags(verb, &common)?;
     if common.cached && common.offline {
         return Err("stale takes --offline or --cached, not both".into());
