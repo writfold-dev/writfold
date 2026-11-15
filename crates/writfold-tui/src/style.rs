@@ -179,3 +179,37 @@ pub fn border(look: Look, focused: bool) -> Style {
         Depth::None => Style::default(),
     }
 }
+
+/// A chip's kind: plain (`secondary` on `raised`), accented (`accent` on
+/// `raised`, bold) or the active tab (`on_accent` on `accent`, bold).
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Chip {
+    Plain,
+    Accent,
+    Active,
+}
+
+/// A chip is its text plus one cell each side: padding on a background in
+/// truecolor, brackets otherwise, so every depth has the same widths.
+pub fn chip_text(look: Look, text: &str) -> String {
+    if look.depth == Depth::Truecolor {
+        format!(" {text} ")
+    } else {
+        format!("[{text}]")
+    }
+}
+
+pub fn chip(look: Look, kind: Chip) -> Style {
+    let palette = look.theme.palette();
+    let bold = Style::default().add_modifier(Modifier::BOLD);
+    match (look.depth, kind) {
+        (Depth::Truecolor, Chip::Plain) => Style::default()
+            .fg(rgb(palette.secondary))
+            .bg(rgb(palette.raised)),
+        (Depth::Truecolor, Chip::Accent) => bold.fg(rgb(palette.accent)).bg(rgb(palette.raised)),
+        (Depth::Truecolor, Chip::Active) => bold.fg(rgb(palette.on_accent)).bg(rgb(palette.accent)),
+        (Depth::Ansi, Chip::Accent) => bold.fg(Color::Cyan),
+        (_, Chip::Plain) => Style::default(),
+        (_, Chip::Accent | Chip::Active) => bold,
+    }
+}

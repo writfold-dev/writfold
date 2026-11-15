@@ -79,6 +79,7 @@ fn selected_run_uses_text_on_selection_for_every_entry_line() -> TestResult {
         theme: ThemeId::Hone,
         depth: Depth::Truecolor,
     };
+    app.level = writfold_tui::app::Detail::Full;
     let buffer = render(&mut app, 160, 40)?;
     let area = writfold_tui::layout::areas(160, 40)
         .runs
@@ -158,7 +159,7 @@ fn degraded_depths_have_no_background_or_unwanted_colours() -> TestResult {
             }
         }
         assert!(
-            cells(&buffer, "> [open]")?
+            cells(&buffer, "> Add --plan to kb runs")?
                 .iter()
                 .all(|cell| cell.modifier.contains(Modifier::REVERSED))
         );

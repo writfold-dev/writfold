@@ -11,7 +11,7 @@ fn recorded_position_event_and_checkpoint_quote_their_verbs() -> TestResult {
     app.focus = Focus::Detail;
     let plan = app.answer(View::Progress).ok_or("plan")?;
     let position = format!(
-        "recorded position: step {}/{}",
+        "step {} of {}",
         plan.count("current").ok_or("current")?,
         plan.count("steps").ok_or("steps")?
     );
@@ -28,6 +28,12 @@ fn recorded_position_event_and_checkpoint_quote_their_verbs() -> TestResult {
         .find(|row| field(row, "label") == "checkpoint")
         .ok_or("checkpoint")?;
     let checkpoint = format!("last checkpoint: {}", field(checkpoint, "text"));
+    // The summary states the position at both levels; the event and
+    // checkpoint are quoted whole at the detailed level.
+    let calm = symbols(&render(&mut app, 320, 40)?);
+    assert!(calm.contains(&position), "{position}\n{calm}");
+    assert!(!calm.contains("last checkpoint:"), "{calm}");
+    app.key(Key::Char('d'));
     let text = symbols(&render(&mut app, 320, 40)?);
     for exact in [position, event, checkpoint] {
         assert!(text.contains(&exact), "{exact}\n{text}");
@@ -46,7 +52,7 @@ fn minimum_narrow_surface_switches_between_map_and_inspector() -> TestResult {
     let text = symbols(&render(&mut app, 60, 12)?);
     assert_eq!(app.focus, Focus::Inspector);
     assert!(text.contains("step 7/11"));
-    assert!(text.contains("full receipts: g"));
+    assert!(text.contains("g gates"), "{text}");
     app.key(Key::Esc);
     assert!(symbols(&render(&mut app, 60, 12)?).contains('▶'));
     app.key(Key::Char('0'));

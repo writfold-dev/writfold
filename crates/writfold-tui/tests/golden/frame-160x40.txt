@@ -1,20 +1,20 @@
 run-20261101T090000Z-a1b2c3 [open] !current  Add --plan to kb runs  project=harbor  subject=kb
 [1 progress] 2 gates 3 timeline 4 inbox 5 guards 6 stale 7 brief 8 resume
 ╭ runs (3) ────────────────────────────╮╭ progress run-20261101T090000Z-a1b2c3 ────────────────────────────────╮╭ gates ───────────────────────────────────────╮
-│> [open] run-20261101T090000Z-a1b2c3 !││plan 2 done, 1 skipped of 6 steps; current step 4/6; owes 2 of 2 gates││gates=6 satisfied=2 open=2 stale=2 failed=0   │
-│    Add --plan to kb runs             ││stale=1                                                               ││unknown=0 attested=0 waived=0 invalid=0       │
-│    project=harbor                    ││     [x] [!] [-] [>] [ ] [ ]                                          ││bench [open] !open                            │
-│    plan: step 4/6 done=2 skipped=1 cu││ x change#1/research [done] notes [satisfied]                         ││lint [stale] !stale                           │
-│    last: 2026-11-10T14:10:00Z Review ││     done: recorded 2026-11-10T23:47:00Z                              ││notes [satisfied]                             │
-│  [open] run-20261102T080000Z-b1c2d3  ││ x change#1/implement [done] unit [satisfied], lint [stale] !stale    ││signoff [open] !open                          │
-│    Review the lantern guide          ││     why: no longer holds: lint [stale] (done stays done; list the    ││unit [satisfied]                              │
-│    project=lantern                   ││     gate again on a later step if it must hold there)                │╰──────────────────────────────────────────────╯
-│    last: 2026-11-02T08:30:00Z Read th││     splice: change#1 @83c2cc9efde7 from .writfold/plans/change.toml  │╭ inbox ───────────────────────────────────────╮
-│  [closed] run-20261104T080000Z-d4e5f6││     gate unit [satisfied] mechanical                                 ││drafts=1 proposals=2 (local; not in the KB)   │
-│    Retire the legacy flush path      ││     gate lint [stale] mechanical !stale                              ││draft s-progress [open]                       │
-│    project=harbor                    ││     done: recorded 2026-11-10T23:50:00Z                              ││  Review started; lint went stale after the re│
-│    plan: complete steps=2 done=2 skip││ - change#1/benchmarks [skipped] no hot path touched (by owner,       ││proposal 2c6ba260f2cde3fa [pending]           │
-│    last: 2026-11-04T09:00:00Z Legacy ││ 2026-11-10T23:51:00Z) !skipped                                       ││  ticket HBR-210: Lint gate scope misses the c│
+│> Add --plan to kb runs               ││plan 2 done, 1 skipped of 6 steps; current step 4/6; owes 2 of 2 gates││gates=6 satisfied=2 open=2 stale=2 failed=0   │
+│  harbor  step 4/6                    ││stale=1                                                               ││unknown=0 attested=0 waived=0 invalid=0       │
+│  Review the lantern guide            ││     [x] [!] [-] [>] [ ] [ ]                                          ││bench [open] !open                            │
+│  lantern                             ││ x change#1/research [done] notes [satisfied]                         ││lint [stale] !stale                           │
+│  Retire the legacy flush path        ││     done: recorded 2026-11-10T23:47:00Z                              ││notes [satisfied]                             │
+│  closed  harbor  complete            ││ x change#1/implement [done] unit [satisfied], lint [stale] !stale    ││signoff [open] !open                          │
+│                                      ││     why: no longer holds: lint [stale] (done stays done; list the    ││unit [satisfied]                              │
+│                                      ││     gate again on a later step if it must hold there)                │╰──────────────────────────────────────────────╯
+│                                      ││     splice: change#1 @83c2cc9efde7 from .writfold/plans/change.toml  │╭ inbox ───────────────────────────────────────╮
+│                                      ││     gate unit [satisfied] mechanical                                 ││drafts=1 proposals=2 (local; not in the KB)   │
+│                                      ││     gate lint [stale] mechanical !stale                              ││draft s-progress [open]                       │
+│                                      ││     done: recorded 2026-11-10T23:50:00Z                              ││  Review started; lint went stale after the re│
+│                                      ││ - change#1/benchmarks [skipped] no hot path touched (by owner,       ││proposal 2c6ba260f2cde3fa [pending]           │
+│                                      ││ 2026-11-10T23:51:00Z) !skipped                                       ││  ticket HBR-210: Lint gate scope misses the c│
 │                                      ││     splice: change#1 @83c2cc9efde7 from .writfold/plans/change.toml  ││proposal 2c9a051ffe807243 [pending]           │
 │                                      ││ > change#1/review [current] owes: review-list [stale], signoff [open]││  link mentions run-20261101T090000Z-a1b2c3 → │
 │                                      ││     splice: change#1 @83c2cc9efde7 from .writfold/plans/change.toml  │╰──────────────────────────────────────────────╯

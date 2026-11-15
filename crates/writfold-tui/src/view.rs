@@ -84,11 +84,20 @@ fn runs(frame: &mut Frame<'_>, app: &App, area: Rect) {
         frame.render_widget(message, area);
         return;
     }
+    // Entries clip with a marker inside the pane, after the "> " gutter.
+    let room = usize::from(area.width.saturating_sub(4));
+    let glyphs = crate::map_view::glyphs(app);
     let items: Vec<ListItem<'static>> = app
         .order
         .iter()
         .filter_map(|index| app.runs.rows.get(*index))
-        .map(|row| ListItem::new(text(lines::run_item(row), app.look)))
+        .map(|row| {
+            let mut entry = lines::run_item(row, app.level);
+            for line in &mut entry {
+                line.text = crate::rail_text::clip(&line.text, room, glyphs);
+            }
+            ListItem::new(text(entry, app.look))
+        })
         .collect();
     let list = List::new(items)
         .block(border)

@@ -24,6 +24,8 @@ mod palettes;
 pub mod poll;
 pub mod progress;
 pub mod rail;
+mod rail_text;
+mod run_item;
 pub mod side;
 pub mod source;
 mod state;

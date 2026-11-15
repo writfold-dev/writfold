@@ -141,6 +141,7 @@ pub fn help() -> Vec<Line> {
         "writfold watch: a read-only view of the KB verbs",
         "j k ↑ ↓: select run / node / scroll inspector; [ ]: previous / next run",
         "h l / Left Right: focus left/right; Enter cycles; Esc steps left",
+        "d: calm / detailed frame (receipts, covered items, splice and stamps); not written",
         "PgUp PgDn: page nodes / scroll text; .: current; n N: next/previous flagged step",
         "Tab / Shift-Tab: next / previous view; 0: runs (narrow)",
         "1/p progress; 2/g gates; 3/t timeline; 4/i inbox",
@@ -192,7 +193,10 @@ fn runs(app: &App, out: &mut String) {
         return;
     }
     for (n, i) in app.order.iter().enumerate() {
-        for (k, item) in lines::run_item(&app.runs.rows[*i]).into_iter().enumerate() {
+        for (k, item) in lines::run_item(&app.runs.rows[*i], crate::app::Detail::Full)
+            .into_iter()
+            .enumerate()
+        {
             out.push_str(if k == 0 && n == app.selected {
                 "> "
             } else {

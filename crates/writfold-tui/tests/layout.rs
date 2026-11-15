@@ -142,7 +142,10 @@ fn narrow_runs_view_and_short_strip_are_real_content() -> TestResult {
     app.key(Key::Char('0'));
     assert!(app.runs_view);
     let text = symbols(&render(&mut app, 70, 20)?);
-    assert!(text.contains("runs") && text.contains(RUN));
+    // Calm entries lead with the title; `d` restores the id line.
+    assert!(text.contains("runs") && text.contains("> Add --plan to kb runs"));
+    app.key(Key::Char('d'));
+    assert!(symbols(&render(&mut app, 70, 20)?).contains(&format!("> [open] {RUN}")));
     app.key(Key::Char('p'));
     assert!(!app.runs_view);
     for (width, present) in [(28, false), (29, true)] {
@@ -162,6 +165,8 @@ fn narrow_runs_view_and_short_strip_are_real_content() -> TestResult {
 fn paging_the_narrow_run_list_keeps_selection_and_reveals_later_runs() -> TestResult {
     let w = world("narrow-pages")?;
     let mut app = App::new(w.source(), Some(RUN));
+    // Five-line detailed entries overflow the pane, so paging has work to do.
+    app.level = writfold_tui::app::Detail::Full;
     render(&mut app, 70, 12)?;
     app.key(Key::Char('0'));
     render(&mut app, 70, 12)?;

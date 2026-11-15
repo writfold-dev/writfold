@@ -1,4 +1,5 @@
 use super::*;
+use crate::app::Detail;
 use crate::cells::State;
 use serde_json::json;
 
@@ -47,7 +48,7 @@ fn fixture() -> Value {
 #[test]
 fn preserves_continuations_and_separate_evidence() {
     let row = fixture();
-    let output = content(&node(&row), Glyphs::Unicode, Look::default());
+    let output = content(&node(&row), Glyphs::Unicode, Look::default(), Detail::Full);
     let text = texts(&output);
     assert_eq!(text[0], "plan#1/check [done] !stale");
     for value in lines::more(&row) {
@@ -65,7 +66,7 @@ fn preserves_continuations_and_separate_evidence() {
     assert!(text.contains(&"@runs/r/plan/done-check.json:1".into()));
     assert_eq!(
         text.last().map(String::as_str),
-        Some("full receipts: g   all steps as text: x")
+        Some("d less   g gates   x text")
     );
 }
 
@@ -73,7 +74,7 @@ fn preserves_continuations_and_separate_evidence() {
 fn segments_keep_order_and_source_count_without_judging() {
     let row = fixture();
     for (glyphs, expected) in [(Glyphs::Unicode, "■ ◆ ! □ "), (Glyphs::Ascii, "x * ! . ")] {
-        let output = content(&node(&row), glyphs, Look::default());
+        let output = content(&node(&row), glyphs, Look::default(), Detail::Full);
         assert!(
             texts(&output).contains(&format!("9/12 required covered  {expected}(+1 optional)"))
         );
@@ -100,7 +101,12 @@ fn optional_marker_must_be_exact_prefix() {
 fn no_gates_and_unjudged_text_do_not_invent_standing() {
     for text in ["no gates", "gates: review, unit"] {
         let row = json!({"id":"p#1/a", "status":"current", "text":text});
-        let output = texts(&content(&node(&row), Glyphs::Ascii, Look::default()));
+        let output = texts(&content(
+            &node(&row),
+            Glyphs::Ascii,
+            Look::default(),
+            Detail::Full,
+        ));
         assert_eq!(output[0], "p#1/a [current]");
         assert!(output.contains(&text.to_owned()));
         assert!(!output.iter().any(|line| line.starts_with("gates (")));
@@ -116,10 +122,51 @@ fn no_gates_and_unjudged_text_do_not_invent_standing() {
 fn skipped_event_path_follows_verbatim_reason() {
     let row = json!({"id":"p#1/a", "status":"skipped", "text":"not needed (by owner, DATE)",
         "path":"runs/r/plan/skip-a.json", "line":1});
-    let output = texts(&content(&node(&row), Glyphs::Unicode, Look::default()));
+    let output = texts(&content(
+        &node(&row),
+        Glyphs::Unicode,
+        Look::default(),
+        Detail::Full,
+    ));
     assert!(output.windows(2).any(|pair| pair
         == [
             "skip: not needed (by owner, DATE)",
             "@runs/r/plan/skip-a.json:1"
         ]));
+}
+
+#[test]
+fn calm_keeps_what_needs_attention_and_drops_receipts_and_covered_items() {
+    let row = fixture();
+    let output = content(&node(&row), Glyphs::Unicode, Look::default(), Detail::Calm);
+    let text = texts(&output);
+    assert_eq!(text[0], "plan#1/check [done] !stale");
+    assert_eq!(text[1], "plan#1/check");
+    assert!(!text.iter().any(|line| line.starts_with('@')));
+    for kept in [
+        "gate review [stale] checklist 9/12 required covered",
+        "■ ◆ ! □ (+1 optional)",
+        "! third [stale] evidence moved",
+        "□ fourth [open] needs evidence",
+        "read: instructions for review",
+        "done: recorded 2026-11-14T07:07:44Z",
+    ] {
+        assert!(text.contains(&kept.to_owned()), "{kept}: {text:#?}");
+    }
+    for dropped in [
+        "first [supported]",
+        "extra [supported]",
+        "second [not-applicable]",
+    ] {
+        assert!(!text.iter().any(|line| line.contains(dropped)), "{dropped}");
+    }
+    assert!(
+        !text
+            .iter()
+            .any(|l| l.starts_with("splice:") || l.starts_with("under:"))
+    );
+    assert_eq!(
+        text.last().map(String::as_str),
+        Some("d receipts and covered items   g gates   x text")
+    );
 }

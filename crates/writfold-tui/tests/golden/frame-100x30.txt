@@ -2,20 +2,20 @@ run-20261101T090000Z-a1b2c3 [open] !current  Add --plan to kb runs  project=harb
 [1 progress] 2 gates 3 timeline 4 inbox 5 guards 6 stale 7 brief 8 resume
 gates: open=2 stale=2 of 6 | inbox: drafts=1 proposals=2 | guards: deny=1 ask=0 of 2
 ╭ runs (3) ──────────────────╮╭ progress run-20261101T090000Z-a1b2c3 ──────────────────────────────╮
-│> [open] run-20261101T090000││ 2026-11-10T23:51:00Z) !skipped                                     │
-│    Add --plan to kb runs   ││     splice: change#1 @83c2cc9efde7 from .writfold/plans/change.toml│
-│    project=harbor          ││ > change#1/review [current] owes: review-list [stale], signoff     │
-│    plan: step 4/6 done=2 sk││ [open]                                                             │
-│    last: 2026-11-10T14:10:0││     splice: change#1 @83c2cc9efde7 from .writfold/plans/change.toml│
-│  [open] run-20261102T080000││     gate review-list [stale] checklist 2/4 required covered !stale │
-│    Review the lantern guide││       item errors [supported] 1 reference by agent                 │
-│    project=lantern         ││       item tests [stale] 1 reference by agent; cited evidence      │
-│    last: 2026-11-02T08:30:0││       moved: gate:lint was satisfied, now stale !stale             │
-│  [closed] run-20261104T0800││       item docs [open] The guide names every new flag              │
-│    Retire the legacy flush ││       item perf [not-applicable] no hot path touched by agent      │
-│    project=harbor          ││       item style [open] (optional) Names follow the module         │
-│    plan: complete steps=2 d││     gate signoff [open] attested !open                             │
-│    last: 2026-11-04T09:00:0││     read: instructions for signoff @.writfold/gates/signoff.md:1   │
+│> Add --plan to kb runs     ││ 2026-11-10T23:51:00Z) !skipped                                     │
+│  harbor  step 4/6          ││     splice: change#1 @83c2cc9efde7 from .writfold/plans/change.toml│
+│  Review the lantern guide  ││ > change#1/review [current] owes: review-list [stale], signoff     │
+│  lantern                   ││ [open]                                                             │
+│  Retire the legacy flush p…││     splice: change#1 @83c2cc9efde7 from .writfold/plans/change.toml│
+│  closed  harbor  complete  ││     gate review-list [stale] checklist 2/4 required covered !stale │
+│                            ││       item errors [supported] 1 reference by agent                 │
+│                            ││       item tests [stale] 1 reference by agent; cited evidence      │
+│                            ││       moved: gate:lint was satisfied, now stale !stale             │
+│                            ││       item docs [open] The guide names every new flag              │
+│                            ││       item perf [not-applicable] no hot path touched by agent      │
+│                            ││       item style [open] (optional) Names follow the module         │
+│                            ││     gate signoff [open] attested !open                             │
+│                            ││     read: instructions for signoff @.writfold/gates/signoff.md:1   │
 │                            ││     next: writfold kb gate cover review-list tests supported REF…  │
 │                            ││     --by WHO                                                       │
 │                            ││   change#1/deliver [later] gates: unit                             │

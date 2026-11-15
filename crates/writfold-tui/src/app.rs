@@ -25,6 +25,13 @@ pub enum Focus {
     Inspector,
 }
 
+/// How much text the frame shows; never written, a fresh start is calm.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Detail {
+    Calm,
+    Full,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Key {
     Up,
@@ -63,6 +70,7 @@ pub struct App {
     pub runs_view: bool,
     pub anchor: bool,
     pub look: Look,
+    pub level: Detail,
     pub(crate) width: u16,
     pub(crate) height: u16,
     pub(crate) main_height: u16,
@@ -98,6 +106,7 @@ impl App {
             runs_view: false,
             anchor: true,
             look: Look::default(),
+            level: Detail::Calm,
             width: 0,
             height: 0,
             main_height: 1,

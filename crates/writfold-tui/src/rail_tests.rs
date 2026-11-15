@@ -14,7 +14,13 @@ fn nested_headers_close_before_their_parent_without_repeating_root() {
         ..Reply::default()
     };
     let nodes = graph::nodes(&answer);
-    let rail = build(&nodes, 50, Glyphs::Unicode, Look::default());
+    let show = Show {
+        glyphs: Glyphs::Unicode,
+        look: Look::default(),
+        full: true,
+        selected: None,
+    };
+    let rail = build(&nodes, 50, show);
     let text: Vec<_> = rail.lines.iter().map(ToString::to_string).collect();
     assert_eq!(
         text.iter()
@@ -42,11 +48,4 @@ fn visible_window_keeps_context_beyond_terminal_offset_range() {
     assert!(70_000 - range.start >= 2);
     assert!(range.end - 70_000 > 2);
     assert_eq!(window(&rail, 0, 9, range.start), range);
-}
-
-#[test]
-fn left_truncation_preserves_display_width_and_terminal_glyph_set() {
-    assert_eq!(left("prefix/last", 5, Glyphs::Unicode), "…last");
-    assert_eq!(left("prefix/last", 7, Glyphs::Ascii), "...last");
-    assert_eq!(left("prefix/界界", 5, Glyphs::Unicode), "…界界");
 }

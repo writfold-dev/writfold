@@ -18,6 +18,11 @@ fn honest(text: &str) -> TestResult {
     Ok(())
 }
 
+/// Calm rows show an id after its group name: its last component.
+fn tail(id: &str) -> String {
+    format!(" {} ", id.rsplit('/').next().unwrap_or(id))
+}
+
 fn ascii_buffer(app: &mut App, width: u16, height: u16) -> TestResult {
     let buffer = render(app, width, height)?;
     let text = symbols(&buffer);
@@ -54,7 +59,7 @@ fn ascii_buffer(app: &mut App, width: u16, height: u16) -> TestResult {
         // Node lines, unlike pane borders, must use only ASCII map glyphs.
         let line = rendered
             .iter()
-            .find(|line| line.contains(node.id))
+            .find(|line| line.contains(&tail(node.id)))
             .ok_or("visible node")?;
         assert!(
             line.contains(node.state.cell(Glyphs::Ascii).glyph),

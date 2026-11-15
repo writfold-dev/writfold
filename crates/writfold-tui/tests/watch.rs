@@ -64,6 +64,7 @@ fn find(rows: &[String], needle: &str) -> Option<(u16, u16)> {
 fn the_layout_has_runs_left_gates_right_and_the_pin_below() -> TestResult {
     let w = world("layout")?;
     let mut app = App::new(w.source(), None);
+    app.level = writfold_tui::app::Detail::Full;
     app.show(View::Gates);
     let buffer = render(&mut app)?;
     let screen = rows(&buffer);

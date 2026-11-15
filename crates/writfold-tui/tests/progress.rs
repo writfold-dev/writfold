@@ -220,7 +220,7 @@ fn run_positions_and_unplanned_fallback_keep_verb_facts() -> TestResult {
         for key in ["done", "skipped"] {
             assert!(position.contains(&format!("{key}={}", answer.count(key).ok_or("count")?)));
         }
-        let listed = lines::run_item(row)
+        let listed = lines::run_item(row, writfold_tui::app::Detail::Full)
             .iter()
             .map(|l| l.text.as_str())
             .collect::<Vec<_>>()
