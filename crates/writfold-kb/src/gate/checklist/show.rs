@@ -54,10 +54,13 @@ fn item_text(e: &Entry<'_>) -> (String, Option<String>) {
 
 pub(crate) fn item_line(e: &Entry<'_>) -> More {
     let (text, path) = item_text(e);
-    let flags = match e.item {
+    let mut flags = match e.item {
         Item::Stale | Item::Unsupported => vec![e.item.name().to_owned()],
         _ => Vec::new(),
     };
+    if e.recorded > 0 {
+        flags.push("recorded".to_owned());
+    }
     More {
         status: Some(e.item.name().into()),
         label: "item",

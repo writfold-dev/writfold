@@ -114,33 +114,69 @@ impl Verdict {
 pub struct Checked {
     pub verdict: Verdict,
     pub head: String,
+    /// Set when the verdict was read from a check receipt: checked
+    /// elsewhere, and when.
+    pub recorded: Option<Recorded>,
+}
+
+/// Where a verdict read from a check receipt came from.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Recorded {
+    /// The receipt's `checked_at`, as written.
+    pub checked_at: String,
+    /// The receipt file, relative to the KB root.
+    pub path: String,
+    pub checker: String,
+    pub version: Option<String>,
+}
+
+/// What one judgement of citations found: the verdicts, this run's
+/// checker answers (empty unless asked) and the receipts read.
+pub struct Judged {
+    pub checked: Vec<Checked>,
+    pub answers: checker::Answers,
+    pub receipts: checker::Receipts,
 }
 
 /// Classify every citation. `offline` reads no repository and reports only
 /// authored marks and due TTLs. Checked kinds read the verdict `kb stale`
-/// cached; nothing here runs a checker.
+/// cached, or a check receipt; nothing here runs a checker.
 pub fn check(session: &Session<'_>, cites: &[Cite], offline: bool) -> Result<Vec<Checked>> {
-    judge(session, cites, offline, &checker::Answers::new())
+    Ok(judged(session, cites, offline, false)?.checked)
 }
 
 /// [`check`], first asking each declared checker about its kind's tokens
 /// (unless `offline`). `writfold kb stale` is its only caller.
-pub fn check_asking(session: &Session<'_>, cites: &[Cite], offline: bool) -> Result<Vec<Checked>> {
+pub fn check_asking(session: &Session<'_>, cites: &[Cite], offline: bool) -> Result<Judged> {
+    judged(session, cites, offline, !offline)
+}
+
+/// Judge `cites`, asking the checkers first when `ask`. Receipts are read
+/// once, for the checked kinds among the citations.
+pub fn judged(session: &Session<'_>, cites: &[Cite], offline: bool, ask: bool) -> Result<Judged> {
     let kinds = kinds::read(&session.ws.root)?;
-    let answers = match offline {
-        true => checker::Answers::new(),
-        false => checker::ask(&session.ws.root, &kinds, cites),
+    let answers = match ask {
+        true => checker::ask(&session.ws.root, &kinds, cites),
+        false => checker::Answers::new(),
     };
-    judge(session, cites, offline, &answers)
+    let wanted = cites.iter().filter_map(|c| c.kind.as_deref());
+    let receipts = checker::Receipts::load(&session.ws.root, &kinds, wanted);
+    let checked = judge(session, &kinds, cites, offline, &answers, &receipts)?;
+    Ok(Judged {
+        checked,
+        answers,
+        receipts,
+    })
 }
 
 fn judge(
     session: &Session<'_>,
+    kinds: &kinds::Kinds,
     cites: &[Cite],
     offline: bool,
     answers: &checker::Answers,
+    receipts: &checker::Receipts,
 ) -> Result<Vec<Checked>> {
-    let kinds = kinds::read(&session.ws.root)?;
     let mut out: Vec<Option<Checked>> = vec![None; cites.len()];
     let mut code = Vec::new();
     for (index, cite) in cites.iter().enumerate() {
@@ -155,11 +191,11 @@ fn judge(
                 "dirty working-tree bytes are not pinned to a commit".into(),
             ));
         } else if offline {
-            out[index] = Some(offline_verdict(session, &kinds, cite)?);
+            out[index] = Some(offline_verdict(session, kinds, cite, receipts)?);
         } else {
             match cite.kind.as_deref() {
                 Some("code" | "gate") => code.push(index),
-                _ => out[index] = Some(other(session, &kinds, cite, answers)?),
+                _ => out[index] = Some(other(session, kinds, cite, answers, receipts)?),
             }
         }
     }
@@ -180,6 +216,7 @@ fn unverifiable(reason: String) -> Checked {
     Checked {
         verdict: Verdict::Unverifiable(reason),
         head: "none".into(),
+        recorded: None,
     }
 }
 
@@ -193,6 +230,7 @@ fn marked(cite: &Cite, checked: Checked) -> Checked {
         writfold_core::verdict::Verdict::Marked => Checked {
             verdict: Verdict::Marked(mark.clone()),
             head: checked.head,
+            recorded: checked.recorded,
         },
         _ => checked,
     }
@@ -216,9 +254,14 @@ fn kernel(verdict: &Verdict) -> writfold_core::verdict::Verdict {
 
 /// Offline: a due TTL, or a checked kind's cached verdict older than its
 /// `max_age`; else fresh.
-fn offline_verdict(session: &Session<'_>, kinds: &kinds::Kinds, cite: &Cite) -> Result<Checked> {
+fn offline_verdict(
+    session: &Session<'_>,
+    kinds: &kinds::Kinds,
+    cite: &Cite,
+    receipts: &checker::Receipts,
+) -> Result<Checked> {
     if let Some(kind) = cite.kind.as_deref().filter(|k| kinds.checker(k).is_some())
-        && let Some(expired) = checker::expired(session, kinds, kind, cite)?
+        && let Some(expired) = checker::expired(session, kinds, kind, cite, receipts)?
     {
         return Ok(expired);
     }
@@ -227,6 +270,7 @@ fn offline_verdict(session: &Session<'_>, kinds: &kinds::Kinds, cite: &Cite) -> 
     Ok(Checked {
         verdict,
         head: "offline".into(),
+        recorded: None,
     })
 }
 
@@ -236,6 +280,7 @@ fn other(
     kinds: &kinds::Kinds,
     cite: &Cite,
     answers: &checker::Answers,
+    receipts: &checker::Receipts,
 ) -> Result<Checked> {
     let head = session.pin.label();
     let state_of = |id: Option<String>, by_path: bool| -> Result<Checked> {
@@ -266,6 +311,7 @@ fn other(
         Ok(Checked {
             verdict,
             head: head.clone(),
+            recorded: None,
         })
     };
     match cite.kind.as_deref() {
@@ -273,7 +319,7 @@ fn other(
         Some("record") => state_of(cite.cpath.clone(), true),
         Some("proposal") => state_of(cite.field("id"), false),
         Some(kind) if kinds.checker(kind).is_some() => {
-            checker::verdict(session, kinds, kind, cite, answers)
+            checker::verdict(session, kinds, kind, cite, answers, receipts)
         }
         Some(kind) => Ok(kinds::judge(kinds, cite, kind, session.now)),
     }

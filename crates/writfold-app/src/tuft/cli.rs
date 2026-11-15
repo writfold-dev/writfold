@@ -1,6 +1,7 @@
 //! Argument handling for `writfold tuft`; all executions use a pinned program.
 mod args;
 mod check;
+mod index;
 mod output;
 mod program;
 mod repos;
@@ -20,6 +21,7 @@ writfold tuft run FILE|- [--repo DIR|NAME[@COMMIT] ...] [--pinned]
 writfold tuft grep PATTERN [--in PATH-GLOB] [--at REF] [--regex] [--limit N]
                          [--repo DIR|NAME[@REF] ...] [--pinned]
 writfold tuft check FILE [--json]
+writfold tuft index [--repo DIR|NAME] [--at REF] [--out FILE] [--json]
 
 Run/grep options: --state DIR --cursor C --verbose|--json --out NEW_FILE
                   --cite --kb DIR --run ID --working-tree --index FILE
@@ -31,6 +33,10 @@ each repository has its own coverage and cursor, followed by overall coverage.
 --working-tree searches tracked and nonignored untracked bytes; changed bytes
 are explicitly dirty, never pinned evidence. --index reads universal-ctags JSON
 with FILE.meta.json carrying its full commit and sha256; symbols are partial.
+index builds that pair from the bytes of one commit (REF, default HEAD) with
+universal-ctags ($WRITFOLD_CTAGS, else ctags on PATH); stdout is the index path,
+so run --index $(writfold tuft index) composes. Deadline 300 s, or
+$WRITFOLD_CTAGS_TIMEOUT seconds; default --out <state>/symbols/<repo>-<commit>.jsonl.
 
 State: --state, else $WRITFOLD_STATE, is an initialized trial state. Otherwise
 inside a KB Tuft uses <KB git dir>/writfold/tuft-state/; outside a KB it falls
@@ -152,6 +158,20 @@ pub fn main(args: &[String]) -> Result<String> {
                 now: None,
             };
             let (printed, notes) = run_command(args, context)?;
+            use std::io::Write as _;
+            let mut stderr = std::io::stderr().lock();
+            for note in notes {
+                writeln!(stderr, "writfold tuft: {note}")?;
+            }
+            Ok(printed)
+        }
+        Some("index") => {
+            let context = Context {
+                cwd: std::env::current_dir()?,
+                discover: true,
+                now: None,
+            };
+            let (printed, notes) = index::run(&parsed, &context)?;
             use std::io::Write as _;
             let mut stderr = std::io::stderr().lock();
             for note in notes {

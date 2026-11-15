@@ -125,7 +125,14 @@ pub fn claims(session: &Session<'_>, text: &str, path: &str) -> Result<Evaluated
             _ => findings.push(finding),
         }
     }
-    let note = Some(format!("{} citation tokens", cites.len()));
+    let recorded = checked
+        .iter()
+        .filter(|c| c.recorded.is_some() && c.verdict == Verdict::Fresh)
+        .count();
+    let note = match crate::gate::ground::recorded_note(recorded) {
+        Some(said) => Some(format!("{} citation tokens; {said}", cites.len())),
+        None => Some(format!("{} citation tokens", cites.len())),
+    };
     if findings.is_empty() && !unverifiable.is_empty() {
         return Ok(Evaluated {
             outcome: Outcome::Unknown,

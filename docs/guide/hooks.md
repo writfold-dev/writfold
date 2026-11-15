@@ -1,6 +1,6 @@
 # Claude Code hooks
 
-> **Status:** built in v0.3.0-dev.1; the plan position, the inbox, the behind-remote line and the re-injection after compaction were added on 12 November 2026 ([design §25](../writfold/kb-v1-design.md#25-deterministic-hooks-as-built)); the stale-citation line, guard rules and the Stop nudge built in v0.5.0-dev.1; a rule's `paths` and a stop rule's `repeat` built in v0.5.0-dev.3.
+> **Status:** built in v0.3.0-dev.1; the plan position, the inbox, the behind-remote line and the re-injection after compaction were added on 12 November 2026 ([design §25](../writfold/kb-v1-design.md#25-deterministic-hooks-as-built)); the stale-citation line, guard rules and the Stop nudge built in v0.5.0-dev.1; a rule's `paths` and a stop rule's `repeat` built in v0.5.0-dev.3; rules naming `writfold:edit`, checked by `kb edit apply` itself, built in v0.5.0-dev.9.
 
 "Hook" here means a Claude Code hook: a command the harness runs at a session event. The plugin registers six, and each one runs `writfold kb hook <event>` with the event's JSON on stdin. No hook calls a model. Only one asks Claude to continue: a `stop` [guard rule](#guard-rules), which you opt into, adds context at most once per session (or, with `repeat = "turn"`, once per user turn), and Claude Code continues the turn so Claude can act on it. Rules about what a run must contain (a reflection, a backfill) are not hooks; they are gates (run-record checks), on the [run-graph](run-graph.md) and [gates](gates.md) pages.
 
@@ -132,7 +132,7 @@ description = "commit only when the run's gates are met"
 | `id` | a slug equal to the file name |
 | `event` | `pre-tool-use`, or `stop` (the nudge below) |
 | `commands` | the first words of a simple command, as in `guard.toml`: `git commit` matches `git commit -m x`, `cargo test && git commit`, and `FOO=1 git commit`, but not `echo "git commit"` |
-| `tools` | exact tool names, such as `Edit` or `mcp__slack__post_message` |
+| `tools` | exact tool names, such as `Edit` or `mcp__slack__post_message`; the reserved name `writfold:edit` makes the rule apply to `writfold kb edit apply` itself ([below](#edits-made-by-writfold-kb-edit-apply)) |
 | `paths` | optional globs over the file a tool call edits, with `!` exclusions (built in v0.5.0-dev.3, [below](#paths)); only with `tools`, refused with `commands` |
 | `repos` | optional repository names ([how a repository is named](#how-repos-names-a-repository)), with `*` and `!` exclusions; default every repository. A rule with `repos` is skipped outside a repository |
 | `require` | one or more of the fixed requirements below; anything else is refused |
@@ -164,6 +164,47 @@ writfold guard rule commit-needs-gates (a guard, not enforcement): commit only w
 ```
 
 Like a guard, a permission rule reads the command line; it is not enforcement either.
+
+### A hard stop at the end of a turn (recipe)
+
+Writfold's [Stop nudge](#the-stop-nudge) only adds context. A stop that blocks the end of a turn until the run's gates are met is your own hook, and it must tell three exit codes of `writfold kb gate status` apart:
+
+| Exit | Means | The hook |
+|---|---|---|
+| 0 | every gate the run owes is met | lets the turn end |
+| 2 | a gate is owed (open, stale, failed, unknown, or an invalid definition) | blocks, naming the gates |
+| 3 | no current run, or a refusal | lets the turn end; blocking here would wedge a session that has no run |
+
+It must also let the turn end when the hook input has `stop_hook_active` set, or it blocks the continuation it caused and loops. `jq` reads the input and lists the owed gates from `gate status --json`:
+
+```sh
+#!/bin/sh
+# Stop hook: do not end the turn while the current run owes a gate.
+input=$(cat)
+[ "$(printf '%s' "$input" | jq -r '.stop_hook_active')" = true ] && exit 0
+cd "$(printf '%s' "$input" | jq -r '.cwd')" || exit 0
+status=$(writfold kb gate status --json 2>/dev/null); code=$?
+[ "$code" -eq 2 ] || exit 0   # 0: every gate met; 3: no current run or a refusal
+owed=$(printf '%s' "$status" | jq -r '[.rows[] | select(.section == "gates")
+  | select(.status | IN("satisfied", "attested", "waived") | not)
+  | "\(.id) [\(.status)]"] | join(", ")')
+jq -n --arg owed "$owed" '{decision: "block",
+  reason: "The run owes gates: \($owed). writfold kb gate status names the next command for each."}'
+```
+
+Register it in `.claude/settings.json` (Stop takes no matcher):
+
+```json
+{
+  "hooks": {
+    "Stop": [
+      { "hooks": [ { "type": "command", "command": ".claude/hooks/writfold-stop.sh", "timeout": 30 } ] }
+    ]
+  }
+}
+```
+
+On a KB whose run owes `unit`, the hook prints `{"decision": "block", "reason": "The run owes gates: unit [open]. writfold kb gate status names the next command for each."}`; with `stop_hook_active` set, after `gate run unit` passes, and with no current run, it prints nothing and the turn ends. Claude Code also ends the turn after eight consecutive continuations, whatever the hook says. Like every hook, this one sees only one harness. The harness-neutral equivalent is CI running `writfold kb gate lines`, which exits 0 only when every gate is met.
 
 ### Inspecting rules without a hook
 
@@ -212,6 +253,29 @@ description = "open a run before editing source"
 - **A call with no file does not match** a rule with `paths`: a tool that names none (an MCP tool, `Bash`), or a file in no repository. Such a rule never refuses them; write a second rule without `paths` if they matter.
 - `paths` is refused next to `commands`: a Bash command line names no single file.
 - `repos` and `paths` look at different things: `repos` names the repository of the event's `cwd` (as `gate status` does), `paths` the edited file's own repository.
+
+### Edits made by `writfold kb edit apply`
+
+> Built in v0.5.0-dev.9.
+
+A hook cannot know which files a recipe edits from a command line (and not at all for a recipe on stdin), so `edit apply` checks the rules itself, on every harness, with or without hooks. A `pre-tool-use` rule applies to it when its `tools` lists `writfold:edit`; list it beside the harness's tools to cover every edit route:
+
+```toml
+# .writfold/guards/deploy-needs-review.toml
+schema = "writfold-guard-rule/1"
+id = "deploy-needs-review"
+event = "pre-tool-use"
+tools = ["Edit", "Write", "MultiEdit", "writfold:edit"]
+paths = ["deploy/**"]
+require = ["gate:deploy-review"]
+action = "deny"
+```
+
+- After the recipes are read and the worktree is resolved, and before anything is replayed, `edit apply` reads the rules of the KB root and of the nearest `.writfold/guards/` at or above the worktree's top, keeps the `pre-tool-use` rules naming `writfold:edit` whose `paths` admit at least one recipe target (relative to the worktree's top; a rule without `paths` admits every target), and judges their requirements as the hook does, at the worktree's top.
+- Any decision but pass refuses the whole batch, exit 3, with nothing written and no journal: the hook's reason, then `targets:` and the matched files. `action = "ask"` refuses too, and says so: `the rule asks, and edit apply cannot ask: meet the requirement or make the edit with a tool your harness can ask about`.
+- `--dry-run` is not refused; it adds `# note: guard rule <id> would refuse this edit: …`. `edit recover` is not guarded: it finishes an edit that was admitted.
+- No rule directory: nothing is read. An unparsable rule file is skipped with the hook's diagnostic on stderr. A matched rule whose requirement cannot be evaluated takes its action, as in the hook.
+- A rule without `writfold:edit` keeps its meaning: it never applies to `edit apply`. It stays a guard, not enforcement: other tools can still edit the file.
 
 ### How `repos` names a repository
 
@@ -273,6 +337,7 @@ The event fields, output shapes, timeouts and exit-code rules above were checked
   - PreToolUse `permissionDecision` takes `allow`, `deny`, `ask` or `defer`, with `permissionDecisionReason`. The rules use `deny` and `ask` only; passing prints nothing, and "staying silent doesn't approve" the call.
   - Stop takes `decision: "block"` with a `reason`, or `hookSpecificOutput.additionalContext`, which is "non-error feedback": "The conversation continues so Claude can act on it", shown as `Stop hook feedback` rather than a hook error. Both pass through the same loop protections: the `stop_hook_active` input ("`true` when Claude Code is already continuing as a result of a stop hook") and a cap of 8 consecutive continuations. No Stop output adds context without continuing the turn, so the nudge uses `additionalContext`, once per session (or once per turn with `repeat = "turn"`), never while `stop_hook_active` is set.
   - Plain stdout from a Stop hook goes only to the debug log.
+- Re-checked on 15 November 2026 for the hard-stop recipe, at https://code.claude.com/docs/en/hooks: Stop input carries `stop_hook_active` ("`true` when Claude Code is already continuing as a result of a stop hook"); `decision: "block"` "prevents Claude from stopping" and its `reason` is required and "tells Claude why it should continue"; a Stop hook has no matcher; and the 8-consecutive-continuation cap still applies (it resets each time Claude calls a tool). The recipe was run against a fixture KB with one mechanical gate in four states: owed (blocks), `stop_hook_active` set (passes), met after `gate run` (passes) and no current run (`gate status` exit 3; passes).
 - https://code.claude.com/docs/en/plugins-reference (the plugin layout, `userConfig`, `CLAUDE_PLUGIN_OPTION_<KEY>`).
 
 A manual run with Claude Code 2.1.322 confirmed the session-start context, the draft through `/compact`, and `--from-draft`. An interactive session and the marketplace install path were not covered by that run.

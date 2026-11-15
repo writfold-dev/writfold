@@ -159,7 +159,7 @@ fn report(
         ));
     };
     let mut answer = Answer::default();
-    let (rows, counts) = gate_rows(session, rec, &subject)?;
+    let (rows, counts, note) = gate_rows(session, rec, &subject)?;
     if rows.is_empty() {
         answer.unknown = Some("no-gates");
         answer.notes.push(format!(
@@ -170,6 +170,7 @@ fn report(
     }
     answer.rows = rows;
     answer.counts = counts;
+    answer.notes.extend(note);
     answer.notes.push(format!(
         "receipts of run {} for {}; state is derived on every read, never stored",
         rec.id, subject.name
@@ -180,7 +181,11 @@ fn report(
 /// Trailer counts by state.
 type Counts = Vec<(&'static str, usize)>;
 
-fn gate_rows(session: &Session<'_>, rec: &Rec, subject: &Subject) -> Result<(Vec<Row>, Counts)> {
+fn gate_rows(
+    session: &Session<'_>,
+    rec: &Rec,
+    subject: &Subject,
+) -> Result<(Vec<Row>, Counts, Option<String>)> {
     let git = session
         .git
         .as_ref()
@@ -188,7 +193,7 @@ fn gate_rows(session: &Session<'_>, rec: &Rec, subject: &Subject) -> Result<(Vec
     let filings = Filings::for_run(session, rec);
     let report = status::judge(session, subject, &filings)?;
     let rows = status::rows(git, subject, &report, &filings)?;
-    Ok((rows, counts(&report, &filings)))
+    Ok((rows, counts(&report, &filings), report.recorded_note()))
 }
 
 /// The gate rows `resume` shows for a run, or why there are none. Quiet
@@ -216,7 +221,7 @@ pub fn resume_rows(session: &Session<'_>, rec: &Rec, cwd: &Path) -> (Vec<Row>, V
         return (Vec::new(), Vec::new());
     }
     match gate_rows(session, rec, &subject) {
-        Ok((rows, _)) => (rows, Vec::new()),
+        Ok((rows, _, _)) => (rows, Vec::new()),
         Err(error) => (Vec::new(), vec![format!("gates: {error}")]),
     }
 }
@@ -263,6 +268,9 @@ fn lines(session: &Session<'_>, rec: &Rec, repo: Option<&Path>, cwd: &Path) -> R
         text.push_str(&format!(
             "invalid receipts or definitions: {invalid} (see writfold kb gate status)\n"
         ));
+    }
+    if let Some(note) = report.recorded_note() {
+        text.push_str(&format!("note: {note}\n"));
     }
     let all = report.all_met() && invalid == 0;
     Ok(Output {

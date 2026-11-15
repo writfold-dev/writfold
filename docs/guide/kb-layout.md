@@ -1,6 +1,6 @@
 # The knowledge base on disk
 
-> **Status:** built in v0.3.0-dev.1; kind declarations (`.writfold/sources/`) built in v0.5.0-dev.1.
+> **Status:** built in v0.3.0-dev.1; kind declarations (`.writfold/sources/`) built in v0.5.0-dev.1; check receipts (`.writfold/checks/`) and the investigation template of `record investigation` built in v0.5.0-dev.9.
 
 A knowledge base (KB) is a directory holding `inventory/assets/`, normally a Git repository. Writfold finds it from `--kb DIR`, then `$WRITFOLD_KB`, then the nearest such directory above the working directory. Outside Git, reads still work and writes are refused.
 
@@ -63,6 +63,35 @@ A relationship, from `record link depends-on quay-worker harbor-db --evidence â€
   ],
   "applicability": ""
 }
+```
+
+An investigation, as `writfold kb record investigation --title "Flush stalls on replicas" --tickets HBR-99 --assets harbor-db --question "Why do replicas stall?"` wrote it in `investigations/2026/2026-11-11-flush-stalls-on-replicas/README.md`, beside an empty `evidence/` (the four empty sections are shortened here):
+
+```text
+---
+id: 2026/2026-11-11-flush-stalls-on-replicas
+title: Flush stalls on replicas
+trigger: manual
+tickets: [HBR-99]
+alerts: []
+assets: [harbor-db]
+status: open
+signatures: []
+created: 2026-11-11
+updated: 2026-11-11
+summary: 
+---
+
+# Flush stalls on replicas
+
+## Question
+
+Why do replicas stall?
+
+## Hypotheses
+## Checked against
+## Scope and limits
+## Conclusion
 ```
 
 A decision is `proposal.md` with front matter (`id`, `kind`, `title`, `status`, `project`, `references`, `decided_by`, `superseded_by` and more) and `##` sections such as Research, Alternatives and Decision log.
@@ -158,6 +187,7 @@ Every answer ends with one line:
 | `.writfold/guards/<id>.toml` | one guard rule (built in v0.5.0-dev.1); in the KB root for every project, or in a repository for that repository only | [hooks](hooks.md#guard-rules) |
 | `.writfold/plans/` | plan templates | [run-graph](run-graph.md) |
 | `.writfold/sources/<kind>.toml` | a citation kind's freshness rule, default lifetime and required fields, or its external checker; KB root only | [above](#a-citation-token) |
+| `.writfold/checks/<kind>/<time>-<hex>.json` | a check receipt: what a checked kind's checker said about each token in one `kb stale --record` run (built in v0.5.0-dev.9); written once, superseded files removed | [checkers](checkers.md#sharing-verdicts-check-receipts) |
 
 ## Knowledge bases not written by Writfold
 
@@ -168,6 +198,71 @@ Writfold reads a KB it did not write, as long as it is Git text in this layout. 
 - Unknown fields, citation kinds and `status` or `state` values are kept and shown as they are, never rejected or rewritten. A file that matches none of the shapes above is still indexed as a document and scanned for citations.
 - Records and citations come only from `.md` and `.json` files that Git lists (tracked, or untracked and not ignored); a path with any part starting with `.` is never a record. Writfold reads no database that comes with a KB: its only database is its own index, built from that text, so whatever lives only in another store is not seen.
 - A citation of a kind Writfold does not check against Git or the index, without `ttl=`, never expires, unless a kind declaration gives it a default ([above](#a-citation-token)).
+
+## Importing existing material
+
+`record` creates new records at the start of their lifecycle: a decision starts as a `draft`, a ticket as `todo`, and later states each need their evidence. History (accepted decisions, closed tickets, an asset list) is therefore imported by writing files in the layout this page documents, from any script, and then validating them:
+
+```sh
+writfold kb index status   # every unreadable file with its reason; exit 2 if any
+writfold kb check          # stale citations, the index against a rebuild, gates
+```
+
+Review the result as one Git diff and commit it. For new records in bulk (open tickets from a tracker export, say), loop over `record` in a clean work tree and discard the work tree on the first failure: Git is the transaction.
+
+The smallest file each kind needs (more fields are kept and shown; see the examples above):
+
+```text
+inventory/assets/harbor-api.json
+{"id": "harbor-api", "kind": "service", "name": "Harbor API"}
+
+inventory/relationships/depends-on__harbor-api__harbor-db.json
+{"schema_version": 1, "id": "depends-on__harbor-api__harbor-db", "type": "depends-on",
+ "from": "harbor-api", "to": "harbor-db", "status": "explicit", "evidence": []}
+
+ktlo/2025/hbr-7-cold-cache.md
+---
+ticket: HBR-7
+title: Cold cache after deploys
+assets: [harbor-api]
+status: done
+created: 2025-03-01
+updated: 2025-03-09
+---
+
+proposals/decision/2025-04-02-cache-in-front/proposal.md
+---
+id: decision/2025-04-02-cache-in-front
+kind: decision
+title: Put a cache in front of the ledger
+status: accepted
+project: harbor
+references: [harbor-api, harbor-db]
+decided_by: ops-review
+created: 2025-04-02
+updated: 2025-04-09
+---
+
+investigations/2025/2025-03-01-cold-cache/README.md
+---
+id: 2025/2025-03-01-cold-cache
+title: Cold cache after deploys
+tickets: [HBR-7]
+assets: [harbor-api]
+status: concluded
+created: 2025-03-01
+updated: 2025-03-09
+---
+
+signatures/cold-cache.md
+---
+title: Cold cache after a deploy
+status: confirmed
+assets: [harbor-api]
+---
+```
+
+A ticket's ID is its `ticket:` field; a decision's is `proposal/` and its `id:`; an investigation's is `inv:` and its `id:` (else its directory under `investigations/`); a signature's is `sig:` and its file name. A status outside a kind's vocabulary is kept and flagged `!vocab=unknown`. These six files, committed together, index as six records with no unreadable file and a clean `kb check`.
 
 ## Tracked and local
 

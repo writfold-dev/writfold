@@ -238,7 +238,9 @@ cited lines moved carries `!` in `why`. `n`/`N` select the next or previous
 marked entry. `why` prints verdicts `kb stale` cached; `stale --cached` judges
 Git-backed citations when asked, so the two can differ until someone runs
 `writfold kb stale`. The KB tab carries a badge only on `stale`: `!N` and `?N`
-from that verb's own counts.
+from that verb's own counts. A verdict read from a [check receipt](checkers.md#sharing-verdicts-check-receipts)
+(built in v0.5.0-dev.9) sets no mark of its own: its row carries the extra flag
+`recorded`, which the stale inspector shows beside the verdict.
 
 ### The inspector
 

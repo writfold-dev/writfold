@@ -136,3 +136,20 @@ fn a_failed_exchange_fails_every_token() -> Result {
     assert!(!stat.exists(), "the checker's child {child} outlived it");
     Ok(())
 }
+
+#[test]
+fn a_tokens_own_ttl_changes_no_verdict_of_a_checked_kind() -> Result {
+    // Seen years ago with a one-hour lifetime: a time-based kind would be
+    // expired (online) and due (offline). A checked kind is judged by its
+    // checker alone, so both forms read it fresh.
+    let token =
+        "⟦cite kind=src depot=main path=lib/old.c want=fresh seen=2020-01-01T00:00Z ttl=1h⟧";
+    let w = world("ttl", &[token], true)?;
+    let (text, exit) = kb(&w, &["stale"], &[])?;
+    assert_eq!(exit, 0, "{text}");
+    assert!(text.contains("checked=1 stale=0 unverifiable=0"), "{text}");
+    let (text, exit) = kb(&w, &["stale", "--offline"], &[])?;
+    assert_eq!(exit, 0, "{text}");
+    assert_eq!(row(&text, "lib/old.c"), "", "{text}");
+    Ok(())
+}

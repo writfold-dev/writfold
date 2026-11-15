@@ -169,7 +169,37 @@ can be found. A missing result is never proof that no caller exists.
 The digest covers the exact index bytes, and the commit must equal the
 resolved query commit. A mismatch refuses with a rebuild instruction.
 Metadata is the index producer's declaration, not a proof of its completeness.
-Generate it from a clean detached worktree, not edited source:
+
+`writfold tuft index` (built in v0.5.0-dev.9) builds the pair from one commit:
+
+```sh
+writfold tuft index [--repo DIR|NAME] [--at REF] [--out FILE] [--json]
+writfold tuft run q.tuft --repo . --index "$(writfold tuft index --at HEAD)"
+```
+
+- `ctags` is `$WRITFOLD_CTAGS`, else `ctags` on `PATH`. Its `--version` must
+  say `Universal Ctags` and `--list-features` must list `json`; otherwise
+  exit 1, naming what was found. Writfold links nothing.
+- `REF` (default `HEAD`) is resolved once to a full commit. The commit's tree
+  is exported, with the same pinned Git reads a search uses, to a new
+  temporary directory under the Tuft state directory; the repository's work
+  tree, index and worktree list are not touched, and uncommitted bytes cannot
+  reach the index.
+- `ctags --options=NONE --output-format=json --fields=+nr --extras=+r -R -f
+  <out>.tmp .` runs there as one supervised process group (TERM, then KILL),
+  with a 300 s deadline (`WRITFOLD_CTAGS_TIMEOUT` seconds overrides it).
+  `<out>` is renamed into place, then `<out>.meta.json` is written with the
+  commit and the SHA-256 of the index bytes. The temporary directory is
+  removed on success and on failure.
+- The default `<out>` is `<state>/symbols/<repository name>-<commit>.jsonl`.
+  stdout is the index path alone, so the command composes as above; the
+  commit, digest, tag count and ctags version go to stderr. `--json` prints
+  `{"path":…,"commit":…,"sha256":…,"tags":N,"ctags":"<version line>"}`.
+- Exit 0 when written, 1 otherwise. What is claimed: the index was produced
+  from the bytes of that commit. Its completeness is still ctags's, and symbol
+  coverage stays `partial`.
+
+What the command does, by hand (a clean detached worktree, not edited source):
 
 ```sh
 pin=$(git rev-parse 'HEAD^{commit}')

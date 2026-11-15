@@ -4,7 +4,7 @@
 //! is written; `cite make` prints the token for the caller to place.
 use super::kinds::{self, DIR, Kind};
 use super::{exchange, proto, spawn};
-use crate::emit::{Answer, Frame, Output, Row};
+use crate::emit::{Answer, Frame, More, Output, Row};
 use crate::error::{KbError, Result};
 use crate::session::Session;
 use crate::workspace::{GitTool, Workspace};
@@ -88,6 +88,7 @@ fn list(ws: &Workspace, declared: &kinds::Kinds) -> Answer {
             id: kind.name.clone(),
             status: Some(status.into()),
             text,
+            more: receipts_line(ws, kind, name).into_iter().collect(),
             ..Row::default()
         });
     }
@@ -98,6 +99,32 @@ fn list(ws: &Workspace, declared: &kinds::Kinds) -> Answer {
     }
     answer.counts = vec![("checked-kinds", answer.rows.len()), ("unknown", unknown)];
     answer
+}
+
+/// `receipts: 14 verdicts in 2 files, newest …, oldest …, max_age 7d`, or
+/// `receipts: 2 files, not read: no max_age`; `None` without receipts.
+fn receipts_line(ws: &Workspace, kind: &Kind, checker: &str) -> Option<More> {
+    let (found, _) = super::receipt::read_kind(&ws.root, &kind.name, checker);
+    let files = found.len();
+    let text = match (&kind.max_age, found.first(), found.last()) {
+        (_, None, _) | (_, _, None) => return None,
+        (None, _, _) => format!("{files} files, not read: no max_age"),
+        (Some(max_age), Some(_), Some(_)) => {
+            let verdicts: usize = found.iter().map(|r| r.verdicts.len()).sum();
+            let newest = found.iter().map(|r| r.checked_at.as_str()).max();
+            let oldest = found.iter().map(|r| r.checked_at.as_str()).min();
+            format!(
+                "{verdicts} verdicts in {files} files, newest {}, oldest {}, max_age {max_age}",
+                newest.unwrap_or_default(),
+                oldest.unwrap_or_default()
+            )
+        }
+    };
+    Some(More {
+        label: "receipts",
+        text,
+        ..More::default()
+    })
 }
 
 fn refused(kind: &str, why: String) -> KbError {

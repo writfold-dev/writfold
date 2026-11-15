@@ -130,7 +130,7 @@ fn choose(flag: &str, value: Option<&str>, default: &str, allowed: &[&str]) -> R
 }
 
 /// Refuse when `id` is already a record.
-fn fresh_id(session: &Session<'_>, id: &str) -> Result<()> {
+pub(super) fn fresh_id(session: &Session<'_>, id: &str) -> Result<()> {
     match query::record(&session.conn, id)? {
         Some(rec) => Err(KbError::Refused(format!(
             "write conflict: {id} already exists at {}",
@@ -141,7 +141,7 @@ fn fresh_id(session: &Session<'_>, id: &str) -> Result<()> {
 }
 
 /// Every name must be an asset in the index.
-fn assets(session: &Session<'_>, names: &[String]) -> Result<()> {
+pub(super) fn assets(session: &Session<'_>, names: &[String]) -> Result<()> {
     for name in names {
         let known: Option<Rec> = query::record(&session.conn, name)?;
         if !is_slug(name) || known.is_none_or(|r| r.kind != "asset") {
@@ -153,7 +153,7 @@ fn assets(session: &Session<'_>, names: &[String]) -> Result<()> {
     Ok(())
 }
 
-fn rendered<S: AsRef<str>>(
+pub(super) fn rendered<S: AsRef<str>>(
     fields: &[(&str, Option<&str>)],
     sections: &[(&str, S)],
     title: &str,

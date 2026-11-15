@@ -295,6 +295,7 @@ fn answer(
             .collect(),
         ..Answer::default()
     };
+    answer.notes.extend(report.recorded_note());
     for (c, path) in covers.iter().zip(paths) {
         answer.notes.push(format!(
             "recorded {path} ({} {}: a judgement with checked evidence, not a check)",

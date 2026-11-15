@@ -11,6 +11,7 @@ pub mod atomic;
 pub mod cite;
 pub mod conclude;
 pub mod decide;
+pub mod investigation;
 pub mod json;
 pub mod observe;
 pub mod record;
@@ -128,6 +129,8 @@ pub enum Write {
     Ticket(record::Ticket),
     Decision(record::Decision),
     Link(record::Link),
+    /// `record investigation`: a new, open investigation.
+    Investigation(investigation::Investigation),
     SetStatus(status::SetStatus),
     CiteMake(cite::CiteMake),
     /// A retrieval receipt in a run (the Tuft adapter).
@@ -159,6 +162,7 @@ pub fn execute(ws: &Workspace, request: &Request, write: &Write, now: i64) -> Re
             Write::Ticket(t) => record::ticket(&session, t)?,
             Write::Decision(d) => record::decision(&session, d)?,
             Write::Link(l) => record::link(&session, l)?,
+            Write::Investigation(i) => investigation::plan(&session, i)?,
             Write::SetStatus(s) => status::plan(&session, s, &request.cwd)?,
             Write::Retrieval(r) => retrieval::plan(&session, r)?,
             Write::Observe(o) => observe::plan(&session, o)?,

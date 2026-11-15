@@ -1318,6 +1318,10 @@ An edit is an ordinary uncommitted change in the worktree, so G1 needs nothing n
 - **No latency was measured.** An apply costs one index open, two `hash-object` spawns per file, the journal and the file writes, one KB write, and the answer from the refreshed index.
 - Not built: `create`, `rename` and `remove` recipes; `--capture` and `--frozen` inputs (the trial does not take them either); a `--within` recount; pruning of `edits/` receipts.
 
+### 17.9 As built (v0.5.0-dev.9): a recipe on stdin
+
+`edit apply -` reads one recipe from stdin (`edit/plan.rs::recipes_from`, at most 4 MiB, a larger input a usage error). `-` may appear once among the recipe arguments, beside files; a second is a usage error, both in `writfold-app/src/kb/edit.rs` and in the kb. The recipe's name in the receipt is `stdin`; its bytes and SHA-256 are kept as for a file, so the receipt is complete without the original input. Empty stdin is refused with the recipe parser's own message, as an empty file is. Replay, the journal, `--dry-run` and refusals are unchanged; no language feature is added. Tests: `crates/writfold-kb/tests/edit_stdin.rs` (a child process fed the recipe on stdin writes the same file bytes and, apart from the name, the same receipt as the recipe from a file; `- -`; empty stdin gives the file's message with the name changed; more than 4 MiB) and the parser test in `writfold-app/src/kb/edit.rs`.
+
 ## 18. T1 as built
 
 T1 adds `writfold watch`, a read-only terminal view of KB runs and their progress, as the gates review recommended and the owner adopted (12 November 2026). It is strictly a projection: every pane is the JSON answer of an existing verb, asked in-process through `writfold_kb::run` exactly as the CLI asks it. New code: the crate `crates/writfold-tui` (`source.rs` the verb calls and the pin poll, `app.rs` the selection, panes and keys, `lines.rs` the frame as toned lines shared by the terminal and `--once`, `view.rs` the ratatui layout, `term.rs` the event loop; about 960 lines with doc comments) and the `watch` branch of `crates/writfold/src/main.rs`.
@@ -2673,6 +2677,10 @@ Two rule keys, documented in [docs/guide/hooks.md](../guide/hooks.md#paths). New
 - **Cost** (13 November 2026, release binary, 300 calls each): about 1.4 ms per `Edit` with no rule directory, 1.3 ms with an unmatched `commands` rule, 1.4 ms for a `.md` edit that a `paths` rule excludes; 10.5 ms for a matched `.rs` edit with no current run, which opens the index.
 - **Not done:** symbolic links in the edited path are not resolved (the walk is by name); `paths` on `Bash` command lines; a `gates.met` that refuses waivers (the hooks guide shows a Claude Code `permissions.ask` recipe instead).
 
+### 30.10 As built (v0.5.0-dev.9): rules that see `edit apply`'s targets
+
+A `pre-tool-use` rule whose `tools` lists the reserved name `writfold:edit` applies to `kb edit apply`, checked by the verb (`edit/guarded.rs`), not the hook: after `plan::recipes` and `target::resolve`, before `replay_all`, it reads `guard::rules::dirs(kb root, worktree top)`, keeps rules naming the tool whose `paths` admit at least one target (`guard::paths::admits` on the recipe paths, already relative to the worktree's top), evaluates them with `guard::require::evaluate` at the top, and decides with `writfold_core::guard::decide`. Any refusal is `KbError::Refused` (exit 3) before the journal, carrying `guard::reason` plus `; targets: …`, and for `ask` the sentence that `edit apply` cannot ask; `--dry-run` turns each refusal into a note. Unparsable rule files print the hook's `writfold kb hook: guard rule … skipped` line on stderr. `edit recover` is not guarded. The hook is unchanged: a rule naming `writfold:edit` and `Edit` still applies to `Edit` calls there. Tests (`crates/writfold-kb/tests/edit_guard.rs`): an open gate refuses a guarded recipe with nothing written and no journal, `--dry-run` notes it, a recipe outside `paths` applies, the guarded recipe applies once `gate run` satisfies the gate, a two-recipe batch with one guarded target refuses both, a rule without `writfold:edit` does not apply, `ask` refuses with its sentence, and a requirement that cannot be judged (a current-run pointer naming no run) takes the rule's action. Each check was removed once and a test failed.
+
 ## 31. Checklist gates and `gate cover` as built (v0.5.0-dev.1)
 
 A gate of class `checklist` declares items; each is covered by a row someone records with `gate cover`. The guide page is [gates § Checklist gates](../guide/gates.md#checklist-gates).
@@ -2816,6 +2824,10 @@ A checked kind may declare `max_age` (`<N>d` or `<N>h`, parsed as `default_ttl` 
 `kb stale` adds a note (`verbs/stale.rs::never_note`, over `stale::kinds::never_expiring`) naming each kind that is neither built in nor declared and holds well-formed tokens without `ttl=`, with their counts, and suggesting a declaration with `default_ttl`. Verdicts and exit codes are unchanged.
 
 Tests: the kernel test above; `crates/writfold-kb/tests/checker_cache.rs` ages a checker's cached fresh row to 6, 7 and 8 days under `max_age = "7d"` (fresh, fresh, `check-expired (8d)`), shows it fresh at 8 days without `max_age`, shows `stale --offline` reporting it and online `stale` asking again; making `aged` ignore the age fails both. `tests/kinds.rs` covers the `max_age` refusals and the note's kinds and counts before and after declarations. The guide's checker template (`docs/guide/checkers.md`) was run through the binary: `cite make --kind`, `kb stale`, a refused `make` for a missing file, `stale --offline` after ageing the cache eight days (`check-expired (8d)`), and online `stale` again.
+
+### Clarification (v0.5.0-dev.9): "a checker together with a TTL"
+
+The phrase in §33.8 means a checked kind that also ages by `ttl=` or `default_ttl`; it is still not built. `max_age` (above) did not build it: `max_age` limits how old a cached verdict may be, not how old the token is. `default_ttl` stays refused beside `freshness = "checked"`, and a token's own `ttl=` changes no verdict of a checked kind, online or offline (`stale/kinds.rs::due` returns early for a checked kind). Test: `crates/writfold/tests/kb_checker.rs::a_tokens_own_ttl_changes_no_verdict_of_a_checked_kind` (a token seen in 2020 with `ttl=1h` reads fresh online and is not `due` offline; removing the early return fails it).
 
 ## 34. T2 as built
 
@@ -3737,3 +3749,63 @@ writes nothing cannot see a process start (a Git-backed full `stale` leaves the
 cache as it was); the binary tour's counting checker does. The website's KB
 frame waits for the merge. `scripts/gate` and `writfold kb gate run` were not
 run; no push, merge or release was performed.
+
+## 38. Check receipts as built (v0.5.0-dev.9)
+
+A checked kind's verdicts can be shared through Git: `kb stale --record` writes what the checkers said to tracked, write-once files, and every clone reads them where it has no newer statement of its own, for as long as the kind's `max_age` allows. The guide is [checkers](../guide/checkers.md#sharing-verdicts-check-receipts); the specification was [dev9-spec.md](dev9-spec.md) §2.1.
+
+### 38.1 Kernel
+
+`writfold_core::verdict` gains, in `verdict/recorded.rs` (the module's existing tests moved to `verdict/tests.rs` to keep the 400-line budget): `recordable(Checker)` (only `Said(Fresh | Moved | Changed | Gone)`), `recorded_age(now, checked_at)` (`None` more than `CLOCK_SKEW` = 3600 s ahead, else never below zero), and `newest(local, recorded, max_age) -> Option<Pick>` over `Statement { said, age, recorded }`: a local `Unverifiable` is dropped, every recorded statement is dropped without `max_age`, the smallest age wins, a tie goes to a receipt, then to the worst verdict (`gone`, `changed`, `moved`, `fresh`), then to file order. `aged` is applied to the pick unchanged. The exhaustive test runs every local statement (or none) against every list of up to two recorded statements, with and without `max_age`, and holds that the pick is usable, that nothing usable is newer, the tie rules, and that the result is fresh exactly when the pick says fresh within its age.
+
+### 38.2 Format and reading
+
+`stale/checker/receipt.rs`: `.writfold/checks/<kind>/<compact UTC>-<6 hex>.json` (`write::unique`), schema `writfold-check-receipt/1`, keys `schema`, `kind`, `checker {name, version?, protocol?}`, `checked_at` (`YYYY-MM-DDTHH:MM:SSZ`) and `verdicts`, each `{token, status, at?, moved?, detail?}` on one line, sorted by token. `token` is `sha256:` and the hex digest of the citation's exact text (the `raw` column). Reading is strict: an unknown key at any level, a wrong `schema`, a `kind` other than the directory, an unreadable `checked_at`, a malformed token, a status outside the four, `moved` missing beside `moved` or present beside another status, a range that is not `1 <= first <= last`, a duplicate token, or more than 4 MiB skips the whole file with a note; a receipt naming another checker than the kind declares is left out silently. `Receipts::load` reads only the checked kinds among the citations, once per `stale::judged` call, and only when `.writfold/checks/` exists; lookup is by `(kind, digest)`.
+
+`stale/checker/cache.rs` (the cache reading moved out of `checker/mod.rs`): `pick` reads this citation's cached row as before, turns it into a local statement when its verdict is one of the five words, collects the receipt entries for the digest whose `recorded_age` is usable, and asks `newest`. A recorded pick becomes a `Checked` with the head `checker:<name>@<version>:<at>` and `recorded: Some(Recorded { checked_at, path, checker, version })`; a moved range drops its path when it equals the token's `path=`, as a live answer does. `checker::verdict` keeps this run's answer except where it is `Checker::Absent` and `cache::recorded` finds a usable (unexpired) recorded verdict; `checker::expired` (offline) uses the same pick. `Answers` now carry the kernel's `Checker`, the reply's `at` and the checker's version beside the verdict (`Answered`). `verbs/stale.rs::remember` skips a recorded verdict, so `cite_checks` never holds one. An authored `stale=` mark applies over a recorded verdict as over any other, keeping the `recorded` label.
+
+### 38.3 Writing
+
+`stale/checker/record.rs`, reached as `Verb::StaleRecord { scope }` (a separate variant keeps every `Verb::Stale` literal unchanged). It runs `verbs::stale::report` (the old `stale`, now also returning the citations and the `Judged` answers and receipts), then `plan`: per citation with an answer, an entry when `recordable` holds (a `moved` answer without a range is no statement), grouped by kind; a digest answered with two different statuses is dropped with a note; a kind without `max_age` is noted and skipped. Each receipt goes through `write::atomic::apply` as one `Op::Create` (lock, temp, sync, rename, directory sync), then `prune` removes, with `remove_file`, each other readable receipt of the same kind and checker whose entries are all held by the new file or whose `checked_at` is older than `max_age`. A failed write sets `refused` (exit 3) with the conflict text after the verdicts. The trailer adds `recorded-now=` and `receipts=`. `--record` beside `--offline` or `--cached` is a usage error in `writfold-app/src/kb/args.rs`.
+
+### 38.4 Presentation
+
+`stale` rows read from a receipt get ` recorded <checked_at>` after the head, the flag `recorded` and a `check:` continuation at the receipt's line 1; the trailer counts `recorded=` when non-zero and a note dates them. `gate/ground.rs::Resolved` gains `recorded` (set when a fresh grounding rests on a recorded verdict; the standing word stays `fresh`); checklist entries count recorded references and their `item` line carries `!recorded`; `Report::recorded_note` adds one note to `gate status` and `gate cover`, a `note:` line to `gate lines`, and `deliver check`'s `claims.cited-fresh` note names the count. `checker list` adds a `receipts:` continuation per kind. `writfold watch` needed no code: `kb_lists.rs::a_recorded_flag_sets_no_mark_in_the_stale_view` shows the list rows unchanged and the inspector naming the flag.
+
+### 38.5 Tests
+
+- Kernel: `verdict/recorded.rs` (above); strict reading and the encoder round trip in `stale/checker/receipt_tests.rs`.
+- Through the binary with the fake checker, a recording clone and a reading clone with no checker on `PATH` and no index: `crates/writfold/tests/kb_checker_record.rs` (sharing and grounding with `!recorded`, the gate note and `gate lines`, `kb check`'s count; only recordable answers and the pre-mark answer recorded and an older receipt kept; refusals and the no-`max_age` note; scoped recording and supersession; two clones merging cleanly; JSON and `checker list`) and `kb_checker_receipts.rs` (token text and checker binding; ageing at `max_age` ± 60 s, `--offline`, never caching, two hours ahead, an hour ahead, no `max_age`; newest and the tie; local fresh newer than a recorded gone, a failing checker not replaced, a local unverifiable not masking; strict skipping and never removing; readers starting no checker).
+- Kill: `crates/writfold-kb/tests/check_receipt_faults.rs` aborts a recording at each write step: no receipt or one strictly readable receipt, and recording again leaves one.
+- `ttl=` on a checked token changes no verdict (`kb_checker.rs`).
+- Every check above was removed or broken once and a test failed; the log is kept with the round's handover.
+
+### 38.6 Deviations
+
+- The ageing test uses `max_age ± 60 s` rather than one second past, because the binary reads the real clock; the exact boundary is the kernel's (`aged`, `recorded_age`) and its tests.
+- "The evidence line" of a grounded reference: gate answers show checklist items, not one line per reference, so the `item` line carries `!recorded`. Assessed gates record `Resolved` standings in their receipts unchanged; their rows do not yet show `!recorded`.
+- The check receipt's `checker` object is written with its keys in alphabetical order (`name`, `protocol`, `version`).
+
+### 38.7 Not built
+
+Recorded verdicts for built-in kinds; showing recorded verdicts in `brief`, `context`, `why` and the session-start line; a required checker version; a flag that fails when a checker is missing; signing.
+
+## 39. The rest of v0.5.0-dev.9 as built
+
+The specification was [dev9-spec.md](dev9-spec.md); check receipts are §38, `edit apply -` is [§17.9](#179-as-built-v050-dev9-a-recipe-on-stdin) and guard rules over `edit apply` are [§30.10](#3010-as-built-v050-dev9-rules-that-see-edit-applys-targets).
+
+### 39.1 `record investigation` and `propose investigation`
+
+`write/investigation.rs` plans one `Op::CreateDir` of `investigations/<year>/<date>-<slug(title)>/` holding `README.md` and an empty `evidence/`; the record ID is `inv:<year>/<date>-<slug>`. Front matter, in the order the KB's investigations use: `id`, `title`, `trigger` (default `manual`, one line), `tickets` (normalised ticket IDs), `alerts`, `assets`, `status: open`, `signatures`, `created`, `updated`, `summary`. Body sections: `Question` (`--question`), `Hypotheses`, `Checked against`, `Scope and limits`, `Conclusion`, so `status --set concluded` succeeds once they are filled. A taken ID (the same title the same day) and an unknown asset are refused (exit 3) before anything is written; a `--tickets` entry that is not a ticket ID, a `--signatures` entry that is not a slug and a multi-line title or trigger are usage errors (exit 1). Tickets and signatures need not exist. The proposal codec gains the kind (`KINDS` is four), so `propose investigation …` validates as `record` does and `proposals accept` writes the same bytes. The app's flags live in `writfold-app/src/kb/investigation.rs` to keep `writes.rs` within its budget. Tests: `crates/writfold-kb/tests/record_investigation.rs` (the file parses back to an `open` investigation with its ticket, asset and signature edges and the index equals a rebuild; a repeat is refused; filling the three sections of the unmodified template concludes; usage errors and the unknown asset; propose, show and accept write the bytes `record` writes) and the parser test in `kb/investigation.rs`.
+
+### 39.2 `writfold tuft index`
+
+`writfold-app/src/tuft/ctags.rs` finds ctags (`$WRITFOLD_CTAGS`, else `ctags` on `PATH`), probes `--version` (`Universal Ctags`) and `--list-features` (`json`), and runs it through `writfold_runtime::process::run_tailed_input` under the KB's process supervisor (TERM at the deadline, KILL after 2 s; 300 s, `WRITFOLD_CTAGS_TIMEOUT` overrides). `tuft/cli/index.rs` resolves `--repo` (default `.`) and `--at` (default `HEAD`) once with `kb_commit`, chooses the Tuft state as `run` does, exports the commit's blobs with `files::snapshot` (the pinned `ls-tree`/`cat-file` reads a search uses) into `<state>/symbols/.export-<pid>-<nanos>/`, runs `ctags --options=NONE --output-format=json --fields=+nr --extras=+r -R -f <out>.tmp .` there, syncs and renames the output into place, then writes `<out>.meta.json` (`{"commit","sha256"}`) through a temporary file and a rename. Both temporaries are removed on every path. stdout is the index path (or the `--json` object); the note on stderr carries the commit, tag count, digest and ctags version.
+
+Tests: `crates/writfold/tests/tuft_index.rs` with a fake ctags script: the default path, the sidecar's commit and digest, an uncommitted edit and an untracked file absent from the index, `git status --porcelain` and `git worktree list` byte-equal before and after, `find def` accepting the pair (`coverage=partial`), `--json` and `--out`; an Exuberant ctags, a ctags without `json`, a missing `WRITFOLD_CTAGS` file and an empty `PATH` refused (exit 1) with nothing left; a hung ctags stopped at a 1 s deadline with its child gone and nothing left. Each check was removed once and a test failed.
+
+Deviation: the specification exported the tree with `git read-tree` into a temporary index file and `git checkout-index -a --prefix=…`. The export uses Tuft's pinned tree and blob reads instead: the same bytes of the same commit, no temporary index file, and only the Git reads the search path already makes. Symlink entries are written as files holding the link text, as Tuft searches them. No real universal-ctags was available on the build machine, so only the fake has been run.
+
+### 39.3 Not done in this round
+
+The qualified `verified` state (`verified_basis`), render templates, `observe --from`, recorded verdicts for built-in kinds, and a configurable proposal cap ([dev9-spec.md](dev9-spec.md) §4).

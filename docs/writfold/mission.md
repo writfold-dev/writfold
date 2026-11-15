@@ -37,6 +37,17 @@ benchmark is planned; benchmarking is paused (owner, 10 November 2026).
 
 ## Decisions
 
+### Component status (15 November 2026)
+
+The current standing of each component. Earlier sentences below that say otherwise are marked superseded in place; the decisions they record are unchanged.
+
+| Component | Status |
+|---|---|
+| Tuft | being expanded ("Tuft expansion", 13 November 2026) |
+| Weft | available and maintained; the assessed gate, which grounds KB citations, is built; no new language features |
+| Splicery | available and maintained; the adapter (`kb edit apply`) is built; no new language features |
+| The trial flow and `serve`'s trial methods, `writfold.agent/1`, Dolt publication, Omnigraph | frozen: kept building and tested, no new development |
+
 ### Storage
 
 - Git text is the source of truth. One record per file, so concurrent writers
@@ -60,7 +71,7 @@ benchmark is planned; benchmarking is paused (owner, 10 November 2026).
 
 Tuft, Weft and Splicery are available to the agent as alternatives within the
 flow, maintained and kept building, but not a priority for new language
-features. The agent chooses per task: Tuft or `kb find` for retrieval,
+features. (Superseded for Tuft: see Component status.) The agent chooses per task: Tuft or `kb find` for retrieval,
 Splicery recipes or ordinary Edit/sed for edits, Weft for plan verification.
 Common edit or query patterns may be added later if real use shows the need.
 
@@ -130,13 +141,13 @@ The v1 design is [kb-v1-design.md](kb-v1-design.md).
 
 Considered for this release and deferred, with the reason:
 
-- ~~**External source checkers**~~ (a program Writfold runs to check a citation kind it cannot check from Git, such as a file in another source-control system): built in v0.5.0-dev.2 as phase 1 ([as built](kb-v1-design.md#33-external-checkers-phase-1-as-built-v050-dev2); [guide](../guide/checkers.md)). The concern that kept it back is answered by running checkers in `kb stale` only: every other reader uses the cached verdict, and an absent or failing checker leaves its tokens `unverifiable`, never fresh. Not built: built-in kinds through the protocol, fetching, render and redaction, a server mode, an SDK, token migration, a checker with a TTL, tracked check receipts and a flag requiring checkers.
+- ~~**External source checkers**~~ (a program Writfold runs to check a citation kind it cannot check from Git, such as a file in another source-control system): built in v0.5.0-dev.2 as phase 1 ([as built](kb-v1-design.md#33-external-checkers-phase-1-as-built-v050-dev2); [guide](../guide/checkers.md)). The concern that kept it back is answered by running checkers in `kb stale` only: every other reader uses the cached verdict, and an absent or failing checker leaves its tokens `unverifiable`, never fresh. Not built: built-in kinds through the protocol, fetching, render and redaction, a server mode, an SDK, token migration, a checker with a TTL, tracked check receipts and a flag requiring checkers. (Clarified 15 November 2026: "a checker with a TTL" means a checked kind that also ages by `ttl=` or `default_ttl`, which is still not built; `max_age` limits how old a cached verdict may be, not how old the token is.)
 - ~~**A separate observation record**~~ (what was looked at, with what result, including failed lookups) as evidence for checklist items: built in v0.5.0-dev.3 in reduced form as `kb observe` (below).
 - ~~**Writing a decision's `accepted`, `applied` and `verified` states.**~~ Built in v0.5.0-dev.2: `accepted` records the reviewed design revision, `applied` a commit on the target ref, `verified` a passing gate receipt of the run ([as built](kb-v1-design.md#32-decision-states-as-built-v050-dev2)).
 - ~~**Following a rename with edits** for code citations.~~ Built in v0.5.0-dev.2 ([as built](kb-v1-design.md#62-algorithm-for-a-code-citation)).
 - **Not planned:** user-declared record lifecycles, origin-URL matching on guard rules (path globs were built in v0.5.0-dev.3), per-audience render and redaction templates for citations, fetching cited repositories, and bulk inventory import (a loop over `record` reviewed as a Git diff does this).
 
-**v0.5.0-dev.2** (13 November 2026): three of the deferred items above are built (external checkers as phase 1, the later decision states, following a rename with edits). Checker phase 2 (tracked check receipts readable on a machine without the checker, a flag that requires checkers, an explicit refresh that proposes new tokens as a diff) waits on real use of phase 1.
+**v0.5.0-dev.2** (13 November 2026): three of the deferred items above are built (external checkers as phase 1, the later decision states, following a rename with edits). Checker phase 2 (tracked check receipts readable on a machine without the checker, a flag that requires checkers, an explicit refresh that proposes new tokens as a diff) waits on real use of phase 1. (15 November 2026: ~~tracked check receipts~~ built in v0.5.0-dev.9 as `kb stale --record`, [as built](kb-v1-design.md#38-check-receipts-as-built-v050-dev9); a flag that requires checkers and an explicit refresh still wait.)
 
 **v0.5.0-dev.3** (13 November 2026): an observation record built in reduced form (`kb observe`: one lookup with its status, in `runs/<run>/observed/`; only an `ok` look with a fresh citation supports a checklist item; no derivation chains and no independent-origins policy); `kb repos` to list cited repositories and their clones, with partial clones and per-repository Git failures degraded to `unverifiable`; tracked proposals; guard `paths` globs (moved out of "Not planned") and per-turn stop rules; checker `max_age`; batch `gate cover`. Still not planned: fetching cited repositories (`kb repos --missing --json` feeds a user's own clone script instead), handing the built-in `code` kind to a checker, render and redaction, reading other tools' observation files, and a checker SDK (the checkers guide has a complete template).
 
@@ -188,7 +199,7 @@ So "every research step backfills the KB" and "every run ends with self-reflecti
 
 ### Narrow adapters for Tuft and Splicery (owner decision, 12 November 2026)
 
-Splicery is not a priority for new language features (Tuft is, since 13 November 2026: see "Tuft expansion" below), but each gains one narrow adapter so agents have two interfaces and can choose by task: Splicery for repeated or structural edits, ordinary tools for small ones; `kb` verbs or Tuft for retrieval. The Tuft adapter emits KB citations and run receipts. The Splicery adapter applies in a run's worktree without the trial's signing and approval flow, which stays frozen. Weft contributes only its four-way vocabulary for plan assumptions; making it read KB citations as premises waits for the two-week pause.
+Splicery is not a priority for new language features (Tuft is, since 13 November 2026: see "Tuft expansion" below), but each gains one narrow adapter so agents have two interfaces and can choose by task: Splicery for repeated or structural edits, ordinary tools for small ones; `kb` verbs or Tuft for retrieval. The Tuft adapter emits KB citations and run receipts. The Splicery adapter applies in a run's worktree without the trial's signing and approval flow, which stays frozen. Weft contributes only its four-way vocabulary for plan assumptions; making it read KB citations as premises waits for the two-week pause. (Superseded: see Component status.)
 
 ### Tuft expansion (owner decision, 13 November 2026)
 
@@ -206,6 +217,10 @@ universal-ctags JSON with a verified commit/digest sidecar and always-partial
 coverage, without new crates. Not included: SCIP, tree-sitter, enclosing-block
 windows (not exact without language-specific parsing), parameters, grouping,
 set operations and a recipes page. [Language and CLI](../tuft/language.md).
+`writfold tuft index` (v0.5.0-dev.9) builds the ctags index and its sidecar
+from the bytes of one commit, exported under the Tuft state directory, with
+universal-ctags found on `PATH` or `$WRITFOLD_CTAGS`; the user's work tree,
+index and worktree list are untouched.
 
 ## Adopted and declined from the review
 
@@ -213,7 +228,7 @@ set operations and a recipes page. [Language and CLI](../tuft/language.md).
 |---|---|
 | Change the mission to project continuity | Adopted |
 | Git as the store, SQLite as a rebuildable index; drop Dolt, shelve Omnigraph | Adopted (paused, not deleted) |
-| Freeze trial, Weft, Splicery; Tuft as verbs | Adopted |
+| Freeze trial, Weft, Splicery; Tuft as verbs | Adopted (Superseded: see Component status) |
 | Cut Verus, TLAPS, the gate inventory and receipt ceremony | Adopted |
 | Read the existing knowledge-base layout unchanged in v1 | Adopted |
 | Derive edges from citations, ID mentions, commit trailers and tracker links | Adopted (milestone 3) |

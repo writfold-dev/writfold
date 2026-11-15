@@ -40,7 +40,7 @@ use writfold_core::guard::{Decision, Fact, Repeat, combine, decide, nudge_with};
 pub const NUDGED: &str = "nudged";
 
 /// Why a rule did not pass: its ID, description and what is owed.
-fn reason(rule: &Rule, owed: &[Owed], tail: &str) -> String {
+pub(crate) fn reason(rule: &Rule, owed: &[Owed], tail: &str) -> String {
     let mut what: Vec<&str> = Vec::new();
     for o in owed.iter().filter(|o| o.fact != Fact::Met) {
         if !what.contains(&o.text.as_str()) {

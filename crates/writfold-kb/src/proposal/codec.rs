@@ -6,11 +6,12 @@
 //! has the same digest. Lists are JSON arrays.
 use crate::error::{KbError, Result};
 use crate::write::Write;
+use crate::write::investigation::Investigation;
 use crate::write::record::{Decision, Link, Ticket};
 use serde_json::{Map, Value};
 
 /// The kinds a proposal may hold.
-pub const KINDS: [&str; 3] = ["ticket", "decision", "link"];
+pub const KINDS: [&str; 4] = ["ticket", "decision", "link", "investigation"];
 
 struct Args(Map<String, Value>);
 
@@ -72,9 +73,20 @@ pub fn encode(write: &Write) -> Result<(&'static str, Map<String, Value>)> {
             a.one("applicability", l.applicability.as_ref());
             "link"
         }
+        Write::Investigation(i) => {
+            a.one("title", Some(&i.title));
+            a.one("trigger", i.trigger.as_ref());
+            a.many("tickets", &i.tickets);
+            a.many("assets", &i.assets);
+            a.many("alerts", &i.alerts);
+            a.many("signatures", &i.signatures);
+            a.one("summary", i.summary.as_ref());
+            a.one("question", i.question.as_ref());
+            "investigation"
+        }
         _ => {
             return Err(KbError::Usage(
-                "a proposal holds a record ticket|decision|link call".into(),
+                "a proposal holds a record ticket|decision|link|investigation call".into(),
             ));
         }
     };
@@ -132,6 +144,16 @@ pub fn decode(kind: &str, args: &Map<String, Value>) -> Result<Write> {
             evidence: list(args, "evidence"),
             applicability: text(args, "applicability"),
         }),
+        "investigation" => Write::Investigation(Investigation {
+            title: need(args, "title")?,
+            trigger: text(args, "trigger"),
+            tickets: list(args, "tickets"),
+            assets: list(args, "assets"),
+            alerts: list(args, "alerts"),
+            signatures: list(args, "signatures"),
+            summary: text(args, "summary"),
+            question: text(args, "question"),
+        }),
         other => return Err(KbError::Usage(format!("unknown proposal kind {other:?}"))),
     })
 }
@@ -142,6 +164,7 @@ pub fn summary(kind: &str, args: &Map<String, Value>) -> String {
     match kind {
         "ticket" => format!("ticket {}: {}", get("id"), get("title")),
         "decision" => format!("decision: {}", get("title")),
+        "investigation" => format!("investigation: {}", get("title")),
         _ => format!("link {} {} → {}", get("type"), get("from"), get("to")),
     }
 }

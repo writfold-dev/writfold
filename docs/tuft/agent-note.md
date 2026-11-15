@@ -34,4 +34,6 @@ mean every match is shown. Exit 0 also covers partial/empty results.
 explicitly non-pinned; do not present them as evidence at a commit.
 `find def "NAME"` / `find refs "NAME"` with `--index FILE` imports ctags JSON
 with a commit/digest sidecar. Symbol coverage is always partial: no result
-does not prove no definition or caller. See the reference for index creation.
+does not prove no definition or caller. `writfold tuft index --at REF` builds
+that pair from the commit's bytes with universal-ctags (`--index "$(writfold tuft index)"`
+composes); see the reference.

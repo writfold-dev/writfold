@@ -1,4 +1,4 @@
-//! The write verbs' arguments: `checkpoint`, `record ticket|decision|link`,
+//! The write verbs' arguments: `checkpoint`, `record ticket|decision|link|investigation`,
 //! `status --set` and `cite make`. Parsing only; `writfold-kb` decides.
 use super::args::Common;
 use writfold_kb::Verb;
@@ -57,21 +57,7 @@ pub fn allowed(verb: &str) -> &'static [&'static str] {
     match verb {
         "runs" => &["open", "plan"],
         "checkpoint" => &["note", "from-draft", "run", "task", "mode", "new-run"],
-        "record" => &[
-            "title",
-            "assets",
-            "status",
-            "summary",
-            "prs",
-            "origin",
-            "context",
-            "evidence",
-            "change",
-            "why",
-            "target-source",
-            "references",
-            "applicability",
-        ],
+        "record" => super::investigation::RECORD,
         "status" => super::set::FLAGS,
         "cite" => &["allow-dirty", "sym", "ttl"],
         "gate" => &["run", "repo", "statement", "reason", "by", "note", "from"],
@@ -101,7 +87,7 @@ pub fn need(common: &Common, verb: &str, key: &str) -> Result<String, String> {
     get(common, key).ok_or(format!("{verb} needs --{key}"))
 }
 
-fn items(common: &Common, key: &str) -> Vec<String> {
+pub fn items(common: &Common, key: &str) -> Vec<String> {
     get(common, key)
         .map(|v| {
             v.split(',')
@@ -153,7 +139,7 @@ pub fn verb(name: &str, common: &Common, positional: &[String]) -> Result<Write,
         ("checkpoint", []) => super::checkpoint::checkpoint(common),
         ("checkpoint", _) => Err("checkpoint takes flags only (--run, --new-run, --note)".into()),
         ("record", [kind, rest @ ..]) => record(kind, common, rest),
-        _ => Err("usage: record ticket|decision|link …".into()),
+        _ => Err("usage: record ticket|decision|link|investigation …".into()),
     }
 }
 
@@ -178,6 +164,7 @@ pub fn record(kind: &str, common: &Common, rest: &[String]) -> Result<Write, Str
             why: get(common, "why"),
             origin: get(common, "origin"),
         }),
+        ("investigation", []) => super::investigation::write(common)?,
         ("link", [rel, from, to]) => Write::Link(Link {
             rel: rel.clone(),
             from: from.clone(),
@@ -188,7 +175,7 @@ pub fn record(kind: &str, common: &Common, rest: &[String]) -> Result<Write, Str
         }),
         _ => {
             return Err(
-                "usage: record ticket <ID> | record decision | record link <type> <from> <to>"
+                "usage: record ticket <ID> | record decision | record link <type> <from> <to> | record investigation"
                     .into(),
             );
         }

@@ -24,7 +24,7 @@ use crate::error::Result;
 use crate::model::Citation;
 use crate::parse::cite::{locator, tokens};
 use crate::session::Session;
-use crate::stale::{self, Cite, Verdict};
+use crate::stale::{self, Checked, Cite, Verdict};
 use crate::workspace::{CANCELLED, budgets};
 use writfold_core::assess::Grounding;
 use writfold_core::gate::{Outcome, Standing, State};
@@ -40,6 +40,10 @@ pub struct Resolved {
     pub standing: String,
     /// The KB file the evidence is in, when there is one.
     pub path: Option<String>,
+    /// Grounded by a citation whose verdict was read from a check receipt
+    /// (checked elsewhere). The standing word stays `fresh`, so stored
+    /// cover rows and assessed receipts still compare equal.
+    pub recorded: bool,
 }
 
 /// Everything grounding reads.
@@ -58,11 +62,33 @@ fn found(reference: &str, grounding: Grounding, standing: &str, path: Option<&st
         grounding,
         standing: standing.to_owned(),
         path: path.map(str::to_owned),
+        recorded: false,
+    }
+}
+
+/// [`found`], grounded on verdicts some of which came from a receipt.
+fn fresh(reference: &str, standing: &str, path: Option<&str>, all: &[Checked]) -> Resolved {
+    Resolved {
+        recorded: all.iter().any(|c| c.recorded.is_some()),
+        ..found(reference, Grounding::Grounded, standing, path)
     }
 }
 
 fn ungrounded(reference: &str, standing: &str, path: Option<&str>) -> Resolved {
     found(reference, Grounding::Ungrounded, standing, path)
+}
+
+/// The note an answer adds when `n` references were grounded by a check
+/// receipt.
+pub fn recorded_note(n: usize) -> Option<String> {
+    let said = match n {
+        0 => return None,
+        1 => "1 reference is".to_owned(),
+        n => format!("{n} references are"),
+    };
+    Some(format!(
+        "{said} fresh by a check receipt (checked elsewhere); writfold kb stale --cached dates them"
+    ))
 }
 
 /// Resolve one reference, as written in a Weft `citation "…"`.
@@ -112,17 +138,14 @@ fn file(cx: &Context<'_, '_>, r: &str) -> Option<String> {
         .find(|p| root.join(p).is_file())
 }
 
-fn verdicts(cx: &Context<'_, '_>, found: Vec<Citation>, path: &str) -> Result<Vec<Verdict>> {
+fn verdicts(cx: &Context<'_, '_>, found: Vec<Citation>, path: &str) -> Result<Vec<Checked>> {
     let cites: Vec<Cite> = found
         .into_iter()
         .filter(|c| !c.illustrative)
         .enumerate()
         .map(|(ord, c)| Cite::from_citation(path, ord, c))
         .collect();
-    Ok(stale::check(cx.session, &cites, false)?
-        .into_iter()
-        .map(|c| c.verdict)
-        .collect())
+    stale::check(cx.session, &cites, false)
 }
 
 /// A citation token or locator, checked by `stale`.
@@ -134,8 +157,8 @@ fn token(cx: &Context<'_, '_>, reference: &str, path: Option<&str>) -> Result<Re
     };
     let found_verdicts = verdicts(cx, read, path.unwrap_or("weft"))?;
     Ok(match found_verdicts.as_slice() {
-        [Verdict::Fresh] => found(reference, Grounding::Grounded, "fresh", path),
-        [verdict] => ungrounded(reference, verdict.name(), path),
+        [c] if c.verdict == Verdict::Fresh => fresh(reference, "fresh", path, &found_verdicts),
+        [c] => ungrounded(reference, c.verdict.name(), path),
         _ => ungrounded(reference, "not-one-citation", path),
     })
 }
@@ -207,10 +230,10 @@ fn statement(cx: &Context<'_, '_>, reference: &str, path: &str) -> Resolved {
 fn retrieval(cx: &Context<'_, '_>, reference: &str, path: &str) -> Result<Resolved> {
     let text = cx.session.text(path).unwrap_or_default();
     let all = verdicts(cx, tokens(&text), path)?;
-    let moved = all.iter().filter(|v| **v != Verdict::Fresh).count();
+    let moved = all.iter().filter(|c| c.verdict != Verdict::Fresh).count();
     Ok(match (all.is_empty(), moved) {
         (true, _) => ungrounded(reference, "no-citations", Some(path)),
-        (false, 0) => found(reference, Grounding::Grounded, "fresh", Some(path)),
+        (false, 0) => fresh(reference, "fresh", Some(path), &all),
         (false, n) => ungrounded(reference, &format!("not-fresh:{n}"), Some(path)),
     })
 }
@@ -231,14 +254,16 @@ fn observed(cx: &Context<'_, '_>, reference: &str, path: &str) -> Result<Resolve
         Some(cite) => verdicts(cx, tokens(cite), path)?,
         None => Vec::new(),
     };
-    let moved = all.iter().filter(|v| **v != Verdict::Fresh).count();
-    let fresh = !all.is_empty() && moved == 0;
-    Ok(match (observe::grounds(o.status, fresh), o.status, moved) {
-        (true, _, _) => found(reference, Grounding::Grounded, "ok", Some(path)),
-        (false, Status::Ok, 0) => ungrounded(reference, "no-citations", Some(path)),
-        (false, Status::Ok, n) => ungrounded(reference, &format!("not-fresh:{n}"), Some(path)),
-        (false, status, _) => ungrounded(reference, status.name(), Some(path)),
-    })
+    let moved = all.iter().filter(|c| c.verdict != Verdict::Fresh).count();
+    let grounds = !all.is_empty() && moved == 0;
+    Ok(
+        match (observe::grounds(o.status, grounds), o.status, moved) {
+            (true, _, _) => fresh(reference, "ok", Some(path), &all),
+            (false, Status::Ok, 0) => ungrounded(reference, "no-citations", Some(path)),
+            (false, Status::Ok, n) => ungrounded(reference, &format!("not-fresh:{n}"), Some(path)),
+            (false, status, _) => ungrounded(reference, status.name(), Some(path)),
+        },
+    )
 }
 
 /// An edit receipt about this subject: grounded while every edited file

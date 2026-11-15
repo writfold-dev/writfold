@@ -11,6 +11,7 @@ mod backend_tests;
 pub mod cli;
 #[cfg(test)]
 mod compact_tests;
+mod ctags;
 #[cfg(test)]
 mod expansion_tests;
 mod files;
