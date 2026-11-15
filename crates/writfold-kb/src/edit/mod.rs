@@ -10,6 +10,7 @@
 //! writes with a journal that makes a crash between files recoverable.
 mod apply;
 pub mod diff;
+pub mod guarded;
 mod journal;
 pub mod plan;
 pub mod receipt;
@@ -108,11 +109,13 @@ fn apply_verb(
         .git
         .as_ref()
         .ok_or_else(|| KbError::Refused("edits need Git".into()))?;
+    let guarded = guarded::check(ctx.ws, &found.top, ctx.now, &paths, dry_run)?;
     let root = &ctx.ws.root;
     let files = plan::replay_all(git, &found.top, &found.git_dir, root, &recipes, &paths)?;
     let args = recipes.iter().map(|r| r.sha256.clone()).collect();
     if dry_run {
-        let answer = answer(&files, &recipes, "preview", None);
+        let mut answer = answer(&files, &recipes, "preview", None);
+        answer.notes.extend(guarded);
         let mut out = session.emit(&answer, &frame(ctx.request, "edit-preview", args))?;
         let diff: String = files.iter().map(|f| f.diff.as_str()).collect();
         out.text = format!("{diff}{}", out.text);

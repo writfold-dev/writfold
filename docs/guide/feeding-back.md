@@ -88,6 +88,19 @@ require = ["run.current"]
 action = "deny"
 ```
 
+A rule can also name the files (built in v0.5.0-dev.9): with `tools = ["writfold:edit"]` and `paths`, `edit apply` checks the rule itself against each recipe's target, needing no hook ([hooks](hooks.md#edits-made-by-writfold-kb-edit-apply)):
+
+```toml
+# .writfold/guards/deploy-edits-need-review.toml
+schema = "writfold-guard-rule/1"
+id = "deploy-edits-need-review"
+event = "pre-tool-use"
+tools = ["Edit", "Write", "MultiEdit", "writfold:edit"]
+paths = ["deploy/**"]
+require = ["gate:deploy-review"]
+action = "deny"
+```
+
 ## Record states
 
 | Kind | What `status --set` writes in v1 |
