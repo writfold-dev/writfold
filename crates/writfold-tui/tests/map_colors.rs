@@ -130,3 +130,36 @@ fn selected_map_row_sits_on_the_selection_surface_across_the_pane() -> TestResul
     }
     Ok(())
 }
+
+#[test]
+fn rail_bars_never_take_a_state_colour() -> TestResult {
+    let w = support::map::nested("map-dim-rail")?;
+    let mut app = App::new(w.source(), Some(RUN));
+    app.focus = Focus::Detail;
+    let theme = writfold_tui::theme::ThemeId::Clay;
+    app.look = writfold_tui::style::Look {
+        theme,
+        depth: Depth::Truecolor,
+    };
+    for detail in [false, true] {
+        if detail {
+            app.key(writfold_tui::app::Key::Char('d'));
+        }
+        let buffer = render(&mut app, 160, 40)?;
+        let area = writfold_tui::layout::focused(160, 40, true, true).main;
+        let muted = theme.palette().muted;
+        let dim = Color::Rgb(muted.0, muted.1, muted.2);
+        let mut seen = 0;
+        for y in area.y + 1..area.bottom() - 1 {
+            for x in area.x + 1..area.right() - 1 {
+                let cell = &buffer[(x, y)];
+                if ["│", "├", "╮", "╯", "┬", "┼", "┴"].contains(&cell.symbol()) {
+                    assert_eq!(cell.fg, dim, "{x},{y} detail={detail}");
+                    seen += 1;
+                }
+            }
+        }
+        assert!(seen > 20, "the nested rail has bars: {seen}");
+    }
+    Ok(())
+}

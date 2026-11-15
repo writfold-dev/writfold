@@ -158,6 +158,10 @@ fn degraded_depths_have_no_background_or_unwanted_colours() -> TestResult {
                 assert_eq!(cell.fg, Color::Reset);
             }
         }
+        // The bars' chips are brackets here, never a painted surface.
+        let screen = rows(&buffer);
+        assert!(screen[1].contains("[2 gates]"), "{}", screen[1]);
+        assert!(screen[39].contains("[read-only]"), "{}", screen[39]);
         assert!(
             cells(&buffer, "> Add --plan to kb runs")?
                 .iter()
