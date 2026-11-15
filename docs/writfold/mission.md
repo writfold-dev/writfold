@@ -43,9 +43,7 @@ The current standing of each component. Earlier sentences below that say otherwi
 
 | Component | Status |
 |---|---|
-| Tuft | being expanded ("Tuft expansion", 13 November 2026) |
-| Weft | available and maintained; the assessed gate, which grounds KB citations, is built; no new language features |
-| Splicery | available and maintained; the adapter (`kb edit apply`) is built; no new language features |
+| Tuft, Weft, Splicery | frozen (owner decision, 15 November 2026): kept building and tested, with their adapters (`tuft`, the Weft assessed gate, `kb edit apply`), and no new development. The `writfold kb` verb groups cover each stage of the flow; the three are revisited only if a use case emerges. They are no longer presented on the website |
 | The trial flow and `serve`'s trial methods, `writfold.agent/1`, Dolt publication, Omnigraph | frozen: kept building and tested, no new development |
 
 ### Storage
