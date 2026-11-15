@@ -3,6 +3,7 @@
 //! statement whose gate's scope holds the run's own files says it made
 //! itself stale.
 #[path = "guard_status/helpers.rs"]
+#[allow(dead_code)]
 mod helpers;
 mod support;
 

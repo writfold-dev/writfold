@@ -40,6 +40,7 @@ pub mod assess;
 pub mod authority;
 pub mod bytes;
 pub mod checklist;
+pub mod command;
 pub mod convenience;
 pub mod decision;
 pub mod flow;
