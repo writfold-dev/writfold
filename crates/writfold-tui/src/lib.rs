@@ -16,6 +16,22 @@ pub mod guards;
 pub mod help;
 pub mod inspect;
 mod inspect_view;
+pub mod kb_bars;
+pub mod kb_entry;
+mod kb_follow;
+mod kb_help;
+mod kb_ink;
+mod kb_inspect;
+mod kb_keys;
+mod kb_list;
+mod kb_load;
+mod kb_projects;
+mod kb_rail;
+mod kb_sections;
+mod kb_source;
+pub mod kb_state;
+pub mod kb_tree;
+mod kb_view;
 mod keys;
 pub mod layout;
 pub mod lines;
@@ -42,6 +58,7 @@ mod views;
 mod wrap;
 
 use app::{App, View};
+use kb_state::KbView;
 use source::Source;
 use std::path::PathBuf;
 use style::{Environment, Look};
@@ -49,7 +66,8 @@ use style::{Environment, Look};
 pub const USAGE: &str = "usage: writfold watch [--kb DIR] [--repo DIR] [--run ID]
                       [--view NAME] [--theme NAME] [--color auto|truecolor|ansi|none] [--once]
 
-Views: progress (default), gates, timeline, inbox, guards, stale, brief, resume.
+Views: progress (default), gates, timeline, inbox, guards, stale, brief, resume;
+knowledge base: kb:why, kb:status, kb:tracker, kb:impact, kb:stale (m switches modes).
 --once or a pipe prints one plain frame; --view selects just one section.";
 
 /// The parsed arguments.
@@ -59,6 +77,7 @@ pub struct Options {
     pub repo: Option<PathBuf>,
     pub run: Option<String>,
     pub view: Option<View>,
+    pub kb_view: Option<KbView>,
     pub theme: Option<String>,
     pub color: Option<String>,
     pub once: bool,
@@ -83,8 +102,13 @@ pub fn parse(args: &[String]) -> Result<Options, String> {
             "--color" => options.color = Some(value("--color")?),
             "--view" => {
                 let name = value("--view")?;
+                if let Some(kb) = name.strip_prefix("kb:").and_then(KbView::from_name) {
+                    options.kb_view = Some(kb);
+                    continue;
+                }
                 options.view = Some(View::from_name(&name).ok_or_else(|| {
-                    let names: Vec<_> = View::ALL.iter().map(|v| v.name()).collect();
+                    let mut names: Vec<_> = View::ALL.iter().map(|v| v.name().to_owned()).collect();
+                    names.extend(KbView::ALL.iter().map(|v| format!("kb:{}", v.name())));
                     format!("unknown view {name:?}; views: {}", names.join(", "))
                 })?);
             }
@@ -154,9 +178,17 @@ pub fn main(
     if let Some(error) = &app.runs.error {
         return Err(error.clone());
     }
+    if let Some(view) = options.kb_view {
+        app.enter_kb();
+        app.kb_show(view);
+    }
     if options.once || !terminal {
+        let stdout = match options.kb_view {
+            Some(view) => frame::once_kb(&mut app, view),
+            None => frame::once(&mut app, options.view),
+        };
         return Ok(Outcome {
-            stdout: Some(frame::once(&mut app, options.view)),
+            stdout: Some(stdout),
             warning,
         });
     }

@@ -19,6 +19,7 @@ impl App {
             .runs(self.open_only, self.project_only.as_deref());
         self.asked = self.source.clock();
         self.answers.clear();
+        self.kb.clear();
         self.guards = None;
         self.subjects.clear();
         self.order_runs(keep.as_deref());

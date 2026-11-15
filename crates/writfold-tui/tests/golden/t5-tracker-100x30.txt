@@ -1,0 +1,30 @@
+ Harbor status  [build]  knowledge base                                              project:harbor
+ 1 why    2 status   [3 tracker]   4 impact    5 stale !9                                    m runs
+╭ projects (2) ──────╮╭ tracker (6) ────────────────────────╮╭ ticket 1/6 ─────────────────────────╮
+│> Harbor status     ││ ┬ project:harbor                    ││Slow ledger flush at month end       │
+│  build  harbor     ││ ○ Slow ledger flus…    promoted-to  ││[in-progress]                        │
+│  Lantern console   ││ ┼ harbor-api                        ││HBR-101                              │
+│  lantern           ││ ○ Replay too slow      concerns     ││                                     │
+│  all records       ││ ┼ harbor-db                         ││status=in-progress                   │
+│  by kind           ││ ● Ledger flush sta…    concerns     ││prs=[acme/harbor-api#42]             │
+│                    ││ ● Flush stalls on …    concerns     ││created=2026-10-28                   │
+│                    ││ ○ Flush stalls ret… !  concerns     ││updated=2026-11-03                   │
+│                    ││ ● Fsync stall on t…    concerns     ││promoted_to=harbor                   │
+│                    ││ ┴                                   ││                                     │
+│                    ││                                     ││linked from                          │
+│                    ││                                     ││  · Harbor status  cites (cite)      │
+│                    ││                                     ││…/2026/hbr-101-slow-ledger-flush.md:5│
+│                    ││                                     ││                                     │
+│                    ││                                     ││                                     │
+│                    ││                                     ││                                     │
+│                    ││                                     ││                                     │
+│                    ││                                     ││                                     │
+│                    ││                                     ││                                     │
+│                    ││                                     ││                                     │
+│                    ││                                     ││                                     │
+│                    ││                                     ││                                     │
+│                    ││                                     ││                                     │
+│                    ││19 reached   not followed: 1         ││                                     │
+│                    ││disputed, 22 inferred                ││d more   f run   a impact            │
+╰────────────────────╯╰─────────────────────────────────────╯╰─────────────────────────────────────╯
+ [read-only]  kb XXXXXXXXXXXX   index fresh     j/k record   l inspect   a impact   ? help   q quit

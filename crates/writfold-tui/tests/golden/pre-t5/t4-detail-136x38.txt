@@ -1,0 +1,38 @@
+ Add --plan to kb runs  [open] [current] [harbor]  subject kb                                               run-20261101T090000Z-a1b2c3
+ [1 progress]   2 gates !2 ○2    3 timeline    4 inbox 3    5 guards deny 1    6 stale    7 brief    8 resume
+╭ runs (3) ──────────╮╭ plan ─────────────────────────────────────────────────╮╭ step 7/11 ────────────────────────────────────────────╮
+│> [open] run-202611…││step 7 of 11    5 done  1 skipped  1 stale             ││change#1/review/review#1/findings/findings#1/check     │
+│    Add --plan to k…││owes 2 of 2 gates                                      ││[current]                                              │
+│    project=harbor  ││                                                       ││splice: findings#1 @6ec817d3031a from                  │
+│    plan: step 7/11…││ ┬ change#1 @83c2cc9efde7 from .writfold/plans/change.…││.writfold/plans/findings.toml                          │
+│    last: 2026-11-1…││ ✓ change#1/research      ●  recorded 2026-11-10T23:4… ││  @runs/run-20261101T090000Z-a1b2c3/plan/splice-change.│
+│  [open] run-202611…││ ! change#1/implement     ●! recorded 2026-11-10T23:5… ││  1~review~review.1~findings~findings.1.json:1         │
+│    Review the lant…││ – change#1/benchmarks       no hot path touched (by … ││under: change#1/review/review#1/findings               │
+│    project=lantern ││ ├─╮ review#1 @932e0ad862a8 from .writfold/plans/revie…││owes: review-list [stale], signoff [open]              │
+│    last: 2026-11-0…││ │ ├─╮ notes#1 @e42e7a4ac404 from .writfold/plans/note…││gates (2)  !○                                          │
+│  [closed] run-2026…││ │ │ ✓ notes#1/read       ●  recorded 2026-11-10T23:5… ││  gate review-list [stale] checklist 2/4 required      │
+│    Retire the lega…││ │ ├─╯                                                 ││  covered !stale                                       │
+│    project=harbor  ││ │ ✓ review#1/read-diff   ●  recorded 2026-11-10T23:5… ││    @runs/run-20261101T090000Z-a1b2c3/covers/review-lis│
+│    plan: complete …││ │ ├─╮ findings#1 @6ec817d3031a from .writfold/plans/f…││    t.perf-20261110T235400Z-XXXXXX.json:1              │
+│    last: 2026-11-0…││ │ │ ✓ findings#1/prepare ●  recorded 2026-11-10T23:5… ││    2/4 required covered  ■ ! □ ◆ (+1 optional)        │
+│                    ││ │ │ ▶ findings#1/check   !○ owes: review-list [stale… ││    item errors [supported] 1 reference by agent       │
+│                    ││ │ ├─╯                                                 ││      @runs/run-20261101T090000Z-a1b2c3/covers/review-l│
+│                    ││ │ ○ review#1/findings    ·· gates: review-list, sign… ││      ist.errors-20261110T235200Z-XXXXXX.json:1        │
+│                    ││ ├─╯                                                   ││    item tests [stale] 1 reference by agent; cited     │
+│                    ││ ○ change#1/review        ·· gates: review-list, sign… ││    evidence moved: gate:lint was satisfied, now stale │
+│                    ││ ○ change#1/deliver       ·  gates: unit               ││    !stale                                             │
+│                    ││ ○ change#1/reflect          no gates                  ││      @runs/run-20261101T090000Z-a1b2c3/covers/review-l│
+│                    ││ ┴                                                     ││      ist.tests-20261110T235300Z-XXXXXX.json:1         │
+│                    ││                                                       ││    item docs [open] The guide names every new flag    │
+│                    ││                                                       ││    item perf [not-applicable] no hot path touched by  │
+│                    ││                                                       ││    agent                                              │
+│                    ││                                                       ││      @runs/run-20261101T090000Z-a1b2c3/covers/review-l│
+│                    ││                                                       ││      ist.perf-20261110T235400Z-XXXXXX.json:1          │
+│                    ││                                                       ││    item style [open] (optional) Names follow the      │
+│                    ││                                                       ││    module                                             │
+│                    ││last plan event: 2026-11-10T23:59:50Z done             ││  gate signoff [open] attested !open                   │
+│                    ││change#1/review/review#1/findings/findings#1/prepare   ││read: instructions for signoff                         │
+│                    ││last checkpoint: 2026-11-10T14:10:00Z Review started.  ││  @.writfold/gates/signoff.md:1                        │
+│                    ││▶ next step to pick up, as recorded                    ││d less   g gates   x text                              │
+╰────────────────────╯╰───────────────────────────────────────────────────────╯╰───────────────────────────────────────────────────────╯
+ [read-only]  kb XXXXXXXXXXXX+dirty:19   index fresh   asked 00:00:00Z                j/k step   l inspect   d detail   ? help   q quit

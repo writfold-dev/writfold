@@ -12,6 +12,10 @@ impl App {
             self.help = false;
             return true;
         }
+        if self.mode == crate::kb_state::Mode::Kb {
+            self.kb_key(key);
+            return true;
+        }
         match key {
             Key::Esc | Key::Left => self.focus_move(false, false),
             Key::Right => self.focus_move(true, false),
@@ -40,6 +44,8 @@ impl App {
             'r' => self.reload(self.run(), None),
             'T' => self.cycle_theme(),
             'd' => self.toggle_detail(),
+            'm' => self.enter_kb(),
+            'f' => self.follow_run(),
             'x' if self.view == View::Progress && !self.runs_view => self.toggle_map(),
             'X' if self.view == View::Progress && !self.map && !self.runs_view => {
                 self.expand_all = !self.expand_all;
@@ -73,7 +79,7 @@ impl App {
         self.load();
     }
 
-    fn toggle_detail(&mut self) {
+    pub(crate) fn toggle_detail(&mut self) {
         self.level = match self.level {
             Detail::Calm => Detail::Full,
             Detail::Full => Detail::Calm,
@@ -81,7 +87,7 @@ impl App {
         self.inspect_scroll = 0;
     }
 
-    fn cycle_theme(&mut self) {
+    pub(crate) fn cycle_theme(&mut self) {
         if self.look.depth == crate::style::Depth::Truecolor {
             self.look.theme = self.look.theme.next();
             self.notice = Some(format!("theme={} (not written)", self.look.theme.name()));

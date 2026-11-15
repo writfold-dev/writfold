@@ -1,5 +1,5 @@
  Batch ledger writes rollout  [open] [harbor]  subject kb       run 1/1
- [1 progress]                                                       1/8
+ [1 progress]                                               m kb    1/8
 ╭ plan ────────────────────────────────────────────────────────────────╮
 │step 2 of 4    1 done  1 skipped  1 disorder                          │
 │                                                                      │

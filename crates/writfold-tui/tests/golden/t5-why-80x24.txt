@@ -1,0 +1,24 @@
+ Harbor status  [build]  knowledge base                             project 1/3
+ [1 why]   5 stale !9                                             m runs    1/5
+╭ why (5) ─────────────────────────────────────────────────────────────────────╮
+│ ┬ decisions                                                                  │
+│ – One writer process for the ledger    superseded                            │
+│ – Drop client retries on flush         rejected                              │
+│ ● Batch ledger writes in the API    !  accepted                              │
+│ ○ Shard the ledger by tenant           draft                                 │
+│ ○ Cap replay batches at 500 rows    !  draft                                 │
+│ ┴                                                                            │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│decisions that name harbor as their project                                   │
+╰──────────────────────────────────────────────────────────────────────────────╯
+ [read-only]  kb XXXXXXXXXXXX            l inspect   a impact   ? help   q quit

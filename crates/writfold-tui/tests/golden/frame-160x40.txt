@@ -1,5 +1,5 @@
  Add --plan to kb runs  [open] [current] [harbor]  subject kb                                                                       run-20261101T090000Z-a1b2c3
- [1 progress]   2 gates !2 ○2    3 timeline    4 inbox 3    5 guards deny 1    6 stale    7 brief    8 resume
+ [1 progress]   2 gates !2 ○2    3 timeline    4 inbox 3    5 guards deny 1    6 stale    7 brief    8 resume                                              m kb
 ╭ runs (3) ────────────────────────────╮╭ progress run-20261101T090000Z-a1b2c3 ────────────────────────────────╮╭ gates ───────────────────────────────────────╮
 │> Add --plan to kb runs               ││plan 2 done, 1 skipped of 6 steps; current step 4/6; owes 2 of 2 gates││gates=6 satisfied=2 open=2 stale=2 failed=0   │
 │  harbor  step 4/6                    ││stale=1                                                               ││unknown=0 attested=0 waived=0 invalid=0       │

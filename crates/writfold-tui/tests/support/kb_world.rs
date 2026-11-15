@@ -56,6 +56,9 @@ pub fn atlas_at(base: PathBuf) -> TestResult<World> {
     records(&w, &rev)?;
     git(&w.kb, &["add", "-A"])?;
     git(&w.kb, &["commit", "-q", "-m", "atlas records"])?;
+    // The last checkpoint moved the current-run pointer to B; the frames
+    // open on the harbor run.
+    write(&w.kb.join(".git/writfold/current-run"), RUN)?;
     second_commit(&code)?;
     // One full check, so `why` and `impact` have cached verdicts.
     writfold_kb::run(&w.request(

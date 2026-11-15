@@ -115,7 +115,8 @@ pub fn tabs(app: &App, width: u16, narrow: bool) -> Vec<Segment> {
         for gap in [4, 3, 2] {
             let units: Vec<_> = all.iter().map(|(_, (u, _))| u.clone()).collect();
             if total(&units, &[], gap) <= room {
-                return fit((units, Vec::new()), gap, room, glyphs);
+                let mode = vec![crate::kb_bars::mode_unit(false)];
+                return fit((units, mode), gap, room, glyphs);
             }
         }
     }
@@ -131,11 +132,10 @@ pub fn tabs(app: &App, width: u16, narrow: bool) -> Vec<Segment> {
             unit
         })
         .collect();
-    let right = vec![Unit::one(
-        format!("{index}/{}", View::ALL.len()),
-        Role::Muted,
-        0,
-    )];
+    let right = vec![
+        crate::kb_bars::mode_unit(false),
+        Unit::one(format!("{index}/{}", View::ALL.len()), Role::Muted, 0),
+    ];
     fit((left, right), 4, room, glyphs)
 }
 
