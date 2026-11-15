@@ -3364,3 +3364,180 @@ changes landed on merge, each covered by a test or a reviewed golden:
 
 Known and left (suspected in review, not reproduced): if a merge ever yields
 two rows with the same id, selection resolves to the first.
+
+## 36. T4 as built
+
+T4 makes the watch frame calm by default and moves every omitted fact one key
+away. The [specification](tui-t4-spec.md) remains the design record (its §5
+lists the owner decisions); the [watch guide](../guide/watch.md#calm-and-detailed)
+documents the exercised interface. No verb, JSON key, record or write path
+changed; `--once` and piped frames are byte-identical (their three goldens did
+not change).
+
+### 36.1 Disclosure rules
+
+`App.level` is `Detail::Calm` or `Detail::Full`. `d` toggles it for the whole
+frame, resets the inspector scroll and keeps the selection; it is never
+written. At the calm level:
+
+- **Text follows `▶` and the cursor.** `rail::build` takes a `Show` (glyphs,
+  look, level, selected node). A row carries its rail text only when its status
+  is `current` or it is selected; `!out-of-order`, `!two-plans`, `!repeated`
+  and `!invalid` stay on every row at both levels.
+- **Names once.** A group header shows the splice name (its first word); rows
+  show `rail_text::shown_id`, which at the calm level also drops a leading
+  `name/` of the row's own group. Ids stay opaque; the inspector's second line
+  is the full id.
+- **Receipts on demand.** `@path:line` lines appear only at the detailed level,
+  in `g` and in `x`.
+- **Attention first.** The calm inspector lists checklist items whose status is
+  neither `supported`, `not-applicable` nor `attested`; the strip still shows
+  every required item.
+- **No row is reformatted.** Calm removes lines and clips at word boundaries.
+  The map's summary line (`step N of M    D done  S skipped  K stale`) is the
+  one new wording; its numbers are the plan trailer's counts, and the position
+  falls back to the row the verb marks current when the counts were not judged.
+
+### 36.2 Bars and degraded forms
+
+`bars` holds the segment model: a `Unit` is one or more `Segment`s with a drop
+priority (0 never drops). `bars::fit` lays a left and a right group out with a
+margin cell at each end, words a fixed visual gap apart (a chip's own padding
+counts as one cell), drops the highest-priority unit until the row fits and
+only then clips a lone title. `bar_content` says what each bar holds:
+
+| Bar | Left | Right | Drops first |
+|---|---|---|---|
+| Header | title (bold), status chip, `current` chip, project chip, `subject NAME` | run id, or `run N/M` when narrow | subject, project, then the id |
+| Tabs | eight tabs; active = filled chip; badges for non-zero counts | `i/8` in the narrow form | gap 4, then 3, then 2; then the narrow form |
+| Footer | `read-only` chip, `kb STAMP`, `index STATE`, `asked TIME` (+ subject stamp at `d`) | up to three focus hints, `? help`, `q quit` | subject, asked, index, kb |
+
+Badges come from the tab's own verb: gate status `stale`, `failed`, `open`,
+`unknown` (`!N ×N ○N ?N`, ASCII `!N xN oN ?N`), the inbox's draft plus
+proposal rows (one number), guard status `deny N` and `ask N`. Gates, Inbox
+and Guards are now asked in every layout class so the badges exist; the
+Medium summary row is gone and every class's panes start at row 2. The
+interactive Inbox view leads with `drafts=N proposals=M`.
+
+`style::chip_text` pads a chip with spaces at truecolor and brackets otherwise,
+so widths never change with depth; `style::chip` paints `secondary` on
+`raised` (plain), `accent` on `raised` bold (`current`) or `on_accent` on
+`accent` bold (the active tab, the only filled accent). ANSI and no-colour
+depths paint no background; the accent chip is cyan bold at ANSI.
+
+### 36.3 What moved where
+
+| Default fact in v0.5.0-dev.6 | Now |
+|---|---|
+| Run id in the runs list, map title and header | Header right, once; runs entries at `d` |
+| `project=`, plan counts, last checkpoint in runs entries | Project and plan words on the calm second line; whole fields at `d` |
+| Summary row (gate, inbox, guard counts) | Tab badges; full counts on the first line of views 2, 4 and 5 |
+| Splice hash and template source on group headers | `d`; the inspector's `splice:` line with its receipt at `d` |
+| `recorded …` on done rows, `gates: …` on later rows, skip reasons | Inspector (`done:`, gate lines, `skip:`); every row at `d` |
+| Group name repeated in each row id | Header; full id in the inspector |
+| `recorded position: …` line | Summary line; its definition in help ("Marks") |
+| Last checkpoint below the rail | `d` (map and inspector) |
+| Legend (two wrapped entries) | Help, "Marks"; a one-row `▶` caption stays |
+| `owes N of M gates` | `d`; the `▶` row's chips and text carry it |
+| Inspector `splice:`, `under:`, `gates (N)` chips, covered items, receipts, run records | `d` |
+| Footer subject stamp, theme, "no daemon", `. current`, `n flag` | Help ("This frame" and the key list); subject stamp also in the footer at `d` |
+| `(Esc: back)` in the inspector title | Footer hint `h back` while the inspector has focus |
+
+### 36.4 Tests and mutation checks
+
+New: `tests/calm.rs` (map and inspector free of receipts, hashes and
+timestamps at 136×38 and 160×40; text follows current and cursor; `d` restores
+every omission and a second `d` returns the identical buffer; nothing is lost
+between the detailed inspector, `g` and `x`; calm run lines are a prefix of
+the verb's plan text; tab badges equal the verb counts), `tests/calm_frames.rs`
+(legend in help; goldens
+[t4-calm-136x38](../../crates/writfold-tui/tests/golden/t4-calm-136x38.txt),
+[t4-calm-80x24](../../crates/writfold-tui/tests/golden/t4-calm-80x24.txt),
+[t4-detail-136x38](../../crates/writfold-tui/tests/golden/t4-detail-136x38.txt)),
+`tests/bars.rs` (no bar token is cut at any width 60..=200 and the right group
+is complete; chips degrade to brackets with no background; the truecolor
+active tab is `on_accent` on `accent`), `map_colors::rail_bars_never_take_a_state_colour`
+(both levels), an inbox-breakdown test, a calm inspector unit test and
+`rail_text` unit tests. `look::degraded_depths_have_no_background_or_unwanted_colours`
+now also requires the bracketed chips. Existing tests that looked for full ids,
+`recorded position:`, the summary row, `theme=` in the footer or the old hint
+were moved to the level or surface that now carries the fact. The nine
+`frame-*`/`t3-*` buffer goldens were re-blessed and read; the binary's terminal
+tour presses `d` and checks the caption, both hints and the detailed checkpoint.
+
+Each mutation below was applied alone; the named test failed (Cargo exit 101)
+and the source was restored. Logs: `target/t4-mutants/`.
+
+| Mutation | File | Failing test |
+|---|---|---|
+| Default level Full | `app.rs` | `calm::default_map_rows_carry_no_timestamps_hashes_or_paths` |
+| `node_line` ignores the detail level | `rail.rs` | `calm::default_map_rows_carry_no_timestamps_hashes_or_paths` |
+| Selected row loses its text | `rail.rs` | `calm::text_follows_current_and_cursor` |
+| `d` unbound | `keys.rs` | `calm::d_restores_every_default_omission` |
+| Detailed inspector drops receipts | `inspect.rs` | `calm::nothing_is_lost` |
+| Calm run line keeps `key=value` tokens | `run_item.rs` | `calm::calm_run_line_is_a_prefix_of_the_verb_plan_text` |
+| Zero counts print a badge | `bar_content.rs` | `calm::tab_badges_equal_verb_counts` |
+| Rail bars take the state tone | `rail.rs` | `map_colors::rail_bars_never_take_a_state_colour` |
+| Bar overflow is never resolved by dropping | `bars.rs` | `bars::bars_never_cut_a_token` |
+| Chips keep padding at degraded depths | `style.rs` | `bars::chips_degrade_to_brackets` |
+| Same mutation, look test | `style.rs` | `look::degraded_depths_have_no_background_or_unwanted_colours` |
+| Inbox view loses its breakdown line | `view.rs` | `inbox::inbox_view_leads_with_the_breakdown_its_tab_badge_sums` |
+| Marks dropped from help | `help.rs` | `calm_frames::legend_lives_in_help` |
+
+### 36.5 Defects fixed
+
+From the specification's §2: the footer no longer paints hints over the stamps
+(defect 1); group headers clip with `…` (2); rail bars are dim on every row (3);
+the inspector hint shortens (`d more   g gates   x text`) instead of losing a
+key at 100×30 (4); the summary is neutral with only problem counts toned (5);
+help names clay as the default (6). Ambiguous-width glyphs (7) cannot be fixed
+in the frame; the guide says `--color none` or `TERM=dumb` selects ASCII marks.
+Also fixed: calm ids shorter than eight cells no longer break the id column,
+and runs entries clip with `…` instead of a hard cut.
+
+### 36.6 Deviations from the specification
+
+- Tabs sit four cells apart, as in the mocks (the prose says three); a row too
+  short for that tries three and two (100×30 uses two) before the narrow form.
+- The narrow header keeps the project chip and subject when they fit (the
+  80×24 mock omits them); they still drop first when the row is short.
+- The `read-only` chip uses the plain chip colours (`secondary` on `raised`),
+  not `muted` on `raised`.
+- At no-colour depth the active tab and the `current` chip keep bold (a
+  modifier, not a colour).
+- Calm checklist items wrap at the item's indent, not under the item text.
+- The map summary's parts wrap between counts when the pane is narrow
+  (100×30: `1 stale` on a second row).
+- The calm runs line prints the state word bare (`closed`), as in the mock.
+- `T` now sets a one-key notice `theme=NAME (not written)`, since the theme
+  left the footer; help states the theme and colour depth.
+- `--help` begins with the Marks block. The help overlay is up to 112 columns
+  wide and the view-key lines share one row so the whole help fits 38 rows.
+- The calm inspector omits continuation labels other than the known ones; `d`
+  shows them.
+- Calm event line reads `last plan event  …` (as in the mock); the detailed
+  line keeps the colon.
+- `frame::header` and `frame::tabs` were removed rather than kept "for
+  `--once`": the plain frame never used them. `frame::footer` keeps only the
+  plain form, whose text is unchanged.
+
+### 36.7 Checks and terminal exercise
+
+Every slice passed `cargo fmt --all --check`, workspace clippy with all targets
+and features, `--locked --offline` and warnings denied, the `writfold-tui`
+tests, the binary's `kb_watch` and `kb_watch_look` tests, and the xtask quality
+report: zero errors, 398 warnings against 401 at the base, the only
+`writfold-tui` warning the pre-existing 51-line progress test. T4 modules stay
+within 250 lines and functions within 80. The debug binary was driven in tmux
+against the recorded fixture KB at 80×24, 100×30, 136×38 and 160×40, in
+truecolor, `--color none` and `TERM=dumb`, calm and detailed; captures (raw
+with colour and plain text) are in `target/t4-frames/`. Rail bars were checked
+dim in the truecolor captures and no bar token is cut.
+
+### 36.8 Not done
+
+Group folding (selection would need a second cursor kind), a persisted detail
+level, and the website's monospace face and recapture (separate repository).
+`scripts/gate` and `writfold kb gate run` were not run; no push, merge or
+release was performed. The integrator still runs the quality and unit gates
+from main.

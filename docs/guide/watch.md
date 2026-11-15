@@ -1,6 +1,6 @@
 # Watching a run
 
-> **Status:** built (T3). Implementation, tests and deviations: [design §35](../writfold/kb-v1-design.md#35-t3-as-built); the earlier text view is recorded in [§34](../writfold/kb-v1-design.md#34-t2-as-built).
+> **Status:** built (T4). Implementation, tests and deviations: [design §36](../writfold/kb-v1-design.md#36-t4-as-built); the plan map is recorded in [§35](../writfold/kb-v1-design.md#35-t3-as-built) and the earlier text view in [§34](../writfold/kb-v1-design.md#34-t2-as-built).
 
 `writfold watch` is a read-only view of the KB verbs. It shows recorded steps,
 gate standings, checklist items, pending drafts and proposals, guard rules and
@@ -70,29 +70,108 @@ retains the exact state words. ASCII rails use `|`, `+`, `\`, `/`.
 The marker means **the next step to pick up**: the recorded current step (the
 first step neither done nor skipped), not a liveness claim. Nothing records
 whether an agent is working; a run whose agent stopped shows the same marker.
-The block below the rail shows `step N/M` from the row the verb marks current,
-the newest plan event from Timeline, and the run list's last checkpoint. Without
-a subject repository the gate counts stay missing and the verb's note is shown;
-the position still comes from the current row.
+The line above the rail reads `step N of M` with the verb's done and skipped
+counts; only stale, moved, invalid and disorder counts take a warning tone.
+Below the rail are the newest plan event from Timeline (one clipped line; whole,
+with the run list's last checkpoint, at the detailed level) and a one-line
+caption for the marker. Without a subject repository the gate counts stay
+missing, the line says `gates not judged` and the verb's note is shown; the
+position still comes from the row the verb marks current.
 Done stays done when its evidence becomes stale; the marker never moves back.
 
 Selection starts at the recorded current step, survives refresh by ID, and falls
 back to the current step or first row if its ID disappears. The rail keeps it
-visible with two rows of context where space permits. Inside a splice group a
-row shows its id from the group's own name (`findings#1/check`); the group
-headers above name the ancestors and the inspector shows the full id. Chips are
-aligned, IDs truncate from the left, and rail text that does not fit ends in
-`…`. The row end repeats only disorder and invalid flags; the state glyph already
-says stale or skipped. The facts line and legend wrap; the legend goes first when
-the pane is short.
+visible with two rows of context where space permits. Group headers name the
+splice; inside a group a row shows its id after the group's name (`check` under
+`findings#1`), and the inspector shows the full id. Chips are aligned, IDs
+truncate from the left, and text that does not fit, headers included, ends in
+`…`. Rail bars are always dim; only the state glyph takes a state colour. The
+row end repeats only disorder and invalid flags; the state glyph already says
+stale or skipped. The legend is in help (`?`, "Marks").
 
-The inspector quotes the selected step's splice, parent, reasons, gates, items,
-read/next commands and event evidence. Paths wrap with a hanging indent.
-Checklist segments are one per required item, in source order: `■` supported,
-`◆` not-applicable/attested, `!` stale, `□` open, then `(+N optional)`.
-Their count never scales with width. The inspector also wraps the last plan
-event and checkpoint; `g` opens full gate receipts. No gate-status rows are
-joined into it.
+The inspector leads with the step's short id and a status chip, then the full
+id. It shows reasons, what the step owes, each gate as the verb words it with
+its segment strip, the checklist items still open or stale, completion or skip
+records and the read/next commands. Checklist segments are one per required
+item, in source order: `■` supported, `◆` not-applicable/attested, `!` stale,
+`□` open, then `(+N optional)`; their count never scales with width. `d` adds
+splice and parent, the gate chips, every item including covered ones, every
+receipt path (wrapped with a hanging indent) and the run's last plan event and
+checkpoint. `g` opens full gate receipts. No gate-status rows are joined into it.
+
+### Calm and detailed
+
+The frame starts **calm**. `d` toggles the **detailed** level for the whole
+frame and back; the level is never written, so a fresh start is calm. Calm
+removes lines and clips at word boundaries; it never rewrites a verb's wording,
+and everything it omits is one key away (`d`, `?`, `g`, `x` or a view).
+
+- A rail row shows its verb text only when it is the recorded current step or
+  the selected row; every other row is rail, glyph, short id and chips.
+- Group headers show the splice name; the hash and template source come back
+  with `d` and are in the inspector's `splice:` line.
+- Receipt paths (`@path:line`) appear only at the detailed level, in `g` and in `x`.
+- Runs entries are two lines (title; state when not open, project and the plan
+  position up to its first `key=value` token); `d` restores the five-line entry
+  with id, fields, plan counts and last checkpoint.
+
+The calm wide frame (136×38, map focused):
+
+```text
+ Add --plan to kb runs   open   current   harbor   subject kb                                               run-20261101T090000Z-a1b2c3
+  1 progress    2 gates !2 ○2    3 timeline    4 inbox 3    5 guards deny 1    6 stale    7 brief    8 resume
+╭ runs (3) ──────────╮╭ plan ─────────────────────────────────────────────────╮╭ step 7/11 ────────────────────────────────────────────╮
+│> Add --plan to kb …││step 7 of 11    5 done  1 skipped  1 stale             ││check  current                                         │
+│  harbor  step 7/11 ││                                                       ││change#1/review/review#1/findings/findings#1/check     │
+│  Review the lanter…││ ┬ change#1                                            ││                                                       │
+│  lantern           ││ ✓ research    ●                                       ││owes: review-list [stale], signoff [open]              │
+│  Retire the legacy…││ ! implement   ●!                                      ││                                                       │
+│  closed  harbor  c…││ – benchmarks                                          ││gate review-list [stale] checklist 2/4 required covered│
+│                    ││ ├─╮ review#1                                          ││  ■ ! □ ◆ (+1 optional)                                │
+│                    ││ │ ├─╮ notes#1                                         ││  ! tests [stale] 1 reference by agent; cited evidence │
+│                    ││ │ │ ✓ read    ●                                       ││  moved: gate:lint was satisfied, now stale            │
+│                    ││ │ ├─╯                                                 ││  □ docs [open] The guide names every new flag         │
+│                    ││ │ ✓ read-diff ●                                       ││  □ style [open] (optional) Names follow the module    │
+│                    ││ │ ├─╮ findings#1                                      ││gate signoff [open] attested                           │
+│                    ││ │ │ ✓ prepare ●                                       ││                                                       │
+│                    ││ │ │ ▶ check   !○ owes: review-list [stale], signoff … ││read: instructions for signoff                         │
+│                    ││ │ ├─╯                                                 ││next: writfold kb gate cover review-list tests         │
+│                    ││ │ ○ findings  ··                                      ││supported REF… --by WHO                                │
+│                    ││ ├─╯                                                   ││                                                       │
+│                    ││ ○ review      ··                                      ││                                                       │
+│                    ││ ○ deliver     ·                                       ││                                                       │
+│                    ││ ○ reflect                                             ││                                                       │
+│                    ││ ┴                                                     ││                                                       │
+│                    ││                                                       ││                                                       │
+│                    ││last plan event  2026-11-10T23:59:50Z done change#1/re…││                                                       │
+│                    ││▶ next step to pick up, as recorded                    ││d receipts and covered items   g gates   x text        │
+╰────────────────────╯╰───────────────────────────────────────────────────────╯╰───────────────────────────────────────────────────────╯
+  read-only   kb 0ea3a743bfef+dirty:19   index fresh   asked 00:21:18Z                j/k step   l inspect   d detail   ? help   q quit
+```
+
+(Blank pane rows are trimmed here.) The same map pane after `d`:
+
+```text
+│step 7 of 11    5 done  1 skipped  1 stale             │
+│owes 2 of 2 gates                                      │
+│                                                       │
+│ ┬ change#1 @83c2cc9efde7 from .writfold/plans/change.…│
+│ ✓ change#1/research      ●  recorded 2026-11-10T23:4… │
+│ ! change#1/implement     ●! recorded 2026-11-10T23:5… │
+│ – change#1/benchmarks       no hot path touched (by … │
+│ ├─╮ review#1 @932e0ad862a8 from .writfold/plans/revie…│
+│ …                                                     │
+│last plan event: 2026-11-10T23:59:50Z done             │
+│change#1/review/review#1/findings/findings#1/prepare   │
+│last checkpoint: 2026-11-10T14:10:00Z Review started.  │
+│▶ next step to pick up, as recorded                    │
+```
+
+At 80×24 the map has the frame to itself; `l` swaps it for the inspector, whose
+footer hint becomes `h back`. Committed buffers:
+[calm 136×38](../../crates/writfold-tui/tests/golden/t4-calm-136x38.txt),
+[calm 80×24](../../crates/writfold-tui/tests/golden/t4-calm-80x24.txt),
+[detailed 136×38](../../crates/writfold-tui/tests/golden/t4-detail-136x38.txt).
 
 `x` switches to the earlier text list. There, a clean done step collapses to its
 heading and completion time, and a later step to its heading; flagged, current
@@ -118,12 +197,13 @@ asked a verb, not an activity timestamp for the run.
 | `0` | Show the full-frame runs list in a narrow layout; paging does not change selection |
 | `.` | Select the recorded current step |
 | `n` / `N` | Next/previous flagged step, wrapping |
+| `d` | Calm / detailed frame: receipts, covered items, splice text, full runs entries and stamps; never written |
 | `x` / `X` | In Progress: map/text toggle / expand or collapse the text list |
 | `o` | Toggle `kb runs --open` |
 | `P` | Toggle the selected project's `kb runs --project`; without a project, show a notice and change nothing |
 | `r` | Drop cached answers and ask again |
-| `T` | Cycle the six themes in truecolor; otherwise explain how to enable it |
-| `?` | Help; any key except `q` closes it |
+| `T` | Cycle the eight themes in truecolor (the footer names the new theme for one key); otherwise explain how to enable it |
+| `?` | Help: the marks, this frame's full stamps, keys and verbs; any key except `q` closes it |
 | `q`, Ctrl-C | Quit and restore the terminal |
 
 No key writes. `c` is unbound. Copy the verb's `confirm:` or `accept:` command to
@@ -137,17 +217,38 @@ that the file has been committed.
 | Class | Minimum size | Layout |
 |---|---|---|
 | Wide | 140×32 | Runs, map and side stack; map/inspector focus replaces the stack with the inspector |
-| Medium | 90×16, when not wide | With a map: runs 24 columns, map 32, inspector in the remainder; summary above |
+| Medium | 90×16, when not wide | With a map: runs 22 columns, map and inspector split the rest (map at least 32) |
 | Narrow | 60×12, when not medium | Map or inspector alone; `l`/Enter opens the inspector, `h`/Esc returns; `0` reveals runs |
 | Too small | Otherwise | `writfold watch needs 60x12 …`; controls still work |
 
 Without a plan, or in another view, the earlier layouts remain. The wide stack
 contains Gates/Inbox/Timeline, plus Guards from height 38; its panes are not
 focusable. Text and evidence wrap with hanging indentation; maps and lists
-truncate. The map reserves recorded facts below the rail and omits legends first
-when space is insufficient. The footer clips metadata to preserve the ask time,
-theme and map hints; narrow layouts retain the KB pin and quit/help hints.
-[§35](../writfold/kb-v1-design.md#35-t3-as-built) links the committed map frames.
+truncate with `…`. The map reserves the recorded facts below the rail and drops
+the caption first, then the oldest record line, when space is short.
+
+Every layout has the same three bars, and every pane starts on the third row:
+
+- **Header**: the run title, its status chip, a `current` chip on the current
+  run, a project chip and `subject NAME`; the run id is right-aligned (`run N/M`
+  in a narrow layout). When the row is short, subject then project drop.
+- **Tabs**: eight views; the active one is a filled chip. A tab carries a badge
+  only for a non-zero count from its own verb: Gates `!N` stale, `×N` failed,
+  `○N` open, `?N` unknown; Inbox one number (drafts plus proposals; the Inbox
+  view's first line has the breakdown); Guards `deny N`, `ask N`. Narrow
+  layouts, or a row too short for all eight, show the active tab, the tabs with
+  badges and `i/8`.
+- **Footer**: a `read-only` chip, `kb STAMP`, `index STATE` (warning tone when
+  not fresh) and `asked HH:MM:SSZ` on the left; at most three hints for the
+  focused pane, then `? help   q quit`, on the right. Left and right are laid
+  out, never overlaid: when they do not fit, asked, index, then kb drop whole.
+  The detailed level adds the subject stamp when it fits. A notice (theme
+  cycling, a refused filter) replaces the left group for one key.
+
+A chip is its text plus one cell each side: padding on a background in
+truecolor, brackets (`[open]`, `[1 progress]`, `[read-only]`) otherwise, so
+widths never change with depth. The full subject stamp, theme and colour depth
+are in help ("This frame").
 
 Every two seconds the viewer compares the KB pin and a stat-only stamp of the
 current-run pointer, drafts and **both** proposal stores. Tracked proposals need
@@ -193,7 +294,9 @@ sends it to stderr. Cycling never writes the configuration.
 | `none` | No foreground/background colours; selected entries reverse and key headings retain emphasis |
 
 Explicit modes override environment detection. There is no 256-colour palette
-quantisation. Contrast tests cover every palette's inks, surface ladder, accent
+quantisation. Most Unicode marks (`● ○ ◆ ■ □ ▶ × – … ·` and box drawing) are
+East Asian Ambiguous width: a terminal set to draw them wide will misalign the
+columns. `--color none` or `TERM=dumb` selects the ASCII marks. Contrast tests cover every palette's inks, surface ladder, accent
 and selected-entry text.
 
 ## Plain frames and scripts
