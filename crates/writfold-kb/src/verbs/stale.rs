@@ -203,29 +203,7 @@ pub fn report(
             }
             _ => flagged += 1,
         }
-        let moved = match &checked.verdict {
-            Verdict::Moved { path, first, last } => (Some(*first), Some(*last), path.clone()),
-            _ => (None, None, None),
-        };
-        let mut row = verdict_row(
-            &cite.path,
-            cite.line,
-            &cite.raw,
-            name,
-            Some(&checked.head),
-            moved,
-        );
-        if let Some(r) = &checked.recorded {
-            label(&mut row, r);
-        }
-        if let Some(detail) = detail(&checked.verdict) {
-            row.text = if row.text.is_empty() {
-                detail
-            } else {
-                format!("{} {detail}", row.text)
-            };
-        }
-        rows.push(row);
+        rows.push(cite_row(cite, checked, name));
     }
     let ttl = past_ttl(session, scope)?;
     flagged += ttl.len();
@@ -251,6 +229,12 @@ pub fn report(
         );
     }
     answer.notes.extend(never_note(session, &cites)?);
+    mode_notes(&mut answer, offline, cached);
+    Ok((answer, cites, judged))
+}
+
+/// The notes saying what `--cached` and `--offline` leave out.
+fn mode_notes(answer: &mut Answer, offline: bool, cached: bool) {
     if cached {
         answer.notes.push(
             "cached: no checker was started; a checked kind shows the verdict the last kb stale cached".into(),
@@ -261,7 +245,27 @@ pub fn report(
             .notes
             .push("offline: only authored stale marks, due TTLs and expired checker verdicts are reported".into());
     }
-    Ok((answer, cites, judged))
+}
+
+/// The row of one citation that is not fresh.
+fn cite_row(cite: &Cite, checked: &Checked, name: &str) -> Row {
+    let moved = match &checked.verdict {
+        Verdict::Moved { path, first, last } => (Some(*first), Some(*last), path.clone()),
+        _ => (None, None, None),
+    };
+    let head = Some(checked.head.as_str());
+    let mut row = verdict_row(&cite.path, cite.line, &cite.raw, name, head, moved);
+    if let Some(r) = &checked.recorded {
+        label(&mut row, r);
+    }
+    if let Some(detail) = detail(&checked.verdict) {
+        row.text = if row.text.is_empty() {
+            detail
+        } else {
+            format!("{} {detail}", row.text)
+        };
+    }
+    row
 }
 
 /// Label a row whose verdict was read from a check receipt: when it was

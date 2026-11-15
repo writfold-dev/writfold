@@ -217,6 +217,10 @@ universal-ctags JSON with a verified commit/digest sidecar and always-partial
 coverage, without new crates. Not included: SCIP, tree-sitter, enclosing-block
 windows (not exact without language-specific parsing), parameters, grouping,
 set operations and a recipes page. [Language and CLI](../tuft/language.md).
+`writfold tuft index` (v0.5.0-dev.9) builds the ctags index and its sidecar
+from the bytes of one commit, exported under the Tuft state directory, with
+universal-ctags found on `PATH` or `$WRITFOLD_CTAGS`; the user's work tree,
+index and worktree list are untouched.
 
 ## Adopted and declined from the review
 

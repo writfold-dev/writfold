@@ -3789,3 +3789,23 @@ A checked kind's verdicts can be shared through Git: `kb stale --record` writes 
 ### 38.7 Not built
 
 Recorded verdicts for built-in kinds; showing recorded verdicts in `brief`, `context`, `why` and the session-start line; a required checker version; a flag that fails when a checker is missing; signing.
+
+## 39. The rest of v0.5.0-dev.9 as built
+
+The specification was [dev9-spec.md](dev9-spec.md); check receipts are §38, `edit apply -` is [§17.9](#179-as-built-v050-dev9-a-recipe-on-stdin) and guard rules over `edit apply` are [§30.10](#3010-as-built-v050-dev9-rules-that-see-edit-applys-targets).
+
+### 39.1 `record investigation` and `propose investigation`
+
+`write/investigation.rs` plans one `Op::CreateDir` of `investigations/<year>/<date>-<slug(title)>/` holding `README.md` and an empty `evidence/`; the record ID is `inv:<year>/<date>-<slug>`. Front matter, in the order the KB's investigations use: `id`, `title`, `trigger` (default `manual`, one line), `tickets` (normalised ticket IDs), `alerts`, `assets`, `status: open`, `signatures`, `created`, `updated`, `summary`. Body sections: `Question` (`--question`), `Hypotheses`, `Checked against`, `Scope and limits`, `Conclusion`, so `status --set concluded` succeeds once they are filled. A taken ID (the same title the same day) and an unknown asset are refused (exit 3) before anything is written; a `--tickets` entry that is not a ticket ID, a `--signatures` entry that is not a slug and a multi-line title or trigger are usage errors (exit 1). Tickets and signatures need not exist. The proposal codec gains the kind (`KINDS` is four), so `propose investigation …` validates as `record` does and `proposals accept` writes the same bytes. The app's flags live in `writfold-app/src/kb/investigation.rs` to keep `writes.rs` within its budget. Tests: `crates/writfold-kb/tests/record_investigation.rs` (the file parses back to an `open` investigation with its ticket, asset and signature edges and the index equals a rebuild; a repeat is refused; filling the three sections of the unmodified template concludes; usage errors and the unknown asset; propose, show and accept write the bytes `record` writes) and the parser test in `kb/investigation.rs`.
+
+### 39.2 `writfold tuft index`
+
+`writfold-app/src/tuft/ctags.rs` finds ctags (`$WRITFOLD_CTAGS`, else `ctags` on `PATH`), probes `--version` (`Universal Ctags`) and `--list-features` (`json`), and runs it through `writfold_runtime::process::run_tailed_input` under the KB's process supervisor (TERM at the deadline, KILL after 2 s; 300 s, `WRITFOLD_CTAGS_TIMEOUT` overrides). `tuft/cli/index.rs` resolves `--repo` (default `.`) and `--at` (default `HEAD`) once with `kb_commit`, chooses the Tuft state as `run` does, exports the commit's blobs with `files::snapshot` (the pinned `ls-tree`/`cat-file` reads a search uses) into `<state>/symbols/.export-<pid>-<nanos>/`, runs `ctags --options=NONE --output-format=json --fields=+nr --extras=+r -R -f <out>.tmp .` there, syncs and renames the output into place, then writes `<out>.meta.json` (`{"commit","sha256"}`) through a temporary file and a rename. Both temporaries are removed on every path. stdout is the index path (or the `--json` object); the note on stderr carries the commit, tag count, digest and ctags version.
+
+Tests: `crates/writfold/tests/tuft_index.rs` with a fake ctags script: the default path, the sidecar's commit and digest, an uncommitted edit and an untracked file absent from the index, `git status --porcelain` and `git worktree list` byte-equal before and after, `find def` accepting the pair (`coverage=partial`), `--json` and `--out`; an Exuberant ctags, a ctags without `json`, a missing `WRITFOLD_CTAGS` file and an empty `PATH` refused (exit 1) with nothing left; a hung ctags stopped at a 1 s deadline with its child gone and nothing left. Each check was removed once and a test failed.
+
+Deviation: the specification exported the tree with `git read-tree` into a temporary index file and `git checkout-index -a --prefix=…`. The export uses Tuft's pinned tree and blob reads instead: the same bytes of the same commit, no temporary index file, and only the Git reads the search path already makes. Symlink entries are written as files holding the link text, as Tuft searches them. No real universal-ctags was available on the build machine, so only the fake has been run.
+
+### 39.3 Not done in this round
+
+The qualified `verified` state (`verified_basis`), render templates, `observe --from`, recorded verdicts for built-in kinds, and a configurable proposal cap ([dev9-spec.md](dev9-spec.md) §4).

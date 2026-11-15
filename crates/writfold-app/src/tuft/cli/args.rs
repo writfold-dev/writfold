@@ -114,6 +114,17 @@ impl Args {
             {
                 Ok(())
             }
+            Some("index")
+                if self.positional.len() == 1
+                    && self.flags.is_empty()
+                    && self.format != Format::Verbose
+                    && self.options.iter().all(|(k, _)| {
+                        matches!(k.as_str(), "repo" | "at" | "out" | "state" | "kb")
+                    })
+                    && self.options.iter().filter(|(k, _)| k == "repo").count() <= 1 =>
+            {
+                Ok(())
+            }
             Some("run" | "grep" | "check") => self.operand().map(|_| ()),
             _ => Err("unknown tuft command or arguments; see: writfold tuft help".into()),
         }

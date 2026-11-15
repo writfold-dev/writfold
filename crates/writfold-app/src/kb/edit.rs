@@ -63,7 +63,7 @@ mod tests {
         let piped = verb("edit apply - b.spl")?;
         assert!(matches!(
             piped,
-            Verb::Edit(EditVerb::Apply { ref recipes, .. }) if recipes[0] == PathBuf::from("-")
+            Verb::Edit(EditVerb::Apply { ref recipes, .. }) if recipes[0].as_path() == std::path::Path::new("-")
         ));
         assert!(matches!(
             verb("edit recover --abandon")?,
