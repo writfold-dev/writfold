@@ -112,7 +112,8 @@ fn build(v: View, seq: u64, detail: bool) -> Gate {
         (None, Some(why)) => format!("delivery: {why}"),
         (None, None) => "delivery no candidate".into(),
     };
-    let candidate = seen.map(|s| {
+    // Under `--gates` the detailed candidate line takes its place.
+    let candidate = seen.filter(|_| !detail).map(|s| {
         let state = s.row.status.clone().unwrap_or_default();
         let owes = match s.owed.is_empty() {
             true => String::new(),

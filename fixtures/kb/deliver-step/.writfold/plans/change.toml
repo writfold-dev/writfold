@@ -1,0 +1,7 @@
+schema = "writfold-plan/1"
+name = "change"
+description = "Implement, then owe the PR comment"
+steps = [
+  "implement:",
+  "deliver: deliver:pr-comment",
+]

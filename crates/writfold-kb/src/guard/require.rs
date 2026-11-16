@@ -71,7 +71,12 @@ struct GateLine {
 /// the count of invalid filings and definitions.
 /// The gate lines, the gates the plan owes (`None` without a plan), the
 /// invalid filings, and the deliveries the plan owes (never counted here).
-type Judged = (Vec<GateLine>, Option<Vec<String>>, usize, Vec<(String, String)>);
+type Judged = (
+    Vec<GateLine>,
+    Option<Vec<String>>,
+    usize,
+    Vec<(String, String)>,
+);
 
 /// What every requirement is looked up in, gathered once.
 struct Facts {

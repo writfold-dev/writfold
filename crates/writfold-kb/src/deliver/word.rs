@@ -40,8 +40,13 @@ pub fn spliced(root: &Path, template: &str, mode: &str) -> Result<()> {
             MODES.join(", ")
         )));
     }
-    let m =
-        config::mode(root, mode).map_err(|e| KbError::Refused(format!("{PREFIX}{mode}: {e}")))?;
+    let m = config::mode(root, mode).map_err(|e| {
+        let why = match e {
+            KbError::Refused(why) | KbError::Usage(why) => why,
+            other => other.to_string(),
+        };
+        KbError::Refused(format!("{PREFIX}{mode}: {why}"))
+    })?;
     if m.checks.is_empty() && m.gates.is_empty() && m.attest.is_empty() {
         return Err(KbError::Refused(format!(
             "plan {template} names {PREFIX}{mode}, whose mode declares nothing to check; a delivery is not met by an empty set: add checks, gates or attest to {file}"
