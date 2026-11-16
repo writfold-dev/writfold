@@ -105,6 +105,17 @@ fn another_mode_or_an_invalid_manifest_decides_nothing() -> TestResult {
     let pr = prepare(&w, "pr-comment", CLEAN, NOW + 180)?;
     check(&w, &pr, NOW + 240)?;
     assert!(owes(&w, "change#1/deliver")?.contains("[satisfied]"));
+    // An invalid manifest belongs to no mode: a later one never shadows
+    // the ready candidate, even when both sort at seq 0.
+    let read = std::fs::read_to_string(w.kb.join(manifest(&pr)))?;
+    put(&w, &manifest(&pr), &read.replace(",\n  \"seq\": 1", ""))?;
+    let broken = prepare(&w, "pr-comment", LEAKY, NOW + 300)?;
+    put(
+        &w,
+        &manifest(&broken),
+        "{\"schema\": \"writfold-delivery/1\"}\n",
+    )?;
+    assert!(owes(&w, "change#1/deliver")?.contains("met: deliver:pr-comment [satisfied]"));
     put(
         &w,
         &manifest(&pr),

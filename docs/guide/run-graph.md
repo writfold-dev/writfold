@@ -278,8 +278,8 @@ $ writfold kb deliver prepare --mode pr-comment --audience external --from comme
 $ writfold kb deliver check
 $ writfold kb plan status
 step change#1/deliver [current] owes: deliver:pr-comment [failed] @runs/run-…/plan/splice-change.1.json:1
-  candidate: 20261116T101500Z-3f9a21 [blocked] owes references.denied [failed] @runs/run-…/deliveries/20261116T101500Z-3f9a21/candidate.md:1
-  next: writfold kb deliver check 20261116T101500Z-3f9a21
+  candidate: 20261116T012805Z-fdf1ff [blocked] owes references.denied [failed] @runs/run-…/deliveries/20261116T012805Z-fdf1ff/candidate.md:1
+  next: writfold kb deliver check 20261116T012805Z-fdf1ff
 ```
 
 Repair the candidate in place (or prepare a new one), check it again, and advance. The done record's entry is `gate` `deliver:pr-comment`, `standing`, `evidence` the payload path, `content` its digest and `definition` a digest over the mode, the audience and each obligation's definition. After that, an edit to the payload or a change to the mode, its deny list or a mode gate reads:
