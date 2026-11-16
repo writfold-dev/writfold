@@ -104,7 +104,7 @@ fn one_bad_row_writes_nothing() -> TestResult {
         ),
         (
             "{\"item\":\"errors\",\"outcome\":\"unsupported\",\"reason\":\"r\"}",
-            "--from line 2: item errors is already covered on line 1",
+            "rows.jsonl:2:9: item errors is already covered on line 1",
         ),
     ] {
         let text = format!(

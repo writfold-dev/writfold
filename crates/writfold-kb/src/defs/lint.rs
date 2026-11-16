@@ -9,7 +9,6 @@ use super::Problem;
 use crate::emit::Output;
 use crate::error::{KbError, Result};
 use crate::gate::def::Origin;
-use serde_json::json;
 use std::path::{Path, PathBuf};
 use writfold_core::diag::Report;
 
@@ -24,6 +23,7 @@ pub enum Kind {
     Deny,
     Delivery,
     Source,
+    Queries,
 }
 
 /// One file read: where it is, how it is shown, its text and its faults.
@@ -57,6 +57,7 @@ fn check(kind: Kind, origin: Origin, dir: &Path, stem: &str, shown: &str, text: 
             _ => None,
         },
         Kind::Source => crate::stale::kind_check::check(text, stem, shown).err(),
+        Kind::Queries => crate::verbs::eval::lint(text, shown),
         Kind::Mode | Kind::Deny | Kind::Delivery => {
             crate::deliver::config::check_file(dir, stem, shown, text).err()
         }
@@ -116,6 +117,33 @@ pub fn files(top: &Path, origin: Origin, prefix: &str) -> Vec<File> {
     out
 }
 
+/// `.writfold/queries.jsonl` of the KB root, when it exists.
+fn queries(kb: &Path) -> Option<File> {
+    let shown = crate::verbs::eval::DEFAULT;
+    let path = kb.join(shown);
+    if !path.is_file() {
+        return None;
+    }
+    let (text, report) = match super::read_text(&path, shown) {
+        Ok(text) => {
+            let dir = path.parent().unwrap_or(kb);
+            let report = check(Kind::Queries, Origin::Kb, dir, "queries", shown, &text);
+            (text, report)
+        }
+        Err(Problem { report, .. }) => (String::new(), report),
+    };
+    let dir = kb.join(".writfold");
+    Some(File {
+        kind: Kind::Queries,
+        origin: Origin::Kb,
+        dir,
+        stem: "queries".into(),
+        shown: shown.into(),
+        text,
+        report,
+    })
+}
+
 /// The repository in view: `--repo`, else the repository holding `cwd`
 /// (found by `stat`, never by Git) when it is not the KB root.
 fn repository(kb: &Path, cwd: &Path, repo: Option<&Path>) -> Result<Option<PathBuf>> {
@@ -148,6 +176,7 @@ pub fn execute(
 ) -> Result<Output> {
     let repo = repository(kb, &request.cwd, repo)?;
     let mut all = files(kb, Origin::Kb, "");
+    all.extend(queries(kb));
     if let Some(top) = &repo {
         let name = top
             .file_name()
@@ -169,7 +198,7 @@ pub fn execute(
         .sources
         .sort_by_key(|s| order.iter().position(|o| *o == s.file));
     report.sort();
-    Ok(output(&all, report, request.json, deny))
+    Ok(super::lint_out::output(&all, report, request.json, deny))
 }
 
 /// The shown names of the files `paths` select (every file without).
@@ -206,53 +235,4 @@ fn wanted(
         }
     }
     Ok(out)
-}
-
-fn output(all: &[File], report: Report, json: bool, deny: bool) -> Output {
-    let invalid: Vec<&str> = all
-        .iter()
-        .filter(|f| {
-            report
-                .diagnostics
-                .iter()
-                .any(|d| d.file == f.shown && d.is_error())
-        })
-        .map(|f| f.shown.as_str())
-        .collect();
-    let (errors, warnings) = (report.errors(), report.warnings());
-    let exit = match errors > 0 || (deny && warnings > 0) {
-        true => 2,
-        false => 0,
-    };
-    let counts = (all.len(), all.len() - invalid.len(), invalid.len());
-    let trailer = format!(
-        "# coverage=complete files={} clean={} invalid={} errors={errors} warnings={warnings}",
-        counts.0, counts.1, counts.2
-    );
-    if !json {
-        return Output {
-            text: format!("{trailer}\n"),
-            exit,
-            report: None,
-            shown: Some(report),
-        };
-    }
-    let rows: Vec<serde_json::Value> = all
-        .iter()
-        .map(|f| {
-            let status = if invalid.contains(&f.shown.as_str()) { "invalid" } else { "clean" };
-            json!({"kind": "definition", "id": f.shown, "status": status, "text": "", "path": f.shown,
-                   "line": null, "flags": [], "more": [], "section": null})
-        })
-        .collect();
-    let body = json!({"writfold_kb": 1, "verb": "lint", "rows": rows, "notes": [],
-        "trailer": {"coverage": "complete", "files": counts.0, "clean": counts.1, "invalid": counts.2,
-                    "errors": errors, "warnings": warnings},
-        "diagnostics": super::json(&report)});
-    Output {
-        text: format!("{body}\n"),
-        exit,
-        report: None,
-        shown: None,
-    }
 }
