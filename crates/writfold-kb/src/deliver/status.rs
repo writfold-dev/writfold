@@ -169,9 +169,12 @@ fn line(j: &Judged<'_>, id: &str) -> More {
     more
 }
 
-/// Whether every obligation is met (satisfied, attested or waived).
+/// Whether the candidate is ready: it has obligations and every one is met
+/// (satisfied, attested or waived); a mode that declares nothing never is
+/// ([`writfold_core::delivery::ready`]).
 pub fn ready(judged: &[Judged<'_>]) -> bool {
-    judged.iter().all(|j| j.standing.met())
+    let standings: Vec<Standing> = judged.iter().map(|j| j.standing).collect();
+    writfold_core::delivery::ready(&standings)
 }
 
 /// The candidate's row, with one `check:` line per obligation.
@@ -210,6 +213,14 @@ pub fn row(c: &Candidate, judged: &[Judged<'_>]) -> Row {
     row.status = Some(if ok { "ready" } else { "blocked" }.into());
     if !ok {
         row.flags.push("blocked".into());
+    }
+    if let (true, Ok(m)) = (judged.is_empty(), &c.manifest) {
+        row.more.push(crate::emit::More {
+            label: "why",
+            text: super::step::empty(&m.mode),
+            ..crate::emit::More::default()
+        });
+        return row;
     }
     // A gate that names instructions adds a `read:` line under its own.
     row.more = judged

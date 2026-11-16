@@ -4,16 +4,12 @@ import Extracted.WritfoldCore
 # Byte identities
 
 Theorems over the Aeneas translation of `writfold_core::bytes`: `same` is
-exact equality of byte strings, `same_option` is equality of optional
-identities, and `contains_digest` is list membership. Every theorem is a
-total-correctness Hoare triple `f args ⦃ r => P r ⦄`.
+exact equality of byte strings. Every theorem is a total-correctness Hoare
+triple `f args ⦃ r => P r ⦄`.
 -/
 
 open Aeneas Aeneas.Std Result
 open writfold_core
-
-/-- A 32-byte digest, as the extraction types `[u8; 32]`. -/
-abbrev Digest := Aeneas.Std.Array U8 32#usize
 
 namespace Writfold.Core
 
@@ -75,73 +71,5 @@ theorem same_spec (a b : Slice U8) : bytes.same a b ⦃ r => r ↔ a.val = b.val
       simpa [Slice.len] using h
     · simp
     · intro j hj; simp at hj
-
-/-- `same_option` is equality of optional identities. -/
-theorem same_option_spec (a b : Option (alloc.vec.Vec U8)) :
-    bytes.same_option a b ⦃ r => r ↔ a = b ⦄ := by
-  unfold bytes.same_option
-  cases a <;> cases b <;> simp only [WP.spec_ok, reduceCtorEq, iff_false, iff_true, Bool.false_eq_true,
-    not_false_eq_true, Option.some.injEq]
-  case some.some l r =>
-    step with same_spec as ⟨ q, hq ⟩
-    rw [hq]
-    simp only [alloc.vec.Vec.deref, Slice.from_val]
-    exact (alloc.vec.Vec.eq_iff l r).symm
-
-/-- The loop of `contains_digest` from `i`, given that no earlier element matched. -/
-theorem contains_digest_loop_spec (digests : Slice (Digest)) (d : Digest)
-    (i : Usize) (hi : i.val ≤ digests.val.length)
-    (hmiss : ∀ j, j < i.val → digests.val[j]? ≠ some d) :
-    bytes.contains_digest_loop digests d i ⦃ r => r ↔ d ∈ digests.val ⦄ := by
-  unfold bytes.contains_digest_loop
-  apply loop.spec_decr_nat (fun i : Usize => digests.val.length - i.val)
-    (fun i : Usize => i.val ≤ digests.val.length ∧ ∀ j, j < i.val → digests.val[j]? ≠ some d)
-  · intro i ⟨hi, hmiss⟩
-    unfold bytes.contains_digest_loop.body
-    dsimp only
-    split_ifs with hlt
-    · step as ⟨ x, hx ⟩
-      step as ⟨ s, hs ⟩
-      step as ⟨ s1, hs1 ⟩
-      step with same_spec as ⟨ b, hb ⟩
-      split_ifs with hbt
-      · simp only [WP.spec_ok, true_iff]
-        have hxd : x = d := by
-          rw [Aeneas.Std.Array.eq_iff]
-          have h := hb.mp hbt
-          rw [hs, hs1] at h
-          simpa [Aeneas.Std.Array.to_slice, Slice.from_val] using h
-        rw [← hxd, hx]
-        exact List.getElem_mem _
-      · apply WP.spec_bind (Usize.add_spec (by scalar_tac))
-        intro i' hi'
-        simp only [WP.spec_ok]
-        and_intros
-        all_goals try scalar_tac
-        intro j hj
-        by_cases hji : j < i.val
-        · exact hmiss j hji
-        · have : j = i.val := by scalar_tac
-          subst this
-          rw [List.getElem?_eq_getElem (by scalar_tac)]
-          intro hsome
-          apply hbt
-          apply hb.mpr
-          rw [hs, hs1]
-          simp only [Option.some.injEq] at hsome
-          simp [Aeneas.Std.Array.to_slice, Slice.from_val, hx, hsome]
-    · simp only [WP.spec_ok, Bool.false_eq_true, false_iff]
-      intro hmem
-      obtain ⟨j, hj, hjd⟩ := List.getElem_of_mem hmem
-      exact hmiss j (by scalar_tac) (by rw [List.getElem?_eq_getElem hj, hjd])
-  · exact ⟨hi, hmiss⟩
-
-/-- `contains_digest` is membership. -/
-theorem contains_digest_spec (digests : Slice (Digest)) (d : Digest) :
-    bytes.contains_digest digests d ⦃ r => r ↔ d ∈ digests.val ⦄ := by
-  unfold bytes.contains_digest
-  apply contains_digest_loop_spec
-  · simp
-  · intro j hj; simp at hj
 
 end Writfold.Core

@@ -27,6 +27,7 @@ use crate::shell::{self, Word};
 use crate::workspace::{GitTool, Workspace};
 use serde_json::{Map, Value, json};
 use std::path::Path;
+use writfold_core::delivery::{self, Body as Posted};
 
 /// The body flags read from a matched command, with whether each names a
 /// file.
@@ -164,17 +165,19 @@ fn decide(ws: &Workspace, body: Body, now: i64) -> HookOutput {
     let blocked = |c: &deliver::candidate::Candidate, owed: &[String]| {
         format!("candidate {} owes {}", c.id, owed.join(", "))
     };
+    let all_ready = cands.iter().all(|(_, ready, _)| *ready);
     match body {
         Body::Bytes(bytes) => {
             let same: Vec<_> = cands
                 .iter()
-                .filter(|(c, _)| c.bytes.as_deref().map(trimmed) == Some(trimmed(&bytes)))
+                .filter(|(c, _, _)| c.bytes.as_deref().map(trimmed) == Some(trimmed(&bytes)))
                 .collect();
-            if same.iter().any(|(_, owed)| owed.is_empty()) {
+            let same_ready = same.iter().any(|(_, ready, _)| *ready);
+            if delivery::guard(Posted::Known, same_ready, cands.len(), all_ready) {
                 return HookOutput::default();
             }
             match same.first() {
-                Some((c, owed)) => deny(format!(
+                Some((c, _, owed)) => deny(format!(
                     "{}; see writfold kb deliver status --run {}",
                     blocked(c, owed),
                     rec.id
@@ -187,14 +190,14 @@ fn decide(ws: &Workspace, body: Body, now: i64) -> HookOutput {
             }
         }
         Body::Unknown(why) => {
-            let owing: Vec<String> = cands
-                .iter()
-                .filter(|(_, owed)| !owed.is_empty())
-                .map(|(c, owed)| blocked(c, owed))
-                .collect();
-            if !cands.is_empty() && owing.is_empty() {
+            if delivery::guard(Posted::Unknown, false, cands.len(), all_ready) {
                 return HookOutput::default();
             }
+            let owing: Vec<String> = cands
+                .iter()
+                .filter(|(_, ready, _)| !ready)
+                .map(|(c, _, owed)| blocked(c, owed))
+                .collect();
             let what = match owing.is_empty() {
                 true => format!("run {} has no delivery candidate", rec.id),
                 false => owing.join("; "),

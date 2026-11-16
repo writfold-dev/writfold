@@ -11,8 +11,16 @@
 //! continuing because of a stop hook, and fires at most once per session
 //! ([`Repeat::Session`]) or once per user turn ([`Repeat::Turn`]).
 //!
-//! Each function is a few lines over a tiny domain; the tests below
-//! enumerate it, and that enumeration is the proof (no Lean translation).
+//! The decisions (`met`, `all_met`, `verdict`, `decide`, `combine`, `effect`,
+//! `gates_fact`, `nudge`, `nudge_with`, the call's decision in [`call`]
+//! and the facts in [`require`]) are in the Charon `start_from` list,
+//! named one by one so the derives and the text conveniences are never
+//! translated; `proofs/Writfold/Guard.lean` proves them for every input
+//! (docs/writfold/aeneas.md). The tests below enumerate the same
+//! properties over small inputs.
+
+pub mod call;
+pub mod require;
 
 /// One requirement, as it stands now.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -55,11 +63,16 @@ pub enum Decision {
     Ask,
 }
 
+/// Whether one fact is met.
+pub fn met(fact: Fact) -> bool {
+    matches!(fact, Fact::Met)
+}
+
 /// Whether every fact is met (true for none).
 pub fn all_met(facts: &[Fact]) -> bool {
     let mut i = 0;
     while i < facts.len() {
-        if facts[i] != Fact::Met {
+        if !met(facts[i]) {
             return false;
         }
         i += 1;
@@ -67,10 +80,10 @@ pub fn all_met(facts: &[Fact]) -> bool {
     true
 }
 
-/// `Pass` iff the rule did not match or every requirement is met;
-/// otherwise the rule's action.
-pub fn decide(matched: bool, action: Action, facts: &[Fact]) -> Decision {
-    if !matched || all_met(facts) {
+/// A matched rule's decision once its requirements are judged: `Pass`
+/// when they are all met, otherwise the rule's action.
+pub fn verdict(met: bool, action: Action) -> Decision {
+    if met {
         return Decision::Pass;
     }
     match action {
@@ -79,14 +92,25 @@ pub fn decide(matched: bool, action: Action, facts: &[Fact]) -> Decision {
     }
 }
 
+/// `Pass` iff the rule did not match or every requirement is met;
+/// otherwise the rule's action.
+pub fn decide(matched: bool, action: Action, facts: &[Fact]) -> Decision {
+    if !matched {
+        return Decision::Pass;
+    }
+    verdict(all_met(facts), action)
+}
+
 /// Several rules' decisions together: a denial wins over a question,
 /// which wins over a pass.
 pub fn combine(a: Decision, b: Decision) -> Decision {
-    match (a, b) {
-        (Decision::Deny, _) | (_, Decision::Deny) => Decision::Deny,
-        (Decision::Ask, _) | (_, Decision::Ask) => Decision::Ask,
-        _ => Decision::Pass,
+    if matches!(a, Decision::Deny) || matches!(b, Decision::Deny) {
+        return Decision::Deny;
     }
+    if matches!(a, Decision::Ask) || matches!(b, Decision::Ask) {
+        return Decision::Ask;
+    }
+    Decision::Pass
 }
 
 /// Whether a pre-tool-use rule decides (`Enforce`, the default) or is
@@ -174,7 +198,7 @@ pub fn nudge_with(
 ) -> bool {
     nudge(
         stop_hook_active,
-        already_nudged && repeat == Repeat::Session,
+        already_nudged && matches!(repeat, Repeat::Session),
         facts,
     )
 }

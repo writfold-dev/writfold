@@ -9,6 +9,15 @@
 //! A covered checklist is reported through the gate kernel as an attested
 //! obligation ([`crate::gate::standing`]): a cover row is someone's
 //! judgement with checked evidence, never a passing check.
+//!
+//! `item`, `covered`, `owes`, `first_owed`, `stale`, `any_stale`, `rollup`, `state`
+//! and `standing` are in the Charon `start_from` list (named one by one, so
+//! the derives and the text conveniences are never translated);
+//! `proofs/Writfold/Checklist.lean` proves them for every input
+//! (docs/writfold/aeneas.md). The exhaustive tests below state the same
+//! properties for small inputs.
+
+use crate::gate::{Standing, State, Statements};
 
 /// What a cover row says about its item.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -126,34 +135,83 @@ pub struct Rollup {
     pub first_owed: Option<usize>,
 }
 
-/// Add up the items, each with whether it is required. Optional items
-/// never change the result.
-pub fn rollup(items: &[(Item, bool)]) -> Rollup {
-    let mut result = Rollup {
-        covered: true,
-        stale: false,
-        first_owed: None,
-    };
+/// One declared item as it stands, with whether the checklist requires it.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct Entry {
+    pub item: Item,
+    pub required: bool,
+}
+
+/// Whether an entry is owed: required and not covered.
+pub fn owes(entry: &Entry) -> bool {
+    entry.required && !covered(entry.item)
+}
+
+/// The first owed entry, in the checklist's order.
+pub fn first_owed(entries: &[Entry]) -> Option<usize> {
     let mut index = 0;
-    while index < items.len() {
-        let (item, required) = items[index];
-        if required && !covered(item) {
-            result.covered = false;
-            if matches!(item, Item::Stale) {
-                result.stale = true;
-            }
-            if result.first_owed.is_none() {
-                result.first_owed = Some(index);
-            }
+    while index < entries.len() {
+        if owes(&entries[index]) {
+            return Some(index);
         }
         index += 1;
     }
-    result
+    None
+}
+
+/// Whether an entry is required and stale.
+pub fn stale(entry: &Entry) -> bool {
+    entry.required && matches!(entry.item, Item::Stale)
+}
+
+/// Whether some required entry is stale.
+pub fn any_stale(entries: &[Entry]) -> bool {
+    let mut index = 0;
+    while index < entries.len() {
+        if stale(&entries[index]) {
+            return true;
+        }
+        index += 1;
+    }
+    false
+}
+
+/// Add up the entries. Optional items never change whether the checklist
+/// is covered or stale.
+pub fn rollup(entries: &[Entry]) -> Rollup {
+    let first = first_owed(entries);
+    Rollup {
+        covered: first.is_none(),
+        stale: any_stale(entries),
+        first_owed: first,
+    }
+}
+
+/// The checked state a checklist reports: `stale` when a required item
+/// is stale, else `open` (a checklist is never `satisfied` by a check).
+pub fn state(rollup: Rollup) -> State {
+    if rollup.stale {
+        State::Stale
+    } else {
+        State::Open
+    }
+}
+
+/// A checklist's standing through the gate kernel, as an attested
+/// obligation: attested while every required item is covered, stale when
+/// a required item is stale, waived by a current waiver, else open.
+pub fn standing(rollup: Rollup, waived_current: bool) -> Standing {
+    let said = Statements {
+        attested_current: rollup.covered,
+        attested_any: rollup.stale,
+        waived_current,
+    };
+    crate::gate::standing(true, state(rollup), said)
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{Item, Outcome, Row, covered, item, rollup};
+    use super::{Entry, Item, Outcome, Row, covered, item, rollup};
     use alloc::vec::Vec;
 
     const OUTCOMES: [Outcome; 3] = [
@@ -249,8 +307,13 @@ mod tests {
             last = longer;
         }
         assert_eq!(lists.len(), 1 + 10 + 100 + 1000 + 10_000);
+        let entries = |list: &[(Item, bool)]| -> Vec<Entry> {
+            list.iter()
+                .map(|&(item, required)| Entry { item, required })
+                .collect()
+        };
         for list in &lists {
-            let got = rollup(list);
+            let got = rollup(&entries(list));
             let required: Vec<(usize, Item)> = list
                 .iter()
                 .enumerate()
@@ -276,7 +339,7 @@ mod tests {
                 "{list:?}"
             );
             let only: Vec<(Item, bool)> = list.iter().copied().filter(|(_, r)| *r).collect();
-            let without = rollup(&only);
+            let without = rollup(&entries(&only));
             assert_eq!(
                 (without.covered, without.stale),
                 (got.covered, got.stale),

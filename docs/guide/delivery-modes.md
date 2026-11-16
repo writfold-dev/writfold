@@ -1,6 +1,6 @@
 # Delivery modes
 
-> **Status:** built in v0.3.0-dev.1; your own modes are built in v0.4.0-dev.1; a delivery as a plan step's gate, `seq` on the manifest and the re-check of cited evidence on every read are built in v0.6.0-dev.1.
+> **Status:** built in v0.3.0-dev.1; your own modes are built in v0.4.0-dev.1; a delivery as a plan step's gate, `seq` on the manifest and the re-check of cited evidence on every read are built in v0.6.0-dev.1; a mode that declares nothing is never ready, for `deliver status` and the guard as for a plan step, since 16 November 2026.
 
 A mode file, a deny list or `guard.toml` that is wrong is reported fault by fault, each at its line and column ([errors](errors.md)):
 
@@ -111,6 +111,8 @@ When a Bash call begins with a listed command, or a listed tool is called, the h
 - body readable: the call goes on when a ready candidate of the current run holds exactly those bytes; otherwise it is denied, with the reason;
 - body not readable: the call goes on only when the run has a candidate and every candidate is ready;
 - no current run: denied.
+
+A candidate is ready when its mode declares at least one check, gate or attestation and every one is met. A mode that declares nothing is never ready: its candidate reads `[blocked]` with `why: mode <name> declares nothing to check; a delivery is not met by an empty set: …`, `deliver status` exits 2, and the guard refuses its bytes. Before 16 November 2026 such a candidate read `[ready]` and the guard let it through, while a plan step on the same mode was refused; the rule is now one proved kernel function for all three (`writfold_core::delivery::ready`, [assurance](assurance.md#proved)).
 
 A denial, as Claude Code receives it:
 

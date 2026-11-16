@@ -4,9 +4,11 @@
 //! receipt; the caller judges each obligation with [`crate::gate`] and
 //! passes the standings in the mode's order.
 //!
-//! Not in the Charon `start_from` list: the input space is small and the
-//! exhaustive tests below cover it. The plan kernel receives the result
-//! through the proved [`crate::gate::Standing::met`].
+//! `deciding`, `unmet`, `is_waived`, `is_attested`, `standing`, `ready`,
+//! `rechecked` and `guard` are in the Charon `start_from` list;
+//! `proofs/Writfold/Delivery.lean` proves them for every input
+//! (docs/writfold/aeneas.md). The exhaustive tests below state the same
+//! properties for small inputs.
 
 use crate::gate::{Standing, State};
 
@@ -24,6 +26,22 @@ pub fn deciding(bound: &[bool]) -> Option<usize> {
     None
 }
 
+/// Whether an obligation's standing is not met. Its own function so the
+/// loop in [`standing`] stays flat for the translation.
+pub fn unmet(standing: Standing) -> bool {
+    !standing.met()
+}
+
+/// Whether a standing is a waiver.
+pub fn is_waived(standing: Standing) -> bool {
+    matches!(standing, Standing::Waived)
+}
+
+/// Whether a standing is an attestation.
+pub fn is_attested(standing: Standing) -> bool {
+    matches!(standing, Standing::Attested)
+}
+
 /// One standing for a delivery from its obligations', in the mode's order:
 /// the weakest word that is true. Empty: `Checked(Open)` (an empty set is
 /// not met). Else the first unmet obligation's standing; else `Waived` if
@@ -35,13 +53,18 @@ pub fn standing(obligations: &[Standing]) -> Standing {
     }
     let mut waived = false;
     let mut attested = false;
-    for &obligation in obligations {
-        match obligation {
-            Standing::Waived => waived = true,
-            Standing::Attested => attested = true,
-            Standing::Checked(State::Satisfied) => {}
-            unmet => return unmet,
+    let mut index = 0;
+    while index < obligations.len() {
+        if unmet(obligations[index]) {
+            return obligations[index];
         }
+        if is_waived(obligations[index]) {
+            waived = true;
+        }
+        if is_attested(obligations[index]) {
+            attested = true;
+        }
+        index += 1;
     }
     if waived {
         Standing::Waived
@@ -52,9 +75,44 @@ pub fn standing(obligations: &[Standing]) -> Standing {
     }
 }
 
+/// Whether a candidate is ready: its delivery's [`standing`] is met. A mode
+/// that declares nothing is never ready (an empty set is not met).
+pub fn ready(obligations: &[Standing]) -> bool {
+    standing(obligations).met()
+}
+
+/// A passed check whose cited evidence moved since (`moved` citations no
+/// longer fresh, or the re-check could not run) is stale; any other state
+/// stands as it is.
+pub fn rechecked(checked: State, moved: usize) -> State {
+    if matches!(checked, State::Satisfied) && moved > 0 {
+        State::Stale
+    } else {
+        checked
+    }
+}
+
+/// What a guarded posting command would post, as far as the guard can read.
+pub enum Body {
+    /// The bytes are read from the command.
+    Known,
+    /// They cannot be read from the command.
+    Unknown,
+}
+
+/// The delivery guard's decision: allow known bytes only when a ready
+/// candidate of the run holds them (`same_ready`); allow unknown bytes only
+/// when the run has at least one candidate and every candidate is ready.
+pub fn guard(body: Body, same_ready: bool, candidates: usize, all_ready: bool) -> bool {
+    match body {
+        Body::Known => same_ready,
+        Body::Unknown => candidates > 0 && all_ready,
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{deciding, standing};
+    use super::{Body, deciding, guard, ready, rechecked, standing};
     use crate::gate::{Standing, State};
     use alloc::vec::Vec;
 
@@ -143,5 +201,25 @@ mod tests {
         let list = [Standing::Checked(State::Satisfied), Standing::Attested];
         assert_eq!(standing(&list), Standing::Attested);
         assert_eq!(standing(&[]), Standing::Checked(State::Open));
+    }
+
+    /// A mode that declares nothing is never ready; otherwise ready is met.
+    #[test]
+    fn ready_is_standing_met() {
+        assert!(!ready(&[]));
+        for list in lists(2) {
+            assert_eq!(ready(&list), standing(&list).met(), "{list:?}");
+        }
+    }
+
+    #[test]
+    fn rechecked_and_guard() {
+        assert_eq!(rechecked(State::Satisfied, 1), State::Stale);
+        assert_eq!(rechecked(State::Satisfied, 0), State::Satisfied);
+        assert_eq!(rechecked(State::Failed, 3), State::Failed);
+        for (same, n, all) in [(false, 0, true), (true, 0, false), (true, 2, true)] {
+            assert_eq!(guard(Body::Known, same, n, all), same);
+            assert_eq!(guard(Body::Unknown, same, n, all), n > 0 && all);
+        }
     }
 }

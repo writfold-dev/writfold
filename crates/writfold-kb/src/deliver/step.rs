@@ -104,7 +104,8 @@ fn definition(mode: &str, audience: &str, judged: &[Judged<'_>]) -> String {
     candidate::sha(text.as_bytes())
 }
 
-fn empty(mode: &str) -> String {
+/// Why a mode that declares nothing is never met.
+pub(crate) fn empty(mode: &str) -> String {
     format!(
         "mode {mode} declares nothing to check; a delivery is not met by an empty set: add checks, gates or attest to {}/{mode}.toml",
         config::DIR

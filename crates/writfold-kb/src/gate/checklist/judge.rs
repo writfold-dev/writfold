@@ -15,7 +15,7 @@ use crate::session::Session;
 use std::collections::BTreeMap;
 use writfold_core::assess::Grounding;
 use writfold_core::checklist::{self, Item, Outcome, Rollup, item, rollup};
-use writfold_core::gate::{State, Statements, standing};
+use writfold_core::gate::about;
 
 /// One declared item, as it stands now.
 pub struct Entry<'a> {
@@ -89,7 +89,7 @@ impl Present<'_, '_, '_> {
                     now
                 }
             };
-            if now.0 == Grounding::Ungrounded || now.1 != e.standing {
+            if writfold_core::ground::moved(now.0, now.1 == e.standing) {
                 return Ok(Some((e.reference.clone(), e.standing.clone(), now.1)));
             }
         }
@@ -124,7 +124,12 @@ fn entry<'a>(
         return Ok((item(None), None));
     };
     let same_definition = c.definition == d.digest;
-    let current = same_definition && c.content == content;
+    let current = about(
+        c.definition.as_bytes(),
+        c.content.as_bytes(),
+        d.digest.as_bytes(),
+        content.as_bytes(),
+    );
     let moved = match current && c.outcome == Outcome::Supported {
         true => present.moved(c)?,
         false => None,
@@ -193,7 +198,12 @@ pub fn judge<'a>(
                 looked: crate::observe::looked(&observed, &d.id, &spec.id),
             });
         }
-        let cells: Vec<(Item, bool)> = entries.iter().map(|e| (e.item, e.spec.required)).collect();
+        let cells: Vec<checklist::Entry> = (entries.iter())
+            .map(|e| checklist::Entry {
+                item: e.item,
+                required: e.spec.required,
+            })
+            .collect();
         let rollup = rollup(&cells);
         let statements = statement::summary(
             &filings.statements,
@@ -202,18 +212,9 @@ pub fn judge<'a>(
             &d.digest,
             &content,
         );
-        let said = Statements {
-            attested_current: rollup.covered,
-            attested_any: rollup.stale,
-            waived_current: statements.statements.waived_current,
-        };
-        let state = match rollup.stale {
-            true => State::Stale,
-            false => State::Open,
-        };
         out.push(Judged {
-            standing: standing(true, state, said),
-            state,
+            standing: checklist::standing(rollup, statements.statements.waived_current),
+            state: checklist::state(rollup),
             receipt: None,
             same_definition: true,
             statements,

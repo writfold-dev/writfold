@@ -12,7 +12,8 @@
 //! | an observation (`runs/<run>/observed/….json`) | its status is `ok` and its citation is fresh | `ok`, `not-fresh:<n>`, or the status (`timeout` …) |
 //!
 //! Gate receipts and statements are read from the current run only; a
-//! waiver is never evidence. Both later-judged classes (assessed and
+//! waiver is never evidence. Each decision is the kernel's
+//! ([`writfold_core::ground`]); the standing words are rendered here. Both later-judged classes (assessed and
 //! checklist gates) resolve against the other gates only, so neither can
 //! cite the other: such a reference is not grounded. Anything else is
 //! `unresolved`. The standing is recorded in the assessed receipt or the
@@ -27,8 +28,11 @@ use crate::session::Session;
 use crate::stale::{self, Checked, Cite, Verdict};
 use crate::workspace::{CANCELLED, budgets};
 use writfold_core::assess::Grounding;
-use writfold_core::gate::{Outcome, Standing, State};
-use writfold_core::observe::{self, Status};
+use writfold_core::gate::{Outcome, Standing};
+use writfold_core::ground::{
+    ReceiptFacts, of_citations, of_gate, of_observation, of_receipt, of_statement, of_token,
+};
+use writfold_core::observe::Status;
 use writfold_runtime::git::edit_hash_bytes;
 
 /// What one citation stands on now.
@@ -156,11 +160,19 @@ fn token(cx: &Context<'_, '_>, reference: &str, path: Option<&str>) -> Result<Re
         false => locator(r, 1).into_iter().collect(),
     };
     let found_verdicts = verdicts(cx, read, path.unwrap_or("weft"))?;
-    Ok(match found_verdicts.as_slice() {
-        [c] if c.verdict == Verdict::Fresh => fresh(reference, "fresh", path, &found_verdicts),
-        [c] => ungrounded(reference, c.verdict.name(), path),
-        _ => ungrounded(reference, "not-one-citation", path),
-    })
+    let not_fresh = (found_verdicts.iter())
+        .filter(|c| c.verdict != Verdict::Fresh)
+        .count();
+    Ok(
+        match (
+            of_token(found_verdicts.len(), not_fresh),
+            found_verdicts.as_slice(),
+        ) {
+            (Grounding::Ungrounded, [c]) => ungrounded(reference, c.verdict.name(), path),
+            (Grounding::Ungrounded, _) => ungrounded(reference, "not-one-citation", path),
+            _ => fresh(reference, "fresh", path, &found_verdicts),
+        },
+    )
 }
 
 /// `gate:<id>`: the gate's standing in this run.
@@ -172,12 +184,11 @@ fn gate(cx: &Context<'_, '_>, reference: &str, id: &str) -> Resolved {
         Standing::Attested => j.statements.attested.map(|(f, _)| f.path.as_str()),
         _ => j.receipt.map(|(f, _)| f.path.as_str()),
     };
-    match j.standing {
-        Standing::Checked(State::Satisfied) => {
-            found(reference, Grounding::Grounded, "satisfied", path)
-        }
-        Standing::Attested => found(reference, Grounding::Attested, "attested", path),
-        other => ungrounded(reference, other.name(), path),
+    // A waiver is never evidence ([`of_gate`]).
+    match of_gate(true, j.standing) {
+        Grounding::Grounded => found(reference, Grounding::Grounded, "satisfied", path),
+        Grounding::Attested => found(reference, Grounding::Attested, "attested", path),
+        Grounding::Ungrounded => ungrounded(reference, j.standing.name(), path),
     }
 }
 
@@ -197,19 +208,27 @@ fn receipt(cx: &Context<'_, '_>, reference: &str, path: &str) -> Resolved {
         return ungrounded(reference, "no-such-gate", Some(path));
     };
     let present = cx.plain.snapshot.scoped(&j.definition.patterns()).digest;
-    let standing = if r.repo != cx.subject.name {
+    let facts = ReceiptFacts {
+        same_subject: r.repo == cx.subject.name,
+        same_definition: r.definition == j.definition.digest,
+        same_content: r.scope == present,
+        passed: r.outcome == Outcome::Pass,
+        gate_met: j.standing.met(),
+    };
+    // The word names the first fact that fails, in this order.
+    let standing = if !facts.same_subject {
         "other-subject"
-    } else if r.definition != j.definition.digest || r.scope != present {
+    } else if !facts.same_definition || !facts.same_content {
         "stale"
-    } else if r.outcome != Outcome::Pass {
+    } else if !facts.passed {
         r.outcome.name()
-    } else if !j.standing.met() {
+    } else if !facts.gate_met {
         j.standing.name()
     } else {
         "satisfied"
     };
-    match standing {
-        "satisfied" => found(reference, Grounding::Grounded, standing, Some(path)),
+    match of_receipt(&facts) {
+        Grounding::Grounded => found(reference, Grounding::Grounded, standing, Some(path)),
         _ => ungrounded(reference, standing, Some(path)),
     }
 }
@@ -220,9 +239,9 @@ fn statement(cx: &Context<'_, '_>, reference: &str, path: &str) -> Resolved {
         j.standing == Standing::Attested
             && j.statements.attested.is_some_and(|(f, _)| f.path == path)
     });
-    match current {
-        true => found(reference, Grounding::Attested, "attested", Some(path)),
-        false => ungrounded(reference, "not-a-current-attestation", Some(path)),
+    match of_statement(current) {
+        Grounding::Ungrounded => ungrounded(reference, "not-a-current-attestation", Some(path)),
+        grounding => found(reference, grounding, "attested", Some(path)),
     }
 }
 
@@ -231,15 +250,15 @@ fn retrieval(cx: &Context<'_, '_>, reference: &str, path: &str) -> Result<Resolv
     let text = cx.session.text(path).unwrap_or_default();
     let all = verdicts(cx, tokens(&text), path)?;
     let moved = all.iter().filter(|c| c.verdict != Verdict::Fresh).count();
-    Ok(match (all.is_empty(), moved) {
-        (true, _) => ungrounded(reference, "no-citations", Some(path)),
-        (false, 0) => fresh(reference, "fresh", Some(path), &all),
-        (false, n) => ungrounded(reference, &format!("not-fresh:{n}"), Some(path)),
+    Ok(match (of_citations(all.len(), moved), moved) {
+        (Grounding::Ungrounded, 0) => ungrounded(reference, "no-citations", Some(path)),
+        (Grounding::Ungrounded, n) => ungrounded(reference, &format!("not-fresh:{n}"), Some(path)),
+        _ => fresh(reference, "fresh", Some(path), &all),
     })
 }
 
 /// An observation: grounded only while it is `ok` and its embedded
-/// citation is fresh ([`writfold_core::observe::grounds`]). Any other
+/// citation is fresh ([`writfold_core::ground::of_observation`]). Any other
 /// status never grounds; its standing is the status.
 fn observed(cx: &Context<'_, '_>, reference: &str, path: &str) -> Result<Resolved> {
     let parsed = cx
@@ -255,13 +274,16 @@ fn observed(cx: &Context<'_, '_>, reference: &str, path: &str) -> Result<Resolve
         None => Vec::new(),
     };
     let moved = all.iter().filter(|c| c.verdict != Verdict::Fresh).count();
-    let grounds = !all.is_empty() && moved == 0;
     Ok(
-        match (observe::grounds(o.status, grounds), o.status, moved) {
-            (true, _, _) => fresh(reference, "ok", Some(path), &all),
-            (false, Status::Ok, 0) => ungrounded(reference, "no-citations", Some(path)),
-            (false, Status::Ok, n) => ungrounded(reference, &format!("not-fresh:{n}"), Some(path)),
-            (false, status, _) => ungrounded(reference, status.name(), Some(path)),
+        match (of_observation(o.status, all.len(), moved), o.status, moved) {
+            (Grounding::Ungrounded, Status::Ok, 0) => {
+                ungrounded(reference, "no-citations", Some(path))
+            }
+            (Grounding::Ungrounded, Status::Ok, n) => {
+                ungrounded(reference, &format!("not-fresh:{n}"), Some(path))
+            }
+            (Grounding::Ungrounded, status, _) => ungrounded(reference, status.name(), Some(path)),
+            _ => fresh(reference, "ok", Some(path), &all),
         },
     )
 }

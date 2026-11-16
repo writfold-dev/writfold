@@ -1,12 +1,13 @@
 [package]
 name = "writfold-core"
-description = "Writfold's pure decision kernels in plain safe Rust, translated to Lean 4 by Charon/Aeneas and proved under proofs/"
+description = "Writfold's pure decision kernels in plain safe Rust; the decisions named in start_from are translated to Lean 4 by Charon/Aeneas and proved under proofs/"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
 
-# No dependencies by construction: no IO, no floats, no `dyn`, `no_std` +
+# No dependencies by construction: no IO, no floats, no trait objects
+# (`diag` passes plain function pointers), `no_std` +
 # `alloc`. The xtask dependency graph enforces the empty set.
 [dependencies]
 
@@ -17,9 +18,45 @@ start_from = [
     "writfold_core::bytes",
     "writfold_core::plan",
     "writfold_core::gate::outcome",
+    "writfold_core::gate::about",
+    "writfold_core::gate::evidence",
+    "writfold_core::gate::judge",
     "writfold_core::gate::state",
+    "writfold_core::gate::stands",
+    "writfold_core::gate::statements",
     "writfold_core::gate::standing",
     "writfold_core::gate::Standing::met",
+    "writfold_core::checklist::item",
+    "writfold_core::checklist::covered",
+    "writfold_core::checklist::owes",
+    "writfold_core::checklist::first_owed",
+    "writfold_core::checklist::stale",
+    "writfold_core::checklist::any_stale",
+    "writfold_core::checklist::rollup",
+    "writfold_core::checklist::state",
+    "writfold_core::checklist::standing",
+    "writfold_core::delivery::deciding",
+    "writfold_core::delivery::unmet",
+    "writfold_core::delivery::is_waived",
+    "writfold_core::delivery::is_attested",
+    "writfold_core::delivery::standing",
+    "writfold_core::delivery::ready",
+    "writfold_core::delivery::rechecked",
+    "writfold_core::delivery::guard",
+    "writfold_core::guard::met",
+    "writfold_core::guard::all_met",
+    "writfold_core::guard::verdict",
+    "writfold_core::guard::decide",
+    "writfold_core::guard::combine",
+    "writfold_core::guard::effect",
+    "writfold_core::guard::gates_fact",
+    "writfold_core::guard::nudge",
+    "writfold_core::guard::nudge_with",
+    "writfold_core::guard::call",
+    "writfold_core::guard::require",
+    "writfold_core::observe::embeds",
+    "writfold_core::observe::grounds",
+    "writfold_core::ground",
     "writfold_core::assess::assumption",
     "writfold_core::assess::basis",
     "writfold_core::assess::met",

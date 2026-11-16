@@ -302,8 +302,13 @@ impl Tally {
         if status::ready(&judged) {
             self.ready += 1;
         }
-        for j in &judged {
-            if let Some(i) = NAMES.iter().position(|n| *n == j.standing.name()) {
+        let mut standings: Vec<&'static str> = judged.iter().map(|j| j.standing.name()).collect();
+        if judged.is_empty() {
+            // A mode that declares nothing: the delivery itself stands open.
+            standings.push(writfold_core::delivery::standing(&[]).name());
+        }
+        for name in standings {
+            if let Some(i) = NAMES.iter().position(|n| *n == name) {
                 self.by[i] += 1;
             }
         }
@@ -320,23 +325,29 @@ impl Tally {
     }
 }
 
-/// Each candidate of the run with what it still owes (`<check>
-/// [<standing>]`); an empty list means it is ready.
-pub fn readiness(session: &Session<'_>, rec: &Rec) -> Vec<(Candidate, Vec<String>)> {
+/// Each candidate of the run, whether it is ready ([`status::ready`]), and
+/// what it still owes (`<check> [<standing>]`, or why it cannot be met).
+pub fn readiness(session: &Session<'_>, rec: &Rec) -> Vec<(Candidate, bool, Vec<String>)> {
     let root = &session.ws.root;
     candidate::list(root, &runs::dir(rec), &rec.id)
         .into_iter()
         .map(|c| {
             let filings = status::Filings::read(root, &c, &rec.id);
-            let owed = match recheck::judged(session, &c, &filings) {
-                Ok(judged) => judged
-                    .iter()
-                    .filter(|j| !j.standing.met())
-                    .map(|j| format!("{} [{}]", j.obligation.name, j.standing.name()))
-                    .collect(),
-                Err(error) => vec![error.to_string()],
+            let (ready, owed) = match recheck::judged(session, &c, &filings) {
+                Ok(judged) => {
+                    let mut owed: Vec<String> = (judged.iter())
+                        .filter(|j| !j.standing.met())
+                        .map(|j| format!("{} [{}]", j.obligation.name, j.standing.name()))
+                        .collect();
+                    let ready = status::ready(&judged);
+                    if let (false, true, Ok(m)) = (ready, owed.is_empty(), &c.manifest) {
+                        owed.push(step::empty(&m.mode));
+                    }
+                    (ready, owed)
+                }
+                Err(error) => (false, vec![error.to_string()]),
             };
-            (c, owed)
+            (c, ready, owed)
         })
         .collect()
 }

@@ -4,6 +4,9 @@
 //! that someone looked and could not tell (or could tell only part), so
 //! it is shown but never grounds a claim. Nothing here reads a file or a
 //! citation; the caller says whether the embedded citation is fresh.
+//!
+//! `embeds` and `grounds` are in the Charon `start_from` list;
+//! `proofs/Writfold/Ground.lean` proves them with [`crate::ground`].
 
 /// How one look at a source went.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

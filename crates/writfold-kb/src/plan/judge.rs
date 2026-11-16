@@ -12,6 +12,7 @@ use crate::gate::status::{self, Filings, Judged};
 use crate::gate::subject::Subject;
 use crate::session::Session;
 use writfold_core::gate::Standing;
+use writfold_core::plan::{GateFact, fact_met};
 
 /// One gate of one step, as it stands now.
 pub struct Gate {
@@ -37,8 +38,16 @@ pub struct Gate {
 }
 
 impl Gate {
+    /// What the plan kernel decides on: no usable definition, or the standing.
+    pub fn fact(&self) -> GateFact {
+        match self.standing {
+            None => GateFact::Undefined,
+            Some(standing) => GateFact::Stands(standing),
+        }
+    }
+
     pub fn met(&self) -> bool {
-        self.standing.is_some_and(Standing::met)
+        fact_met(&self.fact())
     }
 
     pub fn shown(&self) -> &'static str {

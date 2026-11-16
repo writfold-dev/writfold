@@ -43,6 +43,16 @@ MUTANTS = (
            "    node.done || node.skipped",
            "    node.done",
            ("Writfold.Core.Plan.closed_spec",)),
+    # run graph: the current step is the least open one, not the last step
+    Mutant("current-returns-last", "plan.rs",
+           "        if !closed(&nodes[index]) {\n            return Some(index);",
+           "        if !closed(&nodes[index]) {\n            return Some(nodes.len() - 1);",
+           ("Writfold.Core.Plan.current_loop_spec",)),
+    # run graph: the first owed gate is the first one not met
+    Mutant("first-owed-inverted", "plan.rs",
+           "        if !met[index] {",
+           "        if met[index] {",
+           ("Writfold.Core.Plan.first_owed_loop_spec",)),
     # run graph: only the current step may be recorded as done
     Mutant("advance-without-current-check", "plan.rs",
            "    if now != at {",
@@ -83,6 +93,21 @@ MUTANTS = (
            "    if depth > MAX_DEPTH {",
            "    if depth > MAX_DEPTH + 1 {",
            ("Writfold.Core.Plan.splice_check_spec",)),
+    # splice: the last key spliced counts too
+    Mutant("contains-misses-last", "plan.rs",
+           "    while index < keys.len() {",
+           "    while index + 1 < keys.len() {",
+           ("Writfold.Core.Plan.contains_loop_spec",)),
+    # splice: an empty plan takes a root splice at 0
+    Mutant("splice-check-refuses-empty", "plan.rs",
+           "    if nodes.is_empty() {\n        return Ok(Spliced::Insert(0));",
+           "    if nodes.is_empty() {\n        return Err(SpliceRefusal::Complete);",
+           ("Writfold.Core.Plan.splice_check_spec",)),
+    # splice: a complete plan has no current step to splice under
+    Mutant("splice-check-admits-complete", "plan.rs",
+           "        None => Err(SpliceRefusal::Complete),\n        Some(at) => Ok(Spliced::Insert(at)),",
+           "        None => Ok(Spliced::Insert(0)),\n        Some(at) => Ok(Spliced::Insert(at)),",
+           ("Writfold.Core.Plan.splice_check_spec",)),
     # gate: a subject that moved while the command ran is never a pass
     Mutant("outcome-ignores-moved", "gate.rs",
            "    if subject_moved {\n        return Outcome::Unknown;",
@@ -93,11 +118,36 @@ MUTANTS = (
            "        Ending::Exited(0) => Outcome::Pass,",
            "        Ending::Exited(_) => Outcome::Pass,",
            ("Writfold.Core.Gate.outcome_spec",)),
+    # gate: another exit status is a failure, not unknown
+    Mutant("outcome-nonzero-unknown", "gate.rs",
+           "        Ending::Exited(_) => Outcome::Fail,",
+           "        Ending::Exited(_) => Outcome::Unknown,",
+           ("Writfold.Core.Gate.outcome_spec",)),
     # gate: a receipt about other bytes in scope never decides the state
     Mutant("state-ignores-scope", "gate.rs",
            "        if evidence.same_definition && evidence.same_scope {",
            "        if evidence.same_definition {",
            ("Writfold.Core.Gate.state_loop_spec",)),
+    # gate: a receipt about another definition never decides the state
+    Mutant("state-ignores-definition", "gate.rs",
+           "        if evidence.same_definition && evidence.same_scope {",
+           "        if evidence.same_scope {",
+           ("Writfold.Core.Gate.state_loop_spec",)),
+    # gate: the newest receipt about the current subject decides, not the oldest
+    Mutant("state-oldest-first", "gate.rs",
+           "    let mut index = receipts.len();\n    while index > 0 {\n        index -= 1;\n        let evidence = receipts[index];",
+           "    let mut index = 0;\n    while index < receipts.len() {\n        let evidence = receipts[index];\n        index += 1;",
+           ("Writfold.Core.Gate.state_loop_spec", "Writfold.Core.Gate.state_spec")),
+    # gate: a failed receipt is a failure
+    Mutant("state-failed-satisfies", "gate.rs",
+           "                Outcome::Fail => State::Failed,",
+           "                Outcome::Fail => State::Satisfied,",
+           ("Writfold.Core.Gate.state_loop_spec",)),
+    # gate: an attested-class obligation has no checked state to stand on
+    Mutant("attested-class-stands-on-check", "gate.rs",
+           "        (true, false) => Standing::Checked(State::Open),",
+           "        (true, false) => Standing::Checked(state),",
+           ("Writfold.Core.Gate.standing_spec",)),
     # gate: a waiver is never a passing check
     Mutant("waiver-satisfies", "gate.rs",
            "        return Standing::Waived;",
@@ -113,6 +163,276 @@ MUTANTS = (
            "Standing::Checked(State::Open | State::Stale | State::Failed | State::Unknown)",
            "Standing::Checked(State::Open | State::Failed | State::Unknown)",
            ("Writfold.Core.Gate.met_spec",)),
+    # about the present: the recorded definition must be the present one
+    Mutant("about-ignores-definition", "gate.rs",
+           "    crate::bytes::same(recorded_definition, definition)\n        && crate::bytes::same(recorded_content, content)",
+           "    crate::bytes::same(recorded_content, content)",
+           ("Writfold.Core.Gate.about_spec",)),
+    # a receipt under another definition is not the same definition
+    Mutant("evidence-ignores-definition", "gate.rs",
+           "        same_definition: crate::bytes::same(&receipt.definition, definition),",
+           "        same_definition: true,",
+           ("Writfold.Core.Gate.evidence_spec",)),
+    # a receipt about other bytes is not about the present content
+    Mutant("evidence-ignores-content", "gate.rs",
+           "        same_scope: !content.is_empty() && crate::bytes::same(&receipt.content, content),",
+           "        same_scope: !content.is_empty(),",
+           ("Writfold.Core.Gate.evidence_spec",)),
+    # empty present content (unreadable) is never the same content
+    Mutant("evidence-accepts-empty-content", "gate.rs",
+           "        same_scope: !content.is_empty() && crate::bytes::same(&receipt.content, content),",
+           "        same_scope: crate::bytes::same(&receipt.content, content),",
+           ("Writfold.Core.Gate.evidence_spec",)),
+    # every receipt is judged, the newest included
+    Mutant("judge-drops-newest", "gate.rs",
+           "    while index < receipts.len() {\n        all.push(",
+           "    while index + 1 < receipts.len() {\n        all.push(",
+           ("Writfold.Core.Gate.judge_loop_spec",)),
+    # an attestation is never a waiver, and a waiver never an attestation
+    Mutant("stands-ignores-kind", "gate.rs",
+           "    if said.attested != attested {",
+           "    if false {",
+           ("Writfold.Core.Gate.stands_spec",)),
+    # a waiver about other bytes does not stand
+    Mutant("statements-counts-moved-waiver", "gate.rs",
+           "        if stands(&said[index], false, definition, content) {",
+           "        if !said[index].attested {",
+           ("Writfold.Core.Gate.statements_loop_spec",)),
+    # a gate with no usable definition is never met
+    Mutant("advance-undefined-met", "plan.rs",
+           "        GateFact::Undefined => false,",
+           "        GateFact::Undefined => true,",
+           ("Writfold.Core.Plan.fact_met_spec",)),
+    # every gate of the step is judged, the last included
+    Mutant("met-all-drops-last", "plan.rs",
+           "    while index < gates.len() {\n        met.push(",
+           "    while index + 1 < gates.len() {\n        met.push(",
+           ("Writfold.Core.Plan.met_all_loop_spec",)),
+    # a step with no gates owes nothing
+    Mutant("advance-refuses-no-gates", "plan.rs",
+           "    advance_check(nodes, at, &met_all(gates))",
+           "    if gates.is_empty() {\n        return Err(Refusal::Owed(0));\n    }\n    advance_check(nodes, at, &met_all(gates))",
+           ("Writfold.Core.Plan.advance_facts_spec", "Writfold.Core.Plan.advance_facts_ok_iff")),
+    # checklist: a supported row covers only when it cites something
+    Mutant("item-accepts-no-evidence", "checklist.rs",
+           "            if row.evidence > 0 && row.grounded {",
+           "            if row.grounded {",
+           ("Writfold.Core.Checklist.item_spec",)),
+    # checklist: a supported row covers only while its evidence is grounded
+    Mutant("item-accepts-ungrounded", "checklist.rs",
+           "            if row.evidence > 0 && row.grounded {",
+           "            if row.evidence > 0 {",
+           ("Writfold.Core.Checklist.item_spec",)),
+    # checklist: a row about other content or another definition is stale
+    Mutant("item-accepts-not-current", "checklist.rs",
+           "    if !row.current {\n        return Item::Stale;",
+           "    if false {\n        return Item::Stale;",
+           ("Writfold.Core.Checklist.item_spec",)),
+    # checklist: an unsupported item is not covered
+    Mutant("covered-counts-unsupported", "checklist.rs",
+           "        Item::Supported | Item::NotApplicable => true,\n        Item::Open | Item::Unsupported | Item::Stale => false,",
+           "        Item::Supported | Item::NotApplicable | Item::Unsupported => true,\n        Item::Open | Item::Stale => false,",
+           ("Writfold.Core.Checklist.covered_spec",)),
+    # checklist: only required items are owed
+    Mutant("rollup-ignores-required", "checklist.rs",
+           "    entry.required && !covered(entry.item)",
+           "    !covered(entry.item)",
+           ("Writfold.Core.Checklist.owes_spec",)),
+    # checklist: every entry is looked at, the last included
+    Mutant("first-owed-skips-last", "checklist.rs",
+           "    while index < entries.len() {\n        if owes(",
+           "    while index + 1 < entries.len() {\n        if owes(",
+           ("Writfold.Core.Checklist.first_owed_loop_spec",)),
+    # checklist: an optional stale item does not make the checklist stale
+    Mutant("stale-ignores-required", "checklist.rs",
+           "    entry.required && matches!(entry.item, Item::Stale)",
+           "    matches!(entry.item, Item::Stale)",
+           ("Writfold.Core.Checklist.stale_spec",)),
+    # checklist: a stale checklist is not attested
+    Mutant("checklist-attested-when-stale", "checklist.rs",
+           "        attested_current: rollup.covered,",
+           "        attested_current: rollup.covered || rollup.stale,",
+           ("Writfold.Core.Checklist.standing_spec",)),
+    # delivery: an empty set of obligations is not met
+    Mutant("delivery-empty-met", "delivery.rs",
+           "    if obligations.is_empty() {\n        return Standing::Checked(State::Open);",
+           "    if obligations.is_empty() {\n        return Standing::Checked(State::Satisfied);",
+           ("Writfold.Core.Delivery.standing_spec",)),
+    # delivery: a waived obligation is never read as a passing check
+    Mutant("delivery-waived-satisfied", "delivery.rs",
+           "    if waived {\n        Standing::Waived",
+           "    if false {\n        Standing::Waived",
+           ("Writfold.Core.Delivery.standing_loop_spec",)),
+    # delivery: an unmet obligation stops the delivery
+    Mutant("delivery-unmet-ignored", "delivery.rs",
+           "    !standing.met()",
+           "    false",
+           ("Writfold.Core.Delivery.unmet_spec",)),
+    # delivery: a bound candidate never decides an open step
+    Mutant("deciding-ignores-bound", "delivery.rs",
+           "        if !bound[index] {",
+           "        if true {",
+           ("Writfold.Core.Delivery.deciding_loop_spec", "Writfold.Core.Delivery.deciding_spec")),
+    # delivery: the newest unbound candidate decides, not the oldest
+    Mutant("deciding-first-unbound", "delivery.rs",
+           "    let mut index = bound.len();\n    while index > 0 {\n        index -= 1;\n        if !bound[index] {",
+           "    let mut index = 0;\n    while index < bound.len() {\n        index += 1;\n        if !bound[index - 1] {",
+           ("Writfold.Core.Delivery.deciding_loop_spec", "Writfold.Core.Delivery.deciding_spec")),
+    # delivery: a mode that declares nothing is never ready
+    Mutant("ready-accepts-empty", "delivery.rs",
+           "    standing(obligations).met()",
+           "    obligations.is_empty() || standing(obligations).met()",
+           ("Writfold.Core.Delivery.ready_iff",)),
+    # delivery: a passed check whose cited evidence moved is stale
+    Mutant("rechecked-keeps-satisfied", "delivery.rs",
+           "    if matches!(checked, State::Satisfied) && moved > 0 {",
+           "    if false {",
+           ("Writfold.Core.Delivery.rechecked_spec",)),
+    # delivery guard: unknown bytes need at least one candidate
+    Mutant("guard-allows-no-candidate", "delivery.rs",
+           "        Body::Unknown => candidates > 0 && all_ready,",
+           "        Body::Unknown => all_ready,",
+           ("Writfold.Core.Delivery.guard_allow_iff",)),
+    # delivery guard: known bytes pass only when a ready candidate holds them
+    Mutant("guard-known-any-ready", "delivery.rs",
+           "        Body::Known => same_ready,",
+           "        Body::Known => same_ready || all_ready,",
+           ("Writfold.Core.Delivery.guard_allow_iff",)),
+    # guard: an unknown fact is never met
+    Mutant("all-met-accepts-unknown", "guard.rs",
+           "    matches!(fact, Fact::Met)",
+           "    !matches!(fact, Fact::Unmet)",
+           ("Writfold.Core.Guard.met_spec",)),
+    # guard: every requirement is looked at, the last included
+    Mutant("all-met-skips-last", "guard.rs",
+           "    while i < facts.len() {\n        if !met(",
+           "    while i + 1 < facts.len() {\n        if !met(",
+           ("Writfold.Core.Guard.all_met_loop_spec",)),
+    # guard: a matched rule passes only when every requirement is met
+    Mutant("decide-ignores-facts", "guard.rs",
+           "    verdict(all_met(facts), action)",
+           "    verdict(true, action)",
+           ("Writfold.Core.Guard.decide_spec",)),
+    # guard: a deny rule denies
+    Mutant("verdict-deny-asks", "guard.rs",
+           "        Action::Deny => Decision::Deny,\n        Action::Ask => Decision::Ask,\n    }\n}\n\n/// `Pass` iff",
+           "        Action::Deny => Decision::Ask,\n        Action::Ask => Decision::Ask,\n    }\n}\n\n/// `Pass` iff",
+           ("Writfold.Core.Guard.verdict_spec",)),
+    # guard: a denial wins over a question
+    Mutant("combine-ask-over-deny", "guard.rs",
+           "    if matches!(a, Decision::Deny) || matches!(b, Decision::Deny) {\n        return Decision::Deny;\n    }\n    if matches!(a, Decision::Ask) || matches!(b, Decision::Ask) {\n        return Decision::Ask;\n    }",
+           "    if matches!(a, Decision::Ask) || matches!(b, Decision::Ask) {\n        return Decision::Ask;\n    }\n    if matches!(a, Decision::Deny) || matches!(b, Decision::Deny) {\n        return Decision::Deny;\n    }",
+           ("Writfold.Core.Guard.combine_spec",)),
+    # guard: an audit rule never decides the call
+    Mutant("effect-enforces-audit", "guard.rs",
+           "        Mode::Audit => Decision::Pass,",
+           "        Mode::Audit => decided,",
+           ("Writfold.Core.Guard.effect_spec",)),
+    # guard: gates.met is not met by an empty set
+    Mutant("gates-fact-met-on-nothing", "guard.rs",
+           "    if owed > 0 && unmet == 0 && invalid == 0 {",
+           "    if unmet == 0 && invalid == 0 {",
+           ("Writfold.Core.Guard.gates_fact_met_iff",)),
+    # guard: an invalid receipt or definition keeps gates.met unmet
+    Mutant("gates-fact-ignores-invalid", "guard.rs",
+           "    if owed > 0 && unmet == 0 && invalid == 0 {",
+           "    if owed > 0 && unmet == 0 {",
+           ("Writfold.Core.Guard.gates_fact_met_iff",)),
+    # guard: the Stop nudge never fires while a stop hook is continuing
+    Mutant("nudge-while-active", "guard.rs",
+           "    !stop_hook_active && !already_nudged && !all_met(facts)",
+           "    !already_nudged && !all_met(facts)",
+           ("Writfold.Core.Guard.nudge_spec",)),
+    # guard: a turn rule is not held back by the session flag
+    Mutant("nudge-with-ignores-repeat", "guard.rs",
+           "        already_nudged && matches!(repeat, Repeat::Session),",
+           "        already_nudged,",
+           ("Writfold.Core.Guard.nudge_with_iff",)),
+    # guard: every matched rule counts, the last included
+    Mutant("decide-all-drops-last", "guard/call.rs",
+           "    while index < rules.len() {\n        decided = combine",
+           "    while index + 1 < rules.len() {\n        decided = combine",
+           ("Writfold.Core.Guard.decide_all_loop_spec",)),
+    # guard: a pass on a waiver is logged
+    Mutant("logged-drops-waiver", "guard/call.rs",
+           "    matches!(mode, Mode::Audit) || !matches!(decided, Decision::Pass) || waived",
+           "    matches!(mode, Mode::Audit) || !matches!(decided, Decision::Pass)",
+           ("Writfold.Core.Guard.logged_iff",)),
+    # guard: run.current needs an open run
+    Mutant("run-current-closed", "guard/require.rs",
+           "    if found && open {",
+           "    if found {",
+           ("Writfold.Core.Guard.run_current_met_iff",)),
+    # guard: step.met is never met when the plan could not be read
+    Mutant("step-fact-met-unread", "guard/require.rs",
+           "        Looked::Failed => Fact::Unknown,",
+           "        Looked::Failed => Fact::Met,",
+           ("Writfold.Core.Guard.step_fact_met_iff", "Writfold.Core.Guard.step_fact_unknown_iff")),
+    # guard: an undefined gate is never met
+    Mutant("gate-fact-undefined-met", "guard/require.rs",
+           "            if defined && met {",
+           "            if met {",
+           ("Writfold.Core.Guard.gate_fact_met_iff",)),
+    # guard: gates that could not be judged are unknown
+    Mutant("gates-read-unread-counts", "guard/require.rs",
+           "        Looked::No | Looked::Failed => Fact::Unknown,\n        Looked::Read => super::gates_fact(owed, unmet, invalid),",
+           "        Looked::No => Fact::Unknown,\n        Looked::Failed | Looked::Read => super::gates_fact(owed, unmet, invalid),",
+           ("Writfold.Core.Guard.gates_read_met_iff",)),
+    # grounding: a waiver is never evidence
+    Mutant("waiver-grounds", "ground.rs",
+           "        Standing::Checked(_) | Standing::Waived => Grounding::Ungrounded,",
+           "        Standing::Checked(_) => Grounding::Ungrounded,\n        Standing::Waived => Grounding::Grounded,",
+           ("Writfold.Core.Ground.of_gate_spec",)),
+    # grounding: a reference to no gate grounds nothing
+    Mutant("of-gate-ignores-found", "ground.rs",
+           "    if !found {\n        return Grounding::Ungrounded;",
+           "    if false {\n        return Grounding::Ungrounded;",
+           ("Writfold.Core.Ground.of_gate_spec",)),
+    # grounding: a receipt about other content does not ground
+    Mutant("receipt-ignores-content", "ground.rs",
+           "        && facts.same_content\n",
+           "",
+           ("Writfold.Core.Ground.of_receipt_grounded_iff",)),
+    # grounding: a receipt grounds only while its gate stands met
+    Mutant("receipt-ignores-gate-met", "ground.rs",
+           "        && facts.gate_met\n",
+           "\n",
+           ("Writfold.Core.Ground.of_receipt_grounded_iff",)),
+    # grounding: a retrieval with no citation grounds nothing
+    Mutant("citations-zero-grounds", "ground.rs",
+           "    if count > 0 && not_fresh == 0 {",
+           "    if not_fresh == 0 {",
+           ("Writfold.Core.Ground.of_citations_grounded_iff",)),
+    # grounding: a token grounds only as exactly one citation
+    Mutant("token-many-grounds", "ground.rs",
+           "    if count == 1 && not_fresh == 0 {",
+           "    if count > 0 && not_fresh == 0 {",
+           ("Writfold.Core.Ground.of_token_grounded_iff",)),
+    # grounding: an observation with no citation grounds nothing
+    Mutant("observation-no-citation-grounds", "ground.rs",
+           "    if grounds(status, count > 0 && not_fresh == 0) {",
+           "    if grounds(status, not_fresh == 0) {",
+           ("Writfold.Core.Ground.of_observation_grounded_iff",)),
+    # grounding: only the current attestation is attested
+    Mutant("statement-not-current-attested", "ground.rs",
+           "    if current_attestation {",
+           "    if true {",
+           ("Writfold.Core.Ground.of_statement_spec",)),
+    # grounding: a changed standing word is a moved reference
+    Mutant("moved-ignores-word", "ground.rs",
+           "    matches!(now, Grounding::Ungrounded) || !same_word",
+           "    matches!(now, Grounding::Ungrounded)",
+           ("Writfold.Core.Ground.moved_iff",)),
+    # observations: a partial look never grounds
+    Mutant("observation-partial-grounds", "observe.rs",
+           "        Status::Ok => cites_fresh,\n        Status::Partial\n        | Status::NoData",
+           "        Status::Ok | Status::Partial => cites_fresh,\n        Status::NoData",
+           ("Writfold.Core.Ground.grounds_iff",)),
+    # observations: a partial look embeds its citation
+    Mutant("embeds-drops-partial", "observe.rs",
+           "        Status::Ok | Status::Partial => true,",
+           "        Status::Ok => true,\n        Status::Partial => false,",
+           ("Writfold.Core.Ground.embeds_iff",)),
     # assessed gate: one ungrounded premise makes the basis hypothetical
     Mutant("basis-ignores-premises", "assess.rs",
            "        if matches!(premises[index], Grounding::Ungrounded) {",
@@ -128,6 +448,16 @@ MUTANTS = (
            "        if unfinished(required[index]) {",
            "        if false {",
            ("Writfold.Core.Assess.outcome_loop_spec",)),
+    # assessed gate: nothing required is unknown, never a pass
+    Mutant("assessed-empty-passes", "assess.rs",
+           "    if !complete || required.is_empty() {",
+           "    if !complete {",
+           ("Writfold.Core.Assess.outcome_spec",)),
+    # assessed gate: an incomplete run is unknown, never a pass
+    Mutant("assessed-incomplete-passes", "assess.rs",
+           "    if !complete || required.is_empty() {",
+           "    if required.is_empty() {",
+           ("Writfold.Core.Assess.outcome_spec",)),
     # assessed gate: an attested citation makes the assumption attested
     Mutant("assumption-ignores-attested", "assess.rs",
            "        true => Grounding::Attested,",
@@ -232,7 +562,16 @@ def calibrate(mutant: Mutant, scratch: Path) -> None:
     print(f"calibration: {mutant.name} rejected by {', '.join(sorted(failures))}", flush=True)
 
 
+def unclaimed() -> list[str]:
+    """Theorems a mutant names that the axiom audit does not require: a
+    rename would then pass the audit and be caught only here."""
+    claims = set(re.findall(r"``([\w.]+)", (PROOFS / "Audit.lean").read_text()))
+    return sorted({name for m in MUTANTS for name in m.fails} - claims)
+
+
 def main() -> None:
+    if missing := unclaimed():
+        raise SystemExit(f"FAIL: theorems named by mutants are not audited claims: {missing}")
     selected = set(sys.argv[1:])
     mutants = [m for m in MUTANTS if not selected or m.name in selected]
     if selected and len(mutants) != len(selected):
