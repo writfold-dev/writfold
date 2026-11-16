@@ -3,7 +3,7 @@
 //! `weft = "<path>"` in `$XDG_CONFIG_HOME/writfold/config.toml` (or
 //! `~/.config/writfold/config.toml`). Writfold never searches `PATH`. The
 //! definition pins the binary's SHA-256; a binary with another digest is
-//! refused before it runs, as the trial's `--weft` pin is.
+//! refused before it runs.
 //!
 //! Weft runs as `weft prove --json -- <source>` under the gate supervision
 //! (its own process group, stdin at end of file, the definition's timeout,
