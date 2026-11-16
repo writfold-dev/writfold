@@ -63,6 +63,7 @@ pub fn hook(w: &World, stop: bool, session: &str) -> HookOutput {
         if stop { "stop" } else { "pre-tool-use" },
         &input.to_string(),
         &HookEnv {
+            home: None,
             kb: Some(w.kb.clone()),
             cwd: w.base.clone(),
             now: Some(NOW + 3600),
@@ -76,11 +77,21 @@ pub fn parity(w: &World, expected: &str) -> TestResult<Value> {
     assert_eq!(guard["status"], format!("would-{expected}"));
     assert_eq!(exit, if expected == "pass" { 0 } else { 2 });
     let out = hook(w, false, "commit-session");
-    assert!(out.stderr.is_empty(), "{}", out.stderr);
+    // A pass that rests on a waiver says so on stderr (v0.5.0-dev.10).
+    assert!(
+        out.stderr.lines().all(|l| l.contains("passed on a waiver")),
+        "{}",
+        out.stderr
+    );
     if expected == "pass" {
         assert!(out.stdout.is_empty(), "{}", out.stdout);
-        assert_eq!(guard["more"], json!([]));
-        assert_eq!(guard["flags"], json!([]));
+        // A pass that rests on a waiver names it (v0.5.0-dev.10).
+        let waived = !out.stderr.is_empty();
+        let flags = if waived { json!(["waived"]) } else { json!([]) };
+        assert_eq!(guard["flags"], flags);
+        for more in guard["more"].as_array().ok_or("more")? {
+            assert_eq!(more["label"], "waived");
+        }
     } else {
         let value: Value = serde_json::from_str(&out.stdout)?;
         let specific = &value["hookSpecificOutput"];

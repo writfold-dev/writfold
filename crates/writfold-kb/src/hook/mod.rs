@@ -48,12 +48,15 @@ pub const EVENTS: [&str; 6] = [
 
 /// Where the hook runs: the KB override (the plugin's `kb_root` option),
 /// the process working directory (used when the input has no `cwd`), and
-/// a fixed clock for tests.
+/// a fixed clock for tests, and the home directory.
 #[derive(Clone, Debug, Default)]
 pub struct HookEnv {
     pub kb: Option<PathBuf>,
     pub cwd: PathBuf,
     pub now: Option<i64>,
+    /// `HOME`, for the command reader's `~` and `$HOME`; `None` when
+    /// unknown (nothing is expanded then).
+    pub home: Option<PathBuf>,
 }
 
 /// What to print. The exit code is always 0.
@@ -94,9 +97,13 @@ pub fn run(event: &str, input: &str, env: &HookEnv) -> HookOutput {
     let result = match event {
         "session-start" => {
             let source = input.get("source").and_then(Value::as_str);
+            // The session's mark for `delta --since-mark`; best effort.
+            if let Some(session) = input.get("session_id").and_then(Value::as_str) {
+                let _ = crate::delta::session_mark(&ws, session, now);
+            }
             start::session_start(&ws, &cwd, now, source)
         }
-        "pre-tool-use" => crate::guard::pre_tool_use(&ws, &input, &cwd, now),
+        "pre-tool-use" => crate::guard::pre_tool_use(&ws, &input, (&cwd, env.home.as_deref()), now),
         "stop" => record(event, &ws, &input, &cwd, now)
             .and_then(|_| crate::guard::stop(&ws, &input, &cwd, now)),
         _ => record(event, &ws, &input, &cwd, now),

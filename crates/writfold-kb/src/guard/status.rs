@@ -7,7 +7,7 @@ use crate::error::Result;
 use crate::runs;
 use crate::session::Session;
 use crate::workspace::{GitTool, Workspace};
-use writfold_core::guard::{Decision, Fact, decide, nudge};
+use writfold_core::guard::{Decision, Fact, Mode, decide, nudge};
 
 /// Project the hook's facts without running a hook, gate or checker.
 pub fn execute(ws: &Workspace, request: &Request, now: i64) -> Result<Output> {
@@ -93,22 +93,38 @@ fn counts(rows: &[Row], rules: usize, invalid: usize) -> Vec<(&'static str, usiz
             .filter(|r| r.flags.iter().any(|f| f == flag))
             .count()
     };
-    vec![
+    let audit = rows
+        .iter()
+        .filter(|r| r.flags.iter().any(|f| f == "audit"))
+        .filter(|r| matches!(r.status.as_deref(), Some("would-deny" | "would-ask")))
+        .count();
+    let mut counts = vec![
         ("rules", rules),
         ("deny", flagged("deny")),
         ("ask", flagged("ask")),
         ("nudge", flagged("nudge")),
         ("invalid", invalid),
-    ]
+    ];
+    // Shown only when an audit rule would refuse, so other answers keep
+    // their trailer.
+    if audit > 0 {
+        counts.push(("audit", audit));
+    }
+    counts
 }
 
 fn row(rule: Rule, owed: Option<Vec<Owed>>) -> Row {
     let (status, flag) = standing(&rule, owed.as_deref());
     let text = description(&rule);
-    let more = owed
-        .into_iter()
+    let mut flags: Vec<String> = match rule.mode {
+        Mode::Audit => vec!["audit".into()],
+        Mode::Enforce => flag.into_iter().map(str::to_owned).collect(),
+    };
+    let mut more: Vec<More> = owed
+        .iter()
         .flatten()
         .filter(|o| o.fact != Fact::Met)
+        .cloned()
         .map(|o| More {
             label: "owes",
             text: o.text,
@@ -120,6 +136,27 @@ fn row(rule: Rule, owed: Option<Vec<Owed>>) -> Row {
             ..More::default()
         })
         .collect();
+    if status == "would-pass" {
+        for w in owed.iter().flatten().flat_map(|o| &o.waived) {
+            if !flags.iter().any(|f| f == "waived") {
+                flags.push("waived".into());
+            }
+            more.push(More {
+                label: "waived",
+                text: format!("gate {}: {}", w.gate, w.text),
+                path: Some(w.path.clone()),
+                line: Some(1),
+                ..More::default()
+            });
+        }
+    }
+    if rule.mode == Mode::Audit {
+        more.push(More {
+            label: "mode",
+            text: "audit: a matched call is let through and logged".into(),
+            ..More::default()
+        });
+    }
     Row {
         kind: "guard",
         id: rule.id,
@@ -127,7 +164,7 @@ fn row(rule: Rule, owed: Option<Vec<Owed>>) -> Row {
         text,
         path: Some(rule.path),
         line: Some(1),
-        flags: flag.into_iter().map(str::to_owned).collect(),
+        flags,
         more,
         ..Row::default()
     }

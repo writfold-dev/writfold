@@ -1,0 +1,11 @@
+{
+  "schema": "writfold-guard-expected/1",
+  "decision": "deny",
+  "decided_by": [
+    "commit-needs-gates"
+  ],
+  "reason_has": [
+    "no gate is owed here: none is defined for api",
+    "gates.met is not met by an empty set"
+  ]
+}

@@ -5,6 +5,7 @@
 //! cannot be read, every requirement is [`Fact::Unknown`], which takes the
 //! rule's action ([`writfold_core::guard::decide`]).
 use super::rules::{Require, Rule};
+use super::waived::Waived;
 use crate::gate::status::{self, Filings};
 use crate::gate::subject::{self, Subject};
 use crate::index::query::{self, Rec};
@@ -12,8 +13,8 @@ use crate::plan::{self, Loaded};
 use crate::runs;
 use crate::session::Session;
 use crate::workspace::{GitTool, Workspace};
-use std::path::Path;
-use writfold_core::guard::Fact;
+use std::path::{Path, PathBuf};
+use writfold_core::guard::{Fact, gates_fact};
 use writfold_core::scope::in_scope;
 
 /// One requirement's fact, and (when it is not met) what is owed and the
@@ -22,6 +23,8 @@ use writfold_core::scope::in_scope;
 pub struct Owed {
     pub fact: Fact,
     pub text: String,
+    /// The waived gates this requirement was met by.
+    pub waived: Vec<Waived>,
 }
 
 impl Owed {
@@ -29,6 +32,7 @@ impl Owed {
         Self {
             fact: Fact::Met,
             text: String::new(),
+            waived: Vec::new(),
         }
     }
 
@@ -36,6 +40,7 @@ impl Owed {
         Self {
             fact: Fact::Unmet,
             text,
+            waived: Vec::new(),
         }
     }
 
@@ -43,6 +48,7 @@ impl Owed {
         Self {
             fact: Fact::Unknown,
             text,
+            waived: Vec::new(),
         }
     }
 }
@@ -58,6 +64,7 @@ struct GateLine {
     id: String,
     met: bool,
     line: String,
+    waived: Option<Waived>,
 }
 
 /// Every judged gate, the gates the run owes (`None`: every one), and
@@ -75,19 +82,55 @@ struct Facts {
     step: Option<Owed>,
 }
 
-/// Evaluate every rule's requirements.
+/// Where a group of matched rules is judged: a directory, or a command
+/// whose directory cannot be told (the text says why and what to do).
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum Place {
+    At(PathBuf),
+    Unknown(String),
+}
+
+/// Where a group was judged, for the guard log: the current run and the
+/// subject repository's name, when known.
+#[derive(Clone, Debug, Default)]
+pub struct Context {
+    pub run: Option<String>,
+    pub repo: Option<String>,
+}
+
+/// Evaluate every rule's requirements at `cwd`.
 pub fn evaluate(ws: &Workspace, cwd: &Path, now: i64, rules: &[&Rule]) -> Evaluated {
-    let unknown = |why: String| -> Evaluated {
-        rules
+    let groups = [(Place::At(cwd.to_path_buf()), rules.to_vec())];
+    evaluate_at(ws, now, &groups)
+        .into_iter()
+        .next()
+        .map(|(evaluated, _)| evaluated)
+        .unwrap_or_default()
+}
+
+/// Evaluate each group of rules at its place, opening the KB once.
+pub fn evaluate_at(
+    ws: &Workspace,
+    now: i64,
+    groups: &[(Place, Vec<&Rule>)],
+) -> Vec<(Evaluated, Context)> {
+    let unknown = |why: String| -> Vec<(Evaluated, Context)> {
+        let all = |rules: &[&Rule]| -> Evaluated {
+            rules
+                .iter()
+                .map(|r| {
+                    Some(
+                        r.require
+                            .iter()
+                            .map(|_| Owed::unknown(why.clone()))
+                            .collect(),
+                    )
+                })
+                .collect()
+        };
+        groups
             .iter()
-            .map(|r| {
-                Some(
-                    r.require
-                        .iter()
-                        .map(|_| Owed::unknown(why.clone()))
-                        .collect(),
-                )
-            })
+            .map(|(_, rules)| (all(rules), Context::default()))
             .collect()
     };
     let tool = match GitTool::locate() {
@@ -98,7 +141,26 @@ pub fn evaluate(ws: &Workspace, cwd: &Path, now: i64, rules: &[&Rule]) -> Evalua
         Ok(session) => session,
         Err(e) => return unknown(format!("cannot read the KB ({e})")),
     };
-    let facts = gather(&session, cwd, rules);
+    groups
+        .iter()
+        .map(|(place, rules)| {
+            let facts = gather(&session, place, rules);
+            let context = Context {
+                run: facts.run.as_ref().ok().map(|rec| rec.id.clone()),
+                repo: facts
+                    .subject
+                    .as_ref()
+                    .ok()
+                    .and_then(Option::as_ref)
+                    .map(|s| s.name.clone()),
+            };
+            (judged(&facts, rules), context)
+        })
+        .collect()
+}
+
+/// Each rule's facts, or `None` when its `repos` leave the subject out.
+fn judged(facts: &Facts, rules: &[&Rule]) -> Evaluated {
     rules
         .iter()
         .map(|rule| {
@@ -114,12 +176,12 @@ pub fn evaluate(ws: &Workspace, cwd: &Path, now: i64, rules: &[&Rule]) -> Evalua
                     return None;
                 }
             }
-            Some(rule.require.iter().map(|q| fact(&facts, q)).collect())
+            Some(rule.require.iter().map(|q| fact(facts, q)).collect())
         })
         .collect()
 }
 
-fn gather(session: &Session<'_>, cwd: &Path, rules: &[&Rule]) -> Facts {
+fn gather(session: &Session<'_>, place: &Place, rules: &[&Rule]) -> Facts {
     let run = match runs::current_of(session) {
         None => Err(format!("no current KB run; {START}")),
         Some(id) => match query::record(&session.conn, &id) {
@@ -130,9 +192,10 @@ fn gather(session: &Session<'_>, cwd: &Path, rules: &[&Rule]) -> Facts {
             Err(e) => Err(format!("cannot read the KB ({e})")),
         },
     };
-    let subject = match &session.git {
-        None => Err("the KB is not under Git".to_owned()),
-        Some(git) => {
+    let subject = match (&session.git, place) {
+        (_, Place::Unknown(why)) => Err(why.clone()),
+        (None, _) => Err("the KB is not under Git".to_owned()),
+        (Some(git), Place::At(cwd)) => {
             let recorded = run
                 .as_ref()
                 .ok()
@@ -154,10 +217,16 @@ fn gather(session: &Session<'_>, cwd: &Path, rules: &[&Rule]) -> Facts {
         step: None,
     };
     if wants(|q| matches!(q, Require::GatesMet | Require::Gate(_))) {
-        facts.gates = Some(judge(session, &facts));
+        facts.gates = Some(match place {
+            Place::At(_) => judge(session, &facts),
+            Place::Unknown(why) => Err(why.clone()),
+        });
     }
     if wants(|q| matches!(q, Require::StepMet)) {
-        facts.step = Some(step(session, &facts, cwd));
+        facts.step = Some(match place {
+            Place::At(cwd) => step(session, &facts, cwd),
+            Place::Unknown(why) => Owed::unknown(why.clone()),
+        });
     }
     facts
 }
@@ -191,6 +260,7 @@ fn judge(session: &Session<'_>, facts: &Facts) -> Result<Judged, String> {
             GateLine {
                 line: format!("gate {id} [{}]{next}", j.standing.name()),
                 met: j.standing.met(),
+                waived: super::waived::of(j),
                 id,
             }
         })
@@ -254,7 +324,10 @@ fn fact(facts: &Facts, require: &Require) -> Owed {
             None => Owed::unknown("the gates were not judged".into()),
             Some(Err(why)) => Owed::unknown(why.clone()),
             Some(Ok((lines, _, _))) => match lines.iter().find(|g| &g.id == id) {
-                Some(g) if g.met => Owed::met(),
+                Some(g) if g.met => Owed {
+                    waived: g.waived.iter().cloned().collect(),
+                    ..Owed::met()
+                },
                 Some(g) => Owed::unmet(g.line.clone()),
                 None => Owed::unmet(undefined(id)),
             },
@@ -262,7 +335,8 @@ fn fact(facts: &Facts, require: &Require) -> Owed {
     }
 }
 
-/// Every owed gate met, and no invalid receipt, statement or definition.
+/// Every owed gate met, and no invalid receipt, statement or definition;
+/// a run that owes no gate here does not meet it ([`gates_fact`]).
 fn gates_met(facts: &Facts) -> Owed {
     let (lines, owed, invalid) = match &facts.gates {
         None => return Owed::unknown("the gates were not judged".into()),
@@ -270,8 +344,11 @@ fn gates_met(facts: &Facts) -> Owed {
         Some(Ok(judged)) => judged,
     };
     let mut unmet: Vec<String> = Vec::new();
-    match owed {
-        None => unmet.extend(lines.iter().filter(|g| !g.met).map(|g| g.line.clone())),
+    let count = match owed {
+        None => {
+            unmet.extend(lines.iter().filter(|g| !g.met).map(|g| g.line.clone()));
+            lines.len()
+        }
         Some(ids) => {
             for id in ids {
                 match lines.iter().find(|g| &g.id == id) {
@@ -280,15 +357,44 @@ fn gates_met(facts: &Facts) -> Owed {
                     None => unmet.push(undefined(id)),
                 }
             }
+            ids.len()
         }
+    };
+    let n = unmet.len();
+    if count == 0 {
+        unmet.push(empty(facts, owed.is_some()));
     }
     if *invalid > 0 {
         unmet.push(format!(
             "invalid receipts or definitions: {invalid}; next: writfold kb gate status"
         ));
     }
-    match unmet.is_empty() {
-        true => Owed::met(),
-        false => Owed::unmet(unmet.join("; ")),
+    let relied = |g: &&GateLine| owed.as_ref().is_none_or(|ids| ids.contains(&g.id));
+    match gates_fact(count, n, *invalid) {
+        Fact::Met => Owed {
+            waived: lines
+                .iter()
+                .filter(relied)
+                .filter_map(|g| g.waived.clone())
+                .collect(),
+            ..Owed::met()
+        },
+        _ => Owed::unmet(unmet.join("; ")),
     }
+}
+
+/// Why an empty set of owed gates is not met, and the way past.
+fn empty(facts: &Facts, planned: bool) -> String {
+    let why = match (planned, &facts.subject) {
+        (true, _) => "the run's plan names none".to_owned(),
+        (false, Ok(Some(s))) => format!("none is defined for {}", s.name),
+        (false, _) => "none is defined here".to_owned(),
+    };
+    let next = match planned {
+        true => "name a gate in a plan step",
+        false => "define .writfold/gates/<id>.toml",
+    };
+    format!(
+        "no gate is owed here: {why}; gates.met is not met by an empty set; next: {next}, or leave this repository out of the rule with repos"
+    )
 }

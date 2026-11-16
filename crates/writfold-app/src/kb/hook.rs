@@ -34,7 +34,16 @@ pub fn main(args: &[String], cwd: PathBuf) -> Outcome {
     let kb = std::env::var_os(KB_OPTION)
         .filter(|v| !v.is_empty())
         .map(PathBuf::from);
-    let output = run(event, &input, &HookEnv { kb, cwd, now: None });
+    let output = run(
+        event,
+        &input,
+        &HookEnv {
+            kb,
+            cwd,
+            now: None,
+            home: std::env::var_os("HOME").map(PathBuf::from),
+        },
+    );
     Outcome {
         stdout: output.stdout,
         stderr: output.stderr,

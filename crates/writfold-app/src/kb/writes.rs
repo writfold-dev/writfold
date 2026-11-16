@@ -6,7 +6,12 @@ use writfold_kb::write::Write;
 use writfold_kb::write::record::{Decision, Link, Ticket};
 
 /// Flags that take a value.
-pub const VALUES: [&str; 33] = [
+pub const VALUES: [&str; 38] = [
+    "idle",
+    "mark",
+    "since-mark",
+    "rule",
+    "since",
     "from",
     "session",
     "audience",
@@ -42,7 +47,8 @@ pub const VALUES: [&str; 33] = [
     "commit",
 ];
 /// Flags without a value.
-pub const SWITCHES: [&str; 7] = [
+pub const SWITCHES: [&str; 8] = [
+    "eval",
     "open",
     "new-run",
     "allow-dirty",
@@ -55,7 +61,10 @@ pub const SWITCHES: [&str; 7] = [
 /// The write flags each verb accepts.
 pub fn allowed(verb: &str) -> &'static [&'static str] {
     match verb {
-        "runs" => &["open", "plan"],
+        "runs" => &["open", "plan", "idle"],
+        "find" => &["eval"],
+        "guard" => &["rule", "since"],
+        "delta" => &["mark", "since-mark", "since"],
         "checkpoint" => &["note", "from-draft", "run", "task", "mode", "new-run"],
         "record" => super::investigation::RECORD,
         "status" => super::set::FLAGS,
@@ -110,6 +119,7 @@ pub fn runs_and_writes(
     positional: &[String],
 ) -> Option<Result<Verb, String>> {
     Some(match (name, positional) {
+        ("runs", []) if common.values.contains_key("idle") => super::lists::idle(common),
         ("runs", []) => Ok(Verb::Runs {
             open: switch(common, "open"),
             project: common.project.clone(),
@@ -128,7 +138,8 @@ pub fn runs_and_writes(
         ("edit", _) => super::edit::verb(common, positional),
         ("deliver", _) => super::deliver::verb(common, positional),
         ("plan", _) => super::plan::verb(common, positional),
-        ("guard", _) => super::guard::verb(positional),
+        ("guard", _) => super::guard::verb(common, positional),
+        ("delta", _) => super::lists::delta(common, positional),
         ("observe", _) => super::observe::verb(common, positional),
         _ => return super::proposals::verb(name, common, positional),
     })

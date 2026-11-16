@@ -1,6 +1,6 @@
 # The knowledge base on disk
 
-> **Status:** built in v0.3.0-dev.1; kind declarations (`.writfold/sources/`) built in v0.5.0-dev.1; check receipts (`.writfold/checks/`) and the investigation template of `record investigation` built in v0.5.0-dev.9.
+> **Status:** built in v0.3.0-dev.1; kind declarations (`.writfold/sources/`) built in v0.5.0-dev.1; check receipts (`.writfold/checks/`) and the investigation template of `record investigation` built in v0.5.0-dev.9. The lookup tiers `normalized`, `prefix` and `heading`, suggestions on an empty answer, the guard log and marks built in v0.5.0-dev.10.
 
 A knowledge base (KB) is a directory holding `inventory/assets/`, normally a Git repository. Writfold finds it from `--kb DIR`, then `$WRITFOLD_KB`, then the nearest such directory above the working directory. Outside Git, reads still work and writes are refused.
 
@@ -176,6 +176,24 @@ Every answer ends with one line:
 | `index` | `fresh`, `refreshed:N` or `rebuilt` |
 | `answer=unknown reason=…` | the KB has no answer; that is not evidence about the world |
 
+## What a lookup matches
+
+`writfold kb find TEXT` (and `match`, which adds signatures) tries every tier below on every query, merges the rows in this order, and shows each record once, under the first tier that found it. The tier is the first word of the row's `match:` line, followed for a name tier by the form that matched (`normalized harbor-api`, `prefix quay-worker`, `heading Failure modes`), and the JSON key `matched_on` ([json](json.md)); a text hit's `match:` line is the first line of the file holding a query word, with its path and line, so the hit can be cited.
+
+| Tier | Over | Notes |
+|---|---|---|
+| `signature` | signature `match` patterns | with `match`, or `find --signatures` |
+| `exact` | record ID, ticket form (`HBR 101`, `hbr101`), typed prefix, alias, asset locator | assets carry `aliases`; signatures, investigations and projects answer to their bare names |
+| `normalized` | the phrase once case and punctuation are set aside (`harbor api`, `harbor_api` and `HAPI` against `harbor-api` and its alias `hapi`), equal to a record's ID, its ID after the typed prefix, its last `/` segment, its title or an alias | three characters or more; built in v0.5.0-dev.10 |
+| `prefix` | each word of the phrase begins a word of one of those names, in order, gaps allowed (`quay work` finds `quay-worker`, `work quay` does not) | two words, or one of four characters or more; fewest words left over first; built in v0.5.0-dev.10 |
+| `heading` | a Markdown section's name, equal or by prefix; the row is the file's record (or `doc:<path>`) and its `match:` line cites the section's first line | built in v0.5.0-dev.10 |
+| `text` | SQLite FTS5 over ID, title, summary and body, ranked by BM25 (weights 10, 5, 2, 1); every word of the query | diacritics removed |
+| `substring` | an FTS5 trigram table over ID, title and body; the whole query as a substring | three characters or more |
+| `typo` | trigram candidates re-ranked by edit distance | ID and title only; one edit, two for queries longer than eight characters |
+| `text-any` | BM25 again, any word of the query | |
+
+All of it is computed at query time from the derived index, which holds every file's body and each Markdown section's name and line range; the name tiers add nothing to it. A query that finds nothing answers `answer=unknown reason=no-record` with exit 2: absence from the KB is not evidence of absence. From v0.5.0-dev.10 such an answer may list up to three nearest names (an ID, title, alias or section name sharing a trigram with the phrase, more than the `typo` tier's edits away but within half the phrase's length), each a row with status `suggested` and the flag `!suggestion`. A suggestion is not a hit: the answer stays unknown and the exit 2.
+
 ## `.writfold/`
 
 | File | Defines | Guide |
@@ -273,6 +291,10 @@ kb-index-<hex>.sqlite   the derived index
 current-run             the run that checkpoint and gate use by default
 repos                   "<name> <path>" lines: where local clones are
 drafts/<session>.json   checkpoint drafts kept by the hooks (and the Stop nudge's `nudged` flag)
+marks/<name>.json       `kb delta` baselines: HEAD and the dirty files' blob IDs (session start
+                        takes one per session); removed after 30 days
+guard-log.jsonl         what this machine's guard hook decided for audit rules, refusals and
+                        passes on a waiver (guard-log.1.jsonl after 4 MiB); mode 0600
 proposals/<id>.json     pending proposals: record calls not yet made
 gates/, edits/          command output tails, artifacts and edit journals
 staging/, kb-write.lock the write protocol's working files

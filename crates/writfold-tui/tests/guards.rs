@@ -81,3 +81,33 @@ fn no_rule_directory_is_an_explicit_empty_guard_view() -> TestResult {
     assert_eq!(answer.trailer_text("reason").as_deref(), Some("no-guards"));
     Ok(())
 }
+
+#[test]
+fn audit_and_waived_rules_show_their_flags() -> TestResult {
+    let w = world("guards-flags")?;
+    let rules = w.kb.join(".writfold/guards");
+    let commit = rules.join("commit-needs-gates.toml");
+    let text_of = std::fs::read_to_string(&commit)?;
+    std::fs::write(&commit, format!("{text_of}mode = \"audit\"\n"))?;
+    std::fs::write(
+        rules.join("bench-waived.toml"),
+        "schema = \"writfold-guard-rule/1\"\nid = \"bench-waived\"\nevent = \"pre-tool-use\"\ncommands = [\"git push\"]\nrequire = [\"gate:bench\"]\naction = \"deny\"\n",
+    )?;
+    let say = writfold_kb::gate::Say {
+        kind: writfold_kb::gate::statement::Kind::Waived,
+        id: "bench".into(),
+        text: "bench is not run here".into(),
+        by: "owner".into(),
+        run: Some(RUN.into()),
+        repo: Some(w.kb.clone()),
+    };
+    let (out, exit) = w.verb(Verb::Gate(writfold_kb::gate::GateVerb::Say(say)), false)?;
+    assert_eq!(exit, 0, "{out}");
+    let mut app = App::new(w.source(), Some(RUN));
+    app.show(View::Guards);
+    let lines = text(&app);
+    assert!(lines.contains("!audit"), "{lines}");
+    assert!(lines.contains("!waived"), "{lines}");
+    assert!(lines.contains("audit="), "{lines}");
+    Ok(())
+}

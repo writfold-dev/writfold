@@ -1,0 +1,26 @@
+{
+  "schema": "writfold-guard-world/1",
+  "home": "{root}/home",
+  "dirs": [
+    "{root}/tmp"
+  ],
+  "repos": [
+    {
+      "top": "{home}/src/ledger",
+      "worktrees": [
+        "{home}/src/ledger-review"
+      ],
+      "rules": {}
+    }
+  ],
+  "kb": {
+    "rules": {
+      "ledger-review": "schema = \"writfold-guard-rule/1\"\nid = \"ledger-review\"\nevent = \"pre-tool-use\"\ncommands = [\"git commit\"]\nrepos = [\"books\"]\nrequire = [\"gate:review\"]\naction = \"deny\"\n"
+    },
+    "run": "open",
+    "map": {
+      "books": "{home}/src/ledger"
+    },
+    "gates": []
+  }
+}

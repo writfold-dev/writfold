@@ -1,0 +1,12 @@
+{
+  "schema": "writfold-guard-expected/1",
+  "decision": "deny",
+  "decided_by": [
+    "commit-needs-gates"
+  ],
+  "reason_has": [
+    "cannot tell which repository this command acts on",
+    "a variable",
+    "name the directory literally"
+  ]
+}

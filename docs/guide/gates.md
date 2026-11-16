@@ -1,6 +1,6 @@
 # Gates
 
-> **Status:** built in v0.3.0-dev.1; instruction gates, gate scripts, the Weft assessed gate, run-record checks and plan-owed gates built in v0.4.0-dev.1; checklist gates and `gate cover` built in v0.5.0-dev.1; observations as evidence built in v0.5.0-dev.3.
+> **Status:** built in v0.3.0-dev.1; instruction gates, gate scripts, the Weft assessed gate, run-record checks and plan-owed gates built in v0.4.0-dev.1; checklist gates and `gate cover` built in v0.5.0-dev.1; observations as evidence built in v0.5.0-dev.3. Nothing owed reads as not met, and the self-staling note, built in v0.5.0-dev.10.
 
 A gate is one small check with a path scope. `gate run` runs its command and keeps a receipt pinned to the exact bytes checked. `gate status` then says, on every read, whether that evidence still holds. Gates report; they block nothing unless a [guard rule](hooks.md#guard-rules) names them.
 
@@ -51,6 +51,8 @@ description = "README follows the language guideline"
 Patterns are anchored at the top of the repository. `*` and `?` match within one path segment. A `**` segment matches any number of segments, none included. A leading `!` excludes. A path is in scope when some pattern matches it and no exclusion does: `README.md` names only the top-level file, `**/*.md` every Markdown file.
 
 The scope decides staleness. A receipt is about the HEAD commit plus the content of the in-scope paths, uncommitted edits included. Committing the exact bytes a receipt was taken on leaves it satisfied; reverting to them makes it satisfied again.
+
+**A gate about the KB itself.** When the subject is the KB's own repository and the scope admits `runs/` (`**`, say), every statement, cover row and receipt the run files is inside the scope: writing it changes the content it is bound to, and the gate reads `open` again (`why: a waiver exists, but for other content or another definition`). Exclude the run's own files with `!runs/**`. `gate waive`, `gate attest` and `gate cover` re-check the gate after their own write and, when this happened, add `# note: this gate's scope includes the run's own files, so the statement changed the content it is about; exclude runs/** from the scope` (built in v0.5.0-dev.10).
 
 ## Running, and the receipt
 
@@ -122,6 +124,8 @@ A statement is a file in `runs/<run>/statements/`, bound to the same definition 
 
 A run without a plan owes every gate defined for its repository. A run with a plan ([run-graph](run-graph.md)) owes only the gates its steps name: `gate status`, `gate lines` and `resume` list those, and `plan advance` judges the current step's.
 
+**Nothing owed is not met** (built in v0.5.0-dev.10). When the run owes no gate here, `gate status` answers `answer=unknown reason=no-gates`, exit 2, with the note `no gates defined: …`, or, when gates are defined but the plan names none of them, `no gate is owed: the run's plan names none (N defined)`. `gate lines` ends its header with `: no gate is owed; nothing was checked` and exits 2, since the line is meant for a commit message. A [guard rule](hooks.md#guard-rules) requiring `gates.met` refuses in the same case.
+
 Receipts are judged in the order of their `seq` field, one more than the highest of the run's receipts of that gate on that subject when it was written; `recorded` is shown, never compared, so a clock that is wrong on one machine cannot change which receipt decides. Receipts written before `seq` existed count as 0 and keep their file-name order; two clones that wrote the same `seq` are ordered by file name.
 
 ## Instruction gates and gate scripts
@@ -156,6 +160,8 @@ description = "subject at most 72 characters, a blank second line, body wrapped 
 A script gate reports findings as `<line>: <text>` on stdout; only a clean exit 0 passes. A timeout, a signal or a draft that changed while it ran is `unknown`. A worked example is in `fixtures/kb/commit-message/`.
 
 ## Weft assessed gates
+
+> **Status:** built in v0.4.0-dev.1. Weft is frozen: the assessed gate keeps building and its tests keep passing, with no new development.
 
 A gate of class `assessed` is met by a [Weft](https://github.com/writfold-dev/weft) assessment of a plan step instead of a command's exit status. The agent states the step's assumptions and checks in a Weft file, cites the evidence for each assumption, and runs the gate. Writfold resolves every citation, runs the pinned `weft` binary, and records which checks Weft entails and whether each rests on grounded evidence.
 

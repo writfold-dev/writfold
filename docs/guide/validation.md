@@ -1,6 +1,6 @@
 # Is what I am reading still true?
 
-> **Status:** built in v0.3.0-dev.1; `kb check` built in v0.4.0-dev.1, with its plan line; kind declarations built in v0.5.0-dev.1; renames with edits followed in v0.5.0-dev.2; `kb repos` and partial-clone detection built in v0.5.0-dev.3.
+> **Status:** built in v0.3.0-dev.1; `kb check` built in v0.4.0-dev.1, with its plan line; kind declarations built in v0.5.0-dev.1; renames with edits followed in v0.5.0-dev.2; `kb repos` and partial-clone detection built in v0.5.0-dev.3. `find --eval` and the guard conformance cases built in v0.5.0-dev.10.
 
 Four things can drift: a cited source, the index, a gate's evidence, and a delivery draft. Each has its own command, and `kb check` runs the first three together. All of them only read; none fetches from a network.
 
@@ -139,6 +139,21 @@ More in [gates](gates.md).
 
 A draft's checks are tied to its bytes. Editing `candidate.md` makes its receipts stale, and `deliver status` shows the draft as blocked until `deliver check` runs again. More in [delivery-modes](delivery-modes.md).
 
+## Lookups: `find --eval`
+
+> Built in v0.5.0-dev.10.
+
+The KB helps only when the first lookup hits. `writfold kb find --eval [FILE]` measures that: each line of `FILE` (default `.writfold/queries.jsonl`, a tracked file reviewed like any other text) is one phrase and the records it should find:
+
+```text
+{"query": "quay work", "expect": ["quay-worker"], "note": "part of a name"}
+{"query": "failure modes", "expect": ["dossier:harbor-api"]}
+```
+
+`expect` holds one or more record IDs (or `doc:<path>`), any of which counts. Each query runs through the same code as `find` and is a `hit@1`, a `hit@5` (an expected record in the first five rows) or a `miss`, with the rank and the tier that found it; a miss names what ranked first instead. An `expect` ID that is not a record is flagged `!unknown-id` and counts as a miss. The trailer counts `queries`, `hit1`, `hit5`, `miss` and one `by-<tier>` count per tier, which is recall per tier. Exit 0 only when every query hits within five; otherwise 2. A missing or empty file is `answer=unknown reason=no-queries`, exit 2: an evaluation with no queries is not a pass. A line with an unknown key, an empty `expect` or that is not JSON is refused with its line number, exit 3. Nothing is written. Run it in CI to keep a team's known phrases finding their records; a phrase that misses belongs in the file, where it fails until a tier or an alias finds it.
+
+**Measured** (15 November 2026, release binaries of v0.5.0-dev.9 and v0.5.0-dev.10, process start included, `--json`): on a scratch copy of the fixture KB a `find` took 9.6 to 10.9 ms with this release against 9.7 to 11.1 ms with v0.5.0-dev.9 (four phrases, 30 calls each); on a generated KB of 3,000 records (1,500 tickets and 1,500 assets with two aliases each; derived index 7.4 MB) 21.8 to 37.1 ms against 12.3 to 30.8 ms (five phrases, 20 calls each). The added cost is the name tiers' pass over every record's names; every call stays under 50 ms. No hook calls `find`. The script is `target/dev10-smoke/find-timing.sh` in the release round's handover.
+
 ## Exit codes
 
 | Code | Meaning |
@@ -165,3 +180,9 @@ check gates [skipped] no current run
 It exits with the worst of the three codes: 0 only when all are clean, then 2, then 3, then 1. It writes nothing beyond what `index verify` writes. Delivery drafts are not included; `deliver status` reports them.
 
 When the current run holds a plan, a fourth row, `check plan`, carries `plan status`'s trailer: `attention` when a done step is `!stale`, an event is invalid, or a merge left the plan out of order. In the last case the row also carries the flag, `!out-of-order`, `!two-plans` or `!repeated`, and the trailer counts `disorder=` ([run graph](run-graph.md#two-sessions-and-two-clones)).
+
+## Guard decisions: the conformance cases
+
+> Built in v0.5.0-dev.10.
+
+What a guard rule decides is also stated as data: `fixtures/guard-conformance/<suite>/cases/<case>/` holds the hook's input (`event.json`), the world it runs in (`world.json`: repositories, worktrees, the KB's rules, its run and its gates) and the decision expected (`expected.json`). `cargo test` builds each world in a temporary directory, sends the event through the real hook entry point with a fixed clock and compares, naming every case that differs; the unit gate runs it. The seed suite, `writfold`, states how a command is read, which repository a command is judged in, an empty set of owed gates, `repos` and `paths` exclusions, an unreadable KB, `ask`, and the Stop nudge's once-per-session and once-per-turn rules. A suite written elsewhere is accepted by converting it into this format, with its source revision and licence pinned and each difference from its own expectation recorded with the reason; the format and the rules of import are in the suite's [README](../../fixtures/guard-conformance/README.md).

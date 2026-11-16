@@ -296,6 +296,9 @@ fn answer(
         ..Answer::default()
     };
     answer.notes.extend(report.recorded_note());
+    if crate::gate::own::staled(ws, subject, &report, (&gate, None), paths) {
+        answer.notes.push(crate::gate::own::NOTE.into());
+    }
     for (c, path) in covers.iter().zip(paths) {
         answer.notes.push(format!(
             "recorded {path} ({} {}: a judgement with checked evidence, not a check)",

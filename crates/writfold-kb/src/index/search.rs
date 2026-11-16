@@ -102,7 +102,7 @@ pub fn substring(conn: &Connection, text: &str, limit: usize) -> Result<Vec<Hit>
 }
 
 /// The query's distinct lower-case trigrams.
-fn trigrams(text: &str) -> Vec<String> {
+pub fn trigrams(text: &str) -> Vec<String> {
     let chars: Vec<char> = text.to_lowercase().chars().collect();
     let mut found: Vec<String> = chars.windows(3).map(|w| w.iter().collect()).collect();
     found.sort();

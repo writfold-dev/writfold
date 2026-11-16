@@ -16,25 +16,36 @@
 //!   `repeat = "turn"` once per user turn, and never while
 //!   `stop_hook_active` is set; the session flag is its local draft.
 pub mod delivery;
+pub mod log;
+pub mod matched;
 pub mod paths;
+pub(crate) mod pre;
+mod report;
 pub mod require;
 pub mod rules;
 pub mod status;
+pub mod waived;
 
 /// One read-only guard verb.
 #[derive(Clone, Debug)]
 pub enum GuardVerb {
     Status,
+    /// `guard log [--rule ID] [--since AGE]` (AGE in seconds).
+    Log {
+        rule: Option<String>,
+        since: Option<i64>,
+    },
 }
 
 use crate::draft;
 use crate::hook::HookOutput;
 use crate::workspace::Workspace;
+pub use report::execute as log_report;
 use require::Owed;
 use rules::{Event, Rule};
 use serde_json::{Map, Value, json};
 use std::path::Path;
-use writfold_core::guard::{Decision, Fact, Repeat, combine, decide, nudge_with};
+use writfold_core::guard::{Decision, Fact, Repeat, nudge_with};
 
 /// The draft field that records this session's Stop nudge.
 pub const NUDGED: &str = "nudged";
@@ -73,11 +84,12 @@ fn problems_note(problems: &[(String, String)]) -> String {
         .collect()
 }
 
-/// Decide one PreToolUse event: the delivery guard, then the rules.
+/// Decide one PreToolUse event: the delivery guard, then the rules,
+/// each judged where the command it matched acts ([`matched`]).
 pub fn pre_tool_use(
     ws: &Workspace,
     input: &Map<String, Value>,
-    cwd: &Path,
+    (cwd, home): (&Path, Option<&Path>),
     now: i64,
 ) -> Result<HookOutput, String> {
     let mut stderr = match delivery::pre_tool_use(ws, input, cwd, now) {
@@ -85,46 +97,19 @@ pub fn pre_tool_use(
         Ok(out) => out.stderr,
         Err(why) => format!("writfold kb hook: {why}\n"),
     };
-    let dirs = rules::dirs(&ws.root, cwd);
-    if dirs.is_empty() {
+    let call = matched::Call::read(input, cwd, home);
+    let Some(loaded) = matched::Loaded::find(&ws.root, &call.places()) else {
+        return Ok(quiet_with(stderr));
+    };
+    stderr.push_str(&problems_note(&loaded.problems));
+    let groups = matched::groups(&loaded, &call);
+    if groups.is_empty() {
         return Ok(quiet_with(stderr));
     }
-    let (found, problems) = rules::read(&dirs);
-    stderr.push_str(&problems_note(&problems));
-    let tool = input.get("tool_name").and_then(Value::as_str).unwrap_or("");
-    let line = input
-        .get("tool_input")
-        .and_then(|t| t.get("command"))
-        .and_then(Value::as_str)
-        .unwrap_or("");
-    let file = found
-        .iter()
-        .any(|r| !r.paths.is_empty())
-        .then(|| paths::target(input, cwd))
-        .flatten();
-    let matched: Vec<&Rule> = found
-        .iter()
-        .filter(|r| r.event == Event::PreToolUse)
-        .filter(|r| {
-            (r.tools.iter().any(|t| t == tool) && paths::admits(&r.paths, file.as_deref()))
-                || (tool == "Bash" && r.matches_line(line))
-        })
-        .collect();
-    if matched.is_empty() {
-        return Ok(quiet_with(stderr));
-    }
-    let evaluated = require::evaluate(ws, cwd, now, &matched);
-    let mut decision = Decision::Pass;
-    let mut reasons = Vec::new();
-    for (rule, owed) in matched.iter().zip(evaluated) {
-        let Some(owed) = owed else { continue };
-        let facts: Vec<Fact> = owed.iter().map(|o| o.fact).collect();
-        let decided = decide(true, rule.action, &facts);
-        if decided != Decision::Pass {
-            reasons.push(reason(rule, &owed, "a guard, not enforcement"));
-            decision = combine(decision, decided);
-        }
-    }
+    let decided = pre::judge(ws, input, &groups, now);
+    stderr.push_str(&decided.stderr);
+    let reasons = decided.reasons;
+    let decision = decided.decision;
     let verdict = match decision {
         Decision::Pass => return Ok(quiet_with(stderr)),
         Decision::Deny => "deny",

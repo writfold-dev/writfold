@@ -5,15 +5,16 @@
 //! that repository (it is found by walking up from the working directory,
 //! never by spawning Git). Finding rules only reads files.
 use crate::gate::toml::{self, Value};
-use crate::shell::{self, Word};
+use crate::shell;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
-use writfold_core::guard::{Action, Repeat};
+use writfold_core::guard::{Action, Mode, Repeat};
 
 pub const SCHEMA: &str = "writfold-guard-rule/1";
 /// Where rules live, under the KB root or a repository.
 pub const DIR: &str = ".writfold/guards";
-const KEYS: [&str; 11] = [
+const KEYS: [&str; 12] = [
+    "mode",
     "schema",
     "id",
     "event",
@@ -84,18 +85,17 @@ pub struct Rule {
     pub action: Action,
     /// How often a stop rule nudges; `Session` for a pre-tool-use rule.
     pub repeat: Repeat,
+    /// `audit`: judged and logged, never decides the call.
+    pub mode: Mode,
     pub description: String,
 }
 
 impl Rule {
-    /// Whether a Bash command line holds a simple command this rule names.
-    pub fn matches_line(&self, line: &str) -> bool {
-        shell::segments(line).iter().any(|segment| {
-            let words: &[Word] = shell::command(segment);
-            self.commands
-                .iter()
-                .any(|c| c.len() <= words.len() && c.iter().zip(words).all(|(a, w)| *a == w.text))
-        })
+    /// Whether one invocation's words are a command this rule names
+    /// ([`shell::matches`]: a whole-word prefix, not before a lone
+    /// `--help`).
+    pub fn names(&self, words: &[String]) -> bool {
+        self.commands.iter().any(|c| shell::matches(c, words))
     }
 }
 
@@ -157,6 +157,35 @@ fn repeat(map: &BTreeMap<String, Value>, event: Event) -> Result<Repeat, String>
     }
 }
 
+/// The `mode` key: `enforce` (the default) or `audit`, pre-tool-use only.
+fn mode(map: &BTreeMap<String, Value>, event: Event) -> Result<Mode, String> {
+    match (event, text(map, "mode")?) {
+        (Event::PreToolUse, Some(m)) => {
+            Mode::parse(&m).ok_or_else(|| "mode must be enforce or audit".into())
+        }
+        (Event::Stop, Some(_)) => Err("mode applies to a pre-tool-use rule only".into()),
+        (_, None) => Ok(Mode::Enforce),
+    }
+}
+
+/// The `require` key: one or more requirements, each once.
+fn requirements(map: &BTreeMap<String, Value>) -> Result<Vec<Require>, String> {
+    let names = strings(map, "require")?;
+    if names.is_empty() {
+        return Err("require names at least one requirement".into());
+    }
+    let mut require = Vec::new();
+    for (n, name) in names.iter().enumerate() {
+        let parsed = Require::parse(name)
+            .ok_or_else(|| format!("require {name:?} is not one of {}", REQUIREMENTS.join(", ")))?;
+        if names[..n].contains(name) {
+            return Err(format!("require names {name} twice"));
+        }
+        require.push(parsed);
+    }
+    Ok(require)
+}
+
 /// Parse one rule file whose name is `<stem>.toml`.
 pub fn parse(text_in: &str, stem: &str, path: &str) -> Result<Rule, String> {
     let map = toml::parse(text_in)?;
@@ -204,6 +233,7 @@ pub fn parse(text_in: &str, stem: &str, path: &str) -> Result<Rule, String> {
     }
     let paths = paths(&map, &commands, &tools)?;
     let repeat = repeat(&map, event)?;
+    let mode = mode(&map, event)?;
     let repos = strings(&map, "repos")?;
     if let Some(bad) = repos.iter().find(|r| {
         let bare = r.strip_prefix('!').unwrap_or(r);
@@ -211,19 +241,7 @@ pub fn parse(text_in: &str, stem: &str, path: &str) -> Result<Rule, String> {
     }) {
         return Err(format!("repos pattern {bad:?} is not a repository name"));
     }
-    let names = strings(&map, "require")?;
-    if names.is_empty() {
-        return Err("require names at least one requirement".into());
-    }
-    let mut require = Vec::new();
-    for (n, name) in names.iter().enumerate() {
-        let parsed = Require::parse(name)
-            .ok_or_else(|| format!("require {name:?} is not one of {}", REQUIREMENTS.join(", ")))?;
-        if names[..n].contains(name) {
-            return Err(format!("require names {name} twice"));
-        }
-        require.push(parsed);
-    }
+    let require = requirements(&map)?;
     Ok(Rule {
         id,
         path: path.to_owned(),
@@ -235,33 +253,39 @@ pub fn parse(text_in: &str, stem: &str, path: &str) -> Result<Rule, String> {
         require,
         action,
         repeat,
+        mode,
         description: text(&map, "description")?.unwrap_or_default(),
     })
+}
+
+/// The KB root's rule directory, when it exists.
+pub fn root_dir(kb: &Path) -> Option<(PathBuf, String)> {
+    let root = kb.join(DIR);
+    root.is_dir().then(|| (root, DIR.to_owned()))
+}
+
+/// The nearest `.writfold/guards/` at or above `dir` when it is not the
+/// KB root's (found by `stat`, never by Git), with its shown path.
+pub fn near_dir(kb: &Path, dir: &Path) -> Option<(PathBuf, String)> {
+    let (top, found) = dir
+        .ancestors()
+        .map(|d| (d, d.join(DIR)))
+        .find(|(_, d)| d.is_dir())?;
+    let same = match (
+        std::fs::canonicalize(kb.join(DIR)),
+        std::fs::canonicalize(&found),
+    ) {
+        (Ok(a), Ok(b)) => a == b,
+        _ => false,
+    };
+    (!same).then(|| (found, format!("{}/{DIR}", top.display())))
 }
 
 /// The rule directories that apply at `cwd`: the KB root's, then the
 /// nearest `.writfold/guards/` at or above `cwd` when it is another one.
 /// Only directories that exist are returned, so no rule means no work.
 pub fn dirs(kb: &Path, cwd: &Path) -> Vec<(PathBuf, String)> {
-    let mut out = Vec::new();
-    let root = kb.join(DIR);
-    if root.is_dir() {
-        out.push((root.clone(), DIR.to_owned()));
-    }
-    let near = cwd
-        .ancestors()
-        .map(|dir| (dir, dir.join(DIR)))
-        .find(|(_, d)| d.is_dir());
-    if let Some((top, dir)) = near {
-        let same = match (std::fs::canonicalize(&root), std::fs::canonicalize(&dir)) {
-            (Ok(a), Ok(b)) => a == b,
-            _ => false,
-        };
-        if !same {
-            out.push((dir, format!("{}/{DIR}", top.display())));
-        }
-    }
-    out
+    root_dir(kb).into_iter().chain(near_dir(kb, cwd)).collect()
 }
 
 /// Every rule of `dirs`, and every file that does not parse (path, why).

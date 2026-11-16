@@ -1,0 +1,23 @@
+{
+  "schema": "writfold-guard-world/1",
+  "home": "{root}/home",
+  "dirs": [
+    "{root}/tmp"
+  ],
+  "repos": [
+    {
+      "top": "{home}/src/api",
+      "origin": "git@host.example:acme/api.git",
+      "worktrees": [],
+      "rules": {}
+    }
+  ],
+  "kb": {
+    "rules": {
+      "commit-needs-gates": "schema = \"writfold-guard-rule/1\"\nid = \"commit-needs-gates\"\nevent = \"pre-tool-use\"\ncommands = [\"git commit\", \"git push\"]\nrequire = [\"run.current\", \"gates.met\"]\naction = \"deny\"\n"
+    },
+    "run": "open",
+    "map": {},
+    "gates": []
+  }
+}

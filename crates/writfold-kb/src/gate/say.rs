@@ -14,6 +14,7 @@ use crate::session::Session;
 use crate::workspace::{GitTool, Workspace};
 use crate::write::{Op, atomic, unique};
 use crate::{runs, time};
+use writfold_core::gate::Standing;
 
 /// One statement to record about a gate.
 #[derive(Clone, Debug)]
@@ -127,6 +128,17 @@ fn answer(
     let mut filings = Filings::for_run(&session, rec);
     filings.owed.gates = None;
     let report = status::judge(&session, subject, &filings)?;
+    let wanted = match say.kind {
+        Kind::Attested => Standing::Attested,
+        Kind::Waived => Standing::Waived,
+    };
+    let own = super::own::staled(
+        ws,
+        subject,
+        &report,
+        (&say.id, Some(wanted)),
+        &[path.into()],
+    );
     let mut answer = Answer {
         rows: status::rows(git, subject, &report, &filings)?
             .into_iter()
@@ -138,6 +150,9 @@ fn answer(
         "recorded {path} ({}: a statement, not a check)",
         say.kind.name()
     ));
+    if own {
+        answer.notes.push(super::own::NOTE.into());
+    }
     answer
         .notes
         .push("written to the KB work tree; commit it to share it".into());

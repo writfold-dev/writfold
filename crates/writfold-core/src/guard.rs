@@ -89,6 +89,52 @@ pub fn combine(a: Decision, b: Decision) -> Decision {
     }
 }
 
+/// Whether a pre-tool-use rule decides (`Enforce`, the default) or is
+/// being tried (`Audit`): judged the same, its decision only logged.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Mode {
+    Enforce,
+    Audit,
+}
+
+impl Mode {
+    pub fn name(self) -> &'static str {
+        match self {
+            Mode::Enforce => "enforce",
+            Mode::Audit => "audit",
+        }
+    }
+
+    pub fn parse(text: &str) -> Option<Self> {
+        match text {
+            "enforce" => Some(Mode::Enforce),
+            "audit" => Some(Mode::Audit),
+            _ => None,
+        }
+    }
+}
+
+/// What a decided rule does to the call: an audit rule lets it through,
+/// so the log holds what enforcing would have decided.
+pub fn effect(mode: Mode, decided: Decision) -> Decision {
+    match mode {
+        Mode::Enforce => decided,
+        Mode::Audit => Decision::Pass,
+    }
+}
+
+/// The `gates.met` fact from three counts: the gates the run owes here,
+/// how many of those are not met, and how many receipts, statements or
+/// definitions are invalid. `Met` only when something is owed and every
+/// owed gate is met with nothing invalid: an empty set is not met.
+pub fn gates_fact(owed: usize, unmet: usize, invalid: usize) -> Fact {
+    if owed > 0 && unmet == 0 && invalid == 0 {
+        Fact::Met
+    } else {
+        Fact::Unmet
+    }
+}
+
 /// How often a stop rule may nudge.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Repeat {
@@ -142,7 +188,10 @@ pub fn nudge(stop_hook_active: bool, already_nudged: bool, facts: &[Fact]) -> bo
 
 #[cfg(test)]
 mod tests {
-    use super::{Action, Decision, Fact, Repeat, all_met, combine, decide, nudge, nudge_with};
+    use super::{
+        Action, Decision, Fact, Mode, Repeat, all_met, combine, decide, effect, gates_fact, nudge,
+        nudge_with,
+    };
     use alloc::vec::Vec;
 
     const FACTS: [Fact; 3] = [Fact::Met, Fact::Unmet, Fact::Unknown];
@@ -236,6 +285,34 @@ mod tests {
                 assert_eq!(rank(c), rank(a).max(rank(b)));
             }
         }
+    }
+
+    #[test]
+    fn gates_are_met_only_when_some_are_owed_and_all_of_them_are_met() {
+        for owed in 0..=2 {
+            for unmet in 0..=2 {
+                for invalid in 0..=2 {
+                    let want = match (owed, unmet, invalid) {
+                        (0, _, _) => Fact::Unmet,
+                        (_, 0, 0) => Fact::Met,
+                        _ => Fact::Unmet,
+                    };
+                    assert_eq!(gates_fact(owed, unmet, invalid), want);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn audit_lets_every_decision_through_and_enforce_keeps_it() {
+        for decided in DECISIONS {
+            assert_eq!(effect(Mode::Enforce, decided), decided);
+            assert_eq!(effect(Mode::Audit, decided), Decision::Pass);
+        }
+        for mode in [Mode::Enforce, Mode::Audit] {
+            assert_eq!(Mode::parse(mode.name()), Some(mode));
+        }
+        assert_eq!(Mode::parse("warn"), None);
     }
 
     #[test]

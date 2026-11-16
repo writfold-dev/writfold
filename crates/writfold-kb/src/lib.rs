@@ -13,6 +13,7 @@
 
 pub mod check;
 pub mod deliver;
+pub mod delta;
 pub mod draft;
 pub mod edit;
 pub mod emit;
@@ -77,6 +78,21 @@ pub enum Verb {
         text: String,
         filter: verbs::find::Filter,
         signatures: bool,
+    },
+    /// `runs --idle AGE`: open runs whose last recorded write is older
+    /// than `age` seconds (`age_text` as given).
+    RunsIdle {
+        age: i64,
+        age_text: String,
+        project: Option<String>,
+        plan: bool,
+    },
+    /// `delta --mark NAME | --since-mark NAME | --since REV`.
+    Delta(delta::DeltaVerb),
+    /// `find --eval [FILE]`: the query file (absolute), else
+    /// `.writfold/queries.jsonl`.
+    FindEval {
+        file: Option<PathBuf>,
     },
     Status {
         target: String,
@@ -159,6 +175,9 @@ pub fn run(request: &Request) -> Result<Output> {
     if let Verb::Guard(guard::GuardVerb::Status) = &request.verb {
         return guard::status::execute(&ws, request, now);
     }
+    if let Verb::Guard(guard::GuardVerb::Log { rule, since }) = &request.verb {
+        return guard::log_report(&ws, request, (rule.as_deref(), *since), now);
+    }
     if let Verb::Edit(verb) = &request.verb {
         return edit::execute(&ws, request, verb, now);
     }
@@ -176,6 +195,9 @@ pub fn run(request: &Request) -> Result<Output> {
     }
     if let Verb::StaleRecord { scope } = &request.verb {
         return stale::checker::record::execute(&ws, request, scope.as_deref(), now);
+    }
+    if let Verb::Delta(verb) = &request.verb {
+        return delta::execute(&ws, request, verb, now);
     }
     if let Verb::Check { scope } = &request.verb {
         return check::execute(&ws, request, scope.as_deref(), now);
@@ -255,8 +277,46 @@ fn answer(session: &Session<'_>, request: &Request) -> Result<(Answer, &'static 
     })
 }
 
+/// `runs --idle` and `find --eval` (v0.5.0-dev.10); `None` for every
+/// other verb.
+fn measured(
+    session: &Session<'_>,
+    verb: &Verb,
+) -> Option<Result<(Answer, &'static str, Vec<String>)>> {
+    let answered =
+        |r: Result<Answer>, name: &'static str, args: Vec<String>| Some(r.map(|a| (a, name, args)));
+    match verb {
+        Verb::RunsIdle {
+            age,
+            age_text,
+            project,
+            plan,
+        } => {
+            let mut args = vec![format!("idle={age_text}")];
+            args.extend(project.iter().map(|p| format!("project={p}")));
+            if *plan {
+                args.push("plan=true".into());
+            }
+            answered(
+                verbs::runs::idle(session, (*age, age_text), project.as_deref(), *plan),
+                "runs",
+                args,
+            )
+        }
+        Verb::FindEval { file } => answered(
+            verbs::eval::eval(session, file.as_deref()),
+            "find-eval",
+            file.iter().map(|f| f.display().to_string()).collect(),
+        ),
+        _ => None,
+    }
+}
+
 /// The search, graph and housekeeping verbs.
 fn graph(session: &Session<'_>, verb: &Verb) -> Result<(Answer, &'static str, Vec<String>)> {
+    if let Some(found) = measured(session, verb) {
+        return found;
+    }
     Ok(match verb {
         Verb::Find {
             text,

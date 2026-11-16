@@ -1,6 +1,6 @@
 # Claude Code hooks
 
-> **Status:** built in v0.3.0-dev.1; the plan position, the inbox, the behind-remote line and the re-injection after compaction were added on 12 November 2026 ([design §25](../writfold/kb-v1-design.md#25-deterministic-hooks-as-built)); the stale-citation line, guard rules and the Stop nudge built in v0.5.0-dev.1; a rule's `paths` and a stop rule's `repeat` built in v0.5.0-dev.3; rules naming `writfold:edit`, checked by `kb edit apply` itself, built in v0.5.0-dev.9.
+> **Status:** built in v0.3.0-dev.1; the plan position, the inbox, the behind-remote line and the re-injection after compaction were added on 12 November 2026 ([design §25](../writfold/kb-v1-design.md#25-deterministic-hooks-as-built)); the stale-citation line, guard rules and the Stop nudge built in v0.5.0-dev.1; a rule's `paths` and a stop rule's `repeat` built in v0.5.0-dev.3; rules naming `writfold:edit`, checked by `kb edit apply` itself, built in v0.5.0-dev.9. How a command is read (here-documents, wrappers, `git -C` and judging each command where it acts), `gates.met` over an empty set, `mode = "audit"`, the guard log and the session's mark built in v0.5.0-dev.10.
 
 "Hook" here means a Claude Code hook: a command the harness runs at a session event. The plugin registers six, and each one runs `writfold kb hook <event>` with the event's JSON on stdin. No hook calls a model. Only one asks Claude to continue: a `stop` [guard rule](#guard-rules), which you opt into, adds context at most once per session (or, with `repeat = "turn"`, once per user turn), and Claude Code continues the turn so Claude can act on it. Rules about what a run must contain (a reflection, a backfill) are not hooks; they are gates (run-record checks), on the [run-graph](run-graph.md) and [gates](gates.md) pages.
 
@@ -8,7 +8,7 @@
 
 | Claude Code event | Reads from the event | Writes | Prints | Timeout |
 |---|---|---|---|---|
-| `SessionStart` | `cwd`, `source` | nothing | JSON `additionalContext`, built from local files and refs only: a behind-remote line; `brief` for the project inferred from `cwd` (budget 1,200 tokens); a count of stale citations from the verdict cache; `resume` of the current run (budget 500); the plan position; an inbox of drafts, proposals and runs left without an evaluation. After a compaction (`source` `compact`), only the plan position. Fitted to 9,000 characters ([below](#what-session-start-injects)) | 30 s |
+| `SessionStart` | `cwd`, `source`, `session_id` | the session's mark (local; from v0.5.0-dev.10, [below](#a-stop-that-requires-a-write-recipe)) | JSON `additionalContext`, built from local files and refs only: a behind-remote line; `brief` for the project inferred from `cwd` (budget 1,200 tokens); a count of stale citations from the verdict cache; `resume` of the current run (budget 500); the plan position; an inbox of drafts, proposals and runs left without an evaluation. After a compaction (`source` `compact`), only the plan position. Fitted to 9,000 characters ([below](#what-session-start-injects)) | 30 s |
 | `PreCompact` | `session_id`, `cwd`, `trigger` | the draft's place: repository, branch, worktree, HEAD, dirty count | plain-text instructions for the compaction summary: keep the task, decisions with reasons, what failed, open questions, the next step | 15 s |
 | `PostCompact` | `session_id`, `compact_summary` | the draft's summary | nothing | 15 s |
 | `Stop` | `session_id`, `last_assistant_message`, `stop_hook_active`, `cwd` | the draft's last message; the draft's `nudged` flag after a nudge | nothing, or JSON `additionalContext` from a `stop` [guard rule](#guard-rules), once per session or once per turn | 10 s |
@@ -72,7 +72,7 @@ All three are read from files: the run's manifest and sidecar, `checkpoint.md` a
 
 **The 9,000-character cut.** When the parts together exceed 9,000 characters, they are cut in this order: the brief first, then the current run, the inbox, the plan position, the stale-citations line, and the behind-remote line last. The parts are kept whole from the last of that list backwards while they fit. The first that does not fit is cut at a line, with a `[… cut to fit the session-start limit …]` marker, and the rest are dropped.
 
-**Cost.** One Git spawn for the behind-remote line, on top of those the verbs already make. On the fixture KB with a plan and an upstream, the in-process release build took about 41 ms at start (the gates are judged twice, once by `resume` and once by `plan status`) and about 11 ms after a compaction. That is well inside the 30 s timeout.
+**Cost.** One Git spawn for the behind-remote line, on top of those the verbs already make. From v0.5.0-dev.10 the first start of a session also takes its mark (one `git status`, one `ls-tree` and hashing the dirty files): measured on 16 November 2026 on a scratch copy of the fixture KB with three dirty files, about 26 ms a call with a mark against 17 to 19 ms for v0.5.0-dev.9 (30 calls, two rounds); a resume or a compaction finds the mark and writes nothing. On the fixture KB with a plan and an upstream, the in-process release build took about 41 ms at start (the gates are judged twice, once by `resume` and once by `plan status`) and about 11 ms after a compaction. That is well inside the 30 s timeout.
 
 ## Failing open
 
@@ -131,21 +131,24 @@ description = "commit only when the run's gates are met"
 |---|---|
 | `id` | a slug equal to the file name |
 | `event` | `pre-tool-use`, or `stop` (the nudge below) |
-| `commands` | the first words of a simple command, as in `guard.toml`: `git commit` matches `git commit -m x`, `cargo test && git commit`, and `FOO=1 git commit`, but not `echo "git commit"` |
+| `commands` | the first words of a simple command, compared whole word by whole word once wrappers and `git`'s global options are set aside: `git commit` matches `git commit -m x`, `cargo test && git commit`, `FOO=1 git commit`, `sudo git commit` and `git -C ../api commit`, but not `echo "git commit"`, a here-document's body, `git commit-tree` or `git commit --help` ([how a command is read](#how-a-command-is-read)) |
 | `tools` | exact tool names, such as `Edit` or `mcp__slack__post_message`; the reserved name `writfold:edit` makes the rule apply to `writfold kb edit apply` itself ([below](#edits-made-by-writfold-kb-edit-apply)) |
 | `paths` | optional globs over the file a tool call edits, with `!` exclusions (built in v0.5.0-dev.3, [below](#paths)); only with `tools`, refused with `commands` |
-| `repos` | optional repository names ([how a repository is named](#how-repos-names-a-repository)), with `*` and `!` exclusions; default every repository. A rule with `repos` is skipped outside a repository |
+| `repos` | optional repository names ([how a repository is named](#how-repos-names-a-repository)), with `*` and `!` exclusions; default every repository. The repository is the one the matched command acts on ([below](#how-a-command-is-read)). A rule with `repos` is skipped outside a repository |
 | `require` | one or more of the fixed requirements below; anything else is refused |
 | `action` | `deny` or `ask` (`pre-tool-use` only; Claude Code then asks the user) |
 | `description` | shown first in the reason |
 | `repeat` | `stop` rules only: `session` (the default) or `turn` ([below](#the-stop-nudge)) |
+| `mode` | `pre-tool-use` rules only: `enforce` (the default) or `audit`, which judges and logs the rule without deciding the call ([below](#trying-a-rule-audit-mode); built in v0.5.0-dev.10). Any other value, and `mode` on a `stop` rule, is refused |
 
 | Requirement | Met when |
 |---|---|
 | `run.current` | the current-run pointer names a run in the KB, and that run is open |
-| `gates.met` | every gate the run owes for this repository is satisfied, attested or waived, as `gate status` judges it (a plan narrows it to the plan's gates), and no receipt, statement or definition is invalid. A waiver counts, and so does a [checklist](gates.md) whose required items are all covered `supported` or `not-applicable`: it is attested |
+| `gates.met` | the run owes at least one gate for this repository, every gate it owes is satisfied, attested or waived, as `gate status` judges it (a plan narrows it to the plan's gates), and no receipt, statement or definition is invalid. A waiver counts, and so does a [checklist](gates.md) whose required items are all covered `supported` or `not-applicable`: it is attested. **An empty set is not met** (built in v0.5.0-dev.10): with no gate defined for the repository, or a plan whose steps name none, the rule takes its action with `no gate is owed here: none is defined for <repo>; gates.met is not met by an empty set; next: define .writfold/gates/<id>.toml, or leave this repository out of the rule with repos` |
 | `gate:<id>` | that gate is met |
 | `step.met` | the plan's current step owes nothing (met with no plan, or when every step is closed) |
+
+`step.met` is a statement about a plan step, so a run without a plan meets it: a Stop rule built on it stays quiet when there is nothing to finish. When a missing plan, or a missing run, should not pass, put `run.current` or `gates.met` beside it in `require`.
 
 A refusal names each unmet requirement and the command that would meet it, taken from `gate status`'s `next:` lines:
 
@@ -164,6 +167,64 @@ writfold guard rule commit-needs-gates (a guard, not enforcement): commit only w
 ```
 
 Like a guard, a permission rule reads the command line; it is not enforcement either.
+
+### Past a guard
+
+A refusal names what is owed. Each kind of refusal has one way past, and each way leaves a record:
+
+| The refusal names | The way past, and the record it leaves |
+|---|---|
+| a gate that is `open`, `stale`, `failed` or `unknown` | meet it, or `writfold kb gate waive <id> --reason TEXT --by WHO`: a tracked file in `runs/<run>/statements/`, bound to the gate's definition and the bytes in its scope, so it lapses when either changes; shown as `[waived]` by `gate status`, `resume` and the session-start context, as a `waived by … : reason` line by `gate lines` (so it reaches the commit message), and in `guard status` and the guard log |
+| no current run, or a closed one | start a run; there is nothing to waive |
+| an undefined gate, or no gate owed | define the gate, or narrow the rule with `repos` |
+| "cannot tell which repository" | repeat the command with the directory written literally |
+| a rule that matches what it should not, or a KB that cannot be read | set `mode = "audit"` in the rule file: a one-line tracked change, visible in `git diff`, in `guard status` and in every trailer's `+dirty` count until it is committed or reverted, with the guard log recording what the rule would have refused meanwhile |
+
+There is no rule-level waiver. A refusal does not name a waive command, and an agent that is refused is not told how to excuse itself: the way past is in this guide. To keep `gate waive` and `gate attest` for people, make Claude Code ask before they run, and before a rule file is edited, in `.claude/settings.json`:
+
+```json
+{
+  "permissions": {
+    "ask": [
+      "Bash(writfold kb gate waive:*)",
+      "Bash(writfold kb gate attest:*)",
+      "Edit(**/.writfold/guards/**)"
+    ]
+  }
+}
+```
+
+A permission rule, like a guard, reads what the harness shows it; it is not enforcement either.
+
+A waiver is visible where a guard passes on it (built in v0.5.0-dev.10): `guard status` flags the rule `!waived` with a `waived:` line naming the gate, the reason, who and when, and the statement's file; the hook writes `writfold kb hook: guard rule <id> passed on a waiver: gate <gate>` to stderr and adds an entry to the [guard log](#the-guard-log).
+
+### Trying a rule: audit mode
+
+> Built in v0.5.0-dev.10.
+
+A new or changed rule is where false refusals come from. With `mode = "audit"`, a `pre-tool-use` rule is matched and judged exactly as an enforcing one, but the harness is told nothing for it: stdout carries no decision from that rule, and one line goes to stderr, `writfold kb hook: guard rule <id> (audit) would deny: <reason>`. Its would-be decision goes to the guard log. An enforcing rule beside it still decides: a call an enforcing rule denies is denied, and both are logged.
+
+- `guard status` keeps the rule's judged status (`would-deny`, `would-ask`, `would-pass`), flags it `!audit` with the line `mode: audit: a matched call is let through and logged`, and counts a refusing audit rule under `audit=` (shown only when not zero), not under `deny` or `ask`. A non-zero `audit` count exits 2: an audit rule that would refuse is not a clean answer.
+- `kb edit apply` under a matched audit rule naming `writfold:edit` applies the edit and adds `# note: guard rule <id> (audit) would refuse this edit: …; applied and logged`.
+- When the log shows the rule matching and never refusing, `guard log` says `next: remove mode = "audit" from <path> to enforce it`. Writfold never promotes a rule.
+
+### The guard log
+
+> Built in v0.5.0-dev.10.
+
+`<KB Git directory>/writfold/guard-log.jsonl` is what this machine's hook (and `edit apply`) decided: one JSON line per entry, appended with one `write`, mode 0600, never committed. An entry is written for every evaluation of a matched audit rule (passes included, so a clean log can be told from a rule that never matched), every decision of an enforcing rule that is not a pass, and every pass that rested on a waiver; a call no rule matches writes nothing.
+
+```json
+{"schema":"writfold-guard-log/1","at":"2026-11-16T10:02:11Z","via":"hook","session":"3f9c…","rule":"commit-needs-gates","rule_path":".writfold/guards/commit-needs-gates.toml","rule_digest":"sha256:…","mode":"audit","decided":"deny","effect":"pass","tool":"Bash","command":"git commit -m x","dir":"/home/u/src/api","repo":"api","run":"run-…","owes":["gate unit [stale]; next: writfold kb gate run unit"],"waived":[]}
+```
+
+`command` is the matched invocation as read ([above](#how-a-command-is-read)), cut to 200 characters; `rule_digest` is the SHA-256 of the rule file's bytes; `via` is `hook` or `edit-apply`. At 4 MiB the file is renamed to `guard-log.1.jsonl`, replacing the previous one. A log that cannot be written changes no decision; the hook says so on stderr. With no KB Git directory there is no log.
+
+```sh
+writfold kb guard log [--rule ID] [--since AGE] [--json]
+```
+
+One row per `pre-tool-use` rule: for an audit rule `matched=`, `would-deny=`, `would-ask=` and `pass=`, for an enforcing one `deny=`, `ask=` and `passed-on-waiver=`, each since the first counted entry, with the five newest refusals (all of them with `--rule`) as `would-deny:`/`would-ask:` (or `deny:`/`ask:`) lines naming the time, the command, the repository, what was owed and the session. Counts are over the entries for the rule file's current bytes, so editing a rule restarts its count; older entries are reported as `earlier: N entries are for an earlier version of the rule file and are not counted`. An audit rule with no match for its current version is flagged `!unmatched`. A rule in the log whose file is gone is listed as `removed`. The trailer counts `rules`, `entries`, `would-deny`, `would-ask`, `deny`, `ask` and `unparsed` (lines that did not parse, such as a torn last line, are counted and skipped). Exit 2 when an audit rule would have denied or asked, or has not matched; otherwise 0. The note says it plainly: the log is this machine's only, never committed, and a guard, not enforcement.
 
 ### A hard stop at the end of a turn (recipe)
 
@@ -205,6 +266,26 @@ Register it in `.claude/settings.json` (Stop takes no matcher):
 ```
 
 On a KB whose run owes `unit`, the hook prints `{"decision": "block", "reason": "The run owes gates: unit [open]. writfold kb gate status names the next command for each."}`; with `stop_hook_active` set, after `gate run unit` passes, and with no current run, it prints nothing and the turn ends. Claude Code also ends the turn after eight consecutive continuations, whatever the hook says. Like every hook, this one sees only one harness. The harness-neutral equivalent is CI running `writfold kb gate lines`, which exits 0 only when every gate is met.
+
+### A stop that requires a write (recipe)
+
+> Built in v0.5.0-dev.10.
+
+`writfold kb hook session-start` takes a mark named by the event's `session_id` when none exists, so a resume or a compaction keeps the first: `HEAD` and the blob ID of each dirty or untracked file, in `<KB Git directory>/writfold/marks/`, local and never committed. At the end of a turn, `writfold kb delta --since-mark "$session_id"` answers what was written to the KB since the session started, and exits 2 when nothing was. A Stop hook that blocks the end of a turn until something was written:
+
+```sh
+#!/bin/sh
+# Stop hook: do not end the turn until this session wrote to the KB.
+input=$(cat)
+[ "$(printf '%s' "$input" | jq -r '.stop_hook_active')" = true ] && exit 0
+session=$(printf '%s' "$input" | jq -r '.session_id')
+cd "$(printf '%s' "$input" | jq -r '.cwd')" || exit 0
+writfold kb delta --since-mark "$session" >/dev/null 2>&1; code=$?
+[ "$code" -eq 2 ] || exit 0   # 0: something was written; 3: no mark or a refusal
+jq -n '{decision: "block", reason: "Nothing was written to the KB this session: record what you found (writfold kb record, checkpoint or propose), or say why not."}'
+```
+
+As with the gate recipe above, it honours `stop_hook_active` and lets the turn end on exit 3, so a session without a mark is never wedged. Another harness calls `writfold kb delta --mark NAME` at its own start. The per-run form of the question is already a gate: a `run-record` gate with `research.backfilled` ([gates](gates.md#run-record-checks)).
 
 ### Inspecting rules without a hook
 
@@ -252,7 +333,7 @@ description = "open a run before editing source"
 - The globs are those of a gate's `scope`: anchored at the top of the repository, `*` and `?` within one segment, `**` across any number of segments. A path is matched when some pattern without `!` matches it and no `!` pattern does: **an exclusion wins wherever it appears**, so `["!**/*.md", "**"]` means the same as `["**", "!**/*.md"]`. At least one pattern must be an inclusion; a leading `/` or a `\` is refused.
 - **A call with no file does not match** a rule with `paths`: a tool that names none (an MCP tool, `Bash`), or a file in no repository. Such a rule never refuses them; write a second rule without `paths` if they matter.
 - `paths` is refused next to `commands`: a Bash command line names no single file.
-- `repos` and `paths` look at different things: `repos` names the repository of the event's `cwd` (as `gate status` does), `paths` the edited file's own repository.
+- `repos` and `paths` look at different things: for a `tools` rule `repos` names the repository of the event's `cwd` (as `gate status` does), `paths` the edited file's own repository.
 
 ### Edits made by `writfold kb edit apply`
 
@@ -277,19 +358,45 @@ action = "deny"
 - No rule directory: nothing is read. An unparsable rule file is skipped with the hook's diagnostic on stderr. A matched rule whose requirement cannot be evaluated takes its action, as in the hook.
 - A rule without `writfold:edit` keeps its meaning: it never applies to `edit apply`. It stays a guard, not enforcement: other tools can still edit the file.
 
+### How a command is read
+
+> Built in v0.5.0-dev.10.
+
+A `commands` rule reads the Bash command line the way the shell would split it, without running or expanding anything ([`writfold_core::command`](../../crates/writfold-core/src/command/mod.rs)). The delivery guard uses the same reader.
+
+1. **Simple commands.** Words are split on blanks, with quotes and escapes removed; `;`, `&&`, `||`, `|`, `&`, a newline, `(` and `)` end a simple command; `#` starts a comment. Text inside quotes is one word and is never a command, so `echo "git commit"` and `ssh host 'git push'` do not match.
+2. **Here-documents.** After `<<` or `<<-` and its delimiter word, quoted or not, the lines up to a line equal to the delimiter (leading tabs dropped for `<<-`) are data, not commands. Several on one line are read in order; `<<<` is an ordinary word; an unterminated here-document runs to the end.
+3. **Leading words set aside.** `NAME=value` assignments; the shell words `if`, `then`, `else`, `elif`, `do`, `while`, `until`, `!`, `{` and `time`; the wrappers `command`, `exec`, `nohup`, `builtin`, `env` and `sudo` when the next word does not begin with `-`. A wrapper used with options (`sudo -u x git commit`) is left as it is and does not match.
+4. **The command's name.** A first word holding `/` is compared by its last segment: `/usr/bin/git` is `git`.
+5. **`git`'s global options.** Between `git` and its subcommand, `-C`, `-c`, `--git-dir`, `--work-tree`, `--namespace`, `--super-prefix` and `--attr-source` are dropped with their value (also as `--name=value`), and any other word beginning with `-` alone. `git -C ../api --no-pager commit` is compared as `git commit`.
+6. **`--help`.** An invocation whose only word after the rule's words is `--help` does not match. `-h` and `--dry-run` do: their meaning differs from command to command.
+7. **The directory.** It starts as the event's `cwd`. A simple command that is exactly `cd DIR`, not in a pipeline and not in the background, sets it for the commands after it in the same group; a `( … )` or `$( … )` group starts from the directory outside it, and its `cd` ends with it. `cd` alone is the home directory. `git -C DIR` (repeatable, each relative to the last) and `--work-tree DIR` apply to that invocation only. A relative directory is joined by name, `.` and `..` resolved by name.
+8. **What is expanded.** A leading unquoted `~` or `~/`, and a word that begins `$HOME` or `${HOME}` followed by nothing or `/` and holds no other expansion, are the home directory (`HOME` in the hook's environment). `'~/b'` in quotes is a directory named `~`.
+9. **What is never guessed.** A directory word holding any other expansion (`"$REPO"`), an unquoted `*`, `?` or `[`, `~name`, a home directory that is needed and not known; `cd -`, `pushd`, `popd` or `cd` with an option, and every later command of its group; `--git-dir` without `--work-tree`, or a `GIT_DIR` or `GIT_WORK_TREE` assignment.
+
+**Where a rule is judged.** Each invocation a rule matches is judged at that invocation's directory: the repository is the one enclosing it, else the run's recorded worktree, else the KB's, as for the `cwd` before. `cd ../api && git commit` and `git -C ../api commit` are judged against `api`, and `(cd ../api && make); git commit` against the repository the call started in. The KB root's rules apply to every invocation; a repository's own rules (the nearest `.writfold/guards/` at or above a directory) only to the invocations whose directory is at or below it. A `tools` rule is judged at the event's `cwd`. Several matched invocations with different directories are judged separately and combined (a denial wins), with the index opened once. At most four distinct directories are judged per call.
+
+**A directory that cannot be told** is not a pass and not a guess. `run.current` is judged as usual; every requirement that needs a repository (`gates.met`, `gate:<id>`, `step.met`) cannot be evaluated, which takes the rule's action, with `cannot tell which repository this command acts on (git commit: a variable); name the directory literally`. A rule with `repos` applies, since the repository is not known. Only the KB root's rules apply to such an invocation. A fifth distinct directory in one call is treated the same way (`more directories than one call judges`). The way out costs one retry: repeat the command with the directory written literally.
+
+**Not followed.** The string given to `bash -c`, `sh -c` or `eval`; `xargs`, `find -exec`, `watch` and other programs that run their arguments; backquote substitution; aliases, functions, scripts and Makefile targets; the remote command of `ssh`, which acts on another machine. A rule is a guard: each of these is a miss, never a refusal.
+
+A rule never matches by working directory alone: a `pre-tool-use` rule names `commands` or `tools`, so `cat`, `grep` or a lookup verb inside a guarded repository passes unless a rule lists the tool `Bash` itself.
+
 ### How `repos` names a repository
 
 A repository's name, for `repos`, is the first of:
 
 1. its name in the KB clone's repository map (the map `kb stale` resolves `repo=` with; see [validation](validation.md));
 2. the last segment of its `remote.origin.url`, without `.git` (`git@host:acme/ledger.git` is `ledger`);
-3. its directory's name.
+3. its main work tree's directory name, so a linked worktree answers to its clone's name (built in v0.5.0-dev.10).
+
+A linked worktree is the same repository as its clone: a map entry for either names both (they share a Git directory), and so do the origin and the clone's directory name. Before v0.5.0-dev.10 a linked worktree without an origin or a map entry of its own was named by its own directory; receipts filed from one under that name are now about another repository name and read `open` until the gate is run again. Nothing is relabelled.
 
 A pattern with `/` is refused, so two clones with the same last segment (`acme/api` and `beta/api`) both answer to `api`. To tell them apart, map each clone under a unique name, or put the rule in that repository's own `.writfold/guards/` instead of the KB root.
 
 **When a call passes.** No rule directory, an unparsable rule file (skipped, with a `writfold kb hook:` line on stderr; `writfold kb check` lists it as `check guards [attention]`), a call no rule matches, and a timeout all let the call through. A **matched** rule whose requirement cannot be evaluated (the KB, the index or Git cannot be read) is not a pass: it takes the rule's action, with "cannot read the KB" as the reason, as the delivery guard does. The way out of a wedge is the rule's own `ask`, or deleting the file.
 
-**Cost.** With no rule directory, nothing is opened: the hook reads one configuration file and two directory names and exits. Once any rule applies here, each call still reads the rule files, and a rule with `paths` walks up from the edited file looking for `.git`; only a matched call opens the index and judges the gates. The widened matcher means one hook process per `Edit`, `Write`, `MultiEdit` or `NotebookEdit` call. Measured on 13 November 2026 on a one-asset KB, the release binary, process start included, answered an `Edit` event in about 1.4 ms with no rule directory and about 1.5 ms with a rule directory whose rule did not match (300 calls each). A matched `git commit` with no current run, which opens the index, took about 9 ms; one that judges gates costs, on top of that, what `gate status` costs. Re-measured on 13 November 2026 for `paths` (release binary, 300 calls each): about 1.4 ms with no rule directory, 1.3 ms with a `commands` rule that did not match, and 1.4 ms for an `Edit` of a `.md` file that `paths = ["**", "!**/*.md"]` leaves out; an `.rs` edit that rule matches, with no current run, took about 10.5 ms. All are far inside the 10 s timeout.
+**Cost.** With no rule directory, nothing is opened: the hook reads one configuration file and two directory names and exits. Once any rule applies here, each call still reads the rule files, and a rule with `paths` walks up from the edited file looking for `.git`; only a matched call opens the index and judges the gates. The widened matcher means one hook process per `Edit`, `Write`, `MultiEdit` or `NotebookEdit` call. Measured on 13 November 2026 on a one-asset KB, the release binary, process start included, answered an `Edit` event in about 1.4 ms with no rule directory and about 1.5 ms with a rule directory whose rule did not match (300 calls each). A matched `git commit` with no current run, which opens the index, took about 9 ms; one that judges gates costs, on top of that, what `gate status` costs. Re-measured on 13 November 2026 for `paths` (release binary, 300 calls each): about 1.4 ms with no rule directory, 1.3 ms with a `commands` rule that did not match, and 1.4 ms for an `Edit` of a `.md` file that `paths = ["**", "!**/*.md"]` leaves out; an `.rs` edit that rule matches, with no current run, took about 10.5 ms. All are far inside the 10 s timeout. Re-measured on 15 November 2026 for the command reader (release binaries of v0.5.0-dev.9 and of this release, process start included, on a scratch copy of the fixture KB): an unmatched Bash event took 1.42 and 1.44 ms with no rule directory, and 1.43 to 1.48 and 1.45 to 1.52 ms with a rule directory (300 calls each, two rounds); a matched `git commit` judging one gate took about 13 ms with either (50 calls), and `cd DIR && git -C DIR commit` about 13 ms. A matched call costs that once per distinct directory, at most four. The guard log adds one append to a matched call that it records: re-measured on 16 November 2026 with this release, a matched `git commit` that an enforcing rule denies (and logs) took about 13.3 ms and the same call under `mode = "audit"` about 12.7 ms (50 calls each), against 13.6 to 14.0 ms in the earlier rounds, so the append is within the noise; an unmatched call writes nothing.
 
 ### The Stop nudge
 
@@ -320,7 +427,9 @@ The hook uses the plugin's optional `kb_root` setting, then `$WRITFOLD_KB`, then
 - Writing `transcript_path` into the draft, and exporting `WRITFOLD_SESSION` through `CLAUDE_ENV_FILE`.
 - A `fetch` option; the hook never touches the network.
 - A built-in reflect nudge: the Stop hook says nothing about an open reflect step unless you add a `stop` [guard rule](#guard-rules) such as `finish-step` above. The inbox already derives it from the plan when the session ends, and a session that ends without `SessionEnd` is not listed.
-- Per-gate standing sets (a `gates.met` that refuses waivers, say), a warning without a decision, and receipts of guard decisions.
+- Per-gate standing sets (a `gates.met` that refuses waivers, say).
+- A warning without a decision (a `warn` mode): text added to a call that passes tests the wording of a message, not the rule. What matters before a rule blocks is every call it would have blocked, which `mode = "audit"` and the guard log record.
+- Tracked receipts of guard decisions: the guard log is local to one machine on purpose (committed, it would conflict on every merge and publish command lines).
 
 Evaluation of a session is a skill, [`writfold:evaluate`](skills.md#the-bundled-skill-writfoldevaluate), and a closing plan step, not a hook that runs a model. The inbox line above names it; the next session (or the user) invokes it.
 

@@ -9,6 +9,7 @@ mod gate;
 mod guard;
 mod hook;
 mod investigation;
+mod lists;
 mod observe;
 mod plan;
 mod proposals;
@@ -28,8 +29,13 @@ verbs:
   why <id|text>                    why did we decide X (accepted decisions first)
   status <id|project>              the state of one record and what tracks it
   find <text> [--kind K[,K]] [--project P] [--signatures]
-                                   search: exact ID, BM25 text, substring, one-typo;
-                                   with --kind and no text, every record of those kinds by ID
+                                   search in tiers: exact ID or alias, normalized name, name
+                                   prefix, section heading, BM25 text, substring, one typo
+                                   (JSON matched_on names the tier; nothing found may suggest up
+                                   to three near names, exit 2); with --kind and no text,
+                                   every record of those kinds by ID
+  find --eval [FILE]               run each query of FILE (.writfold/queries.jsonl) as find does:
+                                   hit@1, hit@5 or miss per query (exit 0 only if all hit@5)
   match <text>                     find, testing signature patterns first
   impact <id> [--depth N] [--direction in|out|both] [--include inferred]
                                    what does changing X touch (bounded walk, frontier stated)
@@ -45,9 +51,17 @@ verbs:
                                    summary (the worst exit code of the three)
   runs [--open] [--project P] [--plan]
                                    every run: state, place, last checkpoint; --plan adds its position
+  runs --idle AGE [--project P] [--plan]
+                                   open runs whose last recorded write is older than AGE (7d, 36h)
+  delta --mark NAME | --since-mark NAME | --since REV
+                                   what differs in the KB since a local mark or a commit (exit 2 if
+                                   nothing); a mark is local, and session start takes the session's
   resume [<run>]                   one run: manifest, coverage, rechecks, checkpoint tail
   guard status                    would guard rules pass, deny, ask or nudge for the current run?
                                    a read-only judgment, not enforcement; no command is run
+  guard log [--rule ID] [--since AGE]
+                                   what this machine's hook decided per rule, from the local log;
+                                   exit 2 if an audit rule would have refused or never matched
 
 writes (atomic; they leave the work tree dirty for you to commit):
   checkpoint [--run ID | --new-run --project P --task T [--mode M]] --note TEXT|--from-draft SESSION

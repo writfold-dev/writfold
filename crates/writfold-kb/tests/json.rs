@@ -16,6 +16,8 @@ const ROW: [&str; 9] = [
 ];
 /// Keys only `impact` rows add; absent (not null) on every other row.
 const IMPACT_ROW: [&str; 2] = ["edge", "title"];
+/// The key `find` and `match` rows add: the tier that found the row.
+const FIND_ROW: [&str; 1] = ["matched_on"];
 const EDGE: [&str; 5] = ["from", "rel", "to", "origin", "depth"];
 const MORE: [&str; 6] = ["label", "text", "path", "line", "flags", "status"];
 const TRAILER: [&str; 15] = [
@@ -119,7 +121,7 @@ fn impact_rows_add_only_the_documented_keys() -> TestResult {
 fn the_guide_page_names_every_key() -> TestResult {
     let page = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../docs/guide/json.md");
     let text = std::fs::read_to_string(page)?;
-    let impact = IMPACT_ROW.iter().chain(&EDGE);
+    let impact = IMPACT_ROW.iter().chain(&EDGE).chain(&FIND_ROW);
     for key in TOP
         .iter()
         .chain(&ROW)
@@ -131,6 +133,26 @@ fn the_guide_page_names_every_key() -> TestResult {
             text.contains(&format!("`{key}`")),
             "json.md does not name {key}"
         );
+    }
+    Ok(())
+}
+
+#[test]
+fn find_rows_add_only_matched_on() -> TestResult {
+    let w = world(&[])?;
+    for text in ["harbor api", "batch ledger", "zeppelin mooring"] {
+        let mut request = w.request(Verb::Find {
+            text: text.into(),
+            filter: writfold_kb::verbs::find::Filter::default(),
+            signatures: true,
+        });
+        request.json = true;
+        let body: Value = serde_json::from_str(&writfold_kb::run(&request)?.text)?;
+        let allowed: BTreeSet<String> = set(&ROW).union(&set(&FIND_ROW)).cloned().collect();
+        for row in body["rows"].as_array().ok_or("rows")? {
+            assert_eq!(keys(row), allowed, "{row}");
+            assert!(row["matched_on"].is_string(), "{row}");
+        }
     }
     Ok(())
 }

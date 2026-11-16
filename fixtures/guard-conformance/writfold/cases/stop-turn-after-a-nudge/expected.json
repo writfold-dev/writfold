@@ -1,0 +1,10 @@
+{
+  "schema": "writfold-guard-expected/1",
+  "decision": "nudge",
+  "decided_by": [
+    "finish"
+  ],
+  "reason_has": [
+    "once a turn"
+  ]
+}

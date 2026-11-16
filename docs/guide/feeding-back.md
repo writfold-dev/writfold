@@ -1,6 +1,6 @@
 # Feeding the knowledge base
 
-> **Status:** built in v0.3.0-dev.1; `record investigation` and check receipts built in v0.5.0-dev.9; proposals, the backfill and reflection checks, required steps spliced into every run and the `writfold:evaluate` skill built in v0.4.0-dev.1; concluding an investigation built in v0.5.0-dev.1; a decision's `accepted`, `applied` and `verified` states built in v0.5.0-dev.2; tracked proposals built in v0.5.0-dev.3.
+> **Status:** built in v0.3.0-dev.1; `record investigation` and check receipts built in v0.5.0-dev.9; proposals, the backfill and reflection checks, required steps spliced into every run and the `writfold:evaluate` skill built in v0.4.0-dev.1; concluding an investigation built in v0.5.0-dev.1; a decision's `accepted`, `applied` and `verified` states built in v0.5.0-dev.2; tracked proposals built in v0.5.0-dev.3. `kb delta`, closing runs and `runs --idle` built in v0.5.0-dev.10.
 
 Reading the knowledge base (KB) is half of the loop. The other half is what each stage of the work writes back, so that the next session starts from more than this one did. This page follows one piece of work through the four stages and says, for each thing written: which verb writes it, where it lands, and who commits it.
 
@@ -74,7 +74,7 @@ The first command starts the run and makes it the current one; later `checkpoint
 
 Every run write needs a run. `edit apply`, `checkpoint --note`, `gate run|cover|attest|waive`, `observe` and `deliver` without `--run` use the current run; with no current run they are refused (exit 3, nothing written) with `no current run: pass --run ID, or start one`. A closed run is refused the same way.
 
-`edit apply -` reads one recipe from stdin (at most 4 MiB; built in v0.5.0-dev.9), so a recipe need not be written to a file first: `printf '%s\n' 'edit "src/retry.rs" {' '  replace one text "attempts = 5" with "attempts = 7"' '}' | writfold kb edit apply -`. `-` may appear once, beside recipe files; one recipe edits one file, so a batch from stdin is not built (pass several files). The receipt names the recipe `stdin` and keeps its bytes and digest as for a file.
+`edit apply` is Writfold's adapter for Splicery recipes. Splicery is frozen: the adapter keeps building and its tests keep passing, with no new development. `edit apply -` reads one recipe from stdin (at most 4 MiB; built in v0.5.0-dev.9), so a recipe need not be written to a file first: `printf '%s\n' 'edit "src/retry.rs" {' '  replace one text "attempts = 5" with "attempts = 7"' '}' | writfold kb edit apply -`. `-` may appear once, beside recipe files; one recipe edits one file, so a batch from stdin is not built (pass several files). The receipt names the recipe `stdin` and keeps its bytes and digest as for a file.
 
 `edit apply` runs through Bash, so Claude Code's `Edit` and `Write` hooks never see it. A guard rule covers it by command:
 
@@ -185,6 +185,34 @@ git add .writfold/proposals && git commit -m "Propose HBR-130"   # commit it wit
 - **Accept and drop remove every copy**, local and tracked. A removed tracked file is a deletion in the work tree, committed with the accepted record.
 - **The cap of ten per session counts both stores**, one per ID.
 - Proposing a call the chosen store already holds writes nothing; proposing it into the other store adds a copy (to promote a local proposal to a tracked one, propose it again with `--tracked`).
+
+## What was written since: `kb delta`
+
+> Built in v0.5.0-dev.10.
+
+```sh
+writfold kb delta --mark NAME                   # remember the KB as it is now (local)
+writfold kb delta --since-mark NAME [--json]    # what differs from that
+writfold kb delta --since REV [--json]          # what differs from a commit of the KB repository
+```
+
+`--since REV` takes anything `git rev-parse` resolves to a commit of the KB repository (`origin/main`, a tag, a hash) and names the full commit in its note. The changed paths are the committed differences from it to `HEAD` plus the dirty and untracked files now; ignored files are never rows and nothing is written. `--mark NAME` writes `<KB Git directory>/writfold/marks/<NAME>.json` (`NAME` as a session ID: letters, digits, `.`, `-`, `_`), holding `HEAD` and each dirty or untracked path with the blob ID its bytes would have; writing one removes marks older than 30 days. `--since-mark` reports a path when its content now differs from its content at the mark, so a file already dirty at the mark is not counted unless it changed again. A base commit that is no longer in the clone is refused, exit 3. The session-start hook takes a mark named by the session ([hooks](hooks.md#a-stop-that-requires-a-write-recipe)).
+
+Each row is one path: `status` is `added`, `modified` or `deleted`; the text is its kind, the record's (`ticket`, `decision`, …, from the index, or from the layout for a deleted file), else the run artefact's (`checkpoint`, `gate-receipt`, `statement`, `cover`, `observation`, `retrieval`, `edit-receipt`, `plan-event`, `delivery`), else the configuration's (`gate`, `guard`, `plan`, `kind`, `check-receipt`, `proposal`, `delivery-mode`), else `doc`; the `id` is the record ID or the path; the section is `records`, `run`, `config` or `other`. The trailer counts `changed`, `records`, `run`, `config` and `other`; a note names the base. Exit 0 when at least one path differs; 2 when none, with `# note: nothing in the KB differs from <base>`. It says what differs, not who wrote it: commits pulled after the base are included, and a note says so.
+
+## Closing runs
+
+A run stays open until it is closed: `writfold kb status RUN --set closed` writes `closed` to the run's `writfold-run.json`, and later run writes to it are refused. Nothing closes a run on its own: Writfold records and never schedules, and every gate being met is not the same as the work being done. Close a run when its work is finished, and review the change as a Git diff like any other write. `writfold kb runs --open` lists the runs that are still open.
+
+**Idle runs** (built in v0.5.0-dev.10). `writfold kb runs --idle AGE [--project P] [--plan]` (`AGE` such as `14d` or `36h`) lists the runs that are not closed and whose last recorded write is older than `AGE`, oldest first, each with a line such as `idle: 9d since 2026-11-06T14:02:11Z (gate receipt)`. The last recorded write is the newest of the manifest's `created`, the last checkpoint heading, and the UTC stamp in the name of any file under the run's `gates/`, `statements/`, `covers/`, `observed/`, `retrievals/`, `edits/`, `plan/` and `deliveries/`. All of it is tracked text, so every clone gives the same answer; file modification times are not read. Idle is not inactive and recent is not active: no liveness is claimed. Nothing matching answers `answer=unknown reason=no-record`, exit 2. With `--plan`, the plan position shows which idle runs reached the end of their plan; those are the ones to close, in one loop reviewed as a Git diff:
+
+```sh
+writfold kb runs --idle 14d --plan --json |
+  jq -r '.rows[] | select(any(.more[]; .label == "plan" and (.text | startswith("complete")))) | .id' |
+  while read -r run; do writfold kb status "$run" --set closed; done
+```
+
+Then review the change with `git diff` in the KB and commit it.
 
 ## Checking that write-back happened
 

@@ -1,0 +1,11 @@
+{
+  "hook_event_name": "PreToolUse",
+  "tool_name": "Edit",
+  "tool_input": {
+    "file_path": "{home}/src/api/README.md",
+    "old_string": "a",
+    "new_string": "b"
+  },
+  "cwd": "{home}/src/api",
+  "session_id": "s1"
+}

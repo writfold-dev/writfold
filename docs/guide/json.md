@@ -1,6 +1,6 @@
 # Reading answers as JSON
 
-> **Status:** built in v0.5.0-dev.1 (the envelope itself has been emitted since v0.1; this page and the test that pins it are new).
+> **Status:** built in v0.5.0-dev.1 (the envelope itself has been emitted since v0.1; this page and the test that pins it are new). `matched_on`, the `find --eval`, `guard log`, `runs --idle` and `delta` answers built in v0.5.0-dev.10.
 
 Every `writfold kb` verb that prints rows and a trailer takes `--json`. The answer is then one JSON object on one line of stdout, holding the same rows, notes and trailer as the text form. The exit code is the same in both forms.
 
@@ -46,6 +46,22 @@ Each entry of `more` has `label` (`why`, `note`, `cite`, `next` and so on), `tex
 | `title` | string | the reached record's title; absent when the record has none (a code locator, a record labelled by its ID) |
 
 The text form of `impact` is unchanged (`depth=N SRC REL DST (ORIGIN)` in `text`); readers should use `edge`, not split that text.
+
+`find` and `match` rows carry one more key (built in v0.5.0-dev.10), absent on every other verb's rows:
+
+| Key | Type | Meaning |
+|---|---|---|
+| `matched_on` | string | the tier that found the row: `signature`, `exact`, `normalized`, `prefix`, `heading`, `text`, `substring`, `typo` or `text-any`, and `listed` for a `--kind` listing; `suggestion` for a name offered when nothing matched (status `suggested`, flag `suggestion`), which is not a hit. `exact`, `normalized` and `text` are spelt as other tools' readers expect; a reader that knows only those ignores the rest. The `match` continuation stays, with its path and line |
+
+Readers should use `matched_on`, not split the `match` continuation's text (`typo d=1 api`).
+
+`guard status` (from v0.5.0-dev.10) adds the flags `audit` and `waived`, the continuation labels `mode` and `waived`, and the count `audit` (present only when not zero). `guard log` answers rows of kind `guard-log` (status `audit`, `enforce` or `removed`) with continuations labelled `would-deny`, `would-ask`, `deny`, `ask`, `earlier` and `next`, the flags `audit`, `would-deny`, `would-ask` and `unmatched`, and the counts `rules`, `entries`, `would-deny`, `would-ask`, `deny`, `ask` and `unparsed`.
+
+`delta` (built in v0.5.0-dev.10) answers rows of kind `delta`, one per changed path: `id` the record ID or the path, `status` `added`, `modified` or `deleted`, `text` the path's kind, `path` the KB-relative path, `section` `records`, `run`, `config` or `other`; counts `changed`, `records`, `run`, `config` and `other`.
+
+`runs --idle AGE` (built in v0.5.0-dev.10) adds an `idle` continuation to each run row (`9d since <time> (<what was written>)`) and the count `idle`.
+
+`find --eval` (built in v0.5.0-dev.10) answers with one row of kind `query` per line of the query file: `id` is `q<line>`, `status` is `hit@1`, `hit@5` or `miss`, `text` names the first expected record found with its rank and tier, `path` and `line` point at the query's line, the flag `unknown-id` marks an `expect` ID that is not a record, and a miss has a `first` continuation naming what ranked first. The trailer counts `queries`, `hit1`, `hit5`, `miss` and, per tier of the first expected hit, `by-exact`, `by-normalized`, `by-prefix`, `by-heading`, `by-text` and so on. A missing or empty file answers `reason` `no-queries`.
 
 `find --kind K[,K] [--project P]` with no text lists every record of those kinds in ID order, each once, with a `match` continuation whose `text` is `listed`; there is no fifty-row cap, the budget pages the answer. Rows keep the record's title in `text`. Without `--kind`, `find` still requires text; `match` and `--signatures` always do.
 

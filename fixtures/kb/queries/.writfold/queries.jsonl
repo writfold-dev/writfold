@@ -1,0 +1,8 @@
+{"query": "harbor api", "expect": ["harbor-api"], "note": "a phrase for an ID"}
+{"query": "harbor_api", "expect": ["harbor-api"]}
+{"query": "HAPI", "expect": ["harbor-api"], "note": "the alias in capitals"}
+{"query": "quay work", "expect": ["quay-worker"], "note": "part of a name"}
+{"query": "restart harbor", "expect": ["runbook:ops/restart-harbor"], "note": "the last segment of a typed ID"}
+{"query": "failure modes", "expect": ["dossier:harbor-api"], "note": "a section of a dossier"}
+{"query": "hbr 101", "expect": ["HBR-101"], "note": "a ticket form"}
+{"query": "month end flush", "expect": ["HBR-101"], "note": "words of the body"}

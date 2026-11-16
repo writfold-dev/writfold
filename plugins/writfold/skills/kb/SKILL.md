@@ -15,7 +15,7 @@ The project KB is plain records in Git. `writfold kb <verb>` answers from it in 
 | Why did we decide X? | `why <id\|text>` (accepted decisions first, supersession followed) |
 | Everything about one asset, ticket or record | `context <id\|alias\|ticket>` |
 | What is the state of X, and what tracks it? | `status <id\|project>` |
-| Find a record by words, a partial ID or a typo | `find <text>` (`match <text>` also tests signature patterns) |
+| Find a record by words, a partial ID or a typo | `find <text>`: try the phrase people use first (`harbor api`, `quay work`, a section heading); each row's `match:` line names the tier that found it. A miss is `answer=unknown`, exit 2, may list `suggested` names (candidates, not hits), and is not evidence that nothing exists (`match <text>` also tests signature patterns) |
 | What does changing X touch? | `impact <id> [--depth N] [--direction in\|out\|both]` |
 | Which citations have moved? | `stale [<project>\|<path>]` |
 | Is everything still valid: citations, the index, the run's gates? | `check [<project>\|<path>]` (one row per area; worst exit code) |

@@ -161,7 +161,7 @@ pub fn parse(args: &[String], cwd: PathBuf) -> Result<Option<Request>, String> {
     if common.record && (common.offline || common.cached) {
         return Err("--record needs the checkers to be asked; it cannot be combined with --offline or --cached".into());
     }
-    let built: Verb = verbs::verb(verb, &common, &positional)?;
+    let built: Verb = verbs::verb(verb, &common, &positional, &cwd)?;
     Ok(Some(Request {
         verb: built,
         kb: common.kb,

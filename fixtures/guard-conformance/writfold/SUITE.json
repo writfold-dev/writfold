@@ -1,0 +1,10 @@
+{
+  "schema": "writfold-guard-suite/1",
+  "name": "writfold",
+  "source": "this repository",
+  "revision": null,
+  "licence": "MIT",
+  "imported": null,
+  "converted_by": null,
+  "cases": 59
+}
