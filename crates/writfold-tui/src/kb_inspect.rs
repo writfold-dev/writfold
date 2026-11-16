@@ -74,7 +74,9 @@ pub(crate) fn content(
 
 /// The command hint, shortened to fit.
 fn hint(app: &App, width: usize) -> Line<'static> {
-    let detail = if app.level == Detail::Full {
+    let detail = if app.level == Detail::Plain {
+        "exact wording and file"
+    } else if app.level == Detail::Exact {
         "less"
     } else {
         "sources and fresh cites"
@@ -84,10 +86,10 @@ fn hint(app: &App, width: usize) -> Line<'static> {
         &[
             (
                 "d",
-                if app.level == Detail::Full {
+                if app.level == Detail::Exact {
                     "less"
                 } else {
-                    "more"
+                    "exact"
                 },
             ),
             ("f", "run"),
@@ -126,15 +128,15 @@ pub(crate) fn draw(frame: &mut Frame<'_>, app: &mut App, area: Rect) {
     let entry = app.kb_entry().or_else(|| project_entry(app));
     let entries = app.kb_entries();
     let selectable: Vec<_> = entries.iter().filter(|e| !e.header).collect();
-    let kind = |e: &crate::kb_entry::Entry| {
-        if e.kind.is_empty() {
-            "record".to_owned()
-        } else {
-            e.kind.clone()
-        }
+    let kind = |e: &crate::kb_entry::Entry| match e.kind.as_str() {
+        "" => "record".to_owned(),
+        "cite" if app.level == Detail::Plain => "citation".to_owned(),
+        kind => kind.to_owned(),
     };
+    let plain = app.level == Detail::Plain;
     let title = match &entry {
         Some(e) => match selectable.iter().position(|s| s.key == e.key) {
+            Some(at) if plain => format!("{} {} of {}", kind(e), at + 1, selectable.len()),
             Some(at) => format!("{} {}/{}", kind(e), at + 1, selectable.len()),
             None => kind(e),
         },
@@ -153,12 +155,22 @@ pub(crate) fn draw(frame: &mut Frame<'_>, app: &mut App, area: Rect) {
         look: app.look,
         glyphs: map_view::glyphs(app),
         width: usize::from(inner.width),
-        full: app.level == Detail::Full,
+        full: app.level == Detail::Exact,
     };
-    let mut lines = content(app, &entry, record, &ink);
-    let source = source_line(record, &entry, &ink);
-    lines.extend(source);
     let body = usize::from(inner.height - 1);
+    let lines = if plain {
+        let told = crate::kb_plain_inspect::inspector(app, &entry, record, ink.glyphs);
+        let rows = crate::say_draw::told(&told, ink.width, app.look);
+        if rows.len() > body {
+            rows.into_iter().filter(|r| r.width() > 0).collect()
+        } else {
+            rows
+        }
+    } else {
+        let mut lines = content(app, &entry, record, &ink);
+        lines.extend(source_line(record, &entry, &ink));
+        lines
+    };
     let scroll = usize::from(app.kb.inspect_scroll).min(lines.len().saturating_sub(body));
     for (y, line) in lines.into_iter().skip(scroll).take(body).enumerate() {
         let row = Rect::new(inner.x, inner.y + y as u16, inner.width, 1);

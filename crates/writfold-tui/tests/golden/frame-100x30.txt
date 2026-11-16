@@ -1,5 +1,5 @@
- Add --plan to kb runs  [open] [current] [harbor]  subject kb           run-20261101T090000Z-a1b2c3
- [1 progress] 2 gates !2 ○2  3 timeline  4 inbox 3  5 guards deny 1  6 stale  7 brief  8 resume
+ Add --plan to kb runs  [open] [current run] [harbor]                                    run 1 of 3
+ [1 progress] 2 gates 4  3 timeline  4 inbox 3  5 guards 1  6 stale  7 brief  8 resume         m kb
 ╭ runs (3) ──────────────────╮╭ progress run-20261101T090000Z-a1b2c3 ──────────────────────────────╮
 │> Add --plan to kb runs     ││ 2026-11-10T23:51:00Z) !skipped                                     │
 │  harbor  step 4/6          ││     splice: change#1 @83c2cc9efde7 from .writfold/plans/change.toml│
@@ -27,4 +27,4 @@
 │                            ││                                                                    │
 │                            ││                                                                    │
 ╰────────────────────────────╯╰────────────────────────────────────────────────────────────────────╯
- [read-only]  kb XXXXXXXXXXXX+dirty:14   index fresh             j/k run   l plan   ? help   q quit
+ [read-only]  KB has 14 uncommitted changes                      j/k run   l plan   ? help   q quit

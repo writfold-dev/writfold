@@ -1,40 +1,40 @@
- Add --plan to kb runs  [open] [current] [harbor]  subject kb                                                                       run-20261101T090000Z-a1b2c3
- [1 progress]   2 gates !2 ○2    3 timeline    4 inbox 3    5 guards deny 1    6 stale    7 brief    8 resume                                              m kb
+ Add --plan to kb runs  [open] [current run] [harbor]                                                                                                run 1 of 3
+ [1 progress]   2 gates 4 not met    3 timeline    4 inbox 3 pending    5 guards 1 would block    6 stale    7 brief    8 resume                           m kb
 ╭ runs (3) ────────────────────────────╮╭ progress run-20261101T090000Z-a1b2c3 ────────────────────────────────╮╭ gates ───────────────────────────────────────╮
-│> Add --plan to kb runs               ││plan 2 done, 1 skipped of 6 steps; current step 4/6; owes 2 of 2 gates││gates=6 satisfied=2 open=2 stale=2 failed=0   │
-│  harbor  step 4/6                    ││stale=1                                                               ││unknown=0 attested=0 waived=0 invalid=0       │
-│  Review the lantern guide            ││     [x] [!] [-] [>] [ ] [ ]                                          ││bench [open] !open                            │
-│  lantern                             ││ x change#1/research [done] notes [satisfied]                         ││lint [stale] !stale                           │
-│  Retire the legacy flush path        ││     done: recorded 2026-11-10T23:47:00Z                              ││notes [satisfied]                             │
-│  closed  harbor  complete            ││ x change#1/implement [done] unit [satisfied], lint [stale] !stale    ││signoff [open] !open                          │
-│                                      ││     why: no longer holds: lint [stale] (done stays done; list the    ││unit [satisfied]                              │
+│> Add --plan to kb runs               ││plan 2 done, 1 skipped of 6 steps; current step 4/6; owes 2 of 2 gates││6 gates · 2 passed · 2 out of date · 2 with n…│
+│  harbor  step 4/6                    ││stale=1                                                               ││○ bench         nothing recorded yet          │
+│  Review the lantern guide            ││     [x] [!] [-] [>] [ ] [ ]                                          ││! lint          out of date                   │
+│  lantern                             ││ x change#1/research [done] notes [satisfied]                         ││● notes         passed                        │
+│  Retire the legacy flush path        ││     done: recorded 2026-11-10T23:47:00Z                              ││○ signoff       nothing recorded yet          │
+│  closed  harbor  complete            ││ x change#1/implement [done] unit [satisfied], lint [stale] !stale    ││● unit          passed                        │
+│                                      ││     why: no longer holds: lint [stale] (done stays done; list the    ││! review-list   out of date                   │
 │                                      ││     gate again on a later step if it must hold there)                │╰──────────────────────────────────────────────╯
 │                                      ││     splice: change#1 @83c2cc9efde7 from .writfold/plans/change.toml  │╭ inbox ───────────────────────────────────────╮
-│                                      ││     gate unit [satisfied] mechanical                                 ││drafts=1 proposals=2 (local; not in the KB)   │
-│                                      ││     gate lint [stale] mechanical !stale                              ││draft s-progress [open]                       │
-│                                      ││     done: recorded 2026-11-10T23:50:00Z                              ││  Review started; lint went stale after the re│
-│                                      ││ - change#1/benchmarks [skipped] no hot path touched (by owner,       ││proposal 2c6ba260f2cde3fa [pending]           │
-│                                      ││ 2026-11-10T23:51:00Z) !skipped                                       ││  ticket HBR-210: Lint gate scope misses the c│
-│                                      ││     splice: change#1 @83c2cc9efde7 from .writfold/plans/change.toml  ││proposal 2c9a051ffe807243 [pending]           │
-│                                      ││ > change#1/review [current] owes: review-list [stale], signoff [open]││  link mentions run-20261101T090000Z-a1b2c3 → │
+│                                      ││     gate unit [satisfied] mechanical                                 ││3 pending · 1 draft · 2 proposals             │
+│                                      ││     gate lint [stale] mechanical !stale                              ││draft      Review started; lint went stale af…│
+│                                      ││     done: recorded 2026-11-10T23:50:00Z                              ││proposal   ticket HBR-210: Lint gate scope mi…│
+│                                      ││ - change#1/benchmarks [skipped] no hot path touched (by owner,       ││proposal   its text is in exact wording (d)   │
+│                                      ││ 2026-11-10T23:51:00Z) !skipped                                       ││                                              │
+│                                      ││     splice: change#1 @83c2cc9efde7 from .writfold/plans/change.toml  ││                                              │
+│                                      ││ > change#1/review [current] owes: review-list [stale], signoff [open]││                                              │
 │                                      ││     splice: change#1 @83c2cc9efde7 from .writfold/plans/change.toml  │╰──────────────────────────────────────────────╯
-│                                      ││     gate review-list [stale] checklist 2/4 required covered !stale   │╭ guards (current run) ────────────────────────╮
-│                                      ││       item errors [supported] 1 reference by agent                   ││rules=2 deny=1 ask=0 nudge=1 invalid=0        │
-│                                      ││       item tests [stale] 1 reference by agent; cited evidence moved: ││commit-needs-gates [would-deny] pre-tool-use g│
-│                                      ││       gate:lint was satisfied, now stale !stale                      ││  owes: gate lint [stale]; next: writfold kb g│
-│                                      ││       item docs [open] The guide names every new flag                ││stop-reflect [would-nudge] stop requires step.│
-│                                      ││       item perf [not-applicable] no hot path touched by agent        ││  owes: step review owes review-list [stale], │
+│                                      ││     gate review-list [stale] checklist 2/4 required covered !stale   │╭ guards · the current run ────────────────────╮
+│                                      ││       item errors [supported] 1 reference by agent                   ││2 rules · 1 would block · 1 would remind      │
+│                                      ││       item tests [stale] 1 reference by agent; cited evidence moved: ││commit-needs-gates   would block              │
+│                                      ││       gate:lint was satisfied, now stale !stale                      ││stop-reflect         would remind             │
+│                                      ││       item docs [open] The guide names every new flag                ││                                              │
+│                                      ││       item perf [not-applicable] no hot path touched by agent        ││                                              │
 │                                      ││       item style [open] (optional) Names follow the module           │╰──────────────────────────────────────────────╯
 │                                      ││     gate signoff [open] attested !open                               │╭ timeline ────────────────────────────────────╮
-│                                      ││     read: instructions for signoff @.writfold/gates/signoff.md:1     ││decision proposal/decision/2026-03-02-batch-le│
-│                                      ││     next: writfold kb gate cover review-list tests supported REF…    ││decision proposal/decision/2026-03-02-batch-le│
-│                                      ││     --by WHO                                                         ││run run-20261101T090000Z-a1b2c3 [open] 2026-11│
-│                                      ││   change#1/deliver [later] gates: unit                               ││checkpoint 2026-11-10T09:00:00Z entry 1 of 3: │
-│                                      ││   change#1/reflect [later] no gates                                  ││checkpoint 2026-11-10T12:45:00Z entry 2 of 3: │
-│                                      ││# note: plan change @83c2cc9efde7 from .writfold/plans/change.toml;   ││checkpoint 2026-11-10T14:10:00Z entry 3 of 3: │
-│                                      ││steps are derived from runs/run-20261101T090000Z-a1b2c3/plan/ on every││plan change#1 [spliced] 2026-11-10T23:45:00Z s│
-│                                      ││read, never stored                                                    ││plan change#1/research [done] 2026-11-10T23:47│
-│                                      ││                                                                      ││plan change#1/implement [done] 2026-11-10T23:5│
-│                                      ││                                                                      ││plan change#1/benchmarks [skipped] 2026-11-10T│
+│                                      ││     read: instructions for signoff @.writfold/gates/signoff.md:1     ││2026-03-02         decision       created Bat…│
+│                                      ││     next: writfold kb gate cover review-list tests supported REF…    ││2026-03-09         decision       updated Bat…│
+│                                      ││     --by WHO                                                         ││2026-11-01 09:00   run            created Add…│
+│                                      ││   change#1/deliver [later] gates: unit                               ││2026-11-10 09:00   checkpoint     entry 1 of …│
+│                                      ││   change#1/reflect [later] no gates                                  ││2026-11-10 12:45   checkpoint     entry 2 of …│
+│                                      ││# note: plan change @83c2cc9efde7 from .writfold/plans/change.toml;   ││2026-11-10 14:10   checkpoint     entry 3 of …│
+│                                      ││steps are derived from runs/run-20261101T090000Z-a1b2c3/plan/ on every││2026-11-10 23:45   plan added     change      │
+│                                      ││read, never stored                                                    ││2026-11-10 23:47   step done      research    │
+│                                      ││                                                                      ││2026-11-10 23:50   step done      implement   │
+│                                      ││                                                                      ││2026-11-10 23:51   step skipped   benchmarks …│
 ╰──────────────────────────────────────╯╰──────────────────────────────────────────────────────────────────────╯╰──────────────────────────────────────────────╯
- [read-only]  kb XXXXXXXXXXXX+dirty:14   index refreshed:1   asked 00:00:00Z                                                 j/k run   l plan   ? help   q quit
+ [read-only]  KB has 14 uncommitted changes   index refreshed:1                                                              j/k run   l plan   ? help   q quit

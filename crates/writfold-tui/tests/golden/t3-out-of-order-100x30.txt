@@ -1,15 +1,15 @@
- Batch ledger writes rollout  [open] [harbor]  subject kb               run-20261101T090000Z-a1b2c3
- [1 progress]   2 gates    3 timeline    4 inbox    5 guards    6 stale    7 brief    8 resume
-╭ runs (1) ──────────╮╭ plan ───────────────────────────────╮╭ step 2/4 ───────────────────────────╮
-│> Batch ledger writ…││step 2 of 4    1 done  1 skipped     ││child [current]                      │
-│  harbor  step 2/4  ││1 disorder                           ││merge#1/finish/side#1/child          │
+ Batch ledger writes rollout  [open] [harbor]                                            run 1 of 1
+ [1 progress]  2 gates   3 timeline   4 inbox   5 guards   6 stale   7 brief   8 resume        m kb
+╭ runs (1) ──────────╮╭ plan ───────────────────────────────╮╭ step 2 of 4 ────────────────────────╮
+│> Batch ledger writ…││step 2 of 4    1 done  1 skipped     ││child   next up                      │
+│  harbor  step 2/4  ││1 out of order                       ││step 2 of 4 · in side                │
 │                    ││                                     ││                                     │
-│                    ││ ┬ merge#1                           ││no gates                             │
-│                    ││ – prefix                            ││next: writfold kb plan advance       │
-│                    ││ ├─╮ side#1                          ││                                     │
-│                    ││ │ ▶ child  no gates                 ││                                     │
+│                    ││ ┬ merge                             ││Its gates are met.                   │
+│                    ││ – prefix                            ││                                     │
+│                    ││ ├─╮ side                            ││Suggested   a command is suggested   │
+│                    ││ │ ▶ child   its gates are met       ││            (c)                      │
 │                    ││ ├─╯                                 ││                                     │
-│                    ││ ✓ finish   !out-of-order            ││                                     │
+│                    ││ ✓ finish    done out of order       ││                                     │
 │                    ││ ○ later                             ││                                     │
 │                    ││ ┴                                   ││                                     │
 │                    ││                                     ││                                     │
@@ -23,8 +23,8 @@
 │                    ││                                     ││                                     │
 │                    ││                                     ││                                     │
 │                    ││                                     ││                                     │
-│                    ││                                     ││                                     │
-│                    ││last plan event  2026-11-10T23:58:50…││                                     │
-│                    ││▶ next step to pick up, as recorded  ││d more   g gates   x text            │
+│                    ││last recorded   2026-11-10 23:58 · s…││                                     │
+│                    ││▶ the next step to pick up, as       ││                                     │
+│                    ││recorded                             ││d exact   c commands   g gates       │
 ╰────────────────────╯╰─────────────────────────────────────╯╰─────────────────────────────────────╯
- [read-only]  kb XXXXXXXXXXXX   index fresh       j/k step   l inspect   d detail   ? help   q quit
+ [read-only]                                      j/k step   l inspect   d detail   ? help   q quit

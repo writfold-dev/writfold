@@ -6,7 +6,7 @@ use crate::source::{field, flags};
 use serde_json::Value;
 
 pub fn run_item(row: &Value, detail: Detail) -> Vec<Line> {
-    if detail == Detail::Full {
+    if detail == Detail::Exact {
         return full(row);
     }
     let role = if flags(row).contains(&"current") {

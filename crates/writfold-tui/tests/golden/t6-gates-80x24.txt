@@ -1,0 +1,24 @@
+ Add --plan to kb runs  [open] [current run] [harbor]                run 1 of 3
+ [2 gates] 4 not met    4 inbox 3 pending    5 guards 1             m kb    2/8
+╭ gates ───────────────────────────────────────────────────────────────────────╮
+│6 gates · 2 passed · 2 out of date · 2 with nothing recorded yet · 4 not met  │
+│                                                                              │
+│○ bench         nothing recorded yet · checked by a command                   │
+│! lint          out of date · changed in scope: harbor/lint.txt               │
+│● notes         passed                                                        │
+│○ signoff       nothing recorded yet · decided by a person's statement; no    │
+│                command is run                                                │
+│● unit          passed                                                        │
+│! review-list   out of date · checklist · 2 of 4 required items covered       │
+│    ■ errors    covered · 1 reference by agent                                │
+│    ! tests     out of date · the evidence it cites has changed               │
+│    □ docs      not covered · The guide names every new flag                  │
+│    ◆ perf      marked not applicable · no hot path touched by agent          │
+│    □ style     optional · not covered · Names follow the module              │
+│                                                                              │
+│Standings are worked out from the run's recorded results each time this view  │
+│asks; nothing is run.                                                         │
+│                                                                              │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+ [read-only]                              Tab view   d detail   ? help   q quit

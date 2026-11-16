@@ -57,6 +57,16 @@ fn inbox_view_leads_with_the_breakdown_its_tab_badge_sums() -> TestResult {
         .chars()
         .skip(usize::from(main.x))
         .collect();
+    assert!(
+        first.contains("3 pending · 1 draft · 2 proposals"),
+        "{first}"
+    );
+    app.key(writfold_tui::app::Key::Char('d'));
+    let screen = support::projection::rows(&support::projection::render(&mut app, 100, 30)?);
+    let first: String = screen[usize::from(main.y) + 1]
+        .chars()
+        .skip(usize::from(main.x))
+        .collect();
     assert!(first.contains("drafts=1 proposals=2"), "{first}");
     Ok(())
 }

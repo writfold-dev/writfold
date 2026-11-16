@@ -1,0 +1,38 @@
+ Add --plan to kb runs  [open] [current run] [harbor]                                                                        run 1 of 3
+ 1 progress    2 gates 4 not met   [3 timeline]   4 inbox 3 pending    5 guards 1 would block    6 stale    7 brief    8 resume    m kb
+╭ runs (3) ──────────────────╮╭ timeline ──────────────────────────────────────────────────────────────────────────────────────────────╮
+│> Add --plan to kb runs     ││2026-03-02         decision       created Batch ledger writes in the API                                │
+│  harbor  step 7/11         ││2026-03-09         decision       updated Batch ledger writes in the API                                │
+│  Review the lantern guide  ││2026-11-01 09:00   run            created Add --plan to kb runs                                         │
+│  lantern                   ││2026-11-10 09:00   checkpoint     entry 1 of 3: Started; read the runs verb.                            │
+│  Retire the legacy flush p…││2026-11-10 12:45   checkpoint     entry 2 of 3: Implemented --plan; see                                 │
+│  closed  harbor  complete  ││                                  proposal/decision/2026-03-02-batch-ledger-writes.                     │
+│                            ││2026-11-10 14:10   checkpoint     entry 3 of 3: Review started.                                         │
+│                            ││2026-11-10 23:45   plan added     change                                                                │
+│                            ││2026-11-10 23:47   step done      research                                                              │
+│                            ││2026-11-10 23:50   step done      implement                                                             │
+│                            ││2026-11-10 23:51   step skipped   benchmarks · (by owner) no hot path touched                           │
+│                            ││2026-11-10 23:59   plan added     review                                                                │
+│                            ││2026-11-10 23:59   step done      read                                                                  │
+│                            ││2026-11-10 23:59   step done      read-diff                                                             │
+│                            ││2026-11-10 23:59   plan added     findings                                                              │
+│                            ││2026-11-10 23:59   step done      prepare                                                               │
+│                            ││                                                                                                        │
+│                            ││Times are UTC, as recorded.                                                                             │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+╰────────────────────────────╯╰────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+ [read-only]  KB has 19 uncommitted changes                                          j/k scroll   Tab view   d detail   ? help   q quit

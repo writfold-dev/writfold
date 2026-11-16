@@ -256,8 +256,10 @@ separate and frozen. See the
 Its eight read-only views project the KB verbs: a nested plan map and node
 inspector, Gates, Timeline, Inbox, Guards, Stale, Brief and Resume.
 The runs list includes each plan's position. Guards concern the current-run
-pointer, not whichever run is selected. No key writes or starts a checker;
-the Inbox prints the existing confirm/accept commands instead.
+pointer, not whichever run is selected. The frame reads in plain words by
+default (`next up`, `out of date`, `needs review-list and signoff`); `d` shows
+the verbs' exact wording, `c` the ids and commands to copy, and `?` each plain
+phrase beside its exact word. No key writes, runs a command or starts a checker.
 
 `h`/`l` move between runs, map and inspector; `j`/`k` select a node or scroll.
 `.` selects the recorded current step, `n`/`N` the next/previous flag. `x` switches

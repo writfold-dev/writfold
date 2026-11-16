@@ -16,6 +16,9 @@ pub struct Show<'a> {
     pub full: bool,
     pub width: u16,
     pub stale: Option<&'a Reply>,
+    /// The two-cell mark column (the plain stale list, whose every row
+    /// moved, says why in its word instead).
+    pub marks: bool,
 }
 
 /// Rows and, for each entry, the row it starts on.
@@ -91,25 +94,22 @@ pub fn build(entries: &[Entry], show: Show<'_>) -> Rail {
         let pad = label_room.saturating_sub(cells(&label));
         let found = marks(entry, show.stale);
         let cell = glyph(&entry.status, glyphs);
-        let used = cells(&bars) + glyph_width + 1 + label_room + 1 + 2 + 1;
+        let mark_width = if show.marks { 3 } else { 1 };
+        let used = cells(&bars) + glyph_width + 1 + label_room + 1 + mark_width;
         let word = clip(&word(entry, show.full), room.saturating_sub(used), glyphs);
-        rail.lines.push(Line::from(vec![
+        let mut spans = vec![
             Span::styled(bars.clone(), dim),
             Span::styled(cell.glyph, style::style(look, cell.tone)),
             Span::raw(" "),
             Span::raw(label),
             Span::raw(" ".repeat(pad + 1)),
-            Span::styled(
-                if found.moved { "!" } else { " " },
-                style::style(look, Tone::Bad),
-            ),
-            Span::styled(
-                if found.unknown { "?" } else { " " },
-                style::style(look, Tone::Warn),
-            ),
-            Span::raw(" "),
-            Span::styled(word, dim),
-        ]));
+        ];
+        if show.marks {
+            spans.extend(mark_cells(found, look));
+        }
+        spans.push(Span::raw(" "));
+        spans.push(Span::styled(word, dim));
+        rail.lines.push(Line::from(spans));
         if show.full {
             let indent = format!("{bars}{}", " ".repeat(glyph_width + 1));
             let text = left(&second(entry), room.saturating_sub(cells(&indent)), glyphs);
@@ -124,6 +124,20 @@ pub fn build(entries: &[Entry], show: Show<'_>) -> Rail {
             .push(Line::styled(format!(" {}", mark(glyphs, "┴", "+")), dim));
     }
     rail
+}
+
+/// The two mark cells: `!` when a source moved, `?` when unchecked.
+fn mark_cells(found: crate::kb_entry::Marks, look: Look) -> [Span<'static>; 2] {
+    [
+        Span::styled(
+            if found.moved { "!" } else { " " },
+            style::style(look, Tone::Bad),
+        ),
+        Span::styled(
+            if found.unknown { "?" } else { " " },
+            style::style(look, Tone::Warn),
+        ),
+    ]
 }
 
 /// `text` broken at spaces into rows of at most `width` cells; a word

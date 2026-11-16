@@ -1,31 +1,28 @@
- Harbor status  [build]  knowledge base                                                                                  project:harbor
- [1 why]   2 status    3 tracker    4 impact    5 stale !9                                                                       m runs
-╭ projects (2) ──────╮╭ why (5) ──────────────────────────────────────────────╮╭ decision 3/5 ─────────────────────────────────────────╮
-│> Harbor status     ││ ┬ decisions                                           ││Batch ledger writes in the API  [accepted]             │
-│  build  harbor     ││ – One writer process for the ledger    superseded     ││proposal/decision/2026-03-02-batch-ledger-writes       │
+ Harbor status  [build]  knowledge base                                                                                  project 1 of 3
+ [1 why]   2 status    3 tracker    4 impact    5 stale 9 moved                                                                  m runs
+╭ projects (2) ──────╮╭ why (5) ──────────────────────────────────────────────╮╭ decision 3 of 5 ──────────────────────────────────────╮
+│> Harbor status     ││ ┬ decisions                                           ││Batch ledger writes in the API   accepted              │
+│  build  harbor     ││ – One writer process for the ledger    superseded     ││decision · decided by ops-review on 2026-03-09         │
 │  Lantern console   ││ – Drop client retries on flush         rejected       ││                                                       │
-│  lantern           ││ ● Batch ledger writes in the API    !  accepted       ││decided by ops-review on 2026-03-09                    │
-│  all records       ││ ○ Shard the ledger by tenant           draft          ││                                                       │
-│  by kind           ││ ○ Cap replay batches at 500 rows    !  draft          ││why  Group ledger writes into batches of up to 500 rows│
-│                    ││ ┴                                                     ││     per transaction.                                  │
+│  lantern           ││ ● Batch ledger writes in the API    !  accepted       ││Why                                                    │
+│  all records       ││ ○ Shard the ledger by tenant           draft          ││  Group ledger writes into batches of up to 500 rows   │
+│  by kind           ││ ○ Cap replay batches at 500 rows    !  draft          ││  per transaction.                                     │
+│                    ││ ┴                                                     ││  Batching keeps the flush under the store's fsync     │
+│                    ││                                                       ││  budget.                                              │
 │                    ││                                                       ││                                                       │
-│                    ││                                                       ││why  Batching keeps the flush under the store's fsync  │
-│                    ││                                                       ││     budget.                                           │
+│                    ││                                                       ││Sources · 1 of 2 has moved                             │
+│                    ││                                                       ││  ! src/batch.rs:2-4 in demo-service                   │
+│                    ││                                                       ││    moved to 4-6                                       │
 │                    ││                                                       ││                                                       │
-│                    ││                                                       ││cites 2  ● !                                           │
-│                    ││                                                       ││  ! code:demo-service:src/batch.rs:2-4 [moved]         │
-│                    ││                                                       ││    moved→4-6                                          │
+│                    ││                                                       ││See also                                               │
+│                    ││                                                       ││  ● Flush stalls on the ledger store   concluded       │
+│                    ││                                                       ││  ● Ledger flush stalls on slow disk   done            │
 │                    ││                                                       ││                                                       │
-│                    ││                                                       ││see also                                               │
-│                    ││                                                       ││  ● Flush stalls on the ledger store  concluded        │
-│                    ││                                                       ││  ● Ledger flush stalls on slow disk  done             │
+│                    ││                                                       ││Linked from                                            │
+│                    ││                                                       ││  – One writer process for the ledger   replaced by it │
 │                    ││                                                       ││                                                       │
-│                    ││                                                       ││linked from                                            │
-│                    ││                                                       ││  – One writer process for the ledger  superseded-by (…│
-│                    ││                                                       ││                                                       │
-│                    ││                                                       ││runs                                                   │
+│                    ││                                                       ││Runs that name it                                      │
 │                    ││                                                       ││  Add --plan to kb runs                                │
-│                    ││                                                       ││…/decision/2026-03-02-batch-ledger-writes/proposal.md:5│
 │                    ││                                                       ││                                                       │
 │                    ││                                                       ││                                                       │
 │                    ││                                                       ││                                                       │
@@ -33,6 +30,9 @@
 │                    ││                                                       ││                                                       │
 │                    ││                                                       ││                                                       │
 │                    ││                                                       ││                                                       │
-│                    ││decisions that name harbor as their project            ││d sources and fresh cites   f run   a impact           │
+│                    ││                                                       ││                                                       │
+│                    ││                                                       ││                                                       │
+│                    ││                                                       ││                                                       │
+│                    ││harbor's decisions   ! cites a source that has moved   ││d exact wording and file   f run   a impact            │
 ╰────────────────────╯╰───────────────────────────────────────────────────────╯╰───────────────────────────────────────────────────────╯
- [read-only]  kb XXXXXXXXXXXX   index fresh   asked 00:00:00Z                       j/k record   l inspect   a impact   ? help   q quit
+ [read-only]                                                                        j/k record   l inspect   a impact   ? help   q quit

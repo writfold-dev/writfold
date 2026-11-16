@@ -1,5 +1,5 @@
 //! The help overlay: the marks, this frame's full stamps, then the keys
-//! and verbs. The legend and stamps live here so the frame stays calm.
+//! and verbs, and the Words: each plain phrase beside its exact word.
 use crate::app::App;
 use crate::cells::Glyphs;
 use crate::lines::{Line, Tone, line};
@@ -57,6 +57,14 @@ pub fn this_frame(app: &App) -> Vec<Line> {
     ]
 }
 
+/// Every plain phrase beside the verbs' exact word.
+pub fn words() -> Vec<Line> {
+    crate::say_words::glossary()
+        .into_iter()
+        .map(|row| line(row, Tone::Plain))
+        .collect()
+}
+
 /// The overlay's whole text.
 pub fn overlay(app: &App) -> Vec<Line> {
     if app.mode == crate::kb_state::Mode::Kb {
@@ -64,6 +72,7 @@ pub fn overlay(app: &App) -> Vec<Line> {
     }
     let mut out = marks(crate::map_view::glyphs(app));
     out.extend(this_frame(app));
+    out.extend(words());
     out.extend(crate::frame::help());
     out
 }

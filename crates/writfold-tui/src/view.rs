@@ -1,5 +1,5 @@
 //! Responsive terminal panes; all content is projected by `frame` and `side`.
-use crate::app::{App, Focus, View};
+use crate::app::{App, Detail, Focus, View};
 use crate::layout::{self, Areas, Class};
 use crate::lines::{self, Tone};
 use crate::paint::{block, initial_scroll, text};
@@ -26,9 +26,7 @@ pub fn draw(frame: &mut Frame<'_>, app: &mut App) {
     }
     if app.mode == crate::kb_state::Mode::Kb {
         crate::kb_view::draw(frame, app);
-        if app.help {
-            chrome::help(frame, app);
-        }
+        overlays(frame, app);
         return;
     }
     let inspect =
@@ -51,12 +49,40 @@ pub fn draw(frame: &mut Frame<'_>, app: &mut App) {
         }
     }
     sides(frame, app, &areas);
+    overlays(frame, app);
+}
+
+fn overlays(frame: &mut Frame<'_>, app: &mut App) {
+    if app.commands {
+        crate::commands::draw(frame, app);
+    }
     if app.help {
         chrome::help(frame, app);
     }
 }
 
+/// A text view in plain words; `false` where the exact lines stay.
+fn plain_detail(frame: &mut Frame<'_>, app: &mut App, area: Rect) -> bool {
+    let glyphs = crate::map_view::glyphs(app);
+    let Some(told) = crate::plain_views::told(app, app.view, glyphs) else {
+        return false;
+    };
+    let title = crate::plain_views::title(app, app.view);
+    let border = block(title, app.focus == Focus::Detail, app.look);
+    let inner = border.inner(area);
+    let rows = crate::say_draw::told(&told, usize::from(inner.width), app.look);
+    let last = rows.len().saturating_sub(usize::from(inner.height));
+    app.scroll = app.scroll.min(u16::try_from(last).unwrap_or(u16::MAX));
+    app.anchor = false;
+    let pane = Paragraph::new(rows).block(border).scroll((app.scroll, 0));
+    frame.render_widget(pane, area);
+    true
+}
+
 fn detail(frame: &mut Frame<'_>, app: &mut App, area: Rect) {
+    if app.level == Detail::Plain && plain_detail(frame, app, area) {
+        return;
+    }
     let border = ratatui::widgets::Block::bordered();
     let inner = border.inner(area);
     let mut detail = content::detail(app, app.view, Some(inner.width), app.expand_all, false);
@@ -135,14 +161,27 @@ fn sides(frame: &mut Frame<'_>, app: &App, areas: &Areas) {
 }
 
 fn side(frame: &mut Frame<'_>, app: &App, view: View, area: Rect) {
-    let title = if view == View::Guards {
-        "guards (current run)"
-    } else {
-        view.name()
+    let plain = app.level == Detail::Plain;
+    let title = match view {
+        View::Guards if plain => crate::plain_views::title(app, view),
+        View::Guards => "guards (current run)".into(),
+        _ => view.name().into(),
     };
-    let border = block(title.into(), false, app.look);
+    let border = block(title, false, app.look);
     let inner = border.inner(area);
-    let pane = Paragraph::new(text(side::compact(app, view), app.look));
+    let glyphs = crate::map_view::glyphs(app);
+    let told = plain
+        .then(|| crate::plain_views::side(app, view, glyphs))
+        .flatten();
+    let pane = match told {
+        Some(told) => Paragraph::new(crate::plain_views::rows(
+            &told,
+            usize::from(inner.width),
+            app.look,
+            glyphs,
+        )),
+        None => Paragraph::new(text(side::compact(app, view), app.look)),
+    };
     let scroll = if view == View::Timeline {
         let offset = pane
             .line_count(inner.width)

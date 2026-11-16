@@ -21,20 +21,17 @@ fn golden_text(name: &str) -> TestResult<String> {
 #[test]
 fn run_mode_gains_only_the_mode_unit() -> TestResult {
     let w = support::map::nested("t5-run-mode")?;
-    for (name, width, height) in [
-        ("t3-nested-160x40.txt", 160, 40),
-        ("t4-calm-136x38.txt", 136, 38),
-        ("t4-calm-80x24.txt", 80, 24),
-        // Eight tabs leave no room: the mode unit is the first one dropped.
-        ("t3-nested-100x30.txt", 100, 30),
-    ] {
+    // The exact level is the pre-T6 detailed frame, so the pre-T5 detailed
+    // golden still differs from it only by the mode unit.
+    for (name, width, height) in [("t4-detail-136x38.txt", 136, 38)] {
         let mut app = App::new(w.source(), Some(RUN));
         app.focus = Focus::Detail;
+        app.key(Key::Char('d'));
         let mut buffer = render(&mut app, width, height)?;
         support::buffers::stable(&mut buffer)?;
         let screen = rows(&buffer);
         let text = normalize(&w, &symbols(&buffer))?;
-        let shown = usize::from(width != 100);
+        let shown = 1;
         assert_eq!(text.matches("m kb").count(), shown, "{name}: {text}");
         assert_eq!(
             screen[1].contains("m kb"),

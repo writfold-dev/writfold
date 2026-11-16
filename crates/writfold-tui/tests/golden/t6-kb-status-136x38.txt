@@ -1,0 +1,38 @@
+ Harbor status  [build]  knowledge base                                                                                  project 1 of 3
+ 1 why   [2 status]   3 tracker    4 impact    5 stale 9 moved                                                                   m runs
+╭ projects (2) ──────╮╭ status ───────────────────────────────────────────────╮╭ project ──────────────────────────────────────────────╮
+│> Harbor status     ││Harbor status   build                                  ││Harbor status   build                                  │
+│  build  harbor     ││  next    month-end replay                             ││project                                                │
+│  Lantern console   ││  owner   team-quay                                    ││                                                       │
+│  lantern           ││                                                       ││next    month-end replay                               │
+│  all records       ││○ Retire the legacy flush path   run · open            ││owner   team-quay                                      │
+│  by kind           ││    Legacy path removed; nothing left to do.           ││phase   build                                          │
+│                    ││○ Replay too slow   ticket · in-progress               ││                                                       │
+│                    ││○ Cap replay batches at 500 rows   decision · draft    ││Linked from                                            │
+│                    ││○ Slow ledger flush at month end   ticket · in-progress││  ○ Slow ledger flush at month end   promoted to it    │
+│                    ││○ Flush stalls return   investigation · open           ││  ● Harbor billing API   in project                    │
+│                    ││○ Shard the ledger by tenant   decision · draft        ││  ● Harbor ledger store   in project                   │
+│                    ││● Batch ledger writes in the API   decision · accepted ││  – One writer process for the ledger   in project     │
+│                    ││    Group ledger writes into batches of up to 500 rows ││  – Drop client retries on flush   in project          │
+│                    ││    per transaction.                                   ││  ● Batch ledger writes in the API   in project        │
+│                    ││· 2026-11-05 atlas records   commit                    ││  ○ Shard the ledger by tenant   in project            │
+│                    ││· 2026-11-05 progress fixture   commit                 ││  ○ Cap replay batches at 500 rows   in project        │
+│                    ││· src/legacy.rs:1-2 in demo-service   cite · gone      ││  · Quay batch worker   in project                     │
+│                    ││· ktlo/2026/hbr-101-slow-ledger-flush.md   cite ·      ││  ○ Add --plan to kb runs   in project                 │
+│                    ││                                           changed     ││  ○ Retire the legacy flush path   in project          │
+│                    ││· src/db.rs:1-3 in demo-service   cite · moved         ││  ● Tide latency dashboard   in project                │
+│                    ││· https://example.invalid/wiki/harbor   cite · expired ││                                                       │
+│                    ││                                                       ││                                                       │
+│                    ││                                                       ││                                                       │
+│                    ││                                                       ││                                                       │
+│                    ││                                                       ││                                                       │
+│                    ││                                                       ││                                                       │
+│                    ││                                                       ││                                                       │
+│                    ││                                                       ││                                                       │
+│                    ││                                                       ││                                                       │
+│                    ││                                                       ││                                                       │
+│                    ││                                                       ││                                                       │
+│                    ││                                                       ││                                                       │
+│                    ││                                                       ││d exact wording and file   f run   a impact            │
+╰────────────────────╯╰───────────────────────────────────────────────────────╯╰───────────────────────────────────────────────────────╯
+ [read-only]                                                                                    j/k scroll   Tab view   ? help   q quit

@@ -12,6 +12,21 @@ impl App {
             self.help = false;
             return true;
         }
+        if self.commands {
+            match key {
+                Key::Char('j') | Key::Down => self.commands_scroll += 1,
+                Key::Char('k') | Key::Up => {
+                    self.commands_scroll = self.commands_scroll.saturating_sub(1);
+                }
+                _ => self.commands = false,
+            }
+            return true;
+        }
+        if key == Key::Char('c') {
+            self.commands = true;
+            self.commands_scroll = 0;
+            return true;
+        }
         if self.mode == crate::kb_state::Mode::Kb {
             self.kb_key(key);
             return true;
@@ -81,8 +96,8 @@ impl App {
 
     pub(crate) fn toggle_detail(&mut self) {
         self.level = match self.level {
-            Detail::Calm => Detail::Full,
-            Detail::Full => Detail::Calm,
+            Detail::Plain => Detail::Exact,
+            Detail::Exact => Detail::Plain,
         };
         self.inspect_scroll = 0;
     }

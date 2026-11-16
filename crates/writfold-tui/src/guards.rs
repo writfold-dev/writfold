@@ -22,8 +22,10 @@ pub fn title(app: &App) -> String {
     }
 }
 
-fn counts(answer: &Reply) -> Line {
-    let role = if ["deny", "invalid"]
+/// The counts' tone: bad on a deny or an invalid rule, warn on ask or
+/// nudge, good when rules exist and all pass.
+pub(crate) fn tone(answer: &Reply) -> Tone {
+    if ["deny", "invalid"]
         .iter()
         .any(|n| answer.count(n).is_some_and(|n| n > 0))
     {
@@ -37,7 +39,11 @@ fn counts(answer: &Reply) -> Line {
         Tone::Good
     } else {
         Tone::Dim
-    };
+    }
+}
+
+fn counts(answer: &Reply) -> Line {
+    let role = tone(answer);
     let parts = crate::side::count_parts(
         answer,
         &["rules", "deny", "ask", "nudge", "audit", "invalid"],

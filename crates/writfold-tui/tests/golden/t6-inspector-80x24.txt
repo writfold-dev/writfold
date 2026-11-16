@@ -1,0 +1,24 @@
+ Add --plan to kb runs  [open] [current run] [harbor]                run 1 of 3
+ [1 progress]   2 gates 4 not met    4 inbox 3    5 guards 1        m kb    1/8
+╭ step 7 of 11 ────────────────────────────────────────────────────────────────╮
+│check   next up                                                               │
+│step 7 of 11 · in findings                                                    │
+│                                                                              │
+│Needs 2 gates before it can be marked done.                                   │
+│                                                                              │
+│review-list   out of date                                                     │
+│  checklist · 2 of 4 required items covered                                   │
+│  ! tests   out of date · the evidence it cites has changed                   │
+│  □ docs    not covered · The guide names every new flag                      │
+│  □ style   optional · not covered · Names follow the module                  │
+│                                                                              │
+│signoff   nothing recorded yet                                                │
+│  decided by a person's statement; no command is run                          │
+│                                                                              │
+│Read first   instructions for signoff                                         │
+│Suggested    give evidence for tests in review-list                           │
+│                                                                              │
+│                                                                              │
+│d exact wording   c commands   g gates                                        │
+╰──────────────────────────────────────────────────────────────────────────────╯
+ [read-only]                                h back   d detail   ? help   q quit

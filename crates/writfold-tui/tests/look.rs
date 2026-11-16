@@ -43,6 +43,8 @@ fn foreground(buffer: &Buffer, needle: &str, color: Color, bold: bool) -> TestRe
 fn truecolor_gate_and_step_roles_reach_the_surface() -> TestResult {
     let w = world("look-roles")?;
     let mut app = App::new(w.source(), Some(RUN));
+    // The roles are asserted on the exact level's bracketed states.
+    app.level = writfold_tui::app::Detail::Exact;
     app.map = false;
     app.look = Look {
         theme: ThemeId::Hone,
@@ -79,7 +81,7 @@ fn selected_run_uses_text_on_selection_for_every_entry_line() -> TestResult {
         theme: ThemeId::Hone,
         depth: Depth::Truecolor,
     };
-    app.level = writfold_tui::app::Detail::Full;
+    app.level = writfold_tui::app::Detail::Exact;
     let buffer = render(&mut app, 160, 40)?;
     let area = writfold_tui::layout::areas(160, 40)
         .runs
@@ -123,6 +125,8 @@ fn recorded_signoff_is_vouched_not_good() -> TestResult {
     )?;
     assert_eq!(exit, 0, "{text}");
     let mut app = App::new(w.source(), Some(RUN));
+    // The roles are asserted on the exact level's bracketed states.
+    app.level = writfold_tui::app::Detail::Exact;
     app.look = Look {
         theme: ThemeId::Hone,
         depth: Depth::Truecolor,
@@ -151,7 +155,7 @@ fn degraded_depths_have_no_background_or_unwanted_colours() -> TestResult {
         } else {
             Color::Reset
         };
-        foreground(&buffer, "lint [stale]", color, true)?;
+        foreground(&buffer, "out of date · changed in scope", color, true)?;
         for cell in &buffer.content {
             assert_eq!(cell.bg, Color::Reset);
             if depth == Depth::None {

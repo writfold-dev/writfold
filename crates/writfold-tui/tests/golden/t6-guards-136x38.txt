@@ -1,0 +1,38 @@
+ Add --plan to kb runs  [open] [current run] [harbor]                                                                        run 1 of 3
+ 1 progress   2 gates 4 not met   3 timeline   4 inbox 3 pending  [5 guards] 1 would block   6 stale   7 brief   8 resume          m kb
+╭ runs (3) ──────────────────╮╭ guards · the current run ──────────────────────────────────────────────────────────────────────────────╮
+│> Add --plan to kb runs     ││2 rules · 1 would block · 1 would remind                                                                │
+│  harbor  step 7/11         ││                                                                                                        │
+│  Review the lantern guide  ││commit-needs-gates   would block    needs every gate of the run met                                     │
+│  lantern                   ││stop-reflect         would remind   needs the current step's gates met                                  │
+│  Retire the legacy flush p…││                                                                                                        │
+│  closed  harbor  complete  ││Judged for the current run as if each rule applied right now. A guard advises; it does not enforce, and │
+│                            ││nothing was run.                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+╰────────────────────────────╯╰────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+ [read-only]  KB has 19 uncommitted changes                                          j/k scroll   Tab view   d detail   ? help   q quit

@@ -61,7 +61,7 @@ pub fn summary(answer: &Reply, full: bool, look: Look, width: u16) -> Vec<Row<'s
 
 /// Four cells after the position, two between counts; a part that would
 /// cross the edge starts the next row.
-fn pack(parts: Vec<(String, Tone)>, look: Look, width: usize) -> Vec<Row<'static>> {
+pub(crate) fn pack(parts: Vec<(String, Tone)>, look: Look, width: usize) -> Vec<Row<'static>> {
     let mut rows: Vec<Vec<Span<'static>>> = Vec::new();
     let mut used = 0;
     for (at, (text, tone)) in parts.into_iter().enumerate() {

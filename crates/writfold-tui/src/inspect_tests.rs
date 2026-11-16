@@ -48,7 +48,7 @@ fn fixture() -> Value {
 #[test]
 fn preserves_continuations_and_separate_evidence() {
     let row = fixture();
-    let output = content(&node(&row), Glyphs::Unicode, Look::default(), Detail::Full);
+    let output = content(&node(&row), Glyphs::Unicode, Look::default(), Detail::Exact);
     let text = texts(&output);
     assert_eq!(text[0], "plan#1/check [done] !stale");
     for value in lines::more(&row) {
@@ -74,7 +74,7 @@ fn preserves_continuations_and_separate_evidence() {
 fn segments_keep_order_and_source_count_without_judging() {
     let row = fixture();
     for (glyphs, expected) in [(Glyphs::Unicode, "■ ◆ ! □ "), (Glyphs::Ascii, "x * ! . ")] {
-        let output = content(&node(&row), glyphs, Look::default(), Detail::Full);
+        let output = content(&node(&row), glyphs, Look::default(), Detail::Exact);
         assert!(
             texts(&output).contains(&format!("9/12 required covered  {expected}(+1 optional)"))
         );
@@ -105,7 +105,7 @@ fn no_gates_and_unjudged_text_do_not_invent_standing() {
             &node(&row),
             Glyphs::Ascii,
             Look::default(),
-            Detail::Full,
+            Detail::Exact,
         ));
         assert_eq!(output[0], "p#1/a [current]");
         assert!(output.contains(&text.to_owned()));
@@ -126,7 +126,7 @@ fn skipped_event_path_follows_verbatim_reason() {
         &node(&row),
         Glyphs::Unicode,
         Look::default(),
-        Detail::Full,
+        Detail::Exact,
     ));
     assert!(output.windows(2).any(|pair| pair
         == [
@@ -136,37 +136,40 @@ fn skipped_event_path_follows_verbatim_reason() {
 }
 
 #[test]
-fn calm_keeps_what_needs_attention_and_drops_receipts_and_covered_items() {
+fn plain_keeps_what_needs_attention_in_words() {
     let row = fixture();
-    let output = content(&node(&row), Glyphs::Unicode, Look::default(), Detail::Calm);
+    let output = content(&node(&row), Glyphs::Unicode, Look::default(), Detail::Plain);
     let text = texts(&output);
-    assert_eq!(text[0], "plan#1/check [done] !stale");
-    assert_eq!(text[1], "plan#1/check");
-    assert!(!text.iter().any(|line| line.starts_with('@')));
+    assert_eq!(text[0], "plan#1/check   done");
     for kept in [
-        "gate review [stale] checklist 9/12 required covered",
-        "■ ◆ ! □ (+1 optional)",
-        "! third [stale] evidence moved",
-        "□ fourth [open] needs evidence",
-        "read: instructions for review",
-        "done: recorded 2026-11-14T07:07:44Z",
+        "Done on 2026-11-14 07:07.",
+        "It stays done, but 1 of its gates is now out of date.",
+        "review   out of date",
+        "  checklist · 9 of 12 required items covered",
+        "  ! third    out of date · the evidence it cites has changed · evidence moved",
+        "  □ fourth   not covered · needs evidence",
+        "Read first   instructions for review",
+        "Suggested    give evidence for third in review",
     ] {
         assert!(text.contains(&kept.to_owned()), "{kept}: {text:#?}");
     }
     for dropped in [
-        "first [supported]",
-        "extra [supported]",
-        "second [not-applicable]",
+        "■ first",
+        "■ extra",
+        "◆ second",
+        "@",
+        "[",
+        "splice",
+        "under",
+        "recorded",
     ] {
-        assert!(!text.iter().any(|line| line.contains(dropped)), "{dropped}");
+        assert!(
+            !text.iter().skip(1).any(|line| line.contains(dropped)),
+            "{dropped}: {text:#?}"
+        );
     }
-    assert!(
-        !text
-            .iter()
-            .any(|l| l.starts_with("splice:") || l.starts_with("under:"))
-    );
     assert_eq!(
         text.last().map(String::as_str),
-        Some("d receipts and covered items   g gates   x text")
+        Some("d exact wording   c commands   g gates")
     );
 }

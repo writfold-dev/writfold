@@ -1,28 +1,28 @@
- Harbor status  [build]  knowledge base                                                                                  project:harbor
- 1 why    2 status    3 tracker   [4 impact]   5 stale !9                                                                        m runs
-╭ projects (2) ──────╮╭ impact ───────────────────────────────────────────────╮╭ ticket 1/19 ──────────────────────────────────────────╮
-│> Harbor status     ││in  what cites or links to project:harbor              ││Slow ledger flush at month end  [in-progress]          │
-│  build  harbor     ││                                                       ││HBR-101                                                │
-│  Lantern console   ││ ┬ project:harbor                                      ││                                                       │
-│  lantern           ││ ○ Slow ledger flush at month end        promoted-to   ││status=in-progress                                     │
-│  all records       ││ ● Harbor billing API                 !  project       ││prs=[acme/harbor-api#42]                               │
-│  by kind           ││ │ ○ Replay too slow                     concerns      ││created=2026-10-28                                     │
-│                    ││ │ · Harbor billing API               !  dossier-of    ││updated=2026-11-03                                     │
-│                    ││ │ · Restart the Harbor API              concerns      ││promoted_to=harbor                                     │
-│                    ││ ● Harbor ledger store                   project       ││                                                       │
-│                    ││ │ ● Ledger flush stalls on slow disk    concerns      ││linked from                                            │
-│                    ││ │ ● Flush stalls on the ledger store    concerns      ││  · Harbor status  cites (cite)                        │
-│                    ││ │ ○ Flush stalls return              !  concerns      ││@ktlo/2026/hbr-101-slow-ledger-flush.md:5              │
-│                    ││ │ ● Fsync stall on the ledger store     concerns      ││                                                       │
-│                    ││ – One writer process for the ledger  !  project       ││                                                       │
-│                    ││ – Drop client retries on flush       !  project       ││                                                       │
-│                    ││ ● Batch ledger writes in the API     !  project       ││                                                       │
-│                    ││ ○ Shard the ledger by tenant            project       ││                                                       │
-│                    ││ ○ Cap replay batches at 500 rows     !  project       ││                                                       │
-│                    ││ · Quay batch worker                     project       ││                                                       │
-│                    ││ ○ Add --plan to kb runs                 project       ││                                                       │
-│                    ││ ○ Retire the legacy flush path          project       ││                                                       │
-│                    ││ ● Tide latency dashboard                project       ││                                                       │
+ Harbor status  [build]  knowledge base                                                                                  project 1 of 3
+ 1 why    2 status    3 tracker   [4 impact]   5 stale 9 moved                                                                   m runs
+╭ projects (2) ──────╮╭ impact ───────────────────────────────────────────────╮╭ ticket 1 of 19 ───────────────────────────────────────╮
+│> Harbor status     ││what points at Harbor status                           ││Slow ledger flush at month end   in-progress           │
+│  build  harbor     ││                                                       ││ticket HBR-101                                         │
+│  Lantern console   ││ ┬ Harbor status                                       ││                                                       │
+│  lantern           ││ ○ Slow ledger flush at month end        promoted to it││prs           [acme/harbor-api#42]                     │
+│  all records       ││ ● Harbor billing API                 !  in project    ││created       2026-10-28                               │
+│  by kind           ││ │ ○ Replay too slow                     about it      ││updated       2026-11-03                               │
+│                    ││ │ · Harbor billing API               !  its dossier   ││promoted to   harbor                                   │
+│                    ││ │ · Restart the Harbor API              about it      ││                                                       │
+│                    ││ ● Harbor ledger store                   in project    ││Linked from                                            │
+│                    ││ │ ● Ledger flush stalls on slow disk    about it      ││  · Harbor status   cites it                           │
+│                    ││ │ ● Flush stalls on the ledger store    about it      ││                                                       │
+│                    ││ │ ○ Flush stalls return              !  about it      ││                                                       │
+│                    ││ │ ● Fsync stall on the ledger store     about it      ││                                                       │
+│                    ││ – One writer process for the ledger  !  in project    ││                                                       │
+│                    ││ – Drop client retries on flush       !  in project    ││                                                       │
+│                    ││ ● Batch ledger writes in the API     !  in project    ││                                                       │
+│                    ││ ○ Shard the ledger by tenant            in project    ││                                                       │
+│                    ││ ○ Cap replay batches at 500 rows     !  in project    ││                                                       │
+│                    ││ · Quay batch worker                     in project    ││                                                       │
+│                    ││ ○ Add --plan to kb runs                 in project    ││                                                       │
+│                    ││ ○ Retire the legacy flush path          in project    ││                                                       │
+│                    ││ ● Tide latency dashboard                in project    ││                                                       │
 │                    ││ ┴                                                     ││                                                       │
 │                    ││                                                       ││                                                       │
 │                    ││                                                       ││                                                       │
@@ -32,7 +32,7 @@
 │                    ││                                                       ││                                                       │
 │                    ││                                                       ││                                                       │
 │                    ││                                                       ││                                                       │
-│                    ││                                                       ││                                                       │
-│                    ││19 reached   not followed: 1 disputed, 22 inferred     ││d sources and fresh cites   f run   a impact           │
+│                    ││19 records reached · not followed: 1 disputed link, 22 ││                                                       │
+│                    ││inferred links   ! cites a source that has moved       ││d exact wording and file   f run   a impact            │
 ╰────────────────────╯╰───────────────────────────────────────────────────────╯╰───────────────────────────────────────────────────────╯
- [read-only]  kb XXXXXXXXXXXX   index fresh   asked 00:00:00Z                       j/k record   l inspect   a impact   ? help   q quit
+ [read-only]                                                                        j/k record   l inspect   a impact   ? help   q quit

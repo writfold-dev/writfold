@@ -47,12 +47,15 @@ try:
                 b"5", b"n", b"N", b"1", b"?", b"\x1b", b"]", b"[", b"r", b"f", b"q"]:
         os.write(master, key)
         receive()
-    assert child.wait(timeout=20) == 0
+    # Keys are written as soon as the terminal goes quiet, so a debug build
+    # may still be working through queued views when q arrives: allow it time.
+    assert child.wait(timeout=120) == 0
     receive()
     plain = re.sub(rb"\x1b\[[0-?]*[ -/]*[@-~]", b"", seen)
     compact = b"".join(plain.split())
     assert b"nextsteptopickup,asrecorded" in compact, plain.decode("utf-8", "replace")
-    assert b"ggatesxtext" in compact, plain.decode("utf-8", "replace")
+    assert b"dexactwordingccommandsggates" in compact, plain.decode("utf-8", "replace")
+    assert b"watchneverrunsthem" in compact, plain.decode("utf-8", "replace")
     assert b"dlessggates" in compact, plain.decode("utf-8", "replace")
     assert b"lastcheckpoint:" in compact, plain.decode("utf-8", "replace")
     assert b"knowledgebase" in compact, plain.decode("utf-8", "replace")

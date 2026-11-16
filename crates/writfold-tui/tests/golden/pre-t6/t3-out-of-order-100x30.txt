@@ -1,0 +1,30 @@
+ Batch ledger writes rollout  [open] [harbor]  subject kb               run-20261101T090000Z-a1b2c3
+ [1 progress]   2 gates    3 timeline    4 inbox    5 guards    6 stale    7 brief    8 resume
+╭ runs (1) ──────────╮╭ plan ───────────────────────────────╮╭ step 2/4 ───────────────────────────╮
+│> Batch ledger writ…││step 2 of 4    1 done  1 skipped     ││child [current]                      │
+│  harbor  step 2/4  ││1 disorder                           ││merge#1/finish/side#1/child          │
+│                    ││                                     ││                                     │
+│                    ││ ┬ merge#1                           ││no gates                             │
+│                    ││ – prefix                            ││next: writfold kb plan advance       │
+│                    ││ ├─╮ side#1                          ││                                     │
+│                    ││ │ ▶ child  no gates                 ││                                     │
+│                    ││ ├─╯                                 ││                                     │
+│                    ││ ✓ finish   !out-of-order            ││                                     │
+│                    ││ ○ later                             ││                                     │
+│                    ││ ┴                                   ││                                     │
+│                    ││                                     ││                                     │
+│                    ││                                     ││                                     │
+│                    ││                                     ││                                     │
+│                    ││                                     ││                                     │
+│                    ││                                     ││                                     │
+│                    ││                                     ││                                     │
+│                    ││                                     ││                                     │
+│                    ││                                     ││                                     │
+│                    ││                                     ││                                     │
+│                    ││                                     ││                                     │
+│                    ││                                     ││                                     │
+│                    ││                                     ││                                     │
+│                    ││last plan event  2026-11-10T23:58:50…││                                     │
+│                    ││▶ next step to pick up, as recorded  ││d more   g gates   x text            │
+╰────────────────────╯╰─────────────────────────────────────╯╰─────────────────────────────────────╯
+ [read-only]  kb XXXXXXXXXXXX   index fresh       j/k step   l inspect   d detail   ? help   q quit

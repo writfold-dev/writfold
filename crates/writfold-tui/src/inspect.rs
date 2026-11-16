@@ -167,21 +167,23 @@ fn labelled(out: &mut Vec<InspectLine>, node: &Node<'_>, labels: &[&str], look: 
     }
 }
 
-/// Text excludes `indent`; render in a narrowed rectangle. The calm level
-/// keeps what needs attention; `d` restores splice, parent, covered items
-/// and every receipt. The last line is the command hint.
+/// Text excludes `indent`; render in a narrowed rectangle. The exact
+/// level shows every continuation and receipt; the plain level is
+/// `inspect_plain` (without a position or the plan's owed count here).
+/// The last line is the command hint.
 pub fn content(node: &Node<'_>, glyphs: Glyphs, look: Look, detail: Detail) -> Vec<InspectLine> {
-    let full = detail == Detail::Full;
+    if detail == Detail::Plain {
+        return plain::content(node, plain::Context::default(), glyphs, look);
+    }
     let status = field(node.row, "status");
-    let (mut out, first): (_, &[&str]) = if full {
-        (
-            vec![header(node, look)],
-            &["splice", "under", "why", "owes"],
-        )
-    } else {
-        (calm::header(node, look), &["why", "owes"])
-    };
-    labelled(&mut out, node, first, look, full);
+    let mut out = vec![header(node, look)];
+    labelled(
+        &mut out,
+        node,
+        &["splice", "under", "why", "owes"],
+        look,
+        true,
+    );
     if status != "skipped" && !field(node.row, "text").is_empty() {
         out.push(plain(
             0,
@@ -190,17 +192,13 @@ pub fn content(node: &Node<'_>, glyphs: Glyphs, look: Look, detail: Detail) -> V
             look,
         ));
     }
-    if full {
-        gates(&mut out, node, glyphs, look);
-    } else {
-        calm::gates(&mut out, node, glyphs, look);
-    }
+    gates(&mut out, node, glyphs, look);
     labelled(
         &mut out,
         node,
         &["read", "next", "done", "skip"],
         look,
-        full,
+        true,
     );
     if status == "skipped" {
         out.push(plain(
@@ -210,7 +208,7 @@ pub fn content(node: &Node<'_>, glyphs: Glyphs, look: Look, detail: Detail) -> V
             look,
         ));
     }
-    if full && matches!(status, "done" | "skipped") {
+    if matches!(status, "done" | "skipped") {
         evidence(&mut out, node.row, 2, look);
     }
     out.push(InspectLine {
@@ -237,9 +235,9 @@ fn header(node: &Node<'_>, look: Look) -> InspectLine {
     )
 }
 
-#[path = "inspect_calm.rs"]
-mod calm;
-pub use calm::hint;
+#[path = "inspect_plain.rs"]
+pub mod plain;
+pub use plain::hint;
 
 #[cfg(test)]
 #[path = "inspect_tests.rs"]

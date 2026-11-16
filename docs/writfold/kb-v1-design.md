@@ -3871,3 +3871,174 @@ Deviations: a `guard log` row's kind is `guard-log`, so its text line begins `gu
 `delta/mark.rs`: `marks/<NAME>.json` (`writfold-kb-mark/1`: `name`, `head`, `taken`, `dirty` as path to blob ID or null), named by `draft::valid_session`, written as a dot-named temporary then a rename (probed at `temp-written` and `published`), pruned of marks whose `taken` is more than 30 days old after each write. `delta/mod.rs` (`Verb::Delta(DeltaVerb::{Mark, SinceMark, Since})`): the KB repository as a `gate::subject::Subject` and its `snapshot` (status, HEAD tree, dirty blob IDs; new accessors `dirty()` and `committed(path)`), restricted to the KB's prefix; the candidates are `diff-tree` from the base to `HEAD`, the dirty paths now and the dirty paths at the mark; a path's content at the base is the mark's blob, else `cat-file --batch-check <base>:<path>`; now, the dirty blob, else the HEAD tree's; equal blobs are not rows. The base is resolved with `rev-parse` first, so a commit missing from the clone is refused (exit 3). `delta/classify.rs` classifies by run directory, `.writfold/` directory, the index's record at the path, then `layout::classify`. The session-start hook calls `delta::session_mark` before building its context; any failure is silent and writes nothing. Exit 0 with rows, 2 without.
 
 Deviation: the note about others' commits is coarser than specified. The runtime has no primitive listing merge commits between two commits, and adding a Git call was kept out of this round, so the note says either that `HEAD` is not a descendant of the base (commits on both sides) or that commits made since the base are included whoever made them, without counting merges. Tests: `crates/writfold-kb/tests/delta.rs` (three rows in two sections, blob comparison of a file dirty at the mark, an ignored file, `--since HEAD` clean exit 2, unknown revision and missing mark exit 3, the session-start mark kept on `compact`, a kill at `temp-written` and `published`).
+
+## 41. T6 as built (v0.5.0-dev.10)
+
+T6 changes what the remaining lines of `writfold watch` say. The frame keeps
+its panes, rail, state glyphs, bars, keys and both modes; the default surface
+reads as plain words, and the verbs' own wording is one key away. The
+[specification](tui-t6-spec.md) remains the design record; its Decisions
+(owner, 15 November 2026) override its earlier text, and this section records
+what was built, in v0.5.0-dev.10. The [watch guide](../guide/watch.md#plain-and-exact)
+documents the exercised interface.
+
+### 41.1 Two levels, one key
+
+`Detail::{Calm, Full}` became `Detail::{Plain, Exact}`. Plain is the default
+and is never written, so a fresh start is plain (decision 1); `d` toggles the
+exact level, which is the pre-T6 detailed frame byte for byte: the exact
+paths call the pre-T6 functions with the pre-T6 arguments, and the two exact
+goldens (`t4-detail-136x38.txt`, `t5-why-detail-136x38.txt`) did not change.
+The calm level is retired; its dead branches left `inspect.rs`, whose exact
+output is unchanged. `--once`, `--once --view NAME`, a pipe and
+`--once --view kb:NAME` print the same text as before; the four plain-output
+goldens did not change, and `tests/plain_exact.rs` compares all six files
+directly (bless cannot rewrite them there).
+
+### 41.2 The phrasing layer
+
+Pure modules, no `ratatui` or `App`:
+
+| Module | Holds |
+|---|---|
+| `say.rs` | `Piece::{Said, Quoted, Mark}`, `Phrase` (indent, tone, pieces, a lead column), `Told` (lines, withheld lines, withheld notes), `align` |
+| `say_read.rs` | `readable` and `quote`: whole or nothing, a hand-written token scan |
+| `say_words.rs` | the state tables (steps, step flags, gate standings, classes, items, guards, guard needs, record flags) |
+| `say_glossary.rs` | relation words by edge end; the help overlay's Words section, printed from the tables |
+| `say_shape.rs` | the anchored shapes (`named`, `optional`, `class`, `template`, `when`, `event`, `pair`, `requires`, `locator`, `stamp`, `argv`, `respelt`) |
+| `say_next.rs` | the suggested next step from a command's leading argv |
+| `say_step.rs`, `say_gate.rs`, `say_row.rs`, `say_lists.rs`, `say_kb.rs` | steps and map rows; gates, items, counts and `not met`; Timeline and the generic row form; Inbox and Guards; KB inspector sections, relations, reasons and the walk's trailer |
+
+Rendering lives in `say_draw.rs` (a phrase's lead column, then its rest
+wrapped at spaces and hanging under the column), `inspect_plain.rs`,
+`plain_views.rs`, `plain_bars.rs`, `kb_plain.rs` and `commands.rs`.
+
+`readable` refuses a text when any token is a bracketed state, starts with
+`@`, `--` or `!` and a letter, has `=` or `_` between word characters, a
+backtick or `→`, eight digits or twelve hex digits in a row, an ISO or clock
+stamp, a lowercase word directly followed by `:` and more text, a path of
+three or more segments, a label prefix (`owes:`, `next:`, …), `WHO`, `REF…`,
+`would-…` or two chip glyphs in a row; it also refuses any text containing
+`writfold kb`. Authored text (titles, checkpoint text, checklist
+requirements, `why` and `decided` lines, draft text, field values) is never
+scanned: it is quoted whole or not at all.
+
+### 41.3 Honesty rules as built
+
+- **States come from fields.** Every `Said` state phrase is a lookup on
+  `status`, `flags` or a trailer count; bracketed or free text is never read
+  for a state. A word with no entry is quoted as itself.
+- **Only `satisfied` says "passed".** `attested` is "signed off", `waived` is
+  "waived", and their long forms say no check passed. "Met" keeps the
+  product's meaning; the Gates badge is `gates − satisfied − attested −
+  waived`, shown only when all four counts are present.
+- **No liveness.** `current` is "next up"; the caption reads "▶ the next step
+  to pick up, as recorded". `tests/words.rs` rejects running, working, in
+  progress, underway, busy, live, active and waiting in every table phrase.
+- **Stale is "out of date"**, guards are always "would …", `later` is "not
+  judged yet" and `unknown` "no verdict".
+- **Whole or nothing.** A verb sentence that is not readable is withheld, not
+  rewritten; a pane that withholds says `N lines in exact wording (d)` (or
+  `N notes …`). An item's or gate's account that a state phrase stands in for
+  (the stale item's `gate:lint …`) is not counted, as the spec's frames show.
+- **Names are looked up.** A step is named as the map names it; a splice by
+  the template of the group whose splice file is the event's own; a run by the
+  runs list; a tracker header or impact subject by a title an answer on hand
+  carries. When the lookup fails, the id is printed.
+- **Time is respelt, not computed**: `2026-11-10T23:59:50Z` prints as
+  `2026-11-10 23:59`; a date stays a date; Timeline says `Times are UTC, as
+  recorded.`
+
+Decision 2's confirmations against the guides, saying less where a guide is
+wider: `out-of-order` is "done out of order" (long: "done, with an earlier
+step still open"; run graph guide: a done step with open steps before it);
+`two-plans` "two plans on this run"; `repeated` "spliced again" (the guide
+counts any re-splice without `--again`, not only a second one);
+`template-moved` "template changed" (long: "its template file has changed or
+is gone since the run spliced it"); `step.met` "needs the current step's
+gates met" (hooks guide: the plan's current step owes nothing); `gates.met`
+"needs every gate of the run met"; `run.current` "needs an open current run".
+
+### 41.4 Surfaces
+
+- **Map.** No chip cells at plain; a row has words only when it is the
+  recorded current step (`needs review-list and signoff`), the selected row
+  (`done 2026-11-10 23:47`) or flagged (`done; lint is now out of date`,
+  `done out of order`); the group header is the template's name; the plan head
+  says `1 out of date`, `gates not judged (no repository)`; below the rail,
+  `last recorded   2026-11-10 23:59 · prepare done`.
+- **Inspector.** Name and `next up`; `step 7 of 11 · in findings`; what the
+  state means (`Needs 2 gates before it can be marked done.` from the trailer's
+  `current_owed`); each gate with its standing and class; the items still
+  open or out of date; `Read first` and `Suggested`. The pane title is
+  `step 7 of 11`.
+- **Bars.** Header right `run 1 of 3`; `current run`; a subject warning only
+  when no repository is judged. Badges `4 not met`, `3 pending`,
+  `1 would block` shorten to their number, from the right, before a tab or
+  the mode unit drops. The footer says `KB has 19 uncommitted changes` and an
+  index that is not fresh, and nothing in the normal case.
+- **Text views.** Gates (counts, one row per gate with its reason or class,
+  items), Inbox (counts, one entry per draft or proposal), Guards (outcome and
+  need), Timeline (when, what, name), and the generic row form for Stale,
+  Brief and Resume. The side stack (140 columns and up) shows the short forms.
+- **KB mode.** Lists keep their glyphs and marks; the tracker's word is the
+  record's status, the impact's the relation from the row's side; headers are
+  titles; captions name the mark legend; the stale list has no mark column and
+  its word is the reason (`moved`, `overdue`, `came back`). The inspector reads
+  `decision · decided by ops-review on 2026-03-09`, `Why`, `Sources · 1 of 2
+  has moved`, `See also`, `Linked from` (with `replaced by it`), `Runs that
+  name it`; fields as `key   value`. The status view uses the generic form.
+- **Help.** A Words section beside Marks and This frame: every plain phrase
+  with its exact word, printed from the tables.
+- **Command rows (`c`).** Borderless, full-width rows at the bottom of the
+  frame: the run and step ids and files to read as `#` comments, then each
+  suggested command whole, broken at a space with a trailing ` \` when longer
+  than the frame. At most ten rows; `j`/`k` scroll; any other key closes.
+  `watch` runs none of them. In KB mode the rows name the record, its file and
+  the verbs the inspector asked.
+
+### 41.5 Tests and goldens
+
+Goldens copied to `tests/golden/pre-t6/` before re-blessing: `frame-100x30`,
+`frame-160x40`, the nine `t3-*`, `t4-calm-136x38`, `t4-calm-80x24`,
+`t5-why-136x38`, `t5-why-80x24`, `t5-impact-136x38` and `t5-tracker-100x30`
+(all re-blessed at the plain level). New: `t6-inspector-80x24`,
+`t6-gates-136x38`, `t6-gates-80x24`, `t6-inbox-136x38`, `t6-guards-136x38`,
+`t6-timeline-136x38`, `t6-commands-136x38`, `t6-kb-status-136x38`,
+`t6-kb-stale-136x38` and `t6-kb-stale-inspector-80x24`. Unchanged:
+`t4-detail-136x38`, `t5-why-detail-136x38` and the four plain-output goldens.
+
+`tests/words.rs` checks the tables (every standing has a phrase, only
+`satisfied` says passed, no liveness words, guards stay conditional, stale is
+never failed, unknown words are quoted, help prints every word).
+`tests/plain_sweep.rs` checks that `readable` agrees with an independent
+regex list (`tests/support/terse.rs`) over every fixture text, that no `Said`
+piece in any view or inspector is notation, that rendered plain frames at
+136×38, 100×30 and 80×24 (Unicode and ASCII, every run view, the inspector on
+every step, every KB view and inspector) match none of the list, that the
+plain map has no chips, that withholding is announced with the right count,
+and that `not met` is the product's sum. `tests/plain_exact.rs` checks that
+every gate, step id, receipt path and command of the answers is on the exact
+level or in the command rows. Existing tests that asserted calm-level words
+now assert the plain words, or set the exact level where they test the
+verbs' wording (chip colours, segment strips, receipt positions).
+
+Each guarding test was run against its mutation; the log is
+`target/t6-mutants/summary.txt` in the implementation worktree.
+
+### 41.6 Deviations
+
+- `Phrase` carries a lead column (`lead`, `column`) beside its pieces so that
+  names align and continuation rows hang under the rest, as the frames show.
+- The code of steps 4–9 landed as one commit (the documents in the next):
+  the bars, text views, KB mode and command rows share the rendering layer
+  and their tests, and splitting them would have left intermediate commits
+  failing.
+- The plain inspector of a skipped step says `Skipped.` and counts the
+  verb's reason as withheld when it carries a stamp.
+- The side stack's Timeline keeps its rows only (no caption).
+- `--help` lists `d` and `c` in the new words.
+- Below the cut line nothing was built: bespoke layouts for views 6–8, the
+  `change · 2nd time` header (a repeated splice still shows its template
+  name), `--level`, and long forms for the disorder flags beyond the ones the
+  table already gives.

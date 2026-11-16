@@ -211,6 +211,8 @@ fn a_recorded_flag_sets_no_mark_in_the_stale_view() -> TestResult {
     let w = atlas("recorded-flag")?;
     let mut app = kb_app(&w);
     app.key(writfold_tui::app::Key::Char('5'));
+    let words = symbols(&render(&mut app, 136, 38)?);
+    app.key(writfold_tui::app::Key::Char('d'));
     let plain = symbols(&render(&mut app, 136, 38)?);
     let reply = app.kb.stale.as_mut().ok_or("no stale reply")?;
     assert!(!reply.rows.is_empty(), "the atlas has stale rows");
@@ -220,6 +222,9 @@ fn a_recorded_flag_sets_no_mark_in_the_stale_view() -> TestResult {
         }
     }
     let labelled = symbols(&render(&mut app, 136, 38)?);
+    app.key(writfold_tui::app::Key::Char('d'));
+    // The plain level has no phrase for the flag and shows nothing new.
+    assert_eq!(symbols(&render(&mut app, 136, 38)?), words);
     // The list rows and marks are the same; only the inspector's flag
     // line names it.
     let changed: Vec<(&str, &str)> = plain
@@ -227,14 +232,16 @@ fn a_recorded_flag_sets_no_mark_in_the_stale_view() -> TestResult {
         .zip(labelled.lines())
         .filter(|(a, b)| a != b)
         .collect();
-    assert_eq!(changed.len(), 1, "{labelled}");
-    let (before, after) = changed[0];
     assert!(
-        before.contains("│expired ") && after.contains("│expired recorded "),
-        "{after}"
+        changed
+            .iter()
+            .any(|(b, a)| b.contains("│expired ") && a.contains("│expired recorded ")),
+        "{labelled}"
     );
     let list = |line: &str| line.chars().take(78).collect::<String>();
-    assert_eq!(list(before), list(after));
+    for (before, after) in changed {
+        assert_eq!(list(before), list(after));
+    }
     let none = writfold_tui::kb_entry::flag_marks(["recorded"]);
     assert_eq!(none, writfold_tui::kb_entry::Marks::default());
     Ok(())

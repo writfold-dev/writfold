@@ -76,14 +76,15 @@ pub fn help() -> Vec<Line> {
         "writfold watch: a read-only view of the KB verbs",
         "j k ↑ ↓: select run / node / scroll inspector; [ ]: previous / next run",
         "h l / Left Right: focus left/right; Enter cycles; Esc steps left",
-        "d: calm / detailed frame (receipts, covered items, splice and stamps); not written",
+        "d: plain words / exact wording (the verbs' own text, ids, receipts, splice and stamps); not written",
+        "c: commands to copy (ids, paths and the suggested commands; any key closes); watch runs none",
         "PgUp PgDn: page nodes / scroll text; .: current; n N: next/previous flagged step",
         "Tab / Shift-Tab: next / previous view; 0: runs (narrow)",
         "1/p progress; 2/g gates; 3/t timeline; 4/i inbox; 5/u guards; 6/s stale; 7/b brief; 8/e resume",
         "x: map / text Progress; X: expand / collapse text; o: open runs; P: selected project",
         "r: ask again; ?: help (any key closes); q / Ctrl-C: quit",
         "T: next theme (24-bit colour only); the choice is not written.",
-        "c is unbound; no key writes. Inbox prints confirm: and accept: commands.",
+        "No key writes or runs anything; c only lists commands.",
     ];
     let verbs = [
         "Runs: writfold kb runs --plan [--open] [--project P] --json",
@@ -127,7 +128,7 @@ fn runs(app: &App, out: &mut String) {
         return;
     }
     for (n, i) in app.order.iter().enumerate() {
-        for (k, item) in lines::run_item(&app.runs.rows[*i], crate::app::Detail::Full)
+        for (k, item) in lines::run_item(&app.runs.rows[*i], crate::app::Detail::Exact)
             .into_iter()
             .enumerate()
         {

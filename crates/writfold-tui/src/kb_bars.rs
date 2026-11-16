@@ -46,7 +46,9 @@ pub fn title(app: &App, width: u16, narrow: bool) -> Vec<Segment> {
         Scope::All => None,
     }
     .unwrap_or(projects.len());
-    let right = if narrow {
+    let right = if app.level == Detail::Plain {
+        format!("project {} of {}", at + 1, projects.len() + 1)
+    } else if narrow {
         format!("project {}/{}", at + 1, projects.len() + 1)
     } else {
         scope.id().unwrap_or("all records").to_owned()
@@ -73,9 +75,15 @@ fn tab(app: &App, view: KbView) -> (Unit, bool) {
     if view == KbView::Stale
         && let Some(reply) = app.kb.stale.as_ref().filter(|r| r.error.is_none())
     {
+        let plain = app.level == Detail::Plain;
         for (name, mark, tone) in [("stale", "!", Tone::Bad), ("unverifiable", "?", Tone::Warn)] {
             if let Some(n) = reply.count(name).filter(|n| *n > 0) {
-                parts.push(segment(format!(" {mark}{n}"), Role::Badge(tone)));
+                let text = match (plain, name) {
+                    (false, _) => format!(" {mark}{n}"),
+                    (true, "stale") => format!(" {n} moved"),
+                    (true, _) => format!(" {n} unchecked"),
+                };
+                parts.push(segment(text, Role::Badge(tone)));
                 marked = true;
             }
         }
@@ -145,8 +153,13 @@ pub fn footer(app: &App, width: u16, narrow: bool) -> Vec<Segment> {
             )
         })
         .collect();
+    let trailer = |key| app.kb.projects.as_ref().and_then(|r| r.trailer_text(key));
     let left = if let Some(notice) = &app.notice {
         vec![Unit::one(notice.clone(), Role::Notice, 0)]
+    } else if app.level == Detail::Plain {
+        let mut left = vec![Unit::new(vec![chip(app.look, "read-only", Chip::Plain)], 0)];
+        crate::plain_bars::footer(trailer("kb"), trailer("index"), &mut left);
+        left
     } else {
         let at = |key| {
             app.kb
@@ -167,7 +180,7 @@ pub fn footer(app: &App, width: u16, narrow: bool) -> Vec<Segment> {
             Unit::one(format!("index {index}"), tone, 3),
             Unit::one(format!("asked {}", app.asked), Role::Muted, 4),
         ];
-        if app.level == Detail::Full {
+        if app.level == Detail::Exact {
             let subject = crate::poll::subject_text(&app.stamps.subject).replacen('=', " ", 1);
             left.push(Unit::one(subject, Role::Muted, 5));
         }

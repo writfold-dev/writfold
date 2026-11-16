@@ -1,0 +1,38 @@
+ Add --plan to kb runs  [open] [current run] [harbor]                                                                        run 1 of 3
+ 1 progress   2 gates 4 not met   3 timeline  [4 inbox] 3 pending   5 guards 1 would block   6 stale   7 brief   8 resume          m kb
+╭ runs (3) ──────────────────╮╭ inbox ─────────────────────────────────────────────────────────────────────────────────────────────────╮
+│> Add --plan to kb runs     ││3 pending · 1 draft · 2 proposals                                                                       │
+│  harbor  step 7/11         ││Nothing here is in the KB until someone confirms or accepts it.                                         │
+│  Review the lantern guide  ││                                                                                                        │
+│  lantern                   ││draft      Review started; lint went stale after the rename.                                            │
+│  Retire the legacy flush p…││           confirming it records a checkpoint                                                           │
+│  closed  harbor  complete  ││proposal   ticket HBR-210: Lint gate scope misses the command module                                    │
+│                            ││           pending · kept only on this machine                                                          │
+│                            ││proposal   pending · kept only on this machine                                                          │
+│                            ││           its text is in exact wording (d)                                                             │
+│                            ││                                                                                                        │
+│                            ││c lists the confirm and accept commands; watch never runs them.                                         │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+╰────────────────────────────╯╰────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+ [read-only]  KB has 19 uncommitted changes                                          j/k scroll   Tab view   d detail   ? help   q quit

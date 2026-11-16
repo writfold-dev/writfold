@@ -1,0 +1,24 @@
+ Harbor status  [build]  knowledge base                          project 1 of 3
+ [5 stale] 9 moved                                                m runs    5/5
+╭ citation 6 of 9 ─────────────────────────────────────────────────────────────╮
+│src/batch.rs:2-4 in demo-service   moved                                      │
+│a citation of code                                                            │
+│                                                                              │
+│The cited lines are now at 4-6.                                               │
+│                                                                              │
+│Cited by                                                                      │
+│  ● Batch ledger writes in the API                                            │
+│  ○ Cap replay batches at 500 rows                                            │
+│                                                                              │
+│1 note in exact wording (d)                                                   │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│d exact wording and file   f run   a impact                                   │
+╰──────────────────────────────────────────────────────────────────────────────╯
+ [read-only]                                h back   d detail   ? help   q quit

@@ -25,11 +25,12 @@ pub enum Focus {
     Inspector,
 }
 
-/// How much text the frame shows; never written, a fresh start is calm.
+/// Plain words (the default) or the verbs' exact wording (`d`); never
+/// written, so a fresh start is plain.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Detail {
-    Calm,
-    Full,
+    Plain,
+    Exact,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -57,6 +58,9 @@ pub struct App {
     pub focus: Focus,
     pub scroll: u16,
     pub help: bool,
+    /// The command rows (`c`) replace the frame's bottom rows.
+    pub commands: bool,
+    pub commands_scroll: u16,
     pub expand_all: bool,
     pub map: bool,
     pub node: Option<String>,
@@ -95,6 +99,8 @@ impl App {
             focus: Focus::Runs,
             scroll: 0,
             help: false,
+            commands: false,
+            commands_scroll: 0,
             expand_all: false,
             map: true,
             node: None,
@@ -108,7 +114,7 @@ impl App {
             runs_view: false,
             anchor: true,
             look: Look::default(),
-            level: Detail::Calm,
+            level: Detail::Plain,
             mode: crate::kb_state::Mode::Runs,
             kb: crate::kb_state::KbState::default(),
             width: 0,

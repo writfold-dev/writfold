@@ -1,14 +1,14 @@
- Batch ledger writes rollout  [open] [harbor]  subject kb                                                                           run-20261101T090000Z-a1b2c3
+ Batch ledger writes rollout  [open] [harbor]                                                                                                        run 1 of 1
  [1 progress]   2 gates    3 timeline    4 inbox    5 guards    6 stale    7 brief    8 resume                                                             m kb
-╭ runs (1) ────────────────────────────╮╭ plan ────────────────────────────────────────────────────────────────╮╭ step 2/4 ────────────────────────────────────╮
-│> Batch ledger writes rollout         ││step 2 of 4    1 done  1 skipped  1 disorder                          ││child [current]                               │
-│  harbor  step 2/4                    ││                                                                      ││merge#1/finish/side#1/child                   │
-│                                      ││ ┬ merge#1                                                            ││                                              │
-│                                      ││ – prefix                                                             ││no gates                                      │
-│                                      ││ ├─╮ side#1                                                           ││next: writfold kb plan advance                │
-│                                      ││ │ ▶ child  no gates                                                  ││                                              │
+╭ runs (1) ────────────────────────────╮╭ plan ────────────────────────────────────────────────────────────────╮╭ step 2 of 4 ─────────────────────────────────╮
+│> Batch ledger writes rollout         ││step 2 of 4    1 done  1 skipped  1 out of order                      ││child   next up                               │
+│  harbor  step 2/4                    ││                                                                      ││step 2 of 4 · in side                         │
+│                                      ││ ┬ merge                                                              ││                                              │
+│                                      ││ – prefix                                                             ││Its gates are met.                            │
+│                                      ││ ├─╮ side                                                             ││                                              │
+│                                      ││ │ ▶ child   its gates are met                                        ││Suggested   a command is suggested (c)        │
 │                                      ││ ├─╯                                                                  ││                                              │
-│                                      ││ ✓ finish   !out-of-order                                             ││                                              │
+│                                      ││ ✓ finish    done out of order                                        ││                                              │
 │                                      ││ ○ later                                                              ││                                              │
 │                                      ││ ┴                                                                    ││                                              │
 │                                      ││                                                                      ││                                              │
@@ -34,7 +34,7 @@
 │                                      ││                                                                      ││                                              │
 │                                      ││                                                                      ││                                              │
 │                                      ││                                                                      ││                                              │
-│                                      ││last plan event  2026-11-10T23:58:50Z spliced merge#1/finish/side#1   ││                                              │
-│                                      ││▶ next step to pick up, as recorded                                   ││d more   g gates   x text                     │
+│                                      ││last recorded   2026-11-10 23:58 · side added                         ││                                              │
+│                                      ││▶ the next step to pick up, as recorded                               ││d exact wording   c commands   g gates        │
 ╰──────────────────────────────────────╯╰──────────────────────────────────────────────────────────────────────╯╰──────────────────────────────────────────────╯
- [read-only]  kb XXXXXXXXXXXX   index refreshed:1   asked 00:00:00Z                                           j/k step   l inspect   d detail   ? help   q quit
+ [read-only]  index refreshed:1                                                                               j/k step   l inspect   d detail   ? help   q quit

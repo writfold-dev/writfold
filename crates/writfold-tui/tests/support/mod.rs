@@ -9,6 +9,7 @@ pub mod kb_world;
 pub mod map;
 pub mod plan;
 pub mod projection;
+pub mod terse;
 use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::process::Command;
