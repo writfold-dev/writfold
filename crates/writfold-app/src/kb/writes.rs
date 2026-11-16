@@ -6,8 +6,10 @@ use writfold_kb::write::Write;
 use writfold_kb::write::record::{Decision, Link, Ticket};
 
 /// Flags that take a value.
-pub const VALUES: [&str; 36] = [
+pub const VALUES: [&str; 38] = [
     "idle",
+    "mark",
+    "since-mark",
     "rule",
     "since",
     "from",
@@ -62,6 +64,7 @@ pub fn allowed(verb: &str) -> &'static [&'static str] {
         "runs" => &["open", "plan", "idle"],
         "find" => &["eval"],
         "guard" => &["rule", "since"],
+        "delta" => &["mark", "since-mark", "since"],
         "checkpoint" => &["note", "from-draft", "run", "task", "mode", "new-run"],
         "record" => super::investigation::RECORD,
         "status" => super::set::FLAGS,
@@ -136,6 +139,7 @@ pub fn runs_and_writes(
         ("deliver", _) => super::deliver::verb(common, positional),
         ("plan", _) => super::plan::verb(common, positional),
         ("guard", _) => super::guard::verb(common, positional),
+        ("delta", _) => super::lists::delta(common, positional),
         ("observe", _) => super::observe::verb(common, positional),
         _ => return super::proposals::verb(name, common, positional),
     })

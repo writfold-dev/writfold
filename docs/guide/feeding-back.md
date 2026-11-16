@@ -186,6 +186,20 @@ git add .writfold/proposals && git commit -m "Propose HBR-130"   # commit it wit
 - **The cap of ten per session counts both stores**, one per ID.
 - Proposing a call the chosen store already holds writes nothing; proposing it into the other store adds a copy (to promote a local proposal to a tracked one, propose it again with `--tracked`).
 
+## What was written since: `kb delta`
+
+> Built in v0.5.0-dev.10.
+
+```sh
+writfold kb delta --mark NAME                   # remember the KB as it is now (local)
+writfold kb delta --since-mark NAME [--json]    # what differs from that
+writfold kb delta --since REV [--json]          # what differs from a commit of the KB repository
+```
+
+`--since REV` takes anything `git rev-parse` resolves to a commit of the KB repository (`origin/main`, a tag, a hash) and names the full commit in its note. The changed paths are the committed differences from it to `HEAD` plus the dirty and untracked files now; ignored files are never rows and nothing is written. `--mark NAME` writes `<KB Git directory>/writfold/marks/<NAME>.json` (`NAME` as a session ID: letters, digits, `.`, `-`, `_`), holding `HEAD` and each dirty or untracked path with the blob ID its bytes would have; writing one removes marks older than 30 days. `--since-mark` reports a path when its content now differs from its content at the mark, so a file already dirty at the mark is not counted unless it changed again. A base commit that is no longer in the clone is refused, exit 3. The session-start hook takes a mark named by the session ([hooks](hooks.md#a-stop-that-requires-a-write-recipe)).
+
+Each row is one path: `status` is `added`, `modified` or `deleted`; the text is its kind, the record's (`ticket`, `decision`, …, from the index, or from the layout for a deleted file), else the run artefact's (`checkpoint`, `gate-receipt`, `statement`, `cover`, `observation`, `retrieval`, `edit-receipt`, `plan-event`, `delivery`), else the configuration's (`gate`, `guard`, `plan`, `kind`, `check-receipt`, `proposal`, `delivery-mode`), else `doc`; the `id` is the record ID or the path; the section is `records`, `run`, `config` or `other`. The trailer counts `changed`, `records`, `run`, `config` and `other`; a note names the base. Exit 0 when at least one path differs; 2 when none, with `# note: nothing in the KB differs from <base>`. It says what differs, not who wrote it: commits pulled after the base are included, and a note says so.
+
 ## Closing runs
 
 A run stays open until it is closed: `writfold kb status RUN --set closed` writes `closed` to the run's `writfold-run.json`, and later run writes to it are refused. Nothing closes a run on its own: Writfold records and never schedules, and every gate being met is not the same as the work being done. Close a run when its work is finished, and review the change as a Git diff like any other write. `writfold kb runs --open` lists the runs that are still open.

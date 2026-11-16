@@ -13,6 +13,7 @@
 
 pub mod check;
 pub mod deliver;
+pub mod delta;
 pub mod draft;
 pub mod edit;
 pub mod emit;
@@ -86,6 +87,8 @@ pub enum Verb {
         project: Option<String>,
         plan: bool,
     },
+    /// `delta --mark NAME | --since-mark NAME | --since REV`.
+    Delta(delta::DeltaVerb),
     /// `find --eval [FILE]`: the query file (absolute), else
     /// `.writfold/queries.jsonl`.
     FindEval {
@@ -192,6 +195,9 @@ pub fn run(request: &Request) -> Result<Output> {
     }
     if let Verb::StaleRecord { scope } = &request.verb {
         return stale::checker::record::execute(&ws, request, scope.as_deref(), now);
+    }
+    if let Verb::Delta(verb) = &request.verb {
+        return delta::execute(&ws, request, verb, now);
     }
     if let Verb::Check { scope } = &request.verb {
         return check::execute(&ws, request, scope.as_deref(), now);

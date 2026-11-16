@@ -167,6 +167,20 @@ pub fn snapshot(
 }
 
 impl Snapshot {
+    /// The dirty and untracked paths, each with the blob ID its bytes
+    /// would have (`None`: deleted).
+    pub fn dirty(&self) -> &[(String, Option<String>)] {
+        &self.dirty
+    }
+
+    /// The blob ID of `path` in the HEAD commit's tree.
+    pub fn committed(&self, path: &str) -> Option<&str> {
+        self.tree
+            .iter()
+            .find(|(p, _)| p == path)
+            .map(|(_, id)| id.as_str())
+    }
+
     /// The scope digest and counts for one gate's patterns.
     pub fn scoped(&self, patterns: &[&str]) -> Scoped {
         let mut paths: BTreeMap<&str, &str> = self

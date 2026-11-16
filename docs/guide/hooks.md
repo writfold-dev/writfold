@@ -8,7 +8,7 @@
 
 | Claude Code event | Reads from the event | Writes | Prints | Timeout |
 |---|---|---|---|---|
-| `SessionStart` | `cwd`, `source` | nothing | JSON `additionalContext`, built from local files and refs only: a behind-remote line; `brief` for the project inferred from `cwd` (budget 1,200 tokens); a count of stale citations from the verdict cache; `resume` of the current run (budget 500); the plan position; an inbox of drafts, proposals and runs left without an evaluation. After a compaction (`source` `compact`), only the plan position. Fitted to 9,000 characters ([below](#what-session-start-injects)) | 30 s |
+| `SessionStart` | `cwd`, `source`, `session_id` | the session's mark (local; from v0.5.0-dev.10, [below](#a-stop-that-requires-a-write-recipe)) | JSON `additionalContext`, built from local files and refs only: a behind-remote line; `brief` for the project inferred from `cwd` (budget 1,200 tokens); a count of stale citations from the verdict cache; `resume` of the current run (budget 500); the plan position; an inbox of drafts, proposals and runs left without an evaluation. After a compaction (`source` `compact`), only the plan position. Fitted to 9,000 characters ([below](#what-session-start-injects)) | 30 s |
 | `PreCompact` | `session_id`, `cwd`, `trigger` | the draft's place: repository, branch, worktree, HEAD, dirty count | plain-text instructions for the compaction summary: keep the task, decisions with reasons, what failed, open questions, the next step | 15 s |
 | `PostCompact` | `session_id`, `compact_summary` | the draft's summary | nothing | 15 s |
 | `Stop` | `session_id`, `last_assistant_message`, `stop_hook_active`, `cwd` | the draft's last message; the draft's `nudged` flag after a nudge | nothing, or JSON `additionalContext` from a `stop` [guard rule](#guard-rules), once per session or once per turn | 10 s |
@@ -72,7 +72,7 @@ All three are read from files: the run's manifest and sidecar, `checkpoint.md` a
 
 **The 9,000-character cut.** When the parts together exceed 9,000 characters, they are cut in this order: the brief first, then the current run, the inbox, the plan position, the stale-citations line, and the behind-remote line last. The parts are kept whole from the last of that list backwards while they fit. The first that does not fit is cut at a line, with a `[… cut to fit the session-start limit …]` marker, and the rest are dropped.
 
-**Cost.** One Git spawn for the behind-remote line, on top of those the verbs already make. On the fixture KB with a plan and an upstream, the in-process release build took about 41 ms at start (the gates are judged twice, once by `resume` and once by `plan status`) and about 11 ms after a compaction. That is well inside the 30 s timeout.
+**Cost.** One Git spawn for the behind-remote line, on top of those the verbs already make. From v0.5.0-dev.10 the first start of a session also takes its mark (one `git status`, one `ls-tree` and hashing the dirty files): measured on 16 November 2026 on a scratch copy of the fixture KB with three dirty files, about 26 ms a call with a mark against 17 to 19 ms for v0.5.0-dev.9 (30 calls, two rounds); a resume or a compaction finds the mark and writes nothing. On the fixture KB with a plan and an upstream, the in-process release build took about 41 ms at start (the gates are judged twice, once by `resume` and once by `plan status`) and about 11 ms after a compaction. That is well inside the 30 s timeout.
 
 ## Failing open
 
@@ -266,6 +266,26 @@ Register it in `.claude/settings.json` (Stop takes no matcher):
 ```
 
 On a KB whose run owes `unit`, the hook prints `{"decision": "block", "reason": "The run owes gates: unit [open]. writfold kb gate status names the next command for each."}`; with `stop_hook_active` set, after `gate run unit` passes, and with no current run, it prints nothing and the turn ends. Claude Code also ends the turn after eight consecutive continuations, whatever the hook says. Like every hook, this one sees only one harness. The harness-neutral equivalent is CI running `writfold kb gate lines`, which exits 0 only when every gate is met.
+
+### A stop that requires a write (recipe)
+
+> Built in v0.5.0-dev.10.
+
+`writfold kb hook session-start` takes a mark named by the event's `session_id` when none exists, so a resume or a compaction keeps the first: `HEAD` and the blob ID of each dirty or untracked file, in `<KB Git directory>/writfold/marks/`, local and never committed. At the end of a turn, `writfold kb delta --since-mark "$session_id"` answers what was written to the KB since the session started, and exits 2 when nothing was. A Stop hook that blocks the end of a turn until something was written:
+
+```sh
+#!/bin/sh
+# Stop hook: do not end the turn until this session wrote to the KB.
+input=$(cat)
+[ "$(printf '%s' "$input" | jq -r '.stop_hook_active')" = true ] && exit 0
+session=$(printf '%s' "$input" | jq -r '.session_id')
+cd "$(printf '%s' "$input" | jq -r '.cwd')" || exit 0
+writfold kb delta --since-mark "$session" >/dev/null 2>&1; code=$?
+[ "$code" -eq 2 ] || exit 0   # 0: something was written; 3: no mark or a refusal
+jq -n '{decision: "block", reason: "Nothing was written to the KB this session: record what you found (writfold kb record, checkpoint or propose), or say why not."}'
+```
+
+As with the gate recipe above, it honours `stop_hook_active` and lets the turn end on exit 3, so a session without a mark is never wedged. Another harness calls `writfold kb delta --mark NAME` at its own start. The per-run form of the question is already a gate: a `run-record` gate with `research.backfilled` ([gates](gates.md#run-record-checks)).
 
 ### Inspecting rules without a hook
 

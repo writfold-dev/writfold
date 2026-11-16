@@ -53,6 +53,9 @@ verbs:
                                    every run: state, place, last checkpoint; --plan adds its position
   runs --idle AGE [--project P] [--plan]
                                    open runs whose last recorded write is older than AGE (7d, 36h)
+  delta --mark NAME | --since-mark NAME | --since REV
+                                   what differs in the KB since a local mark or a commit (exit 2 if
+                                   nothing); a mark is local, and session start takes the session's
   resume [<run>]                   one run: manifest, coverage, rechecks, checkpoint tail
   guard status                    would guard rules pass, deny, ask or nudge for the current run?
                                    a read-only judgment, not enforcement; no command is run

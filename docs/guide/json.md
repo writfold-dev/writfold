@@ -57,6 +57,8 @@ Readers should use `matched_on`, not split the `match` continuation's text (`typ
 
 `guard status` (from v0.5.0-dev.10) adds the flags `audit` and `waived`, the continuation labels `mode` and `waived`, and the count `audit` (present only when not zero). `guard log` answers rows of kind `guard-log` (status `audit`, `enforce` or `removed`) with continuations labelled `would-deny`, `would-ask`, `deny`, `ask`, `earlier` and `next`, the flags `audit`, `would-deny`, `would-ask` and `unmatched`, and the counts `rules`, `entries`, `would-deny`, `would-ask`, `deny`, `ask` and `unparsed`.
 
+`delta` (built in v0.5.0-dev.10) answers rows of kind `delta`, one per changed path: `id` the record ID or the path, `status` `added`, `modified` or `deleted`, `text` the path's kind, `path` the KB-relative path, `section` `records`, `run`, `config` or `other`; counts `changed`, `records`, `run`, `config` and `other`.
+
 `runs --idle AGE` (built in v0.5.0-dev.10) adds an `idle` continuation to each run row (`9d since <time> (<what was written>)`) and the count `idle`.
 
 `find --eval` (built in v0.5.0-dev.10) answers with one row of kind `query` per line of the query file: `id` is `q<line>`, `status` is `hit@1`, `hit@5` or `miss`, `text` names the first expected record found with its rank and tier, `path` and `line` point at the query's line, the flag `unknown-id` marks an `expect` ID that is not a record, and a miss has a `first` continuation naming what ranked first. The trailer counts `queries`, `hit1`, `hit5`, `miss` and, per tier of the first expected hit, `by-exact`, `by-normalized`, `by-prefix`, `by-heading`, `by-text` and so on. A missing or empty file answers `reason` `no-queries`.
