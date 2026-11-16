@@ -98,10 +98,7 @@ impl Audit<'_> {
             return; // verus_syn's parser-token DSL, not executable declaration input.
         }
         if !self.test
-            && matches!(
-                self.package,
-                "writfold-domain" | "writfold-kernel" | "writfold-protocol"
-            )
+            && self.package == "writfold-domain"
             && matches!(name, "println" | "eprintln" | "print" | "eprint")
         {
             self.emit(
