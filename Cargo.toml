@@ -2,14 +2,10 @@
 members = [
     "crates/writfold-domain",
     "crates/writfold-core",
-    "crates/writfold-kernel",
-    "crates/writfold-wire",
-    "crates/writfold-protocol",
     "crates/writfold-xtask",
     "crates/tuft",
     "crates/writfold-runtime",
     "crates/writfold-sources",
-    "crates/writfold-store",
     "crates/writfold-kb",
     "crates/writfold-app",
     "crates/writfold-tui",
@@ -45,7 +41,6 @@ rusqlite = { version = "=0.37.0", features = ["bundled"] }
 # 0.17 with default features, which Cargo's workspace-wide feature
 # resolution would add (allocator-api2, foldhash) to the core crates' graph.
 ratatui = { version = "=0.29.0", default-features = false, features = ["crossterm", "unstable-rendered-line-info"] }
-ed25519-dalek = { version = "=2.2.0", features = ["pkcs8", "pem"] }
 verus_syn = { version = "=0.0.0-2026-09-06-0133", features = ["full", "visit"] }
 proc-macro2 = { version = "=1.0.107", features = ["span-locations"] }
 syn = { version = "=2.0.119", features = ["full", "visit"] }
