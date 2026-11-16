@@ -1,4 +1,17 @@
-//! A gate policy as the verbs read it: whether any policy is configured.
+//! A gate's policy as the verbs read it: which standings meet the gate
+//! (`accept`, decided by [`writfold_core::policy::met`]), and whether any
+//! policy is configured at all.
+use writfold_core::policy::Accept;
+
+/// Every standing that meets a gate: the rule for a definition without
+/// `accept`.
+pub fn all() -> Accept {
+    Accept {
+        satisfied: true,
+        attested: true,
+        waived: true,
+    }
+}
 
 /// The line `resume`, the session-start context and `kb policy` show when
 /// nothing is configured.

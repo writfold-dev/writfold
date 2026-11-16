@@ -5,8 +5,9 @@
 //! definition and the receipts, recomputed on every read. Which paths a
 //! scope covers is [`crate::scope`].
 //!
-//! The decisions `outcome`, `about`, `evidence`, `judge`, `state`,
-//! `statements`, `standing` and `Standing::met` are in the Charon
+//! The decisions `outcome`, `bound`, `current`, `newest_bound`, `about`,
+//! `evidence`, `judge`, `state`, `stands`, `statements`, `standing` and
+//! `Standing::met` are in the Charon
 //! `start_from` list (named one by one, so the derived trait
 //! impls and the `name`/`parse` text conveniences are never translated);
 //! `proofs/Writfold/Gate.lean` proves them for every input
@@ -107,17 +108,46 @@ pub struct Evidence {
     pub same_definition: bool,
     /// The receipt's scope digest equals the present content in scope.
     pub same_scope: bool,
+    /// The receipt is this run's, about this subject, and intact
+    /// ([`bound`]). A receipt that is not bound counts as absent.
+    pub bound: bool,
 }
 
-/// The state from a gate's valid receipts, oldest first, and the index of
-/// the receipt that decides it: the newest receipt about the current
-/// subject, else the newest receipt (which is then stale).
+/// Whether a record is bound to the run and subject it is judged for: it
+/// is filed in this run, names this repository or candidate, and its
+/// digest is intact. All three, or it counts for nothing.
+pub fn bound(same_run: bool, same_subject: bool, intact: bool) -> bool {
+    same_run && same_subject && intact
+}
+
+/// Whether a receipt decides: bound, and about the current definition and
+/// the current content in scope.
+pub fn current(evidence: &Evidence) -> bool {
+    evidence.bound && evidence.same_definition && evidence.same_scope
+}
+
+/// The newest bound receipt, if any.
+pub fn newest_bound(receipts: &[Evidence]) -> Option<usize> {
+    let mut index = receipts.len();
+    while index > 0 {
+        index -= 1;
+        if receipts[index].bound {
+            return Some(index);
+        }
+    }
+    None
+}
+
+/// The state from a gate's receipts, oldest first, and the index of the
+/// receipt that decides it: the newest [`current`] receipt, else the
+/// newest bound receipt (which is then stale), else none (`open`). A
+/// receipt that is not [`bound`] is treated exactly as an absent one.
 pub fn state(receipts: &[Evidence]) -> (State, Option<usize>) {
     let mut index = receipts.len();
     while index > 0 {
         index -= 1;
         let evidence = receipts[index];
-        if evidence.same_definition && evidence.same_scope {
+        if current(&evidence) {
             let state = match evidence.outcome {
                 Outcome::Pass => State::Satisfied,
                 Outcome::Fail => State::Failed,
@@ -126,9 +156,9 @@ pub fn state(receipts: &[Evidence]) -> (State, Option<usize>) {
             return (state, Some(index));
         }
     }
-    match receipts.len() {
-        0 => (State::Open, None),
-        n => (State::Stale, Some(n - 1)),
+    match newest_bound(receipts) {
+        None => (State::Open, None),
+        Some(newest) => (State::Stale, Some(newest)),
     }
 }
 
@@ -153,6 +183,8 @@ pub struct Recorded {
     pub definition: Vec<u8>,
     /// The content digest (scope or run record) it was made about.
     pub content: Vec<u8>,
+    /// Whether it is bound to this run and subject ([`bound`]).
+    pub bound: bool,
 }
 
 /// A receipt compared with the present: the same definition, and the same
@@ -163,6 +195,7 @@ pub fn evidence(receipt: &Recorded, definition: &[u8], content: &[u8]) -> Eviden
         outcome: receipt.outcome,
         same_definition: crate::bytes::same(&receipt.definition, definition),
         same_scope: !content.is_empty() && crate::bytes::same(&receipt.content, content),
+        bound: receipt.bound,
     }
 }
 
@@ -228,28 +261,41 @@ pub struct Said {
     pub attested: bool,
     pub definition: Vec<u8>,
     pub content: Vec<u8>,
+    /// Whether it is bound to this run and subject ([`bound`]).
+    pub bound: bool,
 }
 
 /// Whether `said` is an attestation (`attested`) or a waiver (not
-/// `attested`) [`about`] the present definition and content. Its own
-/// function so the loop in [`statements`] stays flat for the translation.
+/// `attested`), bound to this run and subject, and [`about`] the present
+/// definition and content. Its own function so the loop in [`statements`]
+/// stays flat for the translation.
 pub fn stands(said: &Said, attested: bool, definition: &[u8], content: &[u8]) -> bool {
     if said.attested != attested {
+        return false;
+    }
+    if !said.bound {
         return false;
     }
     about(&said.definition, &said.content, definition, content)
 }
 
+/// Whether `said` is a bound attestation, current or not. Its own function
+/// so the loop in [`statements`] stays flat for the translation.
+pub fn attests(said: &Said) -> bool {
+    said.attested && said.bound
+}
+
 /// The statements of one obligation compared with the present: an
-/// attestation or a waiver stands only when it is [`about`] the present
-/// definition and content; `attested_any` counts every attestation.
+/// attestation or a waiver stands only when it is bound and [`about`] the
+/// present definition and content; `attested_any` counts every bound
+/// attestation.
 pub fn statements(said: &[Said], definition: &[u8], content: &[u8]) -> Statements {
     let mut attested_current = false;
     let mut attested_any = false;
     let mut waived_current = false;
     let mut index = 0;
     while index < said.len() {
-        if said[index].attested {
+        if attests(&said[index]) {
             attested_any = true;
         }
         if stands(&said[index], true, definition, content) {
@@ -290,105 +336,4 @@ pub fn standing(attested_class: bool, state: State, statements: Statements) -> S
 }
 
 #[cfg(test)]
-mod tests {
-    use super::{Ending, Evidence, Outcome, Standing, State, Statements, outcome, standing, state};
-
-    /// Over every input: an attested-class obligation is never satisfied,
-    /// a statement never makes anything `Satisfied`, a waiver stands only
-    /// when current, and a satisfied check is never shown as waived.
-    #[test]
-    fn statements_are_never_passing_checks() {
-        let states = [
-            State::Open,
-            State::Satisfied,
-            State::Stale,
-            State::Failed,
-            State::Unknown,
-        ];
-        for attested_class in [false, true] {
-            for state in states {
-                for bits in 0..8u8 {
-                    let s = Statements {
-                        attested_current: bits & 1 != 0,
-                        attested_any: bits & 3 != 0,
-                        waived_current: bits & 4 != 0,
-                    };
-                    let got = standing(attested_class, state, s);
-                    let satisfied = got == Standing::Checked(State::Satisfied);
-                    assert_eq!(satisfied, !attested_class && state == State::Satisfied);
-                    assert!(got != Standing::Waived || s.waived_current);
-                    assert!(got != Standing::Attested || (attested_class && s.attested_current));
-                    let expected = if attested_class {
-                        s.attested_current || s.waived_current
-                    } else {
-                        state == State::Satisfied || s.waived_current
-                    };
-                    assert_eq!(got.met(), expected, "{attested_class} {state:?} {s:?}");
-                }
-            }
-        }
-    }
-
-    #[test]
-    fn only_a_clean_zero_exit_passes() {
-        for moved in [false, true] {
-            for ending in [
-                Ending::Exited(0),
-                Ending::Exited(1),
-                Ending::Exited(-1),
-                Ending::Exited(255),
-                Ending::Signaled,
-                Ending::TimedOut,
-                Ending::Error,
-            ] {
-                let got = outcome(ending, moved);
-                let pass = ending == Ending::Exited(0) && !moved;
-                assert_eq!(got == Outcome::Pass, pass, "{ending:?} moved={moved}");
-                let fail = matches!(ending, Ending::Exited(n) if n != 0) && !moved;
-                assert_eq!(got == Outcome::Fail, fail, "{ending:?} moved={moved}");
-            }
-        }
-    }
-
-    /// Every sequence of up to three receipts over every combination: the
-    /// state is satisfied only when the newest receipt about the current
-    /// subject passed, and stale exactly when receipts exist but none is
-    /// about the current subject.
-    #[test]
-    fn a_receipt_about_another_subject_never_satisfies() {
-        let outcomes = [Outcome::Pass, Outcome::Fail, Outcome::Unknown];
-        let mut all = alloc::vec::Vec::new();
-        for outcome in outcomes {
-            for same_definition in [false, true] {
-                for same_scope in [false, true] {
-                    all.push(Evidence {
-                        outcome,
-                        same_definition,
-                        same_scope,
-                    });
-                }
-            }
-        }
-        assert_eq!(state(&[]), (State::Open, None));
-        let n = all.len();
-        for a in 0..n {
-            for b in 0..=n {
-                for c in 0..=n {
-                    let mut seq = alloc::vec![all[a]];
-                    seq.extend(all.get(b).copied());
-                    seq.extend(all.get(c).copied());
-                    let (got, at) = state(&seq);
-                    let current = seq.iter().rposition(|e| e.same_definition && e.same_scope);
-                    match current {
-                        None => assert_eq!((got, at), (State::Stale, Some(seq.len() - 1))),
-                        Some(i) => {
-                            assert_eq!(at, Some(i));
-                            let pass = seq[i].outcome == Outcome::Pass;
-                            assert_eq!(got == State::Satisfied, pass);
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
+mod tests;

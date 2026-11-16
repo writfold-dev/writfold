@@ -42,7 +42,7 @@ impl Gate {
     pub fn fact(&self) -> GateFact {
         match self.standing {
             None => GateFact::Undefined,
-            Some(standing) => GateFact::Stands(standing),
+            Some(standing) => GateFact::Stands(standing, crate::gate::policy::all()),
         }
     }
 

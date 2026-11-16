@@ -1,7 +1,8 @@
 //! Checklist gates behind `writfold kb gate cover`: a gate of class
 //! `checklist` declares items, and each item is covered by a row someone
 //! records: `supported` (with references to evidence), `unsupported` or
-//! `not-applicable` (each with a reason). This kernel decides what one
+//! `not-applicable` (each with a reason), or `none-found` (citing recorded
+//! looks that found nothing, with a reason). This kernel decides what one
 //! item stands on, from its newest row compared with the present, and
 //! what the items add up to. Nothing here reads a row or a reference; the
 //! caller gathers the facts and picks the newest row (by `seq`).
@@ -10,8 +11,13 @@
 //! obligation ([`crate::gate::standing`]): a cover row is someone's
 //! judgement with checked evidence, never a passing check.
 //!
-//! `item`, `covered`, `owes`, `first_owed`, `stale`, `any_stale`, `rollup`, `state`
-//! and `standing` are in the Charon `start_from` list (named one by one, so
+//! Which outcomes cover an item is the team's policy: `not-applicable`
+//! only for the items the checklist lists in `not_applicable` (every item
+//! when the key is absent), `none-found` only for those in `none_found`
+//! ([`covered_under`]).
+//!
+//! `item`, `covered_under`, `owes`, `first_owed`, `stale`, `any_stale`,
+//! `rollup_under`, `state` and `standing` are in the Charon `start_from` list (named one by one, so
 //! the derives and the text conveniences are never translated);
 //! `proofs/Writfold/Checklist.lean` proves them for every input
 //! (docs/writfold/aeneas.md). The exhaustive tests below state the same
@@ -28,6 +34,9 @@ pub enum Outcome {
     Unsupported,
     /// The item does not apply here (with a reason).
     NotApplicable,
+    /// Recorded looks found nothing (citing them, with a reason): never a
+    /// claim that nothing exists.
+    NoneFound,
 }
 
 impl Outcome {
@@ -36,6 +45,7 @@ impl Outcome {
             Outcome::Supported => "supported",
             Outcome::Unsupported => "unsupported",
             Outcome::NotApplicable => "not-applicable",
+            Outcome::NoneFound => "none-found",
         }
     }
 
@@ -44,6 +54,7 @@ impl Outcome {
             "supported" => Some(Outcome::Supported),
             "unsupported" => Some(Outcome::Unsupported),
             "not-applicable" => Some(Outcome::NotApplicable),
+            "none-found" => Some(Outcome::NoneFound),
             _ => None,
         }
     }
@@ -71,6 +82,9 @@ pub enum Item {
     Supported,
     /// The newest row is current and says the item does not apply.
     NotApplicable,
+    /// The newest row is current and cites at least one look that still
+    /// reads as having found nothing.
+    NoneFound,
     /// The newest row is current and says the item does not hold.
     Unsupported,
     /// The newest row is about other content or another definition, or
@@ -84,6 +98,7 @@ impl Item {
             Item::Open => "open",
             Item::Supported => "supported",
             Item::NotApplicable => "not-applicable",
+            Item::NoneFound => "none-found",
             Item::Unsupported => "unsupported",
             Item::Stale => "stale",
         }
@@ -91,9 +106,9 @@ impl Item {
 }
 
 /// The standing of one item from its newest row: none is `Open`; a row
-/// that is not current is `Stale`; a `Supported` row that cites nothing,
-/// or whose evidence is not all grounded as recorded, is `Stale`;
-/// otherwise the row's outcome.
+/// that is not current is `Stale`; a `Supported` or `NoneFound` row that
+/// cites nothing, or whose evidence is not all grounded as recorded, is
+/// `Stale`; otherwise the row's outcome.
 pub fn item(newest: Option<Row>) -> Item {
     let row = match newest {
         None => return Item::Open,
@@ -112,13 +127,24 @@ pub fn item(newest: Option<Row>) -> Item {
         }
         Outcome::Unsupported => Item::Unsupported,
         Outcome::NotApplicable => Item::NotApplicable,
+        Outcome::NoneFound => {
+            if row.evidence > 0 && row.grounded {
+                Item::NoneFound
+            } else {
+                Item::Stale
+            }
+        }
     }
 }
 
-/// Whether an item counts as covered: supported, or not applicable.
-pub fn covered(item: Item) -> bool {
+/// Whether an item counts as covered under its policy: supported; not
+/// applicable where the policy accepts that (`na`); none found where it
+/// accepts that (`none`).
+pub fn covered_under(item: Item, na: bool, none: bool) -> bool {
     match item {
-        Item::Supported | Item::NotApplicable => true,
+        Item::Supported => true,
+        Item::NotApplicable => na,
+        Item::NoneFound => none,
         Item::Open | Item::Unsupported | Item::Stale => false,
     }
 }
@@ -135,16 +161,21 @@ pub struct Rollup {
     pub first_owed: Option<usize>,
 }
 
-/// One declared item as it stands, with whether the checklist requires it.
+/// One declared item as it stands, with whether the checklist requires it
+/// and which of the reasoned outcomes its policy accepts.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Entry {
     pub item: Item,
     pub required: bool,
+    /// `not-applicable` covers this item.
+    pub na: bool,
+    /// `none-found` covers this item.
+    pub none: bool,
 }
 
-/// Whether an entry is owed: required and not covered.
+/// Whether an entry is owed: required and not [`covered_under`] its policy.
 pub fn owes(entry: &Entry) -> bool {
-    entry.required && !covered(entry.item)
+    entry.required && !covered_under(entry.item, entry.na, entry.none)
 }
 
 /// The first owed entry, in the checklist's order.
@@ -176,9 +207,9 @@ pub fn any_stale(entries: &[Entry]) -> bool {
     false
 }
 
-/// Add up the entries. Optional items never change whether the checklist
-/// is covered or stale.
-pub fn rollup(entries: &[Entry]) -> Rollup {
+/// Add up the entries under their policy. Optional items never change
+/// whether the checklist is covered or stale.
+pub fn rollup_under(entries: &[Entry]) -> Rollup {
     let first = first_owed(entries);
     Rollup {
         covered: first.is_none(),
@@ -210,152 +241,4 @@ pub fn standing(rollup: Rollup, waived_current: bool) -> Standing {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::{Entry, Item, Outcome, Row, covered, item, rollup};
-    use alloc::vec::Vec;
-
-    const OUTCOMES: [Outcome; 3] = [
-        Outcome::Supported,
-        Outcome::Unsupported,
-        Outcome::NotApplicable,
-    ];
-    const ITEMS: [Item; 5] = [
-        Item::Open,
-        Item::Supported,
-        Item::NotApplicable,
-        Item::Unsupported,
-        Item::Stale,
-    ];
-
-    fn rows() -> Vec<Row> {
-        let mut all = Vec::new();
-        for outcome in OUTCOMES {
-            for current in [false, true] {
-                for evidence in 0..3 {
-                    for grounded in [false, true] {
-                        all.push(Row {
-                            outcome,
-                            current,
-                            evidence,
-                            grounded,
-                        });
-                    }
-                }
-            }
-        }
-        all
-    }
-
-    /// Over every row: `Supported` only when current, grounded and citing
-    /// something; a row that is not current is always `Stale`; the other
-    /// outcomes need no evidence.
-    #[test]
-    fn supported_needs_current_grounded_evidence() {
-        assert_eq!(item(None), Item::Open);
-        for row in rows() {
-            let got = item(Some(row));
-            assert_ne!(got, Item::Open);
-            assert_eq!(
-                got == Item::Supported,
-                row.current
-                    && row.grounded
-                    && row.evidence > 0
-                    && row.outcome == Outcome::Supported,
-                "{row:?}"
-            );
-            assert_eq!(
-                got == Item::NotApplicable,
-                row.current && row.outcome == Outcome::NotApplicable,
-                "{row:?}"
-            );
-            assert_eq!(
-                got == Item::Unsupported,
-                row.current && row.outcome == Outcome::Unsupported,
-                "{row:?}"
-            );
-            if !row.current {
-                assert_eq!(got, Item::Stale, "{row:?}");
-            }
-        }
-    }
-
-    /// Every list of up to four items, each required or not: covered
-    /// exactly when every required item is supported or not applicable;
-    /// stale exactly when a required item is stale; the first owed item
-    /// is the first required item not covered; and removing the optional
-    /// items never changes the result.
-    #[test]
-    fn rollup_counts_required_items_only() {
-        let mut cells = Vec::new();
-        for item in ITEMS {
-            for required in [false, true] {
-                cells.push((item, required));
-            }
-        }
-        let mut lists: Vec<Vec<(Item, bool)>> = alloc::vec![Vec::new()];
-        let mut last: Vec<Vec<(Item, bool)>> = alloc::vec![Vec::new()];
-        for _ in 0..4 {
-            let mut longer = Vec::new();
-            for list in &last {
-                for cell in &cells {
-                    let mut next = list.clone();
-                    next.push(*cell);
-                    longer.push(next);
-                }
-            }
-            lists.extend(longer.iter().cloned());
-            last = longer;
-        }
-        assert_eq!(lists.len(), 1 + 10 + 100 + 1000 + 10_000);
-        let entries = |list: &[(Item, bool)]| -> Vec<Entry> {
-            list.iter()
-                .map(|&(item, required)| Entry { item, required })
-                .collect()
-        };
-        for list in &lists {
-            let got = rollup(&entries(list));
-            let required: Vec<(usize, Item)> = list
-                .iter()
-                .enumerate()
-                .filter(|(_, (_, r))| *r)
-                .map(|(i, (item, _))| (i, *item))
-                .collect();
-            assert_eq!(
-                got.covered,
-                required.iter().all(|(_, i)| covered(*i)),
-                "{list:?}"
-            );
-            assert_eq!(
-                got.stale,
-                required.iter().any(|(_, i)| *i == Item::Stale),
-                "{list:?}"
-            );
-            assert_eq!(
-                got.first_owed,
-                required
-                    .iter()
-                    .find(|(_, i)| !covered(*i))
-                    .map(|(at, _)| *at),
-                "{list:?}"
-            );
-            let only: Vec<(Item, bool)> = list.iter().copied().filter(|(_, r)| *r).collect();
-            let without = rollup(&entries(&only));
-            assert_eq!(
-                (without.covered, without.stale),
-                (got.covered, got.stale),
-                "{list:?}"
-            );
-        }
-    }
-
-    #[test]
-    fn names_round_trip() {
-        for outcome in OUTCOMES {
-            assert_eq!(Outcome::parse(outcome.name()), Some(outcome));
-        }
-        assert_eq!(Outcome::parse("met"), None);
-        for item in ITEMS {
-            assert!(!item.name().is_empty());
-        }
-    }
-}
+mod tests;

@@ -115,6 +115,7 @@ pub fn judge<'a>(
                 outcome: a.outcome,
                 same_definition,
                 same_scope: same_inputs,
+                bound: true,
             });
         }
         let (state, at) = state(&evidence);

@@ -226,6 +226,7 @@ pub fn judge_gate<'a>(
             outcome: r.outcome,
             definition: r.definition.as_bytes().to_vec(),
             content: r.scope.as_bytes().to_vec(),
+            bound: true,
         })
         .collect();
     let (state, at) = judge_receipts(&recorded, definition.digest.as_bytes(), content.as_bytes());

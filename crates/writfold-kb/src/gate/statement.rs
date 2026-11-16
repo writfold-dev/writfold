@@ -213,6 +213,7 @@ pub fn summary<'a>(
             attested: s.kind == Kind::Attested,
             definition: s.definition.as_bytes().to_vec(),
             content: s.content.as_bytes().to_vec(),
+            bound: true,
         })
         .collect();
     // Which file stands is the newest one the kernel's `about` admits.

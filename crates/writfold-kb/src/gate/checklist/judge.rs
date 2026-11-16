@@ -14,7 +14,7 @@ use crate::gate::subject::Subject;
 use crate::session::Session;
 use std::collections::BTreeMap;
 use writfold_core::assess::Grounding;
-use writfold_core::checklist::{self, Item, Outcome, Rollup, item, rollup};
+use writfold_core::checklist::{self, Item, Outcome, Rollup, item, rollup_under};
 use writfold_core::gate::about;
 
 /// One declared item, as it stands now.
@@ -47,7 +47,7 @@ impl View<'_> {
         let (mut covered, mut all) = (0, 0);
         for e in required {
             all += 1;
-            covered += usize::from(checklist::covered(e.item));
+            covered += usize::from(checklist::covered_under(e.item, true, false));
         }
         (covered, all)
     }
@@ -57,7 +57,7 @@ impl View<'_> {
     pub fn newest(&self) -> Option<&Filed> {
         self.entries
             .iter()
-            .filter(|e| checklist::covered(e.item))
+            .filter(|e| checklist::covered_under(e.item, true, false))
             .filter_map(|e| e.row)
             .max_by(|a, b| (&a.1.recorded, &a.0.name).cmp(&(&b.1.recorded, &b.0.name)))
             .map(|(f, _)| f)
@@ -202,9 +202,11 @@ pub fn judge<'a>(
             .map(|e| checklist::Entry {
                 item: e.item,
                 required: e.spec.required,
+                na: true,
+                none: false,
             })
             .collect();
-        let rollup = rollup(&cells);
+        let rollup = rollup_under(&cells);
         let statements = statement::summary(
             &filings.statements,
             &d.id,
