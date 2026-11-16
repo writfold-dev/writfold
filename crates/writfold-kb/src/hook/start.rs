@@ -174,7 +174,13 @@ fn startup(
         parts.push((Part::Brief, format!("Writfold KB brief (`writfold kb brief`). Rows end in their source; re-check any row with a ! flag before relying on it.\n{found}")));
     }
     let absent = crate::stale::checker::absent_line(&ws.root);
-    let lines: Vec<String> = stale_line(ws).into_iter().chain(absent).collect();
+    let broken = super::broken::here(ws, cwd);
+    let broken = (!broken.is_empty()).then(|| format!("\n{broken}"));
+    let lines: Vec<String> = stale_line(ws)
+        .into_iter()
+        .chain(absent)
+        .chain(broken)
+        .collect();
     if !lines.is_empty() {
         parts.push((Part::Stale, lines.concat()));
     }

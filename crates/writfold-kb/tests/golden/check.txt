@@ -3,5 +3,6 @@ check stale [attention] # coverage=complete records=28/28 shown=8 omitted=0 chec
 check index [clean] # coverage=complete records=28/28 shown=13 omitted=0 kb=d5db758bda80 index=fresh cursor=none q=a5a6a505dff3
 check gates [skipped] no current run
   next: writfold kb gate status
-# coverage=complete records=28/28 shown=3 omitted=0 checks=2 not_clean=1 kb=d5db758bda80 index=fresh cursor=none q=2523ace45f1f
+check definitions [clean] # coverage=complete files=0 clean=0 invalid=0 errors=0 warnings=0
+# coverage=complete records=28/28 shown=4 omitted=0 checks=3 not_clean=1 kb=d5db758bda80 index=fresh cursor=none q=2523ace45f1f
 # exit=2

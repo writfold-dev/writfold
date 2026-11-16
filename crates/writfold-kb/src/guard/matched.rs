@@ -27,7 +27,7 @@ pub struct Loaded {
     repos: Vec<(PathBuf, Vec<Rule>)>,
     /// For each directory looked at, the index of its repository rules.
     near: Vec<(PathBuf, Option<usize>)>,
-    pub problems: Vec<(String, String)>,
+    pub problems: Vec<crate::defs::Problem>,
 }
 
 impl Loaded {
@@ -59,10 +59,7 @@ impl Loaded {
             let mut kept = Vec::new();
             for rule in found {
                 match loaded.root.iter().any(|r| r.id == rule.id) {
-                    true => {
-                        let why = format!("rule {} is defined twice", rule.id);
-                        loaded.problems.push((rule.path.clone(), why));
-                    }
+                    true => loaded.problems.push(rules::twice(&rule)),
                     false => kept.push(rule),
                 }
             }

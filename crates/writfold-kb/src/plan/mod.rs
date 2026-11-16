@@ -25,11 +25,14 @@ pub mod moved;
 mod place;
 pub mod recheck;
 pub mod records;
+pub mod refs;
 pub mod required;
 pub(crate) mod show;
 mod splice;
 mod status;
+pub mod step_word;
 pub mod template;
+mod template_check;
 pub(crate) mod timeline;
 mod write;
 

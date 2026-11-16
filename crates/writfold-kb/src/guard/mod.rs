@@ -23,6 +23,8 @@ pub mod paths;
 pub(crate) mod pre;
 mod report;
 pub mod require;
+pub mod rule_check;
+mod rule_lists;
 pub mod rules;
 pub mod status;
 pub mod waived;
@@ -78,11 +80,8 @@ fn quiet_with(stderr: String) -> HookOutput {
     }
 }
 
-fn problems_note(problems: &[(String, String)]) -> String {
-    problems
-        .iter()
-        .map(|(path, why)| format!("writfold kb hook: guard rule {path} skipped: {why}\n"))
-        .collect()
+fn problems_note(problems: &[crate::defs::Problem]) -> String {
+    problems.iter().map(crate::hook::broken::skipped).collect()
 }
 
 /// Decide one PreToolUse event: the delivery guard, then the rules,
@@ -145,14 +144,6 @@ pub fn stop(
     }
     let (found, problems) = rules::read(&dirs);
     let stderr = problems_note(&problems);
-    let stops: Vec<&Rule> = found.iter().filter(|r| r.event == Event::Stop).collect();
-    if stops.is_empty() {
-        return Ok(quiet_with(stderr));
-    }
-    let active = input
-        .get("stop_hook_active")
-        .and_then(Value::as_bool)
-        .unwrap_or(false);
     let local = match &ws.repo {
         Some(repo) => repo.git_dir.join("writfold"),
         None => return Ok(quiet_with(stderr)),
@@ -161,8 +152,75 @@ pub fn stop(
         .get("session_id")
         .and_then(Value::as_str)
         .unwrap_or("");
-    let Ok(Some(mut d)) = draft::load(&local, session) else {
+    let mut texts = nudges(ws, input, (cwd, &local, session), now, &found)?;
+    if let Some(block) = broken_once(&local, session, &problems, now)? {
+        texts.insert(0, block);
+    }
+    if texts.is_empty() {
         return Ok(quiet_with(stderr));
+    }
+    let value = json!({
+        "hookSpecificOutput": {
+            "hookEventName": "Stop",
+            "additionalContext": texts.join("\n"),
+        }
+    });
+    Ok(HookOutput {
+        stdout: format!("{value}\n"),
+        stderr,
+    })
+}
+
+/// The draft key that records the session was told of broken rules.
+const BROKEN_NOTED: &str = "broken_rules_noted";
+
+/// The block of guard rule files that do not parse, once per session.
+fn broken_once(
+    local: &Path,
+    session: &str,
+    problems: &[crate::defs::Problem],
+    now: i64,
+) -> Result<Option<String>, String> {
+    if problems.is_empty() {
+        return Ok(None);
+    }
+    let Ok(Some(mut d)) = draft::load(local, session) else {
+        return Ok(None);
+    };
+    if d.contains_key(BROKEN_NOTED) {
+        return Ok(None);
+    }
+    let broken = crate::hook::broken::GUARD;
+    let lines: Vec<String> = problems
+        .iter()
+        .map(|p| crate::hook::broken::entry(p, broken))
+        .collect();
+    d.insert(BROKEN_NOTED.into(), crate::time::stamp(now).into());
+    draft::save(local, session, &d).map_err(|e| e.to_string())?;
+    Ok(Some(
+        crate::hook::broken::block(&lines).trim_end().to_owned(),
+    ))
+}
+
+/// The stop rules' nudges that are due, with the closing line; empty
+/// when none is.
+fn nudges(
+    ws: &Workspace,
+    input: &Map<String, Value>,
+    (cwd, local, session): (&Path, &Path, &str),
+    now: i64,
+    found: &[Rule],
+) -> Result<Vec<String>, String> {
+    let stops: Vec<&Rule> = found.iter().filter(|r| r.event == Event::Stop).collect();
+    if stops.is_empty() {
+        return Ok(Vec::new());
+    }
+    let active = input
+        .get("stop_hook_active")
+        .and_then(Value::as_bool)
+        .unwrap_or(false);
+    let Ok(Some(mut d)) = draft::load(local, session) else {
+        return Ok(Vec::new());
     };
     let nudged = d.contains_key(NUDGED);
     // Only the rules that may still nudge are evaluated: none while a stop
@@ -173,7 +231,7 @@ pub fn stop(
         .filter(|r| nudge_with(r.repeat, active, nudged, &[Fact::Unmet]))
         .collect();
     if due.is_empty() {
-        return Ok(quiet_with(stderr));
+        return Ok(Vec::new());
     }
     let evaluated = require::evaluate(ws, cwd, now, &due);
     let mut texts = Vec::new();
@@ -191,10 +249,10 @@ pub fn stop(
         }
     }
     if texts.is_empty() {
-        return Ok(quiet_with(stderr));
+        return Ok(texts);
     }
     d.insert(NUDGED.into(), crate::time::stamp(now).into());
-    draft::save(&local, session, &d).map_err(|e| e.to_string())?;
+    draft::save(local, session, &d).map_err(|e| e.to_string())?;
     texts.push(
         match again {
             false => "Act on this or say why not; Writfold will not raise it again this session.",
@@ -202,14 +260,5 @@ pub fn stop(
         }
         .into(),
     );
-    let value = json!({
-        "hookSpecificOutput": {
-            "hookEventName": "Stop",
-            "additionalContext": texts.join("\n"),
-        }
-    });
-    Ok(HookOutput {
-        stdout: format!("{value}\n"),
-        stderr,
-    })
+    Ok(texts)
 }

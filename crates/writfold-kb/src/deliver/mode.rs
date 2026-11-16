@@ -142,7 +142,8 @@ fn gates(root: &Path, ids: &[String], path: &str) -> Result<Vec<Definition>> {
     let mut out = Vec::new();
     for id in ids {
         let file = format!("{}/{id}.toml", def::DIR);
-        if let Some((_, _, why)) = problems.iter().find(|(_, p, _)| *p == file) {
+        if let Some((_, problem)) = problems.iter().find(|(_, p)| p.path == file) {
+            let why = problem.why();
             return Err(bad(path, format!("gate {id}: {file}: {why}")));
         }
         let Some(d) = found.iter().find(|d| d.id == *id) else {

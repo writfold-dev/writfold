@@ -276,13 +276,16 @@ fn a_malformed_rule_is_skipped_and_check_reports_it() -> TestResult {
     let out = bash(&w, "git commit -m x");
     assert!(out.stdout.is_empty(), "{out:?}");
     assert!(
-        out.stderr.contains(".writfold/guards/commit.toml") && out.stderr.contains("deny or ask"),
+        out.stderr.contains(".writfold/guards/commit.toml:")
+            && out.stderr.contains("unknown action \"warn\""),
         "{out:?}"
     );
     let (text, exit) = w.run(&w.request(Verb::Check { scope: None }))?;
     assert_ne!(exit, 0, "{text}");
     assert!(
-        text.contains("check guards [attention]") && text.contains("commit.toml"),
+        text.contains("check guards [attention] 1 guard rule files do not parse")
+            && text.contains("check definitions [attention]")
+            && text.contains("next: writfold kb lint"),
         "{text}"
     );
     Ok(())

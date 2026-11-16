@@ -34,19 +34,28 @@ fn an_unclosed_array_is_reported_once_and_the_keys_after_it_are_read() {
 
 #[test]
 fn a_broken_value_is_silent_afterwards_and_two_faults_give_two() {
-    let text = "id = \"open\nversion = true\nclass = \"x\"\n";
+    let text = "id = \"open\nversion = true\nclass = \"x\"\ncolour = 'open\n";
     let mut check = Check::read("f.toml", text, "a gate definition");
     assert!(matches!(check.text("id"), Field::Bad));
+    check.unknown_keys(&["id", "version", "class"], &["colors"], "not a key");
     check.need_text("schema", "schema = \"writfold-gate/1\"");
     let report = check.sink.report();
     let codes: Vec<&str> = report.diagnostics.iter().map(|d| d.code).collect();
-    assert_eq!(codes, ["syntax.unclosed-string", "syntax.subset"]);
+    let all = [
+        "syntax.unclosed-string",
+        "syntax.subset",
+        "syntax.unclosed-string",
+    ];
+    assert_eq!(
+        codes, all,
+        "a broken entry gets no key.unknown, no key.missing"
+    );
     let lines: Vec<u32> = report
         .diagnostics
         .iter()
         .filter_map(|d| d.at.map(|a| a.line))
         .collect();
-    assert_eq!(lines, [1, 2]);
+    assert_eq!(lines, [1, 2, 4]);
 }
 
 #[test]

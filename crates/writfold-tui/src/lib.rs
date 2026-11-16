@@ -40,6 +40,7 @@ pub mod layout;
 pub mod lines;
 mod list_view;
 mod map_view;
+pub mod measure;
 mod nav;
 mod paint;
 mod palettes;

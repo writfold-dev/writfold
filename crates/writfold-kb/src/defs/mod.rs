@@ -10,6 +10,9 @@ pub mod closed;
 pub mod doc;
 pub mod fields;
 pub mod lex;
+pub mod lint;
+pub mod lint_cycles;
+pub mod lint_refs;
 pub mod toml;
 
 pub use fields::{Check, Field};
@@ -145,4 +148,61 @@ pub fn read_text(path: &std::path::Path, shown: &str) -> Result<String, Problem>
     })?;
     String::from_utf8(bytes)
         .map_err(|_| Problem::whole(shown, shown, "file.unreadable", "is not UTF-8 text".into()))
+}
+
+/// The `diagnostics` array of a JSON reply: one object per diagnostic;
+/// `line`, `col` and `len` are null together for a file-level one.
+pub fn json(report: &Report) -> serde_json::Value {
+    let all = report.diagnostics.iter().map(|d| {
+        serde_json::json!({"severity": d.severity.name(), "code": d.code, "file": d.file,
+            "line": d.at.map(|a| a.line), "col": d.at.map(|a| a.col), "len": d.at.map(|a| a.len),
+            "message": d.message, "label": d.label, "help": d.help, "notes": d.notes})
+    });
+    serde_json::Value::Array(all.collect())
+}
+
+/// The row of a definition file that does not parse: its text is the
+/// first fault, its source that fault's line; `help:` and `next:
+/// writfold kb lint <path>` follow.
+pub fn invalid_row(
+    kind: &'static str,
+    id: &str,
+    problem: &Problem,
+    section: Option<&'static str>,
+) -> crate::emit::Row {
+    let first = problem.report.diagnostics.first();
+    let shown = first.map_or_else(|| problem.path.clone(), |d| d.file.clone());
+    let mut more = Vec::new();
+    if let Some(help) = first.and_then(|d| d.help.clone()) {
+        more.push(crate::emit::More {
+            label: "help",
+            text: help,
+            ..Default::default()
+        });
+    }
+    more.push(crate::emit::More {
+        label: "next",
+        text: format!("writfold kb lint {shown}"),
+        ..Default::default()
+    });
+    crate::emit::Row {
+        kind,
+        id: id.to_owned(),
+        status: Some("invalid".into()),
+        text: first.map_or_else(String::new, |d| d.message.clone()),
+        path: Some(shown),
+        line: Some(first.and_then(|d| d.at).map_or(1, |a| a.line)),
+        flags: vec!["invalid".into()],
+        more,
+        section,
+        ..Default::default()
+    }
+}
+
+/// The stem of a definition's file name: what a row names it by.
+pub fn stem(path: &str) -> &str {
+    path.rsplit('/')
+        .next()
+        .unwrap_or("")
+        .trim_end_matches(".toml")
 }

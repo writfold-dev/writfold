@@ -66,8 +66,8 @@ pub fn check(
         return Ok(Vec::new());
     }
     let (found, problems) = rules::read(&dirs);
-    for (path, why) in problems {
-        eprintln!("writfold kb hook: guard rule {path} skipped: {why}");
+    for problem in &problems {
+        eprint!("{}", crate::hook::broken::skipped(problem));
     }
     let hit = |r: &Rule| -> Vec<String> {
         let admitted = targets.iter().filter(|t| paths::admits(&r.paths, Some(t)));

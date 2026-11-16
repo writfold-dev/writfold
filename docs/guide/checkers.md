@@ -2,6 +2,8 @@
 
 > **Status:** built in v0.5.0-dev.2 (phase 1: `check` and `make`, run by `stale` only); `max_age` built in v0.5.0-dev.3; check receipts (`kb stale --record`, [below](#sharing-verdicts-check-receipts)) built in v0.5.0-dev.9. Not built: built-in kinds through the protocol, fetching, rendering or redaction, a server mode, an SDK, token migration, a checked kind that also ages by `ttl=` or `default_ttl` (`max_age` limits how old a cached verdict may be, not how old the token is), recorded verdicts for built-in kinds, and a flag that fails when a checker is missing.
 
+Diagnostics with line, column and a suggested fix for kind declarations are planned; today these files are refused with one line. Gate definitions, guard rules and plan templates already have them ([errors](errors.md)).
+
 Writfold checks `code`, `gate`, `record` and `proposal` citations itself, from Git and the index. A citation of anything else (a file in another source-control system, a tracker item, a wiki page) is checked by time unless its kind names an external checker: a small program you install that Writfold asks whether each token still holds.
 
 ## Declaring a checked kind

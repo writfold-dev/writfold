@@ -8,9 +8,8 @@
 //! Each item is `id: text`, its ID a slug unique in the gate; there is
 //! at least one and at most [`MAX_ITEMS`]. `optional` names declared
 //! items. Both keys are part of the definition digest.
-use super::super::toml::Value;
+use crate::defs::{Check, Spanned, Text};
 use crate::write::is_slug;
-use std::collections::BTreeMap;
 
 /// The keys only a checklist gate may use.
 pub const KEYS: [&str; 2] = ["items", "optional"];
@@ -60,74 +59,134 @@ impl Spec {
     }
 }
 
-fn item(text: &str) -> Result<Item, String> {
-    let Some((id, rest)) = text.split_once(':') else {
-        return Err(format!("item {text:?} must be written \"id: text\""));
+fn item(c: &mut Check<'_>, text: &Spanned<Text>) -> Option<Item> {
+    let Some((id, rest)) = text.str().split_once(':') else {
+        let why = format!("item {:?} must be written \"id: text\"", text.str());
+        c.error("value.form", Some(text.span), why)
+            .label("no `:` after the item's ID");
+        return None;
     };
-    let (id, rest) = (id.trim(), rest.trim());
-    if !is_slug(id) {
-        return Err(format!("item ID {id:?} is not a slug"));
+    let (shown, rest) = (id.trim(), rest.trim());
+    if !is_slug(shown) {
+        let at = text.sub(id.len() - id.trim_start().len(), shown.len());
+        let why = format!("item ID {shown:?} is not a slug");
+        c.error("value.form", Some(at), why).label("not a slug");
+        return None;
     }
     if rest.is_empty() || rest.contains(['\n', '\r']) {
-        return Err(format!("item {id} needs one line of text after its ID"));
+        let why = format!("item {shown} needs one line of text after its ID");
+        c.error("value.form", Some(text.span), why)
+            .label("no text after the ID");
+        return None;
     }
-    Ok(Item {
-        id: id.to_owned(),
+    Some(Item {
+        id: shown.to_owned(),
         text: rest.to_owned(),
         required: true,
     })
 }
 
-/// The checklist fields of a definition of class `class`, read from
-/// `map`; `None` for any other class, which may not use them.
-pub fn parse(map: &BTreeMap<String, Value>, class: &str) -> Result<Option<Spec>, String> {
-    if class != super::super::def::CHECKLIST {
-        return match KEYS.iter().find(|k| map.contains_key(**k)) {
-            Some(key) => Err(format!("{key} is for gates of class checklist")),
-            None => Ok(None),
-        };
-    }
-    let declared = match map.get("items") {
-        Some(Value::List(items)) if !items.is_empty() => items,
-        _ => return Err("items must be a non-empty array of \"id: text\" strings".into()),
-    };
+/// The declared items, each once.
+fn items(c: &mut Check<'_>) -> Option<Vec<Item>> {
+    let add = "items = [\"errors: errors are handled or propagated\"]";
+    let declared = c.need_list("items", "a checklist gate", add)?;
     if declared.len() > MAX_ITEMS {
-        return Err(format!("a checklist has at most {MAX_ITEMS} items"));
+        let span = c.doc.get("items").and_then(|e| match &e.value {
+            crate::defs::Slot::Value(v) => Some(v.span),
+            crate::defs::Slot::Broken => None,
+        });
+        let why = format!(
+            "a checklist has at most {MAX_ITEMS} items, and this has {}",
+            declared.len()
+        );
+        c.error("key.range", span, why).label("too many items");
+        return None;
     }
-    let mut items = declared
-        .iter()
-        .map(|t| item(t))
-        .collect::<Result<Vec<_>, String>>()?;
-    if let Some(i) = (1..items.len()).find(|i| items[..*i].iter().any(|x| x.id == items[*i].id)) {
-        return Err(format!("item {} is declared twice", items[i].id));
-    }
-    let optional = match map.get("optional") {
-        None => Vec::new(),
-        Some(Value::List(names)) => names.clone(),
-        Some(_) => return Err("optional must be an array of item IDs".into()),
-    };
-    for (n, name) in optional.iter().enumerate() {
-        if optional[..n].contains(name) {
-            return Err(format!("optional names {name} twice"));
+    let mut items: Vec<Item> = Vec::new();
+    let mut ok = true;
+    for text in &declared {
+        match item(c, text) {
+            Some(i) if items.iter().any(|x| x.id == i.id) => {
+                let why = format!("item {} is declared twice", i.id);
+                c.error("value.twice", Some(text.span), why)
+                    .label("declared again");
+                ok = false;
+            }
+            Some(i) => items.push(i),
+            None => ok = false,
         }
-        let found = items.iter_mut().find(|i| &i.id == name);
-        let Some(found) = found else {
-            return Err(format!(
-                "optional names {name:?}, which is not a declared item"
-            ));
-        };
-        found.required = false;
     }
-    Ok(Some(Spec { items }))
+    ok.then_some(items)
+}
+
+/// The checklist fields of a definition of class `class`; `Some(None)` for
+/// any other class, which may not use them. Every fault is reported to
+/// `c`; `None` when there was one.
+pub fn check(c: &mut Check<'_>, class: &str) -> Option<Option<Spec>> {
+    if class != super::super::def::CHECKLIST {
+        let mut ok = true;
+        for key in KEYS {
+            let why = format!("`{key}` is for gates of class checklist");
+            ok &= !c.not_here(key, why, "only a checklist gate takes it");
+        }
+        return ok.then_some(None);
+    }
+    let items = items(c);
+    let optional = c.list("optional").or(Spanned {
+        value: Vec::new(),
+        span: Default::default(),
+    })?;
+    let mut items = items?;
+    let ids: Vec<String> = items.iter().map(|i| i.id.clone()).collect();
+    let ids: Vec<&str> = ids.iter().map(String::as_str).collect();
+    let mut ok = true;
+    for (n, name) in optional.value.iter().enumerate() {
+        if optional.value[..n].iter().any(|x| x.str() == name.str()) {
+            let why = format!("`optional` names {} twice", name.str());
+            c.error("value.twice", Some(name.span), why)
+                .label("named again");
+            ok = false;
+            continue;
+        }
+        match items.iter_mut().find(|i| i.id == name.str()) {
+            Some(found) => found.required = false,
+            None => {
+                let why = format!(
+                    "`optional` names {:?}, which is not a declared item",
+                    name.str()
+                );
+                c.unknown_value(
+                    name.span,
+                    why,
+                    "not an item of this gate",
+                    name.str(),
+                    &ids,
+                    '"',
+                );
+                c.sink
+                    .found
+                    .last_mut()
+                    .into_iter()
+                    .for_each(|d| d.code = "ref.undefined");
+                ok = false;
+            }
+        }
+    }
+    ok.then_some(Some(Spec { items }))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::gate::toml;
+
+    fn spec_as(text: &str, class: &str) -> Result<Option<Spec>, String> {
+        let mut c = Check::read("f.toml", text, "a gate definition");
+        let got = check(&mut c, class);
+        c.finish(got).map_err(|r| crate::defs::why(&r))
+    }
 
     fn spec(text: &str) -> Result<Option<Spec>, String> {
-        parse(&toml::parse(text)?, "checklist")
+        spec_as(text, "checklist")
     }
 
     #[test]
@@ -155,9 +214,8 @@ mod tests {
         ] {
             assert!(spec(&bad).is_err(), "{bad}");
         }
-        let plain = toml::parse("items = [\"a: x\"]\n")?;
-        assert!(parse(&plain, "attested").is_err());
-        assert_eq!(parse(&toml::parse("")?, "attested")?, None);
+        assert!(spec_as("items = [\"a: x\"]\n", "attested").is_err());
+        assert_eq!(spec_as("", "attested")?, None);
         Ok(())
     }
 }

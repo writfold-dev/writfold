@@ -196,6 +196,8 @@ All of it is computed at query time from the derived index, which holds every fi
 
 ## `.writfold/`
 
+When one of these files is wrong, `writfold kb lint` reports every fault with its line and column ([errors](errors.md)).
+
 | File | Defines | Guide |
 |---|---|---|
 | `.writfold/gates/<id>.toml` | one gate; in the KB root or in the repository it checks | [gates](gates.md) |

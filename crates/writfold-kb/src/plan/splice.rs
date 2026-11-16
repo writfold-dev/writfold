@@ -58,7 +58,8 @@ fn chosen(loaded: &Loaded, ws: &Workspace, request: &Request, verb: &PlanVerb) -
             let shown = file
                 .file_name()
                 .map_or_else(String::new, |n| n.to_string_lossy().into_owned());
-            (template::parse(&bytes, None)?, format!("--from {shown}"))
+            let parsed = template::parse_shown(&bytes, None, &file.display().to_string())?;
+            (parsed, format!("--from {shown}"))
         }
         _ => {
             return Err(KbError::Usage(
@@ -72,34 +73,7 @@ fn chosen(loaded: &Loaded, ws: &Workspace, request: &Request, verb: &PlanVerb) -
 /// Refuse a template that names a gate no definition provides.
 fn defined(ws: &Workspace, loaded: &Loaded, closure: &Closure) -> Result<()> {
     let top = loaded.subject.as_ref().map(|s| s.top.as_path());
-    let (found, problems) = crate::gate::def::all(&ws.root, top);
-    for t in closure.all() {
-        for gate in t.steps.iter().flat_map(|s| &s.gates) {
-            if let Some(mode) = crate::deliver::step::mode_of(gate) {
-                crate::deliver::word::spliced(&ws.root, &t.name, mode)?;
-                continue;
-            }
-            let file = format!("{}/{gate}.toml", crate::gate::def::DIR);
-            if let Some((_, path, why)) = problems.iter().find(|(_, p, _)| *p == file) {
-                return Err(KbError::Refused(format!("gate {gate}: {path}: {why}")));
-            }
-            match found.iter().find(|d| &d.id == gate) {
-                Some(d) if d.on_candidate() => {
-                    return Err(KbError::Refused(format!(
-                        "gate {gate} judges delivery candidates; a plan step owes a delivery by its mode: deliver:<mode>"
-                    )));
-                }
-                Some(_) => {}
-                None => {
-                    return Err(KbError::Refused(format!(
-                        "plan {} names gate {gate}, which is not defined: add {file} to the KB root or the repository",
-                        t.name
-                    )));
-                }
-            }
-        }
-    }
-    Ok(())
+    super::refs::gates(&ws.root, top, closure)
 }
 
 pub(super) fn too_deep(name: &str, parent: &str) -> KbError {

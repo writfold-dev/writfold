@@ -26,6 +26,7 @@ impl Check<'_> {
             .doc
             .entries
             .iter()
+            .filter(|e| e.value != super::Slot::Broken)
             .map(|e| (e.key.value.clone(), e.key.span))
             .collect::<Vec<_>>()
         {

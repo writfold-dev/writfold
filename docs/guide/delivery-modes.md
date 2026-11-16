@@ -2,6 +2,8 @@
 
 > **Status:** built in v0.3.0-dev.1; your own modes are built in v0.4.0-dev.1; a delivery as a plan step's gate, `seq` on the manifest and the re-check of cited evidence on every read are built in v0.6.0-dev.1.
 
+Diagnostics with line, column and a suggested fix for mode files, deny lists and `guard.toml` are planned; today these files are refused with one line. Gate definitions, guard rules and plan templates already have them ([errors](errors.md)).
+
 A delivery candidate is the exact text of a PR comment or Slack summary, kept in the run and checked before anyone posts it. Writfold never sends it: there is no network code and no Slack or PR adapter. Posting stays with you or your agent.
 
 ## Prepare, check, repair

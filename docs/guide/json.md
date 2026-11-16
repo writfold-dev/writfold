@@ -65,6 +65,30 @@ Readers should use `matched_on`, not split the `match` continuation's text (`typ
 
 `find --kind K[,K] [--project P]` with no text lists every record of those kinds in ID order, each once, with a `match` continuation whose `text` is `listed`; there is no fifty-row cap, the budget pages the answer. Rows keep the record's title in `text`. Without `--kind`, `find` still requires text; `match` and `--signatures` always do.
 
+### Diagnostics
+
+`gate status`, `guard status` and `kb lint` (built in v0.6.0-dev.2) add one top-level key, `diagnostics`: an array, empty when every definition file they read parses, absent on every other verb. Each entry is one fault in a file a person wrote ([errors](errors.md)):
+
+```json
+{"severity":"error","code":"key.unknown","file":".writfold/gates/unit.toml",
+ "line":6,"col":1,"len":14,
+ "message":"unknown key `timout_seconds` in a gate definition",
+ "label":"not a gate key","help":"did you mean `timeout_seconds`?","notes":[]}
+```
+
+| Key | Type | Meaning |
+|---|---|---|
+| `severity` | string | `error` or `warning` |
+| `code` | string | the stable code, such as `key.unknown` ([the codes](errors.md#codes)) |
+| `file` | string | the file as rows show it; a repository's file is `<repo>:.writfold/…` |
+| `line`, `col`, `len` | integers, or all three null | 1-based line and column, and the length, in characters; null for a fault about the file as a whole (a missing key) |
+| `message` | string | what is wrong, in one sentence |
+| `label` | string | the few words shown beside the caret; may be empty |
+| `help` | string or null | one concrete fix, when Writfold can name it |
+| `notes` | array of strings | context: the set a value must come from, where an array opened |
+
+The source line is not included: a reader has the file. The row of a definition that does not parse keeps its shape; its `line` is the first fault's line.
+
 ### Labels the views rely on
 
 `plan status --gates` supplies `status` on its `gate` and `item` continuations, and `gate status` on its checklist `item` continuations. Their `text` starts with `<id> [<state>]`, where the ID has no space and the state has no `]`; readers should use `status`, not parse the brackets. Judged gates append their class (except undefined gates), and checklist gates append `<covered>/<required> required covered`. Evidence locations and unmet-gate flags accompany the gate; checklist items retain the same text, location and flags as `gate status`. Later gates say `[later]` without evidence or flags; skipped steps have no gate continuations.
@@ -132,7 +156,7 @@ The meanings are those of the text trailer ([kb-layout](kb-layout.md#the-trailer
 |---|---|
 | 0 | complete, nothing flagged |
 | 2 | partial, unknown, stale or owed; the JSON is still the whole answer |
-| 3 | refused: nothing is printed on stdout, and one `writfold kb: refused: …` line goes to stderr |
+| 3 | refused: nothing is printed on stdout, and one `writfold kb: refused: …` line goes to stderr, last (a refusal over a file a person wrote draws each fault above it, [errors](errors.md)) |
 | 1 | an error: as for 3, stderr only; or a verb that reports a fault in its rows (`index verify` finding a difference), which prints the JSON as usual |
 
 `guard status` has a specific read policy: exit 2 when `deny`, `ask`, `nudge` or

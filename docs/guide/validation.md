@@ -1,6 +1,6 @@
 # Is what I am reading still true?
 
-> **Status:** built in v0.3.0-dev.1; `kb check` built in v0.4.0-dev.1, with its plan line; kind declarations built in v0.5.0-dev.1; renames with edits followed in v0.5.0-dev.2; `kb repos` and partial-clone detection built in v0.5.0-dev.3. `find --eval`, the guard conformance cases and the re-check of a draft's cited evidence on every read built in v0.6.0-dev.1.
+> **Status:** built in v0.3.0-dev.1; `kb check` built in v0.4.0-dev.1, with its plan line; kind declarations built in v0.5.0-dev.1; renames with edits followed in v0.5.0-dev.2; `kb repos` and partial-clone detection built in v0.5.0-dev.3. `find --eval`, the guard conformance cases and the re-check of a draft's cited evidence on every read built in v0.6.0-dev.1. `kb lint` and the `check definitions` row built in v0.6.0-dev.2.
 
 Four things can drift: a cited source, the index, a gate's evidence, and a delivery draft. Each has its own command, and `kb check` runs the first three together. All of them only read; none fetches from a network.
 
@@ -163,9 +163,13 @@ The KB helps only when the first lookup hits. `writfold kb find --eval [FILE]` m
 | 3 | refused: an ambiguous target, a write conflict, no current run |
 | 1 | an error, including a usage error |
 
+## The files you wrote: `kb lint`
+
+`kb lint [PATH…] [--repo DIR] [--deny-warnings] [--json]` reads every gate definition, guard rule, plan template and `required.toml` of the KB root and the repository in view, reports every fault of each file and the references between them, and exits 0 (no errors), 2 (an error, or a warning under `--deny-warnings`) or 1 (a usage or IO error). It reads files only, so it works before the first run and suits a pre-commit hook or CI. The output and the codes are on [errors](errors.md#kb-lint).
+
 ## All at once: `kb check`
 
-`kb check [<project>|<path>]` runs `stale` (for the scope given, else the whole KB), `index verify` and, when a run is current, `gate status` for it, and prints one row per area with that command's own trailer. An area that is not clean gets a `next:` line with the command that shows the detail:
+`kb check [<project>|<path>]` runs `stale` (for the scope given, else the whole KB), `index verify`, when a run is current `gate status` for it, and `lint`, and prints one row per area with that command's own trailer. An area that is not clean gets a `next:` line with the command that shows the detail:
 
 ```text
 $ writfold kb check
@@ -174,10 +178,11 @@ check stale [attention] # coverage=complete records=28/28 shown=8 omitted=0 chec
 check index [clean] # coverage=complete records=28/28 shown=13 omitted=0 kb=d5db758bda80 index=fresh cursor=none q=a5a6a505dff3
 check gates [skipped] no current run
   next: writfold kb gate status
-# coverage=complete records=28/28 shown=3 omitted=0 checks=2 not_clean=1 kb=d5db758bda80 index=fresh cursor=none q=2523ace45f1f
+check definitions [clean] # coverage=complete files=0 clean=0 invalid=0 errors=0 warnings=0
+# coverage=complete records=28/28 shown=4 omitted=0 checks=3 not_clean=1 kb=d5db758bda80 index=fresh cursor=none q=2523ace45f1f
 ```
 
-It exits with the worst of the three codes: 0 only when all are clean, then 2, then 3, then 1. It writes nothing beyond what `index verify` writes. Delivery drafts are not included; `deliver status` reports them.
+A `check definitions` row (built in v0.6.0-dev.2) carries `kb lint`'s trailer, with `next: writfold kb lint` when it is not clean, and `check guards` counts the guard rule files that do not parse. It exits with the worst of the codes: 0 only when all are clean, then 2, then 3, then 1. It writes nothing beyond what `index verify` writes. Delivery drafts are not included; `deliver status` reports them.
 
 When the current run holds a plan, a fourth row, `check plan`, carries `plan status`'s trailer: `attention` when a done step is `!stale`, an event is invalid, or a merge left the plan out of order. In the last case the row also carries the flag, `!out-of-order`, `!two-plans` or `!repeated`, and the trailer counts `disorder=` ([run graph](run-graph.md#two-sessions-and-two-clones)).
 

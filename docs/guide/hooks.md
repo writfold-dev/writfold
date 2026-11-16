@@ -293,6 +293,32 @@ jq -n '{decision: "block", reason: "Nothing was written to the KB this session: 
 
 As with the gate recipe above, it honours `stop_hook_active` and lets the turn end on exit 3, so a session without a mark is never wedged. Another harness calls `writfold kb delta --mark NAME` at its own start. The per-run form of the question is already a gate: a `run-record` gate with `research.backfilled` ([gates](gates.md#run-record-checks)).
 
+### Definitions with errors
+
+A rule file that does not parse is skipped, never treated as a denial (a typo must not block all work), and the session is told. `session-start` adds one block to its context when a guard rule or gate definition that applies here does not parse: compact lines only, at most five, then a count, each ending with what it means. The block is absent when everything parses. `stop` adds the same block once per session, for guard rules; `pre-tool-use` writes the compact line to stderr and adds nothing to stdout.
+
+```text
+Definitions with errors (skipped until fixed; `writfold kb lint` shows each):
+.writfold/guards/commit.toml:5:12: unknown requirement "gates.mett"; did you mean "gates.met"? This rule is not guarding.
+.writfold/gates/lint.toml:4:9: unknown class "mechancal"; did you mean "mechanical"? This gate cannot be run or met.
+```
+
+`guard status` shows the rule as an `[invalid]` row named by its file and draws the fault on stderr:
+
+```text
+$ writfold kb guard status
+error[value.unknown]: unknown requirement "gates.mett"
+ --> .writfold/guards/commit.toml:5:12
+  |
+5 | require = ["gates.mett"]
+  |            ^^^^^^^^^^^^ not a requirement
+  |
+  = help: did you mean "gates.met"?
+  = note: a rule may require run.current, gates.met, step.met or gate:<id>
+```
+
+The full reading is `writfold kb lint` ([errors](errors.md)).
+
 ### Inspecting rules without a hook
 
 ```sh
