@@ -183,11 +183,12 @@ pub fn find(
 /// The `normalized`, `prefix` and `heading` tiers, in that order; each
 /// `match:` line names the form that matched.
 fn name_tiers(session: &Session<'_>, text: &str, found: &mut Found<'_, '_>) -> Result<()> {
-    for named in names::normalized(&session.conn, text)? {
+    let forms = names::forms(&session.conn)?;
+    for named in names::normalized(&forms, text) {
         let more = tier_only(&format!("normalized {}", named.form));
         found.add(&named.id, "normalized", more)?;
     }
-    for named in names::prefixed(&session.conn, text)? {
+    for named in names::prefixed(&forms, text) {
         let more = tier_only(&format!("prefix {}", named.form));
         found.add(&named.id, "prefix", more)?;
     }

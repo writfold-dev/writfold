@@ -139,6 +139,21 @@ More in [gates](gates.md).
 
 A draft's checks are tied to its bytes. Editing `candidate.md` makes its receipts stale, and `deliver status` shows the draft as blocked until `deliver check` runs again. More in [delivery-modes](delivery-modes.md).
 
+## Lookups: `find --eval`
+
+> Built in v0.5.0-dev.10.
+
+The KB helps only when the first lookup hits. `writfold kb find --eval [FILE]` measures that: each line of `FILE` (default `.writfold/queries.jsonl`, a tracked file reviewed like any other text) is one phrase and the records it should find:
+
+```text
+{"query": "quay work", "expect": ["quay-worker"], "note": "part of a name"}
+{"query": "failure modes", "expect": ["dossier:harbor-api"]}
+```
+
+`expect` holds one or more record IDs (or `doc:<path>`), any of which counts. Each query runs through the same code as `find` and is a `hit@1`, a `hit@5` (an expected record in the first five rows) or a `miss`, with the rank and the tier that found it; a miss names what ranked first instead. An `expect` ID that is not a record is flagged `!unknown-id` and counts as a miss. The trailer counts `queries`, `hit1`, `hit5`, `miss` and one `by-<tier>` count per tier, which is recall per tier. Exit 0 only when every query hits within five; otherwise 2. A missing or empty file is `answer=unknown reason=no-queries`, exit 2: an evaluation with no queries is not a pass. A line with an unknown key, an empty `expect` or that is not JSON is refused with its line number, exit 3. Nothing is written. Run it in CI to keep a team's known phrases finding their records; a phrase that misses belongs in the file, where it fails until a tier or an alias finds it.
+
+**Measured** (15 November 2026, release binaries of v0.5.0-dev.9 and v0.5.0-dev.10, process start included, `--json`): on a scratch copy of the fixture KB a `find` took 9.6 to 10.9 ms with this release against 9.7 to 11.1 ms with v0.5.0-dev.9 (four phrases, 30 calls each); on a generated KB of 3,000 records (1,500 tickets and 1,500 assets with two aliases each; derived index 7.4 MB) 21.8 to 37.1 ms against 12.3 to 30.8 ms (five phrases, 20 calls each). The added cost is the name tiers' pass over every record's names; every call stays under 50 ms. No hook calls `find`. The script is `target/dev10-smoke/find-timing.sh` in the release round's handover.
+
 ## Exit codes
 
 | Code | Meaning |

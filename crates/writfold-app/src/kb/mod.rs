@@ -32,6 +32,8 @@ verbs:
                                    prefix, section heading, BM25 text, substring, one typo
                                    (JSON matched_on names the tier); with --kind and no text,
                                    every record of those kinds by ID
+  find --eval [FILE]               run each query of FILE (.writfold/queries.jsonl) as find does:
+                                   hit@1, hit@5 or miss per query (exit 0 only if all hit@5)
   match <text>                     find, testing signature patterns first
   impact <id> [--depth N] [--direction in|out|both] [--include inferred]
                                    what does changing X touch (bounded walk, frontier stated)

@@ -236,6 +236,7 @@ pub fn emit(answer: &Answer, frame: &Frame, scope: &Scope<'_>) -> Result<Output>
                     | "disagree"
                     | "disorder"
                     | "missing"
+                    | "miss"
             )
     });
     let exit = if answer.failed {

@@ -78,6 +78,11 @@ pub enum Verb {
         filter: verbs::find::Filter,
         signatures: bool,
     },
+    /// `find --eval [FILE]`: the query file (absolute), else
+    /// `.writfold/queries.jsonl`.
+    FindEval {
+        file: Option<PathBuf>,
+    },
     Status {
         target: String,
     },
@@ -272,6 +277,11 @@ fn graph(session: &Session<'_>, verb: &Verb) -> Result<(Answer, &'static str, Ve
                 args,
             )
         }
+        Verb::FindEval { file } => (
+            verbs::eval::eval(session, file.as_deref())?,
+            "find-eval",
+            file.iter().map(|f| f.display().to_string()).collect(),
+        ),
         Verb::Status { target } => (
             verbs::status::status(session, target)?,
             "status",

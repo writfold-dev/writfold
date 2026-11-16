@@ -13,6 +13,9 @@ use crate::error::Result;
 use rusqlite::Connection;
 use writfold_core::find::{norm, prefix_match, tokens};
 
+/// A record's name form: (record ID, form as written, rank).
+pub type Form = (String, String, u8);
+
 /// One name hit: the node, the form as written, and where it is cited.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Named {
@@ -25,7 +28,7 @@ pub struct Named {
 /// Every record's name forms, as written: (record ID, form, rank). The
 /// rank orders a tier's hits: the whole ID, the ID after its typed
 /// prefix, its last `/` segment, its title, an alias.
-fn forms(conn: &Connection) -> Result<Vec<(String, String, u8)>> {
+pub fn forms(conn: &Connection) -> Result<Vec<Form>> {
     let mut out = Vec::new();
     let mut statement = conn.prepare_cached("SELECT id, title FROM records ORDER BY id")?;
     let rows = statement.query_map([], |r| {
@@ -63,29 +66,29 @@ fn named(id: &str, form: &str) -> Named {
 
 /// Records one of whose forms normalizes to the query's form, by the
 /// form's rank, then ID.
-pub fn normalized(conn: &Connection, text: &str) -> Result<Vec<Named>> {
+pub fn normalized(forms: &[Form], text: &str) -> Vec<Named> {
     let query = norm(text);
     if query.chars().count() < 3 {
-        return Ok(Vec::new());
+        return Vec::new();
     }
-    let hits = forms(conn)?
-        .into_iter()
+    let hits = forms
+        .iter()
         .filter(|(_, form, _)| norm(form) == query)
-        .map(|(id, form, rank)| ((rank, 0), named(&id, &form)));
-    Ok(best(hits))
+        .map(|(id, form, rank)| ((*rank, 0), named(id, form)));
+    best(hits)
 }
 
 /// Records one of whose forms the query's tokens match by prefix, fewest
 /// unmatched name tokens first, then by the form's rank and ID.
-pub fn prefixed(conn: &Connection, text: &str) -> Result<Vec<Named>> {
+pub fn prefixed(forms: &[Form], text: &str) -> Vec<Named> {
     let query = norm(text);
     let words = tokens(&query);
-    let hits = forms(conn)?.into_iter().filter_map(|(id, form, rank)| {
-        let left = prefix_match(&words, &tokens(&norm(&form)))?;
+    let hits = forms.iter().filter_map(|(id, form, rank)| {
+        let left = prefix_match(&words, &tokens(&norm(form)))?;
         let left = u8::try_from(left).unwrap_or(u8::MAX);
-        Some(((left, rank), named(&id, &form)))
+        Some(((left, *rank), named(id, form)))
     });
-    Ok(best(hits))
+    best(hits)
 }
 
 /// Each record once, at its best key, ordered by key then ID.

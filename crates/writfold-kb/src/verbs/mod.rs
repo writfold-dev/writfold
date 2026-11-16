@@ -1,6 +1,7 @@
 //! One typed query per verb, each returning an [`Answer`].
 pub mod brief;
 pub mod context;
+pub mod eval;
 pub mod find;
 pub mod impact;
 pub mod index;

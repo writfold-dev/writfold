@@ -1,5 +1,6 @@
 //! One `writfold kb` verb from its name, flags and positionals.
 use super::args::Common;
+use std::path::Path;
 use writfold_kb::Verb;
 use writfold_kb::verbs::find::Filter;
 use writfold_kb::verbs::impact::Direction;
@@ -16,7 +17,12 @@ fn why_sections() -> Vec<String> {
 }
 
 /// The typed verb, or why the arguments do not name one.
-pub fn verb(name: &str, common: &Common, positional: &[String]) -> Result<Verb, String> {
+pub fn verb(
+    name: &str,
+    common: &Common,
+    positional: &[String],
+    cwd: &Path,
+) -> Result<Verb, String> {
     if let Some(verb) = super::writes::runs_and_writes(name, common, positional) {
         return verb;
     }
@@ -68,6 +74,7 @@ pub fn verb(name: &str, common: &Common, positional: &[String]) -> Result<Verb, 
             offline: common.offline,
             cached: common.cached,
         },
+        "find" if common.switches.iter().any(|s| s == "eval") => eval(common, positional, cwd)?,
         "find" | "match" => find(name, common, positional)?,
         "status" => Verb::Status {
             target: one("ID or project")?,
@@ -104,6 +111,20 @@ fn find(name: &str, common: &Common, positional: &[String]) -> Result<Verb, Stri
         },
         signatures: common.signatures || name == "match",
     })
+}
+
+/// `find --eval [FILE]`: FILE from the working directory; no other flag.
+fn eval(common: &Common, positional: &[String], cwd: &Path) -> Result<Verb, String> {
+    if common.signatures || !common.kinds.is_empty() || common.project.is_some() {
+        return Err("find --eval takes only a query file".into());
+    }
+    match positional {
+        [] => Ok(Verb::FindEval { file: None }),
+        [file] => Ok(Verb::FindEval {
+            file: Some(cwd.join(file)),
+        }),
+        _ => Err("find --eval takes at most one file".into()),
+    }
 }
 
 fn repos(common: &Common, positional: &[String]) -> Result<Verb, String> {

@@ -42,7 +42,8 @@ pub const VALUES: [&str; 33] = [
     "commit",
 ];
 /// Flags without a value.
-pub const SWITCHES: [&str; 7] = [
+pub const SWITCHES: [&str; 8] = [
+    "eval",
     "open",
     "new-run",
     "allow-dirty",
@@ -56,6 +57,7 @@ pub const SWITCHES: [&str; 7] = [
 pub fn allowed(verb: &str) -> &'static [&'static str] {
     match verb {
         "runs" => &["open", "plan"],
+        "find" => &["eval"],
         "checkpoint" => &["note", "from-draft", "run", "task", "mode", "new-run"],
         "record" => super::investigation::RECORD,
         "status" => super::set::FLAGS,
