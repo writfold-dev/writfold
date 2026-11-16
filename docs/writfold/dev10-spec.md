@@ -1,6 +1,6 @@
 # v0.5.0-dev.10 specification
 
-> **Status:** planned. Nothing on this page is built until its as-built section in [kb-v1-design.md](kb-v1-design.md) says so. Written against `main` at `f2ced5b` (v0.5.0-dev.9). The authority is [mission.md](mission.md).
+> **Status:** built in v0.5.0-dev.10: steps 1 to 11 landed; the as-built record, with every deviation, is [kb-v1-design.md §40](kb-v1-design.md#40-v050-dev10-as-built). Written against `main` at `f2ced5b` (v0.5.0-dev.9). The authority is [mission.md](mission.md).
 
 This release takes eight candidate needs, most of them about guards, and builds the ones that hold for any single user, team or CI job on any harness. Two observations frame it. A guard that blocks the wrong thing costs more than it saves, so the first work is making a rule match exactly the command it names and judge the repository that command acts on. And an empty answer must never read as a met one, so the one place where it still does is closed.
 

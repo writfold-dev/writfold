@@ -1,6 +1,6 @@
 # The knowledge base on disk
 
-> **Status:** built in v0.3.0-dev.1; kind declarations (`.writfold/sources/`) built in v0.5.0-dev.1; check receipts (`.writfold/checks/`) and the investigation template of `record investigation` built in v0.5.0-dev.9.
+> **Status:** built in v0.3.0-dev.1; kind declarations (`.writfold/sources/`) built in v0.5.0-dev.1; check receipts (`.writfold/checks/`) and the investigation template of `record investigation` built in v0.5.0-dev.9. The lookup tiers `normalized`, `prefix` and `heading`, suggestions on an empty answer, the guard log and marks built in v0.5.0-dev.10.
 
 A knowledge base (KB) is a directory holding `inventory/assets/`, normally a Git repository. Writfold finds it from `--kb DIR`, then `$WRITFOLD_KB`, then the nearest such directory above the working directory. Outside Git, reads still work and writes are refused.
 
