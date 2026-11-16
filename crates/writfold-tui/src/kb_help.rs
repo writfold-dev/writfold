@@ -56,6 +56,7 @@ pub fn keys() -> Vec<Line> {
 pub fn overlay(app: &App) -> Vec<Line> {
     let mut out = marks(crate::map_view::glyphs(app));
     out.extend(crate::help::this_frame(app));
+    out.extend(crate::help::words());
     out.extend(keys());
     out
 }
