@@ -16,26 +16,36 @@
 //!   `repeat = "turn"` once per user turn, and never while
 //!   `stop_hook_active` is set; the session flag is its local draft.
 pub mod delivery;
+pub mod log;
 pub mod matched;
 pub mod paths;
+pub(crate) mod pre;
+mod report;
 pub mod require;
 pub mod rules;
 pub mod status;
+pub mod waived;
 
 /// One read-only guard verb.
 #[derive(Clone, Debug)]
 pub enum GuardVerb {
     Status,
+    /// `guard log [--rule ID] [--since AGE]` (AGE in seconds).
+    Log {
+        rule: Option<String>,
+        since: Option<i64>,
+    },
 }
 
 use crate::draft;
 use crate::hook::HookOutput;
 use crate::workspace::Workspace;
+pub use report::execute as log_report;
 use require::Owed;
 use rules::{Event, Rule};
 use serde_json::{Map, Value, json};
 use std::path::Path;
-use writfold_core::guard::{Decision, Fact, Repeat, combine, decide, nudge_with};
+use writfold_core::guard::{Decision, Fact, Repeat, nudge_with};
 
 /// The draft field that records this session's Stop nudge.
 pub const NUDGED: &str = "nudged";
@@ -96,21 +106,10 @@ pub fn pre_tool_use(
     if groups.is_empty() {
         return Ok(quiet_with(stderr));
     }
-    let evaluated = require::evaluate_at(ws, now, &groups);
-    let mut decision = Decision::Pass;
-    let mut reasons: Vec<String> = Vec::new();
-    for ((_, rules), evaluated) in groups.iter().zip(evaluated) {
-        for (rule, owed) in rules.iter().zip(evaluated) {
-            let Some(owed) = owed else { continue };
-            let facts: Vec<Fact> = owed.iter().map(|o| o.fact).collect();
-            let decided = decide(true, rule.action, &facts);
-            let text = reason(rule, &owed, "a guard, not enforcement");
-            if decided != Decision::Pass && !reasons.contains(&text) {
-                reasons.push(text);
-            }
-            decision = combine(decision, decided);
-        }
-    }
+    let decided = pre::judge(ws, input, &groups, now);
+    stderr.push_str(&decided.stderr);
+    let reasons = decided.reasons;
+    let decision = decided.decision;
     let verdict = match decision {
         Decision::Pass => return Ok(quiet_with(stderr)),
         Decision::Deny => "deny",

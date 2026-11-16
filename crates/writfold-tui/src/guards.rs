@@ -28,7 +28,7 @@ fn counts(answer: &Reply) -> Line {
         .any(|n| answer.count(n).is_some_and(|n| n > 0))
     {
         Tone::Bad
-    } else if ["ask", "nudge"]
+    } else if ["ask", "nudge", "audit"]
         .iter()
         .any(|n| answer.count(n).is_some_and(|n| n > 0))
     {
@@ -38,7 +38,10 @@ fn counts(answer: &Reply) -> Line {
     } else {
         Tone::Dim
     };
-    let parts = crate::side::count_parts(answer, &["rules", "deny", "ask", "nudge", "invalid"]);
+    let parts = crate::side::count_parts(
+        answer,
+        &["rules", "deny", "ask", "nudge", "audit", "invalid"],
+    );
     line(parts, role)
 }
 

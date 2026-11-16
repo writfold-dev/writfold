@@ -56,6 +56,9 @@ verbs:
   resume [<run>]                   one run: manifest, coverage, rechecks, checkpoint tail
   guard status                    would guard rules pass, deny, ask or nudge for the current run?
                                    a read-only judgment, not enforcement; no command is run
+  guard log [--rule ID] [--since AGE]
+                                   what this machine's hook decided per rule, from the local log;
+                                   exit 2 if an audit rule would have refused or never matched
 
 writes (atomic; they leave the work tree dirty for you to commit):
   checkpoint [--run ID | --new-run --project P --task T [--mode M]] --note TEXT|--from-draft SESSION

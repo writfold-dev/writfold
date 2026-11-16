@@ -172,6 +172,9 @@ pub fn run(request: &Request) -> Result<Output> {
     if let Verb::Guard(guard::GuardVerb::Status) = &request.verb {
         return guard::status::execute(&ws, request, now);
     }
+    if let Verb::Guard(guard::GuardVerb::Log { rule, since }) = &request.verb {
+        return guard::log_report(&ws, request, (rule.as_deref(), *since), now);
+    }
     if let Verb::Edit(verb) = &request.verb {
         return edit::execute(&ws, request, verb, now);
     }

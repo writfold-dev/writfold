@@ -152,3 +152,26 @@ fn a_requirement_that_cannot_be_judged_takes_the_action() -> TestResult {
     assert!(why.contains("not a run in the KB"), "{why}");
     untouched(&w)
 }
+
+#[test]
+fn an_audit_rule_applies_the_edit_and_notes_what_it_would_refuse() -> TestResult {
+    let w = guarded(TOOLS, "deny", "gate:review")?;
+    let rule = w.kb.join(".writfold/guards/retry-needs-review.toml");
+    let text = std::fs::read_to_string(&rule)?;
+    std::fs::write(&rule, format!("{text}mode = \"audit\"\n"))?;
+    let (out, exit) = apply(&w, vec![recipe(&w, "retry.spl", RETRY)?], false)?;
+    assert_eq!(exit, 0, "{out}");
+    assert!(
+        out.contains("# note: guard rule retry-needs-review (audit) would refuse this edit:"),
+        "{out}"
+    );
+    assert!(out.contains("applied and logged"), "{out}");
+    let retry = std::fs::read_to_string(w.code.join("src/retry.rs"))?;
+    assert!(retry.contains("attempts = 7"), "{retry}");
+    let log = std::fs::read_to_string(w.kb.join(".git/writfold/guard-log.jsonl"))?;
+    assert!(
+        log.contains("\"via\":\"edit-apply\"") && log.contains("\"effect\":\"pass\""),
+        "{log}"
+    );
+    Ok(())
+}

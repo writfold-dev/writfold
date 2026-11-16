@@ -5,6 +5,7 @@
 //! cannot be read, every requirement is [`Fact::Unknown`], which takes the
 //! rule's action ([`writfold_core::guard::decide`]).
 use super::rules::{Require, Rule};
+use super::waived::Waived;
 use crate::gate::status::{self, Filings};
 use crate::gate::subject::{self, Subject};
 use crate::index::query::{self, Rec};
@@ -22,6 +23,8 @@ use writfold_core::scope::in_scope;
 pub struct Owed {
     pub fact: Fact,
     pub text: String,
+    /// The waived gates this requirement was met by.
+    pub waived: Vec<Waived>,
 }
 
 impl Owed {
@@ -29,6 +32,7 @@ impl Owed {
         Self {
             fact: Fact::Met,
             text: String::new(),
+            waived: Vec::new(),
         }
     }
 
@@ -36,6 +40,7 @@ impl Owed {
         Self {
             fact: Fact::Unmet,
             text,
+            waived: Vec::new(),
         }
     }
 
@@ -43,6 +48,7 @@ impl Owed {
         Self {
             fact: Fact::Unknown,
             text,
+            waived: Vec::new(),
         }
     }
 }
@@ -58,6 +64,7 @@ struct GateLine {
     id: String,
     met: bool,
     line: String,
+    waived: Option<Waived>,
 }
 
 /// Every judged gate, the gates the run owes (`None`: every one), and
@@ -83,18 +90,31 @@ pub enum Place {
     Unknown(String),
 }
 
+/// Where a group was judged, for the guard log: the current run and the
+/// subject repository's name, when known.
+#[derive(Clone, Debug, Default)]
+pub struct Context {
+    pub run: Option<String>,
+    pub repo: Option<String>,
+}
+
 /// Evaluate every rule's requirements at `cwd`.
 pub fn evaluate(ws: &Workspace, cwd: &Path, now: i64, rules: &[&Rule]) -> Evaluated {
     let groups = [(Place::At(cwd.to_path_buf()), rules.to_vec())];
     evaluate_at(ws, now, &groups)
         .into_iter()
         .next()
+        .map(|(evaluated, _)| evaluated)
         .unwrap_or_default()
 }
 
 /// Evaluate each group of rules at its place, opening the KB once.
-pub fn evaluate_at(ws: &Workspace, now: i64, groups: &[(Place, Vec<&Rule>)]) -> Vec<Evaluated> {
-    let unknown = |why: String| -> Vec<Evaluated> {
+pub fn evaluate_at(
+    ws: &Workspace,
+    now: i64,
+    groups: &[(Place, Vec<&Rule>)],
+) -> Vec<(Evaluated, Context)> {
+    let unknown = |why: String| -> Vec<(Evaluated, Context)> {
         let all = |rules: &[&Rule]| -> Evaluated {
             rules
                 .iter()
@@ -108,7 +128,10 @@ pub fn evaluate_at(ws: &Workspace, now: i64, groups: &[(Place, Vec<&Rule>)]) -> 
                 })
                 .collect()
         };
-        groups.iter().map(|(_, rules)| all(rules)).collect()
+        groups
+            .iter()
+            .map(|(_, rules)| (all(rules), Context::default()))
+            .collect()
     };
     let tool = match GitTool::locate() {
         Ok(tool) => tool,
@@ -120,7 +143,19 @@ pub fn evaluate_at(ws: &Workspace, now: i64, groups: &[(Place, Vec<&Rule>)]) -> 
     };
     groups
         .iter()
-        .map(|(place, rules)| judged(&gather(&session, place, rules), rules))
+        .map(|(place, rules)| {
+            let facts = gather(&session, place, rules);
+            let context = Context {
+                run: facts.run.as_ref().ok().map(|rec| rec.id.clone()),
+                repo: facts
+                    .subject
+                    .as_ref()
+                    .ok()
+                    .and_then(Option::as_ref)
+                    .map(|s| s.name.clone()),
+            };
+            (judged(&facts, rules), context)
+        })
         .collect()
 }
 
@@ -225,6 +260,7 @@ fn judge(session: &Session<'_>, facts: &Facts) -> Result<Judged, String> {
             GateLine {
                 line: format!("gate {id} [{}]{next}", j.standing.name()),
                 met: j.standing.met(),
+                waived: super::waived::of(j),
                 id,
             }
         })
@@ -288,7 +324,10 @@ fn fact(facts: &Facts, require: &Require) -> Owed {
             None => Owed::unknown("the gates were not judged".into()),
             Some(Err(why)) => Owed::unknown(why.clone()),
             Some(Ok((lines, _, _))) => match lines.iter().find(|g| &g.id == id) {
-                Some(g) if g.met => Owed::met(),
+                Some(g) if g.met => Owed {
+                    waived: g.waived.iter().cloned().collect(),
+                    ..Owed::met()
+                },
                 Some(g) => Owed::unmet(g.line.clone()),
                 None => Owed::unmet(undefined(id)),
             },
@@ -330,8 +369,16 @@ fn gates_met(facts: &Facts) -> Owed {
             "invalid receipts or definitions: {invalid}; next: writfold kb gate status"
         ));
     }
+    let relied = |g: &&GateLine| owed.as_ref().is_none_or(|ids| ids.contains(&g.id));
     match gates_fact(count, n, *invalid) {
-        Fact::Met => Owed::met(),
+        Fact::Met => Owed {
+            waived: lines
+                .iter()
+                .filter(relied)
+                .filter_map(|g| g.waived.clone())
+                .collect(),
+            ..Owed::met()
+        },
         _ => Owed::unmet(unmet.join("; ")),
     }
 }

@@ -139,6 +139,7 @@ description = "commit only when the run's gates are met"
 | `action` | `deny` or `ask` (`pre-tool-use` only; Claude Code then asks the user) |
 | `description` | shown first in the reason |
 | `repeat` | `stop` rules only: `session` (the default) or `turn` ([below](#the-stop-nudge)) |
+| `mode` | `pre-tool-use` rules only: `enforce` (the default) or `audit`, which judges and logs the rule without deciding the call ([below](#trying-a-rule-audit-mode); built in v0.5.0-dev.10). Any other value, and `mode` on a `stop` rule, is refused |
 
 | Requirement | Met when |
 |---|---|
@@ -173,10 +174,11 @@ A refusal names what is owed. Each kind of refusal has one way past, and each wa
 
 | The refusal names | The way past, and the record it leaves |
 |---|---|
-| a gate that is `open`, `stale`, `failed` or `unknown` | meet it, or `writfold kb gate waive <id> --reason TEXT --by WHO`: a tracked file in `runs/<run>/statements/`, bound to the gate's definition and the bytes in its scope, so it lapses when either changes; shown as `[waived]` by `gate status`, `resume` and the session-start context, and as a `waived by … : reason` line by `gate lines`, so it reaches the commit message |
+| a gate that is `open`, `stale`, `failed` or `unknown` | meet it, or `writfold kb gate waive <id> --reason TEXT --by WHO`: a tracked file in `runs/<run>/statements/`, bound to the gate's definition and the bytes in its scope, so it lapses when either changes; shown as `[waived]` by `gate status`, `resume` and the session-start context, as a `waived by … : reason` line by `gate lines` (so it reaches the commit message), and in `guard status` and the guard log |
 | no current run, or a closed one | start a run; there is nothing to waive |
 | an undefined gate, or no gate owed | define the gate, or narrow the rule with `repos` |
 | "cannot tell which repository" | repeat the command with the directory written literally |
+| a rule that matches what it should not, or a KB that cannot be read | set `mode = "audit"` in the rule file: a one-line tracked change, visible in `git diff`, in `guard status` and in every trailer's `+dirty` count until it is committed or reverted, with the guard log recording what the rule would have refused meanwhile |
 
 There is no rule-level waiver. A refusal does not name a waive command, and an agent that is refused is not told how to excuse itself: the way past is in this guide. To keep `gate waive` and `gate attest` for people, make Claude Code ask before they run, and before a rule file is edited, in `.claude/settings.json`:
 
@@ -193,6 +195,36 @@ There is no rule-level waiver. A refusal does not name a waive command, and an a
 ```
 
 A permission rule, like a guard, reads what the harness shows it; it is not enforcement either.
+
+A waiver is visible where a guard passes on it (built in v0.5.0-dev.10): `guard status` flags the rule `!waived` with a `waived:` line naming the gate, the reason, who and when, and the statement's file; the hook writes `writfold kb hook: guard rule <id> passed on a waiver: gate <gate>` to stderr and adds an entry to the [guard log](#the-guard-log).
+
+### Trying a rule: audit mode
+
+> Built in v0.5.0-dev.10.
+
+A new or changed rule is where false refusals come from. With `mode = "audit"`, a `pre-tool-use` rule is matched and judged exactly as an enforcing one, but the harness is told nothing for it: stdout carries no decision from that rule, and one line goes to stderr, `writfold kb hook: guard rule <id> (audit) would deny: <reason>`. Its would-be decision goes to the guard log. An enforcing rule beside it still decides: a call an enforcing rule denies is denied, and both are logged.
+
+- `guard status` keeps the rule's judged status (`would-deny`, `would-ask`, `would-pass`), flags it `!audit` with the line `mode: audit: a matched call is let through and logged`, and counts a refusing audit rule under `audit=` (shown only when not zero), not under `deny` or `ask`. A non-zero `audit` count exits 2: an audit rule that would refuse is not a clean answer.
+- `kb edit apply` under a matched audit rule naming `writfold:edit` applies the edit and adds `# note: guard rule <id> (audit) would refuse this edit: …; applied and logged`.
+- When the log shows the rule matching and never refusing, `guard log` says `next: remove mode = "audit" from <path> to enforce it`. Writfold never promotes a rule.
+
+### The guard log
+
+> Built in v0.5.0-dev.10.
+
+`<KB Git directory>/writfold/guard-log.jsonl` is what this machine's hook (and `edit apply`) decided: one JSON line per entry, appended with one `write`, mode 0600, never committed. An entry is written for every evaluation of a matched audit rule (passes included, so a clean log can be told from a rule that never matched), every decision of an enforcing rule that is not a pass, and every pass that rested on a waiver; a call no rule matches writes nothing.
+
+```json
+{"schema":"writfold-guard-log/1","at":"2026-11-16T10:02:11Z","via":"hook","session":"3f9c…","rule":"commit-needs-gates","rule_path":".writfold/guards/commit-needs-gates.toml","rule_digest":"sha256:…","mode":"audit","decided":"deny","effect":"pass","tool":"Bash","command":"git commit -m x","dir":"/home/u/src/api","repo":"api","run":"run-…","owes":["gate unit [stale]; next: writfold kb gate run unit"],"waived":[]}
+```
+
+`command` is the matched invocation as read ([above](#how-a-command-is-read)), cut to 200 characters; `rule_digest` is the SHA-256 of the rule file's bytes; `via` is `hook` or `edit-apply`. At 4 MiB the file is renamed to `guard-log.1.jsonl`, replacing the previous one. A log that cannot be written changes no decision; the hook says so on stderr. With no KB Git directory there is no log.
+
+```sh
+writfold kb guard log [--rule ID] [--since AGE] [--json]
+```
+
+One row per `pre-tool-use` rule: for an audit rule `matched=`, `would-deny=`, `would-ask=` and `pass=`, for an enforcing one `deny=`, `ask=` and `passed-on-waiver=`, each since the first counted entry, with the five newest refusals (all of them with `--rule`) as `would-deny:`/`would-ask:` (or `deny:`/`ask:`) lines naming the time, the command, the repository, what was owed and the session. Counts are over the entries for the rule file's current bytes, so editing a rule restarts its count; older entries are reported as `earlier: N entries are for an earlier version of the rule file and are not counted`. An audit rule with no match for its current version is flagged `!unmatched`. A rule in the log whose file is gone is listed as `removed`. The trailer counts `rules`, `entries`, `would-deny`, `would-ask`, `deny`, `ask` and `unparsed` (lines that did not parse, such as a torn last line, are counted and skipped). Exit 2 when an audit rule would have denied or asked, or has not matched; otherwise 0. The note says it plainly: the log is this machine's only, never committed, and a guard, not enforcement.
 
 ### A hard stop at the end of a turn (recipe)
 
@@ -344,7 +376,7 @@ A pattern with `/` is refused, so two clones with the same last segment (`acme/a
 
 **When a call passes.** No rule directory, an unparsable rule file (skipped, with a `writfold kb hook:` line on stderr; `writfold kb check` lists it as `check guards [attention]`), a call no rule matches, and a timeout all let the call through. A **matched** rule whose requirement cannot be evaluated (the KB, the index or Git cannot be read) is not a pass: it takes the rule's action, with "cannot read the KB" as the reason, as the delivery guard does. The way out of a wedge is the rule's own `ask`, or deleting the file.
 
-**Cost.** With no rule directory, nothing is opened: the hook reads one configuration file and two directory names and exits. Once any rule applies here, each call still reads the rule files, and a rule with `paths` walks up from the edited file looking for `.git`; only a matched call opens the index and judges the gates. The widened matcher means one hook process per `Edit`, `Write`, `MultiEdit` or `NotebookEdit` call. Measured on 13 November 2026 on a one-asset KB, the release binary, process start included, answered an `Edit` event in about 1.4 ms with no rule directory and about 1.5 ms with a rule directory whose rule did not match (300 calls each). A matched `git commit` with no current run, which opens the index, took about 9 ms; one that judges gates costs, on top of that, what `gate status` costs. Re-measured on 13 November 2026 for `paths` (release binary, 300 calls each): about 1.4 ms with no rule directory, 1.3 ms with a `commands` rule that did not match, and 1.4 ms for an `Edit` of a `.md` file that `paths = ["**", "!**/*.md"]` leaves out; an `.rs` edit that rule matches, with no current run, took about 10.5 ms. All are far inside the 10 s timeout. Re-measured on 15 November 2026 for the command reader (release binaries of v0.5.0-dev.9 and of this release, process start included, on a scratch copy of the fixture KB): an unmatched Bash event took 1.42 and 1.44 ms with no rule directory, and 1.43 to 1.48 and 1.45 to 1.52 ms with a rule directory (300 calls each, two rounds); a matched `git commit` judging one gate took about 13 ms with either (50 calls), and `cd DIR && git -C DIR commit` about 13 ms. A matched call costs that once per distinct directory, at most four.
+**Cost.** With no rule directory, nothing is opened: the hook reads one configuration file and two directory names and exits. Once any rule applies here, each call still reads the rule files, and a rule with `paths` walks up from the edited file looking for `.git`; only a matched call opens the index and judges the gates. The widened matcher means one hook process per `Edit`, `Write`, `MultiEdit` or `NotebookEdit` call. Measured on 13 November 2026 on a one-asset KB, the release binary, process start included, answered an `Edit` event in about 1.4 ms with no rule directory and about 1.5 ms with a rule directory whose rule did not match (300 calls each). A matched `git commit` with no current run, which opens the index, took about 9 ms; one that judges gates costs, on top of that, what `gate status` costs. Re-measured on 13 November 2026 for `paths` (release binary, 300 calls each): about 1.4 ms with no rule directory, 1.3 ms with a `commands` rule that did not match, and 1.4 ms for an `Edit` of a `.md` file that `paths = ["**", "!**/*.md"]` leaves out; an `.rs` edit that rule matches, with no current run, took about 10.5 ms. All are far inside the 10 s timeout. Re-measured on 15 November 2026 for the command reader (release binaries of v0.5.0-dev.9 and of this release, process start included, on a scratch copy of the fixture KB): an unmatched Bash event took 1.42 and 1.44 ms with no rule directory, and 1.43 to 1.48 and 1.45 to 1.52 ms with a rule directory (300 calls each, two rounds); a matched `git commit` judging one gate took about 13 ms with either (50 calls), and `cd DIR && git -C DIR commit` about 13 ms. A matched call costs that once per distinct directory, at most four. The guard log adds one append to a matched call that it records: re-measured on 16 November 2026 with this release, a matched `git commit` that an enforcing rule denies (and logs) took about 13.3 ms and the same call under `mode = "audit"` about 12.7 ms (50 calls each), against 13.6 to 14.0 ms in the earlier rounds, so the append is within the noise; an unmatched call writes nothing.
 
 ### The Stop nudge
 
@@ -375,7 +407,9 @@ The hook uses the plugin's optional `kb_root` setting, then `$WRITFOLD_KB`, then
 - Writing `transcript_path` into the draft, and exporting `WRITFOLD_SESSION` through `CLAUDE_ENV_FILE`.
 - A `fetch` option; the hook never touches the network.
 - A built-in reflect nudge: the Stop hook says nothing about an open reflect step unless you add a `stop` [guard rule](#guard-rules) such as `finish-step` above. The inbox already derives it from the plan when the session ends, and a session that ends without `SessionEnd` is not listed.
-- Per-gate standing sets (a `gates.met` that refuses waivers, say), a warning without a decision, and receipts of guard decisions.
+- Per-gate standing sets (a `gates.met` that refuses waivers, say).
+- A warning without a decision (a `warn` mode): text added to a call that passes tests the wording of a message, not the rule. What matters before a rule blocks is every call it would have blocked, which `mode = "audit"` and the guard log record.
+- Tracked receipts of guard decisions: the guard log is local to one machine on purpose (committed, it would conflict on every merge and publish command lines).
 
 Evaluation of a session is a skill, [`writfold:evaluate`](skills.md#the-bundled-skill-writfoldevaluate), and a closing plan step, not a hook that runs a model. The inbox line above names it; the next session (or the user) invokes it.
 

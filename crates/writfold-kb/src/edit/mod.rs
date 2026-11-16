@@ -128,6 +128,7 @@ fn apply_verb(
     let receipt = Some((&journal.receipt, &lines));
     let mut answer = answer(&files, &recipes, "applied", receipt);
     notes(&mut answer, &journal, found.record.is_some());
+    answer.notes.extend(guarded);
     let session = Session::open(ctx.ws, Some(&ctx.tool), false, ctx.now)?;
     session.emit(&answer, &frame(ctx.request, "edit-apply", args))
 }

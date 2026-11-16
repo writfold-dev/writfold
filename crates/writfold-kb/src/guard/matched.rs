@@ -146,9 +146,17 @@ pub fn unresolved(inv: &Invocation, why: Why) -> String {
     )
 }
 
+/// The rules matched at one place, each with the command it matched (its
+/// words, empty for a `tools` rule).
+pub struct Group<'r> {
+    pub place: Place,
+    pub rules: Vec<&'r Rule>,
+    pub commands: Vec<String>,
+}
+
 /// The matched rules grouped by where each is judged, in order of first
 /// match; a rule is judged once per place.
-pub fn groups<'r>(loaded: &'r Loaded, call: &Call<'_>) -> Vec<(Place, Vec<&'r Rule>)> {
+pub fn groups<'r>(loaded: &'r Loaded, call: &Call<'_>) -> Vec<Group<'r>> {
     let mut hits: Vec<(Dir, &Rule, Option<&Invocation>)> = Vec::new();
     let file = loaded
         .any(|r| !r.paths.is_empty())
@@ -171,15 +179,15 @@ pub fn groups<'r>(loaded: &'r Loaded, call: &Call<'_>) -> Vec<(Place, Vec<&'r Ru
             hits.push((inv.dir.clone(), rule, Some(inv)));
         }
     }
-    let mut out: Vec<(Dir, Place, Vec<&Rule>)> = Vec::new();
+    let mut out: Vec<(Dir, Group<'r>)> = Vec::new();
     let mut judged = 0;
     for (dir, rule, inv) in hits {
-        let known = out.iter().any(|(d, _, _)| *d == dir);
+        let known = out.iter().any(|(d, _)| *d == dir);
         let dir = match (&dir, known) {
             (Dir::At(_), false) if judged == MOST => Dir::Unresolved(Why::TooMany),
             _ => dir,
         };
-        let slot = match out.iter().position(|(d, _, _)| *d == dir) {
+        let slot = match out.iter().position(|(d, _)| *d == dir) {
             Some(i) => i,
             None => {
                 let place = match (&dir, inv) {
@@ -190,16 +198,22 @@ pub fn groups<'r>(loaded: &'r Loaded, call: &Call<'_>) -> Vec<(Place, Vec<&'r Ru
                     (Dir::Unresolved(why), Some(inv)) => Place::Unknown(unresolved(inv, *why)),
                     (Dir::Unresolved(why), None) => Place::Unknown(why.text().to_owned()),
                 };
-                out.push((dir, place, Vec::new()));
+                let group = Group {
+                    place,
+                    rules: Vec::new(),
+                    commands: Vec::new(),
+                };
+                out.push((dir, group));
                 out.len() - 1
             }
         };
-        let rules = &mut out[slot].2;
-        if !rules.iter().any(|r| r.id == rule.id) {
-            rules.push(rule);
+        let group = &mut out[slot].1;
+        if !group.rules.iter().any(|r| r.id == rule.id) {
+            group.rules.push(rule);
+            group
+                .commands
+                .push(inv.map(|i| i.words.join(" ")).unwrap_or_default());
         }
     }
-    out.into_iter()
-        .map(|(_, place, rules)| (place, rules))
-        .collect()
+    out.into_iter().map(|(_, group)| group).collect()
 }

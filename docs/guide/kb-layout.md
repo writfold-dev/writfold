@@ -291,6 +291,8 @@ kb-index-<hex>.sqlite   the derived index
 current-run             the run that checkpoint and gate use by default
 repos                   "<name> <path>" lines: where local clones are
 drafts/<session>.json   checkpoint drafts kept by the hooks (and the Stop nudge's `nudged` flag)
+guard-log.jsonl         what this machine's guard hook decided for audit rules, refusals and
+                        passes on a waiver (guard-log.1.jsonl after 4 MiB); mode 0600
 proposals/<id>.json     pending proposals: record calls not yet made
 gates/, edits/          command output tails, artifacts and edit journals
 staging/, kb-write.lock the write protocol's working files

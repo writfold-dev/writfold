@@ -9,10 +9,10 @@
 //! still edit the file.
 use crate::error::{KbError, Result};
 use crate::guard::rules::{self, Event, Rule};
-use crate::guard::{paths, reason, require};
+use crate::guard::{log, paths, pre, reason, require};
 use crate::workspace::Workspace;
 use std::path::Path;
-use writfold_core::guard::{Action, Decision, Fact, decide};
+use writfold_core::guard::{Action, Decision, Fact, Mode, decide};
 
 /// The tool name a rule lists to cover `edit apply`.
 pub const TOOL: &str = "writfold:edit";
@@ -51,10 +51,28 @@ pub fn check(
         return Ok(Vec::new());
     }
     let rules: Vec<&Rule> = matched.iter().map(|(r, _)| *r).collect();
-    let evaluated = require::evaluate(ws, top, now, &rules);
+    let groups = [(require::Place::At(top.to_path_buf()), rules)];
+    let (evaluated, context) = require::evaluate_at(ws, now, &groups)
+        .into_iter()
+        .next()
+        .unwrap_or_default();
     let mut refusals = Vec::new();
+    let mut audited = Vec::new();
+    let mut entries = Vec::new();
     for ((rule, hits), owed) in matched.iter().zip(evaluated) {
         let Some(owed) = owed else { continue };
+        if pre::logged(rule, &owed) {
+            let command = hits.join(" ");
+            let at = pre::Logged {
+                via: "edit-apply",
+                session: "",
+                tool: TOOL,
+                command: &command,
+                dir: Some(top.display().to_string()),
+                context: &context,
+            };
+            entries.push(pre::entry(ws, rule, &owed, &at, now));
+        }
         let facts: Vec<Fact> = owed.iter().map(|o| o.fact).collect();
         let decided = decide(true, rule.action, &facts);
         if decided == Decision::Pass {
@@ -65,13 +83,25 @@ pub fn check(
         if rule.action == Action::Ask {
             text.push_str(&format!("; {ASKS}"));
         }
-        refusals.push((rule.id.clone(), text));
+        match rule.mode {
+            Mode::Audit => audited.push(format!(
+                "guard rule {} (audit) would refuse this edit: {text}; applied and logged",
+                rule.id
+            )),
+            Mode::Enforce => refusals.push((rule.id.clone(), text)),
+        }
+    }
+    if let Some(path) = log::path(ws)
+        && let Err(why) = log::append(&path, &entries)
+    {
+        eprintln!("writfold kb hook: {why}; the decision is unchanged");
     }
     match (refusals.is_empty(), dry_run) {
-        (true, _) => Ok(Vec::new()),
+        (true, _) => Ok(audited),
         (false, true) => Ok(refusals
             .into_iter()
             .map(|(id, text)| format!("guard rule {id} would refuse this edit: {text}"))
+            .chain(audited)
             .collect()),
         (false, false) => {
             let texts: Vec<String> = refusals.into_iter().map(|(_, t)| t).collect();

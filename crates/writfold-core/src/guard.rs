@@ -89,6 +89,40 @@ pub fn combine(a: Decision, b: Decision) -> Decision {
     }
 }
 
+/// Whether a pre-tool-use rule decides (`Enforce`, the default) or is
+/// being tried (`Audit`): judged the same, its decision only logged.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Mode {
+    Enforce,
+    Audit,
+}
+
+impl Mode {
+    pub fn name(self) -> &'static str {
+        match self {
+            Mode::Enforce => "enforce",
+            Mode::Audit => "audit",
+        }
+    }
+
+    pub fn parse(text: &str) -> Option<Self> {
+        match text {
+            "enforce" => Some(Mode::Enforce),
+            "audit" => Some(Mode::Audit),
+            _ => None,
+        }
+    }
+}
+
+/// What a decided rule does to the call: an audit rule lets it through,
+/// so the log holds what enforcing would have decided.
+pub fn effect(mode: Mode, decided: Decision) -> Decision {
+    match mode {
+        Mode::Enforce => decided,
+        Mode::Audit => Decision::Pass,
+    }
+}
+
 /// The `gates.met` fact from three counts: the gates the run owes here,
 /// how many of those are not met, and how many receipts, statements or
 /// definitions are invalid. `Met` only when something is owed and every
@@ -155,7 +189,8 @@ pub fn nudge(stop_hook_active: bool, already_nudged: bool, facts: &[Fact]) -> bo
 #[cfg(test)]
 mod tests {
     use super::{
-        Action, Decision, Fact, Repeat, all_met, combine, decide, gates_fact, nudge, nudge_with,
+        Action, Decision, Fact, Mode, Repeat, all_met, combine, decide, effect, gates_fact, nudge,
+        nudge_with,
     };
     use alloc::vec::Vec;
 
@@ -266,6 +301,18 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn audit_lets_every_decision_through_and_enforce_keeps_it() {
+        for decided in DECISIONS {
+            assert_eq!(effect(Mode::Enforce, decided), decided);
+            assert_eq!(effect(Mode::Audit, decided), Decision::Pass);
+        }
+        for mode in [Mode::Enforce, Mode::Audit] {
+            assert_eq!(Mode::parse(mode.name()), Some(mode));
+        }
+        assert_eq!(Mode::parse("warn"), None);
     }
 
     #[test]
