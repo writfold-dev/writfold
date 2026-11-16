@@ -181,11 +181,57 @@ pub fn budgets() -> Result<GitBudgets> {
 }
 
 /// A quoted value from the existing Writfold user configuration.
+/// The lines of the user configuration file that are not `key = "value"`
+/// (blank lines and `#` comments aside), each as a compact diagnostic:
+/// such a line is ignored, so it is named once per process on stderr.
+pub fn config_warnings(shown: &str, text: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    for (n, line) in text.lines().enumerate() {
+        let trimmed = line.trim();
+        if trimmed.is_empty() || trimmed.starts_with('#') {
+            continue;
+        }
+        let ok = line.split_once('=').is_some_and(|(key, value)| {
+            let value = value.trim();
+            !key.trim().is_empty()
+                && value.len() > 1
+                && value.starts_with('"')
+                && value.ends_with('"')
+        });
+        if ok {
+            continue;
+        }
+        let why = "this line is not key = \"value\" and is ignored".to_owned();
+        let mut d = writfold_core::diag::Diagnostic::new(
+            writfold_core::diag::Severity::Warning,
+            "syntax.expected",
+            shown,
+            why,
+        );
+        let len = u32::try_from(line.chars().count()).unwrap_or(0);
+        d.at = Some(writfold_core::diag::At {
+            line: u32::try_from(n + 1).unwrap_or(0),
+            col: 1,
+            len,
+        });
+        d.help("write it as theme = \"dark\" or weft = \"/path/to/weft\"".into());
+        out.push(writfold_core::diag::line(&d));
+    }
+    out
+}
+
 pub fn user_config(wanted: &str) -> Option<String> {
     let base = std::env::var_os("XDG_CONFIG_HOME")
         .map(PathBuf::from)
         .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".config")))?;
-    let text = std::fs::read_to_string(base.join("writfold/config.toml")).ok()?;
+    let path = base.join("writfold/config.toml");
+    let text = std::fs::read_to_string(&path).ok()?;
+    static WARNED: std::sync::Once = std::sync::Once::new();
+    WARNED.call_once(|| {
+        for warning in config_warnings(&path.display().to_string(), &text) {
+            eprintln!("writfold: warning: {warning}");
+        }
+    });
     text.lines().find_map(|line| {
         let (key, value) = line.split_once('=')?;
         let value = value.trim();
