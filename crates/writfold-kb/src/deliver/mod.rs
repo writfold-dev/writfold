@@ -244,6 +244,7 @@ fn status_answer(session: &Session<'_>, rec: &Rec, named: Option<&str>) -> Resul
             answer.notes.push(format!("mode {name}: {d}"));
         }
     }
+    crate::plan::delivery::mark(root, rec, &mut answer.rows);
     if answer.rows.is_empty() {
         answer.unknown = Some("no-candidates");
         answer.notes.push(format!(
@@ -351,6 +352,7 @@ pub fn resume_rows(session: &Session<'_>, rec: &Rec) -> (Vec<Row>, Vec<String>) 
             notes.push(format!("deliveries: {error}"));
         }
     }
+    crate::plan::delivery::mark(root, rec, &mut rows);
     if shown > 0 {
         notes.push(format!(
             "{} delivery candidates; the newest 3 are shown (writfold kb deliver status)",

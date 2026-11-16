@@ -57,22 +57,10 @@ pub fn next_or_why(gate: &Gate) -> String {
     }
 }
 
-/// The current step's `candidate:` line for each delivery a candidate
-/// decides, or `why:` when nothing can meet it.
-fn candidates(row: &mut Row, gates: &[Gate]) {
-    for d in gates.iter().filter_map(|g| g.delivery.as_ref()) {
-        match (&d.candidate, &d.why) {
-            (Some(c), _) => row.more.push(c.clone()),
-            (None, Some(why)) => row.more.push(line("why", why.clone())),
-            (None, None) => {}
-        }
-    }
-}
-
 /// What the current step owes, with `read:` and `next:` lines.
 pub fn owes(row: &mut Row, gates: &[Gate]) {
     let owed: Vec<&Gate> = gates.iter().filter(|g| !g.met()).collect();
-    candidates(row, gates);
+    super::delivery::lines(row, gates);
     if owed.is_empty() {
         row.text = match gates.is_empty() {
             true => "no gates".into(),

@@ -10,7 +10,8 @@ use super::fold::{Graph, Step};
 use super::judge::Gate;
 use crate::deliver::candidate::{self, Candidate};
 use crate::deliver::step::{self, PREFIX, View};
-use crate::emit::More;
+use crate::emit::{More, Row};
+use crate::index::query::Rec;
 use crate::session::Session;
 
 /// What a delivery adds to its gate's lines.
@@ -173,5 +174,49 @@ fn build(v: View, seq: u64, detail: bool) -> Gate {
             detail: detail_line,
             why: v.why,
         }),
+    }
+}
+
+/// The current step's `candidate:` line for each delivery a candidate
+/// decides, or `why:` when nothing can meet it.
+pub fn lines(row: &mut Row, gates: &[Gate]) {
+    for d in gates.iter().filter_map(|g| g.delivery.as_ref()) {
+        match (&d.candidate, &d.why) {
+            (Some(c), _) => row.more.push(c.clone()),
+            (None, Some(why)) => row.more.push(line("why", why.clone(), None)),
+            (None, None) => {}
+        }
+    }
+}
+
+/// The `step:` line `deliver status` adds under a candidate a step is
+/// judged on: the current step's deciding candidate, and each candidate a
+/// done record binds. Other candidates are unchanged.
+pub fn mark(root: &std::path::Path, rec: &Rec, rows: &mut [Row]) {
+    let run_dir = crate::runs::dir(rec);
+    let graph = super::fold::read(root, &run_dir, &rec.id);
+    let d = Deliveries::read(root, &run_dir, &rec.id, &graph);
+    let current = graph.current();
+    let mut said: Vec<(String, String)> = Vec::new();
+    for (i, s) in graph.steps.iter().enumerate() {
+        let done = s.done.is_some();
+        if !done && current != Some(i) {
+            continue;
+        }
+        for mode in s.gates.iter().filter_map(|g| step::mode_of(g)) {
+            let Some(c) = d.decides(s, mode) else {
+                continue;
+            };
+            let text = match done {
+                true => format!("bound to {} [done]", s.path),
+                false => format!("decides {PREFIX}{mode} at {} [current]", s.path),
+            };
+            said.push((c.id.clone(), text));
+        }
+    }
+    for row in rows.iter_mut().filter(|r| r.kind == "delivery") {
+        for (_, text) in said.iter().filter(|(id, _)| *id == row.id) {
+            row.more.push(line("step", text.clone(), None));
+        }
     }
 }

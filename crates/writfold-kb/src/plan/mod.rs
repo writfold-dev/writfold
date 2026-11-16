@@ -15,7 +15,7 @@
 //! spliced; required start and end templates are spliced into every new
 //! plan ([`required`]); a spliced template whose file has since changed
 //! is shown `!template-moved` ([`moved`]).
-mod delivery;
+pub(crate) mod delivery;
 mod detail;
 pub mod disorder;
 pub mod event;
