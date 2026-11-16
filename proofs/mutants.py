@@ -378,6 +378,61 @@ MUTANTS = (
            "        Looked::No | Looked::Failed => Fact::Unknown,\n        Looked::Read => super::gates_fact(owed, unmet, invalid),",
            "        Looked::No => Fact::Unknown,\n        Looked::Failed | Looked::Read => super::gates_fact(owed, unmet, invalid),",
            ("Writfold.Core.Guard.gates_read_met_iff",)),
+    # grounding: a waiver is never evidence
+    Mutant("waiver-grounds", "ground.rs",
+           "        Standing::Checked(_) | Standing::Waived => Grounding::Ungrounded,",
+           "        Standing::Checked(_) => Grounding::Ungrounded,\n        Standing::Waived => Grounding::Grounded,",
+           ("Writfold.Core.Ground.of_gate_spec",)),
+    # grounding: a reference to no gate grounds nothing
+    Mutant("of-gate-ignores-found", "ground.rs",
+           "    if !found {\n        return Grounding::Ungrounded;",
+           "    if false {\n        return Grounding::Ungrounded;",
+           ("Writfold.Core.Ground.of_gate_spec",)),
+    # grounding: a receipt about other content does not ground
+    Mutant("receipt-ignores-content", "ground.rs",
+           "        && facts.same_content\n",
+           "",
+           ("Writfold.Core.Ground.of_receipt_grounded_iff",)),
+    # grounding: a receipt grounds only while its gate stands met
+    Mutant("receipt-ignores-gate-met", "ground.rs",
+           "        && facts.gate_met\n",
+           "\n",
+           ("Writfold.Core.Ground.of_receipt_grounded_iff",)),
+    # grounding: a retrieval with no citation grounds nothing
+    Mutant("citations-zero-grounds", "ground.rs",
+           "    if count > 0 && not_fresh == 0 {",
+           "    if not_fresh == 0 {",
+           ("Writfold.Core.Ground.of_citations_grounded_iff",)),
+    # grounding: a token grounds only as exactly one citation
+    Mutant("token-many-grounds", "ground.rs",
+           "    if count == 1 && not_fresh == 0 {",
+           "    if count > 0 && not_fresh == 0 {",
+           ("Writfold.Core.Ground.of_token_grounded_iff",)),
+    # grounding: an observation with no citation grounds nothing
+    Mutant("observation-no-citation-grounds", "ground.rs",
+           "    if grounds(status, count > 0 && not_fresh == 0) {",
+           "    if grounds(status, not_fresh == 0) {",
+           ("Writfold.Core.Ground.of_observation_grounded_iff",)),
+    # grounding: only the current attestation is attested
+    Mutant("statement-not-current-attested", "ground.rs",
+           "    if current_attestation {",
+           "    if true {",
+           ("Writfold.Core.Ground.of_statement_spec",)),
+    # grounding: a changed standing word is a moved reference
+    Mutant("moved-ignores-word", "ground.rs",
+           "    matches!(now, Grounding::Ungrounded) || !same_word",
+           "    matches!(now, Grounding::Ungrounded)",
+           ("Writfold.Core.Ground.moved_iff",)),
+    # observations: a partial look never grounds
+    Mutant("observation-partial-grounds", "observe.rs",
+           "        Status::Ok => cites_fresh,\n        Status::Partial\n        | Status::NoData",
+           "        Status::Ok | Status::Partial => cites_fresh,\n        Status::NoData",
+           ("Writfold.Core.Ground.grounds_iff",)),
+    # observations: a partial look embeds its citation
+    Mutant("embeds-drops-partial", "observe.rs",
+           "        Status::Ok | Status::Partial => true,",
+           "        Status::Ok => true,\n        Status::Partial => false,",
+           ("Writfold.Core.Ground.embeds_iff",)),
     # assessed gate: one ungrounded premise makes the basis hypothetical
     Mutant("basis-ignores-premises", "assess.rs",
            "        if matches!(premises[index], Grounding::Ungrounded) {",

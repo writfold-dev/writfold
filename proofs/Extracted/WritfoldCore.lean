@@ -1013,6 +1013,145 @@ def gate.statements
     gate.statements_loop said definition content false false false 0#usize
   ok { attested_current, attested_any, waived_current }
 
+/-- [writfold_core::ground::of_gate]:
+    Source: 'crates/writfold-core/src/ground.rs', lines 20:0-29:1
+    Visibility: public -/
+def ground.of_gate
+  (found : Bool) (standing : gate.Standing) : Result assess.Grounding := do
+  if found
+  then
+    match standing with
+    | gate.Standing.Checked s =>
+      match s with
+      | gate.State.Open => ok assess.Grounding.Ungrounded
+      | gate.State.Satisfied => ok assess.Grounding.Grounded
+      | gate.State.Stale => ok assess.Grounding.Ungrounded
+      | gate.State.Failed => ok assess.Grounding.Ungrounded
+      | gate.State.Unknown => ok assess.Grounding.Ungrounded
+    | gate.Standing.Attested => ok assess.Grounding.Attested
+    | gate.Standing.Waived => ok assess.Grounding.Ungrounded
+  else ok assess.Grounding.Ungrounded
+
+/-- [writfold_core::ground::ReceiptFacts]
+    Source: 'crates/writfold-core/src/ground.rs', lines 32:0-43:1
+    Visibility: public -/
+structure ground.ReceiptFacts where
+  same_subject : Bool
+  same_definition : Bool
+  same_content : Bool
+  passed : Bool
+  gate_met : Bool
+
+/-- [writfold_core::ground::of_receipt]:
+    Source: 'crates/writfold-core/src/ground.rs', lines 46:0-57:1
+    Visibility: public -/
+def ground.of_receipt
+  (facts : ground.ReceiptFacts) : Result assess.Grounding := do
+  if facts.same_subject
+  then
+    if facts.same_definition
+    then
+      if facts.same_content
+      then
+        if facts.passed
+        then
+          if facts.gate_met
+          then ok assess.Grounding.Grounded
+          else ok assess.Grounding.Ungrounded
+        else ok assess.Grounding.Ungrounded
+      else ok assess.Grounding.Ungrounded
+    else ok assess.Grounding.Ungrounded
+  else ok assess.Grounding.Ungrounded
+
+/-- [writfold_core::ground::of_citations]:
+    Source: 'crates/writfold-core/src/ground.rs', lines 61:0-67:1
+    Visibility: public -/
+def ground.of_citations
+  (count : Std.Usize) (not_fresh : Std.Usize) : Result assess.Grounding := do
+  if count > 0#usize
+  then
+    if not_fresh = 0#usize
+    then ok assess.Grounding.Grounded
+    else ok assess.Grounding.Ungrounded
+  else ok assess.Grounding.Ungrounded
+
+/-- [writfold_core::ground::of_token]:
+    Source: 'crates/writfold-core/src/ground.rs', lines 71:0-77:1
+    Visibility: public -/
+def ground.of_token
+  (count : Std.Usize) (not_fresh : Std.Usize) : Result assess.Grounding := do
+  if count = 1#usize
+  then
+    if not_fresh = 0#usize
+    then ok assess.Grounding.Grounded
+    else ok assess.Grounding.Ungrounded
+  else ok assess.Grounding.Ungrounded
+
+/-- [writfold_core::observe::Status]
+    Source: 'crates/writfold-core/src/observe.rs', lines 13:0-28:1
+    Visibility: public -/
+@[discriminant isize]
+inductive observe.Status where
+| Ok : observe.Status
+| Partial : observe.Status
+| NoData : observe.Status
+| NotFound : observe.Status
+| Timeout : observe.Status
+| Denied : observe.Status
+| Error : observe.Status
+
+/-- [writfold_core::observe::grounds]:
+    Source: 'crates/writfold-core/src/observe.rs', lines 82:0-92:1
+    Visibility: public -/
+def observe.grounds
+  (status : observe.Status) (cites_fresh : Bool) : Result Bool := do
+  match status with
+  | observe.Status.Ok => ok cites_fresh
+  | observe.Status.Partial => ok false
+  | observe.Status.NoData => ok false
+  | observe.Status.NotFound => ok false
+  | observe.Status.Timeout => ok false
+  | observe.Status.Denied => ok false
+  | observe.Status.Error => ok false
+
+/-- [writfold_core::ground::of_observation]:
+    Source: 'crates/writfold-core/src/ground.rs', lines 81:0-87:1
+    Visibility: public -/
+def ground.of_observation
+  (status : observe.Status) (count : Std.Usize) (not_fresh : Std.Usize) :
+  Result assess.Grounding
+  := do
+  let b ← if count > 0#usize
+            then ok (not_fresh = 0#usize)
+            else ok false
+  let b1 ← observe.grounds status b
+  if b1
+  then ok assess.Grounding.Grounded
+  else ok assess.Grounding.Ungrounded
+
+/-- [writfold_core::ground::of_statement]:
+    Source: 'crates/writfold-core/src/ground.rs', lines 90:0-96:1
+    Visibility: public -/
+def ground.of_statement
+  (current_attestation : Bool) : Result assess.Grounding := do
+  if current_attestation
+  then ok assess.Grounding.Attested
+  else ok assess.Grounding.Ungrounded
+
+/-- [writfold_core::ground::moved]:
+    Source: 'crates/writfold-core/src/ground.rs', lines 100:0-102:1
+    Visibility: public -/
+def ground.moved
+  (now : assess.Grounding) (same_word : Bool) : Result Bool := do
+  let b ←
+    match now with
+    | assess.Grounding.Grounded => ok false
+    | assess.Grounding.Attested => ok false
+    | assess.Grounding.Ungrounded => ok true
+  if b
+  then ok true
+  else ok (¬ same_word)
+
 /-- [writfold_core::guard::Mode]
     Source: 'crates/writfold-core/src/guard.rs', lines 119:0-122:1
     Visibility: public -/
@@ -1369,6 +1508,19 @@ def guard.nudge_with
       | guard.Repeat.Turn => ok false
     else ok false
   guard.nudge stop_hook_active b facts
+
+/-- [writfold_core::observe::embeds]:
+    Source: 'crates/writfold-core/src/observe.rs', lines 71:0-78:1
+    Visibility: public -/
+def observe.embeds (status : observe.Status) : Result Bool := do
+  match status with
+  | observe.Status.Ok => ok true
+  | observe.Status.Partial => ok true
+  | observe.Status.NoData => ok false
+  | observe.Status.NotFound => ok false
+  | observe.Status.Timeout => ok false
+  | observe.Status.Denied => ok false
+  | observe.Status.Error => ok false
 
 /-- [writfold_core::plan::Node]
     Source: 'crates/writfold-core/src/plan.rs', lines 22:0-25:1

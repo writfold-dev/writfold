@@ -89,7 +89,7 @@ impl Present<'_, '_, '_> {
                     now
                 }
             };
-            if now.0 == Grounding::Ungrounded || now.1 != e.standing {
+            if writfold_core::ground::moved(now.0, now.1 == e.standing) {
                 return Ok(Some((e.reference.clone(), e.standing.clone(), now.1)));
             }
         }
