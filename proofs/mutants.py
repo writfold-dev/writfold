@@ -43,6 +43,16 @@ MUTANTS = (
            "    node.done || node.skipped",
            "    node.done",
            ("Writfold.Core.Plan.closed_spec",)),
+    # run graph: the current step is the least open one, not the last step
+    Mutant("current-returns-last", "plan.rs",
+           "        if !closed(&nodes[index]) {\n            return Some(index);",
+           "        if !closed(&nodes[index]) {\n            return Some(nodes.len() - 1);",
+           ("Writfold.Core.Plan.current_loop_spec",)),
+    # run graph: the first owed gate is the first one not met
+    Mutant("first-owed-inverted", "plan.rs",
+           "        if !met[index] {",
+           "        if met[index] {",
+           ("Writfold.Core.Plan.first_owed_loop_spec",)),
     # run graph: only the current step may be recorded as done
     Mutant("advance-without-current-check", "plan.rs",
            "    if now != at {",
@@ -83,6 +93,21 @@ MUTANTS = (
            "    if depth > MAX_DEPTH {",
            "    if depth > MAX_DEPTH + 1 {",
            ("Writfold.Core.Plan.splice_check_spec",)),
+    # splice: the last key spliced counts too
+    Mutant("contains-misses-last", "plan.rs",
+           "    while index < keys.len() {",
+           "    while index + 1 < keys.len() {",
+           ("Writfold.Core.Plan.contains_loop_spec",)),
+    # splice: an empty plan takes a root splice at 0
+    Mutant("splice-check-refuses-empty", "plan.rs",
+           "    if nodes.is_empty() {\n        return Ok(Spliced::Insert(0));",
+           "    if nodes.is_empty() {\n        return Err(SpliceRefusal::Complete);",
+           ("Writfold.Core.Plan.splice_check_spec",)),
+    # splice: a complete plan has no current step to splice under
+    Mutant("splice-check-admits-complete", "plan.rs",
+           "        None => Err(SpliceRefusal::Complete),\n        Some(at) => Ok(Spliced::Insert(at)),",
+           "        None => Ok(Spliced::Insert(0)),\n        Some(at) => Ok(Spliced::Insert(at)),",
+           ("Writfold.Core.Plan.splice_check_spec",)),
     # gate: a subject that moved while the command ran is never a pass
     Mutant("outcome-ignores-moved", "gate.rs",
            "    if subject_moved {\n        return Outcome::Unknown;",
@@ -93,11 +118,36 @@ MUTANTS = (
            "        Ending::Exited(0) => Outcome::Pass,",
            "        Ending::Exited(_) => Outcome::Pass,",
            ("Writfold.Core.Gate.outcome_spec",)),
+    # gate: another exit status is a failure, not unknown
+    Mutant("outcome-nonzero-unknown", "gate.rs",
+           "        Ending::Exited(_) => Outcome::Fail,",
+           "        Ending::Exited(_) => Outcome::Unknown,",
+           ("Writfold.Core.Gate.outcome_spec",)),
     # gate: a receipt about other bytes in scope never decides the state
     Mutant("state-ignores-scope", "gate.rs",
            "        if evidence.same_definition && evidence.same_scope {",
            "        if evidence.same_definition {",
            ("Writfold.Core.Gate.state_loop_spec",)),
+    # gate: a receipt about another definition never decides the state
+    Mutant("state-ignores-definition", "gate.rs",
+           "        if evidence.same_definition && evidence.same_scope {",
+           "        if evidence.same_scope {",
+           ("Writfold.Core.Gate.state_loop_spec",)),
+    # gate: the newest receipt about the current subject decides, not the oldest
+    Mutant("state-oldest-first", "gate.rs",
+           "    let mut index = receipts.len();\n    while index > 0 {\n        index -= 1;\n        let evidence = receipts[index];",
+           "    let mut index = 0;\n    while index < receipts.len() {\n        let evidence = receipts[index];\n        index += 1;",
+           ("Writfold.Core.Gate.state_loop_spec", "Writfold.Core.Gate.state_spec")),
+    # gate: a failed receipt is a failure
+    Mutant("state-failed-satisfies", "gate.rs",
+           "                Outcome::Fail => State::Failed,",
+           "                Outcome::Fail => State::Satisfied,",
+           ("Writfold.Core.Gate.state_loop_spec",)),
+    # gate: an attested-class obligation has no checked state to stand on
+    Mutant("attested-class-stands-on-check", "gate.rs",
+           "        (true, false) => Standing::Checked(State::Open),",
+           "        (true, false) => Standing::Checked(state),",
+           ("Writfold.Core.Gate.standing_spec",)),
     # gate: a waiver is never a passing check
     Mutant("waiver-satisfies", "gate.rs",
            "        return Standing::Waived;",
@@ -128,6 +178,16 @@ MUTANTS = (
            "        if unfinished(required[index]) {",
            "        if false {",
            ("Writfold.Core.Assess.outcome_loop_spec",)),
+    # assessed gate: nothing required is unknown, never a pass
+    Mutant("assessed-empty-passes", "assess.rs",
+           "    if !complete || required.is_empty() {",
+           "    if !complete {",
+           ("Writfold.Core.Assess.outcome_spec",)),
+    # assessed gate: an incomplete run is unknown, never a pass
+    Mutant("assessed-incomplete-passes", "assess.rs",
+           "    if !complete || required.is_empty() {",
+           "    if required.is_empty() {",
+           ("Writfold.Core.Assess.outcome_spec",)),
     # assessed gate: an attested citation makes the assumption attested
     Mutant("assumption-ignores-attested", "assess.rs",
            "        true => Grounding::Attested,",
@@ -232,7 +292,16 @@ def calibrate(mutant: Mutant, scratch: Path) -> None:
     print(f"calibration: {mutant.name} rejected by {', '.join(sorted(failures))}", flush=True)
 
 
+def unclaimed() -> list[str]:
+    """Theorems a mutant names that the axiom audit does not require: a
+    rename would then pass the audit and be caught only here."""
+    claims = set(re.findall(r"``([\w.]+)", (PROOFS / "Audit.lean").read_text()))
+    return sorted({name for m in MUTANTS for name in m.fails} - claims)
+
+
 def main() -> None:
+    if missing := unclaimed():
+        raise SystemExit(f"FAIL: theorems named by mutants are not audited claims: {missing}")
     selected = set(sys.argv[1:])
     mutants = [m for m in MUTANTS if not selected or m.name in selected]
     if selected and len(mutants) != len(selected):

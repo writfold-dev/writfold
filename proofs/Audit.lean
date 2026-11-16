@@ -15,35 +15,46 @@ open Lean Elab Command
 /-- Lean's standard axioms. -/
 def allowedAxioms : List Name := [``propext, ``Classical.choice, ``Quot.sound]
 
-/-- The headline claims: byte identity, the run graph (the current step, the
-advance check's refusal order, staleness, splicing), gate obligations (only a
-clean current pass satisfies; a statement never does) and the assessed gate's
-basis (a hypothetical entailment never passes). -/
+/-- The required claims: every theorem a mutant in `proofs/mutants.py` names
+(`mutants.py` refuses to run when one is missing here), and the headline
+statements of each kernel (docs/writfold/aeneas.md). -/
 def claims : List Name := [
   ``Writfold.Core.same_spec,
+  ``Writfold.Core.same_loop_spec,
   -- the run graph (writfold_core::plan)
+  ``Writfold.Core.Plan.closed_spec,
+  ``Writfold.Core.Plan.current_loop_spec,
   ``Writfold.Core.Plan.current_spec,
   ``Writfold.Core.Plan.current_least,
+  ``Writfold.Core.Plan.first_owed_loop_spec,
   ``Writfold.Core.Plan.advance_check_spec,
   ``Writfold.Core.Plan.advance_ok_iff,
   ``Writfold.Core.Plan.stale_spec,
-  ``Writfold.Core.Plan.stale_never_current,
+  -- the splice model: proved for `plan::splice`; the product places spliced
+  -- steps in the fold (`writfold-kb` plan/fold.rs), tested against this model
+  ``Writfold.Core.Plan.splice_loop0_spec,
+  ``Writfold.Core.Plan.splice_loop1_spec,
+  ``Writfold.Core.Plan.splice_loop2_spec,
   ``Writfold.Core.Plan.splice_spec,
   ``Writfold.Core.Plan.splice_keeps_existing,
   ``Writfold.Core.Plan.splice_keeps_prefix,
   ``Writfold.Core.Plan.splice_new_open,
   ``Writfold.Core.Plan.splice_current,
+  ``Writfold.Core.Plan.contains_loop_spec,
   ``Writfold.Core.Plan.splice_check_spec,
   ``Writfold.Core.Plan.splice_check_already_iff,
   ``Writfold.Core.Plan.splice_idempotent,
   ``Writfold.Core.Plan.splice_check_depth,
   ``Writfold.Core.Plan.splice_admitted,
   -- gate obligations (writfold_core::gate)
+  ``Writfold.Core.Gate.outcome_spec,
   ``Writfold.Core.Gate.outcome_pass_iff,
   ``Writfold.Core.Gate.outcome_fail_iff,
+  ``Writfold.Core.Gate.state_loop_spec,
   ``Writfold.Core.Gate.state_spec,
   ``Writfold.Core.Gate.state_satisfied_iff,
   ``Writfold.Core.Gate.state_other_subject,
+  ``Writfold.Core.Gate.standing_spec,
   ``Writfold.Core.Gate.standing_satisfied_iff,
   ``Writfold.Core.Gate.standing_attested_iff,
   ``Writfold.Core.Gate.standing_waived_iff,
@@ -51,9 +62,13 @@ def claims : List Name := [
   ``Writfold.Core.Gate.standing_met_iff,
   ``Writfold.Core.Gate.satisfied_only_by_current_pass,
   -- the Weft assessed gate's basis (writfold_core::assess)
+  ``Writfold.Core.Assess.assumption_loop_spec,
   ``Writfold.Core.Assess.assumption_spec,
+  ``Writfold.Core.Assess.basis_loop_spec,
   ``Writfold.Core.Assess.basis_spec,
   ``Writfold.Core.Assess.met_spec,
+  ``Writfold.Core.Assess.outcome_loop_spec,
+  ``Writfold.Core.Assess.outcome_spec,
   ``Writfold.Core.Assess.outcome_pass_iff,
   ``Writfold.Core.Assess.hypothetical_never_passes,
 ]
