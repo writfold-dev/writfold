@@ -2,8 +2,7 @@
 use crate::cells::{self, Glyphs};
 use crate::graph::Node;
 use crate::lines::Tone;
-use crate::rail_text::{clip, id_column, left, mark, shown_id, splice_name, width as cells_of};
-use crate::source::field;
+use crate::rail_text::{clip, id_column, left, mark, shown_id, width as cells_of};
 use crate::style::{self, Look};
 use ratatui::text::{Line, Span};
 use std::collections::HashMap;
@@ -42,8 +41,9 @@ pub fn build<'a>(nodes: &[Node<'a>], width: u16, show: Show) -> Rail<'a> {
     };
     let mut stack: Vec<usize> = Vec::new();
     let mut root_seen = false;
+    let chips = nodes.iter().map(|n| n.chips.len()).max().unwrap_or(0);
     let shape = Shape {
-        chips: nodes.iter().map(|n| n.chips.len()).max().unwrap_or(0),
+        chips: if show.full { chips } else { 0 },
         ids: id_column(nodes, show.full),
         show,
     };
@@ -65,9 +65,12 @@ pub fn build<'a>(nodes: &[Node<'a>], width: u16, show: Show) -> Rail<'a> {
             stack.push(ancestor);
         }
         rail.node_lines.push(rail.lines.len());
-        let current = field(node.row, "status") == "current";
-        let text = show.full || current || show.selected == Some(index);
-        rail.lines.push(node_line(node, width, shape, text));
+        let words = if show.full {
+            Some((node.rail_text.to_owned(), Tone::Dim))
+        } else {
+            crate::say_step::row(node, show.selected == Some(index))
+        };
+        rail.lines.push(node_line(node, width, shape, words));
     }
     close(&mut rail.lines, &stack, 0, show);
     rail.lines.push(Line::styled(
@@ -92,7 +95,11 @@ fn header<'a>(group: &'a str, depth: usize, first: bool, width: u16, show: Show)
         " {}{shape} ",
         mark(glyphs, "│ ", "| ").repeat(depth.saturating_sub(1))
     );
-    let text = if show.full { group } else { splice_name(group) };
+    let text = if show.full {
+        group
+    } else {
+        crate::say_step::group_name(group)
+    };
     let room = usize::from(width).saturating_sub(cells_of(&rail));
     Line::from(vec![
         Span::styled(rail, style::style(show.look, Tone::Dim)),
@@ -137,14 +144,20 @@ struct Shape {
 }
 
 /// One step row: dim rail bars, the state glyph in its tone, the shown id,
-/// aligned chips, then (when `text`) the verb's rail text and row flags.
-fn node_line<'a>(node: &Node<'a>, width: u16, shape: Shape, text: bool) -> Line<'a> {
+/// aligned chips, then its words: the verb's rail text and row flags
+/// (exact), or the plain words, flags included (plain, no chips).
+fn node_line<'a>(
+    node: &Node<'a>,
+    width: u16,
+    shape: Shape,
+    words: Option<(String, Tone)>,
+) -> Line<'a> {
     let Shape { chips, ids, show } = shape;
     let (glyphs, look) = (show.glyphs, show.look);
     let flags: Vec<_> = node
         .flags
         .iter()
-        .filter(|f| ROW_FLAGS.contains(f))
+        .filter(|f| show.full && ROW_FLAGS.contains(f))
         .collect();
     let state = node.state.cell(glyphs);
     let bars = format!(" {}", mark(glyphs, "│ ", "| ").repeat(node.depth));
@@ -168,19 +181,26 @@ fn node_line<'a>(node: &Node<'a>, width: u16, shape: Shape, text: bool) -> Line<
         Span::raw(id),
         Span::raw(" ".repeat(pad + 1)),
     ];
-    spans.extend(node.chips.iter().map(|status| {
+    let shown_chips = if show.full {
+        node.chips.as_slice()
+    } else {
+        &[]
+    };
+    spans.extend(shown_chips.iter().map(|status| {
         let cell = cells::chip(status, glyphs);
         Span::styled(cell.glyph, style::style(look, cell.tone))
     }));
     let text_width = available.saturating_sub(id_width);
-    let text = text && text_width > 1;
-    if text || !flags.is_empty() {
-        let pad = chips.saturating_sub(node.chips.len());
+    let words = words.filter(|_| text_width > 1);
+    if words.is_some() || !flags.is_empty() {
+        let pad = chips.saturating_sub(shown_chips.len());
         spans.push(Span::raw(" ".repeat(pad)));
     }
-    if text {
-        let text = format!(" {}", clip(node.rail_text, text_width - 1, glyphs));
-        spans.push(Span::styled(text, style::style(look, Tone::Dim)));
+    if let Some((text, tone)) = words {
+        let gap = if show.full { " " } else { "  " };
+        let room = text_width.saturating_sub(gap.len());
+        let text = format!("{gap}{}", clip(&text, room, glyphs));
+        spans.push(Span::styled(text, style::style(look, tone)));
     }
     let bad = style::style(look, Tone::Bad);
     spans.extend(flags.iter().map(|f| Span::styled(format!(" !{f}"), bad)));

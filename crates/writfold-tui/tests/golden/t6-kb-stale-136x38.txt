@@ -1,0 +1,38 @@
+ Harbor status  [build]  knowledge base                                                                                  project 1 of 3
+ 1 why    2 status    3 tracker    4 impact   [5 stale] 9 moved                                                                  m runs
+╭ projects (2) ──────╮╭ stale (9) ────────────────────────────────────────────╮╭ citation 6 of 9 ──────────────────────────────────────╮
+│> Harbor status     ││ ┬ harbor/STATUS.md                                    ││src/batch.rs:2-4 in demo-service   moved               │
+│  build  harbor     ││ · https://example.invalid/wiki/harbor  expired        ││a citation of code                                     │
+│  Lantern console   ││ · …/2026/hbr-101-slow-ledger-flush.md  changed        ││                                                       │
+│  lantern           ││ ┼ harbor/evidence/flush-latency.md                    ││The cited lines are now at 4-6.                        │
+│  all records       ││ · src/legacy.rs:1-2                    gone           ││                                                       │
+│  by kind           ││ · src/db.rs:1-3                        moved          ││Cited by                                               │
+│                    ││ ┼ inventory/dossiers/harbor-api.md                    ││  ● Batch ledger writes in the API                     │
+│                    ││ · src/retry.rs:2-3                     changed        ││  ○ Cap replay batches at 500 rows                     │
+│                    ││ ┼ proposals/decision/2026-03-02-batch-ledger-writes/p…││                                                       │
+│                    ││ · src/batch.rs:2-4                     moved          ││1 note in exact wording (d)                            │
+│                    ││ ┼ proposals/decision/2026-11-11-cap-replay-batches-at…││                                                       │
+│                    ││ · src/batch.rs:2-4                     moved          ││                                                       │
+│                    ││ ┼ inventory/assets/harbor-api.json                    ││                                                       │
+│                    ││ ● harbor-api                           overdue        ││                                                       │
+│                    ││ ┼ investigations/2026/2026-06-01-flush-stalls-again/R…││                                                       │
+│                    ││ ○ …2026/2026-06-01-flush-stalls-again  came back      ││                                                       │
+│                    ││ ┴                                                     ││                                                       │
+│                    ││                                                       ││                                                       │
+│                    ││                                                       ││                                                       │
+│                    ││                                                       ││                                                       │
+│                    ││                                                       ││                                                       │
+│                    ││                                                       ││                                                       │
+│                    ││                                                       ││                                                       │
+│                    ││                                                       ││                                                       │
+│                    ││                                                       ││                                                       │
+│                    ││                                                       ││                                                       │
+│                    ││                                                       ││                                                       │
+│                    ││                                                       ││                                                       │
+│                    ││                                                       ││                                                       │
+│                    ││                                                       ││                                                       │
+│                    ││                                                       ││                                                       │
+│                    ││9 need a look · 11 checked · from the last recorded    ││                                                       │
+│                    ││check; nothing was re-run                              ││d exact wording and file   f run   a impact            │
+╰────────────────────╯╰───────────────────────────────────────────────────────╯╰───────────────────────────────────────────────────────╯
+ [read-only]                                                                        j/k record   l inspect   a impact   ? help   q quit

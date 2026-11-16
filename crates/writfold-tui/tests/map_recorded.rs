@@ -55,7 +55,7 @@ fn minimum_narrow_surface_switches_between_map_and_inspector() -> TestResult {
     app.key(Key::Right);
     let text = symbols(&render(&mut app, 60, 12)?);
     assert_eq!(app.focus, Focus::Inspector);
-    assert!(text.contains("step 7/11"));
+    assert!(text.contains("step 7 of 11"));
     assert!(text.contains("g gates"), "{text}");
     app.key(Key::Esc);
     assert!(symbols(&render(&mut app, 60, 12)?).contains('▶'));

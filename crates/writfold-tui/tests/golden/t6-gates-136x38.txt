@@ -1,0 +1,38 @@
+ Add --plan to kb runs  [open] [current run] [harbor]                                                                        run 1 of 3
+ 1 progress  [2 gates] 4 not met   3 timeline   4 inbox 3 pending   5 guards 1 would block   6 stale   7 brief   8 resume          m kb
+╭ runs (3) ──────────────────╮╭ gates ─────────────────────────────────────────────────────────────────────────────────────────────────╮
+│> Add --plan to kb runs     ││6 gates · 2 passed · 2 out of date · 2 with nothing recorded yet · 4 not met                            │
+│  harbor  step 7/11         ││                                                                                                        │
+│  Review the lantern guide  ││○ bench         nothing recorded yet · checked by a command                                             │
+│  lantern                   ││! lint          out of date · changed in scope: harbor/lint.txt                                         │
+│  Retire the legacy flush p…││● notes         passed                                                                                  │
+│  closed  harbor  complete  ││○ signoff       nothing recorded yet · decided by a person's statement; no command is run               │
+│                            ││● unit          passed                                                                                  │
+│                            ││! review-list   out of date · checklist · 2 of 4 required items covered                                 │
+│                            ││    ■ errors    covered · 1 reference by agent                                                          │
+│                            ││    ! tests     out of date · the evidence it cites has changed                                         │
+│                            ││    □ docs      not covered · The guide names every new flag                                            │
+│                            ││    ◆ perf      marked not applicable · no hot path touched by agent                                    │
+│                            ││    □ style     optional · not covered · Names follow the module                                        │
+│                            ││                                                                                                        │
+│                            ││Standings are worked out from the run's recorded results each time this view asks; nothing is run.      │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+│                            ││                                                                                                        │
+╰────────────────────────────╯╰────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+ [read-only]  KB has 19 uncommitted changes                                          j/k scroll   Tab view   d detail   ? help   q quit

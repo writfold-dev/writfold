@@ -32,7 +32,7 @@ pub fn keys() -> Vec<Line> {
         "j k ↑ ↓: select a project / record, scroll a focused inspector or the status text; [ ]: previous / next project",
         "h l / Left Right: focus projects → list → inspector; Enter cycles; Esc steps left; 0: projects (narrow)",
         "a: impact of the selected record (re-root in impact); v: in impact, direction in → out → both",
-        "n N: next / previous record carrying a mark; d: calm / detailed; PgUp PgDn: page",
+        "n N: next / previous record carrying a mark; d: plain / exact wording; c: commands to copy; PgUp PgDn: page",
         "1 why; 2 status; 3 tracker; 4 impact; 5 stale; Tab / Shift-Tab: next / previous view",
         "p g t i u s b e: leave for that run view; letters never change meaning",
         "r: ask again; ?: help (any key closes); q / Ctrl-C: quit; no key writes",

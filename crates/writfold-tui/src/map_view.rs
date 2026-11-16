@@ -35,29 +35,50 @@ pub(crate) fn records(app: &App) -> Vec<lines::Line> {
 }
 
 /// The one-row caption for the marker; the full legend lives in help.
-pub(crate) fn caption(glyphs: Glyphs) -> &'static str {
-    if glyphs == Glyphs::Unicode {
-        "▶ next step to pick up, as recorded"
-    } else {
-        "[>] next step to pick up, as recorded"
+pub(crate) fn caption(glyphs: Glyphs, plain: bool) -> &'static str {
+    match (glyphs == Glyphs::Unicode, plain) {
+        (true, false) => "▶ next step to pick up, as recorded",
+        (false, false) => "[>] next step to pick up, as recorded",
+        (true, true) => "▶ the next step to pick up, as recorded",
+        (false, true) => "[>] the next step to pick up, as recorded",
     }
 }
 
-/// Calm: the last plan event on one clipped row. Detailed: the event and
-/// checkpoint, wrapped. Both end with the marker caption.
+/// Plain: the newest plan event in words, on one clipped row.
+fn last_recorded(app: &App, width: u16, glyphs: Glyphs) -> String {
+    let event = app
+        .answer(View::Timeline)
+        .and_then(|a| a.rows.iter().rev().find(|r| field(r, "kind") == "plan"));
+    let nodes = app
+        .answer(View::Progress)
+        .map(graph::nodes)
+        .unwrap_or_default();
+    let said = match event {
+        None => "nothing yet".to_owned(),
+        Some(event) => crate::say_step::last_event(event, &nodes)
+            .unwrap_or_else(|| "in exact wording (d)".to_owned()),
+    };
+    clip(
+        &format!("last recorded   {said}"),
+        usize::from(width),
+        glyphs,
+    )
+}
+
+/// Plain: the last plan event in words on one clipped row. Exact: the
+/// event and checkpoint, wrapped. Both end with the marker caption.
 fn below(app: &App, width: u16, glyphs: Glyphs) -> Vec<Row<'static>> {
     let dim = style::style(app.look, Tone::Dim);
-    let mut records = records(app);
-    let mut out: Vec<Row<'static>> = if app.level == Detail::Exact {
-        records
-            .drain(..)
+    let plain = app.level == Detail::Plain;
+    let mut out: Vec<Row<'static>> = if plain {
+        vec![Row::styled(last_recorded(app, width, glyphs), dim)]
+    } else {
+        records(app)
+            .into_iter()
             .map(|l| Row::styled(l.text, dim))
             .collect()
-    } else {
-        let event = records.swap_remove(0).text.replacen(": ", "  ", 1);
-        vec![Row::styled(clip(&event, usize::from(width), glyphs), dim)]
     };
-    out.push(Row::styled(caption(glyphs), dim));
+    out.push(Row::styled(caption(glyphs, plain), dim));
     out
 }
 
@@ -161,7 +182,18 @@ fn draw_rail(
 }
 
 fn prelude(answer: &crate::source::Reply, app: &App, width: u16) -> Vec<Row<'static>> {
-    let mut lines = progress::summary(answer, app.level == Detail::Exact, app.look, width);
+    if app.level == Detail::Plain {
+        let mut lines = progress::pack(crate::say_step::head(answer), app.look, usize::from(width));
+        if answer.count("current").is_none() && !answer.notes.is_empty() {
+            let mut told = crate::say::Told::default();
+            crate::say_row::notes(&mut told, answer, &[]);
+            let mut rows = crate::say_draw::told(&told, usize::from(width), app.look);
+            rows.retain(|row| row.width() > 0);
+            lines.extend(rows);
+        }
+        return lines;
+    }
+    let mut lines = progress::summary(answer, true, app.look, width);
     if answer.count("current").is_none() {
         lines.extend(
             answer

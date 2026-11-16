@@ -81,7 +81,7 @@ fn walk_limits_are_on_screen() -> TestResult {
     app.kb_show(KbView::Impact);
     let buffer = render(&mut app, 136, 38)?;
     let screen = rows(&buffer);
-    let line = "14 reached   not followed: 1 disputed, 6 inferred";
+    let line = "14 records reached · not followed: 1 disputed link,";
     let y = screen.iter().position(|r| r.contains(line)).ok_or(line)?;
     let x = screen[y].chars().position(|c| c == '1').ok_or("x")?;
     let warn = writfold_tui::style::style(app.look, Tone::Warn).fg;
@@ -105,7 +105,7 @@ fn stale_badge_equals_the_verb() -> TestResult {
     let stale = body["trailer"]["counts"]["stale"].as_u64().ok_or("stale")?;
     let screen = rows(&render(&mut app, 136, 38)?);
     assert!(
-        screen[1].contains(&format!("5 stale !{stale}")),
+        screen[1].contains(&format!("5 stale {stale} moved")),
         "{}",
         screen[1]
     );

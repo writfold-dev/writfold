@@ -15,15 +15,33 @@ pub(crate) fn draw(frame: &mut Frame<'_>, app: &mut App, area: Rect) {
     let Some(index) = nodes.iter().position(|n| Some(n.id) == app.node.as_deref()) else {
         return;
     };
-    let title = format!("step {}/{}", index + 1, nodes.len());
+    let exact = app.level == Detail::Exact;
+    let title = if exact {
+        format!("step {}/{}", index + 1, nodes.len())
+    } else {
+        format!("step {} of {}", index + 1, nodes.len())
+    };
     let border = paint::block(title, app.focus == Focus::Inspector, app.look);
     let inner = border.inner(area);
     frame.render_widget(border, area);
-    let mut lines = inspect::content(&nodes[index], map_view::glyphs(app), app.look, app.level);
-    lines.pop();
-    if app.level == Detail::Exact {
+    let lines = if exact {
+        let mut lines = inspect::content(&nodes[index], map_view::glyphs(app), app.look, app.level);
+        lines.pop();
         lines.extend(recorded(app));
-    }
+        lines
+    } else {
+        let cx = inspect::plain::Context {
+            index,
+            total: nodes.len(),
+            owed: answer.count("current_owed"),
+        };
+        let told = inspect::plain::told(&nodes[index], cx, map_view::glyphs(app));
+        let rows = crate::say_draw::told(&told, usize::from(inner.width), app.look);
+        let rows = squeeze(rows, usize::from(inner.height.saturating_sub(1)));
+        rows.into_iter()
+            .map(|text| inspect::InspectLine { indent: 0, text })
+            .collect()
+    };
     let hint = inspect::hint(app.level, inner.width, app.look);
     let body = Rect::new(
         inner.x,
@@ -41,6 +59,17 @@ pub(crate) fn draw(frame: &mut Frame<'_>, app: &mut App, area: Rect) {
         Rect::new(inner.x, inner.bottom().saturating_sub(1), inner.width, 1),
     );
     app.inspect_scroll = scroll.min(usize::from(u16::MAX)) as u16;
+}
+
+/// Blank rows between sections go first when the pane is short.
+fn squeeze(
+    rows: Vec<ratatui::text::Line<'static>>,
+    height: usize,
+) -> Vec<ratatui::text::Line<'static>> {
+    if rows.len() <= height {
+        return rows;
+    }
+    rows.into_iter().filter(|row| row.width() > 0).collect()
 }
 
 fn recorded(app: &App) -> impl Iterator<Item = inspect::InspectLine> + '_ {

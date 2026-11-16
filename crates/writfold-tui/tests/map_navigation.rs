@@ -109,7 +109,7 @@ fn focus_keys_follow_three_panes_at_every_breakpoint() -> TestResult {
 }
 
 #[test]
-fn map_text_expansion_and_unbound_c_are_independent() -> TestResult {
+fn map_text_expansion_and_command_rows_are_independent() -> TestResult {
     let w = map::nested("toggle")?;
     let mut app = App::new(w.source(), Some(RUN));
     render(&mut app, 160, 40)?;
@@ -126,9 +126,13 @@ fn map_text_expansion_and_unbound_c_are_independent() -> TestResult {
     assert!(app.map_visible());
     let before = support::projection::symbols(&render(&mut app, 160, 40)?);
     app.key(Key::Char('c'));
+    let rows = support::projection::symbols(&render(&mut app, 160, 40)?);
+    assert!(rows.contains(" commands for step "), "{rows}");
+    app.key(Key::Char('z'));
     assert_eq!(
         support::projection::symbols(&render(&mut app, 160, 40)?),
-        before
+        before,
+        "any key closes the rows and changes nothing else"
     );
     assert_eq!(app.node, selected);
     Ok(())

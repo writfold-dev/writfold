@@ -21,6 +21,11 @@ pub fn title(app: &App, width: u16, narrow: bool) -> Vec<Segment> {
         return fit((left, Vec::new()), 3, room, glyphs(app));
     };
     let mut left = vec![Unit::one(field(row, "text"), Role::Title, 0)];
+    if app.level == Detail::Plain {
+        crate::plain_bars::header(app, row, &mut left);
+        let right = vec![Unit::one(crate::plain_bars::position(app), Role::Muted, 1)];
+        return fit((left, right), 3, room, glyphs(app));
+    }
     let status = field(row, "status");
     if !status.is_empty() {
         left.push(Unit::new(vec![chip(app.look, status, Chip::Plain)], 0));
@@ -86,7 +91,7 @@ fn badges(app: &App, view: View, glyphs: Glyphs) -> Vec<Segment> {
         .collect()
 }
 
-fn tab(app: &App, view: View, glyphs: Glyphs) -> (Unit, bool) {
+pub(crate) fn tab(app: &App, view: View, glyphs: Glyphs, short: bool) -> (Unit, bool) {
     let name = format!("{} {}", view.digit(), view.name());
     let mut parts = if view == app.view {
         vec![chip(app.look, &name, Chip::Active)]
@@ -96,47 +101,48 @@ fn tab(app: &App, view: View, glyphs: Glyphs) -> (Unit, bool) {
             segment(format!(" {}", view.name()), Role::Tab),
         ]
     };
-    let badges = badges(app, view, glyphs);
+    let badges = if app.level == Detail::Plain {
+        crate::plain_bars::badge(app, view, short)
+    } else {
+        badges(app, view, glyphs)
+    };
     let marked = !badges.is_empty();
     parts.extend(badges);
     (Unit::new(parts, 0), marked)
 }
 
-/// All eight tabs four cells apart (closer when needed). Narrow, or when
-/// even that does not fit: the active tab, the tabs with badges, `i/8`.
+/// All eight tabs four cells apart (closer when needed; plain badges
+/// shorten to their number first). Narrow, or when even that does not
+/// fit: the active tab, the tabs with badges, `i/8`.
 pub fn tabs(app: &App, width: u16, narrow: bool) -> Vec<Segment> {
     let glyphs = glyphs(app);
     let room = usize::from(width);
-    let all: Vec<_> = View::ALL
-        .iter()
-        .map(|v| (*v, tab(app, *v, glyphs)))
-        .collect();
-    if !narrow {
-        for gap in [4, 3, 2] {
-            let units: Vec<_> = all.iter().map(|(_, (u, _))| u.clone()).collect();
-            if total(&units, &[], gap) <= room {
-                let mode = vec![crate::kb_bars::mode_unit(false)];
-                return fit((units, mode), gap, room, glyphs);
+    let row = |short: bool| -> Vec<_> {
+        View::ALL
+            .iter()
+            .map(|v| (*v, tab(app, *v, glyphs, short)))
+            .collect()
+    };
+    let forms = if app.level == Detail::Plain {
+        vec![row(false), row(true)]
+    } else {
+        vec![row(false)]
+    };
+    // Plain keeps the mode unit while a shorter badge can make room.
+    let with_mode = app.level == Detail::Plain;
+    let mode = vec![crate::kb_bars::mode_unit(false)];
+    for keep in [with_mode, false].into_iter().filter(|_| !narrow) {
+        for all in &forms {
+            for gap in [4, 3, 2] {
+                let units: Vec<_> = all.iter().map(|(_, (u, _))| u.clone()).collect();
+                let right: &[Unit] = if keep { &mode } else { &[] };
+                if total(&units, right, gap) <= room {
+                    return fit((units, mode.clone()), gap, room, glyphs);
+                }
             }
         }
     }
-    let index = View::ALL
-        .iter()
-        .position(|v| *v == app.view)
-        .map_or(1, |i| i + 1);
-    let left = all
-        .into_iter()
-        .filter(|(view, (_, marked))| *view == app.view || *marked)
-        .map(|(view, (mut unit, _))| {
-            unit.drop = u8::from(view != app.view);
-            unit
-        })
-        .collect();
-    let right = vec![
-        crate::kb_bars::mode_unit(false),
-        Unit::one(format!("{index}/{}", View::ALL.len()), Role::Muted, 0),
-    ];
-    fit((left, right), 4, room, glyphs)
+    crate::plain_bars::narrow_tabs(app, &forms, room, glyphs)
 }
 
 fn hints(app: &App, narrow: bool) -> Vec<(&'static str, String)> {
@@ -157,6 +163,12 @@ fn hints(app: &App, narrow: bool) -> Vec<(&'static str, String)> {
         vec![
             ("j/k", "step".into()),
             ("l", "inspect".into()),
+            ("d", "detail".into()),
+        ]
+    } else if app.level == Detail::Plain {
+        vec![
+            ("j/k", "scroll".into()),
+            ("Tab", "view".into()),
             ("d", "detail".into()),
         ]
     } else {
@@ -189,6 +201,11 @@ pub fn footer(app: &App, width: u16, narrow: bool) -> Vec<Segment> {
     };
     let left = if let Some(notice) = &app.notice {
         vec![Unit::one(notice.clone(), Role::Notice, 0)]
+    } else if app.level == Detail::Plain {
+        let mut left = vec![Unit::new(vec![chip(app.look, "read-only", Chip::Plain)], 0)];
+        let (kb, index) = (app.runs.trailer_text("kb"), app.runs.trailer_text("index"));
+        crate::plain_bars::footer(kb, index, &mut left);
+        left
     } else {
         let index = at("index");
         let tone = if index == "fresh" {

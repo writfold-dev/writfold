@@ -58,6 +58,9 @@ pub struct App {
     pub focus: Focus,
     pub scroll: u16,
     pub help: bool,
+    /// The command rows (`c`) replace the frame's bottom rows.
+    pub commands: bool,
+    pub commands_scroll: u16,
     pub expand_all: bool,
     pub map: bool,
     pub node: Option<String>,
@@ -96,6 +99,8 @@ impl App {
             focus: Focus::Runs,
             scroll: 0,
             help: false,
+            commands: false,
+            commands_scroll: 0,
             expand_all: false,
             map: true,
             node: None,

@@ -45,6 +45,7 @@ fn entry(walked: &Walked<'_>, depth: usize) -> Entry {
     };
     entry.word = edge("rel");
     entry.origin = edge("origin");
+    entry.from = edge("from") == walked.id;
     entry.depth = depth;
     entry
 }

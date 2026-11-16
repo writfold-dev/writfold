@@ -132,6 +132,11 @@ impl Default for KbState {
 }
 
 impl KbState {
+    /// The cached inspector answers for one record.
+    pub fn record(&self, id: &str) -> Option<&Inspected> {
+        self.records.get(id)
+    }
+
     /// Drop every cached answer; selection, view and focus stay.
     pub(crate) fn clear(&mut self) {
         self.projects = None;

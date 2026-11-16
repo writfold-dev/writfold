@@ -40,29 +40,34 @@ fn select(app: &mut App, id: &str) {
 }
 
 #[test]
-fn inspector_calm_and_detail() -> TestResult {
+fn inspector_plain_and_exact() -> TestResult {
     let w = atlas("inspector")?;
     let mut app = kb_app(&w);
     select(&mut app, ACCEPTED);
-    let calm_buffer = render(&mut app, 160, 48)?;
-    let calm = inspector(&calm_buffer, 160, 48)?;
+    let plain_buffer = render(&mut app, 160, 48)?;
+    let plain = inspector(&plain_buffer, 160, 48)?;
     let position = regex::Regex::new(r"\.(md|json):\d+$")?;
-    let sources: Vec<_> = calm.iter().filter(|l| position.is_match(l)).collect();
-    assert_eq!(sources.len(), 1, "{calm:#?}");
+    assert!(!plain.iter().any(|l| position.is_match(l)), "{plain:#?}");
+    for line in [
+        "Sources · 1 of 2 has moved",
+        "  ! src/batch.rs:2-4 in demo-service",
+        "    moved to 4-6",
+        "decision · decided by ops-review on 2026-03-09",
+    ] {
+        assert!(plain.iter().any(|l| l == line), "{line}: {plain:#?}");
+    }
     assert!(
-        sources[0].ends_with("proposal.md:5"),
-        "the record's own source last"
-    );
-    assert!(calm.iter().any(|l| l == "cites 2  ● !"), "{calm:#?}");
-    assert!(
-        !calm.iter().any(|l| l.contains("ledger.rs:3-5")),
-        "only flagged cites: {calm:#?}"
-    );
-    assert!(
-        calm.iter().any(|l| l.contains("batch.rs:2-4 [moved]")),
-        "{calm:#?}"
+        !plain.iter().any(|l| l.contains("ledger.rs:3-5")),
+        "only moved sources: {plain:#?}"
     );
     app.key(Key::Char('d'));
+    let exact = inspector(&render(&mut app, 160, 48)?, 160, 48)?;
+    let sources: Vec<_> = exact.iter().filter(|l| position.is_match(l)).collect();
+    assert!(
+        !sources.is_empty(),
+        "positions at the exact level: {exact:#?}"
+    );
+    assert!(exact.iter().any(|l| l == "cites 2  ● !"), "{exact:#?}");
     let full = inspector(&render(&mut app, 160, 120)?, 160, 120)?.join("\n");
     for needle in [
         "src/ledger.rs:3-5",
@@ -75,7 +80,7 @@ fn inspector_calm_and_detail() -> TestResult {
         assert!(full.contains(needle), "{needle}: {full}");
     }
     app.key(Key::Char('d'));
-    assert_eq!(render(&mut app, 160, 48)?, calm_buffer);
+    assert_eq!(render(&mut app, 160, 48)?, plain_buffer);
     Ok(())
 }
 
@@ -86,7 +91,7 @@ fn draft_why_says_unknown() -> TestResult {
     select(&mut app, "proposal/decision/2026-04-01-shard-ledger");
     let text = inspector(&render(&mut app, 160, 48)?, 160, 48)?.join("\n");
     assert!(
-        text.contains("answer unknown: no-accepted-decision"),
+        text.contains("answer unknown · no-accepted-decision"),
         "{text}"
     );
     assert!(

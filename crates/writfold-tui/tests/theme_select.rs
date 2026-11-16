@@ -138,10 +138,10 @@ fn degraded_theme_key_keeps_theme_and_explains_truecolor_requirement() -> TestRe
         // The effective colour depth is stated in the help overlay.
         assert!(app.key(Key::Char('?')));
         let buffer = render(&mut app, 200, 40)?;
+        let text = rows(&buffer).join("\n");
         assert!(
-            rows(&buffer)
-                .join("\n")
-                .contains(&format!("colour {name} (themes need truecolor)"))
+            text.contains(&format!("colour {name} (themes need truecolor)")),
+            "{text}"
         );
         assert!(app.key(Key::Esc));
         assert!(app.key(Key::Char('T')));
@@ -158,7 +158,7 @@ fn degraded_theme_key_keeps_theme_and_explains_truecolor_requirement() -> TestRe
                 .join("\n")
                 .contains("themes need 24-bit colour: COLORTERM=truecolor or --color truecolor")
         );
-        app.key(Key::Char('c'));
+        app.key(Key::Char('z'));
     }
     Ok(())
 }

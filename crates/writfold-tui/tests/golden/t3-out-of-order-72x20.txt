@@ -1,20 +1,20 @@
- Batch ledger writes rollout  [open] [harbor]  subject kb       run 1/1
+ Batch ledger writes rollout  [open] [harbor]                run 1 of 1
  [1 progress]                                               m kb    1/8
 ╭ plan ────────────────────────────────────────────────────────────────╮
-│step 2 of 4    1 done  1 skipped  1 disorder                          │
+│step 2 of 4    1 done  1 skipped  1 out of order                      │
 │                                                                      │
-│ ┬ merge#1                                                            │
+│ ┬ merge                                                              │
 │ – prefix                                                             │
-│ ├─╮ side#1                                                           │
-│ │ ▶ child  no gates                                                  │
+│ ├─╮ side                                                             │
+│ │ ▶ child   its gates are met                                        │
 │ ├─╯                                                                  │
-│ ✓ finish   !out-of-order                                             │
+│ ✓ finish    done out of order                                        │
 │ ○ later                                                              │
 │ ┴                                                                    │
 │                                                                      │
 │                                                                      │
 │                                                                      │
-│last plan event  2026-11-10T23:58:50Z spliced merge#1/finish/side#1   │
-│▶ next step to pick up, as recorded                                   │
+│last recorded   2026-11-10 23:58 · side added                         │
+│▶ the next step to pick up, as recorded                               │
 ╰──────────────────────────────────────────────────────────────────────╯
- [read-only]  kb XXXXXXXXXXXX    l inspect   d detail   ? help   q quit
+ [read-only]                     l inspect   d detail   ? help   q quit

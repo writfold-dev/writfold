@@ -50,8 +50,12 @@ fn wide_and_medium_buffer_goldens() -> TestResult {
         let a = layout::areas(width, height);
         title(&buffer, a.runs.ok_or("runs area")?, "runs");
         title(&buffer, a.main, "progress");
-        assert!(rows(&buffer)[0].contains(RUN));
-        assert!(rows(&buffer)[usize::from(height - 1)].contains(" kb "));
+        assert!(rows(&buffer)[0].contains("run 1 of 3"));
+        let footer = &rows(&buffer)[usize::from(height - 1)];
+        assert!(
+            footer.contains("KB has ") && !footer.contains("asked"),
+            "{footer}"
+        );
     }
     Ok(())
 }
@@ -87,13 +91,13 @@ fn all_sizes_render_their_real_panes() -> TestResult {
                 assert_eq!(a.runs.ok_or("runs")?, Rect::new(0, 2, 30, height - 3));
                 assert_eq!(a.main, Rect::new(30, 2, width - 30, height - 3));
                 // The summary row is gone; its non-zero counts are tab badges.
-                for label in ["2 gates !2 ○2", "4 inbox 3", "5 guards deny 1"] {
+                for label in ["2 gates 4", "4 inbox 3", "5 guards 1"] {
                     assert!(screen[1].contains(label), "{label}: {}", screen[1]);
                 }
             }
             Class::Narrow => {
                 assert!(a.runs.is_none());
-                assert!(screen[0].contains("run 1/3"));
+                assert!(screen[0].contains("run 1 of 3"));
                 title(&buffer, a.main, "progress");
             }
             Class::TooSmall => assert!(symbols(&buffer).contains("needs 60x12")),

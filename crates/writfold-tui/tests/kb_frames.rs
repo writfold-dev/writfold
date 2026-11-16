@@ -43,10 +43,10 @@ fn the_impact_of_harbor_db_reads_as_a_tree() -> TestResult {
     app.kb_show(KbView::Impact);
     let text = symbols(&render(&mut app, 136, 38)?);
     for needle in [
-        "in  what cites or links to harbor-db",
-        "┬ harbor-db",
+        "what points at Harbor ledger store",
+        "┬ Harbor ledger store",
         "│ ○ Cap replay batches at 500 rows",
-        "14 reached   not followed: 1 disputed, 6 inferred",
+        "14 records reached · not followed: 1 disputed link,",
     ] {
         assert!(text.contains(needle), "{needle}: {text}");
     }

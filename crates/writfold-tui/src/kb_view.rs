@@ -41,6 +41,7 @@ pub(crate) fn scope_name(app: &App) -> String {
 
 fn title(app: &App, count: usize) -> String {
     match app.kb.view {
+        KbView::Status if app.level == Detail::Plain => "status".into(),
         KbView::Status => format!("status {}", scope_name(app)),
         KbView::Impact => "impact".into(),
         view => format!("{} ({count})", view.name()),
@@ -127,6 +128,10 @@ fn list(frame: &mut Frame<'_>, app: &mut App, area: Rect) {
     frame.render_widget(border, area);
     let reply = app.kb_list_reply();
     let refused = reply.and_then(|r| r.error.as_ref()).is_some();
+    if app.level == Detail::Plain && app.kb.view == KbView::Status && !refused {
+        plain_status(frame, app, inner);
+        return;
+    }
     if app.kb.view == KbView::Status || refused || count == 0 {
         let mut body = match reply {
             Some(r) if refused || app.kb.view == KbView::Status => lines::reply(r),
@@ -140,26 +145,23 @@ fn list(frame: &mut Frame<'_>, app: &mut App, area: Rect) {
         crate::wrap::draw(frame, &body, inner, app.look, app.kb.scroll);
         return;
     }
-    let (top, bottom) = around(app);
-    let glyphs = map_view::glyphs(app);
-    let wrap = |rows: Vec<lines::Line>| -> Vec<lines::Line> {
-        rows.into_iter()
-            .flat_map(|l| {
-                kb_rail::wrap_words(&l.text, usize::from(inner.width), glyphs)
-                    .into_iter()
-                    .map(move |text| lines::line(text, l.tone))
-            })
-            .collect()
+    let plain = app.level == Detail::Plain;
+    let shown = if plain {
+        crate::kb_plain::entries(app, entries.clone())
+    } else {
+        entries.clone()
     };
-    let (top, bottom) = (wrap(top), wrap(bottom));
+    let (top, bottom) = captions(app, &entries, inner.width);
+    let glyphs = map_view::glyphs(app);
     let show = Show {
-        glyphs: map_view::glyphs(app),
+        glyphs,
         look: app.look,
         full: app.level == Detail::Exact,
         width: inner.width,
         stale: app.kb.stale.as_ref(),
+        marks: !(plain && app.kb.view == KbView::Stale),
     };
-    let rail = kb_rail::build(&entries, show);
+    let rail = kb_rail::build(&shown, show);
     let selected = app.kb_entry().map(|e| e.key);
     let at = entries
         .iter()
@@ -191,6 +193,45 @@ fn list(frame: &mut Frame<'_>, app: &mut App, area: Rect) {
         let row = Rect::new(inner.x, bottom_y + n as u16, inner.width, 1);
         put(frame, dim(line), row);
     }
+}
+
+/// The status view in plain words, scrolled.
+fn plain_status(frame: &mut Frame<'_>, app: &mut App, inner: Rect) {
+    let Some(reply) = app.kb_list_reply() else {
+        return;
+    };
+    let told = crate::kb_plain::status(app, reply, map_view::glyphs(app));
+    let rows = crate::say_draw::told(&told, usize::from(inner.width), app.look);
+    let last = rows.len().saturating_sub(1);
+    app.kb.scroll = app.kb.scroll.min(u16::try_from(last).unwrap_or(u16::MAX));
+    frame.render_widget(Paragraph::new(rows).scroll((app.kb.scroll, 0)), inner);
+}
+
+type Lines = Vec<lines::Line>;
+
+/// The lines above and below the list, in plain words or the verbs',
+/// broken at spaces to the pane's width.
+fn captions(app: &App, entries: &[crate::kb_entry::Entry], width: u16) -> (Lines, Lines) {
+    let (top, bottom) = if app.level == Detail::Exact {
+        around(app)
+    } else {
+        let legend = crate::kb_plain::legend(app, entries);
+        let (top, bottom) = crate::kb_plain::around(app, app.kb_list_reply(), &legend);
+        let top = top.into_iter().map(|t| lines::line(t, Tone::Plain));
+        let bottom = bottom.into_iter().map(|(t, tone)| lines::line(t, tone));
+        (top.collect(), bottom.collect())
+    };
+    let glyphs = map_view::glyphs(app);
+    let wrap = |rows: Lines| -> Lines {
+        rows.into_iter()
+            .flat_map(|l| {
+                kb_rail::wrap_words(&l.text, usize::from(width), glyphs)
+                    .into_iter()
+                    .map(move |text| lines::line(text, l.tone))
+            })
+            .collect()
+    };
+    (wrap(top), wrap(bottom))
 }
 
 fn put(frame: &mut Frame<'_>, line: Line<'static>, area: Rect) {

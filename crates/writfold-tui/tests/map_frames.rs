@@ -4,7 +4,7 @@ use support::map;
 use support::projection::{golden, normalize, render, rows, symbols};
 use support::{RUN, TestResult};
 use writfold_tui::app::Key;
-use writfold_tui::app::{App, Focus, View};
+use writfold_tui::app::{App, Detail, Focus, View};
 use writfold_tui::source::field;
 use writfold_tui::{graph, lines};
 
@@ -57,7 +57,7 @@ fn selected_checklist_inspector_buffer_golden() -> TestResult {
     support::buffers::stable(&mut buffer)?;
     let text = normalize(&w, &symbols(&buffer))?;
     honest(&text)?;
-    assert!(text.contains("required covered"));
+    assert!(text.contains("required items covered"));
     golden("t3-checklist-inspector-160x40.txt", &text)?;
     Ok(())
 }
@@ -68,6 +68,8 @@ fn checklist_segments_do_not_scale_with_inspector_width() -> TestResult {
     let mut app = App::new(w.source(), Some(RUN));
     app.node = Some(checklist(&app)?);
     app.focus = Focus::Inspector;
+    // The segment strip is the exact level's; plain names each open item.
+    app.level = Detail::Exact;
     for (width, height) in [(160, 40), (100, 30)] {
         app.inspect_scroll = 0;
         let mut found = false;
@@ -103,6 +105,14 @@ fn no_subject_keeps_notes_without_claiming_completion() -> TestResult {
     let w = map::nested("no-subject-frame")?;
     let mut app = App::new(map::no_subject(&w), Some(RUN));
     app.focus = Focus::Detail;
+    let plain = symbols(&render(&mut app, 160, 40)?);
+    assert!(
+        plain.contains("gates not judged (no repository)"),
+        "{plain}"
+    );
+    assert!(plain.contains("no repository: gates not judged"), "{plain}");
+    // The notes are quoted whole at the exact level.
+    app.level = Detail::Exact;
     let answer = app.detail().ok_or("plan")?;
     assert!(
         !answer.notes.is_empty(),
@@ -137,6 +147,8 @@ fn recorded_marker_and_later_chips_match_verb_rows_in_actual_map() -> TestResult
     let w = support::plan::world("map-evidence")?;
     let mut app = App::new(w.source(), Some(RUN));
     app.focus = Focus::Detail;
+    // Chips are the exact level's; the plain map has none.
+    app.level = Detail::Exact;
     let buffer = render(&mut app, 160, 40)?;
     let area = writfold_tui::layout::focused(160, 40, true, true).main;
     let rendered: Vec<String> = rows(&buffer)
@@ -150,11 +162,11 @@ fn recorded_marker_and_later_chips_match_verb_rows_in_actual_map() -> TestResult
         .collect();
     let nodes = graph::nodes(app.detail().ok_or("plan")?);
     for node in nodes {
-        // Calm rows show the id after its group name: its last component.
+        // Rows show the id after its group name: its last component.
         let tail = node.id.rsplit('/').next().unwrap_or(node.id);
         let row = rendered
             .iter()
-            .find(|row| row.contains(&format!(" {tail} ")))
+            .find(|row| row.contains(&format!(" {tail} ")) || row.contains(&format!("/{tail} ")))
             .ok_or("map row")?;
         assert_eq!(
             row.contains('▶'),

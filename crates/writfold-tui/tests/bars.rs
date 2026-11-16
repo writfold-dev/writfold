@@ -6,7 +6,7 @@ use ratatui::style::Color;
 use std::collections::BTreeSet;
 use support::projection::{render, rows};
 use support::{RUN, TestResult};
-use writfold_tui::app::{App, Focus};
+use writfold_tui::app::{App, Detail, Focus};
 use writfold_tui::bars::{self, Segment};
 use writfold_tui::layout::{self, Class};
 use writfold_tui::style::{Depth, Look};
@@ -22,7 +22,8 @@ fn bars_never_cut_a_token() -> TestResult {
     let w = support::map::nested("bars-tokens")?;
     let mut app = App::new(w.source(), Some(RUN));
     app.focus = Focus::Detail;
-    for width in 60..=200 {
+    for (width, exact) in (60..=200).flat_map(|w| [(w, false), (w, true)]) {
+        app.level = if exact { Detail::Exact } else { Detail::Plain };
         let buffer = render(&mut app, width, 40)?;
         let narrow = layout::class(width, 40) == Class::Narrow;
         let screen = rows(&buffer);
@@ -33,7 +34,11 @@ fn bars_never_cut_a_token() -> TestResult {
                 assert!(whole.contains(word), "{width}: {word:?} cut in {row:?}");
             }
         }
-        let right = if narrow { "run 1/3" } else { RUN };
+        let right = match (exact, narrow) {
+            (false, _) => "run 1 of 3",
+            (true, true) => "run 1/3",
+            (true, false) => RUN,
+        };
         assert!(
             screen[0].trim_end().ends_with(right),
             "{width}: {}",
@@ -74,7 +79,7 @@ fn chips_degrade_to_brackets() -> TestResult {
             .join("\n");
         for chip in [
             "[open]",
-            "[current]",
+            "[current run]",
             "[harbor]",
             "[1 progress]",
             "[read-only]",

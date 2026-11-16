@@ -195,5 +195,5 @@ fn help_names_the_json_verbs_and_poll_intervals() {
         assert!(help.contains(&format!("{}/{} {}", view.digit(), view.key(), view.name())));
     }
     assert!(help.contains("2 s") && help.contains("10 s"));
-    assert!(help.contains("c is unbound"));
+    assert!(help.contains("c: commands to copy") && help.contains("watch runs none"));
 }

@@ -1,0 +1,38 @@
+ Add --plan to kb runs  [open] [current run] [harbor]                                                                        run 1 of 3
+ [1 progress]  2 gates 4 not met   3 timeline   4 inbox 3 pending   5 guards 1 would block   6 stale   7 brief   8 resume          m kb
+╭ runs (3) ──────────╮╭ plan ─────────────────────────────────────────────────╮╭ step 7 of 11 ─────────────────────────────────────────╮
+│> Add --plan to kb …││step 7 of 11    5 done  1 skipped  1 out of date       ││check   next up                                        │
+│  harbor  step 7/11 ││                                                       ││step 7 of 11 · in findings                             │
+│  Review the lanter…││ ┬ change                                              ││                                                       │
+│  lantern           ││ ✓ research                                            ││Needs 2 gates before it can be marked done.            │
+│  Retire the legacy…││ ! implement     done; lint is now out of date         ││                                                       │
+│  closed  harbor  c…││ – benchmarks                                          ││review-list   out of date                              │
+│                    ││ ├─╮ review                                            ││  checklist · 2 of 4 required items covered            │
+│                    ││ │ ├─╮ notes                                           ││  ! tests   out of date · the evidence it cites has    │
+│                    ││ │ │ ✓ read                                            ││            changed                                    │
+│                    ││ │ ├─╯                                                 ││  □ docs    not covered · The guide names every new    │
+│                    ││ │ ✓ read-diff                                         ││            flag                                       │
+│                    ││ │ ├─╮ findings                                        ││  □ style   optional · not covered · Names follow the  │
+│                    ││ │ │ ✓ prepare                                         ││            module                                     │
+│                    ││ │ │ ▶ check     needs review-list and signoff         ││                                                       │
+│                    ││ │ ├─╯                                                 ││signoff   nothing recorded yet                         │
+│                    ││ │ ○ findings                                          ││  decided by a person's statement; no command is run   │
+│                    ││ ├─╯                                                   ││                                                       │
+│                    ││ ○ review                                              ││Read first   instructions for signoff                  │
+│                    ││ ○ deliver                                             ││Suggested    give evidence for tests in review-list    │
+│                    ││ ○ reflect                                             ││                                                       │
+│                    ││ ┴                                                     ││                                                       │
+│                    ││                                                       ││                                                       │
+│                    ││                                                       ││                                                       │
+│                    ││                                                       ││                                                       │
+│                    ││                                                       ││                                                       │
+│                    ││                                                       ││                                                       │
+│                    ││                                                       ││                                                       │
+│                    ││                                                       ││                                                       │
+│                    ││                                                       ││                                                       │
+ commands for step check · copy into a shell; watch never runs them · UPPERCASE words are placeholders
+ # run   run-20261101T090000Z-a1b2c3
+ # step  change#1/review/review#1/findings/findings#1/check
+ # read  .writfold/gates/signoff.md
+ writfold kb gate cover review-list tests supported REF… --by WHO
+ any key closes

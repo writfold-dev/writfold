@@ -107,19 +107,26 @@ fn d_restores_every_default_omission() -> TestResult {
     Ok(())
 }
 
-/// Map rows that carry rail text: the verb text a row would show at `d`.
+/// Map rows that carry words after the step's name.
 fn texted(app: &App, buffer: &Buffer, width: u16, height: u16) -> TestResult<Vec<String>> {
     let (map, _) = areas(width, height)?;
     let map = panel(buffer, map);
     let mut out = Vec::new();
     for node in graph::nodes(app.answer(View::Progress).ok_or("plan")?) {
         let tail = node.id.rsplit('/').next().unwrap_or(node.id);
+        let key = format!(" {tail} ");
         let row = map
             .iter()
-            .find(|row| row.contains(&format!(" {tail} ")))
+            .filter(|row| !row.contains('╮') && !row.contains('┬'))
+            .find(|row| row.contains(&key))
             .ok_or("node row")?;
-        let start: String = node.rail_text.chars().take(8).collect();
-        if !start.is_empty() && row.contains(&start) {
+        let after = row.split_once(&key).map_or("", |(_, rest)| rest);
+        if after
+            .trim_end_matches('│')
+            .trim()
+            .chars()
+            .any(char::is_alphanumeric)
+        {
             out.push(node.id.to_owned());
         }
     }
@@ -127,22 +134,33 @@ fn texted(app: &App, buffer: &Buffer, width: u16, height: u16) -> TestResult<Vec
 }
 
 #[test]
-fn text_follows_current_and_cursor() -> TestResult {
+fn text_follows_current_flags_and_cursor() -> TestResult {
     let w = support::map::nested("calm-text")?;
     let mut app = App::new(w.source(), Some(RUN));
     app.focus = Focus::Detail;
     let buffer = render(&mut app, 160, 40)?;
-    let current = graph::nodes(app.answer(View::Progress).ok_or("plan")?)
+    let always: Vec<(String, bool)> = graph::nodes(app.answer(View::Progress).ok_or("plan")?)
         .iter()
-        .find(|n| field(n.row, "status") == "current")
-        .map(|n| n.id.to_owned())
-        .ok_or("current")?;
-    assert_eq!(texted(&app, &buffer, 160, 40)?, vec![current.clone()]);
+        .map(|n| {
+            let status = field(n.row, "status");
+            let flagged = status == "done" && n.flags.contains(&"stale");
+            (n.id.to_owned(), status == "current" || flagged)
+        })
+        .collect();
+    let worded = |selected: Option<&str>| -> Vec<String> {
+        always
+            .iter()
+            .filter(|(id, words)| *words || Some(id.as_str()) == selected)
+            .map(|(id, _)| id.clone())
+            .collect()
+    };
+    let current = app.node.clone().ok_or("selection")?;
+    assert_eq!(texted(&app, &buffer, 160, 40)?, worded(Some(&current)));
     app.key(Key::Char('j'));
     let selected = app.node.clone().ok_or("selection")?;
     assert_ne!(selected, current);
     let buffer = render(&mut app, 160, 40)?;
-    assert_eq!(texted(&app, &buffer, 160, 40)?, vec![current, selected]);
+    assert_eq!(texted(&app, &buffer, 160, 40)?, worded(Some(&selected)));
     Ok(())
 }
 
@@ -201,24 +219,19 @@ fn tab_badges_equal_verb_counts() -> TestResult {
     let mut app = App::new(w.source(), Some(RUN));
     let buffer = render(&mut app, 160, 40)?;
     let tabs = &rows(&buffer)[1];
-    let gates = app.answer(View::Gates).ok_or("gates")?;
     let tab = |name: &str, next: &str| -> TestResult<String> {
         let start = tabs.find(name).ok_or("tab")?;
         let end = tabs.find(next).ok_or("next tab")?;
         Ok(tabs[start..end].trim().to_owned())
     };
-    let mut expected = String::from("2 gates");
-    for (name, mark) in [
-        ("stale", "!"),
-        ("failed", "×"),
-        ("open", "○"),
-        ("unknown", "?"),
-    ] {
-        if let Some(n) = gates.count(name).filter(|n| *n > 0) {
-            expected.push_str(&format!(" {mark}{n}"));
-        }
-    }
-    assert_eq!(tab("2 gates", "3 timeline")?, expected);
+    let gates = app.answer(View::Gates).ok_or("gates")?;
+    let count = |name: &str| gates.count(name).unwrap_or(0);
+    let not_met = count("gates") - count("satisfied") - count("attested") - count("waived");
+    assert!(not_met > 0, "fixture has unmet gates");
+    assert_eq!(
+        tab("2 gates", "3 timeline")?,
+        format!("2 gates {not_met} not met")
+    );
     let inbox = app.answer(View::Inbox).ok_or("inbox")?;
     let total = inbox
         .rows
@@ -226,22 +239,19 @@ fn tab_badges_equal_verb_counts() -> TestResult {
         .filter(|r| matches!(field(r, "kind"), "draft" | "proposal"))
         .count();
     let expected = if total > 0 {
-        format!("4 inbox {total}")
+        format!("4 inbox {total} pending")
     } else {
         "4 inbox".into()
     };
     assert_eq!(tab("4 inbox", "5 guards")?, expected);
     let guards = app.answer(View::Guards).ok_or("guards")?;
     let mut expected = String::from("5 guards");
-    for name in ["deny", "ask"] {
+    for (name, words) in [("deny", "would block"), ("ask", "would ask")] {
         if let Some(n) = guards.count(name).filter(|n| *n > 0) {
-            expected.push_str(&format!(" {name} {n}"));
+            expected.push_str(&format!(" {n} {words}"));
         }
     }
     assert_eq!(tab("5 guards", "6 stale")?, expected);
-    assert!(
-        !tabs.contains("ask 0") && !tabs.contains("deny 0"),
-        "{tabs}"
-    );
+    assert!(!tabs.contains(" 0 "), "{tabs}");
     Ok(())
 }

@@ -30,6 +30,8 @@ pub struct Entry {
     pub origin: String,
     /// The row's own text, quoted by the inspector of a `stale` row.
     pub text: String,
+    /// A tree entry is its edge's `from` end (the link points away from it).
+    pub from: bool,
 }
 
 impl Entry {

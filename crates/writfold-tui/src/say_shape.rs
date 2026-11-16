@@ -91,6 +91,14 @@ pub fn when(text: &str) -> Option<(String, &str)> {
     shaped(bytes, "dddd-dd-dd").then(|| (token.to_owned(), rest))
 }
 
+/// A field value that is a whole stamp, respelt; any other value whole.
+pub fn respelt(value: &str) -> String {
+    match when(value) {
+        Some((at, "")) => at,
+        _ => value.to_owned(),
+    }
+}
+
 /// A timeline `plan` row: after its stamp, `STATUS ID` (the row's own
 /// fields), then the remainder.
 pub fn event(row: &Value) -> Option<(String, &str)> {
