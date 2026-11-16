@@ -19,6 +19,7 @@ pub mod recheck;
 pub mod script;
 pub mod status;
 pub mod step;
+pub mod word;
 
 use crate::Request;
 use crate::emit::{Answer, Output, Row};

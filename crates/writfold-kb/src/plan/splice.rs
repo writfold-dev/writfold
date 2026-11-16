@@ -75,6 +75,10 @@ fn defined(ws: &Workspace, loaded: &Loaded, closure: &Closure) -> Result<()> {
     let (found, problems) = crate::gate::def::all(&ws.root, top);
     for t in closure.all() {
         for gate in t.steps.iter().flat_map(|s| &s.gates) {
+            if let Some(mode) = crate::deliver::step::mode_of(gate) {
+                crate::deliver::word::spliced(&ws.root, &t.name, mode)?;
+                continue;
+            }
             let file = format!("{}/{gate}.toml", crate::gate::def::DIR);
             if let Some((_, path, why)) = problems.iter().find(|(_, p, _)| *p == file) {
                 return Err(KbError::Refused(format!("gate {gate}: {path}: {why}")));
@@ -82,7 +86,7 @@ fn defined(ws: &Workspace, loaded: &Loaded, closure: &Closure) -> Result<()> {
             match found.iter().find(|d| &d.id == gate) {
                 Some(d) if d.on_candidate() => {
                     return Err(KbError::Refused(format!(
-                        "gate {gate} judges delivery candidates; a plan step owes repository and run-record gates"
+                        "gate {gate} judges delivery candidates; a plan step owes a delivery by its mode: deliver:<mode>"
                     )));
                 }
                 Some(_) => {}
