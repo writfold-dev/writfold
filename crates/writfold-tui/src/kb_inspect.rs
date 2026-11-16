@@ -74,7 +74,7 @@ pub(crate) fn content(
 
 /// The command hint, shortened to fit.
 fn hint(app: &App, width: usize) -> Line<'static> {
-    let detail = if app.level == Detail::Full {
+    let detail = if app.level == Detail::Exact {
         "less"
     } else {
         "sources and fresh cites"
@@ -84,7 +84,7 @@ fn hint(app: &App, width: usize) -> Line<'static> {
         &[
             (
                 "d",
-                if app.level == Detail::Full {
+                if app.level == Detail::Exact {
                     "less"
                 } else {
                     "more"
@@ -153,7 +153,7 @@ pub(crate) fn draw(frame: &mut Frame<'_>, app: &mut App, area: Rect) {
         look: app.look,
         glyphs: map_view::glyphs(app),
         width: usize::from(inner.width),
-        full: app.level == Detail::Full,
+        full: app.level == Detail::Exact,
     };
     let mut lines = content(app, &entry, record, &ink);
     let source = source_line(record, &entry, &ink);

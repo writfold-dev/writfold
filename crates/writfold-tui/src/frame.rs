@@ -127,7 +127,7 @@ fn runs(app: &App, out: &mut String) {
         return;
     }
     for (n, i) in app.order.iter().enumerate() {
-        for (k, item) in lines::run_item(&app.runs.rows[*i], crate::app::Detail::Full)
+        for (k, item) in lines::run_item(&app.runs.rows[*i], crate::app::Detail::Exact)
             .into_iter()
             .enumerate()
         {

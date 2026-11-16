@@ -18,7 +18,7 @@ pub(crate) fn draw(frame: &mut Frame<'_>, app: &App, area: Rect) {
     let border = block(title, app.kb.focus == Focus::Runs, app.look);
     let room = usize::from(area.width.saturating_sub(4));
     let glyphs = map_view::glyphs(app);
-    let full = app.level == Detail::Full;
+    let full = app.level == Detail::Exact;
     let mut items: Vec<ListItem<'static>> = Vec::new();
     for row in &rows {
         let heading = field(row, "text");

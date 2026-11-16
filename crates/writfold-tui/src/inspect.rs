@@ -171,7 +171,7 @@ fn labelled(out: &mut Vec<InspectLine>, node: &Node<'_>, labels: &[&str], look: 
 /// keeps what needs attention; `d` restores splice, parent, covered items
 /// and every receipt. The last line is the command hint.
 pub fn content(node: &Node<'_>, glyphs: Glyphs, look: Look, detail: Detail) -> Vec<InspectLine> {
-    let full = detail == Detail::Full;
+    let full = detail == Detail::Exact;
     let status = field(node.row, "status");
     let (mut out, first): (_, &[&str]) = if full {
         (

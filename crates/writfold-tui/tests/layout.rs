@@ -161,7 +161,7 @@ fn paging_the_narrow_run_list_keeps_selection_and_reveals_later_runs() -> TestRe
     let w = world("narrow-pages")?;
     let mut app = App::new(w.source(), Some(RUN));
     // Five-line detailed entries overflow the pane, so paging has work to do.
-    app.level = writfold_tui::app::Detail::Full;
+    app.level = writfold_tui::app::Detail::Exact;
     render(&mut app, 70, 12)?;
     app.key(Key::Char('0'));
     render(&mut app, 70, 12)?;

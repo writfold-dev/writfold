@@ -202,7 +202,7 @@ pub fn footer(app: &App, width: u16, narrow: bool) -> Vec<Segment> {
             Unit::one(format!("index {index}"), tone, 3),
             Unit::one(format!("asked {}", app.asked), Role::Muted, 4),
         ];
-        if app.level == Detail::Full {
+        if app.level == Detail::Exact {
             let subject = crate::poll::subject_text(&app.stamps.subject).replacen('=', " ", 1);
             left.push(Unit::one(subject, Role::Muted, 5));
         }

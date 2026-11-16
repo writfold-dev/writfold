@@ -109,7 +109,7 @@ fn item_line(item: &Value, glyphs: Glyphs, look: Look) -> InspectLine {
 
 /// The command hint, shortened to fit so no key is cut off.
 pub fn hint(detail: Detail, width: u16, look: Look) -> Line<'static> {
-    let forms: &[&[(&str, &str)]] = if detail == Detail::Full {
+    let forms: &[&[(&str, &str)]] = if detail == Detail::Exact {
         &[
             &[("d", "less"), ("g", "gates"), ("x", "text")],
             &[("d", "less"), ("g", ""), ("x", "")],

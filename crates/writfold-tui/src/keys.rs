@@ -81,8 +81,8 @@ impl App {
 
     pub(crate) fn toggle_detail(&mut self) {
         self.level = match self.level {
-            Detail::Calm => Detail::Full,
-            Detail::Full => Detail::Calm,
+            Detail::Plain => Detail::Exact,
+            Detail::Exact => Detail::Plain,
         };
         self.inspect_scroll = 0;
     }

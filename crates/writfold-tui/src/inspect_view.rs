@@ -21,7 +21,7 @@ pub(crate) fn draw(frame: &mut Frame<'_>, app: &mut App, area: Rect) {
     frame.render_widget(border, area);
     let mut lines = inspect::content(&nodes[index], map_view::glyphs(app), app.look, app.level);
     lines.pop();
-    if app.level == Detail::Full {
+    if app.level == Detail::Exact {
         lines.extend(recorded(app));
     }
     let hint = inspect::hint(app.level, inner.width, app.look);

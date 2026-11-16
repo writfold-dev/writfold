@@ -1,0 +1,30 @@
+ Add --plan to kb runs  [open] [current] [harbor]  subject kb           run-20261101T090000Z-a1b2c3
+ [1 progress] 2 gates !2 ○2  3 timeline  4 inbox 3  5 guards deny 1  6 stale  7 brief  8 resume
+╭ runs (3) ──────────╮╭ plan ───────────────────────────────╮╭ step 7/11 ──────────────────────────╮
+│> Add --plan to kb …││step 7 of 11    5 done  1 skipped    ││check [current]                      │
+│  harbor  step 7/11 ││1 stale                              ││change#1/review/review#1/findings/fin│
+│  Review the lanter…││                                     ││dings#1/check                        │
+│  lantern           ││ ┬ change#1                          ││                                     │
+│  Retire the legacy…││ ✓ research    ●                     ││owes: review-list [stale], signoff   │
+│  closed  harbor  c…││ ! implement   ●!                    ││[open]                               │
+│                    ││ – benchmarks                        ││                                     │
+│                    ││ ├─╮ review#1                        ││gate review-list [stale] checklist   │
+│                    ││ │ ├─╮ notes#1                       ││2/4 required covered                 │
+│                    ││ │ │ ✓ read    ●                     ││  ■ ! □ ◆ (+1 optional)              │
+│                    ││ │ ├─╯                               ││  ! tests [stale] 1 reference by     │
+│                    ││ │ ✓ read-diff ●                     ││  agent; cited evidence moved:       │
+│                    ││ │ ├─╮ findings#1                    ││  gate:lint was satisfied, now stale │
+│                    ││ │ │ ✓ prepare ●                     ││  □ docs [open] The guide names every│
+│                    ││ │ │ ▶ check   !○ owes: review-list… ││  new flag                           │
+│                    ││ │ ├─╯                               ││  □ style [open] (optional) Names    │
+│                    ││ │ ○ findings  ··                    ││  follow the module                  │
+│                    ││ ├─╯                                 ││gate signoff [open] attested         │
+│                    ││ ○ review      ··                    ││                                     │
+│                    ││ ○ deliver     ·                     ││read: instructions for signoff       │
+│                    ││ ○ reflect                           ││next: writfold kb gate cover         │
+│                    ││ ┴                                   ││review-list tests supported REF… --by│
+│                    ││                                     ││WHO                                  │
+│                    ││last plan event  2026-11-10T23:59:50…││                                     │
+│                    ││▶ next step to pick up, as recorded  ││d more   g gates   x text            │
+╰────────────────────╯╰─────────────────────────────────────╯╰─────────────────────────────────────╯
+ [read-only]  kb XXXXXXXXXXXX+dirty:19            j/k step   l inspect   d detail   ? help   q quit

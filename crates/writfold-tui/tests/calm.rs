@@ -159,7 +159,7 @@ fn nothing_is_lost() -> TestResult {
     }
     for node in graph::nodes(app.answer(View::Progress).ok_or("plan")?) {
         let mut shown = elsewhere.clone();
-        let detailed = inspect::content(&node, Glyphs::Unicode, Look::default(), Detail::Full);
+        let detailed = inspect::content(&node, Glyphs::Unicode, Look::default(), Detail::Exact);
         shown.extend(detailed.iter().map(|l| l.text.to_string()));
         let shown = shown.join("\n");
         for value in std::iter::once(node.row).chain(lines::more(node.row)) {
@@ -181,7 +181,7 @@ fn calm_run_line_is_a_prefix_of_the_verb_plan_text() -> TestResult {
     let app = App::new(w.source(), Some(RUN));
     let mut planned = 0;
     for row in &app.runs.rows {
-        let calm = lines::run_item(row, Detail::Calm);
+        let calm = lines::run_item(row, Detail::Plain);
         assert_eq!(calm[0].text, field(row, "text"));
         let Some(plan) = lines::more(row).find(|m| field(m, "label") == "plan") else {
             continue;

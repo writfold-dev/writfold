@@ -48,7 +48,7 @@ pub(crate) fn caption(glyphs: Glyphs) -> &'static str {
 fn below(app: &App, width: u16, glyphs: Glyphs) -> Vec<Row<'static>> {
     let dim = style::style(app.look, Tone::Dim);
     let mut records = records(app);
-    let mut out: Vec<Row<'static>> = if app.level == Detail::Full {
+    let mut out: Vec<Row<'static>> = if app.level == Detail::Exact {
         records
             .drain(..)
             .map(|l| Row::styled(l.text, dim))
@@ -88,7 +88,7 @@ pub(crate) fn draw(frame: &mut Frame<'_>, app: &mut App, area: Rect) {
     let show = rail::Show {
         glyphs,
         look: app.look,
-        full: app.level == Detail::Full,
+        full: app.level == Detail::Exact,
         selected: Some(selected),
     };
     let rail = rail::build(&nodes, inner.width, show);
@@ -161,7 +161,7 @@ fn draw_rail(
 }
 
 fn prelude(answer: &crate::source::Reply, app: &App, width: u16) -> Vec<Row<'static>> {
-    let mut lines = progress::summary(answer, app.level == Detail::Full, app.look, width);
+    let mut lines = progress::summary(answer, app.level == Detail::Exact, app.look, width);
     if answer.count("current").is_none() {
         lines.extend(
             answer

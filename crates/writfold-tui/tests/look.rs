@@ -79,7 +79,7 @@ fn selected_run_uses_text_on_selection_for_every_entry_line() -> TestResult {
         theme: ThemeId::Hone,
         depth: Depth::Truecolor,
     };
-    app.level = writfold_tui::app::Detail::Full;
+    app.level = writfold_tui::app::Detail::Exact;
     let buffer = render(&mut app, 160, 40)?;
     let area = writfold_tui::layout::areas(160, 40)
         .runs

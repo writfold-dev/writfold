@@ -25,11 +25,12 @@ pub enum Focus {
     Inspector,
 }
 
-/// How much text the frame shows; never written, a fresh start is calm.
+/// Plain words (the default) or the verbs' exact wording (`d`); never
+/// written, so a fresh start is plain.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Detail {
-    Calm,
-    Full,
+    Plain,
+    Exact,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -108,7 +109,7 @@ impl App {
             runs_view: false,
             anchor: true,
             look: Look::default(),
-            level: Detail::Calm,
+            level: Detail::Plain,
             mode: crate::kb_state::Mode::Runs,
             kb: crate::kb_state::KbState::default(),
             width: 0,

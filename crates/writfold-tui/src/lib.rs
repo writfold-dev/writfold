@@ -45,6 +45,7 @@ pub mod progress;
 pub mod rail;
 mod rail_text;
 mod run_item;
+pub mod say;
 pub mod side;
 pub mod source;
 mod state;

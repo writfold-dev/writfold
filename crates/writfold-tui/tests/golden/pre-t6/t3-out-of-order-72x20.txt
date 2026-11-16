@@ -1,0 +1,20 @@
+ Batch ledger writes rollout  [open] [harbor]  subject kb       run 1/1
+ [1 progress]                                               m kb    1/8
+╭ plan ────────────────────────────────────────────────────────────────╮
+│step 2 of 4    1 done  1 skipped  1 disorder                          │
+│                                                                      │
+│ ┬ merge#1                                                            │
+│ – prefix                                                             │
+│ ├─╮ side#1                                                           │
+│ │ ▶ child  no gates                                                  │
+│ ├─╯                                                                  │
+│ ✓ finish   !out-of-order                                             │
+│ ○ later                                                              │
+│ ┴                                                                    │
+│                                                                      │
+│                                                                      │
+│                                                                      │
+│last plan event  2026-11-10T23:58:50Z spliced merge#1/finish/side#1   │
+│▶ next step to pick up, as recorded                                   │
+╰──────────────────────────────────────────────────────────────────────╯
+ [read-only]  kb XXXXXXXXXXXX    l inspect   d detail   ? help   q quit

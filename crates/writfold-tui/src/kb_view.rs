@@ -155,7 +155,7 @@ fn list(frame: &mut Frame<'_>, app: &mut App, area: Rect) {
     let show = Show {
         glyphs: map_view::glyphs(app),
         look: app.look,
-        full: app.level == Detail::Full,
+        full: app.level == Detail::Exact,
         width: inner.width,
         stale: app.kb.stale.as_ref(),
     };

@@ -48,7 +48,7 @@ fn fixture() -> Value {
 #[test]
 fn preserves_continuations_and_separate_evidence() {
     let row = fixture();
-    let output = content(&node(&row), Glyphs::Unicode, Look::default(), Detail::Full);
+    let output = content(&node(&row), Glyphs::Unicode, Look::default(), Detail::Exact);
     let text = texts(&output);
     assert_eq!(text[0], "plan#1/check [done] !stale");
     for value in lines::more(&row) {
@@ -74,7 +74,7 @@ fn preserves_continuations_and_separate_evidence() {
 fn segments_keep_order_and_source_count_without_judging() {
     let row = fixture();
     for (glyphs, expected) in [(Glyphs::Unicode, "■ ◆ ! □ "), (Glyphs::Ascii, "x * ! . ")] {
-        let output = content(&node(&row), glyphs, Look::default(), Detail::Full);
+        let output = content(&node(&row), glyphs, Look::default(), Detail::Exact);
         assert!(
             texts(&output).contains(&format!("9/12 required covered  {expected}(+1 optional)"))
         );
@@ -105,7 +105,7 @@ fn no_gates_and_unjudged_text_do_not_invent_standing() {
             &node(&row),
             Glyphs::Ascii,
             Look::default(),
-            Detail::Full,
+            Detail::Exact,
         ));
         assert_eq!(output[0], "p#1/a [current]");
         assert!(output.contains(&text.to_owned()));
@@ -126,7 +126,7 @@ fn skipped_event_path_follows_verbatim_reason() {
         &node(&row),
         Glyphs::Unicode,
         Look::default(),
-        Detail::Full,
+        Detail::Exact,
     ));
     assert!(output.windows(2).any(|pair| pair
         == [
@@ -138,7 +138,7 @@ fn skipped_event_path_follows_verbatim_reason() {
 #[test]
 fn calm_keeps_what_needs_attention_and_drops_receipts_and_covered_items() {
     let row = fixture();
-    let output = content(&node(&row), Glyphs::Unicode, Look::default(), Detail::Calm);
+    let output = content(&node(&row), Glyphs::Unicode, Look::default(), Detail::Plain);
     let text = texts(&output);
     assert_eq!(text[0], "plan#1/check [done] !stale");
     assert_eq!(text[1], "plan#1/check");
