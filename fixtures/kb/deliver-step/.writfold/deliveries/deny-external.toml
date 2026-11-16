@@ -1,0 +1,6 @@
+schema = "writfold-deny/1"
+audience = "external"
+rules = [
+  "internal-host: \\.corp\\.example\\.com",
+  "ticket: \\bOPS-[0-9]+",
+]

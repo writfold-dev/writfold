@@ -1,6 +1,6 @@
 # Is what I am reading still true?
 
-> **Status:** built in v0.3.0-dev.1; `kb check` built in v0.4.0-dev.1, with its plan line; kind declarations built in v0.5.0-dev.1; renames with edits followed in v0.5.0-dev.2; `kb repos` and partial-clone detection built in v0.5.0-dev.3. `find --eval` and the guard conformance cases built in v0.5.0-dev.10.
+> **Status:** built in v0.3.0-dev.1; `kb check` built in v0.4.0-dev.1, with its plan line; kind declarations built in v0.5.0-dev.1; renames with edits followed in v0.5.0-dev.2; `kb repos` and partial-clone detection built in v0.5.0-dev.3. `find --eval`, the guard conformance cases and the re-check of a draft's cited evidence on every read built in v0.5.0-dev.10.
 
 Four things can drift: a cited source, the index, a gate's evidence, and a delivery draft. Each has its own command, and `kb check` runs the first three together. All of them only read; none fetches from a network.
 
@@ -137,7 +137,7 @@ More in [gates](gates.md).
 
 ## Delivery drafts: `deliver check` and `deliver status`
 
-A draft's checks are tied to its bytes. Editing `candidate.md` makes its receipts stale, and `deliver status` shows the draft as blocked until `deliver check` runs again. More in [delivery-modes](delivery-modes.md).
+A draft's checks are tied to its bytes. Editing `candidate.md` makes its receipts stale, and `deliver status` shows the draft as blocked until `deliver check` runs again. From v0.5.0-dev.10 a passed `claims.cited-fresh` check is also re-checked on every read: once a cited record or code span moves, the draft reads blocked until the evidence returns or the check runs again. More in [delivery-modes](delivery-modes.md#cited-evidence-that-moved).
 
 ## Lookups: `find --eval`
 

@@ -15,6 +15,7 @@
 //! spliced; required start and end templates are spliced into every new
 //! plan ([`required`]); a spliced template whose file has since changed
 //! is shown `!template-moved` ([`moved`]).
+pub(crate) mod delivery;
 mod detail;
 pub mod disorder;
 pub mod event;
@@ -166,6 +167,7 @@ pub fn owed(session: &Session<'_>, rec: &Rec) -> Owed {
     let records = records::observe(session, rec).ok();
     Owed {
         gates: graph.planned().then(|| graph.gates()),
+        deliveries: graph.deliveries(),
         records: records.map(|r| {
             let (begin, end) = window(&graph, &r);
             records::digest(begin.as_ref(), &end, &r)

@@ -127,15 +127,29 @@ impl Graph {
             + 1
     }
 
-    /// Every gate any step names, in first-named order.
+    /// Every gate any step names, in first-named order; a delivery
+    /// (`deliver:<mode>`) is not a gate and is not listed.
     pub fn gates(&self) -> Vec<String> {
         let mut out: Vec<String> = Vec::new();
         for gate in self.steps.iter().flat_map(|s| &s.gates) {
-            if !out.contains(gate) {
+            if !out.contains(gate) && crate::deliver::step::mode_of(gate).is_none() {
                 out.push(gate.clone());
             }
         }
         out
+    }
+
+    /// Every delivery a step owes, `(deliver:<mode>, step path)`, in step
+    /// order.
+    pub fn deliveries(&self) -> Vec<(String, String)> {
+        let words = self
+            .steps
+            .iter()
+            .flat_map(|s| s.gates.iter().map(move |g| (g, s)));
+        words
+            .filter(|(g, _)| crate::deliver::step::mode_of(g).is_some())
+            .map(|(g, s)| (g.clone(), s.path.clone()))
+            .collect()
     }
 }
 

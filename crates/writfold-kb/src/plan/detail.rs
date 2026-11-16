@@ -6,7 +6,10 @@ use crate::emit::{Answer, More};
 fn gate_line(gate: &Gate) -> More {
     let state = gate.shown();
     let mut text = format!("{} [{state}]", gate.id);
-    if !gate.class.is_empty() {
+    if let Some(d) = &gate.delivery {
+        text.push(' ');
+        text.push_str(&d.summary);
+    } else if !gate.class.is_empty() {
         text.push(' ');
         text.push_str(&gate.class);
     }
@@ -46,7 +49,12 @@ pub fn add(answer: &mut Answer, graph: &Graph, judged: Option<&[Vec<Gate>]>) {
                 .and_then(|g| g.get(i))
                 .into_iter()
                 .flatten()
-                .flat_map(|g| std::iter::once(gate_line(g)).chain(g.items.iter().cloned()))
+                .flat_map(|g| {
+                    let candidate = g.delivery.as_ref().and_then(|d| d.detail.clone());
+                    std::iter::once(gate_line(g))
+                        .chain(candidate)
+                        .chain(g.items.iter().cloned())
+                })
                 .collect(),
         };
         let at = row

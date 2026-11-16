@@ -1,0 +1,5 @@
+schema = "writfold-plan/1"
+name = "note"
+steps = [
+  "say: deliver:note",
+]

@@ -1,0 +1,4 @@
+schema = "writfold-delivery-mode/1"
+mode = "note"
+description = "An internal note: a person reads it for tone before it goes out"
+attest = ["tone.reviewed"]

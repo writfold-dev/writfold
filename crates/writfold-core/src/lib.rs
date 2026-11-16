@@ -43,6 +43,7 @@ pub mod checklist;
 pub mod command;
 pub mod convenience;
 pub mod decision;
+pub mod delivery;
 pub mod find;
 pub mod flow;
 pub mod gate;

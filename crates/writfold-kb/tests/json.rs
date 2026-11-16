@@ -156,3 +156,69 @@ fn find_rows_add_only_matched_on() -> TestResult {
     }
     Ok(())
 }
+
+/// Every continuation label a delivery step adds, under `plan status
+/// --gates` and `deliver status`, is named on the page.
+#[test]
+fn delivery_labels_are_documented() -> TestResult {
+    use writfold_kb::deliver::{DeliverVerb, candidate::Prepare};
+    use writfold_kb::plan::PlanVerb;
+    let w = world(&["deliver-step"])?;
+    let run = Some("run-20261101T090000Z-a1b2c3".to_owned());
+    let repo = Some(w.code.clone());
+    let set = PlanVerb::Set {
+        template: Some("two".into()),
+        from: None,
+        run: run.clone(),
+        repo: repo.clone(),
+    };
+    w.run(&w.request(Verb::Plan(set)))?;
+    let from = w.base.join("comment.md");
+    std::fs::write(&from, "Batching is live in staging.\n")?;
+    let prepare = DeliverVerb::Prepare(Prepare {
+        mode: "pr-comment".into(),
+        from,
+        audience: Some("external".into()),
+        destination: None,
+        run: run.clone(),
+    });
+    w.run(&w.request(Verb::Deliver(prepare)))?;
+    let page = std::fs::read_to_string(
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../docs/guide/json.md"),
+    )?;
+    let verbs = [
+        Verb::Plan(PlanVerb::Status {
+            run: run.clone(),
+            repo,
+            gates: true,
+        }),
+        Verb::Deliver(DeliverVerb::Status {
+            candidate: None,
+            run,
+        }),
+    ];
+    let mut labels = BTreeSet::new();
+    for verb in verbs {
+        let mut request = w.request(verb);
+        request.json = true;
+        let value: Value = serde_json::from_str(&writfold_kb::run(&request)?.text)?;
+        for row in value["rows"].as_array().into_iter().flatten() {
+            for m in row["more"].as_array().into_iter().flatten() {
+                labels.insert(m["label"].as_str().unwrap_or_default().to_owned());
+            }
+        }
+    }
+    for label in ["candidate", "item", "step", "check"] {
+        assert!(labels.contains(label), "no {label} in {labels:?}");
+    }
+    for label in &labels {
+        assert!(
+            page.contains(&format!("`{label}`")),
+            "json.md does not name {label}"
+        );
+    }
+    for named in ["`seq`", "`deliver:<mode>`", "`deliver:`"] {
+        assert!(page.contains(named), "json.md does not name {named}");
+    }
+    Ok(())
+}

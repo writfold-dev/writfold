@@ -1,0 +1,4 @@
+# A mode that declares nothing: a plan step may not owe it.
+schema = "writfold-delivery-mode/1"
+mode = "empty"
+checks = []

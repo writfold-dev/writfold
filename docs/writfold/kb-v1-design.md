@@ -4042,3 +4042,29 @@ Each guarding test was run against its mutation; the log is
   `change · 2nd time` header (a repeated splice still shows its template
   name), `--level`, and long forms for the disorder flags beyond the ones the
   table already gives.
+
+## 42. Delivery modes as a step's gates as built
+
+The specification was [deliver-gate-spec.md](deliver-gate-spec.md); its owner decisions (15 November 2026) apply: cited evidence is re-checked on every read, and the change ships in the v0.5.0-dev.10 round, built on top of it. Each check named below was removed or broken once and a test failed; the log is kept with the round's handover.
+
+### 42.1 The kernel
+
+`writfold_core::delivery` (no IO, `alloc` only, not in the Charon `start_from` list): `deciding(bound)` is the last unbound index; `standing(obligations)` is `Checked(Open)` for an empty list, else the first unmet obligation's standing, else `Waived` if any, else `Attested` if any, else `Checked(Satisfied)`. Exhaustive tests cover every `bound` of up to four and every list of up to three over the seven standings, with the three properties of the specification. `writfold_core::plan` is not edited: a delivery reaches `advance_check` and `stale` as one more `bool` in `met`, from the proved `Standing::met`. `sh proofs/refresh.sh` leaves `proofs/Extracted/WritfoldCore.lean` byte-identical.
+
+### 42.2 Template, splice and graph
+
+`plan/template.rs::step` keeps `deliver:<mode>` in the step's ordered gate list; `deliver/word.rs::check` refuses a word that does not name a mode (`[a-z0-9.-]`, not `guard`, not `deny-*`) and a mode named twice on one step. `plan/splice.rs::defined` calls `deliver/word.rs::spliced` for every delivery word of every template of the closure and of the required templates: no such mode, a mode file that does not load (the loader's own reason after `deliver:<mode>: `), or a mode that declares nothing, exit 3 with nothing written. A candidate gate named directly keeps its refusal, now pointing at `deliver:<mode>`. `Graph::gates()` skips delivery words; `Graph::deliveries()` lists them with their steps, carried in `gate::status::Owed::deliveries`.
+
+### 42.3 Judging
+
+`deliver prepare` writes `seq` (one more than the run's highest of the mode; `deliver/step.rs::next_seq`); a manifest without it reads as 0, a non-integer is invalid. `deliver/step.rs`: `of_mode` (valid manifests naming the mode, by `(seq, id)`), `bound_id` (a done record's evidence `<run_dir>/deliveries/<id>/candidate.md`), `deciding`, and `view`, which judges one candidate with the existing `status::judge` plus the re-check of 41.4 and returns the aggregate standing, `met/total`, the definition digest (`writfold-delivery-gate/1\n<mode>\n<audience>\n` then `<obligation>\t<digest>\n` per obligation), the `deliver status` row, the owed list, the `next:` command and an owed attested mode gate's instructions. `plan/delivery.rs::Deliveries` reads the run's candidates once (only when some step names a delivery) and the bound set from every done record; a done step is judged on the candidate its own record names (gone: `open`), the current step on the deciding one. `judge::Gate` gains `delivery` (summary, `candidate:` line, the `--gates` candidate line, `why`), and its `cover` field is now `command`. `show::next` returns `None` for a delivery nothing can meet, and `owes` shows its `why:` instead; `guard/require.rs::step` uses `show::next_or_why`. The done record is written by the existing `write::done` from the gate's fields: no new event field.
+
+### 42.4 Cited evidence that moved
+
+`deliver/recheck.rs::apply`: when `claims.cited-fresh`'s checked state is `Satisfied` and the payload holds at least one non-illustrative citation token (`checks::cites`, shared with the check itself), `stale::check(session, cites, false)` runs; any verdict other than `fresh` (or a failure to check) sets the checked state to `Stale`, re-derives the standing with `gate::standing(false, Stale, statements)` and records `moved = (n, m)`. `status::line` appends `; cited evidence moved: <n> of <m> citation tokens no longer fresh` and the `stale` flag. `Tally::add`, `readiness` (the delivery guard) and `resume_rows` now take the session and call `recheck::judged`; `check` continuations carry `status`.
+
+### 42.5 Surfaces
+
+`plan status`: the current step's `candidate:` line (or `why:`) before `read:` and `next:`; `resume` keeps `candidate`, `why` and `next`. `plan status --gates` (`plan/detail.rs`): the delivery's `gate` line with its summary, its candidate line with `seq`, and its obligations as `item` lines; the ordinary `candidate:` line is left out there. `deliver status` and `resume` add `step: decides … [current]` or `step: bound to … [done]` (`plan/delivery.rs::mark`). `gate status`: the plan's deliveries are not rows; a note names them (`gate/mod.rs::report`), and with no gate owed the no-gates note names only deliveries. `gate run|attest|waive|cover` given `deliver:<mode>` refuse before anything is read. `guard/empty.rs` (moved out of `require.rs`) has the `gates.met` text for a plan naming only deliveries. Nothing changed in the hooks; the session-start plan position carries the new line because it is cut from `plan status`.
+
+Deviations: the `candidate:` line is also shown when the delivery is met (`<id> [ready]`), so the deciding candidate is always visible; a delivery with no deciding candidate because its mode no longer loads summarises as `delivery: <reason>` under `--gates`. The `gate cover` refusal is in code but only `run`, `attest` and `waive` are exercised by tests. Tests: `crates/writfold-kb/tests/plan_deliver.rs`, `plan_deliver_pick.rs`, `plan_deliver_cited.rs`, `plan_deliver_faults.rs`, `json.rs::delivery_labels_are_documented`, unit tests in `deliver/word.rs` and `deliver/step.rs`, fixture `fixtures/kb/deliver-step/`; goldens `plan-advance-deliver-refused.txt`, `plan-status-gates-deliver.json`, `hook-session-start-deliver.txt`.

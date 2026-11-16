@@ -1,0 +1,5 @@
+Plan position (`writfold kb plan status`) for run run-20261101T090000Z-a1b2c3: step 1/2
+step two#1/first [current] owes: deliver:pr-comment [failed] @runs/run-20261101T090000Z-a1b2c3/plan/splice-two.1.json:1
+  candidate: 20261111T000100Z-XXXXXX [blocked] owes references.denied [failed] @runs/run-20261101T090000Z-a1b2c3/deliveries/20261111T000100Z-XXXXXX/candidate.md:1
+  next: writfold kb deliver check 20261111T000100Z-XXXXXX
+# exit=0

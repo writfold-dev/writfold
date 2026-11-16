@@ -2,8 +2,9 @@
 //! stands as `gate status` would judge it on the present bytes; a run-record gate is
 //! judged against the run-record digest of the step's own window, so a
 //! done step's run-record evidence keeps standing after later steps add
-//! records. Only done steps and the current step are judged: later steps
-//! owe nothing yet.
+//! records. A delivery (`deliver:<mode>`) is judged on its candidate
+//! ([`super::delivery`]). Only done steps and the current step are judged:
+//! later steps owe nothing yet.
 use super::fold::{Graph, Step};
 use super::records::{self, Records};
 use crate::error::Result;
@@ -25,11 +26,14 @@ pub struct Gate {
     pub read: Option<String>,
     pub attested: bool,
     pub run_record: bool,
-    /// A checklist gate's command for its first owed item.
-    pub cover: Option<String>,
+    /// The command that meets it, when it is not the gate's own (a
+    /// checklist's first owed item, a delivery's first owed obligation).
+    pub command: Option<String>,
     pub class: String,
     pub counts: Option<(usize, usize)>,
     pub items: Vec<crate::emit::More>,
+    /// Set when the gate is a delivery (`deliver:<mode>`).
+    pub delivery: Option<super::delivery::Delivered>,
 }
 
 impl Gate {
@@ -83,10 +87,11 @@ fn undefined(id: &str) -> Gate {
         read: None,
         attested: false,
         run_record: false,
-        cover: None,
+        command: None,
         class: String::new(),
         counts: None,
         items: Vec::new(),
+        delivery: None,
     }
 }
 
@@ -102,7 +107,7 @@ fn gate(j: &Judged<'_>, repo: &str, detail: bool) -> Gate {
         read: status::read_line(d, repo).and_then(|m| m.path),
         attested: d.attested(),
         run_record: d.run_record(),
-        cover: (j.checklist.as_ref()).and_then(|v| crate::gate::checklist::next(&d.id, v)),
+        command: (j.checklist.as_ref()).and_then(|v| crate::gate::checklist::next(&d.id, v)),
         class: if detail {
             d.class.clone()
         } else {
@@ -121,6 +126,7 @@ fn gate(j: &Judged<'_>, repo: &str, detail: bool) -> Gate {
         } else {
             Vec::new()
         },
+        delivery: None,
     }
 }
 
@@ -164,6 +170,7 @@ fn judge_steps(
     filings.owed.gates = Some(graph.gates());
     let report = status::judge(session, subject, &filings)?;
     let valid = filings.valid(&subject.name);
+    let deliveries = super::delivery::Deliveries::read(&session.ws.root, run_dir, run, graph);
     let current = graph.current();
     let mut out = Vec::new();
     for (i, step) in graph.steps.iter().enumerate() {
@@ -174,6 +181,10 @@ fn judge_steps(
         let digest = window(step, records);
         let mut gates = Vec::new();
         for id in &step.gates {
+            if let Some(mode) = crate::deliver::step::mode_of(id) {
+                gates.push(deliveries.gate(session, step, mode, detail));
+                continue;
+            }
             let Some(j) = report.gates.iter().find(|j| &j.definition.id == id) else {
                 gates.push(undefined(id));
                 continue;

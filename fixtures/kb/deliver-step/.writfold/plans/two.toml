@@ -1,0 +1,7 @@
+schema = "writfold-plan/1"
+name = "two"
+description = "Two steps owing the same delivery mode: each needs its own candidate"
+steps = [
+  "first: deliver:pr-comment",
+  "second: deliver:pr-comment",
+]

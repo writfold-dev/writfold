@@ -79,6 +79,17 @@ pub fn execute(ws: &Workspace, request: &Request, verb: &GateVerb, now: i64) -> 
             "gates need a KB under Git (receipts are tracked files)".into(),
         ));
     }
+    let named = match verb {
+        GateVerb::Run { id, .. } | GateVerb::Say(Say { id, .. }) => Some(id),
+        GateVerb::Cover(checklist::Cover { gate, .. })
+        | GateVerb::CoverBatch(checklist::Batch { gate, .. }) => Some(gate),
+        _ => None,
+    };
+    if let Some(word) = named.filter(|w| crate::deliver::step::mode_of(w).is_some()) {
+        return Err(KbError::Refused(format!(
+            "{word} is a delivery, not a gate: use writfold kb deliver check|attest|waive"
+        )));
+    }
     let tool = GitTool::locate()?;
     match verb {
         GateVerb::Run { id, run, repo } => {
@@ -161,9 +172,27 @@ fn report(
     };
     let mut answer = Answer::default();
     let (rows, counts, note) = gate_rows(session, rec, &subject)?;
+    let owed = crate::plan::owed(session, rec);
+    let words: Vec<&str> = owed.deliveries.iter().map(|(w, _)| w.as_str()).collect();
     if rows.is_empty() {
         answer.unknown = Some("no-gates");
-        answer.notes.push(none_owed(session, rec, &subject));
+        answer.notes.push(match &owed.gates {
+            Some(ids) if ids.is_empty() && !words.is_empty() => format!(
+                "no gate is owed here: the run's plan names only deliveries ({}), judged at their steps: writfold kb plan status",
+                words.join(", ")
+            ),
+            _ => none_owed(session, &owed, &subject),
+        });
+    } else if !words.is_empty() {
+        let at: Vec<String> = owed
+            .deliveries
+            .iter()
+            .map(|(w, s)| format!("{w} at {s}"))
+            .collect();
+        answer.notes.push(format!(
+            "the plan also owes {}; a delivery is judged at its step: writfold kb plan status",
+            at.join(", ")
+        ));
     }
     answer.rows = rows;
     answer.counts = counts;
@@ -177,11 +206,9 @@ fn report(
 
 /// Why `gate status` shows no gate: none is defined, or the run's plan
 /// names none of those that are.
-fn none_owed(session: &Session<'_>, rec: &Rec, subject: &Subject) -> String {
+fn none_owed(session: &Session<'_>, owed: &status::Owed, subject: &Subject) -> String {
     let defined = def::all(&session.ws.root, Some(&subject.top)).0.len();
-    let planned_none = crate::plan::owed(session, rec)
-        .gates
-        .is_some_and(|ids| ids.is_empty());
+    let planned_none = owed.gates.as_ref().is_some_and(Vec::is_empty);
     match planned_none && defined > 0 {
         true => format!("no gate is owed: the run's plan names none ({defined} defined)"),
         false => format!(
