@@ -17,7 +17,7 @@ fn owes(w: &World, step: &str) -> TestResult<String> {
     Ok(row(&text, &format!("step {step}")).join("\n"))
 }
 
-fn manifest(w: &World, id: &str) -> String {
+fn manifest(id: &str) -> String {
     format!("runs/{RUN}/deliveries/{id}/delivery.json")
 }
 
@@ -71,22 +71,18 @@ fn seq_orders_before_the_id_and_defaults_to_zero() -> TestResult {
     check(&w, &a, NOW + 120)?;
     let b = prepare(&w, "pr-comment", LEAKY, NOW + 180)?;
     assert_eq!(ids(&w)?, [a.clone(), b.clone()]);
-    let read = |id: &str| std::fs::read_to_string(w.kb.join(manifest(&w, id)));
+    let read = |id: &str| std::fs::read_to_string(w.kb.join(manifest(id)));
     assert!(read(&a)?.contains("\"seq\": 1") && read(&b)?.contains("\"seq\": 2"));
     // Swap the seq values: the older ID, now seq 2, decides.
     put(
         &w,
-        &manifest(&w, &a),
+        &manifest(&a),
         &read(&a)?.replace("\"seq\": 1", "\"seq\": 3"),
     )?;
     let text = owes(&w, "change#1/deliver")?;
     assert!(text.contains(&format!("candidate: {a} [ready]")), "{text}");
     // A manifest without seq counts as 0 and sorts first.
-    put(
-        &w,
-        &manifest(&w, &a),
-        &read(&a)?.replace(",\n  \"seq\": 3", ""),
-    )?;
+    put(&w, &manifest(&a), &read(&a)?.replace(",\n  \"seq\": 3", ""))?;
     assert!(!read(&a)?.contains("seq"), "{}", read(&a)?);
     let text = owes(&w, "change#1/deliver")?;
     assert!(
@@ -111,7 +107,7 @@ fn another_mode_or_an_invalid_manifest_decides_nothing() -> TestResult {
     assert!(owes(&w, "change#1/deliver")?.contains("[satisfied]"));
     put(
         &w,
-        &manifest(&w, &pr),
+        &manifest(&pr),
         "{\"schema\": \"writfold-delivery/1\"}\n",
     )?;
     let text = owes(&w, "change#1/deliver")?;

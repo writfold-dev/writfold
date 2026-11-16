@@ -9,7 +9,7 @@
 use super::fold::{Graph, Step};
 use super::judge::Gate;
 use crate::deliver::candidate::{self, Candidate};
-use crate::deliver::step::{self, PREFIX, View};
+use crate::deliver::step::{self, PREFIX, Seen, View};
 use crate::emit::{More, Row};
 use crate::index::query::Rec;
 use crate::session::Session;
@@ -96,8 +96,39 @@ fn line(label: &'static str, text: String, path: Option<&String>) -> More {
     }
 }
 
+/// The `candidate:` line of `plan status`: what the candidate still owes.
+fn owing(s: &Seen) -> More {
+    let state = s.row.status.clone().unwrap_or_default();
+    let owes = match s.owed.is_empty() {
+        true => String::new(),
+        false => format!(" owes {}", s.owed.join(", ")),
+    };
+    line(
+        "candidate",
+        format!("{} [{state}]{owes}", s.id),
+        Some(&s.payload),
+    )
+}
+
+/// The `candidate:` line of `plan status --gates`, and one `item` per
+/// obligation (the `check:` lines of `deliver status`).
+fn detailed(s: &Seen, seq: u64) -> (More, Vec<More>) {
+    let status = s.row.status.as_deref().unwrap_or_default();
+    let text = format!("{} [{status}] {} seq={seq}", s.id, s.row.text);
+    let candidate = More {
+        status: s.row.status.clone(),
+        flags: s.row.flags.clone(),
+        ..line("candidate", text, Some(&s.payload))
+    };
+    let items = s.row.more.iter().filter(|m| m.label == "check");
+    let items = items.map(|m| More {
+        label: "item",
+        ..m.clone()
+    });
+    (candidate, items.collect())
+}
+
 fn build(v: View, seq: u64, detail: bool) -> Gate {
-    let word = format!("{PREFIX}{}", v.mode);
     let seen = v.candidate.as_ref();
     let command = match (&v.why, seen) {
         (Some(_), _) => None,
@@ -112,48 +143,17 @@ fn build(v: View, seq: u64, detail: bool) -> Gate {
         (None, Some(why)) => format!("delivery: {why}"),
         (None, None) => "delivery no candidate".into(),
     };
-    // Under `--gates` the detailed candidate line takes its place.
-    let candidate = seen.filter(|_| !detail).map(|s| {
-        let state = s.row.status.clone().unwrap_or_default();
-        let owes = match s.owed.is_empty() {
-            true => String::new(),
-            false => format!(" owes {}", s.owed.join(", ")),
-        };
-        line(
-            "candidate",
-            format!("{} [{state}]{owes}", s.id),
-            Some(&s.payload),
-        )
-    });
-    let detail_line = seen.filter(|_| detail).map(|s| More {
-        status: s.row.status.clone(),
-        flags: s.row.flags.clone(),
-        ..line(
-            "candidate",
-            format!(
-                "{} [{}] {} seq={seq}",
-                s.id,
-                s.row.status.as_deref().unwrap_or_default(),
-                s.row.text
-            ),
-            Some(&s.payload),
-        )
-    });
-    let items = match (detail, seen) {
-        (true, Some(s)) => s
-            .row
-            .more
-            .iter()
-            .filter(|m| m.label == "check")
-            .map(|m| More {
-                label: "item",
-                ..m.clone()
-            })
-            .collect(),
-        _ => Vec::new(),
+    // Under `--gates` the detailed candidate line takes the plain one's place.
+    let (candidate, (detail_line, items)) = match (seen, detail) {
+        (Some(s), true) => {
+            let (line, items) = detailed(s, seq);
+            (None, (Some(line), items))
+        }
+        (Some(s), false) => (Some(owing(s)), (None, Vec::new())),
+        (None, _) => (None, (None, Vec::new())),
     };
     Gate {
-        id: word,
+        id: format!("{PREFIX}{}", v.mode),
         standing: Some(v.standing),
         evidence: seen.map(|s| s.payload.clone()),
         definition: v.definition,

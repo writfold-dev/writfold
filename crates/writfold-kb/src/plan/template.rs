@@ -1,8 +1,7 @@
 //! Plan templates: `.writfold/plans/<name>.toml`, schema `writfold-plan/1`,
 //! in the strict TOML subset gate definitions use ([`crate::gate::toml`]).
 //! A step is one string, `id: gate gate …`: a slug, a colon, and the IDs
-//! of the gates the step owes (none is allowed), and any delivery it owes,
-//! written `deliver:<mode>` ([`crate::deliver::word`]). Unknown keys are refused,
+//! of the gates the step owes (none is allowed); `deliver:<mode>` owes a delivery. Unknown keys are refused,
 //! as for gates. The digest is the SHA-256 of the template's exact bytes:
 //! a run keeps a snapshot under that digest, so a later edit to the
 //! template cannot rewrite the run.
@@ -80,13 +79,9 @@ pub fn step(text: &str) -> std::result::Result<Step, String> {
         }
         if word.starts_with(crate::deliver::step::PREFIX) {
             crate::deliver::word::check(id, word, &gates)?;
-            gates.push(word.to_owned());
-            continue;
-        }
-        if !is_slug(word) {
+        } else if !is_slug(word) {
             return Err(format!("step {id}: gate {word:?} is not a gate ID"));
-        }
-        if gates.iter().any(|g| g == word) {
+        } else if gates.iter().any(|g| g == word) {
             return Err(format!("step {id} names gate {word} twice"));
         }
         gates.push(word.to_owned());

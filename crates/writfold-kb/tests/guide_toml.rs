@@ -10,9 +10,12 @@ use writfold_kb::deliver::config;
 use writfold_kb::gate::def::{self, Origin};
 use writfold_kb::gate::toml::{self, Value};
 
+#[path = "guide_toml/blocks.rs"]
+mod blocks;
+use blocks::blocks;
+
 type TestResult<T = ()> = Result<T, Box<dyn Error>>;
 
-const PLANNED: &str = "<!-- planned -->";
 const PAGES: [&str; 12] = [
     "README",
     "kb-layout",
@@ -28,48 +31,8 @@ const PAGES: [&str; 12] = [
     "json",
 ];
 
-struct Block {
-    at: String,
-    planned: bool,
-    text: String,
-}
-
 fn guide() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../docs/guide")
-}
-
-/// The `toml` blocks of one page, each with whether the line before its
-/// fence (blank lines skipped) is the planned marker.
-fn blocks(page: &str, text: &str) -> Vec<Block> {
-    let mut out = Vec::new();
-    let mut open: Option<Block> = None;
-    let mut before = "";
-    for (n, line) in text.lines().enumerate() {
-        match open.take() {
-            Some(block) if line.trim_end() == "```" => {
-                out.push(block);
-                before = "";
-            }
-            Some(mut block) => {
-                block.text.push_str(line);
-                block.text.push('\n');
-                open = Some(block);
-            }
-            None if line.trim_end() == "```toml" => {
-                open = Some(Block {
-                    at: format!("{page}.md:{}", n + 1),
-                    planned: before == PLANNED,
-                    text: String::new(),
-                });
-            }
-            None => {
-                if !line.trim().is_empty() {
-                    before = line.trim();
-                }
-            }
-        }
-    }
-    out
 }
 
 fn string(map: &std::collections::BTreeMap<String, Value>, key: &str) -> Result<String, String> {
@@ -226,21 +189,10 @@ fn every_guide_toml_block_is_read_by_the_real_parser() -> TestResult {
             }
         }
     }
-    // The walk must find built blocks. The guide's last planned block
-    // (a delivery as a step's gate) was built in v0.5.0-dev.10, so none
-    // may be left; the marker's reading is pinned below.
+    // The last planned block was built in v0.5.0-dev.10; the marker is pinned below.
     assert!(built >= 5, "only {built} built toml blocks were checked");
     assert_eq!(planned, 0, "a planned block is back: check it is refused");
     Ok(())
-}
-
-#[test]
-fn a_planned_marker_is_read_as_planned() {
-    let page = "text\n\n<!-- planned -->\n```toml\nschema = \"writfold-plan/9\"\n```\n\n```toml\nschema = \"x\"\n```\n";
-    let found = blocks("page", page);
-    let marks: Vec<bool> = found.iter().map(|b| b.planned).collect();
-    assert_eq!(marks, [true, false]);
-    assert!(accept(&found[0].text).is_err());
 }
 
 #[test]
@@ -273,7 +225,6 @@ fn the_block_check_refuses_what_the_product_refuses() {
     assert!(accept(plan).is_ok());
     assert!(accept(&plan.replace("unit", "use=review")).is_ok());
     assert!(accept(&plan.replace("unit", "use=Review")).is_err());
-    // A step owes a delivery by its mode (built in v0.5.0-dev.10).
     assert!(accept(&plan.replace("unit", "deliver:pr-comment")).is_ok());
     assert!(accept(&plan.replace("unit", "deliver:Bad")).is_err());
     let required = "schema = \"writfold-plan-required/1\"\nend = [\"reflect\"]\n";
