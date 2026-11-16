@@ -56,8 +56,8 @@ fn kind(text: &str) -> Option<(String, Vec<&'static str>)> {
     }
 }
 
-fn check(root: &Path, text: &str, stem: &str) -> Report {
-    let result = match value(text, "schema").as_deref() {
+fn check(root: &Path, schema: &str, text: &str, stem: &str) -> Report {
+    let result = match Some(schema) {
         Some("writfold-source/1") => {
             writfold_kb::stale::kind_check::check(text, stem, "f.toml").err()
         }
@@ -112,11 +112,12 @@ fn delivery_and_kind_files_name_the_wrong_key_at_its_line() -> TestResult {
             };
             let root = root(&format!("{page}-{n}"), &list(&block.text, "gates"))?;
             let e = &block.text;
+            let schema = value(e, "schema").unwrap_or_default();
             assert!(
-                check(&root, e, &stem).diagnostics.is_empty(),
+                check(&root, &schema, e, &stem).diagnostics.is_empty(),
                 "{}: {:?}",
                 block.at,
-                check(&root, e, &stem)
+                check(&root, &schema, e, &stem)
             );
             seen += 1;
             for (line, key, first) in keys(e) {
@@ -126,6 +127,7 @@ fn delivery_and_kind_files_name_the_wrong_key_at_its_line() -> TestResult {
                     }
                     let report = check(
                         &root,
+                        &schema,
                         &replace_line(e, line, Some(&format!("{key} = {other}"))),
                         &stem,
                     );
@@ -137,7 +139,7 @@ fn delivery_and_kind_files_name_the_wrong_key_at_its_line() -> TestResult {
                     assert!(hit, "{}: {key} = {other}: {report:?}", block.at);
                 }
                 if required.contains(&key.as_str()) {
-                    let report = check(&root, &replace_line(e, line, None), &stem);
+                    let report = check(&root, &schema, &replace_line(e, line, None), &stem);
                     let missing: Vec<&Diagnostic> = report
                         .diagnostics
                         .iter()
@@ -155,6 +157,7 @@ fn delivery_and_kind_files_name_the_wrong_key_at_its_line() -> TestResult {
                     let original = e.lines().nth(usize::try_from(line - 1)?).unwrap_or("");
                     let report = check(
                         &root,
+                        &schema,
                         &replace_line(e, line, Some(&original.replacen(&key, &wrong, 1))),
                         &stem,
                     );

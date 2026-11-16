@@ -56,7 +56,7 @@ fn a_delivery_no_mode_can_meet_is_refused_when_spliced() -> TestResult {
     plan(&w, "broken", "\"x: deliver:broken\"")?;
     assert_eq!(
         refused(&w, "broken")?,
-        "deliver:broken: .writfold/deliveries/broken.toml: schema must be writfold-delivery-mode/1"
+        ".writfold/deliveries/broken.toml:1:10: `schema` must be \"writfold-delivery-mode/1\"; write schema = \"writfold-delivery-mode/1\""
     );
     // A required end template is checked like the plan's own.
     plan(&w, "closing", "\"close: deliver:nope\"")?;
