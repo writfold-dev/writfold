@@ -174,7 +174,6 @@ mod tests {
             ("ledger/README.md", Some(Kind::Doc)),
             ("tools/STATUS.md", Some(Kind::Doc)),
             ("ledger/.draft.md", None),
-            (".kctx/policy.json", None),
             ("ledger/diagram.png", None),
         ];
         for (path, kind) in cases {

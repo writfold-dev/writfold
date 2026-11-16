@@ -4,7 +4,7 @@
 //! (the Writfold sidecar's `closed`, else the manifest's), where the work
 //! happens and its last checkpoint. `resume` shows one run: the run, its
 //! coverage counts, the items needing a recheck, its newest retrieval
-//! receipts (from `writfold tuft run`), its newest edit receipts (from
+//! receipts (written by the archived Tuft adapter), its newest edit receipts (from
 //! `writfold kb edit apply`), the state of each defined gate
 //! (`writfold kb gate`), the newest checkpoint entry, and the local
 //! drafts and pending proposals of the run (or of no run). With no run
