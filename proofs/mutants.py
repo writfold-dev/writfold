@@ -253,6 +253,51 @@ MUTANTS = (
            "        attested_current: rollup.covered,",
            "        attested_current: rollup.covered || rollup.stale,",
            ("Writfold.Core.Checklist.standing_spec",)),
+    # delivery: an empty set of obligations is not met
+    Mutant("delivery-empty-met", "delivery.rs",
+           "    if obligations.is_empty() {\n        return Standing::Checked(State::Open);",
+           "    if obligations.is_empty() {\n        return Standing::Checked(State::Satisfied);",
+           ("Writfold.Core.Delivery.standing_spec",)),
+    # delivery: a waived obligation is never read as a passing check
+    Mutant("delivery-waived-satisfied", "delivery.rs",
+           "    if waived {\n        Standing::Waived",
+           "    if false {\n        Standing::Waived",
+           ("Writfold.Core.Delivery.standing_loop_spec",)),
+    # delivery: an unmet obligation stops the delivery
+    Mutant("delivery-unmet-ignored", "delivery.rs",
+           "    !standing.met()",
+           "    false",
+           ("Writfold.Core.Delivery.unmet_spec",)),
+    # delivery: a bound candidate never decides an open step
+    Mutant("deciding-ignores-bound", "delivery.rs",
+           "        if !bound[index] {",
+           "        if true {",
+           ("Writfold.Core.Delivery.deciding_loop_spec", "Writfold.Core.Delivery.deciding_spec")),
+    # delivery: the newest unbound candidate decides, not the oldest
+    Mutant("deciding-first-unbound", "delivery.rs",
+           "    let mut index = bound.len();\n    while index > 0 {\n        index -= 1;\n        if !bound[index] {",
+           "    let mut index = 0;\n    while index < bound.len() {\n        index += 1;\n        if !bound[index - 1] {",
+           ("Writfold.Core.Delivery.deciding_loop_spec", "Writfold.Core.Delivery.deciding_spec")),
+    # delivery: a mode that declares nothing is never ready
+    Mutant("ready-accepts-empty", "delivery.rs",
+           "    standing(obligations).met()",
+           "    obligations.is_empty() || standing(obligations).met()",
+           ("Writfold.Core.Delivery.ready_iff",)),
+    # delivery: a passed check whose cited evidence moved is stale
+    Mutant("rechecked-keeps-satisfied", "delivery.rs",
+           "    if matches!(checked, State::Satisfied) && moved > 0 {",
+           "    if false {",
+           ("Writfold.Core.Delivery.rechecked_spec",)),
+    # delivery guard: unknown bytes need at least one candidate
+    Mutant("guard-allows-no-candidate", "delivery.rs",
+           "        Body::Unknown => candidates > 0 && all_ready,",
+           "        Body::Unknown => all_ready,",
+           ("Writfold.Core.Delivery.guard_allow_iff",)),
+    # delivery guard: known bytes pass only when a ready candidate holds them
+    Mutant("guard-known-any-ready", "delivery.rs",
+           "        Body::Known => same_ready,",
+           "        Body::Known => same_ready || all_ready,",
+           ("Writfold.Core.Delivery.guard_allow_iff",)),
     # assessed gate: one ungrounded premise makes the basis hypothetical
     Mutant("basis-ignores-premises", "assess.rs",
            "        if matches!(premises[index], Grounding::Ungrounded) {",

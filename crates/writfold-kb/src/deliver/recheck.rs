@@ -4,7 +4,7 @@
 //! receipt stands only while every citation token in the candidate is
 //! still fresh: the tokens go through `stale` again, locally, nothing
 //! fetched (the call `deliver check` makes). If any is no longer fresh the
-//! obligation's checked state is `stale`, and its standing is judged again
+//! obligation's checked state is `stale` ([`rechecked`]), and its standing is judged again
 //! with the same kernel ([`writfold_core::gate::standing`]), so a waiver
 //! still stands. A candidate with no citation token costs nothing more.
 //!
@@ -17,6 +17,7 @@ use super::status::{self, Filings, Judged};
 use crate::error::Result;
 use crate::session::Session;
 use crate::stale::{self, Verdict};
+use writfold_core::delivery::rechecked;
 use writfold_core::gate::{State, standing};
 
 /// Re-check the citations behind a passed `claims.cited-fresh` receipt.
@@ -46,8 +47,8 @@ pub fn apply(session: &Session<'_>, c: &Candidate, judged: &mut [Judged<'_>]) {
     if moved == 0 {
         return;
     }
-    j.checked = State::Stale;
-    j.standing = standing(false, State::Stale, j.statements.statements);
+    j.checked = rechecked(j.checked, moved);
+    j.standing = standing(false, j.checked, j.statements.statements);
     j.moved = Some((moved, cites.len()));
 }
 

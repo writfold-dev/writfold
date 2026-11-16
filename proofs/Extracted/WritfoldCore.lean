@@ -572,6 +572,189 @@ def checklist.standing
       waived_current
     }
 
+/-- [writfold_core::delivery::deciding]: loop body 0:
+    Source: 'crates/writfold-core/src/delivery.rs', lines 20:4-27:1
+    Visibility: public -/
+@[rust_loop_body]
+def delivery.deciding_loop.body
+  (bound : Slice Bool) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize (Option Std.Usize))
+  := do
+  if index > 0#usize
+  then
+    let index1 ← index - 1#usize
+    let b ← Slice.index_usize bound index1
+    if b
+    then ok (cont index1)
+    else ok (done (some index1))
+  else ok (done none)
+
+/-- [writfold_core::delivery::deciding]: loop 0:
+    Source: 'crates/writfold-core/src/delivery.rs', lines 20:4-27:1
+    Visibility: public -/
+@[rust_loop]
+def delivery.deciding_loop
+  (bound : Slice Bool) (index : Std.Usize) : Result (Option Std.Usize) := do
+  loop
+    (fun index1 => delivery.deciding_loop.body bound index1)
+    index
+
+/-- [writfold_core::delivery::deciding]:
+    Source: 'crates/writfold-core/src/delivery.rs', lines 18:0-27:1
+    Visibility: public -/
+def delivery.deciding (bound : Slice Bool) : Result (Option Std.Usize) := do
+  let index := Slice.len bound
+  delivery.deciding_loop bound index
+
+/-- [writfold_core::gate::{writfold_core::gate::Standing}::met]:
+    Source: 'crates/writfold-core/src/gate.rs', lines 205:4-210:5
+    Visibility: public -/
+def gate.Standing.met (self : gate.Standing) : Result Bool := do
+  let b ←
+    match self with
+    | gate.Standing.Checked s =>
+      match s with
+      | gate.State.Open => ok true
+      | gate.State.Satisfied => ok false
+      | gate.State.Stale => ok true
+      | gate.State.Failed => ok true
+      | gate.State.Unknown => ok true
+    | gate.Standing.Attested => ok false
+    | gate.Standing.Waived => ok false
+  ok (¬ b)
+
+/-- [writfold_core::delivery::unmet]:
+    Source: 'crates/writfold-core/src/delivery.rs', lines 31:0-33:1
+    Visibility: public -/
+def delivery.unmet (standing : gate.Standing) : Result Bool := do
+  let b ← gate.Standing.met standing
+  ok (¬ b)
+
+/-- [writfold_core::delivery::is_waived]:
+    Source: 'crates/writfold-core/src/delivery.rs', lines 36:0-38:1
+    Visibility: public -/
+def delivery.is_waived (standing : gate.Standing) : Result Bool := do
+  match standing with
+  | gate.Standing.Checked _ => ok false
+  | gate.Standing.Attested => ok false
+  | gate.Standing.Waived => ok true
+
+/-- [writfold_core::delivery::is_attested]:
+    Source: 'crates/writfold-core/src/delivery.rs', lines 41:0-43:1
+    Visibility: public -/
+def delivery.is_attested (standing : gate.Standing) : Result Bool := do
+  match standing with
+  | gate.Standing.Checked _ => ok false
+  | gate.Standing.Attested => ok true
+  | gate.Standing.Waived => ok false
+
+/-- [writfold_core::delivery::standing]: loop body 0:
+    Source: 'crates/writfold-core/src/delivery.rs', lines 57:4-76:1
+    Visibility: public -/
+@[rust_loop_body]
+def delivery.standing_loop.body
+  (obligations : Slice gate.Standing) (waived : Bool) (attested : Bool)
+  (index : Std.Usize) :
+  Result (ControlFlow (Bool × Bool × Std.Usize) gate.Standing)
+  := do
+  let i := Slice.len obligations
+  if index < i
+  then
+    let s ← Slice.index_usize obligations index
+    let b ← delivery.unmet s
+    if b
+    then ok (done s)
+    else
+      let b1 ← delivery.is_waived s
+      let waived1 ← if b1
+                      then ok true
+                      else ok waived
+      let b2 ← delivery.is_attested s
+      let attested1 ← if b2
+                        then ok true
+                        else ok attested
+      let index1 ← index + 1#usize
+      ok (cont (waived1, attested1, index1))
+  else
+    if waived
+    then ok (done gate.Standing.Waived)
+    else
+      if attested
+      then ok (done gate.Standing.Attested)
+      else ok (done (gate.Standing.Checked gate.State.Satisfied))
+
+/-- [writfold_core::delivery::standing]: loop 0:
+    Source: 'crates/writfold-core/src/delivery.rs', lines 57:4-76:1
+    Visibility: public -/
+@[rust_loop]
+def delivery.standing_loop
+  (obligations : Slice gate.Standing) (waived : Bool) (attested : Bool)
+  (index : Std.Usize) :
+  Result gate.Standing
+  := do
+  loop
+    (fun (waived1, attested1, index1) => delivery.standing_loop.body
+      obligations waived1 attested1 index1)
+    (waived, attested, index)
+
+/-- [writfold_core::delivery::standing]:
+    Source: 'crates/writfold-core/src/delivery.rs', lines 50:0-76:1
+    Visibility: public -/
+def delivery.standing
+  (obligations : Slice gate.Standing) : Result gate.Standing := do
+  let b ← core.slice.Slice.is_empty obligations
+  if b
+  then ok (gate.Standing.Checked gate.State.Open)
+  else delivery.standing_loop obligations false false 0#usize
+
+/-- [writfold_core::delivery::ready]:
+    Source: 'crates/writfold-core/src/delivery.rs', lines 80:0-82:1
+    Visibility: public -/
+def delivery.ready (obligations : Slice gate.Standing) : Result Bool := do
+  let s ← delivery.standing obligations
+  gate.Standing.met s
+
+/-- [writfold_core::delivery::rechecked]:
+    Source: 'crates/writfold-core/src/delivery.rs', lines 87:0-93:1
+    Visibility: public -/
+def delivery.rechecked
+  (checked : gate.State) (moved : Std.Usize) : Result gate.State := do
+  let b ←
+    match checked with
+    | gate.State.Open => ok false
+    | gate.State.Satisfied => ok true
+    | gate.State.Stale => ok false
+    | gate.State.Failed => ok false
+    | gate.State.Unknown => ok false
+  if b
+  then if moved > 0#usize
+       then ok gate.State.Stale
+       else ok checked
+  else ok checked
+
+/-- [writfold_core::delivery::Body]
+    Source: 'crates/writfold-core/src/delivery.rs', lines 96:0-101:1
+    Visibility: public -/
+@[discriminant isize]
+inductive delivery.Body where
+| Known : delivery.Body
+| Unknown : delivery.Body
+
+/-- [writfold_core::delivery::guard]:
+    Source: 'crates/writfold-core/src/delivery.rs', lines 106:0-111:1
+    Visibility: public -/
+def delivery.guard
+  (body : delivery.Body) (same_ready : Bool) (candidates : Std.Usize)
+  (all_ready : Bool) :
+  Result Bool
+  := do
+  match body with
+  | delivery.Body.Known => ok same_ready
+  | delivery.Body.Unknown =>
+    if candidates > 0#usize
+    then ok all_ready
+    else ok false
+
 /-- [writfold_core::gate::Ending]
     Source: 'crates/writfold-core/src/gate.rs', lines 20:0-29:1
     Visibility: public -/
@@ -748,23 +931,6 @@ def gate.judge
       gate.Evidence) 0#usize
   let s := alloc.vec.Vec.deref all
   gate.state s
-
-/-- [writfold_core::gate::{writfold_core::gate::Standing}::met]:
-    Source: 'crates/writfold-core/src/gate.rs', lines 205:4-210:5
-    Visibility: public -/
-def gate.Standing.met (self : gate.Standing) : Result Bool := do
-  let b ←
-    match self with
-    | gate.Standing.Checked s =>
-      match s with
-      | gate.State.Open => ok true
-      | gate.State.Satisfied => ok false
-      | gate.State.Stale => ok true
-      | gate.State.Failed => ok true
-      | gate.State.Unknown => ok true
-    | gate.Standing.Attested => ok false
-    | gate.Standing.Waived => ok false
-  ok (¬ b)
 
 /-- [writfold_core::gate::Said]
     Source: 'crates/writfold-core/src/gate.rs', lines 227:0-231:1
