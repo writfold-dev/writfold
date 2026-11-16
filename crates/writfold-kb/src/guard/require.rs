@@ -302,9 +302,9 @@ fn step(session: &Session<'_>, facts: &Facts, cwd: &Path) -> Owed {
     };
     let name = &loaded.graph.steps[at].id;
     Owed::unmet(format!(
-        "step {name} owes {}; next: {}",
+        "step {name} owes {}; {}",
         plan::show::listed(&owed),
-        plan::show::next(first)
+        plan::show::next_or_why(first)
     ))
 }
 

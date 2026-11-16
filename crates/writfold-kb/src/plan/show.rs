@@ -22,12 +22,16 @@ pub fn listed(gates: &[&Gate]) -> String {
     parts.join(", ")
 }
 
-/// The command that would meet `gate`.
-pub fn next(gate: &Gate) -> String {
-    if let Some(cover) = &gate.cover {
-        return cover.clone();
+/// The command that would meet `gate`; `None` for a delivery nothing can
+/// meet now (its `why:` line says so).
+pub fn next(gate: &Gate) -> Option<String> {
+    if let Some(command) = &gate.command {
+        return Some(command.clone());
     }
-    match (gate.standing.is_some(), gate.attested) {
+    if gate.delivery.is_some() {
+        return None;
+    }
+    Some(match (gate.standing.is_some(), gate.attested) {
         (false, _) => format!(
             "define {}/{}.toml in the KB root or the repository",
             crate::gate::def::DIR,
@@ -38,12 +42,37 @@ pub fn next(gate: &Gate) -> String {
             gate.id
         ),
         (true, false) => format!("writfold kb gate run {}", gate.id),
+    })
+}
+
+/// `next: <command>`, or `why: <reason>` for a delivery nothing can meet.
+pub fn next_or_why(gate: &Gate) -> String {
+    match (
+        next(gate),
+        gate.delivery.as_ref().and_then(|d| d.why.as_ref()),
+    ) {
+        (Some(command), _) => format!("next: {command}"),
+        (None, Some(why)) => format!("why: {why}"),
+        (None, None) => "next: writfold kb plan status".into(),
+    }
+}
+
+/// The current step's `candidate:` line for each delivery a candidate
+/// decides, or `why:` when nothing can meet it.
+fn candidates(row: &mut Row, gates: &[Gate]) {
+    for d in gates.iter().filter_map(|g| g.delivery.as_ref()) {
+        match (&d.candidate, &d.why) {
+            (Some(c), _) => row.more.push(c.clone()),
+            (None, Some(why)) => row.more.push(line("why", why.clone())),
+            (None, None) => {}
+        }
     }
 }
 
 /// What the current step owes, with `read:` and `next:` lines.
 pub fn owes(row: &mut Row, gates: &[Gate]) {
     let owed: Vec<&Gate> = gates.iter().filter(|g| !g.met()).collect();
+    candidates(row, gates);
     if owed.is_empty() {
         row.text = match gates.is_empty() {
             true => "no gates".into(),
@@ -65,8 +94,8 @@ pub fn owes(row: &mut Row, gates: &[Gate]) {
             });
         }
     }
-    if let Some(first) = owed.first() {
-        row.more.push(line("next", next(first)));
+    if let Some(command) = owed.first().and_then(|g| next(g)) {
+        row.more.push(line("next", command));
     }
 }
 
@@ -202,7 +231,8 @@ pub fn resume_row(graph: &Graph, gates: Option<&[Vec<Gate>]>, moved: &[Moved]) -
         Some(judged) => {
             owes(&mut row, judged);
             row.text = format!("{at} {}", row.text);
-            row.more.retain(|m| m.label == "next");
+            row.more
+                .retain(|m| matches!(m.label, "candidate" | "why" | "next"));
         }
         None => row.text = format!("{at} gates: {}", step.gates.join(", ")),
     }
