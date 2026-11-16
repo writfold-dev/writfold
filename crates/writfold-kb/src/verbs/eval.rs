@@ -105,7 +105,9 @@ fn judge(
     q: &Query,
     shown: &str,
 ) -> Result<(Row, &'static str, Option<&'static str>)> {
-    let found = find::find(session, &q.text, &Filter::default(), false)?;
+    let mut found = find::find(session, &q.text, &Filter::default(), false)?;
+    // A suggestion is not a hit.
+    found.rows.retain(|r| r.matched_on != Some("suggestion"));
     let at = found.rows.iter().position(|r| q.expect.contains(&r.id));
     let mut unknown = false;
     for id in &q.expect {

@@ -171,6 +171,12 @@ pub fn find(
     if answer.rows.is_empty() {
         answer.unknown = Some("no-record");
         answer.notes.push(BOUNDARY.to_owned());
+        answer.rows = suggested(session, text)?;
+        if !answer.rows.is_empty() {
+            answer
+                .notes
+                .push("nothing matched; the suggested names are near the phrase, not hits".into());
+        }
         if signatures {
             answer
                 .notes
@@ -201,6 +207,22 @@ fn name_tiers(session: &Session<'_>, text: &str, found: &mut Found<'_, '_>) -> R
         found.add(&named.id, "heading", more)?;
     }
     Ok(())
+}
+
+/// Rows for the names nearest a phrase no tier found: status
+/// `suggested`, `matched_on: "suggestion"`, flag `!suggestion`.
+fn suggested(session: &Session<'_>, text: &str) -> Result<Vec<Row>> {
+    let mut rows = Vec::new();
+    for named in names::suggestions(&session.conn, text)? {
+        let mut row = node_row(session, &named.id)?;
+        row.status = Some("suggested".into());
+        row.matched_on = Some("suggestion");
+        row.flags.push("suggestion".into());
+        row.more
+            .push(tier_only(&format!("suggestion {}", named.form)));
+        rows.push(row);
+    }
+    Ok(rows)
 }
 
 /// Every record of the filter's kinds, in ID order, each once; no cap, the

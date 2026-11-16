@@ -127,3 +127,49 @@ fn an_exact_id_is_shown_once_and_every_row_names_its_tier() -> TestResult {
     }
     Ok(())
 }
+
+#[test]
+fn an_empty_answer_suggests_names_and_stays_unknown() -> TestResult {
+    let w = world(&[])?;
+    let (rows, exit) = find(&w, "batchng")?;
+    assert_eq!(exit, 2);
+    assert!(!rows.is_empty() && rows.len() <= 3, "{rows:?}");
+    for row in &rows {
+        assert_eq!(row["status"], "suggested");
+        assert_eq!(row["matched_on"], "suggestion");
+        let flags = row["flags"].as_array().ok_or("flags")?;
+        assert!(flags.contains(&serde_json::json!("suggestion")), "{row}");
+    }
+    let mut request = w.request(Verb::Find {
+        text: "batchng".into(),
+        filter: Filter::default(),
+        signatures: false,
+    });
+    request.json = true;
+    let body: Value = serde_json::from_str(&writfold_kb::run(&request)?.text)?;
+    assert_eq!(body["trailer"]["reason"], "no-record");
+    // Too far from every name: nothing is suggested.
+    let (rows, exit) = find(&w, "zeppelin mooring")?;
+    assert_eq!((rows.len(), exit), (0, 2));
+    // A suggestion never counts as a hit in an evaluation.
+    let file = w.base.join("q.jsonl");
+    let first = rows_first_id(&w, "batchng")?;
+    std::fs::write(
+        &file,
+        format!("{{\"query\": \"batchng\", \"expect\": [\"{first}\"]}}\n"),
+    )?;
+    let mut request = w.request(Verb::FindEval { file: Some(file) });
+    request.json = true;
+    let output = writfold_kb::run(&request)?;
+    assert_eq!(output.exit, 2, "{}", output.text);
+    Ok(())
+}
+
+fn rows_first_id(w: &World, text: &str) -> TestResult<String> {
+    let (rows, _) = find(w, text)?;
+    Ok(rows
+        .first()
+        .and_then(|r| r["id"].as_str())
+        .ok_or("no row")?
+        .to_owned())
+}

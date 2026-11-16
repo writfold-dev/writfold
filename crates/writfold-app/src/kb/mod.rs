@@ -30,7 +30,8 @@ verbs:
   find <text> [--kind K[,K]] [--project P] [--signatures]
                                    search in tiers: exact ID or alias, normalized name, name
                                    prefix, section heading, BM25 text, substring, one typo
-                                   (JSON matched_on names the tier); with --kind and no text,
+                                   (JSON matched_on names the tier; nothing found may suggest up
+                                   to three near names, exit 2); with --kind and no text,
                                    every record of those kinds by ID
   find --eval [FILE]               run each query of FILE (.writfold/queries.jsonl) as find does:
                                    hit@1, hit@5 or miss per query (exit 0 only if all hit@5)

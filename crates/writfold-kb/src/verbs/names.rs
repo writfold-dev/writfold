@@ -8,8 +8,11 @@
 //! - `prefix`: the query's tokens are prefixes of one such form's tokens,
 //!   in order ([`prefix_match`]), fewest unmatched tokens first;
 //! - `heading`: a Markdown section's name, by `norm` or by prefix; the row
-//!   is the file's record (or `doc:<path>`) and cites the section.
+//!   is the file's record (or `doc:<path>`) and cites the section;
+//! - on an empty answer, up to three [`suggestions`]: names near the
+//!   query, shown as `suggested`, never as hits.
 use crate::error::Result;
+use crate::index::search::{closeness, tolerance, trigrams};
 use rusqlite::Connection;
 use writfold_core::find::{norm, prefix_match, tokens};
 
@@ -151,4 +154,48 @@ pub fn headings(conn: &Connection, text: &str) -> Result<Vec<Named>> {
     }
     found.sort_by(|a, b| (a.0, &a.1.path).cmp(&(b.0, &b.1.path)));
     Ok(found.into_iter().map(|(_, n)| n).collect())
+}
+
+/// Up to three nearest names for a query no tier answered: record forms
+/// and section names sharing a trigram with the query, ranked by edit
+/// distance to the closest form or run of its words, beyond the `typo`
+/// tier's tolerance but within half the query's length.
+pub fn suggestions(conn: &Connection, text: &str) -> Result<Vec<Named>> {
+    let query = text.trim().to_lowercase();
+    let length = query.chars().count();
+    let grams = trigrams(&query);
+    if length < 4 || grams.is_empty() {
+        return Ok(Vec::new());
+    }
+    let mut names: Vec<(String, String)> = forms(conn)?
+        .into_iter()
+        .map(|(id, form, _)| (id, form))
+        .collect();
+    let mut statement = conn.prepare_cached(
+        "SELECT s.name, COALESCE((SELECT r.id FROM records r WHERE r.path = s.path \
+         ORDER BY r.id LIMIT 1), 'doc:' || s.path) FROM sections s ORDER BY s.path, s.ord",
+    )?;
+    let rows = statement.query_map([], |r| Ok((r.get::<_, String>(1)?, r.get::<_, String>(0)?)))?;
+    for row in rows {
+        names.push(row?);
+    }
+    let allowed = tolerance(&query);
+    let mut near: Vec<(usize, Named)> = Vec::new();
+    for (id, form) in names {
+        let lower = form.to_lowercase();
+        if !grams.iter().any(|g| lower.contains(g.as_str())) {
+            continue;
+        }
+        let (d, _, _) = closeness(&query, &form);
+        if d <= allowed || d * 2 > length {
+            continue;
+        }
+        match near.iter_mut().find(|(_, n)| n.id == id) {
+            Some(slot) if d < slot.0 => *slot = (d, named(&id, &form)),
+            Some(_) => {}
+            None => near.push((d, named(&id, &form))),
+        }
+    }
+    near.sort_by(|a, b| (a.0, &a.1.id).cmp(&(b.0, &b.1.id)));
+    Ok(near.into_iter().take(3).map(|(_, n)| n).collect())
 }

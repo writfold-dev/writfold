@@ -192,7 +192,7 @@ Every answer ends with one line:
 | `typo` | trigram candidates re-ranked by edit distance | ID and title only; one edit, two for queries longer than eight characters |
 | `text-any` | BM25 again, any word of the query | |
 
-All of it is computed at query time from the derived index, which holds every file's body and each Markdown section's name and line range; the name tiers add nothing to it. A query that finds nothing answers `answer=unknown reason=no-record` with exit 2: absence from the KB is not evidence of absence.
+All of it is computed at query time from the derived index, which holds every file's body and each Markdown section's name and line range; the name tiers add nothing to it. A query that finds nothing answers `answer=unknown reason=no-record` with exit 2: absence from the KB is not evidence of absence. From v0.5.0-dev.10 such an answer may list up to three nearest names (an ID, title, alias or section name sharing a trigram with the phrase, more than the `typo` tier's edits away but within half the phrase's length), each a row with status `suggested` and the flag `!suggestion`. A suggestion is not a hit: the answer stays unknown and the exit 2.
 
 ## `.writfold/`
 

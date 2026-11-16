@@ -51,7 +51,7 @@ The text form of `impact` is unchanged (`depth=N SRC REL DST (ORIGIN)` in `text`
 
 | Key | Type | Meaning |
 |---|---|---|
-| `matched_on` | string | the tier that found the row: `signature`, `exact`, `normalized`, `prefix`, `heading`, `text`, `substring`, `typo` or `text-any`, and `listed` for a `--kind` listing. `exact`, `normalized` and `text` are spelt as other tools' readers expect; a reader that knows only those ignores the rest. The `match` continuation stays, with its path and line |
+| `matched_on` | string | the tier that found the row: `signature`, `exact`, `normalized`, `prefix`, `heading`, `text`, `substring`, `typo` or `text-any`, and `listed` for a `--kind` listing; `suggestion` for a name offered when nothing matched (status `suggested`, flag `suggestion`), which is not a hit. `exact`, `normalized` and `text` are spelt as other tools' readers expect; a reader that knows only those ignores the rest. The `match` continuation stays, with its path and line |
 
 Readers should use `matched_on`, not split the `match` continuation's text (`typo d=1 api`).
 
