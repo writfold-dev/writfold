@@ -48,6 +48,9 @@ pub struct Row {
     /// of an `impact` row; absent keys on every other row.
     pub edge: Option<Walked>,
     pub title: Option<String>,
+    /// JSON only: the tier that found a `find` or `match` row
+    /// (`matched_on`); absent on every other verb's rows.
+    pub matched_on: Option<&'static str>,
 }
 
 /// What a verb found, before paging.
@@ -372,6 +375,9 @@ fn row_json(row: &Row) -> Value {
     }
     if let Some(title) = &row.title {
         value["title"] = json!(title);
+    }
+    if let Some(tier) = row.matched_on {
+        value["matched_on"] = json!(tier);
     }
     value
 }

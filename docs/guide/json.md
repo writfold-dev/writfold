@@ -47,6 +47,14 @@ Each entry of `more` has `label` (`why`, `note`, `cite`, `next` and so on), `tex
 
 The text form of `impact` is unchanged (`depth=N SRC REL DST (ORIGIN)` in `text`); readers should use `edge`, not split that text.
 
+`find` and `match` rows carry one more key (built in v0.5.0-dev.10), absent on every other verb's rows:
+
+| Key | Type | Meaning |
+|---|---|---|
+| `matched_on` | string | the tier that found the row: `signature`, `exact`, `normalized`, `prefix`, `heading`, `text`, `substring`, `typo` or `text-any`, and `listed` for a `--kind` listing. `exact`, `normalized` and `text` are spelt as other tools' readers expect; a reader that knows only those ignores the rest. The `match` continuation stays, with its path and line |
+
+Readers should use `matched_on`, not split the `match` continuation's text (`typo d=1 api`).
+
 `find --kind K[,K] [--project P]` with no text lists every record of those kinds in ID order, each once, with a `match` continuation whose `text` is `listed`; there is no fifty-row cap, the budget pages the answer. Rows keep the record's title in `text`. Without `--kind`, `find` still requires text; `match` and `--signatures` always do.
 
 ### Labels the views rely on
