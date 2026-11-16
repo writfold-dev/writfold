@@ -277,8 +277,46 @@ fn answer(session: &Session<'_>, request: &Request) -> Result<(Answer, &'static 
     })
 }
 
+/// `runs --idle` and `find --eval` (v0.5.0-dev.10); `None` for every
+/// other verb.
+fn measured(
+    session: &Session<'_>,
+    verb: &Verb,
+) -> Option<Result<(Answer, &'static str, Vec<String>)>> {
+    let answered =
+        |r: Result<Answer>, name: &'static str, args: Vec<String>| Some(r.map(|a| (a, name, args)));
+    match verb {
+        Verb::RunsIdle {
+            age,
+            age_text,
+            project,
+            plan,
+        } => {
+            let mut args = vec![format!("idle={age_text}")];
+            args.extend(project.iter().map(|p| format!("project={p}")));
+            if *plan {
+                args.push("plan=true".into());
+            }
+            answered(
+                verbs::runs::idle(session, (*age, age_text), project.as_deref(), *plan),
+                "runs",
+                args,
+            )
+        }
+        Verb::FindEval { file } => answered(
+            verbs::eval::eval(session, file.as_deref()),
+            "find-eval",
+            file.iter().map(|f| f.display().to_string()).collect(),
+        ),
+        _ => None,
+    }
+}
+
 /// The search, graph and housekeeping verbs.
 fn graph(session: &Session<'_>, verb: &Verb) -> Result<(Answer, &'static str, Vec<String>)> {
+    if let Some(found) = measured(session, verb) {
+        return found;
+    }
     Ok(match verb {
         Verb::Find {
             text,
@@ -294,25 +332,6 @@ fn graph(session: &Session<'_>, verb: &Verb) -> Result<(Answer, &'static str, Ve
                 args,
             )
         }
-        Verb::RunsIdle {
-            age,
-            age_text,
-            project,
-            plan,
-        } => {
-            let mut args = vec![format!("idle={age_text}")];
-            args.extend(project.iter().map(|p| format!("project={p}")));
-            if *plan {
-                args.push("plan=true".into());
-            }
-            let answer = verbs::runs::idle(session, (*age, age_text), project.as_deref(), *plan)?;
-            (answer, "runs", args)
-        }
-        Verb::FindEval { file } => (
-            verbs::eval::eval(session, file.as_deref())?,
-            "find-eval",
-            file.iter().map(|f| f.display().to_string()).collect(),
-        ),
         Verb::Status { target } => (
             verbs::status::status(session, target)?,
             "status",

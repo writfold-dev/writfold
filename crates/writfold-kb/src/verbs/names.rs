@@ -11,8 +11,10 @@
 //!   is the file's record (or `doc:<path>`) and cites the section;
 //! - on an empty answer, up to three [`suggestions`]: names near the
 //!   query, shown as `suggested`, never as hits.
+use crate::emit::{More, Row};
 use crate::error::Result;
 use crate::index::search::{closeness, tolerance, trigrams};
+use crate::session::Session;
 use rusqlite::Connection;
 use writfold_core::find::{norm, prefix_match, tokens};
 
@@ -198,4 +200,27 @@ pub fn suggestions(conn: &Connection, text: &str) -> Result<Vec<Named>> {
     }
     near.sort_by(|a, b| (a.0, &a.1.id).cmp(&(b.0, &b.1.id)));
     Ok(near.into_iter().take(3).map(|(_, n)| n).collect())
+}
+
+/// Rows for the names nearest a phrase no tier found: status
+/// `suggested`, `matched_on: "suggestion"`, flag `!suggestion`.
+pub fn suggested(
+    session: &Session<'_>,
+    text: &str,
+    node_row: impl Fn(&Session<'_>, &str) -> Result<Row>,
+) -> Result<Vec<Row>> {
+    let mut rows = Vec::new();
+    for named in suggestions(&session.conn, text)? {
+        let mut row = node_row(session, &named.id)?;
+        row.status = Some("suggested".into());
+        row.matched_on = Some("suggestion");
+        row.flags.push("suggestion".into());
+        row.more.push(More {
+            label: "match",
+            text: format!("suggestion {}", named.form),
+            ..More::default()
+        });
+        rows.push(row);
+    }
+    Ok(rows)
 }

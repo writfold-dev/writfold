@@ -168,6 +168,24 @@ fn mode(map: &BTreeMap<String, Value>, event: Event) -> Result<Mode, String> {
     }
 }
 
+/// The `require` key: one or more requirements, each once.
+fn requirements(map: &BTreeMap<String, Value>) -> Result<Vec<Require>, String> {
+    let names = strings(map, "require")?;
+    if names.is_empty() {
+        return Err("require names at least one requirement".into());
+    }
+    let mut require = Vec::new();
+    for (n, name) in names.iter().enumerate() {
+        let parsed = Require::parse(name)
+            .ok_or_else(|| format!("require {name:?} is not one of {}", REQUIREMENTS.join(", ")))?;
+        if names[..n].contains(name) {
+            return Err(format!("require names {name} twice"));
+        }
+        require.push(parsed);
+    }
+    Ok(require)
+}
+
 /// Parse one rule file whose name is `<stem>.toml`.
 pub fn parse(text_in: &str, stem: &str, path: &str) -> Result<Rule, String> {
     let map = toml::parse(text_in)?;
@@ -223,19 +241,7 @@ pub fn parse(text_in: &str, stem: &str, path: &str) -> Result<Rule, String> {
     }) {
         return Err(format!("repos pattern {bad:?} is not a repository name"));
     }
-    let names = strings(&map, "require")?;
-    if names.is_empty() {
-        return Err("require names at least one requirement".into());
-    }
-    let mut require = Vec::new();
-    for (n, name) in names.iter().enumerate() {
-        let parsed = Require::parse(name)
-            .ok_or_else(|| format!("require {name:?} is not one of {}", REQUIREMENTS.join(", ")))?;
-        if names[..n].contains(name) {
-            return Err(format!("require names {name} twice"));
-        }
-        require.push(parsed);
-    }
+    let require = requirements(&map)?;
     Ok(Rule {
         id,
         path: path.to_owned(),

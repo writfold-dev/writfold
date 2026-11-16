@@ -26,6 +26,8 @@
 //! Not followed: `bash -c` and `eval` strings, programs that run their
 //! arguments (`xargs`, `find -exec`), backquotes, aliases, functions and
 //! scripts, and `ssh`'s remote command. For a guard these are misses.
+#[cfg(test)]
+mod corpus;
 mod invoke;
 mod read;
 #[cfg(test)]

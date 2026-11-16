@@ -119,6 +119,46 @@ fn rule_row(rule: &Rule, current: &str, mine: &[&Value], all: bool) -> (Row, boo
     (row, audit && (unmatched || deny + ask > 0))
 }
 
+/// Rows for rule IDs in the log whose file is gone.
+fn removed(answer: &mut Answer, entries: &[&Value], found: &[Rule]) {
+    let mut ids: Vec<String> = entries
+        .iter()
+        .map(|e| text(e, "rule"))
+        .filter(|id| !found.iter().any(|r| &r.id == id))
+        .collect();
+    ids.sort();
+    ids.dedup();
+    for id in ids {
+        let n = entries.iter().filter(|e| e["rule"] == id.as_str()).count();
+        answer.rows.push(Row {
+            kind: "guard-log",
+            id,
+            status: Some("removed".into()),
+            text: format!("{n} entries; the rule file is gone"),
+            ..Row::default()
+        });
+    }
+}
+
+/// The trailer counts.
+fn counts(entries: &[&Value], rules: usize, unparsed: usize) -> Vec<(&'static str, usize)> {
+    let total = |d: &str, mode: &str| {
+        entries
+            .iter()
+            .filter(|e| e["decided"] == d && e["mode"] == mode)
+            .count()
+    };
+    vec![
+        ("rules", rules),
+        ("entries", entries.len()),
+        ("would-deny", total("deny", "audit")),
+        ("would-ask", total("ask", "audit")),
+        ("deny", total("deny", "enforce")),
+        ("ask", total("ask", "enforce")),
+        ("unparsed", unparsed),
+    ]
+}
+
 /// Answer `guard log`.
 pub fn execute(
     ws: &Workspace,
@@ -161,38 +201,8 @@ pub fn execute(
         unclean |= bad;
         answer.rows.push(row);
     }
-    let mut removed: Vec<String> = entries
-        .iter()
-        .map(|e| text(e, "rule"))
-        .filter(|id| !found.iter().any(|r| &r.id == id))
-        .collect();
-    removed.sort();
-    removed.dedup();
-    for id in removed {
-        let n = entries.iter().filter(|e| e["rule"] == id.as_str()).count();
-        answer.rows.push(Row {
-            kind: "guard-log",
-            id,
-            status: Some("removed".into()),
-            text: format!("{n} entries; the rule file is gone"),
-            ..Row::default()
-        });
-    }
-    let total = |d: &str, mode: &str| {
-        entries
-            .iter()
-            .filter(|e| e["decided"] == d && e["mode"] == mode)
-            .count()
-    };
-    answer.counts = vec![
-        ("rules", found.len()),
-        ("entries", entries.len()),
-        ("would-deny", total("deny", "audit")),
-        ("would-ask", total("ask", "audit")),
-        ("deny", total("deny", "enforce")),
-        ("ask", total("ask", "enforce")),
-        ("unparsed", unparsed),
-    ];
+    removed(&mut answer, &entries, &found);
+    answer.counts = counts(&entries, found.len(), unparsed);
     answer.notes.push(format!(
         "from the local log {}: this machine only, never committed; a guard, not enforcement",
         path.display()

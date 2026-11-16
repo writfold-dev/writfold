@@ -5,9 +5,12 @@
 //! checks each suite's shape, count, licence and recorded differences.
 #[path = "guard_conformance/world.rs"]
 mod cases;
+#[path = "guard_conformance/compare.rs"]
+mod compare;
 mod support;
 
 use cases::{build, keys, placed};
+use compare::{compare, observed};
 use serde_json::Value;
 use std::path::{Path, PathBuf};
 use support::{NOW, TestResult};
@@ -49,19 +52,6 @@ fn dirs(path: &Path) -> TestResult<Vec<PathBuf>> {
 
 fn suites() -> TestResult<Vec<PathBuf>> {
     dirs(&root())
-}
-
-/// The rule IDs a reason names, sorted.
-fn deciders(reason: &str) -> Vec<String> {
-    let mut ids: Vec<String> = reason
-        .lines()
-        .filter_map(|l| l.strip_prefix("writfold guard rule "))
-        .filter_map(|l| l.split_whitespace().next())
-        .map(str::to_owned)
-        .collect();
-    ids.sort();
-    ids.dedup();
-    ids
 }
 
 /// Run one case; `Err` names what differs.
@@ -110,55 +100,8 @@ fn case(dir: &Path) -> TestResult<()> {
         home: Some(home),
     };
     let out = run(name, &event.to_string(), &env);
-    let (decision, reason) = match (name, out.stdout.is_empty()) {
-        ("stop", true) => ("quiet".to_owned(), String::new()),
-        (_, true) => ("pass".to_owned(), String::new()),
-        (_, false) => {
-            let value: Value = serde_json::from_str(&out.stdout)?;
-            let specific = &value["hookSpecificOutput"];
-            match name {
-                "stop" => (
-                    "nudge".to_owned(),
-                    specific["additionalContext"]
-                        .as_str()
-                        .unwrap_or("")
-                        .to_owned(),
-                ),
-                _ => (
-                    specific["permissionDecision"]
-                        .as_str()
-                        .unwrap_or("")
-                        .to_owned(),
-                    specific["permissionDecisionReason"]
-                        .as_str()
-                        .unwrap_or("")
-                        .to_owned(),
-                ),
-            }
-        }
-    };
-    let mut wrong = Vec::new();
-    if expected["decision"] != decision.as_str() {
-        wrong.push(format!(
-            "decision {decision}, expected {}",
-            expected["decision"]
-        ));
-    }
-    if let Some(ids) = expected.get("decided_by") {
-        let ids: Vec<String> = serde_json::from_value(ids.clone())?;
-        if ids != deciders(&reason) {
-            wrong.push(format!(
-                "decided by {:?}, expected {ids:?}",
-                deciders(&reason)
-            ));
-        }
-    }
-    for piece in expected["reason_has"].as_array().into_iter().flatten() {
-        let piece = piece.as_str().ok_or("reason_has holds strings")?;
-        if !reason.contains(piece) {
-            wrong.push(format!("reason lacks {piece:?}"));
-        }
-    }
+    let (decision, reason) = observed(name, &out.stdout)?;
+    let wrong = compare(&expected, &decision, &reason)?;
     match wrong.is_empty() {
         true => Ok(()),
         false => Err(format!(

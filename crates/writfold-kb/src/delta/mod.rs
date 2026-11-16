@@ -151,6 +151,42 @@ fn report(session: &Session<'_>, changed: &[(String, &'static str)], prefix: &st
     answer
 }
 
+/// The base of a comparison and how the note names it.
+fn baseline(
+    git: &GitExecutable<'_>,
+    subject: &Subject,
+    state: &std::path::Path,
+    verb: &DeltaVerb,
+) -> Result<(Mark, String)> {
+    match verb {
+        DeltaVerb::Mark(name) | DeltaVerb::SinceMark(name) => {
+            let m = mark::read(state, name)?;
+            let said = format!(
+                "mark {name} (HEAD {} and {} dirty files, taken {})",
+                short(&m.head),
+                m.dirty.len(),
+                m.taken
+            );
+            Ok((m, said))
+        }
+        DeltaVerb::Since(rev) => {
+            let commit =
+                kb_commit(git, reads(subject), rev, budgets()?, &CANCELLED)?.ok_or_else(|| {
+                    KbError::Refused(format!("{rev} names no commit of the KB repository"))
+                })?;
+            let said = format!("{rev} ({})", commit.as_str());
+            let head = commit.as_str().to_owned();
+            Ok((
+                Mark {
+                    head,
+                    ..Mark::default()
+                },
+                said,
+            ))
+        }
+    }
+}
+
 /// Answer one `delta` form.
 pub fn execute(ws: &Workspace, request: &Request, verb: &DeltaVerb, now: i64) -> Result<Output> {
     let tool = GitTool::locate()?;
@@ -161,43 +197,18 @@ pub fn execute(ws: &Workspace, request: &Request, verb: &DeltaVerb, now: i64) ->
         .ok_or_else(|| KbError::Refused("delta needs Git".into()))?;
     let (subject, prefix) = kb_subject(ws)?;
     let state = subject.git_dir.join("writfold");
-    let (base, said) = match verb {
-        DeltaVerb::Mark(name) => {
-            let taken = take(ws, git, name, now)?;
-            mark::write(&state, &taken, now, request.probe)?;
-            let mut answer = Answer::default();
-            answer.notes.push(format!(
-                "marked {name}: HEAD {} and {} dirty files; local, never committed",
-                short(&taken.head),
-                taken.dirty.len()
-            ));
-            return session.emit(&answer, &frame(request, "delta-mark", name));
-        }
-        DeltaVerb::SinceMark(name) => {
-            let m = mark::read(&state, name)?;
-            let said = format!(
-                "mark {name} (HEAD {} and {} dirty files, taken {})",
-                short(&m.head),
-                m.dirty.len(),
-                m.taken
-            );
-            (m, said)
-        }
-        DeltaVerb::Since(rev) => {
-            let commit =
-                kb_commit(git, reads(&subject), rev, budgets()?, &CANCELLED)?.ok_or_else(|| {
-                    KbError::Refused(format!("{rev} names no commit of the KB repository"))
-                })?;
-            let said = format!("{rev} ({})", commit.as_str());
-            (
-                Mark {
-                    head: commit.as_str().to_owned(),
-                    ..Mark::default()
-                },
-                said,
-            )
-        }
-    };
+    if let DeltaVerb::Mark(name) = verb {
+        let taken = take(ws, git, name, now)?;
+        mark::write(&state, &taken, now, request.probe)?;
+        let mut answer = Answer::default();
+        answer.notes.push(format!(
+            "marked {name}: HEAD {} and {} dirty files; local, never committed",
+            short(&taken.head),
+            taken.dirty.len()
+        ));
+        return session.emit(&answer, &frame(request, "delta-mark", name));
+    }
+    let (base, said) = baseline(git, &subject, &state, verb)?;
     let base_id =
         kb_commit(git, reads(&subject), &base.head, budgets()?, &CANCELLED)?.ok_or_else(|| {
             KbError::Refused(format!(

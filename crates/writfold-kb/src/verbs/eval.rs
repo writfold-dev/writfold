@@ -32,7 +32,7 @@ const BY: [(&str, &str); 10] = [
 struct Query {
     line: u32,
     text: String,
-    expect: Vec<String>,
+    wanted: Vec<String>,
 }
 
 fn refused(line: usize, why: &str) -> KbError {
@@ -57,7 +57,7 @@ fn parse(text: &str) -> Result<Vec<Query>> {
             .and_then(Value::as_str)
             .filter(|q| !q.trim().is_empty());
         let query = query.ok_or_else(|| refused(n, "query must be a non-empty string"))?;
-        let expect: Vec<String> = match map.get("expect") {
+        let wanted: Vec<String> = match map.get("expect") {
             Some(Value::Array(items)) => items
                 .iter()
                 .filter_map(Value::as_str)
@@ -68,8 +68,8 @@ fn parse(text: &str) -> Result<Vec<Query>> {
         let all_strings = map
             .get("expect")
             .and_then(Value::as_array)
-            .is_some_and(|a| a.len() == expect.len());
-        if expect.is_empty() || !all_strings {
+            .is_some_and(|a| a.len() == wanted.len());
+        if wanted.is_empty() || !all_strings {
             return Err(refused(n, "expect must be a non-empty array of record IDs"));
         }
         if map.get("note").is_some_and(|v| !v.is_string()) {
@@ -78,7 +78,7 @@ fn parse(text: &str) -> Result<Vec<Query>> {
         out.push(Query {
             line: u32::try_from(n).unwrap_or(u32::MAX),
             text: query.to_owned(),
-            expect,
+            wanted,
         });
     }
     Ok(out)
@@ -108,9 +108,9 @@ fn judge(
     let mut found = find::find(session, &q.text, &Filter::default(), false)?;
     // A suggestion is not a hit.
     found.rows.retain(|r| r.matched_on != Some("suggestion"));
-    let at = found.rows.iter().position(|r| q.expect.contains(&r.id));
+    let at = found.rows.iter().position(|r| q.wanted.contains(&r.id));
     let mut unknown = false;
-    for id in &q.expect {
+    for id in &q.wanted {
         unknown |= !known(session, id)?;
     }
     let (status, tier) = match at {
@@ -127,7 +127,7 @@ fn judge(
             i + 1,
             found.rows[i].matched_on.unwrap_or("none")
         ),
-        None => format!("{} -> none of {}", q.text, q.expect.join(", ")),
+        None => format!("{} -> none of {}", q.text, q.wanted.join(", ")),
     };
     let mut row = Row {
         kind: "query",
