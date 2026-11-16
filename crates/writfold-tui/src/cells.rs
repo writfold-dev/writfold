@@ -54,6 +54,7 @@ pub fn chip(status: &str, glyphs: Glyphs) -> Cell {
         "open" => ("○", "o", Tone::Warn),
         "stale" => ("!", "!", Tone::Bad),
         "failed" => ("×", "x", Tone::Bad),
+        "invalid" => ("×", "#", Tone::Bad),
         "later" => ("·", ".", Tone::Dim),
         _ => ("?", "?", Tone::Warn),
     };

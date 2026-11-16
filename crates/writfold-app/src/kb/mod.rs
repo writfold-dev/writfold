@@ -14,10 +14,12 @@ mod observe;
 mod plan;
 mod proposals;
 mod set;
+mod shown;
 mod verbs;
 mod writes;
 
 use writfold_kb::Request;
+pub use writfold_kb::diag::Style;
 
 pub const USAGE: &str =
     "usage: writfold kb <verb> [args] [--kb DIR] [--budget-tokens N] [--cursor C] [--json]
@@ -49,6 +51,11 @@ verbs:
   index status|rebuild|verify      what the derived index holds; rebuild it; check it equals a rebuild
   check [<project>|<path>]         stale, index verify and the current run's gate status in one
                                    summary (the worst exit code of the three)
+  lint [PATH…] [--repo DIR] [--deny-warnings] [--records]
+                                   every fault of the files you wrote (gates, guards, plans,
+                                   delivery modes, kinds, queries.jsonl), each at its line and
+                                   column; --records: records' front matter, JSON and citation
+                                   tokens. Reads files only (exit 0 clean, 2 errors, 1 usage)
   runs [--open] [--project P] [--plan]
                                    every run: state, place, last checkpoint; --plan adds its position
   runs --idle AGE [--project P] [--plan]
@@ -159,8 +166,24 @@ pub struct Outcome {
     pub code: u8,
 }
 
-/// Run `writfold kb <args>` in `cwd`.
+/// Run `writfold kb <args>` in `cwd`, diagnostics plain.
 pub fn main(args: &[String], cwd: std::path::PathBuf) -> Outcome {
+    let styles = Styles {
+        stdout: Style::plain(),
+        stderr: Style::plain(),
+    };
+    main_styled(args, cwd, &styles)
+}
+
+/// How diagnostics are drawn on each stream: the caller decides colour
+/// and width (a terminal, `NO_COLOR`, `TERM=dumb`).
+pub struct Styles {
+    pub stdout: Style,
+    pub stderr: Style,
+}
+
+/// Run `writfold kb <args>` in `cwd`, diagnostics drawn in `styles`.
+pub fn main_styled(args: &[String], cwd: std::path::PathBuf, styles: &Styles) -> Outcome {
     if let Some((first, rest)) = args.split_first()
         && first == "hook"
     {
@@ -185,13 +208,13 @@ pub fn main(args: &[String], cwd: std::path::PathBuf) -> Outcome {
     };
     match writfold_kb::run(&request) {
         Ok(output) => Outcome {
-            stdout: output.text,
-            stderr: String::new(),
+            stderr: shown::stderr(&output, &styles.stderr),
+            stdout: shown::stdout(&output, &styles.stdout),
             code: output.exit,
         },
         Err(error) => Outcome {
             stdout: String::new(),
-            stderr: format!("writfold kb: {error}\n"),
+            stderr: shown::error(&error, &styles.stderr),
             code: error.exit_code(),
         },
     }

@@ -245,8 +245,13 @@ fn mode_is_strict() {
     assert!(writfold_kb::guard::rules::parse(&audit, "r", "r.toml").is_ok());
     let stop = format!("{}{AUDIT}", STOP.replace("id = \"finish\"", "id = \"r\""));
     let why = writfold_kb::guard::rules::parse(&stop, "r", "r.toml").err();
+    let first = why.as_ref().and_then(|r| r.diagnostics.first());
     assert_eq!(
-        why.as_deref(),
-        Some("mode applies to a pre-tool-use rule only")
+        first.map(|d| (d.code, d.message.as_str(), d.label.as_str())),
+        Some((
+            "key.not-here",
+            "`mode` is not used by a stop rule",
+            "mode applies to a pre-tool-use rule only"
+        ))
     );
 }

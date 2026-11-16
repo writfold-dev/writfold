@@ -146,7 +146,8 @@ fn accept(text: &str) -> TestResult {
         "writfold-guard-rule/1" => {
             let id = string(&map, "id")?;
             let path = format!("{}/{id}.toml", writfold_kb::guard::rules::DIR);
-            writfold_kb::guard::rules::parse(text, &id, &path)?;
+            writfold_kb::guard::rules::parse(text, &id, &path)
+                .map_err(|r| writfold_kb::defs::why(&r))?;
             Ok(())
         }
         "writfold-plan/1" => {

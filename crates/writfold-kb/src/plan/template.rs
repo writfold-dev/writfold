@@ -1,5 +1,5 @@
 //! Plan templates: `.writfold/plans/<name>.toml`, schema `writfold-plan/1`,
-//! in the strict TOML subset gate definitions use ([`crate::gate::toml`]).
+//! in the strict TOML subset gate definitions use ([`crate::defs::toml`]).
 //! A step is one string, `id: gate gate …`: a slug, a colon, and the IDs
 //! of the gates the step owes (none is allowed); `deliver:<mode>` owes a delivery. Unknown keys are refused,
 //! as for gates. The digest is the SHA-256 of the template's exact bytes:
@@ -13,7 +13,6 @@
 //! cycle or a nesting deeper than [`writfold_core::plan::MAX_DEPTH`] is
 //! refused.
 use crate::error::{KbError, Result};
-use crate::gate::toml::{self, Value};
 use crate::write::is_slug;
 use sha2::{Digest, Sha256};
 use std::path::{Path, PathBuf};
@@ -21,7 +20,7 @@ use std::path::{Path, PathBuf};
 pub const SCHEMA: &str = "writfold-plan/1";
 /// Where templates live, under the KB root or the subject repository.
 pub const DIR: &str = ".writfold/plans";
-const KEYS: [&str; 4] = ["schema", "name", "description", "steps"];
+pub const KEYS: [&str; 4] = ["schema", "name", "description", "steps"];
 /// At most this many steps in one template.
 pub const MAX_STEPS: usize = 64;
 /// The name of the required-steps file in [`DIR`], never a template.
@@ -56,89 +55,23 @@ pub fn digest(bytes: &[u8]) -> String {
     format!("sha256:{}", crate::index::hex(&Sha256::digest(bytes)))
 }
 
-/// One `id: gate gate …` string.
+/// One `id: gate gate …` string ([`super::step_word`]).
 pub fn step(text: &str) -> std::result::Result<Step, String> {
-    let Some((id, rest)) = text.split_once(':') else {
-        return Err(format!("step {text:?} must be written \"id: gate gate …\""));
-    };
-    let id = id.trim();
-    if !is_slug(id) {
-        return Err(format!("step ID {id:?} is not a slug"));
-    }
-    let mut gates: Vec<String> = Vec::new();
-    let mut include: Option<String> = None;
-    for word in rest.split_whitespace() {
-        if let Some(name) = word.strip_prefix("use=") {
-            if !is_slug(name) || name == RESERVED {
-                return Err(format!("step {id}: {word} does not name a template"));
-            }
-            if include.replace(name.to_owned()).is_some() {
-                return Err(format!("step {id} includes more than one template"));
-            }
-            continue;
-        }
-        if word.starts_with(crate::deliver::step::PREFIX) {
-            crate::deliver::word::check(id, word, &gates)?;
-        } else if !is_slug(word) {
-            return Err(format!("step {id}: gate {word:?} is not a gate ID"));
-        } else if gates.iter().any(|g| g == word) {
-            return Err(format!("step {id} names gate {word} twice"));
-        }
-        gates.push(word.to_owned());
-    }
-    Ok(Step {
-        id: id.to_owned(),
-        gates,
-        include,
-    })
+    super::step_word::read(text).map_err(|f| f.why)
 }
 
 /// Parse a template's bytes; `stem`, when given, is the file name the
 /// `name` must equal.
 pub fn parse(bytes: &[u8], stem: Option<&str>) -> Result<Template> {
-    let text = std::str::from_utf8(bytes).map_err(|_| bad("not UTF-8".into()))?;
-    let map = toml::parse(text).map_err(bad)?;
-    if let Some(key) = map.keys().find(|k| !KEYS.contains(&k.as_str())) {
-        return Err(bad(format!("unknown key {key}")));
-    }
-    let string = |key: &str| match map.get(key) {
-        None => Ok(None),
-        Some(Value::Str(s)) => Ok(Some(s.clone())),
-        Some(_) => Err(bad(format!("{key} must be a string"))),
-    };
-    if string("schema")?.as_deref() != Some(SCHEMA) {
-        return Err(bad(format!("schema must be {SCHEMA}")));
-    }
-    let name = string("name")?.ok_or_else(|| bad("name is required".into()))?;
-    if !is_slug(&name) || name == RESERVED || stem.is_some_and(|s| s != name) {
-        return Err(bad(format!(
-            "name {name:?} must be a slug equal to the file name"
-        )));
-    }
-    let description = string("description")?;
-    if description
-        .as_deref()
-        .is_some_and(|d| d.contains(['\n', '\r']))
-    {
-        return Err(bad("description must be one line".into()));
-    }
-    let Some(Value::List(items)) = map.get("steps") else {
-        return Err(bad("steps must be an array of strings".into()));
-    };
-    if items.is_empty() || items.len() > MAX_STEPS {
-        return Err(bad(format!("steps must hold 1 to {MAX_STEPS} steps")));
-    }
-    let mut steps: Vec<Step> = Vec::new();
-    for item in items {
-        let parsed = step(item).map_err(bad)?;
-        if steps.iter().any(|s| s.id == parsed.id) {
-            return Err(bad(format!("step {} is listed twice", parsed.id)));
-        }
-        if parsed.include.as_deref() == Some(name.as_str()) {
-            return Err(bad(format!("step {} includes {name} itself", parsed.id)));
-        }
-        steps.push(parsed);
-    }
+    let shown = format!("{DIR}/{}.toml", stem.unwrap_or("template"));
+    parse_shown(bytes, stem, &shown)
+}
+
+/// [`parse`], its diagnostics shown as `shown`.
+pub fn parse_shown(bytes: &[u8], stem: Option<&str>, shown: &str) -> Result<Template> {
+    let text = std::str::from_utf8(bytes).map_err(|_| unreadable(shown))?;
+    let (name, description, steps) =
+        check(text, stem, shown).map_err(|r| KbError::Definition(Box::new(r)))?;
     Ok(Template {
         name,
         description,
@@ -147,6 +80,14 @@ pub fn parse(bytes: &[u8], stem: Option<&str>) -> Result<Template> {
         bytes: bytes.to_vec(),
     })
 }
+
+fn unreadable(shown: &str) -> KbError {
+    let problem =
+        crate::defs::Problem::whole(shown, shown, "file.unreadable", "is not UTF-8 text".into());
+    KbError::Definition(Box::new(problem.report))
+}
+
+pub use super::template_check::check;
 
 /// The template `name` from the KB root's `.writfold/plans/`, else the
 /// subject repository's (`repo`: its top and its name); the same name in
@@ -169,7 +110,10 @@ pub fn find(kb: &Path, repo: Option<(&Path, &str)>, name: &str) -> Result<(Templ
         [] => Err(KbError::Refused(format!(
             "no plan template {name}: add {file} to the KB root or the repository"
         ))),
-        [(path, source)] => Ok((parse(&std::fs::read(path)?, Some(name))?, source.clone())),
+        [(path, source)] => Ok((
+            parse_shown(&std::fs::read(path)?, Some(name), source)?,
+            source.clone(),
+        )),
         _ => Err(bad(format!(
             "{name} is defined in both the KB and the repository"
         ))),
@@ -199,16 +143,22 @@ impl Closure {
     pub fn all(&self) -> impl Iterator<Item = &Template> {
         std::iter::once(&self.top).chain(self.includes.iter().map(|(t, _)| t))
     }
+
+    /// Every template with where it was read from, the top first.
+    pub fn sourced(&self) -> impl Iterator<Item = (&Template, &str)> {
+        std::iter::once((&self.top, self.source.as_str()))
+            .chain(self.includes.iter().map(|(t, s)| (t, s.as_str())))
+    }
 }
 
 type Repo<'a> = Option<(&'a Path, &'a str)>;
 
 /// Resolve every `use=` of `top`, refusing a cycle and a nesting deeper
-/// than the kernel's bound.
+/// than the kernel's bound, each at the `use=` word that makes it.
 pub fn closure(kb: &Path, repo: Repo<'_>, top: Template, source: String) -> Result<Closure> {
     let mut includes: Vec<(Template, String)> = Vec::new();
     let mut stack = vec![top.name.clone()];
-    let height = visit(kb, repo, &top, &mut stack, &mut includes)?;
+    let height = visit(kb, repo, (&top, &source), &mut stack, &mut includes)?;
     Ok(Closure {
         top,
         source,
@@ -217,40 +167,56 @@ pub fn closure(kb: &Path, repo: Repo<'_>, top: Template, source: String) -> Resu
     })
 }
 
+fn cycle(t: (&Template, &str), step: &str, name: &str, why: String) -> KbError {
+    let report = super::refs::at_word(t.0, t.1, (step, &format!("use={name}")), "ref.cycle", why);
+    KbError::Definition(Box::new(report))
+}
+
 fn visit(
     kb: &Path,
     repo: Repo<'_>,
-    t: &Template,
+    t: (&Template, &str),
     stack: &mut Vec<String>,
     found: &mut Vec<(Template, String)>,
 ) -> Result<usize> {
     let mut height = 1;
-    for name in t.steps.iter().filter_map(|s| s.include.as_deref()) {
+    for (step, name) in
+        t.0.steps
+            .iter()
+            .filter_map(|s| s.include.as_deref().map(|n| (s.id.as_str(), n)))
+    {
+        let path = format!("{} → {name}", stack.join(" → "));
         if stack.iter().any(|s| s == name) {
-            return Err(bad(format!(
-                "{} includes itself: {} → {name}",
-                stack[0],
-                stack.join(" → ")
-            )));
+            return Err(cycle(
+                t,
+                step,
+                name,
+                format!("{} includes itself: {path}", stack[0]),
+            ));
         }
         if stack.len() >= writfold_core::plan::MAX_DEPTH {
-            return Err(bad(format!(
-                "{} nests deeper than {} levels: {} → {name}",
+            let why = format!(
+                "{} nests deeper than {} levels: {path}",
                 stack[0],
-                writfold_core::plan::MAX_DEPTH,
-                stack.join(" → ")
-            )));
+                writfold_core::plan::MAX_DEPTH
+            );
+            return Err(cycle(t, step, name, why));
         }
-        let included = match found.iter().find(|(f, _)| f.name == name) {
-            Some((f, _)) => f.clone(),
+        let (included, source) = match found.iter().find(|(f, _)| f.name == name) {
+            Some((f, s)) => (f.clone(), s.clone()),
             None => {
-                let (f, source) = find(kb, repo, name)?;
-                found.push((f.clone(), source));
-                f
+                let (f, source) = find(kb, repo, name).map_err(|e| match e {
+                    KbError::Refused(why) if why.starts_with("no plan template") => {
+                        super::refs::no_template(kb, repo.map(|r| r.0), t, step, name)
+                    }
+                    other => other,
+                })?;
+                found.push((f.clone(), source.clone()));
+                (f, source)
             }
         };
         stack.push(name.to_owned());
-        let below = visit(kb, repo, &included, stack, found)?;
+        let below = visit(kb, repo, (&included, &source), stack, found)?;
         stack.pop();
         height = height.max(below + 1);
     }

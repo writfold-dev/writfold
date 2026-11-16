@@ -65,7 +65,7 @@ pub fn plan(session: &Session<'_>, s: &SetStatus, cwd: &Path) -> Result<Plan> {
         }
         "investigation" if state == "concluded" => {
             let (_, doc) = document(session, &rec)?;
-            super::conclude::check(&rec.id, &doc)?;
+            super::conclude::check(&rec.id, &rec.path, &doc)?;
             fields(session, &rec, &state, &[])?
         }
         "decision" => {

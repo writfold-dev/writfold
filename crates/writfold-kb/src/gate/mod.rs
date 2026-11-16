@@ -13,6 +13,7 @@
 pub mod assessed;
 pub mod checklist;
 pub mod def;
+pub mod def_check;
 mod def_class;
 #[cfg(test)]
 mod def_tests;
@@ -171,7 +172,8 @@ fn report(
         ));
     };
     let mut answer = Answer::default();
-    let (rows, counts, note) = gate_rows(session, rec, &subject)?;
+    let (rows, counts, note, diagnostics) = gate_rows(session, rec, &subject)?;
+    answer.report = Some(diagnostics);
     let owed = crate::plan::owed(session, rec);
     let words: Vec<&str> = owed.deliveries.iter().map(|(w, _)| w.as_str()).collect();
     if rows.is_empty() {
@@ -221,12 +223,9 @@ fn none_owed(session: &Session<'_>, owed: &status::Owed, subject: &Subject) -> S
 
 /// Trailer counts by state.
 type Counts = Vec<(&'static str, usize)>;
+type Rows = (Vec<Row>, Counts, Option<String>, crate::diag::Report);
 
-fn gate_rows(
-    session: &Session<'_>,
-    rec: &Rec,
-    subject: &Subject,
-) -> Result<(Vec<Row>, Counts, Option<String>)> {
+fn gate_rows(session: &Session<'_>, rec: &Rec, subject: &Subject) -> Result<Rows> {
     let git = session
         .git
         .as_ref()
@@ -234,7 +233,13 @@ fn gate_rows(
     let filings = Filings::for_run(session, rec);
     let report = status::judge(session, subject, &filings)?;
     let rows = status::rows(git, subject, &report, &filings)?;
-    Ok((rows, counts(&report, &filings), report.recorded_note()))
+    let diagnostics = report.diagnostics();
+    Ok((
+        rows,
+        counts(&report, &filings),
+        report.recorded_note(),
+        diagnostics,
+    ))
 }
 
 /// The gate rows `resume` shows for a run, or why there are none. Quiet
@@ -262,7 +267,7 @@ pub fn resume_rows(session: &Session<'_>, rec: &Rec, cwd: &Path) -> (Vec<Row>, V
         return (Vec::new(), Vec::new());
     }
     match gate_rows(session, rec, &subject) {
-        Ok((rows, _, _)) => (rows, Vec::new()),
+        Ok((rows, ..)) => (rows, Vec::new()),
         Err(error) => (Vec::new(), vec![format!("gates: {error}")]),
     }
 }
@@ -320,6 +325,8 @@ fn lines(session: &Session<'_>, rec: &Rec, repo: Option<&Path>, cwd: &Path) -> R
     Ok(Output {
         text,
         exit: if all { 0 } else { 2 },
+        report: None,
+        shown: None,
     })
 }
 

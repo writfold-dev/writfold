@@ -177,6 +177,21 @@ step two#1/first [done] no gates @runs/run-…/plan/done-two.1~first.json:1 !out
 
 `resume`'s plan line and `kb check`'s plan row carry the same flags.
 
+A step written without its colon, or naming a gate that is not defined, is reported at the word that is wrong, with the closest name the KB defines ([errors](errors.md)):
+
+```text
+$ writfold kb plan set main
+error[ref.undefined]: step `implement` owes gate `unitt`, which is not defined
+ --> .writfold/plans/main.toml:4:15
+  |
+4 |   "implement: unitt",
+  |               ^^^^^ no .writfold/gates/unitt.toml in the KB root or the repository
+  |
+  = help: did you mean `unit`?
+
+writfold kb: refused: .writfold/plans/main.toml: 1 error
+```
+
 ## Required steps
 
 Templates that every run's plan includes are named in `.writfold/plans/required.toml`, in the KB root or the repository (the same file in both is refused):

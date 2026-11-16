@@ -18,6 +18,12 @@ const ROW: [&str; 9] = [
 const IMPACT_ROW: [&str; 2] = ["edge", "title"];
 /// The key `find` and `match` rows add: the tier that found the row.
 const FIND_ROW: [&str; 1] = ["matched_on"];
+/// The key `gate status`, `guard status` and `lint` add: the faults of
+/// the definition files they read, each an object of these keys.
+const DIAGNOSTICS: [&str; 1] = ["diagnostics"];
+const DIAGNOSTIC: [&str; 10] = [
+    "severity", "code", "file", "line", "col", "len", "message", "label", "help", "notes",
+];
 const EDGE: [&str; 5] = ["from", "rel", "to", "origin", "depth"];
 const MORE: [&str; 6] = ["label", "text", "path", "line", "flags", "status"];
 const TRAILER: [&str; 15] = [
@@ -121,7 +127,12 @@ fn impact_rows_add_only_the_documented_keys() -> TestResult {
 fn the_guide_page_names_every_key() -> TestResult {
     let page = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../docs/guide/json.md");
     let text = std::fs::read_to_string(page)?;
-    let impact = IMPACT_ROW.iter().chain(&EDGE).chain(&FIND_ROW);
+    let impact = IMPACT_ROW
+        .iter()
+        .chain(&EDGE)
+        .chain(&FIND_ROW)
+        .chain(&DIAGNOSTICS)
+        .chain(&DIAGNOSTIC);
     for key in TOP
         .iter()
         .chain(&ROW)
@@ -220,5 +231,35 @@ fn delivery_labels_are_documented() -> TestResult {
     for named in ["`seq`", "`deliver:<mode>`", "`deliver:`"] {
         assert!(page.contains(named), "json.md does not name {named}");
     }
+    Ok(())
+}
+
+#[test]
+fn a_status_verb_adds_diagnostics_of_the_documented_keys() -> TestResult {
+    let w = world(&[])?;
+    let dir = w.kb.join(".writfold/guards");
+    std::fs::create_dir_all(&dir)?;
+    let rule = "schema = \"writfold-guard-rule/1\"\nid = \"commit\"\nevent = \"pre-tool-use\"\ncommands = [\"git commit\"]\nrequire = [\"gates.mett\"]\naction = \"deny\"\n";
+    std::fs::write(dir.join("commit.toml"), rule)?;
+    let mut request = w.request(Verb::Guard(writfold_kb::guard::GuardVerb::Status));
+    request.json = true;
+    let output = writfold_kb::run(&request)?;
+    let body: Value = serde_json::from_str(&output.text)?;
+    let all: BTreeSet<String> = set(&TOP).union(&set(&DIAGNOSTICS)).cloned().collect();
+    assert_eq!(keys(&body), all);
+    let found = body["diagnostics"].as_array().ok_or("diagnostics")?;
+    assert_eq!(found.len(), 1, "{body}");
+    assert_eq!(keys(&found[0]), set(&DIAGNOSTIC));
+    assert_eq!(found[0]["code"], "value.unknown");
+    assert_eq!(
+        (found[0]["line"].as_u64(), found[0]["col"].as_u64()),
+        (Some(5), Some(12))
+    );
+    assert_eq!(found[0]["help"], "did you mean \"gates.met\"?");
+    let row = &body["rows"][0];
+    assert_eq!(
+        (row["id"].as_str(), row["line"].as_u64()),
+        (Some("commit"), Some(5))
+    );
     Ok(())
 }

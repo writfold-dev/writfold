@@ -247,8 +247,8 @@ fn bad_modes_are_refused_when_loaded() -> TestResult {
             "checks = [\"spelling\"]\n",
             "spelling is not a built-in check",
         ),
-        ("gates = [\"nope\"]\n", "unknown gate nope"),
-        ("gates = [\"unit\"]\n", "gate unit judges a repository"),
+        ("gates = [\"nope\"]\n", "unknown gate `nope`"),
+        ("gates = [\"unit\"]\n", "gate `unit` judges a repository"),
         ("gates = [\"loose\"]\n", "must pass {candidate}"),
         ("gates = [\"m\"]\n", "a mode cannot name a mode"),
         ("gates = [\"pr-comment\"]\n", "a mode cannot name a mode"),
@@ -256,7 +256,7 @@ fn bad_modes_are_refused_when_loaded() -> TestResult {
             "gates = [\"commit-format\", \"commit-format\"]\n",
             "listed twice",
         ),
-        ("include = [\"pr-comment\"]\n", "unknown key include"),
+        ("include = [\"pr-comment\"]\n", "unknown key `include`"),
     ] {
         put(&w, ".writfold/deliveries/m.toml", &format!("{head}{extra}"))?;
         let why = refused(&w, "m")?;

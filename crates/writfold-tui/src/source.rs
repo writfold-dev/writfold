@@ -26,6 +26,10 @@ pub struct Reply {
     pub trailer: Value,
     pub exit: u8,
     pub error: Option<String>,
+    /// `diagnostics` of a verb that read definition files.
+    pub diagnostics: Vec<Value>,
+    /// The text of each file a diagnostic names, for its source line.
+    pub sources: Vec<(String, String)>,
 }
 
 impl Reply {
@@ -107,6 +111,28 @@ impl Source {
         })
     }
 
+    /// The text of each file the diagnostics name: from the KB root, or
+    /// (`<repo>:path`) from the repository around the working directory.
+    fn sources(&self, diagnostics: &[Value]) -> Vec<(String, String)> {
+        let mut out: Vec<(String, String)> = Vec::new();
+        for file in diagnostics.iter().map(|d| field(d, "file")) {
+            if out.iter().any(|(f, _)| f == file) {
+                continue;
+            }
+            let path = match (file.split_once(':'), &self.kb) {
+                (Some((_, rel)), Some(kb)) => {
+                    writfold_kb::defs::lint::enclosing(kb, &self.cwd).map(|top| top.join(rel))
+                }
+                (None, Some(kb)) => Some(kb.join(file)),
+                _ => None,
+            };
+            if let Some(text) = path.and_then(|p| std::fs::read_to_string(p).ok()) {
+                out.push((file.to_owned(), text));
+            }
+        }
+        out
+    }
+
     /// Answer one verb with the whole answer on one page.
     pub fn call(&self, verb: Verb) -> Reply {
         let request = Request {
@@ -131,6 +157,8 @@ impl Source {
                     trailer: body.get("trailer").cloned().unwrap_or_default(),
                     exit: output.exit,
                     error: None,
+                    sources: self.sources(&list(&body, "diagnostics")),
+                    diagnostics: list(&body, "diagnostics"),
                 },
                 Err(error) => Reply::failed(format!("unreadable answer: {error}"), 1),
             },

@@ -42,6 +42,7 @@ pub mod checklist;
 pub mod command;
 pub mod decision;
 pub mod delivery;
+pub mod diag;
 pub mod find;
 pub mod gate;
 pub mod guard;

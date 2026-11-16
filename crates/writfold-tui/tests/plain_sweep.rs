@@ -94,7 +94,10 @@ fn said_pieces_carry_no_notation() -> TestResult {
             "gates",
         )?;
         said(&say_lists::inbox(answer(View::Inbox)?), "inbox")?;
-        said(&say_lists::guards(answer(View::Guards)?), "guards")?;
+        said(
+            &say_lists::guards(answer(View::Guards)?, writfold_tui::cells::Glyphs::Unicode),
+            "guards",
+        )?;
         said(
             &say_row::timeline(answer(View::Timeline)?, &names),
             "timeline",

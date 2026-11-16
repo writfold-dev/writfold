@@ -10,8 +10,7 @@
 //! The binary's path is never part of a definition (see [`super::weft`]):
 //! the definition pins its digest only.
 use super::super::places;
-use super::super::toml::Value;
-use std::collections::BTreeMap;
+use crate::defs::Check;
 use std::path::{Path, PathBuf};
 
 /// The keys only an assessed gate may use.
@@ -97,50 +96,77 @@ fn pin(text: &str) -> Result<String, String> {
     Ok(format!("sha256:{}", hex.to_ascii_lowercase()))
 }
 
-/// The assessed fields of a definition of class `class`, read from `map`;
-/// `None` for any other class, which may not use them. `dir` holds the
-/// definition.
-pub fn parse(
-    map: &BTreeMap<String, Value>,
-    class: &str,
-    dir: &Path,
-) -> Result<Option<Spec>, String> {
+/// The assessed fields of a definition of class `class`; `Some(None)`
+/// for any other class, which may not use them. `dir` holds the
+/// definition. Every fault is reported to `c`; `None` when there was one.
+pub fn check(c: &mut Check<'_>, class: &str, dir: &Path) -> Option<Option<Spec>> {
     if class != super::super::def::ASSESSED {
-        return match KEYS.iter().find(|k| map.contains_key(**k)) {
-            Some(key) => Err(format!("{key} is for gates of class assessed")),
-            None => Ok(None),
-        };
+        let mut ok = true;
+        for key in KEYS {
+            let why = format!("`{key}` is for gates of class assessed");
+            ok &= !c.not_here(key, why, "only an assessed gate takes it");
+        }
+        return ok.then_some(None);
     }
-    let text = |key: &str| match map.get(key) {
-        Some(Value::Str(s)) => Ok(s.clone()),
-        _ => Err(format!("an assessed gate needs {key} as a string")),
-    };
-    let weft = text("weft")?;
-    let checks = match map.get("checks") {
-        Some(Value::List(items)) if !items.is_empty() => items.clone(),
-        _ => return Err("checks must be a non-empty array of Weft check names".into()),
-    };
-    if let Some(bad) = checks.iter().find(|c| !identifier(c)) {
-        return Err(format!("check {bad:?} is not a Weft identifier"));
-    }
-    if (1..checks.len()).any(|i| checks[..i].contains(&checks[i])) {
-        return Err("a check is listed twice".into());
-    }
-    Ok(Some(Spec {
-        source: source(&weft, dir)?,
-        weft,
-        checks,
-        pin: pin(&text("weft_sha256")?)?,
+    let needs = "an assessed gate";
+    let weft = c.need_text_for("weft", needs, "weft = \"{gate}/step.weft\"");
+    let source = weft.as_ref().and_then(|w| match source(w.str(), dir) {
+        Ok(source) => Some(source),
+        Err(why) => {
+            c.error("value.form", Some(w.span), why)
+                .label("not a Weft source");
+            None
+        }
+    });
+    let checks = c.need_list("checks", needs, "checks = [\"ready\"]");
+    let checks_ok = checks.as_ref().is_some_and(|checks| {
+        let mut ok = true;
+        for (n, check) in checks.iter().enumerate() {
+            if !identifier(check.str()) {
+                let why = format!("check {:?} is not a Weft identifier", check.str());
+                c.error("value.form", Some(check.span), why)
+                    .label("not an identifier");
+                ok = false;
+            } else if checks[..n].iter().any(|x| x.str() == check.str()) {
+                let why = format!("check {} is listed twice", check.str());
+                c.error("value.twice", Some(check.span), why)
+                    .label("listed again");
+                ok = false;
+            }
+        }
+        ok
+    });
+    let add = "weft_sha256 = \"sha256:<64 hex digits>\"";
+    let sha = c.need_text_for("weft_sha256", needs, add);
+    let pin = sha.as_ref().and_then(|s| match pin(s.str()) {
+        Ok(pin) => Some(pin),
+        Err(why) => {
+            c.error("value.form", Some(s.span), why)
+                .label("not a SHA-256 digest");
+            None
+        }
+    });
+    let checks = checks.filter(|_| checks_ok)?;
+    Some(Some(Spec {
+        source: source?,
+        weft: weft?.value.text,
+        checks: checks.into_iter().map(|c| c.value.text).collect(),
+        pin: pin?,
     }))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::gate::toml;
+
+    fn spec_as(text: &str, class: &str, dir: &Path) -> Result<Option<Spec>, String> {
+        let mut c = Check::read("f.toml", text, "a gate definition");
+        let got = check(&mut c, class, dir);
+        c.finish(got).map_err(|r| crate::defs::why(&r))
+    }
 
     fn spec(text: &str, dir: &Path) -> Result<Option<Spec>, String> {
-        parse(&toml::parse(text)?, "assessed", dir)
+        spec_as(text, "assessed", dir)
     }
 
     #[test]
@@ -174,8 +200,7 @@ mod tests {
             let text = format!("weft = \"{weft}\"\nchecks = {checks}\nweft_sha256 = \"{sha}\"\n");
             assert!(spec(&text, &dir).is_err(), "{text}");
         }
-        let plain = toml::parse("weft = \"{gate}/step.weft\"\n")?;
-        assert!(parse(&plain, "mechanical", &dir).is_err());
+        assert!(spec_as("weft = \"{gate}/step.weft\"\n", "mechanical", &dir).is_err());
         let _ = std::fs::remove_dir_all(&dir);
         Ok(())
     }

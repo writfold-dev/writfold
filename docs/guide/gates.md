@@ -1,6 +1,6 @@
 # Gates
 
-> **Status:** built in v0.3.0-dev.1; instruction gates, gate scripts, the Weft assessed gate, run-record checks and plan-owed gates built in v0.4.0-dev.1; checklist gates and `gate cover` built in v0.5.0-dev.1; observations as evidence built in v0.5.0-dev.3. Nothing owed reads as not met, and the self-staling note, built in v0.6.0-dev.1.
+> **Status:** built in v0.3.0-dev.1; instruction gates, gate scripts, the Weft assessed gate, run-record checks and plan-owed gates built in v0.4.0-dev.1; checklist gates and `gate cover` built in v0.5.0-dev.1; observations as evidence built in v0.5.0-dev.3. Nothing owed reads as not met, and the self-staling note, built in v0.6.0-dev.1. Every fault of a definition reported at its line and column, built in v0.6.0-dev.2.
 
 A gate is one small check with a path scope. `gate run` runs its command and keeps a receipt pinned to the exact bytes checked. `gate status` then says, on every read, whether that evidence still holds. Gates report; they block nothing unless a [guard rule](hooks.md#guard-rules) names them.
 
@@ -23,6 +23,32 @@ description = "the unit tests"     # optional; one line
 - **`argv`** is executed directly, with stdin closed. A first element containing `/` is resolved against `workdir`; otherwise `PATH` finds it. Placeholders: `{artifacts}` (a fresh local directory for the command's own output files), `{gate}` and `{candidate}` (below). Any other `{name}` is refused.
 - **Unknown keys are refused,** so a misspelt field never silently changes a gate. The files use a small TOML subset: top-level `key = value`, comments, strings, integers and arrays of strings.
 - **Changing** the command, working directory, timeout, class, version or scope makes earlier receipts stale. Changing comments, layout or the description does not.
+
+### When a definition is wrong
+
+Every fault of a definition is reported together, each at its line and column, with a fix when one can be named. `gate status` keeps the `[invalid]` row (its text the first fault, its source that fault's line), and a verb that needs the gate refuses with each fault drawn on stderr:
+
+```text
+$ writfold kb gate run unit
+error[key.type]: `version` must be an integer, and this is a string
+ --> .writfold/gates/unit.toml:3:11
+  |
+3 | version = "one"
+  |           ^^^^^ expected an integer from 1 to 4294967295
+  |
+  = help: write a number without quotes: version = 1
+
+error[key.missing]: a mechanical gate needs `timeout_seconds`
+ --> .writfold/gates/unit.toml
+  |
+  = help: add a line: timeout_seconds = 600   (seconds, 1 to 86400)
+
+2 errors in 1 file
+
+writfold kb: refused: .writfold/gates/unit.toml: 2 errors
+```
+
+How to read these, the codes and `kb lint` are on [errors](errors.md).
 
 ### Classes
 

@@ -35,7 +35,7 @@ pub fn told(app: &App, view: View, glyphs: Glyphs) -> Option<Told> {
         View::Progress => return None,
         View::Gates => crate::say_gate::view(answer, glyphs),
         View::Inbox => crate::say_lists::inbox(answer),
-        View::Guards => crate::say_lists::guards(answer),
+        View::Guards => crate::say_lists::guards(answer, glyphs),
         View::Timeline => crate::say_row::timeline(answer, &names),
         View::Stale | View::Brief | View::Resume => crate::say_row::generic(answer, glyphs, &names),
     })

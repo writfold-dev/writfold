@@ -53,7 +53,20 @@ fn kb(args: &[String]) -> ExitCode {
         Ok(cwd) => cwd,
         Err(error) => return failure(&format!("working directory: {error}")),
     };
-    let outcome = writfold_app::kb::main(args, cwd);
+    let plain = env::var_os("NO_COLOR").is_some() || env::var("TERM").is_ok_and(|t| t == "dumb");
+    let style = |terminal: bool| writfold_app::kb::Style {
+        colour: terminal && !plain,
+        width: match terminal {
+            true => writfold_tui::measure::columns().unwrap_or(100).max(40),
+            false => 100,
+        },
+        cell: writfold_tui::measure::cell,
+    };
+    let styles = writfold_app::kb::Styles {
+        stdout: style(io::stdout().is_terminal()),
+        stderr: style(io::stderr().is_terminal()),
+    };
+    let outcome = writfold_app::kb::main_styled(args, cwd, &styles);
     let _ = io::stdout().lock().write_all(outcome.stdout.as_bytes());
     let _ = io::stderr().lock().write_all(outcome.stderr.as_bytes());
     ExitCode::from(outcome.code)

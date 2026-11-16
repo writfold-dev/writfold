@@ -1,15 +1,17 @@
 //! Finding gate definitions: every `.writfold/gates/<id>.toml` of the KB
 //! root and of the subject repository, parsed and checked ([`super::def`]),
-//! with the files that do not parse kept as problems. Finding a definition
-//! only reads files; nothing is run.
-use super::def::{DIR, Definition, Origin, parse};
+//! with the files that do not parse kept as problems, each with every
+//! fault it has. Finding a definition only reads files; nothing is run.
+use super::def::{DIR, Definition, Origin};
+use crate::defs::{Problem, read_text};
 use crate::error::{KbError, Result};
 use std::path::{Path, PathBuf};
 
 /// The roots definitions are read from: the KB root, then the subject
-/// repository's top when it is another directory.
-fn roots(kb: &Path, repo: Option<&Path>) -> Vec<(Origin, PathBuf)> {
-    let mut out = vec![(Origin::Kb, kb.join(DIR))];
+/// repository's top when it is another directory, with the prefix its
+/// files are shown with (`<repo>:` for the repository).
+fn roots(kb: &Path, repo: Option<&Path>) -> Vec<(Origin, PathBuf, String)> {
+    let mut out = vec![(Origin::Kb, kb.join(DIR), String::new())];
     if let Some(top) = repo {
         let dir = top.join(DIR);
         let same = match (
@@ -20,17 +22,23 @@ fn roots(kb: &Path, repo: Option<&Path>) -> Vec<(Origin, PathBuf)> {
             _ => false,
         };
         if !same {
-            out.push((Origin::Repo, dir));
+            let name = top
+                .file_name()
+                .map_or_else(String::new, |n| n.to_string_lossy().into_owned());
+            out.push((Origin::Repo, dir, format!("{name}:")));
         }
     }
     out
 }
 
-/// Every definition, and every file that does not parse (path, why).
-pub fn all(kb: &Path, repo: Option<&Path>) -> (Vec<Definition>, Vec<(Origin, String, String)>) {
+/// A gate definition file that does not parse or check.
+pub type Unusable = (Origin, Problem);
+
+/// Every definition, and every file that does not parse.
+pub fn all(kb: &Path, repo: Option<&Path>) -> (Vec<Definition>, Vec<Unusable>) {
     let mut found: Vec<Definition> = Vec::new();
     let mut problems = Vec::new();
-    for (origin, dir) in roots(kb, repo) {
+    for (origin, dir, prefix) in roots(kb, repo) {
         let Ok(entries) = std::fs::read_dir(&dir) else {
             continue;
         };
@@ -43,18 +51,33 @@ pub fn all(kb: &Path, repo: Option<&Path>) -> (Vec<Definition>, Vec<(Origin, Str
         for name in names {
             let stem = name.trim_end_matches(".toml");
             let path = format!("{DIR}/{name}");
-            let parsed = std::fs::read_to_string(dir.join(&name))
-                .map_err(KbError::from)
-                .and_then(|text| parse(&text, stem, origin, &dir));
-            match parsed {
-                Ok(d) if found.iter().any(|f| f.id == d.id) => problems.push((
-                    origin,
-                    path,
-                    format!("gate {} is defined in both the KB and the repository", d.id),
-                )),
-                Ok(d) => found.push(d),
-                Err(error) => problems.push((origin, path, error.to_string())),
-            }
+            let shown = format!("{prefix}{path}");
+            let parsed = read_text(&dir.join(&name), &shown).and_then(|text| {
+                super::def_check::check(&text, stem, origin, &dir, &shown).map_err(|report| {
+                    Problem {
+                        path: path.clone(),
+                        report,
+                    }
+                })
+            });
+            let problem = match parsed {
+                Ok(d) if found.iter().any(|f| f.id == d.id) => {
+                    let why = format!(
+                        "gate {} is defined in both the KB root and the repository",
+                        d.id
+                    );
+                    Problem::whole(&path, &shown, "file.twice", why)
+                }
+                Ok(d) => {
+                    found.push(d);
+                    continue;
+                }
+                Err(mut problem) => {
+                    problem.path = path;
+                    problem
+                }
+            };
+            problems.push((origin, problem));
         }
     }
     (found, problems)
@@ -65,8 +88,8 @@ pub fn all(kb: &Path, repo: Option<&Path>) -> (Vec<Definition>, Vec<(Origin, Str
 pub fn find(kb: &Path, repo: Option<&Path>, id: &str) -> Result<Definition> {
     let (found, problems) = all(kb, repo);
     let name = format!("{DIR}/{id}.toml");
-    if let Some((_, path, why)) = problems.iter().find(|(_, path, _)| *path == name) {
-        return Err(KbError::Refused(format!("{path}: {why}")));
+    if let Some((_, problem)) = problems.into_iter().find(|(_, p)| p.path == name) {
+        return Err(KbError::Definition(Box::new(problem.report)));
     }
     found.into_iter().find(|d| d.id == id).ok_or_else(|| {
         KbError::Refused(format!(

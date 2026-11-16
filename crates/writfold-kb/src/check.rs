@@ -1,8 +1,9 @@
 //! `writfold kb check [<project>|<path>]`: one command over the checks that
 //! already exist. It runs `stale` (citations, for the scope given),
 //! `index verify`, `gate status` for the current run when there is one,
-//! the plan's status when a plan exists ([`plan`]), and the guard rule
-//! files when any apply ([`guards`]), and prints one
+//! the plan's status when a plan exists ([`plan`]), `lint` over the
+//! definition files, and the guard rule files when any apply
+//! ([`guards`]), and prints one
 //! `check` row per area carrying that verb's own trailer. The exit code is
 //! the worst of theirs (1 error, then 3 refused, then 2, then 0). Nothing
 //! is written beyond what `index verify` already writes (the rebuilt
@@ -99,6 +100,13 @@ fn parts(ws: &Workspace, request: &Request, scope: Option<&str>) -> Vec<Part> {
         },
     });
     parts.extend(plan(ws, request));
+    let lint = Verb::Lint {
+        paths: Vec::new(),
+        repo: None,
+        deny_warnings: false,
+        records: false,
+    };
+    parts.push(sub(request, "definitions", "writfold kb lint".into(), lint));
     parts.extend(guards(ws, request));
     parts
 }
@@ -111,23 +119,15 @@ pub fn guards(ws: &Workspace, request: &Request) -> Option<Part> {
     if found.is_empty() && problems.is_empty() {
         return None;
     }
-    let (text, code, command) = match problems.first() {
-        None => (
+    let (text, code, command) = match problems.len() {
+        0 => (
             format!("{} guard rules parse", found.len()),
             0,
             String::new(),
         ),
-        Some((path, _)) => {
-            let listed: Vec<String> = problems
-                .iter()
-                .map(|(p, why)| format!("{p}: {why}"))
-                .collect();
-            let text = format!(
-                "{} guard rule files do not parse and are skipped: {}",
-                problems.len(),
-                listed.join("; ")
-            );
-            (text, 2, format!("fix or remove {path}"))
+        n => {
+            let text = format!("{n} guard rule files do not parse and are skipped");
+            (text, 2, "writfold kb lint".to_owned())
         }
     };
     Some(Part {

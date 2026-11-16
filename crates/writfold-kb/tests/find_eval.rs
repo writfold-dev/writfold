@@ -100,10 +100,7 @@ fn misses_unknown_ids_and_empty_files_are_not_passes() -> TestResult {
             Ok(o) => format!("exit {}", o.exit),
             Err(e) => e.to_string(),
         };
-        assert!(
-            why.contains(&format!("queries line {line}:")),
-            "{bad}: {why}"
-        );
+        assert!(why.contains(&format!("q.jsonl:{line}:")), "{bad}: {why}");
     }
     Ok(())
 }

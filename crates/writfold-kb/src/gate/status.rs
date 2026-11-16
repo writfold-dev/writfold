@@ -107,11 +107,20 @@ pub struct Judged<'a> {
 /// The whole picture for one run and subject.
 pub struct Report<'a> {
     pub gates: Vec<Judged<'a>>,
-    pub problems: Vec<(Origin, String, String)>,
+    pub problems: Vec<super::discover::Unusable>,
     pub snapshot: Snapshot,
 }
 
 impl Report<'_> {
+    /// Every fault of the definitions that do not parse.
+    pub fn diagnostics(&self) -> writfold_core::diag::Report {
+        let mut out = writfold_core::diag::Report::default();
+        for (_, problem) in &self.problems {
+            out.extend(problem.report.clone());
+        }
+        out
+    }
+
     /// The note naming how many cited references stand on a verdict read
     /// from a check receipt, if any.
     pub fn recorded_note(&self) -> Option<String> {
@@ -327,16 +336,10 @@ pub fn rows(
             out.push(invalid_row("cover", &f.name, &f.path, why));
         }
     }
-    for (origin, path, why) in &report.problems {
-        out.push(Row {
-            kind: "gate-definition",
-            id: path.clone(),
-            status: Some("invalid".into()),
-            text: format!("{} definition: {why}", origin.name()),
-            flags: vec!["invalid".into()],
-            section: Some("gates"),
-            ..Row::default()
-        });
+    for (_, problem) in &report.problems {
+        let row =
+            crate::defs::invalid_row("gate-definition", &problem.path, problem, Some("gates"));
+        out.push(row);
     }
     Ok(out)
 }

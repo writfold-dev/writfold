@@ -12,11 +12,13 @@
 #![forbid(unsafe_code)]
 
 pub mod check;
+pub mod defs;
 pub mod deliver;
 pub mod delta;
 pub mod draft;
 pub mod edit;
 pub mod emit;
+mod emit_json;
 pub mod error;
 pub mod gate;
 pub mod guard;
@@ -37,6 +39,9 @@ pub mod verbs;
 pub mod watch;
 pub mod workspace;
 pub mod write;
+
+/// The diagnostics model and renderer ([`writfold_core::diag`]).
+pub use writfold_core::diag;
 
 use emit::{Answer, Frame, Output};
 use error::Result;
@@ -139,6 +144,16 @@ pub enum Verb {
     /// `propose …` and `proposals list|show|accept|drop` (the local queue).
     Proposal(proposal::ProposalVerb),
     /// `check [<project>|<path>]`: the existing checks composed.
+    /// `lint [PATH…] [--repo DIR] [--deny-warnings]`: the files a person
+    /// writes, every fault reported ([`defs::lint`]).
+    Lint {
+        paths: Vec<PathBuf>,
+        repo: Option<PathBuf>,
+        deny_warnings: bool,
+        /// `--records`: the records' front matter, JSON and citation
+        /// tokens instead of the definition files.
+        records: bool,
+    },
     Check {
         scope: Option<String>,
     },
@@ -198,6 +213,16 @@ pub fn run(request: &Request) -> Result<Output> {
     }
     if let Verb::Delta(verb) = &request.verb {
         return delta::execute(&ws, request, verb, now);
+    }
+    if let Verb::Lint {
+        paths,
+        repo,
+        deny_warnings,
+        records,
+    } = &request.verb
+    {
+        let given = (paths.as_slice(), repo.as_deref(), *deny_warnings, *records);
+        return defs::lint::execute(&ws.root, request, given);
     }
     if let Verb::Check { scope } = &request.verb {
         return check::execute(&ws, request, scope.as_deref(), now);

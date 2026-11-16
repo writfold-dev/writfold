@@ -12,6 +12,11 @@ pub enum KbError {
     Refused(String),
     #[error("{0}")]
     NoKb(String),
+    /// A file a person or an agent wrote does not parse or check: every
+    /// fault, with the text it was found in. Shown as the first fault's
+    /// compact line; the application renders the whole report.
+    #[error("refused: {}", crate::defs::why(.0))]
+    Definition(Box<writfold_core::diag::Report>),
     #[error("refused: {0}")]
     Cursor(#[from] tuft::cursor::CursorError),
     #[error("filesystem: {0}")]
@@ -34,7 +39,7 @@ impl KbError {
     /// 3 for a refusal, 1 for anything else.
     pub fn exit_code(&self) -> u8 {
         match self {
-            Self::Refused(_) | Self::Cursor(_) => 3,
+            Self::Refused(_) | Self::Cursor(_) | Self::Definition(_) => 3,
             _ => 1,
         }
     }

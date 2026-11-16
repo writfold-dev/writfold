@@ -38,17 +38,15 @@ pub fn execute(ws: &Workspace, request: &Request, now: i64) -> Result<Output> {
         );
     }
     let invalid = problems.len();
-    answer
-        .rows
-        .extend(problems.into_iter().map(|(path, why)| Row {
-            kind: "guard-rule",
-            status: Some("invalid".into()),
-            text: why,
-            path: Some(path),
-            line: Some(1),
-            flags: vec!["invalid".into()],
-            ..Row::default()
-        }));
+    let mut report = writfold_core::diag::Report::default();
+    for problem in problems {
+        let id = crate::defs::stem(&problem.path).to_owned();
+        answer
+            .rows
+            .push(crate::defs::invalid_row("guard-rule", &id, &problem, None));
+        report.extend(problem.report);
+    }
+    answer.report = Some(report);
     answer.counts = counts(&answer.rows, count, invalid);
     let exit = if answer.counts.iter().skip(1).any(|(_, n)| *n > 0) {
         2

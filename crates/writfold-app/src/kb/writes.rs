@@ -47,7 +47,9 @@ pub const VALUES: [&str; 38] = [
     "commit",
 ];
 /// Flags without a value.
-pub const SWITCHES: [&str; 8] = [
+pub const SWITCHES: [&str; 10] = [
+    "deny-warnings",
+    "records",
     "eval",
     "open",
     "new-run",

@@ -4,6 +4,7 @@
 //! same code as `find` and is a `hit@1`, a `hit@5` or a `miss`. Nothing is
 //! written. An evaluation with no queries is not a pass.
 use super::find::{self, Filter};
+use crate::defs::{Field, Sink, jsonl};
 use crate::emit::{Answer, More, Row};
 use crate::error::{KbError, Result};
 use crate::index::query;
@@ -35,53 +36,84 @@ struct Query {
     wanted: Vec<String>,
 }
 
-fn refused(line: usize, why: &str) -> KbError {
-    KbError::Refused(format!("queries line {line}: {why}"))
-}
-
-fn parse(text: &str) -> Result<Vec<Query>> {
-    let mut out = Vec::new();
-    for (n, raw) in text.lines().enumerate().map(|(i, l)| (i + 1, l)) {
-        if raw.trim().is_empty() {
-            continue;
+/// One query line, or nothing (its faults reported).
+fn query(sink: &mut Sink<'_>, l: &jsonl::Line<'_>) -> Option<Query> {
+    let mut ok = jsonl::unknown(sink, l, &KEYS, "not a query key");
+    let text = match jsonl::text(sink, l, "query") {
+        Field::Got(q) if !q.trim().is_empty() => Some(q),
+        Field::Got(_) => {
+            let why = "`query` must not be empty".into();
+            sink.error("key.range", l.value("query"), why)
+                .label("empty");
+            None
         }
-        let value: Value = serde_json::from_str(raw).map_err(|e| refused(n, &e.to_string()))?;
-        let map = value
-            .as_object()
-            .ok_or_else(|| refused(n, "not a JSON object"))?;
-        if let Some(key) = map.keys().find(|k| !KEYS.contains(&k.as_str())) {
-            return Err(refused(n, &format!("unknown key {key}")));
+        Field::Absent => {
+            jsonl::missing(
+                sink,
+                l,
+                "query",
+                "a query line",
+                "\"query\": \"the words to find\"",
+            );
+            None
         }
-        let query = map
-            .get("query")
-            .and_then(Value::as_str)
-            .filter(|q| !q.trim().is_empty());
-        let query = query.ok_or_else(|| refused(n, "query must be a non-empty string"))?;
-        let wanted: Vec<String> = match map.get("expect") {
-            Some(Value::Array(items)) => items
+        Field::Bad => None,
+    };
+    let wanted: Option<Vec<String>> = match l.map.get("expect") {
+        None => {
+            jsonl::missing(
+                sink,
+                l,
+                "expect",
+                "a query line",
+                "\"expect\": [\"<record ID>\"]",
+            );
+            None
+        }
+        Some(Value::Array(items)) if items.is_empty() => {
+            let why = "`expect` needs at least one record ID".into();
+            sink.error("key.range", l.value("expect"), why)
+                .label("empty");
+            None
+        }
+        Some(Value::Array(items)) if items.iter().all(Value::is_string) => Some(
+            items
                 .iter()
                 .filter_map(Value::as_str)
                 .map(str::to_owned)
                 .collect(),
-            _ => Vec::new(),
-        };
-        let all_strings = map
-            .get("expect")
-            .and_then(Value::as_array)
-            .is_some_and(|a| a.len() == wanted.len());
-        if wanted.is_empty() || !all_strings {
-            return Err(refused(n, "expect must be a non-empty array of record IDs"));
+        ),
+        Some(_) => {
+            let why = "`expect` must be an array of record IDs".into();
+            sink.error("key.type", l.value("expect"), why)
+                .label("expected an array of strings");
+            None
         }
-        if map.get("note").is_some_and(|v| !v.is_string()) {
-            return Err(refused(n, "note must be a string"));
-        }
-        out.push(Query {
-            line: u32::try_from(n).unwrap_or(u32::MAX),
-            text: query.to_owned(),
-            wanted,
-        });
+    };
+    ok &= jsonl::text(sink, l, "note") != Field::Bad;
+    let line = u32::try_from(l.number).unwrap_or(u32::MAX);
+    let (text, wanted) = (text?, wanted?);
+    ok.then_some(Query { line, text, wanted })
+}
+
+/// Every query of the file, or every fault of it.
+fn parse(text: &str, shown: &str) -> Result<Vec<Query>> {
+    let mut sink = Sink::new(shown, text);
+    let lines = jsonl::objects(&mut sink, text, "a query line");
+    let queries: Vec<Query> = lines.iter().filter_map(|l| query(&mut sink, l)).collect();
+    match sink.found.is_empty() {
+        true => Ok(queries),
+        false => Err(KbError::Definition(Box::new(sink.report()))),
     }
-    Ok(out)
+}
+
+/// The faults of a query file's text, for `kb lint` (its `expect` IDs
+/// need the index and are judged by `find --eval`).
+pub fn lint(text: &str, shown: &str) -> Option<writfold_core::diag::Report> {
+    match parse(text, shown) {
+        Err(KbError::Definition(report)) => Some(*report),
+        _ => None,
+    }
 }
 
 /// Whether `id` names a record, or `doc:<path>` an indexed file.
@@ -167,7 +199,7 @@ pub fn eval(session: &Session<'_>, file: Option<&Path>) -> Result<Answer> {
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => String::new(),
         Err(e) => return Err(KbError::Refused(format!("cannot read {shown}: {e}"))),
     };
-    let queries = parse(&text)?;
+    let queries = parse(&text, &shown)?;
     let mut answer = Answer::default();
     if queries.is_empty() {
         answer.unknown = Some("no-queries");

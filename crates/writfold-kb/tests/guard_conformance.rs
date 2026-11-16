@@ -37,7 +37,37 @@ fn root() -> PathBuf {
 
 fn json(path: &Path) -> TestResult<Value> {
     let text = std::fs::read_to_string(path).map_err(|e| format!("{}: {e}", path.display()))?;
-    Ok(serde_json::from_str(&text).map_err(|e| format!("{}: {e}", path.display()))?)
+    Ok(serde_json::from_str(&text).map_err(|e| not_json(path, &e))?)
+}
+
+/// A case file that is not JSON, as `path:line:col: why`.
+fn not_json(path: &Path, e: &serde_json::Error) -> String {
+    let why = e.to_string();
+    let why = why.split(" at line ").next().unwrap_or(&why).to_owned();
+    format!(
+        "{}:{}:{}: not JSON: {why}",
+        path.display(),
+        e.line(),
+        e.column()
+    )
+}
+
+#[test]
+fn a_case_file_that_is_not_json_is_named_at_its_line_and_column() -> TestResult {
+    let dir = std::env::temp_dir().join(format!("wf-conformance-json-{}", std::process::id()));
+    std::fs::create_dir_all(&dir)?;
+    let file = dir.join("event.json");
+    std::fs::write(
+        &file,
+        "{\n  \"tool_name\": \"Bash\",\n  \"tool_input\": {\"command\" \"git commit\"}\n}\n",
+    )?;
+    let why = json(&file).err().map(|e| e.to_string()).unwrap_or_default();
+    let _ = std::fs::remove_dir_all(&dir);
+    assert!(
+        why.contains("event.json:3:28: not JSON: expected `:`"),
+        "{why}"
+    );
+    Ok(())
 }
 
 fn dirs(path: &Path) -> TestResult<Vec<PathBuf>> {

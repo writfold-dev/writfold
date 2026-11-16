@@ -69,6 +69,10 @@ pub struct Answer {
     pub failed: bool,
     /// Extra trailer counts such as `stale=` and `unverifiable=`.
     pub counts: Vec<(&'static str, usize)>,
+    /// The diagnostics of the files a person wrote that this verb read:
+    /// `diagnostics` in JSON (present, maybe empty, when `Some`), and
+    /// drawn on stderr by the application.
+    pub report: Option<writfold_core::diag::Report>,
 }
 
 /// The invocation: verb and arguments (they make the query digest), budget,
@@ -96,6 +100,11 @@ pub struct Scope<'a> {
 pub struct Output {
     pub text: String,
     pub exit: u8,
+    /// Diagnostics for stderr ([`Answer::report`]).
+    pub report: Option<writfold_core::diag::Report>,
+    /// Diagnostics that are the answer (`kb lint`): drawn on stdout,
+    /// before the text.
+    pub shown: Option<writfold_core::diag::Report>,
 }
 
 fn plain(text: &str, space_ok: bool) -> bool {
@@ -258,13 +267,8 @@ pub fn emit(answer: &Answer, frame: &Frame, scope: &Scope<'_>) -> Result<Output>
         total: groups.len(),
     };
     let text = if frame.json {
-        let rows: Vec<Value> = answer.rows[page.from..page.to]
-            .iter()
-            .map(row_json)
-            .collect();
-        let body = json!({"writfold_kb": 1, "verb": frame.verb, "rows": rows,
-                          "notes": answer.notes, "trailer": trailer.json()});
-        format!("{body}\n")
+        let rows = &answer.rows[page.from..page.to];
+        crate::emit_json::body(answer, frame, trailer.json(), rows)
     } else {
         let mut text = String::new();
         for group in &groups[page.from..page.to] {
@@ -278,7 +282,16 @@ pub fn emit(answer: &Answer, frame: &Frame, scope: &Scope<'_>) -> Result<Output>
         text.push('\n');
         text
     };
-    Ok(Output { text, exit })
+    let report = match frame.json {
+        true => None,
+        false => answer.report.clone(),
+    };
+    Ok(Output {
+        text,
+        exit,
+        report,
+        shown: None,
+    })
 }
 
 struct Trailer<'a> {
@@ -353,32 +366,4 @@ impl Trailer<'_> {
                "needs": p.needs, "kb": s.pin.label(), "index": s.index.label(),
                "cursor": p.cursor, "q": &self.query[..12]})
     }
-}
-
-fn row_json(row: &Row) -> Value {
-    let more: Vec<Value> = row
-        .more
-        .iter()
-        .map(|m| {
-            let mut value = json!({"label": m.label, "text": m.text, "path": m.path, "line": m.line, "flags": m.flags});
-            if let Some(status) = &m.status {
-                value["status"] = json!(status);
-            }
-            value
-        })
-        .collect();
-    let mut value = json!({"kind": row.kind, "id": row.id, "status": row.status, "text": row.text,
-           "path": row.path, "line": row.line, "flags": row.flags, "more": more,
-           "section": row.section});
-    if let Some(edge) = &row.edge {
-        value["edge"] = json!({"from": edge.from, "rel": edge.rel, "to": edge.to,
-                               "origin": edge.origin, "depth": edge.depth});
-    }
-    if let Some(title) = &row.title {
-        value["title"] = json!(title);
-    }
-    if let Some(tier) = row.matched_on {
-        value["matched_on"] = json!(tier);
-    }
-    value
 }
