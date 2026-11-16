@@ -15,6 +15,7 @@ mod evaluate;
 pub mod markdown;
 pub mod mode;
 pub mod receipt;
+pub mod recheck;
 pub mod script;
 pub mod status;
 pub mod step;
@@ -225,7 +226,7 @@ fn status_answer(session: &Session<'_>, rec: &Rec, named: Option<&str>) -> Resul
     let mut tally = Tally::default();
     let mut modes: Vec<&str> = Vec::new();
     for c in chosen {
-        tally.add(&mut answer.rows, root, c, &rec.id)?;
+        tally.add(&mut answer.rows, session, c, &rec.id)?;
         if let Ok(m) = &c.manifest
             && !modes.contains(&m.mode.as_str())
         {
@@ -279,11 +280,11 @@ impl Tally {
     fn add(
         &mut self,
         rows: &mut Vec<Row>,
-        root: &std::path::Path,
+        session: &Session<'_>,
         c: &Candidate,
         run: &str,
     ) -> Result<()> {
-        let filings = status::Filings::read(root, c, run);
+        let filings = status::Filings::read(&session.ws.root, c, run);
         self.candidates += 1;
         let invalid = status::invalid(&filings);
         self.invalid += invalid.len();
@@ -293,7 +294,7 @@ impl Tally {
             rows.extend(invalid);
             return Ok(());
         }
-        let judged = status::judge(status::obligations(root, c)?, c, &filings);
+        let judged = recheck::judged(session, c, &filings)?;
         if status::ready(&judged) {
             self.ready += 1;
         }
@@ -317,13 +318,14 @@ impl Tally {
 
 /// Each candidate of the run with what it still owes (`<check>
 /// [<standing>]`); an empty list means it is ready.
-pub fn readiness(root: &std::path::Path, rec: &Rec) -> Vec<(Candidate, Vec<String>)> {
+pub fn readiness(session: &Session<'_>, rec: &Rec) -> Vec<(Candidate, Vec<String>)> {
+    let root = &session.ws.root;
     candidate::list(root, &runs::dir(rec), &rec.id)
         .into_iter()
         .map(|c| {
             let filings = status::Filings::read(root, &c, &rec.id);
-            let owed = match status::obligations(root, &c) {
-                Ok(obligations) => status::judge(obligations, &c, &filings)
+            let owed = match recheck::judged(session, &c, &filings) {
+                Ok(judged) => judged
                     .iter()
                     .filter(|j| !j.standing.met())
                     .map(|j| format!("{} [{}]", j.obligation.name, j.standing.name()))
@@ -344,7 +346,7 @@ pub fn resume_rows(session: &Session<'_>, rec: &Rec) -> (Vec<Row>, Vec<String>) 
     let shown = cands.len().saturating_sub(3);
     for c in &cands[shown..] {
         let mut tally = Tally::default();
-        if let Err(error) = tally.add(&mut rows, root, c, &rec.id) {
+        if let Err(error) = tally.add(&mut rows, session, c, &rec.id) {
             notes.push(format!("deliveries: {error}"));
         }
     }

@@ -7,8 +7,8 @@
 //! definition digest a done record keeps. Nothing is sent: a delivery
 //! that stands met means a candidate was ready, never that it was posted.
 use super::candidate::{self, Candidate};
-use super::config;
 use super::status::{self, Filings, Judged};
+use super::{config, recheck};
 use crate::emit::Row;
 use crate::session::Session;
 use writfold_core::gate::{Standing, State};
@@ -142,7 +142,8 @@ pub fn view(session: &Session<'_>, mode: &str, c: Option<&Candidate>, run: &str)
         Err(e) => return open_view(mode, Some(e.to_string())),
     };
     let filings = Filings::read(root, c, run);
-    let judged = status::judge(obligations, c, &filings);
+    let mut judged = status::judge(obligations, c, &filings);
+    recheck::apply(session, c, &mut judged);
     let standings: Vec<Standing> = judged.iter().map(|j| j.standing).collect();
     let owed: Vec<&Judged<'_>> = judged.iter().filter(|j| !j.standing.met()).collect();
     let next = owed.first().map(|j| match j.obligation.class {

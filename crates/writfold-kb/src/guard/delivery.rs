@@ -160,7 +160,7 @@ fn decide(ws: &Workspace, body: Body, now: i64) -> HookOutput {
                 .into(),
         );
     };
-    let cands = deliver::readiness(&ws.root, &rec);
+    let cands = deliver::readiness(&session, &rec);
     let blocked = |c: &deliver::candidate::Candidate, owed: &[String]| {
         format!("candidate {} owes {}", c.id, owed.join(", "))
     };

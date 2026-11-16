@@ -98,15 +98,21 @@ pub fn references(text: &str, deny: &Deny) -> Evaluated {
     judged(findings, Some(note))
 }
 
-/// `claims.cited-fresh`: every citation token in the candidate, checked by
-/// `stale` (local repositories only; nothing is fetched).
-pub fn claims(session: &Session<'_>, text: &str, path: &str) -> Result<Evaluated> {
-    let cites: Vec<Cite> = tokens(text)
+/// The citation tokens of a candidate's text filed at `path`, as
+/// `claims.cited-fresh` and its re-check on read see them.
+pub fn cites(text: &str, path: &str) -> Vec<Cite> {
+    tokens(text)
         .into_iter()
         .filter(|c| !c.illustrative)
         .enumerate()
         .map(|(ord, c)| Cite::from_citation(path, ord, c))
-        .collect();
+        .collect()
+}
+
+/// `claims.cited-fresh`: every citation token in the candidate, checked by
+/// `stale` (local repositories only; nothing is fetched).
+pub fn claims(session: &Session<'_>, text: &str, path: &str) -> Result<Evaluated> {
+    let cites = self::cites(text, path);
     let checked = stale::check(session, &cites, false)?;
     let mut findings = Vec::new();
     let mut unverifiable = Vec::new();

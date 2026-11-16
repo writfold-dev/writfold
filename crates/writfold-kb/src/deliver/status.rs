@@ -23,6 +23,9 @@ pub struct Judged<'a> {
     pub checked: State,
     pub receipt: Option<(&'a receipt::Filed, &'a Receipt)>,
     pub statements: statement::Summary<'a>,
+    /// Citation tokens no longer fresh, of how many, when a passed
+    /// `claims.cited-fresh` receipt was re-checked ([`super::recheck`]).
+    pub moved: Option<(usize, usize)>,
 }
 
 /// A candidate's receipts and statements.
@@ -86,6 +89,7 @@ pub fn judge<'a>(obligations: Vec<Obligation>, c: &Candidate, f: &'a Filings) ->
                 receipt: at.and_then(|i| mine.get(i).copied()),
                 statements,
                 obligation: ob,
+                moved: None,
             }
         })
         .collect()
@@ -148,9 +152,19 @@ fn line(j: &Judged<'_>, id: &str) -> More {
         }
         (None, None) => format!("needs: writfold kb deliver check {id}"),
     };
-    more.text = format!("{} [{}] {} {detail}", ob.name, j.standing.name(), ob.class);
+    let moved = super::recheck::note(j.moved).unwrap_or_default();
+    more.text = format!(
+        "{} [{}] {} {detail}{moved}",
+        ob.name,
+        j.standing.name(),
+        ob.class
+    );
+    more.status = Some(j.standing.name().into());
     if j.standing != Standing::Checked(State::Satisfied) {
         more.flags.push(j.standing.name().into());
+    }
+    if j.moved.is_some() && !more.flags.iter().any(|f| f == "stale") {
+        more.flags.push("stale".into());
     }
     more
 }
