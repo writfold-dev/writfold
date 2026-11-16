@@ -72,7 +72,6 @@ fn run(
         .env("HOME", root.join("home"))
         .env("XDG_CONFIG_HOME", root.join("home"))
         .env_remove("WRITFOLD_KB")
-        .env_remove("KCTX_CONFIG")
         .env_remove("CLAUDE_PLUGIN_OPTION_KB_ROOT")
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
