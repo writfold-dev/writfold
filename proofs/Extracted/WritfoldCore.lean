@@ -294,6 +294,284 @@ def bytes.same (left : Slice Std.U8) (right : Slice Std.U8) : Result Bool := do
   then ok false
   else bytes.same_loop left right 0#usize
 
+/-- [writfold_core::checklist::Outcome]
+    Source: 'crates/writfold-core/src/checklist.rs', lines 24:0-31:1
+    Visibility: public -/
+@[discriminant isize]
+inductive checklist.Outcome where
+| Supported : checklist.Outcome
+| Unsupported : checklist.Outcome
+| NotApplicable : checklist.Outcome
+
+/-- [writfold_core::checklist::Row]
+    Source: 'crates/writfold-core/src/checklist.rs', lines 54:0-63:1
+    Visibility: public -/
+structure checklist.Row where
+  outcome : checklist.Outcome
+  current : Bool
+  evidence : Std.Usize
+  grounded : Bool
+
+/-- [writfold_core::checklist::Item]
+    Source: 'crates/writfold-core/src/checklist.rs', lines 67:0-79:1
+    Visibility: public -/
+@[discriminant isize]
+inductive checklist.Item where
+| Open : checklist.Item
+| Supported : checklist.Item
+| NotApplicable : checklist.Item
+| Unsupported : checklist.Item
+| Stale : checklist.Item
+
+/-- [writfold_core::checklist::item]:
+    Source: 'crates/writfold-core/src/checklist.rs', lines 97:0-116:1
+    Visibility: public -/
+def checklist.item
+  (newest : Option checklist.Row) : Result checklist.Item := do
+  match newest with
+  | none => ok checklist.Item.Open
+  | some row =>
+    if row.current
+    then
+      match row.outcome with
+      | checklist.Outcome.Supported =>
+        if row.evidence > 0#usize
+        then
+          if row.grounded
+          then ok checklist.Item.Supported
+          else ok checklist.Item.Stale
+        else ok checklist.Item.Stale
+      | checklist.Outcome.Unsupported => ok checklist.Item.Unsupported
+      | checklist.Outcome.NotApplicable => ok checklist.Item.NotApplicable
+    else ok checklist.Item.Stale
+
+/-- [writfold_core::checklist::covered]:
+    Source: 'crates/writfold-core/src/checklist.rs', lines 119:0-124:1
+    Visibility: public -/
+def checklist.covered (item : checklist.Item) : Result Bool := do
+  match item with
+  | checklist.Item.Open => ok false
+  | checklist.Item.Supported => ok true
+  | checklist.Item.NotApplicable => ok true
+  | checklist.Item.Unsupported => ok false
+  | checklist.Item.Stale => ok false
+
+/-- [writfold_core::checklist::Rollup]
+    Source: 'crates/writfold-core/src/checklist.rs', lines 128:0-136:1
+    Visibility: public -/
+structure checklist.Rollup where
+  covered : Bool
+  stale : Bool
+  first_owed : Option Std.Usize
+
+/-- [writfold_core::checklist::Entry]
+    Source: 'crates/writfold-core/src/checklist.rs', lines 140:0-143:1
+    Visibility: public -/
+structure checklist.Entry where
+  item : checklist.Item
+  required : Bool
+
+/-- [writfold_core::checklist::owes]:
+    Source: 'crates/writfold-core/src/checklist.rs', lines 146:0-148:1
+    Visibility: public -/
+def checklist.owes (entry : checklist.Entry) : Result Bool := do
+  if entry.required
+  then let b ← checklist.covered entry.item
+       ok (¬ b)
+  else ok false
+
+/-- [writfold_core::checklist::first_owed]: loop body 0:
+    Source: 'crates/writfold-core/src/checklist.rs', lines 153:4-160:1
+    Visibility: public -/
+@[rust_loop_body]
+def checklist.first_owed_loop.body
+  (entries : Slice checklist.Entry) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize (Option Std.Usize))
+  := do
+  let i := Slice.len entries
+  if index < i
+  then
+    let e ← Slice.index_usize entries index
+    let b ← checklist.owes e
+    if b
+    then ok (done (some index))
+    else let index1 ← index + 1#usize
+         ok (cont index1)
+  else ok (done none)
+
+/-- [writfold_core::checklist::first_owed]: loop 0:
+    Source: 'crates/writfold-core/src/checklist.rs', lines 153:4-160:1
+    Visibility: public -/
+@[rust_loop]
+def checklist.first_owed_loop
+  (entries : Slice checklist.Entry) (index : Std.Usize) :
+  Result (Option Std.Usize)
+  := do
+  loop
+    (fun index1 => checklist.first_owed_loop.body entries index1)
+    index
+
+/-- [writfold_core::checklist::first_owed]:
+    Source: 'crates/writfold-core/src/checklist.rs', lines 151:0-160:1
+    Visibility: public -/
+@[reducible]
+def checklist.first_owed
+  (entries : Slice checklist.Entry) : Result (Option Std.Usize) := do
+  checklist.first_owed_loop entries 0#usize
+
+/-- [writfold_core::checklist::stale]:
+    Source: 'crates/writfold-core/src/checklist.rs', lines 163:0-165:1
+    Visibility: public -/
+def checklist.stale (entry : checklist.Entry) : Result Bool := do
+  if entry.required
+  then
+    match entry.item with
+    | checklist.Item.Open => ok false
+    | checklist.Item.Supported => ok false
+    | checklist.Item.NotApplicable => ok false
+    | checklist.Item.Unsupported => ok false
+    | checklist.Item.Stale => ok true
+  else ok false
+
+/-- [writfold_core::checklist::any_stale]: loop body 0:
+    Source: 'crates/writfold-core/src/checklist.rs', lines 170:4-177:1
+    Visibility: public -/
+@[rust_loop_body]
+def checklist.any_stale_loop.body
+  (entries : Slice checklist.Entry) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let i := Slice.len entries
+  if index < i
+  then
+    let e ← Slice.index_usize entries index
+    let b ← checklist.stale e
+    if b
+    then ok (done true)
+    else let index1 ← index + 1#usize
+         ok (cont index1)
+  else ok (done false)
+
+/-- [writfold_core::checklist::any_stale]: loop 0:
+    Source: 'crates/writfold-core/src/checklist.rs', lines 170:4-177:1
+    Visibility: public -/
+@[rust_loop]
+def checklist.any_stale_loop
+  (entries : Slice checklist.Entry) (index : Std.Usize) : Result Bool := do
+  loop
+    (fun index1 => checklist.any_stale_loop.body entries index1)
+    index
+
+/-- [writfold_core::checklist::any_stale]:
+    Source: 'crates/writfold-core/src/checklist.rs', lines 168:0-177:1
+    Visibility: public -/
+@[reducible]
+def checklist.any_stale (entries : Slice checklist.Entry) : Result Bool := do
+  checklist.any_stale_loop entries 0#usize
+
+/-- [writfold_core::checklist::rollup]:
+    Source: 'crates/writfold-core/src/checklist.rs', lines 181:0-188:1
+    Visibility: public -/
+def checklist.rollup
+  (entries : Slice checklist.Entry) : Result checklist.Rollup := do
+  let first ← checklist.first_owed entries
+  let b := core.option.Option.is_none first
+  let b1 ← checklist.any_stale entries
+  ok { covered := b, stale := b1, first_owed := first }
+
+/-- [writfold_core::gate::State]
+    Source: 'crates/writfold-core/src/gate.rs', lines 76:0-88:1
+    Visibility: public -/
+@[discriminant isize]
+inductive gate.State where
+| Open : gate.State
+| Satisfied : gate.State
+| Stale : gate.State
+| Failed : gate.State
+| Unknown : gate.State
+
+/-- [writfold_core::checklist::state]:
+    Source: 'crates/writfold-core/src/checklist.rs', lines 192:0-198:1
+    Visibility: public -/
+def checklist.state (rollup : checklist.Rollup) : Result gate.State := do
+  if rollup.stale
+  then ok gate.State.Stale
+  else ok gate.State.Open
+
+/-- [writfold_core::gate::Statements]
+    Source: 'crates/writfold-core/src/gate.rs', lines 216:0-223:1
+    Visibility: public -/
+structure gate.Statements where
+  attested_current : Bool
+  attested_any : Bool
+  waived_current : Bool
+
+/-- [writfold_core::gate::Standing]
+    Source: 'crates/writfold-core/src/gate.rs', lines 186:0-192:1
+    Visibility: public -/
+@[discriminant isize]
+inductive gate.Standing where
+| Checked : gate.State → gate.Standing
+| Attested : gate.Standing
+| Waived : gate.Standing
+
+/-- [writfold_core::gate::standing]:
+    Source: 'crates/writfold-core/src/gate.rs', lines 274:0-290:1
+    Visibility: public -/
+def gate.standing
+  (attested_class : Bool) (state : gate.State) (statements : gate.Statements) :
+  Result gate.Standing
+  := do
+  if attested_class
+  then
+    if statements.attested_current
+    then ok gate.Standing.Attested
+    else
+      if statements.waived_current
+      then ok gate.Standing.Waived
+      else
+        if attested_class
+        then
+          if statements.attested_any
+          then ok (gate.Standing.Checked gate.State.Stale)
+          else ok (gate.Standing.Checked gate.State.Open)
+        else ok (gate.Standing.Checked state)
+  else
+    let b ←
+      match state with
+      | gate.State.Open => ok false
+      | gate.State.Satisfied => ok true
+      | gate.State.Stale => ok false
+      | gate.State.Failed => ok false
+      | gate.State.Unknown => ok false
+    if b
+    then ok (gate.Standing.Checked gate.State.Satisfied)
+    else
+      if statements.waived_current
+      then ok gate.Standing.Waived
+      else
+        if attested_class
+        then
+          if statements.attested_any
+          then ok (gate.Standing.Checked gate.State.Stale)
+          else ok (gate.Standing.Checked gate.State.Open)
+        else ok (gate.Standing.Checked state)
+
+/-- [writfold_core::checklist::standing]:
+    Source: 'crates/writfold-core/src/checklist.rs', lines 203:0-210:1
+    Visibility: public -/
+def checklist.standing
+  (rollup : checklist.Rollup) (waived_current : Bool) :
+  Result gate.Standing
+  := do
+  let s ← checklist.state rollup
+  gate.standing true s
+    {
+      attested_current := rollup.covered,
+      attested_any := rollup.stale,
+      waived_current
+    }
+
 /-- [writfold_core::gate::Ending]
     Source: 'crates/writfold-core/src/gate.rs', lines 20:0-29:1
     Visibility: public -/
@@ -320,17 +598,6 @@ def gate.outcome
     | gate.Ending.Signaled => ok gate.Outcome.Unknown
     | gate.Ending.TimedOut => ok gate.Outcome.Unknown
     | gate.Ending.Error => ok gate.Outcome.Unknown
-
-/-- [writfold_core::gate::State]
-    Source: 'crates/writfold-core/src/gate.rs', lines 76:0-88:1
-    Visibility: public -/
-@[discriminant isize]
-inductive gate.State where
-| Open : gate.State
-| Satisfied : gate.State
-| Stale : gate.State
-| Failed : gate.State
-| Unknown : gate.State
 
 /-- [writfold_core::gate::Evidence]
     Source: 'crates/writfold-core/src/gate.rs', lines 104:0-110:1
@@ -482,15 +749,6 @@ def gate.judge
   let s := alloc.vec.Vec.deref all
   gate.state s
 
-/-- [writfold_core::gate::Standing]
-    Source: 'crates/writfold-core/src/gate.rs', lines 186:0-192:1
-    Visibility: public -/
-@[discriminant isize]
-inductive gate.Standing where
-| Checked : gate.State → gate.Standing
-| Attested : gate.Standing
-| Waived : gate.Standing
-
 /-- [writfold_core::gate::{writfold_core::gate::Standing}::met]:
     Source: 'crates/writfold-core/src/gate.rs', lines 205:4-210:5
     Visibility: public -/
@@ -507,14 +765,6 @@ def gate.Standing.met (self : gate.Standing) : Result Bool := do
     | gate.Standing.Attested => ok false
     | gate.Standing.Waived => ok false
   ok (¬ b)
-
-/-- [writfold_core::gate::Statements]
-    Source: 'crates/writfold-core/src/gate.rs', lines 216:0-223:1
-    Visibility: public -/
-structure gate.Statements where
-  attested_current : Bool
-  attested_any : Bool
-  waived_current : Bool
 
 /-- [writfold_core::gate::Said]
     Source: 'crates/writfold-core/src/gate.rs', lines 227:0-231:1
@@ -596,48 +846,6 @@ def gate.statements
   let (attested_current, attested_any, waived_current) ←
     gate.statements_loop said definition content false false false 0#usize
   ok { attested_current, attested_any, waived_current }
-
-/-- [writfold_core::gate::standing]:
-    Source: 'crates/writfold-core/src/gate.rs', lines 274:0-290:1
-    Visibility: public -/
-def gate.standing
-  (attested_class : Bool) (state : gate.State) (statements : gate.Statements) :
-  Result gate.Standing
-  := do
-  if attested_class
-  then
-    if statements.attested_current
-    then ok gate.Standing.Attested
-    else
-      if statements.waived_current
-      then ok gate.Standing.Waived
-      else
-        if attested_class
-        then
-          if statements.attested_any
-          then ok (gate.Standing.Checked gate.State.Stale)
-          else ok (gate.Standing.Checked gate.State.Open)
-        else ok (gate.Standing.Checked state)
-  else
-    let b ←
-      match state with
-      | gate.State.Open => ok false
-      | gate.State.Satisfied => ok true
-      | gate.State.Stale => ok false
-      | gate.State.Failed => ok false
-      | gate.State.Unknown => ok false
-    if b
-    then ok (gate.Standing.Checked gate.State.Satisfied)
-    else
-      if statements.waived_current
-      then ok gate.Standing.Waived
-      else
-        if attested_class
-        then
-          if statements.attested_any
-          then ok (gate.Standing.Checked gate.State.Stale)
-          else ok (gate.Standing.Checked gate.State.Open)
-        else ok (gate.Standing.Checked state)
 
 /-- [writfold_core::plan::Node]
     Source: 'crates/writfold-core/src/plan.rs', lines 22:0-25:1

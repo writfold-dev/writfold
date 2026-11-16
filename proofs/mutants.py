@@ -213,6 +213,46 @@ MUTANTS = (
            "    advance_check(nodes, at, &met_all(gates))",
            "    if gates.is_empty() {\n        return Err(Refusal::Owed(0));\n    }\n    advance_check(nodes, at, &met_all(gates))",
            ("Writfold.Core.Plan.advance_facts_spec", "Writfold.Core.Plan.advance_facts_ok_iff")),
+    # checklist: a supported row covers only when it cites something
+    Mutant("item-accepts-no-evidence", "checklist.rs",
+           "            if row.evidence > 0 && row.grounded {",
+           "            if row.grounded {",
+           ("Writfold.Core.Checklist.item_spec",)),
+    # checklist: a supported row covers only while its evidence is grounded
+    Mutant("item-accepts-ungrounded", "checklist.rs",
+           "            if row.evidence > 0 && row.grounded {",
+           "            if row.evidence > 0 {",
+           ("Writfold.Core.Checklist.item_spec",)),
+    # checklist: a row about other content or another definition is stale
+    Mutant("item-accepts-not-current", "checklist.rs",
+           "    if !row.current {\n        return Item::Stale;",
+           "    if false {\n        return Item::Stale;",
+           ("Writfold.Core.Checklist.item_spec",)),
+    # checklist: an unsupported item is not covered
+    Mutant("covered-counts-unsupported", "checklist.rs",
+           "        Item::Supported | Item::NotApplicable => true,\n        Item::Open | Item::Unsupported | Item::Stale => false,",
+           "        Item::Supported | Item::NotApplicable | Item::Unsupported => true,\n        Item::Open | Item::Stale => false,",
+           ("Writfold.Core.Checklist.covered_spec",)),
+    # checklist: only required items are owed
+    Mutant("rollup-ignores-required", "checklist.rs",
+           "    entry.required && !covered(entry.item)",
+           "    !covered(entry.item)",
+           ("Writfold.Core.Checklist.owes_spec",)),
+    # checklist: every entry is looked at, the last included
+    Mutant("first-owed-skips-last", "checklist.rs",
+           "    while index < entries.len() {\n        if owes(",
+           "    while index + 1 < entries.len() {\n        if owes(",
+           ("Writfold.Core.Checklist.first_owed_loop_spec",)),
+    # checklist: an optional stale item does not make the checklist stale
+    Mutant("stale-ignores-required", "checklist.rs",
+           "    entry.required && matches!(entry.item, Item::Stale)",
+           "    matches!(entry.item, Item::Stale)",
+           ("Writfold.Core.Checklist.stale_spec",)),
+    # checklist: a stale checklist is not attested
+    Mutant("checklist-attested-when-stale", "checklist.rs",
+           "        attested_current: rollup.covered,",
+           "        attested_current: rollup.covered || rollup.stale,",
+           ("Writfold.Core.Checklist.standing_spec",)),
     # assessed gate: one ungrounded premise makes the basis hypothetical
     Mutant("basis-ignores-premises", "assess.rs",
            "        if matches!(premises[index], Grounding::Ungrounded) {",
