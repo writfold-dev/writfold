@@ -22,7 +22,7 @@ Its front matter names the four questions, so Claude Code loads it when a sessio
 | Rules | quote the `@path:line` of every row relied on; re-check any row with a `!` flag; on `answer=unknown`, look in the sources and then `record` what was found |
 | Gates | say a check passed only when `gate status` shows `[satisfied]`; waive or attest only when the user asks, with an honest `--by` |
 | Delivery candidates | say a draft is ready only when `deliver status` shows `[ready]` |
-| Splicery or Edit | recipes for repeated or structural edits, ordinary tools for one small change |
+| Edits | ordinary tools; `edit apply` (frozen) only where the KB already works with Splicery recipes |
 | Checkpoint drafts | checkpoint before ending a long task; ask before confirming a draft |
 
 The skill is instructions to a model. Nothing checks that the agent follows it.

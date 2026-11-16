@@ -28,10 +28,12 @@ What stands behind `writfold kb`, sorted by how strong the claim is. The short v
 
 [`spec/RunGraph.tla`](../../spec/RunGraph.tla) models the run graph (`plan set|use|advance|skip`): two sessions, either in two clones that merge or in one clone, a crash between any two writes, the subject's bytes moving under a gate, and a template edited mid-run. TLC checks that a step has at most one `done-` record, that every done record names a receipt about the bytes it judged, that every splice has its snapshot, that two clones holding the same files agree on the plan, that the current step is the first neither done nor skipped, that a splice repeats no template already spliced on its chain unless `--again` asked, that the done set only grows, that a step adds nodes only before the current step, and that a stale step never becomes current again. The bounds are small (two templates, splices two levels deep, two or three decisions per session): with drift and a crash the check is complete for two sessions in one clone (about 44 million states), and for two merging clones it is complete without them (about 2 million states) and was stopped unfinished with them. Ten mutants, each changing one rule, each fail their property. Details and numbers: [design §27](../writfold/kb-v1-design.md#27-model-specrungraphtla).
 
-The run-graph model found two gaps, recorded and not yet fixed:
+The run-graph model found two gaps; both were fixed in v0.4.0-dev.1 ([design §28](../writfold/kb-v1-design.md#28-plan-write-re-check-and-merge-disorder-flags-v040-dev1)):
 
-- **Within one clone,** a plan write decides from a fold read outside the write lock and only checks, under the lock, that its file name is new. Two sessions in one clone can interleave so that a step is done while steps spliced before it are open. The model shows that re-checking the decision under the lock (and, for `plan use`, that nothing was spliced under the step meanwhile) closes this.
-- **Across clones,** a merge can put open steps before a done one (a splice under a step another clone has closed, or two different plans set on one run). Nothing is lost and both clones agree, but `plan status` does not flag it.
+- **Within one clone,** a plan write used to decide from a fold read outside the write lock. Each plan write now re-checks its decision under the lock (the `Op::Plan` guard), and refuses, writing nothing, when another session changed the plan meanwhile. `RunGraph.same` checks that re-checked protocol.
+- **Across clones,** a merge can still put open steps before a done one, or set two plans on one run; nothing is lost and both clones agree. `plan status` now flags it: `!out-of-order`, `!two-plans` and `!repeated`.
+
+Both are tested (`crates/writfold-kb/tests/plan_recheck.rs`, `plan_merge.rs`); the model was not re-run against the Rust.
 
 The models are hand-written and bounded. They are evidence about the design, not a refinement of the Rust: `KbWrite.tla` is tied to the code by the kill tests at the same steps, and `RunGraph.tla` by the plan tests (order independence, kill tests, the kernel's exhaustive tests), not by proof.
 
@@ -44,7 +46,6 @@ With Charon and Aeneas, over the shipped Rust, for every input ([`aeneas.md`](..
 | The run graph (`writfold_core::plan`) | the current step is the first step neither done nor skipped; `plan advance` is admitted exactly for the current step with every gate met, and otherwise refused in a fixed order (complete, not current, the first owed gate); a stale step is done and is never the current step, so `!stale` never moves the plan back; a splice keeps every existing step in order with its state and the done prefix, inserts open steps, and makes the first of them current; a splice is `already` exactly when its key is already spliced at the current step or above it, so repeating it changes nothing; an admitted splice is never deeper than 4 |
 | Gate obligations (`writfold_core::gate`) | only exit status 0 on a subject that did not move is a pass; the state is decided by the newest receipt about the current definition and the current bytes in scope, so a receipt about another definition or other bytes never satisfies; an attestation or a waiver never yields `satisfied`, only standing as itself; met is exactly satisfied, attested or waived |
 | The assessed gate (`writfold_core::assess`) | a check meets the gate exactly when Weft entailed it and every assumption it used is grounded; a hypothetical entailment is never a pass |
-| The edit trial flow | the ledger, grant, revocation, recovery and required-check kernels; that flow is kept working and is not where new development happens |
 
 Put together: a step is recorded as done only when it is the current step and each of its gates stands satisfied by a passing receipt about those exact bytes and that definition, attested, or waived. That sentence is proved for the kernels; that the kernels are given the right facts (which receipts are valid, which digests match, which gates a step names) is tested.
 
@@ -73,5 +74,3 @@ Gate standing, delivery standing and the index are recomputed from tracked files
 ## Planned
 
 - **Ordering without a clock for delivery receipts**, which still order by recorded time.
-
-Until the model lands, describe concurrent sessions and merges on one run as tested, not model-checked.

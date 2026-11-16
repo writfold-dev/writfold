@@ -276,7 +276,7 @@ writfold tuft index [--repo DIR|NAME] [--at REF] [--out FILE] [--json]
 
 **"A checker together with a TTL."** `max_age` did not build it. The phrase means a kind that is both checked and aged by lifetime; that is still refused (`default_ttl` with `freshness = "checked"`), and a token's own `ttl=` is ignored for a checked kind. Replace the phrase in `checkers.md`'s status line with: "a checked kind that also ages by `ttl=` or `default_ttl` (`max_age` limits how old a cached verdict may be, not how old the token is)". Add one sentence to the `max_age` section saying the same, and one test asserting that `ttl=` on a checked token changes no verdict. Use the same wording in the design's §33.8 as-built addendum and in `mission.md`'s dev.1 list (as a dated clarification, not a rewrite).
 
-**Weft's status.** The conflict is inside `mission.md`, not in `status.md` or `qualification/status.json`:
+**Weft's status.** The conflict is inside `mission.md`, not in `status.md` or the qualification status index:
 
 | Place | Says | Current fact |
 |---|---|---|
@@ -284,7 +284,7 @@ writfold tuft index [--repo DIR|NAME] [--at REF] [--out FILE] [--json]
 | "Available tools" (12 November) | lists Tuft as not a priority | superseded by "Tuft expansion" (13 November) |
 | "Narrow adapters" | "Weft contributes only its four-way vocabulary … reading KB citations as premises waits for the two-week pause" | the Weft assessed gate, which grounds citations, is built |
 
-Fix: add a short "Component status" table at the top of `mission.md`'s Decisions (Tuft: being expanded; Weft: available, the assessed gate built, no new language features; Splicery: available, the adapter built, no new language features; trial flow, `writfold.agent/1`, Dolt, Omnigraph: frozen), and mark each of the three sentences `(Superseded: see Component status)` in place, as the file already does elsewhere. `status.md`'s opening paragraph points at the table. `qualification/status.json` and `handovers/` are history and are not edited.
+Fix: add a short "Component status" table at the top of `mission.md`'s Decisions (Tuft: being expanded; Weft: available, the assessed gate built, no new language features; Splicery: available, the adapter built, no new language features; trial flow, the agent contract, Dolt, Omnigraph: frozen), and mark each of the three sentences `(Superseded: see Component status)` in place, as the file already does elsewhere. `status.md`'s opening paragraph points at the table. The qualification status index and the earlier handovers are history and are not edited.
 
 ### 2.7 Recipes and patterns (items 7, 5, 6b, 4; documentation only)
 
@@ -375,7 +375,7 @@ Each description of today's behaviour was compared with the code and guides at `
 | `kb edit apply` reads stdin | It does not; it takes file paths only. It is the Splicery adapter, separate from the frozen trial flow |
 | Investigations can be created through `record` | They cannot: `record` takes `ticket`, `decision` and `link`. `status --set` writes four investigation states |
 | "A checker together with a TTL" was built as `max_age` | No. It means a checked kind that also ages by lifetime, which is still refused; `max_age` bounds the age of a cached verdict |
-| Weft's status conflicts across `status.md`, `mission.md` and `qualification/status.json` | The conflict is within `mission.md` (three places, 2.6). `status.md` agrees with the project instructions; `qualification/status.json` holds history only |
+| Weft's status conflicts across `status.md`, `mission.md` and the qualification status index | The conflict is within `mission.md` (three places, 2.6). `status.md` agrees with the project instructions; the qualification status index holds history only |
 | `paths` is refused beside `commands` | Correct, and a call with no file never matches a `paths` rule |
 | The proposal cap counts tracked proposals | Correct: ten per session label over both stores, one per ID |
 | `verified` refuses attested and waived gates | Correct; a checklist gate is also not resolvable as `--evidence` today |
