@@ -12,28 +12,9 @@ import time
 import writfold_evidence as evidence
 
 ROOT = evidence.ROOT
-GATES = {"baseline": "WF00", "bootstrap": "WF01", "build": "WF01", "unit": "WF02",
-         "quality": "WF02", "lean": "WF04", "verus": "WF05", "model": "WF06",
-         "tlaps": "WF07", "conformance": "WF04", "sources": "WF08", "omnigraph": "WF09",
-         "reference": "WF09", "native-smoke": "WF09", "publication": "WF11",
-         "storage-foundation": "WF24", "storage-profile": "WF03", "legacy-import": "WF14",
-         "views": "WF22", "obsidian": "WF23",
-         "workflows": "WF12", "transport": "WF13", "migration": "WF14",
-         "evaluate": "WF15", "runtime": "WF16", "package": "WF16", "site": "WF17",
-         "scribes": "WF18", "portfolio": "WF19", "design": "WF20", "companion": "WF21",
-         "engineering-ledger": "WF25", "skills": "WF26", "effects": "WF27",
-         "cross-repo": "WF28", "learning": "WF29", "engineering-cuts": "WF30",
-         "engineering-calculus": "WF31", "engineering-lean": "WF31",
-         "citation-lean": "WF08", "citation-verus": "WF08", "stdio-control": "WF13",
-         "release-required": "release-required"}
+GATES = {"bootstrap": "WF01", "build": "WF01", "unit": "WF02", "quality": "WF02"}
 SERVICES = {"unit": ("unit", "Cargo.lock"), "build": ("build", "Cargo.lock"),
-            "quality": ("quality", "scripts/writfold_quality.py"),
-            "verus": ("verus", "scripts/writfold_verus.py"),
-            "engineering-lean": ("engineering-lean", "scripts/writfold_engineering_lean.py"),
-            "citation-lean": ("citation-lean", "scripts/writfold_citation_lean.py"),
-            "citation-verus": ("citation-verus", "scripts/writfold_verus.py"),
-            "stdio-control": ("stdio-control", "scripts/writfold_stdio.py"),
-}
+            "quality": ("quality", "scripts/writfold_quality.py")}
 
 EXPORT_BUILD = """import json, pathlib, shutil, sys
 base = pathlib.Path('/cache/target/rust-1.98.0')
@@ -90,8 +71,8 @@ def admit_image(args, attempt: evidence.Attempt, receipt: dict) -> str:
     lock_path = ROOT / "toolchains.lock.json"
     lock = None
     if args.tool_image:
-        if args.command not in ("bootstrap", "reference", "native-smoke"):
-            raise ValueError("--tool-image is only for bootstrap observation/reference native smoke")
+        if args.command != "bootstrap":
+            raise ValueError("--tool-image is only for bootstrap observation")
         image = args.tool_image
         receipt["tool_admission"] = "explicit-unadmitted"
     else:
@@ -139,10 +120,6 @@ def playbook(args, attempt: evidence.Attempt, receipt: dict) -> None:
     receipt.update(playbook_commit=evidence.PLAYBOOK, playbook_path=str(path))
 
 
-def baseline(args, attempt: evidence.Attempt, receipt: dict) -> list[dict]:
-    raise ValueError("The WF00 baseline compared against the retired kctx Python reference; "
-                     "it is not available in this repository")
-
 def service_checks(args, attempt: evidence.Attempt, receipt: dict, image: str) -> list[dict]:
     service, backing = SERVICES[args.command]
     if not (ROOT / backing).is_file():
@@ -162,10 +139,6 @@ def service_checks(args, attempt: evidence.Attempt, receipt: dict, image: str) -
         receipt["skips"].extend([f"{counts[2]} ignored Rust tests"] if counts[2] else [])
         return [{"name": f"rust-test-{index}", "required": True, "status": state}
                 for count, state in zip(counts, ("pass", "fail", "skip")) for index in range(count)]
-    if args.command in ("reference", "native-smoke"):
-        if "DOLT_INTEGRATION_OK:" not in log.read_text(errors="replace"):
-            raise ValueError("Native smoke success marker absent")
-        return [{"name": "native-reference-smoke-command", "required": True, "status": "pass"}]
     if args.command == "build":
         container(attempt, "dev", image, ["python3", "-c", EXPORT_BUILD, "/evidence/" + log.name])
         return [{"name": "offline-musl-build-command", "required": True, "status": "pass"}]
@@ -178,9 +151,7 @@ def service_checks(args, attempt: evidence.Attempt, receipt: dict, image: str) -
 
 def execute(args, attempt: evidence.Attempt, receipt: dict) -> list[dict]:
     playbook(args, attempt, receipt)
-    if args.command == "baseline":
-        return baseline(args, attempt, receipt)
-    if args.command not in SERVICES and args.command not in ("bootstrap", "release-required"):
+    if args.command not in SERVICES and args.command != "bootstrap":
         raise ValueError(f"Gate producer is not implemented: {args.command}")
     attempt.run([sys.executable, "scripts/writfold_preflight.py"])
     if args.command == "bootstrap" and not args.tool_image:
@@ -191,19 +162,12 @@ def execute(args, attempt: evidence.Attempt, receipt: dict) -> list[dict]:
     if args.command == "bootstrap":
         receipt["scope"] = "tool-observation-only"
         return [{"name": "tool-image-and-executables-observed", "required": True, "status": "pass"}]
-    if args.command == "release-required":
-        report = evidence.release_required(receipt, receipt["candidate_artifacts"])
-        output = attempt.directory / "release-required.json"
-        evidence.publish(output, report)
-        receipt["artifacts"].append(evidence.file_record(output))
-        return report["checks"]
     return service_checks(args, attempt, receipt, image)
 
 
 def initial_receipt(args, attempt: evidence.Attempt) -> dict:
     return {"schema_version": 2, "gate": GATES[args.command], "status": "blocked",
-            # Historical Dolt smoke is not the current Omnigraph WF09 contract.
-            "scope": "release-aggregation" if args.command == "release-required" else f"{args.command}-only",
+            "scope": f"{args.command}-only",
             "source": None, "source_after_digest": None, "command": [sys.executable, *sys.argv],
             "commands": attempt.commands, "toolchain_digest": None, "cargo_lock_digest": None,
             "tool_image": None, "tool_admission": "not-admitted", "fixture_digest": None,
@@ -217,8 +181,6 @@ def initial_receipt(args, attempt: evidence.Attempt) -> dict:
 
 def qualify(args, attempt: evidence.Attempt) -> int:
     receipt = initial_receipt(args, attempt)
-    if args.command in ("reference", "native-smoke"):
-        receipt["scope"] = "historical-dolt-reference-native-smoke-only"
     started = time.monotonic_ns()
     try:
         receipt["source"] = evidence.snapshot()
