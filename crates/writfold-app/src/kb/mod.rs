@@ -9,6 +9,7 @@ mod gate;
 mod guard;
 mod hook;
 mod investigation;
+mod lists;
 mod observe;
 mod plan;
 mod proposals;
@@ -50,6 +51,8 @@ verbs:
                                    summary (the worst exit code of the three)
   runs [--open] [--project P] [--plan]
                                    every run: state, place, last checkpoint; --plan adds its position
+  runs --idle AGE [--project P] [--plan]
+                                   open runs whose last recorded write is older than AGE (7d, 36h)
   resume [<run>]                   one run: manifest, coverage, rechecks, checkpoint tail
   guard status                    would guard rules pass, deny, ask or nudge for the current run?
                                    a read-only judgment, not enforcement; no command is run

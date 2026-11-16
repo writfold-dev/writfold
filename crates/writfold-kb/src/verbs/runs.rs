@@ -11,7 +11,10 @@
 //! named it takes the current-run pointer, then the newest run of the
 //! project inferred from the working directory, then the newest open run.
 //! No liveness is claimed: there is no daemon.
+mod idle;
 mod plan;
+
+pub use idle::{age as idle_age, idle};
 
 use super::{BOUNDARY, brief, record_row};
 use crate::emit::{Answer, More, Row};
@@ -38,52 +41,8 @@ pub fn list(
         {
             continue;
         }
-        let mut row = record_row(session, &rec);
-        row.kind = "run";
-        row.status = Some(state);
-        if current.as_deref() == Some(rec.id.as_str()) {
-            row.flags.push("current".into());
-        }
-        let mut place = Vec::new();
-        if let Some(p) = &rec.project {
-            place.push(format!("project={p}"));
-        }
-        if let Some((_, map)) = runs::sidecar(session, &rec) {
-            for key in runs::PLACE {
-                if let Some(v) = map.get(key).and_then(Value::as_str) {
-                    let v = if key == "base" {
-                        v.get(..12).unwrap_or(v)
-                    } else {
-                        v
-                    };
-                    place.push(format!("{key}={v}"));
-                }
-            }
-        }
-        row.more.push(More {
-            label: "field",
-            text: place.join(" "),
-            ..More::default()
-        });
-        if plan && let Some(position) = plan::position(&session.ws.root, &rec) {
-            row.more.push(position);
-            planned += 1;
-        }
-        let (path, entries) = runs::entries(session, &rec);
-        if let Some(entry) = entries.last() {
-            let first = session
-                .lines(&path, entry.first + 1, entry.last)
-                .into_iter()
-                .find(|l| !l.trim().is_empty())
-                .unwrap_or_default();
-            row.more.push(More {
-                label: "checkpoint",
-                text: format!("{at} {}", first.trim()),
-                path: Some(path),
-                line: Some(entry.first),
-                ..More::default()
-            });
-        }
+        let (row, has_plan) = run_row(session, (&rec, &at, state), current.as_deref(), plan);
+        planned += usize::from(has_plan);
         answer.rows.push(row);
     }
     if plan {
@@ -95,6 +54,64 @@ pub fn list(
         answer.notes.push(start_note());
     }
     Ok(answer)
+}
+
+/// One run's `runs` row: state, place, plan position (with `plan`) and
+/// last checkpoint; and whether it has a plan position.
+pub(crate) fn run_row(
+    session: &Session<'_>,
+    (rec, at, state): (&Rec, &str, String),
+    current: Option<&str>,
+    plan: bool,
+) -> (Row, bool) {
+    let mut row = record_row(session, rec);
+    row.kind = "run";
+    row.status = Some(state);
+    if current == Some(rec.id.as_str()) {
+        row.flags.push("current".into());
+    }
+    let mut place = Vec::new();
+    if let Some(p) = &rec.project {
+        place.push(format!("project={p}"));
+    }
+    if let Some((_, map)) = runs::sidecar(session, rec) {
+        for key in runs::PLACE {
+            if let Some(v) = map.get(key).and_then(Value::as_str) {
+                let v = if key == "base" {
+                    v.get(..12).unwrap_or(v)
+                } else {
+                    v
+                };
+                place.push(format!("{key}={v}"));
+            }
+        }
+    }
+    row.more.push(More {
+        label: "field",
+        text: place.join(" "),
+        ..More::default()
+    });
+    let mut planned = false;
+    if plan && let Some(position) = plan::position(&session.ws.root, rec) {
+        row.more.push(position);
+        planned = true;
+    }
+    let (path, entries) = runs::entries(session, rec);
+    if let Some(entry) = entries.last() {
+        let first = session
+            .lines(&path, entry.first + 1, entry.last)
+            .into_iter()
+            .find(|l| !l.trim().is_empty())
+            .unwrap_or_default();
+        row.more.push(More {
+            label: "checkpoint",
+            text: format!("{at} {}", first.trim()),
+            path: Some(path),
+            line: Some(entry.first),
+            ..More::default()
+        });
+    }
+    (row, planned)
 }
 
 fn start_note() -> String {

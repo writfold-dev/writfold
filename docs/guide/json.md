@@ -55,6 +55,8 @@ The text form of `impact` is unchanged (`depth=N SRC REL DST (ORIGIN)` in `text`
 
 Readers should use `matched_on`, not split the `match` continuation's text (`typo d=1 api`).
 
+`runs --idle AGE` (built in v0.5.0-dev.10) adds an `idle` continuation to each run row (`9d since <time> (<what was written>)`) and the count `idle`.
+
 `find --eval` (built in v0.5.0-dev.10) answers with one row of kind `query` per line of the query file: `id` is `q<line>`, `status` is `hit@1`, `hit@5` or `miss`, `text` names the first expected record found with its rank and tier, `path` and `line` point at the query's line, the flag `unknown-id` marks an `expect` ID that is not a record, and a miss has a `first` continuation naming what ranked first. The trailer counts `queries`, `hit1`, `hit5`, `miss` and, per tier of the first expected hit, `by-exact`, `by-normalized`, `by-prefix`, `by-heading`, `by-text` and so on. A missing or empty file answers `reason` `no-queries`.
 
 `find --kind K[,K] [--project P]` with no text lists every record of those kinds in ID order, each once, with a `match` continuation whose `text` is `listed`; there is no fifty-row cap, the budget pages the answer. Rows keep the record's title in `text`. Without `--kind`, `find` still requires text; `match` and `--signatures` always do.

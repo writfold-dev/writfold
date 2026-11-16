@@ -190,6 +190,16 @@ git add .writfold/proposals && git commit -m "Propose HBR-130"   # commit it wit
 
 A run stays open until it is closed: `writfold kb status RUN --set closed` writes `closed` to the run's `writfold-run.json`, and later run writes to it are refused. Nothing closes a run on its own: Writfold records and never schedules, and every gate being met is not the same as the work being done. Close a run when its work is finished, and review the change as a Git diff like any other write. `writfold kb runs --open` lists the runs that are still open.
 
+**Idle runs** (built in v0.5.0-dev.10). `writfold kb runs --idle AGE [--project P] [--plan]` (`AGE` such as `14d` or `36h`) lists the runs that are not closed and whose last recorded write is older than `AGE`, oldest first, each with a line such as `idle: 9d since 2026-11-06T14:02:11Z (gate receipt)`. The last recorded write is the newest of the manifest's `created`, the last checkpoint heading, and the UTC stamp in the name of any file under the run's `gates/`, `statements/`, `covers/`, `observed/`, `retrievals/`, `edits/`, `plan/` and `deliveries/`. All of it is tracked text, so every clone gives the same answer; file modification times are not read. Idle is not inactive and recent is not active: no liveness is claimed. Nothing matching answers `answer=unknown reason=no-record`, exit 2. With `--plan`, the plan position shows which idle runs reached the end of their plan; those are the ones to close, in one loop reviewed as a Git diff:
+
+```sh
+writfold kb runs --idle 14d --plan --json |
+  jq -r '.rows[] | select(any(.more[]; .label == "plan" and (.text | startswith("complete")))) | .id' |
+  while read -r run; do writfold kb status "$run" --set closed; done
+```
+
+Then review the change with `git diff` in the KB and commit it.
+
 ## Checking that write-back happened
 
 Two run-record checks ([gates](gates.md#run-record-checks)) judge the run's own records, and a plan step can owe them ([run-graph](run-graph.md)):

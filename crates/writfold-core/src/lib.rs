@@ -47,6 +47,7 @@ pub mod find;
 pub mod flow;
 pub mod gate;
 pub mod guard;
+pub mod idle;
 pub mod investigation;
 pub mod ledger;
 pub mod observe;

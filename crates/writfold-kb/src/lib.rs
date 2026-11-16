@@ -78,6 +78,14 @@ pub enum Verb {
         filter: verbs::find::Filter,
         signatures: bool,
     },
+    /// `runs --idle AGE`: open runs whose last recorded write is older
+    /// than `age` seconds (`age_text` as given).
+    RunsIdle {
+        age: i64,
+        age_text: String,
+        project: Option<String>,
+        plan: bool,
+    },
     /// `find --eval [FILE]`: the query file (absolute), else
     /// `.writfold/queries.jsonl`.
     FindEval {
@@ -276,6 +284,20 @@ fn graph(session: &Session<'_>, verb: &Verb) -> Result<(Answer, &'static str, Ve
                 "find",
                 args,
             )
+        }
+        Verb::RunsIdle {
+            age,
+            age_text,
+            project,
+            plan,
+        } => {
+            let mut args = vec![format!("idle={age_text}")];
+            args.extend(project.iter().map(|p| format!("project={p}")));
+            if *plan {
+                args.push("plan=true".into());
+            }
+            let answer = verbs::runs::idle(session, (*age, age_text), project.as_deref(), *plan)?;
+            (answer, "runs", args)
         }
         Verb::FindEval { file } => (
             verbs::eval::eval(session, file.as_deref())?,
