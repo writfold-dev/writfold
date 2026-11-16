@@ -12,10 +12,6 @@ pub(crate) struct Output {
     pub stdout: Vec<u8>,
 }
 
-#[path = "service.rs"]
-mod service;
-pub(crate) use service::Service;
-
 #[path = "tailed.rs"]
 mod tailed;
 pub use tailed::{Tail, TailLimits, Tailed, TailedEnd, run_tailed, run_tailed_input};

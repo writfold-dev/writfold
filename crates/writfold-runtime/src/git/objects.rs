@@ -137,11 +137,6 @@ impl<'a, 'file> Session<'a, 'file> {
         })
     }
 
-    pub(super) fn check_stop(&self) -> Result<(), GitError> {
-        process::check_stop(self.deadline, self.cancelled)?;
-        Ok(())
-    }
-
     pub(super) fn object(
         &self,
         object: &GitObjectId,

@@ -4,10 +4,6 @@
 #[cfg(not(all(target_os = "linux", target_arch = "x86_64")))]
 compile_error!("writfold-runtime supports Linux/WSL x86_64 only");
 
-pub mod dolt;
 pub mod fs;
 pub mod git;
-pub mod omnigraph;
 pub mod process;
-pub mod stdio;
-pub mod worktrunk;
