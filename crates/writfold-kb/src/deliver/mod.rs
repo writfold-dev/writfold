@@ -17,6 +17,7 @@ pub mod mode;
 pub mod receipt;
 pub mod script;
 pub mod status;
+pub mod step;
 
 use crate::Request;
 use crate::emit::{Answer, Output, Row};

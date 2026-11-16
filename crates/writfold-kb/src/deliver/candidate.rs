@@ -50,6 +50,9 @@ pub struct Manifest {
     /// The candidate's digest when it was prepared.
     pub prepared: String,
     pub recorded: String,
+    /// Its place among the run's candidates of its mode (0 when the
+    /// manifest predates it): what decides which candidate is newest.
+    pub seq: u64,
 }
 
 fn manifest_bytes(m: &Manifest, size: usize) -> Vec<u8> {
@@ -64,6 +67,7 @@ fn manifest_bytes(m: &Manifest, size: usize) -> Vec<u8> {
         "candidate": {"file": PAYLOAD, "digest": m.prepared, "bytes": size},
         "rendering": "verbatim",
         "recorded": m.recorded,
+        "seq": m.seq,
     });
     let mut out = serde_json::to_vec_pretty(&value).unwrap_or_default();
     out.push(b'\n');
@@ -95,6 +99,10 @@ pub fn parse(text: &str, run: &str, id: &str) -> std::result::Result<Manifest, S
         source_digest: field(&value, "/source/digest")?,
         prepared: field(&value, "/candidate/digest")?,
         recorded: field(&value, "/recorded")?,
+        seq: match value.get("seq") {
+            None => 0,
+            Some(n) => n.as_u64().ok_or("/seq is not a non-negative integer")?,
+        },
     };
     if m.id != id || m.run != run {
         return Err("its id or run does not match where it is filed".into());
@@ -198,6 +206,7 @@ pub fn plan(
         source_digest: digest.clone(),
         prepared: digest,
         recorded: crate::time::stamp(now),
+        seq: super::step::next_seq(root, run_dir, run_id, &p.mode),
     };
     let op = Op::CreateDir {
         path: format!("{run_dir}/{DIR}/{id}"),
