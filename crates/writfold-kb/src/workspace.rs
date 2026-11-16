@@ -60,7 +60,7 @@ fn is_root(path: &Path) -> bool {
 }
 
 /// `--kb DIR`, then `$WRITFOLD_KB`, then the nearest ancestor of `cwd`
-/// holding `inventory/assets/`, then the prototype configuration's `root`.
+/// holding `inventory/assets/`.
 pub fn discover(explicit: Option<&Path>, cwd: &Path) -> Result<Workspace> {
     let named = explicit
         .map(Path::to_path_buf)
@@ -77,7 +77,6 @@ pub fn discover(explicit: Option<&Path>, cwd: &Path) -> Result<Workspace> {
             .ancestors()
             .find(|dir| is_root(dir))
             .map(Path::to_path_buf)
-            .or_else(configured_root)
             .ok_or_else(|| {
                 KbError::NoKb(
                     "no KB found: pass --kb DIR, set WRITFOLD_KB, or run inside a KB".into(),
@@ -87,31 +86,6 @@ pub fn discover(explicit: Option<&Path>, cwd: &Path) -> Result<Workspace> {
     let root = std::fs::canonicalize(root)?;
     let repo = find_repo(&root)?;
     Ok(Workspace { root, repo })
-}
-
-/// `root = "<path>"` from the prototype's configuration file, if present:
-/// `$KCTX_CONFIG`, else `$XDG_CONFIG_HOME` or `~/.config`, then
-/// `kctx/config.toml`. Every other key is ignored.
-fn configured_root() -> Option<PathBuf> {
-    let file = std::env::var_os("KCTX_CONFIG")
-        .map(PathBuf::from)
-        .or_else(|| {
-            let base = std::env::var_os("XDG_CONFIG_HOME")
-                .map(PathBuf::from)
-                .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".config")))?;
-            Some(base.join("kctx").join("config.toml"))
-        })?;
-    let text = std::fs::read_to_string(file).ok()?;
-    let value = text.lines().find_map(|line| {
-        let (key, value) = line.split_once('=')?;
-        (key.trim() == "root").then(|| value.trim().to_owned())
-    })?;
-    let path: String = serde_json::from_str(&value).ok()?;
-    let path = match path.strip_prefix("~/") {
-        Some(rest) => PathBuf::from(std::env::var_os("HOME")?).join(rest),
-        None => PathBuf::from(path),
-    };
-    is_root(&path).then_some(path)
 }
 
 /// The nearest enclosing work tree and its Git directory (a `.git`

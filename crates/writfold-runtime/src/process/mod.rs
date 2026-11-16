@@ -1,11 +1,11 @@
-//! Owned Linux subprocess groups shared by native storage readers.
+//! Owned Linux subprocess groups shared by native Git readers.
 mod error;
 mod runner;
 mod supervisor;
 
 pub use error::ProcessError;
-pub(crate) use runner::{Service, check_stop, run};
 pub use runner::{Tail, TailLimits, Tailed, TailedEnd, run_tailed, run_tailed_input};
+pub(crate) use runner::{check_stop, run};
 pub use supervisor::ProcessSupervisor;
 use writfold_domain::ByteCount;
 

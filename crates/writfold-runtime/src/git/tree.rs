@@ -1,5 +1,4 @@
-//! Whole-tree reads at one pinned commit, for the read-only Git storage
-//! backend (`writfold-store::backend::git`) that Tuft's `find` lowers onto.
+//! Whole-tree reads at one pinned commit.
 //!
 //! The commit must be named by its full object id and resolve to exactly that
 //! id; a ref, abbreviation or `HEAD` is refused, so the current checkout is

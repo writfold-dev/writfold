@@ -15,37 +15,12 @@ open Lean Elab Command
 /-- Lean's standard axioms. -/
 def allowedAxioms : List Name := [``propext, ``Classical.choice, ``Quot.sound]
 
-/-- The headline claims: byte identity, Lean `historyCheck`, the complete
-`AppendReady` refusal order, `Store::ready` over the current selection,
-"a refusal changes nothing", and the trial edit-flow validator (`Valid`: order,
-material and candidate bindings; nothing follows an outcome), the run graph
-(the current step, the advance check's refusal order, staleness, splicing),
-gate obligations (only a clean current pass satisfies; a statement never
-does) and the assessed gate's basis (a hypothetical entailment never
-passes). -/
+/-- The headline claims: byte identity, the run graph (the current step, the
+advance check's refusal order, staleness, splicing), gate obligations (only a
+clean current pass satisfies; a statement never does) and the assessed gate's
+basis (a hypothetical entailment never passes). -/
 def claims : List Name := [
   ``Writfold.Core.same_spec,
-  ``Writfold.Core.history_check_spec,
-  ``Writfold.Core.ready_against_spec,
-  ``Writfold.Core.ready_ok_iff,
-  ``Writfold.Core.Store.ready_spec,
-  ``Writfold.Core.Store.append_refused,
-  ``Writfold.Core.install_check_spec,
-  ``Writfold.Core.current_spec,
-  ``Writfold.Core.covers_spec,
-  ``Writfold.Core.Authority.install_refused,
-  ``Writfold.Core.Authority.advance_spec,
-  ``Writfold.Core.Authority.revoke_spec,
-  ``Writfold.Core.changes_spec,
-  ``Writfold.Core.recovery_spec,
-  ``Writfold.Core.recoveryOutcome_unambiguous,
-  ``Writfold.Core.required_entailed_spec,
-  ``Writfold.Core.required_ok_iff,
-  ``Writfold.Core.Flow.same_blob_spec,
-  ``Writfold.Core.Flow.carried_spec,
-  ``Writfold.Core.Flow.follows_spec,
-  ``Writfold.Core.Flow.validate_spec,
-  ``Writfold.Core.Flow.follows_closed,
   -- the run graph (writfold_core::plan)
   ``Writfold.Core.Plan.current_spec,
   ``Writfold.Core.Plan.current_least,

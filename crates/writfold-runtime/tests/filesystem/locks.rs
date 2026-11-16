@@ -31,8 +31,6 @@ fn managed_keys_are_validated_and_independent_of_paths() -> TestResult {
     let metadata = fs::metadata(fixture.path.join("managed-locks/logical-record.lock"))?;
     assert_eq!(metadata.ino(), identity.inode());
     assert_eq!(metadata.dev(), identity.device());
-    assert!(!fixture.path.join(".before-rename.kctx-lock").exists());
-    assert!(!fixture.path.join(".after-rename.kctx-lock").exists());
     Ok(())
 }
 

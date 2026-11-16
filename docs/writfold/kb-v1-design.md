@@ -1,6 +1,6 @@
 # Writfold KB v1: design
 
-Status: proposal, 11 November 2026; M1, M2, M3, M4a, the Tuft adapter and G1 implemented (see [section 11](#11-m1-as-built), [section 12](#12-m2-as-built), [section 13](#13-m3-as-built), [section 14](#14-m4a-as-built), [section 15](#15-tuft-adapter-as-built) and [section 16](#16-g1-as-built) for what was built and where it differs). Scope: the `writfold kb` product core for Git-native project continuity. Git text is the source of truth; a local SQLite file is a derived, rebuildable index. No server, no companion process.
+Status: proposal, 11 November 2026; M1, M2, M3, M4a, the Tuft adapter and G1 implemented (see [section 11](#11-m1-as-built), [section 12](#12-m2-as-built), [section 13](#13-m3-as-built), [section 14](#14-m4a-as-built), [section 15](#15-tuft-adapter-as-built) and [section 16](#16-g1-as-built) for what was built and where it differs). Scope: the `writfold kb` product core for Git-native project continuity. (16 November 2026: the Tuft adapter, the trial flow and `serve`, and the crates behind them, moved to the private archive; sections that describe them are history, marked where they begin.) Git text is the source of truth; a local SQLite file is a derived, rebuildable index. No server, no companion process.
 
 A cold session must be able to answer four questions, each pinned to a source and flagged when the source has moved:
 - why did we decide X;
@@ -130,9 +130,9 @@ Dependencies:
 
 ### 2.3 Examined and not used in v1
 
-- **`crates/writfold-app/src/ledger.rs`.** It stores kernel-validated streams under refs with an object store. KB records must be plain tracked files that any clone can read, so the ledger is off this path. Its expected-old head-move pattern returns only if `record --commit` is adopted.
-- **`trial retain` and `writfold-citation/1` bindings.** v1 keeps the existing token fields so the owner's KB works unchanged. Mapping a token to a binding digest is a later, additive step.
-- **`GitTreeBackend`** in `crates/writfold-store/src/backend/git.rs`. It is shaped for the B0 scan trait. The KB calls the runtime tree readers directly and so avoids depending on `writfold-store` (and through it the Dolt code).
+- **`crates/writfold-app/src/ledger.rs`** (archived 16 November 2026). It stores kernel-validated streams under refs with an object store. KB records must be plain tracked files that any clone can read, so the ledger is off this path. Its expected-old head-move pattern returns only if `record --commit` is adopted.
+- **`trial retain` and `writfold-citation/1` bindings** (archived 16 November 2026). v1 keeps the existing token fields so the owner's KB works unchanged. Mapping a token to a binding digest is a later, additive step.
+- **`GitTreeBackend`** in the storage crate (archived 16 November 2026). It is shaped for the B0 scan trait. The KB calls the runtime tree readers directly and so avoids depending on the storage crate (and through it the Dolt code).
 
 ### 2.4 New code elsewhere
 
@@ -193,7 +193,7 @@ Dependencies:
 
 **Unreadable files.** They are skipped, counted in `unreadable=`, and listed by `writfold kb index status`.
 
-**Latency targets.** Warm index, KB of about five thousand records, the bench machine in `bench/latency/`. Every verb pays roughly 20 to 50 ms before its query: one Git admission and one `status` spawn.
+**Latency targets.** Warm index, KB of about five thousand records, the bench machine of the earlier latency pilots (now in the private archive). Every verb pays roughly 20 to 50 ms before its query: one Git admission and one `status` spawn.
 
 ### 3.2 Verbs in order of daily value
 
@@ -592,7 +592,7 @@ Seeded and deterministic. The workspace has no property-test crate today; start 
 
 ### 8.6 Latency
 
-`bench/latency/kb.sh` over the generated KB reports median and p95 per verb against the targets in section 3. A private parity script, run by the owner on his real KB, compares counts with the prototype's JSON output for the shared verbs. Only aggregate numbers leave his machine.
+Planned: a latency script over the generated KB (the earlier latency pilots' scripts are in the private archive) reports median and p95 per verb against the targets in section 3. A private parity script, run by the owner on his real KB, compares counts with the prototype's JSON output for the shared verbs. Only aggregate numbers leave his machine.
 
 ## 9. Milestones
 
@@ -682,7 +682,7 @@ M1 landed as the crate `crates/writfold-kb`, the reads in `crates/writfold-runti
 - `context`: the walk follows authored and field edges whose status is explicit or confirmed, both directions, to `--depth` (default 2, at most 8); it stops at project records (a home, not a dependency) and skips closed ticket records and investigations. `frontier=` counts edges left at the boundary.
 - `why`: candidates are an exact decision, then decisions whose ID, title or `target` contains the text, then full-text matches. Superseded and rejected records are followed through `superseded_by` to the live record. Rationale is the first present section of `Decision`, `Rationale`, `Why`, `Why general / justification`, `Context`, `Proposed change` (override with `WRITFOLD_KB_WHY_SECTIONS`, comma-separated), its first paragraph up to three lines, else the summary.
 - `stale`: as 6.2, except that rename following through `log --follow` (M4) is not done, so a path renamed with edits is `gone` with that note; a pure rename is found by blob. `gate` citations (`rev=<repo>@<sha>`) are checked against the repository's target commit. Repositories are found through a hand-written map at `<git dir>/writfold/repos` (`<name> <path>` per line, until `repo add` exists), the search roots in `$WRITFOLD_KB_REPOS` (`<root>/<repo>` or `<root>/<name>`), a `repo=` that is an absolute path, or a `file://` `url=`. `--offline` reports only authored marks and due TTLs.
-- KB discovery adds a fourth step after the working directory: `root` from the prototype's configuration file (`$KCTX_CONFIG`, else `$XDG_CONFIG_HOME` or `~/.config`, then `kctx/config.toml`).
+- KB discovery added a fourth step after the working directory: `root` from the prototype's configuration file. Prototype-configuration root discovery was removed on 16 November 2026; use `$WRITFOLD_KB` or the plugin's `kb_root`.
 - `--at COMMIT` is refused (M4).
 
 ### 11.6 Tests and latency
@@ -1034,7 +1034,9 @@ The static musl binary still builds offline in the tools image (`cargo build -p 
 
 ## 15. Tuft adapter as built
 
-Owner decision, 12 November 2026: Tuft stays frozen at v0 as a language and gains one narrow adapter, so its results share the KB's vocabulary. No grammar, operator, field or query feature was added; the pure `tuft` crate is unchanged. New code: `crates/writfold-kb/src/write/{span,retrieval}.rs`, `crates/writfold-app/src/tuft/kb.rs`, and the `run` path of `crates/writfold-app/src/tuft/cli.rs`. The user-facing description is in [Tuft's language reference](../tuft/language.md#kb-adapter).
+> **Historical.** The `writfold tuft` subcommand and this adapter moved to the private archive on 16 November 2026 (with the trial code they depended on). What remains in this repository: `writfold-kb` still reads the retrieval receipts of 15.2 (`resume` lists them, they can be cited, and `research.backfilled` counts them), and the `tuft` crate supplies the citation cursor.
+
+Owner decision, 12 November 2026: Tuft stays frozen at v0 as a language and gains one narrow adapter, so its results share the KB's vocabulary. No grammar, operator, field or query feature was added; the pure `tuft` crate is unchanged. New code: `crates/writfold-kb/src/write/{span,retrieval}.rs`, `crates/writfold-app/src/tuft/kb.rs`, and the `run` path of `crates/writfold-app/src/tuft/cli.rs`. The user-facing description was in Tuft's language reference (archived with the adapter).
 
 ### 15.1 Citations (`tuft run --cite`)
 
@@ -1044,7 +1046,7 @@ Owner decision, 12 November 2026: Tuft stays frozen at v0 as a language and gain
 
 ### 15.2 Retrieval receipts
 
-- **When.** With `--kb DIR` or `--run ID`, always (a failure fails the command). Otherwise only when the KB found as `writfold kb` finds it (`$WRITFOLD_KB`, then the working directory's ancestors, then the prototype's configured root) has a current-run pointer naming a run that exists and is not closed; any failure then becomes a note on standard error and the run still prints. With no KB or no open current run nothing is read or written beyond today's run.
+- **When.** With `--kb DIR` or `--run ID`, always (a failure fails the command). Otherwise only when the KB found as `writfold kb` finds it (`$WRITFOLD_KB`, then the working directory's ancestors, then, until 16 November 2026, the prototype's configured root) has a current-run pointer naming a run that exists and is not closed; any failure then becomes a note on standard error and the run still prints. With no KB or no open current run nothing is read or written beyond today's run.
 - **What.** One new file per run of `tuft run`, `runs/<id>/retrievals/<UTC compact time>-<6 hex>.md`: front matter `kind: retrieval`, `tool` (`tuft/0`), `run`, `program` (`sha256:<digest>`), `repo`, `commit`, `rows` (the view's rows), `shown` (this page), `cites`, `recorded`; a `# Retrieval …` heading; `trailer:` with the compact trailer; and `## Citations` with one token per distinct cited span. Tuft's trailer carries `program=<12 hex>` where the KB's carries `q=`; both name the query.
 - **How.** A new write, `Write::Retrieval`, planned like the M3 writes (the run must exist and not be closed; every field one line; every cite exactly one token) and applied as one `Op::Create` through the 13.2 protocol (lock, guard, synced temporary, `link` publish, directory sync). It adds no protocol step and no operation kind. It does not move the current-run pointer.
 - **Where, and the prototype.** The prototype reads `runs/<id>/receipts/*.json` as its own numbered run receipts with a strict decoder, so Writfold does not write there. Under a run it reads only paths it names itself (manifest, coverage, checkpoint, observations, receipts and its own run inputs); only its backlink scan, which reads every tracked file as plain text, sees a receipt, and a Markdown file is what it expects there. Writfold indexes each receipt as a document: its tokens are citations, so `stale runs/<id>/retrievals/<file>.md` (and a KB-wide `stale`) checks them like any other.
@@ -1059,13 +1061,15 @@ Owner decision, 12 November 2026: Tuft stays frozen at v0 as a language and gain
 
 ### 15.4 State without `trial init` (fixed for v0.4.0-dev.1)
 
-Until v0.4.0-dev.1, `tuft run` refused with "no trial state" unless `--state` or `WRITFOLD_STATE` named a directory made by `writfold trial init`. Of that state Tuft used two things: the admitted Git executable (`git.path`, `git.sha256`) and the evidence directory where `retain` writes each binding (`evidence/<binding>.{json,bytes,line}`, plus a copy in the trial's object store). It never used the operator key, the policy, the ledger or the worktrees; `Trial::open` merely required them.
+> **Historical** (archived with the adapter, 16 November 2026).
 
-- **Order** (`crates/writfold-app/src/tuft/state.rs`): `--state`, else `WRITFOLD_STATE`, chooses a trial state exactly as before (same resolution, same refusal, same bytes; the KB is not even looked for). Otherwise, when a KB under Git is found the way the adapter finds it (`--kb`/`--run`, else discovery), Tuft uses `<KB git dir>/writfold/tuft-state/`. Otherwise the default trial state when `trial init` made it, as before. Otherwise a refusal naming `--kb DIR` (or running inside a KB) and `--state DIR` / `WRITFOLD_STATE`.
+Until v0.4.0-dev.1, `tuft run` refused with "no trial state" unless `--state` or the trial's state variable named a directory made by `writfold trial init`. Of that state Tuft used two things: the admitted Git executable (`git.path`, `git.sha256`) and the evidence directory where `retain` writes each binding (`evidence/<binding>.{json,bytes,line}`, plus a copy in the trial's object store). It never used the operator key, the policy, the ledger or the worktrees; `Trial::open` merely required them.
+
+- **Order** (`crates/writfold-app/src/tuft/state.rs`): `--state`, else the trial's state variable, chooses a trial state exactly as before (same resolution, same refusal, same bytes; the KB is not even looked for). Otherwise, when a KB under Git is found the way the adapter finds it (`--kb`/`--run`, else discovery), Tuft uses `<KB git dir>/writfold/tuft-state/`. Otherwise the default trial state when `trial init` made it, as before. Otherwise a refusal naming `--kb DIR` (or running inside a KB) and `--state DIR` / the trial's state variable.
 - **The KB-owned state** holds only `evidence/`, created owner-only on first use and reused after. Git is the executable the `kb` verbs use (`GitTool`: `$WRITFOLD_GIT`, else `git` on `PATH`), observed per run, so no digest is kept and a Git upgrade does not strand the state. No key, policy, ledger, object store or worktree is created. The bytes are kept only in `evidence/<binding>.bytes`.
 - **Bindings** keep the trial realm, so the same bytes bind to the same digest in either state. `writfold trial` commands do not read this state, and `trial prepare` still accepts only reports citing evidence retained in a trial state.
 - **Code:** `trial::retain::retain_read` now writes through an `EvidenceStore` (realm, evidence directory, extra copy), implemented by `Trial` with exactly its previous effects and by `TuftState`. `tuft::execute` is unchanged for callers (the trial run and `serve` still pass a trial state); `tuft::execute_kb` is the KB path.
-- **Tests** (`crates/writfold-app/src/tuft/kb_tests/state.rs`): `--cite` inside a fresh KB with an open run and no setup prints tokens and records its receipt; the state is `evidence/` only, mode 0700, holds the same binding files as the trial state for the same run, and has no `operator.pem` anywhere in the KB; a second run reuses the same directory (same inode, same files) and records a second receipt; `--kb` from outside the KB chooses the KB's state; no KB and no state gives the refusal naming both ways; a given `--state` or `WRITFOLD_STATE` chooses the trial state without looking for a KB. The existing Tuft tests, which all pass `--state`, are unchanged.
+- **Tests** (`crates/writfold-app/src/tuft/kb_tests/state.rs`): `--cite` inside a fresh KB with an open run and no setup prints tokens and records its receipt; the state is `evidence/` only, mode 0700, holds the same binding files as the trial state for the same run, and has no `operator.pem` anywhere in the KB; a second run reuses the same directory (same inode, same files) and records a second receipt; `--kb` from outside the KB chooses the KB's state; no KB and no state gives the refusal naming both ways; a given `--state` or the trial's state variable chooses the trial state without looking for a KB. The existing Tuft tests, which all pass `--state`, are unchanged.
 
 ### 15.5 Not done
 
@@ -1388,7 +1392,7 @@ checkpoint 2026-11-03T16:00:00Z entry 2 of 2 @runs/run-20261101T090000Z-a1b2c3/c
 ### 18.4 Build and dependencies
 
 - **ratatui 0.29.0** (21 October 2024) with `default-features = false, features = ["crossterm"]`, which brings **crossterm 0.28.1**. Both crates, and every other new crate in the lock file, were published more than two weeks before this slice. The new closure (cassowary, compact_str, itertools 0.13, lru 0.12, strum 0.26, unicode-truncate, unicode-width, paste, instability, indoc, parking_lot, mio, signal-hook, rustix 0.38 and the Windows target crates) was fetched into the registry volume as the earlier milestones did (`cargo fetch --locked` in the tools image as root, with the network, the volume `writfold-rust-1.98.0-registry` mounted).
-- **Why not 0.30.** ratatui 0.30.2 (June 2026) splits into `ratatui-core`, which depends on hashbrown 0.17 with its default features. The core crates already resolve hashbrown 0.17.1 (featureless, under the Verus proc-macros), and `cargo metadata` resolves features workspace-wide, so the xtask's resolved graph would show `allocator-api2` and `foldhash` under `writfold-domain`, `writfold-kernel` and `writfold-protocol` and refuse them as unadmitted core dependencies. A real build does not link them there (Cargo keeps proc-macro features apart), but admitting them would widen the reviewed pure list of the core crates, which this slice must not do. ratatui 0.29's lru uses hashbrown 0.15, which only the KB's SQLite closure shares. Moving to 0.30 is a separate decision for that list.
+- **Why not 0.30.** ratatui 0.30.2 (June 2026) splits into `ratatui-core`, which depends on hashbrown 0.17 with its default features. The core crates already resolve hashbrown 0.17.1 (featureless, under the Verus proc-macros), and `cargo metadata` resolves features workspace-wide, so the xtask's resolved graph would show `allocator-api2` and `foldhash` under `writfold-domain` and the other pure core crates of the time and refuse them as unadmitted core dependencies. A real build does not link them there (Cargo keeps proc-macro features apart), but admitting them would widen the reviewed pure list of the core crates, which this slice must not do. ratatui 0.29's lru uses hashbrown 0.15, which only the KB's SQLite closure shares. Moving to 0.30 is a separate decision for that list.
 - **`writfold-xtask`** (`graph.rs`): `writfold-tui` is admitted with `[writfold-kb]` and added to `writfold`'s list; the SQLite closure is admitted for `writfold-tui` (through `writfold-kb`); a new `terminal-dependency` rule admits the terminal closure (ratatui, crossterm and the crates no other member resolves) only in `writfold-tui` and `writfold`. No rule for the workspace's own crates changed. The quality inspection passes on the whole workspace.
 - ratatui and crossterm contain `unsafe` (terminal and signal setup); the xtask audits only workspace sources, and `writfold-tui` itself is `#![forbid(unsafe_code)]` with no `unwrap` or `expect`.
 - The static musl binary builds offline in the tools image (`cargo build -p writfold --release --target x86_64-unknown-linux-musl --locked --offline`; `file`: `static-pie linked`; `ldd`: `statically linked`; 7.3 MB), and that binary's `watch` was driven through a pseudo-terminal (`script`): it draws, takes `j`, Tab, `b`, `?` and `q`, and leaves the alternate screen.
@@ -1912,7 +1916,7 @@ timeout_seconds = 60
 
 ### 23.2 The binary
 
-The path is never the agent's: `$WRITFOLD_WEFT`, else `weft = "<path>"` in `$XDG_CONFIG_HOME/writfold/config.toml` (else `~/.config/writfold/config.toml`); `PATH` is never searched, following the trial's `--weft` pin. `gate run` reads the canonical file and hashes it: another digest than `weft_sha256` is refused (exit 3, nothing written); no path, no file or an unreadable one records a receipt with outcome `unknown` and the reason. Weft runs as `weft prove --json -- <source>` under G1's supervision (16.4): its own process group, stdin at end of file, the definition's timeout, TERM then KILL. Exit statuses 0, 1 and 2 hand the report on (a complete Weft proof exits 1 even when entailed); a signal, a timeout, another status, or a report over 16 MiB (Weft's own output budget) is `unknown`. As in the trial, the digest is checked immediately before the binary is started, not by executing the hashed bytes.
+The path is never the agent's: `$WRITFOLD_WEFT`, else `weft = "<path>"` in `$XDG_CONFIG_HOME/writfold/config.toml` (else `~/.config/writfold/config.toml`); `PATH` is never searched, following the (now archived) trial's Weft pin. `gate run` reads the canonical file and hashes it: another digest than `weft_sha256` is refused (exit 3, nothing written); no path, no file or an unreadable one records a receipt with outcome `unknown` and the reason. Weft runs as `weft prove --json -- <source>` under G1's supervision (16.4): its own process group, stdin at end of file, the definition's timeout, TERM then KILL. Exit statuses 0, 1 and 2 hand the report on (a complete Weft proof exits 1 even when entailed); a signal, a timeout, another status, or a report over 16 MiB (Weft's own output budget) is `unknown`. As in the trial, the digest is checked immediately before the binary is started, not by executing the hashed bytes.
 
 ### 23.3 Citations and grounding
 
@@ -3381,7 +3385,7 @@ two rows with the same id, selection resolves to the first.
 
 T4 makes the watch frame calm by default and moves every omitted fact one key
 away. The [specification](tui-t4-spec.md) remains the design record (its §5
-lists the owner decisions); the [watch guide](../guide/watch.md#calm-and-detailed)
+lists the owner decisions); the [watch guide](../guide/watch.md)
 documents the exercised interface. No verb, JSON key, record or write path
 changed; `--once` and piped frames are byte-identical (their three goldens did
 not change).
@@ -3799,6 +3803,8 @@ The specification was [dev9-spec.md](dev9-spec.md); check receipts are §38, `ed
 `write/investigation.rs` plans one `Op::CreateDir` of `investigations/<year>/<date>-<slug(title)>/` holding `README.md` and an empty `evidence/`; the record ID is `inv:<year>/<date>-<slug>`. Front matter, in the order the KB's investigations use: `id`, `title`, `trigger` (default `manual`, one line), `tickets` (normalised ticket IDs), `alerts`, `assets`, `status: open`, `signatures`, `created`, `updated`, `summary`. Body sections: `Question` (`--question`), `Hypotheses`, `Checked against`, `Scope and limits`, `Conclusion`, so `status --set concluded` succeeds once they are filled. A taken ID (the same title the same day) and an unknown asset are refused (exit 3) before anything is written; a `--tickets` entry that is not a ticket ID, a `--signatures` entry that is not a slug and a multi-line title or trigger are usage errors (exit 1). Tickets and signatures need not exist. The proposal codec gains the kind (`KINDS` is four), so `propose investigation …` validates as `record` does and `proposals accept` writes the same bytes. The app's flags live in `writfold-app/src/kb/investigation.rs` to keep `writes.rs` within its budget. Tests: `crates/writfold-kb/tests/record_investigation.rs` (the file parses back to an `open` investigation with its ticket, asset and signature edges and the index equals a rebuild; a repeat is refused; filling the three sections of the unmodified template concludes; usage errors and the unknown asset; propose, show and accept write the bytes `record` writes) and the parser test in `kb/investigation.rs`.
 
 ### 39.2 `writfold tuft index`
+
+> **Historical** (archived with the Tuft adapter, 16 November 2026).
 
 `writfold-app/src/tuft/ctags.rs` finds ctags (`$WRITFOLD_CTAGS`, else `ctags` on `PATH`), probes `--version` (`Universal Ctags`) and `--list-features` (`json`), and runs it through `writfold_runtime::process::run_tailed_input` under the KB's process supervisor (TERM at the deadline, KILL after 2 s; 300 s, `WRITFOLD_CTAGS_TIMEOUT` overrides). `tuft/cli/index.rs` resolves `--repo` (default `.`) and `--at` (default `HEAD`) once with `kb_commit`, chooses the Tuft state as `run` does, exports the commit's blobs with `files::snapshot` (the pinned `ls-tree`/`cat-file` reads a search uses) into `<state>/symbols/.export-<pid>-<nanos>/`, runs `ctags --options=NONE --output-format=json --fields=+nr --extras=+r -R -f <out>.tmp .` there, syncs and renames the output into place, then writes `<out>.meta.json` (`{"commit","sha256"}`) through a temporary file and a rename. Both temporaries are removed on every path. stdout is the index path (or the `--json` object); the note on stderr carries the commit, tag count, digest and ctags version.
 

@@ -152,4 +152,3 @@ Every `writfold kb` verb, including the writes and the run verbs: `record`, `sta
 Two outputs are not this envelope:
 
 - The hook commands (`writfold kb hook <event>`) print the JSON Claude Code expects.
-- `writfold tuft run --json` prints Tuft's own result object, described in the [Tuft language reference](../tuft/language.md). Inside a run, a search with `--cite` is also kept as a retrieval receipt that `kb resume` lists.

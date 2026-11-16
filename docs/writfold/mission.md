@@ -1,9 +1,9 @@
 # Writfold mission: project continuity for agents
 
 Owner decision, 11 November 2026. This document is the current authority for
-what Writfold builds next. It supersedes the delivery order in
-`agent-boundary-plan.md` and the gate programme in `handovers/revision-5/` as
-live obligations; those stay in the repository as history and are not edited.
+what Writfold builds next. It supersedes the earlier delivery order and gate
+programme as live obligations; those records are kept, unedited, in the
+private archive (see "The public/archive split" below).
 
 ## Mission
 
@@ -43,8 +43,20 @@ The current standing of each component. Earlier sentences below that say otherwi
 
 | Component | Status |
 |---|---|
-| Tuft, Weft, Splicery | frozen (owner decision, 15 November 2026): kept building and tested, with their adapters (`tuft`, the Weft assessed gate, `kb edit apply`), and no new development. The `writfold kb` verb groups cover each stage of the flow; the three are revisited only if a use case emerges. They are no longer presented on the website |
-| The trial flow and `serve`'s trial methods, `writfold.agent/1`, Dolt publication, Omnigraph | frozen: kept building and tested, no new development |
+| Tuft | frozen (owner decision, 15 November 2026). The `writfold tuft` subcommand and its adapter were archived on 16 November 2026; the `tuft` crate stays in the workspace only for the citation cursor `writfold-kb` uses. Retrieval receipts that earlier runs recorded are still read |
+| Weft, Splicery | frozen (15 November 2026): kept building and tested through their adapters (the Weft assessed gate, `kb edit apply`), and no new development. The `writfold kb` verb groups cover each stage of the flow; the two are revisited only if a use case emerges. They are no longer presented on the website |
+| The trial flow and `serve`, `writfold.agent/1`, Dolt publication, Omnigraph | archived (16 November 2026): moved to the private archive and removed from the binary and the workspace |
+
+### The public/archive split (owner decision, 16 November 2026)
+
+The public repository holds the product: the `kb` verbs, `watch`, the crates
+they use, their proofs and models, and the guides. The frozen components
+that the binary no longer runs (the trial flow, `serve`, `writfold tuft`,
+`writfold.agent/1`, Dolt, Omnigraph) and their models, evidence, pilots and
+history moved to the private archive repository `writfold-dev/writfold-archive`:
+the files with their history under `public-split-2026-11-16/`, and the exact
+last tree, buildable, as branch `public-main-pre-split` (tag
+`pre-split-2026-11-16` here). The public history is unchanged.
 
 ### Storage
 
@@ -55,11 +67,12 @@ The current standing of each component. Earlier sentences below that say otherwi
   and full-text search (FTS5 with BM25 and a trigram tokenizer for
   typo-tolerant matching). A vector-similarity table may be added later in
   the same index, never as a source of truth.
-- Dolt and Omnigraph are paused. Their code, documentation, tests, the TLC
-  model of publication and the DINT02 slices stay as they are. This reverses
-  the 9 November interim-backend decision. Fuzzy search no longer waits on
+- Dolt and Omnigraph are archived (16 November 2026; paused since 11
+  November). Their code, documentation, tests, the TLC model of publication
+  and the DINT02 slices are in the private archive. This reverses the 9
+  November interim-backend decision. Fuzzy search no longer waits on
   Omnigraph.
-- Why they stay frozen (owner, 12 November 2026): both were only ever
+- Why they were not resumed (owner, 12 November 2026): both were only ever
   projections of the Git records, so their versioning and branching
   duplicated what Git already provides. The index needs no history of its
   own: it is rebuilt from Git at any commit, and SQLite gives the queries,
@@ -73,14 +86,12 @@ features. (Superseded for Tuft: see Component status.) The agent chooses per tas
 Splicery recipes or ordinary Edit/sed for edits, Weft for plan verification.
 Common edit or query patterns may be added later if real use shows the need.
 
-### Frozen (no new development)
+### Archived (16 November 2026; frozen since 11 November)
 
-- The edit trial flow (`writfold trial`), including `serve`'s trial methods.
+- The edit trial flow (`writfold trial`) and `serve`.
 - `writfold.agent/1` and the cross-repository contract pins.
-- Dolt publication: the open items (signed candidate binding, the
-  same-request rival gap) stay open and are not pursued.
-- Known limitation, not fixed while frozen: `trial init` writes the operator
-  signing key into the state directory, readable by the agent's own shell.
+- Dolt publication: its open items (signed candidate binding, the
+  same-request rival gap) were not pursued.
 
 ### Assurance kept and dropped
 
@@ -92,11 +103,11 @@ Kept:
 - `scripts/gate quality` and `scripts/gate unit` on main before pushing.
 - Honest status language and the website's "must not say" list.
 
-Dropped as live obligations:
+Dropped as live obligations (their records are in the private archive):
 - the WF00–WF31 gates, the V/M entries, E01–E12 and the 148 scenarios;
 - Verus, TLAPS, three-host conformance and the legacy claims map;
-- a `qualification/status.json` entry and a receipt-index commit per
-  component. New work records gate receipts in its commit message instead.
+- a per-component status entry and a receipt-index commit. New work records
+  gate receipts in its commit message instead.
 
 ### Interface
 
@@ -119,13 +130,13 @@ The v1 design is [kb-v1-design.md](kb-v1-design.md).
 2. ~~The index, search and graph verbs~~ (M2): `find`, `match`, `status`, `impact`, `uses`, `timeline`.
 3. ~~Writes~~ (M3): `record`, `checkpoint`, `resume`, `runs`.
 4. ~~M4a: the Claude Code plugin~~ (SessionStart brief, checkpoint drafts, one skill; `plugins/writfold`).
-5. ~~Tuft adapter~~: `tuft run` rows can carry KB citation tokens, and a search is recorded as a retrieval receipt in the current run.
+5. ~~Tuft adapter~~: `tuft run` rows could carry KB citation tokens, and a search was recorded as a retrieval receipt in the current run. (Archived 16 November 2026; existing retrieval receipts are still read.)
 6. ~~G1: checks with pinned receipts~~ (below; `gate run`, `gate status`, `gate verify`, `gate lines`; [as built](kb-v1-design.md#16-g1-as-built)).
 7. ~~Splicery adapter~~: a recipe applies directly in a run's recorded worktree; the result is an ordinary Git change judged by a gate, with the recipe and preview kept as a receipt (`edit apply`, `edit recover`; [as built](kb-v1-design.md#17-splicery-adapter-as-built)).
 8. ~~T1: `writfold watch`, a read-only TUI~~ ([as built](kb-v1-design.md#18-t1-as-built)).
 9. ~~G2: offline delivery candidates; G2b: an optional guard hook~~ (`deliver prepare|check|attest|waive|status`, `gate attest|waive`, `hook pre-tool-use`; [as built](kb-v1-design.md#19-g2-as-built)). Then, from the order of work below, ~~instruction gates and user-defined delivery modes~~ (`instructions`, `{gate}`, `.writfold/deliveries/<mode>.toml`; [as built](kb-v1-design.md#20-instruction-gates-and-delivery-modes-as-built)).
 10. A two-week pause: count real catches and waivers from the receipts. If no catch mattered, keep G1 and drop the rest.
-11. M4b: MCP, trailer and tracker edges, `--at`. G3 only if the pause justifies it.
+11. M4b: trailer and tracker edges, `--at`. G3 only if the pause justifies it. (MCP was dropped on 15 November 2026: see Interface.)
 12. ~~T2: run progress in `writfold watch`~~: plan steps, owed gates, checklist items, guards, inbox and timeline; responsive layouts, subject/queue polling and six themes; read-only and never starting a checker ([as built](kb-v1-design.md#34-t2-as-built)).
 13. ~~T3: the plan map and node inspector in `writfold watch`~~ ([as built](kb-v1-design.md#35-t3-as-built)): the recorded spine, nested splices, per-step state glyphs and gate chips, persistent node selection, and an inspector with evidence and checklist segments. Read-only; the marker is the recorded position, never a liveness claim.
 14. ~~T5: the knowledge base as a second mode of `writfold watch`~~ ([as built](kb-v1-design.md#37-t5-as-built)): `m` shows a project's decisions, status, tracker, impact tree and stale citations with the run mode's look, a record inspector, and `f` between a run and the records its checkpoints name; built on `find --kind` and the JSON-only `edge` of `impact` rows. Read-only.
@@ -149,7 +160,7 @@ Considered for this release and deferred, with the reason:
 
 **v0.5.0-dev.3** (13 November 2026): an observation record built in reduced form (`kb observe`: one lookup with its status, in `runs/<run>/observed/`; only an `ok` look with a fresh citation supports a checklist item; no derivation chains and no independent-origins policy); `kb repos` to list cited repositories and their clones, with partial clones and per-repository Git failures degraded to `unverifiable`; tracked proposals; guard `paths` globs (moved out of "Not planned") and per-turn stop rules; checker `max_age`; batch `gate cover`. Still not planned: fetching cited repositories (`kb repos --missing --json` feeds a user's own clone script instead), handing the built-in `code` kind to a checker, render and redaction, reading other tools' observation files, and a checker SDK (the checkers guide has a complete template).
 
-**v0.5.0-dev.10** (16 November 2026): guards that match exactly the command they name and judge the repository it acts on, and lookups that hit on the first try ([dev10-spec.md](dev10-spec.md); [as built](kb-v1-design.md#40-v050-dev10-as-built)). Built: the shared command reader (here-document bodies are data; wrappers, a path to the binary and `git`'s global options are seen through; `--help` passes; each matched command judged where it acts, an unresolvable directory taking the rule's action; a linked worktree named after its repository); `gates.met` over an empty set refuses; guard conformance cases; `normalized`, `prefix` and `heading` lookup tiers with `matched_on`, suggestions on an empty answer and `find --eval`; `mode = "audit"`, waivers shown in the guard's answers, and the local guard log with `guard log`; `runs --idle`; `kb delta` with marks and the session's mark. Three behaviour changes for existing users: a rule requiring `gates.met` in a repository that owes no gate now refuses (leave it out with `repos`); `commands` rules now match through `git -C` and wrappers; here-document bodies are no longer matched. Not built, with the reasons in the specification: a `warn` mode, a rule-level waiver, skipping an unresolvable directory, closing runs automatically, `delta --since <timestamp>`, semantic search, rank fusion, aliases on Markdown records and learned aliases. In the same release, ~~delivery modes as a step's gates~~ ([deliver-gate-spec.md](deliver-gate-spec.md); [as built](kb-v1-design.md#41-delivery-modes-as-a-steps-gates-as-built)): a step owes `deliver:<mode>` and cannot be advanced until a candidate of the mode prepared in the run is ready; the done record binds that candidate. Two more behaviour changes: a candidate whose cited evidence moved after its check reads `[blocked]` (in `deliver status`, the delivery guard and the plan alike), and `delivery.json` gains `seq`. Nothing is sent: a done delivery step says a candidate was ready, never that it was posted.
+**v0.5.0-dev.10** (16 November 2026): guards that match exactly the command they name and judge the repository it acts on, and lookups that hit on the first try ([dev10-spec.md](dev10-spec.md); [as built](kb-v1-design.md#40-v050-dev10-as-built)). Built: the shared command reader (here-document bodies are data; wrappers, a path to the binary and `git`'s global options are seen through; `--help` passes; each matched command judged where it acts, an unresolvable directory taking the rule's action; a linked worktree named after its repository); `gates.met` over an empty set refuses; guard conformance cases; `normalized`, `prefix` and `heading` lookup tiers with `matched_on`, suggestions on an empty answer and `find --eval`; `mode = "audit"`, waivers shown in the guard's answers, and the local guard log with `guard log`; `runs --idle`; `kb delta` with marks and the session's mark. Three behaviour changes for existing users: a rule requiring `gates.met` in a repository that owes no gate now refuses (leave it out with `repos`); `commands` rules now match through `git -C` and wrappers; here-document bodies are no longer matched. Not built, with the reasons in the specification: a `warn` mode, a rule-level waiver, skipping an unresolvable directory, closing runs automatically, `delta --since <timestamp>`, semantic search, rank fusion, aliases on Markdown records and learned aliases. In the same release, ~~delivery modes as a step's gates~~ ([deliver-gate-spec.md](deliver-gate-spec.md); [as built](kb-v1-design.md#42-delivery-modes-as-a-steps-gates-as-built)): a step owes `deliver:<mode>` and cannot be advanced until a candidate of the mode prepared in the run is ready; the done record binds that candidate. Two more behaviour changes: a candidate whose cited evidence moved after its check reads `[blocked]` (in `deliver status`, the delivery guard and the plan alike), and `delivery.json` gains `seq`. Nothing is sent: a done delivery step says a candidate was ready, never that it was posted.
 
 ## Gates, runs and progress (owner decision, 12 November 2026)
 
@@ -197,11 +208,11 @@ Writfold is a record keeper: it never schedules the agent or its subagents, and 
 
 So "every research step backfills the KB" and "every run ends with self-reflection" are required steps whose gates are run-record checks. The word "hook" is kept only for Claude Code hooks.
 
-### Narrow adapters for Tuft and Splicery (owner decision, 12 November 2026)
+### Narrow adapters for Tuft and Splicery (owner decision, 12 November 2026; the Tuft adapter archived 16 November 2026)
 
 Splicery is not a priority for new language features (Tuft is, since 13 November 2026: see "Tuft expansion" below), but each gains one narrow adapter so agents have two interfaces and can choose by task: Splicery for repeated or structural edits, ordinary tools for small ones; `kb` verbs or Tuft for retrieval. The Tuft adapter emits KB citations and run receipts. The Splicery adapter applies in a run's worktree without the trial's signing and approval flow, which stays frozen. Weft contributes only its four-way vocabulary for plan assumptions; making it read KB citations as premises waits for the two-week pause. (Superseded: see Component status.)
 
-### Tuft expansion (owner decision, 13 November 2026)
+### Tuft expansion (owner decision, 13 November 2026; superseded: frozen 15 November, the adapter archived 16 November 2026)
 
 Tuft is taken off the "not a priority" list. Retrieval is where an agent spends most of its reads, and Tuft's value is the citation and the coverage line, not token counts: a search that says it was complete, and rows that arrive as KB citations. The expansion makes that cheap to reach: refs accepted where a person would type them (resolved to a commit and echoed), a one-line form for the common search, one program over several repositories of the KB's repo map, symbol-aware finds with honest partial coverage, diagnostics that name the fix, and a documented, pinned `--json` and exit codes. Stored programs and receipts stay pinned to full commit IDs; the binary stays static and network-free. Weft and Splicery stay as the section above says.
 
@@ -216,7 +227,8 @@ bytes dirty and never retains them as pinned evidence. `find def|refs` imports
 universal-ctags JSON with a verified commit/digest sidecar and always-partial
 coverage, without new crates. Not included: SCIP, tree-sitter, enclosing-block
 windows (not exact without language-specific parsing), parameters, grouping,
-set operations and a recipes page. [Language and CLI](../tuft/language.md).
+set operations and a recipes page. (The language and CLI reference moved
+to the private archive with the adapter on 16 November 2026.)
 `writfold tuft index` (v0.5.0-dev.9) builds the ctags index and its sidecar
 from the bytes of one commit, exported under the Tuft state directory, with
 universal-ctags found on `PATH` or `$WRITFOLD_CTAGS`; the user's work tree,
@@ -227,7 +239,7 @@ index and worktree list are untouched.
 | Review point | Decision |
 |---|---|
 | Change the mission to project continuity | Adopted |
-| Git as the store, SQLite as a rebuildable index; drop Dolt, shelve Omnigraph | Adopted (paused, not deleted) |
+| Git as the store, SQLite as a rebuildable index; drop Dolt, shelve Omnigraph | Adopted (paused, then archived on 16 November 2026) |
 | Freeze trial, Weft, Splicery; Tuft as verbs | Adopted (Superseded: see Component status) |
 | Cut Verus, TLAPS, the gate inventory and receipt ceremony | Adopted |
 | Read the existing knowledge-base layout unchanged in v1 | Adopted |
@@ -235,4 +247,4 @@ index and worktree list are untouched.
 | Hooks and plugin first, then CLI, then MCP | Adopted |
 | Rewrite AGENTS.md and the website around the mission | Adopted |
 | Measure continuity before building, with a public evaluation | Declined: benchmarking is paused by the owner; the owner's own use is the acceptance test |
-| Move frozen crates to an archive member or branch | Deferred: they stay in the workspace while they build and test cleanly |
+| Move frozen crates to an archive member or branch | Deferred, then done on 16 November 2026: the crates the binary no longer runs moved to the private archive; Weft's and Splicery's adapters stay |

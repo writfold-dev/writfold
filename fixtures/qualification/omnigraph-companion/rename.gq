@@ -1,3 +1,0 @@
-query rename($name: String) {
- update Service set { name: $name } where slug = "a"
-}

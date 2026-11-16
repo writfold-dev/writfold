@@ -2,9 +2,10 @@
 //!
 //! This crate is pure: lexer, parser, typed AST, checker, IR, match location,
 //! projection and rendering, with stable diagnostics and source spans. It
-//! performs no IO. An adapter (`writfold tuft run`) lowers the IR's `find`
-//! onto a storage backend at one pinned commit and its `retain` onto the
-//! evidence store, then hands measured rows back to [`emit::emit`].
+//! performs no IO. An adapter (archived on 16 November 2026) lowered the IR's
+//! `find` onto a storage backend at one pinned commit and its `retain` onto
+//! the evidence store, then handed measured rows back to [`emit::emit`].
+//! `writfold-kb` uses the cursor and budget contract in [`cursor`].
 //!
 //! Text and regex searches use exact bytes at one full commit id. Symbol
 //! searches import an index with explicit partial coverage. `similar`, `rank`

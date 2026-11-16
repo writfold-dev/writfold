@@ -11,17 +11,21 @@ rebuilt. A new machine needs `git clone` and one binary.
 > change. The [release page](https://github.com/writfold-dev/writfold/releases)
 > carries a static Linux x86_64 binary, `writfold-x86_64-linux-musl`, with its
 > `.sha256`. See [writfold.dev](https://writfold.dev/) and the
-> [guides](docs/guide/README.md). The earlier trial flow (`writfold trial`,
-> `serve`'s trial methods) still builds and is tested, but is frozen.
+> [guides](docs/guide/README.md). The binary has two commands, `kb` and
+> `watch`; the earlier trial flow, `serve` and `writfold tuft` were removed
+> on 16 November 2026 (the last release with them is `v0.5.0-dev.9`).
 
 ## The family
 
 | Tool | Job | Try it |
 |---|---|---|
 | **Writfold** (this repo) | Answers continuity questions from a Git knowledge base; runs, checkpoints, gates with receipts, plans and delivery checks | [Try it](#try-it), below |
-| **Tuft** (this repo, `crates/tuft`) | Searches pinned repositories with coverage and citations; imports ctags symbols with partial coverage | [Tuft](#find-and-cite-exact-evidence-with-tuft), below |
-| [**Weft**](https://github.com/writfold-dev/weft) | Checks what declared assumptions actually support: entailed, refuted or open | [Weft: Try it](https://github.com/writfold-dev/weft#try-it) |
-| [**Splicery**](https://github.com/writfold-dev/splicery) | Describes byte-exact edits and previews the result without touching the file | [Splicery: Try it](https://github.com/writfold-dev/splicery#try-it) |
+| [**Weft**](https://github.com/writfold-dev/weft) (frozen) | Checks what declared assumptions actually support: entailed, refuted or open; read by the assessed gate | [Weft: Try it](https://github.com/writfold-dev/weft#try-it) |
+| [**Splicery**](https://github.com/writfold-dev/splicery) (frozen) | Describes byte-exact edits and previews the result without touching the file; replayed by `kb edit apply` | [Splicery: Try it](https://github.com/writfold-dev/splicery#try-it) |
+
+Tuft, Weft and Splicery are frozen (no new development). Tuft's `writfold
+tuft` subcommand is archived; the `tuft` crate here only supplies the
+citation cursor the KB uses.
 
 ## Try it
 
@@ -139,7 +143,7 @@ not. `gate status`, `gate run` and `resume` print the file in a `read:` line.
 Paths that leave the definition's directory are refused, and nothing is run
 when definitions are read.
 
-A gate of class `assessed` is met by a [Weft](https://github.com/writfold-dev/weft)
+A gate of class `assessed` (frozen with Weft: kept working, not developed further) is met by a [Weft](https://github.com/writfold-dev/weft)
 assessment of a plan step. Its definition names a Weft source (`weft =
 "{gate}/step.weft"`, or `"{run}/<path>.weft"` for a file the agent submits
 in the run), the checks that must hold, and the SHA-256 of the `weft`
@@ -225,7 +229,7 @@ until the run's gates are met, naming each unmet gate and its `next:` command.
 A rule can be scoped to file paths (`paths`, v0.5.0-dev.3); a `stop` rule adds context once per session, or once per turn with `repeat = "turn"`. See
 [guard rules as built](docs/writfold/kb-v1-design.md#30-guard-rules-and-the-stop-nudge-as-built).
 
-Splicery recipes apply in a run's worktree. `kb edit apply` replays one or
+Splicery recipes apply in a run's worktree (frozen: kept working, not developed further). `kb edit apply` replays one or
 more [Splicery](https://github.com/writfold-dev/splicery) recipes (each
 `edit "<path>" { … }` names one file) through the pinned kernel against the
 worktree's current bytes, uncommitted edits included, and writes the results
@@ -248,8 +252,7 @@ Use Splicery for repeated or structural edits (every matching line, a block
 between two anchors, an exact expected count); ordinary edits are simpler for
 one small change. This is a cooperating, single-user tool: nothing stops the
 agent's shell from editing the worktree directly, and nothing is signed or
-approved. The edit trial's signing, approval and own-worktree flow is
-separate and frozen. See the
+approved. See the
 [adapter as built](docs/writfold/kb-v1-design.md#17-splicery-adapter-as-built).
 
 `writfold watch` shows recorded run progress, not an estimate of work left.
@@ -357,17 +360,7 @@ The plugin has one optional setting, `kb_root`: Claude Code asks for it when
 it enables the plugin, or pass `--config kb_root=/path/to/kb` to `install`.
 Set it when your sessions start in code repositories rather than in the KB. Without
 it, the hooks use `$WRITFOLD_KB`, then the nearest KB above the session's
-directory, then the prototype configuration's `root`.
-
-Tuft results share this vocabulary. `writfold tuft run … --cite` prints,
-under each shown row, the token `kb cite make` would print for those lines
-at the program's pinned commit, so a token pasted into a record checks
-`fresh` under `kb stale` until the lines move or change. While the KB has an
-open current run (or with `--kb DIR` / `--run ID`), each `tuft run` also
-records a retrieval receipt in `runs/<id>/retrievals/` (program digest,
-commit, trailer, row counts and tokens), and `kb resume` shows the newest
-ones. Standard output stays as it was; the receipt's path goes to standard
-error. See [Tuft's KB adapter](docs/tuft/language.md#kb-adapter).
+directory.
 
 ### What works today
 
@@ -392,13 +385,12 @@ error. See [Tuft's KB adapter](docs/tuft/language.md#kb-adapter).
 | `writfold kb stale --record`: check receipts (v0.5.0-dev.9) | Writes what external checkers said in one run to tracked, write-once files under `.writfold/checks/<kind>/`; any clone that has them, with no checker or credentials, reads the newest verdict per token for as long as the kind's `max_age` allows, always labelled `recorded` with when it was checked, and never caches it locally | [KB v1 design](docs/writfold/kb-v1-design.md#38-check-receipts-as-built-v050-dev9) (section 38), [checkers guide](docs/guide/checkers.md#sharing-verdicts-check-receipts), exhaustive kernel tests in `writfold-core/src/verdict/recorded.rs`, a recording and a reading clone in `crates/writfold/tests/kb_checker_record.rs` and `kb_checker_receipts.rs`, kill test in `crates/writfold-kb/tests/check_receipt_faults.rs`; no real external checker has recorded yet |
 | `writfold kb record investigation` and `propose investigation` (v0.5.0-dev.9) | Opens an investigation in `investigations/<year>/<date>-<slug>/` with its edges and the sections `status --set concluded` checks, empty | [KB v1 design](docs/writfold/kb-v1-design.md#391-record-investigation-and-propose-investigation) (section 39.1), `crates/writfold-kb/tests/record_investigation.rs` |
 | `writfold kb edit apply -`; guard rules naming `writfold:edit` (v0.5.0-dev.9) | One Splicery recipe from stdin, kept in the receipt as `stdin`; a guard rule listing `writfold:edit` with `paths` is checked by `edit apply` itself against each recipe's target before anything is written, on any harness | [KB v1 design](docs/writfold/kb-v1-design.md#179-as-built-v050-dev9-a-recipe-on-stdin) (sections 17.9 and 30.10), [hooks guide](docs/guide/hooks.md#edits-made-by-writfold-kb-edit-apply), `crates/writfold-kb/tests/edit_stdin.rs` and `edit_guard.rs` |
-| `writfold tuft index` (v0.5.0-dev.9) | Builds the universal-ctags index and its commit/digest sidecar from the bytes of one commit, exported under the Tuft state directory without touching the work tree; stdout is the path, so `--index "$(writfold tuft index)"` composes | [Tuft language](docs/tuft/language.md), [design section 39.2](docs/writfold/kb-v1-design.md#392-writfold-tuft-index), `crates/writfold/tests/tuft_index.rs` with a fake ctags; no real universal-ctags has been run through it yet |
 | Guard rules: how a command is read, `gates.met` over nothing (v0.5.0-dev.10) | A `commands` rule matches through wrappers (`sudo`, `env`, `command`, `time`, `if`, `{`, `!`), a path to the binary and `git`'s global options (`git -C DIR`, `--no-pager`, `-c`), never inside a here-document's body or before a lone `--help`, and judges each matched command in the repository it acts on (`cd DIR &&`, `git -C DIR`); a directory that cannot be told takes the rule's action with "name the directory literally"; a linked worktree answers to its repository's name; `gates.met` with no gate owed refuses | [hooks guide](docs/guide/hooks.md#how-a-command-is-read), [design section 40](docs/writfold/kb-v1-design.md#40-v050-dev10-as-built), table and corpus tests in `writfold-core/src/command/tests.rs`, `crates/writfold-kb/tests/guard_dirs.rs` and `guard_empty.rs` |
 | Guard conformance cases (v0.5.0-dev.10) | 59 language-neutral cases (a world, an event, the expected decision) run through the real hook entry point under `cargo test`; an outside suite is converted into the format, with each difference recorded | [`fixtures/guard-conformance/`](fixtures/guard-conformance/README.md), `crates/writfold-kb/tests/guard_conformance.rs` |
 | `writfold kb find` tiers and `find --eval` (v0.5.0-dev.10) | `normalized` (`harbor api`, `HAPI`), `prefix` (`quay work`) and `heading` tiers between exact and full text, the tier in each row's `matched_on`, up to three suggested names on an empty answer (still exit 2), and `find --eval` measuring a tracked query file (hit@1, hit@5, miss, recall per tier) | [kb-layout guide](docs/guide/kb-layout.md#what-a-lookup-matches), [validation guide](docs/guide/validation.md#lookups-find---eval), `crates/writfold-kb/tests/find_tiers.rs` and `find_eval.rs` |
 | `mode = "audit"`, `writfold kb guard log` (v0.5.0-dev.10) | An audit rule is judged and logged but never decides the call; `guard status` flags it `!audit` and a pass resting on a waiver `!waived`; the local guard log records what each rule would have refused, and `guard log` counts it per rule version and says when an audit rule can be enforced | [hooks guide](docs/guide/hooks.md#trying-a-rule-audit-mode), `crates/writfold-kb/tests/guard_audit.rs`; no real session has been audited yet |
 | `writfold kb runs --idle AGE`, `writfold kb delta` (v0.5.0-dev.10) | Open runs whose last recorded write (from tracked file names and checkpoints, never modification times) is older than `AGE`; what differs in the KB since a commit or a local mark, by blob ID and classified as records, run artefacts or configuration, with the session's mark taken at session start | [feeding back](docs/guide/feeding-back.md#what-was-written-since-kb-delta), `crates/writfold-kb/tests/runs_idle.rs` and `delta.rs` |
-| A delivery as a plan step's gate, `deliver:<mode>` (v0.5.0-dev.10) | A step that owes `deliver:pr-comment` is not advanced until the newest candidate of that mode no done step is bound to is ready (every check satisfied, attested or waived for its present bytes); the done record binds the candidate, and an edit to it or to its mode turns the step `!stale`. A passed `claims.cited-fresh` check stands only while its citation tokens are still fresh, in `deliver status`, the delivery guard and the plan. `gate status` and `gates.met` do not count deliveries; `step.met` does. Nothing is sent: done means a candidate was ready, not that it was posted | [run-graph guide](docs/guide/run-graph.md#a-delivery-as-a-steps-gate), [delivery modes](docs/guide/delivery-modes.md#on-a-plan-step), [design section 41](docs/writfold/kb-v1-design.md#42-delivery-modes-as-a-steps-gates-as-built), exhaustive kernel tests in `writfold-core/src/delivery.rs`, `crates/writfold-kb/tests/plan_deliver.rs`, `plan_deliver_pick.rs`, `plan_deliver_cited.rs` and `plan_deliver_faults.rs`; no real PR comment has been held by a plan step yet |
+| A delivery as a plan step's gate, `deliver:<mode>` (v0.5.0-dev.10) | A step that owes `deliver:pr-comment` is not advanced until the newest candidate of that mode no done step is bound to is ready (every check satisfied, attested or waived for its present bytes); the done record binds the candidate, and an edit to it or to its mode turns the step `!stale`. A passed `claims.cited-fresh` check stands only while its citation tokens are still fresh, in `deliver status`, the delivery guard and the plan. `gate status` and `gates.met` do not count deliveries; `step.met` does. Nothing is sent: done means a candidate was ready, not that it was posted | [run-graph guide](docs/guide/run-graph.md#a-delivery-as-a-steps-gate), [delivery modes](docs/guide/delivery-modes.md#on-a-plan-step), [design section 42](docs/writfold/kb-v1-design.md#42-delivery-modes-as-a-steps-gates-as-built), exhaustive kernel tests in `writfold-core/src/delivery.rs`, `crates/writfold-kb/tests/plan_deliver.rs`, `plan_deliver_pick.rs`, `plan_deliver_cited.rs` and `plan_deliver_faults.rs`; no real PR comment has been held by a plan step yet |
 | Guard rules (`.writfold/guards/<id>.toml`), the Stop nudge | `writfold kb hook pre-tool-use` denies or asks about a named command or tool until the current run, its gates (as `gate status` judges them) or its plan step meet the rule's requirements, naming each unmet gate and its `next:` command; a matched rule that cannot read the KB takes its action; with no rule directory nothing is opened. A `stop` rule adds context once per session (or once per turn with `repeat = "turn"`, v0.5.0-dev.3), never while `stop_hook_active` is set; `paths` globs scope a tool rule to the files it edits | [KB v1 design](docs/writfold/kb-v1-design.md#30-guard-rules-and-the-stop-nudge-as-built) (section 30), kernel tests in `writfold-core/src/guard.rs`, hook tests in `crates/writfold-kb/tests/guard_rules.rs` and `crates/writfold/tests/kb_hook.rs`; no real session has been guarded by a rule yet |
 | Instruction gates and user-defined delivery modes | A gate's `instructions` file and `{gate}`-shipped scripts are part of its digest and shown as `read:` lines; any `.writfold/deliveries/<name>.toml` defines a delivery mode whose script gates run on the candidate through `{candidate}` and whose attested gates show their instructions | [KB v1 design](docs/writfold/kb-v1-design.md#20-instruction-gates-and-delivery-modes-as-built) (section 20), golden, staleness, escape, refusal, never-a-pass and kill tests in `crates/writfold-kb/tests/gate_instructions.rs`, `deliver_modes.rs` and `deliver_faults.rs`; the `commit-message` mode is a fixture and has not yet checked a real commit |
 | `writfold kb plan set / status / advance / skip`, run-record gates | A plan's steps spliced from a template snapshot into the run as create-new event files; the current step, what it owes and `!stale` done steps derived on every read, independent of file order and clock; advance refused (exit 3, nothing written) until every gate of the current step is met; `research.backfilled` and `run.reflected` judged over the run's records | [KB v1 design](docs/writfold/kb-v1-design.md#21-run-graph-linear-as-built) (section 21), golden, refusal, stale, order-independence and kill tests in `crates/writfold-kb/tests/plan.rs` and `plan_faults.rs`, kernel tests in `writfold-core/src/plan.rs`; no real run has followed a plan yet |
@@ -407,116 +399,39 @@ error. See [Tuft's KB adapter](docs/tuft/language.md#kb-adapter).
 | `writfold kb gate run` on a gate of class `assessed` | Grounds each Weft assumption's citations (fresh KB tokens, satisfied or attested gates and receipts), runs the pinned `weft` binary on the step's source, and records each check's Weft result with a grounded or hypothetical basis; met only when every required check is entailed from grounded assumptions | [KB v1 design](docs/writfold/kb-v1-design.md#23-weft-assessed-gate-as-built) (section 23), kernel property tests in `writfold-core/src/assess.rs`, golden, staleness, refusal and kill tests in `crates/writfold-kb/tests/gate_assessed.rs` and `gate_assessed_faults.rs` (a labelled test double, plus one test against a real Weft build); no real plan step has been assessed yet |
 | `writfold kb edit apply / recover` | Replays Splicery recipes against a KB run's recorded worktree and writes each file atomically after re-checking its bytes; keeps the recipes, splice sites, blob IDs and preview as a receipt in the run; a crash between files is finished by `recover` from a local journal | [KB v1 design](docs/writfold/kb-v1-design.md#17-splicery-adapter-as-built) (section 17), golden, refusal, gate-staleness and kill tests in `crates/writfold-kb/tests/edit.rs` and `edit_faults.rs` |
 | `writfold watch [--kb DIR] [--repo DIR] [--run ID] [--view NAME] [--theme NAME] [--color MODE] [--once]` | Read-only recorded progress: steps, gates, checklist items, timeline, pending drafts/proposals and current-run guards; responsive layouts, six themes, cached checker verdicts and plain frames | [Watching a run](docs/guide/watch.md), [as built](docs/writfold/kb-v1-design.md#34-t2-as-built) (section 34); projection, layout, colour, refresh and read-only tests in `crates/writfold-tui/tests/` and binary checker-counter tests |
-| `writfold trial prepare / approve / apply / recover / show` | One edit through a durable, validated ledger in Writfold's own sparse worktree; never your checkout | [trial profile](docs/writfold/trial-profile.md), [adversarial campaign](bench/2026-11-09-adversarial/) |
-| `writfold trial approve --require CHECK` | Refuses unless each named check of the bound Weft report is `entailed` (recorded as hypothetical, never as grounded) | proved: `required_entailed_spec` |
-| `writfold trial retain` | Keeps exact bytes of a file at a full commit id as a citation; reports citing anything else are refused | [trial profile](docs/writfold/trial-profile.md) |
-| `writfold trial evidence list/show` | Reads retained evidence back in a later session: compact rows, and exact bytes verified against their digest before printing (tampered evidence refuses); context lines come from the pinned blob, marked apart | [trial profile](docs/writfold/trial-profile.md#reusing-evidence-in-a-later-session) |
-| `writfold tuft run/grep/check` | One-line searches, resolved refs, mapped repositories, spanned JSON diagnostics, dirty working-tree citations and commit-checked ctags symbols; saved programs and receipts stay pinned | [Tuft v0 and JSON contract](docs/tuft/language.md) |
-| `writfold trial run` | Tuft evidence → a Weft report from the binary you name → `prepare`, in one command; stops at approval | [one command](docs/writfold/trial-profile.md#one-command) |
-| `writfold serve` | JSON-RPC 2.0 on stdio; with `writfold.trial/1`, `trial/show`, `trial/retain` and `trial/prepare`. Approval stays CLI-only | [trial profile](docs/writfold/trial-profile.md#through-serve) |
 
-Every agent-facing operation is budgeted at 1 s p95 (5 s ceiling); on a
-100,000-file repository every trial operation's p95 is under 0.5 s
-([bench](bench/2026-11-09-latency/)). The ledger, grant, revocation, recovery and
-required-check decisions are proved over the shipped Rust ([how](docs/writfold/aeneas.md)).
-
-### Prepare, approve and apply one edit
-
-The [trial profile](docs/writfold/trial-profile.md) runs the connected flow on
-any Git repository. Writfold makes its own worktree of your repository's HEAD,
-replays a [Splicery](https://github.com/writfold-dev/splicery) recipe through
-the pinned kernel, and installs the result only after a signed approval and a
-current grant are verified. Every step is recorded in a validated ledger:
-
-```sh
-export WRITFOLD_STATE=/tmp/writfold-trial
-target/release/writfold trial init
-target/release/writfold trial prepare --repo /path/to/repo --file src/lib.rs --recipe edit.spl
-target/release/writfold trial approve <run>
-target/release/writfold trial apply <run>
-git -C "$WRITFOLD_STATE/worktrees/<run>" diff
-```
-
-Your own checkout is never written. `apply` records a durable claim before it
-touches the file, and `writfold trial recover <run>` settles an interrupted
-apply from the file's exact bytes. This is a cooperating single-user trial, not
-the hardened alpha path.
-
-### Find and cite exact evidence with Tuft
-
-[Tuft v0](docs/tuft/language.md) searches exact bytes at resolved commits and
-prints a compact, budgeted view with coverage, omissions and a resume cursor:
-
-```sh
-WRITFOLD_KB=/path/to/kb target/release/writfold tuft grep 'trial_blob(' \
-    --repo . --at HEAD --in 'crates/**/*.rs' --cite
-```
-
-No setup is needed. With a KB found (from inside it, `$WRITFOLD_KB`, or
-`--kb DIR`, which also requires an open current run to record into), Tuft
-keeps its retained evidence in the KB's Git directory,
-`writfold/tuft-state/`, created on first use. Pass `--state DIR` instead to
-retain into a trial state made by `writfold trial init`, which a Weft report
-for `trial prepare` can cite.
-
-`--print-program` shows the pinned lowering on stderr. Saved `tuft run FILE`
-programs and `tuft check FILE --json` remain strict. Repeat `--repo NAME@REF`
-for the KB's mapped repositories, each with its own coverage and citations.
-`--working-tree` explicitly marks uncommitted bytes dirty.
-`find def|refs "NAME"` imports a user-generated ctags index only at its declared
-commit, with partial coverage. See the [language and output contract](docs/tuft/language.md).
-
-It prints one `path:line: text` row per hit, as `grep -n` would, and a
-trailer that says whether anything is missing:
-
-```text
-crates/writfold-app/src/trial/retain.rs:131:     let (blob, content) = trial_blob(executable, &git_dir, &commit, path, budgets()?, &CANCELLED)?;
-crates/writfold-runtime/src/git/trial.rs:145: pub fn trial_blob(
-# coverage=complete files=640/640 hits=2 shown=2 omitted=0 cursor=none program=3ff0993dee6a
-```
-
-`--out hits.txt` writes the rows to a new file and prints only the trailer.
-Add `binding` to the projection for each row's citation, or pass `--verbose`
-or `--json` for the full envelope.
-
-Search is exact text or a bounded regex; semantic, fuzzy and ranked search
-are refused until the Omnigraph backend exists.
-
-### From evidence to a prepared edit in one command
-
-`writfold trial run` runs a Tuft program, a Weft review and `prepare` in
-order and stops before approval. In the review, `citation "tuft:@v#1"` is a
-Writfold-side template (not Weft syntax) for the first row of view `@v`;
-Writfold substitutes its exact binding digest before Weft reads the source.
-Weft is not bundled: name its binary, and its sha256 is printed.
-
-```sh
-target/release/writfold trial run --repo /path/to/repo --file src/client.rs \
-    --recipe edit.spl --tuft q.tuft --weft review.weft --weft-bin /path/to/weft
-target/release/writfold trial approve <run> --require <entailed-check>
-target/release/writfold trial apply <run>
-```
-
-It prints the retained bindings, each Weft check (hypothetical), the run and
-the prepared-edit digest. Any failure names its step; see
-[one command](docs/writfold/trial-profile.md#one-command).
-
-`cargo test --workspace` runs the Rust test suite, including checks that the
-Rust kernels agree with cases exported from the Lean model.
+`cargo test --workspace` runs the Rust test suite.
 
 ## What is in this repository
 
-- `crates/`: the Rust implementation (domain types, pure kernels, wire formats,
-  signatures, runtime boundaries and the `writfold` binary).
-- `formal/`: the Lean model (the specification) and its proofs.
-- `crates/writfold-core` and `proofs/`: the pure kernels production calls, translated to Lean by
-  Aeneas and proved there ([how](docs/writfold/aeneas.md)).
-- `spec/`: TLA+ models of the operational protocols.
-- `docs/writfold/`: design and boundary documents; [status](docs/writfold/status.md)
-  has the detailed implementation and evidence record.
-- `bench/`: agent benchmark pilots with fixtures, prompts, graders and raw results.
-- `handovers/`: the planning contracts the implementation follows.
-- `qualification/`: machine-readable status and evidence indexes.
+- `crates/`: the Rust implementation. `writfold` is the binary (`kb`,
+  `watch`); `writfold-app` holds the `kb` verbs' argument handling;
+  `writfold-kb` the knowledge base, index, runs, gates, plans, deliveries and
+  hooks; `writfold-tui` the `watch` view; `writfold-core` the pure decision
+  kernels; `writfold-runtime` the native Git, filesystem and process effects;
+  `writfold-sources` the pinned Splicery kernel behind `kb edit apply`;
+  `writfold-domain` shared types; `tuft` the citation cursor; and
+  `writfold-xtask` the source, dependency-graph and budget checks.
+- `proofs/`: `crates/writfold-core` translated to Lean by Aeneas and proved
+  there ([how](docs/writfold/aeneas.md)).
+- `spec/`: the TLA+ models `KbWrite` (KB writes) and `RunGraph` (the run
+  graph), with their mutants and probes.
+- `docs/guide/`: the guides; `docs/writfold/`: the mission, the
+  [v1 design](docs/writfold/kb-v1-design.md) with its as-built sections,
+  release specifications and the [status](docs/writfold/status.md) page.
+- `plugins/` and `.claude-plugin/`: the Claude Code plugin and its
+  marketplace entry.
+- `fixtures/kb/` and `fixtures/guard-conformance/`: test knowledge bases and
+  guard conformance cases.
+- `vendor/splicery/`: the vendored Splicery source `writfold-sources` builds.
+- `scripts/`, `compose.yaml`, `docker/`, `qualification/` and
+  `toolchains.lock.json`: the inputs of `scripts/gate quality|unit`
+  ([quality gate](docs/writfold/quality-gate.md)).
+
+The trial flow, `serve`, `writfold tuft`, Dolt, Omnigraph, the Lean
+models of the edit flow, the benchmark pilots, the earlier handovers and their
+qualification records are in a private archive; the last public tree with
+them is tagged `pre-split-2026-11-16`.
 
 ## Feedback
 

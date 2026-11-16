@@ -27,10 +27,7 @@ pub fn path(audit: &mut Audit<'_>, path: &Path) {
 }
 
 pub fn inspect(audit: &mut Audit<'_>, path: &str, span: proc_macro2::Span) {
-    let pure = matches!(
-        audit.package,
-        "writfold-domain" | "writfold-kernel" | "writfold-protocol"
-    );
+    let pure = audit.package == "writfold-domain";
     if pure && !audit.test {
         let mut segments = path.split("::");
         if segments.next() == Some("std")
@@ -49,14 +46,8 @@ pub fn inspect(audit: &mut Audit<'_>, path: &str, span: proc_macro2::Span) {
             "domain deserializer import or implementation",
         );
     }
-    if matches!(
-        audit.package,
-        "writfold-domain"
-            | "writfold-kernel"
-            | "writfold-protocol"
-            | "writfold-app"
-            | "writfold-store"
-    ) && (path == "serde_json::Value" || path.starts_with("serde_json::value::Value"))
+    if matches!(audit.package, "writfold-domain" | "writfold-app")
+        && (path == "serde_json::Value" || path.starts_with("serde_json::value::Value"))
     {
         audit.emit(
             "domain-value",

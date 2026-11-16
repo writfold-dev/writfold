@@ -11,14 +11,10 @@ repository.workspace = true
 [dependencies]
 
 # Read by Charon when the `proofs` gate translates this crate
-# (proofs/extract.sh). Conveniences in `convenience.rs` are never reached.
+# (proofs/extract.sh).
 [package.metadata.charon]
 start_from = [
-    "writfold_core::authority",
     "writfold_core::bytes",
-    "writfold_core::trial",
-    "writfold_core::flow",
-    "writfold_core::ledger",
     "writfold_core::plan",
     "writfold_core::gate::outcome",
     "writfold_core::gate::state",

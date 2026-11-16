@@ -14,7 +14,7 @@
     "kb_root": {
       "type": "directory",
       "title": "KB root",
-      "description": "The project KB (the directory holding inventory/assets/). Leave empty to use $WRITFOLD_KB, the nearest KB above the session's directory, or the prototype configuration's root.",
+      "description": "The project KB (the directory holding inventory/assets/). Leave empty to use $WRITFOLD_KB or the nearest KB above the session's directory.",
       "required": false
     }
   }

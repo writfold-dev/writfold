@@ -1,3 +1,0 @@
-edit "original.weft" {
-  replace range [192,202) with "not ready(\"x\")"
-}

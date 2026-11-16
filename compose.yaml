@@ -13,7 +13,6 @@ x-qualified-tools: &qualified-tools
     CARGO_TARGET_DIR: /cache/target/rust-1.98.0
     CARGO_BUILD_JOBS: ${WRITFOLD_BUILD_JOBS:-8}
     PYTHONDONTWRITEBYTECODE: "1"
-    PYTHONPATH: /work/writfold/src
     TERM: xterm-256color
     GIT_CONFIG_COUNT: "1"
     GIT_CONFIG_KEY_0: safe.directory
@@ -57,22 +56,10 @@ services:
     <<: *qualified-tools
     network_mode: none
     command: [python3, scripts/writfold_quality.py]
-  stdio-control:
-    <<: *qualified-tools
-    network_mode: none
-    command: [python3, scripts/writfold_stdio.py]
   unit:
     <<: *qualified-tools
     network_mode: none
     command: [cargo, test, --workspace, --locked, --offline]
-  verus:
-    <<: *qualified-tools
-    network_mode: none
-    command: [python3, scripts/writfold_verus.py]
-  citation-verus:
-    <<: *qualified-tools
-    network_mode: none
-    command: [python3, scripts/writfold_verus.py, --profile, qualification/citation-verus-profile.json, --package, writfold-kernel]
   reference:
     <<: *qualified-tools
     network_mode: none
@@ -81,14 +68,6 @@ services:
     <<: *qualified-tools
     network_mode: none
     command: [cargo, build, --workspace, --release, --target, x86_64-unknown-linux-musl, --locked, --offline]
-  engineering-lean:
-    <<: *qualified-tools
-    network_mode: none
-    command: [python3, scripts/writfold_engineering_lean.py]
-  citation-lean:
-    <<: *qualified-tools
-    network_mode: none
-    command: [python3, scripts/writfold_citation_lean.py]
 
 volumes:
   cargo-target:

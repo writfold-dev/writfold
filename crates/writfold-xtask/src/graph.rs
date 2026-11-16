@@ -7,15 +7,9 @@ fn allowed(name: &str) -> Option<&'static [&'static str]> {
         "writfold-domain" | "writfold-core" => &[],
         // Tuft is pure (no IO); it reuses the domain's Coverage and SearchBudget.
         "tuft" => &["writfold-domain"],
-        "writfold-kernel" => &["writfold-domain", "writfold-core"],
-        "writfold-protocol" => &["writfold-domain"],
-        "writfold-wire" => &["writfold-domain", "writfold-kernel"],
-        "writfold-sources" | "writfold-dolt" | "writfold-catalog" => {
-            &["writfold-domain", "writfold-wire"]
-        }
-        "writfold-runtime" => &["writfold-domain", "writfold-protocol"],
+        "writfold-sources" | "writfold-runtime" => &["writfold-domain"],
         // KB v1: continuity reads over a derived SQLite index. It uses the
-        // runtime's native reads and never the store (or Dolt) path.
+        // runtime's native reads.
         "writfold-kb" => &[
             "writfold-domain",
             "writfold-sources",
@@ -23,37 +17,13 @@ fn allowed(name: &str) -> Option<&'static [&'static str]> {
             "writfold-core",
             "tuft",
         ],
-        "writfold-store" => &[
-            "writfold-domain",
-            "writfold-protocol",
-            "writfold-wire",
-            "writfold-sources",
-            "writfold-dolt",
-            "writfold-runtime",
-        ],
-        "writfold-app" => &[
-            "writfold-domain",
-            "writfold-protocol",
-            "writfold-kernel",
-            "writfold-store",
-            "writfold-sources",
-            "writfold-catalog",
-            "writfold-wire",
-            "writfold-runtime",
-            // The `writfold tuft` adapter compiles programs with the pure crate.
-            "tuft",
-            "writfold-kb",
-        ],
+        // The binary's `kb` verbs; everything else lives in writfold-kb.
+        "writfold-app" => &["writfold-kb"],
         // `writfold watch` (T1): a read-only projection of the KB verbs. It
         // asks `writfold-kb` only, so the terminal stack stays out of the
         // KB, the application and every core crate.
         "writfold-tui" => &["writfold-kb"],
-        "writfold" => &[
-            "writfold-app",
-            "writfold-tui",
-            "writfold-wire",
-            "writfold-domain",
-        ],
+        "writfold" => &["writfold-app", "writfold-tui"],
         "writfold-xtask" => &[],
         _ => return None,
     })
@@ -211,12 +181,7 @@ fn walk<'a>(
             &format!("{name} is the terminal stack, admitted only for writfold-tui"),
         );
     }
-    if matches!(
-        owner,
-        "writfold-domain" | "writfold-kernel" | "writfold-protocol"
-    ) && !local.contains(id)
-        && !pure_dependency(name)
-    {
+    if owner == "writfold-domain" && !local.contains(id) && !pure_dependency(name) {
         issue(
             diagnostics,
             "core-dependency",

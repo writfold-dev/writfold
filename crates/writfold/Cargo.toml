@@ -1,6 +1,6 @@
 [package]
 name = "writfold"
-description = "Writfold native CLI and ordinary agent stdio host"
+description = "Writfold native CLI"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

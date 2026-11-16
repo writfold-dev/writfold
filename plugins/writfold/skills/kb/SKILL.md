@@ -33,7 +33,7 @@ The project KB is plain records in Git. `writfold kb <verb>` answers from it in 
 | Prepare a PR comment, Slack summary or other draft for review (nothing is sent) | `deliver prepare --mode MODE --from FILE [--audience external]` (built in: `pr-comment`, `slack-summary`; others from `.writfold/deliveries/<mode>.toml`) |
 | Check a delivery candidate, and see what it still owes | `deliver check [CANDIDATE]`, `deliver status` |
 | Where does the run's plan stand, and may it move on? | `plan status`, `plan advance` (`plan set <template>` to start one; `plan use <template>` splices a template's steps before the current step, once) |
-| Apply a Splicery recipe in the run's worktree, keeping a receipt | `edit apply RECIPE.spl… [--dry-run]` (`--worktree DIR` once if the run records none) |
+| Apply a Splicery recipe in the run's worktree, keeping a receipt (frozen) | `edit apply RECIPE.spl… [--dry-run]` (`--worktree DIR` once if the run records none) |
 
 Writes (`checkpoint`, `record`, `status --set`) change the work tree only. They never commit; commit the KB yourself when the user wants it shared.
 
@@ -59,30 +59,13 @@ Exit codes: 0 complete; 2 partial, unknown or stale (still a usable answer; read
 - Re-check any row carrying a `!` flag before acting on it.
 - On `answer=unknown`, look in the sources, then `record` what you found.
 
-## Source retrieval with Tuft
-
-For exact source evidence, use `writfold tuft grep "needle" --repo . --at HEAD
---in 'src/**/*.rs' --cite`. The ref resolves once; results show the full commit
-and coverage. An open KB run records a pinned retrieval receipt. Repeat
-`--repo NAME@REF` for repositories in the KB map, with coverage per repository
-and overall. `--print-program` shows the pinned program on stderr.
-
-Saved `tuft run FILE` and `tuft check FILE --json` require full commits;
-one-shot `tuft run -` accepts refs unless `--pinned`. `--json` is Tuft's own
-documented envelope, not the KB envelope. Exit 0 includes partial/empty results:
-inspect coverage, omissions, limits and cursors. `--working-tree` marks
-uncommitted citations dirty; never describe them as committed evidence.
-`find def|refs "NAME"` with `--index FILE` imports commit-checked ctags JSON;
-symbol coverage is always partial, so absence is not proof of no callers.
-
-
 ## Gates
 
 A gate is a command with a path scope. Only `gate run` writes a receipt; never write or edit one by hand (a hand-written receipt reads as invalid). Say a check passed only when `gate status` shows the gate `[satisfied]`: `!stale` means an in-scope file changed since the receipt, `!failed` means the newest receipt for these bytes failed, and `!unknown` (a timeout or crash) is never a pass. Each such row has a `next:` line with the command to run. `[waived]` (with a reason) and `[attested]` (a statement, for gates of class `attested`) are statements, not checks: report them as waived or attested, never as passed. Waive or attest only when the user asks you to, and use `--by` honestly (`--by agent` when it is you). `gate status` and `gate lines` exit 0 only when every gate is satisfied, attested or waived.
 
 A row with a `read:` line names the gate's instructions file. Read it before you run, repair or attest that gate: it is what the gate checks, and on an attested gate it is what your statement says you followed. Editing it (or a script the gate ships beside itself) makes earlier receipts and attestations stale, so they must be earned again.
 
-A gate of class `assessed` is met by a Weft assessment of a plan step. Write the step's assumptions and checks in the Weft file its definition names (its `next:` line shows where; `{run}/…` is under the run's directory). Cite each assumption's evidence with `claim <name> = citation "<reference>";` directly above its `assume`: a KB citation token, `gate:<id>`, or a receipt of the run (path or name). Then `gate run <id>`. Each check shows `[<Weft result> <basis>]`: only `entailed grounded` counts as met. `!hypothetical` means it rests on an assumption whose citation is stale, failed, missing or absent; a `cite:` line names it. Fix the evidence (rerun the gate, refresh the citation), never the wording of the check, and do not report a hypothetical check as passed. You cannot choose the Weft binary; if the row says there is none or its digest is refused, tell the user.
+A gate of class `assessed` (frozen with Weft: kept working, not developed further) is met by a Weft assessment of a plan step. Write the step's assumptions and checks in the Weft file its definition names (its `next:` line shows where; `{run}/…` is under the run's directory). Cite each assumption's evidence with `claim <name> = citation "<reference>";` directly above its `assume`: a KB citation token, `gate:<id>`, or a receipt of the run (path or name). Then `gate run <id>`. Each check shows `[<Weft result> <basis>]`: only `entailed grounded` counts as met. `!hypothetical` means it rests on an assumption whose citation is stale, failed, missing or absent; a `cite:` line names it. Fix the evidence (rerun the gate, refresh the citation), never the wording of the check, and do not report a hypothetical check as passed. You cannot choose the Weft binary; if the row says there is none or its digest is refused, tell the user.
 
 A gate of class `checklist` shows one `item:` line per item. Cover an item only after you checked it: `supported` with the references you relied on (a citation token, `gate:<id>`, a receipt of the run), each one argument; `not-applicable` or `unsupported` with a reason. A reference that is not grounded now is refused; fix the evidence, not the row. A covered checklist reads `[attested]`: report it as covered by you, never as passed. An item shown `[stale]` lost its evidence or its content moved; check it again before covering it again.
 
@@ -100,14 +83,9 @@ A denial or question that starts `writfold guard rule <id> (a guard, not enforce
 
 A KB may define its own modes (a commit message, a release note) in `.writfold/deliveries/<mode>.toml`. Their script gates run on the candidate during `deliver check` and report `line N` findings like the built-in checks; their attested gates show a `read:` line and are met only by `deliver attest`, after you have read that file and checked the draft against it. For a commit message, prepare and check the draft, then commit with exactly those bytes (`git commit -F` the candidate); nothing ties the checked draft to the commit you make.
 
-## Splicery or Edit
+## Edits
 
-`edit apply` replays Splicery recipes against the run's worktree and keeps the recipe and preview as a receipt in the run. Choose by task:
-
-- **Splicery** for repeated or structural edits: every line matching a pattern (`each @r in line_matches rx"…" expect N`), a block between two anchors, the same change across several files in one batch. The `expect` count and exact selectors refuse instead of guessing, and the receipt records what changed.
-- **Ordinary Edit or sed** for one small change. Don't write a recipe for it.
-
-Run `--dry-run` first and read the diff. A refusal names the recipe, the match sites and counts; fix the recipe, don't loosen it blindly. A file you changed after the replay is refused, never overwritten. After a crash, `edit recover` finishes the batch. The result is an uncommitted change: review it, run `gate status` (in-scope gates are now stale), and commit it. Nothing stops ordinary edits to the same files; this records what Splicery did, it does not guard the worktree.
+Edit files with your ordinary tools. `edit apply` (frozen: kept working, not developed further) replays Splicery recipes against the run's worktree and keeps the recipe and preview as a receipt; use it only when the user or the KB already works with recipes. Run `--dry-run` first; after a crash, `edit recover` finishes the batch. The result is an uncommitted change: review it, run `gate status` (in-scope gates are now stale), and commit it.
 
 ## Checkpoint drafts
 

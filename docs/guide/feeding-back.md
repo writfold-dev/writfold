@@ -22,7 +22,6 @@ Each write is atomic: after a kill at any step the file holds its old bytes or i
 | Stage | What is written | Verb | Where it lands | Who commits |
 |---|---|---|---|---|
 | Research | a citation token for lines of code | `cite make <repo> <path> <a-b>` | printed only; paste it into a record | whoever commits that record |
-| Research | a retrieval receipt per code search | `writfold tuft run Q.tuft --repo DIR --cite`, inside an open run | `runs/<id>/retrievals/` | you |
 | Research | a link between two assets, with its evidence | `record link <type> <from> <to> --evidence …` | `inventory/relationships/` | you |
 | Research | a ticket | `record ticket <ID> --title …` | `ktlo/<year>/` | you |
 | Research | an investigation, `open`, with empty Question, Hypotheses, Checked against, Scope and limits and Conclusion sections (built in v0.5.0-dev.9) | `record investigation --title T [--trigger TEXT] [--tickets a,b] [--assets a,b] [--alerts a,b] [--signatures a,b] [--summary S] [--question TEXT]` | `investigations/<year>/<date>-<slug>/` | you |
@@ -43,14 +42,13 @@ Three things are local and never committed: checkpoint drafts kept by the Claude
 
 ## Research: from a search to a record
 
-A code search with `--cite` prints a token under each row. Inside an open run the search is also kept as a receipt:
+Search the code with any tool you like. For the lines a conclusion rests on, `cite make` prints a citation token pinned to the commit, path, line range and the span's digest; it writes nothing:
 
-```text
-$ writfold tuft run q.tuft --repo . --cite
-writfold tuft: recorded runs/run-…/retrievals/20261112T211036Z-c7b86d.md in …/kb
-src/ledger.rs:3:     let conn = open(url())?;
-  cite: ⟦cite kind=code repo=harbor-api rev=4be03f78… path=src/ledger.rs L=3-3 blob=b7092119… span=0c70393772e189b9 seen=2026-11-12T21:10Z url=…⟧
+```sh
+writfold kb cite make harbor-api src/ledger.rs 3-5
 ```
+
+Runs recorded before 16 November 2026 may also hold retrieval receipts (`runs/<id>/retrievals/`), written by the Tuft adapter, which is now archived. They are still read: `resume` lists them, an assessed gate or a checklist row may cite one, and they count towards `research.backfilled`.
 
 What the agent concludes, it writes down, with the evidence attached:
 
