@@ -1580,3 +1580,5 @@ wait for that evidence.
 1. **The level is not remembered.** A fresh start is plain. A `--level plain|exact` flag is built if time allows; it is below the cut line.
 2. The plain phrases for the disorder flags and `step.met` are confirmed against the guides by the implementer; where a guide is ambiguous, the phrase says less, not more.
 3. Ships in the same release as the v0.5.0-dev.10 round, with the website frames re-captured from the plain level.
+
+> Shipped in v0.6.0-dev.1 (16 November 2026), which also removed the `trial`, `serve` and `tuft` subcommands from the binary.

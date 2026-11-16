@@ -506,3 +506,5 @@ These override the sections above where they differ.
 2. **An unresolvable directory takes the rule's action** with the "name it literally" text (4.3), rather than being skipped.
 3. **Tuft, Weft and Splicery are frozen** (see `mission.md`, Component status): they keep building and their tests keep passing, with no new development. Nothing in this round extends them. The audit note on `edit apply` (2.5) is guard behaviour over an existing verb and stays. Step 1 also sets the status lines of `docs/tuft/language.md`, the Weft section of `gates.md` and the Splicery parts of `feeding-back.md` to say they are frozen, and the guide index says so once.
 4. **Cut line:** steps 1–7 must land. Steps 8–11 are built in this round too and each ships in dev.10 when complete and gated, or moves to dev.11 whole.
+
+> Shipped in v0.6.0-dev.1 (16 November 2026), which also removed the `trial`, `serve` and `tuft` subcommands from the binary.

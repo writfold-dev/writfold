@@ -1,6 +1,6 @@
 # Reading answers as JSON
 
-> **Status:** built in v0.5.0-dev.1 (the envelope itself has been emitted since v0.1; this page and the test that pins it are new). `matched_on`, the `find --eval`, `guard log`, `runs --idle` and `delta` answers built in v0.5.0-dev.10.
+> **Status:** built in v0.5.0-dev.1 (the envelope itself has been emitted since v0.1; this page and the test that pins it are new). `matched_on`, the `find --eval`, `guard log`, `runs --idle` and `delta` answers built in v0.6.0-dev.1.
 
 Every `writfold kb` verb that prints rows and a trailer takes `--json`. The answer is then one JSON object on one line of stdout, holding the same rows, notes and trailer as the text form. The exit code is the same in both forms.
 
@@ -47,7 +47,7 @@ Each entry of `more` has `label` (`why`, `note`, `cite`, `next` and so on), `tex
 
 The text form of `impact` is unchanged (`depth=N SRC REL DST (ORIGIN)` in `text`); readers should use `edge`, not split that text.
 
-`find` and `match` rows carry one more key (built in v0.5.0-dev.10), absent on every other verb's rows:
+`find` and `match` rows carry one more key (built in v0.6.0-dev.1), absent on every other verb's rows:
 
 | Key | Type | Meaning |
 |---|---|---|
@@ -55,13 +55,13 @@ The text form of `impact` is unchanged (`depth=N SRC REL DST (ORIGIN)` in `text`
 
 Readers should use `matched_on`, not split the `match` continuation's text (`typo d=1 api`).
 
-`guard status` (from v0.5.0-dev.10) adds the flags `audit` and `waived`, the continuation labels `mode` and `waived`, and the count `audit` (present only when not zero). `guard log` answers rows of kind `guard-log` (status `audit`, `enforce` or `removed`) with continuations labelled `would-deny`, `would-ask`, `deny`, `ask`, `earlier` and `next`, the flags `audit`, `would-deny`, `would-ask` and `unmatched`, and the counts `rules`, `entries`, `would-deny`, `would-ask`, `deny`, `ask` and `unparsed`.
+`guard status` (from v0.6.0-dev.1) adds the flags `audit` and `waived`, the continuation labels `mode` and `waived`, and the count `audit` (present only when not zero). `guard log` answers rows of kind `guard-log` (status `audit`, `enforce` or `removed`) with continuations labelled `would-deny`, `would-ask`, `deny`, `ask`, `earlier` and `next`, the flags `audit`, `would-deny`, `would-ask` and `unmatched`, and the counts `rules`, `entries`, `would-deny`, `would-ask`, `deny`, `ask` and `unparsed`.
 
-`delta` (built in v0.5.0-dev.10) answers rows of kind `delta`, one per changed path: `id` the record ID or the path, `status` `added`, `modified` or `deleted`, `text` the path's kind, `path` the KB-relative path, `section` `records`, `run`, `config` or `other`; counts `changed`, `records`, `run`, `config` and `other`.
+`delta` (built in v0.6.0-dev.1) answers rows of kind `delta`, one per changed path: `id` the record ID or the path, `status` `added`, `modified` or `deleted`, `text` the path's kind, `path` the KB-relative path, `section` `records`, `run`, `config` or `other`; counts `changed`, `records`, `run`, `config` and `other`.
 
-`runs --idle AGE` (built in v0.5.0-dev.10) adds an `idle` continuation to each run row (`9d since <time> (<what was written>)`) and the count `idle`.
+`runs --idle AGE` (built in v0.6.0-dev.1) adds an `idle` continuation to each run row (`9d since <time> (<what was written>)`) and the count `idle`.
 
-`find --eval` (built in v0.5.0-dev.10) answers with one row of kind `query` per line of the query file: `id` is `q<line>`, `status` is `hit@1`, `hit@5` or `miss`, `text` names the first expected record found with its rank and tier, `path` and `line` point at the query's line, the flag `unknown-id` marks an `expect` ID that is not a record, and a miss has a `first` continuation naming what ranked first. The trailer counts `queries`, `hit1`, `hit5`, `miss` and, per tier of the first expected hit, `by-exact`, `by-normalized`, `by-prefix`, `by-heading`, `by-text` and so on. A missing or empty file answers `reason` `no-queries`.
+`find --eval` (built in v0.6.0-dev.1) answers with one row of kind `query` per line of the query file: `id` is `q<line>`, `status` is `hit@1`, `hit@5` or `miss`, `text` names the first expected record found with its rank and tier, `path` and `line` point at the query's line, the flag `unknown-id` marks an `expect` ID that is not a record, and a miss has a `first` continuation naming what ranked first. The trailer counts `queries`, `hit1`, `hit5`, `miss` and, per tier of the first expected hit, `by-exact`, `by-normalized`, `by-prefix`, `by-heading`, `by-text` and so on. A missing or empty file answers `reason` `no-queries`.
 
 `find --kind K[,K] [--project P]` with no text lists every record of those kinds in ID order, each once, with a `match` continuation whose `text` is `listed`; there is no fifty-row cap, the budget pages the answer. Rows keep the record's title in `text`. Without `--kind`, `find` still requires text; `match` and `--signatures` always do.
 
@@ -71,7 +71,7 @@ Readers should use `matched_on`, not split the `match` continuation's text (`typ
 
 With `--gates` and a subject repository, `counts` includes `current` (the 1-based step position), `current_gates` and `current_owed`. Once every step is closed, only `current=0` is added; a run with no plan gets none of them. Without a subject none of these counts is present. Without `--gates`, plan status keeps its ordinary output and query digest.
 
-A delivery a step owes (built in v0.5.0-dev.10; see [run-graph](run-graph.md#a-delivery-as-a-steps-gate)) is a gate whose ID starts `deliver:` (`deliver:pr-comment`). Under `plan status --gates`, in template order, it has a `gate` continuation whose `text` is `deliver:<mode> [<standing>] delivery <met>/<total> checks met` (or `delivery no candidate`, or `deliver:<mode> [later]` on a later step) with `path` the deciding candidate's payload; then a `candidate` continuation (`status` `ready` or `blocked`; `text` `<id> [<status>] <mode> audience=<a> destination=<d> candidate=<digest12> bytes=<n> seq=<n>`; flags `blocked`, `edited`); then one `item` continuation per obligation of the mode, whose `text` is the `check:` text of `deliver status` and whose `status` is the obligation's standing (flag `stale` when cited evidence moved). `current_gates` and `current_owed` count deliveries. Without `--gates`, `plan status`, `plan advance`, `resume` and the session-start text carry one `candidate` continuation on the current step (`<id> [<status>] owes <check> [<standing>], …`, `path` the payload), or a `why` continuation when no mode can meet the delivery.
+A delivery a step owes (built in v0.6.0-dev.1; see [run-graph](run-graph.md#a-delivery-as-a-steps-gate)) is a gate whose ID starts `deliver:` (`deliver:pr-comment`). Under `plan status --gates`, in template order, it has a `gate` continuation whose `text` is `deliver:<mode> [<standing>] delivery <met>/<total> checks met` (or `delivery no candidate`, or `deliver:<mode> [later]` on a later step) with `path` the deciding candidate's payload; then a `candidate` continuation (`status` `ready` or `blocked`; `text` `<id> [<status>] <mode> audience=<a> destination=<d> candidate=<digest12> bytes=<n> seq=<n>`; flags `blocked`, `edited`); then one `item` continuation per obligation of the mode, whose `text` is the `check:` text of `deliver status` and whose `status` is the obligation's standing (flag `stale` when cited evidence moved). `current_gates` and `current_owed` count deliveries. Without `--gates`, `plan status`, `plan advance`, `resume` and the session-start text carry one `candidate` continuation on the current step (`<id> [<status>] owes <check> [<standing>], …`, `path` the payload), or a `why` continuation when no mode can meet the delivery.
 
 `deliver status`, and every verb that prints its rows, supplies `status` (the obligation's standing) on each `check` continuation, and a `step` continuation under a candidate a plan step is judged on: `decides deliver:<mode> at <step> [current]` or `bound to <step> [done]`. A candidate's manifest (`delivery.json`) gains `seq`, its place among the run's candidates of its mode (absent reads as 0). A done record names a delivery as a `met` entry whose `gate` is `deliver:<mode>`, `evidence` the payload path and `content` its digest.
 

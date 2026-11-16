@@ -1,6 +1,6 @@
 # Watching a run
 
-> **Status:** built (T6, built in v0.5.0-dev.10: plain words by default, the verbs' exact wording on `d`, commands to copy on `c`). Implementation, tests and deviations: [design §41](../writfold/kb-v1-design.md#41-t6-as-built-v050-dev10); the knowledge-base mode is recorded in [§37](../writfold/kb-v1-design.md#37-t5-as-built), the calm frame it replaced in [§36](../writfold/kb-v1-design.md#36-t4-as-built), the plan map in [§35](../writfold/kb-v1-design.md#35-t3-as-built) and the earlier text view in [§34](../writfold/kb-v1-design.md#34-t2-as-built).
+> **Status:** built (T6, built in v0.6.0-dev.1: plain words by default, the verbs' exact wording on `d`, commands to copy on `c`). Implementation, tests and deviations: [design §41](../writfold/kb-v1-design.md#41-t6-as-built-v060-dev1); the knowledge-base mode is recorded in [§37](../writfold/kb-v1-design.md#37-t5-as-built), the calm frame it replaced in [§36](../writfold/kb-v1-design.md#36-t4-as-built), the plan map in [§35](../writfold/kb-v1-design.md#35-t3-as-built) and the earlier text view in [§34](../writfold/kb-v1-design.md#34-t2-as-built).
 
 `writfold watch` is a read-only view of the KB verbs. It shows recorded steps,
 gate standings, checklist items, pending drafts and proposals, guard rules and
@@ -533,7 +533,7 @@ this stamp too: their dot directory is not an index input. Every fifth tick
 (10 seconds) it observes the selected subject's HEAD and dirty-path metadata.
 Selecting a different run observes its subject immediately. Changed stamps drop
 cached answers while retaining selection; Guards is cached per stamp, not per run.
-The Guards view shows each rule's flags as `guard status` gives them, so an audit rule reads `!audit` and a rule passing on a waiver `!waived`, and its count line adds `audit N` when an audit rule would refuse (v0.5.0-dev.10).
+The Guards view shows each rule's flags as `guard status` gives them, so an audit rule reads `!audit` and a rule passing on a waiver `!waived`, and its count line adds `audit N` when an audit rule would refuse (v0.6.0-dev.1).
 
 Dirty subject files are not hashed by the poll. Same-size edits that preserve
 mtime, time-only expiry and other changes outside these stamps can require `r`.

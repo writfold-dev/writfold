@@ -1,6 +1,6 @@
 # The run graph
 
-> **Status:** the run graph (`plan set|use|status|advance|skip`), run-record checks, splicing a template under a step (`use=` includes, `!template-moved`), required steps, the `writfold:evaluate` wrap-up skill, and the write re-check and merge-disorder flags are built in v0.4.0-dev.1; delivery modes as a step's gates are built in v0.5.0-dev.10 ([design §42](../writfold/kb-v1-design.md#42-delivery-modes-as-a-steps-gates-as-built)). The adopted decisions are in [`mission.md`](../writfold/mission.md); the as-built records are [design §21](../writfold/kb-v1-design.md#21-run-graph-linear-as-built), [§24](../writfold/kb-v1-design.md#24-splicing-and-required-steps-as-built) and [§26](../writfold/kb-v1-design.md#26-evaluation-skill-as-built).
+> **Status:** the run graph (`plan set|use|status|advance|skip`), run-record checks, splicing a template under a step (`use=` includes, `!template-moved`), required steps, the `writfold:evaluate` wrap-up skill, and the write re-check and merge-disorder flags are built in v0.4.0-dev.1; delivery modes as a step's gates are built in v0.6.0-dev.1 ([design §42](../writfold/kb-v1-design.md#42-delivery-modes-as-a-steps-gates-as-built)). The adopted decisions are in [`mission.md`](../writfold/mission.md); the as-built records are [design §21](../writfold/kb-v1-design.md#21-run-graph-linear-as-built), [§24](../writfold/kb-v1-design.md#24-splicing-and-required-steps-as-built) and [§26](../writfold/kb-v1-design.md#26-evaluation-skill-as-built).
 
 A run without a plan owes every gate defined for its repository. A run with a plan owes the gates its steps name: the plan is an ordered list of steps, each step names the gates it owes, and Writfold records which step the work has reached and what met each gate.
 
@@ -248,7 +248,7 @@ A root splice after the first (the plan's own template, a required end template)
 
 ## A delivery as a step's gate
 
-> Built in v0.5.0-dev.10.
+> Built in v0.6.0-dev.1.
 
 A step can owe a delivery, written `deliver:<mode>` beside its gate IDs, in any position, at most once per mode. A gate ID is a slug and cannot hold `:`, so the word never reads as a gate; the schema stays `writfold-plan/1`.
 

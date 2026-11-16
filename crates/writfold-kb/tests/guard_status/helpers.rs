@@ -77,7 +77,7 @@ pub fn parity(w: &World, expected: &str) -> TestResult<Value> {
     assert_eq!(guard["status"], format!("would-{expected}"));
     assert_eq!(exit, if expected == "pass" { 0 } else { 2 });
     let out = hook(w, false, "commit-session");
-    // A pass that rests on a waiver says so on stderr (v0.5.0-dev.10).
+    // A pass that rests on a waiver says so on stderr (v0.6.0-dev.1).
     assert!(
         out.stderr.lines().all(|l| l.contains("passed on a waiver")),
         "{}",
@@ -85,7 +85,7 @@ pub fn parity(w: &World, expected: &str) -> TestResult<Value> {
     );
     if expected == "pass" {
         assert!(out.stdout.is_empty(), "{}", out.stdout);
-        // A pass that rests on a waiver names it (v0.5.0-dev.10).
+        // A pass that rests on a waiver names it (v0.6.0-dev.1).
         let waived = !out.stderr.is_empty();
         let flags = if waived { json!(["waived"]) } else { json!([]) };
         assert_eq!(guard["flags"], flags);

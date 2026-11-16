@@ -330,3 +330,5 @@ About 4.5 days. Cut line after step 5 plus its tests and docs: steps 6 (the `ste
 
 1. **Re-checking `claims.cited-fresh` on every read: yes.** A candidate whose cited evidence moved reads `[blocked]` in `deliver status`, the delivery guard and `plan status` alike; the release note names the change.
 2. **Ships in the same release as the v0.5.0-dev.10 round**, built after that round merges, on top of it.
+
+> Shipped in v0.6.0-dev.1 (16 November 2026), which also removed the `trial`, `serve` and `tuft` subcommands from the binary.

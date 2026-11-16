@@ -1,6 +1,6 @@
 # Claude Code hooks
 
-> **Status:** built in v0.3.0-dev.1; the plan position, the inbox, the behind-remote line and the re-injection after compaction were added on 12 November 2026 ([design §25](../writfold/kb-v1-design.md#25-deterministic-hooks-as-built)); the stale-citation line, guard rules and the Stop nudge built in v0.5.0-dev.1; a rule's `paths` and a stop rule's `repeat` built in v0.5.0-dev.3; rules naming `writfold:edit`, checked by `kb edit apply` itself, built in v0.5.0-dev.9. How a command is read (here-documents, wrappers, `git -C` and judging each command where it acts), `gates.met` over an empty set, `mode = "audit"`, the guard log and the session's mark built in v0.5.0-dev.10; `step.met` judging a step's deliveries, and the plan position's `candidate:` line, built in v0.5.0-dev.10.
+> **Status:** built in v0.3.0-dev.1; the plan position, the inbox, the behind-remote line and the re-injection after compaction were added on 12 November 2026 ([design §25](../writfold/kb-v1-design.md#25-deterministic-hooks-as-built)); the stale-citation line, guard rules and the Stop nudge built in v0.5.0-dev.1; a rule's `paths` and a stop rule's `repeat` built in v0.5.0-dev.3; rules naming `writfold:edit`, checked by `kb edit apply` itself, built in v0.5.0-dev.9. How a command is read (here-documents, wrappers, `git -C` and judging each command where it acts), `gates.met` over an empty set, `mode = "audit"`, the guard log and the session's mark built in v0.6.0-dev.1; `step.met` judging a step's deliveries, and the plan position's `candidate:` line, built in v0.6.0-dev.1.
 
 "Hook" here means a Claude Code hook: a command the harness runs at a session event. The plugin registers six, and each one runs `writfold kb hook <event>` with the event's JSON on stdin. No hook calls a model. Only one asks Claude to continue: a `stop` [guard rule](#guard-rules), which you opt into, adds context at most once per session (or, with `repeat = "turn"`, once per user turn), and Claude Code continues the turn so Claude can act on it. Rules about what a run must contain (a reflection, a backfill) are not hooks; they are gates (run-record checks), on the [run-graph](run-graph.md) and [gates](gates.md) pages.
 
@@ -8,7 +8,7 @@
 
 | Claude Code event | Reads from the event | Writes | Prints | Timeout |
 |---|---|---|---|---|
-| `SessionStart` | `cwd`, `source`, `session_id` | the session's mark (local; from v0.5.0-dev.10, [below](#a-stop-that-requires-a-write-recipe)) | JSON `additionalContext`, built from local files and refs only: a behind-remote line; `brief` for the project inferred from `cwd` (budget 1,200 tokens); a count of stale citations from the verdict cache; `resume` of the current run (budget 500); the plan position; an inbox of drafts, proposals and runs left without an evaluation. After a compaction (`source` `compact`), only the plan position. Fitted to 9,000 characters ([below](#what-session-start-injects)) | 30 s |
+| `SessionStart` | `cwd`, `source`, `session_id` | the session's mark (local; from v0.6.0-dev.1, [below](#a-stop-that-requires-a-write-recipe)) | JSON `additionalContext`, built from local files and refs only: a behind-remote line; `brief` for the project inferred from `cwd` (budget 1,200 tokens); a count of stale citations from the verdict cache; `resume` of the current run (budget 500); the plan position; an inbox of drafts, proposals and runs left without an evaluation. After a compaction (`source` `compact`), only the plan position. Fitted to 9,000 characters ([below](#what-session-start-injects)) | 30 s |
 | `PreCompact` | `session_id`, `cwd`, `trigger` | the draft's place: repository, branch, worktree, HEAD, dirty count | plain-text instructions for the compaction summary: keep the task, decisions with reasons, what failed, open questions, the next step | 15 s |
 | `PostCompact` | `session_id`, `compact_summary` | the draft's summary | nothing | 15 s |
 | `Stop` | `session_id`, `last_assistant_message`, `stop_hook_active`, `cwd` | the draft's last message; the draft's `nudged` flag after a nudge | nothing, or JSON `additionalContext` from a `stop` [guard rule](#guard-rules), once per session or once per turn | 10 s |
@@ -45,7 +45,7 @@ Each part is printed only when it has something to say, in this order:
      next: writfold kb gate run unit
    ```
 
-   A plan whose steps are all closed is one `complete` line. A current step that owes a delivery (built in v0.5.0-dev.10) also carries its `candidate:` line, cut from `plan status` like the rest:
+   A plan whose steps are all closed is one `complete` line. A current step that owes a delivery (built in v0.6.0-dev.1) also carries its `candidate:` line, cut from `plan status` like the rest:
 
    ```text
    step two#1/first [current] owes: deliver:pr-comment [failed] @runs/run-…/plan/splice-two.1.json:1
@@ -78,7 +78,7 @@ All three are read from files: the run's manifest and sidecar, `checkpoint.md` a
 
 **The 9,000-character cut.** When the parts together exceed 9,000 characters, they are cut in this order: the brief first, then the current run, the inbox, the plan position, the stale-citations line, and the behind-remote line last. The parts are kept whole from the last of that list backwards while they fit. The first that does not fit is cut at a line, with a `[… cut to fit the session-start limit …]` marker, and the rest are dropped.
 
-**Cost.** One Git spawn for the behind-remote line, on top of those the verbs already make. From v0.5.0-dev.10 the first start of a session also takes its mark (one `git status`, one `ls-tree` and hashing the dirty files): measured on 16 November 2026 on a scratch copy of the fixture KB with three dirty files, about 26 ms a call with a mark against 17 to 19 ms for v0.5.0-dev.9 (30 calls, two rounds); a resume or a compaction finds the mark and writes nothing. On the fixture KB with a plan and an upstream, the in-process release build took about 41 ms at start (the gates are judged twice, once by `resume` and once by `plan status`) and about 11 ms after a compaction. That is well inside the 30 s timeout.
+**Cost.** One Git spawn for the behind-remote line, on top of those the verbs already make. From v0.6.0-dev.1 the first start of a session also takes its mark (one `git status`, one `ls-tree` and hashing the dirty files): measured on 16 November 2026 on a scratch copy of the fixture KB with three dirty files, about 26 ms a call with a mark against 17 to 19 ms for v0.5.0-dev.9 (30 calls, two rounds); a resume or a compaction finds the mark and writes nothing. On the fixture KB with a plan and an upstream, the in-process release build took about 41 ms at start (the gates are judged twice, once by `resume` and once by `plan status`) and about 11 ms after a compaction. That is well inside the 30 s timeout.
 
 ## Failing open
 
@@ -145,14 +145,14 @@ description = "commit only when the run's gates are met"
 | `action` | `deny` or `ask` (`pre-tool-use` only; Claude Code then asks the user) |
 | `description` | shown first in the reason |
 | `repeat` | `stop` rules only: `session` (the default) or `turn` ([below](#the-stop-nudge)) |
-| `mode` | `pre-tool-use` rules only: `enforce` (the default) or `audit`, which judges and logs the rule without deciding the call ([below](#trying-a-rule-audit-mode); built in v0.5.0-dev.10). Any other value, and `mode` on a `stop` rule, is refused |
+| `mode` | `pre-tool-use` rules only: `enforce` (the default) or `audit`, which judges and logs the rule without deciding the call ([below](#trying-a-rule-audit-mode); built in v0.6.0-dev.1). Any other value, and `mode` on a `stop` rule, is refused |
 
 | Requirement | Met when |
 |---|---|
 | `run.current` | the current-run pointer names a run in the KB, and that run is open |
-| `gates.met` | the run owes at least one gate for this repository, every gate it owes is satisfied, attested or waived, as `gate status` judges it (a plan narrows it to the plan's gates), and no receipt, statement or definition is invalid. A waiver counts, and so does a [checklist](gates.md) whose required items are all covered `supported` or `not-applicable`: it is attested. **An empty set is not met** (built in v0.5.0-dev.10): with no gate defined for the repository, or a plan whose steps name none, the rule takes its action with `no gate is owed here: none is defined for <repo>; gates.met is not met by an empty set; next: define .writfold/gates/<id>.toml, or leave this repository out of the rule with repos`. A delivery a step owes (`deliver:<mode>`, built in v0.5.0-dev.10) is neither owed nor counted here: `gates.met` is used on `git commit`, and counting a PR comment would refuse the commit the comment is about. A plan that names only deliveries owes no gate, so the rule refuses with `no gate is owed here: the run's plan names only deliveries; gates.met is not met by an empty set; next: require step.met for the delivery step, name a gate in a plan step, or leave this repository out of the rule with repos` |
+| `gates.met` | the run owes at least one gate for this repository, every gate it owes is satisfied, attested or waived, as `gate status` judges it (a plan narrows it to the plan's gates), and no receipt, statement or definition is invalid. A waiver counts, and so does a [checklist](gates.md) whose required items are all covered `supported` or `not-applicable`: it is attested. **An empty set is not met** (built in v0.6.0-dev.1): with no gate defined for the repository, or a plan whose steps name none, the rule takes its action with `no gate is owed here: none is defined for <repo>; gates.met is not met by an empty set; next: define .writfold/gates/<id>.toml, or leave this repository out of the rule with repos`. A delivery a step owes (`deliver:<mode>`, built in v0.6.0-dev.1) is neither owed nor counted here: `gates.met` is used on `git commit`, and counting a PR comment would refuse the commit the comment is about. A plan that names only deliveries owes no gate, so the rule refuses with `no gate is owed here: the run's plan names only deliveries; gates.met is not met by an empty set; next: require step.met for the delivery step, name a gate in a plan step, or leave this repository out of the rule with repos` |
 | `gate:<id>` | that gate is met |
-| `step.met` | the plan's current step owes nothing (met with no plan, or when every step is closed). Its deliveries are judged with its gates (built in v0.5.0-dev.10): `step deliver owes deliver:pr-comment [open]; next: writfold kb deliver prepare --mode pr-comment --from FILE` |
+| `step.met` | the plan's current step owes nothing (met with no plan, or when every step is closed). Its deliveries are judged with its gates (built in v0.6.0-dev.1): `step deliver owes deliver:pr-comment [open]; next: writfold kb deliver prepare --mode pr-comment --from FILE` |
 
 `step.met` is a statement about a plan step, so a run without a plan meets it: a Stop rule built on it stays quiet when there is nothing to finish. When a missing plan, or a missing run, should not pass, put `run.current` or `gates.met` beside it in `require`.
 
@@ -202,11 +202,11 @@ There is no rule-level waiver. A refusal does not name a waive command, and an a
 
 A permission rule, like a guard, reads what the harness shows it; it is not enforcement either.
 
-A waiver is visible where a guard passes on it (built in v0.5.0-dev.10): `guard status` flags the rule `!waived` with a `waived:` line naming the gate, the reason, who and when, and the statement's file; the hook writes `writfold kb hook: guard rule <id> passed on a waiver: gate <gate>` to stderr and adds an entry to the [guard log](#the-guard-log).
+A waiver is visible where a guard passes on it (built in v0.6.0-dev.1): `guard status` flags the rule `!waived` with a `waived:` line naming the gate, the reason, who and when, and the statement's file; the hook writes `writfold kb hook: guard rule <id> passed on a waiver: gate <gate>` to stderr and adds an entry to the [guard log](#the-guard-log).
 
 ### Trying a rule: audit mode
 
-> Built in v0.5.0-dev.10.
+> Built in v0.6.0-dev.1.
 
 A new or changed rule is where false refusals come from. With `mode = "audit"`, a `pre-tool-use` rule is matched and judged exactly as an enforcing one, but the harness is told nothing for it: stdout carries no decision from that rule, and one line goes to stderr, `writfold kb hook: guard rule <id> (audit) would deny: <reason>`. Its would-be decision goes to the guard log. An enforcing rule beside it still decides: a call an enforcing rule denies is denied, and both are logged.
 
@@ -216,7 +216,7 @@ A new or changed rule is where false refusals come from. With `mode = "audit"`, 
 
 ### The guard log
 
-> Built in v0.5.0-dev.10.
+> Built in v0.6.0-dev.1.
 
 `<KB Git directory>/writfold/guard-log.jsonl` is what this machine's hook (and `edit apply`) decided: one JSON line per entry, appended with one `write`, mode 0600, never committed. An entry is written for every evaluation of a matched audit rule (passes included, so a clean log can be told from a rule that never matched), every decision of an enforcing rule that is not a pass, and every pass that rested on a waiver; a call no rule matches writes nothing.
 
@@ -275,7 +275,7 @@ On a KB whose run owes `unit`, the hook prints `{"decision": "block", "reason": 
 
 ### A stop that requires a write (recipe)
 
-> Built in v0.5.0-dev.10.
+> Built in v0.6.0-dev.1.
 
 `writfold kb hook session-start` takes a mark named by the event's `session_id` when none exists, so a resume or a compaction keeps the first: `HEAD` and the blob ID of each dirty or untracked file, in `<KB Git directory>/writfold/marks/`, local and never committed. At the end of a turn, `writfold kb delta --since-mark "$session_id"` answers what was written to the KB since the session started, and exits 2 when nothing was. A Stop hook that blocks the end of a turn until something was written:
 
@@ -366,7 +366,7 @@ action = "deny"
 
 ### How a command is read
 
-> Built in v0.5.0-dev.10.
+> Built in v0.6.0-dev.1.
 
 A `commands` rule reads the Bash command line the way the shell would split it, without running or expanding anything ([`writfold_core::command`](../../crates/writfold-core/src/command/mod.rs)). The delivery guard uses the same reader.
 
@@ -394,9 +394,9 @@ A repository's name, for `repos`, is the first of:
 
 1. its name in the KB clone's repository map (the map `kb stale` resolves `repo=` with; see [validation](validation.md));
 2. the last segment of its `remote.origin.url`, without `.git` (`git@host:acme/ledger.git` is `ledger`);
-3. its main work tree's directory name, so a linked worktree answers to its clone's name (built in v0.5.0-dev.10).
+3. its main work tree's directory name, so a linked worktree answers to its clone's name (built in v0.6.0-dev.1).
 
-A linked worktree is the same repository as its clone: a map entry for either names both (they share a Git directory), and so do the origin and the clone's directory name. Before v0.5.0-dev.10 a linked worktree without an origin or a map entry of its own was named by its own directory; receipts filed from one under that name are now about another repository name and read `open` until the gate is run again. Nothing is relabelled.
+A linked worktree is the same repository as its clone: a map entry for either names both (they share a Git directory), and so do the origin and the clone's directory name. Before v0.6.0-dev.1 a linked worktree without an origin or a map entry of its own was named by its own directory; receipts filed from one under that name are now about another repository name and read `open` until the gate is run again. Nothing is relabelled.
 
 A pattern with `/` is refused, so two clones with the same last segment (`acme/api` and `beta/api`) both answer to `api`. To tell them apart, map each clone under a unique name, or put the rule in that repository's own `.writfold/guards/` instead of the KB root.
 

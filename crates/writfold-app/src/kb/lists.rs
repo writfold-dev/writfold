@@ -1,4 +1,4 @@
-//! The listing verbs built in v0.5.0-dev.10 that need more than a switch:
+//! The listing verbs built in v0.6.0-dev.1 that need more than a switch:
 //! `runs --idle AGE` and `delta`.
 use super::args::Common;
 use writfold_kb::Verb;

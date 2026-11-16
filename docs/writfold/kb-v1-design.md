@@ -3816,7 +3816,7 @@ Deviation: the specification exported the tree with `git read-tree` into a tempo
 
 The qualified `verified` state (`verified_basis`), render templates, `observe --from`, recorded verdicts for built-in kinds, and a configurable proposal cap ([dev9-spec.md](dev9-spec.md) §4).
 
-## 40. v0.5.0-dev.10 as built
+## 40. v0.6.0-dev.1 as built
 
 The specification was [dev10-spec.md](dev10-spec.md); its §7 decisions apply. Each check named below was removed or broken once and a test failed; the log is kept with the round's handover.
 
@@ -3878,14 +3878,14 @@ Deviations: a `guard log` row's kind is `guard-log`, so its text line begins `gu
 
 Deviation: the note about others' commits is coarser than specified. The runtime has no primitive listing merge commits between two commits, and adding a Git call was kept out of this round, so the note says either that `HEAD` is not a descendant of the base (commits on both sides) or that commits made since the base are included whoever made them, without counting merges. Tests: `crates/writfold-kb/tests/delta.rs` (three rows in two sections, blob comparison of a file dirty at the mark, an ignored file, `--since HEAD` clean exit 2, unknown revision and missing mark exit 3, the session-start mark kept on `compact`, a kill at `temp-written` and `published`).
 
-## 41. T6 as built (v0.5.0-dev.10)
+## 41. T6 as built (v0.6.0-dev.1)
 
 T6 changes what the remaining lines of `writfold watch` say. The frame keeps
 its panes, rail, state glyphs, bars, keys and both modes; the default surface
 reads as plain words, and the verbs' own wording is one key away. The
 [specification](tui-t6-spec.md) remains the design record; its Decisions
 (owner, 15 November 2026) override its earlier text, and this section records
-what was built, in v0.5.0-dev.10. The [watch guide](../guide/watch.md#plain-and-exact)
+what was built, in v0.6.0-dev.1. The [watch guide](../guide/watch.md#plain-and-exact)
 documents the exercised interface.
 
 ### 41.1 Two levels, one key
@@ -4051,7 +4051,7 @@ Each guarding test was run against its mutation; the log is
 
 ## 42. Delivery modes as a step's gates as built
 
-The specification was [deliver-gate-spec.md](deliver-gate-spec.md); its owner decisions (15 November 2026) apply: cited evidence is re-checked on every read, and the change ships in the v0.5.0-dev.10 round, built on top of it. Each check named below was removed or broken once and a test failed; the log is kept with the round's handover.
+The specification was [deliver-gate-spec.md](deliver-gate-spec.md); its owner decisions (15 November 2026) apply: cited evidence is re-checked on every read, and the change ships in the v0.6.0-dev.1 round, built on top of it. Each check named below was removed or broken once and a test failed; the log is kept with the round's handover.
 
 ### 42.1 The kernel
 

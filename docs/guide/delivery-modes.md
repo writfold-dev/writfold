@@ -1,6 +1,6 @@
 # Delivery modes
 
-> **Status:** built in v0.3.0-dev.1; your own modes are built in v0.4.0-dev.1; a delivery as a plan step's gate, `seq` on the manifest and the re-check of cited evidence on every read are built in v0.5.0-dev.10.
+> **Status:** built in v0.3.0-dev.1; your own modes are built in v0.4.0-dev.1; a delivery as a plan step's gate, `seq` on the manifest and the re-check of cited evidence on every read are built in v0.6.0-dev.1.
 
 A delivery candidate is the exact text of a PR comment or Slack summary, kept in the run and checked before anyone posts it. Writfold never sends it: there is no network code and no Slack or PR adapter. Posting stays with you or your agent.
 
@@ -83,7 +83,7 @@ commands = ["gh pr comment", "gh pr review", "gh issue comment"]
 tools = ["mcp__slack__post_message"]
 ```
 
-When a Bash call begins with a listed command, or a listed tool is called, the hook reads the body from `--body`, `-b`, `--body-file` or `-F`. The command line is read as guard rules read it, so a listed command quoted in a here-document's body is data and is not matched (built in v0.5.0-dev.10; [how a command is read](hooks.md#how-a-command-is-read)):
+When a Bash call begins with a listed command, or a listed tool is called, the hook reads the body from `--body`, `-b`, `--body-file` or `-F`. The command line is read as guard rules read it, so a listed command quoted in a here-document's body is data and is not matched (built in v0.6.0-dev.1; [how a command is read](hooks.md#how-a-command-is-read)):
 
 - body readable: the call goes on when a ready candidate of the current run holds exactly those bytes; otherwise it is denied, with the reason;
 - body not readable: the call goes on only when the run has a candidate and every candidate is ready;
@@ -99,7 +99,7 @@ When it lets a call through it prints nothing, so Claude Code's own permission p
 
 ## On a plan step
 
-> Built in v0.5.0-dev.10.
+> Built in v0.6.0-dev.1.
 
 A plan step can owe a delivery: the word `deliver:<mode>` in the step string (`"deliver: deliver:pr-comment"`). The step cannot be advanced until a candidate of that mode, prepared in the run, is ready, exactly as `deliver status` says `[ready]`. The [run graph guide](run-graph.md#a-delivery-as-a-steps-gate) shows the plan's side; this is the delivery's side.
 
@@ -113,7 +113,7 @@ A plan step can owe a delivery: the word `deliver:<mode>` in the step string (`"
 
 ## Cited evidence that moved
 
-> Built in v0.5.0-dev.10.
+> Built in v0.6.0-dev.1.
 
 A `claims.cited-fresh` receipt is bound to the candidate's bytes. From this release a passed receipt also stands only while every citation token in the candidate is still fresh: on every read (`deliver status`, `resume`, the delivery guard and the plan) the tokens are run through `stale` again, locally, with nothing fetched, the same call `deliver check` makes. When any is no longer fresh the check reads `stale`, its line ends `; cited evidence moved: <n> of <m> citation tokens no longer fresh`, and the candidate is `[blocked]` until `deliver check` runs again on evidence that holds. When the evidence comes back, the receipt stands again. A waiver on the check still stands: it is bound to the bytes and the check's definition, not to the receipt. A candidate with no citation token costs nothing more.
 

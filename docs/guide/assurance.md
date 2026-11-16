@@ -1,6 +1,6 @@
 # Assurance
 
-> **Status:** built in v0.4.0-dev.1. The run-graph, gate and assess kernels are proved over the shipped Rust, and the run graph is model-checked with TLC. Kernels added since (investigation, checklist and guard in v0.5.0-dev.1; decision states and checker verdicts in v0.5.0-dev.2; observations in v0.5.0-dev.3) are tested exhaustively and not proved. The command reader's tables and the guard conformance cases added in v0.5.0-dev.10.
+> **Status:** built in v0.4.0-dev.1. The run-graph, gate and assess kernels are proved over the shipped Rust, and the run graph is model-checked with TLC. Kernels added since (investigation, checklist and guard in v0.5.0-dev.1; decision states and checker verdicts in v0.5.0-dev.2; observations in v0.5.0-dev.3) are tested exhaustively and not proved. The command reader's tables and the guard conformance cases added in v0.6.0-dev.1.
 
 What stands behind `writfold kb`, sorted by how strong the claim is. The short version: the write protocol and the run graph are model-checked, the write protocol is kill-tested; the decisions about plans and gates (which step is current, whether a step may be recorded as done, how a splice changes the plan, what a gate's receipts and statements add up to) are proved for every input over the shipped Rust; everything that turns files into those decisions' inputs is tested.
 
@@ -19,8 +19,8 @@ What stands behind `writfold kb`, sorted by how strong the claim is. The short v
 | Receipts | a hand-edited outcome, a wrong digest and a receipt copied under another gate's name each read as invalid |
 | Output | golden files for every verb, the hooks and `watch --once` |
 | These guides | every `toml` block is parsed by the real parser (`crates/writfold-kb/tests/guide_toml.rs`) |
-| Guard decisions (v0.5.0-dev.10) | the conformance cases in `fixtures/guard-conformance/` (a world, an event and the expected decision each) run through the real hook entry point under `cargo test`; reading is strict, every failing case is named, and a difference from an imported suite's expectation must be recorded with its reason |
-| How a command is read (`writfold_core::command`, v0.5.0-dev.10) | one table per reading rule, and a fixed-seed corpus of text placed inside single quotes, double quotes and here-document bodies after `echo` or `cat`, which never yields a `git` invocation |
+| Guard decisions (v0.6.0-dev.1) | the conformance cases in `fixtures/guard-conformance/` (a world, an event and the expected decision each) run through the real hook entry point under `cargo test`; reading is strict, every failing case is named, and a difference from an imported suite's expectation must be recorded with its reason |
+| How a command is read (`writfold_core::command`, v0.6.0-dev.1) | one table per reading rule, and a fixed-seed corpus of text placed inside single quotes, double quotes and here-document bodies after `echo` or `cat`, which never yields a `git` invocation |
 
 ## Model-checked
 

@@ -189,7 +189,7 @@ fn every_guide_toml_block_is_read_by_the_real_parser() -> TestResult {
             }
         }
     }
-    // The last planned block was built in v0.5.0-dev.10; the marker is pinned below.
+    // The last planned block was built in v0.6.0-dev.1; the marker is pinned below.
     assert!(built >= 5, "only {built} built toml blocks were checked");
     assert_eq!(planned, 0, "a planned block is back: check it is refused");
     Ok(())

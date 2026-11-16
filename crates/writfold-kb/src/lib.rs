@@ -277,7 +277,7 @@ fn answer(session: &Session<'_>, request: &Request) -> Result<(Answer, &'static 
     })
 }
 
-/// `runs --idle` and `find --eval` (v0.5.0-dev.10); `None` for every
+/// `runs --idle` and `find --eval` (v0.6.0-dev.1); `None` for every
 /// other verb.
 fn measured(
     session: &Session<'_>,
