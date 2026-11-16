@@ -146,11 +146,7 @@ fn template_ref(sink: &mut Sink<'_>, n: &Names, owner: &str, name: &str, span: O
 fn mode_ref(sink: &mut Sink<'_>, f: &File, owner: &str, mode: &str, span: Option<Span>) {
     let file = format!("{}/{mode}.toml", crate::deliver::config::DIR);
     let kb = match f.origin {
-        Origin::Kb => f
-            .dir
-            .parent()
-            .and_then(|p| p.parent())
-            .and_then(|p| p.parent()),
+        Origin::Kb => f.dir.parent().and_then(|p| p.parent()),
         Origin::Repo => None,
     };
     let exists =

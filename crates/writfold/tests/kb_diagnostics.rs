@@ -205,12 +205,19 @@ fn a_plan_names_an_undefined_gate_at_its_word() -> Result {
 
 #[test]
 fn lint_exits_zero_two_and_two_under_deny_warnings() -> Result {
-    let w = world("lint", &[(".writfold/gates/unit.toml", UNIT)])?;
+    let mode = "schema = \"writfold-delivery-mode/1\"\nmode = \"note2\"\nattest = [\"read\"]\n";
+    let plan = "schema = \"writfold-plan/1\"\nname = \"ship\"\nsteps = [\"x: deliver:note2\"]\n";
+    let files = [
+        (".writfold/gates/unit.toml", UNIT),
+        (".writfold/deliveries/note2.toml", mode),
+        (".writfold/plans/ship.toml", plan),
+    ];
+    let w = world("lint", &files)?;
     let (stdout, _, code) = kb(&w, &["lint"], None)?;
     assert_eq!(code, 0, "{stdout}");
     assert_eq!(
         stdout,
-        "# coverage=complete files=1 clean=1 invalid=0 errors=0 warnings=0\n"
+        "# coverage=complete files=3 clean=3 invalid=0 errors=0 warnings=0\n"
     );
     let rule = "schema = \"writfold-guard-rule/1\"\nid = \"commit\"\nevent = \"pre-tool-use\"\ncommands = [\"git commit\"]\nrequire = [\"gate:unitt\"]\naction = \"deny\"\n";
     fs::create_dir_all(w.0.join("kb/.writfold/guards"))?;
@@ -243,5 +250,25 @@ fn lint_exits_zero_two_and_two_under_deny_warnings() -> Result {
     assert_eq!(body["diagnostics"][0]["severity"], "error");
     assert_eq!(body["trailer"]["errors"], 1);
     assert_eq!(kb(&w, &["lint", "no/such/file.toml"], None)?.2, 1);
+    Ok(())
+}
+
+#[test]
+fn a_step_owing_a_gate_that_stopped_parsing_says_why() -> Result {
+    let plan = "schema = \"writfold-plan/1\"\nname = \"main\"\nsteps = [\"implement: unit\"]\n";
+    let files = [
+        (".writfold/gates/unit.toml", UNIT),
+        (".writfold/plans/main.toml", plan),
+    ];
+    let w = world("owed", &files)?;
+    let (_, stderr, code) = kb(&w, &["plan", "set", "main"], None)?;
+    assert_eq!(code, 0, "{stderr}");
+    let broken = UNIT.replace("timeout_seconds", "timout_seconds");
+    fs::write(w.0.join("kb/.writfold/gates/unit.toml"), broken)?;
+    let (stdout, _, _) = kb(&w, &["plan", "status", "--gates"], None)?;
+    assert!(
+        stdout.contains("  reason: .writfold/gates/unit.toml cannot be read: line 6: unknown key timout_seconds in a gate definition"),
+        "{stdout}"
+    );
     Ok(())
 }

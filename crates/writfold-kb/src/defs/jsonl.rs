@@ -174,6 +174,14 @@ pub fn optional(field: Field<String>) -> Option<Option<String>> {
 
 /// A required key absent from `line`, reported at the line.
 pub fn missing(sink: &mut Sink<'_>, line: &Line<'_>, key: &str, needs: &str, add: &str) {
+    // An unknown key that was said to mean `key` already names the fault.
+    if line
+        .map
+        .keys()
+        .any(|k| k != key && suggest(k, &[key]) == [key])
+    {
+        return;
+    }
     let d = sink.error(
         "key.missing",
         Some(line.span()),
