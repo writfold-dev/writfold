@@ -12,6 +12,7 @@
 #![forbid(unsafe_code)]
 
 pub mod check;
+pub mod defs;
 pub mod deliver;
 pub mod delta;
 pub mod draft;
