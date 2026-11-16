@@ -96,7 +96,8 @@ fn shown(seconds: i64) -> String {
     match seconds {
         s if s >= 86_400 => format!("{}d", s / 86_400),
         s if s >= 3_600 => format!("{}h", s / 3_600),
-        s => format!("{}m", s / 60),
+        s if s >= 60 => format!("{}m", s / 60),
+        s => format!("{s}s"),
     }
 }
 
