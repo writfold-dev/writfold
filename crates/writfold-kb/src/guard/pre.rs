@@ -8,7 +8,7 @@ use super::rules::Rule;
 use super::{log, reason};
 use crate::workspace::Workspace;
 use serde_json::{Map, Value, json};
-use writfold_core::guard::{Decision, Fact, Mode, combine, decide, effect};
+use writfold_core::guard::{Decision, Fact, Mode, all_met, call, decide, effect};
 
 /// What the rules decided for the call.
 pub struct Decided {
@@ -66,7 +66,7 @@ pub fn logged(rule: &Rule, owed: &[Owed]) -> bool {
     let facts: Vec<Fact> = owed.iter().map(|o| o.fact).collect();
     let decided = decide(true, rule.action, &facts);
     let waived = owed.iter().any(|o| !o.waived.is_empty());
-    rule.mode == Mode::Audit || decided != Decision::Pass || waived
+    call::logged(rule.mode, decided, waived)
 }
 
 /// The stderr lines for a judged rule that let the call through.
@@ -116,6 +116,7 @@ pub fn judge(
         stderr: String::new(),
     };
     let mut entries = Vec::new();
+    let mut ruled = Vec::new();
     for (group, (results, context)) in groups.iter().zip(evaluated) {
         let dir = match &group.place {
             Place::At(d) => Some(d.display().to_string()),
@@ -124,13 +125,17 @@ pub fn judge(
         for ((rule, owed), command) in group.rules.iter().zip(results).zip(&group.commands) {
             let Some(owed) = owed else { continue };
             let facts: Vec<Fact> = owed.iter().map(|o| o.fact).collect();
-            let decided = decide(true, rule.action, &facts);
+            let judged = call::Ruled {
+                mode: rule.mode,
+                action: rule.action,
+                met: all_met(&facts),
+            };
             let text = reason(rule, &owed, "a guard, not enforcement");
             out.stderr.push_str(&notes(rule, &owed, &text));
-            if effect(rule.mode, decided) != Decision::Pass && !out.reasons.contains(&text) {
+            if call::ruled(&judged) != Decision::Pass && !out.reasons.contains(&text) {
                 out.reasons.push(text);
             }
-            out.decision = combine(out.decision, effect(rule.mode, decided));
+            ruled.push(judged);
             if logged(rule, &owed) {
                 let at = Logged {
                     via: "hook",
@@ -144,6 +149,7 @@ pub fn judge(
             }
         }
     }
+    out.decision = call::decide_all(&ruled);
     if let Some(path) = log::path(ws)
         && let Err(why) = log::append(&path, &entries)
     {

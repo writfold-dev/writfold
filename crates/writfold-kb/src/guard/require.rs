@@ -14,7 +14,10 @@ use crate::runs;
 use crate::session::Session;
 use crate::workspace::{GitTool, Workspace};
 use std::path::{Path, PathBuf};
-use writfold_core::guard::{Fact, gates_fact};
+use writfold_core::guard::Fact;
+use writfold_core::guard::require::{Looked, gate_fact, run_current, step_fact};
+
+mod gates;
 use writfold_core::scope::in_scope;
 
 /// One requirement's fact, and (when it is not met) what is owed and the
@@ -36,19 +39,15 @@ impl Owed {
         }
     }
 
-    fn unmet(text: String) -> Self {
-        Self {
-            fact: Fact::Unmet,
-            text,
-            waived: Vec::new(),
-        }
-    }
-
-    fn unknown(text: String) -> Self {
-        Self {
-            fact: Fact::Unknown,
-            text,
-            waived: Vec::new(),
+    /// The kernel's fact, with what is owed when it is not met.
+    fn of(fact: Fact, text: String) -> Self {
+        match fact {
+            Fact::Met => Self::met(),
+            _ => Self {
+                fact,
+                text,
+                waived: Vec::new(),
+            },
         }
     }
 }
@@ -67,8 +66,6 @@ struct GateLine {
     waived: Option<Waived>,
 }
 
-/// Every judged gate, the gates the run owes (`None`: every one), and
-/// the count of invalid filings and definitions.
 /// The gate lines, the gates the plan owes (`None` without a plan), the
 /// invalid filings, and the deliveries the plan owes (never counted here).
 type Judged = (
@@ -129,7 +126,7 @@ pub fn evaluate_at(
                     Some(
                         r.require
                             .iter()
-                            .map(|_| Owed::unknown(why.clone()))
+                            .map(|_| Owed::of(Fact::Unknown, why.clone()))
                             .collect(),
                     )
                 })
@@ -232,7 +229,7 @@ fn gather(session: &Session<'_>, place: &Place, rules: &[&Rule]) -> Facts {
     if wants(|q| matches!(q, Require::StepMet)) {
         facts.step = Some(match place {
             Place::At(cwd) => step(session, &facts, cwd),
-            Place::Unknown(why) => Owed::unknown(why.clone()),
+            Place::Unknown(why) => Owed::of(Fact::Unknown, why.clone()),
         });
     }
     facts
@@ -276,120 +273,73 @@ fn judge(session: &Session<'_>, facts: &Facts) -> Result<Judged, String> {
     Ok((lines, owed.gates, invalid, owed.deliveries))
 }
 
-fn undefined(id: &str) -> String {
-    format!(
-        "gate {id} [undefined]; next: define {}/{id}.toml in the KB root or the repository",
-        crate::gate::def::DIR
-    )
-}
-
 /// The plan's current step: met when it owes nothing (or there is no
 /// plan, or every step is closed).
 fn step(session: &Session<'_>, facts: &Facts, cwd: &Path) -> Owed {
+    let failed = |text: String| Owed::of(step_fact(Looked::Failed, true, true, 0), text);
     let rec = match &facts.run {
         Ok(rec) => rec,
-        Err(why) => return Owed::unmet(why.clone()),
+        Err(why) => return Owed::of(step_fact(Looked::No, false, false, 0), why.clone()),
     };
     let loaded = match Loaded::open(session, Some(&rec.id), None, cwd) {
         Ok(loaded) => loaded,
-        Err(e) => return Owed::unknown(format!("cannot read the plan ({e})")),
+        Err(e) => return failed(format!("cannot read the plan ({e})")),
     };
-    let Some(at) = loaded.graph.current().filter(|_| loaded.graph.planned()) else {
-        return Owed::met();
+    let planned = loaded.graph.planned();
+    let Some(at) = loaded.graph.current().filter(|_| planned) else {
+        let current = loaded.graph.current().is_some();
+        return Owed::of(step_fact(Looked::Read, planned, current, 0), String::new());
     };
     let judged = match loaded.judged(session) {
         Ok(Some(judged)) => judged,
-        Ok(None) => return Owed::unknown("no subject repository here to judge the step".into()),
-        Err(e) => return Owed::unknown(format!("cannot judge the step ({e})")),
+        Ok(None) => return failed("no subject repository here to judge the step".into()),
+        Err(e) => return failed(format!("cannot judge the step ({e})")),
     };
     let gates = judged.get(at).map(Vec::as_slice).unwrap_or_default();
     let owed: Vec<&plan::judge::Gate> = gates.iter().filter(|g| !g.met()).collect();
-    let Some(first) = owed.first() else {
-        return Owed::met();
-    };
-    let name = &loaded.graph.steps[at].id;
-    Owed::unmet(format!(
-        "step {name} owes {}; {}",
-        plan::show::listed(&owed),
-        plan::show::next_or_why(first)
-    ))
+    let text = owed.first().map_or_else(String::new, |first| {
+        let name = &loaded.graph.steps[at].id;
+        format!(
+            "step {name} owes {}; {}",
+            plan::show::listed(&owed),
+            plan::show::next_or_why(first)
+        )
+    });
+    Owed::of(step_fact(Looked::Read, true, true, owed.len()), text)
 }
 
 fn fact(facts: &Facts, require: &Require) -> Owed {
     match require {
-        Require::RunCurrent => match &facts.run {
-            Err(why) => Owed::unmet(why.clone()),
-            Ok(_) if facts.state == "open" => Owed::met(),
-            Ok(rec) => Owed::unmet(format!("run {} is {}; {START}", rec.id, facts.state)),
-        },
-        Require::StepMet => facts
-            .step
-            .clone()
-            .unwrap_or_else(|| Owed::unknown("the step was not judged".into())),
-        Require::GatesMet => gates_met(facts),
-        Require::Gate(id) => match &facts.gates {
-            None => Owed::unknown("the gates were not judged".into()),
-            Some(Err(why)) => Owed::unknown(why.clone()),
-            Some(Ok((lines, _, _, _))) => match lines.iter().find(|g| &g.id == id) {
-                Some(g) if g.met => Owed {
-                    waived: g.waived.iter().cloned().collect(),
-                    ..Owed::met()
-                },
-                Some(g) => Owed::unmet(g.line.clone()),
-                None => Owed::unmet(undefined(id)),
-            },
-        },
-    }
-}
-
-/// Every owed gate met, and no invalid receipt, statement or definition;
-/// a run that owes no gate here does not meet it ([`gates_fact`]).
-fn gates_met(facts: &Facts) -> Owed {
-    let (lines, owed, invalid, deliveries) = match &facts.gates {
-        None => return Owed::unknown("the gates were not judged".into()),
-        Some(Err(why)) => return Owed::unknown(why.clone()),
-        Some(Ok(judged)) => judged,
-    };
-    let mut unmet: Vec<String> = Vec::new();
-    let count = match owed {
-        None => {
-            unmet.extend(lines.iter().filter(|g| !g.met).map(|g| g.line.clone()));
-            lines.len()
+        Require::RunCurrent => {
+            let text = match &facts.run {
+                Err(why) => why.clone(),
+                Ok(rec) => format!("run {} is {}; {START}", rec.id, facts.state),
+            };
+            Owed::of(run_current(facts.run.is_ok(), facts.state == "open"), text)
         }
-        Some(ids) => {
-            for id in ids {
-                match lines.iter().find(|g| &g.id == id) {
-                    Some(g) if g.met => {}
-                    Some(g) => unmet.push(g.line.clone()),
-                    None => unmet.push(undefined(id)),
+        Require::StepMet => facts.step.clone().unwrap_or_else(|| {
+            let fact = step_fact(Looked::Failed, true, true, 0);
+            Owed::of(fact, "the step was not judged".into())
+        }),
+        Require::GatesMet => gates::met(facts),
+        Require::Gate(id) => match &facts.gates {
+            None => Owed::of(
+                gate_fact(Looked::No, false, false),
+                "the gates were not judged".into(),
+            ),
+            Some(Err(why)) => Owed::of(gate_fact(Looked::Failed, false, false), why.clone()),
+            Some(Ok((lines, _, _, _))) => {
+                let found = lines.iter().find(|g| &g.id == id);
+                let fact = gate_fact(Looked::Read, found.is_some(), found.is_some_and(|g| g.met));
+                match found {
+                    Some(g) if fact == Fact::Met => Owed {
+                        waived: g.waived.iter().cloned().collect(),
+                        ..Owed::met()
+                    },
+                    Some(g) => Owed::of(fact, g.line.clone()),
+                    None => Owed::of(fact, gates::undefined(id)),
                 }
             }
-            ids.len()
-        }
-    };
-    let n = unmet.len();
-    if count == 0 {
-        unmet.push(super::empty::text(
-            &facts.subject,
-            owed.is_some(),
-            deliveries,
-        ));
-    }
-    if *invalid > 0 {
-        unmet.push(format!(
-            "invalid receipts or definitions: {invalid}; next: writfold kb gate status"
-        ));
-    }
-    let relied = |g: &&GateLine| owed.as_ref().is_none_or(|ids| ids.contains(&g.id));
-    match gates_fact(count, n, *invalid) {
-        Fact::Met => Owed {
-            waived: lines
-                .iter()
-                .filter(relied)
-                .filter_map(|g| g.waived.clone())
-                .collect(),
-            ..Owed::met()
         },
-        _ => Owed::unmet(unmet.join("; ")),
     }
 }

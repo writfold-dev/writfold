@@ -298,6 +298,86 @@ MUTANTS = (
            "        Body::Known => same_ready,",
            "        Body::Known => same_ready || all_ready,",
            ("Writfold.Core.Delivery.guard_allow_iff",)),
+    # guard: an unknown fact is never met
+    Mutant("all-met-accepts-unknown", "guard.rs",
+           "    matches!(fact, Fact::Met)",
+           "    !matches!(fact, Fact::Unmet)",
+           ("Writfold.Core.Guard.met_spec",)),
+    # guard: every requirement is looked at, the last included
+    Mutant("all-met-skips-last", "guard.rs",
+           "    while i < facts.len() {\n        if !met(",
+           "    while i + 1 < facts.len() {\n        if !met(",
+           ("Writfold.Core.Guard.all_met_loop_spec",)),
+    # guard: a matched rule passes only when every requirement is met
+    Mutant("decide-ignores-facts", "guard.rs",
+           "    verdict(all_met(facts), action)",
+           "    verdict(true, action)",
+           ("Writfold.Core.Guard.decide_spec",)),
+    # guard: a deny rule denies
+    Mutant("verdict-deny-asks", "guard.rs",
+           "        Action::Deny => Decision::Deny,\n        Action::Ask => Decision::Ask,\n    }\n}\n\n/// `Pass` iff",
+           "        Action::Deny => Decision::Ask,\n        Action::Ask => Decision::Ask,\n    }\n}\n\n/// `Pass` iff",
+           ("Writfold.Core.Guard.verdict_spec",)),
+    # guard: a denial wins over a question
+    Mutant("combine-ask-over-deny", "guard.rs",
+           "    if matches!(a, Decision::Deny) || matches!(b, Decision::Deny) {\n        return Decision::Deny;\n    }\n    if matches!(a, Decision::Ask) || matches!(b, Decision::Ask) {\n        return Decision::Ask;\n    }",
+           "    if matches!(a, Decision::Ask) || matches!(b, Decision::Ask) {\n        return Decision::Ask;\n    }\n    if matches!(a, Decision::Deny) || matches!(b, Decision::Deny) {\n        return Decision::Deny;\n    }",
+           ("Writfold.Core.Guard.combine_spec",)),
+    # guard: an audit rule never decides the call
+    Mutant("effect-enforces-audit", "guard.rs",
+           "        Mode::Audit => Decision::Pass,",
+           "        Mode::Audit => decided,",
+           ("Writfold.Core.Guard.effect_spec",)),
+    # guard: gates.met is not met by an empty set
+    Mutant("gates-fact-met-on-nothing", "guard.rs",
+           "    if owed > 0 && unmet == 0 && invalid == 0 {",
+           "    if unmet == 0 && invalid == 0 {",
+           ("Writfold.Core.Guard.gates_fact_met_iff",)),
+    # guard: an invalid receipt or definition keeps gates.met unmet
+    Mutant("gates-fact-ignores-invalid", "guard.rs",
+           "    if owed > 0 && unmet == 0 && invalid == 0 {",
+           "    if owed > 0 && unmet == 0 {",
+           ("Writfold.Core.Guard.gates_fact_met_iff",)),
+    # guard: the Stop nudge never fires while a stop hook is continuing
+    Mutant("nudge-while-active", "guard.rs",
+           "    !stop_hook_active && !already_nudged && !all_met(facts)",
+           "    !already_nudged && !all_met(facts)",
+           ("Writfold.Core.Guard.nudge_spec",)),
+    # guard: a turn rule is not held back by the session flag
+    Mutant("nudge-with-ignores-repeat", "guard.rs",
+           "        already_nudged && matches!(repeat, Repeat::Session),",
+           "        already_nudged,",
+           ("Writfold.Core.Guard.nudge_with_iff",)),
+    # guard: every matched rule counts, the last included
+    Mutant("decide-all-drops-last", "guard/call.rs",
+           "    while index < rules.len() {\n        decided = combine",
+           "    while index + 1 < rules.len() {\n        decided = combine",
+           ("Writfold.Core.Guard.decide_all_loop_spec",)),
+    # guard: a pass on a waiver is logged
+    Mutant("logged-drops-waiver", "guard/call.rs",
+           "    matches!(mode, Mode::Audit) || !matches!(decided, Decision::Pass) || waived",
+           "    matches!(mode, Mode::Audit) || !matches!(decided, Decision::Pass)",
+           ("Writfold.Core.Guard.logged_iff",)),
+    # guard: run.current needs an open run
+    Mutant("run-current-closed", "guard/require.rs",
+           "    if found && open {",
+           "    if found {",
+           ("Writfold.Core.Guard.run_current_met_iff",)),
+    # guard: step.met is never met when the plan could not be read
+    Mutant("step-fact-met-unread", "guard/require.rs",
+           "        Looked::Failed => Fact::Unknown,",
+           "        Looked::Failed => Fact::Met,",
+           ("Writfold.Core.Guard.step_fact_met_iff", "Writfold.Core.Guard.step_fact_unknown_iff")),
+    # guard: an undefined gate is never met
+    Mutant("gate-fact-undefined-met", "guard/require.rs",
+           "            if defined && met {",
+           "            if met {",
+           ("Writfold.Core.Guard.gate_fact_met_iff",)),
+    # guard: gates that could not be judged are unknown
+    Mutant("gates-read-unread-counts", "guard/require.rs",
+           "        Looked::No | Looked::Failed => Fact::Unknown,\n        Looked::Read => super::gates_fact(owed, unmet, invalid),",
+           "        Looked::No => Fact::Unknown,\n        Looked::Failed | Looked::Read => super::gates_fact(owed, unmet, invalid),",
+           ("Writfold.Core.Guard.gates_read_met_iff",)),
     # assessed gate: one ungrounded premise makes the basis hypothetical
     Mutant("basis-ignores-premises", "assess.rs",
            "        if matches!(premises[index], Grounding::Ungrounded) {",

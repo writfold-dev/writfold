@@ -1013,6 +1013,363 @@ def gate.statements
     gate.statements_loop said definition content false false false 0#usize
   ok { attested_current, attested_any, waived_current }
 
+/-- [writfold_core::guard::Mode]
+    Source: 'crates/writfold-core/src/guard.rs', lines 119:0-122:1
+    Visibility: public -/
+@[discriminant isize]
+inductive guard.Mode where
+| Enforce : guard.Mode
+| Audit : guard.Mode
+
+/-- [writfold_core::guard::Action]
+    Source: 'crates/writfold-core/src/guard.rs', lines 36:0-39:1
+    Visibility: public -/
+@[discriminant isize]
+inductive guard.Action where
+| Deny : guard.Action
+| Ask : guard.Action
+
+/-- [writfold_core::guard::call::Ruled]
+    Source: 'crates/writfold-core/src/guard/call.rs', lines 7:0-11:1
+    Visibility: public -/
+structure guard.call.Ruled where
+  mode : guard.Mode
+  action : guard.Action
+  met : Bool
+
+/-- [writfold_core::guard::Decision]
+    Source: 'crates/writfold-core/src/guard.rs', lines 60:0-64:1
+    Visibility: public -/
+@[discriminant isize]
+inductive guard.Decision where
+| Pass : guard.Decision
+| Deny : guard.Decision
+| Ask : guard.Decision
+
+/-- [writfold_core::guard::effect]:
+    Source: 'crates/writfold-core/src/guard.rs', lines 143:0-148:1
+    Visibility: public -/
+def guard.effect
+  (mode : guard.Mode) (decided : guard.Decision) : Result guard.Decision := do
+  match mode with
+  | guard.Mode.Enforce => ok decided
+  | guard.Mode.Audit => ok guard.Decision.Pass
+
+/-- [writfold_core::guard::verdict]:
+    Source: 'crates/writfold-core/src/guard.rs', lines 85:0-93:1
+    Visibility: public -/
+def guard.verdict
+  (met : Bool) (action : guard.Action) : Result guard.Decision := do
+  if met
+  then ok guard.Decision.Pass
+  else
+    match action with
+    | guard.Action.Deny => ok guard.Decision.Deny
+    | guard.Action.Ask => ok guard.Decision.Ask
+
+/-- [writfold_core::guard::call::ruled]:
+    Source: 'crates/writfold-core/src/guard/call.rs', lines 14:0-16:1
+    Visibility: public -/
+def guard.call.ruled (rule : guard.call.Ruled) : Result guard.Decision := do
+  let d ← guard.verdict rule.met rule.action
+  guard.effect rule.mode d
+
+/-- [writfold_core::guard::combine]:
+    Source: 'crates/writfold-core/src/guard.rs', lines 106:0-114:1
+    Visibility: public -/
+def guard.combine
+  (a : guard.Decision) (b : guard.Decision) : Result guard.Decision := do
+  let b1 ←
+    match a with
+    | guard.Decision.Pass => ok false
+    | guard.Decision.Deny => ok true
+    | guard.Decision.Ask => ok false
+  if b1
+  then ok guard.Decision.Deny
+  else
+    let b2 ←
+      match b with
+      | guard.Decision.Pass => ok false
+      | guard.Decision.Deny => ok true
+      | guard.Decision.Ask => ok false
+    if b2
+    then ok guard.Decision.Deny
+    else
+      let b3 ←
+        match a with
+        | guard.Decision.Pass => ok false
+        | guard.Decision.Deny => ok false
+        | guard.Decision.Ask => ok true
+      if b3
+      then ok guard.Decision.Ask
+      else
+        let b4 ←
+          match b with
+          | guard.Decision.Pass => ok false
+          | guard.Decision.Deny => ok false
+          | guard.Decision.Ask => ok true
+        if b4
+        then ok guard.Decision.Ask
+        else ok guard.Decision.Pass
+
+/-- [writfold_core::guard::call::decide_all]: loop body 0:
+    Source: 'crates/writfold-core/src/guard/call.rs', lines 23:4-26:5
+    Visibility: public -/
+@[rust_loop_body]
+def guard.call.decide_all_loop.body
+  (rules : Slice guard.call.Ruled) (decided : guard.Decision)
+  (index : Std.Usize) :
+  Result (ControlFlow (guard.Decision × Std.Usize) guard.Decision)
+  := do
+  let i := Slice.len rules
+  if index < i
+  then
+    let r ← Slice.index_usize rules index
+    let d ← guard.call.ruled r
+    let decided1 ← guard.combine decided d
+    let index1 ← index + 1#usize
+    ok (cont (decided1, index1))
+  else ok (done decided)
+
+/-- [writfold_core::guard::call::decide_all]: loop 0:
+    Source: 'crates/writfold-core/src/guard/call.rs', lines 23:4-26:5
+    Visibility: public -/
+@[rust_loop]
+def guard.call.decide_all_loop
+  (rules : Slice guard.call.Ruled) (decided : guard.Decision)
+  (index : Std.Usize) :
+  Result guard.Decision
+  := do
+  loop
+    (fun (decided1, index1) => guard.call.decide_all_loop.body rules decided1
+      index1)
+    (decided, index)
+
+/-- [writfold_core::guard::call::decide_all]:
+    Source: 'crates/writfold-core/src/guard/call.rs', lines 20:0-28:1
+    Visibility: public -/
+@[reducible]
+def guard.call.decide_all
+  (rules : Slice guard.call.Ruled) : Result guard.Decision := do
+  guard.call.decide_all_loop rules guard.Decision.Pass 0#usize
+
+/-- [writfold_core::guard::call::logged]:
+    Source: 'crates/writfold-core/src/guard/call.rs', lines 32:0-34:1
+    Visibility: public -/
+def guard.call.logged
+  (mode : guard.Mode) (decided : guard.Decision) (waived : Bool) :
+  Result Bool
+  := do
+  let b ←
+    match mode with
+    | guard.Mode.Enforce => ok false
+    | guard.Mode.Audit => ok true
+  if b
+  then ok true
+  else
+    let b1 ←
+      match decided with
+      | guard.Decision.Pass => ok true
+      | guard.Decision.Deny => ok false
+      | guard.Decision.Ask => ok false
+    if b1
+    then ok waived
+    else ok true
+
+/-- [writfold_core::guard::require::Looked]
+    Source: 'crates/writfold-core/src/guard/require.rs', lines 8:0-14:1
+    Visibility: public -/
+@[discriminant isize]
+inductive guard.require.Looked where
+| No : guard.require.Looked
+| Failed : guard.require.Looked
+| Read : guard.require.Looked
+
+/-- [writfold_core::guard::Fact]
+    Source: 'crates/writfold-core/src/guard.rs', lines 27:0-32:1
+    Visibility: public -/
+@[discriminant isize]
+inductive guard.Fact where
+| Met : guard.Fact
+| Unmet : guard.Fact
+| Unknown : guard.Fact
+
+/-- [writfold_core::guard::require::run_current]:
+    Source: 'crates/writfold-core/src/guard/require.rs', lines 17:0-23:1
+    Visibility: public -/
+def guard.require.run_current
+  (found : Bool) («open» : Bool) : Result guard.Fact := do
+  if found
+  then if «open»
+       then ok guard.Fact.Met
+       else ok guard.Fact.Unmet
+  else ok guard.Fact.Unmet
+
+/-- [writfold_core::guard::require::step_fact]:
+    Source: 'crates/writfold-core/src/guard/require.rs', lines 28:0-40:1
+    Visibility: public -/
+def guard.require.step_fact
+  (read : guard.require.Looked) (planned : Bool) (has_current : Bool)
+  (owed : Std.Usize) :
+  Result guard.Fact
+  := do
+  match read with
+  | guard.require.Looked.No => ok guard.Fact.Unmet
+  | guard.require.Looked.Failed => ok guard.Fact.Unknown
+  | guard.require.Looked.Read =>
+    if planned
+    then
+      if has_current
+      then if owed = 0#usize
+           then ok guard.Fact.Met
+           else ok guard.Fact.Unmet
+      else ok guard.Fact.Met
+    else ok guard.Fact.Met
+
+/-- [writfold_core::guard::require::gate_fact]:
+    Source: 'crates/writfold-core/src/guard/require.rs', lines 44:0-55:1
+    Visibility: public -/
+def guard.require.gate_fact
+  (read : guard.require.Looked) (defined : Bool) (met : Bool) :
+  Result guard.Fact
+  := do
+  match read with
+  | guard.require.Looked.No => ok guard.Fact.Unknown
+  | guard.require.Looked.Failed => ok guard.Fact.Unknown
+  | guard.require.Looked.Read =>
+    if defined
+    then if met
+         then ok guard.Fact.Met
+         else ok guard.Fact.Unmet
+    else ok guard.Fact.Unmet
+
+/-- [writfold_core::guard::gates_fact]:
+    Source: 'crates/writfold-core/src/guard.rs', lines 154:0-160:1
+    Visibility: public -/
+def guard.gates_fact
+  (owed : Std.Usize) (unmet : Std.Usize) (invalid : Std.Usize) :
+  Result guard.Fact
+  := do
+  if owed > 0#usize
+  then
+    if unmet = 0#usize
+    then if invalid = 0#usize
+         then ok guard.Fact.Met
+         else ok guard.Fact.Unmet
+    else ok guard.Fact.Unmet
+  else ok guard.Fact.Unmet
+
+/-- [writfold_core::guard::require::gates_read]:
+    Source: 'crates/writfold-core/src/guard/require.rs', lines 59:0-64:1
+    Visibility: public -/
+def guard.require.gates_read
+  (read : guard.require.Looked) (owed : Std.Usize) (unmet : Std.Usize)
+  (invalid : Std.Usize) :
+  Result guard.Fact
+  := do
+  match read with
+  | guard.require.Looked.No => ok guard.Fact.Unknown
+  | guard.require.Looked.Failed => ok guard.Fact.Unknown
+  | guard.require.Looked.Read => guard.gates_fact owed unmet invalid
+
+/-- [writfold_core::guard::met]:
+    Source: 'crates/writfold-core/src/guard.rs', lines 67:0-69:1
+    Visibility: public -/
+def guard.met (fact : guard.Fact) : Result Bool := do
+  match fact with
+  | guard.Fact.Met => ok true
+  | guard.Fact.Unmet => ok false
+  | guard.Fact.Unknown => ok false
+
+/-- [writfold_core::guard::all_met]: loop body 0:
+    Source: 'crates/writfold-core/src/guard.rs', lines 74:4-81:1
+    Visibility: public -/
+@[rust_loop_body]
+def guard.all_met_loop.body
+  (facts : Slice guard.Fact) (i : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let i1 := Slice.len facts
+  if i < i1
+  then
+    let f ← Slice.index_usize facts i
+    let b ← guard.met f
+    if b
+    then let i2 ← i + 1#usize
+         ok (cont i2)
+    else ok (done false)
+  else ok (done true)
+
+/-- [writfold_core::guard::all_met]: loop 0:
+    Source: 'crates/writfold-core/src/guard.rs', lines 74:4-81:1
+    Visibility: public -/
+@[rust_loop]
+def guard.all_met_loop
+  (facts : Slice guard.Fact) (i : Std.Usize) : Result Bool := do
+  loop
+    (fun i1 => guard.all_met_loop.body facts i1)
+    i
+
+/-- [writfold_core::guard::all_met]:
+    Source: 'crates/writfold-core/src/guard.rs', lines 72:0-81:1
+    Visibility: public -/
+@[reducible]
+def guard.all_met (facts : Slice guard.Fact) : Result Bool := do
+  guard.all_met_loop facts 0#usize
+
+/-- [writfold_core::guard::decide]:
+    Source: 'crates/writfold-core/src/guard.rs', lines 97:0-102:1
+    Visibility: public -/
+def guard.decide
+  (matched : Bool) (action : guard.Action) (facts : Slice guard.Fact) :
+  Result guard.Decision
+  := do
+  if matched
+  then let b ← guard.all_met facts
+       guard.verdict b action
+  else ok guard.Decision.Pass
+
+/-- [writfold_core::guard::Repeat]
+    Source: 'crates/writfold-core/src/guard.rs', lines 164:0-170:1
+    Visibility: public -/
+@[discriminant isize]
+inductive guard.Repeat where
+| Session : guard.Repeat
+| Turn : guard.Repeat
+
+/-- [writfold_core::guard::nudge]:
+    Source: 'crates/writfold-core/src/guard.rs', lines 209:0-211:1
+    Visibility: public -/
+def guard.nudge
+  (stop_hook_active : Bool) (already_nudged : Bool) (facts : Slice guard.Fact)
+  :
+  Result Bool
+  := do
+  if stop_hook_active
+  then ok false
+  else
+    if already_nudged
+    then ok false
+    else let b ← guard.all_met facts
+         ok (¬ b)
+
+/-- [writfold_core::guard::nudge_with]:
+    Source: 'crates/writfold-core/src/guard.rs', lines 193:0-204:1
+    Visibility: public -/
+def guard.nudge_with
+  («repeat» : guard.Repeat) (stop_hook_active : Bool) (already_nudged : Bool)
+  (facts : Slice guard.Fact) :
+  Result Bool
+  := do
+  let b ←
+    if already_nudged
+    then
+      match «repeat» with
+      | guard.Repeat.Session => ok true
+      | guard.Repeat.Turn => ok false
+    else ok false
+  guard.nudge stop_hook_active b facts
+
 /-- [writfold_core::plan::Node]
     Source: 'crates/writfold-core/src/plan.rs', lines 22:0-25:1
     Visibility: public -/
