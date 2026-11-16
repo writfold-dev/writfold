@@ -207,9 +207,12 @@ impl Report {
         keyed.sort_by(|a, b| a.0.cmp(&b.0));
         let mut out: Vec<Diagnostic> = Vec::new();
         for (_, d) in keyed {
-            let twice = out
-                .iter()
-                .any(|o| o.file == d.file && o.code == d.code && o.at == d.at);
+            let twice = out.iter().any(|o| {
+                o.file == d.file
+                    && o.code == d.code
+                    && o.at == d.at
+                    && (o.at.is_some() || o.message == d.message)
+            });
             if !twice {
                 out.push(d);
             }

@@ -150,6 +150,9 @@ pub enum Verb {
         paths: Vec<PathBuf>,
         repo: Option<PathBuf>,
         deny_warnings: bool,
+        /// `--records`: the records' front matter, JSON and citation
+        /// tokens instead of the definition files.
+        records: bool,
     },
     Check {
         scope: Option<String>,
@@ -215,9 +218,10 @@ pub fn run(request: &Request) -> Result<Output> {
         paths,
         repo,
         deny_warnings,
+        records,
     } = &request.verb
     {
-        let given = (paths.as_slice(), repo.as_deref(), *deny_warnings);
+        let given = (paths.as_slice(), repo.as_deref(), *deny_warnings, *records);
         return defs::lint::execute(&ws.root, request, given);
     }
     if let Verb::Check { scope } = &request.verb {

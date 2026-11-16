@@ -15,6 +15,7 @@ pub mod lint;
 pub mod lint_cycles;
 pub mod lint_out;
 pub mod lint_refs;
+pub mod records;
 pub mod toml;
 
 pub use fields::{Check, Field};

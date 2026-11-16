@@ -51,6 +51,11 @@ verbs:
   index status|rebuild|verify      what the derived index holds; rebuild it; check it equals a rebuild
   check [<project>|<path>]         stale, index verify and the current run's gate status in one
                                    summary (the worst exit code of the three)
+  lint [PATH…] [--repo DIR] [--deny-warnings] [--records]
+                                   every fault of the files you wrote (gates, guards, plans,
+                                   delivery modes, kinds, queries.jsonl), each at its line and
+                                   column; --records: records' front matter, JSON and citation
+                                   tokens. Reads files only (exit 0 clean, 2 errors, 1 usage)
   runs [--open] [--project P] [--plan]
                                    every run: state, place, last checkpoint; --plan adds its position
   runs --idle AGE [--project P] [--plan]

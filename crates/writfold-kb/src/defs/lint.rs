@@ -24,6 +24,7 @@ pub enum Kind {
     Delivery,
     Source,
     Queries,
+    Record,
 }
 
 /// One file read: where it is, how it is shown, its text and its faults.
@@ -58,6 +59,7 @@ fn check(kind: Kind, origin: Origin, dir: &Path, stem: &str, shown: &str, text: 
         },
         Kind::Source => crate::stale::kind_check::check(text, stem, shown).err(),
         Kind::Queries => crate::verbs::eval::lint(text, shown),
+        Kind::Record => None,
         Kind::Mode | Kind::Deny | Kind::Delivery => {
             crate::deliver::config::check_file(dir, stem, shown, text).err()
         }
@@ -172,18 +174,29 @@ pub fn enclosing(kb: &Path, cwd: &Path) -> Option<PathBuf> {
 pub fn execute(
     kb: &Path,
     request: &crate::Request,
-    (paths, repo, deny): (&[PathBuf], Option<&Path>, bool),
+    (paths, repo, deny, records): (&[PathBuf], Option<&Path>, bool, bool),
 ) -> Result<Output> {
-    let repo = repository(kb, &request.cwd, repo)?;
-    let mut all = files(kb, Origin::Kb, "");
-    all.extend(queries(kb));
+    let repo = match records {
+        true => None,
+        false => repository(kb, &request.cwd, repo)?,
+    };
+    let mut all = match records {
+        true => super::records::files(kb),
+        false => files(kb, Origin::Kb, ""),
+    };
+    if !records {
+        all.extend(queries(kb));
+    }
     if let Some(top) = &repo {
         let name = top
             .file_name()
             .map_or_else(String::new, |n| n.to_string_lossy().into_owned());
         all.extend(files(top, Origin::Repo, &format!("{name}:")));
     }
-    let mut report = super::lint_refs::check(&all, repo.is_some());
+    let mut report = match records {
+        true => Report::default(),
+        false => super::lint_refs::check(&all, repo.is_some()),
+    };
     let wanted = wanted(kb, repo.as_deref(), &request.cwd, paths, &all)?;
     let all: Vec<File> = all
         .into_iter()
@@ -198,7 +211,13 @@ pub fn execute(
         .sources
         .sort_by_key(|s| order.iter().position(|o| *o == s.file));
     report.sort();
-    Ok(super::lint_out::output(&all, report, request.json, deny))
+    let label = if records { "record" } else { "definition" };
+    Ok(super::lint_out::output(
+        &all,
+        report,
+        request.json,
+        (deny, label),
+    ))
 }
 
 /// The shown names of the files `paths` select (every file without).

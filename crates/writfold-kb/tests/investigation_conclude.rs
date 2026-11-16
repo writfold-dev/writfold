@@ -24,7 +24,12 @@ fn conclude(w: &World) -> Result<(String, u8), writfold_kb::error::KbError> {
 fn refusal(w: &World) -> TestResult<String> {
     let before = std::fs::read(w.kb.join(PATH))?;
     let message = match conclude(w) {
-        Err(error) if error.exit_code() == 3 => error.to_string(),
+        Err(writfold_kb::error::KbError::Definition(report)) => report
+            .diagnostics
+            .iter()
+            .map(|d| format!("{} {}", writfold_kb::diag::line(d), d.code))
+            .collect::<Vec<_>>()
+            .join("\n"),
         other => return Err(format!("expected a refusal, got {other:?}").into()),
     };
     assert_eq!(
@@ -48,7 +53,9 @@ fn concluded_needs_the_write_up() -> TestResult {
     let w = world(&[])?;
     let message = refusal(&w)?;
     assert!(
-        message.contains("Checked against") && message.contains("Scope and limits"),
+        message.contains("concluding needs a ## Checked against section; add a section")
+            && message.contains("concluding needs a ## Scope and limits section")
+            && message.contains("section.missing"),
         "{message}"
     );
     append(
@@ -58,12 +65,17 @@ fn concluded_needs_the_write_up() -> TestResult {
     append(&w, "\n## Checked against\n\nfsync traces from 2026-06-01\n")?;
     append(&w, "\n## Scope and limits\n\nOne host only.\n")?;
     let message = refusal(&w)?;
-    assert!(message.contains("1 open hypotheses"), "{message}");
+    let open = format!("{PATH}:19:1: this hypothesis is still open; write its outcome");
+    assert!(message.contains(&open), "{message}");
     assert!(!message.contains("Checked against"), "{message}");
     let path = w.kb.join(PATH);
     let body = std::fs::read_to_string(&path)?;
     std::fs::write(&path, body.replace("- H2: open,", "- H2 refuted:"))?;
-    assert!(refusal(&w)?.contains("unreadable hypothesis"));
+    let message = refusal(&w)?;
+    assert!(
+        message.contains("a hypothesis without an outcome"),
+        "{message}"
+    );
     let body = std::fs::read_to_string(&path)?;
     std::fs::write(&path, body.replace("- H2 refuted:", "- H2: refuted,"))?;
     let before = std::fs::read_to_string(&path)?;
@@ -77,5 +89,22 @@ fn concluded_needs_the_write_up() -> TestResult {
     );
     let (text, exit) = w.run(&w.request(Verb::IndexVerify))?;
     assert!(exit == 0 && !text.contains("[differs]"), "{text}");
+    Ok(())
+}
+
+#[test]
+fn a_misspelt_heading_is_named_with_the_one_it_should_be() -> TestResult {
+    let w = world(&[])?;
+    append(&w, "\n## Hypotheses\n\n- H1: supported\n")?;
+    append(&w, "\n## Checked againts\n\nfsync traces\n")?;
+    append(&w, "\n## Scope and limits\n\nOne host only.\n")?;
+    let message = refusal(&w)?;
+    assert!(
+        message.contains(
+            "concluding needs a ## Checked against section; did you mean \"## Checked against\"?"
+        ),
+        "{message}"
+    );
+    assert!(!message.contains("Scope and limits"), "{message}");
     Ok(())
 }

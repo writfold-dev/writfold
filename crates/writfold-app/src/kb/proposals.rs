@@ -16,7 +16,7 @@ pub const SWITCHES: [&str; 2] = ["tracked", "local"];
 pub fn allowed(verb: &str) -> &'static [&'static str] {
     match verb {
         "propose" => super::investigation::PROPOSE,
-        "lint" => &["repo", "deny-warnings"],
+        "lint" => &["repo", "deny-warnings", "records"],
         _ => &[],
     }
 }
@@ -59,6 +59,7 @@ pub fn verb(name: &str, common: &Common, positional: &[String]) -> Option<Result
                 paths: paths.iter().map(std::path::PathBuf::from).collect(),
                 repo: get(common, "repo").map(std::path::PathBuf::from),
                 deny_warnings: switch(common, "deny-warnings"),
+                records: switch(common, "records"),
             }));
         }
         ("check", []) => return Some(Ok(Verb::Check { scope: None })),

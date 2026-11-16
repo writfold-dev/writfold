@@ -104,6 +104,7 @@ fn parts(ws: &Workspace, request: &Request, scope: Option<&str>) -> Vec<Part> {
         paths: Vec::new(),
         repo: None,
         deny_warnings: false,
+        records: false,
     };
     parts.push(sub(request, "definitions", "writfold kb lint".into(), lint));
     parts.extend(guards(ws, request));

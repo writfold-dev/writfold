@@ -5,7 +5,7 @@ use crate::emit::Output;
 use serde_json::json;
 use writfold_core::diag::Report;
 
-pub fn output(all: &[File], report: Report, json: bool, deny: bool) -> Output {
+pub fn output(all: &[File], report: Report, json: bool, (deny, label): (bool, &str)) -> Output {
     let invalid: Vec<&str> = all
         .iter()
         .filter(|f| {
@@ -37,8 +37,12 @@ pub fn output(all: &[File], report: Report, json: bool, deny: bool) -> Output {
     let rows: Vec<serde_json::Value> = all
         .iter()
         .map(|f| {
-            let status = if invalid.contains(&f.shown.as_str()) { "invalid" } else { "clean" };
-            json!({"kind": "definition", "id": f.shown, "status": status, "text": "", "path": f.shown,
+            let status = if invalid.contains(&f.shown.as_str()) {
+                "invalid"
+            } else {
+                "clean"
+            };
+            json!({"kind": label, "id": f.shown, "status": status, "text": "", "path": f.shown,
                    "line": null, "flags": [], "more": [], "section": null})
         })
         .collect();
