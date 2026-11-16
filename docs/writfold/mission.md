@@ -171,6 +171,9 @@ Considered for this release and deferred, with the reason:
 3. One-typo tolerance in body text (today only IDs and titles).
 4. Semantic search, only if the evaluation shows misses of meaning that 1–3 do not fix. The shape: an opt-in tier labelled `matched_on: "semantic"`, never evidence and never on a hook path, with vectors in the rebuildable index keyed by chunk hash. An in-binary embedding (static embeddings such as model2vec, behind an off-by-default feature) is explored first as a spike ([semantic-search-spike.md](semantic-search-spike.md)); it is adopted only if it builds static, offline and within an agreed size, and improves hit@1/hit@5 measurably. New crates need an explicit owner exception.
 
+   **Spike result (16 November 2026): deferred.** An in-binary static-embedding tier (model2vec, potion-base-8M, behind an off-by-default feature, with its ordering and "never evidence" rules proved in Lean) builds static and offline and lifted hit@5 on meaning-only queries from 1/12 to 10/12 on a constructed 28-query set, with no change on naming gaps (already 8/8). Costs: the binary grows from 8.1 MB to 39.5 MB embedded (or 10 MB plus a 30 MB model asset), fixture lookups go from about 15 ms to 58–85 ms, and it adds 47 crates that the dependency checks reject. Revisit only after steps 1–3 and a query set built from real misses; the implementation is kept on branch `semantic-spike`.
+5. Measure lexical `find` latency on a 3,000-record KB with free-text queries: the spike measured 257–281 ms where the guide states under 50 ms (a different workload on a shared host). Either make it fast or correct the stated budget.
+
 ## Gates, runs and progress (owner decision, 12 November 2026)
 
 The owner proposed reusable gates, skills and delivery modes. After an independent review, the owner adopted a smaller version, built after M3, with Writfold's own push-to-main flow as its first user.
