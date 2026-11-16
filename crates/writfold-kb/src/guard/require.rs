@@ -69,7 +69,9 @@ struct GateLine {
 
 /// Every judged gate, the gates the run owes (`None`: every one), and
 /// the count of invalid filings and definitions.
-type Judged = (Vec<GateLine>, Option<Vec<String>>, usize);
+/// The gate lines, the gates the plan owes (`None` without a plan), the
+/// invalid filings, and the deliveries the plan owes (never counted here).
+type Judged = (Vec<GateLine>, Option<Vec<String>>, usize, Vec<(String, String)>);
 
 /// What every requirement is looked up in, gathered once.
 struct Facts {
@@ -266,7 +268,7 @@ fn judge(session: &Session<'_>, facts: &Facts) -> Result<Judged, String> {
         })
         .collect();
     let invalid = filings.invalid() + report.problems.len();
-    Ok((lines, owed.gates, invalid))
+    Ok((lines, owed.gates, invalid, owed.deliveries))
 }
 
 fn undefined(id: &str) -> String {
@@ -323,7 +325,7 @@ fn fact(facts: &Facts, require: &Require) -> Owed {
         Require::Gate(id) => match &facts.gates {
             None => Owed::unknown("the gates were not judged".into()),
             Some(Err(why)) => Owed::unknown(why.clone()),
-            Some(Ok((lines, _, _))) => match lines.iter().find(|g| &g.id == id) {
+            Some(Ok((lines, _, _, _))) => match lines.iter().find(|g| &g.id == id) {
                 Some(g) if g.met => Owed {
                     waived: g.waived.iter().cloned().collect(),
                     ..Owed::met()
@@ -338,7 +340,7 @@ fn fact(facts: &Facts, require: &Require) -> Owed {
 /// Every owed gate met, and no invalid receipt, statement or definition;
 /// a run that owes no gate here does not meet it ([`gates_fact`]).
 fn gates_met(facts: &Facts) -> Owed {
-    let (lines, owed, invalid) = match &facts.gates {
+    let (lines, owed, invalid, deliveries) = match &facts.gates {
         None => return Owed::unknown("the gates were not judged".into()),
         Some(Err(why)) => return Owed::unknown(why.clone()),
         Some(Ok(judged)) => judged,
@@ -362,7 +364,11 @@ fn gates_met(facts: &Facts) -> Owed {
     };
     let n = unmet.len();
     if count == 0 {
-        unmet.push(empty(facts, owed.is_some()));
+        unmet.push(super::empty::text(
+            &facts.subject,
+            owed.is_some(),
+            deliveries,
+        ));
     }
     if *invalid > 0 {
         unmet.push(format!(
@@ -381,20 +387,4 @@ fn gates_met(facts: &Facts) -> Owed {
         },
         _ => Owed::unmet(unmet.join("; ")),
     }
-}
-
-/// Why an empty set of owed gates is not met, and the way past.
-fn empty(facts: &Facts, planned: bool) -> String {
-    let why = match (planned, &facts.subject) {
-        (true, _) => "the run's plan names none".to_owned(),
-        (false, Ok(Some(s))) => format!("none is defined for {}", s.name),
-        (false, _) => "none is defined here".to_owned(),
-    };
-    let next = match planned {
-        true => "name a gate in a plan step",
-        false => "define .writfold/gates/<id>.toml",
-    };
-    format!(
-        "no gate is owed here: {why}; gates.met is not met by an empty set; next: {next}, or leave this repository out of the rule with repos"
-    )
 }

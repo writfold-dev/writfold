@@ -29,6 +29,9 @@ pub struct Owed {
     /// The run-record digest of the current step's window (the whole run
     /// without a plan); `None` when the records could not be read.
     pub records: Option<String>,
+    /// The deliveries the plan owes, `(deliver:<mode>, step path)`: judged
+    /// at their steps, never listed or counted as gates.
+    pub deliveries: Vec<(String, String)>,
 }
 
 /// A run's receipts, statements and assessed receipts, and what its plan
