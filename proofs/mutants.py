@@ -163,6 +163,56 @@ MUTANTS = (
            "Standing::Checked(State::Open | State::Stale | State::Failed | State::Unknown)",
            "Standing::Checked(State::Open | State::Failed | State::Unknown)",
            ("Writfold.Core.Gate.met_spec",)),
+    # about the present: the recorded definition must be the present one
+    Mutant("about-ignores-definition", "gate.rs",
+           "    crate::bytes::same(recorded_definition, definition)\n        && crate::bytes::same(recorded_content, content)",
+           "    crate::bytes::same(recorded_content, content)",
+           ("Writfold.Core.Gate.about_spec",)),
+    # a receipt under another definition is not the same definition
+    Mutant("evidence-ignores-definition", "gate.rs",
+           "        same_definition: crate::bytes::same(&receipt.definition, definition),",
+           "        same_definition: true,",
+           ("Writfold.Core.Gate.evidence_spec",)),
+    # a receipt about other bytes is not about the present content
+    Mutant("evidence-ignores-content", "gate.rs",
+           "        same_scope: !content.is_empty() && crate::bytes::same(&receipt.content, content),",
+           "        same_scope: !content.is_empty(),",
+           ("Writfold.Core.Gate.evidence_spec",)),
+    # empty present content (unreadable) is never the same content
+    Mutant("evidence-accepts-empty-content", "gate.rs",
+           "        same_scope: !content.is_empty() && crate::bytes::same(&receipt.content, content),",
+           "        same_scope: crate::bytes::same(&receipt.content, content),",
+           ("Writfold.Core.Gate.evidence_spec",)),
+    # every receipt is judged, the newest included
+    Mutant("judge-drops-newest", "gate.rs",
+           "    while index < receipts.len() {\n        all.push(",
+           "    while index + 1 < receipts.len() {\n        all.push(",
+           ("Writfold.Core.Gate.judge_loop_spec",)),
+    # an attestation is never a waiver, and a waiver never an attestation
+    Mutant("stands-ignores-kind", "gate.rs",
+           "    if said.attested != attested {",
+           "    if false {",
+           ("Writfold.Core.Gate.stands_spec",)),
+    # a waiver about other bytes does not stand
+    Mutant("statements-counts-moved-waiver", "gate.rs",
+           "        if stands(&said[index], false, definition, content) {",
+           "        if !said[index].attested {",
+           ("Writfold.Core.Gate.statements_loop_spec",)),
+    # a gate with no usable definition is never met
+    Mutant("advance-undefined-met", "plan.rs",
+           "        GateFact::Undefined => false,",
+           "        GateFact::Undefined => true,",
+           ("Writfold.Core.Plan.fact_met_spec",)),
+    # every gate of the step is judged, the last included
+    Mutant("met-all-drops-last", "plan.rs",
+           "    while index < gates.len() {\n        met.push(",
+           "    while index + 1 < gates.len() {\n        met.push(",
+           ("Writfold.Core.Plan.met_all_loop_spec",)),
+    # a step with no gates owes nothing
+    Mutant("advance-refuses-no-gates", "plan.rs",
+           "    advance_check(nodes, at, &met_all(gates))",
+           "    if gates.is_empty() {\n        return Err(Refusal::Owed(0));\n    }\n    advance_check(nodes, at, &met_all(gates))",
+           ("Writfold.Core.Plan.advance_facts_spec", "Writfold.Core.Plan.advance_facts_ok_iff")),
     # assessed gate: one ungrounded premise makes the basis hypothetical
     Mutant("basis-ignores-premises", "assess.rs",
            "        if matches!(premises[index], Grounding::Ungrounded) {",

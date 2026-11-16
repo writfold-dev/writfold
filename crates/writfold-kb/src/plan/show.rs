@@ -109,7 +109,8 @@ pub fn step_row(step: &Step, current: bool, gates: &[Gate], judged: bool) -> Row
             (true, false) => listed(&gates.iter().collect::<Vec<_>>()),
             _ => names,
         };
-        let met: Vec<bool> = gates.iter().map(Gate::met).collect();
+        let facts: Vec<_> = gates.iter().map(Gate::fact).collect();
+        let met = writfold_core::plan::met_all(&facts);
         let node = writfold_core::plan::Node {
             done: true,
             skipped: step.skipped.is_some(),

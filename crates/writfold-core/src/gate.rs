@@ -5,12 +5,15 @@
 //! definition and the receipts, recomputed on every read. Which paths a
 //! scope covers is [`crate::scope`].
 //!
-//! The decisions `outcome`, `state`, `standing` and `Standing::met` are in
-//! the Charon `start_from` list (named one by one, so the derived trait
+//! The decisions `outcome`, `about`, `evidence`, `judge`, `state`,
+//! `statements`, `standing` and `Standing::met` are in the Charon
+//! `start_from` list (named one by one, so the derived trait
 //! impls and the `name`/`parse` text conveniences are never translated);
 //! `proofs/Writfold/Gate.lean` proves them for every input
 //! (docs/writfold/aeneas.md). The property tests below state the same
 //! properties for small inputs.
+
+use alloc::vec::Vec;
 
 /// How one evaluation ended.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -129,6 +132,52 @@ pub fn state(receipts: &[Evidence]) -> (State, Option<usize>) {
     }
 }
 
+/// Whether a record (a receipt, a statement, a cover row) is about the
+/// present: its recorded definition digest and content digest are the
+/// present ones, byte for byte.
+pub fn about(
+    recorded_definition: &[u8],
+    recorded_content: &[u8],
+    definition: &[u8],
+    content: &[u8],
+) -> bool {
+    crate::bytes::same(recorded_definition, definition)
+        && crate::bytes::same(recorded_content, content)
+}
+
+/// One valid receipt with the digests it recorded (oldest first, as the
+/// caller orders them).
+pub struct Recorded {
+    pub outcome: Outcome,
+    /// The definition digest the receipt was made under.
+    pub definition: Vec<u8>,
+    /// The content digest (scope or run record) it was made about.
+    pub content: Vec<u8>,
+}
+
+/// A receipt compared with the present: the same definition, and the same
+/// content in scope. Empty present content (it could not be read) is
+/// never the same content.
+pub fn evidence(receipt: &Recorded, definition: &[u8], content: &[u8]) -> Evidence {
+    Evidence {
+        outcome: receipt.outcome,
+        same_definition: crate::bytes::same(&receipt.definition, definition),
+        same_scope: !content.is_empty() && crate::bytes::same(&receipt.content, content),
+    }
+}
+
+/// [`state`] of a gate's receipts, each compared with the present
+/// definition and content digests by [`evidence`].
+pub fn judge(receipts: &[Recorded], definition: &[u8], content: &[u8]) -> (State, Option<usize>) {
+    let mut all: Vec<Evidence> = Vec::new();
+    let mut index = 0;
+    while index < receipts.len() {
+        all.push(evidence(&receipts[index], definition, content));
+        index += 1;
+    }
+    state(&all)
+}
+
 /// What stands for an obligation once statements are counted: a checked
 /// state, or one of the two statement classes. A statement is never a
 /// passing check: `Attested` and `Waived` are their own standings, and no
@@ -171,6 +220,51 @@ pub struct Statements {
     pub attested_any: bool,
     /// A waiver about the current subject exists.
     pub waived_current: bool,
+}
+
+/// One recorded statement: an attestation (`attested`) or a waiver, with
+/// the digests it was made about.
+pub struct Said {
+    pub attested: bool,
+    pub definition: Vec<u8>,
+    pub content: Vec<u8>,
+}
+
+/// Whether `said` is an attestation (`attested`) or a waiver (not
+/// `attested`) [`about`] the present definition and content. Its own
+/// function so the loop in [`statements`] stays flat for the translation.
+pub fn stands(said: &Said, attested: bool, definition: &[u8], content: &[u8]) -> bool {
+    if said.attested != attested {
+        return false;
+    }
+    about(&said.definition, &said.content, definition, content)
+}
+
+/// The statements of one obligation compared with the present: an
+/// attestation or a waiver stands only when it is [`about`] the present
+/// definition and content; `attested_any` counts every attestation.
+pub fn statements(said: &[Said], definition: &[u8], content: &[u8]) -> Statements {
+    let mut attested_current = false;
+    let mut attested_any = false;
+    let mut waived_current = false;
+    let mut index = 0;
+    while index < said.len() {
+        if said[index].attested {
+            attested_any = true;
+        }
+        if stands(&said[index], true, definition, content) {
+            attested_current = true;
+        }
+        if stands(&said[index], false, definition, content) {
+            waived_current = true;
+        }
+        index += 1;
+    }
+    Statements {
+        attested_current,
+        attested_any,
+        waived_current,
+    }
 }
 
 /// The standing of one obligation. An `attested_class` obligation has no

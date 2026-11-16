@@ -1,8 +1,9 @@
 //! Obligation state, derived on every read from the definitions, the run's
 //! receipts and its statements (never stored): `open`, `satisfied`,
 //! `stale`, `failed`, `unknown`, and the two statement standings
-//! `attested` and `waived`. The comparisons are the kernel's
-//! [`writfold_core::gate::state`] and [`writfold_core::gate::standing`];
+//! `attested` and `waived`. The digest comparisons and the decisions are
+//! the kernel's ([`writfold_core::gate::judge`],
+//! [`writfold_core::gate::statements`], [`writfold_core::gate::standing`]);
 //! this module gathers the facts and renders rows for `gate status`,
 //! `gate lines` and `resume`.
 use super::def::{self, Definition, Origin};
@@ -13,7 +14,7 @@ use crate::emit::{More, Row};
 use crate::error::{KbError, Result};
 use crate::session::Session;
 use std::path::Path;
-use writfold_core::gate::{Evidence, Standing, State, standing, state};
+use writfold_core::gate::{Recorded, Standing, State, judge as judge_receipts, standing};
 use writfold_core::scope::in_scope;
 use writfold_runtime::git::GitExecutable;
 
@@ -219,15 +220,15 @@ pub fn judge_gate<'a>(
         .filter(|(_, r)| r.gate == definition.id)
         .copied()
         .collect();
-    let evidence: Vec<Evidence> = mine
+    let recorded: Vec<Recorded> = mine
         .iter()
-        .map(|(_, r)| Evidence {
+        .map(|(_, r)| Recorded {
             outcome: r.outcome,
-            same_definition: r.definition == definition.digest,
-            same_scope: !content.is_empty() && r.scope == content,
+            definition: r.definition.as_bytes().to_vec(),
+            content: r.scope.as_bytes().to_vec(),
         })
         .collect();
-    let (state, at) = state(&evidence);
+    let (state, at) = judge_receipts(&recorded, definition.digest.as_bytes(), content.as_bytes());
     let receipt = at.and_then(|i| mine.get(i).copied());
     let statements = statement::summary(
         &filings.statements,

@@ -14,7 +14,7 @@ use crate::session::Session;
 use crate::workspace::{GitTool, Workspace};
 use crate::write::{Op, atomic};
 use crate::{runs, time};
-use writfold_core::plan::{Refusal, advance_check};
+use writfold_core::plan::{GateFact, Refusal, advance as advance_kernel};
 
 pub(super) fn open_run(loaded: &Loaded, session: &Session<'_>) -> Result<()> {
     match runs::state(session, &loaded.rec) == "closed" {
@@ -83,8 +83,8 @@ pub(super) fn advance(
             .ok_or_else(|| KbError::Refused("no subject repository to judge the step's gates: run inside one, or pass --repo DIR".into()))?,
         _ => Vec::new(),
     };
-    let met: Vec<bool> = gates.iter().map(judge::Gate::met).collect();
-    let step = match (advance_check(&graph.nodes(), at, &met), step) {
+    let facts: Vec<GateFact> = gates.iter().map(judge::Gate::fact).collect();
+    let step = match (advance_kernel(&graph.nodes(), at, &facts), step) {
         (Ok(()), Some(step)) => step,
         (Err(Refusal::Owed(first)), Some(step)) => {
             let frame = crate::gate::frame(request, "plan-advance", vec![loaded.rec.id.clone()]);

@@ -16,7 +16,7 @@ use crate::error::{KbError, Result};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::path::Path;
-use writfold_core::gate::Statements;
+use writfold_core::gate::{Said, Statements, about, statements};
 
 pub const SCHEMA: &str = "writfold-statement/1";
 /// The directory, under a run or a candidate, that holds statements.
@@ -206,7 +206,24 @@ pub fn summary<'a>(
         .filter(|(_, s)| s.obligation == obligation && s.subject == subject)
         .collect();
     mine.sort_by(|a, b| (&a.1.recorded, &a.0.name).cmp(&(&b.1.recorded, &b.0.name)));
-    let current = |s: &Statement| s.definition == definition && s.content == content;
+    let (definition, content) = (definition.as_bytes(), content.as_bytes());
+    let said: Vec<Said> = mine
+        .iter()
+        .map(|(_, s)| Said {
+            attested: s.kind == Kind::Attested,
+            definition: s.definition.as_bytes().to_vec(),
+            content: s.content.as_bytes().to_vec(),
+        })
+        .collect();
+    // Which file stands is the newest one the kernel's `about` admits.
+    let current = |s: &Statement| {
+        about(
+            s.definition.as_bytes(),
+            s.content.as_bytes(),
+            definition,
+            content,
+        )
+    };
     let newest = |kind: Kind| {
         mine.iter()
             .rev()
@@ -216,11 +233,7 @@ pub fn summary<'a>(
     let attested = newest(Kind::Attested);
     let waived = newest(Kind::Waived);
     Summary {
-        statements: Statements {
-            attested_current: attested.is_some(),
-            attested_any: mine.iter().any(|(_, s)| s.kind == Kind::Attested),
-            waived_current: waived.is_some(),
-        },
+        statements: statements(&said, definition, content),
         attested,
         waived,
         waiver_moved: waived.is_none() && mine.iter().any(|(_, s)| s.kind == Kind::Waived),

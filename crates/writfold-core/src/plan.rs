@@ -14,6 +14,7 @@
 //! `splice_check` is idempotent on its key and bounded in depth. The
 //! exhaustive tests below state the same properties for small inputs.
 
+use crate::gate::Standing;
 use alloc::vec::Vec;
 
 /// One step of the folded list: whether a `done-` or a `skip-` record
@@ -100,6 +101,40 @@ pub fn advance_check(nodes: &[Node], at: usize, met: &[bool]) -> Result<(), Refu
         Some(gate) => Err(Refusal::Owed(gate)),
         None => Ok(()),
     }
+}
+
+/// One gate of a step as the caller found it: no usable definition, or
+/// the standing the gate kernel gives it.
+pub enum GateFact {
+    /// The gate has no usable definition: never met.
+    Undefined,
+    Stands(Standing),
+}
+
+/// Whether one gate is met: it stands, and its standing is met
+/// (satisfied, attested or waived).
+pub fn fact_met(fact: &GateFact) -> bool {
+    match fact {
+        GateFact::Undefined => false,
+        GateFact::Stands(standing) => standing.met(),
+    }
+}
+
+/// Each gate's [`fact_met`], in order.
+pub fn met_all(gates: &[GateFact]) -> Vec<bool> {
+    let mut met: Vec<bool> = Vec::new();
+    let mut index = 0;
+    while index < gates.len() {
+        met.push(fact_met(&gates[index]));
+        index += 1;
+    }
+    met
+}
+
+/// [`advance_check`] on the step's gates as found: an undefined gate is
+/// owed, and a step with no gates owes nothing.
+pub fn advance(nodes: &[Node], at: usize, gates: &[GateFact]) -> Result<(), Refusal> {
+    advance_check(nodes, at, &met_all(gates))
 }
 
 /// A done step whose gates no longer all hold: shown `!stale`. It stays
