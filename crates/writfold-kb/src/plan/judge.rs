@@ -95,6 +95,27 @@ fn undefined(id: &str) -> Gate {
     }
 }
 
+/// Why an owed gate has no usable definition, when its file has errors:
+/// `reason: <file> cannot be read: line 6: unknown key timout_seconds`.
+fn unreadable(problems: &[crate::gate::def::Unusable], id: &str) -> Option<crate::emit::More> {
+    let file = format!("{}/{id}.toml", crate::gate::def::DIR);
+    let (_, problem) = problems.iter().find(|(_, p)| p.path == file)?;
+    let first = problem.report.diagnostics.first()?;
+    let line = first.at.map(|a| a.line);
+    let at = line.map_or_else(String::new, |l| format!("line {l}: "));
+    Some(crate::emit::More {
+        label: "reason",
+        text: format!(
+            "{} cannot be read: {at}{}",
+            first.file,
+            first.message.replace('`', "")
+        ),
+        path: Some(first.file.clone()),
+        line,
+        ..crate::emit::More::default()
+    })
+}
+
 fn gate(j: &Judged<'_>, repo: &str, detail: bool) -> Gate {
     let (evidence, content) = evidence(j);
     let d = &j.definition;
@@ -186,7 +207,9 @@ fn judge_steps(
                 continue;
             }
             let Some(j) = report.gates.iter().find(|j| &j.definition.id == id) else {
-                gates.push(undefined(id));
+                let mut g = undefined(id);
+                g.items.extend(unreadable(&report.problems, id));
+                gates.push(g);
                 continue;
             };
             if !j.definition.run_record() {

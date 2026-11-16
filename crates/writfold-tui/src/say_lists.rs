@@ -97,18 +97,18 @@ pub fn guard_counts(answer: &Reply) -> Phrase {
         ("deny", "would block"),
         ("ask", "would ask first"),
         ("nudge", "would remind"),
-        ("invalid", "invalid"),
     ] {
         match answer.count(name) {
             Some(n) if n > 0 || name == "rules" => pieces.push(said(format!("{n} {word}"))),
             _ => {}
         }
     }
+    pieces.extend(crate::say_diag::count(answer));
     let tone = crate::guards::tone(answer);
     Phrase::new(0, tone, pieces)
 }
 
-pub fn guards(answer: &Reply) -> Told {
+pub fn guards(answer: &Reply, glyphs: crate::cells::Glyphs) -> Told {
     let mut told = Told::default();
     told.lines.push(guard_counts(answer));
     told.lines.push(Phrase::blank());
@@ -126,7 +126,11 @@ pub fn guards(answer: &Reply) -> Told {
         .max()
         .unwrap_or(0);
     let mut rows = Vec::new();
-    for row in &answer.rows {
+    for row in answer
+        .rows
+        .iter()
+        .filter(|r| field(r, "status") != "invalid")
+    {
         let id = format!("{:<w$}", field(row, "id"), w = id_width + 2);
         let mut pieces = vec![
             Piece::Quoted(id),
@@ -140,6 +144,8 @@ pub fn guards(answer: &Reply) -> Told {
     }
     align(&mut rows);
     told.lines.extend(rows);
+    told.lines.extend(crate::say_diag::entries(answer, glyphs));
+    told.lines.extend(crate::say_diag::blocks(answer));
     let sentence = "Judged for the current run as if each rule applied right now. A guard advises; it does not enforce, and nothing was run.";
     notes(
         &mut told,

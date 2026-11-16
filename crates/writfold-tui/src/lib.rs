@@ -52,6 +52,7 @@ pub mod rail;
 mod rail_text;
 mod run_item;
 pub mod say;
+pub mod say_diag;
 pub mod say_draw;
 pub mod say_gate;
 pub mod say_glossary;

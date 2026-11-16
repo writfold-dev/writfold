@@ -81,6 +81,11 @@ pub fn step_gates(row: &Value, glyphs: Glyphs) -> Told {
             told.lines
                 .push(Phrase::new(2, Tone::Dim, class_words(class)));
         }
+        let reasons = all[at + 1..]
+            .iter()
+            .take_while(|v| field(v, "label") == "reason");
+        told.lines
+            .extend(reasons.map(|v| Phrase::new(2, Tone::Bad, vec![said(field(v, "text"))])));
         let mut items: Vec<Phrase> = all[at + 1..]
             .iter()
             .take_while(|v| field(v, "label") == "item")
@@ -166,6 +171,7 @@ pub fn counts(answer: &Reply) -> Phrase {
     if let Some(n) = not_met(answer).filter(|n| *n > 0) {
         pieces.push(said(format!("{n} not met")));
     }
+    pieces.extend(crate::say_diag::count(answer));
     let tone = match not_met(answer) {
         Some(0) => Tone::Good,
         _ => badge_tone(answer),
@@ -194,6 +200,8 @@ pub fn view(answer: &Reply, glyphs: Glyphs) -> Told {
         .collect();
     align(&mut rows);
     told.lines.extend(rows);
+    told.lines.extend(crate::say_diag::entries(answer, glyphs));
+    told.lines.extend(crate::say_diag::blocks(answer));
     let standing = "Standings are worked out from the run's recorded results each time this view asks; nothing is run.";
     crate::say_row::notes(&mut told, answer, &[("receipts of run ", standing)]);
     told

@@ -184,4 +184,4 @@ pub fn digest(d: &Definition) -> String {
     )
 }
 
-pub use super::discover::{all, find, find_repository};
+pub use super::discover::{Unusable, all, find, find_repository};
