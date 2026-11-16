@@ -1,6 +1,6 @@
 # Is what I am reading still true?
 
-> **Status:** built in v0.3.0-dev.1; `kb check` built in v0.4.0-dev.1, with its plan line; kind declarations built in v0.5.0-dev.1; renames with edits followed in v0.5.0-dev.2; `kb repos` and partial-clone detection built in v0.5.0-dev.3. `find --eval`, the guard conformance cases and the re-check of a draft's cited evidence on every read built in v0.6.0-dev.1. `kb lint` and the `check definitions` row built in v0.6.0-dev.2.
+> **Status:** built in v0.3.0-dev.1; `kb check` built in v0.4.0-dev.1, with its plan line; kind declarations built in v0.5.0-dev.1; renames with edits followed in v0.5.0-dev.2; `kb repos` and partial-clone detection built in v0.5.0-dev.3. `find --eval`, the guard conformance cases and the re-check of a draft's cited evidence on every read built in v0.6.0-dev.1. `kb lint` (with `--records`) and the `check definitions` row built in v0.6.0-dev.2.
 
 Four things can drift: a cited source, the index, a gate's evidence, and a delivery draft. Each has its own command, and `kb check` runs the first three together. All of them only read; none fetches from a network.
 
@@ -165,7 +165,7 @@ The KB helps only when the first lookup hits. `writfold kb find --eval [FILE]` m
 
 ## The files you wrote: `kb lint`
 
-`kb lint [PATH…] [--repo DIR] [--deny-warnings] [--json]` reads every gate definition, guard rule, plan template and `required.toml` of the KB root and the repository in view, reports every fault of each file and the references between them, and exits 0 (no errors), 2 (an error, or a warning under `--deny-warnings`) or 1 (a usage or IO error). It reads files only, so it works before the first run and suits a pre-commit hook or CI. The output and the codes are on [errors](errors.md#kb-lint).
+`kb lint [PATH…] [--repo DIR] [--deny-warnings] [--json]` reads every gate definition, guard rule, plan template and `required.toml` of the KB root and the repository in view, reports every fault of each file and the references between them, and exits 0 (no errors), 2 (an error, or a warning under `--deny-warnings`) or 1 (a usage or IO error). It reads files only, so it works before the first run and suits a pre-commit hook or CI. It also reads delivery modes, deny lists, the delivery guard, kind declarations and `.writfold/queries.jsonl`; `kb lint --records` reads the records instead. The output and the codes are on [errors](errors.md#kb-lint).
 
 ## All at once: `kb check`
 

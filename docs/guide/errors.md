@@ -1,8 +1,8 @@
 # When a file you wrote is wrong
 
-> **Status:** built in v0.6.0-dev.2: diagnostics for gate definitions, guard rules, plan templates and `required.toml`, with every fault of a file reported together; `kb lint`; the `check definitions` row of `kb check`; the `diagnostics` key of `gate status`, `guard status` and `kb lint` in JSON; the hooks' compact lines. Planned: the same treatment for delivery modes, deny lists, `guard.toml` and kind declarations, for `.writfold/queries.jsonl` and `gate cover --from`, in `writfold watch`, for the sections `status --set concluded` requires, for records (`kb lint --records`), and for the user configuration file.
+> **Status:** built in v0.6.0-dev.2: diagnostics for every file a person writes (gate definitions, guard rules, plan templates and `required.toml`, delivery modes, deny lists and the delivery guard, kind declarations, `.writfold/queries.jsonl`, the rows of `gate cover --from`, the sections `status --set concluded` requires, records with `kb lint --records`, and the user configuration file), with every fault of a file reported together; `kb lint`; the `check definitions` row of `kb check`; the `diagnostics` key of `gate status`, `guard status` and `kb lint` in JSON; the hooks' compact lines; `writfold watch` in plain words.
 
-Writfold reads files that a person or an agent writes by hand: gate definitions, guard rules, plan templates and the required steps. When one is wrong, Writfold says where, what and, when it can, how to fix it, the way a compiler does for source code. Every fault of a file is reported at once, in file order.
+Writfold reads files that a person or an agent writes by hand: gate definitions, guard rules, plan templates and the required steps, delivery modes and deny lists, kind declarations, query and cover-row files, and the records themselves. When one is wrong, Writfold says where, what and, when it can, how to fix it, the way a compiler does for source code. Every fault of a file is reported at once, in file order.
 
 ## Reading a diagnostic
 
@@ -70,11 +70,13 @@ No key is reported missing in a file that had such a fault: the skipped line may
 
 | Command | What you see |
 |---|---|
-| a verb that needs the file (`gate run`, `gate attest`, `gate waive`, `gate cover`, `plan set`, `plan use`) | exit 3; on stderr each fault drawn as above, then the one line `writfold kb: refused: <file>: N errors` last, as before; stdout stays empty |
+| a verb that needs the file (`gate run`, `gate attest`, `gate waive`, `gate cover` and `gate cover --from`, `plan set`, `plan use`, `deliver prepare` and `deliver check`, `stale`, `checker list`, `find --eval`, `status --set concluded`) | exit 3; on stderr each fault drawn as above, then the one line `writfold kb: refused: <file>: N errors` last, as before; stdout stays empty |
 | `gate status`, `guard status` | the `[invalid]` row stays, its text the first fault, its source that fault's line, then `help:` and `next: writfold kb lint <path>`; stderr draws up to three faults; `--json` carries them all as `diagnostics` ([json](json.md#diagnostics)) |
 | `kb check` | a `check definitions` row carrying `kb lint`'s trailer, with `next: writfold kb lint` |
 | `kb lint` | every definition file, below |
 | the hooks | compact lines only ([hooks](hooks.md#definitions-with-errors)) |
+| `writfold watch` | plain words, below |
+| the user configuration (`$XDG_CONFIG_HOME/writfold/config.toml`) | a line that is not `key = "value"` is ignored and named once per process on stderr as a warning, never in a hook |
 
 Colour is used when the stream is a terminal, `NO_COLOR` is unset and `TERM` is not `dumb`; without it the text is the same, byte for byte, without the escape sequences. A source line is file content: every control character in it but tab is drawn as `\u{…}`, so a file cannot colour, clear or retitle a terminal.
 
@@ -84,7 +86,7 @@ Colour is used when the stream is a terminal, `NO_COLOR` is unset and `TERM` is 
 writfold kb lint [PATH…] [--repo DIR] [--deny-warnings] [--json]
 ```
 
-`kb lint` reads every gate definition, guard rule, plan template and `required.toml` under the KB root's `.writfold/` and, when a repository is given with `--repo` or holds the working directory, the repository's `.writfold/`. Then it checks the references between them: the gates, delivery modes and templates (`use=`) a plan step names, the templates `required.toml` names, a guard rule's `gate:<id>`, the same name in both roots, and `use=` cycles. With `PATH`, only those files are reported (their references are still resolved against the rest).
+`kb lint` reads every gate definition, guard rule, plan template and `required.toml` under the KB root's `.writfold/` (with the KB root's delivery files, kind declarations and `.writfold/queries.jsonl`, whose `expect` IDs need the index and stay with `find --eval`) and, when a repository is given with `--repo` or holds the working directory, the repository's `.writfold/`. Then it checks the references between them: the gates, delivery modes and templates (`use=`) a plan step names, the templates `required.toml` names, a guard rule's `gate:<id>`, the same name in both roots, and `use=` cycles. With `PATH`, only those files are reported (their references are still resolved against the rest).
 
 It reads files and nothing else: it runs no command, starts no checker, spawns no Git, opens no index and writes nothing, so it works before the first run and is fast enough for a pre-commit hook or CI.
 
@@ -162,6 +164,130 @@ A reference that may resolve elsewhere is a warning: a KB-root template or rule 
 
 `kb lint` never exits 3. `--json` gives the envelope with one row per file (`definition <path> [clean|invalid]`), the trailer's counts as fields, and `diagnostics`.
 
+## Other files you write
+
+Delivery modes, deny lists and the delivery guard, and kind declarations are read the same way:
+
+```text
+$ writfold kb plan set ship
+error[value.unknown]: paragraphs.bonded is not a built-in check; list a gate under gates
+ --> .writfold/deliveries/release-note.toml:3:11
+  |
+3 | checks = ["paragraphs.bonded"]
+  |           ^^^^^^^^^^^^^^^^^^^ not a built-in check
+  |
+  = help: did you mean "paragraphs.bounded"?
+
+error[ref.undefined]: unknown gate `reveiw`: define .writfold/gates/reveiw.toml in the KB root
+ --> .writfold/deliveries/release-note.toml:4:10
+  |
+4 | gates = ["reveiw"]
+  |          ^^^^^^^^ no such candidate gate
+
+2 errors in 1 file
+
+writfold kb: refused: .writfold/deliveries/release-note.toml: 2 errors
+```
+
+```text
+$ writfold kb deliver prepare --mode pr-comment --audience external --from draft.md
+error[value.pattern]: rule hosts: the pattern is not a regular expression
+ --> .writfold/deliveries/deny-external.toml:3:18
+  |
+3 | rules = ['hosts: (internal|corp\.example']
+  |                  ^^^^^^^^^^^^^^^^^^^^^^^ does not compile
+  |
+  = note: unclosed group
+
+writfold kb: refused: .writfold/deliveries/deny-external.toml: 1 error
+```
+
+The JSON-lines files (`.writfold/queries.jsonl` for `find --eval`, the rows of `gate cover --from`) are read one object per line; a line that is not JSON is reported at the parser's own column, and a key or value at its place in the line:
+
+```text
+$ writfold kb gate cover review --from rows.jsonl --by smoke
+error[value.unknown]: outcome "suported" is not supported, unsupported or not-applicable
+ --> --from rows.jsonl:1:28
+  |
+1 | {"item":"errors","outcome":"suported","refs":["gate:unit"]}
+  |                            ^^^^^^^^^^ not an outcome
+  |
+  = help: did you mean "supported"?
+
+writfold kb: refused: --from rows.jsonl: 1 error
+```
+
+`status <investigation> --set concluded` names each missing or empty section, at the heading that may be meant when one is close, and each hypothesis still open or without an outcome at its line:
+
+```text
+$ writfold kb status 2026/2026-06-01-flush-stalls-again --set concluded
+error[section.missing]: concluding needs a ## Checked against section
+ --> investigations/2026/2026-06-01-flush-stalls-again/README.md
+  |
+  = help: add a section: ## Checked against
+  = note: an investigation is concluded with ## Hypotheses, ## Checked against and ## Scope and
+          limits
+
+error[section.missing]: concluding needs a ## Scope and limits section
+ --> investigations/2026/2026-06-01-flush-stalls-again/README.md
+  |
+  = help: add a section: ## Scope and limits
+  = note: an investigation is concluded with ## Hypotheses, ## Checked against and ## Scope and
+          limits
+
+2 errors in 1 file
+
+writfold kb: refused: investigations/2026/2026-06-01-flush-stalls-again/README.md: 2 errors
+```
+
+## Records: `kb lint --records`
+
+`kb lint --records [PATH…]` reads every record of the KB instead of the definition files: a JSON record that is not JSON (at the parser's line and column), a front matter fence that is missing or never closed, a key given twice, a required key absent (`id` of a decision, `ticket` of a ticket), a citation token that does not read, and a token missing a field its kind declares (`required` in [the kind declaration](kb-layout.md)), with the written field it may mean. Exit codes are those of `kb lint`.
+
+```text
+$ writfold kb lint --records
+error[syntax.json]: this record is not JSON: expected `:`
+ --> inventory/assets/broken.json:2:10
+  |
+2 |   "name" "X"}
+  |          ^ here
+
+error[key.twice]: `status` is given twice
+ --> ktlo/2026/hbr-9-twice.md:4:1
+  |
+4 | status: done
+  | ^^^^^^ given again
+  |
+  = note: first given on line 3
+
+2 errors in 2 files
+
+# coverage=complete files=32 clean=30 invalid=2 errors=2 warnings=0
+```
+
+## In `writfold watch`
+
+The Gates and Guards views show a definition that does not parse in plain words: the invalid mark, the file's name and the first fault with its line; the counts say how many definitions have errors; a block below says what it means, where, the source line with its caret, the fault and its fix, how many more, and the code, dim, for searching. A plan step owing a gate whose definition stopped parsing shows that gate as not met, with the reason under it. Captured in a 150-column terminal (`NO_COLOR`, so the invalid mark is `#`):
+
+```text
+1 gate · 1 with nothing recorded yet · 1 invalid · 1 not met
+· 1 definition has errors
+
+o unit   nothing recorded yet · checked by a command
+# lint.toml   line 4: unknown class "mechancal"
+
+This gate definition cannot be read, so the gate cannot be
+run or met.
+
+.writfold/gates/lint.toml, line 4, column 9
+
+  4 | class = "mechancal"
+    |         ^^^^^^^^^^^
+
+Unknown class "mechancal". Did you mean "mechanical"?
+1 more error in this file. · value.unknown
+```
+
 ## Codes
 
 A code is `<class>.<what>`. Codes are never renamed or reused; the same code means the same thing in every kind of file.
@@ -193,4 +319,3 @@ A code is `<class>.<what>`. Codes are never renamed or reused; the same code mea
 | `section.missing` | a Markdown section a verb requires is absent or empty |
 | `section.form` | a line in a required section lacks its form |
 
-`syntax.json`, `value.pattern`, `section.missing` and `section.form` belong to files whose diagnostics are planned (above); they are listed so the set is complete.

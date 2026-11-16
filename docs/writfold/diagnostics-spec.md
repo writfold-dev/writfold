@@ -1,6 +1,6 @@
 # Diagnostics for the files a user writes
 
-> **Status:** steps 1–7 built in v0.6.0-dev.2 (the model and renderer, the reader with spans, gate definitions, guard rules and their surfaces, plan templates and references, `gate status` and JSON, `kb lint`); the guide page is [errors](../guide/errors.md). Steps 8–12 are not built and move to the next release whole. Measurements are of the v0.6.0-dev.1 release binary (commit `da63b1f`) on a scratch KB, 16 November 2026.
+> **Status:** built in v0.6.0-dev.2, steps 1–12; the guide page is [errors](../guide/errors.md). Measurements are of the v0.6.0-dev.1 release binary (commit `da63b1f`) on a scratch KB, 16 November 2026.
 
 Writfold reads a dozen kinds of file that a person or an agent writes by hand. When one is wrong, the answer today is one line, often without a line number, sometimes about the wrong field. This spec gives every such file the same treatment a compiler gives source code: the exact file, line and column, the source line with a caret under the fault, what is wrong in plain words, and help where a fix can be named ("did you mean `timeout_seconds`?"). All faults of a file are reported together.
 

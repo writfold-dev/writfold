@@ -16,7 +16,7 @@ These pages hold the full skeletons the website only sketches: file layouts, com
 | [watch](watch.md) | Recorded run progress in eight read-only views, and the knowledge base (decisions, status, tracker, impact, stale) as a second mode; layouts, controls, refresh and colour themes | built (T5) |
 | [skills](skills.md) | The bundled `writfold:kb` and `writfold:evaluate` skills, and skills that splice a plan template | built |
 | [hooks](hooks.md) | What each Claude Code hook reads, writes and prints | built |
-| [errors](errors.md) | When a file you wrote is wrong: reading a diagnostic, the codes, `kb lint`, what hooks show | built in v0.6.0-dev.2 (definitions; delivery and kind files planned) |
+| [errors](errors.md) | When a file you wrote is wrong: reading a diagnostic, the codes, `kb lint`, what hooks show | built in v0.6.0-dev.2 |
 | [json](json.md) | The `--json` envelope: keys, exit codes and the compatibility rule | built in v0.5.0-dev.1 |
 | [assurance](assurance.md) | What is proved, model-checked, tested and trusted | built; run-graph, gate and assess kernels proved |
 

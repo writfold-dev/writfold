@@ -1,6 +1,6 @@
 # Watching a run
 
-> **Status:** built (T6, built in v0.6.0-dev.1: plain words by default, the verbs' exact wording on `d`, commands to copy on `c`). Implementation, tests and deviations: [design §41](../writfold/kb-v1-design.md#41-t6-as-built-v060-dev1); the knowledge-base mode is recorded in [§37](../writfold/kb-v1-design.md#37-t5-as-built), the calm frame it replaced in [§36](../writfold/kb-v1-design.md#36-t4-as-built), the plan map in [§35](../writfold/kb-v1-design.md#35-t3-as-built) and the earlier text view in [§34](../writfold/kb-v1-design.md#34-t2-as-built).
+> **Status:** built (T6, built in v0.6.0-dev.1: plain words by default, the verbs' exact wording on `d`, commands to copy on `c`; a definition that does not parse shown in plain words, built in v0.6.0-dev.2, see [errors](errors.md#in-writfold-watch)). Implementation, tests and deviations: [design §41](../writfold/kb-v1-design.md#41-t6-as-built-v060-dev1); the knowledge-base mode is recorded in [§37](../writfold/kb-v1-design.md#37-t5-as-built), the calm frame it replaced in [§36](../writfold/kb-v1-design.md#36-t4-as-built), the plan map in [§35](../writfold/kb-v1-design.md#35-t3-as-built) and the earlier text view in [§34](../writfold/kb-v1-design.md#34-t2-as-built).
 
 `writfold watch` is a read-only view of the KB verbs. It shows recorded steps,
 gate standings, checklist items, pending drafts and proposals, guard rules and
