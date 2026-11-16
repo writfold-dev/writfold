@@ -1,14 +1,18 @@
 //! Writfold's pure decision kernels, shaped for the Charon/Aeneas translation.
 //!
-//! No IO, no floats, no `dyn`, no dependencies, `no_std` plus `alloc`. The
-//! `proofs` gate translates this crate to Lean 4 (`proofs/Extracted/`,
+//! No IO, no floats, no trait objects, no dependencies, `no_std` plus
+//! `alloc`. The `proofs` gate translates the functions named in
+//! `[package.metadata.charon] start_from` to Lean 4 (`proofs/Extracted/`,
 //! committed) and proves the kernel theorems over that translation
 //! (`proofs/Writfold/`). The theorems are about this code, not a hand-written
-//! Lean copy of it. Production crates call these functions.
+//! Lean copy of it. Production crates call these functions. Modules not in
+//! `start_from` (`scope`, `verdict`, `walk`, `command`, `find`, `idle`,
+//! `diag`, `decision`, `investigation`) are tested, not proved; the backlog
+//! is in docs/writfold/aeneas.md.
 //!
-//! Translation rules (recorded once, applied everywhere): owned data and no
-//! nested borrows; no derives in translated modules (equality a theorem
-//! depends on is an explicit `same` function); no integer casts; explicit
+//! Translation rules for the functions in `start_from`: owned data and no
+//! nested borrows; no derives reached (equality a theorem depends on is an
+//! explicit `same` function or `matches!`); no integer casts; explicit
 //! `while` loops instead of iterator adaptors.
 #![no_std]
 #![forbid(unsafe_code)]

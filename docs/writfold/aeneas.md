@@ -18,26 +18,55 @@ This complements, and does not replace, the existing layers:
 ## What is proved today
 
 `crates/writfold-core` (no dependencies, `no_std` + `alloc`) holds the KB's
-run-graph and gate kernels (below, since 13 November 2026) and the byte
-identities they share. Over its translation
-(`proofs/Extracted/WritfoldCore.lean`), `proofs/Writfold/` proves, as
-total-correctness Hoare triples (terminates, never fails, result as stated):
+decision kernels. Over the translation of the functions named in
+`[package.metadata.charon] start_from` (`proofs/Extracted/WritfoldCore.lean`),
+`proofs/Writfold/` proves, as total-correctness Hoare triples (terminates,
+never fails, result as stated):
 
-- `same_spec`, `same_option_spec`, `contains_digest_spec`: byte identities are
-  exact equality and digest lookup is membership.
-- The run graph, gate obligations and the assessed gate's basis (below).
+- `same_spec`: byte identity is exact equality (`Bytes.lean`). `same` is
+  reached in production through `plan::contains` and the digest comparisons
+  of `gate::about` and `gate::evidence`. (`same_option` and
+  `contains_digest`, left from archived kernels with no caller, were
+  deleted on 16 November 2026.)
+- The run graph, gate obligations and the assessed gate's basis (13 November
+  2026, below).
+- The proof backfill's first round (16 November 2026, below): the digest
+  comparisons that make a record about the present and the advance on the
+  gates as found (`Current.lean`), checklist gates (`Checklist.lean`),
+  deliveries and the delivery guard (`Delivery.lean`), guard rules and their
+  requirements' facts (`Guard.lean`), and what grounds evidence
+  (`Ground.lean`).
 
-The gate (`docker compose -f compose.proofs.yaml run --build --rm proofs`)
-regenerates the translation and refuses drift from the committed copy, builds
-the proofs, audits every theorem's axioms (only `propext`,
-`Classical.choice`, `Quot.sound`; the thirty-three headline claims must exist)
-and calibrates twenty semantic mutants of the Rust source, each of which must
-break exactly its named theorem. Warm run: about four and a half minutes (16
-November 2026), almost all of it mutant calibration.
+The gate (`docker compose -f compose.proofs.yaml run --build --rm proofs`,
+or the `docker run` form below) regenerates the translation and refuses
+drift from the committed copy, builds the proofs, audits every theorem's
+axioms (only `propext`, `Classical.choice`, `Quot.sound`; the required
+claims in `proofs/Audit.lean` must exist, and every theorem a mutant names
+must be one of them) and calibrates the semantic mutants in
+`proofs/mutants.py`, each of which must break exactly its named theorem.
 
-The ledger, grant-authority, trial and edit-flow kernels of the earlier edit
-trial were proved here too until 16 November 2026; they moved to the private
-archive with the trial flow.
+### Running the gate without a Compose network
+
+`docker compose run` creates a project network; on a host short of networks,
+build the image and run it with `--network none` (the image copies the
+sources in at build time, so rebuild after every Rust or Lean edit):
+
+```sh
+docker build -f proofs/Dockerfile --target gate -t writfold-proofs:gate .
+docker run --rm --network none writfold-proofs:gate            # the whole gate
+# refresh proofs/Extracted (what proofs/refresh.sh does through Compose)
+docker run --rm --network none writfold-proofs:gate \
+  sh -c 'sh proofs/extract.sh crates/writfold-core /tmp/fresh >&2 && tar -C /tmp/fresh -cf - .' > /tmp/fresh.tar
+rm -rf proofs/Extracted && mkdir -p proofs/Extracted && tar -C proofs/Extracted -xf /tmp/fresh.tar
+# while iterating: one module, or named mutants
+docker run --rm --network none writfold-proofs:gate sh -c 'cd proofs && lake build Writfold.Guard'
+docker run --rm --network none writfold-proofs:gate python3 proofs/mutants.py guard-known-any-ready
+```
+
+To iterate without rebuilding, keep one container from the image and
+`docker cp` the changed files into `/work`; do not bind-mount over
+`/work/proofs`, which hides the prebuilt `.lake`. Run `cargo fmt` before
+refreshing: the translation records line numbers.
 
 ### The run graph and gate kernels (13 November 2026)
 
@@ -61,12 +90,20 @@ Run graph (`proofs/Writfold/Plan.lean`, the caller's folded list of steps):
   `Complete` exactly when there is no current step; then `NotCurrent(now)`
   naming the current step when it is not the one asked; then `Owed(g)` naming
   the first gate not met. `advance_ok_iff`: admitted exactly when the step is
-  current and every gate is met.
-- `stale_spec`: `stale` is a done step with a gate not met.
-  `stale_never_current`: a stale step is never the current step (`current`
-  reads only `done`/`skipped`, never a gate), so `!stale` never moves the
-  current step back.
-- `splice_spec`: `splice(nodes, at, count)` is
+  current and every gate is met. As wired, `plan advance` asks about the step
+  `current` returns, so the `NotCurrent` branch does not occur there and what
+  decides is the `met` vector; since 16 November 2026 that vector is built in
+  the kernel from the gates as found (`plan::advance`, below).
+- `stale_spec`: `stale` is a done step with a gate not met. That `!stale`
+  never moves the current step back follows from `stale_spec` and
+  `current_spec` (`current` reads only `done`/`skipped`, never a gate);
+  `stale_never_current` states it, and is kept as a lemma, not a required
+  claim, because it would hold of any `stale` that implies `done`.
+- The splice model. `plan use` does not call `plan::splice`: it places the
+  new steps in the fold (`writfold-kb` `plan/fold.rs`), and a test compares
+  the fold with `splice` step for step. So the theorems below are about the
+  model the fold is tested against, not about the product's placement.
+  `splice_spec`: `splice(nodes, at, count)` is
   `take at ++ count open steps ++ drop at` (for lists whose new length fits in
   `usize`; `Vec::push` fails past that in the model).
   `splice_keeps_existing`: removing the inserted block gives back the list, so
@@ -118,15 +155,8 @@ Assessed gate (`proofs/Writfold/Assess.lean`):
   `hypothetical_never_passes`: a hypothetical entailment is never a pass, so
   an assessed gate's state is never `satisfied` from one.
 
-Nineteen mutants calibrate them (the twentieth drops the last byte from `same`): `closed` ignoring `skipped`; `advance_check`
-without the current-step check or ignoring gates; `stale` ignoring `done`;
-`splice` inserting after the current step, inserting done steps or dropping the
-last step; `splice_check` without the key check or with the depth bound off by
-one; `outcome` ignoring a moved subject or passing any exit status; `state`
-ignoring the scope digest; a waiver or an attestation standing as satisfied;
-`met` counting a stale obligation; `basis` ignoring premises; `met` accepting a
-hypothetical basis; `outcome` passing an unfinished check; `assumption`
-reporting grounded when a citation is only attested.
+The mutants that calibrate them are listed with every other in "The claims
+and their mutants" below.
 
 Two small rewrites made these translatable without changing behaviour (the
 kernel's and `writfold-kb`'s tests are unchanged and pass): equality on derived
@@ -136,22 +166,217 @@ enums in `standing`, `basis` and `met` is written `matches!`, and
 `bytes::same`; `plan::contains` now calls `bytes::same`, so `same_spec`
 covers it.
 
+### The proof backfill, first round (16 November 2026)
+
+[`proof-backfill-spec.md`](proof-backfill-spec.md) measured the distance to
+"every product decision is proved" and ordered the work by risk; its steps
+0 to 5 are built. Each moved a decision out of `writfold-kb` into a kernel
+function named in `start_from`, with `writfold-kb` calling it and its tests
+and golden files unchanged (one exception, below).
+
+About the current subject (`proofs/Writfold/Current.lean`). Before, the gate
+kernels received two booleans (`same_definition`, `same_scope`) computed in
+`writfold-kb`; now they receive the recorded and present digests.
+
+- `about_spec`: a record is about the present exactly when its recorded
+  definition and content digests equal the present ones.
+- `evidence_spec`, `judge_spec`: `gate::judge` is `state` over each receipt
+  compared by `evidence`, where the content is the same only when the present
+  content is not empty. `judge_satisfied_iff`: `satisfied` exactly when the
+  newest receipt about the present definition and non-empty content passed.
+  `judge_other_bytes`, `judge_empty_content`: receipts about other bytes, or
+  unreadable present content, never satisfy.
+- `stands_spec`, `statements_spec`: an attestation or a waiver stands
+  exactly when one is about the present; `attested_any` counts every
+  attestation.
+- `met_only_when_current`: whatever receipts and statements exist, an
+  obligation's standing is met only on a passing newest receipt about the
+  present digests (checked class), an attestation about them (attested
+  class), or a waiver about them.
+- `fact_met_spec`, `met_all_spec`, `advance_facts_spec`: `plan::advance` is
+  `advance_check` on each gate's `fact_met`, where a gate with no usable
+  definition (`GateFact::Undefined`) is never met.
+  `advance_facts_ok_iff`: admitted exactly when the step is current and
+  every gate it names stands met; `advance_undefined_refused`.
+- `done_only_when_met`: the assurance sentence end to end. Given that each
+  standing gate's standing is the kernels' (`judge`, `statements`,
+  `standing`) on its receipts, statements and present digests, an admitted
+  advance means every gate of the step stands on evidence about the present
+  digests, as in `met_only_when_current`.
+
+Checklist gates (`proofs/Writfold/Checklist.lean`): `item_spec`,
+`item_covered_iff` (covered exactly when the newest row is current and
+supported by at least one grounded reference, or not applicable),
+`rollup_spec`, `rollup_covered_iff` (covered exactly when every required
+item is), `rollup_optional_irrelevant` (two checklists that agree on which
+items are required and on those items roll up alike), `standing_spec`,
+`standing_attested_iff` (attested exactly when covered),
+`standing_never_satisfied`, `standing_met_iff` and `checklist_met_iff` (met
+exactly when covered or a current waiver stands). The mapping onto the
+gate kernel that `writfold-kb` used to write by hand is now
+`checklist::standing`; a cover row's currency is `gate::about`.
+
+Deliveries (`proofs/Writfold/Delivery.lean`): `deciding_spec` (the newest
+unbound candidate decides), `standing_spec`, `standing_met_iff` (met exactly
+when there is at least one obligation and each is met),
+`standing_satisfied_iff`, `standing_first_unmet`, `ready_iff`,
+`empty_never_ready`, `rechecked_spec` (a passed check whose cited evidence
+moved is stale) and `guard_allow_iff` (the delivery guard: known bytes pass
+only when a ready candidate holds them; unknown bytes only when there is a
+candidate and all are ready).
+
+Guard rules (`proofs/Writfold/Guard.lean`): `all_met_spec`, `decide_spec`,
+`decide_pass_iff`, `unknown_never_passes`; `combine_spec`,
+`combine_deny_iff`, `combine_pass_iff` with the model lemmas
+`combineOf_comm`, `combineOf_assoc`, `combineOf_pass_left`; `effect_spec`,
+`effect_audit_passes`, `effect_enforce`; `decide_all_pass_iff` (a call passes
+exactly when every enforcing rule's requirements are met) and
+`decide_all_deny_iff`; `logged_iff`; `gates_fact_met_iff`,
+`gates_fact_never_unknown`; the requirements' facts `run_current_met_iff`,
+`step_fact_met_iff`, `step_fact_unknown_iff`, `gate_fact_met_iff`,
+`gate_fact_unknown_iff`, `gates_read_met_iff`; `nudge_spec`,
+`nudge_with_iff`. `step_fact_met_iff` writes down an asymmetry that is
+intended and now stated: `step.met` holds for a run with no plan, while
+`gates.met` does not hold for a run that owes no gate.
+
+What grounds evidence (`proofs/Writfold/Ground.lean`): `of_gate_spec`,
+`of_gate_grounded_iff`, `of_gate_attested_iff`, `waiver_never_grounds` (a
+gate that stands on a waiver grounds nothing), `of_receipt_grounded_iff` and
+`of_receipt_never_attested`, `of_citations_grounded_iff`,
+`of_token_grounded_iff`, `of_observation_grounded_iff`, `grounds_iff`,
+`embeds_iff`, `of_statement_spec`, `moved_iff`. The standing words a
+reference records stay in `writfold-kb`.
+
+Reshapes, each with behaviour and tests unchanged: derived `==` and `!=` on
+enums in `guard` are `matches!`; `combine`'s tuple match is two flat tests;
+loops that update several accumulators call one small function per test
+(`gate::stands`, `checklist::owes` and `stale`, `delivery::unmet`,
+`is_waived`, `is_attested`, `guard::met`), because Aeneas could not join a
+loop body whose nested `if`s update different variables; `checklist::rollup`
+takes `&[Entry]` instead of a tuple slice; `delivery::standing` is a `while`
+loop; the guard's call-level decisions are `guard::call` and the
+requirements' facts `guard::require`.
+
+### The claims and their mutants
+
+<!-- generated from proofs/mutants.py -->
+
+86 mutants (20 before 16 November 2026). Each must break exactly the theorems named.
+
+| Mutant | File | What it breaks | Must break |
+|---|---|---|---|
+| `same-ignores-last-byte` | `bytes.rs` | identity is byte-exact: ignoring the last byte is a different identity | `same_loop_spec` |
+| `closed-ignores-skip` | `plan.rs` | run graph: a skipped step is closed, so it is never current | `Plan.closed_spec` |
+| `current-returns-last` | `plan.rs` | run graph: the current step is the least open one, not the last step | `Plan.current_loop_spec` |
+| `first-owed-inverted` | `plan.rs` | run graph: the first owed gate is the first one not met | `Plan.first_owed_loop_spec` |
+| `advance-without-current-check` | `plan.rs` | run graph: only the current step may be recorded as done | `Plan.advance_check_spec` |
+| `advance-ignores-gates` | `plan.rs` | run graph: every gate of the step must be met | `Plan.advance_check_spec` |
+| `stale-ignores-done` | `plan.rs` | run graph: a stale step is a done step with an owed gate | `Plan.stale_spec` |
+| `splice-inserts-after-current` | `plan.rs` | splice: the new steps go before the current step, not after it | `Plan.splice_loop0_spec` |
+| `splice-new-steps-done` | `plan.rs` | splice: the new steps are open | `Plan.splice_loop1_spec` |
+| `splice-drops-last-step` | `plan.rs` | splice: every existing step is kept, the last one included | `Plan.splice_loop2_spec` |
+| `splice-ignores-key` | `plan.rs` | splice: idempotent on the template key | `Plan.splice_check_spec` |
+| `splice-depth-off-by-one` | `plan.rs` | splice: depth is bounded by MAX_DEPTH | `Plan.splice_check_spec` |
+| `contains-misses-last` | `plan.rs` | splice: the last key spliced counts too | `Plan.contains_loop_spec` |
+| `splice-check-refuses-empty` | `plan.rs` | splice: an empty plan takes a root splice at 0 | `Plan.splice_check_spec` |
+| `splice-check-admits-complete` | `plan.rs` | splice: a complete plan has no current step to splice under | `Plan.splice_check_spec` |
+| `outcome-ignores-moved` | `gate.rs` | gate: a subject that moved while the command ran is never a pass | `Gate.outcome_spec` |
+| `outcome-any-exit-passes` | `gate.rs` | gate: only exit status 0 passes | `Gate.outcome_spec` |
+| `outcome-nonzero-unknown` | `gate.rs` | gate: another exit status is a failure, not unknown | `Gate.outcome_spec` |
+| `state-ignores-scope` | `gate.rs` | gate: a receipt about other bytes in scope never decides the state | `Gate.state_loop_spec` |
+| `state-ignores-definition` | `gate.rs` | gate: a receipt about another definition never decides the state | `Gate.state_loop_spec` |
+| `state-oldest-first` | `gate.rs` | gate: the newest receipt about the current subject decides, not the oldest | `Gate.state_loop_spec`, `Gate.state_spec` |
+| `state-failed-satisfies` | `gate.rs` | gate: a failed receipt is a failure | `Gate.state_loop_spec` |
+| `attested-class-stands-on-check` | `gate.rs` | gate: an attested-class obligation has no checked state to stand on | `Gate.standing_spec` |
+| `waiver-satisfies` | `gate.rs` | gate: a waiver is never a passing check | `Gate.standing_spec` |
+| `attestation-satisfies` | `gate.rs` | gate: an attestation is never a passing check | `Gate.standing_spec` |
+| `met-counts-stale` | `gate.rs` | gate: a stale obligation is owed | `Gate.met_spec` |
+| `about-ignores-definition` | `gate.rs` | about the present: the recorded definition must be the present one | `Gate.about_spec` |
+| `evidence-ignores-definition` | `gate.rs` | a receipt under another definition is not the same definition | `Gate.evidence_spec` |
+| `evidence-ignores-content` | `gate.rs` | a receipt about other bytes is not about the present content | `Gate.evidence_spec` |
+| `evidence-accepts-empty-content` | `gate.rs` | empty present content (unreadable) is never the same content | `Gate.evidence_spec` |
+| `judge-drops-newest` | `gate.rs` | every receipt is judged, the newest included | `,
+           (` |
+| `stands-ignores-kind` | `gate.rs` | an attestation is never a waiver, and a waiver never an attestation | `Gate.stands_spec` |
+| `statements-counts-moved-waiver` | `gate.rs` | a waiver about other bytes does not stand | `Gate.statements_loop_spec` |
+| `advance-undefined-met` | `plan.rs` | a gate with no usable definition is never met | `Plan.fact_met_spec` |
+| `met-all-drops-last` | `plan.rs` | every gate of the step is judged, the last included | `,
+           (` |
+| `advance-refuses-no-gates` | `plan.rs` | a step with no gates owes nothing | `Plan.advance_facts_spec`, `Plan.advance_facts_ok_iff` |
+| `item-accepts-no-evidence` | `checklist.rs` | checklist: a supported row covers only when it cites something | `Checklist.item_spec` |
+| `item-accepts-ungrounded` | `checklist.rs` | checklist: a supported row covers only while its evidence is grounded | `Checklist.item_spec` |
+| `item-accepts-not-current` | `checklist.rs` | checklist: a row about other content or another definition is stale | `Checklist.item_spec` |
+| `covered-counts-unsupported` | `checklist.rs` | checklist: an unsupported item is not covered | `Checklist.covered_spec` |
+| `rollup-ignores-required` | `checklist.rs` | checklist: only required items are owed | `Checklist.owes_spec` |
+| `first-owed-skips-last` | `checklist.rs` | checklist: every entry is looked at, the last included | `,
+           (` |
+| `stale-ignores-required` | `checklist.rs` | checklist: an optional stale item does not make the checklist stale | `Checklist.stale_spec` |
+| `checklist-attested-when-stale` | `checklist.rs` | checklist: a stale checklist is not attested | `Checklist.standing_spec` |
+| `delivery-empty-met` | `delivery.rs` | delivery: an empty set of obligations is not met | `Delivery.standing_spec` |
+| `delivery-waived-satisfied` | `delivery.rs` | delivery: a waived obligation is never read as a passing check | `Delivery.standing_loop_spec` |
+| `delivery-unmet-ignored` | `delivery.rs` | delivery: an unmet obligation stops the delivery | `Delivery.unmet_spec` |
+| `deciding-ignores-bound` | `delivery.rs` | delivery: a bound candidate never decides an open step | `Delivery.deciding_loop_spec`, `Delivery.deciding_spec` |
+| `deciding-first-unbound` | `delivery.rs` | delivery: the newest unbound candidate decides, not the oldest | `Delivery.deciding_loop_spec`, `Delivery.deciding_spec` |
+| `ready-accepts-empty` | `delivery.rs` | delivery: a mode that declares nothing is never ready | `Delivery.ready_iff` |
+| `rechecked-keeps-satisfied` | `delivery.rs` | delivery: a passed check whose cited evidence moved is stale | `Delivery.rechecked_spec` |
+| `guard-allows-no-candidate` | `delivery.rs` | delivery guard: unknown bytes need at least one candidate | `Delivery.guard_allow_iff` |
+| `guard-known-any-ready` | `delivery.rs` | delivery guard: known bytes pass only when a ready candidate holds them | `Delivery.guard_allow_iff` |
+| `all-met-accepts-unknown` | `guard.rs` | guard: an unknown fact is never met | `Guard.met_spec` |
+| `all-met-skips-last` | `guard.rs` | guard: every requirement is looked at, the last included | `,
+           (` |
+| `decide-ignores-facts` | `guard.rs` | guard: a matched rule passes only when every requirement is met | `Guard.decide_spec` |
+| `verdict-deny-asks` | `guard.rs` | guard: a deny rule denies | `Guard.verdict_spec` |
+| `combine-ask-over-deny` | `guard.rs` | guard: a denial wins over a question | `Guard.combine_spec` |
+| `effect-enforces-audit` | `guard.rs` | guard: an audit rule never decides the call | `Guard.effect_spec` |
+| `gates-fact-met-on-nothing` | `guard.rs` | guard: gates.met is not met by an empty set | `Guard.gates_fact_met_iff` |
+| `gates-fact-ignores-invalid` | `guard.rs` | guard: an invalid receipt or definition keeps gates.met unmet | `Guard.gates_fact_met_iff` |
+| `nudge-while-active` | `guard.rs` | guard: the Stop nudge never fires while a stop hook is continuing | `Guard.nudge_spec` |
+| `nudge-with-ignores-repeat` | `guard.rs` | guard: a turn rule is not held back by the session flag | `Guard.nudge_with_iff` |
+| `decide-all-drops-last` | `guard/call.rs` | guard: every matched rule counts, the last included | `Guard.decide_all_loop_spec` |
+| `logged-drops-waiver` | `guard/call.rs` | guard: a pass on a waiver is logged | `Guard.logged_iff` |
+| `run-current-closed` | `guard/require.rs` | guard: run.current needs an open run | `Guard.run_current_met_iff` |
+| `step-fact-met-unread` | `guard/require.rs` | guard: step.met is never met when the plan could not be read | `Guard.step_fact_met_iff`, `Guard.step_fact_unknown_iff` |
+| `gate-fact-undefined-met` | `guard/require.rs` | guard: an undefined gate is never met | `Guard.gate_fact_met_iff` |
+| `gates-read-unread-counts` | `guard/require.rs` | guard: gates that could not be judged are unknown | `Guard.gates_read_met_iff` |
+| `waiver-grounds` | `ground.rs` | grounding: a waiver is never evidence | `Ground.of_gate_spec` |
+| `of-gate-ignores-found` | `ground.rs` | grounding: a reference to no gate grounds nothing | `Ground.of_gate_spec` |
+| `receipt-ignores-content` | `ground.rs` | grounding: a receipt about other content does not ground | `Ground.of_receipt_grounded_iff` |
+| `receipt-ignores-gate-met` | `ground.rs` | grounding: a receipt grounds only while its gate stands met | `Ground.of_receipt_grounded_iff` |
+| `citations-zero-grounds` | `ground.rs` | grounding: a retrieval with no citation grounds nothing | `Ground.of_citations_grounded_iff` |
+| `token-many-grounds` | `ground.rs` | grounding: a token grounds only as exactly one citation | `Ground.of_token_grounded_iff` |
+| `observation-no-citation-grounds` | `ground.rs` | grounding: an observation with no citation grounds nothing | `Ground.of_observation_grounded_iff` |
+| `statement-not-current-attested` | `ground.rs` | grounding: only the current attestation is attested | `Ground.of_statement_spec` |
+| `moved-ignores-word` | `ground.rs` | grounding: a changed standing word is a moved reference | `Ground.moved_iff` |
+| `observation-partial-grounds` | `observe.rs` | observations: a partial look never grounds | `Ground.grounds_iff` |
+| `embeds-drops-partial` | `observe.rs` | observations: a partial look embeds its citation | `Ground.embeds_iff` |
+| `basis-ignores-premises` | `assess.rs` | assessed gate: one ungrounded premise makes the basis hypothetical | `Assess.basis_loop_spec` |
+| `met-accepts-hypothetical` | `assess.rs` | assessed gate: a hypothetical entailment never meets the gate | `Assess.met_spec` |
+| `outcome-passes-unfinished` | `assess.rs` | assessed gate: a check Weft could not finish is unknown, never a pass | `Assess.outcome_loop_spec` |
+| `assessed-empty-passes` | `assess.rs` | assessed gate: nothing required is unknown, never a pass | `Assess.outcome_spec` |
+| `assessed-incomplete-passes` | `assess.rs` | assessed gate: an incomplete run is unknown, never a pass | `Assess.outcome_spec` |
+| `assumption-ignores-attested` | `assess.rs` | assessed gate: an attested citation makes the assumption attested | `Assess.assumption_loop_spec` |
+
+<!-- end generated -->
+
 What these proofs do not cover: the fold from event files to the list of
-steps, template and definition parsing, digests, Git and file reads, the
-write protocol (`spec/KbWrite.tla` and the kill tests), scope globs
-(`writfold_core::scope`), citation verdicts (`verdict`) and the bounded walk
-(`walk`). Those are tested. The adapters in `writfold-kb` that turn files into
-kernel inputs (which receipts are valid, which digests match, which gates a
-step names, the ordering by `seq` and file name) are tested, not proved; the
-proofs take their output as given.
+steps (and with it where a splice is placed), skipping and the end guard,
+template and definition parsing, digests, Git and file reads, the write
+protocol (`spec/KbWrite.tla` and the kill tests), scope globs
+(`writfold_core::scope`), citation verdicts (`verdict`), decision states and
+investigations, the command reader, `find`, `idle`, `diag` and the bounded
+walk (`walk`). Those are tested. The adapters in `writfold-kb` that read
+files into kernel inputs (which receipts and statements are valid and in
+this run, their order by `seq` and file name or by recorded time, which
+gates a step names, the digests themselves) are tested, not proved.
 
 ## Trust base
 
 The Charon/Aeneas translation of the Rust (pinned: Charon `8cae8fd`, Aeneas
 `nightly-2026.11.07-c5eb4a2`), the Aeneas library's models of the Rust
 operations used, the Lean kernel and the three standard axioms.
-`writfold-kb`'s plan fold, gate judging and receipt reading, which gather the
-facts the run-graph and gate kernels decide on, are tested, not proved.
+`writfold-kb`'s plan fold, receipt, statement and cover-row reading, digests,
+citation checks and the guard's lookups, which gather the facts the kernels
+decide on, are tested, not proved.
 
 ## Found by the proofs
 
@@ -159,16 +384,42 @@ In the archived ledger kernel, the sequence check could overflow for a
 selection of `usize::MAX` entries, and the inventory epoch increment could
 overflow; both were rewritten to refuse instead.
 
-## Not yet proved
+Found while moving the delivery decisions (16 November 2026): a delivery
+mode that declares nothing was "not met" for a plan step but `ready` for
+`deliver status` and the delivery guard, which let such a candidate's bytes
+through. `ready` is now `delivery::ready`, the same rule as the step
+(`ready_iff`, `empty_never_ready`); such a candidate reads `[blocked]` with
+the reason and `deliver status` exits 2
+(`crates/writfold-kb/tests/deliver_empty_mode.rs`, which failed before the
+change).
 
-- `writfold_core::scope` (glob matching), `verdict` and `walk`: closures,
-  iterators and generic maps that the translation does not take; tested.
-- The later kernels (`investigation`, `checklist`, `guard`, `decision`,
-  `observe`, `delivery`, `command`): tested exhaustively, not proved.
+Noted, not changed: a receipt's content counts as the same only when the
+present content is not empty, while a statement or a cover row compares the
+digests alone (`gate::about`). The present content is empty only when a
+run-record digest could not be read; both rules are now stated as theorems
+(`evidence_spec`, `about_spec`) rather than left implicit.
+
+## Not yet proved (backlog, 16 November 2026)
+
+In the order of [`proof-backfill-spec.md`](proof-backfill-spec.md), section 4:
+
+1. `writfold_core::scope` (glob matching): reshape to index loops over code
+   points, prove against an inductive matcher.
+2. Plan closing writes (skip, the end guard, the re-check under the lock),
+   after the policy spec fixes their signatures.
+3. `decision` and `investigation`.
+4. `verdict` (citation verdicts, `recorded`), including the clock
+   subtractions that need a bound.
+5. `walk`'s completeness claim, `command::matches`, `find`, `idle`, `diag`.
+6. Ordering without a clock for delivery and assessed receipts and
+   statements.
 
 ## Writing kernels for translation
 
-Owned data and no nested borrows; no derives in translated modules (equality a
+These rules apply to the functions named in `start_from`; the tested-only
+modules (`scope`, `verdict`, `walk`, `command`, `find`, `idle`, `diag`,
+`decision`, `investigation`) do not follow them yet, and each will be
+reshaped when its proof is built. Owned data and no nested borrows; no derives in translated modules (equality a
 theorem relies on is an explicit `same`); no integer casts; explicit `while`
 loops; one loop per function when it returns early (Aeneas does not translate a
 `return` inside nested loops); conveniences outside
@@ -176,4 +427,7 @@ loops; one loop per function when it returns early (Aeneas does not translate a
 its callers (`gate`, `assess`) is named function by function in `start_from`,
 so the derives are never reached; inside a translated function, compare
 enums with `matches!`, not a derived `==`, and keep a loop's early-return
-match flat (Aeneas refuses to expand a nested enum pattern there).
+match flat (Aeneas refuses to expand a nested enum pattern there). A loop
+whose body updates several variables under nested `if`s may fail to
+translate ("could not match the contexts"); give each test its own small
+function and keep one flat `if` per variable.

@@ -3,8 +3,10 @@
 //! translated by Charon/Aeneas: this module uses iterators, closures and
 //! recursion over string slices, which the translation does not take.
 //!
-//! Not translated and not proved. The tests below, and the scope tests of
-//! `writfold-kb`, check it.
+//! Not translated and not proved yet: it is the next item on the proof
+//! backlog (docs/writfold/aeneas.md), to be reshaped into index loops over
+//! code points. The tests below, and the scope tests of `writfold-kb`,
+//! check it.
 
 /// Whether `path` (repository-relative, `/`-separated) is in a scope: some
 /// pattern matches it and no `!`-prefixed pattern does. Patterns are

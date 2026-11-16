@@ -1,12 +1,13 @@
 [package]
 name = "writfold-core"
-description = "Writfold's pure decision kernels in plain safe Rust, translated to Lean 4 by Charon/Aeneas and proved under proofs/"
+description = "Writfold's pure decision kernels in plain safe Rust; the decisions named in start_from are translated to Lean 4 by Charon/Aeneas and proved under proofs/"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
 
-# No dependencies by construction: no IO, no floats, no `dyn`, `no_std` +
+# No dependencies by construction: no IO, no floats, no trait objects
+# (`diag` passes plain function pointers), `no_std` +
 # `alloc`. The xtask dependency graph enforces the empty set.
 [dependencies]
 
