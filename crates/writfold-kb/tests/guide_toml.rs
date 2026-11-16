@@ -46,7 +46,10 @@ fn blocks(page: &str, text: &str) -> Vec<Block> {
     let mut before = "";
     for (n, line) in text.lines().enumerate() {
         match open.take() {
-            Some(block) if line.trim_end() == "```" => out.push(block),
+            Some(block) if line.trim_end() == "```" => {
+                out.push(block);
+                before = "";
+            }
             Some(mut block) => {
                 block.text.push_str(line);
                 block.text.push('\n');
@@ -223,10 +226,21 @@ fn every_guide_toml_block_is_read_by_the_real_parser() -> TestResult {
             }
         }
     }
-    // Both kinds must be present, or the walk found nothing to check.
+    // The walk must find built blocks. The guide's last planned block
+    // (a delivery as a step's gate) was built in v0.5.0-dev.10, so none
+    // may be left; the marker's reading is pinned below.
     assert!(built >= 5, "only {built} built toml blocks were checked");
-    assert!(planned >= 1, "no planned toml block was checked");
+    assert_eq!(planned, 0, "a planned block is back: check it is refused");
     Ok(())
+}
+
+#[test]
+fn a_planned_marker_is_read_as_planned() {
+    let page = "text\n\n<!-- planned -->\n```toml\nschema = \"writfold-plan/9\"\n```\n\n```toml\nschema = \"x\"\n```\n";
+    let found = blocks("page", page);
+    let marks: Vec<bool> = found.iter().map(|b| b.planned).collect();
+    assert_eq!(marks, [true, false]);
+    assert!(accept(&found[0].text).is_err());
 }
 
 #[test]
@@ -259,7 +273,9 @@ fn the_block_check_refuses_what_the_product_refuses() {
     assert!(accept(plan).is_ok());
     assert!(accept(&plan.replace("unit", "use=review")).is_ok());
     assert!(accept(&plan.replace("unit", "use=Review")).is_err());
-    assert!(accept(&plan.replace("unit", "deliver:pr-comment")).is_err());
+    // A step owes a delivery by its mode (built in v0.5.0-dev.10).
+    assert!(accept(&plan.replace("unit", "deliver:pr-comment")).is_ok());
+    assert!(accept(&plan.replace("unit", "deliver:Bad")).is_err());
     let required = "schema = \"writfold-plan-required/1\"\nend = [\"reflect\"]\n";
     assert!(accept(required).is_ok());
     assert!(accept(&format!("{required}at = \"end\"\n")).is_err());

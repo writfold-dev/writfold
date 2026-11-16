@@ -1,6 +1,6 @@
 # Delivery modes as a step's gates: specification
 
-> **Status:** planned. Nothing on this page is built until its as-built section in [kb-v1-design.md](kb-v1-design.md) says so. Written against `main` at `808b48b` (v0.5.0-dev.9, with v0.5.0-dev.10 planned) and read against [dev10-spec.md](dev10-spec.md), whose changes to `gates.met`, the `gate status` notes and the command reader it composes with. The authority is [mission.md](mission.md).
+> **Status:** built in v0.5.0-dev.10 ([as built](kb-v1-design.md#41-delivery-modes-as-a-steps-gates-as-built), with its deviations). Written against `main` at `808b48b` (v0.5.0-dev.9, with v0.5.0-dev.10 planned) and read against [dev10-spec.md](dev10-spec.md), whose changes to `gates.met`, the `gate status` notes and the command reader it composes with. The authority is [mission.md](mission.md).
 
 ## 1. Need
 

@@ -1,6 +1,6 @@
 # The run graph
 
-> **Status:** the run graph (`plan set|use|status|advance|skip`), run-record checks, splicing a template under a step (`use=` includes, `!template-moved`), required steps, the `writfold:evaluate` wrap-up skill, and the write re-check and merge-disorder flags are built in v0.4.0-dev.1; delivery modes as a step's gates are planned. The adopted decisions are in [`mission.md`](../writfold/mission.md); the as-built records are [design §21](../writfold/kb-v1-design.md#21-run-graph-linear-as-built), [§24](../writfold/kb-v1-design.md#24-splicing-and-required-steps-as-built) and [§26](../writfold/kb-v1-design.md#26-evaluation-skill-as-built).
+> **Status:** the run graph (`plan set|use|status|advance|skip`), run-record checks, splicing a template under a step (`use=` includes, `!template-moved`), required steps, the `writfold:evaluate` wrap-up skill, and the write re-check and merge-disorder flags are built in v0.4.0-dev.1; delivery modes as a step's gates are built in v0.5.0-dev.10 ([design §41](../writfold/kb-v1-design.md#41-delivery-modes-as-a-steps-gates-as-built)). The adopted decisions are in [`mission.md`](../writfold/mission.md); the as-built records are [design §21](../writfold/kb-v1-design.md#21-run-graph-linear-as-built), [§24](../writfold/kb-v1-design.md#24-splicing-and-required-steps-as-built) and [§26](../writfold/kb-v1-design.md#26-evaluation-skill-as-built).
 
 A run without a plan owes every gate defined for its repository. A run with a plan owes the gates its steps name: the plan is an ordered list of steps, each step names the gates it owes, and Writfold records which step the work has reached and what met each gate.
 
@@ -27,7 +27,7 @@ steps = [
 ]
 ```
 
-Every gate a template names must be defined (`.writfold/gates/<id>.toml`) when the plan is set; an unknown gate is refused, never read as "not applicable". A delivery-candidate gate cannot be a step's gate.
+Every gate a template names must be defined (`.writfold/gates/<id>.toml`) when the plan is set; an unknown gate is refused, never read as "not applicable". A delivery-candidate gate (`subject = "candidate"`) is not named directly: a step owes a delivery by its mode, `deliver:<mode>` ([below](#a-delivery-as-a-steps-gate)).
 
 ```text
 writfold kb plan set <template> | --from FILE    splice the template's steps at the run's root
@@ -246,11 +246,12 @@ The bundled [`writfold:evaluate`](skills.md#the-bundled-skill-writfoldevaluate) 
 
 A root splice after the first (the plan's own template, a required end template) is made with the plan, not when its turn comes, so its first step's window begins where the step before it ended, not at the splice. Otherwise a ticket written during `research` would also answer `run.reflected`'s "a KB record written in the step" at `reflect`.
 
-## Planned: delivery modes as a step's gates
+## A delivery as a step's gate
 
-A step will be able to owe a delivery, written `deliver:<mode>`. Today a step names only repository, assessed and run-record gates, and a candidate gate is refused:
+> Built in v0.5.0-dev.10.
 
-<!-- planned -->
+A step can owe a delivery, written `deliver:<mode>` beside its gate IDs, in any position, at most once per mode. A gate ID is a slug and cannot hold `:`, so the word never reads as a gate; the schema stays `writfold-plan/1`.
+
 ```toml
 schema = "writfold-plan/1"
 name = "change"
@@ -259,6 +260,38 @@ steps = [
   "deliver: deliver:pr-comment",
 ]
 ```
+
+The mode must exist and declare something to check when the plan is set (a built-in mode or `.writfold/deliveries/<mode>.toml` in the KB root); otherwise `plan set` and `plan use` refuse with exit 3 and write nothing, including through `use=` and the required templates.
+
+- **Which candidate decides the current step:** the newest candidate of the mode in the run that no done step is bound to, by the manifest's `seq`, then by ID, never by a clock. It may have been prepared before the step became current.
+- **Which candidate decides a done step:** the one its done record names, and only that one, for ever. That candidate is bound: it never decides another step, so two steps naming one mode each need their own candidate, and a newer candidate never turns a done step stale.
+- **The word on the gate:** one standing for the whole delivery, the weakest that is true. An unmet obligation gives its own standing (the first unmet, in the mode's order); else `waived` if any check is waived; else `attested` if any obligation is attested; else `satisfied`, which means every obligation passed a check on these bytes.
+- **A waived check lets the step advance.** The gate stands `waived`, the done record says `waived`, and `plan status` shows it.
+
+```text
+$ writfold kb plan advance
+step change#1/deliver [current] owes: deliver:pr-comment [open] @runs/run-…/plan/splice-change.1.json:1
+  next: writfold kb deliver prepare --mode pr-comment --from FILE
+# note: not advanced: change#1/deliver owes deliver:pr-comment [open] (first owed: deliver:pr-comment); nothing written
+
+$ writfold kb deliver prepare --mode pr-comment --audience external --from comment.md
+$ writfold kb deliver check
+$ writfold kb plan status
+step change#1/deliver [current] owes: deliver:pr-comment [failed] @runs/run-…/plan/splice-change.1.json:1
+  candidate: 20261116T101500Z-3f9a21 [blocked] owes references.denied [failed] @runs/run-…/deliveries/20261116T101500Z-3f9a21/candidate.md:1
+  next: writfold kb deliver check 20261116T101500Z-3f9a21
+```
+
+Repair the candidate in place (or prepare a new one), check it again, and advance. The done record's entry is `gate` `deliver:pr-comment`, `standing`, `evidence` the payload path, `content` its digest and `definition` a digest over the mode, the audience and each obligation's definition. After that, an edit to the payload or a change to the mode, its deny list or a mode gate reads:
+
+```text
+step change#1/deliver [done] deliver:pr-comment [stale] @runs/run-…/plan/done-change.1~deliver.json:1 !stale
+  why: no longer holds: deliver:pr-comment [stale] (done stays done; list the gate again on a later step if it must hold there)
+```
+
+`next:` follows the first unmet obligation: `deliver prepare` with no deciding candidate, `deliver check <id>` for a check or script gate, `deliver attest <id> --check <name> --statement TEXT --by WHO` for an attested obligation. A mode that no longer loads, or now declares nothing, shows `why:` with the reason and no command. `plan status --gates` lists the delivery's candidate and one `item` per obligation under its gate ([json](json.md#labels-the-views-rely-on)).
+
+**Limits.** The done record says a candidate was ready, never that it was posted: Writfold sends nothing. A team that wants the post on record adds an attested repository gate to the same step ([delivery modes](delivery-modes.md#on-a-plan-step)). A step is judged with a subject repository like any other, also when it names only deliveries: outside one, pass `--repo DIR`. `gate status`, `gate lines` and `gates.met` do not count deliveries ([gates](gates.md#which-gates-a-run-owes)); `step.met` does ([hooks](hooks.md#guard-rules)).
 
 ## Weft on a step
 

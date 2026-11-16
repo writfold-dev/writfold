@@ -1,6 +1,6 @@
 # Delivery modes
 
-> **Status:** built in v0.3.0-dev.1; your own modes are built in v0.4.0-dev.1.
+> **Status:** built in v0.3.0-dev.1; your own modes are built in v0.4.0-dev.1; a delivery as a plan step's gate, `seq` on the manifest and the re-check of cited evidence on every read are built in v0.5.0-dev.10.
 
 A delivery candidate is the exact text of a PR comment or Slack summary, kept in the run and checked before anyone posts it. Writfold never sends it: there is no network code and no Slack or PR adapter. Posting stays with you or your agent.
 
@@ -96,6 +96,30 @@ A denial, as Claude Code receives it:
 ```
 
 When it lets a call through it prints nothing, so Claude Code's own permission prompt still applies. It is a guard, not enforcement: it sees only the calls the harness shows it, and it passes any command or tool it is not configured for. A missing KB, an unreadable configuration or a timeout lets the call proceed. Once a call matches, though, a KB it cannot read denies the call ("cannot read the KB") rather than letting it through. The same hook also evaluates [guard rules](hooks.md#guard-rules) (built in v0.5.0-dev.1), after this guard; a denial here wins.
+
+## On a plan step
+
+> Built in v0.5.0-dev.10.
+
+A plan step can owe a delivery: the word `deliver:<mode>` in the step string (`"deliver: deliver:pr-comment"`). The step cannot be advanced until a candidate of that mode, prepared in the run, is ready, exactly as `deliver status` says `[ready]`. The [run graph guide](run-graph.md#a-delivery-as-a-steps-gate) shows the plan's side; this is the delivery's side.
+
+- **Which candidate decides.** For the current step, the newest candidate of the mode that no done step is bound to. Newest is by the manifest's `seq`, then by ID, never by a clock. A candidate prepared before the step became current counts: drafting the comment during `implement` is ordinary work.
+- **`seq`.** `deliver prepare` writes `"seq": N` in `delivery.json`, one more than the highest among the run's candidates of that mode. A manifest written before this release has none, counts as 0 and keeps ID order.
+- **Binding.** `plan advance` writes the candidate's payload path and digest into the done record. That candidate is bound to the step for ever: the step is judged on it alone, and it never decides another step. Two steps naming one mode each need their own candidate. A newer candidate never turns a done step stale; an edit to the bound candidate, or a change to its mode, deny list or a mode gate, does (`!stale`), and the current step does not move back.
+- **`deliver status`** adds one line under a candidate a step is judged on: `step: decides deliver:pr-comment at change#1/deliver [current]` or `step: bound to change#1/deliver [done]`. Other candidates read as before.
+- **Not built:** `deliver prepare --step`, a step window for candidates, withdrawing a candidate, waiving a delivery as a whole (waive a check with `deliver waive`, or close the step with `plan skip --reason --by`).
+
+**Posting under the guard.** With [the guard](#the-guard) on, the order on a posting step is: `deliver prepare`, `deliver check` (and `attest` or `waive` what the mode asks for), post (the guard passes the ready candidate's bytes), then `plan advance`. The done record says a candidate was ready; it never says the comment was posted, because Writfold sends nothing and sees no post. A team that wants "it was posted" on record adds an attested repository gate to the same step (`"deliver: deliver:pr-comment posted"`). It must not be an `attest` name of the mode: the guard requires the candidate ready before the post, so a mode statement made after posting could never be made in time.
+
+## Cited evidence that moved
+
+> Built in v0.5.0-dev.10.
+
+A `claims.cited-fresh` receipt is bound to the candidate's bytes. From this release a passed receipt also stands only while every citation token in the candidate is still fresh: on every read (`deliver status`, `resume`, the delivery guard and the plan) the tokens are run through `stale` again, locally, with nothing fetched, the same call `deliver check` makes. When any is no longer fresh the check reads `stale`, its line ends `; cited evidence moved: <n> of <m> citation tokens no longer fresh`, and the candidate is `[blocked]` until `deliver check` runs again on evidence that holds. When the evidence comes back, the receipt stands again. A waiver on the check still stands: it is bound to the bytes and the check's definition, not to the receipt. A candidate with no citation token costs nothing more.
+
+Limits: a mode gate of class `observed` is not re-run on read, and a claim made in prose without a citation token is not seen.
+
+**A behaviour change.** A candidate whose citations moved after its check read `[ready]` before this release; it now reads `[blocked]`, `deliver status` exits 2, and the delivery guard refuses its bytes.
 
 ## Your own modes
 
