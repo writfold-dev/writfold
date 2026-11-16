@@ -1,3 +1,0 @@
-edit "artifacts-source.weft" {
-  replace one text "check positive: not ready(\"café\");" with "check positive: ready(\"café\");"
-}

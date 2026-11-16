@@ -1,3 +1,0 @@
-edit "artifacts-source.weft" {
-  replace one text "ready(\"café\")" with "replacement"
-}

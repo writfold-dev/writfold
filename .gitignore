@@ -9,16 +9,9 @@ dist/
 build/
 *.egg-info/
 
-# Lean / Lake build artifacts (sources and lake-manifest.json stay tracked)
-formal/.lake/
-formal/build/
-
-# Local qualification artifacts (committed evidence lives in docs/kctx/reports/)
+# Local artifacts
 *.local/
 .DS_Store
-
-# Native Dolt working state is never an authored Git asset.
-.dolt/
 
 # Rust build output stays outside authored source and commit snapshots.
 /target/

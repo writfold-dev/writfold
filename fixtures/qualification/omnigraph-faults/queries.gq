@@ -1,8 +1,0 @@
-query inventory() {
- match { $c: FaultCell }
- return { $c.key, $c.value }
- order { $c.key }
-}
-query change($key: String, $value: String) {
- update FaultCell set { value: $value } where key = $key
-}
