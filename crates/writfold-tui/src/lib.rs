@@ -46,6 +46,8 @@ pub mod rail;
 mod rail_text;
 mod run_item;
 pub mod say;
+pub mod say_next;
+pub mod say_shape;
 pub mod say_words;
 pub mod side;
 pub mod source;
