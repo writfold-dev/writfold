@@ -11,13 +11,12 @@
 //! cached verdict a reader may use (`max_age`). A kind without a file
 //! behaves as before: fresh until `seen + ttl`, and fresh for ever when the
 //! token has no `ttl=`. Files use the gate definitions' TOML subset
-//! ([`crate::gate::toml`]); an unknown key, a wrong schema or a bad value
+//! ([`crate::defs::toml`]); an unknown key, a wrong schema or a bad value
 //! refuses every check that reads them, so a misspelt field never silently
 //! changes a verdict. The choice of lifetime is the kernel's
 //! ([`writfold_core::verdict::lifetime`]).
 use super::{Checked, Cite, Verdict, unverifiable};
 use crate::error::{KbError, Result};
-use crate::gate::toml::{self, Value};
 use crate::time;
 use std::collections::BTreeMap;
 use std::path::Path;
@@ -28,17 +27,6 @@ pub const DIR: &str = ".writfold/sources";
 pub const SCHEMA: &str = "writfold-source/1";
 /// Kinds checked against Git or the index, which a file may not declare.
 pub const BUILT_IN: [&str; 4] = ["code", "gate", "record", "proposal"];
-const KEYS: [&str; 9] = [
-    "schema",
-    "kind",
-    "freshness",
-    "default_ttl",
-    "required",
-    "description",
-    "checker",
-    "fields",
-    "max_age",
-];
 /// Fields Writfold writes itself, which a checker may never return.
 pub const OWNED: [&str; 5] = ["kind", "seen", "ttl", "stale", "v"];
 
@@ -121,121 +109,11 @@ pub(crate) fn is_word(text: &str) -> bool {
         && !text.starts_with(['.', '-', '_'])
 }
 
-fn string(map: &BTreeMap<String, Value>, key: &str) -> std::result::Result<Option<String>, String> {
-    match map.get(key) {
-        None => Ok(None),
-        Some(Value::Str(text)) => Ok(Some(text.clone())),
-        Some(_) => Err(format!("{key} must be a string")),
-    }
-}
-
-/// Read one declaration; `name` is its file name without `.toml`.
+/// Read one declaration; `name` is its file name without `.toml`. The
+/// first fault, compact, when it does not check ([`super::kind_check`]).
 pub fn parse(text: &str, name: &str) -> std::result::Result<Kind, String> {
-    let map = toml::parse(text)?;
-    if let Some(key) = map.keys().find(|k| !KEYS.contains(&k.as_str())) {
-        return Err(format!("unknown key {key}"));
-    }
-    if string(&map, "schema")?.as_deref() != Some(SCHEMA) {
-        return Err(format!("schema must be {SCHEMA}"));
-    }
-    let kind = string(&map, "kind")?.ok_or("kind is required")?;
-    if kind != name {
-        return Err(format!(
-            "kind {kind:?} must match the file name {name}.toml"
-        ));
-    }
-    if !is_word(&kind) {
-        return Err(format!("kind {kind:?} must be [a-z0-9._-]"));
-    }
-    if BUILT_IN.contains(&kind.as_str()) {
-        return Err(format!(
-            "kind {kind} is checked against Git and the index and cannot be declared"
-        ));
-    }
-    let freshness = match string(&map, "freshness")?.as_deref() {
-        Some("ttl") => Freshness::Ttl,
-        Some("immutable") => Freshness::Immutable,
-        Some("checked") => Freshness::Checked,
-        _ => return Err("freshness must be \"ttl\", \"immutable\" or \"checked\"".into()),
-    };
-    let default_ttl = string(&map, "default_ttl")?;
-    if let Some(ttl) = &default_ttl {
-        match freshness {
-            Freshness::Immutable => {
-                return Err("default_ttl cannot be given with freshness = \"immutable\"".into());
-            }
-            Freshness::Checked => {
-                return Err("default_ttl cannot be given with freshness = \"checked\"".into());
-            }
-            Freshness::Ttl => {}
-        }
-        if !matches!(time::ttl(Some(ttl)), Some(time::Ttl::Seconds(_))) {
-            return Err(format!("default_ttl {ttl:?} must be <N>d or <N>h"));
-        }
-    }
-    let required = names(&map, "required")?;
-    let (checker, fields) = checked(&map, freshness)?;
-    let max_age = string(&map, "max_age")?;
-    if let Some(age) = &max_age {
-        if freshness != Freshness::Checked {
-            return Err("max_age needs freshness = \"checked\"".into());
-        }
-        if !matches!(time::ttl(Some(age)), Some(time::Ttl::Seconds(_))) {
-            return Err(format!("max_age {age:?} must be <N>d or <N>h"));
-        }
-    }
-    Ok(Kind {
-        name: kind,
-        freshness,
-        default_ttl,
-        required,
-        description: string(&map, "description")?,
-        checker,
-        fields,
-        max_age,
-    })
-}
-
-/// An optional array of field names.
-fn names(map: &BTreeMap<String, Value>, key: &str) -> std::result::Result<Vec<String>, String> {
-    let list = match map.get(key) {
-        None => Vec::new(),
-        Some(Value::List(fields)) => fields.clone(),
-        Some(_) => return Err(format!("{key} must be an array of strings")),
-    };
-    if let Some(field) = list.iter().find(|f| !is_word(f) && f.as_str() != "L") {
-        return Err(format!("{key} field {field:?} is not a field name"));
-    }
-    Ok(list)
-}
-
-/// `checker` and `fields`: both required with `freshness = "checked"`,
-/// refused otherwise. A checker is a name, never a command.
-fn checked(
-    map: &BTreeMap<String, Value>,
-    freshness: Freshness,
-) -> std::result::Result<(Option<String>, Vec<String>), String> {
-    let checker = string(map, "checker")?;
-    let fields = names(map, "fields")?;
-    if freshness != Freshness::Checked {
-        if checker.is_some() || map.contains_key("fields") {
-            return Err("checker and fields need freshness = \"checked\"".into());
-        }
-        return Ok((None, fields));
-    }
-    let checker = checker.ok_or("freshness = \"checked\" needs checker = \"<name>\"")?;
-    if !is_word(&checker) {
-        return Err(format!("checker {checker:?} must be a name [a-z0-9._-]"));
-    }
-    if fields.is_empty() {
-        return Err("freshness = \"checked\" needs fields = [...]".into());
-    }
-    if let Some(field) = fields.iter().find(|f| OWNED.contains(&f.as_str())) {
-        return Err(format!(
-            "fields may not list {field}, which Writfold writes"
-        ));
-    }
-    Ok((Some(checker), fields))
+    let shown = format!("{DIR}/{name}.toml");
+    super::kind_check::check(text, name, &shown).map_err(|r| crate::defs::why(&r))
 }
 
 /// Every declaration under the KB root, or a refusal naming the first file
@@ -259,7 +137,8 @@ pub fn read(root: &Path) -> Result<Kinds> {
         let path = format!("{DIR}/{name}.toml");
         let text = std::fs::read_to_string(root.join(&path))
             .map_err(|e| KbError::Refused(format!("{path}: {e}")))?;
-        let kind = parse(&text, &name).map_err(|why| KbError::Refused(format!("{path}: {why}")))?;
+        let kind = super::kind_check::check(&text, &name, &path)
+            .map_err(|report| KbError::Definition(Box::new(report)))?;
         kinds.insert(name, kind);
     }
     Ok(Kinds(kinds))

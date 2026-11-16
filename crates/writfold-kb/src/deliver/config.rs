@@ -1,13 +1,11 @@
 //! Delivery configuration under the KB root's `.writfold/deliveries/`:
 //! a mode file per mode ([`super::mode`]; built-in defaults otherwise), a deny
 //! list per audience, and the guard hook's list of publishing commands.
-//! Every file is the gate definitions' TOML subset ([`crate::gate::toml`]);
+//! Every file is the gate definitions' TOML subset ([`crate::defs::toml`]);
 //! unknown keys are refused, so a misspelt field never silently changes a
 //! check.
 use crate::error::{KbError, Result};
-use crate::gate::toml::{self, Value};
 use sha2::{Digest, Sha256};
-use std::collections::BTreeMap;
 use std::path::Path;
 
 /// Where delivery configuration lives, under the KB root.
@@ -20,40 +18,30 @@ pub const CLAIMS: &str = "claims.cited-fresh";
 /// The built-in checks, in the order they run and are shown.
 pub const BUILTIN: [&str; 3] = [PARAGRAPHS, REFERENCES, CLAIMS];
 
-pub(super) fn bad(path: &str, why: String) -> KbError {
-    KbError::Refused(format!("{path}: {why}"))
-}
-
-/// Parse a configuration file: its keys must be among `keys`, and its
-/// `schema` must be `schema`. `None` when the file does not exist.
-pub(super) fn read(
-    root: &Path,
-    name: &str,
-    schema: &str,
-    keys: &[&str],
-) -> Result<Option<(String, BTreeMap<String, Value>)>> {
+/// A delivery file's path and text; `None` when it does not exist.
+pub(super) fn open(root: &Path, name: &str) -> Result<Option<(String, String)>> {
     let path = format!("{DIR}/{name}");
-    let text = match std::fs::read_to_string(root.join(&path)) {
-        Ok(text) => text,
+    let bytes = match std::fs::read(root.join(&path)) {
+        Ok(bytes) => bytes,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(None),
         Err(e) => return Err(e.into()),
     };
-    let map = toml::parse(&text).map_err(|why| bad(&path, why))?;
-    if let Some(key) = map.keys().find(|k| !keys.contains(&k.as_str())) {
-        return Err(bad(&path, format!("unknown key {key}")));
+    match String::from_utf8(bytes) {
+        Ok(text) => Ok(Some((path, text))),
+        Err(_) => {
+            let p = crate::defs::Problem::whole(
+                &path,
+                &path,
+                "file.unreadable",
+                "is not UTF-8 text".into(),
+            );
+            Err(KbError::Definition(Box::new(p.report)))
+        }
     }
-    if map.get("schema") != Some(&Value::Str(schema.into())) {
-        return Err(bad(&path, format!("schema must be {schema}")));
-    }
-    Ok(Some((path, map)))
 }
 
-pub(super) fn strings(map: &BTreeMap<String, Value>, key: &str, path: &str) -> Result<Vec<String>> {
-    match map.get(key) {
-        None => Ok(Vec::new()),
-        Some(Value::List(items)) => Ok(items.clone()),
-        Some(_) => Err(bad(path, format!("{key} must be an array of strings"))),
-    }
+pub(super) fn refused(report: writfold_core::diag::Report) -> KbError {
+    KbError::Definition(Box::new(report))
 }
 
 /// An obligation name: lower-case letters, digits, `.` and `-`.
@@ -85,51 +73,14 @@ pub struct Deny {
 /// …]`. A pattern is a regular expression in ASCII mode (`\b`, `\w` and
 /// case folding are ASCII), matched case-insensitively, line by line.
 pub fn deny(root: &Path, audience: &str) -> Result<Deny> {
-    let file = format!("deny-{audience}.toml");
-    let found = read(
-        root,
-        &file,
-        "writfold-deny/1",
-        &["schema", "audience", "rules"],
-    )?;
-    let Some((path, map)) = found else {
+    let Some((path, text)) = open(root, &format!("deny-{audience}.toml"))? else {
         return Ok(Deny {
             audience: audience.to_owned(),
             path: None,
             rules: Vec::new(),
         });
     };
-    if map.get("audience") != Some(&Value::Str(audience.into())) {
-        return Err(bad(&path, format!("audience must be {audience}")));
-    }
-    let mut rules = Vec::new();
-    for entry in strings(&map, "rules", &path)? {
-        let Some((name, pattern)) = entry.split_once(": ") else {
-            return Err(bad(
-                &path,
-                format!("rule {entry:?} is not \"name: pattern\""),
-            ));
-        };
-        if !is_name(name) {
-            return Err(bad(&path, format!("rule name {name:?} must be [a-z0-9.-]")));
-        }
-        let regex = regex::bytes::RegexBuilder::new(pattern)
-            .unicode(false)
-            .case_insensitive(true)
-            .size_limit(1 << 20)
-            .build()
-            .map_err(|e| bad(&path, format!("rule {name}: {e}")))?;
-        rules.push(Rule {
-            name: name.to_owned(),
-            pattern: pattern.to_owned(),
-            regex,
-        });
-    }
-    Ok(Deny {
-        audience: audience.to_owned(),
-        path: Some(path),
-        rules,
-    })
+    super::config_check::deny(audience, &path, &text).map_err(refused)
 }
 
 /// One obligation of a candidate, from its mode.
@@ -219,20 +170,29 @@ pub struct Guard {
 /// The guard configuration, or `None` when there is none (the hook then
 /// allows everything).
 pub fn guard(root: &Path) -> Result<Option<Guard>> {
-    let keys = ["schema", "commands", "tools"];
-    let Some((path, map)) = read(root, "guard.toml", "writfold-guard/1", &keys)? else {
+    let Some((path, text)) = open(root, "guard.toml")? else {
         return Ok(None);
     };
-    let commands: Vec<Vec<String>> = strings(&map, "commands", &path)?
-        .iter()
-        .map(|c| c.split_whitespace().map(str::to_owned).collect::<Vec<_>>())
-        .collect();
-    if commands.iter().any(Vec::is_empty) {
-        return Err(bad(&path, "a command must name at least one word".into()));
+    super::config_check::guard(&path, &text)
+        .map(Some)
+        .map_err(refused)
+}
+
+/// Check one delivery file's text (`kb lint`): `dir` is the KB root's
+/// `.writfold/deliveries/`, `stem` the file name without `.toml`.
+pub fn check_file(
+    dir: &Path,
+    stem: &str,
+    shown: &str,
+    text: &str,
+) -> std::result::Result<(), writfold_core::diag::Report> {
+    let root = dir.parent().and_then(Path::parent).unwrap_or(dir);
+    match (stem, stem.strip_prefix("deny-")) {
+        ("guard", _) => super::config_check::guard(shown, text).map(|_| ()),
+        (_, Some(audience)) => super::config_check::deny(audience, shown, text).map(|_| ()),
+        _ => {
+            let defaults = super::mode::default(stem);
+            super::mode_check::mode(root, defaults, shown, text).map(|_| ())
+        }
     }
-    Ok(Some(Guard {
-        tools: strings(&map, "tools", &path)?,
-        commands,
-        path,
-    }))
 }

@@ -20,6 +20,10 @@ pub enum Kind {
     Guard,
     Template,
     Required,
+    Mode,
+    Deny,
+    Delivery,
+    Source,
 }
 
 /// One file read: where it is, how it is shown, its text and its faults.
@@ -35,10 +39,12 @@ pub struct File {
     pub report: Report,
 }
 
-const DIRS: [(&str, Kind); 3] = [
+const DIRS: [(&str, Kind); 5] = [
     (crate::gate::def::DIR, Kind::Gate),
     (crate::guard::rules::DIR, Kind::Guard),
     (crate::plan::template::DIR, Kind::Template),
+    (crate::deliver::config::DIR, Kind::Mode),
+    (crate::stale::kinds::DIR, Kind::Source),
 ];
 
 fn check(kind: Kind, origin: Origin, dir: &Path, stem: &str, shown: &str, text: &str) -> Report {
@@ -50,6 +56,10 @@ fn check(kind: Kind, origin: Origin, dir: &Path, stem: &str, shown: &str, text: 
             Err(KbError::Definition(report)) => Some(*report),
             _ => None,
         },
+        Kind::Source => crate::stale::kind_check::check(text, stem, shown).err(),
+        Kind::Mode | Kind::Deny | Kind::Delivery => {
+            crate::deliver::config::check_file(dir, stem, shown, text).err()
+        }
     };
     let mut report = failed.unwrap_or_default();
     if report.sources.is_empty() {
@@ -79,6 +89,9 @@ pub fn files(top: &Path, origin: Origin, prefix: &str) -> Vec<File> {
             let stem = name.trim_end_matches(".toml").to_owned();
             let kind = match (kind, stem.as_str()) {
                 (Kind::Template, crate::plan::template::RESERVED) => Kind::Required,
+                (Kind::Mode, "guard") => Kind::Delivery,
+                (Kind::Mode, s) if s.starts_with("deny-") => Kind::Deny,
+                (Kind::Source | Kind::Mode, _) if origin == Origin::Repo => continue,
                 _ => kind,
             };
             let shown = format!("{prefix}{rel}/{name}");

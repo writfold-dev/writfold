@@ -42,6 +42,7 @@ pub fn spliced(root: &Path, template: &str, mode: &str) -> Result<()> {
     }
     let m = config::mode(root, mode).map_err(|e| {
         let why = match e {
+            KbError::Definition(report) => return KbError::Definition(report),
             KbError::Refused(why) | KbError::Usage(why) => why,
             other => other.to_string(),
         };

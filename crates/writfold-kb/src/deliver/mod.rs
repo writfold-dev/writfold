@@ -11,9 +11,11 @@
 pub mod candidate;
 pub mod checks;
 pub mod config;
+mod config_check;
 mod evaluate;
 pub mod markdown;
 pub mod mode;
+mod mode_check;
 pub mod receipt;
 pub mod recheck;
 pub mod script;

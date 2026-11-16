@@ -260,7 +260,7 @@ fn max_age_needs_a_checked_kind_and_a_duration() -> TestResult {
         (
             format!("{checked}max_age = 7\n"),
             "dataset",
-            "max_age must be a string",
+            "`max_age` must be a string",
         ),
     ];
     for (text, name, why) in &refused {
@@ -294,10 +294,10 @@ fn bad_declarations_are_refused_and_reported_by_check() -> TestResult {
         (
             format!("{WEB}colour = \"blue\"\n"),
             "web",
-            "unknown key colour",
+            "unknown key `colour`",
         ),
         (WEB.replace("source/1", "source/2"), "web", "schema"),
-        (WEB.to_owned(), "pages", "must match the file name"),
+        (WEB.to_owned(), "pages", "but the file is named pages.toml"),
         (WEB.replace("\"ttl\"", "\"weekly\""), "web", "freshness"),
         (format!("{WEB}required = \"id\"\n"), "web", "array"),
     ];
@@ -329,7 +329,7 @@ fn bad_declarations_are_refused_and_reported_by_check() -> TestResult {
     assert_eq!(error.exit_code(), 3);
     assert_eq!(
         error.to_string(),
-        "refused: .writfold/sources/web.toml: unknown key colour"
+        "refused: .writfold/sources/web.toml:5:1: unknown key `colour` in a kind declaration"
     );
     let (text, _) = w.run(&w.request(Verb::Check { scope: None }))?;
     let line = text
@@ -338,7 +338,7 @@ fn bad_declarations_are_refused_and_reported_by_check() -> TestResult {
         .unwrap_or_default();
     assert!(
         line.starts_with(
-            "check stale [refused] refused: .writfold/sources/web.toml: unknown key colour"
+            "check stale [refused] refused: .writfold/sources/web.toml:5:1: unknown key `colour`"
         ),
         "{text}"
     );

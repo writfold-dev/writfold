@@ -7,6 +7,7 @@
 //! by `kb stale` only ([`checker`]).
 pub mod checker;
 mod code;
+pub mod kind_check;
 pub mod kinds;
 mod rename;
 pub mod repos;
