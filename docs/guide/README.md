@@ -11,6 +11,7 @@ These pages hold the full skeletons the website only sketches: file layouts, com
 | [checkers](checkers.md) | External checkers for citation kinds Git cannot check: the kind file, the `writfold-checker/1` protocol, a minimal checker, versions | built in v0.5.0-dev.2 |
 | [validation](validation.md) | Checking that what you read still holds: `stale`, `index`, `gate status`, `deliver check`, and `kb check` for all at once | built, with the plan line of `kb check` |
 | [gates](gates.md) | Gate definitions, receipts, standing, waivers and attestations, run-record checks | built |
+| [policy](policy.md) | Your policy: `kb init` from a plain repository, the research-policy example, two rubrics over one engine, what already holds and what each mechanism establishes | built in v0.6.0-dev.3 |
 | [delivery-modes](delivery-modes.md) | Delivery candidates, mode files, deny lists and the guard hook | built, with your own modes |
 | [run-graph](run-graph.md) | Plans as a spine of steps that owe gates | built (splicing and required steps included) |
 | [watch](watch.md) | Recorded run progress in eight read-only views, and the knowledge base (decisions, status, tracker, impact, stale) as a second mode; layouts, controls, refresh and colour themes | built (T5) |

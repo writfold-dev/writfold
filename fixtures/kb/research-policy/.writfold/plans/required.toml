@@ -1,0 +1,3 @@
+# Required steps: every plan set in this KB starts with the research step.
+schema = "writfold-plan-required/1"
+start = ["research"]

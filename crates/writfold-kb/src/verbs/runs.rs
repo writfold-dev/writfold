@@ -201,6 +201,12 @@ pub fn resume(session: &Session<'_>, named: Option<&str>, cwd: &Path) -> Result<
     if runs::state(session, &rec) == "closed" {
         answer.notes.push(format!("{} is closed", rec.id));
     }
+    let top = crate::defs::lint::enclosing(&session.ws.root, cwd);
+    if !crate::gate::policy::configured(&session.ws.root, top.as_deref()) {
+        answer
+            .notes
+            .push(crate::gate::policy::NONE_CONFIGURED.into());
+    }
     Ok((answer, rec.id))
 }
 

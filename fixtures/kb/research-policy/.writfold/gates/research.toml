@@ -1,0 +1,13 @@
+# An example. Edit the items, the choices and research.md to say what adequate research means for you.
+schema = "writfold-gate/1"
+id = "research"
+version = 1
+class = "checklist"
+scope = ["docs/research/**"]
+instructions = "research.md"
+items = [
+  "precedents: investigate applicable prior work",
+  "approach: justify the chosen implementation approach",
+  "backfill: preserve findings under our research policy",
+]
+description = "research before a change, under this team's own rubric"

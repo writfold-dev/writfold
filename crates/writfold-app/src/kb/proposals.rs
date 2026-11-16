@@ -1,4 +1,4 @@
-//! `propose …`, `proposals list|show|accept|drop` and `check`: parsing
+//! `propose …`, `proposals list|show|accept|drop`, `check` and `init`: parsing
 //! only; the queue and the composed check live in `writfold-kb`.
 use super::args::Common;
 use super::writes::{get, record, switch};
@@ -17,6 +17,7 @@ pub fn allowed(verb: &str) -> &'static [&'static str] {
     match verb {
         "propose" => super::investigation::PROPOSE,
         "lint" => &["repo", "deny-warnings", "records"],
+        "init" => &["example", "dry-run"],
         _ => &[],
     }
 }
@@ -69,6 +70,14 @@ pub fn verb(name: &str, common: &Common, positional: &[String]) -> Option<Result
             }));
         }
         ("check", _) => Err("check takes at most one project or path".into()),
+        ("init", [] | [_]) => {
+            return Some(Ok(Verb::Init(writfold_kb::init::Init {
+                dir: positional.first().map(std::path::PathBuf::from),
+                example: get(common, "example"),
+                dry_run: switch(common, "dry-run"),
+            })));
+        }
+        ("init", _) => Err("init takes at most one directory".into()),
         _ => return None,
     };
     Some(verb.map(Verb::Proposal))

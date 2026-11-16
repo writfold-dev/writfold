@@ -1,0 +1,8 @@
+# The attested half: someone reads the note against research-reviewed.md.
+schema = "writfold-gate/1"
+id = "research-reviewed"
+version = 1
+class = "attested"
+scope = ["docs/research/**"]
+instructions = "research-reviewed.md"
+description = "a person read the research note against the team's questions"

@@ -51,6 +51,9 @@ verbs:
   index status|rebuild|verify      what the derived index holds; rebuild it; check it equals a rebuild
   check [<project>|<path>]         stale, index verify and the current run's gate status in one
                                    summary (the worst exit code of the three)
+  init [DIR] [--example research-policy] [--dry-run]
+                                   make DIR (default: here) a KB: inventory/assets/.gitkeep, and with
+                                   --example an editable example policy; create-new only, never commits
   lint [PATH…] [--repo DIR] [--deny-warnings] [--records]
                                    every fault of the files you wrote (gates, guards, plans,
                                    delivery modes, kinds, queries.jsonl), each at its line and

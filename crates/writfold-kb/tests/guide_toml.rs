@@ -16,7 +16,7 @@ use blocks::blocks;
 
 type TestResult<T = ()> = Result<T, Box<dyn Error>>;
 
-const PAGES: [&str; 12] = [
+const PAGES: [&str; 13] = [
     "README",
     "kb-layout",
     "checkers",
@@ -29,6 +29,7 @@ const PAGES: [&str; 12] = [
     "hooks",
     "assurance",
     "json",
+    "policy",
 ];
 
 fn guide() -> PathBuf {
