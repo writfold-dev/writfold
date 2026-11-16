@@ -1,6 +1,6 @@
 # Watching a run
 
-> **Status:** built (T5: the knowledge base as a second mode, `m`). Implementation, tests and deviations: [design §37](../writfold/kb-v1-design.md#37-t5-as-built); the calm frame is recorded in [§36](../writfold/kb-v1-design.md#36-t4-as-built), the plan map in [§35](../writfold/kb-v1-design.md#35-t3-as-built) and the earlier text view in [§34](../writfold/kb-v1-design.md#34-t2-as-built).
+> **Status:** built (T6, built in v0.5.0-dev.10: plain words by default, the verbs' exact wording on `d`, commands to copy on `c`). Implementation, tests and deviations: [design §40](../writfold/kb-v1-design.md#40-t6-as-built-v050-dev10); the knowledge-base mode is recorded in [§37](../writfold/kb-v1-design.md#37-t5-as-built), the calm frame it replaced in [§36](../writfold/kb-v1-design.md#36-t4-as-built), the plan map in [§35](../writfold/kb-v1-design.md#35-t3-as-built) and the earlier text view in [§34](../writfold/kb-v1-design.md#34-t2-as-built).
 
 `writfold watch` is a read-only view of the KB verbs. It shows recorded steps,
 gate standings, checklist items, pending drafts and proposals, guard rules and
@@ -60,7 +60,7 @@ including a done step after open children following a merge.
 | Later | `○` | `[ ]` |
 | Invalid flag | `×` | `[#]` |
 
-Gate chips follow each gate continuation's `status`: `●` satisfied, `◆` attested
+At the exact level (`d`), gate chips follow each gate continuation's `status`: `●` satisfied, `◆` attested
 or waived, `○` open, `!` stale, `×` failed, `?` unknown, and `·` later, not judged.
 ASCII chips are `+` satisfied, `*` attested/waived, `o` open, `!` stale, `x`
 failed, `?` unknown and `.` later; every chip shape differs, and the inspector
@@ -72,107 +72,198 @@ The marker means **the next step to pick up**: the recorded current step (the
 first step neither done nor skipped), not a liveness claim. Nothing records
 whether an agent is working; a run whose agent stopped shows the same marker.
 The line above the rail reads `step N of M` with the verb's done and skipped
-counts; only stale, moved, invalid and disorder counts take a warning tone.
-Below the rail are the newest plan event from Timeline (one clipped line; whole,
-with the run list's last checkpoint, at the detailed level) and a one-line
-caption for the marker. Without a subject repository the gate counts stay
-missing, the line says `gates not judged` and the verb's note is shown; the
-position still comes from the row the verb marks current.
+counts and, in words, the counts that need a look (`1 out of date`); only
+those take a warning tone. Below the rail are the newest plan event from
+Timeline in words (`last recorded   2026-11-10 23:59 · prepare done`; the
+verb's line, with the run list's last checkpoint, at the exact level) and a
+one-line caption for the marker. Without a subject repository the gate counts
+stay missing, the line says `gates not judged (no repository)`, the header says
+`no repository: gates not judged`, and the verb's note is quoted when it reads
+as words; the position still comes from the row the verb marks current.
 Done stays done when its evidence becomes stale; the marker never moves back.
 
 Selection starts at the recorded current step, survives refresh by ID, and falls
 back to the current step or first row if its ID disappears. The rail keeps it
 visible with two rows of context where space permits. Group headers name the
-splice; inside a group a row shows its id after the group's name (`check` under
-`findings#1`), and the inspector shows the full id. Chips are aligned, IDs
-truncate from the left, and text that does not fit, headers included, ends in
-`…`. Rail bars are always dim; only the state glyph takes a state colour. The
-row end repeats only disorder and invalid flags; the state glyph already says
-stale or skipped. The legend is in help (`?`, "Marks").
+template (`findings`); inside a group a row shows its id after the group's name
+(`check` under `findings`), and the exact level shows the full id. IDs truncate
+from the left, and text that does not fit, headers included, ends in `…`. Rail
+bars are always dim; only the state glyph takes a state colour. A row carries
+words only when it is the recorded current step (`needs review-list and
+signoff`), the selected row (`done 2026-11-10 23:47`) or flagged (`done; lint
+is now out of date`, `done out of order`); the state glyph says the rest. The
+legend is in help (`?`, "Marks" and "Words").
 
-The inspector leads with the step's short id and a status chip, then the full
-id. It shows reasons, what the step owes, each gate as the verb words it with
-its segment strip, the checklist items still open or stale, completion or skip
-records and the read/next commands. Checklist segments are one per required
-item, in source order: `■` supported, `◆` not-applicable/attested, `!` stale,
-`□` open, then `(+N optional)`; their count never scales with width. `d` adds
-splice and parent, the gate chips, every item including covered ones, every
-receipt path (wrapped with a hanging indent) and the run's last plan event and
-checkpoint. `g` opens full gate receipts. No gate-status rows are joined into it.
+The inspector reads top down: the step's name and `next up` (or `done`,
+`skipped`); where it sits (`step 7 of 11 · in findings`); what its state means
+(`Needs 2 gates before it can be marked done.`, from the plan's owed count;
+`Done on 2026-11-10 23:50.`; `It stays done, but 1 of its gates is now out of
+date.`); each gate with its standing (`review-list   out of date`) and its
+class (`checklist · 2 of 4 required items covered`, `decided by a person's
+statement; no command is run`); the checklist items still open or out of date
+(`□ docs    not covered · The guide names every new flag`); then `Read first`
+and `Suggested` (`give evidence for tests in review-list`). At the exact level
+it shows the splice and parent, the gate chips, the segment strip (`■`
+supported, `◆` not-applicable/attested, `!` stale, `□` open, then `(+N
+optional)`, one per required item, never scaled), every item including covered
+ones, every receipt path and the run's last plan event and checkpoint. `g`
+opens the Gates view; no gate-status rows are joined into the inspector.
 
-### Calm and detailed
+### Plain and exact
 
-The frame starts **calm**. `d` toggles the **detailed** level for the whole
-frame and back; the level is never written, so a fresh start is calm. Calm
-removes lines and clips at word boundaries; it never rewrites a verb's wording,
-and everything it omits is one key away (`d`, `?`, `g`, `x` or a view).
+The frame starts **plain**: the product's nouns (run, step, gate, checklist,
+guard, draft, proposal) and the names people chose, with no notation. `d`
+toggles the **exact** level for the whole frame and back: the verbs' own
+wording, ids, flags, receipts and stamps, exactly as the frame showed them
+before plain words existed. The level is never written, so a fresh start is
+plain. `--once`, `--view NAME --once`, a pipe and `--once --view kb:NAME` print
+the exact text, unchanged; the JSON verbs are untouched.
 
-- A rail row shows its verb text only when it is the recorded current step or
-  the selected row; every other row is rail, glyph, short id and chips.
-- Group headers show the splice name; the hash and template source come back
-  with `d` and are in the inspector's `splice:` line.
-- Receipt paths (`@path:line`) appear only at the detailed level, in `g` and in `x`.
-- Runs entries are two lines (title; state when not open, project and the plan
-  position up to its first `key=value` token); `d` restores the five-line entry
-  with id, fields, plan counts and last checkpoint.
+- **States are words.** `out of date` is `stale` everywhere (map, inspector,
+  Gates, the tab badge, KB lists); `passed` is only ever `satisfied`;
+  `signed off` (attested) and `waived` say that no check passed; `nothing
+  recorded yet` is `open`; `no verdict` is `unknown`; `not judged yet` is
+  `later`; a guard `would block`, `would ask first` or `would remind`, never
+  blocks. `next up` is the recorded current step, not a claim that anyone is
+  working. A word with no phrase is printed as itself. `?` prints the whole
+  vocabulary under **Words**, each phrase beside its exact word.
+- **Whole or nothing.** A verb's sentence is shown unchanged or not at all;
+  when a pane leaves one out it ends with `N lines in exact wording (d)` (or
+  `N notes …`). Authored text (titles, checkpoint text, checklist
+  requirements, `why` lines, field values) is always shown whole.
+- **Times are respelt, not computed.** `2026-11-10T23:59:50Z` prints as
+  `2026-11-10 23:59` (UTC, as recorded); there is no relative time.
+- **The bars speak when something is not normal.** The header's right end is
+  `run 1 of 3`; `current run` is a chip. Badges say `4 not met` (gates not
+  satisfied, attested or waived), `3 pending`, `1 would block`, and shorten to
+  their number before a tab drops. The footer says `KB has 19 uncommitted
+  changes` and an index that is not fresh, and nothing else; the stamps are in
+  help (`?`, "This frame") and at the exact level.
+- **Runs entries** are two lines (title; state when not open, project and the
+  plan position); `d` restores the five-line entry with id, fields, plan counts
+  and last checkpoint.
 
-The calm wide frame (136×38, map focused):
+#### Words
+
+`?` prints this vocabulary from the tables the frame uses, so help and the
+frame cannot disagree. The main rows:
+
+| Plain | Exact word | Where |
+|---|---|---|
+| `next up` | `current` | a step: the next step to pick up, as recorded |
+| `done; lint is now out of date` | `done` with `!stale` | a step that stays done while a gate no longer holds |
+| `done out of order`, `two plans on this run`, `spliced again`, `template changed` | `!out-of-order`, `!two-plans`, `!repeated`, `!template-moved` | step flags (the run graph guide's merge disorder and template checks) |
+| `passed` | `satisfied` | a gate; the only phrase that says passed |
+| `signed off`, `waived` | `attested`, `waived` | a gate decided by a person; no check passed |
+| `nothing recorded yet`, `out of date`, `failed`, `no verdict`, `not judged yet` | `open`, `stale`, `failed`, `unknown`, `later` | gate standings |
+| `checked by a command`, `decided by a person's statement; no command is run` | `mechanical`, `attested` | gate classes |
+| `covered`, `marked not applicable`, `not covered`, `optional ·` | `supported`, `not-applicable`, `open`, `(optional)` | checklist items |
+| `would block`, `would ask first`, `would remind`, `would allow` | `would-deny`, `would-ask`, `would-nudge`, `would-pass` | guards: a guard advises, it does not enforce |
+| `needs every gate of the run met`, `needs the current step's gates met` | `gates.met`, `step.met` | guard requirements (see [hooks](hooks.md#guard-rules)) |
+| `draft`, `pending`, `kept only on this machine`, `in the work tree` | `draft`, `pending`, `!local`, `!tracked` | Inbox |
+| `moved`, `changed`, `gone`, `expired`, `overdue`, `came back` | `moved→X`, `changed`, `gone`, `expired`, `past-ttl`, `regression` | cited sources and records in KB mode |
+| `about it`, `in project`, `replaced by it`, `cites it` | `concerns`, `project`, `superseded-by`, `cites` | a link, read from the linking record's side |
+
+The plain wide frame (136×38, map focused, blank pane rows trimmed):
 
 ```text
- Add --plan to kb runs   open   current   harbor   subject kb                                               run-20261101T090000Z-a1b2c3
-  1 progress    2 gates !2 ○2    3 timeline    4 inbox 3    5 guards deny 1    6 stale    7 brief    8 resume
-╭ runs (3) ──────────╮╭ plan ─────────────────────────────────────────────────╮╭ step 7/11 ────────────────────────────────────────────╮
-│> Add --plan to kb …││step 7 of 11    5 done  1 skipped  1 stale             ││check  current                                         │
-│  harbor  step 7/11 ││                                                       ││change#1/review/review#1/findings/findings#1/check     │
-│  Review the lanter…││ ┬ change#1                                            ││                                                       │
-│  lantern           ││ ✓ research    ●                                       ││owes: review-list [stale], signoff [open]              │
-│  Retire the legacy…││ ! implement   ●!                                      ││                                                       │
-│  closed  harbor  c…││ – benchmarks                                          ││gate review-list [stale] checklist 2/4 required covered│
-│                    ││ ├─╮ review#1                                          ││  ■ ! □ ◆ (+1 optional)                                │
-│                    ││ │ ├─╮ notes#1                                         ││  ! tests [stale] 1 reference by agent; cited evidence │
-│                    ││ │ │ ✓ read    ●                                       ││  moved: gate:lint was satisfied, now stale            │
-│                    ││ │ ├─╯                                                 ││  □ docs [open] The guide names every new flag         │
-│                    ││ │ ✓ read-diff ●                                       ││  □ style [open] (optional) Names follow the module    │
-│                    ││ │ ├─╮ findings#1                                      ││gate signoff [open] attested                           │
-│                    ││ │ │ ✓ prepare ●                                       ││                                                       │
-│                    ││ │ │ ▶ check   !○ owes: review-list [stale], signoff … ││read: instructions for signoff                         │
-│                    ││ │ ├─╯                                                 ││next: writfold kb gate cover review-list tests         │
-│                    ││ │ ○ findings  ··                                      ││supported REF… --by WHO                                │
+ Add --plan to kb runs   open   current run   harbor                                                                         run 1 of 3
+  1 progress   2 gates 4 not met   3 timeline   4 inbox 3 pending   5 guards 1 would block   6 stale   7 brief   8 resume          m kb
+╭ runs (3) ──────────╮╭ plan ─────────────────────────────────────────────────╮╭ step 7 of 11 ─────────────────────────────────────────╮
+│> Add --plan to kb …││step 7 of 11    5 done  1 skipped  1 out of date       ││check   next up                                        │
+│  harbor  step 7/11 ││                                                       ││step 7 of 11 · in findings                             │
+│  Review the lanter…││ ┬ change                                              ││                                                       │
+│  lantern           ││ ✓ research                                            ││Needs 2 gates before it can be marked done.            │
+│  Retire the legacy…││ ! implement     done; lint is now out of date         ││                                                       │
+│  closed  harbor  c…││ – benchmarks                                          ││review-list   out of date                              │
+│                    ││ ├─╮ review                                            ││  checklist · 2 of 4 required items covered            │
+│                    ││ │ ├─╮ notes                                           ││  ! tests   out of date · the evidence it cites has    │
+│                    ││ │ │ ✓ read                                            ││            changed                                    │
+│                    ││ │ ├─╯                                                 ││  □ docs    not covered · The guide names every new    │
+│                    ││ │ ✓ read-diff                                         ││            flag                                       │
+│                    ││ │ ├─╮ findings                                        ││  □ style   optional · not covered · Names follow the  │
+│                    ││ │ │ ✓ prepare                                         ││            module                                     │
+│                    ││ │ │ ▶ check     needs review-list and signoff         ││                                                       │
+│                    ││ │ ├─╯                                                 ││signoff   nothing recorded yet                         │
+│                    ││ │ ○ findings                                          ││  decided by a person's statement; no command is run   │
 │                    ││ ├─╯                                                   ││                                                       │
-│                    ││ ○ review      ··                                      ││                                                       │
-│                    ││ ○ deliver     ·                                       ││                                                       │
+│                    ││ ○ review                                              ││Read first   instructions for signoff                  │
+│                    ││ ○ deliver                                             ││Suggested    give evidence for tests in review-list    │
 │                    ││ ○ reflect                                             ││                                                       │
 │                    ││ ┴                                                     ││                                                       │
-│                    ││                                                       ││                                                       │
-│                    ││last plan event  2026-11-10T23:59:50Z done change#1/re…││                                                       │
-│                    ││▶ next step to pick up, as recorded                    ││d receipts and covered items   g gates   x text        │
+│                    ││last recorded   2026-11-10 23:59 · prepare done        ││                                                       │
+│                    ││▶ the next step to pick up, as recorded                ││d exact wording   c commands   g gates                 │
 ╰────────────────────╯╰───────────────────────────────────────────────────────╯╰───────────────────────────────────────────────────────╯
-  read-only   kb 0ea3a743bfef+dirty:19   index fresh   asked 00:21:18Z                j/k step   l inspect   d detail   ? help   q quit
-```
-
-(Blank pane rows are trimmed here.) The same map pane after `d`:
-
-```text
-│step 7 of 11    5 done  1 skipped  1 stale             │
-│owes 2 of 2 gates                                      │
-│                                                       │
-│ ┬ change#1 @83c2cc9efde7 from .writfold/plans/change.…│
-│ ✓ change#1/research      ●  recorded 2026-11-10T23:4… │
-│ ! change#1/implement     ●! recorded 2026-11-10T23:5… │
-│ – change#1/benchmarks       no hot path touched (by … │
-│ ├─╮ review#1 @932e0ad862a8 from .writfold/plans/revie…│
-│ …                                                     │
-│last plan event: 2026-11-10T23:59:50Z done             │
-│change#1/review/review#1/findings/findings#1/prepare   │
-│last checkpoint: 2026-11-10T14:10:00Z Review started.  │
-│▶ next step to pick up, as recorded                    │
+  read-only   KB has 19 uncommitted changes                                           j/k step   l inspect   d detail   ? help   q quit
 ```
 
 At 80×24 the map has the frame to itself; `l` swaps it for the inspector, whose
 footer hint becomes `h back`. Committed buffers:
-[calm 136×38](../../crates/writfold-tui/tests/golden/t4-calm-136x38.txt),
-[calm 80×24](../../crates/writfold-tui/tests/golden/t4-calm-80x24.txt),
-[detailed 136×38](../../crates/writfold-tui/tests/golden/t4-detail-136x38.txt).
+[plain 136×38](../../crates/writfold-tui/tests/golden/t4-calm-136x38.txt),
+[plain 80×24](../../crates/writfold-tui/tests/golden/t4-calm-80x24.txt),
+[inspector 80×24](../../crates/writfold-tui/tests/golden/t6-inspector-80x24.txt),
+[exact 136×38](../../crates/writfold-tui/tests/golden/t4-detail-136x38.txt).
+
+The text views say the same things in rows. Gates at 136×38:
+
+```text
+ Add --plan to kb runs   open   current run   harbor                                                                         run 1 of 3
+ 1 progress   2 gates  4 not met   3 timeline   4 inbox 3 pending   5 guards 1 would block   6 stale   7 brief   8 resume          m kb
+╭ runs (3) ──────────────────╮╭ gates ─────────────────────────────────────────────────────────────────────────────────────────────────╮
+│> Add --plan to kb runs     ││6 gates · 2 passed · 2 out of date · 2 with nothing recorded yet · 4 not met                            │
+│  harbor  step 7/11         ││                                                                                                        │
+│  Review the lantern guide  ││○ bench         nothing recorded yet · checked by a command                                             │
+│  lantern                   ││! lint          out of date · changed in scope: harbor/lint.txt                                         │
+│  Retire the legacy flush p…││● notes         passed                                                                                  │
+│  closed  harbor  complete  ││○ signoff       nothing recorded yet · decided by a person's statement; no command is run               │
+│                            ││● unit          passed                                                                                  │
+│                            ││! review-list   out of date · checklist · 2 of 4 required items covered                                 │
+│                            ││    ■ errors    covered · 1 reference by agent                                                          │
+│                            ││    ! tests     out of date · the evidence it cites has changed                                         │
+│                            ││    □ docs      not covered · The guide names every new flag                                            │
+│                            ││    ◆ perf      marked not applicable · no hot path touched by agent                                    │
+│                            ││    □ style     optional · not covered · Names follow the module                                        │
+│                            ││Standings are worked out from the run's recorded results each time this view asks; nothing is run.      │
+╰────────────────────────────╯╰────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+  read-only   KB has 19 uncommitted changes                                          j/k scroll   Tab view   d detail   ? help   q quit
+```
+
+Inbox leads with `3 pending · 1 draft · 2 proposals` and one entry per draft or
+proposal (`confirming it records a checkpoint`, `pending · kept only on this
+machine`); Guards with `2 rules · 1 would block · 1 would remind` and one rule
+per row with what it needs (`needs every gate of the run met`); Timeline is
+`when   what   name` (`2026-11-10 23:51   step skipped   benchmarks · (by
+owner) no hot path touched`) and ends `Times are UTC, as recorded.` Stale,
+Brief and Resume show each row as glyph, title, `kind · state` and its
+readable lines. Committed:
+[gates](../../crates/writfold-tui/tests/golden/t6-gates-136x38.txt),
+[gates 80×24](../../crates/writfold-tui/tests/golden/t6-gates-80x24.txt),
+[inbox](../../crates/writfold-tui/tests/golden/t6-inbox-136x38.txt),
+[guards](../../crates/writfold-tui/tests/golden/t6-guards-136x38.txt),
+[timeline](../../crates/writfold-tui/tests/golden/t6-timeline-136x38.txt).
+
+### Commands to copy
+
+`c` replaces the bottom rows of the frame with borderless, full-width lines a
+terminal selection copies cleanly: the run and step ids and the files to read
+as `#` comment lines, then each suggested command whole, exactly as the verb
+gave it. A command longer than the frame breaks at a space and ends in ` \`,
+so the copy still runs. In the Gates, Inbox, Guards and Resume views the rows
+list every `next`, `read`, `confirm` and `accept` of the view under a `# name`
+line; in KB mode they name the record and its file and the verbs the inspector
+asked. At most ten rows; `j`/`k` scroll; any other key closes. `watch` runs
+none of them, and the first row says so:
+
+```text
+ commands for step check · copy into a shell; watch never runs them · UPPERCASE words are placeholders
+ # run   run-20261101T090000Z-a1b2c3
+ # step  change#1/review/review#1/findings/findings#1/check
+ # read  .writfold/gates/signoff.md
+ writfold kb gate cover review-list tests supported REF… --by WHO
+ any key closes
+```
+
+[Committed](../../crates/writfold-tui/tests/golden/t6-commands-136x38.txt).
 
 `x` switches to the earlier text list. There, a clean done step collapses to its
 heading and completion time, and a later step to its heading; flagged, current
@@ -189,7 +280,7 @@ asked a verb, not an activity timestamp for the run.
 
 `m` switches between two modes of the same frame. **Run mode** is everything
 above; **KB mode** shows the knowledge base's records with the same bars,
-rails, chips, calm and detailed levels and help. Each mode keeps its own view,
+rails, plain and exact levels, command rows and help. Each mode keeps its own view,
 selection, focus and scroll, so `m` twice returns to the same place. The tab row
 ends in the switch: `m kb` in run mode, `m runs` in KB mode (the first unit a
 short row drops). `--view kb:why|kb:status|kb:tracker|kb:impact|kb:stale`
@@ -204,7 +295,7 @@ and name; `d` adds the id and position), then **all records**, whose `why` and
 |---|---|---|---|
 | why | `1` | `writfold kb find --kind decision --project P --json`, plus any decision `writfold kb status project:P --json` names that the listing does not | the project's decisions in ID order: title, state glyph, marks, status word |
 | status | `2` | `writfold kb brief P --json` (`brief --all` for all records) | the answer as text, scrolled; the inspector shows the project record |
-| tracker | `3` | `writfold kb impact project:P --direction in --depth 2 --json` | tickets, investigations and signatures within two links, under the record their edge came from (`┼ harbor-db`) |
+| tracker | `3` | `writfold kb impact project:P --direction in --depth 2 --json` | tickets, investigations and signatures within two links, under the record their edge came from (`┼ Harbor ledger store`; the id at the exact level) |
 | impact | `4` | `writfold kb impact ID --direction D --depth 2 --json` | the walk as a tree: root, depth-1 records in verb order, each followed by its depth-2 records on a dim bar |
 | stale | `5` | `writfold kb stale --cached --json` (the whole KB) | stale citations, assets past their TTL and regressions, under the file that holds them |
 
@@ -212,10 +303,13 @@ The views read structured fields only. The tree follows each `impact` row's
 `edge` key (its `from`, `to` and `depth`, see [JSON](json.md#keys-only-some-verbs-add));
 a row without an edge, or whose parent is not in the answer, is drawn flat
 under a `depth N` header, so nothing is dropped. A tree row's label is the
-`title` key when the record has one, else its id; the dim word is the relation.
-The last line quotes the walk's trailer: `N reached`, then
-`not followed: A retired, B disputed, C inferred` for non-zero counts and
-`frontier F`, in the warning tone when the verb's coverage is partial. Mention
+`title` key when the record has one, else its id. The dim word is the
+relation, read from the row's side (`about it`, `in project`, `replaced by
+it`; the exact level prints the edge's word, `concerns`); in the tracker it is
+the record's own status. The last line is the walk's trailer in words:
+`19 records reached · not followed: 1 disputed link, 22 inferred links`, in
+the warning tone when the verb's coverage is partial; a caption names the
+marks the list carries (`! cites a source that has moved`). Mention
 edges are not walked; the count says how many were skipped.
 
 ### Entries, glyphs and marks
@@ -237,26 +331,32 @@ Marks say that a source moved, from flags only: `!` for `stale`, `changed`,
 cited lines moved carries `!` in `why`. `n`/`N` select the next or previous
 marked entry. `why` prints verdicts `kb stale` cached; `stale --cached` judges
 Git-backed citations when asked, so the two can differ until someone runs
-`writfold kb stale`. The KB tab carries a badge only on `stale`: `!N` and `?N`
-from that verb's own counts. A verdict read from a [check receipt](checkers.md#sharing-verdicts-check-receipts)
+`writfold kb stale`. The KB tab carries a badge only on `stale`: `9 moved` and
+`N unchecked` (`!N` and `?N` at the exact level) from that verb's own counts.
+In the plain stale list every row is there because something moved, so the
+mark column goes and the word is the reason: `moved`, `changed`, `gone`,
+`expired`, `overdue` (past its TTL), `came back` (a regression); a cited
+source is named by its place (`src/batch.rs:2-4`). A verdict read from a [check receipt](checkers.md#sharing-verdicts-check-receipts)
 (built in v0.5.0-dev.9) sets no mark of its own: its row carries the extra flag
 `recorded`, which the stale inspector shows beside the verdict.
 
 ### The inspector
 
 The inspector always describes the selected entry: `status ID`, `why ID` for a
-decision and `timeline ID` (for a code node, `uses ID`). Calm, top down: the
-title and a status chip, the full id; for a decision `decided …` and each `why`
-line, then `cites N` with one cell per citation (`●` fresh, `!` moved, `?`
-unknown; ASCII `+ ! ?`) and only the citations that carry a flag; for other
-records their `field` lines; `see also` (the decision's investigations and
-tickets), `linked from` (records whose link names this one, with the relation),
-`runs` (each listed run whose checkpoint names the record, by title), the verbs'
-notes, and the record's `@path:line`. `d` adds every position, fresh citations,
-outcome lines, inferred mentions, checkpoint text under `runs`, all flags as
-words and each verb's coverage. A draft decision's `why` prints its reason
-(`answer unknown: no-accepted-decision`) and the verb's boundary note. `why` on
-a superseded decision answers with its successor, and the inspector says so.
+decision and `timeline ID` (for a code node, `uses ID`). Plain, top down: the
+title and status; what it is (`decision · decided by ops-review on
+2026-03-09`, `ticket HBR-101`, `a citation of code`); for a decision `Why` and
+each line whole, then `Sources · 1 of 2 has moved` with only the sources that
+moved, by place (`! src/batch.rs:2-4 in demo-service`, `moved to 4-6`); for
+other records their fields as `key   value` (the status is the header's); `See
+also`, `Linked from` (with the relation from the linking record's side,
+`replaced by it`), `Cited by`, `Runs that name it` (by title), and the verbs'
+notes when they read as words, else `N notes in exact wording (d)`. `d` shows
+the id, every position, fresh citations, outcome lines, inferred mentions,
+checkpoint text under `runs`, all flags as words and each verb's coverage. A
+draft decision's `why` says `answer unknown · no-accepted-decision` and quotes
+the verb's boundary note. `why` on a superseded decision answers with its
+successor, and the inspector says so.
 
 ### Following between runs and records
 
@@ -274,61 +374,52 @@ records meet only through checkpoint text; the frame says `named`, never `cites`
 `stale` code citation it walks the cited file); `v` cycles the direction
 `in` → `out` → `both`, and the verb is asked again.
 
-The calm KB frame (136×38, list focused, the third decision selected):
+The plain KB frame (136×38, list focused, the third decision selected, blank
+pane rows trimmed):
 
 ```text
- Harbor status   build   knowledge base                                                                                  project:harbor
-  1 why    2 status    3 tracker    4 impact    5 stale !9                                                                       m runs
-╭ projects (2) ──────╮╭ why (5) ──────────────────────────────────────────────╮╭ decision 3/5 ─────────────────────────────────────────╮
+ Harbor status   build   knowledge base                                                                                  project 1 of 3
+  1 why    2 status    3 tracker    4 impact    5 stale 9 moved                                                                  m runs
+╭ projects (2) ──────╮╭ why (5) ──────────────────────────────────────────────╮╭ decision 3 of 5 ──────────────────────────────────────╮
 │> Harbor status     ││ ┬ decisions                                           ││Batch ledger writes in the API   accepted              │
-│  build  harbor     ││ – One writer process for the ledger    superseded     ││proposal/decision/2026-03-02-batch-ledger-writes       │
+│  build  harbor     ││ – One writer process for the ledger    superseded     ││decision · decided by ops-review on 2026-03-09         │
 │  Lantern console   ││ – Drop client retries on flush         rejected       ││                                                       │
-│  lantern           ││ ● Batch ledger writes in the API    !  accepted       ││decided by ops-review on 2026-03-09                    │
-│  all records       ││ ○ Shard the ledger by tenant           draft          ││                                                       │
-│  by kind           ││ ○ Cap replay batches at 500 rows    !  draft          ││why  Group ledger writes into batches of up to 500 rows│
-│                    ││ ┴                                                     ││     per transaction.                                  │
-│                    ││                                                       ││why  Batching keeps the flush under the store's fsync  │
-│                    ││                                                       ││     budget.                                           │
-│                    ││                                                       ││cites 2  ● !                                           │
-│                    ││                                                       ││  ! code:demo-service:src/batch.rs:2-4 [moved]         │
-│                    ││                                                       ││    moved→4-6                                          │
-│                    ││                                                       ││see also                                               │
-│                    ││                                                       ││  ● Flush stalls on the ledger store  concluded        │
-│                    ││                                                       ││  ● Ledger flush stalls on slow disk  done             │
-│                    ││                                                       ││linked from                                            │
-│                    ││                                                       ││  – One writer process for the ledger  superseded-by (…│
-│                    ││                                                       ││runs                                                   │
+│  lantern           ││ ● Batch ledger writes in the API    !  accepted       ││Why                                                    │
+│  all records       ││ ○ Shard the ledger by tenant           draft          ││  Group ledger writes into batches of up to 500 rows   │
+│  by kind           ││ ○ Cap replay batches at 500 rows    !  draft          ││  per transaction.                                     │
+│                    ││ ┴                                                     ││  Batching keeps the flush under the store's fsync     │
+│                    ││                                                       ││  budget.                                              │
+│                    ││                                                       ││Sources · 1 of 2 has moved                             │
+│                    ││                                                       ││  ! src/batch.rs:2-4 in demo-service                   │
+│                    ││                                                       ││    moved to 4-6                                       │
+│                    ││                                                       ││See also                                               │
+│                    ││                                                       ││  ● Flush stalls on the ledger store   concluded       │
+│                    ││                                                       ││  ● Ledger flush stalls on slow disk   done            │
+│                    ││                                                       ││Linked from                                            │
+│                    ││                                                       ││  – One writer process for the ledger   replaced by it │
+│                    ││                                                       ││Runs that name it                                      │
 │                    ││                                                       ││  Add --plan to kb runs                                │
-│                    ││                                                       ││…/decision/2026-03-02-batch-ledger-writes/proposal.md:5│
-│                    ││decisions that name harbor as their project            ││d sources and fresh cites   f run   a impact           │
+│                    ││harbor's decisions   ! cites a source that has moved   ││d exact wording and file   f run   a impact            │
 ╰────────────────────╯╰───────────────────────────────────────────────────────╯╰───────────────────────────────────────────────────────╯
-  read-only   kb 20cd29c9466b   index fresh   asked 00:21:18Z                       j/k record   l inspect   a impact   ? help   q quit
+  read-only                                                                         j/k record   l inspect   a impact   ? help   q quit
 ```
 
-(Blank pane rows and the blank lines between inspector sections are trimmed.)
 The impact pane after `a` on `harbor-db` (direction `in`), same size, blank rows trimmed:
 
 ```text
 ╭ impact ───────────────────────────────────────────────╮
-│in  what cites or links to harbor-db                   │
+│what points at Harbor ledger store                     │
 │                                                       │
-│ ┬ harbor-db                                           │
-│ ○ Slow ledger flush at month end         concerns     │
-│ │ · Harbor status                     !  cites        │
-│ ○ Replay too slow                        concerns     │
-│ │ ○ Cap replay batches at 500 rows    !  references   │
-│ ● Ledger flush stalls on slow disk       concerns     │
-│ ● Harbor billing API                  !  depends-on   │
-│ │ · Harbor billing API                !  dossier-of   │
-│ │ · Restart the Harbor API               concerns     │
-│ ● Flush stalls on the ledger store       concerns     │
-│ ○ Flush stalls return                 !  concerns     │
-│ ● Batch ledger writes in the API      !  references   │
-│ │ – One writer process for the ledger !  superseded-by│
-│ · Quay batch worker                      depends-on   │
-│ ● Fsync stall on the ledger store        concerns     │
-│ ┴                                                     │
-│14 reached   not followed: 1 disputed, 6 inferred      │
+│ ┬ Harbor ledger store                                 │
+│ ○ Slow ledger flush at month end         about it     │
+│ │ · Harbor status                     !  cites it     │
+│ ○ Replay too slow                        about it     │
+│ │ ○ Cap replay batches at 500 rows    !  refers to it │
+│ ● Ledger flush stalls on slow disk       about it     │
+│ ● Harbor billing API                  !  depends on it│
+│ …                                                     │
+│14 records reached · not followed: 1 disputed link, 6  │
+│inferred links   ! cites a source that has moved       │
 ╰───────────────────────────────────────────────────────╯
 ```
 
@@ -338,13 +429,17 @@ The asset `harbor-api` and its dossier share the title "Harbor billing API";
 Committed buffers:
 [why 136×38](../../crates/writfold-tui/tests/golden/t5-why-136x38.txt),
 [why 80×24](../../crates/writfold-tui/tests/golden/t5-why-80x24.txt),
-[why detailed](../../crates/writfold-tui/tests/golden/t5-why-detail-136x38.txt),
+[why exact](../../crates/writfold-tui/tests/golden/t5-why-detail-136x38.txt),
+[status](../../crates/writfold-tui/tests/golden/t6-kb-status-136x38.txt),
+[stale](../../crates/writfold-tui/tests/golden/t6-kb-stale-136x38.txt),
+[a citation 80×24](../../crates/writfold-tui/tests/golden/t6-kb-stale-inspector-80x24.txt),
 [impact](../../crates/writfold-tui/tests/golden/t5-impact-136x38.txt),
 [tracker 100×30](../../crates/writfold-tui/tests/golden/t5-tracker-100x30.txt) and the plain
 [`--once --view kb:why`](../../crates/writfold-tui/tests/golden/t5-once-kb-why.txt).
 
 KB footer hints: list `j/k record   l inspect   a impact`; inspector
-`j/k scroll   h back   d detail`; projects `j/k project   l records`; status
+`j/k scroll   h back   d detail` (its hint line: `d exact wording and file   f run
+a impact`); projects `j/k project   l records`; status
 `j/k scroll   Tab view`. A KB with no project shows only `all records`; an empty
 list says so in one dim line (`harbor names no decisions`, `nothing tracked
 within 2 links of harbor`, `nothing stale; N checked`) followed by the verb's
@@ -368,7 +463,8 @@ press `r`.
 | `0` | Show the full-frame runs list in a narrow layout; paging does not change selection |
 | `.` | Select the recorded current step |
 | `n` / `N` | Next/previous flagged step, wrapping |
-| `d` | Calm / detailed frame: receipts, covered items, splice text, full runs entries and stamps; never written |
+| `d` | Plain words / exact wording for the whole frame: the verbs' own text, ids, receipts, covered items, splice text, chips, full runs entries and stamps; never written, so a fresh start is plain |
+| `c` | Commands to copy: ids, files and the suggested commands of what is on screen, as borderless rows at the bottom; `j`/`k` scroll, any other key closes; `watch` runs none of them |
 | `x` / `X` | In Progress: map/text toggle / expand or collapse the text list |
 | `o` | Toggle `kb runs --open` |
 | `P` | Toggle the selected project's `kb runs --project`; without a project, show a notice and change nothing |
@@ -378,11 +474,11 @@ press `r`.
 | `f` | Follow: from a run to the first record its checkpoints name; from a record to a listed run whose checkpoint names it |
 | `a` / `v` | KB mode: impact of the selected record / cycle its direction in → out → both |
 | `1`–`5` | KB mode: why, status, tracker, impact, stale; a run view's letter (`p g t i u s b e`) leaves KB mode for that view |
-| `?` | Help: the marks, this frame's full stamps, keys and verbs (per mode); any key except `q` closes it |
+| `?` | Help: the marks, this frame's full stamps, the Words (each plain phrase beside the verbs' exact word), keys and verbs (per mode); any key except `q` closes it |
 | `q`, Ctrl-C | Quit and restore the terminal |
 
-No key writes. `c` is unbound. Copy the verb's `confirm:` or `accept:` command to
-another terminal when you intend a write. Local-only inboxes say they are local;
+No key writes, and no key runs anything. `c` lists the verb's `confirm` or
+`accept` command; copy it to another terminal when you intend a write. Local-only inboxes say they are local;
 when a tracked proposal is present, the caption instead describes pending
 records. `!tracked` means the work-tree proposal store, not acceptance or proof
 that the file has been committed.
@@ -398,27 +494,33 @@ that the file has been committed.
 
 Without a plan, or in another view, the earlier layouts remain. The wide stack
 contains Gates/Inbox/Timeline, plus Guards from height 38; its panes are not
-focusable. Text and evidence wrap with hanging indentation; maps and lists
+focusable. At the plain level each holds its count line and one clipped line
+per row (`! lint   out of date`, `stop-reflect   would remind`). Text and evidence wrap with hanging indentation; maps and lists
 truncate with `…`. The map reserves the recorded facts below the rail and drops
 the caption first, then the oldest record line, when space is short.
 
 Every layout has the same three bars, and every pane starts on the third row:
 
-- **Header**: the run title, its status chip, a `current` chip on the current
-  run, a project chip and `subject NAME`; the run id is right-aligned (`run N/M`
-  in a narrow layout). When the row is short, subject then project drop.
+- **Header**: the run title, its status chip, a `current run` chip on the
+  current run and a project chip; `no repository: gates not judged` (or
+  `repository unreadable`) only when no subject is judged; `run 1 of 3` at the
+  right. The exact level shows `current`, `subject NAME` and the run id
+  (`run N/M` in a narrow layout). When the row is short, the subject warning
+  then the project drop.
 - **Tabs**: eight views; the active one is a filled chip. A tab carries a badge
-  only for a non-zero count from its own verb: Gates `!N` stale, `×N` failed,
-  `○N` open, `?N` unknown; Inbox one number (drafts plus proposals; the Inbox
-  view's first line has the breakdown); Guards `deny N`, `ask N`. Narrow
-  layouts, or a row too short for all eight, show the active tab, the tabs with
-  badges and `i/8`.
-- **Footer**: a `read-only` chip, `kb STAMP`, `index STATE` (warning tone when
-  not fresh) and `asked HH:MM:SSZ` on the left; at most three hints for the
-  focused pane, then `? help   q quit`, on the right. Left and right are laid
-  out, never overlaid: when they do not fit, asked, index, then kb drop whole.
-  The detailed level adds the subject stamp when it fits. A notice (theme
-  cycling, a refused filter) replaces the left group for one key.
+  only for a non-zero count from its own verb: Gates `N not met` (gates not
+  satisfied, attested or waived; the bad tone when one is out of date, failed
+  or invalid), Inbox `N pending`, Guards `N would block`, `N would ask`. A
+  badge shortens to its number, from the right, before the mode unit or a tab
+  drops. The exact level shows `!N`, `×N`, `○N`, `?N`, one inbox number and
+  `deny N`, `ask N`. Narrow layouts, or a row too short for all eight, show the
+  active tab, the tabs with badges and `i/8`.
+- **Footer**: a `read-only` chip, then only what is not the normal case: `KB
+  has N uncommitted changes` and `index STATE` (warning tone) when not fresh;
+  at most three hints for the focused pane, then `? help   q quit`, on the
+  right. The exact level shows `kb STAMP`, `index STATE`, `asked HH:MM:SSZ` and
+  the subject stamp, dropping whole from the end when they do not fit. A notice
+  (theme cycling, a refused filter) replaces the left group for one key.
 
 A chip is its text plus one cell each side: padding on a background in
 truecolor, brackets (`[open]`, `[1 progress]`, `[read-only]`) otherwise, so
@@ -480,6 +582,10 @@ and selected-entry text.
 selected one, then `all records`), the view's verb answers as their text under
 `== kb:NAME PROJECT ==`, and the footer line. No rail, glyph or mark enters it.
 
+These frames are the exact wording: the plain words of the terminal frame
+never enter them, so a script or an agent reads the verbs' own text (there is
+no `d` to press in a pipe).
+
 `--once`, or a non-terminal stdout, prints one expanded, unwrapped plain frame:
 Runs, Progress, Gates, Inbox, Guards, Timeline, then the footer. It contains no
 view clock or terminal colour/style sequences, regardless of theme or depth.
@@ -493,5 +599,8 @@ Not built: write keys, text search over runs or records (`find` is not reachable
 from a key), cross-KB views, mouse interaction, focusable side-stack panes,
 user-defined themes, persistence of the theme choice; in KB mode, walking
 mention edges, a depth other than two, history at a commit, record bodies and
-dossier sections (open the path the inspector ends with), and a jump from a plan
-step or gate to the record it cites (their rows name receipts, not records).
+dossier sections (open the path `d` shows in the inspector), and a jump from a
+plan step or gate to the record it cites (their rows name receipts, not
+records); a `--level` flag to start at the exact level, a layout of its own for
+Stale, Brief and Resume beyond the row form, and a `change · 2nd time` header
+for a template spliced twice (it shows the template's name).
