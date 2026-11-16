@@ -855,4 +855,156 @@ def plan.splice
   let out1 ← plan.splice_loop1 count out 0#usize
   plan.splice_loop2 nodes out1 index
 
+/-- [writfold_core::semantic_evidence::Origin]
+    Source: 'crates/writfold-core/src/semantic_evidence.rs', lines 19:0-23:1
+    Visibility: public -/
+@[discriminant isize]
+inductive semantic_evidence.Origin where
+| CheckedSource : semantic_evidence.Origin
+| LexicalRetrieval : semantic_evidence.Origin
+| SemanticRetrieval : semantic_evidence.Origin
+
+/-- [writfold_core::semantic_evidence::grounding]:
+    Source: 'crates/writfold-core/src/semantic_evidence.rs', lines 27:0-33:1
+    Visibility: public -/
+def semantic_evidence.grounding
+  (origin : semantic_evidence.Origin) (checked : assess.Grounding) :
+  Result assess.Grounding
+  := do
+  match origin with
+  | semantic_evidence.Origin.CheckedSource => ok checked
+  | semantic_evidence.Origin.LexicalRetrieval => ok assess.Grounding.Ungrounded
+  | semantic_evidence.Origin.SemanticRetrieval =>
+    ok assess.Grounding.Ungrounded
+
+/-- [writfold_core::semantic_order::Lexical]
+    Source: 'crates/writfold-core/src/semantic_order.rs', lines 7:0-11:1
+    Visibility: public -/
+structure semantic_order.Lexical where
+  exact : Bool
+  rank : Std.U32
+  semantic_rank : Std.U32
+
+/-- [writfold_core::semantic_order::Key]
+    Source: 'crates/writfold-core/src/semantic_order.rs', lines 14:0-18:1
+    Visibility: public -/
+structure semantic_order.Key where
+  slot : Std.Usize
+  semantic : Bool
+  rank : Std.U32
+
+/-- [writfold_core::semantic_order::semantic_wins]:
+    Source: 'crates/writfold-core/src/semantic_order.rs', lines 23:0-42:1
+    Visibility: public -/
+def semantic_order.semantic_wins
+  (lexical_rank : Std.U32) (overlap_rank : Std.U32) (semantic_rank : Std.U32) :
+  Result Bool
+  := do
+  if lexical_rank > 50#u32
+  then ok false
+  else
+    if overlap_rank > 50#u32
+    then ok false
+    else
+      if semantic_rank > 50#u32
+      then ok false
+      else
+        if overlap_rank = 0#u32
+        then ok (semantic_rank < lexical_rank)
+        else
+          let lexical_denominator ← 60#u32 + lexical_rank
+          let overlap_denominator ← 60#u32 + overlap_rank
+          let semantic_denominator ← 60#u32 + semantic_rank
+          let i ← lexical_denominator * overlap_denominator
+          let i1 ← lexical_denominator + overlap_denominator
+          let i2 ← i1 * semantic_denominator
+          ok (i > i2)
+
+/-- [writfold_core::semantic_order::blocks]:
+    Source: 'crates/writfold-core/src/semantic_order.rs', lines 45:0-47:1
+    Visibility: public -/
+def semantic_order.blocks
+  (lexical : semantic_order.Lexical) (semantic_rank : Std.U32) :
+  Result Bool
+  := do
+  if lexical.exact
+  then ok true
+  else
+    let b ←
+      semantic_order.semantic_wins lexical.rank lexical.semantic_rank
+        semantic_rank
+    ok (¬ b)
+
+/-- [writfold_core::semantic_order::semantic_slot]: loop body 0:
+    Source: 'crates/writfold-core/src/semantic_order.rs', lines 58:4-64:5
+    Visibility: public -/
+@[rust_loop_body]
+def semantic_order.semantic_slot_loop.body
+  (lexical : Slice semantic_order.Lexical) (semantic_rank : Std.U32)
+  (slot : Std.Usize) (index : Std.Usize) :
+  Result (ControlFlow (Std.Usize × Std.Usize) Std.Usize)
+  := do
+  let i := Slice.len lexical
+  if index < i
+  then
+    let next ← index + 1#usize
+    let l ← Slice.index_usize lexical index
+    let b ← semantic_order.blocks l semantic_rank
+    if b
+    then ok (cont (next, next))
+    else ok (cont (slot, next))
+  else ok (done slot)
+
+/-- [writfold_core::semantic_order::semantic_slot]: loop 0:
+    Source: 'crates/writfold-core/src/semantic_order.rs', lines 58:4-64:5
+    Visibility: public -/
+@[rust_loop]
+def semantic_order.semantic_slot_loop
+  (lexical : Slice semantic_order.Lexical) (semantic_rank : Std.U32)
+  (slot : Std.Usize) (index : Std.Usize) :
+  Result Std.Usize
+  := do
+  loop
+    (fun (slot1, index1) => semantic_order.semantic_slot_loop.body lexical
+      semantic_rank slot1 index1)
+    (slot, index)
+
+/-- [writfold_core::semantic_order::semantic_slot]:
+    Source: 'crates/writfold-core/src/semantic_order.rs', lines 52:0-66:1
+    Visibility: public -/
+def semantic_order.semantic_slot
+  (lexical : Slice semantic_order.Lexical) (semantic_rank : Std.U32)
+  (rrf : Bool) :
+  Result Std.Usize
+  := do
+  if rrf
+  then semantic_order.semantic_slot_loop lexical semantic_rank 0#usize 0#usize
+  else ok (Slice.len lexical)
+
+/-- [writfold_core::semantic_order::lexical_key]:
+    Source: 'crates/writfold-core/src/semantic_order.rs', lines 68:0-74:1
+    Visibility: public -/
+def semantic_order.lexical_key
+  (index : Std.Usize) : Result semantic_order.Key := do
+  ok { slot := index, semantic := false, rank := 0#u32 }
+
+/-- [writfold_core::semantic_order::semantic_key]:
+    Source: 'crates/writfold-core/src/semantic_order.rs', lines 76:0-82:1
+    Visibility: public -/
+def semantic_order.semantic_key
+  (slot : Std.Usize) (rank : Std.U32) : Result semantic_order.Key := do
+  ok { slot, semantic := true, rank }
+
+/-- [writfold_core::semantic_order::before]:
+    Source: 'crates/writfold-core/src/semantic_order.rs', lines 87:0-95:1
+    Visibility: public -/
+def semantic_order.before
+  (left : semantic_order.Key) (right : semantic_order.Key) : Result Bool := do
+  if left.slot != right.slot
+  then ok (left.slot < right.slot)
+  else
+    if left.semantic != right.semantic
+    then ok left.semantic
+    else ok (left.rank < right.rank)
+
 end writfold_core

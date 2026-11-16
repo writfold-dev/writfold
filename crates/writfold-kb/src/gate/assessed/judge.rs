@@ -44,7 +44,8 @@ impl Present<'_, '_, '_> {
         if let Some(s) = self.seen.get(reference) {
             return Ok(s.clone());
         }
-        let now = ground::resolve(self.cx, reference)?.standing;
+        let now =
+            ground::resolve(self.cx, ground::EvidenceInput::CheckedReference(reference))?.standing;
         self.seen.insert(reference.to_owned(), now.clone());
         Ok(now)
     }

@@ -40,5 +40,10 @@ fn row_json(row: &Row) -> Value {
     if let Some(tier) = row.matched_on {
         value["matched_on"] = json!(tier);
     }
+    #[cfg(feature = "semantic")]
+    if let Some(hit) = &row.semantic {
+        value["semantic"] = json!({"score": hit.score, "path": hit.path,
+                                  "first": hit.first, "last": hit.last});
+    }
     value
 }

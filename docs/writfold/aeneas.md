@@ -30,10 +30,11 @@ total-correctness Hoare triples (terminates, never fails, result as stated):
 The gate (`docker compose -f compose.proofs.yaml run --build --rm proofs`)
 regenerates the translation and refuses drift from the committed copy, builds
 the proofs, audits every theorem's axioms (only `propext`,
-`Classical.choice`, `Quot.sound`; the thirty-three headline claims must exist)
-and calibrates twenty semantic mutants of the Rust source, each of which must
-break exactly its named theorem. Warm run: about four and a half minutes (16
-November 2026), almost all of it mutant calibration.
+`Classical.choice`, `Quot.sound`; the fifty-four headline claims must exist)
+and calibrates thirty-three semantic mutants of the Rust source, each of which
+must break exactly its named theorem. The earlier twenty-mutant warm run took
+about four and a half minutes (16 November 2026). The semantic spike's
+component results and translator limitation are recorded below.
 
 The ledger, grant-authority, trial and edit-flow kernels of the earlier edit
 trial were proved here too until 16 November 2026; they moved to the private
@@ -144,6 +145,66 @@ write protocol (`spec/KbWrite.tla` and the kill tests), scope globs
 kernel inputs (which receipts are valid, which digests match, which gates a
 step names, the ordering by `seq` and file name) are tested, not proved; the
 proofs take their output as given.
+
+### Semantic retrieval decisions (spike, 16 November 2026)
+
+The off-by-default spike is not adopted; see
+[semantic-search-spike.md](semantic-search-spike.md). Its new kernels were
+extracted and their Lean build and axiom audit passed **before** the KB
+adapters were switched to them. Numeric embedding and cosine scanning remain
+tested-only.
+
+`semantic_order` (`proofs/Writfold/SemanticOrder.lean`) supplies stable fusion
+keys, not an unsafe mixed score/ordinal comparator:
+
+- `semantic_wins_spec`: exact cross-multiplied RRF (`k=60`) comparison for
+  ranks at most 50; `invalid_rank_refused` excludes overflow/insertion for
+  oversized inputs; `rrf_tie_lexical` keeps equal scores lexical-first.
+- `semantic_slot_spec`: the insertion slot is after the last lexical score
+  blocker or exact match; `lexical_first` appends. `before_spec` and
+  `key_transitive` establish the strict key order used by the adapter.
+- `lexical_order_preserved`, `exact_protected` and `semantic_ties_stable`
+  preserve lexical ordinals, keep semantic-only hits after exact hits, and
+  retain semantic rank/ID order within a slot.
+- `leading_exact_first` makes an exact hit first **when it leads the lexical
+  input**. Existing `--signatures` priority is preserved; this is not a false
+  unconditional claim that exact outranks a preceding signature.
+- `rrf_insertion_enabled` is a positive control: stable RRF can interleave a
+  semantic hit where lexical-first would append it.
+
+`semantic_evidence` (`proofs/Writfold/SemanticEvidence.lean`) distinguishes a
+raw retrieval pointer from an independently checked source:
+
+- `semantic_never_grounds`, `lexical_never_grounds`, `checked_preserved`,
+  `accepted_iff` and `grounded_iff`: only a checked source retains its actual
+  verdict; retrieval cannot promote even a proposed `Grounded` result.
+- `semantic_assumption_ungrounded` and `semantic_premise_never_meets` compose
+  the existing assumption, basis and assessed-gate kernels.
+
+The KB's typed `EvidenceInput` acceptance boundary invokes that decision
+before a raw pointer can be parsed or checked. Independently checked source
+citations keep their existing meaning, even when the source was discovered
+semantically. The adapter regression checks a fresh citation and a passing
+gate: either grounds as a checked reference, neither as a retrieval pointer;
+neither pointer supports a checklist item or meets an assessed gate.
+Source classification, parsing, IO and Rust sorting are tested boundaries,
+not additional Lean claims.
+
+Observed proof checks: extraction drift passed; `lake build` passed; the
+axiom audit passed for 119 theorems and 54 required claims, with only the
+standard three axioms. All 33 current mutants are calibrated across two
+runs. The full `proofs/gate.sh` invocation rejected 32 and failed one because
+Aeneas could not translate `slot = index` in the loop. That failed run remains
+failed. The equivalent off-by-one mutation `slot = next - 1` translated and
+was rejected by `semantic_slot_loop_spec` in a targeted rerun. No translation
+error was counted as a proof rejection, and no fresh all-in-one gate pass is
+claimed. Logs are named in `target/semantic-spike-report.md`.
+
+The thirteen added mutants cover retrieval admission, checked-negative
+bypass, RRF equality/weight, exact protection, insertion position,
+lexical-first behavior, key ordering, collapsed lexical/semantic keys and
+invalid-rank admission. Their expected failing theorems are registered in
+`proofs/mutants.py`; the audit requires the headline claims.
 
 ## Trust base
 

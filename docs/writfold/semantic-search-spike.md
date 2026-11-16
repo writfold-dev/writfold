@@ -1,6 +1,6 @@
 # Semantic search spike: handover
 
-Status: **planned spike** (owner, 16 November 2026). Nothing here is built. This page hands the spike to one implementer working in its own worktree; the result is a measured recommendation and, if it earns it, a feature-gated implementation that the owner's session reviews and lands.
+Status: **implemented and measured spike; recommendation: defer adoption** (16 November 2026). The off-by-default implementation, proofs, tests and evaluation overlay are on `semantic-spike`, not approved for the product. The original brief below is retained; the measured result follows it. Full local report: `target/semantic-spike-report.md`.
 
 ## The question
 
@@ -52,3 +52,128 @@ All of it behind a cargo feature that is **off by default** (e.g. `semantic`), s
 1. The branch with the feature-gated tier, tests, and the eval overlay.
 2. `target/semantic-spike-report.md`: the measurements above, the recommendation (adopt in-binary / adopt as separate asset / defer / use an external embedding command instead), and the exact steps to land it.
 3. If recommending adoption: the guide text for `docs/guide/kb-layout.md` (the tier, how to build or obtain the model, what it never does) and a design-doc section draft.
+
+## Measured result (16 November 2026)
+
+**Recommendation: defer adoption.** Model2Vec builds static and offline and
+improves recall on the frozen synthetic query set, but its fresh-process cost,
+size and unadmitted dependency closure do not yet justify a product cutover.
+No merge, tag, push or `scripts/gate` run was performed. The owner's landing
+decision remains separate from completing this experiment.
+
+| Packaging | Binary bytes | Additional inference files |
+|---|---:|---:|
+| Default | 8,448,880 | 0 |
+| `semantic` (separate model) | 10,485,136 | 30,920,628 |
+| `semantic-embedded` | 41,405,840 | 0 |
+
+All three final builds used the existing offline Compose `build` service and
+`--release --target x86_64-unknown-linux-musl --locked --offline`; `file`
+identified static PIE binaries. The separate model archive is
+`target/potion-base-8M-bf8b0566.tar.gz` (28,338,861 bytes).
+
+| Ranking | hit@1 | cumulative hit@5 | Misses |
+|---|---:|---:|---:|
+| Lexical | 14/28 | 17/28 | 11 |
+| Semantic, lexical-first | 16/28 | 26/28 | 2 |
+| Semantic, stable RRF (`k=60`) | 16/28 | 26/28 | 2 |
+
+`fixtures/kb/semantic` adds 12 invented records and 28 judgments to `basic`,
+without changing `basic`. Queries were authored before evaluation and held
+fixed. Of 12 meaning-only paraphrases, lexical retrieval hit one within five,
+either semantic mode ten; three of four negation/overlap traps still ranked
+the correct record second. Prefer **lexical-first** within this experiment:
+stable RRF supplied no measured quality benefit. Both final modes preserve
+lexical relative order and keep semantic-only hits behind exact matches.
+
+On the 37-record fixture, 21 fresh-process samples gave semantic medians
+58.31–85.30 ms versus lexical 14.48–14.81 ms, depending on packaging/mode.
+The 3,000-ticket/9,000-chunk workload gave semantic medians 330.24–352.89 ms.
+Its feature-disabled lexical medians were already 256.91–280.91 ms: the
+earlier approximately 40 ms baseline was not reproduced by these difficult
+miss queries. The whole scale difference must not be attributed to semantics.
+The report retains every sample and cold/warm rebuild time. The initial
+pre-proof experiment remains separately recorded; final measurements were
+repeated after the required kernel cutover, not selected for a favorable result.
+
+There are **47 added normal musl dependency identities**, and 52 added lockfile
+identities across platforms/build dependencies, with no old locked identity
+removed. No runtime downloader or new C++/ONNX/BLAS inference runtime is
+enabled. Unsafe code exists in the transitive Rust closure. Standalone xtask
+admission **failed**: 30 terminal-dependency errors for shared tokenizer
+utilities through KB/app, and no syntax, unsafe-source or budget error.
+Allowlists were not weakened. All-feature quality checks would also need
+explicit pinned-model provisioning; unchanged default runtime behavior does
+not make this branch gate-ready.
+
+### Proved decisions and verification
+
+The owner-added proof-first rule was implemented before the final adapter
+cutover. `writfold-core::semantic_order` supplies bounded RRF comparisons,
+protected insertion slots and strict ordering keys; `semantic_evidence`
+supplies the shared typed evidence-acceptance decision. The generated
+translation, Lean statements, audit claims and mutants are retained under
+`proofs/`; [aeneas.md](aeneas.md#semantic-retrieval-decisions-spike-16-november-2026)
+lists their scope and assumptions.
+
+Extraction drift, `lake build` and axiom audit passed: 119 theorems, 54 required
+claims, only the standard three axioms. All 33 current mutants were calibrated
+across two runs. The full proof-gate invocation rejected 32, but failed when
+Aeneas could not translate the off-by-one mutation `slot = index`. That run
+remains failed. The equivalent `slot = next - 1` translated and was rejected
+by its named theorem in a targeted rerun. No translator error was counted
+as a proof rejection, and no fresh all-in-one gate pass is claimed.
+
+The exact-first theorem requires an exact hit at the front of the supplied
+lexical stream; the existing signature-before-exact priority is preserved.
+Raw pointers never ground evidence even when their underlying reference is
+fresh; a later independent citation/source check remains legitimate. Source
+classification, parsing, IO, sorting and numeric embedding/scan operations
+are tested boundaries, not additional Lean claims.
+
+Final integration verification passed 36 tests (eight core, 15 semantic unit,
+one real grounding boundary, two real-model public request, ten existing
+checklist-gate tests). Before the cutover, 12 existing find-contract and four
+feature-on/off parser tests also passed. None ignored. CLI text/JSON, package
+equivalence and missing-model isolation were exercised. No full workspace,
+Clippy or main quality/unit gate receipt is claimed.
+
+### Exercised experimental interface
+
+```sh
+# Explicit developer download; never invoked by Writfold or Cargo.
+python3 scripts/semantic-model.py --output target/semantic-model
+
+# With a feature-enabled binary:
+writfold kb find 'noisy neighbor hogs workers starving everybody else' --semantic
+writfold kb find --eval --semantic --semantic-ranking rrf
+writfold kb index rebuild --semantic
+```
+
+External loading uses `$WRITFOLD_SEMANTIC_MODEL` as a directory, otherwise
+`$XDG_DATA_HOME/writfold/models/potion-base-8M/<pin>` or
+`$HOME/.local/share/writfold/models/potion-base-8M/<pin>`. The pin is
+`bf8b056651a2c21b8d2565580b8569da283cab23`. Embedded compilation needs
+`WRITFOLD_SEMANTIC_MODEL_BUILD` pointing at the model directory **inside the
+build container**. Both packagings verify the same checksums and produced
+identical final rows. The full report contains exact Compose/cache-population
+commands, model/archive checksums, licences, paths and landing prerequisites.
+
+Only explicit semantic find/eval/rebuild loads the model. Rows carry
+`matched_on: "semantic"` when first found semantically, with a score and
+source span; overlaps retain their lexical tier and add semantic metadata.
+Semantic-mode continuations carry `status: "ungrounded"` from the same proved
+kernel used at the evidence boundary. They are pointers, never citation
+verdicts or gate/checklist support. Vectors are derived SQLite BLOBs, reused
+by content/model hash across feature-enabled rebuilds; spans come from
+indexed bytes, not later worktree reads.
+
+The pinned Model2Vec API embeds only a prefix: at most 3,072 Unicode scalar
+values followed by at most 512 tokens, including the prepended title. Long
+sections retain their full source span but are not embedded in full.
+Positive similarity is not a calibrated relevance judgment.
+
+Raw evidence: `/tmp/writfold-semantic-spike.BllDD0`, with final binaries,
+measurements and Rust/xtask logs under `proved/`. Adoption guide/design text
+is not promoted: the recommendation remains lexical improvements and a
+real-miss evaluation, not merging this feature.

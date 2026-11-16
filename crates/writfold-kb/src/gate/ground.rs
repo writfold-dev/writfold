@@ -31,6 +31,9 @@ use writfold_core::gate::{Outcome, Standing, State};
 use writfold_core::observe::{self, Status};
 use writfold_runtime::git::edit_hash_bytes;
 
+mod input;
+pub use input::EvidenceInput;
+
 /// What one citation stands on now.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Resolved {
@@ -91,8 +94,22 @@ pub fn recorded_note(n: usize) -> Option<String> {
     ))
 }
 
-/// Resolve one reference, as written in a Weft `citation "…"`.
-pub fn resolve(cx: &Context<'_, '_>, reference: &str) -> Result<Resolved> {
+/// Resolve an independently checked reference, or reject a raw retrieval
+/// pointer before parsing it or asking any source checker.
+pub fn resolve(cx: &Context<'_, '_>, input: EvidenceInput<'_>) -> Result<Resolved> {
+    let mut resolved = match input {
+        EvidenceInput::CheckedReference(reference) => checked(cx, reference)?,
+        #[cfg(feature = "semantic")]
+        EvidenceInput::LexicalPointer(reference) | EvidenceInput::SemanticPointer(reference) => {
+            found(reference, Grounding::Grounded, "retrieval-pointer", None)
+        }
+    };
+    resolved.grounding = input.grounding(resolved.grounding);
+    Ok(resolved)
+}
+
+/// An independently checked reference in the existing citation/receipt grammar.
+fn checked(cx: &Context<'_, '_>, reference: &str) -> Result<Resolved> {
     let r = reference.trim();
     if r.starts_with('⟦') {
         return token(cx, reference, None);
@@ -309,3 +326,6 @@ fn edit(cx: &Context<'_, '_>, reference: &str, path: &str) -> Result<Resolved> {
     }
     Ok(found(reference, Grounding::Grounded, "holds", Some(path)))
 }
+
+#[cfg(all(test, feature = "semantic"))]
+mod tests;

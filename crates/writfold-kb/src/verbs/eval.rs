@@ -16,7 +16,7 @@ use std::path::Path;
 pub const DEFAULT: &str = ".writfold/queries.jsonl";
 const KEYS: [&str; 3] = ["query", "expect", "note"];
 /// Trailer names for the tier of each first expected hit.
-const BY: [(&str, &str); 10] = [
+const BY: &[(&str, &str)] = &[
     ("signature", "by-signature"),
     ("exact", "by-exact"),
     ("normalized", "by-normalized"),
@@ -27,6 +27,8 @@ const BY: [(&str, &str); 10] = [
     ("typo", "by-typo"),
     ("text-any", "by-text-any"),
     ("listed", "by-listed"),
+    #[cfg(feature = "semantic")]
+    ("semantic", "by-semantic"),
 ];
 
 /// One query line.
@@ -136,8 +138,8 @@ fn judge(
     session: &Session<'_>,
     q: &Query,
     shown: &str,
+    mut found: Answer,
 ) -> Result<(Row, &'static str, Option<&'static str>)> {
-    let mut found = find::find(session, &q.text, &Filter::default(), false)?;
     // A suggestion is not a hit.
     found.rows.retain(|r| r.matched_on != Some("suggestion"));
     let at = found.rows.iter().position(|r| q.wanted.contains(&r.id));
@@ -189,6 +191,17 @@ fn judge(
 
 /// Evaluate the query file; `file` is absolute, else the default.
 pub fn eval(session: &Session<'_>, file: Option<&Path>) -> Result<Answer> {
+    eval_with(session, file, |text| {
+        find::find(session, text, &Filter::default(), false)
+    })
+}
+
+/// Route every evaluation query through the invocation's exact search mode.
+pub(crate) fn eval_with(
+    session: &Session<'_>,
+    file: Option<&Path>,
+    mut search: impl FnMut(&str) -> Result<Answer>,
+) -> Result<Answer> {
     let root = &session.ws.root;
     let path = file.map_or_else(|| root.join(DEFAULT), Path::to_path_buf);
     let shown = path
@@ -215,7 +228,7 @@ pub fn eval(session: &Session<'_>, file: Option<&Path>) -> Result<Answer> {
         ("miss", 0),
     ];
     for q in &queries {
-        let (row, status, tier) = judge(session, q, &shown)?;
+        let (row, status, tier) = judge(session, q, &shown, search(&q.text)?)?;
         count(
             &mut counts,
             match status {

@@ -51,5 +51,7 @@ pub mod investigation;
 pub mod observe;
 pub mod plan;
 pub mod scope;
+pub mod semantic_evidence;
+pub mod semantic_order;
 pub mod verdict;
 pub mod walk;

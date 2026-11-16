@@ -316,6 +316,8 @@ pub fn replace(file: &Path, temporary: &Path) -> Result<()> {
             quote(&file.to_string_lossy())
         );
         let _ = conn.execute_batch(&keep);
+        #[cfg(feature = "semantic")]
+        crate::semantic::carry_vectors(&conn, file)?;
     }
     std::fs::File::open(temporary)?.sync_all()?;
     std::fs::rename(temporary, file)?;

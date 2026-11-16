@@ -248,7 +248,7 @@ fn grounded(session: &Session<'_>, s: &SetStatus, evidence: &str, cwd: &Path) ->
         filings: &filings,
         run_dir: &filings.run_dir,
     };
-    let r = ground::resolve(&cx, evidence)?;
+    let r = ground::resolve(&cx, ground::EvidenceInput::CheckedReference(evidence))?;
     let receipt = r
         .path
         .as_deref()

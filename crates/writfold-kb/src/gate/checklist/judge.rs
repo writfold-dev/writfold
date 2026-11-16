@@ -80,7 +80,10 @@ impl Present<'_, '_, '_> {
             let now = match self.seen.get(&e.reference) {
                 Some(now) => now.clone(),
                 None => {
-                    let r = ground::resolve(self.cx, &e.reference)?;
+                    let r = ground::resolve(
+                        self.cx,
+                        ground::EvidenceInput::CheckedReference(&e.reference),
+                    )?;
                     if r.recorded {
                         self.recorded.insert(e.reference.clone());
                     }

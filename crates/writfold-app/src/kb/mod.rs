@@ -13,6 +13,7 @@ mod lists;
 mod observe;
 mod plan;
 mod proposals;
+mod semantic_args;
 mod set;
 mod shown;
 mod verbs;
@@ -193,7 +194,7 @@ pub fn main_styled(args: &[String], cwd: std::path::PathBuf, styles: &Styles) ->
         Ok(Some(request)) => request,
         Ok(None) => {
             return Outcome {
-                stdout: format!("{USAGE}\n"),
+                stdout: format!("{USAGE}{}\n", semantic_args::USAGE),
                 stderr: String::new(),
                 code: 0,
             };
@@ -201,7 +202,7 @@ pub fn main_styled(args: &[String], cwd: std::path::PathBuf, styles: &Styles) ->
         Err(message) => {
             return Outcome {
                 stdout: String::new(),
-                stderr: format!("writfold kb: {message}\n{USAGE}\n"),
+                stderr: format!("writfold kb: {message}\n{USAGE}{}\n", semantic_args::USAGE),
                 code: 1,
             };
         }

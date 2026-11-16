@@ -13,3 +13,7 @@ writfold-kb = { path = "../writfold-kb" }
 
 [lints]
 workspace = true
+
+[features]
+semantic = ["writfold-kb/semantic"]
+semantic-embedded = ["semantic", "writfold-kb/semantic-embedded"]

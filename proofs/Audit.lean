@@ -56,6 +56,29 @@ def claims : List Name := [
   ``Writfold.Core.Assess.met_spec,
   ``Writfold.Core.Assess.outcome_pass_iff,
   ``Writfold.Core.Assess.hypothetical_never_passes,
+  -- retrieval provenance (writfold_core::semantic_evidence)
+  ``Writfold.Core.SemanticEvidence.semantic_never_grounds,
+  ``Writfold.Core.SemanticEvidence.lexical_never_grounds,
+  ``Writfold.Core.SemanticEvidence.checked_preserved,
+  ``Writfold.Core.SemanticEvidence.accepted_iff,
+  ``Writfold.Core.SemanticEvidence.grounded_iff,
+  ``Writfold.Core.SemanticEvidence.semantic_assumption_ungrounded,
+  ``Writfold.Core.SemanticEvidence.semantic_premise_never_meets,
+  -- stable semantic fusion (writfold_core::semantic_order)
+  ``Writfold.Core.SemanticOrder.semantic_wins_spec,
+  ``Writfold.Core.SemanticOrder.invalid_rank_refused,
+  ``Writfold.Core.SemanticOrder.blocks_spec,
+  ``Writfold.Core.SemanticOrder.exact_blocks,
+  ``Writfold.Core.SemanticOrder.rrf_tie_lexical,
+  ``Writfold.Core.SemanticOrder.semantic_slot_spec,
+  ``Writfold.Core.SemanticOrder.lexical_first,
+  ``Writfold.Core.SemanticOrder.before_spec,
+  ``Writfold.Core.SemanticOrder.key_transitive,
+  ``Writfold.Core.SemanticOrder.lexical_order_preserved,
+  ``Writfold.Core.SemanticOrder.exact_protected,
+  ``Writfold.Core.SemanticOrder.semantic_ties_stable,
+  ``Writfold.Core.SemanticOrder.leading_exact_first,
+  ``Writfold.Core.SemanticOrder.rrf_insertion_enabled,
 ]
 
 /-- Every theorem under `Writfold.Core`, sorted by name. -/

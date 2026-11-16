@@ -51,6 +51,9 @@ pub struct Row {
     /// JSON only: the tier that found a `find` or `match` row
     /// (`matched_on`); absent on every other verb's rows.
     pub matched_on: Option<&'static str>,
+    /// Semantic retrieval metadata is a pointer, never citation evidence.
+    #[cfg(feature = "semantic")]
+    pub semantic: Option<crate::semantic::Hit>,
 }
 
 /// What a verb found, before paging.

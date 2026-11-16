@@ -26,6 +26,13 @@ start_from = [
     "writfold_core::assess::unfinished",
     "writfold_core::assess::found_met",
     "writfold_core::assess::outcome",
+    "writfold_core::semantic_evidence::grounding",
+    "writfold_core::semantic_order::semantic_wins",
+    "writfold_core::semantic_order::blocks",
+    "writfold_core::semantic_order::semantic_slot",
+    "writfold_core::semantic_order::lexical_key",
+    "writfold_core::semantic_order::semantic_key",
+    "writfold_core::semantic_order::before",
 ]
 
 

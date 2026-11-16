@@ -75,7 +75,7 @@ fn shaped(c: &Cover) -> Result<(Option<String>, Option<String>)> {
 fn grounded(cx: &Context<'_, '_>, references: &[String]) -> Result<Vec<Cited>> {
     let mut out = Vec::new();
     for reference in references {
-        let r = ground::resolve(cx, reference)?;
+        let r = ground::resolve(cx, ground::EvidenceInput::CheckedReference(reference))?;
         if r.grounding == Grounding::Ungrounded {
             return Err(KbError::Refused(format!(
                 "reference {reference:?} is not grounded ({}): a cover row cites only evidence that stands now (a waiver is never evidence)",
@@ -98,7 +98,7 @@ fn grounded(cx: &Context<'_, '_>, references: &[String]) -> Result<Vec<Cited>> {
 fn observations(cx: &Context<'_, '_>, c: &Cover) -> Result<Vec<Cited>> {
     let mut out = Vec::new();
     for reference in &c.references {
-        let r = ground::resolve(cx, reference)?;
+        let r = ground::resolve(cx, ground::EvidenceInput::CheckedReference(reference))?;
         let observed = r.path.as_deref().is_some_and(|p| {
             p.strip_prefix(&format!("{}/observed/", cx.run_dir))
                 .is_some_and(|name| !name.contains('/'))

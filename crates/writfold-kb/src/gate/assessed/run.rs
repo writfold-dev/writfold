@@ -40,7 +40,7 @@ fn judgement(
     for a in &report.assumptions {
         let mut citations = Vec::new();
         for (binding, reference) in &a.citations {
-            let r = ground::resolve(cx, reference)?;
+            let r = ground::resolve(cx, ground::EvidenceInput::CheckedReference(reference))?;
             citations.push(Cited {
                 binding: binding.clone(),
                 reference: reference.clone(),

@@ -54,6 +54,9 @@ fn split(verb: &str, args: &[String]) -> Result<(Common, Vec<String>), String> {
             return Err(format!("{arg} given twice"));
         }
         seen.push(arg.clone());
+        if super::semantic_args::parse(arg, &mut items, &mut common)? {
+            continue;
+        }
         match arg.as_str() {
             "--kb" => common.kb = Some(PathBuf::from(value(arg, items.next())?)),
             "--budget-tokens" => common.budget = Some(number(arg, items.next(), 1, MAX_BUDGET)?),
@@ -137,7 +140,8 @@ fn check_flags(verb: &str, common: &Common) -> Result<(), String> {
         }
     }
     let extra = writes::allowed(verb);
-    for flag in common.values.keys().chain(common.switches.iter()) {
+    let flags = common.values.keys().chain(common.switches.iter());
+    for flag in flags.filter(|flag| !super::semantic_args::allowed(verb, flag)) {
         if !extra.contains(&flag.as_str()) {
             return Err(format!("--{flag} does not apply to {verb}"));
         }
@@ -162,6 +166,7 @@ pub fn parse(args: &[String], cwd: PathBuf) -> Result<Option<Request>, String> {
         return Err("--record needs the checkers to be asked; it cannot be combined with --offline or --cached".into());
     }
     let built: Verb = verbs::verb(verb, &common, &positional, &cwd)?;
+    let built = super::semantic_args::apply(built, &common)?;
     Ok(Some(Request {
         verb: built,
         kb: common.kb,

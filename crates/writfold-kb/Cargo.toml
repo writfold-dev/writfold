@@ -19,10 +19,15 @@ regex.workspace = true
 serde_json.workspace = true
 sha2.workspace = true
 thiserror.workspace = true
+model2vec-rs = { version = "=0.4.0", default-features = false, features = ["local-only"], optional = true }
+# Enable only the pure-Rust regex backend, not model2vec's esaxx_fast feature bundle.
+tokenizers = { version = "0.21", default-features = false, features = ["fancy-regex"], optional = true }
 
 [lints]
 workspace = true
 
 [features]
+semantic = ["dep:model2vec-rs", "dep:tokenizers"]
+semantic-embedded = ["semantic"]
 # Manual check against a real Weft binary ($WRITFOLD_TEST_WEFT); not in the unit gate.
 real-weft = []

@@ -17,3 +17,7 @@ serde_json.workspace = true
 
 [lints]
 workspace = true
+
+[features]
+semantic = ["writfold-app/semantic"]
+semantic-embedded = ["semantic", "writfold-app/semantic-embedded"]

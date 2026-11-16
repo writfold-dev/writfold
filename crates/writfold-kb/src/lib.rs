@@ -31,6 +31,8 @@ pub mod parse;
 pub mod plan;
 pub mod proposal;
 pub mod runs;
+#[cfg(feature = "semantic")]
+pub mod semantic;
 pub mod session;
 pub mod shell;
 pub mod stale;
@@ -39,6 +41,12 @@ pub mod verbs;
 pub mod watch;
 pub mod workspace;
 pub mod write;
+
+#[cfg(all(test, feature = "semantic"))]
+extern crate self as writfold_kb;
+#[cfg(all(test, feature = "semantic"))]
+#[path = "../tests/support/mod.rs"]
+mod support;
 
 /// The diagnostics model and renderer ([`writfold_core::diag`]).
 pub use writfold_core::diag;
@@ -84,6 +92,20 @@ pub enum Verb {
         filter: verbs::find::Filter,
         signatures: bool,
     },
+    #[cfg(feature = "semantic")]
+    SemanticFind {
+        text: String,
+        filter: verbs::find::Filter,
+        signatures: bool,
+        ranking: semantic::Ranking,
+    },
+    #[cfg(feature = "semantic")]
+    SemanticEval {
+        file: Option<PathBuf>,
+        ranking: semantic::Ranking,
+    },
+    #[cfg(feature = "semantic")]
+    SemanticRebuild,
     /// `runs --idle AGE`: open runs whose last recorded write is older
     /// than `age` seconds (`age_text` as given).
     RunsIdle {
@@ -232,6 +254,8 @@ pub fn run(request: &Request) -> Result<Output> {
         None => None,
     };
     let rebuild = matches!(request.verb, Verb::IndexRebuild);
+    #[cfg(feature = "semantic")]
+    let rebuild = rebuild || matches!(request.verb, Verb::SemanticRebuild);
     let session = Session::open(&ws, tool.as_ref(), rebuild, now)?;
     let (answer, name, args) = answer(&session, request)?;
     let frame = Frame {
@@ -339,6 +363,10 @@ fn measured(
 
 /// The search, graph and housekeeping verbs.
 fn graph(session: &Session<'_>, verb: &Verb) -> Result<(Answer, &'static str, Vec<String>)> {
+    #[cfg(feature = "semantic")]
+    if let Some(answer) = semantic::rank_dispatch::answer(session, verb) {
+        return answer;
+    }
     if let Some(found) = measured(session, verb) {
         return found;
     }
