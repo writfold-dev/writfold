@@ -281,6 +281,16 @@ def claims : List Name := [
   ``Writfold.Core.Idle.newest_spec,
   ``Writfold.Core.Idle.since_spec,
   ``Writfold.Core.Idle.idle_spec,
+  -- gate lines agree with the plan's word (writfold_core::policy::lines)
+  ``Writfold.Core.Policy.is_skipped_spec,
+  ``Writfold.Core.Policy.all_skipped_loop_spec,
+  ``Writfold.Core.Policy.all_skipped_spec,
+  ``Writfold.Core.Policy.closes_spec,
+  ``Writfold.Core.Policy.owed_met_loop_spec,
+  ``Writfold.Core.Policy.owed_met_spec,
+  ``Writfold.Core.Policy.lines_clean_iff,
+  ``Writfold.Core.Policy.lines_flagged_never_clean,
+  ``Writfold.Core.Policy.lines_agree_with_summary,
   -- the subject repository (writfold_core::subject)
   ``Writfold.Core.Subject.pick_spec,
   ``Writfold.Core.Subject.recorded_never_kb_checkout,

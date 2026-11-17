@@ -866,6 +866,32 @@ MUTANTS = (
            "    if recorded {\n        return Pick::Nothing;",
            ("Writfold.Core.Subject.pick_spec",
             "Writfold.Core.Subject.some_subject")),
+    # gate lines: a gate is skipped only when every step naming it was
+    Mutant("skipped-any-step", "policy/lines.rs",
+           "        if !is_skipped(&owners[index]) {",
+           "        if false {",
+           ("Writfold.Core.Policy.all_skipped_loop_spec",
+            "Writfold.Core.Policy.all_skipped_spec")),
+    # gate lines: a gate no step names is not skipped
+    Mutant("skipped-unnamed", "policy/lines.rs",
+           "    if owners.is_empty() {\n        return false;",
+           "    if owners.is_empty() {\n        return true;",
+           ("Writfold.Core.Policy.all_skipped_spec",)),
+    # gate lines: a gate not skipped is owed until met
+    Mutant("owed-ignores-skip", "policy/lines.rs",
+           "        if !listed[index].skipped && !listed[index].met {",
+           "        if !listed[index].met {",
+           ("Writfold.Core.Policy.owed_met_loop_spec",)),
+    # gate lines: a stale plan does not close
+    Mutant("closes-stale", "policy/lines.rs",
+           "    matches!(summary, Summary::Complete) || matches!(summary, Summary::CompleteWithExceptions)",
+           "    matches!(summary, Summary::Complete)\n        || matches!(summary, Summary::CompleteWithExceptions)\n        || matches!(summary, Summary::CompleteStale)",
+           ("Writfold.Core.Policy.closes_spec",)),
+    # gate lines: an invalid receipt or definition keeps the lines unclean
+    Mutant("clean-ignores-invalid", "policy/lines.rs",
+           "    closes(summary) && owed_met(listed) && valid",
+           "    closes(summary) && owed_met(listed)",
+           ("Writfold.Core.Policy.lines_clean_iff",)),
 )
 
 # lake reports `error: <path>.lean:<line>:<col>: <message>`

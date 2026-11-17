@@ -158,7 +158,7 @@ The KB helps only when the first lookup hits. `writfold kb find --eval [FILE]` m
 
 | Code | Meaning |
 |---|---|
-| 0 | complete; for `gate status`, `gate lines` and `deliver status`, everything is satisfied, attested or waived; for `kb check`, every area is clean |
+| 0 | complete; for `gate status`, `gate lines` and `deliver status`, everything is satisfied, attested or waived (for `gate lines` with a plan, also a plan that reads `complete` or `complete-with-exceptions`; a skipped step's gates do not count); for `kb check`, every area is clean |
 | 2 | partial, unknown or stale, or something is still owed; for `kb repos`, a cited repository has no local clone. The answer is still usable: read the trailer |
 | 3 | refused: an ambiguous target, a write conflict, no current run |
 | 1 | an error, including a usage error |

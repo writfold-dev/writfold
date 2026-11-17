@@ -51,7 +51,8 @@ never fails, result as stated):
   (`Walk.lean`, `Command.lean`, `Find.lean`, `Idle.lean`), and the order
   receipts are judged in (`Order.lean`).
 - The bug-fix round (17 November 2026, below; fixed in v0.6.0-dev.4):
-  which repository a gate judges (`Subject.lean`).
+  which repository a gate judges (`Subject.lean`) and `gate lines`
+  agreeing with the plan's word (`Policy.lean`, extended in place).
 
 The gate (`docker compose -f compose.proofs.yaml run --build --rm proofs`,
 or the `docker run` form below) regenerates the translation and refuses
@@ -488,11 +489,30 @@ work tree holds a KB at a prefix).
 - `unchanged_unless_checkout`: otherwise the choice is the earlier rule
   (`Earlier`), so the change is confined to that case.
 
+`gate lines` with a plan (`proofs/Writfold/Policy.lean`, extended in place;
+`writfold_core::policy::lines`, owner decision). `writfold-kb` gathers which
+steps name each gate, how each closed (`policy::close`) and the plan's word
+(`policy::summary`); not proved: that gathering, the counts and the header
+text.
+
+- `all_skipped_spec`: a gate is listed `skipped` exactly when some step
+  names it and every step naming it was skipped.
+- `closes_spec`: the word closes the plan exactly for `complete` and
+  `complete-with-exceptions`.
+- `owed_met_spec`: every listed gate not skipped is met; a skipped gate never
+  counts.
+- `lines_clean_iff`: the lines exit 0 exactly when the word closes the plan,
+  every gate not skipped is met and nothing is invalid.
+  `lines_flagged_never_clean`: never for `policy-moved` or `complete-stale`.
+- `lines_agree_with_summary`: over `policy::summary`, clean lines imply
+  every step closed, every required template present, the policy unmoved
+  and no done step stale.
+
 ### The claims and their mutants
 
 <!-- generated from proofs/mutants.py -->
 
-164 mutants (20 before 16 November 2026, 86 after the backfill's first round, 108 after the policy round, 161 after the backfill's second round, 164 after the bug-fix round). Each must break exactly the theorems named.
+169 mutants (20 before 16 November 2026, 86 after the backfill's first round, 108 after the policy round, 161 after the backfill's second round, 169 after the bug-fix round). Each must break exactly the theorems named.
 
 | Mutant | File | What it breaks | Must break |
 |---|---|---|---|
@@ -660,6 +680,11 @@ work tree holds a KB at a prefix).
 | `pick-recorded-checkout` | `subject.rs` | subject: another checkout of the KB's repository is never judged | `Subject.pick_spec`, `Subject.recorded_never_kb_checkout` |
 | `pick-here-even-kb` | `subject.rs` | subject: the enclosing repository wins only when it is not the KB's | `Subject.pick_spec`, `Subject.unchanged_unless_checkout` |
 | `pick-checkout-nothing` | `subject.rs` | subject: a recorded checkout outside any repository is the KB's own | `Subject.pick_spec`, `Subject.some_subject` |
+| `skipped-any-step` | `policy/lines.rs` | gate lines: a gate is skipped only when every step naming it was | `Policy.all_skipped_loop_spec`, `Policy.all_skipped_spec` |
+| `skipped-unnamed` | `policy/lines.rs` | gate lines: a gate no step names is not skipped | `Policy.all_skipped_spec` |
+| `owed-ignores-skip` | `policy/lines.rs` | gate lines: a gate not skipped is owed until met | `Policy.owed_met_loop_spec` |
+| `closes-stale` | `policy/lines.rs` | gate lines: a stale plan does not close | `Policy.closes_spec` |
+| `clean-ignores-invalid` | `policy/lines.rs` | gate lines: an invalid receipt or definition keeps the lines unclean | `Policy.lines_clean_iff` |
 
 <!-- end generated -->
 

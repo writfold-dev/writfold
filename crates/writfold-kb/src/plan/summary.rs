@@ -54,9 +54,19 @@ pub fn required_present(graph: &Graph, names: &[String]) -> Vec<bool> {
 pub fn ended(
     graph: &Graph,
     judged: Option<&[Vec<Gate>]>,
-    (drift, run_closed): (&Drift, bool),
+    facts: (&Drift, bool),
     present: &[bool],
 ) -> Ended {
+    decide(graph, judged, facts, present).0
+}
+
+/// [`ended`], with the kernel's word and how each step closed.
+pub fn decide(
+    graph: &Graph,
+    judged: Option<&[Vec<Gate>]>,
+    (drift, run_closed): (&Drift, bool),
+    present: &[bool],
+) -> (Ended, Summary, Vec<Close>) {
     let mut closes: Vec<Close> = Vec::new();
     let mut e = Ended::default();
     for step in &graph.steps {
@@ -88,10 +98,11 @@ pub fn ended(
         repinned: drift.pins.iter().any(|p| p.kind == "repin"),
         stale,
     };
-    e.word = word(&policy::summary(&closes, &facts));
+    let summary = policy::summary(&closes, &facts);
+    e.word = word(&summary);
     e.steps = graph.steps.len();
     e.unpinned = drift.word == "unpinned";
-    e
+    (e, summary, closes)
 }
 
 impl Ended {

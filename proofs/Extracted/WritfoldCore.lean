@@ -2879,6 +2879,168 @@ def plan.splice
   let out1 ← plan.splice_loop1 count out 0#usize
   plan.splice_loop2 nodes out1 index
 
+/-- [writfold_core::policy::Close]
+    Source: 'crates/writfold-core/src/policy.rs', lines 116:0-125:1
+    Visibility: public -/
+@[discriminant isize]
+inductive policy.Close where
+| Open : policy.Close
+| Passed : policy.Close
+| Attested : policy.Close
+| Waived : policy.Close
+| Skipped : policy.Close
+
+/-- [writfold_core::policy::lines::is_skipped]:
+    Source: 'crates/writfold-core/src/policy/lines.rs', lines 11:0-13:1
+    Visibility: public -/
+def policy.lines.is_skipped (close : policy.Close) : Result Bool := do
+  match close with
+  | policy.Close.Open => ok false
+  | policy.Close.Passed => ok false
+  | policy.Close.Attested => ok false
+  | policy.Close.Waived => ok false
+  | policy.Close.Skipped => ok true
+
+/-- [writfold_core::policy::lines::all_skipped]: loop body 0:
+    Source: 'crates/writfold-core/src/policy/lines.rs', lines 22:4-29:1
+    Visibility: public -/
+@[rust_loop_body]
+def policy.lines.all_skipped_loop.body
+  (owners : Slice policy.Close) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let i := Slice.len owners
+  if index < i
+  then
+    let c ← Slice.index_usize owners index
+    let b ← policy.lines.is_skipped c
+    if b
+    then let index1 ← index + 1#usize
+         ok (cont index1)
+    else ok (done false)
+  else ok (done true)
+
+/-- [writfold_core::policy::lines::all_skipped]: loop 0:
+    Source: 'crates/writfold-core/src/policy/lines.rs', lines 22:4-29:1
+    Visibility: public -/
+@[rust_loop]
+def policy.lines.all_skipped_loop
+  (owners : Slice policy.Close) (index : Std.Usize) : Result Bool := do
+  loop
+    (fun index1 => policy.lines.all_skipped_loop.body owners index1)
+    index
+
+/-- [writfold_core::policy::lines::all_skipped]:
+    Source: 'crates/writfold-core/src/policy/lines.rs', lines 17:0-29:1
+    Visibility: public -/
+def policy.lines.all_skipped (owners : Slice policy.Close) : Result Bool := do
+  let b ← core.slice.Slice.is_empty owners
+  if b
+  then ok false
+  else policy.lines.all_skipped_loop owners 0#usize
+
+/-- [writfold_core::policy::Summary]
+    Source: 'crates/writfold-core/src/policy.rs', lines 196:0-204:1
+    Visibility: public -/
+@[discriminant isize]
+inductive policy.Summary where
+| NoPlan : policy.Summary
+| Incomplete : policy.Summary
+| ClosedIncomplete : policy.Summary
+| PolicyMoved : policy.Summary
+| CompleteStale : policy.Summary
+| CompleteWithExceptions : policy.Summary
+| Complete : policy.Summary
+
+/-- [writfold_core::policy::lines::closes]:
+    Source: 'crates/writfold-core/src/policy/lines.rs', lines 33:0-35:1
+    Visibility: public -/
+def policy.lines.closes (summary : policy.Summary) : Result Bool := do
+  let b ←
+    match summary with
+    | policy.Summary.NoPlan => ok false
+    | policy.Summary.Incomplete => ok false
+    | policy.Summary.ClosedIncomplete => ok false
+    | policy.Summary.PolicyMoved => ok false
+    | policy.Summary.CompleteStale => ok false
+    | policy.Summary.CompleteWithExceptions => ok false
+    | policy.Summary.Complete => ok true
+  if b
+  then ok true
+  else
+    match summary with
+    | policy.Summary.NoPlan => ok false
+    | policy.Summary.Incomplete => ok false
+    | policy.Summary.ClosedIncomplete => ok false
+    | policy.Summary.PolicyMoved => ok false
+    | policy.Summary.CompleteStale => ok false
+    | policy.Summary.CompleteWithExceptions => ok true
+    | policy.Summary.Complete => ok false
+
+/-- [writfold_core::policy::lines::Listed]
+    Source: 'crates/writfold-core/src/policy/lines.rs', lines 39:0-42:1
+    Visibility: public -/
+structure policy.lines.Listed where
+  skipped : Bool
+  met : Bool
+
+/-- [writfold_core::policy::lines::owed_met]: loop body 0:
+    Source: 'crates/writfold-core/src/policy/lines.rs', lines 47:4-54:1
+    Visibility: public -/
+@[rust_loop_body]
+def policy.lines.owed_met_loop.body
+  (listed : Slice policy.lines.Listed) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let i := Slice.len listed
+  if index < i
+  then
+    let l ← Slice.index_usize listed index
+    if l.skipped
+    then let index1 ← index + 1#usize
+         ok (cont index1)
+    else
+      if l.met
+      then let index1 ← index + 1#usize
+           ok (cont index1)
+      else ok (done false)
+  else ok (done true)
+
+/-- [writfold_core::policy::lines::owed_met]: loop 0:
+    Source: 'crates/writfold-core/src/policy/lines.rs', lines 47:4-54:1
+    Visibility: public -/
+@[rust_loop]
+def policy.lines.owed_met_loop
+  (listed : Slice policy.lines.Listed) (index : Std.Usize) : Result Bool := do
+  loop
+    (fun index1 => policy.lines.owed_met_loop.body listed index1)
+    index
+
+/-- [writfold_core::policy::lines::owed_met]:
+    Source: 'crates/writfold-core/src/policy/lines.rs', lines 45:0-54:1
+    Visibility: public -/
+@[reducible]
+def policy.lines.owed_met
+  (listed : Slice policy.lines.Listed) : Result Bool := do
+  policy.lines.owed_met_loop listed 0#usize
+
+/-- [writfold_core::policy::lines::lines_clean]:
+    Source: 'crates/writfold-core/src/policy/lines.rs', lines 58:0-60:1
+    Visibility: public -/
+def policy.lines.lines_clean
+  (summary : policy.Summary) (listed : Slice policy.lines.Listed)
+  (valid : Bool) :
+  Result Bool
+  := do
+  let b ← policy.lines.closes summary
+  if b
+  then
+    let b1 ← policy.lines.owed_met listed
+    if b1
+    then ok valid
+    else ok false
+  else ok false
+
 /-- [writfold_core::policy::Pin]
     Source: 'crates/writfold-core/src/policy.rs', lines 35:0-42:1
     Visibility: public -/
@@ -3025,17 +3187,6 @@ inductive policy.How where
 | Attested : policy.How
 | Waived : policy.How
 
-/-- [writfold_core::policy::Close]
-    Source: 'crates/writfold-core/src/policy.rs', lines 116:0-125:1
-    Visibility: public -/
-@[discriminant isize]
-inductive policy.Close where
-| Open : policy.Close
-| Passed : policy.Close
-| Attested : policy.Close
-| Waived : policy.Close
-| Skipped : policy.Close
-
 /-- [writfold_core::policy::how_waived]:
     Source: 'crates/writfold-core/src/policy.rs', lines 128:0-130:1
     Visibility: public -/
@@ -3156,19 +3307,6 @@ structure policy.Facts where
   pin : policy.Pin
   repinned : Bool
   stale : Bool
-
-/-- [writfold_core::policy::Summary]
-    Source: 'crates/writfold-core/src/policy.rs', lines 196:0-204:1
-    Visibility: public -/
-@[discriminant isize]
-inductive policy.Summary where
-| NoPlan : policy.Summary
-| Incomplete : policy.Summary
-| ClosedIncomplete : policy.Summary
-| PolicyMoved : policy.Summary
-| CompleteStale : policy.Summary
-| CompleteWithExceptions : policy.Summary
-| Complete : policy.Summary
 
 /-- [writfold_core::policy::is_open]:
     Source: 'crates/writfold-core/src/policy.rs', lines 207:0-209:1
