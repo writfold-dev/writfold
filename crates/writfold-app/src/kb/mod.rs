@@ -153,6 +153,8 @@ plans (the run graph; templates in .writfold/plans/<name>.toml; Writfold records
                                    record the current step as done, or refuse (exit 3) naming what it owes
   plan skip --reason TEXT --by WHO [--run ID]
                                    close the current step without calling it done
+  plan repin --reason TEXT --by WHO [--run ID] [--repo DIR]
+                                   adopt the policy as it is now when it moved since the run pinned it
 
 edits (the Splicery adapter; Splicery for repeated or structural edits, ordinary tools for small ones):
   edit apply RECIPE.spl|- [RECIPE.spl ...] [--run ID] [--worktree DIR] [--dry-run]
