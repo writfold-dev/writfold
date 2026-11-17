@@ -3118,6 +3118,105 @@ def plan.splice
   let out1 ← plan.splice_loop1 count out 0#usize
   plan.splice_loop2 nodes out1 index
 
+/-- [writfold_core::pointer::Pointer]
+    Source: 'crates/writfold-core/src/pointer.rs', lines 13:0-22:1
+    Visibility: public -/
+@[discriminant isize]
+inductive pointer.Pointer where
+| Unset : pointer.Pointer
+| Open : pointer.Pointer
+| Closed : pointer.Pointer
+| Gone : pointer.Pointer
+
+/-- [writfold_core::pointer::Level]
+    Source: 'crates/writfold-core/src/pointer.rs', lines 25:0-29:1
+    Visibility: public -/
+@[discriminant isize]
+inductive pointer.Level where
+| Session : pointer.Level
+| Tree : pointer.Level
+| Shared : pointer.Level
+
+/-- [writfold_core::pointer::is_set]:
+    Source: 'crates/writfold-core/src/pointer.rs', lines 32:0-34:1
+    Visibility: public -/
+def pointer.is_set (one : pointer.Pointer) : Result Bool := do
+  let b ←
+    match one with
+    | pointer.Pointer.Unset => ok true
+    | pointer.Pointer.Open => ok false
+    | pointer.Pointer.Closed => ok false
+    | pointer.Pointer.Gone => ok false
+  ok (¬ b)
+
+/-- [writfold_core::pointer::level]:
+    Source: 'crates/writfold-core/src/pointer.rs', lines 37:0-48:1
+    Visibility: public -/
+def pointer.level
+  (session : pointer.Pointer) (tree : pointer.Pointer)
+  (shared : pointer.Pointer) :
+  Result (Option pointer.Level)
+  := do
+  let b ← pointer.is_set session
+  if b
+  then ok (some pointer.Level.Session)
+  else
+    let b1 ← pointer.is_set tree
+    if b1
+    then ok (some pointer.Level.Tree)
+    else
+      let b2 ← pointer.is_set shared
+      if b2
+      then ok (some pointer.Level.Shared)
+      else ok none
+
+/-- [writfold_core::pointer::open]:
+    Source: 'crates/writfold-core/src/pointer.rs', lines 52:0-59:1
+    Visibility: public -/
+def pointer.open
+  (session : pointer.Pointer) (tree : pointer.Pointer)
+  (shared : pointer.Pointer) :
+  Result Bool
+  := do
+  let o ← pointer.level session tree shared
+  match o with
+  | none => ok false
+  | some l =>
+    match l with
+    | pointer.Level.Session =>
+      match session with
+      | pointer.Pointer.Unset => ok false
+      | pointer.Pointer.Open => ok true
+      | pointer.Pointer.Closed => ok false
+      | pointer.Pointer.Gone => ok false
+    | pointer.Level.Tree =>
+      match tree with
+      | pointer.Pointer.Unset => ok false
+      | pointer.Pointer.Open => ok true
+      | pointer.Pointer.Closed => ok false
+      | pointer.Pointer.Gone => ok false
+    | pointer.Level.Shared =>
+      match shared with
+      | pointer.Pointer.Unset => ok false
+      | pointer.Pointer.Open => ok true
+      | pointer.Pointer.Closed => ok false
+      | pointer.Pointer.Gone => ok false
+
+/-- [writfold_core::pointer::Writes]
+    Source: 'crates/writfold-core/src/pointer.rs', lines 62:0-66:1
+    Visibility: public -/
+structure pointer.Writes where
+  session : Bool
+  tree : Bool
+  shared : Bool
+
+/-- [writfold_core::pointer::writes]:
+    Source: 'crates/writfold-core/src/pointer.rs', lines 70:0-76:1
+    Visibility: public -/
+def pointer.writes
+  (has_session : Bool) (has_tree : Bool) : Result pointer.Writes := do
+  ok { session := has_session, tree := has_tree, shared := true }
+
 /-- [writfold_core::policy::Close]
     Source: 'crates/writfold-core/src/policy.rs', lines 116:0-125:1
     Visibility: public -/

@@ -60,6 +60,7 @@ pub mod investigation;
 pub mod observe;
 pub mod order;
 pub mod plan;
+pub mod pointer;
 pub mod policy;
 pub mod scope;
 pub mod subject;
