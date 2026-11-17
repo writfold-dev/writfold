@@ -202,6 +202,18 @@ def claims : List Name := [
   ``Writfold.Core.Ground.of_observation_grounded_iff,
   ``Writfold.Core.Ground.of_statement_spec,
   ``Writfold.Core.Ground.moved_iff,
+  -- scope globs (writfold_core::scope, proof backfill G6)
+  ``Writfold.Core.Scope.same_char_spec,
+  ``Writfold.Core.Scope.char_step_spec,
+  ``Writfold.Core.Scope.segment_iff,
+  ``Writfold.Core.Scope.globstar_spec,
+  ``Writfold.Core.Scope.path_step_spec,
+  ``Writfold.Core.Scope.segments_iff,
+  ``Writfold.Core.Scope.include_spec,
+  ``Writfold.Core.Scope.covers_loop_spec,
+  ``Writfold.Core.Scope.covers_iff,
+  ``Writfold.Core.Scope.exclusion_wins,
+  ``Writfold.Core.Scope.no_pattern_no_scope,
   -- the Weft assessed gate's basis (writfold_core::assess)
   ``Writfold.Core.Assess.assumption_loop_spec,
   ``Writfold.Core.Assess.assumption_spec,

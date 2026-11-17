@@ -8,3 +8,4 @@ import Writfold.Checklist
 import Writfold.Delivery
 import Writfold.Guard
 import Writfold.Ground
+import Writfold.Scope

@@ -545,6 +545,57 @@ MUTANTS = (
            "    if facts.repinned || !all_passed(closes) {",
            "    if facts.repinned {",
            ("Writfold.Core.Policy.summary_spec",)),
+    # scope: an exclusion that matches keeps the path out
+    Mutant("covers-ignores-exclusion", "scope.rs",
+           "        if patterns[index].exclude && hit {\n            return false;",
+           "        if false && hit {\n            return false;",
+           ("Writfold.Core.Scope.covers_loop_spec",)),
+    # scope: a scope with no pattern that includes covers nothing
+    Mutant("covers-empty-includes", "scope.rs",
+           "    let mut included = false;",
+           "    let mut included = true;",
+           ("Writfold.Core.Scope.covers_iff",)),
+    # scope: an including pattern counts only when it matches
+    Mutant("include-ignores-hit", "scope.rs",
+           "    included || (!exclude && hit)",
+           "    included || !exclude",
+           ("Writfold.Core.Scope.include_spec",)),
+    # scope: a `*` that led nowhere stretches by one more character
+    Mutant("segment-no-backtrack", "scope.rs",
+           "    if c.i < pattern.len() && same_char(pattern[c.i], text[c.j]) {\n"
+           "        return Next::Go(Cursor {\n            i: c.i + 1,\n            j: c.j + 1,\n"
+           "            starred: c.starred,\n            at: c.at,\n            from: c.from,\n"
+           "        });\n    }\n    if c.starred {",
+           "    if c.i < pattern.len() && same_char(pattern[c.i], text[c.j]) {\n"
+           "        return Next::Go(Cursor {\n            i: c.i + 1,\n            j: c.j + 1,\n"
+           "            starred: c.starred,\n            at: c.at,\n            from: c.from,\n"
+           "        });\n    }\n    if false {",
+           ("Writfold.Core.Scope.char_step_spec",)),
+    # scope: `*` matches nothing too, at the end of a segment included
+    Mutant("star-needs-a-char", "scope.rs",
+           "    if c.i < pattern.len() && pattern[c.i] == STAR {",
+           "    if c.i < pattern.len() && pattern[c.i] == STAR && c.j < text.len() {",
+           ("Writfold.Core.Scope.char_step_spec",)),
+    # scope: `?` matches any one character
+    Mutant("same-char-ignores-any", "scope.rs",
+           "    pattern == ANY || pattern == text",
+           "    (pattern == ANY && text == ANY) || pattern == text",
+           ("Writfold.Core.Scope.same_char_spec",)),
+    # scope: only `**` is a segment wildcard, not `*` followed by anything
+    Mutant("globstar-one-star", "scope.rs",
+           "    segment.len() == 2 && segment[0] == STAR && segment[1] == STAR",
+           "    segment.len() == 2 && segment[0] == STAR",
+           ("Writfold.Core.Scope.globstar_spec",)),
+    # scope: `**` matches no segment too, at the end of a path included
+    Mutant("globstar-needs-a-segment", "scope.rs",
+           "    if c.i < wanted.len() && globstar(&wanted[c.i]) {",
+           "    if c.i < wanted.len() && globstar(&wanted[c.i]) && c.j < parts.len() {",
+           ("Writfold.Core.Scope.path_step_spec",)),
+    # scope: a path with segments left over after the pattern does not match
+    Mutant("segments-accept-trailing", "scope.rs",
+           "    if c.j >= parts.len() {",
+           "    if c.j >= parts.len() || c.i >= wanted.len() {",
+           ("Writfold.Core.Scope.path_step_spec",)),
     # assessed gate: one ungrounded premise makes the basis hypothetical
     Mutant("basis-ignores-premises", "assess.rs",
            "        if matches!(premises[index], Grounding::Ungrounded) {",

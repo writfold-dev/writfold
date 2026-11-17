@@ -2505,4 +2505,372 @@ def policy.summary
         then ok policy.Summary.ClosedIncomplete
         else ok policy.Summary.Incomplete
 
+/-- [writfold_core::scope::STAR]
+    Source: 'crates/writfold-core/src/scope.rs', lines 19:0-19:25
+    Visibility: public -/
+@[global_simps, irreducible] def scope.STAR : Std.U32 := 42#u32
+
+/-- [writfold_core::scope::ANY]
+    Source: 'crates/writfold-core/src/scope.rs', lines 21:0-21:24
+    Visibility: public -/
+@[global_simps, irreducible] def scope.ANY : Std.U32 := 63#u32
+
+/-- [writfold_core::scope::Pattern]
+    Source: 'crates/writfold-core/src/scope.rs', lines 24:0-27:1
+    Visibility: public -/
+structure scope.Pattern where
+  exclude : Bool
+  segments : alloc.vec.Vec (alloc.vec.Vec Std.U32)
+
+/-- [writfold_core::scope::Cursor]
+    Source: 'crates/writfold-core/src/scope.rs', lines 31:0-37:1
+    Visibility: public -/
+structure scope.Cursor where
+  i : Std.Usize
+  j : Std.Usize
+  starred : Bool
+  «at» : Std.Usize
+  «from» : Std.Usize
+
+/-- [writfold_core::scope::Next]
+    Source: 'crates/writfold-core/src/scope.rs', lines 40:0-43:1
+    Visibility: public -/
+@[discriminant isize]
+inductive scope.Next where
+| Go : scope.Cursor → scope.Next
+| Done : Bool → scope.Next
+
+/-- [writfold_core::scope::start]:
+    Source: 'crates/writfold-core/src/scope.rs', lines 46:0-54:1
+    Visibility: public -/
+def scope.start : Result scope.Cursor := do
+  ok
+    {
+      i := 0#usize,
+      j := 0#usize,
+      starred := false,
+      «at» := 0#usize,
+      «from» := 0#usize
+    }
+
+/-- [writfold_core::scope::same_char]:
+    Source: 'crates/writfold-core/src/scope.rs', lines 57:0-59:1
+    Visibility: public -/
+def scope.same_char (pattern : Std.U32) (text : Std.U32) : Result Bool := do
+  if pattern = scope.ANY
+  then ok true
+  else ok (pattern = text)
+
+/-- [writfold_core::scope::char_step]:
+    Source: 'crates/writfold-core/src/scope.rs', lines 64:0-96:1
+    Visibility: public -/
+def scope.char_step
+  (pattern : Slice Std.U32) (text : Slice Std.U32) (c : scope.Cursor) :
+  Result scope.Next
+  := do
+  let i := Slice.len pattern
+  if c.i < i
+  then
+    let i1 ← Slice.index_usize pattern c.i
+    if i1 = scope.STAR
+    then
+      let i2 ← c.i + 1#usize
+      ok (scope.Next.Go
+        { c with i := i2, starred := true, «at» := c.i, «from» := c.j })
+    else
+      let i2 := Slice.len text
+      if c.j >= i2
+      then let i3 := Slice.len pattern
+           ok (scope.Next.Done (c.i = i3))
+      else
+        let i3 := Slice.len pattern
+        if c.i < i3
+        then
+          let i4 ← Slice.index_usize text c.j
+          let b ← scope.same_char i1 i4
+          if b
+          then
+            let i5 ← c.i + 1#usize
+            let i6 ← c.j + 1#usize
+            ok (scope.Next.Go { c with i := i5, j := i6 })
+          else
+            if c.starred
+            then
+              let i5 ← c.at + 1#usize
+              let i6 ← c.from + 1#usize
+              ok (scope.Next.Go { c with i := i5, j := i6, «from» := i6 })
+            else ok (scope.Next.Done false)
+        else
+          if c.starred
+          then
+            let i4 ← c.at + 1#usize
+            let i5 ← c.from + 1#usize
+            ok (scope.Next.Go { c with i := i4, j := i5, «from» := i5 })
+          else ok (scope.Next.Done false)
+  else
+    let i1 := Slice.len text
+    if c.j >= i1
+    then let i2 := Slice.len pattern
+         ok (scope.Next.Done (c.i = i2))
+    else
+      let i2 := Slice.len pattern
+      if c.i < i2
+      then
+        let i3 ← Slice.index_usize pattern c.i
+        let i4 ← Slice.index_usize text c.j
+        let b ← scope.same_char i3 i4
+        if b
+        then
+          let i5 ← c.i + 1#usize
+          let i6 ← c.j + 1#usize
+          ok (scope.Next.Go { c with i := i5, j := i6 })
+        else
+          if c.starred
+          then
+            let i5 ← c.at + 1#usize
+            let i6 ← c.from + 1#usize
+            ok (scope.Next.Go { c with i := i5, j := i6, «from» := i6 })
+          else ok (scope.Next.Done false)
+      else
+        if c.starred
+        then
+          let i3 ← c.at + 1#usize
+          let i4 ← c.from + 1#usize
+          ok (scope.Next.Go { c with i := i3, j := i4, «from» := i4 })
+        else ok (scope.Next.Done false)
+
+/-- [writfold_core::scope::segment]: loop body 0:
+    Source: 'crates/writfold-core/src/scope.rs', lines 101:4-106:5
+    Visibility: public -/
+@[rust_loop_body]
+def scope.segment_loop.body
+  (pattern : Slice Std.U32) (text : Slice Std.U32) (c : scope.Cursor) :
+  Result (ControlFlow scope.Cursor Bool)
+  := do
+  let n ← scope.char_step pattern text c
+  match n with
+  | scope.Next.Go n1 => ok (cont n1)
+  | scope.Next.Done b => ok (done b)
+
+/-- [writfold_core::scope::segment]: loop 0:
+    Source: 'crates/writfold-core/src/scope.rs', lines 101:4-106:5
+    Visibility: public -/
+@[rust_loop]
+def scope.segment_loop
+  (c : scope.Cursor) (pattern : Slice Std.U32) (text : Slice Std.U32) :
+  Result Bool
+  := do
+  loop
+    (fun c1 => scope.segment_loop.body pattern text c1)
+    c
+
+/-- [writfold_core::scope::segment]:
+    Source: 'crates/writfold-core/src/scope.rs', lines 99:0-107:1
+    Visibility: public -/
+def scope.segment
+  (pattern : Slice Std.U32) (text : Slice Std.U32) : Result Bool := do
+  let c ← scope.start
+  scope.segment_loop c pattern text
+
+/-- [writfold_core::scope::globstar]:
+    Source: 'crates/writfold-core/src/scope.rs', lines 110:0-112:1
+    Visibility: public -/
+def scope.globstar (segment : Slice Std.U32) : Result Bool := do
+  let i := Slice.len segment
+  if i = 2#usize
+  then
+    let i1 ← Slice.index_usize segment 0#usize
+    if i1 = scope.STAR
+    then let i2 ← Slice.index_usize segment 1#usize
+         ok (i2 = scope.STAR)
+    else ok false
+  else ok false
+
+/-- [writfold_core::scope::path_step]:
+    Source: 'crates/writfold-core/src/scope.rs', lines 116:0-148:1
+    Visibility: public -/
+def scope.path_step
+  (wanted : Slice (alloc.vec.Vec Std.U32))
+  (parts : Slice (alloc.vec.Vec Std.U32)) (c : scope.Cursor) :
+  Result scope.Next
+  := do
+  let i := Slice.len wanted
+  if c.i < i
+  then
+    let v ← Slice.index_usize wanted c.i
+    let s := alloc.vec.Vec.deref v
+    let b ← scope.globstar s
+    if b
+    then
+      let i1 ← c.i + 1#usize
+      ok (scope.Next.Go
+        { c with i := i1, starred := true, «at» := c.i, «from» := c.j })
+    else
+      let i1 := Slice.len parts
+      if c.j >= i1
+      then let i2 := Slice.len wanted
+           ok (scope.Next.Done (c.i = i2))
+      else
+        let i2 := Slice.len wanted
+        if c.i < i2
+        then
+          let s1 := alloc.vec.Vec.deref v
+          let v1 ← Slice.index_usize parts c.j
+          let s2 := alloc.vec.Vec.deref v1
+          let b1 ← scope.segment s1 s2
+          if b1
+          then
+            let i3 ← c.i + 1#usize
+            let i4 ← c.j + 1#usize
+            ok (scope.Next.Go { c with i := i3, j := i4 })
+          else
+            if c.starred
+            then
+              let i3 ← c.at + 1#usize
+              let i4 ← c.from + 1#usize
+              ok (scope.Next.Go { c with i := i3, j := i4, «from» := i4 })
+            else ok (scope.Next.Done false)
+        else
+          if c.starred
+          then
+            let i3 ← c.at + 1#usize
+            let i4 ← c.from + 1#usize
+            ok (scope.Next.Go { c with i := i3, j := i4, «from» := i4 })
+          else ok (scope.Next.Done false)
+  else
+    let i1 := Slice.len parts
+    if c.j >= i1
+    then let i2 := Slice.len wanted
+         ok (scope.Next.Done (c.i = i2))
+    else
+      let i2 := Slice.len wanted
+      if c.i < i2
+      then
+        let v ← Slice.index_usize wanted c.i
+        let s := alloc.vec.Vec.deref v
+        let v1 ← Slice.index_usize parts c.j
+        let s1 := alloc.vec.Vec.deref v1
+        let b ← scope.segment s s1
+        if b
+        then
+          let i3 ← c.i + 1#usize
+          let i4 ← c.j + 1#usize
+          ok (scope.Next.Go { c with i := i3, j := i4 })
+        else
+          if c.starred
+          then
+            let i3 ← c.at + 1#usize
+            let i4 ← c.from + 1#usize
+            ok (scope.Next.Go { c with i := i3, j := i4, «from» := i4 })
+          else ok (scope.Next.Done false)
+      else
+        if c.starred
+        then
+          let i3 ← c.at + 1#usize
+          let i4 ← c.from + 1#usize
+          ok (scope.Next.Go { c with i := i3, j := i4, «from» := i4 })
+        else ok (scope.Next.Done false)
+
+/-- [writfold_core::scope::segments]: loop body 0:
+    Source: 'crates/writfold-core/src/scope.rs', lines 154:4-159:5
+    Visibility: public -/
+@[rust_loop_body]
+def scope.segments_loop.body
+  (wanted : Slice (alloc.vec.Vec Std.U32))
+  (parts : Slice (alloc.vec.Vec Std.U32)) (c : scope.Cursor) :
+  Result (ControlFlow scope.Cursor Bool)
+  := do
+  let n ← scope.path_step wanted parts c
+  match n with
+  | scope.Next.Go n1 => ok (cont n1)
+  | scope.Next.Done b => ok (done b)
+
+/-- [writfold_core::scope::segments]: loop 0:
+    Source: 'crates/writfold-core/src/scope.rs', lines 154:4-159:5
+    Visibility: public -/
+@[rust_loop]
+def scope.segments_loop
+  (c : scope.Cursor) (wanted : Slice (alloc.vec.Vec Std.U32))
+  (parts : Slice (alloc.vec.Vec Std.U32)) :
+  Result Bool
+  := do
+  loop
+    (fun c1 => scope.segments_loop.body wanted parts c1)
+    c
+
+/-- [writfold_core::scope::segments]:
+    Source: 'crates/writfold-core/src/scope.rs', lines 152:0-160:1
+    Visibility: public -/
+def scope.segments
+  (wanted : Slice (alloc.vec.Vec Std.U32))
+  (parts : Slice (alloc.vec.Vec Std.U32)) :
+  Result Bool
+  := do
+  let c ← scope.start
+  scope.segments_loop c wanted parts
+
+/-- [writfold_core::scope::include]:
+    Source: 'crates/writfold-core/src/scope.rs', lines 164:0-166:1
+    Visibility: public -/
+def scope.include
+  (included : Bool) (exclude : Bool) (hit : Bool) : Result Bool := do
+  if included
+  then ok true
+  else if exclude
+       then ok false
+       else ok hit
+
+/-- [writfold_core::scope::covers]: loop body 0:
+    Source: 'crates/writfold-core/src/scope.rs', lines 173:4-182:1
+    Visibility: public -/
+@[rust_loop_body]
+def scope.covers_loop.body
+  (patterns : Slice scope.Pattern) (path : Slice (alloc.vec.Vec Std.U32))
+  (included : Bool) (index : Std.Usize) :
+  Result (ControlFlow (Bool × Std.Usize) Bool)
+  := do
+  let i := Slice.len patterns
+  if index < i
+  then
+    let p ← Slice.index_usize patterns index
+    let s := alloc.vec.Vec.deref p.segments
+    let hit ← scope.segments s path
+    if p.exclude
+    then
+      if hit
+      then ok (done false)
+      else
+        let included1 ← scope.include included p.exclude hit
+        let index1 ← index + 1#usize
+        ok (cont (included1, index1))
+    else
+      let included1 ← scope.include included p.exclude hit
+      let index1 ← index + 1#usize
+      ok (cont (included1, index1))
+  else ok (done included)
+
+/-- [writfold_core::scope::covers]: loop 0:
+    Source: 'crates/writfold-core/src/scope.rs', lines 173:4-182:1
+    Visibility: public -/
+@[rust_loop]
+def scope.covers_loop
+  (patterns : Slice scope.Pattern) (path : Slice (alloc.vec.Vec Std.U32))
+  (included : Bool) (index : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun (included1, index1) => scope.covers_loop.body patterns path included1
+      index1)
+    (included, index)
+
+/-- [writfold_core::scope::covers]:
+    Source: 'crates/writfold-core/src/scope.rs', lines 170:0-182:1
+    Visibility: public -/
+@[reducible]
+def scope.covers
+  (patterns : Slice scope.Pattern) (path : Slice (alloc.vec.Vec Std.U32)) :
+  Result Bool
+  := do
+  scope.covers_loop patterns path false 0#usize
+
 end writfold_core
