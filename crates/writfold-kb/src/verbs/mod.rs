@@ -3,6 +3,7 @@ pub mod brief;
 pub mod context;
 pub mod eval;
 pub mod find;
+pub mod find_each;
 pub mod impact;
 pub mod index;
 pub mod names;

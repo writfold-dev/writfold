@@ -114,7 +114,7 @@ pub struct Plan {
     /// The record (or run) to show from the index after the write.
     pub show: Option<String>,
     pub notes: Vec<String>,
-    /// The run to make current (`<git dir>/writfold/current-run`).
+    /// The run to make current for the seat ([`crate::seat`]).
     pub current: Option<String>,
     pub verb: &'static str,
     pub args: Vec<String>,
@@ -171,7 +171,7 @@ pub fn execute(ws: &Workspace, request: &Request, write: &Write, now: i64) -> Re
     };
     atomic::apply(&ws.root, &state, &plan.ops, request.probe)?;
     if let Some(id) = &plan.current {
-        crate::runs::set_current(&state, id)?;
+        crate::seat::make_current(&state, &ws.seat, id)?;
     }
     let mut notes = plan.notes.clone();
     if let Write::FromDraft(f) = write {

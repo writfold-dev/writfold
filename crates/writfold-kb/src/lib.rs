@@ -32,6 +32,7 @@ pub mod parse;
 pub mod plan;
 pub mod proposal;
 pub mod runs;
+pub mod seat;
 pub mod session;
 pub mod shell;
 pub mod stale;
@@ -85,6 +86,13 @@ pub enum Verb {
         filter: verbs::find::Filter,
         signatures: bool,
     },
+    /// `find --each Q…`: each query answered as `find` answers it, in one
+    /// process: a `query` row, then that query's rows.
+    FindEach {
+        texts: Vec<String>,
+        filter: verbs::find::Filter,
+        signatures: bool,
+    },
     /// `runs --idle AGE`: open runs whose last recorded write is older
     /// than `age` seconds (`age_text` as given).
     RunsIdle {
@@ -129,6 +137,11 @@ pub enum Verb {
     },
     Resume {
         run: Option<String>,
+    },
+    /// `resume <run> --here`: make the run the seat's current run (local
+    /// pointers only, [`seat`]), then show it as `resume` does.
+    Attach {
+        run: String,
     },
     /// A write verb (`checkpoint`, `record`, `status --set`, `cite make`).
     Write(write::Write),
@@ -184,11 +197,20 @@ pub struct Request {
 }
 
 /// Locate the KB, open its index at the current snapshot, answer, render.
+/// The seat has no session: its current run is its work tree's, else the
+/// clone's shared one ([`seat`]).
 pub fn run(request: &Request) -> Result<Output> {
+    run_as(request, None)
+}
+
+/// [`run`] for a session (`$WRITFOLD_SESSION`, read by the binary): its
+/// own current-run pointer is read first and written with the others.
+pub fn run_as(request: &Request, session: Option<&str>) -> Result<Output> {
     if let Verb::Init(init) = &request.verb {
         return init::execute(init, &request.cwd, request.json);
     }
-    let ws = discover(request.kb.as_deref(), &request.cwd)?;
+    let mut ws = discover(request.kb.as_deref(), &request.cwd)?;
+    ws.seat.session = seat::session_id(session);
     let now = request.now.unwrap_or_else(time::now);
     if let Verb::Write(write) = &request.verb {
         return write::execute(&ws, request, write, now);
@@ -307,6 +329,10 @@ fn answer(session: &Session<'_>, request: &Request) -> Result<(Answer, &'static 
             let (answer, id) = verbs::runs::resume(session, run.as_deref(), &request.cwd)?;
             (answer, "resume", vec![id])
         }
+        Verb::Attach { run } => {
+            let (answer, id) = verbs::runs::attach(session, run, &request.cwd)?;
+            (answer, "resume", vec![id])
+        }
         Verb::Policy => (
             verbs::policy::policy(session, &request.cwd)?,
             "policy",
@@ -316,8 +342,8 @@ fn answer(session: &Session<'_>, request: &Request) -> Result<(Answer, &'static 
     })
 }
 
-/// `runs --idle` and `find --eval` (v0.6.0-dev.1); `None` for every
-/// other verb.
+/// `runs --idle` and `find --eval` (v0.6.0-dev.1), `find --each`
+/// (v0.6.0-dev.6); `None` for every other verb.
 fn measured(
     session: &Session<'_>,
     verb: &Verb,
@@ -342,6 +368,15 @@ fn measured(
                 args,
             )
         }
+        Verb::FindEach {
+            texts,
+            filter,
+            signatures,
+        } => answered(
+            verbs::find_each::each(session, texts, filter, *signatures),
+            "find",
+            verbs::find_each::args(texts, filter, *signatures),
+        ),
         Verb::FindEval { file } => answered(
             verbs::eval::eval(session, file.as_deref()),
             "find-eval",

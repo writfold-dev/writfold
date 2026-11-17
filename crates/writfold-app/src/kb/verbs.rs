@@ -99,6 +99,19 @@ pub fn verb(
 
 /// `find TEXT` and `match TEXT`; `find --kind K` with no text lists records.
 fn find(name: &str, common: &Common, positional: &[String]) -> Result<Verb, String> {
+    if common.switches.iter().any(|s| s == "each") {
+        if positional.is_empty() {
+            return Err("find --each takes one or more queries".into());
+        }
+        return Ok(Verb::FindEach {
+            texts: positional.to_vec(),
+            filter: Filter {
+                kinds: common.kinds.clone(),
+                project: common.project.clone(),
+            },
+            signatures: common.signatures,
+        });
+    }
     let listing = name == "find" && !common.kinds.is_empty() && !common.signatures;
     if positional.is_empty() && !listing {
         return Err(format!("{name} takes some text"));

@@ -132,7 +132,7 @@ pub fn session_start(
     source: Option<&str>,
 ) -> Result<HookOutput, String> {
     let local = state(ws).ok();
-    let current = local.as_deref().and_then(runs::current);
+    let current = runs::current_in(ws);
     let parts = if source == Some("compact") {
         let run = current.as_deref().ok_or("no current run to re-inject")?;
         let header = "Plan position after compaction (`writfold kb plan status`; `writfold kb resume` has the rest)";

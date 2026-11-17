@@ -4236,3 +4236,29 @@ On 3,000 tickets with bodies (22.7 MB index) `find` took 135 to 263 ms (dev.3 mu
 ### 47.9 Behaviour changes, and what is not done
 
 Changes: a waiver a mode gate's `accept` or a mode's `waivable` rejects holds the candidate (W1); an older draft decides no step once a newer candidate of its mode is bound (W3); a withdrawn candidate is not counted by the lenient rule, the standing counts or the exit code; a posted candidate no longer passes the guard twice; the denial for unknown bytes names the ready candidate's file; `next:` after a failed check names the repair; a ready delivery on a step without `posted:` adds a `note:`; the `deliver status` trailer gains `withdrawn=`; JSON keys are additive and `writfold_kb` stays 1. Not done: D18, D19, D20 to D22 (each when a second team asks), `posted:<mode>` on a later step than its `deliver:<mode>`, and the order of statements without a clock.
+
+## 48. A current run per session and work tree, `find --each`, as built (17 November 2026, v0.6.0-dev.6)
+
+The specification is [v060-dev6-spec.md](v060-dev6-spec.md); the proofs are in [aeneas.md](aeneas.md#the-current-run-round-17-november-2026).
+
+### 48.1 The seat and its pointers
+
+`writfold_core::pointer` decides: `level` (the most specific set pointer of session, work tree, shared), `open`, `writes`. `writfold-kb` `seat.rs` holds the files: `Seat { session, tree }`; `current-run.d/session-<id>`, `current-run.d/tree-<16 hex>` (the SHA-256 of the canonical work-tree top; its second line is the path, for a reader), and `current-run`; `standing` reads the run a pointer names from `runs/<id>/manifest.json` and the sidecar (`Gone`, `Closed`, `Open`); `current(ws, seat)` returns the run and the level that decided; `make_current` writes the pointers `pointer::writes` names, most specific first, each by a temporary file and a rename. `Workspace` carries the seat: `discover` sets it from `$WRITFOLD_SESSION` and the work tree enclosing the working directory (`tree_of`: none inside the KB's own work tree), so every existing caller of `runs::current_of` resolves per seat with no change of its own. `runs::current_in(ws)` replaces the readers that had only a workspace (`check`, `policy`, the hooks, the retrieval adapter); `runs::current_at(session, dir)` is the seat's session acting in another directory, used by `guard::require::gather` for each `Place::At`, so a guarded command reads the pointer of the work tree it acts in. `runs::set_current` (the shared pointer alone) stays for callers that have no seat.
+
+Nothing clears a pointer. `status <run> --set closed` leaves them, and a reader is told the run is closed (`ended_not_skipped`).
+
+### 48.2 The session
+
+`hook::run` sets the seat's session from the event's `session_id` when it is a session ID (`draft::valid_session`), else keeps the variable's. `hook/export.rs::export_session` appends `export WRITFOLD_SESSION=<id>` to the file named by `CLAUDE_ENV_FILE` (read by `writfold-app` `kb/hook.rs` for `session-start` only), unless that line is already the last one for the variable; a failure is one stderr line and the hook still exits 0. This closes the "not built" line of [§25](#25-deterministic-hooks-as-built) and of the proposals section: `propose` in a hooked session now counts against the session.
+
+### 48.3 `resume <run> --here`
+
+`Verb::Attach`; `verbs/runs.rs::attach` resolves the run as `resume` does, refuses a closed one (`guard::require::run_current`, exit 3), writes the seat's pointers and answers as `resume` with one more note. It writes no tracked file.
+
+### 48.4 `find --each`
+
+`Verb::FindEach`; `verbs/find_each.rs` runs `find_within` (the tiers of `find` with a row limit of six) per query, shows five and flags the query row `!more` when a sixth exists; rows carry `query` in JSON (`Row::extra`); the trailer counts `queries` and `miss`, and `miss` is one of the counts that give exit 2.
+
+### 48.5 Notes, and what is not done
+
+`guard status` adds a note when the deciding pointer is not the shared one (the first note is unchanged; `writfold watch` reads the run from it). `watch`'s local stamp includes the metadata of `current-run.d/`. Not done: pruning pointers; a `repos` key on gates; link rendering; recorded verdicts for `code`; batch `observe` and `record` (each with its reason in [v060-dev6-spec.md §5](v060-dev6-spec.md#5-deferred-with-reasons)). Not exercised: the export in a live Claude Code session (the hook was run by a test with `CLAUDE_ENV_FILE` set).

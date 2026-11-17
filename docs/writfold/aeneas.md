@@ -59,6 +59,10 @@ never fails, result as stated):
   decides once candidates are withdrawn or bound, the `posted:<mode>`
   standing, and the delivery guard's decision over the run's candidates
   (`Delivery.lean`, replaced in place and extended).
+- The current-run round (17 November 2026, below; built in v0.6.0-dev.6):
+  which of a clone's three current-run pointers decides for a session and
+  work tree, and which are written when a run is made current
+  (`Pointer.lean`).
 
 The gate (`docker compose -f compose.proofs.yaml run --build --rm proofs`,
 or the `docker run` form below) regenerates the translation and refuses
@@ -605,6 +609,59 @@ findings; JSON. `deliver withdraw` and `deliver posted` are each one
 create-new file under the existing write protocol, so `KbWrite.tla` and
 `RunGraph.tla` are unchanged.
 
+### The current-run round (17 November 2026)
+
+Built in v0.6.0-dev.6 ([v060-dev6-spec.md](v060-dev6-spec.md)). Before it,
+one local pointer per KB clone named the current run, so every session on
+the clone shared it. `writfold_core::pointer` now decides among three
+pointers a seat (one session in one work tree) can read: the session's, the
+work tree's and the clone's shared one. It was translated and proved, and
+its mutants calibrated, before `writfold-kb` called it
+(`proofs/Writfold/Pointer.lean`).
+
+A pointer reads `Unset`, or names a run that is `Open`, `Closed` or `Gone`
+(not in the KB). `level(session, tree, shared)` is the deciding level,
+`open(session, tree, shared)` whether the seat's current run is open, and
+`writes(has_session, has_tree)` the pointers a seat writes when it makes a
+run current.
+
+- `is_set_spec`, `level_spec`: the deciding level is the most specific
+  pointer that is set (session, then work tree, then shared); none exactly
+  when none is set.
+- `open_spec`: the seat's current run is open exactly when the deciding
+  pointer names an open run.
+- `session_decides`, `tree_decides`: with its session pointer set, a seat
+  reads the same whatever the work tree's and the shared pointers hold;
+  with no session pointer and a work-tree pointer, the same whatever the
+  shared pointer holds.
+- `ended_not_skipped`: a deciding pointer that names a closed or missing
+  run is never passed over for a less specific pointer to an open run. A
+  session whose run ended is told so; it is not judged against a run that
+  may be another session's.
+- `shared_alone`: with only the shared pointer the answer is that
+  pointer's, which is the rule every earlier release applied.
+- `writes_spec`: a seat writes the pointer of each level it has, and the
+  shared pointer always.
+- `writer_reads_its_run`: after a seat makes an open run current, that seat
+  reads an open current run, whatever the three pointers held before and
+  whichever levels the seat has. (`after` and `seen`, the pointer after a
+  write and a level the seat lacks, are Lean definitions in `Pointer.lean`;
+  that a written file reads back as the run is the file system's, tested.)
+- `other_session_undisturbed`: a seat whose session pointer is set reads
+  the same before and after any other seat makes a run current.
+
+Tested, not proved: reading the pointer files and the state of the run
+each names (`writfold-kb` `seat.rs`: a manifest's presence, the sidecar's
+or the manifest's `state`); which work tree encloses a directory and
+whether it is the KB's own (no work-tree pointer there); the session ID's
+form; the `export` line the `SessionStart` hook appends; `resume <run>
+--here` (it refuses a closed run through the proved
+`guard::require::run_current`). The pointers are local, untracked files,
+each written by one atomic rename; a crash between two of them leaves a
+combination of pointer states, and every combination is an input the
+theorems above cover, so there is no protocol to model: `KbWrite.tla` and
+`RunGraph.tla` are unchanged.
+
 ### The claims and their mutants
 
 <!-- generated from proofs/mutants.py -->
@@ -802,6 +859,12 @@ create-new file under the existing write protocol, so `KbWrite.tla` and
 | `guard-all-counts-withdrawn` | `delivery.rs` | delivery guard: a withdrawn candidate need not be ready | `Delivery.guard_all_loop_spec` |
 | `guard-all-skips-last` | `delivery.rs` | delivery guard: the last candidate counts for the all-ready rule | `Delivery.guard_all_loop_spec` |
 | `guard-any-skips-last` | `delivery.rs` | delivery guard: the last candidate may hold the bytes | `Delivery.guard_any_loop_spec` |
+| `level-tree-before-session` | `pointer.rs` | pointer: a session pointer decides before the work tree's | `Pointer.level_spec`, `Pointer.open_spec`, `Pointer.session_decides`, `Pointer.ended_not_skipped` |
+| `is-set-skips-gone` | `pointer.rs` | pointer: a pointer to a run the KB lacks is set, and so not skipped | `Pointer.is_set_spec`, `Pointer.level_spec`, `Pointer.open_spec`, `Pointer.session_decides`, `Pointer.tree_decides`, `Pointer.ended_not_skipped` |
+| `open-skips-closed-session` | `pointer.rs` | pointer: a closed run at the deciding level is not skipped for an open one below | `Pointer.open_spec`, `Pointer.session_decides`, `Pointer.ended_not_skipped` |
+| `open-shared-any-run` | `pointer.rs` | pointer: only an open run is an open current run | `Pointer.open_spec`, `Pointer.shared_alone`, `Pointer.ended_not_skipped` |
+| `writes-shared-only-without-session` | `pointer.rs` | pointer: the shared pointer is always written | `Pointer.writes_spec` |
+| `writes-no-session` | `pointer.rs` | pointer: a seat with a session writes its session pointer | `Pointer.writes_spec`, `Pointer.writer_reads_its_run` |
 
 <!-- end generated -->
 

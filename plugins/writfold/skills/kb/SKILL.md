@@ -20,6 +20,8 @@ The project KB is plain records in Git. `writfold kb <verb>` answers from it in 
 | Which citations have moved? | `stale [<project>\|<path>]` |
 | Is everything still valid: citations, the index, the run's gates? | `check [<project>\|<path>]` (one row per area; worst exit code) |
 | Pick up a run: its checkpoint, coverage and rechecks | `resume [<run>]` (list runs with `runs --open`) |
+| Work in a run another session started (a review, a hand-over) | `resume <run> --here`: it becomes this session's current run; nothing tracked is written |
+| Look several names up at once | `find --each "<q1>" "<q2>" …`: a `query` row, then up to five rows each |
 | Save where the work stands | `checkpoint --note TEXT` (or `--new-run --project P --task T --note TEXT`) |
 | Write down a ticket, decision or link | `record ticket\|decision\|link …` (see `writfold kb help`) |
 | Suggest a record for the user to review, without writing it | `propose ticket\|decision\|link …` (same arguments); `proposals [list]`, `proposals show <id>` |
@@ -100,6 +102,10 @@ Say a candidate is ready only when `deliver status` shows it `[ready]`; report a
 ## Edits
 
 Edit files with your ordinary tools. `edit apply` (frozen: kept working, not developed further) replays Splicery recipes against the run's worktree and keeps the recipe and preview as a receipt; use it only when the user or the KB already works with recipes. Run `--dry-run` first; after a crash, `edit recover` finishes the batch. The result is an uncommitted change: review it, run `gate status` (in-scope gates are now stale), and commit it.
+
+## The current run
+
+Without `--run`, verbs and guards use the current run of this session, else of the work tree you are in, else the one last made current on the KB clone. Other sessions on the same KB have their own, so starting a run here does not change theirs, and theirs does not change yours. `checkpoint --new-run` makes the new run current for this session. If a guard says `run <id> is closed`, your session's run ended: start a new one or `resume <run> --here`; do not work around it with another session's run.
 
 ## Checkpoint drafts
 

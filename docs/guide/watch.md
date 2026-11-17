@@ -16,8 +16,9 @@ writfold watch --view kb:why
 
 The KB is discovered from the original working directory before `--repo` changes
 the subject working directory. `--repo` must name a directory in a Git work tree.
-`--run` selects a run; otherwise the current-run pointer wins, then the first
-listed run. Runs that are not closed come first, preserving each group's verb order.
+`--run` selects a run; otherwise the current run wins (the pointer of the work tree `watch` runs in,
+else the clone's shared pointer, which is the only one read inside the KB;
+`watch` does not read a session's pointer), then the first listed run. Runs that are not closed come first, preserving each group's verb order.
 
 ## Panes and their sources
 

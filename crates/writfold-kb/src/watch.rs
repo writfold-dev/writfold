@@ -60,7 +60,8 @@ fn files(hash: &mut Sha256, root: &Path, dir: &Path) {
     }
 }
 
-/// Current-run bytes and metadata under drafts and both proposal stores.
+/// The shared current-run pointer's bytes, and metadata under the session
+/// and work-tree pointers, drafts and both proposal stores.
 /// The tracked queue is not an index input. Neither the derived index nor
 /// unrelated local state moves this stamp.
 pub fn local(ws: &Workspace) -> String {
@@ -78,7 +79,12 @@ pub fn local(ws: &Workspace) -> String {
                 hash.update(error.raw_os_error().unwrap_or_default().to_le_bytes());
             }
         }
-        for dir in [crate::draft::dir(state), crate::proposal::dir(state)] {
+        let pointers = state.join(crate::seat::DIR);
+        for dir in [
+            crate::draft::dir(state),
+            crate::proposal::dir(state),
+            pointers,
+        ] {
             name(&mut hash, dir.strip_prefix(state).unwrap_or(&dir));
             files(&mut hash, state, &dir);
         }

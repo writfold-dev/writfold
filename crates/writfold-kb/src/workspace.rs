@@ -53,6 +53,10 @@ impl Repo {
 pub struct Workspace {
     pub root: PathBuf,
     pub repo: Option<Repo>,
+    /// Who is asking ([`crate::seat`]): the work tree enclosing the
+    /// working directory, and the session once the caller names it (a
+    /// hook from its event, the binary from `$WRITFOLD_SESSION`).
+    pub seat: crate::seat::Seat,
 }
 
 pub(crate) fn is_root(path: &Path) -> bool {
@@ -85,7 +89,13 @@ pub fn discover(explicit: Option<&Path>, cwd: &Path) -> Result<Workspace> {
     };
     let root = std::fs::canonicalize(root)?;
     let repo = find_repo(&root)?;
-    Ok(Workspace { root, repo })
+    let mut ws = Workspace {
+        root,
+        repo,
+        seat: crate::seat::Seat::default(),
+    };
+    ws.seat = crate::seat::Seat::at(&ws, None, cwd);
+    Ok(ws)
 }
 
 /// The nearest enclosing work tree and its Git directory (a `.git`

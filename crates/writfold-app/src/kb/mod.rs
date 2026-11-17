@@ -36,6 +36,8 @@ verbs:
                                    (JSON matched_on names the tier; nothing found may suggest up
                                    to three near names, exit 2); with --kind and no text,
                                    every record of those kinds by ID
+  find --each Q… [--kind K] [--project P]
+                                   several queries in one call: a query row, then its first five rows
   find --eval [FILE]               run each query of FILE (.writfold/queries.jsonl) as find does:
                                    hit@1, hit@5 or miss per query (exit 0 only if all hit@5)
   match <text>                     find, testing signature patterns first
@@ -70,6 +72,8 @@ verbs:
                                    what differs in the KB since a local mark or a commit (exit 2 if
                                    nothing); a mark is local, and session start takes the session's
   resume [<run>]                   one run: manifest, coverage, rechecks, checkpoint tail
+  resume <run> --here              first make it the current run of this session and work tree
+                                   (local pointers only; a closed run is refused)
   guard status                    would guard rules pass, deny, ask or nudge for the current run?
                                    a read-only judgment, not enforcement; no command is run
   guard log [--rule ID] [--since AGE]
@@ -172,6 +176,8 @@ harness:
 
 The KB root is --kb, else $WRITFOLD_KB, else the nearest directory above the
 working directory holding inventory/assets/. Git is $WRITFOLD_GIT or git on PATH.
+Without --run, the current run is the session's ($WRITFOLD_SESSION; the session-start
+hook exports it), else the enclosing work tree's, else the clone's shared pointer.
 Exit codes: 0 complete, 2 partial/unknown/stale (or a gate not satisfied), 3 refused
 (or write conflict), 1 error.";
 
@@ -222,7 +228,8 @@ pub fn main_styled(args: &[String], cwd: std::path::PathBuf, styles: &Styles) ->
             };
         }
     };
-    match writfold_kb::run(&request) {
+    let session = writfold_kb::seat::session_from_env();
+    match writfold_kb::run_as(&request, session.as_deref()) {
         Ok(output) => Outcome {
             stderr: shown::stderr(&output, &styles.stderr),
             stdout: shown::stdout(&output, &styles.stdout),

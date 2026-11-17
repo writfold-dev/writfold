@@ -11,6 +11,10 @@ const INPUT_LIMIT: u64 = 8 << 20;
 /// The plugin's `kb_root` option reaches hooks under this name.
 pub const KB_OPTION: &str = "CLAUDE_PLUGIN_OPTION_KB_ROOT";
 
+/// Claude Code's session environment file, given to `SessionStart` hooks:
+/// it runs the file before each Bash command of the session.
+pub const ENV_FILE: &str = "CLAUDE_ENV_FILE";
+
 pub fn main(args: &[String], cwd: PathBuf) -> Outcome {
     let [event] = args else {
         return Outcome {
@@ -31,6 +35,14 @@ pub fn main(args: &[String], cwd: PathBuf) -> Outcome {
             code: 0,
         };
     }
+    // Hand the session's ID to the shell commands the agent runs later.
+    let mut exported = String::new();
+    if event == "session-start"
+        && let Some(file) = std::env::var_os(ENV_FILE).filter(|v| !v.is_empty())
+        && let Err(error) = writfold_kb::hook::export_session(&PathBuf::from(file), &input)
+    {
+        exported = format!("writfold kb hook: {error}\n");
+    }
     let kb = std::env::var_os(KB_OPTION)
         .filter(|v| !v.is_empty())
         .map(PathBuf::from);
@@ -46,7 +58,7 @@ pub fn main(args: &[String], cwd: PathBuf) -> Outcome {
     );
     Outcome {
         stdout: output.stdout,
-        stderr: output.stderr,
+        stderr: format!("{exported}{}", output.stderr),
         code: 0,
     }
 }
