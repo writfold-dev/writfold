@@ -15,6 +15,10 @@ Theorems over the Aeneas translation of `writfold_core::walk::complete`,
   shown, its record is not shown yet and it passes the filter; since every
   tier's hits go through it in tier order, each record is shown once,
   under the first tier that found it.
+- `full_spec`, `full_admits_nothing`, `not_full_admits`: `find` stops running
+  tiers once the rows are full, exactly when no later hit could be shown;
+  before that, any hit not yet shown that passes the filter is shown. So
+  skipping the later tiers changes no row.
 -/
 
 open Aeneas Aeneas.Std Result
@@ -47,6 +51,28 @@ theorem admit_iff (shown limit : Usize) (seen passes : Bool) :
   unfold find.admit
   split
   · cases seen <;> simp <;> scalar_tac
+  · simp; scalar_tac
+
+theorem full_spec (shown limit : Usize) :
+    find.full shown limit ⦃ b => b = true ↔ shown.val ≥ limit.val ⦄ := by
+  unfold find.full
+  simp
+
+/-- Full rows admit no further hit, whatever it is. -/
+theorem full_admits_nothing (shown limit : Usize) (seen passes : Bool) :
+    (do let f ← find.full shown limit; let a ← find.admit shown limit seen passes; ok (f, a))
+      ⦃ r => r.1 = true → r.2 = false ⦄ := by
+  unfold find.full find.admit
+  cases seen <;> cases passes <;> split <;> simp
+  all_goals scalar_tac
+
+/-- Rows not yet full admit any hit not yet shown that passes the filter. -/
+theorem not_full_admits (shown limit : Usize) :
+    (do let f ← find.full shown limit; let a ← find.admit shown limit false true; ok (f, a))
+      ⦃ r => r.1 = false → r.2 = true ⦄ := by
+  unfold find.full find.admit
+  split
+  · simp
   · simp; scalar_tac
 
 end Writfold.Core.Walk

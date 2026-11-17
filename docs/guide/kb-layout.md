@@ -189,10 +189,10 @@ Every answer ends with one line:
 | `heading` | a Markdown section's name, equal or by prefix; the row is the file's record (or `doc:<path>`) and its `match:` line cites the section's first line | built in v0.6.0-dev.1 |
 | `text` | SQLite FTS5 over ID, title, summary and body, ranked by BM25 (weights 10, 5, 2, 1); every word of the query | diacritics removed |
 | `substring` | an FTS5 trigram table over ID, title and body; the whole query as a substring | three characters or more |
-| `typo` | trigram candidates re-ranked by edit distance | ID and title only; one edit, two for queries longer than eight characters |
+| `typo` | every file's ID and title, by edit distance (a whole name, a word or a run of words) | ID and title only, never the body; one edit, two for queries longer than eight characters. Since v0.6.0-dev.4 no title within that distance is dropped: before, only the 200 files whose bodies best matched the query's trigrams were compared |
 | `text-any` | BM25 again, any word of the query | |
 
-All of it is computed at query time from the derived index, which holds every file's body and each Markdown section's name and line range; the name tiers add nothing to it. A query that finds nothing answers `answer=unknown reason=no-record` with exit 2: absence from the KB is not evidence of absence. From v0.6.0-dev.1 such an answer may list up to three nearest names (an ID, title, alias or section name sharing a trigram with the phrase, more than the `typo` tier's edits away but within half the phrase's length), each a row with status `suggested` and the flag `!suggestion`. A suggestion is not a hit: the answer stays unknown and the exit 2.
+Once 50 rows are shown the later tiers do not run: none of their hits could be shown (proved: `find::full`). All of it is computed at query time from the derived index, which holds every file's body and each Markdown section's name and line range; the name tiers add nothing to it. A query that finds nothing answers `answer=unknown reason=no-record` with exit 2: absence from the KB is not evidence of absence. From v0.6.0-dev.1 such an answer may list up to three nearest names (an ID, title, alias or section name sharing a trigram with the phrase, more than the `typo` tier's edits away but within half the phrase's length), each a row with status `suggested` and the flag `!suggestion`. A suggestion is not a hit: the answer stays unknown and the exit 2.
 
 ## `.writfold/`
 

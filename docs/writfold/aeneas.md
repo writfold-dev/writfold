@@ -52,7 +52,8 @@ never fails, result as stated):
   receipts are judged in (`Order.lean`).
 - The bug-fix round (17 November 2026, below; fixed in v0.6.0-dev.4):
   which repository a gate judges (`Subject.lean`) and `gate lines`
-  agreeing with the plan's word (`Policy.lean`, extended in place).
+  agreeing with the plan's word (`Policy.lean`, extended in place),
+  and when `find`'s rows are full (`Walk.lean`).
 
 The gate (`docker compose -f compose.proofs.yaml run --build --rm proofs`,
 or the `docker run` form below) regenerates the translation and refuses
@@ -508,11 +509,19 @@ text.
   every step closed, every required template present, the policy unmoved
   and no done step stale.
 
+When `find`'s rows are full (`proofs/Writfold/Walk.lean`,
+`writfold_core::find::full`). `find` no longer runs its later tiers once
+50 rows are shown. `full_spec` (full exactly when `shown ≥ limit`),
+`full_admits_nothing` (then `admit` takes no hit, whatever it is) and
+`not_full_admits` (before, it takes any hit not yet shown that passes the
+filter): skipping the later tiers changes no row. The tiers' order and
+their SQL stay tested, not proved.
+
 ### The claims and their mutants
 
 <!-- generated from proofs/mutants.py -->
 
-169 mutants (20 before 16 November 2026, 86 after the backfill's first round, 108 after the policy round, 161 after the backfill's second round, 169 after the bug-fix round). Each must break exactly the theorems named.
+170 mutants (20 before 16 November 2026, 86 after the backfill's first round, 108 after the policy round, 161 after the backfill's second round, 170 after the bug-fix round). Each must break exactly the theorems named.
 
 | Mutant | File | What it breaks | Must break |
 |---|---|---|---|
@@ -685,6 +694,7 @@ text.
 | `owed-ignores-skip` | `policy/lines.rs` | gate lines: a gate not skipped is owed until met | `Policy.owed_met_loop_spec` |
 | `closes-stale` | `policy/lines.rs` | gate lines: a stale plan does not close | `Policy.closes_spec` |
 | `clean-ignores-invalid` | `policy/lines.rs` | gate lines: an invalid receipt or definition keeps the lines unclean | `Policy.lines_clean_iff` |
+| `full-late` | `find.rs` | find: the later tiers stop only when no hit could be shown | `Walk.full_spec`, `Walk.not_full_admits` |
 
 <!-- end generated -->
 

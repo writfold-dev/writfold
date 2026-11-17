@@ -1232,6 +1232,12 @@ def find.admit
        else ok passes
   else ok false
 
+/-- [writfold_core::find::full]:
+    Source: 'crates/writfold-core/src/find.rs', lines 121:0-123:1
+    Visibility: public -/
+def find.full (shown : Std.Usize) (limit : Std.Usize) : Result Bool := do
+  ok (shown >= limit)
+
 /-- [writfold_core::gate::Ending]
     Source: 'crates/writfold-core/src/gate.rs', lines 21:0-30:1
     Visibility: public -/

@@ -99,6 +99,7 @@ start_from = [
     "writfold_core::find::next_from",
     "writfold_core::find::prefixed",
     "writfold_core::find::admit",
+    "writfold_core::find::full",
     "writfold_core::idle::newer",
     "writfold_core::idle::newest",
     "writfold_core::idle::since",

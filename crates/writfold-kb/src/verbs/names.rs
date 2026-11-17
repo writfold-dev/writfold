@@ -13,7 +13,7 @@
 //!   query, shown as `suggested`, never as hits.
 use crate::emit::{More, Row};
 use crate::error::Result;
-use crate::index::search::{closeness, tolerance, trigrams};
+use crate::index::search::{self, tolerance, trigrams};
 use crate::session::Session;
 use rusqlite::Connection;
 use writfold_core::find::{norm, prefix_match, tokens};
@@ -159,19 +159,20 @@ pub fn headings(conn: &Connection, text: &str) -> Result<Vec<Named>> {
 }
 
 /// Up to three nearest names for a query no tier answered: record forms
-/// and section names sharing a trigram with the query, ranked by edit
-/// distance to the closest form or run of its words, beyond the `typo`
-/// tier's tolerance but within half the query's length.
-pub fn suggestions(conn: &Connection, text: &str) -> Result<Vec<Named>> {
+/// (`forms`, as [`forms`] read them) and section names sharing a trigram
+/// with the query, ranked by edit distance to the closest form or run of
+/// its words, beyond the `typo` tier's tolerance but within half the
+/// query's length. Options too long or too short to be that near are not
+/// compared.
+pub fn suggestions(conn: &Connection, forms: &[Form], text: &str) -> Result<Vec<Named>> {
     let query = text.trim().to_lowercase();
     let length = query.chars().count();
     let grams = trigrams(&query);
     if length < 4 || grams.is_empty() {
         return Ok(Vec::new());
     }
-    let mut names: Vec<(String, String)> = forms(conn)?
-        .into_iter()
-        .map(|(id, form, _)| (id, form))
+    let mut names: Vec<(String, String)> = (forms.iter())
+        .map(|(id, form, _)| (id.clone(), form.clone()))
         .collect();
     let mut statement = conn.prepare_cached(
         "SELECT s.name, COALESCE((SELECT r.id FROM records r WHERE r.path = s.path \
@@ -188,8 +189,10 @@ pub fn suggestions(conn: &Connection, text: &str) -> Result<Vec<Named>> {
         if !grams.iter().any(|g| lower.contains(g.as_str())) {
             continue;
         }
-        let (d, _, _) = closeness(&query, &form);
-        if d <= allowed || d * 2 > length {
+        let Some((d, _, _)) = search::near(&query, &form, length / 2) else {
+            continue;
+        };
+        if d <= allowed {
             continue;
         }
         match near.iter_mut().find(|(_, n)| n.id == id) {
@@ -206,11 +209,12 @@ pub fn suggestions(conn: &Connection, text: &str) -> Result<Vec<Named>> {
 /// `suggested`, `matched_on: "suggestion"`, flag `!suggestion`.
 pub fn suggested(
     session: &Session<'_>,
+    forms: &[Form],
     text: &str,
     node_row: impl Fn(&Session<'_>, &str) -> Result<Row>,
 ) -> Result<Vec<Row>> {
     let mut rows = Vec::new();
-    for named in suggestions(&session.conn, text)? {
+    for named in suggestions(&session.conn, forms, text)? {
         let mut row = node_row(session, &named.id)?;
         row.status = Some("suggested".into());
         row.matched_on = Some("suggestion");

@@ -78,6 +78,12 @@ impl Found<'_, '_> {
         self.rows.push(row);
         Ok(())
     }
+
+    /// Whether no later hit can be shown ([`writfold_core::find::full`]),
+    /// so the later tiers need not run.
+    fn full(&self) -> bool {
+        writfold_core::find::full(self.rows.len(), self.limit)
+    }
 }
 
 /// The first line of `path` for which `hit` holds, as a `match:` line.
@@ -138,35 +144,9 @@ pub fn find(
         }
         Resolved::None => {}
     }
-    name_tiers(session, text, &mut found)?;
-    let words: Vec<String> = text
-        .split(|c: char| !c.is_alphanumeric())
-        .filter(|w| w.chars().count() >= 2)
-        .map(str::to_lowercase)
-        .collect();
-    let any_word = |line: &str| words.iter().any(|w| contains(line, w));
-    for hit in search::ranked(&session.conn, text, true, LIMIT)? {
-        found.add(
-            &hit.id,
-            "text",
-            snippet(session, "text", &hit.path, &any_word),
-        )?;
-    }
-    for hit in search::substring(&session.conn, text, LIMIT)? {
-        let more = snippet(session, "substring", &hit.path, &|line| {
-            contains(line, text)
-        });
-        found.add(&hit.id, "substring", more)?;
-    }
-    for (hit, d, _, matched) in search::typo(&session.conn, text, LIMIT)? {
-        found.add(&hit.id, "typo", tier_only(&format!("typo d={d} {matched}")))?;
-    }
-    if words.len() > 1 {
-        for hit in search::ranked(&session.conn, text, false, LIMIT)? {
-            let more = snippet(session, "text-any", &hit.path, &any_word);
-            found.add(&hit.id, "text-any", more)?;
-        }
-    }
+    let forms = names::forms(&session.conn)?;
+    name_tiers(session, &forms, text, &mut found)?;
+    text_tiers(session, text, &mut found)?;
     let mut answer = Answer {
         rows: found.rows,
         ..Answer::default()
@@ -174,7 +154,7 @@ pub fn find(
     if answer.rows.is_empty() {
         answer.unknown = Some("no-record");
         answer.notes.push(BOUNDARY.to_owned());
-        answer.rows = names::suggested(session, text, node_row)?;
+        answer.rows = names::suggested(session, &forms, text, node_row)?;
         if !answer.rows.is_empty() {
             answer
                 .notes
@@ -189,17 +169,64 @@ pub fn find(
     Ok(answer)
 }
 
+/// The `text`, `substring`, `typo` and `text-any` tiers, in that order;
+/// none runs once the rows are full, since none of its hits could be shown.
+fn text_tiers(session: &Session<'_>, text: &str, found: &mut Found<'_, '_>) -> Result<()> {
+    let words: Vec<String> = text
+        .split(|c: char| !c.is_alphanumeric())
+        .filter(|w| w.chars().count() >= 2)
+        .map(str::to_lowercase)
+        .collect();
+    let any_word = |line: &str| words.iter().any(|w| contains(line, w));
+    if found.full() {
+        return Ok(());
+    }
+    for hit in search::ranked(&session.conn, text, true, LIMIT)? {
+        let more = snippet(session, "text", &hit.path, &any_word);
+        found.add(&hit.id, "text", more)?;
+    }
+    if found.full() {
+        return Ok(());
+    }
+    for hit in search::substring(&session.conn, text, LIMIT)? {
+        let more = snippet(session, "substring", &hit.path, &|line| {
+            contains(line, text)
+        });
+        found.add(&hit.id, "substring", more)?;
+    }
+    if found.full() {
+        return Ok(());
+    }
+    for (hit, d, _, matched) in search::typo(&session.conn, text, LIMIT)? {
+        found.add(&hit.id, "typo", tier_only(&format!("typo d={d} {matched}")))?;
+    }
+    if words.len() > 1 && !found.full() {
+        for hit in search::ranked(&session.conn, text, false, LIMIT)? {
+            let more = snippet(session, "text-any", &hit.path, &any_word);
+            found.add(&hit.id, "text-any", more)?;
+        }
+    }
+    Ok(())
+}
+
 /// The `normalized`, `prefix` and `heading` tiers, in that order; each
 /// `match:` line names the form that matched.
-fn name_tiers(session: &Session<'_>, text: &str, found: &mut Found<'_, '_>) -> Result<()> {
-    let forms = names::forms(&session.conn)?;
-    for named in names::normalized(&forms, text) {
+fn name_tiers(
+    session: &Session<'_>,
+    forms: &[names::Form],
+    text: &str,
+    found: &mut Found<'_, '_>,
+) -> Result<()> {
+    for named in names::normalized(forms, text) {
         let more = tier_only(&format!("normalized {}", named.form));
         found.add(&named.id, "normalized", more)?;
     }
-    for named in names::prefixed(&forms, text) {
+    for named in names::prefixed(forms, text) {
         let more = tier_only(&format!("prefix {}", named.form));
         found.add(&named.id, "prefix", more)?;
+    }
+    if found.full() {
+        return Ok(());
     }
     for named in names::headings(&session.conn, text)? {
         let more = More {

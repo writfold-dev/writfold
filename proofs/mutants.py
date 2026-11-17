@@ -892,6 +892,11 @@ MUTANTS = (
            "    closes(summary) && owed_met(listed) && valid",
            "    closes(summary) && owed_met(listed)",
            ("Writfold.Core.Policy.lines_clean_iff",)),
+    # find: the later tiers stop only when no hit could be shown
+    Mutant("full-late", "find.rs",
+           "    shown >= limit",
+           "    shown > limit",
+           ("Writfold.Core.Walk.full_spec", "Writfold.Core.Walk.not_full_admits")),
 )
 
 # lake reports `error: <path>.lean:<line>:<col>: <message>`

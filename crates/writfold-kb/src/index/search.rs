@@ -4,8 +4,10 @@
 //! The trigram table uses `detail = none`, under which FTS5 refuses phrase
 //! queries, so a multi-trigram `MATCH` is not available. Substrings use
 //! `LIKE`, which the trigram tokenizer answers from its index for three or
-//! more characters; typo candidates OR the query's single trigrams (each a
-//! one-token query) and are re-ranked here by edit distance.
+//! more characters. Typo candidates are every indexed file's ID and title
+//! (never its body, which a typo is never judged on), compared here by edit
+//! distance; an option whose length alone puts it beyond the tolerance is
+//! never compared.
 use super::query::match_expression;
 use crate::error::Result;
 use rusqlite::Connection;
@@ -122,60 +124,78 @@ pub fn tolerance(text: &str) -> usize {
 /// part, matched text): part 0 is the whole string, 1 a word or a run of
 /// as many words as the query has.
 pub fn closeness(query: &str, candidate: &str) -> (usize, u8, String) {
+    near(query, candidate, usize::MAX).unwrap_or((usize::MAX, 1, String::new()))
+}
+
+/// [`closeness`], when it is at most `bound` edits; `None` otherwise. An
+/// option whose length differs from the query's by more than `bound` is
+/// never compared (nor built): it is at least that many edits away, so the
+/// answer is the same as comparing every option.
+pub fn near(query: &str, candidate: &str, bound: usize) -> Option<(usize, u8, String)> {
     let query = query.to_lowercase();
+    let length = query.chars().count();
+    let width = query.split_whitespace().count().max(1);
     let candidate = candidate.to_lowercase();
     let words: Vec<&str> = candidate
         .split(|c: char| c.is_whitespace() || matches!(c, '/' | ':' | ',' | '(' | ')'))
         .filter(|w| !w.is_empty())
         .collect();
-    let width = query.split_whitespace().count().max(1);
-    let mut options: Vec<(u8, String)> = vec![(0, candidate.clone())];
-    options.extend(words.iter().map(|w| (1, (*w).to_owned())));
-    options.extend(words.windows(width).map(|w| (1, w.join(" "))));
-    options
-        .into_iter()
-        .map(|(part, option)| (distance(&query, &option), part, option))
-        .min()
-        .unwrap_or((usize::MAX, 1, String::new()))
+    let fits = |n: usize| n.abs_diff(length) <= bound;
+    let mut best: Option<(usize, u8, String)> = None;
+    let mut consider = |part: u8, option: &str| {
+        let d = distance(&query, option);
+        let better = match &best {
+            None => true,
+            Some((bd, bp, bo)) => (d, part, option) < (*bd, *bp, bo.as_str()),
+        };
+        if d <= bound && better {
+            best = Some((d, part, option.to_owned()));
+        }
+    };
+    if fits(candidate.chars().count()) {
+        consider(0, &candidate);
+    }
+    for word in &words {
+        if fits(word.chars().count()) {
+            consider(1, word);
+        }
+    }
+    for run in words.windows(width) {
+        let chars: usize = run.iter().map(|w| w.chars().count()).sum();
+        if fits(chars + run.len() - 1) {
+            consider(1, &run.join(" "));
+        }
+    }
+    best
 }
 
 /// One typo-tolerant hit: edits, which part matched (0 the whole ID, 1 the
 /// whole title, 2 a word of either) and the matched text.
 pub type Near = (Hit, usize, u8, String);
 
-/// Typo-tolerant hits for a query of four characters or more: up to 200
-/// trigram candidates, kept when their ID or title is within
-/// [`tolerance`] edits of the query; fewest edits first, then whole-ID
-/// over whole-title over word matches.
+/// Typo-tolerant hits for a query of four characters or more: every
+/// indexed file whose ID or title is within [`tolerance`] edits of the
+/// query; fewest edits first, then whole-ID over whole-title over word
+/// matches. Bodies are never read.
 pub fn typo(conn: &Connection, text: &str, limit: usize) -> Result<Vec<Near>> {
-    let grams = trigrams(text);
-    if text.chars().count() < 4 || grams.is_empty() {
+    if text.chars().count() < 4 || trigrams(text).is_empty() {
         return Ok(Vec::new());
     }
-    let expression: Vec<String> = grams
-        .iter()
-        .map(|g| format!("\"{}\"", g.replace('"', "\"\"")))
-        .collect();
-    let candidates = hits(
-        conn,
-        "SELECT id, title, path FROM tri WHERE tri MATCH ?1 ORDER BY bm25(tri), id, path LIMIT 200",
-        &[&expression.join(" OR ")],
-    )?;
+    let candidates = hits(conn, "SELECT id, title, path FROM tri", &[])?;
     let allowed = tolerance(text);
     let mut found: Vec<Near> = candidates
         .into_iter()
         .filter_map(|hit| {
-            let (d, part, matched) = closeness(text, &hit.id);
-            let by_id = (d, part * 2, matched);
-            let by_title = hit
-                .title
-                .as_deref()
-                .map_or((usize::MAX, 2, String::new()), |t| {
-                    let (d, part, matched) = closeness(text, t);
-                    (d, 1 + part, matched)
-                });
-            let (d, part, matched) = by_id.min(by_title);
-            (d <= allowed).then_some((hit, d, part, matched))
+            let by_id = near(text, &hit.id, allowed).map(|(d, part, m)| (d, part * 2, m));
+            let by_title = (hit.title.as_deref())
+                .and_then(|t| near(text, t, allowed))
+                .map(|(d, part, m)| (d, 1 + part, m));
+            let (d, part, matched) = match (by_id, by_title) {
+                (Some(a), Some(b)) => a.min(b),
+                (Some(a), None) | (None, Some(a)) => a,
+                (None, None) => return None,
+            };
+            Some((hit, d, part, matched))
         })
         .collect();
     found.sort_by(|a, b| (a.1, a.2, &a.0.id, &a.0.path).cmp(&(b.1, b.2, &b.0.id, &b.0.path)));
@@ -184,20 +204,4 @@ pub fn typo(conn: &Connection, text: &str, limit: usize) -> Result<Vec<Near>> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::{closeness, distance, trigrams};
-
-    #[test]
-    fn distances() {
-        assert_eq!(distance("ledger", "ledger"), 0);
-        assert_eq!(distance("ledgr", "ledger"), 1);
-        assert_eq!(distance("legder", "ledger"), 1);
-        assert_eq!(distance("harbr-api", "harbor-api"), 1);
-        assert_eq!(distance("", "abc"), 3);
-        assert_eq!(
-            closeness("fsync stal", "Fsync stall on the ledger store").0,
-            1
-        );
-        assert_eq!(trigrams("Abcd"), ["abc", "bcd"]);
-    }
-}
+mod tests;
