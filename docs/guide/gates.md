@@ -21,7 +21,7 @@ description = "the unit tests"     # optional; one line
 accept = ["satisfied"]             # optional; which standings meet the gate (below)
 ```
 
-- **`argv`** is executed directly, with stdin closed. A first element containing `/` is resolved against `workdir`; otherwise `PATH` finds it. Placeholders: `{artifacts}` (a fresh local directory for the command's own output files), `{gate}` and `{candidate}` (below). Any other `{name}` is refused.
+- **`argv`** is executed directly, with stdin closed. A first element containing `/` is resolved against `workdir`; otherwise `PATH` finds it. Placeholders: `{artifacts}` (a fresh local directory for the command's own output files), `{gate}`, `{candidate}` and `{source}` (below). Any other `{name}` is refused.
 - **Unknown keys are refused,** so a misspelt field never silently changes a gate. The files use a small TOML subset: top-level `key = value`, comments, strings, integers and arrays of strings.
 - **Changing** the command, working directory, timeout, class, version or scope makes earlier receipts stale. Changing comments, layout or the description does not.
 
@@ -171,6 +171,8 @@ gate unit [waived] mechanical fail exit=1 at demo-service@… scope=… paths=1 
 
 `plan advance` then refuses with `owes: unit [waived, not accepted]`, and a guard rule names `gate unit [waived, not accepted]`. In JSON a gate row gains `"accept": [...]` when the key is written and `"accepted": false` when its standing is a met word `accept` leaves out.
 
+**On a candidate gate** (`subject = "candidate"`, named in a delivery mode's `gates`), `accept` holds for the delivery too (built in v0.6.0-dev.4; before, it was ignored there). `deliver waive --check commit-format` on a gate with `accept = ["satisfied"]` is refused, exit 3 (`refused: gate commit-format does not accept a waiver (accept = ["satisfied"] @.writfold/gates/commit-format.toml:12); meet it: writfold kb deliver check <id>`), and a waiver that exists anyway reads `[waived] !not-accepted` with a `why:` line and leaves the candidate `[blocked]`, for `deliver status`, the delivery guard, `deliver match` and a `deliver:<mode>` step alike. A mode's own `waivable` key covers its built-in checks and `attest` names, never its gates ([delivery modes](delivery-modes.md#what-a-mode-takes-waivable-and-a-mode-gates-accept)).
+
 ## Statements: `attest` and `waive`
 
 ```text
@@ -200,7 +202,7 @@ Receipts are judged in the order of their `seq` field, one more than the highest
 
 A gate may name an `instructions` file, a Markdown file beside the definition that the agent reads before running or attesting the gate. Its bytes are part of the definition digest, so editing the instructions makes earlier receipts and attestations stale. `gate status`, `gate run`, `resume` and `deliver status` print a `read:` line pointing at it.
 
-A gate may also ship its own script. `{gate}` expands to the directory holding the definition, so a gate kept in the shared KB carries its check with it; the script's bytes are hashed into the digest too. `{candidate}` is the draft file for gates that check a delivery candidate (`subject = "candidate"`). Paths that leave the definition's directory, including through a symlink, are refused.
+A gate may also ship its own script. `{gate}` expands to the directory holding the definition, so a gate kept in the shared KB carries its check with it; the script's bytes are hashed into the digest too. `{candidate}` is the payload file for gates that check a delivery candidate (`subject = "candidate"`): the candidate itself, or `payload.md` when the mode's `rendering` strips citation tokens; `{source}` (built in v0.6.0-dev.4) is the candidate's own `candidate.md`. Both are refused on a repository gate. Paths that leave the definition's directory, including through a symlink, are refused.
 
 ```toml
 # .writfold/gates/language-guidelines.toml: read the guideline, then attest

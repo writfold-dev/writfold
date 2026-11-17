@@ -30,8 +30,10 @@ The project KB is plain records in Git. `writfold kb <verb>` answers from it in 
 | Set a gate aside, or state an attested gate | `gate waive <id> --reason TEXT --by WHO`, `gate attest <id> --statement TEXT --by WHO` |
 | Cover one item of a checklist gate | `gate cover <id> <item> supported REF… --by WHO`, or `unsupported\|not-applicable --reason TEXT --by WHO` |
 | Cover several items of a checklist gate at once (all or none) | `gate cover <id> --from FILE\|- --by WHO`, one JSON object per line: `{"item":…,"outcome":…,"refs":[…],"reason":…,"note":…}` |
-| Prepare a PR comment, Slack summary or other draft for review (nothing is sent) | `deliver prepare --mode MODE --from FILE [--audience external]` (built in: `pr-comment`, `slack-summary`; others from `.writfold/deliveries/<mode>.toml`) |
+| What a delivery mode asks for, before drafting | `deliver modes [MODE]` |
+| Prepare a PR comment, Slack summary or other draft to check before posting (nothing is sent) | `deliver prepare --mode MODE --from FILE\|-` (built in: `pr-comment`, `slack-summary`; others from `.writfold/deliveries/<mode>.toml`) |
 | Check a delivery candidate, and see what it still owes | `deliver check [CANDIDATE]`, `deliver status` |
+| Record that a checked candidate was posted | `deliver posted [CANDIDATE] --ref URL --by WHO` |
 | Where does the run's plan stand, and may it move on? | `plan status`, `plan advance` (`plan set <template>` to start one; `plan use <template>` splices a template's steps before the current step, once) |
 | Apply a Splicery recipe in the run's worktree, keeping a receipt (frozen) | `edit apply RECIPE.spl… [--dry-run]` (`--worktree DIR` once if the run records none) |
 
@@ -79,9 +81,21 @@ A denial or question that starts `writfold guard rule <id> (a guard, not enforce
 
 ## Delivery candidates
 
-`deliver prepare` copies your draft into the run as the exact payload that would be posted; Writfold never sends it. `deliver check` runs the mode's mechanical checks on those bytes: paragraph length, an audience deny list (`.writfold/deliveries/deny-<audience>.toml`), and whether every citation token is fresh. A failing check names the line and rule: fix the candidate (edit `candidate.md` in place, or prepare a new one) and run `deliver check` again, since any edit makes earlier receipts stale. Say a candidate is ready only when `deliver status` shows it `[ready]`. Checks are mechanical: they don't judge tone or truth, and they miss claims made without a citation token. The optional guard hook may deny a configured publishing command (such as `gh pr comment`) until a ready candidate holds the bytes being posted; it is a guard, not enforcement.
+A delivery candidate is the exact text of a PR comment, Slack summary, commit message or release note, kept in the run and checked before it is posted. Writfold never sends anything. Work in this order:
 
-A KB may define its own modes (a commit message, a release note) in `.writfold/deliveries/<mode>.toml`. Their script gates run on the candidate during `deliver check` and report `line N` findings like the built-in checks; their attested gates show a `read:` line and are met only by `deliver attest`, after you have read that file and checked the draft against it. For a commit message, prepare and check the draft, then commit with exactly those bytes (`git commit -F` the candidate); nothing ties the checked draft to the commit you make.
+1. **Read the mode:** `deliver modes MODE` lists its audience, checks, which take a waiver, deny rule names, instructions (`read:`) and guard routes. Write the draft to fit it.
+2. **Prepare:** `deliver prepare --mode MODE --from FILE` (or `--from -`). Leave `--audience` off when the mode fixes it.
+3. **Check:** `deliver check`. Failing findings are drawn on stderr at their line and column with the rule; the row's `next:` line names the repair.
+4. **Repair** the candidate file in place (`runs/<run>/deliveries/<id>/candidate.md`) and run `deliver check` again; an edit makes earlier receipts stale. `!edited` only means the candidate differs from the file it was prepared from. If a deny list is missing (`unknown`), ask the user: the deny list is the team's policy.
+5. **Attest last**, after reading the `read:` file and checking the draft against it: `deliver attest --check NAME --statement TEXT --by agent`. An attestation made before the mechanical checks pass goes stale with the repair.
+6. **Never waive or withdraw for the user** unless they ask. When a waiver is what would be needed, say so and stop; a mode may refuse it anyway (`does not accept a waiver`). A `[waived] !not-accepted` line is not met.
+7. **Post the payload file itself**, with the command's file flag (`gh pr comment N --body-file FILE`, `git commit -F FILE`), never a retyped or `$(cat …)` body. The file is the one `next:` names: `candidate.md`, or `payload.md` when the mode strips citation tokens (`deliver payload` prints it).
+8. **Record the post:** `deliver posted --ref URL-or-SHA --by agent`. It is a statement; Writfold saw nothing. A recorded candidate is not passed by the guard again; to post the same text elsewhere, prepare a new candidate.
+9. **Advance** the plan step (`plan advance`); a step with `posted:<mode>` stays open until step 8 is done.
+
+Say a candidate is ready only when `deliver status` shows it `[ready]`; report attested or waived obligations as such, never as passed. Checks count words, match patterns and re-check citations; they don't judge tone or truth. Without an ID, a verb means the candidate that decides (`--mode M`) or the only live one; with several it lists them: name one.
+
+**Guard denials.** A denial starting `writfold delivery guard (a guard, not enforcement)` means the call would post bytes that are not a ready, unposted candidate of the right mode, or bytes it could not read. The repair is in the denial: post the checked file it names with the file flag, run the `next:` it gives, or prepare a candidate. Do not reword the command to get around it.
 
 ## Edits
 

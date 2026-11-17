@@ -1,6 +1,6 @@
 # Claude Code hooks
 
-> **Status:** built in v0.3.0-dev.1; the plan position, the inbox, the behind-remote line and the re-injection after compaction were added on 12 November 2026 ([design §25](../writfold/kb-v1-design.md#25-deterministic-hooks-as-built)); the stale-citation line, guard rules and the Stop nudge built in v0.5.0-dev.1; a rule's `paths` and a stop rule's `repeat` built in v0.5.0-dev.3; rules naming `writfold:edit`, checked by `kb edit apply` itself, built in v0.5.0-dev.9. How a command is read (here-documents, wrappers, `git -C` and judging each command where it acts), `gates.met` over an empty set, `mode = "audit"`, the guard log and the session's mark built in v0.6.0-dev.1; `step.met` judging a step's deliveries, and the plan position's `candidate:` line, built in v0.6.0-dev.1. A gate whose `accept` leaves out waivers has no waiver route past a guard, and the session-start context says when no policy is configured, built in v0.6.0-dev.3.
+> **Status:** built in v0.3.0-dev.1; the plan position, the inbox, the behind-remote line and the re-injection after compaction were added on 12 November 2026 ([design §25](../writfold/kb-v1-design.md#25-deterministic-hooks-as-built)); the stale-citation line, guard rules and the Stop nudge built in v0.5.0-dev.1; a rule's `paths` and a stop rule's `repeat` built in v0.5.0-dev.3; rules naming `writfold:edit`, checked by `kb edit apply` itself, built in v0.5.0-dev.9. How a command is read (here-documents, wrappers, `git -C` and judging each command where it acts), `gates.met` over an empty set, `mode = "audit"`, the guard log and the session's mark built in v0.6.0-dev.1; `step.met` judging a step's deliveries, and the plan position's `candidate:` line, built in v0.6.0-dev.1. A gate whose `accept` leaves out waivers has no waiver route past a guard, and the session-start context says when no policy is configured, built in v0.6.0-dev.3. The delivery guard's routes, and its denials naming the repair, built in v0.6.0-dev.4.
 
 "Hook" here means a Claude Code hook: a command the harness runs at a session event. The plugin registers six, and each one runs `writfold kb hook <event>` with the event's JSON on stdin. No hook calls a model. Only one asks Claude to continue: a `stop` [guard rule](#guard-rules), which you opt into, adds context at most once per session (or, with `repeat = "turn"`, once per user turn), and Claude Code continues the turn so Claude can act on it. Rules about what a run must contain (a reflection, a backfill) are not hooks; they are gates (run-record checks), on the [run-graph](run-graph.md) and [gates](gates.md) pages.
 
@@ -50,8 +50,10 @@ Each part is printed only when it has something to say, in this order:
    ```text
    step two#1/first [current] owes: deliver:pr-comment [failed] @runs/run-…/plan/splice-two.1.json:1
      candidate: 20261111T000100Z-8b075e [blocked] owes references.denied [failed] @runs/run-…/deliveries/20261111T000100Z-8b075e/candidate.md:1
-     next: writfold kb deliver check 20261111T000100Z-8b075e
+     next: edit runs/run-…/deliveries/20261111T000100Z-8b075e/candidate.md (line 3: internal-host), then: writfold kb deliver check 20261111T000100Z-8b075e
    ```
+
+   A candidate with a post record also carries its `posted:` line, and a met delivery on a step without `posted:<mode>` a `note:` that nothing records the post (built in v0.6.0-dev.4; [run-graph](run-graph.md#postedmode-holding-the-step-until-the-post-is-recorded)).
 6. **Inbox**: what is waiting on someone, all of it local:
 
    ```text
@@ -113,7 +115,7 @@ checkpoint 2026-11-12T21:47:41Z entry 3 of 3 @runs/run-…/checkpoint.md:10
 
 `PreToolUse` runs two optional guards, in this order. Each is a guard, not enforcement: it sees only the calls the harness shows it, reads a command line rather than running it, and passes anything it is not configured for.
 
-1. The delivery guard, off unless the KB has `.writfold/deliveries/guard.toml`. The configuration and the decision are in [delivery-modes](delivery-modes.md#the-guard). Its denial wins.
+1. The delivery guard, off unless the KB has `.writfold/deliveries/guard.toml`. Its denial wins. A **route** (built in v0.6.0-dev.4) names a posting command or tool, the delivery mode it posts and where its body is (`"git commit: mode=commit-message body=-m,--message file=-F,--file"`, `"mcp__slack__post_message: mode=slack-summary field=text"`): the call passes only when a ready, live, not yet posted candidate of that mode holds exactly the bytes, and a body it cannot read is denied, including a relative body file after `cd`, `pushd`, `git -C` or a `GIT_DIR`/`GIT_WORK_TREE` setting. A listed `commands` or `tools` entry keeps the lenient rule (unread bytes pass when every live candidate is ready). Each denial names the repair, usually the checked file to post. The configuration, the unread causes and every denial are in [delivery-modes](delivery-modes.md#the-guard); [`deliver match`](delivery-modes.md#outside-the-hook-deliver-match) asks the same question outside the hook.
 2. Guard rules, off unless a `.writfold/guards/` directory applies ([below](#guard-rules)).
 
 ## Guard rules
