@@ -587,6 +587,193 @@ def checklist.standing
       waived_current
     }
 
+/-- [writfold_core::decision::State]
+    Source: 'crates/writfold-core/src/decision.rs', lines 25:0-37:1
+    Visibility: public -/
+@[discriminant isize]
+inductive decision.State where
+| Draft : decision.State
+| Proposed : decision.State
+| Accepted : decision.State
+| Deferred : decision.State
+| Rejected : decision.State
+| Landing : decision.State
+| Applied : decision.State
+| Verified : decision.State
+| Regressed : decision.State
+| Superseded : decision.State
+| Other : decision.State
+
+/-- [writfold_core::decision::Needs]
+    Source: 'crates/writfold-core/src/decision.rs', lines 86:0-97:1
+    Visibility: public -/
+structure decision.Needs where
+  ready : Bool
+  actor : Bool
+  commit : Bool
+  evidence : Bool
+  successor : Bool
+
+/-- [writfold_core::decision::needs]:
+    Source: 'crates/writfold-core/src/decision.rs', lines 100:0-108:1
+    Visibility: public -/
+def decision.needs
+  (ready : Bool) (actor : Bool) (commit : Bool) (evidence : Bool)
+  (successor : Bool) :
+  Result decision.Needs
+  := do
+  ok { ready, actor, commit, evidence, successor }
+
+/-- [writfold_core::decision::step]:
+    Source: 'crates/writfold-core/src/decision.rs', lines 113:0-149:1
+    Visibility: public -/
+def decision.step
+  («from» : decision.State) («to» : decision.State) :
+  Result (Option decision.Needs)
+  := do
+  match «to» with
+  | decision.State.Draft =>
+    match «from» with
+    | decision.State.Draft => ok none
+    | decision.State.Proposed =>
+      let n ← decision.needs false false false false false
+      ok (some n)
+    | decision.State.Accepted => ok none
+    | decision.State.Deferred => ok none
+    | decision.State.Rejected => ok none
+    | decision.State.Landing => ok none
+    | decision.State.Applied => ok none
+    | decision.State.Verified => ok none
+    | decision.State.Regressed => ok none
+    | decision.State.Superseded => ok none
+    | decision.State.Other => ok none
+  | decision.State.Proposed =>
+    match «from» with
+    | decision.State.Draft =>
+      let n ← decision.needs true false false false false
+      ok (some n)
+    | decision.State.Proposed => ok none
+    | decision.State.Accepted => ok none
+    | decision.State.Deferred => ok none
+    | decision.State.Rejected => ok none
+    | decision.State.Landing => ok none
+    | decision.State.Applied => ok none
+    | decision.State.Verified => ok none
+    | decision.State.Regressed => ok none
+    | decision.State.Superseded => ok none
+    | decision.State.Other => ok none
+  | decision.State.Accepted =>
+    match «from» with
+    | decision.State.Draft => ok none
+    | decision.State.Proposed =>
+      let n ← decision.needs true true false false false
+      ok (some n)
+    | decision.State.Accepted => ok none
+    | decision.State.Deferred => ok none
+    | decision.State.Rejected => ok none
+    | decision.State.Landing => ok none
+    | decision.State.Applied => ok none
+    | decision.State.Verified => ok none
+    | decision.State.Regressed => ok none
+    | decision.State.Superseded => ok none
+    | decision.State.Other => ok none
+  | decision.State.Deferred =>
+    match «from» with
+    | decision.State.Draft => ok none
+    | decision.State.Proposed => ok none
+    | decision.State.Accepted =>
+      let n ← decision.needs false false false false false
+      ok (some n)
+    | decision.State.Deferred => ok none
+    | decision.State.Rejected => ok none
+    | decision.State.Landing => ok none
+    | decision.State.Applied => ok none
+    | decision.State.Verified => ok none
+    | decision.State.Regressed => ok none
+    | decision.State.Superseded => ok none
+    | decision.State.Other => ok none
+  | decision.State.Rejected =>
+    match «from» with
+    | decision.State.Draft => ok none
+    | decision.State.Proposed =>
+      let n ← decision.needs false true false false false
+      ok (some n)
+    | decision.State.Accepted => ok none
+    | decision.State.Deferred => ok none
+    | decision.State.Rejected => ok none
+    | decision.State.Landing => ok none
+    | decision.State.Applied => ok none
+    | decision.State.Verified => ok none
+    | decision.State.Regressed => ok none
+    | decision.State.Superseded => ok none
+    | decision.State.Other => ok none
+  | decision.State.Landing => ok none
+  | decision.State.Applied =>
+    match «from» with
+    | decision.State.Draft => ok none
+    | decision.State.Proposed => ok none
+    | decision.State.Accepted =>
+      let n ← decision.needs false false true false false
+      ok (some n)
+    | decision.State.Deferred => ok none
+    | decision.State.Rejected => ok none
+    | decision.State.Landing => ok none
+    | decision.State.Applied => ok none
+    | decision.State.Verified => ok none
+    | decision.State.Regressed => ok none
+    | decision.State.Superseded => ok none
+    | decision.State.Other => ok none
+  | decision.State.Verified =>
+    match «from» with
+    | decision.State.Draft => ok none
+    | decision.State.Proposed => ok none
+    | decision.State.Accepted => ok none
+    | decision.State.Deferred => ok none
+    | decision.State.Rejected => ok none
+    | decision.State.Landing => ok none
+    | decision.State.Applied =>
+      let n ← decision.needs false false false true false
+      ok (some n)
+    | decision.State.Verified => ok none
+    | decision.State.Regressed => ok none
+    | decision.State.Superseded => ok none
+    | decision.State.Other => ok none
+  | decision.State.Regressed => ok none
+  | decision.State.Superseded =>
+    match «from» with
+    | decision.State.Draft =>
+      let n ← decision.needs false false false false true
+      ok (some n)
+    | decision.State.Proposed =>
+      let n ← decision.needs false false false false true
+      ok (some n)
+    | decision.State.Accepted =>
+      let n ← decision.needs false false false false true
+      ok (some n)
+    | decision.State.Deferred =>
+      let n ← decision.needs false false false false true
+      ok (some n)
+    | decision.State.Rejected =>
+      let n ← decision.needs false false false false true
+      ok (some n)
+    | decision.State.Landing =>
+      let n ← decision.needs false false false false true
+      ok (some n)
+    | decision.State.Applied =>
+      let n ← decision.needs false false false false true
+      ok (some n)
+    | decision.State.Verified =>
+      let n ← decision.needs false false false false true
+      ok (some n)
+    | decision.State.Regressed =>
+      let n ← decision.needs false false false false true
+      ok (some n)
+    | decision.State.Superseded => ok none
+    | decision.State.Other =>
+      let n ← decision.needs false false false false true
+      ok (some n)
+  | decision.State.Other => ok none
+
 /-- [writfold_core::delivery::deciding]: loop body 0:
     Source: 'crates/writfold-core/src/delivery.rs', lines 20:4-27:1
     Visibility: public -/
@@ -1604,6 +1791,88 @@ def guard.nudge_with
       | guard.Repeat.Turn => ok false
     else ok false
   guard.nudge stop_hook_active b facts
+
+/-- [writfold_core::investigation::Hypothesis]
+    Source: 'crates/writfold-core/src/investigation.rs', lines 11:0-17:1
+    Visibility: public -/
+@[discriminant isize]
+inductive investigation.Hypothesis where
+| Open : investigation.Hypothesis
+| Supported : investigation.Hypothesis
+| Refuted : investigation.Hypothesis
+| Unknown : investigation.Hypothesis
+
+/-- [writfold_core::investigation::Missing]
+    Source: 'crates/writfold-core/src/investigation.rs', lines 21:0-26:1
+    Visibility: public -/
+structure investigation.Missing where
+  checked_against : Bool
+  scope_and_limits : Bool
+  «open» : Std.Usize
+
+/-- [writfold_core::investigation::{writfold_core::investigation::Missing}::none]:
+    Source: 'crates/writfold-core/src/investigation.rs', lines 30:4-32:5
+    Visibility: public -/
+def investigation.Missing.none
+  (self : investigation.Missing) : Result Bool := do
+  if self.checked_against
+  then ok false
+  else if self.scope_and_limits
+       then ok false
+       else ok (self.open = 0#usize)
+
+/-- [writfold_core::investigation::conclude]: loop body 0:
+    Source: 'crates/writfold-core/src/investigation.rs', lines 44:4-49:5
+    Visibility: public -/
+@[rust_loop_body]
+def investigation.conclude_loop.body
+  (hypotheses : Slice investigation.Hypothesis) («open» : Std.Usize)
+  (index : Std.Usize) :
+  Result (ControlFlow (Std.Usize × Std.Usize) Std.Usize)
+  := do
+  let i := Slice.len hypotheses
+  if index < i
+  then
+    let h ← Slice.index_usize hypotheses index
+    let open1 ←
+      match h with
+      | investigation.Hypothesis.Open => «open» + 1#usize
+      | investigation.Hypothesis.Supported => ok «open»
+      | investigation.Hypothesis.Refuted => ok «open»
+      | investigation.Hypothesis.Unknown => ok «open»
+    let index1 ← index + 1#usize
+    ok (cont (open1, index1))
+  else ok (done «open»)
+
+/-- [writfold_core::investigation::conclude]: loop 0:
+    Source: 'crates/writfold-core/src/investigation.rs', lines 44:4-49:5
+    Visibility: public -/
+@[rust_loop]
+def investigation.conclude_loop
+  (hypotheses : Slice investigation.Hypothesis) («open» : Std.Usize)
+  (index : Std.Usize) :
+  Result Std.Usize
+  := do
+  loop
+    (fun (open1, index1) => investigation.conclude_loop.body hypotheses open1
+      index1)
+    («open», index)
+
+/-- [writfold_core::investigation::conclude]:
+    Source: 'crates/writfold-core/src/investigation.rs', lines 37:0-55:1
+    Visibility: public -/
+def investigation.conclude
+  (checked_against : Bool) (scope_and_limits : Bool)
+  (hypotheses : Slice investigation.Hypothesis) :
+  Result investigation.Missing
+  := do
+  let «open» ← investigation.conclude_loop hypotheses 0#usize 0#usize
+  ok
+    {
+      checked_against := (¬ checked_against),
+      scope_and_limits := (¬ scope_and_limits),
+      «open»
+    }
 
 /-- [writfold_core::observe::embeds]:
     Source: 'crates/writfold-core/src/observe.rs', lines 71:0-78:1

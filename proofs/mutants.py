@@ -622,6 +622,42 @@ MUTANTS = (
            "    match manifest_closed {",
            ("Writfold.Core.Recheck.writable_spec", "Writfold.Core.Recheck.sidecar_wins",
             "Writfold.Core.Recheck.closed_refuses")),
+    # decisions: accepting needs readiness
+    Mutant("accepted-without-readiness", "decision.rs",
+           "            State::Proposed => Some(needs(true, true, false, false, false)),",
+           "            State::Proposed => Some(needs(false, true, false, false, false)),",
+           ("Writfold.Core.Decision.step_spec",)),
+    # decisions: verifying needs grounded evidence
+    Mutant("verified-without-evidence", "decision.rs",
+           "            State::Applied => Some(needs(false, false, false, true, false)),",
+           "            State::Applied => Some(needs(false, false, false, false, false)),",
+           ("Writfold.Core.Decision.step_spec",)),
+    # decisions: a superseded decision is not superseded again
+    Mutant("superseded-twice", "decision.rs",
+           "            State::Superseded => None,",
+           "            State::Superseded => Some(needs(false, false, false, false, true)),",
+           ("Writfold.Core.Decision.step_spec",)),
+    # decisions: landing is never written
+    Mutant("landing-written", "decision.rs",
+           "        State::Landing | State::Regressed | State::Other => None,",
+           "        State::Landing => Some(needs(false, false, false, false, false)),\n"
+           "        State::Regressed | State::Other => None,",
+           ("Writfold.Core.Decision.step_spec",)),
+    # investigations: a missing section stops the conclusion
+    Mutant("conclude-ignores-section", "investigation.rs",
+           "        checked_against: !checked_against,",
+           "        checked_against: false,",
+           ("Writfold.Core.Decision.conclude_spec",)),
+    # investigations: every hypothesis is counted, the last included
+    Mutant("conclude-skips-last", "investigation.rs",
+           "    while index < hypotheses.len() {",
+           "    while index + 1 < hypotheses.len() {",
+           ("Writfold.Core.Decision.conclude_loop_spec",)),
+    # investigations: an open hypothesis stops the conclusion
+    Mutant("none-ignores-open", "investigation.rs",
+           "        !self.checked_against && !self.scope_and_limits && self.open == 0",
+           "        !self.checked_against && !self.scope_and_limits",
+           ("Writfold.Core.Decision.none_spec",)),
     # assessed gate: one ungrounded premise makes the basis hypothetical
     Mutant("basis-ignores-premises", "assess.rs",
            "        if matches!(premises[index], Grounding::Ungrounded) {",

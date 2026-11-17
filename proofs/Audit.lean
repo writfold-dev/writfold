@@ -220,6 +220,18 @@ def claims : List Name := [
   ``Writfold.Core.Recheck.writable_spec,
   ``Writfold.Core.Recheck.sidecar_wins,
   ``Writfold.Core.Recheck.closed_refuses,
+  -- decision states and investigations (G8)
+  ``Writfold.Core.Decision.step_spec,
+  ``Writfold.Core.Decision.never_written,
+  ``Writfold.Core.Decision.verified_needs_evidence,
+  ``Writfold.Core.Decision.applied_needs_commit,
+  ``Writfold.Core.Decision.accepted_needs_ready_and_actor,
+  ``Writfold.Core.Decision.rejected_needs_actor,
+  ``Writfold.Core.Decision.superseded_needs_successor,
+  ``Writfold.Core.Decision.conclude_loop_spec,
+  ``Writfold.Core.Decision.conclude_spec,
+  ``Writfold.Core.Decision.none_spec,
+  ``Writfold.Core.Decision.conclude_none_iff,
   -- the Weft assessed gate's basis (writfold_core::assess)
   ``Writfold.Core.Assess.assumption_loop_spec,
   ``Writfold.Core.Assess.assumption_spec,
