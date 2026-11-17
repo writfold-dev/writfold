@@ -66,7 +66,7 @@ allowed-tools: Bash(writfold kb plan use *)
 
 Work the current step shown above, in order. When its gates are met, run
 `writfold kb plan advance`; report a gate as passed only when it shows
-`[satisfied]` or `[attested]`.
+`[satisfied]`, and an `[attested]` or `[waived]` gate as met by a statement or a waiver.
 ```
 
 The syntax, from the Claude Code skills documentation ([Inject dynamic context](https://code.claude.com/docs/en/skills), read on 12 November 2026):
