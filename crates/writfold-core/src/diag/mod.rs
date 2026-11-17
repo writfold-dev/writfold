@@ -3,8 +3,9 @@
 //! when Writfold can name it, the fix. Pure: no IO, no clock, no
 //! environment; the caller decides colour and width ([`render::Style`]).
 //!
-//! Not translated by the proofs gate (it is not a decision kernel), so
-//! iterators and derives are used freely here.
+//! Only [`blocks`] (whether a lint fails) is translated and proved; the
+//! rest is rendering and is not a decision kernel, so iterators and
+//! derives are used freely here.
 use alloc::format;
 use alloc::string::String;
 use alloc::vec::Vec;
@@ -241,6 +242,12 @@ pub fn tally(errors: usize, warnings: usize, files: usize) -> String {
 }
 
 /// `1 error`, `2 errors, 1 warning`: the count of one file.
+/// Whether a lint blocks (exit 2): any error, or any warning under
+/// `--deny-warnings`. Translated and proved (`proofs/Writfold/Walk.lean`).
+pub fn blocks(errors: usize, warnings: usize, deny: bool) -> bool {
+    errors > 0 || (deny && warnings > 0)
+}
+
 pub fn count(errors: usize, warnings: usize) -> String {
     let mut out = plural(errors, "error");
     if warnings > 0 {

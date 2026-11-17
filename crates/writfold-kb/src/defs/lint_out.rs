@@ -17,7 +17,7 @@ pub fn output(all: &[File], report: Report, json: bool, (deny, label): (bool, &s
         .map(|f| f.shown.as_str())
         .collect();
     let (errors, warnings) = (report.errors(), report.warnings());
-    let exit = match errors > 0 || (deny && warnings > 0) {
+    let exit = match writfold_core::diag::blocks(errors, warnings, deny) {
         true => 2,
         false => 0,
     };

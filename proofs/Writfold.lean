@@ -13,3 +13,7 @@ import Writfold.Recheck
 import Writfold.Decision
 import Writfold.Verdict
 import Writfold.Recorded
+import Writfold.Walk
+import Writfold.Command
+import Writfold.Find
+import Writfold.Idle

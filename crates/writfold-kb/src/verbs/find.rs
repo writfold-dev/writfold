@@ -45,8 +45,11 @@ struct Found<'s, 'a> {
 impl Found<'_, '_> {
     /// Add the node `id` once, if it passes the filter, with a `match:`
     /// line and the tier that found it.
+    /// ([`writfold_core::find::admit`]: once, first tier first, within
+    /// the limit).
     fn add(&mut self, id: &str, tier: &'static str, more: More) -> Result<()> {
-        if self.rows.len() >= self.limit || self.seen.contains(id) {
+        let seen = self.seen.contains(id);
+        if !writfold_core::find::admit(self.rows.len(), self.limit, seen, true) {
             return Ok(());
         }
         let rec = query::record(&self.session.conn, id)?;
@@ -60,14 +63,13 @@ impl Found<'_, '_> {
                 ("doc".to_owned(), project, path)
             }
         };
-        if !self.filter.kinds.is_empty() && !self.filter.kinds.contains(&kind) {
+        let kind_ok = self.filter.kinds.is_empty() || self.filter.kinds.contains(&kind);
+        let home = |wanted: &String| {
+            project.as_ref() == Some(wanted) || path.starts_with(&format!("{wanted}/"))
+        };
+        let passes = kind_ok && self.filter.project.as_ref().is_none_or(home);
+        if !writfold_core::find::admit(self.rows.len(), self.limit, seen, passes) {
             return Ok(());
-        }
-        if let Some(wanted) = &self.filter.project {
-            let home = project.as_ref() == Some(wanted) || path.starts_with(&format!("{wanted}/"));
-            if !home {
-                return Ok(());
-            }
         }
         let mut row = node_row(self.session, id)?;
         row.more.push(more);

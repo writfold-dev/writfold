@@ -738,6 +738,71 @@ MUTANTS = (
            "                if before(&s, &recorded[i]) {",
            "                if !before(&recorded[i], &s) {",
            ("Writfold.Core.Recorded.newest_spec",)),
+    # walk: a skipped edge keeps coverage partial
+    Mutant("complete-ignores-skipped", "walk.rs",
+           "    frontier == 0 && skipped == 0",
+           "    frontier == 0",
+           ("Writfold.Core.Walk.complete_iff",)),
+    # lint: a warning blocks only under --deny-warnings
+    Mutant("blocks-any-warning", "diag/mod.rs",
+           "    errors > 0 || (deny && warnings > 0)",
+           "    errors > 0 || warnings > 0",
+           ("Writfold.Core.Walk.blocks_iff",)),
+    # find: a record is shown once, under the first tier that found it
+    Mutant("admit-shows-twice", "find.rs",
+           "    shown < limit && !seen && passes",
+           "    shown < limit && passes",
+           ("Writfold.Core.Walk.admit_iff",)),
+    # command: --help is exactly those bytes
+    Mutant("is-help-wrong-byte", "command/mod.rs",
+           "        && word[1] == b'-'",
+           "        && word[1] == b'h'",
+           ("Writfold.Core.Command.is_help_spec",)),
+    # command: every word of a rule's prefix is compared, the last included
+    Mutant("named-skips-last", "command/mod.rs",
+           "    while i < prefix.len() {\n        if !crate::bytes::same(&prefix[i], &words[i]) {",
+           "    while i + 1 < prefix.len() {\n        if !crate::bytes::same(&prefix[i], &words[i]) {",
+           ("Writfold.Core.Command.named_loop_spec",)),
+    # command: --help stops a match only when it is the one word after the prefix
+    Mutant("named-help-not-alone", "command/mod.rs",
+           "    !(words.len() - prefix.len() == 1 && is_help(&words[prefix.len()]))",
+           "    !(words.len() - prefix.len() >= 1 && is_help(&words[prefix.len()]))",
+           ("Writfold.Core.Command.named_loop_spec",)),
+    # find: a one-token query needs four characters
+    Mutant("query-ok-three-chars", "find.rs",
+           "    query.len() >= 2 || (query.len() == 1 && query[0].len() >= 4)",
+           "    query.len() >= 2 || (query.len() == 1 && query[0].len() >= 3)",
+           ("Writfold.Core.Find.query_ok_spec",)),
+    # find: every character of a prefix is compared, the last included
+    Mutant("starts-skips-last", "find.rs",
+           "    while i < start.len() {",
+           "    while i + 1 < start.len() {",
+           ("Writfold.Core.Find.starts_loop_spec",)),
+    # find: the query token begins the name token, not the other way round
+    Mutant("next-from-reversed", "find.rs",
+           "        if starts(&name[j], q) {",
+           "        if starts(q, &name[j]) {",
+           ("Writfold.Core.Find.next_from_loop_spec",)),
+    # find: each query token takes its own name token
+    Mutant("prefixed-reuses-token", "find.rs",
+           "            Some(j) => at = j + 1,",
+           "            Some(j) => at = j,",
+           ("Writfold.Core.Find.prefixed_loop_spec",)),
+    # idle: the first of equal newest stamps is named
+    Mutant("newest-last-of-equal", "idle.rs",
+           "        Some((_, at)) => stamps[i] > at,",
+           "        Some((_, at)) => stamps[i] >= at,",
+           ("Writfold.Core.Idle.newer_spec",)),
+    # idle: the age is compared over the integers, not after holding it in i64
+    Mutant("idle-saturated-compare", "idle.rs",
+           "            if crate::verdict::expired(now, last, age) {",
+           "            if since(now, last) > age {",
+           ("Writfold.Core.Idle.idle_spec",)),
+    # idle: past the end of i64 the seconds shown are its end
+    Mutant("since-off-by-one", "idle.rs",
+           "    if last < 0 && now > i64::MAX + last {\n        return i64::MAX;",
+           "    if last < 0 && now > i64::MAX + last {\n        return i64::MAX - 1;",
+           ("Writfold.Core.Idle.since_spec",)),
     # assessed gate: one ungrounded premise makes the basis hypothetical
     Mutant("basis-ignores-premises", "assess.rs",
            "        if matches!(premises[index], Grounding::Ungrounded) {",

@@ -5,10 +5,11 @@
 //! `[package.metadata.charon] start_from` to Lean 4 (`proofs/Extracted/`,
 //! committed) and proves the kernel theorems over that translation
 //! (`proofs/Writfold/`). The theorems are about this code, not a hand-written
-//! Lean copy of it. Production crates call these functions. Modules not in
-//! `start_from` (`scope`, `verdict`, `walk`, `command`, `find`, `idle`,
-//! `diag`, `decision`, `investigation`) are tested, not proved; the backlog
-//! is in docs/writfold/aeneas.md.
+//! Lean copy of it. Production crates call these functions. Every module
+//! has its decisions in `start_from` (docs/writfold/aeneas.md lists them);
+//! what stays outside is text plumbing, rendering and traversal (`command`'s
+//! reader, `find`'s name forms, `diag`'s rendering, `walk`'s traversal),
+//! tested, not proved.
 //!
 //! Translation rules for the functions in `start_from`: owned data and no
 //! nested borrows; no derives reached (equality a theorem depends on is an
@@ -34,6 +35,7 @@
     clippy::explicit_counter_loop,
     clippy::needless_return,
     clippy::vec_init_then_push,
+    clippy::question_mark,
     clippy::manual_filter,
     clippy::manual_map,
     reason = "explicit matches, indexed loops and pushes translate to plain Lean \
