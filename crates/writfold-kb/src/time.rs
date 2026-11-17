@@ -77,13 +77,14 @@ pub fn ttl(text: Option<&str>) -> Option<Ttl> {
     }
 }
 
-/// Whether `observed + ttl` lies strictly before `now`. `None` when either
-/// value cannot be read.
+/// Whether `observed + ttl` lies strictly before `now`, over the integers
+/// ([`writfold_core::verdict::expired`]). `None` when either value cannot
+/// be read.
 pub fn expired(observed: &str, ttl_text: Option<&str>, now: i64) -> Option<bool> {
     let at = parse(observed)?;
     match ttl(ttl_text)? {
         Ttl::Never => Some(false),
-        Ttl::Seconds(seconds) => Some(now - at > seconds),
+        Ttl::Seconds(seconds) => Some(writfold_core::verdict::expired(now, at, seconds)),
     }
 }
 

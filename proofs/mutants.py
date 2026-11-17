@@ -658,6 +658,86 @@ MUTANTS = (
            "        !self.checked_against && !self.scope_and_limits && self.open == 0",
            "        !self.checked_against && !self.scope_and_limits",
            ("Writfold.Core.Decision.none_spec",)),
+    # verdict: a span found at other lines is moved, never fresh
+    Mutant("moved-span-fresh", "verdict.rs",
+           "            Located::At(_, _) => Verdict::Moved,",
+           "            Located::At(_, _) => Verdict::Fresh,",
+           ("Writfold.Core.Verdict.observed_spec",)),
+    # verdict: a file too long to search is changed, never fresh
+    Mutant("unsearched-fresh", "verdict.rs",
+           "            Located::Absent | Located::Unsearched => Verdict::Changed,",
+           "            Located::Absent => Verdict::Changed,\n            Located::Unsearched => Verdict::Fresh,",
+           ("Writfold.Core.Verdict.observed_spec",)),
+    # verdict: a mark never hides a change
+    Mutant("mark-hides-change", "verdict.rs",
+           "        Verdict::Changed | Verdict::Gone | Verdict::Expired => reached,",
+           "        Verdict::Gone | Verdict::Expired => reached,",
+           ("Writfold.Core.Verdict.with_mark_spec",)),
+    # verdict: the protocol first, then the kind, then the operation
+    Mutant("handshake-kind-as-op", "verdict.rs",
+           "            } else if !d.lists_kind {\n                Handshake::Kind",
+           "            } else if !d.lists_kind {\n                Handshake::Op",
+           ("Writfold.Core.Verdict.handshake_spec",)),
+    # verdict: a reply counts only after an agreed handshake
+    Mutant("exchange-ignores-handshake", "verdict.rs",
+           "    if !matches!(handshake, Handshake::Agreed) || !clean_exit {",
+           "    if !clean_exit {",
+           ("Writfold.Core.Verdict.exchange_said_iff", "Writfold.Core.Verdict.exchange_spec",)),
+    # verdict: exactly one reply counts, not the first of two
+    Mutant("exchange-first-of-two", "verdict.rs",
+           "    if replies.len() != 1 {",
+           "    if replies.is_empty() {",
+           ("Writfold.Core.Verdict.exchange_said_iff", "Writfold.Core.Verdict.exchange_spec")),
+    # verdict: a reply whose age cannot be read is expired
+    Mutant("aged-keeps-unreadable", "verdict.rs",
+           "            None => Checker::Expired,\n        },",
+           "            None => cached,\n        },",
+           ("Writfold.Core.Verdict.aged_spec",)),
+    # verdict: the token's own ttl comes before the kind's default
+    Mutant("lifetime-token-as-default", "verdict.rs",
+           "        Some(ttl) => Lifetime::Token(ttl),",
+           "        Some(ttl) => Lifetime::Default(ttl),",
+           ("Writfold.Core.Verdict.lifetime_spec",)),
+    # verdict: far past the end of i64, the sign alone decides expiry
+    Mutant("expired-overflow-kept", "verdict.rs",
+           "    if seen < 0 && now > i64::MAX + seen {\n        return true;",
+           "    if seen < 0 && now > i64::MAX + seen {\n        return false;",
+           ("Writfold.Core.Verdict.expired_spec",)),
+    # verdict: the cited lines must lie inside the file
+    Mutant("window-cited-off-by-one", "verdict/locate.rs",
+           "    if last <= lines {",
+           "    if last < lines {",
+           ("Writfold.Core.Verdict.window_spec",)),
+    # verdict: the cited window comes before any other
+    Mutant("place-ignores-cited", "verdict/locate.rs",
+           "    if cited {\n        return Place::Same;",
+           "    if false {\n        return Place::Same;",
+           ("Writfold.Core.Verdict.place_same_iff", "Writfold.Core.Verdict.place_at_iff", "Writfold.Core.Verdict.place_absent_iff",)),
+    # check receipts: an unverifiable answer is never shared
+    Mutant("recordable-unverifiable", "verdict/recorded.rs",
+           "        Checker::Said(said) => !matches!(said, Said::Unverifiable),",
+           "        Checker::Said(_) => true,",
+           ("Writfold.Core.Recorded.recordable_iff",)),
+    # check receipts: a date more than an hour ahead is unusable
+    Mutant("recorded-age-no-skew", "verdict/recorded.rs",
+           "    if now <= i64::MAX - CLOCK_SKEW && checked_at > now + CLOCK_SKEW {",
+           "    if now <= i64::MAX - CLOCK_SKEW && checked_at > now {",
+           ("Writfold.Core.Recorded.recorded_age_spec",)),
+    # check receipts: the newer statement comes first
+    Mutant("before-prefers-older", "verdict/recorded.rs",
+           "        return a.age < b.age;",
+           "        return a.age > b.age;",
+           ("Writfold.Core.Recorded.before_spec",)),
+    # check receipts: on a tie the first receipt is kept
+    Mutant("better-tie-takes-later", "verdict/recorded.rs",
+           "            if before(&recorded[index], &recorded[b]) {",
+           "            if !before(&recorded[b], &recorded[index]) {",
+           ("Writfold.Core.Recorded.better_spec",)),
+    # check receipts: on a full tie a receipt wins over the local statement
+    Mutant("newest-local-on-tie", "verdict/recorded.rs",
+           "                if before(&s, &recorded[i]) {",
+           "                if !before(&recorded[i], &s) {",
+           ("Writfold.Core.Recorded.newest_spec",)),
     # assessed gate: one ungrounded premise makes the basis hypothetical
     Mutant("basis-ignores-premises", "assess.rs",
            "        if matches!(premises[index], Grounding::Ungrounded) {",

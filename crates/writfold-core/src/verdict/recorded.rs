@@ -8,10 +8,10 @@ use super::{Checker, Said};
 /// `Expired` and a checker's own `unverifiable` describe this machine or
 /// this moment, and shared they would overwrite another machine's answer.
 pub fn recordable(checker: Checker) -> bool {
-    matches!(
-        checker,
-        Checker::Said(Said::Fresh | Said::Moved | Said::Changed | Said::Gone)
-    )
+    match checker {
+        Checker::Said(said) => !matches!(said, Said::Unverifiable),
+        _ => false,
+    }
 }
 
 /// How far a recorded clock may run ahead of the reader's, in seconds.
@@ -21,11 +21,16 @@ pub const CLOCK_SKEW: i64 = 3600;
 /// at `now`: `None` (not usable) when it is dated more than [`CLOCK_SKEW`]
 /// after `now`, else never below zero.
 pub fn recorded_age(now: i64, checked_at: i64) -> Option<i64> {
-    if checked_at > now.saturating_add(CLOCK_SKEW) {
-        None
-    } else {
-        Some(now.saturating_sub(checked_at).max(0))
+    if now <= i64::MAX - CLOCK_SKEW && checked_at > now + CLOCK_SKEW {
+        return None;
     }
+    if checked_at >= now {
+        return Some(0);
+    }
+    if now >= 0 && checked_at < now - i64::MAX {
+        return Some(i64::MAX);
+    }
+    Some(now - checked_at)
 }
 
 /// One statement a checker made about a token: what it said, how many
@@ -48,7 +53,7 @@ pub enum Pick {
 
 /// Worst first: `gone`, `changed`, `moved`, `fresh` (then `unverifiable`,
 /// which no usable statement carries).
-fn worst(said: Said) -> u8 {
+pub fn worst(said: Said) -> u8 {
     match said {
         Said::Gone => 0,
         Said::Changed => 1,
@@ -58,38 +63,95 @@ fn worst(said: Said) -> u8 {
     }
 }
 
+/// Whether a statement may be picked at all: an `unverifiable` one never is.
+pub fn usable(s: &Statement) -> bool {
+    !matches!(s.said, Said::Unverifiable)
+}
+
+/// Whether `a` comes strictly before `b`: newer (smaller age), then from a
+/// receipt, then the worse verdict.
+pub fn before(a: &Statement, b: &Statement) -> bool {
+    if a.age != b.age {
+        return a.age < b.age;
+    }
+    if a.recorded != b.recorded {
+        return a.recorded;
+    }
+    worst(a.said) < worst(b.said)
+}
+
+/// The better of the best so far and statement `index`: it replaces the
+/// best only when usable and strictly before it, so a tie keeps the first.
+pub fn better(recorded: &[Statement], best: Option<usize>, index: usize) -> Option<usize> {
+    if !usable(&recorded[index]) {
+        return best;
+    }
+    match best {
+        None => Some(index),
+        Some(b) => {
+            if before(&recorded[index], &recorded[b]) {
+                Some(index)
+            } else {
+                best
+            }
+        }
+    }
+}
+
+/// The first usable recorded statement that no other comes strictly before.
+pub fn best_recorded(recorded: &[Statement]) -> Option<usize> {
+    let mut best = None;
+    let mut index = 0;
+    while index < recorded.len() {
+        best = better(recorded, best, index);
+        index += 1;
+    }
+    best
+}
+
 /// The statement a reader uses: the newest (smallest age) of the local one
 /// and the recorded ones. A local `unverifiable` is dropped (it never masks
 /// a usable recorded verdict), as is a recorded `unverifiable`; every
 /// recorded statement is dropped when the kind declares no `max_age`. A tie
 /// goes to a receipt, between receipts to the worst verdict, then to the
-/// first in `recorded` (the caller orders them by file name). The pick is
-/// then aged with [`super::aged`].
+/// first in `recorded` (the caller orders them by file name), and the local
+/// statement loses every full tie. The pick is then aged with
+/// [`super::aged`].
 pub fn newest(
     local: Option<Statement>,
     recorded: &[Statement],
     max_age: Option<i64>,
 ) -> Option<Pick> {
-    let local = local
-        .filter(|s| s.said != Said::Unverifiable)
-        .map(|s| (Pick::Local, s));
-    let shared = recorded
-        .iter()
-        .enumerate()
-        .filter(|_| max_age.is_some())
-        .filter(|(_, s)| s.said != Said::Unverifiable)
-        .map(|(i, s)| (Pick::Recorded(i), *s));
-    local
-        .into_iter()
-        .chain(shared)
-        .min_by_key(|(pick, s)| {
-            let order = match pick {
-                Pick::Local => usize::MAX,
-                Pick::Recorded(i) => *i,
-            };
-            (s.age, !s.recorded, worst(s.said), order)
-        })
-        .map(|(pick, _)| pick)
+    let shared = match max_age {
+        Some(_) => best_recorded(recorded),
+        None => None,
+    };
+    let local = match local {
+        Some(s) => {
+            if usable(&s) {
+                Some(s)
+            } else {
+                None
+            }
+        }
+        None => None,
+    };
+    match local {
+        None => match shared {
+            Some(i) => Some(Pick::Recorded(i)),
+            None => None,
+        },
+        Some(s) => match shared {
+            None => Some(Pick::Local),
+            Some(i) => {
+                if before(&s, &recorded[i]) {
+                    Some(Pick::Local)
+                } else {
+                    Some(Pick::Recorded(i))
+                }
+            }
+        },
+    }
 }
 
 #[cfg(test)]
@@ -118,6 +180,71 @@ mod tests {
         assert_eq!(recorded_age(10_000, 13_601), None);
         assert_eq!(recorded_age(i64::MAX, i64::MIN), Some(i64::MAX));
         assert_eq!(recorded_age(i64::MAX, i64::MAX), Some(0));
+    }
+
+    /// The pick as first written, with iterator chains: the reshaped
+    /// [`newest`] must agree with it on every input the tests build.
+    fn reference(
+        local: Option<Statement>,
+        recorded: &[Statement],
+        max_age: Option<i64>,
+    ) -> Option<Pick> {
+        let local = local
+            .filter(|s| s.said != Said::Unverifiable)
+            .map(|s| (Pick::Local, s));
+        let shared = recorded
+            .iter()
+            .enumerate()
+            .filter(|_| max_age.is_some())
+            .filter(|(_, s)| s.said != Said::Unverifiable)
+            .map(|(i, s)| (Pick::Recorded(i), *s));
+        local
+            .into_iter()
+            .chain(shared)
+            .min_by_key(|(pick, s)| {
+                let order = match pick {
+                    Pick::Local => usize::MAX,
+                    Pick::Recorded(i) => *i,
+                };
+                (s.age, !s.recorded, super::worst(s.said), order)
+            })
+            .map(|(pick, _)| pick)
+    }
+
+    /// `recorded_age` as first written, with saturating arithmetic.
+    fn reference_age(now: i64, checked_at: i64) -> Option<i64> {
+        if checked_at > now.saturating_add(super::CLOCK_SKEW) {
+            None
+        } else {
+            Some(now.saturating_sub(checked_at).max(0))
+        }
+    }
+
+    #[test]
+    fn the_reshaped_age_agrees_with_the_saturating_one() {
+        let edges = [
+            i64::MIN,
+            i64::MIN + 1,
+            -3601,
+            -3600,
+            -1,
+            0,
+            1,
+            3599,
+            3600,
+            3601,
+            10_000,
+            i64::MAX - 3601,
+            i64::MAX - 3600,
+            i64::MAX - 3599,
+            i64::MAX - 1,
+            i64::MAX,
+        ];
+        for now in edges {
+            for at in edges {
+                assert_eq!(recorded_age(now, at), reference_age(now, at), "{now} {at}");
+            }
+        }
     }
 
     /// Every statement over a few verdicts and ages.
@@ -168,6 +295,10 @@ mod tests {
         for local in &locals {
             for list in &lists {
                 for max in [None, Some(5)] {
+                    assert_eq!(newest(*local, list, max), reference(*local, list, max));
+                    let mut mixed = list.clone();
+                    mixed.extend(statements(false).into_iter().take(3));
+                    assert_eq!(newest(*local, &mixed, max), reference(*local, &mixed, max));
                     let (chosen, verdict) = read(*local, list, max);
                     let usable: alloc::vec::Vec<Statement> = local
                         .iter()

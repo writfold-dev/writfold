@@ -34,6 +34,8 @@
     clippy::explicit_counter_loop,
     clippy::needless_return,
     clippy::vec_init_then_push,
+    clippy::manual_filter,
+    clippy::manual_map,
     reason = "explicit matches, indexed loops and pushes translate to plain Lean \
               without depending on further modelled library functions"
 )]

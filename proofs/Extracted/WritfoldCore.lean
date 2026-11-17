@@ -3205,4 +3205,633 @@ def scope.covers
   := do
   scope.covers_loop patterns path false 0#usize
 
+/-- [writfold_core::verdict::locate::Window]
+    Source: 'crates/writfold-core/src/verdict/locate.rs', lines 11:0-20:1
+    Visibility: public -/
+@[discriminant isize]
+inductive verdict.locate.Window where
+| Unsearched : verdict.locate.Window
+| Absent : verdict.locate.Window
+| Search : Option Std.Usize → Std.Usize → verdict.locate.Window
+
+/-- [writfold_core::verdict::locate::window]:
+    Source: 'crates/writfold-core/src/verdict/locate.rs', lines 24:0-47:1
+    Visibility: public -/
+def verdict.locate.window
+  (lines : Std.Usize) (first : Std.Usize) (last : Std.Usize)
+  (limit : Std.Usize) :
+  Result verdict.locate.Window
+  := do
+  if lines > limit
+  then ok verdict.locate.Window.Unsearched
+  else
+    if first = 0#usize
+    then ok verdict.locate.Window.Absent
+    else
+      if last < first
+      then ok verdict.locate.Window.Absent
+      else
+        let i ← last - first
+        let height ← i + 1#usize
+        if height > lines
+        then ok verdict.locate.Window.Absent
+        else
+          let cited ← first - 1#usize
+          if last <= lines
+          then ok (verdict.locate.Window.Search (some cited) height)
+          else ok (verdict.locate.Window.Search none height)
+
+/-- [writfold_core::verdict::locate::Place]
+    Source: 'crates/writfold-core/src/verdict/locate.rs', lines 50:0-57:1
+    Visibility: public -/
+@[discriminant isize]
+inductive verdict.locate.Place where
+| Same : verdict.locate.Place
+| At : Std.Usize → verdict.locate.Place
+| Absent : verdict.locate.Place
+
+/-- [writfold_core::verdict::locate::place]: loop body 0:
+    Source: 'crates/writfold-core/src/verdict/locate.rs', lines 68:4-75:1
+    Visibility: public -/
+@[rust_loop_body]
+def verdict.locate.place_loop.body
+  (windows : Slice Bool) (start : Std.Usize) :
+  Result (ControlFlow Std.Usize verdict.locate.Place)
+  := do
+  let i := Slice.len windows
+  if start < i
+  then
+    let b ← Slice.index_usize windows start
+    if b
+    then ok (done (verdict.locate.Place.At start))
+    else let start1 ← start + 1#usize
+         ok (cont start1)
+  else ok (done verdict.locate.Place.Absent)
+
+/-- [writfold_core::verdict::locate::place]: loop 0:
+    Source: 'crates/writfold-core/src/verdict/locate.rs', lines 68:4-75:1
+    Visibility: public -/
+@[rust_loop]
+def verdict.locate.place_loop
+  (windows : Slice Bool) (start : Std.Usize) :
+  Result verdict.locate.Place
+  := do
+  loop
+    (fun start1 => verdict.locate.place_loop.body windows start1)
+    start
+
+/-- [writfold_core::verdict::locate::place]:
+    Source: 'crates/writfold-core/src/verdict/locate.rs', lines 63:0-75:1
+    Visibility: public -/
+def verdict.locate.place
+  (cited : Bool) (windows : Slice Bool) : Result verdict.locate.Place := do
+  if cited
+  then ok verdict.locate.Place.Same
+  else verdict.locate.place_loop windows 0#usize
+
+/-- [writfold_core::verdict::Said]
+    Source: 'crates/writfold-core/src/verdict.rs', lines 65:0-71:1
+    Visibility: public -/
+@[discriminant isize]
+inductive verdict.Said where
+| Fresh : verdict.Said
+| Moved : verdict.Said
+| Changed : verdict.Said
+| Gone : verdict.Said
+| Unverifiable : verdict.Said
+
+/-- [writfold_core::verdict::Checker]
+    Source: 'crates/writfold-core/src/verdict.rs', lines 75:0-88:1
+    Visibility: public -/
+@[discriminant isize]
+inductive verdict.Checker where
+| Absent : verdict.Checker
+| Failed : verdict.Checker
+| Version : verdict.Checker
+| Said : verdict.Said → verdict.Checker
+| Expired : verdict.Checker
+
+/-- [writfold_core::verdict::recorded::recordable]:
+    Source: 'crates/writfold-core/src/verdict/recorded.rs', lines 10:0-15:1
+    Visibility: public -/
+def verdict.recorded.recordable (checker : verdict.Checker) : Result Bool := do
+  match checker with
+  | verdict.Checker.Absent => ok false
+  | verdict.Checker.Failed => ok false
+  | verdict.Checker.Version => ok false
+  | verdict.Checker.Said said =>
+    let b ←
+      match said with
+      | verdict.Said.Fresh => ok false
+      | verdict.Said.Moved => ok false
+      | verdict.Said.Changed => ok false
+      | verdict.Said.Gone => ok false
+      | verdict.Said.Unverifiable => ok true
+    ok (¬ b)
+  | verdict.Checker.Expired => ok false
+
+/-- [writfold_core::verdict::recorded::CLOCK_SKEW]
+    Source: 'crates/writfold-core/src/verdict/recorded.rs', lines 18:0-18:33
+    Visibility: public -/
+@[global_simps, irreducible]
+def verdict.recorded.CLOCK_SKEW : Std.I64 := 3600#i64
+
+/-- [writfold_core::verdict::recorded::recorded_age]:
+    Source: 'crates/writfold-core/src/verdict/recorded.rs', lines 23:0-34:1
+    Visibility: public -/
+def verdict.recorded.recorded_age
+  (now : Std.I64) (checked_at : Std.I64) : Result (Option Std.I64) := do
+  let i ← core.num.I64.MAX - verdict.recorded.CLOCK_SKEW
+  if now <= i
+  then
+    let i1 ← now + verdict.recorded.CLOCK_SKEW
+    if checked_at > i1
+    then ok none
+    else
+      if checked_at >= now
+      then ok (some 0#i64)
+      else
+        if now >= 0#i64
+        then
+          let i2 ← now - core.num.I64.MAX
+          if checked_at < i2
+          then ok (some core.num.I64.MAX)
+          else let i3 ← now - checked_at
+               ok (some i3)
+        else let i2 ← now - checked_at
+             ok (some i2)
+  else
+    if checked_at >= now
+    then ok (some 0#i64)
+    else
+      if now >= 0#i64
+      then
+        let i1 ← now - core.num.I64.MAX
+        if checked_at < i1
+        then ok (some core.num.I64.MAX)
+        else let i2 ← now - checked_at
+             ok (some i2)
+      else let i1 ← now - checked_at
+           ok (some i1)
+
+/-- [writfold_core::verdict::recorded::Statement]
+    Source: 'crates/writfold-core/src/verdict/recorded.rs', lines 40:0-44:1
+    Visibility: public -/
+structure verdict.recorded.Statement where
+  said : verdict.Said
+  age : Std.I64
+  recorded : Bool
+
+/-- [writfold_core::verdict::recorded::Pick]
+    Source: 'crates/writfold-core/src/verdict/recorded.rs', lines 48:0-52:1
+    Visibility: public -/
+@[discriminant isize]
+inductive verdict.recorded.Pick where
+| Local : verdict.recorded.Pick
+| Recorded : Std.Usize → verdict.recorded.Pick
+
+/-- [writfold_core::verdict::recorded::worst]:
+    Source: 'crates/writfold-core/src/verdict/recorded.rs', lines 56:0-64:1
+    Visibility: public -/
+def verdict.recorded.worst (said : verdict.Said) : Result Std.U8 := do
+  match said with
+  | verdict.Said.Fresh => ok 3#u8
+  | verdict.Said.Moved => ok 2#u8
+  | verdict.Said.Changed => ok 1#u8
+  | verdict.Said.Gone => ok 0#u8
+  | verdict.Said.Unverifiable => ok 4#u8
+
+/-- [writfold_core::verdict::recorded::usable]:
+    Source: 'crates/writfold-core/src/verdict/recorded.rs', lines 67:0-69:1
+    Visibility: public -/
+def verdict.recorded.usable
+  (s : verdict.recorded.Statement) : Result Bool := do
+  let b ←
+    match s.said with
+    | verdict.Said.Fresh => ok false
+    | verdict.Said.Moved => ok false
+    | verdict.Said.Changed => ok false
+    | verdict.Said.Gone => ok false
+    | verdict.Said.Unverifiable => ok true
+  ok (¬ b)
+
+/-- [writfold_core::verdict::recorded::before]:
+    Source: 'crates/writfold-core/src/verdict/recorded.rs', lines 73:0-81:1
+    Visibility: public -/
+def verdict.recorded.before
+  (a : verdict.recorded.Statement) (b : verdict.recorded.Statement) :
+  Result Bool
+  := do
+  if a.age != b.age
+  then ok (a.age < b.age)
+  else
+    if a.recorded != b.recorded
+    then ok a.recorded
+    else
+      let i ← verdict.recorded.worst a.said
+      let i1 ← verdict.recorded.worst b.said
+      ok (i < i1)
+
+/-- [writfold_core::verdict::recorded::better]:
+    Source: 'crates/writfold-core/src/verdict/recorded.rs', lines 85:0-99:1
+    Visibility: public -/
+def verdict.recorded.better
+  (recorded : Slice verdict.recorded.Statement) (best : Option Std.Usize)
+  (index : Std.Usize) :
+  Result (Option Std.Usize)
+  := do
+  let s ← Slice.index_usize recorded index
+  let b ← verdict.recorded.usable s
+  if b
+  then
+    match best with
+    | none => ok (some index)
+    | some b1 =>
+      let s1 ← Slice.index_usize recorded b1
+      let b2 ← verdict.recorded.before s s1
+      if b2
+      then ok (some index)
+      else ok best
+  else ok best
+
+/-- [writfold_core::verdict::recorded::best_recorded]: loop body 0:
+    Source: 'crates/writfold-core/src/verdict/recorded.rs', lines 105:4-108:5
+    Visibility: public -/
+@[rust_loop_body]
+def verdict.recorded.best_recorded_loop.body
+  (recorded : Slice verdict.recorded.Statement) (best : Option Std.Usize)
+  (index : Std.Usize) :
+  Result (ControlFlow ((Option Std.Usize) × Std.Usize) (Option Std.Usize))
+  := do
+  let i := Slice.len recorded
+  if index < i
+  then
+    let best1 ← verdict.recorded.better recorded best index
+    let index1 ← index + 1#usize
+    ok (cont (best1, index1))
+  else ok (done best)
+
+/-- [writfold_core::verdict::recorded::best_recorded]: loop 0:
+    Source: 'crates/writfold-core/src/verdict/recorded.rs', lines 105:4-108:5
+    Visibility: public -/
+@[rust_loop]
+def verdict.recorded.best_recorded_loop
+  (recorded : Slice verdict.recorded.Statement) (best : Option Std.Usize)
+  (index : Std.Usize) :
+  Result (Option Std.Usize)
+  := do
+  loop
+    (fun (best1, index1) => verdict.recorded.best_recorded_loop.body recorded
+      best1 index1)
+    (best, index)
+
+/-- [writfold_core::verdict::recorded::best_recorded]:
+    Source: 'crates/writfold-core/src/verdict/recorded.rs', lines 102:0-110:1
+    Visibility: public -/
+@[reducible]
+def verdict.recorded.best_recorded
+  (recorded : Slice verdict.recorded.Statement) :
+  Result (Option Std.Usize)
+  := do
+  verdict.recorded.best_recorded_loop recorded none 0#usize
+
+/-- [writfold_core::verdict::recorded::newest]:
+    Source: 'crates/writfold-core/src/verdict/recorded.rs', lines 120:0-155:1
+    Visibility: public -/
+def verdict.recorded.newest
+  («local» : Option verdict.recorded.Statement)
+  (recorded : Slice verdict.recorded.Statement) (max_age : Option Std.I64) :
+  Result (Option verdict.recorded.Pick)
+  := do
+  let shared ←
+    match max_age with
+    | none => ok none
+    | some _ => verdict.recorded.best_recorded recorded
+  let local1 ←
+    match «local» with
+    | none => ok none
+    | some s =>
+      do
+      let b ← verdict.recorded.usable s
+      if b
+      then ok «local»
+      else ok none
+  match local1 with
+  | none =>
+    match shared with
+    | none => ok none
+    | some i => ok (some (verdict.recorded.Pick.Recorded i))
+  | some s =>
+    match shared with
+    | none => ok (some verdict.recorded.Pick.Local)
+    | some i =>
+      let s1 ← Slice.index_usize recorded i
+      let b ← verdict.recorded.before s s1
+      if b
+      then ok (some verdict.recorded.Pick.Local)
+      else ok (some (verdict.recorded.Pick.Recorded i))
+
+/-- [writfold_core::verdict::Located]
+    Source: 'crates/writfold-core/src/verdict.rs', lines 15:0-24:1
+    Visibility: public -/
+@[discriminant isize]
+inductive verdict.Located where
+| Same : verdict.Located
+| At : Std.U32 → Std.U32 → verdict.Located
+| Absent : verdict.Located
+| Unsearched : verdict.Located
+
+/-- [writfold_core::verdict::Target]
+    Source: 'crates/writfold-core/src/verdict.rs', lines 28:0-36:1
+    Visibility: public -/
+@[discriminant isize]
+inductive verdict.Target where
+| SameBlob : verdict.Target
+| OtherBlob : Option verdict.Located → verdict.Target
+| Missing : Bool → verdict.Target
+
+/-- [writfold_core::verdict::Observed]
+    Source: 'crates/writfold-core/src/verdict.rs', lines 40:0-61:1
+    Visibility: public -/
+@[discriminant isize]
+inductive verdict.Observed where
+| Malformed : verdict.Observed
+| Unresolved : verdict.Observed
+| Code : verdict.Target → verdict.Observed
+| Gate : Bool → verdict.Observed
+| State : Option (Option Bool) → verdict.Observed
+| Timed : Option Bool → verdict.Observed
+| Offline : Bool → verdict.Observed
+| Immutable : verdict.Observed
+| Checked : verdict.Checker → verdict.Observed
+
+/-- [writfold_core::verdict::Verdict]
+    Source: 'crates/writfold-core/src/verdict.rs', lines 92:0-106:1
+    Visibility: public -/
+@[discriminant isize]
+inductive verdict.Verdict where
+| Fresh : verdict.Verdict
+| Moved : verdict.Verdict
+| Renamed : verdict.Verdict
+| Changed : verdict.Verdict
+| Gone : verdict.Verdict
+| Expired : verdict.Verdict
+| Unverifiable : verdict.Verdict
+| Marked : verdict.Verdict
+| Due : verdict.Verdict
+
+/-- [writfold_core::verdict::observed]:
+    Source: 'crates/writfold-core/src/verdict.rs', lines 109:0-145:1
+    Visibility: public -/
+def verdict.observed (fact : verdict.Observed) : Result verdict.Verdict := do
+  match fact with
+  | verdict.Observed.Malformed => ok verdict.Verdict.Unverifiable
+  | verdict.Observed.Unresolved => ok verdict.Verdict.Unverifiable
+  | verdict.Observed.Code t =>
+    match t with
+    | verdict.Target.SameBlob => ok verdict.Verdict.Fresh
+    | verdict.Target.OtherBlob o =>
+      match o with
+      | none => ok verdict.Verdict.Changed
+      | some located =>
+        match located with
+        | verdict.Located.Same => ok verdict.Verdict.Fresh
+        | verdict.Located.At _ _ => ok verdict.Verdict.Moved
+        | verdict.Located.Absent => ok verdict.Verdict.Changed
+        | verdict.Located.Unsearched => ok verdict.Verdict.Changed
+    | verdict.Target.Missing b =>
+      if b
+      then ok verdict.Verdict.Renamed
+      else ok verdict.Verdict.Gone
+  | verdict.Observed.Gate b =>
+    if b
+    then ok verdict.Verdict.Fresh
+    else ok verdict.Verdict.Changed
+  | verdict.Observed.State o =>
+    match o with
+    | none => ok verdict.Verdict.Gone
+    | some o1 =>
+      match o1 with
+      | none => ok verdict.Verdict.Unverifiable
+      | some b =>
+        if b
+        then ok verdict.Verdict.Fresh
+        else ok verdict.Verdict.Changed
+  | verdict.Observed.Timed o =>
+    match o with
+    | none => ok verdict.Verdict.Unverifiable
+    | some b =>
+      if b
+      then ok verdict.Verdict.Expired
+      else ok verdict.Verdict.Fresh
+  | verdict.Observed.Offline b =>
+    if b
+    then ok verdict.Verdict.Due
+    else ok verdict.Verdict.Fresh
+  | verdict.Observed.Immutable => ok verdict.Verdict.Fresh
+  | verdict.Observed.Checked checker =>
+    match checker with
+    | verdict.Checker.Absent => ok verdict.Verdict.Unverifiable
+    | verdict.Checker.Failed => ok verdict.Verdict.Unverifiable
+    | verdict.Checker.Version => ok verdict.Verdict.Unverifiable
+    | verdict.Checker.Said s =>
+      match s with
+      | verdict.Said.Fresh => ok verdict.Verdict.Fresh
+      | verdict.Said.Moved => ok verdict.Verdict.Moved
+      | verdict.Said.Changed => ok verdict.Verdict.Changed
+      | verdict.Said.Gone => ok verdict.Verdict.Gone
+      | verdict.Said.Unverifiable => ok verdict.Verdict.Unverifiable
+    | verdict.Checker.Expired => ok verdict.Verdict.Unverifiable
+
+/-- [writfold_core::verdict::Described]
+    Source: 'crates/writfold-core/src/verdict.rs', lines 149:0-156:1
+    Visibility: public -/
+structure verdict.Described where
+  protocol : Bool
+  lists_kind : Bool
+  has_op : Bool
+
+/-- [writfold_core::verdict::Handshake]
+    Source: 'crates/writfold-core/src/verdict.rs', lines 160:0-168:1
+    Visibility: public -/
+@[discriminant isize]
+inductive verdict.Handshake where
+| Agreed : verdict.Handshake
+| Protocol : verdict.Handshake
+| Kind : verdict.Handshake
+| Op : verdict.Handshake
+
+/-- [writfold_core::verdict::handshake]:
+    Source: 'crates/writfold-core/src/verdict.rs', lines 173:0-188:1
+    Visibility: public -/
+def verdict.handshake
+  (described : Option verdict.Described) : Result verdict.Handshake := do
+  match described with
+  | none => ok verdict.Handshake.Protocol
+  | some d =>
+    if d.protocol
+    then
+      if d.lists_kind
+      then
+        if d.has_op
+        then ok verdict.Handshake.Agreed
+        else ok verdict.Handshake.Op
+      else ok verdict.Handshake.Kind
+    else ok verdict.Handshake.Protocol
+
+/-- [writfold_core::verdict::reply]:
+    Source: 'crates/writfold-core/src/verdict.rs', lines 213:0-218:1
+    Visibility: public -/
+def verdict.reply (reply : Option verdict.Said) : Result verdict.Checker := do
+  match reply with
+  | none => ok verdict.Checker.Failed
+  | some said => ok (verdict.Checker.Said said)
+
+/-- [writfold_core::verdict::exchange]:
+    Source: 'crates/writfold-core/src/verdict.rs', lines 194:0-210:1
+    Visibility: public -/
+def verdict.exchange
+  (handshake : verdict.Handshake) (clean_exit : Bool) (readable : Bool)
+  (replies : Slice (Option verdict.Said)) :
+  Result verdict.Checker
+  := do
+  let b ←
+    match handshake with
+    | verdict.Handshake.Agreed => ok true
+    | verdict.Handshake.Protocol => ok false
+    | verdict.Handshake.Kind => ok false
+    | verdict.Handshake.Op => ok false
+  if b
+  then
+    if clean_exit
+    then
+      if readable
+      then
+        let i := Slice.len replies
+        if i != 1#usize
+        then ok verdict.Checker.Failed
+        else let o ← Slice.index_usize replies 0#usize
+             verdict.reply o
+      else ok verdict.Checker.Version
+    else ok verdict.Checker.Failed
+  else ok verdict.Checker.Failed
+
+/-- [writfold_core::verdict::aged]:
+    Source: 'crates/writfold-core/src/verdict.rs', lines 223:0-237:1
+    Visibility: public -/
+def verdict.aged
+  (cached : verdict.Checker) (age : Option Std.I64) (max_age : Option Std.I64)
+  :
+  Result verdict.Checker
+  := do
+  match max_age with
+  | none => ok cached
+  | some max =>
+    match age with
+    | none => ok verdict.Checker.Expired
+    | some age1 =>
+      if age1 <= max
+      then ok cached
+      else ok verdict.Checker.Expired
+
+/-- [writfold_core::verdict::Lifetime]
+    Source: 'crates/writfold-core/src/verdict.rs', lines 241:0-250:1
+    Visibility: public -/
+@[discriminant isize]
+inductive verdict.Lifetime (T : Type _) where
+| Immutable : verdict.Lifetime T
+| Token : T → verdict.Lifetime T
+| Default : T → verdict.Lifetime T
+| Never : verdict.Lifetime T
+
+/-- [writfold_core::verdict::lifetime]:
+    Source: 'crates/writfold-core/src/verdict.rs', lines 254:0-265:1
+    Visibility: public -/
+def verdict.lifetime
+  {T : Type _} (immutable : Bool) (token : Option T) (default : Option T) :
+  Result (verdict.Lifetime T)
+  := do
+  if immutable
+  then ok verdict.Lifetime.Immutable
+  else
+    match token with
+    | none =>
+      match default with
+      | none => ok verdict.Lifetime.Never
+      | some ttl => ok (verdict.Lifetime.Default ttl)
+    | some ttl => ok (verdict.Lifetime.Token ttl)
+
+/-- [writfold_core::verdict::with_mark]:
+    Source: 'crates/writfold-core/src/verdict.rs', lines 274:0-285:1
+    Visibility: public -/
+def verdict.with_mark
+  (reached : verdict.Verdict) (marked : Bool) : Result verdict.Verdict := do
+  match reached with
+  | verdict.Verdict.Fresh =>
+    if marked
+    then ok verdict.Verdict.Marked
+    else ok verdict.Verdict.Fresh
+  | verdict.Verdict.Moved =>
+    if marked
+    then ok verdict.Verdict.Marked
+    else ok verdict.Verdict.Moved
+  | verdict.Verdict.Renamed =>
+    if marked
+    then ok verdict.Verdict.Marked
+    else ok verdict.Verdict.Renamed
+  | verdict.Verdict.Changed => ok verdict.Verdict.Changed
+  | verdict.Verdict.Gone => ok verdict.Verdict.Gone
+  | verdict.Verdict.Expired => ok verdict.Verdict.Expired
+  | verdict.Verdict.Unverifiable =>
+    if marked
+    then ok verdict.Verdict.Marked
+    else ok verdict.Verdict.Unverifiable
+  | verdict.Verdict.Marked =>
+    if marked
+    then ok verdict.Verdict.Marked
+    else ok verdict.Verdict.Marked
+  | verdict.Verdict.Due =>
+    if marked
+    then ok verdict.Verdict.Marked
+    else ok verdict.Verdict.Due
+
+/-- [writfold_core::verdict::decide]:
+    Source: 'crates/writfold-core/src/verdict.rs', lines 269:0-271:1
+    Visibility: public -/
+def verdict.decide
+  (fact : verdict.Observed) (marked : Bool) : Result verdict.Verdict := do
+  let v ← verdict.observed fact
+  verdict.with_mark v marked
+
+/-- [writfold_core::verdict::expired]:
+    Source: 'crates/writfold-core/src/verdict.rs', lines 291:0-299:1
+    Visibility: public -/
+def verdict.expired
+  (now : Std.I64) (seen : Std.I64) (ttl : Std.I64) : Result Bool := do
+  if seen < 0#i64
+  then
+    let i ← core.num.I64.MAX + seen
+    if now > i
+    then ok true
+    else
+      if seen > 0#i64
+      then
+        let i1 ← core.num.I64.MIN + seen
+        if now < i1
+        then ok false
+        else let i2 ← now - seen
+             ok (i2 > ttl)
+      else let i1 ← now - seen
+           ok (i1 > ttl)
+  else
+    if seen > 0#i64
+    then
+      let i ← core.num.I64.MIN + seen
+      if now < i
+      then ok false
+      else let i1 ← now - seen
+           ok (i1 > ttl)
+    else let i ← now - seen
+         ok (i > ttl)
+
 end writfold_core

@@ -3,10 +3,12 @@
 //! cited span now sits, expiry, a recorded state) to exactly one verdict.
 //! Nothing here reads a repository; the caller gathers the facts.
 //!
-//! Proof candidate, not yet in the Charon `start_from` list: no theorem is
-//! claimed about it. Its property tests (in `writfold-kb`) check that a
-//! fresh verdict means the cited lines are unchanged after normalisation
-//! and that a moved verdict names a range holding the cited span digest.
+//! The decisions are named one by one in the Charon `start_from` list
+//! (the derives and the closure-driven [`locate`] are not translated) and
+//! proved in `proofs/Writfold/Verdict.lean` (docs/writfold/aeneas.md).
+//! `writfold-kb`'s property tests check that a fresh verdict means the
+//! cited lines are unchanged after normalisation and that a moved verdict
+//! names a range holding the cited span digest.
 
 /// Where the cited span sits in the file at the target commit.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -19,45 +21,6 @@ pub enum Located {
     Absent,
     /// The file is longer than the search limit.
     Unsearched,
-}
-
-/// Slide a window of the cited height over a file of `lines` lines:
-/// the cited position first, then every position from the top.
-/// `matches(start, height)` says whether the zero-based window
-/// `start..start + height` carries the cited span digest.
-pub fn locate(
-    lines: usize,
-    first: u32,
-    last: u32,
-    limit: usize,
-    matches: impl Fn(usize, usize) -> bool,
-) -> Located {
-    if lines > limit {
-        return Located::Unsearched;
-    }
-    if first == 0 || last < first {
-        return Located::Absent;
-    }
-    let (Ok(first), Ok(last)) = (usize::try_from(first), usize::try_from(last)) else {
-        return Located::Absent;
-    };
-    let height = last - first + 1;
-    if height > lines {
-        return Located::Absent;
-    }
-    let cited = first - 1;
-    if cited + height <= lines && matches(cited, height) {
-        return Located::Same;
-    }
-    let mut start = 0;
-    while start + height <= lines {
-        if matches(start, height) {
-            let to = |n: usize| u32::try_from(n).unwrap_or(u32::MAX);
-            return Located::At(to(start + 1), to(start + height));
-        }
-        start += 1;
-    }
-    Located::Absent
 }
 
 /// What a code citation's path holds at the target commit.
@@ -209,15 +172,18 @@ pub enum Handshake {
 /// count; every other outcome makes each token [`Checker::Failed`].
 pub fn handshake(described: Option<Described>) -> Handshake {
     match described {
-        None
-        | Some(Described {
-            protocol: false, ..
-        }) => Handshake::Protocol,
-        Some(Described {
-            lists_kind: false, ..
-        }) => Handshake::Kind,
-        Some(Described { has_op: false, .. }) => Handshake::Op,
-        Some(_) => Handshake::Agreed,
+        None => Handshake::Protocol,
+        Some(d) => {
+            if !d.protocol {
+                Handshake::Protocol
+            } else if !d.lists_kind {
+                Handshake::Kind
+            } else if !d.has_op {
+                Handshake::Op
+            } else {
+                Handshake::Agreed
+            }
+        }
     }
 }
 
@@ -231,10 +197,23 @@ pub fn exchange(
     readable: bool,
     replies: &[Option<Said>],
 ) -> Checker {
-    match (handshake, clean_exit, readable, replies) {
-        (Handshake::Agreed, true, false, _) => Checker::Version,
-        (Handshake::Agreed, true, true, [Some(said)]) => Checker::Said(*said),
-        _ => Checker::Failed,
+    if !matches!(handshake, Handshake::Agreed) || !clean_exit {
+        return Checker::Failed;
+    }
+    if !readable {
+        return Checker::Version;
+    }
+    if replies.len() != 1 {
+        return Checker::Failed;
+    }
+    reply(replies[0])
+}
+
+/// One well-formed reply is what it says; a malformed one is a failure.
+pub fn reply(reply: Option<Said>) -> Checker {
+    match reply {
+        Some(said) => Checker::Said(said),
+        None => Checker::Failed,
     }
 }
 
@@ -242,10 +221,18 @@ pub fn exchange(
 /// `max_age`, else [`Checker::Expired`] once its age in seconds exceeds
 /// it or cannot be read (`None`).
 pub fn aged(cached: Checker, age: Option<i64>, max_age: Option<i64>) -> Checker {
-    match (max_age, age) {
-        (None, _) => cached,
-        (Some(max), Some(age)) if age <= max => cached,
-        (Some(_), _) => Checker::Expired,
+    match max_age {
+        None => cached,
+        Some(max) => match age {
+            Some(age) => {
+                if age <= max {
+                    cached
+                } else {
+                    Checker::Expired
+                }
+            }
+            None => Checker::Expired,
+        },
     }
 }
 
@@ -265,11 +252,15 @@ pub enum Lifetime<T> {
 /// Choose the lifetime: an immutable kind first, then the token's own
 /// `ttl=`, then the kind's default, else never.
 pub fn lifetime<T>(immutable: bool, token: Option<T>, default: Option<T>) -> Lifetime<T> {
-    match (immutable, token, default) {
-        (true, _, _) => Lifetime::Immutable,
-        (false, Some(ttl), _) => Lifetime::Token(ttl),
-        (false, None, Some(ttl)) => Lifetime::Default(ttl),
-        (false, None, None) => Lifetime::Never,
+    if immutable {
+        return Lifetime::Immutable;
+    }
+    match token {
+        Some(ttl) => Lifetime::Token(ttl),
+        None => match default {
+            Some(ttl) => Lifetime::Default(ttl),
+            None => Lifetime::Never,
+        },
     }
 }
 
@@ -280,16 +271,40 @@ pub fn decide(fact: Observed, marked: bool) -> Verdict {
 }
 
 /// Apply an authored mark to a verdict already reached.
-pub fn with_mark(verdict: Verdict, marked: bool) -> Verdict {
-    match verdict {
-        Verdict::Changed | Verdict::Gone | Verdict::Expired => verdict,
-        _ if marked => Verdict::Marked,
-        _ => verdict,
+pub fn with_mark(reached: Verdict, marked: bool) -> Verdict {
+    match reached {
+        Verdict::Changed | Verdict::Gone | Verdict::Expired => reached,
+        _ => {
+            if marked {
+                Verdict::Marked
+            } else {
+                reached
+            }
+        }
     }
 }
 
+/// Whether a time-based citation seen at `seen` with a lifetime of `ttl`
+/// seconds has expired at `now`: `now - seen > ttl`, over the integers.
+/// The difference is never formed where it would overflow: past either
+/// end of `i64` its sign alone decides.
+pub fn expired(now: i64, seen: i64, ttl: i64) -> bool {
+    if seen < 0 && now > i64::MAX + seen {
+        return true;
+    }
+    if seen > 0 && now < i64::MIN + seen {
+        return false;
+    }
+    now - seen > ttl
+}
+
+mod locate;
+pub use locate::{Place, Window, locate, place, window};
 mod recorded;
-pub use recorded::{CLOCK_SKEW, Pick, Statement, newest, recordable, recorded_age};
+pub use recorded::{
+    CLOCK_SKEW, Pick, Statement, before, best_recorded, better, newest, recordable, recorded_age,
+    usable, worst,
+};
 
 #[cfg(test)]
 mod tests;
