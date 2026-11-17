@@ -22,6 +22,8 @@ pub struct Common {
     pub direction: Option<String>,
     pub include: Option<String>,
     pub missing: bool,
+    /// `--help` anywhere: the usage, not the verb.
+    pub help: bool,
     /// The write verbs' value flags (`--note`, `--title` …) and switches.
     pub values: BTreeMap<String, String>,
     pub switches: Vec<String>,
@@ -67,6 +69,7 @@ fn split(verb: &str, args: &[String]) -> Result<(Common, Vec<String>), String> {
             // `record|propose investigation --signatures a,b` takes a value.
             "--signatures" if !matches!(verb, "record" | "propose") => common.signatures = true,
             "--missing" => common.missing = true,
+            "--help" => common.help = true,
             "--kind" => {
                 common.kinds = value(arg, items.next())?
                     .split(',')
@@ -145,7 +148,8 @@ fn check_flags(verb: &str, common: &Common) -> Result<(), String> {
     Ok(())
 }
 
-/// `None` for `help`; an error message for anything unusable.
+/// `None` for `help` (or `--help` anywhere); an error message for
+/// anything unusable.
 pub fn parse(args: &[String], cwd: PathBuf) -> Result<Option<Request>, String> {
     let Some((verb, rest)) = args.split_first() else {
         return Err("missing verb".into());
@@ -154,6 +158,9 @@ pub fn parse(args: &[String], cwd: PathBuf) -> Result<Option<Request>, String> {
         return Ok(None);
     }
     let (common, positional) = split(verb, rest)?;
+    if common.help {
+        return Ok(None);
+    }
     check_flags(verb, &common)?;
     if common.cached && common.offline {
         return Err("stale takes --offline or --cached, not both".into());
