@@ -263,3 +263,31 @@ fn route_faults_are_refused() -> TestResult {
     }
     Ok(())
 }
+
+/// `deliver match` confirms a post: when several candidates hold the
+/// bytes, the row shown is one with a post record about its present bytes
+/// (here the newer one), with its `posted:` line, whatever the IDs' order.
+#[test]
+fn match_shows_the_posted_candidate_among_equal_bytes() -> TestResult {
+    let w = world()?;
+    let older = prepare(&w, "pr-comment", CLEAN, NOW + 60)?;
+    check(&w, &older, NOW + 70)?;
+    let newer = prepare(&w, "pr-comment", CLEAN, NOW + 120)?;
+    check(&w, &newer, NOW + 130)?;
+    posted(&w, &newer, NOW + 140)?;
+    let body = file(&w, "comment.md", CLEAN)?;
+    let verb = DeliverVerb::Match {
+        from: body,
+        mode: Some("pr-comment".into()),
+        run: Some(RUN.into()),
+    };
+    let (text, exit) = deliver(&w, verb, NOW + 150)?;
+    assert!(
+        exit == 0
+            && text.starts_with(&format!("delivery {newer} "))
+            && text.contains("  posted: by agent")
+            && text.contains("matched=2"),
+        "{text}"
+    );
+    Ok(())
+}

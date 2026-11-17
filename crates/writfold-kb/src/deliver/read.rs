@@ -132,11 +132,15 @@ fn matched(
         .count();
     let mut answer = Answer::default();
     let reason = guarded::decide(root, &rec.id, found, &call, &Read::Bytes(bytes.to_vec()));
-    let holder = found
-        .iter()
-        .zip(&seen)
-        .find(|(_, s)| writfold_core::delivery::postable(s))
-        .or_else(|| found.iter().zip(&seen).find(|(_, s)| s.same));
+    // The row shown: a matching candidate with a post record about its
+    // present bytes (what is being confirmed), else the newest postable
+    // one, else the newest holding the bytes; never the IDs' chance order.
+    let pairs: Vec<_> = found.iter().zip(&seen).collect();
+    let ok = |s: &&writfold_core::delivery::Seen| writfold_core::delivery::postable(s);
+    let holder = (pairs.iter().rev())
+        .find(|(f, s)| ok(s) && f.posted.is_some())
+        .or_else(|| pairs.iter().rev().find(|(_, s)| ok(s)))
+        .or_else(|| pairs.iter().rev().find(|(_, s)| s.same));
     if let Some((f, _)) = holder {
         let filings = super::status::Filings::read(root, &f.c, &rec.id);
         let judged = super::recheck::judged(session, &f.c, &filings).unwrap_or_default();
