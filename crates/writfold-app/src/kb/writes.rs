@@ -85,6 +85,8 @@ pub fn allowed(verb: &str) -> &'static [&'static str] {
             "statement",
             "reason",
             "by",
+            "ref",
+            "to",
         ],
         "edit" => &["run", "worktree", "dry-run", "abandon"],
         "plan" => &["run", "repo", "from", "reason", "by", "again", "gates"],

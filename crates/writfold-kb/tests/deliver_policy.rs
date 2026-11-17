@@ -116,7 +116,7 @@ fn a_mode_gates_accept_holds_for_a_delivery() -> TestResult {
         text.contains("[blocked]")
             && text.contains("check: references.denied [waived]")
             && text.contains("!not-accepted")
-            && text.contains("  why: references.denied does not accept waived (waivable = [] @.writfold/deliveries/commit-message.toml:16)"),
+            && text.contains("  why: references.denied does not accept waived (waivable = [] @.writfold/deliveries/commit-message.toml:17)"),
         "{text}"
     );
     Ok(())

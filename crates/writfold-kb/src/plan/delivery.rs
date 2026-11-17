@@ -199,7 +199,13 @@ fn build(v: View, seq: u64, detail: bool) -> Gate {
 /// decides, or `why:` when nothing can meet it.
 pub fn lines(row: &mut Row, gates: &[Gate]) {
     for d in gates.iter().filter_map(|g| g.delivery.as_ref()) {
+        let said = |row: &Row, m: &More| {
+            row.more
+                .iter()
+                .any(|x| x.label == m.label && x.text == m.text)
+        };
         match (&d.candidate, &d.why) {
+            (Some(c), _) if said(row, c) => {}
             (Some(c), _) => row.more.push(c.clone()),
             (None, Some(why)) => row.more.push(line("why", why.clone(), None)),
             (None, None) => {}
