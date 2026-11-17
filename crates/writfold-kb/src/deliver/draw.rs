@@ -34,6 +34,77 @@ fn caret(out: &mut String, n: u32, text: &str, col: usize, width: usize, label: 
     ));
 }
 
+fn at(x: &Ctx<'_>, f: &Finding, col: usize) -> String {
+    format!(" --> {}:{}:{col}\n", x.path, f.line)
+}
+
+/// A `references.denied` finding: the matched span under its deny rule.
+fn references(x: &Ctx<'_>, f: &Finding, name: &str, line_text: &str) -> String {
+    let audience =
+        x.c.manifest
+            .as_ref()
+            .map_or("internal", |m| m.audience.as_str());
+    let deny = config::deny(x.root, audience).ok();
+    let rule = deny
+        .as_ref()
+        .and_then(|d| d.rules.iter().find(|r| r.name == f.rule));
+    let span = rule.and_then(|r| r.regex.find(line_text.as_bytes()));
+    let mut out = format!(
+        "failed[{name}]: line {} matches the deny rule `{}` for audience {audience}\n",
+        f.line, f.rule
+    );
+    let col = span.map_or(1, |m| line_text[..m.start()].chars().count() + 1);
+    out.push_str(&at(x, f, col));
+    if let Some(m) = span {
+        let width = line_text[m.start()..m.end()].chars().count();
+        caret(&mut out, f.line, line_text, col, width, &f.rule);
+    }
+    if let (Some(r), Some(d)) = (rule, &deny) {
+        let file = d.path.clone().unwrap_or_default();
+        let line = std::fs::read_to_string(x.root.join(&file))
+            .ok()
+            .and_then(|t| {
+                t.lines()
+                    .position(|l| l.contains(&format!("\"{}:", r.name)))
+            })
+            .map_or(1, |n| n + 1);
+        out.push_str(&format!(
+            "  = note: rule `{}: {}` @{file}:{line}\n",
+            r.name, r.pattern
+        ));
+    }
+    out.push_str(&format!(
+        "  = help: reword or remove the match, then: {}\n",
+        x.check
+    ));
+    out
+}
+
+/// A `paragraphs.bounded` finding: the paragraph and the mode's bound.
+fn paragraphs(x: &Ctx<'_>, f: &Finding, name: &str) -> String {
+    let mode =
+        x.c.manifest
+            .as_ref()
+            .ok()
+            .and_then(|m| config::mode(x.root, &m.mode).ok());
+    let (bound, source, mode_name) = mode.map_or((0, String::new(), String::new()), |m| {
+        (m.paragraph_words, m.source.clone(), m.name.clone())
+    });
+    let mut out = format!(
+        "failed[{name}]: the paragraph at line {} has {}; this mode takes at most {bound}\n",
+        f.line, f.detail
+    );
+    out.push_str(&at(x, f, 1));
+    let place = match source.as_str() {
+        "built-in" => format!("built-in {mode_name}"),
+        s => s.to_owned(),
+    };
+    out.push_str(&format!(
+        "  = help: split or shorten it (paragraph_words = {bound} @{place})\n"
+    ));
+    out
+}
+
 /// One finding of a failed check.
 fn finding(x: &Ctx<'_>, j: &Judged<'_>, f: &Finding) -> String {
     let name = &j.obligation.name;
@@ -42,94 +113,34 @@ fn finding(x: &Ctx<'_>, j: &Judged<'_>, f: &Finding) -> String {
         .lines()
         .nth(f.line.saturating_sub(1) as usize)
         .unwrap_or("");
-    let at = |col: usize| format!(" --> {}:{}:{col}\n", x.path, f.line);
-    let mut out;
     match name.as_str() {
-        REFERENCES => {
-            let audience =
-                x.c.manifest
-                    .as_ref()
-                    .map_or("internal", |m| m.audience.as_str());
-            let deny = config::deny(x.root, audience).ok();
-            let rule = deny
-                .as_ref()
-                .and_then(|d| d.rules.iter().find(|r| r.name == f.rule));
-            let span = rule.and_then(|r| r.regex.find(line_text.as_bytes()));
-            out = format!(
-                "failed[{name}]: line {} matches the deny rule `{}` for audience {audience}\n",
-                f.line, f.rule
-            );
-            let col = span.map_or(1, |m| line_text[..m.start()].chars().count() + 1);
-            out.push_str(&at(col));
-            if let Some(m) = span {
-                let width = line_text[m.start()..m.end()].chars().count();
-                caret(&mut out, f.line, line_text, col, width, &f.rule);
-            }
-            if let (Some(r), Some(d)) = (rule, &deny) {
-                let file = d.path.clone().unwrap_or_default();
-                let at = std::fs::read_to_string(x.root.join(&file))
-                    .ok()
-                    .and_then(|t| {
-                        t.lines()
-                            .position(|l| l.contains(&format!("\"{}:", r.name)))
-                    })
-                    .map_or(1, |n| n + 1);
-                out.push_str(&format!(
-                    "  = note: rule `{}: {}` @{file}:{at}\n",
-                    r.name, r.pattern
-                ));
-            }
-            out.push_str(&format!(
-                "  = help: reword or remove the match, then: {}\n",
-                x.check
-            ));
-        }
-        PARAGRAPHS => {
-            let mode =
-                x.c.manifest
-                    .as_ref()
-                    .ok()
-                    .and_then(|m| config::mode(x.root, &m.mode).ok());
-            let (bound, source, mode_name) = mode.map_or((0, String::new(), String::new()), |m| {
-                (m.paragraph_words, m.source.clone(), m.name.clone())
-            });
-            out = format!(
-                "failed[{name}]: the paragraph at line {} has {}; this mode takes at most {bound}\n",
-                f.line, f.detail
-            );
-            out.push_str(&at(1));
-            let place = match source.as_str() {
-                "built-in" => format!("built-in {mode_name}"),
-                s => s.to_owned(),
-            };
-            out.push_str(&format!(
-                "  = help: split or shorten it (paragraph_words = {bound} @{place})\n"
-            ));
-        }
+        REFERENCES => references(x, f, name, line_text),
+        PARAGRAPHS => paragraphs(x, f, name),
         CLAIMS => {
-            out = format!(
+            let mut out = format!(
                 "failed[{name}]: the citation at line {} no longer matches its source ({})\n",
                 f.line, f.rule
             );
             let col = line_text
                 .find('⟦')
                 .map_or(1, |b| line_text[..b].chars().count() + 1);
-            out.push_str(&at(col));
+            out.push_str(&at(x, f, col));
             out.push_str(&format!("  = note: {}\n", f.detail));
             out.push_str("  = help: read the source again, correct the sentence if it no longer holds, and replace the token: writfold kb cite make\n");
+            out
         }
         _ => {
-            out = format!("failed[{name}]: {}\n", f.detail);
+            let mut out = format!("failed[{name}]: {}\n", f.detail);
             if f.line > 0 {
-                out.push_str(&at(1));
+                out.push_str(&at(x, f, 1));
             }
             out.push_str(&format!(
                 "  = help: edit the payload's source, then: {}\n",
                 x.check
             ));
+            out
         }
     }
-    out
 }
 
 /// The drawing for candidate `c`; empty when nothing failed or is unknown
