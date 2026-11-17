@@ -1,4 +1,4 @@
-//! `writfold kb plan set|use|status|advance|skip`: arguments only; the run
+//! `writfold kb plan set|use|status|advance|skip|repin`: arguments only; the run
 //! graph is in `writfold_kb::plan`.
 use super::args::Common;
 use super::writes::get;
@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use writfold_kb::Verb;
 use writfold_kb::plan::PlanVerb;
 
-pub const USAGE: &str = "usage: plan set <template>|--from FILE [--run ID] [--repo DIR] | plan use <template> [--again] [--run ID] [--repo DIR] | plan status [--run ID] [--repo DIR] [--gates] | plan advance [--run ID] [--repo DIR] | plan skip --reason TEXT --by WHO [--run ID] [--repo DIR]";
+pub const USAGE: &str = "usage: plan set <template>|--from FILE [--run ID] [--repo DIR] | plan use <template> [--again] [--run ID] [--repo DIR] | plan status [--run ID] [--repo DIR] [--gates] | plan advance [--run ID] [--repo DIR] | plan skip --reason TEXT --by WHO [--run ID] [--repo DIR] | plan repin --reason TEXT --by WHO [--run ID] [--repo DIR]";
 
 /// The plan verb, or why the arguments do not name one.
 pub fn verb(common: &Common, positional: &[String]) -> Result<Verb, String> {
@@ -26,8 +26,8 @@ pub fn verb(common: &Common, positional: &[String]) -> Result<Verb, String> {
     if from.is_some() && sub != Some("set") {
         return Err("--from belongs to plan set".into());
     }
-    if (reason.is_some() || by.is_some()) && sub != Some("skip") {
-        return Err("--reason and --by belong to plan skip".into());
+    if (reason.is_some() || by.is_some()) && !matches!(sub, Some("skip" | "repin")) {
+        return Err("--reason and --by belong to plan skip and plan repin".into());
     }
     let verb = match positional {
         [s, name] if s == "set" && from.is_none() => PlanVerb::Set {
@@ -53,6 +53,12 @@ pub fn verb(common: &Common, positional: &[String]) -> Result<Verb, String> {
         [s] if s == "skip" => PlanVerb::Skip {
             reason: reason.ok_or("plan skip needs --reason TEXT")?,
             by: by.ok_or("plan skip needs --by WHO")?,
+            run,
+            repo,
+        },
+        [s] if s == "repin" => PlanVerb::Repin {
+            reason: reason.ok_or("plan repin needs --reason TEXT")?,
+            by: by.ok_or("plan repin needs --by WHO")?,
             run,
             repo,
         },
@@ -111,7 +117,16 @@ mod tests {
             verb("plan skip --reason later --by me")?,
             Verb::Plan(PlanVerb::Skip { ref reason, .. }) if reason == "later"
         ));
+        assert!(matches!(
+            verb("plan repin --reason stricter --by me --run r1")?,
+            Verb::Plan(PlanVerb::Repin { ref reason, ref by, run: Some(_), .. })
+                if reason == "stricter" && by == "me"
+        ));
         for bad in [
+            "plan repin",
+            "plan repin --reason x",
+            "plan repin --by me",
+            "plan repin now --reason x --by me",
             "plan",
             "plan set",
             "plan set a b",

@@ -156,8 +156,18 @@ impl Graph {
     }
 }
 
-/// Read and fold the events of the run whose directory is `run_dir`.
+/// Read and fold the events of the run whose directory is `run_dir`,
+/// under the lock list in force (the first pin's, or the newest repin's).
 pub fn read(root: &std::path::Path, run_dir: &str, run: &str) -> Graph {
+    let (pins, _) = super::pin::read(root, run_dir, run);
+    let locked =
+        super::pin::required_in_force(&pins).map_or_else(Vec::new, |(_, r)| r.unskippable.clone());
+    read_under(root, run_dir, run, &locked)
+}
+
+/// [`read`], under this lock list instead of the pinned one (`plan repin`
+/// asks what the list as it is now would lock).
+pub fn read_under(root: &std::path::Path, run_dir: &str, run: &str, locked: &[String]) -> Graph {
     let dir = root.join(run_dir).join(event::DIR);
     let files: Vec<(String, String)> = std::fs::read_dir(&dir)
         .into_iter()
@@ -174,11 +184,8 @@ pub fn read(root: &std::path::Path, run_dir: &str, run: &str) -> Graph {
         let hex = digest.strip_prefix("sha256:")?;
         std::fs::read(dir.join(event::TEMPLATES).join(format!("{hex}.toml"))).ok()
     };
-    let (pins, _) = super::pin::read(root, run_dir, run);
-    let locked = (pins.first().and_then(|p| p.required.as_ref()))
-        .map_or_else(Vec::new, |r| r.unskippable.clone());
     let dir = format!("{run_dir}/{}", event::DIR);
-    fold_locked(run, &dir, files, &snapshot, &locked)
+    fold_locked(run, &dir, files, &snapshot, locked)
 }
 
 type Snapshot<'a> = &'a dyn Fn(&str) -> Option<Vec<u8>>;

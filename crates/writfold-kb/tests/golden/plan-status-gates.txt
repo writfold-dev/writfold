@@ -20,7 +20,7 @@ step detail#1/later [later] gates: unit @runs/run-20261101T090000Z-a1b2c3/plan/s
   splice: detail#1 @b9af91b3c6a0 from .writfold/plans/detail.toml @runs/run-20261101T090000Z-a1b2c3/plan/splice-detail.1.json:1
   gate: unit [later]
 plan incomplete step 3/4 open; 4 steps: 1 passed, 0 attested, 0 waived, 1 skipped @runs/run-20261101T090000Z-a1b2c3/plan/
-# note: policy moved since this run pinned it: 1 gate (missing); the plan cannot read complete until the definitions are restored
+# note: policy moved since this run pinned it: 1 gate (missing); the plan cannot read complete until the definitions are restored or the run adopts them: writfold kb plan repin --reason TEXT --by WHO
 # note: plan detail @b9af91b3c6a0 from .writfold/plans/detail.toml; steps are derived from runs/run-20261101T090000Z-a1b2c3/plan/ on every read, never stored
 # coverage=complete records=37/37 shown=5 omitted=0 steps=4 done=1 skipped=1 stale=1 moved=0 invalid=0 repinned=0 current=3 current_gates=3 current_owed=2 policy=moved summary=incomplete kb=d5db758bda80+dirty:9 index=fresh cursor=none q=6c0a6600533b
 # exit=2

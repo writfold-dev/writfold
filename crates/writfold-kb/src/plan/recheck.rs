@@ -8,6 +8,9 @@
 //!
 //! - `plan set` (and `plan use` on a run without a plan): no splice exists;
 //! - `plan advance` and `plan skip`: the step is still the current one;
+//! - `plan repin`: the current step is still the current one, or there
+//!   was none and there is none, so the steps done are the ones the pin
+//!   was built from;
 //! - `plan use`: the step it splices under is still current and nothing
 //!   was spliced under it since, so the ordinal decided is still the next
 //!   one (re-checking only the current step lets two splices decided at
@@ -27,6 +30,8 @@ pub enum Decided {
     Unplanned,
     /// This step (its path) was the current one.
     Current(String),
+    /// No step was current: every step was closed (`plan repin`).
+    NoCurrent,
     /// A splice under `parent` at `ordinal`; `current`: `parent` was the
     /// current step (false for a required end template at the root).
     Splice {
@@ -56,6 +61,7 @@ pub fn changed(graph: &fold::Graph, decided: &Decided) -> Option<String> {
     let (kernel, named, next) = match decided {
         Decided::Unplanned => (recheck::Decided::Unplanned, None, 0),
         Decided::Current(path) => (recheck::Decided::Current, Some(path.as_str()), 0),
+        Decided::NoCurrent => (recheck::Decided::Current, None, 0),
         Decided::Splice {
             parent,
             ordinal,
@@ -69,14 +75,23 @@ pub fn changed(graph: &fold::Graph, decided: &Decided) -> Option<String> {
             graph.next_ordinal(parent),
         ),
     };
-    let is_current = named.is_some_and(|path| current == Some(path));
+    // What the decision named as current (a step, or none) is so still.
+    let is_current = match decided {
+        Decided::NoCurrent => current.is_none(),
+        _ => named.is_some_and(|path| current == Some(path)),
+    };
     match recheck::still_stands(&kernel, graph.planned(), is_current, next)? {
         Moved::Planned => Some("a plan was set meanwhile".into()),
-        Moved::NotCurrent => Some(format!(
-            "{} is no longer the current step (now {})",
-            named.unwrap_or_default(),
-            current.unwrap_or("no step")
-        )),
+        Moved::NotCurrent => Some(match named {
+            Some(path) => format!(
+                "{path} is no longer the current step (now {})",
+                current.unwrap_or("no step")
+            ),
+            None => format!(
+                "a step is open again (now {})",
+                current.unwrap_or("no step")
+            ),
+        }),
         Moved::Taken => {
             let under = match named.unwrap_or_default() {
                 "" => "the root",

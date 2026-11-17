@@ -352,6 +352,15 @@ def claims : List Name := [
   ``Writfold.Core.Pointer.writes_spec,
   ``Writfold.Core.Pointer.writer_reads_its_run,
   ``Writfold.Core.Pointer.other_session_undisturbed,
+  -- plan repin (writfold_core::policy::repin)
+  ``Writfold.Core.Policy.in_force_loop_spec,
+  ``Writfold.Core.Policy.in_force_spec,
+  ``Writfold.Core.Policy.in_force_none_iff,
+  ``Writfold.Core.Policy.repin_check_spec,
+  ``Writfold.Core.Policy.repin_ok_iff,
+  ``Writfold.Core.Policy.repin_unmoved_refused,
+  ``Writfold.Core.Policy.repin_closed_refused,
+  ``Writfold.Core.Policy.repin_keeps_skips,
 ]
 
 /-- Every theorem under `Writfold.Core`, sorted by name. -/

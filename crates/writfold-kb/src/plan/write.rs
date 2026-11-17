@@ -19,17 +19,23 @@ use writfold_core::plan::{GateFact, Refusal, advance as advance_kernel};
 /// Refuse plan writes on a closed run: the sidecar's state wins over the
 /// manifest's ([`writfold_core::plan::recheck::writable`]).
 pub(super) fn open_run(loaded: &Loaded, session: &Session<'_>) -> Result<()> {
-    let closed = |state: &str| state == "closed";
-    let sidecar = runs::sidecar(session, &loaded.rec)
-        .and_then(|(_, map)| map.get("state")?.as_str().map(closed));
-    let manifest = loaded.rec.status.as_deref().map(closed);
-    match writfold_core::plan::recheck::writable(sidecar, manifest) {
+    match writable(loaded, session) {
         false => Err(KbError::Refused(format!(
             "run {} is closed; reopen it with status {} --set open",
             loaded.rec.id, loaded.rec.id
         ))),
         true => Ok(()),
     }
+}
+
+/// Whether the run takes plan writes
+/// ([`writfold_core::plan::recheck::writable`]).
+pub(super) fn writable(loaded: &Loaded, session: &Session<'_>) -> bool {
+    let closed = |state: &str| state == "closed";
+    let sidecar = runs::sidecar(session, &loaded.rec)
+        .and_then(|(_, map)| map.get("state")?.as_str().map(closed));
+    let manifest = loaded.rec.status.as_deref().map(closed);
+    writfold_core::plan::recheck::writable(sidecar, manifest)
 }
 
 pub(super) fn apply(ws: &Workspace, request: &Request, ops: &[Op]) -> Result<()> {
@@ -152,9 +158,9 @@ pub(super) fn complete_guard(ws: &Workspace, loaded: &Loaded, at: usize) -> Resu
         .chain(&required.end)
         .cloned()
         .collect();
-    let locked = pins.first().and_then(|p| p.required.as_ref());
+    let locked = super::pin::required_in_force(&pins);
     names.extend(
-        (locked.iter().flat_map(|r| &r.unskippable))
+        (locked.iter().flat_map(|(_, r)| &r.unskippable))
             .filter(|n| !required.start.contains(n) && !required.end.contains(n))
             .cloned(),
     );
