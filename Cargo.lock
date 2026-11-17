@@ -813,7 +813,7 @@ dependencies = [
 
 [[package]]
 name = "tuft"
-version = "0.6.0-dev.4"
+version = "0.6.0-dev.5"
 dependencies = [
  "memchr",
  "regex",
@@ -1051,7 +1051,7 @@ checksum = "589f6da84c646204747d1270a2a5661ea66ed1cced2631d546fdfb155959f9ec"
 
 [[package]]
 name = "writfold"
-version = "0.6.0-dev.4"
+version = "0.6.0-dev.5"
 dependencies = [
  "serde_json",
  "writfold-app",
@@ -1060,18 +1060,18 @@ dependencies = [
 
 [[package]]
 name = "writfold-app"
-version = "0.6.0-dev.4"
+version = "0.6.0-dev.5"
 dependencies = [
  "writfold-kb",
 ]
 
 [[package]]
 name = "writfold-core"
-version = "0.6.0-dev.4"
+version = "0.6.0-dev.5"
 
 [[package]]
 name = "writfold-domain"
-version = "0.6.0-dev.4"
+version = "0.6.0-dev.5"
 dependencies = [
  "num-bigint",
  "vstd",
@@ -1079,7 +1079,7 @@ dependencies = [
 
 [[package]]
 name = "writfold-kb"
-version = "0.6.0-dev.4"
+version = "0.6.0-dev.5"
 dependencies = [
  "regex",
  "rusqlite",
@@ -1095,7 +1095,7 @@ dependencies = [
 
 [[package]]
 name = "writfold-runtime"
-version = "0.6.0-dev.4"
+version = "0.6.0-dev.5"
 dependencies = [
  "rustix 1.1.4",
  "sha2",
@@ -1105,7 +1105,7 @@ dependencies = [
 
 [[package]]
 name = "writfold-sources"
-version = "0.6.0-dev.4"
+version = "0.6.0-dev.5"
 dependencies = [
  "serde",
  "serde_json",
@@ -1120,7 +1120,7 @@ dependencies = [
 
 [[package]]
 name = "writfold-tui"
-version = "0.6.0-dev.4"
+version = "0.6.0-dev.5"
 dependencies = [
  "ratatui",
  "regex",
@@ -1130,7 +1130,7 @@ dependencies = [
 
 [[package]]
 name = "writfold-xtask"
-version = "0.6.0-dev.4"
+version = "0.6.0-dev.5"
 dependencies = [
  "proc-macro2",
  "serde",
