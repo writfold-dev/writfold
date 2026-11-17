@@ -16,13 +16,19 @@ use crate::write::{Op, atomic};
 use crate::{runs, time};
 use writfold_core::plan::{GateFact, Refusal, advance as advance_kernel};
 
+/// Refuse plan writes on a closed run: the sidecar's state wins over the
+/// manifest's ([`writfold_core::plan::recheck::writable`]).
 pub(super) fn open_run(loaded: &Loaded, session: &Session<'_>) -> Result<()> {
-    match runs::state(session, &loaded.rec) == "closed" {
-        true => Err(KbError::Refused(format!(
+    let closed = |state: &str| state == "closed";
+    let sidecar = runs::sidecar(session, &loaded.rec)
+        .and_then(|(_, map)| map.get("state")?.as_str().map(closed));
+    let manifest = loaded.rec.status.as_deref().map(closed);
+    match writfold_core::plan::recheck::writable(sidecar, manifest) {
+        false => Err(KbError::Refused(format!(
             "run {} is closed; reopen it with status {} --set open",
             loaded.rec.id, loaded.rec.id
         ))),
-        false => Ok(()),
+        true => Ok(()),
     }
 }
 

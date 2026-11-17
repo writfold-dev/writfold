@@ -1,6 +1,11 @@
 //! Name forms for `find`'s `normalized`, `prefix` and `heading` tiers:
 //! what a phrase and a record's name have in common once case and
 //! punctuation are set aside. Pure; the caller reads the names.
+//!
+//! The prefix decision ([`query_ok`], [`starts`], [`next_from`],
+//! [`prefixed`]) and the row admission ([`admit`]) are translated and
+//! proved (`proofs/Writfold/Find.lean`, `Walk.lean`); [`norm`] and
+//! [`tokens`] are text plumbing, tested.
 
 use alloc::string::String;
 use alloc::vec::Vec;
@@ -30,29 +35,84 @@ pub fn tokens(normed: &str) -> Vec<&str> {
     normed.split('-').filter(|t| !t.is_empty()).collect()
 }
 
+/// Code points of each token.
+fn points(tokens: &[&str]) -> Vec<Vec<u32>> {
+    tokens
+        .iter()
+        .map(|t| t.chars().map(u32::from).collect())
+        .collect()
+}
+
 /// Whether the query's tokens may match by prefix at all: two or more,
-/// or one of four characters or more.
+/// or one of four characters or more ([`query_ok`]).
 pub fn prefix_query(query: &[&str]) -> bool {
-    match query {
-        [] => false,
-        [one] => one.chars().count() >= 4,
-        _ => true,
-    }
+    query_ok(&points(query))
 }
 
 /// Whether each query token is a prefix of a distinct name token, in the
 /// same order, gaps allowed; `Some` with the count of name tokens left
-/// unmatched. `quay work` matches `quay-worker`; `work quay` does not.
+/// unmatched. `quay work` matches `quay-worker`; `work quay` does not
+/// ([`prefixed`]).
 pub fn prefix_match(query: &[&str], name: &[&str]) -> Option<usize> {
-    if !prefix_query(query) {
+    prefixed(&points(query), &points(name))
+}
+
+/// [`prefix_query`] over code points.
+pub fn query_ok(query: &[Vec<u32>]) -> bool {
+    query.len() >= 2 || (query.len() == 1 && query[0].len() >= 4)
+}
+
+/// Whether `word` begins with `start`.
+pub fn starts(word: &[u32], start: &[u32]) -> bool {
+    if start.len() > word.len() {
+        return false;
+    }
+    let mut i = 0;
+    while i < start.len() {
+        if word[i] != start[i] {
+            return false;
+        }
+        i += 1;
+    }
+    true
+}
+
+/// The first name token at or after `at` that begins with `q`.
+pub fn next_from(name: &[Vec<u32>], q: &[u32], at: usize) -> Option<usize> {
+    let mut j = at;
+    while j < name.len() {
+        if starts(&name[j], q) {
+            return Some(j);
+        }
+        j += 1;
+    }
+    None
+}
+
+/// [`prefix_match`] over code points: each query token, in order, takes
+/// the first name token after the last one taken that it begins.
+pub fn prefixed(query: &[Vec<u32>], name: &[Vec<u32>]) -> Option<usize> {
+    if !query_ok(query) {
         return None;
     }
     let mut at = 0;
-    for q in query {
-        let skip = name.get(at..)?.iter().position(|n| n.starts_with(q))?;
-        at += skip + 1;
+    let mut k = 0;
+    while k < query.len() {
+        match next_from(name, &query[k], at) {
+            None => return None,
+            Some(j) => at = j + 1,
+        }
+        k += 1;
     }
     Some(name.len() - query.len())
+}
+
+/// Whether `find` shows a hit: its record is not already shown (by an
+/// earlier tier, or earlier in this one), it passes the filter, and fewer
+/// than `limit` rows are shown. Every tier's hits go through it in tier
+/// order, so a record appears once, under the first tier that found it.
+pub fn admit(shown: usize, limit: usize, seen: bool, passes: bool) -> bool {
+    shown < limit && !seen && passes
 }
 
 #[cfg(test)]

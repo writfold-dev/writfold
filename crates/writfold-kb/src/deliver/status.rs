@@ -62,7 +62,7 @@ pub fn judge<'a>(obligations: Vec<Obligation>, c: &Candidate, f: &'a Filings) ->
         .iter()
         .filter_map(|x| x.parsed.as_ref().ok().map(|r| (x, r)))
         .collect();
-    valid.sort_by(|a, b| (&a.1.recorded, &a.0.name).cmp(&(&b.1.recorded, &b.0.name)));
+    valid.sort_by(|a, b| receipt::order(*a, *b));
     obligations
         .into_iter()
         .map(|ob| {

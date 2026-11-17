@@ -29,6 +29,9 @@ pub struct Facts<'a> {
     /// The digest of the candidate bytes the check read.
     pub content: &'a str,
     pub evaluated: &'a Evaluated,
+    /// One more than the highest `seq` among the candidate's receipts of
+    /// this check: the judging order, with no clock in it.
+    pub seq: u64,
     pub recorded: &'a str,
 }
 
@@ -55,6 +58,7 @@ pub fn bytes(f: &Facts<'_>) -> Vec<u8> {
             "note": e.note,
         },
         "evaluator": evaluator(),
+        "seq": f.seq,
         "recorded": f.recorded,
     });
     let digest = sha(canonical(&value).as_bytes());
@@ -78,6 +82,8 @@ pub struct Receipt {
     pub findings: Vec<Finding>,
     pub total: u64,
     pub note: Option<String>,
+    /// 0 for a receipt written before receipts carried `seq`.
+    pub seq: u64,
     pub recorded: String,
 }
 
@@ -161,9 +167,34 @@ pub fn parse(text_in: &str, run: &str, candidate: &str, name: &str) -> Result<Re
         findings,
         total,
         note: text(&value, "/result/note").ok(),
+        seq: match value.get("seq") {
+            None => 0,
+            Some(v) => v.as_u64().filter(|n| *n > 0).ok_or("seq is not a count")?,
+        },
         recorded: text(&value, "/recorded")?,
         check,
     })
+}
+
+/// The order receipts are judged in, oldest first: by `seq`, then by file
+/// name ([`writfold_core::order::cmp`]). No clock enters: `recorded` is
+/// shown, never compared. A receipt written before `seq` existed reads as
+/// 0, so it comes first, in name order (its name carries the time it was
+/// written).
+pub fn order(a: (&Filed, &Receipt), b: (&Filed, &Receipt)) -> std::cmp::Ordering {
+    writfold_core::order::cmp((a.1.seq, &a.0.name), (b.1.seq, &b.0.name))
+}
+
+/// One more than the highest `seq` among `filed`'s valid receipts of
+/// `check`.
+pub fn next_seq(filed: &[Filed], check: &str) -> u64 {
+    (filed.iter())
+        .filter_map(|f| f.parsed.as_ref().ok())
+        .filter(|r| r.check == check)
+        .map(|r| r.seq)
+        .max()
+        .unwrap_or(0)
+        + 1
 }
 
 /// One receipt file of a candidate.

@@ -26,6 +26,10 @@
 //! Not followed: `bash -c` and `eval` strings, programs that run their
 //! arguments (`xargs`, `find -exec`), backquotes, aliases, functions and
 //! scripts, and `ssh`'s remote command. For a guard these are misses.
+//!
+//! Whether a rule's prefix names a command ([`named`], behind [`matches`])
+//! is translated and proved (`proofs/Writfold/Command.lean`); the reader
+//! is a parser and is tested.
 #[cfg(test)]
 mod corpus;
 mod invoke;
@@ -103,11 +107,39 @@ pub struct Invocation {
 }
 
 /// Whether `prefix` names `words`: a whole-word prefix, unless the only
-/// word after it is `--help`.
+/// word after it is `--help` ([`named`] over their bytes).
 pub fn matches(prefix: &[String], words: &[String]) -> bool {
-    let named = prefix.len() <= words.len() && prefix.iter().zip(words).all(|(a, w)| a == w);
-    let help = words.len() == prefix.len() + 1 && words.last().is_some_and(|w| w == "--help");
-    named && !help
+    let bytes =
+        |all: &[String]| -> Vec<Vec<u8>> { all.iter().map(|w| w.as_bytes().to_vec()).collect() };
+    named(&bytes(prefix), &bytes(words))
+}
+
+/// Whether a word is exactly `--help`.
+pub fn is_help(word: &[u8]) -> bool {
+    word.len() == 6
+        && word[0] == b'-'
+        && word[1] == b'-'
+        && word[2] == b'h'
+        && word[3] == b'e'
+        && word[4] == b'l'
+        && word[5] == b'p'
+}
+
+/// Whether `prefix` names `words`: each word of `prefix` is the word of
+/// `words` at the same place, and `words` is not `prefix` followed by
+/// `--help` alone. Translated and proved (`Command.lean`).
+pub fn named(prefix: &[Vec<u8>], words: &[Vec<u8>]) -> bool {
+    if prefix.len() > words.len() {
+        return false;
+    }
+    let mut i = 0;
+    while i < prefix.len() {
+        if !crate::bytes::same(&prefix[i], &words[i]) {
+            return false;
+        }
+        i += 1;
+    }
+    !(words.len() - prefix.len() == 1 && is_help(&words[prefix.len()]))
 }
 
 /// The simple commands of `line`, each as its words (rules 1 and 2).

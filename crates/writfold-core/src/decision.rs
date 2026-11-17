@@ -14,6 +14,10 @@
 //! | any but superseded | superseded | a successor |
 //!
 //! `landing` and `regressed` are never written.
+//!
+//! `step` is in the Charon `start_from` list (function by function, so
+//! the derives and `name`/`parse` are never translated):
+//! `proofs/Writfold/Decision.lean` proves it is exactly this table.
 
 /// A decision's lifecycle state; `Other` is any status outside the
 /// vocabulary.
@@ -92,47 +96,55 @@ pub struct Needs {
     pub successor: bool,
 }
 
-const NOTHING: Needs = Needs {
-    ready: false,
-    actor: false,
-    commit: false,
-    evidence: false,
-    successor: false,
-};
+/// The requirements, field by field.
+pub fn needs(ready: bool, actor: bool, commit: bool, evidence: bool, successor: bool) -> Needs {
+    Needs {
+        ready,
+        actor,
+        commit,
+        evidence,
+        successor,
+    }
+}
 
 /// What going from `from` to `to` needs, or `None` when Writfold does not
-/// write that change.
+/// write that change. Matched on the target first, then on where it may
+/// come from (one flat match each, for the translation).
 pub fn step(from: State, to: State) -> Option<Needs> {
-    match (from, to) {
-        (State::Superseded, State::Superseded) => None,
-        (_, State::Superseded) => Some(Needs {
-            successor: true,
-            ..NOTHING
-        }),
-        (State::Draft, State::Proposed) => Some(Needs {
-            ready: true,
-            ..NOTHING
-        }),
-        (State::Proposed, State::Draft) => Some(NOTHING),
-        (State::Proposed, State::Accepted) => Some(Needs {
-            ready: true,
-            actor: true,
-            ..NOTHING
-        }),
-        (State::Proposed, State::Rejected) => Some(Needs {
-            actor: true,
-            ..NOTHING
-        }),
-        (State::Accepted, State::Deferred) => Some(NOTHING),
-        (State::Accepted, State::Applied) => Some(Needs {
-            commit: true,
-            ..NOTHING
-        }),
-        (State::Applied, State::Verified) => Some(Needs {
-            evidence: true,
-            ..NOTHING
-        }),
-        _ => None,
+    match to {
+        State::Superseded => match from {
+            State::Superseded => None,
+            _ => Some(needs(false, false, false, false, true)),
+        },
+        State::Proposed => match from {
+            State::Draft => Some(needs(true, false, false, false, false)),
+            _ => None,
+        },
+        State::Draft => match from {
+            State::Proposed => Some(needs(false, false, false, false, false)),
+            _ => None,
+        },
+        State::Accepted => match from {
+            State::Proposed => Some(needs(true, true, false, false, false)),
+            _ => None,
+        },
+        State::Rejected => match from {
+            State::Proposed => Some(needs(false, true, false, false, false)),
+            _ => None,
+        },
+        State::Deferred => match from {
+            State::Accepted => Some(needs(false, false, false, false, false)),
+            _ => None,
+        },
+        State::Applied => match from {
+            State::Accepted => Some(needs(false, false, true, false, false)),
+            _ => None,
+        },
+        State::Verified => match from {
+            State::Applied => Some(needs(false, false, false, true, false)),
+            _ => None,
+        },
+        State::Landing | State::Regressed | State::Other => None,
     }
 }
 

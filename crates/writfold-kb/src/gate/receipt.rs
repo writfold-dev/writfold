@@ -81,7 +81,7 @@ pub fn command(d: &Definition) -> Vec<String> {
 /// written before `seq` existed read as 0 and keep their name order; two
 /// clones that each wrote the same `seq` are ordered by name.
 pub fn order(a: (&str, &Receipt), b: (&str, &Receipt)) -> std::cmp::Ordering {
-    (a.1.seq, a.0).cmp(&(b.1.seq, b.0))
+    writfold_core::order::cmp((a.1.seq, a.0), (b.1.seq, b.0))
 }
 
 /// The receipt's bytes: two-space JSON ending in a line break.

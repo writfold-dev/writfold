@@ -2,6 +2,9 @@
 //! checked against and where its limits are, and no hypothesis is still
 //! open. This is completion of the write-up, not a claim that its findings
 //! are true. The caller reads the record; nothing here does IO.
+//!
+//! `conclude` and `Missing::none` are in the Charon `start_from` list;
+//! `proofs/Writfold/Decision.lean` proves when nothing is missing.
 
 /// A hypothesis's recorded outcome.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

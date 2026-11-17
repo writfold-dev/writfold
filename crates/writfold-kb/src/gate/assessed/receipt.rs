@@ -82,6 +82,10 @@ pub struct Assessed {
     pub error: Option<String>,
     pub duration_ms: u64,
     pub evaluator: String,
+    /// One more than the highest `seq` among the run's assessed receipts
+    /// of this gate on this repository (0 for a receipt written before
+    /// receipts carried it): the judging order, with no clock in it.
+    pub seq: u64,
     pub recorded: String,
 }
 
@@ -137,6 +141,7 @@ pub fn bytes(a: &Assessed) -> Vec<u8> {
         "missing": a.missing,
         "result": {"outcome": a.outcome.name(), "error": a.error, "duration_ms": a.duration_ms},
         "evaluator": a.evaluator,
+        "seq": a.seq,
         "recorded": a.recorded,
     });
     let digest = sha(canonical(&value).as_bytes());
@@ -302,6 +307,10 @@ pub fn parse(text: &str, run: &str, name: &str) -> Result<Assessed, String> {
             .and_then(Value::as_u64)
             .ok_or("duration_ms is missing")?,
         evaluator,
+        seq: match at(&value, &["seq"]) {
+            None => 0,
+            Some(v) => v.as_u64().filter(|n| *n > 0).ok_or("seq is not a count")?,
+        },
         recorded: s(&value, &["recorded"])?,
     };
     if a.outcome != a.derived() {

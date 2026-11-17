@@ -51,6 +51,7 @@ pub(super) fn run(
     let content = candidate::sha(bytes);
     let mut ops = Vec::new();
     let mut notes = Vec::new();
+    let filed = receipt::filed(root, &c.dir, &rec.id, &c.id);
     for ob in &wanted {
         let evaluated = evaluate(session, c, &text, ob, (&mode, &deny))?;
         let path = format!(
@@ -71,6 +72,7 @@ pub(super) fn run(
                 candidate: &c.id,
                 content: &content,
                 evaluated: &evaluated,
+                seq: receipt::next_seq(&filed, &ob.name),
                 recorded: &time::stamp(now),
             }),
         });

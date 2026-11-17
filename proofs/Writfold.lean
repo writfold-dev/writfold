@@ -8,3 +8,13 @@ import Writfold.Checklist
 import Writfold.Delivery
 import Writfold.Guard
 import Writfold.Ground
+import Writfold.Scope
+import Writfold.Recheck
+import Writfold.Decision
+import Writfold.Verdict
+import Writfold.Recorded
+import Writfold.Walk
+import Writfold.Command
+import Writfold.Find
+import Writfold.Idle
+import Writfold.Order

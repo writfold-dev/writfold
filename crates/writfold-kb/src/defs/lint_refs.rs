@@ -32,7 +32,7 @@ struct Names {
 }
 
 fn clean(f: &File) -> bool {
-    f.report.diagnostics.iter().all(|d| !d.is_error())
+    !writfold_core::diag::blocks(f.report.errors(), 0, false)
 }
 
 fn names(all: &[File], repo: bool) -> Names {

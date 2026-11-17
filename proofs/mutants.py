@@ -545,6 +545,279 @@ MUTANTS = (
            "    if facts.repinned || !all_passed(closes) {",
            "    if facts.repinned {",
            ("Writfold.Core.Policy.summary_spec",)),
+    # scope: an exclusion that matches keeps the path out
+    Mutant("covers-ignores-exclusion", "scope.rs",
+           "        if patterns[index].exclude && hit {\n            return false;",
+           "        if false && hit {\n            return false;",
+           ("Writfold.Core.Scope.covers_loop_spec",)),
+    # scope: a scope with no pattern that includes covers nothing
+    Mutant("covers-empty-includes", "scope.rs",
+           "    let mut included = false;",
+           "    let mut included = true;",
+           ("Writfold.Core.Scope.covers_iff",)),
+    # scope: an including pattern counts only when it matches
+    Mutant("include-ignores-hit", "scope.rs",
+           "    included || (!exclude && hit)",
+           "    included || !exclude",
+           ("Writfold.Core.Scope.include_spec",)),
+    # scope: a `*` that led nowhere stretches by one more character
+    Mutant("segment-no-backtrack", "scope.rs",
+           "    if c.i < pattern.len() && same_char(pattern[c.i], text[c.j]) {\n"
+           "        return Next::Go(Cursor {\n            i: c.i + 1,\n            j: c.j + 1,\n"
+           "            starred: c.starred,\n            at: c.at,\n            from: c.from,\n"
+           "        });\n    }\n    if c.starred {",
+           "    if c.i < pattern.len() && same_char(pattern[c.i], text[c.j]) {\n"
+           "        return Next::Go(Cursor {\n            i: c.i + 1,\n            j: c.j + 1,\n"
+           "            starred: c.starred,\n            at: c.at,\n            from: c.from,\n"
+           "        });\n    }\n    if false {",
+           ("Writfold.Core.Scope.char_step_spec",)),
+    # scope: `*` matches nothing too, at the end of a segment included
+    Mutant("star-needs-a-char", "scope.rs",
+           "    if c.i < pattern.len() && pattern[c.i] == STAR {",
+           "    if c.i < pattern.len() && pattern[c.i] == STAR && c.j < text.len() {",
+           ("Writfold.Core.Scope.char_step_spec",)),
+    # scope: `?` matches any one character
+    Mutant("same-char-ignores-any", "scope.rs",
+           "    pattern == ANY || pattern == text",
+           "    (pattern == ANY && text == ANY) || pattern == text",
+           ("Writfold.Core.Scope.same_char_spec",)),
+    # scope: only `**` is a segment wildcard, not `*` followed by anything
+    Mutant("globstar-one-star", "scope.rs",
+           "    segment.len() == 2 && segment[0] == STAR && segment[1] == STAR",
+           "    segment.len() == 2 && segment[0] == STAR",
+           ("Writfold.Core.Scope.globstar_spec",)),
+    # scope: `**` matches no segment too, at the end of a path included
+    Mutant("globstar-needs-a-segment", "scope.rs",
+           "    if c.i < wanted.len() && globstar(&wanted[c.i]) {",
+           "    if c.i < wanted.len() && globstar(&wanted[c.i]) && c.j < parts.len() {",
+           ("Writfold.Core.Scope.path_step_spec",)),
+    # scope: a path with segments left over after the pattern does not match
+    Mutant("segments-accept-trailing", "scope.rs",
+           "    if c.j >= parts.len() {",
+           "    if c.j >= parts.len() || c.i >= wanted.len() {",
+           ("Writfold.Core.Scope.path_step_spec",)),
+    # plan writes: a step write stands only while the step is still current
+    Mutant("recheck-current-ignored", "plan/recheck.rs",
+           "            if is_current {\n                None",
+           "            if true {\n                None",
+           ("Writfold.Core.Recheck.still_stands_spec",)),
+    # plan writes: a splice stands only while its ordinal is still the next one
+    Mutant("recheck-ordinal-ignored", "plan/recheck.rs",
+           "            if next != *ordinal {",
+           "            if false {",
+           ("Writfold.Core.Recheck.still_stands_spec",)),
+    # plan writes: a root end template is not under a current step
+    Mutant("recheck-root-needs-current", "plan/recheck.rs",
+           "            if *parent_current && !is_current {",
+           "            if !is_current {",
+           ("Writfold.Core.Recheck.still_stands_spec",)),
+    # plan writes: a write on an unplanned run stands only while no plan was set
+    Mutant("recheck-ignores-plan", "plan/recheck.rs",
+           "            if planned {\n                Some(Moved::Planned)",
+           "            if false {\n                Some(Moved::Planned)",
+           ("Writfold.Core.Recheck.still_stands_spec",)),
+    # plan writes: the sidecar's state wins over the manifest's
+    Mutant("writable-manifest-wins", "plan/recheck.rs",
+           "    match sidecar_closed {",
+           "    match manifest_closed {",
+           ("Writfold.Core.Recheck.writable_spec", "Writfold.Core.Recheck.sidecar_wins",
+            "Writfold.Core.Recheck.closed_refuses")),
+    # decisions: accepting needs readiness
+    Mutant("accepted-without-readiness", "decision.rs",
+           "            State::Proposed => Some(needs(true, true, false, false, false)),",
+           "            State::Proposed => Some(needs(false, true, false, false, false)),",
+           ("Writfold.Core.Decision.step_spec",)),
+    # decisions: verifying needs grounded evidence
+    Mutant("verified-without-evidence", "decision.rs",
+           "            State::Applied => Some(needs(false, false, false, true, false)),",
+           "            State::Applied => Some(needs(false, false, false, false, false)),",
+           ("Writfold.Core.Decision.step_spec",)),
+    # decisions: a superseded decision is not superseded again
+    Mutant("superseded-twice", "decision.rs",
+           "            State::Superseded => None,",
+           "            State::Superseded => Some(needs(false, false, false, false, true)),",
+           ("Writfold.Core.Decision.step_spec",)),
+    # decisions: landing is never written
+    Mutant("landing-written", "decision.rs",
+           "        State::Landing | State::Regressed | State::Other => None,",
+           "        State::Landing => Some(needs(false, false, false, false, false)),\n"
+           "        State::Regressed | State::Other => None,",
+           ("Writfold.Core.Decision.step_spec",)),
+    # investigations: a missing section stops the conclusion
+    Mutant("conclude-ignores-section", "investigation.rs",
+           "        checked_against: !checked_against,",
+           "        checked_against: false,",
+           ("Writfold.Core.Decision.conclude_spec",)),
+    # investigations: every hypothesis is counted, the last included
+    Mutant("conclude-skips-last", "investigation.rs",
+           "    while index < hypotheses.len() {",
+           "    while index + 1 < hypotheses.len() {",
+           ("Writfold.Core.Decision.conclude_loop_spec",)),
+    # investigations: an open hypothesis stops the conclusion
+    Mutant("none-ignores-open", "investigation.rs",
+           "        !self.checked_against && !self.scope_and_limits && self.open == 0",
+           "        !self.checked_against && !self.scope_and_limits",
+           ("Writfold.Core.Decision.none_spec",)),
+    # verdict: a span found at other lines is moved, never fresh
+    Mutant("moved-span-fresh", "verdict.rs",
+           "            Located::At(_, _) => Verdict::Moved,",
+           "            Located::At(_, _) => Verdict::Fresh,",
+           ("Writfold.Core.Verdict.observed_spec",)),
+    # verdict: a file too long to search is changed, never fresh
+    Mutant("unsearched-fresh", "verdict.rs",
+           "            Located::Absent | Located::Unsearched => Verdict::Changed,",
+           "            Located::Absent => Verdict::Changed,\n            Located::Unsearched => Verdict::Fresh,",
+           ("Writfold.Core.Verdict.observed_spec",)),
+    # verdict: a mark never hides a change
+    Mutant("mark-hides-change", "verdict.rs",
+           "        Verdict::Changed | Verdict::Gone | Verdict::Expired => reached,",
+           "        Verdict::Gone | Verdict::Expired => reached,",
+           ("Writfold.Core.Verdict.with_mark_spec",)),
+    # verdict: the protocol first, then the kind, then the operation
+    Mutant("handshake-kind-as-op", "verdict.rs",
+           "            } else if !d.lists_kind {\n                Handshake::Kind",
+           "            } else if !d.lists_kind {\n                Handshake::Op",
+           ("Writfold.Core.Verdict.handshake_spec",)),
+    # verdict: a reply counts only after an agreed handshake
+    Mutant("exchange-ignores-handshake", "verdict.rs",
+           "    if !matches!(handshake, Handshake::Agreed) || !clean_exit {",
+           "    if !clean_exit {",
+           ("Writfold.Core.Verdict.exchange_said_iff", "Writfold.Core.Verdict.exchange_spec",)),
+    # verdict: exactly one reply counts, not the first of two
+    Mutant("exchange-first-of-two", "verdict.rs",
+           "    if replies.len() != 1 {",
+           "    if replies.is_empty() {",
+           ("Writfold.Core.Verdict.exchange_said_iff", "Writfold.Core.Verdict.exchange_spec")),
+    # verdict: a reply whose age cannot be read is expired
+    Mutant("aged-keeps-unreadable", "verdict.rs",
+           "            None => Checker::Expired,\n        },",
+           "            None => cached,\n        },",
+           ("Writfold.Core.Verdict.aged_spec",)),
+    # verdict: the token's own ttl comes before the kind's default
+    Mutant("lifetime-token-as-default", "verdict.rs",
+           "        Some(ttl) => Lifetime::Token(ttl),",
+           "        Some(ttl) => Lifetime::Default(ttl),",
+           ("Writfold.Core.Verdict.lifetime_spec",)),
+    # verdict: far past the end of i64, the sign alone decides expiry
+    Mutant("expired-overflow-kept", "verdict.rs",
+           "    if seen < 0 && now > i64::MAX + seen {\n        return true;",
+           "    if seen < 0 && now > i64::MAX + seen {\n        return false;",
+           ("Writfold.Core.Verdict.expired_spec",)),
+    # verdict: the cited lines must lie inside the file
+    Mutant("window-cited-off-by-one", "verdict/locate.rs",
+           "    if last <= lines {",
+           "    if last < lines {",
+           ("Writfold.Core.Verdict.window_spec",)),
+    # verdict: the cited window comes before any other
+    Mutant("place-ignores-cited", "verdict/locate.rs",
+           "    if cited {\n        return Place::Same;",
+           "    if false {\n        return Place::Same;",
+           ("Writfold.Core.Verdict.place_same_iff", "Writfold.Core.Verdict.place_at_iff", "Writfold.Core.Verdict.place_absent_iff",)),
+    # check receipts: an unverifiable answer is never shared
+    Mutant("recordable-unverifiable", "verdict/recorded.rs",
+           "        Checker::Said(said) => !matches!(said, Said::Unverifiable),",
+           "        Checker::Said(_) => true,",
+           ("Writfold.Core.Recorded.recordable_iff",)),
+    # check receipts: a date more than an hour ahead is unusable
+    Mutant("recorded-age-no-skew", "verdict/recorded.rs",
+           "    if now <= i64::MAX - CLOCK_SKEW && checked_at > now + CLOCK_SKEW {",
+           "    if now <= i64::MAX - CLOCK_SKEW && checked_at > now {",
+           ("Writfold.Core.Recorded.recorded_age_spec",)),
+    # check receipts: the newer statement comes first
+    Mutant("before-prefers-older", "verdict/recorded.rs",
+           "        return a.age < b.age;",
+           "        return a.age > b.age;",
+           ("Writfold.Core.Recorded.before_spec",)),
+    # check receipts: on a tie the first receipt is kept
+    Mutant("better-tie-takes-later", "verdict/recorded.rs",
+           "            if before(&recorded[index], &recorded[b]) {",
+           "            if !before(&recorded[b], &recorded[index]) {",
+           ("Writfold.Core.Recorded.better_spec",)),
+    # check receipts: on a full tie a receipt wins over the local statement
+    Mutant("newest-local-on-tie", "verdict/recorded.rs",
+           "                if before(&s, &recorded[i]) {",
+           "                if !before(&recorded[i], &s) {",
+           ("Writfold.Core.Recorded.newest_spec",)),
+    # walk: a skipped edge keeps coverage partial
+    Mutant("complete-ignores-skipped", "walk.rs",
+           "    frontier == 0 && skipped == 0",
+           "    frontier == 0",
+           ("Writfold.Core.Walk.complete_iff",)),
+    # lint: a warning blocks only under --deny-warnings
+    Mutant("blocks-any-warning", "diag/mod.rs",
+           "    errors > 0 || (deny && warnings > 0)",
+           "    errors > 0 || warnings > 0",
+           ("Writfold.Core.Walk.blocks_iff",)),
+    # find: a record is shown once, under the first tier that found it
+    Mutant("admit-shows-twice", "find.rs",
+           "    shown < limit && !seen && passes",
+           "    shown < limit && passes",
+           ("Writfold.Core.Walk.admit_iff",)),
+    # command: --help is exactly those bytes
+    Mutant("is-help-wrong-byte", "command/mod.rs",
+           "        && word[1] == b'-'",
+           "        && word[1] == b'h'",
+           ("Writfold.Core.Command.is_help_spec",)),
+    # command: every word of a rule's prefix is compared, the last included
+    Mutant("named-skips-last", "command/mod.rs",
+           "    while i < prefix.len() {\n        if !crate::bytes::same(&prefix[i], &words[i]) {",
+           "    while i + 1 < prefix.len() {\n        if !crate::bytes::same(&prefix[i], &words[i]) {",
+           ("Writfold.Core.Command.named_loop_spec",)),
+    # command: --help stops a match only when it is the one word after the prefix
+    Mutant("named-help-not-alone", "command/mod.rs",
+           "    !(words.len() - prefix.len() == 1 && is_help(&words[prefix.len()]))",
+           "    !(words.len() - prefix.len() >= 1 && is_help(&words[prefix.len()]))",
+           ("Writfold.Core.Command.named_loop_spec",)),
+    # find: a one-token query needs four characters
+    Mutant("query-ok-three-chars", "find.rs",
+           "    query.len() >= 2 || (query.len() == 1 && query[0].len() >= 4)",
+           "    query.len() >= 2 || (query.len() == 1 && query[0].len() >= 3)",
+           ("Writfold.Core.Find.query_ok_spec",)),
+    # find: every character of a prefix is compared, the last included
+    Mutant("starts-skips-last", "find.rs",
+           "    while i < start.len() {",
+           "    while i + 1 < start.len() {",
+           ("Writfold.Core.Find.starts_loop_spec",)),
+    # find: the query token begins the name token, not the other way round
+    Mutant("next-from-reversed", "find.rs",
+           "        if starts(&name[j], q) {",
+           "        if starts(q, &name[j]) {",
+           ("Writfold.Core.Find.next_from_loop_spec",)),
+    # find: each query token takes its own name token
+    Mutant("prefixed-reuses-token", "find.rs",
+           "            Some(j) => at = j + 1,",
+           "            Some(j) => at = j,",
+           ("Writfold.Core.Find.prefixed_loop_spec",)),
+    # idle: the first of equal newest stamps is named
+    Mutant("newest-last-of-equal", "idle.rs",
+           "        Some((_, at)) => stamps[i] > at,",
+           "        Some((_, at)) => stamps[i] >= at,",
+           ("Writfold.Core.Idle.newer_spec",)),
+    # idle: the age is compared over the integers, not after holding it in i64
+    Mutant("idle-saturated-compare", "idle.rs",
+           "            if crate::verdict::expired(now, last, age) {",
+           "            if since(now, last) > age {",
+           ("Writfold.Core.Idle.idle_spec",)),
+    # idle: past the end of i64 the seconds shown are its end
+    Mutant("since-off-by-one", "idle.rs",
+           "    if last < 0 && now > i64::MAX + last {\n        return i64::MAX;",
+           "    if last < 0 && now > i64::MAX + last {\n        return i64::MAX - 1;",
+           ("Writfold.Core.Idle.since_spec",)),
+    # order: at the first differing byte, the smaller sorts first
+    Mutant("less-larger-byte", "order.rs",
+           "            return a[i] < b[i];",
+           "            return a[i] > b[i];",
+           ("Writfold.Core.Order.less_loop_spec",)),
+    # order: a name never sorts before itself
+    Mutant("less-equal-names", "order.rs",
+           "    a.len() < b.len()\n}",
+           "    a.len() <= b.len()\n}",
+           ("Writfold.Core.Order.less_loop_spec",)),
+    # order: the lower seq is judged first
+    Mutant("precedes-higher-seq", "order.rs",
+           "        return seq_a < seq_b;",
+           "        return seq_a > seq_b;",
+           ("Writfold.Core.Order.precedes_spec",)),
     # assessed gate: one ungrounded premise makes the basis hypothetical
     Mutant("basis-ignores-premises", "assess.rs",
            "        if matches!(premises[index], Grounding::Ungrounded) {",

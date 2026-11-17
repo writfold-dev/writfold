@@ -1,0 +1,410 @@
+import Extracted.WritfoldCore
+
+/-!
+# Citation verdicts
+
+Theorems over the Aeneas translation of `writfold_core::verdict`: from
+what a check observed to exactly one verdict.
+
+- `observed_spec`: `observed` is the table `observedOf`, for every fact.
+  `observed_fresh_iff`: a citation reads fresh exactly for the eight fresh
+  facts (`FreshFact`); `moved_span_never_fresh`, `unsearched_never_fresh`,
+  `changed_gate_never_fresh`, `checker_fresh_iff`.
+- `with_mark_spec`, `mark_keeps_change`, `mark_never_fresh`, `decide_spec`:
+  an authored mark wins over every verdict except changed, gone and
+  expired, so a mark never hides a change and never reads fresh.
+- `handshake_spec`, `exchange_said_iff`, `exchange_spec`: a checker's
+  reply counts only after an agreed handshake, a clean exit, a readable
+  version and exactly one well-formed reply.
+- `aged_spec`, `aged_expired_iff`: a cached reply with a `max_age` expires
+  once its age exceeds it or cannot be read.
+- `lifetime_spec`: an immutable kind first, then the token's own `ttl=`,
+  then the kind's default, else never.
+- `expired_spec`: a timed citation has expired exactly when `now - seen >
+  ttl` over the integers: the subtraction never overflows.
+- `window_spec`, `place_same_iff`, `place_at_iff`, `place_absent_iff`:
+  where the cited span sits, from its windows' flags: the cited window
+  first, then the first window from the top.
+-/
+
+open Aeneas Aeneas.Std Result
+open writfold_core
+
+namespace Writfold.Core.Verdict
+
+/-- The verdict of each observation, as `verdict.rs` lists it. -/
+def observedOf : verdict.Observed → verdict.Verdict
+  | .Malformed | .Unresolved => .Unverifiable
+  | .Code .SameBlob => .Fresh
+  | .Code (.OtherBlob none) => .Changed
+  | .Code (.OtherBlob (some .Same)) => .Fresh
+  | .Code (.OtherBlob (some (.At _ _))) => .Moved
+  | .Code (.OtherBlob (some .Absent)) | .Code (.OtherBlob (some .Unsearched)) => .Changed
+  | .Code (.Missing true) => .Renamed
+  | .Code (.Missing false) => .Gone
+  | .Gate true => .Fresh
+  | .Gate false => .Changed
+  | .State none => .Gone
+  | .State (some none) => .Unverifiable
+  | .State (some (some true)) => .Fresh
+  | .State (some (some false)) => .Changed
+  | .Timed (some true) => .Expired
+  | .Timed (some false) => .Fresh
+  | .Timed none => .Unverifiable
+  | .Offline true => .Due
+  | .Offline false => .Fresh
+  | .Immutable => .Fresh
+  | .Checked (.Said .Fresh) => .Fresh
+  | .Checked (.Said .Moved) => .Moved
+  | .Checked (.Said .Changed) => .Changed
+  | .Checked (.Said .Gone) => .Gone
+  | .Checked _ => .Unverifiable
+
+theorem observed_spec (f : verdict.Observed) :
+    verdict.observed f ⦃ v => v = observedOf f ⦄ := by
+  unfold verdict.observed
+  rcases f with _ | _ | t | b | o | o | b | _ | c
+  all_goals try simp [observedOf]
+  · rcases t with _ | (_ | l) | b
+    all_goals try simp [observedOf]
+    · rcases l with _ | ⟨_, _⟩ | _ | _ <;> simp [observedOf]
+    · cases b <;> simp [observedOf]
+  · cases b <;> simp [observedOf]
+  · rcases o with _ | (_ | b) <;> try simp [observedOf]
+    cases b <;> simp [observedOf]
+  · rcases o with _ | b <;> try simp [observedOf]
+    cases b <;> simp [observedOf]
+  · cases b <;> simp [observedOf]
+  · rcases c with _ | _ | _ | s | _ <;> try simp [observedOf]
+    cases s <;> simp [observedOf]
+
+/-- The facts that read fresh. -/
+def FreshFact (f : verdict.Observed) : Prop :=
+  f = .Code .SameBlob ∨ f = .Code (.OtherBlob (some .Same)) ∨ f = .Gate true ∨
+  f = .State (some (some true)) ∨ f = .Timed (some false) ∨ f = .Offline false ∨
+  f = .Immutable ∨ f = .Checked (.Said .Fresh)
+
+/-- A citation reads fresh exactly for the fresh facts. -/
+theorem observed_fresh_iff (f : verdict.Observed) :
+    verdict.observed f ⦃ v => v = .Fresh ↔ FreshFact f ⦄ := by
+  apply WP.spec_mono (observed_spec f)
+  intro v hv; subst hv
+  rcases f with _ | _ | t | b | o | o | b | _ | c
+  all_goals try simp [observedOf, FreshFact]
+  · rcases t with _ | (_ | l) | b
+    all_goals try simp [observedOf]
+    · rcases l with _ | ⟨_, _⟩ | _ | _ <;> simp [observedOf]
+    · cases b <;> simp [observedOf]
+  · cases b <;> simp [observedOf]
+  · rcases o with _ | (_ | b) <;> try simp [observedOf]
+    cases b <;> simp [observedOf]
+  · rcases o with _ | b <;> try simp [observedOf]
+    cases b <;> simp [observedOf]
+  · cases b <;> simp [observedOf]
+  · rcases c with _ | _ | _ | s | _ <;> try simp [observedOf]
+    cases s <;> simp [observedOf]
+
+/-- A span found at other lines reads moved, never fresh. -/
+theorem moved_span_never_fresh (a b : U32) :
+    verdict.observed (.Code (.OtherBlob (some (.At a b)))) ⦃ v => v = .Moved ⦄ := by
+  apply WP.spec_mono (observed_spec _); intro v hv; simp [hv, observedOf]
+
+/-- A file too long to search reads changed, never fresh. -/
+theorem unsearched_never_fresh :
+    verdict.observed (.Code (.OtherBlob (some .Unsearched))) ⦃ v => v = .Changed ⦄ := by
+  apply WP.spec_mono (observed_spec _); intro v hv; simp [hv, observedOf]
+
+/-- A gate citation away from the target commit reads changed. -/
+theorem changed_gate_never_fresh :
+    verdict.observed (.Gate false) ⦃ v => v = .Changed ⦄ := by
+  apply WP.spec_mono (observed_spec _); intro v hv; simp [hv, observedOf]
+
+/-- A checked kind reads fresh exactly when its checker said fresh. -/
+theorem checker_fresh_iff (c : verdict.Checker) :
+    verdict.observed (.Checked c) ⦃ v => v = .Fresh ↔ c = .Said .Fresh ⦄ := by
+  apply WP.spec_mono (observed_fresh_iff _)
+  intro v hv; rw [hv]; simp [FreshFact]
+
+/-! ## Marks -/
+
+/-- Changed, gone and expired say more than a mark. -/
+def Strong : verdict.Verdict → Bool
+  | .Changed | .Gone | .Expired => true
+  | _ => false
+
+theorem with_mark_spec (v : verdict.Verdict) (m : Bool) :
+    verdict.with_mark v m ⦃ r => r = if Strong v = true then v else if m then .Marked else v ⦄ := by
+  unfold verdict.with_mark
+  cases v <;> cases m <;> simp [Strong]
+
+/-- A mark never hides a change. -/
+theorem mark_keeps_change (v : verdict.Verdict) (m : Bool) (h : Strong v = true) :
+    verdict.with_mark v m ⦃ r => r = v ⦄ := by
+  apply WP.spec_mono (with_mark_spec v m); intro r hr; simp [hr, h]
+
+/-- A marked citation never reads fresh. -/
+theorem mark_never_fresh (v : verdict.Verdict) :
+    verdict.with_mark v true ⦃ r => r ≠ .Fresh ⦄ := by
+  apply WP.spec_mono (with_mark_spec v true)
+  intro r hr; subst hr
+  cases v <;> simp [Strong]
+
+theorem decide_spec (f : verdict.Observed) (m : Bool) :
+    verdict.decide f m ⦃ r => r = if Strong (observedOf f) = true then observedOf f
+      else if m then .Marked else observedOf f ⦄ := by
+  unfold verdict.decide
+  step with observed_spec as ⟨ v, hv ⟩
+  subst hv
+  exact with_mark_spec _ m
+
+/-! ## Checkers -/
+
+/-- The handshake's outcome: the protocol first, then the kind, then the
+operation. -/
+def handshakeOf : Option verdict.Described → verdict.Handshake
+  | none => .Protocol
+  | some d => if !d.protocol then .Protocol else if !d.lists_kind then .Kind
+      else if !d.has_op then .Op else .Agreed
+
+theorem handshake_spec (d : Option verdict.Described) :
+    verdict.handshake d ⦃ r => r = handshakeOf d ⦄ := by
+  unfold verdict.handshake
+  rcases d with _ | ⟨p, k, o⟩
+  · simp [handshakeOf]
+  · cases p <;> cases k <;> cases o <;> simp [handshakeOf]
+
+theorem reply_spec (o : Option verdict.Said) :
+    verdict.reply o ⦃ r => r = match o with | some s => .Said s | none => .Failed ⦄ := by
+  unfold verdict.reply
+  cases o <;> simp
+
+/-- A reply counts exactly after an agreed handshake, a clean exit, a
+readable version and exactly one well-formed reply. -/
+theorem exchange_said_iff (h : verdict.Handshake) (clean readable : Bool)
+    (replies : Slice (Option verdict.Said)) (s : verdict.Said) :
+    verdict.exchange h clean readable replies ⦃ r => r = .Said s ↔
+      h = .Agreed ∧ clean = true ∧ readable = true ∧ replies.val = [some s] ⦄ := by
+  unfold verdict.exchange
+  cases h <;> cases clean <;> cases readable <;> try simp
+  split
+  · rename_i hl
+    step as ⟨ o, ho ⟩
+    apply WP.spec_mono (reply_spec o)
+    intro r hr; subst hr
+    obtain ⟨x, hx⟩ := List.length_eq_one_iff.mp hl
+    simp only [hx, List.getElem_cons_zero] at ho ⊢
+    subst ho
+    cases o <;> simp
+  · rename_i hlen
+    simp only [WP.spec_ok, reduceCtorEq, false_iff]
+    intro he; apply hlen; simp [he]
+
+/-- Otherwise the checker failed, or the version could not be read. -/
+theorem exchange_spec (h : verdict.Handshake) (clean readable : Bool)
+    (replies : Slice (Option verdict.Said)) :
+    verdict.exchange h clean readable replies ⦃ r =>
+      (r = .Version ↔ h = .Agreed ∧ clean = true ∧ readable = false) ∧
+      r ≠ .Absent ∧ r ≠ .Expired ⦄ := by
+  unfold verdict.exchange
+  cases h <;> cases clean <;> cases readable <;> try simp
+  split
+  · step as ⟨ o, ho ⟩
+    apply WP.spec_mono (reply_spec o)
+    intro r hr; subst hr
+    cases o <;> simp
+  · simp
+
+/-! ## Ageing and lifetimes -/
+
+/-- A cached reply with a `max_age` is kept only while its age is known
+and within it. -/
+theorem aged_spec (c : verdict.Checker) (age max : Option I64) :
+    verdict.aged c age max ⦃ r => r = match max with
+      | none => c
+      | some m => match age with
+        | some a => if a.val ≤ m.val then c else .Expired
+        | none => .Expired ⦄ := by
+  unfold verdict.aged
+  rcases max with _ | m
+  · simp
+  · rcases age with _ | a
+    · simp
+    · simp only
+      split <;> rename_i h <;> simp only [WP.spec_ok] <;> split <;> first | rfl | scalar_tac
+
+/-- With a `max_age`, a reply expires exactly when its age exceeds it or
+cannot be read (or it had already expired). -/
+theorem aged_expired_iff (c : verdict.Checker) (age : Option I64) (m : I64) :
+    verdict.aged c age (some m) ⦃ r => r = .Expired ↔
+      c = .Expired ∨ age = none ∨ ∃ a, age = some a ∧ a.val > m.val ⦄ := by
+  apply WP.spec_mono (aged_spec c age (some m))
+  intro r hr; subst hr
+  rcases age with _ | a
+  · simp
+  · simp only
+    split <;> rename_i h
+    · simp; intro _; omega
+    · simp; omega
+
+theorem lifetime_spec {T : Type} (immutable : Bool) (token default : Option T) :
+    verdict.lifetime immutable token default ⦃ r => r =
+      if immutable then .Immutable else match token with
+      | some t => .Token t
+      | none => match default with
+        | some d => .Default d
+        | none => .Never ⦄ := by
+  unfold verdict.lifetime
+  cases immutable <;> rcases token with _ | t <;> rcases default with _ | d <;> simp
+
+/-- A timed citation has expired exactly when `now - seen > ttl` over the
+integers: no overflow, whatever the three values. -/
+theorem expired_spec (now seen ttl : I64) :
+    verdict.expired now seen ttl ⦃ b => b = true ↔ now.val - seen.val > ttl.val ⦄ := by
+  unfold verdict.expired
+  have hmax : core.num.I64.MAX.val = 2^63 - 1 := by simp [core.num.I64.MAX]; rfl
+  have hmin : core.num.I64.MIN.val = -2^63 := by simp [core.num.I64.MIN]; rfl
+  split
+  · rename_i hs
+    step as ⟨ i, hi ⟩
+    split
+    · rename_i hn; simp; scalar_tac
+    · rename_i hn
+      split
+      · rename_i hs'; scalar_tac
+      · step as ⟨ d, hd ⟩
+        simp only [decide_eq_true_eq]
+        constructor <;> intro h <;> scalar_tac
+  · rename_i hs
+    split
+    · rename_i hs'
+      step as ⟨ i, hi ⟩
+      split
+      · rename_i hn; simp; scalar_tac
+      · step as ⟨ d, hd ⟩
+        simp only [decide_eq_true_eq]
+        constructor <;> intro h <;> scalar_tac
+    · step as ⟨ d, hd ⟩
+      simp only [decide_eq_true_eq]
+      constructor <;> intro h <;> scalar_tac
+
+/-! ## Where the cited span sits -/
+
+/-- Which windows to search. -/
+def WindowSpec (lines first last limit : Nat) : verdict.locate.Window → Prop
+  | .Unsearched => lines > limit
+  | .Absent => lines ≤ limit ∧ (first = 0 ∨ last < first ∨ last - first + 1 > lines)
+  | .Search cited height => lines ≤ limit ∧ 0 < first ∧ first ≤ last ∧
+      height.val = last - first + 1 ∧ height.val ≤ lines ∧
+      (match cited with
+       | some c => c.val = first - 1 ∧ last ≤ lines
+       | none => lines < last)
+
+theorem window_spec (lines first last limit : Usize) :
+    verdict.locate.window lines first last limit ⦃ w =>
+      WindowSpec lines.val first.val last.val limit.val w ⦄ := by
+  unfold verdict.locate.window
+  split
+  · simp [WindowSpec]; scalar_tac
+  · split
+    · simp [WindowSpec]; scalar_tac
+    · split
+      · simp [WindowSpec]; scalar_tac
+      · step as ⟨ d, hd ⟩
+        step as ⟨ h, hh ⟩
+        split
+        · simp [WindowSpec]; scalar_tac
+        · step as ⟨ c, hc ⟩
+          split <;> simp [WindowSpec] <;> scalar_tac
+
+theorem place_loop_spec (ws : Slice Bool) (i : Usize) (hi : i.val ≤ ws.val.length)
+    (hbefore : ∀ j (hj : j < ws.val.length), j < i.val → ws.val[j] = false) :
+    verdict.locate.place_loop ws i ⦃ p => match p with
+      | .Same => False
+      | .At s => ∃ h : s.val < ws.val.length, ws.val[s.val] = true ∧
+          ∀ j (hj : j < ws.val.length), j < s.val → ws.val[j] = false
+      | .Absent => ∀ b ∈ ws.val, b = false ⦄ := by
+  unfold verdict.locate.place_loop
+  apply loop.spec_decr_nat (fun i : Usize => ws.val.length - i.val)
+    (fun i : Usize => i.val ≤ ws.val.length ∧
+      ∀ j (hj : j < ws.val.length), j < i.val → ws.val[j] = false)
+  · intro i ⟨hi, hbefore⟩
+    unfold verdict.locate.place_loop.body
+    dsimp only
+    split
+    · rename_i hlt
+      step as ⟨ b, hb ⟩
+      split
+      · rename_i hbt
+        simp only [WP.spec_ok]
+        exact ⟨by scalar_tac, by rw [← hb]; exact hbt, hbefore⟩
+      · rename_i hbt
+        step as ⟨ i1, hi1 ⟩
+        refine ⟨by scalar_tac, ?_, by scalar_tac⟩
+        intro j hj hji
+        by_cases hjj : j < i.val
+        · exact hbefore j hj hjj
+        · have : j = i.val := by scalar_tac
+          subst this
+          rw [← hb]; simpa using hbt
+    · rename_i hge
+      simp only [WP.spec_ok]
+      intro b hb
+      obtain ⟨j, hj, rfl⟩ := List.getElem_of_mem hb
+      exact hbefore j hj (by scalar_tac)
+  · exact ⟨hi, hbefore⟩
+
+/-- The cited window holds the span exactly when the answer is `Same`. -/
+theorem place_same_iff (cited : Bool) (ws : Slice Bool) :
+    verdict.locate.place cited ws ⦃ p => p = .Same ↔ cited = true ⦄ := by
+  unfold verdict.locate.place
+  cases cited
+  · simp only [Bool.false_eq_true, ↓reduceIte, iff_false]
+    apply WP.spec_mono (place_loop_spec ws 0#usize (by simp) (by simp))
+    intro p hp; cases p <;> simp_all
+  · simp
+
+/-- Otherwise the first window from the top that holds it. -/
+theorem place_at_iff (cited : Bool) (ws : Slice Bool) (s : Usize) :
+    verdict.locate.place cited ws ⦃ p => p = .At s ↔ cited = false ∧
+      ∃ h : s.val < ws.val.length, ws.val[s.val] = true ∧
+        ∀ j (hj : j < ws.val.length), j < s.val → ws.val[j] = false ⦄ := by
+  unfold verdict.locate.place
+  cases cited
+  · simp only [Bool.false_eq_true, ↓reduceIte, true_and]
+    apply WP.spec_mono (place_loop_spec ws 0#usize (by simp) (by simp))
+    intro p hp
+    rcases p with _ | t | _
+    · exact absurd hp id
+    · obtain ⟨ht, htrue, hfirst⟩ := hp
+      simp only [verdict.locate.Place.At.injEq]
+      constructor
+      · rintro rfl; exact ⟨ht, htrue, hfirst⟩
+      · rintro ⟨hs, hstrue, hsfirst⟩
+        apply UScalar.eq_of_val_eq
+        by_contra hne
+        rcases Nat.lt_or_gt_of_ne hne with hlt | hlt
+        · have := hsfirst t.val ht hlt; simp_all
+        · have := hfirst s.val hs hlt; simp_all
+    · simp only [reduceCtorEq, false_iff, not_exists, not_and]
+      intro hs hstrue _
+      have := hp _ (List.getElem_mem hs); simp_all
+  · simp
+
+/-- No window holds it, and the cited one does not. -/
+theorem place_absent_iff (cited : Bool) (ws : Slice Bool) :
+    verdict.locate.place cited ws ⦃ p => p = .Absent ↔
+      cited = false ∧ ∀ b ∈ ws.val, b = false ⦄ := by
+  unfold verdict.locate.place
+  cases cited
+  · simp only [Bool.false_eq_true, ↓reduceIte, true_and]
+    apply WP.spec_mono (place_loop_spec ws 0#usize (by simp) (by simp))
+    intro p hp
+    rcases p with _ | t | _
+    · exact absurd hp id
+    · obtain ⟨ht, htrue, _⟩ := hp
+      simp only [reduceCtorEq, false_iff]
+      intro hall; have := hall _ (List.getElem_mem ht); simp_all
+    · simpa using hp
+  · simp
+
+end Writfold.Core.Verdict

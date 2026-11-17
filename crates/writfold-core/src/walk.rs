@@ -6,9 +6,9 @@
 //! not visited. `coverage=complete` may be claimed only when both the
 //! frontier and the skipped counts are zero.
 //!
-//! Proof candidate, not yet in the Charon `start_from` list: no theorem is
-//! claimed about it. Its property test compares it with an independent
-//! level-set search on random graphs.
+//! The claim itself, [`complete`], is translated and proved
+//! (`proofs/Writfold/Walk.lean`). The traversal is not: its property test
+//! compares it with an independent level-set search on random graphs.
 use alloc::borrow::ToOwned;
 use alloc::collections::{BTreeMap, BTreeSet};
 use alloc::string::String;
@@ -53,9 +53,21 @@ pub struct Walk<E> {
 }
 
 impl<E> Walk<E> {
+    /// Whether `coverage=complete` may be claimed ([`complete`]).
     pub fn complete(&self) -> bool {
-        self.frontier == 0 && self.skipped.values().all(|n| *n == 0)
+        complete(
+            self.frontier,
+            self.skipped.values().filter(|n| **n > 0).count(),
+        )
     }
+}
+
+/// `coverage=complete` may be claimed exactly when nothing is left on the
+/// frontier and no reason skipped an edge (`skipped`: the reasons with at
+/// least one skipped edge). Translated and proved (`Walk.lean`); the
+/// traversal itself is compared with a reference search, not proved.
+pub fn complete(frontier: usize, skipped: usize) -> bool {
+    frontier == 0 && skipped == 0
 }
 
 /// Walk from `start` to `depth` levels. `arcs` lists a node's edges (in a
