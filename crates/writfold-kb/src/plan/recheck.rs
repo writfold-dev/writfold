@@ -45,39 +45,50 @@ pub fn guard(run_dir: &str, run: &str, decided: Decided) -> Op {
     }
 }
 
-/// Why `decided` no longer stands on `graph`, if it does not.
+/// Why `decided` no longer stands on `graph`, if it does not
+/// ([`writfold_core::plan::recheck::still_stands`]).
 pub fn changed(graph: &fold::Graph, decided: &Decided) -> Option<String> {
+    use writfold_core::plan::recheck::{self, Moved};
     let current = graph
         .current()
         .and_then(|i| graph.steps.get(i))
         .map(|s| s.path.as_str());
-    let is_current = |path: &str| current == Some(path);
-    let now = || current.unwrap_or("no step");
-    match decided {
-        Decided::Unplanned if graph.planned() => Some("a plan was set meanwhile".into()),
-        Decided::Unplanned => None,
-        Decided::Current(path) if !is_current(path) => Some(format!(
-            "{path} is no longer the current step (now {})",
-            now()
-        )),
-        Decided::Current(_) => None,
+    let (kernel, named, next) = match decided {
+        Decided::Unplanned => (recheck::Decided::Unplanned, None, 0),
+        Decided::Current(path) => (recheck::Decided::Current, Some(path.as_str()), 0),
         Decided::Splice {
-            parent, current, ..
-        } if *current && !is_current(parent) => Some(format!(
-            "{parent} is no longer the current step (now {})",
-            now()
+            parent,
+            ordinal,
+            current,
+        } => (
+            recheck::Decided::Splice {
+                parent_current: *current,
+                ordinal: *ordinal,
+            },
+            Some(parent.as_str()),
+            graph.next_ordinal(parent),
+        ),
+    };
+    let is_current = named.is_some_and(|path| current == Some(path));
+    match recheck::still_stands(&kernel, graph.planned(), is_current, next)? {
+        Moved::Planned => Some("a plan was set meanwhile".into()),
+        Moved::NotCurrent => Some(format!(
+            "{} is no longer the current step (now {})",
+            named.unwrap_or_default(),
+            current.unwrap_or("no step")
         )),
-        Decided::Splice {
-            parent, ordinal, ..
-        } => {
-            let next = graph.next_ordinal(parent);
-            (next != *ordinal).then(|| {
-                let under = match parent.as_str() {
-                    "" => "the root",
-                    p => p,
-                };
-                format!("another splice under {under} took ordinal {ordinal}")
-            })
+        Moved::Taken => {
+            let under = match named.unwrap_or_default() {
+                "" => "the root",
+                p => p,
+            };
+            let ordinal = match decided {
+                Decided::Splice { ordinal, .. } => *ordinal,
+                _ => next,
+            };
+            Some(format!(
+                "another splice under {under} took ordinal {ordinal}"
+            ))
         }
     }
 }

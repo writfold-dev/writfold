@@ -596,6 +596,32 @@ MUTANTS = (
            "    if c.j >= parts.len() {",
            "    if c.j >= parts.len() || c.i >= wanted.len() {",
            ("Writfold.Core.Scope.path_step_spec",)),
+    # plan writes: a step write stands only while the step is still current
+    Mutant("recheck-current-ignored", "plan/recheck.rs",
+           "            if is_current {\n                None",
+           "            if true {\n                None",
+           ("Writfold.Core.Recheck.still_stands_spec",)),
+    # plan writes: a splice stands only while its ordinal is still the next one
+    Mutant("recheck-ordinal-ignored", "plan/recheck.rs",
+           "            if next != *ordinal {",
+           "            if false {",
+           ("Writfold.Core.Recheck.still_stands_spec",)),
+    # plan writes: a root end template is not under a current step
+    Mutant("recheck-root-needs-current", "plan/recheck.rs",
+           "            if *parent_current && !is_current {",
+           "            if !is_current {",
+           ("Writfold.Core.Recheck.still_stands_spec",)),
+    # plan writes: a write on an unplanned run stands only while no plan was set
+    Mutant("recheck-ignores-plan", "plan/recheck.rs",
+           "            if planned {\n                Some(Moved::Planned)",
+           "            if false {\n                Some(Moved::Planned)",
+           ("Writfold.Core.Recheck.still_stands_spec",)),
+    # plan writes: the sidecar's state wins over the manifest's
+    Mutant("writable-manifest-wins", "plan/recheck.rs",
+           "    match sidecar_closed {",
+           "    match manifest_closed {",
+           ("Writfold.Core.Recheck.writable_spec", "Writfold.Core.Recheck.sidecar_wins",
+            "Writfold.Core.Recheck.closed_refuses")),
     # assessed gate: one ungrounded premise makes the basis hypothetical
     Mutant("basis-ignores-premises", "assess.rs",
            "        if matches!(premises[index], Grounding::Ungrounded) {",

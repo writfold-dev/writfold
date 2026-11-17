@@ -214,6 +214,12 @@ def claims : List Name := [
   ``Writfold.Core.Scope.covers_iff,
   ``Writfold.Core.Scope.exclusion_wins,
   ``Writfold.Core.Scope.no_pattern_no_scope,
+  -- plan writes: the closed run and the re-check under the lock (G7)
+  ``Writfold.Core.Recheck.still_stands_spec,
+  ``Writfold.Core.Recheck.stands_iff,
+  ``Writfold.Core.Recheck.writable_spec,
+  ``Writfold.Core.Recheck.sidecar_wins,
+  ``Writfold.Core.Recheck.closed_refuses,
   -- the Weft assessed gate's basis (writfold_core::assess)
   ``Writfold.Core.Assess.assumption_loop_spec,
   ``Writfold.Core.Assess.assumption_spec,

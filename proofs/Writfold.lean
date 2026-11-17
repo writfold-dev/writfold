@@ -9,3 +9,4 @@ import Writfold.Delivery
 import Writfold.Guard
 import Writfold.Ground
 import Writfold.Scope
+import Writfold.Recheck

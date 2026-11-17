@@ -1618,6 +1618,69 @@ def observe.embeds (status : observe.Status) : Result Bool := do
   | observe.Status.Denied => ok false
   | observe.Status.Error => ok false
 
+/-- [writfold_core::plan::recheck::Decided]
+    Source: 'crates/writfold-core/src/plan/recheck.rs', lines 12:0-21:1
+    Visibility: public -/
+@[discriminant isize]
+inductive plan.recheck.Decided where
+| Unplanned : plan.recheck.Decided
+| Current : plan.recheck.Decided
+| Splice : Bool → Std.U64 → plan.recheck.Decided
+
+/-- [writfold_core::plan::recheck::Moved]
+    Source: 'crates/writfold-core/src/plan/recheck.rs', lines 24:0-31:1
+    Visibility: public -/
+@[discriminant isize]
+inductive plan.recheck.Moved where
+| Planned : plan.recheck.Moved
+| NotCurrent : plan.recheck.Moved
+| Taken : plan.recheck.Moved
+
+/-- [writfold_core::plan::recheck::still_stands]:
+    Source: 'crates/writfold-core/src/plan/recheck.rs', lines 38:0-73:1
+    Visibility: public -/
+def plan.recheck.still_stands
+  (decided : plan.recheck.Decided) (planned : Bool) (is_current : Bool)
+  (next : Std.U64) :
+  Result (Option plan.recheck.Moved)
+  := do
+  match decided with
+  | plan.recheck.Decided.Unplanned =>
+    if planned
+    then ok (some plan.recheck.Moved.Planned)
+    else ok none
+  | plan.recheck.Decided.Current =>
+    if is_current
+    then ok none
+    else ok (some plan.recheck.Moved.NotCurrent)
+  | plan.recheck.Decided.Splice parent_current ordinal =>
+    if parent_current
+    then
+      if is_current
+      then
+        if next != ordinal
+        then ok (some plan.recheck.Moved.Taken)
+        else ok none
+      else ok (some plan.recheck.Moved.NotCurrent)
+    else
+      if next != ordinal
+      then ok (some plan.recheck.Moved.Taken)
+      else ok none
+
+/-- [writfold_core::plan::recheck::writable]:
+    Source: 'crates/writfold-core/src/plan/recheck.rs', lines 79:0-87:1
+    Visibility: public -/
+def plan.recheck.writable
+  (sidecar_closed : Option Bool) (manifest_closed : Option Bool) :
+  Result Bool
+  := do
+  match sidecar_closed with
+  | none =>
+    match manifest_closed with
+    | none => ok true
+    | some closed => ok (¬ closed)
+  | some closed => ok (¬ closed)
+
 /-- [writfold_core::plan::Node]
     Source: 'crates/writfold-core/src/plan.rs', lines 23:0-26:1
     Visibility: public -/
