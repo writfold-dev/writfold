@@ -2,6 +2,7 @@ delivery 20261111T000000Z-XXXXXX [blocked] pr-comment audience=external destinat
   check: paragraphs.bounded [open] mechanical needs: writfold kb deliver check 20261111T000000Z-XXXXXX !open
   check: references.denied [open] mechanical needs: writfold kb deliver check 20261111T000000Z-XXXXXX !open
   check: claims.cited-fresh [open] observed needs: writfold kb deliver check 20261111T000000Z-XXXXXX !open
+  next: writfold kb deliver check 20261111T000000Z-XXXXXX
 # note: prepared runs/run-20261101T090000Z-a1b2c3/deliveries/20261111T000000Z-XXXXXX/candidate.md: the exact payload; nothing is sent
 # note: standing is derived on every read; checks are mechanical, attestations are statements, and nothing is sent
 # note: written to the KB work tree; commit it to share it

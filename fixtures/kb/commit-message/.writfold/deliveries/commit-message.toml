@@ -7,9 +7,10 @@
 #   git commit -F MSG                    # only once deliver status exits 0
 #
 # The honest limit is in the description, which deliver status prints:
-# nothing ties the checked bytes to the commit that is made.
+# the guard binds the checked bytes for git commit under a route
+# (guard.toml); a commit made outside the hook is not seen.
 schema = "writfold-delivery-mode/1"
 mode = "commit-message"
-description = "checked before git commit; nothing binds the checked bytes to the commit that is made"
+description = "checked before git commit; the guard binds the checked bytes under its route, and a commit made outside the hook is not seen"
 checks = ["references.denied"]
 gates = ["commit-format", "language-guidelines"]

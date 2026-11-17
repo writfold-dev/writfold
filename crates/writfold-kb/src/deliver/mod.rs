@@ -8,31 +8,53 @@
 //! and `deliver waive` record statements; `deliver status` derives each
 //! obligation's standing. Nothing is sent, ever: there is no network and
 //! no adapter. The checks are mechanical; attestations are attestations.
+mod answer;
 pub mod candidate;
 pub mod checks;
 pub mod config;
 mod config_check;
+pub mod draw;
 mod evaluate;
+pub mod found;
+pub mod guarded;
 pub mod markdown;
 pub mod mode;
 mod mode_check;
+mod mode_keys;
+pub mod modes;
+pub mod next;
+mod pick;
+pub mod policy;
+pub mod post;
+mod prepare;
+mod read;
 pub mod receipt;
 pub mod recheck;
+mod record;
+pub mod render;
+pub mod route;
+mod said;
+mod say;
 pub mod script;
 pub mod status;
+mod status_line;
 pub mod step;
+pub mod withdraw;
 pub mod word;
 
+pub use answer::resume_rows;
+use answer::status_answer;
+use say::say;
+
 use crate::Request;
-use crate::emit::{Answer, Output, Row};
+use crate::emit::Output;
 use crate::error::{KbError, Result};
-use crate::gate::statement::{self, Kind, Statement};
+use crate::gate::statement::Kind;
 use crate::index::query::Rec;
+use crate::runs;
 use crate::session::Session;
 use crate::workspace::{GitTool, Workspace};
-use crate::write::{Op, atomic, unique};
-use crate::{runs, time};
-use candidate::{Candidate, Prepare};
+use candidate::Prepare;
 
 /// One `deliver` verb.
 #[derive(Clone, Debug)]
@@ -42,6 +64,7 @@ pub enum DeliverVerb {
         candidate: Option<String>,
         check: Option<String>,
         run: Option<String>,
+        mode: Option<String>,
     },
     /// `deliver attest` or `deliver waive`.
     Say {
@@ -51,10 +74,46 @@ pub enum DeliverVerb {
         text: String,
         by: String,
         run: Option<String>,
+        mode: Option<String>,
     },
     Status {
         candidate: Option<String>,
         run: Option<String>,
+        /// `--all`: withdrawn candidates too.
+        all: bool,
+    },
+    /// `deliver withdraw`: the candidate is not meant.
+    Withdraw {
+        candidate: Option<String>,
+        reason: String,
+        by: String,
+        run: Option<String>,
+        mode: Option<String>,
+    },
+    /// `deliver posted`: a statement that the payload was posted.
+    Posted {
+        candidate: Option<String>,
+        reference: String,
+        by: String,
+        run: Option<String>,
+        mode: Option<String>,
+    },
+    /// `deliver payload`: the bytes to post.
+    Payload {
+        candidate: Option<String>,
+        to: Option<std::path::PathBuf>,
+        run: Option<String>,
+        mode: Option<String>,
+    },
+    /// `deliver match`: whether these bytes are a ready candidate's payload.
+    Match {
+        from: std::path::PathBuf,
+        mode: Option<String>,
+        run: Option<String>,
+    },
+    /// `deliver modes`: what each mode asks for.
+    Modes {
+        mode: Option<String>,
     },
 }
 
@@ -85,29 +144,25 @@ pub fn execute(ws: &Workspace, request: &Request, verb: &DeliverVerb, now: i64) 
     let session = Session::open(ws, Some(&tool), false, now)?;
     let (shown, notes, verb_name) = match verb {
         DeliverVerb::Prepare(p) => {
-            let rec = open_run(&session, p.run.as_deref(), true)?;
-            let (op, id) =
-                candidate::plan(&ws.root, &request.cwd, p, (&rec.id, &runs::dir(&rec)), now)?;
-            drop(session);
-            atomic::apply(&ws.root, &state, &[op], request.probe)?;
-            let notes = vec![format!(
-                "prepared {}/{}/{id}/{}: the exact payload; nothing is sent",
-                runs::dir(&rec),
-                candidate::DIR,
-                candidate::PAYLOAD
-            )];
+            let (rec, id, notes) = prepare::prepare(session, request, p, &state)?;
             (Some((rec, id)), notes, "deliver-prepare")
         }
         DeliverVerb::Check {
             candidate,
             check,
             run,
+            mode,
         } => {
             let rec = open_run(&session, run.as_deref(), true)?;
+            let want = pick::Want {
+                named: candidate.as_deref(),
+                mode: mode.as_deref(),
+                verb: Some("deliver check"),
+            };
             let (id, notes) = evaluate::run(
                 &session,
                 &rec,
-                candidate.as_deref(),
+                &want,
                 check.as_deref(),
                 &state,
                 request.probe,
@@ -116,23 +171,39 @@ pub fn execute(ws: &Workspace, request: &Request, verb: &DeliverVerb, now: i64) 
             (Some((rec, id)), notes, "deliver-check")
         }
         DeliverVerb::Say { .. } => {
-            let (rec, id, path) = say(&session, verb, &state, request.probe, now)?;
+            let (rec, id, path, ahead) = say(&session, verb, &state, request.probe, now)?;
             drop(session);
             let note = format!("recorded {path} (a statement, not a check)");
-            (Some((rec, id)), vec![note], "deliver-say")
+            (
+                Some((rec, id)),
+                [note].into_iter().chain(ahead).collect(),
+                "deliver-say",
+            )
         }
-        DeliverVerb::Status { candidate, run } => {
+        DeliverVerb::Status {
+            candidate,
+            run,
+            all,
+        } => {
             let rec = open_run(&session, run.as_deref(), false)?;
-            let answer = status_answer(&session, &rec, candidate.as_deref())?;
+            let answer = status_answer(&session, &rec, candidate.as_deref(), *all)?;
             let frame = crate::gate::frame(request, "deliver-status", vec![rec.id.clone()]);
             return session.emit(&answer, &frame);
+        }
+        DeliverVerb::Withdraw { .. } | DeliverVerb::Posted { .. } => {
+            let (rec, id, notes, name) = said::record(&session, verb, &state, request.probe)?;
+            drop(session);
+            (Some((rec, id)), notes, name)
+        }
+        DeliverVerb::Payload { .. } | DeliverVerb::Match { .. } | DeliverVerb::Modes { .. } => {
+            return read::answer(&session, request, verb);
         }
     };
     let session = Session::open(ws, Some(&tool), false, now)?;
     let Some((rec, id)) = shown else {
         return Err(KbError::Usage("nothing to show".into()));
     };
-    let mut answer = status_answer(&session, &rec, Some(&id))?;
+    let mut answer = status_answer(&session, &rec, Some(&id), true)?;
     answer.notes.splice(0..0, notes);
     if verb_name == "deliver-prepare" {
         // A new candidate's obligations are open by design; preparing it
@@ -144,233 +215,4 @@ pub fn execute(ws: &Workspace, request: &Request, verb: &DeliverVerb, now: i64) 
         .push("written to the KB work tree; commit it to share it".into());
     let frame = crate::gate::frame(request, verb_name, vec![rec.id.clone()]);
     session.emit(&answer, &frame)
-}
-
-/// Record an attestation or a waiver about one obligation of a candidate.
-fn say(
-    session: &Session<'_>,
-    verb: &DeliverVerb,
-    state: &std::path::Path,
-    probe: crate::write::Probe,
-    now: i64,
-) -> Result<(Rec, String, String)> {
-    let DeliverVerb::Say {
-        kind,
-        candidate,
-        check,
-        text,
-        by,
-        run,
-    } = verb
-    else {
-        return Err(KbError::Usage("not a statement".into()));
-    };
-    let flag = match kind {
-        Kind::Attested => "--statement",
-        Kind::Waived => "--reason",
-    };
-    let text = statement::check_text(flag, text)?;
-    let by = statement::check_text("--by", by)?;
-    let rec = open_run(session, run.as_deref(), true)?;
-    let root = &session.ws.root;
-    let cands = candidate::list(root, &runs::dir(&rec), &rec.id);
-    let c = candidate::pick(&cands, candidate.as_deref(), &rec.id)?;
-    let obligations = status::obligations(root, c)?;
-    let Some(ob) = obligations.iter().find(|o| o.name == *check) else {
-        let names: Vec<&str> = obligations.iter().map(|o| o.name.as_str()).collect();
-        return Err(KbError::Refused(format!(
-            "{check} is not an obligation of candidate {} (its mode asks for: {})",
-            c.id,
-            names.join(", ")
-        )));
-    };
-    if *kind == Kind::Attested && ob.class != "attested" {
-        return Err(KbError::Refused(format!(
-            "{check} is a {} check: only its own passing receipt satisfies it (deliver waive sets it aside, with a reason)",
-            ob.class
-        )));
-    }
-    let path = format!(
-        "{}/{}/{check}-{}.json",
-        c.dir,
-        statement::DIR,
-        unique(now, check)
-    );
-    let bytes = statement::bytes(&Statement {
-        kind: *kind,
-        obligation: check.clone(),
-        run: rec.id.clone(),
-        subject: c.id.clone(),
-        commit: None,
-        content: c.digest(),
-        definition: ob.digest.clone(),
-        text,
-        by,
-        recorded: time::stamp(now),
-    });
-    let ops = [Op::Create {
-        path: path.clone(),
-        bytes,
-    }];
-    atomic::apply(root, state, &ops, probe)?;
-    let id = c.id.clone();
-    Ok((rec, id, path))
-}
-
-/// The status answer for a run's candidates (or one of them).
-fn status_answer(session: &Session<'_>, rec: &Rec, named: Option<&str>) -> Result<Answer> {
-    let root = &session.ws.root;
-    let cands = candidate::list(root, &runs::dir(rec), &rec.id);
-    let chosen: Vec<&Candidate> = match named {
-        Some(_) => vec![candidate::pick(&cands, named, &rec.id)?],
-        None => cands.iter().collect(),
-    };
-    let mut answer = Answer::default();
-    let mut tally = Tally::default();
-    let mut modes: Vec<&str> = Vec::new();
-    for c in chosen {
-        tally.add(&mut answer.rows, session, c, &rec.id)?;
-        if let Ok(m) = &c.manifest
-            && !modes.contains(&m.mode.as_str())
-        {
-            modes.push(&m.mode);
-        }
-    }
-    // What a mode file says about itself (its limits) travels with it.
-    for name in modes {
-        if let Ok(config::Mode {
-            description: Some(d),
-            ..
-        }) = config::mode(root, name)
-        {
-            answer.notes.push(format!("mode {name}: {d}"));
-        }
-    }
-    crate::plan::delivery::mark(root, rec, &mut answer.rows);
-    if answer.rows.is_empty() {
-        answer.unknown = Some("no-candidates");
-        answer.notes.push(format!(
-            "run {} has no delivery candidate: writfold kb deliver prepare --mode M --from FILE",
-            rec.id
-        ));
-    }
-    answer.counts = tally.counts();
-    answer.notes.push(
-        "standing is derived on every read; checks are mechanical, attestations are statements, and nothing is sent".into(),
-    );
-    Ok(answer)
-}
-
-/// Counts for the trailer.
-#[derive(Default)]
-struct Tally {
-    candidates: usize,
-    ready: usize,
-    by: [usize; 7],
-    invalid: usize,
-}
-
-const NAMES: [&str; 7] = [
-    "satisfied",
-    "attested",
-    "waived",
-    "open",
-    "stale",
-    "failed",
-    "unknown",
-];
-
-impl Tally {
-    fn add(
-        &mut self,
-        rows: &mut Vec<Row>,
-        session: &Session<'_>,
-        c: &Candidate,
-        run: &str,
-    ) -> Result<()> {
-        let filings = status::Filings::read(&session.ws.root, c, run);
-        self.candidates += 1;
-        let invalid = status::invalid(&filings);
-        self.invalid += invalid.len();
-        if c.manifest.is_err() {
-            self.invalid += 1;
-            rows.push(status::row(c, &[]));
-            rows.extend(invalid);
-            return Ok(());
-        }
-        let judged = recheck::judged(session, c, &filings)?;
-        if status::ready(&judged) {
-            self.ready += 1;
-        }
-        let mut standings: Vec<&'static str> = judged.iter().map(|j| j.standing.name()).collect();
-        if judged.is_empty() {
-            // A mode that declares nothing: the delivery itself stands open.
-            standings.push(writfold_core::delivery::standing(&[]).name());
-        }
-        for name in standings {
-            if let Some(i) = NAMES.iter().position(|n| *n == name) {
-                self.by[i] += 1;
-            }
-        }
-        rows.push(status::row(c, &judged));
-        rows.extend(invalid);
-        Ok(())
-    }
-
-    fn counts(&self) -> Vec<(&'static str, usize)> {
-        let mut out = vec![("candidates", self.candidates), ("ready", self.ready)];
-        out.extend(NAMES.iter().copied().zip(self.by));
-        out.push(("invalid", self.invalid));
-        out
-    }
-}
-
-/// Each candidate of the run, whether it is ready ([`status::ready`]), and
-/// what it still owes (`<check> [<standing>]`, or why it cannot be met).
-pub fn readiness(session: &Session<'_>, rec: &Rec) -> Vec<(Candidate, bool, Vec<String>)> {
-    let root = &session.ws.root;
-    candidate::list(root, &runs::dir(rec), &rec.id)
-        .into_iter()
-        .map(|c| {
-            let filings = status::Filings::read(root, &c, &rec.id);
-            let (ready, owed) = match recheck::judged(session, &c, &filings) {
-                Ok(judged) => {
-                    let mut owed: Vec<String> = (judged.iter())
-                        .filter(|j| !j.standing.met())
-                        .map(|j| format!("{} [{}]", j.obligation.name, j.standing.name()))
-                        .collect();
-                    let ready = status::ready(&judged);
-                    if let (false, true, Ok(m)) = (ready, owed.is_empty(), &c.manifest) {
-                        owed.push(step::empty(&m.mode));
-                    }
-                    (ready, owed)
-                }
-                Err(error) => (false, vec![error.to_string()]),
-            };
-            (c, ready, owed)
-        })
-        .collect()
-}
-
-/// The rows `resume` shows: the run's newest three candidates.
-pub fn resume_rows(session: &Session<'_>, rec: &Rec) -> (Vec<Row>, Vec<String>) {
-    let root = &session.ws.root;
-    let cands = candidate::list(root, &runs::dir(rec), &rec.id);
-    let mut rows = Vec::new();
-    let mut notes = Vec::new();
-    let shown = cands.len().saturating_sub(3);
-    for c in &cands[shown..] {
-        let mut tally = Tally::default();
-        if let Err(error) = tally.add(&mut rows, session, c, &rec.id) {
-            notes.push(format!("deliveries: {error}"));
-        }
-    }
-    crate::plan::delivery::mark(root, rec, &mut rows);
-    if shown > 0 {
-        notes.push(format!(
-            "{} delivery candidates; the newest 3 are shown (writfold kb deliver status)",
-            cands.len()
-        ));
-    }
-    (rows, notes)
 }

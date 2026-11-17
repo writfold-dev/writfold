@@ -73,7 +73,7 @@ pub fn judge(root: &Path, loaded: &Loaded) -> Drift {
         let naming =
             (loaded.graph.steps.iter().enumerate()).filter(|(_, s)| s.gates.contains(&gate));
         for (i, step) in naming {
-            let delivery = crate::deliver::step::mode_of(&gate).is_some();
+            let delivery = crate::deliver::step::is_delivery_word(&gate);
             // A skipped step owes nothing: its gates are not compared.
             if step.done.is_none() && step.skipped.is_some() {
                 continue;
@@ -185,7 +185,7 @@ pub fn recorded(root: &Path, graph: &super::fold::Graph, rec: &crate::index::que
     let mut checks: Vec<Same> = invalid.iter().map(|_| compare("pin", None)).collect();
     for (gate, digest, _) in pinned(&pins) {
         let done = (graph.steps.iter())
-            .filter(|s| s.gates.contains(&gate) && crate::deliver::step::mode_of(&gate).is_none())
+            .filter(|s| s.gates.contains(&gate) && !crate::deliver::step::is_delivery_word(&gate))
             .filter_map(|s| s.done.as_ref());
         for (_, d) in done {
             let now = d

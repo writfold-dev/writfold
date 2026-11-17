@@ -51,7 +51,7 @@ verbs:
   index status|rebuild|verify      what the derived index holds; rebuild it; check it equals a rebuild
   check [<project>|<path>]         stale, index verify and the current run's gate status in one
                                    summary (the worst exit code of the three)
-  init [DIR] [--example research-policy] [--dry-run]
+  init [DIR] [--example research-policy|delivery] [--dry-run]
                                    make DIR (default: here) a KB: inventory/assets/.gitkeep, and with
                                    --example an editable example policy; create-new only, never commits
   policy                           the policy as it is now (required steps, gates with accept and
@@ -121,13 +121,22 @@ gates (checks with pinned receipts; definitions in .writfold/gates/<id>.toml):
                                    receipt lines for a commit message (exit 0 only if all are met)
 
 deliveries (offline candidates: the exact payload, checked mechanically; nothing is sent):
-  deliver prepare --mode MODE --from FILE [--audience internal|external]
+  deliver modes [MODE]             what each mode asks for: audience, checks, waivers, deny rules, routes
+  deliver prepare --mode MODE --from FILE|- [--audience internal|external]
                   [--destination NAME] [--run ID]
                                    MODE: pr-comment, slack-summary, or .writfold/deliveries/MODE.toml
-  deliver check [CANDIDATE] [--check NAME] [--run ID]
-                                   run the mode's checks and script gates on the candidate's bytes
-  deliver attest|waive [CANDIDATE] --check NAME --statement TEXT|--reason TEXT --by WHO
-  deliver status [CANDIDATE] [--run ID]
+  deliver check [CANDIDATE] [--mode MODE] [--check NAME] [--run ID]
+                                   run the mode's checks and script gates on the payload
+  deliver attest|waive [CANDIDATE] [--mode MODE] --check NAME --statement TEXT|--reason TEXT --by WHO
+  deliver withdraw [CANDIDATE] [--mode MODE] --reason TEXT --by WHO
+                                   the candidate is not meant: it decides no step, the guard never passes it
+  deliver payload [CANDIDATE] [--mode MODE] [--to FILE]
+                                   the bytes to post (citation tokens stripped when the mode says so)
+  deliver posted [CANDIDATE] [--mode MODE] --ref TEXT --by WHO
+                                   record that the payload was posted (a statement; nothing is fetched)
+  deliver match --from FILE|- [--mode MODE] [--run ID]
+                                   are these bytes a ready candidate's payload? (exit 0 only if so)
+  deliver status [CANDIDATE] [--all] [--run ID]
                                    each candidate's checks (exit 0 only if all are met)
 
 plans (the run graph; templates in .writfold/plans/<name>.toml; Writfold records, the agent walks):

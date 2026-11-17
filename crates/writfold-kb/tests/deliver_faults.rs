@@ -49,6 +49,7 @@ fn check() -> DeliverVerb {
         candidate: None,
         check: None,
         run: Some(RUN.into()),
+        mode: None,
     }
 }
 

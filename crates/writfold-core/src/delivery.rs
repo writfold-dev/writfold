@@ -1,35 +1,73 @@
 //! A delivery owed by a plan step (`deliver:<mode>`): which candidate
-//! decides an open step, and one standing for the whole delivery from its
-//! obligations' standings. Nothing here reads a candidate, a mode or a
-//! receipt; the caller judges each obligation with [`crate::gate`] and
-//! passes the standings in the mode's order.
+//! decides an open step, one standing and one readiness for the whole
+//! delivery from its obligations (each with the standings its policy
+//! accepts), what a post record makes of a `posted:<mode>` gate, and the
+//! delivery guard's decision over every candidate of the run. Nothing here
+//! reads a candidate, a mode, a receipt or a command; the caller judges each
+//! obligation with [`crate::gate`] and passes the standings in the mode's
+//! order.
 //!
-//! `deciding`, `unmet`, `is_waived`, `is_attested`, `standing`, `ready`,
-//! `rechecked` and `guard` are in the Charon `start_from` list;
+//! Every function here is in the Charon `start_from` list;
 //! `proofs/Writfold/Delivery.lean` proves them for every input
-//! (docs/writfold/aeneas.md). The exhaustive tests below state the same
-//! properties for small inputs.
+//! (docs/writfold/aeneas.md). The exhaustive tests in `delivery/tests.rs`
+//! state the same properties for small inputs.
 
 use crate::gate::{Standing, State};
+use crate::plan::GateFact;
+use crate::policy::Accept;
 
-/// The candidate that decides an open step: the last unbound one.
-/// `bound[i]` is whether candidate `i` (oldest first, by `(seq, id)`) is
-/// named by a done record of the run.
-pub fn deciding(bound: &[bool]) -> Option<usize> {
-    let mut index = bound.len();
+/// One obligation of a delivery: its standing as the gate kernel gives it,
+/// and the standings its policy takes (a mode's `waivable`, or a mode
+/// gate's own `accept`).
+pub struct Owed {
+    pub standing: Standing,
+    pub accept: Accept,
+}
+
+/// Where one candidate of a mode stands for an open step, oldest first by
+/// `(seq, id)`.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Place {
+    /// Live and named by no done record of the run.
+    Open,
+    /// Named by a done record of the run.
+    Bound,
+    /// Withdrawn by a statement: it decides nothing.
+    Withdrawn,
+}
+
+/// Whether a place is `Open`.
+pub fn is_open(place: &Place) -> bool {
+    matches!(place, Place::Open)
+}
+
+/// Whether a place is `Bound`.
+pub fn is_bound(place: &Place) -> bool {
+    matches!(place, Place::Bound)
+}
+
+/// The candidate that decides an open step: scanning from the newest,
+/// withdrawn candidates are passed over; the first other one decides if it
+/// is open, and nothing does if it is bound (an older draft never decides
+/// once a newer candidate of its mode is bound).
+pub fn deciding(places: &[Place]) -> Option<usize> {
+    let mut index = places.len();
     while index > 0 {
         index -= 1;
-        if !bound[index] {
+        if is_open(&places[index]) {
             return Some(index);
+        }
+        if is_bound(&places[index]) {
+            return None;
         }
     }
     None
 }
 
-/// Whether an obligation's standing is not met. Its own function so the
-/// loop in [`standing`] stays flat for the translation.
-pub fn unmet(standing: Standing) -> bool {
-    !standing.met()
+/// Whether an obligation is not met under its policy
+/// ([`crate::policy::met`]).
+pub fn unmet(owed: &Owed) -> bool {
+    !crate::policy::met(owed.standing, &owed.accept)
 }
 
 /// Whether a standing is a waiver.
@@ -42,26 +80,39 @@ pub fn is_attested(standing: Standing) -> bool {
     matches!(standing, Standing::Attested)
 }
 
+/// The first obligation not met under its policy, in the mode's order.
+pub fn first_unmet(owed: &[Owed]) -> Option<usize> {
+    let mut index = 0;
+    while index < owed.len() {
+        if unmet(&owed[index]) {
+            return Some(index);
+        }
+        index += 1;
+    }
+    None
+}
+
 /// One standing for a delivery from its obligations', in the mode's order:
 /// the weakest word that is true. Empty: `Checked(Open)` (an empty set is
-/// not met). Else the first unmet obligation's standing; else `Waived` if
-/// any is waived; else `Attested` if any is attested; else
-/// `Checked(Satisfied)`. A statement is never read as a passing check.
-pub fn standing(obligations: &[Standing]) -> Standing {
-    if obligations.is_empty() {
+/// not met). Else the first unmet obligation's standing (a waiver its
+/// policy rejects reads `Waived` here, and is not met); else `Waived` if any
+/// is waived; else `Attested` if any is attested; else `Checked(Satisfied)`.
+/// A statement is never read as a passing check.
+pub fn standing(owed: &[Owed]) -> Standing {
+    if owed.is_empty() {
         return Standing::Checked(State::Open);
     }
     let mut waived = false;
     let mut attested = false;
     let mut index = 0;
-    while index < obligations.len() {
-        if unmet(obligations[index]) {
-            return obligations[index];
+    while index < owed.len() {
+        if unmet(&owed[index]) {
+            return owed[index].standing;
         }
-        if is_waived(obligations[index]) {
+        if is_waived(owed[index].standing) {
             waived = true;
         }
-        if is_attested(obligations[index]) {
+        if is_attested(owed[index].standing) {
             attested = true;
         }
         index += 1;
@@ -75,10 +126,53 @@ pub fn standing(obligations: &[Standing]) -> Standing {
     }
 }
 
-/// Whether a candidate is ready: its delivery's [`standing`] is met. A mode
-/// that declares nothing is never ready (an empty set is not met).
-pub fn ready(obligations: &[Standing]) -> bool {
-    standing(obligations).met()
+/// Whether a candidate is ready: it owes at least one obligation and every
+/// one is met under its policy. A mode that declares nothing is never
+/// ready; a waiver the policy rejects never makes one ready.
+pub fn ready(owed: &[Owed]) -> bool {
+    if owed.is_empty() {
+        return false;
+    }
+    match first_unmet(owed) {
+        None => true,
+        Some(_) => false,
+    }
+}
+
+/// Whether the delivery is held by a statement its policy rejects: the
+/// first unmet obligation stands on a met word (a waiver, or an
+/// attestation, the policy does not take).
+pub fn refused(owed: &[Owed]) -> bool {
+    match first_unmet(owed) {
+        None => false,
+        Some(index) => owed[index].standing.met(),
+    }
+}
+
+/// What a plan step's `deliver:<mode>` gate is given: the delivery's
+/// [`standing`], with every word accepted when it is [`ready`] and none
+/// otherwise, so the proved `plan::fact_met` is exactly readiness.
+pub fn fact(owed: &[Owed]) -> GateFact {
+    let taken = ready(owed);
+    GateFact::Stands(
+        standing(owed),
+        Accept {
+            satisfied: taken,
+            attested: taken,
+            waived: taken,
+        },
+    )
+}
+
+/// A `posted:<mode>` gate: `Attested` when a post record about the
+/// candidate's present bytes exists, else `Checked(Open)`. A post record is
+/// a statement; it is never a passing check.
+pub fn posted(recorded: bool) -> Standing {
+    if recorded {
+        Standing::Attested
+    } else {
+        Standing::Checked(State::Open)
+    }
 }
 
 /// A passed check whose cited evidence moved since (`moved` citations no
@@ -100,126 +194,74 @@ pub enum Body {
     Unknown,
 }
 
-/// The delivery guard's decision: allow known bytes only when a ready
-/// candidate of the run holds them (`same_ready`); allow unknown bytes only
-/// when the run has at least one candidate and every candidate is ready.
-pub fn guard(body: Body, same_ready: bool, candidates: usize, all_ready: bool) -> bool {
+/// What unread bytes get: a listed command or tool keeps the lenient rule
+/// (every live candidate of the run ready); a route denies them.
+pub enum Unread {
+    AllReady,
+    Deny,
+}
+
+/// One candidate of the run as the guard sees it.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct Seen {
+    /// Its payload is the bytes being posted.
+    pub same: bool,
+    /// It is ready ([`ready`]).
+    pub ready: bool,
+    /// It is not withdrawn.
+    pub live: bool,
+    /// It is of the route's mode (true for a plain list entry).
+    pub routed: bool,
+    /// A post record about its present bytes exists.
+    pub spent: bool,
+}
+
+/// Whether the guard may pass a candidate's bytes.
+pub fn postable(seen: &Seen) -> bool {
+    seen.same && seen.ready && seen.live && seen.routed && !seen.spent
+}
+
+/// Whether some candidate is postable.
+pub fn guard_any(seen: &[Seen]) -> bool {
+    let mut index = 0;
+    while index < seen.len() {
+        if postable(&seen[index]) {
+            return true;
+        }
+        index += 1;
+    }
+    false
+}
+
+/// Whether at least one candidate is live and every live one is ready.
+pub fn guard_all(seen: &[Seen]) -> bool {
+    let mut live = false;
+    let mut index = 0;
+    while index < seen.len() {
+        if seen[index].live && !seen[index].ready {
+            return false;
+        }
+        if seen[index].live {
+            live = true;
+        }
+        index += 1;
+    }
+    live
+}
+
+/// The delivery guard's decision. Known bytes pass exactly when some
+/// candidate is postable. Unknown bytes never pass under `Deny`; under
+/// `AllReady` they pass when at least one candidate is live and every live
+/// candidate is ready.
+pub fn guard(body: Body, unread: Unread, seen: &[Seen]) -> bool {
     match body {
-        Body::Known => same_ready,
-        Body::Unknown => candidates > 0 && all_ready,
+        Body::Known => guard_any(seen),
+        Body::Unknown => match unread {
+            Unread::AllReady => guard_all(seen),
+            Unread::Deny => false,
+        },
     }
 }
 
 #[cfg(test)]
-mod tests {
-    use super::{Body, deciding, guard, ready, rechecked, standing};
-    use crate::gate::{Standing, State};
-    use alloc::vec::Vec;
-
-    const ALL: [Standing; 7] = [
-        Standing::Checked(State::Open),
-        Standing::Checked(State::Satisfied),
-        Standing::Checked(State::Stale),
-        Standing::Checked(State::Failed),
-        Standing::Checked(State::Unknown),
-        Standing::Attested,
-        Standing::Waived,
-    ];
-
-    /// Every list of up to `max` elements over `ALL`.
-    fn lists(max: usize) -> Vec<Vec<Standing>> {
-        let mut out: Vec<Vec<Standing>> = Vec::new();
-        out.push(Vec::new());
-        let mut layer: Vec<Vec<Standing>> = Vec::from([Vec::new()]);
-        for _ in 0..max {
-            let mut next = Vec::new();
-            for list in &layer {
-                for item in ALL {
-                    let mut grown = list.clone();
-                    grown.push(item);
-                    next.push(grown);
-                }
-            }
-            out.extend(next.iter().cloned());
-            layer = next;
-        }
-        out
-    }
-
-    #[test]
-    fn deciding_is_the_last_unbound_candidate() {
-        for len in 0..=4usize {
-            for mask in 0..(1u32 << len) {
-                let bound: Vec<bool> = (0..len).map(|i| mask & (1 << i) != 0).collect();
-                let want = (0..len).rev().find(|&i| !bound[i]);
-                assert_eq!(deciding(&bound), want, "{bound:?}");
-                if let Some(i) = deciding(&bound) {
-                    assert!(!bound[i]);
-                    assert!(bound[i + 1..].iter().all(|&b| b), "{bound:?}");
-                }
-            }
-        }
-    }
-
-    #[test]
-    fn standing_is_the_weakest_true_word() {
-        let all = lists(3);
-        assert_eq!(all.len(), 1 + 7 + 49 + 343);
-        for list in &all {
-            let got = standing(list);
-            let every_satisfied = list
-                .iter()
-                .all(|s| *s == Standing::Checked(State::Satisfied));
-            let every_met = list.iter().all(|s| s.met());
-            let statement = list
-                .iter()
-                .any(|s| matches!(s, Standing::Attested | Standing::Waived));
-            assert_eq!(
-                got == Standing::Checked(State::Satisfied),
-                !list.is_empty() && every_satisfied,
-                "{list:?}"
-            );
-            assert_eq!(got.met(), !list.is_empty() && every_met, "{list:?}");
-            if statement {
-                assert_ne!(got, Standing::Checked(State::Satisfied), "{list:?}");
-            }
-            let want = match list.iter().find(|s| !s.met()) {
-                Some(first) => *first,
-                None if list.is_empty() => Standing::Checked(State::Open),
-                None if list.contains(&Standing::Waived) => Standing::Waived,
-                None if list.contains(&Standing::Attested) => Standing::Attested,
-                None => Standing::Checked(State::Satisfied),
-            };
-            assert_eq!(got, want, "{list:?}");
-        }
-    }
-
-    #[test]
-    fn waived_is_weaker_than_attested() {
-        let list = [Standing::Attested, Standing::Waived];
-        assert_eq!(standing(&list), Standing::Waived);
-        let list = [Standing::Checked(State::Satisfied), Standing::Attested];
-        assert_eq!(standing(&list), Standing::Attested);
-        assert_eq!(standing(&[]), Standing::Checked(State::Open));
-    }
-
-    /// A mode that declares nothing is never ready; otherwise ready is met.
-    #[test]
-    fn ready_is_standing_met() {
-        assert!(!ready(&[]));
-        for list in lists(2) {
-            assert_eq!(ready(&list), standing(&list).met(), "{list:?}");
-        }
-    }
-
-    #[test]
-    fn rechecked_and_guard() {
-        assert_eq!(rechecked(State::Satisfied, 1), State::Stale);
-        assert_eq!(rechecked(State::Satisfied, 0), State::Satisfied);
-        assert_eq!(rechecked(State::Failed, 3), State::Failed);
-        for (same, n, all) in [(false, 0, true), (true, 0, false), (true, 2, true)] {
-            assert_eq!(guard(Body::Known, same, n, all), same);
-            assert_eq!(guard(Body::Unknown, same, n, all), n > 0 && all);
-        }
-    }
-}
+mod tests;

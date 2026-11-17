@@ -147,3 +147,33 @@ fn a_first_run_resumes_and_says_no_policy_is_configured() -> TestResult {
     let _ = std::fs::remove_dir_all(&dir);
     Ok(())
 }
+
+#[test]
+fn init_writes_the_delivery_example() -> TestResult {
+    let dir = scratch("delivery")?;
+    let (text, exit) = init(&dir, Some("delivery"), false)?;
+    assert!(
+        exit == 0 && text.contains("wrote .writfold/deliveries/guard.toml"),
+        "{text}"
+    );
+    assert!(text.contains("the built-in modes are unchanged"), "{text}");
+    let fixture = support::fixture("delivery-example");
+    for file in [
+        ".writfold/deliveries/deny-external.toml",
+        ".writfold/deliveries/deny-internal.toml",
+        ".writfold/deliveries/commit-message.toml",
+        ".writfold/deliveries/release-note.toml",
+        ".writfold/deliveries/guard.toml",
+        ".writfold/gates/commit-format.toml",
+        ".writfold/gates/commit_format.sh",
+        ".writfold/plans/ship.toml",
+    ] {
+        assert_eq!(
+            std::fs::read(dir.join(file))?,
+            std::fs::read(fixture.join(file))?,
+            "{file}"
+        );
+    }
+    let _ = std::fs::remove_dir_all(&dir);
+    Ok(())
+}

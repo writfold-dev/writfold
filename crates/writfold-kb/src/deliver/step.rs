@@ -11,14 +11,29 @@ use super::status::{self, Filings, Judged};
 use super::{config, recheck};
 use crate::emit::Row;
 use crate::session::Session;
+use writfold_core::delivery::Place;
 use writfold_core::gate::{Standing, State};
+use writfold_core::plan::GateFact;
 
 /// The word a plan step owes a delivery by: `deliver:<mode>`.
 pub const PREFIX: &str = "deliver:";
 
+/// The word a plan step owes a post record by: `posted:<mode>`.
+pub const POSTED: &str = "posted:";
+
 /// The mode a step word owes, when it is a delivery word.
 pub fn mode_of(word: &str) -> Option<&str> {
     word.strip_prefix(PREFIX)
+}
+
+/// The mode a `posted:<mode>` word names.
+pub fn posted_of(word: &str) -> Option<&str> {
+    word.strip_prefix(POSTED)
+}
+
+/// Whether a step word is a delivery's (`deliver:` or `posted:`), not a gate.
+pub fn is_delivery_word(word: &str) -> bool {
+    mode_of(word).is_some() || posted_of(word).is_some()
 }
 
 fn seq(c: &Candidate) -> u64 {
@@ -57,11 +72,31 @@ pub fn bound_id<'a>(run_dir: &str, evidence: &'a str) -> Option<&'a str> {
     (!id.is_empty() && !id.contains('/')).then_some(id)
 }
 
-/// The candidate that decides an open step: the last of `mine` that no
-/// done record binds.
-pub fn deciding<'a>(mine: &[&'a Candidate], bound: &[String]) -> Option<&'a Candidate> {
-    let flags: Vec<bool> = mine.iter().map(|c| bound.contains(&c.id)).collect();
-    writfold_core::delivery::deciding(&flags).and_then(|i| mine.get(i).copied())
+/// Where each of `mine` stands for an open step: bound by a done record,
+/// withdrawn, or open.
+pub fn places(mine: &[&Candidate], bound: &[String], withdrawn: &[String]) -> Vec<Place> {
+    mine.iter()
+        .map(
+            |c| match (bound.contains(&c.id), withdrawn.contains(&c.id)) {
+                (true, _) => Place::Bound,
+                (false, true) => Place::Withdrawn,
+                (false, false) => Place::Open,
+            },
+        )
+        .collect()
+}
+
+/// The candidate that decides an open step
+/// ([`writfold_core::delivery::deciding`]): scanning from the newest of
+/// `mine`, withdrawn ones are passed over; the first other one decides if
+/// no done record binds it, and nothing does if one does.
+pub fn deciding<'a>(
+    mine: &[&'a Candidate],
+    bound: &[String],
+    withdrawn: &[String],
+) -> Option<&'a Candidate> {
+    let places = places(mine, bound, withdrawn);
+    writfold_core::delivery::deciding(&places).and_then(|i| mine.get(i).copied())
 }
 
 /// One candidate as a step judges it.
@@ -85,6 +120,9 @@ pub struct Seen {
 pub struct View {
     pub mode: String,
     pub standing: Standing,
+    /// Whether the plan takes the standing as met: the candidate is ready
+    /// ([`writfold_core::delivery::fact`]).
+    pub taken: bool,
     /// Obligations met, of how many.
     pub met: usize,
     pub total: usize,
@@ -99,7 +137,15 @@ pub struct View {
 fn definition(mode: &str, audience: &str, judged: &[Judged<'_>]) -> String {
     let mut text = format!("writfold-delivery-gate/1\n{mode}\n{audience}\n");
     for j in judged {
-        text.push_str(&format!("{}\t{}\n", j.obligation.name, j.obligation.digest));
+        // A policy key joins the digest only when it narrows something.
+        let narrowed = match j.obligation.waivable {
+            true => "",
+            false => "\tno-waiver",
+        };
+        text.push_str(&format!(
+            "{}\t{}{narrowed}\n",
+            j.obligation.name, j.obligation.digest
+        ));
     }
     candidate::sha(text.as_bytes())
 }
@@ -116,6 +162,7 @@ fn open_view(mode: &str, why: Option<String>) -> View {
     View {
         mode: mode.to_owned(),
         standing: Standing::Checked(State::Open),
+        taken: false,
         met: 0,
         total: 0,
         definition: String::new(),
@@ -145,23 +192,21 @@ pub fn view(session: &Session<'_>, mode: &str, c: Option<&Candidate>, run: &str)
     let filings = Filings::read(root, c, run);
     let mut judged = status::judge(obligations, c, &filings);
     recheck::apply(session, c, &mut judged);
-    let standings: Vec<Standing> = judged.iter().map(|j| j.standing).collect();
-    let owed: Vec<&Judged<'_>> = judged.iter().filter(|j| !j.standing.met()).collect();
-    let next = owed.first().map(|j| match j.obligation.class {
-        "attested" => format!(
-            "writfold kb deliver attest {} --check {} --statement TEXT --by WHO",
-            c.id, j.obligation.name
-        ),
-        _ => format!("writfold kb deliver check {}", c.id),
-    });
+    let owed: Vec<&Judged<'_>> = judged.iter().filter(|j| j.unmet()).collect();
+    let next = super::next::next(root, c, &judged);
     let read = owed
         .iter()
         .filter(|j| j.obligation.class == "attested")
         .filter_map(|j| j.obligation.gate.as_ref())
         .find_map(|g| crate::gate::status::read_line(g, "").and_then(|m| m.path));
+    let (standing, taken) = match writfold_core::delivery::fact(&status::owed(&judged)) {
+        GateFact::Stands(standing, accept) => (standing, accept.satisfied),
+        GateFact::Undefined => (Standing::Checked(State::Open), false),
+    };
     View {
         mode: mode.to_owned(),
-        standing: writfold_core::delivery::standing(&standings),
+        standing,
+        taken,
         met: judged.len() - owed.len(),
         total: judged.len(),
         definition: definition(mode, &audience, &judged),

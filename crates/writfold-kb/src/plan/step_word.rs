@@ -85,7 +85,9 @@ fn word(id: &str, (at, word): (usize, &str), step: &mut Step) -> Result<(), Faul
         }
         return Ok(());
     }
-    if word.starts_with(crate::deliver::step::PREFIX) {
+    if word.starts_with(crate::deliver::step::PREFIX)
+        || word.starts_with(crate::deliver::step::POSTED)
+    {
         if let Err(why) = crate::deliver::word::check(id, word, &step.gates) {
             let code = if why.ends_with("twice") {
                 "value.twice"
@@ -124,6 +126,19 @@ pub fn read(text: &str) -> Result<Step, Fault> {
     };
     for found in words(text, raw.len() + 1) {
         word(id, found, &mut step)?;
+    }
+    if let Some(why) = crate::deliver::word::unpaired(id, &step.gates) {
+        let at = step
+            .gates
+            .iter()
+            .find(|g| crate::deliver::word::lone(g, &step.gates))
+            .and_then(|g| locate(text, g));
+        return Err(fault(
+            "ref.undefined",
+            why,
+            "no deliver: word for this mode",
+            at,
+        ));
     }
     Ok(step)
 }

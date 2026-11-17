@@ -59,6 +59,7 @@ fn check(w: &World, id: &str, at: i64) -> TestResult<(String, u8)> {
         candidate: Some(id.into()),
         check: Some("paragraphs.bounded".into()),
         run: Some(assessed::RUN.into()),
+        mode: None,
     };
     deliver(w, verb, at)
 }
@@ -95,6 +96,7 @@ fn a_delivery_receipt_written_after_a_clock_ran_back_still_decides() -> TestResu
     let verb = DeliverVerb::Status {
         candidate: Some(candidate.clone()),
         run: Some(RUN.into()),
+        all: false,
     };
     let (text, _) = deliver(&w, verb, NOW + 3600)?;
     // The second check (written at 00:05, after the one stamped 00:10)

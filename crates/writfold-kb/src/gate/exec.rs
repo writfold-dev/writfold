@@ -117,17 +117,23 @@ pub fn run(d: &Definition, top: &Path, artifacts: &Path) -> Evaluation {
         gate: &d.dir,
         artifacts: Some(artifacts),
         candidate: None,
+        source: None,
     };
     execute(&d.id, &d.argv, &d.workdir, d.timeout_seconds, top, &places)
 }
 
 /// Run a candidate gate's definition against the payload file
 /// `candidate`, in its working directory under the KB root `root`.
-pub fn run_on_candidate(d: &Definition, root: &Path, candidate: &Path) -> Evaluation {
+pub fn run_on_candidate(
+    d: &Definition,
+    root: &Path,
+    (candidate, source): (&Path, &Path),
+) -> Evaluation {
     let places = Places {
         gate: &d.dir,
         artifacts: None,
         candidate: Some(candidate),
+        source: Some(source),
     };
     execute(&d.id, &d.argv, &d.workdir, d.timeout_seconds, root, &places)
 }

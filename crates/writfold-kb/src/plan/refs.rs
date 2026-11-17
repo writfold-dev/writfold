@@ -114,6 +114,9 @@ pub fn gates(kb: &Path, top: Option<&Path>, closure: &Closure) -> Result<()> {
                     crate::deliver::word::spliced(kb, &t.name, mode)?;
                     continue;
                 }
+                if crate::deliver::step::posted_of(gate).is_some() {
+                    continue;
+                }
                 let file = format!("{}/{gate}.toml", def::DIR);
                 if let Some((_, problem)) = problems.iter().find(|(_, p)| p.path == file) {
                     report.extend(problem.report.clone());

@@ -4,8 +4,7 @@
 //! environment; the caller decides colour and width ([`render::Style`]).
 //!
 //! Only [`blocks`] (whether a lint fails) is translated and proved; the
-//! rest is rendering and is not a decision kernel, so iterators and
-//! derives are used freely here.
+//! rest is rendering, not a decision kernel: iterators and derives are free.
 use alloc::format;
 use alloc::string::String;
 use alloc::vec::Vec;
@@ -22,7 +21,7 @@ pub use suggest::{distance, suggest};
 /// Every code a diagnostic may carry. Codes are never renamed or reused;
 /// a test holds this list, the specification's table, the guide's table
 /// and the codes the source emits to the same set.
-pub const CODES: [&str; 27] = [
+pub const CODES: [&str; 28] = [
     "syntax.unclosed-array",
     "syntax.unclosed-string",
     "syntax.expected",
@@ -41,6 +40,7 @@ pub const CODES: [&str; 27] = [
     "value.pattern",
     "value.class",
     "value.unmeetable",
+    "value.conflict",
     "ref.undefined",
     "ref.wrong-kind",
     "ref.cycle",

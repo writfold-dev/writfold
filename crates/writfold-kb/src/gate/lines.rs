@@ -78,6 +78,7 @@ pub(super) fn lines(
         exit: if clean { 0 } else { 2 },
         report: None,
         shown: None,
+        drawn: None,
     })
 }
 

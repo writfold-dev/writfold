@@ -1,4 +1,4 @@
-//! `kb init [DIR] [--example research-policy] [--dry-run]`: the shortest
+//! `kb init [DIR] [--example research-policy|delivery] [--dry-run]`: the shortest
 //! path from an ordinary directory to a KB. The one `kb` verb that needs
 //! no KB. It creates `inventory/assets/.gitkeep` (the directory every verb
 //! looks for) and, with `--example`, an editable example policy. Every
@@ -34,8 +34,53 @@ const RESEARCH: [(&str, &str); 4] = [
     ),
 ];
 
+/// What `init` writes with `--example delivery`: the bytes of
+/// `fixtures/kb/delivery-example/`, which are the user's after `init`.
+const DELIVERY: [(&str, &str); 8] = [
+    (
+        ".writfold/deliveries/deny-external.toml",
+        include_str!(
+            "../../../fixtures/kb/delivery-example/.writfold/deliveries/deny-external.toml"
+        ),
+    ),
+    (
+        ".writfold/deliveries/deny-internal.toml",
+        include_str!(
+            "../../../fixtures/kb/delivery-example/.writfold/deliveries/deny-internal.toml"
+        ),
+    ),
+    (
+        ".writfold/deliveries/commit-message.toml",
+        include_str!(
+            "../../../fixtures/kb/delivery-example/.writfold/deliveries/commit-message.toml"
+        ),
+    ),
+    (
+        ".writfold/deliveries/release-note.toml",
+        include_str!(
+            "../../../fixtures/kb/delivery-example/.writfold/deliveries/release-note.toml"
+        ),
+    ),
+    (
+        ".writfold/deliveries/guard.toml",
+        include_str!("../../../fixtures/kb/delivery-example/.writfold/deliveries/guard.toml"),
+    ),
+    (
+        ".writfold/gates/commit-format.toml",
+        include_str!("../../../fixtures/kb/delivery-example/.writfold/gates/commit-format.toml"),
+    ),
+    (
+        ".writfold/gates/commit_format.sh",
+        include_str!("../../../fixtures/kb/delivery-example/.writfold/gates/commit_format.sh"),
+    ),
+    (
+        ".writfold/plans/ship.toml",
+        include_str!("../../../fixtures/kb/delivery-example/.writfold/plans/ship.toml"),
+    ),
+];
+
 /// The examples `--example` names.
-pub const EXAMPLES: [&str; 1] = ["research-policy"];
+pub const EXAMPLES: [&str; 2] = ["research-policy", "delivery"];
 
 /// `kb init`'s arguments.
 #[derive(Clone, Debug, Default)]
@@ -51,6 +96,7 @@ fn plan(example: Option<&str>) -> Result<Vec<(&'static str, &'static str)>> {
     match example {
         None => {}
         Some("research-policy") => files.extend(RESEARCH),
+        Some("delivery") => files.extend(DELIVERY),
         Some(other) => {
             return Err(KbError::Usage(format!(
                 "unknown example {other}; known: {}",
@@ -137,13 +183,16 @@ fn refused(dir: &Path, root: &Path, json: bool) -> Output {
         exit: 3,
         report: None,
         shown: None,
+        drawn: None,
     }
 }
 
 fn notes(init: &Init) -> Vec<String> {
     let mut notes = Vec::new();
-    if init.example.is_some() {
-        notes.push("the research policy is an example: these files are yours to edit or delete, and Writfold reads only what they say".to_owned());
+    match init.example.as_deref() {
+        Some("delivery") => notes.push("the delivery modes, deny lists, guard routes and plan are an example: these files are yours to edit or delete, and the built-in modes are unchanged".to_owned()),
+        Some(_) => notes.push("the research policy is an example: these files are yours to edit or delete, and Writfold reads only what they say".to_owned()),
+        None => {}
     }
     if init.dry_run {
         notes.push("dry run: nothing was written".to_owned());
@@ -193,5 +242,6 @@ fn render(rows: &[(&str, bool)], init: &Init, json: bool) -> Output {
         exit: 0,
         report: None,
         shown: None,
+        drawn: None,
     }
 }

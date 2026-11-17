@@ -9,7 +9,10 @@
 //!   that directory; a named file must exist there, and its bytes enter the
 //!   definition digest, so editing the script makes receipts stale.
 //! - `{candidate}`: the delivery candidate's payload file (candidate gates
-//!   only, where it is required).
+//!   only, where it is required): under a mode whose rendering is not
+//!   verbatim, the rendered `payload.md`.
+//! - `{source}`: the candidate's own file, `candidate.md` (candidate gates
+//!   only).
 //!
 //! Any other `{name}` of lower-case letters and `_` is refused, so a typo
 //! cannot pass through as text. Expansion is one pass: text a placeholder
@@ -21,13 +24,15 @@ use std::path::{Path, PathBuf};
 pub const ARTIFACTS: &str = "{artifacts}";
 pub const GATE: &str = "{gate}";
 pub const CANDIDATE: &str = "{candidate}";
-const KNOWN: [&str; 3] = [ARTIFACTS, GATE, CANDIDATE];
+pub const SOURCE: &str = "{source}";
+const KNOWN: [&str; 4] = [ARTIFACTS, GATE, CANDIDATE, SOURCE];
 
 /// The values the placeholders expand to for one evaluation.
 pub struct Places<'a> {
     pub gate: &'a Path,
     pub artifacts: Option<&'a Path>,
     pub candidate: Option<&'a Path>,
+    pub source: Option<&'a Path>,
 }
 
 /// One placeholder found in an argument: its text and byte offset.
@@ -154,6 +159,7 @@ pub fn expand(argv: &[String], places: &Places<'_>) -> Vec<String> {
             GATE => Some(places.gate),
             ARTIFACTS => places.artifacts,
             CANDIDATE => places.candidate,
+            SOURCE => places.source,
             _ => None,
         };
         path.map(|p| p.to_string_lossy().into_owned())
@@ -198,6 +204,7 @@ mod tests {
             gate: Path::new("/kb/.writfold/gates"),
             artifacts: None,
             candidate: Some(Path::new("/r/{gate}/candidate.md")),
+            source: None,
         };
         let argv = vec![
             "{gate}/a.sh".to_owned(),

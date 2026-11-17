@@ -11,6 +11,7 @@ use crate::index::query::Rec;
 use crate::session::Session;
 use crate::write::{Op, Probe, atomic, unique};
 use crate::{runs, time};
+use sha2::Digest;
 use std::path::Path;
 
 /// Run the checks (or the one named) of a candidate; returns its ID and
@@ -18,14 +19,14 @@ use std::path::Path;
 pub(super) fn run(
     session: &Session<'_>,
     rec: &Rec,
-    named: Option<&str>,
+    want: &super::pick::Want<'_>,
     only: Option<&str>,
     state: &Path,
     probe: Probe,
 ) -> Result<(String, Vec<String>)> {
     let root = &session.ws.root;
     let cands = candidate::list(root, &runs::dir(rec), &rec.id);
-    let c = candidate::pick(&cands, named, &rec.id)?;
+    let c = super::pick::pick(session, rec, &cands, want)?;
     let m = c
         .manifest
         .as_ref()
@@ -33,8 +34,13 @@ pub(super) fn run(
     let bytes = c.bytes.as_ref().ok_or_else(|| {
         KbError::Refused(format!("candidate {} has no {}", c.id, candidate::PAYLOAD))
     })?;
-    let text = String::from_utf8_lossy(bytes);
     let mode = config::mode(root, &m.mode)?;
+    let payload = super::render::render(bytes, &mode.rendering);
+    let payload_path = write_payload(root, c, &mode.rendering, &payload, (state, probe))?;
+    let text = (
+        String::from_utf8_lossy(&payload).into_owned(),
+        String::from_utf8_lossy(bytes).into_owned(),
+    );
     let deny = config::deny(root, &m.audience)?;
     let wanted: Vec<config::Obligation> = config::obligations(&mode, &deny)
         .into_iter()
@@ -53,7 +59,14 @@ pub(super) fn run(
     let mut notes = Vec::new();
     let filed = receipt::filed(root, &c.dir, &rec.id, &c.id);
     for ob in &wanted {
-        let evaluated = evaluate(session, c, &text, ob, (&mode, &deny))?;
+        let evaluated = evaluate(
+            session,
+            c,
+            (&text.0, &text.1),
+            ob,
+            (&mode, &deny),
+            &payload_path,
+        )?;
         let path = format!(
             "{}/{}/{}-{}.json",
             c.dir,
@@ -81,20 +94,57 @@ pub(super) fn run(
     Ok((c.id.clone(), notes))
 }
 
+/// Write `payload.md` beside the candidate when the rendering is not
+/// verbatim; returns the KB path of the file that holds the payload.
+fn write_payload(
+    root: &Path,
+    c: &Candidate,
+    rendering: &str,
+    payload: &[u8],
+    (state, probe): (&Path, Probe),
+) -> Result<String> {
+    if rendering == super::render::VERBATIM {
+        return Ok(c.payload_path());
+    }
+    let path = format!("{}/{}", c.dir, super::render::FILE);
+    let op = match std::fs::read(root.join(&path)) {
+        Ok(old) if old == payload => return Ok(path),
+        Ok(old) => Op::Replace {
+            path: path.clone(),
+            expected: crate::index::hex(&sha2::Sha256::digest(&old)),
+            bytes: payload.to_vec(),
+        },
+        Err(_) => Op::Create {
+            path: path.clone(),
+            bytes: payload.to_vec(),
+        },
+    };
+    atomic::apply(root, state, &[op], probe)?;
+    Ok(path)
+}
+
+/// Evaluate one obligation: the payload for the paragraph bound, the deny
+/// list and script gates; the candidate's own tokens for cited claims.
 fn evaluate(
     session: &Session<'_>,
     c: &Candidate,
-    text: &str,
+    (payload, source): (&str, &str),
     ob: &config::Obligation,
     (mode, deny): (&config::Mode, &config::Deny),
+    payload_path: &str,
 ) -> Result<Evaluated> {
     if let Some(gate) = &ob.gate {
-        return Ok(super::script::evaluate(&session.ws.root, c, gate));
+        return Ok(super::script::evaluate(
+            &session.ws.root,
+            c,
+            gate,
+            payload_path,
+        ));
     }
     Ok(match ob.name.as_str() {
-        PARAGRAPHS => checks::paragraphs(text, mode),
-        REFERENCES => checks::references(text, deny),
-        CLAIMS => checks::claims(session, text, &c.payload_path())?,
+        PARAGRAPHS => checks::paragraphs(payload, mode),
+        REFERENCES => checks::references(payload, deny),
+        CLAIMS => checks::claims(session, source, &c.payload_path())?,
         other => return Err(KbError::Refused(format!("{other} is not a built-in check"))),
     })
 }

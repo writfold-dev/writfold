@@ -1,0 +1,6 @@
+# An example to edit (writfold kb init --example delivery): an explicit
+# empty list says nothing is denied for internal readers. Without this
+# file, references.denied stands unknown for the internal audience.
+schema = "writfold-deny/1"
+audience = "internal"
+rules = []

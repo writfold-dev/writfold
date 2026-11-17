@@ -1,0 +1,18 @@
+# An example to edit (writfold kb init --example delivery): a commit
+# message for a public repository, checked before git commit.
+#
+#   writfold kb deliver prepare --mode commit-message --from MSG
+#   writfold kb deliver check
+#   git commit -F <the candidate file>      # guard.toml routes git commit here
+#   writfold kb deliver posted --ref <sha> --by WHO
+#
+# The guard binds the checked bytes for `git commit -F` and `-m` under its
+# route; a commit made outside the hook is not seen. A Git commit-msg hook
+# can ask the same question: writfold kb deliver match --mode commit-message --from "$1"
+schema = "writfold-delivery-mode/1"
+mode = "commit-message"
+description = "a commit message for a public repository; the guard binds the bytes only for commits made under the hook"
+audience = "external"
+checks = ["references.denied"]
+gates = ["commit-format"]
+waivable = []

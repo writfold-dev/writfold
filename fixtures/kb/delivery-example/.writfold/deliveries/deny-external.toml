@@ -1,0 +1,9 @@
+# An example to edit (writfold kb init --example delivery): what an
+# outside reader of this repository must not see. The deny list is the
+# team's policy; replace these two rules with your own.
+schema = "writfold-deny/1"
+audience = "external"
+rules = [
+  "internal-host: \\.corp\\.example\\.com",
+  "ticket: \\bOPS-[0-9]+",
+]

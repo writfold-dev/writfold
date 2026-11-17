@@ -107,7 +107,7 @@ fn split(verb: &str, args: &[String]) -> Result<(Common, Vec<String>), String> {
 /// The flags each verb accepts beyond the shared ones.
 fn allowed(verb: &str) -> &'static [&'static str] {
     match verb {
-        "brief" => &["all"],
+        "brief" | "deliver" => &["all"],
         "context" => &["depth"],
         "stale" => &["offline", "cached", "record"],
         "repos" => &["missing"],

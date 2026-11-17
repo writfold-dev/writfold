@@ -9,10 +9,12 @@
 use super::candidate::Candidate;
 use super::config::{self, Obligation};
 use super::receipt::{self, Receipt};
-use crate::emit::{More, Row};
+use super::status_line::{line, rejected, short};
+use crate::emit::Row;
 use crate::error::Result;
 use crate::gate::statement;
 use std::path::Path;
+use writfold_core::delivery::Owed;
 use writfold_core::gate::{Evidence, Standing, State, standing, state};
 
 /// One obligation of one candidate.
@@ -38,9 +40,19 @@ impl Filings {
     pub fn read(root: &Path, c: &Candidate, run: &str) -> Self {
         Self {
             receipts: receipt::filed(root, &c.dir, run, &c.id),
-            statements: statement::filed(root, &c.dir, run),
+            statements: statement::filed(root, &c.dir, run)
+                .into_iter()
+                .filter(|f| !withdrawal(root, f))
+                .collect(),
         }
     }
+}
+
+/// A withdrawal beside the statements ([`super::withdraw`]): not one of them.
+fn withdrawal(root: &Path, f: &statement::Filed) -> bool {
+    f.name.starts_with(super::withdraw::PREFIX)
+        && std::fs::read_to_string(root.join(&f.path))
+            .is_ok_and(|t| super::withdraw::is_withdrawal(&t))
 }
 
 /// The candidate's obligations from its manifest's mode and audience.
@@ -96,86 +108,36 @@ pub fn judge<'a>(obligations: Vec<Obligation>, c: &Candidate, f: &'a Filings) ->
         .collect()
 }
 
-fn short(digest: &str) -> &str {
-    let d = digest.strip_prefix("sha256:").unwrap_or(digest);
-    d.get(..12).unwrap_or(d)
+/// What the kernel reads of each obligation: its standing and the
+/// standings its policy takes.
+pub fn owed(judged: &[Judged<'_>]) -> Vec<Owed> {
+    judged.iter().map(Judged::owed).collect()
 }
 
-/// The `check:` line of one obligation.
-fn line(j: &Judged<'_>, id: &str) -> More {
-    let ob = &j.obligation;
-    let mut more = More {
-        label: "check",
-        ..More::default()
-    };
-    let said = match j.standing {
-        Standing::Attested => j.statements.attested,
-        Standing::Waived => j.statements.waived,
-        Standing::Checked(_) => None,
-    };
-    let detail = match (said, j.receipt) {
-        (Some((f, s)), _) => {
-            more.path = Some(f.path.clone());
-            more.line = Some(1);
-            match j.standing {
-                Standing::Waived if ob.class != "attested" => {
-                    format!("by {}: {} (check: {})", s.by, s.text, j.checked.name())
-                }
-                _ => format!("by {}: {}", s.by, s.text),
-            }
+impl Judged<'_> {
+    pub fn owed(&self) -> Owed {
+        Owed {
+            standing: self.standing,
+            accept: self.obligation.accept(),
         }
-        (None, Some((f, r))) => {
-            more.path = Some(f.path.clone());
-            more.line = Some(1);
-            let found: Vec<String> = r
-                .findings
-                .iter()
-                .take(3)
-                .map(|x| format!("line {} {} ({})", x.line, x.rule, x.detail))
-                .collect();
-            let mut text = format!("{} for {}", r.outcome.name(), short(&r.content));
-            if !found.is_empty() {
-                text.push_str(&format!(": {}", found.join("; ")));
-            }
-            if r.total > 3 {
-                text.push_str(&format!(" (+{} more)", r.total - 3));
-            }
-            if let Some(note) = r.note.as_ref().filter(|_| r.findings.is_empty()) {
-                text.push_str(&format!(" ({note})"));
-            }
-            text
-        }
-        (None, None) if ob.class == "attested" => {
-            format!(
-                "needs: writfold kb deliver attest {id} --check {} --statement TEXT --by WHO",
-                ob.name
-            )
-        }
-        (None, None) => format!("needs: writfold kb deliver check {id}"),
-    };
-    let moved = super::recheck::note(j.moved).unwrap_or_default();
-    more.text = format!(
-        "{} [{}] {} {detail}{moved}",
-        ob.name,
-        j.standing.name(),
-        ob.class
-    );
-    more.status = Some(j.standing.name().into());
-    if j.standing != Standing::Checked(State::Satisfied) {
-        more.flags.push(j.standing.name().into());
     }
-    if j.moved.is_some() && !more.flags.iter().any(|f| f == "stale") {
-        more.flags.push("stale".into());
+
+    /// Not met under its policy ([`writfold_core::delivery::unmet`]).
+    pub fn unmet(&self) -> bool {
+        writfold_core::delivery::unmet(&self.owed())
     }
-    more
+
+    /// A met word (attested or waived) its policy does not take.
+    pub fn rejected(&self) -> bool {
+        self.standing.met() && self.unmet()
+    }
 }
 
 /// Whether the candidate is ready: it has obligations and every one is met
-/// (satisfied, attested or waived); a mode that declares nothing never is
+/// under its policy; a mode that declares nothing never is
 /// ([`writfold_core::delivery::ready`]).
 pub fn ready(judged: &[Judged<'_>]) -> bool {
-    let standings: Vec<Standing> = judged.iter().map(|j| j.standing).collect();
-    writfold_core::delivery::ready(&standings)
+    writfold_core::delivery::ready(&owed(judged))
 }
 
 /// The candidate's row, with one `check:` line per obligation.
@@ -202,6 +164,14 @@ pub fn row(c: &Candidate, judged: &[Judged<'_>]) -> Row {
             if m.prepared != content {
                 row.flags.push("edited".into());
             }
+            row.extra = vec![
+                ("mode", serde_json::json!(m.mode)),
+                ("audience", serde_json::json!(m.audience)),
+                ("destination", serde_json::json!(m.destination)),
+                ("digest", serde_json::json!(content)),
+                ("bytes", serde_json::json!(bytes)),
+                ("seq", serde_json::json!(m.seq)),
+            ];
         }
         Err(why) => {
             row.status = Some("invalid".into());
@@ -212,6 +182,7 @@ pub fn row(c: &Candidate, judged: &[Judged<'_>]) -> Row {
     }
     let ok = ready(judged);
     row.status = Some(if ok { "ready" } else { "blocked" }.into());
+    row.extra.push(("ready", serde_json::json!(ok)));
     if !ok {
         row.flags.push("blocked".into());
     }
@@ -232,7 +203,9 @@ pub fn row(c: &Candidate, judged: &[Judged<'_>]) -> Row {
                 .gate
                 .as_ref()
                 .and_then(|g| crate::gate::status::read_line(g, ""));
-            std::iter::once(line(j, &c.id)).chain(read)
+            std::iter::once(line(j, &c.id))
+                .chain(rejected(j))
+                .chain(read)
         })
         .collect();
     row

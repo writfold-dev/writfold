@@ -40,15 +40,14 @@ fn placeholders(
             .map(|(_, arg)| arg.sub(arg.str().find(p).unwrap_or(0), p.len()))
     };
     let fault = match judges {
-        Some(Judges::Repository) => at(places::CANDIDATE).map(|s| {
-            (
-                Some(s),
-                format!(
-                    "{} is for gates with subject = \"candidate\"",
-                    places::CANDIDATE
-                ),
-            )
-        }),
+        Some(Judges::Repository) => (at(places::CANDIDATE).map(|s| (s, places::CANDIDATE)))
+            .or_else(|| at(places::SOURCE).map(|s| (s, places::SOURCE)))
+            .map(|(s, p)| {
+                (
+                    Some(s),
+                    format!("{p} is for gates with subject = \"candidate\""),
+                )
+            }),
         Some(Judges::Candidate) if at(places::CANDIDATE).is_none() => Some((
             Some(argv.span),
             format!(

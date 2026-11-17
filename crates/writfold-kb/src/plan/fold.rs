@@ -135,7 +135,7 @@ impl Graph {
     pub fn gates(&self) -> Vec<String> {
         let mut out: Vec<String> = Vec::new();
         for gate in self.steps.iter().flat_map(|s| &s.gates) {
-            if !out.contains(gate) && crate::deliver::step::mode_of(gate).is_none() {
+            if !out.contains(gate) && !crate::deliver::step::is_delivery_word(gate) {
                 out.push(gate.clone());
             }
         }

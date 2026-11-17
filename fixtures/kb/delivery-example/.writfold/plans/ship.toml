@@ -1,0 +1,9 @@
+# An example to edit (writfold kb init --example delivery): a change that
+# ends with a PR comment, held until the post is recorded.
+schema = "writfold-plan/1"
+name = "ship"
+description = "implement, then comment on the PR and record the post"
+steps = [
+  "implement:",
+  "comment: deliver:pr-comment posted:pr-comment",
+]

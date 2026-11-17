@@ -11,7 +11,6 @@ use super::judge::Gate;
 use crate::deliver::candidate::{self, Candidate};
 use crate::deliver::step::{self, PREFIX, Seen, View};
 use crate::emit::{More, Row};
-use crate::index::query::Rec;
 use crate::session::Session;
 
 /// What a delivery adds to its gate's lines.
@@ -25,14 +24,17 @@ pub struct Delivered {
     /// Why nothing can meet it now (the mode does not load or declares
     /// nothing): shown in place of the candidate line, with no `next:`.
     pub why: Option<String>,
+    /// The candidate's `posted:` line, when a post record exists.
+    pub posted: Option<More>,
 }
 
 /// The run's candidates and the ones done records bind.
 pub struct Deliveries {
-    run_dir: String,
-    run: String,
-    cands: Vec<Candidate>,
-    bound: Vec<String>,
+    pub(super) run_dir: String,
+    pub(super) run: String,
+    pub(super) cands: Vec<Candidate>,
+    pub(super) bound: Vec<String>,
+    pub(super) withdrawn: Vec<String>,
 }
 
 impl Deliveries {
@@ -55,19 +57,22 @@ impl Deliveries {
             .filter_map(|e| step::bound_id(run_dir, e))
             .map(str::to_owned)
             .collect();
+        let withdrawn = crate::deliver::withdraw::ids(root, &cands, run);
         Self {
             run_dir: run_dir.to_owned(),
             run: run.to_owned(),
             cands,
             bound,
+            withdrawn,
         }
     }
 
     /// The candidate that decides `mode` at `s`: a done step's own, else
     /// the deciding one.
-    fn decides(&self, s: &Step, mode: &str) -> Option<&Candidate> {
+    pub(super) fn decides(&self, s: &Step, mode: &str) -> Option<&Candidate> {
         let Some((_, done)) = &s.done else {
-            return step::deciding(&step::of_mode(&self.cands, mode), &self.bound);
+            let mine = step::of_mode(&self.cands, mode);
+            return step::deciding(&mine, &self.bound, &self.withdrawn);
         };
         let word = format!("{PREFIX}{mode}");
         let met = done.met.iter().find(|m| m.gate == word)?;
@@ -82,11 +87,19 @@ impl Deliveries {
         let seq = c
             .and_then(|c| c.manifest.as_ref().ok())
             .map_or(0, |m| m.seq);
-        build(v, seq, detail)
+        let mut g = build(v, seq, detail);
+        let posted = c.and_then(|c| {
+            let posts = crate::deliver::post::all(&session.ws.root, c, &self.run);
+            crate::deliver::post::line(&posts, &c.digest())
+        });
+        if let Some(d) = g.delivery.as_mut() {
+            d.posted = posted;
+        }
+        g
     }
 }
 
-fn line(label: &'static str, text: String, path: Option<&String>) -> More {
+pub(super) fn line(label: &'static str, text: String, path: Option<&String>) -> More {
     More {
         label,
         text,
@@ -153,7 +166,9 @@ fn build(v: View, seq: u64, detail: bool) -> Gate {
         (None, _) => (None, (None, Vec::new())),
     };
     Gate {
-        accept: None,
+        // The plan meets the delivery exactly when its candidate is ready
+        // (`delivery::fact`): every word taken, or none.
+        accept: (!v.taken).then(Vec::new),
         id: format!("{PREFIX}{}", v.mode),
         standing: Some(v.standing),
         evidence: seen.map(|s| s.payload.clone()),
@@ -175,6 +190,7 @@ fn build(v: View, seq: u64, detail: bool) -> Gate {
             candidate,
             detail: detail_line,
             why: v.why,
+            posted: None,
         }),
     }
 }
@@ -183,42 +199,22 @@ fn build(v: View, seq: u64, detail: bool) -> Gate {
 /// decides, or `why:` when nothing can meet it.
 pub fn lines(row: &mut Row, gates: &[Gate]) {
     for d in gates.iter().filter_map(|g| g.delivery.as_ref()) {
+        let said = |row: &Row, m: &More| {
+            row.more
+                .iter()
+                .any(|x| x.label == m.label && x.text == m.text)
+        };
         match (&d.candidate, &d.why) {
+            (Some(c), _) if said(row, c) => {}
             (Some(c), _) => row.more.push(c.clone()),
             (None, Some(why)) => row.more.push(line("why", why.clone(), None)),
             (None, None) => {}
         }
+        let shown = row.more.iter().any(|m| m.label == "posted");
+        if let (Some(p), false) = (&d.posted, shown) {
+            row.more.push(p.clone());
+        }
     }
 }
 
-/// The `step:` line `deliver status` adds under a candidate a step is
-/// judged on: the current step's deciding candidate, and each candidate a
-/// done record binds. Other candidates are unchanged.
-pub fn mark(root: &std::path::Path, rec: &Rec, rows: &mut [Row]) {
-    let run_dir = crate::runs::dir(rec);
-    let graph = super::fold::read(root, &run_dir, &rec.id);
-    let d = Deliveries::read(root, &run_dir, &rec.id, &graph);
-    let current = graph.current();
-    let mut said: Vec<(String, String)> = Vec::new();
-    for (i, s) in graph.steps.iter().enumerate() {
-        let done = s.done.is_some();
-        if !done && current != Some(i) {
-            continue;
-        }
-        for mode in s.gates.iter().filter_map(|g| step::mode_of(g)) {
-            let Some(c) = d.decides(s, mode) else {
-                continue;
-            };
-            let text = match done {
-                true => format!("bound to {} [done]", s.path),
-                false => format!("decides {PREFIX}{mode} at {} [current]", s.path),
-            };
-            said.push((c.id.clone(), text));
-        }
-    }
-    for row in rows.iter_mut().filter(|r| r.kind == "delivery") {
-        for (_, text) in said.iter().filter(|(id, _)| *id == row.id) {
-            row.more.push(line("step", text.clone(), None));
-        }
-    }
-}
+pub use super::delivery_mark::{bound_steps, mark};

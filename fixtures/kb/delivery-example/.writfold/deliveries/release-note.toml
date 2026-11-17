@@ -1,0 +1,11 @@
+# An example to edit (writfold kb init --example delivery): a release
+# note, read by people outside the team. Citation tokens prove the claims
+# to the checks and are stripped from what is posted.
+schema = "writfold-delivery-mode/1"
+mode = "release-note"
+description = "a release note; tokens are stripped from the payload (writfold kb deliver payload)"
+audience = "external"
+checks = ["paragraphs.bounded", "references.denied", "claims.cited-fresh"]
+attest = ["notes.reviewed"]
+waivable = []
+rendering = "strip-citations"

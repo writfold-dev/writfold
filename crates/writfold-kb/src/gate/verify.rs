@@ -247,6 +247,7 @@ fn rerun(
         gate: &gate_dir,
         artifacts: Some(&artifacts),
         candidate: None,
+        source: None,
     };
     let e = exec::execute(
         &r.gate,

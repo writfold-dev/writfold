@@ -1,6 +1,6 @@
 # Reading answers as JSON
 
-> **Status:** built in v0.5.0-dev.1 (the envelope itself has been emitted since v0.1; this page and the test that pins it are new). `matched_on`, the `find --eval`, `guard log`, `runs --idle` and `delta` answers built in v0.6.0-dev.1. The policy keys (`accept`, `accepted`, `allowed`, `locked`, `summary`, `passed`, `attested`, `waived`, `policy`, `identity`) and `kb init`'s envelope built in v0.6.0-dev.3.
+> **Status:** built in v0.5.0-dev.1 (the envelope itself has been emitted since v0.1; this page and the test that pins it are new). `matched_on`, the `find --eval`, `guard log`, `runs --idle` and `delta` answers built in v0.6.0-dev.1. The policy keys (`accept`, `accepted`, `allowed`, `locked`, `summary`, `passed`, `attested`, `waived`, `policy`, `identity`) and `kb init`'s envelope built in v0.6.0-dev.3. The delivery keys (on `delivery` rows and `check` continuations, `posted` and `withdrawn` continuations, `deliver match`, `deliver payload`, `deliver modes` and `kb policy`'s `mode` and `route` rows) built in v0.6.0-dev.4.
 
 Every `writfold kb` verb that prints rows and a trailer takes `--json`. The answer is then one JSON object on one line of stdout, holding the same rows, notes and trailer as the text form. The exit code is the same in both forms.
 
@@ -100,6 +100,28 @@ With `--gates` and a subject repository, `counts` includes `current` (the 1-base
 A delivery a step owes (built in v0.6.0-dev.1; see [run-graph](run-graph.md#a-delivery-as-a-steps-gate)) is a gate whose ID starts `deliver:` (`deliver:pr-comment`). Under `plan status --gates`, in template order, it has a `gate` continuation whose `text` is `deliver:<mode> [<standing>] delivery <met>/<total> checks met` (or `delivery no candidate`, or `deliver:<mode> [later]` on a later step) with `path` the deciding candidate's payload; then a `candidate` continuation (`status` `ready` or `blocked`; `text` `<id> [<status>] <mode> audience=<a> destination=<d> candidate=<digest12> bytes=<n> seq=<n>`; flags `blocked`, `edited`); then one `item` continuation per obligation of the mode, whose `text` is the `check:` text of `deliver status` and whose `status` is the obligation's standing (flag `stale` when cited evidence moved). `current_gates` and `current_owed` count deliveries. Without `--gates`, `plan status`, `plan advance`, `resume` and the session-start text carry one `candidate` continuation on the current step (`<id> [<status>] owes <check> [<standing>], …`, `path` the payload), or a `why` continuation when no mode can meet the delivery.
 
 `deliver status`, and every verb that prints its rows, supplies `status` (the obligation's standing) on each `check` continuation, and a `step` continuation under a candidate a plan step is judged on: `decides deliver:<mode> at <step> [current]` or `bound to <step> [done]`. A candidate's manifest (`delivery.json`) gains `seq`, its place among the run's candidates of its mode (absent reads as 0). A done record names a delivery as a `met` entry whose `gate` is `deliver:<mode>`, `evidence` the payload path and `content` its digest.
+
+The delivery keys (built in v0.6.0-dev.4), all additive; `writfold_kb` stays 1. Readers should use them and stop splitting `text`:
+
+| Where | Key | Type | Meaning |
+|---|---|---|---|
+| `delivery` row | `mode`, `audience`, `destination` | string (`destination` may be null) | from the manifest |
+| | `digest`, `payload_digest` | string (`payload_digest` may be null) | the candidate's present digest; the digest of its payload under the mode's rendering |
+| | `bytes`, `seq` | integer | the candidate's size; its place among the run's candidates of its mode |
+| | `ready` | boolean | the candidate is ready |
+| | `posts` | integer | how many valid post records it has |
+| | `next` | string, absent when nothing is owed | the `next:` line's text |
+| | `payload` | string | `deliver payload --json` only: the payload's text |
+| `check` continuation | `check`, `class` | string | the obligation's name; `mechanical`, `observed` or `attested` |
+| | `outcome` | string, absent with no receipt | `pass`, `fail` or `unknown`, from the deciding receipt |
+| | `findings` | array, absent with no receipt | `{line, column, rule, detail}` per finding of the receipt (as many as it keeps); `column` absent when the finding has none |
+| `posted` continuation | `status` | string | `attested` (a record about the present bytes) or `stale` (the candidate was edited after it); `path` the record |
+| `withdrawn` continuation | | | `text` `by <who>: <reason>`, `path` the withdrawal |
+| `match` continuation | | | `deliver match` only: `these bytes are this candidate's payload (<digest>)` |
+
+The row status may be `withdrawn`. New flags: `withdrawn` (row), `posted` (row, a post record about the present bytes exists), `not-accepted` (a `check` continuation whose statement the policy does not take, with a `why` continuation after it) and `unready-when-recorded` (a `posted` continuation). Under a candidate, `step` may read `decides no step: <id>, a newer <mode> candidate, is bound to <step> [done]`. On a plan step, `posted:<mode>` is a gate like `deliver:<mode>` (its `candidate` line may be followed by a `posted` continuation), a met delivery with no `posted:` word adds a `note` continuation, and a done record names it as a `met` entry whose `gate` is `posted:<mode>`, `standing` `attested`, `evidence` the post record and `content` the candidate's digest.
+
+`deliver status`'s trailer gains the count `withdrawn`. `deliver match` answers one `delivery` row or none (with `match` and `posted` continuations), the counts `matched` (candidates holding these bytes) and `postable`, and, when the bytes do not match, `reason` in the trailer with the guard's reason. `deliver payload --json` (or `--to FILE`) answers one `delivery` row with `payload` and `payload_digest`. `deliver modes` answers rows of kind `mode` (`id` the mode, `section` `modes`, `path` the mode file, or none for a built-in mode; status `invalid` when the file does not load) with `audience` (string, or null when `--audience` decides), `rendering`, `paragraph_words` and `waivable` (the obligations the mode takes a waiver of), continuations `check`, `read`, `why`, `deny` and `route`, and the count `modes`. `kb policy` adds the same `mode` rows and rows of kind `route` (`id` the command or tool, `text` `mode=<mode> body=… file=…` or `mode=<mode> field=…`).
 
 Detailed steps also carry a `splice` continuation, then `under` for non-root
 steps, after any existing `why` group and before gates. `splice.text` is

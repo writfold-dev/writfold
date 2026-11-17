@@ -1,4 +1,4 @@
-//! `writfold kb deliver prepare|check|attest|waive|status`: arguments only;
+//! `writfold kb deliver modes|prepare|check|attest|waive|withdraw|payload|posted|match|status`: arguments only;
 //! the logic is in `writfold_kb::deliver`. Nothing is sent.
 use super::args::Common;
 use super::writes::get;
@@ -8,15 +8,19 @@ use writfold_kb::deliver::DeliverVerb;
 use writfold_kb::deliver::candidate::Prepare;
 use writfold_kb::gate::statement::Kind;
 
-pub const USAGE: &str = "usage: deliver prepare --mode MODE --from FILE [--audience internal|external] [--destination NAME] [--run ID] | deliver check [CANDIDATE] [--check NAME] [--run ID] | deliver attest [CANDIDATE] --check NAME --statement TEXT --by WHO [--run ID] | deliver waive [CANDIDATE] --check NAME --reason TEXT --by WHO [--run ID] | deliver status [CANDIDATE] [--run ID]";
+pub const USAGE: &str = "usage: deliver modes [MODE] | deliver prepare --mode MODE --from FILE|- [--audience internal|external] [--destination NAME] [--run ID] | deliver check [CANDIDATE] [--mode MODE] [--check NAME] [--run ID] | deliver attest [CANDIDATE] [--mode MODE] --check NAME --statement TEXT --by WHO [--run ID] | deliver waive [CANDIDATE] [--mode MODE] --check NAME --reason TEXT --by WHO [--run ID] | deliver withdraw [CANDIDATE] [--mode MODE] --reason TEXT --by WHO [--run ID] | deliver payload [CANDIDATE] [--mode MODE] [--to FILE] [--run ID] | deliver posted [CANDIDATE] [--mode MODE] --ref TEXT --by WHO [--run ID] | deliver match --from FILE|- [--mode MODE] [--run ID] | deliver status [CANDIDATE] [--all] [--run ID]";
 
 /// The flags each deliver verb takes, beyond `--run`.
 fn flags(sub: &str) -> &'static [&'static str] {
     match sub {
         "prepare" => &["mode", "from", "audience", "destination"],
-        "check" => &["check"],
-        "attest" => &["check", "statement", "by"],
-        "waive" => &["check", "reason", "by"],
+        "check" => &["check", "mode"],
+        "attest" => &["check", "statement", "by", "mode"],
+        "waive" => &["check", "reason", "by", "mode"],
+        "withdraw" => &["reason", "by", "mode"],
+        "posted" => &["ref", "by", "mode"],
+        "payload" => &["to", "mode"],
+        "match" => &["from", "mode"],
         _ => &[],
     }
 }
@@ -34,7 +38,14 @@ pub fn verb(common: &Common, positional: &[String]) -> Result<Verb, String> {
     {
         return Err(format!("--{flag} does not apply to deliver {sub}"));
     }
+    if common.all && sub != "status" {
+        return Err(format!("--all does not apply to deliver {sub}"));
+    }
+    if sub == "modes" {
+        return modes(common, rest);
+    }
     let run = get(common, "run");
+    let mode = get(common, "mode");
     let need = |key: &str| get(common, key).ok_or(format!("deliver {sub} needs --{key}"));
     let candidate = match rest {
         [] => None,
@@ -53,6 +64,7 @@ pub fn verb(common: &Common, positional: &[String]) -> Result<Verb, String> {
             candidate,
             check: get(common, "check"),
             run,
+            mode,
         },
         "attest" | "waive" => {
             let (kind, flag) = match sub.as_str() {
@@ -66,12 +78,67 @@ pub fn verb(common: &Common, positional: &[String]) -> Result<Verb, String> {
                 text: need(flag)?,
                 by: need("by")?,
                 run,
+                mode,
             }
         }
-        "status" => DeliverVerb::Status { candidate, run },
-        _ => return Err(USAGE.into()),
+        "status" => DeliverVerb::Status {
+            candidate,
+            run,
+            all: common.all,
+        },
+        other => records(common, other, candidate, (run, mode))?,
     };
     Ok(Verb::Deliver(verb))
+}
+
+/// `deliver modes [MODE]`.
+fn modes(common: &Common, rest: &[String]) -> Result<Verb, String> {
+    match (rest, common.values.keys().next()) {
+        (_, Some(flag)) => Err(format!("--{flag} does not apply to deliver modes")),
+        ([], None) => Ok(Verb::Deliver(DeliverVerb::Modes { mode: None })),
+        ([one], None) => Ok(Verb::Deliver(DeliverVerb::Modes {
+            mode: Some(one.clone()),
+        })),
+        _ => Err("deliver modes takes at most one mode".into()),
+    }
+}
+
+/// `deliver withdraw`, `posted`, `payload` and `match`.
+fn records(
+    common: &Common,
+    sub: &str,
+    candidate: Option<String>,
+    (run, mode): (Option<String>, Option<String>),
+) -> Result<DeliverVerb, String> {
+    let need = |key: &str| get(common, key).ok_or(format!("deliver {sub} needs --{key}"));
+    Ok(match sub {
+        "withdraw" => DeliverVerb::Withdraw {
+            candidate,
+            reason: need("reason")?,
+            by: need("by")?,
+            run,
+            mode,
+        },
+        "posted" => DeliverVerb::Posted {
+            candidate,
+            reference: need("ref")?,
+            by: need("by")?,
+            run,
+            mode,
+        },
+        "payload" => DeliverVerb::Payload {
+            candidate,
+            to: get(common, "to").map(PathBuf::from),
+            run,
+            mode,
+        },
+        "match" if candidate.is_none() => DeliverVerb::Match {
+            from: PathBuf::from(need("from")?),
+            mode,
+            run,
+        },
+        _ => return Err(USAGE.into()),
+    })
 }
 
 #[cfg(test)]
@@ -131,7 +198,8 @@ mod tests {
             verb(&["deliver", "status"])?,
             Verb::Deliver(DeliverVerb::Status {
                 candidate: None,
-                run: None
+                run: None,
+                all: false
             })
         ));
         for bad in [

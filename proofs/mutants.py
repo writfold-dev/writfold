@@ -302,8 +302,8 @@ MUTANTS = (
            ("Writfold.Core.Checklist.standing_spec",)),
     # delivery: an empty set of obligations is not met
     Mutant("delivery-empty-met", "delivery.rs",
-           "    if obligations.is_empty() {\n        return Standing::Checked(State::Open);",
-           "    if obligations.is_empty() {\n        return Standing::Checked(State::Satisfied);",
+           "    if owed.is_empty() {\n        return Standing::Checked(State::Open);",
+           "    if owed.is_empty() {\n        return Standing::Checked(State::Satisfied);",
            ("Writfold.Core.Delivery.standing_spec",)),
     # delivery: a waived obligation is never read as a passing check
     Mutant("delivery-waived-satisfied", "delivery.rs",
@@ -312,38 +312,39 @@ MUTANTS = (
            ("Writfold.Core.Delivery.standing_loop_spec",)),
     # delivery: an unmet obligation stops the delivery
     Mutant("delivery-unmet-ignored", "delivery.rs",
-           "    !standing.met()",
+           "    !crate::policy::met(owed.standing, &owed.accept)",
            "    false",
            ("Writfold.Core.Delivery.unmet_spec",)),
-    # delivery: a bound candidate never decides an open step
+    # delivery: a bound candidate ends the scan (continuing past it is the
+    # rule before 17 November 2026, under which an abandoned draft met a step)
     Mutant("deciding-ignores-bound", "delivery.rs",
-           "        if !bound[index] {",
-           "        if true {",
-           ("Writfold.Core.Delivery.deciding_loop_spec", "Writfold.Core.Delivery.deciding_spec")),
-    # delivery: the newest unbound candidate decides, not the oldest
+           "        if is_bound(&places[index]) {\n            return None;",
+           "        if false {\n            return None;",
+           ("Writfold.Core.Delivery.deciding_loop_spec",)),
+    # delivery: the scan runs from the newest candidate, not the oldest
     Mutant("deciding-first-unbound", "delivery.rs",
-           "    let mut index = bound.len();\n    while index > 0 {\n        index -= 1;\n        if !bound[index] {",
-           "    let mut index = 0;\n    while index < bound.len() {\n        index += 1;\n        if !bound[index - 1] {",
+           "    let mut index = places.len();\n    while index > 0 {\n        index -= 1;\n        if is_open(&places[index]) {\n            return Some(index);",
+           "    let mut index = 0;\n    while index < places.len() {\n        index += 1;\n        if is_open(&places[index - 1]) {\n            return Some(index - 1);",
            ("Writfold.Core.Delivery.deciding_loop_spec", "Writfold.Core.Delivery.deciding_spec")),
     # delivery: a mode that declares nothing is never ready
     Mutant("ready-accepts-empty", "delivery.rs",
-           "    standing(obligations).met()",
-           "    obligations.is_empty() || standing(obligations).met()",
+           "    if owed.is_empty() {\n        return false;",
+           "    if owed.is_empty() {\n        return true;",
            ("Writfold.Core.Delivery.ready_iff",)),
     # delivery: a passed check whose cited evidence moved is stale
     Mutant("rechecked-keeps-satisfied", "delivery.rs",
            "    if matches!(checked, State::Satisfied) && moved > 0 {",
            "    if false {",
            ("Writfold.Core.Delivery.rechecked_spec",)),
-    # delivery guard: unknown bytes need at least one candidate
+    # delivery guard: unread bytes under a listed command need a live candidate
     Mutant("guard-allows-no-candidate", "delivery.rs",
-           "        Body::Unknown => candidates > 0 && all_ready,",
-           "        Body::Unknown => all_ready,",
-           ("Writfold.Core.Delivery.guard_allow_iff",)),
-    # delivery guard: known bytes pass only when a ready candidate holds them
+           "        index += 1;\n    }\n    live\n}",
+           "        index += 1;\n    }\n    true\n}",
+           ("Writfold.Core.Delivery.guard_all_loop_spec",)),
+    # delivery guard: known bytes pass only when a postable candidate holds them
     Mutant("guard-known-any-ready", "delivery.rs",
-           "        Body::Known => same_ready,",
-           "        Body::Known => same_ready || all_ready,",
+           "        Body::Known => guard_any(seen),",
+           "        Body::Known => guard_any(seen) || guard_all(seen),",
            ("Writfold.Core.Delivery.guard_allow_iff",)),
     # guard: an unknown fact is never met
     Mutant("all-met-accepts-unknown", "guard.rs",
@@ -897,6 +898,103 @@ MUTANTS = (
            "    shown >= limit",
            "    shown > limit",
            ("Writfold.Core.Walk.full_spec", "Writfold.Core.Walk.not_full_admits")),
+    # ---- delivery modes, second round (17 November 2026) ----
+    # delivery: an obligation is met under its own policy, not by any met word
+    Mutant("delivery-accept-ignored", "delivery.rs",
+           "    !crate::policy::met(owed.standing, &owed.accept)",
+           "    !owed.standing.met()",
+           ("Writfold.Core.Delivery.unmet_spec",)),
+    # delivery: ready is every obligation met under its policy, not a met standing
+    Mutant("ready-from-standing", "delivery.rs",
+           "    if owed.is_empty() {\n        return false;\n    }\n    match first_unmet(owed) {\n        None => true,\n        Some(_) => false,\n    }",
+           "    standing(owed).met()",
+           ("Writfold.Core.Delivery.ready_iff",)),
+    # delivery: refused only when the first unmet obligation stands on a met word
+    Mutant("refused-any-unmet", "delivery.rs",
+           "        Some(index) => owed[index].standing.met(),",
+           "        Some(_) => true,",
+           ("Writfold.Core.Delivery.refused_iff",)),
+    # delivery: a step's deliver gate is met exactly when the candidate is ready
+    Mutant("fact-accepts-when-unready", "delivery.rs",
+           "    let taken = ready(owed);",
+           "    let taken = true;",
+           ("Writfold.Core.Delivery.fact_met_iff_ready",)),
+    # delivery: the last obligation counts too
+    Mutant("first-unmet-skips-last", "delivery.rs",
+           "    while index < owed.len() {\n        if unmet(&owed[index]) {\n            return Some(index);",
+           "    while index + 1 < owed.len() {\n        if unmet(&owed[index]) {\n            return Some(index);",
+           ("Writfold.Core.Delivery.first_unmet_loop_spec",)),
+    # delivery: a withdrawn candidate never decides
+    Mutant("deciding-counts-withdrawn", "delivery.rs",
+           "        if is_open(&places[index]) {",
+           "        if !is_bound(&places[index]) {",
+           ("Writfold.Core.Delivery.deciding_loop_spec",)),
+    # delivery: a withdrawn candidate is passed over, not the end of the scan
+    Mutant("deciding-stops-at-withdrawn", "delivery.rs",
+           "        if is_bound(&places[index]) {\n            return None;",
+           "        if !is_open(&places[index]) {\n            return None;",
+           ("Writfold.Core.Delivery.deciding_loop_spec",)),
+    # delivery: posted:<mode> is open until a post record exists
+    Mutant("posted-always", "delivery.rs",
+           "    if recorded {\n        Standing::Attested",
+           "    if true {\n        Standing::Attested",
+           ("Writfold.Core.Delivery.posted_spec",)),
+    # delivery: a post record is a statement, never a passing check
+    Mutant("posted-satisfied", "delivery.rs",
+           "        Standing::Attested\n    } else {\n        Standing::Checked(State::Open)",
+           "        Standing::Checked(State::Satisfied)\n    } else {\n        Standing::Checked(State::Open)",
+           ("Writfold.Core.Delivery.posted_spec", "Writfold.Core.Delivery.posted_never_satisfied")),
+    # delivery guard: a postable candidate is same
+    Mutant("postable-drops-same", "delivery.rs",
+           "    seen.same && seen.ready && seen.live && seen.routed && !seen.spent",
+           "    seen.ready && seen.live && seen.routed && !seen.spent",
+           ("Writfold.Core.Delivery.postable_spec",)),
+    # delivery guard: a postable candidate is ready
+    Mutant("postable-drops-ready", "delivery.rs",
+           "    seen.same && seen.ready && seen.live && seen.routed && !seen.spent",
+           "    seen.same && seen.live && seen.routed && !seen.spent",
+           ("Writfold.Core.Delivery.postable_spec",)),
+    # delivery guard: a postable candidate is live
+    Mutant("postable-drops-live", "delivery.rs",
+           "    seen.same && seen.ready && seen.live && seen.routed && !seen.spent",
+           "    seen.same && seen.ready && seen.routed && !seen.spent",
+           ("Writfold.Core.Delivery.postable_spec",)),
+    # delivery guard: a postable candidate is routed
+    Mutant("postable-drops-routed", "delivery.rs",
+           "    seen.same && seen.ready && seen.live && seen.routed && !seen.spent",
+           "    seen.same && seen.ready && seen.live && !seen.spent",
+           ("Writfold.Core.Delivery.postable_spec",)),
+    # delivery guard: a posted candidate is spent
+    Mutant("postable-drops-spent", "delivery.rs",
+           "    seen.same && seen.ready && seen.live && seen.routed && !seen.spent",
+           "    seen.same && seen.ready && seen.live && seen.routed",
+           ("Writfold.Core.Delivery.postable_spec",)),
+    # delivery guard: known bytes need one postable candidate, not every candidate ready
+    Mutant("guard-known-all", "delivery.rs",
+           "        Body::Known => guard_any(seen),",
+           "        Body::Known => guard_any(seen) && guard_all(seen),",
+           ("Writfold.Core.Delivery.guard_allow_iff",)),
+    # delivery guard: unread bytes under a route never pass
+    Mutant("guard-unread-deny-allows", "delivery.rs",
+           "            Unread::Deny => false,",
+           "            Unread::Deny => guard_all(seen),",
+           ("Writfold.Core.Delivery.guard_allow_iff", "Writfold.Core.Delivery.guard_deny_unread")),
+    # delivery guard: a withdrawn candidate need not be ready
+    Mutant("guard-all-counts-withdrawn", "delivery.rs",
+           "        if seen[index].live && !seen[index].ready {",
+           "        if !seen[index].ready {",
+           ("Writfold.Core.Delivery.guard_all_loop_spec",)),
+    # delivery guard: the last candidate counts for the all-ready rule
+    Mutant("guard-all-skips-last", "delivery.rs",
+           "    while index < seen.len() {\n        if seen[index].live && !seen[index].ready {",
+           "    while index + 1 < seen.len() {\n        if seen[index].live && !seen[index].ready {",
+           ("Writfold.Core.Delivery.guard_all_loop_spec",)),
+    # delivery guard: the last candidate may hold the bytes
+    Mutant("guard-any-skips-last", "delivery.rs",
+           "    while index < seen.len() {\n        if postable(&seen[index]) {",
+           "    while index + 1 < seen.len() {\n        if postable(&seen[index]) {",
+           ("Writfold.Core.Delivery.guard_any_loop_spec",)),
+    # ---- end delivery modes, second round ----
 )
 
 # lake reports `error: <path>.lean:<line>:<col>: <message>`

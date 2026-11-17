@@ -54,6 +54,11 @@ never fails, result as stated):
   which repository a gate judges (`Subject.lean`) and `gate lines`
   agreeing with the plan's word (`Policy.lean`, extended in place),
   and when `find`'s rows are full (`Walk.lean`).
+- The delivery round (17 November 2026, below; built in v0.6.0-dev.4):
+  each delivery obligation met under its own policy, which candidate
+  decides once candidates are withdrawn or bound, the `posted:<mode>`
+  standing, and the delivery guard's decision over the run's candidates
+  (`Delivery.lean`, replaced in place and extended).
 
 The gate (`docker compose -f compose.proofs.yaml run --build --rm proofs`,
 or the `docker run` form below) regenerates the translation and refuses
@@ -234,14 +239,14 @@ exactly when covered or a current waiver stands). The mapping onto the
 gate kernel that `writfold-kb` used to write by hand is now
 `checklist::standing`; a cover row's currency is `gate::about`.
 
-Deliveries (`proofs/Writfold/Delivery.lean`): `deciding_spec` (the newest
-unbound candidate decides), `standing_spec`, `standing_met_iff` (met exactly
-when there is at least one obligation and each is met),
-`standing_satisfied_iff`, `standing_first_unmet`, `ready_iff`,
-`empty_never_ready`, `rechecked_spec` (a passed check whose cited evidence
-moved is stale) and `guard_allow_iff` (the delivery guard: known bytes pass
-only when a ready candidate holds them; unknown bytes only when there is a
-candidate and all are ready).
+Deliveries (`proofs/Writfold/Delivery.lean`): `deciding_spec`,
+`standing_spec`, `standing_met_iff`, `standing_satisfied_iff`,
+`standing_first_unmet`, `ready_iff`, `empty_never_ready`, `rechecked_spec`
+(a passed check whose cited evidence moved is stale) and `guard_allow_iff`.
+Their statements were replaced in place on 17 November 2026, when each
+obligation gained its policy, a candidate could be withdrawn or bound, and
+the guard's scans moved into the kernel; they are given with the delivery
+round below.
 
 Guard rules (`proofs/Writfold/Guard.lean`): `all_met_spec`, `decide_spec`,
 `decide_pass_iff`, `unknown_never_passes`; `combine_spec`,
@@ -517,11 +522,94 @@ When `find`'s rows are full (`proofs/Writfold/Walk.lean`,
 filter): skipping the later tiers changes no row. The tiers' order and
 their SQL stay tested, not proved.
 
+### The delivery round (17 November 2026)
+
+Built in v0.6.0-dev.4 ([delivery-spec.md](delivery-spec.md) section 3). The
+delivery kernel's theorems were replaced in place and passed the proofs gate
+before any verb was rewired. After the round: 569 theorems (540 before), 298
+required claims (280 before), 189 mutants (170 before); every theorem's
+axioms are within `propext`, `Classical.choice` and `Quot.sound`.
+
+`writfold_core::delivery` now decides on `Owed { standing, accept }`: each
+obligation with the standings its policy takes (a mode's `waivable`, or a
+mode gate's own `accept`). `deciding` takes `Place { Open, Bound, Withdrawn }`;
+`posted(recorded)` is the `posted:<mode>` standing; the guard's scans over the
+run's candidates are in the kernel (`Seen { same, ready, live, routed, spent }`,
+`postable`, `guard_any`, `guard_all`, `Unread { AllReady, Deny }`).
+
+Replaced in place (`proofs/Writfold/Delivery.lean`):
+
+- `unmet_spec`: `unmet o` is `!metB` of the standing under its `accept`.
+- `standing_loop_spec`, `standing_spec`: `Checked(Open)` for no obligations;
+  else the standing of the first obligation not met under its policy; else
+  `Waived` if any is waived, else `Attested` if any is attested, else
+  `Checked(Satisfied)`.
+- `standing_satisfied_iff`: the standing is `Checked(Satisfied)` exactly when
+  there are obligations and each is a passing check its policy takes, **or**
+  the first obligation not met under its policy is a passing check. The
+  second case needs an `accept` without `satisfied`, which the `accept`
+  reader never builds (a class's own word is always taken). The
+  specification's unconditional form is false for such a policy, so the true
+  form is stated.
+- `standing_first_unmet`: if `os[i]` is unmet and no earlier one is, the
+  standing is `os[i]`'s.
+- `standing_met_iff`: a ready delivery's standing is a met word. The converse
+  is false (a waiver the policy rejects stands `waived`) and is no longer
+  claimed.
+- `ready_iff`: ready exactly when there is at least one obligation and every
+  one is met under its policy. `empty_never_ready`, restated over `Owed`.
+- `deciding_loop_spec`, `deciding_spec`: `deciding ps = some i` exactly when
+  `ps[i]` is `Open` and every later entry is `Withdrawn`; `none` otherwise.
+- `guard_allow_iff`: known bytes pass exactly when some candidate is
+  postable; unknown bytes pass exactly under `AllReady` when some candidate
+  is live and every live candidate is ready.
+
+New, each a required claim of the axiom audit:
+
+- `first_unmet_loop_spec`, `first_unmet_spec`: the least unmet index, or
+  none.
+- `refused_iff`: held by a statement its policy rejects exactly when the
+  first unmet obligation stands on a met word.
+- `waiver_rejected_never_ready`: a `Waived` obligation whose policy does not
+  take a waiver makes the delivery unready, whatever the others are.
+- `default_accept_is_before`: with every word taken, readiness and the
+  standing are the rule before the round, on the standings alone, so an
+  absent `accept` or `waivable` changes nothing. `accept_only_narrows`: ready
+  under its policies implies ready with every word taken.
+- `fact_met_iff_ready`: the plan's `fact_met` of `fact os` is exactly
+  `ready os`, so the proved `done_only_when_met` covers a delivery step.
+- `deciding_withdrawn_irrelevant`: inserting a `Withdrawn` entry at any index
+  changes the answer only by the shift of its index (removing one is the
+  converse). `deciding_none_after_bound`: a `Bound` entry with only
+  `Withdrawn` ones after it leaves nothing deciding, so an older draft never
+  decides once a newer candidate of its mode is bound.
+- `posted_spec`, `posted_never_satisfied`, `posted_met_iff`: `Attested` when a
+  record exists, else `Checked(Open)`; never `Checked(Satisfied)`; met
+  exactly when recorded.
+- `postable_spec`: postable exactly when same, ready, live, routed and not
+  spent.
+- `guard_any_loop_spec`, `guard_all_loop_spec` (and `guard_any_spec`,
+  `guard_all_spec`): the two scans, for every prefix.
+- `guard_deny_unread`: unknown bytes never pass under `Deny`.
+- `guard_withdrawn_irrelevant`: two candidate lists whose live sublists are
+  equal get the same decision.
+- `guard_spent_never_passes`: when every candidate holding the bytes is
+  spent, known bytes never pass.
+
+Unchanged: `is_waived_spec`, `is_attested_spec`, `rechecked_spec`. Tested,
+not proved: reading `waivable`, `audience`, `rendering` and `routes`;
+splitting a command line and reading a body flag or a tool field; the
+rendering; digests; which withdrawals and post records belong to the
+candidate and run (the callers use the proved `gate::about`); drawing
+findings; JSON. `deliver withdraw` and `deliver posted` are each one
+create-new file under the existing write protocol, so `KbWrite.tla` and
+`RunGraph.tla` are unchanged.
+
 ### The claims and their mutants
 
 <!-- generated from proofs/mutants.py -->
 
-170 mutants (20 before 16 November 2026, 86 after the backfill's first round, 108 after the policy round, 161 after the backfill's second round, 170 after the bug-fix round). Each must break exactly the theorems named.
+189 mutants (20 before 16 November 2026, 86 after the backfill's first round, 108 after the policy round, 161 after the backfill's second round, 170 after the bug-fix round, 189 after the delivery round: its nine delivery mutants re-aimed and 19 added, all 28 calibrated). Each must break exactly the theorems named.
 
 | Mutant | File | What it breaks | Must break |
 |---|---|---|---|
@@ -581,12 +669,12 @@ their SQL stay tested, not proved.
 | `delivery-empty-met` | `delivery.rs` | delivery: an empty set of obligations is not met | `Delivery.standing_spec` |
 | `delivery-waived-satisfied` | `delivery.rs` | delivery: a waived obligation is never read as a passing check | `Delivery.standing_loop_spec` |
 | `delivery-unmet-ignored` | `delivery.rs` | delivery: an unmet obligation stops the delivery | `Delivery.unmet_spec` |
-| `deciding-ignores-bound` | `delivery.rs` | delivery: a bound candidate never decides an open step | `Delivery.deciding_loop_spec`, `Delivery.deciding_spec` |
-| `deciding-first-unbound` | `delivery.rs` | delivery: the newest unbound candidate decides, not the oldest | `Delivery.deciding_loop_spec`, `Delivery.deciding_spec` |
+| `deciding-ignores-bound` | `delivery.rs` | delivery: a bound candidate ends the scan (continuing past it is the rule before 17 November 2026, under which an abandoned draft met a step) | `Delivery.deciding_loop_spec` |
+| `deciding-first-unbound` | `delivery.rs` | delivery: the scan runs from the newest candidate, not the oldest | `Delivery.deciding_loop_spec`, `Delivery.deciding_spec` |
 | `ready-accepts-empty` | `delivery.rs` | delivery: a mode that declares nothing is never ready | `Delivery.ready_iff` |
 | `rechecked-keeps-satisfied` | `delivery.rs` | delivery: a passed check whose cited evidence moved is stale | `Delivery.rechecked_spec` |
-| `guard-allows-no-candidate` | `delivery.rs` | delivery guard: unknown bytes need at least one candidate | `Delivery.guard_allow_iff` |
-| `guard-known-any-ready` | `delivery.rs` | delivery guard: known bytes pass only when a ready candidate holds them | `Delivery.guard_allow_iff` |
+| `guard-allows-no-candidate` | `delivery.rs` | delivery guard: unread bytes under a listed command need a live candidate | `Delivery.guard_all_loop_spec` |
+| `guard-known-any-ready` | `delivery.rs` | delivery guard: known bytes pass only when a postable candidate holds them | `Delivery.guard_allow_iff` |
 | `all-met-accepts-unknown` | `guard.rs` | guard: an unknown fact is never met | `Guard.met_spec` |
 | `all-met-skips-last` | `guard.rs` | guard: every requirement is looked at, the last included | `Guard.all_met_loop_spec` |
 | `decide-ignores-facts` | `guard.rs` | guard: a matched rule passes only when every requirement is met | `Guard.decide_spec` |
@@ -695,6 +783,25 @@ their SQL stay tested, not proved.
 | `closes-stale` | `policy/lines.rs` | gate lines: a stale plan does not close | `Policy.closes_spec` |
 | `clean-ignores-invalid` | `policy/lines.rs` | gate lines: an invalid receipt or definition keeps the lines unclean | `Policy.lines_clean_iff` |
 | `full-late` | `find.rs` | find: the later tiers stop only when no hit could be shown | `Walk.full_spec`, `Walk.not_full_admits` |
+| `delivery-accept-ignored` | `delivery.rs` | delivery: an obligation is met under its own policy, not by any met word | `Delivery.unmet_spec` |
+| `ready-from-standing` | `delivery.rs` | delivery: ready is every obligation met under its policy, not a met standing | `Delivery.ready_iff` |
+| `refused-any-unmet` | `delivery.rs` | delivery: refused only when the first unmet obligation stands on a met word | `Delivery.refused_iff` |
+| `fact-accepts-when-unready` | `delivery.rs` | delivery: a step's deliver gate is met exactly when the candidate is ready | `Delivery.fact_met_iff_ready` |
+| `first-unmet-skips-last` | `delivery.rs` | delivery: the last obligation counts too | `Delivery.first_unmet_loop_spec` |
+| `deciding-counts-withdrawn` | `delivery.rs` | delivery: a withdrawn candidate never decides | `Delivery.deciding_loop_spec` |
+| `deciding-stops-at-withdrawn` | `delivery.rs` | delivery: a withdrawn candidate is passed over, not the end of the scan | `Delivery.deciding_loop_spec` |
+| `posted-always` | `delivery.rs` | delivery: posted:<mode> is open until a post record exists | `Delivery.posted_spec` |
+| `posted-satisfied` | `delivery.rs` | delivery: a post record is a statement, never a passing check | `Delivery.posted_spec`, `Delivery.posted_never_satisfied` |
+| `postable-drops-same` | `delivery.rs` | delivery guard: a postable candidate is same | `Delivery.postable_spec` |
+| `postable-drops-ready` | `delivery.rs` | delivery guard: a postable candidate is ready | `Delivery.postable_spec` |
+| `postable-drops-live` | `delivery.rs` | delivery guard: a postable candidate is live | `Delivery.postable_spec` |
+| `postable-drops-routed` | `delivery.rs` | delivery guard: a postable candidate is routed | `Delivery.postable_spec` |
+| `postable-drops-spent` | `delivery.rs` | delivery guard: a posted candidate is spent | `Delivery.postable_spec` |
+| `guard-known-all` | `delivery.rs` | delivery guard: known bytes need one postable candidate, not every candidate ready | `Delivery.guard_allow_iff` |
+| `guard-unread-deny-allows` | `delivery.rs` | delivery guard: unread bytes under a route never pass | `Delivery.guard_allow_iff`, `Delivery.guard_deny_unread` |
+| `guard-all-counts-withdrawn` | `delivery.rs` | delivery guard: a withdrawn candidate need not be ready | `Delivery.guard_all_loop_spec` |
+| `guard-all-skips-last` | `delivery.rs` | delivery guard: the last candidate counts for the all-ready rule | `Delivery.guard_all_loop_spec` |
+| `guard-any-skips-last` | `delivery.rs` | delivery guard: the last candidate may hold the bytes | `Delivery.guard_any_loop_spec` |
 
 <!-- end generated -->
 

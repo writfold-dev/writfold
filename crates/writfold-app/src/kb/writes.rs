@@ -6,7 +6,7 @@ use writfold_kb::write::Write;
 use writfold_kb::write::record::{Decision, Link, Ticket};
 
 /// Flags that take a value.
-pub const VALUES: [&str; 39] = [
+pub const VALUES: [&str; 41] = [
     "idle",
     "example",
     "mark",
@@ -46,6 +46,8 @@ pub const VALUES: [&str; 39] = [
     "sym",
     "ttl",
     "commit",
+    "ref",
+    "to",
 ];
 /// Flags without a value.
 pub const SWITCHES: [&str; 10] = [
@@ -83,6 +85,8 @@ pub fn allowed(verb: &str) -> &'static [&'static str] {
             "statement",
             "reason",
             "by",
+            "ref",
+            "to",
         ],
         "edit" => &["run", "worktree", "dry-run", "abandon"],
         "plan" => &["run", "repo", "from", "reason", "by", "again", "gates"],

@@ -127,6 +127,7 @@ pub fn check(w: &World, id: &str, at: i64) -> TestResult<(String, u8)> {
         candidate: Some(id.into()),
         check: None,
         run: Some(RUN.into()),
+        mode: None,
     };
     deliver(w, verb, at)
 }
@@ -140,6 +141,7 @@ pub fn say(w: &World, kind: Kind, id: &str, check: &str, at: i64) -> TestResult<
         text: "read before posting".into(),
         by: "owner".into(),
         run: Some(RUN.into()),
+        mode: None,
     };
     deliver(w, verb, at)
 }
@@ -148,6 +150,7 @@ pub fn deliver_status(w: &World) -> TestResult<(String, u8)> {
     let verb = DeliverVerb::Status {
         candidate: None,
         run: Some(RUN.into()),
+        all: false,
     };
     deliver(w, verb, NOW + 9000)
 }
