@@ -44,12 +44,14 @@ pub fn findings(gate: &str, stdout: &[u8]) -> Vec<Finding> {
         .collect()
 }
 
-/// Run gate `d` against candidate `c` (whose payload is under `root`).
-pub fn evaluate(root: &Path, c: &Candidate, d: &Definition) -> Evaluated {
+/// Run gate `d` against candidate `c` (under `root`): `{candidate}` is
+/// the file holding the payload (`payload`, KB-relative), `{source}` the
+/// candidate's own file.
+pub fn evaluate(root: &Path, c: &Candidate, d: &Definition, payload: &str) -> Evaluated {
     let before = c.digest();
-    let payload = root.join(c.payload_path());
-    let e = exec::run_on_candidate(d, root, &payload);
-    let after = std::fs::read(&payload).map_or_else(|_| "missing".into(), |b| sha(&b));
+    let source = root.join(c.payload_path());
+    let e = exec::run_on_candidate(d, root, (&root.join(payload), &source));
+    let after = std::fs::read(&source).map_or_else(|_| "missing".into(), |b| sha(&b));
     let unknown = |note: String| Evaluated {
         outcome: Outcome::Unknown,
         findings: Vec::new(),

@@ -4,39 +4,32 @@
 //! than running it, and anything outside the configured commands passes.
 //!
 //! With no `.writfold/deliveries/guard.toml` in the KB (the default), or
-//! no KB, it allows everything and prints nothing (fail open). With one,
-//! a Bash command whose simple command starts with a configured command
-//! (such as `gh pr comment`), or a call to a configured tool, is denied
-//! unless the current run has a delivery candidate that is ready:
+//! no KB, it allows everything and prints nothing (fail open). With one:
 //!
-//! - when the body can be read from the command (`--body TEXT`, `-b TEXT`,
-//!   `--body-file PATH`, `-F PATH`, without shell expansions), a ready
-//!   candidate must hold those bytes (trailing whitespace ignored);
-//! - otherwise every candidate of the run must be ready, and there must be
-//!   at least one.
+//! - a route (`routes`) names a posting command or tool, its mode and
+//!   where its body is. The body must be read, and a postable candidate
+//!   of that mode (same payload bytes, ready, not withdrawn, not yet
+//!   recorded as posted) must hold it; a body it cannot read is denied;
+//! - a listed command (`commands`) or tool (`tools`) keeps the lenient
+//!   rule: known bytes need a postable candidate of any mode; unknown
+//!   bytes need every live candidate of the run ready, and at least one.
+//!
+//! A command preceded by `cd`, `pushd` or a Git directory setting, or
+//! carrying `-C`, acts somewhere else: its body file is never read from
+//! the hook's directory ([`crate::shell::invocations`]).
 //!
 //! "Allow" means printing nothing, so Claude Code's own permission flow
 //! still decides; a denial is the documented JSON with
-//! `permissionDecision: "deny"` and the reason.
-use crate::deliver;
-use crate::deliver::config::{self, Guard};
+//! `permissionDecision: "deny"` and the reason, which names the repair.
+use super::delivery_body::{self as body, Matched};
+use crate::deliver::config;
+use crate::deliver::guarded::{self, Call};
 use crate::hook::HookOutput;
 use crate::index::query;
 use crate::session::Session;
-use crate::shell::{self, Word};
 use crate::workspace::{GitTool, Workspace};
 use serde_json::{Map, Value, json};
 use std::path::Path;
-use writfold_core::delivery::{self, Body as Posted, Seen, Unread};
-
-/// The body flags read from a matched command, with whether each names a
-/// file.
-const BODY_FLAGS: [(&str, bool); 4] = [
-    ("--body", false),
-    ("-b", false),
-    ("--body-file", true),
-    ("-F", true),
-];
 
 fn deny(reason: String) -> HookOutput {
     let value = json!({
@@ -52,69 +45,6 @@ fn deny(reason: String) -> HookOutput {
     }
 }
 
-/// What the matched call would post.
-enum Body {
-    Bytes(Vec<u8>),
-    Unknown(String),
-}
-
-/// The words of the first simple command that starts with a configured
-/// command, if any.
-fn matched(guard: &Guard, line: &str) -> Option<Vec<Word>> {
-    shell::segments(line).into_iter().find_map(|segment| {
-        let words = shell::command(&segment);
-        guard
-            .commands
-            .iter()
-            .any(|c| c.len() <= words.len() && c.iter().zip(words).all(|(a, w)| *a == w.text))
-            .then(|| words.to_vec())
-    })
-}
-
-/// The body a matched command names, read from its flags.
-fn body(words: &[Word], cwd: &Path) -> Body {
-    for (i, word) in words.iter().enumerate() {
-        for (flag, file) in BODY_FLAGS {
-            let value = match word.text.strip_prefix(flag) {
-                Some("") => words.get(i + 1),
-                Some(rest) if flag.starts_with("--") && rest.starts_with('=') => {
-                    return value_of(&word.text[flag.len() + 1..], word.expands, file, cwd);
-                }
-                _ => continue,
-            };
-            let Some(value) = value else {
-                return Body::Unknown(format!("{flag} has no value"));
-            };
-            return value_of(&value.text, value.expands, file, cwd);
-        }
-    }
-    Body::Unknown("no body flag the guard can read".into())
-}
-
-fn value_of(text: &str, expands: bool, file: bool, cwd: &Path) -> Body {
-    if expands {
-        return Body::Unknown("the body holds a shell expansion".into());
-    }
-    if !file {
-        return Body::Bytes(text.as_bytes().to_vec());
-    }
-    if text == "-" {
-        return Body::Unknown("the body is read from standard input".into());
-    }
-    match std::fs::read(cwd.join(text)) {
-        Ok(bytes) => Body::Bytes(bytes),
-        Err(e) => Body::Unknown(format!("the body file {text} is unreadable ({e})")),
-    }
-}
-
-fn trimmed(bytes: &[u8]) -> &[u8] {
-    let end = bytes
-        .iter()
-        .rposition(|b| !b.is_ascii_whitespace())
-        .map_or(0, |i| i + 1);
-    &bytes[..end]
-}
-
 /// Decide one PreToolUse event.
 pub fn pre_tool_use(
     ws: &Workspace,
@@ -125,26 +55,13 @@ pub fn pre_tool_use(
     let Some(guard) = config::guard(&ws.root).map_err(|e| e.to_string())? else {
         return Ok(HookOutput::default());
     };
-    let tool = input.get("tool_name").and_then(Value::as_str).unwrap_or("");
-    let body = if guard.tools.iter().any(|t| t == tool) {
-        Body::Unknown(format!("tool {tool} is guarded as a whole"))
-    } else if tool == "Bash" {
-        let line = input
-            .get("tool_input")
-            .and_then(|t| t.get("command"))
-            .and_then(Value::as_str)
-            .unwrap_or("");
-        match matched(&guard, line) {
-            Some(words) => body(&words, cwd),
-            None => return Ok(HookOutput::default()),
-        }
-    } else {
+    let Some(matched) = body::matched(&guard, input, cwd) else {
         return Ok(HookOutput::default());
     };
-    Ok(decide(ws, body, now))
+    Ok(decide(ws, &matched, now))
 }
 
-fn decide(ws: &Workspace, body: Body, now: i64) -> HookOutput {
+fn decide(ws: &Workspace, m: &Matched, now: i64) -> HookOutput {
     let tool = match GitTool::locate() {
         Ok(tool) => tool,
         Err(e) => return deny(format!("cannot read the KB ({e})")),
@@ -161,60 +78,16 @@ fn decide(ws: &Workspace, body: Body, now: i64) -> HookOutput {
                 .into(),
         );
     };
-    let cands = deliver::readiness(&session, &rec);
-    let blocked = |c: &deliver::candidate::Candidate, owed: &[String]| {
-        format!("candidate {} owes {}", c.id, owed.join(", "))
+    let found = crate::deliver::found::all(&session, &rec);
+    let call = Call {
+        name: &m.name,
+        mode: m.mode.as_deref(),
+        file_flag: m.file_flag.as_deref(),
+        unread: m.unread(),
+        spent_matches: false,
     };
-    let seen = |bytes: Option<&[u8]>| -> Vec<Seen> {
-        cands
-            .iter()
-            .map(|(c, ready, _)| Seen {
-                same: bytes.is_some_and(|b| c.bytes.as_deref().map(trimmed) == Some(trimmed(b))),
-                ready: *ready,
-                live: true,
-                routed: true,
-                spent: false,
-            })
-            .collect()
-    };
-    match body {
-        Body::Bytes(bytes) => {
-            let same: Vec<_> = cands
-                .iter()
-                .filter(|(c, _, _)| c.bytes.as_deref().map(trimmed) == Some(trimmed(&bytes)))
-                .collect();
-            if delivery::guard(Posted::Known, Unread::AllReady, &seen(Some(&bytes))) {
-                return HookOutput::default();
-            }
-            match same.first() {
-                Some((c, _, owed)) => deny(format!(
-                    "{}; see writfold kb deliver status --run {}",
-                    blocked(c, owed),
-                    rec.id
-                )),
-                None => deny(format!(
-                    "no delivery candidate of run {} holds the bytes being posted ({}); prepare and check one with writfold kb deliver",
-                    rec.id,
-                    deliver::candidate::sha(&bytes)
-                )),
-            }
-        }
-        Body::Unknown(why) => {
-            if delivery::guard(Posted::Unknown, Unread::AllReady, &seen(None)) {
-                return HookOutput::default();
-            }
-            let owing: Vec<String> = cands
-                .iter()
-                .filter(|(_, ready, _)| !ready)
-                .map(|(c, _, owed)| blocked(c, owed))
-                .collect();
-            let what = match owing.is_empty() {
-                true => format!("run {} has no delivery candidate", rec.id),
-                false => owing.join("; "),
-            };
-            deny(format!(
-                "{what} ({why}, so every candidate of the run must be ready)"
-            ))
-        }
+    match guarded::decide(&ws.root, &rec.id, &found, &call, &m.read) {
+        None => HookOutput::default(),
+        Some(reason) => deny(reason),
     }
 }

@@ -14,6 +14,9 @@ use std::path::Path;
 /// delivery, the mode file's digest (or `builtin:<mode>`) followed by each
 /// mode gate's digest. `None` when it does not load.
 pub fn definition_now(root: &Path, top: Option<&Path>, gate: &str) -> Option<String> {
+    if let Some(name) = crate::deliver::step::posted_of(gate) {
+        return Some(format!("posted:{name}"));
+    }
     if let Some(name) = crate::deliver::step::mode_of(gate) {
         let mode = crate::deliver::mode::mode(root, name).ok()?;
         let own = match std::fs::read(root.join(&mode.source)) {

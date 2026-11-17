@@ -66,6 +66,18 @@ pub fn owes(row: &mut Row, gates: &[Gate]) {
             true => "no gates".into(),
             false => format!("met: {}", listed(&gates.iter().collect::<Vec<_>>())),
         };
+        for g in gates {
+            let Some(mode) = crate::deliver::step::mode_of(&g.id) else {
+                continue;
+            };
+            let posted = format!("{}{mode}", crate::deliver::step::POSTED);
+            if !gates.iter().any(|o| o.id == posted) {
+                row.more.push(line(
+                    "note",
+                    format!("nothing on this step records a post; add {posted} to the template to hold the step until one is recorded"),
+                ));
+            }
+        }
         row.more
             .push(line("next", "writfold kb plan advance".into()));
         return;

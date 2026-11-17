@@ -4,7 +4,7 @@
 //! A gate ID is a slug and cannot hold `:`, so the word never reads as a
 //! gate, and a template written for an older binary keeps its meaning.
 use super::config::{self, MODES, is_name};
-use super::step::PREFIX;
+use super::step::{POSTED, PREFIX};
 use crate::error::{KbError, Result};
 use std::path::Path;
 
@@ -14,10 +14,12 @@ pub fn is_mode(mode: &str) -> bool {
     is_name(mode) && mode != "guard" && !mode.starts_with("deny-")
 }
 
-/// Check one step word that starts `deliver:`, against the words the step
-/// already owes; the refusal names the step `id`.
+/// Check one step word that starts `deliver:` or `posted:`, against the
+/// words the step already owes; the refusal names the step `id`.
 pub fn check(id: &str, word: &str, owed: &[String]) -> std::result::Result<(), String> {
-    let mode = word.strip_prefix(PREFIX).unwrap_or_default();
+    let mode = (word.strip_prefix(PREFIX))
+        .or_else(|| word.strip_prefix(POSTED))
+        .unwrap_or_default();
     if !is_mode(mode) {
         return Err(format!(
             "step {id}: {word} does not name a delivery mode ([a-z0-9.-], not guard or deny-*)"
@@ -27,6 +29,22 @@ pub fn check(id: &str, word: &str, owed: &[String]) -> std::result::Result<(), S
         return Err(format!("step {id} names {word} twice"));
     }
     Ok(())
+}
+
+/// Whether `word` is a `posted:<mode>` with no `deliver:<mode>` among `gates`.
+pub fn lone(word: &str, gates: &[String]) -> bool {
+    word.strip_prefix(POSTED)
+        .is_some_and(|m| !gates.iter().any(|g| g.strip_prefix(PREFIX) == Some(m)))
+}
+
+/// `posted:<mode>` stands beside `deliver:<mode>` on the same step, and
+/// only there: the refusal for a step that has one without the other.
+pub fn unpaired(id: &str, gates: &[String]) -> Option<String> {
+    let word = gates.iter().find(|g| lone(g, gates))?;
+    let mode = word.strip_prefix(POSTED).unwrap_or_default();
+    Some(format!(
+        "plan template: step {id}: {POSTED}{mode} needs {PREFIX}{mode} on the same step"
+    ))
 }
 
 /// Refuse a delivery that no mode of the KB root can meet: no such mode,

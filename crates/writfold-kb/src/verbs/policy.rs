@@ -168,6 +168,12 @@ pub fn policy(session: &Session<'_>, cwd: &Path) -> Result<Answer> {
         answer.rows.push(gate_row(d, pin.line(&d.id, &d.digest)));
     }
     answer.rows.extend(guard_rows(root, cwd));
+    // The delivery modes, as `deliver modes` shows them, and the guard's routes.
+    let modes = crate::deliver::modes::names(root);
+    answer
+        .rows
+        .extend(modes.iter().map(|m| crate::deliver::modes::row(root, m)));
+    answer.rows.extend(route_rows(root));
     lines.sort();
     let mut material = lines.join("\n");
     material.push('\n');
@@ -195,4 +201,29 @@ pub fn policy(session: &Session<'_>, cwd: &Path) -> Result<Answer> {
     answer.words.push(("identity", identity));
     answer.flagged = pin.word == "moved";
     Ok(answer)
+}
+
+/// One row per guard route (`.writfold/deliveries/guard.toml`).
+fn route_rows(root: &Path) -> Vec<Row> {
+    let Ok(Some(g)) = crate::deliver::config::guard(root) else {
+        return Vec::new();
+    };
+    g.routes
+        .iter()
+        .map(|r| {
+            let place = match &r.field {
+                Some(f) => format!("field={f}"),
+                None => format!("body={} file={}", r.body.join(","), r.file.join(",")),
+            };
+            Row {
+                kind: "route",
+                id: r.name(),
+                text: format!("mode={} {place}", r.mode.as_deref().unwrap_or("any")),
+                path: Some(g.path.clone()),
+                line: Some(1),
+                section: Some("policy"),
+                ..Row::default()
+            }
+        })
+        .collect()
 }

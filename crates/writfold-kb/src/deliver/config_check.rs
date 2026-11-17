@@ -99,10 +99,10 @@ pub fn deny(audience: &str, path: &str, text: &str) -> Result<Deny, Report> {
     c.finish(deny)
 }
 
-/// `guard.toml`.
-pub fn guard(path: &str, text: &str) -> Result<Guard, Report> {
+/// `guard.toml`; `root` (when known) is where route modes load from.
+pub fn guard(path: &str, text: &str, root: Option<&std::path::Path>) -> Result<Guard, Report> {
     let mut c = Check::read(path, text, "the delivery guard");
-    let keys = ["schema", "commands", "tools"];
+    let keys = ["schema", "commands", "tools", "routes"];
     c.unknown_keys(&keys, &keys, "not a delivery guard key");
     schema(&mut c, "writfold-guard/1");
     let commands = list(&mut c, "commands");
@@ -118,16 +118,32 @@ pub fn guard(path: &str, text: &str) -> Result<Guard, Report> {
         ok = false;
     }
     let tools = list(&mut c, "tools");
+    let taken: Vec<String> = (commands.iter().flatten())
+        .chain(tools.iter().flatten())
+        .map(|w| w.str().split_whitespace().collect::<Vec<_>>().join(" "))
+        .collect();
+    let mut routes = Some(Vec::new());
+    for entry in list(&mut c, "routes").unwrap_or_default() {
+        match (
+            super::route::read(&mut c, &entry, &taken, root),
+            routes.as_mut(),
+        ) {
+            (Some(r), Some(all)) => all.push(r),
+            _ => routes = None,
+        }
+    }
     let guard = (|| {
         let commands = commands?
             .iter()
             .map(|c| c.str().split_whitespace().map(str::to_owned).collect())
             .collect();
         let tools = tools?.into_iter().map(|t| t.value.text).collect();
+        let routes = routes?;
         ok.then(|| Guard {
             path: path.to_owned(),
             commands,
             tools,
+            routes,
         })
     })();
     c.finish(guard)

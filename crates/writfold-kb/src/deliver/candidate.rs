@@ -55,7 +55,7 @@ pub struct Manifest {
     pub seq: u64,
 }
 
-fn manifest_bytes(m: &Manifest, size: usize) -> Vec<u8> {
+fn manifest_bytes(m: &Manifest, size: usize, rendering: &str) -> Vec<u8> {
     let value = json!({
         "schema": SCHEMA,
         "id": m.id,
@@ -65,7 +65,7 @@ fn manifest_bytes(m: &Manifest, size: usize) -> Vec<u8> {
         "destination": m.destination,
         "source": {"name": m.source_name, "digest": m.source_digest},
         "candidate": {"file": PAYLOAD, "digest": m.prepared, "bytes": size},
-        "rendering": "verbatim",
+        "rendering": rendering,
         "recorded": m.recorded,
         "seq": m.seq,
     });
@@ -172,8 +172,17 @@ pub fn plan(
     now: i64,
 ) -> Result<(Op, String)> {
     let (run_id, run_dir) = run;
-    mode(root, &p.mode)?;
-    let audience = p.audience.clone().unwrap_or_else(|| "internal".into());
+    let m = mode(root, &p.mode)?;
+    let audience = match (&m.audience, &p.audience) {
+        (Some((fixed, line)), Some(asked)) if fixed != asked => {
+            return Err(KbError::Refused(format!(
+                "{} is for audience {fixed} (@{}:{line}); prepare without --audience",
+                p.mode, m.source
+            )));
+        }
+        (Some((fixed, _)), _) => fixed.clone(),
+        (None, asked) => asked.clone().unwrap_or_else(|| "internal".into()),
+    };
     if !AUDIENCES.contains(&audience.as_str()) {
         return Err(KbError::Usage(format!(
             "--audience must be one of {}",
@@ -185,8 +194,7 @@ pub fn plan(
         None => None,
     };
     let from = cwd.join(&p.from);
-    let bytes = std::fs::read(&from)
-        .map_err(|e| KbError::Usage(format!("--from {}: {e}", p.from.display())))?;
+    let bytes = super::read::read_from(cwd, &p.from)?;
     if bytes.is_empty() || bytes.len() > MAX_BYTES || std::str::from_utf8(&bytes).is_err() {
         return Err(KbError::Usage(format!(
             "--from must be a non-empty UTF-8 text file of at most {MAX_BYTES} bytes"
@@ -200,9 +208,12 @@ pub fn plan(
         mode: p.mode.clone(),
         audience,
         destination,
-        source_name: from
-            .file_name()
-            .map_or_else(|| "source".into(), |n| n.to_string_lossy().into_owned()),
+        source_name: match p.from.as_os_str() == "-" {
+            true => "-".into(),
+            false => from
+                .file_name()
+                .map_or_else(|| "source".into(), |n| n.to_string_lossy().into_owned()),
+        },
         source_digest: digest.clone(),
         prepared: digest,
         recorded: crate::time::stamp(now),
@@ -212,35 +223,13 @@ pub fn plan(
         path: format!("{run_dir}/{DIR}/{id}"),
         files: vec![
             (PAYLOAD.into(), bytes.clone()),
-            (MANIFEST.into(), manifest_bytes(&manifest, bytes.len())),
+            (
+                MANIFEST.into(),
+                manifest_bytes(&manifest, bytes.len(), &m.rendering),
+            ),
         ],
     };
     Ok((op, id))
 }
 
-/// The candidate `named` (its ID, or the six hex digits that end it), or
-/// the run's only candidate when none is named.
-pub fn pick<'a>(cands: &'a [Candidate], named: Option<&str>, run: &str) -> Result<&'a Candidate> {
-    let found: Vec<&Candidate> = match named {
-        Some(n) => cands
-            .iter()
-            .filter(|c| c.id == n || c.id.ends_with(&format!("-{n}")))
-            .collect(),
-        None => cands.iter().collect(),
-    };
-    match (found.as_slice(), named) {
-        ([one], _) => Ok(one),
-        ([], Some(n)) => Err(KbError::Refused(format!("no candidate {n} in run {run}"))),
-        ([], None) => Err(KbError::Refused(format!(
-            "run {run} has no delivery candidate: writfold kb deliver prepare --mode M --from FILE"
-        ))),
-        (many, _) => {
-            let ids: Vec<&str> = many.iter().map(|c| c.id.as_str()).collect();
-            Err(KbError::Refused(format!(
-                "{} candidates; name one: {}",
-                many.len(),
-                ids.join(", ")
-            )))
-        }
-    }
-}
+pub use super::pick::named as pick;

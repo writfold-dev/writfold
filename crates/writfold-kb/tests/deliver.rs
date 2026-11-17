@@ -71,6 +71,7 @@ pub fn check(w: &World, id: &str, only: Option<&str>, at: i64) -> TestResult<(St
         candidate: Some(id.into()),
         check: only.map(str::to_owned),
         run: Some(RUN.into()),
+        mode: None,
     };
     deliver(w, verb, at)
 }
@@ -79,6 +80,7 @@ pub fn status(w: &World, id: Option<&str>) -> TestResult<(String, u8)> {
     let verb = DeliverVerb::Status {
         candidate: id.map(str::to_owned),
         run: Some(RUN.into()),
+        all: false,
     };
     deliver(w, verb, NOW + 3600)
 }
@@ -294,6 +296,7 @@ fn waived_and_attested_are_never_satisfied() -> TestResult {
         text: text.into(),
         by: "owner".into(),
         run: Some(RUN.into()),
+        mode: None,
     };
     use writfold_kb::gate::statement::Kind;
     // An attestation never stands in for a check.

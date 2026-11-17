@@ -95,6 +95,26 @@ pub struct Obligation {
     pub digest: String,
     /// The candidate gate behind it, when it is one of the mode's gates.
     pub gate: Option<crate::gate::def::Definition>,
+    /// Whether the mode takes a waiver of it (`waivable`); a mode gate's
+    /// own `accept` decides for it instead.
+    pub waivable: bool,
+    /// The mode's `waivable` key and where it is, for a refusal.
+    pub waivable_at: String,
+}
+
+impl Obligation {
+    /// The standings that meet it: a mode gate's `accept`; otherwise every
+    /// word, `waived` only when the mode takes a waiver of it.
+    pub fn accept(&self) -> writfold_core::policy::Accept {
+        match &self.gate {
+            Some(g) => g.policy(),
+            None => writfold_core::policy::Accept {
+                satisfied: true,
+                attested: true,
+                waived: self.waivable,
+            },
+        }
+    }
 }
 
 fn sha(text: &str) -> String {
@@ -107,6 +127,12 @@ fn sha(text: &str) -> String {
 /// The obligations of a mode for an audience, built-in checks first.
 pub fn obligations(mode: &Mode, deny: &Deny) -> Vec<Obligation> {
     let base = "writfold-delivery-check/1\n";
+    // A rendering other than verbatim joins every digest, so a receipt or
+    // statement about the other payload stops standing.
+    let rendered = match mode.rendering.as_str() {
+        super::render::VERBATIM => String::new(),
+        r => format!("\nrendering={r}"),
+    };
     let mut out = Vec::new();
     for check in &mode.checks {
         let (class, material) = match check.as_str() {
@@ -128,8 +154,10 @@ pub fn obligations(mode: &Mode, deny: &Deny) -> Vec<Obligation> {
         out.push(Obligation {
             name: check.clone(),
             class,
-            digest: sha(&format!("{base}{check}\n{material}")),
+            digest: sha(&format!("{base}{check}\n{material}{rendered}")),
             gate: None,
+            waivable: mode.waivable(check),
+            waivable_at: mode.waivable_at(),
         });
     }
     // A gate's obligation digest is its definition digest, which covers
@@ -142,16 +170,23 @@ pub fn obligations(mode: &Mode, deny: &Deny) -> Vec<Obligation> {
                 "observed" => "observed",
                 _ => "attested",
             },
-            digest: sha(&format!("{base}gate\n{}\n{}", gate.id, gate.digest)),
+            digest: sha(&format!(
+                "{base}gate\n{}\n{}{rendered}",
+                gate.id, gate.digest
+            )),
             gate: Some(gate.clone()),
+            waivable: true,
+            waivable_at: String::new(),
         });
     }
     for name in &mode.attest {
         out.push(Obligation {
             name: name.clone(),
             class: "attested",
-            digest: sha(&format!("{base}attested\n{name}")),
+            digest: sha(&format!("{base}attested\n{name}{rendered}")),
             gate: None,
+            waivable: mode.waivable(name),
+            waivable_at: mode.waivable_at(),
         });
     }
     out
@@ -165,6 +200,8 @@ pub struct Guard {
     pub commands: Vec<Vec<String>>,
     /// Tool names the harness calls directly (an MCP tool that posts).
     pub tools: Vec<String>,
+    /// Posting commands and tools with their mode and body ([`super::route`]).
+    pub routes: Vec<super::route::Route>,
 }
 
 /// The guard configuration, or `None` when there is none (the hook then
@@ -173,7 +210,7 @@ pub fn guard(root: &Path) -> Result<Option<Guard>> {
     let Some((path, text)) = open(root, "guard.toml")? else {
         return Ok(None);
     };
-    super::config_check::guard(&path, &text)
+    super::config_check::guard(&path, &text, Some(root))
         .map(Some)
         .map_err(refused)
 }
@@ -188,7 +225,7 @@ pub fn check_file(
 ) -> std::result::Result<(), writfold_core::diag::Report> {
     let root = dir.parent().and_then(Path::parent).unwrap_or(dir);
     match (stem, stem.strip_prefix("deny-")) {
-        ("guard", _) => super::config_check::guard(shown, text).map(|_| ()),
+        ("guard", _) => super::config_check::guard(shown, text, Some(root)).map(|_| ()),
         (_, Some(audience)) => super::config_check::deny(audience, shown, text).map(|_| ()),
         _ => {
             let defaults = super::mode::default(stem);

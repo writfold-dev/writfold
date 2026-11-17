@@ -231,6 +231,10 @@ fn judge_steps(
                 gates.push(deliveries.gate(session, step, mode, detail));
                 continue;
             }
+            if let Some(mode) = crate::deliver::step::posted_of(id) {
+                gates.push(deliveries.posted_gate(session, step, mode));
+                continue;
+            }
             let Some(j) = report.gates.iter().find(|j| &j.definition.id == id) else {
                 let mut g = undefined(id);
                 g.items.extend(unreadable(&report.problems, id));

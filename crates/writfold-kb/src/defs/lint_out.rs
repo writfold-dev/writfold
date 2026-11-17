@@ -32,6 +32,7 @@ pub fn output(all: &[File], report: Report, json: bool, (deny, label): (bool, &s
             exit,
             report: None,
             shown: Some(report),
+            drawn: None,
         };
     }
     let rows: Vec<serde_json::Value> = all
@@ -55,5 +56,6 @@ pub fn output(all: &[File], report: Report, json: bool, (deny, label): (bool, &s
         exit,
         report: None,
         shown: None,
+        drawn: None,
     }
 }

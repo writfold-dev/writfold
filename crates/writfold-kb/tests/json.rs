@@ -206,6 +206,7 @@ fn delivery_labels_are_documented() -> TestResult {
         Verb::Deliver(DeliverVerb::Status {
             candidate: None,
             run,
+            all: false,
         }),
     ];
     let mut labels = BTreeSet::new();

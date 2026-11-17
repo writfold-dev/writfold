@@ -15,7 +15,7 @@
 //! and a name listed twice are refused with the file and the reason. A
 //! mode cannot name another mode and a gate cannot name a gate, so no
 //! cycle can form. Loading a mode never runs anything.
-use super::config::{BUILTIN, DIR, is_name, open, refused};
+use super::config::{BUILTIN, is_name, open, refused};
 use crate::error::{KbError, Result};
 use crate::gate::def::Definition;
 use std::path::Path;
@@ -37,6 +37,46 @@ pub struct Mode {
     pub description: Option<String>,
     /// `built-in`, or the mode file's KB path.
     pub source: String,
+    /// `waivable`: the built-in checks and attest names the mode takes a
+    /// waiver of, with the key's line; `None` (absent) takes every waiver.
+    pub waivable: Option<(Vec<String>, u32)>,
+    /// `rendering`: how the payload is made from the candidate
+    /// ([`super::render`]); `verbatim` when absent.
+    pub rendering: String,
+    /// `audience`: the audience the mode is for, with the key's line;
+    /// `None` leaves it to `deliver prepare --audience`.
+    pub audience: Option<(String, u32)>,
+}
+
+impl Mode {
+    /// Whether the mode takes a waiver of obligation `name` (a mode gate's
+    /// own `accept` decides for it instead).
+    pub fn waivable(&self, name: &str) -> bool {
+        self.waivable
+            .as_ref()
+            .is_none_or(|(names, _)| names.iter().any(|n| n == name))
+    }
+
+    /// `waivable = ["claims.cited-fresh"] @.writfold/deliveries/pr-comment.toml:6`.
+    pub fn waivable_at(&self) -> String {
+        let (names, line) = self.waivable.clone().unwrap_or_default();
+        let list = serde_json::to_string(&names).unwrap_or_default();
+        format!(
+            "waivable = {} @{}:{line}",
+            list.replace(',', ", "),
+            self.source
+        )
+    }
+}
+
+/// The line of `key = …` in a file's text (1 when it cannot be found).
+pub fn key_line(text: &str, key: &str) -> u32 {
+    let at = text.lines().position(|l| {
+        l.trim_start()
+            .strip_prefix(key)
+            .is_some_and(|rest| rest.trim_start().starts_with('='))
+    });
+    at.map_or(1, |n| u32::try_from(n + 1).unwrap_or(1))
 }
 
 /// The default of a mode: for a built-in mode every check, 150 words per
@@ -55,6 +95,9 @@ pub(super) fn default(name: &str) -> Mode {
         attest: Vec::new(),
         description: None,
         source: "built-in".into(),
+        waivable: None,
+        rendering: super::render::VERBATIM.into(),
+        audience: None,
     }
 }
 
@@ -70,10 +113,7 @@ pub fn mode(root: &Path, name: &str) -> Result<Mode> {
     let Some((path, text)) = open(root, &file)? else {
         return match MODES.contains(&name) {
             true => Ok(default(name)),
-            false => Err(KbError::Refused(format!(
-                "no delivery mode {name}: add {DIR}/{file} (schema = \"writfold-delivery-mode/1\", mode = \"{name}\"), or use a built-in mode: {}",
-                MODES.join(", ")
-            ))),
+            false => Err(super::modes::unknown(root, name)),
         };
     };
     super::mode_check::mode(root, default(name), &path, &text).map_err(refused)

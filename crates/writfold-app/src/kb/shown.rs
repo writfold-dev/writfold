@@ -40,8 +40,12 @@ pub fn stdout(output: &Output, style: &Style) -> String {
 
 /// What stderr shows beside a verb's rows: its diagnostics, at most three.
 pub fn stderr(output: &Output, style: &Style) -> String {
-    match &output.report {
+    let diagnostics = match &output.report {
         Some(report) if !report.diagnostics.is_empty() => render_capped(report, style, 3, 3),
         _ => String::new(),
-    }
+    };
+    format!(
+        "{diagnostics}{}",
+        output.drawn.as_deref().unwrap_or_default()
+    )
 }

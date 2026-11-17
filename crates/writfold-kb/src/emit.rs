@@ -86,6 +86,9 @@ pub struct Answer {
     /// `diagnostics` in JSON (present, maybe empty, when `Some`), and
     /// drawn on stderr by the application.
     pub report: Option<writfold_core::diag::Report>,
+    /// Text the application draws on stderr beside the rows, as it is
+    /// (a delivery's findings drawn against the candidate). Not in JSON.
+    pub drawn: Option<String>,
 }
 
 /// The invocation: verb and arguments (they make the query digest), budget,
@@ -118,6 +121,8 @@ pub struct Output {
     /// Diagnostics that are the answer (`kb lint`): drawn on stdout,
     /// before the text.
     pub shown: Option<writfold_core::diag::Report>,
+    /// Drawn on stderr as it is ([`Answer::drawn`]).
+    pub drawn: Option<String>,
 }
 
 fn plain(text: &str, space_ok: bool) -> bool {
@@ -305,6 +310,7 @@ pub fn emit(answer: &Answer, frame: &Frame, scope: &Scope<'_>) -> Result<Output>
         exit,
         report,
         shown: None,
+        drawn: answer.drawn.clone().filter(|_| !frame.json),
     })
 }
 

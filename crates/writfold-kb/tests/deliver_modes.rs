@@ -69,6 +69,7 @@ fn check() -> DeliverVerb {
         candidate: None,
         check: None,
         run: Some(RUN.into()),
+        mode: None,
     }
 }
 
@@ -76,6 +77,7 @@ fn status(w: &World) -> TestResult<(String, u8)> {
     let verb = DeliverVerb::Status {
         candidate: None,
         run: Some(RUN.into()),
+        all: false,
     };
     deliver(w, verb, NOW + 3600)
 }
@@ -122,7 +124,7 @@ fn a_mode_file_alone_defines_commit_message() -> TestResult {
     assert_eq!(state_of(&text, "references.denied"), "failed");
     assert_eq!(state_of(&text, "language-guidelines"), "open");
     assert!(
-        text.contains("# note: mode commit-message: checked before git commit; nothing binds the checked bytes to the commit that is made"),
+        text.contains("# note: mode commit-message: checked before git commit; the guard binds the checked bytes under its route, and a commit made outside the hook is not seen"),
         "{text}"
     );
     // Repair in place: both receipts are about other bytes now.
@@ -147,6 +149,7 @@ fn say(check: &str, kind: Kind) -> DeliverVerb {
         text: "read the guidelines; the message follows them".into(),
         by: "owner".into(),
         run: Some(RUN.into()),
+        mode: None,
     }
 }
 

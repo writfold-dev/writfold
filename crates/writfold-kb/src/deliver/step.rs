@@ -18,9 +18,22 @@ use writfold_core::plan::GateFact;
 /// The word a plan step owes a delivery by: `deliver:<mode>`.
 pub const PREFIX: &str = "deliver:";
 
+/// The word a plan step owes a post record by: `posted:<mode>`.
+pub const POSTED: &str = "posted:";
+
 /// The mode a step word owes, when it is a delivery word.
 pub fn mode_of(word: &str) -> Option<&str> {
     word.strip_prefix(PREFIX)
+}
+
+/// The mode a `posted:<mode>` word names.
+pub fn posted_of(word: &str) -> Option<&str> {
+    word.strip_prefix(POSTED)
+}
+
+/// Whether a step word is a delivery's (`deliver:` or `posted:`), not a gate.
+pub fn is_delivery_word(word: &str) -> bool {
+    mode_of(word).is_some() || posted_of(word).is_some()
 }
 
 fn seq(c: &Candidate) -> u64 {
@@ -59,18 +72,30 @@ pub fn bound_id<'a>(run_dir: &str, evidence: &'a str) -> Option<&'a str> {
     (!id.is_empty() && !id.contains('/')).then_some(id)
 }
 
+/// Where each of `mine` stands for an open step: bound by a done record,
+/// withdrawn, or open.
+pub fn places(mine: &[&Candidate], bound: &[String], withdrawn: &[String]) -> Vec<Place> {
+    mine.iter()
+        .map(
+            |c| match (bound.contains(&c.id), withdrawn.contains(&c.id)) {
+                (true, _) => Place::Bound,
+                (false, true) => Place::Withdrawn,
+                (false, false) => Place::Open,
+            },
+        )
+        .collect()
+}
+
 /// The candidate that decides an open step
 /// ([`writfold_core::delivery::deciding`]): scanning from the newest of
-/// `mine`, the first candidate decides if no done record binds it, and
-/// nothing does if one does.
-pub fn deciding<'a>(mine: &[&'a Candidate], bound: &[String]) -> Option<&'a Candidate> {
-    let places: Vec<Place> = mine
-        .iter()
-        .map(|c| match bound.contains(&c.id) {
-            true => Place::Bound,
-            false => Place::Open,
-        })
-        .collect();
+/// `mine`, withdrawn ones are passed over; the first other one decides if
+/// no done record binds it, and nothing does if one does.
+pub fn deciding<'a>(
+    mine: &[&'a Candidate],
+    bound: &[String],
+    withdrawn: &[String],
+) -> Option<&'a Candidate> {
+    let places = places(mine, bound, withdrawn);
     writfold_core::delivery::deciding(&places).and_then(|i| mine.get(i).copied())
 }
 
@@ -112,7 +137,15 @@ pub struct View {
 fn definition(mode: &str, audience: &str, judged: &[Judged<'_>]) -> String {
     let mut text = format!("writfold-delivery-gate/1\n{mode}\n{audience}\n");
     for j in judged {
-        text.push_str(&format!("{}\t{}\n", j.obligation.name, j.obligation.digest));
+        // A policy key joins the digest only when it narrows something.
+        let narrowed = match j.obligation.waivable {
+            true => "",
+            false => "\tno-waiver",
+        };
+        text.push_str(&format!(
+            "{}\t{}{narrowed}\n",
+            j.obligation.name, j.obligation.digest
+        ));
     }
     candidate::sha(text.as_bytes())
 }
@@ -160,13 +193,7 @@ pub fn view(session: &Session<'_>, mode: &str, c: Option<&Candidate>, run: &str)
     let mut judged = status::judge(obligations, c, &filings);
     recheck::apply(session, c, &mut judged);
     let owed: Vec<&Judged<'_>> = judged.iter().filter(|j| j.unmet()).collect();
-    let next = owed.first().map(|j| match j.obligation.class {
-        "attested" => format!(
-            "writfold kb deliver attest {} --check {} --statement TEXT --by WHO",
-            c.id, j.obligation.name
-        ),
-        _ => format!("writfold kb deliver check {}", c.id),
-    });
+    let next = super::next::next(root, c, &judged);
     let read = owed
         .iter()
         .filter(|j| j.obligation.class == "attested")

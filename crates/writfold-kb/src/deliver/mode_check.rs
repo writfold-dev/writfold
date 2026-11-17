@@ -4,7 +4,8 @@
 use super::config::{BUILTIN, is_name};
 use super::config_check::{list, named};
 use super::mode::{MODES, Mode};
-use crate::defs::{Check, Field, Spanned, Text};
+use super::mode_keys::{checks, closed, description, waivable};
+use crate::defs::{Check, Spanned, Text};
 use crate::gate::def;
 use crate::gate::def_check::schema;
 use std::path::Path;
@@ -129,6 +130,9 @@ pub fn mode(root: &Path, mut mode: Mode, path: &str, text: &str) -> Result<Mode,
         "paragraph_words",
         "gates",
         "attest",
+        "waivable",
+        "rendering",
+        "audience",
     ];
     c.unknown_keys(&keys, &keys, "not a delivery mode key");
     schema(&mut c, "writfold-delivery-mode/1");
@@ -138,41 +142,8 @@ pub fn mode(root: &Path, mut mode: Mode, path: &str, text: &str) -> Result<Mode,
         &mode.name.clone(),
         &format!("{}.toml", mode.name),
     );
-    let checks = match c.list("checks") {
-        Field::Absent => None,
-        other => Some(other.got().map(|l| l.value)),
-    };
-    for check in checks
-        .iter()
-        .flatten()
-        .flatten()
-        .filter(|x| !BUILTIN.contains(&x.str()))
-    {
-        let why = format!(
-            "{} is not a built-in check; list a gate under gates",
-            check.str()
-        );
-        c.unknown_value(
-            check.span,
-            why,
-            "not a built-in check",
-            check.str(),
-            &BUILTIN,
-            '"',
-        );
-    }
-    let description = match c.text("description") {
-        Field::Got(d) if d.str().is_empty() || d.str().contains(['\n', '\r']) => {
-            c.error(
-                "value.form",
-                Some(d.span),
-                "description must be one line".into(),
-            )
-            .label("empty or several lines");
-            None
-        }
-        other => other.got().map(|d| Some(d.value.text)).or(Some(None)),
-    };
+    let checks = checks(&mut c);
+    let description = description(&mut c);
     let words = c.int("paragraph_words", (1, 10_000), 150).or(Spanned {
         value: i64::try_from(mode.paragraph_words).unwrap_or(150),
         span: Default::default(),
@@ -189,11 +160,25 @@ pub fn mode(root: &Path, mut mode: Mode, path: &str, text: &str) -> Result<Mode,
     if let Some(Some(checks)) = &checks {
         mode.checks = checks.iter().map(|x| x.value.text.clone()).collect();
     }
+    let declared: Vec<String> = (mode.checks.iter())
+        .chain(attest.iter().flatten().map(|a| &a.value.text))
+        .cloned()
+        .collect();
+    let gate_ids: Vec<&str> = gate_items.iter().map(Spanned::str).collect();
+    let waivable = waivable(&mut c, &declared, &gate_ids, text);
+    let rendering = closed(&mut c, "rendering", &super::render::RENDERINGS);
+    let audience = closed(&mut c, "audience", &super::config::AUDIENCES)
+        .map(|a| a.map(|a| (a, super::mode::key_line(text, "audience"))));
     let built = (|| {
         mode.description = description?;
         mode.paragraph_words = usize::try_from(words?.value).ok()?;
         mode.gates = gates?;
         mode.attest = attest?.into_iter().map(|a| a.value.text).collect();
+        mode.waivable = waivable?;
+        if let Some(r) = rendering? {
+            mode.rendering = r;
+        }
+        mode.audience = audience?;
         mode.source = path.to_owned();
         (ok && unique).then_some(mode)
     })();

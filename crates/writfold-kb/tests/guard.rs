@@ -105,6 +105,7 @@ fn check(w: &World, id: &str) -> TestResult<u8> {
             candidate: Some(id.into()),
             check: None,
             run: Some(RUN.into()),
+            mode: None,
         },
     )
 }
@@ -164,7 +165,13 @@ fn denies_and_allows_the_right_calls() -> TestResult {
     assert!(denied(&bash(&w, inline))?.is_none());
     // Other bytes than any candidate's.
     let other = denied(&bash(&w, "gh issue comment 7 -b 'Something else entirely'"))?;
-    assert!(other.is_some_and(|r| r.contains("holds the bytes being posted")));
+    // The denial names the ready candidate's file to post instead.
+    let other = other.ok_or("expected a denial")?;
+    assert!(
+        other.contains("are not a candidate's. The ready pr-comment candidate is runs/")
+            && other.contains("post that file, or prepare these bytes"),
+        "{other}"
+    );
     // Bytes it cannot read: every candidate of the run must be ready.
     let expanded = "gh pr comment 42 --body \"$(cat comment.md)\"";
     assert!(denied(&bash(&w, expanded))?.is_none());

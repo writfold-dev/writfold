@@ -1,0 +1,19 @@
+# An example to edit (writfold kb init --example delivery): the delivery
+# guard (a guard, not enforcement; writfold kb hook pre-tool-use). Each
+# route names a posting command or tool, the mode it posts, and where its
+# body is. Under a route a body the guard cannot read is denied, so post
+# the checked file itself with the command's file flag.
+#
+# To keep waivers and withdrawals for people, make Claude Code ask before
+# they run, in .claude/settings.json:
+#   "permissions": {"ask": ["Bash(writfold kb deliver waive:*)",
+#                           "Bash(writfold kb deliver withdraw:*)"]}
+schema = "writfold-guard/1"
+commands = []
+tools = []
+routes = [
+  "gh pr comment: mode=pr-comment body=--body,-b file=--body-file,-F",
+  "git commit: mode=commit-message body=-m,--message file=-F,--file",
+  "gh release create: mode=release-note body=--notes,-n file=--notes-file,-F",
+  "mcp__slack__post_message: mode=slack-summary field=text",
+]
