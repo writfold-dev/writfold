@@ -1,6 +1,6 @@
 # Delivery modes
 
-> **Status:** built in v0.3.0-dev.1; your own modes are built in v0.4.0-dev.1; a delivery as a plan step's gate, `seq` on the manifest and the re-check of cited evidence on every read are built in v0.6.0-dev.1; a mode that declares nothing is never ready, for `deliver status` and the guard as for a plan step, since 16 November 2026.
+> **Status:** built in v0.3.0-dev.1; your own modes are built in v0.4.0-dev.1; a delivery as a plan step's gate, `seq` on the manifest and the re-check of cited evidence on every read are built in v0.6.0-dev.1; a mode that declares nothing is never ready, for `deliver status` and the guard as for a plan step, since 16 November 2026; `seq` on check receipts, built in v0.6.0-dev.4.
 
 A mode file, a deny list or `guard.toml` that is wrong is reported fault by fault, each at its line and column ([errors](errors.md)):
 
@@ -130,6 +130,7 @@ A plan step can owe a delivery: the word `deliver:<mode>` in the step string (`"
 
 - **Which candidate decides.** For the current step, the newest candidate of the mode that no done step is bound to. Newest is by the manifest's `seq`, then by ID, never by a clock. A candidate prepared before the step became current counts: drafting the comment during `implement` is ordinary work.
 - **`seq`.** `deliver prepare` writes `"seq": N` in `delivery.json`, one more than the highest among the run's candidates of that mode. A manifest written before this release has none, counts as 0 and keeps ID order.
+- **Which check receipt decides.** `deliver check` writes `"seq": N` in each receipt, one more than the highest among the candidate's receipts of that check; the newest is by `seq`, then by file name, never by the receipt's `recorded` time (built in v0.6.0-dev.4). A receipt written before carries none, reads as 0 and comes first, in name order, which is the order of the time in its name.
 - **Binding.** `plan advance` writes the candidate's payload path and digest into the done record. That candidate is bound to the step for ever: the step is judged on it alone, and it never decides another step. Two steps naming one mode each need their own candidate. A newer candidate never turns a done step stale; an edit to the bound candidate, or a change to its mode, deny list or a mode gate, does (`!stale`), and the current step does not move back.
 - **`deliver status`** adds one line under a candidate a step is judged on: `step: decides deliver:pr-comment at change#1/deliver [current]` or `step: bound to change#1/deliver [done]`. Other candidates read as before.
 - **Not built:** `deliver prepare --step`, a step window for candidates, withdrawing a candidate, waiving a delivery as a whole (waive a check with `deliver waive`, or close the step with `plan skip --reason --by`).

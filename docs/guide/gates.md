@@ -1,6 +1,6 @@
 # Gates
 
-> **Status:** built in v0.3.0-dev.1; instruction gates, gate scripts, the Weft assessed gate, run-record checks and plan-owed gates built in v0.4.0-dev.1; checklist gates and `gate cover` built in v0.5.0-dev.1; observations as evidence built in v0.5.0-dev.3. Nothing owed reads as not met, and the self-staling note, built in v0.6.0-dev.1. Every fault of a definition reported at its line and column, built in v0.6.0-dev.2. A gate's `accept` list, a checklist's `not_applicable` and `none_found`, the `none-found` outcome and binding receipts and statements to their run and subject in the proved kernel, built in v0.6.0-dev.3.
+> **Status:** built in v0.3.0-dev.1; instruction gates, gate scripts, the Weft assessed gate, run-record checks and plan-owed gates built in v0.4.0-dev.1; checklist gates and `gate cover` built in v0.5.0-dev.1; observations as evidence built in v0.5.0-dev.3. Nothing owed reads as not met, and the self-staling note, built in v0.6.0-dev.1. Every fault of a definition reported at its line and column, built in v0.6.0-dev.2. A gate's `accept` list, a checklist's `not_applicable` and `none_found`, the `none-found` outcome and binding receipts and statements to their run and subject in the proved kernel, built in v0.6.0-dev.3. Scope globs proved (a `*` now also covers a literal `*` in a path) and `seq` on assessed receipts, built in v0.6.0-dev.4.
 
 A gate is one small check with a path scope. `gate run` runs its command and keeps a receipt pinned to the exact bytes checked. `gate status` then says, on every read, whether that evidence still holds. Gates report; they block nothing unless a [guard rule](hooks.md#guard-rules) names them.
 
@@ -75,7 +75,7 @@ description = "README follows the language guideline"
 
 ### Scope patterns
 
-Patterns are anchored at the top of the repository. `*` and `?` match within one path segment. A `**` segment matches any number of segments, none included. A leading `!` excludes. A path is in scope when some pattern matches it and no exclusion does: `README.md` names only the top-level file, `**/*.md` every Markdown file.
+Patterns are anchored at the top of the repository. `*` and `?` match within one path segment. A `**` segment matches any number of segments, none included. A leading `!` excludes. A path is in scope when some pattern matches it and no exclusion does: `README.md` names only the top-level file, `**/*.md` every Markdown file. This is proved for every pattern and path ([assurance](assurance.md#proved)). Since v0.6.0-dev.4 a `*` also stretches over a literal `*` in a file name (`*a` covers `*ba`); before, such a file could fall outside the scope.
 
 The scope decides staleness. A receipt is about the HEAD commit plus the content of the in-scope paths, uncommitted edits included. Committing the exact bytes a receipt was taken on leaves it satisfied; reverting to them makes it satisfied again.
 
@@ -295,7 +295,7 @@ gate ship [failed] assessed fail met=0/1 weft=f463cf9c4a50 bin=8b46349b5622 at d
   next: writfold kb gate run ship (Weft source {gate}/step.weft)
 ```
 
-The receipt, `runs/<run>/assessed/<gate>-<time>-<hex>.json`, binds the definition digest, the Weft source's digest, the pinned and actual binary digests, the report's digest (the report itself stays local), every citation with what it stood on, and every check's Weft result, Weft's own basis and Writfold's basis. Reading it re-derives every basis and the outcome, so a hypothetical check relabelled grounded reads as `[invalid]`. It goes `stale` when the source changes or any cited evidence moves (`why: cited evidence moved: stall_done (…) was fresh, now changed`), and is satisfied again if the evidence returns.
+The receipt, `runs/<run>/assessed/<gate>-<time>-<hex>.json`, binds the definition digest, the Weft source's digest, the pinned and actual binary digests, the report's digest (the report itself stays local), every citation with what it stood on, and every check's Weft result, Weft's own basis and Writfold's basis. Reading it re-derives every basis and the outcome, so a hypothetical check relabelled grounded reads as `[invalid]`. It carries `seq`, one more than the highest of the run's assessed receipts of that gate on that repository, and receipts are judged in `seq`, then file-name order, never by `recorded` (built in v0.6.0-dev.4; a receipt written before carries none, reads as 0 and comes first). It goes `stale` when the source changes or any cited evidence moves (`why: cited evidence moved: stall_done (…) was fresh, now changed`), and is satisfied again if the evidence returns.
 
 ## Run-record checks
 

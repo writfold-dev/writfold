@@ -42,6 +42,14 @@ never fails, result as stated):
   (`Checklist.lean`, replaced in place); `plan skip`'s lock and the close
   check (`Plan.lean`); evidence bound to its run and subject in
   `gate::state` (`Gate.lean`, replaced in place).
+- The proof backfill's second round (17 November 2026, below; built in
+  v0.6.0-dev.4): scope globs (`Wild.lean`, `Scope.lean`), the plan writes'
+  re-check under the lock and the closed run (`Recheck.lean`), decision
+  states and investigations (`Decision.lean`), citation verdicts and check
+  receipts (`Verdict.lean`, `Recorded.lean`), walk's claim, the lint's
+  verdict, `find`'s prefix tier and rows, command matching and idle runs
+  (`Walk.lean`, `Command.lean`, `Find.lean`, `Idle.lean`), and the order
+  receipts are judged in (`Order.lean`).
 
 The gate (`docker compose -f compose.proofs.yaml run --build --rm proofs`,
 or the `docker run` form below) regenerates the translation and refuses
@@ -85,8 +93,8 @@ of `writfold_core::gate` (behind `writfold kb gate` and the met/owed answer
 `gate::Standing::met`; `assess::assumption`, `basis`, `met`, `unfinished`,
 `found_met`, `outcome`), so their derived trait impls and `name`/`parse` text
 conveniences are never translated. Glob matching moved out of `gate` into
-`writfold_core::scope` (iterators, closures, recursion over string slices):
-it is not translated and not proved.
+`writfold_core::scope`; it was reshaped and proved in the second round
+(below).
 
 Run graph (`proofs/Writfold/Plan.lean`, the caller's folded list of steps):
 
@@ -334,11 +342,132 @@ read in `writfold-kb`); the counts in the summary line; `kb init`,
 in the positive configurations, and the mutant `SkipLocked`
 (`RunGraph.mutant-SkipLocked.cfg`) violates it.
 
+### The proof backfill, second round (17 November 2026)
+
+[`proof-backfill-spec.md`](proof-backfill-spec.md) steps 6 to 11; built in
+v0.6.0-dev.4. As in the first round, each decision `writfold-kb` made is a
+kernel function named in `start_from`, `writfold-kb` calls it, and its tests
+and golden files are unchanged; the three behaviour changes are named
+below and in "Found by the proofs". The guard conformance cases pass
+unchanged.
+
+Scope globs (`Wild.lean`, `Scope.lean`). `scope::covers(patterns, path)`
+takes code points split on `/` (`in_scope` and `glob` only decode text
+into them). Both matchers are the same two-index loop with one backtrack
+point, written as a step function (`char_step` within a segment, with `*`
+as the wildcard; `path_step` across segments, with a `**` segment as the
+wildcard and `segment` as the one-to-one match), and the loop calls it
+until it stops. `Wild.lean` defines `WMatch S L p t` (an inductive
+matcher over any wildcard predicate and match) and proves the invariant
+once (`inv_star`, `inv_lit`, `inv_back`, `inv_fail`, `inv_exit`): each step
+keeps it with a lower measure or stops with `WMatch`'s answer.
+
+- `segment_iff`: one segment pattern matches one path segment exactly when
+  `SegMatch` holds: `*` matches any run, none included; `?` one
+  character; any other character itself.
+- `segments_iff`: a pattern's segments match a path's exactly when
+  `PathMatch` holds: a `**` segment matches any number of segments, none
+  included; any other segment matches one by `SegMatch`.
+- `covers_iff`: a path is covered exactly when some pattern without `!`
+  matches it and no `!` pattern does; `exclusion_wins`,
+  `no_pattern_no_scope`.
+
+Plan writes (`Recheck.lean`, `writfold_core::plan::recheck`).
+`still_stands_spec`, `stands_iff`: a decision stands under the lock
+exactly when what it read still holds (no plan set meanwhile; the step
+still current; a splice's parent still current when it was, and its
+ordinal still the next). `writable_spec`, `sidecar_wins`,
+`closed_refuses`: a run takes plan writes unless the state in force (the
+sidecar's, else the manifest's) is `closed`. `writfold-kb` compares the
+step paths and reads the states; the kernel decides.
+
+Decisions and investigations (`Decision.lean`). `step_spec`: `decision::step`
+is exactly the table of `decision.rs` for every pair of states;
+`never_written`, `verified_needs_evidence`, `applied_needs_commit`,
+`accepted_needs_ready_and_actor`, `rejected_needs_actor`,
+`superseded_needs_successor`. `conclude_spec`, `none_spec`,
+`conclude_none_iff`: an investigation may be concluded exactly when both
+sections have text and no hypothesis is open. Whether what a change needs
+was given (the commit on its ref, grounded evidence, a successor) is still
+checked in `writfold-kb`, where each is resolved by a read; the spec's
+`admit(from, to, given)` was not built, because those reads and their
+refusals are interleaved and computing every fact first would change which
+refusal a user sees.
+
+Citation verdicts (`Verdict.lean`, `Recorded.lean`).
+
+- `observed_spec` (the table `observedOf`), `observed_fresh_iff` (fresh
+  exactly for the eight fresh facts), `moved_span_never_fresh`,
+  `unsearched_never_fresh`, `changed_gate_never_fresh`,
+  `checker_fresh_iff`; `with_mark_spec`, `mark_keeps_change`,
+  `mark_never_fresh`, `decide_spec`.
+- `handshake_spec`; `exchange_said_iff` (a reply counts exactly after an
+  agreed handshake, a clean exit, a readable version and exactly one
+  well-formed reply), `exchange_spec`; `aged_spec`, `aged_expired_iff`;
+  `lifetime_spec` (over any type: the generic translated as is).
+- `expired_spec`: a timed citation has expired exactly when
+  `now - seen > ttl` over the integers.
+- `window_spec`, `place_same_iff`, `place_at_iff`, `place_absent_iff`:
+  `locate` is split into `window` (whether to search, which window was
+  cited) and `place` (from the windows' flags: the cited window first,
+  then the first from the top). `locate` keeps its signature and drives
+  them with the caller's span comparison, comparing windows from the top
+  only while none has matched, as before; that driver is tested, not
+  translated.
+- `recordable_iff`; `recorded_age_spec` (unusable when dated more than an
+  hour ahead, otherwise `now - checked_at` clamped to `0 ..= i64::MAX`);
+  `before_spec`, `better_spec`, `best_recorded_spec`, `newest_spec` (the
+  pick is a usable statement ahead of every other usable one by age, then
+  a receipt before the local statement, then the worse verdict, then the
+  first receipt; `none` exactly when none is usable),
+  `newest_never_unverifiable`. `newest` is one loop over an explicit
+  comparator; the iterator version it replaces is kept as a test reference
+  and agrees on every input the tests build, as does the saturating
+  `recorded_age`.
+
+The remainder (`Walk.lean`, `Command.lean`, `Find.lean`, `Idle.lean`).
+`complete_iff` (`walk::complete`: `coverage=complete` exactly when
+nothing is on the frontier and no reason skipped an edge; the traversal
+stays compared with a reference search); `blocks_iff` (`diag::blocks`:
+a lint fails on an error, or a warning under `--deny-warnings`);
+`admit_iff` (`find::admit`: a hit is shown exactly when fewer than the
+limit are shown, its record is not shown yet and it passes the filter;
+every tier's hits go through it in tier order, so a record is shown once,
+under the first tier that found it: the tier order itself is the order of
+the calls in `verbs/find.rs`, not a kernel); `is_help_spec`, `named_spec`
+(`command::matches` over the words' bytes: a whole-word prefix, not the
+prefix and `--help` alone); `query_ok_spec`, `starts_spec`,
+`next_from_spec`, `prefixed_spec` and `emb_first` (`find::prefix_match`
+over code points: a match exactly when the query may match by prefix and
+its tokens begin distinct name tokens in order; taking the first name
+token each one begins never misses a match); `newer_spec`, `newest_spec`
+(the first greatest stamp), `since_spec`, `idle_spec` (idle exactly when
+the newest stamp lies more than `age` before `now` over the integers).
+
+The order receipts are judged in (`Order.lean`, `writfold_core::order`).
+`less_spec` (lexicographic bytes), `precedes_spec` (the lower `seq`, then
+the file name), and the model lemmas `prec_irrefl`, `prec_trans`,
+`prec_total` (a strict total order, tied to the code by `precedes_spec`).
+Gate receipts, cover rows, assessed receipts and delivery check receipts
+are sorted with `order::cmp`. Assessed receipts and delivery check
+receipts gain `seq` (below, "Found by the proofs").
+
+Reshapes, behaviour and tests unchanged unless named: tuple matches,
+guards, struct and slice patterns become flat `if`s and single matches;
+loops that update several variables call one small function per test
+(`scope::include`, `idle::newer`, `verdict::recorded::better`); a match on
+an indexed element goes through a function (`verdict::reply`); a
+parameter named `verdict` is `reached` (it shadowed the module's
+namespace in Lean); scope and `find` take code points (`u32`), `command`
+takes bytes. `writfold_core`'s crate-level lint allowances gain
+`question_mark`, `manual_filter` and `manual_map` (explicit matches
+translate; their combinator forms do not).
+
 ### The claims and their mutants
 
 <!-- generated from proofs/mutants.py -->
 
-108 mutants (20 before 16 November 2026, 86 after the backfill's first round). Each must break exactly the theorems named.
+161 mutants (20 before 16 November 2026, 86 after the backfill's first round, 108 after the policy round, 161 after the backfill's second round). Each must break exactly the theorems named.
 
 | Mutant | File | What it breaks | Must break |
 |---|---|---|---|
@@ -444,6 +573,59 @@ in the positive configurations, and the mutant `SkipLocked`
 | `summary-skips-moved` | `policy.rs` | policy: a moved policy is never read as complete | `Policy.summary_spec` |
 | `summary-ignores-closed` | `policy.rs` | policy: a closed run with an open step is closed-incomplete | `Policy.summary_spec` |
 | `summary-complete-with-skip` | `policy.rs` | policy: a skipped, waived or attested step is never plain complete | `Policy.summary_spec` |
+| `covers-ignores-exclusion` | `scope.rs` | scope: an exclusion that matches keeps the path out | `Scope.covers_loop_spec` |
+| `covers-empty-includes` | `scope.rs` | scope: a scope with no pattern that includes covers nothing | `Scope.covers_iff` |
+| `include-ignores-hit` | `scope.rs` | scope: an including pattern counts only when it matches | `Scope.include_spec` |
+| `segment-no-backtrack` | `scope.rs` | scope: a `*` that led nowhere stretches by one more character | `Scope.char_step_spec` |
+| `star-needs-a-char` | `scope.rs` | scope: `*` matches nothing too, at the end of a segment included | `Scope.char_step_spec` |
+| `same-char-ignores-any` | `scope.rs` | scope: `?` matches any one character | `Scope.same_char_spec` |
+| `globstar-one-star` | `scope.rs` | scope: only `**` is a segment wildcard, not `*` followed by anything | `Scope.globstar_spec` |
+| `globstar-needs-a-segment` | `scope.rs` | scope: `**` matches no segment too, at the end of a path included | `Scope.path_step_spec` |
+| `segments-accept-trailing` | `scope.rs` | scope: a path with segments left over after the pattern does not match | `Scope.path_step_spec` |
+| `recheck-current-ignored` | `plan/recheck.rs` | plan writes: a step write stands only while the step is still current | `Recheck.still_stands_spec` |
+| `recheck-ordinal-ignored` | `plan/recheck.rs` | plan writes: a splice stands only while its ordinal is still the next one | `Recheck.still_stands_spec` |
+| `recheck-root-needs-current` | `plan/recheck.rs` | plan writes: a root end template is not under a current step | `Recheck.still_stands_spec` |
+| `recheck-ignores-plan` | `plan/recheck.rs` | plan writes: a write on an unplanned run stands only while no plan was set | `Recheck.still_stands_spec` |
+| `writable-manifest-wins` | `plan/recheck.rs` | plan writes: the sidecar's state wins over the manifest's | `Recheck.writable_spec`, `Recheck.sidecar_wins`, `Recheck.closed_refuses` |
+| `accepted-without-readiness` | `decision.rs` | decisions: accepting needs readiness | `Decision.step_spec` |
+| `verified-without-evidence` | `decision.rs` | decisions: verifying needs grounded evidence | `Decision.step_spec` |
+| `superseded-twice` | `decision.rs` | decisions: a superseded decision is not superseded again | `Decision.step_spec` |
+| `landing-written` | `decision.rs` | decisions: landing is never written | `Decision.step_spec` |
+| `conclude-ignores-section` | `investigation.rs` | investigations: a missing section stops the conclusion | `Decision.conclude_spec` |
+| `conclude-skips-last` | `investigation.rs` | investigations: every hypothesis is counted, the last included | `Decision.conclude_loop_spec` |
+| `none-ignores-open` | `investigation.rs` | investigations: an open hypothesis stops the conclusion | `Decision.none_spec` |
+| `moved-span-fresh` | `verdict.rs` | verdict: a span found at other lines is moved, never fresh | `Verdict.observed_spec` |
+| `unsearched-fresh` | `verdict.rs` | verdict: a file too long to search is changed, never fresh | `Verdict.observed_spec` |
+| `mark-hides-change` | `verdict.rs` | verdict: a mark never hides a change | `Verdict.with_mark_spec` |
+| `handshake-kind-as-op` | `verdict.rs` | verdict: the protocol first, then the kind, then the operation | `Verdict.handshake_spec` |
+| `exchange-ignores-handshake` | `verdict.rs` | verdict: a reply counts only after an agreed handshake | `Verdict.exchange_said_iff`, `Verdict.exchange_spec` |
+| `exchange-first-of-two` | `verdict.rs` | verdict: exactly one reply counts, not the first of two | `Verdict.exchange_said_iff`, `Verdict.exchange_spec` |
+| `aged-keeps-unreadable` | `verdict.rs` | verdict: a reply whose age cannot be read is expired | `Verdict.aged_spec` |
+| `lifetime-token-as-default` | `verdict.rs` | verdict: the token's own ttl comes before the kind's default | `Verdict.lifetime_spec` |
+| `expired-overflow-kept` | `verdict.rs` | verdict: far past the end of i64, the sign alone decides expiry | `Verdict.expired_spec` |
+| `window-cited-off-by-one` | `verdict/locate.rs` | verdict: the cited lines must lie inside the file | `Verdict.window_spec` |
+| `place-ignores-cited` | `verdict/locate.rs` | verdict: the cited window comes before any other | `Verdict.place_same_iff`, `Verdict.place_at_iff`, `Verdict.place_absent_iff` |
+| `recordable-unverifiable` | `verdict/recorded.rs` | check receipts: an unverifiable answer is never shared | `Recorded.recordable_iff` |
+| `recorded-age-no-skew` | `verdict/recorded.rs` | check receipts: a date more than an hour ahead is unusable | `Recorded.recorded_age_spec` |
+| `before-prefers-older` | `verdict/recorded.rs` | check receipts: the newer statement comes first | `Recorded.before_spec` |
+| `better-tie-takes-later` | `verdict/recorded.rs` | check receipts: on a tie the first receipt is kept | `Recorded.better_spec` |
+| `newest-local-on-tie` | `verdict/recorded.rs` | check receipts: on a full tie a receipt wins over the local statement | `Recorded.newest_spec` |
+| `complete-ignores-skipped` | `walk.rs` | walk: a skipped edge keeps coverage partial | `Walk.complete_iff` |
+| `blocks-any-warning` | `diag/mod.rs` | lint: a warning blocks only under --deny-warnings | `Walk.blocks_iff` |
+| `admit-shows-twice` | `find.rs` | find: a record is shown once, under the first tier that found it | `Walk.admit_iff` |
+| `is-help-wrong-byte` | `command/mod.rs` | command: --help is exactly those bytes | `Command.is_help_spec` |
+| `named-skips-last` | `command/mod.rs` | command: every word of a rule's prefix is compared, the last included | `Command.named_loop_spec` |
+| `named-help-not-alone` | `command/mod.rs` | command: --help stops a match only when it is the one word after the prefix | `Command.named_loop_spec` |
+| `query-ok-three-chars` | `find.rs` | find: a one-token query needs four characters | `Find.query_ok_spec` |
+| `starts-skips-last` | `find.rs` | find: every character of a prefix is compared, the last included | `Find.starts_loop_spec` |
+| `next-from-reversed` | `find.rs` | find: the query token begins the name token, not the other way round | `Find.next_from_loop_spec` |
+| `prefixed-reuses-token` | `find.rs` | find: each query token takes its own name token | `Find.prefixed_loop_spec` |
+| `newest-last-of-equal` | `idle.rs` | idle: the first of equal newest stamps is named | `Idle.newer_spec` |
+| `idle-saturated-compare` | `idle.rs` | idle: the age is compared over the integers, not after holding it in i64 | `Idle.idle_spec` |
+| `since-off-by-one` | `idle.rs` | idle: past the end of i64 the seconds shown are its end | `Idle.since_spec` |
+| `less-larger-byte` | `order.rs` | order: at the first differing byte, the smaller sorts first | `Order.less_loop_spec` |
+| `less-equal-names` | `order.rs` | order: a name never sorts before itself | `Order.less_loop_spec` |
+| `precedes-higher-seq` | `order.rs` | order: the lower seq is judged first | `Order.precedes_spec` |
 | `basis-ignores-premises` | `assess.rs` | assessed gate: one ungrounded premise makes the basis hypothetical | `Assess.basis_loop_spec` |
 | `met-accepts-hypothetical` | `assess.rs` | assessed gate: a hypothetical entailment never meets the gate | `Assess.met_spec` |
 | `outcome-passes-unfinished` | `assess.rs` | assessed gate: a check Weft could not finish is unknown, never a pass | `Assess.outcome_loop_spec` |
@@ -454,15 +636,17 @@ in the positive configurations, and the mutant `SkipLocked`
 <!-- end generated -->
 
 What these proofs do not cover: the fold from event files to the list of
-steps (and with it where a splice is placed),
-template and definition parsing, digests, Git and file reads, the write
-protocol (`spec/KbWrite.tla` and the kill tests), scope globs
-(`writfold_core::scope`), citation verdicts (`verdict`), decision states and
-investigations, the command reader, `find`, `idle`, `diag` and the bounded
-walk (`walk`). Those are tested. The adapters in `writfold-kb` that read
-files into kernel inputs (which receipts and statements are valid and in
-this run, their order by `seq` and file name or by recorded time, which
-gates a step names, the digests themselves) are tested, not proved.
+steps (and with it where a splice is placed), template and definition
+parsing, digests, Git and file reads, the write protocol
+(`spec/KbWrite.tla` and the kill tests), decoding text into code points
+for scope globs and `find`, the span comparison `locate` drives, the
+command reader, `find`'s name forms and the order of its tiers, `diag`'s
+rendering and the bounded walk's traversal (`walk`). Those are tested. The
+adapters in `writfold-kb` that read files into kernel inputs (which
+receipts and statements are valid and in this run, which gates a step
+names, which step path is current, the digests themselves) are tested,
+not proved. Statements (`gate attest`, `gate waive`, a delivery's
+statements) are still ordered by their recorded time.
 
 ## Trust base
 
@@ -488,33 +672,53 @@ the reason and `deliver status` exits 2
 (`crates/writfold-kb/tests/deliver_empty_mode.rs`, which failed before the
 change).
 
+Found while proving the second round (17 November 2026), each with a test
+that failed before the change:
+
+- **A `*` in a path stopped a `*` in the pattern.** The glob matcher
+  compared a literal before recording a `*`, so `*a` did not cover the
+  segment `*ba`: a file with a literal `*` in its name could fall outside
+  its gate's scope digest, and an old receipt kept satisfying. The
+  wildcard is now tried first (`scope/tests.rs`,
+  `a_star_in_the_path_does_not_stop_a_star_in_the_pattern`).
+- **Two clock subtractions could overflow.** A timed citation's expiry
+  (`now - seen > ttl`, in `writfold-kb`) and an idle run's age
+  (`now - last`) subtracted two `i64` values; the translation demands a
+  bound. Both are now compared over the integers (`verdict::expired`,
+  used by `idle` too) and the age shown is held inside `i64`
+  (`idle.rs`, `far_apart_stamps_do_not_overflow`).
+- **Assessed and delivery receipts were ordered by their clock.** A
+  receipt written after a clock ran back did not decide. They now carry
+  `seq` and are ordered by `(seq, name)` like gate receipts; a receipt
+  without `seq` reads as 0 (`tests/receipt_order.rs`).
+
 Noted, not changed: a receipt's content counts as the same only when the
 present content is not empty, while a statement or a cover row compares the
 digests alone (`gate::about`). The present content is empty only when a
 run-record digest could not be read; both rules are now stated as theorems
 (`evidence_spec`, `about_spec`) rather than left implicit.
 
-## Not yet proved (backlog, 16 November 2026)
+## Not yet proved (backlog, 17 November 2026)
 
-In the order of [`proof-backfill-spec.md`](proof-backfill-spec.md), section 4:
+[`proof-backfill-spec.md`](proof-backfill-spec.md) steps 0 to 11 are built.
+What is left, each tested:
 
-1. `writfold_core::scope` (glob matching): reshape to index loops over code
-   points, prove against an inductive matcher.
-2. Plan closing writes: the re-check under the lock (`skip_check`,
-   `skipped` and `close_check` were proved in the policy round).
-3. `decision` and `investigation`.
-4. `verdict` (citation verdicts, `recorded`), including the clock
-   subtractions that need a bound.
-5. `walk`'s completeness claim, `command::matches`, `find`, `idle`, `diag`.
-6. Ordering without a clock for delivery and assessed receipts and
-   statements.
+1. What a decision state change needs, given: whether the commit is on its
+   ref, the evidence grounded and a gate receipt, the successor present
+   (`writfold-kb` `write/decide.rs`), interleaved with the reads that
+   resolve each.
+2. The order of statements (attestations, waivers, a delivery's
+   statements), still by recorded time; a format change like step 11's.
+3. `find`'s tier order (the order of the calls in `verbs/find.rs`) and the
+   splice placement in the fold (G10's first item; relabelled, not
+   proved).
 
 ## Writing kernels for translation
 
-These rules apply to the functions named in `start_from`; the tested-only
-modules (`scope`, `verdict`, `walk`, `command`, `find`, `idle`, `diag`,
-`decision`, `investigation`) do not follow them yet, and each will be
-reshaped when its proof is built. Owned data and no nested borrows; no derives in translated modules (equality a
+These rules apply to the functions named in `start_from`; the text
+plumbing, rendering and traversal outside it (`command`'s reader, `find`'s
+name forms, `diag`'s rendering, `walk`'s traversal, `locate`'s driver) need
+not follow them. Owned data and no nested borrows; no derives in translated modules (equality a
 theorem relies on is an explicit `same`); no integer casts; explicit `while`
 loops; one loop per function when it returns early (Aeneas does not translate a
 `return` inside nested loops); conveniences outside

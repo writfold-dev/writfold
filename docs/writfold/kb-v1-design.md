@@ -1776,7 +1776,7 @@ A gate of class `run-record` takes `require = [...]` (built-ins only: `research.
 
 ### 21.7 Receipt order without a clock
 
-`gate::state` takes "the newest receipt about the current subject". Receipts were ordered by `recorded` (a writer's clock), so two machines with skewed clocks could disagree. Receipts now carry `seq`: one more than the highest `seq` among the run's valid receipts of that gate on that subject when it was written. They are judged in (`seq`, file name) order; `recorded` is shown, never compared. A receipt without `seq` (written before this slice) reads as 0 and keeps its name order, so existing receipts stand unchanged; two clones that wrote the same `seq` concurrently are ordered by name, a total key on the files. The plan's own events need no order: each is about one node. Delivery receipts (19.4) still order by `recorded` (21.10).
+`gate::state` takes "the newest receipt about the current subject". Receipts were ordered by `recorded` (a writer's clock), so two machines with skewed clocks could disagree. Receipts now carry `seq`: one more than the highest `seq` among the run's valid receipts of that gate on that subject when it was written. They are judged in (`seq`, file name) order; `recorded` is shown, never compared. A receipt without `seq` (written before this slice) reads as 0 and keeps its name order, so existing receipts stand unchanged; two clones that wrote the same `seq` concurrently are ordered by name, a total key on the files. The plan's own events need no order: each is about one node. Delivery receipts (19.4) ordered by `recorded` (21.10) until v0.6.0-dev.4; they and assessed receipts now carry `seq` too, and every receipt kind is sorted with the proved `writfold_core::order` (45.6).
 
 ### 21.8 Tests
 
@@ -4138,3 +4138,32 @@ Scope globs, plan closing writes, decision states and investigations, citation v
 - `runs --plan` computes the word from the records alone: drift is judged only against what the done records name, and `complete-stale` is not judged there (no subject is located), as before.
 - A pin's `delivery` entry is the mode file's digest followed by each mode gate's digest, as specified.
 - Which observation statuses ground `none-found` (`no-data`, `not-found`) is decided in `writfold-kb`, tested, not proved.
+
+## 45. Proof backfill, second round, as built (17 November 2026, v0.6.0-dev.4)
+
+[`proof-backfill-spec.md`](proof-backfill-spec.md) steps 6 to 11. As in 43, each decision `writfold-kb` made is a kernel function named in `start_from`, proved over the Aeneas translation and calibrated with mutants; theorems, mutants and reshapes are in [aeneas.md](aeneas.md#the-proof-backfill-second-round-17-november-2026). Three behaviour changes, each with a test that failed first: 45.1, 45.4, 45.6.
+
+### 45.1 Scope globs (G6)
+
+`scope::covers(&[Pattern], &[Vec<u32>])`, `segments`, `segment` over code points; `in_scope(&[&str], &str)` and `glob` decode text and keep their signatures, so no caller changed. The matcher records a `*` (a `**` segment) before trying a literal: a `*` in a pattern now covers a segment holding a literal `*` (`*a` against `*ba` was a miss).
+
+### 45.2 Plan writes (G7)
+
+`plan::recheck::{Decided, Moved, still_stands, writable}`. `plan/recheck.rs::changed` maps its `Decided` (with paths) onto the kernel's (with `is_current` and the next ordinal computed by the fold) and keeps its refusal texts; `plan/write.rs::open_run` reads the sidecar's and the manifest's states into `writable`. `skip_check`, `skipped` and `close_check` are the policy round's.
+
+### 45.3 Decisions and investigations (G8)
+
+`decision::step` matched on the target first (`needs` builds the requirements); `investigation::conclude` and `Missing::none` unchanged. `write/decide.rs` still checks what was given against the record, the repository and the run.
+
+### 45.4 Citation verdicts (G9)
+
+`verdict::{observed, with_mark, decide, handshake, exchange, reply, aged, lifetime, expired}`, `verdict::locate::{window, place}` (with `locate` the driver), `verdict::recorded::{recordable, recorded_age, worst, usable, before, better, best_recorded, newest}`. `time::expired` calls `verdict::expired`: `now - seen` overflowed for clock values far apart.
+
+### 45.5 The remainder (G10)
+
+`walk::complete` (and `Walk::complete` through it), `diag::blocks` (`defs/lint_out.rs`, `lint_refs.rs`), `find::admit` (`verbs/find.rs::Found::add`: once before the record is read, once with the filter), `find::{query_ok, starts, next_from, prefixed}` behind `prefix_query` and `prefix_match`, `command::{is_help, named}` behind `matches`, `idle::{newer, newest, since, idle}`: an idle run's age compared over the integers, shown held inside `i64`.
+
+### 45.6 Receipt order (step 11)
+
+`order::{less, precedes, cmp}`. `gate/receipt.rs::order`, `gate/checklist/cover.rs`, `gate/assessed/judge.rs` and `deliver/status.rs` sort with `order::cmp`. Assessed receipts and delivery check receipts write `seq` (`gate/assessed/run.rs::next_seq`, `deliver/receipt.rs::next_seq`), read it back (absent is 0) and are no longer ordered by `recorded`. Statements still are.
+
