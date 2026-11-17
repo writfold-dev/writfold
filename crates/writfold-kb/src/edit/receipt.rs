@@ -165,6 +165,7 @@ fn row(session: &Session<'_>, path: &str) -> Row {
         .collect();
     for (n, line) in entries.iter().take(FILES_SHOWN) {
         row.more.push(More {
+            extra: Vec::new(),
             status: None,
             label: "file",
             text: summary(line),

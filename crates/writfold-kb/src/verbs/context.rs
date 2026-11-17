@@ -195,6 +195,7 @@ fn dossier(session: &Session<'_>, rec: &Rec, answer: &mut Answer) -> Result<()> 
     let mut row = record_row(session, &dossier);
     for (name, line) in headings {
         row.more.push(More {
+            extra: Vec::new(),
             status: None,
             label: "section",
             text: name,
@@ -232,6 +233,7 @@ fn runs(
             if !shown.contains(&run.id) && seen.insert(run.id.clone()) {
                 let mut row = record_row(session, &run);
                 row.more.push(More {
+                    extra: Vec::new(),
                     status: None,
                     label: "via",
                     text: "mentions".into(),

@@ -57,8 +57,19 @@ pub fn plan(session: &Session<'_>, s: &SetStatus, cwd: &Path) -> Result<Plan> {
             "--commit and --evidence go with a decision's --set applied or verified".into(),
         ));
     }
+    let mut notes = Vec::new();
     let op = match rec.kind.as_str() {
-        "run" => run(session, &rec, &state)?,
+        "run" => {
+            let note = s
+                .note
+                .as_deref()
+                .map(|n| one_line("--note", n))
+                .transpose()?;
+            if state == "closed" {
+                notes = crate::plan::closing_notes(session, &rec, note.is_some(), cwd);
+            }
+            run(session, &rec, &state, note.as_deref())?
+        }
         "ticket" if TICKET_STATES.contains(&state.as_str()) => fields(session, &rec, &state, &[])?,
         "investigation" if INVESTIGATION_STATES.contains(&state.as_str()) => {
             fields(session, &rec, &state, &[])?
@@ -87,7 +98,7 @@ pub fn plan(session: &Session<'_>, s: &SetStatus, cwd: &Path) -> Result<Plan> {
     Ok(Plan {
         ops: vec![op],
         show: Some(rec.id.clone()),
-        notes: Vec::new(),
+        notes,
         current: None,
         verb: "status-set",
         args: vec![rec.id, state],
@@ -120,8 +131,9 @@ fn fields(session: &Session<'_>, rec: &Rec, state: &str, extra: &[(&str, &str)])
     })
 }
 
-/// Open or close a run in its sidecar.
-fn run(session: &Session<'_>, rec: &Rec, to: &str) -> Result<Op> {
+/// Open or close a run in its sidecar; closing writes the note given
+/// (`closed_note`).
+fn run(session: &Session<'_>, rec: &Rec, to: &str, note: Option<&str>) -> Result<Op> {
     if !matches!(to, "open" | "closed") {
         return Err(KbError::Usage("a run is open or closed".into()));
     }
@@ -135,6 +147,7 @@ fn run(session: &Session<'_>, rec: &Rec, to: &str) -> Result<Op> {
         ];
         if to == "closed" {
             fields.push(("closed", Json::Text(stamp)));
+            fields.extend(note.map(|n| ("closed_note", Json::Text(n.into()))));
         }
         return Ok(Op::Create {
             path,
@@ -153,6 +166,7 @@ fn run(session: &Session<'_>, rec: &Rec, to: &str) -> Result<Op> {
     }
     if to == "closed" {
         fields.push(("closed".into(), Json::Text(stamp)));
+        fields.extend(note.map(|n| ("closed_note".to_owned(), Json::Text(n.into()))));
     }
     let borrowed: Vec<(&str, Json)> = fields
         .iter()

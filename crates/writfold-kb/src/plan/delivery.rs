@@ -153,6 +153,7 @@ fn build(v: View, seq: u64, detail: bool) -> Gate {
         (None, _) => (None, (None, Vec::new())),
     };
     Gate {
+        accept: None,
         id: format!("{PREFIX}{}", v.mode),
         standing: Some(v.standing),
         evidence: seen.map(|s| s.payload.clone()),

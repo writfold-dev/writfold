@@ -8,7 +8,10 @@
 //! end = ["reflect"]      # spliced at the root after them
 //! ```
 //!
-//! Both lists are optional. The templates are spliced, like any other, when
+//! Both lists are optional. `unskippable` (optional) names start or end
+//! templates whose own steps `plan skip` refuses; the lock is taken into
+//! the run's pin when the plan is set ([`super::pin`]), so a later edit of
+//! this file does not change a run already set. The templates are spliced, like any other, when
 //! a plan is first set (`plan set`, or `plan use` on a run without a plan),
 //! as root splices of their own: their steps are ordinary steps with
 //! ordinary gates. A plan whose run lacks a required end template (the file
@@ -18,17 +21,22 @@ use super::template::{self, DIR, RESERVED};
 use crate::defs::{Check, Spanned, Text};
 use crate::error::{KbError, Result};
 use crate::write::is_slug;
+use sha2::Digest;
 use std::path::{Path, PathBuf};
 
 pub const SCHEMA: &str = "writfold-plan-required/1";
-const KEYS: [&str; 3] = ["schema", "start", "end"];
+const KEYS: [&str; 4] = ["schema", "start", "end", "unskippable"];
 
 /// The required templates, by name, and where the file was read from.
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct Required {
     pub start: Vec<String>,
     pub end: Vec<String>,
+    /// Required templates whose steps `plan skip` refuses.
+    pub unskippable: Vec<String>,
     pub source: Option<String>,
+    /// `sha256:<hex>` of the file's bytes, when there is a file.
+    pub digest: Option<String>,
 }
 
 fn bad(why: String) -> KbError {
@@ -61,6 +69,37 @@ fn names(c: &mut Check<'_>, key: &str) -> Option<Vec<Spanned<Text>>> {
     ok.then_some(items)
 }
 
+/// `unskippable`: templates also named in `start` or `end`.
+fn unskippable(
+    c: &mut Check<'_>,
+    start: Option<&[Spanned<Text>]>,
+    end: Option<&[Spanned<Text>]>,
+) -> Option<Vec<String>> {
+    let items = names(c, "unskippable")?;
+    let known: Vec<&str> = (start.into_iter().flatten())
+        .chain(end.into_iter().flatten())
+        .map(|i| i.str())
+        .collect();
+    let mut ok = true;
+    for item in &items {
+        if !known.contains(&item.str()) {
+            let why = format!(
+                "`unskippable` names {}, which is not a start or end template",
+                item.str()
+            );
+            let label = "not in start or end";
+            c.unknown_value(item.span, why, label, item.str(), &known, '"');
+            c.sink
+                .found
+                .last_mut()
+                .into_iter()
+                .for_each(|d| d.code = "ref.undefined");
+            ok = false;
+        }
+    }
+    ok.then(|| items.iter().map(|i| i.value.text.clone()).collect())
+}
+
 /// Parse the file's bytes, shown as `shown`; every fault is reported.
 pub fn parse_shown(bytes: &[u8], shown: &str) -> Result<(Required, Vec<Spanned<Text>>)> {
     let Ok(text) = std::str::from_utf8(bytes) else {
@@ -86,15 +125,18 @@ pub fn parse_shown(bytes: &[u8], shown: &str) -> Result<(Required, Vec<Spanned<T
                 .label("also a start template");
         }
     }
-    let parts = (|| Some((start?, end?)))();
-    let (start, end) = c
+    let locked = unskippable(&mut c, start.as_deref(), end.as_deref());
+    let parts = (|| Some((start?, end?, locked?)))();
+    let (start, end, locked) = c
         .finish(parts)
         .map_err(|r| KbError::Definition(Box::new(r)))?;
     let plain = |items: &[Spanned<Text>]| items.iter().map(|i| i.value.text.clone()).collect();
     let required = Required {
         start: plain(&start),
         end: plain(&end),
+        unskippable: locked,
         source: None,
+        digest: None,
     };
     Ok((required, start.into_iter().chain(end).collect()))
 }
@@ -120,10 +162,15 @@ pub fn find(kb: &Path, repo: Option<(&Path, &str)>) -> Result<Required> {
     let found: Vec<&(PathBuf, String)> = roots.iter().filter(|(p, _)| p.is_file()).collect();
     match found.as_slice() {
         [] => Ok(Required::default()),
-        [(path, source)] => Ok(Required {
-            source: Some(source.clone()),
-            ..parse_shown(&std::fs::read(path)?, source)?.0
-        }),
+        [(path, source)] => {
+            let bytes = std::fs::read(path)?;
+            let hex = crate::index::hex(&sha2::Sha256::digest(&bytes));
+            Ok(Required {
+                source: Some(source.clone()),
+                digest: Some(format!("sha256:{hex}")),
+                ..parse_shown(&bytes, source)?.0
+            })
+        }
         _ => Err(bad("defined in both the KB and the repository".into())),
     }
 }
@@ -147,11 +194,11 @@ pub fn order(required: &Required, main: &str) -> Vec<(String, bool)> {
     out
 }
 
-/// The required end templates no root splice of `graph` holds.
+/// The required templates (start or end) no root splice of `graph` holds:
+/// the file gained them after the plan was set.
 pub fn missing_end(required: &Required, graph: &super::fold::Graph) -> Vec<String> {
-    required
-        .end
-        .iter()
+    (required.start.iter())
+        .chain(&required.end)
         .filter(|name| {
             !graph
                 .uses

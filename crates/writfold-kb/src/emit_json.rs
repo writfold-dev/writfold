@@ -24,6 +24,9 @@ fn row_json(row: &Row) -> Value {
             if let Some(status) = &m.status {
                 value["status"] = json!(status);
             }
+            for (key, extra) in &m.extra {
+                value[*key] = extra.clone();
+            }
             value
         })
         .collect();
@@ -39,6 +42,9 @@ fn row_json(row: &Row) -> Value {
     }
     if let Some(tier) = row.matched_on {
         value["matched_on"] = json!(tier);
+    }
+    for (key, extra) in &row.extra {
+        value[*key] = extra.clone();
     }
     value
 }

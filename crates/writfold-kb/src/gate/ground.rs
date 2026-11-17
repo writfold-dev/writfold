@@ -213,7 +213,7 @@ fn receipt(cx: &Context<'_, '_>, reference: &str, path: &str) -> Resolved {
         same_definition: r.definition == j.definition.digest,
         same_content: r.scope == present,
         passed: r.outcome == Outcome::Pass,
-        gate_met: j.standing.met(),
+        gate_met: j.met(),
     };
     // The word names the first fact that fails, in this order.
     let standing = if !facts.same_subject {

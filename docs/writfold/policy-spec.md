@@ -1,6 +1,6 @@
 # User-defined policy: accepted outcomes, unskippable steps, pins and the first-use path
 
-> **Status:** specification, not built. Written against `main` at `b14505b` (v0.6.0-dev.2 plus the roadmap commit). The authority is [mission.md](mission.md). Every description of today's behaviour below was checked against the code at that commit, and the rows marked "run" were also run with the release binary on a copy of `fixtures/kb/basic` with a scratch subject repository ([section 8](#8-what-was-checked)).
+> **Status:** built through the cut line in v0.6.0-dev.3, as recorded in [design §44](kb-v1-design.md#44-user-defined-policy-as-built-v060-dev3) (deviations there); `plan repin`, `kb policy --paths` and delivery `waivable` are not built. The specification below is kept as written. Written against `main` at `b14505b` (v0.6.0-dev.2 plus the roadmap commit). The authority is [mission.md](mission.md). Every description of today's behaviour below was checked against the code at that commit, and the rows marked "run" were also run with the release binary on a copy of `fixtures/kb/basic` with a scratch subject repository ([section 8](#8-what-was-checked)).
 
 A team writes down what adequate research, implementation and delivery mean for it: gates, checklists, instructions, plan templates, required steps. Writfold loads that policy, shows what is owed, judges the evidence by the mechanism the team chose, and refuses a transition its own verbs control when the policy is not met. It holds no opinion of its own about adequacy.
 

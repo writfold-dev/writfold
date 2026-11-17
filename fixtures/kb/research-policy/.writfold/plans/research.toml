@@ -1,0 +1,4 @@
+schema = "writfold-plan/1"
+name = "research"
+description = "research before changing anything, under the team's checklist"
+steps = ["research: research"]

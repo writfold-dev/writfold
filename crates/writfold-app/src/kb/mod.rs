@@ -51,6 +51,12 @@ verbs:
   index status|rebuild|verify      what the derived index holds; rebuild it; check it equals a rebuild
   check [<project>|<path>]         stale, index verify and the current run's gate status in one
                                    summary (the worst exit code of the three)
+  init [DIR] [--example research-policy] [--dry-run]
+                                   make DIR (default: here) a KB: inventory/assets/.gitkeep, and with
+                                   --example an editable example policy; create-new only, never commits
+  policy                           the policy as it is now (required steps, gates with accept and
+                                   item choices, guard rules) and the current run's pin beside it;
+                                   identity= is one digest two clones can compare (exit 2 if moved)
   lint [PATH…] [--repo DIR] [--deny-warnings] [--records]
                                    every fault of the files you wrote (gates, guards, plans,
                                    delivery modes, kinds, queries.jsonl), each at its line and
@@ -107,7 +113,8 @@ gates (checks with pinned receipts; definitions in .writfold/gates/<id>.toml):
   gate attest <id> --statement TEXT --by WHO | gate waive <id> --reason TEXT --by WHO
                                    a statement (attested gates) or a waiver: never shown as satisfied
   gate cover <id> <item> supported REF… | unsupported|not-applicable --reason TEXT, with --by WHO
-                                   one checklist item: cited evidence re-grounded on every read
+                                   one checklist item: cited evidence re-grounded on every read;
+                                   none-found OBS… --reason TEXT: looks of this run that found nothing
   gate cover <id> --from FILE|- --by WHO
                                    several items from JSON lines, one plan: all rows or none
   gate lines [--run ID] [--repo DIR]

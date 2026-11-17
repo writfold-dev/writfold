@@ -79,7 +79,7 @@ pub fn discover(explicit: Option<&Path>, cwd: &Path) -> Result<Workspace> {
             .map(Path::to_path_buf)
             .ok_or_else(|| {
                 KbError::NoKb(
-                    "no KB found: pass --kb DIR, set WRITFOLD_KB, or run inside a KB".into(),
+                    "no KB found: pass --kb DIR, set WRITFOLD_KB, run inside a KB, or create one here: writfold kb init".into(),
                 )
             })?,
     };

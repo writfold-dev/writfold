@@ -217,7 +217,13 @@ fn run_positions_and_unplanned_fallback_keep_verb_facts() -> TestResult {
         }
         let position = field(position.ok_or("position")?, "text");
         let answer = app.source.plan(id);
-        for key in ["done", "skipped"] {
+        // A complete plan's line counts how its steps closed (v0.6.0-dev.3).
+        let keys: &[&str] = if id == CLOSED {
+            &["skipped"]
+        } else {
+            &["done", "skipped"]
+        };
+        for key in keys {
             assert!(position.contains(&format!("{key}={}", answer.count(key).ok_or("count")?)));
         }
         let listed = lines::run_item(row, writfold_tui::app::Detail::Exact)
@@ -227,7 +233,9 @@ fn run_positions_and_unplanned_fallback_keep_verb_facts() -> TestResult {
             .join("\n");
         assert!(listed.contains(position));
         if id == CLOSED {
-            assert!(position.starts_with("complete steps=2 done=2 skipped=0"));
+            assert!(
+                position.starts_with("complete steps=2 passed=2 attested=0 waived=0 skipped=0")
+            );
         }
     }
     app.load();

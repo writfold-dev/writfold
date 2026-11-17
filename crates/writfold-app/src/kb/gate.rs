@@ -8,7 +8,7 @@ use writfold_kb::gate::checklist::{Batch, Cover, Outcome, Rows};
 use writfold_kb::gate::statement::Kind;
 use writfold_kb::gate::{GateVerb, Say};
 
-pub const USAGE: &str = "usage: gate run <id> [--run ID] [--repo DIR] | gate attest <id> --statement TEXT --by WHO | gate waive <id> --reason TEXT --by WHO | gate cover <id> <item> supported REF… [--note TEXT] | gate cover <id> <item> unsupported|not-applicable --reason TEXT | gate cover <id> --from FILE|- (JSON lines; each with --by WHO) | gate status [--run ID] [--repo DIR] | gate verify <receipt> [--repo DIR] | gate lines [--run ID] [--repo DIR]";
+pub const USAGE: &str = "usage: gate run <id> [--run ID] [--repo DIR] | gate attest <id> --statement TEXT --by WHO | gate waive <id> --reason TEXT --by WHO | gate cover <id> <item> supported REF… [--note TEXT] | gate cover <id> <item> unsupported|not-applicable --reason TEXT | gate cover <id> <item> none-found OBS… --reason TEXT | gate cover <id> --from FILE|- (JSON lines; each with --by WHO) | gate status [--run ID] [--repo DIR] | gate verify <receipt> [--repo DIR] | gate lines [--run ID] [--repo DIR]";
 
 /// The gate verb, or why the arguments do not name one.
 pub fn verb(common: &Common, positional: &[String]) -> Result<Verb, String> {
@@ -27,8 +27,9 @@ pub fn verb(common: &Common, positional: &[String]) -> Result<Verb, String> {
         [sub, id, item, outcome, references @ ..] if sub == "cover" => GateVerb::Cover(Cover {
             gate: id.clone(),
             item: item.clone(),
-            outcome: Outcome::parse(outcome)
-                .ok_or("gate cover <id> <item> takes supported, unsupported or not-applicable")?,
+            outcome: Outcome::parse(outcome).ok_or(
+                "gate cover <id> <item> takes supported, unsupported, not-applicable or none-found",
+            )?,
             references: references.to_vec(),
             reason: get(common, "reason"),
             note: get(common, "note"),

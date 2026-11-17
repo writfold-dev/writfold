@@ -24,6 +24,7 @@ pub mod gate;
 pub mod guard;
 pub mod hook;
 pub mod index;
+pub mod init;
 pub mod layout;
 pub mod model;
 pub mod observe;
@@ -159,6 +160,11 @@ pub enum Verb {
     },
     /// `checker list` and `cite make --kind <kind> key=value …`.
     Checker(stale::checker::verb::CheckerVerb),
+    /// `init [DIR] [--example NAME] [--dry-run]`: the one verb that needs
+    /// no KB.
+    Init(init::Init),
+    /// `policy`: the policy as it is now and the current run's pin.
+    Policy,
 }
 
 /// One invocation.
@@ -179,6 +185,9 @@ pub struct Request {
 
 /// Locate the KB, open its index at the current snapshot, answer, render.
 pub fn run(request: &Request) -> Result<Output> {
+    if let Verb::Init(init) = &request.verb {
+        return init::execute(init, &request.cwd, request.json);
+    }
     let ws = discover(request.kb.as_deref(), &request.cwd)?;
     let now = request.now.unwrap_or_else(time::now);
     if let Verb::Write(write) = &request.verb {
@@ -298,6 +307,11 @@ fn answer(session: &Session<'_>, request: &Request) -> Result<(Answer, &'static 
             let (answer, id) = verbs::runs::resume(session, run.as_deref(), &request.cwd)?;
             (answer, "resume", vec![id])
         }
+        Verb::Policy => (
+            verbs::policy::policy(session, &request.cwd)?,
+            "policy",
+            Vec::new(),
+        ),
         other => graph(session, other)?,
     })
 }

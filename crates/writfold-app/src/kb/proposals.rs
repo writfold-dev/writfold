@@ -1,4 +1,4 @@
-//! `propose …`, `proposals list|show|accept|drop` and `check`: parsing
+//! `propose …`, `proposals list|show|accept|drop`, `check` and `init`: parsing
 //! only; the queue and the composed check live in `writfold-kb`.
 use super::args::Common;
 use super::writes::{get, record, switch};
@@ -17,6 +17,7 @@ pub fn allowed(verb: &str) -> &'static [&'static str] {
     match verb {
         "propose" => super::investigation::PROPOSE,
         "lint" => &["repo", "deny-warnings", "records"],
+        "init" => &["example", "dry-run"],
         _ => &[],
     }
 }
@@ -69,6 +70,16 @@ pub fn verb(name: &str, common: &Common, positional: &[String]) -> Option<Result
             }));
         }
         ("check", _) => Err("check takes at most one project or path".into()),
+        ("init", [] | [_]) => {
+            return Some(Ok(Verb::Init(writfold_kb::init::Init {
+                dir: positional.first().map(std::path::PathBuf::from),
+                example: get(common, "example"),
+                dry_run: switch(common, "dry-run"),
+            })));
+        }
+        ("init", _) => Err("init takes at most one directory".into()),
+        ("policy", []) => return Some(Ok(Verb::Policy)),
+        ("policy", _) => Err("policy takes no arguments".into()),
         _ => return None,
     };
     Some(verb.map(Verb::Proposal))
@@ -133,6 +144,19 @@ mod tests {
             Verb::Check { scope: Some(_) }
         ));
         assert!(verb("check a b").is_err());
+        Ok(())
+    }
+
+    #[test]
+    fn init_and_policy_verbs() -> Result<(), String> {
+        let init = verb("init sub --example research-policy --dry-run")?;
+        assert!(matches!(&init, Verb::Init(i)
+            if i.dry_run && i.example.as_deref() == Some("research-policy")
+                && i.dir == Some(PathBuf::from("sub"))));
+        assert!(matches!(verb("init")?, Verb::Init(i) if !i.dry_run && i.dir.is_none()));
+        assert!(verb("init a b").is_err());
+        assert!(matches!(verb("policy")?, Verb::Policy));
+        assert!(verb("policy x").is_err());
         Ok(())
     }
 }

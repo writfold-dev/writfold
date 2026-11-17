@@ -169,7 +169,7 @@ inductive assess.Required where
 | Found : assess.Verdict → assess.Basis → assess.Required
 
 /-- [writfold_core::gate::Outcome]
-    Source: 'crates/writfold-core/src/gate.rs', lines 33:0-38:1
+    Source: 'crates/writfold-core/src/gate.rs', lines 34:0-39:1
     Visibility: public -/
 @[discriminant isize]
 inductive gate.Outcome where
@@ -295,16 +295,17 @@ def bytes.same (left : Slice Std.U8) (right : Slice Std.U8) : Result Bool := do
   else bytes.same_loop left right 0#usize
 
 /-- [writfold_core::checklist::Outcome]
-    Source: 'crates/writfold-core/src/checklist.rs', lines 24:0-31:1
+    Source: 'crates/writfold-core/src/checklist.rs', lines 30:0-40:1
     Visibility: public -/
 @[discriminant isize]
 inductive checklist.Outcome where
 | Supported : checklist.Outcome
 | Unsupported : checklist.Outcome
 | NotApplicable : checklist.Outcome
+| NoneFound : checklist.Outcome
 
 /-- [writfold_core::checklist::Row]
-    Source: 'crates/writfold-core/src/checklist.rs', lines 54:0-63:1
+    Source: 'crates/writfold-core/src/checklist.rs', lines 65:0-74:1
     Visibility: public -/
 structure checklist.Row where
   outcome : checklist.Outcome
@@ -313,18 +314,19 @@ structure checklist.Row where
   grounded : Bool
 
 /-- [writfold_core::checklist::Item]
-    Source: 'crates/writfold-core/src/checklist.rs', lines 67:0-79:1
+    Source: 'crates/writfold-core/src/checklist.rs', lines 78:0-93:1
     Visibility: public -/
 @[discriminant isize]
 inductive checklist.Item where
 | Open : checklist.Item
 | Supported : checklist.Item
 | NotApplicable : checklist.Item
+| NoneFound : checklist.Item
 | Unsupported : checklist.Item
 | Stale : checklist.Item
 
 /-- [writfold_core::checklist::item]:
-    Source: 'crates/writfold-core/src/checklist.rs', lines 97:0-116:1
+    Source: 'crates/writfold-core/src/checklist.rs', lines 112:0-138:1
     Visibility: public -/
 def checklist.item
   (newest : Option checklist.Row) : Result checklist.Item := do
@@ -343,21 +345,30 @@ def checklist.item
         else ok checklist.Item.Stale
       | checklist.Outcome.Unsupported => ok checklist.Item.Unsupported
       | checklist.Outcome.NotApplicable => ok checklist.Item.NotApplicable
+      | checklist.Outcome.NoneFound =>
+        if row.evidence > 0#usize
+        then
+          if row.grounded
+          then ok checklist.Item.NoneFound
+          else ok checklist.Item.Stale
+        else ok checklist.Item.Stale
     else ok checklist.Item.Stale
 
-/-- [writfold_core::checklist::covered]:
-    Source: 'crates/writfold-core/src/checklist.rs', lines 119:0-124:1
+/-- [writfold_core::checklist::covered_under]:
+    Source: 'crates/writfold-core/src/checklist.rs', lines 143:0-150:1
     Visibility: public -/
-def checklist.covered (item : checklist.Item) : Result Bool := do
+def checklist.covered_under
+  (item : checklist.Item) (na : Bool) (none1 : Bool) : Result Bool := do
   match item with
   | checklist.Item.Open => ok false
   | checklist.Item.Supported => ok true
-  | checklist.Item.NotApplicable => ok true
+  | checklist.Item.NotApplicable => ok na
+  | checklist.Item.NoneFound => ok none1
   | checklist.Item.Unsupported => ok false
   | checklist.Item.Stale => ok false
 
 /-- [writfold_core::checklist::Rollup]
-    Source: 'crates/writfold-core/src/checklist.rs', lines 128:0-136:1
+    Source: 'crates/writfold-core/src/checklist.rs', lines 154:0-162:1
     Visibility: public -/
 structure checklist.Rollup where
   covered : Bool
@@ -365,23 +376,26 @@ structure checklist.Rollup where
   first_owed : Option Std.Usize
 
 /-- [writfold_core::checklist::Entry]
-    Source: 'crates/writfold-core/src/checklist.rs', lines 140:0-143:1
+    Source: 'crates/writfold-core/src/checklist.rs', lines 167:0-174:1
     Visibility: public -/
 structure checklist.Entry where
   item : checklist.Item
   required : Bool
+  na : Bool
+  none : Bool
 
 /-- [writfold_core::checklist::owes]:
-    Source: 'crates/writfold-core/src/checklist.rs', lines 146:0-148:1
+    Source: 'crates/writfold-core/src/checklist.rs', lines 177:0-179:1
     Visibility: public -/
 def checklist.owes (entry : checklist.Entry) : Result Bool := do
   if entry.required
-  then let b ← checklist.covered entry.item
-       ok (¬ b)
+  then
+    let b ← checklist.covered_under entry.item entry.na entry.none
+    ok (¬ b)
   else ok false
 
 /-- [writfold_core::checklist::first_owed]: loop body 0:
-    Source: 'crates/writfold-core/src/checklist.rs', lines 153:4-160:1
+    Source: 'crates/writfold-core/src/checklist.rs', lines 184:4-191:1
     Visibility: public -/
 @[rust_loop_body]
 def checklist.first_owed_loop.body
@@ -400,7 +414,7 @@ def checklist.first_owed_loop.body
   else ok (done none)
 
 /-- [writfold_core::checklist::first_owed]: loop 0:
-    Source: 'crates/writfold-core/src/checklist.rs', lines 153:4-160:1
+    Source: 'crates/writfold-core/src/checklist.rs', lines 184:4-191:1
     Visibility: public -/
 @[rust_loop]
 def checklist.first_owed_loop
@@ -412,7 +426,7 @@ def checklist.first_owed_loop
     index
 
 /-- [writfold_core::checklist::first_owed]:
-    Source: 'crates/writfold-core/src/checklist.rs', lines 151:0-160:1
+    Source: 'crates/writfold-core/src/checklist.rs', lines 182:0-191:1
     Visibility: public -/
 @[reducible]
 def checklist.first_owed
@@ -420,7 +434,7 @@ def checklist.first_owed
   checklist.first_owed_loop entries 0#usize
 
 /-- [writfold_core::checklist::stale]:
-    Source: 'crates/writfold-core/src/checklist.rs', lines 163:0-165:1
+    Source: 'crates/writfold-core/src/checklist.rs', lines 194:0-196:1
     Visibility: public -/
 def checklist.stale (entry : checklist.Entry) : Result Bool := do
   if entry.required
@@ -429,12 +443,13 @@ def checklist.stale (entry : checklist.Entry) : Result Bool := do
     | checklist.Item.Open => ok false
     | checklist.Item.Supported => ok false
     | checklist.Item.NotApplicable => ok false
+    | checklist.Item.NoneFound => ok false
     | checklist.Item.Unsupported => ok false
     | checklist.Item.Stale => ok true
   else ok false
 
 /-- [writfold_core::checklist::any_stale]: loop body 0:
-    Source: 'crates/writfold-core/src/checklist.rs', lines 170:4-177:1
+    Source: 'crates/writfold-core/src/checklist.rs', lines 201:4-208:1
     Visibility: public -/
 @[rust_loop_body]
 def checklist.any_stale_loop.body
@@ -453,7 +468,7 @@ def checklist.any_stale_loop.body
   else ok (done false)
 
 /-- [writfold_core::checklist::any_stale]: loop 0:
-    Source: 'crates/writfold-core/src/checklist.rs', lines 170:4-177:1
+    Source: 'crates/writfold-core/src/checklist.rs', lines 201:4-208:1
     Visibility: public -/
 @[rust_loop]
 def checklist.any_stale_loop
@@ -463,16 +478,16 @@ def checklist.any_stale_loop
     index
 
 /-- [writfold_core::checklist::any_stale]:
-    Source: 'crates/writfold-core/src/checklist.rs', lines 168:0-177:1
+    Source: 'crates/writfold-core/src/checklist.rs', lines 199:0-208:1
     Visibility: public -/
 @[reducible]
 def checklist.any_stale (entries : Slice checklist.Entry) : Result Bool := do
   checklist.any_stale_loop entries 0#usize
 
-/-- [writfold_core::checklist::rollup]:
-    Source: 'crates/writfold-core/src/checklist.rs', lines 181:0-188:1
+/-- [writfold_core::checklist::rollup_under]:
+    Source: 'crates/writfold-core/src/checklist.rs', lines 212:0-219:1
     Visibility: public -/
-def checklist.rollup
+def checklist.rollup_under
   (entries : Slice checklist.Entry) : Result checklist.Rollup := do
   let first ← checklist.first_owed entries
   let b := core.option.Option.is_none first
@@ -480,7 +495,7 @@ def checklist.rollup
   ok { covered := b, stale := b1, first_owed := first }
 
 /-- [writfold_core::gate::State]
-    Source: 'crates/writfold-core/src/gate.rs', lines 76:0-88:1
+    Source: 'crates/writfold-core/src/gate.rs', lines 77:0-89:1
     Visibility: public -/
 @[discriminant isize]
 inductive gate.State where
@@ -491,7 +506,7 @@ inductive gate.State where
 | Unknown : gate.State
 
 /-- [writfold_core::checklist::state]:
-    Source: 'crates/writfold-core/src/checklist.rs', lines 192:0-198:1
+    Source: 'crates/writfold-core/src/checklist.rs', lines 223:0-229:1
     Visibility: public -/
 def checklist.state (rollup : checklist.Rollup) : Result gate.State := do
   if rollup.stale
@@ -499,7 +514,7 @@ def checklist.state (rollup : checklist.Rollup) : Result gate.State := do
   else ok gate.State.Open
 
 /-- [writfold_core::gate::Statements]
-    Source: 'crates/writfold-core/src/gate.rs', lines 216:0-223:1
+    Source: 'crates/writfold-core/src/gate.rs', lines 249:0-256:1
     Visibility: public -/
 structure gate.Statements where
   attested_current : Bool
@@ -507,7 +522,7 @@ structure gate.Statements where
   waived_current : Bool
 
 /-- [writfold_core::gate::Standing]
-    Source: 'crates/writfold-core/src/gate.rs', lines 186:0-192:1
+    Source: 'crates/writfold-core/src/gate.rs', lines 219:0-225:1
     Visibility: public -/
 @[discriminant isize]
 inductive gate.Standing where
@@ -516,7 +531,7 @@ inductive gate.Standing where
 | Waived : gate.Standing
 
 /-- [writfold_core::gate::standing]:
-    Source: 'crates/writfold-core/src/gate.rs', lines 274:0-290:1
+    Source: 'crates/writfold-core/src/gate.rs', lines 320:0-336:1
     Visibility: public -/
 def gate.standing
   (attested_class : Bool) (state : gate.State) (statements : gate.Statements) :
@@ -558,7 +573,7 @@ def gate.standing
         else ok (gate.Standing.Checked state)
 
 /-- [writfold_core::checklist::standing]:
-    Source: 'crates/writfold-core/src/checklist.rs', lines 203:0-210:1
+    Source: 'crates/writfold-core/src/checklist.rs', lines 234:0-241:1
     Visibility: public -/
 def checklist.standing
   (rollup : checklist.Rollup) (waived_current : Bool) :
@@ -607,7 +622,7 @@ def delivery.deciding (bound : Slice Bool) : Result (Option Std.Usize) := do
   delivery.deciding_loop bound index
 
 /-- [writfold_core::gate::{writfold_core::gate::Standing}::met]:
-    Source: 'crates/writfold-core/src/gate.rs', lines 205:4-210:5
+    Source: 'crates/writfold-core/src/gate.rs', lines 238:4-243:5
     Visibility: public -/
 def gate.Standing.met (self : gate.Standing) : Result Bool := do
   let b ←
@@ -756,7 +771,7 @@ def delivery.guard
     else ok false
 
 /-- [writfold_core::gate::Ending]
-    Source: 'crates/writfold-core/src/gate.rs', lines 20:0-29:1
+    Source: 'crates/writfold-core/src/gate.rs', lines 21:0-30:1
     Visibility: public -/
 @[discriminant isize]
 inductive gate.Ending where
@@ -766,7 +781,7 @@ inductive gate.Ending where
 | Error : gate.Ending
 
 /-- [writfold_core::gate::outcome]:
-    Source: 'crates/writfold-core/src/gate.rs', lines 63:0-72:1
+    Source: 'crates/writfold-core/src/gate.rs', lines 64:0-73:1
     Visibility: public -/
 def gate.outcome
   (ending : gate.Ending) (subject_moved : Bool) : Result gate.Outcome := do
@@ -783,15 +798,74 @@ def gate.outcome
     | gate.Ending.Error => ok gate.Outcome.Unknown
 
 /-- [writfold_core::gate::Evidence]
-    Source: 'crates/writfold-core/src/gate.rs', lines 104:0-110:1
+    Source: 'crates/writfold-core/src/gate.rs', lines 105:0-114:1
     Visibility: public -/
 structure gate.Evidence where
   outcome : gate.Outcome
   same_definition : Bool
   same_scope : Bool
+  bound : Bool
+
+/-- [writfold_core::gate::bound]:
+    Source: 'crates/writfold-core/src/gate.rs', lines 119:0-121:1
+    Visibility: public -/
+def gate.bound
+  (same_run : Bool) (same_subject : Bool) (intact : Bool) : Result Bool := do
+  if same_run
+  then if same_subject
+       then ok intact
+       else ok false
+  else ok false
+
+/-- [writfold_core::gate::current]:
+    Source: 'crates/writfold-core/src/gate.rs', lines 125:0-127:1
+    Visibility: public -/
+def gate.current (evidence : gate.Evidence) : Result Bool := do
+  if evidence.bound
+  then if evidence.same_definition
+       then ok evidence.same_scope
+       else ok false
+  else ok false
+
+/-- [writfold_core::gate::newest_bound]: loop body 0:
+    Source: 'crates/writfold-core/src/gate.rs', lines 132:4-139:1
+    Visibility: public -/
+@[rust_loop_body]
+def gate.newest_bound_loop.body
+  (receipts : Slice gate.Evidence) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize (Option Std.Usize))
+  := do
+  if index > 0#usize
+  then
+    let index1 ← index - 1#usize
+    let e ← Slice.index_usize receipts index1
+    if e.bound
+    then ok (done (some index1))
+    else ok (cont index1)
+  else ok (done none)
+
+/-- [writfold_core::gate::newest_bound]: loop 0:
+    Source: 'crates/writfold-core/src/gate.rs', lines 132:4-139:1
+    Visibility: public -/
+@[rust_loop]
+def gate.newest_bound_loop
+  (receipts : Slice gate.Evidence) (index : Std.Usize) :
+  Result (Option Std.Usize)
+  := do
+  loop
+    (fun index1 => gate.newest_bound_loop.body receipts index1)
+    index
+
+/-- [writfold_core::gate::newest_bound]:
+    Source: 'crates/writfold-core/src/gate.rs', lines 130:0-139:1
+    Visibility: public -/
+def gate.newest_bound
+  (receipts : Slice gate.Evidence) : Result (Option Std.Usize) := do
+  let index := Slice.len receipts
+  gate.newest_bound_loop receipts index
 
 /-- [writfold_core::gate::state]: loop body 0:
-    Source: 'crates/writfold-core/src/gate.rs', lines 117:4-133:1
+    Source: 'crates/writfold-core/src/gate.rs', lines 147:4-163:1
     Visibility: public -/
 @[rust_loop_body]
 def gate.state_loop.body
@@ -802,25 +876,22 @@ def gate.state_loop.body
   then
     let index1 ← index - 1#usize
     let evidence ← Slice.index_usize receipts index1
-    if evidence.same_definition
+    let b ← gate.current evidence
+    if b
     then
-      if evidence.same_scope
-      then
-        match evidence.outcome with
-        | gate.Outcome.Pass => ok (done (gate.State.Satisfied, some index1))
-        | gate.Outcome.Fail => ok (done (gate.State.Failed, some index1))
-        | gate.Outcome.Unknown => ok (done (gate.State.Unknown, some index1))
-      else ok (cont index1)
+      match evidence.outcome with
+      | gate.Outcome.Pass => ok (done (gate.State.Satisfied, some index1))
+      | gate.Outcome.Fail => ok (done (gate.State.Failed, some index1))
+      | gate.Outcome.Unknown => ok (done (gate.State.Unknown, some index1))
     else ok (cont index1)
   else
-    let n := Slice.len receipts
-    match n.val with
-    | 0 => ok (done (gate.State.Open, none))
-    | _ => let i ← n - 1#usize
-           ok (done (gate.State.Stale, some i))
+    let o ← gate.newest_bound receipts
+    match o with
+    | none => ok (done (gate.State.Open, none))
+    | some _ => ok (done (gate.State.Stale, o))
 
 /-- [writfold_core::gate::state]: loop 0:
-    Source: 'crates/writfold-core/src/gate.rs', lines 117:4-133:1
+    Source: 'crates/writfold-core/src/gate.rs', lines 147:4-163:1
     Visibility: public -/
 @[rust_loop]
 def gate.state_loop
@@ -832,7 +903,7 @@ def gate.state_loop
     index
 
 /-- [writfold_core::gate::state]:
-    Source: 'crates/writfold-core/src/gate.rs', lines 115:0-133:1
+    Source: 'crates/writfold-core/src/gate.rs', lines 145:0-163:1
     Visibility: public -/
 def gate.state
   (receipts : Slice gate.Evidence) :
@@ -842,7 +913,7 @@ def gate.state
   gate.state_loop receipts index
 
 /-- [writfold_core::gate::about]:
-    Source: 'crates/writfold-core/src/gate.rs', lines 138:0-146:1
+    Source: 'crates/writfold-core/src/gate.rs', lines 168:0-176:1
     Visibility: public -/
 def gate.about
   (recorded_definition : Slice Std.U8) (recorded_content : Slice Std.U8)
@@ -855,15 +926,16 @@ def gate.about
   else ok false
 
 /-- [writfold_core::gate::Recorded]
-    Source: 'crates/writfold-core/src/gate.rs', lines 150:0-156:1
+    Source: 'crates/writfold-core/src/gate.rs', lines 180:0-188:1
     Visibility: public -/
 structure gate.Recorded where
   outcome : gate.Outcome
   definition : alloc.vec.Vec Std.U8
   content : alloc.vec.Vec Std.U8
+  bound : Bool
 
 /-- [writfold_core::gate::evidence]:
-    Source: 'crates/writfold-core/src/gate.rs', lines 161:0-167:1
+    Source: 'crates/writfold-core/src/gate.rs', lines 193:0-200:1
     Visibility: public -/
 def gate.evidence
   (receipt : gate.Recorded) (definition : Slice Std.U8)
@@ -876,14 +948,25 @@ def gate.evidence
   if b1
   then
     ok
-      { outcome := receipt.outcome, same_definition := b, same_scope := false }
+      {
+        outcome := receipt.outcome,
+        same_definition := b,
+        same_scope := false,
+        bound := receipt.bound
+      }
   else
     let s1 := alloc.vec.Vec.deref receipt.content
     let b2 ← bytes.same s1 content
-    ok { outcome := receipt.outcome, same_definition := b, same_scope := b2 }
+    ok
+      {
+        outcome := receipt.outcome,
+        same_definition := b,
+        same_scope := b2,
+        bound := receipt.bound
+      }
 
 /-- [writfold_core::gate::judge]: loop body 0:
-    Source: 'crates/writfold-core/src/gate.rs', lines 174:4-177:5
+    Source: 'crates/writfold-core/src/gate.rs', lines 207:4-210:5
     Visibility: public -/
 @[rust_loop_body]
 def gate.judge_loop.body
@@ -904,7 +987,7 @@ def gate.judge_loop.body
   else ok (done all)
 
 /-- [writfold_core::gate::judge]: loop 0:
-    Source: 'crates/writfold-core/src/gate.rs', lines 174:4-177:5
+    Source: 'crates/writfold-core/src/gate.rs', lines 207:4-210:5
     Visibility: public -/
 @[rust_loop]
 def gate.judge_loop
@@ -919,7 +1002,7 @@ def gate.judge_loop
     (all, index)
 
 /-- [writfold_core::gate::judge]:
-    Source: 'crates/writfold-core/src/gate.rs', lines 171:0-179:1
+    Source: 'crates/writfold-core/src/gate.rs', lines 204:0-212:1
     Visibility: public -/
 def gate.judge
   (receipts : Slice gate.Recorded) (definition : Slice Std.U8)
@@ -933,15 +1016,16 @@ def gate.judge
   gate.state s
 
 /-- [writfold_core::gate::Said]
-    Source: 'crates/writfold-core/src/gate.rs', lines 227:0-231:1
+    Source: 'crates/writfold-core/src/gate.rs', lines 260:0-266:1
     Visibility: public -/
 structure gate.Said where
   attested : Bool
   definition : alloc.vec.Vec Std.U8
   content : alloc.vec.Vec Std.U8
+  bound : Bool
 
 /-- [writfold_core::gate::stands]:
-    Source: 'crates/writfold-core/src/gate.rs', lines 236:0-241:1
+    Source: 'crates/writfold-core/src/gate.rs', lines 272:0-280:1
     Visibility: public -/
 def gate.stands
   (said : gate.Said) (attested : Bool) (definition : Slice Std.U8)
@@ -951,12 +1035,23 @@ def gate.stands
   if said.attested != attested
   then ok false
   else
-    let s := alloc.vec.Vec.deref said.definition
-    let s1 := alloc.vec.Vec.deref said.content
-    gate.about s s1 definition content
+    if said.bound
+    then
+      let s := alloc.vec.Vec.deref said.definition
+      let s1 := alloc.vec.Vec.deref said.content
+      gate.about s s1 definition content
+    else ok false
+
+/-- [writfold_core::gate::attests]:
+    Source: 'crates/writfold-core/src/gate.rs', lines 284:0-286:1
+    Visibility: public -/
+def gate.attests (said : gate.Said) : Result Bool := do
+  if said.attested
+  then ok said.bound
+  else ok false
 
 /-- [writfold_core::gate::statements]: loop body 0:
-    Source: 'crates/writfold-core/src/gate.rs', lines 251:4-262:5
+    Source: 'crates/writfold-core/src/gate.rs', lines 297:4-308:5
     Visibility: public -/
 @[rust_loop_body]
 def gate.statements_loop.body
@@ -970,15 +1065,16 @@ def gate.statements_loop.body
   if index < i
   then
     let s ← Slice.index_usize said index
-    let attested_any1 ← if s.attested
+    let b ← gate.attests s
+    let attested_any1 ← if b
                           then ok true
                           else ok attested_any
-    let b ← gate.stands s true definition content
-    let attested_current1 ← if b
+    let b1 ← gate.stands s true definition content
+    let attested_current1 ← if b1
                               then ok true
                               else ok attested_current
-    let b1 ← gate.stands s false definition content
-    let waived_current1 ← if b1
+    let b2 ← gate.stands s false definition content
+    let waived_current1 ← if b2
                             then ok true
                             else ok waived_current
     let index1 ← index + 1#usize
@@ -986,7 +1082,7 @@ def gate.statements_loop.body
   else ok (done (attested_current, attested_any, waived_current))
 
 /-- [writfold_core::gate::statements]: loop 0:
-    Source: 'crates/writfold-core/src/gate.rs', lines 251:4-262:5
+    Source: 'crates/writfold-core/src/gate.rs', lines 297:4-308:5
     Visibility: public -/
 @[rust_loop]
 def gate.statements_loop
@@ -1002,7 +1098,7 @@ def gate.statements_loop
     (attested_current, attested_any, waived_current, index)
 
 /-- [writfold_core::gate::statements]:
-    Source: 'crates/writfold-core/src/gate.rs', lines 246:0-268:1
+    Source: 'crates/writfold-core/src/gate.rs', lines 292:0-314:1
     Visibility: public -/
 def gate.statements
   (said : Slice gate.Said) (definition : Slice Std.U8) (content : Slice Std.U8)
@@ -1523,14 +1619,14 @@ def observe.embeds (status : observe.Status) : Result Bool := do
   | observe.Status.Error => ok false
 
 /-- [writfold_core::plan::Node]
-    Source: 'crates/writfold-core/src/plan.rs', lines 22:0-25:1
+    Source: 'crates/writfold-core/src/plan.rs', lines 23:0-26:1
     Visibility: public -/
 structure plan.Node where
   done : Bool
   skipped : Bool
 
 /-- [writfold_core::plan::Refusal]
-    Source: 'crates/writfold-core/src/plan.rs', lines 30:0-37:1
+    Source: 'crates/writfold-core/src/plan.rs', lines 31:0-38:1
     Visibility: public -/
 @[discriminant isize]
 inductive plan.Refusal where
@@ -1539,12 +1635,12 @@ inductive plan.Refusal where
 | Owed : Std.Usize → plan.Refusal
 
 /-- [writfold_core::plan::MAX_DEPTH]
-    Source: 'crates/writfold-core/src/plan.rs', lines 40:0-40:31
+    Source: 'crates/writfold-core/src/plan.rs', lines 41:0-41:31
     Visibility: public -/
 @[global_simps, irreducible] def plan.MAX_DEPTH : Std.Usize := 4#usize
 
 /-- [writfold_core::plan::SpliceRefusal]
-    Source: 'crates/writfold-core/src/plan.rs', lines 43:0-48:1
+    Source: 'crates/writfold-core/src/plan.rs', lines 44:0-49:1
     Visibility: public -/
 @[discriminant isize]
 inductive plan.SpliceRefusal where
@@ -1552,7 +1648,7 @@ inductive plan.SpliceRefusal where
 | TooDeep : plan.SpliceRefusal
 
 /-- [writfold_core::plan::Spliced]
-    Source: 'crates/writfold-core/src/plan.rs', lines 51:0-58:1
+    Source: 'crates/writfold-core/src/plan.rs', lines 52:0-59:1
     Visibility: public -/
 @[discriminant isize]
 inductive plan.Spliced where
@@ -1560,7 +1656,7 @@ inductive plan.Spliced where
 | Insert : Std.Usize → plan.Spliced
 
 /-- [writfold_core::plan::closed]:
-    Source: 'crates/writfold-core/src/plan.rs', lines 61:0-63:1
+    Source: 'crates/writfold-core/src/plan.rs', lines 62:0-64:1
     Visibility: public -/
 def plan.closed (node : plan.Node) : Result Bool := do
   if node.done
@@ -1568,7 +1664,7 @@ def plan.closed (node : plan.Node) : Result Bool := do
   else ok node.skipped
 
 /-- [writfold_core::plan::current]: loop body 0:
-    Source: 'crates/writfold-core/src/plan.rs', lines 69:4-76:1
+    Source: 'crates/writfold-core/src/plan.rs', lines 70:4-77:1
     Visibility: public -/
 @[rust_loop_body]
 def plan.current_loop.body
@@ -1587,7 +1683,7 @@ def plan.current_loop.body
   else ok (done none)
 
 /-- [writfold_core::plan::current]: loop 0:
-    Source: 'crates/writfold-core/src/plan.rs', lines 69:4-76:1
+    Source: 'crates/writfold-core/src/plan.rs', lines 70:4-77:1
     Visibility: public -/
 @[rust_loop]
 def plan.current_loop
@@ -1599,14 +1695,14 @@ def plan.current_loop
     index
 
 /-- [writfold_core::plan::current]:
-    Source: 'crates/writfold-core/src/plan.rs', lines 67:0-76:1
+    Source: 'crates/writfold-core/src/plan.rs', lines 68:0-77:1
     Visibility: public -/
 @[reducible]
 def plan.current (nodes : Slice plan.Node) : Result (Option Std.Usize) := do
   plan.current_loop nodes 0#usize
 
 /-- [writfold_core::plan::first_owed]: loop body 0:
-    Source: 'crates/writfold-core/src/plan.rs', lines 81:4-88:1
+    Source: 'crates/writfold-core/src/plan.rs', lines 82:4-89:1
     Visibility: public -/
 @[rust_loop_body]
 def plan.first_owed_loop.body
@@ -1624,7 +1720,7 @@ def plan.first_owed_loop.body
   else ok (done none)
 
 /-- [writfold_core::plan::first_owed]: loop 0:
-    Source: 'crates/writfold-core/src/plan.rs', lines 81:4-88:1
+    Source: 'crates/writfold-core/src/plan.rs', lines 82:4-89:1
     Visibility: public -/
 @[rust_loop]
 def plan.first_owed_loop
@@ -1634,14 +1730,14 @@ def plan.first_owed_loop
     index
 
 /-- [writfold_core::plan::first_owed]:
-    Source: 'crates/writfold-core/src/plan.rs', lines 79:0-88:1
+    Source: 'crates/writfold-core/src/plan.rs', lines 80:0-89:1
     Visibility: public -/
 @[reducible]
 def plan.first_owed (met : Slice Bool) : Result (Option Std.Usize) := do
   plan.first_owed_loop met 0#usize
 
 /-- [writfold_core::plan::advance_check]:
-    Source: 'crates/writfold-core/src/plan.rs', lines 92:0-104:1
+    Source: 'crates/writfold-core/src/plan.rs', lines 93:0-105:1
     Visibility: public -/
 def plan.advance_check
   (nodes : Slice plan.Node) («at» : Std.Usize) (met : Slice Bool) :
@@ -1659,24 +1755,52 @@ def plan.advance_check
       | none => ok (core.result.Result.Ok ())
       | some gate => ok (core.result.Result.Err (plan.Refusal.Owed gate))
 
+/-- [writfold_core::policy::Accept]
+    Source: 'crates/writfold-core/src/policy.rs', lines 18:0-22:1
+    Visibility: public -/
+structure policy.Accept where
+  satisfied : Bool
+  attested : Bool
+  waived : Bool
+
 /-- [writfold_core::plan::GateFact]
-    Source: 'crates/writfold-core/src/plan.rs', lines 108:0-112:1
+    Source: 'crates/writfold-core/src/plan.rs', lines 110:0-114:1
     Visibility: public -/
 @[discriminant isize]
 inductive plan.GateFact where
 | Undefined : plan.GateFact
-| Stands : gate.Standing → plan.GateFact
+| Stands : gate.Standing → policy.Accept → plan.GateFact
+
+/-- [writfold_core::policy::met]:
+    Source: 'crates/writfold-core/src/policy.rs', lines 26:0-32:1
+    Visibility: public -/
+def policy.met
+  (standing : gate.Standing) (accept : policy.Accept) : Result Bool := do
+  match standing with
+  | gate.Standing.Checked state =>
+    let b ←
+      match state with
+      | gate.State.Open => ok false
+      | gate.State.Satisfied => ok true
+      | gate.State.Stale => ok false
+      | gate.State.Failed => ok false
+      | gate.State.Unknown => ok false
+    if b
+    then ok accept.satisfied
+    else ok false
+  | gate.Standing.Attested => ok accept.attested
+  | gate.Standing.Waived => ok accept.waived
 
 /-- [writfold_core::plan::fact_met]:
-    Source: 'crates/writfold-core/src/plan.rs', lines 116:0-121:1
+    Source: 'crates/writfold-core/src/plan.rs', lines 118:0-123:1
     Visibility: public -/
 def plan.fact_met (fact : plan.GateFact) : Result Bool := do
   match fact with
   | plan.GateFact.Undefined => ok false
-  | plan.GateFact.Stands standing => gate.Standing.met standing
+  | plan.GateFact.Stands standing accept => policy.met standing accept
 
 /-- [writfold_core::plan::met_all]: loop body 0:
-    Source: 'crates/writfold-core/src/plan.rs', lines 127:4-130:5
+    Source: 'crates/writfold-core/src/plan.rs', lines 129:4-132:5
     Visibility: public -/
 @[rust_loop_body]
 def plan.met_all_loop.body
@@ -1695,7 +1819,7 @@ def plan.met_all_loop.body
   else ok (done met)
 
 /-- [writfold_core::plan::met_all]: loop 0:
-    Source: 'crates/writfold-core/src/plan.rs', lines 127:4-130:5
+    Source: 'crates/writfold-core/src/plan.rs', lines 129:4-132:5
     Visibility: public -/
 @[rust_loop]
 def plan.met_all_loop
@@ -1708,7 +1832,7 @@ def plan.met_all_loop
     (met, index)
 
 /-- [writfold_core::plan::met_all]:
-    Source: 'crates/writfold-core/src/plan.rs', lines 124:0-132:1
+    Source: 'crates/writfold-core/src/plan.rs', lines 126:0-134:1
     Visibility: public -/
 @[reducible]
 def plan.met_all
@@ -1716,7 +1840,7 @@ def plan.met_all
   plan.met_all_loop gates (alloc.vec.Vec.new Bool) 0#usize
 
 /-- [writfold_core::plan::advance]:
-    Source: 'crates/writfold-core/src/plan.rs', lines 136:0-138:1
+    Source: 'crates/writfold-core/src/plan.rs', lines 138:0-140:1
     Visibility: public -/
 def plan.advance
   (nodes : Slice plan.Node) («at» : Std.Usize) (gates : Slice plan.GateFact)
@@ -1728,7 +1852,7 @@ def plan.advance
   plan.advance_check nodes «at» s
 
 /-- [writfold_core::plan::stale]:
-    Source: 'crates/writfold-core/src/plan.rs', lines 142:0-144:1
+    Source: 'crates/writfold-core/src/plan.rs', lines 144:0-146:1
     Visibility: public -/
 def plan.stale (node : plan.Node) (met : Slice Bool) : Result Bool := do
   if node.done
@@ -1736,8 +1860,52 @@ def plan.stale (node : plan.Node) (met : Slice Bool) : Result Bool := do
        ok (core.option.Option.is_some o)
   else ok false
 
+/-- [writfold_core::plan::SkipRefusal]
+    Source: 'crates/writfold-core/src/plan.rs', lines 151:0-155:1
+    Visibility: public -/
+@[discriminant isize]
+inductive plan.SkipRefusal where
+| Complete : plan.SkipRefusal
+| NotCurrent : Std.Usize → plan.SkipRefusal
+| Locked : plan.SkipRefusal
+
+/-- [writfold_core::plan::skip_check]:
+    Source: 'crates/writfold-core/src/plan.rs', lines 159:0-171:1
+    Visibility: public -/
+def plan.skip_check
+  (nodes : Slice plan.Node) («at» : Std.Usize) (locked : Bool) :
+  Result (core.result.Result Unit plan.SkipRefusal)
+  := do
+  let o ← plan.current nodes
+  match o with
+  | none => ok (core.result.Result.Err plan.SkipRefusal.Complete)
+  | some now =>
+    if now != «at»
+    then ok (core.result.Result.Err (plan.SkipRefusal.NotCurrent now))
+    else
+      if locked
+      then ok (core.result.Result.Err plan.SkipRefusal.Locked)
+      else ok (core.result.Result.Ok ())
+
+/-- [writfold_core::plan::skipped]:
+    Source: 'crates/writfold-core/src/plan.rs', lines 175:0-177:1
+    Visibility: public -/
+def plan.skipped (recorded : Bool) (locked : Bool) : Result Bool := do
+  if recorded
+  then ok (¬ locked)
+  else ok false
+
+/-- [writfold_core::plan::close_check]:
+    Source: 'crates/writfold-core/src/plan.rs', lines 182:0-187:1
+    Visibility: public -/
+def plan.close_check
+  (last_open : Bool) (present : Slice Bool) : Result (Option Std.Usize) := do
+  if last_open
+  then plan.first_owed present
+  else ok none
+
 /-- [writfold_core::plan::contains]: loop body 0:
-    Source: 'crates/writfold-core/src/plan.rs', lines 149:4-156:1
+    Source: 'crates/writfold-core/src/plan.rs', lines 192:4-199:1
     Visibility: public -/
 @[rust_loop_body]
 def plan.contains_loop.body
@@ -1758,7 +1926,7 @@ def plan.contains_loop.body
   else ok (done false)
 
 /-- [writfold_core::plan::contains]: loop 0:
-    Source: 'crates/writfold-core/src/plan.rs', lines 149:4-156:1
+    Source: 'crates/writfold-core/src/plan.rs', lines 192:4-199:1
     Visibility: public -/
 @[rust_loop]
 def plan.contains_loop
@@ -1771,7 +1939,7 @@ def plan.contains_loop
     index
 
 /-- [writfold_core::plan::contains]:
-    Source: 'crates/writfold-core/src/plan.rs', lines 147:0-156:1
+    Source: 'crates/writfold-core/src/plan.rs', lines 190:0-199:1
     Visibility: public -/
 @[reducible]
 def plan.contains
@@ -1781,7 +1949,7 @@ def plan.contains
   plan.contains_loop keys key 0#usize
 
 /-- [writfold_core::plan::splice_check]:
-    Source: 'crates/writfold-core/src/plan.rs', lines 165:0-184:1
+    Source: 'crates/writfold-core/src/plan.rs', lines 208:0-227:1
     Visibility: public -/
 def plan.splice_check
   (nodes : Slice plan.Node) (spliced : Slice (alloc.vec.Vec Std.U8))
@@ -1806,7 +1974,7 @@ def plan.splice_check
           ok (core.result.Result.Ok (plan.Spliced.Insert «at»))
 
 /-- [writfold_core::plan::splice]: loop body 0:
-    Source: 'crates/writfold-core/src/plan.rs', lines 191:4-197:5
+    Source: 'crates/writfold-core/src/plan.rs', lines 234:4-240:5
     Visibility: public -/
 @[rust_loop_body]
 def plan.splice_loop0.body
@@ -1828,7 +1996,7 @@ def plan.splice_loop0.body
   else ok (done (out, index))
 
 /-- [writfold_core::plan::splice]: loop 0:
-    Source: 'crates/writfold-core/src/plan.rs', lines 191:4-197:5
+    Source: 'crates/writfold-core/src/plan.rs', lines 234:4-240:5
     Visibility: public -/
 @[rust_loop]
 def plan.splice_loop0
@@ -1841,7 +2009,7 @@ def plan.splice_loop0
     (out, index)
 
 /-- [writfold_core::plan::splice]: loop body 1:
-    Source: 'crates/writfold-core/src/plan.rs', lines 199:4-205:5
+    Source: 'crates/writfold-core/src/plan.rs', lines 242:4-248:5
     Visibility: public -/
 @[rust_loop_body]
 def plan.splice_loop1.body
@@ -1858,7 +2026,7 @@ def plan.splice_loop1.body
   else ok (done out)
 
 /-- [writfold_core::plan::splice]: loop 1:
-    Source: 'crates/writfold-core/src/plan.rs', lines 199:4-205:5
+    Source: 'crates/writfold-core/src/plan.rs', lines 242:4-248:5
     Visibility: public -/
 @[rust_loop]
 def plan.splice_loop1
@@ -1870,7 +2038,7 @@ def plan.splice_loop1
     (out, added)
 
 /-- [writfold_core::plan::splice]: loop body 2:
-    Source: 'crates/writfold-core/src/plan.rs', lines 206:4-212:5
+    Source: 'crates/writfold-core/src/plan.rs', lines 249:4-255:5
     Visibility: public -/
 @[rust_loop_body]
 def plan.splice_loop2.body
@@ -1889,7 +2057,7 @@ def plan.splice_loop2.body
   else ok (done out)
 
 /-- [writfold_core::plan::splice]: loop 2:
-    Source: 'crates/writfold-core/src/plan.rs', lines 206:4-212:5
+    Source: 'crates/writfold-core/src/plan.rs', lines 249:4-255:5
     Visibility: public -/
 @[rust_loop]
 def plan.splice_loop2
@@ -1902,7 +2070,7 @@ def plan.splice_loop2
     (out, index)
 
 /-- [writfold_core::plan::splice]:
-    Source: 'crates/writfold-core/src/plan.rs', lines 188:0-214:1
+    Source: 'crates/writfold-core/src/plan.rs', lines 231:0-257:1
     Visibility: public -/
 def plan.splice
   (nodes : Slice plan.Node) («at» : Std.Usize) (count : Std.Usize) :
@@ -1912,5 +2080,429 @@ def plan.splice
     plan.splice_loop0 nodes «at» (alloc.vec.Vec.new plan.Node) 0#usize
   let out1 ← plan.splice_loop1 count out 0#usize
   plan.splice_loop2 nodes out1 index
+
+/-- [writfold_core::policy::Pin]
+    Source: 'crates/writfold-core/src/policy.rs', lines 35:0-42:1
+    Visibility: public -/
+@[discriminant isize]
+inductive policy.Pin where
+| Unpinned : policy.Pin
+| Same : policy.Pin
+| Moved : policy.Pin
+
+/-- [writfold_core::policy::pin_one]:
+    Source: 'crates/writfold-core/src/policy.rs', lines 46:0-60:1
+    Visibility: public -/
+def policy.pin_one
+  (pinned : Option (alloc.vec.Vec Std.U8))
+  (now : Option (alloc.vec.Vec Std.U8)) :
+  Result policy.Pin
+  := do
+  match pinned with
+  | none => ok policy.Pin.Unpinned
+  | some pinned1 =>
+    match now with
+    | none => ok policy.Pin.Moved
+    | some now1 =>
+      let s := alloc.vec.Vec.deref pinned1
+      let s1 := alloc.vec.Vec.deref now1
+      let b ← bytes.same s s1
+      if b
+      then ok policy.Pin.Same
+      else ok policy.Pin.Moved
+
+/-- [writfold_core::policy::is_moved]:
+    Source: 'crates/writfold-core/src/policy.rs', lines 63:0-65:1
+    Visibility: public -/
+def policy.is_moved (pin : policy.Pin) : Result Bool := do
+  match pin with
+  | policy.Pin.Unpinned => ok false
+  | policy.Pin.Same => ok false
+  | policy.Pin.Moved => ok true
+
+/-- [writfold_core::policy::is_unpinned]:
+    Source: 'crates/writfold-core/src/policy.rs', lines 68:0-70:1
+    Visibility: public -/
+def policy.is_unpinned (pin : policy.Pin) : Result Bool := do
+  match pin with
+  | policy.Pin.Unpinned => ok true
+  | policy.Pin.Same => ok false
+  | policy.Pin.Moved => ok false
+
+/-- [writfold_core::policy::any_moved]: loop body 0:
+    Source: 'crates/writfold-core/src/policy.rs', lines 75:4-82:1
+    Visibility: public -/
+@[rust_loop_body]
+def policy.any_moved_loop.body
+  (pins : Slice policy.Pin) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let i := Slice.len pins
+  if index < i
+  then
+    let p ← Slice.index_usize pins index
+    let b ← policy.is_moved p
+    if b
+    then ok (done true)
+    else let index1 ← index + 1#usize
+         ok (cont index1)
+  else ok (done false)
+
+/-- [writfold_core::policy::any_moved]: loop 0:
+    Source: 'crates/writfold-core/src/policy.rs', lines 75:4-82:1
+    Visibility: public -/
+@[rust_loop]
+def policy.any_moved_loop
+  (pins : Slice policy.Pin) (index : Std.Usize) : Result Bool := do
+  loop
+    (fun index1 => policy.any_moved_loop.body pins index1)
+    index
+
+/-- [writfold_core::policy::any_moved]:
+    Source: 'crates/writfold-core/src/policy.rs', lines 73:0-82:1
+    Visibility: public -/
+@[reducible]
+def policy.any_moved (pins : Slice policy.Pin) : Result Bool := do
+  policy.any_moved_loop pins 0#usize
+
+/-- [writfold_core::policy::any_unpinned]: loop body 0:
+    Source: 'crates/writfold-core/src/policy.rs', lines 87:4-94:1
+    Visibility: public -/
+@[rust_loop_body]
+def policy.any_unpinned_loop.body
+  (pins : Slice policy.Pin) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let i := Slice.len pins
+  if index < i
+  then
+    let p ← Slice.index_usize pins index
+    let b ← policy.is_unpinned p
+    if b
+    then ok (done true)
+    else let index1 ← index + 1#usize
+         ok (cont index1)
+  else ok (done false)
+
+/-- [writfold_core::policy::any_unpinned]: loop 0:
+    Source: 'crates/writfold-core/src/policy.rs', lines 87:4-94:1
+    Visibility: public -/
+@[rust_loop]
+def policy.any_unpinned_loop
+  (pins : Slice policy.Pin) (index : Std.Usize) : Result Bool := do
+  loop
+    (fun index1 => policy.any_unpinned_loop.body pins index1)
+    index
+
+/-- [writfold_core::policy::any_unpinned]:
+    Source: 'crates/writfold-core/src/policy.rs', lines 85:0-94:1
+    Visibility: public -/
+@[reducible]
+def policy.any_unpinned (pins : Slice policy.Pin) : Result Bool := do
+  policy.any_unpinned_loop pins 0#usize
+
+/-- [writfold_core::policy::pin_all]:
+    Source: 'crates/writfold-core/src/policy.rs', lines 98:0-106:1
+    Visibility: public -/
+def policy.pin_all (pins : Slice policy.Pin) : Result policy.Pin := do
+  let b ← policy.any_moved pins
+  if b
+  then ok policy.Pin.Moved
+  else
+    let b1 ← core.slice.Slice.is_empty pins
+    if b1
+    then ok policy.Pin.Unpinned
+    else
+      let b2 ← policy.any_unpinned pins
+      if b2
+      then ok policy.Pin.Unpinned
+      else ok policy.Pin.Same
+
+/-- [writfold_core::policy::How]
+    Source: 'crates/writfold-core/src/policy.rs', lines 109:0-113:1
+    Visibility: public -/
+@[discriminant isize]
+inductive policy.How where
+| Passed : policy.How
+| Attested : policy.How
+| Waived : policy.How
+
+/-- [writfold_core::policy::Close]
+    Source: 'crates/writfold-core/src/policy.rs', lines 116:0-125:1
+    Visibility: public -/
+@[discriminant isize]
+inductive policy.Close where
+| Open : policy.Close
+| Passed : policy.Close
+| Attested : policy.Close
+| Waived : policy.Close
+| Skipped : policy.Close
+
+/-- [writfold_core::policy::how_waived]:
+    Source: 'crates/writfold-core/src/policy.rs', lines 128:0-130:1
+    Visibility: public -/
+def policy.how_waived (how : policy.How) : Result Bool := do
+  match how with
+  | policy.How.Passed => ok false
+  | policy.How.Attested => ok false
+  | policy.How.Waived => ok true
+
+/-- [writfold_core::policy::how_attested]:
+    Source: 'crates/writfold-core/src/policy.rs', lines 133:0-135:1
+    Visibility: public -/
+def policy.how_attested (how : policy.How) : Result Bool := do
+  match how with
+  | policy.How.Passed => ok false
+  | policy.How.Attested => ok true
+  | policy.How.Waived => ok false
+
+/-- [writfold_core::policy::any_waived]: loop body 0:
+    Source: 'crates/writfold-core/src/policy.rs', lines 140:4-147:1
+    Visibility: public -/
+@[rust_loop_body]
+def policy.any_waived_loop.body
+  (met : Slice policy.How) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let i := Slice.len met
+  if index < i
+  then
+    let h ← Slice.index_usize met index
+    let b ← policy.how_waived h
+    if b
+    then ok (done true)
+    else let index1 ← index + 1#usize
+         ok (cont index1)
+  else ok (done false)
+
+/-- [writfold_core::policy::any_waived]: loop 0:
+    Source: 'crates/writfold-core/src/policy.rs', lines 140:4-147:1
+    Visibility: public -/
+@[rust_loop]
+def policy.any_waived_loop
+  (met : Slice policy.How) (index : Std.Usize) : Result Bool := do
+  loop
+    (fun index1 => policy.any_waived_loop.body met index1)
+    index
+
+/-- [writfold_core::policy::any_waived]:
+    Source: 'crates/writfold-core/src/policy.rs', lines 138:0-147:1
+    Visibility: public -/
+@[reducible]
+def policy.any_waived (met : Slice policy.How) : Result Bool := do
+  policy.any_waived_loop met 0#usize
+
+/-- [writfold_core::policy::any_attested]: loop body 0:
+    Source: 'crates/writfold-core/src/policy.rs', lines 152:4-159:1
+    Visibility: public -/
+@[rust_loop_body]
+def policy.any_attested_loop.body
+  (met : Slice policy.How) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let i := Slice.len met
+  if index < i
+  then
+    let h ← Slice.index_usize met index
+    let b ← policy.how_attested h
+    if b
+    then ok (done true)
+    else let index1 ← index + 1#usize
+         ok (cont index1)
+  else ok (done false)
+
+/-- [writfold_core::policy::any_attested]: loop 0:
+    Source: 'crates/writfold-core/src/policy.rs', lines 152:4-159:1
+    Visibility: public -/
+@[rust_loop]
+def policy.any_attested_loop
+  (met : Slice policy.How) (index : Std.Usize) : Result Bool := do
+  loop
+    (fun index1 => policy.any_attested_loop.body met index1)
+    index
+
+/-- [writfold_core::policy::any_attested]:
+    Source: 'crates/writfold-core/src/policy.rs', lines 150:0-159:1
+    Visibility: public -/
+@[reducible]
+def policy.any_attested (met : Slice policy.How) : Result Bool := do
+  policy.any_attested_loop met 0#usize
+
+/-- [writfold_core::policy::close]:
+    Source: 'crates/writfold-core/src/policy.rs', lines 165:0-179:1
+    Visibility: public -/
+def policy.close
+  (done1 : Bool) (skipped : Bool) (met : Slice policy.How) :
+  Result policy.Close
+  := do
+  if done1
+  then
+    let b ← policy.any_waived met
+    if b
+    then ok policy.Close.Waived
+    else
+      let b1 ← policy.any_attested met
+      if b1
+      then ok policy.Close.Attested
+      else ok policy.Close.Passed
+  else if skipped
+       then ok policy.Close.Skipped
+       else ok policy.Close.Open
+
+/-- [writfold_core::policy::Facts]
+    Source: 'crates/writfold-core/src/policy.rs', lines 182:0-193:1
+    Visibility: public -/
+structure policy.Facts where
+  run_closed : Bool
+  required_present : Bool
+  pin : policy.Pin
+  repinned : Bool
+  stale : Bool
+
+/-- [writfold_core::policy::Summary]
+    Source: 'crates/writfold-core/src/policy.rs', lines 196:0-204:1
+    Visibility: public -/
+@[discriminant isize]
+inductive policy.Summary where
+| NoPlan : policy.Summary
+| Incomplete : policy.Summary
+| ClosedIncomplete : policy.Summary
+| PolicyMoved : policy.Summary
+| CompleteStale : policy.Summary
+| CompleteWithExceptions : policy.Summary
+| Complete : policy.Summary
+
+/-- [writfold_core::policy::is_open]:
+    Source: 'crates/writfold-core/src/policy.rs', lines 207:0-209:1
+    Visibility: public -/
+def policy.is_open (close : policy.Close) : Result Bool := do
+  match close with
+  | policy.Close.Open => ok true
+  | policy.Close.Passed => ok false
+  | policy.Close.Attested => ok false
+  | policy.Close.Waived => ok false
+  | policy.Close.Skipped => ok false
+
+/-- [writfold_core::policy::is_passed]:
+    Source: 'crates/writfold-core/src/policy.rs', lines 212:0-214:1
+    Visibility: public -/
+def policy.is_passed (close : policy.Close) : Result Bool := do
+  match close with
+  | policy.Close.Open => ok false
+  | policy.Close.Passed => ok true
+  | policy.Close.Attested => ok false
+  | policy.Close.Waived => ok false
+  | policy.Close.Skipped => ok false
+
+/-- [writfold_core::policy::any_open]: loop body 0:
+    Source: 'crates/writfold-core/src/policy.rs', lines 219:4-226:1
+    Visibility: public -/
+@[rust_loop_body]
+def policy.any_open_loop.body
+  (closes : Slice policy.Close) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let i := Slice.len closes
+  if index < i
+  then
+    let c ← Slice.index_usize closes index
+    let b ← policy.is_open c
+    if b
+    then ok (done true)
+    else let index1 ← index + 1#usize
+         ok (cont index1)
+  else ok (done false)
+
+/-- [writfold_core::policy::any_open]: loop 0:
+    Source: 'crates/writfold-core/src/policy.rs', lines 219:4-226:1
+    Visibility: public -/
+@[rust_loop]
+def policy.any_open_loop
+  (closes : Slice policy.Close) (index : Std.Usize) : Result Bool := do
+  loop
+    (fun index1 => policy.any_open_loop.body closes index1)
+    index
+
+/-- [writfold_core::policy::any_open]:
+    Source: 'crates/writfold-core/src/policy.rs', lines 217:0-226:1
+    Visibility: public -/
+@[reducible]
+def policy.any_open (closes : Slice policy.Close) : Result Bool := do
+  policy.any_open_loop closes 0#usize
+
+/-- [writfold_core::policy::all_passed]: loop body 0:
+    Source: 'crates/writfold-core/src/policy.rs', lines 231:4-238:1
+    Visibility: public -/
+@[rust_loop_body]
+def policy.all_passed_loop.body
+  (closes : Slice policy.Close) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let i := Slice.len closes
+  if index < i
+  then
+    let c ← Slice.index_usize closes index
+    let b ← policy.is_passed c
+    if b
+    then let index1 ← index + 1#usize
+         ok (cont index1)
+    else ok (done false)
+  else ok (done true)
+
+/-- [writfold_core::policy::all_passed]: loop 0:
+    Source: 'crates/writfold-core/src/policy.rs', lines 231:4-238:1
+    Visibility: public -/
+@[rust_loop]
+def policy.all_passed_loop
+  (closes : Slice policy.Close) (index : Std.Usize) : Result Bool := do
+  loop
+    (fun index1 => policy.all_passed_loop.body closes index1)
+    index
+
+/-- [writfold_core::policy::all_passed]:
+    Source: 'crates/writfold-core/src/policy.rs', lines 229:0-238:1
+    Visibility: public -/
+@[reducible]
+def policy.all_passed (closes : Slice policy.Close) : Result Bool := do
+  policy.all_passed_loop closes 0#usize
+
+/-- [writfold_core::policy::summary]:
+    Source: 'crates/writfold-core/src/policy.rs', lines 244:0-264:1
+    Visibility: public -/
+def policy.summary
+  (closes : Slice policy.Close) (facts : policy.Facts) :
+  Result policy.Summary
+  := do
+  let b ← core.slice.Slice.is_empty closes
+  if b
+  then ok policy.Summary.NoPlan
+  else
+    let b1 ← policy.any_open closes
+    if b1
+    then
+      if facts.run_closed
+      then ok policy.Summary.ClosedIncomplete
+      else ok policy.Summary.Incomplete
+    else
+      if facts.required_present
+      then
+        let b2 ← policy.is_moved facts.pin
+        if b2
+        then ok policy.Summary.PolicyMoved
+        else
+          if facts.stale
+          then ok policy.Summary.CompleteStale
+          else
+            if facts.repinned
+            then ok policy.Summary.CompleteWithExceptions
+            else
+              let b3 ← policy.all_passed closes
+              if b3
+              then ok policy.Summary.Complete
+              else ok policy.Summary.CompleteWithExceptions
+      else
+        if facts.run_closed
+        then ok policy.Summary.ClosedIncomplete
+        else ok policy.Summary.Incomplete
 
 end writfold_core

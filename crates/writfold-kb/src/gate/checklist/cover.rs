@@ -174,6 +174,7 @@ fn shaped(c: &Cover) -> Result<(), String> {
         }
         Outcome::Supported => Ok(()),
         _ if c.reason.is_none() => Err(format!("{} without a reason", c.outcome.name())),
+        Outcome::NoneFound if c.evidence.is_empty() => Err("none-found, but cites no look".into()),
         _ if !c.evidence.iter().all(observation) => Err(format!(
             "{} cites evidence other than observations",
             c.outcome.name()

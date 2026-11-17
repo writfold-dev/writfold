@@ -35,6 +35,8 @@ pub struct Gate {
     pub items: Vec<crate::emit::More>,
     /// Set when the gate is a delivery (`deliver:<mode>`).
     pub delivery: Option<super::delivery::Delivered>,
+    /// The definition's `accept`, when written ([`crate::gate::def_accept`]).
+    pub accept: Option<Vec<String>>,
 }
 
 impl Gate {
@@ -42,7 +44,10 @@ impl Gate {
     pub fn fact(&self) -> GateFact {
         match self.standing {
             None => GateFact::Undefined,
-            Some(standing) => GateFact::Stands(standing),
+            Some(standing) => GateFact::Stands(
+                standing,
+                crate::gate::def_accept::policy(self.accept.as_deref()),
+            ),
         }
     }
 
@@ -52,6 +57,15 @@ impl Gate {
 
     pub fn shown(&self) -> &'static str {
         self.standing.map_or("undefined", Standing::name)
+    }
+
+    /// The standing as shown in a list of what is owed: `waived, not
+    /// accepted` when the gate's `accept` leaves out its met word.
+    pub fn display(&self) -> String {
+        match self.standing {
+            Some(s) if s.met() && !self.met() => format!("{}, not accepted", s.name()),
+            _ => self.shown().to_owned(),
+        }
     }
 }
 
@@ -101,6 +115,7 @@ fn undefined(id: &str) -> Gate {
         counts: None,
         items: Vec::new(),
         delivery: None,
+        accept: None,
     }
 }
 
@@ -129,6 +144,7 @@ fn gate(j: &Judged<'_>, repo: &str, detail: bool) -> Gate {
     let (evidence, content) = evidence(j);
     let d = &j.definition;
     Gate {
+        accept: d.accept.clone(),
         id: d.id.clone(),
         standing: Some(j.standing),
         evidence,
@@ -199,7 +215,7 @@ fn judge_steps(
     let mut filings = Filings::read(&session.ws.root, run_dir, run);
     filings.owed.gates = Some(graph.gates());
     let report = status::judge(session, subject, &filings)?;
-    let valid = filings.valid(&subject.name);
+    let valid = filings.parsed();
     let deliveries = super::delivery::Deliveries::read(&session.ws.root, run_dir, run, graph);
     let current = graph.current();
     let mut out = Vec::new();

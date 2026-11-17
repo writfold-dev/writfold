@@ -262,8 +262,8 @@ fn judge(session: &Session<'_>, facts: &Facts) -> Result<Judged, String> {
                 .map(|m| format!("; next: {}", m.text))
                 .unwrap_or_default();
             GateLine {
-                line: format!("gate {id} [{}]{next}", j.standing.name()),
-                met: j.standing.met(),
+                line: format!("gate {id} [{}]{next}", super::super::gate::policy::shown(j)),
+                met: j.met(),
                 waived: super::waived::of(j),
                 id,
             }

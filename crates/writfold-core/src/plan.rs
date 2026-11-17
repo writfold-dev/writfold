@@ -15,6 +15,7 @@
 //! exhaustive tests below state the same properties for small inputs.
 
 use crate::gate::Standing;
+use crate::policy::Accept;
 use alloc::vec::Vec;
 
 /// One step of the folded list: whether a `done-` or a `skip-` record
@@ -104,19 +105,20 @@ pub fn advance_check(nodes: &[Node], at: usize, met: &[bool]) -> Result<(), Refu
 }
 
 /// One gate of a step as the caller found it: no usable definition, or
-/// the standing the gate kernel gives it.
+/// the standing the gate kernel gives it with the standings its policy
+/// accepts.
 pub enum GateFact {
     /// The gate has no usable definition: never met.
     Undefined,
-    Stands(Standing),
+    Stands(Standing, Accept),
 }
 
-/// Whether one gate is met: it stands, and its standing is met
-/// (satisfied, attested or waived).
+/// Whether one gate is met: it stands, and its standing is met under its
+/// policy ([`crate::policy::met`]).
 pub fn fact_met(fact: &GateFact) -> bool {
     match fact {
         GateFact::Undefined => false,
-        GateFact::Stands(standing) => standing.met(),
+        GateFact::Stands(standing, accept) => crate::policy::met(*standing, accept),
     }
 }
 
@@ -141,6 +143,47 @@ pub fn advance(nodes: &[Node], at: usize, gates: &[GateFact]) -> Result<(), Refu
 /// done, and the current step does not move back.
 pub fn stale(node: &Node, met: &[bool]) -> bool {
     node.done && first_owed(met).is_some()
+}
+
+/// Why `plan skip` is refused, in the fixed order it is checked: the plan
+/// is complete; the step named is not the current one; the step is locked
+/// by the run's pinned policy (`unskippable`).
+pub enum SkipRefusal {
+    Complete,
+    NotCurrent(usize),
+    Locked,
+}
+
+/// Whether step `at` may be skipped: it is the current step, and the
+/// run's pin does not lock it.
+pub fn skip_check(nodes: &[Node], at: usize, locked: bool) -> Result<(), SkipRefusal> {
+    let now = match current(nodes) {
+        None => return Err(SkipRefusal::Complete),
+        Some(now) => now,
+    };
+    if now != at {
+        return Err(SkipRefusal::NotCurrent(now));
+    }
+    if locked {
+        return Err(SkipRefusal::Locked);
+    }
+    Ok(())
+}
+
+/// Whether a step counts as skipped: a skip record exists and the run's
+/// pin does not lock the step. A skip of a locked step counts for nothing.
+pub fn skipped(recorded: bool, locked: bool) -> bool {
+    recorded && !locked
+}
+
+/// Whether closing the plan's last open step is refused: when `last_open`
+/// (the step being closed is the last open one), the first required
+/// template that is not `present` in the plan; otherwise nothing.
+pub fn close_check(last_open: bool, present: &[bool]) -> Option<usize> {
+    if !last_open {
+        return None;
+    }
+    first_owed(present)
 }
 
 /// Whether `key` is one of `keys`.
@@ -214,182 +257,4 @@ pub fn splice(nodes: &[Node], at: usize, count: usize) -> Vec<Node> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::{
-        MAX_DEPTH, Node, Refusal, SpliceRefusal, Spliced, advance_check, closed, current,
-        first_owed, splice, splice_check, stale,
-    };
-    use alloc::vec::Vec;
-
-    /// Every list of up to `max` steps, each open, done, skipped or both.
-    fn lists(max: usize) -> Vec<Vec<(bool, bool)>> {
-        let mut out: Vec<Vec<(bool, bool)>> = Vec::new();
-        out.push(Vec::new());
-        let mut from = 0;
-        for _ in 0..max {
-            let to = out.len();
-            for i in from..to {
-                for state in [(false, false), (true, false), (false, true), (true, true)] {
-                    let mut next = out[i].clone();
-                    next.push(state);
-                    out.push(next);
-                }
-            }
-            from = to;
-        }
-        out
-    }
-
-    fn nodes(states: &[(bool, bool)]) -> Vec<Node> {
-        states
-            .iter()
-            .map(|&(done, skipped)| Node { done, skipped })
-            .collect()
-    }
-
-    /// Every met vector of up to three gates.
-    fn mets() -> Vec<Vec<bool>> {
-        let mut out = Vec::new();
-        for n in 0..=3usize {
-            for bits in 0..(1usize << n) {
-                out.push((0..n).map(|i| bits & (1 << i) != 0).collect());
-            }
-        }
-        out
-    }
-
-    #[test]
-    fn current_is_the_least_open_step() {
-        for states in lists(4) {
-            let list = nodes(&states);
-            let expected = list.iter().position(|n| !closed(n));
-            assert_eq!(current(&list), expected, "{states:?}");
-            if let Some(i) = current(&list) {
-                assert!(list[..i].iter().all(closed));
-            } else {
-                assert!(list.iter().all(closed));
-            }
-        }
-    }
-
-    #[test]
-    fn advance_is_admitted_exactly_for_the_current_step_with_every_gate_met() {
-        for states in lists(4) {
-            let list = nodes(&states);
-            for at in 0..=list.len() {
-                for met in mets() {
-                    let admitted = advance_check(&list, at, &met).is_ok();
-                    let expected = current(&list) == Some(at) && met.iter().all(|m| *m);
-                    assert_eq!(admitted, expected, "{states:?} at={at} met={met:?}");
-                    // The fixed refusal order.
-                    match advance_check(&list, at, &met) {
-                        Ok(()) => {}
-                        Err(Refusal::Complete) => assert!(current(&list).is_none()),
-                        Err(Refusal::NotCurrent(now)) => {
-                            assert_eq!(current(&list), Some(now));
-                            assert_ne!(now, at);
-                        }
-                        Err(Refusal::Owed(gate)) => {
-                            assert_eq!(current(&list), Some(at));
-                            assert_eq!(first_owed(&met), Some(gate));
-                            assert!(!met[gate] && met[..gate].iter().all(|m| *m));
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    #[test]
-    fn an_admitted_advance_moves_current_strictly_later() {
-        for states in lists(4) {
-            let mut list = nodes(&states);
-            let Some(at) = current(&list) else {
-                continue;
-            };
-            assert!(advance_check(&list, at, &[]).is_ok());
-            list[at].done = true;
-            assert!(current(&list).is_none_or(|next| next > at));
-        }
-    }
-
-    #[test]
-    fn stale_is_a_done_step_with_an_owed_gate() {
-        for states in lists(3) {
-            for met in mets() {
-                for node in nodes(&states) {
-                    let expected = node.done && met.iter().any(|m| !*m);
-                    assert_eq!(stale(&node, &met), expected);
-                    // A stale step is still closed: it never becomes current again.
-                    assert!(!stale(&node, &met) || closed(&node));
-                }
-            }
-        }
-    }
-
-    fn states(list: &[Node]) -> Vec<(bool, bool)> {
-        list.iter().map(|n| (n.done, n.skipped)).collect()
-    }
-
-    #[test]
-    fn splice_keeps_every_existing_step_and_the_done_prefix() {
-        for before in lists(4) {
-            let list = nodes(&before);
-            for count in 0..=3usize {
-                let admitted = splice_check(&list, &[], b"t", 1);
-                // No keys: never already; depth 1: never too deep.
-                assert!(!matches!(
-                    admitted,
-                    Ok(Spliced::Already) | Err(SpliceRefusal::TooDeep)
-                ));
-                let Ok(Spliced::Insert(at)) = admitted else {
-                    assert!(!list.is_empty() && current(&list).is_none());
-                    continue;
-                };
-                assert_eq!(Some(at), current(&list).or(Some(0)));
-                let after = splice(&list, at, count);
-                let after_states = states(&after);
-                assert_eq!(after.len(), list.len() + count);
-                // The prefix (all closed) and the suffix are unchanged.
-                assert_eq!(after_states[..at], before[..at]);
-                assert_eq!(after_states[at + count..], before[at..]);
-                assert!(after[at..at + count].iter().all(|n| !closed(n)));
-                // The current step is the first new one, or unchanged.
-                let expected = if count > 0 { Some(at) } else { current(&list) };
-                assert_eq!(current(&after), expected, "{before:?} +{count}");
-            }
-        }
-    }
-
-    #[test]
-    fn splice_is_idempotent_on_its_key_and_bounded_in_depth() {
-        let keys = [b"review@1".to_vec(), b"change@2".to_vec()];
-        for before in lists(3) {
-            let list = nodes(&before);
-            for key in [&b"review@1"[..], b"change@2"] {
-                for depth in 0..=MAX_DEPTH + 2 {
-                    // A key already spliced is a no-op, whatever else holds.
-                    assert!(matches!(
-                        splice_check(&list, &keys, key, depth),
-                        Ok(Spliced::Already)
-                    ));
-                }
-            }
-            for key in [&b"review@2"[..], b"review", b"other@1", b""] {
-                for depth in 0..=MAX_DEPTH + 2 {
-                    let admitted = splice_check(&list, &keys, key, depth);
-                    assert!(!matches!(admitted, Ok(Spliced::Already)), "{key:?}");
-                    match admitted {
-                        Ok(Spliced::Already) => {}
-                        Err(SpliceRefusal::TooDeep) => assert!(depth > MAX_DEPTH),
-                        Err(SpliceRefusal::Complete) => assert!(current(&list).is_none()),
-                        Ok(Spliced::Insert(at)) => {
-                            assert!(depth <= MAX_DEPTH);
-                            assert_eq!(Some(at), current(&list).or(Some(0)));
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
+mod tests;

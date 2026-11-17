@@ -52,7 +52,7 @@ fn refused(line: usize, message: impl std::fmt::Display) -> KbError {
 }
 
 const KEYS: [&str; 5] = ["item", "outcome", "refs", "reason", "note"];
-const OUTCOMES: [&str; 3] = ["supported", "unsupported", "not-applicable"];
+const OUTCOMES: [&str; 4] = ["supported", "unsupported", "not-applicable", "none-found"];
 
 /// `refs`: absent, or a list of strings.
 fn references(sink: &mut Sink<'_>, l: &jsonl::Line<'_>) -> Option<Vec<String>> {
@@ -90,7 +90,8 @@ fn outcome(sink: &mut Sink<'_>, l: &jsonl::Line<'_>) -> Option<Outcome> {
         return Some(o);
     }
     let found = suggest(&written, &OUTCOMES);
-    let why = format!("outcome {written:?} is not supported, unsupported or not-applicable");
+    let why =
+        format!("outcome {written:?} is not supported, unsupported, not-applicable or none-found");
     let d = sink.error("value.unknown", l.value("outcome").or(Some(l.span())), why);
     d.label("not an outcome");
     d.help = did_you_mean(&found, '"');

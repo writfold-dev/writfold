@@ -5,7 +5,7 @@ step detail#1/done [done] unit [stale] @runs/run-20261101T090000Z-a1b2c3/plan/do
   done: recorded 2026-11-11T00:00:00Z
 step detail#1/skip [skipped] not needed (by owner, 2026-11-11T00:00:00Z) @runs/run-20261101T090000Z-a1b2c3/plan/skip-detail.1~skip.json:1 !skipped
   splice: detail#1 @b9af91b3c6a0 from .writfold/plans/detail.toml @runs/run-20261101T090000Z-a1b2c3/plan/splice-detail.1.json:1
-step detail#1/review [current] owes: review [stale], missing [undefined] @runs/run-20261101T090000Z-a1b2c3/plan/splice-detail.1.json:1
+step detail#1/review [current] owes: review [stale], missing [undefined] @runs/run-20261101T090000Z-a1b2c3/plan/splice-detail.1.json:1 !policy-moved
   splice: detail#1 @b9af91b3c6a0 from .writfold/plans/detail.toml @runs/run-20261101T090000Z-a1b2c3/plan/splice-detail.1.json:1
   gate: ready [satisfied] mechanical @runs/run-20261101T090000Z-a1b2c3/gates/ready-20261111T000000Z-XXXXXX.json:1
   gate: review [stale] checklist 1/2 required covered @runs/run-20261101T090000Z-a1b2c3/covers/review.record-20261111T000000Z-XXXXXX.json:1 !stale
@@ -15,9 +15,12 @@ step detail#1/review [current] owes: review [stale], missing [undefined] @runs/r
   gate: missing [undefined] !undefined
   read: instructions for review @.writfold/gates/review.md:1
   next: writfold kb gate cover review errors supported REF… --by WHO
+  why: missing no longer loads; this run pinned missing@41ae4635d789 (@runs/run-20261101T090000Z-a1b2c3/policy/pin-1-d3f287bb.json:1)
 step detail#1/later [later] gates: unit @runs/run-20261101T090000Z-a1b2c3/plan/splice-detail.1.json:1
   splice: detail#1 @b9af91b3c6a0 from .writfold/plans/detail.toml @runs/run-20261101T090000Z-a1b2c3/plan/splice-detail.1.json:1
   gate: unit [later]
+plan incomplete step 3/4 open; 4 steps: 1 passed, 0 attested, 0 waived, 1 skipped @runs/run-20261101T090000Z-a1b2c3/plan/
+# note: policy moved since this run pinned it: 1 gate (missing); the plan cannot read complete until the definitions are restored
 # note: plan detail @b9af91b3c6a0 from .writfold/plans/detail.toml; steps are derived from runs/run-20261101T090000Z-a1b2c3/plan/ on every read, never stored
-# coverage=complete records=36/36 shown=4 omitted=0 steps=4 done=1 skipped=1 stale=1 moved=0 invalid=0 current=3 current_gates=3 current_owed=2 kb=d5db758bda80+dirty:8 index=fresh cursor=none q=6c0a6600533b
+# coverage=complete records=37/37 shown=5 omitted=0 steps=4 done=1 skipped=1 stale=1 moved=0 invalid=0 repinned=0 current=3 current_gates=3 current_owed=2 policy=moved summary=incomplete kb=d5db758bda80+dirty:9 index=fresh cursor=none q=6c0a6600533b
 # exit=2

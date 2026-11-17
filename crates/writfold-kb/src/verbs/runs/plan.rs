@@ -36,10 +36,28 @@ pub(super) fn position(root: &Path, rec: &Rec) -> Option<More> {
             row.path = Some(step.splice.clone());
             row.line = Some(1);
         }
-        None => row.text = format!("complete steps={total} done={done} skipped={skipped}"),
+        None => {
+            let drift = crate::plan::drift::recorded(root, &graph, rec);
+            let present = vec![true];
+            let ended = crate::plan::summary::ended(&graph, None, (&drift, false), &present);
+            row.text = format!(
+                "{} steps={total} passed={} attested={} waived={} skipped={}",
+                ended.shown(),
+                ended.passed,
+                ended.attested,
+                ended.waived,
+                ended.skipped
+            );
+        }
     }
     if !graph.invalid.is_empty() {
         row.flags.push("invalid".into());
     }
     Some(row)
+}
+
+/// Whether the run's plan still has an open step.
+pub(super) fn open(root: &Path, rec: &Rec) -> bool {
+    let graph = fold::read(root, &crate::runs::dir(rec), &rec.id);
+    graph.planned() && graph.current().is_some()
 }

@@ -31,11 +31,29 @@ fn item_text(e: &Entry<'_>) -> (String, Option<String>) {
     if !e.spec.required {
         text.push_str(" (optional)");
     }
+    let choices = (e.spec.required && !e.covers())
+        .then(|| super::allowed::choices(&e.spec, e.restricted))
+        .flatten()
+        .map_or_else(String::new, |c| format!(" ({c})"));
     match e.row {
         None => {
             text.push(' ');
             text.push_str(&e.spec.text);
+            text.push_str(&choices);
             (text, None)
+        }
+        Some((f, c)) if c.outcome == writfold_core::checklist::Outcome::NoneFound => {
+            let looks = match c.evidence.len() {
+                1 => "1 look found nothing".to_owned(),
+                n => format!("{n} looks found nothing"),
+            };
+            let reason = c.reason.clone().unwrap_or_default();
+            text.push_str(&format!(" {looks}: {reason} by {}", c.by));
+            if let Some(why) = &e.why {
+                text.push_str(&format!("; {why}"));
+            }
+            text.push_str(&choices);
+            (text, Some(f.path.clone()))
         }
         Some((f, c)) => {
             let said = match (&c.reason, c.evidence.len()) {
@@ -47,6 +65,7 @@ fn item_text(e: &Entry<'_>) -> (String, Option<String>) {
             if let Some(why) = &e.why {
                 text.push_str(&format!("; {why}"));
             }
+            text.push_str(&choices);
             (text, Some(f.path.clone()))
         }
     }
@@ -55,13 +74,26 @@ fn item_text(e: &Entry<'_>) -> (String, Option<String>) {
 pub(crate) fn item_line(e: &Entry<'_>) -> More {
     let (text, path) = item_text(e);
     let mut flags = match e.item {
-        Item::Stale | Item::Unsupported => vec![e.item.name().to_owned()],
+        Item::Stale | Item::Unsupported | Item::NoneFound => vec![e.item.name().to_owned()],
         _ => Vec::new(),
     };
+    if e.not_accepted() {
+        flags.push("not-accepted".to_owned());
+    }
     if e.recorded > 0 {
         flags.push("recorded".to_owned());
     }
+    let mut extra = Vec::new();
+    if e.restricted {
+        let allowed = super::allowed::choices(&e.spec, true).unwrap_or_default();
+        let words: Vec<&str> = allowed.split(" or ").collect();
+        extra.push(("allowed", serde_json::json!(words)));
+    }
+    if e.not_accepted() {
+        extra.push(("accepted", serde_json::json!(false)));
+    }
     More {
+        extra,
         status: Some(e.item.name().into()),
         label: "item",
         text,
@@ -103,6 +135,7 @@ pub fn row(subject: &Subject, judged: &Judged<'_>, view: &View<'_>) -> Row {
         row.more.push(item_line(e));
         row.more.extend(e.looked.clone());
     }
+    crate::gate::policy::json_keys(&mut row, judged);
     if let Some(read) = crate::gate::status::read_line(d, &subject.name) {
         row.more.push(read);
     }
@@ -112,8 +145,18 @@ pub fn row(subject: &Subject, judged: &Judged<'_>, view: &View<'_>) -> Row {
         row.more.push(statement::more(f, s));
     }
     row.flags.push(judged.standing.name().into());
-    if judged.standing.met() {
+    if judged.met() {
         return row;
+    }
+    if judged.not_accepted() {
+        row.flags.push("not-accepted".into());
+        let shown = super::super::status::shown_path(&judged.definition, subject);
+        let why = super::super::policy::why_not_accepted(
+            &judged.definition,
+            judged.standing.name(),
+            &shown,
+        );
+        row.more.push(more("why", why));
     }
     if judged.statements.waiver_moved {
         row.more.push(more(
@@ -150,11 +193,25 @@ pub fn line(judged: &Judged<'_>, view: &View<'_>, width: usize) -> String {
         let by = e
             .row
             .map_or(String::new(), |(f, c)| format!(" by {} {}", c.by, f.path));
+        let said = match (e.item, e.row) {
+            (Item::NoneFound, Some((_, c))) => {
+                let n = c.evidence.len();
+                let looks = if n == 1 {
+                    "1 look".to_owned()
+                } else {
+                    format!("{n} looks")
+                };
+                format!(
+                    ": none-found ({looks}): {}",
+                    c.reason.clone().unwrap_or_default()
+                )
+            }
+            _ => format!(" {}", e.item.name()),
+        };
         out.push_str(&format!(
-            "{:<w$}   {} {}{by}\n",
+            "{:<w$}   {}{said}{by}\n",
             "",
             e.spec.id,
-            e.item.name(),
             w = width + 1
         ));
     }

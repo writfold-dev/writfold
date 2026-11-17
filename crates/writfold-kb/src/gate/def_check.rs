@@ -10,7 +10,8 @@ use crate::defs::{Check, Field, Slot, Spanned, Text, Value};
 use std::path::Path;
 use writfold_core::diag::Report;
 
-const KEYS: [&str; 17] = [
+const KEYS: [&str; 20] = [
+    "accept",
     "schema",
     "id",
     "version",
@@ -28,8 +29,11 @@ const KEYS: [&str; 17] = [
     "require",
     "items",
     "optional",
+    "not_applicable",
+    "none_found",
 ];
-const COMMON: [&str; 6] = [
+const COMMON: [&str; 7] = [
+    "accept",
     "schema",
     "id",
     "version",
@@ -47,7 +51,7 @@ fn keys_for(class: Option<&str>) -> Vec<&'static str> {
         Some("attested") => &["scope", "subject"],
         Some(ASSESSED) => &["weft", "checks", "weft_sha256", "timeout_seconds"],
         Some(RUN_RECORD) => &["require"],
-        Some(CHECKLIST) => &["scope", "items", "optional"],
+        Some(CHECKLIST) => &["scope", "items", "optional", "not_applicable", "none_found"],
         _ => return KEYS.to_vec(),
     };
     COMMON.iter().chain(own).copied().collect()
@@ -237,6 +241,7 @@ pub fn check(
     let scope = scope(&mut c, judges, &class);
     let assessed = super::assessed::spec::check(&mut c, &class, dir);
     let checklist = super::checklist::spec::check(&mut c, &class);
+    let accept = super::def_accept::check(&mut c, &class);
     let files = command
         .as_ref()
         .and_then(|(argv, ..)| def_class::files(&mut c, argv, dir));
@@ -261,6 +266,7 @@ pub fn check(
             files: files?,
             assessed: assessed?,
             checklist: checklist?,
+            accept: accept?,
             dir: dir.to_path_buf(),
             digest: String::new(),
         })

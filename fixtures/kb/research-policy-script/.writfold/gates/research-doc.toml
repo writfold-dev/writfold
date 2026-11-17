@@ -1,0 +1,10 @@
+# Another team's rubric over the same binary: research is a document with
+# three headings, checked by a script the team ships beside the gate.
+schema = "writfold-gate/1"
+id = "research-doc"
+version = 1
+class = "mechanical"
+argv = ["sh", "{gate}/research-doc.sh"]
+timeout_seconds = 60
+scope = ["docs/research/**"]
+description = "docs/research/ holds a note with Question, Found and Decision headings"

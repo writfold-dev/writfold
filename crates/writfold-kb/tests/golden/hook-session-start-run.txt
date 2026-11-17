@@ -26,6 +26,7 @@ draft s-0 [open] Read the KB. @<WORLD>/kb/.git/writfold/drafts/s-0.json !draft
   confirm: writfold kb checkpoint --from-draft s-0
 draft s-1 [ended] Summary: replay is 41 s. @<WORLD>/kb/.git/writfold/drafts/s-1.json !draft
   confirm: writfold kb checkpoint --from-draft s-1
+# note: policy: none configured (continuity only: checkpoints, records and citations work without one)
 # coverage=complete records=28/28 shown=4 omitted=0 kb=d5db758bda80 index=fresh cursor=none q=0d2c88940cf6
 
 Inbox (local only; nothing here is in the KB until confirmed or accepted):

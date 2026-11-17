@@ -176,10 +176,18 @@ fn startup(
     let absent = crate::stale::checker::absent_line(&ws.root);
     let broken = super::broken::here(ws, cwd);
     let broken = (!broken.is_empty()).then(|| format!("\n{broken}"));
+    // `resume` carries the no-policy line when a run is current; a hook that
+    // could read nothing else stays silent.
+    let top = crate::defs::lint::enclosing(&ws.root, cwd);
+    let none = (current.is_none()
+        && !parts.is_empty()
+        && !crate::gate::policy::configured(&ws.root, top.as_deref()))
+    .then(|| format!("\n{}\n", crate::gate::policy::NONE_CONFIGURED));
     let lines: Vec<String> = stale_line(ws)
         .into_iter()
         .chain(absent)
         .chain(broken)
+        .chain(none)
         .collect();
     if !lines.is_empty() {
         parts.push((Part::Stale, lines.concat()));

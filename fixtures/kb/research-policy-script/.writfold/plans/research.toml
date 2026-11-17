@@ -1,0 +1,4 @@
+schema = "writfold-plan/1"
+name = "research"
+description = "a research note, checked by script and read by a person"
+steps = ["research: research-doc research-reviewed"]

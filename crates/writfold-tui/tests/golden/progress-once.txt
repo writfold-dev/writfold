@@ -11,7 +11,7 @@
   [closed] run-20261104T080000Z-d4e5f6
     Retire the legacy flush path
     project=harbor
-    plan: complete steps=2 done=2 skipped=0
+    plan: complete steps=2 passed=2 attested=0 waived=0 skipped=0
     last: 2026-11-04T09:00:00Z Legacy path removed; nothing left to do.
 == progress run-20261101T090000Z-a1b2c3 ==
 plan 2 done, 1 skipped of 6 steps; current step 4/6; owes 2 of 2 gates stale=1
@@ -44,6 +44,7 @@ plan 2 done, 1 skipped of 6 steps; current step 4/6; owes 2 of 2 gates stale=1
      gate unit [later]
    step change#1/reflect [later] no gates @runs/run-20261101T090000Z-a1b2c3/plan/splice-change.1.json:1
      splice: change#1 @83c2cc9efde7 from .writfold/plans/change.toml @runs/run-20261101T090000Z-a1b2c3/plan/splice-change.1.json:1
+plan incomplete step 4/6 open; 6 steps: 2 passed, 0 attested, 0 waived, 1 skipped @runs/run-20261101T090000Z-a1b2c3/plan/
 # note: plan change @83c2cc9efde7 from .writfold/plans/change.toml; steps are derived from runs/run-20261101T090000Z-a1b2c3/plan/ on every read, never stored
 == gates run-20261101T090000Z-a1b2c3 ==
 gates: gates=6 satisfied=2 open=2 stale=2 failed=0 unknown=0 attested=0 waived=0 invalid=0
@@ -93,4 +94,4 @@ plan change#1 [spliced] 2026-11-10T23:45:00Z spliced change#1 @runs/run-20261101
 plan change#1/research [done] 2026-11-10T23:47:00Z done change#1/research @runs/run-20261101T090000Z-a1b2c3/plan/done-change.1~research.json:1
 plan change#1/implement [done] 2026-11-10T23:50:00Z done change#1/implement @runs/run-20261101T090000Z-a1b2c3/plan/done-change.1~implement.json:1
 plan change#1/benchmarks [skipped] 2026-11-10T23:51:00Z skipped change#1/benchmarks (by owner) no hot path touched @runs/run-20261101T090000Z-a1b2c3/plan/skip-change.1~benchmarks.json:1
-== kb=XXXXXXXXXXXX+dirty:14 index=refreshed:1  subject=kb@0ea3a743bfef+dirty:17  read-only; no daemon, nothing here claims a run is live ==
+== kb=XXXXXXXXXXXX+dirty:16 index=refreshed:1  subject=kb@0ea3a743bfef+dirty:19  read-only; no daemon, nothing here claims a run is live ==

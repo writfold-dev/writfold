@@ -77,6 +77,7 @@ pub fn judge<'a>(obligations: Vec<Obligation>, c: &Candidate, f: &'a Filings) ->
                     outcome: r.outcome,
                     same_definition: r.definition == ob.digest,
                     same_scope: r.content == content,
+                    bound: true,
                 })
                 .collect();
             let (checked, at) = state(&evidence);

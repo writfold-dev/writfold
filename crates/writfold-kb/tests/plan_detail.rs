@@ -25,7 +25,8 @@ fn detailed_rows_preserve_default_and_expose_each_gate() -> TestResult {
     let default = status(&w, false, true)?;
     let detailed = status(&w, true, true)?;
     let rows = detailed["rows"].as_array().ok_or("rows")?;
-    assert_eq!(rows.len(), 4);
+    // Four steps, then the plan's summary row (v0.6.0-dev.3).
+    assert_eq!(rows.len(), 5);
     assert_eq!(rows[0]["flags"], json!(["stale"]));
     assert_eq!(rows[0]["more"][0]["label"], "why");
     assert_eq!(rows[0]["more"][1]["text"], "unit [stale] mechanical");

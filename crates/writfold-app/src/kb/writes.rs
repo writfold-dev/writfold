@@ -6,8 +6,9 @@ use writfold_kb::write::Write;
 use writfold_kb::write::record::{Decision, Link, Ticket};
 
 /// Flags that take a value.
-pub const VALUES: [&str; 38] = [
+pub const VALUES: [&str; 39] = [
     "idle",
+    "example",
     "mark",
     "since-mark",
     "rule",

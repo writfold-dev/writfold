@@ -69,14 +69,22 @@ impl Filings {
 
     /// The valid receipts about `repo`, in judging order ([`receipt::order`]).
     pub fn valid(&self, repo: &str) -> Vec<(&Filed, &Receipt)> {
-        let mut valid: Vec<(&Filed, &Receipt)> = self
+        let mut valid = self.parsed();
+        valid.retain(|(_, r)| r.repo == repo);
+        valid
+    }
+
+    /// Every receipt of the run that reads (its digest intact, filed in
+    /// this run), about any subject, in judging order. The gate kernel
+    /// decides which are bound ([`writfold_core::gate::bound`]).
+    pub fn parsed(&self) -> Vec<(&Filed, &Receipt)> {
+        let mut all: Vec<(&Filed, &Receipt)> = self
             .receipts
             .iter()
             .filter_map(|f| f.parsed.as_ref().ok().map(|r| (f, r)))
-            .filter(|(_, r)| r.repo == repo)
             .collect();
-        valid.sort_by(|a, b| receipt::order((&a.0.name, a.1), (&b.0.name, b.1)));
-        valid
+        all.sort_by(|a, b| receipt::order((&a.0.name, a.1), (&b.0.name, b.1)));
+        all
     }
 
     /// Receipts and statements that do not read as valid.
@@ -130,9 +138,9 @@ impl Report<'_> {
         super::ground::recorded_note(n)
     }
 
-    /// Whether every gate is met (satisfied, attested or waived).
+    /// Whether every gate is met under its policy.
     pub fn all_met(&self) -> bool {
-        !self.gates.is_empty() && self.gates.iter().all(|j| j.standing.met())
+        !self.gates.is_empty() && self.gates.iter().all(Judged::met)
     }
 }
 
@@ -181,7 +189,7 @@ pub fn judge_plain<'a>(
         .collect();
     let wanted = |p: &str| patterns.iter().any(|scope| in_scope(scope, p));
     let snapshot = snapshot(git, subject, &wanted)?;
-    let valid = filings.valid(&subject.name);
+    let valid = filings.parsed();
     let records = filings.owed.records.clone().unwrap_or_default();
     let mut gates = Vec::new();
     for definition in definitions {
@@ -205,9 +213,11 @@ pub fn judge_plain<'a>(
     Ok((report, later))
 }
 
-/// Judge one gate from the valid receipts (in judging order) against the
+/// Judge one gate from the run's receipts (in judging order) against the
 /// present `content`: the scope digest of a repository gate, the
-/// run-record digest of a run-record gate.
+/// run-record digest of a run-record gate. Each receipt goes to the kernel
+/// with whether it is bound: filed in this run (it parsed), about `repo`,
+/// and intact (it parsed); one that is not counts as absent.
 pub fn judge_gate<'a>(
     definition: Definition,
     valid: &[(&'a Filed, &'a Receipt)],
@@ -226,6 +236,7 @@ pub fn judge_gate<'a>(
             outcome: r.outcome,
             definition: r.definition.as_bytes().to_vec(),
             content: r.scope.as_bytes().to_vec(),
+            bound: writfold_core::gate::bound(true, r.repo == repo, true),
         })
         .collect();
     let (state, at) = judge_receipts(&recorded, definition.digest.as_bytes(), content.as_bytes());
@@ -359,43 +370,11 @@ fn gate_row(
         section: Some("gates"),
         ..Row::default()
     };
-    match judged.receipt {
-        None if d.attested() => {
-            row.text = format!(
-                "attested: statements only, no command, for {}",
-                subject.name
-            );
-            row.path = Some(shown_path(d, subject));
-            row.line = Some(1);
-        }
-        None => {
-            row.text = format!("{} no receipt in this run for {}", d.class, subject.name);
-            row.path = Some(shown_path(d, subject));
-            row.line = Some(1);
-        }
-        Some((f, r)) => {
-            let dirty = if r.dirty > 0 {
-                format!("+dirty:{}", r.dirty)
-            } else {
-                String::new()
-            };
-            row.text = format!(
-                "{} {} {} at {}@{}{dirty} scope={} paths={}",
-                r.class,
-                r.outcome.name(),
-                receipt::ended(r),
-                r.repo,
-                short(&r.commit),
-                short(&r.scope),
-                r.paths
-            );
-            row.path = Some(f.path.clone());
-            row.line = Some(1);
-        }
-    }
+    super::head::head(&mut row, judged, subject);
     if let Some(more) = read_line(d, &subject.name) {
         row.more.push(more);
     }
+    super::policy::json_keys(&mut row, judged);
     let shown = match judged.standing {
         Standing::Attested => judged.statements.attested,
         Standing::Waived => judged.statements.waived,
@@ -408,9 +387,10 @@ fn gate_row(
         return Ok(row);
     }
     row.flags.push(judged.standing.name().into());
-    if judged.standing.met() {
+    if judged.met() {
         return Ok(row);
     }
+    super::policy::flag(&mut row, judged, &shown_path(d, subject));
     if judged.state == State::Stale
         && let Some((_, r)) = judged.receipt
     {

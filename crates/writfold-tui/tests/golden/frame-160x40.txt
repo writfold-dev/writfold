@@ -31,10 +31,10 @@
 │                                      ││     --by WHO                                                         ││2026-11-01 09:00   run            created Add…│
 │                                      ││   change#1/deliver [later] gates: unit                               ││2026-11-10 09:00   checkpoint     entry 1 of …│
 │                                      ││   change#1/reflect [later] no gates                                  ││2026-11-10 12:45   checkpoint     entry 2 of …│
-│                                      ││# note: plan change @83c2cc9efde7 from .writfold/plans/change.toml;   ││2026-11-10 14:10   checkpoint     entry 3 of …│
-│                                      ││steps are derived from runs/run-20261101T090000Z-a1b2c3/plan/ on every││2026-11-10 23:45   plan added     change      │
-│                                      ││read, never stored                                                    ││2026-11-10 23:47   step done      research    │
-│                                      ││                                                                      ││2026-11-10 23:50   step done      implement   │
-│                                      ││                                                                      ││2026-11-10 23:51   step skipped   benchmarks …│
+│                                      ││plan incomplete step 4/6 open; 6 steps: 2 passed, 0 attested, 0       ││2026-11-10 14:10   checkpoint     entry 3 of …│
+│                                      ││waived, 1 skipped @runs/run-20261101T090000Z-a1b2c3/plan/             ││2026-11-10 23:45   plan added     change      │
+│                                      ││# note: plan change @83c2cc9efde7 from .writfold/plans/change.toml;   ││2026-11-10 23:47   step done      research    │
+│                                      ││steps are derived from runs/run-20261101T090000Z-a1b2c3/plan/ on every││2026-11-10 23:50   step done      implement   │
+│                                      ││read, never stored                                                    ││2026-11-10 23:51   step skipped   benchmarks …│
 ╰──────────────────────────────────────╯╰──────────────────────────────────────────────────────────────────────╯╰──────────────────────────────────────────────╯
- [read-only]  KB has 14 uncommitted changes   index refreshed:1                                                              j/k run   l plan   ? help   q quit
+ [read-only]  KB has 16 uncommitted changes   index refreshed:1                                                              j/k run   l plan   ? help   q quit

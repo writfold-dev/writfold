@@ -156,6 +156,7 @@ fn decision(
         .unwrap_or_else(|| "undated".into());
     let line = crate::parse::field_line(&session.text(&rec.path).unwrap_or_default(), "decided_by");
     row.more.push(More {
+        extra: Vec::new(),
         status: None,
         label: "decided",
         text: format!("by {decided} on {when}"),
@@ -196,6 +197,7 @@ fn decision(
             shown.flags
         };
         row.more.push(More {
+            extra: Vec::new(),
             status: None,
             label: "cite",
             text: format!("{} [{verdict}]", shown.id),
@@ -242,6 +244,7 @@ pub(crate) fn rationale(session: &Session<'_>, rec: &Rec, names: &[String]) -> R
             started = true;
             let line = first + 1 + u32::try_from(offset).unwrap_or(0);
             out.push(More {
+                extra: Vec::new(),
                 status: None,
                 label: "why",
                 text,
@@ -258,6 +261,7 @@ pub(crate) fn rationale(session: &Session<'_>, rec: &Rec, names: &[String]) -> R
         && let Some(summary) = &rec.summary
     {
         out.push(More {
+            extra: Vec::new(),
             status: None,
             label: "why",
             text: summary.clone(),
@@ -304,6 +308,7 @@ fn outcome(session: &Session<'_>, rec: &Rec) -> Result<Option<More>> {
         .enumerate()
         .find(|(_, l)| !l.trim().is_empty())
         .map(|(offset, text)| More {
+            extra: Vec::new(),
             status: None,
             label: "outcome",
             text: text.trim().to_owned(),

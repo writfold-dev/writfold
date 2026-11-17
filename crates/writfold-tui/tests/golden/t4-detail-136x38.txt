@@ -35,4 +35,4 @@
 │                    ││last checkpoint: 2026-11-10T14:10:00Z Review started.  ││  @.writfold/gates/signoff.md:1                        │
 │                    ││▶ next step to pick up, as recorded                    ││d less   g gates   x text                              │
 ╰────────────────────╯╰───────────────────────────────────────────────────────╯╰───────────────────────────────────────────────────────╯
- [read-only]  kb XXXXXXXXXXXX+dirty:19   index fresh   asked 00:00:00Z                j/k step   l inspect   d detail   ? help   q quit
+ [read-only]  kb XXXXXXXXXXXX+dirty:23   index fresh   asked 00:00:00Z                j/k step   l inspect   d detail   ? help   q quit

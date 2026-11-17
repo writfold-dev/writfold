@@ -55,6 +55,7 @@ pub mod idle;
 pub mod investigation;
 pub mod observe;
 pub mod plan;
+pub mod policy;
 pub mod scope;
 pub mod verdict;
 pub mod walk;

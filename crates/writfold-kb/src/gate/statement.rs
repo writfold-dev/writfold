@@ -203,7 +203,7 @@ pub fn summary<'a>(
     let mut mine: Vec<(&Filed, &Statement)> = filed
         .iter()
         .filter_map(|f| f.parsed.as_ref().ok().map(|s| (f, s)))
-        .filter(|(_, s)| s.obligation == obligation && s.subject == subject)
+        .filter(|(_, s)| s.obligation == obligation)
         .collect();
     mine.sort_by(|a, b| (&a.1.recorded, &a.0.name).cmp(&(&b.1.recorded, &b.0.name)));
     let (definition, content) = (definition.as_bytes(), content.as_bytes());
@@ -213,16 +213,18 @@ pub fn summary<'a>(
             attested: s.kind == Kind::Attested,
             definition: s.definition.as_bytes().to_vec(),
             content: s.content.as_bytes().to_vec(),
+            bound: writfold_core::gate::bound(true, s.subject == subject, true),
         })
         .collect();
     // Which file stands is the newest one the kernel's `about` admits.
     let current = |s: &Statement| {
-        about(
-            s.definition.as_bytes(),
-            s.content.as_bytes(),
-            definition,
-            content,
-        )
+        s.subject == subject
+            && about(
+                s.definition.as_bytes(),
+                s.content.as_bytes(),
+                definition,
+                content,
+            )
     };
     let newest = |kind: Kind| {
         mine.iter()
@@ -236,7 +238,10 @@ pub fn summary<'a>(
         statements: statements(&said, definition, content),
         attested,
         waived,
-        waiver_moved: waived.is_none() && mine.iter().any(|(_, s)| s.kind == Kind::Waived),
+        waiver_moved: waived.is_none()
+            && mine
+                .iter()
+                .any(|(_, s)| s.kind == Kind::Waived && s.subject == subject),
     }
 }
 
@@ -244,6 +249,7 @@ pub fn summary<'a>(
 /// by <who>` or `waived: <reason> by <who>`, at the statement's file.
 pub fn more(f: &Filed, s: &Statement) -> crate::emit::More {
     crate::emit::More {
+        extra: Vec::new(),
         status: None,
         label: s.kind.name(),
         text: format!("{} (by {}, {})", s.text, s.by, s.recorded),

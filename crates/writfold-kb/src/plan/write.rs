@@ -127,28 +127,50 @@ pub(super) fn advance(
     )
 }
 
-/// Refuse to close the plan's last open step while a required end
-/// template is missing from it (the required file changed after the plan
-/// was set).
+/// Refuse to close the plan's last open step while a required template
+/// (named by the live file or locked by the run's pin) is missing from it
+/// ([`writfold_core::plan::close_check`]).
 pub(super) fn complete_guard(ws: &Workspace, loaded: &Loaded, at: usize) -> Result<()> {
     let mut nodes = loaded.graph.nodes();
     if let Some(node) = nodes.get_mut(at) {
         node.done = true;
     }
-    if writfold_core::plan::current(&nodes).is_some() {
-        return Ok(());
-    }
+    let last_open = writfold_core::plan::current(&nodes).is_none();
     let repo = loaded
         .subject
         .as_ref()
         .map(|s| (s.top.as_path(), s.name.as_str()));
     let required = required::find(&ws.root, repo)?;
-    match required::missing_end(&required, &loaded.graph).first() {
+    let (pins, _) = super::pin::read(&ws.root, &runs::dir(&loaded.rec), &loaded.rec.id);
+    let mut names: Vec<String> = (required.start.iter())
+        .chain(&required.end)
+        .cloned()
+        .collect();
+    let locked = pins.first().and_then(|p| p.required.as_ref());
+    names.extend(
+        (locked.iter().flat_map(|r| &r.unskippable))
+            .filter(|n| !required.start.contains(n) && !required.end.contains(n))
+            .cloned(),
+    );
+    let present = super::summary::required_present(&loaded.graph, &names);
+    match writfold_core::plan::close_check(last_open, &present).and_then(|i| names.get(i)) {
         None => Ok(()),
-        Some(name) => Err(KbError::Refused(format!(
-            "not advanced: the plan cannot complete without its required end step {name} ({}); add it with writfold kb plan use {name}",
-            required.source.as_deref().unwrap_or("required.toml")
-        ))),
+        Some(name) => {
+            let end = if required.end.contains(name) {
+                "end"
+            } else {
+                "required"
+            };
+            let end = if required.start.contains(name) {
+                "start"
+            } else {
+                end
+            };
+            Err(KbError::Refused(format!(
+                "not advanced: the plan cannot complete without its required {end} step {name} ({}); add it with writfold kb plan use {name}",
+                required.source.as_deref().unwrap_or("required.toml")
+            )))
+        }
     }
 }
 
@@ -209,12 +231,22 @@ pub(super) fn skip(
     let session = Session::open(ws, Some(tool), false, now)?;
     let loaded = Loaded::open(&session, run.as_deref(), repo.as_deref(), &request.cwd)?;
     open_run(&loaded, &session)?;
-    let Some(at) = loaded.graph.current() else {
-        return Err(KbError::Refused(format!(
-            "run {} has no current step to skip",
-            loaded.rec.id
-        )));
-    };
+    let at = loaded.graph.current().unwrap_or(loaded.graph.steps.len());
+    let locked = loaded.graph.steps.get(at).is_some_and(|s| s.locked);
+    match writfold_core::plan::skip_check(&loaded.graph.nodes(), at, locked) {
+        Ok(()) => {}
+        Err(writfold_core::plan::SkipRefusal::Locked) => {
+            let answer = super::lock::refused(&session, &loaded, at)?;
+            let frame = crate::gate::frame(request, "plan-skip", vec![loaded.rec.id.clone()]);
+            return session.emit(&answer, &frame);
+        }
+        Err(_) => {
+            return Err(KbError::Refused(format!(
+                "run {} has no current step to skip",
+                loaded.rec.id
+            )));
+        }
+    }
     complete_guard(ws, &loaded, at)?;
     let step = &loaded.graph.steps[at];
     let skip = Event::Skip(Skip {

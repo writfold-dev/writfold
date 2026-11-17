@@ -12,7 +12,7 @@ use crate::defs::{Check, Spanned, Text};
 use crate::write::is_slug;
 
 /// The keys only a checklist gate may use.
-pub const KEYS: [&str; 2] = ["items", "optional"];
+pub const KEYS: [&str; 4] = ["items", "optional", "not_applicable", "none_found"];
 /// The most items one checklist may declare.
 pub const MAX_ITEMS: usize = 64;
 
@@ -24,12 +24,19 @@ pub struct Item {
     pub text: String,
     /// False for an item named in `optional`.
     pub required: bool,
+    /// `not-applicable` covers it ([`super::allowed`]).
+    pub na: bool,
+    /// `none-found` covers it.
+    pub none: bool,
 }
 
 /// A checklist gate's own fields.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Spec {
     pub items: Vec<Item>,
+    /// `not_applicable` and `none_found` as written ([`super::allowed`]).
+    pub not_applicable: super::allowed::Listed,
+    pub none_found: super::allowed::Listed,
 }
 
 impl Spec {
@@ -46,11 +53,17 @@ impl Spec {
             .filter(|i| !i.required)
             .map(|i| i.id.as_str())
             .collect();
+        let own = super::allowed::canonical(&self.items, &self.not_applicable, &self.none_found);
         format!(
-            "items={}\noptional={}\n",
+            "items={}\noptional={}\n{own}",
             serde_json::to_string(&items).unwrap_or_default(),
             serde_json::to_string(&optional).unwrap_or_default()
         )
+    }
+
+    /// Whether the policy restricts the reasoned outcomes at all.
+    pub fn restricted(&self) -> bool {
+        self.not_applicable.is_some() || self.none_found.is_some()
     }
 
     /// The item with this ID.
@@ -83,6 +96,8 @@ fn item(c: &mut Check<'_>, text: &Spanned<Text>) -> Option<Item> {
         id: shown.to_owned(),
         text: rest.to_owned(),
         required: true,
+        na: true,
+        none: false,
     })
 }
 
@@ -172,7 +187,12 @@ pub fn check(c: &mut Check<'_>, class: &str) -> Option<Option<Spec>> {
             }
         }
     }
-    ok.then_some(Some(Spec { items }))
+    let (not_applicable, none_found) = super::allowed::check(c, &mut items)?;
+    ok.then_some(Some(Spec {
+        items,
+        not_applicable,
+        none_found,
+    }))
 }
 
 #[cfg(test)]

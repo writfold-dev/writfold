@@ -18,10 +18,14 @@
 pub(crate) mod delivery;
 mod detail;
 pub mod disorder;
+pub mod drift;
 pub mod event;
 pub mod fold;
 pub mod judge;
+mod lock;
 pub mod moved;
+pub mod pin;
+mod pin_write;
 mod place;
 pub mod recheck;
 pub mod records;
@@ -31,6 +35,7 @@ pub(crate) mod show;
 mod splice;
 mod status;
 pub mod step_word;
+pub mod summary;
 pub mod template;
 mod template_check;
 pub(crate) mod timeline;
@@ -114,7 +119,7 @@ pub fn execute(ws: &Workspace, request: &Request, verb: &PlanVerb, now: i64) -> 
 }
 
 /// A run with its folded plan, its records and its subject repository.
-pub(crate) struct Loaded {
+pub struct Loaded {
     pub rec: Rec,
     pub graph: Graph,
     pub records: Records,
@@ -201,7 +206,60 @@ pub fn resume_row(session: &Session<'_>, rec: &Rec, cwd: &Path) -> Option<Row> {
     }
     let judged = loaded.judged(session).ok().flatten();
     let mut row = show::resume_row(&loaded.graph, judged.as_deref(), &loaded.moved);
+    let drift = drift::judge(&session.ws.root, &loaded);
+    let ended = status::ended(session, &loaded, judged.as_deref(), &drift);
+    summary::resume(&mut row, &ended, closed_note(session, rec));
+    if drift.moved() {
+        row.flags.push("policy-moved".into());
+    }
     let kinds = disorder::find(&loaded.graph).kinds();
     row.flags.extend(kinds.into_iter().map(str::to_owned));
     Some(row)
+}
+
+/// A run with its folded plan, for readers outside this module.
+pub fn loaded(session: &Session<'_>, run: &str, cwd: &Path) -> Option<Loaded> {
+    Loaded::open(session, Some(run), None, cwd).ok()
+}
+
+/// When and why a closed run was closed: `2026-11-16T20:50:05Z: abandoned`.
+fn closed_note(session: &Session<'_>, rec: &Rec) -> Option<String> {
+    let (_, map) = runs::sidecar(session, rec)?;
+    let at = map.get("closed").and_then(|v| v.as_str())?.to_owned();
+    Some(match map.get("closed_note").and_then(|v| v.as_str()) {
+        Some(note) => format!("{at}: {note}"),
+        None => format!("{at}: no reason recorded"),
+    })
+}
+
+/// The notes of closing a run (policy spec 2.6): when its plan is not
+/// complete, what is still open; when no `--note` was given, that no
+/// reason was recorded. Closing stays unconditional.
+pub fn closing_notes(session: &Session<'_>, rec: &Rec, noted: bool, cwd: &Path) -> Vec<String> {
+    let mut notes = Vec::new();
+    if let Ok(loaded) = Loaded::open(session, Some(&rec.id), None, cwd)
+        && loaded.graph.planned()
+        && let Some(at) = loaded.graph.current()
+    {
+        let total = loaded.graph.steps.len();
+        let judged = loaded.judged(session).ok().flatten();
+        let gates = judged.as_ref().and_then(|g| g.get(at));
+        let owed: Vec<&judge::Gate> = gates
+            .iter()
+            .flat_map(|g| g.iter())
+            .filter(|g| !g.met())
+            .collect();
+        let owing = match owed.is_empty() {
+            true => String::new(),
+            false => format!(", owing {}", show::listed(&owed)),
+        };
+        notes.push(format!(
+            "closed with the plan incomplete: step {}/{total} open{owing}; a closed run is not a completed one",
+            at + 1
+        ));
+    }
+    if !noted {
+        notes.push("no reason recorded: pass --note TEXT to say why".into());
+    }
+    notes
 }

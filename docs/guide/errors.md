@@ -1,6 +1,6 @@
 # When a file you wrote is wrong
 
-> **Status:** built in v0.6.0-dev.2: diagnostics for every file a person writes (gate definitions, guard rules, plan templates and `required.toml`, delivery modes, deny lists and the delivery guard, kind declarations, `.writfold/queries.jsonl`, the rows of `gate cover --from`, the sections `status --set concluded` requires, records with `kb lint --records`, and the user configuration file), with every fault of a file reported together; `kb lint`; the `check definitions` row of `kb check`; the `diagnostics` key of `gate status`, `guard status` and `kb lint` in JSON; the hooks' compact lines; `writfold watch` in plain words.
+> **Status:** built in v0.6.0-dev.2: diagnostics for every file a person writes (gate definitions, guard rules, plan templates and `required.toml`, delivery modes, deny lists and the delivery guard, kind declarations, `.writfold/queries.jsonl`, the rows of `gate cover --from`, the sections `status --set concluded` requires, records with `kb lint --records`, and the user configuration file), with every fault of a file reported together; `kb lint`; the `check definitions` row of `kb check`; the `diagnostics` key of `gate status`, `guard status` and `kb lint` in JSON; the hooks' compact lines; `writfold watch` in plain words. The codes `value.class`, `value.unmeetable` and the warning `policy.waivable` built in v0.6.0-dev.3.
 
 Writfold reads files that a person or an agent writes by hand: gate definitions, guard rules, plan templates and the required steps, delivery modes and deny lists, kind declarations, query and cover-row files, and the records themselves. When one is wrong, Writfold says where, what and, when it can, how to fix it, the way a compiler does for source code. Every fault of a file is reported at once, in file order.
 
@@ -310,6 +310,8 @@ A code is `<class>.<what>`. Codes are never renamed or reused; the same code mea
 | `value.form` | a string that does not have its form (`id: gate …`, a relative glob, a slug) |
 | `value.twice` | the same item listed twice |
 | `value.pattern` | a regular expression that does not compile |
+| `value.class` | a standing the gate's class cannot reach in `accept` (`a mechanical gate is never attested`) |
+| `value.unmeetable` | an `accept` list without the class's own standing: the gate could never be met by its own evidence |
 | `ref.undefined` | a name that should be defined elsewhere and is not: a gate, a template, a mode, a checklist item |
 | `ref.wrong-kind` | defined, but not usable here (a candidate gate in a plan step) |
 | `ref.cycle` | templates that include each other, or nesting past the bound |
@@ -318,4 +320,5 @@ A code is `<class>.<what>`. Codes are never renamed or reused; the same code mea
 | `file.unreadable` | not UTF-8, or the file cannot be read |
 | `section.missing` | a Markdown section a verb requires is absent or empty |
 | `section.form` | a line in a required section lacks its form |
+| `policy.waivable` | a warning: a checklist restricts `not_applicable` while its gate still accepts a waiver |
 

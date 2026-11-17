@@ -64,6 +64,7 @@ fn cited(session: &Session<'_>) -> Result<BTreeMap<String, Cited>> {
 
 fn more(label: &'static str, text: String, path: Option<String>) -> More {
     More {
+        extra: Vec::new(),
         status: None,
         label,
         text,

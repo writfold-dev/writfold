@@ -13,6 +13,7 @@
 pub mod assessed;
 pub mod checklist;
 pub mod def;
+pub mod def_accept;
 pub mod def_check;
 mod def_class;
 #[cfg(test)]
@@ -20,8 +21,10 @@ mod def_tests;
 mod discover;
 pub mod exec;
 pub(crate) mod ground;
+mod head;
 pub(crate) mod own;
 pub mod places;
+pub mod policy;
 pub mod receipt;
 mod run;
 mod say;
@@ -370,7 +373,10 @@ fn gate_line(judged: &status::Judged<'_>, width: usize) -> String {
 /// receipts, statements and definitions are counted together.
 fn counts(report: &status::Report<'_>, filings: &Filings) -> Vec<(&'static str, usize)> {
     let count = |s: Standing| report.gates.iter().filter(|j| j.standing == s).count();
-    vec![
+    // A met word the gate's `accept` leaves out is owed; counted only when
+    // there is one, so trailers without a policy are unchanged.
+    let refused = report.gates.iter().filter(|j| j.not_accepted()).count();
+    let mut out = vec![
         ("gates", report.gates.len()),
         ("satisfied", count(Standing::Checked(State::Satisfied))),
         ("open", count(Standing::Checked(State::Open))),
@@ -380,5 +386,9 @@ fn counts(report: &status::Report<'_>, filings: &Filings) -> Vec<(&'static str, 
         ("attested", count(Standing::Attested)),
         ("waived", count(Standing::Waived)),
         ("invalid", filings.invalid() + report.problems.len()),
-    ]
+    ];
+    if refused > 0 {
+        out.push(("not-accepted", refused));
+    }
+    out
 }

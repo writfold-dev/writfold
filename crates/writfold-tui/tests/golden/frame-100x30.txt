@@ -19,12 +19,12 @@
 │                            ││     --by WHO                                                       │
 │                            ││   change#1/deliver [later] gates: unit                             │
 │                            ││   change#1/reflect [later] no gates                                │
+│                            ││plan incomplete step 4/6 open; 6 steps: 2 passed, 0 attested, 0     │
+│                            ││waived, 1 skipped @runs/run-20261101T090000Z-a1b2c3/plan/           │
 │                            ││# note: plan change @83c2cc9efde7 from .writfold/plans/change.toml; │
 │                            ││steps are derived from runs/run-20261101T090000Z-a1b2c3/plan/ on    │
 │                            ││every read, never stored                                            │
 │                            ││                                                                    │
 │                            ││                                                                    │
-│                            ││                                                                    │
-│                            ││                                                                    │
 ╰────────────────────────────╯╰────────────────────────────────────────────────────────────────────╯
- [read-only]  KB has 14 uncommitted changes                      j/k run   l plan   ? help   q quit
+ [read-only]  KB has 16 uncommitted changes                      j/k run   l plan   ? help   q quit

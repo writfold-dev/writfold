@@ -166,6 +166,14 @@ pub fn plan(ws: &Workspace, request: &Request) -> Option<Part> {
     let graph = crate::plan::fold::read(&ws.root, &format!("runs/{run}"), &run);
     let kinds = crate::plan::disorder::find(&graph).kinds();
     part.flags = kinds.into_iter().map(str::to_owned).collect();
+    // The plan's trailer carries its policy word (policy spec 2.5).
+    if part
+        .outcome
+        .as_ref()
+        .is_some_and(|(t, _)| t.contains(" policy=moved"))
+    {
+        part.flags.push("policy-moved".into());
+    }
     Some(part)
 }
 

@@ -1,0 +1,6 @@
+# Required steps: every plan set in this KB starts with the research step.
+schema = "writfold-plan-required/1"
+start = ["research"]
+# Uncomment to make the research step one plan skip refuses (the run keeps
+# the lock it was set under, even if this file changes later):
+# unskippable = ["research"]
