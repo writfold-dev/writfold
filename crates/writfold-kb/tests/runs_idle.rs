@@ -101,3 +101,24 @@ fn stamped_files_closed_runs_projects_and_created() -> TestResult {
     assert_eq!(covered_row.1, "1d since 2026-11-10T00:00:00Z (cover)");
     Ok(())
 }
+
+#[test]
+fn a_policy_pin_is_a_recorded_write() -> TestResult {
+    let w = world(&[])?;
+    let pinned = "run-20261101T000000Z-f0f0f0";
+    run(&w, pinned, "harbor", "open", "2026-11-01T00:00:00Z")?;
+    let policy = w.kb.join("runs").join(pinned).join("policy");
+    std::fs::create_dir_all(&policy)?;
+    let pin =
+        json!({"schema": "writfold-policy-pin/1", "seq": 1, "recorded": "2026-11-09T12:00:00Z"});
+    std::fs::write(policy.join("pin-1-0a1b2c3d.json"), pin.to_string())?;
+    let (rows, _) = idle(&w, "12h", None)?;
+    let row = rows
+        .iter()
+        .find(|(id, _)| id == pinned)
+        .ok_or("pinned run")?;
+    assert_eq!(row.1, "1d since 2026-11-09T12:00:00Z (policy pin)");
+    let (rows, _) = idle(&w, "2d", None)?;
+    assert!(rows.iter().all(|(id, _)| id != pinned), "{rows:?}");
+    Ok(())
+}

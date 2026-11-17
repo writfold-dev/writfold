@@ -294,7 +294,7 @@ step research#1/research [current] owes: note [open] @runs/run-…/plan/splice-r
 # note: policy moved since this run pinned it: 1 gate (note); the plan cannot read complete until the definitions are restored
 ```
 
-The trailer carries `policy=same|moved|unpinned` and `repinned=N`; `plan status` exits 2 while the policy is moved, and `resume`'s plan line carries `!policy-moved`. Drift blocks no step: evidence under a changed definition is already stale, and the definition as it is now is what is judged. Restoring the definition clears the flag for open steps; a step done under another definition stays flagged. A run with no pin is `unpinned`, never flagged, and judged as before; one note says why.
+The trailer carries `policy=same|moved|unpinned` and `repinned=N`; `plan status` exits 2 while the policy is moved, and `resume`'s plan line carries `!policy-moved`. Drift blocks no step: evidence under a changed definition is already stale, and the definition as it is now is what is judged. Restoring the definition clears the flag for open steps; a step done under another definition stays flagged. A run with no pin is `unpinned`, never flagged, and judged as before; one note says why. **The way out** (`plan repin` is not built): restore the definitions the note names (for example `git checkout <commit> -- .writfold/gates/note.md`), which clears the flag for open steps, or, to adopt the changed policy, close the run and start a new one, which pins the policy as it is now.
 
 **How a plan ended.** One word, the first that applies, decided by `writfold_core::policy::summary`:
 
