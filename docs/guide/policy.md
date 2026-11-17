@@ -1,6 +1,6 @@
 # Your policy
 
-> **Status:** `kb init`, the research-policy example and the "no policy configured" line built in v0.6.0-dev.3. What holds already (required steps, evidence bound to its run, the research guard recipe, approval by a person) is described as built.
+> **Status:** built in v0.6.0-dev.3: `kb init`, the research-policy example, the "no policy configured" line, `kb policy`, a gate's `accept`, a checklist's `not_applicable` and `none_found` with the `none-found` outcome, `unskippable` required steps, policy pins and drift, and the plan's summary word. What held already (required steps, evidence bound to its run, the research guard recipe, approval by a person) is described as built. `plan repin`, `kb policy --paths` and `waivable` on a delivery mode are planned.
 
 A team writes down what adequate research, implementation and delivery mean for it: gates, checklists, instructions, plan templates, required steps. Writfold loads those files, shows what is owed, judges the evidence by the mechanism the team chose, and refuses a transition its own verbs control when the policy is not met. It holds no opinion of its own about adequacy, and nothing in this page is a rule Writfold adds.
 
@@ -29,10 +29,10 @@ Every other verb, run outside a KB, now names the fix: `no KB found: pass --kb D
 
 `writfold kb init --example research-policy` also writes four files to the work tree. They are an example: yours to edit or delete, and Writfold reads only what they say.
 
-- `.writfold/gates/research.toml`: a checklist gate with three items (`precedents`, `approach`, `backfill`) over `docs/research/**`, naming its instructions.
+- `.writfold/gates/research.toml`: a checklist gate with three items (`precedents`, `approach`, `backfill`) over `docs/research/**`, naming its instructions; only `backfill` may be covered `not-applicable`, `precedents` may be covered `none-found` (citing a look that found nothing), and the gate takes no waiver (`accept = ["attested"]`).
 - `.writfold/gates/research.md`: the instructions, one heading per question the team answers for itself (which sources count; what makes a precedent comparable; reuse, extend, extract or keep it local, with no option preferred; what a search that finds nothing records; what belongs in the KB afterwards and when "nothing new" is acceptable; how open questions are kept), each with a short starting answer and "Change this.".
 - `.writfold/plans/research.toml`: `steps = ["research: research"]`.
-- `.writfold/plans/required.toml`: `start = ["research"]`, so every plan set in the KB begins with the research step.
+- `.writfold/plans/required.toml`: `start = ["research"]`, so every plan set in the KB begins with the research step, with `unskippable = ["research"]` present but commented out.
 
 The same bytes are in [`fixtures/kb/research-policy`](../../fixtures/kb/research-policy/.writfold).
 
@@ -52,6 +52,33 @@ description = "docs/research/ holds a note with Question, Found and Decision hea
 ```
 
 Both run through one binary, each to completion under its own rules (`crates/writfold-kb/tests/research_rubrics.rs`): a plan set from a file that names no research step gets the research step first, the advance is refused while the team's own evidence is missing, and the plan completes once it is there. The same test reads every product source file and fails if one names either team's items or gates.
+
+## What the policy may say
+
+Every key is opt-in: a definition without it means what it meant before, and keeps its digest.
+
+| Key | Where | Says | Guide |
+|---|---|---|---|
+| `accept` | a gate | which standings meet it: `satisfied`, `attested`, `waived` | [gates](gates.md#which-standings-meet-a-gate-accept) |
+| `not_applicable`, `none_found` | a checklist | which items take `not-applicable`, which take `none-found` | [gates](gates.md#checklist-gates) |
+| `unskippable` | `required.toml` | which required templates' steps `plan skip` refuses | [run-graph](run-graph.md#policy-unskippable-steps-pins-and-how-a-plan-ended) |
+
+Each run pins the policy its plan was set under; a later edit is shown (`!policy-moved`, `policy=moved`, exit 2), and a moved run never reads `complete`. Every plan says how it ended: `complete`, `complete-with-exceptions`, `complete-stale`, `policy-moved`, `incomplete`, `closed-incomplete`.
+
+## Seeing the policy: `kb policy`
+
+```text
+$ writfold kb policy
+required required start=research end= unskippable=research @.writfold/plans/required.toml:1
+gate research checklist accept=attested items=3 (precedents: supported|none-found; approach: supported; backfill: supported|not-applicable) scope=docs/research/** @000910a8d958 @.writfold/gates/research.toml:1
+  read: instructions @.writfold/gates/research.md:1
+  pin: moved (pinned @c4a42a7b289b, now @000910a8d958)
+# coverage=complete records=7/7 shown=2 omitted=0 gates=1 templates=1 guards=0 modes=0 policy=moved identity=sha256:9253ee90… …
+```
+
+(Run after the research instructions were edited while the research step was open; restoring them gives `pin: same @runs/run-…/policy/pin-1-….json:1` and `policy=same`.)
+
+Read-only; no command or checker runs. Each gate row shows its class, `accept`, its items' choices and its scope, and, when a run is current, a `pin:` line: `same`, or `moved (pinned @…, now @…)`. Guard rules follow, each `(a guard, not enforcement)`. `identity=` is the SHA-256 over the sorted `<gate>\t<definition digest>` lines and the required file's digest: one value two clones can compare. With nothing configured: `answer=unknown reason=no-policy`, exit 2, and the no-policy note. Exit 2 also while the current run's policy is moved.
 
 ## What already holds
 

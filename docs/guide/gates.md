@@ -1,6 +1,6 @@
 # Gates
 
-> **Status:** built in v0.3.0-dev.1; instruction gates, gate scripts, the Weft assessed gate, run-record checks and plan-owed gates built in v0.4.0-dev.1; checklist gates and `gate cover` built in v0.5.0-dev.1; observations as evidence built in v0.5.0-dev.3. Nothing owed reads as not met, and the self-staling note, built in v0.6.0-dev.1. Every fault of a definition reported at its line and column, built in v0.6.0-dev.2.
+> **Status:** built in v0.3.0-dev.1; instruction gates, gate scripts, the Weft assessed gate, run-record checks and plan-owed gates built in v0.4.0-dev.1; checklist gates and `gate cover` built in v0.5.0-dev.1; observations as evidence built in v0.5.0-dev.3. Nothing owed reads as not met, and the self-staling note, built in v0.6.0-dev.1. Every fault of a definition reported at its line and column, built in v0.6.0-dev.2. A gate's `accept` list, a checklist's `not_applicable` and `none_found`, the `none-found` outcome and binding receipts and statements to their run and subject in the proved kernel, built in v0.6.0-dev.3.
 
 A gate is one small check with a path scope. `gate run` runs its command and keeps a receipt pinned to the exact bytes checked. `gate status` then says, on every read, whether that evidence still holds. Gates report; they block nothing unless a [guard rule](hooks.md#guard-rules) names them.
 
@@ -18,6 +18,7 @@ workdir = "."                      # optional; relative to the repository's top
 timeout_seconds = 600              # required for a command gate; 1 to 86400
 scope = ["src/**", "Cargo.toml", "!src/**/*.md"]   # required; see below
 description = "the unit tests"     # optional; one line
+accept = ["satisfied"]             # optional; which standings meet the gate (below)
 ```
 
 - **`argv`** is executed directly, with stdin closed. A first element containing `/` is resolved against `workdir`; otherwise `PATH` finds it. Placeholders: `{artifacts}` (a fresh local directory for the command's own output files), `{gate}` and `{candidate}` (below). Any other `{name}` is refused.
@@ -130,6 +131,35 @@ Gates for harbor-api@4be03f7897b6 (writfold kb gate, run run-20261112T211025Z-7f
 unit:    stale pass exit=0 runs/run-20261112T211025Z-7fe148/gates/unit-20261112T211036Z-f5f8fb.json
 wording: attested by agent: README unchanged runs/run-20261112T211025Z-7fe148/statements/wording-20261112T212106Z-32b104.json
 ```
+
+### Which standings meet a gate: `accept`
+
+`accept` (built in v0.6.0-dev.3) is an optional list of the standings that meet the gate: any of `satisfied`, `attested`, `waived`. Without it, every standing the class can reach meets the gate, as before.
+
+| Class | Standings it can reach | Without `accept` | `accept` may say |
+|---|---|---|---|
+| `mechanical`, `observed`, `run-record` | `satisfied`, `waived` | both | `["satisfied"]` or both |
+| `attested`, `checklist` | `attested`, `waived` | both | `["attested"]` or both |
+| `assessed` | `satisfied` | `satisfied` | `["satisfied"]` |
+
+A word that is not a standing is `value.unknown`; a standing the class cannot reach is `value.class` (`a mechanical gate is never attested`); a list without the class's own standing is `value.unmeetable`; a word twice is `value.twice`. The digest gains the line `accept=<json>` only when the key is written, so a definition without it keeps its digest; adding or changing it makes earlier receipts, statements and rows stale, so the stricter policy starts with fresh evidence.
+
+Met has one meaning wherever a gate is judged (`gate status`, `gate lines`, `plan advance`, `plan status`, `resume`, `kb check`, the `gates.met`, `gate:<id>` and `step.met` requirements): the standing, met under the gate's `accept` (`writfold_core::policy::met`, proved). The standing itself is shown as before. `gate waive` on a gate whose `accept` leaves out `waived` is refused, exit 3, nothing written:
+
+```text
+refused: gate unit does not accept a waiver (accept = ["satisfied"] @.writfold/gates/unit.toml:8); meet it: writfold kb gate run unit
+```
+
+A waiver that exists anyway (written by hand, or merged from a clone) is shown and counts for nothing (`crates/writfold-kb/tests/policy_gates.rs`):
+
+```text
+gate unit [waived] mechanical fail exit=1 at demo-service@… scope=… paths=1 @runs/run-…/gates/unit-….json:1 !waived !not-accepted
+  waived: flaky here (by owner, 2026-11-11T00:30:00Z) @runs/run-…/statements/unit-by-hand.json:1
+  why: this gate accepts only: satisfied (@.writfold/gates/unit.toml:8); the waiver is recorded and does not meet it
+  next: writfold kb gate run unit
+```
+
+`plan advance` then refuses with `owes: unit [waived, not accepted]`, and a guard rule names `gate unit [waived, not accepted]`. In JSON a gate row gains `"accept": [...]` when the key is written and `"accepted": false` when its standing is a met word `accept` leaves out.
 
 ## Statements: `attest` and `waive`
 
@@ -317,13 +347,27 @@ description = "code review checklist"
 ```
 
 - **`items`**: one to 64 strings, each `id: text`, the ID a slug unique in the gate. **`optional`** names items that never hold the gate open. Both are part of the definition digest, so adding, removing or rewording an item makes every row stale.
+- **`not_applicable`** (built in v0.6.0-dev.3): the items `not-applicable` covers. Absent: every item, as before; an empty list: none. **`none_found`**: the items `none-found` covers. Absent: none. Each names declared items only (`ref.undefined` otherwise, with the nearest ID) and joins the digest only when written.
 - A checklist gate takes `scope` (the content its rows are about) and optionally `instructions` and `description`; it takes no `argv`, `workdir`, `timeout_seconds`, `subject`, `require` or Weft keys.
 
 ```text
 writfold kb gate cover <gate> <item> supported REF… --by WHO [--note TEXT] [--run ID] [--repo DIR]
 writfold kb gate cover <gate> <item> unsupported --reason TEXT --by WHO
 writfold kb gate cover <gate> <item> not-applicable --reason TEXT --by WHO
+writfold kb gate cover <gate> <item> none-found OBS… --reason TEXT --by WHO
 ```
+
+**`none-found`** (built in v0.6.0-dev.3) says: these recorded looks found nothing. Each `OBS` is an [observation](#observations-as-evidence-built-in-v050-dev3) of this run whose status is `no-data` or `not-found`; at least one is required, and `--reason` states what was searched and where the search stopped. A look that did not answer (`timeout`, `denied`, `error`) or answered (`ok`, `partial`) does not ground it, and it is never a claim that nothing exists. It covers only an item the checklist names in `none_found`.
+
+| Refused (exit 3, nothing written) | Text |
+|---|---|
+| `not-applicable` for an item the policy does not list | `review.record cannot be covered not-applicable (not_applicable = ["perf"] @.writfold/gates/review.toml:7); cover it supported with evidence` (and `, or none-found citing a look` when the item is in `none_found`) |
+| `none-found` for an item not in `none_found` | `review.record cannot be covered none-found (none_found = ["errors"] @…:8)` |
+| `none-found` citing anything but a look of this run that found nothing | `none-found needs a look that found nothing: <ref> is a look with status ok; record one with writfold kb observe --status no-data` |
+
+A row whose outcome the policy does not take (hand-written, or merged) keeps its word and does not cover: the item line carries `!not-accepted` and the gate stays `open` with that item first owed. An owed item whose choices the policy restricts lists them once: `item: errors [open] errors are handled (supported or none-found)`. `gate lines` prints a `none-found` item as `errors: none-found (1 look): <reason>`. In JSON an item's `standing` may be `none-found`; item rows gain `"allowed": [...]` when the policy restricts them and `"accepted": false` when a current row's outcome is not allowed.
+
+**A whole-gate waiver.** `gate waive` still sets a checklist aside unless the definition says `accept = ["attested"]`. `kb lint` warns (`policy.waivable`, a warning: exit unchanged without `--deny-warnings`) when a checklist restricts `not_applicable` and still accepts a waiver, because the restriction is then one command from being moot.
 
 Each `REF` is one argument, any reference an assessed gate may cite ([the table above](#weft-assessed-gates)): a citation token, a locator, `gate:<id>`, or a gate receipt, attestation, retrieval receipt, edit receipt or observation of this run. `supported` needs at least one, and is refused (exit 3, nothing written) when any is not grounded now, so a row never starts out false. A waiver is never evidence. A checklist and an assessed gate are both judged against the other gates only, so a reference to either class is not grounded.
 
@@ -346,10 +390,11 @@ Each item stands on its newest row by `seq` (file name on ties; never the clock)
 | `open` | no row |
 | `supported` | the row is about the current definition and scope content, and every reference it cites still stands as recorded and is grounded |
 | `not-applicable` | the row is current and says so, with a reason |
+| `none-found` | the row is current, says so, and cites at least one look of this run that still reads as `no-data` or `not-found` |
 | `unsupported` | the row is current and says so, with a reason |
 | `stale` | the row is about another definition or other content, or a reference it cites moved |
 
-A checklist with every required item `supported` or `not-applicable` stands as **`attested`**: a cover row is someone's judgement with checked evidence, never a passing check, so a checklist is never `satisfied`. A required item that is `stale` makes the gate `stale`; otherwise an uncovered one keeps it `open`. `gate waive` sets the whole gate aside as for any gate; `gate attest` and `gate run` are refused and name `gate cover`, and `gate verify` answers `unverifiable` for a row.
+A checklist with every required item covered (`supported`; `not-applicable` where its policy takes it; `none-found` where its policy takes it) stands as **`attested`**: a cover row is someone's judgement with checked evidence, never a passing check, so a checklist is never `satisfied`. A required item that is `stale` makes the gate `stale`; otherwise an uncovered one keeps it `open`. `gate waive` sets the whole gate aside as for any gate; `gate attest` and `gate run` are refused and name `gate cover`, and `gate verify` answers `unverifiable` for a row.
 
 The output below is from `crates/writfold-kb/tests/gate_checklist.rs`, where `review` covers `src/batch.rs`, `errors` cites `gate:unit` and `record` cites a record token:
 

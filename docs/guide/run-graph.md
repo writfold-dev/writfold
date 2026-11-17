@@ -1,6 +1,6 @@
 # The run graph
 
-> **Status:** the run graph (`plan set|use|status|advance|skip`), run-record checks, splicing a template under a step (`use=` includes, `!template-moved`), required steps, the `writfold:evaluate` wrap-up skill, and the write re-check and merge-disorder flags are built in v0.4.0-dev.1; delivery modes as a step's gates are built in v0.6.0-dev.1 ([design §42](../writfold/kb-v1-design.md#42-delivery-modes-as-a-steps-gates-as-built)). The adopted decisions are in [`mission.md`](../writfold/mission.md); the as-built records are [design §21](../writfold/kb-v1-design.md#21-run-graph-linear-as-built), [§24](../writfold/kb-v1-design.md#24-splicing-and-required-steps-as-built) and [§26](../writfold/kb-v1-design.md#26-evaluation-skill-as-built).
+> **Status:** the run graph (`plan set|use|status|advance|skip`), run-record checks, splicing a template under a step (`use=` includes, `!template-moved`), required steps, the `writfold:evaluate` wrap-up skill, and the write re-check and merge-disorder flags are built in v0.4.0-dev.1; delivery modes as a step's gates are built in v0.6.0-dev.1 ([design §42](../writfold/kb-v1-design.md#42-delivery-modes-as-a-steps-gates-as-built)); `unskippable` required steps, policy pins and drift, and the plan's summary word are built in v0.6.0-dev.3 ([below](#policy-unskippable-steps-pins-and-how-a-plan-ended)). The adopted decisions are in [`mission.md`](../writfold/mission.md); the as-built records are [design §21](../writfold/kb-v1-design.md#21-run-graph-linear-as-built), [§24](../writfold/kb-v1-design.md#24-splicing-and-required-steps-as-built) and [§26](../writfold/kb-v1-design.md#26-evaluation-skill-as-built).
 
 A run without a plan owes every gate defined for its repository. A run with a plan owes the gates its steps name: the plan is an ordered list of steps, each step names the gates it owes, and Writfold records which step the work has reached and what met each gate.
 
@@ -260,6 +260,64 @@ These are gates, not Claude Code hooks. A run that never advances past `reflect`
 The bundled [`writfold:evaluate`](skills.md#the-bundled-skill-writfoldevaluate) skill walks this step: it writes the reflection, proposes or writes `no proposal:`, runs `reflected`, attests `reflection` and advances. Its injection line, `writfold kb plan use reflect`, writes nothing when the run already has this required step, and splices the template before the current step when it has none. A session that ends with the step open is listed in the next session start's inbox as `unevaluated`; once the step is done it is not ([hooks](hooks.md)).
 
 A root splice after the first (the plan's own template, a required end template) is made with the plan, not when its turn comes, so its first step's window begins where the step before it ended, not at the splice. Otherwise a ticket written during `research` would also answer `run.reflected`'s "a KB record written in the step" at `reflect`.
+
+## Policy: unskippable steps, pins and how a plan ended
+
+Built in v0.6.0-dev.3 ([policy spec](../writfold/policy-spec.md) 2.4 to 2.6). Each decision below is a proved kernel ([assurance](assurance.md)); `crates/writfold-kb/tests/policy_plan.rs` runs every case.
+
+**Unskippable steps.** `required.toml` may name start or end templates whose own steps `plan skip` refuses:
+
+```toml
+schema = "writfold-plan-required/1"
+start = ["research"]
+end = ["reflect"]
+unskippable = ["research"]   # steps of this required template cannot be closed by plan skip
+```
+
+The lock is the run's, taken into its pin when the plan is set, so a later edit of the file does not unlock (or lock) a run already set; a run set before the key existed, or by an earlier binary, has no lock. It covers the steps the required template brings at the root (its own and those of its `use=` includes), never a sub-step spliced later with `plan use`. A refused skip (exit 3, nothing written):
+
+```text
+step research#1/research [current] owes: note [open] @runs/run-…/plan/splice-research.1.json:1 !locked
+  next: writfold kb gate attest note --statement TEXT --by WHO
+# note: not skipped: research#1/research is a required step this run cannot skip (unskippable = ["research"] @.writfold/plans/required.toml:3, pinned @runs/run-…/policy/pin-1-….json:1); nothing written
+```
+
+A `skip-` record of a locked step that exists anyway counts for nothing: the step stays current and `plan status` lists the file `[invalid] a skip of a step this run cannot skip`. Open locked steps carry `!locked` (JSON `"locked": true`). The lock does not make a step's gates strict: a policy that wants the research done says both, `unskippable` here and `accept` on the gate ([gates](gates.md#which-standings-meet-a-gate-accept)). Closing the plan's last open step is refused while any required template, named by the live file or locked by the pin, is missing; `plan use <template>` adds it at the root.
+
+**Pins.** With every splice (`plan set`, `plan use`), in the same write and before the splice files, Writfold writes `runs/<run>/policy/pin-<seq>-<hex>.json` (schema `writfold-policy-pin/1`; `<hex>`, eight digits of the file's own SHA-256, keeps two clones' pins of one `seq` from colliding when they merge): each gate the spliced templates name that no earlier pin names, with its definition digest (a `deliver:<mode>` entry is the mode file's digest, or `builtin:<mode>`, followed by each mode gate's digest), and, on the first pin, the required file's digest and its `unskippable` list. A pin is create-new and ends with a digest over the rest; an edited one reads invalid and the run is judged moved. A crash between the pin and its splices leaves a pin that covers nothing; running the same command again reuses it when it holds what would be written now, and otherwise refuses naming the file to delete.
+
+**Drift.** On every read each pinned gate is compared: on an open step, with its definition digest now (a gate that no longer loads counts as different); on a done step, with the definition its done record names; the required file, with its digest now. One difference makes the run's policy `moved`:
+
+```text
+step research#1/research [current] owes: note [open] @runs/run-…/plan/splice-research.1.json:1 !policy-moved
+  why: note is now @0c2b…; this run pinned note@61ed…: evidence is judged under the definition as it is now
+# note: policy moved since this run pinned it: 1 gate (note); the plan cannot read complete until the definitions are restored
+```
+
+The trailer carries `policy=same|moved|unpinned` and `repinned=N`; `plan status` exits 2 while the policy is moved, and `resume`'s plan line carries `!policy-moved`. Drift blocks no step: evidence under a changed definition is already stale, and the definition as it is now is what is judged. Restoring the definition clears the flag for open steps; a step done under another definition stays flagged. A run with no pin is `unpinned`, never flagged, and judged as before; one note says why.
+
+**How a plan ended.** One word, the first that applies, decided by `writfold_core::policy::summary`:
+
+| Word | When |
+|---|---|
+| `no-plan` | the run has no step |
+| `incomplete` | a step is open, or a required template is missing, and the run is open |
+| `closed-incomplete` | the same, and the run is closed |
+| `policy-moved` | every step is closed, and the policy differs from the pin |
+| `complete-stale` | every step is closed, and a done step's gate no longer holds |
+| `complete-with-exceptions` | every step is closed, and a step was skipped, done on a waiver or on an attestation, or the run was repinned |
+| `complete` | every step is done, each on passing checks only |
+
+A step's own word comes from its done record: `passed` when every gate's recorded standing is `satisfied` (a step with no gate is `passed`), `attested` when any is attested and none waived, `waived` when any is waived, else `skipped`. `plan status` ends with the plan row and its trailer carries `summary=`; `resume`'s plan line and `runs --plan` say it too:
+
+```text
+plan complete-with-exceptions 3 steps: 1 passed, 1 attested, 0 waived, 1 skipped; policy=same @runs/run-…/plan/
+plan: complete-with-exceptions steps=2 passed=0 attested=0 waived=1 skipped=1
+```
+
+A run whose plan was set before pins existed reads `complete (unpinned)` when every step passed. `policy-moved` and `complete-stale` exit 2. In JSON the plan row and the trailer gain `summary`, `passed`, `attested`, `waived`.
+
+**Closing a run.** `status RUN --set closed --note TEXT` writes the note into `writfold-run.json` as `closed_note`. Closing stays unconditional; when the plan is not complete the answer adds `# note: closed with the plan incomplete: step 1/3 open, owing note [open]; a closed run is not a completed one`, and without a note `# note: no reason recorded: pass --note TEXT to say why`. `resume`'s plan line for such a run reads `closed-incomplete`, with when and why it was closed.
 
 ## A delivery as a step's gate
 

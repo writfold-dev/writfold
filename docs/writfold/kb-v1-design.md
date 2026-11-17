@@ -4108,3 +4108,33 @@ Deviations: the `candidate:` line is also shown when the delivery is met (`<id> 
 ### 43.7 Not done in this round
 
 Scope globs, plan closing writes, decision states and investigations, citation verdicts, the smaller kernels, and the clock-free ordering of delivery and assessed receipts and statements: [aeneas.md](aeneas.md#not-yet-proved-backlog-16-november-2026).
+
+## 44. User-defined policy as built (v0.6.0-dev.3)
+
+[`policy-spec.md`](policy-spec.md), steps 1 to 12 (the cut line). Order kept: groundwork, kernels, translation, proofs, the proofs gate, then wiring; no verb called a new kernel function before the gate passed.
+
+### 44.1 First use
+
+`kb init [DIR] [--example research-policy] [--dry-run]` (`crates/writfold-kb/src/init.rs`): create-new only, `kept` rows for paths that exist, refused inside another KB (exit 3). The example's bytes are `fixtures/kb/research-policy/` (`include_str!`). The no-KB message names `kb init`. `resume` and the session-start context add `policy: none configured …` when no `.toml` exists under `.writfold/{gates,plans,guards,deliveries}` in the KB root or the repository in view (`gate::policy::configured`); session start adds it only when no run is current, since `resume` carries it otherwise.
+
+### 44.2 Kernels and proofs
+
+`writfold_core::policy` (new, translated whole), `plan::{skip_check, skipped, close_check}`, `checklist::{covered_under, rollup_under}` with `NoneFound`, `gate::{bound, current, newest_bound, attests}` and the `state` change. Theorems, the in-place replacements of round-1 theorems and the 22 new mutants are in [`aeneas.md`](aeneas.md#the-policy-round-16-november-2026). Shape choices: `pin_all`, `close` and `summary` read their lists through one-early-return loops (`any_moved`, `any_unpinned`, `any_waived`, `any_attested`, `any_open`, `all_passed`); `GateFact::Stands` carries the gate's `Accept`, so `plan::advance` is judged under the policy without a second entry point; `gate::stands` keeps round 1's signature and refuses an unbound statement.
+
+### 44.3 Wiring
+
+- `accept` (`gate/def_accept.rs`): read with `value.unknown`, `value.class`, `value.unmeetable`, `value.twice`; the digest line only when written. `Judged::met` (`policy::met`) at `gate status`, `gate lines`, grounding, the guard's `gate:<id>` and `gates.met` facts, and `plan::judge::Gate::fact`. `gate waive` refused when `waived` is not accepted. Rows: `!not-accepted` with a `why:` line; owed lists `[waived, not accepted]`; JSON `accept`, `accepted`.
+- Receipts and statements go to the kernel with `bound` (this run: they parsed from the run's directory; this subject: `repo`/`subject` equal; intact: they parsed) instead of being filtered by subject first. The assessed gate's and a delivery's receipts are still filtered before the kernel and passed `bound: true`.
+- Checklists (`gate/checklist/allowed.rs`, `looks.rs`): `not_applicable`, `none_found` (`ref.undefined` for an undeclared item); the `none-found` outcome in `gate cover` and `--from`, refused unless every reference is an observation of this run with status `no-data` or `not-found`; the row stands while every cited look still reads with the status it was recorded with. The `policy.waivable` lint warning (`defs/lint_policy.rs`).
+- `unskippable` in `required.toml`; pins (`plan/pin.rs`, `pin_write.rs`) written with each splice, after the write guard and before the snapshots and splice events; the fold locks the steps of a locked root template and passes skip records through `plan::skipped`; `plan skip` through `plan::skip_check`; the end guard through `plan::close_check` over the live file's start and end templates and the pin's locked ones (start templates are now checked too, and `plan use` adds a missing one at the root's end). Drift (`plan/drift.rs`) through `policy::pin_one` and `pin_all`.
+- The summary (`plan/summary.rs`) through `policy::close` and `policy::summary`: `plan status` (a final plan row, trailer `policy=`, `summary=`, `repinned=`, exit 2 for `policy-moved` and `complete-stale`), `resume`'s plan line, `runs --plan`. `status RUN --set closed --note` writes `closed_note`.
+- `kb policy` (`verbs/policy.rs`). `runs` flags a closed run whose plan has an open step `!incomplete`; `kb check`'s plan row carries `!policy-moved`; `gate status` counts a gate whose standing `accept` leaves out (`not-accepted=N`, exit 2).
+
+### 44.4 Deviations and what is not built
+
+- Pin files are named `pin-<seq>-<hex>.json`, not `pin-<seq>.json`: two clones that each splice write pins of the same `seq`, and a merge of two files of one name with different bytes is an add/add conflict (`tests/plan_merge.rs` found it). `<hex>` is the first eight hex digits of the file's SHA-256; ordering is by `seq`, then path.
+- A skipped step's gates are not compared for drift: a skipped step owes nothing.
+- Not built (below the cut line, or left for the release): `plan repin` (so a moved run stays `policy-moved` until its definitions are restored), `kb policy --paths`, `waivable` on a delivery mode and the `deliver waive` refusal (a delivery's readiness is `delivery::standing`, proved over `Standing::met`; taking a per-obligation `Accept` there changes that kernel and its round-1 theorems, which this round did not re-prove), `paths=N` on `kb policy`'s gate rows, `gate lines`' header (it still shows what it showed; `plan status`, `resume`, `runs --plan`, the session-start plan position once every step is closed, and `kb check`'s plan row, which shows `plan status`'s trailer and `!policy-moved`, carry the word), `runs --idle` reading pin stamps (pin file names carry no time; their `recorded` field does).
+- `runs --plan` computes the word from the records alone: drift is judged only against what the done records name, and `complete-stale` is not judged there (no subject is located), as before.
+- A pin's `delivery` entry is the mode file's digest followed by each mode gate's digest, as specified.
+- Which observation statuses ground `none-found` (`no-data`, `not-found`) is decided in `writfold-kb`, tested, not proved.
