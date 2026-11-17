@@ -57,7 +57,7 @@ pub struct Cover {
 /// The order rows are judged in, oldest first: by `seq`, then by file
 /// name. `recorded` never decides it.
 pub fn order(a: (&str, &Cover), b: (&str, &Cover)) -> std::cmp::Ordering {
-    (a.1.seq, a.0).cmp(&(b.1.seq, b.0))
+    writfold_core::order::cmp((a.1.seq, a.0), (b.1.seq, b.0))
 }
 
 /// Whether `name` is a row file of `gate` and `item`:

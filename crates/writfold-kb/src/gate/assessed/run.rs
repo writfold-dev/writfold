@@ -195,6 +195,7 @@ pub fn run(
         error,
         duration_ms: ran.duration_ms,
         evaluator: crate::gate::receipt::evaluator(),
+        seq: next_seq(&ws.root, &run_dir, &rec.id, &subject.name, &d.id),
         recorded: time::stamp(now),
     };
     assessed.outcome = assessed.derived();
@@ -272,4 +273,16 @@ fn answer(
         .push("written to the KB work tree; commit it to share it".into());
     let frame = crate::gate::frame(request, "gate-run", vec![a.gate.clone(), rec.id.clone()]);
     session.emit(&answer, &frame)
+}
+
+/// One more than the highest `seq` among the run's valid assessed receipts
+/// of `gate` on `repo`: the judging order, with no clock in it.
+fn next_seq(root: &std::path::Path, run_dir: &str, run: &str, repo: &str, gate: &str) -> u64 {
+    (super::filed(root, run_dir, run).iter())
+        .filter_map(|f| f.parsed.as_ref().ok())
+        .filter(|a| a.gate == gate && a.repo == repo)
+        .map(|a| a.seq)
+        .max()
+        .unwrap_or(0)
+        + 1
 }

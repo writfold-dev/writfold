@@ -58,6 +58,7 @@ pub mod guard;
 pub mod idle;
 pub mod investigation;
 pub mod observe;
+pub mod order;
 pub mod plan;
 pub mod policy;
 pub mod scope;

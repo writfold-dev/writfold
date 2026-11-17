@@ -281,6 +281,16 @@ def claims : List Name := [
   ``Writfold.Core.Idle.newest_spec,
   ``Writfold.Core.Idle.since_spec,
   ``Writfold.Core.Idle.idle_spec,
+  -- the order receipts are judged in, without a clock (step 11)
+  ``Writfold.Core.Order.less_loop_spec,
+  ``Writfold.Core.Order.less_spec,
+  ``Writfold.Core.Order.lex_irrefl,
+  ``Writfold.Core.Order.lex_trans,
+  ``Writfold.Core.Order.lex_total,
+  ``Writfold.Core.Order.precedes_spec,
+  ``Writfold.Core.Order.prec_irrefl,
+  ``Writfold.Core.Order.prec_trans,
+  ``Writfold.Core.Order.prec_total,
   -- the Weft assessed gate's basis (writfold_core::assess)
   ``Writfold.Core.Assess.assumption_loop_spec,
   ``Writfold.Core.Assess.assumption_spec,

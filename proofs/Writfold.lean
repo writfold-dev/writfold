@@ -17,3 +17,4 @@ import Writfold.Walk
 import Writfold.Command
 import Writfold.Find
 import Writfold.Idle
+import Writfold.Order

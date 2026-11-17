@@ -104,7 +104,7 @@ pub fn judge<'a>(
             .filter_map(|f| f.parsed.as_ref().ok().map(|a| (f, a)))
             .filter(|(_, a)| a.gate == d.id && a.repo == subject.name)
             .collect();
-        mine.sort_by(|a, b| (&a.1.recorded, &a.0.name).cmp(&(&b.1.recorded, &b.0.name)));
+        mine.sort_by(|a, b| writfold_core::order::cmp((a.1.seq, &a.0.name), (b.1.seq, &b.0.name)));
         let mut evidence = Vec::new();
         for (_, a) in &mine {
             let same_definition = a.definition == d.digest;

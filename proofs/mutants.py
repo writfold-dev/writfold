@@ -803,6 +803,21 @@ MUTANTS = (
            "    if last < 0 && now > i64::MAX + last {\n        return i64::MAX;",
            "    if last < 0 && now > i64::MAX + last {\n        return i64::MAX - 1;",
            ("Writfold.Core.Idle.since_spec",)),
+    # order: at the first differing byte, the smaller sorts first
+    Mutant("less-larger-byte", "order.rs",
+           "            return a[i] < b[i];",
+           "            return a[i] > b[i];",
+           ("Writfold.Core.Order.less_loop_spec",)),
+    # order: a name never sorts before itself
+    Mutant("less-equal-names", "order.rs",
+           "    a.len() < b.len()\n}",
+           "    a.len() <= b.len()\n}",
+           ("Writfold.Core.Order.less_loop_spec",)),
+    # order: the lower seq is judged first
+    Mutant("precedes-higher-seq", "order.rs",
+           "        return seq_a < seq_b;",
+           "        return seq_a > seq_b;",
+           ("Writfold.Core.Order.precedes_spec",)),
     # assessed gate: one ungrounded premise makes the basis hypothetical
     Mutant("basis-ignores-premises", "assess.rs",
            "        if matches!(premises[index], Grounding::Ungrounded) {",

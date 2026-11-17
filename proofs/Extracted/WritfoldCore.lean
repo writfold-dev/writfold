@@ -2297,6 +2297,62 @@ def observe.embeds (status : observe.Status) : Result Bool := do
   | observe.Status.Denied => ok false
   | observe.Status.Error => ok false
 
+/-- [writfold_core::order::less]: loop body 0:
+    Source: 'crates/writfold-core/src/order.rs', lines 17:4-24:1
+    Visibility: public -/
+@[rust_loop_body]
+def order.less_loop.body
+  (a : Slice Std.U8) (b : Slice Std.U8) (i : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let i1 := Slice.len a
+  if i < i1
+  then
+    let i2 := Slice.len b
+    if i < i2
+    then
+      let i3 ← Slice.index_usize a i
+      let i4 ← Slice.index_usize b i
+      if i3 != i4
+      then ok (done (i3 < i4))
+      else let i5 ← i + 1#usize
+           ok (cont i5)
+    else let i3 := Slice.len a
+         let i4 := Slice.len b
+         ok (done (i3 < i4))
+  else let i2 := Slice.len a
+       let i3 := Slice.len b
+       ok (done (i2 < i3))
+
+/-- [writfold_core::order::less]: loop 0:
+    Source: 'crates/writfold-core/src/order.rs', lines 17:4-24:1
+    Visibility: public -/
+@[rust_loop]
+def order.less_loop
+  (a : Slice Std.U8) (b : Slice Std.U8) (i : Std.Usize) : Result Bool := do
+  loop
+    (fun i1 => order.less_loop.body a b i1)
+    i
+
+/-- [writfold_core::order::less]:
+    Source: 'crates/writfold-core/src/order.rs', lines 15:0-24:1
+    Visibility: public -/
+@[reducible]
+def order.less (a : Slice Std.U8) (b : Slice Std.U8) : Result Bool := do
+  order.less_loop a b 0#usize
+
+/-- [writfold_core::order::precedes]:
+    Source: 'crates/writfold-core/src/order.rs', lines 28:0-33:1
+    Visibility: public -/
+def order.precedes
+  (seq_a : Std.U64) (name_a : Slice Std.U8) (seq_b : Std.U64)
+  (name_b : Slice Std.U8) :
+  Result Bool
+  := do
+  if seq_a != seq_b
+  then ok (seq_a < seq_b)
+  else order.less name_a name_b
+
 /-- [writfold_core::plan::recheck::Decided]
     Source: 'crates/writfold-core/src/plan/recheck.rs', lines 12:0-21:1
     Visibility: public -/
