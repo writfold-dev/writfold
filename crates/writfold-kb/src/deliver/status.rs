@@ -13,6 +13,7 @@ use crate::emit::{More, Row};
 use crate::error::Result;
 use crate::gate::statement;
 use std::path::Path;
+use writfold_core::delivery::Owed;
 use writfold_core::gate::{Evidence, Standing, State, standing, state};
 
 /// One obligation of one candidate.
@@ -170,12 +171,35 @@ fn line(j: &Judged<'_>, id: &str) -> More {
     more
 }
 
+/// What the kernel reads of each obligation: its standing and the
+/// standings its policy takes (every word, until a mode's policy keys).
+pub fn owed(judged: &[Judged<'_>]) -> Vec<Owed> {
+    judged.iter().map(Judged::owed).collect()
+}
+
+impl Judged<'_> {
+    pub fn owed(&self) -> Owed {
+        Owed {
+            standing: self.standing,
+            accept: writfold_core::policy::Accept {
+                satisfied: true,
+                attested: true,
+                waived: true,
+            },
+        }
+    }
+
+    /// Not met under its policy ([`writfold_core::delivery::unmet`]).
+    pub fn unmet(&self) -> bool {
+        writfold_core::delivery::unmet(&self.owed())
+    }
+}
+
 /// Whether the candidate is ready: it has obligations and every one is met
-/// (satisfied, attested or waived); a mode that declares nothing never is
+/// under its policy; a mode that declares nothing never is
 /// ([`writfold_core::delivery::ready`]).
 pub fn ready(judged: &[Judged<'_>]) -> bool {
-    let standings: Vec<Standing> = judged.iter().map(|j| j.standing).collect();
-    writfold_core::delivery::ready(&standings)
+    writfold_core::delivery::ready(&owed(judged))
 }
 
 /// The candidate's row, with one `check:` line per obligation.

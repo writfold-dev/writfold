@@ -27,7 +27,7 @@ use crate::shell::{self, Word};
 use crate::workspace::{GitTool, Workspace};
 use serde_json::{Map, Value, json};
 use std::path::Path;
-use writfold_core::delivery::{self, Body as Posted};
+use writfold_core::delivery::{self, Body as Posted, Seen, Unread};
 
 /// The body flags read from a matched command, with whether each names a
 /// file.
@@ -165,15 +165,25 @@ fn decide(ws: &Workspace, body: Body, now: i64) -> HookOutput {
     let blocked = |c: &deliver::candidate::Candidate, owed: &[String]| {
         format!("candidate {} owes {}", c.id, owed.join(", "))
     };
-    let all_ready = cands.iter().all(|(_, ready, _)| *ready);
+    let seen = |bytes: Option<&[u8]>| -> Vec<Seen> {
+        cands
+            .iter()
+            .map(|(c, ready, _)| Seen {
+                same: bytes.is_some_and(|b| c.bytes.as_deref().map(trimmed) == Some(trimmed(b))),
+                ready: *ready,
+                live: true,
+                routed: true,
+                spent: false,
+            })
+            .collect()
+    };
     match body {
         Body::Bytes(bytes) => {
             let same: Vec<_> = cands
                 .iter()
                 .filter(|(c, _, _)| c.bytes.as_deref().map(trimmed) == Some(trimmed(&bytes)))
                 .collect();
-            let same_ready = same.iter().any(|(_, ready, _)| *ready);
-            if delivery::guard(Posted::Known, same_ready, cands.len(), all_ready) {
+            if delivery::guard(Posted::Known, Unread::AllReady, &seen(Some(&bytes))) {
                 return HookOutput::default();
             }
             match same.first() {
@@ -190,7 +200,7 @@ fn decide(ws: &Workspace, body: Body, now: i64) -> HookOutput {
             }
         }
         Body::Unknown(why) => {
-            if delivery::guard(Posted::Unknown, false, cands.len(), all_ready) {
+            if delivery::guard(Posted::Unknown, Unread::AllReady, &seen(None)) {
                 return HookOutput::default();
             }
             let owing: Vec<String> = cands

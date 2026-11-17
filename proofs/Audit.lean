@@ -321,6 +321,26 @@ def claims : List Name := [
   ``Writfold.Core.Assess.outcome_spec,
   ``Writfold.Core.Assess.outcome_pass_iff,
   ``Writfold.Core.Assess.hypothetical_never_passes,
+  -- ---- delivery modes, second round (writfold_core::delivery, 17 November 2026) ----
+  ``Writfold.Core.Delivery.first_unmet_loop_spec,
+  ``Writfold.Core.Delivery.first_unmet_spec,
+  ``Writfold.Core.Delivery.refused_iff,
+  ``Writfold.Core.Delivery.waiver_rejected_never_ready,
+  ``Writfold.Core.Delivery.default_accept_is_before,
+  ``Writfold.Core.Delivery.accept_only_narrows,
+  ``Writfold.Core.Delivery.fact_met_iff_ready,
+  ``Writfold.Core.Delivery.deciding_withdrawn_irrelevant,
+  ``Writfold.Core.Delivery.deciding_none_after_bound,
+  ``Writfold.Core.Delivery.posted_spec,
+  ``Writfold.Core.Delivery.posted_never_satisfied,
+  ``Writfold.Core.Delivery.posted_met_iff,
+  ``Writfold.Core.Delivery.postable_spec,
+  ``Writfold.Core.Delivery.guard_any_loop_spec,
+  ``Writfold.Core.Delivery.guard_all_loop_spec,
+  ``Writfold.Core.Delivery.guard_deny_unread,
+  ``Writfold.Core.Delivery.guard_withdrawn_irrelevant,
+  ``Writfold.Core.Delivery.guard_spent_never_passes,
+  -- ---- end delivery modes, second round ----
 ]
 
 /-- Every theorem under `Writfold.Core`, sorted by name. -/

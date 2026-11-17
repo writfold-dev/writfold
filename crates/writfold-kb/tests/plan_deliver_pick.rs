@@ -128,3 +128,26 @@ fn another_mode_or_an_invalid_manifest_decides_nothing() -> TestResult {
     );
     Ok(())
 }
+
+/// W3: once a step has bound the candidate that was meant, an older draft
+/// of the mode decides no later step; the step is open and asks for a new
+/// candidate.
+#[test]
+fn an_abandoned_draft_never_meets_a_later_step() -> TestResult {
+    let w = fixture()?;
+    set(&w, "two")?;
+    let draft = prepare(&w, "pr-comment", CLEAN, NOW + 30)?;
+    check(&w, &draft, NOW + 40)?;
+    let meant = prepare(&w, "pr-comment", CLEAN, NOW + 60)?;
+    check(&w, &meant, NOW + 120)?;
+    let (text, exit) = advance(&w)?;
+    assert_eq!(exit, 0, "{text}");
+    let text = owes(&w, "two#1/second")?;
+    assert!(
+        text.contains("owes: deliver:pr-comment [open]")
+            && !text.contains(&draft)
+            && text.contains("next: writfold kb deliver prepare --mode pr-comment --from FILE"),
+        "an older draft met the step after the bound one\n{text}"
+    );
+    Ok(())
+}

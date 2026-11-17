@@ -336,7 +336,7 @@ pub fn readiness(session: &Session<'_>, rec: &Rec) -> Vec<(Candidate, bool, Vec<
             let (ready, owed) = match recheck::judged(session, &c, &filings) {
                 Ok(judged) => {
                     let mut owed: Vec<String> = (judged.iter())
-                        .filter(|j| !j.standing.met())
+                        .filter(|j| j.unmet())
                         .map(|j| format!("{} [{}]", j.obligation.name, j.standing.name()))
                         .collect();
                     let ready = status::ready(&judged);

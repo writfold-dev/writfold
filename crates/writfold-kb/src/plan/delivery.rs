@@ -153,7 +153,9 @@ fn build(v: View, seq: u64, detail: bool) -> Gate {
         (None, _) => (None, (None, Vec::new())),
     };
     Gate {
-        accept: None,
+        // The plan meets the delivery exactly when its candidate is ready
+        // (`delivery::fact`): every word taken, or none.
+        accept: (!v.taken).then(Vec::new),
         id: format!("{PREFIX}{}", v.mode),
         standing: Some(v.standing),
         evidence: seen.map(|s| s.payload.clone()),
