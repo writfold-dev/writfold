@@ -6,11 +6,12 @@
 //! unchanged, and any edit, addition or removal in scope changes it.
 use crate::error::{KbError, Result};
 use crate::stale::repos;
-use crate::workspace::{CANCELLED, Workspace, budgets, find_repo};
+use crate::workspace::{CANCELLED, Workspace, budgets, find_repo, is_root};
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use writfold_core::scope::in_scope;
+use writfold_core::subject::{Pick, pick};
 use writfold_domain::GitObjectId;
 use writfold_runtime::git::{
     GitExecutable, KbRepository, gate_hash_paths, gate_ls_tree, kb_config, kb_diff_tree, kb_status,
@@ -39,7 +40,10 @@ impl Subject {
 
 /// The subject: `--repo`, else the repository enclosing the working
 /// directory unless it is the KB's own, else the run's recorded worktree
-/// when it exists here, else the KB's repository. `None` outside any.
+/// when it exists here and is not another checkout of the KB's
+/// repository, else the enclosing repository (or the KB's own, for a
+/// recorded checkout of it). `None` outside any. The choice is
+/// [`writfold_core::subject::pick`].
 pub fn locate(
     ws: &Workspace,
     git: &GitExecutable<'_>,
@@ -63,13 +67,23 @@ pub fn locate(
         })?)
     } else {
         let here = found(cwd)?;
-        let kb_top = ws.repo.as_ref().map(|r| r.work_tree.clone());
-        match here {
-            Some(r) if Some(&r.work_tree) != kb_top.as_ref() => Some(r),
-            here => match recorded.map(Path::new).filter(|p| p.is_dir()) {
-                Some(dir) => found(dir)?.or(here),
-                None => here,
-            },
+        let kb = ws.repo.as_ref();
+        let here_is_kb = (here.as_ref().zip(kb)).is_some_and(|(h, k)| h.work_tree == k.work_tree);
+        let recorded = match recorded.map(Path::new).filter(|p| p.is_dir()) {
+            Some(dir) => found(dir)?,
+            None => None,
+        };
+        let recorded_is_kb = (recorded.as_ref().zip(kb)).is_some_and(|(r, k)| checkout_of(r, k));
+        match pick(
+            here.is_some(),
+            here_is_kb,
+            recorded.is_some(),
+            recorded_is_kb,
+        ) {
+            Pick::Here => here,
+            Pick::Recorded => recorded,
+            Pick::Kb => kb.cloned(),
+            Pick::Nothing => None,
         }
     };
     let Some(repo) = repo else {
@@ -100,6 +114,19 @@ pub fn locate(
         git_dir: repo.git_dir,
         name,
     }))
+}
+
+/// Whether `repo` is a checkout of the KB's repository `kb`: it shares
+/// its Git common directory (a linked worktree of the same clone), or it
+/// holds a KB at the KB's prefix (another clone of that repository).
+fn checkout_of(repo: &crate::workspace::Repo, kb: &crate::workspace::Repo) -> bool {
+    let common = |git_dir: &Path| {
+        let linked = std::fs::read_to_string(git_dir.join("commondir")).ok();
+        let dir = linked.map_or_else(|| git_dir.to_path_buf(), |c| git_dir.join(c.trim()));
+        std::fs::canonicalize(dir).ok()
+    };
+    let same_common = common(&repo.git_dir).is_some_and(|c| Some(c) == common(&kb.git_dir));
+    same_common || is_root(&repo.work_tree.join(&kb.prefix))
 }
 
 /// The commit, its tree, and the work tree's dirty paths with the blob ID

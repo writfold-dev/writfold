@@ -281,6 +281,13 @@ def claims : List Name := [
   ``Writfold.Core.Idle.newest_spec,
   ``Writfold.Core.Idle.since_spec,
   ``Writfold.Core.Idle.idle_spec,
+  -- the subject repository (writfold_core::subject)
+  ``Writfold.Core.Subject.pick_spec,
+  ``Writfold.Core.Subject.recorded_never_kb_checkout,
+  ``Writfold.Core.Subject.here_outside_kb_wins,
+  ``Writfold.Core.Subject.kb_only_for_checkout,
+  ``Writfold.Core.Subject.unchanged_unless_checkout,
+  ``Writfold.Core.Subject.some_subject,
   -- the order receipts are judged in, without a clock (step 11)
   ``Writfold.Core.Order.less_loop_spec,
   ``Writfold.Core.Order.less_spec,

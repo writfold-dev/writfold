@@ -848,6 +848,24 @@ MUTANTS = (
            "        true => Grounding::Attested,",
            "        true => Grounding::Grounded,",
            ("Writfold.Core.Assess.assumption_loop_spec",)),
+    # subject: another checkout of the KB's repository is never judged
+    Mutant("pick-recorded-checkout", "subject.rs",
+           "    if recorded && !recorded_is_kb {",
+           "    if recorded {",
+           ("Writfold.Core.Subject.pick_spec",
+            "Writfold.Core.Subject.recorded_never_kb_checkout")),
+    # subject: the enclosing repository wins only when it is not the KB's
+    Mutant("pick-here-even-kb", "subject.rs",
+           "    if here && !here_is_kb {",
+           "    if here {",
+           ("Writfold.Core.Subject.pick_spec",
+            "Writfold.Core.Subject.unchanged_unless_checkout")),
+    # subject: a recorded checkout outside any repository is the KB's own
+    Mutant("pick-checkout-nothing", "subject.rs",
+           "    if recorded {\n        return Pick::Kb;",
+           "    if recorded {\n        return Pick::Nothing;",
+           ("Writfold.Core.Subject.pick_spec",
+            "Writfold.Core.Subject.some_subject")),
 )
 
 # lake reports `error: <path>.lean:<line>:<col>: <message>`

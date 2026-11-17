@@ -3671,6 +3671,62 @@ def scope.covers
   := do
   scope.covers_loop patterns path false 0#usize
 
+/-- [writfold_core::subject::Pick]
+    Source: 'crates/writfold-core/src/subject.rs', lines 16:0-25:1
+    Visibility: public -/
+@[discriminant isize]
+inductive subject.Pick where
+| Here : subject.Pick
+| Recorded : subject.Pick
+| Kb : subject.Pick
+| Nothing : subject.Pick
+
+/-- [writfold_core::subject::pick]:
+    Source: 'crates/writfold-core/src/subject.rs', lines 37:0-51:1
+    Visibility: public -/
+def subject.pick
+  (here : Bool) (here_is_kb : Bool) (recorded : Bool) (recorded_is_kb : Bool) :
+  Result subject.Pick
+  := do
+  if here
+  then
+    if here_is_kb
+    then
+      if recorded
+      then
+        if recorded_is_kb
+        then
+          if here
+          then ok subject.Pick.Here
+          else if recorded
+               then ok subject.Pick.Kb
+               else ok subject.Pick.Nothing
+        else ok subject.Pick.Recorded
+      else
+        if here
+        then ok subject.Pick.Here
+        else if recorded
+             then ok subject.Pick.Kb
+             else ok subject.Pick.Nothing
+    else ok subject.Pick.Here
+  else
+    if recorded
+    then
+      if recorded_is_kb
+      then
+        if here
+        then ok subject.Pick.Here
+        else if recorded
+             then ok subject.Pick.Kb
+             else ok subject.Pick.Nothing
+      else ok subject.Pick.Recorded
+    else
+      if here
+      then ok subject.Pick.Here
+      else if recorded
+           then ok subject.Pick.Kb
+           else ok subject.Pick.Nothing
+
 /-- [writfold_core::verdict::locate::Window]
     Source: 'crates/writfold-core/src/verdict/locate.rs', lines 11:0-20:1
     Visibility: public -/

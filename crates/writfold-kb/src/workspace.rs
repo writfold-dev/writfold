@@ -55,7 +55,7 @@ pub struct Workspace {
     pub repo: Option<Repo>,
 }
 
-fn is_root(path: &Path) -> bool {
+pub(crate) fn is_root(path: &Path) -> bool {
     path.join("inventory").join("assets").is_dir()
 }
 

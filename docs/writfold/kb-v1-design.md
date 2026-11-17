@@ -1091,7 +1091,7 @@ writfold kb gate lines [--run ID] [--repo DIR]         receipt lines for a commi
 ```
 
 - **The run** is `--run`, else the current-run pointer; with neither, the verb refuses (exit 3) and names `checkpoint --new-run`. `gate run` refuses a closed run.
-- **The subject repository** is `--repo DIR`; else the repository enclosing the working directory, unless that is the KB's own; else the run's recorded worktree (13.3) when it exists on this machine; else the KB's repository. Its name is the KB repository map's name for it, else its origin URL's last path segment, else its directory name, so worktrees of one repository share a name. Receipts are matched to a subject by that name.
+- **The subject repository** is `--repo DIR`; else the repository enclosing the working directory, unless that is the KB's own; else the run's recorded worktree (13.3) when it exists on this machine and is not another checkout of the KB's own repository (same Git common directory, or holding this KB at the same prefix; 46.1); else the enclosing repository, or the KB's repository. Its name is the KB repository map's name for it, else its origin URL's last path segment, else its directory name, so worktrees of one repository share a name. Receipts are matched to a subject by that name.
 - **Exit codes** follow 3.1. `gate status` exits 0 only when every gate is satisfied and nothing is invalid; otherwise 2, with counts in the trailer (`gates= satisfied= open= stale= failed= unknown= invalid=`). `gate run` exits 0 on a pass and 2 otherwise. `gate verify` exits 0 on agree and 2 on disagree, inconclusive or unverifiable. `gate lines` exits 0 only when every gate is satisfied.
 - **`resume`** shows one row per defined gate, the same rows as `gate status`, between the retrieval receipts and the checkpoint tail. With no gate defined anywhere it shows nothing, so KBs without gates read as before. A failure to evaluate gates becomes a note; it never fails `resume`.
 
@@ -1346,7 +1346,7 @@ writfold watch [--kb DIR] [--run ID] [--once]
 
 - **Selection.** `--run`, else the run the current-run pointer names (`!current`), else the first listed.
 - **The project** of the stale and brief panes is the `project=` of the run's `kb runs` place line; with none, `brief` infers it from the working directory and `stale` covers the KB.
-- **The gate subject** is the verbs' own: the repository enclosing the working directory, else the run's recorded worktree, else the KB's repository (16.1). `watch` has no `--repo`; start it in the repository whose gates you want. A `gate status` refusal (no subject, no run) becomes the `gates:` line and never stops the view.
+- **The gate subject** is the verbs' own: the repository enclosing the working directory, else the run's recorded worktree unless it is another checkout of the KB's repository, else the KB's repository (16.1, 46.1). `watch` has no `--repo`; start it in the repository whose gates you want. A `gate status` refusal (no subject, no run) becomes the `gates:` line and never stops the view.
 - **Tones** only colour what the verbs flagged: a row with a `failed`, `stale`, `invalid`, `changed`, `gone`, `expired`, `moved`, `regression` or `disagree` flag in bold red, `open`, `unknown`, `unverifiable`, `draft` or `past-ttl` in yellow, `[satisfied]` in green, closed runs dimmed. The `gates:` line is red when any gate is failed or stale or a receipt is invalid.
 - **Not shown,** as the review asked: a progress percentage, any "running" or liveness claim (there is no daemon), and an uncertain-effects pane.
 
@@ -2632,7 +2632,7 @@ Gathered once per event (`guard/require.rs`), after a rule matched:
 - `gate:<id>`: that gate, judged the same way, whether or not the plan names it.
 - `step.met`: the plan's current step owes nothing (`plan::judge`), with `plan advance`'s `next:` text; met with no plan or when every step is closed.
 
-The subject is `gate status`'s: the repository enclosing `cwd` unless it is the KB's own, else the run's recorded worktree. A rule with `repos` is skipped outside a repository.
+The subject is `gate status`'s: the repository enclosing `cwd` unless it is the KB's own, else the run's recorded worktree unless it is another checkout of the KB's repository (46.1). A rule with `repos` is skipped outside a repository.
 
 ### 30.3 The decision
 
@@ -4167,3 +4167,10 @@ Scope globs, plan closing writes, decision states and investigations, citation v
 
 `order::{less, precedes, cmp}`. `gate/receipt.rs::order`, `gate/checklist/cover.rs`, `gate/assessed/judge.rs` and `deliver/status.rs` sort with `order::cmp`. Assessed receipts and delivery check receipts write `seq` (`gate/assessed/run.rs::next_seq`, `deliver/receipt.rs::next_seq`), read it back (absent is 0) and are no longer ordered by `recorded`. Statements still are.
 
+## 46. Bug-fix round, as built (17 November 2026, v0.6.0-dev.4)
+
+Each fix has a test that failed before it. Decisions that changed are proved first (theorems in [aeneas.md](aeneas.md#the-bug-fix-round-17-november-2026)).
+
+### 46.1 A second checkout is judged as itself
+
+`writfold_core::subject::pick(here, here_is_kb, recorded, recorded_is_kb)` chooses the subject when no `--repo` is given; `gate/subject.rs::locate` finds the repositories and calls it. The recorded worktree is used only when it is not a checkout of the KB's repository: `checkout_of` holds when it shares the KB repository's Git common directory (`commondir` of a linked worktree) or holds a KB at the KB's prefix (`workspace::is_root`), with no name heuristics. Then the enclosing repository is the subject, or the KB's own when the working directory is outside any. Before, with the KB in its code repository, a second clone on the machine that started the run was judged against the first: `gate run` ran there, and `gate status`, `gate lines`, `resume`, guards, plans and `watch` read it; the first clone's definitions also showed as "defined in both" under its directory name beside the subject's name, with a `next: kb lint` pointing into the other clone. Tests: `crates/writfold/tests/kb_second_clone.rs` (the KB at the root and in `kb/`, a linked worktree, and a KB in its own repository, whose recorded worktree is still the subject).

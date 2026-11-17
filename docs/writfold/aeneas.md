@@ -50,6 +50,8 @@ never fails, result as stated):
   verdict, `find`'s prefix tier and rows, command matching and idle runs
   (`Walk.lean`, `Command.lean`, `Find.lean`, `Idle.lean`), and the order
   receipts are judged in (`Order.lean`).
+- The bug-fix round (17 November 2026, below; fixed in v0.6.0-dev.4):
+  which repository a gate judges (`Subject.lean`).
 
 The gate (`docker compose -f compose.proofs.yaml run --build --rm proofs`,
 or the `docker run` form below) regenerates the translation and refuses
@@ -463,11 +465,34 @@ takes bytes. `writfold_core`'s crate-level lint allowances gain
 `question_mark`, `manual_filter` and `manual_map` (explicit matches
 translate; their combinator forms do not).
 
+### The bug-fix round (17 November 2026)
+
+Fixed in v0.6.0-dev.4. Each decision the round changed was translated and
+proved, and its mutants calibrated, before a verb called it.
+
+The subject repository (`proofs/Writfold/Subject.lean`,
+`writfold_core::subject::pick`). `pick(here, here_is_kb, recorded,
+recorded_is_kb)` chooses the subject when no `--repo` is given;
+`writfold-kb` finds the repositories and says what each is (tested, not
+proved: whether two repositories share a Git common directory, whether a
+work tree holds a KB at a prefix).
+
+- `pick_spec`: the rule, row by row (`Rule`): the enclosing repository when
+  it is not the KB's own; else the recorded worktree when it is not a
+  checkout of the KB's repository; else the enclosing repository; else the
+  KB's own when the recorded worktree was such a checkout; else none.
+- `recorded_never_kb_checkout`: the recorded worktree is the subject only
+  when it is not a checkout of the KB's repository, so the subject is never
+  another checkout of it than the one the command runs in.
+- `here_outside_kb_wins`, `kb_only_for_checkout`, `some_subject`.
+- `unchanged_unless_checkout`: otherwise the choice is the earlier rule
+  (`Earlier`), so the change is confined to that case.
+
 ### The claims and their mutants
 
 <!-- generated from proofs/mutants.py -->
 
-161 mutants (20 before 16 November 2026, 86 after the backfill's first round, 108 after the policy round, 161 after the backfill's second round). Each must break exactly the theorems named.
+164 mutants (20 before 16 November 2026, 86 after the backfill's first round, 108 after the policy round, 161 after the backfill's second round, 164 after the bug-fix round). Each must break exactly the theorems named.
 
 | Mutant | File | What it breaks | Must break |
 |---|---|---|---|
@@ -632,6 +657,9 @@ translate; their combinator forms do not).
 | `assessed-empty-passes` | `assess.rs` | assessed gate: nothing required is unknown, never a pass | `Assess.outcome_spec` |
 | `assessed-incomplete-passes` | `assess.rs` | assessed gate: an incomplete run is unknown, never a pass | `Assess.outcome_spec` |
 | `assumption-ignores-attested` | `assess.rs` | assessed gate: an attested citation makes the assumption attested | `Assess.assumption_loop_spec` |
+| `pick-recorded-checkout` | `subject.rs` | subject: another checkout of the KB's repository is never judged | `Subject.pick_spec`, `Subject.recorded_never_kb_checkout` |
+| `pick-here-even-kb` | `subject.rs` | subject: the enclosing repository wins only when it is not the KB's | `Subject.pick_spec`, `Subject.unchanged_unless_checkout` |
+| `pick-checkout-nothing` | `subject.rs` | subject: a recorded checkout outside any repository is the KB's own | `Subject.pick_spec`, `Subject.some_subject` |
 
 <!-- end generated -->
 
