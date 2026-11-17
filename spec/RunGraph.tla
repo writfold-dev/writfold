@@ -95,6 +95,10 @@ Cat(seqs) == IF seqs = <<>> THEN <<>> ELSE Head(seqs) \o Cat(Tail(seqs))
 
 \* A node is a path: a sequence of <<template, ordinal, step>>.
 StepOf(n) == n[Len(n)][3]
+\* The run's pin locks step a at the root (`unskippable`, policy spec 2.4):
+\* the steps a required template brings at the root, never a step spliced
+\* under one later.
+Locked(n) == Len(n) = 1 /\ StepOf(n) = "a"
 
 Ev(k, node, t, v, o, ev, w) ==
   [k |-> k, node |-> node, t |-> t, v |-> v, ord |-> o, ev |-> ev, w |-> w]
@@ -288,9 +292,12 @@ PlanAdvance(s) ==
      /\ Decide(s, "advance", n, <<DoneEv(n, ev, s)>>)
      /\ UNCHANGED <<files, rcpt, subj, tver, lock, crashes, againReq>>
 
+\* plan skip: refused for a step the run's pin locks (writfold_core::plan::
+\* skip_check); mutant SkipLocked drops the refusal.
 PlanSkip(s) ==
   LET c == Home[s]
   IN /\ Free(s) /\ Cur(c) /= 0
+     /\ ~Locked(CurNode(c)) \/ Mutant = "SkipLocked"
      /\ Decide(s, "skip", CurNode(c), <<SkipEv(CurNode(c), s)>>)
      /\ UNCHANGED <<files, rcpt, subj, tver, lock, crashes, againReq>>
 
@@ -449,6 +456,9 @@ FoldOrderIndependent ==
 \* 6. The current node is the first neither done nor skipped.
 CurrentIsFirstOpen == \A c \in Clones : Cur(c) = FirstOpen(c)
 
+\* 6a. A locked step is never in the skipped set (policy spec 2.4).
+LockedNeverSkipped == \A c \in Clones : \A n \in SkipNodes(c) : ~Locked(n)
+
 \* 7. A splice is idempotent on its key (24.1): a splice not made with
 \* --again never repeats a (template, digest) already spliced under its
 \* parent, one of the parent's ancestors or the root. "Already" is the
@@ -482,6 +492,7 @@ DonePrefixOneRoot == \A c \in Clones : OneRoot(c) => DonePrefixAt(c)
 Invariants ==
   /\ TypeOK /\ OneDonePerNode /\ EvidenceNamed /\ AdvanceOnlyWhenMet
   /\ SnapshotsExist /\ FoldOrderIndependent /\ CurrentIsFirstOpen /\ SpliceIdempotentLocal
+  /\ LockedNeverSkipped
 
 \* Action properties, over every step.
 

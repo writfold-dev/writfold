@@ -36,6 +36,12 @@ never fails, result as stated):
   deliveries and the delivery guard (`Delivery.lean`), guard rules and their
   requirements' facts (`Guard.lean`), and what grounds evidence
   (`Ground.lean`).
+- The policy round (16 November 2026, below; built in v0.6.0-dev.3): a
+  team's `accept` list, pins and drift, how a step closed and how a plan
+  ended (`Policy.lean`); the checklist's `not_applicable` and `none_found`
+  (`Checklist.lean`, replaced in place); `plan skip`'s lock and the close
+  check (`Plan.lean`); evidence bound to its run and subject in
+  `gate::state` (`Gate.lean`, replaced in place).
 
 The gate (`docker compose -f compose.proofs.yaml run --build --rm proofs`,
 or the `docker run` form below) regenerates the translation and refuses
@@ -257,11 +263,82 @@ takes `&[Entry]` instead of a tuple slice; `delivery::standing` is a `while`
 loop; the guard's call-level decisions are `guard::call` and the
 requirements' facts `guard::require`.
 
+### The policy round (16 November 2026)
+
+[`policy-spec.md`](policy-spec.md) section 3; built in v0.6.0-dev.3. Every
+decision the round adds or changes was translated and proved, and the
+proofs gate passed, before any verb called it.
+
+A team's policy (`proofs/Writfold/Policy.lean`, `writfold_core::policy`,
+translated whole):
+
+- `met_spec`: a standing meets a gate exactly when it is satisfied,
+  attested or waived and the gate's `accept` takes that standing.
+  `met_default`: with all three accepted (a definition without `accept`)
+  it is `Standing::met`, proved from the code of `policy::met` itself.
+  `met_narrows`: a policy only narrows. `waiver_rejected_never_met`: a gate
+  whose policy rejects waivers is never met by one, whatever statements
+  exist.
+- `pin_one_spec`, `pin_one_same_iff`, `pin_one_unpinned_iff`: a pinned
+  digest is the same only when something is there now with the same bytes.
+  `pin_all_spec`, `pin_all_moved_iff`, `pin_all_same_iff`: one moved pin
+  moves the run; `same` needs something pinned and all of it unchanged.
+- `close_spec`, `close_passed_iff`, `close_waived_iff`, `close_open_iff`:
+  a step reads `passed` only when done with every gate passed; an
+  attestation or a waiver is never read as a pass.
+- `summary_spec` (the table of the policy spec's 2.6, row by row in
+  order), `summary_complete_iff`, `moved_never_complete`,
+  `open_never_complete`, `exception_never_clean`, `empty_never_complete`.
+
+Replaced in place, with what changed:
+
+- **Gate** (`Gate.lean`, `Current.lean`): `Evidence`, `Recorded` and `Said`
+  carry `bound` (`bound_spec`: this run, this subject, intact). `isCurrent`
+  gains the conjunct `bound`; `StateSpec`'s fallback ranges over bound
+  receipts (`newest_bound_spec`), and with no bound receipt the state is
+  `open`. `state_loop_spec`, `state_spec`, `state_satisfied_iff` keep their
+  statements over the new `isCurrent`. `state_other_subject`'s statement
+  changed: with no current receipt the state is `stale` when some receipt is
+  bound, else `open` (it was `stale` when any receipt existed), because an
+  unbound receipt now counts as absent. Added: `current_spec`,
+  `state_unbound_never_satisfies`, `state_ignores_unbound` (the state of
+  the bound receipts alone). `About` and `AboutS` gain `bound`, so
+  `judge_*`, `stands_spec`, `statements_spec` and `met_only_when_current`
+  hold with bound records only; `attested_any` counts bound attestations
+  (`attests_spec`).
+- **Advance** (`Current.lean`): `GateFact::Stands` carries the gate's
+  `Accept` and `fact_met` is `policy::met`; `fact_met_spec`,
+  `advance_facts_ok_iff` (met under the policy: `PMet`) and
+  `done_only_when_met` (whose conclusion is unchanged, by `PMet.met`) are
+  restated over it.
+- **Checklist** (`Checklist.lean`): the `NoneFound` outcome and item;
+  `covered_under_spec` replaces `covered_spec` and `rollup_under_spec`
+  replaces `rollup_spec` (each entry covered under its own `na` and `none`);
+  `item_covered_iff`, `rollup_covered_iff`, `rollup_optional_irrelevant`
+  (two checklists must also agree on the required items' policies) and
+  `checklist_met_iff` are restated over them. Added: `item_supported_iff`,
+  `item_none_found_iff` (from the code of `item` itself),
+  `not_applicable_rejected_never_covers`.
+- **Plan** (`Plan.lean`, added, nothing else changed): `skip_check_spec`,
+  `skip_ok_iff`, `skipped_spec`, `locked_skip_never_closes`,
+  `locked_stays_current`, `close_check_spec`.
+
+Not proved, and tested: the readers of `accept`, `not_applicable`,
+`none_found`, `unskippable` and `waivable`; writing and reading pin files
+and choosing the newest pin naming a gate; the fold from event and pin
+files to `Node`, `locked`, `How`, `Close` and `Facts`; which statuses of an
+observation count as a look that found nothing (`no-data`, `not-found`,
+read in `writfold-kb`); the counts in the summary line; `kb init`,
+`kb policy` and all rendering. `spec/RunGraph.tla` gains the lock:
+`PlanSkip` is enabled only for an unlocked step, `LockedNeverSkipped` holds
+in the positive configurations, and the mutant `SkipLocked`
+(`RunGraph.mutant-SkipLocked.cfg`) violates it.
+
 ### The claims and their mutants
 
 <!-- generated from proofs/mutants.py -->
 
-86 mutants (20 before 16 November 2026). Each must break exactly the theorems named.
+108 mutants (20 before 16 November 2026, 86 after the backfill's first round). Each must break exactly the theorems named.
 
 | Mutant | File | What it breaks | Must break |
 |---|---|---|---|
@@ -283,8 +360,14 @@ requirements' facts `guard::require`.
 | `outcome-ignores-moved` | `gate.rs` | gate: a subject that moved while the command ran is never a pass | `Gate.outcome_spec` |
 | `outcome-any-exit-passes` | `gate.rs` | gate: only exit status 0 passes | `Gate.outcome_spec` |
 | `outcome-nonzero-unknown` | `gate.rs` | gate: another exit status is a failure, not unknown | `Gate.outcome_spec` |
-| `state-ignores-scope` | `gate.rs` | gate: a receipt about other bytes in scope never decides the state | `Gate.state_loop_spec` |
-| `state-ignores-definition` | `gate.rs` | gate: a receipt about another definition never decides the state | `Gate.state_loop_spec` |
+| `state-ignores-scope` | `gate.rs` | gate: a receipt about other bytes in scope never decides the state | `Gate.current_spec` |
+| `state-ignores-definition` | `gate.rs` | gate: a receipt about another definition never decides the state | `Gate.current_spec` |
+| `state-ignores-bound` | `gate.rs` | gate: a receipt from another run or subject, or broken, counts as absent | `Gate.state_loop_spec` |
+| `current-ignores-bound` | `gate.rs` | gate: a decision needs a bound receipt (the comparison itself) | `Gate.current_spec` |
+| `stale-from-unbound` | `gate.rs` | gate: with no current receipt, only a bound one makes the gate stale | `Gate.newest_bound_loop_spec`, `Gate.newest_bound_spec` |
+| `bound-ignores-subject` | `gate.rs` | gate: bound needs this run, this subject and an intact digest | `Gate.bound_spec` |
+| `stands-ignores-bound` | `gate.rs` | gate: a statement from another run or subject never stands | `Gate.stands_spec` |
+| `attests-ignores-bound` | `gate.rs` | gate: an unbound attestation is not "some attestation" | `Gate.attests_spec` |
 | `state-oldest-first` | `gate.rs` | gate: the newest receipt about the current subject decides, not the oldest | `Gate.state_loop_spec`, `Gate.state_spec` |
 | `state-failed-satisfies` | `gate.rs` | gate: a failed receipt is a failure | `Gate.state_loop_spec` |
 | `attested-class-stands-on-check` | `gate.rs` | gate: an attested-class obligation has no checked state to stand on | `Gate.standing_spec` |
@@ -295,21 +378,21 @@ requirements' facts `guard::require`.
 | `evidence-ignores-definition` | `gate.rs` | a receipt under another definition is not the same definition | `Gate.evidence_spec` |
 | `evidence-ignores-content` | `gate.rs` | a receipt about other bytes is not about the present content | `Gate.evidence_spec` |
 | `evidence-accepts-empty-content` | `gate.rs` | empty present content (unreadable) is never the same content | `Gate.evidence_spec` |
-| `judge-drops-newest` | `gate.rs` | every receipt is judged, the newest included | `,
-           (` |
+| `judge-drops-newest` | `gate.rs` | every receipt is judged, the newest included | `Gate.judge_loop_spec` |
 | `stands-ignores-kind` | `gate.rs` | an attestation is never a waiver, and a waiver never an attestation | `Gate.stands_spec` |
 | `statements-counts-moved-waiver` | `gate.rs` | a waiver about other bytes does not stand | `Gate.statements_loop_spec` |
 | `advance-undefined-met` | `plan.rs` | a gate with no usable definition is never met | `Plan.fact_met_spec` |
-| `met-all-drops-last` | `plan.rs` | every gate of the step is judged, the last included | `,
-           (` |
+| `met-all-drops-last` | `plan.rs` | every gate of the step is judged, the last included | `Plan.met_all_loop_spec` |
 | `advance-refuses-no-gates` | `plan.rs` | a step with no gates owes nothing | `Plan.advance_facts_spec`, `Plan.advance_facts_ok_iff` |
 | `item-accepts-no-evidence` | `checklist.rs` | checklist: a supported row covers only when it cites something | `Checklist.item_spec` |
 | `item-accepts-ungrounded` | `checklist.rs` | checklist: a supported row covers only while its evidence is grounded | `Checklist.item_spec` |
-| `item-accepts-not-current` | `checklist.rs` | checklist: a row about other content or another definition is stale | `Checklist.item_spec` |
-| `covered-counts-unsupported` | `checklist.rs` | checklist: an unsupported item is not covered | `Checklist.covered_spec` |
+| `item-accepts-not-current` | `checklist.rs` | checklist: a row about other content or another definition is stale | `Checklist.item_spec`, `Checklist.item_none_found_iff` |
+| `covered-counts-unsupported` | `checklist.rs` | checklist: an unsupported item is not covered | `Checklist.covered_under_spec` |
+| `covered-ignores-na` | `checklist.rs` | checklist: not-applicable covers only where the policy accepts it | `Checklist.covered_under_spec` |
+| `covered-none-found-without-policy` | `checklist.rs` | checklist: none-found covers only where the policy accepts it | `Checklist.covered_under_spec` |
+| `item-none-found-no-evidence` | `checklist.rs` | checklist: none-found needs at least one cited look | `Checklist.item_spec`, `Checklist.item_none_found_iff` |
 | `rollup-ignores-required` | `checklist.rs` | checklist: only required items are owed | `Checklist.owes_spec` |
-| `first-owed-skips-last` | `checklist.rs` | checklist: every entry is looked at, the last included | `,
-           (` |
+| `first-owed-skips-last` | `checklist.rs` | checklist: every entry is looked at, the last included | `Checklist.first_owed_loop_spec` |
 | `stale-ignores-required` | `checklist.rs` | checklist: an optional stale item does not make the checklist stale | `Checklist.stale_spec` |
 | `checklist-attested-when-stale` | `checklist.rs` | checklist: a stale checklist is not attested | `Checklist.standing_spec` |
 | `delivery-empty-met` | `delivery.rs` | delivery: an empty set of obligations is not met | `Delivery.standing_spec` |
@@ -322,8 +405,7 @@ requirements' facts `guard::require`.
 | `guard-allows-no-candidate` | `delivery.rs` | delivery guard: unknown bytes need at least one candidate | `Delivery.guard_allow_iff` |
 | `guard-known-any-ready` | `delivery.rs` | delivery guard: known bytes pass only when a ready candidate holds them | `Delivery.guard_allow_iff` |
 | `all-met-accepts-unknown` | `guard.rs` | guard: an unknown fact is never met | `Guard.met_spec` |
-| `all-met-skips-last` | `guard.rs` | guard: every requirement is looked at, the last included | `,
-           (` |
+| `all-met-skips-last` | `guard.rs` | guard: every requirement is looked at, the last included | `Guard.all_met_loop_spec` |
 | `decide-ignores-facts` | `guard.rs` | guard: a matched rule passes only when every requirement is met | `Guard.decide_spec` |
 | `verdict-deny-asks` | `guard.rs` | guard: a deny rule denies | `Guard.verdict_spec` |
 | `combine-ask-over-deny` | `guard.rs` | guard: a denial wins over a question | `Guard.combine_spec` |
@@ -349,6 +431,19 @@ requirements' facts `guard::require`.
 | `moved-ignores-word` | `ground.rs` | grounding: a changed standing word is a moved reference | `Ground.moved_iff` |
 | `observation-partial-grounds` | `observe.rs` | observations: a partial look never grounds | `Ground.grounds_iff` |
 | `embeds-drops-partial` | `observe.rs` | observations: a partial look embeds its citation | `Ground.embeds_iff` |
+| `skip-without-lock` | `plan.rs` | plan: a step locked by the run's pinned policy cannot be skipped | `Plan.skip_check_spec` |
+| `skipped-ignores-lock` | `plan.rs` | plan: a skip record of a locked step never closes it | `Plan.skipped_spec`, `Plan.locked_skip_never_closes` |
+| `close-check-ignores-present` | `plan.rs` | plan: the last step closes only with every required template present | `Plan.close_check_spec` |
+| `fact-met-ignores-policy` | `plan.rs` | plan: a gate is judged under its own policy | `Plan.fact_met_spec` |
+| `met-ignores-waived` | `policy.rs` | policy: a gate that rejects waivers is never met by one | `Policy.met_spec` |
+| `met-default-counts-stale` | `policy.rs` | policy: a policy without accept is exactly today's rule | `Policy.met_spec`, `Policy.met_default` |
+| `pin-one-missing-same` | `policy.rs` | policy: a pinned digest with nothing there now is moved, never same | `Policy.pin_one_spec`, `Policy.pin_one_same_iff` |
+| `pin-all-empty-same` | `policy.rs` | policy: an empty pin is not "same" | `Policy.pin_all_spec` |
+| `pin-all-misses-moved` | `policy.rs` | policy: one moved pin moves the run | `Policy.any_moved_loop_spec` |
+| `close-waived-passed` | `policy.rs` | policy: a waived gate is never read as passed | `Policy.close_spec` |
+| `summary-skips-moved` | `policy.rs` | policy: a moved policy is never read as complete | `Policy.summary_spec` |
+| `summary-ignores-closed` | `policy.rs` | policy: a closed run with an open step is closed-incomplete | `Policy.summary_spec` |
+| `summary-complete-with-skip` | `policy.rs` | policy: a skipped, waived or attested step is never plain complete | `Policy.summary_spec` |
 | `basis-ignores-premises` | `assess.rs` | assessed gate: one ungrounded premise makes the basis hypothetical | `Assess.basis_loop_spec` |
 | `met-accepts-hypothetical` | `assess.rs` | assessed gate: a hypothetical entailment never meets the gate | `Assess.met_spec` |
 | `outcome-passes-unfinished` | `assess.rs` | assessed gate: a check Weft could not finish is unknown, never a pass | `Assess.outcome_loop_spec` |
@@ -359,7 +454,7 @@ requirements' facts `guard::require`.
 <!-- end generated -->
 
 What these proofs do not cover: the fold from event files to the list of
-steps (and with it where a splice is placed), skipping and the end guard,
+steps (and with it where a splice is placed),
 template and definition parsing, digests, Git and file reads, the write
 protocol (`spec/KbWrite.tla` and the kill tests), scope globs
 (`writfold_core::scope`), citation verdicts (`verdict`), decision states and
@@ -405,8 +500,8 @@ In the order of [`proof-backfill-spec.md`](proof-backfill-spec.md), section 4:
 
 1. `writfold_core::scope` (glob matching): reshape to index loops over code
    points, prove against an inductive matcher.
-2. Plan closing writes (skip, the end guard, the re-check under the lock),
-   after the policy spec fixes their signatures.
+2. Plan closing writes: the re-check under the lock (`skip_check`,
+   `skipped` and `close_check` were proved in the policy round).
 3. `decision` and `investigation`.
 4. `verdict` (citation verdicts, `recorded`), including the clock
    subtractions that need a bound.

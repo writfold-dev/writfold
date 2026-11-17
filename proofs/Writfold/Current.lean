@@ -1,5 +1,6 @@
 import Writfold.Gate
 import Writfold.Plan
+import Writfold.Policy
 
 /-!
 # About the current subject
@@ -53,15 +54,17 @@ theorem about_spec (rd rc d c : Slice U8) :
 /-! ## `evidence` and `judge` -/
 
 /-- A receipt is about the current subject: the present definition and the
-present content in scope, which is not empty. -/
+present content in scope, which is not empty; and it is bound to this run
+and subject. -/
 def About (d c : List U8) (r : gate.Recorded) : Prop :=
-  r.definition.val = d ∧ r.content.val = c ∧ c ≠ []
+  r.definition.val = d ∧ r.content.val = c ∧ c ≠ [] ∧ r.bound = true
 
 /-- `evidence` on the model: the comparison flags of one receipt. -/
 def evid (d c : List U8) (r : gate.Recorded) : gate.Evidence :=
   { outcome := r.outcome,
     same_definition := decide (r.definition.val = d),
-    same_scope := decide (c ≠ [] ∧ r.content.val = c) }
+    same_scope := decide (c ≠ [] ∧ r.content.val = c),
+    bound := r.bound }
 
 theorem isCurrent_evid (d c : List U8) (r : gate.Recorded) :
     isCurrent (evid d c r) = true ↔ About d c r := by
@@ -196,14 +199,15 @@ theorem judge_empty_content (rs : Slice gate.Recorded) (d c : Slice U8) (h : c.v
     gate.judge rs d c ⦃ r => r.1 ≠ .Satisfied ⦄ := by
   apply WP.spec_mono (judge_satisfied_iff rs d c)
   intro r hr hs
-  obtain ⟨i, hi, ⟨_, _, hc⟩, _, _⟩ := hr.mp hs
+  obtain ⟨i, hi, ⟨_, _, hc, _⟩, _, _⟩ := hr.mp hs
   exact hc h
 
 /-! ## `stands` and `statements` -/
 
-/-- A statement is about the present definition and content. -/
+/-- A statement is about the present definition and content, and bound to
+this run and subject. -/
 def AboutS (d c : List U8) (f : gate.Said) : Prop :=
-  f.definition.val = d ∧ f.content.val = c
+  f.definition.val = d ∧ f.content.val = c ∧ f.bound = true
 
 theorem stands_spec (f : gate.Said) (a : Bool) (d c : Slice U8) :
     gate.stands f a d c ⦃ b => b = true ↔ f.attested = a ∧ AboutS d.val c.val f ⦄ := by
@@ -215,14 +219,24 @@ theorem stands_spec (f : gate.Said) (a : Bool) (d c : Slice U8) :
     simp [heq] at hne
   · rename_i heq
     have ha : f.attested = a := by simpa using heq
-    apply WP.spec_mono (about_spec _ _ d c)
-    intro b hb
-    simp [hb, ha, AboutS, alloc.vec.Vec.deref, Slice.from_val]
+    split
+    · rename_i hb
+      apply WP.spec_mono (about_spec _ _ d c)
+      intro b hab
+      simp [hab, ha, hb, AboutS, alloc.vec.Vec.deref, Slice.from_val]
+    · rename_i hb
+      simp [AboutS, hb]
+
+/-- An attestation counts as some attestation only when it is bound. -/
+theorem attests_spec (f : gate.Said) :
+    gate.attests f ⦃ b => b = (f.attested && f.bound) ⦄ := by
+  unfold gate.attests
+  cases f.attested <;> simp
 
 /-- The three flags over the first `i` statements. -/
 def Flags (fs : List gate.Said) (d c : List U8) (i : Nat) (ac aa wc : Bool) : Prop :=
   (ac = true ↔ ∃ j, ∃ hj : j < fs.length, j < i ∧ fs[j].attested = true ∧ AboutS d c fs[j]) ∧
-  (aa = true ↔ ∃ j, ∃ hj : j < fs.length, j < i ∧ fs[j].attested = true) ∧
+  (aa = true ↔ ∃ j, ∃ hj : j < fs.length, j < i ∧ fs[j].attested = true ∧ fs[j].bound = true) ∧
   (wc = true ↔ ∃ j, ∃ hj : j < fs.length, j < i ∧ fs[j].attested = false ∧ AboutS d c fs[j])
 
 theorem statements_loop_spec (fs : Slice gate.Said) (d c : Slice U8) (ac aa wc : Bool)
@@ -243,6 +257,7 @@ theorem statements_loop_spec (fs : Slice gate.Said) (d c : Slice U8) (ac aa wc :
       subst hx
       have hif : ∀ (c v : Bool), (if c = true then ok true else ok v : Result Bool) = ok (c || v) := by
         intro c v; cases c <;> rfl
+      step with attests_spec as ⟨ ba, hba ⟩
       simp only [hif, bind_tc_ok]
       step with stands_spec as ⟨ b, hb ⟩
       step with stands_spec as ⟨ b1, hb1 ⟩
@@ -261,16 +276,17 @@ theorem statements_loop_spec (fs : Slice gate.Said) (d c : Slice U8) (ac aa wc :
           by_cases hjeq : j = i.val
           · subst hjeq; exact Or.inl (hb.mpr ⟨hja, hjab⟩)
           · exact Or.inr (hac.mpr ⟨j, hj, by omega, hja, hjab⟩)
-      · rw [hi1, Bool.or_eq_true]
+      · rw [hi1, Bool.or_eq_true, hba]
         constructor
         · rintro (h | h)
-          · exact ⟨i.val, hil, by omega, h⟩
-          · obtain ⟨j, hj, hji, hja⟩ := haa.mp h
-            exact ⟨j, hj, by omega, hja⟩
-        · rintro ⟨j, hj, hji, hja⟩
+          · simp only [Bool.and_eq_true] at h
+            exact ⟨i.val, hil, by omega, h.1, h.2⟩
+          · obtain ⟨j, hj, hji, hja, hjb⟩ := haa.mp h
+            exact ⟨j, hj, by omega, hja, hjb⟩
+        · rintro ⟨j, hj, hji, hja, hjb⟩
           by_cases hjeq : j = i.val
-          · subst hjeq; exact Or.inl hja
-          · exact Or.inr (haa.mpr ⟨j, hj, by omega, hja⟩)
+          · subst hjeq; exact Or.inl (by simp [hja, hjb])
+          · exact Or.inr (haa.mpr ⟨j, hj, by omega, hja, hjb⟩)
       · rw [hi1, Bool.or_eq_true]
         constructor
         · rintro (h | h)
@@ -288,13 +304,14 @@ theorem statements_loop_spec (fs : Slice gate.Said) (d c : Slice U8) (ac aa wc :
       exact ⟨hac, haa, hwc⟩
   · exact ⟨hi, hf⟩
 
-/-- An attestation or a waiver stands exactly when one is about the present
-definition and content; `attested_any` is whether any attestation exists. -/
+/-- An attestation or a waiver stands exactly when one is bound and about the
+present definition and content; `attested_any` is whether any bound
+attestation exists. -/
 theorem statements_spec (fs : Slice gate.Said) (d c : Slice U8) :
     gate.statements fs d c ⦃ s =>
       (s.attested_current = true ↔ ∃ f ∈ fs.val, f.attested = true ∧ AboutS d.val c.val f) ∧
       (s.waived_current = true ↔ ∃ f ∈ fs.val, f.attested = false ∧ AboutS d.val c.val f) ∧
-      (s.attested_any = true ↔ ∃ f ∈ fs.val, f.attested = true) ⦄ := by
+      (s.attested_any = true ↔ ∃ f ∈ fs.val, f.attested = true ∧ f.bound = true) ⦄ := by
   unfold gate.statements
   apply WP.spec_bind (statements_loop_spec fs d c false false false 0#usize (by simp)
     (by simp [Flags]))
@@ -313,7 +330,7 @@ theorem statements_spec (fs : Slice gate.Said) (d c : Slice U8) :
   refine ⟨?_, ?_, ?_⟩
   · rw [hac]; exact mem (fun f => f.attested = true ∧ AboutS d.val c.val f)
   · rw [hwc]; exact mem (fun f => f.attested = false ∧ AboutS d.val c.val f)
-  · rw [haa]; exact mem (fun f => f.attested = true)
+  · rw [haa]; exact mem (fun f => f.attested = true ∧ f.bound = true)
 
 /-! ## The composed claim for one gate -/
 
@@ -378,26 +395,51 @@ namespace Writfold.Core.Plan
 
 /-! ## `fact_met`, `met_all`, `advance` -/
 
+/-- Met under a policy: a met standing the policy accepts (`Policy.met_spec`). -/
+def PMet (x : gate.Standing) (a : policy.Accept) : Prop :=
+  (x = .Checked .Satisfied ∧ a.satisfied = true) ∨
+  (x = .Attested ∧ a.attested = true) ∨ (x = .Waived ∧ a.waived = true)
+
+/-- `PMet` as a function. -/
+def pmetB (x : gate.Standing) (a : policy.Accept) : Bool :=
+  match x with
+  | .Checked .Satisfied => a.satisfied
+  | .Attested => a.attested
+  | .Waived => a.waived
+  | _ => false
+
+theorem pmetB_iff (x : gate.Standing) (a : policy.Accept) : pmetB x a = true ↔ PMet x a := by
+  rcases x with st | _ | _
+  · cases st <;> simp [pmetB, PMet]
+  · simp [pmetB, PMet]
+  · simp [pmetB, PMet]
+
+/-- Met under a policy is met: a policy only narrows. -/
+theorem PMet.met {x : gate.Standing} {a : policy.Accept} (h : PMet x a) : Gate.Met x := by
+  rcases h with ⟨h, _⟩ | ⟨h, _⟩ | ⟨h, _⟩ <;> simp [Gate.Met, h]
+
 /-- `fact_met` on the model. -/
 def factMetB : plan.GateFact → Bool
   | .Undefined => false
-  | .Stands s => Gate.metB s
+  | .Stands s a => pmetB s a
 
 theorem fact_met_spec (g : plan.GateFact) :
     plan.fact_met g ⦃ b => b = factMetB g ⦄ := by
   unfold plan.fact_met
   cases g with
   | Undefined => simp [factMetB]
-  | Stands s =>
+  | Stands s a =>
     simp only
-    apply WP.spec_mono (Gate.met_spec s)
+    apply WP.spec_mono (Policy.met_spec s a)
     intro b hb
-    have hm := Gate.metB_iff s
-    cases hmb : Gate.metB s <;> cases b <;> simp_all [factMetB, Gate.Met]
+    have hm := pmetB_iff s a
+    simp only [factMetB]
+    have hb' : b = true ↔ PMet s a := hb
+    cases hmb : pmetB s a <;> cases b <;> simp_all
 
 theorem factMetB_iff (g : plan.GateFact) :
-    factMetB g = true ↔ ∃ s, g = .Stands s ∧ Gate.Met s := by
-  cases g <;> simp [factMetB, Gate.metB_iff]
+    factMetB g = true ↔ ∃ s a, g = .Stands s a ∧ PMet s a := by
+  cases g <;> simp [factMetB, pmetB_iff]
 
 theorem met_all_loop_spec (gs : Slice plan.GateFact) (out : alloc.vec.Vec Bool) (i : Usize)
     (hi : i.val ≤ gs.val.length) (hout : out.val = (gs.val.take i.val).map factMetB) :
@@ -446,11 +488,12 @@ theorem advance_facts_spec (nodes : Slice plan.Node) (pos : Usize) (gs : Slice p
   simpa [alloc.vec.Vec.deref, Slice.from_val, hv] using hr
 
 /-- A step is recorded done exactly when it is the current step and every
-gate it names has a usable definition and stands met (satisfied, attested
-or waived). A step with no gates owes nothing. -/
+gate it names has a usable definition and stands met under its policy
+(satisfied, attested or waived, each only where the gate accepts it). A
+step with no gates owes nothing. -/
 theorem advance_facts_ok_iff (nodes : Slice plan.Node) (pos : Usize) (gs : Slice plan.GateFact) :
     plan.advance nodes pos gs ⦃ r => r = .Ok () ↔
-      cur nodes.val = some pos.val ∧ ∀ g ∈ gs.val, ∃ s, g = .Stands s ∧ Gate.Met s ⦄ := by
+      cur nodes.val = some pos.val ∧ ∀ g ∈ gs.val, ∃ s a, g = .Stands s a ∧ PMet s a ⦄ := by
   unfold plan.advance
   step with met_all_spec as ⟨ v, hv ⟩
   apply WP.spec_mono (advance_ok_iff nodes pos (alloc.vec.Vec.deref v))
@@ -468,20 +511,21 @@ theorem advance_undefined_refused (nodes : Slice plan.Node) (pos : Usize)
     plan.advance nodes pos gs ⦃ r => r ≠ .Ok () ⦄ := by
   apply WP.spec_mono (advance_facts_ok_iff nodes pos gs)
   intro r hr hok
-  obtain ⟨s, hs, _⟩ := (hr.mp hok).2 _ h
+  obtain ⟨s, a, hs, _⟩ := (hr.mp hok).2 _ h
   cases hs
 
 /-! ## The assurance sentence, end to end -/
 
 /-- A step is recorded as done only when every gate it names has a usable
-definition and stands met on evidence about the present digests. `judged k`
-is what the caller computed for gate `k`: when gate `k` stands, its standing
-is the kernels' (`judge`, `statements`, `standing`) on that gate's
-receipts, statements and present digests. -/
+definition and stands met on evidence about the present digests (and, by
+`PMet.met`, under a policy that only narrows). `judged k` is what the caller
+computed for gate `k`: when gate `k` stands, its standing is the kernels'
+(`judge`, `statements`, `standing`) on that gate's receipts, statements and
+present digests. -/
 theorem done_only_when_met (nodes : Slice plan.Node) (pos : Usize) (gs : Slice plan.GateFact)
     (rs : Nat → Slice gate.Recorded) (fs : Nat → Slice gate.Said) (ac : Nat → Bool)
     (d c : Nat → Slice U8)
-    (judged : ∀ k (hk : k < gs.val.length) s, gs.val[k]'hk = .Stands s →
+    (judged : ∀ k (hk : k < gs.val.length) s a, gs.val[k]'hk = .Stands s a →
       (do let r ← gate.judge (rs k) (d k) (c k)
           let st ← gate.statements (fs k) (d k) (c k)
           gate.standing (ac k) r.1 st) = ok s) :
@@ -494,9 +538,9 @@ theorem done_only_when_met (nodes : Slice plan.Node) (pos : Usize) (gs : Slice p
       (∃ f ∈ (fs k).val, f.attested = false ∧ Gate.AboutS (d k).val (c k).val f) ⦄ := by
   apply WP.spec_mono (advance_facts_ok_iff nodes pos gs)
   intro r hr hok k hk
-  obtain ⟨s, hs, hmet⟩ := (hr.mp hok).2 _ (List.getElem_mem hk)
+  obtain ⟨s, a, hs, hmet⟩ := (hr.mp hok).2 _ (List.getElem_mem hk)
   have hcomp := Gate.met_only_when_current (rs k) (fs k) (ac k) (d k) (c k)
-  rw [judged k hk s hs, WP.spec_ok] at hcomp
-  exact hcomp hmet
+  rw [judged k hk s a hs, WP.spec_ok] at hcomp
+  exact hcomp hmet.met
 
 end Writfold.Core.Plan

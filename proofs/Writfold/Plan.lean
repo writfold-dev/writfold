@@ -20,6 +20,12 @@ ordered list of steps; these are the decisions on that list.
   current step, the first new step becomes current (`splice_spec`,
   `splice_keeps_existing`, `splice_keeps_prefix`, `splice_new_open`,
   `splice_current`).
+- `skip_check` admits exactly the current step that the run's pinned policy
+  does not lock, and otherwise refuses in the fixed order: complete, not
+  current, locked (`skip_check_spec`, `skip_ok_iff`). A skip record of a
+  locked step never closes it (`locked_skip_never_closes`), so the step stays
+  current (`locked_stays_current`). `close_check` refuses closing the last
+  open step while a required template is missing (`close_check_spec`).
 - `splice_check` is `Already` exactly when the key is already spliced, so a
   splice is idempotent on its key; it admits a splice only within the depth
   bound and only before the current step (`splice_check_spec`,
@@ -340,6 +346,99 @@ theorem stale_never_current (nodes : Slice plan.Node) (i : Nat) (hi : i < nodes.
   have hdone := (hb.mp hbt).1
   obtain ⟨h, hf, _⟩ := (leastFailing_some_iff _ _ _).mp hcur
   simp [closedB, hdone] at hf
+
+/-! ## `skip_check`, `skipped` and `close_check` -/
+
+/-- `skip_check`'s decision, refusal by refusal, in the fixed order:
+complete, then not current, then locked by the run's pinned policy. -/
+theorem skip_check_spec (nodes : Slice plan.Node) (pos : Usize) (locked : Bool) :
+    plan.skip_check nodes pos locked ⦃ r => match r with
+      | .Ok _ => cur nodes.val = some pos.val ∧ locked = false
+      | .Err .Complete => cur nodes.val = none
+      | .Err (.NotCurrent now) => cur nodes.val = some now.val ∧ now.val ≠ pos.val
+      | .Err .Locked => cur nodes.val = some pos.val ∧ locked = true ⦄ := by
+  unfold plan.skip_check
+  step with current_spec as ⟨ o, ho ⟩
+  cases o with
+  | none =>
+    simp only [WP.spec_ok]
+    simpa using ho.symm
+  | some now =>
+    simp only
+    split
+    · rename_i hne
+      simp only [WP.spec_ok]
+      refine ⟨by simpa using ho.symm, ?_⟩
+      intro h
+      simp only [bne_iff_ne, ne_eq] at hne
+      exact hne (UScalar.eq_of_val_eq h)
+    · rename_i heq
+      have hnow : cur nodes.val = some pos.val := by
+        have : now.val = pos.val := by simpa using heq
+        rw [← this]
+        simpa using ho.symm
+      cases locked
+      · simp [hnow]
+      · simp [hnow]
+
+/-- A skip is admitted exactly when the step is the current one and the run's
+pin does not lock it. -/
+theorem skip_ok_iff (nodes : Slice plan.Node) (pos : Usize) (locked : Bool) :
+    plan.skip_check nodes pos locked ⦃ r =>
+      r = .Ok () ↔ cur nodes.val = some pos.val ∧ locked = false ⦄ := by
+  apply WP.spec_mono (skip_check_spec nodes pos locked)
+  intro r hr
+  cases r with
+  | Ok u => simpa using hr
+  | Err e =>
+    cases e with
+    | Complete =>
+      simp only [reduceCtorEq, false_iff, not_and]
+      intro h; rw [hr] at h; simp at h
+    | NotCurrent now =>
+      simp only [reduceCtorEq, false_iff, not_and]
+      intro h
+      rw [hr.1] at h
+      simp only [Option.some.injEq] at h
+      exact absurd h hr.2
+    | Locked =>
+      simp only [reduceCtorEq, false_iff, not_and]
+      intro _ hl; rw [hr.2] at hl; simp at hl
+
+theorem skipped_spec (recorded locked : Bool) :
+    plan.skipped recorded locked ⦃ b => b = (recorded && !locked) ⦄ := by
+  unfold plan.skipped
+  cases recorded <;> cases locked <;> simp
+
+/-- A skip record never closes a locked step. -/
+theorem locked_skip_never_closes (recorded : Bool) :
+    (do let s ← plan.skipped recorded true; plan.closed ⟨false, s⟩) ⦃ b => b = false ⦄ := by
+  unfold plan.skipped plan.closed
+  cases recorded <;> simp
+
+/-- So a locked step that is not done, with every step before it closed, is
+the current step. -/
+theorem locked_stays_current (nodes : Slice plan.Node) (i : Nat) (hi : i < nodes.val.length)
+    (hprefix : ∀ j (hj : j < i), closedB (nodes.val[j]'(Nat.lt_trans hj hi)) = true)
+    (hopen : nodes.val[i].done = false) (hlock : nodes.val[i].skipped = false) :
+    plan.current nodes ⦃ r => r.map (·.val) = some i ⦄ := by
+  apply WP.spec_mono (current_spec nodes)
+  intro r hr
+  rw [hr]
+  unfold cur
+  rw [leastFailing_some_iff]
+  exact ⟨hi, by simp [closedB, hopen, hlock], hprefix⟩
+
+/-- The plan's last open step closes only when every required template is
+present: on the last step, the first template not present refuses it. -/
+theorem close_check_spec (last : Bool) (present : Slice Bool) :
+    plan.close_check last present ⦃ r => r.map (·.val) =
+      if last then firstOwed present.val else none ⦄ := by
+  unfold plan.close_check
+  cases last
+  · simp
+  · simp only [↓reduceIte]
+    exact first_owed_spec present
 
 /-! ## `splice` -/
 
