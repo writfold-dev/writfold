@@ -341,6 +341,15 @@ def claims : List Name := [
   ``Writfold.Core.Delivery.guard_withdrawn_irrelevant,
   ``Writfold.Core.Delivery.guard_spent_never_passes,
   -- ---- end delivery modes, second round ----
+  -- plan repin (writfold_core::policy::repin)
+  ``Writfold.Core.Policy.in_force_loop_spec,
+  ``Writfold.Core.Policy.in_force_spec,
+  ``Writfold.Core.Policy.in_force_none_iff,
+  ``Writfold.Core.Policy.repin_check_spec,
+  ``Writfold.Core.Policy.repin_ok_iff,
+  ``Writfold.Core.Policy.repin_unmoved_refused,
+  ``Writfold.Core.Policy.repin_closed_refused,
+  ``Writfold.Core.Policy.repin_keeps_skips,
 ]
 
 /-- Every theorem under `Writfold.Core`, sorted by name. -/

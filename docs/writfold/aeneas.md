@@ -59,6 +59,9 @@ never fails, result as stated):
   decides once candidates are withdrawn or bound, the `posted:<mode>`
   standing, and the delivery guard's decision over the run's candidates
   (`Delivery.lean`, replaced in place and extended).
+- The repin round (17 November 2026, below; built in v0.6.0-dev.6): which
+  pin entry is in force and whether a run may adopt a changed policy
+  (`Policy.lean`, extended in place).
 
 The gate (`docker compose -f compose.proofs.yaml run --build --rm proofs`,
 or the `docker run` form below) regenerates the translation and refuses
@@ -605,11 +608,53 @@ findings; JSON. `deliver withdraw` and `deliver posted` are each one
 create-new file under the existing write protocol, so `KbWrite.tla` and
 `RunGraph.tla` are unchanged.
 
+### The repin round (17 November 2026)
+
+Built in v0.6.0-dev.6 ([policy-spec.md](policy-spec.md) section 2.5,
+`plan repin`). The two decisions the verb adds were translated and proved,
+and their mutants calibrated, before the verb was wired. After the round:
+579 theorems, 306 required claims (298 before), 197 mutants (189 before).
+
+`writfold_core::policy::repin` (`proofs/Writfold/Policy.lean`, extended in
+place):
+
+- `in_force(applies)`: which pin entry is in force. `writfold-kb` lists a
+  run's pin entries oldest first (pins by `seq`, each pin's entries in file
+  order) and says which apply to what is asked about: a gate for one step,
+  or the required file. `in_force_spec` (`InForce`): the answer is an entry
+  that applies with no applying entry after it, so the newest pin naming a
+  gate wins and a repin's entry for one done step wins over its general
+  entry for the gate; `in_force_none_iff`: there is none exactly when no
+  entry applies. Before the round "the newest pin naming it" was decided in
+  `writfold-kb` for gates, and the required file was always compared with
+  the first pin.
+- `repin_check(writable, valid, pin, loads, keeps)`: whether a repin may
+  be written. `repin_check_spec`: the refusals in their fixed order (the
+  run is closed; a pin file does not read; nothing was pinned; nothing
+  moved; a gate an open step owes does not load now; the lock list as it
+  is now locks a step the run already skipped). `repin_ok_iff`: written
+  exactly when the run is open, every pin file reads, the policy against
+  the pins (`pin_all`) is `Moved`, every owed gate loads and no skipped
+  step would be locked. `repin_unmoved_refused`, `repin_closed_refused`,
+  `repin_keeps_skips` (a repin never reopens a step, so it invalidates
+  nothing itself).
+
+That a repinned run never reads plain `complete` was already proved
+(`summary_complete_iff`, `exception_never_clean`). Tested, not proved:
+reading and writing pin files and their digests, gathering the entries and
+which apply (comparing gate names and step paths), which digest a repin
+records for each step, the definition digests themselves, folding the plan
+again under the lock list as it is now to see whether a skipped step would
+be locked, the `repin:` line and all other rendering. A repin is one create-new file under the
+existing write protocol and the plan re-check (`Recheck.lean`, whose
+`Current` case now also stands for "no step was current and none is"), so
+`KbWrite.tla` and `RunGraph.tla` are unchanged.
+
 ### The claims and their mutants
 
 <!-- generated from proofs/mutants.py -->
 
-189 mutants (20 before 16 November 2026, 86 after the backfill's first round, 108 after the policy round, 161 after the backfill's second round, 170 after the bug-fix round, 189 after the delivery round: its nine delivery mutants re-aimed and 19 added, all 28 calibrated). Each must break exactly the theorems named.
+197 mutants (20 before 16 November 2026, 86 after the backfill's first round, 108 after the policy round, 161 after the backfill's second round, 170 after the bug-fix round, 189 after the delivery round: its nine delivery mutants re-aimed and 19 added, all 28 calibrated; 197 after the repin round). Each must break exactly the theorems named.
 
 | Mutant | File | What it breaks | Must break |
 |---|---|---|---|
@@ -803,6 +848,14 @@ create-new file under the existing write protocol, so `KbWrite.tla` and
 | `guard-all-skips-last` | `delivery.rs` | delivery guard: the last candidate counts for the all-ready rule | `Delivery.guard_all_loop_spec` |
 | `guard-any-skips-last` | `delivery.rs` | delivery guard: the last candidate may hold the bytes | `Delivery.guard_any_loop_spec` |
 
+| `in-force-inverted` | `policy/repin.rs` | repin: the entry in force is one that applies | `Policy.in_force_loop_spec` |
+| `in-force-skips-oldest` | `policy/repin.rs` | repin: the oldest entry counts when no newer one applies | `Policy.in_force_loop_spec` |
+| `repin-closed-run` | `policy/repin.rs` | repin: a closed run takes no repin | `Policy.repin_check_spec`, `Policy.repin_ok_iff`, `Policy.repin_closed_refused` |
+| `repin-ignores-invalid` | `policy/repin.rs` | repin: a pin file that does not read is not adopted | `Policy.repin_check_spec`, `Policy.repin_ok_iff` |
+| `repin-when-same` | `policy/repin.rs` | repin: refused when nothing moved | `Policy.repin_check_spec`, `Policy.repin_ok_iff` |
+| `repin-when-unpinned` | `policy/repin.rs` | repin: refused when the run pinned nothing | `Policy.repin_check_spec`, `Policy.repin_ok_iff` |
+| `repin-undefined-gate` | `policy/repin.rs` | repin: a gate an open step owes must load to be adopted | `Policy.repin_check_spec`, `Policy.repin_ok_iff` |
+| `repin-reopens-skip` | `policy/repin.rs` | repin: adopting a lock list never reopens a skipped step | `Policy.repin_check_spec`, `Policy.repin_ok_iff` |
 <!-- end generated -->
 
 What these proofs do not cover: the fold from event files to the list of

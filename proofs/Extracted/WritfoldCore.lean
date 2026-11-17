@@ -3280,6 +3280,53 @@ def policy.lines.lines_clean
     else ok false
   else ok false
 
+/-- [writfold_core::policy::repin::in_force]: loop body 0:
+    Source: 'crates/writfold-core/src/policy/repin.rs', lines 15:4-22:1
+    Visibility: public -/
+@[rust_loop_body]
+def policy.repin.in_force_loop.body
+  (applies : Slice Bool) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize (Option Std.Usize))
+  := do
+  if index > 0#usize
+  then
+    let index1 ← index - 1#usize
+    let b ← Slice.index_usize applies index1
+    if b
+    then ok (done (some index1))
+    else ok (cont index1)
+  else ok (done none)
+
+/-- [writfold_core::policy::repin::in_force]: loop 0:
+    Source: 'crates/writfold-core/src/policy/repin.rs', lines 15:4-22:1
+    Visibility: public -/
+@[rust_loop]
+def policy.repin.in_force_loop
+  (applies : Slice Bool) (index : Std.Usize) : Result (Option Std.Usize) := do
+  loop
+    (fun index1 => policy.repin.in_force_loop.body applies index1)
+    index
+
+/-- [writfold_core::policy::repin::in_force]:
+    Source: 'crates/writfold-core/src/policy/repin.rs', lines 13:0-22:1
+    Visibility: public -/
+def policy.repin.in_force
+  (applies : Slice Bool) : Result (Option Std.Usize) := do
+  let index := Slice.len applies
+  policy.repin.in_force_loop applies index
+
+/-- [writfold_core::policy::repin::Refusal]
+    Source: 'crates/writfold-core/src/policy/repin.rs', lines 25:0-40:1
+    Visibility: public -/
+@[discriminant isize]
+inductive policy.repin.Refusal where
+| Closed : policy.repin.Refusal
+| Invalid : policy.repin.Refusal
+| Unpinned : policy.repin.Refusal
+| Same : policy.repin.Refusal
+| Undefined : policy.repin.Refusal
+| Reopens : policy.repin.Refusal
+
 /-- [writfold_core::policy::Pin]
     Source: 'crates/writfold-core/src/policy.rs', lines 35:0-42:1
     Visibility: public -/
@@ -3288,6 +3335,33 @@ inductive policy.Pin where
 | Unpinned : policy.Pin
 | Same : policy.Pin
 | Moved : policy.Pin
+
+/-- [writfold_core::policy::repin::repin_check]:
+    Source: 'crates/writfold-core/src/policy/repin.rs', lines 47:0-73:1
+    Visibility: public -/
+def policy.repin.repin_check
+  (writable : Bool) (valid : Bool) (pin : policy.Pin) (loads : Bool)
+  (keeps : Bool) :
+  Result (core.result.Result Unit policy.repin.Refusal)
+  := do
+  if writable
+  then
+    if valid
+    then
+      match pin with
+      | policy.Pin.Unpinned =>
+        ok (core.result.Result.Err policy.repin.Refusal.Unpinned)
+      | policy.Pin.Same =>
+        ok (core.result.Result.Err policy.repin.Refusal.Same)
+      | policy.Pin.Moved =>
+        if loads
+        then
+          if keeps
+          then ok (core.result.Result.Ok ())
+          else ok (core.result.Result.Err policy.repin.Refusal.Reopens)
+        else ok (core.result.Result.Err policy.repin.Refusal.Undefined)
+    else ok (core.result.Result.Err policy.repin.Refusal.Invalid)
+  else ok (core.result.Result.Err policy.repin.Refusal.Closed)
 
 /-- [writfold_core::policy::pin_one]:
     Source: 'crates/writfold-core/src/policy.rs', lines 46:0-60:1

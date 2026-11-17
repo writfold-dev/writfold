@@ -29,6 +29,13 @@ since it was pinned, how a step was closed and one word for how a plan ended.
   met and nothing invalid), `lines_flagged_never_clean`,
   `lines_agree_with_summary` (clean lines imply every step closed, every
   required template present, the policy unmoved and nothing stale).
+- `plan repin` (`writfold_core::policy::repin`): `in_force_spec` (the pin
+  entry in force is the newest that applies; none exactly when none
+  applies, `in_force_none_iff`), `repin_check_spec` (the refusals in their
+  fixed order), `repin_ok_iff` (written exactly for an open run whose
+  readable pins moved, whose owed gates load and whose skipped steps stay
+  skipped), `repin_unmoved_refused`, `repin_closed_refused`,
+  `repin_keeps_skips`.
 -/
 
 open Aeneas Aeneas.Std Result
@@ -879,5 +886,118 @@ theorem lines_agree_with_summary (cs : Slice policy.Close) (f : policy.Facts)
   · cases st
     · rfl
     · exact absurd rfl h3
+
+/-! ## `plan repin`: the entry in force, and whether a repin may be written -/
+
+/-- `in_force`'s answer: the greatest index of an entry that applies, or
+none when no entry applies. -/
+def InForce (xs : List Bool) : Option Usize → Prop
+  | some i => ∃ h : i.val < xs.length, xs[i.val] = true ∧
+      ∀ j (hj : j < xs.length), i.val < j → xs[j] = false
+  | none => ∀ b ∈ xs, b = false
+
+theorem in_force_loop_spec (xs : Slice Bool) (i : Usize) (hi : i.val ≤ xs.val.length)
+    (hnewer : ∀ j (hj : j < xs.val.length), i.val ≤ j → xs.val[j] = false) :
+    policy.repin.in_force_loop xs i ⦃ r => InForce xs.val r ⦄ := by
+  unfold policy.repin.in_force_loop
+  apply loop.spec_decr_nat (fun i : Usize => i.val)
+    (fun i : Usize => i.val ≤ xs.val.length ∧
+      ∀ j (hj : j < xs.val.length), i.val ≤ j → xs.val[j] = false)
+  · intro i ⟨hi, hnewer⟩
+    unfold policy.repin.in_force_loop.body
+    split
+    · rename_i hpos
+      step as ⟨ i1, hi1 ⟩
+      step as ⟨ b, hb ⟩
+      split
+      · rename_i hbt
+        simp only [WP.spec_ok, InForce]
+        refine ⟨by scalar_tac, by rw [← hb]; exact hbt, ?_⟩
+        intro j hj hij
+        exact hnewer j hj (by scalar_tac)
+      · rename_i hbf
+        simp only [WP.spec_ok]
+        refine ⟨by scalar_tac, ?_, by scalar_tac⟩
+        intro j hj hij
+        by_cases hji : i1.val = j
+        · subst hji; rw [← hb]; simpa using hbf
+        · exact hnewer j hj (by scalar_tac)
+    · rename_i hzero
+      simp only [WP.spec_ok, InForce]
+      intro e he
+      obtain ⟨j, hj, rfl⟩ := List.getElem_of_mem he
+      exact hnewer j hj (by scalar_tac)
+  · exact ⟨hi, hnewer⟩
+
+/-- The pin entry in force is the newest that applies: it applies, and no
+entry after it does; there is none exactly when no entry applies. -/
+theorem in_force_spec (xs : Slice Bool) :
+    policy.repin.in_force xs ⦃ r => InForce xs.val r ⦄ := by
+  unfold policy.repin.in_force
+  apply in_force_loop_spec
+  · simp [Slice.len]
+  · intro j hj hle
+    simp [Slice.len] at hle
+    omega
+
+/-- Nothing is in force exactly when no pin entry applies: one entry naming
+the gate (or the required file) is enough for a comparison to be made. -/
+theorem in_force_none_iff (xs : Slice Bool) :
+    policy.repin.in_force xs ⦃ r => r = none ↔ ∀ b ∈ xs.val, b = false ⦄ := by
+  apply WP.spec_mono (in_force_spec xs)
+  intro r hr
+  cases r with
+  | none => simpa [InForce] using hr
+  | some i =>
+    obtain ⟨h, ht, _⟩ := hr
+    simp only [reduceCtorEq, false_iff, not_forall]
+    exact ⟨xs.val[i.val], List.getElem_mem h, by simp [ht]⟩
+
+/-- `repin_check`'s decision, refusal by refusal, in the fixed order: the
+run is closed; a pin file does not read; nothing was pinned; nothing moved;
+a gate an open step owes does not load; the lock list as it is now would
+reopen a skipped step. -/
+theorem repin_check_spec (w v : Bool) (p : policy.Pin) (l k : Bool) :
+    policy.repin.repin_check w v p l k ⦃ r => match r with
+      | .Ok _ => w = true ∧ v = true ∧ p = .Moved ∧ l = true ∧ k = true
+      | .Err .Closed => w = false
+      | .Err .Invalid => w = true ∧ v = false
+      | .Err .Unpinned => w = true ∧ v = true ∧ p = .Unpinned
+      | .Err .Same => w = true ∧ v = true ∧ p = .Same
+      | .Err .Undefined => w = true ∧ v = true ∧ p = .Moved ∧ l = false
+      | .Err .Reopens => w = true ∧ v = true ∧ p = .Moved ∧ l = true ∧ k = false ⦄ := by
+  unfold policy.repin.repin_check
+  cases w <;> cases v <;> cases p <;> cases l <;> cases k <;> simp
+
+/-- A repin is written exactly when the run is open, every pin file reads,
+the policy moved, every gate an open step owes loads now, and the lock list
+as it is now locks no step the run skipped. -/
+theorem repin_ok_iff (w v : Bool) (p : policy.Pin) (l k : Bool) :
+    policy.repin.repin_check w v p l k ⦃ r =>
+      r = .Ok () ↔ w = true ∧ v = true ∧ p = .Moved ∧ l = true ∧ k = true ⦄ := by
+  unfold policy.repin.repin_check
+  cases w <;> cases v <;> cases p <;> cases l <;> cases k <;> simp
+
+/-- A run whose policy did not move (the same, or never pinned) never
+writes a repin. -/
+theorem repin_unmoved_refused (w v : Bool) (p : policy.Pin) (l k : Bool) (h : p ≠ .Moved) :
+    policy.repin.repin_check w v p l k ⦃ r => r ≠ .Ok () ⦄ := by
+  apply WP.spec_mono (repin_ok_iff w v p l k)
+  intro r hr hok
+  exact h (hr.mp hok).2.2.1
+
+/-- A closed run never writes a repin. -/
+theorem repin_closed_refused (v : Bool) (p : policy.Pin) (l k : Bool) :
+    policy.repin.repin_check false v p l k ⦃ r => r = .Err .Closed ⦄ := by
+  unfold policy.repin.repin_check
+  simp
+
+/-- A repin never reopens a step: it is refused when the lock list as it
+is now locks a step the run already skipped. -/
+theorem repin_keeps_skips (w v : Bool) (p : policy.Pin) (l : Bool) :
+    policy.repin.repin_check w v p l false ⦃ r => r ≠ .Ok () ⦄ := by
+  apply WP.spec_mono (repin_ok_iff w v p l false)
+  intro r hr hok
+  simpa using (hr.mp hok).2.2.2.2
 
 end Writfold.Core.Policy

@@ -995,6 +995,49 @@ MUTANTS = (
            "    while index + 1 < seen.len() {\n        if postable(&seen[index]) {",
            ("Writfold.Core.Delivery.guard_any_loop_spec",)),
     # ---- end delivery modes, second round ----
+    # ---- plan repin (17 November 2026) ----
+    # repin: the entry in force is one that applies
+    Mutant("in-force-inverted", "policy/repin.rs",
+           "        if applies[index] {",
+           "        if !applies[index] {",
+           ("Writfold.Core.Policy.in_force_loop_spec",)),
+    # repin: the oldest entry counts when no newer one applies
+    Mutant("in-force-skips-oldest", "policy/repin.rs",
+           "    while index > 0 {",
+           "    while index > 1 {",
+           ("Writfold.Core.Policy.in_force_loop_spec",)),
+    # repin: a closed run takes no repin
+    Mutant("repin-closed-run", "policy/repin.rs",
+           "    if !writable {",
+           "    if false {",
+           ("Writfold.Core.Policy.repin_check_spec", "Writfold.Core.Policy.repin_ok_iff",
+            "Writfold.Core.Policy.repin_closed_refused")),
+    # repin: a pin file that does not read is not adopted
+    Mutant("repin-ignores-invalid", "policy/repin.rs",
+           "    if !valid {",
+           "    if false {",
+           ("Writfold.Core.Policy.repin_check_spec", "Writfold.Core.Policy.repin_ok_iff")),
+    # repin: refused when nothing moved
+    Mutant("repin-when-same", "policy/repin.rs",
+           "        Pin::Same => Err(Refusal::Same),",
+           "        Pin::Same => Ok(()),",
+           ("Writfold.Core.Policy.repin_check_spec", "Writfold.Core.Policy.repin_ok_iff")),
+    # repin: refused when the run pinned nothing
+    Mutant("repin-when-unpinned", "policy/repin.rs",
+           "        Pin::Unpinned => Err(Refusal::Unpinned),",
+           "        Pin::Unpinned => Ok(()),",
+           ("Writfold.Core.Policy.repin_check_spec", "Writfold.Core.Policy.repin_ok_iff")),
+    # repin: a gate an open step owes must load to be adopted
+    Mutant("repin-undefined-gate", "policy/repin.rs",
+           "            if !loads {",
+           "            if false {",
+           ("Writfold.Core.Policy.repin_check_spec", "Writfold.Core.Policy.repin_ok_iff")),
+    # repin: adopting a lock list never reopens a skipped step
+    Mutant("repin-reopens-skip", "policy/repin.rs",
+           "            if !keeps {",
+           "            if false {",
+           ("Writfold.Core.Policy.repin_check_spec", "Writfold.Core.Policy.repin_ok_iff")),
+    # ---- end plan repin ----
 )
 
 # lake reports `error: <path>.lean:<line>:<col>: <message>`
