@@ -150,21 +150,25 @@ fn a_required_end_step_added_later_must_be_spliced_before_completing() -> TestRe
         &required,
         "schema = \"writfold-plan-required/1\"\nend = [\"reflect\"]\n",
     )?;
-    assert_eq!(plan(&w, "advance", "")?.1, 0);
+    // The required file changed after the plan was set: the run's policy
+    // moved since its pin (exit 2), and the advance is still recorded.
+    let (text, exit) = plan(&w, "advance", "")?;
+    assert!(exit == 2 && text.contains("policy=moved"), "{text}");
     let refused = plan(&w, "advance", "");
     assert!(refused.is_err_and(|e| {
         e.to_string()
             .contains("cannot complete without its required end step reflect")
     }));
     let (text, exit) = plan(&w, "use", "reflect")?;
+    // The required file changed after the plan was set: policy moved, exit 2.
     assert!(
-        exit == 0
+        exit == 2
             && text.contains("spliced reflect under the root as reflect#2")
             && text.contains("step fix#1/implement [current]")
             && text.contains("step reflect#2/reflect [later]"),
         "{text}"
     );
-    assert_eq!(plan(&w, "advance", "")?.1, 0);
+    assert_eq!(plan(&w, "advance", "")?.1, 2);
     let (text, _) = plan(&w, "status", "")?;
     assert!(text.contains("step reflect#2/reflect [current]"), "{text}");
     Ok(())

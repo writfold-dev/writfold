@@ -27,4 +27,4 @@
 │                    ││▶ the next step to pick up, as       ││             in review-list          │
 │                    ││recorded                             ││d exact   c commands   g gates       │
 ╰────────────────────╯╰─────────────────────────────────────╯╰─────────────────────────────────────╯
- [read-only]  KB has 19 uncommitted changes       j/k step   l inspect   d detail   ? help   q quit
+ [read-only]  KB has 23 uncommitted changes       j/k step   l inspect   d detail   ? help   q quit

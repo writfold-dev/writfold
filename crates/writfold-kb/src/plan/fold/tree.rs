@@ -73,6 +73,7 @@ fn steps_of(
             splice: path.clone(),
             usage,
             root: s.parent.is_empty(),
+            locked: false,
             done: None,
             skipped: None,
             begin: s.records.clone(),

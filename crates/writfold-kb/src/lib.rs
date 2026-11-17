@@ -163,6 +163,8 @@ pub enum Verb {
     /// `init [DIR] [--example NAME] [--dry-run]`: the one verb that needs
     /// no KB.
     Init(init::Init),
+    /// `policy`: the policy as it is now and the current run's pin.
+    Policy,
 }
 
 /// One invocation.
@@ -305,6 +307,11 @@ fn answer(session: &Session<'_>, request: &Request) -> Result<(Answer, &'static 
             let (answer, id) = verbs::runs::resume(session, run.as_deref(), &request.cwd)?;
             (answer, "resume", vec![id])
         }
+        Verb::Policy => (
+            verbs::policy::policy(session, &request.cwd)?,
+            "policy",
+            Vec::new(),
+        ),
         other => graph(session, other)?,
     })
 }

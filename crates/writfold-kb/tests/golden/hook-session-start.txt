@@ -13,3 +13,5 @@ decision proposal/decision/2026-03-02-batch-ledger-writes [accepted] Batch ledge
 commit d5db758bda80 2026-11-05 fixture KB
 # note: 4 citation(s) have no cached verdict; run `writfold kb stale harbor`
 # coverage=complete records=28/28 shown=7 omitted=0 kb=d5db758bda80 index=rebuilt cursor=none q=bee89fa3786e
+
+policy: none configured (continuity only: checkpoints, records and citations work without one)

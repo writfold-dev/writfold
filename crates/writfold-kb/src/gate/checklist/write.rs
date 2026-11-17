@@ -57,6 +57,9 @@ fn shaped(c: &Cover) -> Result<(Option<String>, Option<String>)> {
         .transpose()?;
     match (c.outcome, &reason, c.references.is_empty()) {
         (Outcome::Supported, None, false) => Ok((None, note)),
+        (Outcome::NoneFound, Some(_), true) => Err(KbError::Usage(
+            "gate cover … none-found cites at least one look that found nothing (an observation of this run with status no-data or not-found) and gives --reason".into(),
+        )),
         (Outcome::Supported, Some(_), _) => Err(KbError::Usage(
             "gate cover … supported cites references; --reason is for unsupported and not-applicable".into(),
         )),
@@ -140,6 +143,9 @@ fn item(d: &def::Definition, c: &Cover) -> Result<()> {
             c.gate
         )));
     };
+    if let Some(found) = spec.item(&c.item) {
+        return super::looks::allowed(d, found, c.outcome);
+    }
     if spec.item(&c.item).is_none() {
         let ids: Vec<&str> = spec.items.iter().map(|i| i.id.as_str()).collect();
         return Err(KbError::Refused(format!(
@@ -185,6 +191,7 @@ fn rows(
             let by = check_text("--by", &c.by)?;
             let evidence = match c.outcome {
                 Outcome::Supported => grounded(&cx, &c.references)?,
+                Outcome::NoneFound => super::looks::recorded(&cx, &c.references)?,
                 _ => observations(&cx, c)?,
             };
             let rows = super::rows_of(&filings.covers, &c.gate, &c.item, &subject.name);

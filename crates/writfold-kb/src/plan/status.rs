@@ -64,6 +64,7 @@ pub(super) fn status(session: &Session<'_>, loaded: &Loaded, gates: bool) -> Res
         ("moved", moved),
         ("invalid", graph.invalid.len()),
     ];
+    policy(&mut answer, session, loaded, judged.as_deref());
     if gates {
         detail::add(&mut answer, graph, judged.as_deref());
     }
@@ -99,4 +100,105 @@ fn notes(answer: &mut Answer, loaded: &Loaded) {
     answer
         .notes
         .extend(loaded.moved.iter().map(moved::Moved::note));
+}
+
+/// Flag the steps whose pinned gate moved (`!policy-moved`, with why) and
+/// the open steps the pin locks (`!locked`).
+fn policy_rows(answer: &mut Answer, loaded: &Loaded, drift: &super::drift::Drift) {
+    for (i, why) in &drift.steps {
+        if let Some(row) = answer.rows.get_mut(*i) {
+            if !row.flags.iter().any(|f| f == "policy-moved") {
+                row.flags.push("policy-moved".into());
+            }
+            row.more.push(crate::emit::More {
+                label: "why",
+                text: why.clone(),
+                ..crate::emit::More::default()
+            });
+        }
+    }
+    for (i, step) in loaded.graph.steps.iter().enumerate() {
+        if let (true, false, Some(row)) = (step.locked, step.closed(), answer.rows.get_mut(i)) {
+            row.flags.push("locked".into());
+            row.extra.push(("locked", serde_json::json!(true)));
+        }
+    }
+}
+
+/// The plan's summary, from its steps, the run's state and its drift.
+pub(crate) fn ended(
+    session: &Session<'_>,
+    loaded: &Loaded,
+    judged: Option<&[Vec<judge::Gate>]>,
+    drift: &super::drift::Drift,
+) -> super::summary::Ended {
+    let repo = (loaded.subject.as_ref()).map(|s| (s.top.as_path(), s.name.as_str()));
+    let mut names: Vec<String> = Vec::new();
+    if let Ok(r) = super::required::find(&session.ws.root, repo) {
+        names.extend(r.start.into_iter().chain(r.end));
+    }
+    let pinned = drift.pins.first().and_then(|p| p.required.as_ref());
+    for name in pinned.iter().flat_map(|r| &r.unskippable) {
+        if !names.contains(name) {
+            names.push(name.clone());
+        }
+    }
+    let present = super::summary::required_present(&loaded.graph, &names);
+    let closed = runs::state(session, &loaded.rec) == "closed";
+    super::summary::ended(&loaded.graph, judged, (drift, closed), &present)
+}
+
+/// The final `plan:` row of `plan status`.
+fn summary_row(
+    loaded: &Loaded,
+    ended: &super::summary::Ended,
+    (drift, closed): (&super::drift::Drift, Option<String>),
+) -> crate::emit::Row {
+    let text = match ended.word {
+        "incomplete" | "closed-incomplete" => {
+            let at = loaded.graph.current().map_or(0, |i| i + 1);
+            let closed = match (ended.word, closed) {
+                ("closed-incomplete", Some(c)) => format!("; closed {c}"),
+                _ => String::new(),
+            };
+            format!("step {at}/{} open; {}{closed}", ended.steps, ended.counts())
+        }
+        _ => format!("{}; policy={}", ended.counts(), drift.word),
+    };
+    crate::emit::Row {
+        kind: "plan",
+        id: ended.shown(),
+        text,
+        path: Some(format!("{}/plan/", runs::dir(&loaded.rec))),
+        section: Some("plan"),
+        extra: ended.keys(),
+        ..crate::emit::Row::default()
+    }
+}
+
+/// The policy parts of `plan status`: drift and lock flags, the summary
+/// row, and the trailer's `policy=`, `summary=` and `repinned=`.
+fn policy(
+    answer: &mut Answer,
+    session: &Session<'_>,
+    loaded: &Loaded,
+    judged: Option<&[Vec<judge::Gate>]>,
+) {
+    let drift = super::drift::judge(&session.ws.root, loaded);
+    policy_rows(answer, loaded, &drift);
+    if !loaded.graph.planned() {
+        return;
+    }
+    let ended = ended(session, loaded, judged, &drift);
+    let closed = super::closed_note(session, &loaded.rec);
+    answer
+        .rows
+        .push(summary_row(loaded, &ended, (&drift, closed)));
+    answer.words.push(("policy", drift.word.into()));
+    answer.words.push(("summary", ended.word.into()));
+    answer.trailer_json.extend(ended.keys());
+    let repins = drift.pins.iter().filter(|p| p.kind == "repin").count();
+    answer.counts.push(("repinned", repins));
+    answer.flagged |= drift.moved() || ended.flagged();
+    answer.notes.extend(drift.note());
 }

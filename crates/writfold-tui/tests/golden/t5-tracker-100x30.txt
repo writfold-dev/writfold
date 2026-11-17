@@ -24,7 +24,7 @@
 │                    ││tickets, investigations and          ││                                     │
 │                    ││signatures within two links          ││                                     │
 │                    ││19 records reached · not followed: 1 ││                                     │
-│                    ││disputed link, 22 inferred links   ! ││                                     │
+│                    ││disputed link, 26 inferred links   ! ││                                     │
 │                    ││cites a source that has moved        ││d exact   f run   a impact           │
 ╰────────────────────╯╰─────────────────────────────────────╯╰─────────────────────────────────────╯
  [read-only]                                    j/k record   l inspect   a impact   ? help   q quit

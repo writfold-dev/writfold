@@ -66,6 +66,10 @@ pub(crate) fn run_row(
 ) -> (Row, bool) {
     let mut row = record_row(session, rec);
     row.kind = "run";
+    // A closed run whose plan still has an open step (policy spec 2.6).
+    if state == "closed" && plan::open(&session.ws.root, rec) {
+        row.flags.push("incomplete".into());
+    }
     row.status = Some(state);
     if current == Some(rec.id.as_str()) {
         row.flags.push("current".into());

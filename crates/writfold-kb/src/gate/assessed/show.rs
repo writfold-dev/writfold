@@ -18,6 +18,7 @@ fn short(text: &str) -> &str {
 
 fn more(label: &'static str, text: String, path: Option<&str>, flags: Vec<String>) -> More {
     More {
+        extra: Vec::new(),
         status: None,
         label,
         text,

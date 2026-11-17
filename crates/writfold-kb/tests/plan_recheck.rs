@@ -84,7 +84,7 @@ fn plan(w: &World, command: &str) -> TestResult<(String, u8)> {
     w.run(&w.request(Verb::Plan(verb(command))))
 }
 
-/// The run's plan files (events and snapshots) with their bytes.
+/// The run's plan files (events, snapshots and policy pins) with their bytes.
 fn files(w: &World) -> TestResult<BTreeMap<PathBuf, Vec<u8>>> {
     fn walk(dir: &Path, out: &mut BTreeMap<PathBuf, Vec<u8>>) -> TestResult {
         for entry in std::fs::read_dir(dir).into_iter().flatten() {
@@ -99,6 +99,7 @@ fn files(w: &World) -> TestResult<BTreeMap<PathBuf, Vec<u8>>> {
     }
     let mut out = BTreeMap::new();
     walk(&w.kb.join(format!("runs/{RUN}/plan")), &mut out)?;
+    walk(&w.kb.join(format!("runs/{RUN}/policy")), &mut out)?;
     Ok(out)
 }
 

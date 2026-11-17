@@ -6,7 +6,7 @@ use std::collections::BTreeSet;
 use std::path::Path;
 use writfold_core::diag::CODES;
 
-const CLASSES: [&str; 6] = ["syntax", "key", "value", "ref", "file", "section"];
+const CLASSES: [&str; 7] = ["syntax", "key", "value", "ref", "file", "section", "policy"];
 
 fn root() -> &'static Path {
     Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../.."))

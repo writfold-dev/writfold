@@ -18,6 +18,8 @@ pub struct More {
     pub line: Option<u32>,
     pub flags: Vec<String>,
     pub status: Option<String>,
+    /// JSON only: additive keys (`allowed`, `accepted` on a checklist item).
+    pub extra: Vec<(&'static str, serde_json::Value)>,
 }
 
 /// The edge that reached an `impact` row, for JSON readers only; the text
@@ -51,6 +53,9 @@ pub struct Row {
     /// JSON only: the tier that found a `find` or `match` row
     /// (`matched_on`); absent on every other verb's rows.
     pub matched_on: Option<&'static str>,
+    /// JSON only: additive keys of a policy row (`accept`, `accepted`,
+    /// `locked`, `summary` …); absent unless set.
+    pub extra: Vec<(&'static str, serde_json::Value)>,
 }
 
 /// What a verb found, before paging.
@@ -69,6 +74,14 @@ pub struct Answer {
     pub failed: bool,
     /// Extra trailer counts such as `stale=` and `unverifiable=`.
     pub counts: Vec<(&'static str, usize)>,
+    /// Trailer words such as `policy=moved` and `summary=complete`; in
+    /// JSON, keys of the trailer.
+    pub words: Vec<(&'static str, String)>,
+    /// JSON only: further trailer keys (`passed`, `attested`, `waived`).
+    pub trailer_json: Vec<(&'static str, serde_json::Value)>,
+    /// The answer is not clean for a verb-specific reason (exit 2), such as
+    /// a run whose policy moved since its pin.
+    pub flagged: bool,
     /// The diagnostics of the files a person wrote that this verb read:
     /// `diagnostics` in JSON (present, maybe empty, when `Some`), and
     /// drawn on stderr by the application.
@@ -246,13 +259,14 @@ pub fn emit(answer: &Answer, frame: &Frame, scope: &Scope<'_>) -> Result<Output>
                     | "disorder"
                     | "missing"
                     | "miss"
+                    | "not-accepted"
             )
     });
     let exit = if answer.failed {
         1
     } else if answer.refused {
         3
-    } else if partial || flagged {
+    } else if partial || flagged || answer.flagged {
         2
     } else {
         0
@@ -329,6 +343,9 @@ impl Trailer<'_> {
         for (name, count) in &self.answer.counts {
             out.push_str(&format!(" {name}={count}"));
         }
+        for (name, word) in &self.answer.words {
+            out.push_str(&format!(" {name}={word}"));
+        }
         if s.unreadable > 0 {
             out.push_str(&format!(" unreadable={}", s.unreadable));
         }
@@ -358,12 +375,19 @@ impl Trailer<'_> {
             .iter()
             .map(|(n, c)| ((*n).to_owned(), json!(c)))
             .collect();
-        json!({"coverage": if self.partial { "partial" } else { "complete" },
+        let mut out = json!({"coverage": if self.partial { "partial" } else { "complete" },
                "records_examined": s.examined, "records_total": s.total,
                "shown": p.to - p.from, "omitted": self.total - p.to, "omitted_by": omitted_by,
                "answer": if self.answer.unknown.is_some() { "unknown" } else { "known" },
                "reason": self.answer.unknown, "counts": counts, "unreadable": s.unreadable,
                "needs": p.needs, "kb": s.pin.label(), "index": s.index.label(),
-               "cursor": p.cursor, "q": &self.query[..12]})
+               "cursor": p.cursor, "q": &self.query[..12]});
+        for (name, word) in &self.answer.words {
+            out[*name] = json!(word);
+        }
+        for (name, value) in &self.answer.trailer_json {
+            out[*name] = value.clone();
+        }
+        out
     }
 }

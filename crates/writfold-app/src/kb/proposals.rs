@@ -78,6 +78,8 @@ pub fn verb(name: &str, common: &Common, positional: &[String]) -> Option<Result
             })));
         }
         ("init", _) => Err("init takes at most one directory".into()),
+        ("policy", []) => return Some(Ok(Verb::Policy)),
+        ("policy", _) => Err("policy takes no arguments".into()),
         _ => return None,
     };
     Some(verb.map(Verb::Proposal))
@@ -142,6 +144,19 @@ mod tests {
             Verb::Check { scope: Some(_) }
         ));
         assert!(verb("check a b").is_err());
+        Ok(())
+    }
+
+    #[test]
+    fn init_and_policy_verbs() -> Result<(), String> {
+        let init = verb("init sub --example research-policy --dry-run")?;
+        assert!(matches!(&init, Verb::Init(i)
+            if i.dry_run && i.example.as_deref() == Some("research-policy")
+                && i.dir == Some(PathBuf::from("sub"))));
+        assert!(matches!(verb("init")?, Verb::Init(i) if !i.dry_run && i.dir.is_none()));
+        assert!(verb("init a b").is_err());
+        assert!(matches!(verb("policy")?, Verb::Policy));
+        assert!(verb("policy x").is_err());
         Ok(())
     }
 }

@@ -32,7 +32,7 @@
 │                    ││                                                       ││                                                       │
 │                    ││                                                       ││                                                       │
 │                    ││                                                       ││                                                       │
-│                    ││19 records reached · not followed: 1 disputed link, 22 ││                                                       │
+│                    ││19 records reached · not followed: 1 disputed link, 26 ││                                                       │
 │                    ││inferred links   ! cites a source that has moved       ││d exact wording and file   f run   a impact            │
 ╰────────────────────╯╰───────────────────────────────────────────────────────╯╰───────────────────────────────────────────────────────╯
  [read-only]                                                                        j/k record   l inspect   a impact   ? help   q quit

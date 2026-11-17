@@ -1,5 +1,5 @@
 step change#1/deliver [current] owes: deliver:pr-comment [open] @runs/run-20261101T090000Z-a1b2c3/plan/splice-change.1.json:1
   next: writfold kb deliver prepare --mode pr-comment --from FILE
 # note: not advanced: change#1/deliver owes deliver:pr-comment [open] (first owed: deliver:pr-comment); nothing written
-# coverage=complete records=30/30 shown=1 omitted=0 kb=f22eaa2acfdf+dirty:2 index=fresh cursor=none q=344986924523
+# coverage=complete records=31/31 shown=1 omitted=0 kb=f22eaa2acfdf+dirty:3 index=fresh cursor=none q=344986924523
 # exit=3

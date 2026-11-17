@@ -5,7 +5,8 @@
 //! Kept: the `[current]` step with its `read:` and `next:` lines, and each
 //! done step shown `!stale` with its `why:` line. Dropped: the later steps,
 //! the `done:` lines, notes and the trailer. A plan whose every step is
-//! closed is one `plan complete` line; a run without a plan, nothing.
+//! closed is one line saying how it ended (its summary row); a run without
+//! a plan, nothing.
 
 /// One answer row: its first line and its indented lines.
 fn rows(text: &str) -> Vec<Vec<&str>> {
@@ -36,11 +37,7 @@ pub fn block(status: &str, run: &str, header: &str) -> Option<String> {
     let current = steps.iter().position(|r| r[0].contains(" [current] "));
     let mut text = match current {
         Some(i) => format!("\n{header} for run {run}: step {}/{total}\n", i + 1),
-        None => {
-            return Some(format!(
-                "\n{header} for run {run}: complete, every step is done or skipped ({total} steps)\n"
-            ));
-        }
+        None => return Some(ended(status, run, header, total)),
     };
     let wanted = |row: &&Vec<&str>| row[0].contains(" [current] ") || row[0].ends_with(" !stale");
     for row in steps.iter().filter(wanted) {
@@ -54,6 +51,25 @@ pub fn block(status: &str, run: &str, header: &str) -> Option<String> {
         }
     }
     Some(text)
+}
+
+/// Every step closed: the plan's summary row when `plan status` gives one
+/// (`plan complete-with-exceptions 3 steps: …`), else the step count.
+fn ended(status: &str, run: &str, header: &str, total: usize) -> String {
+    let summary = rows(status)
+        .into_iter()
+        .find(|r| r[0].starts_with("plan "))
+        .map(|r| {
+            r[0].rsplit_once(" @")
+                .map_or(r[0], |(head, _)| head)
+                .to_owned()
+        });
+    match summary {
+        Some(line) => format!("\n{header} for run {run}: {line}\n"),
+        None => format!(
+            "\n{header} for run {run}: complete, every step is done or skipped ({total} steps)\n"
+        ),
+    }
 }
 
 #[cfg(test)]
@@ -73,6 +89,17 @@ step c#1/reflect [later] gates: reflected @c:1\n# note: plan c\n# coverage=compl
             "\nPlan position for run run-1: step 3/4\n\
 step c#1/implement [done] unit [stale] @b:1 !stale\n  why: no longer holds: unit [stale]\n\
 step c#1/review [current] owes: review [open] @c:1\n  next: writfold kb gate attest review --statement TEXT --by WHO\n"
+        );
+    }
+
+    #[test]
+    fn a_closed_plan_says_how_it_ended() {
+        let done = "step c#1/a [skipped] no time @a:1\nplan complete-with-exceptions 1 step: 0 passed, 0 attested, 0 waived, 1 skipped; policy=same @runs/r/plan/\n# trailer\n";
+        assert_eq!(
+            block(done, "run-1", "Plan").as_deref(),
+            Some(
+                "\nPlan for run run-1: plan complete-with-exceptions 1 step: 0 passed, 0 attested, 0 waived, 1 skipped; policy=same\n"
+            )
         );
     }
 

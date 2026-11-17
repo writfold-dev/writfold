@@ -61,6 +61,9 @@ pub struct Step {
     pub usage: usize,
     /// Whether that splice is at the root (rather than under a step).
     pub root: bool,
+    /// Whether the run's pin locks it (`unskippable`): a step a locked
+    /// required template brings at the root, never one spliced later.
+    pub locked: bool,
     pub done: Option<(String, Done)>,
     pub skipped: Option<(String, Skip)>,
     /// Where its window begins.
@@ -171,7 +174,11 @@ pub fn read(root: &std::path::Path, run_dir: &str, run: &str) -> Graph {
         let hex = digest.strip_prefix("sha256:")?;
         std::fs::read(dir.join(event::TEMPLATES).join(format!("{hex}.toml"))).ok()
     };
-    fold(run, &format!("{run_dir}/{}", event::DIR), files, &snapshot)
+    let (pins, _) = super::pin::read(root, run_dir, run);
+    let locked = (pins.first().and_then(|p| p.required.as_ref()))
+        .map_or_else(Vec::new, |r| r.unskippable.clone());
+    let dir = format!("{run_dir}/{}", event::DIR);
+    fold_locked(run, &dir, files, &snapshot, &locked)
 }
 
 type Snapshot<'a> = &'a dyn Fn(&str) -> Option<Vec<u8>>;
@@ -179,6 +186,17 @@ type Snapshot<'a> = &'a dyn Fn(&str) -> Option<Vec<u8>>;
 /// Fold event files `(name, text)` filed under `dir` (KB-relative).
 /// `snapshot` returns a template snapshot's bytes by digest.
 pub fn fold(run: &str, dir: &str, files: Vec<(String, String)>, snapshot: Snapshot<'_>) -> Graph {
+    fold_locked(run, dir, files, snapshot, &[])
+}
+
+/// [`fold`], with the templates the run's pin locks (`unskippable`).
+pub fn fold_locked(
+    run: &str,
+    dir: &str,
+    files: Vec<(String, String)>,
+    snapshot: Snapshot<'_>,
+    locked: &[String],
+) -> Graph {
     let mut graph = Graph::default();
     let mut splices = Vec::new();
     let mut closes: Vec<(String, Event)> = Vec::new();
@@ -226,10 +244,26 @@ pub fn fold(run: &str, dir: &str, files: Vec<(String, String)>, snapshot: Snapsh
         }
     }
     graph.splices = splices;
+    lock(&mut graph, locked);
     close(&mut graph, closes);
     windows(&mut graph);
     graph.invalid.sort();
     graph
+}
+
+/// Mark the steps a locked required template brings at the root.
+fn lock(graph: &mut Graph, locked: &[String]) {
+    let roots: Vec<(&str, &str)> = (graph.splices.iter())
+        .filter(|(_, s, _)| s.parent.is_empty())
+        .map(|(path, s, _)| (path.as_str(), s.template.as_str()))
+        .collect();
+    for step in &mut graph.steps {
+        let template = roots
+            .iter()
+            .find(|(p, _)| *p == step.splice)
+            .map(|(_, t)| *t);
+        step.locked = step.root && template.is_some_and(|t| locked.iter().any(|l| l == t));
+    }
 }
 
 fn close(graph: &mut Graph, closes: Vec<(String, Event)>) {
@@ -246,6 +280,11 @@ fn close(graph: &mut Graph, closes: Vec<(String, Event)>) {
         };
         match e {
             Event::Done(d) => step.done = Some((path, d)),
+            // A skip of a step the run's pin locks counts for nothing.
+            Event::Skip(_) if !writfold_core::plan::skipped(true, step.locked) => {
+                let why = "a skip of a step this run cannot skip".to_owned();
+                graph.invalid.push((path, why));
+            }
             Event::Skip(s) => step.skipped = Some((path, s)),
             Event::Splice(_) => {}
         }

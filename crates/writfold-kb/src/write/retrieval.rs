@@ -279,6 +279,7 @@ fn row(session: &Session<'_>, path: &str) -> Row {
 
 fn more(label: &'static str, text: String, path: &str, line: Option<u32>) -> More {
     More {
+        extra: Vec::new(),
         status: None,
         label,
         text,

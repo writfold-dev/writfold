@@ -56,7 +56,8 @@ fn nested_structure_names_exact_parents_and_template_uses() -> TestResult {
     let (text, _) = w.run(&request)?;
     let value: Value = serde_json::from_str(&text)?;
     let rows = value["rows"].as_array().ok_or("rows")?;
-    assert_eq!(rows.len(), 6);
+    // Six steps, then the plan's summary row (v0.6.0-dev.3).
+    assert_eq!(rows.len(), 7);
     for (row, step) in rows.iter().zip(&graph.steps) {
         let usage = &graph.uses[step.usage];
         let more = row["more"].as_array().ok_or("more")?;

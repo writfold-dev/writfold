@@ -101,7 +101,10 @@ fn run_positions_match_plan_counts_for_open_complete_and_unplanned_runs() -> Tes
     assert!(plan_line(row(&answer, UNPLANNED)?).is_none());
     for (run, expected) in [
         (OPEN, "step 3/3 done=1 skipped=1 current=position#1/third"),
-        (COMPLETE, "complete steps=3 done=2 skipped=1"),
+        (
+            COMPLETE,
+            "complete-with-exceptions steps=3 passed=2 attested=0 waived=0 skipped=1",
+        ),
     ] {
         let line = plan_line(row(&answer, run)?).ok_or("plan line")?;
         assert_eq!(line["text"], expected);
@@ -114,8 +117,19 @@ fn run_positions_match_plan_counts_for_open_complete_and_unplanned_runs() -> Tes
             }),
         )?;
         let counts = &status["trailer"]["counts"];
-        for name in ["done", "skipped"] {
+        // A complete plan's line counts how steps closed (passed, attested,
+        // waived, skipped), an open one's done and skipped.
+        let names: &[&str] = if run == OPEN {
+            &["done", "skipped"]
+        } else {
+            &["skipped"]
+        };
+        for name in names {
             assert!(expected.contains(&format!("{name}={}", counts[name])));
+        }
+        if run != OPEN {
+            assert_eq!(status["trailer"]["passed"], 2);
+            assert_eq!(status["trailer"]["summary"], "complete-with-exceptions");
         }
         assert_eq!(counts["steps"], 3);
         if run == OPEN {

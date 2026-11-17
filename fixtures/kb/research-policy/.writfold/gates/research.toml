@@ -10,4 +10,7 @@ items = [
   "approach: justify the chosen implementation approach",
   "backfill: preserve findings under our research policy",
 ]
+not_applicable = ["backfill"]      # only this item may be covered not-applicable
+none_found = ["precedents"]        # this item may be covered none-found, citing a look that found nothing
+accept = ["attested"]              # and the gate as a whole takes no waiver
 description = "research before a change, under this team's own rubric"

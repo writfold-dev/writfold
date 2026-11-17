@@ -50,27 +50,10 @@ pub(super) fn record(
             KbError::Refused("no subject repository: run inside one, or pass --repo DIR".into())
         })?;
     let definition = def::find_repository(&ws.root, Some(&subject.top), &say.id)?;
-    if definition.assessed.is_some() {
-        return Err(KbError::Refused(format!(
-            "gate {} is assessed: only gate run, with every required Weft check entailed from grounded assumptions, meets it (statements about an assessed gate are not built)",
-            say.id
-        )));
-    }
-    if say.kind == Kind::Attested && definition.is_checklist() {
-        return Err(KbError::Refused(format!(
-            "gate {} is a checklist: record each item with gate cover {} <item> supported REF…|not-applicable --reason TEXT --by WHO (gate waive sets the whole gate aside)",
-            say.id, say.id
-        )));
-    }
+    refuse(say, &definition, &subject)?;
     // A run-record gate's statement binds the run-record digest it is judged by.
     let records = crate::plan::owed(&session, &rec).records;
     drop(session);
-    if say.kind == Kind::Attested && !definition.attested() {
-        return Err(KbError::Refused(format!(
-            "gate {} is a {} check: only a passing gate run satisfies it (gate waive sets it aside, with a reason)",
-            say.id, definition.class
-        )));
-    }
     let git = tool.admit()?;
     let patterns = definition.patterns();
     let wanted = |p: &str| writfold_core::scope::in_scope(&patterns, p);
@@ -109,6 +92,31 @@ pub(super) fn record(
     }];
     atomic::apply(&ws.root, &state, &ops, request.probe)?;
     answer(ws, tool, request, (&rec, &subject), say, &path, now)
+}
+
+/// The statements a gate's class or policy refuses.
+fn refuse(say: &Say, definition: &def::Definition, subject: &subject::Subject) -> Result<()> {
+    let refused = if definition.assessed.is_some() {
+        format!(
+            "gate {} is assessed: only gate run, with every required Weft check entailed from grounded assumptions, meets it (statements about an assessed gate are not built)",
+            say.id
+        )
+    } else if say.kind == Kind::Attested && definition.is_checklist() {
+        format!(
+            "gate {} is a checklist: record each item with gate cover {} <item> supported REF…|not-applicable --reason TEXT --by WHO (gate waive sets the whole gate aside)",
+            say.id, say.id
+        )
+    } else if say.kind == Kind::Waived && !definition.policy().waived {
+        super::policy::no_waiver(definition, subject)
+    } else if say.kind == Kind::Attested && !definition.attested() {
+        format!(
+            "gate {} is a {} check: only a passing gate run satisfies it (gate waive sets it aside, with a reason)",
+            say.id, definition.class
+        )
+    } else {
+        return Ok(());
+    };
+    Err(KbError::Refused(refused))
 }
 
 fn answer(

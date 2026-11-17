@@ -254,5 +254,6 @@ pub fn check(all: &[File], repo: bool) -> Report {
         }
     }
     report.diagnostics.extend(super::lint_cycles::cycles(all));
+    report.extend(super::lint_policy::check(all));
     report
 }

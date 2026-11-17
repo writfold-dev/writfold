@@ -5,7 +5,7 @@ use crate::emit::{Answer, More};
 
 fn gate_line(gate: &Gate) -> More {
     let state = gate.shown();
-    let mut text = format!("{} [{state}]", gate.id);
+    let mut text = format!("{} [{}]", gate.id, gate.display());
     if let Some(d) = &gate.delivery {
         text.push(' ');
         text.push_str(&d.summary);
@@ -17,6 +17,7 @@ fn gate_line(gate: &Gate) -> More {
         text.push_str(&format!(" {covered}/{required} required covered"));
     }
     More {
+        extra: Vec::new(),
         label: "gate",
         text,
         status: Some(state.into()),

@@ -16,9 +16,11 @@
 //!
 //! Checklist and assessed gates are both judged after the other gates and
 //! against them only, so neither can cite the other.
+pub mod allowed;
 pub mod batch;
 pub mod cover;
 mod judge;
+mod looks;
 mod show;
 pub mod spec;
 pub mod write;

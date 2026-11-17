@@ -29,6 +29,20 @@ pub struct Entry<'a> {
     pub looked: Option<crate::emit::More>,
     /// How many of the row's references are grounded by a check receipt.
     pub recorded: usize,
+    /// Whether the checklist restricts the reasoned outcomes at all.
+    pub restricted: bool,
+}
+
+impl Entry<'_> {
+    /// Covered under the checklist's policy ([`checklist::covered_under`]).
+    pub fn covers(&self) -> bool {
+        checklist::covered_under(self.item, self.spec.na, self.spec.none)
+    }
+
+    /// A current row whose outcome the policy does not take for this item.
+    pub fn not_accepted(&self) -> bool {
+        matches!(self.item, Item::NotApplicable | Item::NoneFound) && !self.covers()
+    }
 }
 
 /// What a checklist gate's row shows besides its standing.
@@ -47,7 +61,7 @@ impl View<'_> {
         let (mut covered, mut all) = (0, 0);
         for e in required {
             all += 1;
-            covered += usize::from(checklist::covered_under(e.item, true, false));
+            covered += usize::from(e.covers());
         }
         (covered, all)
     }
@@ -57,7 +71,7 @@ impl View<'_> {
     pub fn newest(&self) -> Option<&Filed> {
         self.entries
             .iter()
-            .filter(|e| checklist::covered_under(e.item, true, false))
+            .filter(|e| e.covers())
             .filter_map(|e| e.row)
             .max_by(|a, b| (&a.1.recorded, &a.0.name).cmp(&(&b.1.recorded, &b.0.name)))
             .map(|(f, _)| f)
@@ -130,9 +144,10 @@ fn entry<'a>(
         d.digest.as_bytes(),
         content.as_bytes(),
     );
-    let moved = match current && c.outcome == Outcome::Supported {
-        true => present.moved(c)?,
-        false => None,
+    let moved = match (current, c.outcome) {
+        (true, Outcome::Supported) => present.moved(c)?,
+        (true, Outcome::NoneFound) => super::looks::moved(present.cx, c)?,
+        _ => None,
     };
     let got = item(Some(checklist::Row {
         outcome: c.outcome,
@@ -196,14 +211,15 @@ pub fn judge<'a>(
                 row: newest,
                 why,
                 looked: crate::observe::looked(&observed, &d.id, &spec.id),
+                restricted: d.checklist.as_ref().is_some_and(|s| s.restricted()),
             });
         }
         let cells: Vec<checklist::Entry> = (entries.iter())
             .map(|e| checklist::Entry {
                 item: e.item,
                 required: e.spec.required,
-                na: true,
-                none: false,
+                na: e.spec.na,
+                none: e.spec.none,
             })
             .collect();
         let rollup = rollup_under(&cells);

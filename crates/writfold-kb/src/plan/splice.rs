@@ -154,6 +154,7 @@ fn write(
         }
     }
     let mut paths = Vec::new();
+    let mut covers = Vec::new();
     for p in planned {
         let splice = Event::Splice(Splice {
             parent: p.parent.clone(),
@@ -175,12 +176,21 @@ fn write(
             records: loaded.records.baseline(),
             recorded: time::stamp(now),
         });
+        covers.push(event::name(&splice));
         let path = format!("{dir}/{}", event::name(&splice));
         ops.push(Op::Create {
             path: path.clone(),
             bytes: event::bytes(&loaded.rec.id, &splice),
         });
         paths.push(path);
+    }
+    // The pin goes first after the guard: a crash leaves a pin without its
+    // splices, never splices without their pin.
+    if let Some(pin) = super::pin_write::op(&ws.root, loaded, planned, covers, now)? {
+        if let Op::Create { path, .. } = &pin {
+            paths.insert(0, path.clone());
+        }
+        ops.insert(1, pin);
     }
     apply(ws, request, &ops)?;
     Ok(paths)

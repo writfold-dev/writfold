@@ -92,6 +92,9 @@ pub struct Definition {
     pub assessed: Option<super::assessed::Spec>,
     /// A checklist gate's items.
     pub checklist: Option<super::checklist::Spec>,
+    /// `accept`, when written: the standings that meet the gate, in the
+    /// order satisfied, attested, waived ([`super::def_accept`]).
+    pub accept: Option<Vec<String>>,
     /// The directory holding the definition: what `{gate}` expands to.
     pub dir: PathBuf,
     /// `.writfold/gates/<id>.toml`, relative to its root.
@@ -103,6 +106,11 @@ pub struct Definition {
 impl Definition {
     pub fn patterns(&self) -> Vec<&str> {
         self.scope.iter().map(String::as_str).collect()
+    }
+
+    /// The standings that meet this gate, for [`writfold_core::policy::met`].
+    pub fn policy(&self) -> writfold_core::policy::Accept {
+        super::def_accept::policy(self.accept.as_deref())
     }
 
     /// An attested gate runs no command; only `gate attest` meets it.
@@ -177,6 +185,10 @@ pub fn digest(d: &Definition) -> String {
     }
     if let Some(spec) = &d.checklist {
         canonical.push_str(&spec.canonical());
+    }
+    // Only when written, so a definition without it keeps its digest.
+    if let Some(accept) = &d.accept {
+        canonical.push_str(&format!("accept={}\n", json(accept)));
     }
     format!(
         "sha256:{}",

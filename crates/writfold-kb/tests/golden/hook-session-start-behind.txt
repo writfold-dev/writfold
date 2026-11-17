@@ -14,3 +14,5 @@ commit d5db758bda80 2026-11-05 fixture KB
 # note: 9 citation(s) have no cached verdict; run `writfold kb stale`
 # note: no project matched the working directory; showing a KB-wide brief (pass a project, or --all)
 # coverage=partial records=28/28 shown=8 omitted=0 answer=unknown reason=no-home kb=d5db758bda80 index=fresh cursor=none q=5fd1130d20a7
+
+policy: none configured (continuity only: checkpoints, records and citations work without one)

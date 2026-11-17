@@ -6,6 +6,8 @@ pub mod find;
 pub mod impact;
 pub mod index;
 pub mod names;
+pub mod policy;
+mod policy_pin;
 pub mod repos;
 pub mod runs;
 pub mod stale;
@@ -104,6 +106,7 @@ pub fn record_row(session: &Session<'_>, rec: &Rec) -> Row {
 /// A continuation line for an edge: `via: <rel> <other>` at its provenance.
 pub fn via(rel: &str, other: &str, path: &str, line: u32) -> More {
     More {
+        extra: Vec::new(),
         status: None,
         label: "via",
         text: format!("{rel} {other}"),
@@ -117,6 +120,7 @@ pub fn via(rel: &str, other: &str, path: &str, line: u32) -> More {
 /// provenance: `via: <rel> (<origin>)`.
 pub fn link(edge: &Edge) -> More {
     More {
+        extra: Vec::new(),
         status: None,
         label: "via",
         text: format!("{} ({})", edge.rel, edge.origin),

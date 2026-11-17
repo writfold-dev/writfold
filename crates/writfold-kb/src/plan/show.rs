@@ -17,7 +17,7 @@ fn line(label: &'static str, text: String) -> More {
 pub fn listed(gates: &[&Gate]) -> String {
     let parts: Vec<String> = gates
         .iter()
-        .map(|g| format!("{} [{}]", g.id, g.shown()))
+        .map(|g| format!("{} [{}]", g.id, g.display()))
         .collect();
     parts.join(", ")
 }
