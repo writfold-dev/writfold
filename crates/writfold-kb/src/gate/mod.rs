@@ -22,6 +22,7 @@ mod discover;
 pub mod exec;
 pub(crate) mod ground;
 mod head;
+mod lines;
 pub(crate) mod own;
 pub mod places;
 pub mod policy;
@@ -115,7 +116,7 @@ pub fn execute(ws: &Workspace, request: &Request, verb: &GateVerb, now: i64) -> 
         GateVerb::Lines { run, repo } => {
             let session = Session::open(ws, Some(&tool), false, now)?;
             let rec = target(&session, run.as_deref())?;
-            lines(&session, &rec, repo.as_deref(), &request.cwd)
+            lines::lines(&session, &rec, repo.as_deref(), &request.cwd)
         }
     }
 }
@@ -272,100 +273,6 @@ pub fn resume_rows(session: &Session<'_>, rec: &Rec, cwd: &Path) -> (Vec<Row>, V
     match gate_rows(session, rec, &subject) {
         Ok((rows, ..)) => (rows, Vec::new()),
         Err(error) => (Vec::new(), vec![format!("gates: {error}")]),
-    }
-}
-
-/// `gate lines`: plain lines to paste into a commit message, exit 0 only
-/// when every gate is met: satisfied, or attested or waived (each named as
-/// such, with its statement's file).
-fn lines(session: &Session<'_>, rec: &Rec, repo: Option<&Path>, cwd: &Path) -> Result<Output> {
-    let Some(subject) = locate(session, rec, repo, cwd)? else {
-        return Err(KbError::Refused(
-            "no subject repository: run inside one, or pass --repo DIR".into(),
-        ));
-    };
-    let filings = Filings::for_run(session, rec);
-    let report = status::judge(session, &subject, &filings)?;
-    let count = |s: Standing| report.gates.iter().filter(|j| j.standing == s).count();
-    let satisfied = count(Standing::Checked(State::Satisfied));
-    let mut said = String::new();
-    for standing in [Standing::Attested, Standing::Waived] {
-        let n = count(standing);
-        if n > 0 {
-            said.push_str(&format!(", {n} {}", standing.name()));
-        }
-    }
-    let head = report.snapshot.commit.as_str();
-    let tally = match report.gates.len() {
-        0 => "no gate is owed; nothing was checked".to_owned(),
-        n => format!("{satisfied} of {n} satisfied{said}"),
-    };
-    let mut text = format!(
-        "Gates for {}@{} (writfold kb gate, run {}): {tally}\n",
-        subject.name,
-        head.get(..12).unwrap_or(head),
-        rec.id,
-    );
-    let width = report
-        .gates
-        .iter()
-        .map(|j| j.definition.id.len())
-        .max()
-        .unwrap_or(0);
-    for judged in &report.gates {
-        text.push_str(&gate_line(judged, width));
-    }
-    let invalid = filings.invalid() + report.problems.len();
-    if invalid > 0 {
-        text.push_str(&format!(
-            "invalid receipts or definitions: {invalid} (see writfold kb gate status)\n"
-        ));
-    }
-    if let Some(note) = report.recorded_note() {
-        text.push_str(&format!("note: {note}\n"));
-    }
-    let all = report.all_met() && invalid == 0;
-    Ok(Output {
-        text,
-        exit: if all { 0 } else { 2 },
-        report: None,
-        shown: None,
-    })
-}
-
-/// One `gate lines` line: the standing, then the receipt or statement.
-fn gate_line(judged: &status::Judged<'_>, width: usize) -> String {
-    if let Some(assessment) = &judged.assessment {
-        return assessed::line(judged, assessment, width);
-    }
-    if let Some(view) = &judged.checklist {
-        return checklist::line(judged, view, width);
-    }
-    let id = format!("{}:", judged.definition.id);
-    let standing = judged.standing.name();
-    let said = match judged.standing {
-        Standing::Attested => judged.statements.attested,
-        Standing::Waived => judged.statements.waived,
-        Standing::Checked(_) => None,
-    };
-    if let Some((f, s)) = said {
-        return format!(
-            "{id:<w$} {standing} by {}: {} {}\n",
-            s.by,
-            s.text,
-            f.path,
-            w = width + 1
-        );
-    }
-    match judged.receipt {
-        Some((f, r)) => format!(
-            "{id:<w$} {standing} {} {} {}\n",
-            r.outcome.name(),
-            receipt::ended(r),
-            f.path,
-            w = width + 1
-        ),
-        None => format!("{id:<w$} {standing}\n", w = width + 1),
     }
 }
 

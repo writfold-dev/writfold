@@ -3,9 +3,9 @@
 //! punctuation are set aside. Pure; the caller reads the names.
 //!
 //! The prefix decision ([`query_ok`], [`starts`], [`next_from`],
-//! [`prefixed`]) and the row admission ([`admit`]) are translated and
-//! proved (`proofs/Writfold/Find.lean`, `Walk.lean`); [`norm`] and
-//! [`tokens`] are text plumbing, tested.
+//! [`prefixed`]), the row admission ([`admit`]) and when the rows are
+//! [`full`] are translated and proved (`proofs/Writfold/Find.lean`,
+//! `Walk.lean`); [`norm`] and [`tokens`] are text plumbing, tested.
 
 use alloc::string::String;
 use alloc::vec::Vec;
@@ -113,6 +113,13 @@ pub fn prefixed(query: &[Vec<u32>], name: &[Vec<u32>]) -> Option<usize> {
 /// order, so a record appears once, under the first tier that found it.
 pub fn admit(shown: usize, limit: usize, seen: bool, passes: bool) -> bool {
     shown < limit && !seen && passes
+}
+
+/// Whether `find` has shown as many rows as it may: then [`admit`] takes
+/// no further hit, so a later tier need not run; before, it takes any hit
+/// not yet shown that passes the filter.
+pub fn full(shown: usize, limit: usize) -> bool {
+    shown >= limit
 }
 
 #[cfg(test)]

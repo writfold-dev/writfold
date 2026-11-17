@@ -22,6 +22,13 @@ since it was pinned, how a step was closed and one word for how a plan ended.
 - `summary_spec`: the plan's word, row by row in the table's order.
   `summary_complete_iff`, `moved_never_complete`, `open_never_complete`,
   `exception_never_clean`, `empty_never_complete`.
+- `gate lines` (`writfold_core::policy::lines`): `all_skipped_spec` (a gate
+  is listed `skipped` exactly when every step naming it was skipped),
+  `owed_met_spec` (a skipped gate never counts), `lines_clean_iff` (exit 0
+  exactly for `complete` or `complete-with-exceptions` with every other gate
+  met and nothing invalid), `lines_flagged_never_clean`,
+  `lines_agree_with_summary` (clean lines imply every step closed, every
+  required template present, the policy unmoved and nothing stale).
 -/
 
 open Aeneas Aeneas.Std Result
@@ -682,5 +689,195 @@ theorem empty_never_complete (cs : Slice policy.Close) (h : cs.val = []) (f : po
   apply WP.spec_mono (summary_spec cs f)
   intro r hr
   simpa [SummarySpec, h] using hr
+
+/-! ## `gate lines` agrees with the plan's word -/
+
+theorem is_skipped_spec (x : policy.Close) :
+    policy.lines.is_skipped x ⦃ b => b = true ↔ x = .Skipped ⦄ := by
+  unfold policy.lines.is_skipped; cases x <;> simp
+
+theorem all_skipped_loop_spec (xs : Slice policy.Close) (i : Usize) (hi : i.val ≤ xs.val.length)
+    (hprefix : ∀ j (hj : j < i.val) (hj' : j < xs.val.length), xs.val[j] = .Skipped) :
+    policy.lines.all_skipped_loop xs i ⦃ b => b = true ↔ ∀ x ∈ xs.val, x = .Skipped ⦄ := by
+  unfold policy.lines.all_skipped_loop
+  apply loop.spec_decr_nat (fun i : Usize => xs.val.length - i.val)
+    (fun i : Usize => i.val ≤ xs.val.length ∧
+      ∀ j (hj : j < i.val) (hj' : j < xs.val.length), xs.val[j] = .Skipped)
+  · intro i ⟨hi, hprefix⟩
+    unfold policy.lines.all_skipped_loop.body
+    dsimp only
+    split
+    · rename_i hlt
+      step as ⟨ x, hx ⟩
+      step with is_skipped_spec as ⟨ b, hb ⟩
+      split
+      · rename_i hbt
+        step as ⟨ i', hi' ⟩
+        refine ⟨by scalar_tac, ?_, by scalar_tac⟩
+        intro j hj hj'
+        by_cases hji : j < i.val
+        · exact hprefix j hji hj'
+        · have : j = i.val := by scalar_tac
+          subst this
+          rw [← hx]; exact hb.mp hbt
+      · rename_i hbt
+        simp only [WP.spec_ok, Bool.false_eq_true, false_iff, not_forall]
+        exact ⟨x, by rw [hx]; exact List.getElem_mem _, fun h => hbt (hb.mpr h)⟩
+    · rename_i hge
+      simp only [WP.spec_ok, true_iff]
+      intro e he
+      obtain ⟨j, hj, rfl⟩ := List.getElem_of_mem he
+      exact hprefix j (by scalar_tac) hj
+  · exact ⟨hi, hprefix⟩
+
+/-- A gate is listed `skipped` exactly when some step names it and every
+step naming it was skipped. -/
+theorem all_skipped_spec (xs : Slice policy.Close) :
+    policy.lines.all_skipped xs ⦃ b => b = true ↔ xs.val ≠ [] ∧ ∀ x ∈ xs.val, x = .Skipped ⦄ := by
+  unfold policy.lines.all_skipped
+  step with core.slice.Slice.is_empty_spec as ⟨ e, he ⟩
+  split
+  · rename_i hempty
+    have hnil : xs.val = [] := by
+      have : xs.length = 0 := by simpa [hempty] using he.symm
+      simpa [Slice.length] using this
+    simp [hnil]
+  · rename_i hne
+    have hnil : xs.val ≠ [] := by
+      intro h0; apply hne; rw [he]; simp [Slice.length, h0]
+    apply WP.spec_mono (all_skipped_loop_spec xs 0#usize (by simp) (by intro j hj; simp at hj))
+    intro b hb
+    simp only [ne_eq, hnil, not_false_eq_true, true_and]
+    exact hb
+
+/-- The plan's word closes it exactly when it is `complete` or
+`complete-with-exceptions`. -/
+theorem closes_spec (s : policy.Summary) :
+    policy.lines.closes s ⦃ b => b = true ↔ s = .Complete ∨ s = .CompleteWithExceptions ⦄ := by
+  unfold policy.lines.closes; cases s <;> simp
+
+/-- Owed: listed and not skipped. -/
+def Owed (l : policy.lines.Listed) : Prop := l.skipped = false → l.met = true
+
+theorem owed_met_loop_spec (xs : Slice policy.lines.Listed) (i : Usize)
+    (hi : i.val ≤ xs.val.length)
+    (hprefix : ∀ j (hj : j < i.val) (hj' : j < xs.val.length), Owed xs.val[j]) :
+    policy.lines.owed_met_loop xs i ⦃ b => b = true ↔ ∀ l ∈ xs.val, Owed l ⦄ := by
+  unfold policy.lines.owed_met_loop
+  apply loop.spec_decr_nat (fun i : Usize => xs.val.length - i.val)
+    (fun i : Usize => i.val ≤ xs.val.length ∧
+      ∀ j (hj : j < i.val) (hj' : j < xs.val.length), Owed xs.val[j])
+  · intro i ⟨hi, hprefix⟩
+    unfold policy.lines.owed_met_loop.body
+    dsimp only
+    split
+    · rename_i hlt
+      step as ⟨ x, hx ⟩
+      have step_ok : ∀ (hok : Owed x), ∀ i' : Usize, i'.val = i.val + 1 →
+          i'.val ≤ xs.val.length ∧
+          (∀ j (hj : j < i'.val) (hj' : j < xs.val.length), Owed xs.val[j]) := by
+        intro hok i' hi'
+        refine ⟨by scalar_tac, ?_⟩
+        intro j hj hj'
+        by_cases hji : j < i.val
+        · exact hprefix j hji hj'
+        · have : j = i.val := by scalar_tac
+          subst this
+          rw [← hx]; exact hok
+      split
+      · rename_i hs
+        step as ⟨ i', hi' ⟩
+        exact ⟨(step_ok (fun h => by simp_all) i' hi').1,
+               (step_ok (fun h => by simp_all) i' hi').2, by scalar_tac⟩
+      · rename_i hs
+        split
+        · rename_i hm
+          step as ⟨ i', hi' ⟩
+          exact ⟨(step_ok (fun _ => hm) i' hi').1,
+                 (step_ok (fun _ => hm) i' hi').2, by scalar_tac⟩
+        · rename_i hm
+          simp only [WP.spec_ok, Bool.false_eq_true, false_iff, not_forall]
+          refine ⟨x, by rw [hx]; exact List.getElem_mem _, ?_⟩
+          intro h; exact hm (h (by simpa using hs))
+    · rename_i hge
+      simp only [WP.spec_ok, true_iff]
+      intro e he
+      obtain ⟨j, hj, rfl⟩ := List.getElem_of_mem he
+      exact hprefix j (by scalar_tac) hj
+  · exact ⟨hi, hprefix⟩
+
+/-- Every listed gate that is not skipped is met; a skipped one never
+counts. -/
+theorem owed_met_spec (xs : Slice policy.lines.Listed) :
+    policy.lines.owed_met xs ⦃ b => b = true ↔ ∀ l ∈ xs.val, Owed l ⦄ :=
+  owed_met_loop_spec xs 0#usize (by simp) (by intro j hj; simp at hj)
+
+/-- `gate lines` exits 0 for a planned run exactly when the plan's word is
+`complete` or `complete-with-exceptions`, every gate not skipped is met
+and nothing is invalid. -/
+theorem lines_clean_iff (s : policy.Summary) (xs : Slice policy.lines.Listed) (v : Bool) :
+    policy.lines.lines_clean s xs v ⦃ b => b = true ↔
+      (s = .Complete ∨ s = .CompleteWithExceptions) ∧ (∀ l ∈ xs.val, Owed l) ∧ v = true ⦄ := by
+  unfold policy.lines.lines_clean
+  step with closes_spec as ⟨ c, hc ⟩
+  split
+  · rename_i hct
+    step with owed_met_spec as ⟨ o, ho ⟩
+    split
+    · rename_i hot
+      simp only [WP.spec_ok]
+      exact ⟨fun h => ⟨hc.mp hct, ho.mp hot, h⟩, fun h => h.2.2⟩
+    · rename_i hot
+      simp only [WP.spec_ok, Bool.false_eq_true, false_iff, not_and]
+      exact fun _ h => absurd (ho.mpr h) hot
+  · rename_i hct
+    simp only [WP.spec_ok, Bool.false_eq_true, false_iff, not_and]
+    exact fun h => absurd (hc.mpr h) hct
+
+/-- A moved policy or a stale done step never gives clean lines. -/
+theorem lines_flagged_never_clean (s : policy.Summary) (xs : Slice policy.lines.Listed) (v : Bool)
+    (h : s = .PolicyMoved ∨ s = .CompleteStale) :
+    policy.lines.lines_clean s xs v ⦃ b => b = false ⦄ := by
+  apply WP.spec_mono (lines_clean_iff s xs v)
+  intro b hb
+  cases b
+  · rfl
+  · rcases (hb.mp rfl).1 with h1 | h1 <;> rcases h with h2 | h2 <;> simp_all
+
+/-- `gate lines` agrees with the plan's word: clean lines need a plan that
+reads `complete` or `complete-with-exceptions` from `summary`, so every
+step is closed, every required template is present, the policy did not
+move and no done step went stale. -/
+theorem lines_agree_with_summary (cs : Slice policy.Close) (f : policy.Facts)
+    (xs : Slice policy.lines.Listed) (v : Bool) :
+    (do let s ← policy.summary cs f; policy.lines.lines_clean s xs v) ⦃ b => b = true →
+      cs.val ≠ [] ∧ .Open ∉ cs.val ∧ f.required_present = true ∧ f.pin ≠ .Moved ∧
+        f.stale = false ⦄ := by
+  apply WP.spec_bind (summary_spec cs f)
+  intro s hs
+  apply WP.spec_mono (lines_clean_iff s xs v)
+  intro b hb hbt
+  have hw := (hb.mp hbt).1
+  unfold SummarySpec at hs
+  rcases f with ⟨rc, rp, pin, rep, st⟩
+  dsimp only at hs ⊢
+  by_cases h0 : cs.val = []
+  · rw [if_pos h0] at hs; subst hs; simp at hw
+  rw [if_neg h0] at hs
+  by_cases h1 : (∃ c ∈ cs.val, c = .Open) ∨ rp = false
+  · rw [if_pos h1] at hs; subst hs; cases rc <;> simp at hw
+  rw [if_neg h1] at hs
+  by_cases h2 : pin = .Moved
+  · rw [if_pos h2] at hs; subst hs; simp at hw
+  rw [if_neg h2] at hs
+  by_cases h3 : st = true
+  · rw [if_pos h3] at hs; subst hs; simp at hw
+  refine ⟨h0, fun ho => h1 (Or.inl ⟨_, ho, rfl⟩), ?_, h2, ?_⟩
+  · cases rp
+    · exact absurd (Or.inr rfl) h1
+    · rfl
+  · cases st
+    · rfl
+    · exact absurd rfl h3
 
 end Writfold.Core.Policy

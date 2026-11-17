@@ -132,6 +132,20 @@ pub(crate) fn ended(
     judged: Option<&[Vec<judge::Gate>]>,
     drift: &super::drift::Drift,
 ) -> super::summary::Ended {
+    decided(session, loaded, judged, drift).0
+}
+
+/// [`ended`], with the kernel's word and how each step closed.
+pub(crate) fn decided(
+    session: &Session<'_>,
+    loaded: &Loaded,
+    judged: Option<&[Vec<judge::Gate>]>,
+    drift: &super::drift::Drift,
+) -> (
+    super::summary::Ended,
+    writfold_core::policy::Summary,
+    Vec<writfold_core::policy::Close>,
+) {
     let repo = (loaded.subject.as_ref()).map(|s| (s.top.as_path(), s.name.as_str()));
     let mut names: Vec<String> = Vec::new();
     if let Ok(r) = super::required::find(&session.ws.root, repo) {
@@ -145,7 +159,7 @@ pub(crate) fn ended(
     }
     let present = super::summary::required_present(&loaded.graph, &names);
     let closed = runs::state(session, &loaded.rec) == "closed";
-    super::summary::ended(&loaded.graph, judged, (drift, closed), &present)
+    super::summary::decide(&loaded.graph, judged, (drift, closed), &present)
 }
 
 /// The final `plan:` row of `plan status`.

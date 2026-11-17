@@ -2,7 +2,8 @@
 //! write is older than `AGE`, oldest first. The last recorded write is the
 //! newest of the manifest's `created`, the last checkpoint heading and
 //! the UTC stamp in the name of any file under the run's gate, statement,
-//! cover, observation, retrieval, edit, plan and delivery directories:
+//! cover, observation, retrieval, edit, plan and delivery directories, and
+//! the `recorded` time of each policy pin (whose name carries none):
 //! tracked text only, so every clone answers the same. No liveness is
 //! claimed, and no state is decided by the clock.
 use super::{BOUNDARY, run_row};
@@ -76,7 +77,18 @@ fn stamps(session: &Session<'_>, rec: &Rec, at: &str) -> Vec<(i64, &'static str)
         names(&base.join(dir), &mut found);
         out.extend(found.iter().filter_map(|n| compact(n)).map(|t| (t, what)));
     }
+    out.extend(pins(&base.join(crate::plan::pin::DIR)).map(|t| (t, "policy pin")));
     out
+}
+
+/// The `recorded` instant of every policy pin: pin names carry no time.
+fn pins(dir: &Path) -> impl Iterator<Item = i64> {
+    let files = std::fs::read_dir(dir).into_iter().flatten().flatten();
+    files.filter_map(|entry| {
+        let text = std::fs::read_to_string(entry.path()).ok()?;
+        let pin: serde_json::Value = serde_json::from_str(&text).ok()?;
+        crate::time::parse(pin.get("recorded")?.as_str()?)
+    })
 }
 
 /// `7d`, `36h`, `90m` or `45s` in seconds.

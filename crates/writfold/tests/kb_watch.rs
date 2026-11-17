@@ -142,7 +142,16 @@ fn all_watch_panes_leave_records_local_state_and_checker_cache_unchanged() -> Re
     Ok(())
 }
 
+/// The keys through a real terminal, paced by quiet output and then all at
+/// once (queued while the app draws).
 fn terminal_keys(w: &Root) -> Result {
+    for burst in ["0", "1"] {
+        terminal_keys_paced(w, burst)?;
+    }
+    Ok(())
+}
+
+fn terminal_keys_paced(w: &Root, burst: &str) -> Result {
     let path = format!("{}:{}", w.bin().display(), std::env::var("PATH")?);
     let output = std::process::Command::new("python3")
         .args(["-c", include_str!("watch_pty.py"), checker::WRITFOLD, RUN])
@@ -153,11 +162,12 @@ fn terminal_keys(w: &Root) -> Result {
         .env("FAKE_COUNTER", w.counter())
         .env("TERM", "xterm-256color")
         .env("NO_COLOR", "1")
+        .env("WATCH_PTY_BURST", burst)
         .env_remove("WRITFOLD_KB")
         .output()?;
     assert!(
         output.status.success(),
-        "{}",
+        "burst={burst}: {}",
         String::from_utf8_lossy(&output.stderr)
     );
     Ok(())

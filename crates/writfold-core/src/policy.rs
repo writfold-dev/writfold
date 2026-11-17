@@ -263,5 +263,7 @@ pub fn summary(closes: &[Close], facts: &Facts) -> Summary {
     Summary::Complete
 }
 
+pub mod lines;
+
 #[cfg(test)]
 mod tests;

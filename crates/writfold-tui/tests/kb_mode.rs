@@ -22,7 +22,10 @@ fn golden_text(name: &str) -> TestResult<String> {
 fn run_mode_gains_only_the_mode_unit() -> TestResult {
     let w = support::map::nested("t5-run-mode")?;
     // The exact level is the pre-T6 detailed frame, so the pre-T5 detailed
-    // golden still differs from it only by the mode unit.
+    // golden still differs from it only by the mode unit. The KB's dirty
+    // count follows how many files a plan write makes, which is not what
+    // this frame is about.
+    let dirty = regex::Regex::new(r"\+dirty:\d+")?;
     for (name, width, height) in [("t4-detail-136x38.txt", 136, 38)] {
         let mut app = App::new(w.source(), Some(RUN));
         app.focus = Focus::Detail;
@@ -43,11 +46,9 @@ fn run_mode_gains_only_the_mode_unit() -> TestResult {
             assert!(!text.contains(kb), "{name}: {kb}");
         }
         let blanked = text.replacen("m kb", "    ", 1);
-        let pre: Vec<String> = golden_text(name)?
-            .lines()
-            .map(|l| l.trim_end().to_owned())
-            .collect();
-        let now: Vec<String> = blanked.lines().map(|l| l.trim_end().to_owned()).collect();
+        let line = |l: &str| dirty.replace_all(l.trim_end(), "+dirty:N").into_owned();
+        let pre: Vec<String> = golden_text(name)?.lines().map(line).collect();
+        let now: Vec<String> = blanked.lines().map(line).collect();
         assert_eq!(now, pre, "{name}");
     }
     Ok(())

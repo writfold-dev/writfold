@@ -1,6 +1,6 @@
 # Gates
 
-> **Status:** built in v0.3.0-dev.1; instruction gates, gate scripts, the Weft assessed gate, run-record checks and plan-owed gates built in v0.4.0-dev.1; checklist gates and `gate cover` built in v0.5.0-dev.1; observations as evidence built in v0.5.0-dev.3. Nothing owed reads as not met, and the self-staling note, built in v0.6.0-dev.1. Every fault of a definition reported at its line and column, built in v0.6.0-dev.2. A gate's `accept` list, a checklist's `not_applicable` and `none_found`, the `none-found` outcome and binding receipts and statements to their run and subject in the proved kernel, built in v0.6.0-dev.3. Scope globs proved (a `*` now also covers a literal `*` in a path) and `seq` on assessed receipts, built in v0.6.0-dev.4.
+> **Status:** built in v0.3.0-dev.1; instruction gates, gate scripts, the Weft assessed gate, run-record checks and plan-owed gates built in v0.4.0-dev.1; checklist gates and `gate cover` built in v0.5.0-dev.1; observations as evidence built in v0.5.0-dev.3. Nothing owed reads as not met, and the self-staling note, built in v0.6.0-dev.1. Every fault of a definition reported at its line and column, built in v0.6.0-dev.2. A gate's `accept` list, a checklist's `not_applicable` and `none_found`, the `none-found` outcome and binding receipts and statements to their run and subject in the proved kernel, built in v0.6.0-dev.3. Scope globs proved (a `*` now also covers a literal `*` in a path) and `seq` on assessed receipts, built in v0.6.0-dev.4. A second checkout of the KB's repository judged as itself, never as the run's recorded worktree, and `gate lines` agreeing with the plan's word: fixed in v0.6.0-dev.4.
 
 A gate is one small check with a path scope. `gate run` runs its command and keeps a receipt pinned to the exact bytes checked. `gate status` then says, on every read, whether that evidence still holds. Gates report; they block nothing unless a [guard rule](hooks.md#guard-rules) names them.
 
@@ -88,7 +88,9 @@ $ writfold kb gate run unit
 gate unit [satisfied] mechanical pass exit=0 at harbor-api@4be03f7897b6+dirty:2 scope=01cc14a55a8f paths=2 @runs/run-…/gates/unit-20261112T211036Z-f5f8fb.json:1
 ```
 
-The run is `--run ID`, else the current run. The repository is `--repo DIR`, else the one enclosing the working directory, else the run's recorded worktree. Exit status 0 is `pass`, any other exit status is `fail`, and a signal, a timeout, a failure to start or a subject that moved while the command ran is `unknown`, never a pass.
+The run is `--run ID`, else the current run. The repository is `--repo DIR`, else the one enclosing the working directory, else the run's recorded worktree, unless that is another checkout of the KB's own repository (a linked worktree of the same clone, or another clone holding this KB at the same place); then the enclosing repository, or the KB's own outside any. The recorded worktree is for a KB kept in its own repository, run from the KB clone. This choice is proved ([assurance](assurance.md#proved)). Exit status 0 is `pass`, any other exit status is `fail`, and a signal, a timeout, a failure to start or a subject that moved while the command ran is `unknown`, never a pass.
+
+Fixed in v0.6.0-dev.4: with a KB kept in its code repository and two clones of it on one machine, the second clone was judged against the first clone's work tree and commit whenever the run had been started in the first: `gate run` ran the check there, and `gate status`, `gate lines`, `resume`, guards, `plan advance` and `watch` read it. A receipt filed from a second clone before this fix is about the first clone's commit. It stays as filed; in the second clone it reads `stale` or `open` until the gate runs again there.
 
 The receipt is one JSON file, `runs/<run>/gates/<gate>-<UTC time>-<6 hex>.json` (fields regrouped for reading; `…` cuts digests, and the `output` block is left out):
 
@@ -124,12 +126,20 @@ Receipts are a log: a rerun adds a file. Only `gate run` writes them. A hand-edi
 | `waived` | a check that is not satisfied, with a current waiver | met |
 | `attested` | an attested gate with a current attestation, or a checklist with every required item covered | met |
 
-Every owed row carries a `why:` line where there is one and a `next:` line with the command to run. `gate status` and `gate lines` exit 0 only when every gate is met. `gate lines` prints the same facts as lines for a commit message:
+Every owed row carries a `why:` line where there is one and a `next:` line with the command to run. `gate status` and `gate lines` exit 0 only when every gate is met (with a plan, `gate lines` also needs the plan to read complete; below). `gate lines` prints the same facts as lines for a commit message:
 
 ```text
 Gates for harbor-api@4be03f7897b6 (writfold kb gate, run run-20261112T211025Z-7fe148): 0 of 2 satisfied, 1 attested
 unit:    stale pass exit=0 runs/run-20261112T211025Z-7fe148/gates/unit-20261112T211036Z-f5f8fb.json
 wording: attested by agent: README unchanged runs/run-20261112T211025Z-7fe148/statements/wording-20261112T212106Z-32b104.json
+```
+
+**With a plan, `gate lines` agrees with the plan's word** (fixed in v0.6.0-dev.4). The header ends with the word `plan status` gives ([run-graph](run-graph.md#policy-unskippable-steps-pins-and-how-a-plan-ended)); a gate that only skipped steps name is listed `skipped`, never `open` or met, and counted apart; and the exit is the plan's: 0 only when the plan reads `complete` or `complete-with-exceptions`, every other listed gate is met and nothing is invalid, so `incomplete`, `policy-moved` and `complete-stale` exit 2 even when every listed gate is met. This rule is proved ([assurance](assurance.md#proved)). Without a plan the rule above is unchanged.
+
+```text
+Gates for demo-api@ee03790b34e4 (writfold kb gate, run run-…-17b8d0): 0 of 2 satisfied, 1 attested, 1 skipped; plan complete-with-exceptions
+findings: skipped
+research: attested by agent: … runs/run-…-17b8d0/statements/research-….json
 ```
 
 ### Which standings meet a gate: `accept`

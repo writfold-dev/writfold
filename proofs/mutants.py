@@ -848,6 +848,55 @@ MUTANTS = (
            "        true => Grounding::Attested,",
            "        true => Grounding::Grounded,",
            ("Writfold.Core.Assess.assumption_loop_spec",)),
+    # subject: another checkout of the KB's repository is never judged
+    Mutant("pick-recorded-checkout", "subject.rs",
+           "    if recorded && !recorded_is_kb {",
+           "    if recorded {",
+           ("Writfold.Core.Subject.pick_spec",
+            "Writfold.Core.Subject.recorded_never_kb_checkout")),
+    # subject: the enclosing repository wins only when it is not the KB's
+    Mutant("pick-here-even-kb", "subject.rs",
+           "    if here && !here_is_kb {",
+           "    if here {",
+           ("Writfold.Core.Subject.pick_spec",
+            "Writfold.Core.Subject.unchanged_unless_checkout")),
+    # subject: a recorded checkout outside any repository is the KB's own
+    Mutant("pick-checkout-nothing", "subject.rs",
+           "    if recorded {\n        return Pick::Kb;",
+           "    if recorded {\n        return Pick::Nothing;",
+           ("Writfold.Core.Subject.pick_spec",
+            "Writfold.Core.Subject.some_subject")),
+    # gate lines: a gate is skipped only when every step naming it was
+    Mutant("skipped-any-step", "policy/lines.rs",
+           "        if !is_skipped(&owners[index]) {",
+           "        if false {",
+           ("Writfold.Core.Policy.all_skipped_loop_spec",
+            "Writfold.Core.Policy.all_skipped_spec")),
+    # gate lines: a gate no step names is not skipped
+    Mutant("skipped-unnamed", "policy/lines.rs",
+           "    if owners.is_empty() {\n        return false;",
+           "    if owners.is_empty() {\n        return true;",
+           ("Writfold.Core.Policy.all_skipped_spec",)),
+    # gate lines: a gate not skipped is owed until met
+    Mutant("owed-ignores-skip", "policy/lines.rs",
+           "        if !listed[index].skipped && !listed[index].met {",
+           "        if !listed[index].met {",
+           ("Writfold.Core.Policy.owed_met_loop_spec",)),
+    # gate lines: a stale plan does not close
+    Mutant("closes-stale", "policy/lines.rs",
+           "    matches!(summary, Summary::Complete) || matches!(summary, Summary::CompleteWithExceptions)",
+           "    matches!(summary, Summary::Complete)\n        || matches!(summary, Summary::CompleteWithExceptions)\n        || matches!(summary, Summary::CompleteStale)",
+           ("Writfold.Core.Policy.closes_spec",)),
+    # gate lines: an invalid receipt or definition keeps the lines unclean
+    Mutant("clean-ignores-invalid", "policy/lines.rs",
+           "    closes(summary) && owed_met(listed) && valid",
+           "    closes(summary) && owed_met(listed)",
+           ("Writfold.Core.Policy.lines_clean_iff",)),
+    # find: the later tiers stop only when no hit could be shown
+    Mutant("full-late", "find.rs",
+           "    shown >= limit",
+           "    shown > limit",
+           ("Writfold.Core.Walk.full_spec", "Writfold.Core.Walk.not_full_admits")),
 )
 
 # lake reports `error: <path>.lean:<line>:<col>: <message>`

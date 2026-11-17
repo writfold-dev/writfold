@@ -22,6 +22,7 @@ pub mod drift;
 pub mod event;
 pub mod fold;
 pub mod judge;
+pub(crate) mod lines;
 mod lock;
 pub mod moved;
 pub mod pin;

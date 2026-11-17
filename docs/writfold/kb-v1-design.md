@@ -398,7 +398,7 @@ Targets: rebuild under 2 s at five thousand records; refresh of fifty changed fi
 
 **v1, built in M2**
 - `fts` gives BM25 ranking with column weights (ID and title above summary above body).
-- `tri` gives substring matching for queries of three or more characters, and typo tolerance: the query's trigrams are OR-ed, the top 200 candidates are fetched, and they are re-ranked in Rust by trigram overlap and by edit distance on ID and title.
+- `tri` gives substring matching for queries of three or more characters, and typo tolerance: the query's trigrams are OR-ed, the top 200 candidates are fetched, and they are re-ranked in Rust by trigram overlap and by edit distance on ID and title. (Until v0.6.0-dev.4; since then every file's ID and title is compared by edit distance, with no candidate cap: 46.3.)
 - `detail = none` keeps the trigram table small. Substring search by LIKE and three-character MATCH are expected to keep working under it; M2 confirms this before relying on it.
 
 **Later slot, not built**
@@ -1091,7 +1091,7 @@ writfold kb gate lines [--run ID] [--repo DIR]         receipt lines for a commi
 ```
 
 - **The run** is `--run`, else the current-run pointer; with neither, the verb refuses (exit 3) and names `checkpoint --new-run`. `gate run` refuses a closed run.
-- **The subject repository** is `--repo DIR`; else the repository enclosing the working directory, unless that is the KB's own; else the run's recorded worktree (13.3) when it exists on this machine; else the KB's repository. Its name is the KB repository map's name for it, else its origin URL's last path segment, else its directory name, so worktrees of one repository share a name. Receipts are matched to a subject by that name.
+- **The subject repository** is `--repo DIR`; else the repository enclosing the working directory, unless that is the KB's own; else the run's recorded worktree (13.3) when it exists on this machine and is not another checkout of the KB's own repository (same Git common directory, or holding this KB at the same prefix; 46.1); else the enclosing repository, or the KB's repository. Its name is the KB repository map's name for it, else its origin URL's last path segment, else its directory name, so worktrees of one repository share a name. Receipts are matched to a subject by that name.
 - **Exit codes** follow 3.1. `gate status` exits 0 only when every gate is satisfied and nothing is invalid; otherwise 2, with counts in the trailer (`gates= satisfied= open= stale= failed= unknown= invalid=`). `gate run` exits 0 on a pass and 2 otherwise. `gate verify` exits 0 on agree and 2 on disagree, inconclusive or unverifiable. `gate lines` exits 0 only when every gate is satisfied.
 - **`resume`** shows one row per defined gate, the same rows as `gate status`, between the retrieval receipts and the checkpoint tail. With no gate defined anywhere it shows nothing, so KBs without gates read as before. A failure to evaluate gates becomes a note; it never fails `resume`.
 
@@ -1346,7 +1346,7 @@ writfold watch [--kb DIR] [--run ID] [--once]
 
 - **Selection.** `--run`, else the run the current-run pointer names (`!current`), else the first listed.
 - **The project** of the stale and brief panes is the `project=` of the run's `kb runs` place line; with none, `brief` infers it from the working directory and `stale` covers the KB.
-- **The gate subject** is the verbs' own: the repository enclosing the working directory, else the run's recorded worktree, else the KB's repository (16.1). `watch` has no `--repo`; start it in the repository whose gates you want. A `gate status` refusal (no subject, no run) becomes the `gates:` line and never stops the view.
+- **The gate subject** is the verbs' own: the repository enclosing the working directory, else the run's recorded worktree unless it is another checkout of the KB's repository, else the KB's repository (16.1, 46.1). `watch` has no `--repo`; start it in the repository whose gates you want. A `gate status` refusal (no subject, no run) becomes the `gates:` line and never stops the view.
 - **Tones** only colour what the verbs flagged: a row with a `failed`, `stale`, `invalid`, `changed`, `gone`, `expired`, `moved`, `regression` or `disagree` flag in bold red, `open`, `unknown`, `unverifiable`, `draft` or `past-ttl` in yellow, `[satisfied]` in green, closed runs dimmed. The `gates:` line is red when any gate is failed or stale or a receipt is invalid.
 - **Not shown,** as the review asked: a progress percentage, any "running" or liveness claim (there is no daemon), and an uncertain-effects pane.
 
@@ -2632,7 +2632,7 @@ Gathered once per event (`guard/require.rs`), after a rule matched:
 - `gate:<id>`: that gate, judged the same way, whether or not the plan names it.
 - `step.met`: the plan's current step owes nothing (`plan::judge`), with `plan advance`'s `next:` text; met with no plan or when every step is closed.
 
-The subject is `gate status`'s: the repository enclosing `cwd` unless it is the KB's own, else the run's recorded worktree. A rule with `repos` is skipped outside a repository.
+The subject is `gate status`'s: the repository enclosing `cwd` unless it is the KB's own, else the run's recorded worktree unless it is another checkout of the KB's repository (46.1). A rule with `repos` is skipped outside a repository.
 
 ### 30.3 The decision
 
@@ -4134,7 +4134,7 @@ Scope globs, plan closing writes, decision states and investigations, citation v
 
 - Pin files are named `pin-<seq>-<hex>.json`, not `pin-<seq>.json`: two clones that each splice write pins of the same `seq`, and a merge of two files of one name with different bytes is an add/add conflict (`tests/plan_merge.rs` found it). `<hex>` is the first eight hex digits of the file's SHA-256; ordering is by `seq`, then path.
 - A skipped step's gates are not compared for drift: a skipped step owes nothing.
-- Not built (below the cut line, or left for the release): `plan repin` (so a moved run stays `policy-moved` until its definitions are restored), `kb policy --paths`, `waivable` on a delivery mode and the `deliver waive` refusal (a delivery's readiness is `delivery::standing`, proved over `Standing::met`; taking a per-obligation `Accept` there changes that kernel and its round-1 theorems, which this round did not re-prove), `paths=N` on `kb policy`'s gate rows, `gate lines`' header (it still shows what it showed; `plan status`, `resume`, `runs --plan`, the session-start plan position once every step is closed, and `kb check`'s plan row, which shows `plan status`'s trailer and `!policy-moved`, carry the word), `runs --idle` reading pin stamps (pin file names carry no time; their `recorded` field does).
+- Not built (below the cut line, or left for the release): `plan repin` (so a moved run stays `policy-moved` until its definitions are restored), `kb policy --paths`, `waivable` on a delivery mode and the `deliver waive` refusal (a delivery's readiness is `delivery::standing`, proved over `Standing::met`; taking a per-obligation `Accept` there changes that kernel and its round-1 theorems, which this round did not re-prove), `paths=N` on `kb policy`'s gate rows, `gate lines`' header (built in the bug-fix round, 46.2), `runs --idle` reading pin stamps (pin file names carry no time; their `recorded` field does; built in the bug-fix round, 46.6).
 - `runs --plan` computes the word from the records alone: drift is judged only against what the done records name, and `complete-stale` is not judged there (no subject is located), as before.
 - A pin's `delivery` entry is the mode file's digest followed by each mode gate's digest, as specified.
 - Which observation statuses ground `none-found` (`no-data`, `not-found`) is decided in `writfold-kb`, tested, not proved.
@@ -4167,3 +4167,32 @@ Scope globs, plan closing writes, decision states and investigations, citation v
 
 `order::{less, precedes, cmp}`. `gate/receipt.rs::order`, `gate/checklist/cover.rs`, `gate/assessed/judge.rs` and `deliver/status.rs` sort with `order::cmp`. Assessed receipts and delivery check receipts write `seq` (`gate/assessed/run.rs::next_seq`, `deliver/receipt.rs::next_seq`), read it back (absent is 0) and are no longer ordered by `recorded`. Statements still are.
 
+## 46. Bug-fix round, as built (17 November 2026, v0.6.0-dev.4)
+
+Each fix has a test that failed before it. Decisions that changed are proved first (theorems in [aeneas.md](aeneas.md#the-bug-fix-round-17-november-2026)).
+
+### 46.1 A second checkout is judged as itself
+
+`writfold_core::subject::pick(here, here_is_kb, recorded, recorded_is_kb)` chooses the subject when no `--repo` is given; `gate/subject.rs::locate` finds the repositories and calls it. The recorded worktree is used only when it is not a checkout of the KB's repository: `checkout_of` holds when it shares the KB repository's Git common directory (`commondir` of a linked worktree) or holds a KB at the KB's prefix (`workspace::is_root`), with no name heuristics. Then the enclosing repository is the subject, or the KB's own when the working directory is outside any. Before, with the KB in its code repository, a second clone on the machine that started the run was judged against the first: `gate run` ran there, and `gate status`, `gate lines`, `resume`, guards, plans and `watch` read it; the first clone's definitions also showed as "defined in both" under its directory name beside the subject's name, with a `next: kb lint` pointing into the other clone. Tests: `crates/writfold/tests/kb_second_clone.rs` (the KB at the root and in `kb/`, a linked worktree, and a KB in its own repository, whose recorded worktree is still the subject).
+
+### 46.2 `gate lines` agrees with the plan's word
+
+Before, `gate lines` built its header and exit from the listed gates alone: a plan that read `complete-with-exceptions` (a step skipped) exited 2 on `findings: open`, the gate of the skipped step, and an `incomplete` plan whose listed gates were all met exited 0. Now (owner decision) `gate/lines.rs` reads the run's plan through `plan/lines.rs::of_run` (the same `Loaded`, judged steps, drift and `status::decided` as `plan status`): the header ends `; plan <word>`; a gate every step naming it skipped is listed `skipped` (`policy::lines::all_skipped`) and counted apart (`, 1 skipped`); the exit is `policy::lines::lines_clean(summary, listed, valid)`: 0 only for `complete` or `complete-with-exceptions` with every gate not skipped met and nothing invalid. Without a plan nothing changed (`golden/gate-lines.txt` unchanged). `plan/summary.rs::decide` and `plan/status.rs::decided` return the kernel's word and each step's close beside `Ended`. Proved in `Policy.lean` (`all_skipped_spec`, `owed_met_spec`, `lines_clean_iff`, `lines_flagged_never_clean`, `lines_agree_with_summary`), 5 mutants. Tests: `crates/writfold-kb/tests/plan_lines.rs`.
+
+### 46.3 `find` latency
+
+On 3,000 tickets with bodies (22.7 MB index) `find` took 135 to 263 ms (dev.3 musl, median), not the documented "under 50 ms", which was measured on records with almost no body. The `typo` tier was most of it: it OR-ed every query trigram against the trigram table, whose `body` column matched nearly every file, ranked all of them with `bm25()` and compared the IDs and titles of the top 200. Now (`index/search.rs::typo`) it reads `id, title, path` of every file (2 ms on that index) and compares them with `search::near(query, candidate, tolerance)`, which skips any option whose length is beyond the tolerance (the same answer as comparing all; `search/tests.rs`). No candidate cap: a title within the tolerance is never dropped because 200 bodies outranked it (`tests/find_typo.rs`, which failed before), so some `find` answers gain `typo` rows (on the generated KB, `SYN-1234` gains `SYN-1034`, `SYN-1134`, … that the cap dropped). `verbs/find.rs` loads the name forms once (the name tiers and the suggestions share them), and skips the heading tier and every text tier once the rows are full, decided by `find::full` (proved: `full_admits_nothing`, `not_full_admits`; so no visible row changes). `names::suggestions` compares with `near` bounded by half the query's length. Measured again (`docs/guide/validation.md`): 47.9 to 92.1 ms median, musl, same KB.
+
+### 46.4 The terminal test waits on output, never on a clock
+
+`crates/writfold/tests/watch_pty.py` paced its keys by 150 ms of quiet output and, after `q`, waited for the child without reading the terminal: under load the child still had queued frames to draw, filled the pty and blocked, and the wait timed out after 120 s. Now the first frame is awaited until it says `read-only` (no 20 s deadline), and after `q` the terminal is read until the child closes it. `kb_watch.rs` runs the script twice: paced, and with `WATCH_PTY_BURST=1`, every key at once; the burst run failed on every host with the old wait (`TimeoutExpired`). `writfold-tui`'s `run_mode_gains_only_the_mode_unit` compares its frame with the pre-T5 golden with the KB's `+dirty:N` set aside: the count follows how many files a plan write makes, not the mode unit. That test was not reproduced failing under load (it is synchronous); its one recorded failure was that count.
+
+### 46.5 `kb … --help`
+
+`writfold kb --help`, `-h` and `help` printed the usage once, to stdout, exit 0. `--help` anywhere else on the line (`kb gate --help`, `kb gate run --help`, `kb find ledger --help`, `kb --json --help`) was an unknown option: `writfold kb: unknown option --help` and the whole usage on stderr, exit 1, so a reader merging the streams saw the usage after an error. Now `--help` anywhere asks for the usage: printed once, to stdout, exit 0 (`crates/writfold-app/src/kb/args.rs`; `crates/writfold/tests/kb_help.rs`, which failed before).
+
+### 46.6 Small fixes, and what is not done
+
+- `runs --idle` reads the `recorded` time inside each policy pin (`verbs/runs/idle.rs::pins`, shown `(policy pin)`): a pin's name carries no time, so a run whose last write was a pin read idle longer than it was (`tests/runs_idle.rs`, which failed before). Gathering the stamps stays tested; choosing the newest is `idle::newest`, proved.
+- `run-graph.md` names the way out of `policy-moved` while `plan repin` is not built: restore the named definitions, or close the run and start a new one.
+- Not done: `plan repin`; `kb policy --paths` and `paths=N` on its rows; `waivable` on a delivery mode (left to the delivery spec); the `none-found` statuses (`no-data`, `not-found`) moved into the checklist kernel; a completed TLC run of `RunGraph.wide.cfg`; and naming a repository gate definition's path after the subject (its directory name is shown, `gate/discover.rs::roots`; the callers that list definitions without a subject would need the name threaded through). With 46.1 the case that showed two names in one answer no longer arises.
