@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Non-gating tauten strictness check (docs/writfold/tauten-adoption.md).
+# Not part of scripts/gate and not a required receipt. Findings recorded in
+# tauten-baseline.json are accepted; a new error-level finding, or a stale
+# baseline slot (TAU-R001), exits non-zero. Extra arguments go to
+# `cargo tauten check` (for example `--format json` or `--warnings`).
+#
+# Needs cargo-tauten built from tauten main at or after 443282d (0.0.1 on
+# crates.io predates fixes this baseline relies on). Set CARGO_TAUTEN to
+# its path if it is not on PATH.
+set -euo pipefail
+root=$(cd "$(dirname "$0")/.." && pwd)
+tauten=${CARGO_TAUTEN:-cargo-tauten}
+if ! command -v "$tauten" >/dev/null 2>&1; then
+    echo "tauten-check: $tauten not found; build it from tauten main or set CARGO_TAUTEN" >&2
+    exit 2
+fi
+exec "$tauten" tauten check --manifest-path "$root/Cargo.toml" "$@"
