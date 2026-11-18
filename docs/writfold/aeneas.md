@@ -911,7 +911,6 @@ existing write protocol and the plan re-check (`Recheck.lean`, whose
 | `open-shared-any-run` | `pointer.rs` | pointer: only an open run is an open current run | `Pointer.open_spec`, `Pointer.shared_alone`, `Pointer.ended_not_skipped` |
 | `writes-shared-only-without-session` | `pointer.rs` | pointer: the shared pointer is always written | `Pointer.writes_spec` |
 | `writes-no-session` | `pointer.rs` | pointer: a seat with a session writes its session pointer | `Pointer.writes_spec`, `Pointer.writer_reads_its_run` |
-
 | `in-force-inverted` | `policy/repin.rs` | repin: the entry in force is one that applies | `Policy.in_force_loop_spec` |
 | `in-force-skips-oldest` | `policy/repin.rs` | repin: the oldest entry counts when no newer one applies | `Policy.in_force_loop_spec` |
 | `repin-closed-run` | `policy/repin.rs` | repin: a closed run takes no repin | `Policy.repin_check_spec`, `Policy.repin_ok_iff`, `Policy.repin_closed_refused` |
