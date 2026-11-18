@@ -212,6 +212,10 @@ class Producer:
             ("json-runtime", 'fn hidden() { json!({"key": Some(1).unwrap()}); }', "production-panic"),
             ("vec-closure-budget", "fn outer() { let _ = vec![|| {\n" + "let _ = 0;\n" * 81 + "}; 2]; }", "function-budget"),
             ("opaque-declarations", "unknown_generator! { fn hidden() {} }", "opaque-macro"),
+            ("expect-attribute-control", '#[expect(dead_code, reason = "calibration")] fn allowed() {}', None),
+            ("expect-attribute-verus-control", 'verus! { #[expect(dead_code, reason = "calibration")] fn allowed() {} }', None),
+            ("expect-attribute-allowance", '#[expect(clippy::unwrap_used, reason = "calibration")] pub fn hidden() {}', "unsafe-allowance"),
+            ("expect-path-runtime", 'pub fn hidden() -> fn(Option<u8>, &str) -> u8 { Option::expect }', "production-panic"),
         ]
         for name, source, rule in cases:
             root = self.fixture(name, source)

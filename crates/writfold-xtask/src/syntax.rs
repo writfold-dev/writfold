@@ -114,7 +114,9 @@ impl Audit<'_> {
     ) {
         for attr in attrs {
             crate::attributes::check_function(self, attr, signature, has_body);
-            visit::visit_attribute(self, attr);
+            if !attr.path().is_ident("expect") {
+                visit::visit_attribute(self, attr);
+            }
         }
     }
 
@@ -369,7 +371,10 @@ impl<'ast> Visit<'ast> for Audit<'_> {
     }
     fn visit_attribute(&mut self, node: &'ast verus_syn::Attribute) {
         crate::attributes::check(self, node);
-        visit::visit_attribute(self, node);
+        // `#[expect(lint)]` names a lint level, not `Option::expect`.
+        if !node.path().is_ident("expect") {
+            visit::visit_attribute(self, node);
+        }
     }
     fn visit_path(&mut self, node: &'ast verus_syn::Path) {
         crate::safety::path(self, node);

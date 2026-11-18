@@ -132,7 +132,10 @@ impl<'ast> Visit<'ast> for Audit<'_> {
     }
     fn visit_attribute(&mut self, node: &'ast syn::Attribute) {
         crate::rust_attributes::check(self, node);
-        visit::visit_attribute(self, node);
+        // `#[expect(lint)]` names a lint level, not `Option::expect`.
+        if !node.path().is_ident("expect") {
+            visit::visit_attribute(self, node);
+        }
     }
     fn visit_path(&mut self, node: &'ast syn::Path) {
         crate::rust_safety::path(self, node);
