@@ -1,6 +1,9 @@
 //! Two clones of one repository in one temporary directory, for
 //! `kb_second_clone.rs`.
-#![allow(dead_code)]
+#![allow(
+    dead_code,
+    reason = "shared by several test binaries; each one uses only part of it"
+)]
 use std::path::{Path, PathBuf};
 use std::process::Command;
 

@@ -2,7 +2,6 @@
 //! an audit rule is judged and logged but never decides the call; a pass
 //! that rested on a waiver says so; `guard log` counts per rule version.
 #[path = "guard_status/helpers.rs"]
-#[allow(dead_code)]
 mod helpers;
 mod support;
 

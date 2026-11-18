@@ -1,3 +1,7 @@
+#![allow(
+    dead_code,
+    reason = "shared by several test binaries; each one uses only part of it"
+)]
 use super::support::{NOW, TestResult, World};
 use serde_json::{Value, json};
 use std::path::Path;

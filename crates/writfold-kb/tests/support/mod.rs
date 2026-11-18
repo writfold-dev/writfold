@@ -2,7 +2,10 @@
 //! fresh repository, and a companion code repository whose history
 //! exercises every citation verdict. Authors, committers and dates are
 //! fixed, so commit IDs (and so outputs) are stable.
-#![allow(dead_code)]
+#![allow(
+    dead_code,
+    reason = "shared by several test binaries; each one uses only part of it"
+)]
 use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::process::Command;

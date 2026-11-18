@@ -2,7 +2,10 @@
 //! second run that is closed, and four gates over the KB repository
 //! itself (satisfied, failed, stale and open) with receipts recorded by
 //! `gate run`.
-#![allow(dead_code)]
+#![allow(
+    dead_code,
+    reason = "shared by several test binaries; each one uses only part of it"
+)]
 pub mod buffers;
 pub mod kb_app;
 pub mod kb_world;

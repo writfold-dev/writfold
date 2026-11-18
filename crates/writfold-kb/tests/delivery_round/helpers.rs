@@ -1,7 +1,10 @@
 //! Shared steps for the delivery-modes tests: a world with a current run,
 //! the deliver verbs (a refusal read as exit 3 with its reason), and the
 //! PreToolUse hook.
-#![allow(dead_code)]
+#![allow(
+    dead_code,
+    reason = "shared by several test binaries; each one uses only part of it"
+)]
 use crate::support::{NOW, TestResult, World, world};
 use serde_json::{Value, json};
 use std::path::{Path, PathBuf};

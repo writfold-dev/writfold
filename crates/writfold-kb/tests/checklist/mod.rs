@@ -1,7 +1,10 @@
 //! Shared set-up for the checklist gate tests: a `unit` gate over
 //! `src/ledger.rs`, and a `review` checklist over `src/batch.rs` with two
 //! required items and one optional one.
-#![allow(dead_code)]
+#![allow(
+    dead_code,
+    reason = "shared by several test binaries; each one uses only part of it"
+)]
 use crate::support::{NOW, TestResult, World};
 use std::path::{Path, PathBuf};
 use writfold_kb::gate::GateVerb;

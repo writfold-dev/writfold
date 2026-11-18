@@ -1,7 +1,10 @@
 //! Shared set-up for the `plan repin` tests: a `note` gate with
 //! instructions, a required `research` start template that owes it, and a
 //! `mine` template whose first step owes it again.
-#![allow(dead_code)]
+#![allow(
+    dead_code,
+    reason = "shared by several test binaries; each one uses only part of it"
+)]
 use crate::checklist::{RUN, put};
 use crate::support::{TestResult, World, world};
 use writfold_kb::Verb;

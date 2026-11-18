@@ -1,7 +1,10 @@
 //! Shared steps for the plan-delivery tests: a world with the
 //! `deliver-step` overlay, the plan and deliver verbs on its run, and the
 //! goldens with candidate and event names made stable.
-#![allow(dead_code)]
+#![allow(
+    dead_code,
+    reason = "shared by several test binaries; each one uses only part of it"
+)]
 use crate::support::{NOW, TestResult, World, world};
 use std::path::{Path, PathBuf};
 use writfold_kb::Verb;

@@ -4,7 +4,10 @@
 //! `PATH` for the binary only. The fake answers each token as its `want=`
 //! field says, appends a line to `$FAKE_COUNTER` each time it starts, and
 //! misbehaves as `$FAKE_MODE` says.
-#![allow(dead_code)]
+#![allow(
+    dead_code,
+    reason = "shared by several test binaries; each one uses only part of it"
+)]
 pub mod receipts;
 
 use std::fs;

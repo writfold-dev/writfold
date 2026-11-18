@@ -6,7 +6,6 @@
 //! `gates.met` ignores it (a commit is not held by its PR comment), and
 //! `step.met` judges it.
 #[path = "guard_status/helpers.rs"]
-#[allow(dead_code)]
 mod guard;
 #[path = "plan_deliver/helpers.rs"]
 mod helpers;
