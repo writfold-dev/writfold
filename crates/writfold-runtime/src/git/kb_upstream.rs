@@ -70,6 +70,27 @@ pub fn kb_is_ancestor(
     }
 }
 
+/// Whether some ref reaches `commit` (a commit that exists; resolve it
+/// first): one `for-each-ref --contains` spawn, stopping at the first ref.
+/// A commit only the reflog or a dangling object holds is not reached.
+pub fn kb_anchored(
+    executable: &GitExecutable<'_>,
+    repository: KbRepository<'_>,
+    commit: &GitObjectId,
+    budgets: GitBudgets,
+    cancelled: &AtomicBool,
+) -> Result<bool, GitError> {
+    let contains = format!("--contains={}", commit.as_str());
+    let args = [
+        "for-each-ref",
+        "--count=1",
+        "--format=%(refname)",
+        contains.as_str(),
+    ];
+    let output = run(executable, repository, &args, &[], budgets, cancelled)?;
+    Ok(output.iter().any(|b| !b.is_ascii_whitespace()))
+}
+
 /// One `<ref>\t<upstream>\t<track>` line, if it is `branch`'s and names
 /// an upstream.
 fn parse(line: &str, branch: &str) -> Option<KbUpstream> {

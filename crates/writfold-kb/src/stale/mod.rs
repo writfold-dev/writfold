@@ -9,6 +9,7 @@ pub mod checker;
 mod code;
 pub mod kind_check;
 pub mod kinds;
+mod pinned;
 mod rename;
 pub mod repos;
 pub mod span;

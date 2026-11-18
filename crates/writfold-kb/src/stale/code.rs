@@ -7,7 +7,7 @@
 //! blobs may need a fetch. A Git failure in one repository makes that
 //! repository's citations unverifiable (`git-error: …`), not the run fail.
 use super::span::{Located, locate};
-use super::{Checked, Cite, Verdict, rename, repos};
+use super::{Checked, Cite, Verdict, pinned, rename, repos};
 use crate::error::{KbError, Result};
 use crate::session::Session;
 use crate::workspace::{CANCELLED, budgets};
@@ -52,12 +52,29 @@ pub fn check(
         );
         return Ok(out);
     };
+    let stores = crate::store::read(&session.ws.root)?;
     let mut remaining = rename::REV_CAP;
     for (repo, members) in groups {
-        let url = members.iter().find_map(|&i| cites[i].field("url"));
-        let Some(dir) = repos::resolve(session, &repo, url.as_deref()) else {
-            out.extend(members.iter().map(|&i| (i, missing("repo-not-local"))));
-            continue;
+        let (dir, members) = match stores.get(&repo) {
+            Some(store) => match pinned::split(session, store, cites, members) {
+                pinned::Split::Answered(found) => {
+                    out.extend(found);
+                    continue;
+                }
+                pinned::Split::Read { dir, head, pinned } => {
+                    let found = pinned::check(git, &dir, cites, &pinned);
+                    out.extend(per_repo_or(found, &pinned)?);
+                    (dir, head)
+                }
+            },
+            None => {
+                let url = members.iter().find_map(|&i| cites[i].field("url"));
+                let Some(dir) = repos::resolve(session, &repo, url.as_deref()) else {
+                    out.extend(members.iter().map(|&i| (i, missing("repo-not-local"))));
+                    continue;
+                };
+                (dir, members)
+            }
         };
         let (gates, members): (Vec<usize>, Vec<usize>) = members
             .into_iter()
@@ -68,16 +85,26 @@ pub fn check(
         } else {
             [gates, members].concat()
         };
-        match check_repo(git, &dir, cites, &members, &mut remaining) {
-            Ok(found) => out.extend(found),
-            Err(error) if !CANCELLED.load(Ordering::Relaxed) && per_repo(&error) => {
-                let reason = format!("git-error: {}", brief(&error));
-                out.extend(members.iter().map(|&i| (i, missing(&reason))));
-            }
-            Err(error) => return Err(error),
-        }
+        let found = check_repo(git, &dir, cites, &members, &mut remaining);
+        out.extend(per_repo_or(found, &members)?);
     }
     Ok(out)
+}
+
+/// A repository's verdicts, or, on a Git failure confined to it, each of
+/// `members` unverifiable with the reason.
+fn per_repo_or(
+    found: Result<Vec<(usize, Checked)>>,
+    members: &[usize],
+) -> Result<Vec<(usize, Checked)>> {
+    match found {
+        Ok(found) => Ok(found),
+        Err(error) if !CANCELLED.load(Ordering::Relaxed) && per_repo(&error) => {
+            let reason = format!("git-error: {}", brief(&error));
+            Ok(members.iter().map(|&i| (i, missing(&reason))).collect())
+        }
+        Err(error) => Err(error),
+    }
 }
 
 /// A Git failure confined to one repository: its citations read as
@@ -119,7 +146,7 @@ fn missing(reason: &str) -> Checked {
     }
 }
 
-fn valid_path(path: &str) -> bool {
+pub(super) fn valid_path(path: &str) -> bool {
     !path.is_empty()
         && !path.starts_with('/')
         && !path.contains('\n')
