@@ -63,6 +63,7 @@ pub mod plan;
 pub mod pointer;
 pub mod policy;
 pub mod scope;
+pub mod store;
 pub mod subject;
 pub mod verdict;
 pub mod walk;

@@ -45,7 +45,7 @@ pub use kb::{
     kb_log, kb_ls_files, kb_status,
 };
 pub use kb_renames::kb_renames;
-pub use kb_upstream::{KbUpstream, kb_is_ancestor, kb_upstream};
+pub use kb_upstream::{KbUpstream, kb_anchored, kb_is_ancestor, kb_upstream};
 pub use objects::{GitBlob, GitEntry};
 use std::time::Duration;
 pub use tree::{TreeBlob, pinned_blobs, pinned_tree};

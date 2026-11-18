@@ -68,13 +68,13 @@ fn map(ws: Option<&Workspace>) -> Vec<(String, PathBuf)> {
         .collect()
 }
 
-fn mapped(ws: Option<&Workspace>, repo: &str) -> Option<PathBuf> {
+pub(crate) fn mapped(ws: Option<&Workspace>, repo: &str) -> Option<PathBuf> {
     map(ws)
         .into_iter()
         .find_map(|(name, path)| (name == repo).then_some(path))
 }
 
-fn searched(repo: &str) -> Option<PathBuf> {
+pub(crate) fn searched(repo: &str) -> Option<PathBuf> {
     let roots = std::env::var_os("WRITFOLD_KB_REPOS")?;
     let name = repo.rsplit('/').next().unwrap_or(repo);
     std::env::split_paths(&roots)
@@ -133,7 +133,7 @@ pub fn resolve_via(
 
 /// The directory holding a Git directory's shared files (its config and
 /// objects): itself, or what a linked worktree's `commondir` names.
-fn common_dir(git_dir: &Path) -> PathBuf {
+pub(crate) fn common_dir(git_dir: &Path) -> PathBuf {
     std::fs::read_to_string(git_dir.join("commondir"))
         .ok()
         .map(|text| git_dir.join(text.trim()))

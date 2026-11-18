@@ -36,6 +36,7 @@ pub mod seat;
 pub mod session;
 pub mod shell;
 pub mod stale;
+pub mod store;
 pub mod time;
 pub mod verbs;
 pub mod watch;

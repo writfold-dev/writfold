@@ -1082,6 +1082,45 @@ MUTANTS = (
            "            if false {",
            ("Writfold.Core.Policy.repin_check_spec", "Writfold.Core.Policy.repin_ok_iff")),
     # ---- end plan repin ----
+    # ---- attached stores (18 November 2026) ----
+    # store: the pin judges only a citation that names a revision
+    Mutant("basis-ignores-rev", "store.rs",
+           "    if declared && pinned && has_rev {",
+           "    if declared && pinned {",
+           ("Writfold.Core.Store.basis_pin_iff",)),
+    # store: a clone that is behind is not evidence of loss
+    Mutant("pinned-absent-gone", "store.rs",
+           "        Commit::Absent => Verdict::Unverifiable,",
+           "        Commit::Absent => Verdict::Gone,",
+           ("Writfold.Core.Store.pinned_behind_unverifiable",)),
+    # store: a commit no ref reaches is not fresh
+    Mutant("pinned-unanchored-fresh", "store.rs",
+           "        Commit::Unanchored => Verdict::Gone,",
+           "        Commit::Unanchored => Verdict::Fresh,",
+           ("Writfold.Core.Store.pinned_fresh_iff",
+            "Writfold.Core.Store.pinned_unanchored_gone")),
+    # store: other bytes at the pin are not the cited ones
+    Mutant("pinned-other-bytes-fresh", "store.rs",
+           "            AtPin::Cited => Verdict::Fresh,\n            AtPin::Other | AtPin::Nothing => Verdict::Gone,",
+           "            AtPin::Cited | AtPin::Other => Verdict::Fresh,\n            AtPin::Nothing => Verdict::Gone,",
+           ("Writfold.Core.Store.pinned_fresh_iff",
+            "Writfold.Core.Store.pinned_other_bytes")),
+    # store: a committed hint needs the declared origin
+    Mutant("resolve-hint-any-origin", "store.rs",
+           "    if matches!(hint, Candidate::Clone(true)) {",
+           "    if matches!(hint, Candidate::Clone(_)) {",
+           ("Writfold.Core.Store.resolve_committed_needs_origin",
+            "Writfold.Core.Store.resolve_mismatch_iff")),
+    # store: the map's clone is flagged when its origin differs
+    Mutant("resolve-map-unflagged", "store.rs",
+           "            flagged: !*origin,",
+           "            flagged: false,",
+           ("Writfold.Core.Store.resolve_map_wins",)),
+    # store: search roots before committed hints
+    Mutant("resolve-hint-before-search", "store.rs",
+           "    if matches!(search, Candidate::Clone(true)) {\n        return Resolved::Found {\n            via: Via::SearchRoot,\n            flagged: false,\n        };\n    }\n    if matches!(hint, Candidate::Clone(true)) {\n        return Resolved::Found {\n            via: Via::Hint,",
+           "    if matches!(hint, Candidate::Clone(true)) {\n        return Resolved::Found {\n            via: Via::Hint,\n            flagged: false,\n        };\n    }\n    if matches!(search, Candidate::Clone(true)) {\n        return Resolved::Found {\n            via: Via::SearchRoot,",
+           ("Writfold.Core.Store.resolve_search_before_hint",)),
 )
 
 # lake reports `error: <path>.lean:<line>:<col>: <message>`

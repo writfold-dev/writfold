@@ -9,6 +9,7 @@ These pages hold the full skeletons the website only sketches: file layouts, com
 | [kb-layout](kb-layout.md) | The knowledge base directory, records, citation tokens and kind declarations, the trailer, `.writfold/`, knowledge bases not written by Writfold, tracked and local state | built |
 | [feeding-back](feeding-back.md) | What each stage writes, with which verb, where it lands and who commits | built, with proposals and the backfill and reflection checks |
 | [checkers](checkers.md) | External checkers for citation kinds Git cannot check: the kind file, the `writfold-checker/1` protocol, a minimal checker, versions | built in v0.5.0-dev.2 |
+| [stores](stores.md) | Attached stores: a companion repository of evidence (probes, reproducers, review notes) declared once, found on every machine, and cited at its pinned revision so tidying it never makes evidence stale | built in v0.6.0-dev.7 |
 | [validation](validation.md) | Checking that what you read still holds: `stale`, `index`, `gate status`, `deliver check`, and `kb check` for all at once | built, with the plan line of `kb check` |
 | [gates](gates.md) | Gate definitions, receipts, standing, waivers and attestations, run-record checks | built |
 | [policy](policy.md) | Your policy: `kb init` from a plain repository, the research-policy example, two rubrics over one engine, what already holds and what each mechanism establishes | built in v0.6.0-dev.3 |

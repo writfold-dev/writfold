@@ -2,7 +2,8 @@
 //! definition files of the KB root and the repository in view, and the
 //! current run's pin beside it. Read-only; no command or checker is run.
 //! `identity` is the SHA-256 over the sorted `<gate>\t<definition digest>`
-//! lines and the required file's digest: one value two clones can compare.
+//! lines, each declared store's rule, and the required file's digest: one
+//! value two clones can compare.
 use crate::emit::{Answer, More, Row};
 use crate::error::Result;
 use crate::gate::def::Definition;
@@ -174,6 +175,7 @@ pub fn policy(session: &Session<'_>, cwd: &Path) -> Result<Answer> {
         .rows
         .extend(modes.iter().map(|m| crate::deliver::modes::row(root, m)));
     answer.rows.extend(route_rows(root));
+    let stores = store_lines(root, &mut lines)?;
     lines.sort();
     let mut material = lines.join("\n");
     material.push('\n');
@@ -196,6 +198,7 @@ pub fn policy(session: &Session<'_>, cwd: &Path) -> Result<Answer> {
         ),
         ("guards", dirs("guards")),
         ("modes", dirs("deliveries")),
+        ("stores", stores),
     ];
     answer.words.push(("policy", pin.word.into()));
     answer.words.push(("identity", identity));
@@ -226,4 +229,20 @@ fn route_rows(root: &Path) -> Vec<Row> {
             }
         })
         .collect()
+}
+
+/// Declared stores change what counts as evidence: each joins the
+/// identity as one line (a KB without stores keeps the identity it had).
+/// The number of stores.
+fn store_lines(root: &Path, lines: &mut Vec<String>) -> Result<usize> {
+    let stores = crate::store::read(root)?;
+    for store in stores.iter() {
+        let rule = match store.freshness {
+            crate::store::Freshness::Pinned => "pinned",
+            crate::store::Freshness::Head => "head",
+        };
+        let url = crate::store::normalise(&store.url);
+        lines.push(format!("store:{}\t{rule}\t{url}", store.name));
+    }
+    Ok(stores.iter().count())
 }

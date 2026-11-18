@@ -1,6 +1,6 @@
 # v0.6.0-dev.6 and attached stores: specification
 
-> **Status:** Part A (sections 1 to 7) is built in v0.6.0-dev.6: everything in sections 2.1 to 2.6, merged and gated as one release (the proofs gate on the merged tree: 594 theorems, 316 required claims, 203 mutants). Section 7 records the state at hand-over and is kept as history. Part B (attached stores, [section 8](#8-part-b-attached-stores-for-disposable-evidence)) is being built on its own branch for the next release. Written against `main` at `4f73917` (v0.6.0-dev.5). The authority is [mission.md](mission.md).
+> **Status:** Part A (sections 1 to 7) is built in v0.6.0-dev.6: everything in sections 2.1 to 2.6, merged and gated as one release (the proofs gate on the merged tree: 594 theorems, 316 required claims, 203 mutants). Section 7 records the state at hand-over and is kept as history. Part B (attached stores, [section 8](#8-part-b-attached-stores-for-disposable-evidence)): S1 and S2 built in v0.6.0-dev.7; S3, S4 and the snapshot verb are not built. Written against `main` at `4f73917` (v0.6.0-dev.5). The authority is [mission.md](mission.md).
 
 This release answers a review by someone moving a working agent flow onto the `writfold` binary: hooks of their own, a registry of checks, and several agent sessions running at once on one machine against one KB clone. Of the earlier round's asks, most had shipped. One thing still blocked the move, and it is general: **every session on a KB clone shared one current run**. The rest of the review is smaller requests and gaps the flow implies. Each need below is stated for any user; nothing in it is specific to one setup.
 
@@ -189,7 +189,7 @@ Recorded on 17 November 2026 when implementation was handed over. Nothing was pu
 
 ## 8. Part B: attached stores for disposable evidence
 
-A second request, queued after Part A and not part of its release. Design only.
+A second request, queued after Part A and not part of its release. S1 and S2 are built in v0.6.0-dev.7 as designed below ([stores guide](../guide/stores.md); proofs in [aeneas.md](aeneas.md#the-attached-stores-round-18-november-2026)), with the owner's choices of 18 November 2026 on 8.6: an unanchored pin reads `gone`, and `role = "attached"` implies `pinned`. As built, the theorems are those of 8.3 for `basis`, `pinned` and `resolve`; `judge_*` are not separate functions (the head rule is unchanged code, the pin rule takes no head input, and a mark is applied after both by the proved `with_mark`); `artifact` and `claim` wait for S4 and S3.
 
 ### 8.1 The need
 

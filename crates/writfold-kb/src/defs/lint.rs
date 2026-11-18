@@ -23,6 +23,7 @@ pub enum Kind {
     Deny,
     Delivery,
     Source,
+    Store,
     Queries,
     Record,
 }
@@ -40,12 +41,13 @@ pub struct File {
     pub report: Report,
 }
 
-const DIRS: [(&str, Kind); 5] = [
+const DIRS: [(&str, Kind); 6] = [
     (crate::gate::def::DIR, Kind::Gate),
     (crate::guard::rules::DIR, Kind::Guard),
     (crate::plan::template::DIR, Kind::Template),
     (crate::deliver::config::DIR, Kind::Mode),
     (crate::stale::kinds::DIR, Kind::Source),
+    (crate::store::DIR, Kind::Store),
 ];
 
 fn check(kind: Kind, origin: Origin, dir: &Path, stem: &str, shown: &str, text: &str) -> Report {
@@ -58,6 +60,7 @@ fn check(kind: Kind, origin: Origin, dir: &Path, stem: &str, shown: &str, text: 
             _ => None,
         },
         Kind::Source => crate::stale::kind_check::check(text, stem, shown).err(),
+        Kind::Store => crate::store::check::check(text, stem, shown).err(),
         Kind::Queries => crate::verbs::eval::lint(text, shown),
         Kind::Record => None,
         Kind::Mode | Kind::Deny | Kind::Delivery => {
@@ -94,7 +97,7 @@ pub fn files(top: &Path, origin: Origin, prefix: &str) -> Vec<File> {
                 (Kind::Template, crate::plan::template::RESERVED) => Kind::Required,
                 (Kind::Mode, "guard") => Kind::Delivery,
                 (Kind::Mode, s) if s.starts_with("deny-") => Kind::Deny,
-                (Kind::Source | Kind::Mode, _) if origin == Origin::Repo => continue,
+                (Kind::Source | Kind::Store | Kind::Mode, _) if origin == Origin::Repo => continue,
                 _ => kind,
             };
             let shown = format!("{prefix}{rel}/{name}");

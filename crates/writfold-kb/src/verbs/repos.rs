@@ -9,7 +9,8 @@
 use crate::emit::{Answer, More, Row};
 use crate::error::Result;
 use crate::session::Session;
-use crate::stale::repos::{self, Via};
+use crate::stale::repos;
+use crate::store::{self, Freshness, Store};
 use crate::time;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
@@ -75,7 +76,7 @@ fn more(label: &'static str, text: String, path: Option<String>) -> More {
 }
 
 /// The status and continuation lines of a repository found at `dir`.
-fn found(session: &Session<'_>, dir: PathBuf, via: Via) -> (&'static str, Vec<More>) {
+fn found(session: &Session<'_>, dir: PathBuf, via: &'static str) -> (&'static str, Vec<More>) {
     let status = if repos::partial(&dir) {
         "partial"
     } else {
@@ -94,11 +95,7 @@ fn found(session: &Session<'_>, dir: PathBuf, via: Via) -> (&'static str, Vec<Mo
         );
     let fetched = repos::fetched(&dir).map_or_else(|| "none".to_owned(), time::stamp);
     let lines = vec![
-        more(
-            "resolved",
-            via.name().to_owned(),
-            Some(dir.display().to_string()),
-        ),
+        more("resolved", via.to_owned(), Some(dir.display().to_string())),
         more("target", target, None),
         more("fetched", fetched, None),
     ];
@@ -108,16 +105,24 @@ fn found(session: &Session<'_>, dir: PathBuf, via: Via) -> (&'static str, Vec<Mo
 pub fn repos(session: &Session<'_>, missing_only: bool) -> Result<Answer> {
     let mut answer = Answer::default();
     let (mut total, mut missing, mut partial) = (0, 0, 0);
-    for (name, cited) in cited(session)? {
+    let stores = store::read(&session.ws.root)?;
+    let mut all = cited(session)?;
+    for declared in stores.iter() {
+        all.entry(declared.name.clone()).or_default();
+    }
+    for (name, cited) in all {
         total += 1;
-        let (status, lines) =
-            match repos::resolve_via(Some(session.ws), &name, cited.url.as_deref()) {
-                Some((dir, via)) => found(session, dir, via),
+        let mut flags = Vec::new();
+        let (status, lines) = match stores.get(&name) {
+            Some(declared) => store_row(session, declared, &mut flags),
+            None => match repos::resolve_via(Some(session.ws), &name, cited.url.as_deref()) {
+                Some((dir, via)) => found(session, dir, via.name()),
                 None => ("missing", Vec::new()),
-            };
-        missing += usize::from(status == "missing");
+            },
+        };
+        missing += usize::from(matches!(status, "missing" | "mismatch"));
         partial += usize::from(status == "partial");
-        if missing_only && status != "missing" {
+        if missing_only && !matches!(status, "missing" | "mismatch") {
             continue;
         }
         let mut row_more: Vec<More> = cited
@@ -134,7 +139,7 @@ pub fn repos(session: &Session<'_>, missing_only: bool) -> Result<Answer> {
             text: format!("tokens={}", cited.tokens),
             path,
             line,
-            flags: Vec::new(),
+            flags,
             more: row_more,
             ..Row::default()
         });
@@ -151,4 +156,37 @@ pub fn repos(session: &Session<'_>, missing_only: bool) -> Result<Answer> {
     }
     answer.counts = vec![("repos", total), ("missing", missing), ("partial", partial)];
     Ok(answer)
+}
+
+/// A declared store's row: resolved by the proved store rule
+/// ([`store::resolve`]), flagged `store` and with its freshness.
+fn store_row(
+    session: &Session<'_>,
+    declared: &Store,
+    flags: &mut Vec<String>,
+) -> (&'static str, Vec<More>) {
+    flags.push("store".into());
+    flags.push(match declared.freshness {
+        Freshness::Pinned => "pinned".into(),
+        Freshness::Head => "head".into(),
+    });
+    let file = format!("{}/{}.toml", store::DIR, declared.name);
+    let mut lines = vec![more("store", declared.url.clone(), Some(file))];
+    let resolved = store::resolve(Some(session.ws), declared);
+    if let Some(other) = &resolved.other_origin {
+        flags.push("origin-differs".into());
+        lines.push(more("origin", other.clone(), None));
+    }
+    let status = match resolved.git_dir {
+        Some(dir) => {
+            let (status, found) = found(session, dir, resolved.how);
+            lines.extend(found);
+            status
+        }
+        None => {
+            lines.push(more("clone", format!("git clone {}", declared.url), None));
+            resolved.how
+        }
+    };
+    (status, lines)
 }

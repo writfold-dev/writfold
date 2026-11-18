@@ -8,7 +8,7 @@ model's output: what is done, what is owed and whether a step may close are
 computed from those files, the same on every machine. A new session reads a
 short brief and the last checkpoint, and carries on.
 
-> **Pre-release (`v0.6.0-dev.6`).** Built in public, for one person and their
+> **Pre-release (`v0.6.0-dev.7`).** Built in public, for one person and their
 > agents; formats and commands may still change. Linux x86_64 or WSL2. See
 > [writfold.dev](https://writfold.dev/) and the [guides](docs/guide/README.md).
 
@@ -258,7 +258,7 @@ limits.
 | Sourced answers | `kb brief`, `context`, `why`, `status`, `find`, `match`, `impact`, `uses`, `timeline`, `resume`, `runs`, `repos`, `delta`; `find --each` for several lookups | [kb-layout](docs/guide/kb-layout.md) |
 | Parallel sessions | a current run per agent session and per work tree; `kb resume <run> --here` | [hooks](docs/guide/hooks.md#the-current-run-per-session-and-per-work-tree) |
 | Writing records | `kb init`, `checkpoint`, `record`, `status --set`, `cite make`, `observe`, `propose`, `proposals` | [feeding-back](docs/guide/feeding-back.md) |
-| Citations | `kb stale`, `check`, `index`; external checkers (`checker list`, `stale --record`) | [validation](docs/guide/validation.md), [checkers](docs/guide/checkers.md) |
+| Citations | `kb stale`, `check`, `index`; external checkers (`checker list`, `stale --record`); attached stores judged at their pin | [validation](docs/guide/validation.md), [checkers](docs/guide/checkers.md), [stores](docs/guide/stores.md) |
 | Gates | `kb gate run`, `status`, `verify`, `lines`, `attest`, `waive`, `cover` | [gates](docs/guide/gates.md) |
 | Plans | `kb plan set`, `use`, `status`, `advance`, `skip`, `repin`; required steps | [run-graph](docs/guide/run-graph.md) |
 | Policy | `accept`, `not_applicable`, `none_found`, `unskippable`, `waivable`; pins and drift; `kb policy` | [policy](docs/guide/policy.md) |
