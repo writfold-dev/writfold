@@ -8,7 +8,7 @@ model's output: what is done, what is owed and whether a step may close are
 computed from those files, the same on every machine. A new session reads a
 short brief and the last checkpoint, and carries on.
 
-> **Pre-release (`v0.6.0-dev.7`).** Built in public, for one person and their
+> **Pre-release (`v0.6.0-dev.8`).** Built in public, for one person and their
 > agents; formats and commands may still change. Linux x86_64 or WSL2. See
 > [writfold.dev](https://writfold.dev/) and the [guides](docs/guide/README.md).
 
