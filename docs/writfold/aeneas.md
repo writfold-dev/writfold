@@ -708,11 +708,44 @@ existing write protocol and the plan re-check (`Recheck.lean`, whose
 `Current` case now also stands for "no step was current and none is"), so
 `KbWrite.tla` and `RunGraph.tla` are unchanged.
 
+### The attached-stores round (18 November 2026)
+
+Built in v0.6.0-dev.7 ([v060-dev6-spec.md](v060-dev6-spec.md) part B, S1 and
+S2; [stores](../guide/stores.md)). `writfold_core::store` was translated and
+proved, and its mutants calibrated, before `writfold-kb` called it
+(`proofs/Writfold/Store.lean`). After the round: 606 theorems, 328 required
+claims (316 before), 210 mutants (203 before).
+
+- `basis(declared, pinned, has_rev)`: which rule judges a citation.
+  `basis_pin_iff`: the pin exactly for a declared store whose freshness is
+  `pinned` and a token with a revision; `basis_head_default`: every
+  undeclared repository, and a store declared `head`, is judged at head as
+  before.
+- `pinned(commit, at)`: the verdict under the pin, from whether the cited
+  commit is absent, present but reached by no ref, or anchored, and what
+  `rev:path` holds. `pinned_fresh_iff`: fresh exactly for the cited bytes at
+  an anchored commit; `pinned_behind_unverifiable`: a commit the clone lacks
+  is never gone and never fresh; `pinned_unanchored_gone`;
+  `pinned_other_bytes`. That a reorganised store reads the same is the
+  function's signature: nothing about the head is an input.
+- `resolve(map, search, hint)`: where a declared store's clone is found.
+  `resolve_map_wins` (flagged exactly when the origin differs),
+  `resolve_committed_needs_origin`, `resolve_search_before_hint`,
+  `resolve_flag_only_map`, `resolve_missing_iff`, `resolve_mismatch_iff`.
+
+An authored mark still wins through the proved `verdict::with_mark`.
+Tested, not proved: reading and checking the declaration files, `~` in a
+hint, normalising a remote URL and reading a clone's `origin`, choosing
+which hint to offer the kernel, the Git reads (one `cat-file --batch-check`
+for the commits and paths, one `for-each-ref --contains` per present
+commit), the full-revision check, rendering and JSON. Nothing is written, so
+`KbWrite.tla` and `RunGraph.tla` are unchanged.
+
 ### The claims and their mutants
 
 <!-- generated from proofs/mutants.py -->
 
-203 mutants (20 before 16 November 2026, 86 after the backfill's first round, 108 after the policy round, 161 after the backfill's second round, 170 after the bug-fix round, 189 after the delivery round: its nine delivery mutants re-aimed and 19 added, all 28 calibrated; 203 after the current-run and repin rounds). Each must break exactly the theorems named.
+210 mutants (20 before 16 November 2026, 86 after the backfill's first round, 108 after the policy round, 161 after the backfill's second round, 170 after the bug-fix round, 189 after the delivery round: its nine delivery mutants re-aimed and 19 added, all 28 calibrated; 203 after the current-run and repin rounds; 210 after the attached-stores round). Each must break exactly the theorems named.
 
 | Mutant | File | What it breaks | Must break |
 |---|---|---|---|
@@ -919,6 +952,13 @@ existing write protocol and the plan re-check (`Recheck.lean`, whose
 | `repin-when-unpinned` | `policy/repin.rs` | repin: refused when the run pinned nothing | `Policy.repin_check_spec`, `Policy.repin_ok_iff` |
 | `repin-undefined-gate` | `policy/repin.rs` | repin: a gate an open step owes must load to be adopted | `Policy.repin_check_spec`, `Policy.repin_ok_iff` |
 | `repin-reopens-skip` | `policy/repin.rs` | repin: adopting a lock list never reopens a skipped step | `Policy.repin_check_spec`, `Policy.repin_ok_iff` |
+| `basis-ignores-rev` | `store.rs` | store: the pin judges only a citation that names a revision | `Store.basis_pin_iff` |
+| `pinned-absent-gone` | `store.rs` | store: a clone that is behind is not evidence of loss | `Store.pinned_behind_unverifiable` |
+| `pinned-unanchored-fresh` | `store.rs` | store: a commit no ref reaches is not fresh | `Store.pinned_fresh_iff`, `Store.pinned_unanchored_gone` |
+| `pinned-other-bytes-fresh` | `store.rs` | store: other bytes at the pin are not the cited ones | `Store.pinned_fresh_iff`, `Store.pinned_other_bytes` |
+| `resolve-hint-any-origin` | `store.rs` | store: a committed hint needs the declared origin | `Store.resolve_committed_needs_origin`, `Store.resolve_mismatch_iff` |
+| `resolve-map-unflagged` | `store.rs` | store: the map's clone is flagged when its origin differs | `Store.resolve_map_wins` |
+| `resolve-hint-before-search` | `store.rs` | store: search roots before committed hints | `Store.resolve_search_before_hint` |
 <!-- end generated -->
 
 What these proofs do not cover: the fold from event files to the list of

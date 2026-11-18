@@ -6,6 +6,15 @@ This page is for someone pinned to one release who wants to upgrade on purpose. 
 
 A line marked **fix** changed an answer that was wrong; anything depending on the old answer was depending on the fault.
 
+## v0.6.0-dev.7
+
+- **A KB without `.writfold/stores/` behaves exactly as before.** Everything below needs a store declaration.
+- A citation whose `repo=` names a declared store is found through the store's rule ([stores](stores.md#where-the-clone-is-found)), not only through the local map: a clone found under a `$WRITFOLD_KB_REPOS` root or a path hint whose `origin` is another repository is no longer read (`unverifiable: store-origin-mismatch`). A clone named in the local map is still used, flagged when its origin differs.
+- A citation into a store declared `pinned` (the default) is judged at its own revision: a path moved, edited or deleted in the store since reads `fresh`, and a cited commit no branch or tag reaches reads `gone`. A short or symbolic `rev=` into such a store reads `unverifiable`.
+- `kb repos` has a row for each declared store, even one nothing cites yet, flagged `!store`; a `mismatch` counts as missing (exit 2 with `--missing`).
+- `kb policy`: the trailer gains `stores=`, and `identity` changes for a KB that declares stores.
+- A faulty store declaration refuses `stale`, `repos` and `policy`, as a faulty kind declaration refuses `stale`.
+
 ## v0.6.0-dev.6
 
 - **The current run is resolved per session, then per work tree, then from the shared pointer.** Before, one pointer per KB clone (`<KB git dir>/writfold/current-run`) decided for every hook and every verb without `--run`. Now a session's own pointer decides first, then the pointer of the work tree the command runs (or acts) in, and the shared pointer only when neither is set ([hooks](hooks.md#the-current-run-per-session-and-per-work-tree)). For one session in one repository nothing changes. What can be noticed:
