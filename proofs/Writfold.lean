@@ -21,3 +21,5 @@ import Writfold.Find
 import Writfold.Idle
 import Writfold.Order
 import Writfold.Subject
+import Writfold.Bind
+import Writfold.Pin

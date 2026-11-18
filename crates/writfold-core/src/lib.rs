@@ -45,6 +45,7 @@
 extern crate alloc;
 
 pub mod assess;
+pub mod bind;
 pub mod bytes;
 pub mod checklist;
 pub mod command;
@@ -59,6 +60,7 @@ pub mod idle;
 pub mod investigation;
 pub mod observe;
 pub mod order;
+pub mod pin;
 pub mod plan;
 pub mod pointer;
 pub mod policy;

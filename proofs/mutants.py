@@ -1141,6 +1141,46 @@ MUTANTS = (
            "        Commit::Absent => Artifact::Refuse(Refusal::NoCommit),",
            "        Commit::Absent => Artifact::Refuse(Refusal::Unanchored),",
            ("Writfold.Core.Store.artifact_no_commit",)),
+    # bind: a look recorded for another item never answers an item that wants its own
+    Mutant("own-accepts-other", "bind.rs",
+           "            Bound::Named | Bound::This => true,\n            Bound::Other | Bound::Unbound => false,",
+           "            Bound::Named | Bound::This | Bound::Other => true,\n            Bound::Unbound => false,",
+           ("Writfold.Core.Bind.answers_spec",)),
+    # bind: only a named gate answers an item that names its evidence
+    Mutant("named-accepts-this", "bind.rs",
+           "            Bound::Named => true,\n            Bound::This | Bound::Other | Bound::Unbound => false,",
+           "            Bound::Named | Bound::This => true,\n            Bound::Other | Bound::Unbound => false,",
+           ("Writfold.Core.Bind.answers_spec",)),
+    # bind: an ungrounded reference never answers
+    Mutant("answered-ignores-grounded", "bind.rs",
+           "        if refs[at].grounded && answers(need, refs[at].bound) {",
+           "        if answers(need, refs[at].bound) {",
+           ("Writfold.Core.Bind.answered_from_loop_spec",)),
+    # bind: an unanswered supported row is stale
+    Mutant("item-under-ignores-answer", "bind.rs",
+           "            if answered {\n                base",
+           "            if true {\n                base",
+           ("Writfold.Core.Bind.item_under_spec",)),
+    # pin: an unreadable pin never holds
+    Mutant("holds-skips-unreadable", "pin.rs",
+           "            Pin::Held => {}\n            Pin::Moved | Pin::Aged | Pin::Unreadable => return false,",
+           "            Pin::Held | Pin::Unreadable => {}\n            Pin::Moved | Pin::Aged => return false,",
+           ("Writfold.Core.Pin.holds_from_loop_spec",)),
+    # pin: a catalog default lifetime ages like a token's own
+    Mutant("timed-default-never-ages", "pin.rs",
+           "        Lifetime::Immutable | Lifetime::Never => Pin::Held,\n        Lifetime::Token(ttl) | Lifetime::Default(ttl) => {",
+           "        Lifetime::Immutable | Lifetime::Never | Lifetime::Default(_) => Pin::Held,\n        Lifetime::Token(ttl) => {",
+           ("Writfold.Core.Pin.timed_spec",)),
+    # pin: a negative look's pins decide whether it still found nothing
+    Mutant("nothing-found-ignores-pins", "pin.rs",
+           "        Status::NoData | Status::NotFound => holds(pins),",
+           "        Status::NoData | Status::NotFound => true,",
+           ("Writfold.Core.Pin.nothing_found_spec",)),
+    # pin: pins never make a receipt about other bytes current
+    Mutant("current-under-ignores-about", "pin.rs",
+           "    about && holds(pins)",
+           "    holds(pins)",
+           ("Writfold.Core.Pin.current_under_spec",)),
 )
 
 # lake reports `error: <path>.lean:<line>:<col>: <message>`

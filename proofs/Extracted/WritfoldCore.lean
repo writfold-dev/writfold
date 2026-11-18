@@ -253,6 +253,185 @@ def assess.outcome
     else assess.outcome_loop required true 0#usize
   else ok gate.Outcome.Unknown
 
+/-- [writfold_core::bind::Bound]
+    Source: 'crates/writfold-core/src/bind.rs', lines 26:0-37:1
+    Visibility: public -/
+@[discriminant isize]
+inductive bind.Bound where
+| Named : bind.Bound
+| This : bind.Bound
+| Other : bind.Bound
+| Unbound : bind.Bound
+
+/-- [writfold_core::bind::Need]
+    Source: 'crates/writfold-core/src/bind.rs', lines 41:0-49:1
+    Visibility: public -/
+@[discriminant isize]
+inductive bind.Need where
+| Any : bind.Need
+| Own : bind.Need
+| Named : bind.Need
+
+/-- [writfold_core::bind::Ref]
+    Source: 'crates/writfold-core/src/bind.rs', lines 53:0-57:1
+    Visibility: public -/
+structure bind.Ref where
+  grounded : Bool
+  bound : bind.Bound
+
+/-- [writfold_core::bind::answers]:
+    Source: 'crates/writfold-core/src/bind.rs', lines 60:0-72:1
+    Visibility: public -/
+def bind.answers (need : bind.Need) (bound : bind.Bound) : Result Bool := do
+  match need with
+  | bind.Need.Any => ok true
+  | bind.Need.Own =>
+    match bound with
+    | bind.Bound.Named => ok true
+    | bind.Bound.This => ok true
+    | bind.Bound.Other => ok false
+    | bind.Bound.Unbound => ok false
+  | bind.Need.Named =>
+    match bound with
+    | bind.Bound.Named => ok true
+    | bind.Bound.This => ok false
+    | bind.Bound.Other => ok false
+    | bind.Bound.Unbound => ok false
+
+/-- [writfold_core::bind::answered_from]: loop body 0:
+    Source: 'crates/writfold-core/src/bind.rs', lines 77:4-84:1
+    Visibility: public -/
+@[rust_loop_body]
+def bind.answered_from_loop.body
+  (need : bind.Need) (refs : Slice bind.Ref) («at» : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let i := Slice.len refs
+  if «at» < i
+  then
+    let r ← Slice.index_usize refs «at»
+    if r.grounded
+    then
+      let b ← bind.answers need r.bound
+      if b
+      then ok (done true)
+      else let at1 ← «at» + 1#usize
+           ok (cont at1)
+    else let at1 ← «at» + 1#usize
+         ok (cont at1)
+  else ok (done false)
+
+/-- [writfold_core::bind::answered_from]: loop 0:
+    Source: 'crates/writfold-core/src/bind.rs', lines 77:4-84:1
+    Visibility: public -/
+@[rust_loop]
+def bind.answered_from_loop
+  (need : bind.Need) (refs : Slice bind.Ref) («at» : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun at1 => bind.answered_from_loop.body need refs at1)
+    «at»
+
+/-- [writfold_core::bind::answered_from]:
+    Source: 'crates/writfold-core/src/bind.rs', lines 75:0-84:1
+    Visibility: public -/
+@[reducible]
+def bind.answered_from
+  (need : bind.Need) (refs : Slice bind.Ref) (index : Std.Usize) :
+  Result Bool
+  := do
+  bind.answered_from_loop need refs index
+
+/-- [writfold_core::bind::answered]:
+    Source: 'crates/writfold-core/src/bind.rs', lines 87:0-89:1
+    Visibility: public -/
+def bind.answered
+  (need : bind.Need) (refs : Slice bind.Ref) : Result Bool := do
+  bind.answered_from need refs 0#usize
+
+/-- [writfold_core::checklist::Item]
+    Source: 'crates/writfold-core/src/checklist.rs', lines 78:0-93:1
+    Visibility: public -/
+@[discriminant isize]
+inductive checklist.Item where
+| Open : checklist.Item
+| Supported : checklist.Item
+| NotApplicable : checklist.Item
+| NoneFound : checklist.Item
+| Unsupported : checklist.Item
+| Stale : checklist.Item
+
+/-- [writfold_core::checklist::Outcome]
+    Source: 'crates/writfold-core/src/checklist.rs', lines 30:0-40:1
+    Visibility: public -/
+@[discriminant isize]
+inductive checklist.Outcome where
+| Supported : checklist.Outcome
+| Unsupported : checklist.Outcome
+| NotApplicable : checklist.Outcome
+| NoneFound : checklist.Outcome
+
+/-- [writfold_core::checklist::Row]
+    Source: 'crates/writfold-core/src/checklist.rs', lines 65:0-74:1
+    Visibility: public -/
+structure checklist.Row where
+  outcome : checklist.Outcome
+  current : Bool
+  evidence : Std.Usize
+  grounded : Bool
+
+/-- [writfold_core::checklist::item]:
+    Source: 'crates/writfold-core/src/checklist.rs', lines 112:0-138:1
+    Visibility: public -/
+def checklist.item
+  (newest : Option checklist.Row) : Result checklist.Item := do
+  match newest with
+  | none => ok checklist.Item.Open
+  | some row =>
+    if row.current
+    then
+      match row.outcome with
+      | checklist.Outcome.Supported =>
+        if row.evidence > 0#usize
+        then
+          if row.grounded
+          then ok checklist.Item.Supported
+          else ok checklist.Item.Stale
+        else ok checklist.Item.Stale
+      | checklist.Outcome.Unsupported => ok checklist.Item.Unsupported
+      | checklist.Outcome.NotApplicable => ok checklist.Item.NotApplicable
+      | checklist.Outcome.NoneFound =>
+        if row.evidence > 0#usize
+        then
+          if row.grounded
+          then ok checklist.Item.NoneFound
+          else ok checklist.Item.Stale
+        else ok checklist.Item.Stale
+    else ok checklist.Item.Stale
+
+/-- [writfold_core::bind::item_under]:
+    Source: 'crates/writfold-core/src/bind.rs', lines 94:0-106:1
+    Visibility: public -/
+def bind.item_under
+  (newest : Option checklist.Row) (answered : Bool) :
+  Result checklist.Item
+  := do
+  let base ← checklist.item newest
+  match base with
+  | checklist.Item.Open => ok checklist.Item.Open
+  | checklist.Item.Supported =>
+    if answered
+    then ok checklist.Item.Supported
+    else ok checklist.Item.Stale
+  | checklist.Item.NotApplicable => ok checklist.Item.NotApplicable
+  | checklist.Item.NoneFound =>
+    if answered
+    then ok checklist.Item.NoneFound
+    else ok checklist.Item.Stale
+  | checklist.Item.Unsupported => ok checklist.Item.Unsupported
+  | checklist.Item.Stale => ok checklist.Item.Stale
+
 /-- [writfold_core::bytes::same]: loop body 0:
     Source: 'crates/writfold-core/src/bytes.rs', lines 10:4-17:1
     Visibility: public -/
@@ -293,66 +472,6 @@ def bytes.same (left : Slice Std.U8) (right : Slice Std.U8) : Result Bool := do
   if i != i1
   then ok false
   else bytes.same_loop left right 0#usize
-
-/-- [writfold_core::checklist::Outcome]
-    Source: 'crates/writfold-core/src/checklist.rs', lines 30:0-40:1
-    Visibility: public -/
-@[discriminant isize]
-inductive checklist.Outcome where
-| Supported : checklist.Outcome
-| Unsupported : checklist.Outcome
-| NotApplicable : checklist.Outcome
-| NoneFound : checklist.Outcome
-
-/-- [writfold_core::checklist::Row]
-    Source: 'crates/writfold-core/src/checklist.rs', lines 65:0-74:1
-    Visibility: public -/
-structure checklist.Row where
-  outcome : checklist.Outcome
-  current : Bool
-  evidence : Std.Usize
-  grounded : Bool
-
-/-- [writfold_core::checklist::Item]
-    Source: 'crates/writfold-core/src/checklist.rs', lines 78:0-93:1
-    Visibility: public -/
-@[discriminant isize]
-inductive checklist.Item where
-| Open : checklist.Item
-| Supported : checklist.Item
-| NotApplicable : checklist.Item
-| NoneFound : checklist.Item
-| Unsupported : checklist.Item
-| Stale : checklist.Item
-
-/-- [writfold_core::checklist::item]:
-    Source: 'crates/writfold-core/src/checklist.rs', lines 112:0-138:1
-    Visibility: public -/
-def checklist.item
-  (newest : Option checklist.Row) : Result checklist.Item := do
-  match newest with
-  | none => ok checklist.Item.Open
-  | some row =>
-    if row.current
-    then
-      match row.outcome with
-      | checklist.Outcome.Supported =>
-        if row.evidence > 0#usize
-        then
-          if row.grounded
-          then ok checklist.Item.Supported
-          else ok checklist.Item.Stale
-        else ok checklist.Item.Stale
-      | checklist.Outcome.Unsupported => ok checklist.Item.Unsupported
-      | checklist.Outcome.NotApplicable => ok checklist.Item.NotApplicable
-      | checklist.Outcome.NoneFound =>
-        if row.evidence > 0#usize
-        then
-          if row.grounded
-          then ok checklist.Item.NoneFound
-          else ok checklist.Item.Stale
-        else ok checklist.Item.Stale
-    else ok checklist.Item.Stale
 
 /-- [writfold_core::checklist::covered_under]:
     Source: 'crates/writfold-core/src/checklist.rs', lines 143:0-150:1
@@ -2627,6 +2746,113 @@ def order.precedes
   if seq_a != seq_b
   then ok (seq_a < seq_b)
   else order.less name_a name_b
+
+/-- [writfold_core::pin::Pin]
+    Source: 'crates/writfold-core/src/pin.rs', lines 27:0-37:1
+    Visibility: public -/
+@[discriminant isize]
+inductive pin.Pin where
+| Held : pin.Pin
+| Moved : pin.Pin
+| Aged : pin.Pin
+| Unreadable : pin.Pin
+
+/-- [writfold_core::pin::holds_from]: loop body 0:
+    Source: 'crates/writfold-core/src/pin.rs', lines 42:4-50:1
+    Visibility: public -/
+@[rust_loop_body]
+def pin.holds_from_loop.body
+  (pins : Slice pin.Pin) («at» : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let i := Slice.len pins
+  if «at» < i
+  then
+    let p ← Slice.index_usize pins «at»
+    match p with
+    | pin.Pin.Held => let at1 ← «at» + 1#usize
+                      ok (cont at1)
+    | pin.Pin.Moved => ok (done false)
+    | pin.Pin.Aged => ok (done false)
+    | pin.Pin.Unreadable => ok (done false)
+  else ok (done true)
+
+/-- [writfold_core::pin::holds_from]: loop 0:
+    Source: 'crates/writfold-core/src/pin.rs', lines 42:4-50:1
+    Visibility: public -/
+@[rust_loop]
+def pin.holds_from_loop
+  (pins : Slice pin.Pin) («at» : Std.Usize) : Result Bool := do
+  loop
+    (fun at1 => pin.holds_from_loop.body pins at1)
+    «at»
+
+/-- [writfold_core::pin::holds_from]:
+    Source: 'crates/writfold-core/src/pin.rs', lines 40:0-50:1
+    Visibility: public -/
+@[reducible]
+def pin.holds_from
+  (pins : Slice pin.Pin) (index : Std.Usize) : Result Bool := do
+  pin.holds_from_loop pins index
+
+/-- [writfold_core::pin::holds]:
+    Source: 'crates/writfold-core/src/pin.rs', lines 53:0-55:1
+    Visibility: public -/
+def pin.holds (pins : Slice pin.Pin) : Result Bool := do
+  pin.holds_from pins 0#usize
+
+/-- [writfold_core::verdict::Lifetime]
+    Source: 'crates/writfold-core/src/verdict.rs', lines 241:0-250:1
+    Visibility: public -/
+@[discriminant isize]
+inductive verdict.Lifetime (T : Type _) where
+| Immutable : verdict.Lifetime T
+| Token : T → verdict.Lifetime T
+| Default : T → verdict.Lifetime T
+| Never : verdict.Lifetime T
+
+/-- [writfold_core::pin::timed]:
+    Source: 'crates/writfold-core/src/pin.rs', lines 60:0-71:1
+    Visibility: public -/
+def pin.timed
+  (life : verdict.Lifetime Std.I64) (seen : Std.I64) (now : Std.I64) :
+  Result pin.Pin
+  := do
+  match life with
+  | verdict.Lifetime.Immutable => ok pin.Pin.Held
+  | verdict.Lifetime.Token ttl =>
+    let b ← verdict.expired now seen ttl
+    if b
+    then ok pin.Pin.Aged
+    else ok pin.Pin.Held
+  | verdict.Lifetime.Default ttl =>
+    let b ← verdict.expired now seen ttl
+    if b
+    then ok pin.Pin.Aged
+    else ok pin.Pin.Held
+  | verdict.Lifetime.Never => ok pin.Pin.Held
+
+/-- [writfold_core::pin::nothing_found]:
+    Source: 'crates/writfold-core/src/pin.rs', lines 75:0-80:1
+    Visibility: public -/
+def pin.nothing_found
+  (status : observe.Status) (pins : Slice pin.Pin) : Result Bool := do
+  match status with
+  | observe.Status.Ok => ok false
+  | observe.Status.Partial => ok false
+  | observe.Status.NoData => pin.holds pins
+  | observe.Status.NotFound => pin.holds pins
+  | observe.Status.Timeout => ok false
+  | observe.Status.Denied => ok false
+  | observe.Status.Error => ok false
+
+/-- [writfold_core::pin::current_under]:
+    Source: 'crates/writfold-core/src/pin.rs', lines 84:0-86:1
+    Visibility: public -/
+def pin.current_under (about : Bool) (pins : Slice pin.Pin) : Result Bool := do
+  if about
+  then pin.holds pins
+  else ok false
 
 /-- [writfold_core::plan::recheck::Decided]
     Source: 'crates/writfold-core/src/plan/recheck.rs', lines 12:0-21:1
@@ -4976,16 +5202,6 @@ def verdict.aged
       if age1 <= max
       then ok cached
       else ok verdict.Checker.Expired
-
-/-- [writfold_core::verdict::Lifetime]
-    Source: 'crates/writfold-core/src/verdict.rs', lines 241:0-250:1
-    Visibility: public -/
-@[discriminant isize]
-inductive verdict.Lifetime (T : Type _) where
-| Immutable : verdict.Lifetime T
-| Token : T → verdict.Lifetime T
-| Default : T → verdict.Lifetime T
-| Never : verdict.Lifetime T
 
 /-- [writfold_core::verdict::lifetime]:
     Source: 'crates/writfold-core/src/verdict.rs', lines 254:0-265:1

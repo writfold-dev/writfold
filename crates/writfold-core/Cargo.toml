@@ -128,6 +128,15 @@ start_from = [
     "writfold_core::assess::unfinished",
     "writfold_core::assess::found_met",
     "writfold_core::assess::outcome",
+    "writfold_core::bind::answers",
+    "writfold_core::bind::answered_from",
+    "writfold_core::bind::answered",
+    "writfold_core::bind::item_under",
+    "writfold_core::pin::holds_from",
+    "writfold_core::pin::holds",
+    "writfold_core::pin::timed",
+    "writfold_core::pin::nothing_found",
+    "writfold_core::pin::current_under",
 ]
 
 

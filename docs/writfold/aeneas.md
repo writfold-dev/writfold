@@ -66,6 +66,10 @@ never fails, result as stated):
 - The repin round (17 November 2026, below; built in v0.6.0-dev.6): which
   pin entry is in force and whether a run may adopt a changed policy
   (`Policy.lean`, extended in place).
+- The evidence-binding round (18 November 2026, below; kernels only, not
+  yet wired): whether a cover row's references answer the item they cover
+  (`Bind.lean`) and whether evidence still holds under its pins: what a
+  look searched, a catalog lifetime, another repository (`Pin.lean`).
 
 The gate (`docker compose -f compose.proofs.yaml run --build --rm proofs`,
 or the `docker run` form below) regenerates the translation and refuses
@@ -766,11 +770,40 @@ of one checkpoint are one create-new file in the same write plan as the
 checkpoint entry, written before it, so `KbWrite.tla` and `RunGraph.tla` are
 unchanged.
 
+### The evidence-binding round (18 November 2026)
+
+Kernels and proofs only; no verb calls them yet
+([gate-evidence-spec.md](gate-evidence-spec.md), stage 1). After the round:
+659 theorems, 366 required claims (336 before), 222 mutants (214 before).
+
+- `bind` (`Bind.lean`): whether the references a cover row cites answer
+  the item. `answers_spec`, `answers_any`, `other_never_answers`,
+  `unbound_never_answers`, `named_need_iff`: under `Any` every reference
+  answers; under `Own` only a look recorded for this item or a gate the
+  item names; under `Named` only a named gate. `answered_spec`,
+  `answered_iff`: some cited reference is grounded and answers.
+  `answeredB_skip`, `answered_unrelated`: a reference that does not answer,
+  or does not ground, never changes the answer. `item_under_spec`,
+  `item_under_answered`, `item_under_supported_iff`,
+  `item_under_none_found_iff`, `item_under_narrows`,
+  `item_under_unanswered`: binding only narrows `checklist.item`.
+  `bound_supported_iff`: relevance soundness end to end.
+- `pin` (`Pin.lean`): evidence holds while every pin holds.
+  `holds_spec`, `holds_nil`, `unheld_never_holds`; `timed_spec`,
+  `timed_untimed`, `timed_aged_iff`, `timed_never_moved` (a catalog
+  lifetime ages by `verdict::expired`); `nothing_found_spec`,
+  `nothing_found_refines` (no pins is the status test of today);
+  `current_under_spec`, `current_under_about`, `current_under_refines`.
+
+Tested, not proved: everything the wiring stages add (the `evidence` key,
+the `searched` field, store resolution, clock reads, rendering). Nothing is
+written by these kernels, so `KbWrite.tla` and `RunGraph.tla` are unchanged.
+
 ### The claims and their mutants
 
 <!-- generated from proofs/mutants.py -->
 
-214 mutants (20 before 16 November 2026, 86 after the backfill's first round, 108 after the policy round, 161 after the backfill's second round, 170 after the bug-fix round, 189 after the delivery round: its nine delivery mutants re-aimed and 19 added, all 28 calibrated; 203 after the current-run and repin rounds; 210 after the attached-stores round; 214 after the run-artifacts round). Each must break exactly the theorems named.
+222 mutants (20 before 16 November 2026, 86 after the backfill's first round, 108 after the policy round, 161 after the backfill's second round, 170 after the bug-fix round, 189 after the delivery round: its nine delivery mutants re-aimed and 19 added, all 28 calibrated; 203 after the current-run and repin rounds; 210 after the attached-stores round; 214 after the run-artifacts round; 222 after the evidence-binding round). Each must break exactly the theorems named.
 
 | Mutant | File | What it breaks | Must break |
 |---|---|---|---|
@@ -988,6 +1021,14 @@ unchanged.
 | `artifact-unanchored-admitted` | `store.rs` | store: an unanchored commit is refused, never admitted | `Store.artifact_admit_iff`, `Store.artifact_admit_reads_fresh`, `Store.artifact_unanchored` |
 | `artifact-found-before-declared` | `store.rs` | store: the declaration is checked before the clone | `Store.artifact_undeclared` |
 | `artifact-absent-as-unanchored` | `store.rs` | store: a missing commit says fetch, not push | `Store.artifact_no_commit` |
+| `own-accepts-other` | `bind.rs` | bind: a look recorded for another item never answers an item that wants its own | `Bind.answers_spec` |
+| `named-accepts-this` | `bind.rs` | bind: only a named gate answers an item that names its evidence | `Bind.answers_spec` |
+| `answered-ignores-grounded` | `bind.rs` | bind: an ungrounded reference never answers | `Bind.answered_from_loop_spec` |
+| `item-under-ignores-answer` | `bind.rs` | bind: an unanswered supported row is stale | `Bind.item_under_spec` |
+| `holds-skips-unreadable` | `pin.rs` | pin: an unreadable pin never holds | `Pin.holds_from_loop_spec` |
+| `timed-default-never-ages` | `pin.rs` | pin: a catalog default lifetime ages like a token's own | `Pin.timed_spec` |
+| `nothing-found-ignores-pins` | `pin.rs` | pin: a negative look's pins decide whether it still found nothing | `Pin.nothing_found_spec` |
+| `current-under-ignores-about` | `pin.rs` | pin: pins never make a receipt about other bytes current | `Pin.current_under_spec` |
 <!-- end generated -->
 
 What these proofs do not cover: the fold from event files to the list of
