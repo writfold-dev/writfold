@@ -19,6 +19,7 @@ start_from = [
     "writfold_core::plan",
     "writfold_core::policy",
     "writfold_core::pointer",
+    "writfold_core::store",
     "writfold_core::gate::outcome",
     "writfold_core::gate::bound",
     "writfold_core::gate::current",

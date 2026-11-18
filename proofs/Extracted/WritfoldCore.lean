@@ -4221,6 +4221,145 @@ def scope.covers
   := do
   scope.covers_loop patterns path false 0#usize
 
+/-- [writfold_core::store::Basis]
+    Source: 'crates/writfold-core/src/store.rs', lines 14:0-20:1
+    Visibility: public -/
+@[discriminant isize]
+inductive store.Basis where
+| Head : store.Basis
+| Pin : store.Basis
+
+/-- [writfold_core::store::basis]:
+    Source: 'crates/writfold-core/src/store.rs', lines 24:0-30:1
+    Visibility: public -/
+def store.basis
+  (declared : Bool) (pinned : Bool) (has_rev : Bool) : Result store.Basis := do
+  if declared
+  then
+    if pinned
+    then if has_rev
+         then ok store.Basis.Pin
+         else ok store.Basis.Head
+    else ok store.Basis.Head
+  else ok store.Basis.Head
+
+/-- [writfold_core::store::Commit]
+    Source: 'crates/writfold-core/src/store.rs', lines 33:0-41:1
+    Visibility: public -/
+@[discriminant isize]
+inductive store.Commit where
+| Absent : store.Commit
+| Unanchored : store.Commit
+| Anchored : store.Commit
+
+/-- [writfold_core::store::AtPin]
+    Source: 'crates/writfold-core/src/store.rs', lines 44:0-51:1
+    Visibility: public -/
+@[discriminant isize]
+inductive store.AtPin where
+| Cited : store.AtPin
+| Other : store.AtPin
+| Nothing : store.AtPin
+
+/-- [writfold_core::verdict::Verdict]
+    Source: 'crates/writfold-core/src/verdict.rs', lines 92:0-106:1
+    Visibility: public -/
+@[discriminant isize]
+inductive verdict.Verdict where
+| Fresh : verdict.Verdict
+| Moved : verdict.Verdict
+| Renamed : verdict.Verdict
+| Changed : verdict.Verdict
+| Gone : verdict.Verdict
+| Expired : verdict.Verdict
+| Unverifiable : verdict.Verdict
+| Marked : verdict.Verdict
+| Due : verdict.Verdict
+
+/-- [writfold_core::store::pinned]:
+    Source: 'crates/writfold-core/src/store.rs', lines 55:0-64:1
+    Visibility: public -/
+def store.pinned
+  (commit : store.Commit) («at» : store.AtPin) : Result verdict.Verdict := do
+  match commit with
+  | store.Commit.Absent => ok verdict.Verdict.Unverifiable
+  | store.Commit.Unanchored => ok verdict.Verdict.Gone
+  | store.Commit.Anchored =>
+    match «at» with
+    | store.AtPin.Cited => ok verdict.Verdict.Fresh
+    | store.AtPin.Other => ok verdict.Verdict.Gone
+    | store.AtPin.Nothing => ok verdict.Verdict.Gone
+
+/-- [writfold_core::store::Candidate]
+    Source: 'crates/writfold-core/src/store.rs', lines 67:0-72:1
+    Visibility: public -/
+@[discriminant isize]
+inductive store.Candidate where
+| None : store.Candidate
+| Clone : Bool → store.Candidate
+
+/-- [writfold_core::store::Via]
+    Source: 'crates/writfold-core/src/store.rs', lines 75:0-82:1
+    Visibility: public -/
+@[discriminant isize]
+inductive store.Via where
+| Map : store.Via
+| SearchRoot : store.Via
+| Hint : store.Via
+
+/-- [writfold_core::store::Resolved]
+    Source: 'crates/writfold-core/src/store.rs', lines 85:0-95:1
+    Visibility: public -/
+@[discriminant isize]
+inductive store.Resolved where
+| Found : store.Via → Bool → store.Resolved
+| Mismatch : store.Resolved
+| Missing : store.Resolved
+
+/-- [writfold_core::store::resolve]:
+    Source: 'crates/writfold-core/src/store.rs', lines 101:0-124:1
+    Visibility: public -/
+def store.resolve
+  (map : store.Candidate) (search : store.Candidate) (hint : store.Candidate) :
+  Result store.Resolved
+  := do
+  match map with
+  | store.Candidate.None =>
+    let b ←
+      match search with
+      | store.Candidate.None => ok false
+      | store.Candidate.Clone b1 => if b1
+                                    then ok true
+                                    else ok false
+    if b
+    then ok (store.Resolved.Found store.Via.SearchRoot false)
+    else
+      let b1 ←
+        match hint with
+        | store.Candidate.None => ok false
+        | store.Candidate.Clone b2 => if b2
+                                      then ok true
+                                      else ok false
+      if b1
+      then ok (store.Resolved.Found store.Via.Hint false)
+      else
+        let b2 ←
+          match search with
+          | store.Candidate.None => ok false
+          | store.Candidate.Clone _ => ok true
+        if b2
+        then ok store.Resolved.Mismatch
+        else
+          let b3 ←
+            match hint with
+            | store.Candidate.None => ok false
+            | store.Candidate.Clone _ => ok true
+          if b3
+          then ok store.Resolved.Mismatch
+          else ok store.Resolved.Missing
+  | store.Candidate.Clone origin =>
+    ok (store.Resolved.Found store.Via.Map (¬ origin))
+
 /-- [writfold_core::subject::Pick]
     Source: 'crates/writfold-core/src/subject.rs', lines 16:0-25:1
     Visibility: public -/
@@ -4636,21 +4775,6 @@ inductive verdict.Observed where
 | Offline : Bool → verdict.Observed
 | Immutable : verdict.Observed
 | Checked : verdict.Checker → verdict.Observed
-
-/-- [writfold_core::verdict::Verdict]
-    Source: 'crates/writfold-core/src/verdict.rs', lines 92:0-106:1
-    Visibility: public -/
-@[discriminant isize]
-inductive verdict.Verdict where
-| Fresh : verdict.Verdict
-| Moved : verdict.Verdict
-| Renamed : verdict.Verdict
-| Changed : verdict.Verdict
-| Gone : verdict.Verdict
-| Expired : verdict.Verdict
-| Unverifiable : verdict.Verdict
-| Marked : verdict.Verdict
-| Due : verdict.Verdict
 
 /-- [writfold_core::verdict::observed]:
     Source: 'crates/writfold-core/src/verdict.rs', lines 109:0-145:1

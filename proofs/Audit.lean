@@ -361,6 +361,19 @@ def claims : List Name := [
   ``Writfold.Core.Policy.repin_unmoved_refused,
   ``Writfold.Core.Policy.repin_closed_refused,
   ``Writfold.Core.Policy.repin_keeps_skips,
+  -- attached stores (writfold_core::store)
+  ``Writfold.Core.Store.basis_pin_iff,
+  ``Writfold.Core.Store.basis_head_default,
+  ``Writfold.Core.Store.pinned_fresh_iff,
+  ``Writfold.Core.Store.pinned_behind_unverifiable,
+  ``Writfold.Core.Store.pinned_unanchored_gone,
+  ``Writfold.Core.Store.pinned_other_bytes,
+  ``Writfold.Core.Store.resolve_map_wins,
+  ``Writfold.Core.Store.resolve_committed_needs_origin,
+  ``Writfold.Core.Store.resolve_search_before_hint,
+  ``Writfold.Core.Store.resolve_flag_only_map,
+  ``Writfold.Core.Store.resolve_missing_iff,
+  ``Writfold.Core.Store.resolve_mismatch_iff,
 ]
 
 /-- Every theorem under `Writfold.Core`, sorted by name. -/
