@@ -123,6 +123,10 @@ impl Drop for Temporary<'_> {
     fn drop(&mut self) {
         // Failure leaves at most this operation's temporary; it is not swept by
         // a later write. Publication paths report explicit cleanup failures.
+        #[expect(
+            clippy::let_underscore_must_use,
+            reason = "Drop cannot fail; leaves one temporary"
+        )]
         let _ = self.remove_owned();
     }
 }

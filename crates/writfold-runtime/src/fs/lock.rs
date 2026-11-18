@@ -86,6 +86,10 @@ impl Drop for LockedFile<'_> {
         // callers must already have quiesced their owned effects before drop.
         // Drop cannot return an unlock error. Closing remains the fallback, and
         // subsequent acquisition still observes any kernel-held lock as busy.
+        #[expect(
+            clippy::let_underscore_must_use,
+            reason = "Drop cannot fail; close releases the lock"
+        )]
         let _ = flock(&self.descriptor, FlockOperation::Unlock);
     }
 }

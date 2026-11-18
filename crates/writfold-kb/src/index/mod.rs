@@ -203,6 +203,10 @@ fn attempt(
     let temporary = file.with_file_name(format!(".kb-rebuild-{}.tmp", std::process::id()));
     build_file(&temporary, inputs(&ws.root, listed(repo, git)?), &snapshot)?;
     if observe(ws, repo, git)?.pin.digest != snapshot.pin.digest {
+        #[expect(
+            clippy::let_underscore_must_use,
+            reason = "best-effort cleanup of an unused file"
+        )]
         let _ = std::fs::remove_file(&temporary);
         return Ok(None);
     }
@@ -293,7 +297,12 @@ pub fn listed(repo: &Repo, git: &GitExecutable<'_>) -> Result<Vec<String>> {
 
 /// Build `inputs` into the file `target` (replaced if present).
 pub fn build_file(target: &Path, inputs: Vec<Input>, snapshot: &Snapshot) -> Result<()> {
-    let _ = std::fs::remove_file(target);
+    // A file that cannot be removed must not be built into: the build
+    // would mix with whatever it already holds.
+    match std::fs::remove_file(target) {
+        Err(error) if error.kind() != std::io::ErrorKind::NotFound => return Err(error.into()),
+        Ok(()) | Err(_) => {}
+    }
     let mut conn = Connection::open(target)?;
     conn.execute_batch("PRAGMA journal_mode = OFF; PRAGMA synchronous = OFF;")?;
     build::build(&mut conn, inputs, &snapshot_meta(snapshot))?;
@@ -315,6 +324,10 @@ pub fn replace(file: &Path, temporary: &Path) -> Result<()> {
              DETACH DATABASE old;",
             quote(&file.to_string_lossy())
         );
+        #[expect(
+            clippy::let_underscore_must_use,
+            reason = "cache carry-over; misses are recomputed"
+        )]
         let _ = conn.execute_batch(&keep);
     }
     std::fs::File::open(temporary)?.sync_all()?;

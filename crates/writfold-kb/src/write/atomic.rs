@@ -54,6 +54,10 @@ impl Lock {
 
 impl Drop for Lock {
     fn drop(&mut self) {
+        #[expect(
+            clippy::let_underscore_must_use,
+            reason = "Drop cannot fail; close releases the lock"
+        )]
         let _ = self.file.unlock();
     }
 }
@@ -156,6 +160,10 @@ fn publish(root: &Path, staging: &Path, op: &Op, probe: Probe) -> Result<()> {
             let temp = temporary(dir, bytes, probe)?;
             probe(Step::Rechecked);
             let linked = std::fs::hard_link(&temp, &target);
+            #[expect(
+                clippy::let_underscore_must_use,
+                reason = "best-effort cleanup; link decides"
+            )]
             let _ = std::fs::remove_file(&temp);
             match linked {
                 Err(error) if error.kind() == ErrorKind::AlreadyExists => {
@@ -178,6 +186,10 @@ fn publish(root: &Path, staging: &Path, op: &Op, probe: Probe) -> Result<()> {
             let temp = temporary(dir, bytes, probe)?;
             let now = std::fs::read(&target).unwrap_or_default();
             if digest(&now) != *expected {
+                #[expect(
+                    clippy::let_underscore_must_use,
+                    reason = "best-effort cleanup; conflict reported"
+                )]
                 let _ = std::fs::remove_file(&temp);
                 return Err(conflict(format!("{path} changed since it was read")));
             }
@@ -225,11 +237,19 @@ fn create_dir(
     let target = root.join(path);
     directories(root, &target)?;
     if target.symlink_metadata().is_ok() {
+        #[expect(
+            clippy::let_underscore_must_use,
+            reason = "best-effort cleanup; conflict reported"
+        )]
         let _ = std::fs::remove_dir_all(&stage);
         return Err(conflict(format!("{path} already exists")));
     }
     probe(Step::Rechecked);
     if let Err(error) = std::fs::rename(&stage, &target) {
+        #[expect(
+            clippy::let_underscore_must_use,
+            reason = "best-effort cleanup; rename error reported"
+        )]
         let _ = std::fs::remove_dir_all(&stage);
         return Err(error.into());
     }

@@ -110,6 +110,10 @@ pub fn run(event: &str, input: &str, env: &HookEnv) -> HookOutput {
             let source = input.get("source").and_then(Value::as_str);
             // The session's mark for `delta --since-mark`; best effort.
             if let Some(session) = input.get("session_id").and_then(Value::as_str) {
+                #[expect(
+                    clippy::let_underscore_must_use,
+                    reason = "best effort; must not block start"
+                )]
                 let _ = crate::delta::session_mark(&ws, session, now);
             }
             start::session_start(&ws, &cwd, now, source)

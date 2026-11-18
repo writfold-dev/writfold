@@ -75,6 +75,10 @@ fn prune(state: &Path, now: i64) {
             .and_then(|m| crate::time::parse(&m.taken))
             .is_some_and(|t| now - t > KEEP);
         if old {
+            #[expect(
+                clippy::let_underscore_must_use,
+                reason = "best-effort prune; retried next pass"
+            )]
             let _ = std::fs::remove_file(path);
         }
     }

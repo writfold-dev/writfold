@@ -190,6 +190,10 @@ fn check(
     let outcome = rerun(ws, git, &tree, r, run, stem, now);
     let removed = gate_worktree_remove(git, git_dir, &tree, budgets()?, &CANCELLED);
     if removed.is_err() {
+        #[expect(
+            clippy::let_underscore_must_use,
+            reason = "fallback cleanup after git failed"
+        )]
         let _ = std::fs::remove_dir_all(&tree);
     }
     let (again, ended, ms, scope_same) = outcome?;

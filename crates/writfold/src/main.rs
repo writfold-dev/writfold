@@ -67,7 +67,15 @@ fn kb(args: &[String]) -> ExitCode {
         stderr: style(io::stderr().is_terminal()),
     };
     let outcome = writfold_app::kb::main_styled(args, cwd, &styles);
+    #[expect(
+        clippy::let_underscore_must_use,
+        reason = "exiting; no channel is left to report to"
+    )]
     let _ = io::stdout().lock().write_all(outcome.stdout.as_bytes());
+    #[expect(
+        clippy::let_underscore_must_use,
+        reason = "exiting; no channel is left to report to"
+    )]
     let _ = io::stderr().lock().write_all(outcome.stderr.as_bytes());
     ExitCode::from(outcome.code)
 }
@@ -87,9 +95,17 @@ fn watch(args: &[String]) -> ExitCode {
     match writfold_tui::main(args, cwd, io::stdout().is_terminal(), environment) {
         Ok(outcome) => {
             if let Some(warning) = outcome.warning {
+                #[expect(
+                    clippy::let_underscore_must_use,
+                    reason = "stderr itself failed; nowhere to report"
+                )]
                 let _ = writeln!(io::stderr().lock(), "{warning}");
             }
             if let Some(text) = outcome.stdout {
+                #[expect(
+                    clippy::let_underscore_must_use,
+                    reason = "exiting; no channel is left to report to"
+                )]
                 let _ = writeln!(io::stdout().lock(), "{}", text.trim_end());
             }
             ExitCode::SUCCESS
@@ -99,6 +115,10 @@ fn watch(args: &[String]) -> ExitCode {
 }
 
 fn failure(message: &str) -> ExitCode {
+    #[expect(
+        clippy::let_underscore_must_use,
+        reason = "stderr itself failed; nowhere to report"
+    )]
     let _ = writeln!(io::stderr().lock(), "writfold: {message}");
     ExitCode::FAILURE
 }

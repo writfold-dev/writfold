@@ -137,6 +137,10 @@ impl Drop for OwnedChild<'_> {
                 if !reported {
                     // A failed diagnostic must not panic during destruction or
                     // change the requirement to keep owning unquiesced work.
+                    #[expect(
+                        clippy::let_underscore_must_use,
+                        reason = "diagnostic only; must not panic in Drop"
+                    )]
                     let _ = writeln!(
                         std::io::stderr().lock(),
                         "native process cleanup failed; ownership retained: {error}"
