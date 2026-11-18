@@ -5,7 +5,7 @@
 # baseline slot (TAU-R001), exits non-zero. Extra arguments go to
 # `cargo tauten check` (for example `--format json` or `--warnings`).
 #
-# Needs cargo-tauten built from tauten main at or after 443282d (0.0.1 on
+# Needs cargo-tauten built from tauten main at or after 3b7512e (0.0.1 on
 # crates.io predates fixes this baseline relies on). Set CARGO_TAUTEN to
 # its path if it is not on PATH.
 set -euo pipefail

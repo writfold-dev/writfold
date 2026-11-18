@@ -7,7 +7,7 @@ tauten's own structural checks). This page records the tiers, what the first
 run found, what was fixed, what was accepted into the baseline and why, and
 the path to tightening it.
 
-- Tool: `cargo-tauten` built from tauten main at `443282d` (0.0.1 on
+- Tool: `cargo-tauten` built from tauten main at `3b7512e` (0.0.1 on
   crates.io predates fixes the baseline relies on).
 - Run: `scripts/tauten-check` (set `CARGO_TAUTEN` if `cargo-tauten` is not on
   `PATH`). It is not part of `scripts/gate` and produces no receipt.
@@ -63,6 +63,9 @@ By crate after the fixes: `writfold-core` 248, `writfold-domain` 155,
 `tuft` 129, `writfold-sources` 103, `writfold-runtime` 26, `writfold-kb` 17,
 `writfold-xtask` 1; `writfold`, `writfold-app` and `writfold-tui` have none.
 (The 754 of the dry run used assumed tiers and an older tauten.)
+The counts are from tauten 443282d. tauten 3b7512e also reports file-level
+`#![allow]`, which added 12 X001 findings in `writfold-core` before fix 5
+below and none after it, so the 679 stands.
 
 ## What was fixed
 
@@ -91,6 +94,19 @@ By crate after the fixes: `writfold-core` 248, `writfold-domain` 155,
    rejects `#[expect(clippy::unwrap_used)]` in production code) still runs.
    Four calibrations were added to `scripts/writfold_quality.py` and checked
    by running `writfold-xtask quality` on each fixture by hand.
+5. **writfold-core's crate-level `#![allow]` became `#![expect]`.** tauten
+   3b7512e reports file-level `#![allow]` under X001 (12 findings here, one
+   per listed lint plus a bogus one, see below). Of the eleven allowed lints
+   only five fire (`redundant_pattern_matching`, `match_like_matches_macro`,
+   `question_mark`, `manual_filter`, `manual_map`, one site each in `assess`,
+   `delivery`, `find` and `verdict::recorded`); those five are now a reasoned
+   `#![expect]` and the six that never fired are gone, since an unfulfilled
+   expectation warns. It stays crate-level on purpose: an item attribute in
+   an extracted module would shift the source lines recorded in
+   `proofs/Extracted` (which records no `lib.rs` spans). No kernel function
+   changed; `cargo build -p writfold-core` and both clippy runs are clean.
+   This fix never entered the baseline (the finding did not exist when it was
+   recorded), so the baseline is unchanged.
 
 Not touched: anything in Tuft, Weft (`gate/assessed`, `tests/assessed`) or
 Splicery (`kb edit`, `splicery_refusal`), which are frozen; and any function
@@ -121,14 +137,15 @@ new errors with the baseline in place.
 
 Reported for tauten; nothing in tauten was changed.
 
-1. **Inner `#![allow(lint, reason)]` escapes X001 and X004.** `clippy::allow_attributes` checks only outer attributes, and X004 inspects only profile lints. So `writfold-core`'s crate-level `#![allow(clippy::needless_range_loop, …, reason = "…")]` passes a kernel crate whose profile says "no lint exceptions at all". Repro: a kernel crate with `#![no_std] #![allow(clippy::needless_return, reason = "x")] pub fn f() -> u8 { return 1; }` reports nothing. For writfold these allowances are legitimate (Aeneas-friendly shapes), so the kernel tier needs a stated way to admit them, not just a detection fix.
-2. **E001 false positives.** `clippy::map_err_ignore` fires where the discarded value is not an error or cannot be kept. Repro (core tier): `pub fn f(v: &[u8]) -> Result<usize, E> { v.binary_search(&1).map_err(|_| E::Missing) }`. Same for `AtomicUsize::fetch_update`, `Mutex::lock` (`PoisonError<Guard>` cannot become a `'static` source), and `JoinHandle::join` (panic payload).
-3. **E002 is narrower than its text.** It is `clippy::result_unit_err`, which fires only for exported functions: `pub fn probe() -> Result<u8, ()>` in a private module of a core crate is not reported, and `anyhow::Error` is not covered by that lint.
-4. **Adoption friction, not bugs.** rustfmt expands every `#[expect(.., reason = "..")]` to four lines (19 statement-level exceptions added 76 lines); the agent profile's "do not add `#[allow]`" has no answer for helper modules shared by several test binaries; and a project's own checker may treat `expect` as a panic (writfold-xtask did, fixed above).
+1. **Inner `#![allow(lint, reason)]` escaped X001 and X004** (fixed in tauten 3b7512e; X001 now reports file-level allowances in `src/`; the reasoned `#![allow(dead_code)]` in shared test helpers is still accepted). `clippy::allow_attributes` checks only outer attributes, and X004 inspects only profile lints. So `writfold-core`'s crate-level `#![allow(clippy::needless_range_loop, …, reason = "…")]` passes a kernel crate whose profile says "no lint exceptions at all". Repro: a kernel crate with `#![no_std] #![allow(clippy::needless_return, reason = "x")] pub fn f() -> u8 { return 1; }` reports nothing. For writfold these allowances are legitimate (Aeneas-friendly shapes), so the kernel tier needs a stated way to admit them, not just a detection fix.
+2. **E001 false positives** (now a documented gap in tauten's MAPPING.md: use a reasoned `#[expect]`). `clippy::map_err_ignore` fires where the discarded value is not an error or cannot be kept. Repro (core tier): `pub fn f(v: &[u8]) -> Result<usize, E> { v.binary_search(&1).map_err(|_| E::Missing) }`. Same for `AtomicUsize::fetch_update`, `Mutex::lock` (`PoisonError<Guard>` cannot become a `'static` source), and `JoinHandle::join` (panic payload).
+3. **E002 is narrower than its text** (now a documented gap in MAPPING.md). It is `clippy::result_unit_err`, which fires only for exported functions: `pub fn probe() -> Result<u8, ()>` in a private module of a core crate is not reported, and `anyhow::Error` is not covered by that lint.
+4. **X001 splits a reason string at commas** (tauten 3b7512e). Text after a comma inside `reason = "..."` is read as a lint name: `#![allow(clippy::needless_return, reason = "a, b c")]` reports a second finding for a "lint" named `bc"` (spaces dropped, closing quote kept). On writfold-core's old attribute it produced `#![allow(indexedloopsandpushes…)]`.
+5. **Adoption friction, not bugs.** rustfmt expands every `#[expect(.., reason = "..")]` to four lines (19 statement-level exceptions added 76 lines); the agent profile's "do not add `#[allow]`" has no answer for helper modules shared by several test binaries; and a project's own checker may treat `expect` as a panic (writfold-xtask did, fixed above).
 
 ## Path to stage 3 (tightening the ratchet)
 
-1. Pin `cargo-tauten` (a release at or after `443282d`) in the tools image and
+1. Pin `cargo-tauten` (a release at or after `3b7512e`) in the tools image and
    add a non-required compose service, so the check runs offline like the
    other tools. Until then `scripts/tauten-check` needs a local build.
 2. Re-record the baseline after each cleanup so it only shrinks

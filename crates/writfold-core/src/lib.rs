@@ -26,20 +26,18 @@
     clippy::todo,
     clippy::unimplemented
 )]
-#![allow(
+// Crate-level, not on the items: an attribute inside an extracted module
+// would shift the source lines recorded in proofs/Extracted. Only lints that
+// fire are listed (an unfulfilled expectation warns); a new Aeneas-shaped
+// construct that trips another lint needs its own reasoned expectation.
+#![expect(
     clippy::redundant_pattern_matching,
     clippy::match_like_matches_macro,
-    clippy::new_without_default,
-    clippy::needless_range_loop,
-    clippy::manual_memcpy,
-    clippy::explicit_counter_loop,
-    clippy::needless_return,
-    clippy::vec_init_then_push,
     clippy::question_mark,
     clippy::manual_filter,
     clippy::manual_map,
-    reason = "explicit matches, indexed loops and pushes translate to plain Lean \
-              without depending on further modelled library functions"
+    reason = "explicit matches translate to plain Lean without depending on \
+              further modelled library functions"
 )]
 
 extern crate alloc;
