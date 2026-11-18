@@ -30,11 +30,13 @@ const RECEIPT_TRAILER: &str =
 fn write(name: &str, note: &str) -> Write {
     match name {
         "checkpoint" => Write::Checkpoint(Checkpoint {
+            artifacts: Vec::new(),
             run: Some(RUN.into()),
             new_run: None,
             note: note.into(),
         }),
         "new-run" => Write::Checkpoint(Checkpoint {
+            artifacts: Vec::new(),
             run: None,
             new_run: Some(NewRun {
                 project: "harbor".into(),

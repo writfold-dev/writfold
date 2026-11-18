@@ -15,6 +15,7 @@ fn write(w: &World, verb: Write) -> TestResult<(String, u8)> {
 
 fn checkpoint(run: Option<&str>, note: &str) -> Write {
     Write::Checkpoint(Checkpoint {
+        artifacts: Vec::new(),
         run: run.map(str::to_owned),
         new_run: None,
         note: note.into(),
@@ -99,6 +100,7 @@ fn export_for_prototype_parity() -> TestResult {
     )?;
     write(&w, set("HBR-101", "done", None))?;
     let new = Write::Checkpoint(Checkpoint {
+        artifacts: Vec::new(),
         run: None,
         new_run: Some(NewRun {
             project: "harbor".into(),

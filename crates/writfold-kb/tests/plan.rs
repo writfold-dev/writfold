@@ -112,6 +112,7 @@ fn note(w: &World, text: &str) -> TestResult<(String, u8)> {
     call(
         w,
         Verb::Write(Write::Checkpoint(Checkpoint {
+            artifacts: Vec::new(),
             run: Some(RUN.into()),
             new_run: None,
             note: text.into(),

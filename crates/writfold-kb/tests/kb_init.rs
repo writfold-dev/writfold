@@ -118,6 +118,7 @@ fn a_first_run_resumes_and_says_no_policy_is_configured() -> TestResult {
     init(&dir, None, false)?;
     let checkpoint = Verb::Write(writfold_kb::write::Write::Checkpoint(
         writfold_kb::write::run::Checkpoint {
+            artifacts: Vec::new(),
             run: None,
             new_run: Some(writfold_kb::write::run::NewRun {
                 project: "demo".into(),

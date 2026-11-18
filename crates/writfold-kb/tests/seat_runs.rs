@@ -54,6 +54,7 @@ fn runs(w: &World) -> TestResult<Vec<String>> {
 fn start(w: &World, cwd: &Path, task: &str) -> TestResult<String> {
     let before = runs(w)?;
     let mut request = w.request(Verb::Write(Write::Checkpoint(Checkpoint {
+        artifacts: Vec::new(),
         run: None,
         new_run: Some(NewRun {
             project: "harbor".into(),

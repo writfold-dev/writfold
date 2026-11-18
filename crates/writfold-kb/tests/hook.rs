@@ -131,6 +131,7 @@ fn drafts_from_stop_compaction_and_end_then_confirm() -> TestResult {
 fn confirm(w: &World) -> TestResult {
     let from = |session: &str| {
         Verb::Write(Write::FromDraft(FromDraft {
+            artifacts: Vec::new(),
             session: session.into(),
             run: None,
             new_run: None,

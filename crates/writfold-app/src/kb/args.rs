@@ -52,7 +52,7 @@ fn split(verb: &str, args: &[String]) -> Result<(Common, Vec<String>), String> {
             positional.push(arg.clone());
             continue;
         }
-        if seen.contains(arg) {
+        if seen.contains(arg) && !writes::REPEATS.contains(&&arg[2..]) {
             return Err(format!("{arg} given twice"));
         }
         seen.push(arg.clone());
@@ -86,9 +86,7 @@ fn split(verb: &str, args: &[String]) -> Result<(Common, Vec<String>), String> {
                     || super::observe::VALUES.contains(&&other[2..])
                     || super::investigation::VALUES.contains(&&other[2..]) =>
             {
-                common
-                    .values
-                    .insert(other[2..].to_owned(), value(arg, items.next())?);
+                writes::put(&mut common.values, &other[2..], value(arg, items.next())?);
             }
             // `--tracked` and `--local` are `propose`'s switches.
             other if super::proposals::SWITCHES.contains(&&other[2..]) => {

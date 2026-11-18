@@ -22,7 +22,7 @@ The project KB is plain records in Git. `writfold kb <verb>` answers from it in 
 | Pick up a run: its checkpoint, coverage and rechecks | `resume [<run>]` (list runs with `runs --open`) |
 | Work in a run another session started (a review, a hand-over) | `resume <run> --here`: it becomes this session's current run; nothing tracked is written |
 | Look several names up at once | `find --each "<q1>" "<q2>" …`: a `query` row, then up to five rows each |
-| Save where the work stands | `checkpoint --note TEXT` (or `--new-run --project P --task T --note TEXT`) |
+| Save where the work stands | `checkpoint --note TEXT` (or `--new-run --project P --task T --note TEXT`); add `--artifact STORE@REV:PATH` for what the run made in an attached store |
 | Write down a ticket, decision or link | `record ticket\|decision\|link …` (see `writfold kb help`) |
 | Suggest a record for the user to review, without writing it | `propose ticket\|decision\|link …` (same arguments); `proposals [list]`, `proposals show <id>` |
 | Run a check and record its receipt in the run | `gate run <id>` (definitions in `.writfold/gates/`; an `assessed` gate runs Weft on the step's source) |

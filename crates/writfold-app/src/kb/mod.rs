@@ -82,6 +82,7 @@ verbs:
 
 writes (atomic; they leave the work tree dirty for you to commit):
   checkpoint [--run ID | --new-run --project P --task T [--mode M]] --note TEXT|--from-draft SESSION
+             [--artifact STORE@REV:PATH …]  pointers to what the run made in an attached store
   record ticket <ID> --title T [--assets a,b] [--status S] [--summary S] [--prs p,q]
   record decision --title T --target-source S [--project P] [--references a,b]
                   [--context ..] [--evidence ..] [--change ..] [--why ..] [--origin O]

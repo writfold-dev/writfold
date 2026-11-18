@@ -1,7 +1,8 @@
 //! `checkpoint` arguments: `--note TEXT` or `--from-draft SESSION`, with
-//! `--run ID` or `--new-run --project P --task T [--mode M]`.
+//! `--run ID` or `--new-run --project P --task T [--mode M]`, and any
+//! number of `--artifact <store>@<rev>:<path>`.
 use super::args::Common;
-use super::writes::{get, need, switch};
+use super::writes::{all, get, need, switch};
 use writfold_kb::write::Write;
 use writfold_kb::write::run::{Checkpoint, FromDraft, NewRun};
 
@@ -22,14 +23,21 @@ pub fn checkpoint(common: &Common) -> Result<Write, String> {
         None
     };
     let run = get(common, "run");
+    let artifacts = all(common, "artifact");
     match (get(common, "note"), get(common, "from-draft")) {
         (Some(_), Some(_)) => Err("checkpoint takes --note or --from-draft, not both".into()),
         (None, None) => Err("checkpoint needs --note TEXT or --from-draft SESSION".into()),
-        (Some(note), None) => Ok(Write::Checkpoint(Checkpoint { run, new_run, note })),
+        (Some(note), None) => Ok(Write::Checkpoint(Checkpoint {
+            run,
+            new_run,
+            note,
+            artifacts,
+        })),
         (None, Some(session)) => Ok(Write::FromDraft(FromDraft {
             session,
             run,
             new_run,
+            artifacts,
         })),
     }
 }
@@ -57,6 +65,10 @@ mod tests {
             verb("checkpoint --note n")?,
             Verb::Write(Write::Checkpoint(_))
         ));
+        let two = verb("checkpoint --note n --artifact s@a:x --artifact s@b:y")?;
+        assert!(matches!(two, Verb::Write(Write::Checkpoint(c))
+            if c.artifacts == ["s@a:x", "s@b:y"]));
+        assert!(verb("checkpoint --note n --note m").is_err());
         Ok(())
     }
 }

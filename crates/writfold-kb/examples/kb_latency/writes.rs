@@ -46,6 +46,7 @@ fn cases(kb: String) -> Vec<Case> {
             "checkpoint --new-run",
             Box::new(|n| {
                 Verb::Write(Write::Checkpoint(Checkpoint {
+                    artifacts: Vec::new(),
                     run: None,
                     new_run: Some(NewRun {
                         project: "proj3".into(),
@@ -60,6 +61,7 @@ fn cases(kb: String) -> Vec<Case> {
             "checkpoint (append)",
             Box::new(|n| {
                 Verb::Write(Write::Checkpoint(Checkpoint {
+                    artifacts: Vec::new(),
                     run: None,
                     new_run: None,
                     note: format!("Entry {n}."),

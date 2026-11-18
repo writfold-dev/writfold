@@ -7,6 +7,7 @@
 //! new snapshot. Files are written in the shapes the KB already uses, so
 //! the earlier prototype keeps accepting them. Writes leave the work tree
 //! dirty; committing is the user's (or agent's) step.
+pub mod artifact;
 pub mod atomic;
 pub mod cite;
 pub mod conclude;

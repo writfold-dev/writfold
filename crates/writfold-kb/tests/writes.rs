@@ -37,6 +37,7 @@ fn read(w: &World, path: &str) -> TestResult<String> {
 
 fn checkpoint(run: Option<&str>, note: &str) -> Write {
     Write::Checkpoint(Checkpoint {
+        artifacts: Vec::new(),
         run: run.map(str::to_owned),
         new_run: None,
         note: note.into(),
@@ -75,6 +76,7 @@ fn checkpoints_and_runs() -> TestResult {
 fn new_runs_and_their_lifecycle() -> TestResult {
     let w = world(&[])?;
     let new = Write::Checkpoint(Checkpoint {
+        artifacts: Vec::new(),
         run: None,
         new_run: Some(NewRun {
             project: "harbor".into(),

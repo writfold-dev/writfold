@@ -29,6 +29,15 @@ under the pinned revision, and where a declared store's clone is found.
   `resolve_missing_iff`, `resolve_mismatch_iff`: missing exactly when no
   way names a clone; a mismatch exactly when one does but none that may be
   used.
+- `artifact_admit_iff`: a run records a pointer into a store
+  (`checkpoint --artifact`) exactly when the store is declared and found
+  here, the revision is a full commit ID that some ref reaches, and the
+  path holds a file there. `artifact_admit_reads_fresh`: an admitted
+  pointer reads fresh under the pin when it is written; it is an ordinary
+  citation, judged by `pinned` on every later read (there is no second
+  rule). `artifact_undeclared`, `artifact_not_found`, `artifact_short_rev`,
+  `artifact_no_commit`, `artifact_unanchored`, `artifact_no_blob`: the
+  refusals, in the order they are checked.
 -/
 
 open Aeneas Aeneas.Std Result
@@ -124,5 +133,58 @@ theorem resolve_mismatch_iff (m s h : store.Candidate) :
   unfold store.resolve
   rcases m with _ | ⟨_ | _⟩ <;> rcases s with _ | ⟨_ | _⟩ <;>
     rcases h with _ | ⟨_ | _⟩ <;> simp
+
+/-- A run artifact is recorded exactly when the store is declared and
+found, the revision is full, the commit is anchored and the path holds a
+file. -/
+theorem artifact_admit_iff (d f r : Bool) (c : store.Commit) (b : Bool) :
+    store.artifact d f r c b ⦃ a => a = .Admit ↔
+      d = true ∧ f = true ∧ r = true ∧ c = .Anchored ∧ b = true ⦄ := by
+  unfold store.artifact
+  cases d <;> cases f <;> cases r <;> cases c <;> cases b <;> simp
+
+/-- An admitted pointer reads fresh under the pin at the moment it is
+written: admission asks for exactly the facts `pinned` needs. -/
+theorem artifact_admit_reads_fresh (d f r : Bool) (c : store.Commit) (b : Bool) :
+    store.artifact d f r c b ⦃ a => a = .Admit →
+      store.pinned c (if b then .Cited else .Nothing) = ok .Fresh ⦄ := by
+  unfold store.artifact store.pinned
+  cases d <;> cases f <;> cases r <;> cases c <;> cases b <;> simp
+
+/-- An undeclared store is refused first. -/
+theorem artifact_undeclared (f r : Bool) (c : store.Commit) (b : Bool) :
+    store.artifact false f r c b ⦃ a => a = .Refuse .Undeclared ⦄ := by
+  unfold store.artifact
+  simp
+
+/-- A declared store with no usable clone here is refused next. -/
+theorem artifact_not_found (r : Bool) (c : store.Commit) (b : Bool) :
+    store.artifact true false r c b ⦃ a => a = .Refuse .NotLocal ⦄ := by
+  unfold store.artifact
+  simp
+
+/-- A short or symbolic revision is refused before any Git fact counts. -/
+theorem artifact_short_rev (c : store.Commit) (b : Bool) :
+    store.artifact true true false c b ⦃ a => a = .Refuse .ShortRev ⦄ := by
+  unfold store.artifact
+  simp
+
+/-- A commit the clone lacks is refused. -/
+theorem artifact_no_commit (b : Bool) :
+    store.artifact true true true .Absent b ⦃ a => a = .Refuse .NoCommit ⦄ := by
+  unfold store.artifact
+  simp
+
+/-- A commit no ref reaches is refused: it would read gone at once. -/
+theorem artifact_unanchored (b : Bool) :
+    store.artifact true true true .Unanchored b ⦃ a => a = .Refuse .Unanchored ⦄ := by
+  unfold store.artifact
+  simp
+
+/-- An anchored commit whose path holds no file is refused. -/
+theorem artifact_no_blob :
+    store.artifact true true true .Anchored false ⦃ a => a = .Refuse .NoBlob ⦄ := by
+  unfold store.artifact
+  simp
 
 end Writfold.Core.Store

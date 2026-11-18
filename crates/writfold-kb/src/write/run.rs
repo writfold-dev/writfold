@@ -8,7 +8,7 @@
 //! branch, worktree and base commit (recorded, never created), and empty
 //! `observations/` and `receipts/` directories.
 use super::json::{Json, object};
-use super::{Op, Plan, atomic::digest, one_line};
+use super::{Op, Plan, artifact, atomic::digest, one_line};
 use crate::error::{KbError, Result};
 use crate::index::query::{self, Rec};
 use crate::runs::{self, SIDECAR};
@@ -34,6 +34,8 @@ pub struct Checkpoint {
     pub run: Option<String>,
     pub new_run: Option<NewRun>,
     pub note: String,
+    /// `--artifact <store>@<rev>:<path>`, repeatable ([`super::artifact`]).
+    pub artifacts: Vec<String>,
 }
 
 /// `checkpoint --from-draft SESSION [--run ID | --new-run …]`: the note is
@@ -43,6 +45,7 @@ pub struct FromDraft {
     pub session: String,
     pub run: Option<String>,
     pub new_run: Option<NewRun>,
+    pub artifacts: Vec<String>,
 }
 
 /// The checkpoint a draft becomes: the run named, else the draft's run when
@@ -67,6 +70,7 @@ pub fn from_draft(session: &Session<'_>, state: &Path, request: &FromDraft) -> R
         run,
         new_run: request.new_run.clone(),
         note,
+        artifacts: request.artifacts.clone(),
     })
 }
 
@@ -82,7 +86,7 @@ pub fn plan(session: &Session<'_>, request: &Checkpoint, cwd: &Path) -> Result<P
     }
     let stamp = time::stamp(session.now);
     if let Some(new) = &request.new_run {
-        return new_run(session, new, note, &stamp, cwd);
+        return new_run(session, new, (note, &request.artifacts), &stamp, cwd);
     }
     let rec = target(session, request.run.as_deref())?;
     if runs::state(session, &rec) == "closed" {
@@ -114,10 +118,21 @@ pub fn plan(session: &Session<'_>, request: &Checkpoint, cwd: &Path) -> Result<P
             bytes: format!("{text}{addition}").into_bytes(),
         },
     };
+    let mut ops = Vec::new();
+    let mut notes = Vec::new();
+    if let Some((name, bytes)) = artifact::file(session, &rec.id, &stamp, &request.artifacts)? {
+        let path = format!("{}/{name}", runs::dir(&rec));
+        notes.push(format!(
+            "{} artifact(s) recorded in {path}",
+            request.artifacts.len()
+        ));
+        ops.push(Op::Create { path, bytes });
+    }
+    ops.push(op);
     Ok(Plan {
-        ops: vec![op],
+        ops,
         show: Some(rec.id.clone()),
-        notes: Vec::new(),
+        notes,
         current: Some(rec.id.clone()),
         verb: "checkpoint",
         args: vec![rec.id, stamp],
@@ -144,7 +159,7 @@ pub(crate) fn target(session: &Session<'_>, named: Option<&str>) -> Result<Rec> 
 fn new_run(
     session: &Session<'_>,
     new: &NewRun,
-    note: &str,
+    (note, artifacts): (&str, &[String]),
     stamp: &str,
     cwd: &Path,
 ) -> Result<Plan> {
@@ -189,13 +204,21 @@ fn new_run(
     if query::record(&session.conn, &format!("project:{project}"))?.is_none() {
         notes.push(format!("no project {project} in the KB yet"));
     }
-    let files = vec![
+    let mut files = vec![
         ("manifest.json".to_owned(), manifest.into_bytes()),
         ("checkpoint.md".to_owned(), entry(stamp, note).into_bytes()),
         (SIDECAR.to_owned(), object(&extra).into_bytes()),
         ("observations/".to_owned(), Vec::new()),
         ("receipts/".to_owned(), Vec::new()),
     ];
+    if let Some(file) = artifact::file(session, &id, stamp, artifacts)? {
+        notes.push(format!(
+            "{} artifact(s) recorded in runs/{id}/{}",
+            artifacts.len(),
+            file.0
+        ));
+        files.push(file);
+    }
     Ok(Plan {
         ops: vec![Op::CreateDir {
             path: format!("runs/{id}"),

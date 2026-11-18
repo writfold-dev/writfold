@@ -225,6 +225,7 @@ fn records(w: &World, rev: &str) -> TestResult {
     call(
         w,
         Write::Checkpoint(Checkpoint {
+            artifacts: Vec::new(),
             run: Some(RUN.into()),
             new_run: None,
             note: format!("Drafted {id} for HBR-102; batching follows {ACCEPTED}."),
@@ -234,6 +235,7 @@ fn records(w: &World, rev: &str) -> TestResult {
     call(
         w,
         Write::Checkpoint(Checkpoint {
+            artifacts: Vec::new(),
             run: Some(super::plan::B.into()),
             new_run: None,
             note: "Compared the lantern stalls with sig:fsync-stall.".into(),

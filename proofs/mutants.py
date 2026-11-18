@@ -1121,6 +1121,26 @@ MUTANTS = (
            "    if matches!(search, Candidate::Clone(true)) {\n        return Resolved::Found {\n            via: Via::SearchRoot,\n            flagged: false,\n        };\n    }\n    if matches!(hint, Candidate::Clone(true)) {\n        return Resolved::Found {\n            via: Via::Hint,",
            "    if matches!(hint, Candidate::Clone(true)) {\n        return Resolved::Found {\n            via: Via::Hint,\n            flagged: false,\n        };\n    }\n    if matches!(search, Candidate::Clone(true)) {\n        return Resolved::Found {\n            via: Via::SearchRoot,",
            ("Writfold.Core.Store.resolve_search_before_hint",)),
+    # store: an artifact needs a full commit ID
+    Mutant("artifact-short-rev-admitted", "store.rs",
+           "    if !full_rev {\n",
+           "    if !full_rev && false {\n",
+           ("Writfold.Core.Store.artifact_admit_iff", "Writfold.Core.Store.artifact_short_rev")),
+    # store: an unanchored commit is refused, never admitted
+    Mutant("artifact-unanchored-admitted", "store.rs",
+           "        Commit::Unanchored => Artifact::Refuse(Refusal::Unanchored),",
+           "        Commit::Unanchored => Artifact::Admit,",
+           ("Writfold.Core.Store.artifact_admit_iff", "Writfold.Core.Store.artifact_admit_reads_fresh", "Writfold.Core.Store.artifact_unanchored")),
+    # store: the declaration is checked before the clone
+    Mutant("artifact-found-before-declared", "store.rs",
+           "    if !declared {\n        return Artifact::Refuse(Refusal::Undeclared);\n    }\n    if !found {\n        return Artifact::Refuse(Refusal::NotLocal);\n    }",
+           "    if !found {\n        return Artifact::Refuse(Refusal::NotLocal);\n    }\n    if !declared {\n        return Artifact::Refuse(Refusal::Undeclared);\n    }",
+           ("Writfold.Core.Store.artifact_undeclared",)),
+    # store: a missing commit says fetch, not push
+    Mutant("artifact-absent-as-unanchored", "store.rs",
+           "        Commit::Absent => Artifact::Refuse(Refusal::NoCommit),",
+           "        Commit::Absent => Artifact::Refuse(Refusal::Unanchored),",
+           ("Writfold.Core.Store.artifact_no_commit",)),
 )
 
 # lake reports `error: <path>.lean:<line>:<col>: <message>`

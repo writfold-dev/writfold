@@ -374,6 +374,14 @@ def claims : List Name := [
   ``Writfold.Core.Store.resolve_flag_only_map,
   ``Writfold.Core.Store.resolve_missing_iff,
   ``Writfold.Core.Store.resolve_mismatch_iff,
+  ``Writfold.Core.Store.artifact_admit_iff,
+  ``Writfold.Core.Store.artifact_admit_reads_fresh,
+  ``Writfold.Core.Store.artifact_undeclared,
+  ``Writfold.Core.Store.artifact_not_found,
+  ``Writfold.Core.Store.artifact_short_rev,
+  ``Writfold.Core.Store.artifact_no_commit,
+  ``Writfold.Core.Store.artifact_unanchored,
+  ``Writfold.Core.Store.artifact_no_blob,
 ]
 
 /-- Every theorem under `Writfold.Core`, sorted by name. -/

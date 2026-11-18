@@ -4222,7 +4222,7 @@ def scope.covers
   scope.covers_loop patterns path false 0#usize
 
 /-- [writfold_core::store::Basis]
-    Source: 'crates/writfold-core/src/store.rs', lines 14:0-20:1
+    Source: 'crates/writfold-core/src/store.rs', lines 15:0-21:1
     Visibility: public -/
 @[discriminant isize]
 inductive store.Basis where
@@ -4230,7 +4230,7 @@ inductive store.Basis where
 | Pin : store.Basis
 
 /-- [writfold_core::store::basis]:
-    Source: 'crates/writfold-core/src/store.rs', lines 24:0-30:1
+    Source: 'crates/writfold-core/src/store.rs', lines 25:0-31:1
     Visibility: public -/
 def store.basis
   (declared : Bool) (pinned : Bool) (has_rev : Bool) : Result store.Basis := do
@@ -4244,7 +4244,7 @@ def store.basis
   else ok store.Basis.Head
 
 /-- [writfold_core::store::Commit]
-    Source: 'crates/writfold-core/src/store.rs', lines 33:0-41:1
+    Source: 'crates/writfold-core/src/store.rs', lines 34:0-42:1
     Visibility: public -/
 @[discriminant isize]
 inductive store.Commit where
@@ -4253,7 +4253,7 @@ inductive store.Commit where
 | Anchored : store.Commit
 
 /-- [writfold_core::store::AtPin]
-    Source: 'crates/writfold-core/src/store.rs', lines 44:0-51:1
+    Source: 'crates/writfold-core/src/store.rs', lines 45:0-52:1
     Visibility: public -/
 @[discriminant isize]
 inductive store.AtPin where
@@ -4277,7 +4277,7 @@ inductive verdict.Verdict where
 | Due : verdict.Verdict
 
 /-- [writfold_core::store::pinned]:
-    Source: 'crates/writfold-core/src/store.rs', lines 55:0-64:1
+    Source: 'crates/writfold-core/src/store.rs', lines 56:0-65:1
     Visibility: public -/
 def store.pinned
   (commit : store.Commit) («at» : store.AtPin) : Result verdict.Verdict := do
@@ -4291,7 +4291,7 @@ def store.pinned
     | store.AtPin.Nothing => ok verdict.Verdict.Gone
 
 /-- [writfold_core::store::Candidate]
-    Source: 'crates/writfold-core/src/store.rs', lines 67:0-72:1
+    Source: 'crates/writfold-core/src/store.rs', lines 68:0-73:1
     Visibility: public -/
 @[discriminant isize]
 inductive store.Candidate where
@@ -4299,7 +4299,7 @@ inductive store.Candidate where
 | Clone : Bool → store.Candidate
 
 /-- [writfold_core::store::Via]
-    Source: 'crates/writfold-core/src/store.rs', lines 75:0-82:1
+    Source: 'crates/writfold-core/src/store.rs', lines 76:0-83:1
     Visibility: public -/
 @[discriminant isize]
 inductive store.Via where
@@ -4308,7 +4308,7 @@ inductive store.Via where
 | Hint : store.Via
 
 /-- [writfold_core::store::Resolved]
-    Source: 'crates/writfold-core/src/store.rs', lines 85:0-95:1
+    Source: 'crates/writfold-core/src/store.rs', lines 86:0-96:1
     Visibility: public -/
 @[discriminant isize]
 inductive store.Resolved where
@@ -4317,7 +4317,7 @@ inductive store.Resolved where
 | Missing : store.Resolved
 
 /-- [writfold_core::store::resolve]:
-    Source: 'crates/writfold-core/src/store.rs', lines 101:0-124:1
+    Source: 'crates/writfold-core/src/store.rs', lines 102:0-125:1
     Visibility: public -/
 def store.resolve
   (map : store.Candidate) (search : store.Candidate) (hint : store.Candidate) :
@@ -4359,6 +4359,53 @@ def store.resolve
           else ok store.Resolved.Missing
   | store.Candidate.Clone origin =>
     ok (store.Resolved.Found store.Via.Map (¬ origin))
+
+/-- [writfold_core::store::Refusal]
+    Source: 'crates/writfold-core/src/store.rs', lines 128:0-142:1
+    Visibility: public -/
+@[discriminant isize]
+inductive store.Refusal where
+| Undeclared : store.Refusal
+| NotLocal : store.Refusal
+| ShortRev : store.Refusal
+| NoCommit : store.Refusal
+| Unanchored : store.Refusal
+| NoBlob : store.Refusal
+
+/-- [writfold_core::store::Artifact]
+    Source: 'crates/writfold-core/src/store.rs', lines 145:0-148:1
+    Visibility: public -/
+@[discriminant isize]
+inductive store.Artifact where
+| Admit : store.Artifact
+| Refuse : store.Refusal → store.Artifact
+
+/-- [writfold_core::store::artifact]:
+    Source: 'crates/writfold-core/src/store.rs', lines 155:0-182:1
+    Visibility: public -/
+def store.artifact
+  (declared : Bool) (found : Bool) (full_rev : Bool) (commit : store.Commit)
+  (blob : Bool) :
+  Result store.Artifact
+  := do
+  if declared
+  then
+    if found
+    then
+      if full_rev
+      then
+        match commit with
+        | store.Commit.Absent =>
+          ok (store.Artifact.Refuse store.Refusal.NoCommit)
+        | store.Commit.Unanchored =>
+          ok (store.Artifact.Refuse store.Refusal.Unanchored)
+        | store.Commit.Anchored =>
+          if blob
+          then ok store.Artifact.Admit
+          else ok (store.Artifact.Refuse store.Refusal.NoBlob)
+      else ok (store.Artifact.Refuse store.Refusal.ShortRev)
+    else ok (store.Artifact.Refuse store.Refusal.NotLocal)
+  else ok (store.Artifact.Refuse store.Refusal.Undeclared)
 
 /-- [writfold_core::subject::Pick]
     Source: 'crates/writfold-core/src/subject.rs', lines 16:0-25:1

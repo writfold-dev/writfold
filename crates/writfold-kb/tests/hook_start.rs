@@ -142,6 +142,7 @@ fn inbox_lists_drafts_proposals_and_unevaluated_runs() -> TestResult {
     golden("hook-session-start-inbox.txt", &text)?;
     // A checkpoint written since the session ended: no longer unevaluated.
     let note = Write::Checkpoint(Checkpoint {
+        artifacts: Vec::new(),
         run: Some(RUN.into()),
         new_run: None,
         note: "Picked up after s-5.".into(),

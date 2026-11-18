@@ -741,11 +741,36 @@ for the commits and paths, one `for-each-ref --contains` per present
 commit), the full-revision check, rendering and JSON. Nothing is written, so
 `KbWrite.tla` and `RunGraph.tla` are unchanged.
 
+### The run-artifacts round (18 November 2026)
+
+Built in v0.6.0-dev.8 ([v060-dev6-spec.md](v060-dev6-spec.md) part B, S4;
+[stores](../guide/stores.md#pointing-a-run-at-its-material)).
+`store::artifact` was translated, proved and its mutants calibrated before
+`checkpoint --artifact` called it. After the round: 614 theorems, 336
+required claims (328 before), 214 mutants (210 before).
+
+- `artifact(declared, found, full_rev, commit, blob)`: whether a run records
+  a pointer into a store. `artifact_admit_iff`: exactly when the store is
+  declared and found here, the revision is a full commit ID, some ref
+  reaches the commit and the path holds a file there.
+  `artifact_admit_reads_fresh`: an admitted pointer reads fresh under
+  `pinned` when it is written; it is an ordinary citation afterwards, with
+  no second validity rule. `artifact_undeclared`, `artifact_not_found`,
+  `artifact_short_rev`, `artifact_no_commit`, `artifact_unanchored`,
+  `artifact_no_blob`: the refusals, in the order they are checked.
+
+Tested, not proved: parsing `<store>@<rev>:<path>`, the Git reads (one batch
+check for the commit, one `for-each-ref --contains`, one blob read), minting
+the whole-file token, the artifacts file and the `resume` rows. The pointers
+of one checkpoint are one create-new file in the same write plan as the
+checkpoint entry, written before it, so `KbWrite.tla` and `RunGraph.tla` are
+unchanged.
+
 ### The claims and their mutants
 
 <!-- generated from proofs/mutants.py -->
 
-210 mutants (20 before 16 November 2026, 86 after the backfill's first round, 108 after the policy round, 161 after the backfill's second round, 170 after the bug-fix round, 189 after the delivery round: its nine delivery mutants re-aimed and 19 added, all 28 calibrated; 203 after the current-run and repin rounds; 210 after the attached-stores round). Each must break exactly the theorems named.
+214 mutants (20 before 16 November 2026, 86 after the backfill's first round, 108 after the policy round, 161 after the backfill's second round, 170 after the bug-fix round, 189 after the delivery round: its nine delivery mutants re-aimed and 19 added, all 28 calibrated; 203 after the current-run and repin rounds; 210 after the attached-stores round; 214 after the run-artifacts round). Each must break exactly the theorems named.
 
 | Mutant | File | What it breaks | Must break |
 |---|---|---|---|
@@ -959,6 +984,10 @@ commit), the full-revision check, rendering and JSON. Nothing is written, so
 | `resolve-hint-any-origin` | `store.rs` | store: a committed hint needs the declared origin | `Store.resolve_committed_needs_origin`, `Store.resolve_mismatch_iff` |
 | `resolve-map-unflagged` | `store.rs` | store: the map's clone is flagged when its origin differs | `Store.resolve_map_wins` |
 | `resolve-hint-before-search` | `store.rs` | store: search roots before committed hints | `Store.resolve_search_before_hint` |
+| `artifact-short-rev-admitted` | `store.rs` | store: an artifact needs a full commit ID | `Store.artifact_admit_iff`, `Store.artifact_short_rev` |
+| `artifact-unanchored-admitted` | `store.rs` | store: an unanchored commit is refused, never admitted | `Store.artifact_admit_iff`, `Store.artifact_admit_reads_fresh`, `Store.artifact_unanchored` |
+| `artifact-found-before-declared` | `store.rs` | store: the declaration is checked before the clone | `Store.artifact_undeclared` |
+| `artifact-absent-as-unanchored` | `store.rs` | store: a missing commit says fetch, not push | `Store.artifact_no_commit` |
 <!-- end generated -->
 
 What these proofs do not cover: the fold from event files to the list of

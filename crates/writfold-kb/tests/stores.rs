@@ -8,6 +8,10 @@ mod support;
 use std::path::{Path, PathBuf};
 use support::{TestResult, World, git, world};
 use writfold_kb::Verb;
+use writfold_kb::write::Write;
+use writfold_kb::write::run::Checkpoint;
+
+const RUN: &str = "run-20261101T090000Z-a1b2c3";
 
 /// The store's origin (`<base>/scratch`) with `work/probe/run.sh`, a clone
 /// at `<base>/scratch-clone`, and a declaration whose hint names the clone.
@@ -163,5 +167,85 @@ fn repos_lists_a_declared_store_and_how_it_was_found() -> TestResult {
         row.contains("resolved: hint @<WORLD>/scratch-clone/.git"),
         "{text}"
     );
+    Ok(())
+}
+
+fn checkpoint(w: &World, note: &str, artifacts: &[String]) -> TestResult<(String, u8)> {
+    w.run(&w.request(Verb::Write(Write::Checkpoint(Checkpoint {
+        run: Some(RUN.into()),
+        new_run: None,
+        note: note.into(),
+        artifacts: artifacts.to_vec(),
+    }))))
+}
+
+#[test]
+fn a_run_artifact_is_a_pinned_citation_that_survives_reorganising() -> TestResult {
+    let (w, origin, clone) = stored()?;
+    let rev = git(&clone, &["rev-parse", "HEAD"])?;
+    let (text, code) = checkpoint(
+        &w,
+        "Probe written.",
+        &[format!("scratch@{rev}:work/probe/run.sh")],
+    )?;
+    assert_eq!(code, 0, "{text}");
+    assert!(text.contains("1 artifact(s) recorded in runs/"), "{text}");
+    reorganise(&origin, &clone)?;
+    let (text, _) = w.run(&w.request(Verb::Resume {
+        run: Some(RUN.into()),
+    }))?;
+    let at = text
+        .find("artifact scratch@")
+        .ok_or_else(|| format!("no artifact row:\n{text}"))?;
+    let row = &text[at..];
+    assert!(
+        row.contains("[fresh]") && row.contains("checkpoint"),
+        "{text}"
+    );
+    assert!(row.contains("repo=scratch") && row.contains(&rev), "{text}");
+    Ok(())
+}
+
+#[test]
+fn an_artifact_is_refused_unless_its_pin_would_read_fresh() -> TestResult {
+    let (w, _, clone) = stored()?;
+    let rev = git(&clone, &["rev-parse", "HEAD"])?;
+    git(&clone, &["checkout", "-q", "-b", "side"])?;
+    std::fs::write(clone.join("work/probe/run.sh"), "echo side\n")?;
+    git(&clone, &["commit", "-q", "-am", "side"])?;
+    let side = git(&clone, &["rev-parse", "HEAD"])?;
+    git(&clone, &["checkout", "-q", "main"])?;
+    git(&clone, &["branch", "-q", "-D", "side"])?;
+    for (spec, why) in [
+        (
+            format!("other@{rev}:work/probe/run.sh"),
+            "no store other is declared",
+        ),
+        (
+            format!("scratch@{}:work/probe/run.sh", &rev[..12]),
+            "not a full commit ID",
+        ),
+        (
+            format!("scratch@{}:work/probe/run.sh", "0".repeat(40)),
+            "has no commit",
+        ),
+        (
+            format!("scratch@{side}:work/probe/run.sh"),
+            "no branch or tag reaches",
+        ),
+        (format!("scratch@{rev}:work/probe/none.sh"), "not a file at"),
+        (
+            "scratch:work/probe/run.sh".to_owned(),
+            "is not <store>@<rev>:<path>",
+        ),
+    ] {
+        let refused = match checkpoint(&w, &format!("Try {spec}."), std::slice::from_ref(&spec)) {
+            Ok((text, code)) => return Err(format!("{spec}: exit {code}: {text}").into()),
+            Err(error) => error.to_string(),
+        };
+        assert!(refused.contains(why), "{spec}: {refused}");
+    }
+    // Nothing was written: the run has no artifacts directory.
+    assert!(!w.kb.join(format!("runs/{RUN}/artifacts")).exists());
     Ok(())
 }

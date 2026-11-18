@@ -6,6 +6,12 @@ This page is for someone pinned to one release who wants to upgrade on purpose. 
 
 A line marked **fix** changed an answer that was wrong; anything depending on the old answer was depending on the fault.
 
+## v0.6.0-dev.8
+
+- `checkpoint` accepts `--artifact <store>@<rev>:<path>`, repeatable. Without it nothing changes. With it, the checkpoint also writes `runs/<run>/artifacts/<time>-<hex>.json`, and is refused, writing nothing, when a pointer would not read fresh ([stores](stores.md#pointing-a-run-at-its-material)).
+- `resume` adds an `artifact` row per pointer, after the delivery rows, for a run that has any.
+- Every write flag could be given once; `--artifact` is the one that may be repeated.
+
 ## v0.6.0-dev.7
 
 - **A KB without `.writfold/stores/` behaves exactly as before.** Everything below needs a store declaration.

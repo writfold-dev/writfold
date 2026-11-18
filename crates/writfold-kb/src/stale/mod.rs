@@ -14,6 +14,9 @@ mod rename;
 pub mod repos;
 pub mod span;
 
+pub(crate) use code::valid_path as code_path;
+pub(crate) use pinned::full as full_rev;
+
 use crate::error::Result;
 use crate::session::Session;
 

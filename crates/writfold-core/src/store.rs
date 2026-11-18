@@ -4,7 +4,8 @@
 //! The decisions: which rule judges a citation (the head of the store, as
 //! for any repository, or the pinned revision the citation names); the
 //! verdict under the pin; and where a declared store's clone is found on
-//! this machine. Translated and proved (`proofs/Writfold/Store.lean`).
+//! this machine; and whether a run may record a pointer into a store
+//! (`checkpoint --artifact`). Translated and proved (`proofs/Writfold/Store.lean`).
 //! Reading the declaration, the clone's origin and the Git facts is
 //! `writfold-kb`'s (`stores.rs`, `stale/pinned.rs`), tested there.
 
@@ -123,9 +124,69 @@ pub fn resolve(map: &Candidate, search: &Candidate, hint: &Candidate) -> Resolve
     Resolved::Missing
 }
 
+/// Why a run artifact is not recorded, in the order they are checked.
+pub enum Refusal {
+    /// No `.writfold/stores/<name>.toml` declares the store.
+    Undeclared,
+    /// The store has no usable clone on this machine (missing, or a clone
+    /// of another repository).
+    NotLocal,
+    /// The revision is not a full commit ID.
+    ShortRev,
+    /// The clone does not have the commit (fetch it).
+    NoCommit,
+    /// No branch or tag reaches the commit (push or tag it first).
+    Unanchored,
+    /// The path holds no file at that commit.
+    NoBlob,
+}
+
+/// Whether `checkpoint --artifact` records a pointer.
+pub enum Artifact {
+    Admit,
+    Refuse(Refusal),
+}
+
+/// A run artifact is recorded exactly when its store is declared and
+/// found here, the revision is a full commit ID that some ref reaches, and
+/// the path holds a file there: exactly the facts under which its token
+/// reads fresh under the pin ([`pinned`]). The pointer is an ordinary
+/// citation, judged by the same rule on every later read.
+pub fn artifact(
+    declared: bool,
+    found: bool,
+    full_rev: bool,
+    commit: &Commit,
+    blob: bool,
+) -> Artifact {
+    if !declared {
+        return Artifact::Refuse(Refusal::Undeclared);
+    }
+    if !found {
+        return Artifact::Refuse(Refusal::NotLocal);
+    }
+    if !full_rev {
+        return Artifact::Refuse(Refusal::ShortRev);
+    }
+    match commit {
+        Commit::Absent => Artifact::Refuse(Refusal::NoCommit),
+        Commit::Unanchored => Artifact::Refuse(Refusal::Unanchored),
+        Commit::Anchored => {
+            if blob {
+                Artifact::Admit
+            } else {
+                Artifact::Refuse(Refusal::NoBlob)
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{AtPin, Basis, Candidate, Commit, Resolved, Via, basis, pinned, resolve};
+    use super::{
+        Artifact, AtPin, Basis, Candidate, Commit, Refusal, Resolved, Via, artifact, basis, pinned,
+        resolve,
+    };
     use crate::verdict::Verdict;
 
     #[test]
@@ -194,6 +255,23 @@ mod tests {
                         Resolved::Missing => "missing",
                     };
                     assert_eq!(said, want, "{m} {s} {h}");
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn an_artifact_is_admitted_only_when_its_pin_reads_fresh() {
+        let commits = || [Commit::Absent, Commit::Unanchored, Commit::Anchored];
+        for bits in 0..16u8 {
+            let (d, l, f, b) = (bits & 1 != 0, bits & 2 != 0, bits & 4 != 0, bits & 8 != 0);
+            for commit in commits() {
+                let at = if b { AtPin::Cited } else { AtPin::Nothing };
+                let fresh = pinned(&commit, &at) == Verdict::Fresh;
+                let got = artifact(d, l, f, &commit, b);
+                assert_eq!(matches!(got, Artifact::Admit), d && l && f && fresh);
+                if !d {
+                    assert!(matches!(got, Artifact::Refuse(Refusal::Undeclared)));
                 }
             }
         }

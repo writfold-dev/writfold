@@ -99,6 +99,7 @@ impl Log {
 
     fn note(&mut self, text: &str) -> TestResult<(String, u8)> {
         let verb = Verb::Write(Write::Checkpoint(Checkpoint {
+            artifacts: Vec::new(),
             run: Some(RUN.into()),
             new_run: None,
             note: text.into(),

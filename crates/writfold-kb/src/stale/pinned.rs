@@ -68,7 +68,7 @@ pub fn split(session: &Session<'_>, store: &Store, cites: &[Cite], members: Vec<
 }
 
 /// A full commit ID: forty or sixty-four lowercase hex digits.
-fn full(rev: &str) -> bool {
+pub(crate) fn full(rev: &str) -> bool {
     matches!(rev.len(), 40 | 64)
         && rev
             .bytes()
