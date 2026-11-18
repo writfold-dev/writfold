@@ -3118,6 +3118,105 @@ def plan.splice
   let out1 ← plan.splice_loop1 count out 0#usize
   plan.splice_loop2 nodes out1 index
 
+/-- [writfold_core::pointer::Pointer]
+    Source: 'crates/writfold-core/src/pointer.rs', lines 13:0-22:1
+    Visibility: public -/
+@[discriminant isize]
+inductive pointer.Pointer where
+| Unset : pointer.Pointer
+| Open : pointer.Pointer
+| Closed : pointer.Pointer
+| Gone : pointer.Pointer
+
+/-- [writfold_core::pointer::Level]
+    Source: 'crates/writfold-core/src/pointer.rs', lines 25:0-29:1
+    Visibility: public -/
+@[discriminant isize]
+inductive pointer.Level where
+| Session : pointer.Level
+| Tree : pointer.Level
+| Shared : pointer.Level
+
+/-- [writfold_core::pointer::is_set]:
+    Source: 'crates/writfold-core/src/pointer.rs', lines 32:0-34:1
+    Visibility: public -/
+def pointer.is_set (one : pointer.Pointer) : Result Bool := do
+  let b ←
+    match one with
+    | pointer.Pointer.Unset => ok true
+    | pointer.Pointer.Open => ok false
+    | pointer.Pointer.Closed => ok false
+    | pointer.Pointer.Gone => ok false
+  ok (¬ b)
+
+/-- [writfold_core::pointer::level]:
+    Source: 'crates/writfold-core/src/pointer.rs', lines 37:0-48:1
+    Visibility: public -/
+def pointer.level
+  (session : pointer.Pointer) (tree : pointer.Pointer)
+  (shared : pointer.Pointer) :
+  Result (Option pointer.Level)
+  := do
+  let b ← pointer.is_set session
+  if b
+  then ok (some pointer.Level.Session)
+  else
+    let b1 ← pointer.is_set tree
+    if b1
+    then ok (some pointer.Level.Tree)
+    else
+      let b2 ← pointer.is_set shared
+      if b2
+      then ok (some pointer.Level.Shared)
+      else ok none
+
+/-- [writfold_core::pointer::open]:
+    Source: 'crates/writfold-core/src/pointer.rs', lines 52:0-59:1
+    Visibility: public -/
+def pointer.open
+  (session : pointer.Pointer) (tree : pointer.Pointer)
+  (shared : pointer.Pointer) :
+  Result Bool
+  := do
+  let o ← pointer.level session tree shared
+  match o with
+  | none => ok false
+  | some l =>
+    match l with
+    | pointer.Level.Session =>
+      match session with
+      | pointer.Pointer.Unset => ok false
+      | pointer.Pointer.Open => ok true
+      | pointer.Pointer.Closed => ok false
+      | pointer.Pointer.Gone => ok false
+    | pointer.Level.Tree =>
+      match tree with
+      | pointer.Pointer.Unset => ok false
+      | pointer.Pointer.Open => ok true
+      | pointer.Pointer.Closed => ok false
+      | pointer.Pointer.Gone => ok false
+    | pointer.Level.Shared =>
+      match shared with
+      | pointer.Pointer.Unset => ok false
+      | pointer.Pointer.Open => ok true
+      | pointer.Pointer.Closed => ok false
+      | pointer.Pointer.Gone => ok false
+
+/-- [writfold_core::pointer::Writes]
+    Source: 'crates/writfold-core/src/pointer.rs', lines 62:0-66:1
+    Visibility: public -/
+structure pointer.Writes where
+  session : Bool
+  tree : Bool
+  shared : Bool
+
+/-- [writfold_core::pointer::writes]:
+    Source: 'crates/writfold-core/src/pointer.rs', lines 70:0-76:1
+    Visibility: public -/
+def pointer.writes
+  (has_session : Bool) (has_tree : Bool) : Result pointer.Writes := do
+  ok { session := has_session, tree := has_tree, shared := true }
+
 /-- [writfold_core::policy::Close]
     Source: 'crates/writfold-core/src/policy.rs', lines 116:0-125:1
     Visibility: public -/
@@ -3280,6 +3379,53 @@ def policy.lines.lines_clean
     else ok false
   else ok false
 
+/-- [writfold_core::policy::repin::in_force]: loop body 0:
+    Source: 'crates/writfold-core/src/policy/repin.rs', lines 15:4-22:1
+    Visibility: public -/
+@[rust_loop_body]
+def policy.repin.in_force_loop.body
+  (applies : Slice Bool) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize (Option Std.Usize))
+  := do
+  if index > 0#usize
+  then
+    let index1 ← index - 1#usize
+    let b ← Slice.index_usize applies index1
+    if b
+    then ok (done (some index1))
+    else ok (cont index1)
+  else ok (done none)
+
+/-- [writfold_core::policy::repin::in_force]: loop 0:
+    Source: 'crates/writfold-core/src/policy/repin.rs', lines 15:4-22:1
+    Visibility: public -/
+@[rust_loop]
+def policy.repin.in_force_loop
+  (applies : Slice Bool) (index : Std.Usize) : Result (Option Std.Usize) := do
+  loop
+    (fun index1 => policy.repin.in_force_loop.body applies index1)
+    index
+
+/-- [writfold_core::policy::repin::in_force]:
+    Source: 'crates/writfold-core/src/policy/repin.rs', lines 13:0-22:1
+    Visibility: public -/
+def policy.repin.in_force
+  (applies : Slice Bool) : Result (Option Std.Usize) := do
+  let index := Slice.len applies
+  policy.repin.in_force_loop applies index
+
+/-- [writfold_core::policy::repin::Refusal]
+    Source: 'crates/writfold-core/src/policy/repin.rs', lines 25:0-40:1
+    Visibility: public -/
+@[discriminant isize]
+inductive policy.repin.Refusal where
+| Closed : policy.repin.Refusal
+| Invalid : policy.repin.Refusal
+| Unpinned : policy.repin.Refusal
+| Same : policy.repin.Refusal
+| Undefined : policy.repin.Refusal
+| Reopens : policy.repin.Refusal
+
 /-- [writfold_core::policy::Pin]
     Source: 'crates/writfold-core/src/policy.rs', lines 35:0-42:1
     Visibility: public -/
@@ -3288,6 +3434,33 @@ inductive policy.Pin where
 | Unpinned : policy.Pin
 | Same : policy.Pin
 | Moved : policy.Pin
+
+/-- [writfold_core::policy::repin::repin_check]:
+    Source: 'crates/writfold-core/src/policy/repin.rs', lines 47:0-73:1
+    Visibility: public -/
+def policy.repin.repin_check
+  (writable : Bool) (valid : Bool) (pin : policy.Pin) (loads : Bool)
+  (keeps : Bool) :
+  Result (core.result.Result Unit policy.repin.Refusal)
+  := do
+  if writable
+  then
+    if valid
+    then
+      match pin with
+      | policy.Pin.Unpinned =>
+        ok (core.result.Result.Err policy.repin.Refusal.Unpinned)
+      | policy.Pin.Same =>
+        ok (core.result.Result.Err policy.repin.Refusal.Same)
+      | policy.Pin.Moved =>
+        if loads
+        then
+          if keeps
+          then ok (core.result.Result.Ok ())
+          else ok (core.result.Result.Err policy.repin.Refusal.Reopens)
+        else ok (core.result.Result.Err policy.repin.Refusal.Undefined)
+    else ok (core.result.Result.Err policy.repin.Refusal.Invalid)
+  else ok (core.result.Result.Err policy.repin.Refusal.Closed)
 
 /-- [writfold_core::policy::pin_one]:
     Source: 'crates/writfold-core/src/policy.rs', lines 46:0-60:1

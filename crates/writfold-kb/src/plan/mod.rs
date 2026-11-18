@@ -1,4 +1,4 @@
-//! The run graph (`writfold kb plan set|use|status|advance|skip`).
+//! The run graph (`writfold kb plan set|use|status|advance|skip|repin`).
 //!
 //! Writfold records the graph and the agent walks it; nothing here
 //! schedules anything. A plan is a template's steps spliced at the run's
@@ -14,7 +14,8 @@
 //! children ([`splice`]); `use=` includes are expanded when a template is
 //! spliced; required start and end templates are spliced into every new
 //! plan ([`required`]); a spliced template whose file has since changed
-//! is shown `!template-moved` ([`moved`]).
+//! is shown `!template-moved` ([`moved`]). `plan repin` adopts a policy
+//! that moved since the run pinned it ([`repin`]).
 pub(crate) mod delivery;
 mod delivery_mark;
 mod delivery_posted;
@@ -33,6 +34,7 @@ mod place;
 pub mod recheck;
 pub mod records;
 pub mod refs;
+mod repin;
 pub mod required;
 pub(crate) mod show;
 mod splice;
@@ -90,6 +92,13 @@ pub enum PlanVerb {
         run: Option<String>,
         repo: Option<PathBuf>,
     },
+    /// Adopt the policy as it is now for a run whose policy moved.
+    Repin {
+        reason: String,
+        by: String,
+        run: Option<String>,
+        repo: Option<PathBuf>,
+    },
 }
 
 /// Answer one plan verb.
@@ -118,6 +127,7 @@ pub fn execute(ws: &Workspace, request: &Request, verb: &PlanVerb, now: i64) -> 
             write::advance(ws, &tool, request, (run.as_deref(), repo.as_deref()), now)
         }
         PlanVerb::Skip { .. } => write::skip(ws, &tool, request, verb, now),
+        PlanVerb::Repin { .. } => repin::repin(ws, &tool, request, verb, now),
     }
 }
 

@@ -4,7 +4,6 @@ use super::rules::{self, Event, Require, Rule};
 use crate::Request;
 use crate::emit::{Answer, Frame, More, Output, Row};
 use crate::error::Result;
-use crate::runs;
 use crate::session::Session;
 use crate::workspace::{GitTool, Workspace};
 use writfold_core::guard::{Decision, Fact, Mode, decide, nudge};
@@ -67,12 +66,29 @@ pub fn execute(ws: &Workspace, request: &Request, now: i64) -> Result<Output> {
 }
 
 fn notes(answer: &mut Answer, session: &Session<'_>, request: &Request) {
-    let current = runs::current_of(session);
+    let current = crate::seat::current(session.ws, &session.ws.seat);
     answer.notes.push(format!(
         "judged for the current run {} in {} as if each rule had matched; a guard, not enforcement; nothing was run",
-        current.as_deref().map_or("none", |id| id),
+        current.as_ref().map_or("none", |(found, _)| &found.id),
         request.cwd.display(),
     ));
+    // Said only when a narrower pointer than the clone's shared one decided.
+    if let Some((found, _)) = current.filter(|(found, _)| found.level != "shared") {
+        let seat = &session.ws.seat;
+        let whose = match found.level {
+            "session" => format!("session {}", seat.session.as_deref().unwrap_or_default()),
+            _ => format!(
+                "work tree {}",
+                seat.tree
+                    .as_deref()
+                    .map_or_else(String::new, |t| t.display().to_string())
+            ),
+        };
+        answer.notes.push(format!(
+            "the current run comes from the {} pointer ({whose}), read before the clone's shared pointer",
+            found.level
+        ));
+    }
     if session
         .ws
         .root

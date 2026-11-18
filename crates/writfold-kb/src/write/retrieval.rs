@@ -53,21 +53,11 @@ pub struct Retrieval {
     pub cites: Vec<String>,
 }
 
-/// The run's ID when the KB's current-run pointer names a run that exists
-/// and is not closed; `None` otherwise (and for a KB outside Git).
+/// The run's ID when the seat's current-run pointer names a run that
+/// exists and is not closed; `None` otherwise (and for a KB outside Git).
 pub fn current(ws: &Workspace) -> Option<String> {
-    let id = runs::current(&ws.repo.as_ref()?.git_dir.join("writfold"))?;
-    let dir = ws.root.join("runs").join(&id);
-    if !dir.join("manifest.json").is_file() {
-        return None;
-    }
-    let state = |file: &str| {
-        let text = std::fs::read_to_string(dir.join(file)).ok()?;
-        let value: serde_json::Value = serde_json::from_str(&text).ok()?;
-        value.get("state")?.as_str().map(str::to_owned)
-    };
-    let state = state(runs::SIDECAR).or_else(|| state("manifest.json"));
-    (state.as_deref() != Some("closed")).then_some(id)
+    let (found, open) = crate::seat::current(ws, &ws.seat)?;
+    open.then_some(found.id)
 }
 
 /// Citation tokens for spans of files at `commit` of the repository in

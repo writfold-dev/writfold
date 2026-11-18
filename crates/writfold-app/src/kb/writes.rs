@@ -50,7 +50,9 @@ pub const VALUES: [&str; 41] = [
     "to",
 ];
 /// Flags without a value.
-pub const SWITCHES: [&str; 10] = [
+pub const SWITCHES: [&str; 12] = [
+    "each",
+    "here",
     "deny-warnings",
     "records",
     "eval",
@@ -67,7 +69,8 @@ pub const SWITCHES: [&str; 10] = [
 pub fn allowed(verb: &str) -> &'static [&'static str] {
     match verb {
         "runs" => &["open", "plan", "idle"],
-        "find" => &["eval"],
+        "find" => &["eval", "each"],
+        "resume" => &["here"],
         "guard" => &["rule", "since"],
         "delta" => &["mark", "since-mark", "since"],
         "checkpoint" => &["note", "from-draft", "run", "task", "mode", "new-run"],
@@ -132,11 +135,8 @@ pub fn runs_and_writes(
             project: common.project.clone(),
             plan: switch(common, "plan"),
         }),
-        ("resume", []) => Ok(Verb::Resume { run: None }),
-        ("resume", [run]) => Ok(Verb::Resume {
-            run: Some(run.clone()),
-        }),
-        ("runs" | "resume", _) => Err(format!("{name}: too many arguments")),
+        ("resume", _) => super::lists::resume(switch(common, "here"), positional),
+        ("runs", _) => Err(format!("{name}: too many arguments")),
         ("status", [target]) if common.values.contains_key("set") => {
             super::set::status(common, target.clone()).map(Verb::Write)
         }

@@ -2,13 +2,15 @@
 //! rejects unknown keys and knows only the state `open`), Writfold's
 //! sidecar `runs/<id>/writfold-run.json` (the working repository, branch,
 //! worktree and base commit, and the `closed` state), `checkpoint.md`, and
-//! the local current-run pointer `<git dir>/writfold/current-run`.
+//! the local current-run pointers under `<git dir>/writfold/`
+//! ([`crate::seat`]).
 use crate::emit::{More, Row};
 use crate::error::Result;
 use crate::index::query::{self, Rec};
 use crate::parse::json::line_of;
 use crate::session::Session;
 use crate::verbs::record_row;
+use crate::workspace::Workspace;
 use serde_json::{Map, Value};
 use std::path::Path;
 
@@ -46,25 +48,28 @@ pub fn entries(session: &Session<'_>, rec: &Rec) -> (String, Vec<crate::model::S
     (path, found)
 }
 
-/// The current-run pointer, if set.
-pub fn current(state: &Path) -> Option<String> {
-    let text = std::fs::read_to_string(state.join("current-run")).ok()?;
-    let id = text.trim();
-    (!id.is_empty()).then(|| id.to_owned())
+/// The current run of the workspace's seat ([`crate::seat`]): its
+/// session's pointer, else its work tree's, else the shared one.
+pub fn current_in(ws: &Workspace) -> Option<String> {
+    crate::seat::current(ws, &ws.seat).map(|(found, _)| found.id)
 }
 
-/// Point the current run at `id` (local, untracked state).
+/// Point the clone's shared pointer at `id` (local, untracked state).
+/// A seat making a run current goes through [`crate::seat::make_current`].
 pub fn set_current(state: &Path, id: &str) -> Result<()> {
-    std::fs::create_dir_all(state)?;
-    let temporary = state.join(format!(".current-run-{}.tmp", std::process::id()));
-    std::fs::write(&temporary, format!("{id}\n"))?;
-    std::fs::rename(temporary, state.join("current-run"))?;
-    Ok(())
+    crate::seat::make_current(state, &crate::seat::Seat::default(), id)
 }
 
-/// The current-run pointer of this session's KB.
+/// The current run of this session's seat.
 pub fn current_of(session: &Session<'_>) -> Option<String> {
-    current(&session.ws.repo.as_ref()?.git_dir.join("writfold"))
+    current_in(session.ws)
+}
+
+/// The current run of this session's seat acting in `dir` (a guarded
+/// command is judged where it acts).
+pub fn current_at(session: &Session<'_>, dir: &Path) -> Option<String> {
+    let seat = session.ws.seat.moved_to(session.ws, dir);
+    crate::seat::current(session.ws, &seat).map(|(found, _)| found.id)
 }
 
 /// The run row (effective state, place fields) and the newest checkpoint

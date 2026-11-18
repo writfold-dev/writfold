@@ -2,6 +2,7 @@ import Writfold.Bytes
 import Writfold.Plan
 import Writfold.Gate
 import Writfold.Policy
+import Writfold.Pointer
 import Writfold.Assess
 import Writfold.Current
 import Writfold.Checklist

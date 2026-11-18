@@ -995,6 +995,93 @@ MUTANTS = (
            "    while index + 1 < seen.len() {\n        if postable(&seen[index]) {",
            ("Writfold.Core.Delivery.guard_any_loop_spec",)),
     # ---- end delivery modes, second round ----
+    # ---- the current run of a seat (17 November 2026) ----
+    # pointer: a session pointer decides before the work tree's
+    Mutant("level-tree-before-session", "pointer.rs",
+           "    if is_set(session) {\n        return Some(Level::Session);\n    }\n    if is_set(tree) {\n        return Some(Level::Tree);\n    }",
+           "    if is_set(tree) {\n        return Some(Level::Tree);\n    }\n    if is_set(session) {\n        return Some(Level::Session);\n    }",
+           ("Writfold.Core.Pointer.level_spec",
+            "Writfold.Core.Pointer.open_spec",
+            "Writfold.Core.Pointer.session_decides",
+            "Writfold.Core.Pointer.ended_not_skipped")),
+    # pointer: a pointer to a run the KB lacks is set, and so not skipped
+    Mutant("is-set-skips-gone", "pointer.rs",
+           "    !matches!(one, Pointer::Unset)",
+           "    !matches!(one, Pointer::Unset | Pointer::Gone)",
+           ("Writfold.Core.Pointer.is_set_spec",
+            "Writfold.Core.Pointer.level_spec",
+            "Writfold.Core.Pointer.open_spec",
+            "Writfold.Core.Pointer.session_decides",
+            "Writfold.Core.Pointer.tree_decides",
+            "Writfold.Core.Pointer.ended_not_skipped")),
+    # pointer: a closed run at the deciding level is not skipped for an open one below
+    Mutant("open-skips-closed-session", "pointer.rs",
+           "        Some(Level::Session) => matches!(session, Pointer::Open),",
+           "        Some(Level::Session) => matches!(session, Pointer::Open) || matches!(tree, Pointer::Open),",
+           ("Writfold.Core.Pointer.open_spec",
+            "Writfold.Core.Pointer.session_decides",
+            "Writfold.Core.Pointer.ended_not_skipped")),
+    # pointer: only an open run is an open current run
+    Mutant("open-shared-any-run", "pointer.rs",
+           "        Some(Level::Shared) => matches!(shared, Pointer::Open),",
+           "        Some(Level::Shared) => true,",
+           ("Writfold.Core.Pointer.open_spec",
+            "Writfold.Core.Pointer.shared_alone",
+            "Writfold.Core.Pointer.ended_not_skipped")),
+    # pointer: the shared pointer is always written
+    Mutant("writes-shared-only-without-session", "pointer.rs",
+           "        shared: true,",
+           "        shared: !has_session,",
+           ("Writfold.Core.Pointer.writes_spec",)),
+    # pointer: a seat with a session writes its session pointer
+    Mutant("writes-no-session", "pointer.rs",
+           "        session: has_session,",
+           "        session: false,",
+           ("Writfold.Core.Pointer.writes_spec",
+            "Writfold.Core.Pointer.writer_reads_its_run")),
+    # ---- plan repin (17 November 2026) ----
+    # repin: the entry in force is one that applies
+    Mutant("in-force-inverted", "policy/repin.rs",
+           "        if applies[index] {",
+           "        if !applies[index] {",
+           ("Writfold.Core.Policy.in_force_loop_spec",)),
+    # repin: the oldest entry counts when no newer one applies
+    Mutant("in-force-skips-oldest", "policy/repin.rs",
+           "    while index > 0 {",
+           "    while index > 1 {",
+           ("Writfold.Core.Policy.in_force_loop_spec",)),
+    # repin: a closed run takes no repin
+    Mutant("repin-closed-run", "policy/repin.rs",
+           "    if !writable {",
+           "    if false {",
+           ("Writfold.Core.Policy.repin_check_spec", "Writfold.Core.Policy.repin_ok_iff",
+            "Writfold.Core.Policy.repin_closed_refused")),
+    # repin: a pin file that does not read is not adopted
+    Mutant("repin-ignores-invalid", "policy/repin.rs",
+           "    if !valid {",
+           "    if false {",
+           ("Writfold.Core.Policy.repin_check_spec", "Writfold.Core.Policy.repin_ok_iff")),
+    # repin: refused when nothing moved
+    Mutant("repin-when-same", "policy/repin.rs",
+           "        Pin::Same => Err(Refusal::Same),",
+           "        Pin::Same => Ok(()),",
+           ("Writfold.Core.Policy.repin_check_spec", "Writfold.Core.Policy.repin_ok_iff")),
+    # repin: refused when the run pinned nothing
+    Mutant("repin-when-unpinned", "policy/repin.rs",
+           "        Pin::Unpinned => Err(Refusal::Unpinned),",
+           "        Pin::Unpinned => Ok(()),",
+           ("Writfold.Core.Policy.repin_check_spec", "Writfold.Core.Policy.repin_ok_iff")),
+    # repin: a gate an open step owes must load to be adopted
+    Mutant("repin-undefined-gate", "policy/repin.rs",
+           "            if !loads {",
+           "            if false {",
+           ("Writfold.Core.Policy.repin_check_spec", "Writfold.Core.Policy.repin_ok_iff")),
+    # repin: adopting a lock list never reopens a skipped step
+    Mutant("repin-reopens-skip", "policy/repin.rs",
+           "            if !keeps {",
+           "            if false {",
+           ("Writfold.Core.Policy.repin_check_spec", "Writfold.Core.Policy.repin_ok_iff")),
+    # ---- end plan repin ----
 )
 
 # lake reports `error: <path>.lean:<line>:<col>: <message>`

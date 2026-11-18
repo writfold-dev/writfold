@@ -186,7 +186,11 @@ fn judged(facts: &Facts, rules: &[&Rule]) -> Evaluated {
 }
 
 fn gather(session: &Session<'_>, place: &Place, rules: &[&Rule]) -> Facts {
-    let run = match runs::current_of(session) {
+    let current = match place {
+        Place::At(cwd) => runs::current_at(session, cwd),
+        Place::Unknown(_) => runs::current_of(session),
+    };
+    let run = match current {
         None => Err(format!("no current KB run; {START}")),
         Some(id) => match query::record(&session.conn, &id) {
             Ok(Some(rec)) if rec.kind == "run" => Ok(rec),

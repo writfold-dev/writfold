@@ -1,6 +1,6 @@
 # Your policy
 
-> **Status:** built in v0.6.0-dev.3: `kb init`, the research-policy example, the "no policy configured" line, `kb policy`, a gate's `accept`, a checklist's `not_applicable` and `none_found` with the `none-found` outcome, `unskippable` required steps, policy pins and drift, and the plan's summary word. What held already (required steps, evidence bound to its run, the research guard recipe, approval by a person) is described as built. `waivable` on a delivery mode, a mode gate's `accept` holding for a delivery, `kb init --example delivery`, and `kb policy`'s mode and route rows are built in v0.6.0-dev.4. `plan repin` and `kb policy --paths` are planned.
+> **Status:** built in v0.6.0-dev.3: `kb init`, the research-policy example, the "no policy configured" line, `kb policy`, a gate's `accept`, a checklist's `not_applicable` and `none_found` with the `none-found` outcome, `unskippable` required steps, policy pins and drift, and the plan's summary word. What held already (required steps, evidence bound to its run, the research guard recipe, approval by a person) is described as built. `waivable` on a delivery mode, a mode gate's `accept` holding for a delivery, `kb init --example delivery`, and `kb policy`'s mode and route rows are built in v0.6.0-dev.4. `plan repin` is built in v0.6.0-dev.6. `kb policy --paths` is planned.
 
 A team writes down what adequate research, implementation and delivery mean for it: gates, checklists, instructions, plan templates, required steps. Writfold loads those files, shows what is owed, judges the evidence by the mechanism the team chose, and refuses a transition its own verbs control when the policy is not met. It holds no opinion of its own about adequacy, and nothing in this page is a rule Writfold adds.
 
@@ -67,7 +67,7 @@ Every key is opt-in: a definition without it means what it meant before, and kee
 
 `writfold kb init --example delivery` writes an example delivery policy to edit: two deny lists, a `commit-message` and a `release-note` mode that take no waiver, the `commit-format` gate with `accept = ["satisfied"]`, guard routes, and a plan whose comment step is held until the post is recorded ([delivery modes](delivery-modes.md#an-example-to-start-from-kb-init---example-delivery)). `kb lint` warns (`policy.waivable`) when a mode lists `references.denied` or a mechanical gate and still takes a waiver of it.
 
-Each run pins the policy its plan was set under; a later edit is shown (`!policy-moved`, `policy=moved`, exit 2), and a moved run never reads `complete`. Every plan says how it ended: `complete`, `complete-with-exceptions`, `complete-stale`, `policy-moved`, `incomplete`, `closed-incomplete`.
+Each run pins the policy its plan was set under; a later edit is shown (`!policy-moved`, `policy=moved`, exit 2), and a moved run never reads `complete`. The run either has the definitions restored or adopts the policy as it is now, on the record, with `writfold kb plan repin --reason TEXT --by WHO` ([run-graph](run-graph.md#adopting-a-change-plan-repin)); a repinned run reads at best `complete-with-exceptions`. Every plan says how it ended: `complete`, `complete-with-exceptions`, `complete-stale`, `policy-moved`, `incomplete`, `closed-incomplete`.
 
 ## Seeing the policy: `kb policy`
 
@@ -80,7 +80,7 @@ gate research checklist accept=attested items=3 (precedents: supported|none-foun
 # coverage=complete records=7/7 shown=2 omitted=0 gates=1 templates=1 guards=0 modes=0 policy=moved identity=sha256:9253ee90… …
 ```
 
-(Run after the research instructions were edited while the research step was open; restoring them gives `pin: same @runs/run-…/policy/pin-1-….json:1` and `policy=same`.)
+(Run after the research instructions were edited while the research step was open; restoring them gives `pin: same @runs/run-…/policy/pin-1-….json:1` and `policy=same`, and so does `plan repin`, against the pin it writes.)
 
 Read-only; no command or checker runs. Each gate row shows its class, `accept`, its items' choices and its scope, and, when a run is current, a `pin:` line: `same`, or `moved (pinned @…, now @…)`. Guard rules follow, each `(a guard, not enforcement)`, then (built in v0.6.0-dev.4) one `mode` row per delivery mode, as [`deliver modes`](delivery-modes.md#what-a-mode-asks-for-deliver-modes) prints it, and one `route` row per guard route (`mode=<mode> body=… file=…` or `field=…`). The `modes=` count is unchanged. `identity=` is the SHA-256 over the sorted `<gate>\t<definition digest>` lines and the required file's digest: one value two clones can compare. With nothing configured: `answer=unknown reason=no-policy`, exit 2, and the no-policy note. Exit 2 also while the current run's policy is moved.
 
@@ -101,7 +101,7 @@ action = "deny"
 description = "edit source only once the research gate is met"
 ```
 
-- **Approval by a person, and its limit.** A guard rule with `action = "ask"` on `writfold kb gate attest`, `gate waive` and `plan skip` (or the harness's own permission rule, [hooks](hooks.md#guard-rules)) makes the harness ask a person before the statement is written; the statement is then bound to the definition and bytes it was made about. Writfold has no record that the harness asked or who answered: `--by` is text, recorded as given. A policy that needs an authenticated approval is not supported. For deliveries, the same holds for `deliver waive` and `deliver withdraw` (built in v0.6.0-dev.4); the delivery example's `guard.toml` carries the permission rule for `.claude/settings.json` in a comment:
+- **Approval by a person, and its limit.** A guard rule with `action = "ask"` on `writfold kb gate attest`, `gate waive`, `plan skip` and `plan repin` (or the harness's own permission rule, [hooks](hooks.md#guard-rules)) makes the harness ask a person before the statement is written; the statement is then bound to the definition and bytes it was made about. Writfold has no record that the harness asked or who answered: `--by` is text, recorded as given. A policy that needs an authenticated approval is not supported. For deliveries, the same holds for `deliver waive` and `deliver withdraw` (built in v0.6.0-dev.4); the delivery example's `guard.toml` carries the permission rule for `.claude/settings.json` in a comment:
 
   ```json
   {"permissions": {"ask": ["Bash(writfold kb deliver waive:*)", "Bash(writfold kb deliver withdraw:*)"]}}

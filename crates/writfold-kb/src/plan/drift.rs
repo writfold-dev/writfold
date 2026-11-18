@@ -2,10 +2,13 @@
 //! every read. An open step's gate is compared with its definition digest
 //! now (a gate that no longer loads counts as different); a done step's
 //! with the definition its done record names (a delivery is not compared
-//! once done: its own `!stale` covers a changed mode); the first pin's
-//! required file with that file's digest now. One difference makes the
-//! run's policy moved. The comparisons are [`writfold_core::policy::pin_one`]
-//! and [`writfold_core::policy::pin_all`]; this module gathers them.
+//! once done: its own `!stale` covers a changed mode); the pinned
+//! required file with that file's digest now. What is pinned is the entry
+//! in force ([`pin::gate_in_force`], [`pin::required_in_force`]): the
+//! newest pin naming the gate, so a `plan repin` replaces what earlier
+//! pins held. One difference makes the run's policy moved. The
+//! comparisons are [`writfold_core::policy::pin_one`] and
+//! [`writfold_core::policy::pin_all`]; this module gathers them.
 //! Drift blocks no step: it changes the summary, never `plan advance`.
 use super::Loaded;
 use super::pin::{self, Pin};
@@ -26,6 +29,8 @@ pub struct Drift {
     /// The pins, by `seq`.
     pub pins: Vec<Pin>,
     pub required_moved: bool,
+    /// The pin files that do not read as written, each with why.
+    pub invalid: Vec<(String, String)>,
 }
 
 fn short(digest: &str) -> String {
@@ -43,16 +48,32 @@ fn moved(p: &Same) -> bool {
     matches!(p, Same::Moved)
 }
 
-/// The pinned digest of each gate: the newest pin naming it.
-fn pinned(pins: &[Pin]) -> Vec<(String, String, String)> {
-    let mut out: Vec<(String, String, String)> = Vec::new();
-    for p in pins {
-        for (gate, digest) in &p.gates {
-            out.retain(|(g, _, _)| g != gate);
-            out.push((gate.clone(), digest.clone(), p.path.clone()));
+/// Every pinned gate, once.
+fn pinned(pins: &[Pin]) -> Vec<String> {
+    let mut out: Vec<String> = Vec::new();
+    for (gate, _) in pins.iter().flat_map(|p| &p.gates) {
+        if !out.contains(gate) {
+            out.push(gate.clone());
         }
     }
     out
+}
+
+/// Why a step's gate reads moved: `done` when the step is done (then
+/// `now` is the definition its record names).
+fn why(gate: &str, digest: &str, done: bool, now: Option<&str>, path: &str) -> String {
+    let then = format!("{gate}@{}", short(digest));
+    match (done, now) {
+        (true, n) => format!(
+            "met under {gate}@{}; this run pinned {then} (@{path}:1)",
+            short(n.unwrap_or("none"))
+        ),
+        (false, Some(n)) => format!(
+            "{gate} is now @{}; this run pinned {then}: evidence is judged under the definition as it is now",
+            short(n)
+        ),
+        (false, None) => format!("{gate} no longer loads; this run pinned {then} (@{path}:1)"),
+    }
 }
 
 /// Judge the run's drift.
@@ -69,10 +90,14 @@ pub fn judge(root: &Path, loaded: &Loaded) -> Drift {
     // An edited pin reads invalid: the run is then judged moved.
     let mut checks: Vec<Same> = invalid.iter().map(|_| compare("pin", None)).collect();
     let mut now_of = std::collections::BTreeMap::new();
-    for (gate, digest, path) in pinned(&pins) {
+    for gate in pinned(&pins) {
         let naming =
             (loaded.graph.steps.iter().enumerate()).filter(|(_, s)| s.gates.contains(&gate));
         for (i, step) in naming {
+            let Some((digest, pin)) = pin::gate_in_force(&pins, &gate, Some(&step.path)) else {
+                continue;
+            };
+            let path = &pin.path;
             let delivery = crate::deliver::step::is_delivery_word(&gate);
             // A skipped step owes nothing: its gates are not compared.
             if step.done.is_none() && step.skipped.is_some() {
@@ -94,22 +119,9 @@ pub fn judge(root: &Path, loaded: &Loaded) -> Drift {
                     )
                 }
             };
-            let r = compare(&digest, now.as_deref());
+            let r = compare(digest, now.as_deref());
             if moved(&r) {
-                let then = format!("{gate}@{}", short(&digest));
-                let why = match (done, &now) {
-                    (true, n) => format!(
-                        "met under {gate}@{}; this run pinned {then} (@{path}:1)",
-                        short(n.as_deref().unwrap_or("none"))
-                    ),
-                    (false, Some(n)) => format!(
-                        "{gate} is now @{}; this run pinned {then}: evidence is judged under the definition as it is now",
-                        short(n)
-                    ),
-                    (false, None) => {
-                        format!("{gate} no longer loads; this run pinned {then} (@{path}:1)")
-                    }
-                };
+                let why = why(&gate, digest, done, now.as_deref(), path);
                 drift.steps.push((i, why));
                 if !drift.gates.contains(&gate) {
                     drift.gates.push(gate.clone());
@@ -118,7 +130,7 @@ pub fn judge(root: &Path, loaded: &Loaded) -> Drift {
             checks.push(r);
         }
     }
-    if let Some(req) = pins.first().and_then(|p| p.required.as_ref()) {
+    if let Some((_, req)) = pin::required_in_force(&pins) {
         let repo = (loaded.subject.as_ref()).map(|s| (s.top.as_path(), s.name.as_str()));
         let now = super::required::find(root, repo)
             .ok()
@@ -133,6 +145,7 @@ pub fn judge(root: &Path, loaded: &Loaded) -> Drift {
         Same::Moved => "moved",
     };
     drift.pins = pins;
+    drift.invalid = invalid;
     drift
 }
 
@@ -158,7 +171,7 @@ impl Drift {
                     what.push("a pin file no longer reads as written".into());
                 }
                 Some(format!(
-                    "policy moved since this run pinned it: {}; the plan cannot read complete until the definitions are restored",
+                    "policy moved since this run pinned it: {}; the plan cannot read complete until the definitions are restored or the run adopts them: writfold kb plan repin --reason TEXT --by WHO",
                     what.join(" and ")
                 ))
             }
@@ -183,17 +196,20 @@ pub fn recorded(root: &Path, graph: &super::fold::Graph, rec: &crate::index::que
         return drift;
     }
     let mut checks: Vec<Same> = invalid.iter().map(|_| compare("pin", None)).collect();
-    for (gate, digest, _) in pinned(&pins) {
+    for gate in pinned(&pins) {
         let done = (graph.steps.iter())
             .filter(|s| s.gates.contains(&gate) && !crate::deliver::step::is_delivery_word(&gate))
-            .filter_map(|s| s.done.as_ref());
-        for (_, d) in done {
+            .filter_map(|s| Some((s, &s.done.as_ref()?.1)));
+        for (step, d) in done {
+            let Some((digest, _)) = pin::gate_in_force(&pins, &gate, Some(&step.path)) else {
+                continue;
+            };
             let now = d
                 .met
                 .iter()
                 .find(|m| m.gate == gate)
                 .map(|m| m.definition.as_str());
-            checks.push(compare(&digest, now));
+            checks.push(compare(digest, now));
         }
     }
     drift.word = match policy::pin_all(&checks) {
@@ -201,5 +217,6 @@ pub fn recorded(root: &Path, graph: &super::fold::Graph, rec: &crate::index::que
         _ => "same",
     };
     drift.pins = pins;
+    drift.invalid = invalid;
     drift
 }

@@ -290,7 +290,9 @@ Everything above is tracked text. Local state lives in the KB repository's Git d
 
 ```text
 kb-index-<hex>.sqlite   the derived index
-current-run             the run that checkpoint and gate use by default
+current-run             the shared current-run pointer: the run last made current on this clone
+current-run.d/          a current run per session (session-<id>) and per work tree (tree-<hex>),
+                        read before the shared pointer (hooks guide, "The current run")
 repos                   "<name> <path>" lines: where local clones are
 drafts/<session>.json   checkpoint drafts kept by the hooks (and the Stop nudge's `nudged` flag)
 marks/<name>.json       `kb delta` baselines: HEAD and the dirty files' blob IDs (session start
@@ -301,5 +303,7 @@ proposals/<id>.json     pending proposals: record calls not yet made
 gates/, edits/          command output tails, artifacts and edit journals
 staging/, kb-write.lock the write protocol's working files
 ```
+
+The current run is resolved per session, then per work tree, then from the shared pointer: [hooks, the current run](hooks.md#the-current-run-per-session-and-per-work-tree) (built in v0.6.0-dev.6).
 
 It vanishes with the clone. The index can always be rebuilt from the tracked files (see [validation](validation.md)).

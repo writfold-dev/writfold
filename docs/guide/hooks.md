@@ -1,6 +1,6 @@
 # Claude Code hooks
 
-> **Status:** built in v0.3.0-dev.1; the plan position, the inbox, the behind-remote line and the re-injection after compaction were added on 12 November 2026 ([design §25](../writfold/kb-v1-design.md#25-deterministic-hooks-as-built)); the stale-citation line, guard rules and the Stop nudge built in v0.5.0-dev.1; a rule's `paths` and a stop rule's `repeat` built in v0.5.0-dev.3; rules naming `writfold:edit`, checked by `kb edit apply` itself, built in v0.5.0-dev.9. How a command is read (here-documents, wrappers, `git -C` and judging each command where it acts), `gates.met` over an empty set, `mode = "audit"`, the guard log and the session's mark built in v0.6.0-dev.1; `step.met` judging a step's deliveries, and the plan position's `candidate:` line, built in v0.6.0-dev.1. A gate whose `accept` leaves out waivers has no waiver route past a guard, and the session-start context says when no policy is configured, built in v0.6.0-dev.3. The delivery guard's routes, and its denials naming the repair, built in v0.6.0-dev.4.
+> **Status:** built in v0.3.0-dev.1; the plan position, the inbox, the behind-remote line and the re-injection after compaction were added on 12 November 2026 ([design §25](../writfold/kb-v1-design.md#25-deterministic-hooks-as-built)); the stale-citation line, guard rules and the Stop nudge built in v0.5.0-dev.1; a rule's `paths` and a stop rule's `repeat` built in v0.5.0-dev.3; rules naming `writfold:edit`, checked by `kb edit apply` itself, built in v0.5.0-dev.9. How a command is read (here-documents, wrappers, `git -C` and judging each command where it acts), `gates.met` over an empty set, `mode = "audit"`, the guard log and the session's mark built in v0.6.0-dev.1; `step.met` judging a step's deliveries, and the plan position's `candidate:` line, built in v0.6.0-dev.1. A gate whose `accept` leaves out waivers has no waiver route past a guard, and the session-start context says when no policy is configured, built in v0.6.0-dev.3. The delivery guard's routes, and its denials naming the repair, built in v0.6.0-dev.4. A current run per session and per work tree, the session's ID handed to later shell commands, and `resume <run> --here`, built in v0.6.0-dev.6 ([below](#the-current-run-per-session-and-per-work-tree)).
 
 "Hook" here means a Claude Code hook: a command the harness runs at a session event. The plugin registers six, and each one runs `writfold kb hook <event>` with the event's JSON on stdin. No hook calls a model. Only one asks Claude to continue: a `stop` [guard rule](#guard-rules), which you opt into, adds context at most once per session (or, with `repeat = "turn"`, once per user turn), and Claude Code continues the turn so Claude can act on it. Rules about what a run must contain (a reflection, a backfill) are not hooks; they are gates (run-record checks), on the [run-graph](run-graph.md) and [gates](gates.md) pages.
 
@@ -8,12 +8,12 @@
 
 | Claude Code event | Reads from the event | Writes | Prints | Timeout |
 |---|---|---|---|---|
-| `SessionStart` | `cwd`, `source`, `session_id` | the session's mark (local; from v0.6.0-dev.1, [below](#a-stop-that-requires-a-write-recipe)) | JSON `additionalContext`, built from local files and refs only: a behind-remote line; `brief` for the project inferred from `cwd` (budget 1,200 tokens); a count of stale citations from the verdict cache; `resume` of the current run (budget 500); the plan position; an inbox of drafts, proposals and runs left without an evaluation. After a compaction (`source` `compact`), only the plan position. Fitted to 9,000 characters ([below](#what-session-start-injects)) | 30 s |
+| `SessionStart` | `cwd`, `source`, `session_id` | the session's mark (local; from v0.6.0-dev.1, [below](#a-stop-that-requires-a-write-recipe)); one `export WRITFOLD_SESSION=<session_id>` line appended to the file Claude Code names in `CLAUDE_ENV_FILE`, when it names one (from v0.6.0-dev.6, [below](#the-current-run-per-session-and-per-work-tree)) | JSON `additionalContext`, built from local files and refs only: a behind-remote line; `brief` for the project inferred from `cwd` (budget 1,200 tokens); a count of stale citations from the verdict cache; `resume` of the current run (budget 500); the plan position; an inbox of drafts, proposals and runs left without an evaluation. After a compaction (`source` `compact`), only the plan position. Fitted to 9,000 characters ([below](#what-session-start-injects)) | 30 s |
 | `PreCompact` | `session_id`, `cwd`, `trigger` | the draft's place: repository, branch, worktree, HEAD, dirty count | plain-text instructions for the compaction summary: keep the task, decisions with reasons, what failed, open questions, the next step | 15 s |
 | `PostCompact` | `session_id`, `compact_summary` | the draft's summary | nothing | 15 s |
 | `Stop` | `session_id`, `last_assistant_message`, `stop_hook_active`, `cwd` | the draft's last message; the draft's `nudged` flag after a nudge | nothing, or JSON `additionalContext` from a `stop` [guard rule](#guard-rules), once per session or once per turn | 10 s |
 | `SessionEnd` | `session_id`, `reason` | marks an existing draft as ended; never creates one | nothing | Claude Code's 1.5 s |
-| `PreToolUse` (matcher `^(Bash\|Edit\|Write\|MultiEdit\|NotebookEdit\|mcp__.*)$`) | `tool_name`, `tool_input`, `cwd` | nothing | a deny or ask decision, or nothing | 10 s |
+| `PreToolUse` (matcher `^(Bash\|Edit\|Write\|MultiEdit\|NotebookEdit\|mcp__.*)$`) | `tool_name`, `tool_input`, `cwd`, `session_id` | nothing | a deny or ask decision, or nothing | 10 s |
 
 The session-start context begins like this (real output, shortened):
 
@@ -36,7 +36,7 @@ Each part is printed only when it has something to say, in this order:
 1. **Behind remote.** One line when the KB clone's branch is behind its upstream: `KB is 2 commits behind origin/main (last fetched 2026-11-10T19:00:00Z, 5h ago); run git pull`. It compares `HEAD`'s branch with its configured upstream using local refs only (one `git for-each-ref`), and never fetches, so it reports what the clone last fetched. The fetch time is the newest `FETCH_HEAD`. Nothing is printed when the branch is up to date or only ahead, has no upstream, its upstream is gone, or `HEAD` is detached.
 2. **Brief**, as before.
 3. **Stale citations.** One line counting the citations that were not fresh when `writfold kb stale` last ran, worst first: ``Citations: 1 gone, 2 changed, 2 moved, 1 expired as of the last `writfold kb stale`; run it to re-check``. It reads only the verdict cache in the local index: no repository is read and nothing is spawned, so a source that moved since then is not counted until `stale` runs again. Nothing is printed when the cache is empty or every cached verdict is fresh. When a kind is declared `checked` and its checker is not on `PATH`, a second line names it (``Checkers not on PATH: writfold-check-acme-src (kind src); …``); finding it is a `PATH` lookup, and no checker is ever run by a hook ([checkers](checkers.md), built in v0.5.0-dev.2).
-4. **Current run** (`resume`), when the current-run pointer is set.
+4. **Current run** (`resume`), when this session, its work tree or the clone has a current run ([below](#the-current-run-per-session-and-per-work-tree)).
 5. **Plan position**, when the current run has a plan: the current step and what it still owes, with its `next:` line, plus any done step that has gone `!stale`. The lines are taken from `plan status`:
 
    ```text
@@ -151,7 +151,7 @@ description = "commit only when the run's gates are met"
 
 | Requirement | Met when |
 |---|---|
-| `run.current` | the current-run pointer names a run in the KB, and that run is open |
+| `run.current` | the current run [of this session and work tree](#the-current-run-per-session-and-per-work-tree) is a run in the KB, and that run is open. The session's own pointer decides first, then the pointer of the work tree the command acts in, then the clone's shared pointer; a closed or missing run at the deciding pointer is not met and is never skipped for a less specific pointer |
 | `gates.met` | the run owes at least one gate for this repository, every gate it owes is satisfied, attested or waived, as `gate status` judges it (a plan narrows it to the plan's gates), and no receipt, statement or definition is invalid. A waiver counts, and so does a [checklist](gates.md) whose required items are all covered `supported` or `not-applicable`: it is attested. **An empty set is not met** (built in v0.6.0-dev.1): with no gate defined for the repository, or a plan whose steps name none, the rule takes its action with `no gate is owed here: none is defined for <repo>; gates.met is not met by an empty set; next: define .writfold/gates/<id>.toml, or leave this repository out of the rule with repos`. A delivery a step owes (`deliver:<mode>`, built in v0.6.0-dev.1) is neither owed nor counted here: `gates.met` is used on `git commit`, and counting a PR comment would refuse the commit the comment is about. A plan that names only deliveries owes no gate, so the rule refuses with `no gate is owed here: the run's plan names only deliveries; gates.met is not met by an empty set; next: require step.met for the delivery step, name a gate in a plan step, or leave this repository out of the rule with repos` |
 | `gate:<id>` | that gate is met |
 | `step.met` | the plan's current step owes nothing (met with no plan, or when every step is closed). Its deliveries are judged with its gates (built in v0.6.0-dev.1): `step deliver owes deliver:pr-comment [open]; next: writfold kb deliver prepare --mode pr-comment --from FILE` |
@@ -330,7 +330,10 @@ writfold kb guard status --json
 ```
 
 This read asks what each rule would decide **as if it had matched**, for the
-current-run pointer and working directory. It takes no `--run`. PreToolUse rules
+current run and working directory. It takes no `--run`: it reads the same
+[current run](#the-current-run-per-session-and-per-work-tree) the hook reads
+for this session (`$WRITFOLD_SESSION`) and work tree, and when a pointer
+narrower than the clone's shared one decided, a note says which. PreToolUse rules
 show `would-pass`, `would-deny` or `would-ask`; Stop rules show `would-nudge` or
 `quiet`; a repository exclusion shows `not-here`. Each unmet requirement has an
 `owes:` line with the existing next command. Unknown facts are flagged, and
@@ -453,13 +456,47 @@ It prints `hookSpecificOutput.additionalContext` for `Stop`, which Claude Code s
 
 The text says which applies (`once this session` or `once a turn`). A session rule and a turn rule can sit side by side: after the first nudge only the turn rule is raised again. With no stop rule, the Stop hook opens nothing and spawns nothing, as before.
 
+## The current run: per session and per work tree
+
+> **Status:** built in v0.6.0-dev.6. The decision (which pointer decides, which are written) is proved in Lean ([assurance](assurance.md)); reading and writing the pointer files is tested.
+
+Several agent sessions can work on one KB clone at once, each on its own task, without sharing a current run. A KB clone keeps three kinds of local pointer under `<KB git dir>/writfold/`, and every hook and every verb without `--run` reads them in this order:
+
+| Order | Pointer | File | Read when |
+|---|---|---|---|
+| 1 | the session's | `current-run.d/session-<session id>` | the session is known: a hook's `session_id`, or `$WRITFOLD_SESSION` for a verb |
+| 2 | the work tree's | `current-run.d/tree-<16 hex>` (its second line names the tree) | the working directory is inside a Git work tree other than the KB's own. For a guarded command it is the work tree the command acts in (`git -C DIR commit` is judged for `DIR`'s) |
+| 3 | the shared one | `current-run` | always: the run last made current on this clone |
+
+**The most specific pointer that is set decides, whatever state its run is in.** A session whose run was closed is told `run <id> is closed`; it is not moved onto the open run a less specific pointer names, because that run may be another session's. A pointer naming a run the KB no longer has reads the same way. Start a new run, or attach to one, to move on.
+
+**Making a run current writes every pointer the seat has**: `checkpoint --new-run` (and `checkpoint` on an existing run) writes the session's pointer when the session is known, the work tree's when the working directory is in one, and the shared pointer always. So a second session that starts a run moves the shared pointer and its own two, and never another session's pointer or another work tree's.
+
+```text
+session A in ~/src/api      checkpoint --new-run …   → session-A, tree(api), shared = run 1
+session B in ~/src/billing  checkpoint --new-run …   → session-B, tree(billing), shared = run 2
+session A: git commit       judged against run 1 (its session pointer; without it, tree(api))
+a shell in ~/src/api        writfold kb gate status  → run 1 (the work tree's pointer)
+a shell elsewhere           writfold kb gate status  → run 2 (only the shared pointer is left)
+```
+
+**How a session's ID reaches verbs.** Hooks receive `session_id` in their event. Verbs run by the agent's shell do not, so the `SessionStart` hook appends `export WRITFOLD_SESSION=<session_id>` to the file Claude Code names in `CLAUDE_ENV_FILE`; Claude Code runs that file before each Bash command of the session. The line is appended once per session ID and is the last one for the variable, so a resumed or forked session exports its own ID. With your own hooks instead of the plugin, do the same in your `SessionStart` hook, or `export WRITFOLD_SESSION=…` any other way; a value that is not a session ID (1 to 128 of letters, digits, `.`, `-`, `_`, no leading dot) is ignored. **Without it nothing breaks:** verbs fall back to the work tree's pointer, which already separates sessions working in different repositories or different worktrees of one repository. The session pointer adds the case of two sessions in one work tree, and a session that moves between repositories.
+
+**Attaching to a run.** `writfold kb resume <run> --here` makes an open run the current run of this session and work tree and then shows it; it writes the local pointers only, nothing tracked (a closed run is refused, exit 3). Use it for a reviewer session, a second agent or a new day's session that should work in an existing run. Tool calls made by a subagent fire the same hooks as the main conversation, so a subagent whose events carry the parent session's `session_id` reads the parent's run with no step; a separately started session attaches with `--here`, or passes `--run`.
+
+**The KB's own work tree has no pointer of its own.** A run started with the working directory inside the KB is the shared pointer's (and the session's), so `writfold watch` in the KB follows the run made current last, as before.
+
+**Cleaning up.** The pointers are local and untracked, one short file each. Deleting `current-run.d/` or any file in it only moves those seats to the next, less specific pointer. Nothing prunes them; a pointer to a closed run is harmless and says so when read.
+
+**What is not separated.** A verb run with no session, outside every work tree (or inside the KB), reads the shared pointer, which is whichever run was made current last on the clone. In a shell that several sessions share, pass `--run` or export `WRITFOLD_SESSION`.
+
 ## Where the KB comes from
 
 The hook uses the plugin's optional `kb_root` setting, then `$WRITFOLD_KB`, then the nearest KB above the event's `cwd`. Set `kb_root` when sessions start in code repositories and the KB is elsewhere.
 
 ## Not built
 
-- Writing `transcript_path` into the draft, and exporting `WRITFOLD_SESSION` through `CLAUDE_ENV_FILE`.
+- Writing `transcript_path` into the draft.
 - A `fetch` option; the hook never touches the network.
 - A built-in reflect nudge: the Stop hook says nothing about an open reflect step unless you add a `stop` [guard rule](#guard-rules) such as `finish-step` above. The inbox already derives it from the plan when the session ends, and a session that ends without `SessionEnd` is not listed.
 - Per-gate standing sets (a `gates.met` that refuses waivers, say).
@@ -482,6 +519,7 @@ The event fields, output shapes, timeouts and exit-code rules above were checked
   - Stop takes `decision: "block"` with a `reason`, or `hookSpecificOutput.additionalContext`, which is "non-error feedback": "The conversation continues so Claude can act on it", shown as `Stop hook feedback` rather than a hook error. Both pass through the same loop protections: the `stop_hook_active` input ("`true` when Claude Code is already continuing as a result of a stop hook") and a cap of 8 consecutive continuations. No Stop output adds context without continuing the turn, so the nudge uses `additionalContext`, once per session (or once per turn with `repeat = "turn"`), never while `stop_hook_active` is set.
   - Plain stdout from a Stop hook goes only to the debug log.
 - Re-checked on 15 November 2026 for the hard-stop recipe, at https://code.claude.com/docs/en/hooks: Stop input carries `stop_hook_active` ("`true` when Claude Code is already continuing as a result of a stop hook"); `decision: "block"` "prevents Claude from stopping" and its `reason` is required and "tells Claude why it should continue"; a Stop hook has no matcher; and the 8-consecutive-continuation cap still applies (it resets each time Claude calls a tool). The recipe was run against a fixture KB with one mechanical gate in four states: owed (blocks), `stop_hook_active` set (passes), met after `gate run` (passes) and no current run (`gate status` exit 3; passes).
+- Re-checked on 17 November 2026 for the session export, at https://code.claude.com/docs/en/hooks: "`CLAUDE_ENV_FILE` is available for SessionStart, Setup, CwdChanged, and FileChanged hooks"; "write `export` statements to `CLAUDE_ENV_FILE`. Use append (`>>`) to preserve variables set by other hooks"; "Each Bash command runs the file's contents as shell code before the command itself". The session ID reaches hooks only as the `session_id` input field; the page names no environment variable carrying it. "When a subagent calls a tool, tool events such as `PreToolUse` and `PostToolUse` fire the same configured hooks as in the main conversation, and the input carries the `agent_id` and `agent_type` common input fields"; the page does not say which `session_id` those events carry, so the guide does not either. Not run against a live Claude Code session: the hook was run with `CLAUDE_ENV_FILE` set by a test.
 - https://code.claude.com/docs/en/plugins-reference (the plugin layout, `userConfig`, `CLAUDE_PLUGIN_OPTION_<KEY>`).
 
 A manual run with Claude Code 2.1.322 confirmed the session-start context, the draft through `/compact`, and `--from-draft`. An interactive session and the marketplace install path were not covered by that run.

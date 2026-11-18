@@ -151,8 +151,8 @@ pub(crate) fn decided(
     if let Ok(r) = super::required::find(&session.ws.root, repo) {
         names.extend(r.start.into_iter().chain(r.end));
     }
-    let pinned = drift.pins.first().and_then(|p| p.required.as_ref());
-    for name in pinned.iter().flat_map(|r| &r.unskippable) {
+    let pinned = super::pin::required_in_force(&drift.pins);
+    for name in pinned.iter().flat_map(|(_, r)| &r.unskippable) {
         if !names.contains(name) {
             names.push(name.clone());
         }
@@ -186,6 +186,7 @@ fn summary_row(
         path: Some(format!("{}/plan/", runs::dir(&loaded.rec))),
         section: Some("plan"),
         extra: ended.keys(),
+        more: super::repin::lines(&drift.pins),
         ..crate::emit::Row::default()
     }
 }

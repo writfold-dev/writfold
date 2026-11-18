@@ -59,6 +59,13 @@ never fails, result as stated):
   decides once candidates are withdrawn or bound, the `posted:<mode>`
   standing, and the delivery guard's decision over the run's candidates
   (`Delivery.lean`, replaced in place and extended).
+- The current-run round (17 November 2026, below; built in v0.6.0-dev.6):
+  which of a clone's three current-run pointers decides for a session and
+  work tree, and which are written when a run is made current
+  (`Pointer.lean`).
+- The repin round (17 November 2026, below; built in v0.6.0-dev.6): which
+  pin entry is in force and whether a run may adopt a changed policy
+  (`Policy.lean`, extended in place).
 
 The gate (`docker compose -f compose.proofs.yaml run --build --rm proofs`,
 or the `docker run` form below) regenerates the translation and refuses
@@ -605,11 +612,107 @@ findings; JSON. `deliver withdraw` and `deliver posted` are each one
 create-new file under the existing write protocol, so `KbWrite.tla` and
 `RunGraph.tla` are unchanged.
 
+### The current-run round (17 November 2026)
+
+Built in v0.6.0-dev.6 ([v060-dev6-spec.md](v060-dev6-spec.md)). Before it,
+one local pointer per KB clone named the current run, so every session on
+the clone shared it. `writfold_core::pointer` now decides among three
+pointers a seat (one session in one work tree) can read: the session's, the
+work tree's and the clone's shared one. It was translated and proved, and
+its mutants calibrated, before `writfold-kb` called it
+(`proofs/Writfold/Pointer.lean`).
+
+A pointer reads `Unset`, or names a run that is `Open`, `Closed` or `Gone`
+(not in the KB). `level(session, tree, shared)` is the deciding level,
+`open(session, tree, shared)` whether the seat's current run is open, and
+`writes(has_session, has_tree)` the pointers a seat writes when it makes a
+run current.
+
+- `is_set_spec`, `level_spec`: the deciding level is the most specific
+  pointer that is set (session, then work tree, then shared); none exactly
+  when none is set.
+- `open_spec`: the seat's current run is open exactly when the deciding
+  pointer names an open run.
+- `session_decides`, `tree_decides`: with its session pointer set, a seat
+  reads the same whatever the work tree's and the shared pointers hold;
+  with no session pointer and a work-tree pointer, the same whatever the
+  shared pointer holds.
+- `ended_not_skipped`: a deciding pointer that names a closed or missing
+  run is never passed over for a less specific pointer to an open run. A
+  session whose run ended is told so; it is not judged against a run that
+  may be another session's.
+- `shared_alone`: with only the shared pointer the answer is that
+  pointer's, which is the rule every earlier release applied.
+- `writes_spec`: a seat writes the pointer of each level it has, and the
+  shared pointer always.
+- `writer_reads_its_run`: after a seat makes an open run current, that seat
+  reads an open current run, whatever the three pointers held before and
+  whichever levels the seat has. (`after` and `seen`, the pointer after a
+  write and a level the seat lacks, are Lean definitions in `Pointer.lean`;
+  that a written file reads back as the run is the file system's, tested.)
+- `other_session_undisturbed`: a seat whose session pointer is set reads
+  the same before and after any other seat makes a run current.
+
+Tested, not proved: reading the pointer files and the state of the run
+each names (`writfold-kb` `seat.rs`: a manifest's presence, the sidecar's
+or the manifest's `state`); which work tree encloses a directory and
+whether it is the KB's own (no work-tree pointer there); the session ID's
+form; the `export` line the `SessionStart` hook appends; `resume <run>
+--here` (it refuses a closed run through the proved
+`guard::require::run_current`). The pointers are local, untracked files,
+each written by one atomic rename; a crash between two of them leaves a
+combination of pointer states, and every combination is an input the
+theorems above cover, so there is no protocol to model: `KbWrite.tla` and
+`RunGraph.tla` are unchanged.
+
+### The repin round (17 November 2026)
+
+Built in v0.6.0-dev.6 ([policy-spec.md](policy-spec.md) section 2.5,
+`plan repin`). The two decisions the verb adds were translated and proved,
+and their mutants calibrated, before the verb was wired. After this round
+and the current-run round, merged: 594 theorems, 316 required claims (298
+before both), 203 mutants (189 before both).
+
+`writfold_core::policy::repin` (`proofs/Writfold/Policy.lean`, extended in
+place):
+
+- `in_force(applies)`: which pin entry is in force. `writfold-kb` lists a
+  run's pin entries oldest first (pins by `seq`, each pin's entries in file
+  order) and says which apply to what is asked about: a gate for one step,
+  or the required file. `in_force_spec` (`InForce`): the answer is an entry
+  that applies with no applying entry after it, so the newest pin naming a
+  gate wins and a repin's entry for one done step wins over its general
+  entry for the gate; `in_force_none_iff`: there is none exactly when no
+  entry applies. Before the round "the newest pin naming it" was decided in
+  `writfold-kb` for gates, and the required file was always compared with
+  the first pin.
+- `repin_check(writable, valid, pin, loads, keeps)`: whether a repin may
+  be written. `repin_check_spec`: the refusals in their fixed order (the
+  run is closed; a pin file does not read; nothing was pinned; nothing
+  moved; a gate an open step owes does not load now; the lock list as it
+  is now locks a step the run already skipped). `repin_ok_iff`: written
+  exactly when the run is open, every pin file reads, the policy against
+  the pins (`pin_all`) is `Moved`, every owed gate loads and no skipped
+  step would be locked. `repin_unmoved_refused`, `repin_closed_refused`,
+  `repin_keeps_skips` (a repin never reopens a step, so it invalidates
+  nothing itself).
+
+That a repinned run never reads plain `complete` was already proved
+(`summary_complete_iff`, `exception_never_clean`). Tested, not proved:
+reading and writing pin files and their digests, gathering the entries and
+which apply (comparing gate names and step paths), which digest a repin
+records for each step, the definition digests themselves, folding the plan
+again under the lock list as it is now to see whether a skipped step would
+be locked, the `repin:` line and all other rendering. A repin is one create-new file under the
+existing write protocol and the plan re-check (`Recheck.lean`, whose
+`Current` case now also stands for "no step was current and none is"), so
+`KbWrite.tla` and `RunGraph.tla` are unchanged.
+
 ### The claims and their mutants
 
 <!-- generated from proofs/mutants.py -->
 
-189 mutants (20 before 16 November 2026, 86 after the backfill's first round, 108 after the policy round, 161 after the backfill's second round, 170 after the bug-fix round, 189 after the delivery round: its nine delivery mutants re-aimed and 19 added, all 28 calibrated). Each must break exactly the theorems named.
+203 mutants (20 before 16 November 2026, 86 after the backfill's first round, 108 after the policy round, 161 after the backfill's second round, 170 after the bug-fix round, 189 after the delivery round: its nine delivery mutants re-aimed and 19 added, all 28 calibrated; 203 after the current-run and repin rounds). Each must break exactly the theorems named.
 
 | Mutant | File | What it breaks | Must break |
 |---|---|---|---|
@@ -802,7 +905,20 @@ create-new file under the existing write protocol, so `KbWrite.tla` and
 | `guard-all-counts-withdrawn` | `delivery.rs` | delivery guard: a withdrawn candidate need not be ready | `Delivery.guard_all_loop_spec` |
 | `guard-all-skips-last` | `delivery.rs` | delivery guard: the last candidate counts for the all-ready rule | `Delivery.guard_all_loop_spec` |
 | `guard-any-skips-last` | `delivery.rs` | delivery guard: the last candidate may hold the bytes | `Delivery.guard_any_loop_spec` |
-
+| `level-tree-before-session` | `pointer.rs` | pointer: a session pointer decides before the work tree's | `Pointer.level_spec`, `Pointer.open_spec`, `Pointer.session_decides`, `Pointer.ended_not_skipped` |
+| `is-set-skips-gone` | `pointer.rs` | pointer: a pointer to a run the KB lacks is set, and so not skipped | `Pointer.is_set_spec`, `Pointer.level_spec`, `Pointer.open_spec`, `Pointer.session_decides`, `Pointer.tree_decides`, `Pointer.ended_not_skipped` |
+| `open-skips-closed-session` | `pointer.rs` | pointer: a closed run at the deciding level is not skipped for an open one below | `Pointer.open_spec`, `Pointer.session_decides`, `Pointer.ended_not_skipped` |
+| `open-shared-any-run` | `pointer.rs` | pointer: only an open run is an open current run | `Pointer.open_spec`, `Pointer.shared_alone`, `Pointer.ended_not_skipped` |
+| `writes-shared-only-without-session` | `pointer.rs` | pointer: the shared pointer is always written | `Pointer.writes_spec` |
+| `writes-no-session` | `pointer.rs` | pointer: a seat with a session writes its session pointer | `Pointer.writes_spec`, `Pointer.writer_reads_its_run` |
+| `in-force-inverted` | `policy/repin.rs` | repin: the entry in force is one that applies | `Policy.in_force_loop_spec` |
+| `in-force-skips-oldest` | `policy/repin.rs` | repin: the oldest entry counts when no newer one applies | `Policy.in_force_loop_spec` |
+| `repin-closed-run` | `policy/repin.rs` | repin: a closed run takes no repin | `Policy.repin_check_spec`, `Policy.repin_ok_iff`, `Policy.repin_closed_refused` |
+| `repin-ignores-invalid` | `policy/repin.rs` | repin: a pin file that does not read is not adopted | `Policy.repin_check_spec`, `Policy.repin_ok_iff` |
+| `repin-when-same` | `policy/repin.rs` | repin: refused when nothing moved | `Policy.repin_check_spec`, `Policy.repin_ok_iff` |
+| `repin-when-unpinned` | `policy/repin.rs` | repin: refused when the run pinned nothing | `Policy.repin_check_spec`, `Policy.repin_ok_iff` |
+| `repin-undefined-gate` | `policy/repin.rs` | repin: a gate an open step owes must load to be adopted | `Policy.repin_check_spec`, `Policy.repin_ok_iff` |
+| `repin-reopens-skip` | `policy/repin.rs` | repin: adopting a lock list never reopens a skipped step | `Policy.repin_check_spec`, `Policy.repin_ok_iff` |
 <!-- end generated -->
 
 What these proofs do not cover: the fold from event files to the list of

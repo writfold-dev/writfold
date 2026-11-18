@@ -36,8 +36,8 @@ pub fn definition_now(root: &Path, top: Option<&Path>, gate: &str) -> Option<Str
         .map(|d| d.digest)
 }
 
-/// The required file as the first pin records it.
-fn required(root: &Path, loaded: &Loaded) -> Result<RequiredPin> {
+/// The required file as a pin records it.
+pub(super) fn required(root: &Path, loaded: &Loaded) -> Result<RequiredPin> {
     let repo = (loaded.subject.as_ref()).map(|s| (s.top.as_path(), s.name.as_str()));
     let r = super::required::find(root, repo)?;
     Ok(RequiredPin {
@@ -98,6 +98,9 @@ pub(super) fn op(
         },
         gates,
         recorded: time::stamp(now),
+        steps: Vec::new(),
+        reason: None,
+        by: None,
     };
     let taken = pin::max_seq(root, &run_dir);
     Ok(pin::next(root, &pins, new, taken)?.map(|p| {

@@ -6,6 +6,9 @@
 //! Code shows only in its debug log) and exits 0. Nothing here commits or
 //! writes a tracked file; drafts are local ([`crate::draft`]).
 //!
+//! Every hook resolves the current run for its seat: the event's
+//! `session_id` and the work tree of its `cwd` ([`crate::seat`]).
+//!
 //! - `session-start` prints JSON whose `additionalContext` holds a
 //!   behind-remote line, `brief`, `resume` when a current run exists, the
 //!   plan position and an inbox (drafts, pending proposals, runs left
@@ -31,11 +34,13 @@ use serde_json::{Map, Value};
 use std::path::{Path, PathBuf};
 
 pub mod broken;
+mod export;
 mod inbox;
 mod position;
 mod remote;
 mod start;
 
+pub use export::export_session;
 pub use start::{BRIEF_BUDGET, CONTEXT_LIMIT, DROP_ORDER, PLAN_BUDGET, Part, RESUME_BUDGET, fit};
 
 pub const EVENTS: [&str; 6] = [
@@ -90,10 +95,15 @@ pub fn run(event: &str, input: &str, env: &HookEnv) -> HookOutput {
         .get("cwd")
         .and_then(Value::as_str)
         .map_or_else(|| env.cwd.clone(), PathBuf::from);
-    let ws = match discover(env.kb.as_deref(), &cwd) {
+    let mut ws = match discover(env.kb.as_deref(), &cwd) {
         Ok(ws) => ws,
         Err(error) => return quiet(error.to_string()),
     };
+    // The event's session is the seat's ([`crate::seat`]); without a usable
+    // one the seat keeps `$WRITFOLD_SESSION`.
+    if let Some(id) = crate::seat::session_id(input.get("session_id").and_then(Value::as_str)) {
+        ws.seat.session = Some(id);
+    }
     let now = env.now.unwrap_or_else(time::now);
     let result = match event {
         "session-start" => {
@@ -229,7 +239,7 @@ fn record(
         d.insert("cwd".into(), cwd.to_string_lossy().into_owned().into());
         d
     });
-    if let Some(run) = runs::current(&local) {
+    if let Some(run) = runs::current_in(ws) {
         d.insert("run".into(), run.into());
     }
     if let Some(trigger) = field("trigger") {

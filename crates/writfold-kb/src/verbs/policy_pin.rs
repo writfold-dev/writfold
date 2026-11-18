@@ -12,7 +12,7 @@ pub struct Current {
 
 /// Read the current run's pin and drift (none without a current run).
 pub fn current(session: &Session<'_>, cwd: &Path) -> Current {
-    let run = crate::proposal::state_of(session.ws).and_then(|s| crate::runs::current(&s));
+    let run = crate::runs::current_of(session);
     let loaded = run.and_then(|r| crate::plan::loaded(session, &r, cwd));
     let drift = loaded.map(|l| crate::plan::drift::judge(&session.ws.root, &l));
     Current {

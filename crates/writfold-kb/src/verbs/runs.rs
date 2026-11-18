@@ -162,6 +162,40 @@ fn pick(
     }
 }
 
+/// `resume <run> --here`: point the seat's pointers at an open run, then
+/// answer as `resume`. A run that is closed or not in the KB is refused:
+/// the seat may take a run exactly when `run.current` would then be met
+/// ([`writfold_core::guard::require::run_current`]).
+pub fn attach(session: &Session<'_>, named: &str, cwd: &Path) -> Result<(Answer, String)> {
+    use crate::error::KbError;
+    use writfold_core::guard::{Fact, require::run_current};
+    let rec = match pick(session, Some(named), cwd)? {
+        Ok(rec) => rec,
+        Err(answer) => return Ok((answer, named.to_owned())),
+    };
+    let open = runs::state(session, &rec) != "closed";
+    if !matches!(run_current(true, open), Fact::Met) {
+        return Err(KbError::Refused(format!(
+            "run {} is closed; reopen it with status {} --set open",
+            rec.id, rec.id
+        )));
+    }
+    let Some(repo) = &session.ws.repo else {
+        return Err(KbError::Refused(
+            "the current-run pointers need a KB under Git".into(),
+        ));
+    };
+    let seat = &session.ws.seat;
+    crate::seat::make_current(&repo.git_dir.join("writfold"), seat, &rec.id)?;
+    let (mut answer, id) = resume(session, Some(&rec.id), cwd)?;
+    answer.notes.push(format!(
+        "{} is now the current run here ({}); local pointers only, nothing to commit",
+        rec.id,
+        seat.describe()
+    ));
+    Ok((answer, id))
+}
+
 pub fn resume(session: &Session<'_>, named: Option<&str>, cwd: &Path) -> Result<(Answer, String)> {
     let rec = match pick(session, named, cwd)? {
         Ok(rec) => rec,

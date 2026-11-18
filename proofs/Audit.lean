@@ -341,6 +341,26 @@ def claims : List Name := [
   ``Writfold.Core.Delivery.guard_withdrawn_irrelevant,
   ``Writfold.Core.Delivery.guard_spent_never_passes,
   -- ---- end delivery modes, second round ----
+  -- the current run of a seat (writfold_core::pointer)
+  ``Writfold.Core.Pointer.is_set_spec,
+  ``Writfold.Core.Pointer.level_spec,
+  ``Writfold.Core.Pointer.open_spec,
+  ``Writfold.Core.Pointer.session_decides,
+  ``Writfold.Core.Pointer.tree_decides,
+  ``Writfold.Core.Pointer.ended_not_skipped,
+  ``Writfold.Core.Pointer.shared_alone,
+  ``Writfold.Core.Pointer.writes_spec,
+  ``Writfold.Core.Pointer.writer_reads_its_run,
+  ``Writfold.Core.Pointer.other_session_undisturbed,
+  -- plan repin (writfold_core::policy::repin)
+  ``Writfold.Core.Policy.in_force_loop_spec,
+  ``Writfold.Core.Policy.in_force_spec,
+  ``Writfold.Core.Policy.in_force_none_iff,
+  ``Writfold.Core.Policy.repin_check_spec,
+  ``Writfold.Core.Policy.repin_ok_iff,
+  ``Writfold.Core.Policy.repin_unmoved_refused,
+  ``Writfold.Core.Policy.repin_closed_refused,
+  ``Writfold.Core.Policy.repin_keeps_skips,
 ]
 
 /-- Every theorem under `Writfold.Core`, sorted by name. -/

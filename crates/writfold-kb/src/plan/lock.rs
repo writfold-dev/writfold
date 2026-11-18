@@ -24,11 +24,10 @@ pub(super) fn refused(session: &Session<'_>, loaded: &Loaded, at: usize) -> Resu
         });
     }
     let (pins, _) = super::pin::read(&session.ws.root, &runs::dir(&loaded.rec), &loaded.rec.id);
-    let first = pins.first();
-    let source = (first.and_then(|p| p.required.as_ref()))
-        .map_or_else(|| "required.toml".to_owned(), |r| r.source.clone());
-    let words =
-        (first.and_then(|p| p.required.as_ref())).map_or_else(Vec::new, |r| r.unskippable.clone());
+    // The lock in force: the first pin's, or the newest repin's.
+    let force = super::pin::required_in_force(&pins);
+    let source = force.map_or_else(|| "required.toml".to_owned(), |(_, r)| r.source.clone());
+    let words = force.map_or_else(Vec::new, |(_, r)| r.unskippable.clone());
     let list = serde_json::to_string(&words)
         .unwrap_or_default()
         .replace(',', ", ");
@@ -39,7 +38,7 @@ pub(super) fn refused(session: &Session<'_>, loaded: &Loaded, at: usize) -> Resu
                 .position(|l| l.trim_start().starts_with("unskippable"))
         })
         .map_or(1, |n| n + 1);
-    let pinned = first.map_or_else(String::new, |p| format!(", pinned @{}:1", p.path));
+    let pinned = force.map_or_else(String::new, |(p, _)| format!(", pinned @{}:1", p.path));
     let mut answer = Answer {
         refused: true,
         rows: vec![row],

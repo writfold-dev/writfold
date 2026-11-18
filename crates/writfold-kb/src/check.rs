@@ -80,7 +80,7 @@ fn parts(ws: &Workspace, request: &Request, scope: Option<&str>) -> Vec<Part> {
             Verb::IndexVerify,
         ),
     ];
-    let current = crate::proposal::state_of(ws).and_then(|state| runs::current(&state));
+    let current = runs::current_in(ws);
     parts.push(match current {
         Some(run) => sub(
             request,
@@ -143,7 +143,7 @@ pub fn guards(ws: &Workspace, request: &Request) -> Option<Part> {
 /// a plan (a `plan/` directory of events), its row flagged with any merge
 /// disorder ([`crate::plan::disorder`]); `None` otherwise.
 pub fn plan(ws: &Workspace, request: &Request) -> Option<Part> {
-    let run = crate::proposal::state_of(ws).and_then(|state| runs::current(&state))?;
+    let run = runs::current_in(ws)?;
     let events = ws
         .root
         .join("runs")

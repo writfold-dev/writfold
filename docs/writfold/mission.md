@@ -164,6 +164,8 @@ Considered for this release and deferred, with the reason:
 
 **v0.6.0-dev.2** (16 November 2026): diagnostics for every file a user writes, and `kb lint` ([diagnostics-spec.md](diagnostics-spec.md)).
 
+**v0.6.0-dev.6** (17 November 2026): parallel sessions on one KB clone ([v060-dev6-spec.md](v060-dev6-spec.md); [as built](kb-v1-design.md#48-a-current-run-per-session-and-work-tree-find---each-as-built-17-november-2026-v060-dev6)). Built: a current run per session and per work tree with the clone's shared pointer as the fallback, the decision proved in Lean before it was wired in; the session's ID exported to the session's later shell commands by the `SessionStart` hook; `resume <run> --here` to work in an existing run from another session; `find --each` for several lookups in one process (the batched form the find research recommended); `plan repin`; a page of behaviour changes by release and a guide to adopting Writfold in an existing workflow. One behaviour change: a session or work tree with its own pointer no longer follows the shared `current-run` file. Asked for and deferred with reasons in the specification: citations rendered as links, recorded verdicts for the built-in `code` kind, batch `observe` and `record` for importing history (the three were "not planned" in v0.5.0-dev.3 and are now open requests), and a `repos` key on a gate.
+
 **Planned: finding records by what people call them** (owner, 16 November 2026), in this order, each measured with `find --eval` on a query set grown from real misses:
 
 1. Aliases on every record, not only assets (one front-matter key).

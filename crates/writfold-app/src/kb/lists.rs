@@ -1,5 +1,5 @@
 //! The listing verbs built in v0.6.0-dev.1 that need more than a switch:
-//! `runs --idle AGE` and `delta`.
+//! `runs --idle AGE` and `delta`; and `resume [<run>] [--here]`.
 use super::args::Common;
 use writfold_kb::Verb;
 
@@ -31,5 +31,19 @@ pub fn delta(common: &Common, positional: &[String]) -> Result<Verb, String> {
         (None, Some(name), None) => Ok(Verb::Delta(DeltaVerb::SinceMark(name))),
         (None, None, Some(rev)) => Ok(Verb::Delta(DeltaVerb::Since(rev))),
         _ => Err("delta takes exactly one of --mark NAME, --since-mark NAME or --since REV".into()),
+    }
+}
+
+/// `resume [<run>]`, and `resume <run> --here`: make the run this seat's
+/// current run (local pointers), then show it.
+pub fn resume(here: bool, positional: &[String]) -> Result<Verb, String> {
+    match (positional, here) {
+        ([], false) => Ok(Verb::Resume { run: None }),
+        ([run], false) => Ok(Verb::Resume {
+            run: Some(run.clone()),
+        }),
+        ([run], true) => Ok(Verb::Attach { run: run.clone() }),
+        (_, true) => Err("resume --here takes one run".into()),
+        _ => Err("resume: too many arguments".into()),
     }
 }

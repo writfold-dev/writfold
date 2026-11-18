@@ -125,12 +125,24 @@ pub fn find(
     if text.trim().is_empty() && !signatures && !filter.kinds.is_empty() {
         return listed(session, filter);
     }
+    find_within(session, text, filter, signatures, LIMIT)
+}
+
+/// `find` with its own row limit (at most [`LIMIT`]): the same tiers in
+/// the same order, stopping at `limit` rows.
+pub(super) fn find_within(
+    session: &Session<'_>,
+    text: &str,
+    filter: &Filter,
+    signatures: bool,
+    limit: usize,
+) -> Result<Answer> {
     let mut found = Found {
         session,
         filter,
         seen: BTreeSet::new(),
         rows: Vec::new(),
-        limit: LIMIT,
+        limit: limit.min(LIMIT),
     };
     if signatures {
         signature_tier(session, text, &mut found)?;

@@ -264,6 +264,7 @@ pub fn summary(closes: &[Close], facts: &Facts) -> Summary {
 }
 
 pub mod lines;
+pub mod repin;
 
 #[cfg(test)]
 mod tests;
