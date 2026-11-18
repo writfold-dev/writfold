@@ -7,6 +7,10 @@ repository.workspace = true
 license.workspace = true
 publish.workspace = true
 
+# Strictness tier for `cargo tauten check` (docs/writfold/tauten-adoption.md).
+[package.metadata.tauten]
+tier = "core"
+
 [dependencies]
 writfold-domain = { path = "../writfold-domain" }
 serde.workspace = true

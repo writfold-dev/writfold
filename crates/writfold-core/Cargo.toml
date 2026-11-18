@@ -9,6 +9,10 @@ repository.workspace = true
 # No dependencies by construction: no IO, no floats, no trait objects
 # (`diag` passes plain function pointers), `no_std` +
 # `alloc`. The xtask dependency graph enforces the empty set.
+# Strictness tier for `cargo tauten check` (docs/writfold/tauten-adoption.md).
+[package.metadata.tauten]
+tier = "kernel"
+
 [dependencies]
 
 # Read by Charon when the `proofs` gate translates this crate

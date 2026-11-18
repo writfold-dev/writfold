@@ -7,6 +7,10 @@ rust-version.workspace = true
 license.workspace = true
 publish = false
 
+# Strictness tier for `cargo tauten check` (docs/writfold/tauten-adoption.md).
+[package.metadata.tauten]
+tier = "edge"
+
 [dependencies]
 serde.workspace = true
 sha2.workspace = true
