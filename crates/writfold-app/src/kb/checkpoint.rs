@@ -2,9 +2,35 @@
 //! `--run ID` or `--new-run --project P --task T [--mode M]`, and any
 //! number of `--artifact <store>@<rev>:<path>`.
 use super::args::Common;
-use super::writes::{all, get, need, switch};
+use super::writes::{get, need, switch};
 use writfold_kb::write::Write;
 use writfold_kb::write::run::{Checkpoint, FromDraft, NewRun};
+
+/// Value flags that may be given more than once; their values are kept in
+/// order, separated by a line break.
+pub const REPEATS: [&str; 1] = ["artifact"];
+
+/// Record `value` for `flag`: once, or appended for a repeatable flag.
+pub fn put(values: &mut std::collections::BTreeMap<String, String>, flag: &str, value: String) {
+    match values.get_mut(flag) {
+        Some(old) if REPEATS.contains(&flag) => {
+            old.push('\n');
+            old.push_str(&value);
+        }
+        _ => {
+            values.insert(flag.to_owned(), value);
+        }
+    }
+}
+
+/// The values of a repeatable flag, in order.
+pub fn all(common: &Common, flag: &str) -> Vec<String> {
+    common
+        .values
+        .get(flag)
+        .map(|v| v.split('\n').map(str::to_owned).collect())
+        .unwrap_or_default()
+}
 
 pub fn checkpoint(common: &Common) -> Result<Write, String> {
     let new_run = if switch(common, "new-run") {

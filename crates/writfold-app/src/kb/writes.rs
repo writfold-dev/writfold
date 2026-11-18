@@ -50,32 +50,6 @@ pub const VALUES: [&str; 42] = [
     "ref",
     "to",
 ];
-/// Value flags that may be given more than once; their values are kept in
-/// order, separated by a line break.
-pub const REPEATS: [&str; 1] = ["artifact"];
-
-/// Record `value` for `flag`: once, or appended for a repeatable flag.
-pub fn put(values: &mut std::collections::BTreeMap<String, String>, flag: &str, value: String) {
-    match values.get_mut(flag) {
-        Some(old) if REPEATS.contains(&flag) => {
-            old.push('\n');
-            old.push_str(&value);
-        }
-        _ => {
-            values.insert(flag.to_owned(), value);
-        }
-    }
-}
-
-/// The values of a repeatable flag, in order.
-pub fn all(common: &Common, flag: &str) -> Vec<String> {
-    common
-        .values
-        .get(flag)
-        .map(|v| v.split('\n').map(str::to_owned).collect())
-        .unwrap_or_default()
-}
-
 /// Flags without a value.
 pub const SWITCHES: [&str; 12] = [
     "each",
