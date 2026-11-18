@@ -17,7 +17,8 @@ A line marked **fix** changed an answer that was wrong; anything depending on th
 - **The `SessionStart` hook writes to `CLAUDE_ENV_FILE`** when Claude Code names one: one `export WRITFOLD_SESSION=<session_id>` line. Verbs run later in that session's shell read it: `propose` then counts its ten per session against that session (before, a shell with no `--session` shared one bucket), and run writes go to the session's run.
 - **A checkpoint draft's `run`** is the session's current run, not the clone's.
 - **`guard status`** adds one note when a pointer narrower than the shared one decided.
-- `plan repin`: see the release notes; a run that was `policy-moved` reads so until it is repinned, as before.
+- **`plan repin` is built.** A run that is `policy-moved` still reads so, and still exits 2 from `plan status`, until it is repinned; the note that says so now names the verb. A repinned run never reads plain `complete` (`complete-with-exceptions`). After a repin, the pin in force for a gate (and for the required file) is the newest one naming it; before, the required file was always compared with the first pin. A done step whose record names another digest than its gate's now is kept at its own digest (the new `steps` key of a repin pin); an earlier binary ignores the key and may still read such a run `moved`.
+- `find a b c` is unchanged (one phrase); several queries are `find --each a b c`.
 
 ## v0.6.0-dev.5
 

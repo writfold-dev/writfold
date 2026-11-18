@@ -664,12 +664,14 @@ each written by one atomic rename; a crash between two of them leaves a
 combination of pointer states, and every combination is an input the
 theorems above cover, so there is no protocol to model: `KbWrite.tla` and
 `RunGraph.tla` are unchanged.
+
 ### The repin round (17 November 2026)
 
 Built in v0.6.0-dev.6 ([policy-spec.md](policy-spec.md) section 2.5,
 `plan repin`). The two decisions the verb adds were translated and proved,
-and their mutants calibrated, before the verb was wired. After the round:
-579 theorems, 306 required claims (298 before), 197 mutants (189 before).
+and their mutants calibrated, before the verb was wired. After this round
+and the current-run round, merged: 594 theorems, 316 required claims (298
+before both), 203 mutants (189 before both).
 
 `writfold_core::policy::repin` (`proofs/Writfold/Policy.lean`, extended in
 place):
@@ -710,7 +712,7 @@ existing write protocol and the plan re-check (`Recheck.lean`, whose
 
 <!-- generated from proofs/mutants.py -->
 
-197 mutants (20 before 16 November 2026, 86 after the backfill's first round, 108 after the policy round, 161 after the backfill's second round, 170 after the bug-fix round, 189 after the delivery round: its nine delivery mutants re-aimed and 19 added, all 28 calibrated; 197 after the repin round). Each must break exactly the theorems named.
+203 mutants (20 before 16 November 2026, 86 after the backfill's first round, 108 after the policy round, 161 after the backfill's second round, 170 after the bug-fix round, 189 after the delivery round: its nine delivery mutants re-aimed and 19 added, all 28 calibrated; 203 after the current-run and repin rounds). Each must break exactly the theorems named.
 
 | Mutant | File | What it breaks | Must break |
 |---|---|---|---|
