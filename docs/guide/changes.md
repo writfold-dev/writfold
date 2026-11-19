@@ -6,6 +6,13 @@ This page is for someone pinned to one release who wants to upgrade on purpose. 
 
 A line marked **fix** changed an answer that was wrong; anything depending on the old answer was depending on the fault.
 
+## v0.6.0-dev.9
+
+- **A look that found nothing now ages** by its `--source` kind's declared `default_ttl` ([gates](gates.md#observations-as-evidence-built-in-v050-dev3)). A `none-found` row citing a `no-data` or `not-found` look of a kind declared with a lifetime turns `stale` once that lifetime has passed (`… was no-data, now aged`); before, such a look never aged. Looks of undeclared kinds, or kinds with no `default_ttl`, are unchanged. A kind catalog that cannot be read leaves such a look `unreadable`.
+- `gate status` and `gate cover` add `bound:` lines under an item that stands on a look recorded `--for` another item (`!other-item`) or on a reference that also backs other items (`!shared`), and the item line carries those flags. No standing or exit code changes.
+- A `scope` pattern starting `repo:` (or `!repo:`) now names a store ([gates](gates.md#a-definition-every-key)) and must be `repo:<store>/<glob>`; before, it was a glob over the subject's own paths. A definition with another `repo:` pattern is now refused.
+- New optional keys `own_evidence`, `evidence_from` (checklists) and `ages_as` (mechanical and observed gates) and the optional `searched` field of an observation change nothing until written. Writing a key changes that definition's digest, so its earlier receipts, rows and statements read `stale` once.
+
 ## v0.6.0-dev.8
 
 - `checkpoint` accepts `--artifact <store>@<rev>:<path>`, repeatable. Without it nothing changes. With it, the checkpoint also writes `runs/<run>/artifacts/<time>-<hex>.json`, and is refused, writing nothing, when a pointer would not read fresh ([stores](stores.md#pointing-a-run-at-its-material)).

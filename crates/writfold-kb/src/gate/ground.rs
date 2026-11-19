@@ -303,8 +303,12 @@ fn negative(
     o: &crate::observe::Observation,
     path: &str,
 ) -> Result<Resolved> {
-    let kinds = crate::stale::kinds::read(&cx.session.ws.root)?;
-    let pins = super::pins::of(cx, &kinds, o, path)?;
+    // A catalog that cannot be read leaves the look unreadable: it never
+    // holds, and nothing else is refused.
+    let pins = match crate::stale::kinds::read(&cx.session.ws.root) {
+        Ok(kinds) => super::pins::of(cx, &kinds, o, path)?,
+        Err(_) => vec![writfold_core::pin::Pin::Unreadable],
+    };
     let word = match writfold_core::pin::nothing_found(o.status, &pins) {
         true => o.status.name(),
         false => super::pins::word(&pins),
