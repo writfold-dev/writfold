@@ -259,10 +259,7 @@ fn tables(conn: &Connection) -> bool {
 }
 
 /// What the cache holds per README blob, for any commit.
-fn by_blob(
-    conn: &Connection,
-    store: &str,
-) -> BTreeMap<String, Claims> {
+fn by_blob(conn: &Connection, store: &str) -> BTreeMap<String, Claims> {
     let mut out: BTreeMap<String, Vec<_>> = BTreeMap::new();
     let Ok(mut statement) = conn.prepare(
         "SELECT readme_blob, dir, subject, heading FROM store_material WHERE store = ?1 ORDER BY dir, ord",
