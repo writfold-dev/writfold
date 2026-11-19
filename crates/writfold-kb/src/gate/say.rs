@@ -57,10 +57,13 @@ pub(super) fn record(
     let git = tool.admit()?;
     let patterns = definition.patterns();
     let wanted = |p: &str| writfold_core::scope::in_scope(&patterns, p);
-    let snapshot = subject::snapshot(&git, &subject, &wanted)?;
+    let mut snapshot = subject::snapshot(&git, &subject, &wanted)?;
+    snapshot.attach(&git, ws, patterns.iter().copied());
     let mut scoped = snapshot.scoped(&patterns);
     if definition.run_record() {
         scoped.digest = records.unwrap_or_default();
+    } else {
+        super::repos::readable(&scoped.digest, &patterns)?;
     }
     let bytes = statement::bytes(&Statement {
         kind: say.kind,

@@ -135,6 +135,8 @@ pub struct Snapshot {
     pub commit: GitObjectId,
     tree: Vec<(String, String)>,
     dirty: Vec<(String, Option<String>)>,
+    /// The stores `repo:` scope entries name ([`super::repos`]).
+    others: super::repos::Trees,
 }
 
 /// One gate's view of a snapshot.
@@ -190,6 +192,7 @@ pub fn snapshot(
         commit,
         tree,
         dirty,
+        others: super::repos::Trees::new(),
     })
 }
 
@@ -208,8 +211,49 @@ impl Snapshot {
             .map(|(_, id)| id.as_str())
     }
 
-    /// The scope digest and counts for one gate's patterns.
+    /// Read the stores that `scopes` name (`repo:` entries), so
+    /// [`Snapshot::scoped`] can fold them in.
+    pub fn attach<'a>(
+        &mut self,
+        git: &GitExecutable<'_>,
+        ws: &Workspace,
+        scopes: impl IntoIterator<Item = &'a str>,
+    ) {
+        let names = super::repos::named(scopes);
+        let missing: std::collections::BTreeSet<String> = (names.into_iter())
+            .filter(|n| !self.others.contains_key(n))
+            .collect();
+        self.others.extend(super::repos::read(git, ws, &missing));
+    }
+
+    /// The scope digest and counts for one gate's patterns: the subject's
+    /// own paths, then each `repo:` store's, folded in. A store that was not
+    /// read makes the digest empty (never the same content).
     pub fn scoped(&self, patterns: &[&str]) -> Scoped {
+        let (local, stores) = super::repos::split(patterns);
+        let mut out = self.local(&local);
+        if stores.is_empty() {
+            return out;
+        }
+        let mut all = Sha256::new();
+        all.update(format!("writfold-gate-scope-repos/1\n{}\n", out.digest).as_bytes());
+        for (store, globs) in &stores {
+            let globs: Vec<&str> = globs.iter().map(String::as_str).collect();
+            let Some(Some(tree)) = self.others.get(*store) else {
+                out.digest = String::new();
+                return out;
+            };
+            for (path, id) in tree.iter().filter(|(p, _)| in_scope(&globs, p)) {
+                out.paths += 1;
+                all.update(format!("{store}:{path}\0{id}\n").as_bytes());
+            }
+        }
+        out.digest = format!("sha256:{}", crate::index::hex(&all.finalize()));
+        out
+    }
+
+    /// The scope digest and counts over the subject's own patterns.
+    fn local(&self, patterns: &[&str]) -> Scoped {
         let mut paths: BTreeMap<&str, &str> = self
             .tree
             .iter()

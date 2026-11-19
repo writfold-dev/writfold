@@ -188,7 +188,10 @@ pub fn judge_plain<'a>(
         .map(Definition::patterns)
         .collect();
     let wanted = |p: &str| patterns.iter().any(|scope| in_scope(scope, p));
-    let snapshot = snapshot(git, subject, &wanted)?;
+    let mut snapshot = snapshot(git, subject, &wanted)?;
+    let scopes =
+        (definitions.iter().chain(&later)).flat_map(|d| d.scope.iter().map(String::as_str));
+    snapshot.attach(git, session.ws, scopes);
     let valid = filings.parsed();
     let records = filings.owed.records.clone().unwrap_or_default();
     let clock = super::pins::Clock::read(session);
@@ -449,10 +452,14 @@ fn stale_why(
         );
     }
     let patterns = judged.definition.patterns();
+    let present = report.snapshot.scoped(&patterns).digest;
+    if let Err(KbError::Refused(why)) = super::repos::readable(&present, &patterns) {
+        return Ok(why);
+    }
     // About the present bytes under the same definition, yet stale: only a
     // pin can have stopped it (`ages_as`).
     if let Some(kind) = &judged.definition.ages_as
-        && report.snapshot.scoped(&patterns).digest == r.scope
+        && present == r.scope
     {
         return Ok(format!(
             "the receipt aged: this gate ages as {kind} (.writfold/sources/{kind}.toml); recorded {}",

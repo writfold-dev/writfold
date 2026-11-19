@@ -157,7 +157,15 @@ pub fn globs(c: &mut Check<'_>, patterns: &[Spanned<Text>], key: &str) -> bool {
     let mut ok = true;
     for p in patterns {
         let bare = p.str().strip_prefix('!').unwrap_or(p.str());
-        if bare.is_empty() || bare.starts_with('/') || bare.contains('\\') {
+        if !super::repos::well_formed(p.str()) {
+            let why = format!("{key} pattern {:?} must be repo:<store>/<glob>", p.str());
+            let d = c.error("value.form", Some(p.span), why);
+            d.label("not a store and a relative glob");
+            d.help(
+                "name a store declared in .writfold/stores/, such as \"repo:docs/adr/**\"".into(),
+            );
+            ok = false;
+        } else if bare.is_empty() || bare.starts_with('/') || bare.contains('\\') {
             let why = format!("{key} pattern {:?} is not a relative glob", p.str());
             let d = c.error("value.form", Some(p.span), why);
             d.label("not a relative glob");

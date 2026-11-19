@@ -182,6 +182,7 @@ fn rows(
         run_dir: &filings.run_dir,
     };
     let content = plain.snapshot.scoped(&d.patterns()).digest;
+    crate::gate::repos::readable(&content, &d.patterns())?;
     let commit = plain.snapshot.commit.as_str().to_owned();
     let observed = crate::observe::filed(&session.ws.root, &filings.run_dir);
     let mut out = Vec::new();

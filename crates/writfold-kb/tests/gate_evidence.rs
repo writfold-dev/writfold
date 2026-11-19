@@ -246,3 +246,83 @@ fn a_gate_that_ages_as_a_kind_goes_stale_when_its_receipt_ages() -> TestResult {
     );
     Ok(())
 }
+
+/// A store `docs` (origin and a clone the declaration's hint names) with
+/// `adr/0035.md` and `README.md`; its origin and clone.
+fn docs_store(w: &World) -> TestResult<(std::path::PathBuf, std::path::PathBuf)> {
+    use support::git;
+    let origin = w.base.join("docs");
+    std::fs::create_dir_all(origin.join("adr"))?;
+    git(&origin, &["init", "-q", "-b", "main"])?;
+    std::fs::write(origin.join("adr/0035.md"), "# ADR 35\n\nThe old API.\n")?;
+    std::fs::write(origin.join("README.md"), "docs\n")?;
+    git(&origin, &["add", "-A"])?;
+    git(&origin, &["commit", "-q", "-m", "adr"])?;
+    let clone = w.base.join("docs-clone");
+    let url = format!("file://{}", origin.display());
+    git(
+        &w.base,
+        &["clone", "-q", &url, &clone.display().to_string()],
+    )?;
+    put(
+        &w.kb.join(".writfold/stores/docs.toml"),
+        &format!(
+            "schema = \"writfold-store/1\"\nname = \"docs\"\nurl = \"{url}\"\nrole = \"attached\"\npaths = [\"{}\"]\n",
+            clone.display()
+        ),
+    )?;
+    Ok((origin, clone))
+}
+
+fn upstream(origin: &std::path::Path, clone: &std::path::Path, file: &str) -> TestResult {
+    use support::git;
+    std::fs::write(origin.join(file), "changed\n")?;
+    git(origin, &["commit", "-q", "-am", "change"])?;
+    git(clone, &["pull", "-q", "--ff-only"])?;
+    Ok(())
+}
+
+#[test]
+fn a_repo_scope_entry_stales_a_receipt_when_the_store_moves() -> TestResult {
+    let w = set_up("")?;
+    let (origin, clone) = docs_store(&w)?;
+    let unit = UNIT.replace(
+        "scope = [\"src/ledger.rs\"]",
+        "scope = [\"src/ledger.rs\", \"repo:docs/adr/**\"]",
+    );
+    put(&w.kb.join(".writfold/gates/unit.toml"), &unit)?;
+    run_unit(&w)?;
+    let (text, _) = status(&w)?;
+    assert_eq!(gate_standing(&text, "unit"), "satisfied", "{text}");
+    // Outside the entry's glob: still satisfied.
+    upstream(&origin, &clone, "README.md")?;
+    let (text, _) = status(&w)?;
+    assert_eq!(gate_standing(&text, "unit"), "satisfied", "{text}");
+    // Inside it: stale.
+    upstream(&origin, &clone, "adr/0035.md")?;
+    let (text, _) = status(&w)?;
+    assert_eq!(gate_standing(&text, "unit"), "stale", "{text}");
+    run_unit(&w)?;
+    let (text, _) = status(&w)?;
+    assert_eq!(gate_standing(&text, "unit"), "satisfied", "{text}");
+    // A store that cannot be read here never holds, and nothing is recorded.
+    std::fs::remove_file(w.kb.join(".writfold/stores/docs.toml"))?;
+    let (text, _) = status(&w)?;
+    assert_eq!(gate_standing(&text, "unit"), "stale", "{text}");
+    assert!(
+        text.contains("names repo:docs, which cannot be read here"),
+        "{text}"
+    );
+    let why = refusal(writfold_kb::run(&w.request(Verb::Gate(
+        writfold_kb::gate::GateVerb::Run {
+            id: "unit".into(),
+            run: Some(RUN.into()),
+            repo: Some(w.code.clone()),
+        },
+    ))));
+    assert!(
+        why.contains("names repo:docs, which cannot be read here"),
+        "{why}"
+    );
+    Ok(())
+}

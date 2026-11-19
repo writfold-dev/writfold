@@ -229,8 +229,10 @@ fn command(
     let git = tool.admit()?;
     let patterns = definition.patterns();
     let wanted = |p: &str| writfold_core::scope::in_scope(&patterns, p);
-    let before = subject::snapshot(&git, subject, &wanted)?;
+    let mut before = subject::snapshot(&git, subject, &wanted)?;
+    before.attach(&git, ws, patterns.iter().copied());
     let scoped = before.scoped(&patterns);
+    super::repos::readable(&scoped.digest, &patterns)?;
     let stem = name(&definition.id, now);
     let local = local_dir(ws, &rec.id, &stem)
         .ok_or_else(|| KbError::Refused("gates need a KB under Git".into()))?;
@@ -239,7 +241,8 @@ fn command(
     let evaluation = exec::run(definition, &subject.top, &artifacts);
     std::fs::write(local.join("stdout.tail"), &evaluation.stdout.bytes)?;
     std::fs::write(local.join("stderr.tail"), &evaluation.stderr.bytes)?;
-    let after = subject::snapshot(&git, subject, &wanted)?;
+    let mut after = subject::snapshot(&git, subject, &wanted)?;
+    after.attach(&git, ws, patterns.iter().copied());
     let moved = after.commit != before.commit || after.scoped(&patterns) != scoped;
     let bytes = receipt::bytes(&Facts {
         definition,

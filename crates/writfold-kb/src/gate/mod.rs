@@ -28,6 +28,7 @@ pub mod pins;
 pub mod places;
 pub mod policy;
 pub mod receipt;
+pub mod repos;
 mod run;
 mod say;
 pub mod statement;
