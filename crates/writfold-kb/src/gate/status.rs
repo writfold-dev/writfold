@@ -14,7 +14,7 @@ use crate::emit::{More, Row};
 use crate::error::{KbError, Result};
 use crate::session::Session;
 use std::path::Path;
-use writfold_core::gate::{Recorded, Standing, State, judge as judge_receipts, standing};
+use writfold_core::gate::{Evidence, Recorded, Standing, State, standing};
 use writfold_core::scope::in_scope;
 use writfold_runtime::git::GitExecutable;
 
@@ -191,6 +191,7 @@ pub fn judge_plain<'a>(
     let snapshot = snapshot(git, subject, &wanted)?;
     let valid = filings.parsed();
     let records = filings.owed.records.clone().unwrap_or_default();
+    let clock = super::pins::Clock::read(session);
     let mut gates = Vec::new();
     for definition in definitions {
         let content = match definition.run_record() {
@@ -203,6 +204,7 @@ pub fn judge_plain<'a>(
             filings,
             &subject.name,
             &content,
+            Some(&clock),
         ));
     }
     let report = Report {
@@ -224,6 +226,7 @@ pub fn judge_gate<'a>(
     filings: &'a Filings,
     repo: &str,
     content: &str,
+    clock: Option<&super::pins::Clock>,
 ) -> Judged<'a> {
     let mine: Vec<(&Filed, &Receipt)> = valid
         .iter()
@@ -239,7 +242,24 @@ pub fn judge_gate<'a>(
             bound: writfold_core::gate::bound(true, r.repo == repo, true),
         })
         .collect();
-    let (state, at) = judge_receipts(&recorded, definition.digest.as_bytes(), content.as_bytes());
+    // Each receipt through the gate kernel, about the present only while
+    // its pins hold (`ages_as`; `pin::current_under`).
+    let ages_as = definition.ages_as.as_deref();
+    let evidence: Vec<Evidence> = (recorded.iter().zip(&mine))
+        .map(|(rec, (_, r))| {
+            let e = writfold_core::gate::evidence(
+                rec,
+                definition.digest.as_bytes(),
+                content.as_bytes(),
+            );
+            let pins = super::pins::receipt(clock, ages_as, &r.recorded);
+            Evidence {
+                same_scope: writfold_core::pin::current_under(e.same_scope, &pins),
+                ..e
+            }
+        })
+        .collect();
+    let (state, at) = writfold_core::gate::state(&evidence);
     let receipt = at.and_then(|i| mine.get(i).copied());
     let statements = statement::summary(
         &filings.statements,
@@ -429,6 +449,16 @@ fn stale_why(
         );
     }
     let patterns = judged.definition.patterns();
+    // About the present bytes under the same definition, yet stale: only a
+    // pin can have stopped it (`ages_as`).
+    if let Some(kind) = &judged.definition.ages_as
+        && report.snapshot.scoped(&patterns).digest == r.scope
+    {
+        return Ok(format!(
+            "the receipt aged: this gate ages as {kind} (.writfold/sources/{kind}.toml); recorded {}",
+            r.recorded
+        ));
+    }
     Ok(
         match report
             .snapshot

@@ -10,7 +10,7 @@ use crate::defs::{Check, Field, Slot, Spanned, Text, Value};
 use std::path::Path;
 use writfold_core::diag::Report;
 
-const KEYS: [&str; 22] = [
+const KEYS: [&str; 23] = [
     "accept",
     "schema",
     "id",
@@ -33,6 +33,7 @@ const KEYS: [&str; 22] = [
     "none_found",
     "own_evidence",
     "evidence_from",
+    "ages_as",
 ];
 const COMMON: [&str; 7] = [
     "accept",
@@ -47,9 +48,14 @@ const COMMON: [&str; 7] = [
 /// The keys a class takes, for suggestions.
 fn keys_for(class: Option<&str>) -> Vec<&'static str> {
     let own: &[&str] = match class {
-        Some("mechanical" | "observed") => {
-            &["argv", "workdir", "timeout_seconds", "scope", "subject"]
-        }
+        Some("mechanical" | "observed") => &[
+            "argv",
+            "workdir",
+            "timeout_seconds",
+            "scope",
+            "subject",
+            "ages_as",
+        ],
         Some("attested") => &["scope", "subject"],
         Some(ASSESSED) => &["weft", "checks", "weft_sha256", "timeout_seconds"],
         Some(RUN_RECORD) => &["require"],
@@ -252,6 +258,7 @@ pub fn check(
     let assessed = super::assessed::spec::check(&mut c, &class, dir);
     let checklist = super::checklist::spec::check(&mut c, &class);
     let accept = super::def_accept::check(&mut c, &class);
+    let ages_as = def_class::ages_as(&mut c, &class);
     let files = command
         .as_ref()
         .and_then(|(argv, ..)| def_class::files(&mut c, argv, dir));
@@ -277,6 +284,7 @@ pub fn check(
             assessed: assessed?,
             checklist: checklist?,
             accept: accept?,
+            ages_as: ages_as?,
             dir: dir.to_path_buf(),
             digest: String::new(),
         })

@@ -78,3 +78,33 @@ pub fn word(pins: &[Pin]) -> &'static str {
         Some(Pin::Held) | None => "held",
     }
 }
+
+/// What ageing a receipt reads: the kind catalog and the time now.
+/// A catalog that cannot be read leaves every ageing receipt
+/// unreadable, so it never holds; gates that do not age are unaffected.
+pub struct Clock {
+    pub kinds: Option<Kinds>,
+    pub now: i64,
+}
+
+impl Clock {
+    pub fn read(session: &crate::session::Session<'_>) -> Clock {
+        Clock {
+            kinds: crate::stale::kinds::read(&session.ws.root).ok(),
+            now: session.now,
+        }
+    }
+}
+
+/// The pins of a receipt recorded at `recorded` of a gate that ages as
+/// `ages_as`: none when it does not age (its standing is then exactly the
+/// gate kernel's, `pin::current_under_refines`).
+pub fn receipt(clock: Option<&Clock>, ages_as: Option<&str>, recorded: &str) -> Vec<Pin> {
+    match (clock, ages_as) {
+        (Some(clock), Some(kind)) => vec![match &clock.kinds {
+            Some(kinds) => timed(kinds, kind, recorded, clock.now),
+            None => Pin::Unreadable,
+        }],
+        _ => Vec::new(),
+    }
+}

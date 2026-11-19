@@ -19,10 +19,12 @@ timeout_seconds = 600              # required for a command gate; 1 to 86400
 scope = ["src/**", "Cargo.toml", "!src/**/*.md"]   # required; see below
 description = "the unit tests"     # optional; one line
 accept = ["satisfied"]             # optional; which standings meet the gate (below)
+ages_as = "ci"                     # optional; mechanical and observed repository gates: receipts age (below)
 ```
 
 - **`argv`** is executed directly, with stdin closed. A first element containing `/` is resolved against `workdir`; otherwise `PATH` finds it. Placeholders: `{artifacts}` (a fresh local directory for the command's own output files), `{gate}`, `{candidate}` and `{source}` (below). Any other `{name}` is refused.
 - **Unknown keys are refused,** so a misspelt field never silently changes a gate. The files use a small TOML subset: top-level `key = value`, comments, strings, integers and arrays of strings.
+- **`ages_as`** (built in v0.6.0-dev.9) names a kind in the catalog (`.writfold/sources/KIND.toml`). A receipt then stands only while that kind's lifetime since it was recorded has not passed: for a gate about outside state (CI green, a bot's review) that an unchanged head cannot vouch for. An aged receipt reads `stale` with `why: the receipt aged: this gate ages as ci (.writfold/sources/ci.toml); recorded <time>`, and `gate run` makes it current again. An undeclared kind, or one with no `default_ttl`, never ages; a catalog that cannot be read leaves the gate stale. Candidate gates (delivery checks) refuse the key. The decision is the proved gate kernel with `pin::current_under` ([gate evidence spec](../writfold/gate-evidence-spec.md)).
 - **Changing** the command, working directory, timeout, class, version or scope makes earlier receipts stale. Changing comments, layout or the description does not.
 
 ### When a definition is wrong

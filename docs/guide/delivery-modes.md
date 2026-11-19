@@ -353,7 +353,7 @@ The done record gains an entry with `gate` `posted:pr-comment`, `standing` `atte
 
 A `claims.cited-fresh` receipt is bound to the candidate's bytes. A passed receipt also stands only while every citation token in the candidate is still fresh: on every read (`deliver status`, `resume`, the delivery guard and the plan) the tokens are run through `stale` again, locally, with nothing fetched, the same call `deliver check` makes. When any is no longer fresh the check reads `stale`, its line ends `; cited evidence moved: <n> of <m> citation tokens no longer fresh`, and the candidate is `[blocked]` until `deliver check` runs again on evidence that holds. When the evidence comes back, the receipt stands again. A waiver on the check still stands if the mode takes it: it is bound to the bytes and the check's definition, not to the receipt. A candidate with no citation token costs nothing more.
 
-Limits: a mode gate of class `observed` is not re-run on read, and a claim made in prose without a citation token is not seen.
+Limits: a mode gate of class `observed` is not re-run on read and does not age (`ages_as` is for repository gates), and a claim made in prose without a citation token is not seen.
 
 ## Your own modes
 

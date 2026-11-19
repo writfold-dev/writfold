@@ -95,6 +95,9 @@ pub struct Definition {
     /// `accept`, when written: the standings that meet the gate, in the
     /// order satisfied, attested, waived ([`super::def_accept`]).
     pub accept: Option<Vec<String>>,
+    /// `ages_as`, when written: the kind whose catalog lifetime its
+    /// receipts age by ([`super::def_class::ages_as`]).
+    pub ages_as: Option<String>,
     /// The directory holding the definition: what `{gate}` expands to.
     pub dir: PathBuf,
     /// `.writfold/gates/<id>.toml`, relative to its root.
@@ -189,6 +192,9 @@ pub fn digest(d: &Definition) -> String {
     // Only when written, so a definition without it keeps its digest.
     if let Some(accept) = &d.accept {
         canonical.push_str(&format!("accept={}\n", json(accept)));
+    }
+    if let Some(kind) = &d.ages_as {
+        canonical.push_str(&format!("ages_as={kind}\n"));
     }
     format!(
         "sha256:{}",

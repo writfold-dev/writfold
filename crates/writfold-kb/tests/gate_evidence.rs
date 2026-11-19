@@ -211,3 +211,38 @@ fn a_look_that_found_nothing_holds_while_what_it_searched_holds() -> TestResult 
     }
     Ok(())
 }
+
+fn gate_standing(text: &str, id: &str) -> String {
+    checklist::standing(text, id)
+}
+
+#[test]
+fn a_gate_that_ages_as_a_kind_goes_stale_when_its_receipt_ages() -> TestResult {
+    let w = set_up("")?;
+    put(
+        &w.kb.join(".writfold/gates/unit.toml"),
+        &format!("{UNIT}ages_as = \"probe\"\n"),
+    )?;
+    run_unit(&w)?; // recorded at NOW + 1h
+    let text = status_at(&w, support::NOW + 3600 + DAY)?;
+    assert_eq!(gate_standing(&text, "unit"), "satisfied", "{text}");
+    let text = status_at(&w, support::NOW + 3600 + DAY + 1)?;
+    assert_eq!(gate_standing(&text, "unit"), "stale", "{text}");
+    assert!(
+        text.contains("why: the receipt aged: this gate ages as probe"),
+        "{text}"
+    );
+    // Without `ages_as` a receipt never ages.
+    let w = set_up("")?;
+    run_unit(&w)?;
+    let text = status_at(&w, support::NOW + 400 * DAY)?;
+    assert_eq!(gate_standing(&text, "unit"), "satisfied", "{text}");
+    // Only command gates take it.
+    let w = set_up("ages_as = \"probe\"\n")?;
+    let text = status_at(&w, support::NOW)?;
+    assert!(
+        text.contains("`ages_as` is for mechanical and observed gates"),
+        "{text}"
+    );
+    Ok(())
+}
