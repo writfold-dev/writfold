@@ -31,6 +31,8 @@ pub struct Entry<'a> {
     pub recorded: usize,
     /// Whether the checklist restricts the reasoned outcomes at all.
     pub restricted: bool,
+    /// Binding notes on the row's references ([`super::bound`]).
+    pub bound: Vec<crate::emit::More>,
 }
 
 impl Entry<'_> {
@@ -119,7 +121,7 @@ impl Present<'_, '_, '_> {
     }
 }
 
-fn short(reference: &str) -> String {
+pub(super) fn short(reference: &str) -> String {
     let one: String = reference.split_whitespace().collect::<Vec<_>>().join(" ");
     match one.chars().count() > 60 {
         true => format!("{}…", one.chars().take(59).collect::<String>()),
@@ -212,6 +214,7 @@ pub fn judge<'a>(
                 why,
                 looked: crate::observe::looked(&observed, &d.id, &spec.id),
                 restricted: d.checklist.as_ref().is_some_and(|s| s.restricted()),
+                bound: Vec::new(),
             });
         }
         let cells: Vec<checklist::Entry> = (entries.iter())
@@ -246,5 +249,6 @@ pub fn judge<'a>(
             definition: d,
         });
     }
+    super::bound::annotate(&observed, &mut out);
     Ok(out)
 }

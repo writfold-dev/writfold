@@ -83,6 +83,11 @@ pub(crate) fn item_line(e: &Entry<'_>) -> More {
     if e.recorded > 0 {
         flags.push("recorded".to_owned());
     }
+    for flag in e.bound.iter().flat_map(|n| &n.flags) {
+        if !flags.contains(flag) {
+            flags.push(flag.clone());
+        }
+    }
     let mut extra = Vec::new();
     if e.restricted {
         let allowed = super::allowed::choices(&e.spec, true).unwrap_or_default();
@@ -133,6 +138,7 @@ pub fn row(subject: &Subject, judged: &Judged<'_>, view: &View<'_>) -> Row {
     };
     for e in &view.entries {
         row.more.push(item_line(e));
+        row.more.extend(e.bound.iter().cloned());
         row.more.extend(e.looked.clone());
     }
     crate::gate::policy::json_keys(&mut row, judged);

@@ -18,6 +18,7 @@
 //! against them only, so neither can cite the other.
 pub mod allowed;
 pub mod batch;
+mod bound;
 pub mod cover;
 mod judge;
 mod looks;

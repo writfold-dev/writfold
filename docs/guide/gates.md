@@ -460,6 +460,20 @@ A look that could not tell is still worth keeping. Record it with `--for GATE.IT
 
 `resume` also counts the run's observations: `observations: 4 (timeout, no-data, ok) in runs/<run>/observed/`.
 
+### Which item the evidence was for (built in v0.6.0-dev.9)
+
+Grounded is not the same as relevant: any grounded reference can back any item. `gate status` and `gate cover` add a `bound:` line under an item that stands `supported` or `none-found`, for each cited reference that
+- is a look recorded `--for` another item (`!other-item`); or
+- also backs other items that stand on it (`!shared`, with how many, across every checklist of the run).
+
+```text
+  item: errors [supported] 1 reference by agent @runs/run-…/covers/review.errors-….json:1 !other-item !shared
+  bound: recorded for review.perf, not this item @runs/run-…/observed/20261111T000000Z-….json:1 !other-item
+  bound: also backs 1 other item @runs/run-…/observed/20261111T000000Z-….json:1 !shared
+```
+
+These lines only report: no item's standing changes and nothing is refused. A shared reference is often right (one test run can answer several items), so the count is there for a reader, not a rule. Letting an item require its own evidence is planned ([gate evidence spec](../writfold/gate-evidence-spec.md), stage 3).
+
 ## What is claimed
 
 - **Mistakes, not adversaries.** A gate catches a forgotten check, a check run on other bytes, and a "tests pass" that is stale. A careful forger can still write a receipt that reads as valid; nothing is signed.
