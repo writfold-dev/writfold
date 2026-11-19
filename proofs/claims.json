@@ -20,7 +20,7 @@
         "assumption-ignores-attested"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -40,7 +40,7 @@
         "basis-ignores-premises"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -59,7 +59,7 @@
         "met-accepts-hypothetical"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -83,7 +83,7 @@
         "assessed-incomplete-passes"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -104,7 +104,7 @@
         "answered-reads-past-end"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -128,7 +128,7 @@
         "named-accepts-this"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -152,7 +152,7 @@
         "item-under-ignores-answer"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -172,7 +172,7 @@
         "same-ignores-last-byte"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -192,7 +192,7 @@
         "any-stale-skips-last"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -215,7 +215,7 @@
         "covered-none-found-without-policy"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -235,7 +235,7 @@
         "first-owed-skips-last"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -259,7 +259,7 @@
         "item-none-found-no-evidence"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -278,7 +278,7 @@
         "rollup-ignores-required"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -297,7 +297,7 @@
         "stale-ignores-required"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -318,7 +318,7 @@
         "checklist-attested-when-stale"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -337,7 +337,7 @@
         "is-help-wrong-byte"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -358,7 +358,7 @@
         "named-help-not-alone"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -386,7 +386,7 @@
         "landing-written"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -410,7 +410,7 @@
         "deciding-stops-at-withdrawn"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -426,7 +426,7 @@
         "fact-accepts-when-unready"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -446,7 +446,7 @@
         "first-unmet-skips-last"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -469,7 +469,7 @@
         "guard-unread-deny-allows"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -491,7 +491,7 @@
         "guard-all-skips-last"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -511,7 +511,7 @@
         "guard-any-skips-last"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -534,7 +534,7 @@
         "postable-drops-spent"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -556,7 +556,7 @@
         "posted-satisfied"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -578,7 +578,7 @@
         "ready-from-standing"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -597,7 +597,7 @@
         "rechecked-keeps-satisfied"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -616,7 +616,7 @@
         "refused-any-unmet"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -639,7 +639,7 @@
         "delivery-waived-satisfied"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -659,7 +659,7 @@
         "delivery-accept-ignored"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -678,7 +678,7 @@
         "blocks-any-warning"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -697,7 +697,7 @@
         "admit-shows-twice"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -717,7 +717,7 @@
         "full-late"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -737,7 +737,7 @@
         "next-from-reversed"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -757,7 +757,7 @@
         "prefixed-reuses-token"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -776,7 +776,7 @@
         "query-ok-three-chars"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -796,7 +796,7 @@
         "starts-skips-last"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -815,7 +815,7 @@
         "met-counts-stale"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -834,7 +834,7 @@
         "about-ignores-definition"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -853,7 +853,7 @@
         "attests-ignores-bound"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -872,7 +872,7 @@
         "bound-ignores-subject"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -893,7 +893,7 @@
         "current-ignores-bound"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -914,7 +914,7 @@
         "evidence-accepts-empty-content"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -937,7 +937,7 @@
         "judge-drops-newest"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -957,7 +957,7 @@
         "stale-from-unbound"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -980,7 +980,7 @@
         "outcome-nonzero-unknown"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1004,7 +1004,7 @@
         "attestation-satisfies"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1024,7 +1024,7 @@
         "stands-ignores-kind"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1050,7 +1050,7 @@
         "state-failed-satisfies"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1070,7 +1070,7 @@
         "statements-counts-moved-waiver"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1089,7 +1089,7 @@
         "moved-ignores-word"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1109,7 +1109,7 @@
         "citations-zero-grounds"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1132,7 +1132,7 @@
         "of-gate-ignores-found"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1151,7 +1151,7 @@
         "observation-no-citation-grounds"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1172,7 +1172,7 @@
         "receipt-ignores-gate-met"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1191,7 +1191,7 @@
         "statement-not-current-attested"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1210,7 +1210,7 @@
         "token-many-grounds"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1230,7 +1230,7 @@
         "all-met-skips-last"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1251,7 +1251,7 @@
         "combine-ask-over-deny"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1272,7 +1272,7 @@
         "decide-ignores-facts"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1293,7 +1293,7 @@
         "effect-enforces-audit"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1314,7 +1314,7 @@
         "gates-fact-ignores-invalid"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1333,7 +1333,7 @@
         "all-met-accepts-unknown"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1352,7 +1352,7 @@
         "nudge-while-active"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1371,7 +1371,7 @@
         "nudge-with-ignores-repeat"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1390,7 +1390,7 @@
         "verdict-deny-asks"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1411,7 +1411,7 @@
         "decide-all-drops-last"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1430,7 +1430,7 @@
         "logged-drops-waiver"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1450,7 +1450,7 @@
         "gate-fact-undefined-met"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1469,7 +1469,7 @@
         "gates-read-unread-counts"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1488,7 +1488,7 @@
         "run-current-closed"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1508,7 +1508,7 @@
         "step-fact-met-unread"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1527,7 +1527,7 @@
         "idle-saturated-compare"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1535,15 +1535,21 @@
       "function": "newer",
       "lean": "writfold_core.idle.newer",
       "theorems": [
-        "Writfold.Core.Idle.newer_spec"
+        "Writfold.Core.Idle.newer_past_end",
+        "Writfold.Core.Idle.newer_spec",
+        "Writfold.Core.Idle.newer_total"
       ],
-      "total": null,
-      "subsumes": [],
+      "total": "Writfold.Core.Idle.newer_total",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
       "mutants": [
-        "newest-last-of-equal"
+        "newest-last-of-equal",
+        "newer-reads-past-end"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1563,7 +1569,7 @@
         "newest-skips-last"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1582,7 +1588,7 @@
         "since-off-by-one"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1601,7 +1607,7 @@
         "none-ignores-open"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1622,7 +1628,7 @@
         "conclude-skips-last"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1641,7 +1647,7 @@
         "embeds-drops-partial"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1660,7 +1666,7 @@
         "observation-partial-grounds"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1681,7 +1687,7 @@
         "less-equal-names"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1700,7 +1706,7 @@
         "precedes-higher-seq"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1721,7 +1727,7 @@
         "current-under-ignores-about"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1742,7 +1748,7 @@
         "holds-reads-past-end"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1762,7 +1768,7 @@
         "nothing-found-ignores-pins"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1782,7 +1788,7 @@
         "timed-default-never-ages"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1804,7 +1810,7 @@
         "advance-refuses-no-gates"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1825,7 +1831,7 @@
         "advance-ignores-gates"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1844,7 +1850,7 @@
         "close-check-ignores-present"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1863,7 +1869,7 @@
         "closed-ignores-skip"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1883,7 +1889,7 @@
         "contains-misses-last"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1905,7 +1911,7 @@
         "current-returns-last"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1925,7 +1931,7 @@
         "fact-met-ignores-policy"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1945,7 +1951,7 @@
         "first-owed-inverted"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1965,7 +1971,7 @@
         "met-all-drops-last"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -1985,7 +1991,7 @@
         "skip-without-lock"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2005,7 +2011,7 @@
         "skipped-ignores-lock"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2026,7 +2032,7 @@
         "splice-drops-last-step"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2052,7 +2058,7 @@
         "splice-check-admits-complete"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2072,7 +2078,7 @@
         "stale-ignores-done"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2095,7 +2101,7 @@
         "recheck-ignores-plan"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2116,7 +2122,7 @@
         "writable-manifest-wins"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2143,7 +2149,7 @@
         "open-shared-any-run"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2168,7 +2174,7 @@
         "open-shared-any-run"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2193,7 +2199,7 @@
         "open-shared-any-run"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2214,7 +2220,7 @@
         "writes-no-session"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2234,7 +2240,7 @@
         "all-passed-skips-last"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2254,7 +2260,7 @@
         "any-attested-skips-last"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2274,7 +2280,7 @@
         "pin-all-misses-moved"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2294,7 +2300,7 @@
         "any-open-skips-last"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2314,7 +2320,7 @@
         "any-unpinned-skips-last"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2334,7 +2340,7 @@
         "any-waived-skips-last"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2356,7 +2362,7 @@
         "close-waived-passed"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2377,7 +2383,7 @@
         "met-default-counts-stale"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2398,7 +2404,7 @@
         "pin-all-empty-same"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2419,7 +2425,7 @@
         "pin-one-missing-same"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2445,7 +2451,7 @@
         "summary-complete-with-skip"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2466,7 +2472,7 @@
         "skipped-unnamed"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2485,7 +2491,7 @@
         "closes-stale"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2505,7 +2511,7 @@
         "clean-ignores-invalid"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2525,7 +2531,7 @@
         "owed-ignores-skip"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2547,7 +2553,7 @@
         "in-force-skips-oldest"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2575,7 +2581,7 @@
         "repin-reopens-skip"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2583,16 +2589,22 @@
       "function": "char_step",
       "lean": "writfold_core.scope.char_step",
       "theorems": [
-        "Writfold.Core.Scope.char_step_spec"
+        "Writfold.Core.Scope.char_step_outside",
+        "Writfold.Core.Scope.char_step_spec",
+        "Writfold.Core.Scope.char_step_total"
       ],
-      "total": null,
-      "subsumes": [],
+      "total": "Writfold.Core.Scope.char_step_total",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
       "mutants": [
         "segment-no-backtrack",
-        "star-needs-a-char"
+        "star-needs-a-char",
+        "char-step-stretches-out"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2615,7 +2627,7 @@
         "covers-empty-includes"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2634,7 +2646,7 @@
         "globstar-one-star"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2653,7 +2665,7 @@
         "include-ignores-hit"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2661,16 +2673,22 @@
       "function": "path_step",
       "lean": "writfold_core.scope.path_step",
       "theorems": [
-        "Writfold.Core.Scope.path_step_spec"
+        "Writfold.Core.Scope.path_step_outside",
+        "Writfold.Core.Scope.path_step_spec",
+        "Writfold.Core.Scope.path_step_total"
       ],
-      "total": null,
-      "subsumes": [],
+      "total": "Writfold.Core.Scope.path_step_total",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
       "mutants": [
         "globstar-needs-a-segment",
-        "segments-accept-trailing"
+        "segments-accept-trailing",
+        "path-step-stretches-out"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2689,7 +2707,7 @@
         "same-char-ignores-any"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2718,7 +2736,7 @@
         "artifact-absent-as-unanchored"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2738,7 +2756,7 @@
         "basis-ignores-rev"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2762,7 +2780,7 @@
         "pinned-other-bytes-fresh"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2788,7 +2806,7 @@
         "resolve-hint-before-search"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2814,7 +2832,7 @@
         "pick-checkout-nothing"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2834,7 +2852,7 @@
         "aged-keeps-unreadable"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2855,7 +2873,7 @@
         "exchange-first-of-two"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2874,7 +2892,7 @@
         "expired-overflow-kept"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2893,7 +2911,7 @@
         "handshake-kind-as-op"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2912,7 +2930,7 @@
         "lifetime-token-as-default"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2937,7 +2955,7 @@
         "unsearched-fresh"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2958,7 +2976,7 @@
         "mark-hides-change"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2980,7 +2998,7 @@
         "place-ignores-cited"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -2999,7 +3017,7 @@
         "window-cited-off-by-one"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -3018,7 +3036,7 @@
         "before-prefers-older"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -3038,7 +3056,7 @@
         "best-recorded-skips-last"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -3046,15 +3064,21 @@
       "function": "better",
       "lean": "writfold_core.verdict.recorded.better",
       "theorems": [
-        "Writfold.Core.Recorded.better_spec"
+        "Writfold.Core.Recorded.better_past_end",
+        "Writfold.Core.Recorded.better_spec",
+        "Writfold.Core.Recorded.better_total"
       ],
-      "total": null,
-      "subsumes": [],
+      "total": "Writfold.Core.Recorded.better_total",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
       "mutants": [
-        "better-tie-takes-later"
+        "better-tie-takes-later",
+        "better-past-end-underflows"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -3074,7 +3098,7 @@
         "newest-local-on-tie"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -3093,7 +3117,7 @@
         "recordable-unverifiable"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -3112,7 +3136,7 @@
         "recorded-age-no-skew"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     },
     {
       "crate": "writfold-core",
@@ -3131,7 +3155,7 @@
         "complete-ignores-skipped"
       ],
       "outcome": "proved",
-      "fingerprint": "fnv1a64:f490957dd45c761e"
+      "fingerprint": "fnv1a64:fd41bf459f6dfdbb"
     }
   ]
 }

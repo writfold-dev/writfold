@@ -60,9 +60,14 @@ pub fn same_char(pattern: u32, text: u32) -> bool {
 
 /// One step of [`segment`]: a `*` is recorded first; at the end of the
 /// text only trailing `*`s remain to match; then `?` or the same
-/// character; then the last `*` stretches by one; else no match.
+/// character; then the last `*` stretches by one; else no match. Every
+/// cursor a match reaches has `at` inside the pattern and `from` inside
+/// the text when it stretches; a cursor outside that is no match.
 pub fn char_step(pattern: &[u32], text: &[u32], c: Cursor) -> Next {
-    if c.i < pattern.len() && pattern[c.i] == STAR {
+    let here = pattern.get(c.i);
+    if let Some(p) = here
+        && *p == STAR
+    {
         return Next::Go(Cursor {
             i: c.i + 1,
             j: c.j,
@@ -71,10 +76,13 @@ pub fn char_step(pattern: &[u32], text: &[u32], c: Cursor) -> Next {
             from: c.j,
         });
     }
-    if c.j >= text.len() {
-        return Next::Done(c.i == pattern.len());
-    }
-    if c.i < pattern.len() && same_char(pattern[c.i], text[c.j]) {
+    let t = match text.get(c.j) {
+        Some(t) => t,
+        None => return Next::Done(c.i == pattern.len()),
+    };
+    if let Some(p) = here
+        && same_char(*p, *t)
+    {
         return Next::Go(Cursor {
             i: c.i + 1,
             j: c.j + 1,
@@ -83,7 +91,7 @@ pub fn char_step(pattern: &[u32], text: &[u32], c: Cursor) -> Next {
             from: c.from,
         });
     }
-    if c.starred {
+    if c.starred && c.at < pattern.len() && c.from < text.len() {
         return Next::Go(Cursor {
             i: c.at + 1,
             j: c.from + 1,
@@ -114,7 +122,10 @@ pub fn globstar(segment: &[u32]) -> bool {
 /// One step of [`segments`]: [`char_step`] one level up, with a `**`
 /// segment for `*` and [`segment`] for the same character.
 pub fn path_step(wanted: &[Vec<u32>], parts: &[Vec<u32>], c: Cursor) -> Next {
-    if c.i < wanted.len() && globstar(&wanted[c.i]) {
+    let here = wanted.get(c.i);
+    if let Some(w) = here
+        && globstar(w)
+    {
         return Next::Go(Cursor {
             i: c.i + 1,
             j: c.j,
@@ -123,10 +134,13 @@ pub fn path_step(wanted: &[Vec<u32>], parts: &[Vec<u32>], c: Cursor) -> Next {
             from: c.j,
         });
     }
-    if c.j >= parts.len() {
-        return Next::Done(c.i == wanted.len());
-    }
-    if c.i < wanted.len() && segment(&wanted[c.i], &parts[c.j]) {
+    let part = match parts.get(c.j) {
+        Some(part) => part,
+        None => return Next::Done(c.i == wanted.len()),
+    };
+    if let Some(w) = here
+        && segment(w, part)
+    {
         return Next::Go(Cursor {
             i: c.i + 1,
             j: c.j + 1,
@@ -135,7 +149,7 @@ pub fn path_step(wanted: &[Vec<u32>], parts: &[Vec<u32>], c: Cursor) -> Next {
             from: c.from,
         });
     }
-    if c.starred {
+    if c.starred && c.at < wanted.len() && c.from < parts.len() {
         return Next::Go(Cursor {
             i: c.at + 1,
             j: c.from + 1,

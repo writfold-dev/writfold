@@ -61,6 +61,9 @@ them are TAU-D001 documentation):
 
 After the proof claims (below): 130 of these (N001 57, P003 73) are
 subsumed by proofs, and the baseline accepts 549 (N001 239, P003 194).
+After the total helpers (stage 2c, below): 142 are subsumed (N001 69,
+P003 73), 10 P003 are gone from the source, and the baseline accepts 527
+(N001 227, P003 184).
 
 By crate after the fixes: `writfold-core` 248, `writfold-domain` 155,
 `tuft` 129, `writfold-sources` 103, `writfold-runtime` 26, `writfold-kb` 17,
@@ -126,7 +129,7 @@ new errors with the baseline in place.
 
 | Group | Count | Why it is not fixed here |
 |---|---:|---|
-| `writfold-core` N001/P003 inside the extraction roots (`start_from`) | 29 (130 of 159 now subsumed by proofs; see "Proof claims") | The functions whose only theorems carry hypotheses: `plan::splice` (7; needs `nodes.len() + count ≤ usize::MAX`, and does panic past it), `scope::char_step` and `scope::path_step` (9 each; need the matcher's cursor invariant), `verdict::recorded::better` (3) and `idle::newer` (1) (need `i < len`). All are `pub` but called only from proved total functions in the crate. |
+| `writfold-core` N001/P003 inside the extraction roots (`start_from`) | 7 (142 of 159 now subsumed by proofs and 10 removed; see "Proof claims" and "Total helpers") | `plan::splice` only: its theorems need `nodes.len() + count ≤ usize::MAX`, and past that bound it does panic (the inserted length overflows `usize`). That is real behaviour, not a missing proof, so it was left alone: a total `splice` would have to choose a result for a run graph longer than memory can hold, which is no improvement on a panic. |
 | `writfold-core` M001 inside the extraction roots | 11 | Not subsumed by proofs (exhaustiveness is about future variants, not runtime failure), but a fix changes extracted kernel code (`decision.rs` has 8). Recorded for the owner; do with the next proved change to those kernels. |
 | `writfold-core` outside the extraction roots | 78 (N001 54, P003 23, M001 1) | Text plumbing that `AGENTS.md` keeps tested-only: `diag` rendering, `command`'s reader, `walk`, `decision::State::parse`, `verdict::locate::locate`. Fixable without proofs, but it is in the kernel crate and some may be reachable from extracted items; check reachability first. |
 | `writfold-domain` | 155 (130 in `verus!` files) | Verus-annotated legacy code; editing inside `verus!` with `ensures` clauses needs a Verus run to stay coherent. The owner should decide whether this code shrinks before it is tightened. |
@@ -183,9 +186,62 @@ cargo tauten baseline                                # only after the claims are
 ```
 
 Any edit under `crates/writfold-core/` or `proofs/` (including
-`claims.toml`) makes every claim stale: the 130 findings return as errors
-and the check fails until `cargo tauten proofs` runs again. That is the
-intended binding, and its cost here is a full gate run.
+`claims.toml`) makes every claim stale: the 142 subsumed findings return
+as errors and the check fails until `cargo tauten proofs` runs again. That
+is the intended binding, and its cost here is a full gate run.
+
+**Owner decisions (19 November 2026).** The owner accepted the 10 mutants
+and required claims added for stage 2b, and accepts a full claims re-run
+(`cargo tauten proofs`, about 1h45 now) after every kernel or proofs edit
+for now, rather than a finer fingerprint.
+
+## Total helpers (stage 2c, 19 November 2026)
+
+The owner chose to make the four helpers whose theorems needed a
+precondition total, rather than ask tauten for caller credit (finding 6).
+Each now reads through `get` and handles `None`, and guards the arithmetic
+the precondition used to justify; on every input the old precondition
+allowed it does exactly what it did (the old theorems are kept and still
+hold), and outside it the result is the conservative one:
+
+| Function | Out-of-precondition behaviour now (was: panic) | Theorems added |
+|---|---|---|
+| `idle::newer` | A position past the end has no stamp: never newer (`false`). | `newer_total`, `newer_past_end` |
+| `verdict::recorded::better` | An `index` past the end keeps the best so far; a best so far past the end is replaced by any usable statement (as if there were none). | `better_total`, `better_past_end` |
+| `scope::char_step` | A `*` stretch from a cursor whose `at` is outside the pattern or `from` outside the text is no match (`Done(false)`), instead of `at + 1`/`from + 1` overflowing. | `char_step_total`, `char_step_outside` |
+| `scope::path_step` | The same one level up, for `**`. | `path_step_total`, `path_step_outside` |
+
+No public behaviour of writfold changed: the helpers are called only by
+`newest`, `best_recorded`, `segment` and `segments`, which pass only
+in-precondition arguments (their theorems are unchanged). New unit tests
+pin the out-of-precondition results (`newer_past_the_end_is_false`,
+`better_past_the_end_never_panics`, `cursors_outside_the_input_are_no_match`).
+
+Proof side: `proofs/Writfold/Get.lean` (`slice_get_ok`: Aeneas's
+`<[T]>::get` at a `usize` is `ok s.val[i]?`, no axiom), re-proved
+`newer_spec`, `better_spec`, `char_step_spec`, `path_step_spec`, the eight
+theorems above (all in `Audit.lean`'s required claims), and four new
+mutants, each of which reintroduces the old failure outside the
+precondition and is rejected by the total theorem (and the matching
+`_past_end`/`_outside` theorem) but not by the precondition spec:
+`newer-reads-past-end`, `better-past-end-underflows`,
+`char-step-stretches-out`, `path-step-stretches-out`. Six existing mutants
+were re-targeted to the new source text with the same intent
+(`segment-no-backtrack`, `star-needs-a-char`, `globstar-needs-a-segment`,
+`segments-accept-trailing`, which now also breaks `path_step_outside`,
+`better-tie-takes-later`, `newest-last-of-equal`).
+
+**Result.** Gate run through the adapter (`cargo tauten proofs`, tauten
+main `ca17666`): 105 minutes, drift check clean, `lake build`, axiom audit
+of 674 theorems (382 required claims), 236 mutants calibrated; 151 claims,
+all `proved`, 149 with a total theorem (the two without: `splice` and
+`fact`). Of the 29 findings left by stage 2b, 22 are resolved: the 12
+N001 (`c.i + 1`, `c.at + 1`, ... in the two step functions) are subsumed by
+the new total theorems, and the 10 P003 (`newer` 1, `better` 3,
+`char_step` 3, `path_step` 3) no longer exist, since the source now uses
+`get`. `scripts/tauten-check` passes with 0 errors, 142 subsumed, 527
+accepted by the baseline; the same result with tauten main `bbb20eb`
+(0.0.3).
 
 ## Findings about tauten
 
@@ -197,9 +253,9 @@ Reported for tauten; nothing in tauten was changed.
 4. **X001 splits a reason string at commas** (tauten 3b7512e). Text after a comma inside `reason = "..."` is read as a lint name: `#![allow(clippy::needless_return, reason = "a, b c")]` reports a second finding for a "lint" named `bc"` (spaces dropped, closing quote kept). On writfold-core's old attribute it produced `#![allow(indexedloopsandpushes…)]`.
 5. **Adoption friction, not bugs.** rustfmt expands every `#[expect(.., reason = "..")]` to four lines (19 statement-level exceptions added 76 lines); the agent profile's "do not add `#[allow]`" has no answer for helper modules shared by several test binaries; and a project's own checker may treat `expect` as a panic (writfold-xtask did, fixed above).
 
-6. **No credit for helpers with preconditions** (gap, by design). Subsumption is per function and needs a hypothesis-free `total` theorem, so a helper proved only under its callers' precondition keeps its findings even when every caller is proved total. 29 writfold findings stay for this reason (table above). Repro (kernel tier): `pub fn pick(v: &[u8], i: usize) -> u8 { v[i] }` with `pick_spec (h : i < v.len) : pick v i ⦃ _ ⦄` and `pub fn first(v: &[u8]) -> u8 { if v.is_empty() { 0 } else { pick(v, 0) } }` with a total `first_spec`: the P003 in `pick` is an error. For a `pub` helper this is correct (an outside caller can panic it); for a private helper tauten could credit a precondition theorem when every caller in the crate is claimed total. Writfold's four helpers are `pub` but used only inside the crate.
+6. **No credit for helpers with preconditions** (gap, by design). Subsumption is per function and needs a hypothesis-free `total` theorem, so a helper proved only under its callers' precondition keeps its findings even when every caller is proved total. 29 writfold findings stayed for this reason after stage 2b; stage 2c made the four helpers total instead, so none stay now. Repro (kernel tier): `pub fn pick(v: &[u8], i: usize) -> u8 { v[i] }` with `pick_spec (h : i < v.len) : pick v i ⦃ _ ⦄` and `pub fn first(v: &[u8]) -> u8 { if v.is_empty() { 0 } else { pick(v, 0) } }` with a total `first_spec`: the P003 in `pick` is an error. For a `pub` helper this is correct (an outside caller can panic it); for a private helper tauten could credit a precondition theorem when every caller in the crate is claimed total. Writfold's four helpers were `pub` but used only inside the crate.
 7. **The total-shape check lives in project code.** `cargo tauten proofs` trusts `{"total": …}` lines; the shape check is the template's `Audit.lean`. A project with its own Lean layout must reproduce it (writfold: `proofs/Total.lean`, a copy of `totalOver` over `Writfold.Core`, because the template assumes a `Proofs` library). A gate that printed a `total` line for any theorem would be believed; only review of the adapter guards against that. Worth stating in tauten's TRUST.md.
-8. **The fingerprint is coarse and misses an input.** It covers the whole crate directory and all of `proofs/`, so editing untranslated `diag` rendering, a test, or `claims.toml` itself stales all 151 claims (here a 96-minute rerun). It does not cover the workspace `Cargo.toml`, which `proofs/extract.sh` copies into the translation (inherited `edition` and package keys): an edit there leaves the claims fresh. Read from `current_fingerprints` in `cargo-tauten/src/proofs.rs` (not run): only member directories and `proofs/` are hashed.
+8. **The fingerprint is coarse and misses an input.** It covers the whole crate directory and all of `proofs/`, so editing untranslated `diag` rendering, a test, or `claims.toml` itself stales all 151 claims (here a 96-minute rerun). It does not cover the workspace `Cargo.toml`, which `proofs/extract.sh` copies into the translation (inherited `edition` and package keys): an edit there leaves the claims fresh. Read from `current_fingerprints` in `cargo-tauten/src/proofs.rs` (not run): only member directories and `proofs/` are hashed. Fixed in tauten `f1612e7`: the workspace manifest and toolchain pin are now hashed too (the stage 2c claims were recorded under it). The coarseness stands: stage 2c's new unit tests alone would have staled every claim.
 9. **Mutant semantics differ.** tauten's template counts a theorem as broken when its proof fails or it depends on `sorry`; writfold's `mutants.py` counts direct failures only and requires the exact named set. The adapter reports writfold's narrower set, which is conservative (for example `newest-last-of-equal` breaks `newer_spec`; under tauten's rule it would also break `newest_loop_spec`, which uses it), but it is why eight mutants had to be added.
 10. **The `total` shape is not too strict for writfold.** 229 theorems already had it (most `*_spec` triples are hypothesis-free); only loop helpers and index-taking helpers did not.
 
@@ -214,10 +270,9 @@ Reported for tauten; nothing in tauten was changed.
    or `#[expect(clippy::map_err_ignore, reason)]` where nothing is lost);
    `writfold-sources` parsers with property tests; `writfold-core` plumbing
    outside the extraction roots after a reachability check.
-4. Kernel N001/P003: done for 130 findings ("Proof claims"). The 29 left
-   need either a narrower API (make the four helpers private and ask tauten
-   for caller credit, finding 6) or `get`-based rewrites with re-proofs; fix
-   kernel M001 together with the next proved change to those kernels.
+4. Kernel N001/P003 in the extraction roots: done except `plan::splice`
+   (7, a real panic past a capacity bound; see the table). Fix kernel M001
+   together with the next proved change to those kernels.
 5. Frozen components and the Verus-legacy domain code stay baselined until
    they are retired or unfrozen.
 6. When a crate's baseline is empty, make tauten required for that crate

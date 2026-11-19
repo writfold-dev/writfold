@@ -540,14 +540,6 @@
     {
       "id": "TAU-N001",
       "crate": "writfold-core",
-      "file": "crates/writfold-core/src/scope.rs",
-      "source": "clippy::arithmetic_side_effects",
-      "message": "arithmetic operation that can potentially result in unexpected side-effects",
-      "count": 12
-    },
-    {
-      "id": "TAU-N001",
-      "crate": "writfold-core",
       "file": "crates/writfold-core/src/verdict/locate.rs",
       "source": "clippy::arithmetic_side_effects",
       "message": "arithmetic operation that can potentially result in unexpected side-effects",
@@ -916,34 +908,10 @@
     {
       "id": "TAU-P003",
       "crate": "writfold-core",
-      "file": "crates/writfold-core/src/idle.rs",
-      "source": "clippy::indexing_slicing",
-      "message": "indexing may panic",
-      "count": 1
-    },
-    {
-      "id": "TAU-P003",
-      "crate": "writfold-core",
       "file": "crates/writfold-core/src/plan.rs",
       "source": "clippy::indexing_slicing",
       "message": "indexing may panic",
       "count": 4
-    },
-    {
-      "id": "TAU-P003",
-      "crate": "writfold-core",
-      "file": "crates/writfold-core/src/scope.rs",
-      "source": "clippy::indexing_slicing",
-      "message": "indexing may panic",
-      "count": 6
-    },
-    {
-      "id": "TAU-P003",
-      "crate": "writfold-core",
-      "file": "crates/writfold-core/src/verdict/recorded.rs",
-      "source": "clippy::indexing_slicing",
-      "message": "indexing may panic",
-      "count": 3
     },
     {
       "id": "TAU-P003",

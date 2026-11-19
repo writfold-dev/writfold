@@ -1,4 +1,5 @@
 import Extracted.WritfoldCore
+import Writfold.Get
 
 /-!
 # Check receipts: what may be shared, how old it is, which one is used
@@ -158,24 +159,22 @@ theorem better_spec (rs : Slice verdict.recorded.Statement) (best : Option Usize
     (hi : i.val < rs.val.length) (hb : BestUpTo rs.val i.val best) :
     verdict.recorded.better rs best i ⦃ r => BestUpTo rs.val (i.val + 1) r ⦄ := by
   unfold verdict.recorded.better
-  step as ⟨ s, hs ⟩
+  simp only [slice_get_ok, List.getElem?_eq_getElem hi, bind_ok]
   step with usable_spec as ⟨ u, hu ⟩
   split
   · rename_i hut
-    have hus : Usable rs.val[i.val] := by rw [← hs]; exact hu.mp hut
+    have hus : Usable rs.val[i.val] := hu.mp hut
     rcases best with _ | b
     · simp only [WP.spec_ok, BestUpTo]
       refine ⟨hi, by omega, hus, ?_⟩
       intro j hj hjn hji hju
       exact absurd hju (hb j hj (by omega))
     · obtain ⟨hbl, hbn, hbu, hball⟩ := hb
-      simp only
-      step as ⟨ s1, hs1 ⟩
+      simp only [List.getElem?_eq_getElem hbl]
       step with before_spec as ⟨ c, hc ⟩
       split
       · rename_i hct
-        have hbef : Before rs.val[i.val] rs.val[b.val] := by
-          rw [← hs, ← hs1]; exact hc.mp hct
+        have hbef : Before rs.val[i.val] rs.val[b.val] := hc.mp hct
         simp only [WP.spec_ok, BestUpTo]
         refine ⟨hi, by omega, hus, ?_⟩
         intro j hj hjn hji hju
@@ -187,8 +186,7 @@ theorem better_spec (rs : Slice verdict.recorded.Statement) (best : Option Usize
           · exact before_of_le hbef (before_asymm h)
           · exact before_of_le hbef h
       · rename_i hct
-        have hnot : ¬ Before rs.val[i.val] rs.val[b.val] := by
-          rw [← hs, ← hs1]; exact fun h => hct (hc.mpr h)
+        have hnot : ¬ Before rs.val[i.val] rs.val[b.val] := fun h => hct (hc.mpr h)
         simp only [WP.spec_ok, BestUpTo]
         refine ⟨hbl, by omega, hbu, ?_⟩
         intro j hj hjn hjb hju
@@ -196,7 +194,7 @@ theorem better_spec (rs : Slice verdict.recorded.Statement) (best : Option Usize
         · subst hji; right; exact ⟨hnot, hbn⟩
         · exact hball j hj (by omega) hjb hju
   · rename_i hut
-    have hnu : ¬ Usable rs.val[i.val] := by rw [← hs]; exact fun h => hut (hu.mpr h)
+    have hnu : ¬ Usable rs.val[i.val] := fun h => hut (hu.mpr h)
     simp only [WP.spec_ok]
     rcases best with _ | b
     · simp only [BestUpTo] at hb ⊢
@@ -210,6 +208,32 @@ theorem better_spec (rs : Slice verdict.recorded.Statement) (best : Option Usize
       by_cases hji : j = i.val
       · subst hji; exact absurd hju hnu
       · exact hball j hj (by omega) hjb hju
+
+/-- `better` never fails, at any index and from any best so far (tauten's
+total shape, docs/writfold/tauten-adoption.md). -/
+theorem better_total (rs : Slice verdict.recorded.Statement) (best : Option Usize) (i : Usize) :
+    verdict.recorded.better rs best i ⦃ _ => True ⦄ := by
+  unfold verdict.recorded.better
+  simp only [slice_get_ok, bind_ok]
+  split
+  · simp
+  · step with usable_spec as ⟨ u, hu ⟩
+    split
+    · split
+      · simp
+      · split
+        · simp
+        · step with before_spec as ⟨ c, hc ⟩
+          split <;> simp
+    · simp
+
+/-- Past the end there is no statement: an index there keeps the best so
+far. -/
+theorem better_past_end (rs : Slice verdict.recorded.Statement) (best : Option Usize) (i : Usize)
+    (hi : rs.val.length ≤ i.val) :
+    verdict.recorded.better rs best i ⦃ r => r = best ⦄ := by
+  unfold verdict.recorded.better
+  simp [slice_get_ok, List.getElem?_eq_none hi]
 
 theorem best_recorded_loop_spec (rs : Slice verdict.recorded.Statement) (best : Option Usize)
     (i : Usize) (hi : i.val ≤ rs.val.length) (hb : BestUpTo rs.val i.val best) :

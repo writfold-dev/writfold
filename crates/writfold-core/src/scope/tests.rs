@@ -1,4 +1,4 @@
-use super::{glob, in_scope};
+use super::{Cursor, Next, char_step, glob, in_scope, path_step};
 use alloc::format;
 use alloc::string::String;
 use alloc::vec;
@@ -103,4 +103,29 @@ fn segments_agree_with_their_definition() {
             assert_eq!(glob(&wj, &pj), path_ref(w, p), "{wj:?} against {pj:?}");
         }
     }
+}
+
+/// A cursor no match reaches never panics: a stretch that would leave the
+/// pattern or the text is no match.
+#[test]
+fn cursors_outside_the_input_are_no_match() {
+    let out = Cursor {
+        i: usize::MAX,
+        j: 0,
+        starred: true,
+        at: usize::MAX,
+        from: usize::MAX,
+    };
+    assert!(matches!(char_step(&[], &[97], out), Next::Done(false)));
+    let out = Cursor {
+        i: usize::MAX,
+        j: 0,
+        starred: true,
+        at: usize::MAX,
+        from: usize::MAX,
+    };
+    assert!(matches!(
+        path_step(&[], &[vec![97]], out),
+        Next::Done(false)
+    ));
 }

@@ -1,4 +1,5 @@
 import Writfold.Verdict
+import Writfold.Get
 
 /-!
 # Idle runs
@@ -31,12 +32,24 @@ theorem newer_spec (l : Slice I64) (best : Option (Usize × I64)) (i : Usize)
       | none => True
       | some (_, a0) => l.val[i.val].val > a0.val ⦄ := by
   unfold idle.newer
-  rcases best with _ | ⟨k, a0⟩
-  · simp
-  · simp only
-    step as ⟨ x, hx ⟩
-    simp only [WP.spec_ok, decide_eq_true_eq, gt_iff_lt]
-    rw [hx]; constructor <;> intro h <;> scalar_tac
+  simp only [slice_get_ok, List.getElem?_eq_getElem hi, bind_ok]
+  rcases best with _ | ⟨k, a0⟩ <;> simp
+
+/-- `newer` never fails, at any index (tauten's total shape,
+docs/writfold/tauten-adoption.md): a position past the end has no stamp
+and is never newer. -/
+theorem newer_total (l : Slice I64) (best : Option (Usize × I64)) (i : Usize) :
+    idle.newer l best i ⦃ _ => True ⦄ := by
+  unfold idle.newer
+  simp only [slice_get_ok, bind_ok]
+  rcases best with _ | ⟨k, a0⟩ <;> split <;> simp
+
+/-- Past the end, `newer` is `false`: no stamp there to be newer. -/
+theorem newer_past_end (l : Slice I64) (best : Option (Usize × I64)) (i : Usize)
+    (hi : l.val.length ≤ i.val) :
+    idle.newer l best i ⦃ b => b = false ⦄ := by
+  unfold idle.newer
+  simp [slice_get_ok, List.getElem?_eq_none hi]
 
 theorem newest_loop_spec (l : Slice I64) (best : Option (Usize × I64)) (i : Usize)
     (hi : i.val ≤ l.val.length) (hb : NewestUpTo l.val i.val best) :

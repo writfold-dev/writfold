@@ -82,19 +82,28 @@ pub fn before(a: &Statement, b: &Statement) -> bool {
 
 /// The better of the best so far and statement `index`: it replaces the
 /// best only when usable and strictly before it, so a tie keeps the first.
+/// A position past the end holds no statement: as `index` it is never
+/// picked, and as the best so far it is replaced by any usable statement.
 pub fn better(recorded: &[Statement], best: Option<usize>, index: usize) -> Option<usize> {
-    if !usable(&recorded[index]) {
+    let candidate = match recorded.get(index) {
+        Some(s) => s,
+        None => return best,
+    };
+    if !usable(candidate) {
         return best;
     }
     match best {
         None => Some(index),
-        Some(b) => {
-            if before(&recorded[index], &recorded[b]) {
-                Some(index)
-            } else {
-                best
+        Some(b) => match recorded.get(b) {
+            None => Some(index),
+            Some(kept) => {
+                if before(candidate, kept) {
+                    Some(index)
+                } else {
+                    best
+                }
             }
-        }
+        },
     }
 }
 
@@ -159,7 +168,7 @@ mod tests {
     use super::super::aged;
     use super::super::tests::{CHECKERS, SAID};
     use super::super::{Observed, Verdict, decide};
-    use super::{Checker, Pick, Said, Statement, newest, recordable, recorded_age};
+    use super::{Checker, Pick, Said, Statement, better, newest, recordable, recorded_age};
 
     #[test]
     fn only_a_checkers_statement_about_the_token_is_recordable() {
@@ -379,5 +388,19 @@ mod tests {
             Some(Pick::Local)
         );
         assert_eq!(newest(None, &[new_gone], None), None);
+    }
+
+    /// A position past the end holds no statement: as the index it keeps
+    /// the best so far, as the best so far it gives way.
+    #[test]
+    fn better_past_the_end_never_panics() {
+        let s = Statement {
+            said: Said::Fresh,
+            age: 1,
+            recorded: true,
+        };
+        assert_eq!(better(&[], None, 0), None);
+        assert_eq!(better(&[s], Some(0), usize::MAX), Some(0));
+        assert_eq!(better(&[s], Some(usize::MAX), 0), Some(0));
     }
 }

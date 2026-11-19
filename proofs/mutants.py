@@ -563,19 +563,13 @@ MUTANTS = (
            ("Writfold.Core.Scope.include_spec",)),
     # scope: a `*` that led nowhere stretches by one more character
     Mutant("segment-no-backtrack", "scope.rs",
-           "    if c.i < pattern.len() && same_char(pattern[c.i], text[c.j]) {\n"
-           "        return Next::Go(Cursor {\n            i: c.i + 1,\n            j: c.j + 1,\n"
-           "            starred: c.starred,\n            at: c.at,\n            from: c.from,\n"
-           "        });\n    }\n    if c.starred {",
-           "    if c.i < pattern.len() && same_char(pattern[c.i], text[c.j]) {\n"
-           "        return Next::Go(Cursor {\n            i: c.i + 1,\n            j: c.j + 1,\n"
-           "            starred: c.starred,\n            at: c.at,\n            from: c.from,\n"
-           "        });\n    }\n    if false {",
+           "    if c.starred && c.at < pattern.len() && c.from < text.len() {",
+           "    if false && c.at < pattern.len() && c.from < text.len() {",
            ("Writfold.Core.Scope.char_step_spec",)),
     # scope: `*` matches nothing too, at the end of a segment included
     Mutant("star-needs-a-char", "scope.rs",
-           "    if c.i < pattern.len() && pattern[c.i] == STAR {",
-           "    if c.i < pattern.len() && pattern[c.i] == STAR && c.j < text.len() {",
+           "        && *p == STAR\n",
+           "        && *p == STAR\n        && c.j < text.len()\n",
            ("Writfold.Core.Scope.char_step_spec",)),
     # scope: `?` matches any one character
     Mutant("same-char-ignores-any", "scope.rs",
@@ -589,14 +583,15 @@ MUTANTS = (
            ("Writfold.Core.Scope.globstar_spec",)),
     # scope: `**` matches no segment too, at the end of a path included
     Mutant("globstar-needs-a-segment", "scope.rs",
-           "    if c.i < wanted.len() && globstar(&wanted[c.i]) {",
-           "    if c.i < wanted.len() && globstar(&wanted[c.i]) && c.j < parts.len() {",
+           "        && globstar(w)\n",
+           "        && globstar(w)\n        && c.j < parts.len()\n",
            ("Writfold.Core.Scope.path_step_spec",)),
     # scope: a path with segments left over after the pattern does not match
     Mutant("segments-accept-trailing", "scope.rs",
-           "    if c.j >= parts.len() {",
-           "    if c.j >= parts.len() || c.i >= wanted.len() {",
-           ("Writfold.Core.Scope.path_step_spec",)),
+           "    let part = match parts.get(c.j) {",
+           "    if let None = here {\n        return Next::Done(c.i == wanted.len());\n    }\n"
+           "    let part = match parts.get(c.j) {",
+           ("Writfold.Core.Scope.path_step_spec", "Writfold.Core.Scope.path_step_outside")),
     # plan writes: a step write stands only while the step is still current
     Mutant("recheck-current-ignored", "plan/recheck.rs",
            "            if is_current {\n                None",
@@ -731,8 +726,8 @@ MUTANTS = (
            ("Writfold.Core.Recorded.before_spec",)),
     # check receipts: on a tie the first receipt is kept
     Mutant("better-tie-takes-later", "verdict/recorded.rs",
-           "            if before(&recorded[index], &recorded[b]) {",
-           "            if !before(&recorded[b], &recorded[index]) {",
+           "                if before(candidate, kept) {",
+           "                if !before(kept, candidate) {",
            ("Writfold.Core.Recorded.better_spec",)),
     # check receipts: on a full tie a receipt wins over the local statement
     Mutant("newest-local-on-tie", "verdict/recorded.rs",
@@ -791,8 +786,8 @@ MUTANTS = (
            ("Writfold.Core.Find.prefixed_loop_spec",)),
     # idle: the first of equal newest stamps is named
     Mutant("newest-last-of-equal", "idle.rs",
-           "        Some((_, at)) => stamps[i] > at,",
-           "        Some((_, at)) => stamps[i] >= at,",
+           "            Some((_, at)) => *stamp > at,",
+           "            Some((_, at)) => *stamp >= at,",
            ("Writfold.Core.Idle.newer_spec",)),
     # idle: the age is compared over the integers, not after holding it in i64
     Mutant("idle-saturated-compare", "idle.rs",
@@ -1190,6 +1185,29 @@ MUTANTS = (
            "        match pins[at] {",
            "        match pins[at + 1] {",
            ("Writfold.Core.Pin.holds_from_loop_spec", "Writfold.Core.Pin.holds_from_total")),
+    # the total theorems of the four helpers rewritten with checked access
+    # (docs/writfold/tauten-adoption.md) catch what their precondition specs
+    # cannot: a read or an overflow outside the precondition
+    # idle: a position past the end is read
+    Mutant("newer-reads-past-end", "idle.rs",
+           "        None => false,",
+           "        None => stamps[i] > 0,",
+           ("Writfold.Core.Idle.newer_total", "Writfold.Core.Idle.newer_past_end")),
+    # recorded: an index past the end picks the last statement
+    Mutant("better-past-end-underflows", "verdict/recorded.rs",
+           "        None => return best,",
+           "        None => return Some(recorded.len() - 1),",
+           ("Writfold.Core.Recorded.better_total", "Writfold.Core.Recorded.better_past_end")),
+    # scope: a `*` stretch from a cursor outside the pattern overflows
+    Mutant("char-step-stretches-out", "scope.rs",
+           "    if c.starred && c.at < pattern.len() && c.from < text.len() {",
+           "    if c.starred {",
+           ("Writfold.Core.Scope.char_step_total", "Writfold.Core.Scope.char_step_outside")),
+    # scope: a `**` stretch from a cursor outside the path overflows
+    Mutant("path-step-stretches-out", "scope.rs",
+           "    if c.starred && c.at < wanted.len() && c.from < parts.len() {",
+           "    if c.starred {",
+           ("Writfold.Core.Scope.path_step_total", "Writfold.Core.Scope.path_step_outside")),
     # skips-last mutants for the loops whose theorems no mutant broke, added so
     # their functions can be tauten claims (docs/writfold/tauten-adoption.md)
     # checklist: one stale entry is enough, the last one too

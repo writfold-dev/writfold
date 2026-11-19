@@ -5,11 +5,15 @@
 //! newest stamp is the first greatest one, and `idle` compares over the
 //! integers, so no clock value overflows it.
 
-/// Whether stamp `i` is newer than the newest so far.
+/// Whether stamp `i` is newer than the newest so far. A position past the
+/// end has no stamp, so it is never newer.
 pub fn newer(stamps: &[i64], best: Option<(usize, i64)>, i: usize) -> bool {
-    match best {
-        None => true,
-        Some((_, at)) => stamps[i] > at,
+    match stamps.get(i) {
+        None => false,
+        Some(stamp) => match best {
+            None => true,
+            Some((_, at)) => *stamp > at,
+        },
     }
 }
 
@@ -57,7 +61,7 @@ pub fn idle(now: i64, stamps: &[i64], age: i64) -> Option<(usize, i64)> {
 
 #[cfg(test)]
 mod tests {
-    use super::{idle, newest};
+    use super::{idle, newer, newest};
 
     #[test]
     fn idle_is_measured_from_the_newest_stamp() {
@@ -87,5 +91,13 @@ mod tests {
         assert_eq!(idle(i64::MIN, &[i64::MAX], i64::MIN), None);
         assert_eq!(idle(i64::MAX, &[-1], i64::MAX), Some((0, i64::MAX)));
         assert_eq!(idle(i64::MAX, &[0], i64::MAX), None);
+    }
+
+    /// A position past the end has no stamp, so it is never newer.
+    #[test]
+    fn newer_past_the_end_is_false() {
+        assert!(!newer(&[], None, 0));
+        assert!(!newer(&[5], Some((0, 1)), usize::MAX));
+        assert!(newer(&[5], Some((0, 1)), 0));
     }
 }

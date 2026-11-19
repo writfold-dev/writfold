@@ -1,4 +1,5 @@
 import Writfold.Wild
+import Writfold.Get
 
 /-!
 # Scope globs
@@ -157,32 +158,52 @@ theorem start_spec {α β : Type} {S : α → Prop} {L : α → β → Prop} (P 
 theorem char_step_spec (p t : Slice U32) (c : scope.Cursor)
     (h : CInv IsStar SameChar p.val t.val c) :
     scope.char_step p t c ⦃ n => Good IsStar SameChar p.val t.val c n ⦄ := by
-  have hjT : c.j.val ≤ t.val.length := h.2.1
+  have hiP : c.i.val ≤ p.val.length := h.1
   have hfj : c.from.val ≤ c.j.val := h.2.2.1
   have hat : c.starred = true → c.at.val + 1 ≤ c.i.val := by
     intro hst; obtain ⟨n, hn, _⟩ := h.2.2.2.2 hst; omega
   unfold scope.char_step
-  dsimp only
-  by_cases hlt : c.i < p.len
-  · simp only [hlt, ↓reduceIte]
-    step as ⟨ x, hx ⟩
-    have ha : p.val[c.i.val]? = some x := by
-      rw [hx]; exact List.getElem?_eq_getElem (by scalar_tac)
+  simp only [slice_get_ok, bind_ok]
+  cases ha : p.val[c.i.val]? with
+  | none =>
+    have hno : Stuck IsStar SameChar p.val t.val c.i.val c.j.val := by
+      intro a ha'; rw [ha] at ha'; cases ha'
+    cases hb : t.val[c.j.val]? with
+    | none =>
+      simp only [WP.spec_ok]
+      exact done_exit (len := p.len) h (List.getElem?_eq_none_iff.mp hb) (by scalar_tac)
+        (fun a ha' => by rw [ha] at ha'; cases ha')
+    | some y =>
+      have hjt : c.j.val < t.val.length := (List.getElem?_eq_some_iff.mp hb).1
+      simp only
+      split
+      · rename_i hst
+        have h1 : c.at < p.len := by have := hat hst; scalar_tac
+        have h2 : c.from < t.len := by scalar_tac
+        try simp only [h1, h2, ↓reduceIte]
+        step as ⟨ i3, hi3 ⟩
+        step as ⟨ i4, hi4 ⟩
+        exact go_back h hst hjt hno hi3 hi4
+      · rename_i hst
+        rw [WP.spec_ok]
+        exact done_fail h (by simpa using hst) hjt hno
+  | some x =>
+    have hlt : c.i.val < p.val.length := (List.getElem?_eq_some_iff.mp ha).1
+    simp only
     by_cases hstar : x = scope.STAR
     · simp only [hstar, ↓reduceIte]
       step as ⟨ i2, hi2 ⟩
       exact go_star h (hstar ▸ ha) (by simp [IsStar, star_val]) hi2
     · simp only [hstar, ↓reduceIte]
       have hns : ¬ IsStar x := by simp [IsStar, ← star_val, hstar]
-      by_cases hend : c.j ≥ t.len
-      · simp only [hend, ↓reduceIte]
-        rw [WP.spec_ok]
-        exact done_exit (len := p.len) h (by scalar_tac) (by scalar_tac)
+      cases hb : t.val[c.j.val]? with
+      | none =>
+        simp only [WP.spec_ok]
+        exact done_exit (len := p.len) h (List.getElem?_eq_none_iff.mp hb) (by scalar_tac)
           (fun a ha' => by rw [ha] at ha'; cases ha'; exact hns)
-      · simp only [hend, ↓reduceIte]
-        step as ⟨ y, hy ⟩
-        have hb : t.val[c.j.val]? = some y := by
-          rw [hy]; exact List.getElem?_eq_getElem (by scalar_tac)
+      | some y =>
+        have hjt : c.j.val < t.val.length := (List.getElem?_eq_some_iff.mp hb).1
+        simp only
         step with same_char_spec as ⟨ b, hbs ⟩
         by_cases hbt : b = true
         · simp only [hbt, ↓reduceIte]
@@ -198,30 +219,40 @@ theorem char_step_spec (p t : Slice U32) (c : scope.Cursor)
             intro hl; exact hbt (hbs.mpr hl)
           split
           · rename_i hst
+            have h1 : c.at < p.len := by have := hat hst; scalar_tac
+            have h2 : c.from < t.len := by scalar_tac
+            try simp only [h1, h2, ↓reduceIte]
             step as ⟨ i5, hi5 ⟩
             step as ⟨ i6, hi6 ⟩
-            exact go_back h hst (by scalar_tac) hno hi5 hi6
+            exact go_back h hst hjt hno hi5 hi6
           · rename_i hst
             rw [WP.spec_ok]
-            exact done_fail h (by simpa using hst) (by scalar_tac) hno
-  · simp only [hlt, ↓reduceIte]
-    have hnone : p.val[c.i.val]? = none := List.getElem?_eq_none (by scalar_tac)
-    have hno : Stuck IsStar SameChar p.val t.val c.i.val c.j.val := by
-      intro a ha'; rw [hnone] at ha'; cases ha'
-    by_cases hend : c.j ≥ t.len
-    · simp only [hend, ↓reduceIte]
-      rw [WP.spec_ok]
-      exact done_exit (len := p.len) h (by scalar_tac) (by scalar_tac)
-        (fun a ha' => by rw [hnone] at ha'; cases ha')
-    · simp only [hend, ↓reduceIte]
-      split
-      · rename_i hst
-        step as ⟨ i3, hi3 ⟩
-        step as ⟨ i4, hi4 ⟩
-        exact go_back h hst (by scalar_tac) hno hi3 hi4
-      · rename_i hst
-        rw [WP.spec_ok]
-        exact done_fail h (by simpa using hst) (by scalar_tac) hno
+            exact done_fail h (by simpa using hst) hjt hno
+
+attribute [local step] same_char_spec
+
+/-- `char_step` never fails, from any cursor (tauten's total shape,
+docs/writfold/tauten-adoption.md): it reads only through `get`, steps past
+a position only when it is inside the slice, and stretches a `*` only
+when `at` and `from` are inside the pattern and the text. -/
+theorem char_step_total (p t : Slice U32) (c : scope.Cursor) :
+    scope.char_step p t c ⦃ _ => True ⦄ := by
+  unfold scope.char_step
+  simp only [slice_get_ok, bind_ok]
+  cases ha : p.val[c.i.val]? <;> cases hb : t.val[c.j.val]? <;> (try simp only) <;>
+    (try have hlt : c.i.val < p.val.length := (List.getElem?_eq_some_iff.mp ha).1) <;>
+    (try have hjt : c.j.val < t.val.length := (List.getElem?_eq_some_iff.mp hb).1) <;>
+    step*
+
+/-- A cursor whose `*` stretch would leave the pattern or the text is no
+match: `char_step` stops with `false` instead of stepping out. -/
+theorem char_step_outside (p t : Slice U32) (c : scope.Cursor)
+    (hp : p.val[c.i.val]? = none) (ht : c.j.val < t.val.length) (hst : c.starred = true)
+    (hout : p.val.length ≤ c.at.val) :
+    scope.char_step p t c ⦃ n => n = .Done false ⦄ := by
+  unfold scope.char_step
+  have hat : ¬ c.at < p.len := by scalar_tac
+  simp [slice_get_ok, hp, List.getElem?_eq_getElem ht, hst, hat]
 
 theorem segment_loop_spec (p t : Slice U32) (c : scope.Cursor)
     (h : CInv IsStar SameChar p.val t.val c) :
@@ -287,17 +318,38 @@ theorem deref_val {γ : Type} (v : alloc.vec.Vec γ) : (alloc.vec.Vec.deref v).v
 theorem path_step_spec (w ps : Slice (alloc.vec.Vec U32)) (c : scope.Cursor)
     (h : CInv IsGlobstar SegMatchV w.val ps.val c) :
     scope.path_step w ps c ⦃ n => Good IsGlobstar SegMatchV w.val ps.val c n ⦄ := by
-  have hjT : c.j.val ≤ ps.val.length := h.2.1
+  have hiP : c.i.val ≤ w.val.length := h.1
   have hfj : c.from.val ≤ c.j.val := h.2.2.1
   have hat : c.starred = true → c.at.val + 1 ≤ c.i.val := by
     intro hst; obtain ⟨n, hn, _⟩ := h.2.2.2.2 hst; omega
   unfold scope.path_step
-  dsimp only
-  by_cases hlt : c.i < w.len
-  · simp only [hlt, ↓reduceIte]
-    step as ⟨ x, hx ⟩
-    have ha : w.val[c.i.val]? = some x := by
-      rw [hx]; exact List.getElem?_eq_getElem (by scalar_tac)
+  simp only [slice_get_ok, bind_ok]
+  cases ha : w.val[c.i.val]? with
+  | none =>
+    have hno : Stuck IsGlobstar SegMatchV w.val ps.val c.i.val c.j.val := by
+      intro a ha'; rw [ha] at ha'; cases ha'
+    cases hb : ps.val[c.j.val]? with
+    | none =>
+      simp only [WP.spec_ok]
+      exact done_exit (len := w.len) h (List.getElem?_eq_none_iff.mp hb) (by scalar_tac)
+        (fun a ha' => by rw [ha] at ha'; cases ha')
+    | some y =>
+      have hjt : c.j.val < ps.val.length := (List.getElem?_eq_some_iff.mp hb).1
+      simp only
+      split
+      · rename_i hst
+        have h1 : c.at < w.len := by have := hat hst; scalar_tac
+        have h2 : c.from < ps.len := by scalar_tac
+        try simp only [h1, h2, ↓reduceIte]
+        step as ⟨ i3, hi3 ⟩
+        step as ⟨ i4, hi4 ⟩
+        exact go_back h hst hjt hno hi3 hi4
+      · rename_i hst
+        rw [WP.spec_ok]
+        exact done_fail h (by simpa using hst) hjt hno
+  | some x =>
+    have hlt : c.i.val < w.val.length := (List.getElem?_eq_some_iff.mp ha).1
+    simp only
     step with globstar_spec as ⟨ g, hg ⟩
     rw [deref_val] at hg
     by_cases hstar : g = true
@@ -306,15 +358,14 @@ theorem path_step_spec (w ps : Slice (alloc.vec.Vec U32)) (c : scope.Cursor)
       exact go_star h ha (hg.mp hstar) hi2
     · simp only [hstar, Bool.false_eq_true, ↓reduceIte]
       have hns : ¬ IsGlobstar x := fun e => hstar (hg.mpr e)
-      by_cases hend : c.j ≥ ps.len
-      · simp only [hend, ↓reduceIte]
-        rw [WP.spec_ok]
-        exact done_exit (len := w.len) h (by scalar_tac) (by scalar_tac)
+      cases hb : ps.val[c.j.val]? with
+      | none =>
+        simp only [WP.spec_ok]
+        exact done_exit (len := w.len) h (List.getElem?_eq_none_iff.mp hb) (by scalar_tac)
           (fun a ha' => by rw [ha] at ha'; cases ha'; exact hns)
-      · simp only [hend, ↓reduceIte]
-        step as ⟨ y, hy ⟩
-        have hb : ps.val[c.j.val]? = some y := by
-          rw [hy]; exact List.getElem?_eq_getElem (by scalar_tac)
+      | some y =>
+        have hjt : c.j.val < ps.val.length := (List.getElem?_eq_some_iff.mp hb).1
+        simp only
         step with segment_iff as ⟨ b, hbs ⟩
         rw [deref_val, deref_val] at hbs
         by_cases hbt : b = true
@@ -331,30 +382,39 @@ theorem path_step_spec (w ps : Slice (alloc.vec.Vec U32)) (c : scope.Cursor)
             intro hl; exact hbt (hbs.mpr hl)
           split
           · rename_i hst
+            have h1 : c.at < w.len := by have := hat hst; scalar_tac
+            have h2 : c.from < ps.len := by scalar_tac
+            try simp only [h1, h2, ↓reduceIte]
             step as ⟨ i5, hi5 ⟩
             step as ⟨ i6, hi6 ⟩
-            exact go_back h hst (by scalar_tac) hno hi5 hi6
+            exact go_back h hst hjt hno hi5 hi6
           · rename_i hst
             rw [WP.spec_ok]
-            exact done_fail h (by simpa using hst) (by scalar_tac) hno
-  · simp only [hlt, ↓reduceIte]
-    have hnone : w.val[c.i.val]? = none := List.getElem?_eq_none (by scalar_tac)
-    have hno : Stuck IsGlobstar SegMatchV w.val ps.val c.i.val c.j.val := by
-      intro a ha'; rw [hnone] at ha'; cases ha'
-    by_cases hend : c.j ≥ ps.len
-    · simp only [hend, ↓reduceIte]
-      rw [WP.spec_ok]
-      exact done_exit (len := w.len) h (by scalar_tac) (by scalar_tac)
-        (fun a ha' => by rw [hnone] at ha'; cases ha')
-    · simp only [hend, ↓reduceIte]
-      split
-      · rename_i hst
-        step as ⟨ i3, hi3 ⟩
-        step as ⟨ i4, hi4 ⟩
-        exact go_back h hst (by scalar_tac) hno hi3 hi4
-      · rename_i hst
-        rw [WP.spec_ok]
-        exact done_fail h (by simpa using hst) (by scalar_tac) hno
+            exact done_fail h (by simpa using hst) hjt hno
+
+attribute [local step] globstar_spec segment_iff
+
+/-- `path_step` never fails, from any cursor (tauten's total shape,
+docs/writfold/tauten-adoption.md), as `char_step_total` one level up:
+`globstar` and `segment` never fail. -/
+theorem path_step_total (w ps : Slice (alloc.vec.Vec U32)) (c : scope.Cursor) :
+    scope.path_step w ps c ⦃ _ => True ⦄ := by
+  unfold scope.path_step
+  simp only [slice_get_ok, bind_ok]
+  cases ha : w.val[c.i.val]? <;> cases hb : ps.val[c.j.val]? <;> (try simp only) <;>
+    (try have hlt : c.i.val < w.val.length := (List.getElem?_eq_some_iff.mp ha).1) <;>
+    (try have hjt : c.j.val < ps.val.length := (List.getElem?_eq_some_iff.mp hb).1) <;>
+    step*
+
+/-- A cursor whose `**` stretch would leave the pattern or the path is no
+match: `path_step` stops with `false` instead of stepping out. -/
+theorem path_step_outside (w ps : Slice (alloc.vec.Vec U32)) (c : scope.Cursor)
+    (hw : w.val[c.i.val]? = none) (hps : c.j.val < ps.val.length) (hst : c.starred = true)
+    (hout : w.val.length ≤ c.at.val) :
+    scope.path_step w ps c ⦃ n => n = .Done false ⦄ := by
+  unfold scope.path_step
+  have hat : ¬ c.at < w.len := by scalar_tac
+  simp [slice_get_ok, hw, List.getElem?_eq_getElem hps, hst, hat]
 
 theorem segments_loop_spec (w ps : Slice (alloc.vec.Vec U32)) (c : scope.Cursor)
     (h : CInv IsGlobstar SegMatchV w.val ps.val c) :

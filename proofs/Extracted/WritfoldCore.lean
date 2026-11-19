@@ -2462,22 +2462,26 @@ def guard.nudge_with
   guard.nudge stop_hook_active b facts
 
 /-- [writfold_core::idle::newer]:
-    Source: 'crates/writfold-core/src/idle.rs', lines 9:0-14:1
+    Source: 'crates/writfold-core/src/idle.rs', lines 10:0-18:1
     Visibility: public -/
 def idle.newer
   (stamps : Slice Std.I64) (best : Option (Std.Usize × Std.I64))
   (i : Std.Usize) :
   Result Bool
   := do
-  match best with
-  | none => ok true
-  | some p =>
-    let (_, «at») := p
-    let i1 ← Slice.index_usize stamps i
-    ok (i1 > «at»)
+  let o ←
+    core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice Std.I64) stamps
+      i
+  match o with
+  | none => ok false
+  | some stamp =>
+    match best with
+    | none => ok true
+    | some p => let (_, «at») := p
+                ok (stamp > «at»)
 
 /-- [writfold_core::idle::newest]: loop body 0:
-    Source: 'crates/writfold-core/src/idle.rs', lines 20:4-25:5
+    Source: 'crates/writfold-core/src/idle.rs', lines 24:4-29:5
     Visibility: public -/
 @[rust_loop_body]
 def idle.newest_loop.body
@@ -2501,7 +2505,7 @@ def idle.newest_loop.body
   else ok (done best)
 
 /-- [writfold_core::idle::newest]: loop 0:
-    Source: 'crates/writfold-core/src/idle.rs', lines 20:4-25:5
+    Source: 'crates/writfold-core/src/idle.rs', lines 24:4-29:5
     Visibility: public -/
 @[rust_loop]
 def idle.newest_loop
@@ -2514,7 +2518,7 @@ def idle.newest_loop
     (best, i)
 
 /-- [writfold_core::idle::newest]:
-    Source: 'crates/writfold-core/src/idle.rs', lines 17:0-27:1
+    Source: 'crates/writfold-core/src/idle.rs', lines 21:0-31:1
     Visibility: public -/
 @[reducible]
 def idle.newest
@@ -2522,7 +2526,7 @@ def idle.newest
   idle.newest_loop stamps none 0#usize
 
 /-- [writfold_core::idle::since]:
-    Source: 'crates/writfold-core/src/idle.rs', lines 31:0-39:1
+    Source: 'crates/writfold-core/src/idle.rs', lines 35:0-43:1
     Visibility: public -/
 def idle.since (now : Std.I64) (last : Std.I64) : Result Std.I64 := do
   if last < 0#i64
@@ -2579,7 +2583,7 @@ def verdict.expired
          ok (i > ttl)
 
 /-- [writfold_core::idle::idle]:
-    Source: 'crates/writfold-core/src/idle.rs', lines 45:0-56:1
+    Source: 'crates/writfold-core/src/idle.rs', lines 49:0-60:1
     Visibility: public -/
 def idle.idle
   (now : Std.I64) (stamps : Slice Std.I64) (age : Std.I64) :
@@ -4136,85 +4140,76 @@ def scope.same_char (pattern : Std.U32) (text : Std.U32) : Result Bool := do
   else ok (pattern = text)
 
 /-- [writfold_core::scope::char_step]:
-    Source: 'crates/writfold-core/src/scope.rs', lines 64:0-96:1
+    Source: 'crates/writfold-core/src/scope.rs', lines 66:0-104:1
     Visibility: public -/
 def scope.char_step
   (pattern : Slice Std.U32) (text : Slice Std.U32) (c : scope.Cursor) :
   Result scope.Next
   := do
-  let i := Slice.len pattern
-  if c.i < i
-  then
-    let i1 ← Slice.index_usize pattern c.i
-    if i1 = scope.STAR
-    then
-      let i2 ← c.i + 1#usize
-      ok (scope.Next.Go
-        { c with i := i2, starred := true, «at» := c.i, «from» := c.j })
-    else
-      let i2 := Slice.len text
-      if c.j >= i2
-      then let i3 := Slice.len pattern
-           ok (scope.Next.Done (c.i = i3))
-      else
-        let i3 := Slice.len pattern
-        if c.i < i3
-        then
-          let i4 ← Slice.index_usize text c.j
-          let b ← scope.same_char i1 i4
-          if b
-          then
-            let i5 ← c.i + 1#usize
-            let i6 ← c.j + 1#usize
-            ok (scope.Next.Go { c with i := i5, j := i6 })
-          else
-            if c.starred
-            then
-              let i5 ← c.at + 1#usize
-              let i6 ← c.from + 1#usize
-              ok (scope.Next.Go { c with i := i5, j := i6, «from» := i6 })
-            else ok (scope.Next.Done false)
-        else
-          if c.starred
-          then
-            let i4 ← c.at + 1#usize
-            let i5 ← c.from + 1#usize
-            ok (scope.Next.Go { c with i := i4, j := i5, «from» := i5 })
-          else ok (scope.Next.Done false)
-  else
-    let i1 := Slice.len text
-    if c.j >= i1
-    then let i2 := Slice.len pattern
-         ok (scope.Next.Done (c.i = i2))
-    else
-      let i2 := Slice.len pattern
-      if c.i < i2
+  let here ←
+    core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice Std.U32)
+      pattern c.i
+  match here with
+  | none =>
+    let o ←
+      core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice Std.U32) text
+        c.j
+    match o with
+    | none => let i := Slice.len pattern
+              ok (scope.Next.Done (c.i = i))
+    | some _ =>
+      if c.starred
       then
-        let i3 ← Slice.index_usize pattern c.i
-        let i4 ← Slice.index_usize text c.j
-        let b ← scope.same_char i3 i4
+        let i := Slice.len pattern
+        if c.at < i
+        then
+          let i1 := Slice.len text
+          if c.from < i1
+          then
+            let i2 ← c.at + 1#usize
+            let i3 ← c.from + 1#usize
+            ok (scope.Next.Go { c with i := i2, j := i3, «from» := i3 })
+          else ok (scope.Next.Done false)
+        else ok (scope.Next.Done false)
+      else ok (scope.Next.Done false)
+  | some p =>
+    if p = scope.STAR
+    then
+      let i ← c.i + 1#usize
+      ok (scope.Next.Go
+        { c with i, starred := true, «at» := c.i, «from» := c.j })
+    else
+      let o ←
+        core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice Std.U32)
+          text c.j
+      match o with
+      | none => let i := Slice.len pattern
+                ok (scope.Next.Done (c.i = i))
+      | some t =>
+        let b ← scope.same_char p t
         if b
         then
-          let i5 ← c.i + 1#usize
-          let i6 ← c.j + 1#usize
-          ok (scope.Next.Go { c with i := i5, j := i6 })
+          let i ← c.i + 1#usize
+          let i1 ← c.j + 1#usize
+          ok (scope.Next.Go { c with i, j := i1 })
         else
           if c.starred
           then
-            let i5 ← c.at + 1#usize
-            let i6 ← c.from + 1#usize
-            ok (scope.Next.Go { c with i := i5, j := i6, «from» := i6 })
+            let i := Slice.len pattern
+            if c.at < i
+            then
+              let i1 := Slice.len text
+              if c.from < i1
+              then
+                let i2 ← c.at + 1#usize
+                let i3 ← c.from + 1#usize
+                ok (scope.Next.Go { c with i := i2, j := i3, «from» := i3 })
+              else ok (scope.Next.Done false)
+            else ok (scope.Next.Done false)
           else ok (scope.Next.Done false)
-      else
-        if c.starred
-        then
-          let i3 ← c.at + 1#usize
-          let i4 ← c.from + 1#usize
-          ok (scope.Next.Go { c with i := i3, j := i4, «from» := i4 })
-        else ok (scope.Next.Done false)
 
 /-- [writfold_core::scope::segment]: loop body 0:
-    Source: 'crates/writfold-core/src/scope.rs', lines 101:4-106:5
+    Source: 'crates/writfold-core/src/scope.rs', lines 109:4-114:5
     Visibility: public -/
 @[rust_loop_body]
 def scope.segment_loop.body
@@ -4227,7 +4222,7 @@ def scope.segment_loop.body
   | scope.Next.Done b => ok (done b)
 
 /-- [writfold_core::scope::segment]: loop 0:
-    Source: 'crates/writfold-core/src/scope.rs', lines 101:4-106:5
+    Source: 'crates/writfold-core/src/scope.rs', lines 109:4-114:5
     Visibility: public -/
 @[rust_loop]
 def scope.segment_loop
@@ -4239,7 +4234,7 @@ def scope.segment_loop
     c
 
 /-- [writfold_core::scope::segment]:
-    Source: 'crates/writfold-core/src/scope.rs', lines 99:0-107:1
+    Source: 'crates/writfold-core/src/scope.rs', lines 107:0-115:1
     Visibility: public -/
 def scope.segment
   (pattern : Slice Std.U32) (text : Slice Std.U32) : Result Bool := do
@@ -4247,7 +4242,7 @@ def scope.segment
   scope.segment_loop c pattern text
 
 /-- [writfold_core::scope::globstar]:
-    Source: 'crates/writfold-core/src/scope.rs', lines 110:0-112:1
+    Source: 'crates/writfold-core/src/scope.rs', lines 118:0-120:1
     Visibility: public -/
 def scope.globstar (segment : Slice Std.U32) : Result Bool := do
   let i := Slice.len segment
@@ -4261,92 +4256,81 @@ def scope.globstar (segment : Slice Std.U32) : Result Bool := do
   else ok false
 
 /-- [writfold_core::scope::path_step]:
-    Source: 'crates/writfold-core/src/scope.rs', lines 116:0-148:1
+    Source: 'crates/writfold-core/src/scope.rs', lines 124:0-162:1
     Visibility: public -/
 def scope.path_step
   (wanted : Slice (alloc.vec.Vec Std.U32))
   (parts : Slice (alloc.vec.Vec Std.U32)) (c : scope.Cursor) :
   Result scope.Next
   := do
-  let i := Slice.len wanted
-  if c.i < i
-  then
-    let v ← Slice.index_usize wanted c.i
-    let s := alloc.vec.Vec.deref v
+  let here ←
+    core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice (alloc.vec.Vec
+      Std.U32)) wanted c.i
+  match here with
+  | none =>
+    let o ←
+      core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+        (alloc.vec.Vec Std.U32)) parts c.j
+    match o with
+    | none => let i := Slice.len wanted
+              ok (scope.Next.Done (c.i = i))
+    | some _ =>
+      if c.starred
+      then
+        let i := Slice.len wanted
+        if c.at < i
+        then
+          let i1 := Slice.len parts
+          if c.from < i1
+          then
+            let i2 ← c.at + 1#usize
+            let i3 ← c.from + 1#usize
+            ok (scope.Next.Go { c with i := i2, j := i3, «from» := i3 })
+          else ok (scope.Next.Done false)
+        else ok (scope.Next.Done false)
+      else ok (scope.Next.Done false)
+  | some w =>
+    let s := alloc.vec.Vec.deref w
     let b ← scope.globstar s
     if b
     then
-      let i1 ← c.i + 1#usize
+      let i ← c.i + 1#usize
       ok (scope.Next.Go
-        { c with i := i1, starred := true, «at» := c.i, «from» := c.j })
+        { c with i, starred := true, «at» := c.i, «from» := c.j })
     else
-      let i1 := Slice.len parts
-      if c.j >= i1
-      then let i2 := Slice.len wanted
-           ok (scope.Next.Done (c.i = i2))
-      else
-        let i2 := Slice.len wanted
-        if c.i < i2
+      let o ←
+        core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+          (alloc.vec.Vec Std.U32)) parts c.j
+      match o with
+      | none => let i := Slice.len wanted
+                ok (scope.Next.Done (c.i = i))
+      | some part =>
+        let s1 := alloc.vec.Vec.deref w
+        let s2 := alloc.vec.Vec.deref part
+        let b1 ← scope.segment s1 s2
+        if b1
         then
-          let s1 := alloc.vec.Vec.deref v
-          let v1 ← Slice.index_usize parts c.j
-          let s2 := alloc.vec.Vec.deref v1
-          let b1 ← scope.segment s1 s2
-          if b1
+          let i ← c.i + 1#usize
+          let i1 ← c.j + 1#usize
+          ok (scope.Next.Go { c with i, j := i1 })
+        else
+          if c.starred
           then
-            let i3 ← c.i + 1#usize
-            let i4 ← c.j + 1#usize
-            ok (scope.Next.Go { c with i := i3, j := i4 })
-          else
-            if c.starred
+            let i := Slice.len wanted
+            if c.at < i
             then
-              let i3 ← c.at + 1#usize
-              let i4 ← c.from + 1#usize
-              ok (scope.Next.Go { c with i := i3, j := i4, «from» := i4 })
+              let i1 := Slice.len parts
+              if c.from < i1
+              then
+                let i2 ← c.at + 1#usize
+                let i3 ← c.from + 1#usize
+                ok (scope.Next.Go { c with i := i2, j := i3, «from» := i3 })
+              else ok (scope.Next.Done false)
             else ok (scope.Next.Done false)
-        else
-          if c.starred
-          then
-            let i3 ← c.at + 1#usize
-            let i4 ← c.from + 1#usize
-            ok (scope.Next.Go { c with i := i3, j := i4, «from» := i4 })
           else ok (scope.Next.Done false)
-  else
-    let i1 := Slice.len parts
-    if c.j >= i1
-    then let i2 := Slice.len wanted
-         ok (scope.Next.Done (c.i = i2))
-    else
-      let i2 := Slice.len wanted
-      if c.i < i2
-      then
-        let v ← Slice.index_usize wanted c.i
-        let s := alloc.vec.Vec.deref v
-        let v1 ← Slice.index_usize parts c.j
-        let s1 := alloc.vec.Vec.deref v1
-        let b ← scope.segment s s1
-        if b
-        then
-          let i3 ← c.i + 1#usize
-          let i4 ← c.j + 1#usize
-          ok (scope.Next.Go { c with i := i3, j := i4 })
-        else
-          if c.starred
-          then
-            let i3 ← c.at + 1#usize
-            let i4 ← c.from + 1#usize
-            ok (scope.Next.Go { c with i := i3, j := i4, «from» := i4 })
-          else ok (scope.Next.Done false)
-      else
-        if c.starred
-        then
-          let i3 ← c.at + 1#usize
-          let i4 ← c.from + 1#usize
-          ok (scope.Next.Go { c with i := i3, j := i4, «from» := i4 })
-        else ok (scope.Next.Done false)
 
 /-- [writfold_core::scope::segments]: loop body 0:
-    Source: 'crates/writfold-core/src/scope.rs', lines 154:4-159:5
+    Source: 'crates/writfold-core/src/scope.rs', lines 168:4-173:5
     Visibility: public -/
 @[rust_loop_body]
 def scope.segments_loop.body
@@ -4360,7 +4344,7 @@ def scope.segments_loop.body
   | scope.Next.Done b => ok (done b)
 
 /-- [writfold_core::scope::segments]: loop 0:
-    Source: 'crates/writfold-core/src/scope.rs', lines 154:4-159:5
+    Source: 'crates/writfold-core/src/scope.rs', lines 168:4-173:5
     Visibility: public -/
 @[rust_loop]
 def scope.segments_loop
@@ -4373,7 +4357,7 @@ def scope.segments_loop
     c
 
 /-- [writfold_core::scope::segments]:
-    Source: 'crates/writfold-core/src/scope.rs', lines 152:0-160:1
+    Source: 'crates/writfold-core/src/scope.rs', lines 166:0-174:1
     Visibility: public -/
 def scope.segments
   (wanted : Slice (alloc.vec.Vec Std.U32))
@@ -4384,7 +4368,7 @@ def scope.segments
   scope.segments_loop c wanted parts
 
 /-- [writfold_core::scope::include]:
-    Source: 'crates/writfold-core/src/scope.rs', lines 164:0-166:1
+    Source: 'crates/writfold-core/src/scope.rs', lines 178:0-180:1
     Visibility: public -/
 def scope.include
   (included : Bool) (exclude : Bool) (hit : Bool) : Result Bool := do
@@ -4395,7 +4379,7 @@ def scope.include
        else ok hit
 
 /-- [writfold_core::scope::covers]: loop body 0:
-    Source: 'crates/writfold-core/src/scope.rs', lines 173:4-182:1
+    Source: 'crates/writfold-core/src/scope.rs', lines 187:4-196:1
     Visibility: public -/
 @[rust_loop_body]
 def scope.covers_loop.body
@@ -4424,7 +4408,7 @@ def scope.covers_loop.body
   else ok (done included)
 
 /-- [writfold_core::scope::covers]: loop 0:
-    Source: 'crates/writfold-core/src/scope.rs', lines 173:4-182:1
+    Source: 'crates/writfold-core/src/scope.rs', lines 187:4-196:1
     Visibility: public -/
 @[rust_loop]
 def scope.covers_loop
@@ -4438,7 +4422,7 @@ def scope.covers_loop
     (included, index)
 
 /-- [writfold_core::scope::covers]:
-    Source: 'crates/writfold-core/src/scope.rs', lines 170:0-182:1
+    Source: 'crates/writfold-core/src/scope.rs', lines 184:0-196:1
     Visibility: public -/
 @[reducible]
 def scope.covers
@@ -4917,29 +4901,39 @@ def verdict.recorded.before
       ok (i < i1)
 
 /-- [writfold_core::verdict::recorded::better]:
-    Source: 'crates/writfold-core/src/verdict/recorded.rs', lines 85:0-99:1
+    Source: 'crates/writfold-core/src/verdict/recorded.rs', lines 87:0-108:1
     Visibility: public -/
 def verdict.recorded.better
   (recorded : Slice verdict.recorded.Statement) (best : Option Std.Usize)
   (index : Std.Usize) :
   Result (Option Std.Usize)
   := do
-  let s ← Slice.index_usize recorded index
-  let b ← verdict.recorded.usable s
-  if b
-  then
-    match best with
-    | none => ok (some index)
-    | some b1 =>
-      let s1 ← Slice.index_usize recorded b1
-      let b2 ← verdict.recorded.before s s1
-      if b2
-      then ok (some index)
-      else ok best
-  else ok best
+  let o ←
+    core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+      verdict.recorded.Statement) recorded index
+  match o with
+  | none => ok best
+  | some s =>
+    let b ← verdict.recorded.usable s
+    if b
+    then
+      match best with
+      | none => ok (some index)
+      | some b1 =>
+        let o1 ←
+          core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
+            verdict.recorded.Statement) recorded b1
+        match o1 with
+        | none => ok (some index)
+        | some kept =>
+          let b2 ← verdict.recorded.before s kept
+          if b2
+          then ok (some index)
+          else ok best
+    else ok best
 
 /-- [writfold_core::verdict::recorded::best_recorded]: loop body 0:
-    Source: 'crates/writfold-core/src/verdict/recorded.rs', lines 105:4-108:5
+    Source: 'crates/writfold-core/src/verdict/recorded.rs', lines 114:4-117:5
     Visibility: public -/
 @[rust_loop_body]
 def verdict.recorded.best_recorded_loop.body
@@ -4956,7 +4950,7 @@ def verdict.recorded.best_recorded_loop.body
   else ok (done best)
 
 /-- [writfold_core::verdict::recorded::best_recorded]: loop 0:
-    Source: 'crates/writfold-core/src/verdict/recorded.rs', lines 105:4-108:5
+    Source: 'crates/writfold-core/src/verdict/recorded.rs', lines 114:4-117:5
     Visibility: public -/
 @[rust_loop]
 def verdict.recorded.best_recorded_loop
@@ -4970,7 +4964,7 @@ def verdict.recorded.best_recorded_loop
     (best, index)
 
 /-- [writfold_core::verdict::recorded::best_recorded]:
-    Source: 'crates/writfold-core/src/verdict/recorded.rs', lines 102:0-110:1
+    Source: 'crates/writfold-core/src/verdict/recorded.rs', lines 111:0-119:1
     Visibility: public -/
 @[reducible]
 def verdict.recorded.best_recorded
@@ -4980,7 +4974,7 @@ def verdict.recorded.best_recorded
   verdict.recorded.best_recorded_loop recorded none 0#usize
 
 /-- [writfold_core::verdict::recorded::newest]:
-    Source: 'crates/writfold-core/src/verdict/recorded.rs', lines 120:0-155:1
+    Source: 'crates/writfold-core/src/verdict/recorded.rs', lines 129:0-164:1
     Visibility: public -/
 def verdict.recorded.newest
   («local» : Option verdict.recorded.Statement)

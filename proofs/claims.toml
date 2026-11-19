@@ -1172,10 +1172,15 @@ file = "crates/writfold-core/src/idle.rs"
 function = "newer"
 lean = "writfold_core.idle.newer"
 theorems = [
+  "Writfold.Core.Idle.newer_past_end",
   "Writfold.Core.Idle.newer_spec",
+  "Writfold.Core.Idle.newer_total",
 ]
+total = "Writfold.Core.Idle.newer_total"
+subsumes = ["TAU-N001", "TAU-P003"]
 mutants = [
   "newest-last-of-equal",
+  "newer-reads-past-end",
 ]
 
 [[claim]]
@@ -1972,11 +1977,16 @@ file = "crates/writfold-core/src/scope.rs"
 function = "char_step"
 lean = "writfold_core.scope.char_step"
 theorems = [
+  "Writfold.Core.Scope.char_step_outside",
   "Writfold.Core.Scope.char_step_spec",
+  "Writfold.Core.Scope.char_step_total",
 ]
+total = "Writfold.Core.Scope.char_step_total"
+subsumes = ["TAU-N001", "TAU-P003"]
 mutants = [
   "segment-no-backtrack",
   "star-needs-a-char",
+  "char-step-stretches-out",
 ]
 
 [[claim]]
@@ -2031,11 +2041,16 @@ file = "crates/writfold-core/src/scope.rs"
 function = "path_step"
 lean = "writfold_core.scope.path_step"
 theorems = [
+  "Writfold.Core.Scope.path_step_outside",
   "Writfold.Core.Scope.path_step_spec",
+  "Writfold.Core.Scope.path_step_total",
 ]
+total = "Writfold.Core.Scope.path_step_total"
+subsumes = ["TAU-N001", "TAU-P003"]
 mutants = [
   "globstar-needs-a-segment",
   "segments-accept-trailing",
+  "path-step-stretches-out",
 ]
 
 [[claim]]
@@ -2327,10 +2342,15 @@ file = "crates/writfold-core/src/verdict/recorded.rs"
 function = "better"
 lean = "writfold_core.verdict.recorded.better"
 theorems = [
+  "Writfold.Core.Recorded.better_past_end",
   "Writfold.Core.Recorded.better_spec",
+  "Writfold.Core.Recorded.better_total",
 ]
+total = "Writfold.Core.Recorded.better_total"
+subsumes = ["TAU-N001", "TAU-P003"]
 mutants = [
   "better-tie-takes-later",
+  "better-past-end-underflows",
 ]
 
 [[claim]]
