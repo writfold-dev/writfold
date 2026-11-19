@@ -20,7 +20,7 @@ pub const KEYS: [&str; 2] = ["not_applicable", "none_found"];
 pub type Listed = Option<Vec<String>>;
 
 /// Read one list naming declared items; `Some(None)` when absent.
-fn listed(c: &mut Check<'_>, key: &str, items: &[Item]) -> Option<Listed> {
+pub(super) fn listed(c: &mut Check<'_>, key: &str, items: &[Item]) -> Option<Listed> {
     let list = match c.list(key) {
         Field::Absent => return Some(None),
         Field::Bad => return None,

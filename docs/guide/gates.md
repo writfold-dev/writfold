@@ -1,6 +1,6 @@
 # Gates
 
-> **Status:** built in v0.3.0-dev.1; instruction gates, gate scripts, the Weft assessed gate, run-record checks and plan-owed gates built in v0.4.0-dev.1; checklist gates and `gate cover` built in v0.5.0-dev.1; observations as evidence built in v0.5.0-dev.3. Nothing owed reads as not met, and the self-staling note, built in v0.6.0-dev.1. Every fault of a definition reported at its line and column, built in v0.6.0-dev.2. A gate's `accept` list, a checklist's `not_applicable` and `none_found`, the `none-found` outcome and binding receipts and statements to their run and subject in the proved kernel, built in v0.6.0-dev.3. Scope globs proved (a `*` now also covers a literal `*` in a path) and `seq` on assessed receipts, built in v0.6.0-dev.4. A second checkout of the KB's repository judged as itself, never as the run's recorded worktree, and `gate lines` agreeing with the plan's word: fixed in v0.6.0-dev.4.
+> **Status:** built in v0.3.0-dev.1; instruction gates, gate scripts, the Weft assessed gate, run-record checks and plan-owed gates built in v0.4.0-dev.1; checklist gates and `gate cover` built in v0.5.0-dev.1; observations as evidence built in v0.5.0-dev.3. Nothing owed reads as not met, and the self-staling note, built in v0.6.0-dev.1. Every fault of a definition reported at its line and column, built in v0.6.0-dev.2. A checklist's `own_evidence` and `evidence_from`, and `bound:` notes on shared and other-item evidence, built in v0.6.0-dev.9. A gate's `accept` list, a checklist's `not_applicable` and `none_found`, the `none-found` outcome and binding receipts and statements to their run and subject in the proved kernel, built in v0.6.0-dev.3. Scope globs proved (a `*` now also covers a literal `*` in a path) and `seq` on assessed receipts, built in v0.6.0-dev.4. A second checkout of the KB's repository judged as itself, never as the run's recorded worktree, and `gate lines` agreeing with the plan's word: fixed in v0.6.0-dev.4.
 
 A gate is one small check with a path scope. `gate run` runs its command and keeps a receipt pinned to the exact bytes checked. `gate status` then says, on every read, whether that evidence still holds. Gates report; they block nothing unless a [guard rule](hooks.md#guard-rules) names them.
 
@@ -360,6 +360,7 @@ description = "code review checklist"
 
 - **`items`**: one to 64 strings, each `id: text`, the ID a slug unique in the gate. **`optional`** names items that never hold the gate open. Both are part of the definition digest, so adding, removing or rewording an item makes every row stale.
 - **`not_applicable`** (built in v0.6.0-dev.3): the items `not-applicable` covers. Absent: every item, as before; an empty list: none. **`none_found`**: the items `none-found` covers. Absent: none. Each names declared items only (`ref.undefined` otherwise, with the nearest ID) and joins the digest only when written.
+- **`own_evidence`** (built in v0.6.0-dev.9): the items that need evidence of their own. A `supported` or `none-found` row for one of them must cite, among its references, a look recorded `--for` that item, or a gate `evidence_from` names for it. **`evidence_from`**: `["item: gate …"]`, the gates whose receipts (or `gate:<id>`) answer an item. An item named here and not in `own_evidence` takes only those gates. The gates named are not checked to exist: a gate that does not exist grounds nothing. Both keys name declared items only and join the digest only when written, so adding one makes that checklist's rows stale ("the definition changed"), and the next cover row is checked against it. Items in neither take any grounded reference, as before. The decision is the proved `bind` kernel ([gate evidence spec](../writfold/gate-evidence-spec.md)).
 - A checklist gate takes `scope` (the content its rows are about) and optionally `instructions` and `description`; it takes no `argv`, `workdir`, `timeout_seconds`, `subject`, `require` or Weft keys.
 
 ```text
@@ -375,6 +376,7 @@ writfold kb gate cover <gate> <item> none-found OBS… --reason TEXT --by WHO
 |---|---|
 | `not-applicable` for an item the policy does not list | `review.record cannot be covered not-applicable (not_applicable = ["perf"] @.writfold/gates/review.toml:7); cover it supported with evidence` (and `, or none-found citing a look` when the item is in `none_found`) |
 | `none-found` for an item not in `none_found` | `review.record cannot be covered none-found (none_found = ["errors"] @…:8)` |
+| `supported` or `none-found` whose references do not answer the item (`own_evidence`, `evidence_from`) | `review.errors takes its own evidence (a look recorded --for review.errors) (own_evidence @.writfold/gates/review.toml:9): none of the cited references does`; `review.record takes evidence from gate:unit (evidence_from @…:10): …` |
 | `none-found` citing anything but a look of this run that found nothing | `none-found needs a look that found nothing: <ref> is a look with status ok; record one with writfold kb observe --status no-data` |
 
 A row whose outcome the policy does not take (hand-written, or merged) keeps its word and does not cover: the item line carries `!not-accepted` and the gate stays `open` with that item first owed. An owed item whose choices the policy restricts lists them once: `item: errors [open] errors are handled (supported or none-found)`. `gate lines` prints a `none-found` item as `errors: none-found (1 look): <reason>`. In JSON an item's `standing` may be `none-found`; item rows gain `"allowed": [...]` when the policy restricts them and `"accepted": false` when a current row's outcome is not allowed.
@@ -472,7 +474,7 @@ Grounded is not the same as relevant: any grounded reference can back any item. 
   bound: also backs 1 other item @runs/run-…/observed/20261111T000000Z-….json:1 !shared
 ```
 
-These lines only report: no item's standing changes and nothing is refused. A shared reference is often right (one test run can answer several items), so the count is there for a reader, not a rule. Letting an item require its own evidence is planned ([gate evidence spec](../writfold/gate-evidence-spec.md), stage 3).
+These lines only report: no item's standing changes and nothing is refused. A shared reference is often right (one test run can answer several items), so the count is there for a reader, not a rule. An item that must have its own evidence says so in the definition: `own_evidence` and `evidence_from` (above).
 
 ## What is claimed
 

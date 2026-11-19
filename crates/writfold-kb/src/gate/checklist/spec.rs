@@ -7,12 +7,21 @@
 //!
 //! Each item is `id: text`, its ID a slug unique in the gate; there is
 //! at least one and at most [`MAX_ITEMS`]. `optional` names declared
-//! items. Both keys are part of the definition digest.
+//! items. Both keys are part of the definition digest. The reasoned
+//! outcomes' keys are [`super::allowed`]'s, what answers an item is
+//! [`super::evidence`]'s.
 use crate::defs::{Check, Spanned, Text};
 use crate::write::is_slug;
 
 /// The keys only a checklist gate may use.
-pub const KEYS: [&str; 4] = ["items", "optional", "not_applicable", "none_found"];
+pub const KEYS: [&str; 6] = [
+    "items",
+    "optional",
+    "not_applicable",
+    "none_found",
+    "own_evidence",
+    "evidence_from",
+];
 /// The most items one checklist may declare.
 pub const MAX_ITEMS: usize = 64;
 
@@ -28,6 +37,10 @@ pub struct Item {
     pub na: bool,
     /// `none-found` covers it.
     pub none: bool,
+    /// What answers it ([`super::evidence`]).
+    pub need: writfold_core::bind::Need,
+    /// The gates `evidence_from` names for it.
+    pub from: Vec<String>,
 }
 
 /// A checklist gate's own fields.
@@ -37,6 +50,9 @@ pub struct Spec {
     /// `not_applicable` and `none_found` as written ([`super::allowed`]).
     pub not_applicable: super::allowed::Listed,
     pub none_found: super::allowed::Listed,
+    /// `own_evidence` and `evidence_from` as written ([`super::evidence`]).
+    pub own_evidence: super::allowed::Listed,
+    pub evidence_from: super::evidence::From,
 }
 
 impl Spec {
@@ -54,8 +70,10 @@ impl Spec {
             .map(|i| i.id.as_str())
             .collect();
         let own = super::allowed::canonical(&self.items, &self.not_applicable, &self.none_found);
+        let needs =
+            super::evidence::canonical(&self.items, &self.own_evidence, &self.evidence_from);
         format!(
-            "items={}\noptional={}\n{own}",
+            "items={}\noptional={}\n{own}{needs}",
             serde_json::to_string(&items).unwrap_or_default(),
             serde_json::to_string(&optional).unwrap_or_default()
         )
@@ -98,6 +116,8 @@ fn item(c: &mut Check<'_>, text: &Spanned<Text>) -> Option<Item> {
         required: true,
         na: true,
         none: false,
+        need: writfold_core::bind::Need::Any,
+        from: Vec::new(),
     })
 }
 
@@ -188,10 +208,13 @@ pub fn check(c: &mut Check<'_>, class: &str) -> Option<Option<Spec>> {
         }
     }
     let (not_applicable, none_found) = super::allowed::check(c, &mut items)?;
+    let (own_evidence, evidence_from) = super::evidence::check(c, &mut items)?;
     ok.then_some(Some(Spec {
         items,
         not_applicable,
         none_found,
+        own_evidence,
+        evidence_from,
     }))
 }
 

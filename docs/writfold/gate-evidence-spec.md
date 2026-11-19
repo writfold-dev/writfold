@@ -1,6 +1,6 @@
 # Gate evidence: binding and pins
 
-> **Status:** specification, 18 November 2026, against `main` at `c2de2a7` (v0.6.0-dev.8). Stages 1 (kernels and proofs) and 2 (report-only notes) are built; stages 3 to 6 are not. The authority is [mission.md](mission.md). The rule is AGENTS.md's "Lean proofs first": every decision below is a pure kernel in `crates/writfold-core`, proved in Lean, before any verb calls it.
+> **Status:** specification, 18 November 2026, against `main` at `c2de2a7` (v0.6.0-dev.8). Stages 1 (kernels and proofs), 2 (report-only notes) and 3 (`own_evidence`, `evidence_from`) are built; stages 4 to 6 are not. The authority is [mission.md](mission.md). The rule is AGENTS.md's "Lean proofs first": every decision below is a pure kernel in `crates/writfold-core`, proved in Lean, before any verb calls it.
 
 ## 0. Why
 
@@ -24,7 +24,7 @@ A cover row stands on (item, evidence, present). Two concepts cover the gaps.
 
 | `Bound` | Meaning |
 |---|---|
-| `Named` | the item names it: a receipt or standing of a gate in the item's `evidence` list |
+| `Named` | the item names it: a receipt or standing of a gate in the item's `evidence_from` entry |
 | `This` | it names this item: a look recorded `--for` this item |
 | `Other` | it names another item: a look recorded `--for` another item |
 | `Unbound` | neither: a citation token, a retrieval, a look without `--for`, a gate the item does not name |
@@ -32,8 +32,8 @@ A cover row stands on (item, evidence, present). Two concepts cover the gaps.
 | `Need` | Declared as | Answered by |
 |---|---|---|
 | `Any` | no key (default, today's behaviour) | anything |
-| `Own` | `evidence = "own"` | `This`, `Named` |
-| `Named` | `evidence = ["gate:<id>", …]` | `Named` |
+| `Own` | the item in `own_evidence = [...]` | `This`, `Named` |
+| `Named` | the item in `evidence_from = ["item: gate …"]` only | `Named` |
 
 An item is *answered* when some cited reference is both grounded and answers it. A `supported` or `none-found` row that is not answered stands `stale`, as a row whose evidence moved does. Binding only narrows the standing. Only `Named` is checked from both sides. `--for` is the recorder's own word, and it is enough to catch mistakes ([gates](../guide/gates.md): mistakes, not adversaries). Under `Own`, a look must name the item explicitly; a look without `--for` does not count (owner default).
 
@@ -90,7 +90,7 @@ pub fn nothing_found(status: observe::Status, pins: &[Pin]) -> bool;
 pub fn current_under(about: bool, pins: &[Pin]) -> bool;
 ```
 
-**Tested, not proved:** the TOML keys `evidence` and `ages_as` and their diagnostics; parsing the `for` and `searched` fields; classifying a reference into a `Bound`; resolving stores and computing other repositories' scope digests (`stale/repos.rs`); clock reads and turning a duration into seconds; rendering `why:` lines and notes about shared references.
+**Tested, not proved:** the TOML keys `own_evidence`, `evidence_from` and `ages_as` and their diagnostics; parsing the `for` and `searched` fields; classifying a reference into a `Bound`; resolving stores and computing other repositories' scope digests (`stale/repos.rs`); clock reads and turning a duration into seconds; rendering `why:` lines and notes about shared references.
 
 **TLC:** no change. Each decision is made per read, and `cover` and `observe` remain single create-new writes. `RunGraph.tla` treats a gate as met when a passing receipt is about the present bytes, and pins only narrow "about".
 
@@ -100,7 +100,7 @@ Each stage ships on its own. Stages 2 to 6 call only the kernels proved in stage
 
 1. **Kernels and proofs.** Built: `bind.rs`, `pin.rs`, `Bind.lean`, `Pin.lean`, the audit claims and eight mutants.
 2. **Report only.** Built (`gate/checklist/bound.rs`; [gates](../guide/gates.md#which-item-the-evidence-was-for-built-in-v060-dev9)). `gate status` and `gate cover` add notes: `!other-item` when a cited look's `for` names another item, and a count when one reference grounds several items. No standing changes. No refusal on a count: a count is shown, never decided on.
-3. **Per-item `evidence`.** The key joins the definition digest only when it is written, as `not_applicable` and `none_found` do, so existing rows keep their standing. `gate cover` refuses a `supported` or `none-found` row that `item_under` would not stand, and the read path reports it `stale` with the reason.
+3. **Per-item evidence.** Built as two checklist keys in the list style of `not_applicable`: `own_evidence = [items]` (`Need::Own`) and `evidence_from = ["item: gate …"]` (`Need::Named`, or `Own` when the item is in both); `gate/checklist/evidence.rs`, classification in `bound.rs`. The keys join the definition digest only when written, as `not_applicable` and `none_found` do: a checklist without them keeps its digest and its rows; adding one makes that checklist's rows stale. `gate cover` refuses a `supported` or `none-found` row that `item_under` would not stand, and the read path reports it `stale` with the reason.
 4. **Negative looks age.** A look's `--source` kind lifetime applies to `no-data` and `not-found` through `timed`. The optional `searched` token on `writfold-observation/1` is an additive field, so an older binary ignores it and reads the row as standing. It is judged like any citation, resolved through the store map, and never fetched. `kb lint` warns about a negative look of an undeclared kind, which never ages.
 5. **Receipt lifetime.** `ages_as = "<kind>"` on an observed-mode gate. The receipt's time pin comes from `timed` with that kind's catalog lifetime, and `current_under` decides. An aged receipt is `stale`.
 6. **`repo:<store>/<glob>` scope entries.** The caller folds each store's scope digest into the content digest the receipt already records. An unresolved store is `Unreadable`.
@@ -111,7 +111,7 @@ Each stage ships on its own. Stages 2 to 6 call only the kernels proved in stage
 - A threshold for shared references that refuses anything.
 - Pattern matching over notes ("mentions a grep").
 - Independent-origins counting.
-- Executing or checking what an observation says was run. A team that wants execution uses a mechanical gate and names it in the item's `evidence`.
+- Executing or checking what an observation says was run. A team that wants execution uses a mechanical gate and names it in the item's `evidence_from`.
 - Fetching, cloning or authenticated approval.
 - Receipts about more than one subject, or any change to the proved `gate::about`.
 - An example docs-sync sweep gate (owner, 18 November 2026).

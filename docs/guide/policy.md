@@ -113,5 +113,5 @@ description = "edit source only once the research gate is met"
 |---|---|
 | A reference exists | checked: the citation, receipt or observation resolves |
 | It is fresh | checked: re-grounded on every read, stale when its bytes moved |
-| It is relevant | the judgement of whoever covered or attested, recorded as theirs; `gate status` notes a look recorded for another item and a reference shared across items, without deciding on either |
+| It is relevant | the judgement of whoever covered or attested, recorded as theirs; `gate status` notes a look recorded for another item and a reference shared across items; a checklist may require that an item's evidence be its own (`own_evidence`) or come from named gates (`evidence_from`), checked mechanically, which still says nothing of what the evidence shows |
 | The conclusion follows | not determined |

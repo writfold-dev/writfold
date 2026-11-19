@@ -11,16 +11,40 @@
 //! observation files; the decision is the kernel's.
 use super::cover::{Cited, Cover};
 use super::judge::Entry;
+use super::spec::Item as Spec;
 use crate::emit::More;
+use crate::error::{KbError, Result};
+use crate::gate::def::Definition;
 use crate::gate::status::Judged;
 use crate::observe::Filed;
 use std::collections::{BTreeMap, BTreeSet};
-use writfold_core::bind::{self, Bound, Need};
+use writfold_core::bind::{self, Bound, Need, Ref};
 use writfold_core::checklist::Item;
 
+/// The gate a reference names: `gate:<id>`, or a receipt
+/// `runs/<run>/gates/<id>-<stamp>-<hex>.json`.
+fn gate_of(c: &Cited) -> Option<&str> {
+    if let Some(id) = c.reference.trim().strip_prefix("gate:") {
+        return Some(id.trim());
+    }
+    let (_, name) = c
+        .path
+        .as_deref()?
+        .strip_prefix("runs/")?
+        .split_once("/gates/")?;
+    let mut parts = name.strip_suffix(".json")?.rsplitn(3, '-');
+    let (_hex, _stamp) = (parts.next()?, parts.next()?);
+    parts.next()
+}
+
 /// How a cited reference relates to `gate`.`item`, with the item a look
-/// recorded for another item names.
-fn bound_of(observed: &[Filed], c: &Cited, gate: &str, item: &str) -> (Bound, Option<String>) {
+/// recorded for another item names: `Named` when it is a gate the item's
+/// `evidence_from` names.
+pub fn classify(observed: &[Filed], c: &Cited, gate: &str, item: &Spec) -> (Bound, Option<String>) {
+    if gate_of(c).is_some_and(|g| item.from.iter().any(|f| f == g)) {
+        return (Bound::Named, None);
+    }
+    let item = item.id.as_str();
     let look = (c.path.as_deref())
         .and_then(|p| observed.iter().find(|f| f.path == p))
         .and_then(|f| f.parsed.as_ref().ok());
@@ -70,7 +94,7 @@ fn notes(observed: &[Filed], backs: &BTreeMap<String, usize>, gate: &str, e: &En
     let mut out = Vec::new();
     let mut seen = BTreeSet::new();
     for c in row.evidence.iter().filter(|c| seen.insert(key(c))) {
-        let (bound, other) = bound_of(observed, c, gate, &e.spec.id);
+        let (bound, other) = classify(observed, c, gate, &e.spec);
         if let Some(other) = other.filter(|_| !bind::answers(Need::Own, bound)) {
             let said = format!("recorded for {other}, not this item");
             out.push(note(c, "other-item", &said));
@@ -105,5 +129,70 @@ pub fn annotate(observed: &[Filed], judged: &mut [Judged<'_>]) {
             let found = notes(observed, &backs, &gate, entry);
             entry.bound = found;
         }
+    }
+}
+
+/// Whether the cited references answer `item` ([`bind::answered`]);
+/// `grounded` says whether they are all grounded now.
+pub fn answered(
+    observed: &[Filed],
+    gate: &str,
+    item: &Spec,
+    cited: &[Cited],
+    grounded: bool,
+) -> bool {
+    let refs: Vec<Ref> = (cited.iter())
+        .map(|c| Ref {
+            grounded,
+            bound: classify(observed, c, gate, item).0,
+        })
+        .collect();
+    bind::answered(item.need, &refs)
+}
+
+/// Refuse a new `supported` or `none-found` row whose references do not
+/// answer its item.
+pub fn require(observed: &[Filed], d: &Definition, item: &str, cited: &[Cited]) -> Result<()> {
+    let Some(spec) = d.checklist.as_ref().and_then(|s| s.item(item)) else {
+        return Ok(());
+    };
+    if answered(observed, &d.id, spec, cited, true) {
+        return Ok(());
+    }
+    let key = match spec.need {
+        Need::Named => "evidence_from",
+        Need::Any | Need::Own => "own_evidence",
+    };
+    let at = crate::gate::policy::key_line(d, key);
+    Err(KbError::Refused(format!(
+        "{}.{item} takes {} ({key} @{}:{at}): none of the cited references does",
+        d.id,
+        super::evidence::wanted(&d.id, spec),
+        d.path
+    )))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Cited, gate_of};
+    use writfold_core::assess::Grounding;
+
+    fn cited(reference: &str, path: Option<&str>) -> Cited {
+        Cited {
+            reference: reference.into(),
+            grounding: Grounding::Grounded,
+            standing: "satisfied".into(),
+            path: path.map(str::to_owned),
+        }
+    }
+
+    #[test]
+    fn a_gate_is_named_by_its_reference_or_its_receipt() {
+        assert_eq!(gate_of(&cited("gate:unit", None)), Some("unit"));
+        let receipt = "runs/run-1/gates/docs-sweep-20261119T100504Z-ae033a.json";
+        assert_eq!(gate_of(&cited("x", Some(receipt))), Some("docs-sweep"));
+        let look = "runs/run-1/observed/20261119T100504Z-ae033a.json";
+        assert_eq!(gate_of(&cited("x", Some(look))), None);
+        assert_eq!(gate_of(&cited("⟦cite kind=web⟧", None)), None);
     }
 }

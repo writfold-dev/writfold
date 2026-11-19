@@ -10,7 +10,7 @@ use crate::defs::{Check, Field, Slot, Spanned, Text, Value};
 use std::path::Path;
 use writfold_core::diag::Report;
 
-const KEYS: [&str; 20] = [
+const KEYS: [&str; 22] = [
     "accept",
     "schema",
     "id",
@@ -31,6 +31,8 @@ const KEYS: [&str; 20] = [
     "optional",
     "not_applicable",
     "none_found",
+    "own_evidence",
+    "evidence_from",
 ];
 const COMMON: [&str; 7] = [
     "accept",
@@ -51,7 +53,15 @@ fn keys_for(class: Option<&str>) -> Vec<&'static str> {
         Some("attested") => &["scope", "subject"],
         Some(ASSESSED) => &["weft", "checks", "weft_sha256", "timeout_seconds"],
         Some(RUN_RECORD) => &["require"],
-        Some(CHECKLIST) => &["scope", "items", "optional", "not_applicable", "none_found"],
+        Some(CHECKLIST) => &[
+            "scope",
+            "items",
+            "optional",
+            "not_applicable",
+            "none_found",
+            "own_evidence",
+            "evidence_from",
+        ],
         _ => return KEYS.to_vec(),
     };
     COMMON.iter().chain(own).copied().collect()

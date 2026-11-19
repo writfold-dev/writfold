@@ -183,6 +183,7 @@ fn rows(
     };
     let content = plain.snapshot.scoped(&d.patterns()).digest;
     let commit = plain.snapshot.commit.as_str().to_owned();
+    let observed = crate::observe::filed(&session.ws.root, &filings.run_dir);
     let mut out = Vec::new();
     for (index, c) in covers.iter().enumerate() {
         let one = || -> Result<Vec<u8>> {
@@ -194,6 +195,9 @@ fn rows(
                 Outcome::NoneFound => super::looks::recorded(&cx, &c.references)?,
                 _ => observations(&cx, c)?,
             };
+            if matches!(c.outcome, Outcome::Supported | Outcome::NoneFound) {
+                super::bound::require(&observed, d, &c.item, &evidence)?;
+            }
             let rows = super::rows_of(&filings.covers, &c.gate, &c.item, &subject.name);
             let seq = rows.iter().map(|(_, r)| r.seq).max().unwrap_or(0) + 1;
             Ok(cover::bytes(&cover::Cover {
