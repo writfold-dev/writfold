@@ -74,6 +74,8 @@ $ writfold kb find --each "harbor api" "zzqx" --json
 
 `context` and `uses` (built in v0.6.0-dev.10) end, when a store is declared, with rows of kind `material` (section `material`, flag `store-claim`, `status`, `path` and `line` null, `text` the README's first heading or the directory), each with five more keys: `store`, `commit` (the full commit read), `dir`, `subject` (the element of `subject:` that listed it) and `claim` (always `store`). Its continuations are `at` (a code locator of the `README.md`) and `via` (`subject: <id>`). The trailer then gains `stores`, one object per declared store: `name`, `state` (`read`, `over-limit`, `missing`, `mismatch`, `partial-clone`, `no-commit` or `git-error`), `commit` (null when none was read) and `via` (`map`, `search-root`, `hint`, or empty); `counts.material` is the number of rows. With no store declared none of this is present ([stores](stores.md#material-behind-a-record)).
 
+An observation recorded with `--snapshot` (built in v0.6.0-dev.10) carries a `snapshot` string beside `cite` in its file; a `looked` continuation whose newest look kept a snapshot has the flag `snapshot`.
+
 `find --kind K[,K] [--project P]` with no text lists every record of those kinds in ID order, each once, with a `match` continuation whose `text` is `listed`; there is no fifty-row cap, the budget pages the answer. Rows keep the record's title in `text`. Without `--kind`, `find` still requires text; `match` and `--signatures` always do.
 
 ### Diagnostics

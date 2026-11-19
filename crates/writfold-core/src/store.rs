@@ -216,6 +216,75 @@ pub fn claim(attached: bool, exact: bool, aliased: usize) -> Claim {
     }
 }
 
+/// The facts about a snapshot that are not Git commits or bytes at a path.
+pub struct SnapshotFacts {
+    /// The look's status embeds a citation (`observe::embeds`).
+    pub embeds: bool,
+    /// The store is declared.
+    pub declared: bool,
+    /// Its freshness is `pinned`.
+    pub pinned: bool,
+    /// [`resolve`] found a clone with a work tree.
+    pub local: bool,
+    /// The bytes in the work tree are the ones its provenance file names.
+    pub intact: bool,
+}
+
+/// Why `observe --snapshot` records nothing, in the order checked.
+pub enum Withheld {
+    /// The status embeds no citation (`no-data`, `not-found`, `error`, …).
+    NoCitation,
+    /// No declared store to keep it in.
+    NotAStore,
+    /// The store is judged at head, where a reorganisation would lose it.
+    NotPinned,
+    /// The store has no clone with a work tree here.
+    NotLocal,
+    /// The bytes no longer match their provenance file.
+    Damaged,
+    /// The store has no commit, or its `HEAD` holds nothing at the path:
+    /// the only answer under which files may be written into the store.
+    NotCommitted,
+    /// `HEAD` holds other bytes at the path (a filter, or an edit).
+    OtherBytes,
+    /// No ref reaches `HEAD`.
+    Unanchored,
+}
+
+/// Whether `observe --snapshot` records the observation.
+pub enum Snapshot {
+    Record,
+    Withhold(Withheld),
+}
+
+/// `commit`: the store's `HEAD` commit (`Absent` when it has none). `at`:
+/// what `HEAD:<path>` holds against the snapshot's bytes, the worse of the
+/// file and its provenance file. A snapshot is recorded exactly when its
+/// citation would read fresh under [`pinned`]: there is no second rule.
+pub fn snapshot(facts: &SnapshotFacts, commit: &Commit, at: &AtPin) -> Snapshot {
+    if !facts.embeds {
+        return Snapshot::Withhold(Withheld::NoCitation);
+    }
+    if !facts.declared {
+        return Snapshot::Withhold(Withheld::NotAStore);
+    }
+    if !facts.pinned {
+        return Snapshot::Withhold(Withheld::NotPinned);
+    }
+    if !facts.local {
+        return Snapshot::Withhold(Withheld::NotLocal);
+    }
+    if !facts.intact {
+        return Snapshot::Withhold(Withheld::Damaged);
+    }
+    match (commit, at) {
+        (Commit::Absent, _) | (_, AtPin::Nothing) => Snapshot::Withhold(Withheld::NotCommitted),
+        (_, AtPin::Other) => Snapshot::Withhold(Withheld::OtherBytes),
+        (Commit::Unanchored, AtPin::Cited) => Snapshot::Withhold(Withheld::Unanchored),
+        (Commit::Anchored, AtPin::Cited) => Snapshot::Record,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::{

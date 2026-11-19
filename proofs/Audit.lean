@@ -200,6 +200,7 @@ def claims : List Name := [
   ``Writfold.Core.Ground.embeds_iff,
   ``Writfold.Core.Ground.grounds_iff,
   ``Writfold.Core.Ground.of_observation_grounded_iff,
+  ``Writfold.Core.Ground.of_observation_antitone,
   ``Writfold.Core.Ground.of_statement_spec,
   ``Writfold.Core.Ground.moved_iff,
   -- scope globs (writfold_core::scope, proof backfill G6)
@@ -387,6 +388,11 @@ def claims : List Name := [
   ``Writfold.Core.Store.claim_ambiguous_iff,
   ``Writfold.Core.Store.claim_unknown_iff,
   ``Writfold.Core.Store.claim_needs_store,
+  ``Writfold.Core.Store.snapshot_record_iff,
+  ``Writfold.Core.Store.snapshot_record_is_fresh,
+  ``Writfold.Core.Store.snapshot_uncommitted_withheld,
+  ``Writfold.Core.Store.snapshot_order,
+  ``Writfold.Core.Store.snapshot_stage_iff,
   -- evidence binding (writfold_core::bind)
   ``Writfold.Core.Bind.answers_spec,
   ``Writfold.Core.Bind.answers_any,

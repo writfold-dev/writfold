@@ -18,6 +18,7 @@ pub mod observe;
 pub mod record;
 pub mod retrieval;
 pub mod run;
+pub mod snapshot;
 pub mod span;
 pub mod status;
 

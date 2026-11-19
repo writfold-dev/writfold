@@ -95,6 +95,7 @@ writes (atomic; they leave the work tree dirty for you to commit):
   cite make --kind K key=value …   a checked kind's token from its checker's make (prints it)
   observe --source KIND --locator TEXT --status ok|partial|no-data|not-found|timeout|denied|error
           [--revision R] [--for GATE.ITEM] [--note TEXT] [--cite TOKEN] [--searched TOKEN] [--run ID]
+          [--snapshot FILE [--store NAME]]   keep the look's bytes in a pinned store (run, commit, run again)
                                    one look at an outside source, in the run (ok/partial embed a token)
 
 checkers (kinds declared freshness = \"checked\"; writfold-check-<name> on PATH; only stale runs them):

@@ -32,6 +32,10 @@ pub struct Observe {
     pub searched: Option<String>,
     /// The run; `None` takes the current-run pointer.
     pub run: Option<String>,
+    /// A file holding the look's bytes, kept in a pinned store.
+    pub snapshot: Option<String>,
+    /// The store for `snapshot`; the only declared store when absent.
+    pub store: Option<String>,
 }
 
 fn usage(text: impl Into<String>) -> KbError {
@@ -150,8 +154,35 @@ fn shaped(session: &Session<'_>, o: &Observe, run: &str) -> Result<Observation> 
         note: optional("--note", o.note.as_ref())?,
         cite,
         searched: searched(status, o.searched.as_ref())?,
+        snapshot: None,
         observed: time::stamp(session.now),
     })
+}
+
+/// The same `observe` command, shell-quoted, without `--snapshot`, to run
+/// after the snapshot is committed.
+fn again(o: &Observe, run: &str) -> String {
+    let q = crate::store::snapshot::quote;
+    let mut out = format!(
+        "writfold kb observe --source {} --locator {} --status {}",
+        q(&o.source),
+        q(&o.locator),
+        q(&o.status)
+    );
+    let flags = [
+        ("--revision", &o.revision),
+        ("--for", &o.item),
+        ("--note", &o.note),
+        ("--cite", &o.cite),
+        ("--store", &o.store),
+    ];
+    for (flag, value) in flags {
+        if let Some(v) = value {
+            out.push_str(&format!(" {flag} {}", q(v)));
+        }
+    }
+    out.push_str(&format!(" --run {}", q(run)));
+    out
 }
 
 /// Plan one observation in the named or current run.
@@ -163,11 +194,22 @@ pub fn plan(session: &Session<'_>, o: &Observe) -> Result<Plan> {
             rec.id, rec.id
         )));
     }
-    let observation = shaped(session, o, &rec.id)?;
+    let mut observation = shaped(session, o, &rec.id)?;
+    if let Some(file) = &o.snapshot {
+        let again = again(o, &rec.id);
+        let token =
+            super::snapshot::token(session, &observation, file, o.store.as_deref(), &again)?;
+        observation.snapshot = Some(token);
+    } else if o.store.is_some() {
+        return Err(usage("--store names the store for --snapshot"));
+    }
     let name = super::unique(session.now, &observation.locator);
     let path = format!("{}/{}/{name}.json", runs::dir(&rec), observe::DIR);
     let status = observation.status;
     let mut notes = vec![format!("recorded {path} ({})", status.name())];
+    if observation.snapshot.is_some() {
+        notes.push("its snapshot is cited at the store's commit (pinned); a lost snapshot stops the look grounding".into());
+    }
     notes.push(match status {
         Status::Ok => {
             "evidence while its citation is fresh (cite it on a supported cover row)".into()

@@ -821,11 +821,38 @@ Tested, not proved: the tree read, front matter, the limits, the cache
 table and its key, the two index lookups, row order, text and JSON. Nothing
 is written to the KB, so `KbWrite.tla` and `RunGraph.tla` are unchanged.
 
+### The snapshot round (19 November 2026)
+
+[v060-stores-next-spec.md](v060-stores-next-spec.md) section 2. `store::snapshot` was
+translated, proved and its mutants calibrated before `observe --snapshot`
+called it. After the round: 670 theorems, 377 required claims (371
+before), 233 mutants (226 before).
+
+- `snapshot(facts, commit, at)`: whether `observe --snapshot` records the
+  look. `snapshot_record_iff`: exactly when the status embeds a citation,
+  the store is declared, pinned and has a work tree here, the bytes match
+  their provenance file, `HEAD` is anchored and holds those bytes.
+  `snapshot_record_is_fresh`: the citation written reads fresh under
+  `pinned`; there is no second validity rule.
+  `snapshot_uncommitted_withheld`: an uncommitted snapshot is never cited.
+  `snapshot_order`: the reason withheld is the first that applies.
+  `snapshot_stage_iff`: `NotCommitted`, the only answer under which files
+  are written into the store, exactly when the five facts hold and nothing
+  is committed at the path.
+- `of_observation_antitone` (`Ground.lean`, no kernel change): adding a
+  citation to an observation, or one ceasing to be fresh, never grounds a
+  look that did not ground; a snapshot cannot revive an expired look.
+
+Tested, not proved: reading the file, `HEAD`, reachability and
+`HEAD:<path>`; the provenance codec and layout; the create-new writes into
+the store; the printed commands. The KB write is the existing single create
+of `observe`, so `KbWrite.tla` and `RunGraph.tla` are unchanged.
+
 ### The claims and their mutants
 
 <!-- generated from proofs/mutants.py -->
 
-226 mutants (20 before 16 November 2026, 86 after the backfill's first round, 108 after the policy round, 161 after the backfill's second round, 170 after the bug-fix round, 189 after the delivery round: its nine delivery mutants re-aimed and 19 added, all 28 calibrated; 203 after the current-run and repin rounds; 210 after the attached-stores round; 214 after the run-artifacts round; 222 after the evidence-binding round; 226 after the backlinks round). Each must break exactly the theorems named.
+233 mutants (20 before 16 November 2026, 86 after the backfill's first round, 108 after the policy round, 161 after the backfill's second round, 170 after the bug-fix round, 189 after the delivery round: its nine delivery mutants re-aimed and 19 added, all 28 calibrated; 203 after the current-run and repin rounds; 210 after the attached-stores round; 214 after the run-artifacts round; 222 after the evidence-binding round; 226 after the backlinks round; 233 after the snapshot round). Each must break exactly the theorems named.
 
 | Mutant | File | What it breaks | Must break |
 |---|---|---|---|
@@ -1047,6 +1074,13 @@ is written to the KB, so `KbWrite.tla` and `RunGraph.tla` are unchanged.
 | `claim-unknown-listed` | `store.rs` | store: a subject that names no record lists nothing | `Store.claim_listed_iff`, `Store.claim_unknown_iff` |
 | `claim-alias-hides-id` | `store.rs` | store: a shared alias never hides a record's own ID | `Store.claim_exact_wins`, `Store.claim_listed_iff`, `Store.claim_ambiguous_iff` |
 | `claim-any-repository` | `store.rs` | store: nothing is listed from a repository that is not a declared store | `Store.claim_needs_store`, `Store.claim_listed_iff`, `Store.claim_ambiguous_iff`, `Store.claim_unknown_iff` |
+| `snapshot-uncommitted-recorded` | `store.rs` | store: an uncommitted snapshot is never cited | `Store.snapshot_record_iff`, `Store.snapshot_record_is_fresh`, `Store.snapshot_uncommitted_withheld`, `Store.snapshot_order`, `Store.snapshot_stage_iff` |
+| `snapshot-unanchored-recorded` | `store.rs` | store: a snapshot no ref reaches is not recorded | `Store.snapshot_record_iff`, `Store.snapshot_record_is_fresh`, `Store.snapshot_order` |
+| `snapshot-other-bytes-recorded` | `store.rs` | store: a snapshot whose committed bytes differ is not recorded | `Store.snapshot_record_iff`, `Store.snapshot_record_is_fresh`, `Store.snapshot_order` |
+| `snapshot-head-store` | `store.rs` | store: a snapshot is kept only in a pinned store | `Store.snapshot_record_iff`, `Store.snapshot_order`, `Store.snapshot_stage_iff` |
+| `snapshot-damaged-recorded` | `store.rs` | store: bytes that no longer match their provenance are not recorded | `Store.snapshot_record_iff`, `Store.snapshot_order`, `Store.snapshot_stage_iff` |
+| `snapshot-any-status` | `store.rs` | store: a status that embeds nothing takes no snapshot | `Store.snapshot_record_iff`, `Store.snapshot_order`, `Store.snapshot_stage_iff` |
+| `snapshot-order-swapped` | `store.rs` | store: a head-judged store is named before a missing clone | `Store.snapshot_order` |
 | `own-accepts-other` | `bind.rs` | bind: a look recorded for another item never answers an item that wants its own | `Bind.answers_spec` |
 | `named-accepts-this` | `bind.rs` | bind: only a named gate answers an item that names its evidence | `Bind.answers_spec` |
 | `answered-ignores-grounded` | `bind.rs` | bind: an ungrounded reference never answers | `Bind.answered_from_loop_spec` |

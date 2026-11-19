@@ -39,6 +39,7 @@ fn look(w: &World, item: Option<&str>) -> TestResult<String> {
         cite: None,
         searched: None,
         run: Some(RUN.into()),
+        ..Observe::default()
     };
     let out = writfold_kb::run(&w.request(Verb::Write(Write::Observe(o))))?;
     let path = (out.text.lines())
@@ -131,6 +132,7 @@ fn nothing(w: &World, source: &str, searched: Option<&str>) -> TestResult<String
         cite: None,
         searched: searched.map(str::to_owned),
         run: Some(RUN.into()),
+        ..Observe::default()
     };
     let out = writfold_kb::run(&w.request(Verb::Write(Write::Observe(o))))?;
     let path = (out.text.lines())
@@ -205,6 +207,7 @@ fn a_look_that_found_nothing_holds_while_what_it_searched_holds() -> TestResult 
             cite: None,
             searched: Some(token.into()),
             run: Some(RUN.into()),
+            ..Observe::default()
         };
         let why = refusal(writfold_kb::run(&w.request(Verb::Write(Write::Observe(o)))));
         assert!(why.contains("--searched"), "{why}");

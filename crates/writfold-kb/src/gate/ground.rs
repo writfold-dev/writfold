@@ -273,10 +273,13 @@ fn observed(cx: &Context<'_, '_>, reference: &str, path: &str) -> Result<Resolve
     let Ok(o) = parsed else {
         return Ok(ungrounded(reference, "not-a-valid-observation", Some(path)));
     };
-    let all = match &o.cite {
+    let mut all = match &o.cite {
         Some(cite) => verdicts(cx, tokens(cite), path)?,
         None => Vec::new(),
     };
+    if let Some(snapshot) = &o.snapshot {
+        all.extend(verdicts(cx, tokens(snapshot), path)?);
+    }
     let moved = all.iter().filter(|c| c.verdict != Verdict::Fresh).count();
     Ok(
         match (of_observation(o.status, all.len(), moved), o.status, moved) {

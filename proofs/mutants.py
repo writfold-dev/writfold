@@ -1161,6 +1161,41 @@ MUTANTS = (
            "    if !attached {\n",
            "    if !attached && false {\n",
            ("Writfold.Core.Store.claim_needs_store", "Writfold.Core.Store.claim_listed_iff", "Writfold.Core.Store.claim_ambiguous_iff", "Writfold.Core.Store.claim_unknown_iff")),
+    # store: an uncommitted snapshot is never cited
+    Mutant("snapshot-uncommitted-recorded", "store.rs",
+           '        (Commit::Absent, _) | (_, AtPin::Nothing) => Snapshot::Withhold(Withheld::NotCommitted),\n        (_, AtPin::Other) => Snapshot::Withhold(Withheld::OtherBytes),\n        (Commit::Unanchored, AtPin::Cited) => Snapshot::Withhold(Withheld::Unanchored),\n        (Commit::Anchored, AtPin::Cited) => Snapshot::Record,\n',
+           '        (Commit::Absent, _) => Snapshot::Withhold(Withheld::NotCommitted),\n        (_, AtPin::Other) => Snapshot::Withhold(Withheld::OtherBytes),\n        (Commit::Unanchored, AtPin::Cited | AtPin::Nothing) => Snapshot::Withhold(Withheld::Unanchored),\n        (Commit::Anchored, AtPin::Cited | AtPin::Nothing) => Snapshot::Record,\n',
+           ("Writfold.Core.Store.snapshot_record_iff", "Writfold.Core.Store.snapshot_record_is_fresh", "Writfold.Core.Store.snapshot_uncommitted_withheld", "Writfold.Core.Store.snapshot_order", "Writfold.Core.Store.snapshot_stage_iff")),
+    # store: a snapshot no ref reaches is not recorded
+    Mutant("snapshot-unanchored-recorded", "store.rs",
+           '        (Commit::Unanchored, AtPin::Cited) => Snapshot::Withhold(Withheld::Unanchored),\n',
+           '        (Commit::Unanchored, AtPin::Cited) => Snapshot::Record,\n',
+           ("Writfold.Core.Store.snapshot_record_iff", "Writfold.Core.Store.snapshot_record_is_fresh", "Writfold.Core.Store.snapshot_order")),
+    # store: a snapshot whose committed bytes differ is not recorded
+    Mutant("snapshot-other-bytes-recorded", "store.rs",
+           '        (_, AtPin::Other) => Snapshot::Withhold(Withheld::OtherBytes),\n',
+           '        (Commit::Anchored, AtPin::Other) => Snapshot::Record,\n        (_, AtPin::Other) => Snapshot::Withhold(Withheld::OtherBytes),\n',
+           ("Writfold.Core.Store.snapshot_record_iff", "Writfold.Core.Store.snapshot_record_is_fresh", "Writfold.Core.Store.snapshot_order")),
+    # store: a snapshot is kept only in a pinned store
+    Mutant("snapshot-head-store", "store.rs",
+           '    if !facts.pinned {\n',
+           '    if !facts.pinned && false {\n',
+           ("Writfold.Core.Store.snapshot_record_iff", "Writfold.Core.Store.snapshot_order", "Writfold.Core.Store.snapshot_stage_iff")),
+    # store: bytes that no longer match their provenance are not recorded
+    Mutant("snapshot-damaged-recorded", "store.rs",
+           '    if !facts.intact {\n',
+           '    if !facts.intact && false {\n',
+           ("Writfold.Core.Store.snapshot_record_iff", "Writfold.Core.Store.snapshot_order", "Writfold.Core.Store.snapshot_stage_iff")),
+    # store: a status that embeds nothing takes no snapshot
+    Mutant("snapshot-any-status", "store.rs",
+           '    if !facts.embeds {\n',
+           '    if !facts.embeds && false {\n',
+           ("Writfold.Core.Store.snapshot_record_iff", "Writfold.Core.Store.snapshot_order", "Writfold.Core.Store.snapshot_stage_iff")),
+    # store: a head-judged store is named before a missing clone
+    Mutant("snapshot-order-swapped", "store.rs",
+           '    if !facts.pinned {\n        return Snapshot::Withhold(Withheld::NotPinned);\n    }\n    if !facts.local {\n        return Snapshot::Withhold(Withheld::NotLocal);\n    }\n',
+           '    if !facts.local {\n        return Snapshot::Withhold(Withheld::NotLocal);\n    }\n    if !facts.pinned {\n        return Snapshot::Withhold(Withheld::NotPinned);\n    }\n',
+           ("Writfold.Core.Store.snapshot_order",)),
     # bind: a look recorded for another item never answers an item that wants its own
     Mutant("own-accepts-other", "bind.rs",
            "            Bound::Named | Bound::This => true,\n            Bound::Other | Bound::Unbound => false,",

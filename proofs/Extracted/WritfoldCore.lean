@@ -4663,6 +4663,80 @@ def store.claim
         else ok store.Claim.Ambiguous
   else ok store.Claim.NotAStore
 
+/-- [writfold_core::store::SnapshotFacts]
+    Source: 'crates/writfold-core/src/store.rs', lines 220:0-231:1
+    Visibility: public -/
+structure store.SnapshotFacts where
+  embeds : Bool
+  declared : Bool
+  pinned : Bool
+  «local» : Bool
+  intact : Bool
+
+/-- [writfold_core::store::Withheld]
+    Source: 'crates/writfold-core/src/store.rs', lines 234:0-252:1
+    Visibility: public -/
+@[discriminant isize]
+inductive store.Withheld where
+| NoCitation : store.Withheld
+| NotAStore : store.Withheld
+| NotPinned : store.Withheld
+| NotLocal : store.Withheld
+| Damaged : store.Withheld
+| NotCommitted : store.Withheld
+| OtherBytes : store.Withheld
+| Unanchored : store.Withheld
+
+/-- [writfold_core::store::Snapshot]
+    Source: 'crates/writfold-core/src/store.rs', lines 255:0-258:1
+    Visibility: public -/
+@[discriminant isize]
+inductive store.Snapshot where
+| Record : store.Snapshot
+| Withhold : store.Withheld → store.Snapshot
+
+/-- [writfold_core::store::snapshot]:
+    Source: 'crates/writfold-core/src/store.rs', lines 264:0-286:1
+    Visibility: public -/
+def store.snapshot
+  (facts : store.SnapshotFacts) (commit : store.Commit) («at» : store.AtPin)
+  :
+  Result store.Snapshot
+  := do
+  if facts.embeds
+  then
+    if facts.declared
+    then
+      if facts.pinned
+      then
+        if facts.local
+        then
+          if facts.intact
+          then
+            match commit with
+            | store.Commit.Absent =>
+              ok (store.Snapshot.Withhold store.Withheld.NotCommitted)
+            | store.Commit.Unanchored =>
+              match «at» with
+              | store.AtPin.Cited =>
+                ok (store.Snapshot.Withhold store.Withheld.Unanchored)
+              | store.AtPin.Other =>
+                ok (store.Snapshot.Withhold store.Withheld.OtherBytes)
+              | store.AtPin.Nothing =>
+                ok (store.Snapshot.Withhold store.Withheld.NotCommitted)
+            | store.Commit.Anchored =>
+              match «at» with
+              | store.AtPin.Cited => ok store.Snapshot.Record
+              | store.AtPin.Other =>
+                ok (store.Snapshot.Withhold store.Withheld.OtherBytes)
+              | store.AtPin.Nothing =>
+                ok (store.Snapshot.Withhold store.Withheld.NotCommitted)
+          else ok (store.Snapshot.Withhold store.Withheld.Damaged)
+        else ok (store.Snapshot.Withhold store.Withheld.NotLocal)
+      else ok (store.Snapshot.Withhold store.Withheld.NotPinned)
+    else ok (store.Snapshot.Withhold store.Withheld.NotAStore)
+  else ok (store.Snapshot.Withhold store.Withheld.NoCitation)
+
 /-- [writfold_core::subject::Pick]
     Source: 'crates/writfold-core/src/subject.rs', lines 16:0-25:1
     Visibility: public -/

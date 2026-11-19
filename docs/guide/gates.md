@@ -443,6 +443,7 @@ Some items are checked by looking somewhere outside Git: a dashboard, a ticket t
 ```text
 writfold kb observe --source KIND --locator TEXT --status STATUS [--revision R] [--for GATE.ITEM]
                     [--note TEXT] [--cite TOKEN] [--searched TOKEN] [--run ID]
+                    [--snapshot FILE [--store NAME]]
 ```
 
 | `--status` | Meaning | Embeds a citation | Grounds `supported` |
@@ -459,6 +460,8 @@ The file is `runs/<run>/observed/<time>-<hex>.json` (schema `writfold-observatio
 - what it searched has not moved: `--searched TOKEN` (no-data and not-found only; exactly one citation token, from `cite make` for code) records what was searched, judged like any citation on every read. An optional `searched` field in the file; a binary before v0.6.0-dev.9 ignores it.
 
 Otherwise its standing is `aged`, `searched-moved` or `unreadable`: a `none-found` row citing it turns `stale` (`cited evidence moved: … was no-data, now aged`), and a new one is refused. The decision is the proved `pin` kernel ([gate evidence spec](../writfold/gate-evidence-spec.md)).
+
+**Keeping what you saw** (built in v0.6.0-dev.10). `--snapshot FILE` keeps the look's bytes (the page, the query result, the screenshot) in a pinned [attached store](stores.md#keeping-a-looks-bytes-snapshots) and cites them from the observation, beside `cite`. An `ok` look then grounds only while both its source citation and its snapshot read fresh: a snapshot whose commit no ref reaches stops it grounding, and an expired source citation is not revived by a snapshot (both proved, `store::snapshot` and `of_observation_antitone`). Its `looked:` line is flagged `!snapshot`.
 
 Cite the file (or its bare name in this run, with or without `.json`) as a `REF` of a `supported` row. It is grounded only while its status is `ok` and its citation is fresh; otherwise its standing is `not-fresh:<n>` or the status, and `gate cover` refuses it. When an `ok` look's citation ages, the item turns `stale` like any moved evidence.
 

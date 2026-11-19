@@ -28,6 +28,7 @@ fn look(status: &str, item: Option<&str>) -> Observe {
         cite: None,
         searched: None,
         run: Some(RUN.into()),
+        ..Observe::default()
     }
 }
 

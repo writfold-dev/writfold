@@ -234,4 +234,65 @@ theorem claim_needs_store (e : Bool) (n : Usize) :
   unfold store.claim
   simp
 
+/-- The five facts about a snapshot that are not Git commits or bytes. -/
+def snapshotFactsHold (f : store.SnapshotFacts) : Prop :=
+  f.embeds = true ∧ f.declared = true ∧ f.pinned = true ∧ f.local = true ∧ f.intact = true
+
+/-- The reason a snapshot is withheld, the first that applies, or `Record`. -/
+def snapshotExpected (f : store.SnapshotFacts) (c : store.Commit) (a : store.AtPin) :
+    store.Snapshot :=
+  if f.embeds = false then .Withhold .NoCitation
+  else if f.declared = false then .Withhold .NotAStore
+  else if f.pinned = false then .Withhold .NotPinned
+  else if f.local = false then .Withhold .NotLocal
+  else if f.intact = false then .Withhold .Damaged
+  else match c, a with
+    | .Absent, _ | _, .Nothing => .Withhold .NotCommitted
+    | _, .Other => .Withhold .OtherBytes
+    | .Unanchored, .Cited => .Withhold .Unanchored
+    | .Anchored, .Cited => .Record
+
+/-- A snapshot is recorded exactly when the five facts hold, `HEAD` is
+anchored and holds the snapshot's bytes. -/
+theorem snapshot_record_iff (f : store.SnapshotFacts) (c : store.Commit) (a : store.AtPin) :
+    store.snapshot f c a ⦃ s => s = .Record ↔
+      snapshotFactsHold f ∧ c = .Anchored ∧ a = .Cited ⦄ := by
+  rcases f with ⟨e, d, p, l, i⟩
+  unfold store.snapshot snapshotFactsHold
+  cases e <;> cases d <;> cases p <;> cases l <;> cases i <;> cases c <;> cases a <;> simp
+
+/-- The citation a recorded snapshot writes is fresh under the rule that
+judges it on every later read: there is no second validity rule. -/
+theorem snapshot_record_is_fresh (f : store.SnapshotFacts) (c : store.Commit) (a : store.AtPin) :
+    store.snapshot f c a ⦃ s => s = .Record → store.pinned c a = ok .Fresh ⦄ := by
+  rcases f with ⟨e, d, p, l, i⟩
+  unfold store.snapshot store.pinned
+  cases e <;> cases d <;> cases p <;> cases l <;> cases i <;> cases c <;> cases a <;> simp
+
+/-- An uncommitted snapshot is never cited. -/
+theorem snapshot_uncommitted_withheld (f : store.SnapshotFacts) (c : store.Commit) :
+    store.snapshot f c .Nothing ⦃ s => s ≠ .Record ⦄ := by
+  rcases f with ⟨e, d, p, l, i⟩
+  unfold store.snapshot
+  cases e <;> cases d <;> cases p <;> cases l <;> cases i <;> cases c <;> simp
+
+/-- The reason is the first that applies, in the order `NoCitation`,
+`NotAStore`, `NotPinned`, `NotLocal`, `Damaged`, `NotCommitted`,
+`OtherBytes`, `Unanchored`. -/
+theorem snapshot_order (f : store.SnapshotFacts) (c : store.Commit) (a : store.AtPin) :
+    store.snapshot f c a ⦃ s => s = snapshotExpected f c a ⦄ := by
+  rcases f with ⟨e, d, p, l, i⟩
+  unfold store.snapshot snapshotExpected
+  cases e <;> cases d <;> cases p <;> cases l <;> cases i <;> cases c <;> cases a <;> simp
+
+/-- `NotCommitted` exactly when the five facts hold and the store has no
+commit or nothing at the path: the only answer under which the wiring may
+write into the store. -/
+theorem snapshot_stage_iff (f : store.SnapshotFacts) (c : store.Commit) (a : store.AtPin) :
+    store.snapshot f c a ⦃ s => s = .Withhold .NotCommitted ↔
+      snapshotFactsHold f ∧ (c = .Absent ∨ a = .Nothing) ⦄ := by
+  rcases f with ⟨e, d, p, l, i⟩
+  unfold store.snapshot snapshotFactsHold
+  cases e <;> cases d <;> cases p <;> cases l <;> cases i <;> cases c <;> cases a <;> simp
+
 end Writfold.Core.Store

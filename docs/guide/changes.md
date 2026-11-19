@@ -10,6 +10,8 @@ A line marked **fix** changed an answer that was wrong; anything depending on th
 
 - **A KB without `.writfold/stores/` behaves exactly as before.** With a store declared, `context` and `uses` on a record end with `material` rows (the store directories whose `README.md` names the record in `subject:`), the count `material=` and, in JSON, the trailer key `stores` ([stores](stores.md#material-behind-a-record)). They read each store's clone (one or two Git calls per store, plus one tree read per new commit), which they never did before.
 - `kb repos` adds a `material:` line (`material=N ambiguous=N unknown=N`) to each readable store's row, and a `claim:` line for up to five directories listed under no record.
+- `observe` accepts `--snapshot FILE [--store NAME]` ([stores](stores.md#keeping-a-looks-bytes-snapshots)). Without it nothing changes: an observation without a `snapshot` field parses, grounds and prints as before. With it, the first call may write two files into the store's work tree (never into the KB) and is refused until they are committed.
+- An observation with a `snapshot` field grounds only while its snapshot reads fresh as well. **An earlier binary ignores the field** and grounds such a look on `cite` alone, so it does not see a lost snapshot.
 - The index file gains two cache tables on first use. The index is not rebuilt, and an earlier binary opens the same file.
 
 ## v0.6.0-dev.9

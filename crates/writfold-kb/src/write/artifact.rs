@@ -77,7 +77,7 @@ fn facts(
 }
 
 /// The whole file as one span (an empty file is line 1, with no text).
-fn whole(path: &str, blob: &Blob) -> Spanned {
+pub(super) fn whole(path: &str, blob: &Blob) -> Spanned {
     let text = String::from_utf8_lossy(&blob.1);
     let lines: Vec<&str> = text.lines().collect();
     Spanned {

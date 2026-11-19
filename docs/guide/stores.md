@@ -80,6 +80,29 @@ $ writfold kb checkpoint --note "Fuzzer found a crash in the parser; reproducer 
 
 `resume` lists the run's artifacts as `artifact` rows, each with its verdict now and the checkpoint it came with. Since they are judged at their pin, tidying the store later leaves them fresh; deleting the only branch that holds them turns them `gone`.
 
+## Keeping a look's bytes: snapshots
+
+A look at a page or a dashboard is evidence only for as long as its kind's lifetime, and the page may change or vanish. `observe … --snapshot FILE` keeps the bytes you saw in a store declared `pinned` and cites them from the observation. Writfold never commits, so it is one command run twice with your commit between:
+
+```text
+$ writfold kb observe --source page --locator https://example.org/spec/v2 --status ok \
+    --for review.spec-read --snapshot /tmp/spec-v2.html
+refused: the snapshot is not committed; nothing was recorded
+  stored: scratch:snapshots/2026-11-19-page-example-org-spec-v2-9c41e07a/spec-v2.html (18234 bytes)
+  next: git -C ~/src/scratch add -- snapshots/2026-11-19-page-example-org-spec-v2-9c41e07a
+  next: git -C ~/src/scratch commit -m 'snapshot: page https://example.org/spec/v2' -- snapshots/…
+  next: git -C ~/src/scratch push
+  next: writfold kb observe --source page --locator https://example.org/spec/v2 --status ok --for review.spec-read --run <run> --snapshot ~/src/scratch/snapshots/…/spec-v2.html
+```
+
+Run the `next:` lines. The second `observe` records the look with a `snapshot` field: a `code` citation of the committed file at the store's `HEAD`, judged at its pin like any store citation.
+
+- **One rule decides both calls:** the snapshot is recorded only when it is a committed file of a pinned attached store, whose `HEAD` some branch or tag reaches and holds exactly the bytes its provenance file names. Then its citation reads `fresh` (proved: `store::snapshot`, `snapshot_record_is_fresh`). A file outside the store is copied in, under the layout above, and the call stops; a file already in the store's work tree stays where it is. Only when the snapshot is not yet committed are files written into the store, and never into the KB.
+- **The provenance file**, `<file>.snapshot.json` beside it (`writfold-snapshot/1`, never changed), names the bytes' SHA-256, size, source, locator, status, time, run and item. It says the bytes were handed to Writfold then, for that look; Writfold did not fetch them.
+- **Refused, with nothing recorded:** a status that embeds no citation (`no-data`, `not-found`, …); no store declared, or several and no `--store`; a store declared `freshness = "head"`; a store with no clone and work tree here; bytes that no longer match their provenance file; committed bytes that differ (a Git filter or an edit); a `HEAD` no branch or tag reaches. Also a file that is missing, a symbolic link, or over 5 MiB, and a staged path that already holds other bytes.
+- **A pushed commit is not required:** any branch anchors it. Another machine reads the snapshot `unverifiable` until you push.
+- **Grounding.** The snapshot counts with the source citation: the look grounds only while both are fresh. A snapshot that is lost (its commit no longer reached) stops the look grounding; one whose source citation expired is not revived by its snapshot.
+
 ## Laying out a store
 
 Writfold reads nothing inside a store but the cited files, so the layout is yours. One that works for agents:

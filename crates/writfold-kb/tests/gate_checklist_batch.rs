@@ -185,6 +185,7 @@ fn looked(w: &support::World) -> TestResult<String> {
         cite: None,
         searched: None,
         run: Some(RUN.into()),
+        ..Observe::default()
     };
     let out = writfold_kb::run(&w.request(Verb::Write(Write::Observe(o))))?;
     let path = out
