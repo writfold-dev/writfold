@@ -39,6 +39,9 @@ pub struct Observation {
     pub note: Option<String>,
     /// The embedded citation token (`ok` and `partial` only).
     pub cite: Option<String>,
+    /// What a look that found nothing searched: one citation token
+    /// (`no-data` and `not-found` only; written only when given).
+    pub searched: Option<String>,
     pub observed: String,
 }
 
@@ -56,6 +59,10 @@ pub fn bytes(o: &Observation) -> Vec<u8> {
         "cite": o.cite,
         "observed": o.observed,
     });
+    let mut value = value;
+    if let (Some(searched), Some(map)) = (&o.searched, value.as_object_mut()) {
+        map.insert("searched".into(), Value::String(searched.clone()));
+    }
     let mut out = serde_json::to_vec_pretty(&value).unwrap_or_default();
     out.push(b'\n');
     out
@@ -97,6 +104,13 @@ pub fn parse(text: &str) -> Result<Observation, String> {
         Some(text) => Some(item(&text).ok_or_else(|| format!("for {text:?} is not gate.item"))?),
     };
     let cite = maybe(&value, "cite")?;
+    let searched = maybe(&value, "searched")?;
+    if searched.is_some() && !matches!(status, Status::NoData | Status::NotFound) {
+        return Err(format!(
+            "a {} observation carries no searched",
+            status.name()
+        ));
+    }
     if cite.is_some() != embeds(status) {
         return Err(format!(
             "a {} observation {} a citation",
@@ -117,6 +131,7 @@ pub fn parse(text: &str) -> Result<Observation, String> {
         item,
         note: maybe(&value, "note")?,
         cite,
+        searched,
         observed: s(&value, "observed")?,
     })
 }
@@ -219,6 +234,8 @@ mod tests {
             note: None,
             cite: embeds(status)
                 .then(|| "⟦cite kind=dashboard locator=x seen=2026-11-01T00:00Z⟧".into()),
+            searched: matches!(status, Status::NoData | Status::NotFound)
+                .then(|| "⟦cite kind=code repo=svc path=src/a.rs lines=1-2⟧".into()),
             observed: "2026-11-01T00:00:00Z".into(),
         }
     }

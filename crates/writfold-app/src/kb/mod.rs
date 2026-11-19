@@ -94,7 +94,7 @@ writes (atomic; they leave the work tree dirty for you to commit):
   cite make <repo> <path> <a-b> [--allow-dirty] [--sym S] [--ttl T]   (prints a token)
   cite make --kind K key=value …   a checked kind's token from its checker's make (prints it)
   observe --source KIND --locator TEXT --status ok|partial|no-data|not-found|timeout|denied|error
-          [--revision R] [--for GATE.ITEM] [--note TEXT] [--cite TOKEN] [--run ID]
+          [--revision R] [--for GATE.ITEM] [--note TEXT] [--cite TOKEN] [--searched TOKEN] [--run ID]
                                    one look at an outside source, in the run (ok/partial embed a token)
 
 checkers (kinds declared freshness = \"checked\"; writfold-check-<name> on PATH; only stale runs them):

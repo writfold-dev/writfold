@@ -24,6 +24,7 @@ pub(crate) mod ground;
 mod head;
 mod lines;
 pub(crate) mod own;
+pub mod pins;
 pub mod places;
 pub mod policy;
 pub mod receipt;

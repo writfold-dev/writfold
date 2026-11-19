@@ -1,5 +1,5 @@
 //! `observe --source KIND --locator TEXT --status STATUS [--revision R]
-//! [--for GATE.ITEM] [--note TEXT] [--cite TOKEN] [--run ID]`: record one
+//! [--for GATE.ITEM] [--note TEXT] [--cite TOKEN] [--searched TOKEN] [--run ID]`: record one
 //! observation ([`crate::observe`]) in the named or current run.
 //!
 //! An `ok` or `partial` observation embeds one citation token: the one
@@ -28,6 +28,8 @@ pub struct Observe {
     pub item: Option<String>,
     pub note: Option<String>,
     pub cite: Option<String>,
+    /// What a look that found nothing searched (one citation token).
+    pub searched: Option<String>,
     /// The run; `None` takes the current-run pointer.
     pub run: Option<String>,
 }
@@ -86,6 +88,28 @@ fn token(session: &Session<'_>, o: &Observe, source: &str, locator: &str) -> Res
 }
 
 /// The observation's content, validated.
+/// The `--searched` token: one well-formed citation token, on a look
+/// that found nothing.
+fn searched(status: Status, token: Option<&String>) -> Result<Option<String>> {
+    let Some(token) = token else {
+        return Ok(None);
+    };
+    if !matches!(status, Status::NoData | Status::NotFound) {
+        return Err(usage(format!(
+            "--searched is for no-data and not-found observations, not {}",
+            status.name()
+        )));
+    }
+    let token = one_line("--searched", token)?;
+    let found = tokens(&token);
+    if found.len() != 1 || found.iter().any(|c| c.malformed.is_some()) {
+        return Err(usage(
+            "--searched must be exactly one well-formed citation token (cite make prints one)",
+        ));
+    }
+    Ok(Some(token))
+}
+
 fn shaped(session: &Session<'_>, o: &Observe, run: &str) -> Result<Observation> {
     let source = one_line("--source", &o.source)?;
     if !kinds::is_word(&source) {
@@ -125,6 +149,7 @@ fn shaped(session: &Session<'_>, o: &Observe, run: &str) -> Result<Observation> 
         item,
         note: optional("--note", o.note.as_ref())?,
         cite,
+        searched: searched(status, o.searched.as_ref())?,
         observed: time::stamp(session.now),
     })
 }

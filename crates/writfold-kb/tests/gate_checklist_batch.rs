@@ -183,6 +183,7 @@ fn looked(w: &support::World) -> TestResult<String> {
         item: Some("review.perf".into()),
         note: None,
         cite: None,
+        searched: None,
         run: Some(RUN.into()),
     };
     let out = writfold_kb::run(&w.request(Verb::Write(Write::Observe(o))))?;

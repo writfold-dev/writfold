@@ -26,6 +26,7 @@ fn look(status: &str, item: Option<&str>) -> Observe {
         item: item.map(str::to_owned),
         note: None,
         cite: None,
+        searched: None,
         run: Some(RUN.into()),
     }
 }

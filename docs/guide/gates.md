@@ -439,7 +439,7 @@ Some items are checked by looking somewhere outside Git: a dashboard, a ticket t
 
 ```text
 writfold kb observe --source KIND --locator TEXT --status STATUS [--revision R] [--for GATE.ITEM]
-                    [--note TEXT] [--cite TOKEN] [--run ID]
+                    [--note TEXT] [--cite TOKEN] [--searched TOKEN] [--run ID]
 ```
 
 | `--status` | Meaning | Embeds a citation | Grounds `supported` |
@@ -450,6 +450,12 @@ writfold kb observe --source KIND --locator TEXT --status STATUS [--revision R] 
 | `timeout`, `denied`, `error` | it did not answer | no | never |
 
 The file is `runs/<run>/observed/<time>-<hex>.json` (schema `writfold-observation/1`), written create-new and never changed; with no run it is refused (exit 3). An `ok` or `partial` look embeds one ordinary citation token: the one `--cite` passes (its `kind=` must be `--source`), else `⟦cite kind=KIND locator=TEXT [rev=R] seen=<now>⟧`. Its freshness is that token's, so a kind declaration in `.writfold/sources/KIND.toml` decides how long it holds ([kind declarations](kb-layout.md)); a kind without one and without `ttl=` never ages. A built-in kind such as `code`, or a kind declared `checked`, needs `--cite` with the token `cite make` prints.
+
+**A look that found nothing ages too** (built in v0.6.0-dev.9). A `no-data` or `not-found` look reads as having found nothing only while
+- its `--source` kind's lifetime has not passed: the kind's declaration in `.writfold/sources/KIND.toml` (a `default_ttl` ages it that long after it was observed; `immutable` and an undeclared kind never age it); and
+- what it searched has not moved: `--searched TOKEN` (no-data and not-found only; exactly one citation token, from `cite make` for code) records what was searched, judged like any citation on every read. An optional `searched` field in the file; a binary before v0.6.0-dev.9 ignores it.
+
+Otherwise its standing is `aged`, `searched-moved` or `unreadable`: a `none-found` row citing it turns `stale` (`cited evidence moved: … was no-data, now aged`), and a new one is refused. The decision is the proved `pin` kernel ([gate evidence spec](../writfold/gate-evidence-spec.md)).
 
 Cite the file (or its bare name in this run, with or without `.json`) as a `REF` of a `supported` row. It is grounded only while its status is `ok` and its citation is fresh; otherwise its standing is `not-fresh:<n>` or the status, and `gate cover` refuses it. When an `ok` look's citation ages, the item turns `stale` like any moved evidence.
 
