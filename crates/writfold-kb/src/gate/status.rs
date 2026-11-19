@@ -245,23 +245,9 @@ pub fn judge_gate<'a>(
             bound: writfold_core::gate::bound(true, r.repo == repo, true),
         })
         .collect();
-    // Each receipt through the gate kernel, about the present only while
-    // its pins hold (`ages_as`; `pin::current_under`).
-    let ages_as = definition.ages_as.as_deref();
-    let evidence: Vec<Evidence> = (recorded.iter().zip(&mine))
-        .map(|(rec, (_, r))| {
-            let e = writfold_core::gate::evidence(
-                rec,
-                definition.digest.as_bytes(),
-                content.as_bytes(),
-            );
-            let pins = super::pins::receipt(clock, ages_as, &r.recorded);
-            Evidence {
-                same_scope: writfold_core::pin::current_under(e.same_scope, &pins),
-                ..e
-            }
-        })
-        .collect();
+    let stamps: Vec<&str> = mine.iter().map(|(_, r)| r.recorded.as_str()).collect();
+    let evidence: Vec<Evidence> =
+        super::pins::evidence(&recorded, &stamps, &definition, content, clock);
     let (state, at) = writfold_core::gate::state(&evidence);
     let receipt = at.and_then(|i| mine.get(i).copied());
     let statements = statement::summary(
@@ -453,18 +439,8 @@ fn stale_why(
     }
     let patterns = judged.definition.patterns();
     let present = report.snapshot.scoped(&patterns).digest;
-    if let Err(KbError::Refused(why)) = super::repos::readable(&present, &patterns) {
+    if let Some(why) = super::pins::why(&judged.definition, &present, r) {
         return Ok(why);
-    }
-    // About the present bytes under the same definition, yet stale: only a
-    // pin can have stopped it (`ages_as`).
-    if let Some(kind) = &judged.definition.ages_as
-        && present == r.scope
-    {
-        return Ok(format!(
-            "the receipt aged: this gate ages as {kind} (.writfold/sources/{kind}.toml); recorded {}",
-            r.recorded
-        ));
     }
     Ok(
         match report

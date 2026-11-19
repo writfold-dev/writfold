@@ -108,3 +108,50 @@ pub fn receipt(clock: Option<&Clock>, ages_as: Option<&str>, recorded: &str) -> 
         _ => Vec::new(),
     }
 }
+
+/// Each receipt through the gate kernel ([`writfold_core::gate::evidence`]),
+/// about the present only while its pins hold
+/// ([`writfold_core::pin::current_under`]); `stamps` are their recorded
+/// times, in the same order.
+pub fn evidence(
+    recorded: &[writfold_core::gate::Recorded],
+    stamps: &[&str],
+    definition: &super::def::Definition,
+    content: &str,
+    clock: Option<&Clock>,
+) -> Vec<writfold_core::gate::Evidence> {
+    let ages_as = definition.ages_as.as_deref();
+    (recorded.iter().zip(stamps))
+        .map(|(rec, at)| {
+            let e = writfold_core::gate::evidence(
+                rec,
+                definition.digest.as_bytes(),
+                content.as_bytes(),
+            );
+            let pins = receipt(clock, ages_as, at);
+            writfold_core::gate::Evidence {
+                same_scope: pin::current_under(e.same_scope, &pins),
+                ..e
+            }
+        })
+        .collect()
+}
+
+/// Why a receipt under the current definition is stale, when the reason is
+/// not the subject's paths: a `repo:` store that cannot be read here, or a
+/// receipt about the present bytes that aged (`ages_as`).
+pub fn why(
+    definition: &super::def::Definition,
+    present: &str,
+    r: &super::receipt::Receipt,
+) -> Option<String> {
+    let patterns = definition.patterns();
+    if let Err(crate::error::KbError::Refused(why)) = super::repos::readable(present, &patterns) {
+        return Some(why);
+    }
+    let kind = definition.ages_as.as_ref().filter(|_| present == r.scope)?;
+    Some(format!(
+        "the receipt aged: this gate ages as {kind} (.writfold/sources/{kind}.toml); recorded {}",
+        r.recorded
+    ))
+}
