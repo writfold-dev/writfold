@@ -664,6 +664,7 @@ M1 landed as the crate `crates/writfold-kb`, the reads in `crates/writfold-runti
 - One file per KB root at `<git dir>/writfold/kb-index-<12 hex of the root's path in the work tree>.sqlite`, built in a temporary file in the same directory and renamed into place. It uses the rollback journal, not WAL, because the file is replaced by rename.
 - The pin is SHA-256 over HEAD and the sorted `(path, content digest)` of every dirty or untracked file that is a KB input. A dirty file the layout ignores does not rebuild the index. A matching pin, schema and extractor version opens the index as is (`index=fresh`); anything else rebuilds it in full (`index=rebuilt`). Incremental refresh is M2.
 - Cached citation verdicts (`cite_checks`) survive a rebuild for every citation whose token text is unchanged.
+- Store backlinks (v0.6.0-dev.10, [stores-next spec](v060-stores-next-spec.md) S3) are cached in `store_material` and `store_material_at`, created on first use with `CREATE TABLE IF NOT EXISTS` and keyed by the store commit read. They are outside the equality claim and the index pin, `SCHEMA` and `EXTRACTOR` are unchanged, and a rebuilt index starts without them. Whether a claim lists a directory is `store::claim` (proved).
 - A KB outside Git is indexed in memory on every call, with `kb=none`.
 - Schema differences from 4.2: `records.line` (the line of the status field, for row positions), `citations.malformed` and `citations.fields` (every token field as JSON), no `files.blob_oid`. The `tri` table is populated but unused until M2's search.
 

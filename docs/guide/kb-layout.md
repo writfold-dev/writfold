@@ -308,4 +308,6 @@ staging/, kb-write.lock the write protocol's working files
 
 The current run is resolved per session, then per work tree, then from the shared pointer: [hooks, the current run](hooks.md#the-current-run-per-session-and-per-work-tree) (built in v0.6.0-dev.6).
 
+The index file also keeps two caches outside the index proper, so neither is rebuilt with it nor moves its pin: cached citation verdicts (`cite_checks`, written by `stale`) and what each attached store's `README.md` files claim at the commit read (`store_material`, `store_material_at`, from v0.6.0-dev.10, written by `context` and `uses`; [stores](stores.md#material-behind-a-record)). An earlier binary ignores them.
+
 It vanishes with the clone. The index can always be rebuilt from the tracked files (see [validation](validation.md)).

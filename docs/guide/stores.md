@@ -96,4 +96,34 @@ Some uses:
 - **A test suite or a fuzz harness.** One directory per effort: the harness, a README naming what it tests, and the results. Keep minimised reproducers, not whole corpora: Git keeps every version of every file, and large binaries make every clone slow. Record the reproducer on the run's checkpoint with `--artifact`, and cite it from the investigation or decision; either way it stays fresh however much the store is tidied later.
 - **Data pulls and probes.** The script and its output side by side, so the record cites both and a reader can rerun one and compare with the other.
 
-The `subject:` line is a convention for now; a later release indexes it so `kb context <id>` lists the material behind a record (S3).
+The `subject:` line is what lists a directory under a record (below). The layout is still a convention: Writfold reads any `README.md` at any depth.
+
+## Material behind a record
+
+`kb context <id>` and `kb uses <id>` end with a `material` section: the store directories whose `README.md` names the record in its front matter.
+
+```text
+---
+subject: [HBR-204, run-20261118T101731Z-4be2a9]
+---
+# Review of pull request 1234
+```
+
+```text
+$ writfold kb context HBR-204
+…
+material scratch:work/2026-11-18-review-service-1234 Review of pull request 1234 !store-claim
+  at: scratch@3f9c2a1b…(40 hex):work/2026-11-18-review-service-1234/README.md
+  via: subject: HBR-204
+# coverage=complete … material=1 …
+```
+
+- **What is read.** In every declared store whose clone is found here, every `README.md` in the tree of the store's target commit: `origin/HEAD`, else `HEAD`, the commit `cite make` pins, so every directory listed can be cited at exactly the commit the row shows. Material committed in the clone and not pushed is not listed while `origin/HEAD` exists; a note says when the clone's `HEAD` is elsewhere. The work tree is never read and nothing is fetched.
+- **What lists a directory.** Each element of `subject:` (one ID or a list) on its own: a record's exact ID, or an alias exactly one record has. An alias two records share, or a name of no record, lists the directory nowhere. The looser matching of lookups (ticket spellings, prefixes) is not used: a store must name the record as the record names itself. The rule is proved (`store::claim`, [proofs](../writfold/aeneas.md)).
+- **What a row is.** The store's claim, never a KB fact: every row is flagged `!store-claim` (and `!origin-differs` when the clone the map names has another origin), its `path` and `line` are empty, and its `at:` line is a code locator you can pass to `uses` or `cite make`. A cover row or an assumption cannot cite a material row. Rows come after every KB row, by store, then directory descending, so date-prefixed directories read newest first.
+- **A store that cannot be read** (missing, a clone of another repository, a partial clone, no commit, a Git failure) gives no rows and one note (`material: store scratch not read (missing); writfold kb repos`). The answer stays `known` and its coverage is unchanged.
+- **Limits.** 5,000 `README.md` files per store and 64 KiB per file; past either, the store's rows are incomplete and a note says so.
+- **Cost.** Only `context` and `uses` pay, and only when a store is declared: one or two Git calls per store to find its commit, then, the first time a commit is seen, one tree listing and one read of the `README.md` files not read before. What was read is kept in the index file, keyed by the commit, beside the cached citation verdicts; it is not part of the index and nothing is rebuilt for it. `WRITFOLD_KB_VERIFY=1` rereads every store and refuses when the kept rows differ.
+
+`kb repos` adds to each store's row how its claims came out (`material=12 ambiguous=1 unknown=2`) and names up to five directories listed nowhere, so a mistyped `subject:` can be fixed in the store.
+

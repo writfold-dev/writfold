@@ -382,6 +382,11 @@ def claims : List Name := [
   ``Writfold.Core.Store.artifact_no_commit,
   ``Writfold.Core.Store.artifact_unanchored,
   ``Writfold.Core.Store.artifact_no_blob,
+  ``Writfold.Core.Store.claim_listed_iff,
+  ``Writfold.Core.Store.claim_exact_wins,
+  ``Writfold.Core.Store.claim_ambiguous_iff,
+  ``Writfold.Core.Store.claim_unknown_iff,
+  ``Writfold.Core.Store.claim_needs_store,
   -- evidence binding (writfold_core::bind)
   ``Writfold.Core.Bind.answers_spec,
   ``Writfold.Core.Bind.answers_any,

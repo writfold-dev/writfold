@@ -133,5 +133,8 @@ pub fn uses(session: &Session<'_>, target: &str) -> Result<Answer> {
     if answer.rows.is_empty() {
         answer.notes.push(BOUNDARY.to_owned());
     }
+    if let Some(rec) = &rec {
+        super::material::append(session, rec, &mut answer)?;
+    }
     Ok(answer)
 }

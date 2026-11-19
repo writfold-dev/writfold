@@ -1,6 +1,6 @@
 # Attached stores, next: backlinks, snapshots and the deferred items
 
-> **Status:** specification, 18 November 2026. Nothing here is built. It continues [part B of the v0.6.0-dev.6 specification](v060-dev6-spec.md#8-part-b-attached-stores-for-disposable-evidence): S1 and S2 shipped in v0.6.0-dev.7, S4 (run artifacts) is being built from 8.4 as written and is not planned here. This page specifies S3 (backlinks), the snapshot verb, and refreshes the items deferred in [section 5](v060-dev6-spec.md#5-deferred-with-reasons).
+> **Status:** specification, 18 November 2026. S3 (section 1) built in v0.6.0-dev.10 on 19 November 2026, with the proposed defaults of 1.7; the rest is not built. It continues [part B of the v0.6.0-dev.6 specification](v060-dev6-spec.md#8-part-b-attached-stores-for-disposable-evidence): S1 and S2 shipped in v0.6.0-dev.7, S4 (run artifacts) is being built from 8.4 as written and is not planned here. This page specifies S3 (backlinks), the snapshot verb, and refreshes the items deferred in [section 5](v060-dev6-spec.md#5-deferred-with-reasons).
 
 Every section lists its theorems first. Decisions live in `writfold_core::store` (or the kernel named), are translated and proved before a verb calls them; parsers, Git and file IO, the cache table and rendering are tested only, and each section says which.
 

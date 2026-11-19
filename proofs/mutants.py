@@ -1141,6 +1141,26 @@ MUTANTS = (
            "        Commit::Absent => Artifact::Refuse(Refusal::NoCommit),",
            "        Commit::Absent => Artifact::Refuse(Refusal::Unanchored),",
            ("Writfold.Core.Store.artifact_no_commit",)),
+    # store: an alias of two records lists the directory under neither
+    Mutant("claim-two-listed", "store.rs",
+           "    if aliased == 1 {\n",
+           "    if aliased >= 1 {\n",
+           ("Writfold.Core.Store.claim_listed_iff", "Writfold.Core.Store.claim_ambiguous_iff")),
+    # store: a subject that names no record lists nothing
+    Mutant("claim-unknown-listed", "store.rs",
+           "    } else if aliased == 0 {\n        Claim::Unknown\n",
+           "    } else if aliased == 0 {\n        Claim::Listed\n",
+           ("Writfold.Core.Store.claim_listed_iff", "Writfold.Core.Store.claim_unknown_iff")),
+    # store: a shared alias never hides a record's own ID
+    Mutant("claim-alias-hides-id", "store.rs",
+           "    if exact {\n        return Claim::Listed;\n",
+           "    if exact && aliased < 2 {\n        return Claim::Listed;\n",
+           ("Writfold.Core.Store.claim_exact_wins", "Writfold.Core.Store.claim_listed_iff", "Writfold.Core.Store.claim_ambiguous_iff")),
+    # store: nothing is listed from a repository that is not a declared store
+    Mutant("claim-any-repository", "store.rs",
+           "    if !attached {\n",
+           "    if !attached && false {\n",
+           ("Writfold.Core.Store.claim_needs_store", "Writfold.Core.Store.claim_listed_iff", "Writfold.Core.Store.claim_ambiguous_iff", "Writfold.Core.Store.claim_unknown_iff")),
     # bind: a look recorded for another item never answers an item that wants its own
     Mutant("own-accepts-other", "bind.rs",
            "            Bound::Named | Bound::This => true,\n            Bound::Other | Bound::Unbound => false,",

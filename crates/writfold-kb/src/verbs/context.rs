@@ -55,6 +55,7 @@ pub fn context(session: &Session<'_>, target: &str, depth: usize) -> Result<Answ
             rec.path
         ));
     }
+    super::material::append(session, &rec, &mut answer)?;
     Ok(answer)
 }
 

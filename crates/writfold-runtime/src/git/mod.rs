@@ -37,8 +37,8 @@ mod traversal;
 pub use admission::{GitExecutable, GitRepository};
 pub use error::GitError;
 pub use gate::{
-    GateEntry, edit_hash_bytes, gate_hash_paths, gate_ls_tree, gate_worktree_add,
-    gate_worktree_remove,
+    GateEntry, SizedEntry, edit_hash_bytes, gate_hash_paths, gate_ls_tree, gate_worktree_add,
+    gate_worktree_remove, store_ls_tree,
 };
 pub use kb::{
     KbCommit, KbDirty, KbRepository, KbStatus, kb_batch_check, kb_commit, kb_config, kb_diff_tree,

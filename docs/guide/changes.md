@@ -6,6 +6,12 @@ This page is for someone pinned to one release who wants to upgrade on purpose. 
 
 A line marked **fix** changed an answer that was wrong; anything depending on the old answer was depending on the fault.
 
+## v0.6.0-dev.10
+
+- **A KB without `.writfold/stores/` behaves exactly as before.** With a store declared, `context` and `uses` on a record end with `material` rows (the store directories whose `README.md` names the record in `subject:`), the count `material=` and, in JSON, the trailer key `stores` ([stores](stores.md#material-behind-a-record)). They read each store's clone (one or two Git calls per store, plus one tree read per new commit), which they never did before.
+- `kb repos` adds a `material:` line (`material=N ambiguous=N unknown=N`) to each readable store's row, and a `claim:` line for up to five directories listed under no record.
+- The index file gains two cache tables on first use. The index is not rebuilt, and an earlier binary opens the same file.
+
 ## v0.6.0-dev.9
 
 - **A look that found nothing now ages** by its `--source` kind's declared `default_ttl` ([gates](gates.md#observations-as-evidence-built-in-v050-dev3)). A `none-found` row citing a `no-data` or `not-found` look of a kind declared with a lifetime turns `stale` once that lifetime has passed (`… was no-data, now aged`); before, such a look never aged. Looks of undeclared kinds, or kinds with no `default_ttl`, are unchanged. A kind catalog that cannot be read leaves such a look `unreadable`.

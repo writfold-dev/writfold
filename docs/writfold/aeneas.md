@@ -799,11 +799,33 @@ Tested, not proved: everything the wiring stages add (the `evidence` key,
 the `searched` field, store resolution, clock reads, rendering). Nothing is
 written by these kernels, so `KbWrite.tla` and `RunGraph.tla` are unchanged.
 
+### The backlinks round (19 November 2026)
+
+[v060-stores-next-spec.md](v060-stores-next-spec.md) S3. `store::claim` was
+translated, proved and its mutants calibrated before `context` and `uses`
+called it. After the round: 664 theorems, 371 required claims (366
+before), 226 mutants (222 before).
+
+- `claim(attached, exact, aliased)`: what one `subject:` entry of a store
+  directory's `README.md` amounts to. `claim_listed_iff`: the directory is
+  listed under a record exactly when it was read from a declared, readable
+  store and names the record by its ID or by an alias no other record has.
+  `claim_exact_wins`: a record's own ID is never hidden by an alias others
+  share. `claim_ambiguous_iff`, `claim_unknown_iff`: an alias of two or
+  more records, or a name of none, lists nothing. `claim_needs_store`:
+  nothing is listed from a repository that is not a declared, readable
+  store. `Claim` is an input of no grounding function: a `material` row is
+  the store's claim, never evidence a cover row can cite.
+
+Tested, not proved: the tree read, front matter, the limits, the cache
+table and its key, the two index lookups, row order, text and JSON. Nothing
+is written to the KB, so `KbWrite.tla` and `RunGraph.tla` are unchanged.
+
 ### The claims and their mutants
 
 <!-- generated from proofs/mutants.py -->
 
-222 mutants (20 before 16 November 2026, 86 after the backfill's first round, 108 after the policy round, 161 after the backfill's second round, 170 after the bug-fix round, 189 after the delivery round: its nine delivery mutants re-aimed and 19 added, all 28 calibrated; 203 after the current-run and repin rounds; 210 after the attached-stores round; 214 after the run-artifacts round; 222 after the evidence-binding round). Each must break exactly the theorems named.
+226 mutants (20 before 16 November 2026, 86 after the backfill's first round, 108 after the policy round, 161 after the backfill's second round, 170 after the bug-fix round, 189 after the delivery round: its nine delivery mutants re-aimed and 19 added, all 28 calibrated; 203 after the current-run and repin rounds; 210 after the attached-stores round; 214 after the run-artifacts round; 222 after the evidence-binding round; 226 after the backlinks round). Each must break exactly the theorems named.
 
 | Mutant | File | What it breaks | Must break |
 |---|---|---|---|
@@ -1021,6 +1043,10 @@ written by these kernels, so `KbWrite.tla` and `RunGraph.tla` are unchanged.
 | `artifact-unanchored-admitted` | `store.rs` | store: an unanchored commit is refused, never admitted | `Store.artifact_admit_iff`, `Store.artifact_admit_reads_fresh`, `Store.artifact_unanchored` |
 | `artifact-found-before-declared` | `store.rs` | store: the declaration is checked before the clone | `Store.artifact_undeclared` |
 | `artifact-absent-as-unanchored` | `store.rs` | store: a missing commit says fetch, not push | `Store.artifact_no_commit` |
+| `claim-two-listed` | `store.rs` | store: an alias of two records lists the directory under neither | `Store.claim_listed_iff`, `Store.claim_ambiguous_iff` |
+| `claim-unknown-listed` | `store.rs` | store: a subject that names no record lists nothing | `Store.claim_listed_iff`, `Store.claim_unknown_iff` |
+| `claim-alias-hides-id` | `store.rs` | store: a shared alias never hides a record's own ID | `Store.claim_exact_wins`, `Store.claim_listed_iff`, `Store.claim_ambiguous_iff` |
+| `claim-any-repository` | `store.rs` | store: nothing is listed from a repository that is not a declared store | `Store.claim_needs_store`, `Store.claim_listed_iff`, `Store.claim_ambiguous_iff`, `Store.claim_unknown_iff` |
 | `own-accepts-other` | `bind.rs` | bind: a look recorded for another item never answers an item that wants its own | `Bind.answers_spec` |
 | `named-accepts-this` | `bind.rs` | bind: only a named gate answers an item that names its evidence | `Bind.answers_spec` |
 | `answered-ignores-grounded` | `bind.rs` | bind: an ungrounded reference never answers | `Bind.answered_from_loop_spec` |

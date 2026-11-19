@@ -50,6 +50,53 @@ pub fn gate_ls_tree(
     Ok(entries)
 }
 
+/// One blob of a tree with its size in bytes.
+pub struct SizedEntry {
+    pub path: String,
+    pub id: String,
+    pub size: u64,
+}
+
+/// Every blob of `commit`'s tree, recursively, with its size (`ls-tree -r
+/// -l -z`). Submodules and other non-blob entries are left out; non-UTF-8
+/// paths are refused.
+pub fn store_ls_tree(
+    executable: &GitExecutable<'_>,
+    git_dir: &Path,
+    commit: &GitObjectId,
+    budgets: GitBudgets,
+    cancelled: &AtomicBool,
+) -> Result<Vec<SizedEntry>, GitError> {
+    let repository = KbRepository {
+        git_dir,
+        work_tree: None,
+    };
+    let args = ["ls-tree", "-r", "-l", "-z", "--full-tree", commit.as_str()];
+    let output = run(executable, repository, &args, &[], budgets, cancelled)?;
+    let mut entries = Vec::new();
+    for record in output.split(|&b| b == 0).filter(|r| !r.is_empty()) {
+        let line = std::str::from_utf8(record).map_err(|_| GitError::Malformed("tree path"))?;
+        let (meta, path) = line
+            .split_once('\t')
+            .ok_or(GitError::Malformed("ls-tree entry"))?;
+        let mut fields = meta.split_whitespace();
+        let (_, kind, id, size) = (fields.next(), fields.next(), fields.next(), fields.next());
+        if kind != Some("blob") {
+            continue;
+        }
+        let id = id.ok_or(GitError::Malformed("ls-tree entry"))?;
+        let size = size
+            .and_then(|s| s.parse().ok())
+            .ok_or(GitError::Malformed("ls-tree size"))?;
+        entries.push(SizedEntry {
+            path: path.to_owned(),
+            id: id.to_owned(),
+            size,
+        });
+    }
+    Ok(entries)
+}
+
 /// The blob ID Git would store for each work-tree file (`hash-object
 /// --stdin-paths`, with the repository's filters, writing nothing). Paths
 /// are relative to the top of `work_tree`.

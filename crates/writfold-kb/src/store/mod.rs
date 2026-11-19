@@ -27,6 +27,7 @@ use std::path::{Path, PathBuf};
 use writfold_core::store::{self as kernel, Candidate, Resolved};
 
 pub mod check;
+pub mod material;
 
 /// Where store declarations live, under the KB root.
 pub const DIR: &str = ".writfold/stores";
