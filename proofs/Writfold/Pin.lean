@@ -187,4 +187,16 @@ theorem current_under_refines (about : Bool) (pins : Slice pin.Pin) (h : pins.va
   rw [h] at hb
   cases b <;> cases about <;> simp_all
 
+/-- `holds_from` never fails, from any start index (tauten's total shape,
+docs/writfold/tauten-adoption.md): the loop reads only in-bounds positions
+and its increment cannot overflow. -/
+theorem holds_from_total (pins : Slice pin.Pin) (index : Usize) :
+    pin.holds_from pins index ⦃ _ => True ⦄ := by
+  unfold pin.holds_from pin.holds_from_loop
+  apply loop.spec_decr_nat (fun i : Usize => pins.val.length - i.val) (fun _ => True)
+  · intro i _
+    unfold pin.holds_from_loop.body
+    step*
+  · trivial
+
 end Writfold.Core.Pin

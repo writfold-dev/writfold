@@ -1,0 +1,3137 @@
+{
+  "version": 1,
+  "generated_by": "cargo tauten proofs",
+  "claims": [
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/assess.rs",
+      "function": "assumption",
+      "lean": "writfold_core.assess.assumption",
+      "theorems": [
+        "Writfold.Core.Assess.assumption_loop_spec",
+        "Writfold.Core.Assess.assumption_spec"
+      ],
+      "total": "Writfold.Core.Assess.assumption_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "assumption-ignores-attested"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/assess.rs",
+      "function": "basis",
+      "lean": "writfold_core.assess.basis",
+      "theorems": [
+        "Writfold.Core.Assess.basis_loop_spec",
+        "Writfold.Core.Assess.basis_spec"
+      ],
+      "total": "Writfold.Core.Assess.basis_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "basis-ignores-premises"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/assess.rs",
+      "function": "met",
+      "lean": "writfold_core.assess.met",
+      "theorems": [
+        "Writfold.Core.Assess.met_spec"
+      ],
+      "total": "Writfold.Core.Assess.met_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "met-accepts-hypothetical"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/assess.rs",
+      "function": "outcome",
+      "lean": "writfold_core.assess.outcome",
+      "theorems": [
+        "Writfold.Core.Assess.hypothetical_never_passes",
+        "Writfold.Core.Assess.outcome_loop_spec",
+        "Writfold.Core.Assess.outcome_pass_iff",
+        "Writfold.Core.Assess.outcome_spec"
+      ],
+      "total": "Writfold.Core.Assess.outcome_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "outcome-passes-unfinished",
+        "assessed-empty-passes",
+        "assessed-incomplete-passes"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/bind.rs",
+      "function": "answered_from",
+      "lean": "writfold_core.bind.answered_from",
+      "theorems": [
+        "Writfold.Core.Bind.answered_from_loop_spec",
+        "Writfold.Core.Bind.answered_from_total"
+      ],
+      "total": "Writfold.Core.Bind.answered_from_total",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "answered-ignores-grounded",
+        "answered-reads-past-end"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/bind.rs",
+      "function": "answers",
+      "lean": "writfold_core.bind.answers",
+      "theorems": [
+        "Writfold.Core.Bind.answers_any",
+        "Writfold.Core.Bind.answers_spec",
+        "Writfold.Core.Bind.named_need_iff",
+        "Writfold.Core.Bind.other_never_answers",
+        "Writfold.Core.Bind.unbound_never_answers"
+      ],
+      "total": "Writfold.Core.Bind.answers_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "own-accepts-other",
+        "named-accepts-this"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/bind.rs",
+      "function": "item_under",
+      "lean": "writfold_core.bind.item_under",
+      "theorems": [
+        "Writfold.Core.Bind.item_under_answered",
+        "Writfold.Core.Bind.item_under_narrows",
+        "Writfold.Core.Bind.item_under_none_found_iff",
+        "Writfold.Core.Bind.item_under_spec",
+        "Writfold.Core.Bind.item_under_supported_iff",
+        "Writfold.Core.Bind.item_under_unanswered"
+      ],
+      "total": "Writfold.Core.Bind.item_under_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "item-under-ignores-answer"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/bytes.rs",
+      "function": "same",
+      "lean": "writfold_core.bytes.same",
+      "theorems": [
+        "Writfold.Core.same_loop_spec",
+        "Writfold.Core.same_spec"
+      ],
+      "total": "Writfold.Core.same_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "same-ignores-last-byte"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/checklist.rs",
+      "function": "any_stale",
+      "lean": "writfold_core.checklist.any_stale",
+      "theorems": [
+        "Writfold.Core.Checklist.any_stale_loop_spec",
+        "Writfold.Core.Checklist.any_stale_spec"
+      ],
+      "total": "Writfold.Core.Checklist.any_stale_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "any-stale-skips-last"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/checklist.rs",
+      "function": "covered_under",
+      "lean": "writfold_core.checklist.covered_under",
+      "theorems": [
+        "Writfold.Core.Checklist.covered_under_coveredB",
+        "Writfold.Core.Checklist.covered_under_spec",
+        "Writfold.Core.Checklist.not_applicable_rejected_never_covers"
+      ],
+      "total": "Writfold.Core.Checklist.covered_under_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "covered-counts-unsupported",
+        "covered-ignores-na",
+        "covered-none-found-without-policy"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/checklist.rs",
+      "function": "first_owed",
+      "lean": "writfold_core.checklist.first_owed",
+      "theorems": [
+        "Writfold.Core.Checklist.first_owed_loop_spec",
+        "Writfold.Core.Checklist.first_owed_spec"
+      ],
+      "total": "Writfold.Core.Checklist.first_owed_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "first-owed-skips-last"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/checklist.rs",
+      "function": "item",
+      "lean": "writfold_core.checklist.item",
+      "theorems": [
+        "Writfold.Core.Checklist.item_none_found_iff",
+        "Writfold.Core.Checklist.item_spec",
+        "Writfold.Core.Checklist.item_supported_iff"
+      ],
+      "total": "Writfold.Core.Checklist.item_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "item-accepts-no-evidence",
+        "item-accepts-ungrounded",
+        "item-accepts-not-current",
+        "item-none-found-no-evidence"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/checklist.rs",
+      "function": "owes",
+      "lean": "writfold_core.checklist.owes",
+      "theorems": [
+        "Writfold.Core.Checklist.owes_spec"
+      ],
+      "total": "Writfold.Core.Checklist.owes_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "rollup-ignores-required"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/checklist.rs",
+      "function": "stale",
+      "lean": "writfold_core.checklist.stale",
+      "theorems": [
+        "Writfold.Core.Checklist.stale_spec"
+      ],
+      "total": "Writfold.Core.Checklist.stale_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "stale-ignores-required"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/checklist.rs",
+      "function": "standing",
+      "lean": "writfold_core.checklist.standing",
+      "theorems": [
+        "Writfold.Core.Checklist.standing_attested_iff",
+        "Writfold.Core.Checklist.standing_never_satisfied",
+        "Writfold.Core.Checklist.standing_spec"
+      ],
+      "total": "Writfold.Core.Checklist.standing_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "checklist-attested-when-stale"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/command/mod.rs",
+      "function": "is_help",
+      "lean": "writfold_core.command.is_help",
+      "theorems": [
+        "Writfold.Core.Command.is_help_spec"
+      ],
+      "total": "Writfold.Core.Command.is_help_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "is-help-wrong-byte"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/command/mod.rs",
+      "function": "named",
+      "lean": "writfold_core.command.named",
+      "theorems": [
+        "Writfold.Core.Command.named_loop_spec",
+        "Writfold.Core.Command.named_spec"
+      ],
+      "total": "Writfold.Core.Command.named_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "named-skips-last",
+        "named-help-not-alone"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/decision.rs",
+      "function": "step",
+      "lean": "writfold_core.decision.step",
+      "theorems": [
+        "Writfold.Core.Decision.accepted_needs_ready_and_actor",
+        "Writfold.Core.Decision.applied_needs_commit",
+        "Writfold.Core.Decision.never_written",
+        "Writfold.Core.Decision.rejected_needs_actor",
+        "Writfold.Core.Decision.step_spec",
+        "Writfold.Core.Decision.superseded_needs_successor",
+        "Writfold.Core.Decision.verified_needs_evidence"
+      ],
+      "total": "Writfold.Core.Decision.step_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "accepted-without-readiness",
+        "verified-without-evidence",
+        "superseded-twice",
+        "landing-written"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/delivery.rs",
+      "function": "deciding",
+      "lean": "writfold_core.delivery.deciding",
+      "theorems": [
+        "Writfold.Core.Delivery.deciding_loop_spec",
+        "Writfold.Core.Delivery.deciding_none_after_bound",
+        "Writfold.Core.Delivery.deciding_spec"
+      ],
+      "total": "Writfold.Core.Delivery.deciding_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "deciding-ignores-bound",
+        "deciding-first-unbound",
+        "deciding-counts-withdrawn",
+        "deciding-stops-at-withdrawn"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/delivery.rs",
+      "function": "fact",
+      "lean": "writfold_core.delivery.fact",
+      "theorems": [
+        "Writfold.Core.Delivery.fact_met_iff_ready"
+      ],
+      "total": null,
+      "subsumes": [],
+      "mutants": [
+        "fact-accepts-when-unready"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/delivery.rs",
+      "function": "first_unmet",
+      "lean": "writfold_core.delivery.first_unmet",
+      "theorems": [
+        "Writfold.Core.Delivery.first_unmet_loop_spec",
+        "Writfold.Core.Delivery.first_unmet_spec"
+      ],
+      "total": "Writfold.Core.Delivery.first_unmet_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "first-unmet-skips-last"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/delivery.rs",
+      "function": "guard",
+      "lean": "writfold_core.delivery.guard",
+      "theorems": [
+        "Writfold.Core.Delivery.guard_allow_iff",
+        "Writfold.Core.Delivery.guard_deny_unread",
+        "Writfold.Core.Delivery.guard_spent_never_passes"
+      ],
+      "total": "Writfold.Core.Delivery.guard_allow_iff",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "guard-known-any-ready",
+        "guard-known-all",
+        "guard-unread-deny-allows"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/delivery.rs",
+      "function": "guard_all",
+      "lean": "writfold_core.delivery.guard_all",
+      "theorems": [
+        "Writfold.Core.Delivery.guard_all_loop_spec",
+        "Writfold.Core.Delivery.guard_all_spec"
+      ],
+      "total": "Writfold.Core.Delivery.guard_all_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "guard-allows-no-candidate",
+        "guard-all-counts-withdrawn",
+        "guard-all-skips-last"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/delivery.rs",
+      "function": "guard_any",
+      "lean": "writfold_core.delivery.guard_any",
+      "theorems": [
+        "Writfold.Core.Delivery.guard_any_loop_spec",
+        "Writfold.Core.Delivery.guard_any_spec"
+      ],
+      "total": "Writfold.Core.Delivery.guard_any_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "guard-any-skips-last"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/delivery.rs",
+      "function": "postable",
+      "lean": "writfold_core.delivery.postable",
+      "theorems": [
+        "Writfold.Core.Delivery.postable_spec"
+      ],
+      "total": "Writfold.Core.Delivery.postable_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "postable-drops-same",
+        "postable-drops-ready",
+        "postable-drops-live",
+        "postable-drops-routed",
+        "postable-drops-spent"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/delivery.rs",
+      "function": "posted",
+      "lean": "writfold_core.delivery.posted",
+      "theorems": [
+        "Writfold.Core.Delivery.posted_met_iff",
+        "Writfold.Core.Delivery.posted_never_satisfied",
+        "Writfold.Core.Delivery.posted_spec"
+      ],
+      "total": "Writfold.Core.Delivery.posted_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "posted-always",
+        "posted-satisfied"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/delivery.rs",
+      "function": "ready",
+      "lean": "writfold_core.delivery.ready",
+      "theorems": [
+        "Writfold.Core.Delivery.empty_never_ready",
+        "Writfold.Core.Delivery.ready_iff",
+        "Writfold.Core.Delivery.waiver_rejected_never_ready"
+      ],
+      "total": "Writfold.Core.Delivery.ready_iff",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "ready-accepts-empty",
+        "ready-from-standing"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/delivery.rs",
+      "function": "rechecked",
+      "lean": "writfold_core.delivery.rechecked",
+      "theorems": [
+        "Writfold.Core.Delivery.rechecked_spec"
+      ],
+      "total": "Writfold.Core.Delivery.rechecked_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "rechecked-keeps-satisfied"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/delivery.rs",
+      "function": "refused",
+      "lean": "writfold_core.delivery.refused",
+      "theorems": [
+        "Writfold.Core.Delivery.refused_iff"
+      ],
+      "total": "Writfold.Core.Delivery.refused_iff",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "refused-any-unmet"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/delivery.rs",
+      "function": "standing",
+      "lean": "writfold_core.delivery.standing",
+      "theorems": [
+        "Writfold.Core.Delivery.standing_first_unmet",
+        "Writfold.Core.Delivery.standing_loop_spec",
+        "Writfold.Core.Delivery.standing_satisfied_iff",
+        "Writfold.Core.Delivery.standing_spec"
+      ],
+      "total": "Writfold.Core.Delivery.standing_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "delivery-empty-met",
+        "delivery-waived-satisfied"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/delivery.rs",
+      "function": "unmet",
+      "lean": "writfold_core.delivery.unmet",
+      "theorems": [
+        "Writfold.Core.Delivery.unmet_spec"
+      ],
+      "total": "Writfold.Core.Delivery.unmet_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "delivery-unmet-ignored",
+        "delivery-accept-ignored"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/diag/mod.rs",
+      "function": "blocks",
+      "lean": "writfold_core.diag.blocks",
+      "theorems": [
+        "Writfold.Core.Walk.blocks_iff"
+      ],
+      "total": "Writfold.Core.Walk.blocks_iff",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "blocks-any-warning"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/find.rs",
+      "function": "admit",
+      "lean": "writfold_core.find.admit",
+      "theorems": [
+        "Writfold.Core.Walk.admit_iff"
+      ],
+      "total": "Writfold.Core.Walk.admit_iff",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "admit-shows-twice"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/find.rs",
+      "function": "full",
+      "lean": "writfold_core.find.full",
+      "theorems": [
+        "Writfold.Core.Walk.full_spec",
+        "Writfold.Core.Walk.not_full_admits"
+      ],
+      "total": "Writfold.Core.Walk.full_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "full-late"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/find.rs",
+      "function": "next_from",
+      "lean": "writfold_core.find.next_from",
+      "theorems": [
+        "Writfold.Core.Find.next_from_loop_spec",
+        "Writfold.Core.Find.next_from_spec"
+      ],
+      "total": "Writfold.Core.Find.next_from_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "next-from-reversed"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/find.rs",
+      "function": "prefixed",
+      "lean": "writfold_core.find.prefixed",
+      "theorems": [
+        "Writfold.Core.Find.prefixed_loop_spec",
+        "Writfold.Core.Find.prefixed_spec"
+      ],
+      "total": "Writfold.Core.Find.prefixed_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "prefixed-reuses-token"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/find.rs",
+      "function": "query_ok",
+      "lean": "writfold_core.find.query_ok",
+      "theorems": [
+        "Writfold.Core.Find.query_ok_spec"
+      ],
+      "total": "Writfold.Core.Find.query_ok_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "query-ok-three-chars"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/find.rs",
+      "function": "starts",
+      "lean": "writfold_core.find.starts",
+      "theorems": [
+        "Writfold.Core.Find.starts_loop_spec",
+        "Writfold.Core.Find.starts_spec"
+      ],
+      "total": "Writfold.Core.Find.starts_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "starts-skips-last"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/gate.rs",
+      "function": "Standing::met",
+      "lean": "writfold_core.gate.Standing.met",
+      "theorems": [
+        "Writfold.Core.Gate.met_spec"
+      ],
+      "total": "Writfold.Core.Gate.met_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "met-counts-stale"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/gate.rs",
+      "function": "about",
+      "lean": "writfold_core.gate.about",
+      "theorems": [
+        "Writfold.Core.Gate.about_spec"
+      ],
+      "total": "Writfold.Core.Gate.about_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "about-ignores-definition"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/gate.rs",
+      "function": "attests",
+      "lean": "writfold_core.gate.attests",
+      "theorems": [
+        "Writfold.Core.Gate.attests_spec"
+      ],
+      "total": "Writfold.Core.Gate.attests_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "attests-ignores-bound"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/gate.rs",
+      "function": "bound",
+      "lean": "writfold_core.gate.bound",
+      "theorems": [
+        "Writfold.Core.Gate.bound_spec"
+      ],
+      "total": "Writfold.Core.Gate.bound_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "bound-ignores-subject"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/gate.rs",
+      "function": "current",
+      "lean": "writfold_core.gate.current",
+      "theorems": [
+        "Writfold.Core.Gate.current_spec"
+      ],
+      "total": "Writfold.Core.Gate.current_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "state-ignores-scope",
+        "state-ignores-definition",
+        "current-ignores-bound"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/gate.rs",
+      "function": "evidence",
+      "lean": "writfold_core.gate.evidence",
+      "theorems": [
+        "Writfold.Core.Gate.evidence_spec"
+      ],
+      "total": "Writfold.Core.Gate.evidence_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "evidence-ignores-definition",
+        "evidence-ignores-content",
+        "evidence-accepts-empty-content"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/gate.rs",
+      "function": "judge",
+      "lean": "writfold_core.gate.judge",
+      "theorems": [
+        "Writfold.Core.Gate.judge_empty_content",
+        "Writfold.Core.Gate.judge_loop_spec",
+        "Writfold.Core.Gate.judge_other_bytes",
+        "Writfold.Core.Gate.judge_satisfied_iff",
+        "Writfold.Core.Gate.judge_spec"
+      ],
+      "total": "Writfold.Core.Gate.judge_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "judge-drops-newest"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/gate.rs",
+      "function": "newest_bound",
+      "lean": "writfold_core.gate.newest_bound",
+      "theorems": [
+        "Writfold.Core.Gate.newest_bound_loop_spec",
+        "Writfold.Core.Gate.newest_bound_spec"
+      ],
+      "total": "Writfold.Core.Gate.newest_bound_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "stale-from-unbound"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/gate.rs",
+      "function": "outcome",
+      "lean": "writfold_core.gate.outcome",
+      "theorems": [
+        "Writfold.Core.Gate.outcome_fail_iff",
+        "Writfold.Core.Gate.outcome_pass_iff",
+        "Writfold.Core.Gate.outcome_spec"
+      ],
+      "total": "Writfold.Core.Gate.outcome_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "outcome-ignores-moved",
+        "outcome-any-exit-passes",
+        "outcome-nonzero-unknown"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/gate.rs",
+      "function": "standing",
+      "lean": "writfold_core.gate.standing",
+      "theorems": [
+        "Writfold.Core.Gate.standing_attested_iff",
+        "Writfold.Core.Gate.standing_satisfied_iff",
+        "Writfold.Core.Gate.standing_spec",
+        "Writfold.Core.Gate.standing_waived_iff"
+      ],
+      "total": "Writfold.Core.Gate.standing_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "attested-class-stands-on-check",
+        "waiver-satisfies",
+        "attestation-satisfies"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/gate.rs",
+      "function": "stands",
+      "lean": "writfold_core.gate.stands",
+      "theorems": [
+        "Writfold.Core.Gate.stands_spec"
+      ],
+      "total": "Writfold.Core.Gate.stands_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "stands-ignores-bound",
+        "stands-ignores-kind"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/gate.rs",
+      "function": "state",
+      "lean": "writfold_core.gate.state",
+      "theorems": [
+        "Writfold.Core.Gate.state_ignores_unbound",
+        "Writfold.Core.Gate.state_loop_spec",
+        "Writfold.Core.Gate.state_other_subject",
+        "Writfold.Core.Gate.state_satisfied_iff",
+        "Writfold.Core.Gate.state_spec",
+        "Writfold.Core.Gate.state_unbound_never_satisfies"
+      ],
+      "total": "Writfold.Core.Gate.state_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "state-ignores-bound",
+        "state-oldest-first",
+        "state-failed-satisfies"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/gate.rs",
+      "function": "statements",
+      "lean": "writfold_core.gate.statements",
+      "theorems": [
+        "Writfold.Core.Gate.statements_loop_spec",
+        "Writfold.Core.Gate.statements_spec"
+      ],
+      "total": "Writfold.Core.Gate.statements_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "statements-counts-moved-waiver"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/ground.rs",
+      "function": "moved",
+      "lean": "writfold_core.ground.moved",
+      "theorems": [
+        "Writfold.Core.Ground.moved_iff"
+      ],
+      "total": "Writfold.Core.Ground.moved_iff",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "moved-ignores-word"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/ground.rs",
+      "function": "of_citations",
+      "lean": "writfold_core.ground.of_citations",
+      "theorems": [
+        "Writfold.Core.Ground.of_citations_grounded_iff",
+        "Writfold.Core.Ground.of_citations_never_attested"
+      ],
+      "total": "Writfold.Core.Ground.of_citations_grounded_iff",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "citations-zero-grounds"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/ground.rs",
+      "function": "of_gate",
+      "lean": "writfold_core.ground.of_gate",
+      "theorems": [
+        "Writfold.Core.Ground.of_gate_attested_iff",
+        "Writfold.Core.Ground.of_gate_grounded_iff",
+        "Writfold.Core.Ground.of_gate_spec",
+        "Writfold.Core.Ground.waiver_never_grounds"
+      ],
+      "total": "Writfold.Core.Ground.of_gate_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "waiver-grounds",
+        "of-gate-ignores-found"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/ground.rs",
+      "function": "of_observation",
+      "lean": "writfold_core.ground.of_observation",
+      "theorems": [
+        "Writfold.Core.Ground.of_observation_grounded_iff"
+      ],
+      "total": "Writfold.Core.Ground.of_observation_grounded_iff",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "observation-no-citation-grounds"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/ground.rs",
+      "function": "of_receipt",
+      "lean": "writfold_core.ground.of_receipt",
+      "theorems": [
+        "Writfold.Core.Ground.of_receipt_grounded_iff",
+        "Writfold.Core.Ground.of_receipt_never_attested"
+      ],
+      "total": "Writfold.Core.Ground.of_receipt_grounded_iff",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "receipt-ignores-content",
+        "receipt-ignores-gate-met"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/ground.rs",
+      "function": "of_statement",
+      "lean": "writfold_core.ground.of_statement",
+      "theorems": [
+        "Writfold.Core.Ground.of_statement_spec"
+      ],
+      "total": "Writfold.Core.Ground.of_statement_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "statement-not-current-attested"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/ground.rs",
+      "function": "of_token",
+      "lean": "writfold_core.ground.of_token",
+      "theorems": [
+        "Writfold.Core.Ground.of_token_grounded_iff"
+      ],
+      "total": "Writfold.Core.Ground.of_token_grounded_iff",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "token-many-grounds"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/guard.rs",
+      "function": "all_met",
+      "lean": "writfold_core.guard.all_met",
+      "theorems": [
+        "Writfold.Core.Guard.all_met_loop_spec",
+        "Writfold.Core.Guard.all_met_spec"
+      ],
+      "total": "Writfold.Core.Guard.all_met_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "all-met-skips-last"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/guard.rs",
+      "function": "combine",
+      "lean": "writfold_core.guard.combine",
+      "theorems": [
+        "Writfold.Core.Guard.combine_deny_iff",
+        "Writfold.Core.Guard.combine_pass_iff",
+        "Writfold.Core.Guard.combine_spec"
+      ],
+      "total": "Writfold.Core.Guard.combine_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "combine-ask-over-deny"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/guard.rs",
+      "function": "decide",
+      "lean": "writfold_core.guard.decide",
+      "theorems": [
+        "Writfold.Core.Guard.decide_pass_iff",
+        "Writfold.Core.Guard.decide_spec",
+        "Writfold.Core.Guard.unknown_never_passes"
+      ],
+      "total": "Writfold.Core.Guard.decide_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "decide-ignores-facts"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/guard.rs",
+      "function": "effect",
+      "lean": "writfold_core.guard.effect",
+      "theorems": [
+        "Writfold.Core.Guard.effect_audit_passes",
+        "Writfold.Core.Guard.effect_enforce",
+        "Writfold.Core.Guard.effect_spec"
+      ],
+      "total": "Writfold.Core.Guard.effect_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "effect-enforces-audit"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/guard.rs",
+      "function": "gates_fact",
+      "lean": "writfold_core.guard.gates_fact",
+      "theorems": [
+        "Writfold.Core.Guard.gates_fact_met_iff",
+        "Writfold.Core.Guard.gates_fact_never_unknown"
+      ],
+      "total": "Writfold.Core.Guard.gates_fact_met_iff",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "gates-fact-met-on-nothing",
+        "gates-fact-ignores-invalid"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/guard.rs",
+      "function": "met",
+      "lean": "writfold_core.guard.met",
+      "theorems": [
+        "Writfold.Core.Guard.met_spec"
+      ],
+      "total": "Writfold.Core.Guard.met_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "all-met-accepts-unknown"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/guard.rs",
+      "function": "nudge",
+      "lean": "writfold_core.guard.nudge",
+      "theorems": [
+        "Writfold.Core.Guard.nudge_spec"
+      ],
+      "total": "Writfold.Core.Guard.nudge_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "nudge-while-active"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/guard.rs",
+      "function": "nudge_with",
+      "lean": "writfold_core.guard.nudge_with",
+      "theorems": [
+        "Writfold.Core.Guard.nudge_with_iff"
+      ],
+      "total": "Writfold.Core.Guard.nudge_with_iff",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "nudge-with-ignores-repeat"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/guard.rs",
+      "function": "verdict",
+      "lean": "writfold_core.guard.verdict",
+      "theorems": [
+        "Writfold.Core.Guard.verdict_spec"
+      ],
+      "total": "Writfold.Core.Guard.verdict_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "verdict-deny-asks"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/guard/call.rs",
+      "function": "decide_all",
+      "lean": "writfold_core.guard.call.decide_all",
+      "theorems": [
+        "Writfold.Core.Guard.decide_all_deny_iff",
+        "Writfold.Core.Guard.decide_all_loop_spec",
+        "Writfold.Core.Guard.decide_all_pass_iff"
+      ],
+      "total": "Writfold.Core.Guard.decide_all_deny_iff",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "decide-all-drops-last"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/guard/call.rs",
+      "function": "logged",
+      "lean": "writfold_core.guard.call.logged",
+      "theorems": [
+        "Writfold.Core.Guard.logged_iff"
+      ],
+      "total": "Writfold.Core.Guard.logged_iff",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "logged-drops-waiver"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/guard/require.rs",
+      "function": "gate_fact",
+      "lean": "writfold_core.guard.require.gate_fact",
+      "theorems": [
+        "Writfold.Core.Guard.gate_fact_met_iff",
+        "Writfold.Core.Guard.gate_fact_unknown_iff"
+      ],
+      "total": "Writfold.Core.Guard.gate_fact_met_iff",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "gate-fact-undefined-met"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/guard/require.rs",
+      "function": "gates_read",
+      "lean": "writfold_core.guard.require.gates_read",
+      "theorems": [
+        "Writfold.Core.Guard.gates_read_met_iff"
+      ],
+      "total": "Writfold.Core.Guard.gates_read_met_iff",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "gates-read-unread-counts"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/guard/require.rs",
+      "function": "run_current",
+      "lean": "writfold_core.guard.require.run_current",
+      "theorems": [
+        "Writfold.Core.Guard.run_current_met_iff"
+      ],
+      "total": "Writfold.Core.Guard.run_current_met_iff",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "run-current-closed"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/guard/require.rs",
+      "function": "step_fact",
+      "lean": "writfold_core.guard.require.step_fact",
+      "theorems": [
+        "Writfold.Core.Guard.step_fact_met_iff",
+        "Writfold.Core.Guard.step_fact_unknown_iff"
+      ],
+      "total": "Writfold.Core.Guard.step_fact_met_iff",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "step-fact-met-unread"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/idle.rs",
+      "function": "idle",
+      "lean": "writfold_core.idle.idle",
+      "theorems": [
+        "Writfold.Core.Idle.idle_spec"
+      ],
+      "total": "Writfold.Core.Idle.idle_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "idle-saturated-compare"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/idle.rs",
+      "function": "newer",
+      "lean": "writfold_core.idle.newer",
+      "theorems": [
+        "Writfold.Core.Idle.newer_spec"
+      ],
+      "total": null,
+      "subsumes": [],
+      "mutants": [
+        "newest-last-of-equal"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/idle.rs",
+      "function": "newest",
+      "lean": "writfold_core.idle.newest",
+      "theorems": [
+        "Writfold.Core.Idle.newest_loop_spec",
+        "Writfold.Core.Idle.newest_spec"
+      ],
+      "total": "Writfold.Core.Idle.newest_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "newest-skips-last"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/idle.rs",
+      "function": "since",
+      "lean": "writfold_core.idle.since",
+      "theorems": [
+        "Writfold.Core.Idle.since_spec"
+      ],
+      "total": "Writfold.Core.Idle.since_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "since-off-by-one"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/investigation.rs",
+      "function": "Missing::none",
+      "lean": "writfold_core.investigation.Missing.none",
+      "theorems": [
+        "Writfold.Core.Decision.none_spec"
+      ],
+      "total": "Writfold.Core.Decision.none_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "none-ignores-open"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/investigation.rs",
+      "function": "conclude",
+      "lean": "writfold_core.investigation.conclude",
+      "theorems": [
+        "Writfold.Core.Decision.conclude_loop_spec",
+        "Writfold.Core.Decision.conclude_spec"
+      ],
+      "total": "Writfold.Core.Decision.conclude_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "conclude-ignores-section",
+        "conclude-skips-last"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/observe.rs",
+      "function": "embeds",
+      "lean": "writfold_core.observe.embeds",
+      "theorems": [
+        "Writfold.Core.Ground.embeds_iff"
+      ],
+      "total": "Writfold.Core.Ground.embeds_iff",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "embeds-drops-partial"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/observe.rs",
+      "function": "grounds",
+      "lean": "writfold_core.observe.grounds",
+      "theorems": [
+        "Writfold.Core.Ground.grounds_iff"
+      ],
+      "total": "Writfold.Core.Ground.grounds_iff",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "observation-partial-grounds"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/order.rs",
+      "function": "less",
+      "lean": "writfold_core.order.less",
+      "theorems": [
+        "Writfold.Core.Order.less_loop_spec",
+        "Writfold.Core.Order.less_spec"
+      ],
+      "total": "Writfold.Core.Order.less_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "less-larger-byte",
+        "less-equal-names"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/order.rs",
+      "function": "precedes",
+      "lean": "writfold_core.order.precedes",
+      "theorems": [
+        "Writfold.Core.Order.precedes_spec"
+      ],
+      "total": "Writfold.Core.Order.precedes_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "precedes-higher-seq"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/pin.rs",
+      "function": "current_under",
+      "lean": "writfold_core.pin.current_under",
+      "theorems": [
+        "Writfold.Core.Pin.current_under_about",
+        "Writfold.Core.Pin.current_under_refines",
+        "Writfold.Core.Pin.current_under_spec"
+      ],
+      "total": "Writfold.Core.Pin.current_under_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "current-under-ignores-about"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/pin.rs",
+      "function": "holds_from",
+      "lean": "writfold_core.pin.holds_from",
+      "theorems": [
+        "Writfold.Core.Pin.holds_from_loop_spec",
+        "Writfold.Core.Pin.holds_from_total"
+      ],
+      "total": "Writfold.Core.Pin.holds_from_total",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "holds-skips-unreadable",
+        "holds-reads-past-end"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/pin.rs",
+      "function": "nothing_found",
+      "lean": "writfold_core.pin.nothing_found",
+      "theorems": [
+        "Writfold.Core.Pin.nothing_found_refines",
+        "Writfold.Core.Pin.nothing_found_spec"
+      ],
+      "total": "Writfold.Core.Pin.nothing_found_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "nothing-found-ignores-pins"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/pin.rs",
+      "function": "timed",
+      "lean": "writfold_core.pin.timed",
+      "theorems": [
+        "Writfold.Core.Pin.timed_never_moved",
+        "Writfold.Core.Pin.timed_spec"
+      ],
+      "total": "Writfold.Core.Pin.timed_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "timed-default-never-ages"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/plan.rs",
+      "function": "advance",
+      "lean": "writfold_core.plan.advance",
+      "theorems": [
+        "Writfold.Core.Plan.advance_facts_ok_iff",
+        "Writfold.Core.Plan.advance_facts_spec",
+        "Writfold.Core.Plan.advance_undefined_refused",
+        "Writfold.Core.Plan.done_only_when_met"
+      ],
+      "total": "Writfold.Core.Plan.advance_facts_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "advance-refuses-no-gates"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/plan.rs",
+      "function": "advance_check",
+      "lean": "writfold_core.plan.advance_check",
+      "theorems": [
+        "Writfold.Core.Plan.advance_check_spec",
+        "Writfold.Core.Plan.advance_ok_iff"
+      ],
+      "total": "Writfold.Core.Plan.advance_check_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "advance-without-current-check",
+        "advance-ignores-gates"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/plan.rs",
+      "function": "close_check",
+      "lean": "writfold_core.plan.close_check",
+      "theorems": [
+        "Writfold.Core.Plan.close_check_spec"
+      ],
+      "total": "Writfold.Core.Plan.close_check_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "close-check-ignores-present"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/plan.rs",
+      "function": "closed",
+      "lean": "writfold_core.plan.closed",
+      "theorems": [
+        "Writfold.Core.Plan.closed_spec"
+      ],
+      "total": "Writfold.Core.Plan.closed_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "closed-ignores-skip"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/plan.rs",
+      "function": "contains",
+      "lean": "writfold_core.plan.contains",
+      "theorems": [
+        "Writfold.Core.Plan.contains_loop_spec",
+        "Writfold.Core.Plan.contains_spec"
+      ],
+      "total": "Writfold.Core.Plan.contains_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "contains-misses-last"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/plan.rs",
+      "function": "current",
+      "lean": "writfold_core.plan.current",
+      "theorems": [
+        "Writfold.Core.Plan.current_least",
+        "Writfold.Core.Plan.current_loop_spec",
+        "Writfold.Core.Plan.current_spec",
+        "Writfold.Core.Plan.locked_stays_current"
+      ],
+      "total": "Writfold.Core.Plan.current_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "current-returns-last"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/plan.rs",
+      "function": "fact_met",
+      "lean": "writfold_core.plan.fact_met",
+      "theorems": [
+        "Writfold.Core.Plan.fact_met_spec"
+      ],
+      "total": "Writfold.Core.Plan.fact_met_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "advance-undefined-met",
+        "fact-met-ignores-policy"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/plan.rs",
+      "function": "first_owed",
+      "lean": "writfold_core.plan.first_owed",
+      "theorems": [
+        "Writfold.Core.Plan.first_owed_loop_spec",
+        "Writfold.Core.Plan.first_owed_spec"
+      ],
+      "total": "Writfold.Core.Plan.first_owed_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "first-owed-inverted"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/plan.rs",
+      "function": "met_all",
+      "lean": "writfold_core.plan.met_all",
+      "theorems": [
+        "Writfold.Core.Plan.met_all_loop_spec",
+        "Writfold.Core.Plan.met_all_spec"
+      ],
+      "total": "Writfold.Core.Plan.met_all_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "met-all-drops-last"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/plan.rs",
+      "function": "skip_check",
+      "lean": "writfold_core.plan.skip_check",
+      "theorems": [
+        "Writfold.Core.Plan.skip_check_spec",
+        "Writfold.Core.Plan.skip_ok_iff"
+      ],
+      "total": "Writfold.Core.Plan.skip_check_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "skip-without-lock"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/plan.rs",
+      "function": "skipped",
+      "lean": "writfold_core.plan.skipped",
+      "theorems": [
+        "Writfold.Core.Plan.locked_skip_never_closes",
+        "Writfold.Core.Plan.skipped_spec"
+      ],
+      "total": "Writfold.Core.Plan.skipped_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "skipped-ignores-lock"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/plan.rs",
+      "function": "splice",
+      "lean": "writfold_core.plan.splice",
+      "theorems": [
+        "Writfold.Core.Plan.splice_loop0_spec",
+        "Writfold.Core.Plan.splice_loop1_spec",
+        "Writfold.Core.Plan.splice_loop2_spec",
+        "Writfold.Core.Plan.splice_spec"
+      ],
+      "total": null,
+      "subsumes": [],
+      "mutants": [
+        "splice-inserts-after-current",
+        "splice-new-steps-done",
+        "splice-drops-last-step"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/plan.rs",
+      "function": "splice_check",
+      "lean": "writfold_core.plan.splice_check",
+      "theorems": [
+        "Writfold.Core.Plan.splice_admitted",
+        "Writfold.Core.Plan.splice_check_already_iff",
+        "Writfold.Core.Plan.splice_check_depth",
+        "Writfold.Core.Plan.splice_check_spec",
+        "Writfold.Core.Plan.splice_idempotent"
+      ],
+      "total": "Writfold.Core.Plan.splice_check_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "splice-ignores-key",
+        "splice-depth-off-by-one",
+        "splice-check-refuses-empty",
+        "splice-check-admits-complete"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/plan.rs",
+      "function": "stale",
+      "lean": "writfold_core.plan.stale",
+      "theorems": [
+        "Writfold.Core.Plan.stale_never_current",
+        "Writfold.Core.Plan.stale_spec"
+      ],
+      "total": "Writfold.Core.Plan.stale_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "stale-ignores-done"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/plan/recheck.rs",
+      "function": "still_stands",
+      "lean": "writfold_core.plan.recheck.still_stands",
+      "theorems": [
+        "Writfold.Core.Recheck.stands_iff",
+        "Writfold.Core.Recheck.still_stands_spec"
+      ],
+      "total": "Writfold.Core.Recheck.still_stands_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "recheck-current-ignored",
+        "recheck-ordinal-ignored",
+        "recheck-root-needs-current",
+        "recheck-ignores-plan"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/plan/recheck.rs",
+      "function": "writable",
+      "lean": "writfold_core.plan.recheck.writable",
+      "theorems": [
+        "Writfold.Core.Recheck.closed_refuses",
+        "Writfold.Core.Recheck.sidecar_wins",
+        "Writfold.Core.Recheck.writable_spec"
+      ],
+      "total": "Writfold.Core.Recheck.writable_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "writable-manifest-wins"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/pointer.rs",
+      "function": "is_set",
+      "lean": "writfold_core.pointer.is_set",
+      "theorems": [
+        "Writfold.Core.Pointer.ended_not_skipped",
+        "Writfold.Core.Pointer.is_set_spec",
+        "Writfold.Core.Pointer.level_spec",
+        "Writfold.Core.Pointer.open_spec",
+        "Writfold.Core.Pointer.session_decides",
+        "Writfold.Core.Pointer.tree_decides"
+      ],
+      "total": "Writfold.Core.Pointer.is_set_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "level-tree-before-session",
+        "is-set-skips-gone",
+        "open-skips-closed-session",
+        "open-shared-any-run"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/pointer.rs",
+      "function": "level",
+      "lean": "writfold_core.pointer.level",
+      "theorems": [
+        "Writfold.Core.Pointer.ended_not_skipped",
+        "Writfold.Core.Pointer.level_spec",
+        "Writfold.Core.Pointer.open_spec",
+        "Writfold.Core.Pointer.session_decides"
+      ],
+      "total": "Writfold.Core.Pointer.level_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "level-tree-before-session",
+        "is-set-skips-gone",
+        "open-skips-closed-session",
+        "open-shared-any-run"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/pointer.rs",
+      "function": "open",
+      "lean": "writfold_core.pointer.open",
+      "theorems": [
+        "Writfold.Core.Pointer.ended_not_skipped",
+        "Writfold.Core.Pointer.open_spec",
+        "Writfold.Core.Pointer.session_decides",
+        "Writfold.Core.Pointer.shared_alone"
+      ],
+      "total": "Writfold.Core.Pointer.open_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "level-tree-before-session",
+        "is-set-skips-gone",
+        "open-skips-closed-session",
+        "open-shared-any-run"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/pointer.rs",
+      "function": "writes",
+      "lean": "writfold_core.pointer.writes",
+      "theorems": [
+        "Writfold.Core.Pointer.writer_reads_its_run",
+        "Writfold.Core.Pointer.writes_spec"
+      ],
+      "total": "Writfold.Core.Pointer.writes_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "writes-shared-only-without-session",
+        "writes-no-session"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/policy.rs",
+      "function": "all_passed",
+      "lean": "writfold_core.policy.all_passed",
+      "theorems": [
+        "Writfold.Core.Policy.all_passed_loop_spec",
+        "Writfold.Core.Policy.all_passed_spec"
+      ],
+      "total": "Writfold.Core.Policy.all_passed_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "all-passed-skips-last"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/policy.rs",
+      "function": "any_attested",
+      "lean": "writfold_core.policy.any_attested",
+      "theorems": [
+        "Writfold.Core.Policy.any_attested_loop_spec",
+        "Writfold.Core.Policy.any_attested_spec"
+      ],
+      "total": "Writfold.Core.Policy.any_attested_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "any-attested-skips-last"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/policy.rs",
+      "function": "any_moved",
+      "lean": "writfold_core.policy.any_moved",
+      "theorems": [
+        "Writfold.Core.Policy.any_moved_loop_spec",
+        "Writfold.Core.Policy.any_moved_spec"
+      ],
+      "total": "Writfold.Core.Policy.any_moved_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "pin-all-misses-moved"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/policy.rs",
+      "function": "any_open",
+      "lean": "writfold_core.policy.any_open",
+      "theorems": [
+        "Writfold.Core.Policy.any_open_loop_spec",
+        "Writfold.Core.Policy.any_open_spec"
+      ],
+      "total": "Writfold.Core.Policy.any_open_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "any-open-skips-last"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/policy.rs",
+      "function": "any_unpinned",
+      "lean": "writfold_core.policy.any_unpinned",
+      "theorems": [
+        "Writfold.Core.Policy.any_unpinned_loop_spec",
+        "Writfold.Core.Policy.any_unpinned_spec"
+      ],
+      "total": "Writfold.Core.Policy.any_unpinned_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "any-unpinned-skips-last"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/policy.rs",
+      "function": "any_waived",
+      "lean": "writfold_core.policy.any_waived",
+      "theorems": [
+        "Writfold.Core.Policy.any_waived_loop_spec",
+        "Writfold.Core.Policy.any_waived_spec"
+      ],
+      "total": "Writfold.Core.Policy.any_waived_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "any-waived-skips-last"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/policy.rs",
+      "function": "close",
+      "lean": "writfold_core.policy.close",
+      "theorems": [
+        "Writfold.Core.Policy.close_open_iff",
+        "Writfold.Core.Policy.close_passed_iff",
+        "Writfold.Core.Policy.close_spec",
+        "Writfold.Core.Policy.close_waived_iff"
+      ],
+      "total": "Writfold.Core.Policy.close_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "close-waived-passed"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/policy.rs",
+      "function": "met",
+      "lean": "writfold_core.policy.met",
+      "theorems": [
+        "Writfold.Core.Policy.met_default",
+        "Writfold.Core.Policy.met_spec"
+      ],
+      "total": "Writfold.Core.Policy.met_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "met-ignores-waived",
+        "met-default-counts-stale"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/policy.rs",
+      "function": "pin_all",
+      "lean": "writfold_core.policy.pin_all",
+      "theorems": [
+        "Writfold.Core.Policy.pin_all_moved_iff",
+        "Writfold.Core.Policy.pin_all_same_iff",
+        "Writfold.Core.Policy.pin_all_spec"
+      ],
+      "total": "Writfold.Core.Policy.pin_all_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "pin-all-empty-same"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/policy.rs",
+      "function": "pin_one",
+      "lean": "writfold_core.policy.pin_one",
+      "theorems": [
+        "Writfold.Core.Policy.pin_one_same_iff",
+        "Writfold.Core.Policy.pin_one_spec",
+        "Writfold.Core.Policy.pin_one_unpinned_iff"
+      ],
+      "total": "Writfold.Core.Policy.pin_one_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "pin-one-missing-same"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/policy.rs",
+      "function": "summary",
+      "lean": "writfold_core.policy.summary",
+      "theorems": [
+        "Writfold.Core.Policy.empty_never_complete",
+        "Writfold.Core.Policy.exception_never_clean",
+        "Writfold.Core.Policy.moved_never_complete",
+        "Writfold.Core.Policy.open_never_complete",
+        "Writfold.Core.Policy.summary_complete_iff",
+        "Writfold.Core.Policy.summary_spec"
+      ],
+      "total": "Writfold.Core.Policy.summary_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "summary-skips-moved",
+        "summary-ignores-closed",
+        "summary-complete-with-skip"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/policy/lines.rs",
+      "function": "all_skipped",
+      "lean": "writfold_core.policy.lines.all_skipped",
+      "theorems": [
+        "Writfold.Core.Policy.all_skipped_loop_spec",
+        "Writfold.Core.Policy.all_skipped_spec"
+      ],
+      "total": "Writfold.Core.Policy.all_skipped_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "skipped-any-step",
+        "skipped-unnamed"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/policy/lines.rs",
+      "function": "closes",
+      "lean": "writfold_core.policy.lines.closes",
+      "theorems": [
+        "Writfold.Core.Policy.closes_spec"
+      ],
+      "total": "Writfold.Core.Policy.closes_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "closes-stale"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/policy/lines.rs",
+      "function": "lines_clean",
+      "lean": "writfold_core.policy.lines.lines_clean",
+      "theorems": [
+        "Writfold.Core.Policy.lines_clean_iff",
+        "Writfold.Core.Policy.lines_flagged_never_clean"
+      ],
+      "total": "Writfold.Core.Policy.lines_clean_iff",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "clean-ignores-invalid"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/policy/lines.rs",
+      "function": "owed_met",
+      "lean": "writfold_core.policy.lines.owed_met",
+      "theorems": [
+        "Writfold.Core.Policy.owed_met_loop_spec",
+        "Writfold.Core.Policy.owed_met_spec"
+      ],
+      "total": "Writfold.Core.Policy.owed_met_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "owed-ignores-skip"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/policy/repin.rs",
+      "function": "in_force",
+      "lean": "writfold_core.policy.repin.in_force",
+      "theorems": [
+        "Writfold.Core.Policy.in_force_loop_spec",
+        "Writfold.Core.Policy.in_force_none_iff",
+        "Writfold.Core.Policy.in_force_spec"
+      ],
+      "total": "Writfold.Core.Policy.in_force_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "in-force-inverted",
+        "in-force-skips-oldest"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/policy/repin.rs",
+      "function": "repin_check",
+      "lean": "writfold_core.policy.repin.repin_check",
+      "theorems": [
+        "Writfold.Core.Policy.repin_check_spec",
+        "Writfold.Core.Policy.repin_closed_refused",
+        "Writfold.Core.Policy.repin_keeps_skips",
+        "Writfold.Core.Policy.repin_ok_iff",
+        "Writfold.Core.Policy.repin_unmoved_refused"
+      ],
+      "total": "Writfold.Core.Policy.repin_check_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "repin-closed-run",
+        "repin-ignores-invalid",
+        "repin-when-same",
+        "repin-when-unpinned",
+        "repin-undefined-gate",
+        "repin-reopens-skip"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/scope.rs",
+      "function": "char_step",
+      "lean": "writfold_core.scope.char_step",
+      "theorems": [
+        "Writfold.Core.Scope.char_step_spec"
+      ],
+      "total": null,
+      "subsumes": [],
+      "mutants": [
+        "segment-no-backtrack",
+        "star-needs-a-char"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/scope.rs",
+      "function": "covers",
+      "lean": "writfold_core.scope.covers",
+      "theorems": [
+        "Writfold.Core.Scope.covers_iff",
+        "Writfold.Core.Scope.covers_loop_spec",
+        "Writfold.Core.Scope.exclusion_wins",
+        "Writfold.Core.Scope.no_pattern_no_scope"
+      ],
+      "total": "Writfold.Core.Scope.covers_iff",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "covers-ignores-exclusion",
+        "covers-empty-includes"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/scope.rs",
+      "function": "globstar",
+      "lean": "writfold_core.scope.globstar",
+      "theorems": [
+        "Writfold.Core.Scope.globstar_spec"
+      ],
+      "total": "Writfold.Core.Scope.globstar_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "globstar-one-star"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/scope.rs",
+      "function": "include",
+      "lean": "writfold_core.scope.include",
+      "theorems": [
+        "Writfold.Core.Scope.include_spec"
+      ],
+      "total": "Writfold.Core.Scope.include_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "include-ignores-hit"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/scope.rs",
+      "function": "path_step",
+      "lean": "writfold_core.scope.path_step",
+      "theorems": [
+        "Writfold.Core.Scope.path_step_spec"
+      ],
+      "total": null,
+      "subsumes": [],
+      "mutants": [
+        "globstar-needs-a-segment",
+        "segments-accept-trailing"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/scope.rs",
+      "function": "same_char",
+      "lean": "writfold_core.scope.same_char",
+      "theorems": [
+        "Writfold.Core.Scope.same_char_spec"
+      ],
+      "total": "Writfold.Core.Scope.same_char_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "same-char-ignores-any"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/store.rs",
+      "function": "artifact",
+      "lean": "writfold_core.store.artifact",
+      "theorems": [
+        "Writfold.Core.Store.artifact_admit_iff",
+        "Writfold.Core.Store.artifact_admit_reads_fresh",
+        "Writfold.Core.Store.artifact_no_blob",
+        "Writfold.Core.Store.artifact_no_commit",
+        "Writfold.Core.Store.artifact_not_found",
+        "Writfold.Core.Store.artifact_short_rev",
+        "Writfold.Core.Store.artifact_unanchored",
+        "Writfold.Core.Store.artifact_undeclared"
+      ],
+      "total": "Writfold.Core.Store.artifact_admit_iff",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "artifact-short-rev-admitted",
+        "artifact-unanchored-admitted",
+        "artifact-found-before-declared",
+        "artifact-absent-as-unanchored"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/store.rs",
+      "function": "basis",
+      "lean": "writfold_core.store.basis",
+      "theorems": [
+        "Writfold.Core.Store.basis_head_default",
+        "Writfold.Core.Store.basis_pin_iff"
+      ],
+      "total": "Writfold.Core.Store.basis_pin_iff",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "basis-ignores-rev"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/store.rs",
+      "function": "pinned",
+      "lean": "writfold_core.store.pinned",
+      "theorems": [
+        "Writfold.Core.Store.pinned_behind_unverifiable",
+        "Writfold.Core.Store.pinned_fresh_iff",
+        "Writfold.Core.Store.pinned_other_bytes",
+        "Writfold.Core.Store.pinned_unanchored_gone"
+      ],
+      "total": "Writfold.Core.Store.pinned_fresh_iff",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "pinned-absent-gone",
+        "pinned-unanchored-fresh",
+        "pinned-other-bytes-fresh"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/store.rs",
+      "function": "resolve",
+      "lean": "writfold_core.store.resolve",
+      "theorems": [
+        "Writfold.Core.Store.resolve_committed_needs_origin",
+        "Writfold.Core.Store.resolve_flag_only_map",
+        "Writfold.Core.Store.resolve_map_wins",
+        "Writfold.Core.Store.resolve_mismatch_iff",
+        "Writfold.Core.Store.resolve_missing_iff",
+        "Writfold.Core.Store.resolve_search_before_hint"
+      ],
+      "total": "Writfold.Core.Store.resolve_committed_needs_origin",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "resolve-hint-any-origin",
+        "resolve-map-unflagged",
+        "resolve-hint-before-search"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/subject.rs",
+      "function": "pick",
+      "lean": "writfold_core.subject.pick",
+      "theorems": [
+        "Writfold.Core.Subject.here_outside_kb_wins",
+        "Writfold.Core.Subject.kb_only_for_checkout",
+        "Writfold.Core.Subject.pick_spec",
+        "Writfold.Core.Subject.recorded_never_kb_checkout",
+        "Writfold.Core.Subject.some_subject",
+        "Writfold.Core.Subject.unchanged_unless_checkout"
+      ],
+      "total": "Writfold.Core.Subject.pick_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "pick-recorded-checkout",
+        "pick-here-even-kb",
+        "pick-checkout-nothing"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/verdict.rs",
+      "function": "aged",
+      "lean": "writfold_core.verdict.aged",
+      "theorems": [
+        "Writfold.Core.Verdict.aged_expired_iff",
+        "Writfold.Core.Verdict.aged_spec"
+      ],
+      "total": "Writfold.Core.Verdict.aged_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "aged-keeps-unreadable"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/verdict.rs",
+      "function": "exchange",
+      "lean": "writfold_core.verdict.exchange",
+      "theorems": [
+        "Writfold.Core.Verdict.exchange_said_iff",
+        "Writfold.Core.Verdict.exchange_spec"
+      ],
+      "total": "Writfold.Core.Verdict.exchange_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "exchange-ignores-handshake",
+        "exchange-first-of-two"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/verdict.rs",
+      "function": "expired",
+      "lean": "writfold_core.verdict.expired",
+      "theorems": [
+        "Writfold.Core.Verdict.expired_spec"
+      ],
+      "total": "Writfold.Core.Verdict.expired_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "expired-overflow-kept"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/verdict.rs",
+      "function": "handshake",
+      "lean": "writfold_core.verdict.handshake",
+      "theorems": [
+        "Writfold.Core.Verdict.handshake_spec"
+      ],
+      "total": "Writfold.Core.Verdict.handshake_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "handshake-kind-as-op"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/verdict.rs",
+      "function": "lifetime",
+      "lean": "writfold_core.verdict.lifetime",
+      "theorems": [
+        "Writfold.Core.Verdict.lifetime_spec"
+      ],
+      "total": "Writfold.Core.Verdict.lifetime_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "lifetime-token-as-default"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/verdict.rs",
+      "function": "observed",
+      "lean": "writfold_core.verdict.observed",
+      "theorems": [
+        "Writfold.Core.Verdict.changed_gate_never_fresh",
+        "Writfold.Core.Verdict.checker_fresh_iff",
+        "Writfold.Core.Verdict.moved_span_never_fresh",
+        "Writfold.Core.Verdict.observed_fresh_iff",
+        "Writfold.Core.Verdict.observed_spec",
+        "Writfold.Core.Verdict.unsearched_never_fresh"
+      ],
+      "total": "Writfold.Core.Verdict.observed_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "moved-span-fresh",
+        "unsearched-fresh"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/verdict.rs",
+      "function": "with_mark",
+      "lean": "writfold_core.verdict.with_mark",
+      "theorems": [
+        "Writfold.Core.Verdict.mark_keeps_change",
+        "Writfold.Core.Verdict.mark_never_fresh",
+        "Writfold.Core.Verdict.with_mark_spec"
+      ],
+      "total": "Writfold.Core.Verdict.with_mark_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "mark-hides-change"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/verdict/locate.rs",
+      "function": "place",
+      "lean": "writfold_core.verdict.locate.place",
+      "theorems": [
+        "Writfold.Core.Verdict.place_absent_iff",
+        "Writfold.Core.Verdict.place_at_iff",
+        "Writfold.Core.Verdict.place_loop_spec",
+        "Writfold.Core.Verdict.place_same_iff"
+      ],
+      "total": "Writfold.Core.Verdict.place_absent_iff",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "place-ignores-cited"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/verdict/locate.rs",
+      "function": "window",
+      "lean": "writfold_core.verdict.locate.window",
+      "theorems": [
+        "Writfold.Core.Verdict.window_spec"
+      ],
+      "total": "Writfold.Core.Verdict.window_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "window-cited-off-by-one"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/verdict/recorded.rs",
+      "function": "before",
+      "lean": "writfold_core.verdict.recorded.before",
+      "theorems": [
+        "Writfold.Core.Recorded.before_spec"
+      ],
+      "total": "Writfold.Core.Recorded.before_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "before-prefers-older"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/verdict/recorded.rs",
+      "function": "best_recorded",
+      "lean": "writfold_core.verdict.recorded.best_recorded",
+      "theorems": [
+        "Writfold.Core.Recorded.best_recorded_loop_spec",
+        "Writfold.Core.Recorded.best_recorded_spec"
+      ],
+      "total": "Writfold.Core.Recorded.best_recorded_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "best-recorded-skips-last"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/verdict/recorded.rs",
+      "function": "better",
+      "lean": "writfold_core.verdict.recorded.better",
+      "theorems": [
+        "Writfold.Core.Recorded.better_spec"
+      ],
+      "total": null,
+      "subsumes": [],
+      "mutants": [
+        "better-tie-takes-later"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/verdict/recorded.rs",
+      "function": "newest",
+      "lean": "writfold_core.verdict.recorded.newest",
+      "theorems": [
+        "Writfold.Core.Recorded.newest_never_unverifiable",
+        "Writfold.Core.Recorded.newest_spec"
+      ],
+      "total": "Writfold.Core.Recorded.newest_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "newest-local-on-tie"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/verdict/recorded.rs",
+      "function": "recordable",
+      "lean": "writfold_core.verdict.recorded.recordable",
+      "theorems": [
+        "Writfold.Core.Recorded.recordable_iff"
+      ],
+      "total": "Writfold.Core.Recorded.recordable_iff",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "recordable-unverifiable"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/verdict/recorded.rs",
+      "function": "recorded_age",
+      "lean": "writfold_core.verdict.recorded.recorded_age",
+      "theorems": [
+        "Writfold.Core.Recorded.recorded_age_spec"
+      ],
+      "total": "Writfold.Core.Recorded.recorded_age_spec",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "recorded-age-no-skew"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/walk.rs",
+      "function": "complete",
+      "lean": "writfold_core.walk.complete",
+      "theorems": [
+        "Writfold.Core.Walk.complete_iff"
+      ],
+      "total": "Writfold.Core.Walk.complete_iff",
+      "subsumes": [
+        "TAU-N001",
+        "TAU-P003"
+      ],
+      "mutants": [
+        "complete-ignores-skipped"
+      ],
+      "outcome": "proved",
+      "fingerprint": "fnv1a64:f490957dd45c761e"
+    }
+  ]
+}

@@ -70,6 +70,9 @@ never fails, result as stated):
   yet wired): whether a cover row's references answer the item they cover
   (`Bind.lean`) and whether evidence still holds under its pins: what a
   look searched, a catalog lifetime, another repository (`Pin.lean`).
+- The tauten claims round (19 November 2026, below): `holds_from` and
+  `answered_from` never fail from any start index, and mutants for the
+  loops no mutant broke, so `cargo tauten proofs` can claim them.
 
 The gate (`docker compose -f compose.proofs.yaml run --build --rm proofs`,
 or the `docker run` form below) regenerates the translation and refuses
@@ -799,11 +802,33 @@ Tested, not proved: everything the wiring stages add (the `evidence` key,
 the `searched` field, store resolution, clock reads, rendering). Nothing is
 written by these kernels, so `KbWrite.tla` and `RunGraph.tla` are unchanged.
 
+### The tauten claims round (19 November 2026)
+
+For the tauten pilot ([tauten-adoption.md](tauten-adoption.md), "Proof
+claims"): no kernel or existing theorem changed. After the round: 662
+theorems, 374 required claims, 232 mutants.
+
+- `pin` (`Pin.lean`), `bind` (`Bind.lean`): `holds_from_total`,
+  `answered_from_total`: `holds_from` and `answered_from` never fail, from
+  any start index (the existing loop specs need the prefix before the start
+  to be held or unanswered, so they say nothing for an arbitrary start).
+  These are the shape tauten needs to subsume arithmetic and indexing
+  findings, `∀ args, f args ⦃ _ ⦄` with no hypotheses; `holds-reads-past-end`
+  and `answered-reads-past-end` show they reject an out-of-bounds read.
+- Eight skips-last mutants for loops whose theorems no mutant broke
+  (`any_stale`, `idle::newest`, `any_unpinned`, `any_waived`,
+  `any_attested`, `any_open`, `all_passed`, `best_recorded`), so those
+  functions can be tauten claims, which need a killed mutant. Their loop
+  specs joined the required claims.
+
+`proofs/Total.lean` (not part of the gate) lists the theorems of the total
+shape; `proofs/tauten_gate.py` runs it after the unchanged gate.
+
 ### The claims and their mutants
 
 <!-- generated from proofs/mutants.py -->
 
-222 mutants (20 before 16 November 2026, 86 after the backfill's first round, 108 after the policy round, 161 after the backfill's second round, 170 after the bug-fix round, 189 after the delivery round: its nine delivery mutants re-aimed and 19 added, all 28 calibrated; 203 after the current-run and repin rounds; 210 after the attached-stores round; 214 after the run-artifacts round; 222 after the evidence-binding round). Each must break exactly the theorems named.
+222 mutants (20 before 16 November 2026, 86 after the backfill's first round, 108 after the policy round, 161 after the backfill's second round, 170 after the bug-fix round, 189 after the delivery round: its nine delivery mutants re-aimed and 19 added, all 28 calibrated; 203 after the current-run and repin rounds; 210 after the attached-stores round; 214 after the run-artifacts round; 222 after the evidence-binding round; 232 after the tauten claims round). Each must break exactly the theorems named.
 
 | Mutant | File | What it breaks | Must break |
 |---|---|---|---|
@@ -1029,6 +1054,16 @@ written by these kernels, so `KbWrite.tla` and `RunGraph.tla` are unchanged.
 | `timed-default-never-ages` | `pin.rs` | pin: a catalog default lifetime ages like a token's own | `Pin.timed_spec` |
 | `nothing-found-ignores-pins` | `pin.rs` | pin: a negative look's pins decide whether it still found nothing | `Pin.nothing_found_spec` |
 | `current-under-ignores-about` | `pin.rs` | pin: pins never make a receipt about other bytes current | `Pin.current_under_spec` |
+| `answered-reads-past-end` | `bind.rs` | bind: the total theorem rejects an out-of-bounds read | `Bind.answered_from_loop_spec`, `Bind.answered_from_total` |
+| `holds-reads-past-end` | `pin.rs` | pin: the total theorem rejects an out-of-bounds read | `Pin.holds_from_loop_spec`, `Pin.holds_from_total` |
+| `any-stale-skips-last` | `checklist.rs` | checklist: one stale entry is enough, the last one too | `Checklist.any_stale_loop_spec` |
+| `newest-skips-last` | `idle.rs` | idle: the newest stamp may be the last one | `Idle.newest_loop_spec` |
+| `any-unpinned-skips-last` | `policy.rs` | policy: an unpinned last gate counts | `Policy.any_unpinned_loop_spec` |
+| `any-waived-skips-last` | `policy.rs` | policy: a waived last gate counts | `Policy.any_waived_loop_spec` |
+| `any-attested-skips-last` | `policy.rs` | policy: an attested last gate counts | `Policy.any_attested_loop_spec` |
+| `any-open-skips-last` | `policy.rs` | policy: an open last step counts | `Policy.any_open_loop_spec` |
+| `all-passed-skips-last` | `policy.rs` | policy: the last step must have passed too | `Policy.all_passed_loop_spec` |
+| `best-recorded-skips-last` | `verdict/recorded.rs` | recorded: the last recorded statement is a candidate | `Recorded.best_recorded_loop_spec` |
 <!-- end generated -->
 
 What these proofs do not cover: the fold from event files to the list of

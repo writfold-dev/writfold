@@ -59,6 +59,9 @@ them are TAU-D001 documentation):
 | TAU-N002 | lossy `as` | 19 | 19 | 19 |
 | **Total** | | **712** | **679** | **679** |
 
+After the proof claims (below): 130 of these (N001 57, P003 73) are
+subsumed by proofs, and the baseline accepts 549 (N001 239, P003 194).
+
 By crate after the fixes: `writfold-core` 248, `writfold-domain` 155,
 `tuft` 129, `writfold-sources` 103, `writfold-runtime` 26, `writfold-kb` 17,
 `writfold-xtask` 1; `writfold`, `writfold-app` and `writfold-tui` have none.
@@ -123,7 +126,7 @@ new errors with the baseline in place.
 
 | Group | Count | Why it is not fixed here |
 |---|---:|---|
-| `writfold-core` N001/P003 inside the extraction roots (`start_from`) | 159 (72 + 87) | **Subsumed by proofs (candidate).** Aeneas models overflow and out-of-bounds as failure, so a proved no-failure theorem covers them. Rewriting would change extracted code and require re-extraction and the proofs gate. Which functions have such a theorem should be listed per function; tauten plans a `claims.toml` for this. |
+| `writfold-core` N001/P003 inside the extraction roots (`start_from`) | 29 (130 of 159 now subsumed by proofs; see "Proof claims") | The functions whose only theorems carry hypotheses: `plan::splice` (7; needs `nodes.len() + count ≤ usize::MAX`, and does panic past it), `scope::char_step` and `scope::path_step` (9 each; need the matcher's cursor invariant), `verdict::recorded::better` (3) and `idle::newer` (1) (need `i < len`). All are `pub` but called only from proved total functions in the crate. |
 | `writfold-core` M001 inside the extraction roots | 11 | Not subsumed by proofs (exhaustiveness is about future variants, not runtime failure), but a fix changes extracted kernel code (`decision.rs` has 8). Recorded for the owner; do with the next proved change to those kernels. |
 | `writfold-core` outside the extraction roots | 78 (N001 54, P003 23, M001 1) | Text plumbing that `AGENTS.md` keeps tested-only: `diag` rendering, `command`'s reader, `walk`, `decision::State::parse`, `verdict::locate::locate`. Fixable without proofs, but it is in the kernel crate and some may be reachable from extracted items; check reachability first. |
 | `writfold-domain` | 155 (130 in `verus!` files) | Verus-annotated legacy code; editing inside `verus!` with `ensures` clauses needs a Verus run to stay coherent. The owner should decide whether this code shrinks before it is tightened. |
@@ -132,6 +135,57 @@ new errors with the baseline in place.
 | `tuft` | 129 | Frozen. |
 | Weft and Splicery in `writfold-kb` | 6 (X001 3, E003 1, E001 2 in `edit/`) | Frozen. |
 | E001 in `writfold-runtime`, `writfold-kb`, `writfold-xtask` | 38 | Deliberate translations into closed error enums of errors that carry nothing more (`TryFromIntError`, `Utf8Error`, `TryReserveError`), values that are not errors (`binary_search`'s insertion index, `fetch_update`'s previous value), and in tests a `PoisonError` holding a guard or a thread's panic payload. A few IO cases (`write/atomic.rs` reporting any read failure as "is gone") are worth a closer look; changing them changes user-visible messages. |
+
+## Proof claims (stage 2b, 19 November 2026)
+
+`cargo tauten check` reports an arithmetic (TAU-N001) or indexing (TAU-P003)
+finding in a kernel crate as "subsumed by proof" when the enclosing function
+has a claim in `proofs/claims.json` that the last `cargo tauten proofs` run
+recorded `proved`, with a `total` theorem (`∀ args, f args ⦃ _ ⦄`, no
+hypotheses: Aeneas's `⦃ ⦄` is false for a panic, an overflow or an
+out-of-bounds access), for exactly the current sources (fingerprint of
+`crates/writfold-core/` and `proofs/`). Tool: `cargo-tauten` from tauten main
+at `a08964f`.
+
+**Result.** 151 claims, all `proved` (gate run of 96 minutes: drift,
+`lake build`, axiom audit, 232 mutants). 145 have a total theorem. Of the
+159 baselined N001/P003 findings in the extraction roots, **130 are
+subsumed** (N001 57, P003 73) and 29 remain (table above). The other 77
+writfold-core N001/P003 findings are in code that is not translated
+(`diag`, `command::invoke`, `command::command`, `decision::State::parse`,
+`verdict::locate::locate`, `walk::walk`) and stay baselined. The baseline
+went from 679 to 549 accepted findings; the check passes with 0 errors,
+130 subsumed.
+
+**What was added (no kernel or existing theorem changed).**
+
+| File | Role |
+|---|---|
+| `proofs/claims.toml` | One `[[claim]]` per function: its theorems, `total`, `subsumes = ["TAU-N001", "TAU-P003"]` (only with `total`) and the mutants that break its theorems. The gate command is the adapter below. |
+| `proofs/claims.json` | Written by `cargo tauten proofs`; committed, reviewed like the baseline. |
+| `proofs/tauten-gate.sh` | Host side: checks Docker, builds the proofs image from this tree (`docker build --target gate`, as in `aeneas.md`), runs the adapter with `--network none`. |
+| `proofs/tauten_gate.py` | In the image: runs the unchanged `proofs/gate.sh` and turns what it printed into `TAUTEN-PROOFS` lines (stages reached, each `AXIOMS` line, each `calibration:` or `FAIL` line of `mutants.py`), then runs `proofs/Total.lean`. A stage gate.sh did not reach is `fail`. |
+| `proofs/Total.lean` | Not part of the gate: tauten's template check of the total shape (`totalOver`), over `Writfold.Core`, printing `TOTAL` (and `SPEC` for triples with hypotheses). |
+| `proofs/tauten_claims.py` | Drafts `claims.toml` from `Total.lean`'s output and `mutants.py`. |
+| `Pin.lean`, `Bind.lean` | `holds_from_total`, `answered_from_total`: the two functions whose loop specs need a prefix hypothesis now also have a hypothesis-free no-failure theorem (5 findings). |
+| `mutants.py`, `Audit.lean` | 10 mutants: two out-of-bounds reads that must break the new total theorems, and eight skips-last mutants for loops no mutant broke (`any_stale`, `idle::newest`, `policy::{any_unpinned, any_waived, any_attested, any_open, all_passed}`, `best_recorded`; 17 findings), since a claim needs a killed mutant. Their theorems joined the required claims. |
+
+**Workflow.**
+
+```sh
+docker build -f proofs/Dockerfile --target gate -t writfold-proofs:tauten .
+docker run --rm --network none writfold-proofs:tauten \
+    sh -c 'cd proofs && lake build >&2 && lake env lean Total.lean' > /tmp/total.txt
+python3 proofs/tauten_claims.py /tmp/total.txt     # redraft claims.toml; review the diff
+cargo tauten proofs                                  # the whole gate (~1.5 h); writes proofs/claims.json
+scripts/tauten-check                                 # subsumed findings are warnings
+cargo tauten baseline                                # only after the claims are proved
+```
+
+Any edit under `crates/writfold-core/` or `proofs/` (including
+`claims.toml`) makes every claim stale: the 130 findings return as errors
+and the check fails until `cargo tauten proofs` runs again. That is the
+intended binding, and its cost here is a full gate run.
 
 ## Findings about tauten
 
@@ -142,6 +196,12 @@ Reported for tauten; nothing in tauten was changed.
 3. **E002 is narrower than its text** (now a documented gap in MAPPING.md). It is `clippy::result_unit_err`, which fires only for exported functions: `pub fn probe() -> Result<u8, ()>` in a private module of a core crate is not reported, and `anyhow::Error` is not covered by that lint.
 4. **X001 splits a reason string at commas** (tauten 3b7512e). Text after a comma inside `reason = "..."` is read as a lint name: `#![allow(clippy::needless_return, reason = "a, b c")]` reports a second finding for a "lint" named `bc"` (spaces dropped, closing quote kept). On writfold-core's old attribute it produced `#![allow(indexedloopsandpushes…)]`.
 5. **Adoption friction, not bugs.** rustfmt expands every `#[expect(.., reason = "..")]` to four lines (19 statement-level exceptions added 76 lines); the agent profile's "do not add `#[allow]`" has no answer for helper modules shared by several test binaries; and a project's own checker may treat `expect` as a panic (writfold-xtask did, fixed above).
+
+6. **No credit for helpers with preconditions** (gap, by design). Subsumption is per function and needs a hypothesis-free `total` theorem, so a helper proved only under its callers' precondition keeps its findings even when every caller is proved total. 29 writfold findings stay for this reason (table above). Repro (kernel tier): `pub fn pick(v: &[u8], i: usize) -> u8 { v[i] }` with `pick_spec (h : i < v.len) : pick v i ⦃ _ ⦄` and `pub fn first(v: &[u8]) -> u8 { if v.is_empty() { 0 } else { pick(v, 0) } }` with a total `first_spec`: the P003 in `pick` is an error. For a `pub` helper this is correct (an outside caller can panic it); for a private helper tauten could credit a precondition theorem when every caller in the crate is claimed total. Writfold's four helpers are `pub` but used only inside the crate.
+7. **The total-shape check lives in project code.** `cargo tauten proofs` trusts `{"total": …}` lines; the shape check is the template's `Audit.lean`. A project with its own Lean layout must reproduce it (writfold: `proofs/Total.lean`, a copy of `totalOver` over `Writfold.Core`, because the template assumes a `Proofs` library). A gate that printed a `total` line for any theorem would be believed; only review of the adapter guards against that. Worth stating in tauten's TRUST.md.
+8. **The fingerprint is coarse and misses an input.** It covers the whole crate directory and all of `proofs/`, so editing untranslated `diag` rendering, a test, or `claims.toml` itself stales all 151 claims (here a 96-minute rerun). It does not cover the workspace `Cargo.toml`, which `proofs/extract.sh` copies into the translation (inherited `edition` and package keys): an edit there leaves the claims fresh. Read from `current_fingerprints` in `cargo-tauten/src/proofs.rs` (not run): only member directories and `proofs/` are hashed.
+9. **Mutant semantics differ.** tauten's template counts a theorem as broken when its proof fails or it depends on `sorry`; writfold's `mutants.py` counts direct failures only and requires the exact named set. The adapter reports writfold's narrower set, which is conservative (for example `newest-last-of-equal` breaks `newer_spec`; under tauten's rule it would also break `newest_loop_spec`, which uses it), but it is why eight mutants had to be added.
+10. **The `total` shape is not too strict for writfold.** 229 theorems already had it (most `*_spec` triples are hypothesis-free); only loop helpers and index-taking helpers did not.
 
 ## Path to stage 3 (tightening the ratchet)
 
@@ -154,9 +214,10 @@ Reported for tauten; nothing in tauten was changed.
    or `#[expect(clippy::map_err_ignore, reason)]` where nothing is lost);
    `writfold-sources` parsers with property tests; `writfold-core` plumbing
    outside the extraction roots after a reachability check.
-4. For the kernel, list proved no-failure theorems per function and let
-   tauten's planned `claims.toml` subsume N001/P003 there; fix kernel M001
-   together with the next proved change to those kernels.
+4. Kernel N001/P003: done for 130 findings ("Proof claims"). The 29 left
+   need either a narrower API (make the four helpers private and ask tauten
+   for caller credit, finding 6) or `get`-based rewrites with re-proofs; fix
+   kernel M001 together with the next proved change to those kernels.
 5. Frozen components and the Verus-legacy domain code stay baselined until
    they are retired or unfrozen.
 6. When a crate's baseline is empty, make tauten required for that crate

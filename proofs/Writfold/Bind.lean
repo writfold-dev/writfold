@@ -254,4 +254,17 @@ theorem bound_supported_iff (need : bind.Need) (refs : Slice bind.Ref)
       · cases o <;> by_cases hev : 0 < ev.val <;> cases g <;> simp [itemOf, hev]
   rw [hsup]
 
+attribute [local step] answers_spec in
+/-- `answered_from` never fails, from any start index (tauten's total shape,
+docs/writfold/tauten-adoption.md): the loop reads only in-bounds positions
+and its increment cannot overflow. -/
+theorem answered_from_total (need : bind.Need) (refs : Slice bind.Ref) (index : Usize) :
+    bind.answered_from need refs index ⦃ _ => True ⦄ := by
+  unfold bind.answered_from bind.answered_from_loop
+  apply loop.spec_decr_nat (fun i : Usize => refs.val.length - i.val) (fun _ => True)
+  · intro i _
+    unfold bind.answered_from_loop.body
+    step*
+  · trivial
+
 end Writfold.Core.Bind

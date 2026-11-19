@@ -1181,6 +1181,57 @@ MUTANTS = (
            "    about && holds(pins)",
            "    holds(pins)",
            ("Writfold.Core.Pin.current_under_spec",)),
+    # the total theorems (no panic for any input) catch an out-of-bounds read
+    Mutant("answered-reads-past-end", "bind.rs",
+           "        if refs[at].grounded && answers(need, refs[at].bound) {",
+           "        if refs[at + 1].grounded && answers(need, refs[at].bound) {",
+           ("Writfold.Core.Bind.answered_from_loop_spec", "Writfold.Core.Bind.answered_from_total")),
+    Mutant("holds-reads-past-end", "pin.rs",
+           "        match pins[at] {",
+           "        match pins[at + 1] {",
+           ("Writfold.Core.Pin.holds_from_loop_spec", "Writfold.Core.Pin.holds_from_total")),
+    # skips-last mutants for the loops whose theorems no mutant broke, added so
+    # their functions can be tauten claims (docs/writfold/tauten-adoption.md)
+    # checklist: one stale entry is enough, the last one too
+    Mutant("any-stale-skips-last", "checklist.rs",
+           "    while index < entries.len() {\n        if stale(&entries[index]) {",
+           "    while index + 1 < entries.len() {\n        if stale(&entries[index]) {",
+           ("Writfold.Core.Checklist.any_stale_loop_spec",)),
+    # idle: the newest stamp may be the last one
+    Mutant("newest-skips-last", "idle.rs",
+           "    while i < stamps.len() {\n        if newer(stamps, best, i) {",
+           "    while i + 1 < stamps.len() {\n        if newer(stamps, best, i) {",
+           ("Writfold.Core.Idle.newest_loop_spec",)),
+    # policy: an unpinned last gate counts
+    Mutant("any-unpinned-skips-last", "policy.rs",
+           "    while index < pins.len() {\n        if is_unpinned(&pins[index]) {",
+           "    while index + 1 < pins.len() {\n        if is_unpinned(&pins[index]) {",
+           ("Writfold.Core.Policy.any_unpinned_loop_spec",)),
+    # policy: a waived last gate counts
+    Mutant("any-waived-skips-last", "policy.rs",
+           "    while index < met.len() {\n        if how_waived(&met[index]) {",
+           "    while index + 1 < met.len() {\n        if how_waived(&met[index]) {",
+           ("Writfold.Core.Policy.any_waived_loop_spec",)),
+    # policy: an attested last gate counts
+    Mutant("any-attested-skips-last", "policy.rs",
+           "    while index < met.len() {\n        if how_attested(&met[index]) {",
+           "    while index + 1 < met.len() {\n        if how_attested(&met[index]) {",
+           ("Writfold.Core.Policy.any_attested_loop_spec",)),
+    # policy: an open last step counts
+    Mutant("any-open-skips-last", "policy.rs",
+           "    while index < closes.len() {\n        if is_open(&closes[index]) {",
+           "    while index + 1 < closes.len() {\n        if is_open(&closes[index]) {",
+           ("Writfold.Core.Policy.any_open_loop_spec",)),
+    # policy: the last step must have passed too
+    Mutant("all-passed-skips-last", "policy.rs",
+           "    while index < closes.len() {\n        if !is_passed(&closes[index]) {",
+           "    while index + 1 < closes.len() {\n        if !is_passed(&closes[index]) {",
+           ("Writfold.Core.Policy.all_passed_loop_spec",)),
+    # recorded: the last recorded statement is a candidate
+    Mutant("best-recorded-skips-last", "verdict/recorded.rs",
+           "    while index < recorded.len() {\n        best = better(recorded, best, index);",
+           "    while index + 1 < recorded.len() {\n        best = better(recorded, best, index);",
+           ("Writfold.Core.Recorded.best_recorded_loop_spec",)),
 )
 
 # lake reports `error: <path>.lean:<line>:<col>: <message>`
