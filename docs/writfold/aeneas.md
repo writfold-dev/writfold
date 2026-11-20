@@ -887,11 +887,28 @@ rounds). After the round: 685 theorems, 393 required claims (377 before),
 `proofs/Total.lean` (not part of the gate) lists the theorems of the total
 shape; `proofs/tauten_gate.py` runs it after the unchanged gate.
 
+### The find rows round (20 November 2026)
+
+`find::show` takes every tier's hits in tier order (each a record number
+and whether it passes the filter) and returns the positions `admit`
+takes; `verbs/find.rs` gathers the hits and builds rows only for those
+positions, so the tier order is now decided by a proved kernel rather than
+by the order of the calls. `find::exact_stops` decides when `find` may stop
+after the `exact` tier. `proofs/Writfold/Show.lean` proves `show` equal to
+a list model (`show_spec`) and, on the model: at most the limit
+(`shown_le_limit`), each record once (`shown_once`), in the hits' order
+(`shown_in_order`), every row passing the filter (`shown_passes`) and
+under its record's first passing hit (`shown_first`); the rows under a
+smaller limit are the first rows under a larger one (`limit_prefix`), and
+the rows of the first tiers' hits alone are the first rows of all of them
+(`stop_is_prefix`). Four mutants. After the round: 714 theorems, 405
+required claims, 251 mutants.
+
 ### The claims and their mutants
 
 <!-- generated from proofs/mutants.py -->
 
-247 mutants (20 before 16 November 2026, 86 after the backfill's first round, 108 after the policy round, 161 after the backfill's second round, 170 after the bug-fix round, 189 after the delivery round: its nine delivery mutants re-aimed and 19 added, all 28 calibrated; 203 after the current-run and repin rounds; 210 after the attached-stores round; 214 after the run-artifacts round; 222 after the evidence-binding round; 226 after the backlinks round; 233 after the snapshot round; 247 after the tauten claims round). Each must break exactly the theorems named.
+251 mutants (20 before 16 November 2026, 86 after the backfill's first round, 108 after the policy round, 161 after the backfill's second round, 170 after the bug-fix round, 189 after the delivery round: its nine delivery mutants re-aimed and 19 added, all 28 calibrated; 203 after the current-run and repin rounds; 210 after the attached-stores round; 214 after the run-artifacts round; 222 after the evidence-binding round; 226 after the backlinks round; 233 after the snapshot round; 247 after the tauten claims round; 251 after the find rows round). Each must break exactly the theorems named.
 
 | Mutant | File | What it breaks | Must break |
 |---|---|---|---|
@@ -1065,6 +1082,10 @@ shape; `proofs/tauten_gate.py` runs it after the unchanged gate.
 | `closes-stale` | `policy/lines.rs` | gate lines: a stale plan does not close | `Policy.closes_spec` |
 | `clean-ignores-invalid` | `policy/lines.rs` | gate lines: an invalid receipt or definition keeps the lines unclean | `Policy.lines_clean_iff` |
 | `full-late` | `find.rs` | find: the later tiers stop only when no hit could be shown | `Walk.full_spec`, `Walk.not_full_admits` |
+| `show-ignores-seen` | `find.rs` | find: a record is shown once, under its first hit | `Show.show_loop_spec` |
+| `show-records-wrong` | `find.rs` | find: the records shown are the hits' records | `Show.show_loop_spec` |
+| `among-skips-last` | `find.rs` | find: every record shown is compared, the last included | `Show.among_loop_spec` |
+| `exact-stops-on-many` | `find.rs` | find: stop after the exact tier only on exactly one record | `Show.exact_stops_spec` |
 | `delivery-accept-ignored` | `delivery.rs` | delivery: an obligation is met under its own policy, not by any met word | `Delivery.unmet_spec` |
 | `ready-from-standing` | `delivery.rs` | delivery: ready is every obligation met under its policy, not a met standing | `Delivery.ready_iff` |
 | `refused-any-unmet` | `delivery.rs` | delivery: refused only when the first unmet obligation stands on a met word | `Delivery.refused_iff` |
@@ -1218,9 +1239,11 @@ What is left, each tested:
    resolve each.
 2. The order of statements (attestations, waivers, a delivery's
    statements), still by recorded time; a format change like step 11's.
-3. `find`'s tier order (the order of the calls in `verbs/find.rs`) and the
-   splice placement in the fold (G10's first item; relabelled, not
-   proved).
+3. The splice placement in the fold (G10's first item; relabelled, not
+   proved; [#17](https://github.com/writfold-dev/writfold/issues/17)).
+   *(20 November 2026: `find`'s tier order is proved: `verbs/find.rs`
+   gathers every tier's hits in order and `find::show` decides the rows,
+   `proofs/Writfold/Show.lean`; [#16](https://github.com/writfold-dev/writfold/issues/16).)*
 
 ## Writing kernels for translation
 

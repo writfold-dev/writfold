@@ -100,6 +100,12 @@ pub fn verb(
 /// `find TEXT` and `match TEXT`; `find --kind K` with no text lists records.
 fn find(name: &str, common: &Common, positional: &[String]) -> Result<Verb, String> {
     if common.switches.iter().any(|s| s == "each") {
+        if common.limit.is_some() {
+            return Err(
+                "find --each shows the first five rows of each query; --limit is for one query"
+                    .into(),
+            );
+        }
         if positional.is_empty() {
             return Err("find --each takes one or more queries".into());
         }
@@ -108,6 +114,7 @@ fn find(name: &str, common: &Common, positional: &[String]) -> Result<Verb, Stri
             filter: Filter {
                 kinds: common.kinds.clone(),
                 project: common.project.clone(),
+                limit: None,
             },
             signatures: common.signatures,
         });
@@ -121,6 +128,7 @@ fn find(name: &str, common: &Common, positional: &[String]) -> Result<Verb, Stri
         filter: Filter {
             kinds: common.kinds.clone(),
             project: common.project.clone(),
+            limit: common.limit,
         },
         signatures: common.signatures || name == "match",
     })
@@ -128,7 +136,11 @@ fn find(name: &str, common: &Common, positional: &[String]) -> Result<Verb, Stri
 
 /// `find --eval [FILE]`: FILE from the working directory; no other flag.
 fn eval(common: &Common, positional: &[String], cwd: &Path) -> Result<Verb, String> {
-    if common.signatures || !common.kinds.is_empty() || common.project.is_some() {
+    if common.signatures
+        || !common.kinds.is_empty()
+        || common.project.is_some()
+        || common.limit.is_some()
+    {
         return Err("find --eval takes only a query file".into());
     }
     match positional {

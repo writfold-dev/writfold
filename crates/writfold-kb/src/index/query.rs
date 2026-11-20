@@ -102,6 +102,15 @@ const PREFIXES: [&str; 9] = [
     "rel:",
 ];
 
+/// Whether `input` names the record `id` by its own ID: exactly, as its
+/// normalised ticket, or without its typed prefix (not an alias or a
+/// locator, which [`resolve`] also accepts).
+pub fn own_id(input: &str, id: &str) -> bool {
+    id == input
+        || ticket(input).as_deref() == Some(id)
+        || PREFIXES.iter().any(|p| id.strip_prefix(p) == Some(input))
+}
+
 /// Exact ID first; then the normalised ticket, typed prefixes and aliases;
 /// then an asset whose locator contains the text.
 pub fn resolve(conn: &Connection, input: &str) -> Result<Resolved> {

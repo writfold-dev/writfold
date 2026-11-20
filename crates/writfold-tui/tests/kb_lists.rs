@@ -36,6 +36,7 @@ fn why_lists_exactly_the_verbs_decisions() -> TestResult {
             filter: Filter {
                 kinds: vec!["decision".into()],
                 project: Some("harbor".into()),
+                limit: None,
             },
             signatures: false,
         },

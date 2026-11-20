@@ -7,7 +7,9 @@
 //! alone for the rest. A query that found nothing keeps `find`'s suggested
 //! names under it, flagged `!suggested`. The trailer counts `queries=` and
 //! `miss=`; any miss exits 2, as a lone `find` that finds nothing does.
-//! Composition only: the tiers and their order are `find`'s.
+//! Composition only: the tiers and their order are `find`'s. As under
+//! `find --limit`, a record's own ID stops after the `exact` tier, so its
+//! group is that one row, the first of the lone answer.
 use super::find::{Filter, find_within};
 
 /// Rows shown per query, so one broad query cannot crowd the others off

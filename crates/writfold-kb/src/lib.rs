@@ -399,6 +399,7 @@ fn graph(session: &Session<'_>, verb: &Verb) -> Result<(Answer, &'static str, Ve
             let mut args = vec![text.clone(), format!("signatures={signatures}")];
             args.extend(filter.kinds.iter().map(|k| format!("kind={k}")));
             args.extend(filter.project.iter().map(|p| format!("project={p}")));
+            args.extend(filter.limit.map(|n| format!("limit={n}")));
             (
                 verbs::find::find(session, text, filter, *signatures)?,
                 "find",

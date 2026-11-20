@@ -30,7 +30,7 @@ verbs:
                                    everything around one record
   why <id|text>                    why did we decide X (accepted decisions first)
   status <id|project>              the state of one record and what tracks it
-  find <text> [--kind K[,K]] [--project P] [--signatures]
+  find <text> [--kind K[,K]] [--project P] [--signatures] [--limit N]
                                    search in tiers: exact ID or alias, normalized name, name
                                    prefix, section heading, BM25 text, substring, one typo
                                    (JSON matched_on names the tier; nothing found may suggest up

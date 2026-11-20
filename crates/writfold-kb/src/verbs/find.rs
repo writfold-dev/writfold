@@ -22,7 +22,7 @@ use crate::index::query::{self, Resolved};
 use crate::index::search::{self, contains};
 use crate::layout::{first_segment, project_name};
 use crate::session::Session;
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 /// At most this many rows per answer (the budget pages them).
 const LIMIT: usize = 50;
@@ -32,25 +32,63 @@ const LIMIT: usize = 50;
 pub struct Filter {
     pub kinds: Vec<String>,
     pub project: Option<String>,
+    /// `--limit N`: at most N rows (at most [`LIMIT`]); a record's own ID
+    /// then stops after the `exact` tier.
+    pub limit: Option<usize>,
 }
 
+/// What a hit shows if [`writfold_core::find::show`] takes it: a node
+/// with its tier and `match:` line, or a row built already (signatures).
+enum Shows {
+    Node(&'static str, More),
+    Row(Box<Row>),
+}
+
+/// Every tier's hits, in tier order; which of them become rows is
+/// [`writfold_core::find::show`]'s decision (proved: once, under the first
+/// tier that found the record, within the limit).
 struct Found<'s, 'a> {
     session: &'s Session<'a>,
     filter: &'s Filter,
-    seen: BTreeSet<String>,
-    rows: Vec<Row>,
+    /// Record numbers for the kernel, and the IDs they stand for.
+    numbers: BTreeMap<String, u32>,
+    ids: Vec<String>,
+    /// Whether each record passes the filter, read once.
+    passes: BTreeMap<String, bool>,
+    hits: Vec<writfold_core::find::Hit>,
+    shows: Vec<Shows>,
     limit: usize,
 }
 
-impl Found<'_, '_> {
-    /// Add the node `id` once, if it passes the filter, with a `match:`
-    /// line and the tier that found it.
-    /// ([`writfold_core::find::admit`]: once, first tier first, within
-    /// the limit).
-    fn add(&mut self, id: &str, tier: &'static str, more: More) -> Result<()> {
-        let seen = self.seen.contains(id);
-        if !writfold_core::find::admit(self.rows.len(), self.limit, seen, true) {
-            return Ok(());
+impl<'s, 'a> Found<'s, 'a> {
+    fn new(session: &'s Session<'a>, filter: &'s Filter, limit: usize) -> Self {
+        Found {
+            session,
+            filter,
+            numbers: BTreeMap::new(),
+            ids: Vec::new(),
+            passes: BTreeMap::new(),
+            hits: Vec::new(),
+            shows: Vec::new(),
+            limit,
+        }
+    }
+
+    /// The kernel's number for `id`.
+    fn number(&mut self, id: &str) -> u32 {
+        if let Some(n) = self.numbers.get(id) {
+            return *n;
+        }
+        let n = u32::try_from(self.ids.len()).unwrap_or(u32::MAX);
+        self.numbers.insert(id.to_owned(), n);
+        self.ids.push(id.to_owned());
+        n
+    }
+
+    /// Whether the node `id` passes the filter (its kind and project).
+    fn passes(&mut self, id: &str) -> Result<bool> {
+        if let Some(p) = self.passes.get(id) {
+            return Ok(*p);
         }
         let rec = query::record(&self.session.conn, id)?;
         let (kind, project, path) = match &rec {
@@ -68,21 +106,59 @@ impl Found<'_, '_> {
             project.as_ref() == Some(wanted) || path.starts_with(&format!("{wanted}/"))
         };
         let passes = kind_ok && self.filter.project.as_ref().is_none_or(home);
-        if !writfold_core::find::admit(self.rows.len(), self.limit, seen, passes) {
-            return Ok(());
-        }
-        let mut row = node_row(self.session, id)?;
-        row.more.push(more);
-        row.matched_on = Some(tier);
-        self.seen.insert(id.to_owned());
-        self.rows.push(row);
+        self.passes.insert(id.to_owned(), passes);
+        Ok(passes)
+    }
+
+    /// A hit on the node `id` from `tier`, with its `match:` line.
+    fn add(&mut self, id: &str, tier: &'static str, more: More) -> Result<()> {
+        let passes = self.passes(id)?;
+        self.push(id, passes, Shows::Node(tier, more));
         Ok(())
+    }
+
+    fn push(&mut self, id: &str, passes: bool, shows: Shows) {
+        let record = self.number(id);
+        self.hits.push(writfold_core::find::Hit { record, passes });
+        self.shows.push(shows);
+    }
+
+    /// The positions of the hits shown so far.
+    fn shown(&self) -> Vec<usize> {
+        writfold_core::find::show(&self.hits, self.limit)
     }
 
     /// Whether no later hit can be shown ([`writfold_core::find::full`]),
     /// so the later tiers need not run.
     fn full(&self) -> bool {
-        writfold_core::find::full(self.rows.len(), self.limit)
+        writfold_core::find::full(self.shown().len(), self.limit)
+    }
+
+    /// The rows, in the order [`writfold_core::find::show`] gives.
+    fn rows(mut self) -> Result<Vec<Row>> {
+        let mut rows = Vec::new();
+        for at in self.shown() {
+            let blank = || Shows::Node("", More::default());
+            let (Some(hit), Some(shows)) = (self.hits.get(at), self.shows.get_mut(at)) else {
+                continue;
+            };
+            let shows = std::mem::replace(shows, blank());
+            let id = usize::try_from(hit.record)
+                .ok()
+                .and_then(|n| self.ids.get(n))
+                .cloned()
+                .unwrap_or_default();
+            rows.push(match shows {
+                Shows::Row(row) => *row,
+                Shows::Node(tier, more) => {
+                    let mut row = node_row(self.session, &id)?;
+                    row.more.push(more);
+                    row.matched_on = Some(tier);
+                    row
+                }
+            });
+        }
+        Ok(rows)
     }
 }
 
@@ -125,7 +201,13 @@ pub fn find(
     if text.trim().is_empty() && !signatures && !filter.kinds.is_empty() {
         return listed(session, filter);
     }
-    find_within(session, text, filter, signatures, LIMIT)
+    find_within(
+        session,
+        text,
+        filter,
+        signatures,
+        filter.limit.unwrap_or(LIMIT),
+    )
 }
 
 /// `find` with its own row limit (at most [`LIMIT`]): the same tiers in
@@ -137,32 +219,41 @@ pub(super) fn find_within(
     signatures: bool,
     limit: usize,
 ) -> Result<Answer> {
-    let mut found = Found {
-        session,
-        filter,
-        seen: BTreeSet::new(),
-        rows: Vec::new(),
-        limit: limit.min(LIMIT),
-    };
+    let mut found = Found::new(session, filter, limit.min(LIMIT));
     if signatures {
         signature_tier(session, text, &mut found)?;
     }
-    match query::resolve(&session.conn, text)? {
-        Resolved::One(rec) => found.add(&rec.id, "exact", tier_only("exact"))?,
+    let (exact, own) = match query::resolve(&session.conn, text)? {
+        Resolved::One(rec) => {
+            found.add(&rec.id, "exact", tier_only("exact"))?;
+            (1, query::own_id(text.trim(), &rec.id))
+        }
         Resolved::Many(candidates) => {
-            for rec in candidates {
+            for rec in &candidates {
                 found.add(&rec.id, "exact", tier_only("exact"))?;
             }
+            (candidates.len(), false)
         }
-        Resolved::None => {}
-    }
+        Resolved::None => (0, false),
+    };
+    // With a row limit asked for (`--limit`, `--each`), a record's own ID
+    // stops after the exact tier: the rows are then the first rows of the
+    // full answer (`stop_is_prefix`).
+    let stops = limit < LIMIT && writfold_core::find::exact_stops(own, exact);
     let forms = names::forms(&session.conn)?;
-    name_tiers(session, &forms, text, &mut found)?;
-    text_tiers(session, text, &mut found)?;
+    if !stops {
+        name_tiers(session, &forms, text, &mut found)?;
+        text_tiers(session, text, &mut found)?;
+    }
     let mut answer = Answer {
-        rows: found.rows,
+        rows: found.rows()?,
         ..Answer::default()
     };
+    if stops && !answer.rows.is_empty() {
+        answer
+            .notes
+            .push("an exact ID: the other tiers were not searched".into());
+    }
     if answer.rows.is_empty() {
         answer.unknown = Some("no-record");
         answer.notes.push(BOUNDARY.to_owned());
@@ -260,18 +351,12 @@ fn listed(session: &Session<'_>, filter: &Filter) -> Result<Answer> {
             ids.insert(rec.id);
         }
     }
-    let mut found = Found {
-        session,
-        filter,
-        seen: BTreeSet::new(),
-        rows: Vec::new(),
-        limit: usize::MAX,
-    };
+    let mut found = Found::new(session, filter, usize::MAX);
     for id in &ids {
         found.add(id, "listed", tier_only("listed"))?;
     }
     let mut answer = Answer {
-        rows: found.rows,
+        rows: found.rows()?,
         ..Answer::default()
     };
     if answer.rows.is_empty() {
@@ -325,9 +410,10 @@ fn signature_tier(session: &Session<'_>, text: &str, found: &mut Found<'_, '_>) 
         hits.push((matched.len(), row));
     }
     hits.sort_by(|a, b| b.0.cmp(&a.0).then_with(|| a.1.id.cmp(&b.1.id)));
+    // A matching signature is shown whatever the filter, as before.
     for (_, row) in hits {
-        found.seen.insert(row.id.clone());
-        found.rows.push(row);
+        let id = row.id.clone();
+        found.push(&id, true, Shows::Row(Box::new(row)));
     }
     Ok(())
 }

@@ -8,6 +8,8 @@ A line marked **fix** changed an answer that was wrong; anything depending on th
 
 ## v0.6.0-dev.11 (unreleased)
 
+- `find --each` answers a query that is a record's own ID (`LAN-20`, `harbor` for `project:harbor`; not an alias) with its `exact` row only, the first row it gave before, and the note `an exact ID: the other tiers were not searched`. A lone `find` without `--limit` is unchanged. `find --limit N` is new ([#20](https://github.com/writfold-dev/writfold/issues/20)).
+- **fix** `match` (and `find --signatures`) shows at most 50 rows like any other `find`; before, every matching signature was added even past the limit ([#16](https://github.com/writfold-dev/writfold/issues/16)).
 - `find --eval` adds one note per class named in the queries' `note` fields (text before the first `:`), and the JSON trailer key `classes`. A query file whose notes have no `:` reads as before ([#19](https://github.com/writfold-dev/writfold/issues/19)).
 - The plugin adds a `PostToolUse` hook for `Bash` and `mcp__*` calls (`writfold kb hook post-tool-use`). Without `.writfold/deliveries/guard.toml` it prints nothing. With one, after a call whose bytes are a ready candidate's, it adds one line of context naming the `deliver posted` command for that candidate ([#13](https://github.com/writfold-dev/writfold/issues/13)).
 - A delivery mode may list a fourth built-in check, `length.bounded`, with the new keys `max_chars` and `max_lines`. The built-in modes' defaults are unchanged, so no existing receipt moves; a mode file that does not use them reads as before ([#12](https://github.com/writfold-dev/writfold/issues/12)).

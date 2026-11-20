@@ -24,6 +24,7 @@ impl Source {
             filter: Filter {
                 kinds: kinds.iter().map(|k| (*k).to_owned()).collect(),
                 project: project.map(str::to_owned),
+                limit: None,
             },
             signatures: false,
         })

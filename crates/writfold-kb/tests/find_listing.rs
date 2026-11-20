@@ -17,6 +17,7 @@ fn listing(kinds: &[&str], project: Option<&str>) -> Verb {
         filter: Filter {
             kinds: kinds.iter().map(|k| (*k).to_owned()).collect(),
             project: project.map(str::to_owned),
+            limit: None,
         },
         signatures: false,
     }

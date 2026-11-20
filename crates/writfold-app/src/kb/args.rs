@@ -22,6 +22,7 @@ pub struct Common {
     pub direction: Option<String>,
     pub include: Option<String>,
     pub missing: bool,
+    pub limit: Option<usize>,
     /// `--help` anywhere: the usage, not the verb.
     pub help: bool,
     /// The write verbs' value flags (`--note`, `--title` …) and switches.
@@ -61,6 +62,7 @@ fn split(verb: &str, args: &[String]) -> Result<(Common, Vec<String>), String> {
             "--budget-tokens" => common.budget = Some(number(arg, items.next(), 1, MAX_BUDGET)?),
             "--cursor" => common.cursor = Some(value(arg, items.next())?),
             "--depth" => common.depth = Some(number(arg, items.next(), 1, 8)?),
+            "--limit" => common.limit = Some(number(arg, items.next(), 1, 50)?),
             "--json" => common.json = true,
             "--all" => common.all = true,
             "--offline" => common.offline = true,
@@ -110,7 +112,7 @@ fn allowed(verb: &str) -> &'static [&'static str] {
         "context" => &["depth"],
         "stale" => &["offline", "cached", "record"],
         "repos" => &["missing"],
-        "find" => &["kind", "project", "signatures"],
+        "find" => &["kind", "project", "signatures", "limit"],
         "match" => &["kind", "project"],
         "cite" => &["kind"],
         "impact" => &["depth", "direction", "include"],
@@ -133,6 +135,7 @@ fn check_flags(verb: &str, common: &Common) -> Result<(), String> {
         ("direction", common.direction.is_some()),
         ("include", common.include.is_some()),
         ("missing", common.missing),
+        ("limit", common.limit.is_some()),
     ] {
         if set && !allowed.contains(&flag) {
             return Err(format!("--{flag} does not apply to {verb}"));
