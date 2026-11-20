@@ -39,6 +39,7 @@ use std::path::{Path, PathBuf};
 pub mod broken;
 mod export;
 mod inbox;
+mod named;
 mod position;
 mod remote;
 mod start;

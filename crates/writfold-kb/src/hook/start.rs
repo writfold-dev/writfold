@@ -6,6 +6,9 @@
 //! 1. **Behind remote** ([`super::remote`]): one line when the KB's branch
 //!    lags its upstream as last fetched; one Git spawn, no fetch.
 //! 2. **Brief** (`brief`, budget [`BRIEF_BUDGET`] tokens), as before.
+//!    Then **named here** ([`super::named`]): records the working
+//!    branch's ticket-shaped words, the current run's task or the
+//!    repository's name resolve to exactly; at most five rows.
 //! 3. **Stale citations** ([`stale_line`]): one line counting the
 //!    non-fresh verdicts `writfold kb stale` last cached, when there are
 //!    any, and one line naming each declared checker not on `PATH`
@@ -20,14 +23,14 @@
 //!
 //! The whole stays within [`CONTEXT_LIMIT`] characters. When it would not,
 //! parts are cut (each at a line, with a marker) in [`DROP_ORDER`]: the
-//! brief first, then the run, the inbox, the plan position, the stale
+//! named records first, then the brief, then the run, the inbox, the plan position, the stale
 //! citations line, and the behind-remote line last.
 //!
 //! After a compaction (`source` = `"compact"`) only the plan position is
 //! injected again: the earlier context was summarised, not dropped, so the
 //! brief is not sent twice, but the exact step and its owed gates are the
 //! part a summary is most likely to blur.
-use super::{HookOutput, inbox, position, remote, state, verb};
+use super::{HookOutput, inbox, named, position, remote, state, verb};
 use crate::plan::PlanVerb;
 use crate::workspace::Workspace;
 use crate::{Verb, runs};
@@ -46,6 +49,7 @@ pub const PLAN_BUDGET: usize = 600;
 pub enum Part {
     Behind,
     Brief,
+    Named,
     Stale,
     Run,
     Plan,
@@ -53,7 +57,8 @@ pub enum Part {
 }
 
 /// Which part is cut first when the whole is over the limit.
-pub const DROP_ORDER: [Part; 6] = [
+pub const DROP_ORDER: [Part; 7] = [
+    Part::Named,
     Part::Brief,
     Part::Run,
     Part::Inbox,
@@ -172,6 +177,9 @@ fn startup(
     };
     if let Some(found) = verb(ws, cwd, now, brief, BRIEF_BUDGET) {
         parts.push((Part::Brief, format!("Writfold KB brief (`writfold kb brief`). Rows end in their source; re-check any row with a ! flag before relying on it.\n{found}")));
+    }
+    if let Some(block) = named::block(ws, cwd, current) {
+        parts.push((Part::Named, block));
     }
     let absent = crate::stale::checker::absent_line(&ws.root);
     let broken = super::broken::here(ws, cwd);

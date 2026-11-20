@@ -301,6 +301,7 @@ fn the_cut_follows_the_drop_order() {
     assert_eq!(
         DROP_ORDER,
         [
+            Part::Named,
             Part::Brief,
             Part::Run,
             Part::Inbox,

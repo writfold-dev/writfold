@@ -8,6 +8,7 @@ A line marked **fix** changed an answer that was wrong; anything depending on th
 
 ## v0.6.0-dev.11 (unreleased)
 
+- The session-start context may gain a `Named here` part after the brief: records that the working branch's ticket-shaped words, the current run's task or the repository's name resolve to exactly. It is the first part cut under the 9,000-character limit, so nothing else is cut sooner than before ([#26](https://github.com/writfold-dev/writfold/issues/26)).
 - **The index is rebuilt once** (schema 4): the `text` and `text-any` tiers stem English words (FTS5 `porter`), so `migrating` now finds "migrations" and rows in those tiers may come in a different order. Their `match:` line is the body line holding the first word the tier matched, which may differ from before (before, the first line containing a query word as a substring, so `end` matched "appends"). An earlier binary rebuilds the index again when it next reads ([#21](https://github.com/writfold-dev/writfold/issues/21)).
 - `find --each` answers a query that is a record's own ID (`LAN-20`, `harbor` for `project:harbor`; not an alias) with its `exact` row only, the first row it gave before, and the note `an exact ID: the other tiers were not searched`. A lone `find` without `--limit` is unchanged. `find --limit N` is new ([#20](https://github.com/writfold-dev/writfold/issues/20)).
 - **fix** `match` (and `find --signatures`) shows at most 50 rows like any other `find`; before, every matching signature was added even past the limit ([#16](https://github.com/writfold-dev/writfold/issues/16)).
