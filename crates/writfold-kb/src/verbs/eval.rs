@@ -34,6 +34,24 @@ struct Query {
     line: u32,
     text: String,
     wanted: Vec<String>,
+    /// The class a `note` names before its first `:`, without a leading
+    /// code such as `N01` (`"N01 naming gap: …"` is `naming gap`).
+    class: Option<String>,
+}
+
+/// The class of a note, if it names one.
+fn class(note: &str) -> Option<String> {
+    let (head, _) = note.split_once(':')?;
+    let head = head.trim();
+    let coded = |w: &str| {
+        let digits = w.trim_start_matches(|c: char| c.is_ascii_alphabetic());
+        digits.len() < w.len() && !digits.is_empty() && digits.chars().all(|c| c.is_ascii_digit())
+    };
+    let head = match head.split_once(' ') {
+        Some((code, rest)) if coded(code) => rest.trim(),
+        _ => head,
+    };
+    (!head.is_empty()).then(|| head.to_owned())
 }
 
 /// One query line, or nothing (its faults reported).
@@ -93,7 +111,13 @@ fn query(sink: &mut Sink<'_>, l: &jsonl::Line<'_>) -> Option<Query> {
     ok &= jsonl::text(sink, l, "note") != Field::Bad;
     let line = u32::try_from(l.number).unwrap_or(u32::MAX);
     let (text, wanted) = (text?, wanted?);
-    ok.then_some(Query { line, text, wanted })
+    let class = l.map.get("note").and_then(Value::as_str).and_then(class);
+    ok.then_some(Query {
+        line,
+        text,
+        wanted,
+        class,
+    })
 }
 
 /// Every query of the file, or every fault of it.
@@ -214,8 +238,23 @@ pub fn eval(session: &Session<'_>, file: Option<&Path>) -> Result<Answer> {
         ("hit5", 0),
         ("miss", 0),
     ];
+    // Per class: (name, queries, hit@1, in the first five).
+    let mut classes: Vec<(String, usize, usize, usize)> = Vec::new();
     for q in &queries {
         let (row, status, tier) = judge(session, q, &shown)?;
+        if let Some(name) = &q.class {
+            let at = match classes.iter().position(|c| &c.0 == name) {
+                Some(i) => i,
+                None => {
+                    classes.push((name.clone(), 0, 0, 0));
+                    classes.len() - 1
+                }
+            };
+            let c = &mut classes[at];
+            c.1 += 1;
+            c.2 += usize::from(status == "hit@1");
+            c.3 += usize::from(status != "miss");
+        }
         count(
             &mut counts,
             match status {
@@ -233,5 +272,18 @@ pub fn eval(session: &Session<'_>, file: Option<&Path>) -> Result<Answer> {
     answer.notes.push(format!(
         "queries from {shown}; each ran as find does; nothing was written"
     ));
+    for (name, n, first, five) in &classes {
+        answer
+            .notes
+            .push(format!("class {name}: hit@1 {first}/{n}, first five {five}/{n}"));
+    }
+    if !classes.is_empty() {
+        let json: Vec<Value> = (classes.iter())
+            .map(|(name, n, first, five)| {
+                serde_json::json!({"class": name, "queries": n, "hit1": first, "first5": five})
+            })
+            .collect();
+        answer.trailer_json.push(("classes", Value::Array(json)));
+    }
     Ok(answer)
 }

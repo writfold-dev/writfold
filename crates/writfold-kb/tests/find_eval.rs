@@ -104,3 +104,33 @@ fn misses_unknown_ids_and_empty_files_are_not_passes() -> TestResult {
     }
     Ok(())
 }
+
+/// #19: the control set (28 phrases from the semantic spike, written
+/// apart from the find prototypes) reports hit@1 and the first five per
+/// class, the class read from each `note`. Its numbers are the baseline
+/// every later find change states its delta against.
+#[test]
+fn the_control_set_reports_each_class() -> TestResult {
+    let w = world(&["find-control"])?;
+    let (body, _) = eval(&w, None)?;
+    let c = counts(&body);
+    assert_eq!(c["queries"].as_u64(), Some(28), "{body}");
+    let classes = body["trailer"]["classes"].as_array().ok_or("classes")?;
+    let names: Vec<&str> = classes.iter().filter_map(|c| c["class"].as_str()).collect();
+    assert!(names.contains(&"lexical control"), "{names:?}");
+    assert!(names.contains(&"naming gap"), "{names:?}");
+    let total: u64 = classes.iter().filter_map(|c| c["queries"].as_u64()).sum();
+    assert_eq!(total, 28, "{classes:?}");
+    // Lexical controls hit first: they are the floor, not a measurement.
+    let lexical = classes
+        .iter()
+        .find(|c| c["class"] == "lexical control")
+        .ok_or("lexical")?;
+    assert_eq!(lexical["hit1"], lexical["queries"], "{lexical}");
+    let notes = body["notes"].as_array().ok_or("notes")?;
+    assert!(
+        notes.iter().any(|n| n.as_str().is_some_and(|n| n.starts_with("class naming gap: hit@1 "))),
+        "{notes:?}"
+    );
+    Ok(())
+}
