@@ -59,6 +59,7 @@ verbs:
   policy                           the policy as it is now (required steps, gates with accept and
                                    item choices, guard rules) and the current run's pin beside it;
                                    identity= is one digest two clones can compare (exit 2 if moved)
+  policy --paths GATE              the paths GATE's scope covers now, one per row (the declared scope)
   lint [PATH…] [--repo DIR] [--deny-warnings] [--records]
                                    every fault of the files you wrote (gates, guards, plans,
                                    delivery modes, kinds, queries.jsonl), each at its line and
@@ -94,7 +95,8 @@ writes (atomic; they leave the work tree dirty for you to commit):
   cite make <repo> <path> <a-b> [--allow-dirty] [--sym S] [--ttl T]   (prints a token)
   cite make --kind K key=value …   a checked kind's token from its checker's make (prints it)
   observe --source KIND --locator TEXT --status ok|partial|no-data|not-found|timeout|denied|error
-          [--revision R] [--for GATE.ITEM] [--note TEXT] [--cite TOKEN] [--run ID]
+          [--revision R] [--for GATE.ITEM] [--note TEXT] [--cite TOKEN] [--searched TOKEN] [--run ID]
+          [--snapshot FILE [--store NAME]]   keep the look's bytes in a pinned store (run, commit, run again)
                                    one look at an outside source, in the run (ok/partial embed a token)
 
 checkers (kinds declared freshness = \"checked\"; writfold-check-<name> on PATH; only stale runs them):

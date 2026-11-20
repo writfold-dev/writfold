@@ -27,6 +27,9 @@
 //! - `pre-tool-use` is the optional delivery guard and the guard rules
 //!   ([`crate::guard`]): silent unless the KB or the repository configures
 //!   them, and then it may print a denial or a question.
+//! - `post-tool-use`, after a call the delivery guard routes, reminds the
+//!   agent to record the post of the candidate it carried (D19); silent
+//!   without a delivery guard.
 use crate::draft;
 use crate::workspace::{GitTool, Workspace, discover};
 use crate::{Request, Verb, runs, time};
@@ -43,9 +46,10 @@ mod start;
 pub use export::export_session;
 pub use start::{BRIEF_BUDGET, CONTEXT_LIMIT, DROP_ORDER, PLAN_BUDGET, Part, RESUME_BUDGET, fit};
 
-pub const EVENTS: [&str; 6] = [
+pub const EVENTS: [&str; 7] = [
     "session-start",
     "pre-tool-use",
+    "post-tool-use",
     "pre-compact",
     "post-compact",
     "stop",
@@ -119,6 +123,7 @@ pub fn run(event: &str, input: &str, env: &HookEnv) -> HookOutput {
             start::session_start(&ws, &cwd, now, source)
         }
         "pre-tool-use" => crate::guard::pre_tool_use(&ws, &input, (&cwd, env.home.as_deref()), now),
+        "post-tool-use" => crate::guard::delivery::post_tool_use(&ws, &input, &cwd, now),
         "stop" => record(event, &ws, &input, &cwd, now)
             .and_then(|_| crate::guard::stop(&ws, &input, &cwd, now)),
         _ => record(event, &ws, &input, &cwd, now),

@@ -12,12 +12,16 @@ pub const SESSION_ENV: &str = "WRITFOLD_SESSION";
 /// `propose`'s switches: which store to write.
 pub const SWITCHES: [&str; 2] = ["tracked", "local"];
 
+/// Flags here that take a value: `policy --paths GATE`.
+pub const VALUES: [&str; 1] = ["paths"];
+
 /// The write flags each verb here accepts.
 pub fn allowed(verb: &str) -> &'static [&'static str] {
     match verb {
         "propose" => super::investigation::PROPOSE,
         "lint" => &["repo", "deny-warnings", "records"],
         "init" => &["example", "dry-run"],
+        "policy" => &["paths"],
         _ => &[],
     }
 }
@@ -78,8 +82,13 @@ pub fn verb(name: &str, common: &Common, positional: &[String]) -> Option<Result
             })));
         }
         ("init", _) => Err("init takes at most one directory".into()),
-        ("policy", []) => return Some(Ok(Verb::Policy)),
-        ("policy", _) => Err("policy takes no arguments".into()),
+        ("policy", []) => {
+            return Some(Ok(match get(common, "paths") {
+                Some(gate) => Verb::PolicyPaths { gate },
+                None => Verb::Policy,
+            }));
+        }
+        ("policy", _) => Err("policy takes no arguments (but --paths GATE)".into()),
         _ => return None,
     };
     Some(verb.map(Verb::Proposal))
@@ -156,6 +165,9 @@ mod tests {
         assert!(matches!(verb("init")?, Verb::Init(i) if !i.dry_run && i.dir.is_none()));
         assert!(verb("init a b").is_err());
         assert!(matches!(verb("policy")?, Verb::Policy));
+        assert!(
+            matches!(verb("policy --paths unit")?, Verb::PolicyPaths { gate } if gate == "unit")
+        );
         assert!(verb("policy x").is_err());
         Ok(())
     }

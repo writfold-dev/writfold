@@ -179,6 +179,10 @@ pub enum Verb {
     Init(init::Init),
     /// `policy`: the policy as it is now and the current run's pin.
     Policy,
+    /// `policy --paths GATE`: the paths in a gate's scope, now.
+    PolicyPaths {
+        gate: String,
+    },
 }
 
 /// One invocation.
@@ -246,15 +250,8 @@ pub fn run_as(request: &Request, session: Option<&str>) -> Result<Output> {
     if let Verb::Delta(verb) = &request.verb {
         return delta::execute(&ws, request, verb, now);
     }
-    if let Verb::Lint {
-        paths,
-        repo,
-        deny_warnings,
-        records,
-    } = &request.verb
-    {
-        let given = (paths.as_slice(), repo.as_deref(), *deny_warnings, *records);
-        return defs::lint::execute(&ws.root, request, given);
+    if matches!(request.verb, Verb::Lint { .. }) {
+        return defs::lint::run(&ws.root, request);
     }
     if let Verb::Check { scope } = &request.verb {
         return check::execute(&ws, request, scope.as_deref(), now);
@@ -339,6 +336,7 @@ fn answer(session: &Session<'_>, request: &Request) -> Result<(Answer, &'static 
             "policy",
             Vec::new(),
         ),
+        Verb::PolicyPaths { gate } => verbs::policy_paths::answer(session, &request.cwd, gate)?,
         other => graph(session, other)?,
     })
 }

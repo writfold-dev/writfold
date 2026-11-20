@@ -203,6 +203,9 @@ fn a_run_artifact_is_a_pinned_citation_that_survives_reorganising() -> TestResul
         "{text}"
     );
     assert!(row.contains("repo=scratch") && row.contains(&rev), "{text}");
+    // The verdict is the row's status, not also a flag (#7).
+    let line = row.lines().next().unwrap_or_default();
+    assert!(!line.contains("!fresh"), "{text}");
     Ok(())
 }
 

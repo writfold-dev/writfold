@@ -88,7 +88,7 @@ writfold kb lint [PATH…] [--repo DIR] [--deny-warnings] [--json]
 
 `kb lint` reads every gate definition, guard rule, plan template and `required.toml` under the KB root's `.writfold/` (with the KB root's delivery files, kind declarations and `.writfold/queries.jsonl`, whose `expect` IDs need the index and stay with `find --eval`) and, when a repository is given with `--repo` or holds the working directory, the repository's `.writfold/`. Then it checks the references between them: the gates, delivery modes and templates (`use=`) a plan step names, the templates `required.toml` names, a guard rule's `gate:<id>`, the same name in both roots, and `use=` cycles. With `PATH`, only those files are reported (their references are still resolved against the rest).
 
-It reads files and nothing else: it runs no command, starts no checker, spawns no Git, opens no index and writes nothing, so it works before the first run and is fast enough for a pre-commit hook or CI.
+It reads files and nothing else: it runs no command, starts no checker, spawns no Git, opens no index and writes nothing, so it works before the first run and is fast enough for a pre-commit hook or CI. Without `PATH` it also reads the runs' observation files, for one warning (since v0.6.0-dev.11): `policy.never-ages`, once per source kind with no declaration in `.writfold/sources/` that has `no-data` or `not-found` looks, which never age ([gates](gates.md#observations-as-evidence-built-in-v050-dev3)).
 
 Over a KB with a gate whose class and one key are misspelt, a guard rule with an unknown requirement and action, a template naming an undefined gate and template, and a `required.toml` naming an undefined template:
 
@@ -322,4 +322,5 @@ A code is `<class>.<what>`. Codes are never renamed or reused; the same code mea
 | `section.missing` | a Markdown section a verb requires is absent or empty |
 | `section.form` | a line in a required section lacks its form |
 | `policy.waivable` | a warning: a checklist restricts `not_applicable` while its gate still accepts a waiver |
+| `policy.never-ages` | a warning: `no-data` or `not-found` looks of a source kind with no declaration in `.writfold/sources/`, which never age (built in v0.6.0-dev.11) |
 

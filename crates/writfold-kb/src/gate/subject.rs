@@ -135,6 +135,8 @@ pub struct Snapshot {
     pub commit: GitObjectId,
     tree: Vec<(String, String)>,
     dirty: Vec<(String, Option<String>)>,
+    /// The stores `repo:` scope entries name ([`super::repos`]).
+    others: super::repos::Trees,
 }
 
 /// One gate's view of a snapshot.
@@ -190,6 +192,7 @@ pub fn snapshot(
         commit,
         tree,
         dirty,
+        others: super::repos::Trees::new(),
     })
 }
 
@@ -208,23 +211,96 @@ impl Snapshot {
             .map(|(_, id)| id.as_str())
     }
 
-    /// The scope digest and counts for one gate's patterns.
+    /// Read the stores that `scopes` name (`repo:` entries), so
+    /// [`Snapshot::scoped`] can fold them in.
+    pub fn attach<'a>(
+        &mut self,
+        git: &GitExecutable<'_>,
+        ws: &Workspace,
+        scopes: impl IntoIterator<Item = &'a str>,
+    ) {
+        let names = super::repos::named(scopes);
+        let missing: std::collections::BTreeSet<String> = (names.into_iter())
+            .filter(|n| !self.others.contains_key(n))
+            .collect();
+        self.others.extend(super::repos::read(git, ws, &missing));
+    }
+
+    /// The scope digest and counts for one gate's patterns: the subject's
+    /// own paths, then each `repo:` store's, folded in. A store that was not
+    /// read makes the digest empty (never the same content).
     pub fn scoped(&self, patterns: &[&str]) -> Scoped {
+        let (local, stores) = super::repos::split(patterns);
+        let mut out = self.local(&local);
+        if stores.is_empty() {
+            return out;
+        }
+        let mut all = Sha256::new();
+        all.update(format!("writfold-gate-scope-repos/1\n{}\n", out.digest).as_bytes());
+        for (store, globs) in &stores {
+            let globs: Vec<&str> = globs.iter().map(String::as_str).collect();
+            let Some(Some(tree)) = self.others.get(*store) else {
+                out.digest = String::new();
+                return out;
+            };
+            for (path, id) in tree.iter().filter(|(p, _)| in_scope(&globs, p)) {
+                out.paths += 1;
+                all.update(format!("{store}:{path}\0{id}\n").as_bytes());
+            }
+        }
+        out.digest = format!("sha256:{}", crate::index::hex(&all.finalize()));
+        out
+    }
+
+    /// The paths a gate's patterns cover at the present state: the
+    /// subject's own (committed, then dirty; deleted ones gone), then each
+    /// `repo:` store's as `<store>:<path>`; and the stores not read.
+    pub fn listed(&self, patterns: &[&str]) -> (Vec<String>, Vec<String>) {
+        let (local, stores) = super::repos::split(patterns);
+        let mut out: Vec<String> = self
+            .present(&local)
+            .into_keys()
+            .map(str::to_owned)
+            .collect();
+        let mut unread = Vec::new();
+        for (store, globs) in &stores {
+            let globs: Vec<&str> = globs.iter().map(String::as_str).collect();
+            match self.others.get(*store) {
+                Some(Some(tree)) => out.extend(
+                    (tree.iter().filter(|(p, _)| in_scope(&globs, p)))
+                        .map(|(p, _)| format!("{store}:{p}")),
+                ),
+                _ => unread.push((*store).to_owned()),
+            }
+        }
+        (out, unread)
+    }
+
+    /// In-scope paths and their blob IDs, dirty bytes over committed.
+    fn present(&self, patterns: &[&str]) -> BTreeMap<&str, &str> {
         let mut paths: BTreeMap<&str, &str> = self
             .tree
             .iter()
             .filter(|(p, _)| in_scope(patterns, p))
             .map(|(p, id)| (p.as_str(), id.as_str()))
             .collect();
+        for (path, id) in self.dirty.iter().filter(|(p, _)| in_scope(patterns, p)) {
+            match id {
+                Some(id) => paths.insert(path, id),
+                None => paths.remove(path.as_str()),
+            };
+        }
+        paths
+    }
+
+    /// The scope digest and counts over the subject's own patterns.
+    fn local(&self, patterns: &[&str]) -> Scoped {
+        let paths = self.present(patterns);
         let mut dirty = Sha256::new();
         let mut count = 0;
         for (path, id) in self.dirty.iter().filter(|(p, _)| in_scope(patterns, p)) {
             count += 1;
             dirty.update(format!("{path}\0{}\n", id.as_deref().unwrap_or("deleted")).as_bytes());
-            match id {
-                Some(id) => paths.insert(path, id),
-                None => paths.remove(path.as_str()),
-            };
         }
         let mut all = Sha256::new();
         all.update(b"writfold-gate-scope/1\n");

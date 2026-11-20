@@ -6,6 +6,31 @@ This page is for someone pinned to one release who wants to upgrade on purpose. 
 
 A line marked **fix** changed an answer that was wrong; anything depending on the old answer was depending on the fault.
 
+## v0.6.0-dev.11 (unreleased)
+
+- `find --eval` adds one note per class named in the queries' `note` fields (text before the first `:`), and the JSON trailer key `classes`. A query file whose notes have no `:` reads as before ([#19](https://github.com/writfold-dev/writfold/issues/19)).
+- The plugin adds a `PostToolUse` hook for `Bash` and `mcp__*` calls (`writfold kb hook post-tool-use`). Without `.writfold/deliveries/guard.toml` it prints nothing. With one, after a call whose bytes are a ready candidate's, it adds one line of context naming the `deliver posted` command for that candidate ([#13](https://github.com/writfold-dev/writfold/issues/13)).
+- A delivery mode may list a fourth built-in check, `length.bounded`, with the new keys `max_chars` and `max_lines`. The built-in modes' defaults are unchanged, so no existing receipt moves; a mode file that does not use them reads as before ([#12](https://github.com/writfold-dev/writfold/issues/12)).
+- `kb policy` accepts `--paths GATE`; without it nothing changes ([#10](https://github.com/writfold-dev/writfold/issues/10)).
+- `kb lint` without `PATH` may now report the warning `policy.never-ages` (once per undeclared source kind that has `no-data` or `not-found` looks) and counts it in `warnings=`; under `--deny-warnings` that exits 2 ([#8](https://github.com/writfold-dev/writfold/issues/8)).
+- `gate status --json`: a `looked:` line whose newest look kept a snapshot gains the key `snapshot` (`store`, `rev`, `path`, `verdict`, `basis`). Text output is unchanged ([#2](https://github.com/writfold-dev/writfold/issues/2)).
+- `resume`'s `artifact` rows no longer repeat their verdict as a flag (`[fresh] … !fresh` is now `[fresh] …`); in JSON the row's `flags` no longer holds the verdict, which stays in `status`. An `unverifiable` row still carries its reason as a flag ([#7](https://github.com/writfold-dev/writfold/issues/7)).
+
+## v0.6.0-dev.10
+
+- **A KB without `.writfold/stores/` behaves exactly as before.** With a store declared, `context` and `uses` on a record end with `material` rows (the store directories whose `README.md` names the record in `subject:`), the count `material=` and, in JSON, the trailer key `stores` ([stores](stores.md#material-behind-a-record)). They read each store's clone (one or two Git calls per store, plus one tree read per new commit), which they never did before.
+- `kb repos` adds a `material:` line (`material=N ambiguous=N unknown=N`) to each readable store's row, and a `claim:` line for up to five directories listed under no record.
+- `observe` accepts `--snapshot FILE [--store NAME]` ([stores](stores.md#keeping-a-looks-bytes-snapshots)). Without it nothing changes: an observation without a `snapshot` field parses, grounds and prints as before. With it, the first call may write two files into the store's work tree (never into the KB) and is refused until they are committed.
+- An observation with a `snapshot` field grounds only while its snapshot reads fresh as well. **An earlier binary ignores the field** and grounds such a look on `cite` alone, so it does not see a lost snapshot.
+- The index file gains two cache tables on first use. The index is not rebuilt, and an earlier binary opens the same file.
+
+## v0.6.0-dev.9
+
+- **A look that found nothing now ages** by its `--source` kind's declared `default_ttl` ([gates](gates.md#observations-as-evidence-built-in-v050-dev3)). A `none-found` row citing a `no-data` or `not-found` look of a kind declared with a lifetime turns `stale` once that lifetime has passed (`… was no-data, now aged`); before, such a look never aged. Looks of undeclared kinds, or kinds with no `default_ttl`, are unchanged. A kind catalog that cannot be read leaves such a look `unreadable`.
+- `gate status` and `gate cover` add `bound:` lines under an item that stands on a look recorded `--for` another item (`!other-item`) or on a reference that also backs other items (`!shared`), and the item line carries those flags. No standing or exit code changes.
+- A `scope` pattern starting `repo:` (or `!repo:`) now names a store ([gates](gates.md#a-definition-every-key)) and must be `repo:<store>/<glob>`; before, it was a glob over the subject's own paths. A definition with another `repo:` pattern is now refused.
+- New optional keys `own_evidence`, `evidence_from` (checklists) and `ages_as` (mechanical and observed gates) and the optional `searched` field of an observation change nothing until written. Writing a key changes that definition's digest, so its earlier receipts, rows and statements read `stale` once.
+
 ## v0.6.0-dev.8
 
 - `checkpoint` accepts `--artifact <store>@<rev>:<path>`, repeatable. Without it nothing changes. With it, the checkpoint also writes `runs/<run>/artifacts/<time>-<hex>.json`, and is refused, writing nothing, when a pointer would not read fresh ([stores](stores.md#pointing-a-run-at-its-material)).

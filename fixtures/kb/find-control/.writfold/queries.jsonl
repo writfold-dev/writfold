@@ -1,0 +1,28 @@
+{"query":"runbook:continuity/lease-fence","expect":["runbook:continuity/lease-fence"],"note":"L01 lexical control: exact canonical ID"}
+{"query":"decision/2026-10-04-expand-contract","expect":["proposal/decision/2026-10-04-expand-contract"],"note":"L02 lexical control: decision alias resolves to canonical proposal ID"}
+{"query":"Restore tenant fairness in the export scheduler","expect":["runbook:continuity/tenant-fairness"],"note":"L03 lexical control: exact title"}
+{"query":"durable publication obligation","expect":["proposal/decision/2026-10-03-transactional-outbox"],"note":"L04 lexical control: distinctive body phrase"}
+{"query":"split brain fencing after lease expiry","expect":["runbook:continuity/lease-fence"],"note":"N01 naming gap: split brain is not the record's name"}
+{"query":"idempotency for duplicate webhook billing","expect":["runbook:continuity/webhook-receipt"],"note":"N02 naming gap: idempotency maps to durable receipt"}
+{"query":"zero downtime signing key rollover","expect":["runbook:continuity/credential-overlap"],"note":"N03 naming gap: rollover maps to credential overlap"}
+{"query":"backup recoverability fire drill","expect":["runbook:continuity/restore-rehearsal"],"note":"N04 naming gap: fire drill maps to restoration rehearsal"}
+{"query":"dead letter handling for a queue blocker","expect":["runbook:continuity/poison-quarantine"],"note":"N05 naming gap: blocker maps to poison payload"}
+{"query":"noisy neighbor export starvation","expect":["runbook:continuity/tenant-fairness"],"note":"N06 naming gap: noisy neighbor maps to tenant fairness"}
+{"query":"cold session provenance for inherited claims","expect":["runbook:continuity/handover-pin"],"note":"N07 naming gap: inherited claims map to pinned handover sources"}
+{"query":"abort unhealthy rollout and restore stable traffic","expect":["runbook:continuity/canary-revert"],"note":"N08 naming gap: abort rollout maps to canary revert, not archived state restoration"}
+{"query":"sleepy boss awakens yet cannot command subordinates","expect":["runbook:continuity/lease-fence"],"note":"M01 meaning-only paraphrase: resumed expired coordinator must lose mutation authority"}
+{"query":"repeated callback must bill customer just once","expect":["runbook:continuity/webhook-receipt"],"note":"M02 meaning-only paraphrase: one invoice despite repeated event delivery"}
+{"query":"renew authentication secrets without interrupting logins","expect":["runbook:continuity/credential-overlap"],"note":"M03 meaning-only paraphrase: graceful signing credential transition"}
+{"query":"prove disaster copies usable through sandbox drills","expect":["runbook:continuity/restore-rehearsal"],"note":"M04 meaning-only paraphrase: exercise archived-state recovery"}
+{"query":"sideline toxic message so followers progress","expect":["runbook:continuity/poison-quarantine"],"note":"M05 meaning-only paraphrase: remove malformed head-of-line envelope durably"}
+{"query":"noisy neighbor hogs workers starving everybody else","expect":["runbook:continuity/tenant-fairness"],"note":"M06 meaning-only paraphrase: redistribute executor admission among tenants"}
+{"query":"help tomorrow's assistant trace yesterday's conclusions","expect":["runbook:continuity/handover-pin"],"note":"M07 meaning-only paraphrase: preserve source provenance for the next session"}
+{"query":"undo faulty software launch when failures spike","expect":["runbook:continuity/canary-revert"],"note":"M08 meaning-only paraphrase: revert unhealthy candidate code"}
+{"query":"banking disruption permits viewing money but forbids spending","expect":["proposal/decision/2026-10-01-read-only-outage"],"note":"M09 meaning-only paraphrase: cached balance visibility without transfers during quorum loss"}
+{"query":"erased items must stay gone when offline peers reconnect","expect":["proposal/decision/2026-10-02-tombstone-horizon"],"note":"M10 meaning-only paraphrase: tombstones prevent replica resurrection"}
+{"query":"ensure customer emails survive purchase crashes","expect":["proposal/decision/2026-10-03-transactional-outbox"],"note":"M11 meaning-only paraphrase: notification obligation survives process termination"}
+{"query":"evolve table layout gradually while old programs coexist","expect":["proposal/decision/2026-10-04-expand-contract"],"note":"M12 meaning-only paraphrase: additive schema transition retains version compatibility"}
+{"query":"invoice notification lost after commit, not duplicate inbound webhook delivery","expect":["proposal/decision/2026-10-03-transactional-outbox"],"note":"T01 negation trap: outbound publication gap is relevant; webhook-receipt is a related distractor"}
+{"query":"restore archived ledger data, not revert a canary deployment","expect":["runbook:continuity/restore-rehearsal"],"note":"T02 negation trap: archived state exercise is relevant; canary-revert restores code only"}
+{"query":"retain old signing keys until assertions expire, not tombstones for absent replicas","expect":["runbook:continuity/credential-overlap"],"note":"T03 overlap trap: credential lifetime is relevant; tombstone retention is a distractor"}
+{"query":"successor session must verify stale claims, not fence a stale lease holder","expect":["runbook:continuity/handover-pin"],"note":"T04 overlap trap: provenance is relevant; lease authority is a distractor"}

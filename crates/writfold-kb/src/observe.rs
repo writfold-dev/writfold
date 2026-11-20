@@ -39,6 +39,12 @@ pub struct Observation {
     pub note: Option<String>,
     /// The embedded citation token (`ok` and `partial` only).
     pub cite: Option<String>,
+    /// What a look that found nothing searched: one citation token
+    /// (`no-data` and `not-found` only; written only when given).
+    pub searched: Option<String>,
+    /// The citation of the look's bytes kept in a pinned store (`ok` and
+    /// `partial` only; written only when taken with `--snapshot`).
+    pub snapshot: Option<String>,
     pub observed: String,
 }
 
@@ -56,6 +62,13 @@ pub fn bytes(o: &Observation) -> Vec<u8> {
         "cite": o.cite,
         "observed": o.observed,
     });
+    let mut value = value;
+    if let (Some(searched), Some(map)) = (&o.searched, value.as_object_mut()) {
+        map.insert("searched".into(), Value::String(searched.clone()));
+    }
+    if let (Some(snapshot), Some(map)) = (&o.snapshot, value.as_object_mut()) {
+        map.insert("snapshot".into(), Value::String(snapshot.clone()));
+    }
     let mut out = serde_json::to_vec_pretty(&value).unwrap_or_default();
     out.push(b'\n');
     out
@@ -97,6 +110,24 @@ pub fn parse(text: &str) -> Result<Observation, String> {
         Some(text) => Some(item(&text).ok_or_else(|| format!("for {text:?} is not gate.item"))?),
     };
     let cite = maybe(&value, "cite")?;
+    let searched = maybe(&value, "searched")?;
+    if searched.is_some() && !matches!(status, Status::NoData | Status::NotFound) {
+        return Err(format!(
+            "a {} observation carries no searched",
+            status.name()
+        ));
+    }
+    let snapshot = maybe(&value, "snapshot")?;
+    if let Some(token) = &snapshot {
+        let read = crate::parse::cite::tokens(token);
+        let code = matches!(read.as_slice(), [one] if one.kind.as_deref() == Some("code"));
+        if !embeds(status) || !code {
+            return Err(format!(
+                "a {} observation carries no snapshot, and a snapshot is one code token",
+                status.name()
+            ));
+        }
+    }
     if cite.is_some() != embeds(status) {
         return Err(format!(
             "a {} observation {} a citation",
@@ -117,6 +148,8 @@ pub fn parse(text: &str) -> Result<Observation, String> {
         item,
         note: maybe(&value, "note")?,
         cite,
+        searched,
+        snapshot,
         observed: s(&value, "observed")?,
     })
 }
@@ -166,6 +199,11 @@ fn tally(statuses: &[Status]) -> String {
 /// The `looked:` line under a checklist item: the observations made for
 /// `gate`.`item`, and the newest one's path.
 pub fn looked(filed: &[Filed], gate: &str, item: &str) -> Option<More> {
+    let kept = filed
+        .iter()
+        .filter_map(|f| f.parsed.as_ref().ok())
+        .rfind(|o| o.item.as_ref().is_some_and(|(g, i)| g == gate && i == item))
+        .is_some_and(|o| o.snapshot.is_some());
     let mine: Vec<(&str, Status)> = filed
         .iter()
         .filter_map(|f| f.parsed.as_ref().ok().map(|o| (f, o)))
@@ -181,7 +219,11 @@ pub fn looked(filed: &[Filed], gate: &str, item: &str) -> Option<More> {
         text: tally(&statuses),
         path: Some((*newest).to_owned()),
         line: Some(1),
-        flags: Vec::new(),
+        flags: if kept {
+            vec!["snapshot".into()]
+        } else {
+            Vec::new()
+        },
     })
 }
 
@@ -219,6 +261,9 @@ mod tests {
             note: None,
             cite: embeds(status)
                 .then(|| "⟦cite kind=dashboard locator=x seen=2026-11-01T00:00Z⟧".into()),
+            searched: matches!(status, Status::NoData | Status::NotFound)
+                .then(|| "⟦cite kind=code repo=svc path=src/a.rs lines=1-2⟧".into()),
+            snapshot: None,
             observed: "2026-11-01T00:00:00Z".into(),
         }
     }

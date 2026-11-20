@@ -5,7 +5,8 @@
 //! for any repository, or the pinned revision the citation names); the
 //! verdict under the pin; and where a declared store's clone is found on
 //! this machine; and whether a run may record a pointer into a store
-//! (`checkpoint --artifact`). Translated and proved (`proofs/Writfold/Store.lean`).
+//! (`checkpoint --artifact`); and what a store directory's `subject:`
+//! claim amounts to (backlinks, [`claim`]). Translated and proved (`proofs/Writfold/Store.lean`).
 //! Reading the declaration, the clone's origin and the Git facts is
 //! `writfold-kb`'s (`stores.rs`, `stale/pinned.rs`), tested there.
 
@@ -181,11 +182,114 @@ pub fn artifact(
     }
 }
 
+/// What one `subject:` entry of a store directory's `README.md` amounts to.
+pub enum Claim {
+    /// It names exactly one record: listed under that record.
+    Listed,
+    /// It is an alias of two or more records: listed under none.
+    Ambiguous,
+    /// It names no record.
+    Unknown,
+    /// The directory was not read from a declared, readable attached
+    /// store: nothing is listed from it.
+    NotAStore,
+}
+
+/// `attached`: the directory was read from the clone [`resolve`] found for
+/// a declared store. `exact`: a record has the subject as its ID.
+/// `aliased`: how many distinct records have it as an alias. A record's
+/// own ID wins over an alias other records share, the rule authored edges
+/// follow.
+pub fn claim(attached: bool, exact: bool, aliased: usize) -> Claim {
+    if !attached {
+        return Claim::NotAStore;
+    }
+    if exact {
+        return Claim::Listed;
+    }
+    if aliased == 1 {
+        Claim::Listed
+    } else if aliased == 0 {
+        Claim::Unknown
+    } else {
+        Claim::Ambiguous
+    }
+}
+
+/// The facts about a snapshot that are not Git commits or bytes at a path.
+pub struct SnapshotFacts {
+    /// The look's status embeds a citation (`observe::embeds`).
+    pub embeds: bool,
+    /// The store is declared.
+    pub declared: bool,
+    /// Its freshness is `pinned`.
+    pub pinned: bool,
+    /// [`resolve`] found a clone with a work tree.
+    pub local: bool,
+    /// The bytes in the work tree are the ones its provenance file names.
+    pub intact: bool,
+}
+
+/// Why `observe --snapshot` records nothing, in the order checked.
+pub enum Withheld {
+    /// The status embeds no citation (`no-data`, `not-found`, `error`, …).
+    NoCitation,
+    /// No declared store to keep it in.
+    NotAStore,
+    /// The store is judged at head, where a reorganisation would lose it.
+    NotPinned,
+    /// The store has no clone with a work tree here.
+    NotLocal,
+    /// The bytes no longer match their provenance file.
+    Damaged,
+    /// The store has no commit, or its `HEAD` holds nothing at the path:
+    /// the only answer under which files may be written into the store.
+    NotCommitted,
+    /// `HEAD` holds other bytes at the path (a filter, or an edit).
+    OtherBytes,
+    /// No ref reaches `HEAD`.
+    Unanchored,
+}
+
+/// Whether `observe --snapshot` records the observation.
+pub enum Snapshot {
+    Record,
+    Withhold(Withheld),
+}
+
+/// `commit`: the store's `HEAD` commit (`Absent` when it has none). `at`:
+/// what `HEAD:<path>` holds against the snapshot's bytes, the worse of the
+/// file and its provenance file. A snapshot is recorded exactly when its
+/// citation would read fresh under [`pinned`]: there is no second rule.
+pub fn snapshot(facts: &SnapshotFacts, commit: &Commit, at: &AtPin) -> Snapshot {
+    if !facts.embeds {
+        return Snapshot::Withhold(Withheld::NoCitation);
+    }
+    if !facts.declared {
+        return Snapshot::Withhold(Withheld::NotAStore);
+    }
+    if !facts.pinned {
+        return Snapshot::Withhold(Withheld::NotPinned);
+    }
+    if !facts.local {
+        return Snapshot::Withhold(Withheld::NotLocal);
+    }
+    if !facts.intact {
+        return Snapshot::Withhold(Withheld::Damaged);
+    }
+    match (commit, at) {
+        (Commit::Absent, _) | (_, AtPin::Nothing) => Snapshot::Withhold(Withheld::NotCommitted),
+        (_, AtPin::Other) => Snapshot::Withhold(Withheld::OtherBytes),
+        (Commit::Unanchored, AtPin::Cited) => Snapshot::Withhold(Withheld::Unanchored),
+        (Commit::Anchored, AtPin::Cited) => Snapshot::Record,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::{
-        Artifact, AtPin, Basis, Candidate, Commit, Refusal, Resolved, Via, artifact, basis, pinned,
-        resolve,
+        Artifact, AtPin, Basis, Candidate, Claim, Commit, Refusal, Resolved, Via, artifact, basis,
+        claim, pinned, resolve,
     };
     use crate::verdict::Verdict;
 
@@ -272,6 +376,30 @@ mod tests {
                 assert_eq!(matches!(got, Artifact::Admit), d && l && f && fresh);
                 if !d {
                     assert!(matches!(got, Artifact::Refuse(Refusal::Undeclared)));
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn a_claim_is_listed_only_from_a_store_for_one_record() {
+        for attached in [false, true] {
+            for exact in [false, true] {
+                for aliased in 0..4usize {
+                    let got = claim(attached, exact, aliased);
+                    let want = match (attached, exact, aliased) {
+                        (false, _, _) => "not-a-store",
+                        (true, true, _) | (true, false, 1) => "listed",
+                        (true, false, 0) => "unknown",
+                        _ => "ambiguous",
+                    };
+                    let said = match got {
+                        Claim::Listed => "listed",
+                        Claim::Ambiguous => "ambiguous",
+                        Claim::Unknown => "unknown",
+                        Claim::NotAStore => "not-a-store",
+                    };
+                    assert_eq!(said, want, "{attached} {exact} {aliased}");
                 }
             }
         }

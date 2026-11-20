@@ -84,7 +84,8 @@ fn split(verb: &str, args: &[String]) -> Result<(Common, Vec<String>), String> {
             other
                 if writes::VALUES.contains(&&other[2..])
                     || super::observe::VALUES.contains(&&other[2..])
-                    || super::investigation::VALUES.contains(&&other[2..]) =>
+                    || super::investigation::VALUES.contains(&&other[2..])
+                    || super::proposals::VALUES.contains(&&other[2..]) =>
             {
                 super::checkpoint::put(&mut common.values, &other[2..], value(arg, items.next())?);
             }

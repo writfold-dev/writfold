@@ -231,7 +231,9 @@ fn rerun(
     };
     let patterns: Vec<&str> = r.patterns.iter().map(String::as_str).collect();
     let wanted = |p: &str| writfold_core::scope::in_scope(&patterns, p);
-    let scoped = subject::snapshot(git, &at, &wanted)?.scoped(&patterns);
+    let mut before = subject::snapshot(git, &at, &wanted)?;
+    before.attach(git, ws, patterns.iter().copied());
+    let scoped = before.scoped(&patterns);
     let compact: String = time::stamp(now)
         .chars()
         .filter(|c| c.is_ascii_alphanumeric())
@@ -263,7 +265,9 @@ fn rerun(
     );
     std::fs::write(local.join("stdout.tail"), &e.stdout.bytes)?;
     std::fs::write(local.join("stderr.tail"), &e.stderr.bytes)?;
-    let after = subject::snapshot(git, &at, &wanted)?.scoped(&patterns);
+    let mut after = subject::snapshot(git, &at, &wanted)?;
+    after.attach(git, ws, patterns.iter().copied());
+    let after = after.scoped(&patterns);
     let outcome = writfold_core::gate::outcome(e.ending, after != scoped);
     let ended = match (e.exit_code, e.timed_out, &e.error) {
         (Some(code), _, _) => format!("exit={code}"),

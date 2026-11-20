@@ -246,7 +246,7 @@ fn judge_steps(
                 continue;
             }
             let d = j.definition.clone();
-            let judged = status::judge_gate(d, &valid, &filings, &subject.name, &digest);
+            let judged = status::judge_gate(d, &valid, &filings, &subject.name, &digest, None);
             gates.push(gate(&judged, &subject.name, detail));
             // A run-record gate's content is its window, receipt or not.
             if let Some(last) = gates.last_mut() {

@@ -159,6 +159,20 @@ theorem of_observation_grounded_iff (s : observe.Status) (n nf : Usize) :
   intro b hb1
   cases b <;> simp_all
 
+/-- Adding a citation to an observation, or one of its citations ceasing to
+be fresh, never grounds a look that did not ground before: a snapshot
+cannot revive an expired look. -/
+theorem of_observation_antitone (s : observe.Status) (c c' n n' : Usize)
+    (hc : 0 < c.val) (hn : n.val ≤ n'.val) :
+    ground.of_observation s c' n' ⦃ g' => g' = .Grounded →
+      ground.of_observation s c n ⦃ g => g = .Grounded ⦄ ⦄ := by
+  apply WP.spec_mono (of_observation_grounded_iff s c' n')
+  intro g' hg' hG
+  apply WP.spec_mono (of_observation_grounded_iff s c n)
+  intro g hg
+  obtain ⟨hs, _, hnf⟩ := hg'.mp hG
+  exact hg.mpr ⟨hs, hc, by omega⟩
+
 /-! ## Attestations and moved references -/
 
 theorem of_statement_spec (c : Bool) :

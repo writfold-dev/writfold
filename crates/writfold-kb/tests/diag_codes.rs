@@ -64,7 +64,7 @@ fn every_code_has_a_row_and_every_row_a_code() -> std::io::Result<()> {
     assert!(unlisted.is_empty(), "emitted but not listed: {unlisted:?}");
     assert!(source.len() >= 20, "the scan found {source:?}");
     assert_eq!(
-        table("docs/writfold/diagnostics-spec.md")?,
+        table("docs/rfcs/2026-11-16-diagnostics.md")?,
         listed,
         "the specification's table"
     );

@@ -8,7 +8,7 @@ model's output: what is done, what is owed and whether a step may close are
 computed from those files, the same on every machine. A new session reads a
 short brief and the last checkpoint, and carries on.
 
-> **Pre-release (`v0.6.0-dev.8`).** Built in public, for one person and their
+> **Pre-release (`v0.6.0-dev.10`).** Built in public, for one person and their
 > agents; formats and commands may still change. Linux x86_64 or WSL2. See
 > [writfold.dev](https://writfold.dev/) and the [guides](docs/guide/README.md).
 
@@ -294,7 +294,8 @@ built and tested, with little real use behind them yet.
   ([how](docs/writfold/aeneas.md)). `spec/`: the TLA+ models.
 - `docs/guide/`: the guides. `docs/writfold/`: the
   [mission](docs/writfold/mission.md) and the
-  [design](docs/writfold/kb-v1-design.md).
+  [design](docs/writfold/kb-v1-design.md). `docs/rfcs/`: the
+  [RFCs](docs/rfcs/README.md), one per design decision, built or planned.
 - `plugins/` and `.claude-plugin/`: the Claude Code plugin and its
   marketplace entry.
 - `fixtures/`: test knowledge bases and guard conformance cases.
@@ -308,7 +309,10 @@ built and tested, with little real use behind them yet.
 
 Writfold and its companion website use the [MIT license](LICENSE), selected by Tarek Nawara on 2 November 2026. Third-party materials retain their original notices and licenses; this does not relicense bundled reference material or authorize publication of private playbook content.
 
-## Feedback
+## Feedback and planning
 
-Issues and discussion are welcome on
-[GitHub issues](https://github.com/writfold-dev/writfold/issues).
+Work is tracked in [GitHub issues](https://github.com/writfold-dev/writfold/issues),
+grouped into [milestones](https://github.com/writfold-dev/writfold/milestones)
+by release. Designs are written as [RFCs](docs/rfcs/README.md).
+[CONTRIBUTING.md](CONTRIBUTING.md) says where to start, and
+[GOVERNANCE.md](GOVERNANCE.md) says who decides.

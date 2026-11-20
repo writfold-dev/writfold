@@ -14,7 +14,7 @@ use crate::emit::{More, Row};
 use crate::error::{KbError, Result};
 use crate::session::Session;
 use std::path::Path;
-use writfold_core::gate::{Recorded, Standing, State, judge as judge_receipts, standing};
+use writfold_core::gate::{Evidence, Recorded, Standing, State, standing};
 use writfold_core::scope::in_scope;
 use writfold_runtime::git::GitExecutable;
 
@@ -188,9 +188,13 @@ pub fn judge_plain<'a>(
         .map(Definition::patterns)
         .collect();
     let wanted = |p: &str| patterns.iter().any(|scope| in_scope(scope, p));
-    let snapshot = snapshot(git, subject, &wanted)?;
+    let mut snapshot = snapshot(git, subject, &wanted)?;
+    let scopes =
+        (definitions.iter().chain(&later)).flat_map(|d| d.scope.iter().map(String::as_str));
+    snapshot.attach(git, session.ws, scopes);
     let valid = filings.parsed();
     let records = filings.owed.records.clone().unwrap_or_default();
+    let clock = super::pins::Clock::read(session);
     let mut gates = Vec::new();
     for definition in definitions {
         let content = match definition.run_record() {
@@ -203,6 +207,7 @@ pub fn judge_plain<'a>(
             filings,
             &subject.name,
             &content,
+            Some(&clock),
         ));
     }
     let report = Report {
@@ -224,6 +229,7 @@ pub fn judge_gate<'a>(
     filings: &'a Filings,
     repo: &str,
     content: &str,
+    clock: Option<&super::pins::Clock>,
 ) -> Judged<'a> {
     let mine: Vec<(&Filed, &Receipt)> = valid
         .iter()
@@ -239,7 +245,10 @@ pub fn judge_gate<'a>(
             bound: writfold_core::gate::bound(true, r.repo == repo, true),
         })
         .collect();
-    let (state, at) = judge_receipts(&recorded, definition.digest.as_bytes(), content.as_bytes());
+    let stamps: Vec<&str> = mine.iter().map(|(_, r)| r.recorded.as_str()).collect();
+    let evidence: Vec<Evidence> =
+        super::pins::evidence(&recorded, &stamps, &definition, content, clock);
+    let (state, at) = writfold_core::gate::state(&evidence);
     let receipt = at.and_then(|i| mine.get(i).copied());
     let statements = statement::summary(
         &filings.statements,
@@ -429,6 +438,10 @@ fn stale_why(
         );
     }
     let patterns = judged.definition.patterns();
+    let present = report.snapshot.scoped(&patterns).digest;
+    if let Some(why) = super::pins::why(&judged.definition, &present, r) {
+        return Ok(why);
+    }
     Ok(
         match report
             .snapshot

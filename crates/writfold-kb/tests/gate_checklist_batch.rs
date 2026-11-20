@@ -183,7 +183,9 @@ fn looked(w: &support::World) -> TestResult<String> {
         item: Some("review.perf".into()),
         note: None,
         cite: None,
+        searched: None,
         run: Some(RUN.into()),
+        ..Observe::default()
     };
     let out = writfold_kb::run(&w.request(Verb::Write(Write::Observe(o))))?;
     let path = out

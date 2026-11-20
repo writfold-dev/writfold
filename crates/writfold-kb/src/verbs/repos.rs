@@ -106,6 +106,8 @@ pub fn repos(session: &Session<'_>, missing_only: bool) -> Result<Answer> {
     let mut answer = Answer::default();
     let (mut total, mut missing, mut partial) = (0, 0, 0);
     let stores = store::read(&session.ws.root)?;
+    let reads =
+        store::material::read_all(session.git.as_ref(), session.ws, &session.conn, &stores)?;
     let mut all = cited(session)?;
     for declared in stores.iter() {
         all.entry(declared.name.clone()).or_default();
@@ -114,7 +116,10 @@ pub fn repos(session: &Session<'_>, missing_only: bool) -> Result<Answer> {
         total += 1;
         let mut flags = Vec::new();
         let (status, lines) = match stores.get(&name) {
-            Some(declared) => store_row(session, declared, &mut flags),
+            Some(declared) => {
+                let read = reads.iter().find(|r| r.name == name);
+                store_row(session, declared, read, &mut flags)?
+            }
             None => match repos::resolve_via(Some(session.ws), &name, cited.url.as_deref()) {
                 Some((dir, via)) => found(session, dir, via.name()),
                 None => ("missing", Vec::new()),
@@ -163,8 +168,9 @@ pub fn repos(session: &Session<'_>, missing_only: bool) -> Result<Answer> {
 fn store_row(
     session: &Session<'_>,
     declared: &Store,
+    read: Option<&store::material::Read>,
     flags: &mut Vec<String>,
-) -> (&'static str, Vec<More>) {
+) -> Result<(&'static str, Vec<More>)> {
     flags.push("store".into());
     flags.push(match declared.freshness {
         Freshness::Pinned => "pinned".into(),
@@ -188,5 +194,14 @@ fn store_row(
             resolved.how
         }
     };
-    (status, lines)
+    if let Some(read) = read.filter(|r| r.attached()) {
+        let (listed, ambiguous, unknown, named) = super::material::tally(&session.conn, read)?;
+        lines.push(more(
+            "material",
+            format!("material={listed} ambiguous={ambiguous} unknown={unknown}"),
+            None,
+        ));
+        lines.extend(named.into_iter().map(|n| more("claim", n, None)));
+    }
+    Ok((status, lines))
 }

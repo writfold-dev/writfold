@@ -7,6 +7,8 @@
 //!   more words than the mode's bound.
 //! - `references.denied`: no line matches a rule of the audience's deny
 //!   list. With no deny list the outcome is `unknown`, never `pass`.
+//! - `length.bounded`: the whole payload has at most `max_chars`
+//!   characters and `max_lines` lines (only when a mode lists it).
 //! - `claims.cited-fresh`: every KB citation token is `fresh` under
 //!   `stale`'s verdicts. A token `stale` cannot check makes the outcome
 //!   `unknown`; any other non-fresh verdict fails it.
@@ -66,6 +68,42 @@ pub fn paragraphs(text: &str, mode: &Mode) -> Evaluated {
         findings,
         Some(format!("at most {bound} words per paragraph")),
     )
+}
+
+/// `length.bounded`: the whole payload within the mode's `max_chars`
+/// (Unicode scalar values) and `max_lines`; a finding names the line
+/// where the bound is crossed.
+pub fn length(text: &str, mode: &Mode) -> Evaluated {
+    let mut findings = Vec::new();
+    let mut said = Vec::new();
+    if let Some(max) = mode.max_chars {
+        said.push(format!("at most {max} characters"));
+        let n = text.chars().count();
+        if n > max {
+            let mut seen = 0;
+            let crossed = text.split_inclusive('\n').position(|l| {
+                seen += l.chars().count();
+                seen > max
+            });
+            findings.push(Finding {
+                line: u32::try_from(crossed.map_or(1, |i| i + 1)).unwrap_or(u32::MAX),
+                rule: format!("max-{max}-chars"),
+                detail: format!("{n} characters; this mode takes at most {max} (max_chars)"),
+            });
+        }
+    }
+    if let Some(max) = mode.max_lines {
+        said.push(format!("at most {max} lines"));
+        let n = text.lines().count();
+        if n > max {
+            findings.push(Finding {
+                line: u32::try_from(max + 1).unwrap_or(u32::MAX),
+                rule: format!("max-{max}-lines"),
+                detail: format!("{n} lines; this mode takes at most {max} (max_lines)"),
+            });
+        }
+    }
+    judged(findings, Some(said.join(", ")))
 }
 
 /// `references.denied`: the first match of each rule on each line.

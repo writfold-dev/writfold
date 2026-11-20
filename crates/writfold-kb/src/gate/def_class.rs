@@ -218,3 +218,32 @@ pub(super) fn checklist_subject(c: &mut Check<'_>, class: &str) -> Option<()> {
         false => Some(()),
     }
 }
+
+/// `ages_as = "KIND"` on a mechanical or observed gate (gate-evidence
+/// spec, stage 5): its receipts age by that kind's lifetime in the catalog
+/// (`.writfold/sources/KIND.toml`). `Some(None)` when absent.
+pub fn ages_as(c: &mut Check<'_>, class: &str) -> Option<Option<String>> {
+    let candidate = matches!(c.doc.get("subject").map(|e| &e.value),
+        Some(crate::defs::Slot::Value(v)) if matches!(&v.value, crate::defs::Value::Str(t) if t.text == "candidate"));
+    if candidate {
+        let why = "`ages_as` is not taken by candidate gates (delivery checks)".to_owned();
+        return (!c.not_here("ages_as", why, "a repository gate only")).then_some(None);
+    }
+    if !matches!(class, "mechanical" | "observed") {
+        let why = "`ages_as` is for mechanical and observed gates".to_owned();
+        return (!c.not_here("ages_as", why, "only a command gate takes it")).then_some(None);
+    }
+    match c.text("ages_as") {
+        crate::defs::Field::Absent => Some(None),
+        crate::defs::Field::Bad => None,
+        crate::defs::Field::Got(t) if crate::stale::kinds::is_word(t.str()) => {
+            Some(Some(t.value.text))
+        }
+        crate::defs::Field::Got(t) => {
+            let why = format!("ages_as {:?} must be a kind name ([a-z0-9._-])", t.str());
+            c.error("value.form", Some(t.span), why)
+                .label("not a kind name");
+            None
+        }
+    }
+}

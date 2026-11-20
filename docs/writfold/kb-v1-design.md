@@ -664,6 +664,7 @@ M1 landed as the crate `crates/writfold-kb`, the reads in `crates/writfold-runti
 - One file per KB root at `<git dir>/writfold/kb-index-<12 hex of the root's path in the work tree>.sqlite`, built in a temporary file in the same directory and renamed into place. It uses the rollback journal, not WAL, because the file is replaced by rename.
 - The pin is SHA-256 over HEAD and the sorted `(path, content digest)` of every dirty or untracked file that is a KB input. A dirty file the layout ignores does not rebuild the index. A matching pin, schema and extractor version opens the index as is (`index=fresh`); anything else rebuilds it in full (`index=rebuilt`). Incremental refresh is M2.
 - Cached citation verdicts (`cite_checks`) survive a rebuild for every citation whose token text is unchanged.
+- Store backlinks (v0.6.0-dev.10, [stores-next spec](../rfcs/2026-11-18-attached-stores-next.md) S3) are cached in `store_material` and `store_material_at`, created on first use with `CREATE TABLE IF NOT EXISTS` and keyed by the store commit read. They are outside the equality claim and the index pin, `SCHEMA` and `EXTRACTOR` are unchanged, and a rebuilt index starts without them. Whether a claim lists a directory is `store::claim` (proved).
 - A KB outside Git is indexed in memory on every call, with `kb=none`.
 - Schema differences from 4.2: `records.line` (the line of the status field, for row positions), `citations.malformed` and `citations.fields` (every token field as JSON), no `files.blob_oid`. The `tri` table is populated but unused until M2's search.
 
@@ -2837,7 +2838,7 @@ The phrase in §33.8 means a checked kind that also ages by `ttl=` or `default_t
 
 T2 extends the read-only terminal projection of §18. Every pane is an in-process
 JSON answer from `writfold_kb::run`; the viewer neither parses KB records nor
-judges gates. The [specification](tui-t2-spec.md) remains the design record;
+judges gates. The [specification](../rfcs/2026-11-13-watch-run-progress.md) remains the design record;
 owner decisions in its §0a are reflected here. The user guide is
 [Watching a run](../guide/watch.md).
 
@@ -3166,7 +3167,7 @@ by these local checks.
 ## 35. T3 as built
 
 T3 makes the plan map the default Progress presentation and adds a selected-node
-inspector. The [specification](tui-t3-spec.md) remains the design record; the
+inspector. The [specification](../rfcs/2026-11-14-watch-plan-map.md) remains the design record; the
 [watch guide](../guide/watch.md) documents the exercised interface. This extends
 §34 without changing its read-only, recorded-facts or checker policies.
 
@@ -3384,7 +3385,7 @@ two rows with the same id, selection resolves to the first.
 ## 36. T4 as built
 
 T4 makes the watch frame calm by default and moves every omitted fact one key
-away. The [specification](tui-t4-spec.md) remains the design record (its §5
+away. The [specification](../rfcs/2026-11-15-watch-calm-defaults.md) remains the design record (its §5
 lists the owner decisions); the [watch guide](../guide/watch.md)
 documents the exercised interface. No verb, JSON key, record or write path
 changed; `--once` and piped frames are byte-identical (their three goldens did
@@ -3561,7 +3562,7 @@ from main.
 ## 37. T5 as built
 
 T5 adds the knowledge base to `writfold watch` as a second mode of the same
-frame. The [specification](tui-t5-spec.md) remains the design record; its §7
+frame. The [specification](../rfcs/2026-11-15-watch-knowledge-base.md) remains the design record; its §7
 (decisions of 15 November 2026) overrides its earlier sections, and this
 section records what was built. The [watch guide](../guide/watch.md#the-knowledge-base)
 documents the exercised interface and the [JSON guide](../guide/json.md#keys-only-some-verbs-add)
@@ -3756,7 +3757,7 @@ run; no push, merge or release was performed.
 
 ## 38. Check receipts as built (v0.5.0-dev.9)
 
-A checked kind's verdicts can be shared through Git: `kb stale --record` writes what the checkers said to tracked, write-once files, and every clone reads them where it has no newer statement of its own, for as long as the kind's `max_age` allows. The guide is [checkers](../guide/checkers.md#sharing-verdicts-check-receipts); the specification was [dev9-spec.md](dev9-spec.md) §2.1.
+A checked kind's verdicts can be shared through Git: `kb stale --record` writes what the checkers said to tracked, write-once files, and every clone reads them where it has no newer statement of its own, for as long as the kind's `max_age` allows. The guide is [checkers](../guide/checkers.md#sharing-verdicts-check-receipts); the specification was [dev9-spec.md](../rfcs/2026-11-15-v050-dev9.md) §2.1.
 
 ### 38.1 Kernel
 
@@ -3796,7 +3797,7 @@ Recorded verdicts for built-in kinds; showing recorded verdicts in `brief`, `con
 
 ## 39. The rest of v0.5.0-dev.9 as built
 
-The specification was [dev9-spec.md](dev9-spec.md); check receipts are §38, `edit apply -` is [§17.9](#179-as-built-v050-dev9-a-recipe-on-stdin) and guard rules over `edit apply` are [§30.10](#3010-as-built-v050-dev9-rules-that-see-edit-applys-targets).
+The specification was [dev9-spec.md](../rfcs/2026-11-15-v050-dev9.md); check receipts are §38, `edit apply -` is [§17.9](#179-as-built-v050-dev9-a-recipe-on-stdin) and guard rules over `edit apply` are [§30.10](#3010-as-built-v050-dev9-rules-that-see-edit-applys-targets).
 
 ### 39.1 `record investigation` and `propose investigation`
 
@@ -3814,11 +3815,11 @@ Deviation: the specification exported the tree with `git read-tree` into a tempo
 
 ### 39.3 Not done in this round
 
-The qualified `verified` state (`verified_basis`), render templates, `observe --from`, recorded verdicts for built-in kinds, and a configurable proposal cap ([dev9-spec.md](dev9-spec.md) §4).
+The qualified `verified` state (`verified_basis`), render templates, `observe --from`, recorded verdicts for built-in kinds, and a configurable proposal cap ([dev9-spec.md](../rfcs/2026-11-15-v050-dev9.md) §4).
 
 ## 40. v0.6.0-dev.1 as built
 
-The specification was [dev10-spec.md](dev10-spec.md); its §7 decisions apply. Each check named below was removed or broken once and a test failed; the log is kept with the round's handover.
+The specification was [dev10-spec.md](../rfcs/2026-11-15-v050-dev10.md); its §7 decisions apply. Each check named below was removed or broken once and a test failed; the log is kept with the round's handover.
 
 ### 40.1 Empty is not met
 
@@ -3883,7 +3884,7 @@ Deviation: the note about others' commits is coarser than specified. The runtime
 T6 changes what the remaining lines of `writfold watch` say. The frame keeps
 its panes, rail, state glyphs, bars, keys and both modes; the default surface
 reads as plain words, and the verbs' own wording is one key away. The
-[specification](tui-t6-spec.md) remains the design record; its Decisions
+[specification](../rfcs/2026-11-15-watch-plain-language.md) remains the design record; its Decisions
 (owner, 15 November 2026) override its earlier text, and this section records
 what was built, in v0.6.0-dev.1. The [watch guide](../guide/watch.md#plain-and-exact)
 documents the exercised interface.
@@ -4051,7 +4052,7 @@ Each guarding test was run against its mutation; the log is
 
 ## 42. Delivery modes as a step's gates as built
 
-The specification was [deliver-gate-spec.md](deliver-gate-spec.md); its owner decisions (15 November 2026) apply: cited evidence is re-checked on every read, and the change ships in the v0.6.0-dev.1 round, built on top of it. Each check named below was removed or broken once and a test failed; the log is kept with the round's handover.
+The specification was [deliver-gate-spec.md](../rfcs/2026-11-15-delivery-modes-as-step-gates.md); its owner decisions (15 November 2026) apply: cited evidence is re-checked on every read, and the change ships in the v0.6.0-dev.1 round, built on top of it. Each check named below was removed or broken once and a test failed; the log is kept with the round's handover.
 
 ### 42.1 The kernel
 
@@ -4077,7 +4078,7 @@ Deviations: the `candidate:` line is also shown when the delivery is met (`<id> 
 
 ## 43. Proof backfill, first round, as built (16 November 2026)
 
-[`proof-backfill-spec.md`](proof-backfill-spec.md) steps 0 to 5. Each step moved a decision that `writfold-kb` made into a kernel function of `writfold-core` named in `[package.metadata.charon] start_from`, proved it over the Aeneas translation ([aeneas.md](aeneas.md#the-proof-backfill-first-round-16-november-2026)), and calibrated it with mutants. `writfold-kb`'s behaviour is unchanged apart from 43.4.
+[`proof-backfill-spec.md`](../rfcs/2026-11-16-proof-backfill.md) steps 0 to 5. Each step moved a decision that `writfold-kb` made into a kernel function of `writfold-core` named in `[package.metadata.charon] start_from`, proved it over the Aeneas translation ([aeneas.md](aeneas.md#the-proof-backfill-first-round-16-november-2026)), and calibrated it with mutants. `writfold-kb`'s behaviour is unchanged apart from 43.4.
 
 ### 43.1 Truth and calibration
 
@@ -4111,7 +4112,7 @@ Scope globs, plan closing writes, decision states and investigations, citation v
 
 ## 44. User-defined policy as built (v0.6.0-dev.3)
 
-[`policy-spec.md`](policy-spec.md), steps 1 to 12 (the cut line). Order kept: groundwork, kernels, translation, proofs, the proofs gate, then wiring; no verb called a new kernel function before the gate passed.
+[`policy-spec.md`](../rfcs/2026-11-16-user-defined-policy.md), steps 1 to 12 (the cut line). Order kept: groundwork, kernels, translation, proofs, the proofs gate, then wiring; no verb called a new kernel function before the gate passed.
 
 ### 44.1 First use
 
@@ -4141,7 +4142,7 @@ Scope globs, plan closing writes, decision states and investigations, citation v
 
 ## 45. Proof backfill, second round, as built (17 November 2026, v0.6.0-dev.4)
 
-[`proof-backfill-spec.md`](proof-backfill-spec.md) steps 6 to 11. As in 43, each decision `writfold-kb` made is a kernel function named in `start_from`, proved over the Aeneas translation and calibrated with mutants; theorems, mutants and reshapes are in [aeneas.md](aeneas.md#the-proof-backfill-second-round-17-november-2026). Three behaviour changes, each with a test that failed first: 45.1, 45.4, 45.6.
+[`proof-backfill-spec.md`](../rfcs/2026-11-16-proof-backfill.md) steps 6 to 11. As in 43, each decision `writfold-kb` made is a kernel function named in `start_from`, proved over the Aeneas translation and calibrated with mutants; theorems, mutants and reshapes are in [aeneas.md](aeneas.md#the-proof-backfill-second-round-17-november-2026). Three behaviour changes, each with a test that failed first: 45.1, 45.4, 45.6.
 
 ### 45.1 Scope globs (G6)
 
@@ -4199,7 +4200,7 @@ On 3,000 tickets with bodies (22.7 MB index) `find` took 135 to 263 ms (dev.3 mu
 
 ## 47. Delivery modes, second round, as built (17 November 2026, v0.6.0-dev.4)
 
-[`delivery-spec.md`](delivery-spec.md) steps 1 to 8, above its cut line; its owner decisions adopt the ten recommendations of its section 6. D18 (`length.bounded`) and D19 (a reminder after a guarded call passes) are below the cut line and not built. Writfold still sends nothing. Each step started from the failing test of the W or F number it closes; the guides were updated with it ([delivery-modes](../guide/delivery-modes.md)).
+[`delivery-spec.md`](../rfcs/2026-11-17-delivery-modes-second-round.md) steps 1 to 8, above its cut line; its owner decisions adopt the ten recommendations of its section 6. D18 (`length.bounded`) and D19 (a reminder after a guarded call passes) are below the cut line and not built. Writfold still sends nothing. Each step started from the failing test of the W or F number it closes; the guides were updated with it ([delivery-modes](../guide/delivery-modes.md)).
 
 ### 47.1 The kernel
 
@@ -4239,7 +4240,7 @@ Changes: a waiver a mode gate's `accept` or a mode's `waivable` rejects holds th
 
 ## 48. A current run per session and work tree, `find --each`, as built (17 November 2026, v0.6.0-dev.6)
 
-The specification is [v060-dev6-spec.md](v060-dev6-spec.md); the proofs are in [aeneas.md](aeneas.md#the-current-run-round-17-november-2026).
+The specification is [v060-dev6-spec.md](../rfcs/2026-11-17-v060-dev6-and-attached-stores.md); the proofs are in [aeneas.md](aeneas.md#the-current-run-round-17-november-2026).
 
 ### 48.1 The seat and its pointers
 
@@ -4261,4 +4262,4 @@ Nothing clears a pointer. `status <run> --set closed` leaves them, and a reader 
 
 ### 48.5 Notes, and what is not done
 
-`guard status` adds a note when the deciding pointer is not the shared one (the first note is unchanged; `writfold watch` reads the run from it). `watch`'s local stamp includes the metadata of `current-run.d/`. Not done: pruning pointers; a `repos` key on gates; link rendering; recorded verdicts for `code`; batch `observe` and `record` (each with its reason in [v060-dev6-spec.md §5](v060-dev6-spec.md#5-deferred-with-reasons)). Not exercised: the export in a live Claude Code session (the hook was run by a test with `CLAUDE_ENV_FILE` set).
+`guard status` adds a note when the deciding pointer is not the shared one (the first note is unchanged; `writfold watch` reads the run from it). `watch`'s local stamp includes the metadata of `current-run.d/`. Not done: pruning pointers; a `repos` key on gates; link rendering; recorded verdicts for `code`; batch `observe` and `record` (each with its reason in [v060-dev6-spec.md §5](../rfcs/2026-11-17-v060-dev6-and-attached-stores.md#5-deferred-with-reasons)). Not exercised: the export in a live Claude Code session (the hook was run by a test with `CLAUDE_ENV_FILE` set).

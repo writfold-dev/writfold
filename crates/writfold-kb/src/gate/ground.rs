@@ -142,7 +142,11 @@ fn file(cx: &Context<'_, '_>, r: &str) -> Option<String> {
         .find(|p| root.join(p).is_file())
 }
 
-fn verdicts(cx: &Context<'_, '_>, found: Vec<Citation>, path: &str) -> Result<Vec<Checked>> {
+pub(super) fn verdicts(
+    cx: &Context<'_, '_>,
+    found: Vec<Citation>,
+    path: &str,
+) -> Result<Vec<Checked>> {
     let cites: Vec<Cite> = found
         .into_iter()
         .filter(|c| !c.illustrative)
@@ -269,10 +273,13 @@ fn observed(cx: &Context<'_, '_>, reference: &str, path: &str) -> Result<Resolve
     let Ok(o) = parsed else {
         return Ok(ungrounded(reference, "not-a-valid-observation", Some(path)));
     };
-    let all = match &o.cite {
+    let mut all = match &o.cite {
         Some(cite) => verdicts(cx, tokens(cite), path)?,
         None => Vec::new(),
     };
+    if let Some(snapshot) = &o.snapshot {
+        all.extend(verdicts(cx, tokens(snapshot), path)?);
+    }
     let moved = all.iter().filter(|c| c.verdict != Verdict::Fresh).count();
     Ok(
         match (of_observation(o.status, all.len(), moved), o.status, moved) {
@@ -282,10 +289,34 @@ fn observed(cx: &Context<'_, '_>, reference: &str, path: &str) -> Result<Resolve
             (Grounding::Ungrounded, Status::Ok, n) => {
                 ungrounded(reference, &format!("not-fresh:{n}"), Some(path))
             }
+            (Grounding::Ungrounded, Status::NoData | Status::NotFound, _) => {
+                negative(cx, reference, &o, path)?
+            }
             (Grounding::Ungrounded, status, _) => ungrounded(reference, status.name(), Some(path)),
             _ => fresh(reference, "ok", Some(path), &all),
         },
     )
+}
+
+/// A look that found nothing: its status while every pin holds
+/// ([`writfold_core::pin::nothing_found`]), else why not ([`super::pins`]).
+fn negative(
+    cx: &Context<'_, '_>,
+    reference: &str,
+    o: &crate::observe::Observation,
+    path: &str,
+) -> Result<Resolved> {
+    // A catalog that cannot be read leaves the look unreadable: it never
+    // holds, and nothing else is refused.
+    let pins = match crate::stale::kinds::read(&cx.session.ws.root) {
+        Ok(kinds) => super::pins::of(cx, &kinds, o, path)?,
+        Err(_) => vec![writfold_core::pin::Pin::Unreadable],
+    };
+    let word = match writfold_core::pin::nothing_found(o.status, &pins) {
+        true => o.status.name(),
+        false => super::pins::word(&pins),
+    };
+    Ok(ungrounded(reference, word, Some(path)))
 }
 
 /// An edit receipt about this subject: grounded while every edited file

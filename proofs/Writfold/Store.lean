@@ -38,6 +38,15 @@ under the pinned revision, and where a declared store's clone is found.
   rule). `artifact_undeclared`, `artifact_not_found`, `artifact_short_rev`,
   `artifact_no_commit`, `artifact_unanchored`, `artifact_no_blob`: the
   refusals, in the order they are checked.
+- `claim_listed_iff`: a store directory's `subject:` entry lists the
+  directory under a record exactly when it was read from a declared,
+  readable store and names that record by its ID or by an alias no other
+  record has. `claim_exact_wins`: a record's own ID is never hidden by an
+  alias other records share. `claim_ambiguous_iff`, `claim_unknown_iff`:
+  an alias of two or more records, or a name of none, lists nothing.
+  `claim_needs_store`: nothing is listed from a repository that is not a
+  declared, readable store. `Claim` is an input of no grounding function:
+  a backlink is the store's claim, never evidence.
 -/
 
 open Aeneas Aeneas.Std Result
@@ -186,5 +195,104 @@ theorem artifact_no_blob :
     store.artifact true true true .Anchored false ⦃ a => a = .Refuse .NoBlob ⦄ := by
   unfold store.artifact
   simp
+
+/-- Listed exactly from a store, for a record's ID or an alias of exactly
+one record. -/
+theorem claim_listed_iff (a e : Bool) (n : Usize) :
+    store.claim a e n ⦃ c => c = .Listed ↔ a = true ∧ (e = true ∨ n.val = 1) ⦄ := by
+  unfold store.claim
+  split_ifs <;> simp_all
+
+/-- A record's own ID wins over an alias other records share. -/
+theorem claim_exact_wins (n : Usize) :
+    store.claim true true n ⦃ c => c = .Listed ⦄ := by
+  unfold store.claim
+  simp
+
+/-- An alias of two or more records lists nothing. -/
+theorem claim_ambiguous_iff (a e : Bool) (n : Usize) :
+    store.claim a e n ⦃ c => c = .Ambiguous ↔ a = true ∧ e = false ∧ 2 ≤ n.val ⦄ := by
+  unfold store.claim
+  split_ifs <;> simp_all
+  all_goals try scalar_tac
+
+set_option linter.unusedTactic false in
+set_option linter.unreachableTactic false in
+/-- A name of no record lists nothing. (The trailing `scalar_tac` is
+idle on the shipped kernel and closes the arithmetic left when a mutant
+changes a comparison, so the theorem fails only when its statement does.) -/
+theorem claim_unknown_iff (a e : Bool) (n : Usize) :
+    store.claim a e n ⦃ c => c = .Unknown ↔ a = true ∧ e = false ∧ n.val = 0 ⦄ := by
+  unfold store.claim
+  split_ifs <;> simp_all
+  all_goals try scalar_tac
+
+/-- Nothing is listed from a repository that is not a declared, readable
+store. -/
+theorem claim_needs_store (e : Bool) (n : Usize) :
+    store.claim false e n ⦃ c => c = .NotAStore ⦄ := by
+  unfold store.claim
+  simp
+
+/-- The five facts about a snapshot that are not Git commits or bytes. -/
+def snapshotFactsHold (f : store.SnapshotFacts) : Prop :=
+  f.embeds = true ∧ f.declared = true ∧ f.pinned = true ∧ f.local = true ∧ f.intact = true
+
+/-- The reason a snapshot is withheld, the first that applies, or `Record`. -/
+def snapshotExpected (f : store.SnapshotFacts) (c : store.Commit) (a : store.AtPin) :
+    store.Snapshot :=
+  if f.embeds = false then .Withhold .NoCitation
+  else if f.declared = false then .Withhold .NotAStore
+  else if f.pinned = false then .Withhold .NotPinned
+  else if f.local = false then .Withhold .NotLocal
+  else if f.intact = false then .Withhold .Damaged
+  else match c, a with
+    | .Absent, _ | _, .Nothing => .Withhold .NotCommitted
+    | _, .Other => .Withhold .OtherBytes
+    | .Unanchored, .Cited => .Withhold .Unanchored
+    | .Anchored, .Cited => .Record
+
+/-- A snapshot is recorded exactly when the five facts hold, `HEAD` is
+anchored and holds the snapshot's bytes. -/
+theorem snapshot_record_iff (f : store.SnapshotFacts) (c : store.Commit) (a : store.AtPin) :
+    store.snapshot f c a ⦃ s => s = .Record ↔
+      snapshotFactsHold f ∧ c = .Anchored ∧ a = .Cited ⦄ := by
+  rcases f with ⟨e, d, p, l, i⟩
+  unfold store.snapshot snapshotFactsHold
+  cases e <;> cases d <;> cases p <;> cases l <;> cases i <;> cases c <;> cases a <;> simp
+
+/-- The citation a recorded snapshot writes is fresh under the rule that
+judges it on every later read: there is no second validity rule. -/
+theorem snapshot_record_is_fresh (f : store.SnapshotFacts) (c : store.Commit) (a : store.AtPin) :
+    store.snapshot f c a ⦃ s => s = .Record → store.pinned c a = ok .Fresh ⦄ := by
+  rcases f with ⟨e, d, p, l, i⟩
+  unfold store.snapshot store.pinned
+  cases e <;> cases d <;> cases p <;> cases l <;> cases i <;> cases c <;> cases a <;> simp
+
+/-- An uncommitted snapshot is never cited. -/
+theorem snapshot_uncommitted_withheld (f : store.SnapshotFacts) (c : store.Commit) :
+    store.snapshot f c .Nothing ⦃ s => s ≠ .Record ⦄ := by
+  rcases f with ⟨e, d, p, l, i⟩
+  unfold store.snapshot
+  cases e <;> cases d <;> cases p <;> cases l <;> cases i <;> cases c <;> simp
+
+/-- The reason is the first that applies, in the order `NoCitation`,
+`NotAStore`, `NotPinned`, `NotLocal`, `Damaged`, `NotCommitted`,
+`OtherBytes`, `Unanchored`. -/
+theorem snapshot_order (f : store.SnapshotFacts) (c : store.Commit) (a : store.AtPin) :
+    store.snapshot f c a ⦃ s => s = snapshotExpected f c a ⦄ := by
+  rcases f with ⟨e, d, p, l, i⟩
+  unfold store.snapshot snapshotExpected
+  cases e <;> cases d <;> cases p <;> cases l <;> cases i <;> cases c <;> cases a <;> simp
+
+/-- `NotCommitted` exactly when the five facts hold and the store has no
+commit or nothing at the path: the only answer under which the wiring may
+write into the store. -/
+theorem snapshot_stage_iff (f : store.SnapshotFacts) (c : store.Commit) (a : store.AtPin) :
+    store.snapshot f c a ⦃ s => s = .Withhold .NotCommitted ↔
+      snapshotFactsHold f ∧ (c = .Absent ∨ a = .Nothing) ⦄ := by
+  rcases f with ⟨e, d, p, l, i⟩
+  unfold store.snapshot snapshotFactsHold
+  cases e <;> cases d <;> cases p <;> cases l <;> cases i <;> cases c <;> cases a <;> simp
 
 end Writfold.Core.Store

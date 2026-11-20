@@ -31,6 +31,8 @@ pub struct Entry<'a> {
     pub recorded: usize,
     /// Whether the checklist restricts the reasoned outcomes at all.
     pub restricted: bool,
+    /// Binding notes on the row's references ([`super::bound`]).
+    pub bound: Vec<crate::emit::More>,
 }
 
 impl Entry<'_> {
@@ -81,12 +83,41 @@ impl View<'_> {
 /// The present standing of each reference, read once per reference.
 struct Present<'c, 's, 'r> {
     cx: &'c Context<'s, 'r>,
+    /// The run's observations, for what a look was recorded for.
+    observed: Vec<crate::observe::Filed>,
     seen: BTreeMap<String, (Grounding, String)>,
     /// References grounded by a verdict read from a check receipt.
     recorded: std::collections::BTreeSet<String>,
 }
 
 impl Present<'_, '_, '_> {
+    /// The `looked:` line for `gate`.`item`; when the newest look kept a
+    /// snapshot, JSON also carries what that snapshot reads now.
+    fn looked(&self, gate: &str, item: &str) -> Result<Option<crate::emit::More>> {
+        let Some(mut more) = crate::observe::looked(&self.observed, gate, item) else {
+            return Ok(None);
+        };
+        let newest = more.path.clone().unwrap_or_default();
+        let token = (self.observed.iter())
+            .find(|f| f.path == newest)
+            .and_then(|f| f.parsed.as_ref().ok()?.snapshot.clone());
+        if let Some(token) = token {
+            let found = crate::parse::cite::tokens(&token);
+            let (repo, rev, path) = match found.first() {
+                Some(c) => (c.repo.clone(), c.rev.clone(), c.path.clone()),
+                None => (None, None, None),
+            };
+            let checked = ground::verdicts(self.cx, found, &newest)?;
+            let verdict = checked.first().map(|c| c.verdict.name());
+            let value = serde_json::json!({
+                "store": repo, "rev": rev, "path": path,
+                "verdict": verdict, "basis": "pin",
+            });
+            more.extra.push(("snapshot", value));
+        }
+        Ok(Some(more))
+    }
+
     /// The first cited reference that is not grounded as recorded:
     /// `(reference, then, now)`.
     fn moved(&mut self, c: &Cover) -> Result<Option<(String, String, String)>> {
@@ -119,7 +150,7 @@ impl Present<'_, '_, '_> {
     }
 }
 
-fn short(reference: &str) -> String {
+pub(super) fn short(reference: &str) -> String {
     let one: String = reference.split_whitespace().collect::<Vec<_>>().join(" ");
     match one.chars().count() > 60 {
         true => format!("{}…", one.chars().take(59).collect::<String>()),
@@ -130,6 +161,7 @@ fn short(reference: &str) -> String {
 /// One item's standing, and why its row is stale when it is.
 fn entry<'a>(
     d: &Definition,
+    spec: &super::spec::Item,
     content: &str,
     newest: Option<(&'a Filed, &'a Cover)>,
     present: &mut Present<'_, '_, '_>,
@@ -149,12 +181,20 @@ fn entry<'a>(
         (true, Outcome::NoneFound) => super::looks::moved(present.cx, c)?,
         _ => None,
     };
-    let got = item(Some(checklist::Row {
+    let answered = match c.outcome {
+        Outcome::Supported | Outcome::NoneFound => {
+            let all = moved.is_none();
+            super::bound::answered(&present.observed, &d.id, spec, &c.evidence, all)
+        }
+        Outcome::Unsupported | Outcome::NotApplicable => true,
+    };
+    let row = checklist::Row {
         outcome: c.outcome,
         current,
         evidence: c.evidence.len(),
         grounded: moved.is_none(),
-    }));
+    };
+    let got = writfold_core::bind::item_under(Some(row), answered);
     let why = match (got, moved) {
         (Item::Stale, _) if !same_definition => {
             Some("the definition changed since this row".to_owned())
@@ -163,6 +203,10 @@ fn entry<'a>(
         (Item::Stale, Some((reference, then, now))) => Some(format!(
             "cited evidence moved: {} was {then}, now {now}",
             short(&reference)
+        )),
+        (Item::Stale, None) if !answered => Some(format!(
+            "no cited reference answers it: it takes {}",
+            super::evidence::wanted(&d.id, spec)
         )),
         _ => None,
     };
@@ -188,10 +232,10 @@ pub fn judge<'a>(
     };
     let mut present = Present {
         cx: &cx,
+        observed: crate::observe::filed(&session.ws.root, &filings.run_dir),
         seen: BTreeMap::new(),
         recorded: std::collections::BTreeSet::new(),
     };
-    let observed = crate::observe::filed(&session.ws.root, &filings.run_dir);
     let mut out = Vec::new();
     for d in definitions {
         let content = plain.snapshot.scoped(&d.patterns()).digest;
@@ -199,7 +243,7 @@ pub fn judge<'a>(
         for spec in d.checklist.iter().flat_map(|s| &s.items) {
             let rows = rows_of(&filings.covers, &d.id, &spec.id, &subject.name);
             let newest = rows.last().copied();
-            let (item, why) = entry(&d, &content, newest, &mut present)?;
+            let (item, why) = entry(&d, spec, &content, newest, &mut present)?;
             let recorded = match (item, newest) {
                 (Item::Supported, Some((_, c))) => present.recorded(c),
                 _ => 0,
@@ -210,8 +254,9 @@ pub fn judge<'a>(
                 item,
                 row: newest,
                 why,
-                looked: crate::observe::looked(&observed, &d.id, &spec.id),
+                looked: present.looked(&d.id, &spec.id)?,
                 restricted: d.checklist.as_ref().is_some_and(|s| s.restricted()),
+                bound: Vec::new(),
             });
         }
         let cells: Vec<checklist::Entry> = (entries.iter())
@@ -246,5 +291,6 @@ pub fn judge<'a>(
             definition: d,
         });
     }
+    super::bound::annotate(&present.observed, &mut out);
     Ok(out)
 }

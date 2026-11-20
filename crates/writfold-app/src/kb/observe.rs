@@ -8,11 +8,14 @@ use writfold_kb::write::observe::Observe;
 
 /// Value flags only `observe` takes (`--status`, `--note` and `--run` are
 /// shared with other write verbs).
-pub const VALUES: [&str; 5] = ["source", "locator", "revision", "for", "cite"];
+pub const VALUES: [&str; 8] = [
+    "source", "locator", "revision", "for", "cite", "searched", "snapshot", "store",
+];
 
 /// The write flags `observe` accepts.
 pub const FLAGS: &[&str] = &[
-    "source", "locator", "status", "revision", "for", "note", "cite", "run",
+    "source", "locator", "status", "revision", "for", "note", "cite", "searched", "run",
+    "snapshot", "store",
 ];
 
 pub fn verb(common: &Common, positional: &[String]) -> Result<Verb, String> {
@@ -27,7 +30,10 @@ pub fn verb(common: &Common, positional: &[String]) -> Result<Verb, String> {
         item: get(common, "for"),
         note: get(common, "note"),
         cite: get(common, "cite"),
+        searched: get(common, "searched"),
         run: get(common, "run"),
+        snapshot: get(common, "snapshot"),
+        store: get(common, "store"),
     })))
 }
 

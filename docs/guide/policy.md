@@ -1,6 +1,6 @@
 # Your policy
 
-> **Status:** built in v0.6.0-dev.3: `kb init`, the research-policy example, the "no policy configured" line, `kb policy`, a gate's `accept`, a checklist's `not_applicable` and `none_found` with the `none-found` outcome, `unskippable` required steps, policy pins and drift, and the plan's summary word. What held already (required steps, evidence bound to its run, the research guard recipe, approval by a person) is described as built. `waivable` on a delivery mode, a mode gate's `accept` holding for a delivery, `kb init --example delivery`, and `kb policy`'s mode and route rows are built in v0.6.0-dev.4. `plan repin` is built in v0.6.0-dev.6. `kb policy --paths` is planned.
+> **Status:** built in v0.6.0-dev.3: `kb init`, the research-policy example, the "no policy configured" line, `kb policy`, a gate's `accept`, a checklist's `not_applicable` and `none_found` with the `none-found` outcome, `unskippable` required steps, policy pins and drift, and the plan's summary word. What held already (required steps, evidence bound to its run, the research guard recipe, approval by a person) is described as built. `waivable` on a delivery mode, a mode gate's `accept` holding for a delivery, `kb init --example delivery`, and `kb policy`'s mode and route rows are built in v0.6.0-dev.4. `plan repin` is built in v0.6.0-dev.6. `kb policy --paths` is built in v0.6.0-dev.11.
 
 A team writes down what adequate research, implementation and delivery mean for it: gates, checklists, instructions, plan templates, required steps. Writfold loads those files, shows what is owed, judges the evidence by the mechanism the team chose, and refuses a transition its own verbs control when the policy is not met. It holds no opinion of its own about adequacy, and nothing in this page is a rule Writfold adds.
 
@@ -84,6 +84,16 @@ gate research checklist accept=attested items=3 (precedents: supported|none-foun
 
 Read-only; no command or checker runs. Each gate row shows its class, `accept`, its items' choices and its scope, and, when a run is current, a `pin:` line: `same`, or `moved (pinned @…, now @…)`. Guard rules follow, each `(a guard, not enforcement)`, then (built in v0.6.0-dev.4) one `mode` row per delivery mode, as [`deliver modes`](delivery-modes.md#what-a-mode-asks-for-deliver-modes) prints it, and one `route` row per guard route (`mode=<mode> body=… file=…` or `field=…`). The `modes=` count is unchanged. `identity=` is the SHA-256 over the sorted `<gate>\t<definition digest>` lines and the required file's digest: one value two clones can compare. With nothing configured: `answer=unknown reason=no-policy`, exit 2, and the no-policy note. Exit 2 also while the current run's policy is moved.
 
+`writfold kb policy --paths GATE` (built in v0.6.0-dev.11) lists the paths that gate's `scope` covers at the subject's present state, one `path` row each: committed files, dirty and untracked ones in scope, deleted ones gone, then each `repo:` store's as `<store>:<path>`. It reads what `gate status` reads to count `paths=N`. The note says what it is: the declared scope; Writfold does not infer what else the check depends on. A gate with no path scope (a run-record or candidate gate) is refused; a store that cannot be read is named in a note and the answer is partial.
+
+```text
+$ writfold kb policy --paths unit
+path src/ledger.rs
+path src/retry.rs
+# note: gate unit scope=src/**,!src/batch.rs in demo-service: the declared scope; Writfold does not infer what else the check depends on
+# coverage=complete … paths=2 …
+```
+
 ## What already holds
 
 - **A plan cannot leave out a required template.** `plan set --from mine.toml`, whose file names no research step, still gives `research#1/research [current]` first: required start and end templates are spliced around any plan ([run-graph](run-graph.md#required-steps)).
@@ -113,5 +123,5 @@ description = "edit source only once the research gate is met"
 |---|---|
 | A reference exists | checked: the citation, receipt or observation resolves |
 | It is fresh | checked: re-grounded on every read, stale when its bytes moved |
-| It is relevant | the judgement of whoever covered or attested, recorded as theirs |
+| It is relevant | the judgement of whoever covered or attested, recorded as theirs; `gate status` notes a look recorded for another item and a reference shared across items; a checklist may require that an item's evidence be its own (`own_evidence`) or come from named gates (`evidence_from`), checked mechanically, which still says nothing of what the evidence shows |
 | The conclusion follows | not determined |

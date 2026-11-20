@@ -169,3 +169,23 @@ fn a_checklist_definition_takes_items_and_no_command() -> Result<(), String> {
     );
     Ok(())
 }
+
+#[test]
+fn ages_as_names_a_kind_on_repository_command_gates_and_joins_the_digest() -> Result<(), String> {
+    let nowhere = Path::new(NOWHERE);
+    let plain = read(UNIT, "unit", nowhere)?;
+    let aged = read(&format!("{UNIT}ages_as = \"ci\"\n"), "unit", nowhere)?;
+    assert_eq!(aged.ages_as.as_deref(), Some("ci"));
+    assert_eq!(plain.ages_as, None);
+    assert_ne!(plain.digest, aged.digest);
+    let bad = read(
+        &format!("{UNIT}ages_as = \"Not A Kind\"\n"),
+        "unit",
+        nowhere,
+    );
+    assert!(bad.is_err_and(|e| e.contains("must be a kind name")));
+    let candidate = "schema = \"writfold-gate/1\"\nid = \"lang\"\nversion = 1\nclass = \"mechanical\"\nsubject = \"candidate\"\nargv = [\"sh\", \"{candidate}\"]\ntimeout_seconds = 10\nages_as = \"ci\"\n";
+    let refused = read(candidate, "lang", nowhere);
+    assert!(refused.is_err_and(|e| e.contains("not taken by candidate gates")));
+    Ok(())
+}

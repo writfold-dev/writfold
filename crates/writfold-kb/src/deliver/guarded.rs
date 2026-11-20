@@ -84,6 +84,22 @@ pub fn decide(
     })
 }
 
+/// The candidate a call that went through posted (D19): the newest
+/// ready, live, unposted candidate of its route whose payload is the
+/// call's bytes, or, with the bytes unread, the one `ready_one` picks.
+pub fn posting<'f>(found: &'f [Found], call: &Call<'_>, read: &Read) -> Option<&'f Found> {
+    match read {
+        Read::Bytes(b) => found.iter().rev().find(|f| {
+            same(f, Some(b))
+                && f.ready
+                && f.withdrawn.is_none()
+                && f.posted.is_none()
+                && call.mode.is_none_or(|m| f.mode.as_deref() == Some(m))
+        }),
+        Read::Unread(_) => ready_one(found, call),
+    }
+}
+
 fn mode_name(call: &Call<'_>) -> String {
     call.mode.map_or_else(|| "delivery".into(), str::to_owned)
 }

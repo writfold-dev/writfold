@@ -26,7 +26,9 @@ fn look(status: &str, item: Option<&str>) -> Observe {
         item: item.map(str::to_owned),
         note: None,
         cite: None,
+        searched: None,
         run: Some(RUN.into()),
+        ..Observe::default()
     }
 }
 
@@ -235,5 +237,49 @@ fn refusals_no_run_cite_shapes_and_create_new() -> TestResult {
     let second = observe(&w, look("timeout", None), NOW)?;
     assert_ne!(first, second);
     assert_eq!(std::fs::read(w.kb.join(&first))?, bytes);
+    Ok(())
+}
+
+#[test]
+fn a_look_for_another_item_and_shared_evidence_are_noted_never_decided() -> TestResult {
+    let w = set_up()?;
+    let own = observe(&w, look("ok", Some("review.perf")), NOW)?;
+    cover(&w, "perf", Outcome::Supported, &[&own])?;
+    cover(&w, "errors", Outcome::Supported, &[&own])?;
+    let (text, _) = status(&w)?;
+    let lines: Vec<&str> = text.lines().collect();
+    let at = |id: &str| {
+        lines
+            .iter()
+            .position(|l| l.starts_with(&format!("  item: {id} [")))
+    };
+    let errors = at("errors").ok_or("no errors item")?;
+    assert!(lines[errors].ends_with("!other-item !shared"), "{text}");
+    assert_eq!(
+        lines[errors + 1],
+        format!("  bound: recorded for review.perf, not this item @{own}:1 !other-item"),
+        "{text}"
+    );
+    assert_eq!(
+        lines[errors + 2],
+        format!("  bound: also backs 1 other item @{own}:1 !shared"),
+        "{text}"
+    );
+    // The look made for perf answers perf: shared, never other-item.
+    let perf = at("perf").ok_or("no perf item")?;
+    assert!(lines[perf].ends_with("!shared"), "{text}");
+    assert_eq!(
+        lines[perf + 1],
+        format!("  bound: also backs 1 other item @{own}:1 !shared"),
+        "{text}"
+    );
+    assert_eq!(text.matches("!other-item").count(), 2, "{text}");
+    // Report only: both items still stand on the look.
+    assert_eq!(item(&text, "perf"), "supported", "{text}");
+    assert_eq!(item(&text, "errors"), "supported", "{text}");
+    // An item that no longer stands on it carries no note.
+    cover(&w, "errors", Outcome::Unsupported, &[])?;
+    let (text, _) = status(&w)?;
+    assert!(!text.contains("bound:"), "{text}");
     Ok(())
 }

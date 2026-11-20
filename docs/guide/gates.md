@@ -1,6 +1,6 @@
 # Gates
 
-> **Status:** built in v0.3.0-dev.1; instruction gates, gate scripts, the Weft assessed gate, run-record checks and plan-owed gates built in v0.4.0-dev.1; checklist gates and `gate cover` built in v0.5.0-dev.1; observations as evidence built in v0.5.0-dev.3. Nothing owed reads as not met, and the self-staling note, built in v0.6.0-dev.1. Every fault of a definition reported at its line and column, built in v0.6.0-dev.2. A gate's `accept` list, a checklist's `not_applicable` and `none_found`, the `none-found` outcome and binding receipts and statements to their run and subject in the proved kernel, built in v0.6.0-dev.3. Scope globs proved (a `*` now also covers a literal `*` in a path) and `seq` on assessed receipts, built in v0.6.0-dev.4. A second checkout of the KB's repository judged as itself, never as the run's recorded worktree, and `gate lines` agreeing with the plan's word: fixed in v0.6.0-dev.4.
+> **Status:** built in v0.3.0-dev.1; instruction gates, gate scripts, the Weft assessed gate, run-record checks and plan-owed gates built in v0.4.0-dev.1; checklist gates and `gate cover` built in v0.5.0-dev.1; observations as evidence built in v0.5.0-dev.3. Nothing owed reads as not met, and the self-staling note, built in v0.6.0-dev.1. Every fault of a definition reported at its line and column, built in v0.6.0-dev.2. A checklist's `own_evidence` and `evidence_from`, and `bound:` notes on shared and other-item evidence, built in v0.6.0-dev.9. A gate's `accept` list, a checklist's `not_applicable` and `none_found`, the `none-found` outcome and binding receipts and statements to their run and subject in the proved kernel, built in v0.6.0-dev.3. Scope globs proved (a `*` now also covers a literal `*` in a path) and `seq` on assessed receipts, built in v0.6.0-dev.4. A second checkout of the KB's repository judged as itself, never as the run's recorded worktree, and `gate lines` agreeing with the plan's word: fixed in v0.6.0-dev.4.
 
 A gate is one small check with a path scope. `gate run` runs its command and keeps a receipt pinned to the exact bytes checked. `gate status` then says, on every read, whether that evidence still holds. Gates report; they block nothing unless a [guard rule](hooks.md#guard-rules) names them.
 
@@ -19,10 +19,13 @@ timeout_seconds = 600              # required for a command gate; 1 to 86400
 scope = ["src/**", "Cargo.toml", "!src/**/*.md"]   # required; see below
 description = "the unit tests"     # optional; one line
 accept = ["satisfied"]             # optional; which standings meet the gate (below)
+ages_as = "ci"                     # optional; mechanical and observed repository gates: receipts age (below)
 ```
 
 - **`argv`** is executed directly, with stdin closed. A first element containing `/` is resolved against `workdir`; otherwise `PATH` finds it. Placeholders: `{artifacts}` (a fresh local directory for the command's own output files), `{gate}`, `{candidate}` and `{source}` (below). Any other `{name}` is refused.
 - **Unknown keys are refused,** so a misspelt field never silently changes a gate. The files use a small TOML subset: top-level `key = value`, comments, strings, integers and arrays of strings.
+- **`repo:<store>/<glob>` in `scope`** (built in v0.6.0-dev.9) names paths in another repository, declared as a store in `.writfold/stores/` ([stores](stores.md)): `scope = ["src/api/**", "repo:docs/adr/**"]`. Its clone on this machine is found as citations find it and read at `origin/HEAD` (else `HEAD`), committed bytes only, never fetched; its in-scope paths join the scope digest, so a receipt, cover row or statement stops being current when they move there, exactly as for the subject's own paths. `!repo:docs/adr/old/**` excludes. A store that is not declared, not cloned here or a partial clone makes the gate not met (`why: this gate's scope names repo:docs, which cannot be read here …`), and `gate run`, `gate cover`, `gate attest` and `gate waive` refuse to record anything about it. This is how a checklist item like "the docs that describe this API still match" goes stale when either repository moves.
+- **`ages_as`** (built in v0.6.0-dev.9) names a kind in the catalog (`.writfold/sources/KIND.toml`). A receipt then stands only while that kind's lifetime since it was recorded has not passed: for a gate about outside state (CI green, a bot's review) that an unchanged head cannot vouch for. An aged receipt reads `stale` with `why: the receipt aged: this gate ages as ci (.writfold/sources/ci.toml); recorded <time>`, and `gate run` makes it current again. An undeclared kind, or one with no `default_ttl`, never ages; a catalog that cannot be read leaves the gate stale. Candidate gates (delivery checks) refuse the key. The decision is the proved gate kernel with `pin::current_under` ([gate evidence spec](../rfcs/2026-11-18-gate-evidence-binding-and-pins.md)).
 - **Changing** the command, working directory, timeout, class, version or scope makes earlier receipts stale. Changing comments, layout or the description does not.
 
 ### When a definition is wrong
@@ -360,6 +363,7 @@ description = "code review checklist"
 
 - **`items`**: one to 64 strings, each `id: text`, the ID a slug unique in the gate. **`optional`** names items that never hold the gate open. Both are part of the definition digest, so adding, removing or rewording an item makes every row stale.
 - **`not_applicable`** (built in v0.6.0-dev.3): the items `not-applicable` covers. Absent: every item, as before; an empty list: none. **`none_found`**: the items `none-found` covers. Absent: none. Each names declared items only (`ref.undefined` otherwise, with the nearest ID) and joins the digest only when written.
+- **`own_evidence`** (built in v0.6.0-dev.9): the items that need evidence of their own. A `supported` or `none-found` row for one of them must cite, among its references, a look recorded `--for` that item, or a gate `evidence_from` names for it. **`evidence_from`**: `["item: gate …"]`, the gates whose receipts (or `gate:<id>`) answer an item. An item named here and not in `own_evidence` takes only those gates. The gates named are not checked to exist: a gate that does not exist grounds nothing. Both keys name declared items only and join the digest only when written, so adding one makes that checklist's rows stale ("the definition changed"), and the next cover row is checked against it. Items in neither take any grounded reference, as before. The decision is the proved `bind` kernel ([gate evidence spec](../rfcs/2026-11-18-gate-evidence-binding-and-pins.md)).
 - A checklist gate takes `scope` (the content its rows are about) and optionally `instructions` and `description`; it takes no `argv`, `workdir`, `timeout_seconds`, `subject`, `require` or Weft keys.
 
 ```text
@@ -375,6 +379,7 @@ writfold kb gate cover <gate> <item> none-found OBS… --reason TEXT --by WHO
 |---|---|
 | `not-applicable` for an item the policy does not list | `review.record cannot be covered not-applicable (not_applicable = ["perf"] @.writfold/gates/review.toml:7); cover it supported with evidence` (and `, or none-found citing a look` when the item is in `none_found`) |
 | `none-found` for an item not in `none_found` | `review.record cannot be covered none-found (none_found = ["errors"] @…:8)` |
+| `supported` or `none-found` whose references do not answer the item (`own_evidence`, `evidence_from`) | `review.errors takes its own evidence (a look recorded --for review.errors) (own_evidence @.writfold/gates/review.toml:9): none of the cited references does`; `review.record takes evidence from gate:unit (evidence_from @…:10): …` |
 | `none-found` citing anything but a look of this run that found nothing | `none-found needs a look that found nothing: <ref> is a look with status ok; record one with writfold kb observe --status no-data` |
 
 A row whose outcome the policy does not take (hand-written, or merged) keeps its word and does not cover: the item line carries `!not-accepted` and the gate stays `open` with that item first owed. An owed item whose choices the policy restricts lists them once: `item: errors [open] errors are handled (supported or none-found)`. `gate lines` prints a `none-found` item as `errors: none-found (1 look): <reason>`. In JSON an item's `standing` may be `none-found`; item rows gain `"allowed": [...]` when the policy restricts them and `"accepted": false` when a current row's outcome is not allowed.
@@ -437,7 +442,8 @@ Some items are checked by looking somewhere outside Git: a dashboard, a ticket t
 
 ```text
 writfold kb observe --source KIND --locator TEXT --status STATUS [--revision R] [--for GATE.ITEM]
-                    [--note TEXT] [--cite TOKEN] [--run ID]
+                    [--note TEXT] [--cite TOKEN] [--searched TOKEN] [--run ID]
+                    [--snapshot FILE [--store NAME]]
 ```
 
 | `--status` | Meaning | Embeds a citation | Grounds `supported` |
@@ -449,6 +455,14 @@ writfold kb observe --source KIND --locator TEXT --status STATUS [--revision R] 
 
 The file is `runs/<run>/observed/<time>-<hex>.json` (schema `writfold-observation/1`), written create-new and never changed; with no run it is refused (exit 3). An `ok` or `partial` look embeds one ordinary citation token: the one `--cite` passes (its `kind=` must be `--source`), else `⟦cite kind=KIND locator=TEXT [rev=R] seen=<now>⟧`. Its freshness is that token's, so a kind declaration in `.writfold/sources/KIND.toml` decides how long it holds ([kind declarations](kb-layout.md)); a kind without one and without `ttl=` never ages. A built-in kind such as `code`, or a kind declared `checked`, needs `--cite` with the token `cite make` prints.
 
+**A look that found nothing ages too** (built in v0.6.0-dev.9). A `no-data` or `not-found` look reads as having found nothing only while
+- its `--source` kind's lifetime has not passed: the kind's declaration in `.writfold/sources/KIND.toml` (a `default_ttl` ages it that long after it was observed; `immutable` and an undeclared kind never age it); and
+- what it searched has not moved: `--searched TOKEN` (no-data and not-found only; exactly one citation token, from `cite make` for code) records what was searched, judged like any citation on every read. An optional `searched` field in the file; a binary before v0.6.0-dev.9 ignores it.
+
+Otherwise its standing is `aged`, `searched-moved` or `unreadable`: a `none-found` row citing it turns `stale` (`cited evidence moved: … was no-data, now aged`), and a new one is refused. The decision is the proved `pin` kernel ([gate evidence spec](../rfcs/2026-11-18-gate-evidence-binding-and-pins.md)).
+
+**Keeping what you saw** (built in v0.6.0-dev.10). `--snapshot FILE` keeps the look's bytes (the page, the query result, the screenshot) in a pinned [attached store](stores.md#keeping-a-looks-bytes-snapshots) and cites them from the observation, beside `cite`. An `ok` look then grounds only while both its source citation and its snapshot read fresh: a snapshot whose commit no ref reaches stops it grounding, and an expired source citation is not revived by a snapshot (both proved, `store::snapshot` and `of_observation_antitone`). Its `looked:` line is flagged `!snapshot`; in `--json` that line also carries `"snapshot": {"store", "rev", "path", "verdict", "basis": "pin"}`, the newest look's snapshot and what it reads now (since v0.6.0-dev.11).
+
 Cite the file (or its bare name in this run, with or without `.json`) as a `REF` of a `supported` row. It is grounded only while its status is `ok` and its citation is fresh; otherwise its standing is `not-fresh:<n>` or the status, and `gate cover` refuses it. When an `ok` look's citation ages, the item turns `stale` like any moved evidence.
 
 A look that could not tell is still worth keeping. Record it with `--for GATE.ITEM`, cover the item `unsupported` (or `not-applicable`) with a reason that names the file, and every look made for that item shows under it in `gate status`, `gate cover`'s answer and `resume`, newest file last. The row may also cite the file itself (built in v0.5.0-dev.3): `gate cover review perf unsupported runs/<run>/observed/<file>.json --reason TEXT --by WHO`, or `"refs":["<file>"]` in a `--from` row. An `unsupported` or `not-applicable` row still needs its reason and may cite only observations of this run (by path or bare name, any status, refused when not a readable observation); they are recorded with their standing at write time and never change how the item stands:
@@ -459,6 +473,20 @@ A look that could not tell is still worth keeping. Record it with `--for GATE.IT
 ```
 
 `resume` also counts the run's observations: `observations: 4 (timeout, no-data, ok) in runs/<run>/observed/`.
+
+### Which item the evidence was for (built in v0.6.0-dev.9)
+
+Grounded is not the same as relevant: any grounded reference can back any item. `gate status` and `gate cover` add a `bound:` line under an item that stands `supported` or `none-found`, for each cited reference that
+- is a look recorded `--for` another item (`!other-item`); or
+- also backs other items that stand on it (`!shared`, with how many, across every checklist of the run).
+
+```text
+  item: errors [supported] 1 reference by agent @runs/run-…/covers/review.errors-….json:1 !other-item !shared
+  bound: recorded for review.perf, not this item @runs/run-…/observed/20261111T000000Z-….json:1 !other-item
+  bound: also backs 1 other item @runs/run-…/observed/20261111T000000Z-….json:1 !shared
+```
+
+These lines only report: no item's standing changes and nothing is refused. A shared reference is often right (one test run can answer several items), so the count is there for a reader, not a rule. An item that must have its own evidence says so in the definition: `own_evidence` and `evidence_from` (above).
 
 ## What is claimed
 

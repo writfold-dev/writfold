@@ -14,6 +14,7 @@
 | `Stop` | `session_id`, `last_assistant_message`, `stop_hook_active`, `cwd` | the draft's last message; the draft's `nudged` flag after a nudge | nothing, or JSON `additionalContext` from a `stop` [guard rule](#guard-rules), once per session or once per turn | 10 s |
 | `SessionEnd` | `session_id`, `reason` | marks an existing draft as ended; never creates one | nothing | Claude Code's 1.5 s |
 | `PreToolUse` (matcher `^(Bash\|Edit\|Write\|MultiEdit\|NotebookEdit\|mcp__.*)$`) | `tool_name`, `tool_input`, `cwd`, `session_id` | nothing | a deny or ask decision, or nothing | 10 s |
+| `PostToolUse` (matcher `^(Bash\|mcp__.*)$`; since v0.6.0-dev.11) | `tool_name`, `tool_input`, `cwd`, `session_id` | nothing (opens the index only when a delivery guard is configured and the call matches a route or command) | with the delivery guard, after a call that carried a postable candidate's bytes, `additionalContext`: `writfold: if <command> posted it, record the post: writfold kb deliver posted <id> --ref URL --by WHO`; otherwise nothing | 10 s |
 
 The session-start context begins like this (real output, shortened):
 

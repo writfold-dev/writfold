@@ -10,7 +10,7 @@ use crate::defs::{Check, Field, Slot, Spanned, Text, Value};
 use std::path::Path;
 use writfold_core::diag::Report;
 
-const KEYS: [&str; 20] = [
+const KEYS: [&str; 23] = [
     "accept",
     "schema",
     "id",
@@ -31,6 +31,9 @@ const KEYS: [&str; 20] = [
     "optional",
     "not_applicable",
     "none_found",
+    "own_evidence",
+    "evidence_from",
+    "ages_as",
 ];
 const COMMON: [&str; 7] = [
     "accept",
@@ -45,13 +48,26 @@ const COMMON: [&str; 7] = [
 /// The keys a class takes, for suggestions.
 fn keys_for(class: Option<&str>) -> Vec<&'static str> {
     let own: &[&str] = match class {
-        Some("mechanical" | "observed") => {
-            &["argv", "workdir", "timeout_seconds", "scope", "subject"]
-        }
+        Some("mechanical" | "observed") => &[
+            "argv",
+            "workdir",
+            "timeout_seconds",
+            "scope",
+            "subject",
+            "ages_as",
+        ],
         Some("attested") => &["scope", "subject"],
         Some(ASSESSED) => &["weft", "checks", "weft_sha256", "timeout_seconds"],
         Some(RUN_RECORD) => &["require"],
-        Some(CHECKLIST) => &["scope", "items", "optional", "not_applicable", "none_found"],
+        Some(CHECKLIST) => &[
+            "scope",
+            "items",
+            "optional",
+            "not_applicable",
+            "none_found",
+            "own_evidence",
+            "evidence_from",
+        ],
         _ => return KEYS.to_vec(),
     };
     COMMON.iter().chain(own).copied().collect()
@@ -141,7 +157,15 @@ pub fn globs(c: &mut Check<'_>, patterns: &[Spanned<Text>], key: &str) -> bool {
     let mut ok = true;
     for p in patterns {
         let bare = p.str().strip_prefix('!').unwrap_or(p.str());
-        if bare.is_empty() || bare.starts_with('/') || bare.contains('\\') {
+        if !super::repos::well_formed(p.str()) {
+            let why = format!("{key} pattern {:?} must be repo:<store>/<glob>", p.str());
+            let d = c.error("value.form", Some(p.span), why);
+            d.label("not a store and a relative glob");
+            d.help(
+                "name a store declared in .writfold/stores/, such as \"repo:docs/adr/**\"".into(),
+            );
+            ok = false;
+        } else if bare.is_empty() || bare.starts_with('/') || bare.contains('\\') {
             let why = format!("{key} pattern {:?} is not a relative glob", p.str());
             let d = c.error("value.form", Some(p.span), why);
             d.label("not a relative glob");
@@ -242,6 +266,7 @@ pub fn check(
     let assessed = super::assessed::spec::check(&mut c, &class, dir);
     let checklist = super::checklist::spec::check(&mut c, &class);
     let accept = super::def_accept::check(&mut c, &class);
+    let ages_as = def_class::ages_as(&mut c, &class);
     let files = command
         .as_ref()
         .and_then(|(argv, ..)| def_class::files(&mut c, argv, dir));
@@ -267,6 +292,7 @@ pub fn check(
             assessed: assessed?,
             checklist: checklist?,
             accept: accept?,
+            ages_as: ages_as?,
             dir: dir.to_path_buf(),
             digest: String::new(),
         })

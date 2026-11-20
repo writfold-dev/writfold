@@ -205,7 +205,7 @@ covers it.
 
 ### The proof backfill, first round (16 November 2026)
 
-[`proof-backfill-spec.md`](proof-backfill-spec.md) measured the distance to
+[`proof-backfill-spec.md`](../rfcs/2026-11-16-proof-backfill.md) measured the distance to
 "every product decision is proved" and ordered the work by risk; its steps
 0 to 5 are built. Each moved a decision out of `writfold-kb` into a kernel
 function named in `start_from`, with `writfold-kb` calling it and its tests
@@ -296,7 +296,7 @@ requirements' facts `guard::require`.
 
 ### The policy round (16 November 2026)
 
-[`policy-spec.md`](policy-spec.md) section 3; built in v0.6.0-dev.3. Every
+[`policy-spec.md`](../rfcs/2026-11-16-user-defined-policy.md) section 3; built in v0.6.0-dev.3. Every
 decision the round adds or changes was translated and proved, and the
 proofs gate passed, before any verb called it.
 
@@ -367,7 +367,7 @@ in the positive configurations, and the mutant `SkipLocked`
 
 ### The proof backfill, second round (17 November 2026)
 
-[`proof-backfill-spec.md`](proof-backfill-spec.md) steps 6 to 11; built in
+[`proof-backfill-spec.md`](../rfcs/2026-11-16-proof-backfill.md) steps 6 to 11; built in
 v0.6.0-dev.4. As in the first round, each decision `writfold-kb` made is a
 kernel function named in `start_from`, `writfold-kb` calls it, and its tests
 and golden files are unchanged; the three behaviour changes are named
@@ -538,7 +538,7 @@ their SQL stay tested, not proved.
 
 ### The delivery round (17 November 2026)
 
-Built in v0.6.0-dev.4 ([delivery-spec.md](delivery-spec.md) section 3). The
+Built in v0.6.0-dev.4 ([delivery-spec.md](../rfcs/2026-11-17-delivery-modes-second-round.md) section 3). The
 delivery kernel's theorems were replaced in place and passed the proofs gate
 before any verb was rewired. After the round: 569 theorems (540 before), 298
 required claims (280 before), 189 mutants (170 before); every theorem's
@@ -621,7 +621,7 @@ create-new file under the existing write protocol, so `KbWrite.tla` and
 
 ### The current-run round (17 November 2026)
 
-Built in v0.6.0-dev.6 ([v060-dev6-spec.md](v060-dev6-spec.md)). Before it,
+Built in v0.6.0-dev.6 ([v060-dev6-spec.md](../rfcs/2026-11-17-v060-dev6-and-attached-stores.md)). Before it,
 one local pointer per KB clone named the current run, so every session on
 the clone shared it. `writfold_core::pointer` now decides among three
 pointers a seat (one session in one work tree) can read: the session's, the
@@ -674,7 +674,7 @@ theorems above cover, so there is no protocol to model: `KbWrite.tla` and
 
 ### The repin round (17 November 2026)
 
-Built in v0.6.0-dev.6 ([policy-spec.md](policy-spec.md) section 2.5,
+Built in v0.6.0-dev.6 ([policy-spec.md](../rfcs/2026-11-16-user-defined-policy.md) section 2.5,
 `plan repin`). The two decisions the verb adds were translated and proved,
 and their mutants calibrated, before the verb was wired. After this round
 and the current-run round, merged: 594 theorems, 316 required claims (298
@@ -717,7 +717,7 @@ existing write protocol and the plan re-check (`Recheck.lean`, whose
 
 ### The attached-stores round (18 November 2026)
 
-Built in v0.6.0-dev.7 ([v060-dev6-spec.md](v060-dev6-spec.md) part B, S1 and
+Built in v0.6.0-dev.7 ([v060-dev6-spec.md](../rfcs/2026-11-17-v060-dev6-and-attached-stores.md) part B, S1 and
 S2; [stores](../guide/stores.md)). `writfold_core::store` was translated and
 proved, and its mutants calibrated, before `writfold-kb` called it
 (`proofs/Writfold/Store.lean`). After the round: 606 theorems, 328 required
@@ -750,7 +750,7 @@ commit), the full-revision check, rendering and JSON. Nothing is written, so
 
 ### The run-artifacts round (18 November 2026)
 
-Built in v0.6.0-dev.8 ([v060-dev6-spec.md](v060-dev6-spec.md) part B, S4;
+Built in v0.6.0-dev.8 ([v060-dev6-spec.md](../rfcs/2026-11-17-v060-dev6-and-attached-stores.md) part B, S4;
 [stores](../guide/stores.md#pointing-a-run-at-its-material)).
 `store::artifact` was translated, proved and its mutants calibrated before
 `checkpoint --artifact` called it. After the round: 614 theorems, 336
@@ -776,7 +776,7 @@ unchanged.
 ### The evidence-binding round (18 November 2026)
 
 Kernels and proofs only; no verb calls them yet
-([gate-evidence-spec.md](gate-evidence-spec.md), stage 1). After the round:
+([gate-evidence-spec.md](../rfcs/2026-11-18-gate-evidence-binding-and-pins.md), stage 1). After the round:
 659 theorems, 366 required claims (336 before), 222 mutants (214 before).
 
 - `bind` (`Bind.lean`): whether the references a cover row cites answer
@@ -802,11 +802,61 @@ Tested, not proved: everything the wiring stages add (the `evidence` key,
 the `searched` field, store resolution, clock reads, rendering). Nothing is
 written by these kernels, so `KbWrite.tla` and `RunGraph.tla` are unchanged.
 
+### The backlinks round (19 November 2026)
+
+[v060-stores-next-spec.md](../rfcs/2026-11-18-attached-stores-next.md) S3. `store::claim` was
+translated, proved and its mutants calibrated before `context` and `uses`
+called it. After the round: 664 theorems, 371 required claims (366
+before), 226 mutants (222 before).
+
+- `claim(attached, exact, aliased)`: what one `subject:` entry of a store
+  directory's `README.md` amounts to. `claim_listed_iff`: the directory is
+  listed under a record exactly when it was read from a declared, readable
+  store and names the record by its ID or by an alias no other record has.
+  `claim_exact_wins`: a record's own ID is never hidden by an alias others
+  share. `claim_ambiguous_iff`, `claim_unknown_iff`: an alias of two or
+  more records, or a name of none, lists nothing. `claim_needs_store`:
+  nothing is listed from a repository that is not a declared, readable
+  store. `Claim` is an input of no grounding function: a `material` row is
+  the store's claim, never evidence a cover row can cite.
+
+Tested, not proved: the tree read, front matter, the limits, the cache
+table and its key, the two index lookups, row order, text and JSON. Nothing
+is written to the KB, so `KbWrite.tla` and `RunGraph.tla` are unchanged.
+
+### The snapshot round (19 November 2026)
+
+[v060-stores-next-spec.md](../rfcs/2026-11-18-attached-stores-next.md) section 2. `store::snapshot` was
+translated, proved and its mutants calibrated before `observe --snapshot`
+called it. After the round: 670 theorems, 377 required claims (371
+before), 233 mutants (226 before).
+
+- `snapshot(facts, commit, at)`: whether `observe --snapshot` records the
+  look. `snapshot_record_iff`: exactly when the status embeds a citation,
+  the store is declared, pinned and has a work tree here, the bytes match
+  their provenance file, `HEAD` is anchored and holds those bytes.
+  `snapshot_record_is_fresh`: the citation written reads fresh under
+  `pinned`; there is no second validity rule.
+  `snapshot_uncommitted_withheld`: an uncommitted snapshot is never cited.
+  `snapshot_order`: the reason withheld is the first that applies.
+  `snapshot_stage_iff`: `NotCommitted`, the only answer under which files
+  are written into the store, exactly when the five facts hold and nothing
+  is committed at the path.
+- `of_observation_antitone` (`Ground.lean`, no kernel change): adding a
+  citation to an observation, or one ceasing to be fresh, never grounds a
+  look that did not ground; a snapshot cannot revive an expired look.
+
+Tested, not proved: reading the file, `HEAD`, reachability and
+`HEAD:<path>`; the provenance codec and layout; the create-new writes into
+the store; the printed commands. The KB write is the existing single create
+of `observe`, so `KbWrite.tla` and `RunGraph.tla` are unchanged.
+
 ### The tauten claims round (19 November 2026)
 
 For the tauten pilot ([tauten-adoption.md](tauten-adoption.md), "Proof
-claims"): no kernel or existing theorem changed. After the round: 662
-theorems, 374 required claims, 232 mutants.
+claims" and "Total helpers"; merged after the backlinks and snapshot
+rounds). After the round: 685 theorems, 393 required claims (377 before),
+247 mutants (233 before).
 
 - `pin` (`Pin.lean`), `bind` (`Bind.lean`): `holds_from_total`,
   `answered_from_total`: `holds_from` and `answered_from` never fail, from
@@ -821,6 +871,19 @@ theorems, 374 required claims, 232 mutants.
   functions can be tauten claims, which need a killed mutant. Their loop
   specs joined the required claims.
 
+- Total helpers: `idle::newer`, `verdict::recorded::better`,
+  `scope::char_step` and `scope::path_step` read through `get` and guard
+  the arithmetic their preconditions justified, so they never panic; on
+  every input the old preconditions allow they behave as before (the old
+  specs are re-proved over the new source and kept). `slice_get_ok`
+  (`Get.lean`); `newer_total`, `newer_past_end`, `better_total`,
+  `better_past_end`, `char_step_total`, `char_step_outside`,
+  `path_step_total`, `path_step_outside`: they never fail, and outside the
+  old precondition the result is the conservative one (not newer, keep the
+  best so far, no match). Four mutants reintroduce the old failure outside
+  the precondition (`newer-reads-past-end`, `better-past-end-underflows`,
+  `char-step-stretches-out`, `path-step-stretches-out`).
+
 `proofs/Total.lean` (not part of the gate) lists the theorems of the total
 shape; `proofs/tauten_gate.py` runs it after the unchanged gate.
 
@@ -828,7 +891,7 @@ shape; `proofs/tauten_gate.py` runs it after the unchanged gate.
 
 <!-- generated from proofs/mutants.py -->
 
-222 mutants (20 before 16 November 2026, 86 after the backfill's first round, 108 after the policy round, 161 after the backfill's second round, 170 after the bug-fix round, 189 after the delivery round: its nine delivery mutants re-aimed and 19 added, all 28 calibrated; 203 after the current-run and repin rounds; 210 after the attached-stores round; 214 after the run-artifacts round; 222 after the evidence-binding round; 232 after the tauten claims round). Each must break exactly the theorems named.
+247 mutants (20 before 16 November 2026, 86 after the backfill's first round, 108 after the policy round, 161 after the backfill's second round, 170 after the bug-fix round, 189 after the delivery round: its nine delivery mutants re-aimed and 19 added, all 28 calibrated; 203 after the current-run and repin rounds; 210 after the attached-stores round; 214 after the run-artifacts round; 222 after the evidence-binding round; 226 after the backlinks round; 233 after the snapshot round; 247 after the tauten claims round). Each must break exactly the theorems named.
 
 | Mutant | File | What it breaks | Must break |
 |---|---|---|---|
@@ -942,7 +1005,7 @@ shape; `proofs/tauten_gate.py` runs it after the unchanged gate.
 | `same-char-ignores-any` | `scope.rs` | scope: `?` matches any one character | `Scope.same_char_spec` |
 | `globstar-one-star` | `scope.rs` | scope: only `**` is a segment wildcard, not `*` followed by anything | `Scope.globstar_spec` |
 | `globstar-needs-a-segment` | `scope.rs` | scope: `**` matches no segment too, at the end of a path included | `Scope.path_step_spec` |
-| `segments-accept-trailing` | `scope.rs` | scope: a path with segments left over after the pattern does not match | `Scope.path_step_spec` |
+| `segments-accept-trailing` | `scope.rs` | scope: a path with segments left over after the pattern does not match | `Scope.path_step_spec`, `Scope.path_step_outside` |
 | `recheck-current-ignored` | `plan/recheck.rs` | plan writes: a step write stands only while the step is still current | `Recheck.still_stands_spec` |
 | `recheck-ordinal-ignored` | `plan/recheck.rs` | plan writes: a splice stands only while its ordinal is still the next one | `Recheck.still_stands_spec` |
 | `recheck-root-needs-current` | `plan/recheck.rs` | plan writes: a root end template is not under a current step | `Recheck.still_stands_spec` |
@@ -1046,6 +1109,17 @@ shape; `proofs/tauten_gate.py` runs it after the unchanged gate.
 | `artifact-unanchored-admitted` | `store.rs` | store: an unanchored commit is refused, never admitted | `Store.artifact_admit_iff`, `Store.artifact_admit_reads_fresh`, `Store.artifact_unanchored` |
 | `artifact-found-before-declared` | `store.rs` | store: the declaration is checked before the clone | `Store.artifact_undeclared` |
 | `artifact-absent-as-unanchored` | `store.rs` | store: a missing commit says fetch, not push | `Store.artifact_no_commit` |
+| `claim-two-listed` | `store.rs` | store: an alias of two records lists the directory under neither | `Store.claim_listed_iff`, `Store.claim_ambiguous_iff` |
+| `claim-unknown-listed` | `store.rs` | store: a subject that names no record lists nothing | `Store.claim_listed_iff`, `Store.claim_unknown_iff` |
+| `claim-alias-hides-id` | `store.rs` | store: a shared alias never hides a record's own ID | `Store.claim_exact_wins`, `Store.claim_listed_iff`, `Store.claim_ambiguous_iff` |
+| `claim-any-repository` | `store.rs` | store: nothing is listed from a repository that is not a declared store | `Store.claim_needs_store`, `Store.claim_listed_iff`, `Store.claim_ambiguous_iff`, `Store.claim_unknown_iff` |
+| `snapshot-uncommitted-recorded` | `store.rs` | store: an uncommitted snapshot is never cited | `Store.snapshot_record_iff`, `Store.snapshot_record_is_fresh`, `Store.snapshot_uncommitted_withheld`, `Store.snapshot_order`, `Store.snapshot_stage_iff` |
+| `snapshot-unanchored-recorded` | `store.rs` | store: a snapshot no ref reaches is not recorded | `Store.snapshot_record_iff`, `Store.snapshot_record_is_fresh`, `Store.snapshot_order` |
+| `snapshot-other-bytes-recorded` | `store.rs` | store: a snapshot whose committed bytes differ is not recorded | `Store.snapshot_record_iff`, `Store.snapshot_record_is_fresh`, `Store.snapshot_order` |
+| `snapshot-head-store` | `store.rs` | store: a snapshot is kept only in a pinned store | `Store.snapshot_record_iff`, `Store.snapshot_order`, `Store.snapshot_stage_iff` |
+| `snapshot-damaged-recorded` | `store.rs` | store: bytes that no longer match their provenance are not recorded | `Store.snapshot_record_iff`, `Store.snapshot_order`, `Store.snapshot_stage_iff` |
+| `snapshot-any-status` | `store.rs` | store: a status that embeds nothing takes no snapshot | `Store.snapshot_record_iff`, `Store.snapshot_order`, `Store.snapshot_stage_iff` |
+| `snapshot-order-swapped` | `store.rs` | store: a head-judged store is named before a missing clone | `Store.snapshot_order` |
 | `own-accepts-other` | `bind.rs` | bind: a look recorded for another item never answers an item that wants its own | `Bind.answers_spec` |
 | `named-accepts-this` | `bind.rs` | bind: only a named gate answers an item that names its evidence | `Bind.answers_spec` |
 | `answered-ignores-grounded` | `bind.rs` | bind: an ungrounded reference never answers | `Bind.answered_from_loop_spec` |
@@ -1056,6 +1130,10 @@ shape; `proofs/tauten_gate.py` runs it after the unchanged gate.
 | `current-under-ignores-about` | `pin.rs` | pin: pins never make a receipt about other bytes current | `Pin.current_under_spec` |
 | `answered-reads-past-end` | `bind.rs` | bind: the total theorem rejects an out-of-bounds read | `Bind.answered_from_loop_spec`, `Bind.answered_from_total` |
 | `holds-reads-past-end` | `pin.rs` | pin: the total theorem rejects an out-of-bounds read | `Pin.holds_from_loop_spec`, `Pin.holds_from_total` |
+| `newer-reads-past-end` | `idle.rs` | idle: a position past the end has no stamp, so it is never newer | `Idle.newer_total`, `Idle.newer_past_end` |
+| `better-past-end-underflows` | `verdict/recorded.rs` | recorded: an index past the end keeps the best so far | `Recorded.better_total`, `Recorded.better_past_end` |
+| `char-step-stretches-out` | `scope.rs` | scope: a `*` stretch from a cursor outside the pattern or text is no match | `Scope.char_step_total`, `Scope.char_step_outside` |
+| `path-step-stretches-out` | `scope.rs` | scope: a `**` stretch from a cursor outside the pattern or path is no match | `Scope.path_step_total`, `Scope.path_step_outside` |
 | `any-stale-skips-last` | `checklist.rs` | checklist: one stale entry is enough, the last one too | `Checklist.any_stale_loop_spec` |
 | `newest-skips-last` | `idle.rs` | idle: the newest stamp may be the last one | `Idle.newest_loop_spec` |
 | `any-unpinned-skips-last` | `policy.rs` | policy: an unpinned last gate counts | `Policy.any_unpinned_loop_spec` |
@@ -1131,7 +1209,7 @@ run-record digest could not be read; both rules are now stated as theorems
 
 ## Not yet proved (backlog, 17 November 2026)
 
-[`proof-backfill-spec.md`](proof-backfill-spec.md) steps 0 to 11 are built.
+[`proof-backfill-spec.md`](../rfcs/2026-11-16-proof-backfill.md) steps 0 to 11 are built.
 What is left, each tested:
 
 1. What a decision state change needs, given: whether the commit is on its

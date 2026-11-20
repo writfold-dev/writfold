@@ -152,6 +152,12 @@ pub fn row(root: &Path, name: &str) -> Row {
         .push(("rendering", serde_json::json!(mode.rendering)));
     row.extra
         .push(("paragraph_words", serde_json::json!(mode.paragraph_words)));
+    for (key, bound) in [("max_chars", mode.max_chars), ("max_lines", mode.max_lines)] {
+        if let Some(n) = bound {
+            row.text.push_str(&format!(" {key}={n}"));
+            row.extra.push((key, serde_json::json!(n)));
+        }
+    }
     row.extra.push(("waivable", serde_json::json!(waivable)));
     row
 }
