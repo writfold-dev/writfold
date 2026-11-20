@@ -6,7 +6,7 @@ This page is for someone pinned to one release who wants to upgrade on purpose. 
 
 A line marked **fix** changed an answer that was wrong; anything depending on the old answer was depending on the fault.
 
-## v0.6.0-dev.11 (unreleased)
+## v0.6.0-dev.11
 
 - A checklist gate may list `snapshot = ["item"]`. Without the key nothing changes, and the definition's digest is unchanged. **An earlier binary refuses a definition that writes it** (`key.unknown`) ([#3](https://github.com/writfold-dev/writfold/issues/3)).
 - The session-start context may gain a `Named here` part after the brief: records that the working branch's ticket-shaped words, the current run's task or the repository's name resolve to exactly. It is the first part cut under the 9,000-character limit, so nothing else is cut sooner than before ([#26](https://github.com/writfold-dev/writfold/issues/26)).
