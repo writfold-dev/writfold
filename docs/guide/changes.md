@@ -6,6 +6,10 @@ This page is for someone pinned to one release who wants to upgrade on purpose. 
 
 A line marked **fix** changed an answer that was wrong; anything depending on the old answer was depending on the fault.
 
+## v0.6.0-dev.11 (unreleased)
+
+- `resume`'s `artifact` rows no longer repeat their verdict as a flag (`[fresh] … !fresh` is now `[fresh] …`); in JSON the row's `flags` no longer holds the verdict, which stays in `status`. An `unverifiable` row still carries its reason as a flag ([#7](https://github.com/writfold-dev/writfold/issues/7)).
+
 ## v0.6.0-dev.10
 
 - **A KB without `.writfold/stores/` behaves exactly as before.** With a store declared, `context` and `uses` on a record end with `material` rows (the store directories whose `README.md` names the record in `subject:`), the count `material=` and, in JSON, the trailer key `stores` ([stores](stores.md#material-behind-a-record)). They read each store's clone (one or two Git calls per store, plus one tree read per new commit), which they never did before.

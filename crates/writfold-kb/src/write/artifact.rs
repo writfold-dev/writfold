@@ -221,7 +221,7 @@ fn row(cite: &Cite, verdict: &stale::Verdict, checkpoint: String) -> Row {
     let repo = cite.repo.clone().unwrap_or_default();
     let rev = cite.rev.clone().unwrap_or_default();
     let cpath = cite.cpath.clone().unwrap_or_default();
-    let mut flags = vec![verdict.name().to_owned()];
+    let mut flags = Vec::new();
     if let stale::Verdict::Unverifiable(why) = verdict {
         flags.push(why.clone());
     }
