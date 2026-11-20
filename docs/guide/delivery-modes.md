@@ -1,6 +1,6 @@
 # Delivery modes
 
-> **Status:** built in v0.3.0-dev.1; your own modes are built in v0.4.0-dev.1; a delivery as a plan step's gate, `seq` on the manifest and the re-check of cited evidence on every read are built in v0.6.0-dev.1; a mode that declares nothing is never ready, for `deliver status` and the guard as for a plan step, since 16 November 2026; `seq` on check receipts, built in v0.6.0-dev.4. The second round ([spec](../rfcs/2026-11-17-delivery-modes-second-round.md), [design §47](../writfold/kb-v1-design.md#47-delivery-modes-second-round-as-built-17-november-2026-v060-dev4)) is built in v0.6.0-dev.4: a mode's policy (`waivable`, a mode gate's `accept`), withdrawing a candidate, `rendering` and `deliver payload`, guard routes, `deliver match`, post records and `posted:<mode>`, findings drawn against the candidate, `deliver modes`, a mode's `audience`, `--from -`, and `kb init --example delivery`. A `length.bounded` check and a reminder after a guarded call passes are not built.
+> **Status:** built in v0.3.0-dev.1; your own modes are built in v0.4.0-dev.1; a delivery as a plan step's gate, `seq` on the manifest and the re-check of cited evidence on every read are built in v0.6.0-dev.1; a mode that declares nothing is never ready, for `deliver status` and the guard as for a plan step, since 16 November 2026; `seq` on check receipts, built in v0.6.0-dev.4. The second round ([spec](../rfcs/2026-11-17-delivery-modes-second-round.md), [design §47](../writfold/kb-v1-design.md#47-delivery-modes-second-round-as-built-17-november-2026-v060-dev4)) is built in v0.6.0-dev.4: a mode's policy (`waivable`, a mode gate's `accept`), withdrawing a candidate, `rendering` and `deliver payload`, guard routes, `deliver match`, post records and `posted:<mode>`, findings drawn against the candidate, `deliver modes`, a mode's `audience`, `--from -`, and `kb init --example delivery`. The `length.bounded` check is built in v0.6.0-dev.11. A reminder after a guarded call passes is not built.
 
 A mode file, a deny list or `guard.toml` that is wrong is reported fault by fault, each at its line and column ([errors](errors.md)):
 
@@ -92,13 +92,14 @@ delivery 20261112T211045Z-ee94cc [ready] pr-comment audience=external destinatio
 
 `deliver prepare` adds a note when the run already has a live, unbound candidate of the mode: `<older id> is an older pr-comment candidate; this one now decides. Withdraw the older one if it is not meant: writfold kb deliver withdraw <older id> --reason TEXT --by WHO`.
 
-## The three built-in checks
+## The built-in checks
 
 | Check | Class | Passes when |
 |---|---|---|
 | `paragraphs.bounded` | mechanical | no prose paragraph has more words than the bound. Code blocks, tables and headings are skipped; each list item is its own paragraph |
 | `references.denied` | mechanical | no line matches a rule of the audience's deny list. With no deny list for the audience the outcome is `unknown`, never a pass |
 | `claims.cited-fresh` | observed | every citation token in the draft is fresh under `kb stale`. A draft with no tokens passes, and the note says `0 citation tokens` |
+| `length.bounded` | mechanical | (built in v0.6.0-dev.11; only in a mode that lists it, never a default) the whole payload has at most `max_chars` characters and `max_lines` lines. A finding names the line where the bound is crossed: `failed[length.bounded]: 3 lines; this mode takes at most 2 (max_lines)`. Listing it without either bound is refused |
 
 The checks count words, match patterns and run `stale`. They do not judge tone or truth, and they miss a claim made in prose without a citation token.
 
@@ -112,6 +113,8 @@ schema = "writfold-delivery-mode/1"
 mode = "slack-summary"             # must be the file's name, and a built-in mode
 checks = ["paragraphs.bounded", "references.denied", "claims.cited-fresh"]
 paragraph_words = 60               # 1 to 10000
+# max_chars = 4000                 # with "length.bounded" in checks: 1 to 1000000
+# max_lines = 40                   # with "length.bounded" in checks: 1 to 100000
 attest = ["tone.reviewed"]         # obligations met only by deliver attest
 waivable = ["claims.cited-fresh"]  # absent: every waiver is taken; []: none
 audience = "internal"              # absent: --audience decides

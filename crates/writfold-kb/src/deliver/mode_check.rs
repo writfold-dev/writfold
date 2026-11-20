@@ -128,6 +128,8 @@ pub fn mode(root: &Path, mut mode: Mode, path: &str, text: &str) -> Result<Mode,
         "description",
         "checks",
         "paragraph_words",
+        "max_chars",
+        "max_lines",
         "gates",
         "attest",
         "waivable",
@@ -148,6 +150,8 @@ pub fn mode(root: &Path, mut mode: Mode, path: &str, text: &str) -> Result<Mode,
         value: i64::try_from(mode.paragraph_words).unwrap_or(150),
         span: Default::default(),
     });
+    let max_chars = bound(c.int("max_chars", (1, 1_000_000), 4000));
+    let max_lines = bound(c.int("max_lines", (1, 100_000), 40));
     let gate_items = list(&mut c, "gates").unwrap_or_default();
     let gates = gates(&mut c, root);
     let attest = list(&mut c, "attest");
@@ -164,6 +168,13 @@ pub fn mode(root: &Path, mut mode: Mode, path: &str, text: &str) -> Result<Mode,
         .chain(attest.iter().flatten().map(|a| &a.value.text))
         .cloned()
         .collect();
+    let measured = (mode.checks.iter()).any(|x| x == super::config::LENGTH);
+    let unbounded = matches!((&max_chars, &max_lines), (Some(None), Some(None)));
+    if measured && unbounded {
+        let why = "length.bounded needs max_chars or max_lines".to_owned();
+        c.error("key.missing", None, why)
+            .label("no bound");
+    }
     let gate_ids: Vec<&str> = gate_items.iter().map(Spanned::str).collect();
     let waivable = waivable(&mut c, &declared, &gate_ids, text);
     let rendering = closed(&mut c, "rendering", &super::render::RENDERINGS);
@@ -172,6 +183,8 @@ pub fn mode(root: &Path, mut mode: Mode, path: &str, text: &str) -> Result<Mode,
     let built = (|| {
         mode.description = description?;
         mode.paragraph_words = usize::try_from(words?.value).ok()?;
+        mode.max_chars = max_chars?;
+        mode.max_lines = max_lines?;
         mode.gates = gates?;
         mode.attest = attest?.into_iter().map(|a| a.value.text).collect();
         mode.waivable = waivable?;
@@ -180,7 +193,16 @@ pub fn mode(root: &Path, mut mode: Mode, path: &str, text: &str) -> Result<Mode,
         }
         mode.audience = audience?;
         mode.source = path.to_owned();
-        (ok && unique).then_some(mode)
+        (ok && unique && !(measured && unbounded)).then_some(mode)
     })();
     c.finish(built)
+}
+
+/// An optional bound: `Some(None)` when absent, `None` when reported bad.
+fn bound(field: crate::defs::fields::Field<Spanned<i64>>) -> Option<Option<usize>> {
+    match field {
+        crate::defs::fields::Field::Absent => Some(None),
+        crate::defs::fields::Field::Bad => None,
+        crate::defs::fields::Field::Got(v) => usize::try_from(v.value).ok().map(Some),
+    }
 }

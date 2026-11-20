@@ -15,7 +15,7 @@
 //! and a name listed twice are refused with the file and the reason. A
 //! mode cannot name another mode and a gate cannot name a gate, so no
 //! cycle can form. Loading a mode never runs anything.
-use super::config::{BUILTIN, is_name, open, refused};
+use super::config::{DEFAULTS, is_name, open, refused};
 use crate::error::{KbError, Result};
 use crate::gate::def::Definition;
 use std::path::Path;
@@ -29,6 +29,9 @@ pub struct Mode {
     pub name: String,
     pub checks: Vec<String>,
     pub paragraph_words: usize,
+    /// `length.bounded`'s bounds on the whole payload, when written.
+    pub max_chars: Option<usize>,
+    pub max_lines: Option<usize>,
     /// Candidate gates, in the order listed.
     pub gates: Vec<Definition>,
     pub attest: Vec<String>,
@@ -87,10 +90,12 @@ pub(super) fn default(name: &str) -> Mode {
     Mode {
         name: name.to_owned(),
         checks: match builtin {
-            true => BUILTIN.iter().map(|c| (*c).to_owned()).collect(),
+            true => DEFAULTS.iter().map(|c| (*c).to_owned()).collect(),
             false => Vec::new(),
         },
         paragraph_words: if name == "slack-summary" { 60 } else { 150 },
+        max_chars: None,
+        max_lines: None,
         gates: Vec::new(),
         attest: Vec::new(),
         description: None,

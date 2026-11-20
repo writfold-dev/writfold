@@ -15,8 +15,12 @@ pub const AUDIENCES: [&str; 2] = ["internal", "external"];
 pub const PARAGRAPHS: &str = "paragraphs.bounded";
 pub const REFERENCES: &str = "references.denied";
 pub const CLAIMS: &str = "claims.cited-fresh";
+/// `length.bounded` (`max_chars`, `max_lines`): never on by default.
+pub const LENGTH: &str = "length.bounded";
 /// The built-in checks, in the order they run and are shown.
-pub const BUILTIN: [&str; 3] = [PARAGRAPHS, REFERENCES, CLAIMS];
+pub const BUILTIN: [&str; 4] = [PARAGRAPHS, REFERENCES, CLAIMS, LENGTH];
+/// The checks a built-in mode runs when no file names it.
+pub const DEFAULTS: [&str; 3] = [PARAGRAPHS, REFERENCES, CLAIMS];
 
 /// A delivery file's path and text; `None` when it does not exist.
 pub(super) fn open(root: &Path, name: &str) -> Result<Option<(String, String)>> {
