@@ -172,8 +172,7 @@ pub fn mode(root: &Path, mut mode: Mode, path: &str, text: &str) -> Result<Mode,
     let unbounded = matches!((&max_chars, &max_lines), (Some(None), Some(None)));
     if measured && unbounded {
         let why = "length.bounded needs max_chars or max_lines".to_owned();
-        c.error("key.missing", None, why)
-            .label("no bound");
+        c.error("key.missing", None, why).label("no bound");
     }
     let gate_ids: Vec<&str> = gate_items.iter().map(Spanned::str).collect();
     let waivable = waivable(&mut c, &declared, &gate_ids, text);

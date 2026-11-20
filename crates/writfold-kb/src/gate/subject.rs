@@ -257,7 +257,11 @@ impl Snapshot {
     /// `repo:` store's as `<store>:<path>`; and the stores not read.
     pub fn listed(&self, patterns: &[&str]) -> (Vec<String>, Vec<String>) {
         let (local, stores) = super::repos::split(patterns);
-        let mut out: Vec<String> = self.present(&local).into_keys().map(str::to_owned).collect();
+        let mut out: Vec<String> = self
+            .present(&local)
+            .into_keys()
+            .map(str::to_owned)
+            .collect();
         let mut unread = Vec::new();
         for (store, globs) in &stores {
             let globs: Vec<&str> = globs.iter().map(String::as_str).collect();

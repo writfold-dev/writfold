@@ -113,13 +113,13 @@ schema = "writfold-delivery-mode/1"
 mode = "slack-summary"             # must be the file's name, and a built-in mode
 checks = ["paragraphs.bounded", "references.denied", "claims.cited-fresh"]
 paragraph_words = 60               # 1 to 10000
-# max_chars = 4000                 # with "length.bounded" in checks: 1 to 1000000
-# max_lines = 40                   # with "length.bounded" in checks: 1 to 100000
 attest = ["tone.reviewed"]         # obligations met only by deliver attest
 waivable = ["claims.cited-fresh"]  # absent: every waiver is taken; []: none
 audience = "internal"              # absent: --audience decides
 rendering = "verbatim"             # or "strip-citations"
 ```
+
+A mode that lists `length.bounded` in `checks` also sets `max_chars` (1 to 1000000) or `max_lines` (1 to 100000), or both (built in v0.6.0-dev.11).
 
 An attested obligation is met by a statement, and a check can be set aside by a waiver the mode takes. Both are shown as such, never as satisfied:
 

@@ -43,7 +43,9 @@ fn mode(w: &World, name: &str, keys: &str) -> TestResult {
     std::fs::create_dir_all(&dir)?;
     std::fs::write(
         dir.join(format!("{name}.toml")),
-        format!("schema = \"writfold-delivery-mode/1\"\nmode = \"{name}\"\nchecks = [\"length.bounded\"]\n{keys}"),
+        format!(
+            "schema = \"writfold-delivery-mode/1\"\nmode = \"{name}\"\nchecks = [\"length.bounded\"]\n{keys}"
+        ),
     )?;
     Ok(())
 }
@@ -57,7 +59,10 @@ fn a_payload_over_its_bound_fails_naming_the_line() -> TestResult {
     let (text, exit) = checked(&w)?;
     assert_eq!(exit, 2, "{text}");
     assert!(text.contains("length.bounded"), "{text}");
-    assert!(text.contains("3 lines; this mode takes at most 2 (max_lines)"), "{text}");
+    assert!(
+        text.contains("3 lines; this mode takes at most 2 (max_lines)"),
+        "{text}"
+    );
     // Within both bounds it passes.
     let w = world(&[])?;
     mode(&w, "short", "max_lines = 2\nmax_chars = 9\n")?;
@@ -75,7 +80,10 @@ fn length_bounded_without_a_bound_is_refused_and_built_ins_do_not_run_it() -> Te
         Ok((text, _)) => text,
         Err(e) => e.to_string(),
     };
-    assert!(why.contains("length.bounded needs max_chars or max_lines"), "{why}");
+    assert!(
+        why.contains("length.bounded needs max_chars or max_lines"),
+        "{why}"
+    );
     // A built-in mode's defaults do not include it.
     let w = world(&[])?;
     let long = "word ".repeat(20) + "\n";

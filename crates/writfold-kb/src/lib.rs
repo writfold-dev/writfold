@@ -180,7 +180,9 @@ pub enum Verb {
     /// `policy`: the policy as it is now and the current run's pin.
     Policy,
     /// `policy --paths GATE`: the paths in a gate's scope, now.
-    PolicyPaths { gate: String },
+    PolicyPaths {
+        gate: String,
+    },
 }
 
 /// One invocation.

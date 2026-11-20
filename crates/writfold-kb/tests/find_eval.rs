@@ -129,7 +129,9 @@ fn the_control_set_reports_each_class() -> TestResult {
     assert_eq!(lexical["hit1"], lexical["queries"], "{lexical}");
     let notes = body["notes"].as_array().ok_or("notes")?;
     assert!(
-        notes.iter().any(|n| n.as_str().is_some_and(|n| n.starts_with("class naming gap: hit@1 "))),
+        notes.iter().any(|n| n
+            .as_str()
+            .is_some_and(|n| n.starts_with("class naming gap: hit@1 "))),
         "{notes:?}"
     );
     Ok(())

@@ -16,14 +16,22 @@ fn paths(w: &World, gate: &str) -> writfold_kb::error::Result<writfold_kb::emit:
 #[test]
 fn a_gates_scope_is_listed_path_by_path() -> TestResult {
     let w = world(&[])?;
-    let wide = UNIT.replace("scope = [\"src/ledger.rs\"]", "scope = [\"src/**\", \"!src/batch.rs\"]");
+    let wide = UNIT.replace(
+        "scope = [\"src/ledger.rs\"]",
+        "scope = [\"src/**\", \"!src/batch.rs\"]",
+    );
     put(&w.kb.join(".writfold/gates/unit.toml"), &wide)?;
     let out = paths(&w, "unit")?;
     assert_eq!(out.exit, 0, "{}", out.text);
     assert!(out.text.contains("path src/ledger.rs"), "{}", out.text);
-    assert!(!out.text.contains("path src/batch.rs"), "excluded: {}", out.text);
     assert!(
-        out.text.contains("Writfold does not infer what else the check depends on"),
+        !out.text.contains("path src/batch.rs"),
+        "excluded: {}",
+        out.text
+    );
+    assert!(
+        out.text
+            .contains("Writfold does not infer what else the check depends on"),
         "{}",
         out.text
     );

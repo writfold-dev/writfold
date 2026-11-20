@@ -273,9 +273,9 @@ pub fn eval(session: &Session<'_>, file: Option<&Path>) -> Result<Answer> {
         "queries from {shown}; each ran as find does; nothing was written"
     ));
     for (name, n, first, five) in &classes {
-        answer
-            .notes
-            .push(format!("class {name}: hit@1 {first}/{n}, first five {five}/{n}"));
+        answer.notes.push(format!(
+            "class {name}: hit@1 {first}/{n}, first five {five}/{n}"
+        ));
     }
     if !classes.is_empty() {
         let json: Vec<Value> = (classes.iter())

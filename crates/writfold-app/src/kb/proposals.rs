@@ -165,7 +165,9 @@ mod tests {
         assert!(matches!(verb("init")?, Verb::Init(i) if !i.dry_run && i.dir.is_none()));
         assert!(verb("init a b").is_err());
         assert!(matches!(verb("policy")?, Verb::Policy));
-        assert!(matches!(verb("policy --paths unit")?, Verb::PolicyPaths { gate } if gate == "unit"));
+        assert!(
+            matches!(verb("policy --paths unit")?, Verb::PolicyPaths { gate } if gate == "unit")
+        );
         assert!(verb("policy x").is_err());
         Ok(())
     }

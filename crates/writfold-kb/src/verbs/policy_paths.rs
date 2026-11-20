@@ -15,11 +15,16 @@ use writfold_core::scope::in_scope;
 pub fn paths(session: &Session<'_>, cwd: &Path, gate: &str) -> Result<Answer> {
     let git = (session.git.as_ref()).ok_or_else(|| KbError::Refused("gates need Git".into()))?;
     let subject = locate(session.ws, git, None, cwd, None)?.ok_or_else(|| {
-        KbError::Refused("not in a Git work tree: run it in the repository whose gates you mean".into())
+        KbError::Refused(
+            "not in a Git work tree: run it in the repository whose gates you mean".into(),
+        )
     })?;
     let (defs, _) = def::all(&session.ws.root, Some(&subject.top));
-    let d = (defs.into_iter().find(|d| d.id == gate))
-        .ok_or_else(|| KbError::Refused(format!("no gate {gate} is defined (writfold kb policy lists them)")))?;
+    let d = (defs.into_iter().find(|d| d.id == gate)).ok_or_else(|| {
+        KbError::Refused(format!(
+            "no gate {gate} is defined (writfold kb policy lists them)"
+        ))
+    })?;
     if d.run_record() || d.on_candidate() {
         return Err(KbError::Refused(format!(
             "gate {gate} has no path scope: it judges {}",
@@ -34,15 +39,17 @@ pub fn paths(session: &Session<'_>, cwd: &Path, gate: &str) -> Result<Answer> {
     let mut snap = snapshot(git, &subject, &wanted)?;
     snap.attach(git, session.ws, d.scope.iter().map(String::as_str));
     let (listed, unread) = snap.listed(&patterns);
-    let mut answer = Answer::default();
-    answer.rows = (listed.iter())
-        .map(|p| Row {
-            kind: "path",
-            id: p.clone(),
-            section: Some("policy"),
-            ..Row::default()
-        })
-        .collect();
+    let mut answer = Answer {
+        rows: (listed.iter())
+            .map(|p| Row {
+                kind: "path",
+                id: p.clone(),
+                section: Some("policy"),
+                ..Row::default()
+            })
+            .collect(),
+        ..Answer::default()
+    };
     answer.notes.push(format!(
         "gate {gate} scope={} in {}: the declared scope; Writfold does not infer what else the check depends on",
         match d.scope.is_empty() {

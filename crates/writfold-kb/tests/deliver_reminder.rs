@@ -45,12 +45,17 @@ fn a_routed_post_is_followed_by_the_record_command() -> TestResult {
         .as_str()
         .ok_or("no context")?;
     assert!(
-        context.contains(&format!("writfold kb deliver posted {id} --ref URL --by WHO")),
+        context.contains(&format!(
+            "writfold kb deliver posted {id} --ref URL --by WHO"
+        )),
         "{context}"
     );
     // Other bytes, or a command no route names, say nothing.
     let other = file(&w, "other.md", "something else\n")?;
-    let out = after(&w, &format!("gh pr comment 42 --body-file {}", show(&other)));
+    let out = after(
+        &w,
+        &format!("gh pr comment 42 --body-file {}", show(&other)),
+    );
     assert!(out.stdout.is_empty(), "{out:?}");
     assert!(after(&w, "ls -la").stdout.is_empty());
     Ok(())
