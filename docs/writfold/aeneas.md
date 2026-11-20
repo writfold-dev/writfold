@@ -904,11 +904,25 @@ the rows of the first tiers' hits alone are the first rows of all of them
 (`stop_is_prefix`). Four mutants. After the round: 714 theorems, 405
 required claims, 251 mutants.
 
+### The decision flags round (20 November 2026)
+
+`status --set` on a decision used to check its flags and facts inline in
+`write/decide.rs`. Two kernels now decide them: `decision::flags` (which of
+`--by`, `--commit`, `--evidence`, `--run`/`--repo`, `--superseded-by` the
+change needs or refuses; the first misfit is named) and `decision::writes`
+(every fact the change needs holds: readiness, the commit on its target
+ref, grounded evidence, an existing successor). `Decision.lean` proves
+`flags_none_iff`, `flags_actor_first` and `writes_spec`, and composes the
+latter with the transition table: `verified_written_only_grounded`,
+`applied_written_only_on_ref`, `accepted_written_only_ready`,
+`superseded_written_only_to_successor`. Five mutants. After the round: 721
+theorems, 412 required claims, 256 mutants.
+
 ### The claims and their mutants
 
 <!-- generated from proofs/mutants.py -->
 
-251 mutants (20 before 16 November 2026, 86 after the backfill's first round, 108 after the policy round, 161 after the backfill's second round, 170 after the bug-fix round, 189 after the delivery round: its nine delivery mutants re-aimed and 19 added, all 28 calibrated; 203 after the current-run and repin rounds; 210 after the attached-stores round; 214 after the run-artifacts round; 222 after the evidence-binding round; 226 after the backlinks round; 233 after the snapshot round; 247 after the tauten claims round; 251 after the find rows round). Each must break exactly the theorems named.
+256 mutants (20 before 16 November 2026, 86 after the backfill's first round, 108 after the policy round, 161 after the backfill's second round, 170 after the bug-fix round, 189 after the delivery round: its nine delivery mutants re-aimed and 19 added, all 28 calibrated; 203 after the current-run and repin rounds; 210 after the attached-stores round; 214 after the run-artifacts round; 222 after the evidence-binding round; 226 after the backlinks round; 233 after the snapshot round; 247 after the tauten claims round; 251 after the find rows round; 256 after the decision flags round). Each must break exactly the theorems named.
 
 | Mutant | File | What it breaks | Must break |
 |---|---|---|---|
@@ -1086,6 +1100,11 @@ required claims, 251 mutants.
 | `show-records-wrong` | `find.rs` | find: the records shown are the hits' records | `Show.show_loop_spec` |
 | `among-skips-last` | `find.rs` | find: every record shown is compared, the last included | `Show.among_loop_spec` |
 | `exact-stops-on-many` | `find.rs` | find: stop after the exact tier only on exactly one record | `Show.exact_stops_spec` |
+| `flags-actor-inverted` | `decision.rs` | decision: accepting or rejecting needs `--by` | `Decision.flags_none_iff`, `Decision.flags_actor_first` |
+| `flags-commit-not-refused` | `decision.rs` | decision: `--commit` goes only with `applied` | `Decision.flags_none_iff` |
+| `flags-run-or-repo-ignored` | `decision.rs` | decision: `--run` and `--repo` go only with `verified` | `Decision.flags_none_iff` |
+| `writes-ignores-grounded` | `decision.rs` | decision: `verified` needs evidence that grounds | `Decision.writes_spec` |
+| `writes-ignores-successor` | `decision.rs` | decision: `superseded` needs an existing successor | `Decision.writes_spec` |
 | `delivery-accept-ignored` | `delivery.rs` | delivery: an obligation is met under its own policy, not by any met word | `Delivery.unmet_spec` |
 | `ready-from-standing` | `delivery.rs` | delivery: ready is every obligation met under its policy, not a met standing | `Delivery.ready_iff` |
 | `refused-any-unmet` | `delivery.rs` | delivery: refused only when the first unmet obligation stands on a met word | `Delivery.refused_iff` |
@@ -1233,10 +1252,12 @@ run-record digest could not be read; both rules are now stated as theorems
 [`proof-backfill-spec.md`](../rfcs/2026-11-16-proof-backfill.md) steps 0 to 11 are built.
 What is left, each tested:
 
-1. What a decision state change needs, given: whether the commit is on its
-   ref, the evidence grounded and a gate receipt, the successor present
-   (`writfold-kb` `write/decide.rs`), interleaved with the reads that
-   resolve each.
+1. *(20 November 2026: proved. `decision::flags` decides which flags a
+   change takes and `decision::writes` whether the facts the reads
+   established are enough; `write/decide.rs` makes the reads and asks
+   them, [#14](https://github.com/writfold-dev/writfold/issues/14).)* The
+   reads themselves (the commit on its ref, the evidence grounding, the
+   successor present, readiness) stay tested.
 2. The order of statements (attestations, waivers, a delivery's
    statements), still by recorded time; a format change like step 11's.
 3. The splice placement in the fold (G10's first item; relabelled, not

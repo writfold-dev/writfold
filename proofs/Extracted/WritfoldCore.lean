@@ -986,6 +986,891 @@ def decision.step
       ok (some n)
   | decision.State.Other => ok none
 
+/-- [writfold_core::decision::Given]
+    Source: 'crates/writfold-core/src/decision.rs', lines 154:0-160:1
+    Visibility: public -/
+structure decision.Given where
+  actor : Bool
+  commit : Bool
+  evidence : Bool
+  run_or_repo : Bool
+  successor : Bool
+
+/-- [writfold_core::decision::given_flags]:
+    Source: 'crates/writfold-core/src/decision.rs', lines 163:0-177:1
+    Visibility: public -/
+def decision.given_flags
+  (actor : Bool) (commit : Bool) (evidence : Bool) (run_or_repo : Bool)
+  (successor : Bool) :
+  Result decision.Given
+  := do
+  ok { actor, commit, evidence, run_or_repo, successor }
+
+/-- [writfold_core::decision::Flag]
+    Source: 'crates/writfold-core/src/decision.rs', lines 181:0-196:1
+    Visibility: public -/
+@[discriminant isize]
+inductive decision.Flag where
+| NeedsActor : decision.Flag
+| NeedsCommit : decision.Flag
+| CommitNotTaken : decision.Flag
+| NeedsEvidence : decision.Flag
+| EvidenceNotTaken : decision.Flag
+| RunOrRepoNotTaken : decision.Flag
+| SuccessorNotTaken : decision.Flag
+
+/-- [writfold_core::decision::flags]:
+    Source: 'crates/writfold-core/src/decision.rs', lines 201:0-224:1
+    Visibility: public -/
+def decision.flags
+  (needs : decision.Needs) (got : decision.Given) :
+  Result (Option decision.Flag)
+  := do
+  if needs.actor
+  then
+    if got.actor
+    then
+      if needs.commit
+      then
+        if got.commit
+        then
+          if needs.commit
+          then
+            if needs.evidence
+            then
+              if got.evidence
+              then
+                if needs.evidence
+                then
+                  if needs.evidence
+                  then
+                    if needs.successor
+                    then ok none
+                    else
+                      if got.successor
+                      then ok (some decision.Flag.SuccessorNotTaken)
+                      else ok none
+                  else
+                    if got.run_or_repo
+                    then ok (some decision.Flag.RunOrRepoNotTaken)
+                    else
+                      if needs.successor
+                      then ok none
+                      else
+                        if got.successor
+                        then ok (some decision.Flag.SuccessorNotTaken)
+                        else ok none
+                else
+                  if got.evidence
+                  then ok (some decision.Flag.EvidenceNotTaken)
+                  else
+                    if needs.evidence
+                    then
+                      if needs.successor
+                      then ok none
+                      else
+                        if got.successor
+                        then ok (some decision.Flag.SuccessorNotTaken)
+                        else ok none
+                    else
+                      if got.run_or_repo
+                      then ok (some decision.Flag.RunOrRepoNotTaken)
+                      else
+                        if needs.successor
+                        then ok none
+                        else
+                          if got.successor
+                          then ok (some decision.Flag.SuccessorNotTaken)
+                          else ok none
+              else ok (some decision.Flag.NeedsEvidence)
+            else
+              if needs.evidence
+              then
+                if needs.evidence
+                then
+                  if needs.successor
+                  then ok none
+                  else
+                    if got.successor
+                    then ok (some decision.Flag.SuccessorNotTaken)
+                    else ok none
+                else
+                  if got.run_or_repo
+                  then ok (some decision.Flag.RunOrRepoNotTaken)
+                  else
+                    if needs.successor
+                    then ok none
+                    else
+                      if got.successor
+                      then ok (some decision.Flag.SuccessorNotTaken)
+                      else ok none
+              else
+                if got.evidence
+                then ok (some decision.Flag.EvidenceNotTaken)
+                else
+                  if needs.evidence
+                  then
+                    if needs.successor
+                    then ok none
+                    else
+                      if got.successor
+                      then ok (some decision.Flag.SuccessorNotTaken)
+                      else ok none
+                  else
+                    if got.run_or_repo
+                    then ok (some decision.Flag.RunOrRepoNotTaken)
+                    else
+                      if needs.successor
+                      then ok none
+                      else
+                        if got.successor
+                        then ok (some decision.Flag.SuccessorNotTaken)
+                        else ok none
+          else
+            if got.commit
+            then ok (some decision.Flag.CommitNotTaken)
+            else
+              if needs.evidence
+              then
+                if got.evidence
+                then
+                  if needs.evidence
+                  then
+                    if needs.evidence
+                    then
+                      if needs.successor
+                      then ok none
+                      else
+                        if got.successor
+                        then ok (some decision.Flag.SuccessorNotTaken)
+                        else ok none
+                    else
+                      if got.run_or_repo
+                      then ok (some decision.Flag.RunOrRepoNotTaken)
+                      else
+                        if needs.successor
+                        then ok none
+                        else
+                          if got.successor
+                          then ok (some decision.Flag.SuccessorNotTaken)
+                          else ok none
+                  else
+                    if got.evidence
+                    then ok (some decision.Flag.EvidenceNotTaken)
+                    else
+                      if needs.evidence
+                      then
+                        if needs.successor
+                        then ok none
+                        else
+                          if got.successor
+                          then ok (some decision.Flag.SuccessorNotTaken)
+                          else ok none
+                      else
+                        if got.run_or_repo
+                        then ok (some decision.Flag.RunOrRepoNotTaken)
+                        else
+                          if needs.successor
+                          then ok none
+                          else
+                            if got.successor
+                            then ok (some decision.Flag.SuccessorNotTaken)
+                            else ok none
+                else ok (some decision.Flag.NeedsEvidence)
+              else
+                if needs.evidence
+                then
+                  if needs.evidence
+                  then
+                    if needs.successor
+                    then ok none
+                    else
+                      if got.successor
+                      then ok (some decision.Flag.SuccessorNotTaken)
+                      else ok none
+                  else
+                    if got.run_or_repo
+                    then ok (some decision.Flag.RunOrRepoNotTaken)
+                    else
+                      if needs.successor
+                      then ok none
+                      else
+                        if got.successor
+                        then ok (some decision.Flag.SuccessorNotTaken)
+                        else ok none
+                else
+                  if got.evidence
+                  then ok (some decision.Flag.EvidenceNotTaken)
+                  else
+                    if needs.evidence
+                    then
+                      if needs.successor
+                      then ok none
+                      else
+                        if got.successor
+                        then ok (some decision.Flag.SuccessorNotTaken)
+                        else ok none
+                    else
+                      if got.run_or_repo
+                      then ok (some decision.Flag.RunOrRepoNotTaken)
+                      else
+                        if needs.successor
+                        then ok none
+                        else
+                          if got.successor
+                          then ok (some decision.Flag.SuccessorNotTaken)
+                          else ok none
+        else ok (some decision.Flag.NeedsCommit)
+      else
+        if needs.commit
+        then
+          if needs.evidence
+          then
+            if got.evidence
+            then
+              if needs.evidence
+              then
+                if needs.evidence
+                then
+                  if needs.successor
+                  then ok none
+                  else
+                    if got.successor
+                    then ok (some decision.Flag.SuccessorNotTaken)
+                    else ok none
+                else
+                  if got.run_or_repo
+                  then ok (some decision.Flag.RunOrRepoNotTaken)
+                  else
+                    if needs.successor
+                    then ok none
+                    else
+                      if got.successor
+                      then ok (some decision.Flag.SuccessorNotTaken)
+                      else ok none
+              else
+                if got.evidence
+                then ok (some decision.Flag.EvidenceNotTaken)
+                else
+                  if needs.evidence
+                  then
+                    if needs.successor
+                    then ok none
+                    else
+                      if got.successor
+                      then ok (some decision.Flag.SuccessorNotTaken)
+                      else ok none
+                  else
+                    if got.run_or_repo
+                    then ok (some decision.Flag.RunOrRepoNotTaken)
+                    else
+                      if needs.successor
+                      then ok none
+                      else
+                        if got.successor
+                        then ok (some decision.Flag.SuccessorNotTaken)
+                        else ok none
+            else ok (some decision.Flag.NeedsEvidence)
+          else
+            if needs.evidence
+            then
+              if needs.evidence
+              then
+                if needs.successor
+                then ok none
+                else
+                  if got.successor
+                  then ok (some decision.Flag.SuccessorNotTaken)
+                  else ok none
+              else
+                if got.run_or_repo
+                then ok (some decision.Flag.RunOrRepoNotTaken)
+                else
+                  if needs.successor
+                  then ok none
+                  else
+                    if got.successor
+                    then ok (some decision.Flag.SuccessorNotTaken)
+                    else ok none
+            else
+              if got.evidence
+              then ok (some decision.Flag.EvidenceNotTaken)
+              else
+                if needs.evidence
+                then
+                  if needs.successor
+                  then ok none
+                  else
+                    if got.successor
+                    then ok (some decision.Flag.SuccessorNotTaken)
+                    else ok none
+                else
+                  if got.run_or_repo
+                  then ok (some decision.Flag.RunOrRepoNotTaken)
+                  else
+                    if needs.successor
+                    then ok none
+                    else
+                      if got.successor
+                      then ok (some decision.Flag.SuccessorNotTaken)
+                      else ok none
+        else
+          if got.commit
+          then ok (some decision.Flag.CommitNotTaken)
+          else
+            if needs.evidence
+            then
+              if got.evidence
+              then
+                if needs.evidence
+                then
+                  if needs.evidence
+                  then
+                    if needs.successor
+                    then ok none
+                    else
+                      if got.successor
+                      then ok (some decision.Flag.SuccessorNotTaken)
+                      else ok none
+                  else
+                    if got.run_or_repo
+                    then ok (some decision.Flag.RunOrRepoNotTaken)
+                    else
+                      if needs.successor
+                      then ok none
+                      else
+                        if got.successor
+                        then ok (some decision.Flag.SuccessorNotTaken)
+                        else ok none
+                else
+                  if got.evidence
+                  then ok (some decision.Flag.EvidenceNotTaken)
+                  else
+                    if needs.evidence
+                    then
+                      if needs.successor
+                      then ok none
+                      else
+                        if got.successor
+                        then ok (some decision.Flag.SuccessorNotTaken)
+                        else ok none
+                    else
+                      if got.run_or_repo
+                      then ok (some decision.Flag.RunOrRepoNotTaken)
+                      else
+                        if needs.successor
+                        then ok none
+                        else
+                          if got.successor
+                          then ok (some decision.Flag.SuccessorNotTaken)
+                          else ok none
+              else ok (some decision.Flag.NeedsEvidence)
+            else
+              if needs.evidence
+              then
+                if needs.evidence
+                then
+                  if needs.successor
+                  then ok none
+                  else
+                    if got.successor
+                    then ok (some decision.Flag.SuccessorNotTaken)
+                    else ok none
+                else
+                  if got.run_or_repo
+                  then ok (some decision.Flag.RunOrRepoNotTaken)
+                  else
+                    if needs.successor
+                    then ok none
+                    else
+                      if got.successor
+                      then ok (some decision.Flag.SuccessorNotTaken)
+                      else ok none
+              else
+                if got.evidence
+                then ok (some decision.Flag.EvidenceNotTaken)
+                else
+                  if needs.evidence
+                  then
+                    if needs.successor
+                    then ok none
+                    else
+                      if got.successor
+                      then ok (some decision.Flag.SuccessorNotTaken)
+                      else ok none
+                  else
+                    if got.run_or_repo
+                    then ok (some decision.Flag.RunOrRepoNotTaken)
+                    else
+                      if needs.successor
+                      then ok none
+                      else
+                        if got.successor
+                        then ok (some decision.Flag.SuccessorNotTaken)
+                        else ok none
+    else ok (some decision.Flag.NeedsActor)
+  else
+    if needs.commit
+    then
+      if got.commit
+      then
+        if needs.commit
+        then
+          if needs.evidence
+          then
+            if got.evidence
+            then
+              if needs.evidence
+              then
+                if needs.evidence
+                then
+                  if needs.successor
+                  then ok none
+                  else
+                    if got.successor
+                    then ok (some decision.Flag.SuccessorNotTaken)
+                    else ok none
+                else
+                  if got.run_or_repo
+                  then ok (some decision.Flag.RunOrRepoNotTaken)
+                  else
+                    if needs.successor
+                    then ok none
+                    else
+                      if got.successor
+                      then ok (some decision.Flag.SuccessorNotTaken)
+                      else ok none
+              else
+                if got.evidence
+                then ok (some decision.Flag.EvidenceNotTaken)
+                else
+                  if needs.evidence
+                  then
+                    if needs.successor
+                    then ok none
+                    else
+                      if got.successor
+                      then ok (some decision.Flag.SuccessorNotTaken)
+                      else ok none
+                  else
+                    if got.run_or_repo
+                    then ok (some decision.Flag.RunOrRepoNotTaken)
+                    else
+                      if needs.successor
+                      then ok none
+                      else
+                        if got.successor
+                        then ok (some decision.Flag.SuccessorNotTaken)
+                        else ok none
+            else ok (some decision.Flag.NeedsEvidence)
+          else
+            if needs.evidence
+            then
+              if needs.evidence
+              then
+                if needs.successor
+                then ok none
+                else
+                  if got.successor
+                  then ok (some decision.Flag.SuccessorNotTaken)
+                  else ok none
+              else
+                if got.run_or_repo
+                then ok (some decision.Flag.RunOrRepoNotTaken)
+                else
+                  if needs.successor
+                  then ok none
+                  else
+                    if got.successor
+                    then ok (some decision.Flag.SuccessorNotTaken)
+                    else ok none
+            else
+              if got.evidence
+              then ok (some decision.Flag.EvidenceNotTaken)
+              else
+                if needs.evidence
+                then
+                  if needs.successor
+                  then ok none
+                  else
+                    if got.successor
+                    then ok (some decision.Flag.SuccessorNotTaken)
+                    else ok none
+                else
+                  if got.run_or_repo
+                  then ok (some decision.Flag.RunOrRepoNotTaken)
+                  else
+                    if needs.successor
+                    then ok none
+                    else
+                      if got.successor
+                      then ok (some decision.Flag.SuccessorNotTaken)
+                      else ok none
+        else
+          if got.commit
+          then ok (some decision.Flag.CommitNotTaken)
+          else
+            if needs.evidence
+            then
+              if got.evidence
+              then
+                if needs.evidence
+                then
+                  if needs.evidence
+                  then
+                    if needs.successor
+                    then ok none
+                    else
+                      if got.successor
+                      then ok (some decision.Flag.SuccessorNotTaken)
+                      else ok none
+                  else
+                    if got.run_or_repo
+                    then ok (some decision.Flag.RunOrRepoNotTaken)
+                    else
+                      if needs.successor
+                      then ok none
+                      else
+                        if got.successor
+                        then ok (some decision.Flag.SuccessorNotTaken)
+                        else ok none
+                else
+                  if got.evidence
+                  then ok (some decision.Flag.EvidenceNotTaken)
+                  else
+                    if needs.evidence
+                    then
+                      if needs.successor
+                      then ok none
+                      else
+                        if got.successor
+                        then ok (some decision.Flag.SuccessorNotTaken)
+                        else ok none
+                    else
+                      if got.run_or_repo
+                      then ok (some decision.Flag.RunOrRepoNotTaken)
+                      else
+                        if needs.successor
+                        then ok none
+                        else
+                          if got.successor
+                          then ok (some decision.Flag.SuccessorNotTaken)
+                          else ok none
+              else ok (some decision.Flag.NeedsEvidence)
+            else
+              if needs.evidence
+              then
+                if needs.evidence
+                then
+                  if needs.successor
+                  then ok none
+                  else
+                    if got.successor
+                    then ok (some decision.Flag.SuccessorNotTaken)
+                    else ok none
+                else
+                  if got.run_or_repo
+                  then ok (some decision.Flag.RunOrRepoNotTaken)
+                  else
+                    if needs.successor
+                    then ok none
+                    else
+                      if got.successor
+                      then ok (some decision.Flag.SuccessorNotTaken)
+                      else ok none
+              else
+                if got.evidence
+                then ok (some decision.Flag.EvidenceNotTaken)
+                else
+                  if needs.evidence
+                  then
+                    if needs.successor
+                    then ok none
+                    else
+                      if got.successor
+                      then ok (some decision.Flag.SuccessorNotTaken)
+                      else ok none
+                  else
+                    if got.run_or_repo
+                    then ok (some decision.Flag.RunOrRepoNotTaken)
+                    else
+                      if needs.successor
+                      then ok none
+                      else
+                        if got.successor
+                        then ok (some decision.Flag.SuccessorNotTaken)
+                        else ok none
+      else ok (some decision.Flag.NeedsCommit)
+    else
+      if needs.commit
+      then
+        if needs.evidence
+        then
+          if got.evidence
+          then
+            if needs.evidence
+            then
+              if needs.evidence
+              then
+                if needs.successor
+                then ok none
+                else
+                  if got.successor
+                  then ok (some decision.Flag.SuccessorNotTaken)
+                  else ok none
+              else
+                if got.run_or_repo
+                then ok (some decision.Flag.RunOrRepoNotTaken)
+                else
+                  if needs.successor
+                  then ok none
+                  else
+                    if got.successor
+                    then ok (some decision.Flag.SuccessorNotTaken)
+                    else ok none
+            else
+              if got.evidence
+              then ok (some decision.Flag.EvidenceNotTaken)
+              else
+                if needs.evidence
+                then
+                  if needs.successor
+                  then ok none
+                  else
+                    if got.successor
+                    then ok (some decision.Flag.SuccessorNotTaken)
+                    else ok none
+                else
+                  if got.run_or_repo
+                  then ok (some decision.Flag.RunOrRepoNotTaken)
+                  else
+                    if needs.successor
+                    then ok none
+                    else
+                      if got.successor
+                      then ok (some decision.Flag.SuccessorNotTaken)
+                      else ok none
+          else ok (some decision.Flag.NeedsEvidence)
+        else
+          if needs.evidence
+          then
+            if needs.evidence
+            then
+              if needs.successor
+              then ok none
+              else
+                if got.successor
+                then ok (some decision.Flag.SuccessorNotTaken)
+                else ok none
+            else
+              if got.run_or_repo
+              then ok (some decision.Flag.RunOrRepoNotTaken)
+              else
+                if needs.successor
+                then ok none
+                else
+                  if got.successor
+                  then ok (some decision.Flag.SuccessorNotTaken)
+                  else ok none
+          else
+            if got.evidence
+            then ok (some decision.Flag.EvidenceNotTaken)
+            else
+              if needs.evidence
+              then
+                if needs.successor
+                then ok none
+                else
+                  if got.successor
+                  then ok (some decision.Flag.SuccessorNotTaken)
+                  else ok none
+              else
+                if got.run_or_repo
+                then ok (some decision.Flag.RunOrRepoNotTaken)
+                else
+                  if needs.successor
+                  then ok none
+                  else
+                    if got.successor
+                    then ok (some decision.Flag.SuccessorNotTaken)
+                    else ok none
+      else
+        if got.commit
+        then ok (some decision.Flag.CommitNotTaken)
+        else
+          if needs.evidence
+          then
+            if got.evidence
+            then
+              if needs.evidence
+              then
+                if needs.evidence
+                then
+                  if needs.successor
+                  then ok none
+                  else
+                    if got.successor
+                    then ok (some decision.Flag.SuccessorNotTaken)
+                    else ok none
+                else
+                  if got.run_or_repo
+                  then ok (some decision.Flag.RunOrRepoNotTaken)
+                  else
+                    if needs.successor
+                    then ok none
+                    else
+                      if got.successor
+                      then ok (some decision.Flag.SuccessorNotTaken)
+                      else ok none
+              else
+                if got.evidence
+                then ok (some decision.Flag.EvidenceNotTaken)
+                else
+                  if needs.evidence
+                  then
+                    if needs.successor
+                    then ok none
+                    else
+                      if got.successor
+                      then ok (some decision.Flag.SuccessorNotTaken)
+                      else ok none
+                  else
+                    if got.run_or_repo
+                    then ok (some decision.Flag.RunOrRepoNotTaken)
+                    else
+                      if needs.successor
+                      then ok none
+                      else
+                        if got.successor
+                        then ok (some decision.Flag.SuccessorNotTaken)
+                        else ok none
+            else ok (some decision.Flag.NeedsEvidence)
+          else
+            if needs.evidence
+            then
+              if needs.evidence
+              then
+                if needs.successor
+                then ok none
+                else
+                  if got.successor
+                  then ok (some decision.Flag.SuccessorNotTaken)
+                  else ok none
+              else
+                if got.run_or_repo
+                then ok (some decision.Flag.RunOrRepoNotTaken)
+                else
+                  if needs.successor
+                  then ok none
+                  else
+                    if got.successor
+                    then ok (some decision.Flag.SuccessorNotTaken)
+                    else ok none
+            else
+              if got.evidence
+              then ok (some decision.Flag.EvidenceNotTaken)
+              else
+                if needs.evidence
+                then
+                  if needs.successor
+                  then ok none
+                  else
+                    if got.successor
+                    then ok (some decision.Flag.SuccessorNotTaken)
+                    else ok none
+                else
+                  if got.run_or_repo
+                  then ok (some decision.Flag.RunOrRepoNotTaken)
+                  else
+                    if needs.successor
+                    then ok none
+                    else
+                      if got.successor
+                      then ok (some decision.Flag.SuccessorNotTaken)
+                      else ok none
+
+/-- [writfold_core::decision::Facts]
+    Source: 'crates/writfold-core/src/decision.rs', lines 229:0-234:1
+    Visibility: public -/
+structure decision.Facts where
+  ready : Bool
+  on_ref : Bool
+  grounded : Bool
+  successor : Bool
+
+/-- [writfold_core::decision::facts]:
+    Source: 'crates/writfold-core/src/decision.rs', lines 237:0-244:1
+    Visibility: public -/
+def decision.facts
+  (ready : Bool) (on_ref : Bool) (grounded : Bool) (successor : Bool) :
+  Result decision.Facts
+  := do
+  ok { ready, on_ref, grounded, successor }
+
+/-- [writfold_core::decision::writes]:
+    Source: 'crates/writfold-core/src/decision.rs', lines 247:0-252:1
+    Visibility: public -/
+def decision.writes
+  (needs : decision.Needs) (facts : decision.Facts) : Result Bool := do
+  if needs.ready
+  then
+    if facts.ready
+    then
+      if needs.commit
+      then
+        if facts.on_ref
+        then
+          if needs.evidence
+          then
+            if facts.grounded
+            then if needs.successor
+                 then ok facts.successor
+                 else ok true
+            else ok false
+          else if needs.successor
+               then ok facts.successor
+               else ok true
+        else ok false
+      else
+        if needs.evidence
+        then
+          if facts.grounded
+          then if needs.successor
+               then ok facts.successor
+               else ok true
+          else ok false
+        else if needs.successor
+             then ok facts.successor
+             else ok true
+    else ok false
+  else
+    if needs.commit
+    then
+      if facts.on_ref
+      then
+        if needs.evidence
+        then
+          if facts.grounded
+          then if needs.successor
+               then ok facts.successor
+               else ok true
+          else ok false
+        else if needs.successor
+             then ok facts.successor
+             else ok true
+      else ok false
+    else
+      if needs.evidence
+      then
+        if facts.grounded
+        then if needs.successor
+             then ok facts.successor
+             else ok true
+        else ok false
+      else if needs.successor
+           then ok facts.successor
+           else ok true
+
 /-- [writfold_core::policy::Accept]
     Source: 'crates/writfold-core/src/policy.rs', lines 18:0-22:1
     Visibility: public -/

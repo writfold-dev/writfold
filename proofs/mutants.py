@@ -911,6 +911,28 @@ MUTANTS = (
            "    id_shaped && exact_hits == 1",
            "    id_shaped && exact_hits >= 1",
            ("Writfold.Core.Show.exact_stops_spec",)),
+    # decision status --set: the flags fit the change (20 November 2026)
+    Mutant("flags-actor-inverted", "decision.rs",
+           "    if needs.actor && !got.actor {",
+           "    if needs.actor && got.actor {",
+           ("Writfold.Core.Decision.flags_none_iff", "Writfold.Core.Decision.flags_actor_first")),
+    Mutant("flags-commit-not-refused", "decision.rs",
+           "    if !needs.commit && got.commit {",
+           "    if needs.commit && got.commit {",
+           ("Writfold.Core.Decision.flags_none_iff",)),
+    Mutant("flags-run-or-repo-ignored", "decision.rs",
+           "    if !needs.evidence && got.run_or_repo {",
+           "    if needs.evidence && got.run_or_repo {",
+           ("Writfold.Core.Decision.flags_none_iff",)),
+    # decision status --set: written only when every needed fact holds
+    Mutant("writes-ignores-grounded", "decision.rs",
+           "        && (!needs.evidence || facts.grounded)",
+           "        && (!needs.evidence || facts.on_ref)",
+           ("Writfold.Core.Decision.writes_spec",)),
+    Mutant("writes-ignores-successor", "decision.rs",
+           "        && (!needs.successor || facts.successor)",
+           "        && (needs.successor || facts.successor)",
+           ("Writfold.Core.Decision.writes_spec",)),
     # ---- delivery modes, second round (17 November 2026) ----
     # delivery: an obligation is met under its own policy, not by any met word
     Mutant("delivery-accept-ignored", "delivery.rs",

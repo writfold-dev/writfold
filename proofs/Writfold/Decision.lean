@@ -13,6 +13,13 @@ and `writfold_core::investigation`.
   `accepted_needs_ready_and_actor`, `rejected_needs_actor`,
   `superseded_needs_successor` (and never from `superseded`): nothing
   skips a stage, and each change needs what the table says.
+- `flags_none_iff`: `status --set` takes its flags exactly when each one
+  the change needs is given (`--by`, `--commit`, `--evidence`) and none it
+  does not take (`--commit`, `--evidence`, `--run`/`--repo`,
+  `--superseded-by`). `writes_spec`: the change is written exactly when
+  every fact it needs holds (`Writes`). Composed with the table:
+  `verified_written_only_grounded`, `applied_written_only_on_ref`,
+  `accepted_written_only_ready`, `superseded_written_only_to_successor`.
 - `conclude_spec`: what a conclusion lacks: either section without text,
   and the number of hypotheses still open. `none_spec`,
   `conclude_none_iff`: an investigation may be concluded exactly when both
@@ -94,6 +101,64 @@ theorem superseded_needs_successor (f : decision.State) :
   apply WP.spec_mono (step_spec f .Superseded)
   intro r hr; subst hr
   cases f <;> simp [stepOf, N]
+
+/-! ## Flags and facts (`status --set`) -/
+
+theorem flags_none_iff (n : decision.Needs) (g : decision.Given) :
+    decision.flags n g ⦃ r => r = none ↔
+      (n.actor = true → g.actor = true) ∧ g.commit = n.commit ∧ g.evidence = n.evidence ∧
+      (g.run_or_repo = true → n.evidence = true) ∧ (g.successor = true → n.successor = true) ⦄ := by
+  unfold decision.flags
+  rcases n with ⟨r, a, c, e, s⟩
+  rcases g with ⟨ga, gc, ge, gr, gs⟩
+  cases a <;> cases ga <;> cases c <;> cases gc <;> cases e <;> cases ge <;> cases gr <;>
+    cases s <;> cases gs <;> simp
+
+/-- A missing actor is named first. -/
+theorem flags_actor_first (n : decision.Needs) (g : decision.Given)
+    (ha : n.actor = true) (hg : g.actor = false) :
+    decision.flags n g ⦃ r => r = some .NeedsActor ⦄ := by
+  unfold decision.flags
+  simp [ha, hg]
+
+/-- The facts a change needs, all holding. -/
+def Writes (n : decision.Needs) (f : decision.Facts) : Prop :=
+  (n.ready = true → f.ready = true) ∧ (n.commit = true → f.on_ref = true) ∧
+  (n.evidence = true → f.grounded = true) ∧ (n.successor = true → f.successor = true)
+
+theorem writes_spec (n : decision.Needs) (f : decision.Facts) :
+    decision.writes n f ⦃ b => b = true ↔ Writes n f ⦄ := by
+  unfold decision.writes Writes
+  rcases n with ⟨r, a, c, e, s⟩
+  rcases f with ⟨fr, fo, fg, fs⟩
+  cases r <;> cases fr <;> cases c <;> cases fo <;> cases e <;> cases fg <;> cases s <;>
+    cases fs <;> simp
+
+/-- `verified` is written only from `applied`, on evidence that grounds. -/
+theorem verified_written_only_grounded (fr : decision.State) (n : decision.Needs)
+    (f : decision.Facts) (hs : stepOf fr .Verified = some n) (hw : Writes n f) :
+    fr = .Applied ∧ f.grounded = true := by
+  cases fr <;> simp [stepOf, N] at hs <;> subst hs <;> exact ⟨rfl, hw.2.2.1 rfl⟩
+
+/-- `applied` is written only from `accepted`, for a commit on its target ref. -/
+theorem applied_written_only_on_ref (fr : decision.State) (n : decision.Needs)
+    (f : decision.Facts) (hs : stepOf fr .Applied = some n) (hw : Writes n f) :
+    fr = .Accepted ∧ f.on_ref = true := by
+  cases fr <;> simp [stepOf, N] at hs <;> subst hs <;> exact ⟨rfl, hw.2.1 rfl⟩
+
+/-- `accepted` is written only from `proposed`, when the record is ready and
+`--by` was given. -/
+theorem accepted_written_only_ready (fr : decision.State) (n : decision.Needs)
+    (f : decision.Facts) (g : decision.Given) (hs : stepOf fr .Accepted = some n)
+    (hw : Writes n f) (hf : (n.actor = true → g.actor = true)) :
+    fr = .Proposed ∧ f.ready = true ∧ g.actor = true := by
+  cases fr <;> simp [stepOf, N] at hs <;> subst hs <;> exact ⟨rfl, hw.1 rfl, hf rfl⟩
+
+/-- `superseded` is written only when the successor exists. -/
+theorem superseded_written_only_to_successor (fr : decision.State) (n : decision.Needs)
+    (f : decision.Facts) (hs : stepOf fr .Superseded = some n) (hw : Writes n f) :
+    f.successor = true := by
+  cases fr <;> simp [stepOf, N] at hs <;> subst hs <;> exact hw.2.2.2 rfl
 
 /-! ## Investigations -/
 

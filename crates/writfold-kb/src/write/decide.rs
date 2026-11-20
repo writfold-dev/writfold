@@ -23,7 +23,7 @@ use crate::time;
 use crate::workspace::{CANCELLED, budgets};
 use std::path::Path;
 use writfold_core::assess::Grounding;
-use writfold_core::decision::{Needs, State, step};
+use writfold_core::decision::{self, Flag, Needs, State, step};
 use writfold_runtime::git::{KbRepository, kb_commit, kb_is_ancestor};
 use writfold_sources::documents::MarkdownDocument;
 use writfold_sources::material::material_revision;
@@ -55,9 +55,7 @@ pub fn op(
     })?;
     let by = s.by.as_deref().map(str::trim).unwrap_or_default();
     given(needs, to, by, s)?;
-    if needs.ready {
-        ready(doc)?;
-    }
+    let read = reads(session, (rec, doc), needs, s, cwd)?;
     let date = time::date(session.now);
     let mut changes: Vec<(&str, Option<String>)> = vec![
         ("status", Some(to.into())),
@@ -77,7 +75,7 @@ pub fn op(
             changes.push(("accepted_revision", Some(revision.as_str().into())));
         }
         State::Applied => {
-            let landed = landed(session, s.commit.as_deref().unwrap_or_default())?;
+            let landed = read.landed.unwrap_or_default();
             let mut list = crate::parse::list(doc.field("landed").unwrap_or_default());
             if !list.contains(&landed) {
                 list.push(landed.clone());
@@ -89,15 +87,13 @@ pub fn op(
             fact = Some(format!("landed {landed}"));
         }
         State::Verified => {
-            let evidence = s.evidence.as_deref().unwrap_or_default();
-            fact = Some(grounded(session, s, evidence.trim(), cwd)?);
+            fact = read.grounded;
             if !by.is_empty() {
                 changes.push(("verifier", Some(by.into())));
             }
         }
         State::Superseded => {
-            let successor = successor_of(session, rec, s.superseded_by.as_deref())?;
-            changes.push(("superseded_by", Some(successor)));
+            changes.push(("superseded_by", read.successor));
         }
         _ => {}
     }
@@ -112,6 +108,54 @@ pub fn op(
         path: rec.path.clone(),
         expected: digest(text.as_bytes()),
         bytes: edited.as_bytes().to_vec(),
+    })
+}
+
+/// What the reads a change needs established: the landed commit, the
+/// grounding fact and the successor, each when the change needs it.
+struct Read {
+    landed: Option<String>,
+    grounded: Option<String>,
+    successor: Option<String>,
+}
+
+/// Each read the change needs, then the kernel's decision on what they
+/// established ([`decision::writes`], proved: `writes_spec`); a refused
+/// change names the first read that failed.
+fn reads(
+    session: &Session<'_>,
+    (rec, doc): (&Rec, &MarkdownDocument),
+    needs: Needs,
+    s: &SetStatus,
+    cwd: &Path,
+) -> Result<Read> {
+    let ready = if needs.ready { ready(doc) } else { Ok(()) };
+    let landed = needs
+        .commit
+        .then(|| landed(session, s.commit.as_deref().unwrap_or_default()));
+    let evidence = s.evidence.as_deref().unwrap_or_default().trim();
+    let grounded = needs.evidence.then(|| grounded(session, s, evidence, cwd));
+    let successor = needs
+        .successor
+        .then(|| successor_of(session, rec, s.superseded_by.as_deref()));
+    let holds = |r: &Option<Result<String>>| r.as_ref().is_none_or(Result::is_ok);
+    let facts = decision::facts(
+        ready.is_ok(),
+        holds(&landed),
+        holds(&grounded),
+        holds(&successor),
+    );
+    if !decision::writes(needs, facts) {
+        ready?;
+        for read in [landed, grounded, successor].into_iter().flatten() {
+            read?;
+        }
+        return Err(refused(format!("{} cannot go to this state", rec.id)));
+    }
+    Ok(Read {
+        landed: landed.transpose()?,
+        grounded: grounded.transpose()?,
+        successor: successor.transpose()?,
     })
 }
 
@@ -130,39 +174,37 @@ fn log_line(date: &str, to: &str, by: &str, fact: Option<&str>, note: Option<&st
     line
 }
 
-/// Each flag the change needs is given, and no flag it does not take.
+/// Each flag the change needs is given, and no flag it does not take
+/// ([`decision::flags`], proved: `flags_none_iff`).
 fn given(needs: Needs, to: &str, by: &str, s: &SetStatus) -> Result<()> {
-    let usage = |text: &str| Err(KbError::Usage(text.into()));
-    if needs.actor && by.is_empty() {
-        let verb = if to == "accepted" {
-            "accepting"
-        } else {
-            "rejecting"
-        };
-        return Err(KbError::Usage(format!("{verb} a decision needs --by WHO")));
-    }
     let blank = |v: &Option<String>| v.as_deref().is_none_or(|v| v.trim().is_empty());
-    match (needs.commit, blank(&s.commit)) {
-        (true, true) => return usage("--set applied needs --commit REPO@SHA"),
-        (false, false) => return usage("--commit goes with --set applied"),
-        _ => {}
-    }
-    match (needs.evidence, blank(&s.evidence)) {
-        (true, true) => {
-            return usage(
-                "--set verified needs --evidence REF (a gate receipt of the run, or gate:<id>)",
-            );
+    let got = decision::given_flags(
+        !by.is_empty(),
+        !blank(&s.commit),
+        !blank(&s.evidence),
+        s.run.is_some() || s.repo.is_some(),
+        s.superseded_by.is_some(),
+    );
+    let text = match decision::flags(needs, got) {
+        None => return Ok(()),
+        Some(Flag::NeedsActor) => {
+            let verb = if to == "accepted" {
+                "accepting"
+            } else {
+                "rejecting"
+            };
+            format!("{verb} a decision needs --by WHO")
         }
-        (false, false) => return usage("--evidence goes with --set verified"),
-        _ => {}
-    }
-    if !needs.evidence && (s.run.is_some() || s.repo.is_some()) {
-        return usage("--run and --repo go with --set verified");
-    }
-    if !needs.successor && s.superseded_by.is_some() {
-        return usage("--superseded-by goes with --set superseded");
-    }
-    Ok(())
+        Some(Flag::NeedsCommit) => "--set applied needs --commit REPO@SHA".into(),
+        Some(Flag::CommitNotTaken) => "--commit goes with --set applied".into(),
+        Some(Flag::NeedsEvidence) => {
+            "--set verified needs --evidence REF (a gate receipt of the run, or gate:<id>)".into()
+        }
+        Some(Flag::EvidenceNotTaken) => "--evidence goes with --set verified".into(),
+        Some(Flag::RunOrRepoNotTaken) => "--run and --repo go with --set verified".into(),
+        Some(Flag::SuccessorNotTaken) => "--superseded-by goes with --set superseded".into(),
+    };
+    Err(KbError::Usage(text))
 }
 
 /// `<repo>@<full sha>` for `--commit REPO@SHA`: a local clone holds the

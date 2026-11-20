@@ -284,6 +284,23 @@ mutants = [
 [[claim]]
 crate = "writfold-core"
 file = "crates/writfold-core/src/decision.rs"
+function = "flags"
+lean = "writfold_core.decision.flags"
+theorems = [
+  "Writfold.Core.Decision.flags_actor_first",
+  "Writfold.Core.Decision.flags_none_iff",
+]
+total = "Writfold.Core.Decision.flags_none_iff"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "flags-actor-inverted",
+  "flags-commit-not-refused",
+  "flags-run-or-repo-ignored",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/decision.rs"
 function = "step"
 lean = "writfold_core.decision.step"
 theorems = [
@@ -302,6 +319,21 @@ mutants = [
   "verified-without-evidence",
   "superseded-twice",
   "landing-written",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/decision.rs"
+function = "writes"
+lean = "writfold_core.decision.writes"
+theorems = [
+  "Writfold.Core.Decision.writes_spec",
+]
+total = "Writfold.Core.Decision.writes_spec"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "writes-ignores-grounded",
+  "writes-ignores-successor",
 ]
 
 [[claim]]

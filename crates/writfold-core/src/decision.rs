@@ -148,6 +148,109 @@ pub fn step(from: State, to: State) -> Option<Needs> {
     }
 }
 
+/// What `status --set` was given: `--by`, `--commit`, `--evidence`,
+/// `--run` or `--repo`, `--superseded-by`.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub struct Given {
+    pub actor: bool,
+    pub commit: bool,
+    pub evidence: bool,
+    pub run_or_repo: bool,
+    pub successor: bool,
+}
+
+/// The flags, field by field.
+pub fn given_flags(
+    actor: bool,
+    commit: bool,
+    evidence: bool,
+    run_or_repo: bool,
+    successor: bool,
+) -> Given {
+    Given {
+        actor,
+        commit,
+        evidence,
+        run_or_repo,
+        successor,
+    }
+}
+
+/// Why the flags given do not fit the change.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Flag {
+    /// `accepted` and `rejected` need `--by`.
+    NeedsActor,
+    /// `applied` needs `--commit`.
+    NeedsCommit,
+    /// `--commit` goes only with `applied`.
+    CommitNotTaken,
+    /// `verified` needs `--evidence`.
+    NeedsEvidence,
+    /// `--evidence` goes only with `verified`.
+    EvidenceNotTaken,
+    /// `--run` and `--repo` go only with `verified`.
+    RunOrRepoNotTaken,
+    /// `--superseded-by` goes only with `superseded`.
+    SuccessorNotTaken,
+}
+
+/// The first flag that does not fit the change, in this order: a missing
+/// actor, commit or evidence, then a flag the change does not take.
+/// `None` when each flag it needs is given and none it does not take.
+pub fn flags(needs: Needs, got: Given) -> Option<Flag> {
+    if needs.actor && !got.actor {
+        return Some(Flag::NeedsActor);
+    }
+    if needs.commit && !got.commit {
+        return Some(Flag::NeedsCommit);
+    }
+    if !needs.commit && got.commit {
+        return Some(Flag::CommitNotTaken);
+    }
+    if needs.evidence && !got.evidence {
+        return Some(Flag::NeedsEvidence);
+    }
+    if !needs.evidence && got.evidence {
+        return Some(Flag::EvidenceNotTaken);
+    }
+    if !needs.evidence && got.run_or_repo {
+        return Some(Flag::RunOrRepoNotTaken);
+    }
+    if !needs.successor && got.successor {
+        return Some(Flag::SuccessorNotTaken);
+    }
+    None
+}
+
+/// What the reads established: the record is ready for review, the commit
+/// is on its target ref, the evidence grounds now, the successor exists.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub struct Facts {
+    pub ready: bool,
+    pub on_ref: bool,
+    pub grounded: bool,
+    pub successor: bool,
+}
+
+/// The facts, field by field.
+pub fn facts(ready: bool, on_ref: bool, grounded: bool, successor: bool) -> Facts {
+    Facts {
+        ready,
+        on_ref,
+        grounded,
+        successor,
+    }
+}
+
+/// Whether the change is written: every fact it needs holds.
+pub fn writes(needs: Needs, facts: Facts) -> bool {
+    (!needs.ready || facts.ready)
+        && (!needs.commit || facts.on_ref)
+        && (!needs.evidence || facts.grounded)
+        && (!needs.successor || facts.successor)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -193,6 +296,46 @@ mod tests {
                 assert_eq!(step(from, to).is_some(), from == only);
             }
         }
+    }
+
+    #[test]
+    fn flags_and_facts() {
+        let accept = needs(true, true, false, false, false);
+        let none = given_flags(false, false, false, false, false);
+        assert_eq!(flags(accept, none), Some(Flag::NeedsActor));
+        let by = given_flags(true, false, false, false, false);
+        assert_eq!(flags(accept, by), None);
+        let apply = needs(false, false, true, false, false);
+        assert_eq!(flags(apply, none), Some(Flag::NeedsCommit));
+        assert_eq!(
+            flags(accept, given_flags(true, true, false, false, false)),
+            Some(Flag::CommitNotTaken)
+        );
+        let verify = needs(false, false, false, true, false);
+        assert_eq!(flags(verify, none), Some(Flag::NeedsEvidence));
+        assert_eq!(
+            flags(verify, given_flags(false, false, true, true, false)),
+            None
+        );
+        assert_eq!(
+            flags(accept, given_flags(true, false, true, false, false)),
+            Some(Flag::EvidenceNotTaken)
+        );
+        assert_eq!(
+            flags(accept, given_flags(true, false, false, true, false)),
+            Some(Flag::RunOrRepoNotTaken)
+        );
+        assert_eq!(
+            flags(accept, given_flags(true, false, false, false, true)),
+            Some(Flag::SuccessorNotTaken)
+        );
+        assert!(writes(accept, facts(true, false, false, false)));
+        assert!(!writes(accept, facts(false, true, true, true)));
+        assert!(!writes(verify, facts(true, true, false, true)));
+        assert!(writes(
+            needs(false, false, false, false, false),
+            Facts::default()
+        ));
     }
 
     #[test]
