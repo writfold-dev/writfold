@@ -184,6 +184,30 @@ fn snippet(session: &Session<'_>, tier: &str, path: &str, hit: &dyn Fn(&str) -> 
     }
 }
 
+/// A text tier's `match:` line: the body line FTS5 marked, or else the
+/// first line holding a query word (a hit on the ID or title alone).
+fn matched(
+    session: &Session<'_>,
+    tier: &str,
+    path: &str,
+    line: search::Marked,
+    hit: &dyn Fn(&str) -> bool,
+) -> More {
+    match line {
+        Some((line, text)) => More {
+            label: "match",
+            text: format!(
+                "{tier} {}",
+                text.trim().chars().take(100).collect::<String>()
+            ),
+            path: Some(path.to_owned()),
+            line: Some(line),
+            ..More::default()
+        },
+        None => snippet(session, tier, path, hit),
+    }
+}
+
 fn tier_only(tier: &str) -> More {
     More {
         label: "match",
@@ -284,8 +308,8 @@ fn text_tiers(session: &Session<'_>, text: &str, found: &mut Found<'_, '_>) -> R
     if found.full() {
         return Ok(());
     }
-    for hit in search::ranked(&session.conn, text, true, LIMIT)? {
-        let more = snippet(session, "text", &hit.path, &any_word);
+    for (hit, line) in search::ranked(&session.conn, text, true, LIMIT)? {
+        let more = matched(session, "text", &hit.path, line, &any_word);
         found.add(&hit.id, "text", more)?;
     }
     if found.full() {
@@ -304,8 +328,8 @@ fn text_tiers(session: &Session<'_>, text: &str, found: &mut Found<'_, '_>) -> R
         found.add(&hit.id, "typo", tier_only(&format!("typo d={d} {matched}")))?;
     }
     if words.len() > 1 && !found.full() {
-        for hit in search::ranked(&session.conn, text, false, LIMIT)? {
-            let more = snippet(session, "text-any", &hit.path, &any_word);
+        for (hit, line) in search::ranked(&session.conn, text, false, LIMIT)? {
+            let more = matched(session, "text-any", &hit.path, line, &any_word);
             found.add(&hit.id, "text-any", more)?;
         }
     }

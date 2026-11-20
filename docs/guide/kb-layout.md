@@ -189,7 +189,7 @@ Every answer ends with one line:
 | `normalized` | the phrase once case and punctuation are set aside (`harbor api`, `harbor_api` and `HAPI` against `harbor-api` and its alias `hapi`), equal to a record's ID, its ID after the typed prefix, its last `/` segment, its title or an alias | three characters or more; built in v0.6.0-dev.1 |
 | `prefix` | each word of the phrase begins a word of one of those names, in order, gaps allowed (`quay work` finds `quay-worker`, `work quay` does not) | two words, or one of four characters or more; fewest words left over first; built in v0.6.0-dev.1 |
 | `heading` | a Markdown section's name, equal or by prefix; the row is the file's record (or `doc:<path>`) and its `match:` line cites the section's first line | built in v0.6.0-dev.1 |
-| `text` | SQLite FTS5 over ID, title, summary and body, ranked by BM25 (weights 10, 5, 2, 1); every word of the query | diacritics removed |
+| `text` | SQLite FTS5 over ID, title, summary and body, ranked by BM25 (weights 10, 5, 2, 1); every word of the query | diacritics removed; from v0.6.0-dev.11 English words are stemmed (FTS5 `porter`), so `migrating` finds "migrations", and the `match:` line is the body line of the first word FTS5 matched |
 | `substring` | an FTS5 trigram table over ID, title and body; the whole query as a substring | three characters or more |
 | `typo` | every file's ID and title, by edit distance (a whole name, a word or a run of words) | ID and title only, never the body; one edit, two for queries longer than eight characters. Since v0.6.0-dev.4 no title within that distance is dropped: before, only the 200 files whose bodies best matched the query's trigrams were compared |
 | `text-any` | BM25 again, any word of the query | |

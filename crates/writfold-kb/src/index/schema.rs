@@ -11,12 +11,12 @@
 //! row ID (an FTS5 delete by an unindexed column scans the whole table).
 
 /// Bumped when the schema changes; a different stored value rebuilds.
-pub const SCHEMA: &str = "3";
+pub const SCHEMA: &str = "4";
 /// Bumped when derivation changes; a different stored value rebuilds.
 pub const EXTRACTOR: &str = "writfold-kb-extract/2";
 
 pub const DDL: &str = "
-PRAGMA user_version = 3;
+PRAGMA user_version = 4;
 CREATE TABLE meta(key TEXT PRIMARY KEY, value TEXT NOT NULL);
 CREATE TABLE files(path TEXT PRIMARY KEY, sha256 BLOB NOT NULL, size INTEGER NOT NULL,
                    kind TEXT NOT NULL, parse_status TEXT NOT NULL, parse_error TEXT,
@@ -53,7 +53,7 @@ CREATE TABLE edges(src TEXT NOT NULL, rel TEXT NOT NULL, dst TEXT NOT NULL,
                    PRIMARY KEY(src, rel, dst, origin, prov_path, prov_line)) WITHOUT ROWID;
 CREATE INDEX edges_dst ON edges(dst, rel);
 CREATE VIRTUAL TABLE fts USING fts5(id, title, summary, body, path UNINDEXED,
-                                    tokenize = 'unicode61 remove_diacritics 2');
+                                    tokenize = 'porter unicode61 remove_diacritics 2');
 CREATE VIRTUAL TABLE tri USING fts5(id, title, body, path UNINDEXED,
                                     tokenize = 'trigram case_sensitive 0', detail = none);
 CREATE TABLE text_rows(path TEXT PRIMARY KEY, row INTEGER NOT NULL);

@@ -36,10 +36,21 @@ fn hits(conn: &Connection, sql: &str, params: &[&dyn rusqlite::ToSql]) -> Result
     Ok(found)
 }
 
+/// A body line a full-text hit matched: its 1-based number and its text.
+pub type Marked = Option<(u32, String)>;
+
 /// BM25 over ID, title, summary and body (weighted in that order), best
 /// first; ties by ID and path. With `every`, a hit holds every word of the
-/// text; otherwise any one.
-pub fn ranked(conn: &Connection, text: &str, every: bool, limit: usize) -> Result<Vec<Hit>> {
+/// text; otherwise any one. Each hit carries the body line of the first
+/// word FTS5 matched there (`highlight()`), which under the stemming
+/// tokenizer need not contain the query's word (`migrating` finds
+/// "migrations"); `None` when only the ID, title or summary matched.
+pub fn ranked(
+    conn: &Connection,
+    text: &str,
+    every: bool,
+    limit: usize,
+) -> Result<Vec<(Hit, Marked)>> {
     let Some(expression) = match_expression(text) else {
         return Ok(Vec::new());
     };
@@ -48,12 +59,36 @@ pub fn ranked(conn: &Connection, text: &str, every: bool, limit: usize) -> Resul
     } else {
         expression
     };
-    hits(
-        conn,
-        "SELECT id, title, path FROM fts WHERE fts MATCH ?1 \
-         ORDER BY bm25(fts, 10.0, 5.0, 2.0, 1.0), id, path LIMIT ?2",
-        &[&expression, &limit],
-    )
+    let mut statement = conn.prepare_cached(
+        "SELECT id, title, path, highlight(fts, 3, char(2), char(3)) FROM fts \
+         WHERE fts MATCH ?1 ORDER BY bm25(fts, 10.0, 5.0, 2.0, 1.0), id, path LIMIT ?2",
+    )?;
+    let found = statement
+        .query_map((&expression, &limit), |r| {
+            let body: Option<String> = r.get(3)?;
+            Ok((
+                Hit {
+                    id: r.get(0)?,
+                    title: r.get(1)?,
+                    path: r.get(2)?,
+                },
+                body.as_deref().and_then(marked),
+            ))
+        })?
+        .collect::<rusqlite::Result<Vec<_>>>()?;
+    Ok(found)
+}
+
+/// The line holding the first `highlight()` marker, markers removed.
+fn marked(body: &str) -> Marked {
+    let at = body.find('\u{2}')?;
+    let (before, after) = body.split_at(at);
+    let number = before.matches('\n').count().checked_add(1)?;
+    let start = before.rfind('\n').map_or(0, |n| n.saturating_add(1));
+    let rest = after.split('\n').next().unwrap_or_default();
+    let line = format!("{}{rest}", before.get(start..).unwrap_or_default())
+        .replace(['\u{2}', '\u{3}'], "");
+    Some((u32::try_from(number).ok()?, line))
 }
 
 /// Case-insensitive ASCII containment, as `LIKE` decides it.
