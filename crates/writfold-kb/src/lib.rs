@@ -179,6 +179,8 @@ pub enum Verb {
     Init(init::Init),
     /// `policy`: the policy as it is now and the current run's pin.
     Policy,
+    /// `policy --paths GATE`: the paths in a gate's scope, now.
+    PolicyPaths { gate: String },
 }
 
 /// One invocation.
@@ -338,6 +340,11 @@ fn answer(session: &Session<'_>, request: &Request) -> Result<(Answer, &'static 
             verbs::policy::policy(session, &request.cwd)?,
             "policy",
             Vec::new(),
+        ),
+        Verb::PolicyPaths { gate } => (
+            verbs::policy_paths::paths(session, &request.cwd, gate)?,
+            "policy",
+            vec![gate.clone()],
         ),
         other => graph(session, other)?,
     })

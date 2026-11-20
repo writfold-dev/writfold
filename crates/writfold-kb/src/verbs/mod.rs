@@ -9,6 +9,7 @@ pub mod index;
 pub mod material;
 pub mod names;
 pub mod policy;
+pub mod policy_paths;
 mod policy_pin;
 pub mod repos;
 pub mod runs;

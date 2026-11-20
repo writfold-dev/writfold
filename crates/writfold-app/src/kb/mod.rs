@@ -59,6 +59,7 @@ verbs:
   policy                           the policy as it is now (required steps, gates with accept and
                                    item choices, guard rules) and the current run's pin beside it;
                                    identity= is one digest two clones can compare (exit 2 if moved)
+  policy --paths GATE              the paths GATE's scope covers now, one per row (the declared scope)
   lint [PATH…] [--repo DIR] [--deny-warnings] [--records]
                                    every fault of the files you wrote (gates, guards, plans,
                                    delivery modes, kinds, queries.jsonl), each at its line and
