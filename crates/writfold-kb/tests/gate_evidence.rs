@@ -179,6 +179,20 @@ fn a_look_that_found_nothing_ages_by_its_catalog_kind() -> TestResult {
     none_found(&w, &look)?;
     let text = status_at(&w, support::NOW + 400 * DAY)?;
     assert_eq!(item(&text, "perf"), "none-found", "{text}");
+    // `kb lint` warns about it (#8), and not about the declared kind.
+    nothing(&w, "probe", None)?;
+    let mut lint = w.request(Verb::Lint {
+        paths: Vec::new(),
+        repo: None,
+        deny_warnings: false,
+        records: false,
+    });
+    lint.json = true;
+    let (text, exit) = w.run(&lint)?;
+    assert_eq!(exit, 0, "a warning only: {text}");
+    assert!(text.contains("\"policy.never-ages\""), "{text}");
+    assert!(text.contains("of kind grep never age"), "{text}");
+    assert!(!text.contains("kind probe"), "{text}");
     Ok(())
 }
 

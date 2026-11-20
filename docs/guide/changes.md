@@ -8,6 +8,7 @@ A line marked **fix** changed an answer that was wrong; anything depending on th
 
 ## v0.6.0-dev.11 (unreleased)
 
+- `kb lint` without `PATH` may now report the warning `policy.never-ages` (once per undeclared source kind that has `no-data` or `not-found` looks) and counts it in `warnings=`; under `--deny-warnings` that exits 2 ([#8](https://github.com/writfold-dev/writfold/issues/8)).
 - `gate status --json`: a `looked:` line whose newest look kept a snapshot gains the key `snapshot` (`store`, `rev`, `path`, `verdict`, `basis`). Text output is unchanged ([#2](https://github.com/writfold-dev/writfold/issues/2)).
 - `resume`'s `artifact` rows no longer repeat their verdict as a flag (`[fresh] … !fresh` is now `[fresh] …`); in JSON the row's `flags` no longer holds the verdict, which stays in `status`. An `unverifiable` row still carries its reason as a flag ([#7](https://github.com/writfold-dev/writfold/issues/7)).
 

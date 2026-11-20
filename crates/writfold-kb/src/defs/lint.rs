@@ -214,6 +214,9 @@ pub fn execute(
         .sources
         .sort_by_key(|s| order.iter().position(|o| *o == s.file));
     report.sort();
+    if !records && paths.is_empty() {
+        report.extend(super::lint_looks::check(kb));
+    }
     let label = if records { "record" } else { "definition" };
     Ok(super::lint_out::output(
         &all,

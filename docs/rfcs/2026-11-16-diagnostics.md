@@ -139,6 +139,7 @@ A code is `<class>.<what>`, lower case, the same for every kind of file; the fil
 | `section.missing` | a Markdown section a verb requires is absent or empty |
 | `section.form` | a line in a required section lacks its form (a hypothesis without an outcome) |
 | `policy.waivable` | a warning: a checklist restricts `not_applicable` while its gate still accepts a waiver |
+| `policy.never-ages` | a warning: `no-data` or `not-found` looks of a source kind with no declaration in `.writfold/sources/`, which never age (built in v0.6.0-dev.11) |
 
 ### 2.2 The renderer
 

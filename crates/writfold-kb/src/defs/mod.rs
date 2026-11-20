@@ -13,6 +13,7 @@ pub mod jsonl;
 pub mod lex;
 pub mod lint;
 pub mod lint_cycles;
+pub mod lint_looks;
 pub mod lint_out;
 pub mod lint_policy;
 pub mod lint_refs;
