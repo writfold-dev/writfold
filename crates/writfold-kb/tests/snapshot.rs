@@ -81,6 +81,17 @@ fn observed(w: &World) -> usize {
     std::fs::read_dir(dir).map_or(0, |d| d.count())
 }
 
+/// `gate status --json` for the run.
+fn status_json(w: &World) -> TestResult<String> {
+    let mut req = w.request(Verb::Gate(writfold_kb::gate::GateVerb::Status {
+        run: Some(RUN.into()),
+        repo: Some(w.code.clone()),
+    }));
+    req.json = true;
+    req.now = Some(support::NOW + 3600);
+    Ok(w.run(&req)?.0.replace(' ', ""))
+}
+
 /// The `stored:` path the first call staged.
 fn staged(why: &str) -> TestResult<String> {
     let line = why
@@ -144,6 +155,12 @@ fn a_snapshot_is_staged_then_recorded_once_committed() -> TestResult {
     let (text, _) = status(&w)?;
     assert_eq!(item(&text, "perf"), "supported", "{text}");
     assert!(text.contains("!snapshot"), "{text}");
+    // In JSON the looked: line names the snapshot and what it reads now (#2).
+    let json = status_json(&w)?;
+    assert!(json.contains("\"snapshot\":{"), "{json}");
+    assert!(json.contains("\"basis\":\"pin\""), "{json}");
+    assert!(json.contains("\"store\":\"scratch\""), "{json}");
+    assert!(json.contains("\"verdict\":\"fresh\""), "{json}");
     // No ref reaches the snapshot any more: the look stops grounding.
     let head = git(&clone, &["rev-parse", "HEAD"])?;
     git(&clone, &["checkout", "-q", "--detach", &head])?;

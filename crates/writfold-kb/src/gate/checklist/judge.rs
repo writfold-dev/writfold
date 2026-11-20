@@ -91,6 +91,33 @@ struct Present<'c, 's, 'r> {
 }
 
 impl Present<'_, '_, '_> {
+    /// The `looked:` line for `gate`.`item`; when the newest look kept a
+    /// snapshot, JSON also carries what that snapshot reads now.
+    fn looked(&self, gate: &str, item: &str) -> Result<Option<crate::emit::More>> {
+        let Some(mut more) = crate::observe::looked(&self.observed, gate, item) else {
+            return Ok(None);
+        };
+        let newest = more.path.clone().unwrap_or_default();
+        let token = (self.observed.iter())
+            .find(|f| f.path == newest)
+            .and_then(|f| f.parsed.as_ref().ok()?.snapshot.clone());
+        if let Some(token) = token {
+            let found = crate::parse::cite::tokens(&token);
+            let (repo, rev, path) = match found.first() {
+                Some(c) => (c.repo.clone(), c.rev.clone(), c.path.clone()),
+                None => (None, None, None),
+            };
+            let checked = ground::verdicts(self.cx, found, &newest)?;
+            let verdict = checked.first().map(|c| c.verdict.name());
+            let value = serde_json::json!({
+                "store": repo, "rev": rev, "path": path,
+                "verdict": verdict, "basis": "pin",
+            });
+            more.extra.push(("snapshot", value));
+        }
+        Ok(Some(more))
+    }
+
     /// The first cited reference that is not grounded as recorded:
     /// `(reference, then, now)`.
     fn moved(&mut self, c: &Cover) -> Result<Option<(String, String, String)>> {
@@ -227,7 +254,7 @@ pub fn judge<'a>(
                 item,
                 row: newest,
                 why,
-                looked: crate::observe::looked(&present.observed, &d.id, &spec.id),
+                looked: present.looked(&d.id, &spec.id)?,
                 restricted: d.checklist.as_ref().is_some_and(|s| s.restricted()),
                 bound: Vec::new(),
             });
