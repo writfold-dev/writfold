@@ -91,3 +91,49 @@ fn decide(ws: &Workspace, m: &Matched, now: i64) -> HookOutput {
         Some(reason) => deny(reason),
     }
 }
+
+/// D19: after a routed call returns, remind the agent to record the post
+/// of the candidate it carried. Silent when no guard is configured, the
+/// call matches no route or command, or no candidate holds its bytes.
+pub fn post_tool_use(
+    ws: &Workspace,
+    input: &Map<String, Value>,
+    cwd: &Path,
+    now: i64,
+) -> Result<HookOutput, String> {
+    let Some(guard) = config::guard(&ws.root).map_err(|e| e.to_string())? else {
+        return Ok(HookOutput::default());
+    };
+    let Some(m) = body::matched(&guard, input, cwd) else {
+        return Ok(HookOutput::default());
+    };
+    let tool = GitTool::locate().map_err(|e| e.to_string())?;
+    let session = Session::open(ws, Some(&tool), false, now).map_err(|e| e.to_string())?;
+    let rec = crate::runs::current_of(&session)
+        .and_then(|id| query::record(&session.conn, &id).ok().flatten());
+    let Some(rec) = rec else {
+        return Ok(HookOutput::default());
+    };
+    let found = crate::deliver::found::all(&session, &rec);
+    let call = Call {
+        name: &m.name,
+        mode: m.mode.as_deref(),
+        file_flag: m.file_flag.as_deref(),
+        unread: m.unread(),
+        spent_matches: false,
+    };
+    let Some(f) = guarded::posting(&found, &call, &m.read) else {
+        return Ok(HookOutput::default());
+    };
+    let context = format!(
+        "writfold: if {} posted it, record the post: writfold kb deliver posted {} --ref URL --by WHO (a statement; Writfold sees no post)",
+        m.name, f.c.id
+    );
+    let value = json!({
+        "hookSpecificOutput": {"hookEventName": "PostToolUse", "additionalContext": context}
+    });
+    Ok(HookOutput {
+        stdout: format!("{value}\n"),
+        stderr: String::new(),
+    })
+}

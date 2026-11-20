@@ -1,6 +1,6 @@
 # Delivery modes
 
-> **Status:** built in v0.3.0-dev.1; your own modes are built in v0.4.0-dev.1; a delivery as a plan step's gate, `seq` on the manifest and the re-check of cited evidence on every read are built in v0.6.0-dev.1; a mode that declares nothing is never ready, for `deliver status` and the guard as for a plan step, since 16 November 2026; `seq` on check receipts, built in v0.6.0-dev.4. The second round ([spec](../rfcs/2026-11-17-delivery-modes-second-round.md), [design §47](../writfold/kb-v1-design.md#47-delivery-modes-second-round-as-built-17-november-2026-v060-dev4)) is built in v0.6.0-dev.4: a mode's policy (`waivable`, a mode gate's `accept`), withdrawing a candidate, `rendering` and `deliver payload`, guard routes, `deliver match`, post records and `posted:<mode>`, findings drawn against the candidate, `deliver modes`, a mode's `audience`, `--from -`, and `kb init --example delivery`. The `length.bounded` check is built in v0.6.0-dev.11. A reminder after a guarded call passes is not built.
+> **Status:** built in v0.3.0-dev.1; your own modes are built in v0.4.0-dev.1; a delivery as a plan step's gate, `seq` on the manifest and the re-check of cited evidence on every read are built in v0.6.0-dev.1; a mode that declares nothing is never ready, for `deliver status` and the guard as for a plan step, since 16 November 2026; `seq` on check receipts, built in v0.6.0-dev.4. The second round ([spec](../rfcs/2026-11-17-delivery-modes-second-round.md), [design §47](../writfold/kb-v1-design.md#47-delivery-modes-second-round-as-built-17-november-2026-v060-dev4)) is built in v0.6.0-dev.4: a mode's policy (`waivable`, a mode gate's `accept`), withdrawing a candidate, `rendering` and `deliver payload`, guard routes, `deliver match`, post records and `posted:<mode>`, findings drawn against the candidate, `deliver modes`, a mode's `audience`, `--from -`, and `kb init --example delivery`. The `length.bounded` check and a reminder after a guarded call passes are built in v0.6.0-dev.11.
 
 A mode file, a deny list or `guard.toml` that is wrong is reported fault by fault, each at its line and column ([errors](errors.md)):
 
@@ -291,6 +291,8 @@ delivery 20261117T103623Z-95bb2e [ready] pr-comment audience=external destinatio
 - Refused (exit 3): a withdrawn candidate; no `--ref` or `--by`.
 
 It is a statement: `--by` is text, and a session that stops between the post and the record leaves no trace of the post.
+
+With the delivery guard configured, the plugin's `PostToolUse` hook (built in v0.6.0-dev.11) narrows that gap: after a `Bash` or MCP call whose bytes are a ready, unposted candidate's payload, it adds one line to the agent's context, `writfold: if gh pr comment posted it, record the post: writfold kb deliver posted <id> --ref URL --by WHO`. It is a reminder, not a record; it cannot tell whether the call posted anything.
 
 ## Outside the hook: `deliver match`
 

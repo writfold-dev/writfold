@@ -178,6 +178,7 @@ fn plugin_commands_need_nothing_but_the_binary() -> Result {
         names,
         [
             "PostCompact",
+            "PostToolUse",
             "PreCompact",
             "PreToolUse",
             "SessionEnd",
