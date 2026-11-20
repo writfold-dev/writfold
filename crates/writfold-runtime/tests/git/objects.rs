@@ -132,6 +132,9 @@ fn corrupt_named_commit_tree_and_blob_never_acquire_provenance() -> Result {
                 .join(&oid.as_str()[..2])
                 .join(&oid.as_str()[2..])
         };
+        // Git writes loose objects read-only: remove the target first, or
+        // the copy is refused for any user but root.
+        fs::remove_file(object_path(target))?;
         fs::copy(object_path(replacement), object_path(target))?;
         let repository = fixture.repository(GitObjectFormat::Sha1)?;
         let file = executable_file()?;
