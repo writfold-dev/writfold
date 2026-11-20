@@ -12,6 +12,15 @@ use crate::session::Session;
 use std::path::Path;
 use writfold_core::scope::in_scope;
 
+/// The answer, the verb name and its arguments, as the dispatcher wants.
+pub fn answer(
+    session: &Session<'_>,
+    cwd: &Path,
+    gate: &str,
+) -> Result<(Answer, &'static str, Vec<String>)> {
+    Ok((paths(session, cwd, gate)?, "policy", vec![gate.to_owned()]))
+}
+
 pub fn paths(session: &Session<'_>, cwd: &Path, gate: &str) -> Result<Answer> {
     let git = (session.git.as_ref()).ok_or_else(|| KbError::Refused("gates need Git".into()))?;
     let subject = locate(session.ws, git, None, cwd, None)?.ok_or_else(|| {

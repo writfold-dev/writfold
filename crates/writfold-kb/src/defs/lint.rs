@@ -173,6 +173,21 @@ pub fn enclosing(kb: &Path, cwd: &Path) -> Option<PathBuf> {
     (std::fs::canonicalize(top).ok() != kb).then(|| top.to_path_buf())
 }
 
+/// `kb lint` from its request ([`crate::Verb::Lint`]).
+pub fn run(kb: &Path, request: &crate::Request) -> Result<Output> {
+    let crate::Verb::Lint {
+        paths,
+        repo,
+        deny_warnings,
+        records,
+    } = &request.verb
+    else {
+        return Err(KbError::Usage("not a lint request".into()));
+    };
+    let given = (paths.as_slice(), repo.as_deref(), *deny_warnings, *records);
+    execute(kb, request, given)
+}
+
 /// Run the lint over the KB root and the repository in view.
 pub fn execute(
     kb: &Path,
