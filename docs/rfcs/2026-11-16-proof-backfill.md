@@ -1,6 +1,22 @@
-# Proof backfill: what is proved, what is not, and the order to close it
+---
+rfc: "2026-11-16-proof-backfill"
+title: "Proof backfill: what is proved, what is not, and the order to close it"
+status: accepted
+implementation: partial
+authors:
+  - tknawara
+created: 2026-11-16
+updated: 2026-11-20
+issue: null
+milestone: null
+supersedes: []
+superseded_by: []
+blocked_on: []
+---
 
-Status: assessment and plan, 16 November 2026, against `main` at `e489d98` (v0.6.0-dev.2). Steps 0 to 5 (the first round, up to the cut line) are built; as built: [design §43](kb-v1-design.md#43-proof-backfill-first-round-as-built-16-november-2026) and [aeneas.md](aeneas.md#the-proof-backfill-first-round-16-november-2026). Steps 6 to 11 (the second round) are built in v0.6.0-dev.4; as built: [design §45](kb-v1-design.md#45-proof-backfill-second-round-as-built-17-november-2026-v060-dev4) and [aeneas.md](aeneas.md#the-proof-backfill-second-round-17-november-2026). The sections below are the plan as written; where the build differs (names such as `gate::Recorded` and `gate::Said`, `guard::call` and `guard::require`, the theorem names) the as-built pages are authoritative.
+# RFC: Proof backfill: what is proved, what is not, and the order to close it
+
+Status: assessment and plan, 16 November 2026, against `main` at `e489d98` (v0.6.0-dev.2). Steps 0 to 5 (the first round, up to the cut line) are built; as built: [design §43](../writfold/kb-v1-design.md#43-proof-backfill-first-round-as-built-16-november-2026) and [aeneas.md](../writfold/aeneas.md#the-proof-backfill-first-round-16-november-2026). Steps 6 to 11 (the second round) are built in v0.6.0-dev.4; as built: [design §45](../writfold/kb-v1-design.md#45-proof-backfill-second-round-as-built-17-november-2026-v060-dev4) and [aeneas.md](../writfold/aeneas.md#the-proof-backfill-second-round-17-november-2026). The sections below are the plan as written; where the build differs (names such as `gate::Recorded` and `gate::Said`, `guard::call` and `guard::require`, the theorem names) the as-built pages are authoritative.
 
 `AGENTS.md` ("Lean proofs first", 16 November 2026) requires every product decision (met, stale, ready, skipped, complete, refused, allowed) to live in a pure kernel in `crates/writfold-core`, extracted with Charon/Aeneas and proved in Lean. Parsers, IO, rendering and numeric plumbing stay tested-only. This document measures the distance to that rule and orders the work.
 
@@ -487,7 +503,7 @@ Sizes assume the pinned toolchain translates the reshaped code as described. The
 
 ## 5. Coordination with the policy spec
 
-`docs/writfold/policy-spec.md` is not in the repository yet. Its announced scope is five policy kernels: accepted outcomes, unskippable required steps, drift, closed-incomplete runs and evidence binding. The overlaps, and a rule for each:
+`docs/rfcs/2026-11-16-user-defined-policy.md` is not in the repository yet. Its announced scope is five policy kernels: accepted outcomes, unskippable required steps, drift, closed-incomplete runs and evidence binding. The overlaps, and a rule for each:
 
 | Policy topic | Touches | Rule |
 |---|---|---|
@@ -502,7 +518,7 @@ Two rules keep the plans from colliding:
 1. **This plan never changes behaviour** (one exception, named: the empty delivery mode in G3). The policy spec changes behaviour. When both touch a function, the backfill lands first with the as-built specification and the policy change replaces the theorem and its mutants in the same commit.
 2. **`advance`'s signature is shared.** G1 changes it to take `GateFact`s. If the policy needs a per-step input (required, unskippable), add it to `Node` or as one further argument to the same function, and agree the shape before step 1 starts. `Plan.lean` and `Gate.lean` have one owner at a time; new policy theorems go in their own file (`proofs/Writfold/Policy.lean`) and import the others.
 
-The semantic-search work (`docs/writfold/semantic-search-spike.md`) asks for a tier-ordering kernel and "a semantic hit never grounds". The first is the tier kernel of step 10; the second belongs in `ground` (G5) as one more input that is never `Grounded`. Whichever lands first defines the function.
+The semantic-search work (`docs/rfcs/2026-11-16-semantic-search-spike.md`) asks for a tier-ordering kernel and "a semantic hit never grounds". The first is the tier kernel of step 10; the second belongs in `ground` (G5) as one more input that is never `Grounded`. Whichever lands first defines the function.
 
 ## Decisions (owner, 16 November 2026)
 

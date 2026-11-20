@@ -1,4 +1,20 @@
-# `writfold watch` T4: calm defaults and progressive disclosure
+---
+rfc: "2026-11-15-watch-calm-defaults"
+title: "`writfold watch` T4: calm defaults and progressive disclosure"
+status: accepted
+implementation: complete
+authors:
+  - tknawara
+created: 2026-11-15
+updated: 2026-11-20
+issue: null
+milestone: null
+supersedes: []
+superseded_by: []
+blocked_on: []
+---
+
+# RFC: `writfold watch` T4: calm defaults and progressive disclosure
 
 Reviewed: main at 22acc4b (v0.5.0-dev.6), `crates/writfold-tui/src`, the captured frames
 the v0.5.0-dev.6 homepage capture (136x38) and the how-it-works capture (160x40), and live runs in tmux at 80x24,

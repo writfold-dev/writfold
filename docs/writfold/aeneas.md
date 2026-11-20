@@ -202,7 +202,7 @@ covers it.
 
 ### The proof backfill, first round (16 November 2026)
 
-[`proof-backfill-spec.md`](proof-backfill-spec.md) measured the distance to
+[`proof-backfill-spec.md`](../rfcs/2026-11-16-proof-backfill.md) measured the distance to
 "every product decision is proved" and ordered the work by risk; its steps
 0 to 5 are built. Each moved a decision out of `writfold-kb` into a kernel
 function named in `start_from`, with `writfold-kb` calling it and its tests
@@ -293,7 +293,7 @@ requirements' facts `guard::require`.
 
 ### The policy round (16 November 2026)
 
-[`policy-spec.md`](policy-spec.md) section 3; built in v0.6.0-dev.3. Every
+[`policy-spec.md`](../rfcs/2026-11-16-user-defined-policy.md) section 3; built in v0.6.0-dev.3. Every
 decision the round adds or changes was translated and proved, and the
 proofs gate passed, before any verb called it.
 
@@ -364,7 +364,7 @@ in the positive configurations, and the mutant `SkipLocked`
 
 ### The proof backfill, second round (17 November 2026)
 
-[`proof-backfill-spec.md`](proof-backfill-spec.md) steps 6 to 11; built in
+[`proof-backfill-spec.md`](../rfcs/2026-11-16-proof-backfill.md) steps 6 to 11; built in
 v0.6.0-dev.4. As in the first round, each decision `writfold-kb` made is a
 kernel function named in `start_from`, `writfold-kb` calls it, and its tests
 and golden files are unchanged; the three behaviour changes are named
@@ -535,7 +535,7 @@ their SQL stay tested, not proved.
 
 ### The delivery round (17 November 2026)
 
-Built in v0.6.0-dev.4 ([delivery-spec.md](delivery-spec.md) section 3). The
+Built in v0.6.0-dev.4 ([delivery-spec.md](../rfcs/2026-11-17-delivery-modes-second-round.md) section 3). The
 delivery kernel's theorems were replaced in place and passed the proofs gate
 before any verb was rewired. After the round: 569 theorems (540 before), 298
 required claims (280 before), 189 mutants (170 before); every theorem's
@@ -618,7 +618,7 @@ create-new file under the existing write protocol, so `KbWrite.tla` and
 
 ### The current-run round (17 November 2026)
 
-Built in v0.6.0-dev.6 ([v060-dev6-spec.md](v060-dev6-spec.md)). Before it,
+Built in v0.6.0-dev.6 ([v060-dev6-spec.md](../rfcs/2026-11-17-v060-dev6-and-attached-stores.md)). Before it,
 one local pointer per KB clone named the current run, so every session on
 the clone shared it. `writfold_core::pointer` now decides among three
 pointers a seat (one session in one work tree) can read: the session's, the
@@ -671,7 +671,7 @@ theorems above cover, so there is no protocol to model: `KbWrite.tla` and
 
 ### The repin round (17 November 2026)
 
-Built in v0.6.0-dev.6 ([policy-spec.md](policy-spec.md) section 2.5,
+Built in v0.6.0-dev.6 ([policy-spec.md](../rfcs/2026-11-16-user-defined-policy.md) section 2.5,
 `plan repin`). The two decisions the verb adds were translated and proved,
 and their mutants calibrated, before the verb was wired. After this round
 and the current-run round, merged: 594 theorems, 316 required claims (298
@@ -714,7 +714,7 @@ existing write protocol and the plan re-check (`Recheck.lean`, whose
 
 ### The attached-stores round (18 November 2026)
 
-Built in v0.6.0-dev.7 ([v060-dev6-spec.md](v060-dev6-spec.md) part B, S1 and
+Built in v0.6.0-dev.7 ([v060-dev6-spec.md](../rfcs/2026-11-17-v060-dev6-and-attached-stores.md) part B, S1 and
 S2; [stores](../guide/stores.md)). `writfold_core::store` was translated and
 proved, and its mutants calibrated, before `writfold-kb` called it
 (`proofs/Writfold/Store.lean`). After the round: 606 theorems, 328 required
@@ -747,7 +747,7 @@ commit), the full-revision check, rendering and JSON. Nothing is written, so
 
 ### The run-artifacts round (18 November 2026)
 
-Built in v0.6.0-dev.8 ([v060-dev6-spec.md](v060-dev6-spec.md) part B, S4;
+Built in v0.6.0-dev.8 ([v060-dev6-spec.md](../rfcs/2026-11-17-v060-dev6-and-attached-stores.md) part B, S4;
 [stores](../guide/stores.md#pointing-a-run-at-its-material)).
 `store::artifact` was translated, proved and its mutants calibrated before
 `checkpoint --artifact` called it. After the round: 614 theorems, 336
@@ -773,7 +773,7 @@ unchanged.
 ### The evidence-binding round (18 November 2026)
 
 Kernels and proofs only; no verb calls them yet
-([gate-evidence-spec.md](gate-evidence-spec.md), stage 1). After the round:
+([gate-evidence-spec.md](../rfcs/2026-11-18-gate-evidence-binding-and-pins.md), stage 1). After the round:
 659 theorems, 366 required claims (336 before), 222 mutants (214 before).
 
 - `bind` (`Bind.lean`): whether the references a cover row cites answer
@@ -801,7 +801,7 @@ written by these kernels, so `KbWrite.tla` and `RunGraph.tla` are unchanged.
 
 ### The backlinks round (19 November 2026)
 
-[v060-stores-next-spec.md](v060-stores-next-spec.md) S3. `store::claim` was
+[v060-stores-next-spec.md](../rfcs/2026-11-18-attached-stores-next.md) S3. `store::claim` was
 translated, proved and its mutants calibrated before `context` and `uses`
 called it. After the round: 664 theorems, 371 required claims (366
 before), 226 mutants (222 before).
@@ -823,7 +823,7 @@ is written to the KB, so `KbWrite.tla` and `RunGraph.tla` are unchanged.
 
 ### The snapshot round (19 November 2026)
 
-[v060-stores-next-spec.md](v060-stores-next-spec.md) section 2. `store::snapshot` was
+[v060-stores-next-spec.md](../rfcs/2026-11-18-attached-stores-next.md) section 2. `store::snapshot` was
 translated, proved and its mutants calibrated before `observe --snapshot`
 called it. After the round: 670 theorems, 377 required claims (371
 before), 233 mutants (226 before).
@@ -1156,7 +1156,7 @@ run-record digest could not be read; both rules are now stated as theorems
 
 ## Not yet proved (backlog, 17 November 2026)
 
-[`proof-backfill-spec.md`](proof-backfill-spec.md) steps 0 to 11 are built.
+[`proof-backfill-spec.md`](../rfcs/2026-11-16-proof-backfill.md) steps 0 to 11 are built.
 What is left, each tested:
 
 1. What a decision state change needs, given: whether the commit is on its

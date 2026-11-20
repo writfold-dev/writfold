@@ -1,6 +1,22 @@
-# v0.6.0-dev.6 and attached stores: specification
+---
+rfc: "2026-11-17-v060-dev6-and-attached-stores"
+title: "v0.6.0-dev.6 and attached stores"
+status: accepted
+implementation: partial
+authors:
+  - tknawara
+created: 2026-11-17
+updated: 2026-11-20
+issue: null
+milestone: null
+supersedes: []
+superseded_by: []
+blocked_on: []
+---
 
-> **Status:** Part A (sections 1 to 7) is built in v0.6.0-dev.6: everything in sections 2.1 to 2.6, merged and gated as one release (the proofs gate on the merged tree: 594 theorems, 316 required claims, 203 mutants). Section 7 records the state at hand-over and is kept as history. Part B (attached stores, [section 8](#8-part-b-attached-stores-for-disposable-evidence)): S1 and S2 built in v0.6.0-dev.7, S4 in v0.6.0-dev.8; S3 and the snapshot verb are specified in [v060-stores-next-spec.md](v060-stores-next-spec.md), not built. Written against `main` at `4f73917` (v0.6.0-dev.5). The authority is [mission.md](mission.md).
+# RFC: v0.6.0-dev.6 and attached stores
+
+> **Status:** Part A (sections 1 to 7) is built in v0.6.0-dev.6: everything in sections 2.1 to 2.6, merged and gated as one release (the proofs gate on the merged tree: 594 theorems, 316 required claims, 203 mutants). Section 7 records the state at hand-over and is kept as history. Part B (attached stores, [section 8](#8-part-b-attached-stores-for-disposable-evidence)): S1 and S2 built in v0.6.0-dev.7, S4 in v0.6.0-dev.8; S3 and the snapshot verb are specified in [v060-stores-next-spec.md](2026-11-18-attached-stores-next.md), not built. *(Note, 20 November 2026: both built in v0.6.0-dev.10.)* Written against `main` at `4f73917` (v0.6.0-dev.5). The authority is [mission.md](../writfold/mission.md).
 
 This release answers a review by someone moving a working agent flow onto the `writfold` binary: hooks of their own, a registry of checks, and several agent sessions running at once on one machine against one KB clone. Of the earlier round's asks, most had shipped. One thing still blocked the move, and it is general: **every session on a KB clone shared one current run**. The rest of the review is smaller requests and gaps the flow implies. Each need below is stated for any user; nothing in it is specific to one setup.
 
@@ -11,11 +27,11 @@ Each description of today's behaviour was checked against the code at `4f73917`;
 | # | Need | Verdict | Reason |
 |---|---|---|---|
 | 1 | Parallel agent sessions on one KB clone, each on its own task, without sharing a current run | **Adopt: a current run per session and per work tree, with the shared pointer as the fallback** ([2.1](#21-a-current-run-per-session-and-per-work-tree-item-1)) | The one blocker. With one pointer per clone, a second session's new run moves the first session's pointer, and the first session's next commit is judged against gates it never owed, or passes on gates the other session met. `--run` on verbs does not help: a hook cannot be given one |
-| 2 | Several lookups in one process, for hooks | **Adopt: `find --each`** ([2.2](#22-find---each-item-2)); reverses the "decline" of [dev10-spec 4.6](dev10-spec.md#46-lookup-layers-not-built-item-7) | That decision rested on one `find` taking about 10 ms. On a KB of 3,000 records it measures 48 to 92 ms with process start, and a hook that resolves three names before each search pays it three times at every tool call |
-| 3 | A run left `policy-moved` by a gate edited mid-run has no way forward but a new run | **Adopt: `plan repin`**, as specified in [policy-spec 2.5](policy-spec.md#25-policy-pins-and-drift-items-11-12) | Planned since v0.6.0-dev.3; tuning gates on live runs makes it frequent |
+| 2 | Several lookups in one process, for hooks | **Adopt: `find --each`** ([2.2](#22-find---each-item-2)); reverses the "decline" of [dev10-spec 4.6](2026-11-15-v050-dev10.md#46-lookup-layers-not-built-item-7) | That decision rested on one `find` taking about 10 ms. On a KB of 3,000 records it measures 48 to 92 ms with process start, and a hook that resolves three names before each search pays it three times at every tool call |
+| 3 | A run left `policy-moved` by a gate edited mid-run has no way forward but a new run | **Adopt: `plan repin`**, as specified in [policy-spec 2.5](2026-11-16-user-defined-policy.md#25-policy-pins-and-drift-items-11-12) | Planned since v0.6.0-dev.3; tuning gates on live runs makes it frequent |
 | 4 | Gates in the KB root that apply to some repositories only | **Already does through plans: confirm, test and document. Defer a `repos` key on a gate** ([2.3](#23-gates-for-some-repositories-item-4), [5](#5-deferred-with-reasons)) | A run's plan narrows what the run owes to the gates its steps name. That covers a KB that holds gates for several kinds of repository. A selector on the gate itself raises questions a plan does not |
 | 5 | Upgrading on purpose: what changed in behaviour between releases | **Adopt: one page, kept with each release** ([2.4](#24-behaviour-changes-by-release-item-5)) | Five pre-releases in two days carried behaviour changes spread over five sets of notes |
-| 6 | A short path for small changes that still leaves a record | **Adopt as a documented recipe, not a built-in** ([2.5](#25-recipes-items-6-to-10)) | An attested gate and a one-step plan template already give the record and the narrowing. A rule-level waiver stays declined ([dev10-spec 4.2](dev10-spec.md#42-a-rule-level-waiver-guard-waive-item-3)) |
+| 6 | A short path for small changes that still leaves a record | **Adopt as a documented recipe, not a built-in** ([2.5](#25-recipes-items-6-to-10)) | An attested gate and a one-step plan template already give the record and the narrowing. A rule-level waiver stays declined ([dev10-spec 4.2](2026-11-15-v050-dev10.md#42-a-rule-level-waiver-guard-waive-item-3)) |
 | 7 | Rolling guards out without false refusals | **Already does (`mode = "audit"`, `guard log`); adopt the rollout as a recipe** | The mechanism exists; what was missing is saying how to use it |
 | 8 | Converting an existing registry of checks | **Adopt as a recipe** | Mechanical, checklist and attested gates, plan templates per kind of change and `kb lint` are the pieces; the mapping was not written down |
 | 9 | Sources reachable only through an agent's tool server | **Adopt as a recipe** (a lifetime, an observation, or a checker over any command-line route) | A checker is a plain process and stays one |
@@ -72,7 +88,7 @@ The decisions, and why each was taken:
 | `writer_reads_its_run` | after a seat makes an open run current, it reads an open current run, for every prior state of the three pointers and every seat shape |
 | `other_session_undisturbed` | a seat whose session pointer is set reads the same before and after another seat makes a run current |
 
-Six mutants, each rejected by the theorems named in [aeneas.md](aeneas.md#the-claims-and-their-mutants): work tree before session, a missing run treated as unset, a closed session run skipped for an open work-tree run, any run counted as open at the shared level, the shared pointer not always written, the session pointer never written.
+Six mutants, each rejected by the theorems named in [aeneas.md](../writfold/aeneas.md#the-claims-and-their-mutants): work tree before session, a missing run treated as unset, a closed session run skipped for an open work-tree run, any run counted as open at the shared level, the shared pointer not always written, the session pointer never written.
 
 **Tested, not proved** (`crates/writfold-kb/src/seat.rs`, `hook/export.rs`): reading the pointer files; the state of the run a pointer names (the manifest's presence, the sidecar's or the manifest's `state`); which work tree encloses a directory and whether it is the KB's own; the form of a session ID; the `export` line; argument parsing; the notes `guard status` and `resume --here` print. `resume --here` refuses a closed run through the already proved `guard::require::run_current`.
 
@@ -100,7 +116,7 @@ A run's plan narrows what the run owes: `plan::owed` gives `gate status`, `gate 
 
 ### 2.6 `plan repin` (item 3)
 
-As [policy-spec 2.5](policy-spec.md#25-policy-pins-and-drift-items-11-12) specifies; its theorems and what is tested are recorded there and in [aeneas.md](aeneas.md).
+As [policy-spec 2.5](2026-11-16-user-defined-policy.md#25-policy-pins-and-drift-items-11-12) specifies; its theorems and what is tested are recorded there and in [aeneas.md](../writfold/aeneas.md).
 
 ## 3. Build order
 
@@ -154,7 +170,7 @@ Recorded on 17 November 2026 when implementation was handed over. Nothing was pu
 **Branch `session-runs`** (the main checkout, at `4f73917`, no commit made): everything of sections 2.1 to 2.5 is in the working tree, uncommitted.
 
 - Kernel and proofs: `crates/writfold-core/src/pointer.rs`, `start_from` and `lib.rs`; `proofs/Writfold/Pointer.lean`, `proofs/Writfold.lean`, `proofs/Audit.lean` (ten claims), `proofs/mutants.py` (six mutants), `proofs/Extracted/WritfoldCore.lean` refreshed after `cargo fmt`. Observed in a scratch container: no drift, `lake build` clean, the axiom audit `584 theorems, 308 required claims`, each of the six new mutants rejected by exactly its named theorems, and 139 of the 195 mutants calibrated with no failure when the run was stopped. **The full proofs gate has not passed on this tree.**
-- Wiring: `writfold-kb` `seat.rs`, `hook/export.rs`, `verbs/find_each.rs` (new) and the readers and writers listed in [kb-v1-design.md §48](kb-v1-design.md#48-a-current-run-per-session-and-work-tree-find---each-as-built-17-november-2026-v060-dev6); `writfold-app` `kb/{hook,lists,mod,verbs,writes}.rs`.
+- Wiring: `writfold-kb` `seat.rs`, `hook/export.rs`, `verbs/find_each.rs` (new) and the readers and writers listed in [kb-v1-design.md §48](../writfold/kb-v1-design.md#48-a-current-run-per-session-and-work-tree-find---each-as-built-17-november-2026-v060-dev6); `writfold-app` `kb/{hook,lists,mod,verbs,writes}.rs`.
 - Tests: `crates/writfold-kb/tests/{seat_runs,find_each}.rs`, `crates/writfold/tests/kb_session_runs.rs`, `guide_toml.rs` (the `adopting` page). Observed on the host: these pass; `cargo fmt --check`, both clippy runs and the xtask `quality` check were clean; the `writfold`, `writfold-app`, `writfold-kb` and `writfold-tui` suites passed once before the last two edits (the library no longer reads `$WRITFOLD_SESSION`; the `guard status` note was reworded) and were re-run only in part after them.
 - Documentation: the guides `hooks`, `kb-layout`, `feeding-back`, `gates`, `watch`, `json`, `assurance`, `README`, the new `adopting` and `changes`; `aeneas.md`, `kb-v1-design.md` §48, `mission.md`; the plugin's skill and hook description. They say "built in v0.6.0-dev.6", which becomes true only at the release. `aeneas.md`'s mutant and theorem totals were not updated (they wait for the merged tree).
 - Not started: the version bump (`Cargo.toml`, `Cargo.lock`, README's pre-release line and its "What works today" and "Planned" lines), the release notes (a draft is kept outside the repository), the website.
@@ -163,7 +179,7 @@ Recorded on 17 November 2026 when implementation was handed over. Nothing was pu
 
 - Kernel `crates/writfold-core/src/policy/repin.rs`: `in_force` (the newest pin entry that applies) and `repin_check` (refusals in the order closed, an edited pin, unpinned, nothing moved, a gate that does not load, a lock list that would reopen a skipped step). Theorems in `Policy.lean`, all audited: `in_force_loop_spec`, `in_force_spec`, `in_force_none_iff`, `repin_check_spec`, `repin_ok_iff`, `repin_unmoved_refused`, `repin_closed_refused`, `repin_keeps_skips`. Eight mutants.
 - Reported by that agent, not re-checked here: no drift, `lake build` clean, the audit `579 theorems, 306 required claims`, its eight mutants each rejected by exactly their theorems, 67 of 197 mutants calibrated with no failure when stopped; `cargo fmt`, both clippy runs, the xtask check and the four crates' tests clean. **The full proofs gate has not passed on this branch either.** A paused container `wf-repin-gate` holds that run (`docker unpause` resumes it, `docker stop` discards it).
-- Three things in it go beyond [policy-spec 2.5](policy-spec.md#25-policy-pins-and-drift-items-11-12) and need a reviewer's decision: a new optional `steps` key in a repin pin (a done step and an open step naming one gate at different digests cannot both read `same` from one digest per gate; an older binary ignores the key and may still read such a run `moved`); three refusals the specification does not list (an edited pin, a gate that does not load, a stricter `unskippable` list that would reopen a step the run already skipped); and the required file's pin in force becoming the newest pin that carries one, where it was the first. A repin exits 2 while a done step is still stale: it revives no evidence.
+- Three things in it go beyond [policy-spec 2.5](2026-11-16-user-defined-policy.md#25-policy-pins-and-drift-items-11-12) and need a reviewer's decision: a new optional `steps` key in a repin pin (a done step and an open step naming one gate at different digests cannot both read `same` from one digest per gate; an older binary ignores the key and may still read such a run `moved`); three refusals the specification does not list (an edited pin, a gate that does not load, a stricter `unskippable` list that would reopen a step the run already skipped); and the required file's pin in force becoming the newest pin that carries one, where it was the first. A repin exits 2 while a done step is still stale: it revives no evidence.
 - Left for the merge: README's "Planned: `plan repin`" line; `kb-layout.md` if it is to document `steps`, `reason` and `by`; one refusal path with no end-to-end test (a done record that does not name its step's gate, reachable only by editing a record by hand).
 - It will conflict with `session-runs` in `proofs/Extracted/WritfoldCore.lean` (regenerate), and may in `proofs/Audit.lean`, `proofs/mutants.py`, `docs/writfold/aeneas.md`, `docs/guide/{assurance,json}.md` and the usage text in `crates/writfold-app/src/kb/mod.rs` (244 lines on `session-runs`, 239 on `repin`, budget 250).
 
@@ -189,7 +205,7 @@ Recorded on 17 November 2026 when implementation was handed over. Nothing was pu
 
 ## 8. Part B: attached stores for disposable evidence
 
-A second request, queued after Part A and not part of its release. S1 and S2 are built in v0.6.0-dev.7 as designed below ([stores guide](../guide/stores.md); proofs in [aeneas.md](aeneas.md#the-attached-stores-round-18-november-2026)), with the owner's choices of 18 November 2026 on 8.6: an unanchored pin reads `gone`, and `role = "attached"` implies `pinned`. As built, the theorems are those of 8.3 for `basis`, `pinned` and `resolve`; `judge_*` are not separate functions (the head rule is unchanged code, the pin rule takes no head input, and a mark is applied after both by the proved `with_mark`); `artifact` was built with S4 in v0.6.0-dev.8 (the refusals add `found` and an anchored commit, so an admitted pointer reads fresh when written; proved as `artifact_admit_reads_fresh`); `claim` waits for S3, specified in [v060-stores-next-spec.md](v060-stores-next-spec.md), which also specifies the snapshot verb and replaces 8.4's index-pin design for S3.
+A second request, queued after Part A and not part of its release. S1 and S2 are built in v0.6.0-dev.7 as designed below ([stores guide](../guide/stores.md); proofs in [aeneas.md](../writfold/aeneas.md#the-attached-stores-round-18-november-2026)), with the owner's choices of 18 November 2026 on 8.6: an unanchored pin reads `gone`, and `role = "attached"` implies `pinned`. As built, the theorems are those of 8.3 for `basis`, `pinned` and `resolve`; `judge_*` are not separate functions (the head rule is unchanged code, the pin rule takes no head input, and a mark is applied after both by the proved `with_mark`); `artifact` was built with S4 in v0.6.0-dev.8 (the refusals add `found` and an anchored commit, so an admitted pointer reads fresh when written; proved as `artifact_admit_reads_fresh`); `claim` waits for S3, specified in [v060-stores-next-spec.md](2026-11-18-attached-stores-next.md), which also specifies the snapshot verb and replaces 8.4's index-pin design for S3.
 
 ### 8.1 The need
 

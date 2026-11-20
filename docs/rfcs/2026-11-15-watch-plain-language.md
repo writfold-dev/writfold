@@ -1,4 +1,20 @@
-# `writfold watch` T6: a plain-language surface
+---
+rfc: "2026-11-15-watch-plain-language"
+title: "`writfold watch` T6: a plain-language surface"
+status: accepted
+implementation: complete
+authors:
+  - tknawara
+created: 2026-11-15
+updated: 2026-11-20
+issue: null
+milestone: null
+supersedes: []
+superseded_by: []
+blocked_on: []
+---
+
+# RFC: `writfold watch` T6: a plain-language surface
 
 Looked at: main at 808b48b (v0.5.0-dev.10 planning), `crates/writfold-tui/src`, and live
 frames driven in tmux at 136×38 and 80×24 against the two capture worlds (the run world of

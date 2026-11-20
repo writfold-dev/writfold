@@ -1,8 +1,26 @@
-# T3: the plan map and node inspector in `writfold watch` — specification
+---
+rfc: "2026-11-14-watch-plan-map"
+title: "T3: the plan map and node inspector in `writfold watch`"
+status: accepted
+implementation: complete
+authors:
+  - tknawara
+created: 2026-11-14
+updated: 2026-11-20
+issue: null
+milestone: null
+supersedes: []
+superseded_by: []
+blocked_on: []
+---
+
+# RFC: T3: the plan map and node inspector in `writfold watch`
+
+*(Note, 20 November 2026: built; as built in [design §35](../writfold/kb-v1-design.md#35-t3-as-built). The status line below is as written.)*
 
 Status: design, not built. Written 14 November 2026 against `main` at `c7bb3d4` (v0.5.0-dev.5, T2 as built). Branch from current `main` and re-read every file named here before editing it.
 
-Audience: an agent implementing T3 in its own worktree. Read first: `AGENTS.md`, `docs/writfold/mission.md`, [`tui-t2-spec.md`](tui-t2-spec.md) (its principles, section 1, and owner decisions, 0a, still hold unless this document says otherwise), `docs/writfold/kb-v1-design.md` §34 (T2 as built) and §21/§24 (run graph), `docs/guide/run-graph.md`, `docs/guide/watch.md`, `docs/guide/json.md`.
+Audience: an agent implementing T3 in its own worktree. Read first: `AGENTS.md`, `docs/writfold/mission.md`, [`tui-t2-spec.md`](2026-11-13-watch-run-progress.md) (its principles, section 1, and owner decisions, 0a, still hold unless this document says otherwise), `docs/writfold/kb-v1-design.md` §34 (T2 as built) and §21/§24 (run graph), `docs/guide/run-graph.md`, `docs/guide/watch.md`, `docs/guide/json.md`.
 
 ## 0. Summary
 

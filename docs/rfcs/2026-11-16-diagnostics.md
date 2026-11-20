@@ -1,4 +1,20 @@
-# Diagnostics for the files a user writes
+---
+rfc: "2026-11-16-diagnostics"
+title: "Diagnostics for the files a user writes"
+status: accepted
+implementation: complete
+authors:
+  - tknawara
+created: 2026-11-16
+updated: 2026-11-20
+issue: null
+milestone: null
+supersedes: []
+superseded_by: []
+blocked_on: []
+---
+
+# RFC: Diagnostics for the files a user writes
 
 > **Status:** built in v0.6.0-dev.2, steps 1–12; the guide page is [errors](../guide/errors.md). Measurements are of the v0.6.0-dev.1 release binary (commit `da63b1f`) on a scratch KB, 16 November 2026.
 

@@ -1,4 +1,22 @@
-# T2: run progress in `writfold watch` — specification
+---
+rfc: "2026-11-13-watch-run-progress"
+title: "T2: run progress in `writfold watch`"
+status: accepted
+implementation: complete
+authors:
+  - tknawara
+created: 2026-11-13
+updated: 2026-11-20
+issue: null
+milestone: null
+supersedes: []
+superseded_by: []
+blocked_on: []
+---
+
+# RFC: T2: run progress in `writfold watch`
+
+*(Note, 20 November 2026: built; as built in [design §34](../writfold/kb-v1-design.md#34-t2-as-built). The status line below is as written.)*
 
 Status: design, not built. Written 13 November 2026 against `main` at `b1ef5c2` (v0.5.0-dev.2); the owner's answers to its open questions are folded in below (section 0a, which overrides any sentence it contradicts). Branch from current `main`: v0.5.0-dev.3 work (guard `paths`/`repeat`, `kb observe`, tracked proposals, checker `max_age`, `kb repos`, batch `gate cover`) lands there in parallel; re-read the files named here before editing them. Nothing in this document has been implemented; every "T2 does" below is a requirement for the implementer.
 
@@ -524,7 +542,7 @@ The kb-side tests are listed with each verb in section 3. "Removing the check fa
 ## 11. Documentation to update with the change
 
 - `docs/writfold/kb-v1-design.md`: a new section after §33, "## 34. T2 as built", created by the implementer with these subsections filled from what was actually built: 34.1 Verb and panes; 34.2 Verb additions (`plan status --gates`, `runs --plan`, `stale --cached`, `timeline <run>`, `guard status`, the stamps, `user_config`); 34.3 Layout classes, with the two buffer goldens; 34.4 Keys and refresh; 34.5 `--once`; 34.6 Themes and colour depth (crediting the source of the palettes); 34.7 Build and dependencies (none new); 34.8 Tests; 34.9 Deviations from this specification; 34.10 Not done. §18 is not rewritten; add one line at the top of §18.6 pointing to §34 for the items it closes (`--repo`, the subject poll, the plan position in the runs list, the run filters) and the one it declines (`c`). §30 and §33 each get a one-line pointer (`guard status`; `stale --cached`). Fix the `### 32.x` subsection numbers under §33 only if the owner asks; it is outside this change.
-- `docs/writfold/mission.md`, Roadmap: add under the v0.5.0-dev.2 items, struck through when built: `T2: run progress in writfold watch (plan steps, owed gates, checklist items, guards, inbox; themes) ([as built](kb-v1-design.md#34-t2-as-built))`.
+- `docs/writfold/mission.md`, Roadmap: add under the v0.5.0-dev.2 items, struck through when built: `T2: run progress in writfold watch (plan steps, owed gates, checklist items, guards, inbox; themes) ([as built](../writfold/kb-v1-design.md#34-t2-as-built))`.
 - `docs/guide/`: a new page `watch.md` ("Watching a run": what each pane shows and the verb behind it, the keys, the layout classes, `--once` and `--view`, themes and colour, what it never shows and why), linked from `docs/guide/README.md`; `run-graph.md` line 69 updated (`watch` shows the steps, not one line) and `plan status --gates`, `runs --plan` added to its command list; `json.md` gains a short "Labels the views rely on" paragraph (the `gate`/`item` grammar of 3.1, the `plan` label, the new counts) with no change to its key tables; `checkers.md` line 33 adds `stale --cached` to the readers that start no checker; `hooks.md` documents `guard status`.
 - `README.md`: the `watch` paragraph (line 255) and the command table row (line 385); the status line follows the README's convention for built versus planned.
 - `plugins/writfold` skill text only if it names `watch`'s keys (check; do not widen).

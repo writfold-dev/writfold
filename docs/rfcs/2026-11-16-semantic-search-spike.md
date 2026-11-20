@@ -1,4 +1,20 @@
-# Semantic search spike: handover
+---
+rfc: "2026-11-16-semantic-search-spike"
+title: "Semantic search spike"
+status: draft
+implementation: not-started
+authors:
+  - tknawara
+created: 2026-11-16
+updated: 2026-11-20
+issue: https://github.com/writfold-dev/writfold/issues/27
+milestone: "Later"
+supersedes: []
+superseded_by: []
+blocked_on: []
+---
+
+# RFC: Semantic search spike
 
 Status: **planned spike** (owner, 16 November 2026). Nothing here is built. This page hands the spike to one implementer working in its own worktree; the result is a measured recommendation and, if it earns it, a feature-gated implementation that the owner's session reviews and lands.
 

@@ -1,6 +1,22 @@
-# Delivery modes, second round: specification
+---
+rfc: "2026-11-17-delivery-modes-second-round"
+title: "Delivery modes, second round"
+status: accepted
+implementation: partial
+authors:
+  - tknawara
+created: 2026-11-17
+updated: 2026-11-20
+issue: null
+milestone: null
+supersedes: []
+superseded_by: []
+blocked_on: []
+---
 
-> **Status:** built in v0.6.0-dev.4 above the cut line (steps 1 to 8, D1 to D13, with D14's skill text and the guides); D18 and D19, below the cut line, are not built ([design §47](kb-v1-design.md#47-delivery-modes-second-round-as-built-17-november-2026-v060-dev4)). Proposed 17 November 2026, written against `main` at `83d5ded` (v0.6.0-dev.3); sections 1 to 4 describe the state before this round. Every description of today's behaviour was run with the v0.6.0-dev.3 release binary on a scratch KB (section 1), or read from the code at that commit. The authority is [mission.md](mission.md). This document stands beside [deliver-gate-spec.md](deliver-gate-spec.md) (a delivery as a step's gate, built) and [policy-spec.md](policy-spec.md) (whose delivery `waivable` is specified here in full and built by this round).
+# RFC: Delivery modes, second round
+
+> **Status:** built in v0.6.0-dev.4 above the cut line (steps 1 to 8, D1 to D13, with D14's skill text and the guides); D18 and D19, below the cut line, are not built ([design §47](../writfold/kb-v1-design.md#47-delivery-modes-second-round-as-built-17-november-2026-v060-dev4)). Proposed 17 November 2026, written against `main` at `83d5ded` (v0.6.0-dev.3); sections 1 to 4 describe the state before this round. Every description of today's behaviour was run with the v0.6.0-dev.3 release binary on a scratch KB (section 1), or read from the code at that commit. The authority is [mission.md](../writfold/mission.md). This document stands beside [deliver-gate-spec.md](2026-11-15-delivery-modes-as-step-gates.md) (a delivery as a step's gate, built) and [policy-spec.md](2026-11-16-user-defined-policy.md) (whose delivery `waivable` is specified here in full and built by this round).
 
 A delivery mode is how an agent prepares outward text (a PR comment, a Slack summary, a commit message, a release note) and has it checked before anyone posts it. Writfold never sends anything: no network code, no adapter. That does not change. What changes is how well an agent that has never seen this repository can get from a draft to posted text without a wrong answer on the way, and what a cold session can tell afterwards.
 
@@ -22,7 +38,7 @@ delivery 20261117T103915Z-4d85ce [ready] commit-message audience=external …
 
 The same gate named on a plan step would refuse the waiver. One word, two rules.
 
-**W2. Any check can be waived by whoever runs the command.** A 170-word paragraph against a bound of 150, and a deny-list failure, are each one command from `[ready]`; `--by` is text. `waivable` ([policy-spec.md](policy-spec.md) section 2.2) is the answer and is not built.
+**W2. Any check can be waived by whoever runs the command.** A 170-word paragraph against a bound of 150, and a deny-list failure, are each one command from `[ready]`; `--by` is text. `waivable` ([policy-spec.md](2026-11-16-user-defined-policy.md) section 2.2) is the answer and is not built.
 
 ```text
 $ writfold kb deliver waive … --check paragraphs.bounded --reason "I like long paragraphs" --by agent

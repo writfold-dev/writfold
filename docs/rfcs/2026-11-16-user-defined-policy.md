@@ -1,6 +1,22 @@
-# User-defined policy: accepted outcomes, unskippable steps, pins and the first-use path
+---
+rfc: "2026-11-16-user-defined-policy"
+title: "User-defined policy: accepted outcomes, unskippable steps, pins and the first-use path"
+status: accepted
+implementation: partial
+authors:
+  - tknawara
+created: 2026-11-16
+updated: 2026-11-20
+issue: null
+milestone: null
+supersedes: []
+superseded_by: []
+blocked_on: []
+---
 
-> **Status:** built through the cut line in v0.6.0-dev.3, as recorded in [design §44](kb-v1-design.md#44-user-defined-policy-as-built-v060-dev3) (deviations there); `plan repin` is built in v0.6.0-dev.6 ([run-graph](../guide/run-graph.md#adopting-a-change-plan-repin); its two decisions are `writfold_core::policy::repin`, proved in the repin round of [aeneas.md](aeneas.md); as built it also records, under `steps`, a done step's own digest where it differs from the gate's, and refuses to adopt an edited pin, a gate that does not load, or a lock list that would reopen a skipped step); `kb policy --paths` is not built. The specification below is kept as written. Written against `main` at `b14505b` (v0.6.0-dev.2 plus the roadmap commit). The authority is [mission.md](mission.md). Every description of today's behaviour below was checked against the code at that commit, and the rows marked "run" were also run with the release binary on a copy of `fixtures/kb/basic` with a scratch subject repository ([section 8](#8-what-was-checked)).
+# RFC: User-defined policy: accepted outcomes, unskippable steps, pins and the first-use path
+
+> **Status:** built through the cut line in v0.6.0-dev.3, as recorded in [design §44](../writfold/kb-v1-design.md#44-user-defined-policy-as-built-v060-dev3) (deviations there); `plan repin` is built in v0.6.0-dev.6 ([run-graph](../guide/run-graph.md#adopting-a-change-plan-repin); its two decisions are `writfold_core::policy::repin`, proved in the repin round of [aeneas.md](../writfold/aeneas.md); as built it also records, under `steps`, a done step's own digest where it differs from the gate's, and refuses to adopt an edited pin, a gate that does not load, or a lock list that would reopen a skipped step); `kb policy --paths` is not built. The specification below is kept as written. Written against `main` at `b14505b` (v0.6.0-dev.2 plus the roadmap commit). The authority is [mission.md](../writfold/mission.md). Every description of today's behaviour below was checked against the code at that commit, and the rows marked "run" were also run with the release binary on a copy of `fixtures/kb/basic` with a scratch subject repository ([section 8](#8-what-was-checked)).
 
 A team writes down what adequate research, implementation and delivery mean for it: gates, checklists, instructions, plan templates, required steps. Writfold loads that policy, shows what is owed, judges the evidence by the mechanism the team chose, and refuses a transition its own verbs control when the policy is not met. It holds no opinion of its own about adequacy.
 
@@ -341,7 +357,7 @@ Nothing is built. The guide states the route that exists and its limit in one pl
 
 ## 3. Kernels and theorems
 
-Everything below is pure, IO-free Rust in `crates/writfold-core`, written for translation ([aeneas.md](aeneas.md#writing-kernels-for-translation)): owned data, explicit `while` loops, one early-returning loop per function, `matches!` instead of derived equality, no casts. The new module `writfold_core::policy` carries no derives and is translated whole; functions added to `plan`, `gate` and `checklist` are named in `[package.metadata.charon] start_from` one by one. The theorems are total-correctness triples over the translation, in the style of `proofs/Writfold/Gate.lean`; the statements below are the claims the axiom audit must find. Names may be adjusted to the translation's; the content may not be weakened.
+Everything below is pure, IO-free Rust in `crates/writfold-core`, written for translation ([aeneas.md](../writfold/aeneas.md#writing-kernels-for-translation)): owned data, explicit `while` loops, one early-returning loop per function, `matches!` instead of derived equality, no casts. The new module `writfold_core::policy` carries no derives and is translated whole; functions added to `plan`, `gate` and `checklist` are named in `[package.metadata.charon] start_from` one by one. The theorems are total-correctness triples over the translation, in the style of `proofs/Writfold/Gate.lean`; the statements below are the claims the axiom audit must find. Names may be adjusted to the translation's; the content may not be weakened.
 
 ### 3.1 `policy::met`
 
@@ -543,7 +559,7 @@ This step changes no behaviour. If the proofs of 3.1 to 3.5 run long it moves be
 
 ### 3.7 Audit and mutants
 
-`proofs/Audit.lean`'s `claims` list gains every theorem named in 3.1 to 3.6 (thirty names; the count in [aeneas.md](aeneas.md) and the guide moves from thirty-three). `proofs/mutants.py` gains one mutant per decision, each required to break exactly the named theorem:
+`proofs/Audit.lean`'s `claims` list gains every theorem named in 3.1 to 3.6 (thirty names; the count in [aeneas.md](../writfold/aeneas.md) and the guide moves from thirty-three). `proofs/mutants.py` gains one mutant per decision, each required to break exactly the named theorem:
 
 | Mutant of the Rust | Must break |
 |---|---|
@@ -760,5 +776,5 @@ Compared with the code at `b14505b`; rows marked "run" were run with the release
 3. Guard rules that only partly parse keep being skipped loudly; no action from a partial parse for now.
 4. The gate-binding proof (3.6) stays above the cut line, first to slip.
 5. Earlier runs read `complete (unpinned)`: yes.
-6. **Order with the proof backfill** ([proof-backfill-spec.md](proof-backfill-spec.md)): the backfill's first round lands first. Where this spec changes a kernel the backfill proves (gate standing, checklist roll-up, plan skip/advance), it replaces those theorems in place and re-runs the proofs gate; nothing is proved twice.
+6. **Order with the proof backfill** ([proof-backfill-spec.md](2026-11-16-proof-backfill.md)): the backfill's first round lands first. Where this spec changes a kernel the backfill proves (gate standing, checklist roll-up, plan skip/advance), it replaces those theorems in place and re-runs the proofs gate; nothing is proved twice.
 7. Lean first: every kernel in section 3 passes the proofs gate before it is wired into a verb.

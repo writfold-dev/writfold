@@ -1,6 +1,22 @@
-# Delivery modes as a step's gates: specification
+---
+rfc: "2026-11-15-delivery-modes-as-step-gates"
+title: "Delivery modes as a step's gates"
+status: accepted
+implementation: complete
+authors:
+  - tknawara
+created: 2026-11-15
+updated: 2026-11-20
+issue: null
+milestone: null
+supersedes: []
+superseded_by: []
+blocked_on: []
+---
 
-> **Status:** built in v0.5.0-dev.10 ([as built](kb-v1-design.md#42-delivery-modes-as-a-steps-gates-as-built), with its deviations). Written against `main` at `808b48b` (v0.5.0-dev.9, with v0.5.0-dev.10 planned) and read against [dev10-spec.md](dev10-spec.md), whose changes to `gates.met`, the `gate status` notes and the command reader it composes with. The authority is [mission.md](mission.md).
+# RFC: Delivery modes as a step's gates
+
+> **Status:** built in v0.5.0-dev.10 ([as built](../writfold/kb-v1-design.md#42-delivery-modes-as-a-steps-gates-as-built), with its deviations). Written against `main` at `808b48b` (v0.5.0-dev.9, with v0.5.0-dev.10 planned) and read against [dev10-spec.md](2026-11-15-v050-dev10.md), whose changes to `gates.met`, the `gate status` notes and the command reader it composes with. The authority is [mission.md](../writfold/mission.md).
 
 ## 1. Need
 
@@ -30,7 +46,7 @@ steps = [
 | 7 | How the step's delivery gate is worded | One standing for the whole delivery, the weakest word that is true: an unmet obligation gives its own standing (the first unmet, in the mode's order: `open`, `stale`, `failed`, `unknown`); else `waived` if any obligation is waived; else `attested` if any is attested; else `satisfied` | A statement is never read as a passing check, here as everywhere. `satisfied` means every obligation passed a check on these bytes |
 | 8 | May a waived check let the step advance? | Yes. The gate stands `waived`, the done record says `waived`, and `plan status` shows it | A waived gate advances a step today and a waived check makes a candidate ready today; a third rule for the same word would be a trap. The waiver is tracked text with who and why, bound to the candidate's bytes |
 | 9 | Waiving the delivery as a whole | Not built. `gate waive deliver:<mode>` is refused (it is not a gate definition). Waive a check with `deliver waive`; close the step without a delivery with `plan skip --reason --by` | A skip is already the honest record of "this step was not done" |
-| 10 | A mode with no obligation | Refused at `plan set`/`plan use`; if the mode file is emptied later the gate stands `open` with the reason | An empty set is not met ([dev10-spec 2.1](dev10-spec.md#21-empty-is-not-met-item-4)) |
+| 10 | A mode with no obligation | Refused at `plan set`/`plan use`; if the mode file is emptied later the gate stands `open` with the reason | An empty set is not met ([dev10-spec 2.1](2026-11-15-v050-dev10.md#21-empty-is-not-met-item-4)) |
 | 11 | No candidate, or only bound ones | The gate stands `open`; `next:` is the `deliver prepare` command | Open is "nothing recorded", as for a gate without a receipt |
 | 12 | Staleness | Derived on every read. Candidate bytes changed, mode file changed, deny list or paragraph bound changed, a mode gate's definition, instructions or script changed: the affected obligations go `stale`, as they do today. New: a passed `claims.cited-fresh` receipt stands only while every citation token in the candidate is still fresh (section 5). A done step whose delivery no longer holds is `[done] !stale`; the current step never moves back | Like every other gate. The citation re-check closes the one case where a candidate read `[ready]` after its evidence moved |
 | 13 | `gate status`, `gate lines`, the `gates.met` requirement | They do not list or count deliveries. `gate status` adds a note naming the plan's deliveries and their steps. `step.met` does judge them | A delivery is ordered by the plan: it becomes due at its step. `gates.met` is used on `git commit`; counting a PR comment there would refuse the commit the comment is about. A gate-wide answer is also not defined when two steps name one mode |

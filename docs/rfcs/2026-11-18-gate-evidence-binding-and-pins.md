@@ -1,6 +1,22 @@
-# Gate evidence: binding and pins
+---
+rfc: "2026-11-18-gate-evidence-binding-and-pins"
+title: "Gate evidence: binding and pins"
+status: accepted
+implementation: partial
+authors:
+  - tknawara
+created: 2026-11-18
+updated: 2026-11-20
+issue: null
+milestone: null
+supersedes: []
+superseded_by: []
+blocked_on: []
+---
 
-> **Status:** specification, 18 November 2026, against `main` at `c2de2a7` (v0.6.0-dev.8). Stages 1 (kernels and proofs), 2 (report-only notes), 3 (`own_evidence`, `evidence_from`) 4 (negative looks age; `--searched`), 5 (`ages_as`) and 6 (`repo:` scope entries) are built. The authority is [mission.md](mission.md). The rule is AGENTS.md's "Lean proofs first": every decision below is a pure kernel in `crates/writfold-core`, proved in Lean, before any verb calls it.
+# RFC: Gate evidence: binding and pins
+
+> **Status:** specification, 18 November 2026, against `main` at `c2de2a7` (v0.6.0-dev.8). Stages 1 (kernels and proofs), 2 (report-only notes), 3 (`own_evidence`, `evidence_from`) 4 (negative looks age; `--searched`), 5 (`ages_as`) and 6 (`repo:` scope entries) are built. The authority is [mission.md](../writfold/mission.md). The rule is AGENTS.md's "Lean proofs first": every decision below is a pure kernel in `crates/writfold-core`, proved in Lean, before any verb calls it.
 
 ## 0. Why
 
@@ -67,7 +83,7 @@ An item is *answered* when some cited reference is both grounded and answers it.
 | `nothing_found_spec`, `nothing_found_refines` | a look still found nothing ↔ (`no-data` ∨ `not-found`) ∧ every pin holds; with no pins this is today's status test |
 | `current_under_spec`, `current_under_about`, `current_under_refines` | current ↔ about the present bytes ∧ every pin holds; pins only take standing away; no pins = about |
 
-There are eight mutants, one per decision, each calibrated against the theorems it must break ([aeneas.md](aeneas.md#the-claims-and-their-mutants)).
+There are eight mutants, one per decision, each calibrated against the theorems it must break ([aeneas.md](../writfold/aeneas.md#the-claims-and-their-mutants)).
 
 The existing kernels are untouched: `observe::grounds`, `ground::of_*` (they also serve the frozen assessed gate), `checklist::item` and `gate::about`. The new kernels sit on top of them, and each one has a refinement theorem showing that the default reproduces today's behaviour.
 

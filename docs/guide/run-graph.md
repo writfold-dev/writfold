@@ -264,7 +264,7 @@ A root splice after the first (the plan's own template, a required end template)
 
 ## Policy: unskippable steps, pins and how a plan ended
 
-Built in v0.6.0-dev.3 ([policy spec](../writfold/policy-spec.md) 2.4 to 2.6). Each decision below is a proved kernel ([assurance](assurance.md)); `crates/writfold-kb/tests/policy_plan.rs` runs every case.
+Built in v0.6.0-dev.3 ([policy spec](../rfcs/2026-11-16-user-defined-policy.md) 2.4 to 2.6). Each decision below is a proved kernel ([assurance](assurance.md)); `crates/writfold-kb/tests/policy_plan.rs` runs every case.
 
 **Unskippable steps.** `required.toml` may name start or end templates whose own steps `plan skip` refuses:
 

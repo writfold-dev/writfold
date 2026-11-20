@@ -1,4 +1,20 @@
-# `writfold watch` T5: the knowledge base in the same frame
+---
+rfc: "2026-11-15-watch-knowledge-base"
+title: "`writfold watch` T5: the knowledge base in the same frame"
+status: accepted
+implementation: complete
+authors:
+  - tknawara
+created: 2026-11-15
+updated: 2026-11-20
+issue: null
+milestone: null
+supersedes: []
+superseded_by: []
+blocked_on: []
+---
+
+# RFC: `writfold watch` T5: the knowledge base in the same frame
 
 Reviewed: main at 024d525 (v0.5.0-dev.7), `crates/writfold-tui/src`, `crates/writfold-kb/src/verbs`,
 the guides (`watch.md`, `json.md`, `kb-layout.md`), design §3, §5, §6, §12 and §34–36. Every verb

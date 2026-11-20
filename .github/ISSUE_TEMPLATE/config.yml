@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: RFC process
+    url: https://github.com/writfold-dev/writfold/blob/main/docs/rfcs/README.md
+    about: Designs for changes that are costly to reverse are written as RFCs behind an issue.
