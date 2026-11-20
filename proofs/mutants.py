@@ -893,6 +893,24 @@ MUTANTS = (
            "    shown >= limit",
            "    shown > limit",
            ("Writfold.Core.Walk.full_spec", "Writfold.Core.Walk.not_full_admits")),
+    # find: the rows walk every tier's hits once, in order (show, 20 November 2026)
+    Mutant("show-ignores-seen", "find.rs",
+           "        if admit(shown.len(), limit, among(&records, hit.record), hit.passes) {",
+           "        if admit(shown.len(), limit, false, hit.passes) {",
+           ("Writfold.Core.Show.show_loop_spec",)),
+    Mutant("show-records-wrong", "find.rs",
+           "            records.push(hit.record);",
+           "            records.push(0);",
+           ("Writfold.Core.Show.show_loop_spec",)),
+    Mutant("among-skips-last", "find.rs",
+           "    while i < records.len() {",
+           "    while i + 1 < records.len() {",
+           ("Writfold.Core.Show.among_loop_spec",)),
+    # find: stop after the exact tier only on exactly one record
+    Mutant("exact-stops-on-many", "find.rs",
+           "    id_shaped && exact_hits == 1",
+           "    id_shaped && exact_hits >= 1",
+           ("Writfold.Core.Show.exact_stops_spec",)),
     # ---- delivery modes, second round (17 November 2026) ----
     # delivery: an obligation is met under its own policy, not by any met word
     Mutant("delivery-accept-ignored", "delivery.rs",

@@ -544,6 +544,35 @@ mutants = [
 [[claim]]
 crate = "writfold-core"
 file = "crates/writfold-core/src/find.rs"
+function = "among"
+lean = "writfold_core.find.among"
+theorems = [
+  "Writfold.Core.Show.among_loop_spec",
+  "Writfold.Core.Show.among_spec",
+]
+total = "Writfold.Core.Show.among_spec"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "among-skips-last",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/find.rs"
+function = "exact_stops"
+lean = "writfold_core.find.exact_stops"
+theorems = [
+  "Writfold.Core.Show.exact_stops_spec",
+]
+total = "Writfold.Core.Show.exact_stops_spec"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "exact-stops-on-many",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/find.rs"
 function = "full"
 lean = "writfold_core.find.full"
 theorems = [
@@ -598,6 +627,22 @@ total = "Writfold.Core.Find.query_ok_spec"
 subsumes = ["TAU-N001", "TAU-P003"]
 mutants = [
   "query-ok-three-chars",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/find.rs"
+function = "show"
+lean = "writfold_core.find.show"
+theorems = [
+  "Writfold.Core.Show.show_loop_spec",
+  "Writfold.Core.Show.show_spec",
+]
+total = "Writfold.Core.Show.show_spec"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "show-ignores-seen",
+  "show-records-wrong",
 ]
 
 [[claim]]
@@ -877,6 +922,7 @@ file = "crates/writfold-core/src/ground.rs"
 function = "of_observation"
 lean = "writfold_core.ground.of_observation"
 theorems = [
+  "Writfold.Core.Ground.of_observation_antitone",
   "Writfold.Core.Ground.of_observation_grounded_iff",
 ]
 total = "Writfold.Core.Ground.of_observation_grounded_iff"
@@ -2109,6 +2155,27 @@ mutants = [
 [[claim]]
 crate = "writfold-core"
 file = "crates/writfold-core/src/store.rs"
+function = "claim"
+lean = "writfold_core.store.claim"
+theorems = [
+  "Writfold.Core.Store.claim_ambiguous_iff",
+  "Writfold.Core.Store.claim_exact_wins",
+  "Writfold.Core.Store.claim_listed_iff",
+  "Writfold.Core.Store.claim_needs_store",
+  "Writfold.Core.Store.claim_unknown_iff",
+]
+total = "Writfold.Core.Store.claim_ambiguous_iff"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "claim-two-listed",
+  "claim-unknown-listed",
+  "claim-alias-hides-id",
+  "claim-any-repository",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/store.rs"
 function = "pinned"
 lean = "writfold_core.store.pinned"
 theorems = [
@@ -2144,6 +2211,30 @@ mutants = [
   "resolve-hint-any-origin",
   "resolve-map-unflagged",
   "resolve-hint-before-search",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/store.rs"
+function = "snapshot"
+lean = "writfold_core.store.snapshot"
+theorems = [
+  "Writfold.Core.Store.snapshot_order",
+  "Writfold.Core.Store.snapshot_record_iff",
+  "Writfold.Core.Store.snapshot_record_is_fresh",
+  "Writfold.Core.Store.snapshot_stage_iff",
+  "Writfold.Core.Store.snapshot_uncommitted_withheld",
+]
+total = "Writfold.Core.Store.snapshot_order"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "snapshot-uncommitted-recorded",
+  "snapshot-unanchored-recorded",
+  "snapshot-other-bytes-recorded",
+  "snapshot-head-store",
+  "snapshot-damaged-recorded",
+  "snapshot-any-status",
+  "snapshot-order-swapped",
 ]
 
 [[claim]]

@@ -1626,6 +1626,114 @@ def find.admit
 def find.full (shown : Std.Usize) (limit : Std.Usize) : Result Bool := do
   ok (shown >= limit)
 
+/-- [writfold_core::find::Hit]
+    Source: 'crates/writfold-core/src/find.rs', lines 128:0-131:1
+    Visibility: public -/
+structure find.Hit where
+  record : Std.U32
+  passes : Bool
+
+/-- [writfold_core::find::among]: loop body 0:
+    Source: 'crates/writfold-core/src/find.rs', lines 136:4-143:1
+    Visibility: public -/
+@[rust_loop_body]
+def find.among_loop.body
+  (records : Slice Std.U32) (record : Std.U32) (i : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let i1 := Slice.len records
+  if i < i1
+  then
+    let i2 ← Slice.index_usize records i
+    if i2 = record
+    then ok (done true)
+    else let i3 ← i + 1#usize
+         ok (cont i3)
+  else ok (done false)
+
+/-- [writfold_core::find::among]: loop 0:
+    Source: 'crates/writfold-core/src/find.rs', lines 136:4-143:1
+    Visibility: public -/
+@[rust_loop]
+def find.among_loop
+  (records : Slice Std.U32) (record : Std.U32) (i : Std.Usize) :
+  Result Bool
+  := do
+  loop
+    (fun i1 => find.among_loop.body records record i1)
+    i
+
+/-- [writfold_core::find::among]:
+    Source: 'crates/writfold-core/src/find.rs', lines 134:0-143:1
+    Visibility: public -/
+@[reducible]
+def find.among (records : Slice Std.U32) (record : Std.U32) : Result Bool := do
+  find.among_loop records record 0#usize
+
+/-- [writfold_core::find::show]: loop body 0:
+    Source: 'crates/writfold-core/src/find.rs', lines 155:4-162:5
+    Visibility: public -/
+@[rust_loop_body]
+def find.show_loop.body
+  (hits : Slice find.Hit) (limit : Std.Usize) (shown : alloc.vec.Vec Std.Usize)
+  (records : alloc.vec.Vec Std.U32) (i : Std.Usize) :
+  Result (ControlFlow ((alloc.vec.Vec Std.Usize) × (alloc.vec.Vec Std.U32) ×
+    Std.Usize) (alloc.vec.Vec Std.Usize))
+  := do
+  let i1 := Slice.len hits
+  if i < i1
+  then
+    let hit ← Slice.index_usize hits i
+    let i2 := alloc.vec.Vec.len shown
+    let s := alloc.vec.Vec.deref records
+    let b ← find.among s hit.record
+    let b1 ← find.admit i2 limit b hit.passes
+    let (shown1, records1) ←
+      if b1
+      then
+        do
+        let shown2 ← alloc.vec.Vec.push shown i
+        let records2 ← alloc.vec.Vec.push records hit.record
+        ok (shown2, records2)
+      else ok (shown, records)
+    let i3 ← i + 1#usize
+    ok (cont (shown1, records1, i3))
+  else ok (done shown)
+
+/-- [writfold_core::find::show]: loop 0:
+    Source: 'crates/writfold-core/src/find.rs', lines 155:4-162:5
+    Visibility: public -/
+@[rust_loop]
+def find.show_loop
+  (hits : Slice find.Hit) (limit : Std.Usize) (shown : alloc.vec.Vec Std.Usize)
+  (records : alloc.vec.Vec Std.U32) (i : Std.Usize) :
+  Result (alloc.vec.Vec Std.Usize)
+  := do
+  loop
+    (fun (shown1, records1, i1) => find.show_loop.body hits limit shown1
+      records1 i1)
+    (shown, records, i)
+
+/-- [writfold_core::find::show]:
+    Source: 'crates/writfold-core/src/find.rs', lines 151:0-164:1
+    Visibility: public -/
+@[reducible]
+def find.show
+  (hits : Slice find.Hit) (limit : Std.Usize) :
+  Result (alloc.vec.Vec Std.Usize)
+  := do
+  find.show_loop hits limit (alloc.vec.Vec.new Std.Usize) (alloc.vec.Vec.new
+    Std.U32) 0#usize
+
+/-- [writfold_core::find::exact_stops]:
+    Source: 'crates/writfold-core/src/find.rs', lines 169:0-171:1
+    Visibility: public -/
+def find.exact_stops
+  (id_shaped : Bool) (exact_hits : Std.Usize) : Result Bool := do
+  if id_shaped
+  then ok (exact_hits = 1#usize)
+  else ok false
+
 /-- [writfold_core::gate::Ending]
     Source: 'crates/writfold-core/src/gate.rs', lines 21:0-30:1
     Visibility: public -/

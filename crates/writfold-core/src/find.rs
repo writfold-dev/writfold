@@ -122,6 +122,54 @@ pub fn full(shown: usize, limit: usize) -> bool {
     shown >= limit
 }
 
+/// One hit, in tier order: the record it names (numbered by the caller,
+/// equal numbers for the same record) and whether it passes the filter.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct Hit {
+    pub record: u32,
+    pub passes: bool,
+}
+
+/// Whether `record` is among `records`.
+pub fn among(records: &[u32], record: u32) -> bool {
+    let mut i = 0;
+    while i < records.len() {
+        if records[i] == record {
+            return true;
+        }
+        i += 1;
+    }
+    false
+}
+
+/// The rows `find` shows: the positions in `hits` (every tier's hits, the
+/// tiers in their fixed order) that [`admit`] takes, walking them in
+/// order. So a record is shown once, under the first tier that found it,
+/// and at most `limit` rows. The rows under a smaller limit are the first
+/// rows under a larger one, and the rows of the first tiers alone are the
+/// first rows of all of them (`proofs/Writfold/Show.lean`).
+pub fn show(hits: &[Hit], limit: usize) -> Vec<usize> {
+    let mut shown: Vec<usize> = Vec::new();
+    let mut records: Vec<u32> = Vec::new();
+    let mut i = 0;
+    while i < hits.len() {
+        let hit = hits[i];
+        if admit(shown.len(), limit, among(&records, hit.record), hit.passes) {
+            shown.push(i);
+            records.push(hit.record);
+        }
+        i += 1;
+    }
+    shown
+}
+
+/// Whether `find` stops after its `exact` tier: the phrase is a record's
+/// own ID and exactly one record has it. The rows it then shows are the
+/// first rows of the full answer ([`show`] over a prefix of the hits).
+pub fn exact_stops(id_shaped: bool, exact_hits: usize) -> bool {
+    id_shaped && exact_hits == 1
+}
+
 #[cfg(test)]
 mod tests {
     use super::{norm, prefix_match, tokens};
