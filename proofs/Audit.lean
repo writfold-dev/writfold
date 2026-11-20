@@ -312,6 +312,8 @@ def claims : List Name := [
   ``Writfold.Core.Decision.applied_written_only_on_ref,
   ``Writfold.Core.Decision.accepted_written_only_ready,
   ``Writfold.Core.Decision.superseded_written_only_to_successor,
+  ``Writfold.Core.Checklist.snapshot_item_needs_snapshot,
+  ``Writfold.Core.Checklist.unlisted_item_unchanged,
   ``Writfold.Core.Idle.newer_spec,
   ``Writfold.Core.Idle.newer_total,
   ``Writfold.Core.Idle.newer_past_end,

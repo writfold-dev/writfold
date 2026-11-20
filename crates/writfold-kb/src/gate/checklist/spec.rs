@@ -14,11 +14,12 @@ use crate::defs::{Check, Spanned, Text};
 use crate::write::is_slug;
 
 /// The keys only a checklist gate may use.
-pub const KEYS: [&str; 6] = [
+pub const KEYS: [&str; 7] = [
     "items",
     "optional",
     "not_applicable",
     "none_found",
+    "snapshot",
     "own_evidence",
     "evidence_from",
 ];
@@ -37,6 +38,8 @@ pub struct Item {
     pub na: bool,
     /// `none-found` covers it.
     pub none: bool,
+    /// `supported` covers it only citing a look that kept a snapshot.
+    pub snapshot: bool,
     /// What answers it ([`super::evidence`]).
     pub need: writfold_core::bind::Need,
     /// The gates `evidence_from` names for it.
@@ -47,9 +50,9 @@ pub struct Item {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Spec {
     pub items: Vec<Item>,
-    /// `not_applicable` and `none_found` as written ([`super::allowed`]).
-    pub not_applicable: super::allowed::Listed,
-    pub none_found: super::allowed::Listed,
+    /// `not_applicable`, `none_found` and `snapshot` as written
+    /// ([`super::allowed`]).
+    pub lists: super::allowed::Lists,
     /// `own_evidence` and `evidence_from` as written ([`super::evidence`]).
     pub own_evidence: super::allowed::Listed,
     pub evidence_from: super::evidence::From,
@@ -69,7 +72,7 @@ impl Spec {
             .filter(|i| !i.required)
             .map(|i| i.id.as_str())
             .collect();
-        let own = super::allowed::canonical(&self.items, &self.not_applicable, &self.none_found);
+        let own = super::allowed::canonical(&self.items, &self.lists);
         let needs =
             super::evidence::canonical(&self.items, &self.own_evidence, &self.evidence_from);
         format!(
@@ -81,7 +84,7 @@ impl Spec {
 
     /// Whether the policy restricts the reasoned outcomes at all.
     pub fn restricted(&self) -> bool {
-        self.not_applicable.is_some() || self.none_found.is_some()
+        self.lists.na.is_some() || self.lists.none.is_some()
     }
 
     /// The item with this ID.
@@ -116,6 +119,7 @@ fn item(c: &mut Check<'_>, text: &Spanned<Text>) -> Option<Item> {
         required: true,
         na: true,
         none: false,
+        snapshot: false,
         need: writfold_core::bind::Need::Any,
         from: Vec::new(),
     })
@@ -207,12 +211,11 @@ pub fn check(c: &mut Check<'_>, class: &str) -> Option<Option<Spec>> {
             }
         }
     }
-    let (not_applicable, none_found) = super::allowed::check(c, &mut items)?;
+    let lists = super::allowed::check(c, &mut items)?;
     let (own_evidence, evidence_from) = super::evidence::check(c, &mut items)?;
     ok.then_some(Some(Spec {
         items,
-        not_applicable,
-        none_found,
+        lists,
         own_evidence,
         evidence_from,
     }))

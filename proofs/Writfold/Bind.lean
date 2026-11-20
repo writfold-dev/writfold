@@ -210,9 +210,9 @@ theorem item_under_none_found_iff (r : Option checklist.Row) (a : Bool) :
 
 /-- Binding never widens: whatever `item_under` covers, `checklist.item`
 covered already, under the same policy. -/
-theorem item_under_narrows (r : Option checklist.Row) (a na nf : Bool) :
-    bind.item_under r a ⦃ i => Checklist.coveredB i na nf = true →
-      Checklist.coveredB (itemOf r) na nf = true ⦄ := by
+theorem item_under_narrows (r : Option checklist.Row) (a na nf u : Bool) :
+    bind.item_under r a ⦃ i => Checklist.coveredB i na nf u = true →
+      Checklist.coveredB (itemOf r) na nf u = true ⦄ := by
   apply WP.spec_mono (item_under_spec r a)
   intro i hi; subst hi
   unfold itemUnderOf

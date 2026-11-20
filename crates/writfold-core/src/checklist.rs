@@ -137,12 +137,13 @@ pub fn item(newest: Option<Row>) -> Item {
     }
 }
 
-/// Whether an item counts as covered under its policy: supported; not
-/// applicable where the policy accepts that (`na`); none found where it
-/// accepts that (`none`).
-pub fn covered_under(item: Item, na: bool, none: bool) -> bool {
+/// Whether an item counts as covered under its policy: supported, unless
+/// the checklist's `snapshot` list names it and its row cites no look that
+/// kept a snapshot (`unsnapped`); not applicable where the policy accepts
+/// that (`na`); none found where it accepts that (`none`).
+pub fn covered_under(item: Item, na: bool, none: bool, unsnapped: bool) -> bool {
     match item {
-        Item::Supported => true,
+        Item::Supported => !unsnapped,
         Item::NotApplicable => na,
         Item::NoneFound => none,
         Item::Open | Item::Unsupported | Item::Stale => false,
@@ -171,11 +172,14 @@ pub struct Entry {
     pub na: bool,
     /// `none-found` covers this item.
     pub none: bool,
+    /// The checklist's `snapshot` list names this item and its newest row
+    /// cites no look that kept a snapshot.
+    pub unsnapped: bool,
 }
 
 /// Whether an entry is owed: required and not [`covered_under`] its policy.
 pub fn owes(entry: &Entry) -> bool {
-    entry.required && !covered_under(entry.item, entry.na, entry.none)
+    entry.required && !covered_under(entry.item, entry.na, entry.none, entry.unsnapped)
 }
 
 /// The first owed entry, in the checklist's order.

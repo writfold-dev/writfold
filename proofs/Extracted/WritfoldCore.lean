@@ -474,20 +474,22 @@ def bytes.same (left : Slice Std.U8) (right : Slice Std.U8) : Result Bool := do
   else bytes.same_loop left right 0#usize
 
 /-- [writfold_core::checklist::covered_under]:
-    Source: 'crates/writfold-core/src/checklist.rs', lines 143:0-150:1
+    Source: 'crates/writfold-core/src/checklist.rs', lines 144:0-151:1
     Visibility: public -/
 def checklist.covered_under
-  (item : checklist.Item) (na : Bool) (none1 : Bool) : Result Bool := do
+  (item : checklist.Item) (na : Bool) (none1 : Bool) (unsnapped : Bool) :
+  Result Bool
+  := do
   match item with
   | checklist.Item.Open => ok false
-  | checklist.Item.Supported => ok true
+  | checklist.Item.Supported => ok (¬ unsnapped)
   | checklist.Item.NotApplicable => ok na
   | checklist.Item.NoneFound => ok none1
   | checklist.Item.Unsupported => ok false
   | checklist.Item.Stale => ok false
 
 /-- [writfold_core::checklist::Rollup]
-    Source: 'crates/writfold-core/src/checklist.rs', lines 154:0-162:1
+    Source: 'crates/writfold-core/src/checklist.rs', lines 155:0-163:1
     Visibility: public -/
 structure checklist.Rollup where
   covered : Bool
@@ -495,26 +497,28 @@ structure checklist.Rollup where
   first_owed : Option Std.Usize
 
 /-- [writfold_core::checklist::Entry]
-    Source: 'crates/writfold-core/src/checklist.rs', lines 167:0-174:1
+    Source: 'crates/writfold-core/src/checklist.rs', lines 168:0-178:1
     Visibility: public -/
 structure checklist.Entry where
   item : checklist.Item
   required : Bool
   na : Bool
   none : Bool
+  unsnapped : Bool
 
 /-- [writfold_core::checklist::owes]:
-    Source: 'crates/writfold-core/src/checklist.rs', lines 177:0-179:1
+    Source: 'crates/writfold-core/src/checklist.rs', lines 181:0-183:1
     Visibility: public -/
 def checklist.owes (entry : checklist.Entry) : Result Bool := do
   if entry.required
   then
-    let b ← checklist.covered_under entry.item entry.na entry.none
+    let b ←
+      checklist.covered_under entry.item entry.na entry.none entry.unsnapped
     ok (¬ b)
   else ok false
 
 /-- [writfold_core::checklist::first_owed]: loop body 0:
-    Source: 'crates/writfold-core/src/checklist.rs', lines 184:4-191:1
+    Source: 'crates/writfold-core/src/checklist.rs', lines 188:4-195:1
     Visibility: public -/
 @[rust_loop_body]
 def checklist.first_owed_loop.body
@@ -533,7 +537,7 @@ def checklist.first_owed_loop.body
   else ok (done none)
 
 /-- [writfold_core::checklist::first_owed]: loop 0:
-    Source: 'crates/writfold-core/src/checklist.rs', lines 184:4-191:1
+    Source: 'crates/writfold-core/src/checklist.rs', lines 188:4-195:1
     Visibility: public -/
 @[rust_loop]
 def checklist.first_owed_loop
@@ -545,7 +549,7 @@ def checklist.first_owed_loop
     index
 
 /-- [writfold_core::checklist::first_owed]:
-    Source: 'crates/writfold-core/src/checklist.rs', lines 182:0-191:1
+    Source: 'crates/writfold-core/src/checklist.rs', lines 186:0-195:1
     Visibility: public -/
 @[reducible]
 def checklist.first_owed
@@ -553,7 +557,7 @@ def checklist.first_owed
   checklist.first_owed_loop entries 0#usize
 
 /-- [writfold_core::checklist::stale]:
-    Source: 'crates/writfold-core/src/checklist.rs', lines 194:0-196:1
+    Source: 'crates/writfold-core/src/checklist.rs', lines 198:0-200:1
     Visibility: public -/
 def checklist.stale (entry : checklist.Entry) : Result Bool := do
   if entry.required
@@ -568,7 +572,7 @@ def checklist.stale (entry : checklist.Entry) : Result Bool := do
   else ok false
 
 /-- [writfold_core::checklist::any_stale]: loop body 0:
-    Source: 'crates/writfold-core/src/checklist.rs', lines 201:4-208:1
+    Source: 'crates/writfold-core/src/checklist.rs', lines 205:4-212:1
     Visibility: public -/
 @[rust_loop_body]
 def checklist.any_stale_loop.body
@@ -587,7 +591,7 @@ def checklist.any_stale_loop.body
   else ok (done false)
 
 /-- [writfold_core::checklist::any_stale]: loop 0:
-    Source: 'crates/writfold-core/src/checklist.rs', lines 201:4-208:1
+    Source: 'crates/writfold-core/src/checklist.rs', lines 205:4-212:1
     Visibility: public -/
 @[rust_loop]
 def checklist.any_stale_loop
@@ -597,14 +601,14 @@ def checklist.any_stale_loop
     index
 
 /-- [writfold_core::checklist::any_stale]:
-    Source: 'crates/writfold-core/src/checklist.rs', lines 199:0-208:1
+    Source: 'crates/writfold-core/src/checklist.rs', lines 203:0-212:1
     Visibility: public -/
 @[reducible]
 def checklist.any_stale (entries : Slice checklist.Entry) : Result Bool := do
   checklist.any_stale_loop entries 0#usize
 
 /-- [writfold_core::checklist::rollup_under]:
-    Source: 'crates/writfold-core/src/checklist.rs', lines 212:0-219:1
+    Source: 'crates/writfold-core/src/checklist.rs', lines 216:0-223:1
     Visibility: public -/
 def checklist.rollup_under
   (entries : Slice checklist.Entry) : Result checklist.Rollup := do
@@ -625,7 +629,7 @@ inductive gate.State where
 | Unknown : gate.State
 
 /-- [writfold_core::checklist::state]:
-    Source: 'crates/writfold-core/src/checklist.rs', lines 223:0-229:1
+    Source: 'crates/writfold-core/src/checklist.rs', lines 227:0-233:1
     Visibility: public -/
 def checklist.state (rollup : checklist.Rollup) : Result gate.State := do
   if rollup.stale
@@ -692,7 +696,7 @@ def gate.standing
         else ok (gate.Standing.Checked state)
 
 /-- [writfold_core::checklist::standing]:
-    Source: 'crates/writfold-core/src/checklist.rs', lines 234:0-241:1
+    Source: 'crates/writfold-core/src/checklist.rs', lines 238:0-245:1
     Visibility: public -/
 def checklist.standing
   (rollup : checklist.Rollup) (waived_current : Bool) :

@@ -221,3 +221,63 @@ fn a_kb_without_stores_refuses_and_a_plain_look_is_unchanged() -> TestResult {
     assert_eq!(observed(&w), 0);
     Ok(())
 }
+
+/// #3: a checklist's `snapshot` list. A listed item's supported row covers
+/// it only when it cites a look that kept a snapshot; an unlisted item is
+/// covered as before.
+#[test]
+fn a_snapshot_listed_item_needs_a_look_that_kept_one() -> TestResult {
+    let (w, clone) = stored("")?;
+    let review = REVIEW.replace(
+        "optional = [\"perf\"]",
+        "optional = []\nsnapshot = [\"perf\"]",
+    );
+    put(&w.kb.join(".writfold/gates/review.toml"), &review)?;
+    git(&w.kb, &["add", "-A"])?;
+    git(&w.kb, &["commit", "-q", "-m", "snapshot list"])?;
+    // A plain look (no snapshot) does not cover the listed item.
+    let plain = Observe {
+        source: "page".into(),
+        locator: "https://example.org/spec/v2".into(),
+        status: "ok".into(),
+        item: Some("review.perf".into()),
+        run: Some(RUN.into()),
+        ..Observe::default()
+    };
+    let text = writfold_kb::run(&w.request(Verb::Write(Write::Observe(plain))))?.text;
+    let path = text
+        .lines()
+        .find_map(|l| l.split("recorded ").nth(1))
+        .and_then(|r| r.split(' ').next())
+        .ok_or("no path")?
+        .to_owned();
+    cover(&w, "perf", Outcome::Supported, &[&path])?;
+    let (text, _) = status(&w)?;
+    assert!(text.contains("checklist 0/3 required covered"), "{text}");
+    assert!(
+        text.contains("cites no look that kept a snapshot, which `snapshot` asks of this item"),
+        "{text}"
+    );
+    // A look that kept a snapshot covers it.
+    let page = w.base.join("spec-v2.html");
+    std::fs::write(&page, "<h1>v2</h1>\n")?;
+    let rel = staged(&refusal(observe(&w, "ok", &page)))?;
+    git(&clone, &["add", "-A"])?;
+    git(&clone, &["commit", "-q", "-m", "snapshot"])?;
+    let text = observe(&w, "ok", &clone.join(&rel))?;
+    let kept = text
+        .lines()
+        .find_map(|l| l.split("recorded ").nth(1))
+        .and_then(|r| r.split(' ').next())
+        .ok_or("no path")?
+        .to_owned();
+    cover(&w, "perf", Outcome::Supported, &[&kept])?;
+    let (text, _) = status(&w)?;
+    assert!(text.contains("checklist 1/3 required covered"), "{text}");
+    assert_eq!(item(&text, "perf"), "supported", "{text}");
+    assert!(
+        !text.contains("cites no look that kept a snapshot"),
+        "{text}"
+    );
+    Ok(())
+}

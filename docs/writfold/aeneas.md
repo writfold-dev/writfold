@@ -918,11 +918,22 @@ latter with the transition table: `verified_written_only_grounded`,
 `superseded_written_only_to_successor`. Five mutants. After the round: 721
 theorems, 412 required claims, 256 mutants.
 
+### The checklist snapshot round (20 November 2026)
+
+`checklist::covered_under` gained a fourth fact, `unsnapped`: the
+checklist's `snapshot` list names the item and its newest row cites no
+look that kept a snapshot. A supported item is then not covered.
+`Checklist.lean`'s `coveredB`, `covered_under_spec`, `item_covered_iff`,
+`rollup_optional_irrelevant` and `Bind.lean`'s `item_under_narrows` carry
+the fact; `snapshot_item_needs_snapshot` and `unlisted_item_unchanged`
+(an unlisted item is covered exactly as before) are new. One mutant. After
+the round: 723 theorems, 414 required claims, 257 mutants.
+
 ### The claims and their mutants
 
 <!-- generated from proofs/mutants.py -->
 
-256 mutants (20 before 16 November 2026, 86 after the backfill's first round, 108 after the policy round, 161 after the backfill's second round, 170 after the bug-fix round, 189 after the delivery round: its nine delivery mutants re-aimed and 19 added, all 28 calibrated; 203 after the current-run and repin rounds; 210 after the attached-stores round; 214 after the run-artifacts round; 222 after the evidence-binding round; 226 after the backlinks round; 233 after the snapshot round; 247 after the tauten claims round; 251 after the find rows round; 256 after the decision flags round). Each must break exactly the theorems named.
+257 mutants (20 before 16 November 2026, 86 after the backfill's first round, 108 after the policy round, 161 after the backfill's second round, 170 after the bug-fix round, 189 after the delivery round: its nine delivery mutants re-aimed and 19 added, all 28 calibrated; 203 after the current-run and repin rounds; 210 after the attached-stores round; 214 after the run-artifacts round; 222 after the evidence-binding round; 226 after the backlinks round; 233 after the snapshot round; 247 after the tauten claims round; 251 after the find rows round; 256 after the decision flags round; 257 after the checklist snapshot round). Each must break exactly the theorems named.
 
 | Mutant | File | What it breaks | Must break |
 |---|---|---|---|
@@ -974,6 +985,7 @@ theorems, 412 required claims, 256 mutants.
 | `covered-counts-unsupported` | `checklist.rs` | checklist: an unsupported item is not covered | `Checklist.covered_under_spec` |
 | `covered-ignores-na` | `checklist.rs` | checklist: not-applicable covers only where the policy accepts it | `Checklist.covered_under_spec` |
 | `covered-none-found-without-policy` | `checklist.rs` | checklist: none-found covers only where the policy accepts it | `Checklist.covered_under_spec` |
+| `covered-ignores-snapshot` | `checklist.rs` | checklist: an item the `snapshot` list names needs a look that kept one | `Checklist.covered_under_spec` |
 | `item-none-found-no-evidence` | `checklist.rs` | checklist: none-found needs at least one cited look | `Checklist.item_spec`, `Checklist.item_none_found_iff` |
 | `rollup-ignores-required` | `checklist.rs` | checklist: only required items are owed | `Checklist.owes_spec` |
 | `first-owed-skips-last` | `checklist.rs` | checklist: every entry is looked at, the last included | `Checklist.first_owed_loop_spec` |

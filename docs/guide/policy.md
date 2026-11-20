@@ -61,6 +61,7 @@ Every key is opt-in: a definition without it means what it meant before, and kee
 |---|---|---|---|
 | `accept` | a gate | which standings meet it: `satisfied`, `attested`, `waived` | [gates](gates.md#which-standings-meet-a-gate-accept) |
 | `not_applicable`, `none_found` | a checklist | which items take `not-applicable`, which take `none-found` | [gates](gates.md#checklist-gates) |
+| `snapshot` | a checklist | which items a `supported` row covers only citing a look that kept a snapshot (v0.6.0-dev.11) | [gates](gates.md#checklist-gates) |
 | `unskippable` | `required.toml` | which required templates' steps `plan skip` refuses | [run-graph](run-graph.md#policy-unskippable-steps-pins-and-how-a-plan-ended) |
 | `waivable` | a delivery mode | which of its built-in checks and `attest` names a waiver may set aside (absent: all; `[]`: none); a mode gate's own `accept` decides for the gate | [delivery modes](delivery-modes.md#what-a-mode-takes-waivable-and-a-mode-gates-accept) |
 | `audience`, `rendering` | a delivery mode | the audience the mode is for; whether citation tokens are stripped from what is posted | [delivery modes](delivery-modes.md#a-mode-file) |

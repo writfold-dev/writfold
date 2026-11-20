@@ -95,31 +95,50 @@ theorem item_none_found_iff (r : Option checklist.Row) :
 
 /-- `covered_under` on the model: supported; not applicable where the policy
 accepts it (`na`); none found where it accepts that (`none`). -/
-def coveredB : checklist.Item → Bool → Bool → Bool
-  | .Supported, _, _ => true
-  | .NotApplicable, na, _ => na
-  | .NoneFound, _, nf => nf
-  | _, _, _ => false
+def coveredB : checklist.Item → Bool → Bool → Bool → Bool
+  | .Supported, _, _, u => !u
+  | .NotApplicable, na, _, _ => na
+  | .NoneFound, _, nf, _ => nf
+  | _, _, _, _ => false
 
 /-- An entry is covered under its own policy. -/
-def coveredE (e : checklist.Entry) : Bool := coveredB e.item e.na e.none
+def coveredE (e : checklist.Entry) : Bool := coveredB e.item e.na e.none e.unsnapped
 
-theorem covered_under_spec (i : checklist.Item) (na nf : Bool) :
-    checklist.covered_under i na nf ⦃ b => b = true ↔
-      i = .Supported ∨ (i = .NotApplicable ∧ na = true) ∨ (i = .NoneFound ∧ nf = true) ⦄ := by
+theorem covered_under_spec (i : checklist.Item) (na nf u : Bool) :
+    checklist.covered_under i na nf u ⦃ b => b = true ↔
+      (i = .Supported ∧ u = false) ∨ (i = .NotApplicable ∧ na = true) ∨
+        (i = .NoneFound ∧ nf = true) ⦄ := by
   unfold checklist.covered_under
-  cases i <;> simp
+  cases i <;> cases u <;> simp
 
-theorem covered_under_coveredB (i : checklist.Item) (na nf : Bool) :
-    checklist.covered_under i na nf ⦃ b => b = coveredB i na nf ⦄ := by
-  apply WP.spec_mono (covered_under_spec i na nf)
+theorem covered_under_coveredB (i : checklist.Item) (na nf u : Bool) :
+    checklist.covered_under i na nf u ⦃ b => b = coveredB i na nf u ⦄ := by
+  apply WP.spec_mono (covered_under_spec i na nf u)
   intro b hb
-  cases i <;> cases na <;> cases nf <;> cases b <;> simp_all [coveredB]
+  cases i <;> cases na <;> cases nf <;> cases u <;> cases b <;> simp_all [coveredB]
+
+/-- An item the checklist's `snapshot` list names, whose row cites no look
+that kept a snapshot, is not covered by `supported`. -/
+theorem snapshot_item_needs_snapshot (na nf : Bool) :
+    checklist.covered_under .Supported na nf true ⦃ b => b = false ⦄ := by
+  apply WP.spec_mono (covered_under_spec .Supported na nf true)
+  intro b hb
+  cases b <;> simp_all
+
+/-- An item the `snapshot` list does not name is covered exactly as before
+the list existed. -/
+theorem unlisted_item_unchanged (i : checklist.Item) (na nf : Bool) :
+    checklist.covered_under i na nf false ⦃ b => b = true ↔
+      i = .Supported ∨ (i = .NotApplicable ∧ na = true) ∨ (i = .NoneFound ∧ nf = true) ⦄ := by
+  apply WP.spec_mono (covered_under_spec i na nf false)
+  intro b hb
+  rw [hb]
+  simp
 
 /-- An item whose policy rejects not-applicable is never covered by it. -/
-theorem not_applicable_rejected_never_covers (nf : Bool) :
-    checklist.covered_under .NotApplicable false nf ⦃ b => b = false ⦄ := by
-  apply WP.spec_mono (covered_under_spec .NotApplicable false nf)
+theorem not_applicable_rejected_never_covers (nf u : Bool) :
+    checklist.covered_under .NotApplicable false nf u ⦃ b => b = false ⦄ := by
+  apply WP.spec_mono (covered_under_spec .NotApplicable false nf u)
   intro b hb
   cases b <;> simp_all
 
@@ -127,15 +146,15 @@ theorem not_applicable_rejected_never_covers (nf : Bool) :
 the present and is supported by at least one grounded reference, or not
 applicable where the policy accepts it, or none found (citing at least one
 look that still found nothing) where the policy accepts it. -/
-theorem item_covered_iff (r : Option checklist.Row) (na nf : Bool) :
-    (do let i ← checklist.item r; checklist.covered_under i na nf) ⦃ b => b = true ↔
+theorem item_covered_iff (r : Option checklist.Row) (na nf u : Bool) :
+    (do let i ← checklist.item r; checklist.covered_under i na nf u) ⦃ b => b = true ↔
       ∃ row, r = some row ∧ row.current = true ∧
-        ((row.outcome = .Supported ∧ 0 < row.evidence.val ∧ row.grounded = true) ∨
+        ((row.outcome = .Supported ∧ 0 < row.evidence.val ∧ row.grounded = true ∧ u = false) ∨
           (row.outcome = .NotApplicable ∧ na = true) ∨
           (row.outcome = .NoneFound ∧ 0 < row.evidence.val ∧ row.grounded = true ∧
             nf = true)) ⦄ := by
   step with item_spec as ⟨ i, hi ⟩
-  apply WP.spec_mono (covered_under_coveredB i na nf)
+  apply WP.spec_mono (covered_under_coveredB i na nf u)
   intro b hb
   subst hb hi
   rcases r with _ | ⟨o, cur, ev, g⟩
@@ -143,7 +162,7 @@ theorem item_covered_iff (r : Option checklist.Row) (na nf : Bool) :
   · cases cur
     · simp [itemOf, coveredB]
     · cases o <;> by_cases hev : 0 < ev.val <;> cases g <;> cases na <;> cases nf <;>
-        simp [itemOf, coveredB, hev]
+        cases u <;> simp [itemOf, coveredB, hev]
 
 /-! ## `owes`, `first_owed`, `any_stale`, `rollup` -/
 
@@ -152,7 +171,7 @@ def owesB (e : checklist.Entry) : Bool := e.required && !coveredE e
 
 theorem owes_spec (e : checklist.Entry) : checklist.owes e ⦃ b => b = owesB e ⦄ := by
   unfold checklist.owes owesB coveredE
-  rcases e with ⟨i, req, na, nf⟩
+  rcases e with ⟨i, req, na, nf, u⟩
   cases req
   · simp
   · simp only [↓reduceIte]
@@ -317,7 +336,8 @@ theorem rollup_optional_irrelevant (es fs : Slice checklist.Entry)
     (hreq : ∀ j (h1 : j < es.val.length) (h2 : j < fs.val.length),
       es.val[j].required = fs.val[j].required ∧
       (es.val[j].required = true → es.val[j].item = fs.val[j].item ∧
-        es.val[j].na = fs.val[j].na ∧ es.val[j].none = fs.val[j].none)) :
+        es.val[j].na = fs.val[j].na ∧ es.val[j].none = fs.val[j].none ∧
+        es.val[j].unsnapped = fs.val[j].unsnapped)) :
     (do let a ← checklist.rollup_under es; let b ← checklist.rollup_under fs; ok (a, b)) ⦃ p =>
       p.1.covered = p.2.covered ∧ p.1.stale = p.2.stale ∧ p.1.first_owed = p.2.first_owed ⦄ := by
   have hfl : ∀ l : List checklist.Entry,
@@ -337,7 +357,7 @@ theorem rollup_optional_irrelevant (es fs : Slice checklist.Entry)
     unfold owesB staleB coveredE
     cases hreq' : es.val[j].required
     · simp_all
-    · obtain ⟨h1, h2, h3⟩ := hi hreq'; rw [h1, h2, h3]; simp_all
+    · obtain ⟨h1, h2, h3, h4⟩ := hi hreq'; rw [h1, h2, h3, h4]; simp_all
   have hfirst : firstOwedL es.val = firstOwedL fs.val := by
     unfold firstOwedL
     apply Option.ext

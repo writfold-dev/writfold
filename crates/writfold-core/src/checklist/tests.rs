@@ -77,10 +77,13 @@ fn covered_under_follows_the_policy() {
     for i in ITEMS {
         for na in [false, true] {
             for none in [false, true] {
-                let want = i == Item::Supported
-                    || (i == Item::NotApplicable && na)
-                    || (i == Item::NoneFound && none);
-                assert_eq!(covered_under(i, na, none), want, "{i:?} {na} {none}");
+                for unsnapped in [false, true] {
+                    let want = (i == Item::Supported && !unsnapped)
+                        || (i == Item::NotApplicable && na)
+                        || (i == Item::NoneFound && none);
+                    let got = covered_under(i, na, none, unsnapped);
+                    assert_eq!(got, want, "{i:?} {na} {none} {unsnapped}");
+                }
             }
         }
     }
@@ -127,10 +130,11 @@ fn rollup_counts_required_items_only() {
                 required,
                 na,
                 none,
+                unsnapped: false,
             })
             .collect()
     };
-    let cov = |c: &Cell| covered_under(c.0, c.2, c.3);
+    let cov = |c: &Cell| covered_under(c.0, c.2, c.3, false);
     for list in &lists {
         let got = rollup_under(&entries(list));
         let required: Vec<(usize, Cell)> = list

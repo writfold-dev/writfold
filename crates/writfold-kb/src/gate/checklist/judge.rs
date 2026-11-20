@@ -33,12 +33,15 @@ pub struct Entry<'a> {
     pub restricted: bool,
     /// Binding notes on the row's references ([`super::bound`]).
     pub bound: Vec<crate::emit::More>,
+    /// The `snapshot` list names the item and its row cites no look that
+    /// kept a snapshot.
+    pub unsnapped: bool,
 }
 
 impl Entry<'_> {
     /// Covered under the checklist's policy ([`checklist::covered_under`]).
     pub fn covers(&self) -> bool {
-        checklist::covered_under(self.item, self.spec.na, self.spec.none)
+        checklist::covered_under(self.item, self.spec.na, self.spec.none, self.unsnapped)
     }
 
     /// A current row whose outcome the policy does not take for this item.
@@ -142,6 +145,15 @@ impl Present<'_, '_, '_> {
     }
 
     /// How many of the row's references were grounded by a receipt.
+    /// Whether the row cites a look of this run that kept a snapshot (its
+    /// grounding already requires the snapshot to read fresh).
+    fn snapshotted(&self, c: &Cover) -> bool {
+        (c.evidence.iter())
+            .filter_map(|e| e.path.as_deref())
+            .filter_map(|p| self.observed.iter().find(|f| f.path == p))
+            .any(|f| f.parsed.as_ref().is_ok_and(|o| o.snapshot.is_some()))
+    }
+
     fn recorded(&self, c: &Cover) -> usize {
         let cited = c.evidence.iter();
         cited
@@ -243,7 +255,13 @@ pub fn judge<'a>(
         for spec in d.checklist.iter().flat_map(|s| &s.items) {
             let rows = rows_of(&filings.covers, &d.id, &spec.id, &subject.name);
             let newest = rows.last().copied();
-            let (item, why) = entry(&d, spec, &content, newest, &mut present)?;
+            let (item, mut why) = entry(&d, spec, &content, newest, &mut present)?;
+            let unsnapped = spec.snapshot && newest.is_some_and(|(_, c)| !present.snapshotted(c));
+            if unsnapped && item == Item::Supported {
+                why = Some(
+                    "cites no look that kept a snapshot, which `snapshot` asks of this item".into(),
+                );
+            }
             let recorded = match (item, newest) {
                 (Item::Supported, Some((_, c))) => present.recorded(c),
                 _ => 0,
@@ -257,6 +275,7 @@ pub fn judge<'a>(
                 looked: present.looked(&d.id, &spec.id)?,
                 restricted: d.checklist.as_ref().is_some_and(|s| s.restricted()),
                 bound: Vec::new(),
+                unsnapped,
             });
         }
         let cells: Vec<checklist::Entry> = (entries.iter())
@@ -265,6 +284,7 @@ pub fn judge<'a>(
                 required: e.spec.required,
                 na: e.spec.na,
                 none: e.spec.none,
+                unsnapped: e.unsnapped,
             })
             .collect();
         let rollup = rollup_under(&cells);

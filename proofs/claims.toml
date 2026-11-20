@@ -164,6 +164,8 @@ theorems = [
   "Writfold.Core.Checklist.covered_under_coveredB",
   "Writfold.Core.Checklist.covered_under_spec",
   "Writfold.Core.Checklist.not_applicable_rejected_never_covers",
+  "Writfold.Core.Checklist.snapshot_item_needs_snapshot",
+  "Writfold.Core.Checklist.unlisted_item_unchanged",
 ]
 total = "Writfold.Core.Checklist.covered_under_spec"
 subsumes = ["TAU-N001", "TAU-P003"]
@@ -171,6 +173,7 @@ mutants = [
   "covered-counts-unsupported",
   "covered-ignores-na",
   "covered-none-found-without-policy",
+  "covered-ignores-snapshot",
 ]
 
 [[claim]]

@@ -10,7 +10,7 @@ use crate::defs::{Check, Field, Slot, Spanned, Text, Value};
 use std::path::Path;
 use writfold_core::diag::Report;
 
-const KEYS: [&str; 23] = [
+const KEYS: [&str; 24] = [
     "accept",
     "schema",
     "id",
@@ -31,6 +31,7 @@ const KEYS: [&str; 23] = [
     "optional",
     "not_applicable",
     "none_found",
+    "snapshot",
     "own_evidence",
     "evidence_from",
     "ages_as",
@@ -65,6 +66,7 @@ fn keys_for(class: Option<&str>) -> Vec<&'static str> {
             "optional",
             "not_applicable",
             "none_found",
+            "snapshot",
             "own_evidence",
             "evidence_from",
         ],

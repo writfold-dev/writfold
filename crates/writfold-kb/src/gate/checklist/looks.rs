@@ -87,14 +87,14 @@ pub fn allowed(d: &Definition, item: &super::spec::Item, outcome: Outcome) -> Re
                 "{}.{} cannot be covered not-applicable ({}); cover it supported with evidence{or}",
                 d.id,
                 item.id,
-                shown("not_applicable", &spec.not_applicable)
+                shown("not_applicable", &spec.lists.na)
             )
         }
         Outcome::NoneFound if !item.none => format!(
             "{}.{} cannot be covered none-found ({})",
             d.id,
             item.id,
-            shown("none_found", &spec.none_found)
+            shown("none_found", &spec.lists.none)
         ),
         _ => return Ok(()),
     };

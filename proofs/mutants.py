@@ -282,8 +282,8 @@ MUTANTS = (
     # checklist: only required items are owed
     # (`rollup_under` reads `required` through `owes`)
     Mutant("rollup-ignores-required", "checklist.rs",
-           "    entry.required && !covered_under(entry.item, entry.na, entry.none)",
-           "    !covered_under(entry.item, entry.na, entry.none)",
+           "    entry.required && !covered_under(entry.item, entry.na, entry.none, entry.unsnapped)",
+           "    !covered_under(entry.item, entry.na, entry.none, entry.unsnapped)",
            ("Writfold.Core.Checklist.owes_spec",)),
     # checklist: every entry is looked at, the last included
     Mutant("first-owed-skips-last", "checklist.rs",
@@ -933,6 +933,11 @@ MUTANTS = (
            "        && (!needs.successor || facts.successor)",
            "        && (needs.successor || facts.successor)",
            ("Writfold.Core.Decision.writes_spec",)),
+    # checklist: an item the `snapshot` list names needs a look that kept one
+    Mutant("covered-ignores-snapshot", "checklist.rs",
+           "        Item::Supported => !unsnapped,",
+           "        Item::Supported => true,",
+           ("Writfold.Core.Checklist.covered_under_spec",)),
     # ---- delivery modes, second round (17 November 2026) ----
     # delivery: an obligation is met under its own policy, not by any met word
     Mutant("delivery-accept-ignored", "delivery.rs",

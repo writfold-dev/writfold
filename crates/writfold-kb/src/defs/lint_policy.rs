@@ -11,7 +11,7 @@ use writfold_core::diag::{Report, Severity};
 fn waivable(f: &File) -> Option<Report> {
     let d = crate::gate::def_check::check(&f.text, &f.stem, f.origin, &f.dir, &f.shown).ok()?;
     let spec = d.checklist.as_ref()?;
-    spec.not_applicable.as_ref()?;
+    spec.lists.na.as_ref()?;
     if !d.policy().waived {
         return None;
     }
