@@ -6653,12 +6653,23 @@ def verdict.decide
   verdict.with_mark v marked
 
 /-- [writfold_core::walk::complete]:
-    Source: 'crates/writfold-core/src/walk.rs', lines 69:0-71:1
+    Source: 'crates/writfold-core/src/walk.rs', lines 75:0-77:1
     Visibility: public -/
 def walk.complete
   (frontier : Std.Usize) (skipped : Std.Usize) : Result Bool := do
   if frontier = 0#usize
   then ok (skipped = 0#usize)
   else ok false
+
+/-- [writfold_core::walk::complete_within]:
+    Source: 'crates/writfold-core/src/walk.rs', lines 82:0-87:1
+    Visibility: public -/
+def walk.complete_within
+  (frontier : Std.Usize) (skipped : Std.Usize) (truncated : Bool) :
+  Result Bool
+  := do
+  if truncated
+  then ok false
+  else walk.complete frontier skipped
 
 end writfold_core
