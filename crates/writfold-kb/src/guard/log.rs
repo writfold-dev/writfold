@@ -1,5 +1,5 @@
 //! The guard log: `<KB Git directory>/writfold/guard-log.jsonl`, what this
-//! machine's hook (and `edit apply`) decided for audit rules, refusals and
+//! machine's hook decided for audit rules, refusals and
 //! passes that rested on a waiver. Local, untracked, mode 0600; one line
 //! per entry, appended with one `write`. At 4 MiB the file is renamed to
 //! `guard-log.1.jsonl`. A log that cannot be written changes no decision.

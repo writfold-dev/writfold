@@ -4,13 +4,14 @@
 //! (the Writfold sidecar's `closed`, else the manifest's), where the work
 //! happens and its last checkpoint. `resume` shows one run: the run, its
 //! coverage counts, the items needing a recheck, its newest retrieval
-//! receipts (written by the archived Tuft adapter), its newest edit receipts (from
-//! `writfold kb edit apply`), the state of each defined gate
+//! receipts (written by the retired Tuft adapter), its newest edit receipts (from
+//! the retired `kb edit apply`), the state of each defined gate
 //! (`writfold kb gate`), the newest checkpoint entry, and the local
 //! drafts and pending proposals of the run (or of no run). With no run
 //! named it takes the current-run pointer, then the newest run of the
 //! project inferred from the working directory, then the newest open run.
 //! No liveness is claimed: there is no daemon.
+mod edits;
 mod idle;
 mod plan;
 
@@ -217,7 +218,7 @@ pub fn resume(session: &Session<'_>, named: Option<&str>, cwd: &Path) -> Result<
         ));
     }
     answer.rows.extend(receipts);
-    let (edits, total) = crate::edit::receipt::rows(session, &rec)?;
+    let (edits, total) = edits::rows(session, &rec)?;
     if total > edits.len() {
         answer.notes.push(format!(
             "{total} edit receipts; the newest {} are shown",

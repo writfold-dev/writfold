@@ -10,7 +10,7 @@
 # staleness afterwards, and it is deliberately narrower: the inputs these
 # checks read. A change to docs/, README.md, AGENTS.md, the plugin, the
 # proofs or the TLA+ models leaves a quality receipt satisfied; a change to a
-# crate, the vendored Splicery source, a Cargo file, a toolchain pin, the
+# crate, a Cargo file, a toolchain pin, the
 # gate scripts, the Docker inputs or the four qualification files the gate
 # reads makes it stale. If quality starts reading another path, add it here.
 schema = "writfold-gate/1"
@@ -22,7 +22,6 @@ workdir = "."
 timeout_seconds = 7200
 scope = [
   "crates/**",
-  "vendor/**",
   "Cargo.toml",
   "Cargo.lock",
   "rust-toolchain.toml",

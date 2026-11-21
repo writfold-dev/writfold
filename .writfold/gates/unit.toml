@@ -6,8 +6,7 @@
 # Scope decision. scripts/gate binds the whole checkout while it runs: any
 # tracked or untracked file that changes during the run fails it, and
 # writfold kb gate records such a run as unknown. The scope below is only for
-# staleness afterwards. Tests read the crates, fixtures/, the vendored
-# Splicery source, the guides under docs/guide/ (their JSON and TOML
+# staleness afterwards. Tests read the crates, fixtures/, the guides under docs/guide/ (their JSON and TOML
 # examples), README.md (its pre-release line) and the plugin's skills, so
 # the scope is everything except prose no test reads: docs/writfold/,
 # AGENTS.md and LICENSE, and the gate definitions themselves (a changed

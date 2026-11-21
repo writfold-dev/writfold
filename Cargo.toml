@@ -10,7 +10,6 @@ members = [
     "crates/writfold-tui",
     "crates/writfold",
 ]
-exclude = ["vendor/splicery"]
 resolver = "3"
 
 [workspace.package]
@@ -28,8 +27,10 @@ serde_json = { version = "=1.0.151", features = ["arbitrary_precision"] }
 num-bigint = "=0.4.8"
 sha2 = "=0.11.0"
 thiserror = "=2.0.20"
-# Bounded, linear-time patterns (guard rules, watch filters).
-regex = { version = "=1.11.1", default-features = false, features = ["std", "perf"] }
+# Bounded, linear-time patterns (guard rules, watch filters). `unicode`
+# keeps `\d`, `\w` and case folding as they were when the retired Splicery
+# crates enabled it by feature unification (#54).
+regex = { version = "=1.11.1", default-features = false, features = ["std", "perf", "unicode"] }
 # Derived, rebuildable KB index (KB v1). `bundled` compiles the SQLite
 # amalgamation (with FTS5) into the static musl binary; no system library.
 rusqlite = { version = "=0.37.0", features = ["bundled"] }
@@ -41,10 +42,6 @@ ratatui = { version = "=0.29.0", default-features = false, features = ["crosster
 verus_syn = { version = "=0.0.0-2026-09-06-0133", features = ["full", "visit"] }
 proc-macro2 = { version = "=1.0.107", features = ["span-locations"] }
 syn = { version = "=2.0.119", features = ["full", "visit"] }
-splicery-domain = { path = "vendor/splicery/crates/splicery-domain" }
-splicery-syntax = { path = "vendor/splicery/crates/splicery-syntax" }
-splicery-compile = { path = "vendor/splicery/crates/splicery-compile" }
-splicery-kernel = { path = "vendor/splicery/crates/splicery-kernel" }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

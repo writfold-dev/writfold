@@ -4,7 +4,6 @@ pub mod args;
 mod checkpoint;
 mod cite;
 mod deliver;
-mod edit;
 mod gate;
 mod guard;
 mod hook;
@@ -162,14 +161,6 @@ plans (the run graph; templates in .writfold/plans/<name>.toml; Writfold records
                                    close the current step without calling it done
   plan repin --reason TEXT --by WHO [--run ID] [--repo DIR]
                                    adopt the policy as it is now when it moved since the run pinned it
-
-edits (the Splicery adapter; Splicery for repeated or structural edits, ordinary tools for small ones):
-  edit apply RECIPE.spl|- [RECIPE.spl ...] [--run ID] [--worktree DIR] [--dry-run]
-                                   (- reads one recipe from stdin, at most 4 MiB)
-                                   replay recipes against the run's worktree bytes, write each file
-                                   atomically, keep recipe and preview as a receipt in the run
-  edit recover [--run ID] [--abandon]
-                                   finish (or drop) an edit a crash interrupted between files
 
 harness:
   hook session-start|pre-compact|post-compact|stop|session-end|pre-tool-use|post-tool-use

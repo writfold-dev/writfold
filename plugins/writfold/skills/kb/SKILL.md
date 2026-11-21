@@ -37,7 +37,6 @@ The project KB is plain records in Git. `writfold kb <verb>` answers from it in 
 | Check a delivery candidate, and see what it still owes | `deliver check [CANDIDATE]`, `deliver status` |
 | Record that a checked candidate was posted | `deliver posted [CANDIDATE] --ref URL --by WHO` |
 | Where does the run's plan stand, and may it move on? | `plan status`, `plan advance` (`plan set <template>` to start one; `plan use <template>` splices a template's steps before the current step, once) |
-| Apply a Splicery recipe in the run's worktree, keeping a receipt (frozen) | `edit apply RECIPE.spl… [--dry-run]` (`--worktree DIR` once if the run records none) |
 
 Writes (`checkpoint`, `record`, `status --set`) change the work tree only. They never commit; commit the KB yourself when the user wants it shared.
 
@@ -102,7 +101,7 @@ Say a candidate is ready only when `deliver status` shows it `[ready]`; report a
 
 ## Edits
 
-Edit files with your ordinary tools. `edit apply` (frozen: kept working, not developed further) replays Splicery recipes against the run's worktree and keeps the recipe and preview as a receipt; use it only when the user or the KB already works with recipes. Run `--dry-run` first; after a crash, `edit recover` finishes the batch. The result is an uncommitted change: review it, run `gate status` (in-scope gates are now stale), and commit it.
+Edit files with your ordinary tools. Review the uncommitted change, run `gate status` (in-scope gates are now stale), and commit it.
 
 ## The current run
 

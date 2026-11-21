@@ -690,41 +690,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "149309498a5f7334b12ddae0cad8aba81ce785fe91755068867e017cf98fee46"
 
 [[package]]
-name = "splicery-compile"
-version = "0.1.0-dev.0"
-dependencies = [
- "regex",
- "splicery-domain",
- "splicery-syntax",
-]
-
-[[package]]
-name = "splicery-domain"
-version = "0.1.0-dev.0"
-dependencies = [
- "sha2",
-]
-
-[[package]]
-name = "splicery-kernel"
-version = "0.1.0-dev.0"
-dependencies = [
- "splicery-domain",
- "splicery-splice",
-]
-
-[[package]]
-name = "splicery-splice"
-version = "0.1.0-dev.0"
-
-[[package]]
-name = "splicery-syntax"
-version = "0.1.0-dev.0"
-dependencies = [
- "splicery-domain",
-]
-
-[[package]]
 name = "static_assertions"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1099,10 +1064,6 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2",
- "splicery-compile",
- "splicery-domain",
- "splicery-kernel",
- "splicery-syntax",
  "thiserror",
  "writfold-domain",
 ]

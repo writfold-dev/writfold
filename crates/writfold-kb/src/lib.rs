@@ -17,7 +17,6 @@ pub mod defs;
 pub mod deliver;
 pub mod delta;
 pub mod draft;
-pub mod edit;
 pub mod emit;
 mod emit_json;
 pub mod error;
@@ -151,8 +150,6 @@ pub enum Verb {
     Gate(gate::GateVerb),
     /// `guard status`: rules judged for the current run, as if matched.
     Guard(guard::GuardVerb),
-    /// `edit apply|recover` (the Splicery adapter).
-    Edit(edit::EditVerb),
     /// `deliver prepare|check|attest|waive|status` (G2; nothing is sent).
     Deliver(deliver::DeliverVerb),
     /// `plan set|use|status|advance|skip` (the run graph).
@@ -229,9 +226,6 @@ pub fn run_as(request: &Request, session: Option<&str>) -> Result<Output> {
     }
     if let Verb::Guard(guard::GuardVerb::Log { rule, since }) = &request.verb {
         return guard::log_report(&ws, request, (rule.as_deref(), *since), now);
-    }
-    if let Verb::Edit(verb) = &request.verb {
-        return edit::execute(&ws, request, verb, now);
     }
     if let Verb::Deliver(verb) = &request.verb {
         return deliver::execute(&ws, request, verb, now);
