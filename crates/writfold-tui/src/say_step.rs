@@ -26,9 +26,25 @@ pub fn group_name(splice: &str) -> &str {
 
 /// The chip word beside the name (`next up`, `done`, `skipped`).
 pub fn chip(node: &Node<'_>) -> Option<&'static str> {
+    // A loop (#81): a spent loop says so; a step of an earlier round is
+    // history, not a step to do again.
+    if node.flags.contains(&"spent") {
+        return Some("spent");
+    }
+    if node.row.get("superseded").and_then(Value::as_bool) == Some(true) {
+        return Some("earlier round");
+    }
     find(STEP, field(node.row, "status"))
         .map(|w| w.short)
         .filter(|s| !s.is_empty())
+}
+
+/// A loop step's round, as `round 2 of at most 5` (#81).
+pub fn round(node: &Node<'_>) -> Option<String> {
+    let lp = node.row.get("loop")?;
+    let rounds = lp.get("rounds")?.as_u64()?;
+    let max = lp.get("max")?.as_u64()?;
+    Some(format!("round {rounds} of at most {max}"))
 }
 
 /// `step 7 of 11 · in findings`.

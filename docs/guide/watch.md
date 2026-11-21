@@ -606,3 +606,7 @@ plan step or gate to the record it cites (their rows name receipts, not
 records); a `--level` flag to start at the exact level, a layout of its own for
 Stale, Brief and Resume beyond the row form, and a `change · 2nd time` header
 for a template spliced twice (it shows the template's name).
+
+## Loops
+
+Built in v0.6.0-dev.15 ([#81](https://github.com/writfold-dev/writfold/issues/81)). A [loop](run-graph.md#loops-a-step-that-repeats-until-its-gates-pass) step's inspector title carries its round, `round 2 of at most 5`; a spent loop's chip reads `spent`, and a step of an earlier round reads `earlier round`: history, not a step to do again. The text list (`x`) is unchanged.

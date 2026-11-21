@@ -190,3 +190,31 @@ fn chip_and_segment_shapes_and_tones_are_status_projections() {
     .collect();
     assert_eq!(shapes.len(), 7);
 }
+
+#[test]
+fn a_loop_shows_its_round_spent_and_earlier_rounds_as_history() {
+    let mut spent = step("fix#1/converge", "current", "fix", None);
+    spent["flags"] = json!(["spent"]);
+    spent["loop"] =
+        json!({"template": "attempt", "min": 1, "max": 2, "rounds": 2, "exit": "spent"});
+    let mut earlier = step(
+        "fix#1/converge/attempt#1/change",
+        "done",
+        "attempt",
+        Some("fix#1/converge"),
+    );
+    earlier["round"] = json!(1);
+    earlier["superseded"] = json!(true);
+    let answer = Reply {
+        rows: vec![earlier, spent],
+        ..Reply::default()
+    };
+    let nodes = nodes(&answer);
+    assert_eq!(crate::say_step::chip(&nodes[0]), Some("earlier round"));
+    assert_eq!(crate::say_step::chip(&nodes[1]), Some("spent"));
+    assert_eq!(
+        crate::say_step::round(&nodes[1]).as_deref(),
+        Some("round 2 of at most 2")
+    );
+    assert_eq!(crate::say_step::round(&nodes[0]), None);
+}

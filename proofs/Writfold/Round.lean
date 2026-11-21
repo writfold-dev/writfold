@@ -376,7 +376,7 @@ theorem superseded_never_stale (n : plan.Node) (met : Slice Bool) :
 theorem newest_round_unchanged (n : plan.Node) (met : Slice Bool) :
     plan.round.stale n met false ⦃ s => s = true ↔ n.done = true ∧ false ∈ met.val ⦄ := by
   unfold plan.round.stale
-  simp only [Bool.false_eq_true, ite_false]
+  try (split; · rename_i h; simp at h)
   exact stale_spec n met
 
 theorem over_iff (b : plan.round.Bounds) (r : Usize) :

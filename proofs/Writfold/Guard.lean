@@ -410,11 +410,12 @@ theorem settled_unknown_iff_unread (r : guard.require.Looked) (planned cur : Boo
   cases r
   · simp
   · simp
-  · cases spent
-    · simp only [Bool.false_eq_true, ite_false]
-      apply WP.spec_mono (step_fact_unknown_iff .Read planned cur owed)
-      intro f hf; simpa using hf
-    · simp
+  · dsimp only
+    repeat' split
+    all_goals first
+      | simp; done
+      | (apply WP.spec_mono (step_fact_unknown_iff .Read planned cur owed)
+         intro f hf; simpa using hf)
 
 /-- Without a spent loop, `step.settled` is `step.met`. -/
 theorem not_spent_equals_step_fact (r : guard.require.Looked) (planned cur : Bool) (owed : Usize) :

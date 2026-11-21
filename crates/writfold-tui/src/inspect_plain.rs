@@ -25,6 +25,7 @@ pub struct Context {
 pub fn told(node: &Node<'_>, cx: Context, glyphs: Glyphs) -> Told {
     let mut pieces = vec![Piece::Quoted(name(node).to_owned())];
     pieces.extend(chip(node).map(said));
+    pieces.extend(crate::say_step::round(node).map(said));
     let mut told = Told::default();
     told.lines.push(Phrase::led(0, Tone::Current, pieces, 1));
     if cx.total > 0 {
