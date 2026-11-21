@@ -1,1 +1,0 @@
-no-emit.tuft:2:1: error[T101]: expected a binding `@name := ...` or `emit`, found end of program

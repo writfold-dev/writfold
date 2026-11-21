@@ -1,1 +1,0 @@
-emit-not-last.tuft:4:1: error[T101]: expected end of program: `emit` must be the last statement, found `@late`

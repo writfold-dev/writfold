@@ -17,7 +17,6 @@ writfold-domain = { path = "../writfold-domain" }
 writfold-core = { path = "../writfold-core" }
 writfold-sources = { path = "../writfold-sources" }
 writfold-runtime = { path = "../writfold-runtime" }
-tuft = { path = "../tuft" }
 rusqlite.workspace = true
 regex.workspace = true
 serde_json.workspace = true

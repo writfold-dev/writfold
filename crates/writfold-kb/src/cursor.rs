@@ -1,5 +1,7 @@
-//! `cursor`: Tuft's resume cursor, a serialized continuation of one paged
-//! view.
+//! `cursor`: the resume cursor, a serialized continuation of one paged
+//! view (moved from the retired Tuft crate on 21 November 2026, #54; its
+//! canonical text and domain string are unchanged, so issued cursors still
+//! resume).
 //!
 //! Canonical text (version 2): `v2.<P>.<C>.<OFFSET>.<K>`, where `P` and `C`
 //! are the first 8 lowercase hex digits of the program digest and the
@@ -16,8 +18,13 @@
 //! The revision-9 `NoticeCursor` is a different value: a borrowed,
 //! in-process position over a `NoticeQuery` with no serialized form. This
 //! cursor crosses processes as text, so it carries its binding itself.
-use crate::digest_hex;
+use sha2::{Digest, Sha256};
 use std::fmt;
+
+/// SHA-256 of `bytes` as lowercase hexadecimal.
+fn digest_hex(bytes: &[u8]) -> String {
+    crate::index::hex(&Sha256::digest(bytes))
+}
 
 const VERSION: &str = "v2";
 const DOMAIN: &str = "tuft-cursor/2";
@@ -132,7 +139,7 @@ impl Cursor {
         let cursor = Self {
             program: (*program).to_owned(),
             commit: (*commit).to_owned(),
-            offset: offset.parse().map_err(|_| CursorError::Malformed)?,
+            offset: offset.parse().ok().ok_or(CursorError::Malformed)?,
             check: (*check).to_owned(),
         };
         if cursor.to_string() != text {

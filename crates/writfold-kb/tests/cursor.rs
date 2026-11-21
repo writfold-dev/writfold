@@ -1,7 +1,7 @@
 //! The resume cursor's canonical encoding and its typed refusals: a round
 //! trip, a foreign program, another commit, malformed or older text, an
 //! edited offset or result, and an offset past the end.
-use tuft::cursor::{Binding, Cursor, CursorError};
+use writfold_kb::cursor::{Binding, Cursor, CursorError};
 
 type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error>>;
 

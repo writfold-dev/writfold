@@ -18,7 +18,7 @@ pub enum KbError {
     #[error("refused: {}", crate::defs::why(.0))]
     Definition(Box<writfold_core::diag::Report>),
     #[error("refused: {0}")]
-    Cursor(#[from] tuft::cursor::CursorError),
+    Cursor(#[from] crate::cursor::CursorError),
     #[error("filesystem: {0}")]
     Io(#[from] std::io::Error),
     #[error("index: {0}")]

@@ -5,8 +5,6 @@ use std::path::Path;
 fn allowed(name: &str) -> Option<&'static [&'static str]> {
     Some(match name {
         "writfold-domain" | "writfold-core" => &[],
-        // Tuft is pure (no IO); it reuses the domain's Coverage and SearchBudget.
-        "tuft" => &["writfold-domain"],
         "writfold-sources" | "writfold-runtime" => &["writfold-domain"],
         // KB v1: continuity reads over a derived SQLite index. It uses the
         // runtime's native reads.
@@ -15,7 +13,6 @@ fn allowed(name: &str) -> Option<&'static [&'static str]> {
             "writfold-sources",
             "writfold-runtime",
             "writfold-core",
-            "tuft",
         ],
         // The binary's `kb` verbs; everything else lives in writfold-kb.
         "writfold-app" => &["writfold-kb"],

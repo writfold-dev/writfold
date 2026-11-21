@@ -1,13 +1,13 @@
 //! The output contract shared by every verb: budgeted rows, notes, and a
-//! trailer that is always the last line. Budget and cursor follow Tuft:
-//! each row group costs `ceil((bytes + 1) / 4)` estimated tokens per line,
-//! rows stop at a group boundary, and the resume cursor is Tuft's v2 cursor
-//! bound to the query digest, the KB pin digest and the digest of all rows.
+//! trailer that is always the last line. Each row group costs
+//! `ceil((bytes + 1) / 4)` estimated tokens per line, rows stop at a group
+//! boundary, and the resume cursor ([`crate::cursor`], v2) is bound to the
+//! query digest, the KB pin digest and the digest of all rows.
 use crate::error::Result;
 use crate::index::{IndexState, Pin, hex};
 use serde_json::{Map, Value, json};
 use sha2::{Digest, Sha256};
-use tuft::cursor::{Binding, Cursor};
+use crate::cursor::{Binding, Cursor};
 
 /// A continuation line (`why:`, `cite:`, `via:` …) of the row above it.
 #[derive(Clone, Debug, Default)]
