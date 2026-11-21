@@ -84,6 +84,19 @@ impl<'a> Session<'a> {
 
     /// Page and render an answer against this snapshot.
     pub fn emit(&self, answer: &Answer, frame: &Frame) -> Result<Output> {
+        // An answer that read verdicts through a view with an unreadable
+        // declaration says so and is partial (#68).
+        let faulted;
+        let answer = match self.view.get().filter(|v| !v.faults.is_empty()) {
+            None => answer,
+            Some(view) => {
+                let mut copy = answer.clone();
+                copy.partial = true;
+                copy.notes.extend(view.faults.iter().cloned());
+                faulted = copy;
+                &faulted
+            }
+        };
         let (examined, total, unreadable) = query::scope(&self.conn)?;
         let scope = Scope {
             pin: &self.pin,

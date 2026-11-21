@@ -35,11 +35,32 @@ pub struct View {
     kinds: Kinds,
     receipts: Receipts,
     stores: Stores,
+    /// Declarations that could not be read (#68): a reader then says so
+    /// and is partial, instead of showing committed verdicts as never
+    /// checked.
+    pub faults: Vec<String>,
+}
+
+/// Why a declaration could not be read, in one line.
+fn fault(what: &str, error: &crate::error::KbError) -> String {
+    let why = match error {
+        crate::error::KbError::Definition(report) => crate::defs::why(report),
+        other => other.to_string(),
+    };
+    format!("{what} could not be read ({why}); verdicts it governs are shown as unchecked")
 }
 
 impl View {
     pub fn load(root: &Path) -> Self {
-        let kinds = super::kinds::read(root).unwrap_or_default();
+        let mut faults = Vec::new();
+        let kinds = super::kinds::read(root).unwrap_or_else(|e| {
+            faults.push(fault("a source kind declaration (.writfold/sources/)", &e));
+            Kinds::default()
+        });
+        let stores = crate::store::read(root).unwrap_or_else(|e| {
+            faults.push(fault("a store declaration", &e));
+            Stores::default()
+        });
         let checked: Vec<String> = (kinds.iter())
             .filter(|k| kinds.checker(&k.name).is_some())
             .map(|k| k.name.clone())
@@ -49,7 +70,8 @@ impl View {
             root: root.to_path_buf(),
             kinds,
             receipts,
-            stores: crate::store::read(root).unwrap_or_default(),
+            stores,
+            faults,
         }
     }
 

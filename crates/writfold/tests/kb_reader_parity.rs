@@ -212,3 +212,30 @@ fn a_newer_local_answer_beats_an_older_receipt() -> Result {
     );
     Ok(())
 }
+
+#[test]
+fn an_unreadable_kind_declaration_is_said_not_hidden() -> Result {
+    let (_a, b) = handwritten("par-broken", -60, "gone", "acme-src")?;
+    let s = seen(&b)?;
+    assert!(s.why.contains("[gone]"), "{}", s.why);
+    // The declaration stops parsing: readers say so instead of showing
+    // the committed gone as never checked.
+    put(
+        &b.kb().join(".writfold/sources/src.toml"),
+        "schema = \"writfold-source/1\"\nkind = \n",
+    )?;
+    let (why, exit) = kb(&b, &["why", DECISION], &[])?;
+    assert_eq!(exit, 2, "{why}");
+    assert!(
+        why.contains("a source kind declaration (.writfold/sources/) could not be read"),
+        "{why}"
+    );
+    assert!(why.contains("coverage=partial"), "{why}");
+    let s = seen(&b)?;
+    assert!(
+        s.start.starts_with("Citations: could not be read"),
+        "{}",
+        s.start
+    );
+    Ok(())
+}

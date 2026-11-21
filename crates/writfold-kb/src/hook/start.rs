@@ -247,6 +247,9 @@ pub fn stale_line(ws: &Workspace, now: i64) -> Option<String> {
         .ok()?;
     paths.dedup();
     let view = crate::stale::effective::View::load(&ws.root);
+    if let Some(first) = view.faults.first() {
+        return Some(format!("\nCitations: could not be read: {first}\n"));
+    }
     let mut tally: std::collections::BTreeMap<String, i64> = std::collections::BTreeMap::new();
     let mut recorded = 0usize;
     for path in &paths {

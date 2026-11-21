@@ -6,6 +6,10 @@ This page is for someone pinned to one release who wants to upgrade on purpose. 
 
 A line marked **fix** changed an answer that was wrong; anything depending on the old answer was depending on the fault.
 
+## v0.6.0-dev.15 (unreleased)
+
+- **fix** When a source kind or store declaration cannot be read, `brief`, `context`, `why` and edge flags add a note naming it and read `coverage=partial` (exit 2), and session start prints `Citations: could not be read: …`, instead of showing committed verdicts as never checked ([#68](https://github.com/writfold-dev/writfold/issues/68)).
+
 ## v0.6.0-dev.14
 
 - `impact`, `uses` and `context` read at most `WRITFOLD_KB_WORK` edges (default 100,000); one that stops there says so in a note and reads `coverage=partial` (exit 2) instead of loading a hub's every edge. `impact` adds `examined=N` to its trailer; `uses` adds a `links: N more from this source` line where it keeps three of more ([#60](https://github.com/writfold-dev/writfold/issues/60)). 
