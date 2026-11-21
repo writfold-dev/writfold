@@ -45,7 +45,7 @@ mod status;
 pub mod step_word;
 pub mod summary;
 pub mod template;
-mod template_check;
+pub mod template_check;
 pub(crate) mod timeline;
 mod write;
 

@@ -38,6 +38,11 @@ pub fn annotate(
             "an earlier round: history, not judged again".into(),
         ));
     }
+    if let Some(place) = graph.places(&step.path).last() {
+        row.extra.push(("round", serde_json::json!(place.round)));
+        row.extra
+            .push(("superseded", serde_json::json!(superseded)));
+    }
     let Some(((body, _), b)) = step.repeat.as_ref().zip(super::rounds::bounds(step)) else {
         return;
     };
@@ -51,16 +56,27 @@ pub fn annotate(
         (None, None) => format!("{body}, round {rounds} of at most {}", b.max),
     };
     let met: Vec<bool> = gates.iter().map(Gate::met).collect();
-    let spent = matches!(
-        exit(&b, rounds, &met),
-        writfold_core::plan::round::Exit::Spent
-    );
+    // Only a judged step has an exit to state: a later step's gates were
+    // not judged, and an empty list would read as met.
+    let judged_all = gates.len() == step.gates.len() && (current || step.done.is_some());
+    let state = judged_all.then(|| exit(&b, rounds, &met));
+    let spent = matches!(state, Some(writfold_core::plan::round::Exit::Spent));
     let left = if spent && step.done.is_none() && step.skipped.is_none() {
         "; no round is left"
     } else {
         ""
     };
     row.more.push(line("loop", format!("{text}{left}")));
+    let word = match state {
+        Some(writfold_core::plan::round::Exit::Met) => serde_json::json!("met"),
+        Some(writfold_core::plan::round::Exit::Again) => serde_json::json!("again"),
+        Some(writfold_core::plan::round::Exit::Spent) => serde_json::json!("spent"),
+        None => serde_json::Value::Null,
+    };
+    row.extra.push((
+        "loop",
+        serde_json::json!({"template": body, "min": b.min, "max": b.max, "rounds": rounds, "exit": word}),
+    ));
     if !current {
         return;
     }
@@ -80,4 +96,25 @@ pub fn annotate(
             ));
         }
     }
+}
+
+/// The trailer's `loops=` and `spent=` (when the plan has a loop), and
+/// `!over-max` making the answer exit 2 (two clones each added a round).
+pub fn counts(answer: &mut crate::emit::Answer, graph: &Graph) {
+    let loops = graph.steps.iter().filter(|s| s.repeat.is_some()).count();
+    if loops == 0 {
+        return;
+    }
+    let spent = answer
+        .rows
+        .iter()
+        .filter(|r| r.flags.iter().any(|f| f == "spent"))
+        .count();
+    let over = answer
+        .rows
+        .iter()
+        .any(|r| r.flags.iter().any(|f| f == "over-max"));
+    answer.counts.push(("loops", loops));
+    answer.counts.push(("spent", spent));
+    answer.flagged |= over;
 }

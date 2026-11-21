@@ -33,6 +33,12 @@ pub(super) fn position(root: &Path, rec: &Rec) -> Option<More> {
                 i + 1,
                 step.path
             );
+            if let Some((body, r)) = &step.repeat {
+                // Folded only: rounds, not whether the loop is spent (#78).
+                let rounds = graph.rounds(step);
+                row.text
+                    .push_str(&format!(" loop={body} round={rounds}/{}", r.max));
+            }
             row.path = Some(step.splice.clone());
             row.line = Some(1);
         }

@@ -77,6 +77,42 @@ fn mode_waivable(f: &File) -> Option<Report> {
     Some(sink.report())
 }
 
+/// The warning for a template whose loop step (`loop=`, #78) can be ended
+/// by whoever walks it with a statement: every gate of the step is
+/// `attested` or `checklist` class, or accepts a waiver.
+fn self_exit(f: &File, all: &[File]) -> Option<Report> {
+    let (_, _, steps) =
+        crate::plan::template_check::check(&f.text, Some(&f.stem), &f.shown).ok()?;
+    let gate = |id: &str| {
+        let g = all.iter().find(|g| g.kind == Kind::Gate && g.stem == id)?;
+        crate::gate::def_check::check(&g.text, &g.stem, g.origin, &g.dir, &g.shown).ok()
+    };
+    let step = steps.iter().find(|s| {
+        s.repeat.is_some()
+            && !s.gates.is_empty()
+            && s.gates.iter().all(|id| {
+                gate(id).is_some_and(|d| {
+                    matches!(d.class.as_str(), "attested" | "checklist") || d.policy().waived
+                })
+            })
+    })?;
+    let mut sink = Sink::new(&f.shown, &f.text);
+    let doc = toml::read(&f.text, &mut Sink::new("", &f.text));
+    let span = doc.get("steps").and_then(|e| match &e.value {
+        Slot::Value(v) => Some(v.span),
+        Slot::Broken => None,
+    });
+    let why = format!(
+        "loop step {} ends on gates its walker can meet with a statement ({}): the loop is one attest or waive from done",
+        step.id,
+        step.gates.join(", ")
+    );
+    let w = sink.push(Severity::Warning, "policy.self-exit", span, why);
+    w.label = "loop here".into();
+    w.help = Some("add a mechanical gate to the step, or accept = [\"satisfied\"] on its gates, or keep it if a statement is the exit you want".into());
+    Some(sink.report())
+}
+
 /// Every policy warning of the definition files.
 pub fn check(all: &[File]) -> Report {
     let mut report = Report::default();
@@ -84,6 +120,7 @@ pub fn check(all: &[File]) -> Report {
         let found = match f.kind {
             Kind::Gate => waivable(f),
             Kind::Mode => mode_waivable(f),
+            Kind::Template => self_exit(f, all),
             _ => None,
         };
         if let Some(found) = found {

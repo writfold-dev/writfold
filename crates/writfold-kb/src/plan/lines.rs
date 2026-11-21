@@ -15,6 +15,9 @@ pub struct PlanLines {
     pub summary: Summary,
     /// Each step's gates with how the step closed.
     steps: Vec<(Vec<String>, Close)>,
+    /// One line per loop step: how many rounds it took, or gave up after
+    /// (#78). Shown only; the exit rule is unchanged.
+    pub loops: Vec<String>,
 }
 
 impl PlanLines {
@@ -57,9 +60,23 @@ pub fn of_run(
         .map(|s| s.gates.clone())
         .zip(closes)
         .collect();
+    let graph = &loaded.graph;
+    let loops = (graph.steps.iter())
+        .filter_map(|s| Some((s, s.repeat.as_ref()?)))
+        .map(|(s, (_, r))| {
+            let rounds = graph.rounds(s);
+            let how = match (&s.done, &s.skipped) {
+                (Some(_), _) => format!("{rounds} rounds of at most {}", r.max),
+                (None, Some(_)) => format!("gave up after {rounds} of at most {} rounds", r.max),
+                (None, None) => format!("round {rounds} of at most {}, open", r.max),
+            };
+            format!("loop {}: {how}", s.path)
+        })
+        .collect();
     Some(PlanLines {
         word: ended.shown(),
         summary,
         steps,
+        loops,
     })
 }

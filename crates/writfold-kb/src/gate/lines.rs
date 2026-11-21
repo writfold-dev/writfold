@@ -54,6 +54,9 @@ pub(super) fn lines(
             false => gate_line(judged, width),
         });
     }
+    for line in plan.iter().flat_map(|p| &p.loops) {
+        text.push_str(&format!("{line}\n"));
+    }
     let invalid = filings.invalid() + report.problems.len();
     if invalid > 0 {
         text.push_str(&format!(

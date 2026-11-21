@@ -136,7 +136,10 @@ impl Graph {
     /// (`deliver:<mode>`) is not a gate and is not listed.
     pub fn gates(&self) -> Vec<String> {
         let mut out: Vec<String> = Vec::new();
-        for gate in self.steps.iter().flat_map(|s| &s.gates) {
+        // A gate named only by steps of an earlier loop round is history,
+        // not owed (#78).
+        let live = self.steps.iter().filter(|s| !self.superseded(&s.path));
+        for gate in live.flat_map(|s| &s.gates) {
             if !out.contains(gate) && !crate::deliver::step::is_delivery_word(gate) {
                 out.push(gate.clone());
             }

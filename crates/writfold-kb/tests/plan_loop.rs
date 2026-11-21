@@ -257,3 +257,61 @@ fn loop_words_are_checked_where_they_are_written() -> TestResult {
     assert!(ok.is_ok_and(|s| s.include.as_deref() == Some("attempt") && s.repeat.is_some()));
     Ok(())
 }
+
+#[test]
+fn other_readers_show_the_loop() -> TestResult {
+    let w = looping("fixed loop=attempt max=3")?;
+    round(&w)?;
+    assert_eq!(gate(&w, "fixed")?, 2);
+    assert_eq!(again(&w)?.1, 0);
+    let verb = GateVerb::Lines {
+        run: run(),
+        repo: Some(w.code.clone()),
+    };
+    let lines = writfold_kb::run(&w.request(Verb::Gate(verb)))?.text;
+    assert!(
+        lines.contains("loop fix#1/converge: round 2 of at most 3, open"),
+        "{lines}"
+    );
+    let mut request = w.request(Verb::Plan(PlanVerb::Status {
+        gates: false,
+        run: run(),
+        repo: Some(w.code.clone()),
+    }));
+    request.json = true;
+    let json: serde_json::Value = serde_json::from_str(&writfold_kb::run(&request)?.text)?;
+    let rows = json["rows"].as_array().ok_or("rows")?;
+    let converge = rows
+        .iter()
+        .find(|r| r["id"] == "fix#1/converge")
+        .ok_or("converge row")?;
+    assert_eq!(converge["loop"]["rounds"], 2, "{converge}");
+    assert!(
+        converge["loop"]["exit"].is_null(),
+        "a round under way: no exit judged yet: {converge}"
+    );
+    let first = rows
+        .iter()
+        .find(|r| r["id"] == "fix#1/converge/attempt#1/change")
+        .ok_or("round 1")?;
+    assert_eq!(first["superseded"], true, "{first}");
+    assert_eq!(json["trailer"]["counts"]["loops"], 1, "{json}");
+    Ok(())
+}
+
+#[test]
+fn a_loop_that_ends_on_a_statement_is_warned() -> TestResult {
+    let w = looping("review loop=attempt max=2")?;
+    let verb = Verb::Lint {
+        paths: Vec::new(),
+        repo: Some(w.code.clone()),
+        deny_warnings: false,
+        records: false,
+    };
+    let output = writfold_kb::run(&w.request(verb))?;
+    let codes: Vec<&str> = (output.shown.iter())
+        .flat_map(|r| r.diagnostics.iter().map(|d| d.code))
+        .collect();
+    assert!(codes.contains(&"policy.self-exit"), "{codes:?}");
+    Ok(())
+}

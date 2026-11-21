@@ -142,6 +142,7 @@ A code is `<class>.<what>`, lower case, the same for every kind of file; the fil
 | `section.form` | a line in a required section lacks its form (a hypothesis without an outcome) |
 | `policy.waivable` | a warning: a checklist restricts `not_applicable` while its gate still accepts a waiver |
 | `policy.never-ages` | a warning: `no-data` or `not-found` looks of a source kind with no declaration in `.writfold/sources/`, which never age (built in v0.6.0-dev.11) |
+| `policy.self-exit` | warning: a loop step (`loop=`) ends only on gates its walker can meet with a statement (attested or checklist class, or accepting a waiver) (from v0.6.0-dev.15) |
 
 ### 2.2 The renderer
 

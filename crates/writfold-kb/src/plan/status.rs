@@ -71,6 +71,7 @@ pub(super) fn status(session: &Session<'_>, loaded: &Loaded, gates: bool) -> Res
     if disorder.count() > 0 {
         answer.counts.push(("disorder", disorder.count()));
     }
+    super::show_loop::counts(&mut answer, graph);
     notes(&mut answer, loaded);
     answer.notes.extend(disorder.notes);
     Ok(answer)

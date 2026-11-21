@@ -211,3 +211,7 @@ Every `writfold kb` verb, including the writes and the run verbs: `record`, `sta
 Two outputs are not this envelope:
 
 - The hook commands (`writfold kb hook <event>`) print the JSON Claude Code expects.
+
+## Loops in `plan status` (from v0.6.0-dev.15)
+
+A loop step's row has `"loop": {"template", "min", "max", "rounds", "exit"}`, where `exit` is `"met"`, `"again"` or `"spent"` when the step's gates were judged (the current or a done step) and `null` otherwise. A step inside a loop round has `"round"` (its round's number) and `"superseded"` (`true` for an earlier round). The trailer counts `loops` and `spent` when the plan has a loop; `!over-max` on a loop step makes the answer exit 2.
