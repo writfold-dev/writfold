@@ -185,38 +185,26 @@ pub fn cached_verdicts(
     let mut rows = Vec::new();
     let mut unchecked = 0usize;
     for path in paths {
-        let mut statement = session.conn.prepare_cached(
-            "SELECT c.ord, c.line, c.raw, k.verdict, k.repo_head, k.new_first, k.new_last, k.new_path \
-             FROM citations c LEFT JOIN cite_checks k ON k.path = c.path AND k.ord = c.ord \
-             WHERE c.path = ?1 AND c.illustrative = 0 ORDER BY c.ord",
-        )?;
-        let found = statement.query_map([path], |r| {
-            Ok((
-                r.get::<_, u32>(1)?,
-                r.get::<_, String>(2)?,
-                r.get::<_, Option<String>>(3)?,
-                r.get::<_, Option<String>>(4)?,
-                (
-                    r.get::<_, Option<u32>>(5)?,
-                    r.get::<_, Option<u32>>(6)?,
-                    r.get::<_, Option<String>>(7)?,
-                ),
-            ))
-        })?;
-        for item in found {
-            let (line, raw, verdict, head, moved) = item?;
-            match verdict.as_deref() {
-                None => unchecked += 1,
-                Some("fresh") => {}
-                Some(verdict) => rows.push(stale::verdict_row(
-                    path,
-                    line,
-                    &raw,
-                    verdict,
-                    head.as_deref(),
-                    moved,
-                )),
+        for cite in crate::stale::effective::cites(&session.conn, path)? {
+            let Some(shown) = session.shown(&cite)? else {
+                unchecked += 1;
+                continue;
+            };
+            if shown.verdict == "fresh" {
+                continue;
             }
+            let mut row = stale::verdict_row(
+                path,
+                cite.line,
+                &cite.raw,
+                &shown.verdict,
+                shown.head.as_deref(),
+                shown.moved,
+            );
+            if shown.recorded {
+                row.flags.push("recorded".into());
+            }
+            rows.push(row);
         }
     }
     rows.sort_by_key(|row| stale::severity(row.status.as_deref().unwrap_or_default()));
@@ -265,21 +253,24 @@ type Cached = (String, Option<u32>, Option<u32>, Option<String>);
 /// locators), and `stale` when its source record is superseded, rejected
 /// or retired. A citation never checked adds no flag.
 pub fn edge_flags(session: &Session<'_>, edge: &Edge) -> Result<Vec<String>> {
-    let sql = match (edge.origin.as_str(), edge.cite) {
-        ("cite", Some(_)) => {
-            "SELECT verdict, new_first, new_last, new_path FROM cite_checks WHERE path = ?1 AND ord = ?2"
-        }
-        ("authored", _) => {
-            "SELECT verdict, new_first, new_last, new_path FROM cite_checks WHERE path = ?1 AND ?2 IS NULL"
-        }
-        _ => return lifecycle(session, edge, Vec::new()),
+    let wanted = |c: &crate::stale::Cite| match (edge.origin.as_str(), edge.cite) {
+        ("cite", Some(ord)) => c.ord == ord,
+        ("authored", None) => true,
+        _ => false,
     };
-    let mut statement = session.conn.prepare_cached(sql)?;
-    let mut verdicts = statement
-        .query_map((&edge.path, &edge.cite), |r| {
-            Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?))
-        })?
-        .collect::<rusqlite::Result<Vec<Cached>>>()?;
+    if !matches!(edge.origin.as_str(), "cite" | "authored") {
+        return lifecycle(session, edge, Vec::new());
+    }
+    let mut verdicts: Vec<Cached> = Vec::new();
+    for cite in crate::stale::effective::cites(&session.conn, &edge.path)? {
+        if !wanted(&cite) {
+            continue;
+        }
+        if let Some(shown) = session.shown(&cite)? {
+            let (a, b, p) = shown.moved;
+            verdicts.push((shown.verdict, a, b, p));
+        }
+    }
     verdicts.retain(|(verdict, ..)| verdict != "fresh");
     verdicts.sort_by_key(|(verdict, ..)| stale::severity(verdict));
     let flags = verdicts

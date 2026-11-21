@@ -191,7 +191,7 @@ fn startup(
         && !parts.is_empty()
         && !crate::gate::policy::configured(&ws.root, top.as_deref()))
     .then(|| format!("\n{}\n", crate::gate::policy::NONE_CONFIGURED));
-    let lines: Vec<String> = stale_line(ws)
+    let lines: Vec<String> = stale_line(ws, now)
         .into_iter()
         .chain(absent)
         .chain(broken)
@@ -226,28 +226,38 @@ fn startup(
 }
 
 /// `Citations: 4 changed, 2 gone as of the last writfold kb stale; …`:
-/// the non-fresh verdicts in the index's verdict cache, worst first, for
-/// citations the index still holds. `None` when the cache is empty, all
-/// fresh, or there is no index file (a KB outside Git).
-pub fn stale_line(ws: &Workspace) -> Option<String> {
+/// the non-fresh verdicts readers show, worst first, for citations the
+/// index holds: this machine's cached verdicts, or a committed check
+/// receipt's where that is newer and usable, as the gates see them
+/// ([`crate::stale::effective`], #35). `None` when all are fresh or never
+/// checked, or there is no index file (a KB outside Git). Starts no checker.
+pub fn stale_line(ws: &Workspace, now: i64) -> Option<String> {
     let file = crate::index::index_file(ws.repo.as_ref()?).ok()?;
     if !file.is_file() {
         return None;
     }
     let flags = rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY;
     let conn = rusqlite::Connection::open_with_flags(&file, flags).ok()?;
-    let mut statement = conn
-        .prepare(
-            "SELECT k.verdict, COUNT(*) FROM cite_checks k \
-             JOIN citations c ON c.path = k.path AND c.ord = k.ord \
-             WHERE k.verdict != 'fresh' GROUP BY k.verdict",
-        )
-        .ok()?;
-    let mut counts: Vec<(String, i64)> = statement
-        .query_map([], |r| Ok((r.get(0)?, r.get(1)?)))
+    let mut paths: Vec<String> = conn
+        .prepare("SELECT DISTINCT path FROM citations WHERE illustrative = 0 ORDER BY path")
+        .ok()?
+        .query_map([], |r| r.get(0))
         .ok()?
         .collect::<rusqlite::Result<_>>()
         .ok()?;
+    paths.dedup();
+    let view = crate::stale::effective::View::load(&ws.root);
+    let mut tally: std::collections::BTreeMap<String, i64> = std::collections::BTreeMap::new();
+    for path in &paths {
+        for cite in crate::stale::effective::cites(&conn, path).ok()? {
+            if let Some(shown) = view.shown(&conn, now, &cite).ok()?
+                && shown.verdict != "fresh"
+            {
+                *tally.entry(shown.verdict).or_default() += 1;
+            }
+        }
+    }
+    let mut counts: Vec<(String, i64)> = tally.into_iter().collect();
     if counts.is_empty() {
         return None;
     }

@@ -9,6 +9,7 @@ pub mod checker;
 mod code;
 pub mod kind_check;
 pub mod kinds;
+pub mod effective;
 mod pin_receipt;
 pub(crate) use pin_receipt::plan as pin_plan;
 mod pinned;
