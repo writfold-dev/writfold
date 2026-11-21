@@ -5,7 +5,7 @@ use crate::defs::{Check, Spanned, Text};
 use writfold_core::diag::suggest::{did_you_mean, suggest};
 
 /// The requirement names without `gate:<id>`, for suggestions.
-const NAMED: [&str; 3] = ["run.current", "gates.met", "step.met"];
+const NAMED: [&str; 4] = ["run.current", "gates.met", "step.met", "step.settled"];
 
 pub fn strings(c: &mut Check<'_>, key: &str) -> Option<Vec<Spanned<Text>>> {
     c.list(key)
@@ -39,7 +39,7 @@ pub fn requirements(c: &mut Check<'_>) -> Option<Vec<Require>> {
                 if let Some(help) = did_you_mean(&found, '"') {
                     d.help(help);
                 }
-                d.note("a rule may require run.current, gates.met, step.met or gate:<id>".into());
+                d.note("a rule may require run.current, gates.met, step.met, step.settled or gate:<id>".into());
                 ok = false;
             }
         }

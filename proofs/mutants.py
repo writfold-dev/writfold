@@ -34,6 +34,20 @@ class Mutant:
 
 
 MUTANTS = (
+    # step.settled (#79): only a spent loop settles an owing step
+    Mutant("settled-ignores-spent", "guard/require.rs",
+           "            if spent {",
+           "            if false {",
+           ("Writfold.Core.Guard.settled_met_iff",)),
+    Mutant("settled-always", "guard/require.rs",
+           "            if spent {",
+           "            if true {",
+           ("Writfold.Core.Guard.settled_met_iff",)),
+    # step.settled: an unread plan is never settled
+    Mutant("settled-ignores-read", "guard/require.rs",
+           "        Looked::Failed => Fact::Unknown,\n        Looked::Read => {\n            if spent {",
+           "        Looked::Failed => Fact::Met,\n        Looked::Read => {\n            if spent {",
+           ("Writfold.Core.Guard.settled_met_iff", "Writfold.Core.Guard.settled_unknown_iff_unread")),
     # loops (#75): the round kernel
     Mutant("round-exit-ignores-min", "plan/round.rs",
            "    if rounds >= b.min && all_met(met) {",

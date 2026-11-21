@@ -163,6 +163,7 @@ description = "commit only when the run's gates are met"
 | `gates.met` | the run owes at least one gate for this repository, every gate it owes is satisfied, attested or waived, as `gate status` judges it (a plan narrows it to the plan's gates), and no receipt, statement or definition is invalid. A waiver counts unless the gate's own [`accept`](gates.md#which-standings-meet-a-gate-accept) leaves waivers out (then this is the per-gate standing set: `accept = ["satisfied"]` refuses a waiver for that gate here as in `gate status`), and so does a [checklist](gates.md) whose required items are all covered `supported` or `not-applicable`: it is attested. **An empty set is not met** (built in v0.6.0-dev.1): with no gate defined for the repository, or a plan whose steps name none, the rule takes its action with `no gate is owed here: none is defined for <repo>; gates.met is not met by an empty set; next: define .writfold/gates/<id>.toml, or leave this repository out of the rule with repos`. A delivery a step owes (`deliver:<mode>`, built in v0.6.0-dev.1) is neither owed nor counted here: `gates.met` is used on `git commit`, and counting a PR comment would refuse the commit the comment is about. A plan that names only deliveries owes no gate, so the rule refuses with `no gate is owed here: the run's plan names only deliveries; gates.met is not met by an empty set; next: require step.met for the delivery step, name a gate in a plan step, or leave this repository out of the rule with repos` |
 | `gate:<id>` | that gate is met |
 | `step.met` | the plan's current step owes nothing (met with no plan, or when every step is closed). Its deliveries are judged with its gates (built in v0.6.0-dev.1): `step deliver owes deliver:pr-comment [open]; next: writfold kb deliver prepare --mode pr-comment --from FILE` |
+| `step.settled` | `step.met`, or the current step is a **spent loop** (built in v0.6.0-dev.15, [#79](https://github.com/writfold-dev/writfold/issues/79)): every round used without meeting its gates, so the session has nothing left there but to report. A Stop rule on it keeps a session going round a loop (its text names `writfold kb plan again`) and goes quiet when the loop is spent, where `step.met` would keep nudging. An unread plan is never settled |
 
 `step.met` is a statement about a plan step, so a run without a plan meets it: a Stop rule built on it stays quiet when there is nothing to finish. When a missing plan, or a missing run, should not pass, put `run.current` or `gates.met` beside it in `require`.
 
@@ -324,7 +325,7 @@ error[value.unknown]: unknown requirement "gates.mett"
   |            ^^^^^^^^^^^^ not a requirement
   |
   = help: did you mean "gates.met"?
-  = note: a rule may require run.current, gates.met, step.met or gate:<id>
+  = note: a rule may require run.current, gates.met, step.met, step.settled or gate:<id>
 ```
 
 The full reading is `writfold kb lint` ([errors](errors.md)).

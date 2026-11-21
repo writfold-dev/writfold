@@ -14,7 +14,13 @@ pub const SCHEMA: &str = "writfold-guard-rule/1";
 /// Where rules live, under the KB root or a repository.
 pub const DIR: &str = ".writfold/guards";
 /// The requirement names a rule may use; `gate:<id>` names one gate.
-pub const REQUIREMENTS: [&str; 4] = ["run.current", "gates.met", "gate:<id>", "step.met"];
+pub const REQUIREMENTS: [&str; 5] = [
+    "run.current",
+    "gates.met",
+    "gate:<id>",
+    "step.met",
+    "step.settled",
+];
 
 /// When a rule is evaluated.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -34,6 +40,8 @@ pub enum Require {
     Gate(String),
     /// The plan's current step owes nothing.
     StepMet,
+    /// `step.met`, or the current step is a spent loop (#79).
+    StepSettled,
 }
 
 impl Require {
@@ -42,6 +50,7 @@ impl Require {
             "run.current" => Some(Require::RunCurrent),
             "gates.met" => Some(Require::GatesMet),
             "step.met" => Some(Require::StepMet),
+            "step.settled" => Some(Require::StepSettled),
             _ => text
                 .strip_prefix("gate:")
                 .filter(|id| crate::write::is_slug(id))

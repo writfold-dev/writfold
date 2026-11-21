@@ -5,6 +5,8 @@
 //! history (never `!stale`), so a loop can end `complete`; `plan use
 //! <body> --again` cannot go around the bound; `plan advance` waits for
 //! `min` rounds. Nothing runs a round: the test plays the agent.
+#[path = "guard_status/helpers.rs"]
+mod helpers;
 mod support;
 
 use std::path::Path;
@@ -313,5 +315,42 @@ fn a_loop_that_ends_on_a_statement_is_warned() -> TestResult {
         .flat_map(|r| r.diagnostics.iter().map(|d| d.code))
         .collect();
     assert!(codes.contains(&"policy.self-exit"), "{codes:?}");
+    Ok(())
+}
+
+/// A Stop rule requiring `requirement`, the run current, and the loop spent.
+fn spent_with_rule(requirement: &str) -> TestResult<World> {
+    let w = looping("fixed loop=attempt max=1")?;
+    round(&w)?;
+    assert_eq!(gate(&w, "fixed")?, 2);
+    helpers::current(&w)?;
+    let rule = format!(
+        "schema = \"writfold-guard-rule/1\"\nid = \"finish\"\nevent = \"stop\"\nrequire = [\"{requirement}\"]\n"
+    );
+    put(&w.kb.join(".writfold/guards/finish.toml"), &rule)?;
+    Ok(w)
+}
+
+#[test]
+fn a_spent_loop_settles_a_stop_rule_on_step_settled_only() -> TestResult {
+    let w = spent_with_rule("step.met")?;
+    assert!(
+        !helpers::hook(&w, true, "met-session").stdout.is_empty(),
+        "step.met still nudges a spent loop"
+    );
+    let w = spent_with_rule("step.settled")?;
+    assert!(
+        helpers::hook(&w, true, "settled-session").stdout.is_empty(),
+        "a spent loop is settled"
+    );
+    // A loop with rounds left is nudged under step.settled too.
+    let w = looping("fixed loop=attempt max=2")?;
+    round(&w)?;
+    assert_eq!(gate(&w, "fixed")?, 2);
+    helpers::current(&w)?;
+    let rule = "schema = \"writfold-guard-rule/1\"\nid = \"finish\"\nevent = \"stop\"\nrequire = [\"step.settled\"]\n";
+    put(&w.kb.join(".writfold/guards/finish.toml"), rule)?;
+    let nudge = helpers::hook(&w, true, "rounds-left").stdout;
+    assert!(nudge.contains("plan again"), "{nudge}");
     Ok(())
 }

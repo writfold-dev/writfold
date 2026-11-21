@@ -39,6 +39,29 @@ pub fn step_fact(read: Looked, planned: bool, has_current: bool, owed: usize) ->
     }
 }
 
+/// `step.settled` (#79): [`step_fact`], except that a current loop step
+/// whose rounds are all used without meeting its gates (spent) is also
+/// settled: nothing is left for the session to do there but report. An
+/// unread plan is never settled.
+pub fn settled_fact(
+    read: Looked,
+    planned: bool,
+    has_current: bool,
+    owed: usize,
+    spent: bool,
+) -> Fact {
+    match read {
+        Looked::No => Fact::Unmet,
+        Looked::Failed => Fact::Unknown,
+        Looked::Read => {
+            if spent {
+                return Fact::Met;
+            }
+            step_fact(Looked::Read, planned, has_current, owed)
+        }
+    }
+}
+
 /// `gate:<id>`: unknown unless the gates were judged; then met only when
 /// the gate is defined and met.
 pub fn gate_fact(read: Looked, defined: bool, met: bool) -> Fact {

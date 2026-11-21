@@ -15,7 +15,7 @@ use crate::session::Session;
 use crate::workspace::{GitTool, Workspace};
 use std::path::{Path, PathBuf};
 use writfold_core::guard::Fact;
-use writfold_core::guard::require::{Looked, gate_fact, run_current, step_fact};
+use writfold_core::guard::require::{Looked, gate_fact, run_current, settled_fact, step_fact};
 
 mod gates;
 use writfold_core::scope::in_scope;
@@ -83,7 +83,8 @@ struct Facts {
     subject: Result<Option<Subject>, String>,
     /// The judged gates; `None` until a rule asks.
     gates: Option<Result<Judged, String>>,
-    step: Option<Owed>,
+    /// `step.met` and `step.settled` (#79), judged together.
+    step: Option<(Owed, Owed)>,
 }
 
 /// Where a group of matched rules is judged: a directory, or a command
@@ -230,10 +231,13 @@ fn gather(session: &Session<'_>, place: &Place, rules: &[&Rule]) -> Facts {
             Place::Unknown(why) => Err(why.clone()),
         });
     }
-    if wants(|q| matches!(q, Require::StepMet)) {
+    if wants(|q| matches!(q, Require::StepMet | Require::StepSettled)) {
         facts.step = Some(match place {
             Place::At(cwd) => step(session, &facts, cwd),
-            Place::Unknown(why) => Owed::of(Fact::Unknown, why.clone()),
+            Place::Unknown(why) => {
+                let unknown = Owed::of(Fact::Unknown, why.clone());
+                (unknown.clone(), unknown)
+            }
         });
     }
     facts
@@ -279,11 +283,69 @@ fn judge(session: &Session<'_>, facts: &Facts) -> Result<Judged, String> {
 
 /// The plan's current step: met when it owes nothing (or there is no
 /// plan, or every step is closed).
-fn step(session: &Session<'_>, facts: &Facts, cwd: &Path) -> Owed {
-    let failed = |text: String| Owed::of(step_fact(Looked::Failed, true, true, 0), text);
+/// A second `Looked` (kernel types carry no derives).
+fn again(read: &Looked) -> Looked {
+    match read {
+        Looked::No => Looked::No,
+        Looked::Failed => Looked::Failed,
+        Looked::Read => Looked::Read,
+    }
+}
+
+/// The same fact as `step.met` and `step.settled` would read it.
+fn both(
+    read: Looked,
+    (planned, current, owed): (bool, bool, usize),
+    spent: bool,
+    text: String,
+) -> (Owed, Owed) {
+    let settled_text = match spent {
+        true => "the current step is a spent loop: stop and report".to_owned(),
+        false => text.clone(),
+    };
+    (
+        Owed::of(step_fact(again(&read), planned, current, owed), text),
+        Owed::of(
+            settled_fact(read, planned, current, owed, spent),
+            settled_text,
+        ),
+    )
+}
+
+/// For a loop step: whether it is spent, and the nudge's text naming the
+/// loop's own next move ([`writfold_core::plan::round::next`]).
+fn looping(
+    graph: &plan::fold::Graph,
+    step: &plan::fold::Step,
+    (gates, met): (&[plan::judge::Gate], &[bool]),
+    text: String,
+) -> (bool, String) {
+    use writfold_core::plan::round::{Exit, Next, exit, next};
+    let Some(b) = plan::rounds::bounds(step) else {
+        return (false, text);
+    };
+    let rounds = graph.rounds(step);
+    let judged: Vec<bool> = gates.iter().map(plan::judge::Gate::judged).collect();
+    let spent = matches!(exit(&b, rounds, met), Exit::Spent);
+    match next(&b, rounds, met, &judged) {
+        Next::Again => {
+            let owes = text.split("; next:").next().unwrap_or_default();
+            let again = format!(
+                "next: writfold kb plan again (round {} of at most {})",
+                rounds + 1,
+                b.max
+            );
+            (spent, format!("{owes}; {again}"))
+        }
+        Next::Advance | Next::Judge(_) | Next::Report => (spent, text),
+    }
+}
+
+fn step(session: &Session<'_>, facts: &Facts, cwd: &Path) -> (Owed, Owed) {
+    let failed = |text: String| both(Looked::Failed, (true, true, 0), false, text);
     let rec = match &facts.run {
         Ok(rec) => rec,
-        Err(why) => return Owed::of(step_fact(Looked::No, false, false, 0), why.clone()),
+        Err(why) => return both(Looked::No, (false, false, 0), false, why.clone()),
     };
     let loaded = match Loaded::open(session, Some(&rec.id), None, cwd) {
         Ok(loaded) => loaded,
@@ -292,7 +354,7 @@ fn step(session: &Session<'_>, facts: &Facts, cwd: &Path) -> Owed {
     let planned = loaded.graph.planned();
     let Some(at) = loaded.graph.current().filter(|_| planned) else {
         let current = loaded.graph.current().is_some();
-        return Owed::of(step_fact(Looked::Read, planned, current, 0), String::new());
+        return both(Looked::Read, (planned, current, 0), false, String::new());
     };
     let judged = match loaded.judged(session) {
         Ok(Some(judged)) => judged,
@@ -301,15 +363,18 @@ fn step(session: &Session<'_>, facts: &Facts, cwd: &Path) -> Owed {
     };
     let gates = judged.get(at).map(Vec::as_slice).unwrap_or_default();
     let owed: Vec<&plan::judge::Gate> = gates.iter().filter(|g| !g.met()).collect();
+    let step = &loaded.graph.steps[at];
     let text = owed.first().map_or_else(String::new, |first| {
-        let name = &loaded.graph.steps[at].id;
         format!(
-            "step {name} owes {}; {}",
+            "step {} owes {}; {}",
+            step.id,
             plan::show::listed(&owed),
             plan::show::next_or_why(first)
         )
     });
-    Owed::of(step_fact(Looked::Read, true, true, owed.len()), text)
+    let met: Vec<bool> = gates.iter().map(plan::judge::Gate::met).collect();
+    let (spent, text) = looping(&loaded.graph, step, (gates, &met), text);
+    both(Looked::Read, (true, true, owed.len()), spent, text)
 }
 
 fn fact(facts: &Facts, require: &Require) -> Owed {
@@ -321,10 +386,22 @@ fn fact(facts: &Facts, require: &Require) -> Owed {
             };
             Owed::of(run_current(facts.run.is_ok(), facts.state == "open"), text)
         }
-        Require::StepMet => facts.step.clone().unwrap_or_else(|| {
-            let fact = step_fact(Looked::Failed, true, true, 0);
-            Owed::of(fact, "the step was not judged".into())
-        }),
+        Require::StepMet => facts
+            .step
+            .as_ref()
+            .map(|(met, _)| met.clone())
+            .unwrap_or_else(|| {
+                let fact = step_fact(Looked::Failed, true, true, 0);
+                Owed::of(fact, "the step was not judged".into())
+            }),
+        Require::StepSettled => facts
+            .step
+            .as_ref()
+            .map(|(_, settled)| settled.clone())
+            .unwrap_or_else(|| {
+                let fact = settled_fact(Looked::Failed, true, true, 0, false);
+                Owed::of(fact, "the step was not judged".into())
+            }),
         Require::GatesMet => gates::met(facts),
         Require::Gate(id) => match &facts.gates {
             None => Owed::of(

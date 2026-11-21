@@ -51,6 +51,17 @@ impl Gate {
         }
     }
 
+    /// Whether it has a verdict about the present bytes: it ran and did
+    /// not pass, as opposed to open or stale (a loop's `next:`, #76).
+    pub fn judged(&self) -> bool {
+        matches!(
+            self.standing,
+            Some(writfold_core::gate::Standing::Checked(
+                writfold_core::gate::State::Failed | writfold_core::gate::State::Unknown
+            ))
+        )
+    }
+
     pub fn met(&self) -> bool {
         fact_met(&self.fact())
     }

@@ -2095,7 +2095,7 @@ def delivery.guard
     | delivery.Unread.Deny => ok false
 
 /-- [writfold_core::diag::blocks]:
-    Source: 'crates/writfold-core/src/diag/mod.rs', lines 249:0-251:1
+    Source: 'crates/writfold-core/src/diag/mod.rs', lines 251:0-253:1
     Visibility: public -/
 def diag.blocks
   (errors : Std.Usize) (warnings : Std.Usize) (deny : Bool) : Result Bool := do
@@ -3160,8 +3160,26 @@ def guard.require.step_fact
       else ok guard.Fact.Met
     else ok guard.Fact.Met
 
+/-- [writfold_core::guard::require::settled_fact]:
+    Source: 'crates/writfold-core/src/guard/require.rs', lines 46:0-63:1
+    Visibility: public -/
+def guard.require.settled_fact
+  (read : guard.require.Looked) (planned : Bool) (has_current : Bool)
+  (owed : Std.Usize) (spent : Bool) :
+  Result guard.Fact
+  := do
+  match read with
+  | guard.require.Looked.No => ok guard.Fact.Unmet
+  | guard.require.Looked.Failed => ok guard.Fact.Unknown
+  | guard.require.Looked.Read =>
+    if spent
+    then ok guard.Fact.Met
+    else
+      guard.require.step_fact guard.require.Looked.Read planned has_current
+        owed
+
 /-- [writfold_core::guard::require::gate_fact]:
-    Source: 'crates/writfold-core/src/guard/require.rs', lines 44:0-55:1
+    Source: 'crates/writfold-core/src/guard/require.rs', lines 67:0-78:1
     Visibility: public -/
 def guard.require.gate_fact
   (read : guard.require.Looked) (defined : Bool) (met : Bool) :
@@ -3194,7 +3212,7 @@ def guard.gates_fact
   else ok guard.Fact.Unmet
 
 /-- [writfold_core::guard::require::gates_read]:
-    Source: 'crates/writfold-core/src/guard/require.rs', lines 59:0-64:1
+    Source: 'crates/writfold-core/src/guard/require.rs', lines 82:0-87:1
     Visibility: public -/
 def guard.require.gates_read
   (read : guard.require.Looked) (owed : Std.Usize) (unmet : Std.Usize)

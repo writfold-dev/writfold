@@ -387,6 +387,42 @@ theorem step_fact_unknown_iff (r : guard.require.Looked) (planned cur : Bool) (o
     · have : owed ≠ 0#usize := by intro h0; apply h; rw [h0]; rfl
       cases planned <;> cases cur <;> simp [this]
 
+/-- `step.settled` (#79) is met exactly when the plan was read and either
+the current step is a spent loop or `step.met` would be met. -/
+theorem settled_met_iff (r : guard.require.Looked) (planned cur : Bool) (owed : Usize) (spent : Bool) :
+    guard.require.settled_fact r planned cur owed spent ⦃ f => f = .Met ↔
+      r = .Read ∧ (spent = true ∨ planned = false ∨ cur = false ∨ owed.val = 0) ⦄ := by
+  unfold guard.require.settled_fact
+  cases r
+  · simp
+  · simp
+  · cases spent
+    · simp only [Bool.false_eq_true, ite_false, false_or, true_and]
+      apply WP.spec_mono (step_fact_met_iff .Read planned cur owed)
+      intro f hf; simpa using hf
+    · simp
+
+/-- An unread plan is never settled: `step.settled` is unknown exactly when
+the plan or the step could not be read. -/
+theorem settled_unknown_iff_unread (r : guard.require.Looked) (planned cur : Bool) (owed : Usize) (spent : Bool) :
+    guard.require.settled_fact r planned cur owed spent ⦃ f => f = .Unknown ↔ r = .Failed ⦄ := by
+  unfold guard.require.settled_fact
+  cases r
+  · simp
+  · simp
+  · cases spent
+    · simp only [Bool.false_eq_true, ite_false]
+      apply WP.spec_mono (step_fact_unknown_iff .Read planned cur owed)
+      intro f hf; simpa using hf
+    · simp
+
+/-- Without a spent loop, `step.settled` is `step.met`. -/
+theorem not_spent_equals_step_fact (r : guard.require.Looked) (planned cur : Bool) (owed : Usize) :
+    guard.require.settled_fact r planned cur owed false ⦃ f => f = .Met ↔
+      r = .Read ∧ (planned = false ∨ cur = false ∨ owed.val = 0) ⦄ := by
+  apply WP.spec_mono (settled_met_iff r planned cur owed false)
+  intro f hf; simpa using hf
+
 /-- `gate:<id>` is met exactly when the gates were judged and the gate is
 defined and met. -/
 theorem gate_fact_met_iff (r : guard.require.Looked) (defined met : Bool) :

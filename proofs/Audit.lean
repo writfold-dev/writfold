@@ -19,6 +19,10 @@ def allowedAxioms : List Name := [``propext, ``Classical.choice, ``Quot.sound]
 (`mutants.py` refuses to run when one is missing here), and the headline
 statements of each kernel (docs/writfold/aeneas.md). -/
 def claims : List Name := [
+  -- step.settled (writfold_core::guard::require::settled_fact, #79)
+  ``Writfold.Core.Guard.settled_met_iff,
+  ``Writfold.Core.Guard.settled_unknown_iff_unread,
+  ``Writfold.Core.Guard.not_spent_equals_step_fact,
   -- loops (writfold_core::plan::round, #75)
   ``Writfold.Core.Round.all_met_spec,
   ``Writfold.Core.Round.exit_spec,

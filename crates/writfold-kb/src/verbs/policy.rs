@@ -98,6 +98,7 @@ fn guard_rows(root: &Path, cwd: &Path) -> Vec<Row> {
                 .map(|q| match q {
                     Require::RunCurrent => "run.current".into(),
                     Require::GatesMet => "gates.met".into(),
+                    Require::StepSettled => "step.settled".into(),
                     Require::Gate(g) => format!("gate:{g}"),
                     Require::StepMet => "step.met".into(),
                 })

@@ -5,7 +5,6 @@
 use super::fold::{Graph, Step};
 use super::judge::Gate;
 use crate::emit::{More, Row};
-use writfold_core::gate::{Standing, State};
 use writfold_core::plan::round::{Next, exit, next, over};
 
 fn line(label: &'static str, text: String) -> More {
@@ -14,15 +13,6 @@ fn line(label: &'static str, text: String) -> More {
         text,
         ..More::default()
     }
-}
-
-/// Whether a gate has a verdict about the present bytes: it ran and did
-/// not pass, as opposed to open or stale.
-fn judged(g: &Gate) -> bool {
-    matches!(
-        g.standing,
-        Some(Standing::Checked(State::Failed | State::Unknown))
-    )
 }
 
 pub fn annotate(
@@ -80,7 +70,7 @@ pub fn annotate(
     if !current {
         return;
     }
-    let verdicts: Vec<bool> = gates.iter().map(judged).collect();
+    let verdicts: Vec<bool> = gates.iter().map(Gate::judged).collect();
     match next(&b, rounds, &met, &verdicts) {
         Next::Advance | Next::Judge(_) => {}
         Next::Again => {

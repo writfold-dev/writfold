@@ -216,6 +216,7 @@ fn description(rule: &Rule) -> String {
             Require::RunCurrent => text.push_str("run.current"),
             Require::GatesMet => text.push_str("gates.met"),
             Require::StepMet => text.push_str("step.met"),
+            Require::StepSettled => text.push_str("step.settled"),
             Require::Gate(id) => {
                 text.push_str("gate:");
                 text.push_str(id);
