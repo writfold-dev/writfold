@@ -130,6 +130,7 @@ start_from = [
     "writfold_core::subject::pick",
     "writfold_core::order::less",
     "writfold_core::order::precedes",
+    "writfold_core::order::newest",
     "writfold_core::observe::embeds",
     "writfold_core::observe::grounds",
     "writfold_core::ground",

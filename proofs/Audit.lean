@@ -348,6 +348,8 @@ def claims : List Name := [
   ``Writfold.Core.Order.prec_irrefl,
   ``Writfold.Core.Order.prec_trans,
   ``Writfold.Core.Order.prec_total,
+  ``Writfold.Core.Order.newest_loop_spec,
+  ``Writfold.Core.Order.newest_is_max,
   -- the Weft assessed gate's basis (writfold_core::assess)
   ``Writfold.Core.Assess.assumption_loop_spec,
   ``Writfold.Core.Assess.assumption_spec,

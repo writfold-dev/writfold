@@ -7,7 +7,11 @@
 //! [`less`] and [`precedes`] are translated and proved
 //! (`proofs/Writfold/Order.lean`): `precedes` is a strict total order, so
 //! the sort has one answer whatever order the files were listed in.
+//! Attestations and waivers are ordered the same way (since
+//! v0.6.0-dev.12), and the one that stands is chosen by [`newest`]: the
+//! last, under [`precedes`], of those that stand (`newest_is_max`).
 
+use alloc::vec::Vec;
 use core::cmp::Ordering;
 
 /// Whether byte string `a` sorts strictly before `b`: at the first place
@@ -43,9 +47,56 @@ pub fn cmp(a: (u64, &str), b: (u64, &str)) -> Ordering {
     }
 }
 
+/// One statement in the order: its `seq` (0 when it has none), its file
+/// name, and whether it stands (about the present subject and definition).
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Keyed {
+    pub seq: u64,
+    pub name: Vec<u8>,
+    pub stands: bool,
+}
+
+/// The position of the newest statement that stands: the one no other
+/// standing statement follows under [`precedes`]; `None` when none
+/// stands. No clock is read.
+pub fn newest(items: &[Keyed]) -> Option<usize> {
+    let mut best: Option<usize> = None;
+    let mut i = 0;
+    while i < items.len() {
+        if items[i].stands {
+            let later = match best {
+                None => true,
+                Some(b) => precedes(items[b].seq, &items[b].name, items[i].seq, &items[i].name),
+            };
+            if later {
+                best = Some(i);
+            }
+        }
+        i += 1;
+    }
+    best
+}
+
 #[cfg(test)]
 mod tests {
-    use super::cmp;
+    use super::{Keyed, cmp, newest};
+
+    #[test]
+    fn newest_is_the_last_standing() {
+        let k = |seq: u64, name: &str, stands: bool| Keyed {
+            seq,
+            name: name.as_bytes().to_vec(),
+            stands,
+        };
+        assert_eq!(newest(&[]), None);
+        assert_eq!(newest(&[k(1, "a", false)]), None);
+        assert_eq!(newest(&[k(2, "a", true), k(1, "b", true)]), Some(0));
+        assert_eq!(newest(&[k(0, "b", true), k(0, "a", true)]), Some(0));
+        assert_eq!(
+            newest(&[k(1, "a", true), k(3, "a", false), k(2, "a", true)]),
+            Some(2)
+        );
+    }
 
     /// The comparison is the tuple order on `(seq, name)` it replaces.
     #[test]

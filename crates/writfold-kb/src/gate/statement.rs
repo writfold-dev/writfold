@@ -11,12 +11,20 @@
 //! digest and the subject's content digest (a gate's scope digest, a
 //! candidate's bytes), so it stops standing once either moves, like a
 //! receipt. Who made it is `by`, as given; Writfold cannot check it.
+//!
+//! Since v0.6.0-dev.12 a statement carries `seq`, one more than the highest
+//! among the statements already filed for its obligation there, and they
+//! are ordered by (`seq`, file name) as receipts are
+//! ([`writfold_core::order`]); one written before carries none and reads
+//! as 0. The one that stands is [`writfold_core::order::newest`], so no
+//! clock decides which waiver or attestation is newest (#15).
 use super::receipt::canonical;
 use crate::error::{KbError, Result};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::path::Path;
 use writfold_core::gate::{Said, Statements, about, statements};
+use writfold_core::order::{self, Keyed};
 
 pub const SCHEMA: &str = "writfold-statement/1";
 /// The directory, under a run or a candidate, that holds statements.
@@ -59,6 +67,8 @@ pub struct Statement {
     pub text: String,
     pub by: String,
     pub recorded: String,
+    /// The order among the obligation's statements; 0 when not written.
+    pub seq: u64,
 }
 
 fn sha(bytes: &[u8]) -> String {
@@ -90,6 +100,9 @@ pub fn bytes(s: &Statement) -> Vec<u8> {
         "by": s.by,
         "recorded": s.recorded,
     });
+    if let (Value::Object(map), true) = (&mut value, s.seq > 0) {
+        map.insert("seq".into(), json!(s.seq));
+    }
     let digest = sha(canonical(&value).as_bytes());
     if let Value::Object(map) = &mut value {
         map.insert("digest".into(), Value::String(digest));
@@ -147,7 +160,23 @@ pub fn parse(text: &str, run: &str, name: &str) -> std::result::Result<Statement
         text: text_at(&value, &["text"])?,
         by: text_at(&value, &["by"])?,
         recorded: text_at(&value, &["recorded"])?,
+        seq: match value.get("seq") {
+            None => 0,
+            Some(v) => v.as_u64().filter(|n| *n > 0).ok_or("seq is not a count")?,
+        },
     })
+}
+
+/// One more than the highest `seq` among `filed`'s valid statements about
+/// `obligation` (attested and waived alike).
+pub fn next_seq(filed: &[Filed], obligation: &str) -> u64 {
+    (filed.iter())
+        .filter_map(|f| f.parsed.as_ref().ok())
+        .filter(|s| s.obligation == obligation)
+        .map(|s| s.seq)
+        .max()
+        .unwrap_or(0)
+        .saturating_add(1)
 }
 
 /// One statement file.
@@ -205,7 +234,7 @@ pub fn summary<'a>(
         .filter_map(|f| f.parsed.as_ref().ok().map(|s| (f, s)))
         .filter(|(_, s)| s.obligation == obligation)
         .collect();
-    mine.sort_by(|a, b| (&a.1.recorded, &a.0.name).cmp(&(&b.1.recorded, &b.0.name)));
+    mine.sort_by(|a, b| writfold_core::order::cmp((a.1.seq, &a.0.name), (b.1.seq, &b.0.name)));
     let (definition, content) = (definition.as_bytes(), content.as_bytes());
     let said: Vec<Said> = mine
         .iter()
@@ -227,10 +256,14 @@ pub fn summary<'a>(
             )
     };
     let newest = |kind: Kind| {
-        mine.iter()
-            .rev()
-            .find(|(_, s)| s.kind == kind && current(s))
-            .copied()
+        let keyed: Vec<Keyed> = (mine.iter())
+            .map(|(f, s)| Keyed {
+                seq: s.seq,
+                name: f.name.as_bytes().to_vec(),
+                stands: s.kind == kind && current(s),
+            })
+            .collect();
+        order::newest(&keyed).and_then(|i| mine.get(i).copied())
     };
     let attested = newest(Kind::Attested);
     let waived = newest(Kind::Waived);
@@ -275,6 +308,7 @@ mod tests {
             text: "flaky on this host; CI covers it".into(),
             by: "owner".into(),
             recorded: "2026-11-11T00:00:00Z".into(),
+            seq: 0,
         }
     }
 

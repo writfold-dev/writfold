@@ -929,6 +929,16 @@ the fact; `snapshot_item_needs_snapshot` and `unlisted_item_unchanged`
 (an unlisted item is covered exactly as before) are new. One mutant. After
 the round: 723 theorems, 414 required claims, 257 mutants.
 
+### The statement order round (21 November 2026)
+
+Attestations and waivers (a gate's and a delivery's) gain `seq` and are
+sorted by `order::cmp`, the receipt order of step 11. Which one stands is
+`order::newest`: the position of the maximum, under `Prec`, of the
+statements that stand. `Order.lean`'s `newest_loop_spec` and
+`newest_is_max` (`none` exactly when none stands; otherwise a standing
+statement that no standing statement follows) are new, with two mutants
+(`newest-keeps-oldest`, `newest-ignores-stands`).
+
 ### The claims and their mutants
 
 <!-- generated from proofs/mutants.py -->
@@ -1207,7 +1217,8 @@ adapters in `writfold-kb` that read files into kernel inputs (which
 receipts and statements are valid and in this run, which gates a step
 names, which step path is current, the digests themselves) are tested,
 not proved. Statements (`gate attest`, `gate waive`, a delivery's
-statements) are still ordered by their recorded time.
+statements) are ordered by (`seq`, name) since v0.6.0-dev.12, and the one
+that stands is `order::newest`.
 
 ## Trust base
 
@@ -1270,8 +1281,10 @@ What is left, each tested:
    them, [#14](https://github.com/writfold-dev/writfold/issues/14).)* The
    reads themselves (the commit on its ref, the evidence grounding, the
    successor present, readiness) stay tested.
-2. The order of statements (attestations, waivers, a delivery's
-   statements), still by recorded time; a format change like step 11's.
+2. *(21 November 2026: proved. Statements carry `seq` and are ordered by
+   `order::cmp`; `order::newest` chooses the one that stands,
+   [#15](https://github.com/writfold-dev/writfold/issues/15).)* The
+   next-`seq` read and the file codec stay tested.
 3. The splice placement in the fold (G10's first item; relabelled, not
    proved; [#17](https://github.com/writfold-dev/writfold/issues/17)).
    *(20 November 2026: `find`'s tier order is proved: `verbs/find.rs`

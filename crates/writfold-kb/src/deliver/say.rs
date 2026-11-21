@@ -86,6 +86,7 @@ pub(super) fn say(
         text,
         by,
         recorded: time::stamp(now),
+        seq: statement::next_seq(&statement::filed(root, &c.dir, &rec.id), check),
     });
     let ops = [Op::Create {
         path: path.clone(),

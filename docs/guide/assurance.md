@@ -93,9 +93,8 @@ Model output, the quality of a statement or a reflection, whether a recorded dec
 
 ## What "derived" buys
 
-Gate standing, delivery standing and the index are recomputed from tracked files on every read and never stored. Two clones at the same commit with the same local repositories give the same answer, and there is no state to migrate or repair. Where several receipts cover the same bytes (gate receipts, cover rows, and since v0.6.0-dev.4 assessed receipts and delivery check receipts), the newest is chosen by a `seq` counter and the file name, never the clock ([design 21.7](../writfold/kb-v1-design.md#217-receipt-order-without-a-clock)); a receipt written before it carried `seq` reads as 0 and comes first, in file-name order. One caveat today: statements (attestations and waivers) are still ordered by their recorded time, which comes from the machine's clock.
+Gate standing, delivery standing and the index are recomputed from tracked files on every read and never stored. Two clones at the same commit with the same local repositories give the same answer, and there is no state to migrate or repair. Where several receipts cover the same bytes (gate receipts, cover rows, and since v0.6.0-dev.4 assessed receipts and delivery check receipts), the newest is chosen by a `seq` counter and the file name, never the clock ([design 21.7](../writfold/kb-v1-design.md#217-receipt-order-without-a-clock)); a receipt written before it carried `seq` reads as 0 and comes first, in file-name order. Since v0.6.0-dev.12 statements (attestations and waivers, a gate's or a delivery's) are ordered the same way, and the one that stands is the newest under that order among those about the present (proved: `newest_is_max`); a statement written before it carried `seq` reads as 0 and comes first, in file-name order.
 
 ## Planned
 
-- **Ordering without a clock for statements**, which still order by recorded time.
 - **Proofs for what is left** ([aeneas.md](../writfold/aeneas.md#not-yet-proved-backlog-17-november-2026)): what a decision state change was given, and `find`'s tier order.

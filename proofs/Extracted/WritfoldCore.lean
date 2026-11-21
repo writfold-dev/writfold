@@ -3693,7 +3693,7 @@ def observe.embeds (status : observe.Status) : Result Bool := do
   | observe.Status.Error => ok false
 
 /-- [writfold_core::order::less]: loop body 0:
-    Source: 'crates/writfold-core/src/order.rs', lines 17:4-24:1
+    Source: 'crates/writfold-core/src/order.rs', lines 21:4-28:1
     Visibility: public -/
 @[rust_loop_body]
 def order.less_loop.body
@@ -3720,7 +3720,7 @@ def order.less_loop.body
        ok (done (i2 < i3))
 
 /-- [writfold_core::order::less]: loop 0:
-    Source: 'crates/writfold-core/src/order.rs', lines 17:4-24:1
+    Source: 'crates/writfold-core/src/order.rs', lines 21:4-28:1
     Visibility: public -/
 @[rust_loop]
 def order.less_loop
@@ -3730,14 +3730,14 @@ def order.less_loop
     i
 
 /-- [writfold_core::order::less]:
-    Source: 'crates/writfold-core/src/order.rs', lines 15:0-24:1
+    Source: 'crates/writfold-core/src/order.rs', lines 19:0-28:1
     Visibility: public -/
 @[reducible]
 def order.less (a : Slice Std.U8) (b : Slice Std.U8) : Result Bool := do
   order.less_loop a b 0#usize
 
 /-- [writfold_core::order::precedes]:
-    Source: 'crates/writfold-core/src/order.rs', lines 28:0-33:1
+    Source: 'crates/writfold-core/src/order.rs', lines 32:0-37:1
     Visibility: public -/
 def order.precedes
   (seq_a : Std.U64) (name_a : Slice Std.U8) (seq_b : Std.U64)
@@ -3747,6 +3747,66 @@ def order.precedes
   if seq_a != seq_b
   then ok (seq_a < seq_b)
   else order.less name_a name_b
+
+/-- [writfold_core::order::Keyed]
+    Source: 'crates/writfold-core/src/order.rs', lines 53:0-57:1
+    Visibility: public -/
+structure order.Keyed where
+  seq : Std.U64
+  «name» : alloc.vec.Vec Std.U8
+  stands : Bool
+
+/-- [writfold_core::order::newest]: loop body 0:
+    Source: 'crates/writfold-core/src/order.rs', lines 65:4-76:5
+    Visibility: public -/
+@[rust_loop_body]
+def order.newest_loop.body
+  (items : Slice order.Keyed) (best : Option Std.Usize) (i : Std.Usize) :
+  Result (ControlFlow ((Option Std.Usize) × Std.Usize) (Option Std.Usize))
+  := do
+  let i1 := Slice.len items
+  if i < i1
+  then
+    let k ← Slice.index_usize items i
+    let best1 ←
+      if k.stands
+      then
+        do
+        let later ←
+          match best with
+          | none => ok true
+          | some b =>
+            do
+            let k1 ← Slice.index_usize items b
+            let s := alloc.vec.Vec.deref k1.name
+            let s1 := alloc.vec.Vec.deref k.name
+            order.precedes k1.seq s k.seq s1
+        if later
+        then ok (some i)
+        else ok best
+      else ok best
+    let i2 ← i + 1#usize
+    ok (cont (best1, i2))
+  else ok (done best)
+
+/-- [writfold_core::order::newest]: loop 0:
+    Source: 'crates/writfold-core/src/order.rs', lines 65:4-76:5
+    Visibility: public -/
+@[rust_loop]
+def order.newest_loop
+  (items : Slice order.Keyed) (best : Option Std.Usize) (i : Std.Usize) :
+  Result (Option Std.Usize)
+  := do
+  loop
+    (fun (best1, i1) => order.newest_loop.body items best1 i1)
+    (best, i)
+
+/-- [writfold_core::order::newest]:
+    Source: 'crates/writfold-core/src/order.rs', lines 62:0-78:1
+    Visibility: public -/
+@[reducible]
+def order.newest (items : Slice order.Keyed) : Result (Option Std.Usize) := do
+  order.newest_loop items none 0#usize
 
 /-- [writfold_core::pin::Pin]
     Source: 'crates/writfold-core/src/pin.rs', lines 27:0-37:1

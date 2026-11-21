@@ -76,6 +76,10 @@ pub(super) fn record(
         text,
         by,
         recorded: time::stamp(now),
+        seq: statement::next_seq(
+            &statement::filed(&ws.root, &runs::dir(&rec), &rec.id),
+            &say.id,
+        ),
     });
     let path = format!(
         "{}/{}/{}-{}.json",

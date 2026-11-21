@@ -69,6 +69,7 @@ fn a_gate_that_accepts_only_satisfied_refuses_a_waiver() -> TestResult {
         text: "flaky here".into(),
         by: "owner".into(),
         recorded: "2026-11-11T00:30:00Z".into(),
+        seq: 0,
     };
     let file =
         w.kb.join(format!("runs/{RUN}/statements/unit-by-hand.json"));

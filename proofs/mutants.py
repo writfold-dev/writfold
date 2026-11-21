@@ -814,6 +814,16 @@ MUTANTS = (
            "        return seq_a < seq_b;",
            "        return seq_a > seq_b;",
            ("Writfold.Core.Order.precedes_spec",)),
+    # order: the statement that stands is the newest, not the oldest (#15)
+    Mutant("newest-keeps-oldest", "order.rs",
+           "                Some(b) => precedes(items[b].seq, &items[b].name, items[i].seq, &items[i].name),",
+           "                Some(b) => precedes(items[i].seq, &items[i].name, items[b].seq, &items[b].name),",
+           ("Writfold.Core.Order.newest_loop_spec",)),
+    # order: only a statement that stands can be the newest (#15)
+    Mutant("newest-ignores-stands", "order.rs",
+           "        if items[i].stands {",
+           "        if true {",
+           ("Writfold.Core.Order.newest_loop_spec",)),
     # assessed gate: one ungrounded premise makes the basis hypothetical
     Mutant("basis-ignores-premises", "assess.rs",
            "        if matches!(premises[index], Grounding::Ungrounded) {",

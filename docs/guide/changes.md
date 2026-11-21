@@ -6,6 +6,10 @@ This page is for someone pinned to one release who wants to upgrade on purpose. 
 
 A line marked **fix** changed an answer that was wrong; anything depending on the old answer was depending on the fault.
 
+## v0.6.0-dev.12 (unreleased)
+
+- `gate attest`, `gate waive`, `deliver attest` and `deliver waive` write a `seq` field (one more than the highest among that obligation's statements there), and statements are ordered by (`seq`, file name), not by their recorded time. When two attestations or waivers are about the present, the one written later now stands even if the machine's clock had moved backwards between them. Statements written before carry no `seq`, read as 0 and keep their file-name order. **An earlier binary ignores `seq`** and orders by recorded time ([#15](https://github.com/writfold-dev/writfold/issues/15)).
+
 ## v0.6.0-dev.11
 
 - A checklist gate may list `snapshot = ["item"]`. Without the key nothing changes, and the definition's digest is unchanged. **An earlier binary refuses a definition that writes it** (`key.unknown`) ([#3](https://github.com/writfold-dev/writfold/issues/3)).

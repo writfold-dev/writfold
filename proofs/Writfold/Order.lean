@@ -209,4 +209,113 @@ theorem prec_total (sa sb : U64) (na nb : List U8) :
       · exact Or.inr (Or.inl ⟨rfl, rfl⟩)
       · exact Or.inr (Or.inr (Or.inr ⟨rfl, h⟩))
 
+/-! ## The newest statement that stands (`newest`)
+
+`newest_is_max`: `newest` answers `none` exactly when no statement stands,
+and otherwise a standing statement that no standing statement follows
+under `Prec`: the newest one, with no clock read. -/
+
+/-- One keyed statement is judged before another. -/
+def KPrec (a b : order.Keyed) : Prop := Prec a.seq a.name.val b.seq b.name.val
+
+/-- What `newest` answers about the statements before `i`. -/
+def Best (items : List order.Keyed) (i : Nat) : Option Usize → Prop
+  | none => ∀ j (hj : j < items.length), j < i → items[j].stands = false
+  | some b => ∃ hb : b.val < items.length, b.val < i ∧ items[b.val].stands = true ∧
+      ∀ j (hj : j < items.length), j < i → items[j].stands = true →
+        ¬ KPrec items[b.val] items[j]
+
+theorem newest_loop_spec (items : Slice order.Keyed) (best : Option Usize) (i : Usize)
+    (hi : i.val ≤ items.val.length) (hb : Best items.val i.val best) :
+    order.newest_loop items best i ⦃ r => Best items.val items.val.length r ⦄ := by
+  unfold order.newest_loop
+  apply loop.spec_decr_nat
+    (fun p : Option Usize × Usize => items.val.length - p.2.val)
+    (fun p : Option Usize × Usize => p.2.val ≤ items.val.length ∧ Best items.val p.2.val p.1)
+  · rintro ⟨best, i⟩ ⟨hi, hb⟩
+    unfold order.newest_loop.body
+    dsimp only at hi hb ⊢
+    split
+    · rename_i hlt
+      have hil : i.val < items.val.length := by scalar_tac
+      step as ⟨ k, hk ⟩
+      -- The candidate after looking at position i.
+      have step_best : ∀ best1 : Option Usize, Best items.val (i.val + 1) best1 →
+          ∀ i2 : Usize, i2.val = i.val + 1 →
+          i2.val ≤ items.val.length ∧ Best items.val i2.val best1 ∧
+            items.val.length - i2.val < items.val.length - i.val := by
+        intro best1 h i2 hi2
+        rw [hi2]; exact ⟨by omega, h, by omega⟩
+      split
+      · rename_i hst
+        have hsti : items.val[i.val].stands = true := by rw [← hk]; exact hst
+        cases best with
+        | none =>
+          simp only [bind_ok, ↓reduceIte]
+          step as ⟨ i2, hi2 ⟩
+          apply step_best _ _ i2 (by scalar_tac)
+          refine ⟨by scalar_tac, by scalar_tac, hsti, ?_⟩
+          intro j hj hji hsj hp
+          by_cases hje : j = i.val
+          · subst hje; exact prec_irrefl _ _ hp
+          · have := hb j hj (by omega); rw [this] at hsj; exact Bool.false_ne_true hsj
+        | some b =>
+          obtain ⟨hbl, hbi, hbs, hbm⟩ := hb
+          simp only
+          step as ⟨ k1, hk1 ⟩
+          step with precedes_spec as ⟨ later, hlater ⟩
+          split
+          · rename_i hlt2
+            have hp : KPrec items.val[b.val] items.val[i.val] := by
+              have := hlater.mp hlt2
+              rw [← hk, ← hk1]; simpa [KPrec, alloc.vec.Vec.deref] using this
+            step as ⟨ i2, hi2 ⟩
+            apply step_best _ _ i2 (by scalar_tac)
+            refine ⟨by scalar_tac, by scalar_tac, hsti, ?_⟩
+            intro j hj hji hsj hij
+            by_cases hje : j = i.val
+            · subst hje; exact prec_irrefl _ _ hij
+            · exact hbm j hj (by omega) hsj (prec_trans hp hij)
+          · rename_i hlt2
+            have hnp : ¬ KPrec items.val[b.val] items.val[i.val] := by
+              intro h; apply hlt2; apply hlater.mpr
+              rw [← hk, ← hk1] at h; simpa [KPrec, alloc.vec.Vec.deref] using h
+            step as ⟨ i2, hi2 ⟩
+            apply step_best _ _ i2 (by scalar_tac)
+            refine ⟨hbl, by omega, hbs, ?_⟩
+            intro j hj hji hsj
+            by_cases hje : j = i.val
+            · subst hje; exact hnp
+            · exact hbm j hj (by omega) hsj
+      · rename_i hst
+        have hsti : items.val[i.val].stands = false := by
+          rw [← hk]; simpa using hst
+        step as ⟨ i2, hi2 ⟩
+        apply step_best _ _ i2 (by scalar_tac)
+        cases best with
+        | none =>
+          intro j hj hji
+          by_cases hje : j = i.val
+          · subst hje; exact hsti
+          · exact hb j hj (by omega)
+        | some b =>
+          obtain ⟨hbl, hbi, hbs, hbm⟩ := hb
+          refine ⟨hbl, by omega, hbs, ?_⟩
+          intro j hj hji hsj
+          by_cases hje : j = i.val
+          · subst hje; rw [hsti] at hsj; exact absurd hsj Bool.false_ne_true
+          · exact hbm j hj (by omega) hsj
+    · rename_i hge
+      have : i.val = items.val.length := by scalar_tac
+      simp only [WP.spec_ok]
+      rw [← this]; exact hb
+  · exact ⟨hi, hb⟩
+
+/-- `newest` is the maximum, under `Prec`, of the statements that stand;
+`none` exactly when none stands. -/
+theorem newest_is_max (items : Slice order.Keyed) :
+    order.newest items ⦃ r => Best items.val items.val.length r ⦄ := by
+  unfold order.newest
+  exact newest_loop_spec items none 0#usize (by simp) (fun j _ hj => by simp at hj)
+
 end Writfold.Core.Order
