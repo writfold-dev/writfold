@@ -171,3 +171,5 @@ Rows are in creation order.
 | [2026-11-20](2026-11-20-statement-order-without-clock.md) | Order statements without a clock | accepted | complete | [#15](https://github.com/writfold-dev/writfold/issues/15) |
 | [2026-11-21](2026-11-21-reader-verdict-parity.md) | Show the usable checked-citation verdict on a cold read | accepted | complete | [#35](https://github.com/writfold-dev/writfold/issues/35) |
 | [2026-11-21](2026-11-21-reviewed-lookup-misses.md) | Turn a reported lookup miss into a reviewable alias | accepted | not-started | [#22](https://github.com/writfold-dev/writfold/issues/22) |
+| [2026-11-21](2026-11-21-project-asset-catalogs.md) | Project asset catalogs as reviewable Git projections | accepted | not-started | [#84](https://github.com/writfold-dev/writfold/issues/84), [#86](https://github.com/writfold-dev/writfold/issues/86) |
+| [2026-11-21](2026-11-21-record-option-ownership.md) | Record options belong to the kind that consumes them | accepted | not-started | [#85](https://github.com/writfold-dev/writfold/issues/85) |
