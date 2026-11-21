@@ -28,7 +28,6 @@ Each write is atomic: after a kill at any step the file holds its old bytes or i
 | Plan | a run: task, project, repository, branch, worktree, base commit | `checkpoint --new-run --project P --task T --note TEXT` | `runs/<id>/` | you |
 | Plan | a decision, as a draft | `record decision --title … --target-source …` | `proposals/decision/<date>-<slug>/` | you |
 | Execute | a checkpoint entry | `checkpoint --note TEXT` | `runs/<id>/checkpoint.md` | you |
-| Execute | an edit receipt: recipes, sites, preview | `edit apply RECIPE.spl`, or `edit apply -` for one recipe on stdin (built in v0.5.0-dev.9) | `runs/<id>/edits/` | you |
 | Execute | a gate receipt | `gate run <id>` | `runs/<id>/gates/` | you |
 | Execute | a statement | `gate attest`, `gate waive` | `runs/<id>/statements/` | you |
 | Execute | a checklist item's cover row (v0.5.0-dev.1) | `gate cover <gate> <item> …` | `runs/<id>/covers/` | you |
@@ -48,7 +47,7 @@ Search the code with any tool you like. For the lines a conclusion rests on, `ci
 writfold kb cite make harbor-api src/ledger.rs 3-5
 ```
 
-Runs recorded before 16 November 2026 may also hold retrieval receipts (`runs/<id>/retrievals/`), written by the Tuft adapter, which is now archived. They are still read: `resume` lists them, an assessed gate or a checklist row may cite one, and they count towards `research.backfilled`.
+Runs recorded before 16 November 2026 may also hold retrieval receipts (`runs/<id>/retrievals/`), written by the Tuft adapter, and edit receipts (`runs/<id>/edits/`), written by `kb edit apply`; both were removed on 21 November 2026. They are still read: `resume` lists them, a checklist row may cite one, and retrieval receipts count towards `research.backfilled`.
 
 What the agent concludes, it writes down, with the evidence attached:
 
@@ -70,34 +69,7 @@ writfold kb checkpoint --note "Retry applied in ledger.rs and audit.rs. Next: co
 
 The first command starts the run and makes it the current one; later `checkpoint`, `gate` and `deliver` calls use it without `--run`. A note equal to the previous entry is refused, so re-running after a crash never duplicates an entry.
 
-Every run write needs a run. `edit apply`, `checkpoint --note`, `gate run|cover|attest|waive`, `observe` and `deliver` without `--run` use the current run; with no current run they are refused (exit 3, nothing written) with `no current run: pass --run ID, or start one`. A closed run is refused the same way. The current run is this session's (`$WRITFOLD_SESSION`), else this work tree's, else the clone's shared one, so parallel sessions on one clone each write to their own run ([hooks, the current run](hooks.md#the-current-run-per-session-and-per-work-tree); built in v0.6.0-dev.6). `writfold kb resume <run> --here` makes an existing open run current for this session and work tree without writing a tracked file.
-
-`edit apply` is Writfold's adapter for Splicery recipes. Splicery is frozen: the adapter keeps building and its tests keep passing, with no new development. `edit apply -` reads one recipe from stdin (at most 4 MiB; built in v0.5.0-dev.9), so a recipe need not be written to a file first: `printf '%s\n' 'edit "src/retry.rs" {' '  replace one text "attempts = 5" with "attempts = 7"' '}' | writfold kb edit apply -`. `-` may appear once, beside recipe files; one recipe edits one file, so a batch from stdin is not built (pass several files). The receipt names the recipe `stdin` and keeps its bytes and digest as for a file.
-
-`edit apply` runs through Bash, so Claude Code's `Edit` and `Write` hooks never see it. A guard rule covers it by command:
-
-```toml
-# .writfold/guards/edits-need-a-run.toml
-schema = "writfold-guard-rule/1"
-id = "edits-need-a-run"
-event = "pre-tool-use"
-commands = ["writfold kb edit"]
-require = ["run.current"]
-action = "deny"
-```
-
-A rule can also name the files (built in v0.5.0-dev.9): with `tools = ["writfold:edit"]` and `paths`, `edit apply` checks the rule itself against each recipe's target, needing no hook ([hooks](hooks.md#edits-made-by-writfold-kb-edit-apply)):
-
-```toml
-# .writfold/guards/deploy-edits-need-review.toml
-schema = "writfold-guard-rule/1"
-id = "deploy-edits-need-review"
-event = "pre-tool-use"
-tools = ["Edit", "Write", "MultiEdit", "writfold:edit"]
-paths = ["deploy/**"]
-require = ["gate:deploy-review"]
-action = "deny"
-```
+Every run write needs a run. `checkpoint --note`, `gate run|cover|attest|waive`, `observe` and `deliver` without `--run` use the current run; with no current run they are refused (exit 3, nothing written) with `no current run: pass --run ID, or start one`. A closed run is refused the same way. The current run is this session's (`$WRITFOLD_SESSION`), else this work tree's, else the clone's shared one, so parallel sessions on one clone each write to their own run ([hooks, the current run](hooks.md#the-current-run-per-session-and-per-work-tree); built in v0.6.0-dev.6). `writfold kb resume <run> --here` makes an existing open run current for this session and work tree without writing a tracked file.
 
 ## Record states
 

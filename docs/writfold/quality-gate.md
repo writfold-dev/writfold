@@ -58,10 +58,9 @@ Run it in the admitted, offline Compose `quality` service. Source may be mounted
 - `cargo metadata --format-version 1 --all-features --locked --offline`, without a host-only platform filter; both declared dependency kinds and actual resolved package identities are inspected.
 - Syntax, module/function budgets, dependency direction, IO boundaries, unsafe and production error-path checks.
 - TOML-parsed manifest lint policy: every actual workspace member must inherit or explicitly declare `unsafe_code = "forbid"`, with positive/negative isolated manifest controls.
-- Positive and negative checker calibrations, including generated macro bodies and runtime functions inside `verus!`.
+- Positive and negative checker calibrations, including generated macro bodies.
 - Conditional attributes and macro-supplied metadata are inspected; `matches!` guards, repeated `vec!` expressions and JSON-embedded Rust cannot hide executable bodies.
-- Proof assumptions are fail-closed: `assume`, proof axioms and assumed-specification statements are rejected. Assumption/exclusion attributes require exact-source approval. Bare `verifier::opaque` is only a spec-function unfolding control when that function has an inspected body; it does not waive body inspection or admit an external body.
-- Actual consumer compilations against `writfold-domain`: matching-ID/unit/state positive controls and wrong-ID/unit/state negative controls. Rejection requires exactly one rustc error, `E0308`, with the primary span on the intended argument and both expected and supplied nominal types in the diagnostic. Unrelated compiler/tool/dependency failures cannot satisfy these checks.
+- Actual consumer compilations against `writfold-domain`: matching positive controls and wrong-identity/revision/unit negative controls (`ContentDigest` for a `GitObjectId`, `DesignRevision` for a `ProposalMaterialRevision`, `ByteCount` for a `GitObjectFormat`). Rejection requires exactly one rustc error, `E0308`, with the primary span on the intended argument and both expected and supplied nominal types in the diagnostic. Unrelated compiler/tool/dependency failures cannot satisfy these checks.
 
 `/evidence/obligations.json` contains named required checks, statuses, an explicit empty skips list, and artifact SHA256 hashes. Standard output, standard error, command arguments, working directories, elapsed time, exit codes, checker reports and exact generated fixture bytes remain available. A missing executable, timeout, malformed output or unmet prerequisite fails a required obligation. The enclosing gate runner binds this evidence to source/tool/lock identities.
 
@@ -69,23 +68,11 @@ The receipt lists freshly generated synthetic fixture roots. Before hashing, the
 
 ## Syntax ownership and budgets
 
-Pinned `syn` parses ordinary Rust; pinned `verus_syn` parses only the bodies owned by `verus!`. The grammar boundary is explicit, not a parse-error fallback: ordinary identifiers such as `ghost`, `tracked`, `spec` and `proof` never become proof modifiers. In particular, Verus's field parser consumes a data-mode keyword before the field identifier, whereas ordinary Rust permits a field named `ghost`. Separate grammar visitors share diagnostic/budget state and effect-path policy; macro templates and embedded expression grammars use their enclosing grammar. Positive and negative controls cover these identifiers in fields, expressions, macro templates and JSON arguments, mixed proof/runtime bodies, and invalid syntax in each grammar. Syntax and macro-parser diagnostics retain the failing token's line and column range.
+Pinned `syn` parses every Rust file. Token spans, rather than source regexes, identify nonblank, noncomment lines; `//` in a URL/string is not a comment. Rust doc comments do not consume the code-line budget. Nested inline modules, free functions, methods, default trait methods and closures are visited.
 
-Token spans, rather than source regexes, identify nonblank, noncomment lines; `//` in a URL/string is not a comment. Rust doc comments do not consume the code-line budget. Nested inline modules, free functions, methods, default trait methods and closures are visited. Runtime functions in proof macros retain production restrictions. Actual proof/spec functions and `proof` expressions may use ghost-only unwraps; their bodies still count toward size budgets.
-
-Handwritten modules have a 400-line ceiling and a warning above 250. Function/closure bodies have an 80-line ceiling and a warning above 50. `main.rs`, `build.rs` and application orchestration modules have a 250-line ceiling. No 500-line proof-family exception is currently admitted: proof files retain the stricter ordinary ceiling until an exact, owned obligation-family scope is explicitly reviewed. There are no wildcard size waivers.
+Handwritten modules have a 400-line ceiling and a warning above 250. Function/closure bodies have an 80-line ceiling and a warning above 50. `main.rs`, `build.rs` and application orchestration modules have a 250-line ceiling. There are no wildcard size waivers.
 
 `macro_rules!` matchers identify metavariable fragment kinds. Every handwritten expansion template is normalized into parseable representative syntax and inspected once, retaining source spans; unsupported fragments or expansions fail closed. Invocation arguments cannot silently supply uninspected executable declarations. Unknown macros fail closed. The JSON macro has a dedicated recursive grammar adapter that visits embedded Rust expressions, including closures. Supported standard expression macros inspect their expressions; unparsed dangerous arguments are rejected. Derive-generated declarations are restricted to the explicitly classified standard/data/error derives. Parser token DSL macros are an exact development-tool scope, not a production escape hatch.
-
-Verus `seq!` literals use a fully parsed comma-expression grammar, and every
-element is visited in its caller's mode. Nested assumptions, unsafe/IO and
-runtime panic paths remain checked. Ordinary Rust `seq!`, unsupported tokens
-and uninspected declarations refuse. Spec-opacity ownership passes only through
-the owning function's conditional attributes, never to nested declarations or
-unexpanded macro arguments. Verifier namespace paths in metadata arguments
-refuse, including raw identifiers; an ordinary record field named `verifier`
-is not an attribute. The producer carries positive and negative controls for
-these distinctions.
 
 Nominal compile controls use separate root-package identities and require a
 fresh positive consumer artifact. A retained failure exposed Cargo reusing a
@@ -93,42 +80,13 @@ successful same-named consumer for a different negative fixture. Cache reuse
 cannot count as the required wrong-ID/unit/state rejection; exactly the intended
 compiler error and primary source span remain required.
 
-
 Integration tests, examples and benches are development contexts for the syntax audit, but workspace Clippy policies still apply to all targets. Fallible test setup uses `Result` rather than panic/unwrap waivers. Development contexts are not excluded from size or unsafe checks. `writfold-xtask` is explicitly a tooling crate permitted to inspect JSON metadata and perform IO; its Rust source still receives syntax, budget and error-path inspection.
 
 ## Architecture and safety
 
-The crate dependency table is in `crates/writfold-xtask/src/graph.rs`. Unknown workspace members require classification. Renamed, optional, build, dev and target dependencies are checked by Cargo package identity, not import spelling. Resolved edges are traversed from every workspace member. Product crates cannot depend on tooling. The domain crate uses an exact admitted pure arithmetic/proof/compiler-support closure; a newly introduced external dependency requires classification rather than slipping past an IO-name denylist. OpenSSL/native-tls packages are rejected in the active graph and in direct declarations.
-
-The only new local third-party exception is the pure Splicery libraries used
-by `writfold-sources`: domain, syntax, compile and kernel directly, and the
-dependency-free `splicery-splice` byte-splice kernel only through
-`splicery-kernel`. Admission checks the exact in-tree source export at commit
-`b14c67a7aca9f416c4facdf189ef340d5666351f`, artifact
-`b4c3574a1874f8441b871b1b901eb5ef51f8829a760237adfd1b2df11a1827e0`.
-The canonical manifest, complete regular-file inventory, modes and every byte
-digest must match; declared and resolved Cargo paths must use that export, and
-each resolved Splicery package must declare exactly its admitted dependency
-names (`splicery-splice` none; `splicery-kernel` only domain and splice).
-Matching package names, a self-rehashed manifest or a mutable sibling path do
-not suffice. Other crates cannot gain this dependency by reusing its name.
-The export is not subjected to a misleading Writfold source-proof claim: its own
-qualification remains separate. This is not a general vendor/engine exemption.
-
-The exercised controls include valid admission, changed bytes, self-rehashed
-changes, an unlisted implicit build script, a missing declared file, executable
-mode drift, a false commit and a mutable-source substitution. File/directory
-symlink controls use the real admission implementation in the Rust suite.
+The crate dependency table is in `crates/writfold-xtask/src/graph.rs`. Unknown workspace members require classification. Renamed, optional, build, dev and target dependencies are checked by Cargo package identity, not import spelling. Resolved edges are traversed from every workspace member. Product crates cannot depend on tooling. The domain crate uses an exact admitted pure closure; a newly introduced external dependency requires classification rather than slipping past an IO-name denylist. OpenSSL/native-tls packages are rejected in the active graph and in direct declarations.
 
 Pure production crates cannot import ambient filesystem/network/process/environment/clock/thread/IO APIs or emit stdio through macros. Aliased/grouped imports are inspected. Domain `Deserialize` derives, implementations and imports are rejected: untrusted bytes must enter through checked wire conversions. Untyped `serde_json::Value` is rejected in the domain and app crates. Unsafe blocks/functions/traits/implementations/foreign boundaries and unsafe attributes fail; broad unsafe/panic lint allowances fail. Production panic, unwrap, expect, todo and unimplemented paths fail. No invariant exception is currently admitted.
-
-`qualification/trusted-boundaries.json` lists the exact approved source digest and
-attribute set for a reviewed external-library boundary. The current approval is
-WF-TCB-001's num-bigint specification module only. Changing its bytes invalidates
-admission; an approval must name inspected workspace source. Conditional
-attributes and macro bodies cannot escape this rule. Positive approved-source,
-hash-drift, unapproved external-body/specification, conditional-exclusion, axiom
-and assumption controls exercise the actual checker.
 
 ## Direct checker interface
 
@@ -141,8 +99,8 @@ cargo run -p writfold-xtask --locked --offline -- quality \
   --report /evidence/manual-quality.report.json
 ```
 
-A completed report has `schema: 1`, `complete: true`, an explicit `success` boolean, structured diagnostics and syntax-derived executable declaration spans. The Verus producer consumes these spans rather than guessing function boundaries from source text. A successful shell exit without a completed report does not qualify the source.
+A completed report has `schema: 1`, `complete: true`, an explicit `success` boolean and structured diagnostics. A successful shell exit without a completed report does not qualify the source.
 
 ## Scope and evidence status
 
-These checks enforce syntax/typing/dependency/trust boundaries, not semantic correctness or formal refinement. They do not replace the Aeneas proofs, the TLC models, unit tests or runtime integration. Advisory/license qualification with a retained advisory snapshot is not implemented by this producer and must not be inferred from its success. Executed status comes from retained gate attempts, not from the existence of this document.
+These checks enforce syntax/typing/dependency boundaries, not semantic correctness or formal refinement. They do not replace the Aeneas proofs, the TLC models, unit tests or runtime integration. Advisory/license qualification with a retained advisory snapshot is not implemented by this producer and must not be inferred from its success. Executed status comes from retained gate attempts, not from the existence of this document.

@@ -206,7 +206,7 @@ The key sets above are pinned by a test (`crates/writfold-kb/tests/json.rs`), wh
 
 ## Which commands use it
 
-Every `writfold kb` verb, including the writes and the run verbs: `record`, `status --set`, `checkpoint`, `propose` and `proposals`, `observe`, `repos`, `checker list`, `cite make`, `gate run|status|cover|attest|waive|lines`, `guard status`, `plan`, `deliver`, `edit apply` and `edit recover`. A write answers with the rows of what it wrote and its notes.
+Every `writfold kb` verb, including the writes and the run verbs: `record`, `status --set`, `checkpoint`, `propose` and `proposals`, `observe`, `repos`, `checker list`, `cite make`, `gate run|status|cover|attest|waive|lines`, `guard status`, `plan` and `deliver`. A write answers with the rows of what it wrote and its notes.
 
 Two outputs are not this envelope:
 

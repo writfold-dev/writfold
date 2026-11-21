@@ -19,9 +19,8 @@ the path to tightening it.
 | Crate | Tier | Why |
 |---|---|---|
 | `writfold-core` | `kernel` | Already `#![no_std]` + `alloc`, no dependencies, no IO, no floats, no trait objects; its decisions are extracted by Charon/Aeneas and proved in Lean. It meets the kernel's structural rules (K003 no_std, T003 no dependencies) as it stands. |
-| `writfold-domain` | `core` | No ambient IO (no `std::fs`/`env`/`process`/clock/stdio found), but it depends on `vstd` and `num-bigint`, which a kernel's dependency allowlist would reject. Much of it is `verus!`-annotated; the Verus proofs were archived on 16 November 2026 (`mission.md`), so its annotations are no longer proof evidence. |
-| `writfold-sources` | `core` | Pure byte-preserving parsers/codecs; no ambient IO. Depends on the vendored Splicery crates. |
-| `tuft` | `core` | Pure parser/checker for citation cursors; no ambient IO. Frozen (only the citation cursor is used). |
+| `writfold-domain` | `core` | No ambient IO. Since 21 November 2026 (#54) plain Rust with no dependencies: the checked values the runtime, the KB and the sources codec pass between them; the Verus-annotated code was removed. |
+| `writfold-sources` | `core` | Pure byte-preserving parsers/codecs; no ambient IO. (Its Splicery adapter and the `tuft` crate were removed on 21 November 2026.) |
 | `writfold-runtime` | `edge` | Runs Git and child processes (`std::process::Command`, rustix `fs`/`process`), reads the clock. It is the adapter layer. |
 | `writfold-kb` | `edge` | Does direct file IO (`std::fs`, SQLite) and Git through `writfold-runtime`. Run as `core` in the dry run it produced over a thousand ambient-authority findings. |
 | `writfold-app` | `edge` | The verb front end over `writfold-kb`. |
@@ -138,6 +137,8 @@ new errors with the baseline in place.
 | `tuft` | 129 | Frozen. |
 | Weft and Splicery in `writfold-kb` | 6 (X001 3, E003 1, E001 2 in `edit/`) | Frozen. |
 | E001 in `writfold-runtime`, `writfold-kb`, `writfold-xtask` | 38 | Deliberate translations into closed error enums of errors that carry nothing more (`TryFromIntError`, `Utf8Error`, `TryReserveError`), values that are not errors (`binary_search`'s insertion index, `fetch_update`'s previous value), and in tests a `PoisonError` holding a guard or a thread's panic payload. A few IO cases (`write/atomic.rs` reporting any read failure as "is gone") are worth a closer look; changing them changes user-visible messages. |
+
+The cleanup of 21 November 2026 (#54) removed the files behind the Tuft, Splicery, Weft and Verus rows above (and the runtime's staged writes). Their baseline entries were deleted, never re-recorded: the baseline went from 527 accepted findings to 217, and the check's warnings from 2,171 to 1,275, with no new finding outside the kernel. The rows stay as the record of that day.
 
 ## Proof claims (stage 2b, 19 November 2026)
 

@@ -434,12 +434,6 @@ A session that stops between the post and `deliver posted` leaves no record; not
 
 **Limits.** A step is judged with a subject repository like any other, also when it names only deliveries: outside one, pass `--repo DIR`. `gate status`, `gate lines` and `gates.met` do not count deliveries ([gates](gates.md#which-gates-a-run-owes)); `step.met` does ([hooks](hooks.md#guard-rules)).
 
-## Weft on a step
-
-> **Built:** the gate itself, class `assessed` ([gates](gates.md#weft-assessed-gates)). A step names it like any other gate: met or not met.
-
-A step may require a Weft assessment: it owes a gate of class `assessed`. The agent submits a Weft file stating the step's assumptions and checks (at the `{run}/…` path the gate names); each assumption cites a Writfold receipt or citation with a Weft `claim … = citation "…";` directly above it. `gate run` resolves those citations (a KB citation must be fresh, a gate or receipt satisfied or attested), runs the pinned `weft` binary and records an assessed receipt. A check counts as met only when Weft entails it from assumptions Writfold has grounded; one that rests on an ungrounded assumption keeps Weft's result, is reported as hypothetical and does not meet the gate. The receipt goes stale when the source or any cited evidence moves. To the advance decision this is one more gate: met or not met.
-
 ## Order of work
 
 1. ~~Instruction gates and user-defined delivery modes.~~
@@ -447,4 +441,4 @@ A step may require a Weft assessment: it owes a gate of class `assessed`. The ag
 3. ~~Splicing and required steps.~~
 4. ~~The session-start and compaction hooks showing the plan position ([hooks](hooks.md)).~~
 5. One week of real use.
-6. Then: ~~proofs of the plan kernel~~ ([assurance](assurance.md)), a TLA+ model of two sessions on one run, ~~the evaluation skill~~ and ~~the Weft assessed gate~~.
+6. Then: ~~proofs of the plan kernel~~ ([assurance](assurance.md)), a TLA+ model of two sessions on one run, ~~the evaluation skill~~ and ~~the Weft assessed gate~~ (built, then removed on 21 November 2026).

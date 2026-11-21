@@ -282,9 +282,8 @@ built and tested, with little real use behind them yet.
 - **Not planned:** access control and signing. `--by` is text, and a post
   record is a statement: Writfold has no network code and sees no post. An
   agent can still skip a gate or edit a file by hand; Git history shows it.
-- **Frozen:** Tuft, and Weft and Splicery in their own repositories. `kb edit
-  apply` and the assessed gate, which use Splicery and Weft, are kept
-  building and tested.
+- **Removed (21 November 2026):** `kb edit apply` (Splicery) and the
+  assessed gate (Weft); both tools live on in their own repositories.
 
 ## Repository map
 
@@ -292,8 +291,9 @@ built and tested, with little real use behind them yet.
   (argument handling), `writfold-kb` (records, index, runs, gates, plans,
   deliveries, hooks), `writfold-core` (the pure decision functions),
   `writfold-runtime` (Git, file and process effects), `writfold-tui`
-  (`watch`), `writfold-domain` (shared types), `writfold-sources` and `tuft`
-  (behind `kb edit apply` and citations), `writfold-xtask` (source checks).
+  (`watch`), `writfold-domain` (shared checked values), `writfold-sources`
+  (citation, front matter and Markdown codecs), `writfold-xtask` (source
+  checks).
 - `proofs/`: the Lean proofs over `writfold-core`
   ([how](docs/writfold/aeneas.md)). `spec/`: the TLA+ models.
 - `docs/guide/`: the guides. `docs/writfold/`: the
@@ -303,7 +303,6 @@ built and tested, with little real use behind them yet.
 - `plugins/` and `.claude-plugin/`: the Claude Code plugin and its
   marketplace entry.
 - `fixtures/`: test knowledge bases and guard conformance cases.
-  `vendor/splicery/`: vendored source.
 - `scripts/`, `compose.yaml`, `docker/`, `qualification/`: the
   [quality and unit gates](docs/writfold/quality-gate.md).
 

@@ -1,7 +1,7 @@
 # Governance
 
 Writfold has one maintainer, the owner. The owner decides what is accepted,
-what ships and what is frozen. The standing decisions are recorded in the
+what ships and what is removed. The standing decisions are recorded in the
 [mission](docs/writfold/mission.md) and in [AGENTS.md](AGENTS.md).
 
 ## Who does what
@@ -50,7 +50,8 @@ next milestone, and the move is recorded in a comment.
   `area/watch`, `area/proofs`, `area/docs`, `area/release`.
 - **Type:** `bug`, `enhancement`, `documentation`.
 
-## Frozen components
+## Removed components
 
-Tuft, Weft and Splicery are frozen (owner, 15 November 2026). Issues against
-them are accepted only when a change elsewhere breaks them.
+Tuft, Weft's assessed gate, Splicery's `kb edit` and the Verus
+formalization were removed on 21 November 2026 (owner, #54) after a freeze
+from 15 November. Weft and Splicery have their own repositories.

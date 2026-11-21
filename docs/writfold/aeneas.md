@@ -955,6 +955,10 @@ a reader uses it instead of its own verdict (only when that is
 `newest`'s indexing. After the statement order and recorded verdicts
 rounds: 731 theorems, 422 required claims, 263 mutants.
 
+### The cleanup (21 November 2026)
+
+The assessed gate was removed with Weft ([#54](https://github.com/writfold-dev/writfold/issues/54)): the `assess` kernel, `Assess.lean`, its nine audited theorems, six mutants and four claims. No remaining theorem depended on it. `Grounding`, which the ground and checklist kernels decide with, moved to `grounding.rs`, outside the translated set; `Ground.lean` names `grounding.Grounding`. After the cleanup: 722 theorems, 413 required claims, 257 mutants. The removed Lean is in the archive's `public-pre-cleanup-2026-11-21` branch.
+
 ### The claims and their mutants
 
 <!-- generated from proofs/mutants.py -->

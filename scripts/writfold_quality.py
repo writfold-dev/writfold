@@ -229,9 +229,9 @@ class Producer:
 
     def nominal_calibrations(self) -> None:
         domain = self.root / "crates/writfold-domain"
-        pairs = [("wrong-id", "ObservationId", "ClaimId"),
-                 ("wrong-unit", "DurationSeconds", "ByteCount"),
-                 ("wrong-state", "PortfolioPlan", "PortfolioState")]
+        pairs = [("wrong-id", "ContentDigest", "GitObjectId"),
+                 ("wrong-revision", "DesignRevision", "ProposalMaterialRevision"),
+                 ("wrong-unit", "ByteCount", "GitObjectFormat")]
         for name, expected, supplied in pairs:
             for negative in (False, True):
                 suffix = "reject" if negative else "control"

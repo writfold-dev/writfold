@@ -540,7 +540,7 @@ Dirty subject files are not hashed by the poll. Same-size edits that preserve
 mtime, time-only expiry and other changes outside these stamps can require `r`.
 The view is not a freshness guarantee between asks.
 
-`watch` never starts a checker, gate command, hook or Weft process. Git reads are
+`watch` never starts a checker, gate command or hook. Git reads are
 permitted. `stale --cached` checks Git-backed citations normally and reads cached
 external verdicts without writing `cite_checks`; an unchecked token remains
 `not-checked`. Run `writfold kb stale` explicitly to ask external checkers. Opening

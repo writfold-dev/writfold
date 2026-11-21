@@ -4,8 +4,10 @@ use writfold_sources::{
 };
 
 type TestResult = Result<(), Box<dyn std::error::Error>>;
-// Exact retained tests/test_authored_design.py::LEGACY_DESIGN input.
-const LEGACY: &str = include_str!("../fixtures/legacy-design.md");
+// A workflow-2 decision record. Its revision hash is the one `status --set
+// accepted` records as `accepted_revision`, and must stay byte-compatible
+// with the records the KB already holds.
+const LEGACY: &str = include_str!("../fixtures/workflow-2-decision.md");
 
 #[test]
 fn frozen_legacy_and_disjoint_design_hashes_match_python() -> TestResult {

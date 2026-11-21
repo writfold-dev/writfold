@@ -105,8 +105,8 @@ runs/run-20261112T211025Z-7fe148/
   manifest.json        task, project, mode, created
   writfold-run.json    open or closed; repo, branch, worktree, base commit
   checkpoint.md        one "## <UTC time>" entry per checkpoint
-  retrievals/          retrieval receipts (written by the archived Tuft adapter)
-  edits/               one receipt per edit apply
+  retrievals/          retrieval receipts (written by the Tuft adapter, removed)
+  edits/               edit receipts (written by kb edit apply, removed)
   gates/               one receipt per gate run
   statements/          gate attestations and waivers
   covers/              one row per checklist item judgement (gate cover; v0.5.0-dev.1)

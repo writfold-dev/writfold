@@ -3,46 +3,6 @@
   "entries": [
     {
       "id": "TAU-E001",
-      "crate": "tuft",
-      "file": "crates/tuft/src/cursor.rs",
-      "source": "clippy::map_err_ignore",
-      "message": "`map_err(|_|...` wildcard pattern discards the original error",
-      "count": 1
-    },
-    {
-      "id": "TAU-E001",
-      "crate": "tuft",
-      "file": "crates/tuft/src/lexer.rs",
-      "source": "clippy::map_err_ignore",
-      "message": "`map_err(|_|...` wildcard pattern discards the original error",
-      "count": 1
-    },
-    {
-      "id": "TAU-E001",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/engineering/dependency.rs",
-      "source": "clippy::map_err_ignore",
-      "message": "`map_err(|_|...` wildcard pattern discards the original error",
-      "count": 2
-    },
-    {
-      "id": "TAU-E001",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/worktree/mod.rs",
-      "source": "clippy::map_err_ignore",
-      "message": "`map_err(|_|...` wildcard pattern discards the original error",
-      "count": 1
-    },
-    {
-      "id": "TAU-E001",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/worktree/prepared.rs",
-      "source": "clippy::map_err_ignore",
-      "message": "`map_err(|_|...` wildcard pattern discards the original error",
-      "count": 3
-    },
-    {
-      "id": "TAU-E001",
       "crate": "writfold-kb",
       "file": "crates/writfold-kb/src/defs/mod.rs",
       "source": "clippy::map_err_ignore",
@@ -53,22 +13,6 @@
       "id": "TAU-E001",
       "crate": "writfold-kb",
       "file": "crates/writfold-kb/src/delta/mark.rs",
-      "source": "clippy::map_err_ignore",
-      "message": "`map_err(|_|...` wildcard pattern discards the original error",
-      "count": 1
-    },
-    {
-      "id": "TAU-E001",
-      "crate": "writfold-kb",
-      "file": "crates/writfold-kb/src/edit/plan.rs",
-      "source": "clippy::map_err_ignore",
-      "message": "`map_err(|_|...` wildcard pattern discards the original error",
-      "count": 1
-    },
-    {
-      "id": "TAU-E001",
-      "crate": "writfold-kb",
-      "file": "crates/writfold-kb/src/edit/target.rs",
       "source": "clippy::map_err_ignore",
       "message": "`map_err(|_|...` wildcard pattern discards the original error",
       "count": 1
@@ -148,38 +92,6 @@
     {
       "id": "TAU-E001",
       "crate": "writfold-runtime",
-      "file": "crates/writfold-runtime/src/fs/staged/create.rs",
-      "source": "clippy::map_err_ignore",
-      "message": "`map_err(|_|...` wildcard pattern discards the original error",
-      "count": 1
-    },
-    {
-      "id": "TAU-E001",
-      "crate": "writfold-runtime",
-      "file": "crates/writfold-runtime/src/fs/staged/inspect.rs",
-      "source": "clippy::map_err_ignore",
-      "message": "`map_err(|_|...` wildcard pattern discards the original error",
-      "count": 3
-    },
-    {
-      "id": "TAU-E001",
-      "crate": "writfold-runtime",
-      "file": "crates/writfold-runtime/src/fs/staged/mod.rs",
-      "source": "clippy::map_err_ignore",
-      "message": "`map_err(|_|...` wildcard pattern discards the original error",
-      "count": 1
-    },
-    {
-      "id": "TAU-E001",
-      "crate": "writfold-runtime",
-      "file": "crates/writfold-runtime/src/fs/temporary.rs",
-      "source": "clippy::map_err_ignore",
-      "message": "`map_err(|_|...` wildcard pattern discards the original error",
-      "count": 1
-    },
-    {
-      "id": "TAU-E001",
-      "crate": "writfold-runtime",
       "file": "crates/writfold-runtime/src/git/gate.rs",
       "source": "clippy::map_err_ignore",
       "message": "`map_err(|_|...` wildcard pattern discards the original error",
@@ -242,94 +154,6 @@
       "count": 1
     },
     {
-      "id": "TAU-E001",
-      "crate": "writfold-runtime",
-      "file": "crates/writfold-runtime/tests/filesystem/locks.rs",
-      "source": "clippy::map_err_ignore",
-      "message": "`map_err(|_|...` wildcard pattern discards the original error",
-      "count": 1
-    },
-    {
-      "id": "TAU-E001",
-      "crate": "writfold-xtask",
-      "file": "crates/writfold-xtask/src/vendored.rs",
-      "source": "clippy::map_err_ignore",
-      "message": "`map_err(|_|...` wildcard pattern discards the original error",
-      "count": 1
-    },
-    {
-      "id": "TAU-E003",
-      "crate": "tuft",
-      "file": "crates/tuft/src/emit.rs",
-      "source": "clippy::let_underscore_must_use",
-      "message": "non-binding `let` on an expression with `#[must_use]` type",
-      "count": 3
-    },
-    {
-      "id": "TAU-E003",
-      "crate": "tuft",
-      "file": "crates/tuft/src/envelope.rs",
-      "source": "clippy::let_underscore_must_use",
-      "message": "non-binding `let` on an expression with `#[must_use]` type",
-      "count": 5
-    },
-    {
-      "id": "TAU-E003",
-      "crate": "tuft",
-      "file": "crates/tuft/src/lib.rs",
-      "source": "clippy::let_underscore_must_use",
-      "message": "non-binding `let` on an expression with `#[must_use]` type",
-      "count": 1
-    },
-    {
-      "id": "TAU-E003",
-      "crate": "tuft",
-      "file": "crates/tuft/src/render.rs",
-      "source": "clippy::let_underscore_must_use",
-      "message": "non-binding `let` on an expression with `#[must_use]` type",
-      "count": 1
-    },
-    {
-      "id": "TAU-E003",
-      "crate": "writfold-kb",
-      "file": "crates/writfold-kb/src/edit/apply.rs",
-      "source": "clippy::let_underscore_must_use",
-      "message": "non-binding `let` on an expression with `#[must_use]` type",
-      "count": 1
-    },
-    {
-      "id": "TAU-M001",
-      "crate": "tuft",
-      "file": "crates/tuft/src/check.rs",
-      "source": "clippy::wildcard_enum_match_arm",
-      "message": "wildcard match will also match any future added variants",
-      "count": 1
-    },
-    {
-      "id": "TAU-M001",
-      "crate": "tuft",
-      "file": "crates/tuft/src/locate.rs",
-      "source": "clippy::wildcard_enum_match_arm",
-      "message": "wildcard matches known variants and will also match future added variants",
-      "count": 1
-    },
-    {
-      "id": "TAU-M001",
-      "crate": "tuft",
-      "file": "crates/tuft/src/parser.rs",
-      "source": "clippy::wildcard_enum_match_arm",
-      "message": "wildcard match will also match any future added variants",
-      "count": 9
-    },
-    {
-      "id": "TAU-M001",
-      "crate": "writfold-core",
-      "file": "crates/writfold-core/src/assess.rs",
-      "source": "clippy::wildcard_enum_match_arm",
-      "message": "wildcard match will also match any future added variants",
-      "count": 1
-    },
-    {
       "id": "TAU-M001",
       "crate": "writfold-core",
       "file": "crates/writfold-core/src/command/invoke.rs",
@@ -360,110 +184,6 @@
       "source": "clippy::wildcard_enum_match_arm",
       "message": "wildcard match will also match any future added variants",
       "count": 1
-    },
-    {
-      "id": "TAU-M001",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/engineering/dependency.rs",
-      "source": "clippy::wildcard_enum_match_arm",
-      "message": "wildcard match will also match any future added variants",
-      "count": 1
-    },
-    {
-      "id": "TAU-M001",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/evidence.rs",
-      "source": "clippy::wildcard_enum_match_arm",
-      "message": "wildcard match will also match any future added variants",
-      "count": 1
-    },
-    {
-      "id": "TAU-M001",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/worktree/observation.rs",
-      "source": "clippy::wildcard_enum_match_arm",
-      "message": "wildcard match will also match any future added variants",
-      "count": 1
-    },
-    {
-      "id": "TAU-M001",
-      "crate": "writfold-sources",
-      "file": "crates/writfold-sources/src/splicery_refusal.rs",
-      "source": "clippy::wildcard_enum_match_arm",
-      "message": "wildcard match will also match any future added variants",
-      "count": 3
-    },
-    {
-      "id": "TAU-N001",
-      "crate": "tuft",
-      "file": "crates/tuft/src/diag.rs",
-      "source": "clippy::arithmetic_side_effects",
-      "message": "arithmetic operation that can potentially result in unexpected side-effects",
-      "count": 3
-    },
-    {
-      "id": "TAU-N001",
-      "crate": "tuft",
-      "file": "crates/tuft/src/emit.rs",
-      "source": "clippy::arithmetic_side_effects",
-      "message": "arithmetic operation that can potentially result in unexpected side-effects",
-      "count": 6
-    },
-    {
-      "id": "TAU-N001",
-      "crate": "tuft",
-      "file": "crates/tuft/src/lexer.rs",
-      "source": "clippy::arithmetic_side_effects",
-      "message": "arithmetic operation that can potentially result in unexpected side-effects",
-      "count": 26
-    },
-    {
-      "id": "TAU-N001",
-      "crate": "tuft",
-      "file": "crates/tuft/src/lib.rs",
-      "source": "clippy::arithmetic_side_effects",
-      "message": "arithmetic operation that can potentially result in unexpected side-effects",
-      "count": 1
-    },
-    {
-      "id": "TAU-N001",
-      "crate": "tuft",
-      "file": "crates/tuft/src/locate.rs",
-      "source": "clippy::arithmetic_side_effects",
-      "message": "arithmetic operation that can potentially result in unexpected side-effects",
-      "count": 13
-    },
-    {
-      "id": "TAU-N001",
-      "crate": "tuft",
-      "file": "crates/tuft/src/parser.rs",
-      "source": "clippy::arithmetic_side_effects",
-      "message": "arithmetic operation that can potentially result in unexpected side-effects",
-      "count": 1
-    },
-    {
-      "id": "TAU-N001",
-      "crate": "tuft",
-      "file": "crates/tuft/src/render.rs",
-      "source": "clippy::arithmetic_side_effects",
-      "message": "arithmetic operation that can potentially result in unexpected side-effects",
-      "count": 1
-    },
-    {
-      "id": "TAU-N001",
-      "crate": "tuft",
-      "file": "crates/tuft/src/scope.rs",
-      "source": "clippy::arithmetic_side_effects",
-      "message": "arithmetic operation that can potentially result in unexpected side-effects",
-      "count": 17
-    },
-    {
-      "id": "TAU-N001",
-      "crate": "tuft",
-      "file": "crates/tuft/src/view.rs",
-      "source": "clippy::arithmetic_side_effects",
-      "message": "arithmetic operation that can potentially result in unexpected side-effects",
-      "count": 4
     },
     {
       "id": "TAU-N001",
@@ -555,110 +275,6 @@
     },
     {
       "id": "TAU-N001",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/citation/generation.rs",
-      "source": "clippy::arithmetic_side_effects",
-      "message": "arithmetic operation that can potentially result in unexpected side-effects",
-      "count": 1
-    },
-    {
-      "id": "TAU-N001",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/citation/mod.rs",
-      "source": "clippy::arithmetic_side_effects",
-      "message": "arithmetic operation that can potentially result in unexpected side-effects",
-      "count": 1
-    },
-    {
-      "id": "TAU-N001",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/citation/presentation.rs",
-      "source": "clippy::arithmetic_side_effects",
-      "message": "arithmetic operation that can potentially result in unexpected side-effects",
-      "count": 1
-    },
-    {
-      "id": "TAU-N001",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/engineering/codec.rs",
-      "source": "clippy::arithmetic_side_effects",
-      "message": "arithmetic operation that can potentially result in unexpected side-effects",
-      "count": 8
-    },
-    {
-      "id": "TAU-N001",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/equality.rs",
-      "source": "clippy::arithmetic_side_effects",
-      "message": "arithmetic operation that can potentially result in unexpected side-effects",
-      "count": 1
-    },
-    {
-      "id": "TAU-N001",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/identity_grammar.rs",
-      "source": "clippy::arithmetic_side_effects",
-      "message": "arithmetic operation that can potentially result in unexpected side-effects",
-      "count": 14
-    },
-    {
-      "id": "TAU-N001",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/identity_grammar/storage.rs",
-      "source": "clippy::arithmetic_side_effects",
-      "message": "arithmetic operation that can potentially result in unexpected side-effects",
-      "count": 13
-    },
-    {
-      "id": "TAU-N001",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/ids/inventory.rs",
-      "source": "clippy::arithmetic_side_effects",
-      "message": "arithmetic operation that can potentially result in unexpected side-effects",
-      "count": 6
-    },
-    {
-      "id": "TAU-N001",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/knowledge.rs",
-      "source": "clippy::arithmetic_side_effects",
-      "message": "arithmetic operation that can potentially result in unexpected side-effects",
-      "count": 2
-    },
-    {
-      "id": "TAU-N001",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/language.rs",
-      "source": "clippy::arithmetic_side_effects",
-      "message": "arithmetic operation that can potentially result in unexpected side-effects",
-      "count": 1
-    },
-    {
-      "id": "TAU-N001",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/request_generation.rs",
-      "source": "clippy::arithmetic_side_effects",
-      "message": "arithmetic operation that can potentially result in unexpected side-effects",
-      "count": 1
-    },
-    {
-      "id": "TAU-N001",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/worktree/mod.rs",
-      "source": "clippy::arithmetic_side_effects",
-      "message": "arithmetic operation that can potentially result in unexpected side-effects",
-      "count": 2
-    },
-    {
-      "id": "TAU-N001",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/worktree/prepared.rs",
-      "source": "clippy::arithmetic_side_effects",
-      "message": "arithmetic operation that can potentially result in unexpected side-effects",
-      "count": 1
-    },
-    {
-      "id": "TAU-N001",
       "crate": "writfold-sources",
       "file": "crates/writfold-sources/src/citation_fields.rs",
       "source": "clippy::arithmetic_side_effects",
@@ -716,89 +332,9 @@
     {
       "id": "TAU-N001",
       "crate": "writfold-sources",
-      "file": "crates/writfold-sources/src/splicery_refusal.rs",
-      "source": "clippy::arithmetic_side_effects",
-      "message": "arithmetic operation that can potentially result in unexpected side-effects",
-      "count": 4
-    },
-    {
-      "id": "TAU-N001",
-      "crate": "writfold-sources",
       "file": "crates/writfold-sources/src/unicode.rs",
       "source": "clippy::arithmetic_side_effects",
       "message": "arithmetic operation that can potentially result in unexpected side-effects",
-      "count": 3
-    },
-    {
-      "id": "TAU-N002",
-      "crate": "tuft",
-      "file": "crates/tuft/src/check.rs",
-      "source": "clippy::as_conversions",
-      "message": "using a potentially dangerous silent `as` conversion",
-      "count": 2
-    },
-    {
-      "id": "TAU-N002",
-      "crate": "tuft",
-      "file": "crates/tuft/src/check.rs",
-      "source": "clippy::cast_possible_truncation",
-      "message": "casting `u64` to `usize` may truncate the value on targets with 32-bit wide pointers",
-      "count": 2
-    },
-    {
-      "id": "TAU-N002",
-      "crate": "tuft",
-      "file": "crates/tuft/src/locate.rs",
-      "source": "clippy::as_conversions",
-      "message": "using a potentially dangerous silent `as` conversion",
-      "count": 1
-    },
-    {
-      "id": "TAU-N002",
-      "crate": "tuft",
-      "file": "crates/tuft/src/view.rs",
-      "source": "clippy::as_conversions",
-      "message": "using a potentially dangerous silent `as` conversion",
-      "count": 2
-    },
-    {
-      "id": "TAU-N002",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/citation/selector.rs",
-      "source": "clippy::as_conversions",
-      "message": "using a potentially dangerous silent `as` conversion",
-      "count": 1
-    },
-    {
-      "id": "TAU-N002",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/engineering/codec.rs",
-      "source": "clippy::as_conversions",
-      "message": "using a potentially dangerous silent `as` conversion",
-      "count": 2
-    },
-    {
-      "id": "TAU-N002",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/ids/inventory.rs",
-      "source": "clippy::as_conversions",
-      "message": "using a potentially dangerous silent `as` conversion",
-      "count": 3
-    },
-    {
-      "id": "TAU-N002",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/ids/inventory.rs",
-      "source": "clippy::cast_possible_truncation",
-      "message": "casting `usize` to `u8` may truncate the value",
-      "count": 2
-    },
-    {
-      "id": "TAU-N002",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/worktree/prepared.rs",
-      "source": "clippy::as_conversions",
-      "message": "using a potentially dangerous silent `as` conversion",
       "count": 3
     },
     {
@@ -807,46 +343,6 @@
       "file": "crates/writfold-sources/src/unicode.rs",
       "source": "clippy::as_conversions",
       "message": "using a potentially dangerous silent `as` conversion",
-      "count": 1
-    },
-    {
-      "id": "TAU-P003",
-      "crate": "tuft",
-      "file": "crates/tuft/src/lexer.rs",
-      "source": "clippy::string_slice",
-      "message": "indexing into a string may panic if the index is within a UTF-8 character",
-      "count": 5
-    },
-    {
-      "id": "TAU-P003",
-      "crate": "tuft",
-      "file": "crates/tuft/src/lib.rs",
-      "source": "clippy::indexing_slicing",
-      "message": "slicing may panic",
-      "count": 2
-    },
-    {
-      "id": "TAU-P003",
-      "crate": "tuft",
-      "file": "crates/tuft/src/parser.rs",
-      "source": "clippy::indexing_slicing",
-      "message": "slicing may panic",
-      "count": 1
-    },
-    {
-      "id": "TAU-P003",
-      "crate": "tuft",
-      "file": "crates/tuft/src/scope.rs",
-      "source": "clippy::indexing_slicing",
-      "message": "indexing may panic",
-      "count": 18
-    },
-    {
-      "id": "TAU-P003",
-      "crate": "tuft",
-      "file": "crates/tuft/src/scope.rs",
-      "source": "clippy::string_slice",
-      "message": "indexing into a string may panic if the index is within a UTF-8 character",
       "count": 1
     },
     {
@@ -915,102 +411,6 @@
     },
     {
       "id": "TAU-P003",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/citation/mod.rs",
-      "source": "clippy::indexing_slicing",
-      "message": "indexing may panic",
-      "count": 2
-    },
-    {
-      "id": "TAU-P003",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/citation/presentation.rs",
-      "source": "clippy::indexing_slicing",
-      "message": "indexing may panic",
-      "count": 2
-    },
-    {
-      "id": "TAU-P003",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/engineering/codec.rs",
-      "source": "clippy::indexing_slicing",
-      "message": "indexing may panic",
-      "count": 7
-    },
-    {
-      "id": "TAU-P003",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/engineering/dependency.rs",
-      "source": "clippy::indexing_slicing",
-      "message": "indexing may panic",
-      "count": 8
-    },
-    {
-      "id": "TAU-P003",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/equality.rs",
-      "source": "clippy::indexing_slicing",
-      "message": "indexing may panic",
-      "count": 2
-    },
-    {
-      "id": "TAU-P003",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/identity_grammar.rs",
-      "source": "clippy::indexing_slicing",
-      "message": "indexing may panic",
-      "count": 19
-    },
-    {
-      "id": "TAU-P003",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/identity_grammar/storage.rs",
-      "source": "clippy::indexing_slicing",
-      "message": "indexing may panic",
-      "count": 18
-    },
-    {
-      "id": "TAU-P003",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/ids/inventory.rs",
-      "source": "clippy::indexing_slicing",
-      "message": "indexing may panic",
-      "count": 4
-    },
-    {
-      "id": "TAU-P003",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/knowledge.rs",
-      "source": "clippy::indexing_slicing",
-      "message": "indexing may panic",
-      "count": 2
-    },
-    {
-      "id": "TAU-P003",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/language.rs",
-      "source": "clippy::indexing_slicing",
-      "message": "indexing may panic",
-      "count": 1
-    },
-    {
-      "id": "TAU-P003",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/worktree/mod.rs",
-      "source": "clippy::string_slice",
-      "message": "indexing into a string may panic if the index is within a UTF-8 character",
-      "count": 1
-    },
-    {
-      "id": "TAU-P003",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/worktree/prepared.rs",
-      "source": "clippy::indexing_slicing",
-      "message": "indexing may panic",
-      "count": 11
-    },
-    {
-      "id": "TAU-P003",
       "crate": "writfold-sources",
       "file": "crates/writfold-sources/src/citation_fields.rs",
       "source": "clippy::string_slice",
@@ -1076,90 +476,10 @@
     {
       "id": "TAU-P003",
       "crate": "writfold-sources",
-      "file": "crates/writfold-sources/src/splicery_refusal.rs",
-      "source": "clippy::indexing_slicing",
-      "message": "slicing may panic",
-      "count": 4
-    },
-    {
-      "id": "TAU-P003",
-      "crate": "writfold-sources",
       "file": "crates/writfold-sources/src/unicode.rs",
       "source": "clippy::string_slice",
       "message": "indexing into a string may panic if the index is within a UTF-8 character",
       "count": 3
-    },
-    {
-      "id": "TAU-X001",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/citation/binding.rs",
-      "source": "clippy::allow_attributes",
-      "message": "#[allow] attribute found",
-      "count": 1
-    },
-    {
-      "id": "TAU-X001",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/citation/handles.rs",
-      "source": "clippy::allow_attributes",
-      "message": "#[allow] attribute found",
-      "count": 1
-    },
-    {
-      "id": "TAU-X001",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/dolt.rs",
-      "source": "clippy::allow_attributes",
-      "message": "#[allow] attribute found",
-      "count": 1
-    },
-    {
-      "id": "TAU-X001",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/engineering/approval.rs",
-      "source": "clippy::allow_attributes",
-      "message": "#[allow] attribute found",
-      "count": 1
-    },
-    {
-      "id": "TAU-X001",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/engineering/grant.rs",
-      "source": "clippy::allow_attributes",
-      "message": "#[allow] attribute found",
-      "count": 1
-    },
-    {
-      "id": "TAU-X001",
-      "crate": "writfold-domain",
-      "file": "crates/writfold-domain/src/records.rs",
-      "source": "clippy::allow_attributes",
-      "message": "#[allow] attribute found",
-      "count": 1
-    },
-    {
-      "id": "TAU-X001",
-      "crate": "writfold-kb",
-      "file": "crates/writfold-kb/src/gate/assessed/run.rs",
-      "source": "clippy::allow_attributes",
-      "message": "#[allow] attribute found",
-      "count": 1
-    },
-    {
-      "id": "TAU-X001",
-      "crate": "writfold-kb",
-      "file": "crates/writfold-kb/src/gate/assessed/run.rs",
-      "source": "clippy::allow_attributes_without_reason",
-      "message": "`allow` attribute without specifying a reason",
-      "count": 1
-    },
-    {
-      "id": "TAU-X001",
-      "crate": "writfold-kb",
-      "file": "crates/writfold-kb/tests/assessed/mod.rs",
-      "source": "clippy::allow_attributes_without_reason",
-      "message": "`allow` attribute without specifying a reason",
-      "count": 1
     }
   ]
 }

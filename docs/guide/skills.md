@@ -17,12 +17,11 @@ Its front matter names the four questions, so Claude Code loads it when a sessio
 
 | Section | What it teaches |
 |---|---|
-| Which verb | one row per question: `brief`, `why`, `context`, `status`, `find`, `impact`, `stale`, `resume`, `checkpoint`, `record`, `gate`, `deliver`, `edit apply` |
+| Which verb | one row per question: `brief`, `why`, `context`, `status`, `find`, `impact`, `stale`, `resume`, `checkpoint`, `record`, `gate`, `deliver` |
 | Reading an answer | the trailer: `coverage=partial`, `answer=unknown`, `stale=N`, `omitted=N` with a cursor, `+dirty`; the exit codes |
 | Rules | quote the `@path:line` of every row relied on; re-check any row with a `!` flag; on `answer=unknown`, look in the sources and then `record` what was found |
 | Gates | say a check passed only when `gate status` shows `[satisfied]`; waive or attest only when the user asks, with an honest `--by` |
 | Delivery candidates | say a draft is ready only when `deliver status` shows `[ready]` |
-| Edits | ordinary tools; `edit apply` (frozen) only where the KB already works with Splicery recipes |
 | Checkpoint drafts | checkpoint before ending a long task; ask before confirming a draft |
 
 The skill is instructions to a model. Nothing checks that the agent follows it.

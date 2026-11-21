@@ -37,14 +37,15 @@ benchmark is planned; benchmarking is paused (owner, 10 November 2026).
 
 ## Decisions
 
-### Component status (15 November 2026)
+### Component status (15 November 2026; updated 21 November 2026)
 
 The current standing of each component. Earlier sentences below that say otherwise are marked superseded in place; the decisions they record are unchanged.
 
 | Component | Status |
 |---|---|
-| Tuft | frozen (owner decision, 15 November 2026). The `writfold tuft` subcommand and its adapter were archived on 16 November 2026; the `tuft` crate stays in the workspace only for the citation cursor `writfold-kb` uses. Retrieval receipts that earlier runs recorded are still read |
-| Weft, Splicery | frozen (15 November 2026): kept building and tested through their adapters (the Weft assessed gate, `kb edit apply`), and no new development. The `writfold kb` verb groups cover each stage of the flow; the two are revisited only if a use case emerges. They are no longer presented on the website |
+| Tuft | removed (owner decision, 21 November 2026, #54) after a freeze from 15 November; its subcommand and adapter were archived on 16 November. The resume cursor `writfold-kb` used moved into it unchanged. Retrieval receipts that earlier runs recorded are still read |
+| Weft, Splicery | removed from Writfold (owner decision, 21 November 2026, #54) after a freeze from 15 November: the assessed gate and `kb edit apply` are gone, and both tools live on in their own repositories. Edit receipts that earlier runs recorded are still read |
+| Verus | retired (21 November 2026, #54): `writfold-domain` is plain Rust; decisions are proved in Lean through Aeneas |
 | The trial flow and `serve`, `writfold.agent/1`, Dolt publication, Omnigraph | archived (16 November 2026): moved to the private archive and removed from the binary and the workspace |
 
 ### The public/archive split (owner decision, 16 November 2026)
