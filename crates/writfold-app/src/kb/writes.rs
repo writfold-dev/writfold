@@ -85,7 +85,7 @@ pub fn allowed(verb: &str) -> &'static [&'static str] {
             "new-run",
             "artifact",
         ],
-        "record" => super::investigation::RECORD,
+        "record" => super::kinds::RECORD.as_slice(),
         "status" => super::set::FLAGS,
         "cite" => &["allow-dirty", "sym", "ttl"],
         "gate" => &["run", "repo", "statement", "reason", "by", "note", "from"],
@@ -166,7 +166,10 @@ pub fn verb(name: &str, common: &Common, positional: &[String]) -> Result<Write,
     match (name, positional) {
         ("checkpoint", []) => super::checkpoint::checkpoint(common),
         ("checkpoint", _) => Err("checkpoint takes flags only (--run, --new-run, --note)".into()),
-        ("record", [kind, rest @ ..]) => record(kind, common, rest),
+        ("record", [kind, rest @ ..]) => {
+            super::kinds::check("record", kind, common)?;
+            record(kind, common, rest)
+        }
         _ => Err("usage: record ticket|decision|link|investigation …".into()),
     }
 }

@@ -18,7 +18,7 @@ pub const VALUES: [&str; 1] = ["paths"];
 /// The write flags each verb here accepts.
 pub fn allowed(verb: &str) -> &'static [&'static str] {
     match verb {
-        "propose" => super::investigation::PROPOSE,
+        "propose" => super::kinds::PROPOSE.as_slice(),
         "lint" => &["repo", "deny-warnings", "records"],
         "init" => &["example", "dry-run"],
         "policy" => &["paths"],
@@ -30,18 +30,20 @@ pub fn allowed(verb: &str) -> &'static [&'static str] {
 /// other verb.
 pub fn verb(name: &str, common: &Common, positional: &[String]) -> Option<Result<Verb, String>> {
     let verb = match (name, positional) {
-        ("propose", [kind, rest @ ..]) => store(common).and_then(|store| {
-            record(kind, common, rest).map(|write| {
-                ProposalVerb::Propose(Box::new(Propose {
-                    write,
-                    session: get(common, "session")
-                        .or_else(|| std::env::var(SESSION_ENV).ok())
-                        .filter(|s| !s.is_empty()),
-                    run: get(common, "run"),
-                    store,
-                }))
-            })
-        }),
+        ("propose", [kind, rest @ ..]) => (super::kinds::check("propose", kind, common))
+            .and_then(|()| store(common))
+            .and_then(|store| {
+                record(kind, common, rest).map(|write| {
+                    ProposalVerb::Propose(Box::new(Propose {
+                        write,
+                        session: get(common, "session")
+                            .or_else(|| std::env::var(SESSION_ENV).ok())
+                            .filter(|s| !s.is_empty()),
+                        run: get(common, "run"),
+                        store,
+                    }))
+                })
+            }),
         ("propose", []) => {
             Err("usage: propose ticket|decision|link|investigation … (as record)".into())
         }

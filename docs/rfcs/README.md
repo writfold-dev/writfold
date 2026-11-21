@@ -180,4 +180,4 @@ Rows are in creation order.
 | [2026-11-21](2026-11-21-bounded-graph-reads.md) | Bound the edges a graph answer reads; a work limit never certifies completeness | accepted | complete | [#60](https://github.com/writfold-dev/writfold/issues/60) |
 | [2026-11-21](2026-11-21-loops.md) | Loops: a plan step that repeats a template until its gates are met | accepted | complete | [#74](https://github.com/writfold-dev/writfold/issues/74) |
 | [2026-11-21](2026-11-21-project-asset-catalogs.md) | Project asset catalogs as reviewable Git projections | accepted | not-started | [#84](https://github.com/writfold-dev/writfold/issues/84), [#86](https://github.com/writfold-dev/writfold/issues/86) |
-| [2026-11-21](2026-11-21-record-option-ownership.md) | Record options belong to the kind that consumes them | accepted | not-started | [#85](https://github.com/writfold-dev/writfold/issues/85) |
+| [2026-11-21](2026-11-21-record-option-ownership.md) | Record options belong to the kind that consumes them | accepted | complete | [#85](https://github.com/writfold-dev/writfold/issues/85) |

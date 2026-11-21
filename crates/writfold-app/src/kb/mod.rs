@@ -9,6 +9,7 @@ mod gate;
 mod guard;
 mod hook;
 mod investigation;
+mod kinds;
 mod lists;
 mod observe;
 mod plan;
@@ -106,6 +107,12 @@ fn overview(args: &[String]) -> Option<Outcome> {
             command.build();
             let rendered = command.find_subcommand_mut(v).map(|c| c.render_help());
             rendered.map_or_else(|| USAGE.to_owned(), |r| r.to_string())
+        }
+        // `record|propose <kind> --help`: that kind's options only (#85).
+        (Some(v @ ("record" | "propose")), Some(kind))
+            if kinds::options(kind).is_some() && args.iter().any(help) =>
+        {
+            cli::kind_command(v, kind).render_help().to_string()
         }
         (Some("help" | "--help" | "-h"), _) => USAGE.to_owned(),
         (Some(v), _) if !verb(v) && args.iter().any(help) => USAGE.to_owned(),

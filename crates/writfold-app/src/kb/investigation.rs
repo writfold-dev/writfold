@@ -8,54 +8,6 @@ use writfold_kb::write::investigation::Investigation;
 /// The value flags only `record investigation` takes.
 pub const VALUES: [&str; 5] = ["trigger", "tickets", "alerts", "signatures", "question"];
 
-/// Every flag `record` accepts, for each of its kinds.
-pub const RECORD: &[&str] = &[
-    "title",
-    "assets",
-    "status",
-    "summary",
-    "prs",
-    "origin",
-    "context",
-    "evidence",
-    "change",
-    "why",
-    "target-source",
-    "references",
-    "applicability",
-    "trigger",
-    "tickets",
-    "alerts",
-    "signatures",
-    "question",
-];
-
-/// `record`'s flags plus `propose`'s own.
-pub const PROPOSE: &[&str] = &[
-    "title",
-    "assets",
-    "status",
-    "summary",
-    "prs",
-    "origin",
-    "context",
-    "evidence",
-    "change",
-    "why",
-    "target-source",
-    "references",
-    "applicability",
-    "trigger",
-    "tickets",
-    "alerts",
-    "signatures",
-    "question",
-    "session",
-    "run",
-    "tracked",
-    "local",
-];
-
 /// `record investigation --title T [--trigger …] …`.
 pub fn write(common: &Common) -> Result<Write, String> {
     Ok(Write::Investigation(Investigation {

@@ -2,7 +2,7 @@
 rfc: "2026-11-21-record-option-ownership"
 title: "Record options belong to the kind that consumes them"
 status: accepted
-implementation: not-started
+implementation: complete
 authors: [astra]
 created: 2026-11-21
 updated: 2026-11-21
@@ -44,3 +44,5 @@ Just deriving `PROPOSE = RECORD + extras` still accepts the wrong kind's flag. M
 ## Decision log
 
 2026-11-21 — Accepted under the owner's standing default. Fix silently dropped input, not the product's record schema. No unresolved acceptance questions.
+
+2026-11-21 — Implemented for v0.6.0-dev.15: `crates/writfold-app/src/kb/kinds.rs` is the one table (the verb-wide lists are its union; the usage synopsis is checked against it by a unit test); `crates/writfold/tests/kb_record_options.rs` exercises the four kinds, an option before the kind, direct, `--local` and `--tracked` paths with the KB and both queues untouched, valid direct and proposed writes, and scoped help.

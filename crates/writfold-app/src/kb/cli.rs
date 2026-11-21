@@ -165,6 +165,22 @@ fn verb_command(verb: &'static str) -> Command {
     command
 }
 
+/// `record|propose <kind>` alone, for its help (#85): the shared flags,
+/// the kind's own options and, for `propose`, its scope and store.
+pub fn kind_command(verb: &str, kind: &str) -> Command {
+    let own = super::kinds::options(kind).unwrap_or_default();
+    let mut command = Command::new(format!("{verb} {kind}"))
+        .bin_name(format!("writfold kb {verb} {kind}"))
+        .about(usage::section(verb));
+    for name in every_flag() {
+        let keep = SHARED.contains(&name)
+            || own.contains(&name)
+            || (verb == "propose" && super::kinds::PROPOSE_ONLY.contains(&name));
+        command = command.arg(flag(verb, name).hide(!keep));
+    }
+    command
+}
+
 /// The whole `writfold kb` command.
 pub fn command() -> Command {
     Command::new("kb")
