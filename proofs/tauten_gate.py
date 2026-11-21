@@ -73,9 +73,16 @@ def main() -> int:
             reached = reached and status == 0
         if stage == "build" and reached:
             # the audit's per-theorem results, printed before AXIOM_AUDIT
+            # Lake replays a module's messages (`info: Audit.lean:…: AXIOMS …`)
+            # beside the audit's own lines: each theorem is reported once,
+            # failing if any of its lines names another axiom.
+            audited: dict[str, bool] = {}
             for match in AXIOMS.finditer(output):
                 axioms = {a.strip() for a in match.group("axioms").split(",") if a.strip()}
-                emit(theorem=match.group("name"), status="ok" if axioms <= ALLOWED else "fail")
+                name = match.group("name")
+                audited[name] = audited.get(name, True) and axioms <= ALLOWED
+            for name, ok in audited.items():
+                emit(theorem=name, status="ok" if ok else "fail")
         if stage == "build" and reached:
             total = subprocess.run(["lake", "env", "lean", "Total.lean"], cwd=ROOT / "proofs",
                                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
