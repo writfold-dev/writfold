@@ -3,7 +3,8 @@
 //! waived (each named as such, with its statement's file). With a plan it
 //! agrees with the plan's word: the header ends `; plan <word>`, a gate
 //! only skipped steps name is listed `skipped` and never counts, and it
-//! exits 0 only as [`writfold_core::policy::lines::lines_clean`] decides.
+//! exits 0 only as [`writfold_core::inventory::lines_clean_over`] decides
+//! (an incomplete gate inventory is never clean, #56).
 use super::status::{self, Filings};
 use super::{checklist, locate, receipt};
 use crate::emit::Output;
@@ -12,7 +13,8 @@ use crate::index::query::Rec;
 use crate::session::Session;
 use std::path::Path;
 use writfold_core::gate::{Standing, State};
-use writfold_core::policy::lines::{Listed, lines_clean};
+use writfold_core::inventory::lines_clean_over;
+use writfold_core::policy::lines::Listed;
 
 pub(super) fn lines(
     session: &Session<'_>,
@@ -62,7 +64,7 @@ pub(super) fn lines(
         text.push_str(&format!("note: {note}\n"));
     }
     let clean = match &plan {
-        None => report.all_met() && invalid == 0,
+        None => report.unplanned_clean(invalid == 0),
         Some(plan) => {
             let listed: Vec<Listed> = (report.gates.iter())
                 .map(|j| Listed {
@@ -70,7 +72,7 @@ pub(super) fn lines(
                     met: j.met(),
                 })
                 .collect();
-            lines_clean(&plan.summary, &listed, invalid == 0)
+            lines_clean_over(report.complete, &plan.summary, &listed, invalid == 0)
         }
     };
     Ok(Output {

@@ -171,3 +171,6 @@ Rows are in creation order.
 | [2026-11-20](2026-11-20-statement-order-without-clock.md) | Order statements without a clock | accepted | complete | [#15](https://github.com/writfold-dev/writfold/issues/15) |
 | [2026-11-21](2026-11-21-reader-verdict-parity.md) | Show the usable checked-citation verdict on a cold read | accepted | complete | [#35](https://github.com/writfold-dev/writfold/issues/35) |
 | [2026-11-21](2026-11-21-reviewed-lookup-misses.md) | Turn a reported lookup miss into a reviewable alias | accepted | not-started | [#22](https://github.com/writfold-dev/writfold/issues/22) |
+| [2026-11-21](2026-11-21-complete-gate-inventory.md) | A gate inventory that could not be listed is not a complete answer | accepted | complete | [#56](https://github.com/writfold-dev/writfold/issues/56) |
+| [2026-11-21](2026-11-21-strict-handoff-check.md) | Judge a handoff against an operator's required gates, not the agent's plan | accepted | complete | [#57](https://github.com/writfold-dev/writfold/issues/57) |
+| [2026-11-21](2026-11-21-streamed-verify-same-pin-repair.md) | Stream index rebuild and verification; repair only the generation compared, at a still-current pin | accepted | complete | [#58](https://github.com/writfold-dev/writfold/issues/58) |

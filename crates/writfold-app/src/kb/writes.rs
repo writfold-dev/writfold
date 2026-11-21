@@ -6,7 +6,9 @@ use writfold_kb::write::Write;
 use writfold_kb::write::record::{Decision, Link, Ticket};
 
 /// Flags that take a value.
-pub const VALUES: [&str; 42] = [
+pub const VALUES: [&str; 44] = [
+    "policy",
+    "candidate",
     "artifact",
     "idle",
     "example",
@@ -101,6 +103,7 @@ pub fn allowed(verb: &str) -> &'static [&'static str] {
             "to",
         ],
         "plan" => &["run", "repo", "from", "reason", "by", "again", "gates"],
+        "handoff" => &["policy", "candidate", "run", "repo"],
         "observe" => super::observe::FLAGS,
         _ => super::proposals::allowed(verb),
     }

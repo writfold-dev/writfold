@@ -112,7 +112,7 @@ check fts-integrity [ok]
 (Eight table rows are left out.)
 
 - `index status` shows the pin and counts per record kind.
-- `index verify` builds a second index from scratch and compares every table. Use it when an answer looks wrong.
+- `index verify` builds a second index from scratch and compares every table. Use it when an answer looks wrong. Both sides are streamed, one row at a time (from v0.6.0-dev.14; on a generated 2-million-edge KB its peak memory fell from 2.5 GB to 19 MB), and it needs disk for a second index. A difference replaces the index only while the KB and the live index are both still where they were compared; if either moved meanwhile, nothing is replaced and the answer is partial (exit 2): run it again ([RFC](../rfcs/2026-11-21-streamed-verify-same-pin-repair.md)).
 - `index rebuild` replaces the index. Deleting the file has the same effect; the next read rebuilds it.
 
 ## Gate evidence: `gate status` and `gate verify`

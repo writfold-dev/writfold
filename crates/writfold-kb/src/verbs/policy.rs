@@ -133,7 +133,8 @@ pub fn policy(session: &Session<'_>, cwd: &Path) -> Result<Answer> {
     let root = &session.ws.root;
     let top = crate::defs::lint::enclosing(root, cwd);
     let mut answer = Answer::default();
-    if !crate::gate::policy::configured(root, top.as_deref()) {
+    let found = crate::gate::def::inventory(root, top.as_deref(), crate::gate::def::list);
+    if found.complete() && !crate::gate::policy::configured(root, top.as_deref()) {
         answer.unknown = Some("no-policy");
         answer
             .notes
@@ -162,7 +163,18 @@ pub fn policy(session: &Session<'_>, cwd: &Path) -> Result<Answer> {
         };
         answer.rows.push(row);
     }
-    let (defs, _) = crate::gate::def::all(root, top.as_deref());
+    // An unreadable gate directory leaves the inventory partial (#56), and
+    // a definition that does not parse is reported, never dropped.
+    answer.partial = !found.complete();
+    if !found.problems.is_empty() {
+        let mut report = writfold_core::diag::Report::default();
+        for (_, problem) in &found.problems {
+            report.extend(problem.report.clone());
+        }
+        answer.report = Some(report);
+        answer.flagged = true;
+    }
+    let defs = found.definitions;
     let mut lines: Vec<String> = Vec::new();
     for d in &defs {
         lines.push(format!("{}\t{}", d.id, d.digest));
@@ -202,7 +214,7 @@ pub fn policy(session: &Session<'_>, cwd: &Path) -> Result<Answer> {
     ];
     answer.words.push(("policy", pin.word.into()));
     answer.words.push(("identity", identity));
-    answer.flagged = pin.word == "moved";
+    answer.flagged = answer.flagged || pin.word == "moved";
     Ok(answer)
 }
 

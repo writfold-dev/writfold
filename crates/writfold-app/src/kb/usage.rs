@@ -126,6 +126,13 @@ deliveries (offline candidates: the exact payload, checked mechanically; nothing
   deliver status [CANDIDATE] [--all] [--run ID]
                                    each candidate's checks (exit 0 only if all are met)
 
+handoff (a receiver's check; nothing is run):
+  handoff check --policy REV --candidate REV [--run ID] [--repo DIR]
+                                   every gate .writfold/handoff.toml requires at the policy revision,
+                                   judged on the candidate commit from the run's receipts under the
+                                   policy's definitions: accepted only on a current mechanical pass
+                                   for each (exit 0); a waiver, a skip or a changed definition refuses
+
 plans (the run graph; templates in .writfold/plans/<name>.toml; Writfold records, the agent walks):
   plan set <template>|--from FILE [--run ID] [--repo DIR]
                                    splice a template's steps at the run's root (keeps a snapshot;

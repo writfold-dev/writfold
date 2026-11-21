@@ -82,12 +82,22 @@ pub fn files(top: &Path, origin: Origin, prefix: &str) -> Vec<File> {
     let mut out = Vec::new();
     for (rel, kind) in DIRS {
         let dir = top.join(rel);
-        let Ok(entries) = std::fs::read_dir(&dir) else {
-            continue;
-        };
-        let mut names: Vec<String> = entries
-            .flatten()
-            .map(|e| e.file_name().to_string_lossy().into_owned())
+        let (_, names, why) = crate::gate::def::classify(&dir, crate::gate::def::list);
+        if let Some(why) = why {
+            // A directory that cannot be listed is a fault at its path (#56).
+            let shown = format!("{prefix}{rel}");
+            let report = crate::gate::def::unlisted(rel, &shown, &why).report;
+            out.push(File {
+                kind,
+                origin,
+                dir: dir.clone(),
+                stem: String::new(),
+                shown,
+                text: String::new(),
+                report,
+            });
+        }
+        let mut names: Vec<String> = (names.into_iter())
             .filter(|n| n.ends_with(".toml") && !n.starts_with('.'))
             .collect();
         names.sort();

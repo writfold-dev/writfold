@@ -19,6 +19,40 @@ def allowedAxioms : List Name := [``propext, ``Classical.choice, ``Quot.sound]
 (`mutants.py` refuses to run when one is missing here), and the headline
 statements of each kernel (docs/writfold/aeneas.md). -/
 def claims : List Name := [
+  -- policy inventories (writfold_core::inventory, #56)
+  ``Writfold.Core.Inventory.readable_spec,
+  ``Writfold.Core.Inventory.complete_loop_spec,
+  ``Writfold.Core.Inventory.complete_spec,
+  ``Writfold.Core.Inventory.unreadable_loop_spec,
+  ``Writfold.Core.Inventory.unreadable_pos_iff,
+  ``Writfold.Core.Inventory.gates_unmet_when_incomplete,
+  ``Writfold.Core.Inventory.lines_clean_over_iff,
+  ``Writfold.Core.Inventory.lines_clean_over_incomplete,
+  ``Writfold.Core.Inventory.all_true_loop_spec,
+  ``Writfold.Core.Inventory.all_true_spec,
+  ``Writfold.Core.Inventory.unplanned_clean_iff,
+  ``Writfold.Core.Inventory.unplanned_clean_empty,
+  ``Writfold.Core.Inventory.complete_total,
+  ``Writfold.Core.Inventory.unreadable_total,
+  ``Writfold.Core.Inventory.all_true_total,
+  ``Writfold.Core.Inventory.unplanned_clean_total,
+  -- publishing a derived index (writfold_core::publish, #58)
+  ``Writfold.Core.Publish.repair_replace_iff,
+  ``Writfold.Core.Publish.drift_never_replaces,
+  ``Writfold.Core.Publish.equal_keeps,
+  ``Writfold.Core.Publish.derived_replace_iff,
+  -- the strict handoff decision (writfold_core::handoff, #57)
+  ``Writfold.Core.Handoff.item_spec,
+  ``Writfold.Core.Handoff.itemOf_none_iff,
+  ``Writfold.Core.Handoff.statement_never_passes,
+  ``Writfold.Core.Handoff.first_failing_loop_spec,
+  ``Writfold.Core.Handoff.first_failing_spec,
+  ``Writfold.Core.Handoff.strict_spec,
+  ``Writfold.Core.Handoff.strict_accepted_iff,
+  ``Writfold.Core.Handoff.strict_refused_names_lowest,
+  ``Writfold.Core.Handoff.failing_member_refused,
+  ``Writfold.Core.Handoff.first_failing_total,
+  ``Writfold.Core.Handoff.strict_total,
   ``Writfold.Core.same_spec,
   ``Writfold.Core.same_loop_spec,
   -- the run graph (writfold_core::plan)

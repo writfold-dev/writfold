@@ -40,6 +40,7 @@ pub const VERBS: &[&str] = &[
     "gate",
     "deliver",
     "plan",
+    "handoff",
 ];
 
 /// Flags every verb takes.

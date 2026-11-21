@@ -28,10 +28,20 @@ pub fn paths(session: &Session<'_>, cwd: &Path, gate: &str) -> Result<Answer> {
             "not in a Git work tree: run it in the repository whose gates you mean".into(),
         )
     })?;
-    let (defs, _) = def::all(&session.ws.root, Some(&subject.top));
-    let d = (defs.into_iter().find(|d| d.id == gate)).ok_or_else(|| {
+    let found = def::inventory(&session.ws.root, Some(&subject.top), def::list);
+    let name = format!("{}/{gate}.toml", def::DIR);
+    if let Some((_, problem)) = found.problems.iter().find(|(_, p)| p.path == name) {
+        return Err(KbError::Definition(Box::new(problem.report.clone())));
+    }
+    let unread = match found.complete() {
+        true => "",
+        false => {
+            "; a gates directory could not be listed, so it may be defined there (writfold kb lint)"
+        }
+    };
+    let d = (found.definitions.into_iter().find(|d| d.id == gate)).ok_or_else(|| {
         KbError::Refused(format!(
-            "no gate {gate} is defined (writfold kb policy lists them)"
+            "no gate {gate} is defined (writfold kb policy lists them){unread}"
         ))
     })?;
     if d.run_record() || d.on_candidate() {

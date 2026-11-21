@@ -2534,3 +2534,67 @@ subsumes = ["TAU-N001", "TAU-P003"]
 mutants = [
   "complete-ignores-skipped",
 ]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/inventory.rs"
+function = "complete"
+lean = "writfold_core.inventory.complete"
+theorems = [
+  "Writfold.Core.Inventory.complete_loop_spec",
+  "Writfold.Core.Inventory.complete_spec",
+  "Writfold.Core.Inventory.complete_total",
+]
+total = "Writfold.Core.Inventory.complete_total"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "complete-skips-check",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/inventory.rs"
+function = "unreadable"
+lean = "writfold_core.inventory.unreadable"
+theorems = [
+  "Writfold.Core.Inventory.unreadable_loop_spec",
+  "Writfold.Core.Inventory.unreadable_pos_iff",
+  "Writfold.Core.Inventory.unreadable_total",
+]
+total = "Writfold.Core.Inventory.unreadable_total"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "unreadable-never-counts",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/inventory.rs"
+function = "all_true"
+lean = "writfold_core.inventory.all_true"
+theorems = [
+  "Writfold.Core.Inventory.all_true_loop_spec",
+  "Writfold.Core.Inventory.all_true_spec",
+  "Writfold.Core.Inventory.all_true_total",
+]
+total = "Writfold.Core.Inventory.all_true_total"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "all-true-skips-last",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/handoff.rs"
+function = "first_failing"
+lean = "writfold_core.handoff.first_failing"
+theorems = [
+  "Writfold.Core.Handoff.first_failing_loop_spec",
+  "Writfold.Core.Handoff.first_failing_spec",
+  "Writfold.Core.Handoff.first_failing_total",
+]
+total = "Writfold.Core.Handoff.first_failing_total"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "first-failing-skips-last",
+]

@@ -6,6 +6,12 @@ This page is for someone pinned to one release who wants to upgrade on purpose. 
 
 A line marked **fix** changed an answer that was wrong; anything depending on the old answer was depending on the fault.
 
+## v0.6.0-dev.14 (unreleased)
+
+- **fix** A `.writfold/gates` directory (KB root or subject repository) that exists but cannot be listed is now `error[file.unlisted]`, counted in `invalid=`: `gate status`, `gate lines` and `gates.met` are no longer satisfied over the gates that happened to load, `kb policy` reads `coverage=partial` (exit 2) instead of `coverage=complete`, and session start no longer says "policy: none configured" for it. Before, it was skipped as if absent ([#56](https://github.com/writfold-dev/writfold/issues/56)). `kb lint` reports the same fault for any unreadable policy directory it reads. `kb policy` now also reports definitions that do not parse (exit 2) instead of dropping them, and `kb policy --paths` refuses a malformed definition with its diagnostics.
+- **fix** `index verify` and `kb check` no longer replace the index when the KB, or the live index, moved while they compared it: the answer is then partial (exit 2) with the note `the KB or the index moved while it was compared: nothing was replaced …`. Before, the comparison could report a mismatch and replace a healthy index. A temporary index file left by a killed rebuild or verify is removed by the next one ([#58](https://github.com/writfold-dev/writfold/issues/58)). Memory use of `index rebuild` and `index verify` no longer grows with the KB.
+- `writfold kb handoff check` and `.writfold/handoff.toml` are new; nothing existing changes ([#57](https://github.com/writfold-dev/writfold/issues/57)).
+
 ## v0.6.0-dev.13
 
 - **`kb edit apply` and `kb edit recover` are removed** with Splicery ([#54](https://github.com/writfold-dev/writfold/issues/54)). Finish or abandon an interrupted edit with v0.6.0-dev.12 before upgrading. Edit receipts already in a run stay readable: `resume` lists them and a checklist row may still cite one. A guard rule naming `writfold:edit` in `tools` now matches nothing.

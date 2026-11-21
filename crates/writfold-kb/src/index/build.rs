@@ -19,7 +19,7 @@ pub struct Input {
 /// Create the schema and derive every table from `inputs` (sorted by path).
 pub fn build(
     conn: &mut Connection,
-    inputs: Vec<Input>,
+    inputs: impl IntoIterator<Item = Input>,
     meta: &[(&str, String)],
 ) -> rusqlite::Result<()> {
     conn.execute_batch(DDL)?;

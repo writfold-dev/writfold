@@ -136,6 +136,7 @@ A code is `<class>.<what>`, lower case, the same for every kind of file; the fil
 | `file.name` | `id`, `name`, `kind`, `mode` or `audience` does not equal the file name |
 | `file.twice` | the same ID defined in the KB root and the repository |
 | `file.unreadable` | not UTF-8, or the file cannot be read |
+| `file.unlisted` | a policy directory exists but could not be listed (in whole or part-way): the answers that depend on it are partial (from v0.6.0-dev.14) |
 | `section.missing` | a Markdown section a verb requires is absent or empty |
 | `section.form` | a line in a required section lacks its form (a hypothesis without an outcome) |
 | `policy.waivable` | a warning: a checklist restricts `not_applicable` while its gate still accepts a waiver |

@@ -2095,7 +2095,7 @@ def delivery.guard
     | delivery.Unread.Deny => ok false
 
 /-- [writfold_core::diag::blocks]:
-    Source: 'crates/writfold-core/src/diag/mod.rs', lines 248:0-250:1
+    Source: 'crates/writfold-core/src/diag/mod.rs', lines 249:0-251:1
     Visibility: public -/
 def diag.blocks
   (errors : Std.Usize) (warnings : Std.Usize) (deny : Bool) : Result Bool := do
@@ -3247,6 +3247,150 @@ def guard.nudge_with
     else ok false
   guard.nudge stop_hook_active b facts
 
+/-- [writfold_core::handoff::Reason]
+    Source: 'crates/writfold-core/src/handoff.rs', lines 13:0-30:1
+    Visibility: public -/
+@[discriminant isize]
+inductive handoff.Reason where
+| Empty : handoff.Reason
+| Incomplete : handoff.Reason
+| Undefined : handoff.Reason
+| DefinitionChanged : handoff.Reason
+| NoEvidence : handoff.Reason
+| Stale : handoff.Reason
+| NotPassed : handoff.Reason
+| Statement : handoff.Reason
+
+/-- [writfold_core::handoff::Item]
+    Source: 'crates/writfold-core/src/handoff.rs', lines 33:0-41:1
+    Visibility: public -/
+structure handoff.Item where
+  defined : Bool
+  approved : Bool
+  standing : gate.Standing
+
+/-- [writfold_core::handoff::Verdict]
+    Source: 'crates/writfold-core/src/handoff.rs', lines 44:0-49:1
+    Visibility: public -/
+@[discriminant isize]
+inductive handoff.Verdict where
+| Accepted : handoff.Verdict
+| Refused : Std.Usize → handoff.Reason → handoff.Verdict
+
+/-- [writfold_core::handoff::item]:
+    Source: 'crates/writfold-core/src/handoff.rs', lines 54:0-76:1
+    Visibility: public -/
+def handoff.item (item : handoff.Item) : Result (Option handoff.Reason) := do
+  if item.defined
+  then
+    let (s, b) ←
+      match item.standing with
+      | gate.Standing.Checked _ => ok (item.standing, false)
+      | gate.Standing.Attested => ok (gate.Standing.Attested, true)
+      | gate.Standing.Waived => ok (gate.Standing.Waived, false)
+    if b
+    then ok (some handoff.Reason.Statement)
+    else
+      let b1 ←
+        match s with
+        | gate.Standing.Checked _ => ok false
+        | gate.Standing.Attested => ok false
+        | gate.Standing.Waived => ok true
+      if b1
+      then ok (some handoff.Reason.Statement)
+      else
+        let (s1, b2) ←
+          match s with
+          | gate.Standing.Checked s2 =>
+            do
+            let b3 ←
+              match s2 with
+              | gate.State.Open => ok true
+              | gate.State.Satisfied => ok false
+              | gate.State.Stale => ok false
+              | gate.State.Failed => ok false
+              | gate.State.Unknown => ok false
+            ok (s, b3)
+          | gate.Standing.Attested => ok (gate.Standing.Attested, false)
+          | gate.Standing.Waived => ok (gate.Standing.Waived, false)
+        if b2
+        then ok (some handoff.Reason.NoEvidence)
+        else
+          if item.approved
+          then
+            match s1 with
+            | gate.Standing.Checked s2 =>
+              match s2 with
+              | gate.State.Open => ok (some handoff.Reason.NoEvidence)
+              | gate.State.Satisfied => ok none
+              | gate.State.Stale => ok (some handoff.Reason.Stale)
+              | gate.State.Failed => ok (some handoff.Reason.NotPassed)
+              | gate.State.Unknown => ok (some handoff.Reason.NotPassed)
+            | gate.Standing.Attested => ok (some handoff.Reason.Statement)
+            | gate.Standing.Waived => ok (some handoff.Reason.Statement)
+          else ok (some handoff.Reason.DefinitionChanged)
+  else ok (some handoff.Reason.Undefined)
+
+/-- [writfold_core::handoff::first_failing]: loop body 0:
+    Source: 'crates/writfold-core/src/handoff.rs', lines 81:4-88:1
+    Visibility: public -/
+@[rust_loop_body]
+def handoff.first_failing_loop.body
+  (items : Slice handoff.Item) («at» : Std.Usize) :
+  Result (ControlFlow Std.Usize (Option (Std.Usize × handoff.Reason)))
+  := do
+  let i := Slice.len items
+  if «at» < i
+  then
+    let i1 ← Slice.index_usize items «at»
+    let o ← handoff.item i1
+    match o with
+    | none => let at1 ← «at» + 1#usize
+              ok (cont at1)
+    | some reason => ok (done (some («at», reason)))
+  else ok (done none)
+
+/-- [writfold_core::handoff::first_failing]: loop 0:
+    Source: 'crates/writfold-core/src/handoff.rs', lines 81:4-88:1
+    Visibility: public -/
+@[rust_loop]
+def handoff.first_failing_loop
+  (items : Slice handoff.Item) («at» : Std.Usize) :
+  Result (Option (Std.Usize × handoff.Reason))
+  := do
+  loop
+    (fun at1 => handoff.first_failing_loop.body items at1)
+    «at»
+
+/-- [writfold_core::handoff::first_failing]:
+    Source: 'crates/writfold-core/src/handoff.rs', lines 79:0-88:1
+    Visibility: public -/
+@[reducible]
+def handoff.first_failing
+  (items : Slice handoff.Item) :
+  Result (Option (Std.Usize × handoff.Reason))
+  := do
+  handoff.first_failing_loop items 0#usize
+
+/-- [writfold_core::handoff::strict]:
+    Source: 'crates/writfold-core/src/handoff.rs', lines 91:0-102:1
+    Visibility: public -/
+def handoff.strict
+  (complete : Bool) (items : Slice handoff.Item) : Result handoff.Verdict := do
+  if complete
+  then
+    let b ← core.slice.Slice.is_empty items
+    if b
+    then ok (handoff.Verdict.Refused 0#usize handoff.Reason.Empty)
+    else
+      let o ← handoff.first_failing items
+      match o with
+      | none => ok handoff.Verdict.Accepted
+      | some p =>
+        let («at», reason) := p
+        ok (handoff.Verdict.Refused «at» reason)
+  else ok (handoff.Verdict.Refused 0#usize handoff.Reason.Incomplete)
+
 /-- [writfold_core::idle::newer]:
     Source: 'crates/writfold-core/src/idle.rs', lines 10:0-18:1
     Visibility: public -/
@@ -3385,6 +3529,268 @@ def idle.idle
     then let i ← idle.since now last
          ok (some («at», i))
     else ok none
+
+/-- [writfold_core::inventory::Root]
+    Source: 'crates/writfold-core/src/inventory.rs', lines 13:0-21:1
+    Visibility: public -/
+@[discriminant isize]
+inductive inventory.Root where
+| Absent : inventory.Root
+| Listed : inventory.Root
+| Unreadable : inventory.Root
+
+/-- [writfold_core::inventory::readable]:
+    Source: 'crates/writfold-core/src/inventory.rs', lines 24:0-26:1
+    Visibility: public -/
+def inventory.readable (root : inventory.Root) : Result Bool := do
+  let b ←
+    match root with
+    | inventory.Root.Absent => ok false
+    | inventory.Root.Listed => ok false
+    | inventory.Root.Unreadable => ok true
+  ok (¬ b)
+
+/-- [writfold_core::inventory::complete]: loop body 0:
+    Source: 'crates/writfold-core/src/inventory.rs', lines 31:4-38:1
+    Visibility: public -/
+@[rust_loop_body]
+def inventory.complete_loop.body
+  (roots : Slice inventory.Root) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let i := Slice.len roots
+  if index < i
+  then
+    let r ← Slice.index_usize roots index
+    let b ← inventory.readable r
+    if b
+    then let index1 ← index + 1#usize
+         ok (cont index1)
+    else ok (done false)
+  else ok (done true)
+
+/-- [writfold_core::inventory::complete]: loop 0:
+    Source: 'crates/writfold-core/src/inventory.rs', lines 31:4-38:1
+    Visibility: public -/
+@[rust_loop]
+def inventory.complete_loop
+  (roots : Slice inventory.Root) (index : Std.Usize) : Result Bool := do
+  loop
+    (fun index1 => inventory.complete_loop.body roots index1)
+    index
+
+/-- [writfold_core::inventory::complete]:
+    Source: 'crates/writfold-core/src/inventory.rs', lines 29:0-38:1
+    Visibility: public -/
+@[reducible]
+def inventory.complete (roots : Slice inventory.Root) : Result Bool := do
+  inventory.complete_loop roots 0#usize
+
+/-- [writfold_core::inventory::unreadable]: loop body 0:
+    Source: 'crates/writfold-core/src/inventory.rs', lines 46:4-51:5
+    Visibility: public -/
+@[rust_loop_body]
+def inventory.unreadable_loop.body
+  (roots : Slice inventory.Root) (index : Std.Usize) (count : Std.Usize) :
+  Result (ControlFlow (Std.Usize × Std.Usize) Std.Usize)
+  := do
+  let i := Slice.len roots
+  if index < i
+  then
+    let r ← Slice.index_usize roots index
+    let b ← inventory.readable r
+    let count1 ← if b
+                   then ok count
+                   else count + 1#usize
+    let index1 ← index + 1#usize
+    ok (cont (index1, count1))
+  else ok (done count)
+
+/-- [writfold_core::inventory::unreadable]: loop 0:
+    Source: 'crates/writfold-core/src/inventory.rs', lines 46:4-51:5
+    Visibility: public -/
+@[rust_loop]
+def inventory.unreadable_loop
+  (roots : Slice inventory.Root) (index : Std.Usize) (count : Std.Usize) :
+  Result Std.Usize
+  := do
+  loop
+    (fun (index1, count1) => inventory.unreadable_loop.body roots index1
+      count1)
+    (index, count)
+
+/-- [writfold_core::inventory::unreadable]:
+    Source: 'crates/writfold-core/src/inventory.rs', lines 43:0-53:1
+    Visibility: public -/
+@[reducible]
+def inventory.unreadable
+  (roots : Slice inventory.Root) : Result Std.Usize := do
+  inventory.unreadable_loop roots 0#usize 0#usize
+
+/-- [writfold_core::policy::Summary]
+    Source: 'crates/writfold-core/src/policy.rs', lines 196:0-204:1
+    Visibility: public -/
+@[discriminant isize]
+inductive policy.Summary where
+| NoPlan : policy.Summary
+| Incomplete : policy.Summary
+| ClosedIncomplete : policy.Summary
+| PolicyMoved : policy.Summary
+| CompleteStale : policy.Summary
+| CompleteWithExceptions : policy.Summary
+| Complete : policy.Summary
+
+/-- [writfold_core::policy::lines::Listed]
+    Source: 'crates/writfold-core/src/policy/lines.rs', lines 39:0-42:1
+    Visibility: public -/
+structure policy.lines.Listed where
+  skipped : Bool
+  met : Bool
+
+/-- [writfold_core::policy::lines::owed_met]: loop body 0:
+    Source: 'crates/writfold-core/src/policy/lines.rs', lines 47:4-54:1
+    Visibility: public -/
+@[rust_loop_body]
+def policy.lines.owed_met_loop.body
+  (listed : Slice policy.lines.Listed) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let i := Slice.len listed
+  if index < i
+  then
+    let l ← Slice.index_usize listed index
+    if l.skipped
+    then let index1 ← index + 1#usize
+         ok (cont index1)
+    else
+      if l.met
+      then let index1 ← index + 1#usize
+           ok (cont index1)
+      else ok (done false)
+  else ok (done true)
+
+/-- [writfold_core::policy::lines::owed_met]: loop 0:
+    Source: 'crates/writfold-core/src/policy/lines.rs', lines 47:4-54:1
+    Visibility: public -/
+@[rust_loop]
+def policy.lines.owed_met_loop
+  (listed : Slice policy.lines.Listed) (index : Std.Usize) : Result Bool := do
+  loop
+    (fun index1 => policy.lines.owed_met_loop.body listed index1)
+    index
+
+/-- [writfold_core::policy::lines::owed_met]:
+    Source: 'crates/writfold-core/src/policy/lines.rs', lines 45:0-54:1
+    Visibility: public -/
+@[reducible]
+def policy.lines.owed_met
+  (listed : Slice policy.lines.Listed) : Result Bool := do
+  policy.lines.owed_met_loop listed 0#usize
+
+/-- [writfold_core::policy::lines::closes]:
+    Source: 'crates/writfold-core/src/policy/lines.rs', lines 33:0-35:1
+    Visibility: public -/
+def policy.lines.closes (summary : policy.Summary) : Result Bool := do
+  let b ←
+    match summary with
+    | policy.Summary.NoPlan => ok false
+    | policy.Summary.Incomplete => ok false
+    | policy.Summary.ClosedIncomplete => ok false
+    | policy.Summary.PolicyMoved => ok false
+    | policy.Summary.CompleteStale => ok false
+    | policy.Summary.CompleteWithExceptions => ok false
+    | policy.Summary.Complete => ok true
+  if b
+  then ok true
+  else
+    match summary with
+    | policy.Summary.NoPlan => ok false
+    | policy.Summary.Incomplete => ok false
+    | policy.Summary.ClosedIncomplete => ok false
+    | policy.Summary.PolicyMoved => ok false
+    | policy.Summary.CompleteStale => ok false
+    | policy.Summary.CompleteWithExceptions => ok true
+    | policy.Summary.Complete => ok false
+
+/-- [writfold_core::policy::lines::lines_clean]:
+    Source: 'crates/writfold-core/src/policy/lines.rs', lines 58:0-60:1
+    Visibility: public -/
+def policy.lines.lines_clean
+  (summary : policy.Summary) (listed : Slice policy.lines.Listed)
+  (valid : Bool) :
+  Result Bool
+  := do
+  let b ← policy.lines.closes summary
+  if b
+  then
+    let b1 ← policy.lines.owed_met listed
+    if b1
+    then ok valid
+    else ok false
+  else ok false
+
+/-- [writfold_core::inventory::lines_clean_over]:
+    Source: 'crates/writfold-core/src/inventory.rs', lines 57:0-59:1
+    Visibility: public -/
+def inventory.lines_clean_over
+  (complete : Bool) (summary : policy.Summary)
+  (listed : Slice policy.lines.Listed) (valid : Bool) :
+  Result Bool
+  := do
+  if complete
+  then policy.lines.lines_clean summary listed valid
+  else ok false
+
+/-- [writfold_core::inventory::all_true]: loop body 0:
+    Source: 'crates/writfold-core/src/inventory.rs', lines 64:4-71:1
+    Visibility: public -/
+@[rust_loop_body]
+def inventory.all_true_loop.body
+  (met : Slice Bool) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let i := Slice.len met
+  if index < i
+  then
+    let b ← Slice.index_usize met index
+    if b
+    then let index1 ← index + 1#usize
+         ok (cont index1)
+    else ok (done false)
+  else ok (done true)
+
+/-- [writfold_core::inventory::all_true]: loop 0:
+    Source: 'crates/writfold-core/src/inventory.rs', lines 64:4-71:1
+    Visibility: public -/
+@[rust_loop]
+def inventory.all_true_loop
+  (met : Slice Bool) (index : Std.Usize) : Result Bool := do
+  loop
+    (fun index1 => inventory.all_true_loop.body met index1)
+    index
+
+/-- [writfold_core::inventory::all_true]:
+    Source: 'crates/writfold-core/src/inventory.rs', lines 62:0-71:1
+    Visibility: public -/
+@[reducible]
+def inventory.all_true (met : Slice Bool) : Result Bool := do
+  inventory.all_true_loop met 0#usize
+
+/-- [writfold_core::inventory::unplanned_clean]:
+    Source: 'crates/writfold-core/src/inventory.rs', lines 76:0-78:1
+    Visibility: public -/
+def inventory.unplanned_clean
+  (complete : Bool) (met : Slice Bool) (valid : Bool) : Result Bool := do
+  if complete
+  then
+    let b ← core.slice.Slice.is_empty met
+    if b
+    then ok false
+    else let b1 ← inventory.all_true met
+         if b1
+         then ok valid
+         else ok false
+  else ok false
 
 /-- [writfold_core::investigation::Hypothesis]
     Source: 'crates/writfold-core/src/investigation.rs', lines 11:0-17:1
@@ -4353,108 +4759,6 @@ def policy.lines.all_skipped (owners : Slice policy.Close) : Result Bool := do
   then ok false
   else policy.lines.all_skipped_loop owners 0#usize
 
-/-- [writfold_core::policy::Summary]
-    Source: 'crates/writfold-core/src/policy.rs', lines 196:0-204:1
-    Visibility: public -/
-@[discriminant isize]
-inductive policy.Summary where
-| NoPlan : policy.Summary
-| Incomplete : policy.Summary
-| ClosedIncomplete : policy.Summary
-| PolicyMoved : policy.Summary
-| CompleteStale : policy.Summary
-| CompleteWithExceptions : policy.Summary
-| Complete : policy.Summary
-
-/-- [writfold_core::policy::lines::closes]:
-    Source: 'crates/writfold-core/src/policy/lines.rs', lines 33:0-35:1
-    Visibility: public -/
-def policy.lines.closes (summary : policy.Summary) : Result Bool := do
-  let b ←
-    match summary with
-    | policy.Summary.NoPlan => ok false
-    | policy.Summary.Incomplete => ok false
-    | policy.Summary.ClosedIncomplete => ok false
-    | policy.Summary.PolicyMoved => ok false
-    | policy.Summary.CompleteStale => ok false
-    | policy.Summary.CompleteWithExceptions => ok false
-    | policy.Summary.Complete => ok true
-  if b
-  then ok true
-  else
-    match summary with
-    | policy.Summary.NoPlan => ok false
-    | policy.Summary.Incomplete => ok false
-    | policy.Summary.ClosedIncomplete => ok false
-    | policy.Summary.PolicyMoved => ok false
-    | policy.Summary.CompleteStale => ok false
-    | policy.Summary.CompleteWithExceptions => ok true
-    | policy.Summary.Complete => ok false
-
-/-- [writfold_core::policy::lines::Listed]
-    Source: 'crates/writfold-core/src/policy/lines.rs', lines 39:0-42:1
-    Visibility: public -/
-structure policy.lines.Listed where
-  skipped : Bool
-  met : Bool
-
-/-- [writfold_core::policy::lines::owed_met]: loop body 0:
-    Source: 'crates/writfold-core/src/policy/lines.rs', lines 47:4-54:1
-    Visibility: public -/
-@[rust_loop_body]
-def policy.lines.owed_met_loop.body
-  (listed : Slice policy.lines.Listed) (index : Std.Usize) :
-  Result (ControlFlow Std.Usize Bool)
-  := do
-  let i := Slice.len listed
-  if index < i
-  then
-    let l ← Slice.index_usize listed index
-    if l.skipped
-    then let index1 ← index + 1#usize
-         ok (cont index1)
-    else
-      if l.met
-      then let index1 ← index + 1#usize
-           ok (cont index1)
-      else ok (done false)
-  else ok (done true)
-
-/-- [writfold_core::policy::lines::owed_met]: loop 0:
-    Source: 'crates/writfold-core/src/policy/lines.rs', lines 47:4-54:1
-    Visibility: public -/
-@[rust_loop]
-def policy.lines.owed_met_loop
-  (listed : Slice policy.lines.Listed) (index : Std.Usize) : Result Bool := do
-  loop
-    (fun index1 => policy.lines.owed_met_loop.body listed index1)
-    index
-
-/-- [writfold_core::policy::lines::owed_met]:
-    Source: 'crates/writfold-core/src/policy/lines.rs', lines 45:0-54:1
-    Visibility: public -/
-@[reducible]
-def policy.lines.owed_met
-  (listed : Slice policy.lines.Listed) : Result Bool := do
-  policy.lines.owed_met_loop listed 0#usize
-
-/-- [writfold_core::policy::lines::lines_clean]:
-    Source: 'crates/writfold-core/src/policy/lines.rs', lines 58:0-60:1
-    Visibility: public -/
-def policy.lines.lines_clean
-  (summary : policy.Summary) (listed : Slice policy.lines.Listed)
-  (valid : Bool) :
-  Result Bool
-  := do
-  let b ← policy.lines.closes summary
-  if b
-  then
-    let b1 ← policy.lines.owed_met listed
-    if b1
-    then ok valid
-    else ok false
-  else ok false
-
 /-- [writfold_core::policy::repin::in_force]: loop body 0:
     Source: 'crates/writfold-core/src/policy/repin.rs', lines 15:4-22:1
     Visibility: public -/
@@ -4928,6 +5232,45 @@ def policy.summary
         if facts.run_closed
         then ok policy.Summary.ClosedIncomplete
         else ok policy.Summary.Incomplete
+
+/-- [writfold_core::publish::Publish]
+    Source: 'crates/writfold-core/src/publish.rs', lines 13:0-20:1
+    Visibility: public -/
+@[discriminant isize]
+inductive publish.Publish where
+| Replace : publish.Publish
+| Keep : publish.Publish
+| Retry : publish.Publish
+
+/-- [writfold_core::publish::Repair]
+    Source: 'crates/writfold-core/src/publish.rs', lines 23:0-31:1
+    Visibility: public -/
+structure publish.Repair where
+  mismatch : Bool
+  source_moved : Bool
+  live_moved : Bool
+
+/-- [writfold_core::publish::repair]:
+    Source: 'crates/writfold-core/src/publish.rs', lines 34:0-42:1
+    Visibility: public -/
+def publish.repair (found : publish.Repair) : Result publish.Publish := do
+  if found.mismatch
+  then
+    if found.source_moved
+    then ok publish.Publish.Retry
+    else
+      if found.live_moved
+      then ok publish.Publish.Retry
+      else ok publish.Publish.Replace
+  else ok publish.Publish.Keep
+
+/-- [writfold_core::publish::derived]:
+    Source: 'crates/writfold-core/src/publish.rs', lines 45:0-50:1
+    Visibility: public -/
+def publish.derived (source_moved : Bool) : Result publish.Publish := do
+  if source_moved
+  then ok publish.Publish.Retry
+  else ok publish.Publish.Replace
 
 /-- [writfold_core::scope::STAR]
     Source: 'crates/writfold-core/src/scope.rs', lines 19:0-19:25

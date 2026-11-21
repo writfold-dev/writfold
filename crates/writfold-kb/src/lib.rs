@@ -22,6 +22,7 @@ mod emit_json;
 pub mod error;
 pub mod gate;
 pub mod guard;
+pub mod handoff;
 pub mod hook;
 pub mod index;
 pub mod init;
@@ -181,6 +182,15 @@ pub enum Verb {
     PolicyPaths {
         gate: String,
     },
+    /// `handoff check --policy REV --candidate REV [--run ID] [--repo DIR]`:
+    /// the operator's required gates at the policy revision, judged on the
+    /// candidate from the run's receipts (#57).
+    Handoff {
+        policy: String,
+        candidate: String,
+        run: Option<String>,
+        repo: Option<PathBuf>,
+    },
 }
 
 /// One invocation.
@@ -268,6 +278,28 @@ pub fn run_as(request: &Request, session: Option<&str>) -> Result<Output> {
     session.emit(&answer, &frame)
 }
 
+/// `index verify` with `after_build` run once the shadow rebuild is built
+/// and before it is compared: tests interleave a second writer there
+/// (#58). The verb itself runs nothing there.
+pub fn index_verify_with(request: &Request, after_build: &dyn Fn()) -> Result<Output> {
+    let ws = discover(request.kb.as_deref(), &request.cwd)?;
+    let now = request.now.unwrap_or_else(time::now);
+    let tool = match &ws.repo {
+        Some(_) => Some(GitTool::locate()?),
+        None => None,
+    };
+    let session = Session::open(&ws, tool.as_ref(), false, now)?;
+    let answer = verbs::index::verify(&session, after_build)?;
+    let frame = Frame {
+        verb: "index-verify".into(),
+        args: Vec::new(),
+        budget: request.budget,
+        cursor: request.cursor.clone(),
+        json: request.json,
+    };
+    session.emit(&answer, &frame)
+}
+
 fn answer(session: &Session<'_>, request: &Request) -> Result<(Answer, &'static str, Vec<String>)> {
     Ok(match &request.verb {
         Verb::Brief { project, all } => {
@@ -332,6 +364,21 @@ fn answer(session: &Session<'_>, request: &Request) -> Result<(Answer, &'static 
             Vec::new(),
         ),
         Verb::PolicyPaths { gate } => verbs::policy_paths::answer(session, &request.cwd, gate)?,
+        Verb::Handoff {
+            policy,
+            candidate,
+            run,
+            repo,
+        } => {
+            let rec = gate::target(session, run.as_deref())?;
+            let pair = (policy.as_str(), candidate.as_str());
+            let answer = handoff::check(session, &rec, pair, repo.as_deref(), &request.cwd)?;
+            (
+                answer,
+                "handoff",
+                vec![policy.clone(), candidate.clone(), rec.id],
+            )
+        }
         other => graph(session, other)?,
     })
 }
@@ -431,7 +478,11 @@ fn graph(session: &Session<'_>, verb: &Verb) -> Result<(Answer, &'static str, Ve
             "timeline",
             vec![target.clone()],
         ),
-        Verb::IndexVerify => (verbs::index::verify(session)?, "index-verify", Vec::new()),
+        Verb::IndexVerify => (
+            verbs::index::verify(session, &|| {})?,
+            "index-verify",
+            Vec::new(),
+        ),
         Verb::Runs {
             open,
             project,

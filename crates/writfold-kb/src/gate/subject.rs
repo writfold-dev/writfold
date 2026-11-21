@@ -30,7 +30,7 @@ pub struct Subject {
 }
 
 impl Subject {
-    fn reads(&self) -> KbRepository<'_> {
+    pub(crate) fn reads(&self) -> KbRepository<'_> {
         KbRepository {
             git_dir: &self.git_dir,
             work_tree: Some(&self.top),
@@ -192,6 +192,25 @@ pub fn snapshot(
         commit,
         tree,
         dirty,
+        others: super::repos::Trees::new(),
+    })
+}
+
+/// The tree of `commit` as a snapshot with no dirty paths: what a gate's
+/// scope holds at that commit (the handoff check's candidate, #57).
+pub fn at_commit(
+    git: &GitExecutable<'_>,
+    subject: &Subject,
+    commit: GitObjectId,
+) -> Result<Snapshot> {
+    let tree = gate_ls_tree(git, &subject.git_dir, &commit, budgets()?, &CANCELLED)?
+        .into_iter()
+        .map(|e| (e.path, e.id))
+        .collect();
+    Ok(Snapshot {
+        commit,
+        tree,
+        dirty: Vec::new(),
         others: super::repos::Trees::new(),
     })
 }

@@ -6,7 +6,7 @@
 //! [`writfold_core::gate::statements`], [`writfold_core::gate::standing`]);
 //! this module gathers the facts and renders rows for `gate status`,
 //! `gate lines` and `resume`.
-use super::def::{self, Definition, Origin};
+use super::def::{Definition, Origin};
 use super::receipt::{self, Receipt};
 use super::statement;
 use super::subject::{Snapshot, Subject, snapshot};
@@ -113,6 +113,8 @@ pub struct Report<'a> {
     pub gates: Vec<Judged<'a>>,
     pub problems: Vec<super::discover::Unusable>,
     pub snapshot: Snapshot,
+    /// Whether every definition root was listed or absent (#56).
+    pub complete: bool,
 }
 
 impl Report<'_> {
@@ -133,9 +135,12 @@ impl Report<'_> {
         super::ground::recorded_note(n)
     }
 
-    /// Whether every gate is met under its policy.
-    pub fn all_met(&self) -> bool {
-        !self.gates.is_empty() && self.gates.iter().all(Judged::met)
+    /// Whether an unplanned run's gates are clean: the inventory is
+    /// complete, some gate is judged, every one is met, and nothing is
+    /// invalid (`valid`) ([`writfold_core::inventory::unplanned_clean`]).
+    pub fn unplanned_clean(&self, valid: bool) -> bool {
+        let met: Vec<bool> = self.gates.iter().map(Judged::met).collect();
+        writfold_core::inventory::unplanned_clean(self.complete, &met, valid)
     }
 }
 
@@ -169,7 +174,10 @@ pub fn judge_plain<'a>(
         .git
         .as_ref()
         .ok_or_else(|| KbError::Refused("gates need Git".into()))?;
-    let (mut definitions, problems) = def::all(&session.ws.root, Some(&subject.top));
+    let found =
+        super::discover::inventory(&session.ws.root, Some(&subject.top), super::discover::list);
+    let complete = found.complete();
+    let (mut definitions, problems) = (found.definitions, found.problems);
     // Candidate gates judge delivery drafts, never a repository: a run
     // owes them only through a delivery mode (`deliver status`).
     definitions.retain(|d| !d.on_candidate());
@@ -205,6 +213,7 @@ pub fn judge_plain<'a>(
         gates,
         problems,
         snapshot,
+        complete,
     };
     Ok((report, later))
 }

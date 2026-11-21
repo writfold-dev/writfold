@@ -21,15 +21,16 @@ pub const NONE_CONFIGURED: &str = "policy: none configured (continuity only: che
 const POLICY_DIRS: [&str; 4] = ["gates", "plans", "guards", "deliveries"];
 
 /// Whether `top/.writfold/` holds any gate, plan template, required file,
-/// guard rule or delivery file (a `.toml` in one of those directories).
+/// guard rule or delivery file (a `.toml` in one of those directories). A
+/// directory that exists but cannot be listed counts as holding one: it
+/// cannot be called empty (#56).
 fn holds(top: &std::path::Path) -> bool {
     POLICY_DIRS.iter().any(|dir| {
-        std::fs::read_dir(top.join(".writfold").join(dir)).is_ok_and(|entries| {
-            entries.flatten().any(|e| {
-                let path = e.path();
-                path.extension().is_some_and(|x| x == "toml")
-            })
-        })
+        let path = top.join(".writfold").join(dir);
+        match super::discover::classify(&path, super::discover::list) {
+            (writfold_core::inventory::Root::Unreadable, ..) => true,
+            (_, names, _) => names.iter().any(|n| n.ends_with(".toml")),
+        }
     })
 }
 

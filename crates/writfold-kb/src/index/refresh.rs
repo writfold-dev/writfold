@@ -13,6 +13,7 @@ use crate::layout::classify;
 use crate::workspace::{CANCELLED, Repo, Workspace, budgets};
 use rusqlite::{Connection, ErrorCode, OptionalExtension, TransactionBehavior};
 use std::collections::{BTreeMap, BTreeSet};
+use writfold_core::publish::{Publish, derived};
 use writfold_runtime::git::{GitExecutable, kb_diff_tree};
 
 pub enum Outcome {
@@ -165,7 +166,8 @@ pub fn refresh(
     // The files were read after the snapshot was observed. Store the
     // derivation only if the snapshot still holds, so a reader that reports
     // this pin sees exactly its derivation (spec/KbWrite.tla, RecheckPin).
-    if super::observe(ws, repo, git)?.pin.digest != now.pin.digest {
+    let moved = super::observe(ws, repo, git)?.pin.digest != now.pin.digest;
+    if !matches!(derived(moved), Publish::Replace) {
         return Ok(Outcome::Moved);
     }
     for (key, value) in snapshot_meta(now) {

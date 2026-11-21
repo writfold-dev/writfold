@@ -34,6 +34,66 @@ class Mutant:
 
 
 MUTANTS = (
+    # publish (#58): drift never authorises a repair
+    Mutant("repair-on-drift", "publish.rs",
+           "    if found.source_moved || found.live_moved {",
+           "    if false {",
+           ("Writfold.Core.Publish.repair_replace_iff", "Writfold.Core.Publish.drift_never_replaces")),
+    # publish: an equal index is kept
+    Mutant("repair-without-mismatch", "publish.rs",
+           "    if !found.mismatch {",
+           "    if false {",
+           ("Writfold.Core.Publish.repair_replace_iff", "Writfold.Core.Publish.equal_keeps")),
+    # publish: a rebuild read while the KB moved is not published
+    Mutant("derived-ignores-move", "publish.rs",
+           "    if source_moved {",
+           "    if false {",
+           ("Writfold.Core.Publish.derived_replace_iff",)),
+    # inventory (#56): an unreadable root is never readable
+    Mutant("readable-all", "inventory.rs",
+           "    !matches!(root, Root::Unreadable)",
+           "    true",
+           ("Writfold.Core.Inventory.readable_spec",)),
+    # inventory: an unreadable root makes it incomplete
+    Mutant("complete-skips-check", "inventory.rs",
+           "        if !readable(&roots[index]) {\n            return false;",
+           "        if false {\n            return false;",
+           ("Writfold.Core.Inventory.complete_loop_spec",)),
+    # inventory: each unreadable root counts as one problem
+    Mutant("unreadable-never-counts", "inventory.rs",
+           "            count += 1;",
+           "            count += 0;",
+           ("Writfold.Core.Inventory.unreadable_loop_spec",)),
+    # inventory: an incomplete inventory never gives clean planned lines
+    Mutant("over-drops-complete", "inventory.rs",
+           "    complete && lines_clean(summary, listed, valid)",
+           "    lines_clean(summary, listed, valid)",
+           ("Writfold.Core.Inventory.lines_clean_over_iff", "Writfold.Core.Inventory.lines_clean_over_incomplete")),
+    # inventory: every judged gate must be met
+    Mutant("all-true-skips-last", "inventory.rs",
+           "    while index < met.len() {",
+           "    while index + 1 < met.len() {",
+           ("Writfold.Core.Inventory.all_true_loop_spec",)),
+    # inventory: no gate judged is never clean
+    Mutant("unplanned-empty-clean", "inventory.rs",
+           "    complete && !met.is_empty() && all_true(met) && valid",
+           "    complete && all_true(met) && valid",
+           ("Writfold.Core.Inventory.unplanned_clean_iff",)),
+    # handoff (#57): evidence under another definition is never a pass
+    Mutant("item-ignores-approved", "handoff.rs",
+           "    if !item.approved {",
+           "    if false {",
+           ("Writfold.Core.Handoff.item_spec",)),
+    # handoff: every required gate is examined
+    Mutant("first-failing-skips-last", "handoff.rs",
+           "    while at < items.len() {",
+           "    while at + 1 < items.len() {",
+           ("Writfold.Core.Handoff.first_failing_loop_spec",)),
+    # handoff: an empty required set is refused
+    Mutant("strict-empty-ok", "handoff.rs",
+           "    if items.is_empty() {",
+           "    if false {",
+           ("Writfold.Core.Handoff.strict_spec",)),
     # identity is byte-exact: ignoring the last byte is a different identity
     Mutant("same-ignores-last-byte", "bytes.rs",
            "    while i < left.len() {\n        if left[i] != right[i] {",

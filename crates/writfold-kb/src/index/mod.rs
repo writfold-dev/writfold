@@ -21,6 +21,7 @@ use rusqlite::{Connection, OpenFlags, OptionalExtension};
 use sha2::{Digest, Sha256};
 use std::path::{Path, PathBuf};
 use std::time::Duration;
+use writfold_core::publish::{Publish, derived};
 use writfold_runtime::git::{GitExecutable, kb_ls_files, kb_status};
 
 /// The observed snapshot: HEAD (if any), the number of dirty KB inputs, and
@@ -189,7 +190,7 @@ fn attempt(
             }
             refresh::Outcome::Done(n) => {
                 if std::env::var_os("WRITFOLD_KB_VERIFY").is_some_and(|v| v == "1") {
-                    shadow(ws, repo, git, &conn, file, &snapshot)?;
+                    shadow(ws, repo, git, file, &snapshot)?;
                 }
                 return Ok(Some(opened(conn, snapshot.pin, IndexState::Refreshed(n))));
             }
@@ -201,8 +202,10 @@ fn attempt(
         }
     }
     let temporary = file.with_file_name(format!(".kb-rebuild-{}.tmp", std::process::id()));
+    sweep(file);
     build_file(&temporary, inputs(&ws.root, listed(repo, git)?), &snapshot)?;
-    if observe(ws, repo, git)?.pin.digest != snapshot.pin.digest {
+    let moved = observe(ws, repo, git)?.pin.digest != snapshot.pin.digest;
+    if !matches!(derived(moved), Publish::Replace) {
         #[expect(
             clippy::let_underscore_must_use,
             reason = "best-effort cleanup of an unused file"
@@ -225,16 +228,15 @@ fn shadow(
     ws: &Workspace,
     repo: &Repo,
     git: &GitExecutable<'_>,
-    conn: &Connection,
     file: &Path,
     snapshot: &Snapshot,
 ) -> Result<()> {
-    let report = verify::against_rebuild(ws, repo, git, conn, file, snapshot)?;
-    match report.first_difference() {
-        None => Ok(()),
-        Some(difference) => Err(KbError::Mismatch(format!(
+    let report = verify::against_rebuild(ws, repo, git, file, snapshot, &|| {})?;
+    match (report.replaced, report.first_difference()) {
+        (true, Some(difference)) => Err(KbError::Mismatch(format!(
             "refresh differs from a rebuild at {difference}; the index was rebuilt"
         ))),
+        _ => Ok(()),
     }
 }
 
@@ -295,8 +297,40 @@ pub fn listed(repo: &Repo, git: &GitExecutable<'_>) -> Result<Vec<String>> {
         .collect())
 }
 
-/// Build `inputs` into the file `target` (replaced if present).
-pub fn build_file(target: &Path, inputs: Vec<Input>, snapshot: &Snapshot) -> Result<()> {
+/// Remove the temporary index files a killed rebuild or verify left
+/// beside `file` (`.kb-rebuild-<pid>.tmp`, `.kb-verify-<pid>.tmp`) whose
+/// process is gone. Best effort: a file that cannot be removed is left.
+pub fn sweep(file: &Path) {
+    let Some(dir) = file.parent() else {
+        return;
+    };
+    for entry in std::fs::read_dir(dir).into_iter().flatten().flatten() {
+        let name = entry.file_name().to_string_lossy().into_owned();
+        let pid = (name
+            .strip_prefix(".kb-rebuild-")
+            .or_else(|| name.strip_prefix(".kb-verify-")))
+        .and_then(|rest| rest.strip_suffix(".tmp"));
+        let Some(pid) = pid.filter(|p| !p.is_empty() && p.bytes().all(|b| b.is_ascii_digit()))
+        else {
+            continue;
+        };
+        if pid != std::process::id().to_string() && !Path::new("/proc").join(pid).exists() {
+            #[expect(
+                clippy::let_underscore_must_use,
+                reason = "best-effort cleanup of a dead process's file"
+            )]
+            let _ = std::fs::remove_file(entry.path());
+        }
+    }
+}
+
+/// Build `inputs` into the file `target` (replaced if present), reading
+/// them one at a time.
+pub fn build_file(
+    target: &Path,
+    inputs: impl IntoIterator<Item = Input>,
+    snapshot: &Snapshot,
+) -> Result<()> {
     // A file that cannot be removed must not be built into: the build
     // would mix with whatever it already holds.
     match std::fs::remove_file(target) {
@@ -354,11 +388,13 @@ pub fn input(root: &Path, path: String) -> Option<Input> {
     Some(Input { path, kind, bytes })
 }
 
-/// Read every classified path under `root` into build inputs, in path order.
-pub fn inputs(root: &Path, mut paths: Vec<String>) -> Vec<Input> {
+/// Every classified path under `root` as build inputs, in path order, each
+/// read only when the build reaches it: no file body is held beyond the
+/// one being derived (#58).
+pub fn inputs(root: &Path, mut paths: Vec<String>) -> impl Iterator<Item = Input> + '_ {
     paths.sort();
     paths.dedup();
-    paths.into_iter().filter_map(|p| input(root, p)).collect()
+    paths.into_iter().filter_map(move |p| input(root, p))
 }
 
 /// Every regular file under `root` (outside Git), skipping dot names.

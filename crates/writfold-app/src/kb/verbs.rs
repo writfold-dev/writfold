@@ -29,6 +29,9 @@ pub fn verb(
     if name == "gate" {
         return super::gate::verb(common, positional);
     }
+    if name == "handoff" {
+        return handoff(common, positional);
+    }
     let one = |what: &str| -> Result<String, String> {
         match positional {
             [single] => Ok(single.clone()),
@@ -177,5 +180,20 @@ fn impact(common: &Common, target: String) -> Result<Verb, String> {
         depth: common.depth.unwrap_or(2),
         direction,
         inferred,
+    })
+}
+
+/// `handoff check --policy REV --candidate REV [--run ID] [--repo DIR]`.
+fn handoff(common: &Common, positional: &[String]) -> Result<Verb, String> {
+    if positional != ["check"] {
+        return Err(
+            "usage: handoff check --policy REV --candidate REV [--run ID] [--repo DIR]".into(),
+        );
+    }
+    Ok(Verb::Handoff {
+        policy: super::writes::need(common, "handoff check", "policy")?,
+        candidate: super::writes::need(common, "handoff check", "candidate")?,
+        run: super::writes::get(common, "run"),
+        repo: super::writes::get(common, "repo").map(std::path::PathBuf::from),
     })
 }

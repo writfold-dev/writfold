@@ -92,20 +92,37 @@ pub fn status(session: &Session<'_>) -> Result<Answer> {
 
 /// Rebuild the same snapshot and compare it with the index, table by
 /// table; a difference replaces the index with the rebuild and fails.
-pub fn verify(session: &Session<'_>) -> Result<Answer> {
+pub fn verify(session: &Session<'_>, after_build: &dyn Fn()) -> Result<Answer> {
     let report = match (&session.ws.repo, &session.git, &session.file) {
         (Some(repo), Some(git), Some(file)) => {
             let snapshot = index::observe(session.ws, repo, git)?;
-            verify::against_rebuild(session.ws, repo, git, &session.conn, file, &snapshot)?
+            verify::against_rebuild(session.ws, repo, git, file, &snapshot, after_build)?
         }
-        _ => {
-            let root = &session.ws.root;
-            let mut rebuilt = Connection::open_in_memory()?;
-            build::build(&mut rebuilt, index::inputs(root, index::walk(root)?), &[])?;
-            verify::compare(&session.conn, &rebuilt)?
-        }
+        _ => outside_git(session)?,
     };
     Ok(render(&report))
+}
+
+/// A KB outside Git: rebuild into a temporary file (never into memory, so
+/// a large KB needs disk, not RAM) and compare; nothing is replaced, since
+/// such an index is rebuilt on every read anyway.
+fn outside_git(session: &Session<'_>) -> Result<Report> {
+    let root = &session.ws.root;
+    let dir = std::env::temp_dir().join(format!("writfold-verify-{}", std::process::id()));
+    std::fs::create_dir_all(&dir)?;
+    let file = dir.join("rebuild.sqlite");
+    let built = (|| -> Result<Report> {
+        let mut rebuilt = Connection::open(&file)?;
+        rebuilt.execute_batch("PRAGMA journal_mode = OFF; PRAGMA synchronous = OFF;")?;
+        build::build(&mut rebuilt, index::inputs(root, index::walk(root)?), &[])?;
+        verify::compare(&session.conn, &rebuilt)
+    })();
+    #[expect(
+        clippy::let_underscore_must_use,
+        reason = "best-effort cleanup of a temporary directory"
+    )]
+    let _ = std::fs::remove_dir_all(&dir);
+    built
 }
 
 fn render(report: &Report) -> Answer {
@@ -148,11 +165,21 @@ fn render(report: &Report) -> Answer {
         ..Row::default()
     };
     answer.rows.push(integrity);
+    if report.moved {
+        answer.partial = true;
+        answer.notes.push(
+            "the KB or the index moved while it was compared: nothing was replaced and nothing is claimed about the index; run it again".into(),
+        );
+        return answer;
+    }
     if let Some(difference) = report.first_difference() {
         answer.failed = true;
-        answer.notes.push(format!(
-            "the index differed from a rebuild at {difference}; the rebuild replaced it"
-        ));
+        answer.notes.push(match report.replaced {
+            true => format!(
+                "the index differed from a rebuild at {difference}; the rebuild replaced it"
+            ),
+            false => format!("the index differs from a rebuild at {difference}"),
+        });
     }
     answer
 }
