@@ -11,6 +11,7 @@
 //! work tree dirty for the user to commit.
 #![forbid(unsafe_code)]
 
+pub mod catalog;
 pub mod check;
 pub mod cursor;
 pub mod defs;
@@ -192,6 +193,9 @@ pub enum Verb {
         run: Option<String>,
         repo: Option<PathBuf>,
     },
+    /// `catalog diff|check`: project asset catalogs as reviewable patches
+    /// (#86).
+    Catalog(catalog::CatalogVerb),
 }
 
 /// One invocation.
@@ -258,6 +262,9 @@ pub fn run_as(request: &Request, session: Option<&str>) -> Result<Output> {
     }
     if matches!(request.verb, Verb::Lint { .. }) {
         return defs::lint::run(&ws.root, request);
+    }
+    if let Verb::Catalog(verb) = &request.verb {
+        return catalog::execute(&ws, request, verb, now);
     }
     if let Verb::Check { scope } = &request.verb {
         return check::execute(&ws, request, scope.as_deref(), now);

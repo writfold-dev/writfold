@@ -2,7 +2,7 @@
 rfc: "2026-11-21-project-asset-catalogs"
 title: "Project asset catalogs as reviewable Git projections"
 status: accepted
-implementation: not-started
+implementation: complete
 authors: [astra]
 created: 2026-11-21
 updated: 2026-11-21
@@ -88,3 +88,5 @@ This narrows the [mission's earlier bulk-import exclusion](../writfold/mission.m
 ## Decision log
 
 2026-11-21 — Accepted under the owner's standing default. Git-local input, explicit review, native assets on output; no general schema/plugin system. No unresolved acceptance questions.
+
+2026-11-21 — Implemented for v0.6.0-dev.15. #84: `writfold_core::catalog` proved (`proofs/Writfold/Catalog.lean`, 11 counter-mutants), receipt posted on the issue before wiring. #86: `crates/writfold-kb/src/catalog/`, guide `docs/guide/catalogs.md`, tests `crates/writfold/tests/kb_catalog.rs` (both input shapes, escaped pointers, explicit empty against missing input, collisions with hand-owned and other-kind records, symlinks, untracked and duplicate inputs, orphans, hand edits, two clones, reordering, the CSV export recipe). One addition while building: an ID equal to an alias another record answers to is a collision too, since creating it would retarget references. Checked by hand: the v0.6.0-dev.14 binary lists and resolves projected records.

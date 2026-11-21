@@ -193,6 +193,38 @@ pub fn kb_ls_files(
         .collect())
 }
 
+/// Tracked files under the pathspec, staged additions included (`ls-files
+/// --cached`), as work-tree-relative paths in Git's order: what a catalog
+/// may read (#86). An untracked file is not listed.
+pub fn kb_ls_tracked(
+    executable: &GitExecutable<'_>,
+    repository: KbRepository<'_>,
+    pathspec: &str,
+    budgets: GitBudgets,
+    cancelled: &AtomicBool,
+) -> Result<Vec<String>, GitError> {
+    let output = run(
+        executable,
+        repository,
+        &[
+            "ls-files",
+            "-z",
+            "--cached",
+            "--deduplicate",
+            "--",
+            pathspec,
+        ],
+        &[],
+        budgets,
+        cancelled,
+    )?;
+    Ok(output
+        .split(|&b| b == 0)
+        .filter(|r| !r.is_empty())
+        .map(|r| String::from_utf8_lossy(r).into_owned())
+        .collect())
+}
+
 /// Paths under the pathspec that differ between commits `old` and `new`
 /// (`diff-tree -r --name-only -z --no-renames`), relative to the top of the
 /// work tree. `None` when either commit is unknown to the repository.

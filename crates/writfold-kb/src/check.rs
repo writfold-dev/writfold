@@ -108,6 +108,17 @@ fn parts(ws: &Workspace, request: &Request, scope: Option<&str>) -> Vec<Part> {
     };
     parts.push(sub(request, "definitions", "writfold kb lint".into(), lint));
     parts.extend(guards(ws, request));
+    // Project asset catalogs (#86), only where one is declared or a
+    // managed record exists: a KB without them reads as before.
+    if crate::catalog::configured(&ws.root) {
+        let verb = Verb::Catalog(crate::catalog::CatalogVerb::Check { name: None });
+        parts.push(sub(
+            request,
+            "catalogs",
+            "writfold kb catalog check".into(),
+            verb,
+        ));
+    }
     parts
 }
 

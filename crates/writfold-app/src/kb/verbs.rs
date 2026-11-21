@@ -32,6 +32,9 @@ pub fn verb(
     if name == "handoff" {
         return handoff(common, positional);
     }
+    if name == "catalog" {
+        return catalog(positional);
+    }
     let one = |what: &str| -> Result<String, String> {
         match positional {
             [single] => Ok(single.clone()),
@@ -196,4 +199,17 @@ fn handoff(common: &Common, positional: &[String]) -> Result<Verb, String> {
         run: super::writes::get(common, "run"),
         repo: super::writes::get(common, "repo").map(std::path::PathBuf::from),
     })
+}
+
+/// `catalog diff NAME` and `catalog check [NAME]` (#86).
+fn catalog(positional: &[String]) -> Result<Verb, String> {
+    use writfold_kb::catalog::CatalogVerb;
+    Ok(Verb::Catalog(match positional {
+        [d, name] if d == "diff" => CatalogVerb::Diff { name: name.clone() },
+        [c] if c == "check" => CatalogVerb::Check { name: None },
+        [c, name] if c == "check" => CatalogVerb::Check {
+            name: Some(name.clone()),
+        },
+        _ => return Err("usage: catalog diff NAME | catalog check [NAME]".into()),
+    }))
 }

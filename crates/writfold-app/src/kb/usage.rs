@@ -133,6 +133,12 @@ handoff (a receiver's check; nothing is run):
                                    policy's definitions: accepted only on a current mechanical pass
                                    for each (exit 0); a waiver, a skip or a changed definition refuses
 
+catalogs (a project's JSON inventory as reviewable asset records; .writfold/catalogs/<name>.toml):
+  catalog diff NAME                a Git patch of the asset records the catalog's input wants
+                                   (stdout only; nothing is written: review it, then git apply);
+                                   an incomplete or conflicting input prints no patch (exit 3)
+  catalog check [NAME]             the same without a patch: exit 0 clean, 2 drift, 3 invalid
+
 plans (the run graph; templates in .writfold/plans/<name>.toml; Writfold records, the agent walks):
   plan set <template>|--from FILE [--run ID] [--repo DIR]
                                    splice a template's steps at the run's root (keeps a snapshot;

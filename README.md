@@ -265,6 +265,7 @@ limits.
 | Citations | `kb stale`, `check`, `index`; external checkers (`checker list`, `stale --record`); attached stores judged at their pin, and run artifacts in them (`checkpoint --artifact`) | [validation](docs/guide/validation.md), [checkers](docs/guide/checkers.md), [stores](docs/guide/stores.md) |
 | Gates | `kb gate run`, `status`, `verify`, `lines`, `attest`, `waive`, `cover` | [gates](docs/guide/gates.md) |
 | Handoffs | `kb handoff check`: only a current mechanical pass for every required gate at a policy revision | [gates](docs/guide/gates.md), [validation](docs/guide/validation.md#handing-a-change-over-handoff-check) |
+| Asset catalogs | `kb catalog diff`, `catalog check`: a project's JSON inventory as a reviewable patch of asset records | [catalogs](docs/guide/catalogs.md) |
 | Plans | `kb plan set`, `use`, `status`, `advance`, `skip`, `repin`, `again`; required steps; loops (`loop=`, `max=`, `min=`) | [run-graph](docs/guide/run-graph.md) |
 | Policy | `accept`, `not_applicable`, `none_found`, `snapshot`, `unskippable`, `waivable`; pins and drift; `kb policy`, `policy --paths` | [policy](docs/guide/policy.md) |
 | Delivery | `kb deliver prepare`, `check`, `status`, `attest`, `waive`, `withdraw`, `payload`, `posted`, `match`, `modes`; guard routes; `deliver:` and `posted:` on a step | [delivery-modes](docs/guide/delivery-modes.md) |
