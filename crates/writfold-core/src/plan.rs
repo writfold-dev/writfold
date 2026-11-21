@@ -257,6 +257,7 @@ pub fn splice(nodes: &[Node], at: usize, count: usize) -> Vec<Node> {
 }
 
 pub mod recheck;
+pub mod round;
 
 #[cfg(test)]
 mod tests;

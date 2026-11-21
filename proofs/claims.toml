@@ -2614,3 +2614,64 @@ subsumes = ["TAU-N001", "TAU-P003"]
 mutants = [
   "any-skips-last",
 ]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/plan/round.rs"
+function = "superseded_any"
+lean = "writfold_core.plan.round.superseded_any"
+theorems = [
+  "Writfold.Core.Round.superseded_any_loop_spec",
+  "Writfold.Core.Round.superseded_any_iff",
+  "Writfold.Core.Round.superseded_any_total",
+]
+total = "Writfold.Core.Round.superseded_any_total"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "round-superseded-any-skips-last",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/plan/round.rs"
+function = "judged_at"
+lean = "writfold_core.plan.round.judged_at"
+theorems = [
+  "Writfold.Core.Round.judged_at_spec",
+  "Writfold.Core.Round.judged_at_total",
+]
+total = "Writfold.Core.Round.judged_at_total"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "round-next-again-before-judge",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/plan/round.rs"
+function = "again_check"
+lean = "writfold_core.plan.round.again_check"
+theorems = [
+  "Writfold.Core.Round.again_spec",
+  "Writfold.Core.Round.again_total",
+]
+total = "Writfold.Core.Round.again_total"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "round-again-when-met",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/plan/round.rs"
+function = "advance_check"
+lean = "writfold_core.plan.round.advance_check"
+theorems = [
+  "Writfold.Core.Round.advance_iff",
+  "Writfold.Core.Round.advance_total",
+]
+total = "Writfold.Core.Round.advance_total"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "round-advance-ignores-min",
+]

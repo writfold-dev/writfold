@@ -4230,42 +4230,126 @@ def plan.recheck.writable
     | some closed => ok (¬ closed)
   | some closed => ok (¬ closed)
 
+/-- [writfold_core::plan::round::MAX_ROUNDS]
+    Source: 'crates/writfold-core/src/plan/round.rs', lines 13:0-13:33
+    Visibility: public -/
+@[global_simps, irreducible] def plan.round.MAX_ROUNDS : Std.Usize := 32#usize
+
+/-- [writfold_core::plan::round::Bounds]
+    Source: 'crates/writfold-core/src/plan/round.rs', lines 16:0-19:1
+    Visibility: public -/
+structure plan.round.Bounds where
+  min : Std.Usize
+  max : Std.Usize
+
+/-- [writfold_core::plan::round::bounds_ok]:
+    Source: 'crates/writfold-core/src/plan/round.rs', lines 22:0-24:1
+    Visibility: public -/
+def plan.round.bounds_ok (b : plan.round.Bounds) : Result Bool := do
+  if 1#usize <= b.min
+  then if b.min <= b.max
+       then ok (b.max <= plan.round.MAX_ROUNDS)
+       else ok false
+  else ok false
+
+/-- [writfold_core::plan::round::has_exit]:
+    Source: 'crates/writfold-core/src/plan/round.rs', lines 28:0-30:1
+    Visibility: public -/
+def plan.round.has_exit
+  (b : plan.round.Bounds) (gates : Std.Usize) : Result Bool := do
+  if gates > 0#usize
+  then ok true
+  else ok (b.min > 1#usize)
+
+/-- [writfold_core::plan::round::Exit]
+    Source: 'crates/writfold-core/src/plan/round.rs', lines 33:0-40:1
+    Visibility: public -/
+@[discriminant isize]
+inductive plan.round.Exit where
+| Met : plan.round.Exit
+| Again : plan.round.Exit
+| Spent : plan.round.Exit
+
+/-- [writfold_core::plan::first_owed]: loop body 0:
+    Source: 'crates/writfold-core/src/plan.rs', lines 82:4-89:1
+    Visibility: public -/
+@[rust_loop_body]
+def plan.first_owed_loop.body
+  (met : Slice Bool) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize (Option Std.Usize))
+  := do
+  let i := Slice.len met
+  if index < i
+  then
+    let b ← Slice.index_usize met index
+    if b
+    then let index1 ← index + 1#usize
+         ok (cont index1)
+    else ok (done (some index))
+  else ok (done none)
+
+/-- [writfold_core::plan::first_owed]: loop 0:
+    Source: 'crates/writfold-core/src/plan.rs', lines 82:4-89:1
+    Visibility: public -/
+@[rust_loop]
+def plan.first_owed_loop
+  (met : Slice Bool) (index : Std.Usize) : Result (Option Std.Usize) := do
+  loop
+    (fun index1 => plan.first_owed_loop.body met index1)
+    index
+
+/-- [writfold_core::plan::first_owed]:
+    Source: 'crates/writfold-core/src/plan.rs', lines 80:0-89:1
+    Visibility: public -/
+@[reducible]
+def plan.first_owed (met : Slice Bool) : Result (Option Std.Usize) := do
+  plan.first_owed_loop met 0#usize
+
+/-- [writfold_core::plan::round::all_met]:
+    Source: 'crates/writfold-core/src/plan/round.rs', lines 43:0-45:1
+    Visibility: public -/
+def plan.round.all_met (met : Slice Bool) : Result Bool := do
+  let o ← plan.first_owed met
+  ok (core.option.Option.is_none o)
+
+/-- [writfold_core::plan::round::exit]:
+    Source: 'crates/writfold-core/src/plan/round.rs', lines 49:0-57:1
+    Visibility: public -/
+def plan.round.exit
+  (b : plan.round.Bounds) (rounds : Std.Usize) (met : Slice Bool) :
+  Result plan.round.Exit
+  := do
+  if rounds >= b.min
+  then
+    let b1 ← plan.round.all_met met
+    if b1
+    then ok plan.round.Exit.Met
+    else
+      if rounds < b.max
+      then ok plan.round.Exit.Again
+      else ok plan.round.Exit.Spent
+  else
+    if rounds < b.max
+    then ok plan.round.Exit.Again
+    else ok plan.round.Exit.Spent
+
+/-- [writfold_core::plan::round::AgainRefusal]
+    Source: 'crates/writfold-core/src/plan/round.rs', lines 60:0-71:1
+    Visibility: public -/
+@[discriminant isize]
+inductive plan.round.AgainRefusal where
+| Complete : plan.round.AgainRefusal
+| NotCurrent : Std.Usize → plan.round.AgainRefusal
+| NotLoop : plan.round.AgainRefusal
+| Met : plan.round.AgainRefusal
+| Spent : plan.round.AgainRefusal
+
 /-- [writfold_core::plan::Node]
     Source: 'crates/writfold-core/src/plan.rs', lines 23:0-26:1
     Visibility: public -/
 structure plan.Node where
   done : Bool
   skipped : Bool
-
-/-- [writfold_core::plan::Refusal]
-    Source: 'crates/writfold-core/src/plan.rs', lines 31:0-38:1
-    Visibility: public -/
-@[discriminant isize]
-inductive plan.Refusal where
-| Complete : plan.Refusal
-| NotCurrent : Std.Usize → plan.Refusal
-| Owed : Std.Usize → plan.Refusal
-
-/-- [writfold_core::plan::MAX_DEPTH]
-    Source: 'crates/writfold-core/src/plan.rs', lines 41:0-41:31
-    Visibility: public -/
-@[global_simps, irreducible] def plan.MAX_DEPTH : Std.Usize := 4#usize
-
-/-- [writfold_core::plan::SpliceRefusal]
-    Source: 'crates/writfold-core/src/plan.rs', lines 44:0-49:1
-    Visibility: public -/
-@[discriminant isize]
-inductive plan.SpliceRefusal where
-| Complete : plan.SpliceRefusal
-| TooDeep : plan.SpliceRefusal
-
-/-- [writfold_core::plan::Spliced]
-    Source: 'crates/writfold-core/src/plan.rs', lines 52:0-59:1
-    Visibility: public -/
-@[discriminant isize]
-inductive plan.Spliced where
-| Already : plan.Spliced
-| Insert : Std.Usize → plan.Spliced
 
 /-- [writfold_core::plan::closed]:
     Source: 'crates/writfold-core/src/plan.rs', lines 62:0-64:1
@@ -4313,40 +4397,50 @@ def plan.current_loop
 def plan.current (nodes : Slice plan.Node) : Result (Option Std.Usize) := do
   plan.current_loop nodes 0#usize
 
-/-- [writfold_core::plan::first_owed]: loop body 0:
-    Source: 'crates/writfold-core/src/plan.rs', lines 82:4-89:1
+/-- [writfold_core::plan::round::again_check]:
+    Source: 'crates/writfold-core/src/plan/round.rs', lines 75:0-98:1
     Visibility: public -/
-@[rust_loop_body]
-def plan.first_owed_loop.body
-  (met : Slice Bool) (index : Std.Usize) :
-  Result (ControlFlow Std.Usize (Option Std.Usize))
+def plan.round.again_check
+  (nodes : Slice plan.Node) («at» : Std.Usize) (looped : Bool)
+  (b : plan.round.Bounds) (rounds : Std.Usize) (met : Slice Bool) :
+  Result (core.result.Result Std.Usize plan.round.AgainRefusal)
   := do
-  let i := Slice.len met
-  if index < i
-  then
-    let b ← Slice.index_usize met index
-    if b
-    then let index1 ← index + 1#usize
-         ok (cont index1)
-    else ok (done (some index))
-  else ok (done none)
+  let o ← plan.current nodes
+  match o with
+  | none => ok (core.result.Result.Err plan.round.AgainRefusal.Complete)
+  | some now =>
+    if now != «at»
+    then ok (core.result.Result.Err (plan.round.AgainRefusal.NotCurrent now))
+    else
+      if looped
+      then
+        let e ← plan.round.exit b rounds met
+        match e with
+        | plan.round.Exit.Met =>
+          ok (core.result.Result.Err plan.round.AgainRefusal.Met)
+        | plan.round.Exit.Again =>
+          let i ← rounds + 1#usize
+          ok (core.result.Result.Ok i)
+        | plan.round.Exit.Spent =>
+          ok (core.result.Result.Err plan.round.AgainRefusal.Spent)
+      else ok (core.result.Result.Err plan.round.AgainRefusal.NotLoop)
 
-/-- [writfold_core::plan::first_owed]: loop 0:
-    Source: 'crates/writfold-core/src/plan.rs', lines 82:4-89:1
+/-- [writfold_core::plan::Refusal]
+    Source: 'crates/writfold-core/src/plan.rs', lines 31:0-38:1
     Visibility: public -/
-@[rust_loop]
-def plan.first_owed_loop
-  (met : Slice Bool) (index : Std.Usize) : Result (Option Std.Usize) := do
-  loop
-    (fun index1 => plan.first_owed_loop.body met index1)
-    index
+@[discriminant isize]
+inductive plan.Refusal where
+| Complete : plan.Refusal
+| NotCurrent : Std.Usize → plan.Refusal
+| Owed : Std.Usize → plan.Refusal
 
-/-- [writfold_core::plan::first_owed]:
-    Source: 'crates/writfold-core/src/plan.rs', lines 80:0-89:1
+/-- [writfold_core::plan::round::Refusal]
+    Source: 'crates/writfold-core/src/plan/round.rs', lines 101:0-106:1
     Visibility: public -/
-@[reducible]
-def plan.first_owed (met : Slice Bool) : Result (Option Std.Usize) := do
-  plan.first_owed_loop met 0#usize
+@[discriminant isize]
+inductive plan.round.Refusal where
+| Plan : plan.Refusal → plan.round.Refusal
+| Rounds : Std.Usize → plan.round.Refusal
 
 /-- [writfold_core::plan::advance_check]:
     Source: 'crates/writfold-core/src/plan.rs', lines 93:0-105:1
@@ -4366,6 +4460,173 @@ def plan.advance_check
       match o1 with
       | none => ok (core.result.Result.Ok ())
       | some gate => ok (core.result.Result.Err (plan.Refusal.Owed gate))
+
+/-- [writfold_core::plan::round::advance_check]:
+    Source: 'crates/writfold-core/src/plan/round.rs', lines 110:0-126:1
+    Visibility: public -/
+def plan.round.advance_check
+  (nodes : Slice plan.Node) («at» : Std.Usize) (b : plan.round.Bounds)
+  (rounds : Std.Usize) (met : Slice Bool) :
+  Result (core.result.Result Unit plan.round.Refusal)
+  := do
+  let r ← plan.advance_check nodes «at» met
+  match r with
+  | core.result.Result.Ok _ =>
+    if rounds < b.min
+    then
+      let i ← b.min - rounds
+      ok (core.result.Result.Err (plan.round.Refusal.Rounds i))
+    else ok (core.result.Result.Ok ())
+  | core.result.Result.Err refusal =>
+    ok (core.result.Result.Err (plan.round.Refusal.Plan refusal))
+
+/-- [writfold_core::plan::round::Place]
+    Source: 'crates/writfold-core/src/plan/round.rs', lines 130:0-133:1
+    Visibility: public -/
+structure plan.round.Place where
+  round : Std.Usize
+  rounds : Std.Usize
+
+/-- [writfold_core::plan::round::superseded]:
+    Source: 'crates/writfold-core/src/plan/round.rs', lines 136:0-138:1
+    Visibility: public -/
+def plan.round.superseded (place : plan.round.Place) : Result Bool := do
+  ok (place.round < place.rounds)
+
+/-- [writfold_core::plan::round::superseded_any]: loop body 0:
+    Source: 'crates/writfold-core/src/plan/round.rs', lines 143:4-150:1
+    Visibility: public -/
+@[rust_loop_body]
+def plan.round.superseded_any_loop.body
+  (path : Slice plan.round.Place) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let i := Slice.len path
+  if index < i
+  then
+    let p ← Slice.index_usize path index
+    let b ← plan.round.superseded p
+    if b
+    then ok (done true)
+    else let index1 ← index + 1#usize
+         ok (cont index1)
+  else ok (done false)
+
+/-- [writfold_core::plan::round::superseded_any]: loop 0:
+    Source: 'crates/writfold-core/src/plan/round.rs', lines 143:4-150:1
+    Visibility: public -/
+@[rust_loop]
+def plan.round.superseded_any_loop
+  (path : Slice plan.round.Place) (index : Std.Usize) : Result Bool := do
+  loop
+    (fun index1 => plan.round.superseded_any_loop.body path index1)
+    index
+
+/-- [writfold_core::plan::round::superseded_any]:
+    Source: 'crates/writfold-core/src/plan/round.rs', lines 141:0-150:1
+    Visibility: public -/
+@[reducible]
+def plan.round.superseded_any
+  (path : Slice plan.round.Place) : Result Bool := do
+  plan.round.superseded_any_loop path 0#usize
+
+/-- [writfold_core::plan::stale]:
+    Source: 'crates/writfold-core/src/plan.rs', lines 144:0-146:1
+    Visibility: public -/
+def plan.stale (node : plan.Node) (met : Slice Bool) : Result Bool := do
+  if node.done
+  then let o ← plan.first_owed met
+       ok (core.option.Option.is_some o)
+  else ok false
+
+/-- [writfold_core::plan::round::stale]:
+    Source: 'crates/writfold-core/src/plan/round.rs', lines 154:0-159:1
+    Visibility: public -/
+def plan.round.stale
+  (node : plan.Node) (met : Slice Bool) (superseded : Bool) : Result Bool := do
+  if superseded
+  then ok false
+  else plan.stale node met
+
+/-- [writfold_core::plan::round::over]:
+    Source: 'crates/writfold-core/src/plan/round.rs', lines 162:0-164:1
+    Visibility: public -/
+def plan.round.over
+  (b : plan.round.Bounds) (rounds : Std.Usize) : Result Bool := do
+  ok (rounds > b.max)
+
+/-- [writfold_core::plan::round::judged_at]:
+    Source: 'crates/writfold-core/src/plan/round.rs', lines 168:0-170:1
+    Visibility: public -/
+def plan.round.judged_at
+  (judged : Slice Bool) (i : Std.Usize) : Result Bool := do
+  let i1 := Slice.len judged
+  if i < i1
+  then Slice.index_usize judged i
+  else ok false
+
+/-- [writfold_core::plan::round::Next]
+    Source: 'crates/writfold-core/src/plan/round.rs', lines 173:0-182:1
+    Visibility: public -/
+@[discriminant isize]
+inductive plan.round.Next where
+| Advance : plan.round.Next
+| Judge : Std.Usize → plan.round.Next
+| Again : plan.round.Next
+| Report : plan.round.Next
+
+/-- [writfold_core::plan::round::owed_or]:
+    Source: 'crates/writfold-core/src/plan/round.rs', lines 196:0-207:1
+    Visibility: public -/
+def plan.round.owed_or
+  (met : Slice Bool) (judged : Slice Bool) («then» : plan.round.Next) :
+  Result plan.round.Next
+  := do
+  let o ← plan.first_owed met
+  match o with
+  | none => ok «then»
+  | some i =>
+    let b ← plan.round.judged_at judged i
+    if b
+    then ok «then»
+    else ok (plan.round.Next.Judge i)
+
+/-- [writfold_core::plan::round::next]:
+    Source: 'crates/writfold-core/src/plan/round.rs', lines 187:0-193:1
+    Visibility: public -/
+def plan.round.next
+  (b : plan.round.Bounds) (rounds : Std.Usize) (met : Slice Bool)
+  (judged : Slice Bool) :
+  Result plan.round.Next
+  := do
+  let e ← plan.round.exit b rounds met
+  match e with
+  | plan.round.Exit.Met => ok plan.round.Next.Advance
+  | plan.round.Exit.Again =>
+    plan.round.owed_or met judged plan.round.Next.Again
+  | plan.round.Exit.Spent =>
+    plan.round.owed_or met judged plan.round.Next.Report
+
+/-- [writfold_core::plan::MAX_DEPTH]
+    Source: 'crates/writfold-core/src/plan.rs', lines 41:0-41:31
+    Visibility: public -/
+@[global_simps, irreducible] def plan.MAX_DEPTH : Std.Usize := 4#usize
+
+/-- [writfold_core::plan::SpliceRefusal]
+    Source: 'crates/writfold-core/src/plan.rs', lines 44:0-49:1
+    Visibility: public -/
+@[discriminant isize]
+inductive plan.SpliceRefusal where
+| Complete : plan.SpliceRefusal
+| TooDeep : plan.SpliceRefusal
+
+/-- [writfold_core::plan::Spliced]
+    Source: 'crates/writfold-core/src/plan.rs', lines 52:0-59:1
+    Visibility: public -/
+@[discriminant isize]
+inductive plan.Spliced where
+| Already : plan.Spliced
+| Insert : Std.Usize → plan.Spliced
 
 /-- [writfold_core::plan::fact_met]:
     Source: 'crates/writfold-core/src/plan.rs', lines 118:0-123:1
@@ -4426,15 +4687,6 @@ def plan.advance
   let v ← plan.met_all gates
   let s := alloc.vec.Vec.deref v
   plan.advance_check nodes «at» s
-
-/-- [writfold_core::plan::stale]:
-    Source: 'crates/writfold-core/src/plan.rs', lines 144:0-146:1
-    Visibility: public -/
-def plan.stale (node : plan.Node) (met : Slice Bool) : Result Bool := do
-  if node.done
-  then let o ← plan.first_owed met
-       ok (core.option.Option.is_some o)
-  else ok false
 
 /-- [writfold_core::plan::SkipRefusal]
     Source: 'crates/writfold-core/src/plan.rs', lines 151:0-155:1
