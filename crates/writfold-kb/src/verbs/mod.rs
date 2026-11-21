@@ -7,6 +7,7 @@ pub mod find_each;
 pub mod impact;
 pub mod index;
 pub mod material;
+pub mod measured;
 pub mod names;
 pub mod policy;
 pub mod policy_paths;

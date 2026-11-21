@@ -107,6 +107,23 @@ pub fn terminal(node: &str) -> bool {
     node.starts_with("project:")
 }
 
+/// Where the walk starts: a code node with referrers, else the record
+/// `target` names; or the answer for an ambiguous or unknown target.
+fn start(session: &Session<'_>, target: &str) -> Result<std::result::Result<String, Answer>> {
+    let referred = target.starts_with("code:")
+        && !query::edges_within(&session.conn, target, false, 1)?
+            .0
+            .is_empty();
+    if referred {
+        return Ok(Ok(target.to_owned()));
+    }
+    Ok(match query::resolve(&session.conn, target)? {
+        Resolved::One(rec) => Ok(rec.id),
+        Resolved::Many(candidates) => Err(ambiguous(session, target, &candidates)),
+        Resolved::None => Err(unknown(session, "unresolved-id", target, &[])?),
+    })
+}
+
 pub fn impact(
     session: &Session<'_>,
     target: &str,
@@ -114,18 +131,9 @@ pub fn impact(
     direction: Direction,
     inferred: bool,
 ) -> Result<Answer> {
-    let start = if target.starts_with("code:")
-        && !query::edges_within(&session.conn, target, false, 1)?
-            .0
-            .is_empty()
-    {
-        target.to_owned()
-    } else {
-        match query::resolve(&session.conn, target)? {
-            Resolved::One(rec) => rec.id,
-            Resolved::Many(candidates) => return Ok(ambiguous(session, target, &candidates)),
-            Resolved::None => return unknown(session, "unresolved-id", target, &[]),
-        }
+    let start = match start(session, target)? {
+        Ok(start) => start,
+        Err(answer) => return Ok(answer),
     };
     // The walk takes an infallible neighbour function; the first index
     // error is kept and returned after it.

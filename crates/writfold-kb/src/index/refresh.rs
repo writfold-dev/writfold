@@ -168,23 +168,7 @@ pub fn refresh(
         count += 1;
     }
     if count > 0 {
-        derive::keys(&tx)?;
-        let keys_same = derive::keys_digest(&tx)? == keys_before;
-        let (word, (deleted, written)) = match plan(keys_same, &changed) {
-            Plan::Skip => ("skip", (0, 0)),
-            Plan::Delta => {
-                let affected: Vec<String> = (rederived.iter().zip(&changed))
-                    .filter(|(_, c)| **c)
-                    .map(|(p, _)| p.clone())
-                    .collect();
-                ("delta", derive::of(&tx, &affected)?)
-            }
-            Plan::Whole => ("whole", derive::whole(&tx)?),
-        };
-        let note =
-            format!("files={count} graph={word} edges-deleted={deleted} edges-written={written}");
-        tx.prepare_cached("INSERT OR REPLACE INTO meta(key, value) VALUES ('last_refresh', ?1)")?
-            .execute([note])?;
+        graph(&tx, count, (&rederived, &changed), &keys_before)?;
     }
     // The files were read after the snapshot was observed. Store the
     // derivation only if the snapshot still holds, so a reader that reports
@@ -231,5 +215,34 @@ fn forget_verdicts(
                 .execute((path, ord))?;
         }
     }
+    Ok(())
+}
+
+/// Phase B after a refresh re-derived `count` files: the keys, then the
+/// edges as [`plan`] decides; the work done is kept in `meta` for `index
+/// status` (#59).
+fn graph(
+    tx: &rusqlite::Transaction<'_>,
+    count: usize,
+    (rederived, changed): (&[String], &[bool]),
+    keys_before: &[u8],
+) -> Result<()> {
+    derive::keys(tx)?;
+    let keys_same = derive::keys_digest(tx)? == keys_before;
+    let (word, (deleted, written)) = match plan(keys_same, changed) {
+        Plan::Skip => ("skip", (0, 0)),
+        Plan::Delta => {
+            let affected: Vec<String> = (rederived.iter().zip(changed))
+                .filter(|(_, c)| **c)
+                .map(|(p, _)| p.clone())
+                .collect();
+            ("delta", derive::of(tx, &affected)?)
+        }
+        Plan::Whole => ("whole", derive::whole(tx)?),
+    };
+    let note =
+        format!("files={count} graph={word} edges-deleted={deleted} edges-written={written}");
+    tx.prepare_cached("INSERT OR REPLACE INTO meta(key, value) VALUES ('last_refresh', ?1)")?
+        .execute([note])?;
     Ok(())
 }

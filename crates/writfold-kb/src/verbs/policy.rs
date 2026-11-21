@@ -165,15 +165,7 @@ pub fn policy(session: &Session<'_>, cwd: &Path) -> Result<Answer> {
     }
     // An unreadable gate directory leaves the inventory partial (#56), and
     // a definition that does not parse is reported, never dropped.
-    answer.partial = !found.complete();
-    if !found.problems.is_empty() {
-        let mut report = writfold_core::diag::Report::default();
-        for (_, problem) in &found.problems {
-            report.extend(problem.report.clone());
-        }
-        answer.report = Some(report);
-        answer.flagged = true;
-    }
+    reported(&found, &mut answer);
     let defs = found.definitions;
     let mut lines: Vec<String> = Vec::new();
     for d in &defs {
@@ -260,4 +252,19 @@ fn store_lines(root: &Path, lines: &mut Vec<String>) -> Result<usize> {
         lines.push(format!("store:{}\t{rule}\t{url}{recorded}", store.name));
     }
     Ok(stores.iter().count())
+}
+
+/// An unreadable gate directory leaves the inventory partial (#56), and a
+/// definition that does not parse is reported, never dropped.
+fn reported(found: &crate::gate::def::Inventory, answer: &mut Answer) {
+    answer.partial = !found.complete();
+    if found.problems.is_empty() {
+        return;
+    }
+    let mut report = writfold_core::diag::Report::default();
+    for (_, problem) in &found.problems {
+        report.extend(problem.report.clone());
+    }
+    answer.report = Some(report);
+    answer.flagged = true;
 }

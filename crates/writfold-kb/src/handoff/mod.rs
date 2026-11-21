@@ -126,3 +126,20 @@ fn copy(item: &Item) -> Item {
         standing: item.standing,
     }
 }
+
+/// `handoff check` for the run named (else the current one): the answer,
+/// the verb's name and its arguments.
+pub fn answer(
+    session: &Session<'_>,
+    (policy, candidate): (&str, &str),
+    (run, repo): (Option<&str>, Option<&Path>),
+    cwd: &Path,
+) -> Result<(Answer, &'static str, Vec<String>)> {
+    let rec = crate::gate::target(session, run)?;
+    let answer = check(session, &rec, (policy, candidate), repo, cwd)?;
+    Ok((
+        answer,
+        "handoff",
+        vec![policy.to_owned(), candidate.to_owned(), rec.id],
+    ))
+}

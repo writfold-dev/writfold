@@ -23,6 +23,7 @@ pub mod error;
 pub mod gate;
 pub mod guard;
 pub mod handoff;
+pub use verbs::index::index_verify_with;
 pub mod hook;
 pub mod index;
 pub mod init;
@@ -278,28 +279,6 @@ pub fn run_as(request: &Request, session: Option<&str>) -> Result<Output> {
     session.emit(&answer, &frame)
 }
 
-/// `index verify` with `after_build` run once the shadow rebuild is built
-/// and before it is compared: tests interleave a second writer there
-/// (#58). The verb itself runs nothing there.
-pub fn index_verify_with(request: &Request, after_build: &dyn Fn()) -> Result<Output> {
-    let ws = discover(request.kb.as_deref(), &request.cwd)?;
-    let now = request.now.unwrap_or_else(time::now);
-    let tool = match &ws.repo {
-        Some(_) => Some(GitTool::locate()?),
-        None => None,
-    };
-    let session = Session::open(&ws, tool.as_ref(), false, now)?;
-    let answer = verbs::index::verify(&session, after_build)?;
-    let frame = Frame {
-        verb: "index-verify".into(),
-        args: Vec::new(),
-        budget: request.budget,
-        cursor: request.cursor.clone(),
-        json: request.json,
-    };
-    session.emit(&answer, &frame)
-}
-
 fn answer(session: &Session<'_>, request: &Request) -> Result<(Answer, &'static str, Vec<String>)> {
     Ok(match &request.verb {
         Verb::Brief { project, all } => {
@@ -369,67 +348,19 @@ fn answer(session: &Session<'_>, request: &Request) -> Result<(Answer, &'static 
             candidate,
             run,
             repo,
-        } => {
-            let rec = gate::target(session, run.as_deref())?;
-            let pair = (policy.as_str(), candidate.as_str());
-            let answer = handoff::check(session, &rec, pair, repo.as_deref(), &request.cwd)?;
-            (
-                answer,
-                "handoff",
-                vec![policy.clone(), candidate.clone(), rec.id],
-            )
-        }
+        } => handoff::answer(
+            session,
+            (policy, candidate),
+            (run.as_deref(), repo.as_deref()),
+            &request.cwd,
+        )?,
         other => graph(session, other)?,
     })
 }
 
-/// `runs --idle` and `find --eval` (v0.6.0-dev.1), `find --each`
-/// (v0.6.0-dev.6); `None` for every other verb.
-fn measured(
-    session: &Session<'_>,
-    verb: &Verb,
-) -> Option<Result<(Answer, &'static str, Vec<String>)>> {
-    let answered =
-        |r: Result<Answer>, name: &'static str, args: Vec<String>| Some(r.map(|a| (a, name, args)));
-    match verb {
-        Verb::RunsIdle {
-            age,
-            age_text,
-            project,
-            plan,
-        } => {
-            let mut args = vec![format!("idle={age_text}")];
-            args.extend(project.iter().map(|p| format!("project={p}")));
-            if *plan {
-                args.push("plan=true".into());
-            }
-            answered(
-                verbs::runs::idle(session, (*age, age_text), project.as_deref(), *plan),
-                "runs",
-                args,
-            )
-        }
-        Verb::FindEach {
-            texts,
-            filter,
-            signatures,
-        } => answered(
-            verbs::find_each::each(session, texts, filter, *signatures),
-            "find",
-            verbs::find_each::args(texts, filter, *signatures),
-        ),
-        Verb::FindEval { file } => answered(
-            verbs::eval::eval(session, file.as_deref()),
-            "find-eval",
-            file.iter().map(|f| f.display().to_string()).collect(),
-        ),
-        _ => None,
-    }
-}
-
 /// The search, graph and housekeeping verbs.
 fn graph(session: &Session<'_>, verb: &Verb) -> Result<(Answer, &'static str, Vec<String>)> {
-    if let Some(found) = measured(session, verb) {
+    if let Some(found) = verbs::measured::measured(session, verb) {
         return found;
     }
     Ok(match verb {

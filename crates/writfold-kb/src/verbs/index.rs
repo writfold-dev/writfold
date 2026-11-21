@@ -35,6 +35,38 @@ pub fn status(session: &Session<'_>) -> Result<Answer> {
             ..More::default()
         });
     }
+    counts(session, &mut head)?;
+    last_refresh(session, &mut head)?;
+    answer.rows.push(head);
+    let mut statement = session.conn.prepare(
+        "SELECT f.path, f.kind, coalesce(f.parse_error, 'duplicate id ' || d.id, '') FROM files f \
+         LEFT JOIN dups d ON d.path = f.path WHERE f.parse_status <> 'ok' OR d.path IS NOT NULL ORDER BY f.path",
+    )?;
+    let unreadable = statement
+        .query_map([], |r| {
+            Ok((
+                r.get::<_, String>(0)?,
+                r.get::<_, String>(1)?,
+                r.get::<_, String>(2)?,
+            ))
+        })?
+        .collect::<rusqlite::Result<Vec<_>>>()?;
+    for (path, kind, reason) in unreadable {
+        answer.rows.push(Row {
+            kind: "unreadable",
+            id: kind,
+            text: reason,
+            path: Some(path),
+            line: None,
+            flags: vec!["unreadable".into()],
+            ..Row::default()
+        });
+    }
+    Ok(answer)
+}
+
+/// The `count:` lines of `index status`.
+fn counts(session: &Session<'_>, head: &mut Row) -> Result<()> {
     for (label, sql) in [
         ("files", "SELECT COUNT(*) FROM files"),
         (
@@ -62,8 +94,12 @@ pub fn status(session: &Session<'_>) -> Result<Answer> {
             ..More::default()
         });
     }
-    // The graph work of the last in-place refresh (#59), when there was one
-    // since the last rebuild.
+    Ok(())
+}
+
+/// The graph work of the last in-place refresh (#59), when there was one
+/// since the last rebuild.
+fn last_refresh(session: &Session<'_>, head: &mut Row) -> Result<()> {
     let last: Option<String> = session
         .conn
         .query_row(
@@ -79,32 +115,7 @@ pub fn status(session: &Session<'_>) -> Result<Answer> {
             ..More::default()
         });
     }
-    answer.rows.push(head);
-    let mut statement = session.conn.prepare(
-        "SELECT f.path, f.kind, coalesce(f.parse_error, 'duplicate id ' || d.id, '') FROM files f \
-         LEFT JOIN dups d ON d.path = f.path WHERE f.parse_status <> 'ok' OR d.path IS NOT NULL ORDER BY f.path",
-    )?;
-    let unreadable = statement
-        .query_map([], |r| {
-            Ok((
-                r.get::<_, String>(0)?,
-                r.get::<_, String>(1)?,
-                r.get::<_, String>(2)?,
-            ))
-        })?
-        .collect::<rusqlite::Result<Vec<_>>>()?;
-    for (path, kind, reason) in unreadable {
-        answer.rows.push(Row {
-            kind: "unreadable",
-            id: kind,
-            text: reason,
-            path: Some(path),
-            line: None,
-            flags: vec!["unreadable".into()],
-            ..Row::default()
-        });
-    }
-    Ok(answer)
+    Ok(())
 }
 
 /// Rebuild the same snapshot and compare it with the index, table by
@@ -199,4 +210,29 @@ fn render(report: &Report) -> Answer {
         });
     }
     answer
+}
+
+/// `index verify` with `after_build` run once the shadow rebuild is built
+/// and before it is compared: tests interleave a second writer there
+/// (#58). The verb itself runs nothing there.
+pub fn index_verify_with(
+    request: &crate::Request,
+    after_build: &dyn Fn(),
+) -> Result<crate::emit::Output> {
+    let ws = crate::discover(request.kb.as_deref(), &request.cwd)?;
+    let now = request.now.unwrap_or_else(crate::time::now);
+    let tool = match &ws.repo {
+        Some(_) => Some(crate::workspace::GitTool::locate()?),
+        None => None,
+    };
+    let session = crate::session::Session::open(&ws, tool.as_ref(), false, now)?;
+    let answer = verify(&session, after_build)?;
+    let frame = crate::emit::Frame {
+        verb: "index-verify".into(),
+        args: Vec::new(),
+        budget: request.budget,
+        cursor: request.cursor.clone(),
+        json: request.json,
+    };
+    session.emit(&answer, &frame)
 }

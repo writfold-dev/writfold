@@ -97,7 +97,7 @@ fn a_corrupt_index_is_found_at_its_first_key_and_replaced() -> TestResult {
     let update = Connection::open(&file)?;
     update.execute(
         "UPDATE edges SET status = 'corrupt' WHERE src = ?1 AND rel = ?2 AND dst = ?3 AND origin = ?4 AND prov_path = ?5 AND prov_line = ?6",
-        rusqlite::params![key.0, key.1, key.2, key.3, key.4, key.5],
+        (&key.0, &key.1, &key.2, &key.3, &key.4, key.5),
     )?;
     drop(update);
     let (text, exit) = verify(&w)?;
