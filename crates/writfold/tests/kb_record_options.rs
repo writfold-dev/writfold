@@ -82,84 +82,87 @@ fn state(k: &Kb) -> Result<String> {
     Ok(seen)
 }
 
+/// Calls that give a kind an option it does not keep.
+const WRONG: [&[&str]; 9] = [
+    &[
+        "record",
+        "investigation",
+        "--title",
+        "Temperature again",
+        "--prs",
+        "PR-42",
+    ],
+    &[
+        "record",
+        "--prs",
+        "PR-42",
+        "investigation",
+        "--title",
+        "before the kind",
+    ],
+    &[
+        "record",
+        "ticket",
+        "AB-1",
+        "--title",
+        "t",
+        "--question",
+        "why?",
+    ],
+    &[
+        "record",
+        "ticket",
+        "AB-1",
+        "--title",
+        "t",
+        "--project",
+        "harbor",
+    ],
+    &[
+        "record",
+        "decision",
+        "--title",
+        "t",
+        "--target-source",
+        "s",
+        "--prs",
+        "p",
+    ],
+    &["record", "link", "relates-to", "a", "b", "--title", "t"],
+    &[
+        "propose",
+        "investigation",
+        "--title",
+        "t",
+        "--prs",
+        "PR-42",
+        "--local",
+    ],
+    &[
+        "propose",
+        "investigation",
+        "--title",
+        "t",
+        "--prs",
+        "PR-42",
+        "--tracked",
+    ],
+    &[
+        "propose",
+        "ticket",
+        "AB-1",
+        "--title",
+        "t",
+        "--trigger",
+        "x",
+    ],
+];
+
 #[test]
 fn another_kinds_option_is_refused_before_anything_is_written() -> Result {
     let k = kb("wrong")?;
     let before = state(&k)?;
-    let wrong: [&[&str]; 9] = [
-        &[
-            "record",
-            "investigation",
-            "--title",
-            "Temperature again",
-            "--prs",
-            "PR-42",
-        ],
-        &[
-            "record",
-            "--prs",
-            "PR-42",
-            "investigation",
-            "--title",
-            "before the kind",
-        ],
-        &[
-            "record",
-            "ticket",
-            "AB-1",
-            "--title",
-            "t",
-            "--question",
-            "why?",
-        ],
-        &[
-            "record",
-            "ticket",
-            "AB-1",
-            "--title",
-            "t",
-            "--project",
-            "harbor",
-        ],
-        &[
-            "record",
-            "decision",
-            "--title",
-            "t",
-            "--target-source",
-            "s",
-            "--prs",
-            "p",
-        ],
-        &["record", "link", "relates-to", "a", "b", "--title", "t"],
-        &[
-            "propose",
-            "investigation",
-            "--title",
-            "t",
-            "--prs",
-            "PR-42",
-            "--local",
-        ],
-        &[
-            "propose",
-            "investigation",
-            "--title",
-            "t",
-            "--prs",
-            "PR-42",
-            "--tracked",
-        ],
-        &[
-            "propose",
-            "ticket",
-            "AB-1",
-            "--title",
-            "t",
-            "--trigger",
-            "x",
-        ],
-    ];
+    let wrong = WRONG;
     for args in wrong {
         let (text, exit) = kb_run(&k, args)?;
         assert_eq!(exit, 1, "{args:?}: {text}");

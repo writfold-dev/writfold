@@ -71,7 +71,7 @@ fn top(c: &mut Check<'_>, has_fields: bool) -> Option<(String, Option<String>)> 
     let items = match c.text("items") {
         Field::Absent => None,
         Field::Bad => return None,
-        Field::Got(i) => pointer(c, "items", &i).then(|| i.value.text)?.into(),
+        Field::Got(i) => Some(pointer(c, "items", &i).then_some(i.value.text)?),
     };
     if !has_fields {
         c.error(
@@ -169,7 +169,10 @@ mod tests {
             (GOOD.replace("label", "label\"\nnope = \"/x"), "nope"),
             (GOOD.replace("\"/tag\"", "\"tag\""), "JSON Pointer"),
             (GOOD.replace("asset-catalog/1", "asset-catalog/2"), "schema"),
-            (format!("{GOOD}[fields]\nid = \"/x\"\n"), "tables are not used"),
+            (
+                format!("{GOOD}[fields]\nid = \"/x\"\n"),
+                "tables are not used",
+            ),
         ];
         for (text, word) in faults {
             let got = check(&text, "brewery", "x.toml");

@@ -121,10 +121,12 @@ fn status(a: &Action) -> Option<&'static str> {
     }
 }
 
-/// The plan of the catalog `index` in `world.decls`.
-pub fn planned(world: &World, index: usize) -> Option<Planned> {
-    let (decl, read) = world.decls.get(index)?;
-    let name = decl.name.as_str();
+/// A slot with what the verbs report about it: ID, path, present and
+/// wanted bytes, and why when foreign.
+type Found = (Slot, String, String, Option<String>, Option<String>, String);
+
+/// Every fault that keeps `name`'s input from being complete.
+fn faults_of(world: &World, name: &str, read: &Read) -> Vec<String> {
     let mut faults: Vec<String> = read.faults.clone();
     faults.extend(world.global.iter().cloned());
     for (other, r) in &world.decls {
@@ -135,6 +137,11 @@ pub fn planned(world: &World, index: usize) -> Option<Planned> {
             ));
         }
     }
+    faults
+}
+
+/// One slot per wanted row, then one per owned record no row wants.
+fn slots_of(world: &World, name: &str, read: &Read) -> Vec<Found> {
     let mut slots = Vec::new();
     let mut seen = Vec::new();
     for row in &read.rows {
@@ -142,12 +149,13 @@ pub fn planned(world: &World, index: usize) -> Option<Planned> {
         let (owner, why) = owner(world, name, &row.id, &path);
         let old = world.assets.get(&path).map(|(b, _)| b.clone());
         let equal = old.as_deref() == Some(row.bytes.as_str());
+        let slot = Slot {
+            wanted: true,
+            owner,
+            equal,
+        };
         slots.push((
-            Slot {
-                wanted: true,
-                owner,
-                equal,
-            },
+            slot,
             row.id.clone(),
             path.clone(),
             old,
@@ -160,8 +168,7 @@ pub fn planned(world: &World, index: usize) -> Option<Planned> {
         if owned.as_deref() == Some(name) && !seen.contains(path) {
             let id = path
                 .trim_start_matches(&format!("{ASSETS}/"))
-                .trim_end_matches(".json")
-                .to_owned();
+                .trim_end_matches(".json");
             let slot = Slot {
                 wanted: false,
                 owner: Owner::Mine,
@@ -169,7 +176,7 @@ pub fn planned(world: &World, index: usize) -> Option<Planned> {
             };
             slots.push((
                 slot,
-                id,
+                id.to_owned(),
                 path.clone(),
                 Some(bytes.clone()),
                 None,
@@ -177,6 +184,15 @@ pub fn planned(world: &World, index: usize) -> Option<Planned> {
             ));
         }
     }
+    slots
+}
+
+/// The plan of the catalog `index` in `world.decls`.
+pub fn planned(world: &World, index: usize) -> Option<Planned> {
+    let (decl, read) = world.decls.get(index)?;
+    let name = decl.name.as_str();
+    let faults = faults_of(world, name, read);
+    let slots = slots_of(world, name, read);
     let kernel: Vec<Slot> = (slots.iter())
         .map(|(s, ..)| Slot {
             wanted: s.wanted,
