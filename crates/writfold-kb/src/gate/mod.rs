@@ -10,7 +10,6 @@
 //! stored. The claims are mistake resistance and Git tamper evidence: a
 //! receipt is a tracked file whose history Git keeps, and anyone can
 //! re-run it. Nothing here signs anything or stops a determined forger.
-pub mod assessed;
 pub mod checklist;
 pub mod def;
 pub mod def_accept;

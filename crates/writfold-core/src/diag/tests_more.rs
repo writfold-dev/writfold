@@ -69,7 +69,6 @@ fn suggestions_offer_close_names_and_nothing_else() {
         "mechanical",
         "observed",
         "attested",
-        "assessed",
         "run-record",
         "checklist",
     ];

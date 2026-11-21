@@ -1,20 +1,15 @@
 //! Receipts are judged oldest first by `seq`, then by file name; no clock
 //! enters. A receipt written later with a clock that ran back still
-//! decides: the assessed gate's and a delivery check's newest receipt is
-//! the one with the highest `seq` ([`writfold_core::order`]).
-mod assessed;
+//! decides: a delivery check's newest receipt is the one with the highest
+//! `seq` ([`writfold_core::order`]).
 mod support;
 
-use assessed::{RUN, assess, define, double, receipts, sha, state_of, status, unit};
 use support::{NOW, TestResult, World, world};
 use writfold_kb::Verb;
 use writfold_kb::deliver::DeliverVerb;
 use writfold_kb::deliver::candidate::Prepare;
 
-#[test]
-fn child() -> TestResult {
-    assessed::child()
-}
+const RUN: &str = "run-20261101T090000Z-a1b2c3";
 
 fn seqs(paths: &[std::path::PathBuf]) -> TestResult<Vec<u64>> {
     let mut out = Vec::new();
@@ -24,28 +19,6 @@ fn seqs(paths: &[std::path::PathBuf]) -> TestResult<Vec<u64>> {
     }
     out.sort();
     Ok(out)
-}
-
-#[test]
-fn an_assessed_receipt_written_after_a_clock_ran_back_still_decides() -> TestResult {
-    let w = world(&[])?;
-    define(
-        &w,
-        &sha(&double())?,
-        &[("ship", "{gate}/step.weft", "ready")],
-    )?;
-    unit(&w, NOW)?;
-    // Without a Weft binary the gate is unknown; this receipt's clock is
-    // the later one.
-    let (text, _) = assess(&w, "ship", None, NOW + 600)?;
-    assert!(text.contains("gate ship [unknown]"), "{text}");
-    // The clock runs back; the passing assessment is written second.
-    let (text, exit) = assess(&w, "ship", Some(&double()), NOW + 300)?;
-    assert_eq!(exit, 0, "{text}");
-    assert_eq!(seqs(&receipts(&w)?)?, vec![1, 2]);
-    let (text, _) = status(&w)?;
-    assert_eq!(state_of(&text, "ship"), "satisfied", "{text}");
-    Ok(())
 }
 
 fn deliver(w: &World, verb: DeliverVerb, at: i64) -> TestResult<(String, u8)> {
@@ -58,7 +31,7 @@ fn check(w: &World, id: &str, at: i64) -> TestResult<(String, u8)> {
     let verb = DeliverVerb::Check {
         candidate: Some(id.into()),
         check: Some("paragraphs.bounded".into()),
-        run: Some(assessed::RUN.into()),
+        run: Some(RUN.into()),
         mode: None,
     };
     deliver(w, verb, at)

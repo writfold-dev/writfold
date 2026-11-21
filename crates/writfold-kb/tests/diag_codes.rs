@@ -79,8 +79,8 @@ fn a_user_configuration_line_that_is_not_key_value_is_named() {
     assert_eq!(
         found,
         [
-            "config.toml:4:1: this line is not key = \"value\" and is ignored; write it as theme = \"dark\" or weft = \"/path/to/weft\"",
-            "config.toml:5:1: this line is not key = \"value\" and is ignored; write it as theme = \"dark\" or weft = \"/path/to/weft\"",
+            "config.toml:4:1: this line is not key = \"value\" and is ignored; write it as theme = \"dark\"",
+            "config.toml:5:1: this line is not key = \"value\" and is ignored; write it as theme = \"dark\"",
         ]
     );
 }

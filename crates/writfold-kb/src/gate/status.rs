@@ -40,7 +40,6 @@ pub struct Owed {
 pub struct Filings {
     pub receipts: Vec<Filed>,
     pub statements: Vec<statement::Filed>,
-    pub assessed: Vec<super::assessed::Filed>,
     pub covers: Vec<super::checklist::Filed>,
     /// `runs/<run>`.
     pub run_dir: String,
@@ -53,7 +52,6 @@ impl Filings {
         Self {
             receipts: filed(root, run_dir, run),
             statements: statement::filed(root, run_dir, run),
-            assessed: super::assessed::filed(root, run_dir, run),
             covers: super::checklist::filed(root, run_dir, run),
             run_dir: run_dir.to_owned(),
             owed: Owed::default(),
@@ -91,7 +89,6 @@ impl Filings {
     pub fn invalid(&self) -> usize {
         self.receipts.iter().filter(|f| f.parsed.is_err()).count()
             + self.statements.iter().filter(|f| f.parsed.is_err()).count()
-            + self.assessed.iter().filter(|f| f.parsed.is_err()).count()
             + self.covers.iter().filter(|f| f.parsed.is_err()).count()
     }
 }
@@ -107,8 +104,6 @@ pub struct Judged<'a> {
     pub receipt: Option<(&'a Filed, &'a Receipt)>,
     pub same_definition: bool,
     pub statements: statement::Summary<'a>,
-    /// An assessed gate's receipt and checks (its `receipt` is `None`).
-    pub assessment: Option<super::assessed::Assessment<'a>>,
     /// A checklist gate's items (its `receipt` is `None`).
     pub checklist: Option<super::checklist::View<'a>>,
 }
@@ -153,10 +148,7 @@ pub fn judge<'a>(
     filings: &'a Filings,
 ) -> Result<Report<'a>> {
     let (mut report, later) = judge_plain(session, subject, filings)?;
-    let (assessed, lists) = later.into_iter().partition(|d| d.assessed.is_some());
-    let more = super::assessed::judge(session, subject, filings, &report, assessed)?;
-    let lists = super::checklist::judge(session, subject, filings, &report, lists)?;
-    report.gates.extend(more);
+    let lists = super::checklist::judge(session, subject, filings, &report, later)?;
     report.gates.extend(lists);
     // Every gate is judged, so evidence grounds the same with or without
     // a plan; only the gates the plan owes are reported.
@@ -183,7 +175,7 @@ pub fn judge_plain<'a>(
     definitions.retain(|d| !d.on_candidate());
     let later: Vec<Definition>;
     (later, definitions) =
-        (definitions.into_iter()).partition(|d| d.assessed.is_some() || d.is_checklist());
+        (definitions.into_iter()).partition(Definition::is_checklist);
     let patterns: Vec<Vec<&str>> = (definitions.iter().chain(&later))
         .map(Definition::patterns)
         .collect();
@@ -264,7 +256,6 @@ pub fn judge_gate<'a>(
         state,
         receipt,
         statements,
-        assessment: None,
         checklist: None,
     }
 }
@@ -331,10 +322,9 @@ pub fn rows(
 ) -> Result<Vec<Row>> {
     let mut out = Vec::new();
     for judged in &report.gates {
-        out.push(match (&judged.assessment, &judged.checklist) {
-            (Some(assessment), _) => super::assessed::row(subject, judged, assessment),
-            (_, Some(view)) => super::checklist::row(subject, judged, view),
-            _ => gate_row(git, subject, report, judged)?,
+        out.push(match &judged.checklist {
+            Some(view) => super::checklist::row(subject, judged, view),
+            None => gate_row(git, subject, report, judged)?,
         });
     }
     for f in &filings.receipts {
@@ -345,11 +335,6 @@ pub fn rows(
     for f in &filings.statements {
         if let Err(why) = &f.parsed {
             out.push(invalid_row("statement", &f.name, &f.path, why));
-        }
-    }
-    for f in &filings.assessed {
-        if let Err(why) = &f.parsed {
-            out.push(invalid_row("receipt", &f.name, &f.path, why));
         }
     }
     for f in &filings.covers {

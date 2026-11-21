@@ -91,11 +91,8 @@ fn evidence(j: &Judged<'_>) -> (Option<String>, String) {
     if let Some((f, r)) = j.receipt {
         return (Some(f.path.clone()), r.scope.clone());
     }
-    if let Some(view) = &j.checklist {
-        return (view.newest().map(|f| f.path.clone()), view.content.clone());
-    }
-    match j.assessment.as_ref().and_then(|a| a.receipt) {
-        Some((f, r)) => (Some(f.path.clone()), r.source.clone()),
+    match &j.checklist {
+        Some(view) => (view.newest().map(|f| f.path.clone()), view.content.clone()),
         None => (None, String::new()),
     }
 }

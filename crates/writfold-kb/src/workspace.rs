@@ -224,7 +224,7 @@ pub fn config_warnings(shown: &str, text: &str) -> Vec<String> {
             col: 1,
             len,
         });
-        d.help("write it as theme = \"dark\" or weft = \"/path/to/weft\"".into());
+        d.help("write it as theme = \"dark\"".into());
         out.push(writfold_core::diag::line(&d));
     }
     out

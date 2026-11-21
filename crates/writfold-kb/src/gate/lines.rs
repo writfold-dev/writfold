@@ -5,7 +5,7 @@
 //! only skipped steps name is listed `skipped` and never counts, and it
 //! exits 0 only as [`writfold_core::policy::lines::lines_clean`] decides.
 use super::status::{self, Filings};
-use super::{assessed, checklist, locate, receipt};
+use super::{checklist, locate, receipt};
 use crate::emit::Output;
 use crate::error::{KbError, Result};
 use crate::index::query::Rec;
@@ -114,9 +114,6 @@ fn header(
 
 /// One `gate lines` line: the standing, then the receipt or statement.
 fn gate_line(judged: &status::Judged<'_>, width: usize) -> String {
-    if let Some(assessment) = &judged.assessment {
-        return assessed::line(judged, assessment, width);
-    }
     if let Some(view) = &judged.checklist {
         return checklist::line(judged, view, width);
     }

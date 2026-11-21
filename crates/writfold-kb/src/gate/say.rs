@@ -103,12 +103,7 @@ pub(super) fn record(
 
 /// The statements a gate's class or policy refuses.
 fn refuse(say: &Say, definition: &def::Definition, subject: &subject::Subject) -> Result<()> {
-    let refused = if definition.assessed.is_some() {
-        format!(
-            "gate {} is assessed: only gate run, with every required Weft check entailed from grounded assumptions, meets it (statements about an assessed gate are not built)",
-            say.id
-        )
-    } else if say.kind == Kind::Attested && definition.is_checklist() {
+    let refused = if say.kind == Kind::Attested && definition.is_checklist() {
         format!(
             "gate {} is a checklist: record each item with gate cover {} <item> supported REF…|not-applicable --reason TEXT --by WHO (gate waive sets the whole gate aside)",
             say.id, say.id

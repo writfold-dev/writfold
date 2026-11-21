@@ -18,18 +18,15 @@ pub use places::ARTIFACTS;
 pub(super) const MAX_TIMEOUT: i64 = 86_400;
 /// The class of a gate that is a statement, not a check.
 pub const ATTESTED: &str = "attested";
-/// The class of a gate met by a Weft assessment ([`super::assessed`]).
-pub const ASSESSED: &str = "assessed";
 /// The class of a check over the run's own records ([`crate::plan::records`]).
 pub const RUN_RECORD: &str = "run-record";
 /// The class of a gate met by covering its items ([`super::checklist`]).
 pub const CHECKLIST: &str = "checklist";
 /// Every class, in the order the guide lists them.
-pub const CLASSES: [&str; 6] = [
+pub const CLASSES: [&str; 5] = [
     "mechanical",
     "observed",
     ATTESTED,
-    ASSESSED,
     RUN_RECORD,
     CHECKLIST,
 ];
@@ -88,8 +85,6 @@ pub struct Definition {
     pub require: Vec<String>,
     /// Files named through `{gate}/…` in `argv`, with their digests.
     pub files: Vec<(String, String)>,
-    /// An assessed gate's Weft source, checks and binary pin.
-    pub assessed: Option<super::assessed::Spec>,
     /// A checklist gate's items.
     pub checklist: Option<super::checklist::Spec>,
     /// `accept`, when written: the standings that meet the gate, in the
@@ -182,9 +177,6 @@ pub fn digest(d: &Definition) -> String {
     }
     for (path, file) in &d.files {
         canonical.push_str(&format!("file={path} {file}\n"));
-    }
-    if let Some(spec) = &d.assessed {
-        canonical.push_str(&spec.canonical());
     }
     if let Some(spec) = &d.checklist {
         canonical.push_str(&spec.canonical());

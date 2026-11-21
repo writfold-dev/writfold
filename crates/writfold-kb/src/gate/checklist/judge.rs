@@ -301,7 +301,6 @@ pub fn judge<'a>(
             receipt: None,
             same_definition: true,
             statements,
-            assessment: None,
             checklist: Some(View {
                 entries,
                 rollup,

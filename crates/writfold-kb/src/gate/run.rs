@@ -98,10 +98,6 @@ pub(super) fn run(
             "gate {id} is a checklist: it runs nothing; record each item with gate cover {id} <item> supported REF…|not-applicable --reason TEXT --by WHO"
         )));
     }
-    if definition.assessed.is_some() {
-        drop(session);
-        return super::assessed::run(ws, tool, request, &rec, &subject, &definition, now);
-    }
     let seq = next_seq(&ws.root, &runs::dir(&rec), &rec.id, &subject.name, id);
     let target = Target {
         rec: &rec,

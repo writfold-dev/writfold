@@ -8,7 +8,7 @@
 //! | mechanical, observed, run-record | satisfied, waived | `["satisfied"]` or both |
 //! | attested, checklist | attested, waived | `["attested"]` or both |
 //! | assessed | satisfied | `["satisfied"]` |
-use super::def::{ASSESSED, ATTESTED, CHECKLIST};
+use super::def::{ATTESTED, CHECKLIST};
 use super::def_check::a_class;
 use crate::defs::{Check, Field};
 use writfold_core::policy::Accept;
@@ -20,7 +20,6 @@ pub const STANDINGS: [&str; 3] = ["satisfied", "attested", "waived"];
 pub fn reachable(class: &str) -> &'static [&'static str] {
     match class {
         ATTESTED | CHECKLIST => &["attested", "waived"],
-        ASSESSED => &["satisfied"],
         _ => &["satisfied", "waived"],
     }
 }
@@ -113,8 +112,6 @@ mod tests {
         assert!(unmeetable.is_err_and(|e| e.contains("accept must include \"attested\"")));
         let twice = read("accept = [\"satisfied\", \"satisfied\"]\n", "mechanical");
         assert!(twice.is_err_and(|e| e.contains("names satisfied twice")));
-        let assessed = read("accept = [\"satisfied\", \"waived\"]\n", "assessed");
-        assert!(assessed.is_err_and(|e| e.contains("never waived")));
     }
 
     #[test]

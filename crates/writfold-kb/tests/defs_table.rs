@@ -134,7 +134,6 @@ fn required(text: &str) -> Vec<&'static str> {
         "mechanical" | "observed" => vec!["argv", "timeout_seconds", "scope"],
         "attested" if candidate => vec![],
         "attested" => vec!["scope"],
-        "assessed" => vec!["weft", "checks", "weft_sha256", "timeout_seconds"],
         "run-record" => vec!["require"],
         _ => vec!["scope", "items"],
     });

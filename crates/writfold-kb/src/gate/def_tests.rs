@@ -152,7 +152,6 @@ fn a_checklist_definition_takes_items_and_no_command() -> Result<(), String> {
         ("version = 1", "version = 1\ntimeout_seconds = 5"),
         ("version = 1", "version = 1\nsubject = \"candidate\""),
         ("version = 1", "version = 1\nrequire = [\"run.reflected\"]"),
-        ("version = 1", "version = 1\nweft = \"{gate}/x.weft\""),
         (
             "items = [\"errors: errors are handled\", \"perf: no new allocation\"]\n",
             "",

@@ -1,7 +1,7 @@
 //! The per-class rules of a gate definition ([`super::def`]): which
 //! command fields a class takes, a run-record gate's `require`, a
 //! checklist gate's subject, and the placeholders a command may use.
-use super::def::{ASSESSED, ATTESTED, CHECKLIST, Judges, MAX_TIMEOUT, RUN_RECORD};
+use super::def::{ATTESTED, CHECKLIST, Judges, MAX_TIMEOUT, RUN_RECORD};
 use super::def_check::a_class;
 use super::places;
 use crate::defs::{Check, Spanned, Text};
@@ -80,11 +80,10 @@ pub(super) fn command(
     judges: Option<Judges>,
 ) -> Option<(Vec<Spanned<Text>>, String, u64)> {
     let gate = a_class(class);
-    if [ATTESTED, ASSESSED, RUN_RECORD, CHECKLIST].contains(&class) {
+    if [ATTESTED, RUN_RECORD, CHECKLIST].contains(&class) {
         let runs = match class {
             ATTESTED => "an attested gate runs nothing",
             CHECKLIST => "a checklist gate runs nothing (gate cover records its items)",
-            ASSESSED => "an assessed gate runs only the pinned weft binary",
             _ => "a run-record gate runs no command",
         };
         let mut ok = true;
@@ -93,11 +92,7 @@ pub(super) fn command(
                 ok &= !c.not_here(key, format!("`{key}` is not used by {gate}"), runs);
             }
         }
-        let timeout = match class == ASSESSED {
-            true => timeout(c, &gate)?,
-            false => 0,
-        };
-        return ok.then(|| (Vec::new(), ".".into(), timeout));
+        return ok.then(|| (Vec::new(), ".".into(), 0));
     }
     let argv = c.list("argv");
     let argv = match argv {

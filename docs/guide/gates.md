@@ -1,6 +1,6 @@
 # Gates
 
-> **Status:** built in v0.3.0-dev.1; instruction gates, gate scripts, the Weft assessed gate, run-record checks and plan-owed gates built in v0.4.0-dev.1; checklist gates and `gate cover` built in v0.5.0-dev.1; observations as evidence built in v0.5.0-dev.3. Nothing owed reads as not met, and the self-staling note, built in v0.6.0-dev.1. Every fault of a definition reported at its line and column, built in v0.6.0-dev.2. A checklist's `own_evidence` and `evidence_from`, and `bound:` notes on shared and other-item evidence, built in v0.6.0-dev.9. A gate's `accept` list, a checklist's `not_applicable` and `none_found`, the `none-found` outcome and binding receipts and statements to their run and subject in the proved kernel, built in v0.6.0-dev.3. Scope globs proved (a `*` now also covers a literal `*` in a path) and `seq` on assessed receipts, built in v0.6.0-dev.4. A second checkout of the KB's repository judged as itself, never as the run's recorded worktree, and `gate lines` agreeing with the plan's word: fixed in v0.6.0-dev.4.
+> **Status:** built in v0.3.0-dev.1; instruction gates, gate scripts, run-record checks and plan-owed gates built in v0.4.0-dev.1; checklist gates and `gate cover` built in v0.5.0-dev.1; observations as evidence built in v0.5.0-dev.3. Nothing owed reads as not met, and the self-staling note, built in v0.6.0-dev.1. Every fault of a definition reported at its line and column, built in v0.6.0-dev.2. A checklist's `own_evidence` and `evidence_from`, and `bound:` notes on shared and other-item evidence, built in v0.6.0-dev.9. A gate's `accept` list, a checklist's `not_applicable` and `none_found`, the `none-found` outcome and binding receipts and statements to their run and subject in the proved kernel, built in v0.6.0-dev.3. Scope globs proved (a `*` now also covers a literal `*` in a path) and `seq` on assessed receipts, built in v0.6.0-dev.4. A second checkout of the KB's repository judged as itself, never as the run's recorded worktree, and `gate lines` agreeing with the plan's word: fixed in v0.6.0-dev.4.
 
 A gate is one small check with a path scope. `gate run` runs its command and keeps a receipt pinned to the exact bytes checked. `gate status` then says, on every read, whether that evidence still holds. Gates report; they block nothing unless a [guard rule](hooks.md#guard-rules) names them.
 
@@ -12,7 +12,7 @@ One file per gate, `.writfold/gates/<id>.toml`. It lives in the KB root (shared 
 schema = "writfold-gate/1"         # required
 id = "unit"                        # required; a slug equal to the file name
 version = 1                        # required; your own revision number
-class = "mechanical"               # required; mechanical | observed | attested | run-record | assessed | checklist
+class = "mechanical"               # required; mechanical | observed | attested | run-record | checklist
 argv = ["cargo", "test", "--locked"]   # required for a command gate; never a shell string
 workdir = "."                      # optional; relative to the repository's top
 timeout_seconds = 600              # required for a command gate; 1 to 86400
@@ -62,7 +62,6 @@ How to read these, the codes and `kb lint` are on [errors](errors.md).
 | `observed` | a command whose result also depends on the world: a service answering | a passing receipt from `gate run` |
 | `attested` | a statement someone must make; it runs nothing | `gate attest` |
 | `run-record` | a check over the run's own records, not code ([below](#run-record-checks)) | a passing receipt from `gate run` |
-| `assessed` | a plan step verified by Weft from cited evidence ([below](#weft-assessed-gates)) | a passing receipt from `gate run`: every required check entailed from grounded assumptions |
 | `checklist` | items someone covers, each with cited evidence or a reason ([below](#checklist-gates)) | `gate cover` on every required item: stands as `attested` |
 
 An attested gate has no `argv`, `workdir` or `timeout_seconds`:
@@ -153,7 +152,6 @@ research: attested by agent: … runs/run-…-17b8d0/statements/research-….jso
 |---|---|---|---|
 | `mechanical`, `observed`, `run-record` | `satisfied`, `waived` | both | `["satisfied"]` or both |
 | `attested`, `checklist` | `attested`, `waived` | both | `["attested"]` or both |
-| `assessed` | `satisfied` | `satisfied` | `["satisfied"]` |
 
 A word that is not a standing is `value.unknown`; a standing the class cannot reach is `value.class` (`a mechanical gate is never attested`); a list without the class's own standing is `value.unmeetable`; a word twice is `value.twice`. The digest gains the line `accept=<json>` only when the key is written, so a definition without it keeps its digest; adding or changing it makes earlier receipts, statements and rows stale, so the stricter policy starts with fresh evidence.
 
@@ -232,86 +230,6 @@ description = "subject at most 72 characters, a blank second line, body wrapped 
 
 A script gate reports findings as `<line>: <text>` on stdout; only a clean exit 0 passes. A timeout, a signal or a draft that changed while it ran is `unknown`. A worked example is in `fixtures/kb/commit-message/`.
 
-## Weft assessed gates
-
-> **Status:** built in v0.4.0-dev.1. Weft is frozen: the assessed gate keeps building and its tests keep passing, with no new development.
-
-A gate of class `assessed` is met by a [Weft](https://github.com/writfold-dev/weft) assessment of a plan step instead of a command's exit status. The agent states the step's assumptions and checks in a Weft file, cites the evidence for each assumption, and runs the gate. Writfold resolves every citation, runs the pinned `weft` binary, and records which checks Weft entails and whether each rests on grounded evidence.
-
-```toml
-# .writfold/gates/ship-batching.toml: the step is verified by Weft
-schema = "writfold-gate/1"
-id = "ship-batching"
-version = 1
-class = "assessed"
-weft = "{run}/plan/ship.weft"       # submitted by the agent in the run; or "{gate}/<file>.weft" beside this file
-checks = ["ready"]                  # the Weft checks that must be met
-weft_sha256 = "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"   # sha256sum of your weft binary
-timeout_seconds = 60
-description = "the batched ledger writes are ready to ship"
-```
-
-- **`weft`** is `{gate}/<path>.weft` (a source shipped beside the definition) or `{run}/<path>.weft` (a file the agent writes under `runs/<run>/`). Either must stay inside its directory.
-- **`weft_sha256`** pins the binary. Its path is never in the definition or on the command line: it is `$WRITFOLD_WEFT`, else `weft = "<path>"` in `~/.config/writfold/config.toml`. A binary with another digest is refused before it runs; no binary at all records `unknown`, never a pass.
-- An assessed gate has no `argv`, `workdir` or `scope`: what it judges is its Weft source and the evidence the source cites. `gate attest` and `gate waive` refuse it.
-
-The Weft file is ordinary Weft. Each assumption cites its evidence with Weft's own binding, `claim <name> = citation "<reference>";`, declared **directly above** the `assume` it supports (a citation followed by a check, or by nothing, is refused):
-
-```weft
-// runs/<run>/plan/ship.weft: plan step "ship the batched ledger writes"
-review ship_batching {
-    context "kb" at "run";
-    profile "weft.symbolic/1";
-    target change = proposal "batch-ledger-writes";
-
-    claim unit_green = citation "gate:unit";
-    assume tests_pass: passes("unit");
-
-    claim stall_done = citation "⟦cite kind=record path=ktlo/2026/hbr-99-flush-stall.md state=done⟧";
-    assume stall_fixed: fixed("hbr-99");
-
-    check ready: passes("unit") and fixed("hbr-99");
-    check rolled_back: not passes("unit");
-    check deployed: deployed("production");
-}
-```
-
-A reference may be:
-
-| Reference | Grounded when |
-|---|---|
-| a KB citation token `⟦cite …⟧` or a locator `repo@commit:path[:a-b]` | `stale` says it is fresh |
-| `gate:<id>` | the gate is `satisfied` (or `attested`, kept as attested) |
-| a gate receipt of this run, by path or name | it passed, about the gate's current definition and bytes |
-| an attestation of this run, by path | it is the gate's current attestation (attested) |
-| a retrieval receipt, by path or name | every citation in it is fresh |
-| an edit receipt, by path or name | every file it edited still holds the bytes it wrote |
-| an observation (`runs/<run>/observed/…json`), by path or name (built in v0.5.0-dev.3) | its status is `ok` and its embedded citation is fresh ([observations](#observations-as-evidence-built-in-v050-dev3)) |
-
-An assumption with no citation, or with any citation that is not grounded, is ungrounded. Weft's report lists, for each check, the assumptions it used (every assumption declared above the check). A check **meets** the gate only when Weft's result is `entailed` and every one of those assumptions is grounded. Weft's results are kept in its own words, `entailed`, `refuted`, `undetermined` or `inconsistent-premises`; the basis is `grounded`, or `hypothetical` when any assumption it used is ungrounded. A hypothetical check is flagged `!hypothetical` and is never counted as met, whatever its result. The gate passes when every required check is met; Weft unable to finish (no binary, a timeout, an incomplete report) is `unknown`.
-
-The output below is from `crates/writfold-kb/tests/gate_assessed.rs`, where this source is shipped as `{gate}/step.weft` for a gate named `ship` and `bin=` is the test double's digest. With `unit` satisfied and the record fresh, `ready` is entailed on a grounded basis and the gate is satisfied:
-
-```text
-gate ship [satisfied] assessed pass met=1/1 weft=f463cf9c4a50 bin=8b46349b5622 at demo-service@bcacd8cac84e @runs/run-…/assessed/ship-20261111T000100Z-….json:1
-  check: ready [entailed grounded] met
-  check: rolled_back [refuted grounded] (not required)
-  check: deployed [undetermined grounded] (not required)
-```
-
-The same source after an in-scope file changed, so `gate:unit` is stale: Weft still entails `ready`, but from an ungrounded assumption, and the gate fails:
-
-```text
-gate ship [failed] assessed fail met=0/1 weft=f463cf9c4a50 bin=8b46349b5622 at demo-service@bcacd8cac84e @runs/run-…/assessed/ship-20261111T000100Z-….json:1 !failed
-  check: ready [entailed hypothetical] not met; rests on ungrounded tests_pass !hypothetical
-  check: rolled_back [refuted hypothetical] (not required); rests on ungrounded tests_pass !hypothetical
-  check: deployed [undetermined hypothetical] (not required); rests on ungrounded tests_pass !hypothetical
-  cite: tests_pass unit_green [ungrounded] stale @runs/run-…/gates/unit-20261111T000000Z-….json:1
-  next: writfold kb gate run ship (Weft source {gate}/step.weft)
-```
-
-The receipt, `runs/<run>/assessed/<gate>-<time>-<hex>.json`, binds the definition digest, the Weft source's digest, the pinned and actual binary digests, the report's digest (the report itself stays local), every citation with what it stood on, and every check's Weft result, Weft's own basis and Writfold's basis. Reading it re-derives every basis and the outcome, so a hypothetical check relabelled grounded reads as `[invalid]`. It carries `seq`, one more than the highest of the run's assessed receipts of that gate on that repository, and receipts are judged in `seq`, then file-name order, never by `recorded` (built in v0.6.0-dev.4; a receipt written before carries none, reads as 0 and comes first). It goes `stale` when the source changes or any cited evidence moves (`why: cited evidence moved: stall_done (…) was fresh, now changed`), and is satisfied again if the evidence returns.
-
 ## Run-record checks
 
 A gate of class `run-record` runs no command: `gate run` judges the run's own records against the built-in requirements its `require` list names, and records a receipt like any other (exit status 0 for met, 1 for not met, with the reason as a note).
@@ -364,7 +282,7 @@ description = "code review checklist"
 - **`items`**: one to 64 strings, each `id: text`, the ID a slug unique in the gate. **`optional`** names items that never hold the gate open. Both are part of the definition digest, so adding, removing or rewording an item makes every row stale.
 - **`not_applicable`** (built in v0.6.0-dev.3): the items `not-applicable` covers. Absent: every item, as before; an empty list: none. **`none_found`**: the items `none-found` covers. Absent: none. **`snapshot`** (built in v0.6.0-dev.11, [#3](https://github.com/writfold-dev/writfold/issues/3)): the items whose `supported` row covers them only when it cites a look of the run that kept a [snapshot](stores.md#keeping-a-looks-bytes-snapshots) (`observe --snapshot`). Absent: none. A listed item whose row cites no such look shows `[supported]` followed by "cites no look that kept a snapshot" and is not counted covered (proved: `snapshot_item_needs_snapshot`; an unlisted item is covered exactly as before, `unlisted_item_unchanged`). Each names declared items only (`ref.undefined` otherwise, with the nearest ID) and joins the digest only when written.
 - **`own_evidence`** (built in v0.6.0-dev.9): the items that need evidence of their own. A `supported` or `none-found` row for one of them must cite, among its references, a look recorded `--for` that item, or a gate `evidence_from` names for it. **`evidence_from`**: `["item: gate …"]`, the gates whose receipts (or `gate:<id>`) answer an item. An item named here and not in `own_evidence` takes only those gates. The gates named are not checked to exist: a gate that does not exist grounds nothing. Both keys name declared items only and join the digest only when written, so adding one makes that checklist's rows stale ("the definition changed"), and the next cover row is checked against it. Items in neither take any grounded reference, as before. The decision is the proved `bind` kernel ([gate evidence spec](../rfcs/2026-11-18-gate-evidence-binding-and-pins.md)).
-- A checklist gate takes `scope` (the content its rows are about) and optionally `instructions` and `description`; it takes no `argv`, `workdir`, `timeout_seconds`, `subject`, `require` or Weft keys.
+- A checklist gate takes `scope` (the content its rows are about) and optionally `instructions` and `description`; it takes no `argv`, `workdir`, `timeout_seconds`, `subject` or `require` keys.
 
 ```text
 writfold kb gate cover <gate> <item> supported REF… --by WHO [--note TEXT] [--run ID] [--repo DIR]
@@ -386,7 +304,19 @@ A row whose outcome the policy does not take (hand-written, or merged) keeps its
 
 **A whole-gate waiver.** `gate waive` still sets a checklist aside unless the definition says `accept = ["attested"]`. `kb lint` warns (`policy.waivable`, a warning: exit unchanged without `--deny-warnings`) when a checklist restricts `not_applicable` and still accepts a waiver, because the restriction is then one command from being moot.
 
-Each `REF` is one argument, any reference an assessed gate may cite ([the table above](#weft-assessed-gates)): a citation token, a locator, `gate:<id>`, or a gate receipt, attestation, retrieval receipt, edit receipt or observation of this run. `supported` needs at least one, and is refused (exit 3, nothing written) when any is not grounded now, so a row never starts out false. A waiver is never evidence. A checklist and an assessed gate are both judged against the other gates only, so a reference to either class is not grounded.
+Each `REF` is one argument: a citation token, a locator, `gate:<id>`, or a gate receipt, attestation, retrieval receipt, edit receipt or observation of this run.
+
+| Reference | Grounded when |
+|---|---|
+| a KB citation token `⟦cite …⟧` or a locator `repo@commit:path[:a-b]` | `stale` says it is fresh |
+| `gate:<id>` | the gate is `satisfied` (or `attested`, kept as attested) |
+| a gate receipt of this run, by path or name | it passed, about the gate's current definition and bytes |
+| an attestation of this run, by path | it is the gate's current attestation (attested) |
+| a retrieval receipt, by path or name | every citation in it is fresh |
+| an edit receipt, by path or name | every file it edited still holds the bytes it wrote |
+| an observation (`runs/<run>/observed/…json`), by path or name (built in v0.5.0-dev.3) | its status is `ok` and its embedded citation is fresh ([observations](#observations-as-evidence-built-in-v050-dev3)) |
+
+`supported` needs at least one, and is refused (exit 3, nothing written) when any is not grounded now, so a row never starts out false. A waiver is never evidence. A checklist is judged against the other gates only, so a reference to another checklist is not grounded. Edit and retrieval receipts are those written before `kb edit` and the Tuft adapter were removed (21 November 2026); nothing writes them now.
 
 **Several items at once** (built in v0.5.0-dev.3): `gate cover <gate> --from FILE --by WHO [--run ID] [--repo DIR]`, or `--from -` to read standard input, takes one JSON object per line:
 

@@ -2,7 +2,7 @@
 //! reports at the position of what it judges; a check that needs a value
 //! another check found wrong does not run, so no fault is reported twice.
 use super::def::{
-    ASSESSED, CHECKLIST, CLASSES, DIR, Definition, Instructions, Judges, Origin, RUN_RECORD,
+    CHECKLIST, CLASSES, DIR, Definition, Instructions, Judges, Origin, RUN_RECORD,
     SCHEMA, digest,
 };
 use super::{def_class, places};
@@ -10,7 +10,7 @@ use crate::defs::{Check, Field, Slot, Spanned, Text, Value};
 use std::path::Path;
 use writfold_core::diag::Report;
 
-const KEYS: [&str; 24] = [
+const KEYS: [&str; 21] = [
     "accept",
     "schema",
     "id",
@@ -23,9 +23,6 @@ const KEYS: [&str; 24] = [
     "description",
     "instructions",
     "subject",
-    "weft",
-    "checks",
-    "weft_sha256",
     "require",
     "items",
     "optional",
@@ -58,7 +55,6 @@ fn keys_for(class: Option<&str>) -> Vec<&'static str> {
             "ages_as",
         ],
         Some("attested") => &["scope", "subject"],
-        Some(ASSESSED) => &["weft", "checks", "weft_sha256", "timeout_seconds"],
         Some(RUN_RECORD) => &["require"],
         Some(CHECKLIST) => &[
             "scope",
@@ -184,18 +180,9 @@ fn scope(c: &mut Check<'_>, judges: Option<Judges>, class: &str) -> Option<Vec<S
     if class == RUN_RECORD {
         return Some(Vec::new());
     }
-    if class == ASSESSED || judges == Some(Judges::Candidate) {
-        let (who, why) = match class == ASSESSED {
-            true => (
-                "an assessed gate",
-                "it judges its Weft source and cited evidence",
-            ),
-            false => ("a candidate gate", "it judges the candidate's bytes"),
-        };
-        let mut ok = !c.not_here("scope", format!("`scope` is not used by {who}"), why);
-        if class == ASSESSED && judges == Some(Judges::Candidate) {
-            ok &= !c.not_here("subject", format!("`subject` is not used by {who}"), why);
-        }
+    if judges == Some(Judges::Candidate) {
+        let (who, why) = ("a candidate gate", "it judges the candidate's bytes");
+        let ok = !c.not_here("scope", format!("`scope` is not used by {who}"), why);
         return ok.then(Vec::new);
     }
     judges?;
@@ -265,7 +252,6 @@ pub fn check(
     let judges = judges(&mut c, origin);
     let command = def_class::command(&mut c, &class, judges);
     let scope = scope(&mut c, judges, &class);
-    let assessed = super::assessed::spec::check(&mut c, &class, dir);
     let checklist = super::checklist::spec::check(&mut c, &class);
     let accept = super::def_accept::check(&mut c, &class);
     let ages_as = def_class::ages_as(&mut c, &class);
@@ -291,7 +277,6 @@ pub fn check(
             instructions: instructions?,
             require: require?,
             files: files?,
-            assessed: assessed?,
             checklist: checklist?,
             accept: accept?,
             ages_as: ages_as?,
