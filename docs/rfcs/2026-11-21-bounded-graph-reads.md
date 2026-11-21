@@ -8,7 +8,7 @@ authors:
 created: 2026-11-21
 updated: 2026-11-21
 issue: https://github.com/writfold-dev/writfold/issues/60
-milestone: "v0.6.0"
+milestone: "v0.6.0-dev.14"
 supersedes: []
 superseded_by: []
 blocked_on: []
