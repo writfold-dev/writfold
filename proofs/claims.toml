@@ -2675,3 +2675,35 @@ subsumes = ["TAU-N001", "TAU-P003"]
 mutants = [
   "round-advance-ignores-min",
 ]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/catalog.rs"
+function = "any_conflict"
+lean = "writfold_core.catalog.any_conflict"
+theorems = [
+  "Writfold.Core.Catalog.any_conflict_loop_spec",
+  "Writfold.Core.Catalog.any_conflict_spec",
+  "Writfold.Core.Catalog.any_conflict_total",
+]
+total = "Writfold.Core.Catalog.any_conflict_total"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "catalog-conflict-skips-last",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/catalog.rs"
+function = "any_change"
+lean = "writfold_core.catalog.any_change"
+theorems = [
+  "Writfold.Core.Catalog.any_change_loop_spec",
+  "Writfold.Core.Catalog.any_change_spec",
+  "Writfold.Core.Catalog.any_change_total",
+]
+total = "Writfold.Core.Catalog.any_change_total"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "catalog-change-skips-last",
+]

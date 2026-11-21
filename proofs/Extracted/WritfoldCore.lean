@@ -240,6 +240,194 @@ def bytes.same (left : Slice Std.U8) (right : Slice Std.U8) : Result Bool := do
   then ok false
   else bytes.same_loop left right 0#usize
 
+/-- [writfold_core::catalog::Owner]
+    Source: 'crates/writfold-core/src/catalog.rs', lines 14:0-21:1
+    Visibility: public -/
+@[discriminant isize]
+inductive catalog.Owner where
+| Absent : catalog.Owner
+| Mine : catalog.Owner
+| Foreign : catalog.Owner
+
+/-- [writfold_core::catalog::Action]
+    Source: 'crates/writfold-core/src/catalog.rs', lines 24:0-31:1
+    Visibility: public -/
+@[discriminant isize]
+inductive catalog.Action where
+| Keep : catalog.Action
+| Create : catalog.Action
+| Replace : catalog.Action
+| Remove : catalog.Action
+| Conflict : catalog.Action
+
+/-- [writfold_core::catalog::Slot]
+    Source: 'crates/writfold-core/src/catalog.rs', lines 34:0-40:1
+    Visibility: public -/
+structure catalog.Slot where
+  wanted : Bool
+  owner : catalog.Owner
+  equal : Bool
+
+/-- [writfold_core::catalog::Verdict]
+    Source: 'crates/writfold-core/src/catalog.rs', lines 43:0-50:1
+    Visibility: public -/
+@[discriminant isize]
+inductive catalog.Verdict where
+| Invalid : catalog.Verdict
+| Drift : catalog.Verdict
+| Clean : catalog.Verdict
+
+/-- [writfold_core::catalog::action]:
+    Source: 'crates/writfold-core/src/catalog.rs', lines 54:0-80:1
+    Visibility: public -/
+def catalog.action (slot : catalog.Slot) : Result catalog.Action := do
+  match slot.owner with
+  | catalog.Owner.Absent =>
+    if slot.wanted
+    then ok catalog.Action.Create
+    else ok catalog.Action.Keep
+  | catalog.Owner.Mine =>
+    if slot.wanted
+    then
+      if slot.equal
+      then ok catalog.Action.Keep
+      else ok catalog.Action.Replace
+    else ok catalog.Action.Remove
+  | catalog.Owner.Foreign =>
+    if slot.wanted
+    then ok catalog.Action.Conflict
+    else ok catalog.Action.Keep
+
+/-- [writfold_core::catalog::conflicts]:
+    Source: 'crates/writfold-core/src/catalog.rs', lines 83:0-91:1
+    Visibility: public -/
+def catalog.conflicts (slot : catalog.Slot) : Result Bool := do
+  let a ← catalog.action slot
+  match a with
+  | catalog.Action.Keep => ok false
+  | catalog.Action.Create => ok false
+  | catalog.Action.Replace => ok false
+  | catalog.Action.Remove => ok false
+  | catalog.Action.Conflict => ok true
+
+/-- [writfold_core::catalog::changes]:
+    Source: 'crates/writfold-core/src/catalog.rs', lines 94:0-102:1
+    Visibility: public -/
+def catalog.changes (slot : catalog.Slot) : Result Bool := do
+  let a ← catalog.action slot
+  match a with
+  | catalog.Action.Keep => ok false
+  | catalog.Action.Create => ok true
+  | catalog.Action.Replace => ok true
+  | catalog.Action.Remove => ok true
+  | catalog.Action.Conflict => ok false
+
+/-- [writfold_core::catalog::any_conflict]: loop body 0:
+    Source: 'crates/writfold-core/src/catalog.rs', lines 107:4-114:1
+    Visibility: public -/
+@[rust_loop_body]
+def catalog.any_conflict_loop.body
+  (slots : Slice catalog.Slot) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let i := Slice.len slots
+  if index < i
+  then
+    let s ← Slice.index_usize slots index
+    let b ← catalog.conflicts s
+    if b
+    then ok (done true)
+    else let index1 ← index + 1#usize
+         ok (cont index1)
+  else ok (done false)
+
+/-- [writfold_core::catalog::any_conflict]: loop 0:
+    Source: 'crates/writfold-core/src/catalog.rs', lines 107:4-114:1
+    Visibility: public -/
+@[rust_loop]
+def catalog.any_conflict_loop
+  (slots : Slice catalog.Slot) (index : Std.Usize) : Result Bool := do
+  loop
+    (fun index1 => catalog.any_conflict_loop.body slots index1)
+    index
+
+/-- [writfold_core::catalog::any_conflict]:
+    Source: 'crates/writfold-core/src/catalog.rs', lines 105:0-114:1
+    Visibility: public -/
+@[reducible]
+def catalog.any_conflict (slots : Slice catalog.Slot) : Result Bool := do
+  catalog.any_conflict_loop slots 0#usize
+
+/-- [writfold_core::catalog::any_change]: loop body 0:
+    Source: 'crates/writfold-core/src/catalog.rs', lines 119:4-126:1
+    Visibility: public -/
+@[rust_loop_body]
+def catalog.any_change_loop.body
+  (slots : Slice catalog.Slot) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let i := Slice.len slots
+  if index < i
+  then
+    let s ← Slice.index_usize slots index
+    let b ← catalog.changes s
+    if b
+    then ok (done true)
+    else let index1 ← index + 1#usize
+         ok (cont index1)
+  else ok (done false)
+
+/-- [writfold_core::catalog::any_change]: loop 0:
+    Source: 'crates/writfold-core/src/catalog.rs', lines 119:4-126:1
+    Visibility: public -/
+@[rust_loop]
+def catalog.any_change_loop
+  (slots : Slice catalog.Slot) (index : Std.Usize) : Result Bool := do
+  loop
+    (fun index1 => catalog.any_change_loop.body slots index1)
+    index
+
+/-- [writfold_core::catalog::any_change]:
+    Source: 'crates/writfold-core/src/catalog.rs', lines 117:0-126:1
+    Visibility: public -/
+@[reducible]
+def catalog.any_change (slots : Slice catalog.Slot) : Result Bool := do
+  catalog.any_change_loop slots 0#usize
+
+/-- [writfold_core::catalog::verdict]:
+    Source: 'crates/writfold-core/src/catalog.rs', lines 130:0-138:1
+    Visibility: public -/
+def catalog.verdict
+  (complete : Bool) (conflict : Bool) (changed : Bool) :
+  Result catalog.Verdict
+  := do
+  if complete
+  then
+    if conflict
+    then ok catalog.Verdict.Invalid
+    else if changed
+         then ok catalog.Verdict.Drift
+         else ok catalog.Verdict.Clean
+  else ok catalog.Verdict.Invalid
+
+/-- [writfold_core::catalog::plan]:
+    Source: 'crates/writfold-core/src/catalog.rs', lines 141:0-145:1
+    Visibility: public -/
+def catalog.plan
+  (complete : Bool) (slots : Slice catalog.Slot) : Result catalog.Verdict := do
+  let conflict ← catalog.any_conflict slots
+  let changed ← catalog.any_change slots
+  catalog.verdict complete conflict changed
+
+/-- [writfold_core::catalog::patches]:
+    Source: 'crates/writfold-core/src/catalog.rs', lines 149:0-155:1
+    Visibility: public -/
+def catalog.patches (verdict : catalog.Verdict) : Result Bool := do
+  match verdict with
+  | catalog.Verdict.Invalid => ok false
+  | catalog.Verdict.Drift => ok true
+  | catalog.Verdict.Clean => ok true
+
 /-- [writfold_core::checklist::covered_under]:
     Source: 'crates/writfold-core/src/checklist.rs', lines 144:0-151:1
     Visibility: public -/

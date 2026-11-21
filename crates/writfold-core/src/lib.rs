@@ -43,6 +43,7 @@ extern crate alloc;
 
 pub mod bind;
 pub mod bytes;
+pub mod catalog;
 pub mod checklist;
 pub mod command;
 pub mod decision;

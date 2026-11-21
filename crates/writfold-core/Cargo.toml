@@ -25,6 +25,7 @@ start_from = [
     "writfold_core::pointer",
     "writfold_core::store",
     "writfold_core::inventory",
+    "writfold_core::catalog",
     "writfold_core::handoff",
     "writfold_core::publish",
     "writfold_core::graph",

@@ -19,6 +19,28 @@ def allowedAxioms : List Name := [``propext, ``Classical.choice, ``Quot.sound]
 (`mutants.py` refuses to run when one is missing here), and the headline
 statements of each kernel (docs/writfold/aeneas.md). -/
 def claims : List Name := [
+  -- project asset catalogs (writfold_core::catalog, #84)
+  ``Writfold.Core.Catalog.action_spec,
+  ``Writfold.Core.Catalog.create_only_absent,
+  ``Writfold.Core.Catalog.replace_remove_only_owned,
+  ``Writfold.Core.Catalog.foreign_never_written,
+  ``Writfold.Core.Catalog.owned_delta_exact,
+  ``Writfold.Core.Catalog.absent_unwanted_kept,
+  ``Writfold.Core.Catalog.conflicts_spec,
+  ``Writfold.Core.Catalog.changes_spec,
+  ``Writfold.Core.Catalog.any_conflict_loop_spec,
+  ``Writfold.Core.Catalog.any_conflict_spec,
+  ``Writfold.Core.Catalog.any_change_loop_spec,
+  ``Writfold.Core.Catalog.any_change_spec,
+  ``Writfold.Core.Catalog.verdict_spec,
+  ``Writfold.Core.Catalog.plan_spec,
+  ``Writfold.Core.Catalog.clean_iff,
+  ``Writfold.Core.Catalog.invalid_iff,
+  ``Writfold.Core.Catalog.patches_spec,
+  ``Writfold.Core.Catalog.partial_never_patches,
+  ``Writfold.Core.Catalog.any_conflict_total,
+  ``Writfold.Core.Catalog.any_change_total,
+  ``Writfold.Core.Catalog.plan_total,
   -- evidence read in full (writfold_core::handoff::checked, #67)
   ``Writfold.Core.Handoff.complete_evidence_unchanged,
   ``Writfold.Core.Handoff.incomplete_evidence_never_accepted,
