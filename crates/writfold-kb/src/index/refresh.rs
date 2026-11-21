@@ -13,7 +13,7 @@ use crate::layout::classify;
 use crate::workspace::{CANCELLED, Repo, Workspace, budgets};
 use rusqlite::{Connection, ErrorCode, OptionalExtension, TransactionBehavior};
 use std::collections::{BTreeMap, BTreeSet};
-use writfold_core::graph::{Plan, plan};
+use writfold_core::graph::{Plan, affected, plan};
 use writfold_core::publish::{Publish, derived};
 use writfold_runtime::git::{GitExecutable, kb_diff_tree};
 
@@ -135,7 +135,6 @@ pub fn refresh(
     if stored(&tx)?.is_some_and(|s| s.pin.digest == now.pin.digest) {
         return Ok(Outcome::Current);
     }
-    let keys_before = derive::keys_digest(&tx)?;
     let mut rederived: Vec<String> = Vec::new();
     let mut changed: Vec<bool> = Vec::new();
     let mut count = 0;
@@ -168,7 +167,7 @@ pub fn refresh(
         count += 1;
     }
     if count > 0 {
-        graph(&tx, count, (&rederived, &changed), &keys_before)?;
+        graph(&tx, count, (&rederived, &changed))?;
     }
     // The files were read after the snapshot was observed. Store the
     // derivation only if the snapshot still holds, so a reader that reports
@@ -219,29 +218,40 @@ fn forget_verdicts(
 }
 
 /// Phase B after a refresh re-derived `count` files: the keys, then the
-/// edges as [`plan`] decides; the work done is kept in `meta` for `index
-/// status` (#59).
+/// edges of the [`affected`] files as [`plan`] decides; the work done is
+/// kept in `meta` for `index status` (#59, #65).
 fn graph(
     tx: &rusqlite::Transaction<'_>,
     count: usize,
     (rederived, changed): (&[String], &[bool]),
-    keys_before: &[u8],
 ) -> Result<()> {
+    derive::keys_before(tx)?;
     derive::keys(tx)?;
-    let keys_same = derive::keys_digest(tx)? == keys_before;
-    let (word, (deleted, written)) = match plan(keys_same, changed) {
+    let (dups, tokens) = derive::moved(tx)?;
+    let refs: BTreeSet<&String> = (rederived.iter().zip(changed))
+        .filter(|(_, c)| **c)
+        .map(|(p, _)| p)
+        .collect();
+    let files: BTreeSet<&String> = refs.iter().copied().chain(&dups).chain(&tokens).collect();
+    let files: Vec<&String> = files.into_iter().collect();
+    let marks: Vec<bool> = files
+        .iter()
+        .map(|p| affected(refs.contains(p), dups.contains(*p), tokens.contains(*p)))
+        .collect();
+    let (word, (deleted, written)) = match plan(&marks) {
         Plan::Skip => ("skip", (0, 0)),
         Plan::Delta => {
-            let affected: Vec<String> = (rederived.iter().zip(changed))
-                .filter(|(_, c)| **c)
-                .map(|(p, _)| p.clone())
+            let chosen: Vec<String> = (files.iter().zip(&marks))
+                .filter(|(_, a)| **a)
+                .map(|(p, _)| (*p).clone())
                 .collect();
-            ("delta", derive::of(tx, &affected)?)
+            ("delta", derive::of(tx, &chosen)?)
         }
-        Plan::Whole => ("whole", derive::whole(tx)?),
     };
-    let note =
-        format!("files={count} graph={word} edges-deleted={deleted} edges-written={written}");
+    let note = format!(
+        "files={count} graph={word} affected={} edges-deleted={deleted} edges-written={written}",
+        marks.iter().filter(|a| **a).count()
+    );
     tx.prepare_cached("INSERT OR REPLACE INTO meta(key, value) VALUES ('last_refresh', ?1)")?
         .execute([note])?;
     Ok(())

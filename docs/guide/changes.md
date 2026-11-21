@@ -9,6 +9,7 @@ A line marked **fix** changed an answer that was wrong; anything depending on th
 ## v0.6.0-dev.15 (unreleased)
 
 - **Loops** ([#74](https://github.com/writfold-dev/writfold/issues/74)): new step words `loop=`, `max=`, `min=` and the verb `writfold kb plan again`; a template without them reads, splices and folds as before. An earlier binary refuses a template (or a run snapshot) that uses them (`value.form`). New diagnostic codes `value.no-exit` and the warning `policy.self-exit`. A guard rule may require `step.settled` (#79); a `step.met` nudge on a loop step now names `plan again` when a round is left.
+- **The index is rebuilt once** (schema 7: an index on each reference's token). A refresh after a record is added, removed, renamed or duplicated now rewrites only the links of the files whose tokens resolve differently, not every link; `last-refresh` reads `graph=delta affected=N` and never `graph=whole` ([#65](https://github.com/writfold-dev/writfold/issues/65)). Answers are unchanged.
 - The release profile sets `overflow-checks = true` ([#62](https://github.com/writfold-dev/writfold/issues/62)): an arithmetic overflow outside the proved kernel now aborts instead of wrapping silently.
 - **fix** When a source kind or store declaration cannot be read, `brief`, `context`, `why` and edge flags add a note naming it and read `coverage=partial` (exit 2), and session start prints `Citations: could not be read: …`, instead of showing committed verdicts as never checked ([#68](https://github.com/writfold-dev/writfold/issues/68)).
 

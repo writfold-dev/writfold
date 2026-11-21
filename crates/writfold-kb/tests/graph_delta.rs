@@ -1,10 +1,10 @@
-//! A refresh rewrites only the graph facts an edit affects (#59): an edit
-//! that changes no reference writes no edge row; a changed reference
-//! rewrites only its file's edges; a key change (a renamed record) takes
-//! the explicit whole-graph fallback, which retargets references in files
-//! that did not change; and at a fixed small edit, the edge rows written do
-//! not grow with the unrelated edges. After every step the index equals a
-//! rebuild (`index verify`).
+//! A refresh rewrites only the graph facts an edit affects (#59, #65): an
+//! edit that changes no reference writes no edge row; a changed reference
+//! rewrites only its file's edges; a key change (a renamed, added, removed
+//! or duplicated record) rewrites the edges of the files whose tokens now
+//! resolve differently, found by token, and no others; and at a fixed small
+//! edit, the edge rows written do not grow with the unrelated edges. After
+//! every step the index equals a rebuild (`index verify`).
 mod support;
 
 use std::path::Path;
@@ -108,9 +108,8 @@ fn edits_rewrite_only_what_they_affect() -> TestResult {
         "one file's edges: {note}"
     );
     equal_to_rebuild(&dir)?;
-    // A renamed record is a key change: everything is resolved again, and
-    // references in files that did not change (d0017..d0019 name d0020)
-    // now dangle; the fallback says so.
+    // A renamed record is a key change: the renamed file and the files
+    // that name d0020 (d0005, d0017..d0019) are affected, and only they.
     let renamed = std::fs::read_to_string(dir.join("proposals/decision/2026-01-01-d0020.md"))?
         .replace(
             "id: decision/2026-01-01-d0020",
@@ -118,8 +117,40 @@ fn edits_rewrite_only_what_they_affect() -> TestResult {
         );
     std::fs::write(dir.join("proposals/decision/2026-01-01-d0020.md"), renamed)?;
     let note = refresh(&dir)?;
-    assert!(note.contains("graph=whole"), "{note}");
+    assert!(note.contains("graph=delta affected=5 "), "{note}");
     equal_to_rebuild(&dir)?;
+    // A new file takes the freed ID: the same referrers resolve again.
+    let back = std::fs::read_to_string(dir.join("proposals/decision/2026-01-01-d0020.md"))?
+        .replace(
+            "id: decision/2026-01-01-renamed",
+            "id: decision/2026-01-01-d0020",
+        );
+    std::fs::write(dir.join("proposals/decision/2026-01-01-d0020b.md"), back)?;
+    let note = refresh(&dir)?;
+    assert!(note.contains("graph=delta affected=5 "), "{note}");
+    equal_to_rebuild(&dir)?;
+    // Removed: the file's own edges go, its referrers' edges dangle.
+    std::fs::remove_file(dir.join("proposals/decision/2026-01-01-d0030.md"))?;
+    let note = refresh(&dir)?;
+    assert!(note.contains("graph=delta affected=4 "), "{note}");
+    equal_to_rebuild(&dir)?;
+    // A duplicate ID: the losing file's edges go.
+    let dup = std::fs::read_to_string(dir.join("proposals/decision/2026-01-01-d0010.md"))?;
+    std::fs::write(dir.join("proposals/decision/2026-01-01-d0010z.md"), dup)?;
+    let note = refresh(&dir)?;
+    assert!(note.contains("graph=delta"), "{note}");
+    // A duplicate ID makes coverage partial (exit 2); every table is equal.
+    let out = writfold_kb::run(&request(&dir, Verb::IndexVerify))?;
+    let tables: Vec<&str> = out
+        .text
+        .lines()
+        .filter(|l| l.starts_with("table "))
+        .collect();
+    assert!(
+        tables.len() > 5 && tables.iter().all(|l| l.contains("[equal]")),
+        "{}",
+        out.text
+    );
     Ok(())
 }
 
@@ -139,6 +170,33 @@ fn a_small_edit_writes_the_same_edges_however_large_the_graph() -> TestResult {
     assert_eq!(
         counts[0], counts[1],
         "edge rows written track the edit, not the graph: {counts:?}"
+    );
+    Ok(())
+}
+
+#[test]
+fn a_rename_rewrites_its_referrers_however_large_the_graph() -> TestResult {
+    let mut notes = Vec::new();
+    for n in [30, 300] {
+        let dir = kb(&format!("rename{n}"), n)?;
+        writfold_kb::run(&request(&dir, Verb::IndexStatus))?;
+        let file = dir.join("proposals/decision/2026-01-01-d0010.md");
+        let text = std::fs::read_to_string(&file)?.replace(
+            "id: decision/2026-01-01-d0010",
+            "id: decision/2026-01-01-moved",
+        );
+        std::fs::write(&file, text)?;
+        let note = refresh(&dir)?;
+        equal_to_rebuild(&dir)?;
+        notes.push(
+            note.split_once(" affected=")
+                .map(|(_, r)| r.to_owned())
+                .unwrap_or(note),
+        );
+    }
+    assert_eq!(
+        notes[0], notes[1],
+        "a rename's work tracks its referrers, not the graph"
     );
     Ok(())
 }

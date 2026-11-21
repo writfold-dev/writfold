@@ -2739,16 +2739,28 @@ def gate.statements
   ok { attested_current, attested_any, waived_current }
 
 /-- [writfold_core::graph::Plan]
-    Source: 'crates/writfold-core/src/graph.rs', lines 13:0-21:1
+    Source: 'crates/writfold-core/src/graph.rs', lines 16:0-21:1
     Visibility: public -/
 @[discriminant isize]
 inductive graph.Plan where
 | Skip : graph.Plan
 | Delta : graph.Plan
-| Whole : graph.Plan
+
+/-- [writfold_core::graph::affected]:
+    Source: 'crates/writfold-core/src/graph.rs', lines 26:0-28:1
+    Visibility: public -/
+def graph.affected
+  (refs_changed : Bool) (dup_changed : Bool) (token_moved : Bool) :
+  Result Bool
+  := do
+  if refs_changed
+  then ok true
+  else if dup_changed
+       then ok true
+       else ok token_moved
 
 /-- [writfold_core::graph::any]: loop body 0:
-    Source: 'crates/writfold-core/src/graph.rs', lines 26:4-33:1
+    Source: 'crates/writfold-core/src/graph.rs', lines 33:4-40:1
     Visibility: public -/
 @[rust_loop_body]
 def graph.any_loop.body
@@ -2766,7 +2778,7 @@ def graph.any_loop.body
   else ok (done false)
 
 /-- [writfold_core::graph::any]: loop 0:
-    Source: 'crates/writfold-core/src/graph.rs', lines 26:4-33:1
+    Source: 'crates/writfold-core/src/graph.rs', lines 33:4-40:1
     Visibility: public -/
 @[rust_loop]
 def graph.any_loop
@@ -2776,24 +2788,20 @@ def graph.any_loop
     index
 
 /-- [writfold_core::graph::any]:
-    Source: 'crates/writfold-core/src/graph.rs', lines 24:0-33:1
+    Source: 'crates/writfold-core/src/graph.rs', lines 31:0-40:1
     Visibility: public -/
 @[reducible]
 def graph.any (changed : Slice Bool) : Result Bool := do
   graph.any_loop changed 0#usize
 
 /-- [writfold_core::graph::plan]:
-    Source: 'crates/writfold-core/src/graph.rs', lines 38:0-46:1
+    Source: 'crates/writfold-core/src/graph.rs', lines 43:0-48:1
     Visibility: public -/
-def graph.plan
-  (keys_same : Bool) (changed : Slice Bool) : Result graph.Plan := do
-  if keys_same
-  then
-    let b ← graph.any changed
-    if b
-    then ok graph.Plan.Delta
-    else ok graph.Plan.Skip
-  else ok graph.Plan.Whole
+def graph.plan (affected : Slice Bool) : Result graph.Plan := do
+  let b ← graph.any affected
+  if b
+  then ok graph.Plan.Delta
+  else ok graph.Plan.Skip
 
 /-- [writfold_core::grounding::Grounding]
     Source: 'crates/writfold-core/src/grounding.rs', lines 9:0-16:1

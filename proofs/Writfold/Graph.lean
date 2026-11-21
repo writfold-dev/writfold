@@ -7,10 +7,14 @@ Theorems over the Aeneas translation of `writfold_core::graph`, and the
 model fact that justifies its delta.
 
 - `any_spec`: some file's references changed (`true ∈ changed`).
-- `plan_whole_iff`, `plan_skip_iff`, `plan_delta_iff`: a key change resolves
-  everything; with the keys unchanged, a refresh rewrites the changed files'
-  edges, or none when no reference changed. `Delta` is never chosen when a
-  key changed.
+- `affected_iff` (#65): a file is affected when its references, its
+  duplicate standing or one of its tokens' resolutions changed.
+- `plan_skip_iff`, `plan_delta_iff`: a refresh rewrites the affected files'
+  edges, or none when no file is affected. A key change no longer resolves
+  everything.
+- `delta_eq_full_keyed` (model, #65): with a file's edges local to its own
+  tokens, keeping every unaffected file and resolving the affected ones
+  against the new keys equals resolving every file.
 - `delta_eq_full` (model, not extracted): edges are the concatenation over
   files of a function of each file's references and the shared keys (edges
   partition by `prov_path`). With the keys unchanged, keeping every file
@@ -70,56 +74,42 @@ theorem any_spec (xs : Slice Bool) :
 theorem any_total (xs : Slice Bool) : graph.any xs ⦃ _ => True ⦄ :=
   WP.spec_mono (any_spec xs) (fun _ _ => trivial)
 
-/-- A key change resolves everything. -/
-theorem plan_whole_iff (k : Bool) (xs : Slice Bool) :
-    graph.plan k xs ⦃ p => p = .Whole ↔ k = false ⦄ := by
-  unfold graph.plan
-  cases k
-  · simp
-  · rw [if_pos rfl]
-    step with any_spec as ⟨ b, hb ⟩
-    repeat' split
-    all_goals simp
+/-- A file is affected exactly when its references changed, its
+duplicate standing changed, or one of its tokens moved (#65). -/
+theorem affected_iff (r d m : Bool) :
+    graph.affected r d m ⦃ a => a = true ↔ r = true ∨ d = true ∨ m = true ⦄ := by
+  unfold graph.affected
+  cases r <;> cases d <;> cases m <;> simp
 
-/-- Nothing is rewritten exactly when the keys and every file's
-references are unchanged. -/
-theorem plan_skip_iff (k : Bool) (xs : Slice Bool) :
-    graph.plan k xs ⦃ p => p = .Skip ↔ k = true ∧ ∀ x ∈ xs.val, x = false ⦄ := by
+/-- Nothing is rewritten exactly when no file is affected. -/
+theorem plan_skip_iff (xs : Slice Bool) :
+    graph.plan xs ⦃ p => p = .Skip ↔ ∀ x ∈ xs.val, x = false ⦄ := by
   unfold graph.plan
-  cases k
-  · simp
-  · simp only [true_and]
-    rw [if_pos trivial]
-    step with any_spec as ⟨ b, hb ⟩
-    split
-    · rename_i hbt
-      simp only [WP.spec_ok, reduceCtorEq, false_iff, not_forall]
-      exact ⟨true, hb.mp hbt, by simp⟩
-    · rename_i hbf
-      simp only [WP.spec_ok, true_iff]
-      intro x hx
-      cases x
-      · rfl
-      · exact absurd (hb.mpr hx) hbf
+  step with any_spec as ⟨ b, hb ⟩
+  split
+  · rename_i hbt
+    simp only [WP.spec_ok, reduceCtorEq, false_iff, not_forall]
+    exact ⟨true, hb.mp hbt, by simp⟩
+  · rename_i hbf
+    simp only [WP.spec_ok, true_iff]
+    intro x hx
+    cases x
+    · rfl
+    · exact absurd (hb.mpr hx) hbf
 
-/-- A delta is chosen exactly when the keys are unchanged and some file's
-references changed. -/
-theorem plan_delta_iff (k : Bool) (xs : Slice Bool) :
-    graph.plan k xs ⦃ p => p = .Delta ↔ k = true ∧ true ∈ xs.val ⦄ := by
+/-- A delta is chosen exactly when some file is affected. -/
+theorem plan_delta_iff (xs : Slice Bool) :
+    graph.plan xs ⦃ p => p = .Delta ↔ true ∈ xs.val ⦄ := by
   unfold graph.plan
-  cases k
-  · simp
-  · simp only [true_and]
-    rw [if_pos trivial]
-    step with any_spec as ⟨ b, hb ⟩
-    split
-    · rename_i hbt; simp only [WP.spec_ok, true_iff]; exact hb.mp hbt
-    · rename_i hbf
-      simp only [WP.spec_ok, reduceCtorEq, false_iff]
-      exact fun h => hbf (hb.mpr h)
+  step with any_spec as ⟨ b, hb ⟩
+  split
+  · rename_i hbt; simp only [WP.spec_ok, true_iff]; exact hb.mp hbt
+  · rename_i hbf
+    simp only [WP.spec_ok, reduceCtorEq, false_iff]
+    exact fun h => hbf (hb.mpr h)
 
-theorem plan_total (k : Bool) (xs : Slice Bool) : graph.plan k xs ⦃ _ => True ⦄ :=
-  WP.spec_mono (plan_whole_iff k xs) (fun _ _ => trivial)
+theorem plan_total (xs : Slice Bool) : graph.plan xs ⦃ _ => True ⦄ :=
+  WP.spec_mono (plan_skip_iff xs) (fun _ _ => trivial)
 
 /-! ## The delta, on the model -/
 
@@ -154,6 +144,50 @@ theorem delta_eq_full {R E K : Type} (edges : K → R → List E) (k : K) (files
     unfold deltaOf
     cases hc : f.changed
     · simp [sound f List.mem_cons_self hc]
+    · simp
+
+/-! ## The keyed delta (#65), on the model
+
+A file's edges depend on the keys only through how its own tokens
+resolve, and on whether it lost a duplicate ID. -/
+
+/-- One file before and after a refresh, with the keys' resolution. -/
+structure KFile (R T : Type) where
+  old : R
+  new : R
+  dupOld : Bool
+  dupNew : Bool
+  affected : Bool
+
+/-- What the keyed delta keeps or recomputes for one file. -/
+def keyedOf {R T D E : Type} (edges : (T → D) → Bool → R → List E)
+    (resOld resNew : T → D) (f : KFile R T) : List E :=
+  if f.affected then edges resNew f.dupNew f.new else edges resOld f.dupOld f.old
+
+/-- With edges local to a file's tokens, and every unaffected file's
+references, duplicate standing and token resolutions unchanged, the keyed
+delta (old edges kept, affected files resolved against the new keys)
+equals resolving every file against the new keys. -/
+theorem delta_eq_full_keyed {R T D E : Type} (edges : (T → D) → Bool → R → List E)
+    (tokens : R → List T) (resOld resNew : T → D) (files : List (KFile R T))
+    (local_ : ∀ (r : R) (d : Bool) (a b : T → D),
+      (∀ t ∈ tokens r, a t = b t) → edges a d r = edges b d r)
+    (sound : ∀ f ∈ files, f.affected = false →
+      f.old = f.new ∧ f.dupOld = f.dupNew ∧ ∀ t ∈ tokens f.new, resOld t = resNew t) :
+    files.flatMap (keyedOf edges resOld resNew) =
+      files.flatMap (fun f => edges resNew f.dupNew f.new) := by
+  induction files with
+  | nil => rfl
+  | cons f rest ih =>
+    simp only [List.flatMap_cons]
+    rw [ih (fun g hg => sound g (List.mem_cons_of_mem _ hg))]
+    congr 1
+    unfold keyedOf
+    cases ha : f.affected
+    · obtain ⟨hr, hd, ht⟩ := sound f List.mem_cons_self ha
+      simp only [Bool.false_eq_true, ite_false]
+      rw [hr, hd]
+      exact local_ f.new f.dupNew resOld resNew ht
     · simp
 
 end Writfold.Core.Graph

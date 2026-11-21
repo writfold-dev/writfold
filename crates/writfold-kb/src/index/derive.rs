@@ -3,12 +3,12 @@
 //! changed files' Phase A rows and reruns it yields exactly what a rebuild
 //! yields. The keys (records, aliases, duplicates) are always recomputed;
 //! the edges are rewritten as [`writfold_core::graph::plan`] decides: not at
-//! all, only for the files whose references changed, or in full (#59).
+//! all, or only for the affected files (#59, #65).
 use super::schema::{PHASE_B_EDGES, PHASE_B_EDGES_OF, PHASE_B_RECORDS};
 use crate::layout::{first_segment, project_name};
 use rusqlite::Transaction;
 use sha2::{Digest, Sha256};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 /// Phase B in full: the keys, then every edge.
 pub fn phase_b(tx: &Transaction<'_>) -> rusqlite::Result<()> {
@@ -86,15 +86,56 @@ fn digest_of(
     Ok(hash.finalize().to_vec())
 }
 
-/// A digest of everything a reference resolves against: record IDs and
-/// paths, every alias pair, and the files that lost a duplicate ID.
-pub fn keys_digest(tx: &Transaction<'_>) -> rusqlite::Result<Vec<u8>> {
-    let sqls = [
-        "SELECT id, path FROM records ORDER BY id",
-        "SELECT alias, record_id FROM aliases ORDER BY alias, record_id",
-        "SELECT path FROM dups ORDER BY path",
-    ];
-    digest_of(tx, &sqls, None)
+/// How every token resolved before the keys are recomputed: record IDs
+/// and paths, the unique aliases, and the files that lost a duplicate ID,
+/// kept in temporary tables for [`moved`] (#65).
+pub fn keys_before(tx: &Transaction<'_>) -> rusqlite::Result<()> {
+    tx.execute_batch(
+        "DROP TABLE IF EXISTS temp.old_ids; DROP TABLE IF EXISTS temp.old_alias;
+         DROP TABLE IF EXISTS temp.old_dups;
+         CREATE TEMP TABLE old_ids AS SELECT id, path FROM main.records;
+         CREATE TEMP TABLE old_alias AS SELECT alias, min(record_id) AS id FROM main.aliases
+           GROUP BY alias HAVING COUNT(DISTINCT record_id) = 1;
+         CREATE TEMP TABLE old_dups AS SELECT path FROM main.dups;",
+    )
+}
+
+/// After the keys are recomputed: the files that gained or lost a
+/// duplicate ID, and the files holding a token that now resolves
+/// differently (an ID added or removed, a record's path moved, an alias
+/// that became, stopped being or changed its unique record), found through
+/// the `refs(token)` index. Every other file's edges are unchanged.
+pub fn moved(tx: &Transaction<'_>) -> rusqlite::Result<(BTreeSet<String>, BTreeSet<String>)> {
+    const NEW_ALIAS: &str = "SELECT alias, min(record_id) AS id FROM main.aliases GROUP BY alias HAVING COUNT(DISTINCT record_id) = 1";
+    tx.execute_batch(&format!(
+        "DROP TABLE IF EXISTS temp.moved_tokens;
+         CREATE TEMP TABLE moved_tokens(token TEXT PRIMARY KEY);
+         INSERT OR IGNORE INTO moved_tokens SELECT id FROM (SELECT id FROM temp.old_ids EXCEPT SELECT id FROM main.records);
+         INSERT OR IGNORE INTO moved_tokens SELECT id FROM (SELECT id FROM main.records EXCEPT SELECT id FROM temp.old_ids);
+         INSERT OR IGNORE INTO moved_tokens SELECT 'path:' || path FROM (SELECT id, path FROM temp.old_ids EXCEPT SELECT id, path FROM main.records);
+         INSERT OR IGNORE INTO moved_tokens SELECT 'path:' || path FROM (SELECT id, path FROM main.records EXCEPT SELECT id, path FROM temp.old_ids);
+         INSERT OR IGNORE INTO moved_tokens SELECT alias FROM (SELECT alias, id FROM temp.old_alias EXCEPT {NEW_ALIAS});
+         INSERT OR IGNORE INTO moved_tokens SELECT alias FROM ({NEW_ALIAS} EXCEPT SELECT alias, id FROM temp.old_alias);"
+    ))?;
+    let paths = |sql: &str| -> rusqlite::Result<BTreeSet<String>> {
+        let mut statement = tx.prepare(sql)?;
+        let found = statement
+            .query_map([], |r| r.get::<_, String>(0))?
+            .collect::<rusqlite::Result<BTreeSet<_>>>()?;
+        Ok(found)
+    };
+    let dups = paths(
+        "SELECT path FROM (SELECT path FROM temp.old_dups EXCEPT SELECT path FROM main.dups)
+         UNION SELECT path FROM (SELECT path FROM main.dups EXCEPT SELECT path FROM temp.old_dups)",
+    )?;
+    let tokens = paths(
+        "SELECT DISTINCT r.path FROM temp.moved_tokens m JOIN main.refs r ON r.token = m.token",
+    )?;
+    tx.execute_batch(
+        "DROP TABLE temp.moved_tokens; DROP TABLE temp.old_ids; DROP TABLE temp.old_alias;
+         DROP TABLE temp.old_dups;",
+    )?;
+    Ok((dups, tokens))
 }
 
 /// A digest of one file's references, in order.

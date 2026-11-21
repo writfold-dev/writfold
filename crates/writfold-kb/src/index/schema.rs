@@ -11,12 +11,12 @@
 //! row ID (an FTS5 delete by an unindexed column scans the whole table).
 
 /// Bumped when the schema changes; a different stored value rebuilds.
-pub const SCHEMA: &str = "6";
+pub const SCHEMA: &str = "7";
 /// Bumped when derivation changes; a different stored value rebuilds.
 pub const EXTRACTOR: &str = "writfold-kb-extract/2";
 
 pub const DDL: &str = "
-PRAGMA user_version = 6;
+PRAGMA user_version = 7;
 CREATE TABLE meta(key TEXT PRIMARY KEY, value TEXT NOT NULL);
 CREATE TABLE files(path TEXT PRIMARY KEY, sha256 BLOB NOT NULL, size INTEGER NOT NULL,
                    kind TEXT NOT NULL, parse_status TEXT NOT NULL, parse_error TEXT,
@@ -56,6 +56,8 @@ CREATE TABLE edges(src TEXT NOT NULL, rel TEXT NOT NULL, dst TEXT NOT NULL,
 CREATE INDEX edges_dst ON edges(dst, src, rel, origin, prov_path, prov_line);
 -- A refresh replaces the edges of the files whose references changed (#59).
 CREATE INDEX edges_prov ON edges(prov_path);
+-- A key change finds the files whose tokens now resolve differently (#65).
+CREATE INDEX refs_token ON refs(token);
 CREATE VIRTUAL TABLE fts USING fts5(id, title, summary, body, path UNINDEXED,
                                     tokenize = 'porter unicode61 remove_diacritics 2');
 CREATE VIRTUAL TABLE tri USING fts5(id, title, body, path UNINDEXED,
