@@ -47,6 +47,16 @@ pub fn round(node: &Node<'_>) -> Option<String> {
     Some(format!("round {rounds} of at most {max}"))
 }
 
+/// What the round this step opens began after, from the row's `until`:
+/// `this round began after fixed failed` (#81).
+pub fn began(node: &Node<'_>) -> Option<String> {
+    let until = node.row.get("until")?.as_array()?;
+    let each: Vec<String> = (until.iter())
+        .map(|g| format!("{} {}", field(g, "gate"), field(g, "standing")))
+        .collect();
+    (!each.is_empty()).then(|| format!("this round began after {}", listed(&each)))
+}
+
 /// `step 7 of 11 · in findings`.
 pub fn place(node: &Node<'_>, index: usize, total: usize) -> Phrase {
     let mut pieces = vec![said(format!("step {} of {total}", index + 1))];

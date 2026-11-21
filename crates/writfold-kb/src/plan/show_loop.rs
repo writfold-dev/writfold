@@ -2,8 +2,10 @@
 //! current step a `next:` that says to go around, to advance, or (spent) to
 //! stop and report ([`writfold_core::plan::round::next`]); a step of an
 //! earlier round is marked as history. Rendering only.
+use super::event::prefix;
 use super::fold::{Graph, Step};
 use super::judge::Gate;
+use super::until::{self, Began};
 use crate::emit::{More, Row};
 use writfold_core::plan::round::{Next, exit, next, over};
 
@@ -15,6 +17,17 @@ fn line(label: &'static str, text: String) -> More {
     }
 }
 
+/// The `until` of the round `step` opens, on the round's first step only.
+fn began<'g>(graph: &'g Graph, step: &Step) -> Option<&'g [Began]> {
+    let (prefix, s) = (graph.splices.iter())
+        .filter(|(_, s, _)| !s.until.is_empty())
+        .map(|(_, s, _)| (format!("{}/", prefix(&s.parent, &s.template, s.ordinal)), s))
+        .filter(|(p, _)| step.path.starts_with(p.as_str()))
+        .max_by_key(|(p, _)| p.len())?;
+    let first = (graph.steps.iter()).find(|x| x.path.starts_with(prefix.as_str()))?;
+    (first.path == step.path).then_some(s.until.as_slice())
+}
+
 pub fn annotate(
     graph: &Graph,
     step: &Step,
@@ -22,6 +35,11 @@ pub fn annotate(
     gates: &[Gate],
     row: &mut Row,
 ) {
+    if let Some(until) = began(graph, step) {
+        row.more
+            .push(line("began", format!("after {}", until::said(until))));
+        row.extra.push(("until", until::json(until)));
+    }
     if superseded {
         row.more.push(line(
             "round",

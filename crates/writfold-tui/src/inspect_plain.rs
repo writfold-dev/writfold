@@ -31,6 +31,10 @@ pub fn told(node: &Node<'_>, cx: Context, glyphs: Glyphs) -> Told {
     if cx.total > 0 {
         told.lines.push(place(node, cx.index, cx.total));
     }
+    if let Some(began) = crate::say_step::began(node) {
+        told.lines
+            .push(Phrase::new(0, Tone::Dim, vec![said(began)]));
+    }
     told.lines.push(Phrase::blank());
     let current = field(node.row, "status") == "current";
     told.lines

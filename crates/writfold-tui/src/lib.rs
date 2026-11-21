@@ -49,6 +49,7 @@ mod plain_views;
 pub mod poll;
 pub mod progress;
 pub mod rail;
+mod rail_fold;
 mod rail_text;
 mod run_item;
 pub mod say;

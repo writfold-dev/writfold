@@ -161,6 +161,12 @@ fn a_loop_goes_around_until_spent_and_is_never_shown_passed() -> TestResult {
         text.contains("round 2 of at most 2 under fix#1/converge"),
         "{text}"
     );
+    // The round records what it began on, once, on its first step (#81).
+    let began = status(&w)?;
+    assert!(
+        began.contains("began: after fixed failed (runs/") && began.matches("began:").count() == 1,
+        "{began}"
+    );
     round(&w)?;
     assert_eq!(gate(&w, "fixed")?, 2);
     let text = status(&w)?;

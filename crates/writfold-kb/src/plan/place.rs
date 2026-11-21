@@ -58,6 +58,7 @@ pub fn place(
             ordinal,
             closure,
             again,
+            until: Vec::new(),
         }));
     }
     let parent = graph
@@ -89,6 +90,7 @@ pub fn place(
             parent,
             closure,
             again,
+            until: Vec::new(),
         })),
         Err(SpliceRefusal::TooDeep) => Err(too_deep(&name, &parent)),
         Err(SpliceRefusal::Complete) => Err(KbError::Refused(

@@ -61,6 +61,8 @@ pub struct Splice {
     /// template includes none (and then not written, so events written
     /// before includes existed keep their bytes).
     pub includes: Vec<Include>,
+    /// What a `plan again` round began on ([`super::until`]).
+    pub until: Vec<super::until::Began>,
     pub records: Baseline,
     pub recorded: String,
 }
@@ -149,6 +151,9 @@ fn body(event: &Event) -> Value {
             }
             if let (true, Value::Object(map)) = (s.again, &mut value) {
                 map.insert("again".into(), Value::Bool(true));
+            }
+            if let Value::Object(map) = &mut value {
+                super::until::write(map, &s.until);
             }
             value
         }
@@ -275,6 +280,7 @@ fn event(v: &Value) -> Parsed<Event> {
                 },
                 source: text(t, "source")?,
                 includes: includes(v)?,
+                until: super::until::parse(v)?,
                 records,
                 recorded,
             })
@@ -343,6 +349,7 @@ mod tests {
             again: false,
             source: ".writfold/plans/change.toml".into(),
             includes: Vec::new(),
+            until: Vec::new(),
             records: Baseline::default(),
             recorded: "2026-11-12T00:00:00Z".into(),
         });

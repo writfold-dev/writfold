@@ -214,4 +214,4 @@ Two outputs are not this envelope:
 
 ## Loops in `plan status` (from v0.6.0-dev.15)
 
-A loop step's row has `"loop": {"template", "min", "max", "rounds", "exit"}`, where `exit` is `"met"`, `"again"` or `"spent"` when the step's gates were judged (the current or a done step) and `null` otherwise. A step inside a loop round has `"round"` (its round's number) and `"superseded"` (`true` for an earlier round). The trailer counts `loops` and `spent` when the plan has a loop; `!over-max` on a loop step makes the answer exit 2.
+A loop step's row has `"loop": {"template", "min", "max", "rounds", "exit"}`, where `exit` is `"met"`, `"again"` or `"spent"` when the step's gates were judged (the current or a done step) and `null` otherwise. A step inside a loop round has `"round"` (its round's number) and `"superseded"` (`true` for an earlier round). The first step of a round made by `plan again` has `"until"`: each of the loop step's gates as it stood when the round began, `{"gate", "standing", "evidence"}` (`evidence` only when one stood). The trailer counts `loops` and `spent` when the plan has a loop; `!over-max` on a loop step makes the answer exit 2.

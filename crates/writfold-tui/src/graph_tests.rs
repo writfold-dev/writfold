@@ -217,4 +217,20 @@ fn a_loop_shows_its_round_spent_and_earlier_rounds_as_history() {
         Some("round 2 of at most 2")
     );
     assert_eq!(crate::say_step::round(&nodes[0]), None);
+    let mut opened = step(
+        "fix#1/converge/attempt#2/change",
+        "current",
+        "attempt",
+        None,
+    );
+    opened["until"] = json!([{"gate": "fixed", "standing": "failed", "evidence": "runs/r/g.json"}]);
+    let answer = Reply {
+        rows: vec![opened],
+        ..Reply::default()
+    };
+    let nodes = super::nodes(&answer);
+    assert_eq!(
+        crate::say_step::began(&nodes[0]).as_deref(),
+        Some("this round began after fixed failed")
+    );
 }

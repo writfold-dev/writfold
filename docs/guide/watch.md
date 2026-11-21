@@ -609,4 +609,4 @@ for a template spliced twice (it shows the template's name).
 
 ## Loops
 
-Built in v0.6.0-dev.15 ([#81](https://github.com/writfold-dev/writfold/issues/81)). A [loop](run-graph.md#loops-a-step-that-repeats-until-its-gates-pass) step's inspector title carries its round, `round 2 of at most 5`; a spent loop's chip reads `spent`, and a step of an earlier round reads `earlier round`: history, not a step to do again. The text list (`x`) is unchanged.
+Built in v0.6.0-dev.15 ([#81](https://github.com/writfold-dev/writfold/issues/81)). A [loop](run-graph.md#loops-a-step-that-repeats-until-its-gates-pass) step's inspector title carries its round, `round 2 of at most 5`; a spent loop's chip reads `spent`, and a step of an earlier round reads `earlier round`: history, not a step to do again. In the plan map a run of earlier rounds folds into one line, `⋯ rounds 1-2: done` (`history` when they did not all end the same way); moving the selection onto it opens the run, step by step. The inspector of a round's first step says what the round began after, `this round began after fixed failed` (the exact level adds the evidence path). The text list (`x`) is unchanged.

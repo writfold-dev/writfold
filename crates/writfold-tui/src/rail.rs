@@ -40,6 +40,9 @@ pub fn build<'a>(nodes: &[Node<'a>], width: u16, show: Show) -> Rail<'a> {
         node_lines: Vec::with_capacity(nodes.len()),
     };
     let mut stack: Vec<usize> = Vec::new();
+    // Whether each open group drew its header (a folded one did not).
+    let mut drawn: Vec<bool> = Vec::new();
+    let folds = crate::rail_fold::folds(nodes, show.selected);
     let mut root_seen = false;
     let chips = nodes.iter().map(|n| n.chips.len()).max().unwrap_or(0);
     let shape = Shape {
@@ -48,21 +51,36 @@ pub fn build<'a>(nodes: &[Node<'a>], width: u16, show: Show) -> Rail<'a> {
         show,
     };
     for (index, node) in nodes.iter().enumerate() {
+        let fold = folds.iter().find(|run| run.contains(&index));
         let path = group_path(index, nodes, &ids);
         let common = stack
             .iter()
             .zip(&path)
             .take_while(|(a, b)| same_group(&nodes[**a], &nodes[**b]))
             .count();
-        close(&mut rail.lines, &stack, common, show);
+        close(&mut rail.lines, &drawn, common, show);
         stack.truncate(common);
+        drawn.truncate(common);
         for ancestor in path.into_iter().skip(common) {
-            let depth = stack.len();
-            let first = !root_seen;
-            root_seen = true;
-            let group = nodes[ancestor].group;
-            rail.lines.push(header(group, depth, first, width, show));
+            // A fold hides only its rounds' own groups.
+            let quiet = fold.is_some() && ancestor == index;
+            if !quiet {
+                let first = !root_seen;
+                root_seen = true;
+                let group = nodes[ancestor].group;
+                rail.lines
+                    .push(header(group, stack.len(), first, width, show));
+            }
             stack.push(ancestor);
+            drawn.push(!quiet);
+        }
+        if let Some(run) = fold {
+            if run.start == index {
+                rail.lines
+                    .push(crate::rail_fold::line(&nodes[run.clone()], width, show));
+            }
+            rail.node_lines.push(rail.lines.len().saturating_sub(1));
+            continue;
         }
         rail.node_lines.push(rail.lines.len());
         let words = if show.full {
@@ -72,7 +90,7 @@ pub fn build<'a>(nodes: &[Node<'a>], width: u16, show: Show) -> Rail<'a> {
         };
         rail.lines.push(node_line(node, width, shape, words));
     }
-    close(&mut rail.lines, &stack, 0, show);
+    close(&mut rail.lines, &drawn, 0, show);
     rail.lines.push(Line::styled(
         format!(" {}", mark(show.glyphs, "┴", "+")),
         style::style(show.look, Tone::Dim),
@@ -110,8 +128,10 @@ fn header<'a>(group: &'a str, depth: usize, first: bool, width: u16, show: Show)
     ])
 }
 
-fn close(lines: &mut Vec<Line<'_>>, stack: &[usize], common: usize, show: Show) {
-    for depth in (common..stack.len()).rev().filter(|d| *d > 0) {
+/// Close the open groups deeper than `common` whose headers were drawn.
+fn close(lines: &mut Vec<Line<'_>>, drawn: &[bool], common: usize, show: Show) {
+    let shown = |d: &usize| *d > 0 && drawn.get(*d).copied().unwrap_or(false);
+    for depth in (common..drawn.len()).rev().filter(shown) {
         lines.push(Line::styled(
             format!(
                 " {}{}",

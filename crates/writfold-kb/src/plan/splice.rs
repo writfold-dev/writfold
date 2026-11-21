@@ -34,6 +34,8 @@ pub(super) struct Planned {
     pub ordinal: u64,
     pub closure: Closure,
     pub again: bool,
+    /// What a `plan again` round began on; empty for any other splice.
+    pub until: Vec<super::until::Began>,
 }
 
 type Repo<'a> = Option<(&'a std::path::Path, &'a str)>;
@@ -115,6 +117,7 @@ fn root(ws: &Workspace, loaded: &Loaded, main: Closure) -> Result<Vec<Planned>> 
             ordinal: out.len() as u64 + 1,
             closure,
             again: false,
+            until: Vec::new(),
         });
     }
     Ok(out)
@@ -162,6 +165,7 @@ fn write(
             digest: p.closure.top.digest.clone(),
             ordinal: p.ordinal,
             again: p.again,
+            until: p.until.clone(),
             source: p.closure.source.clone(),
             includes: p
                 .closure
