@@ -58,3 +58,6 @@ lto = "thin"
 codegen-units = 1
 strip = "symbols"
 panic = "abort"
+# An arithmetic overflow outside the proved kernel aborts instead of
+# wrapping (TAU-H001, tauten 0.0.4+). Owner decision, #62.
+overflow-checks = true
