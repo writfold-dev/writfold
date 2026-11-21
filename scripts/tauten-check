@@ -5,8 +5,9 @@
 # baseline slot (TAU-R001), exits non-zero. Extra arguments go to
 # `cargo tauten check` (for example `--format json` or `--warnings`).
 #
-# Needs cargo-tauten built from tauten main at or after 3b7512e (0.0.1 on
-# crates.io predates fixes this baseline relies on). Refreshing
+# Needs cargo-tauten built from tauten main at eb1b594 or later (#62: 0.0.5
+# plus the TAU-X001 fix for shared test modules, due in 0.0.6; the release
+# profile sets overflow-checks for TAU-H001). Refreshing
 # proofs/claims.json is a different job (`cargo tauten proofs`, a build with
 # the proofs subcommand); see "Which tauten does what" in
 # docs/writfold/tauten-adoption.md. Set CARGO_TAUTEN to its path if it is

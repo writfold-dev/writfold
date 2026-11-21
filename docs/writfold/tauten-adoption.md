@@ -36,8 +36,7 @@ How to obtain each: clone `tauten-dev/tauten`, check out the revision, and
 `proofs/claims.json` names the tauten revision (`git -C <tauten> rev-parse
 --short HEAD`) in its message.
 
-**Moving the pin to 0.0.5** (ship-level proofs, `proofs try`) is a separate
-issue, [#62](https://github.com/writfold-dev/writfold/issues/62), blocked on
+**Moving the pin to 0.0.5** (ship-level proofs, `proofs try`), done for v0.6.0-dev.15: the lint pilot and the proof claims both use tauten main at `eb1b594` (0.0.5 plus the TAU-X001 fix for shared test modules, which 0.0.5 itself lacks), and `[profile.release]` sets `overflow-checks = true` (owner decision, #73). History of the decision: [#62](https://github.com/writfold-dev/writfold/issues/62), blocked on
 tauten-dev/tauten#59 (TAU-X001 on the reasoned `#![allow(dead_code)]` of test
 modules shared by several targets) and on the owner's decision about
 `overflow-checks = true` in the release profile, which TAU-H001 requires. That
