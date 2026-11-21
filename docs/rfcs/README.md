@@ -166,3 +166,5 @@ Rows are in creation order.
 | [2026-11-20](2026-11-20-links-from-trailers-and-at-commit.md) | Links from commit trailers and tracker references, and answers as of a commit (M4b) | draft | not-started | [#31](https://github.com/writfold-dev/writfold/issues/31) |
 | [2026-11-20](2026-11-20-recorded-pinned-verdicts.md) | Recorded verdicts for pinned store citations | draft | not-started | [#4](https://github.com/writfold-dev/writfold/issues/4) |
 | [2026-11-20](2026-11-20-statement-order-without-clock.md) | Order statements without a clock | draft | not-started | [#15](https://github.com/writfold-dev/writfold/issues/15) |
+| [2026-11-21](2026-11-21-reader-verdict-parity.md) | Show the usable checked-citation verdict on a cold read | draft | not-started | [#35](https://github.com/writfold-dev/writfold/issues/35) |
+| [2026-11-21](2026-11-21-reviewed-lookup-misses.md) | Turn a reported lookup miss into a reviewable alias | draft | not-started | [#22](https://github.com/writfold-dev/writfold/issues/22) |
