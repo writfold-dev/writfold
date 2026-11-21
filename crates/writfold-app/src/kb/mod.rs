@@ -172,12 +172,12 @@ edits (the Splicery adapter; Splicery for repeated or structural edits, ordinary
                                    finish (or drop) an edit a crash interrupted between files
 
 harness:
-  hook session-start|pre-compact|post-compact|stop|session-end|pre-tool-use
+  hook session-start|pre-compact|post-compact|stop|session-end|pre-tool-use|post-tool-use
                                    a Claude Code hook: event JSON on stdin; always exits 0;
                                    checkpoint drafts stay local until --from-draft confirms one;
                                    pre-tool-use and stop apply guard rules in .writfold/guards/
                                    and the delivery guard (.writfold/deliveries/guard.toml);
-                                   with neither, they open nothing
+                                   with neither, they open nothing; post-tool-use names deliver posted
 
 The KB root is --kb, else $WRITFOLD_KB, else the nearest directory above the
 working directory holding inventory/assets/. Git is $WRITFOLD_GIT or git on PATH.

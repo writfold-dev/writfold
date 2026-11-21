@@ -22,7 +22,10 @@ fn readme_names_the_workspace_version() -> Result<(), Box<dyn Error>> {
                 .unwrap_or_default()
         })
         .collect();
-    assert!(!tags.is_empty(), "README.md should give a manual download URL");
+    assert!(
+        !tags.is_empty(),
+        "README.md should give a manual download URL"
+    );
     for tag in tags {
         assert_eq!(
             tag,

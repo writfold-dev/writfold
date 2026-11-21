@@ -52,6 +52,7 @@ The last line is always the trailer:
 - `coverage=partial` means the answer is incomplete. Records were unreadable, the walk hit its depth (`frontier=`), or nothing matched. Say so; don't present it as the whole picture.
 - `answer=unknown reason=…` means the KB has no answer. Its absence from the KB is not evidence about the world. Look in the sources, then `record` what you found.
 - `stale=N` / `unverifiable=N`: N cited sources have moved or could not be checked. A row flagged `!stale`, `!moved→a-b`, `!changed`, `!gone`, `!expired` or `!superseded→<id>` must be re-checked at its source before you act on it.
+- Not every `!` flag is a warning. Some only describe the row: `!current` (the run this session resumes, a healthy state), `!draft`, `!recorded` (a verdict read from a committed receipt; its date is on the row), `!store` (a declared attached store), `!suggested` (a near name, not a hit). Re-check only for the flags in the line above, and for any row whose status is `stale`, `gone` or `unverifiable`.
 - `omitted=N` with `cursor=v2.…`: more rows exist. Re-run with `--cursor <value>` (same query) or a larger `--budget-tokens`.
 - `kb=<commit>+dirty:N` means N KB files have uncommitted changes.
 

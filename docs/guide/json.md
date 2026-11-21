@@ -30,7 +30,7 @@ $ writfold kb why "batch ledger" --json
 | `status` | string or null | the bracketed state in the text form (`[accepted]`, `[expired]`) |
 | `text` | string | the row's text |
 | `path`, `line` | string, integer, or null | the source the row ends in (`@path:line`) |
-| `flags` | array of strings | the `!` flags, without the `!` |
+| `flags` | array of strings | the `!` flags, without the `!`. Some ask for a re-check at the source (`stale`, `moved…`, `changed`, `gone`, `expired`, `superseded…`); others only describe the row (`current`, `draft`, `recorded`, `store`, `suggested`) |
 | `more` | array | the indented lines under the row |
 | `section` | string or null | the output section, used for `omitted_by` |
 
