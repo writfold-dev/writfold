@@ -40,8 +40,9 @@ fn files(
     for path in paths {
         match tree.iter().find(|e| &e.path == path) {
             Some(entry) => {
-                let id = GitObjectId::new(commit.format(), entry.id.clone())
-                    .map_err(|_| KbError::Refused(format!("{path}: malformed object ID")))?;
+                let id = GitObjectId::new(commit.format(), entry.id.clone()).map_err(|e| {
+                    KbError::Refused(format!("{path}: malformed object ID ({e:?})"))
+                })?;
                 at.push(Some(ids.len()));
                 ids.push(id);
             }
@@ -77,17 +78,18 @@ pub fn ids(text: &str) -> std::result::Result<Vec<String>, String> {
 
 /// Read the required set and its definitions at `commit`.
 pub fn read(git: &GitExecutable<'_>, subject: &Subject, commit: &GitObjectId) -> Result<Required> {
-    let [handoff] = files(git, subject, commit, &[FILE.to_owned()])?
-        .try_into()
-        .map_err(|_| KbError::Refused("one file expected".into()))?;
+    let handoff = (files(git, subject, commit, &[FILE.to_owned()])?.into_iter())
+        .next()
+        .flatten();
     let Some(bytes) = handoff else {
         return Err(KbError::Refused(format!(
             "no required set: {FILE} does not exist at the policy revision {}; an operator lists the gates a handoff needs there (schema = \"writfold-handoff/1\", required = [\"unit\", …])",
             short(commit.as_str())
         )));
     };
-    let text = String::from_utf8(bytes)
-        .map_err(|_| KbError::Refused(format!("{FILE} at the policy revision is not UTF-8")))?;
+    let text = String::from_utf8(bytes).map_err(|e| {
+        KbError::Refused(format!("{FILE} at the policy revision is not UTF-8 ({e})"))
+    })?;
     let ids = ids(&text)
         .map_err(|why| KbError::Refused(format!("{FILE} at the policy revision: {why}")))?;
     let paths: Vec<String> = ids.iter().map(|id| format!("{DIR}/{id}.toml")).collect();
@@ -113,7 +115,7 @@ fn definition(
     dir: &Path,
 ) -> std::result::Result<Definition, String> {
     let bytes = bytes.ok_or_else(|| format!("{path} does not exist at the policy revision"))?;
-    let text = String::from_utf8(bytes).map_err(|_| format!("{path} is not UTF-8"))?;
+    let text = String::from_utf8(bytes).map_err(|e| format!("{path} is not UTF-8 ({e})"))?;
     crate::gate::def_check::check(&text, id, Origin::Repo, dir, path)
         .map_err(|report| crate::defs::why(&report))
 }
