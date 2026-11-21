@@ -51,11 +51,33 @@ edge otherwise. This is stage b: a key change rewrites the edges of the
 files whose tokens it moved, found by token, and no others. A rename with
 many referrers still rewrites all their edges: valid edges are never capped.
 
+## The keys, only when they can have moved
+
+The keys are a function of three Phase A rows per file: whether it is an
+input and its heading (a synthesized project), its claim and its aliases.
+The refresh digests those for each re-derived file before and after; when
+none moved (`graph::any`, proved), the keys, the snapshot and the diff are
+skipped (`last-refresh: keys=same`). Tested only, by the random-edit
+oracle and `graph_delta.rs`.
+
+## Behaviour and cost
+
+On the generated shape of #58 (`scripts/kb_shape.py OUT 50000 40 150`:
+50,002 files, about two million edges), release build, 21 November:
+
+| Refresh after | v0.6.0-dev.14 | this RFC |
+|---|---:|---:|
+| a renamed record | 32.3 s (`graph=whole`) | 3.15 s (`keys=moved graph=delta affected=44`, 1,804 deleted, 1,761 written) |
+| one new reference in one file | 0.86 s | 1.1 s with about eight files dirty (`keys=same graph=delta affected=1`) |
+
+Peak RSS stayed about 18 MB. After the rename, `index verify` found the
+index equal to a rebuild (131 s).
+
 ## Compatibility
 
 Schema 7 (the `refs(token)` index): the index is rebuilt once. Answers are
-unchanged. `last-refresh` gains `affected=N` and no longer reads
-`graph=whole`.
+unchanged. `last-refresh` gains `keys=same|moved` and `affected=N`, and no
+longer reads `graph=whole`.
 
 ## Decision log
 

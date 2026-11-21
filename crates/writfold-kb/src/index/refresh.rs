@@ -137,6 +137,7 @@ pub fn refresh(
     }
     let mut rederived: Vec<String> = Vec::new();
     let mut changed: Vec<bool> = Vec::new();
+    let mut keyed: Vec<bool> = Vec::new();
     let mut count = 0;
     for path in &paths {
         let fresh = members
@@ -157,17 +158,19 @@ pub fn refresh(
         }
         let before = raws(&tx, path)?;
         let refs_before = derive::refs_digest(&tx, path)?;
+        let keys_before = derive::key_inputs_digest(&tx, path)?;
         delete_file(&tx, path)?;
         if let Some(fresh) = fresh {
             insert_file(&tx, fresh)?;
         }
         forget_verdicts(&tx, path, &before)?;
         changed.push(derive::refs_digest(&tx, path)? != refs_before);
+        keyed.push(derive::key_inputs_digest(&tx, path)? != keys_before);
         rederived.push(path.clone());
         count += 1;
     }
     if count > 0 {
-        graph(&tx, count, (&rederived, &changed))?;
+        graph(&tx, count, (&rederived, &changed), &keyed)?;
     }
     // The files were read after the snapshot was observed. Store the
     // derivation only if the snapshot still holds, so a reader that reports
@@ -224,10 +227,17 @@ fn graph(
     tx: &rusqlite::Transaction<'_>,
     count: usize,
     (rederived, changed): (&[String], &[bool]),
+    keyed: &[bool],
 ) -> Result<()> {
-    derive::keys_before(tx)?;
-    derive::keys(tx)?;
-    let (dups, tokens) = derive::moved(tx)?;
+    // The keys are a function of the files' key inputs: when none moved,
+    // they and every token's resolution are unchanged.
+    let (dups, tokens) = if writfold_core::graph::any(keyed) {
+        derive::keys_before(tx)?;
+        derive::keys(tx)?;
+        derive::moved(tx)?
+    } else {
+        Default::default()
+    };
     let refs: BTreeSet<&String> = (rederived.iter().zip(changed))
         .filter(|(_, c)| **c)
         .map(|(p, _)| p)
@@ -249,7 +259,12 @@ fn graph(
         }
     };
     let note = format!(
-        "files={count} graph={word} affected={} edges-deleted={deleted} edges-written={written}",
+        "files={count} keys={} graph={word} affected={} edges-deleted={deleted} edges-written={written}",
+        if writfold_core::graph::any(keyed) {
+            "moved"
+        } else {
+            "same"
+        },
         marks.iter().filter(|a| **a).count()
     );
     tx.prepare_cached("INSERT OR REPLACE INTO meta(key, value) VALUES ('last_refresh', ?1)")?

@@ -138,6 +138,19 @@ pub fn moved(tx: &Transaction<'_>) -> rusqlite::Result<(BTreeSet<String>, BTreeS
     Ok((dups, tokens))
 }
 
+/// A digest of what one file gives the keys: whether it is an input and
+/// its heading (a synthesized project's record), its claim and its
+/// aliases. The keys are a function of these rows over every file, so when
+/// no re-derived file's digest moved, the keys are unchanged (#65).
+pub fn key_inputs_digest(tx: &Transaction<'_>, path: &str) -> rusqlite::Result<Vec<u8>> {
+    let sqls = [
+        "SELECT path, heading FROM files WHERE path = ?1",
+        "SELECT * FROM claims WHERE path = ?1",
+        "SELECT * FROM claim_aliases WHERE path = ?1 ORDER BY alias, source",
+    ];
+    digest_of(tx, &sqls, Some(path))
+}
+
 /// A digest of one file's references, in order.
 pub fn refs_digest(tx: &Transaction<'_>, path: &str) -> rusqlite::Result<Vec<u8>> {
     let sql = "SELECT line, ord, src, rel, token, origin, status, cite_ord FROM refs WHERE path = ?1 ORDER BY ord";
