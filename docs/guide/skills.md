@@ -57,6 +57,22 @@ description: Review a change before it is delivered.
 allowed-tools: Bash(writfold kb plan use *)
 ---
 
+### A skill that walks a loop
+
+A skill can splice a template whose step loops (`converge: unit review loop=attempt max=5`, see [loops](run-graph.md#loops-a-step-that-repeats-until-its-gates-pass)) and tell the agent how to walk it:
+
+```markdown
+Run `writfold kb plan use fix` once. Then, until the plan is complete:
+follow the `next:` line of `writfold kb plan status` (`plan advance` on a
+body step, the exit gate's own command, then `writfold kb plan again` to go
+round, or `plan advance` when the loop's gates pass). If the loop step reads
+`!spent`, stop and report what each round tried; do not skip or waive it.
+```
+
+The commands it names are exercised by the [recipes](hooks.md#holding-a-turn-in-a-loop-recipe); the skill text itself has not yet been run through `claude -p`.
+
+For unattended use, [`recipes/loop-rounds.sh`](recipes/loop-rounds.sh) starts one fresh agent session at a time until the plan is complete (exit 0) or the loop is spent (exit 2). Writfold does not run it: the script is the loop, and Writfold records each round and refuses one past the bound.
+
 ## Where the run's plan stands
 
 !`writfold kb plan use review || true`

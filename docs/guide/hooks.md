@@ -284,6 +284,13 @@ Register it in `.claude/settings.json` (Stop takes no matcher):
 
 On a KB whose run owes `unit`, the hook prints `{"decision": "block", "reason": "The run owes gates: unit [open]. writfold kb gate status names the next command for each."}`; with `stop_hook_active` set, after `gate run unit` passes, and with no current run, it prints nothing and the turn ends. Claude Code also ends the turn after eight consecutive continuations, whatever the hook says. Like every hook, this one sees only one harness. The harness-neutral equivalent is CI running `writfold kb gate lines`, which exits 0 only when every gate is met.
 
+### Holding a turn in a loop (recipe)
+
+Built in v0.6.0-dev.15 ([#80](https://github.com/writfold-dev/writfold/issues/80)). For a session walking a [loop](run-graph.md#loops-a-step-that-repeats-until-its-gates-pass), two ways to keep it going round:
+
+- **A guard rule** (a nudge, once per session or per turn with `repeat = "turn"`): `event = "stop"`, `require = ["step.settled"]`. While a round is left its text names `writfold kb plan again`; on a spent loop `step.settled` is met and the rule is quiet, where `step.met` would keep nudging.
+- **A hard Stop hook** that blocks the end of the turn while the current loop step has a round left, and lets it end on a spent loop or a finished plan: [`recipes/loop-stop-hook.sh`](recipes/loop-stop-hook.sh). It only reads `writfold kb plan status`; Writfold decides nothing new there. Exercised by `crates/writfold/tests/kb_loop_recipes.rs`.
+
 ### A stop that requires a write (recipe)
 
 > Built in v0.6.0-dev.1.
