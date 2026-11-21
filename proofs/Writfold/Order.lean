@@ -318,4 +318,9 @@ theorem newest_is_max (items : Slice order.Keyed) :
   unfold order.newest
   exact newest_loop_spec items none 0#usize (by simp) (fun j _ hj => by simp at hj)
 
+/-- `newest` never fails, for every input (from `newest_is_max`). -/
+theorem newest_total (items : Slice order.Keyed) :
+    order.newest items ⦃ _ => True ⦄ :=
+  WP.spec_mono (newest_is_max items) (fun _ _ => trivial)
+
 end Writfold.Core.Order

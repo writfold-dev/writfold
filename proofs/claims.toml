@@ -1370,6 +1370,23 @@ mutants = [
 [[claim]]
 crate = "writfold-core"
 file = "crates/writfold-core/src/order.rs"
+function = "newest"
+lean = "writfold_core.order.newest"
+theorems = [
+  "Writfold.Core.Order.newest_is_max",
+  "Writfold.Core.Order.newest_loop_spec",
+  "Writfold.Core.Order.newest_total",
+]
+total = "Writfold.Core.Order.newest_total"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "newest-keeps-oldest",
+  "newest-ignores-stands",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/order.rs"
 function = "precedes"
 lean = "writfold_core.order.precedes"
 theorems = [
@@ -2211,6 +2228,20 @@ mutants = [
 [[claim]]
 crate = "writfold-core"
 file = "crates/writfold-core/src/store.rs"
+function = "pin_recordable"
+lean = "writfold_core.store.pin_recordable"
+theorems = [
+  "Writfold.Core.Store.code_recorded_unverifiable_never",
+]
+total = "Writfold.Core.Store.code_recorded_unverifiable_never"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "pin-records-unverifiable",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/store.rs"
 function = "pinned"
 lean = "writfold_core.store.pinned"
 theorems = [
@@ -2225,6 +2256,22 @@ mutants = [
   "pinned-absent-gone",
   "pinned-unanchored-fresh",
   "pinned-other-bytes-fresh",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/store.rs"
+function = "recorded"
+lean = "writfold_core.store.recorded"
+theorems = [
+  "Writfold.Core.Store.code_head_never_recorded",
+  "Writfold.Core.Store.code_recorded_iff",
+]
+total = "Writfold.Core.Store.code_recorded_iff"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "recorded-any-basis",
+  "recorded-ignores-age",
 ]
 
 [[claim]]
@@ -2270,6 +2317,21 @@ mutants = [
   "snapshot-damaged-recorded",
   "snapshot-any-status",
   "snapshot-order-swapped",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/store.rs"
+function = "use_recorded"
+lean = "writfold_core.store.use_recorded"
+theorems = [
+  "Writfold.Core.Store.code_local_wins",
+  "Writfold.Core.Store.use_recorded_iff",
+]
+total = "Writfold.Core.Store.use_recorded_iff"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "receipt-beats-local",
 ]
 
 [[claim]]

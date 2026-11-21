@@ -951,6 +951,9 @@ a reader uses it instead of its own verdict (only when that is
 (`recorded-any-basis`, `recorded-ignores-age`, `receipt-beats-local`,
 `pin-records-unverifiable`). Which receipt is newest reuses the proved
 `verdict::recorded::newest` ([#4](https://github.com/writfold-dev/writfold/issues/4)).
+`Order.lean`'s `newest_total` (from `newest_is_max`) lets tauten subsume
+`newest`'s indexing. After the statement order and recorded verdicts
+rounds: 731 theorems, 422 required claims, 263 mutants.
 
 ### The claims and their mutants
 
