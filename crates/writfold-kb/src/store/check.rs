@@ -6,7 +6,7 @@ use crate::gate::def_check::{description, schema};
 use crate::stale::kinds::is_word;
 use writfold_core::diag::Report;
 
-const KEYS: [&str; 7] = [
+const KEYS: [&str; 8] = [
     "schema",
     "name",
     "url",
@@ -14,6 +14,7 @@ const KEYS: [&str; 7] = [
     "freshness",
     "paths",
     "description",
+    "recorded_max_age",
 ];
 const ROLES: [&str; 1] = ["attached"];
 const FRESHNESS: [&str; 2] = ["pinned", "head"];
@@ -87,6 +88,38 @@ fn paths(c: &mut Check<'_>) -> Option<Vec<String>> {
     ok.then(|| list.into_iter().map(|p| p.value.text).collect())
 }
 
+/// `recorded_max_age`: how old a recorded verdict of a pinned citation a
+/// reader without the clone may use (#4), `<N>d` or `<N>h`; only beside
+/// `freshness = "pinned"`.
+fn recorded_max_age(c: &mut Check<'_>, freshness: Option<Freshness>) -> Option<Option<String>> {
+    let v = match c.text("recorded_max_age") {
+        Field::Absent => return Some(None),
+        Field::Bad => return None,
+        Field::Got(v) => v,
+    };
+    if freshness == Some(Freshness::Head) {
+        let why = "recorded_max_age needs freshness = \"pinned\" (a head-judged store never uses a receipt)";
+        c.error(
+            "key.not-here",
+            c.key_span("recorded_max_age"),
+            why.to_owned(),
+        )
+        .help("remove this line".into());
+        return None;
+    }
+    if !matches!(
+        crate::time::ttl(Some(v.str())),
+        Some(crate::time::Ttl::Seconds(_))
+    ) {
+        let why = format!("recorded_max_age {:?} must be <N>d or <N>h", v.str());
+        c.error("value.form", Some(v.span), why)
+            .label("not a duration")
+            .help("write recorded_max_age = \"30d\"".into());
+        return None;
+    }
+    Some(Some(v.value.text))
+}
+
 /// Every fault of one declaration, or the declaration.
 pub fn check(text: &str, file: &str, shown: &str) -> Result<Store, Report> {
     let mut c = Check::read(shown, text, "a store declaration");
@@ -98,6 +131,7 @@ pub fn check(text: &str, file: &str, shown: &str) -> Result<Store, Report> {
     let freshness = freshness(&mut c);
     let paths = paths(&mut c);
     let description = description(&mut c);
+    let recorded = recorded_max_age(&mut c, freshness);
     let built = (|| {
         role?;
         Some(Store {
@@ -106,6 +140,7 @@ pub fn check(text: &str, file: &str, shown: &str) -> Result<Store, Report> {
             freshness: freshness?,
             paths: paths?,
             description: description?,
+            recorded_max_age: recorded?,
         })
     })();
     c.finish(built)

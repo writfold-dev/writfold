@@ -814,6 +814,26 @@ MUTANTS = (
            "        return seq_a < seq_b;",
            "        return seq_a > seq_b;",
            ("Writfold.Core.Order.precedes_spec",)),
+    # store: a receipt stands in only under the pin (#4)
+    Mutant("recorded-any-basis", "store.rs",
+           "        Basis::Pin => declared_max_age && within_age,\n        Basis::Head => false,",
+           "        Basis::Pin => declared_max_age && within_age,\n        Basis::Head => declared_max_age && within_age,",
+           ("Writfold.Core.Store.code_recorded_iff", "Writfold.Core.Store.code_head_never_recorded")),
+    # store: a receipt stands in only while within recorded_max_age (#4)
+    Mutant("recorded-ignores-age", "store.rs",
+           "        Basis::Pin => declared_max_age && within_age,",
+           "        Basis::Pin => declared_max_age,",
+           ("Writfold.Core.Store.code_recorded_iff",)),
+    # store: a verdict this machine reached beats any receipt (#4)
+    Mutant("receipt-beats-local", "store.rs",
+           "        Verdict::Unverifiable => recorded,\n        _ => false,",
+           "        Verdict::Unverifiable => recorded,\n        _ => recorded,",
+           ("Writfold.Core.Store.code_local_wins", "Writfold.Core.Store.use_recorded_iff")),
+    # store: an unverifiable pinned verdict is never recorded (#4)
+    Mutant("pin-records-unverifiable", "store.rs",
+           "    !matches!(judged, Verdict::Unverifiable)",
+           "    true",
+           ("Writfold.Core.Store.code_recorded_unverifiable_never",)),
     # order: the statement that stands is the newest, not the oldest (#15)
     Mutant("newest-keeps-oldest", "order.rs",
            "                Some(b) => precedes(items[b].seq, &items[b].name, items[i].seq, &items[i].name),",

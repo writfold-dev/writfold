@@ -431,6 +431,11 @@ def claims : List Name := [
   ``Writfold.Core.Store.snapshot_uncommitted_withheld,
   ``Writfold.Core.Store.snapshot_order,
   ``Writfold.Core.Store.snapshot_stage_iff,
+  ``Writfold.Core.Store.code_recorded_iff,
+  ``Writfold.Core.Store.code_head_never_recorded,
+  ``Writfold.Core.Store.code_local_wins,
+  ``Writfold.Core.Store.use_recorded_iff,
+  ``Writfold.Core.Store.code_recorded_unverifiable_never,
   -- evidence binding (writfold_core::bind)
   ``Writfold.Core.Bind.answers_spec,
   ``Writfold.Core.Bind.answers_any,

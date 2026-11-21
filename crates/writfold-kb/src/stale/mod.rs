@@ -9,6 +9,8 @@ pub mod checker;
 mod code;
 pub mod kind_check;
 pub mod kinds;
+mod pin_receipt;
+pub(crate) use pin_receipt::plan as pin_plan;
 mod pinned;
 mod rename;
 pub mod repos;
@@ -242,7 +244,7 @@ fn marked(cite: &Cite, checked: Checked) -> Checked {
 }
 
 /// The kernel's name for a verdict.
-fn kernel(verdict: &Verdict) -> writfold_core::verdict::Verdict {
+pub(crate) fn kernel(verdict: &Verdict) -> writfold_core::verdict::Verdict {
     use writfold_core::verdict::Verdict as K;
     match verdict {
         Verdict::Fresh => K::Fresh,

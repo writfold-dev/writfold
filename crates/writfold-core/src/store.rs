@@ -31,6 +31,34 @@ pub fn basis(declared: bool, pinned: bool, has_rev: bool) -> Basis {
     }
 }
 
+/// Whether a recorded verdict (a check receipt written by `kb stale
+/// --record` on a machine that had the store) may stand in for a citation:
+/// only under the pin, only for a store that declares `recorded_max_age`,
+/// and only while the receipt is within it (U3, #4). A head-judged
+/// citation never uses one.
+pub fn recorded(basis: &Basis, declared_max_age: bool, within_age: bool) -> bool {
+    match basis {
+        Basis::Pin => declared_max_age && within_age,
+        Basis::Head => false,
+    }
+}
+
+/// Whether a reader uses a recorded verdict instead of its own: only when
+/// its own is `unverifiable` (no clone here, or the commit not in it) and
+/// [`recorded`] allows. A verdict this machine could reach always wins.
+pub fn use_recorded(local: &Verdict, recorded: bool) -> bool {
+    match local {
+        Verdict::Unverifiable => recorded,
+        _ => false,
+    }
+}
+
+/// Whether a verdict under the pin may be written to a receipt: every one
+/// but `unverifiable`, which describes this machine, not the citation.
+pub fn pin_recordable(judged: &Verdict) -> bool {
+    !matches!(judged, Verdict::Unverifiable)
+}
+
 /// The cited commit in the local clone.
 pub enum Commit {
     /// The clone does not have it (it may be behind).

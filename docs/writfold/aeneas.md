@@ -939,6 +939,19 @@ statements that stand. `Order.lean`'s `newest_loop_spec` and
 statement that no standing statement follows) are new, with two mutants
 (`newest-keeps-oldest`, `newest-ignores-stands`).
 
+### The recorded pinned verdicts round (21 November 2026)
+
+`store::recorded(basis, declared_max_age, within_age)` decides whether a
+receipt may stand in for a pinned citation, `store::use_recorded` whether
+a reader uses it instead of its own verdict (only when that is
+`unverifiable`), and `store::pin_recordable` which verdicts `stale
+--record` may write. `Store.lean` proves `code_recorded_iff`,
+`code_head_never_recorded`, `code_local_wins`, `use_recorded_iff` and
+`code_recorded_unverifiable_never`, with four mutants
+(`recorded-any-basis`, `recorded-ignores-age`, `receipt-beats-local`,
+`pin-records-unverifiable`). Which receipt is newest reuses the proved
+`verdict::recorded::newest` ([#4](https://github.com/writfold-dev/writfold/issues/4)).
+
 ### The claims and their mutants
 
 <!-- generated from proofs/mutants.py -->

@@ -2,7 +2,7 @@
 rfc: "2026-11-20-recorded-pinned-verdicts"
 title: "Recorded verdicts for pinned store citations"
 status: accepted
-implementation: not-started
+implementation: complete
 authors:
   - tknawara
 created: 2026-11-20

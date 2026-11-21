@@ -164,5 +164,5 @@ Rows are in creation order.
 | [2026-11-20](2026-11-20-citations-as-links.md) | Citations rendered as links in posted text | draft | not-started | [#5](https://github.com/writfold-dev/writfold/issues/5) |
 | [2026-11-20](2026-11-20-gates-owed-by-diff.md) | Gates owed by what a change touches (applies_when) | draft | not-started | [#9](https://github.com/writfold-dev/writfold/issues/9) |
 | [2026-11-20](2026-11-20-links-from-trailers-and-at-commit.md) | Links from commit trailers and tracker references, and answers as of a commit (M4b) | draft | not-started | [#31](https://github.com/writfold-dev/writfold/issues/31) |
-| [2026-11-20](2026-11-20-recorded-pinned-verdicts.md) | Recorded verdicts for pinned store citations | accepted | not-started | [#4](https://github.com/writfold-dev/writfold/issues/4) |
+| [2026-11-20](2026-11-20-recorded-pinned-verdicts.md) | Recorded verdicts for pinned store citations | accepted | complete | [#4](https://github.com/writfold-dev/writfold/issues/4) |
 | [2026-11-20](2026-11-20-statement-order-without-clock.md) | Order statements without a clock | accepted | complete | [#15](https://github.com/writfold-dev/writfold/issues/15) |

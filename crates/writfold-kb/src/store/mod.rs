@@ -10,6 +10,7 @@
 //! role = "attached"                # cited, never curated
 //! freshness = "pinned"             # the default; "head" keeps the rule of any repository
 //! paths = ["~/src/scratch"]        # optional hints, tried in order on each machine
+//! recorded_max_age = "30d"         # optional: use recorded verdicts where the clone is missing
 //! ```
 //!
 //! A citation into a pinned store is judged at its own revision
@@ -51,6 +52,25 @@ pub struct Store {
     pub freshness: Freshness,
     pub paths: Vec<String>,
     pub description: Option<String>,
+    /// How old a recorded verdict a reader without the clone may use, as
+    /// written (`30d`); `None`: receipts are never used (#4).
+    pub recorded_max_age: Option<String>,
+}
+
+impl Store {
+    /// [`Store::recorded_max_age`] in seconds.
+    pub fn recorded_seconds(&self) -> Option<i64> {
+        match crate::time::ttl(Some(self.recorded_max_age.as_deref()?))? {
+            crate::time::Ttl::Seconds(seconds) => Some(seconds),
+            crate::time::Ttl::Never => None,
+        }
+    }
+
+    /// The check-receipt kind its recorded verdicts are filed under: a
+    /// name no declared kind can take (`@` is not in a kind name).
+    pub fn receipt_kind(&self) -> String {
+        format!("store@{}", self.name)
+    }
 }
 
 /// Every declaration of a KB, by name.

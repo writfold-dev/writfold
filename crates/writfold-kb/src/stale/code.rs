@@ -7,7 +7,7 @@
 //! blobs may need a fetch. A Git failure in one repository makes that
 //! repository's citations unverifiable (`git-error: …`), not the run fail.
 use super::span::{Located, locate};
-use super::{Checked, Cite, Verdict, pinned, rename, repos};
+use super::{Checked, Cite, Verdict, pin_receipt, pinned, rename, repos};
 use crate::error::{KbError, Result};
 use crate::session::Session;
 use crate::workspace::{CANCELLED, budgets};
@@ -56,17 +56,28 @@ pub fn check(
     let mut remaining = rename::REV_CAP;
     for (repo, members) in groups {
         let (dir, members) = match stores.get(&repo) {
-            Some(store) => match pinned::split(session, store, cites, members) {
-                pinned::Split::Answered(found) => {
-                    out.extend(found);
-                    continue;
+            Some(store) => {
+                // A pinned citation this machine cannot judge may read a
+                // recorded verdict instead (#4).
+                let stand_in = |(i, c): (usize, Checked)| {
+                    let root = &session.ws.root;
+                    (
+                        i,
+                        pin_receipt::stand_in(root, store, &cites[i], c, session.now),
+                    )
+                };
+                match pinned::split(session, store, cites, members) {
+                    pinned::Split::Answered(found) => {
+                        out.extend(found.into_iter().map(stand_in));
+                        continue;
+                    }
+                    pinned::Split::Read { dir, head, pinned } => {
+                        let found = pinned::check(git, &dir, cites, &pinned);
+                        out.extend(per_repo_or(found, &pinned)?.into_iter().map(stand_in));
+                        (dir, head)
+                    }
                 }
-                pinned::Split::Read { dir, head, pinned } => {
-                    let found = pinned::check(git, &dir, cites, &pinned);
-                    out.extend(per_repo_or(found, &pinned)?);
-                    (dir, head)
-                }
-            },
+            }
             None => {
                 let url = members.iter().find_map(|&i| cites[i].field("url"));
                 let Some(dir) = repos::resolve(session, &repo, url.as_deref()) else {

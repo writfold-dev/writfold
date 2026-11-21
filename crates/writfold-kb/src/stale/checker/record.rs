@@ -140,7 +140,7 @@ pub fn prune(root: &Path, new: &Receipt, max_age: i64, now: i64) -> Result<usize
 fn publish(
     root: &Path,
     state: &Path,
-    kinds: &Kinds,
+    max_age: Option<i64>,
     new: &Receipt,
     now: i64,
     probe: Probe,
@@ -150,8 +150,7 @@ fn publish(
         bytes: receipt::encode(new).into_bytes(),
     };
     atomic::apply(root, state, &[op], probe)?;
-    let max_age = kinds.max_age(&new.kind).unwrap_or(i64::MAX);
-    let removed = prune(root, new, max_age, now)?;
+    let removed = prune(root, new, max_age.unwrap_or(i64::MAX), now)?;
     let tail = match removed {
         0 => String::new(),
         1 => " (1 superseded receipt removed)".into(),
@@ -179,9 +178,19 @@ pub fn execute(ws: &Workspace, request: &Request, scope: Option<&str>, now: i64)
     let declared = kinds::read(&ws.root)?;
     let plan = plan(&declared, &cites, &judged.answers, now);
     answer.notes.extend(plan.notes);
+    // Pinned store citations judged here, for stores that declare
+    // `recorded_max_age` (#4).
+    let stores = crate::store::read(&ws.root)?;
+    let pinned = crate::stale::pin_plan(&stores, &cites, &judged.checked, now);
+    let max_age = |r: &Receipt| match r.kind.strip_prefix("store@") {
+        Some(name) => stores
+            .get(name)
+            .and_then(crate::store::Store::recorded_seconds),
+        None => declared.max_age(&r.kind),
+    };
     let (mut verdicts, mut files) = (0, 0);
-    for new in &plan.receipts {
-        match publish(&ws.root, &state, &declared, new, now, request.probe) {
+    for new in plan.receipts.iter().chain(&pinned) {
+        match publish(&ws.root, &state, max_age(new), new, now, request.probe) {
             Ok(note) => {
                 verdicts += new.verdicts.len();
                 files += 1;

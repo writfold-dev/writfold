@@ -1,6 +1,6 @@
 # Attached stores
 
-> **Status:** declaring a store (S1) and judging its citations at their pinned revision (S2) built in v0.6.0-dev.7; run artifacts on `checkpoint` and `resume` (S4) built in v0.6.0-dev.8 ([spec, part B](../rfcs/2026-11-17-v060-dev6-and-attached-stores.md#8-part-b-attached-stores-for-disposable-evidence)); backlinks from a store directory to the record it serves (S3, [below](#material-behind-a-record)) and `observe --snapshot` ([below](#keeping-a-looks-bytes-snapshots)) built in v0.6.0-dev.10 ([spec](../rfcs/2026-11-18-attached-stores-next.md)). The checklist `snapshot` list ([#3](https://github.com/writfold-dev/writfold/issues/3), [gates](gates.md#checklist-gates)) is built in v0.6.0-dev.11. Not built: recorded verdicts for a machine without the store's clone ([#4](https://github.com/writfold-dev/writfold/issues/4)). Writfold never clones, fetches or commits in a store.
+> **Status:** declaring a store (S1) and judging its citations at their pinned revision (S2) built in v0.6.0-dev.7; run artifacts on `checkpoint` and `resume` (S4) built in v0.6.0-dev.8 ([spec, part B](../rfcs/2026-11-17-v060-dev6-and-attached-stores.md#8-part-b-attached-stores-for-disposable-evidence)); backlinks from a store directory to the record it serves (S3, [below](#material-behind-a-record)) and `observe --snapshot` ([below](#keeping-a-looks-bytes-snapshots)) built in v0.6.0-dev.10 ([spec](../rfcs/2026-11-18-attached-stores-next.md)). The checklist `snapshot` list ([#3](https://github.com/writfold-dev/writfold/issues/3), [gates](gates.md#checklist-gates)) is built in v0.6.0-dev.11. Recorded verdicts for a machine without the store's clone ([#4](https://github.com/writfold-dev/writfold/issues/4), [below](#on-a-machine-without-the-clone-recorded-verdicts)) are built in v0.6.0-dev.12. Writfold never clones, fetches or commits in a store.
 
 Agents make a lot of material that is worth citing and not worth curating: probe scripts, data pulls, a test suite written to pin a bug, a fuzz harness and the crash it found, notes from reviewing a pull request. Keep it in an ordinary Git repository beside the KB, and cite into it the way you cite any code. Declaring that repository as an **attached store** tells Writfold two things: where every machine should find it, and that what a record relies on is the content **at the cited commit**, not whatever sits at that path today. You can then reorganise the store freely; sound evidence stays fresh.
 
@@ -17,9 +17,10 @@ role = "attached"                       # cited, never curated
 freshness = "pinned"                    # the default; "head" keeps the rule of any repository
 paths = ["~/src/scratch", "/work/scratch"]   # optional hints, tried on each machine
 description = "probes, data pulls, reproducers and review notes"
+recorded_max_age = "30d"                # optional: read recorded verdicts where the clone is missing
 ```
 
-Every key but `freshness`, `paths` and `description` is required; an unknown key, a wrong schema or a bad value refuses the file, so a misspelling never silently changes which rule judges evidence. `kb lint` reports each fault at its line.
+Every key but `freshness`, `paths`, `description` and `recorded_max_age` is required; an unknown key, a wrong schema or a bad value refuses the file, so a misspelling never silently changes which rule judges evidence. `kb lint` reports each fault at its line.
 
 ## Where the clone is found
 
@@ -53,6 +54,18 @@ A row that is not fresh shows the pin it was judged at (`head: <rev>:pin`). The 
 So `git mv work archive` in the store changes nothing for the KB. Rewriting history that dropped a cited commit, or deleting the only branch holding it, turns that citation `gone`, which is the truth: no other machine can read it any more.
 
 The declaration joins `kb policy`'s `identity` (a KB without stores keeps the identity it had), because it changes what counts as evidence.
+
+### On a machine without the clone: recorded verdicts
+
+Built in v0.6.0-dev.12 ([RFC](../rfcs/2026-11-20-recorded-pinned-verdicts.md)). A store that declares `recorded_max_age` (`<N>d` or `<N>h`; only beside `freshness = "pinned"`) lets a machine that has the clone share what it found. `writfold kb stale --record` there writes the verdicts of the pinned citations it judged itself into a check receipt, `.writfold/checks/store@<name>/<time>-<hex>.json` (the [checkers'](checkers.md#sharing-verdicts-check-receipts) layout, keyed by the citation's exact text and so by its `rev=`, checker `writfold-pin`). Commit it with the KB.
+
+On a machine where that citation would read `unverifiable` (no clone, or the cited commit not in it), a reader (`stale`, `gate status`, `gate cover`, guard rules, `deliver check`) uses the newest such verdict instead, while it is no older than `recorded_max_age`, and marks it `recorded <checked_at>` with a `check:` line naming the receipt. Under the pin a `fresh` verdict changes only when history is rewritten or the last ref reaching the commit is deleted, which is why this is limited to pinned citations. What holds, proved in `Store.lean`:
+
+- a receipt stands in only under the pin, for a store that declares `recorded_max_age`, within that age (`code_recorded_iff`); a head-judged citation never uses one (`code_head_never_recorded`);
+- a verdict this machine reaches itself always wins over a receipt (`code_local_wins`);
+- an `unverifiable` verdict is never recorded (`code_recorded_unverifiable_never`).
+
+Without the key nothing is recorded or read, and a receipt already written is ignored. Writing the key changes the declaration's line in `kb policy`'s `identity`.
 
 ## Pointing a run at its material
 

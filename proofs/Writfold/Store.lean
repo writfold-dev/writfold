@@ -295,4 +295,40 @@ theorem snapshot_stage_iff (f : store.SnapshotFacts) (c : store.Commit) (a : sto
   unfold store.snapshot snapshotFactsHold
   cases e <;> cases d <;> cases p <;> cases l <;> cases i <;> cases c <;> cases a <;> simp
 
+/-! ## Recorded verdicts for pinned citations (U3, #4) -/
+
+/-- A recorded verdict may stand in exactly under the pin, for a store that
+declares `recorded_max_age`, while the receipt is within it. -/
+theorem code_recorded_iff (b : store.Basis) (d w : Bool) :
+    store.recorded b d w ⦃ r => r = true ↔ b = .Pin ∧ d = true ∧ w = true ⦄ := by
+  unfold store.recorded
+  cases b <;> cases d <;> cases w <;> simp
+
+/-- A head-judged citation never uses a receipt: it reads as before. -/
+theorem code_head_never_recorded (d w : Bool) :
+    store.recorded .Head d w ⦃ r => r = false ⦄ := by
+  unfold store.recorded
+  simp
+
+/-- A verdict this machine reached (anything but `unverifiable`) is never
+replaced by a receipt. -/
+theorem code_local_wins (v : verdict.Verdict) (r : Bool) (h : v ≠ .Unverifiable) :
+    store.use_recorded v r ⦃ u => u = false ⦄ := by
+  unfold store.use_recorded
+  cases v <;> simp_all
+
+/-- A receipt is used exactly when the local verdict is `unverifiable` and
+`recorded` allows it. -/
+theorem use_recorded_iff (v : verdict.Verdict) (r : Bool) :
+    store.use_recorded v r ⦃ u => u = true ↔ v = .Unverifiable ∧ r = true ⦄ := by
+  unfold store.use_recorded
+  cases v <;> cases r <;> simp
+
+/-- An `unverifiable` verdict under the pin is never written to a receipt;
+every other one may be. -/
+theorem code_recorded_unverifiable_never (v : verdict.Verdict) :
+    store.pin_recordable v ⦃ b => b = true ↔ v ≠ .Unverifiable ⦄ := by
+  unfold store.pin_recordable
+  cases v <;> simp
+
 end Writfold.Core.Store

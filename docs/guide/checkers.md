@@ -1,6 +1,6 @@
 # External checkers
 
-> **Status:** built in v0.5.0-dev.2 (phase 1: `check` and `make`, run by `stale` only); `max_age` built in v0.5.0-dev.3; check receipts (`kb stale --record`, [below](#sharing-verdicts-check-receipts)) built in v0.5.0-dev.9. Not built: built-in kinds through the protocol, fetching, rendering or redaction, a server mode, an SDK, token migration, a checked kind that also ages by `ttl=` or `default_ttl` (`max_age` limits how old a cached verdict may be, not how old the token is), recorded verdicts for built-in kinds, and a flag that fails when a checker is missing.
+> **Status:** built in v0.5.0-dev.2 (phase 1: `check` and `make`, run by `stale` only); `max_age` built in v0.5.0-dev.3; check receipts (`kb stale --record`, [below](#sharing-verdicts-check-receipts)) built in v0.5.0-dev.9. Not built: built-in kinds through the protocol, fetching, rendering or redaction, a server mode, an SDK, token migration, a checked kind that also ages by `ttl=` or `default_ttl` (`max_age` limits how old a cached verdict may be, not how old the token is), recorded verdicts for built-in kinds (except pinned citations into an attached store, built in v0.6.0-dev.12: [stores](stores.md#on-a-machine-without-the-clone-recorded-verdicts)), and a flag that fails when a checker is missing.
 
 A kind declaration that is wrong is reported fault by fault, each at its line and column ([errors](errors.md)):
 

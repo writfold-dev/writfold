@@ -242,7 +242,10 @@ fn store_lines(root: &Path, lines: &mut Vec<String>) -> Result<usize> {
             crate::store::Freshness::Head => "head",
         };
         let url = crate::store::normalise(&store.url);
-        lines.push(format!("store:{}\t{rule}\t{url}", store.name));
+        let recorded = (store.recorded_max_age.as_deref())
+            .map(|age| format!("\trecorded={age}"))
+            .unwrap_or_default();
+        lines.push(format!("store:{}\t{rule}\t{url}{recorded}", store.name));
     }
     Ok(stores.iter().count())
 }
