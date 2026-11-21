@@ -85,6 +85,23 @@ impl Filings {
         all
     }
 
+    /// Each receipt, statement or cover that does not read, as `path:
+    /// why`, including a directory listed only in part (#67).
+    pub fn unread(&self) -> Vec<String> {
+        let row = |path: &str, why: &str| format!("{path}: {why}");
+        (self.receipts.iter())
+            .filter_map(|f| f.parsed.as_ref().err().map(|e| row(&f.path, e)))
+            .chain(
+                (self.statements.iter())
+                    .filter_map(|f| f.parsed.as_ref().err().map(|e| row(&f.path, e))),
+            )
+            .chain(
+                (self.covers.iter())
+                    .filter_map(|f| f.parsed.as_ref().err().map(|e| row(&f.path, e))),
+            )
+            .collect()
+    }
+
     /// Receipts and statements that do not read as valid.
     pub fn invalid(&self) -> usize {
         self.receipts.iter().filter(|f| f.parsed.is_err()).count()

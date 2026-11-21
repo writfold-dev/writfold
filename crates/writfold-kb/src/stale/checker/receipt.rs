@@ -247,15 +247,14 @@ fn entry_json(e: &Entry) -> String {
 /// file skipped. Another checker's receipts are left out without a note.
 pub fn read_kind(root: &Path, kind: &str, checker: &str) -> (Vec<Receipt>, Vec<String>) {
     let dir = root.join(DIR).join(kind);
-    let Ok(listing) = std::fs::read_dir(&dir) else {
-        return (Vec::new(), Vec::new());
-    };
-    let mut names: Vec<String> = listing
-        .filter_map(|e| e.ok()?.file_name().into_string().ok())
-        .filter(|n| n.ends_with(".json") && !n.starts_with('.'))
-        .collect();
-    names.sort();
+    let (names, fault) = crate::gate::discover::evidence(&dir, crate::gate::discover::list);
     let (mut found, mut notes) = (Vec::new(), Vec::new());
+    if let Some(why) = fault {
+        notes.push(format!(
+            "{DIR}/{kind}/: {}",
+            crate::gate::discover::unlisted_evidence(&why)
+        ));
+    }
     for name in names {
         let path = format!("{DIR}/{kind}/{name}");
         let file = dir.join(&name);

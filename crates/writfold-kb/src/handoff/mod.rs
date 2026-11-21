@@ -3,7 +3,7 @@
 //! definitions are read at `--policy` ([`policy`]); the evidence is the
 //! run's receipts, judged against each approved definition and the
 //! candidate commit's scoped content; the decision is
-//! [`writfold_core::handoff::strict`]. Read-only: nothing is run.
+//! [`writfold_core::handoff::checked`]. Read-only: nothing is run.
 pub mod policy;
 mod rows;
 
@@ -13,7 +13,7 @@ use crate::gate::status::{Filings, judge_gate};
 use crate::index::query::Rec;
 use crate::session::Session;
 use std::path::Path;
-use writfold_core::handoff::{Item, Verdict, strict};
+use writfold_core::handoff::{Item, Verdict, checked};
 use writfold_domain::GitObjectId;
 use writfold_runtime::git::{GitExecutable, kb_commit};
 
@@ -106,7 +106,10 @@ pub fn check(
         });
     }
     let items: Vec<Item> = judged.iter().map(|j| copy(&j.item)).collect();
-    let verdict = strict(required.complete, &items);
+    // Evidence read in full (#67): every receipt, statement and cover of
+    // the run reads, and each directory was listed in full.
+    let unread = filings.unread();
+    let verdict = checked(unread.is_empty(), required.complete, &items);
     let refused = matches!(verdict, Verdict::Refused(..));
     let mut answer = rows::answer(
         &judged,
@@ -114,6 +117,7 @@ pub fn check(
         rec,
         (&policy_commit, policy_rev),
         &candidate,
+        &unread,
     );
     answer.flagged = refused;
     Ok(answer)

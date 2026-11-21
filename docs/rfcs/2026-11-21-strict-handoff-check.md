@@ -72,6 +72,28 @@ read, what was and was not run, and the next command.
   test repository is `crates/writfold-kb/tests/handoff.rs`. No new crashable
   protocol (nothing is written), so no TLC model.
 
+### Amendment: evidence read in full (#67)
+
+`writfold_core::handoff::checked(evidence_complete, complete, items)` wraps
+`strict`: when the run's receipt, statement or cover directory could not be
+listed in full, or a file in it does not read, the newest evidence is not
+known and the candidate is refused as `incomplete` before any gate is
+judged. Proved in `proofs/Writfold/Handoff.lean`:
+
+- `accepted_implies_evidence_complete`: an accepted candidate had its
+  evidence read in full and passes `strict`.
+- `incomplete_evidence_never_accepted`: unread evidence is refused as
+  `Incomplete` at index 0.
+- `complete_evidence_unchanged`: with evidence read in full, `checked` is
+  `strict`.
+- Mutant `checked-ignores-evidence` fails the first two.
+
+Tested only: the shared lister `gate::discover::evidence`, which every
+evidence reader (gate receipts, statements, covers, delivery checks,
+observations, stale-checker receipts) now uses, and which turns a partial
+listing into one invalid row; `tests/handoff.rs` and
+`tests/gate_inventory_guard.rs` replace each root with a file.
+
 ## Behaviour
 
 ```
@@ -145,3 +167,5 @@ A new verb and an optional new file. An older binary ignores
 - 2026-11-21: accepted under the owner's standing acceptance of RFCs (owner,
   21 November: proceed, review and amend later), after the plan review
   posted on #57; deployment recipes and attested receipts split to #64.
+- 2026-11-21: amended for #67 (evidence read in full); implemented for
+  v0.6.0-dev.15.

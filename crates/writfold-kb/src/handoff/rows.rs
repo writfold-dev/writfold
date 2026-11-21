@@ -88,6 +88,7 @@ pub fn answer(
     rec: &Rec,
     policy: (&GitObjectId, &str),
     candidate: &GitObjectId,
+    unread: &[String],
 ) -> Answer {
     let (commit, named) = policy;
     let shown = super::policy::short(commit.as_str());
@@ -95,7 +96,12 @@ pub fn answer(
         rows: judged.iter().map(|j| row(j, rec, shown)).collect(),
         ..Answer::default()
     };
-    if let Verdict::Refused(_, reason @ (Reason::Empty | Reason::Incomplete)) = verdict {
+    if let (Verdict::Refused(_, Reason::Incomplete), Some(first)) = (verdict, unread.first()) {
+        answer.notes.push(format!(
+            "refused: incomplete: {} of the run's receipts, statements or covers do not read, so its newest evidence is not known: {first}; next: repair or remove them, then check again",
+            unread.len()
+        ));
+    } else if let Verdict::Refused(_, reason @ (Reason::Empty | Reason::Incomplete)) = verdict {
         answer.notes.push(format!(
             "refused: {}: {}",
             word(reason),

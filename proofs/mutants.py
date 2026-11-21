@@ -34,6 +34,11 @@ class Mutant:
 
 
 MUTANTS = (
+    # handoff (#67): unread evidence is never accepted
+    Mutant("checked-ignores-evidence", "handoff.rs",
+           "    if !evidence_complete {",
+           "    if false {",
+           ("Writfold.Core.Handoff.incomplete_evidence_never_accepted", "Writfold.Core.Handoff.accepted_implies_evidence_complete")),
     # step.settled (#79): only a spent loop settles an owing step
     Mutant("settled-ignores-spent", "guard/require.rs",
            "            if spent {",

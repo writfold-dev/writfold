@@ -102,6 +102,23 @@ pub fn classify(dir: &Path, lister: Lister) -> (Root, Vec<String>, Option<String
     }
 }
 
+/// The `.json` names of a run's evidence directory (receipts, statements,
+/// covers, delivery checks, observations), sorted, and why it could not be
+/// listed in full (#67). An absent directory holds no evidence and is
+/// complete; a partial listing is never read as complete.
+pub fn evidence(dir: &Path, lister: Lister) -> (Vec<String>, Option<String>) {
+    let (_, mut names, why) = classify(dir, lister);
+    names.retain(|n| n.ends_with(".json") && !n.starts_with('.'));
+    names.sort();
+    (names, why)
+}
+
+/// The error an evidence directory listed only in part reads as: one
+/// invalid row, so no aggregate answer over it reads clean (#67).
+pub fn unlisted_evidence(why: &str) -> String {
+    format!("the directory could not be listed in full ({why}); evidence in it may be missing")
+}
+
 /// The problem an unreadable directory adds (`path` relative to its root,
 /// `shown` with the root's prefix): one per directory, counted as invalid
 /// wherever problems are, so no aggregate answer is positive meanwhile.

@@ -164,16 +164,9 @@ pub struct Filed {
 /// Every observation file of the run whose directory is `run_dir`,
 /// oldest first (the names start with the UTC time).
 pub fn filed(root: &Path, run_dir: &str) -> Vec<Filed> {
-    let Ok(entries) = std::fs::read_dir(root.join(run_dir).join(DIR)) else {
-        return Vec::new();
-    };
-    let mut names: Vec<String> = entries
-        .flatten()
-        .map(|e| e.file_name().to_string_lossy().into_owned())
-        .filter(|n| n.ends_with(".json") && !n.starts_with('.'))
-        .collect();
-    names.sort();
-    names
+    let (names, fault) =
+        crate::gate::discover::evidence(&root.join(run_dir).join(DIR), crate::gate::discover::list);
+    let mut filed: Vec<Filed> = names
         .into_iter()
         .map(|name| {
             let path = format!("{run_dir}/{DIR}/{name}");
@@ -182,7 +175,12 @@ pub fn filed(root: &Path, run_dir: &str) -> Vec<Filed> {
                 .and_then(|text| parse(&text));
             Filed { path, parsed }
         })
-        .collect()
+        .collect();
+    filed.extend(fault.map(|why| Filed {
+        path: format!("{run_dir}/{DIR}"),
+        parsed: Err(crate::gate::discover::unlisted_evidence(&why)),
+    }));
+    filed
 }
 
 /// `n (a, b)`: how many, and each status once in first-seen order.

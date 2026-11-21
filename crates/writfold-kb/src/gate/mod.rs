@@ -17,7 +17,7 @@ pub mod def_check;
 mod def_class;
 #[cfg(test)]
 mod def_tests;
-mod discover;
+pub(crate) mod discover;
 pub mod exec;
 pub(crate) mod ground;
 mod head;

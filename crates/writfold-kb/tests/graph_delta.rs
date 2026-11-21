@@ -97,7 +97,10 @@ fn edits_rewrite_only_what_they_affect() -> TestResult {
     let text = std::fs::read_to_string(&file)?.replace("We chose it.", "We picked it.");
     std::fs::write(&file, text)?;
     let note = refresh(&dir)?;
-    assert!(note.contains("keys=same graph=skip") && written(&note) == 0, "{note}");
+    assert!(
+        note.contains("keys=same graph=skip") && written(&note) == 0,
+        "{note}"
+    );
     equal_to_rebuild(&dir)?;
     // A new reference in one file: only that file's edges are replaced.
     write(&dir, 5, 40, " Also decision/2026-01-01-d0020.")?;
@@ -117,7 +120,10 @@ fn edits_rewrite_only_what_they_affect() -> TestResult {
         );
     std::fs::write(dir.join("proposals/decision/2026-01-01-d0020.md"), renamed)?;
     let note = refresh(&dir)?;
-    assert!(note.contains("keys=moved graph=delta affected=5 "), "{note}");
+    assert!(
+        note.contains("keys=moved graph=delta affected=5 "),
+        "{note}"
+    );
     equal_to_rebuild(&dir)?;
     // A new file takes the freed ID: the same referrers resolve again.
     let back = std::fs::read_to_string(dir.join("proposals/decision/2026-01-01-d0020.md"))?

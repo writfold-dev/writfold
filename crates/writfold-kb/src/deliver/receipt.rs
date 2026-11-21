@@ -206,16 +206,9 @@ pub struct Filed {
 
 /// Every receipt file under `<candidate dir>/checks/`, by name.
 pub fn filed(root: &std::path::Path, dir: &str, run: &str, candidate: &str) -> Vec<Filed> {
-    let Ok(entries) = std::fs::read_dir(root.join(dir).join(DIR)) else {
-        return Vec::new();
-    };
-    let mut names: Vec<String> = entries
-        .flatten()
-        .map(|e| e.file_name().to_string_lossy().into_owned())
-        .filter(|n| n.ends_with(".json") && !n.starts_with('.'))
-        .collect();
-    names.sort();
-    names
+    let (names, fault) =
+        crate::gate::discover::evidence(&root.join(dir).join(DIR), crate::gate::discover::list);
+    let mut filed: Vec<Filed> = names
         .into_iter()
         .map(|name| {
             let path = format!("{dir}/{DIR}/{name}");
@@ -224,5 +217,11 @@ pub fn filed(root: &std::path::Path, dir: &str, run: &str, candidate: &str) -> V
                 .and_then(|t| parse(&t, run, candidate, &name));
             Filed { path, name, parsed }
         })
-        .collect()
+        .collect();
+    filed.extend(fault.map(|why| Filed {
+        path: format!("{dir}/{DIR}"),
+        name: String::new(),
+        parsed: Err(crate::gate::discover::unlisted_evidence(&why)),
+    }));
+    filed
 }

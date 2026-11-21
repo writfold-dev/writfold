@@ -101,9 +101,20 @@ pub fn strict(complete: bool, items: &[Item]) -> Verdict {
     }
 }
 
+/// [`strict`] over evidence read in full (#67): when an evidence directory
+/// of the run could not be listed in full, or a receipt, statement or cover
+/// in it does not read, the newest evidence is not known, so the candidate
+/// is refused as incomplete before any gate is judged.
+pub fn checked(evidence_complete: bool, complete: bool, items: &[Item]) -> Verdict {
+    if !evidence_complete {
+        return Verdict::Refused(0, Reason::Incomplete);
+    }
+    strict(complete, items)
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{Item, Reason, Verdict, strict};
+    use super::{Item, Reason, Verdict, checked, strict};
     use crate::gate::{Standing, State};
 
     fn passing() -> Item {
@@ -119,6 +130,15 @@ mod tests {
             Verdict::Accepted => None,
             Verdict::Refused(at, why) => Some((*at, why)),
         }
+    }
+
+    #[test]
+    fn incomplete_evidence_refuses_a_passing_set() {
+        assert!(matches!(
+            refused(&checked(false, true, &[passing()])),
+            Some((0, Reason::Incomplete))
+        ));
+        assert!(matches!(checked(true, true, &[passing()]), Verdict::Accepted));
     }
 
     #[test]

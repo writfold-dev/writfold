@@ -196,3 +196,60 @@ fn a_plan_that_skips_the_gate_does_not_change_the_answer() -> TestResult {
     );
     Ok(())
 }
+
+/// The run's evidence directory `name` (`gates`, `statements`, `covers`),
+/// next to its run record.
+fn evidence_dir(w: &World, name: &str) -> TestResult<std::path::PathBuf> {
+    let mut stack = vec![w.kb.join("runs")];
+    while let Some(dir) = stack.pop() {
+        for entry in std::fs::read_dir(&dir)? {
+            let path = entry?.path();
+            if path.is_dir() {
+                stack.push(path);
+            } else if path.file_name().and_then(|n| n.to_str()) == Some("run.md")
+                || path.to_string_lossy().contains(RUN)
+            {
+                let run_dir = path.parent().ok_or("parent")?;
+                if run_dir.to_string_lossy().contains(RUN) {
+                    return Ok(run_dir.join(name));
+                }
+            }
+        }
+    }
+    Err("no run directory".into())
+}
+
+#[test]
+fn evidence_that_cannot_be_listed_or_read_is_refused_as_incomplete() -> TestResult {
+    let (w, rev) = policy("[\"unit\"]")?;
+    assert_eq!(check(&w, "unit")?, 0);
+    assert_eq!(handoff(&w, &rev, "HEAD")?.1, 0);
+    // Each evidence root, replaced by a file, is listed only in part.
+    for name in ["statements", "covers", "gates"] {
+        let dir = evidence_dir(&w, name)?;
+        let moved = dir.with_extension("aside");
+        if dir.exists() {
+            std::fs::rename(&dir, &moved)?;
+        }
+        std::fs::write(&dir, "not a directory\n")?;
+        let (text, exit) = handoff(&w, &rev, "HEAD")?;
+        assert_ne!(exit, 0, "{name}: {text}");
+        assert!(
+            text.contains("refused: incomplete: 1 of the run's receipts")
+                && text.contains("could not be listed in full"),
+            "{name}: {text}"
+        );
+        std::fs::remove_file(&dir)?;
+        if moved.exists() {
+            std::fs::rename(&moved, &dir)?;
+        }
+        assert_eq!(handoff(&w, &rev, "HEAD")?.1, 0, "{name} restored");
+    }
+    // A receipt that does not read refuses too, though an older pass stands.
+    let gates = evidence_dir(&w, "gates")?;
+    std::fs::write(gates.join("zz-newer.json"), "{ not json")?;
+    let (text, exit) = handoff(&w, &rev, "HEAD")?;
+    assert_ne!(exit, 0, "{text}");
+    assert!(text.contains("zz-newer.json"), "{text}");
+    Ok(())
+}

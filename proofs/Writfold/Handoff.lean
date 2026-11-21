@@ -190,6 +190,32 @@ theorem failing_member_refused (c : Bool) (xs : Slice handoff.Item) (x : handoff
   intro v hv hacc
   exact hfail ((hv.mp hacc).2.2 x hx)
 
+/-! ## Evidence read in full (#67) -/
+
+/-- Evidence read in full leaves the strict decision unchanged. -/
+theorem complete_evidence_unchanged (c : Bool) (xs : Slice handoff.Item) :
+    handoff.checked true c xs = handoff.strict c xs := by
+  unfold handoff.checked; simp
+
+/-- Evidence that could not all be read is never accepted: it is refused
+as incomplete. -/
+theorem incomplete_evidence_never_accepted (c : Bool) (xs : Slice handoff.Item) :
+    handoff.checked false c xs ⦃ v => v = .Refused 0#usize .Incomplete ⦄ := by
+  unfold handoff.checked; simp
+
+/-- An accepted candidate had its evidence read in full, and passes
+`strict`. -/
+theorem accepted_implies_evidence_complete (e c : Bool) (xs : Slice handoff.Item) :
+    handoff.checked e c xs ⦃ v => v = .Accepted →
+      e = true ∧ c = true ∧ xs.val ≠ [] ∧ ∀ x ∈ xs.val, Passes x ⦄ := by
+  unfold handoff.checked
+  cases e
+  · simp
+  · simp only [Bool.not_true, Bool.false_eq_true, ite_false, true_and]
+    apply WP.spec_mono (strict_accepted_iff c xs)
+    intro v hv hacc
+    exact hv.mp hacc
+
 /-! ## Totality (tauten claims) -/
 
 theorem first_failing_total (xs : Slice handoff.Item) :

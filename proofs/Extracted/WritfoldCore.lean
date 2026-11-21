@@ -3474,6 +3474,17 @@ def handoff.strict
         ok (handoff.Verdict.Refused «at» reason)
   else ok (handoff.Verdict.Refused 0#usize handoff.Reason.Incomplete)
 
+/-- [writfold_core::handoff::checked]:
+    Source: 'crates/writfold-core/src/handoff.rs', lines 108:0-113:1
+    Visibility: public -/
+def handoff.checked
+  (evidence_complete : Bool) (complete : Bool) (items : Slice handoff.Item) :
+  Result handoff.Verdict
+  := do
+  if evidence_complete
+  then handoff.strict complete items
+  else ok (handoff.Verdict.Refused 0#usize handoff.Reason.Incomplete)
+
 /-- [writfold_core::idle::newer]:
     Source: 'crates/writfold-core/src/idle.rs', lines 10:0-18:1
     Visibility: public -/
