@@ -138,7 +138,10 @@ mod tests {
             refused(&checked(false, true, &[passing()])),
             Some((0, Reason::Incomplete))
         ));
-        assert!(matches!(checked(true, true, &[passing()]), Verdict::Accepted));
+        assert!(matches!(
+            checked(true, true, &[passing()]),
+            Verdict::Accepted
+        ));
     }
 
     #[test]

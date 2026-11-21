@@ -440,8 +440,15 @@ Built in v0.6.0-dev.15 ([#74](https://github.com/writfold-dev/writfold/issues/74
 
 ```toml
 # .writfold/plans/fix.toml
+schema = "writfold-plan/1"
+name = "fix"
 steps = ["converge: unit review loop=attempt max=5"]
+```
+
+```toml
 # .writfold/plans/attempt.toml: one round
+schema = "writfold-plan/1"
+name = "attempt"
 steps = ["change:", "read-diff: diff-read"]
 ```
 

@@ -136,6 +136,29 @@ verify unit-20261112T211036Z-f5f8fb [unverifiable] the receipt's subject had 2 d
 
 More in [gates](gates.md).
 
+## Handing a change over: `handoff check`
+
+`handoff check --policy REV --candidate REV` is what a receiver runs before taking a change: it reads the required gates (`.writfold/handoff.toml`) and their definitions at the policy revision, and accepts only a current mechanical pass for each, never a waiver or attestation, a plan's skip, or evidence it could not all read. Read-only; nothing is run. Taken on 21 November 2026 on a scratch KB:
+
+```text
+$ writfold kb handoff check --policy b12dadf --candidate HEAD
+handoff unit [refused] no-evidence: not run; next: writfold kb gate run unit --run run-20261121T185715Z-32b6ea !no-evidence
+  instructions: .writfold/gates/unit.toml at b12dadf8d0a1
+# coverage=complete records=12/12 shown=1 omitted=0 required=1 refused=1 handoff=refused …
+$ writfold kb gate run unit
+$ writfold kb handoff check --policy b12dadf --candidate HEAD
+handoff unit [accepted] satisfied by a current mechanical pass
+  instructions: .writfold/gates/unit.toml at b12dadf8d0a1
+  evidence: receipt taken at b12dadf8d0a1 @runs/run-20261121T185715Z-32b6ea/gates/unit-20261121T200816Z-bfc9d9.json:1
+# coverage=complete records=13/13 shown=1 omitted=0 required=1 refused=0 handoff=accepted …
+```
+
+Exit 0 when accepted, 2 when refused. Every refusal is listed in [gates](gates.md).
+
+## Answers that stop early: the work limit
+
+`impact`, `uses` and `context` read at most `WRITFOLD_KB_WORK` edges (default 100,000). One that stops there says so in a note and reads `coverage=partial` (exit 2): the rows shown are right, and more exist. Raise the limit for one command when the whole answer is needed.
+
 ## Delivery drafts: `deliver check` and `deliver status`
 
 A draft's checks are tied to its bytes. Editing `candidate.md` makes its receipts stale, and `deliver status` shows the draft as blocked until `deliver check` runs again. From v0.6.0-dev.1 a passed `claims.cited-fresh` check is also re-checked on every read: once a cited record or code span moves, the draft reads blocked until the evidence returns or the check runs again. More in [delivery-modes](delivery-modes.md#cited-evidence-that-moved).
