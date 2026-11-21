@@ -96,6 +96,7 @@ pub(super) fn advance(
         _ => Vec::new(),
     };
     let facts: Vec<GateFact> = gates.iter().map(judge::Gate::fact).collect();
+    loop_rounds(graph, at, &facts)?;
     let step = match (advance_kernel(&graph.nodes(), at, &facts), step) {
         (Ok(()), Some(step)) => step,
         (Err(Refusal::Owed(first)), Some(step)) => {
@@ -137,6 +138,27 @@ pub(super) fn advance(
         notes,
         now,
     )
+}
+
+/// A loop step is advanced only after its `min` rounds
+/// ([`writfold_core::plan::round::advance_check`]); every other refusal
+/// is the plan kernel's, reported as before.
+fn loop_rounds(graph: &super::fold::Graph, at: usize, facts: &[GateFact]) -> Result<()> {
+    let Some(step) = graph.steps.get(at) else {
+        return Ok(());
+    };
+    let Some(b) = super::rounds::bounds(step) else {
+        return Ok(());
+    };
+    let rounds = graph.rounds(step);
+    let met = writfold_core::plan::met_all(facts);
+    match writfold_core::plan::round::advance_check(&graph.nodes(), at, &b, rounds, &met) {
+        Err(writfold_core::plan::round::Refusal::Rounds(more)) => Err(KbError::Refused(format!(
+            "not advanced: {} owes {more} more rounds ({rounds} of at least {}): writfold kb plan again",
+            step.path, b.min
+        ))),
+        _ => Ok(()),
+    }
 }
 
 /// Refuse to close the plan's last open step while a required template
@@ -190,7 +212,7 @@ pub(super) fn complete_guard(ws: &Workspace, loaded: &Loaded, at: usize) -> Resu
 fn refused(step: &super::fold::Step, gates: &[judge::Gate], first: usize) -> Answer {
     let mut answer = Answer {
         refused: true,
-        rows: vec![show::step_row(step, true, gates, true)],
+        rows: vec![show::step_row(step, true, gates, (true, false))],
         ..Answer::default()
     };
     answer.notes.push(format!(

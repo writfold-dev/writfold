@@ -100,7 +100,12 @@ pub fn owes(row: &mut Row, gates: &[Gate]) {
 }
 
 /// One step's row; `gates` is empty for steps not judged.
-pub fn step_row(step: &Step, current: bool, gates: &[Gate], judged: bool) -> Row {
+pub fn step_row(
+    step: &Step,
+    current: bool,
+    gates: &[Gate],
+    (judged, superseded): (bool, bool),
+) -> Row {
     let mut row = Row {
         kind: "step",
         id: step.path.clone(),
@@ -127,7 +132,7 @@ pub fn step_row(step: &Step, current: bool, gates: &[Gate], judged: bool) -> Row
             done: true,
             skipped: step.skipped.is_some(),
         };
-        if judged && writfold_core::plan::stale(&node, &met) {
+        if judged && writfold_core::plan::round::stale(&node, &met, superseded) {
             row.flags.push("stale".into());
             row.more.push(line(
                 "why",
@@ -171,12 +176,10 @@ pub fn rows(graph: &Graph, gates: Option<&[Vec<Gate>]>, moved: &[Moved]) -> Vec<
         .enumerate()
         .map(|(i, s)| {
             let judged = gates.and_then(|g| g.get(i));
-            let mut row = step_row(
-                s,
-                current == Some(i),
-                judged.map_or(&[], Vec::as_slice),
-                judged.is_some(),
-            );
+            let gates = judged.map_or(&[][..], Vec::as_slice);
+            let superseded = graph.superseded(&s.path);
+            let mut row = step_row(s, current == Some(i), gates, (judged.is_some(), superseded));
+            super::show_loop::annotate(graph, s, (current == Some(i), superseded), gates, &mut row);
             if has_moved(s, moved) {
                 row.flags.push("template-moved".into());
             }

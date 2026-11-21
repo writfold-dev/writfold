@@ -16,6 +16,7 @@
 //! plan ([`required`]); a spliced template whose file has since changed
 //! is shown `!template-moved` ([`moved`]). `plan repin` adopts a policy
 //! that moved since the run pinned it ([`repin`]).
+mod again;
 pub(crate) mod delivery;
 mod delivery_mark;
 mod delivery_posted;
@@ -36,7 +37,9 @@ pub mod records;
 pub mod refs;
 mod repin;
 pub mod required;
+pub mod rounds;
 pub(crate) mod show;
+mod show_loop;
 mod splice;
 mod status;
 pub mod step_word;
@@ -82,6 +85,11 @@ pub enum PlanVerb {
         repo: Option<PathBuf>,
         gates: bool,
     },
+    /// Record the next round of the current loop step (#76).
+    Again {
+        run: Option<String>,
+        repo: Option<PathBuf>,
+    },
     Advance {
         run: Option<String>,
         repo: Option<PathBuf>,
@@ -123,6 +131,9 @@ pub fn execute(ws: &Workspace, request: &Request, verb: &PlanVerb, now: i64) -> 
         }
         PlanVerb::Set { .. } => splice::set(ws, &tool, request, verb, now),
         PlanVerb::Use { .. } => splice::use_template(ws, &tool, request, verb, now),
+        PlanVerb::Again { run, repo } => {
+            again::again(ws, &tool, request, (run.as_deref(), repo.as_deref()), now)
+        }
         PlanVerb::Advance { run, repo } => {
             write::advance(ws, &tool, request, (run.as_deref(), repo.as_deref()), now)
         }

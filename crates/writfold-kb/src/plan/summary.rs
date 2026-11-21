@@ -84,8 +84,10 @@ pub fn decide(
         closes.push(c);
     }
     let stale = judged.is_some_and(|g| {
-        (graph.steps.iter().zip(g))
-            .any(|(s, gates)| s.done.is_some() && gates.iter().any(|j| !j.met()))
+        (graph.steps.iter().zip(g)).any(|(s, gates)| {
+            // An earlier round of a loop is history (#76): never stale.
+            s.done.is_some() && !graph.superseded(&s.path) && gates.iter().any(|j| !j.met())
+        })
     });
     let facts = Facts {
         run_closed,

@@ -14,7 +14,7 @@ pub(super) fn refused(session: &Session<'_>, loaded: &Loaded, at: usize) -> Resu
     let gates = (loaded.judged(session)?)
         .and_then(|mut all| (at < all.len()).then(|| all.swap_remove(at)))
         .unwrap_or_default();
-    let mut row = show::step_row(step, true, &gates, !gates.is_empty());
+    let mut row = show::step_row(step, true, &gates, (!gates.is_empty(), false));
     row.flags.push("locked".into());
     if !row.more.iter().any(|m| m.label == "next") {
         row.more.push(More {

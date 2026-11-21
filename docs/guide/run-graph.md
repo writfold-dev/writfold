@@ -434,6 +434,27 @@ A session that stops between the post and `deliver posted` leaves no record; not
 
 **Limits.** A step is judged with a subject repository like any other, also when it names only deliveries: outside one, pass `--repo DIR`. `gate status`, `gate lines` and `gates.met` do not count deliveries ([gates](gates.md#which-gates-a-run-owes)); `step.met` does ([hooks](hooks.md#guard-rules)).
 
+## Loops: a step that repeats until its gates pass
+
+Built in v0.6.0-dev.15 ([#74](https://github.com/writfold-dev/writfold/issues/74), [RFC](../rfcs/2026-11-21-loops.md)). **Writfold does not run a loop.** It records each round the agent chooses to go around, refuses a round past the bound, and judges the exit like any other gate.
+
+```toml
+# .writfold/plans/fix.toml
+steps = ["converge: unit review loop=attempt max=5"]
+# .writfold/plans/attempt.toml: one round
+steps = ["change:", "read-diff: diff-read"]
+```
+
+- `loop=<template>` names the body; `max=N` (1 to 32) is required; `min=N` (default 1) asks for at least that many rounds.
+- **The step's gates are the exit**, so every gate class works: a script is a `mechanical` gate, a quality bar a `checklist`, "someone says so" an `attested` gate, CI an `observed` gate. A fixed count is `loop=attempt min=3 max=3` with no gate.
+- Round 1 is spliced with the plan, as `use=` would. **`writfold kb plan again`** records the next round under the step; it is refused when the exit already holds (`… owes nothing more …: writfold kb plan advance`), when every round is used (`… has used its 5 rounds`) and on a step that is not a loop. `plan use <body> --again` at the loop step is refused and names `plan again`, so the bound cannot be walked around.
+- `plan status` shows `loop: attempt, round 2 of at most 5` on the step. Its `next:` names the exit gate's own command while that gate has no verdict yet, `writfold kb plan again` once it ran and did not pass, and `writfold kb plan advance` when it holds. `plan advance` also waits for `min` rounds (`owes 1 more rounds (1 of at least 2)`).
+- **Spent:** every round used and a gate still not met. The step reads `!spent`, `no round is left`, and has no `next:`: stop and report. It closes only as any step does without passing: `plan skip` (shown skipped), or a waiver its gate's `accept` takes (`complete-with-exceptions`). Running out is never shown as passing.
+- **Earlier rounds are history:** a step of a round that is not its loop's newest shows `round: an earlier round`, is not judged again, never reads `!stale` and does not make the plan `complete-stale`. A check that must hold at the end belongs on the loop step (the exit), not in the body.
+- Faults where they are written: `key.missing` (no `max=`), `key.not-here` (`max=`/`min=` without `loop=`), `key.range`, `value.twice`, `value.conflict` (`loop=` beside `use=` or a delivery), `value.no-exit` (no gate and `min=1`: nothing of its own ends it).
+
+Proved in Lean (`proofs/Writfold/Round.lean`): a round is admitted only at the current loop step while its exit is `Again`, never past `max`; a loop step advances only when the plan kernel would; a spent loop neither advances nor repeats; superseded steps are never stale; the `next:` line names a gate with no verdict before `plan again`.
+
 ## Order of work
 
 1. ~~Instruction gates and user-defined delivery modes.~~

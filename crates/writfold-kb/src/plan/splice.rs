@@ -197,7 +197,7 @@ fn write(
 }
 
 /// Check every planned splice (gates defined, depth bounded) and write.
-fn checked_write(
+pub(super) fn checked_write(
     ws: &Workspace,
     request: &Request,
     loaded: &Loaded,
@@ -213,7 +213,7 @@ fn checked_write(
     write(ws, request, loaded, (planned, decided), now)
 }
 
-fn recorded(paths: Vec<String>) -> Vec<String> {
+pub(super) fn recorded(paths: Vec<String>) -> Vec<String> {
     paths.into_iter().map(|p| format!("recorded {p}")).collect()
 }
 
@@ -286,6 +286,17 @@ pub(super) fn use_template(
     let run_id = loaded.rec.id.clone();
     let frame = ("plan-use", run_id.as_str(), repo.as_deref());
     let r = repo_of(&loaded);
+    let at = loaded
+        .graph
+        .current()
+        .and_then(|i| loaded.graph.steps.get(i));
+    if let Some((body, _)) = at.and_then(|s| s.repeat.as_ref())
+        && body == name
+    {
+        return Err(KbError::Refused(format!(
+            "not spliced: {name} is the loop body of the current step; a round is recorded with writfold kb plan again, which keeps the loop's bound"
+        )));
+    }
     let (t, source) = template::find(&ws.root, r, name)?;
     let closure = template::closure(&ws.root, r, t, source)?;
     let (planned, mut notes, decision) = match loaded.graph.planned() {

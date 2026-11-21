@@ -31,8 +31,18 @@ pub const RESERVED: &str = "required";
 pub struct Step {
     pub id: String,
     pub gates: Vec<String>,
-    /// The template a `use=` names, spliced under this step.
+    /// The template a `use=` names, spliced under this step; for a loop,
+    /// its body (`loop=`).
     pub include: Option<String>,
+    /// A loop's bounds (`loop=` with `max=` and `min=`, #76).
+    pub repeat: Option<Repeat>,
+}
+
+/// A loop step's bounds: at least `min` rounds of its body, at most `max`.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct Repeat {
+    pub min: usize,
+    pub max: usize,
 }
 
 /// One parsed template.

@@ -313,6 +313,7 @@ A code is `<class>.<what>`. Codes are never renamed or reused; the same code mea
 | `value.class` | a standing the gate's class cannot reach in `accept` (`a mechanical gate is never attested`) |
 | `value.unmeetable` | an `accept` list without the class's own standing: the gate could never be met by its own evidence |
 | `value.conflict` | two settings that cannot stand together: a mode gate named in a mode's `waivable` (its own `accept` decides), a guard route with `field` and `body`/`file`, a route with none of them, a route for a command or tool also under `commands` or `tools` |
+| `value.no-exit` | a plan step loops (`loop=`) with no gate and `min=1`: nothing of its own ends it (from v0.6.0-dev.15) |
 | `ref.undefined` | a name that should be defined elsewhere and is not: a gate, a template, a mode, a checklist item |
 | `ref.wrong-kind` | defined, but not usable here (a candidate gate in a plan step) |
 | `ref.cycle` | templates that include each other, or nesting past the bound |

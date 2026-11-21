@@ -68,6 +68,8 @@ pub struct Step {
     pub skipped: Option<(String, Skip)>,
     /// Where its window begins.
     pub begin: Baseline,
+    /// A loop step's body and bounds (#76).
+    pub repeat: Option<(String, super::template::Repeat)>,
 }
 
 impl Step {

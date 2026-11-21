@@ -21,7 +21,7 @@ pub use suggest::{distance, suggest};
 /// Every code a diagnostic may carry. Codes are never renamed or reused;
 /// a test holds this list, the specification's table, the guide's table
 /// and the codes the source emits to the same set.
-pub const CODES: [&str; 30] = [
+pub const CODES: [&str; 31] = [
     "syntax.unclosed-array",
     "syntax.unclosed-string",
     "syntax.expected",
@@ -41,6 +41,7 @@ pub const CODES: [&str; 30] = [
     "value.class",
     "value.unmeetable",
     "value.conflict",
+    "value.no-exit",
     "ref.undefined",
     "ref.wrong-kind",
     "ref.cycle",

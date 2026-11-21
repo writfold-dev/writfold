@@ -2,7 +2,7 @@
 //! the position of each fault inside the string: the step's ID, a word
 //! that is not a gate ID, a second `use=`. [`super::template::step`]
 //! keeps the plain form; [`check`] reports into a definition check.
-use super::template::{RESERVED, Step};
+use super::template::{RESERVED, Repeat, Step};
 use crate::defs::{Check, Spanned, Text};
 use crate::write::is_slug;
 
@@ -123,10 +123,15 @@ pub fn read(text: &str) -> Result<Step, Fault> {
         id: id.to_owned(),
         gates: Vec::new(),
         include: None,
+        repeat: None,
     };
+    let mut looping = Looping::default();
     for found in words(text, raw.len() + 1) {
-        word(id, found, &mut step)?;
+        if !looping.take(id, found)? {
+            word(id, found, &mut step)?;
+        }
     }
+    looping.apply(id, &mut step)?;
     if let Some(why) = crate::deliver::word::unpaired(id, &step.gates) {
         let at = step
             .gates
@@ -164,4 +169,92 @@ pub fn locate(text: &str, word: &str) -> Option<(usize, usize)> {
         .into_iter()
         .find(|(_, w)| *w == word)
         .map(|(at, w)| (at, w.len()))
+}
+
+/// A loop's words as written (`loop=`, `max=`, `min=`, #76), each with its
+/// position.
+#[derive(Default)]
+struct Looping<'a> {
+    body: Option<(usize, &'a str)>,
+    max: Option<(usize, &'a str)>,
+    min: Option<(usize, &'a str)>,
+}
+
+impl<'a> Looping<'a> {
+    /// Keep a loop word; `false` for any other word.
+    fn take(&mut self, id: &str, (at, word): (usize, &'a str)) -> Result<bool, Fault> {
+        let slot = match () {
+            () if word.starts_with("loop=") => &mut self.body,
+            () if word.starts_with("max=") => &mut self.max,
+            () if word.starts_with("min=") => &mut self.min,
+            () => return Ok(false),
+        };
+        if slot.replace((at, word)).is_some() {
+            let why = format!(
+                "step {id} writes {} twice",
+                &word[..word.find('=').unwrap_or(0) + 1]
+            );
+            return Err(fault(
+                "value.twice",
+                why,
+                "written again",
+                Some((at, word.len())),
+            ));
+        }
+        Ok(true)
+    }
+
+    /// Check the loop words together and set the step's body and bounds.
+    fn apply(self, id: &str, step: &mut Step) -> Result<(), Fault> {
+        let at = |w: (usize, &str)| Some((w.0, w.1.len()));
+        let Some(body) = self.body else {
+            if let Some(w) = self.max.or(self.min) {
+                let why = format!(
+                    "step {id}: {} applies only to a loop (loop=<template>)",
+                    w.1
+                );
+                return Err(fault("key.not-here", why, "not a loop", at(w)));
+            }
+            return Ok(());
+        };
+        let name = &body.1["loop=".len()..];
+        if !is_slug(name) || name == RESERVED {
+            let why = format!("step {id}: {} does not name a template", body.1);
+            return Err(fault("value.form", why, "not a template name", at(body)));
+        }
+        if step.include.is_some() || step.gates.iter().any(|g| g.contains(':')) {
+            let why = format!("step {id}: a loop cannot also include a template or owe a delivery");
+            return Err(fault("value.conflict", why, "loop here", at(body)));
+        }
+        let Some(max) = self.max else {
+            let why =
+                format!("step {id}: a loop needs max=N, the most rounds it may take (1 to 32)");
+            return Err(fault("key.missing", why, "no max=", at(body)));
+        };
+        let number = |w: (usize, &str)| w.1[4..].parse::<usize>().ok();
+        let bounds = writfold_core::plan::round::Bounds {
+            max: number(max).unwrap_or(0),
+            min: self.min.map_or(Some(1), number).unwrap_or(0),
+        };
+        if !writfold_core::plan::round::bounds_ok(&bounds) {
+            let why = format!("step {id}: a loop takes 1 <= min <= max <= 32");
+            let w = self
+                .min
+                .filter(|_| (1..=32).contains(&bounds.max))
+                .unwrap_or(max);
+            return Err(fault("key.range", why, "out of range", at(w)));
+        }
+        if !writfold_core::plan::round::has_exit(&bounds, step.gates.len()) {
+            let why = format!(
+                "step {id}: a loop with no gate and min=1 has no exit of its own; name the gates that end it, or write use={name}"
+            );
+            return Err(fault("value.no-exit", why, "no exit", at(body)));
+        }
+        step.include = Some(name.to_owned());
+        step.repeat = Some(Repeat {
+            min: bounds.min,
+            max: bounds.max,
+        });
+        Ok(())
+    }
 }

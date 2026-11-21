@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use writfold_kb::Verb;
 use writfold_kb::plan::PlanVerb;
 
-pub const USAGE: &str = "usage: plan set <template>|--from FILE [--run ID] [--repo DIR] | plan use <template> [--again] [--run ID] [--repo DIR] | plan status [--run ID] [--repo DIR] [--gates] | plan advance [--run ID] [--repo DIR] | plan skip --reason TEXT --by WHO [--run ID] [--repo DIR] | plan repin --reason TEXT --by WHO [--run ID] [--repo DIR]";
+pub const USAGE: &str = "usage: plan set <template>|--from FILE [--run ID] [--repo DIR] | plan use <template> [--again] [--run ID] [--repo DIR] | plan status [--run ID] [--repo DIR] [--gates] | plan again [--run ID] [--repo DIR] | plan advance [--run ID] [--repo DIR] | plan skip --reason TEXT --by WHO [--run ID] [--repo DIR] | plan repin --reason TEXT --by WHO [--run ID] [--repo DIR]";
 
 /// The plan verb, or why the arguments do not name one.
 pub fn verb(common: &Common, positional: &[String]) -> Result<Verb, String> {
@@ -50,6 +50,7 @@ pub fn verb(common: &Common, positional: &[String]) -> Result<Verb, String> {
         },
         [s] if s == "status" => PlanVerb::Status { run, repo, gates },
         [s] if s == "advance" => PlanVerb::Advance { run, repo },
+        [s] if s == "again" => PlanVerb::Again { run, repo },
         [s] if s == "skip" => PlanVerb::Skip {
             reason: reason.ok_or("plan skip needs --reason TEXT")?,
             by: by.ok_or("plan skip needs --by WHO")?,

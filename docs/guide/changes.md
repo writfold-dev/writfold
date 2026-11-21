@@ -8,6 +8,8 @@ A line marked **fix** changed an answer that was wrong; anything depending on th
 
 ## v0.6.0-dev.15 (unreleased)
 
+- **Loops** ([#74](https://github.com/writfold-dev/writfold/issues/74)): new step words `loop=`, `max=`, `min=` and the verb `writfold kb plan again`; a template without them reads, splices and folds as before. An earlier binary refuses a template (or a run snapshot) that uses them (`value.form`). New diagnostic code `value.no-exit`.
+- The release profile sets `overflow-checks = true` ([#62](https://github.com/writfold-dev/writfold/issues/62)): an arithmetic overflow outside the proved kernel now aborts instead of wrapping silently.
 - **fix** When a source kind or store declaration cannot be read, `brief`, `context`, `why` and edge flags add a note naming it and read `coverage=partial` (exit 2), and session start prints `Citations: could not be read: …`, instead of showing committed verdicts as never checked ([#68](https://github.com/writfold-dev/writfold/issues/68)).
 
 ## v0.6.0-dev.14

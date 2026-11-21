@@ -143,6 +143,9 @@ plans (the run graph; templates in .writfold/plans/<name>.toml; Writfold records
   plan status [--run ID] [--repo DIR] [--gates]
                                    each step: done (!stale if a gate no longer holds), current with
                                    what it owes, later; --gates lists gate and checklist item standings
+  plan again [--run ID] [--repo DIR]
+                                   record the next round of the current loop step (loop=<template>
+                                   max=N [min=N]); refused once its gates are met or its rounds used
   plan advance [--run ID] [--repo DIR]
                                    record the current step as done, or refuse (exit 3) naming what it owes
   plan skip --reason TEXT --by WHO [--run ID]

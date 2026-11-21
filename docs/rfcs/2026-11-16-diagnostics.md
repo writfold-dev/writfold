@@ -130,6 +130,7 @@ A code is `<class>.<what>`, lower case, the same for every kind of file; the fil
 | `value.class` | a standing the gate's class cannot reach in `accept` (`a mechanical gate is never attested`) |
 | `value.unmeetable` | an `accept` list without the class's own standing: the gate could never be met by its own evidence |
 | `value.conflict` | two settings that cannot stand together: a mode gate named in a mode's `waivable`, a guard route with `field` and `body`/`file`, a route with none of them, or for a command also under `commands` or `tools` |
+| `value.no-exit` | a plan step loops (`loop=`) with no gate and `min=1`: nothing of its own ends it (from v0.6.0-dev.15) |
 | `ref.undefined` | a name that should be defined elsewhere and is not: a gate, a template, a mode, a checklist item |
 | `ref.wrong-kind` | defined, but not usable here (a repository gate in a delivery mode, a candidate gate in a plan step) |
 | `ref.cycle` | templates that include each other, or nesting past the bound |

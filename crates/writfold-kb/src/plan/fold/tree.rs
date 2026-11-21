@@ -77,6 +77,7 @@ fn steps_of(
             done: None,
             skipped: None,
             begin: s.records.clone(),
+            repeat: (step.include.clone()).zip(step.repeat),
         });
     }
 }
