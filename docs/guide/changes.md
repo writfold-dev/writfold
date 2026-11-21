@@ -6,7 +6,7 @@ This page is for someone pinned to one release who wants to upgrade on purpose. 
 
 A line marked **fix** changed an answer that was wrong; anything depending on the old answer was depending on the fault.
 
-## v0.6.0-dev.13 (unreleased)
+## v0.6.0-dev.13
 
 - **`kb edit apply` and `kb edit recover` are removed** with Splicery ([#54](https://github.com/writfold-dev/writfold/issues/54)). Finish or abandon an interrupted edit with v0.6.0-dev.12 before upgrading. Edit receipts already in a run stay readable: `resume` lists them and a checklist row may still cite one. A guard rule naming `writfold:edit` in `tools` now matches nothing.
 - **A gate of `class = "assessed"` is refused** (`value.unknown`, and its `weft`, `checks` and `weft_sha256` keys `key.unknown`), with Weft: a plan step owing such a gate cannot be met until its definition changes. `runs/*/assessed/` receipts are no longer read. `$WRITFOLD_WEFT` and a `weft =` line in the user config are ignored, and the config hint no longer suggests one.
