@@ -100,10 +100,16 @@ pub fn parse(text_in: &str, stem: &str, path: &str) -> Result<Rule, Report> {
     super::rule_check::check(text_in, stem, path)
 }
 
-/// The KB root's rule directory, when it exists.
+/// Whether anything is at `path`: a directory, or something that should
+/// have been one and is then reported unreadable, never skipped (#63).
+fn present(path: &Path) -> bool {
+    std::fs::symlink_metadata(path).is_ok()
+}
+
+/// The KB root's rule directory, when anything is there.
 pub fn root_dir(kb: &Path) -> Option<(PathBuf, String)> {
     let root = kb.join(DIR);
-    root.is_dir().then(|| (root, DIR.to_owned()))
+    present(&root).then(|| (root, DIR.to_owned()))
 }
 
 /// The nearest `.writfold/guards/` at or above `dir` when it is not the
@@ -112,7 +118,7 @@ pub fn near_dir(kb: &Path, dir: &Path) -> Option<(PathBuf, String)> {
     let (top, found) = dir
         .ancestors()
         .map(|d| (d, d.join(DIR)))
-        .find(|(_, d)| d.is_dir())?;
+        .find(|(_, d)| present(d))?;
     let same = match (
         std::fs::canonicalize(kb.join(DIR)),
         std::fs::canonicalize(&found),
@@ -125,7 +131,8 @@ pub fn near_dir(kb: &Path, dir: &Path) -> Option<(PathBuf, String)> {
 
 /// The rule directories that apply at `cwd`: the KB root's, then the
 /// nearest `.writfold/guards/` at or above `cwd` when it is another one.
-/// Only directories that exist are returned, so no rule means no work.
+/// Only paths where something exists are returned, so no rule means no
+/// work; one that is not a listable directory is reported by [`read`].
 pub fn dirs(kb: &Path, cwd: &Path) -> Vec<(PathBuf, String)> {
     root_dir(kb).into_iter().chain(near_dir(kb, cwd)).collect()
 }
@@ -137,14 +144,13 @@ pub fn read(dirs: &[(PathBuf, String)]) -> (Vec<Rule>, Vec<Problem>) {
     let mut found: Vec<Rule> = Vec::new();
     let mut problems = Vec::new();
     for (dir, shown) in dirs {
-        let Ok(entries) = std::fs::read_dir(dir) else {
-            continue;
-        };
-        let mut names: Vec<String> = entries
-            .flatten()
-            .map(|e| e.file_name().to_string_lossy().into_owned())
-            .filter(|n| n.ends_with(".toml") && !n.starts_with('.'))
-            .collect();
+        // A rule directory that cannot be listed in full is a fault, never
+        // "no rules" (#63).
+        let (_, mut names, why) = crate::gate::discover::classify(dir, crate::gate::discover::list);
+        if let Some(why) = why {
+            problems.push(crate::gate::discover::unlisted(DIR, shown, &why));
+        }
+        names.retain(|n| n.ends_with(".toml") && !n.starts_with('.'));
         names.sort();
         for name in names {
             let stem = name.trim_end_matches(".toml");

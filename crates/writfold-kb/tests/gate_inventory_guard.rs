@@ -72,3 +72,31 @@ fn walk(dir: &std::path::Path) -> TestResult<Vec<std::path::PathBuf>> {
     }
     Ok(out)
 }
+
+#[test]
+fn an_unlistable_guards_directory_is_reported_not_read_as_no_rules() -> TestResult {
+    let w = world(&[])?;
+    current(&w)?;
+    let guards = w.kb.join(".writfold/guards");
+    if guards.exists() {
+        std::fs::remove_dir_all(&guards)?;
+    }
+    put(&guards, "not a directory\n")?;
+    let out = hook(&w, false, "unlisted-guards");
+    let said = format!("{}{}", out.stdout, out.stderr);
+    assert!(said.contains("could not be listed"), "{said}");
+    let mut request = w.request(writfold_kb::Verb::Policy);
+    request.cwd = w.code.clone();
+    let (text, exit) = w.run(&request)?;
+    assert_eq!(exit, 2, "exit {exit}: {text}");
+    // The file.unlisted diagnostic goes to the report (stderr in the CLI).
+    assert!(text.contains("coverage=partial"), "{text}");
+    std::fs::remove_file(&guards)?;
+    let out = hook(&w, false, "listed-again");
+    assert!(
+        !out.stderr.contains("could not be listed"),
+        "{}",
+        out.stderr
+    );
+    Ok(())
+}

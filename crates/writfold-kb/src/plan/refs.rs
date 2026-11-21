@@ -33,13 +33,11 @@ pub fn span_of(text: &str, step: &str, word: &str) -> Option<Span> {
 pub fn names(kb: &Path, repo: Option<&Path>) -> Vec<String> {
     let mut out: Vec<String> = Vec::new();
     for root in std::iter::once(kb).chain(repo) {
-        let Ok(entries) = std::fs::read_dir(root.join(DIR)) else {
-            continue;
-        };
-        for name in entries
-            .flatten()
-            .map(|e| e.file_name().to_string_lossy().into_owned())
-        {
+        // A plans directory that cannot be listed is reported by lint and
+        // `kb policy` (#63); the names that were read are still offered.
+        let (_, names, _) =
+            crate::gate::discover::classify(&root.join(DIR), crate::gate::discover::list);
+        for name in names {
             let stem = name.trim_end_matches(".toml");
             if name.ends_with(".toml") && stem != RESERVED && !out.iter().any(|o| o == stem) {
                 out.push(stem.to_owned());

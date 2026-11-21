@@ -121,12 +121,31 @@ fn guard_rows(root: &Path, cwd: &Path) -> Vec<Row> {
 }
 
 fn count(dir: &Path) -> usize {
-    std::fs::read_dir(dir)
-        .into_iter()
-        .flatten()
-        .flatten()
-        .filter(|e| e.path().extension().is_some_and(|x| x == "toml"))
-        .count()
+    let (_, names, _) = crate::gate::discover::classify(dir, crate::gate::discover::list);
+    names.iter().filter(|n| n.ends_with(".toml")).count()
+}
+
+/// The plans, guards and deliveries directories that cannot be listed in
+/// full (#63): each a `file.unlisted` problem, and the answer partial. The
+/// gates directories are reported by the inventory (#56).
+fn unlisted_dirs(root: &Path, top: Option<&Path>, answer: &mut Answer) {
+    let mut report = answer.report.take().unwrap_or_default();
+    for (base, prefix) in
+        std::iter::once((root, String::new())).chain(top.map(|t| (t, format!("{}/", t.display()))))
+    {
+        for dir in ["plans", "guards", "deliveries"] {
+            let rel = format!(".writfold/{dir}");
+            let (_, _, why) =
+                crate::gate::discover::classify(&base.join(&rel), crate::gate::discover::list);
+            if let Some(why) = why {
+                let shown = format!("{prefix}{rel}");
+                report.extend(crate::gate::discover::unlisted(&rel, &shown, &why).report);
+                answer.partial = true;
+                answer.flagged = true;
+            }
+        }
+    }
+    answer.report = (!report.diagnostics.is_empty()).then_some(report);
 }
 
 /// The `kb policy` answer.
@@ -167,6 +186,7 @@ pub fn policy(session: &Session<'_>, cwd: &Path) -> Result<Answer> {
     // An unreadable gate directory leaves the inventory partial (#56), and
     // a definition that does not parse is reported, never dropped.
     reported(&found, &mut answer);
+    unlisted_dirs(root, top.as_deref(), &mut answer);
     let defs = found.definitions;
     let mut lines: Vec<String> = Vec::new();
     for d in &defs {

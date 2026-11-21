@@ -13,11 +13,12 @@ use writfold_core::diag::suggest::{did_you_mean, suggest};
 /// Every mode name: the built-in ones, then each mode file's.
 pub fn names(root: &Path) -> Vec<String> {
     let mut out: Vec<String> = MODES.iter().map(|m| (*m).to_owned()).collect();
-    let mut files: Vec<String> = std::fs::read_dir(root.join(DIR))
+    // An unlistable deliveries directory is reported by lint and `kb
+    // policy` (#63); the names that were read are still offered.
+    let (_, listed, _) =
+        crate::gate::discover::classify(&root.join(DIR), crate::gate::discover::list);
+    let mut files: Vec<String> = listed
         .into_iter()
-        .flatten()
-        .flatten()
-        .filter_map(|e| e.file_name().to_str().map(str::to_owned))
         .filter_map(|n| n.strip_suffix(".toml").map(str::to_owned))
         .filter(|n| n != "guard" && !n.starts_with("deny-") && config::is_name(n))
         .filter(|n| !MODES.contains(&n.as_str()))
