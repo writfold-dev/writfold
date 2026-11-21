@@ -14,6 +14,7 @@ from pathlib import Path
 import os
 import re
 import shutil
+import concurrent.futures
 import subprocess
 import sys
 import tempfile
@@ -1494,14 +1495,20 @@ def main() -> None:
     if selected and len(mutants) != len(selected):
         raise SystemExit(f"unknown mutant(s): {sorted(selected - {m.name for m in mutants})}")
     # Every mutant runs even after a failure, so one gate run reports them all.
-    failed: list[str] = []
-    for mutant in mutants:
+    # Each calibrates in its own scratch copy, so they run side by side
+    # (WRITFOLD_MUTANT_JOBS, default 6); the outcome does not depend on order.
+    def one(mutant: Mutant) -> str | None:
         with tempfile.TemporaryDirectory(prefix=f"mutant-{mutant.name}-") as directory:
             try:
                 calibrate(mutant, Path(directory))
             except SystemExit as error:
                 print(error, flush=True)
-                failed.append(mutant.name)
+                return mutant.name
+        return None
+
+    jobs = max(1, int(os.environ.get("WRITFOLD_MUTANT_JOBS", "6") or "6"))
+    with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as pool:
+        failed = [name for name in pool.map(one, mutants) if name is not None]
     if failed:
         raise SystemExit(f"FAIL: {len(failed)} mutant(s) not calibrated: {failed}")
     print(f"PROOF_CALIBRATIONS={len(mutants)}", flush=True)
