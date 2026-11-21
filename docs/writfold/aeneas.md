@@ -959,6 +959,17 @@ rounds: 731 theorems, 422 required claims, 263 mutants.
 
 The assessed gate was removed with Weft ([#54](https://github.com/writfold-dev/writfold/issues/54)): the `assess` kernel, `Assess.lean`, its nine audited theorems, six mutants and four claims. No remaining theorem depended on it. `Grounding`, which the ground and checklist kernels decide with, moved to `grounding.rs`, outside the translated set; `Ground.lean` names `grounding.Grounding`. After the cleanup: 722 theorems, 413 required claims, 257 mutants. The removed Lean is in the archive's `public-pre-cleanup-2026-11-21` branch.
 
+### The dev.14 round (21 November 2026)
+
+Four kernels, each proved before it was wired ([#56](https://github.com/writfold-dev/writfold/issues/56)–[#59](https://github.com/writfold-dev/writfold/issues/59)):
+
+- `inventory` (`Inventory.lean`): an inventory is complete exactly when no root is unreadable; each unreadable root is a counted problem, so `gates.met` is never met over an incomplete one; planned `gate lines` (`lines_clean_over`) and the unplanned "all met" (`unplanned_clean`, the backfill of the former `Report::all_met() && invalid == 0`) are never clean over one. Mutants `readable-all`, `complete-skips-check`, `unreadable-never-counts`, `over-drops-complete`, `all-true-skips-last`, `unplanned-empty-clean`.
+- `handoff` (`Handoff.lean`): `strict` accepts exactly a complete, non-empty set whose every item is defined, made under the approved definition and `Checked Satisfied`; a statement never passes; a refusal names the lowest failing item. Mutants `item-ignores-approved`, `first-failing-skips-last`, `strict-empty-ok`.
+- `publish` (`Publish.lean`): a repair replaces only a mismatching index while neither the KB nor the live index moved; a rebuild or refresh publishes unless the KB moved. Mutants `repair-on-drift`, `repair-without-mismatch`, `derived-ignores-move`. Its protocol is the new `spec/KbRepair.tla`.
+- `graph` (`Graph.lean`): the refresh plan (skip, delta, whole), and the model theorem `delta_eq_full` (pure Lean, over a per-file edge function) that justifies the delta. Mutants `any-skips-last`, `plan-delta-on-key-change`, `plan-skip-ignores-changes`.
+
+Two mutants first failed for the wrong reason: `plan-skip-ignores-changes` (removing the call to `any` broke an unrelated proof script; it now keeps the call, `any(changed) && false`) and the first draft of `KbRepair` (TLC found that a pin-only re-check lets a repair replace a healthy index a refresh committed during the comparison; the repair now confirms the generation).
+
 ### The claims and their mutants
 
 <!-- generated from proofs/mutants.py -->

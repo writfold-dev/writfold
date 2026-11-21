@@ -28,8 +28,10 @@ and `--help`. `writfold --version` prints `writfold <version>` only.
 | `writfold-domain` | shared checked values (Git object IDs, digests, byte counts) |
 | `writfold-xtask` | development-only source, dependency-graph and budget checks |
 
-Models: `spec/KbWrite.tla` (KB writes) and `spec/RunGraph.tla` (the run
-graph), each with mutants and probes; see the
+Models: `spec/KbWrite.tla` (KB writes and the transactional refresh),
+`spec/KbRepair.tla` (publishing a rebuilt index by rename, and repair, from
+v0.6.0-dev.14) and `spec/RunGraph.tla` (the run graph), each with mutants
+and probes; see the
 [assurance guide](../guide/assurance.md).
 
 ## Gates
