@@ -124,66 +124,9 @@ class Producer:
             ("comments-control", "// ignored\n" * 450 + "pub fn safe() {}\n", None),
             ("platform-guard", '#[cfg(not(target_os="linux"))] compile_error!("unsupported platform"); pub fn allowed() {}', None),
             ("test-control", '#[cfg(test)] mod tests { #[test] fn allowed() { Some(1).unwrap(); } }', None),
-            ("ghost-control", 'verus! { proof fn allowed() { let x = Some(1); x.unwrap(); } }', None),
-            ("ghost-contract-control", 'verus! { fn allowed(x: Option<u64>) -> (r: Option<u64>) ensures r.is_some() ==> r.unwrap() == x.unwrap(), { x } }', None),
-            ("proof-positivity-control", 'verus! { #[verifier::reject_recursive_types(T)] struct Restricted<T> { value: T } }', None),
-            ("seq-literal-control", 'verus! { spec fn allowed() -> Seq<int> { seq![1, 2 + 3,] } }', None),
-            ("seq-empty-control", 'verus! { spec fn allowed() -> Seq<int> { seq![] } }', None),
-            ("seq-proof-control", 'verus! { proof fn allowed() { let _ = seq![Some(1).unwrap(), seq![2, 3].len()]; } }', None),
-            ("seq-qualified-control", 'verus! { spec fn allowed() -> Seq<int> { vstd::seq![1, 2] } }', None),
-            ("seq-contract-control", 'verus! { fn allowed() ensures seq![Some(1).unwrap()].len() == 1, {} }', None),
-            ("seq-assume-first", 'verus! { proof fn forbidden() { let _ = seq![{ assume(false); 0 }, 1]; } }', "unapproved-proof-assumption"),
-            ("seq-assume-last", 'verus! { proof fn forbidden() { let _ = seq![0, { assume(false); 1 }]; } }', "unapproved-proof-assumption"),
-            ("seq-assume-nested", 'verus! { proof fn forbidden() { let _ = seq![seq![{ assume(false); 1 }]]; } }', "unapproved-proof-assumption"),
-            ("seq-unsafe", 'verus! { spec fn forbidden() -> Seq<int> { seq![0, unsafe { 1 }] } }', "unsafe"),
-            ("seq-io", 'verus! { spec fn forbidden() -> Seq<int> { seq![{ let _ = std::fs::read("x"); 0 }] } }', "core-io"),
-            ("seq-stdio", 'verus! { proof fn forbidden() { let _ = seq![{ println!("hidden"); 0 }]; } }', "core-io"),
-            ("seq-runtime-unwrap", 'verus! { fn forbidden() { let _ = seq![Some(1).unwrap()]; } }', "production-panic"),
-            ("seq-runtime-panic", 'verus! { fn forbidden() { let _ = seq![{ panic!("hidden"); 0 }]; } }', "production-panic"),
-            ("seq-runtime-nested-function", 'verus! { proof fn forbidden() { let _ = seq![{ fn runtime() { Some(1).unwrap(); } 0 }]; } }', "production-panic"),
-            ("seq-external-body", 'verus! { proof fn forbidden() { let _ = seq![{ #[verifier::external_body] spec fn hidden() -> bool { true } 0 }]; } }', "unapproved-proof-assumption"),
-            ("seq-unknown-macro", 'verus! { spec fn forbidden() -> Seq<int> { seq![unknown!(1)] } }', "opaque-macro"),
-            ("seq-repeat-reject", 'verus! { spec fn forbidden() -> Seq<int> { seq![1; 2] } }', "macro-parse"),
-            ("seq-missing-comma", 'verus! { spec fn forbidden() -> Seq<int> { seq![1 2] } }', "macro-parse"),
-            ("seq-extra-comma", 'verus! { spec fn forbidden() -> Seq<int> { seq![1,, 2] } }', "macro-parse"),
-            ("seq-verbatim-reject", 'verus! { spec fn forbidden() -> Seq<int> { seq![builtin#hidden(unsafe { 0 })] } }', "macro-parse"),
             ("rust-seq-reject", 'fn forbidden() { let _ = seq![1, 2]; }', "opaque-macro"),
-            ("spec-opaque-control", 'verus! { #[verifier::opaque] spec fn allowed() -> Seq<int> { seq![1, 2] } }', None),
-            ("spec-opaque-checked-control", 'verus! { #[verifier::opaque] spec(checked) fn allowed() -> bool { true } }', None),
-            ("spec-opaque-conditional-control", 'verus! { #[cfg_attr(feature="opaque", cfg_attr(feature="nested", verifier::opaque))] spec fn allowed() -> bool { true } }', None),
-            ("spec-opaque-method-control", 'verus! { struct S; impl S { #[verifier::opaque] spec fn allowed() -> bool { true } } }', None),
-            ("spec-opaque-trait-control", 'verus! { trait S { #[verifier::opaque] spec fn allowed() -> bool { true } } }', None),
-            ("spec-opaque-assume", 'verus! { #[verifier::opaque] spec fn forbidden() -> bool { assume(false); true } }', "unapproved-proof-assumption"),
-            ("spec-opaque-seq-assume", 'verus! { #[verifier::opaque] spec fn forbidden() -> Seq<int> { seq![{ assume(false); 0 }] } }', "unapproved-proof-assumption"),
-            ("spec-opaque-unsafe", 'verus! { #[verifier::opaque] spec fn forbidden() -> bool { unsafe { true } } }', "unsafe"),
-            ("spec-opaque-io", 'verus! { #[verifier::opaque] spec fn forbidden() -> bool { let _ = std::fs::read("x"); true } }', "core-io"),
-            ("spec-opaque-runtime", 'verus! { #[verifier::opaque] spec fn forbidden() -> bool { fn runtime() { Some(1).unwrap(); } true } }', "production-panic"),
-            ("spec-opaque-external", 'verus! { #[verifier::opaque] #[verifier::external_body] spec fn forbidden() -> bool { true } }', "unapproved-proof-assumption"),
-            ("spec-opaque-conditional-external", 'verus! { #[cfg_attr(feature="bypass", verifier::opaque, verifier::external_body)] spec fn forbidden() -> bool { true } }', "unapproved-proof-assumption"),
-            ("spec-opaque-nested-owner", 'verus! { #[verifier::opaque] spec fn forbidden() -> bool { #[verifier::opaque] fn runtime() {} true } }', "unapproved-proof-assumption"),
-            ("spec-opaque-no-body", 'verus! { trait S { #[verifier::opaque] spec fn forbidden() -> bool; } }', "unapproved-proof-assumption"),
-            ("proof-opaque-reject", 'verus! { #[verifier::opaque] proof fn forbidden() {} }', "unapproved-proof-assumption"),
-            ("exec-opaque-reject", 'verus! { #[verifier::opaque] fn forbidden() {} }', "unapproved-proof-assumption"),
-            ("datatype-opaque-reject", 'verus! { #[verifier::opaque] struct Forbidden; }', "unapproved-proof-assumption"),
-            ("spec-opaque-arguments-reject", 'verus! { #[verifier::opaque(external_body)] spec fn forbidden() -> bool { true } }', "unapproved-proof-assumption"),
-            ("rust-opaque-reject", '#[verifier::opaque] fn forbidden() {}', "unapproved-proof-assumption"),
-            ("rust-opaque-conditional-reject", '#[cfg_attr(feature="opaque", verifier::opaque)] fn forbidden() {}', "unapproved-proof-assumption"),
-            ("spec-opaque-macro-argument", 'verus! { macro_rules! record { ($(#[$meta:meta])* $name:ident) => { $(#[$meta])* spec fn $name() -> bool { true } }; } record!(#[verifier::opaque] hidden); }', "unapproved-proof-assumption"),
-            ("spec-opaque-conditional-macro-argument", 'verus! { macro_rules! record { ($(#[$meta:meta])* $name:ident) => { $(#[$meta])* spec fn $name() -> bool { true } }; } record!(#[cfg_attr(feature="opaque", verifier::opaque)] hidden); }', "unapproved-proof-assumption"),
-            ("spec-opaque-body-macro-argument", 'verus! { macro_rules! record { ($(#[$meta:meta])* $name:ident) => { $(#[$meta])* struct $name; }; } #[verifier::opaque] spec fn forbidden() -> bool { record!(#[verifier::opaque] Hidden); true } }', "unapproved-proof-assumption"),
-            ("spec-opaque-bare-macro-argument", 'verus! { macro_rules! record { ($meta:meta) => { #[$meta] spec fn hidden() -> bool { true } }; } record!(verifier::opaque); }', "macro-argument"),
-            ("spec-external-bare-macro-argument", 'verus! { macro_rules! record { ($meta:meta) => { #[$meta] spec fn hidden() -> bool { true } }; } record!(cfg_attr(feature="bypass", verifier::external_body)); }', "macro-argument"),
             ("rust-opaque-bare-macro-argument", 'macro_rules! record { ($meta:meta) => { #[$meta] fn hidden() {} }; } record!(verifier::opaque);', "macro-argument"),
             ("rust-verifier-field-macro", 'macro_rules! record { ($field:ident : $ty:ty) => { struct Row { $field: $ty } }; } record!(verifier: u64);', None),
-            ("verus-verifier-field-macro", 'verus! { macro_rules! record { ($field:ident : $ty:ty) => { struct Row { $field: $ty } }; } record!(verifier: u64); }', None),
-            ("spec-raw-verifier-meta", 'verus! { macro_rules! record { ($meta:meta) => { #[$meta] spec fn hidden() -> bool { true } }; } record!(r#verifier::external_body); }', "macro-argument"),
-            ("proof-recursion-acceptance", 'verus! { #[verifier::accept_recursive_types(T)] struct Unreviewed<T> { value: T } }', "unapproved-proof-assumption"),
-            ("proof-assume", 'verus! { proof fn forbidden() { assume(false); } }', "unapproved-proof-assumption"),
-            ("proof-axiom", 'verus! { axiom fn forbidden() ensures false; }', "unapproved-proof-assumption"),
-            ("proof-external-body", 'verus! { #[verifier::external_body] fn forbidden() -> bool { true } }', "unapproved-proof-assumption"),
-            ("proof-external-spec", 'verus! { #[verifier::external_fn_specification] fn forbidden() -> bool { foreign() } }', "unapproved-proof-assumption"),
-            ("proof-conditional-external", 'verus! { #[cfg_attr(feature="bypass", verifier::external_body)] fn forbidden() -> bool { true } }', "unapproved-proof-assumption"),
-            ("proof-assumed-spec", 'verus! { assume_specification[foreign]() -> bool; }', "unapproved-proof-assumption"),
             ("rust-proof-identifiers", 'struct Audit { ghost: bool, tracked: bool } fn proof(spec: Audit) -> bool { let ghost = spec.ghost; let tracked = spec.tracked; ghost || tracked }', None),
             ("rust-proof-expression", 'fn proof() -> bool { true } fn runtime() -> bool { proof() }', None),
             ("rust-proof-macro", 'macro_rules! record { () => { struct Audit { ghost: bool } fn proof(ghost: Audit) -> bool { ghost.ghost } }; } record!();', None),
@@ -191,16 +134,12 @@ class Producer:
             ("rust-proof-runtime", 'struct Audit { ghost: Option<u8> } fn proof(spec: Audit) { spec.ghost.unwrap(); }', "production-panic"),
             ("rust-proof-macro-runtime", 'macro_rules! record { () => { struct Audit { ghost: Option<u8> } fn proof(spec: Audit) { spec.ghost.unwrap(); } }; } record!();', "production-panic"),
             ("rust-proof-json-runtime", 'fn runtime() { let ghost = Some(1); let _ = json!({"proof": ghost.unwrap()}); }', "production-panic"),
-            ("proof-mixed-runtime", 'verus! { proof fn allowed() { Some(1).unwrap(); } fn runtime() { Some(1).unwrap(); } }', "production-panic"),
-            ("proof-block-runtime", 'verus! { fn runtime() { proof { Some(1).unwrap(); } Some(1).unwrap(); } }', "production-panic"),
-            ("rust-proof-syntax-reject", 'proof fn outside_verus() {}', "syntax"),
-            ("verus-syntax-reject", 'verus! { proof fn missing_name(: bool) {} }', "macro-parse"),
+            ("rust-proof-syntax-reject", 'proof fn not_rust() {}', "syntax"),
             ("derive-control", '#[derive(Clone, Debug)] pub struct Identity(String);', None),
             ("test-lint-control", '#[cfg(test)] mod tests { #[allow(clippy::unwrap_used)] #[test] fn allowed() { Some(1).unwrap(); } }', None),
             ("module-budget", "\n".join(f"const N{i}: u8 = 0;" for i in range(401)), "module-budget"),
             ("function-budget", "pub fn oversized() {\n" + "let _ = 0;\n" * 81 + "}\n", "function-budget"),
             ("nested-function", "fn outer() { fn inner() {\n" + "let _ = 0;\n" * 81 + "} }", "function-budget"),
-            ("proof-runtime", "verus! { fn runtime() { Some(1).unwrap(); } }", "production-panic"),
             ("unsafe", "pub fn forbidden() { unsafe {} }", "unsafe"),
             ("unsafe-allowance", "#![allow(unsafe_code)]\npub fn safe() {}", "unsafe-allowance"),
             ("domain-deserialize", "#[derive(serde::Deserialize)] pub struct Identity(String);", "domain-deserialize"),
@@ -213,7 +152,6 @@ class Producer:
             ("vec-closure-budget", "fn outer() { let _ = vec![|| {\n" + "let _ = 0;\n" * 81 + "}; 2]; }", "function-budget"),
             ("opaque-declarations", "unknown_generator! { fn hidden() {} }", "opaque-macro"),
             ("expect-attribute-control", '#[expect(dead_code, reason = "calibration")] fn allowed() {}', None),
-            ("expect-attribute-verus-control", 'verus! { #[expect(dead_code, reason = "calibration")] fn allowed() {} }', None),
             ("expect-attribute-allowance", '#[expect(clippy::unwrap_used, reason = "calibration")] pub fn hidden() {}', "unsafe-allowance"),
             ("expect-path-runtime", 'pub fn hidden() -> fn(Option<u8>, &str) -> u8 { Option::expect }', "production-panic"),
         ]
@@ -233,98 +171,6 @@ class Producer:
             metadata = self.metadata(f"calibration-manifest-{level}-metadata", root, False)
             if metadata:
                 self.lint_policy(f"calibration-manifest-{level}", root, metadata, reject=level == "allow")
-
-    def declaration_calibrations(self) -> None:
-        source = (
-            'verus! {\n'
-            '#[derive(Clone, Copy)]\npub struct Record { value: u64 }\n'
-            '#[derive(Clone, Copy)]\npub enum Choice { One, Two }\n'
-            'pub fn clone() {}\n'
-            'pub struct NotDerived;\n'
-            '#[cfg(test)] mod tests { #[derive(Clone)] struct Hidden; }\n'
-            'pub fn text() -> &\'static str { "#[derive(Clone)] struct Fake;" }\n'
-            '}\n'
-        )
-        name = "calibration-generated-declarations"
-        root = self.fixture(name, source)
-        metadata = self.metadata(name + "-metadata", root, False)
-        if metadata is None:
-            self.record(name + "-mapping", False, reason="metadata prerequisite failed")
-            return
-        self.inspect(name, root, metadata)
-        try:
-            declarations = json.loads((self.evidence / f"{name}.report.json").read_text())["declarations"]
-            generated = [entry for entry in declarations if entry.get("origin") is not None]
-            expected = [
-                {"source": "src/lib.rs", "name": "clone", "lines": lines,
-                 "origin": {"kind": "derive-clone", "type_name": owner}}
-                for owner, lines in (("Record", [2, 3]), ("Choice", [4, 5]))
-            ]
-            handwritten = [entry for entry in declarations
-                           if entry["name"] == "clone" and entry.get("origin") is None]
-            passed = (sorted(generated, key=lambda row: row["lines"])
-                      == sorted(expected, key=lambda row: row["lines"])
-                      and handwritten == [{"source": "src/lib.rs", "name": "clone", "lines": [6, 6]}])
-        except (OSError, ValueError, KeyError, TypeError):
-            passed = False
-        self.record(name + "-mapping", passed)
-
-    def macro_declaration_calibrations(self) -> None:
-        source = (
-            'macro_rules! record { ($name:ident, $view:ident { $($field:ident: $ty:ty),* $(,)? }) => { '
-            'verus! { struct $name { $($field: $ty),* } impl $name { '
-            '$(fn $field(&self) -> &$ty { &self.$field })* } } }; }\n'
-            'record!(Linked, LinkedView { field: u64 });\n'
-            'macro_rules! quantity { ($name:ident, $min:expr) => { '
-            'verus! { #[derive(Clone, Copy)] struct $name(u64); } }; }\n'
-            'quantity!(Count, 0);\n'
-            'const TEXT: &str = "record!(Fake, FakeView { invented: u64 });";\n'
-            '#[cfg(test)] mod tests { record!(Hidden, HiddenView { secret: u64 }); }\n'
-        )
-        name = "calibration-macro-declarations"
-        root = self.fixture(name, source)
-        metadata = self.metadata(name + "-metadata", root, False)
-        if metadata is None:
-            self.record(name + "-mapping", False, reason="metadata prerequisite failed")
-            return
-        self.inspect(name, root, metadata)
-        try:
-            declarations = json.loads((self.evidence / f"{name}.report.json").read_text())["declarations"]
-            generated = [entry for entry in declarations if entry.get("origin") is not None]
-            expected = [
-                {"source": "src/lib.rs", "name": leaf, "lines": [line, line],
-                 "origin": {"kind": kind, "type_name": owner}}
-                for leaf, line, kind, owner in (
-                    ("field", 2, "record-field", "Linked"),
-                    ("clone", 3, "derive-clone", "__wf_name"),
-                    ("clone", 4, "quantity-clone", "Count"),
-                )
-            ]
-            passed = (sorted(generated, key=lambda row: row["lines"]) == expected
-                      and {"source": "src/lib.rs", "name": "__wf_field", "lines": [1, 1]} in declarations)
-        except (OSError, ValueError, KeyError, TypeError):
-            passed = False
-        self.record(name + "-mapping", passed)
-
-    def trust_calibrations(self) -> None:
-        source = 'verus! { #[verifier::external_type_specification] #[verifier::external_body] pub struct Foreign(std::ffi::OsString); }'
-        for changed in (False, True):
-            name = "proof-trust-drift" if changed else "proof-trust-control"
-            root = self.fixture(name, source)
-            policy = root / "qualification"
-            policy.mkdir()
-            manifest = {"schema_version": 1, "modules": [{
-                "source": "src/lib.rs", "decision": "calibration-only",
-                "sha256": hashlib.sha256(source.encode()).hexdigest(),
-                "attributes": ["external_type_specification", "external_body"],
-            }]}
-            (policy / "trusted-boundaries.json").write_text(json.dumps(manifest) + "\n")
-            if changed:
-                (root / "src/lib.rs").write_text(source.replace("Foreign", "Different"))
-            metadata = self.metadata(f"calibration-{name}-metadata", root, False)
-            if metadata:
-                self.inspect(f"calibration-{name}", root, metadata,
-                             "proof-trust-identity" if changed else None)
 
     def module_calibrations(self) -> None:
         for name, escaped, panic in [
@@ -462,10 +308,7 @@ class Producer:
             self.record("workspace-syntax-architecture", False, reason="required build/metadata prerequisite failed")
         if built:
             self.syntax_calibrations()
-            self.declaration_calibrations()
-            self.macro_declaration_calibrations()
             self.module_calibrations()
-            self.trust_calibrations()
             self.graph_calibrations()
         else:
             self.record("checker-calibration", False, reason="xtask build failed; no calibration executed")

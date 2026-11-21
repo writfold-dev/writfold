@@ -32,7 +32,6 @@
 // construct that trips another lint needs its own reasoned expectation.
 #![expect(
     clippy::redundant_pattern_matching,
-    clippy::match_like_matches_macro,
     clippy::question_mark,
     clippy::manual_filter,
     clippy::manual_map,

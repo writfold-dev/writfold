@@ -21,10 +21,8 @@ license = "MIT"
 publish = false
 
 [workspace.dependencies]
-vstd = "=0.0.0-2026-09-06-0133"
 serde = { version = "=1.0.229", features = ["derive"] }
 serde_json = { version = "=1.0.151", features = ["arbitrary_precision"] }
-num-bigint = "=0.4.8"
 sha2 = "=0.11.0"
 thiserror = "=2.0.20"
 # Bounded, linear-time patterns (guard rules, watch filters). `unicode`
@@ -39,13 +37,11 @@ rusqlite = { version = "=0.37.0", features = ["bundled"] }
 # 0.17 with default features, which Cargo's workspace-wide feature
 # resolution would add (allocator-api2, foldhash) to the core crates' graph.
 ratatui = { version = "=0.29.0", default-features = false, features = ["crossterm", "unstable-rendered-line-info"] }
-verus_syn = { version = "=0.0.0-2026-09-06-0133", features = ["full", "visit"] }
 proc-macro2 = { version = "=1.0.107", features = ["span-locations"] }
 syn = { version = "=2.0.119", features = ["full", "visit"] }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"
-unexpected_cfgs = { level = "warn", check-cfg = ["cfg(verus_only)", "cfg(verus_keep_ghost)", "cfg(verus_keep_ghost_body)"] }
 
 [workspace.lints.clippy]
 unwrap_used = "deny"

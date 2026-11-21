@@ -1,6 +1,5 @@
-use crate::{macros, syntax::Audit, tokens, trust};
+use crate::{syntax::Audit, tokens};
 use serde_json::{Value, json};
-use sha2::{Digest, Sha256};
 use std::{
     collections::BTreeSet,
     fs,
@@ -17,7 +16,6 @@ struct Unit<'a> {
     package_root: &'a Path,
     file: syn::File,
     lines: BTreeSet<usize>,
-    digest: [u8; 32],
 }
 
 fn load<'a>(
@@ -70,7 +68,6 @@ fn load<'a>(
                     package_root: directory,
                     file,
                     lines,
-                    digest: Sha256::digest(source.as_bytes()).into(),
                 }),
                 Err(error) => {
                     let span = error.span();
@@ -92,12 +89,10 @@ pub fn check(
     root: &Path,
     metadata: &Value,
     diagnostics: &mut Vec<Value>,
-) -> Result<Vec<crate::syntax::FunctionSource>, String> {
+) -> Result<(), String> {
     let units = load(root, metadata, diagnostics)?;
-    let trust = trust::Policy::load(root)?;
     let mut inspected_sources = BTreeSet::new();
     let mut definitions = Definitions(BTreeSet::new());
-    let mut functions = BTreeSet::new();
     for unit in &units {
         definitions.visit_file(&unit.file);
     }
@@ -112,14 +107,6 @@ pub fn check(
             .map_err(|error| error.to_string())?
             .to_string_lossy();
         inspected_sources.insert(relative.to_string());
-        let proof_approval = match trust.admit(&relative, &unit.digest) {
-            Ok(approval) => approval,
-            Err(message) => {
-                diagnostics.push(json!({"rule":"proof-trust-identity", "severity":"error",
-                    "path":relative, "line":1, "message":message}));
-                None
-            }
-        };
         let dev = unit.path.components().any(|component| {
             matches!(
                 component.as_os_str().to_str(),
@@ -135,24 +122,18 @@ pub fn check(
             lines: &unit.lines,
             diagnostics,
             definitions: &definitions.0,
-            functions: &mut functions,
-            proof_approval,
             test: dev,
-            ghost: false,
         };
         let orchestration = unit
             .path
             .file_name()
             .is_some_and(|name| name == "main.rs" || name == "build.rs")
             || unit.package == "writfold-app";
-        // No proof-family 500-line exception is currently admitted. All Verus
-        // files therefore retain the stricter ordinary 400-line budget.
         let limit = if orchestration { 250 } else { 400 };
         audit.budget(unit.file.span(), limit, 250, "module-budget");
         audit.visit_file(&unit.file);
     }
-    trust.require_owned_sources(&inspected_sources)?;
-    Ok(functions.into_iter().collect())
+    Ok(())
 }
 
 fn discover(directory: &Path, files: &mut Vec<PathBuf>) -> Result<(), String> {
@@ -181,25 +162,6 @@ impl<'ast> Visit<'ast> for Definitions {
         {
             self.0.insert(name.to_string());
         }
-        if node.mac.path.is_ident("verus")
-            && let Ok(file) = verus_syn::parse2::<verus_syn::File>(node.mac.tokens.clone())
-        {
-            verus_syn::visit::Visit::visit_file(self, &file);
-        }
         visit::visit_item_macro(self, node);
-    }
-}
-
-impl<'ast> verus_syn::visit::Visit<'ast> for Definitions {
-    fn visit_item_macro(&mut self, node: &'ast verus_syn::ItemMacro) {
-        if let Some(name) = macros::declared_name(node) {
-            self.0.insert(name.to_string());
-        }
-        if node.mac.path.is_ident("verus")
-            && let Ok(file) = verus_syn::parse2::<verus_syn::File>(node.mac.tokens.clone())
-        {
-            verus_syn::visit::Visit::visit_file(self, &file);
-        }
-        verus_syn::visit::visit_item_macro(self, node);
     }
 }

@@ -39,12 +39,7 @@ impl Audit<'_> {
             .last()
             .map(|segment| segment.ident.to_string())
             .unwrap_or_default();
-        if name == "verus" {
-            match verus_syn::parse2::<verus_syn::File>(node.tokens.clone()) {
-                Ok(file) => verus_syn::visit::Visit::visit_file(self, &file),
-                Err(error) => self.emit("macro-parse", error.span(), error.to_string()),
-            }
-        } else if name == "macro_rules" {
+        if name == "macro_rules" {
             match macros::templates(node.tokens.clone()) {
                 Ok(bodies) => {
                     for body in bodies {
@@ -79,7 +74,7 @@ impl Audit<'_> {
             return;
         }
         if self.package == "writfold-xtask" && matches!(name, "braced" | "bracketed" | "Token") {
-            return; // verus_syn's parser-token DSL, not executable declaration input.
+            return; // a parser-token DSL, not executable declaration input.
         }
         if !self.test
             && self.package == "writfold-domain"
@@ -92,7 +87,6 @@ impl Audit<'_> {
             );
         }
         if !self.test
-            && !self.ghost
             && matches!(
                 name,
                 "panic"
@@ -139,7 +133,6 @@ impl Audit<'_> {
                 );
             }
             self.rust_argument_blocks(node.tokens.clone());
-            self.declaration_bindings(node.tokens.clone(), node.span(), name);
             return;
         }
         if !BUILTIN.contains(&name) {

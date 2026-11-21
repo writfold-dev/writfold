@@ -112,11 +112,3 @@ fn replacement(name: &Ident, bindings: &BTreeMap<String, String>) -> Result<Toke
         })
         .collect())
 }
-
-pub fn declared_name(item: &verus_syn::ItemMacro) -> Option<&Ident> {
-    if item.mac.path.is_ident("macro_rules") {
-        item.ident.as_ref()
-    } else {
-        None
-    }
-}

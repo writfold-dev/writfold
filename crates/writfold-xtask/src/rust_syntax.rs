@@ -11,16 +11,15 @@ impl Audit<'_> {
         block: &syn::Block,
         attrs: &[syn::Attribute],
     ) {
-        let old = (self.test, self.ghost);
+        let old = self.test;
         self.test |= is_test(attrs);
-        self.ghost = false;
         self.budget(block.span(), 80, 50, "function-budget");
         if signature.unsafety.is_some() {
             self.emit("unsafe", signature.span(), "unsafe function");
         }
         visit::visit_signature(self, signature);
         self.visit_block(block);
-        (self.test, self.ghost) = old;
+        self.test = old;
     }
 }
 
@@ -70,7 +69,6 @@ impl<'ast> Visit<'ast> for Audit<'_> {
     }
     fn visit_expr_method_call(&mut self, node: &'ast syn::ExprMethodCall) {
         if !self.test
-            && !self.ghost
             && matches!(
                 node.method.to_string().as_str(),
                 "unwrap" | "expect" | "unwrap_unchecked"

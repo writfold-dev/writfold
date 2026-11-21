@@ -1,4 +1,4 @@
-use crate::{safety::inspect, syntax::Audit};
+use crate::syntax::Audit;
 use syn::{Path, UseTree, spanned::Spanned};
 
 pub fn path(audit: &mut Audit<'_>, path: &Path) {
@@ -10,7 +10,6 @@ pub fn path(audit: &mut Audit<'_>, path: &Path) {
         .join("::");
     inspect(audit, &joined, path.span());
     if !audit.test
-        && !audit.ghost
         && path.segments.last().is_some_and(|segment| {
             matches!(
                 segment.ident.to_string().as_str(),
@@ -55,5 +54,36 @@ pub fn imports(audit: &mut Audit<'_>, tree: &UseTree, prefix: String) {
                 imports(audit, child, prefix.clone());
             }
         }
+    }
+}
+
+pub fn inspect(audit: &mut Audit<'_>, path: &str, span: proc_macro2::Span) {
+    let pure = audit.package == "writfold-domain";
+    if pure && !audit.test {
+        let mut segments = path.split("::");
+        if segments.next() == Some("std")
+            && matches!(
+                segments.next(),
+                Some("fs" | "net" | "process" | "env" | "time" | "thread" | "io")
+            )
+        {
+            audit.emit("core-io", span, format!("ambient IO dependency {path}"));
+        }
+    }
+    if audit.package == "writfold-domain" && path.split("::").any(|part| part == "Deserialize") {
+        audit.emit(
+            "domain-deserialize",
+            span,
+            "domain deserializer import or implementation",
+        );
+    }
+    if matches!(audit.package, "writfold-domain" | "writfold-app")
+        && (path == "serde_json::Value" || path.starts_with("serde_json::value::Value"))
+    {
+        audit.emit(
+            "domain-value",
+            span,
+            "untyped JSON outside the bounded wire/catalog boundary",
+        );
     }
 }
