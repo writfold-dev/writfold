@@ -59,3 +59,26 @@ fn distances() {
     );
     assert_eq!(trigrams("Abcd"), ["abc", "bcd"]);
 }
+
+#[test]
+fn a_substring_with_like_wildcards_matches_them_literally() -> rusqlite::Result<()> {
+    let conn = rusqlite::Connection::open_in_memory()?;
+    conn.execute_batch(
+        "CREATE VIRTUAL TABLE tri USING fts5(id, title, body, path UNINDEXED, tokenize = 'trigram');
+         INSERT INTO tri VALUES ('a', 'Rate 50% off', 'x', 'a.md');
+         INSERT INTO tri VALUES ('b', 'Rate 50 percent off', 'x', 'b.md');
+         INSERT INTO tri VALUES ('c', 'snake_case', 'x', 'c.md');
+         INSERT INTO tri VALUES ('d', 'snakeXcase', 'x', 'd.md');
+         INSERT INTO tri VALUES ('e', 'plain', 'the LEDGER flush', 'e.md');",
+    )?;
+    let ids = |text: &str, limit: usize| -> rusqlite::Result<Vec<String>> {
+        let found = super::substring(&conn, text, limit)
+            .map_err(|e| rusqlite::Error::InvalidParameterName(e.to_string()))?;
+        Ok(found.into_iter().map(|h| h.id).collect())
+    };
+    assert_eq!(ids("50% off", 10)?, ["a"]);
+    assert_eq!(ids("e_c", 10)?, ["c"]);
+    assert_eq!(ids("ledger fl", 10)?, ["e"], "ASCII case folds");
+    assert_eq!(ids("ate", 1)?, ["a"], "reading stops at the limit");
+    Ok(())
+}

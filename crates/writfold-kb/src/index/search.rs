@@ -22,20 +22,6 @@ pub struct Hit {
     pub path: String,
 }
 
-fn hits(conn: &Connection, sql: &str, params: &[&dyn rusqlite::ToSql]) -> Result<Vec<Hit>> {
-    let mut statement = conn.prepare_cached(sql)?;
-    let found = statement
-        .query_map(params, |r| {
-            Ok(Hit {
-                id: r.get(0)?,
-                title: r.get(1)?,
-                path: r.get(2)?,
-            })
-        })?
-        .collect::<rusqlite::Result<Vec<_>>>()?;
-    Ok(found)
-}
-
 /// A body line a full-text hit matched: its 1-based number and its text.
 pub type Marked = Option<(u32, String)>;
 
@@ -98,43 +84,59 @@ pub fn contains(haystack: &str, needle: &str) -> bool {
         .contains(&needle.to_ascii_lowercase())
 }
 
+/// `text` as a `LIKE` pattern that matches it literally, and whether it
+/// needs `ESCAPE '\\'`: only when `text` holds `%`, `_` or the escape
+/// character, since FTS5's trigram index does not serve a `LIKE` with an
+/// `ESCAPE` clause (it scans instead).
+fn literal(text: &str) -> (String, bool) {
+    let escaped = text.contains(['%', '_', '\\']);
+    let mut out = String::from("%");
+    for c in text.chars() {
+        if matches!(c, '%' | '_' | '\\') {
+            out.push('\\');
+        }
+        out.push(c);
+    }
+    out.push('%');
+    (out, escaped)
+}
+
 /// Files whose ID, title or body contains `text` (three characters or
 /// more): ID and title hits first, then body hits, each by ID and path.
+/// The escaped `LIKE` is exactly [`contains`] (ASCII case folded, other
+/// characters compared as they are), so no column value is loaded, and
+/// reading stops at `limit` rows (#70).
 pub fn substring(conn: &Connection, text: &str, limit: usize) -> Result<Vec<Hit>> {
     if text.chars().count() < 3 {
         return Ok(Vec::new());
     }
-    // `%` and `_` in the text widen the pattern; the check below narrows it
-    // back to a literal substring.
-    let pattern = format!("%{text}%");
+    let (pattern, escaped) = literal(text);
+    let escape = if escaped { " ESCAPE '\\'" } else { "" };
     let mut found = Vec::new();
     let mut seen = BTreeSet::new();
     for column in ["id", "title", "body"] {
-        let sql = format!(
-            "SELECT id, title, path, {column} FROM tri WHERE {column} LIKE ?1 ORDER BY id, path"
-        );
-        let mut statement = conn.prepare_cached(&sql)?;
-        let rows = statement.query_map([&pattern], |r| {
-            Ok((
-                Hit {
-                    id: r.get(0)?,
-                    title: r.get(1)?,
-                    path: r.get(2)?,
-                },
-                r.get::<_, Option<String>>(3)?,
-            ))
-        })?;
-        for row in rows {
-            let (hit, value) = row?;
-            if value.is_some_and(|v| contains(&v, text)) && seen.insert(hit.path.clone()) {
-                found.push(hit);
-            }
-        }
         if found.len() >= limit {
             break;
         }
+        let sql = format!(
+            "SELECT id, title, path FROM tri WHERE {column} LIKE ?1{escape} ORDER BY id, path"
+        );
+        let mut statement = conn.prepare_cached(&sql)?;
+        let mut rows = statement.query([&pattern])?;
+        while let Some(r) = rows.next()? {
+            let hit = Hit {
+                id: r.get(0)?,
+                title: r.get(1)?,
+                path: r.get(2)?,
+            };
+            if seen.insert(hit.path.clone()) {
+                found.push(hit);
+                if found.len() >= limit {
+                    break;
+                }
+            }
+        }
     }
-    found.truncate(limit);
     Ok(found)
 }
 
@@ -204,6 +206,20 @@ pub fn near(query: &str, candidate: &str, bound: usize) -> Option<(usize, u8, St
     best
 }
 
+/// `hit` as a typo-tolerant hit when its ID or title is near `text`.
+fn closest(text: &str, hit: Hit, allowed: usize) -> Option<Near> {
+    let by_id = near(text, &hit.id, allowed).map(|(d, part, m)| (d, part * 2, m));
+    let by_title = (hit.title.as_deref())
+        .and_then(|t| near(text, t, allowed))
+        .map(|(d, part, m)| (d, 1 + part, m));
+    let (d, part, matched) = match (by_id, by_title) {
+        (Some(a), Some(b)) => a.min(b),
+        (Some(a), None) | (None, Some(a)) => a,
+        (None, None) => return None,
+    };
+    Some((hit, d, part, matched))
+}
+
 /// One typo-tolerant hit: edits, which part matched (0 the whole ID, 1 the
 /// whole title, 2 a word of either) and the matched text.
 pub type Near = (Hit, usize, u8, String);
@@ -216,23 +232,36 @@ pub fn typo(conn: &Connection, text: &str, limit: usize) -> Result<Vec<Near>> {
     if text.chars().count() < 4 || trigrams(text).is_empty() {
         return Ok(Vec::new());
     }
-    let candidates = hits(conn, "SELECT id, title, path FROM tri", &[])?;
+    // Rows are read in batches by rowid and only the near ones kept, so
+    // memory is one batch however large the KB (#70).
     let allowed = tolerance(text);
-    let mut found: Vec<Near> = candidates
-        .into_iter()
-        .filter_map(|hit| {
-            let by_id = near(text, &hit.id, allowed).map(|(d, part, m)| (d, part * 2, m));
-            let by_title = (hit.title.as_deref())
-                .and_then(|t| near(text, t, allowed))
-                .map(|(d, part, m)| (d, 1 + part, m));
-            let (d, part, matched) = match (by_id, by_title) {
-                (Some(a), Some(b)) => a.min(b),
-                (Some(a), None) | (None, Some(a)) => a,
-                (None, None) => return None,
-            };
-            Some((hit, d, part, matched))
-        })
-        .collect();
+    let mut statement = conn.prepare_cached(
+        "SELECT rowid, id, title, path FROM tri WHERE rowid > ?1 ORDER BY rowid LIMIT 4096",
+    )?;
+    let (mut after, mut found): (i64, Vec<Near>) = (i64::MIN, Vec::new());
+    loop {
+        let batch: Vec<(i64, Hit)> = statement
+            .query_map([after], |r| {
+                Ok((
+                    r.get(0)?,
+                    Hit {
+                        id: r.get(1)?,
+                        title: r.get(2)?,
+                        path: r.get(3)?,
+                    },
+                ))
+            })?
+            .collect::<rusqlite::Result<_>>()?;
+        let Some((last, _)) = batch.last() else {
+            break;
+        };
+        after = *last;
+        found.extend(
+            batch
+                .into_iter()
+                .filter_map(|(_, hit)| closest(text, hit, allowed)),
+        );
+    }
     found.sort_by(|a, b| (a.1, a.2, &a.0.id, &a.0.path).cmp(&(b.1, b.2, &b.0.id, &b.0.path)));
     found.truncate(limit);
     Ok(found)
