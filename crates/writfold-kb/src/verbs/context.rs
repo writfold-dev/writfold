@@ -119,19 +119,21 @@ fn neighbours(
 ) -> Result<()> {
     let mut level = vec![rec.id.clone()];
     let mut frontier = 0usize;
+    let limit = super::impact::work();
+    let (mut examined, mut truncated) = (0usize, false);
     for step in 1..=depth.max(1) + 1 {
         let mut found: BTreeMap<(u8, String), (Rec, More)> = BTreeMap::new();
         let mut next = Vec::new();
         for id in &level {
-            for (edge, outgoing) in query::edges(&session.conn, id, true)?
-                .into_iter()
-                .map(|e| (e, true))
-                .chain(
-                    query::edges(&session.conn, id, false)?
-                        .into_iter()
-                        .map(|e| (e, false)),
-                )
-            {
+            let mut both = Vec::new();
+            for outgoing in [true, false] {
+                let room = limit.saturating_sub(examined);
+                let (edges, more) = query::edges_within(&session.conn, id, outgoing, room)?;
+                examined = examined.saturating_add(edges.len());
+                truncated = truncated || more;
+                both.extend(edges.into_iter().map(|e| (e, outgoing)));
+            }
+            for (edge, outgoing) in both {
                 let other = if outgoing { &edge.dst } else { &edge.src };
                 if shown.contains(other)
                     || !matches!(edge.status.as_str(), "explicit" | "confirmed")
@@ -177,6 +179,12 @@ fn neighbours(
     }
     if frontier > 0 {
         answer.counts.push(("frontier", frontier));
+    }
+    if truncated {
+        answer.partial = true;
+        answer.notes.push(format!(
+            "stopped at the work limit of {limit} links (WRITFOLD_KB_WORK): more neighbours exist than are shown"
+        ));
     }
     Ok(())
 }

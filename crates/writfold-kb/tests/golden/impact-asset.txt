@@ -15,5 +15,5 @@ project project:lantern depth=2 quay-worker project project:lantern (field) @inv
 decision proposal/decision/2026-01-10-single-writer [superseded] depth=2 proposal/decision/2026-01-10-single-writer superseded-by proposal/decision/2026-03-02-batch-ledger-writes (field) @proposals/decision/2026-01-10-single-writer.md:9 !superseded→decision/2026-03-02-batch-ledger-writes !stale
 signature sig:fsync-stall [fixed] depth=2 sig:fsync-stall concerns harbor-db (field) @signatures/fsync-stall.md:6
 # note: walked from harbor-api: depth 2, direction both; project records are homes and are not walked through
-# coverage=partial records=28/28 shown=16 omitted=0 frontier=1 skipped_retired=0 skipped_disputed=1 skipped_inferred=3 stale=3 kb=d5db758bda80 index=fresh cursor=none q=4fb409e78c27
+# coverage=partial records=28/28 shown=16 omitted=0 frontier=1 skipped_retired=0 skipped_disputed=1 skipped_inferred=3 stale=3 examined=53 kb=d5db758bda80 index=fresh cursor=none q=4fb409e78c27
 # exit=2

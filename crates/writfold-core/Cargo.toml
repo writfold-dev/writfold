@@ -115,6 +115,7 @@ start_from = [
     "writfold_core::verdict::recorded::best_recorded",
     "writfold_core::verdict::recorded::newest",
     "writfold_core::walk::complete",
+    "writfold_core::walk::complete_within",
     "writfold_core::command::is_help",
     "writfold_core::command::named",
     "writfold_core::find::query_ok",

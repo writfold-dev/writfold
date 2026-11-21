@@ -41,6 +41,9 @@ def claims : List Name := [
   ``Writfold.Core.Publish.drift_never_replaces,
   ``Writfold.Core.Publish.equal_keeps,
   ``Writfold.Core.Publish.derived_replace_iff,
+  -- a walk under a work limit (writfold_core::walk, #60)
+  ``Writfold.Core.Walk.complete_within_iff,
+  ``Writfold.Core.Walk.truncated_never_complete,
   -- which graph facts a refresh rewrites (writfold_core::graph, #59)
   ``Writfold.Core.Graph.any_loop_spec,
   ``Writfold.Core.Graph.any_spec,

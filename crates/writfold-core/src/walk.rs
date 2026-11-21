@@ -50,14 +50,20 @@ pub struct Walk<E> {
     pub frontier: usize,
     /// Distinct skipped edges per reason, among the nodes expanded.
     pub skipped: BTreeMap<&'static str, usize>,
+    /// The work limit stopped the walk before it read every edge it would
+    /// have (#60): what was reached is right, but not all of it.
+    pub truncated: bool,
+    /// Edges read, against the limit.
+    pub examined: usize,
 }
 
 impl<E> Walk<E> {
-    /// Whether `coverage=complete` may be claimed ([`complete`]).
+    /// Whether `coverage=complete` may be claimed ([`complete_within`]).
     pub fn complete(&self) -> bool {
-        complete(
+        complete_within(
             self.frontier,
             self.skipped.values().filter(|n| **n > 0).count(),
+            self.truncated,
         )
     }
 }
@@ -70,13 +76,28 @@ pub fn complete(frontier: usize, skipped: usize) -> bool {
     frontier == 0 && skipped == 0
 }
 
+/// [`complete`] for a walk under a work limit (#60): never when the limit
+/// stopped it (`truncated`), else exactly [`complete`]. Translated and
+/// proved (`Walk.lean`).
+pub fn complete_within(frontier: usize, skipped: usize, truncated: bool) -> bool {
+    if truncated {
+        return false;
+    }
+    complete(frontier, skipped)
+}
+
 /// Walk from `start` to `depth` levels. `arcs` lists a node's edges (in a
 /// deterministic order), `follow` classifies one, and a `terminal` node
 /// (other than the start) is reached but never expanded.
+///
+/// At most `limit` edges are read (#60): `arcs(node, room)` returns up to
+/// `room` of the node's edges, in order, and whether more were left
+/// unread. When the limit is reached, or a node had more, the walk stops
+/// expanding and is `truncated`; it is then never complete.
 pub fn walk<E: Clone>(
     start: &str,
-    depth: usize,
-    mut arcs: impl FnMut(&str) -> Vec<Arc<E>>,
+    (depth, limit): (usize, usize),
+    mut arcs: impl FnMut(&str, usize) -> (Vec<Arc<E>>, bool),
     follow: impl Fn(&E) -> Follow,
     terminal: impl Fn(&str) -> bool,
 ) -> Walk<E> {
@@ -84,6 +105,19 @@ pub fn walk<E: Clone>(
         reached: Vec::new(),
         frontier: 0,
         skipped: BTreeMap::new(),
+        truncated: false,
+        examined: 0,
+    };
+    let mut read = |node: &str, out: &mut Walk<E>| -> Option<Vec<Arc<E>>> {
+        let room = limit.saturating_sub(out.examined);
+        if out.truncated || room == 0 {
+            out.truncated = true;
+            return None;
+        }
+        let (list, more) = arcs(node, room);
+        out.examined = out.examined.saturating_add(list.len());
+        out.truncated = more;
+        Some(list)
     };
     let mut visited: BTreeSet<String> = BTreeSet::from([start.to_owned()]);
     let mut skipped: BTreeSet<(&'static str, String)> = BTreeSet::new();
@@ -91,7 +125,10 @@ pub fn walk<E: Clone>(
     for step in 1..=depth {
         let mut next: BTreeMap<String, Reached<E>> = BTreeMap::new();
         for node in level.iter().filter(|n| *n == start || !terminal(n)) {
-            for arc in arcs(node) {
+            let Some(list) = read(node, &mut out) else {
+                break;
+            };
+            for arc in list {
                 match follow(&arc.edge) {
                     Follow::Skip(reason) => {
                         skipped.insert((reason, arc.key));
@@ -114,7 +151,10 @@ pub fn walk<E: Clone>(
     }
     let mut frontier = BTreeSet::new();
     for node in level.iter().filter(|n| *n == start || !terminal(n)) {
-        for arc in arcs(node) {
+        let Some(list) = read(node, &mut out) else {
+            break;
+        };
+        for arc in list {
             if follow(&arc.edge) == Follow::Yes && !visited.contains(&arc.other) {
                 frontier.insert(arc.key);
             }
@@ -225,19 +265,46 @@ mod tests {
                 .map(|n| format!("n{n}"))
                 .collect();
             let depth = 1 + rng.next(4) as usize;
+            let follow = |ok: &bool| {
+                if *ok {
+                    Follow::Yes
+                } else {
+                    Follow::Skip("disputed")
+                }
+            };
             let result = walk(
                 "n0",
-                depth,
-                |n| arcs(&graph, n),
-                |ok| {
-                    if *ok {
-                        Follow::Yes
-                    } else {
-                        Follow::Skip("disputed")
-                    }
-                },
+                (depth, usize::MAX),
+                |n, _| (arcs(&graph, n), false),
+                follow,
                 |n| terminal.contains(n),
             );
+            assert!(!result.truncated);
+            // Under a limit: never complete when truncated, and what it
+            // reached is reached by the unlimited walk at the same depth.
+            let limit = rng.next(8) as usize;
+            let bounded = walk(
+                "n0",
+                (depth, limit),
+                |n, room| {
+                    let all = arcs(&graph, n);
+                    let more = all.len() > room;
+                    (all.into_iter().take(room).collect(), more)
+                },
+                follow,
+                |n| terminal.contains(n),
+            );
+            assert!(bounded.examined <= limit);
+            if bounded.truncated {
+                assert!(!bounded.complete());
+            }
+            for r in &bounded.reached {
+                let full = result.reached.iter().find(|f| f.node == r.node);
+                assert!(
+                    full.is_some_and(|f| f.depth <= r.depth),
+                    "{graph:?} limit {limit}"
+                );
+            }
             let reached: BTreeMap<String, usize> = result
                 .reached
                 .iter()

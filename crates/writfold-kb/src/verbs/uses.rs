@@ -95,7 +95,9 @@ pub fn uses(session: &Session<'_>, target: &str) -> Result<Answer> {
         },
     };
     let mut groups: BTreeMap<(u8, String), Vec<More>> = BTreeMap::new();
-    for edge in query::edges(&session.conn, &node, false)? {
+    let limit = super::impact::work();
+    let (edges, truncated) = query::edges_within(&session.conn, &node, false, limit)?;
+    for edge in edges {
         if let Some(range) = range
             && !overlaps(session, &edge, range)?
         {
@@ -121,8 +123,22 @@ pub fn uses(session: &Session<'_>, target: &str) -> Result<Answer> {
             row.flags.push("self".into());
         }
         row.section = Some(row.kind);
+        let extra = links.len().saturating_sub(3);
         row.more.extend(links.into_iter().take(3));
+        if extra > 0 {
+            row.more.push(More {
+                label: "links",
+                text: format!("{extra} more from this source"),
+                ..More::default()
+            });
+        }
         answer.rows.push(row);
+    }
+    if truncated {
+        answer.partial = true;
+        answer.notes.push(format!(
+            "stopped at the work limit of {limit} links (WRITFOLD_KB_WORK): more referrers exist than are shown"
+        ));
     }
     answer.notes.push(format!(
         "referrers of {node}{}; reliance that no record cites or mentions is not traced",

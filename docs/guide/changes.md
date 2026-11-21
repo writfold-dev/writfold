@@ -6,6 +6,10 @@ This page is for someone pinned to one release who wants to upgrade on purpose. 
 
 A line marked **fix** changed an answer that was wrong; anything depending on the old answer was depending on the fault.
 
+## v0.6.0-dev.15 (unreleased)
+
+- `impact`, `uses` and `context` read at most `WRITFOLD_KB_WORK` edges (default 100,000); one that stops there says so in a note and reads `coverage=partial` (exit 2) instead of loading a hub's every edge. `impact` adds `examined=N` to its trailer; `uses` adds a `links: N more from this source` line where it keeps three of more ([#60](https://github.com/writfold-dev/writfold/issues/60)). **The index is rebuilt once** (schema 6: incoming edges indexed in key order).
+
 ## v0.6.0-dev.14 (unreleased)
 
 - **fix** A `.writfold/gates` directory (KB root or subject repository) that exists but cannot be listed is now `error[file.unlisted]`, counted in `invalid=`: `gate status`, `gate lines` and `gates.met` are no longer satisfied over the gates that happened to load, `kb policy` reads `coverage=partial` (exit 2) instead of `coverage=complete`, and session start no longer says "policy: none configured" for it. Before, it was skipped as if absent ([#56](https://github.com/writfold-dev/writfold/issues/56)). `kb lint` reports the same fault for any unreadable policy directory it reads. `kb policy` now also reports definitions that do not parse (exit 2) instead of dropping them, and `kb policy --paths` refuses a malformed definition with its diagnostics.

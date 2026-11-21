@@ -207,14 +207,33 @@ pub struct Edge {
 
 /// Edges leaving (`outgoing`) or reaching `id`, in key order.
 pub fn edges(conn: &Connection, id: &str, outgoing: bool) -> Result<Vec<Edge>> {
-    let column = if outgoing { "src" } else { "dst" };
-    let sql = format!(
-        "SELECT src, rel, dst, origin, status, prov_path, prov_line, cite_ord FROM edges WHERE {column} = ?1 \
-         ORDER BY src, rel, dst, origin, prov_path, prov_line"
-    );
-    let mut statement = conn.prepare_cached(&sql)?;
-    let found = statement
-        .query_map([id], |r| {
+    Ok(edges_within(conn, id, outgoing, usize::MAX)?.0)
+}
+
+/// At most `room` edges leaving or reaching `id`, in key order, and
+/// whether more were left unread (#60). Both directions read an index in
+/// that order (the primary key, `edges_dst`), so a hub's first page costs
+/// its page, not its degree.
+pub fn edges_within(
+    conn: &Connection,
+    id: &str,
+    outgoing: bool,
+    room: usize,
+) -> Result<(Vec<Edge>, bool)> {
+    let sql = match outgoing {
+        true => {
+            "SELECT src, rel, dst, origin, status, prov_path, prov_line, cite_ord FROM edges WHERE src = ?1 \
+                 ORDER BY src, rel, dst, origin, prov_path, prov_line LIMIT ?2"
+        }
+        false => {
+            "SELECT src, rel, dst, origin, status, prov_path, prov_line, cite_ord FROM edges WHERE dst = ?1 \
+                  ORDER BY dst, src, rel, origin, prov_path, prov_line LIMIT ?2"
+        }
+    };
+    let limit = i64::try_from(room.saturating_add(1)).unwrap_or(i64::MAX);
+    let mut statement = conn.prepare_cached(sql)?;
+    let mut found = statement
+        .query_map((id, limit), |r| {
             Ok(Edge {
                 src: r.get(0)?,
                 rel: r.get(1)?,
@@ -227,7 +246,9 @@ pub fn edges(conn: &Connection, id: &str, outgoing: bool) -> Result<Vec<Edge>> {
             })
         })?
         .collect::<rusqlite::Result<Vec<_>>>()?;
-    Ok(found)
+    let more = found.len() > room;
+    found.truncate(room);
+    Ok((found, more))
 }
 
 /// Destinations mentioned by files inside one run's directory.

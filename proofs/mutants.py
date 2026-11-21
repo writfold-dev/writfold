@@ -34,6 +34,11 @@ class Mutant:
 
 
 MUTANTS = (
+    # walk (#60): hitting the work limit never certifies completeness
+    Mutant("within-ignores-truncation", "walk.rs",
+           "    if truncated {\n        return false;\n    }\n    complete(frontier, skipped)",
+           "    if truncated && false {\n        return false;\n    }\n    complete(frontier, skipped)",
+           ("Writfold.Core.Walk.complete_within_iff", "Writfold.Core.Walk.truncated_never_complete")),
     # graph (#59): every file's change is seen
     Mutant("any-skips-last", "graph.rs",
            "    while index < changed.len() {",

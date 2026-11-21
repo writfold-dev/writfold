@@ -37,6 +37,22 @@ theorem complete_iff (frontier skipped : Usize) :
   · rename_i h; simp only [WP.spec_ok, Bool.false_eq_true, false_iff, not_and]
     intro e; exact absurd (UScalar.eq_of_val_eq (by simpa using e)) h
 
+/-- Under a work limit (#60): `coverage=complete` exactly when the limit did
+not stop the walk and nothing is left on the frontier or skipped. -/
+theorem complete_within_iff (frontier skipped : Usize) (truncated : Bool) :
+    walk.complete_within frontier skipped truncated ⦃ b => b = true ↔
+      truncated = false ∧ frontier.val = 0 ∧ skipped.val = 0 ⦄ := by
+  unfold walk.complete_within
+  cases truncated
+  · simp only [Bool.false_eq_true, ite_false, true_and]
+    exact complete_iff frontier skipped
+  · simp
+
+/-- Hitting the work limit never certifies completeness. -/
+theorem truncated_never_complete (frontier skipped : Usize) :
+    walk.complete_within frontier skipped true ⦃ b => b = false ⦄ := by
+  unfold walk.complete_within; simp
+
 theorem blocks_iff (errors warnings : Usize) (deny : Bool) :
     diag.blocks errors warnings deny ⦃ b => b = true ↔
       errors.val > 0 ∨ (deny = true ∧ warnings.val > 0) ⦄ := by

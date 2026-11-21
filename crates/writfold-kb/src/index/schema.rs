@@ -11,12 +11,12 @@
 //! row ID (an FTS5 delete by an unindexed column scans the whole table).
 
 /// Bumped when the schema changes; a different stored value rebuilds.
-pub const SCHEMA: &str = "5";
+pub const SCHEMA: &str = "6";
 /// Bumped when derivation changes; a different stored value rebuilds.
 pub const EXTRACTOR: &str = "writfold-kb-extract/2";
 
 pub const DDL: &str = "
-PRAGMA user_version = 5;
+PRAGMA user_version = 6;
 CREATE TABLE meta(key TEXT PRIMARY KEY, value TEXT NOT NULL);
 CREATE TABLE files(path TEXT PRIMARY KEY, sha256 BLOB NOT NULL, size INTEGER NOT NULL,
                    kind TEXT NOT NULL, parse_status TEXT NOT NULL, parse_error TEXT,
@@ -51,7 +51,9 @@ CREATE TABLE edges(src TEXT NOT NULL, rel TEXT NOT NULL, dst TEXT NOT NULL,
                    origin TEXT NOT NULL, status TEXT NOT NULL,
                    prov_path TEXT NOT NULL, prov_line INTEGER NOT NULL, cite_ord INTEGER,
                    PRIMARY KEY(src, rel, dst, origin, prov_path, prov_line)) WITHOUT ROWID;
-CREATE INDEX edges_dst ON edges(dst, rel);
+-- Incoming edges in key order, so a page of a hub's referrers reads only
+-- that page (#60).
+CREATE INDEX edges_dst ON edges(dst, src, rel, origin, prov_path, prov_line);
 -- A refresh replaces the edges of the files whose references changed (#59).
 CREATE INDEX edges_prov ON edges(prov_path);
 CREATE VIRTUAL TABLE fts USING fts5(id, title, summary, body, path UNINDEXED,

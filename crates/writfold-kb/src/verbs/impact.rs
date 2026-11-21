@@ -55,14 +55,39 @@ pub fn follow(edge: &Edge, inferred: bool) -> Follow {
     }
 }
 
-/// A node's edges in the walk's direction, in key order.
-pub fn arcs(session: &Session<'_>, node: &str, direction: Direction) -> Result<Vec<Arc<Edge>>> {
+/// The edges a graph answer may read before it stops and says so (#60):
+/// `WRITFOLD_KB_WORK`, else 100,000. Depth and the output budget do not
+/// bound the work a hub costs; this does.
+pub fn work() -> usize {
+    std::env::var("WRITFOLD_KB_WORK")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .filter(|n: &usize| *n > 0)
+        .unwrap_or(100_000)
+}
+
+/// Up to `room` of a node's edges in the walk's direction, in key order,
+/// and whether more were left unread.
+pub fn arcs(
+    session: &Session<'_>,
+    node: &str,
+    direction: Direction,
+    room: usize,
+) -> Result<(Vec<Arc<Edge>>, bool)> {
     let mut out = Vec::new();
+    let mut more = false;
     for outgoing in [true, false] {
         if (outgoing && direction == Direction::In) || (!outgoing && direction == Direction::Out) {
             continue;
         }
-        for edge in query::edges(&session.conn, node, outgoing)? {
+        let (edges, left) = query::edges_within(
+            &session.conn,
+            node,
+            outgoing,
+            room.saturating_sub(out.len()),
+        )?;
+        more = more || left;
+        for edge in edges {
             let other = if outgoing { &edge.dst } else { &edge.src };
             out.push(Arc {
                 other: other.clone(),
@@ -74,7 +99,7 @@ pub fn arcs(session: &Session<'_>, node: &str, direction: Direction) -> Result<V
             });
         }
     }
-    Ok(out)
+    Ok((out, more))
 }
 
 /// A node the walk reaches but does not expand.
@@ -89,26 +114,30 @@ pub fn impact(
     direction: Direction,
     inferred: bool,
 ) -> Result<Answer> {
-    let start =
-        if target.starts_with("code:") && !query::edges(&session.conn, target, false)?.is_empty() {
-            target.to_owned()
-        } else {
-            match query::resolve(&session.conn, target)? {
-                Resolved::One(rec) => rec.id,
-                Resolved::Many(candidates) => return Ok(ambiguous(session, target, &candidates)),
-                Resolved::None => return unknown(session, "unresolved-id", target, &[]),
-            }
-        };
+    let start = if target.starts_with("code:")
+        && !query::edges_within(&session.conn, target, false, 1)?
+            .0
+            .is_empty()
+    {
+        target.to_owned()
+    } else {
+        match query::resolve(&session.conn, target)? {
+            Resolved::One(rec) => rec.id,
+            Resolved::Many(candidates) => return Ok(ambiguous(session, target, &candidates)),
+            Resolved::None => return unknown(session, "unresolved-id", target, &[]),
+        }
+    };
     // The walk takes an infallible neighbour function; the first index
     // error is kept and returned after it.
     let mut failure = None;
+    let limit = work();
     let result = walk(
         &start,
-        depth,
-        |node| {
-            arcs(session, node, direction).unwrap_or_else(|error| {
+        (depth, limit),
+        |node, room| {
+            arcs(session, node, direction, room).unwrap_or_else(|error| {
                 failure.get_or_insert(error);
-                Vec::new()
+                (Vec::new(), true)
             })
         },
         |edge| follow(edge, inferred),
@@ -156,7 +185,13 @@ pub fn impact(
     if stale > 0 {
         answer.counts.push(("stale", stale));
     }
+    answer.counts.push(("examined", result.examined));
     answer.partial = !result.complete();
+    if result.truncated {
+        answer.notes.push(format!(
+            "the walk stopped at its work limit of {limit} edges (WRITFOLD_KB_WORK): what is shown is reached, but not everything reachable is shown; narrow --depth or --direction"
+        ));
+    }
     answer.notes.push(format!(
         "walked from {start}: depth {depth}, direction {}{}; project records are homes and are not walked through",
         direction.name(),
