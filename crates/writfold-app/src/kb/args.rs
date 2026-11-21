@@ -1,8 +1,8 @@
 //! `writfold kb` arguments into one typed request.
-use super::{verbs, writes};
+use super::{cli, verbs, writes};
 use std::collections::BTreeMap;
 use std::path::PathBuf;
-use writfold_kb::{DEFAULT_BUDGET, MAX_BUDGET, Request, Verb};
+use writfold_kb::{DEFAULT_BUDGET, Request, Verb};
 
 /// Every flag, parsed once; `verbs` checks which apply.
 #[derive(Default)]
@@ -23,90 +23,23 @@ pub struct Common {
     pub include: Option<String>,
     pub missing: bool,
     pub limit: Option<usize>,
-    /// `--help` anywhere: the usage, not the verb.
-    pub help: bool,
+    /// `--color auto|always|never`: how diagnostics are drawn.
+    pub color: Option<String>,
     /// The write verbs' value flags (`--note`, `--title` …) and switches.
     pub values: BTreeMap<String, String>,
     pub switches: Vec<String>,
 }
 
-fn number(flag: &str, value: Option<&String>, low: usize, high: usize) -> Result<usize, String> {
-    let value = value.ok_or(format!("{flag} needs a value"))?;
+/// `value` as an integer from `low` to `high`, or the message for `flag`.
+pub(crate) fn number(flag: &str, value: &str, low: usize, high: usize) -> Result<usize, String> {
     match value.parse::<usize>() {
         Ok(n) if (low..=high).contains(&n) => Ok(n),
         _ => Err(format!("{flag} must be an integer from {low} to {high}")),
     }
 }
 
-fn value(flag: &str, value: Option<&String>) -> Result<String, String> {
-    value.cloned().ok_or(format!("{flag} needs a value"))
-}
-
-/// Split flags from positionals. Every flag may appear once.
-fn split(verb: &str, args: &[String]) -> Result<(Common, Vec<String>), String> {
-    let mut common = Common::default();
-    let mut positional = Vec::new();
-    let mut seen = Vec::new();
-    let mut items = args.iter();
-    while let Some(arg) = items.next() {
-        if !arg.starts_with("--") {
-            positional.push(arg.clone());
-            continue;
-        }
-        if seen.contains(arg) && !super::checkpoint::REPEATS.contains(&&arg[2..]) {
-            return Err(format!("{arg} given twice"));
-        }
-        seen.push(arg.clone());
-        match arg.as_str() {
-            "--kb" => common.kb = Some(PathBuf::from(value(arg, items.next())?)),
-            "--budget-tokens" => common.budget = Some(number(arg, items.next(), 1, MAX_BUDGET)?),
-            "--cursor" => common.cursor = Some(value(arg, items.next())?),
-            "--depth" => common.depth = Some(number(arg, items.next(), 1, 8)?),
-            "--limit" => common.limit = Some(number(arg, items.next(), 1, 50)?),
-            "--json" => common.json = true,
-            "--all" => common.all = true,
-            "--offline" => common.offline = true,
-            "--cached" => common.cached = true,
-            "--record" => common.record = true,
-            // `record|propose investigation --signatures a,b` takes a value.
-            "--signatures" if !matches!(verb, "record" | "propose") => common.signatures = true,
-            "--missing" => common.missing = true,
-            "--help" => common.help = true,
-            "--kind" => {
-                common.kinds = value(arg, items.next())?
-                    .split(',')
-                    .map(|k| k.trim().to_owned())
-                    .filter(|k| !k.is_empty())
-                    .collect();
-            }
-            "--project" => common.project = Some(value(arg, items.next())?),
-            "--direction" => common.direction = Some(value(arg, items.next())?),
-            "--include" => common.include = Some(value(arg, items.next())?),
-            "--at" => return Err("--at COMMIT is not built in v1 (planned for M4)".into()),
-            other
-                if writes::VALUES.contains(&&other[2..])
-                    || super::observe::VALUES.contains(&&other[2..])
-                    || super::investigation::VALUES.contains(&&other[2..])
-                    || super::proposals::VALUES.contains(&&other[2..]) =>
-            {
-                super::checkpoint::put(&mut common.values, &other[2..], value(arg, items.next())?);
-            }
-            // `--tracked` and `--local` are `propose`'s switches.
-            other if super::proposals::SWITCHES.contains(&&other[2..]) => {
-                common.switches.push(other[2..].to_owned());
-            }
-            // `--again` is `plan use`'s switch.
-            other if writes::SWITCHES.contains(&&other[2..]) || other == "--again" => {
-                common.switches.push(other[2..].to_owned());
-            }
-            other => return Err(format!("unknown option {other}")),
-        }
-    }
-    Ok((common, positional))
-}
-
 /// The flags each verb accepts beyond the shared ones.
-fn allowed(verb: &str) -> &'static [&'static str] {
+pub(crate) fn allowed(verb: &str) -> &'static [&'static str] {
     match verb {
         "brief" | "deliver" => &["all"],
         "context" => &["depth"],
@@ -150,19 +83,39 @@ fn check_flags(verb: &str, common: &Common) -> Result<(), String> {
     Ok(())
 }
 
-/// `None` for `help` (or `--help` anywhere); an error message for
-/// anything unusable.
-pub fn parse(args: &[String], cwd: PathBuf) -> Result<Option<Request>, String> {
-    let Some((verb, rest)) = args.split_first() else {
-        return Err("missing verb".into());
+/// What the line asks for: a request, or text clap rendered (help on
+/// stdout, exit 0; a usage error on stderr, exit 1).
+pub enum Parsed {
+    Request(Box<Request>),
+    Help(clap::builder::StyledStr),
+    Usage(String),
+    Refused(clap::Error),
+}
+
+/// Parse `writfold kb <args>`: clap splits the line into flags and
+/// positionals ([`cli`]); the verb modules build the typed request.
+pub fn parse(args: &[String], cwd: PathBuf) -> Parsed {
+    let line = std::iter::once("kb".to_owned()).chain(args.iter().cloned());
+    let matches = match cli::command().try_get_matches_from(line) {
+        Ok(matches) => matches,
+        Err(error) => {
+            return match error.kind() {
+                clap::error::ErrorKind::DisplayHelp => Parsed::Help(error.render()),
+                _ => Parsed::Refused(error),
+            };
+        }
     };
-    if matches!(verb.as_str(), "help" | "--help" | "-h") {
-        return Ok(None);
+    let Some((verb, sub)) = matches.subcommand() else {
+        return Parsed::Usage("missing verb".into());
+    };
+    match request(verb, sub, cwd) {
+        Ok(request) => Parsed::Request(Box::new(request)),
+        Err(message) => Parsed::Usage(message),
     }
-    let (common, positional) = split(verb, rest)?;
-    if common.help {
-        return Ok(None);
-    }
+}
+
+fn request(verb: &str, sub: &clap::ArgMatches, cwd: PathBuf) -> Result<Request, String> {
+    let (common, positional) = cli::common(verb, sub)?;
     check_flags(verb, &common)?;
     if common.cached && common.offline {
         return Err("stale takes --offline or --cached, not both".into());
@@ -171,7 +124,7 @@ pub fn parse(args: &[String], cwd: PathBuf) -> Result<Option<Request>, String> {
         return Err("--record needs the checkers to be asked; it cannot be combined with --offline or --cached".into());
     }
     let built: Verb = verbs::verb(verb, &common, &positional, &cwd)?;
-    Ok(Some(Request {
+    Ok(Request {
         verb: built,
         kb: common.kb,
         cwd,
@@ -180,60 +133,67 @@ pub fn parse(args: &[String], cwd: PathBuf) -> Result<Option<Request>, String> {
         json: common.json,
         now: None,
         probe: writfold_kb::write::no_probe,
-    }))
+    })
+}
+
+/// The verb `args` parse to, or the refusal's message (module tests).
+#[cfg(test)]
+pub fn verb_of(args: &[String]) -> Result<Verb, String> {
+    match parse(args, PathBuf::from("/")) {
+        Parsed::Request(request) => Ok(request.verb),
+        Parsed::Usage(message) => Err(message),
+        Parsed::Refused(error) => Err(error.to_string()),
+        Parsed::Help(_) => Err("help".into()),
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::parse;
+    use super::{Parsed, parse};
     use std::path::PathBuf;
-    use writfold_kb::Verb;
+    use writfold_kb::{Request, Verb};
 
-    fn args(text: &str) -> Vec<String> {
-        text.split(' ').map(str::to_owned).collect()
+    /// The request `text` parses to, or the message of its refusal.
+    fn req(text: &str) -> Result<Request, String> {
+        let args: Vec<String> = text.split(' ').map(str::to_owned).collect();
+        match parse(&args, PathBuf::from("/")) {
+            Parsed::Request(request) => Ok(*request),
+            Parsed::Usage(message) => Err(message),
+            Parsed::Refused(error) => Err(error.to_string()),
+            Parsed::Help(_) => Err("help".into()),
+        }
     }
 
     #[test]
     fn verbs_and_flags() -> Result<(), String> {
-        let cwd = PathBuf::from("/");
-        let request = parse(
-            &args("why batch ledger writes --budget-tokens 200 --json"),
-            cwd.clone(),
-        )?
-        .ok_or("a request")?;
+        let request = req("why batch ledger writes --budget-tokens 200 --json")?;
         assert!(matches!(&request.verb, Verb::Why { text, .. } if text == "batch ledger writes"));
         assert_eq!((request.budget, request.json), (200, true));
-        assert!(parse(&args("context a b"), cwd.clone()).is_err());
-        assert!(parse(&args("context a --offline"), cwd.clone()).is_err());
-        assert!(parse(&args("brief x --all"), cwd.clone()).is_err());
-        assert!(parse(&args("brief --budget-tokens 0"), cwd.clone()).is_err());
-        assert!(parse(&args("stale --at abc"), cwd.clone()).is_err());
-        assert!(parse(&args("impact x --direction sideways"), cwd.clone()).is_err());
-        assert!(parse(&args("impact x --include everything"), cwd.clone()).is_err());
-        assert!(parse(&args("status x --kind ticket"), cwd.clone()).is_err());
-        let listed = parse(
-            &args("find --kind decision,ticket --project harbor"),
-            cwd.clone(),
-        )?;
-        assert!(listed.is_some_and(|r| matches!(
+        assert!(req("context a b").is_err());
+        assert!(req("context a --offline").is_err());
+        assert!(req("brief x --all").is_err());
+        assert!(req("brief --budget-tokens 0").is_err());
+        assert!(req("stale --at abc").is_err());
+        assert!(req("impact x --direction sideways").is_err());
+        assert!(req("impact x --include everything").is_err());
+        assert!(req("status x --kind ticket").is_err());
+        let listed = req("find --kind decision,ticket --project harbor");
+        assert!(listed.is_ok_and(|r| matches!(
             r.verb,
             Verb::Find { signatures: false, ref text, ref filter }
                 if text.is_empty() && filter.kinds == ["decision", "ticket"]
         )));
-        assert!(parse(&args("find"), cwd.clone()).is_err());
-        assert!(parse(&args("find --project harbor"), cwd.clone()).is_err());
-        assert!(parse(&args("match --kind signature"), cwd.clone()).is_err());
-        assert!(parse(&args("find --kind signature --signatures"), cwd.clone()).is_err());
-        let found = parse(&args("match fsync took --kind signature"), cwd.clone())?;
-        assert!(found.is_some_and(|r| matches!(
+        assert!(req("find").is_err());
+        assert!(req("find --project harbor").is_err());
+        assert!(req("match --kind signature").is_err());
+        assert!(req("find --kind signature --signatures").is_err());
+        let found = req("match fsync took --kind signature");
+        assert!(found.is_ok_and(|r| matches!(
             r.verb,
             Verb::Find { signatures: true, ref text, .. } if text == "fsync took"
         )));
-        let impact = parse(
-            &args("impact harbor-api --depth 3 --direction in --include inferred"),
-            cwd.clone(),
-        )?;
-        assert!(impact.is_some_and(|r| matches!(
+        let impact = req("impact harbor-api --depth 3 --direction in --include inferred");
+        assert!(impact.is_ok_and(|r| matches!(
             r.verb,
             Verb::Impact {
                 depth: 3,
@@ -241,11 +201,8 @@ mod tests {
                 ..
             }
         )));
-        assert!(
-            parse(&args("index verify"), cwd.clone())
-                .is_ok_and(|r| r.is_some_and(|r| matches!(r.verb, Verb::IndexVerify)))
-        );
-        assert!(parse(&args("help"), cwd).is_ok_and(|r| r.is_none()));
+        assert!(req("index verify").is_ok_and(|r| matches!(r.verb, Verb::IndexVerify)));
+        assert_eq!(req("brief --help").err().as_deref(), Some("help"));
         Ok(())
     }
 }

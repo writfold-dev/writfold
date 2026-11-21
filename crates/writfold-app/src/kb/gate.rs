@@ -119,15 +119,13 @@ fn batch(
 
 #[cfg(test)]
 mod tests {
-    use super::super::args::parse;
-    use std::path::PathBuf;
     use writfold_kb::Verb;
     use writfold_kb::gate::GateVerb;
     use writfold_kb::gate::checklist::Rows;
 
     fn verb(args: &str) -> Result<Verb, String> {
         let args: Vec<String> = args.split(' ').map(str::to_owned).collect();
-        Ok(parse(&args, PathBuf::from("/"))?.ok_or("a request")?.verb)
+        super::super::args::verb_of(&args)
     }
 
     #[test]

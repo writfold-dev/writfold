@@ -2,7 +2,7 @@
 rfc: "2026-11-21-reader-verdict-parity"
 title: "Show the usable checked-citation verdict on a cold read"
 status: accepted
-implementation: done
+implementation: complete
 authors:
   - astra
 created: 2026-11-21

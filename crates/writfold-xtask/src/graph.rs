@@ -121,7 +121,10 @@ fn walk<'a>(
             &format!("{name} compiles native code and is admitted only for writfold-kb"),
         );
     }
-    if terminal_closure(name) && !matches!(owner, "writfold-tui" | "writfold") {
+    if terminal_closure(name)
+        && !matches!(owner, "writfold-tui" | "writfold")
+        && !(owner == "writfold-app" && cli_closure(name))
+    {
         issue(
             diagnostics,
             "terminal-dependency",
@@ -236,6 +239,19 @@ fn terminal_closure(name: &str) -> bool {
                 | "unicode-segmentation"
                 | "unicode-truncate"
                 | "unicode-width"
+        )
+}
+
+/// clap and the crates it builds with (#55): the argument parser of
+/// `writfold` and `writfold kb`, pure Rust with no IO of its own. `heck`
+/// (derive names) and `strsim` (did-you-mean) are also in the terminal
+/// stack; through clap they are admitted for `writfold-app` too.
+fn cli_closure(name: &str) -> bool {
+    name.starts_with("clap")
+        || name.starts_with("anstyle")
+        || matches!(
+            name,
+            "anstream" | "colorchoice" | "utf8parse" | "is_terminal_polyfill" | "heck" | "strsim"
         )
 }
 

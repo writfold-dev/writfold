@@ -6,43 +6,75 @@ use std::{
     process::ExitCode,
 };
 
-const USAGE: &str = "Usage: writfold kb <verb> (see: writfold kb help)\n       writfold watch [--kb DIR] [--repo DIR] [--run ID] [--view NAME] [--theme NAME] [--color auto|truecolor|ansi|none] [--once]\n       writfold --version\n       writfold --help\n\nkb: Git-native project continuity (brief, why, find, impact, resume, checkpoint, record …)\n    and the Claude Code plugin hooks (writfold kb hook <event>).\nwatch: a read-only terminal view of KB runs, gates and receipts (plain text when piped).";
+/// `writfold`: `kb` and `watch` take the rest of the line as their own
+/// arguments (each parses it itself); clap handles `--help`, `--version`
+/// and a mistyped command (#55).
+#[derive(clap::Parser)]
+#[command(
+    name = "writfold",
+    version = writfold_app::VERSION,
+    about = "Git-native project continuity for agents",
+    disable_help_subcommand = true
+)]
+struct Cli {
+    #[command(subcommand)]
+    command: Top,
+}
+
+#[derive(clap::Subcommand)]
+enum Top {
+    /// brief, why, find, impact, resume, checkpoint, record … and the Claude
+    /// Code plugin hooks (writfold kb hook <event>); see: writfold kb help
+    #[command(disable_help_flag = true)]
+    Kb {
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true, num_args = 0..)]
+        args: Vec<String>,
+    },
+    /// a read-only terminal view of KB runs, gates and receipts (plain text
+    /// when piped): [--kb DIR] [--repo DIR] [--run ID] [--view NAME]
+    /// [--theme NAME] [--color auto|truecolor|ansi|none] [--once]
+    #[command(disable_help_flag = true)]
+    Watch {
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true, num_args = 0..)]
+        args: Vec<String>,
+    },
+}
 
 fn main() -> ExitCode {
     let Some(all) = env::args_os()
-        .skip(1)
         .map(|a| a.into_string().ok())
         .collect::<Option<Vec<String>>>()
     else {
         return failure("arguments must be valid UTF-8");
     };
-    if all.first().map(String::as_str) == Some("kb") {
-        return kb(&all[1..]);
-    }
-    if all.first().map(String::as_str) == Some("watch") {
-        return watch(&all[1..]);
-    }
-    let mut arguments = env::args_os().skip(1);
-    let command = arguments.next();
-    if arguments.next().is_some() {
-        return failure("expected exactly one command; use --help");
-    }
-    match command.as_ref().and_then(|value| value.to_str()) {
-        Some("--version") => {
-            if writeln!(io::stdout().lock(), "writfold {}", writfold_app::VERSION).is_ok() {
-                ExitCode::SUCCESS
-            } else {
-                ExitCode::FAILURE
+    match <Cli as clap::Parser>::try_parse_from(&all) {
+        Ok(Cli {
+            command: Top::Kb { args },
+        }) => kb(&args),
+        Ok(Cli {
+            command: Top::Watch { args },
+        }) => watch(&args),
+        Err(error) => {
+            let (text, code) = match error.kind() {
+                clap::error::ErrorKind::DisplayHelp | clap::error::ErrorKind::DisplayVersion => {
+                    (error.render(), 0)
+                }
+                _ => (error.render(), 1),
+            };
+            let colour = env::var_os("NO_COLOR").is_none() && io::stderr().is_terminal();
+            let text = match colour {
+                true => text.ansi().to_string(),
+                false => text.to_string(),
+            };
+            let written = match code {
+                0 => write!(io::stdout().lock(), "{text}"),
+                _ => write!(io::stderr().lock(), "{text}"),
+            };
+            match (written, code) {
+                (Ok(()), 0) => ExitCode::SUCCESS,
+                _ => ExitCode::FAILURE,
             }
         }
-        Some("--help" | "-h") => {
-            if writeln!(io::stdout().lock(), "{USAGE}").is_ok() {
-                ExitCode::SUCCESS
-            } else {
-                ExitCode::FAILURE
-            }
-        }
-        _ => failure("unknown or missing command; use --help"),
     }
 }
 

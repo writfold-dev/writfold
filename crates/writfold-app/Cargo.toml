@@ -14,6 +14,7 @@ tier = "edge"
 
 [dependencies]
 writfold-kb = { path = "../writfold-kb" }
+clap.workspace = true
 
 [lints]
 workspace = true

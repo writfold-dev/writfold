@@ -93,6 +93,10 @@ fn known(name: &str) -> bool {
             | "source"
             | "backtrace"
             | "serde"
+            // clap's derive helpers (`writfold` and `writfold kb` argument
+            // parsing, #55): they configure the derived parser only.
+            | "command"
+            | "arg"
             | "verifier"
             | "rustfmt"
     )
@@ -144,6 +148,9 @@ fn derives(audit: &mut Audit<'_>, list: &MetaList) {
                             | "Error"
                             | "Serialize"
                             | "Deserialize"
+                            // clap (#55): the argument parser of `writfold`.
+                            | "Parser"
+                            | "Subcommand"
                     )
                 ) {
                     audit.emit(
