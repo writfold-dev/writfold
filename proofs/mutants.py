@@ -610,8 +610,8 @@ MUTANTS = (
            ("Writfold.Core.Guard.run_current_met_iff",)),
     # guard: step.met is never met when the plan could not be read
     Mutant("step-fact-met-unread", "guard/require.rs",
-           "        Looked::Failed => Fact::Unknown,",
-           "        Looked::Failed => Fact::Met,",
+           "owed: usize) -> Fact {\n    match read {\n        Looked::No => Fact::Unmet,\n        Looked::Failed => Fact::Unknown,",
+           "owed: usize) -> Fact {\n    match read {\n        Looked::No => Fact::Unmet,\n        Looked::Failed => Fact::Met,",
            ("Writfold.Core.Guard.step_fact_met_iff", "Writfold.Core.Guard.step_fact_unknown_iff")),
     # guard: an undefined gate is never met
     Mutant("gate-fact-undefined-met", "guard/require.rs",
