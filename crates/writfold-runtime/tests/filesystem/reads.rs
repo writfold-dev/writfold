@@ -4,7 +4,7 @@ use std::fs;
 use std::os::unix::ffi::OsStringExt;
 use std::os::unix::fs::symlink;
 use std::path::Path;
-use writfold_runtime::fs::{ContainedRoot, FsError, ManagedLocks, ReadExtent, RelativePath};
+use writfold_runtime::fs::{ContainedRoot, FsError, ReadExtent, RelativePath};
 
 #[test]
 fn relative_paths_reject_escape_without_utf8_coercion() -> TestResult {
@@ -49,7 +49,6 @@ fn ordinary_open_and_reads_never_initialize() -> TestResult {
         ContainedRoot::open(&absent),
         Err(FsError::Missing)
     ));
-    assert!(matches!(ManagedLocks::open(&absent), Err(FsError::Missing)));
     assert!(!absent.exists());
     let root = ContainedRoot::open(&fixture.path)?;
     assert!(matches!(

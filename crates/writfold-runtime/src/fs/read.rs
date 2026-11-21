@@ -83,10 +83,6 @@ impl OpenedFile<'_> {
         self.stamp.size
     }
 
-    pub(crate) fn identity(&self) -> FileIdentity {
-        self.stamp.identity
-    }
-
     /// Fill only a caller-owned prefix buffer without allocating the whole file.
     pub(crate) fn read_prefix(&self, bytes: &mut [u8]) -> Result<usize, FsError> {
         self.ensure_unchanged()?;

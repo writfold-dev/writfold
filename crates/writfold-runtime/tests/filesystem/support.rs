@@ -5,7 +5,7 @@ use std::os::unix::fs::DirBuilderExt;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use writfold_domain::ByteCount;
-use writfold_runtime::fs::{ContainedRoot, ManagedLocks, PinnedFile, RelativePath};
+use writfold_runtime::fs::{ContainedRoot, PinnedFile, RelativePath};
 
 pub type TestResult = Result<(), Box<dyn Error>>;
 static NEXT_FIXTURE: AtomicU64 = AtomicU64::new(0);
@@ -42,9 +42,6 @@ impl Fixture {
         Ok(ContainedRoot::open(&self.path)?.pin(&RelativePath::new(path)?)?)
     }
 
-    pub fn locks(&self) -> Result<ManagedLocks, Box<dyn Error>> {
-        Ok(ManagedLocks::create(self.path.join("managed-locks"))?)
-    }
 }
 
 impl Drop for Fixture {
@@ -57,14 +54,3 @@ pub fn limit(bytes: u64) -> Result<ByteCount, Box<dyn Error>> {
     Ok(ByteCount::new(bytes)?)
 }
 
-pub fn temporary_names(path: &Path) -> io::Result<Vec<std::ffi::OsString>> {
-    let mut names = Vec::new();
-    for entry in fs::read_dir(path)? {
-        let name = entry?.file_name();
-        if name.to_string_lossy().starts_with(".writfold-tmp-") {
-            names.push(name);
-        }
-    }
-    names.sort();
-    Ok(names)
-}

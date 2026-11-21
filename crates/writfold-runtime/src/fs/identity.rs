@@ -58,10 +58,6 @@ impl FileStamp {
     }
 }
 
-pub(super) fn digest(content: &[u8]) -> Result<ContentDigest, FsError> {
-    finish_digest(Sha256::new_with_prefix(content))
-}
-
 pub(super) fn finish_digest(hasher: Sha256) -> Result<ContentDigest, FsError> {
     const HEX: &[u8; 16] = b"0123456789abcdef";
     let mut encoded = String::with_capacity(64);
