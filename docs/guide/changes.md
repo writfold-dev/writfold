@@ -6,7 +6,7 @@ This page is for someone pinned to one release who wants to upgrade on purpose. 
 
 A line marked **fix** changed an answer that was wrong; anything depending on the old answer was depending on the fault.
 
-## v0.6.0-dev.12 (unreleased)
+## v0.6.0-dev.12
 
 - A Markdown record's front matter may list `aliases`. Without the key nothing changes. With it, `find` answers those names (often ahead of the text tiers), and a reference token equal to an alias of only that record now links to it. `kb lint --records` may report the warning `alias.collides` for such an alias, counted in `warnings=` (exit 2 under `--deny-warnings`). An earlier binary ignores the key ([#41](https://github.com/writfold-dev/writfold/issues/41)).
 
