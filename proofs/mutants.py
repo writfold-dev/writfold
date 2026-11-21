@@ -827,8 +827,8 @@ MUTANTS = (
            ("Writfold.Core.Store.code_recorded_iff",)),
     # store: a verdict this machine reached beats any receipt (#4)
     Mutant("receipt-beats-local", "store.rs",
-           "        Verdict::Unverifiable => recorded,\n        _ => false,",
-           "        Verdict::Unverifiable => recorded,\n        _ => recorded,",
+           "        | Verdict::Due => false,",
+           "        | Verdict::Due => recorded,",
            ("Writfold.Core.Store.code_local_wins", "Writfold.Core.Store.use_recorded_iff")),
     # store: an unverifiable pinned verdict is never recorded (#4)
     Mutant("pin-records-unverifiable", "store.rs",
