@@ -6,8 +6,11 @@
 # `cargo tauten check` (for example `--format json` or `--warnings`).
 #
 # Needs cargo-tauten built from tauten main at or after 3b7512e (0.0.1 on
-# crates.io predates fixes this baseline relies on). Set CARGO_TAUTEN to
-# its path if it is not on PATH.
+# crates.io predates fixes this baseline relies on). Refreshing
+# proofs/claims.json is a different job (`cargo tauten proofs`, a build with
+# the proofs subcommand); see "Which tauten does what" in
+# docs/writfold/tauten-adoption.md. Set CARGO_TAUTEN to its path if it is
+# not on PATH.
 set -euo pipefail
 root=$(cd "$(dirname "$0")/.." && pwd)
 tauten=${CARGO_TAUTEN:-cargo-tauten}

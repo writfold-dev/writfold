@@ -1,18 +1,48 @@
 # tauten adoption (pilot, stage 2)
 
-Status: **pilot on branch `tauten-adoption`, not merged, not a gate.**
+Status: **merged into main on 20 November 2026; a pilot, not a gate.**
+The lint pilot (`scripts/tauten-check`, `tauten-baseline.json`) and the
+proof claims inventory (`proofs/claims.toml`, `proofs/claims.json`) are both
+on main. Neither is part of `scripts/gate` and neither produces a release
+receipt; the quality and unit gates are the only required receipts.
 tauten is a strictness profile for agent-written Rust: each crate declares a
 tier, and `cargo tauten check` applies that tier's rules (clippy lints plus
 tauten's own structural checks). This page records the tiers, what the first
 run found, what was fixed, what was accepted into the baseline and why, and
 the path to tightening it.
 
-- Tool: `cargo-tauten` built from tauten main at `3b7512e` (0.0.1 on
-  crates.io predates fixes the baseline relies on).
+- Tools (two revisions, for two jobs; see [Which tauten does what](#which-tauten-does-what)):
+  the lint pilot needs `cargo-tauten` from tauten main at or after `3b7512e`;
+  refreshing `proofs/claims.json` needs a build with the `proofs`
+  subcommand (tauten main `a08964f` or later; 0.0.1 on crates.io has
+  neither the baseline fixes nor `proofs`).
 - Run: `scripts/tauten-check` (set `CARGO_TAUTEN` if `cargo-tauten` is not on
   `PATH`). It is not part of `scripts/gate` and produces no receipt.
 - Agent profile: [`AGENTS.tauten.md`](../../AGENTS.tauten.md), written by
   `cargo tauten init`. Where it disagrees with `AGENTS.md`, `AGENTS.md` wins.
+
+## Which tauten does what
+
+Recorded 21 November 2026 ([#47](https://github.com/writfold-dev/writfold/issues/47)).
+
+| Job | Files | Revision | Mandatory? |
+|---|---|---|---|
+| Lint pilot: `scripts/tauten-check` | `tauten-baseline.json` | tauten main at or after `3b7512e` (any later main build also works while the baseline holds; 0.0.4 and later add TAU-H001, see below) | No. Non-gating: a new error-level finding fails the script, not a gate. Do not grow the baseline to pass a task. |
+| Proof claims: `cargo tauten proofs` | `proofs/claims.json` (from `proofs/claims.toml`) | a build with `proofs`: `a08964f` (stage 2b), `ca17666` (stage 2c); later runs (dev.11, dev.12, the #54 cleanup) used local tauten main builds whose revision was not recorded | Freshness is mandatory for the lint pilot to subsume kernel findings: any edit under `crates/writfold-core/` or `proofs/` stales every claim until the command reruns. The proofs gate itself (`proofs/gate.sh`, `docs/writfold/aeneas.md`) is what AGENTS.md requires; claims.json is its recorded result. |
+
+How to obtain each: clone `tauten-dev/tauten`, check out the revision, and
+`cargo build --release -p cargo-tauten`; point `CARGO_TAUTEN` at
+`target/release/cargo-tauten`. From now on a commit that refreshes
+`proofs/claims.json` names the tauten revision (`git -C <tauten> rev-parse
+--short HEAD`) in its message.
+
+**Moving the pin to 0.0.5** (ship-level proofs, `proofs try`) is a separate
+issue, [#62](https://github.com/writfold-dev/writfold/issues/62), blocked on
+tauten-dev/tauten#59 (TAU-X001 on the reasoned `#![allow(dead_code)]` of test
+modules shared by several targets) and on the owner's decision about
+`overflow-checks = true` in the release profile, which TAU-H001 requires. That
+decision changes the shipped binary (an overflow outside the proved kernel
+would abort instead of wrapping); correcting this page does not make it.
 
 ## Tiers
 
