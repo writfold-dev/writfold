@@ -12,6 +12,7 @@ pub mod fields;
 pub mod jsonl;
 pub mod lex;
 pub mod lint;
+pub mod lint_aliases;
 pub mod lint_cycles;
 pub mod lint_looks;
 pub mod lint_out;

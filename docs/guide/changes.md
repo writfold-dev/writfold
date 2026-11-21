@@ -8,6 +8,8 @@ A line marked **fix** changed an answer that was wrong; anything depending on th
 
 ## v0.6.0-dev.12 (unreleased)
 
+- A Markdown record's front matter may list `aliases`. Without the key nothing changes. With it, `find` answers those names (often ahead of the text tiers), and a reference token equal to an alias of only that record now links to it. `kb lint --records` may report the warning `alias.collides` for such an alias, counted in `warnings=` (exit 2 under `--deny-warnings`). An earlier binary ignores the key ([#41](https://github.com/writfold-dev/writfold/issues/41)).
+
 - A store declaration may set `recorded_max_age`. Without it nothing changes. With it, `stale --record` also writes `.writfold/checks/store@<name>/` receipts, and on a machine without the store's clone its pinned citations read the recorded verdict (marked `recorded`) instead of `unverifiable: store-not-local`, so a gate needing that evidence can be met there. Writing the key changes `kb policy`'s `identity`. **An earlier binary refuses a declaration that writes it** (`key.unknown`) ([#4](https://github.com/writfold-dev/writfold/issues/4)).
 
 - `gate attest`, `gate waive`, `deliver attest` and `deliver waive` write a `seq` field (one more than the highest among that obligation's statements there), and statements are ordered by (`seq`, file name), not by their recorded time. When two attestations or waivers are about the present, the one written later now stands even if the machine's clock had moved backwards between them. Statements written before carry no `seq`, read as 0 and keep their file-name order. **An earlier binary ignores `seq`** and orders by recorded time ([#15](https://github.com/writfold-dev/writfold/issues/15)).

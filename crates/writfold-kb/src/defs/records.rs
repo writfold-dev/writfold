@@ -210,6 +210,7 @@ pub fn files(kb: &Path) -> Vec<File> {
             report,
         });
     }
+    super::lint_aliases::check(&mut out);
     out
 }
 

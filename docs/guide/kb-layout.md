@@ -96,6 +96,8 @@ Why do replicas stall?
 
 A decision is `proposal.md` with front matter (`id`, `kind`, `title`, `status`, `project`, `references`, `decided_by`, `superseded_by` and more) and `##` sections such as Research, Alternatives and Decision log.
 
+**What people call a record** (built in v0.6.0-dev.12, [#41](https://github.com/writfold-dev/writfold/issues/41)). Any Markdown record may list `aliases: [bounce the dock, BTD]` in its front matter. `find` answers an alias in its `exact` tier and through the name tiers, a reference token that is an alias of exactly one record links to it, and `kb lint --records` warns (`alias.collides`) when every word of an alias already appears in another record's ID, title or alias, which is how an alias ends up taking a phrase meant for that record. Assets have carried `aliases` in their JSON since before; the warning is only for the Markdown key.
+
 ## A run
 
 ```text
@@ -185,7 +187,7 @@ Every answer ends with one line:
 | Tier | Over | Notes |
 |---|---|---|
 | `signature` | signature `match` patterns | with `match`, or `find --signatures` |
-| `exact` | record ID, ticket form (`HBR 101`, `hbr101`), typed prefix, alias, asset locator | assets carry `aliases`; signatures, investigations and projects answer to their bare names |
+| `exact` | record ID, ticket form (`HBR 101`, `hbr101`), typed prefix, alias, asset locator | assets carry `aliases`, and since v0.6.0-dev.12 any Markdown record may (`aliases:` in its front matter); signatures, investigations and projects answer to their bare names |
 | `normalized` | the phrase once case and punctuation are set aside (`harbor api`, `harbor_api` and `HAPI` against `harbor-api` and its alias `hapi`), equal to a record's ID, its ID after the typed prefix, its last `/` segment, its title or an alias | three characters or more; built in v0.6.0-dev.1 |
 | `prefix` | each word of the phrase begins a word of one of those names, in order, gaps allowed (`quay work` finds `quay-worker`, `work quay` does not) | two words, or one of four characters or more; fewest words left over first; built in v0.6.0-dev.1 |
 | `heading` | a Markdown section's name, equal or by prefix; the row is the file's record (or `doc:<path>`) and its `match:` line cites the section's first line | built in v0.6.0-dev.1 |

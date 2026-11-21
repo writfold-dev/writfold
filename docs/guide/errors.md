@@ -323,4 +323,5 @@ A code is `<class>.<what>`. Codes are never renamed or reused; the same code mea
 | `section.form` | a line in a required section lacks its form |
 | `policy.waivable` | a warning: a checklist restricts `not_applicable` while its gate still accepts a waiver |
 | `policy.never-ages` | a warning: `no-data` or `not-found` looks of a source kind with no declaration in `.writfold/sources/`, which never age (built in v0.6.0-dev.11) |
+| `alias.collides` | a warning from `kb lint --records`: every word of an alias in a Markdown record's front matter is in another record's ID, title or alias, so phrases using it may find that record (built in v0.6.0-dev.12) |
 

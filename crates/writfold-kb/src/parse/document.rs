@@ -88,6 +88,18 @@ fn identity(
     })
 }
 
+/// The `aliases` front-matter list: each one-line, non-empty name once.
+pub fn authored_aliases(value: Option<String>) -> Vec<(String, &'static str)> {
+    let mut out: Vec<(String, &'static str)> = Vec::new();
+    for alias in value.map(|v| list(&v)).unwrap_or_default() {
+        let alias = alias.trim().to_owned();
+        if !alias.is_empty() && !out.iter().any(|(a, _)| *a == alias) {
+            out.push((alias, "alias"));
+        }
+    }
+    out
+}
+
 pub fn parse(path: &str, kind: Kind, text: &str) -> Result<Facts, String> {
     let entries: Vec<(String, String)> = match parse_frontmatter(text) {
         Ok(block) => block
@@ -108,8 +120,14 @@ pub fn parse(path: &str, kind: Kind, text: &str) -> Result<Facts, String> {
     if !kind.needs_identity() {
         return Ok(facts);
     }
+    // `aliases`, on every Markdown record (#41): what people call it, which
+    // the `exact`, `normalized` and `prefix` tiers then answer.
+    let authored = authored_aliases(get("aliases"));
     let (id, aliases) = identity(path, kind, &get)?;
     facts.aliases = aliases.into_iter().map(|alias| (alias, "id")).collect();
+    facts
+        .aliases
+        .extend(authored.into_iter().filter(|(a, _)| *a != id));
     for (field, rel, target) in links(kind) {
         let line = field_line(text, field);
         for item in get(field).map(|v| list(&v)).unwrap_or_default() {
