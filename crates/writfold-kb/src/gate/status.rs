@@ -174,8 +174,7 @@ pub fn judge_plain<'a>(
     // owes them only through a delivery mode (`deliver status`).
     definitions.retain(|d| !d.on_candidate());
     let later: Vec<Definition>;
-    (later, definitions) =
-        (definitions.into_iter()).partition(Definition::is_checklist);
+    (later, definitions) = (definitions.into_iter()).partition(Definition::is_checklist);
     let patterns: Vec<Vec<&str>> = (definitions.iter().chain(&later))
         .map(Definition::patterns)
         .collect();

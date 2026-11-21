@@ -13,9 +13,9 @@ use crate::gate::status::{Filings, Judged, Report};
 use crate::gate::subject::Subject;
 use crate::session::Session;
 use std::collections::BTreeMap;
-use writfold_core::assess::Grounding;
 use writfold_core::checklist::{self, Item, Outcome, Rollup, item, rollup_under};
 use writfold_core::gate::about;
+use writfold_core::grounding::Grounding;
 
 /// One declared item, as it stands now.
 pub struct Entry<'a> {

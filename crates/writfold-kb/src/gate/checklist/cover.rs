@@ -12,8 +12,8 @@
 use super::super::receipt::canonical;
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
-use writfold_core::assess::Grounding;
 use writfold_core::checklist::Outcome;
+use writfold_core::grounding::Grounding;
 
 pub const SCHEMA: &str = "writfold-cover/1";
 /// The directory of a run that holds cover rows.

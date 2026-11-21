@@ -845,36 +845,6 @@ MUTANTS = (
            "        if items[i].stands {",
            "        if true {",
            ("Writfold.Core.Order.newest_loop_spec",)),
-    # assessed gate: one ungrounded premise makes the basis hypothetical
-    Mutant("basis-ignores-premises", "assess.rs",
-           "        if matches!(premises[index], Grounding::Ungrounded) {",
-           "        if false {",
-           ("Writfold.Core.Assess.basis_loop_spec",)),
-    # assessed gate: a hypothetical entailment never meets the gate
-    Mutant("met-accepts-hypothetical", "assess.rs",
-           "    matches!(verdict, Verdict::Entailed) && matches!(basis, Basis::Grounded)",
-           "    matches!(verdict, Verdict::Entailed) || matches!(basis, Basis::Grounded)",
-           ("Writfold.Core.Assess.met_spec",)),
-    # assessed gate: a check Weft could not finish is unknown, never a pass
-    Mutant("outcome-passes-unfinished", "assess.rs",
-           "        if unfinished(required[index]) {",
-           "        if false {",
-           ("Writfold.Core.Assess.outcome_loop_spec",)),
-    # assessed gate: nothing required is unknown, never a pass
-    Mutant("assessed-empty-passes", "assess.rs",
-           "    if !complete || required.is_empty() {",
-           "    if !complete {",
-           ("Writfold.Core.Assess.outcome_spec",)),
-    # assessed gate: an incomplete run is unknown, never a pass
-    Mutant("assessed-incomplete-passes", "assess.rs",
-           "    if !complete || required.is_empty() {",
-           "    if required.is_empty() {",
-           ("Writfold.Core.Assess.outcome_spec",)),
-    # assessed gate: an attested citation makes the assumption attested
-    Mutant("assumption-ignores-attested", "assess.rs",
-           "        true => Grounding::Attested,",
-           "        true => Grounding::Grounded,",
-           ("Writfold.Core.Assess.assumption_loop_spec",)),
     # subject: another checkout of the KB's repository is never judged
     Mutant("pick-recorded-checkout", "subject.rs",
            "    if recorded && !recorded_is_kb {",

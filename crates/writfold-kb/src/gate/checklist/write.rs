@@ -22,8 +22,8 @@ use crate::session::Session;
 use crate::workspace::{GitTool, Workspace};
 use crate::write::{Op, atomic, unique};
 use crate::{runs, time};
-use writfold_core::assess::Grounding;
 use writfold_core::checklist::Outcome;
+use writfold_core::grounding::Grounding;
 
 /// One cover row to record.
 #[derive(Clone, Debug)]

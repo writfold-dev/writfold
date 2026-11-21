@@ -175,7 +175,7 @@ pub fn require(observed: &[Filed], d: &Definition, item: &str, cited: &[Cited]) 
 #[cfg(test)]
 mod tests {
     use super::{Cited, gate_of};
-    use writfold_core::assess::Grounding;
+    use writfold_core::grounding::Grounding;
 
     fn cited(reference: &str, path: Option<&str>) -> Cited {
         Cited {

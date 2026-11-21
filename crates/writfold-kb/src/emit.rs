@@ -3,11 +3,11 @@
 //! `ceil((bytes + 1) / 4)` estimated tokens per line, rows stop at a group
 //! boundary, and the resume cursor ([`crate::cursor`], v2) is bound to the
 //! query digest, the KB pin digest and the digest of all rows.
+use crate::cursor::{Binding, Cursor};
 use crate::error::Result;
 use crate::index::{IndexState, Pin, hex};
 use serde_json::{Map, Value, json};
 use sha2::{Digest, Sha256};
-use crate::cursor::{Binding, Cursor};
 
 /// A continuation line (`why:`, `cite:`, `via:` …) of the row above it.
 #[derive(Clone, Debug, Default)]

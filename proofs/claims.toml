@@ -10,69 +10,6 @@ crates = ["crates/writfold-core"]
 
 [[claim]]
 crate = "writfold-core"
-file = "crates/writfold-core/src/assess.rs"
-function = "assumption"
-lean = "writfold_core.assess.assumption"
-theorems = [
-  "Writfold.Core.Assess.assumption_loop_spec",
-  "Writfold.Core.Assess.assumption_spec",
-]
-total = "Writfold.Core.Assess.assumption_spec"
-subsumes = ["TAU-N001", "TAU-P003"]
-mutants = [
-  "assumption-ignores-attested",
-]
-
-[[claim]]
-crate = "writfold-core"
-file = "crates/writfold-core/src/assess.rs"
-function = "basis"
-lean = "writfold_core.assess.basis"
-theorems = [
-  "Writfold.Core.Assess.basis_loop_spec",
-  "Writfold.Core.Assess.basis_spec",
-]
-total = "Writfold.Core.Assess.basis_spec"
-subsumes = ["TAU-N001", "TAU-P003"]
-mutants = [
-  "basis-ignores-premises",
-]
-
-[[claim]]
-crate = "writfold-core"
-file = "crates/writfold-core/src/assess.rs"
-function = "met"
-lean = "writfold_core.assess.met"
-theorems = [
-  "Writfold.Core.Assess.met_spec",
-]
-total = "Writfold.Core.Assess.met_spec"
-subsumes = ["TAU-N001", "TAU-P003"]
-mutants = [
-  "met-accepts-hypothetical",
-]
-
-[[claim]]
-crate = "writfold-core"
-file = "crates/writfold-core/src/assess.rs"
-function = "outcome"
-lean = "writfold_core.assess.outcome"
-theorems = [
-  "Writfold.Core.Assess.hypothetical_never_passes",
-  "Writfold.Core.Assess.outcome_loop_spec",
-  "Writfold.Core.Assess.outcome_pass_iff",
-  "Writfold.Core.Assess.outcome_spec",
-]
-total = "Writfold.Core.Assess.outcome_spec"
-subsumes = ["TAU-N001", "TAU-P003"]
-mutants = [
-  "outcome-passes-unfinished",
-  "assessed-empty-passes",
-  "assessed-incomplete-passes",
-]
-
-[[claim]]
-crate = "writfold-core"
 file = "crates/writfold-core/src/bind.rs"
 function = "answered_from"
 lean = "writfold_core.bind.answered_from"

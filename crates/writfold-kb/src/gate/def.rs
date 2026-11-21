@@ -23,13 +23,7 @@ pub const RUN_RECORD: &str = "run-record";
 /// The class of a gate met by covering its items ([`super::checklist`]).
 pub const CHECKLIST: &str = "checklist";
 /// Every class, in the order the guide lists them.
-pub const CLASSES: [&str; 5] = [
-    "mechanical",
-    "observed",
-    ATTESTED,
-    RUN_RECORD,
-    CHECKLIST,
-];
+pub const CLASSES: [&str; 5] = ["mechanical", "observed", ATTESTED, RUN_RECORD, CHECKLIST];
 
 /// Which root a definition was read from.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

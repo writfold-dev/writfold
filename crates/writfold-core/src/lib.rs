@@ -42,7 +42,6 @@
 
 extern crate alloc;
 
-pub mod assess;
 pub mod bind;
 pub mod bytes;
 pub mod checklist;
@@ -53,6 +52,7 @@ pub mod diag;
 pub mod find;
 pub mod gate;
 pub mod ground;
+pub mod grounding;
 pub mod guard;
 pub mod idle;
 pub mod investigation;

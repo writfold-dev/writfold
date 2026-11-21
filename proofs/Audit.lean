@@ -352,15 +352,6 @@ def claims : List Name := [
   ``Writfold.Core.Order.newest_is_max,
   ``Writfold.Core.Order.newest_total,
   -- the Weft assessed gate's basis (writfold_core::assess)
-  ``Writfold.Core.Assess.assumption_loop_spec,
-  ``Writfold.Core.Assess.assumption_spec,
-  ``Writfold.Core.Assess.basis_loop_spec,
-  ``Writfold.Core.Assess.basis_spec,
-  ``Writfold.Core.Assess.met_spec,
-  ``Writfold.Core.Assess.outcome_loop_spec,
-  ``Writfold.Core.Assess.outcome_spec,
-  ``Writfold.Core.Assess.outcome_pass_iff,
-  ``Writfold.Core.Assess.hypothetical_never_passes,
   -- ---- delivery modes, second round (writfold_core::delivery, 17 November 2026) ----
   ``Writfold.Core.Delivery.first_unmet_loop_spec,
   ``Writfold.Core.Delivery.first_unmet_spec,

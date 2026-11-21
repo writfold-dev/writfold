@@ -1,6 +1,6 @@
 //! The order receipts are judged in, oldest first, with no clock in it:
 //! by `seq` (one more than the highest of the receipts it follows), then
-//! by file name. Gate receipts, cover rows, assessed receipts and delivery
+//! by file name. Gate receipts, cover rows, statements and delivery
 //! check receipts are all sorted with [`cmp`]; a receipt written before it
 //! carried `seq` reads as 0.
 //!

@@ -31,7 +31,7 @@ namespace Writfold.Core.Ground
 /-! ## A gate -/
 
 /-- `of_gate` on the model. -/
-def ofGate (found : Bool) (s : gate.Standing) : assess.Grounding :=
+def ofGate (found : Bool) (s : gate.Standing) : grounding.Grounding :=
   if found then
     match s with
     | .Checked .Satisfied => .Grounded
@@ -182,7 +182,7 @@ theorem of_statement_spec (c : Bool) :
 
 /-- A recorded reference moved exactly when it no longer grounds or its
 standing word changed. -/
-theorem moved_iff (g : assess.Grounding) (same : Bool) :
+theorem moved_iff (g : grounding.Grounding) (same : Bool) :
     ground.moved g same ⦃ b => b = true ↔ g = .Ungrounded ∨ same = false ⦄ := by
   unfold ground.moved
   cases g <;> cases same <;> simp

@@ -27,11 +27,11 @@ use crate::parse::cite::{locator, tokens};
 use crate::session::Session;
 use crate::stale::{self, Checked, Cite, Verdict};
 use crate::workspace::{CANCELLED, budgets};
-use writfold_core::assess::Grounding;
 use writfold_core::gate::{Outcome, Standing};
 use writfold_core::ground::{
     ReceiptFacts, of_citations, of_gate, of_observation, of_receipt, of_statement, of_token,
 };
+use writfold_core::grounding::Grounding;
 use writfold_core::observe::Status;
 use writfold_runtime::git::edit_hash_bytes;
 

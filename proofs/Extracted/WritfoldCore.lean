@@ -20,239 +20,6 @@ set_option maxRecDepth 2048
 
 namespace writfold_core
 
-/-- [writfold_core::assess::Grounding]
-    Source: 'crates/writfold-core/src/assess.rs', lines 25:0-32:1
-    Visibility: public -/
-@[discriminant isize]
-inductive assess.Grounding where
-| Grounded : assess.Grounding
-| Attested : assess.Grounding
-| Ungrounded : assess.Grounding
-
-/-- [writfold_core::assess::Verdict]
-    Source: 'crates/writfold-core/src/assess.rs', lines 55:0-63:1
-    Visibility: public -/
-@[discriminant isize]
-inductive assess.Verdict where
-| Entailed : assess.Verdict
-| Refuted : assess.Verdict
-| Undetermined : assess.Verdict
-| Inconsistent : assess.Verdict
-| Unknown : assess.Verdict
-| NotEvaluated : assess.Verdict
-
-/-- [writfold_core::assess::Basis]
-    Source: 'crates/writfold-core/src/assess.rs', lines 92:0-97:1
-    Visibility: public -/
-@[discriminant isize]
-inductive assess.Basis where
-| Grounded : assess.Basis
-| Hypothetical : assess.Basis
-
-/-- [writfold_core::assess::assumption]: loop body 0:
-    Source: 'crates/writfold-core/src/assess.rs', lines 125:4-137:1
-    Visibility: public -/
-@[rust_loop_body]
-def assess.assumption_loop.body
-  (citations : Slice assess.Grounding) (attested : Bool) (index : Std.Usize) :
-  Result (ControlFlow (Bool × Std.Usize) assess.Grounding)
-  := do
-  let i := Slice.len citations
-  if index < i
-  then
-    let g ← Slice.index_usize citations index
-    match g with
-    | assess.Grounding.Grounded =>
-      let index1 ← index + 1#usize
-      ok (cont (attested, index1))
-    | assess.Grounding.Attested =>
-      let index1 ← index + 1#usize
-      ok (cont (true, index1))
-    | assess.Grounding.Ungrounded => ok (done assess.Grounding.Ungrounded)
-  else
-    if attested
-    then ok (done assess.Grounding.Attested)
-    else ok (done assess.Grounding.Grounded)
-
-/-- [writfold_core::assess::assumption]: loop 0:
-    Source: 'crates/writfold-core/src/assess.rs', lines 125:4-137:1
-    Visibility: public -/
-@[rust_loop]
-def assess.assumption_loop
-  (citations : Slice assess.Grounding) (attested : Bool) (index : Std.Usize) :
-  Result assess.Grounding
-  := do
-  loop
-    (fun (attested1, index1) => assess.assumption_loop.body citations attested1
-      index1)
-    (attested, index)
-
-/-- [writfold_core::assess::assumption]:
-    Source: 'crates/writfold-core/src/assess.rs', lines 119:0-137:1
-    Visibility: public -/
-def assess.assumption
-  (citations : Slice assess.Grounding) : Result assess.Grounding := do
-  let b ← core.slice.Slice.is_empty citations
-  if b
-  then ok assess.Grounding.Ungrounded
-  else assess.assumption_loop citations false 0#usize
-
-/-- [writfold_core::assess::basis]: loop body 0:
-    Source: 'crates/writfold-core/src/assess.rs', lines 144:4-151:1
-    Visibility: public -/
-@[rust_loop_body]
-def assess.basis_loop.body
-  (premises : Slice assess.Grounding) (index : Std.Usize) :
-  Result (ControlFlow Std.Usize assess.Basis)
-  := do
-  let i := Slice.len premises
-  if index < i
-  then
-    let g ← Slice.index_usize premises index
-    let b ←
-      match g with
-      | assess.Grounding.Grounded => ok false
-      | assess.Grounding.Attested => ok false
-      | assess.Grounding.Ungrounded => ok true
-    if b
-    then ok (done assess.Basis.Hypothetical)
-    else let index1 ← index + 1#usize
-         ok (cont index1)
-  else ok (done assess.Basis.Grounded)
-
-/-- [writfold_core::assess::basis]: loop 0:
-    Source: 'crates/writfold-core/src/assess.rs', lines 144:4-151:1
-    Visibility: public -/
-@[rust_loop]
-def assess.basis_loop
-  (premises : Slice assess.Grounding) (index : Std.Usize) :
-  Result assess.Basis
-  := do
-  loop
-    (fun index1 => assess.basis_loop.body premises index1)
-    index
-
-/-- [writfold_core::assess::basis]:
-    Source: 'crates/writfold-core/src/assess.rs', lines 142:0-151:1
-    Visibility: public -/
-@[reducible]
-def assess.basis
-  (premises : Slice assess.Grounding) : Result assess.Basis := do
-  assess.basis_loop premises 0#usize
-
-/-- [writfold_core::assess::met]:
-    Source: 'crates/writfold-core/src/assess.rs', lines 154:0-156:1
-    Visibility: public -/
-def assess.met
-  (verdict : assess.Verdict) (basis : assess.Basis) : Result Bool := do
-  let b ←
-    match verdict with
-    | assess.Verdict.Entailed => ok true
-    | assess.Verdict.Refuted => ok false
-    | assess.Verdict.Undetermined => ok false
-    | assess.Verdict.Inconsistent => ok false
-    | assess.Verdict.Unknown => ok false
-    | assess.Verdict.NotEvaluated => ok false
-  if b
-  then
-    match basis with
-    | assess.Basis.Grounded => ok true
-    | assess.Basis.Hypothetical => ok false
-  else ok false
-
-/-- [writfold_core::assess::Required]
-    Source: 'crates/writfold-core/src/assess.rs', lines 160:0-164:1
-    Visibility: public -/
-@[discriminant isize]
-inductive assess.Required where
-| Missing : assess.Required
-| Found : assess.Verdict → assess.Basis → assess.Required
-
-/-- [writfold_core::gate::Outcome]
-    Source: 'crates/writfold-core/src/gate.rs', lines 34:0-39:1
-    Visibility: public -/
-@[discriminant isize]
-inductive gate.Outcome where
-| Pass : gate.Outcome
-| Fail : gate.Outcome
-| Unknown : gate.Outcome
-
-/-- [writfold_core::assess::found_met]:
-    Source: 'crates/writfold-core/src/assess.rs', lines 206:0-211:1
-    Visibility: public -/
-def assess.found_met (required : assess.Required) : Result Bool := do
-  match required with
-  | assess.Required.Missing => ok false
-  | assess.Required.Found verdict basis => assess.met verdict basis
-
-/-- [writfold_core::assess::unfinished]:
-    Source: 'crates/writfold-core/src/assess.rs', lines 195:0-203:1
-    Visibility: public -/
-def assess.unfinished (required : assess.Required) : Result Bool := do
-  match required with
-  | assess.Required.Missing => ok false
-  | assess.Required.Found verdict _ =>
-    match verdict with
-    | assess.Verdict.Entailed => ok false
-    | assess.Verdict.Refuted => ok false
-    | assess.Verdict.Undetermined => ok false
-    | assess.Verdict.Inconsistent => ok false
-    | assess.Verdict.Unknown => ok true
-    | assess.Verdict.NotEvaluated => ok true
-
-/-- [writfold_core::assess::outcome]: loop body 0:
-    Source: 'crates/writfold-core/src/assess.rs', lines 178:4-191:1
-    Visibility: public -/
-@[rust_loop_body]
-def assess.outcome_loop.body
-  (required : Slice assess.Required) (all : Bool) (index : Std.Usize) :
-  Result (ControlFlow (Bool × Std.Usize) gate.Outcome)
-  := do
-  let i := Slice.len required
-  if index < i
-  then
-    let r ← Slice.index_usize required index
-    let b ← assess.unfinished r
-    if b
-    then ok (done gate.Outcome.Unknown)
-    else
-      let b1 ← assess.found_met r
-      let all1 ← if b1
-                   then ok all
-                   else ok false
-      let index1 ← index + 1#usize
-      ok (cont (all1, index1))
-  else if all
-       then ok (done gate.Outcome.Pass)
-       else ok (done gate.Outcome.Fail)
-
-/-- [writfold_core::assess::outcome]: loop 0:
-    Source: 'crates/writfold-core/src/assess.rs', lines 178:4-191:1
-    Visibility: public -/
-@[rust_loop]
-def assess.outcome_loop
-  (required : Slice assess.Required) (all : Bool) (index : Std.Usize) :
-  Result gate.Outcome
-  := do
-  loop
-    (fun (all1, index1) => assess.outcome_loop.body required all1 index1)
-    (all, index)
-
-/-- [writfold_core::assess::outcome]:
-    Source: 'crates/writfold-core/src/assess.rs', lines 172:0-191:1
-    Visibility: public -/
-def assess.outcome
-  (complete : Bool) (required : Slice assess.Required) :
-  Result gate.Outcome
-  := do
-  if complete
-  then
-    let b ← core.slice.Slice.is_empty required
-    if b
-    then ok gate.Outcome.Unknown
-    else assess.outcome_loop required true 0#usize
-  else ok gate.Outcome.Unknown
-
 /-- [writfold_core::bind::Bound]
     Source: 'crates/writfold-core/src/bind.rs', lines 26:0-37:1
     Visibility: public -/
@@ -2633,6 +2400,15 @@ inductive gate.Ending where
 | TimedOut : gate.Ending
 | Error : gate.Ending
 
+/-- [writfold_core::gate::Outcome]
+    Source: 'crates/writfold-core/src/gate.rs', lines 34:0-39:1
+    Visibility: public -/
+@[discriminant isize]
+inductive gate.Outcome where
+| Pass : gate.Outcome
+| Fail : gate.Outcome
+| Unknown : gate.Outcome
+
 /-- [writfold_core::gate::outcome]:
     Source: 'crates/writfold-core/src/gate.rs', lines 64:0-73:1
     Visibility: public -/
@@ -2962,24 +2738,33 @@ def gate.statements
     gate.statements_loop said definition content false false false 0#usize
   ok { attested_current, attested_any, waived_current }
 
+/-- [writfold_core::grounding::Grounding]
+    Source: 'crates/writfold-core/src/grounding.rs', lines 9:0-16:1
+    Visibility: public -/
+@[discriminant isize]
+inductive grounding.Grounding where
+| Grounded : grounding.Grounding
+| Attested : grounding.Grounding
+| Ungrounded : grounding.Grounding
+
 /-- [writfold_core::ground::of_gate]:
     Source: 'crates/writfold-core/src/ground.rs', lines 20:0-29:1
     Visibility: public -/
 def ground.of_gate
-  (found : Bool) (standing : gate.Standing) : Result assess.Grounding := do
+  (found : Bool) (standing : gate.Standing) : Result grounding.Grounding := do
   if found
   then
     match standing with
     | gate.Standing.Checked s =>
       match s with
-      | gate.State.Open => ok assess.Grounding.Ungrounded
-      | gate.State.Satisfied => ok assess.Grounding.Grounded
-      | gate.State.Stale => ok assess.Grounding.Ungrounded
-      | gate.State.Failed => ok assess.Grounding.Ungrounded
-      | gate.State.Unknown => ok assess.Grounding.Ungrounded
-    | gate.Standing.Attested => ok assess.Grounding.Attested
-    | gate.Standing.Waived => ok assess.Grounding.Ungrounded
-  else ok assess.Grounding.Ungrounded
+      | gate.State.Open => ok grounding.Grounding.Ungrounded
+      | gate.State.Satisfied => ok grounding.Grounding.Grounded
+      | gate.State.Stale => ok grounding.Grounding.Ungrounded
+      | gate.State.Failed => ok grounding.Grounding.Ungrounded
+      | gate.State.Unknown => ok grounding.Grounding.Ungrounded
+    | gate.Standing.Attested => ok grounding.Grounding.Attested
+    | gate.Standing.Waived => ok grounding.Grounding.Ungrounded
+  else ok grounding.Grounding.Ungrounded
 
 /-- [writfold_core::ground::ReceiptFacts]
     Source: 'crates/writfold-core/src/ground.rs', lines 32:0-43:1
@@ -2995,7 +2780,7 @@ structure ground.ReceiptFacts where
     Source: 'crates/writfold-core/src/ground.rs', lines 46:0-57:1
     Visibility: public -/
 def ground.of_receipt
-  (facts : ground.ReceiptFacts) : Result assess.Grounding := do
+  (facts : ground.ReceiptFacts) : Result grounding.Grounding := do
   if facts.same_subject
   then
     if facts.same_definition
@@ -3005,36 +2790,40 @@ def ground.of_receipt
         if facts.passed
         then
           if facts.gate_met
-          then ok assess.Grounding.Grounded
-          else ok assess.Grounding.Ungrounded
-        else ok assess.Grounding.Ungrounded
-      else ok assess.Grounding.Ungrounded
-    else ok assess.Grounding.Ungrounded
-  else ok assess.Grounding.Ungrounded
+          then ok grounding.Grounding.Grounded
+          else ok grounding.Grounding.Ungrounded
+        else ok grounding.Grounding.Ungrounded
+      else ok grounding.Grounding.Ungrounded
+    else ok grounding.Grounding.Ungrounded
+  else ok grounding.Grounding.Ungrounded
 
 /-- [writfold_core::ground::of_citations]:
     Source: 'crates/writfold-core/src/ground.rs', lines 61:0-67:1
     Visibility: public -/
 def ground.of_citations
-  (count : Std.Usize) (not_fresh : Std.Usize) : Result assess.Grounding := do
+  (count : Std.Usize) (not_fresh : Std.Usize) :
+  Result grounding.Grounding
+  := do
   if count > 0#usize
   then
     if not_fresh = 0#usize
-    then ok assess.Grounding.Grounded
-    else ok assess.Grounding.Ungrounded
-  else ok assess.Grounding.Ungrounded
+    then ok grounding.Grounding.Grounded
+    else ok grounding.Grounding.Ungrounded
+  else ok grounding.Grounding.Ungrounded
 
 /-- [writfold_core::ground::of_token]:
     Source: 'crates/writfold-core/src/ground.rs', lines 71:0-77:1
     Visibility: public -/
 def ground.of_token
-  (count : Std.Usize) (not_fresh : Std.Usize) : Result assess.Grounding := do
+  (count : Std.Usize) (not_fresh : Std.Usize) :
+  Result grounding.Grounding
+  := do
   if count = 1#usize
   then
     if not_fresh = 0#usize
-    then ok assess.Grounding.Grounded
-    else ok assess.Grounding.Ungrounded
-  else ok assess.Grounding.Ungrounded
+    then ok grounding.Grounding.Grounded
+    else ok grounding.Grounding.Ungrounded
+  else ok grounding.Grounding.Ungrounded
 
 /-- [writfold_core::observe::Status]
     Source: 'crates/writfold-core/src/observe.rs', lines 13:0-28:1
@@ -3068,35 +2857,35 @@ def observe.grounds
     Visibility: public -/
 def ground.of_observation
   (status : observe.Status) (count : Std.Usize) (not_fresh : Std.Usize) :
-  Result assess.Grounding
+  Result grounding.Grounding
   := do
   let b ← if count > 0#usize
             then ok (not_fresh = 0#usize)
             else ok false
   let b1 ← observe.grounds status b
   if b1
-  then ok assess.Grounding.Grounded
-  else ok assess.Grounding.Ungrounded
+  then ok grounding.Grounding.Grounded
+  else ok grounding.Grounding.Ungrounded
 
 /-- [writfold_core::ground::of_statement]:
     Source: 'crates/writfold-core/src/ground.rs', lines 90:0-96:1
     Visibility: public -/
 def ground.of_statement
-  (current_attestation : Bool) : Result assess.Grounding := do
+  (current_attestation : Bool) : Result grounding.Grounding := do
   if current_attestation
-  then ok assess.Grounding.Attested
-  else ok assess.Grounding.Ungrounded
+  then ok grounding.Grounding.Attested
+  else ok grounding.Grounding.Ungrounded
 
 /-- [writfold_core::ground::moved]:
     Source: 'crates/writfold-core/src/ground.rs', lines 100:0-102:1
     Visibility: public -/
 def ground.moved
-  (now : assess.Grounding) (same_word : Bool) : Result Bool := do
+  (now : grounding.Grounding) (same_word : Bool) : Result Bool := do
   let b ←
     match now with
-    | assess.Grounding.Grounded => ok false
-    | assess.Grounding.Attested => ok false
-    | assess.Grounding.Ungrounded => ok true
+    | grounding.Grounding.Grounded => ok false
+    | grounding.Grounding.Attested => ok false
+    | grounding.Grounding.Ungrounded => ok true
   if b
   then ok true
   else ok (¬ same_word)

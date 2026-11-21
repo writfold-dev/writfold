@@ -2,8 +2,7 @@
 //! reports at the position of what it judges; a check that needs a value
 //! another check found wrong does not run, so no fault is reported twice.
 use super::def::{
-    CHECKLIST, CLASSES, DIR, Definition, Instructions, Judges, Origin, RUN_RECORD,
-    SCHEMA, digest,
+    CHECKLIST, CLASSES, DIR, Definition, Instructions, Judges, Origin, RUN_RECORD, SCHEMA, digest,
 };
 use super::{def_class, places};
 use crate::defs::{Check, Field, Slot, Spanned, Text, Value};

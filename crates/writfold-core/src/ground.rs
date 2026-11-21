@@ -1,5 +1,5 @@
-//! What grounds a cited piece of evidence, for an assessed gate's
-//! assumptions and a checklist gate's cover rows alike. The caller resolves
+//! What grounds a cited piece of evidence, for a checklist gate's cover
+//! rows (and, until 21 November 2026, an assessed gate's assumptions). The caller resolves
 //! the reference (a gate, a gate receipt, an attestation, a retrieval, an
 //! observation, a citation token) and gathers the facts; the decision is
 //! here. The standing words a reference records (`satisfied`,
@@ -10,8 +10,8 @@
 //!
 //! In the Charon `start_from` list; `proofs/Writfold/Ground.lean` proves
 //! every function for every input (docs/writfold/aeneas.md).
-use crate::assess::Grounding;
 use crate::gate::{Standing, State};
+use crate::grounding::Grounding;
 use crate::observe::{Status, grounds};
 
 /// `gate:<id>`: grounded while the gate is satisfied by a check; attested
@@ -107,8 +107,8 @@ mod tests {
         ReceiptFacts, moved, of_citations, of_gate, of_observation, of_receipt, of_statement,
         of_token,
     };
-    use crate::assess::Grounding;
     use crate::gate::{Standing, State};
+    use crate::grounding::Grounding;
     use crate::observe::{ALL, Status};
 
     #[test]
