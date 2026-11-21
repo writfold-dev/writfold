@@ -6,7 +6,7 @@ This page is for someone pinned to one release who wants to upgrade on purpose. 
 
 A line marked **fix** changed an answer that was wrong; anything depending on the old answer was depending on the fault.
 
-## v0.6.0-dev.15 (unreleased)
+## v0.6.0-dev.15
 
 - **Loops** ([#74](https://github.com/writfold-dev/writfold/issues/74)): new step words `loop=`, `max=`, `min=` and the verb `writfold kb plan again`; a template without them reads, splices and folds as before. An earlier binary refuses a template (or a run snapshot) that uses them (`value.form`). New diagnostic codes `value.no-exit` and the warning `policy.self-exit`. A guard rule may require `step.settled` (#79); a `step.met` nudge on a loop step now names `plan again` when a round is left.
 - **The index is rebuilt once** (schema 7: an index on each reference's token). A refresh after a record is added, removed, renamed or duplicated now rewrites only the links of the files whose tokens resolve differently, not every link; `last-refresh` reads `keys=same|moved graph=delta affected=N` and never `graph=whole`; a rename on a 50,000-file KB refreshes in 3 s instead of 32 s, and an edit that touches no record ID or alias no longer recomputes the keys ([#65](https://github.com/writfold-dev/writfold/issues/65)). Answers are unchanged.
