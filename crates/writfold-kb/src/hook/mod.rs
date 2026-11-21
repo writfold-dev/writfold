@@ -170,6 +170,25 @@ fn verb(ws: &Workspace, cwd: &Path, now: i64, verb: Verb, budget: usize) -> Opti
         .map(|output| output.text)
 }
 
+/// [`verb`] with a deadline (#69): `Err(())` when it has not answered in
+/// time. The read goes on in a thread the hook then abandons; when the
+/// process exits, an index build it started is dropped unpublished (a
+/// build publishes by rename) and its temporary file is swept later.
+fn verb_within(
+    ws: &Workspace,
+    cwd: &Path,
+    now: i64,
+    (verb, budget): (Verb, usize),
+    deadline: std::time::Duration,
+) -> Result<Option<String>, ()> {
+    let (ws, cwd) = (ws.clone(), cwd.to_path_buf());
+    let (send, answer) = std::sync::mpsc::channel();
+    std::thread::spawn(move || {
+        let _ = send.send(self::verb(&ws, &cwd, now, verb, budget));
+    });
+    answer.recv_timeout(deadline).map_err(|_| ())
+}
+
 /// `draft <session> <updated> [run=<id>] <first line>`.
 pub fn draft_line(session: &str, d: &Map<String, Value>) -> String {
     let mut line = format!(

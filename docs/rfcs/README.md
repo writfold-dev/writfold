@@ -176,5 +176,6 @@ Rows are in creation order.
 | [2026-11-21](2026-11-21-streamed-verify-same-pin-repair.md) | Stream index rebuild and verification; repair only the generation compared, at a still-current pin | accepted | complete | [#58](https://github.com/writfold-dev/writfold/issues/58) |
 | [2026-11-21](2026-11-21-refresh-affected-graph-facts.md) | Refresh only the graph facts an edit affects | accepted | complete | [#59](https://github.com/writfold-dev/writfold/issues/59) |
 | [2026-11-21](2026-11-21-keyed-graph-refresh.md) | Refresh the graph by token when a record is added, removed or renamed | accepted | complete | [#65](https://github.com/writfold-dev/writfold/issues/65) |
+| [2026-11-21](2026-11-21-session-start-deadline.md) | Session start: a deadline below the hook timeout | accepted | complete | [#69](https://github.com/writfold-dev/writfold/issues/69) |
 | [2026-11-21](2026-11-21-bounded-graph-reads.md) | Bound the edges a graph answer reads; a work limit never certifies completeness | accepted | complete | [#60](https://github.com/writfold-dev/writfold/issues/60) |
 | [2026-11-21](2026-11-21-loops.md) | Loops: a plan step that repeats a template until its gates are met | accepted | partial | [#74](https://github.com/writfold-dev/writfold/issues/74) |

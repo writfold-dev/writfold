@@ -30,7 +30,7 @@
 //! injected again: the earlier context was summarised, not dropped, so the
 //! brief is not sent twice, but the exact step and its owed gates are the
 //! part a summary is most likely to blur.
-use super::{HookOutput, inbox, named, position, remote, state, verb};
+use super::{HookOutput, inbox, named, position, remote, state, verb, verb_within};
 use crate::plan::PlanVerb;
 use crate::workspace::Workspace;
 use crate::{Verb, runs};
@@ -175,7 +175,16 @@ fn startup(
         project: None,
         all: false,
     };
-    if let Some(found) = verb(ws, cwd, now, brief, BRIEF_BUDGET) {
+    // The brief is the first read of the index and may build it: past the
+    // deadline, only what needs no index is injected (#69).
+    let Ok(brief) = verb_within(ws, cwd, now, (brief, BRIEF_BUDGET), deadline()) else {
+        parts.push((Part::Stale, format!("\n{NOT_BUILT}\n")));
+        if let Some(local) = local {
+            parts = with_inbox(parts, &ws.root, local);
+        }
+        return trimmed(parts);
+    };
+    if let Some(found) = brief {
         parts.push((Part::Brief, format!("Writfold KB brief (`writfold kb brief`). Rows end in their source; re-check any row with a ! flag before relying on it.\n{found}")));
     }
     if let Some(block) = named::block(ws, cwd, current) {
@@ -218,11 +227,29 @@ fn startup(
     if let Some(local) = local {
         parts = with_inbox(parts, &ws.root, local);
     }
-    // Without a brief the first part must not open with a blank line.
+    trimmed(parts)
+}
+
+/// Without a brief the first part must not open with a blank line.
+fn trimmed(mut parts: Vec<(Part, String)>) -> Vec<(Part, String)> {
     if let Some((_, first)) = parts.first_mut() {
         *first = first.trim_start_matches('\n').to_owned();
     }
     parts
+}
+
+/// The line past the deadline (#69).
+pub const NOT_BUILT: &str =
+    "index not built yet: run writfold kb index rebuild, then writfold kb brief";
+
+/// How long session start waits for the brief: 20 s, below the plugin's
+/// 30 s hook timeout; `WRITFOLD_HOOK_DEADLINE_MS` overrides it.
+fn deadline() -> std::time::Duration {
+    let ms = std::env::var("WRITFOLD_HOOK_DEADLINE_MS")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(20_000);
+    std::time::Duration::from_millis(ms)
 }
 
 /// `Citations: 4 changed, 2 gone as of the last writfold kb stale; …`:

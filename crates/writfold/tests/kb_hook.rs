@@ -293,3 +293,45 @@ fn guard_rules_through_the_binary() -> Result {
     silent(&hook("stop", &stop)?, "a second stop in one session")?;
     Ok(())
 }
+
+#[test]
+fn session_start_past_its_deadline_says_the_index_is_not_built_yet() -> Result {
+    let r = root("deadline")?;
+    let kb = kb(&r.0)?.display().to_string();
+    let start = format!("{{\"session_id\": \"s\", \"cwd\": \"{kb}\"}}");
+    // No index exists yet, so the brief would build it: a zero deadline
+    // stands in for a build slower than the hook may wait.
+    let env = [
+        ("CLAUDE_PLUGIN_OPTION_KB_ROOT", kb.as_str()),
+        ("WRITFOLD_HOOK_DEADLINE_MS", "0"),
+    ];
+    let out = run(
+        &r.0,
+        WRITFOLD,
+        &["kb", "hook", "session-start"],
+        &env,
+        &start,
+    )?;
+    assert_eq!(out.status.code(), Some(0));
+    let said = context(&out)?;
+    assert!(
+        said.contains("index not built yet: run writfold kb index rebuild, then writfold kb brief"),
+        "{said}"
+    );
+    assert!(!said.contains("Writfold KB brief"), "{said}");
+    // With time to build, the brief is injected as before.
+    let env = [("CLAUDE_PLUGIN_OPTION_KB_ROOT", kb.as_str())];
+    let out = run(
+        &r.0,
+        WRITFOLD,
+        &["kb", "hook", "session-start"],
+        &env,
+        &start,
+    )?;
+    let said = context(&out)?;
+    assert!(
+        said.contains("Writfold KB brief") && !said.contains("not built yet"),
+        "{said}"
+    );
+    Ok(())
+}
