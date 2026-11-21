@@ -5539,7 +5539,7 @@ inductive verdict.Verdict where
 | Due : verdict.Verdict
 
 /-- [writfold_core::store::use_recorded]:
-    Source: 'crates/writfold-core/src/store.rs', lines 49:0-54:1
+    Source: 'crates/writfold-core/src/store.rs', lines 49:0-61:1
     Visibility: public -/
 def store.use_recorded
   («local» : verdict.Verdict) (recorded : Bool) : Result Bool := do
@@ -5555,7 +5555,7 @@ def store.use_recorded
   | verdict.Verdict.Due => ok false
 
 /-- [writfold_core::store::pin_recordable]:
-    Source: 'crates/writfold-core/src/store.rs', lines 58:0-60:1
+    Source: 'crates/writfold-core/src/store.rs', lines 65:0-67:1
     Visibility: public -/
 def store.pin_recordable (judged : verdict.Verdict) : Result Bool := do
   let b ←
@@ -5572,7 +5572,7 @@ def store.pin_recordable (judged : verdict.Verdict) : Result Bool := do
   ok (¬ b)
 
 /-- [writfold_core::store::Commit]
-    Source: 'crates/writfold-core/src/store.rs', lines 63:0-71:1
+    Source: 'crates/writfold-core/src/store.rs', lines 70:0-78:1
     Visibility: public -/
 @[discriminant isize]
 inductive store.Commit where
@@ -5581,7 +5581,7 @@ inductive store.Commit where
 | Anchored : store.Commit
 
 /-- [writfold_core::store::AtPin]
-    Source: 'crates/writfold-core/src/store.rs', lines 74:0-81:1
+    Source: 'crates/writfold-core/src/store.rs', lines 81:0-88:1
     Visibility: public -/
 @[discriminant isize]
 inductive store.AtPin where
@@ -5590,7 +5590,7 @@ inductive store.AtPin where
 | Nothing : store.AtPin
 
 /-- [writfold_core::store::pinned]:
-    Source: 'crates/writfold-core/src/store.rs', lines 85:0-94:1
+    Source: 'crates/writfold-core/src/store.rs', lines 92:0-101:1
     Visibility: public -/
 def store.pinned
   (commit : store.Commit) («at» : store.AtPin) : Result verdict.Verdict := do
@@ -5604,7 +5604,7 @@ def store.pinned
     | store.AtPin.Nothing => ok verdict.Verdict.Gone
 
 /-- [writfold_core::store::Candidate]
-    Source: 'crates/writfold-core/src/store.rs', lines 97:0-102:1
+    Source: 'crates/writfold-core/src/store.rs', lines 104:0-109:1
     Visibility: public -/
 @[discriminant isize]
 inductive store.Candidate where
@@ -5612,7 +5612,7 @@ inductive store.Candidate where
 | Clone : Bool → store.Candidate
 
 /-- [writfold_core::store::Via]
-    Source: 'crates/writfold-core/src/store.rs', lines 105:0-112:1
+    Source: 'crates/writfold-core/src/store.rs', lines 112:0-119:1
     Visibility: public -/
 @[discriminant isize]
 inductive store.Via where
@@ -5621,7 +5621,7 @@ inductive store.Via where
 | Hint : store.Via
 
 /-- [writfold_core::store::Resolved]
-    Source: 'crates/writfold-core/src/store.rs', lines 115:0-125:1
+    Source: 'crates/writfold-core/src/store.rs', lines 122:0-132:1
     Visibility: public -/
 @[discriminant isize]
 inductive store.Resolved where
@@ -5630,7 +5630,7 @@ inductive store.Resolved where
 | Missing : store.Resolved
 
 /-- [writfold_core::store::resolve]:
-    Source: 'crates/writfold-core/src/store.rs', lines 131:0-154:1
+    Source: 'crates/writfold-core/src/store.rs', lines 138:0-161:1
     Visibility: public -/
 def store.resolve
   (map : store.Candidate) (search : store.Candidate) (hint : store.Candidate) :
@@ -5674,7 +5674,7 @@ def store.resolve
     ok (store.Resolved.Found store.Via.Map (¬ origin))
 
 /-- [writfold_core::store::Refusal]
-    Source: 'crates/writfold-core/src/store.rs', lines 157:0-171:1
+    Source: 'crates/writfold-core/src/store.rs', lines 164:0-178:1
     Visibility: public -/
 @[discriminant isize]
 inductive store.Refusal where
@@ -5686,7 +5686,7 @@ inductive store.Refusal where
 | NoBlob : store.Refusal
 
 /-- [writfold_core::store::Artifact]
-    Source: 'crates/writfold-core/src/store.rs', lines 174:0-177:1
+    Source: 'crates/writfold-core/src/store.rs', lines 181:0-184:1
     Visibility: public -/
 @[discriminant isize]
 inductive store.Artifact where
@@ -5694,7 +5694,7 @@ inductive store.Artifact where
 | Refuse : store.Refusal → store.Artifact
 
 /-- [writfold_core::store::artifact]:
-    Source: 'crates/writfold-core/src/store.rs', lines 184:0-211:1
+    Source: 'crates/writfold-core/src/store.rs', lines 191:0-218:1
     Visibility: public -/
 def store.artifact
   (declared : Bool) (found : Bool) (full_rev : Bool) (commit : store.Commit)
@@ -5721,7 +5721,7 @@ def store.artifact
   else ok (store.Artifact.Refuse store.Refusal.Undeclared)
 
 /-- [writfold_core::store::Claim]
-    Source: 'crates/writfold-core/src/store.rs', lines 214:0-224:1
+    Source: 'crates/writfold-core/src/store.rs', lines 221:0-231:1
     Visibility: public -/
 @[discriminant isize]
 inductive store.Claim where
@@ -5731,7 +5731,7 @@ inductive store.Claim where
 | NotAStore : store.Claim
 
 /-- [writfold_core::store::claim]:
-    Source: 'crates/writfold-core/src/store.rs', lines 231:0-245:1
+    Source: 'crates/writfold-core/src/store.rs', lines 238:0-252:1
     Visibility: public -/
 def store.claim
   (attached : Bool) (exact : Bool) (aliased : Std.Usize) :
@@ -5751,7 +5751,7 @@ def store.claim
   else ok store.Claim.NotAStore
 
 /-- [writfold_core::store::SnapshotFacts]
-    Source: 'crates/writfold-core/src/store.rs', lines 248:0-259:1
+    Source: 'crates/writfold-core/src/store.rs', lines 255:0-266:1
     Visibility: public -/
 structure store.SnapshotFacts where
   embeds : Bool
@@ -5761,7 +5761,7 @@ structure store.SnapshotFacts where
   intact : Bool
 
 /-- [writfold_core::store::Withheld]
-    Source: 'crates/writfold-core/src/store.rs', lines 262:0-280:1
+    Source: 'crates/writfold-core/src/store.rs', lines 269:0-287:1
     Visibility: public -/
 @[discriminant isize]
 inductive store.Withheld where
@@ -5775,7 +5775,7 @@ inductive store.Withheld where
 | Unanchored : store.Withheld
 
 /-- [writfold_core::store::Snapshot]
-    Source: 'crates/writfold-core/src/store.rs', lines 283:0-286:1
+    Source: 'crates/writfold-core/src/store.rs', lines 290:0-293:1
     Visibility: public -/
 @[discriminant isize]
 inductive store.Snapshot where
@@ -5783,7 +5783,7 @@ inductive store.Snapshot where
 | Withhold : store.Withheld → store.Snapshot
 
 /-- [writfold_core::store::snapshot]:
-    Source: 'crates/writfold-core/src/store.rs', lines 292:0-314:1
+    Source: 'crates/writfold-core/src/store.rs', lines 299:0-321:1
     Visibility: public -/
 def store.snapshot
   (facts : store.SnapshotFacts) (commit : store.Commit) («at» : store.AtPin)

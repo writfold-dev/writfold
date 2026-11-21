@@ -49,7 +49,14 @@ pub fn recorded(basis: &Basis, declared_max_age: bool, within_age: bool) -> bool
 pub fn use_recorded(local: &Verdict, recorded: bool) -> bool {
     match local {
         Verdict::Unverifiable => recorded,
-        _ => false,
+        Verdict::Fresh
+        | Verdict::Moved
+        | Verdict::Renamed
+        | Verdict::Changed
+        | Verdict::Gone
+        | Verdict::Expired
+        | Verdict::Marked
+        | Verdict::Due => false,
     }
 }
 
