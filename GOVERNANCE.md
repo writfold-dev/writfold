@@ -12,7 +12,9 @@ what ships and what is frozen. The standing decisions are recorded in the
 - **Agents** (coding sessions working for the owner) may file issues, draft
   RFCs, implement accepted work, run the gates, cut pre-releases they have
   been cleared to cut, and close the issues their commits resolve. Planning
-  agents explore and write plans only. An agent never accepts its own RFC.
+  agents explore and write plans only. Since 21 November 2026 the owner's
+  standing acceptance covers agents' RFCs: an agent records it in the RFC's
+  decision log and proceeds; the owner reviews, amends or rejects later.
 - **Contributors** open issues. A pull request needs an `accepted` issue or
   RFC behind it, unless it is a trivial fix ([CONTRIBUTING.md](CONTRIBUTING.md)).
 

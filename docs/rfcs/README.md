@@ -97,8 +97,11 @@ draft ──owner decision──▶ accepted ──accepted replacement──▶
 - **Superseded:** a later accepted RFC owns the decision. Link both ways and
   keep the old text.
 
-Agents may draft RFCs and propose changes to them. Only the owner accepts or
-rejects one ([GOVERNANCE.md](../../GOVERNANCE.md)).
+Agents may draft RFCs and propose changes to them. The owner accepts or
+rejects one ([GOVERNANCE.md](../../GOVERNANCE.md)). Since 21 November 2026
+the owner accepts RFCs by default: an agent sets `status: accepted` with a
+decision-log line saying so, implements it, and the owner reviews and
+amends or rejects afterwards. Work is not held waiting for acceptance.
 
 ## Proof obligations come first
 
@@ -166,3 +169,5 @@ Rows are in creation order.
 | [2026-11-20](2026-11-20-links-from-trailers-and-at-commit.md) | Links from commit trailers and tracker references, and answers as of a commit (M4b) | draft | not-started | [#31](https://github.com/writfold-dev/writfold/issues/31) |
 | [2026-11-20](2026-11-20-recorded-pinned-verdicts.md) | Recorded verdicts for pinned store citations | accepted | complete | [#4](https://github.com/writfold-dev/writfold/issues/4) |
 | [2026-11-20](2026-11-20-statement-order-without-clock.md) | Order statements without a clock | accepted | complete | [#15](https://github.com/writfold-dev/writfold/issues/15) |
+| [2026-11-21](2026-11-21-reader-verdict-parity.md) | Show the usable checked-citation verdict on a cold read | accepted | not-started | [#35](https://github.com/writfold-dev/writfold/issues/35) |
+| [2026-11-21](2026-11-21-reviewed-lookup-misses.md) | Turn a reported lookup miss into a reviewable alias | accepted | not-started | [#22](https://github.com/writfold-dev/writfold/issues/22) |
