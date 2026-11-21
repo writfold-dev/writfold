@@ -69,3 +69,4 @@ Keep today's two mechanisms (proposed until the owner decides).
 
 - 2026-11-18: deferred by the owner (gate-evidence RFC §5).
 - 2026-11-20: written up as a draft so that the question is tracked.
+- 2026-11-21: owner decision ([#40](https://github.com/writfold-dev/writfold/issues/40), question 9): deferred, merged with #11 into one "which gates a run owes" issue; the design should derive from the gate's existing `scope` (an opt-in such as `owed = "when-touched"`) rather than a second glob list.

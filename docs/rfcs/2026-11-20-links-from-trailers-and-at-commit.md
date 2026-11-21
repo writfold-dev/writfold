@@ -75,3 +75,4 @@ Each step ships on its own.
 ## Decision log
 
 - 2026-11-20: written from the mission roadmap and design §9 when the RFC process was adopted.
+- 2026-11-21: owner decision ([#40](https://github.com/writfold-dev/writfold/issues/40), question 6): split. `--at COMMIT` (read-only, no kernel) is planned for v0.6.0; trailer and tracker links wait for the tracker vocabulary and stay Later.

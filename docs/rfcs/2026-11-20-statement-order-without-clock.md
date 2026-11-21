@@ -1,12 +1,12 @@
 ---
 rfc: "2026-11-20-statement-order-without-clock"
 title: "Order statements without a clock"
-status: draft
+status: accepted
 implementation: not-started
 authors:
   - tknawara
 created: 2026-11-20
-updated: 2026-11-20
+updated: 2026-11-21
 issue: https://github.com/writfold-dev/writfold/issues/15
 milestone: "v0.6.0-dev.12"
 supersedes: []
@@ -55,3 +55,4 @@ One release, preceded by the proofs gate.
 ## Decision log
 
 - 2026-11-20: written from the aeneas backlog.
+- 2026-11-21: accepted by the owner ([#40](https://github.com/writfold-dev/writfold/issues/40), question 2), amended: reuse the proved receipt order (`order::precedes` over (`seq`, name), a missing `seq` read as 0) instead of a new kernel, and take the next `seq` over every statement kind of one obligation, since its summary sorts them together. Only the choice of the newest (`newest_is_max`) is new.

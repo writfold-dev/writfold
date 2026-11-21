@@ -1,17 +1,17 @@
 ---
 rfc: "2026-11-20-recorded-pinned-verdicts"
 title: "Recorded verdicts for pinned store citations"
-status: draft
+status: accepted
 implementation: not-started
 authors:
   - tknawara
 created: 2026-11-20
-updated: 2026-11-20
+updated: 2026-11-21
 issue: https://github.com/writfold-dev/writfold/issues/4
 milestone: "v0.6.0-dev.12"
 supersedes: []
 superseded_by: []
-blocked_on: ["owner: is U3 limited to pinned citations enough for now (proposed: yes)"]
+blocked_on: []
 ---
 
 # RFC: Recorded verdicts for pinned store citations
@@ -82,3 +82,4 @@ One release: kernel and proofs, then wiring, then the guide and `changes.md`.
 ## Decision log
 
 - 2026-11-20: written from attached-stores-next §3.1 when the RFC process was adopted.
+- 2026-11-21: accepted by the owner ([#40](https://github.com/writfold-dev/writfold/issues/40), question 3): limited to pinned citations. Amended: the kernel takes `within_age: bool`, computed outside from the receipt's age and `recorded_max_age`, so that `recorded-ignores-age` can break `code_recorded_iff`.

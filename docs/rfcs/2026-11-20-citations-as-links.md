@@ -80,3 +80,4 @@ Golden outputs for each combination; a deny-list check over a rendered link; a r
 ## Decision log
 
 - 2026-11-20: written from attached-stores-next §3.2.
+- 2026-11-21: owner answer ([#40](https://github.com/writfold-dev/writfold/issues/40), question 5): an unmapped citation is refused by default; `strip` is opt-in. The RFC stays a draft until it is accepted as a whole.
