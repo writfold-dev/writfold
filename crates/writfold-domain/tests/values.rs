@@ -13,7 +13,12 @@ fn git_object_ids_take_their_format_from_their_width() {
     assert_eq!(id, Ok(GitObjectFormat::Sha1));
     let id = GitObjectId::try_from(sha256.clone()).map(|i| i.format());
     assert_eq!(id, Ok(GitObjectFormat::Sha256));
-    for bad in ["A".repeat(40), "g".repeat(40), "a".repeat(39), String::new()] {
+    for bad in [
+        "A".repeat(40),
+        "g".repeat(40),
+        "a".repeat(39),
+        String::new(),
+    ] {
         let refused = GitObjectId::try_from(bad);
         assert!(refused.is_err_and(|e| e.to_string() == "invalid GitObjectId"));
     }

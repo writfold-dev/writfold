@@ -85,11 +85,7 @@ fn load<'a>(
     Ok(units)
 }
 
-pub fn check(
-    root: &Path,
-    metadata: &Value,
-    diagnostics: &mut Vec<Value>,
-) -> Result<(), String> {
+pub fn check(root: &Path, metadata: &Value, diagnostics: &mut Vec<Value>) -> Result<(), String> {
     let units = load(root, metadata, diagnostics)?;
     let mut inspected_sources = BTreeSet::new();
     let mut definitions = Definitions(BTreeSet::new());

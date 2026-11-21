@@ -41,7 +41,6 @@ impl Fixture {
     pub fn target(&self, path: impl AsRef<Path>) -> Result<PinnedFile, Box<dyn Error>> {
         Ok(ContainedRoot::open(&self.path)?.pin(&RelativePath::new(path)?)?)
     }
-
 }
 
 impl Drop for Fixture {
@@ -53,4 +52,3 @@ impl Drop for Fixture {
 pub fn limit(bytes: u64) -> Result<ByteCount, Box<dyn Error>> {
     Ok(ByteCount::new(bytes)?)
 }
-
