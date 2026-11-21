@@ -17,6 +17,8 @@ pub struct Session<'a> {
     pub file: Option<PathBuf>,
     /// Seconds since the epoch, for `ttl` checks.
     pub now: i64,
+    /// What readers show for a citation, loaded on first use (#35).
+    view: std::cell::OnceCell<crate::stale::effective::View>,
 }
 
 impl<'a> Session<'a> {
@@ -46,7 +48,18 @@ impl<'a> Session<'a> {
             index: opened.state,
             file: opened.file,
             now,
+            view: std::cell::OnceCell::new(),
         })
+    }
+
+    /// The verdict a reader shows for `cite`, as the gates see it
+    /// ([`crate::stale::effective`]); `None` when nothing observed it.
+    pub fn shown(
+        &self,
+        cite: &crate::stale::Cite,
+    ) -> Result<Option<crate::stale::effective::Shown>> {
+        let view = (self.view).get_or_init(|| crate::stale::effective::View::load(&self.ws.root));
+        view.shown(&self.conn, self.now, cite)
     }
 
     /// The current text of a KB file (the snapshot the pin names).

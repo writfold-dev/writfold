@@ -8,8 +8,8 @@ use super::super::kinds::Kinds;
 use super::super::{Checked, Cite, Recorded, Verdict};
 use super::receipt::{Entry, Receipt, Receipts};
 use crate::error::Result;
-use crate::session::Session;
 use crate::time;
+use rusqlite::Connection;
 use writfold_core::verdict::{self as kernel, Checker, Pick, Said, Statement};
 
 pub const EXPIRED: &str = "check-expired";
@@ -49,9 +49,9 @@ fn age_text(age: Option<i64>) -> String {
 
 /// The row `kb stale` last cached for the same token text from the same
 /// checker (this citation's row first).
-fn row(session: &Session<'_>, name: &str, cite: &Cite) -> Result<Option<Row>> {
+fn row(conn: &Connection, name: &str, cite: &Cite) -> Result<Option<Row>> {
     let head = format!("checker:{name}");
-    Ok(rusqlite::OptionalExtension::optional(session.conn.query_row(
+    Ok(rusqlite::OptionalExtension::optional(conn.query_row(
         "SELECT k.verdict, k.new_first, k.new_last, k.new_path, k.repo_head, k.detail, k.checked_at \
          FROM cite_checks k JOIN citations c ON c.path = k.path AND c.ord = k.ord \
          WHERE c.raw = ?1 AND (k.repo_head = ?2 OR k.repo_head GLOB ?2 || '@*') \
@@ -145,7 +145,7 @@ fn from_entry(
 /// The recorded statements for the token (dated no later than an hour
 /// ahead), with their receipts.
 fn statements<'a>(
-    session: &Session<'_>,
+    now: i64,
     kind: &str,
     cite: &Cite,
     receipts: &'a Receipts,
@@ -154,7 +154,7 @@ fn statements<'a>(
         .lookup(kind, &cite.raw)
         .into_iter()
         .filter_map(|(receipt, entry)| {
-            let age = kernel::recorded_age(session.now, receipt.at)?;
+            let age = kernel::recorded_age(now, receipt.at)?;
             let said = entry.said;
             Some((
                 Statement {
@@ -172,7 +172,7 @@ fn statements<'a>(
 /// The newest statement about the token: the cached row or a receipt's
 /// entry, aged. `None` when neither exists.
 pub fn pick(
-    session: &Session<'_>,
+    (conn, now): (&Connection, i64),
     kinds: &Kinds,
     kind: &str,
     cite: &Cite,
@@ -180,10 +180,10 @@ pub fn pick(
 ) -> Result<Option<Checked>> {
     let name = kinds.checker(kind).unwrap_or_default();
     let max_age = kinds.max_age(kind);
-    let row = row(session, name, cite)?;
+    let row = row(conn, name, cite)?;
     let age = row
         .as_ref()
-        .map(|r| time::parse(&r.checked_at).map(|at| session.now.saturating_sub(at)));
+        .map(|r| time::parse(&r.checked_at).map(|at| now.saturating_sub(at)));
     let local = match (&row, said(row.as_ref().map_or("", |r| r.said.as_str()))) {
         (Some(_), Checker::Said(said)) => Some(Statement {
             said,
@@ -192,7 +192,7 @@ pub fn pick(
         }),
         _ => None,
     };
-    let recorded = statements(session, kind, cite, receipts);
+    let recorded = statements(now, kind, cite, receipts);
     let list: Vec<Statement> = recorded.iter().map(|(s, _, _)| *s).collect();
     Ok(match kernel::newest(local, &list, max_age) {
         Some(Pick::Recorded(i)) => recorded
@@ -205,14 +205,14 @@ pub fn pick(
 /// The newest usable recorded verdict alone (within `max_age`), for a
 /// token whose checker is absent from this machine.
 pub fn recorded(
-    session: &Session<'_>,
+    now: i64,
     kinds: &Kinds,
     kind: &str,
     cite: &Cite,
     receipts: &Receipts,
 ) -> Option<Checked> {
     let max_age = kinds.max_age(kind);
-    let recorded = statements(session, kind, cite, receipts);
+    let recorded = statements(now, kind, cite, receipts);
     let list: Vec<Statement> = recorded.iter().map(|(s, _, _)| *s).collect();
     let Some(Pick::Recorded(i)) = kernel::newest(None, &list, max_age) else {
         return None;

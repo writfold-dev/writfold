@@ -172,35 +172,33 @@ fn decision(
         });
     }
     row.more.extend(rationale(session, rec, sections)?);
-    let mut statement = session.conn.prepare_cached(
-        "SELECT c.line, c.raw, k.verdict, k.repo_head, k.new_first, k.new_last, k.new_path FROM citations c \
-         LEFT JOIN cite_checks k ON k.path = c.path AND k.ord = c.ord \
-         WHERE c.path = ?1 AND c.illustrative = 0 ORDER BY c.ord LIMIT 5",
-    )?;
-    let cites = statement
-        .query_map([&rec.path], |r| {
-            Ok((
-                r.get::<_, u32>(0)?,
-                r.get::<_, String>(1)?,
-                r.get::<_, Option<String>>(2)?,
-                r.get::<_, Option<String>>(3)?,
-                (r.get(4)?, r.get(5)?, r.get(6)?),
-            ))
-        })?
-        .collect::<rusqlite::Result<Vec<_>>>()?;
-    for (line, raw, verdict, head, moved) in cites {
-        let verdict = verdict.unwrap_or_else(|| "unchecked".into());
-        let shown = verdict_row(&rec.path, line, &raw, &verdict, head.as_deref(), moved);
-        let flags = if verdict == "fresh" {
+    let cites = crate::stale::effective::cites(&session.conn, &rec.path)?;
+    for cite in cites.into_iter().take(5) {
+        let line = cite.line;
+        let effective = session.shown(&cite)?;
+        let verdict =
+            (effective.as_ref()).map_or_else(|| "unchecked".to_owned(), |s| s.verdict.clone());
+        let head = effective.as_ref().and_then(|s| s.head.clone());
+        let moved = effective
+            .as_ref()
+            .map(|s| s.moved.clone())
+            .unwrap_or_default();
+        let shown = verdict_row(&rec.path, line, &cite.raw, &verdict, head.as_deref(), moved);
+        let mut flags = if verdict == "fresh" {
             Vec::new()
         } else {
             shown.flags
         };
+        let recorded = effective.and_then(|s| s.recorded);
+        if recorded.is_some() {
+            flags.push("recorded".into());
+        }
+        let when = recorded.map(|r| format!(" recorded {} in {}", r.checked_at, r.path));
         row.more.push(More {
             extra: Vec::new(),
             status: None,
             label: "cite",
-            text: format!("{} [{verdict}]", shown.id),
+            text: format!("{} [{verdict}]{}", shown.id, when.unwrap_or_default()),
             path: Some(rec.path.clone()),
             line: Some(line),
             flags,

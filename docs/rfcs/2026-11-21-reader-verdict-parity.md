@@ -2,7 +2,7 @@
 rfc: "2026-11-21-reader-verdict-parity"
 title: "Show the usable checked-citation verdict on a cold read"
 status: accepted
-implementation: not-started
+implementation: done
 authors:
   - astra
 created: 2026-11-21
@@ -50,4 +50,5 @@ Owner reviews the changed output and the hook's bounded KB-local reads. After de
 
 ## Decision log
 
+- 2026-11-21: implemented on main for v0.6.0-dev.13 (`stale::effective::View`, delegating to `cache::pick` and `pin_receipt::stand_in`; no kernel change). Evidence: `crates/writfold/tests/kb_reader_parity.rs` (two clones; cold `gone`, within/beyond `max_age`, wrong checker, no `max_age`, newer local answer; no checker started, cache and tracked files unchanged). Finding: custom checked kinds produce no graph edges, so edge-flag parity is exercised only for pinned-store citations (existing #4 tests). The hook's output limit is unchanged (the line is one of the existing cut parts).
 - 2026-11-21: accepted under the owner's standing acceptance of RFCs (owner, 21 November: proceed, review and amend later). #4 and #41 have landed on main (v0.6.0-dev.12).

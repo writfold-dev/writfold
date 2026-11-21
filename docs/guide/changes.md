@@ -10,6 +10,7 @@ A line marked **fix** changed an answer that was wrong; anything depending on th
 
 - **`kb edit apply` and `kb edit recover` are removed** with Splicery ([#54](https://github.com/writfold-dev/writfold/issues/54)). Finish or abandon an interrupted edit with v0.6.0-dev.12 before upgrading. Edit receipts already in a run stay readable: `resume` lists them and a checklist row may still cite one. A guard rule naming `writfold:edit` in `tools` now matches nothing.
 - **A gate of `class = "assessed"` is refused** (`value.unknown`, and its `weft`, `checks` and `weft_sha256` keys `key.unknown`), with Weft: a plan step owing such a gate cannot be met until its definition changes. `runs/*/assessed/` receipts are no longer read. `$WRITFOLD_WEFT` and a `weft =` line in the user config are ignored, and the config hint no longer suggests one.
+- `brief`, `context`, `why`, edge flags and the session-start stale line show a usable committed check receipt's verdict, as `stale --cached` and the gates already did: a clone that never ran `stale` may now see `!gone !recorded` rows, `unverifiable` `check-expired` rows past `max_age`, a `check:` line under `brief`/`context` rows, and a session-start line `Citations: … (N read from committed check receipts) …`. Only kinds that declare `max_age` and have committed receipts are affected ([#35](https://github.com/writfold-dev/writfold/issues/35)).
 - Nothing else that an existing setup can notice changes: the resume cursor moved into `writfold-kb` byte for byte, so issued cursors still resume.
 
 ## v0.6.0-dev.12

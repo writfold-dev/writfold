@@ -37,7 +37,7 @@ The read verbs (`brief`, `why`, `context`) show the same flags from cached verdi
 
 Kinds other than `code`, `gate`, `record` and `proposal` are checked by time, and a token without `ttl=` never expires unless its kind declares a default. Declare a kind's lifetime, an `immutable` rule or required fields in `.writfold/sources/<kind>.toml` ([kb-layout](kb-layout.md#a-citation-token)). A declaration that cannot be read makes `stale` exit 3 naming the file; `kb check` shows that on its `stale` row. `stale --offline` reports a token as `due` by the same lifetime, and never an `immutable` one.
 
-A kind declared `checked` is asked of an external checker, `writfold-check-<name>` on `PATH`, and only `stale` (without `--offline`) runs it: one process per kind per run. Every other reader, `gate status` and `kb check`'s gate row among them, uses the verdict `stale` cached. A checker that is absent, fails or times out leaves its tokens `unverifiable` with the reason, never fresh; the trailer counts `checker-absent=` when one is missing. See [checkers](checkers.md) (built in v0.5.0-dev.2).
+A kind declared `checked` is asked of an external checker, `writfold-check-<name>` on `PATH`, and only `stale` (without `--offline`) runs it: one process per kind per run. Every other reader, `gate status` and `kb check`'s gate row among them, uses the verdict `stale` cached, or a newer usable committed check receipt (`brief`, `context`, `why` and session start too, from v0.6.0-dev.13). A checker that is absent, fails or times out leaves its tokens `unverifiable` with the reason, never fresh; the trailer counts `checker-absent=` when one is missing. See [checkers](checkers.md) (built in v0.5.0-dev.2).
 
 ### Local clones: `kb repos`
 

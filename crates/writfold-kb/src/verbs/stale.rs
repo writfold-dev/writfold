@@ -95,36 +95,43 @@ fn load(session: &Session<'_>, scope: Option<&str>) -> Result<Vec<Cite>> {
         Some(s) => s.to_owned(),
         None => String::new(),
     };
-    let mut statement = session.conn.prepare(
-        "SELECT path, ord, line, kind, repo, rev, cpath, l_first, l_last, blob, span, seen, ttl, \
-         state, marked, malformed, fields, raw FROM citations \
-         WHERE illustrative = 0 AND substr(path, 1, length(?1)) = ?1 ORDER BY path, ord",
-    )?;
+    let sql = format!(
+        "SELECT {CITE_COLUMNS} FROM citations \
+         WHERE illustrative = 0 AND substr(path, 1, length(?1)) = ?1 ORDER BY path, ord"
+    );
+    let mut statement = session.conn.prepare(&sql)?;
     let found = statement
-        .query_map([prefix], |r| {
-            Ok(Cite {
-                path: r.get(0)?,
-                ord: r.get(1)?,
-                line: r.get(2)?,
-                kind: r.get(3)?,
-                repo: r.get(4)?,
-                rev: r.get(5)?,
-                cpath: r.get(6)?,
-                first: r.get(7)?,
-                last: r.get(8)?,
-                blob: r.get(9)?,
-                span: r.get(10)?,
-                seen: r.get(11)?,
-                ttl: r.get(12)?,
-                state: r.get(13)?,
-                marked: r.get(14)?,
-                malformed: r.get(15)?,
-                fields: r.get(16)?,
-                raw: r.get(17)?,
-            })
-        })?
+        .query_map([prefix], read_cite)?
         .collect::<rusqlite::Result<Vec<_>>>()?;
     Ok(found)
+}
+
+/// The `citations` columns [`read_cite`] reads, in order.
+pub(crate) const CITE_COLUMNS: &str = "path, ord, line, kind, repo, rev, cpath, l_first, l_last, \
+     blob, span, seen, ttl, state, marked, malformed, fields, raw";
+
+/// One `citations` row (selected as [`CITE_COLUMNS`]) as a citation.
+pub(crate) fn read_cite(r: &rusqlite::Row<'_>) -> rusqlite::Result<Cite> {
+    Ok(Cite {
+        path: r.get(0)?,
+        ord: r.get(1)?,
+        line: r.get(2)?,
+        kind: r.get(3)?,
+        repo: r.get(4)?,
+        rev: r.get(5)?,
+        cpath: r.get(6)?,
+        first: r.get(7)?,
+        last: r.get(8)?,
+        blob: r.get(9)?,
+        span: r.get(10)?,
+        seen: r.get(11)?,
+        ttl: r.get(12)?,
+        state: r.get(13)?,
+        marked: r.get(14)?,
+        malformed: r.get(15)?,
+        fields: r.get(16)?,
+        raw: r.get(17)?,
+    })
 }
 
 /// The reason or detail a verdict carries.
@@ -270,7 +277,7 @@ fn cite_row(cite: &Cite, checked: &Checked, name: &str) -> Row {
 
 /// Label a row whose verdict was read from a check receipt: when it was
 /// checked, the `recorded` flag, and a `check:` line naming the receipt.
-fn label(row: &mut Row, r: &stale::Recorded) {
+pub(crate) fn label(row: &mut Row, r: &stale::Recorded) {
     row.text = format!("{} recorded {}", row.text, r.checked_at);
     row.flags.push("recorded".into());
     let version = r.version.as_deref().map(|v| format!(" {v}"));

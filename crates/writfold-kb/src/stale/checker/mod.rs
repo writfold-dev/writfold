@@ -11,7 +11,7 @@
 //! handshake and an unreadable token version each leave the token
 //! unverifiable with the reason (decided by the kernel,
 //! [`writfold_core::verdict::exchange`]).
-mod cache;
+pub(crate) mod cache;
 pub mod proto;
 pub mod receipt;
 pub mod record;
@@ -239,12 +239,13 @@ pub fn verdict(
     }
     if let Some(answer) = answers.get(&(cite.path.clone(), cite.ord)) {
         let absent = answer.checker == Checker::Absent;
-        if absent && let Some(recorded) = cache::recorded(session, kinds, kind, cite, receipts) {
+        if absent && let Some(recorded) = cache::recorded(session.now, kinds, kind, cite, receipts)
+        {
             return Ok(recorded);
         }
         return Ok(answer.checked.clone());
     }
-    let found = cache::pick(session, kinds, kind, cite, receipts)?;
+    let found = cache::pick((&session.conn, session.now), kinds, kind, cite, receipts)?;
     Ok(found.unwrap_or_else(|| unverifiable("not-checked".into())))
 }
 
@@ -261,9 +262,11 @@ pub fn expired(
     if kinds.max_age(kind).is_none() {
         return Ok(None);
     }
-    Ok(cache::pick(session, kinds, kind, cite, receipts)?.filter(
-        |c| matches!(&c.verdict, Verdict::Unverifiable(why) if why.starts_with(cache::EXPIRED)),
-    ))
+    Ok(
+        cache::pick((&session.conn, session.now), kinds, kind, cite, receipts)?.filter(
+            |c| matches!(&c.verdict, Verdict::Unverifiable(why) if why.starts_with(cache::EXPIRED)),
+        ),
+    )
 }
 
 /// The session-start line naming each declared checker not on `PATH`
