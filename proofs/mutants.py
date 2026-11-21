@@ -34,6 +34,21 @@ class Mutant:
 
 
 MUTANTS = (
+    # graph (#59): every file's change is seen
+    Mutant("any-skips-last", "graph.rs",
+           "    while index < changed.len() {",
+           "    while index + 1 < changed.len() {",
+           ("Writfold.Core.Graph.any_loop_spec",)),
+    # graph: a key change resolves everything
+    Mutant("plan-delta-on-key-change", "graph.rs",
+           "    if !keys_same {",
+           "    if false {",
+           ("Writfold.Core.Graph.plan_whole_iff", "Writfold.Core.Graph.plan_skip_iff", "Writfold.Core.Graph.plan_delta_iff")),
+    # graph: a changed reference is never skipped
+    Mutant("plan-skip-ignores-changes", "graph.rs",
+           "    if any(changed) {",
+           "    if any(changed) && false {",
+           ("Writfold.Core.Graph.plan_skip_iff", "Writfold.Core.Graph.plan_delta_iff")),
     # publish (#58): drift never authorises a repair
     Mutant("repair-on-drift", "publish.rs",
            "    if found.source_moved || found.live_moved {",

@@ -2598,3 +2598,19 @@ subsumes = ["TAU-N001", "TAU-P003"]
 mutants = [
   "first-failing-skips-last",
 ]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/graph.rs"
+function = "any"
+lean = "writfold_core.graph.any"
+theorems = [
+  "Writfold.Core.Graph.any_loop_spec",
+  "Writfold.Core.Graph.any_spec",
+  "Writfold.Core.Graph.any_total",
+]
+total = "Writfold.Core.Graph.any_total"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "any-skips-last",
+]

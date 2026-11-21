@@ -27,3 +27,4 @@ import Writfold.Show
 import Writfold.Inventory
 import Writfold.Handoff
 import Writfold.Publish
+import Writfold.Graph

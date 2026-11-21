@@ -7,7 +7,7 @@ use crate::index::{
     verify::{self, Report},
 };
 use crate::session::Session;
-use rusqlite::Connection;
+use rusqlite::{Connection, OptionalExtension};
 
 pub fn status(session: &Session<'_>) -> Result<Answer> {
     let mut answer = Answer::default();
@@ -59,6 +59,23 @@ pub fn status(session: &Session<'_>) -> Result<Answer> {
         head.more.push(More {
             label: "count",
             text: format!("{label}={count}"),
+            ..More::default()
+        });
+    }
+    // The graph work of the last in-place refresh (#59), when there was one
+    // since the last rebuild.
+    let last: Option<String> = session
+        .conn
+        .query_row(
+            "SELECT value FROM meta WHERE key = 'last_refresh'",
+            [],
+            |r| r.get(0),
+        )
+        .optional()?;
+    if let Some(text) = last {
+        head.more.push(More {
+            label: "last-refresh",
+            text,
             ..More::default()
         });
     }

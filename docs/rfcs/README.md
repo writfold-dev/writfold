@@ -174,3 +174,4 @@ Rows are in creation order.
 | [2026-11-21](2026-11-21-complete-gate-inventory.md) | A gate inventory that could not be listed is not a complete answer | accepted | complete | [#56](https://github.com/writfold-dev/writfold/issues/56) |
 | [2026-11-21](2026-11-21-strict-handoff-check.md) | Judge a handoff against an operator's required gates, not the agent's plan | accepted | complete | [#57](https://github.com/writfold-dev/writfold/issues/57) |
 | [2026-11-21](2026-11-21-streamed-verify-same-pin-repair.md) | Stream index rebuild and verification; repair only the generation compared, at a still-current pin | accepted | complete | [#58](https://github.com/writfold-dev/writfold/issues/58) |
+| [2026-11-21](2026-11-21-refresh-affected-graph-facts.md) | Refresh only the graph facts an edit affects | accepted | complete | [#59](https://github.com/writfold-dev/writfold/issues/59) |

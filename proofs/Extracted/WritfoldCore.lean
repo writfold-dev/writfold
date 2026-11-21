@@ -2738,6 +2738,63 @@ def gate.statements
     gate.statements_loop said definition content false false false 0#usize
   ok { attested_current, attested_any, waived_current }
 
+/-- [writfold_core::graph::Plan]
+    Source: 'crates/writfold-core/src/graph.rs', lines 13:0-21:1
+    Visibility: public -/
+@[discriminant isize]
+inductive graph.Plan where
+| Skip : graph.Plan
+| Delta : graph.Plan
+| Whole : graph.Plan
+
+/-- [writfold_core::graph::any]: loop body 0:
+    Source: 'crates/writfold-core/src/graph.rs', lines 26:4-33:1
+    Visibility: public -/
+@[rust_loop_body]
+def graph.any_loop.body
+  (changed : Slice Bool) (index : Std.Usize) :
+  Result (ControlFlow Std.Usize Bool)
+  := do
+  let i := Slice.len changed
+  if index < i
+  then
+    let b ← Slice.index_usize changed index
+    if b
+    then ok (done true)
+    else let index1 ← index + 1#usize
+         ok (cont index1)
+  else ok (done false)
+
+/-- [writfold_core::graph::any]: loop 0:
+    Source: 'crates/writfold-core/src/graph.rs', lines 26:4-33:1
+    Visibility: public -/
+@[rust_loop]
+def graph.any_loop
+  (changed : Slice Bool) (index : Std.Usize) : Result Bool := do
+  loop
+    (fun index1 => graph.any_loop.body changed index1)
+    index
+
+/-- [writfold_core::graph::any]:
+    Source: 'crates/writfold-core/src/graph.rs', lines 24:0-33:1
+    Visibility: public -/
+@[reducible]
+def graph.any (changed : Slice Bool) : Result Bool := do
+  graph.any_loop changed 0#usize
+
+/-- [writfold_core::graph::plan]:
+    Source: 'crates/writfold-core/src/graph.rs', lines 38:0-46:1
+    Visibility: public -/
+def graph.plan
+  (keys_same : Bool) (changed : Slice Bool) : Result graph.Plan := do
+  if keys_same
+  then
+    let b ← graph.any changed
+    if b
+    then ok graph.Plan.Delta
+    else ok graph.Plan.Skip
+  else ok graph.Plan.Whole
+
 /-- [writfold_core::grounding::Grounding]
     Source: 'crates/writfold-core/src/grounding.rs', lines 9:0-16:1
     Visibility: public -/

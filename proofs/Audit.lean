@@ -41,6 +41,16 @@ def claims : List Name := [
   ``Writfold.Core.Publish.drift_never_replaces,
   ``Writfold.Core.Publish.equal_keeps,
   ``Writfold.Core.Publish.derived_replace_iff,
+  -- which graph facts a refresh rewrites (writfold_core::graph, #59)
+  ``Writfold.Core.Graph.any_loop_spec,
+  ``Writfold.Core.Graph.any_spec,
+  ``Writfold.Core.Graph.any_total,
+  ``Writfold.Core.Graph.plan_whole_iff,
+  ``Writfold.Core.Graph.plan_skip_iff,
+  ``Writfold.Core.Graph.plan_delta_iff,
+  ``Writfold.Core.Graph.plan_total,
+  ``Writfold.Core.Graph.frame,
+  ``Writfold.Core.Graph.delta_eq_full,
   -- the strict handoff decision (writfold_core::handoff, #57)
   ``Writfold.Core.Handoff.item_spec,
   ``Writfold.Core.Handoff.itemOf_none_iff,

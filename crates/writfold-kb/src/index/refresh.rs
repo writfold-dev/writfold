@@ -13,6 +13,7 @@ use crate::layout::classify;
 use crate::workspace::{CANCELLED, Repo, Workspace, budgets};
 use rusqlite::{Connection, ErrorCode, OptionalExtension, TransactionBehavior};
 use std::collections::{BTreeMap, BTreeSet};
+use writfold_core::graph::{Plan, plan};
 use writfold_core::publish::{Publish, derived};
 use writfold_runtime::git::{GitExecutable, kb_diff_tree};
 
@@ -134,6 +135,9 @@ pub fn refresh(
     if stored(&tx)?.is_some_and(|s| s.pin.digest == now.pin.digest) {
         return Ok(Outcome::Current);
     }
+    let keys_before = derive::keys_digest(&tx)?;
+    let mut rederived: Vec<String> = Vec::new();
+    let mut changed: Vec<bool> = Vec::new();
     let mut count = 0;
     for path in &paths {
         let fresh = members
@@ -153,15 +157,34 @@ pub fn refresh(
             continue;
         }
         let before = raws(&tx, path)?;
+        let refs_before = derive::refs_digest(&tx, path)?;
         delete_file(&tx, path)?;
         if let Some(fresh) = fresh {
             insert_file(&tx, fresh)?;
         }
         forget_verdicts(&tx, path, &before)?;
+        changed.push(derive::refs_digest(&tx, path)? != refs_before);
+        rederived.push(path.clone());
         count += 1;
     }
     if count > 0 {
-        derive::phase_b(&tx)?;
+        derive::keys(&tx)?;
+        let keys_same = derive::keys_digest(&tx)? == keys_before;
+        let (word, (deleted, written)) = match plan(keys_same, &changed) {
+            Plan::Skip => ("skip", (0, 0)),
+            Plan::Delta => {
+                let affected: Vec<String> = (rederived.iter().zip(&changed))
+                    .filter(|(_, c)| **c)
+                    .map(|(p, _)| p.clone())
+                    .collect();
+                ("delta", derive::of(&tx, &affected)?)
+            }
+            Plan::Whole => ("whole", derive::whole(&tx)?),
+        };
+        let note =
+            format!("files={count} graph={word} edges-deleted={deleted} edges-written={written}");
+        tx.prepare_cached("INSERT OR REPLACE INTO meta(key, value) VALUES ('last_refresh', ?1)")?
+            .execute([note])?;
     }
     // The files were read after the snapshot was observed. Store the
     // derivation only if the snapshot still holds, so a reader that reports
