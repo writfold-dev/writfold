@@ -29,13 +29,17 @@ the Claude Code plugin. No sudo, no edits to shell startup files. Add `-s -- --d
 By hand, the same steps:
 
 ```sh
-base=https://github.com/writfold-dev/writfold/releases/download/v0.6.0-dev.5
+base=https://github.com/writfold-dev/writfold/releases/download/v0.6.0-dev.11
 curl -LO "$base/writfold-x86_64-linux-musl" -LO "$base/writfold-x86_64-linux-musl.sha256"
 echo "$(cut -d' ' -f1 writfold-x86_64-linux-musl.sha256)  writfold-x86_64-linux-musl" | sha256sum -c
-install -m 755 writfold-x86_64-linux-musl ~/.local/bin/writfold
+install -D -m 755 writfold-x86_64-linux-musl ~/.local/bin/writfold
 claude plugin marketplace add writfold-dev/writfold
 claude plugin install writfold@writfold
 ```
+
+The marketplace serves the plugin from `main`, which calls only hook events
+the newest release has; install that release's binary (the tag above, which
+a test keeps equal to the pre-release line) so the two agree.
 
 From source, on Linux x86_64 with [rustup](https://rustup.rs) (the pinned
 toolchain installs on first build):
