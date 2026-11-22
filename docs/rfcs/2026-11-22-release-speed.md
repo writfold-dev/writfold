@@ -2,7 +2,7 @@
 rfc: "2026-11-22-release-speed"
 title: "Release speed: incremental claims, an early site check, a parallel unit gate, one release command"
 status: accepted
-implementation: partial
+implementation: complete
 authors:
   - fable
   - opus
@@ -105,3 +105,5 @@ tag.
   the mutant sites. 5 implemented: `scripts/release` with `prepare`,
   `claims`, `build`, `publish`, `site` and `close`; gating stays explicit
   from main.
+- 2026-11-22: complete; v0.6.0-dev.16 is the first release cut entirely with
+  `scripts/release`.

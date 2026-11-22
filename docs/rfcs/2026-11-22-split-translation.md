@@ -2,7 +2,7 @@
 rfc: "2026-11-22-split-translation"
 title: "Split translation: a mutant rebuilds only the proofs it can reach"
 status: accepted
-implementation: partial
+implementation: complete
 authors:
   - fable
   - opus
@@ -104,7 +104,9 @@ Measured on an idle host, with two mutants: a leaf module
 | Whole gate with those two | 134 s | 100 s |
 
 Each mutant's extraction (Charon and Aeneas, about 7 s) is now its largest
-fixed cost. A full run is measured with the dev.16 claims.
+fixed cost. Full run (dev.16 claims, 269 mutants, 8 jobs on a loaded
+host): mutant calibration 2246 s, against 4562 s for the same set on
+dev.15.
 
 ## Decision log
 
@@ -116,3 +118,5 @@ fixed cost. A full run is measured with the dev.16 claims.
   per-mutant build started from nothing, so the split alone would not have
   saved anything. Obligation 4 was added after reading tauten's input
   computation.
+- 2026-11-22: complete. dev.16's claims ran with the split: all 170 claims
+  proved, and mutant calibration took half the time.
