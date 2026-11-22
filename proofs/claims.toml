@@ -2722,3 +2722,10 @@ subsumes = ["TAU-N001", "TAU-P003"]
 mutants = [
   "catalog-change-skips-last",
 ]
+
+[[amend]]
+file = "crates/writfold-core/src/plan/round.rs"
+function = "judged_at"
+kind = "mutant"
+name = "round-next-again-before-judge"
+reason = "the mutant edits owed_or, the caller, and breaks none of judged_at's theorems; it moved to the owed_or claim, and judged_at has its own mutant round-judged-at-ignores-verdict (v0.6.0-dev.15)"
