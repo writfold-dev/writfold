@@ -77,7 +77,7 @@ repo ghost [missing] tokens=2 @lantern/notes.md:4
 
 **Which clone to make.** Use a full clone, bare or not. A shallow clone (`--depth`) holds every file at its newest commit but not the history behind it. What the bytes at the target decide reads the same as in a full clone: a token with `blob=` at an unchanged path, and a token with `span=` whose file holds another blob (the span is searched there). What needs the cited commit (a token with neither `blob=` nor `span=`, a path renamed with edits or deleted since) reads `unverifiable` `history-not-local`, never `changed` or `gone`, until `git fetch --unshallow`. `kb repos` marks such a clone `history: shallow`. Since v0.6.0-dev.17; earlier binaries reported those citations changed or gone. A partial clone (`--filter=blob:none`) is `partial-clone` throughout. For a clone that only feeds `stale`, `git clone --mirror` is the simplest: `git fetch` keeps its branches and `HEAD` current (a plain `--bare` clone has no fetch refspec, so fetching does not move its branches).
 
-A script that clones every missing repository into the first search root and fetches every resolved clone (it needs `jq`, and a `url=` on at least one token of each repository):
+**The trusted-KB shortcut.** When every `url=` in the KB is one you would clone anyway, this script clones every missing repository into the first search root and fetches every resolved clone (it needs `jq`, and a `url=` on at least one token of each repository). It fetches whatever the KB's text names, so on a KB you did not write, or a machine with limited storage, plan the clones first (next section).
 
 ```sh
 #!/bin/sh
@@ -94,6 +94,47 @@ writfold kb repos --json --budget-tokens 100000 |
 ```
 
 Run it from the KB with `WRITFOLD_KB_REPOS` set, then on a timer, for example `*/30 * * * * cd ~/kb && WRITFOLD_KB_REPOS=~/src/cited ~/bin/writfold-repos-sync` in `crontab -e`. Writfold itself never clones or fetches.
+
+### Which clones to provision
+
+On a new machine a KB can index cleanly while most of its code citations have no clone. Decide which clones this handoff needs, by the evidence they settle, before cloning anything. `docs/guide/recipes/clone-coverage.py` walks the stages; `crates/writfold/tests/kb_clone_coverage.rs` runs it on a disposable KB citing three repositories (the output below is from that setup, `$DEMO` its directory).
+
+1. **Inventory** (no network, no Git write). Every repository the KB cites, its state here, and its token count. A `url=` is shown for review, never fetched. A partial clone is not `missing`: `kb repos --missing` alone does not list it.
+2. **Shortlist** (no network, no Git write). Missing and partial repositories, not stores, in this order: those named by gate citations first, since a gate needs that evidence, then by descending token count. A token count ranks candidates. It does not promise fresh citations: a clone turns `repo-not-local` into a real verdict, which may be `changed`. Stop at your storage or time budget; there is no fixed number. A pinned store with a usable recorded verdict ([stores](stores.md), `recorded_max_age`) answers without a clone. An ordinary repository judged at a moving head cannot, and a recorded verdict never says that head is still fresh.
+3. **Provision** only what you approved. `provision APPROVED --into DIR` reads `<repo> <origin>` lines you wrote, mirrors each into `DIR`, names it in the KB's local map, and reports the storage it took. It never updates or prunes an existing clone. `--depth 1` is a sound cheap first stage when the citations carry `blob=` or `span=`. The rest read `history-not-local` until that one repository is deepened (`git fetch --unshallow`).
+4. **Compare** citation verdicts before and after, by verdict and reason. "Still unverifiable" is a row of its own, with its reason.
+
+```text
+$ python3 clone-coverage.py inventory
+repo             status    tokens  url (shown for review, not fetched)
+alpha            missing        4  https://example.invalid/alpha.git
+beta             missing        3  https://example.invalid/beta.git
+gamma            partial        2  https://example.invalid/gamma.git
+# repos=3 missing=2 partial=1
+# a partial clone is not `missing`: `kb repos --missing` does not list it
+$ python3 clone-coverage.py shortlist
+ # repo             status    tokens  why
+ 1 beta             missing        3  named by a gate citation
+ 2 alpha            missing        4  token count
+ 3 gamma            partial        2  token count
+# review this list; write the approved `<repo> <origin>` lines yourself
+$ python3 clone-coverage.py verdicts --save ../before.json
+     2  unverifiable partial-clone
+     7  unverifiable repo-not-local
+$ python3 clone-coverage.py provision ../approved.txt --into ../clones --depth 1
+alpha: $DEMO/clones/alpha.git 220 KiB (depth 1)
+# provisioned 220 KiB on disk; named in $DEMO/kb/.git/writfold/repos
+$ du -sk ../clones/alpha.git ../full/alpha.git
+220	../clones/alpha.git
+948	../full/alpha.git
+$ python3 clone-coverage.py compare ../before.json ../after.json
+before  after  verdict and reason
+     0      4  fresh
+     2      2  unverifiable partial-clone
+     7      3  unverifiable repo-not-local
+```
+
+Here `approved.txt` names only `alpha`. `beta` stays missing on purpose, so its three citations, the gate citation among them, still read `repo-not-local`. `alpha`'s four `blob=` citations read fresh from a shallow mirror taking a quarter of a full one's storage. `gamma`'s partial clone stays `partial-clone` until it is replaced by a full or shallow clone.
 
 ## The index: `kb index status | verify | rebuild`
 
