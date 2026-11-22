@@ -27,4 +27,4 @@ scope = [
   "!LICENSE",
   "!.writfold/**",
 ]
-description = "cargo test over the workspace through scripts/gate"
+description = "the workspace tests (built once, run in parallel) through scripts/gate"

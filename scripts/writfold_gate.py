@@ -13,7 +13,7 @@ import writfold_evidence as evidence
 
 ROOT = evidence.ROOT
 GATES = {"bootstrap": "WF01", "build": "WF01", "unit": "WF02", "quality": "WF02"}
-SERVICES = {"unit": ("unit", "Cargo.lock"), "build": ("build", "Cargo.lock"),
+SERVICES = {"unit": ("unit", "scripts/unit_tests.py"), "build": ("build", "Cargo.lock"),
             "quality": ("quality", "scripts/writfold_quality.py")}
 
 EXPORT_BUILD = """import json, pathlib, shutil, sys

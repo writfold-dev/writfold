@@ -59,7 +59,18 @@ services:
   unit:
     <<: *qualified-tools
     network_mode: none
-    command: [cargo, test, --workspace, --locked, --offline]
+    # The workspace tests, built once and run WRITFOLD_TEST_JOBS executables
+    # at a time (#93).
+    environment:
+      CARGO_TARGET_DIR: /cache/target/rust-1.98.0
+      CARGO_BUILD_JOBS: ${WRITFOLD_BUILD_JOBS:-8}
+      PYTHONDONTWRITEBYTECODE: "1"
+      TERM: xterm-256color
+      GIT_CONFIG_COUNT: "1"
+      GIT_CONFIG_KEY_0: safe.directory
+      GIT_CONFIG_VALUE_0: /work/writfold
+      WRITFOLD_TEST_JOBS: ${WRITFOLD_TEST_JOBS:-4}
+    command: [python3, scripts/unit_tests.py]
   reference:
     <<: *qualified-tools
     network_mode: none

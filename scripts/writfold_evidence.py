@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PLAYBOOK = "e7d991e990e3dff9c5d70e4327c0e90298e2f67e"
 TARGET = "x86_64-unknown-linux-musl"
 DEFINITIONS = ("scripts/gate", "scripts/writfold_gate.py", "scripts/writfold_evidence.py",
-               "qualification/gate-receipt.schema.json", "compose.yaml")
+               "qualification/gate-receipt.schema.json", "compose.yaml", "scripts/unit_tests.py")
 
 
 def canonical(value: object) -> bytes:
