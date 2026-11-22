@@ -268,7 +268,7 @@ def site(directory: str | None) -> None:
     sh("python3", "scripts/build_pages.py", cwd=site_dir, capture=False)
     sh("bash", "scripts/test_install.sh", cwd=site_dir, capture=False)
     with tempfile.TemporaryDirectory(prefix="writfold-package-") as scratch:
-        sh("python3", "scripts/package.py", "--refresh-manifest", "--output", scratch, cwd=site_dir, capture=False)
+        sh("python3", "scripts/package.py", "--refresh-manifest", "--output", str(Path(scratch) / "site"), cwd=site_dir, capture=False)
     sh("git", "add", "-A", cwd=site_dir)
     if sh("git", "status", "--porcelain", cwd=site_dir):
         sh("git", "commit", "-q", "-m", f"Release {tag}", cwd=site_dir)
