@@ -54,7 +54,8 @@ def main() -> int:
         return 3
     emit(stage="tools", status="ok")
 
-    gate = subprocess.Popen(["sh", "proofs/gate.sh"], cwd=ROOT, stdout=subprocess.PIPE,
+    # Arguments (`--only a,b` from `[gate] try`) select the mutants (#91).
+    gate = subprocess.Popen(["sh", "proofs/gate.sh", *sys.argv[1:]], cwd=ROOT, stdout=subprocess.PIPE,
                             stderr=subprocess.STDOUT, text=True)
     lines = []
     assert gate.stdout is not None

@@ -2,7 +2,9 @@
 # The `proofs` gate (docs/writfold/aeneas.md), run at container start in the image
 # proofs/Dockerfile builds: regenerate the translation and refuse drift
 # against the committed proofs/Extracted/, build the proofs, audit every
-# theorem's axioms, then calibrate with mutants that must fail.
+# theorem's axioms, then calibrate with mutants that must fail. Arguments go
+# to proofs/mutants.py: none runs every mutant; `--only a,b` runs those
+# (the `[gate] try` form `cargo tauten proofs --level ship` uses, #91).
 set -eu
 cd "$(dirname "$0")/.."
 started="$(date +%s)"
@@ -27,6 +29,6 @@ lake env lean Audit.lean
 cd ..
 
 stamp "mutant calibration"
-python3 proofs/mutants.py
+python3 proofs/mutants.py "$@"
 
 stamp "proofs gate: OK"

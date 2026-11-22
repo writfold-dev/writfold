@@ -6,6 +6,9 @@ version = 1
 
 [gate]
 command = ["sh", "proofs/tauten-gate.sh"]
+# `cargo tauten proofs --level ship` and `proofs try` append the mutants to
+# run, comma-separated (#91).
+try = ["sh", "proofs/tauten-gate.sh", "--only"]
 crates = ["crates/writfold-core"]
 
 [[claim]]
@@ -2642,6 +2645,18 @@ theorems = [
 ]
 total = "Writfold.Core.Round.judged_at_total"
 subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "round-judged-at-ignores-verdict",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/plan/round.rs"
+function = "owed_or"
+lean = "writfold_core.plan.round.owed_or"
+theorems = [
+  "Writfold.Core.Round.owed_or_spec",
+]
 mutants = [
   "round-next-again-before-judge",
 ]

@@ -5,6 +5,10 @@
 # proofs/tauten_gate.py, which prints the TAUTEN-PROOFS result lines
 # `cargo tauten proofs` reads. Progress goes to stderr; result lines to stdout.
 # Run from the workspace root. WRITFOLD_PROOFS_IMAGE overrides the tag.
+# Arguments pass through to proofs/mutants.py: `[gate] try` appends
+# `--only a,b`, so `cargo tauten proofs --level ship` and `proofs try` run
+# every stage but only the named mutants (#91). The site pre-flight runs
+# first, on every mutant, either way (#92).
 set -u
 cd "$(dirname "$0")/.."
 image=${WRITFOLD_PROOFS_IMAGE:-writfold-proofs:tauten}
@@ -16,4 +20,4 @@ command -v docker >/dev/null 2>&1 || missing "docker is not installed"
 docker info >/dev/null 2>&1 || missing "the docker daemon is not reachable"
 docker build -f proofs/Dockerfile --target gate -t "$image" . >&2 \
     || missing "building the proofs image failed (see stderr)"
-exec docker run --rm --network none "$image" python3 proofs/tauten_gate.py
+exec docker run --rm --network none "$image" python3 proofs/tauten_gate.py "$@"

@@ -8,6 +8,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import sys
 import shutil
 import tempfile
 import time
@@ -313,6 +314,9 @@ class Producer:
         else:
             self.record("checker-calibration", False, reason="xtask build failed; no calibration executed")
         self.nominal_calibrations()
+        # Every mutant's site matches its kernel file exactly once (#92):
+        # seconds here, instead of a refused claims run.
+        self.simple("mutant-sites", [sys.executable, "proofs/mutants.py", "--check-sites"])
         self.flush()
 
 

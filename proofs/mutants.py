@@ -142,6 +142,11 @@ MUTANTS = (
            "    rounds > b.max",
            "    rounds >= b.max",
            ("Writfold.Core.Round.over_iff",)),
+    # round: a gate counts as judged only when its verdict says so
+    Mutant("round-judged-at-ignores-verdict", "plan/round.rs",
+           "    i < judged.len() && judged[i]\n",
+           "    i < judged.len()\n",
+           ("Writfold.Core.Round.judged_at_spec",)),
     Mutant("round-next-again-before-judge", "plan/round.rs",
            "            if judged_at(judged, i) {",
            "            if true {",
@@ -1653,11 +1658,47 @@ def unclaimed() -> list[str]:
     return sorted({name for m in MUTANTS for name in m.fails} - claims)
 
 
+def bad_sites() -> list[str]:
+    """Each mutant whose site does not occur exactly once in its kernel file.
+
+    A static pre-flight (#92): calibration refuses such a mutant only after
+    copying and building, so a drifted site used to cost a whole run.
+    """
+    bad = []
+    for mutant in MUTANTS:
+        source = KERNEL / "src" / mutant.file
+        count = source.read_text().count(mutant.before) if source.is_file() else 0
+        if count != 1:
+            bad.append(f"FAIL {mutant.name}: mutation site does not match exactly once ({count} matches)")
+    return bad
+
+
+def selection(argv: list[str]) -> tuple[bool, set[str] | None]:
+    """`--check-sites` (only the pre-flight), `--only a,b` (those mutants;
+    empty means none, as `cargo tauten proofs --level ship` asks when every
+    claim's inputs are unchanged), or names as arguments; nothing selects all.
+    """
+    if argv == ["--check-sites"]:
+        return True, set()
+    if argv[:1] == ["--only"]:
+        if len(argv) != 2:
+            raise SystemExit("usage: mutants.py --only NAME[,NAME...]")
+        return False, {n for n in argv[1].split(",") if n}
+    return False, set(argv) or None
+
+
 def main() -> None:
     if missing := unclaimed():
         raise SystemExit(f"FAIL: theorems named by mutants are not audited claims: {missing}")
-    selected = set(sys.argv[1:])
-    mutants = [m for m in MUTANTS if not selected or m.name in selected]
+    only_sites, selected = selection(sys.argv[1:])
+    if bad := bad_sites():
+        for line in bad:
+            print(line, flush=True)
+        raise SystemExit(f"FAIL: {len(bad)} mutant site(s) do not match exactly once")
+    if only_sites:
+        print(f"MUTANT_SITES ok ({len(MUTANTS)})", flush=True)
+        return
+    mutants = [m for m in MUTANTS if selected is None or m.name in selected]
     if selected and len(mutants) != len(selected):
         raise SystemExit(f"unknown mutant(s): {sorted(selected - {m.name for m in mutants})}")
     # Every mutant runs even after a failure, so one gate run reports them all.
