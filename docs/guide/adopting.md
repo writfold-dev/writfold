@@ -147,3 +147,8 @@ It decides nothing (no `permissionDecision`), prints nothing when the KB has no 
 ## 8. Moving history
 
 Records written by another tool are read as they are when they are Git text in the layout ([kb-layout](kb-layout.md#knowledge-bases-not-written-by-writfold)), and history is imported by writing files in that layout and validating them ([importing existing material](kb-layout.md#importing-existing-material)). Two things do not move today. An earlier tool's `runs/*/observations/` and `runs/*/receipts/` are skipped, not indexed: they cannot stand as evidence for a Writfold gate, because nothing recorded how each look went under Writfold's rules. And `observe` and `record` take one item per call. A batch form of both (`--from FILE`), which is what a history import needs, is planned, not built; it has to say how an imported look is marked so that it never reads as one made in the run.
+
+## 9. Before a cutover
+
+Before relying on Writfold in place of another tool, rehearse the parts an index alone does not show:
+- **Run counts:** reconcile Writfold's runs with the other tool's by ID, not by count ([validation guide, "Runs: reconciling a count by ID"](validation.md#runs-reconciling-a-count-by-id)).

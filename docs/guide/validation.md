@@ -184,6 +184,21 @@ The KB helps only when the first lookup hits. `writfold kb find --eval [FILE]` m
 
 **Measured again** (17 November 2026, fixed in v0.6.0-dev.4): on 3,000 generated tickets with a title and three sections of 20 to 55 words each, plus one asset (derived index 22.7 MB), release musl binary, process start included, `--json`, 30 sequential calls each, median / p95: exact ID (`SYN-1234`) 58.3 / 59.9 ms, a short phrase with 50 hits (`ledger flush`) 47.9 / 49.2 ms, a long free-text phrase that only `text-any` answers (`restore lost information after disaster`) 92.1 / 103.4 ms, a miss with suggestions (`zzqx unmatched phrase`) 72.5 / 73.6 ms. Before the fix (v0.6.0-dev.3 musl) the same calls took 135.1 / 145.2, 184.0 / 195.2, 263.2 / 269.9 and 172.2 / 178.9 ms: the `typo` tier ranked every body that shared a trigram with the query. Now `typo` compares IDs and titles only, the later tiers stop once 50 rows are shown, and options too far in length are never compared. So on this shape every `find` takes under 100 ms at the median and under 105 ms at p95; a glibc build of the same code took 40 to 60 ms. The KB generator and timing script are `genkb.py` and `findtime.sh` in the bug-fix round's handover. No hook calls `find`. The script is `target/dev10-smoke/find-timing.sh` in the release round's handover.
 
+## Runs: reconciling a count by ID
+
+A count of runs from Writfold and a count from the tool it replaces can differ for reasons that have nothing to do with which runs exist. Compare IDs, at the same commit, never first pages. `docs/guide/recipes/reconcile-runs.py` does this at a KB root. It reads every page of `writfold kb runs --json` (following the cursor) and lists what Git holds at `--commit` (default `HEAD`). Given `--other FILE` (one `<id> <state>` per line from the other tool), it also prints the IDs only one side knows and the states that differ. It writes nothing and exits 1 when anything disagrees. `crates/writfold/tests/kb_run_reconcile.rs` runs it on a fixture with every cause below.
+
+| Cause | How it shows up | Visible in `kb runs`? |
+|---|---|---|
+| More rows than one answer holds | `omitted=`, `cursor=` in the trailer; the recipe prints the pages it read | yes |
+| Different commits or a dirty tree | `kb=<commit>[+dirty:N]` in the trailer; the recipe notes a mismatch with `--commit` | yes |
+| A `runs/<id>/` directory without `manifest.json` | the recipe's "directories without manifest.json" | **no** ([#98](https://github.com/writfold-dev/writfold/issues/98)) |
+| A `manifest.json` outside `runs/<id>/` | the recipe's "manifest.json outside runs/<id>/" | **no** (#98) |
+| A manifest that does not parse | `unreadable=N`, `coverage=partial`; `kb index status` names it with the parse error | counted, not named |
+| Two manifests with one `run_id` | the same; `kb index status` says `duplicate id`; the first path wins | counted, not named |
+| A state other than `open` or `closed`, or a closure the other tool records elsewhere | shown as written (`[done]`); `--open` keeps every state but `closed` (#98); Writfold reads only the sidecar's `closed` and the manifest's `state` | shown; `--open` does not exclude it |
+| `--open`, `--project` | the command line | yes |
+
 ## Exit codes
 
 | Code | Meaning |

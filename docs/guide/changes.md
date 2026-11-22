@@ -9,6 +9,7 @@ A line marked **fix** changed an answer that was wrong; anything depending on th
 ## v0.6.0-dev.17
 
 - **fix** A code citation whose cited commit is not in the local clone (a shallow or single-branch clone, an unfetched or rewritten commit) now reads `unverifiable` `history-not-local` instead of `changed` or `gone`. This applies to a token with no `blob=` and no `span=`, and to a path renamed or deleted since. A token without `rev=` that would need one reads `nothing-to-compare`, and the 64-revision rename cap reads `rename-unchecked`; both used to read `gone`. Git failures while following a rename other than an unknown commit read `git-error`. Exit codes are unchanged (both exit 2). The trailer moves those citations from `stale=` to `unverifiable=`, and a delivery's `claims.cited-fresh` check reads `unknown` instead of `fail` for them. `proposal accept` still refuses them. An authored `stale=` mark now shows on them. `kb repos` lists a shallow clone with `history: shallow` and a `shallow=` count ([#90](https://github.com/writfold-dev/writfold/issues/90)).
+- `kb runs` no longer prints an empty `field: ""` line for a run with no project, place or base ([#97](https://github.com/writfold-dev/writfold/issues/97)).
 
 ## v0.6.0-dev.16
 

@@ -91,11 +91,14 @@ pub(crate) fn run_row(
             }
         }
     }
-    row.more.push(More {
-        label: "field",
-        text: place.join(" "),
-        ..More::default()
-    });
+    // A run with no project, place or base has no field line (#97).
+    if !place.is_empty() {
+        row.more.push(More {
+            label: "field",
+            text: place.join(" "),
+            ..More::default()
+        });
+    }
     let mut planned = false;
     if plan && let Some(position) = plan::position(&session.ws.root, rec) {
         row.more.push(position);
