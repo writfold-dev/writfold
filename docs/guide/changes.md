@@ -6,6 +6,10 @@ This page is for someone pinned to one release who wants to upgrade on purpose. 
 
 A line marked **fix** changed an answer that was wrong; anything depending on the old answer was depending on the fault.
 
+## v0.6.0-dev.16
+
+- No change to the binary's answers: this release only speeds up the release process ([#91](https://github.com/writfold-dev/writfold/issues/91)–[#95](https://github.com/writfold-dev/writfold/issues/95)). Pre-releases record proof claims at tauten's ship level, re-calibrating only the claims whose inputs changed. A drifted mutant site fails the quality gate in seconds. The unit gate runs test binaries four at a time. The Lean translation is split per kernel module (`proofs/Extracted/WritfoldCore/`), so a mutant rebuilds only the theorems it can reach. `scripts/release` cuts the release.
+
 ## v0.6.0-dev.15
 
 - **Loops** ([#74](https://github.com/writfold-dev/writfold/issues/74)): new step words `loop=`, `max=`, `min=` and the verb `writfold kb plan again`; a template without them reads, splices and folds as before. An earlier binary refuses a template (or a run snapshot) that uses them (`value.form`). New diagnostic codes `value.no-exit` and the warning `policy.self-exit`. A guard rule may require `step.settled` (#79); a `step.met` nudge on a loop step now names `plan again` when a round is left. A `plan again` splice event records an optional `until` (each gate's standing and evidence when the round began; earlier binaries ignore it), shown as `began:` in `plan status`; `watch` folds earlier rounds into one line (#81).
