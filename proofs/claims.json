@@ -22,7 +22,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:bind.Bound": "fnv1a64:67581dc60dae4c1d",
         "lean:bind.Need": "fnv1a64:8c8ef137b0a1c635",
@@ -40,7 +40,7 @@
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -83,7 +83,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:bind.Bound": "fnv1a64:67581dc60dae4c1d",
         "lean:bind.Need": "fnv1a64:8c8ef137b0a1c635",
@@ -97,7 +97,7 @@
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -139,7 +139,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:bind.item_under": "fnv1a64:db68f406f9988e86",
         "lean:checklist.Item": "fnv1a64:ae93a5f6eebc86d5",
@@ -154,7 +154,7 @@
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -185,14 +185,14 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:bytes.same": "fnv1a64:6b4f8052d7dc03f6",
         "lean:bytes.same_loop": "fnv1a64:94d62684a1043845",
         "lean:bytes.same_loop.body": "fnv1a64:c4a864549f7663da",
         "mutant:same-ignores-last-byte": "fnv1a64:3b6986b3eba5d4f5",
         "proof:Writfold/Bytes.lean": "fnv1a64:f010412e3932db5b",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -223,7 +223,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:checklist.Entry": "fnv1a64:e67c09276bbdd1fc",
         "lean:checklist.Item": "fnv1a64:ae93a5f6eebc86d5",
@@ -238,7 +238,7 @@
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -275,7 +275,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:checklist.Item": "fnv1a64:ae93a5f6eebc86d5",
         "lean:checklist.covered_under": "fnv1a64:d7709618b8b1f671",
@@ -289,7 +289,7 @@
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -300,14 +300,14 @@
           ]
         },
         {
-          "mutant": "covered-counts-unsupported",
+          "mutant": "covered-none-found-without-policy",
           "status": "killed",
           "broken": [
             "Writfold.Core.Checklist.covered_under_spec"
           ]
         },
         {
-          "mutant": "covered-none-found-without-policy",
+          "mutant": "covered-counts-unsupported",
           "status": "killed",
           "broken": [
             "Writfold.Core.Checklist.covered_under_spec"
@@ -341,7 +341,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:checklist.Entry": "fnv1a64:e67c09276bbdd1fc",
         "lean:checklist.Item": "fnv1a64:ae93a5f6eebc86d5",
@@ -357,7 +357,7 @@
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -392,7 +392,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:checklist.Item": "fnv1a64:ae93a5f6eebc86d5",
         "lean:checklist.Outcome": "fnv1a64:78c136a36c46d9f6",
@@ -409,7 +409,7 @@
         "proof:Writfold/Handoff.lean": "fnv1a64:6ea04c4da803c8c1",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -462,7 +462,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:checklist.Entry": "fnv1a64:e67c09276bbdd1fc",
         "lean:checklist.Item": "fnv1a64:ae93a5f6eebc86d5",
@@ -475,7 +475,7 @@
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -505,7 +505,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:checklist.Entry": "fnv1a64:e67c09276bbdd1fc",
         "lean:checklist.Item": "fnv1a64:ae93a5f6eebc86d5",
@@ -517,7 +517,7 @@
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -549,7 +549,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:checklist.Rollup": "fnv1a64:875c3ac906cdb567",
         "lean:checklist.standing": "fnv1a64:fd267caf60e2d239",
@@ -566,7 +566,7 @@
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -596,13 +596,13 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:command.is_help": "fnv1a64:a699d1829898d327",
         "mutant:is-help-wrong-byte": "fnv1a64:d16bdaf0db046225",
         "proof:Writfold/Bytes.lean": "fnv1a64:f010412e3932db5b",
         "proof:Writfold/Command.lean": "fnv1a64:f8974f3836e48228",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -634,7 +634,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:bytes.same": "fnv1a64:6b4f8052d7dc03f6",
         "lean:bytes.same_loop": "fnv1a64:94d62684a1043845",
@@ -647,7 +647,7 @@
         "mutant:named-skips-last": "fnv1a64:bf9277eb0ad10661",
         "proof:Writfold/Bytes.lean": "fnv1a64:f010412e3932db5b",
         "proof:Writfold/Command.lean": "fnv1a64:f8974f3836e48228",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -687,7 +687,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:decision.Flag": "fnv1a64:63ef918a93fa8473",
         "lean:decision.Given": "fnv1a64:59258f1bbe192d80",
@@ -697,7 +697,7 @@
         "mutant:flags-commit-not-refused": "fnv1a64:6a5450772ca6eadb",
         "mutant:flags-run-or-repo-ignored": "fnv1a64:531828a16274cc0a",
         "proof:Writfold/Decision.lean": "fnv1a64:e8a7b27d15ffadf1",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -751,7 +751,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:decision.Needs": "fnv1a64:ce2da9a53a586e4b",
         "lean:decision.State": "fnv1a64:27d36909f2be2476",
@@ -762,18 +762,11 @@
         "mutant:superseded-twice": "fnv1a64:c7508a13c9b222b9",
         "mutant:verified-without-evidence": "fnv1a64:139ae3bdd400a5a1",
         "proof:Writfold/Decision.lean": "fnv1a64:e8a7b27d15ffadf1",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
           "mutant": "accepted-without-readiness",
-          "status": "killed",
-          "broken": [
-            "Writfold.Core.Decision.step_spec"
-          ]
-        },
-        {
-          "mutant": "superseded-twice",
           "status": "killed",
           "broken": [
             "Writfold.Core.Decision.step_spec"
@@ -788,6 +781,13 @@
         },
         {
           "mutant": "landing-written",
+          "status": "killed",
+          "broken": [
+            "Writfold.Core.Decision.step_spec"
+          ]
+        },
+        {
+          "mutant": "superseded-twice",
           "status": "killed",
           "broken": [
             "Writfold.Core.Decision.step_spec"
@@ -814,7 +814,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:decision.Facts": "fnv1a64:b0b89b3cf6548a3c",
         "lean:decision.Needs": "fnv1a64:ce2da9a53a586e4b",
@@ -823,18 +823,18 @@
         "mutant:writes-ignores-successor": "fnv1a64:a2842333fc30eb09",
         "proof:Writfold/Decision.lean": "fnv1a64:e8a7b27d15ffadf1",
         "proof:Writfold/Pointer.lean": "fnv1a64:e648b2a4196e953c",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
-          "mutant": "writes-ignores-grounded",
+          "mutant": "writes-ignores-successor",
           "status": "killed",
           "broken": [
             "Writfold.Core.Decision.writes_spec"
           ]
         },
         {
-          "mutant": "writes-ignores-successor",
+          "mutant": "writes-ignores-grounded",
           "status": "killed",
           "broken": [
             "Writfold.Core.Decision.writes_spec"
@@ -865,7 +865,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:delivery.Place": "fnv1a64:397f008c4435aef1",
         "lean:delivery.deciding": "fnv1a64:1bf450866d517331",
@@ -883,22 +883,22 @@
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
+        {
+          "mutant": "deciding-ignores-bound",
+          "status": "killed",
+          "broken": [
+            "Writfold.Core.Delivery.deciding_loop_spec"
+          ]
+        },
         {
           "mutant": "deciding-first-unbound",
           "status": "killed",
           "broken": [
             "Writfold.Core.Delivery.deciding_loop_spec",
             "Writfold.Core.Delivery.deciding_spec"
-          ]
-        },
-        {
-          "mutant": "deciding-ignores-bound",
-          "status": "killed",
-          "broken": [
-            "Writfold.Core.Delivery.deciding_loop_spec"
           ]
         },
         {
@@ -932,7 +932,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:delivery.Owed": "fnv1a64:51ed50ab2d935d68",
         "lean:delivery.fact": "fnv1a64:f5974aab6d5eeb96",
@@ -958,7 +958,7 @@
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -989,7 +989,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:delivery.Owed": "fnv1a64:51ed50ab2d935d68",
         "lean:delivery.first_unmet": "fnv1a64:f90a2567a7256521",
@@ -1007,7 +1007,7 @@
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -1041,7 +1041,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:delivery.Body": "fnv1a64:6f606f6e25e8877c",
         "lean:delivery.Seen": "fnv1a64:b20173800bb2c929",
@@ -1063,7 +1063,7 @@
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -1111,7 +1111,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:delivery.Seen": "fnv1a64:b20173800bb2c929",
         "lean:delivery.guard_all": "fnv1a64:57cbabacc3c07444",
@@ -1126,7 +1126,7 @@
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -1171,7 +1171,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:delivery.Seen": "fnv1a64:b20173800bb2c929",
         "lean:delivery.guard_any": "fnv1a64:bde940f2104bcdfe",
@@ -1185,7 +1185,7 @@
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -1219,7 +1219,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:delivery.Seen": "fnv1a64:b20173800bb2c929",
         "lean:delivery.postable": "fnv1a64:902af02bfa18c91a",
@@ -1234,18 +1234,18 @@
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
-          "mutant": "postable-drops-same",
+          "mutant": "postable-drops-ready",
           "status": "killed",
           "broken": [
             "Writfold.Core.Delivery.postable_spec"
           ]
         },
         {
-          "mutant": "postable-drops-ready",
+          "mutant": "postable-drops-same",
           "status": "killed",
           "broken": [
             "Writfold.Core.Delivery.postable_spec"
@@ -1295,7 +1295,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:delivery.posted": "fnv1a64:7670492bd956252e",
         "lean:gate.Standing": "fnv1a64:215589f9c3906da6",
@@ -1308,7 +1308,7 @@
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -1349,7 +1349,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:delivery.Owed": "fnv1a64:51ed50ab2d935d68",
         "lean:delivery.first_unmet": "fnv1a64:f90a2567a7256521",
@@ -1369,7 +1369,7 @@
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -1406,7 +1406,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:delivery.rechecked": "fnv1a64:c01840dd08a1b23b",
         "lean:gate.State": "fnv1a64:fae97e18dddf6287",
@@ -1417,7 +1417,7 @@
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -1447,7 +1447,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:delivery.Owed": "fnv1a64:51ed50ab2d935d68",
         "lean:delivery.first_unmet": "fnv1a64:f90a2567a7256521",
@@ -1467,7 +1467,7 @@
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -1501,7 +1501,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:delivery.Owed": "fnv1a64:51ed50ab2d935d68",
         "lean:delivery.is_attested": "fnv1a64:60b69dca169374d5",
@@ -1523,7 +1523,7 @@
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -1561,7 +1561,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:delivery.Owed": "fnv1a64:51ed50ab2d935d68",
         "lean:delivery.unmet": "fnv1a64:7fa8a80721b4e911",
@@ -1577,7 +1577,7 @@
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -1614,12 +1614,12 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:diag.blocks": "fnv1a64:018d65329bb86fff",
         "mutant:blocks-any-warning": "fnv1a64:a226c987b5d33116",
         "proof:Writfold/Walk.lean": "fnv1a64:512787c5c3bc9dff",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -1649,12 +1649,12 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:find.admit": "fnv1a64:b2b38bbd42401cc5",
         "mutant:admit-shows-twice": "fnv1a64:e74bbe72850d52bf",
         "proof:Writfold/Walk.lean": "fnv1a64:512787c5c3bc9dff",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -1685,7 +1685,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:find.among": "fnv1a64:76da618770883e69",
         "lean:find.among_loop": "fnv1a64:93477d4270036a3d",
@@ -1693,7 +1693,7 @@
         "mutant:among-skips-last": "fnv1a64:d1d4734620dccd78",
         "proof:Writfold/Show.lean": "fnv1a64:d77f6a664716fdbb",
         "proof:Writfold/Walk.lean": "fnv1a64:512787c5c3bc9dff",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -1723,13 +1723,13 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:find.exact_stops": "fnv1a64:ed7e56384fd165f1",
         "mutant:exact-stops-on-many": "fnv1a64:68c11bc17110fc70",
         "proof:Writfold/Show.lean": "fnv1a64:d77f6a664716fdbb",
         "proof:Writfold/Walk.lean": "fnv1a64:512787c5c3bc9dff",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -1760,12 +1760,12 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:find.full": "fnv1a64:623bf2cac921bf31",
         "mutant:full-late": "fnv1a64:e9f6c6bfcc677fc7",
         "proof:Writfold/Walk.lean": "fnv1a64:512787c5c3bc9dff",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -1797,7 +1797,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:find.next_from": "fnv1a64:c79dcc3f18e284e3",
         "lean:find.next_from_loop": "fnv1a64:b94fdb092202520e",
@@ -1807,7 +1807,7 @@
         "lean:find.starts_loop.body": "fnv1a64:6e73544b97cbe9f5",
         "mutant:next-from-reversed": "fnv1a64:32b4a4719b7d7e4b",
         "proof:Writfold/Find.lean": "fnv1a64:784e1c4a45ef21a3",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -1838,7 +1838,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:find.next_from": "fnv1a64:c79dcc3f18e284e3",
         "lean:find.next_from_loop": "fnv1a64:b94fdb092202520e",
@@ -1852,7 +1852,7 @@
         "lean:find.starts_loop.body": "fnv1a64:6e73544b97cbe9f5",
         "mutant:prefixed-reuses-token": "fnv1a64:9669f7c78d8b0ae2",
         "proof:Writfold/Find.lean": "fnv1a64:784e1c4a45ef21a3",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -1882,12 +1882,12 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:find.query_ok": "fnv1a64:79e416d76555af47",
         "mutant:query-ok-three-chars": "fnv1a64:ffda5538d337db3e",
         "proof:Writfold/Find.lean": "fnv1a64:784e1c4a45ef21a3",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -1919,7 +1919,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:find.Hit": "fnv1a64:2bde257fd0c15654",
         "lean:find.admit": "fnv1a64:b2b38bbd42401cc5",
@@ -1933,7 +1933,7 @@
         "mutant:show-records-wrong": "fnv1a64:008bf60f8d653cce",
         "proof:Writfold/Show.lean": "fnv1a64:d77f6a664716fdbb",
         "proof:Writfold/Walk.lean": "fnv1a64:512787c5c3bc9dff",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -1971,14 +1971,14 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:find.starts": "fnv1a64:4c45926c3be33a79",
         "lean:find.starts_loop": "fnv1a64:0e0624a3bb3b5dde",
         "lean:find.starts_loop.body": "fnv1a64:6e73544b97cbe9f5",
         "mutant:starts-skips-last": "fnv1a64:092368f1b40895ce",
         "proof:Writfold/Find.lean": "fnv1a64:784e1c4a45ef21a3",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -2008,7 +2008,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:gate.Standing": "fnv1a64:215589f9c3906da6",
         "lean:gate.Standing.met": "fnv1a64:64dc9e4f983fba87",
@@ -2020,7 +2020,7 @@
         "proof:Writfold/Guard.lean": "fnv1a64:079fb396d7f2c041",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -2050,7 +2050,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:bytes.same": "fnv1a64:6b4f8052d7dc03f6",
         "lean:bytes.same_loop": "fnv1a64:94d62684a1043845",
@@ -2062,7 +2062,7 @@
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -2092,7 +2092,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:gate.Said": "fnv1a64:bc8ace95c4a45081",
         "lean:gate.attests": "fnv1a64:cc7aa606ade8530b",
@@ -2102,7 +2102,7 @@
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -2132,13 +2132,13 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:gate.bound": "fnv1a64:4fc0de9c6144c44f",
         "mutant:bound-ignores-subject": "fnv1a64:f005ff0bcc30e072",
         "proof:Writfold/Bytes.lean": "fnv1a64:f010412e3932db5b",
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -2170,7 +2170,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:gate.Evidence": "fnv1a64:39e54c244ce67524",
         "lean:gate.Outcome": "fnv1a64:5dd1bc7c0d056361",
@@ -2181,7 +2181,7 @@
         "proof:Writfold/Bytes.lean": "fnv1a64:f010412e3932db5b",
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -2192,14 +2192,14 @@
           ]
         },
         {
-          "mutant": "current-ignores-bound",
+          "mutant": "state-ignores-definition",
           "status": "killed",
           "broken": [
             "Writfold.Core.Gate.current_spec"
           ]
         },
         {
-          "mutant": "state-ignores-definition",
+          "mutant": "current-ignores-bound",
           "status": "killed",
           "broken": [
             "Writfold.Core.Gate.current_spec"
@@ -2227,7 +2227,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:bytes.same": "fnv1a64:6b4f8052d7dc03f6",
         "lean:bytes.same_loop": "fnv1a64:94d62684a1043845",
@@ -2244,9 +2244,16 @@
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
+        {
+          "mutant": "evidence-accepts-empty-content",
+          "status": "killed",
+          "broken": [
+            "Writfold.Core.Gate.evidence_spec"
+          ]
+        },
         {
           "mutant": "evidence-ignores-definition",
           "status": "killed",
@@ -2256,13 +2263,6 @@
         },
         {
           "mutant": "evidence-ignores-content",
-          "status": "killed",
-          "broken": [
-            "Writfold.Core.Gate.evidence_spec"
-          ]
-        },
-        {
-          "mutant": "evidence-accepts-empty-content",
           "status": "killed",
           "broken": [
             "Writfold.Core.Gate.evidence_spec"
@@ -2292,7 +2292,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:bytes.same": "fnv1a64:6b4f8052d7dc03f6",
         "lean:bytes.same_loop": "fnv1a64:94d62684a1043845",
@@ -2318,7 +2318,7 @@
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -2349,7 +2349,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:gate.Evidence": "fnv1a64:39e54c244ce67524",
         "lean:gate.Outcome": "fnv1a64:5dd1bc7c0d056361",
@@ -2359,7 +2359,7 @@
         "mutant:stale-from-unbound": "fnv1a64:6ed65302b0328022",
         "proof:Writfold/Bytes.lean": "fnv1a64:f010412e3932db5b",
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -2394,7 +2394,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:gate.Ending": "fnv1a64:dd02663956384caa",
         "lean:gate.Outcome": "fnv1a64:5dd1bc7c0d056361",
@@ -2404,18 +2404,18 @@
         "mutant:outcome-nonzero-unknown": "fnv1a64:d0c81300a65cbcc3",
         "proof:Writfold/Bytes.lean": "fnv1a64:f010412e3932db5b",
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
-          "mutant": "outcome-ignores-moved",
+          "mutant": "outcome-any-exit-passes",
           "status": "killed",
           "broken": [
             "Writfold.Core.Gate.outcome_spec"
           ]
         },
         {
-          "mutant": "outcome-any-exit-passes",
+          "mutant": "outcome-ignores-moved",
           "status": "killed",
           "broken": [
             "Writfold.Core.Gate.outcome_spec"
@@ -2453,7 +2453,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:gate.Standing": "fnv1a64:215589f9c3906da6",
         "lean:gate.State": "fnv1a64:fae97e18dddf6287",
@@ -2469,18 +2469,18 @@
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
-          "mutant": "attested-class-stands-on-check",
+          "mutant": "waiver-satisfies",
           "status": "killed",
           "broken": [
             "Writfold.Core.Gate.standing_spec"
           ]
         },
         {
-          "mutant": "waiver-satisfies",
+          "mutant": "attested-class-stands-on-check",
           "status": "killed",
           "broken": [
             "Writfold.Core.Gate.standing_spec"
@@ -2514,7 +2514,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:bytes.same": "fnv1a64:6b4f8052d7dc03f6",
         "lean:bytes.same_loop": "fnv1a64:94d62684a1043845",
@@ -2529,7 +2529,7 @@
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -2573,7 +2573,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:gate.Evidence": "fnv1a64:39e54c244ce67524",
         "lean:gate.Outcome": "fnv1a64:5dd1bc7c0d056361",
@@ -2594,18 +2594,11 @@
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
           "mutant": "state-ignores-bound",
-          "status": "killed",
-          "broken": [
-            "Writfold.Core.Gate.state_loop_spec"
-          ]
-        },
-        {
-          "mutant": "state-failed-satisfies",
           "status": "killed",
           "broken": [
             "Writfold.Core.Gate.state_loop_spec"
@@ -2617,6 +2610,13 @@
           "broken": [
             "Writfold.Core.Gate.state_loop_spec",
             "Writfold.Core.Gate.state_spec"
+          ]
+        },
+        {
+          "mutant": "state-failed-satisfies",
+          "status": "killed",
+          "broken": [
+            "Writfold.Core.Gate.state_loop_spec"
           ]
         }
       ]
@@ -2640,7 +2640,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:bytes.same": "fnv1a64:6b4f8052d7dc03f6",
         "lean:bytes.same_loop": "fnv1a64:94d62684a1043845",
@@ -2659,7 +2659,7 @@
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -2689,7 +2689,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:ground.moved": "fnv1a64:0bd3a593c19eab46",
         "lean:grounding.Grounding": "fnv1a64:73a98ad17817b2d1",
@@ -2700,7 +2700,7 @@
         "proof:Writfold/Ground.lean": "fnv1a64:e7845b2b8c298ae7",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -2731,7 +2731,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:ground.of_citations": "fnv1a64:af9df06ec5ae982c",
         "lean:grounding.Grounding": "fnv1a64:73a98ad17817b2d1",
@@ -2742,7 +2742,7 @@
         "proof:Writfold/Ground.lean": "fnv1a64:e7845b2b8c298ae7",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -2776,7 +2776,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:gate.Standing": "fnv1a64:215589f9c3906da6",
         "lean:gate.State": "fnv1a64:fae97e18dddf6287",
@@ -2790,7 +2790,7 @@
         "proof:Writfold/Ground.lean": "fnv1a64:e7845b2b8c298ae7",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -2828,7 +2828,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:ground.of_observation": "fnv1a64:71f9255a69b82b35",
         "lean:grounding.Grounding": "fnv1a64:73a98ad17817b2d1",
@@ -2841,7 +2841,7 @@
         "proof:Writfold/Ground.lean": "fnv1a64:e7845b2b8c298ae7",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -2873,7 +2873,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:ground.ReceiptFacts": "fnv1a64:3180094466d6931d",
         "lean:ground.of_receipt": "fnv1a64:aa9b59fb689da96d",
@@ -2886,7 +2886,7 @@
         "proof:Writfold/Ground.lean": "fnv1a64:e7845b2b8c298ae7",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -2923,7 +2923,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:ground.of_statement": "fnv1a64:1e7dc5be3ee13edd",
         "lean:grounding.Grounding": "fnv1a64:73a98ad17817b2d1",
@@ -2934,7 +2934,7 @@
         "proof:Writfold/Ground.lean": "fnv1a64:e7845b2b8c298ae7",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -2964,7 +2964,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:ground.of_token": "fnv1a64:cfec0e1bbdfd5bb6",
         "lean:grounding.Grounding": "fnv1a64:73a98ad17817b2d1",
@@ -2975,7 +2975,7 @@
         "proof:Writfold/Ground.lean": "fnv1a64:e7845b2b8c298ae7",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -3006,7 +3006,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:guard.Fact": "fnv1a64:74bb4cb6e8aff33d",
         "lean:guard.all_met": "fnv1a64:11ce6b52f054d704",
@@ -3021,7 +3021,7 @@
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
         "proof:Writfold/Round.lean": "fnv1a64:682dea4da6275c91",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -3053,7 +3053,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:guard.Decision": "fnv1a64:0356f4a564504c46",
         "lean:guard.combine": "fnv1a64:eb75bb867c2d9a9f",
@@ -3064,7 +3064,7 @@
         "proof:Writfold/Guard.lean": "fnv1a64:079fb396d7f2c041",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -3096,7 +3096,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:guard.Action": "fnv1a64:54c8ebe0c0f06654",
         "lean:guard.Decision": "fnv1a64:0356f4a564504c46",
@@ -3115,7 +3115,7 @@
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
         "proof:Writfold/Verdict.lean": "fnv1a64:4b39bfa357253243",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -3147,7 +3147,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:guard.Decision": "fnv1a64:0356f4a564504c46",
         "lean:guard.Mode": "fnv1a64:8ec65cf9ade6f365",
@@ -3159,7 +3159,7 @@
         "proof:Writfold/Guard.lean": "fnv1a64:079fb396d7f2c041",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -3191,7 +3191,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:guard.Fact": "fnv1a64:74bb4cb6e8aff33d",
         "lean:guard.gates_fact": "fnv1a64:75702bc474dbb6a0",
@@ -3203,7 +3203,7 @@
         "proof:Writfold/Guard.lean": "fnv1a64:079fb396d7f2c041",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -3240,7 +3240,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:guard.Fact": "fnv1a64:74bb4cb6e8aff33d",
         "lean:guard.met": "fnv1a64:43ca3565fca3a019",
@@ -3251,7 +3251,7 @@
         "proof:Writfold/Guard.lean": "fnv1a64:079fb396d7f2c041",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -3281,7 +3281,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:guard.Fact": "fnv1a64:74bb4cb6e8aff33d",
         "lean:guard.all_met": "fnv1a64:11ce6b52f054d704",
@@ -3296,7 +3296,7 @@
         "proof:Writfold/Guard.lean": "fnv1a64:079fb396d7f2c041",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -3326,7 +3326,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:guard.Fact": "fnv1a64:74bb4cb6e8aff33d",
         "lean:guard.Repeat": "fnv1a64:87aa4f0addfc7ab0",
@@ -3343,7 +3343,7 @@
         "proof:Writfold/Guard.lean": "fnv1a64:079fb396d7f2c041",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -3373,7 +3373,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:guard.Action": "fnv1a64:54c8ebe0c0f06654",
         "lean:guard.Decision": "fnv1a64:0356f4a564504c46",
@@ -3387,7 +3387,7 @@
         "proof:Writfold/Guard.lean": "fnv1a64:079fb396d7f2c041",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -3419,7 +3419,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:guard.Action": "fnv1a64:54c8ebe0c0f06654",
         "lean:guard.Decision": "fnv1a64:0356f4a564504c46",
@@ -3439,7 +3439,7 @@
         "proof:Writfold/Guard.lean": "fnv1a64:079fb396d7f2c041",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -3469,7 +3469,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:guard.Decision": "fnv1a64:0356f4a564504c46",
         "lean:guard.Mode": "fnv1a64:8ec65cf9ade6f365",
@@ -3481,7 +3481,7 @@
         "proof:Writfold/Guard.lean": "fnv1a64:079fb396d7f2c041",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -3512,7 +3512,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:guard.Fact": "fnv1a64:74bb4cb6e8aff33d",
         "lean:guard.require.Looked": "fnv1a64:8559de05ed44293a",
@@ -3524,7 +3524,7 @@
         "proof:Writfold/Guard.lean": "fnv1a64:079fb396d7f2c041",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -3554,7 +3554,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:guard.Fact": "fnv1a64:74bb4cb6e8aff33d",
         "lean:guard.gates_fact": "fnv1a64:75702bc474dbb6a0",
@@ -3567,7 +3567,7 @@
         "proof:Writfold/Guard.lean": "fnv1a64:079fb396d7f2c041",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -3597,7 +3597,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:guard.Fact": "fnv1a64:74bb4cb6e8aff33d",
         "lean:guard.require.run_current": "fnv1a64:eb010b89146f12ef",
@@ -3608,7 +3608,7 @@
         "proof:Writfold/Guard.lean": "fnv1a64:079fb396d7f2c041",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -3639,7 +3639,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:guard.Fact": "fnv1a64:74bb4cb6e8aff33d",
         "lean:guard.require.Looked": "fnv1a64:8559de05ed44293a",
@@ -3651,7 +3651,7 @@
         "proof:Writfold/Guard.lean": "fnv1a64:079fb396d7f2c041",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -3682,7 +3682,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:idle.idle": "fnv1a64:a86b93f787227a8c",
         "lean:idle.newer": "fnv1a64:011ad74106b950bd",
@@ -3695,7 +3695,7 @@
         "proof:Writfold/Get.lean": "fnv1a64:c03a1381bd399880",
         "proof:Writfold/Idle.lean": "fnv1a64:65f47f4ca954a854",
         "proof:Writfold/Verdict.lean": "fnv1a64:4b39bfa357253243",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -3728,7 +3728,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:idle.newer": "fnv1a64:011ad74106b950bd",
         "mutant:newer-reads-past-end": "fnv1a64:648b4ab0334c21fe",
@@ -3736,7 +3736,7 @@
         "proof:Writfold/Get.lean": "fnv1a64:c03a1381bd399880",
         "proof:Writfold/Idle.lean": "fnv1a64:65f47f4ca954a854",
         "proof:Writfold/Verdict.lean": "fnv1a64:4b39bfa357253243",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -3775,7 +3775,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:idle.newer": "fnv1a64:011ad74106b950bd",
         "lean:idle.newest": "fnv1a64:78cb07c1f783d125",
@@ -3787,7 +3787,7 @@
         "proof:Writfold/Order.lean": "fnv1a64:242615e0855e7f05",
         "proof:Writfold/Recorded.lean": "fnv1a64:14657fdf92c2eba9",
         "proof:Writfold/Verdict.lean": "fnv1a64:4b39bfa357253243",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -3817,14 +3817,14 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:idle.since": "fnv1a64:6b31a19ee4e2852f",
         "mutant:since-off-by-one": "fnv1a64:97ced515dcf7bb9f",
         "proof:Writfold/Get.lean": "fnv1a64:c03a1381bd399880",
         "proof:Writfold/Idle.lean": "fnv1a64:65f47f4ca954a854",
         "proof:Writfold/Verdict.lean": "fnv1a64:4b39bfa357253243",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -3854,13 +3854,13 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:investigation.Missing": "fnv1a64:d0434129d509c460",
         "lean:investigation.Missing.none": "fnv1a64:51cfe118ec3169d1",
         "mutant:none-ignores-open": "fnv1a64:6f356107c130a354",
         "proof:Writfold/Decision.lean": "fnv1a64:e8a7b27d15ffadf1",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -3892,7 +3892,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:investigation.Hypothesis": "fnv1a64:dcb51124a59a2a34",
         "lean:investigation.Missing": "fnv1a64:d0434129d509c460",
@@ -3902,7 +3902,7 @@
         "mutant:conclude-ignores-section": "fnv1a64:d4d8e8a962cc75c4",
         "mutant:conclude-skips-last": "fnv1a64:0b52097cb2cfd3a8",
         "proof:Writfold/Decision.lean": "fnv1a64:e8a7b27d15ffadf1",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -3939,7 +3939,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:observe.Status": "fnv1a64:2d8b219e7eec52a6",
         "lean:observe.embeds": "fnv1a64:7b8a8ea55a66bf73",
@@ -3950,7 +3950,7 @@
         "proof:Writfold/Ground.lean": "fnv1a64:e7845b2b8c298ae7",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -3980,7 +3980,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:observe.Status": "fnv1a64:2d8b219e7eec52a6",
         "lean:observe.grounds": "fnv1a64:a820f22f405f7a31",
@@ -3991,7 +3991,7 @@
         "proof:Writfold/Ground.lean": "fnv1a64:e7845b2b8c298ae7",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -4023,7 +4023,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:order.less": "fnv1a64:0e8ecd89b39ef4b9",
         "lean:order.less_loop": "fnv1a64:f794e91abb1eef7f",
@@ -4031,7 +4031,7 @@
         "mutant:less-equal-names": "fnv1a64:c95cd05ed925b02f",
         "mutant:less-larger-byte": "fnv1a64:4a94a6512de5ed53",
         "proof:Writfold/Order.lean": "fnv1a64:242615e0855e7f05",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -4071,7 +4071,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:order.Keyed": "fnv1a64:998c94c9448ae84f",
         "lean:order.less": "fnv1a64:0e8ecd89b39ef4b9",
@@ -4087,7 +4087,7 @@
         "proof:Writfold/Idle.lean": "fnv1a64:65f47f4ca954a854",
         "proof:Writfold/Order.lean": "fnv1a64:242615e0855e7f05",
         "proof:Writfold/Verdict.lean": "fnv1a64:4b39bfa357253243",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -4124,7 +4124,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:order.less": "fnv1a64:0e8ecd89b39ef4b9",
         "lean:order.less_loop": "fnv1a64:f794e91abb1eef7f",
@@ -4132,7 +4132,7 @@
         "lean:order.precedes": "fnv1a64:9ecd332c806b69e4",
         "mutant:precedes-higher-seq": "fnv1a64:cba030b95a409ce4",
         "proof:Writfold/Order.lean": "fnv1a64:242615e0855e7f05",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -4164,7 +4164,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:pin.Pin": "fnv1a64:52136a373554f7d8",
         "lean:pin.current_under": "fnv1a64:a450422bdb477199",
@@ -4175,7 +4175,7 @@
         "mutant:current-under-ignores-about": "fnv1a64:237780928c2ec22f",
         "proof:Writfold/Pin.lean": "fnv1a64:75e1ed69ae0fb8db",
         "proof:Writfold/Verdict.lean": "fnv1a64:4b39bfa357253243",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -4207,7 +4207,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:pin.Pin": "fnv1a64:52136a373554f7d8",
         "lean:pin.holds_from": "fnv1a64:bd84488556f7be7c",
@@ -4217,7 +4217,7 @@
         "mutant:holds-skips-unreadable": "fnv1a64:14d46849df28e463",
         "proof:Writfold/Pin.lean": "fnv1a64:75e1ed69ae0fb8db",
         "proof:Writfold/Verdict.lean": "fnv1a64:4b39bfa357253243",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -4256,7 +4256,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:observe.Status": "fnv1a64:2d8b219e7eec52a6",
         "lean:pin.Pin": "fnv1a64:52136a373554f7d8",
@@ -4268,7 +4268,7 @@
         "mutant:nothing-found-ignores-pins": "fnv1a64:084340d6ec03c09d",
         "proof:Writfold/Pin.lean": "fnv1a64:75e1ed69ae0fb8db",
         "proof:Writfold/Verdict.lean": "fnv1a64:4b39bfa357253243",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -4299,7 +4299,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:pin.Pin": "fnv1a64:52136a373554f7d8",
         "lean:pin.timed": "fnv1a64:963393217b43e1e5",
@@ -4308,7 +4308,7 @@
         "mutant:timed-default-never-ages": "fnv1a64:f90efbc7f2589c30",
         "proof:Writfold/Pin.lean": "fnv1a64:75e1ed69ae0fb8db",
         "proof:Writfold/Verdict.lean": "fnv1a64:4b39bfa357253243",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -4341,7 +4341,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:gate.Standing": "fnv1a64:215589f9c3906da6",
         "lean:gate.State": "fnv1a64:fae97e18dddf6287",
@@ -4369,7 +4369,7 @@
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -4402,7 +4402,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:plan.Node": "fnv1a64:3c07b9d3235d2554",
         "lean:plan.Refusal": "fnv1a64:e451203e88262ce9",
@@ -4418,7 +4418,7 @@
         "mutant:advance-without-current-check": "fnv1a64:8666360d703cbdca",
         "proof:Writfold/Bytes.lean": "fnv1a64:f010412e3932db5b",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -4455,7 +4455,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:plan.close_check": "fnv1a64:e2470c96d1c752b6",
         "lean:plan.first_owed": "fnv1a64:05e6b501ae9e9366",
@@ -4464,7 +4464,7 @@
         "mutant:close-check-ignores-present": "fnv1a64:d9eb1f1b326227df",
         "proof:Writfold/Bytes.lean": "fnv1a64:f010412e3932db5b",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -4494,14 +4494,14 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:plan.Node": "fnv1a64:3c07b9d3235d2554",
         "lean:plan.closed": "fnv1a64:aee5455bad0f2496",
         "mutant:closed-ignores-skip": "fnv1a64:ad22bd84b00e3624",
         "proof:Writfold/Bytes.lean": "fnv1a64:f010412e3932db5b",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -4532,7 +4532,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:bytes.same": "fnv1a64:6b4f8052d7dc03f6",
         "lean:bytes.same_loop": "fnv1a64:94d62684a1043845",
@@ -4543,7 +4543,7 @@
         "mutant:contains-misses-last": "fnv1a64:739cb2b152ee48e8",
         "proof:Writfold/Bytes.lean": "fnv1a64:f010412e3932db5b",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -4576,7 +4576,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:plan.Node": "fnv1a64:3c07b9d3235d2554",
         "lean:plan.closed": "fnv1a64:aee5455bad0f2496",
@@ -4587,7 +4587,7 @@
         "proof:Writfold/Bytes.lean": "fnv1a64:f010412e3932db5b",
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -4618,7 +4618,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:gate.Standing": "fnv1a64:215589f9c3906da6",
         "lean:gate.State": "fnv1a64:fae97e18dddf6287",
@@ -4633,7 +4633,7 @@
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -4671,7 +4671,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:plan.first_owed": "fnv1a64:05e6b501ae9e9366",
         "lean:plan.first_owed_loop": "fnv1a64:e63453c0a4be9710",
@@ -4683,7 +4683,7 @@
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -4714,7 +4714,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:gate.Standing": "fnv1a64:215589f9c3906da6",
         "lean:gate.State": "fnv1a64:fae97e18dddf6287",
@@ -4731,7 +4731,7 @@
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -4762,7 +4762,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:plan.Node": "fnv1a64:3c07b9d3235d2554",
         "lean:plan.SkipRefusal": "fnv1a64:601ce422f7f6316e",
@@ -4774,7 +4774,7 @@
         "mutant:skip-without-lock": "fnv1a64:9b698d101499a84a",
         "proof:Writfold/Bytes.lean": "fnv1a64:f010412e3932db5b",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -4805,13 +4805,13 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:plan.skipped": "fnv1a64:dff6424147a1463f",
         "mutant:skipped-ignores-lock": "fnv1a64:6db0d28352993c6c",
         "proof:Writfold/Bytes.lean": "fnv1a64:f010412e3932db5b",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -4844,7 +4844,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:plan.Node": "fnv1a64:3c07b9d3235d2554",
         "lean:plan.splice": "fnv1a64:dc333712757e56cb",
@@ -4859,7 +4859,7 @@
         "mutant:splice-new-steps-done": "fnv1a64:cec5e9d6a7a9e19f",
         "proof:Writfold/Bytes.lean": "fnv1a64:f010412e3932db5b",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -4870,17 +4870,17 @@
           ]
         },
         {
-          "mutant": "splice-new-steps-done",
-          "status": "killed",
-          "broken": [
-            "Writfold.Core.Plan.splice_loop1_spec"
-          ]
-        },
-        {
           "mutant": "splice-drops-last-step",
           "status": "killed",
           "broken": [
             "Writfold.Core.Plan.splice_loop2_spec"
+          ]
+        },
+        {
+          "mutant": "splice-new-steps-done",
+          "status": "killed",
+          "broken": [
+            "Writfold.Core.Plan.splice_loop1_spec"
           ]
         }
       ]
@@ -4910,7 +4910,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:bytes.same": "fnv1a64:6b4f8052d7dc03f6",
         "lean:bytes.same_loop": "fnv1a64:94d62684a1043845",
@@ -4933,18 +4933,18 @@
         "mutant:splice-ignores-key": "fnv1a64:7d7c602aa17d6fb2",
         "proof:Writfold/Bytes.lean": "fnv1a64:f010412e3932db5b",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
-          "mutant": "splice-ignores-key",
+          "mutant": "splice-depth-off-by-one",
           "status": "killed",
           "broken": [
             "Writfold.Core.Plan.splice_check_spec"
           ]
         },
         {
-          "mutant": "splice-depth-off-by-one",
+          "mutant": "splice-ignores-key",
           "status": "killed",
           "broken": [
             "Writfold.Core.Plan.splice_check_spec"
@@ -4985,7 +4985,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:plan.Node": "fnv1a64:3c07b9d3235d2554",
         "lean:plan.first_owed": "fnv1a64:05e6b501ae9e9366",
@@ -4999,7 +4999,7 @@
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -5033,7 +5033,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:plan.recheck.Decided": "fnv1a64:cdb8780bc5bbe8c7",
         "lean:plan.recheck.Moved": "fnv1a64:0f1126144f1e8316",
@@ -5043,7 +5043,7 @@
         "mutant:recheck-ordinal-ignored": "fnv1a64:c82d16a7feabe06d",
         "mutant:recheck-root-needs-current": "fnv1a64:7e0d336d77890a6b",
         "proof:Writfold/Recheck.lean": "fnv1a64:d1fe5da0f5cc0c08",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -5096,12 +5096,12 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:plan.recheck.writable": "fnv1a64:e8cf82fa38dc1e2e",
         "mutant:writable-manifest-wins": "fnv1a64:17e16e1c36836ff3",
         "proof:Writfold/Recheck.lean": "fnv1a64:d1fe5da0f5cc0c08",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -5141,7 +5141,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:pointer.Pointer": "fnv1a64:da2cd349b8f97c44",
         "lean:pointer.is_set": "fnv1a64:0e1965f467dbcbd7",
@@ -5150,7 +5150,7 @@
         "mutant:open-shared-any-run": "fnv1a64:1ecfda0c082112b5",
         "mutant:open-skips-closed-session": "fnv1a64:cb9b37e93af17e15",
         "proof:Writfold/Pointer.lean": "fnv1a64:e648b2a4196e953c",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -5159,6 +5159,15 @@
           "broken": [
             "Writfold.Core.Pointer.ended_not_skipped",
             "Writfold.Core.Pointer.level_spec",
+            "Writfold.Core.Pointer.open_spec",
+            "Writfold.Core.Pointer.session_decides"
+          ]
+        },
+        {
+          "mutant": "open-skips-closed-session",
+          "status": "killed",
+          "broken": [
+            "Writfold.Core.Pointer.ended_not_skipped",
             "Writfold.Core.Pointer.open_spec",
             "Writfold.Core.Pointer.session_decides"
           ]
@@ -5173,15 +5182,6 @@
             "Writfold.Core.Pointer.open_spec",
             "Writfold.Core.Pointer.session_decides",
             "Writfold.Core.Pointer.tree_decides"
-          ]
-        },
-        {
-          "mutant": "open-skips-closed-session",
-          "status": "killed",
-          "broken": [
-            "Writfold.Core.Pointer.ended_not_skipped",
-            "Writfold.Core.Pointer.open_spec",
-            "Writfold.Core.Pointer.session_decides"
           ]
         },
         {
@@ -5219,7 +5219,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:pointer.Level": "fnv1a64:f63da977820fc665",
         "lean:pointer.Pointer": "fnv1a64:da2cd349b8f97c44",
@@ -5230,7 +5230,7 @@
         "mutant:open-shared-any-run": "fnv1a64:1ecfda0c082112b5",
         "mutant:open-skips-closed-session": "fnv1a64:cb9b37e93af17e15",
         "proof:Writfold/Pointer.lean": "fnv1a64:e648b2a4196e953c",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -5239,6 +5239,15 @@
           "broken": [
             "Writfold.Core.Pointer.ended_not_skipped",
             "Writfold.Core.Pointer.level_spec",
+            "Writfold.Core.Pointer.open_spec",
+            "Writfold.Core.Pointer.session_decides"
+          ]
+        },
+        {
+          "mutant": "open-skips-closed-session",
+          "status": "killed",
+          "broken": [
+            "Writfold.Core.Pointer.ended_not_skipped",
             "Writfold.Core.Pointer.open_spec",
             "Writfold.Core.Pointer.session_decides"
           ]
@@ -5253,15 +5262,6 @@
             "Writfold.Core.Pointer.open_spec",
             "Writfold.Core.Pointer.session_decides",
             "Writfold.Core.Pointer.tree_decides"
-          ]
-        },
-        {
-          "mutant": "open-skips-closed-session",
-          "status": "killed",
-          "broken": [
-            "Writfold.Core.Pointer.ended_not_skipped",
-            "Writfold.Core.Pointer.open_spec",
-            "Writfold.Core.Pointer.session_decides"
           ]
         },
         {
@@ -5299,7 +5299,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:pointer.Level": "fnv1a64:f63da977820fc665",
         "lean:pointer.Pointer": "fnv1a64:da2cd349b8f97c44",
@@ -5311,7 +5311,7 @@
         "mutant:open-shared-any-run": "fnv1a64:1ecfda0c082112b5",
         "mutant:open-skips-closed-session": "fnv1a64:cb9b37e93af17e15",
         "proof:Writfold/Pointer.lean": "fnv1a64:e648b2a4196e953c",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -5320,6 +5320,15 @@
           "broken": [
             "Writfold.Core.Pointer.ended_not_skipped",
             "Writfold.Core.Pointer.level_spec",
+            "Writfold.Core.Pointer.open_spec",
+            "Writfold.Core.Pointer.session_decides"
+          ]
+        },
+        {
+          "mutant": "open-skips-closed-session",
+          "status": "killed",
+          "broken": [
+            "Writfold.Core.Pointer.ended_not_skipped",
             "Writfold.Core.Pointer.open_spec",
             "Writfold.Core.Pointer.session_decides"
           ]
@@ -5334,15 +5343,6 @@
             "Writfold.Core.Pointer.open_spec",
             "Writfold.Core.Pointer.session_decides",
             "Writfold.Core.Pointer.tree_decides"
-          ]
-        },
-        {
-          "mutant": "open-skips-closed-session",
-          "status": "killed",
-          "broken": [
-            "Writfold.Core.Pointer.ended_not_skipped",
-            "Writfold.Core.Pointer.open_spec",
-            "Writfold.Core.Pointer.session_decides"
           ]
         },
         {
@@ -5376,7 +5376,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:pointer.Writes": "fnv1a64:b0e4e2ace3c06530",
         "lean:pointer.writes": "fnv1a64:df0e397350520866",
@@ -5384,7 +5384,7 @@
         "mutant:writes-shared-only-without-session": "fnv1a64:d7d8517d559d1731",
         "proof:Writfold/Decision.lean": "fnv1a64:e8a7b27d15ffadf1",
         "proof:Writfold/Pointer.lean": "fnv1a64:e648b2a4196e953c",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -5423,7 +5423,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:policy.Close": "fnv1a64:b92e8920408de43f",
         "lean:policy.all_passed": "fnv1a64:becb8e61bee91d24",
@@ -5434,7 +5434,7 @@
         "proof:Writfold/Bytes.lean": "fnv1a64:f010412e3932db5b",
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -5465,7 +5465,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:policy.How": "fnv1a64:2192fd91c649ade8",
         "lean:policy.any_attested": "fnv1a64:3dfb60d8ca2cf637",
@@ -5476,7 +5476,7 @@
         "proof:Writfold/Bytes.lean": "fnv1a64:f010412e3932db5b",
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -5507,7 +5507,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:policy.Pin": "fnv1a64:2dad9a03952a7302",
         "lean:policy.any_moved": "fnv1a64:204eec394a1780d5",
@@ -5518,7 +5518,7 @@
         "proof:Writfold/Bytes.lean": "fnv1a64:f010412e3932db5b",
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -5549,7 +5549,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:policy.Close": "fnv1a64:b92e8920408de43f",
         "lean:policy.any_open": "fnv1a64:58143b5a53a157a9",
@@ -5560,7 +5560,7 @@
         "proof:Writfold/Bytes.lean": "fnv1a64:f010412e3932db5b",
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -5591,7 +5591,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:policy.Pin": "fnv1a64:2dad9a03952a7302",
         "lean:policy.any_unpinned": "fnv1a64:253ff5b30fb7d35b",
@@ -5602,7 +5602,7 @@
         "proof:Writfold/Bytes.lean": "fnv1a64:f010412e3932db5b",
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -5633,7 +5633,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:policy.How": "fnv1a64:2192fd91c649ade8",
         "lean:policy.any_waived": "fnv1a64:8dd81f60d91cf5a5",
@@ -5644,7 +5644,7 @@
         "proof:Writfold/Bytes.lean": "fnv1a64:f010412e3932db5b",
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -5677,7 +5677,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:policy.Close": "fnv1a64:b92e8920408de43f",
         "lean:policy.How": "fnv1a64:2192fd91c649ade8",
@@ -5694,7 +5694,7 @@
         "proof:Writfold/Bytes.lean": "fnv1a64:f010412e3932db5b",
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -5726,7 +5726,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:gate.Standing": "fnv1a64:215589f9c3906da6",
         "lean:gate.State": "fnv1a64:fae97e18dddf6287",
@@ -5740,7 +5740,7 @@
         "proof:Writfold/Guard.lean": "fnv1a64:079fb396d7f2c041",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -5780,7 +5780,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:policy.Pin": "fnv1a64:2dad9a03952a7302",
         "lean:policy.any_moved": "fnv1a64:204eec394a1780d5",
@@ -5796,7 +5796,7 @@
         "proof:Writfold/Bytes.lean": "fnv1a64:f010412e3932db5b",
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -5828,7 +5828,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:bytes.same": "fnv1a64:6b4f8052d7dc03f6",
         "lean:bytes.same_loop": "fnv1a64:94d62684a1043845",
@@ -5839,7 +5839,7 @@
         "proof:Writfold/Bytes.lean": "fnv1a64:f010412e3932db5b",
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -5877,7 +5877,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:policy.Close": "fnv1a64:b92e8920408de43f",
         "lean:policy.Facts": "fnv1a64:d8c6ee180deb6581",
@@ -5899,7 +5899,7 @@
         "proof:Writfold/Bytes.lean": "fnv1a64:f010412e3932db5b",
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -5945,7 +5945,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:policy.Close": "fnv1a64:b92e8920408de43f",
         "lean:policy.lines.all_skipped": "fnv1a64:5765680cace5edd8",
@@ -5957,7 +5957,7 @@
         "proof:Writfold/Bytes.lean": "fnv1a64:f010412e3932db5b",
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -5995,7 +5995,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:policy.Summary": "fnv1a64:2b7483bfa1696c8a",
         "lean:policy.lines.closes": "fnv1a64:4006baedb786c073",
@@ -6003,7 +6003,7 @@
         "proof:Writfold/Bytes.lean": "fnv1a64:f010412e3932db5b",
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -6034,7 +6034,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:policy.Summary": "fnv1a64:2b7483bfa1696c8a",
         "lean:policy.lines.Listed": "fnv1a64:e1dab84b870ca315",
@@ -6047,7 +6047,7 @@
         "proof:Writfold/Bytes.lean": "fnv1a64:f010412e3932db5b",
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -6078,7 +6078,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:policy.lines.Listed": "fnv1a64:e1dab84b870ca315",
         "lean:policy.lines.owed_met": "fnv1a64:95c67da810eb7d7a",
@@ -6088,7 +6088,7 @@
         "proof:Writfold/Bytes.lean": "fnv1a64:f010412e3932db5b",
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -6121,7 +6121,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:policy.repin.in_force": "fnv1a64:cc1cac94569a097f",
         "lean:policy.repin.in_force_loop": "fnv1a64:75672f0f094f4856",
@@ -6131,18 +6131,18 @@
         "proof:Writfold/Bytes.lean": "fnv1a64:f010412e3932db5b",
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
-          "mutant": "in-force-skips-oldest",
+          "mutant": "in-force-inverted",
           "status": "killed",
           "broken": [
             "Writfold.Core.Policy.in_force_loop_spec"
           ]
         },
         {
-          "mutant": "in-force-inverted",
+          "mutant": "in-force-skips-oldest",
           "status": "killed",
           "broken": [
             "Writfold.Core.Policy.in_force_loop_spec"
@@ -6177,7 +6177,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:policy.Pin": "fnv1a64:2dad9a03952a7302",
         "lean:policy.repin.Refusal": "fnv1a64:5f6a87597940551b",
@@ -6191,7 +6191,7 @@
         "proof:Writfold/Bytes.lean": "fnv1a64:f010412e3932db5b",
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -6200,6 +6200,14 @@
           "broken": [
             "Writfold.Core.Policy.repin_check_spec",
             "Writfold.Core.Policy.repin_closed_refused",
+            "Writfold.Core.Policy.repin_ok_iff"
+          ]
+        },
+        {
+          "mutant": "repin-when-unpinned",
+          "status": "killed",
+          "broken": [
+            "Writfold.Core.Policy.repin_check_spec",
             "Writfold.Core.Policy.repin_ok_iff"
           ]
         },
@@ -6213,14 +6221,6 @@
         },
         {
           "mutant": "repin-when-same",
-          "status": "killed",
-          "broken": [
-            "Writfold.Core.Policy.repin_check_spec",
-            "Writfold.Core.Policy.repin_ok_iff"
-          ]
-        },
-        {
-          "mutant": "repin-when-unpinned",
           "status": "killed",
           "broken": [
             "Writfold.Core.Policy.repin_check_spec",
@@ -6267,7 +6267,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:scope.ANY": "fnv1a64:0ba80993f31754a5",
         "lean:scope.Cursor": "fnv1a64:da319b6e8c30fa7a",
@@ -6281,7 +6281,7 @@
         "proof:Writfold/Get.lean": "fnv1a64:c03a1381bd399880",
         "proof:Writfold/Scope.lean": "fnv1a64:0aa8b894cf167889",
         "proof:Writfold/Wild.lean": "fnv1a64:6e346ef80c5dbc67",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -6330,7 +6330,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:scope.ANY": "fnv1a64:0ba80993f31754a5",
         "lean:scope.Cursor": "fnv1a64:da319b6e8c30fa7a",
@@ -6357,7 +6357,7 @@
         "proof:Writfold/Get.lean": "fnv1a64:c03a1381bd399880",
         "proof:Writfold/Scope.lean": "fnv1a64:0aa8b894cf167889",
         "proof:Writfold/Wild.lean": "fnv1a64:6e346ef80c5dbc67",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -6394,7 +6394,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:scope.STAR": "fnv1a64:f2c802922393bd9d",
         "lean:scope.globstar": "fnv1a64:ac4fab193bb264d9",
@@ -6402,7 +6402,7 @@
         "proof:Writfold/Get.lean": "fnv1a64:c03a1381bd399880",
         "proof:Writfold/Scope.lean": "fnv1a64:0aa8b894cf167889",
         "proof:Writfold/Wild.lean": "fnv1a64:6e346ef80c5dbc67",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -6432,14 +6432,14 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:scope.include": "fnv1a64:2a59fb500ed88e9c",
         "mutant:include-ignores-hit": "fnv1a64:4a36806b0477fc87",
         "proof:Writfold/Get.lean": "fnv1a64:c03a1381bd399880",
         "proof:Writfold/Scope.lean": "fnv1a64:0aa8b894cf167889",
         "proof:Writfold/Wild.lean": "fnv1a64:6e346ef80c5dbc67",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -6473,7 +6473,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:scope.ANY": "fnv1a64:0ba80993f31754a5",
         "lean:scope.Cursor": "fnv1a64:da319b6e8c30fa7a",
@@ -6493,7 +6493,7 @@
         "proof:Writfold/Get.lean": "fnv1a64:c03a1381bd399880",
         "proof:Writfold/Scope.lean": "fnv1a64:0aa8b894cf167889",
         "proof:Writfold/Wild.lean": "fnv1a64:6e346ef80c5dbc67",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -6539,7 +6539,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:scope.ANY": "fnv1a64:0ba80993f31754a5",
         "lean:scope.same_char": "fnv1a64:c6b846dd5af66a53",
@@ -6547,7 +6547,7 @@
         "proof:Writfold/Get.lean": "fnv1a64:c03a1381bd399880",
         "proof:Writfold/Scope.lean": "fnv1a64:0aa8b894cf167889",
         "proof:Writfold/Wild.lean": "fnv1a64:6e346ef80c5dbc67",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -6587,7 +6587,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:store.Artifact": "fnv1a64:94ba268274506a99",
         "lean:store.Commit": "fnv1a64:ae3fa1f2fbaeb4b6",
@@ -6598,7 +6598,7 @@
         "mutant:artifact-short-rev-admitted": "fnv1a64:edb600a2edbedeb6",
         "mutant:artifact-unanchored-admitted": "fnv1a64:68ff39b7bf08c280",
         "proof:Writfold/Store.lean": "fnv1a64:abfb5ed79f78a400",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -6653,13 +6653,13 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:store.Basis": "fnv1a64:ea590889dbda18ad",
         "lean:store.basis": "fnv1a64:88472f32e7905652",
         "mutant:basis-ignores-rev": "fnv1a64:b74210a415a3010f",
         "proof:Writfold/Store.lean": "fnv1a64:abfb5ed79f78a400",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -6696,7 +6696,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:store.Claim": "fnv1a64:3b62200e92f9310a",
         "lean:store.claim": "fnv1a64:1cf941d8958deb7d",
@@ -6705,7 +6705,7 @@
         "mutant:claim-two-listed": "fnv1a64:34f5e11d1b3eea79",
         "mutant:claim-unknown-listed": "fnv1a64:57644de15f50656a",
         "proof:Writfold/Store.lean": "fnv1a64:abfb5ed79f78a400",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -6725,15 +6725,6 @@
           ]
         },
         {
-          "mutant": "claim-alias-hides-id",
-          "status": "killed",
-          "broken": [
-            "Writfold.Core.Store.claim_ambiguous_iff",
-            "Writfold.Core.Store.claim_exact_wins",
-            "Writfold.Core.Store.claim_listed_iff"
-          ]
-        },
-        {
           "mutant": "claim-any-repository",
           "status": "killed",
           "broken": [
@@ -6741,6 +6732,15 @@
             "Writfold.Core.Store.claim_listed_iff",
             "Writfold.Core.Store.claim_needs_store",
             "Writfold.Core.Store.claim_unknown_iff"
+          ]
+        },
+        {
+          "mutant": "claim-alias-hides-id",
+          "status": "killed",
+          "broken": [
+            "Writfold.Core.Store.claim_ambiguous_iff",
+            "Writfold.Core.Store.claim_exact_wins",
+            "Writfold.Core.Store.claim_listed_iff"
           ]
         }
       ]
@@ -6763,13 +6763,13 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:store.pin_recordable": "fnv1a64:0ce2ef82e4567952",
         "lean:verdict.Verdict": "fnv1a64:b48ead47a4df1b7e",
         "mutant:pin-records-unverifiable": "fnv1a64:dee0ace040493984",
         "proof:Writfold/Store.lean": "fnv1a64:abfb5ed79f78a400",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -6804,7 +6804,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:store.AtPin": "fnv1a64:a2d7d13f6fce2f1c",
         "lean:store.Commit": "fnv1a64:ae3fa1f2fbaeb4b6",
@@ -6814,7 +6814,7 @@
         "mutant:pinned-other-bytes-fresh": "fnv1a64:ee4fb588baed38b8",
         "mutant:pinned-unanchored-fresh": "fnv1a64:574567e3bc1d15c9",
         "proof:Writfold/Store.lean": "fnv1a64:abfb5ed79f78a400",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -6862,14 +6862,14 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:store.Basis": "fnv1a64:ea590889dbda18ad",
         "lean:store.recorded": "fnv1a64:8dcf9f7956ff6df2",
         "mutant:recorded-any-basis": "fnv1a64:03416943e320abf4",
         "mutant:recorded-ignores-age": "fnv1a64:535587162d9c981b",
         "proof:Writfold/Store.lean": "fnv1a64:abfb5ed79f78a400",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -6914,7 +6914,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:store.Candidate": "fnv1a64:00b4745626877566",
         "lean:store.Resolved": "fnv1a64:6a71c52136068bc3",
@@ -6924,7 +6924,7 @@
         "mutant:resolve-hint-before-search": "fnv1a64:ce7ef881aacaba74",
         "mutant:resolve-map-unflagged": "fnv1a64:ef67306ca4f447bf",
         "proof:Writfold/Store.lean": "fnv1a64:abfb5ed79f78a400",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -6979,7 +6979,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:store.AtPin": "fnv1a64:a2d7d13f6fce2f1c",
         "lean:store.Commit": "fnv1a64:ae3fa1f2fbaeb4b6",
@@ -6995,7 +6995,7 @@
         "mutant:snapshot-unanchored-recorded": "fnv1a64:1722b6b28175e558",
         "mutant:snapshot-uncommitted-recorded": "fnv1a64:fb2fa3b7cdc47686",
         "proof:Writfold/Store.lean": "fnv1a64:abfb5ed79f78a400",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -7028,15 +7028,6 @@
           ]
         },
         {
-          "mutant": "snapshot-damaged-recorded",
-          "status": "killed",
-          "broken": [
-            "Writfold.Core.Store.snapshot_order",
-            "Writfold.Core.Store.snapshot_record_iff",
-            "Writfold.Core.Store.snapshot_stage_iff"
-          ]
-        },
-        {
           "mutant": "snapshot-head-store",
           "status": "killed",
           "broken": [
@@ -7046,7 +7037,7 @@
           ]
         },
         {
-          "mutant": "snapshot-any-status",
+          "mutant": "snapshot-damaged-recorded",
           "status": "killed",
           "broken": [
             "Writfold.Core.Store.snapshot_order",
@@ -7059,6 +7050,15 @@
           "status": "killed",
           "broken": [
             "Writfold.Core.Store.snapshot_order"
+          ]
+        },
+        {
+          "mutant": "snapshot-any-status",
+          "status": "killed",
+          "broken": [
+            "Writfold.Core.Store.snapshot_order",
+            "Writfold.Core.Store.snapshot_record_iff",
+            "Writfold.Core.Store.snapshot_stage_iff"
           ]
         }
       ]
@@ -7082,13 +7082,13 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:store.use_recorded": "fnv1a64:7a4912038a855979",
         "lean:verdict.Verdict": "fnv1a64:b48ead47a4df1b7e",
         "mutant:receipt-beats-local": "fnv1a64:5f9ede1277895888",
         "proof:Writfold/Store.lean": "fnv1a64:abfb5ed79f78a400",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -7126,7 +7126,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:subject.Pick": "fnv1a64:fa42ac8b0bd14c6d",
         "lean:subject.pick": "fnv1a64:200f92ad6c657d7a",
@@ -7134,23 +7134,23 @@
         "mutant:pick-here-even-kb": "fnv1a64:3b2d61bbe50af382",
         "mutant:pick-recorded-checkout": "fnv1a64:50f9e4fe9837ae21",
         "proof:Writfold/Subject.lean": "fnv1a64:0e6c76a993bb07f6",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
-        {
-          "mutant": "pick-here-even-kb",
-          "status": "killed",
-          "broken": [
-            "Writfold.Core.Subject.pick_spec",
-            "Writfold.Core.Subject.unchanged_unless_checkout"
-          ]
-        },
         {
           "mutant": "pick-recorded-checkout",
           "status": "killed",
           "broken": [
             "Writfold.Core.Subject.pick_spec",
             "Writfold.Core.Subject.recorded_never_kb_checkout"
+          ]
+        },
+        {
+          "mutant": "pick-here-even-kb",
+          "status": "killed",
+          "broken": [
+            "Writfold.Core.Subject.pick_spec",
+            "Writfold.Core.Subject.unchanged_unless_checkout"
           ]
         },
         {
@@ -7182,14 +7182,14 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:verdict.Checker": "fnv1a64:7ff28c7a62e621fd",
         "lean:verdict.Said": "fnv1a64:e3405d87e7ae999b",
         "lean:verdict.aged": "fnv1a64:386bd69e377d65e8",
         "mutant:aged-keeps-unreadable": "fnv1a64:62f84138a25aaee2",
         "proof:Writfold/Verdict.lean": "fnv1a64:4b39bfa357253243",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -7221,7 +7221,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:verdict.Checker": "fnv1a64:7ff28c7a62e621fd",
         "lean:verdict.Handshake": "fnv1a64:69bf4d4315afb04a",
@@ -7231,7 +7231,7 @@
         "mutant:exchange-first-of-two": "fnv1a64:8f2caafe453d907d",
         "mutant:exchange-ignores-handshake": "fnv1a64:772623f3067c43ab",
         "proof:Writfold/Verdict.lean": "fnv1a64:4b39bfa357253243",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -7270,12 +7270,12 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:verdict.expired": "fnv1a64:a0f0d56a13a83e39",
         "mutant:expired-overflow-kept": "fnv1a64:e9a5b6361444a885",
         "proof:Writfold/Verdict.lean": "fnv1a64:4b39bfa357253243",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -7305,14 +7305,14 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:verdict.Described": "fnv1a64:75b6e2d7bac46de3",
         "lean:verdict.Handshake": "fnv1a64:69bf4d4315afb04a",
         "lean:verdict.handshake": "fnv1a64:64a4bba1841c2d2a",
         "mutant:handshake-kind-as-op": "fnv1a64:941a27367bfde1ac",
         "proof:Writfold/Verdict.lean": "fnv1a64:4b39bfa357253243",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -7342,13 +7342,13 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:verdict.Lifetime": "fnv1a64:efa49987d6ee229b",
         "lean:verdict.lifetime": "fnv1a64:77e1584aa39667e8",
         "mutant:lifetime-token-as-default": "fnv1a64:a9ae9be640d7a2e3",
         "proof:Writfold/Verdict.lean": "fnv1a64:4b39bfa357253243",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -7384,7 +7384,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:verdict.Checker": "fnv1a64:7ff28c7a62e621fd",
         "lean:verdict.Located": "fnv1a64:44804c3059b88e13",
@@ -7396,18 +7396,18 @@
         "mutant:moved-span-fresh": "fnv1a64:9dcf14ae5a360fd5",
         "mutant:unsearched-fresh": "fnv1a64:e359a7ebfdf5dd88",
         "proof:Writfold/Verdict.lean": "fnv1a64:4b39bfa357253243",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
-          "mutant": "unsearched-fresh",
+          "mutant": "moved-span-fresh",
           "status": "killed",
           "broken": [
             "Writfold.Core.Verdict.observed_spec"
           ]
         },
         {
-          "mutant": "moved-span-fresh",
+          "mutant": "unsearched-fresh",
           "status": "killed",
           "broken": [
             "Writfold.Core.Verdict.observed_spec"
@@ -7435,13 +7435,13 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:verdict.Verdict": "fnv1a64:b48ead47a4df1b7e",
         "lean:verdict.with_mark": "fnv1a64:82d949fc68505b14",
         "mutant:mark-hides-change": "fnv1a64:e19c90a1cdb5dba4",
         "proof:Writfold/Verdict.lean": "fnv1a64:4b39bfa357253243",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -7474,7 +7474,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:verdict.locate.Place": "fnv1a64:bc8d2d7abe4efa21",
         "lean:verdict.locate.place": "fnv1a64:6748a7dda28f82d1",
@@ -7482,7 +7482,7 @@
         "lean:verdict.locate.place_loop.body": "fnv1a64:93d64baac7f5594a",
         "mutant:place-ignores-cited": "fnv1a64:c7314d2fcf80b558",
         "proof:Writfold/Verdict.lean": "fnv1a64:4b39bfa357253243",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -7514,13 +7514,13 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:verdict.locate.Window": "fnv1a64:63457b58683ee036",
         "lean:verdict.locate.window": "fnv1a64:4f7f1d1f9109dd0b",
         "mutant:window-cited-off-by-one": "fnv1a64:a923b2dfeff492e4",
         "proof:Writfold/Verdict.lean": "fnv1a64:4b39bfa357253243",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -7550,7 +7550,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:verdict.Said": "fnv1a64:e3405d87e7ae999b",
         "lean:verdict.recorded.Statement": "fnv1a64:732efa3a19365d68",
@@ -7559,7 +7559,7 @@
         "mutant:before-prefers-older": "fnv1a64:f2fe1c3afc4869ea",
         "proof:Writfold/Get.lean": "fnv1a64:c03a1381bd399880",
         "proof:Writfold/Recorded.lean": "fnv1a64:14657fdf92c2eba9",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -7590,7 +7590,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:verdict.Said": "fnv1a64:e3405d87e7ae999b",
         "lean:verdict.recorded.Statement": "fnv1a64:732efa3a19365d68",
@@ -7601,10 +7601,10 @@
         "lean:verdict.recorded.better": "fnv1a64:93bde98a8fd2c477",
         "lean:verdict.recorded.usable": "fnv1a64:c4c27abd78f27e45",
         "lean:verdict.recorded.worst": "fnv1a64:dbe4b9406cd924d0",
-        "mutant:best-recorded-skips-last": "fnv1a64:58cdfebf9418340a",
+        "mutant:best-recorded-skips-last": "fnv1a64:08d7b6828ee5c7c0",
         "proof:Writfold/Get.lean": "fnv1a64:c03a1381bd399880",
         "proof:Writfold/Recorded.lean": "fnv1a64:14657fdf92c2eba9",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -7637,7 +7637,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:verdict.Said": "fnv1a64:e3405d87e7ae999b",
         "lean:verdict.recorded.Statement": "fnv1a64:732efa3a19365d68",
@@ -7649,7 +7649,7 @@
         "mutant:better-tie-takes-later": "fnv1a64:3cdadc8a1ce14cab",
         "proof:Writfold/Get.lean": "fnv1a64:c03a1381bd399880",
         "proof:Writfold/Recorded.lean": "fnv1a64:14657fdf92c2eba9",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -7688,7 +7688,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:verdict.Said": "fnv1a64:e3405d87e7ae999b",
         "lean:verdict.recorded.Pick": "fnv1a64:fbc50457ead7bf02",
@@ -7706,7 +7706,7 @@
         "proof:Writfold/Idle.lean": "fnv1a64:65f47f4ca954a854",
         "proof:Writfold/Recorded.lean": "fnv1a64:14657fdf92c2eba9",
         "proof:Writfold/Verdict.lean": "fnv1a64:4b39bfa357253243",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -7736,7 +7736,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:verdict.Checker": "fnv1a64:7ff28c7a62e621fd",
         "lean:verdict.Said": "fnv1a64:e3405d87e7ae999b",
@@ -7744,7 +7744,7 @@
         "mutant:recordable-unverifiable": "fnv1a64:800b502ca2a0d5dd",
         "proof:Writfold/Get.lean": "fnv1a64:c03a1381bd399880",
         "proof:Writfold/Recorded.lean": "fnv1a64:14657fdf92c2eba9",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -7774,14 +7774,14 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:verdict.recorded.CLOCK_SKEW": "fnv1a64:a8675696562ab324",
         "lean:verdict.recorded.recorded_age": "fnv1a64:1e8f489c4ba893d3",
         "mutant:recorded-age-no-skew": "fnv1a64:2a0ea102f224785c",
         "proof:Writfold/Get.lean": "fnv1a64:c03a1381bd399880",
         "proof:Writfold/Recorded.lean": "fnv1a64:14657fdf92c2eba9",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -7811,12 +7811,12 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:walk.complete": "fnv1a64:6570f097c307c4a5",
         "mutant:complete-ignores-skipped": "fnv1a64:cecdcec45cd53591",
         "proof:Writfold/Walk.lean": "fnv1a64:512787c5c3bc9dff",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -7848,7 +7848,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:inventory.Root": "fnv1a64:d9a84b1f2bd43c2f",
         "lean:inventory.complete": "fnv1a64:a43e98890e9e8dc3",
@@ -7863,7 +7863,7 @@
         "proof:Writfold/Inventory.lean": "fnv1a64:fa0309fe6c24ab5a",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -7895,7 +7895,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:inventory.Root": "fnv1a64:d9a84b1f2bd43c2f",
         "lean:inventory.readable": "fnv1a64:18c6e5933c5a3fcb",
@@ -7910,7 +7910,7 @@
         "proof:Writfold/Inventory.lean": "fnv1a64:fa0309fe6c24ab5a",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -7942,7 +7942,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:inventory.all_true": "fnv1a64:ba0d6b2ce62a526e",
         "lean:inventory.all_true_loop": "fnv1a64:b8a5c1c29e1bf14e",
@@ -7955,7 +7955,7 @@
         "proof:Writfold/Inventory.lean": "fnv1a64:fa0309fe6c24ab5a",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Policy.lean": "fnv1a64:70c182db14204381",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -7987,7 +7987,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:gate.Standing": "fnv1a64:215589f9c3906da6",
         "lean:gate.State": "fnv1a64:fae97e18dddf6287",
@@ -8001,7 +8001,7 @@
         "proof:Writfold/Bytes.lean": "fnv1a64:f010412e3932db5b",
         "proof:Writfold/Gate.lean": "fnv1a64:3499758804df4be1",
         "proof:Writfold/Handoff.lean": "fnv1a64:6ea04c4da803c8c1",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -8033,7 +8033,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:graph.any": "fnv1a64:aedb0d8c0264fe04",
         "lean:graph.any_loop": "fnv1a64:e85421586a7749c0",
@@ -8041,7 +8041,7 @@
         "mutant:any-skips-last": "fnv1a64:b59e2cda8ef9d289",
         "proof:Writfold/Get.lean": "fnv1a64:c03a1381bd399880",
         "proof:Writfold/Graph.lean": "fnv1a64:a89564860c66b0ce",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -8073,7 +8073,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:plan.round.Place": "fnv1a64:992b5da4e218d90a",
         "lean:plan.round.superseded": "fnv1a64:aaff2d0addb409a0",
@@ -8084,7 +8084,7 @@
         "proof:Writfold/Bytes.lean": "fnv1a64:f010412e3932db5b",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Round.lean": "fnv1a64:682dea4da6275c91",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -8111,19 +8111,57 @@
         "TAU-P003"
       ],
       "mutants": [
-        "round-next-again-before-judge"
+        "round-judged-at-ignores-verdict"
       ],
-      "outcome": "mutant-survived",
-      "badge": "not-established",
-      "detail": "mutant round-next-again-before-judge broke none of the claim's theorems",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "outcome": "proved",
+      "badge": "proved",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:plan.round.judged_at": "fnv1a64:e05311b64cdb47d6",
+        "mutant:round-judged-at-ignores-verdict": "fnv1a64:89ce65c9e1e121a5",
+        "proof:Writfold/Bytes.lean": "fnv1a64:f010412e3932db5b",
+        "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
+        "proof:Writfold/Round.lean": "fnv1a64:682dea4da6275c91",
+        "toolchain": "fnv1a64:d7f1213f90d51812"
+      },
+      "mutant_results": [
+        {
+          "mutant": "round-judged-at-ignores-verdict",
+          "status": "killed",
+          "broken": [
+            "Writfold.Core.Round.judged_at_spec"
+          ]
+        }
+      ]
+    },
+    {
+      "crate": "writfold-core",
+      "file": "crates/writfold-core/src/plan/round.rs",
+      "function": "owed_or",
+      "lean": "writfold_core.plan.round.owed_or",
+      "theorems": [
+        "Writfold.Core.Round.owed_or_spec"
+      ],
+      "total": null,
+      "subsumes": [],
+      "mutants": [
+        "round-next-again-before-judge"
+      ],
+      "outcome": "proved",
+      "badge": "proved",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
+      "inputs": {
+        "lean:plan.first_owed": "fnv1a64:05e6b501ae9e9366",
+        "lean:plan.first_owed_loop": "fnv1a64:e63453c0a4be9710",
+        "lean:plan.first_owed_loop.body": "fnv1a64:79cff4aaca90d52d",
+        "lean:plan.round.Next": "fnv1a64:05bd9326f45fae82",
+        "lean:plan.round.judged_at": "fnv1a64:e05311b64cdb47d6",
+        "lean:plan.round.owed_or": "fnv1a64:0e9d6e485e02be13",
         "mutant:round-next-again-before-judge": "fnv1a64:911ecdc78d2a455d",
         "proof:Writfold/Bytes.lean": "fnv1a64:f010412e3932db5b",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Round.lean": "fnv1a64:682dea4da6275c91",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -8154,7 +8192,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:plan.Node": "fnv1a64:3c07b9d3235d2554",
         "lean:plan.closed": "fnv1a64:aee5455bad0f2496",
@@ -8174,7 +8212,7 @@
         "proof:Writfold/Bytes.lean": "fnv1a64:f010412e3932db5b",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Round.lean": "fnv1a64:682dea4da6275c91",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -8205,7 +8243,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:plan.Node": "fnv1a64:3c07b9d3235d2554",
         "lean:plan.Refusal": "fnv1a64:e451203e88262ce9",
@@ -8224,7 +8262,7 @@
         "proof:Writfold/Bytes.lean": "fnv1a64:f010412e3932db5b",
         "proof:Writfold/Plan.lean": "fnv1a64:10de0bcac2457264",
         "proof:Writfold/Round.lean": "fnv1a64:682dea4da6275c91",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -8256,7 +8294,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:catalog.Action": "fnv1a64:d9fd45304107f5bd",
         "lean:catalog.Owner": "fnv1a64:171befe0f779c605",
@@ -8269,7 +8307,7 @@
         "mutant:catalog-conflict-skips-last": "fnv1a64:a7c52dbeb4bb4a2d",
         "proof:Writfold/Catalog.lean": "fnv1a64:6f92b76720c6b121",
         "proof:Writfold/Get.lean": "fnv1a64:c03a1381bd399880",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -8301,7 +8339,7 @@
       ],
       "outcome": "proved",
       "badge": "proved",
-      "fingerprint": "fnv1a64:fd6b5e1af8376665",
+      "fingerprint": "fnv1a64:6e3e1c88c7be2e08",
       "inputs": {
         "lean:catalog.Action": "fnv1a64:d9fd45304107f5bd",
         "lean:catalog.Owner": "fnv1a64:171befe0f779c605",
@@ -8314,7 +8352,7 @@
         "mutant:catalog-change-skips-last": "fnv1a64:fa1a606422aa834e",
         "proof:Writfold/Catalog.lean": "fnv1a64:6f92b76720c6b121",
         "proof:Writfold/Get.lean": "fnv1a64:c03a1381bd399880",
-        "toolchain": "fnv1a64:0bbb9157744fc54b"
+        "toolchain": "fnv1a64:d7f1213f90d51812"
       },
       "mutant_results": [
         {
@@ -8327,5 +8365,5 @@
       ]
     }
   ],
-  "commit": "c00c2eb79afc1a1ae839c7b7cc03e957ba5c596d"
+  "commit": "3d5beb8aea267e70fc3145132674d47491f9252d"
 }
