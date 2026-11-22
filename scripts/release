@@ -1,0 +1,281 @@
+#!/usr/bin/env python3
+"""One release command (#94, docs/rfcs/2026-11-22-release-speed.md).
+
+Each step checks what it needs, does one thing, and says what it checked;
+steps are resumable (a step already done is reported and skipped).
+
+  scripts/release prepare 0.6.0-dev.16   bump Cargo.toml, Cargo.lock and README
+  scripts/release build COMMIT           musl binary + .sha256 from a detached worktree, smoke-tested
+  scripts/release publish COMMIT         refuse an ungated commit; tag, push, GitHub pre-release, verify download
+  scripts/release site [SITE_DIR]        install.sh pins, og-image, package.py, build, test, push, deploy, verify
+  scripts/release close                  close the version's milestone when no issue is open in it
+
+The gates themselves (quality, unit from main) and the claims run stay
+explicit: `writfold kb gate run quality|unit` and
+`cargo tauten proofs --level ship` (a stable tag: the full level).
+Release notes are the version's section of docs/guide/changes.md.
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+from pathlib import Path
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+import time
+
+ROOT = Path(__file__).resolve().parent.parent
+REPO = "writfold-dev/writfold"
+SITE_REPO = "writfold-dev/writfold-dev.github.io"
+ASSET = "writfold-x86_64-linux-musl"
+TOOLS = "writfold-tools@sha256:c854889f19c83174e69600ee28f0d4d35a0d2de1a23b3a35b1ecf4c4a88e0fc6"
+OUT = Path.home() / ".cache" / "writfold-release"
+FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf"
+
+
+def sh(*args: str, cwd: Path = ROOT, check: bool = True, capture: bool = True) -> str:
+    result = subprocess.run(args, cwd=cwd, text=True, check=False,
+                            stdout=subprocess.PIPE if capture else None)
+    if check and result.returncode != 0:
+        raise SystemExit(f"release: {' '.join(args)} exited {result.returncode}")
+    return (result.stdout or "").strip()
+
+
+def say(text: str) -> None:
+    print(f"release: {text}", flush=True)
+
+
+def version() -> str:
+    text = (ROOT / "Cargo.toml").read_text()
+    found = re.search(r'^version = "([^"]+)"', text, re.M)
+    if not found:
+        raise SystemExit("release: no workspace version in Cargo.toml")
+    return found.group(1)
+
+
+def prepare(new: str) -> None:
+    old = version()
+    if old == new:
+        say(f"Cargo.toml already at {new}")
+    else:
+        toml = ROOT / "Cargo.toml"
+        toml.write_text(toml.read_text().replace(f'version = "{old}"', f'version = "{new}"', 1))
+        sh("cargo", "metadata", "--offline", "--format-version", "1")
+        say(f"Cargo.toml {old} -> {new}; Cargo.lock refreshed")
+    readme = ROOT / "README.md"
+    text = readme.read_text()
+    fixed = text.replace(f"(`v{old}`)", f"(`v{new}`)").replace(f"download/v{old}", f"download/v{new}")
+    if fixed != text:
+        readme.write_text(fixed)
+        say("README pre-release line and download URL bumped")
+    if f"## v{new}" not in (ROOT / "docs/guide/changes.md").read_text():
+        say(f"warning: docs/guide/changes.md has no '## v{new}' section yet (the release notes)")
+    say("next: commit, then `cargo tauten proofs --level ship` on that commit (side by side with `build`)")
+
+
+def gated(commit: str) -> list[str]:
+    """The gate lines of `commit`: quality and unit must both pass on it."""
+    full = sh("git", "rev-parse", commit)
+    kb = Path.home() / ".local/share/writfold/kb"
+    lines = []
+    for gate in ("quality", "unit"):
+        receipts = sorted((kb / "runs").glob(f"*/gates/{gate}-*.json"))
+        hit = None
+        for path in reversed(receipts):
+            try:
+                data = json.loads(path.read_text())
+            except (OSError, json.JSONDecodeError):
+                continue
+            subject, result = data.get("subject", {}), data.get("result", {})
+            if (subject.get("commit") == full and subject.get("dirty") == 0
+                    and result.get("outcome") == "pass" and not result.get("subject_moved")):
+                hit = path
+                break
+        if hit is None:
+            raise SystemExit(f"release: no passing {gate} receipt names {full[:12]}: run "
+                             f"`writfold kb gate run {gate}` from main first; never tag an ungated commit")
+        lines.append(f"{gate}: {hit.relative_to(kb)}")
+    return lines
+
+
+def build(commit: str) -> Path:
+    full = sh("git", "rev-parse", commit)
+    out = OUT / full[:12]
+    binary = out / ASSET
+    if binary.is_file() and (out / f"{ASSET}.sha256").is_file():
+        say(f"{binary} already built")
+        return out
+    out.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="writfold-release-") as scratch:
+        tree = Path(scratch) / "src"
+        sh("git", "worktree", "add", "-q", "--detach", str(tree), full)
+        try:
+            target = OUT / "target"
+            target.mkdir(parents=True, exist_ok=True)
+            uid = sh("id", "-u")
+            gid = sh("id", "-g")
+            sh("docker", "run", "--rm", "--network", "none", "-u", f"{uid}:{gid}",
+               "-v", f"{tree}:/work/writfold:ro",
+               "-v", "writfold-rust-1.98.0-registry:/opt/cargo/registry:ro",
+               "-v", f"{target}:/cache/target", "-e", "CARGO_TARGET_DIR=/cache/target",
+               "-w", "/work/writfold", TOOLS, "cargo", "build", "-p", "writfold", "--release",
+               "--target", "x86_64-unknown-linux-musl", "--locked", "--offline", capture=False)
+            shutil.copy2(target / "x86_64-unknown-linux-musl/release/writfold", binary)
+        finally:
+            sh("git", "worktree", "remove", "--force", str(tree), check=False)
+    digest = hashlib.sha256(binary.read_bytes()).hexdigest()
+    (out / f"{ASSET}.sha256").write_text(f"{digest}  {ASSET}\n")
+    shown = sh(str(binary), "--version")
+    want = sh("git", "show", f"{full}:Cargo.toml")
+    want = re.search(r'^version = "([^"]+)"', want, re.M)
+    if not want or want.group(1) not in shown:
+        raise SystemExit(f"release: smoke test: `--version` says {shown!r}")
+    for args in (["kb", "--help"], ["kb", "plan", "--help"]):
+        sh(str(binary), *args)
+    say(f"built {binary} ({digest[:12]}); --version and help smoke-tested: {shown}")
+    return out
+
+
+def notes(tag: str) -> str:
+    text = (ROOT / "docs/guide/changes.md").read_text()
+    found = re.search(rf"^## {re.escape(tag)}\n(.*?)(?=^## |\Z)", text, re.M | re.S)
+    if not found:
+        raise SystemExit(f"release: docs/guide/changes.md has no '## {tag}' section")
+    return found.group(1).strip() + "\n"
+
+
+def publish(commit: str) -> None:
+    full = sh("git", "rev-parse", commit)
+    tag = "v" + json.loads(sh("cargo", "metadata", "--offline", "--no-deps", "--format-version", "1",
+                              "--manifest-path", str(ROOT / "Cargo.toml")))["packages"][0]["version"]
+    lines = gated(full)
+    say("gated: " + "; ".join(lines))
+    out = build(full)
+    if sh("git", "tag", "-l", tag):
+        if sh("git", "rev-parse", f"{tag}^{{commit}}") != full:
+            raise SystemExit(f"release: tag {tag} exists on another commit")
+        say(f"tag {tag} exists")
+    else:
+        sh("git", "tag", "-a", tag, full, "-m", f"Writfold {tag}")
+    sh("git", "push", "origin", tag, capture=False)
+    if subprocess.run(["gh", "release", "view", tag, "-R", REPO], capture_output=True).returncode != 0:
+        note = out / "notes.md"
+        note.write_text(notes(tag))
+        sh("gh", "release", "create", tag, "-R", REPO, "--prerelease", "--title", f"Writfold {tag}",
+           "--notes-file", str(note), str(out / ASSET), str(out / f"{ASSET}.sha256"), capture=False)
+    with tempfile.TemporaryDirectory(prefix="writfold-download-") as scratch:
+        sh("gh", "release", "download", tag, "-R", REPO, "--dir", scratch)
+        sh("sha256sum", "-c", f"{ASSET}.sha256", cwd=Path(scratch))
+    say(f"{tag} released from {full[:12]}; download verified")
+
+
+def og_image(path: Path, old: str, new: str) -> None:
+    """Redraw the dev number (two digits) in the og-image, after checking that
+    redrawing the current one reproduces the image."""
+    from PIL import Image, ImageChops, ImageDraw, ImageFont
+    font = ImageFont.truetype(FONT, 18.6)
+
+    def drawn(base: Image.Image, number: str) -> Image.Image:
+        image = base.copy()
+        draw = ImageDraw.Draw(image)
+        draw.rectangle((601, 440, 624, 468), fill=(16, 25, 34))
+        draw.text((602.5, 440), number, font=font, fill=(109, 215, 196))
+        return image
+
+    if len(old) != 2 or len(new) != 2:
+        raise SystemExit("release: og-image: only a two-digit dev number is drawn; redraw it by hand")
+    image = Image.open(path).convert("RGB")
+    residual = sum(ImageChops.difference(drawn(image, old), image).convert("L").getdata())
+    if residual > 400:
+        raise SystemExit(f"release: og-image: redrawing dev.{old} differs by {residual}; the layout moved")
+    drawn(image, new).save(path)
+    say(f"og-image dev.{old} -> dev.{new} (self-check residual {residual})")
+
+
+def site(directory: str | None) -> None:
+    site_dir = Path(directory or ROOT.parent / "writfold-dev.github.io")
+    current = version()
+    tag = f"v{current}"
+    release = json.loads(sh("gh", "release", "view", tag, "-R", REPO, "--json", "targetCommitish,assets"))
+    commit = sh("git", "rev-parse", f"{tag}^{{commit}}")
+    with tempfile.TemporaryDirectory(prefix="writfold-site-") as scratch:
+        sh("gh", "release", "download", tag, "-R", REPO, "--pattern", f"{ASSET}.sha256", "--dir", scratch)
+        digest = (Path(scratch) / f"{ASSET}.sha256").read_text().split()[0]
+    del release
+    install = site_dir / "install.sh"
+    text = install.read_text()
+    old = re.search(r'^WRITFOLD_DEFAULT_VERSION="([^"]+)"', text, re.M).group(1)
+    text = re.sub(r'^WRITFOLD_DEFAULT_VERSION="[^"]+"', f'WRITFOLD_DEFAULT_VERSION="{current}"', text, flags=re.M)
+    text = re.sub(r'^WRITFOLD_DEFAULT_SHA256="[^"]+"', f'WRITFOLD_DEFAULT_SHA256="{digest}"', text, flags=re.M)
+    install.write_text(text)
+    pages = site_dir / "scripts/build_pages.py"
+    if f'VERSION = "{tag}"' not in pages.read_text():
+        raise SystemExit(f"release: {pages} is not at {tag}: write the status, roadmap and log entry first")
+    package = site_dir / "scripts/package.py"
+    ptext = package.read_text()
+    ptext = re.sub(r'"product_release": "[^"]+"', f'"product_release": "{tag}"', ptext)
+    ptext = re.sub(r'"product_source_commit": "[^"]+"', f'"product_source_commit": "{commit}"', ptext)
+    package.write_text(ptext)
+    old_n, new_n = old.rsplit(".", 1)[-1], current.rsplit(".", 1)[-1]
+    if old_n != new_n:
+        og_image(site_dir / "assets/og-image.png", old_n, new_n)
+    sh("python3", "scripts/build_pages.py", cwd=site_dir, capture=False)
+    sh("bash", "scripts/test_install.sh", cwd=site_dir, capture=False)
+    with tempfile.TemporaryDirectory(prefix="writfold-package-") as scratch:
+        sh("python3", "scripts/package.py", "--refresh-manifest", "--output", scratch, cwd=site_dir, capture=False)
+    sh("git", "add", "-A", cwd=site_dir)
+    if sh("git", "status", "--porcelain", cwd=site_dir):
+        sh("git", "commit", "-q", "-m", f"Release {tag}", cwd=site_dir)
+    sh("git", "push", "-q", "origin", "HEAD", cwd=site_dir)
+    head = sh("git", "rev-parse", "HEAD", cwd=site_dir)
+    sh("gh", "workflow", "run", "pages.yml", "-R", SITE_REPO, "-f", f"commit={head}")
+    time.sleep(5)
+    run = sh("gh", "run", "list", "-R", SITE_REPO, "--workflow", "pages.yml", "--limit", "1",
+             "--json", "databaseId", "--jq", ".[0].databaseId")
+    sh("gh", "run", "watch", run, "-R", SITE_REPO, "--exit-status", capture=False)
+    with tempfile.TemporaryDirectory(prefix="writfold-install-") as scratch:
+        script = sh("curl", "-fsSL", "https://writfold.dev/install.sh")
+        Path(scratch, "install.sh").write_text(script)
+        sh("sh", "install.sh", "--no-plugin", "--prefix", scratch, cwd=Path(scratch))
+        shown = sh(str(Path(scratch) / "writfold"), "--version")
+    if current not in shown:
+        raise SystemExit(f"release: the live installer installed {shown!r}, not {current}")
+    say(f"site deployed at {head[:12]}; live installer installs {shown}")
+
+
+def close() -> None:
+    title = f"v{version()}"
+    milestones = json.loads(sh("gh", "api", f"repos/{REPO}/milestones?state=all&per_page=100"))
+    found = [m for m in milestones if m["title"] == title]
+    if not found:
+        raise SystemExit(f"release: no milestone {title}")
+    m = found[0]
+    if m["state"] == "closed":
+        say(f"milestone {title} already closed")
+        return
+    if m["open_issues"]:
+        raise SystemExit(f"release: milestone {title} has {m['open_issues']} open issue(s); close only gated work")
+    sh("gh", "api", "-X", "PATCH", f"repos/{REPO}/milestones/{m['number']}", "-f", "state=closed")
+    say(f"milestone {title} closed")
+
+
+def main(argv: list[str]) -> None:
+    steps = {"prepare": (prepare, 1), "build": (build, 1), "publish": (publish, 1),
+             "site": (site, None), "close": (close, 0)}
+    if not argv or argv[0] not in steps:
+        raise SystemExit(__doc__)
+    step, arity = steps[argv[0]]
+    args = argv[1:]
+    if arity is None:
+        step(args[0] if args else None)
+    elif len(args) != arity:
+        raise SystemExit(__doc__)
+    else:
+        step(*args)
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])
