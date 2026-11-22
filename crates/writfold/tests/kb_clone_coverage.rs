@@ -96,10 +96,16 @@ fn lines_with<'a>(text: &'a str, needle: &str) -> Vec<&'a str> {
 #[test]
 fn coverage_is_planned_reviewed_then_provisioned() -> Result {
     let d = demo()?;
-    let kb = d.0.join("kb");
-    let before = sh(&kb, &d, "git rev-parse HEAD; git status --porcelain")?.0;
+    plan_without_writes(&d)?;
+    provision_and_compare(&d)
+}
 
-    let (inventory, exit) = sh(&kb, &d, "python3 \"$RECIPE\" inventory")?;
+/// Inventory, shortlist and verdicts: no clone, no Git write.
+fn plan_without_writes(d: &Demo) -> Result {
+    let (kb, d) = (d.0.join("kb"), d);
+    let before = sh(&kb, d, "git rev-parse HEAD; git status --porcelain")?.0;
+
+    let (inventory, exit) = sh(&kb, d, "python3 \"$RECIPE\" inventory")?;
     assert_eq!(exit, 0, "{inventory}");
     assert!(
         inventory.contains("# repos=3 missing=2 partial=1"),
@@ -109,10 +115,10 @@ fn coverage_is_planned_reviewed_then_provisioned() -> Result {
         inventory.contains("--missing` does not list it"),
         "{inventory}"
     );
-    let (missing, _) = sh(&kb, &d, "writfold kb repos --missing")?;
+    let (missing, _) = sh(&kb, d, "writfold kb repos --missing")?;
     assert!(!missing.contains("repo gamma"), "{missing}");
 
-    let (shortlist, exit) = sh(&kb, &d, "python3 \"$RECIPE\" shortlist")?;
+    let (shortlist, exit) = sh(&kb, d, "python3 \"$RECIPE\" shortlist")?;
     assert_eq!(exit, 0, "{shortlist}");
     let order = lines_with(&shortlist, "  ");
     assert!(
@@ -127,11 +133,7 @@ fn coverage_is_planned_reviewed_then_provisioned() -> Result {
         order[3].contains("gamma") && order[3].contains("partial"),
         "{shortlist}"
     );
-    let (verdicts, _) = sh(
-        &kb,
-        &d,
-        "python3 \"$RECIPE\" verdicts --save ../before.json",
-    )?;
+    let (verdicts, _) = sh(&kb, d, "python3 \"$RECIPE\" verdicts --save ../before.json")?;
     assert!(
         verdicts.contains("unverifiable repo-not-local"),
         "{verdicts}"
@@ -142,19 +144,23 @@ fn coverage_is_planned_reviewed_then_provisioned() -> Result {
     );
     // Nothing so far wrote to Git or cloned anything.
     assert_eq!(
-        sh(&kb, &d, "git rev-parse HEAD; git status --porcelain")?.0,
+        sh(&kb, d, "git rev-parse HEAD; git status --porcelain")?.0,
         before
     );
     assert!(!d.0.join("clones").exists());
+    Ok(())
+}
 
-    // The operator approves alpha only; beta stays missing on purpose.
+/// The operator approves alpha only; beta stays missing on purpose.
+fn provision_and_compare(d: &Demo) -> Result {
+    let (kb, d) = (d.0.join("kb"), d);
     std::fs::write(
         d.0.join("approved.txt"),
         format!("alpha file://{}/src/alpha\n", d.0.display()),
     )?;
     let (provisioned, exit) = sh(
         &kb,
-        &d,
+        d,
         "python3 \"$RECIPE\" provision ../approved.txt --into ../clones --depth 1",
     )?;
     assert_eq!(exit, 0, "{provisioned}");
@@ -165,7 +171,7 @@ fn coverage_is_planned_reviewed_then_provisioned() -> Result {
     assert!(!d.0.join("clones/beta.git").exists());
     let (sizes, _) = sh(
         &kb,
-        &d,
+        d,
         "git clone -q --mirror \"file://$DEMO/src/alpha\" ../full/alpha.git && du -sk ../clones/alpha.git ../full/alpha.git",
     )?;
     let kib: Vec<u64> = sizes
@@ -177,10 +183,10 @@ fn coverage_is_planned_reviewed_then_provisioned() -> Result {
         "shallow is smaller: {sizes}"
     );
 
-    let _ = sh(&kb, &d, "python3 \"$RECIPE\" verdicts --save ../after.json")?;
+    let _ = sh(&kb, d, "python3 \"$RECIPE\" verdicts --save ../after.json")?;
     let (compare, _) = sh(
         &kb,
-        &d,
+        d,
         "python3 \"$RECIPE\" compare ../before.json ../after.json",
     )?;
     // alpha's four citations carry blob= at unchanged paths: fresh even shallow.
