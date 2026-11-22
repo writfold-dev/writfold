@@ -7,10 +7,15 @@ import Extracted.WritfoldCore.Verdict
 Theorems over the Aeneas translation of `writfold_core::verdict`: from
 what a check observed to exactly one verdict.
 
-- `observed_spec`: `observed` is the table `observedOf`, for every fact.
+- `observed_spec`: `observed` is the table `observedOf`, for every fact
+  (`other_blob_spec`, `missing_spec` for code citations).
   `observed_fresh_iff`: a citation reads fresh exactly for the eight fresh
   facts (`FreshFact`); `moved_span_never_fresh`, `unsearched_never_fresh`,
   `changed_gate_never_fresh`, `checker_fresh_iff`.
+- `absence_never_evidence`, `unknown_blob_changed_only_by_span`,
+  `gone_witness`, `changed_witness`, `history_only_refines`,
+  `rename_never_fresh` (#90): missing history is never evidence of a
+  change; a negative verdict for a code citation has a witness.
 - `with_mark_spec`, `mark_keeps_change`, `mark_never_fresh`, `decide_spec`:
   an authored mark wins over every verdict except changed, gone and
   expired, so a mark never hides a change and never reads fresh.
@@ -33,16 +38,27 @@ open writfold_core
 
 namespace Writfold.Core.Verdict
 
+/-- `other_blob`: another blob at the cited path. A located span decides from
+the bytes at the target; otherwise only a known cited blob says changed. -/
+def otherBlobOf (k : Bool) : Option verdict.Located → verdict.Verdict
+  | some .Same => .Fresh
+  | some (.At _ _) => .Moved
+  | some .Absent => .Changed
+  | some .Unsearched | none => if k then .Changed else .Unverifiable
+
+/-- `missing`: a path absent at the target, by how following it ended. -/
+def missingOf : verdict.Absence → verdict.Verdict
+  | .Renamed => .Renamed
+  | .Followed (some .Same) | .Followed (some (.At _ _)) => .Moved
+  | .Followed _ | .NoRename => .Gone
+  | .RevAbsent | .NoRev | .Capped => .Unverifiable
+
 /-- The verdict of each observation, as `verdict.rs` lists it. -/
 def observedOf : verdict.Observed → verdict.Verdict
   | .Malformed | .Unresolved => .Unverifiable
   | .Code .SameBlob => .Fresh
-  | .Code (.OtherBlob none) => .Changed
-  | .Code (.OtherBlob (some .Same)) => .Fresh
-  | .Code (.OtherBlob (some (.At _ _))) => .Moved
-  | .Code (.OtherBlob (some .Absent)) | .Code (.OtherBlob (some .Unsearched)) => .Changed
-  | .Code (.Missing true) => .Renamed
-  | .Code (.Missing false) => .Gone
+  | .Code (.OtherBlob k l) => otherBlobOf k l
+  | .Code (.Missing a) => missingOf a
   | .Gate true => .Fresh
   | .Gate false => .Changed
   | .State none => .Gone
@@ -61,15 +77,31 @@ def observedOf : verdict.Observed → verdict.Verdict
   | .Checked (.Said .Gone) => .Gone
   | .Checked _ => .Unverifiable
 
+theorem other_blob_spec (k : Bool) (l : Option verdict.Located) :
+    verdict.other_blob k l ⦃ v => v = otherBlobOf k l ⦄ := by
+  unfold verdict.other_blob
+  rcases l with _ | l
+  · cases k <;> simp [otherBlobOf]
+  · rcases l with _ | ⟨_, _⟩ | _ | _ <;> try simp [otherBlobOf]
+    cases k <;> simp [otherBlobOf]
+
+theorem missing_spec (a : verdict.Absence) :
+    verdict.missing a ⦃ v => v = missingOf a ⦄ := by
+  unfold verdict.missing
+  rcases a with _ | l | _ | _ | _ | _ <;> try simp [missingOf]
+  rcases l with _ | l
+  · simp [missingOf]
+  · rcases l with _ | ⟨_, _⟩ | _ | _ <;> simp [missingOf]
+
 theorem observed_spec (f : verdict.Observed) :
     verdict.observed f ⦃ v => v = observedOf f ⦄ := by
   unfold verdict.observed
   rcases f with _ | _ | t | b | o | o | b | _ | c
   all_goals try simp [observedOf]
-  · rcases t with _ | (_ | l) | b
-    all_goals try simp [observedOf]
-    · rcases l with _ | ⟨_, _⟩ | _ | _ <;> simp [observedOf]
-    · cases b <;> simp [observedOf]
+  · rcases t with _ | ⟨k, l⟩ | a
+    · simp [observedOf]
+    · simpa [observedOf] using other_blob_spec k l
+    · simpa [observedOf] using missing_spec a
   · cases b <;> simp [observedOf]
   · rcases o with _ | (_ | b) <;> try simp [observedOf]
     cases b <;> simp [observedOf]
@@ -81,7 +113,7 @@ theorem observed_spec (f : verdict.Observed) :
 
 /-- The facts that read fresh. -/
 def FreshFact (f : verdict.Observed) : Prop :=
-  f = .Code .SameBlob ∨ f = .Code (.OtherBlob (some .Same)) ∨ f = .Gate true ∨
+  f = .Code .SameBlob ∨ (∃ k, f = .Code (.OtherBlob k (some .Same))) ∨ f = .Gate true ∨
   f = .State (some (some true)) ∨ f = .Timed (some false) ∨ f = .Offline false ∨
   f = .Immutable ∨ f = .Checked (.Said .Fresh)
 
@@ -92,10 +124,16 @@ theorem observed_fresh_iff (f : verdict.Observed) :
   intro v hv; subst hv
   rcases f with _ | _ | t | b | o | o | b | _ | c
   all_goals try simp [observedOf, FreshFact]
-  · rcases t with _ | (_ | l) | b
-    all_goals try simp [observedOf]
-    · rcases l with _ | ⟨_, _⟩ | _ | _ <;> simp [observedOf]
-    · cases b <;> simp [observedOf]
+  · rcases t with _ | ⟨k, l⟩ | a
+    · simp [observedOf]
+    · rcases l with _ | l
+      · cases k <;> simp [observedOf, otherBlobOf]
+      · rcases l with _ | ⟨_, _⟩ | _ | _ <;> try simp [observedOf, otherBlobOf]
+        cases k <;> simp [observedOf, otherBlobOf]
+    · rcases a with _ | l | _ | _ | _ | _ <;> try simp [observedOf, missingOf]
+      rcases l with _ | l
+      · simp [missingOf]
+      · rcases l with _ | ⟨_, _⟩ | _ | _ <;> simp [missingOf]
   · cases b <;> simp [observedOf]
   · rcases o with _ | (_ | b) <;> try simp [observedOf]
     cases b <;> simp [observedOf]
@@ -106,14 +144,16 @@ theorem observed_fresh_iff (f : verdict.Observed) :
     cases s <;> simp [observedOf]
 
 /-- A span found at other lines reads moved, never fresh. -/
-theorem moved_span_never_fresh (a b : U32) :
-    verdict.observed (.Code (.OtherBlob (some (.At a b)))) ⦃ v => v = .Moved ⦄ := by
-  apply WP.spec_mono (observed_spec _); intro v hv; simp [hv, observedOf]
+theorem moved_span_never_fresh (k : Bool) (a b : U32) :
+    verdict.observed (.Code (.OtherBlob k (some (.At a b)))) ⦃ v => v = .Moved ⦄ := by
+  apply WP.spec_mono (observed_spec _); intro v hv; simp [hv, observedOf, otherBlobOf]
 
-/-- A file too long to search reads changed, never fresh. -/
-theorem unsearched_never_fresh :
-    verdict.observed (.Code (.OtherBlob (some .Unsearched))) ⦃ v => v = .Changed ⦄ := by
-  apply WP.spec_mono (observed_spec _); intro v hv; simp [hv, observedOf]
+/-- A file too long to search reads changed when the cited blob was
+compared, unverifiable when it was not; never fresh. -/
+theorem unsearched_never_fresh (k : Bool) :
+    verdict.observed (.Code (.OtherBlob k (some .Unsearched)))
+      ⦃ v => v = if k then .Changed else .Unverifiable ⦄ := by
+  apply WP.spec_mono (observed_spec _); intro v hv; simp [hv, observedOf, otherBlobOf]
 
 /-- A gate citation away from the target commit reads changed. -/
 theorem changed_gate_never_fresh :
@@ -125,6 +165,86 @@ theorem checker_fresh_iff (c : verdict.Checker) :
     verdict.observed (.Checked c) ⦃ v => v = .Fresh ↔ c = .Said .Fresh ⦄ := by
   apply WP.spec_mono (observed_fresh_iff _)
   intro v hv; rw [hv]; simp [FreshFact]
+
+/-! ## Missing history is not evidence (#90) -/
+
+/-- A follow that could not run (the cited commit is not in this clone,
+there is no `rev=`, or the per-run limit was reached) reads unverifiable:
+never gone, never changed. -/
+theorem absence_never_evidence (a : verdict.Absence)
+    (h : a = .RevAbsent ∨ a = .NoRev ∨ a = .Capped) :
+    verdict.observed (.Code (.Missing a)) ⦃ v => v = .Unverifiable ⦄ := by
+  apply WP.spec_mono (observed_spec _); intro v hv
+  rcases h with h | h | h <;> simp [hv, h, observedOf, missingOf]
+
+/-- With no cited blob known, a citation reads changed only when a span
+search ran and did not find the span, and never reads gone. -/
+theorem unknown_blob_changed_only_by_span (l : Option verdict.Located) :
+    verdict.observed (.Code (.OtherBlob false l))
+      ⦃ v => (v = .Changed ↔ l = some .Absent) ∧ v ≠ .Gone ⦄ := by
+  apply WP.spec_mono (observed_spec _); intro v hv; subst hv
+  rcases l with _ | l
+  · simp [observedOf, otherBlobOf]
+  · rcases l with _ | ⟨_, _⟩ | _ | _ <;> simp [observedOf, otherBlobOf]
+
+/-- A located span is not followed. -/
+def Unlocated (l : Option verdict.Located) : Prop :=
+  l ≠ some .Same ∧ ∀ a b, l ≠ some (.At a b)
+
+/-- Gone has a witness: the path is absent at the target, no exact rename
+exists, and the follow completed (no rename, or a rename in which the cited
+span was not found). -/
+theorem gone_witness (t : verdict.Target) :
+    verdict.observed (.Code t) ⦃ v => v = .Gone ↔
+      (t = .Missing .NoRename ∨ ∃ l, t = .Missing (.Followed l) ∧ Unlocated l) ⦄ := by
+  apply WP.spec_mono (observed_spec _); intro v hv; subst hv
+  rcases t with _ | ⟨k, l⟩ | a
+  · simp [observedOf]
+  · rcases l with _ | l
+    · cases k <;> simp [observedOf, otherBlobOf]
+    · rcases l with _ | ⟨_, _⟩ | _ | _ <;> try simp [observedOf, otherBlobOf]
+      cases k <;> simp [observedOf, otherBlobOf]
+  · rcases a with _ | l | _ | _ | _ | _ <;> try simp [observedOf, missingOf, Unlocated]
+    rcases l with _ | l
+    · simp [missingOf]
+    · rcases l with _ | ⟨_, _⟩ | _ | _ <;> simp [missingOf]
+
+/-- Changed has a witness: a known cited blob that differs, or a completed
+span search that did not find the span. -/
+theorem changed_witness (t : verdict.Target) :
+    verdict.observed (.Code t) ⦃ v => v = .Changed ↔
+      ∃ k l, t = .OtherBlob k l ∧
+        (l = some .Absent ∨ (k = true ∧ (l = none ∨ l = some .Unsearched))) ⦄ := by
+  apply WP.spec_mono (observed_spec _); intro v hv; subst hv
+  rcases t with _ | ⟨k, l⟩ | a
+  · simp [observedOf]
+  · rcases l with _ | l
+    · cases k <;> simp [observedOf, otherBlobOf]
+    · rcases l with _ | ⟨_, _⟩ | _ | _ <;> cases k <;> simp [observedOf, otherBlobOf]
+  · rcases a with _ | l | _ | _ | _ | _ <;> try simp [observedOf, missingOf]
+    rcases l with _ | l
+    · simp [missingOf]
+    · rcases l with _ | ⟨_, _⟩ | _ | _ <;> simp [missingOf]
+
+/-- Supplying history only refines: knowing the cited blob changes a
+verdict only where it was unverifiable, so every verdict decided from the
+bytes at the target is the same with or without history. -/
+theorem history_only_refines (l : Option verdict.Located) :
+    verdict.observed (.Code (.OtherBlob false l))
+      ⦃ v => v = observedOf (.Code (.OtherBlob true l)) ∨ v = .Unverifiable ⦄ := by
+  apply WP.spec_mono (observed_spec _); intro v hv; subst hv
+  rcases l with _ | l
+  · simp [observedOf, otherBlobOf]
+  · rcases l with _ | ⟨_, _⟩ | _ | _ <;> simp [observedOf, otherBlobOf]
+
+/-- A path absent at the target never reads fresh, renamed or not. -/
+theorem rename_never_fresh (a : verdict.Absence) :
+    verdict.observed (.Code (.Missing a)) ⦃ v => v ≠ .Fresh ⦄ := by
+  apply WP.spec_mono (observed_spec _); intro v hv; subst hv
+  rcases a with _ | l | _ | _ | _ | _ <;> try simp [observedOf, missingOf]
+  rcases l with _ | l
+  · simp [missingOf]
+  · rcases l with _ | ⟨_, _⟩ | _ | _ <;> simp [missingOf]
 
 /-! ## Marks -/
 

@@ -74,7 +74,7 @@ fn citations_resolve_or_report() {
             Target::SameBlob
         } else {
             let (a, b) = (first as u32, last as u32);
-            Target::OtherBlob(Some(locate(&after, a, b, &span)))
+            Target::OtherBlob(true, Some(locate(&after, a, b, &span)))
         };
         let verdict = observed(Observed::Code(target));
         let now = span_of(&lines, first, last);
@@ -87,7 +87,7 @@ fn citations_resolve_or_report() {
                     "{before:?} -> {after:?}"
                 );
             }
-            (Verdict::Moved, Target::OtherBlob(Some(Located::At(a, b)))) => {
+            (Verdict::Moved, Target::OtherBlob(_, Some(Located::At(a, b)))) => {
                 moved += 1;
                 assert_eq!(
                     span_of(&lines, a as usize, b as usize).as_deref(),

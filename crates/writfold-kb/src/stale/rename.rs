@@ -10,38 +10,66 @@ use crate::error::Result;
 use crate::workspace::{CANCELLED, budgets};
 use std::collections::BTreeMap;
 use std::path::Path;
+use writfold_core::verdict::{Absence, Verdict as Kernel, missing};
 use writfold_domain::GitObjectId;
-use writfold_runtime::git::{GitExecutable, KbRepository, TreeBlob, kb_renames, pinned_blobs};
+use writfold_runtime::git::{
+    GitExecutable, KbRepository, Renames, TreeBlob, kb_renames, pinned_blobs,
+};
 
 /// Distinct cited revisions followed per `kb stale` run; citations of the
-/// rest stay `gone` and say so.
+/// rest are unverifiable (`rename-unchecked`) and say so.
 pub const REV_CAP: usize = 64;
 
-/// The verdict for a renamed citation from where its span sits in the new
-/// file (`None` when the citation carries no span digest or range), and
-/// the cited lines.
-pub fn decide(path: &str, located: Option<Located>, cited: (u32, u32)) -> Verdict {
-    let gone = |why: &str| Verdict::Gone {
-        detail: Some(format!("renamed to {path}; {why}")),
-    };
-    let moved = |(first, last)| Verdict::Moved {
-        path: Some(path.to_owned()),
-        first,
-        last,
-    };
-    match located {
-        Some(Located::Same) => moved(cited),
-        Some(Located::At(first, last)) => moved((first, last)),
-        Some(Located::Absent) => gone("span not found"),
-        Some(Located::Unsearched) => gone("span unsearched: file too long"),
-        None => gone("no span digest to search"),
+/// The verdict for a path absent at the target, decided by the kernel's
+/// [`missing`] (#90): `path` is where a followed rename leads, `cited` the
+/// cited lines, `shallow` whether this clone is shallow (named in the
+/// reason when the cited commit is absent).
+pub fn decide(absence: Absence, path: &str, cited: (u32, u32), shallow: bool) -> Verdict {
+    let detail = |text: String| Some(text);
+    match (missing(absence), absence) {
+        (Kernel::Moved, Absence::Followed(located)) => {
+            let (first, last) = match located {
+                Some(Located::At(first, last)) => (first, last),
+                _ => cited,
+            };
+            Verdict::Moved {
+                path: Some(path.to_owned()),
+                first,
+                last,
+            }
+        }
+        (Kernel::Gone, Absence::Followed(located)) => Verdict::Gone {
+            detail: detail(format!(
+                "renamed to {path}; {}",
+                match located {
+                    Some(Located::Unsearched) => "span unsearched: file too long",
+                    Some(_) => "span not found",
+                    None => "no span digest to search",
+                }
+            )),
+        },
+        (Kernel::Gone, _) => Verdict::Gone {
+            detail: detail("path absent; no rename since the cited rev".into()),
+        },
+        (_, Absence::RevAbsent) => Verdict::Unverifiable(history(shallow)),
+        (_, Absence::NoRev) => Verdict::Unverifiable(
+            "nothing-to-compare: path absent and no rev= to follow a rename from".into(),
+        ),
+        (_, Absence::Capped) => Verdict::Unverifiable(format!(
+            "rename-unchecked: over {REV_CAP} cited revs this run"
+        )),
+        _ => Verdict::Unverifiable("path absent".into()),
     }
 }
 
-fn gone(detail: &str) -> Verdict {
-    Verdict::Gone {
-        detail: Some(format!("path absent; {detail}")),
-    }
+/// The reason for a citation whose cited commit is not in this clone.
+pub fn history(shallow: bool) -> String {
+    let shallow = if shallow {
+        " (shallow clone: fetch --unshallow)"
+    } else {
+        " (fetch it)"
+    };
+    format!("history-not-local: the cited rev is not in this clone{shallow}")
 }
 
 /// Citations to follow, by cited revision.
@@ -58,7 +86,7 @@ pub fn plan(
     let mut decided = Vec::new();
     for &index in absent {
         let Some(rev) = cites[index].rev.as_deref().map(str::to_lowercase) else {
-            decided.push((index, gone("no rev= to follow a rename")));
+            decided.push((index, decide(Absence::NoRev, "", (1, 1), false)));
             continue;
         };
         if let Some(members) = by_rev.get_mut(&rev) {
@@ -67,17 +95,23 @@ pub fn plan(
             *remaining -= 1;
             by_rev.insert(rev, vec![index]);
         } else {
-            let detail = format!("rename-unchecked (over {REV_CAP} cited revs this run)");
-            decided.push((index, gone(&detail)));
+            decided.push((index, decide(Absence::Capped, "", (1, 1), false)));
         }
     }
     (by_rev, decided)
 }
 
+/// The repository a follow reads, and whether it is a shallow clone.
+#[derive(Clone, Copy)]
+pub struct Repo<'a> {
+    pub dir: &'a Path,
+    pub shallow: bool,
+}
+
 /// Follow every absent citation's path from its cited revision to `target`.
 pub fn follow(
     git: &GitExecutable<'_>,
-    dir: &Path,
+    clone: Repo<'_>,
     target: &GitObjectId,
     tree: &[TreeBlob],
     cites: &[Cite],
@@ -86,7 +120,7 @@ pub fn follow(
 ) -> Result<Vec<(usize, Verdict)>> {
     let (by_rev, mut decided) = plan(cites, absent, remaining);
     let reads = KbRepository {
-        git_dir: dir,
+        git_dir: clone.dir,
         work_tree: None,
     };
     let mut renamed: Vec<(usize, String, GitObjectId)> = Vec::new();
@@ -94,17 +128,24 @@ pub fn follow(
         let map = kb_renames(git, reads, &rev, target.as_str(), budgets()?, &CANCELLED)?;
         for index in members {
             let old = cites[index].cpath.as_deref().unwrap_or_default();
-            let Some(map) = &map else {
-                decided.push((index, gone("cited rev not in repository")));
+            let cited = (
+                cites[index].first.unwrap_or(1),
+                cites[index].last.unwrap_or(1),
+            );
+            let Renames::Found(map) = &map else {
+                decided.push((index, decide(Absence::RevAbsent, "", cited, clone.shallow)));
                 continue;
             };
             let Some(new) = map.get(old) else {
-                decided.push((index, gone("no rename since the cited rev")));
+                decided.push((index, decide(Absence::NoRename, "", cited, false)));
                 continue;
             };
             match tree.iter().find(|entry| &entry.path == new) {
                 Some(entry) => renamed.push((index, new.clone(), entry.blob.clone())),
-                None => decided.push((index, decide(new, Some(Located::Absent), (0, 0)))),
+                None => {
+                    let absence = Absence::Followed(Some(Located::Absent));
+                    decided.push((index, decide(absence, new, cited, false)));
+                }
             }
         }
     }
@@ -112,7 +153,7 @@ pub fn follow(
     let contents = if ids.is_empty() {
         Vec::new()
     } else {
-        pinned_blobs(git, dir, &ids, budgets()?, &CANCELLED)?
+        pinned_blobs(git, clone.dir, &ids, budgets()?, &CANCELLED)?
     };
     for ((index, path, _), bytes) in renamed.iter().zip(contents) {
         let cite = &cites[*index];
@@ -123,14 +164,17 @@ pub fn follow(
             }
             _ => None,
         };
-        decided.push((*index, decide(path, located, cited)));
+        decided.push((
+            *index,
+            decide(Absence::Followed(located), path, cited, false),
+        ));
     }
     Ok(decided)
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{Cite, Located, REV_CAP, Verdict, decide, plan};
+    use super::{Absence, Cite, Located, REV_CAP, Verdict, decide, plan};
 
     #[test]
     fn a_rename_is_never_fresh() {
@@ -142,22 +186,19 @@ mod tests {
             Some(Located::Unsearched),
         ];
         for located in cases {
-            let verdict = decide("src/new.rs", located, (1, 3));
+            let verdict = decide(Absence::Followed(located), "src/new.rs", (1, 3), false);
             assert_ne!(verdict, Verdict::Fresh);
             let moved = matches!(verdict, Verdict::Moved { .. });
             let found = matches!(located, Some(Located::Same | Located::At(_, _)));
             assert_eq!(moved, found);
         }
         assert_eq!(
-            decide("src/new.rs", Some(Located::Same), (1, 3)),
-            Verdict::Moved {
-                path: Some("src/new.rs".into()),
-                first: 1,
-                last: 3
-            }
-        );
-        assert_eq!(
-            decide("src/new.rs", Some(Located::At(4, 6)), (1, 3)),
+            decide(
+                Absence::Followed(Some(Located::At(4, 6))),
+                "src/new.rs",
+                (1, 3),
+                false
+            ),
             Verdict::Moved {
                 path: Some("src/new.rs".into()),
                 first: 4,
@@ -165,11 +206,26 @@ mod tests {
             }
         );
         assert_eq!(
-            decide("p", Some(Located::Absent), (1, 3)),
+            decide(Absence::Followed(Some(Located::Absent)), "p", (1, 3), false),
             Verdict::Gone {
                 detail: Some("renamed to p; span not found".into())
             }
         );
+    }
+
+    /// #90: an unavailable follow is unverifiable with its reason, never gone.
+    #[test]
+    fn missing_history_is_not_a_removal() {
+        let reason = |a, shallow| match decide(a, "", (1, 1), shallow) {
+            Verdict::Unverifiable(why) => why,
+            other => format!("not unverifiable: {other:?}"),
+        };
+        assert!(reason(Absence::RevAbsent, true).starts_with("history-not-local:"));
+        assert!(reason(Absence::RevAbsent, true).contains("shallow clone"));
+        assert!(!reason(Absence::RevAbsent, false).contains("shallow"));
+        assert!(reason(Absence::NoRev, false).starts_with("nothing-to-compare:"));
+        assert!(reason(Absence::Capped, false).starts_with("rename-unchecked:"));
+        assert_eq!(decide(Absence::NoRename, "", (1, 1), false).name(), "gone");
     }
 
     #[test]
@@ -192,7 +248,7 @@ mod tests {
         assert_eq!(by_rev.get("0000000").map(Vec::len), Some(2));
         assert_eq!(by_rev.get("000000a").map(Vec::len), Some(2));
         assert_eq!(decided.len(), 4);
-        assert!(decided.iter().all(|(_, v)| v.name() == "gone"));
+        assert!(decided.iter().all(|(_, v)| v.name() == "unverifiable"));
         let mut none = 0;
         let (by_rev, decided) = plan(&cites, &all[..2], &mut none);
         assert!(by_rev.is_empty() && decided.len() == 2);

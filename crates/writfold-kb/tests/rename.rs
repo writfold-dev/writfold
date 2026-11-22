@@ -107,10 +107,11 @@ fn renames_with_edits_are_followed() -> TestResult {
         drop.contains("path absent; no rename since the cited rev"),
         "{drop}"
     );
+    // A cited commit this clone does not hold is no evidence of removal (#90).
     let elsewhere = row(&text, 7)?;
-    assert!(elsewhere.contains("[gone]"), "{elsewhere}");
+    assert!(elsewhere.contains("[unverifiable]"), "{elsewhere}");
     assert!(
-        elsewhere.contains("cited rev not in repository"),
+        elsewhere.contains("history-not-local: the cited rev is not in this clone"),
         "{elsewhere}"
     );
     for line in 3..=7 {

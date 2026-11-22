@@ -269,7 +269,7 @@ pub fn read(ws: &Workspace, git: &GitExecutable<'_>, decl: &Decl) -> Read {
             }
         };
         let parsed = std::str::from_utf8(&raw)
-            .map_err(|_| format!("{path}: not UTF-8"))
+            .map_err(|e| format!("{path}: not UTF-8 ({e})"))
             .and_then(|text| match duplicate_key(text) {
                 Some(key) => Err(format!("{path}: duplicate JSON key {key:?}")),
                 None => serde_json::from_str::<serde_json::Value>(text)

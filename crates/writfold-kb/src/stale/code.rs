@@ -14,7 +14,7 @@ use crate::workspace::{CANCELLED, budgets};
 use std::collections::BTreeMap;
 use std::path::Path;
 use std::sync::atomic::Ordering;
-use writfold_core::verdict::{Observed, Target, Verdict as Kernel, observed};
+use writfold_core::verdict::{Verdict as Kernel, other_blob};
 use writfold_domain::GitObjectId;
 use writfold_runtime::git::{
     GitError, GitExecutable, KbRepository, kb_batch_check, pinned_blobs, pinned_tree,
@@ -216,6 +216,8 @@ fn check_repo(
         names.push(format!("{}:{path}", target.as_str()));
         let pinned = cite.rev.as_deref().filter(|_| cite.blob.is_none());
         names.push(pinned.map_or_else(|| "0".repeat(40), |rev| format!("{rev}:{path}")));
+        // Whether this clone holds the cited commit at all (#90).
+        names.push(pinned.map_or_else(|| "0".repeat(40), |rev| format!("{rev}^{{commit}}")));
         asked.push(index);
     }
     let answers = kb_batch_check(git, reads, &names, budgets()?, &CANCELLED)?;
@@ -223,7 +225,11 @@ fn check_repo(
         indices: &asked,
         answers: &answers,
     };
-    let verdicts = settle(git, dir, &target, cites, asked, remaining)?;
+    let clone = rename::Repo {
+        dir,
+        shallow: repos::shallow(dir),
+    };
+    let verdicts = settle(git, clone, &target, cites, asked, remaining)?;
     out.extend(verdicts.into_iter().map(|(i, verdict)| {
         (
             i,
@@ -239,7 +245,8 @@ fn check_repo(
 
 type Answer = Option<(GitObjectId, String)>;
 
-/// The citations asked about, with two batch-check answers each.
+/// The citations asked about, with three batch-check answers each: the
+/// path at the target, the path at the cited rev, the cited commit.
 #[derive(Clone, Copy)]
 struct Asked<'a> {
     indices: &'a [usize],
@@ -250,48 +257,49 @@ struct Asked<'a> {
 /// the tree only where needed.
 fn settle(
     git: &GitExecutable<'_>,
-    dir: &Path,
+    clone: rename::Repo<'_>,
     target: &GitObjectId,
     cites: &[Cite],
     asked: Asked<'_>,
     remaining: &mut usize,
 ) -> Result<Vec<(usize, Verdict)>> {
     let answers = asked.answers;
+    let dir = clone.dir;
     let mut decided = Vec::new();
-    let mut read: Vec<(usize, GitObjectId)> = Vec::new();
+    let mut read: Vec<(usize, GitObjectId, Option<String>)> = Vec::new();
     let mut absent = Vec::new();
     for (n, &index) in asked.indices.iter().enumerate() {
         let cite = &cites[index];
         let now = answers
-            .get(2 * n)
+            .get(3 * n)
             .cloned()
             .flatten()
             .filter(|(_, kind)| kind == "blob");
         let then = answers
-            .get(2 * n + 1)
+            .get(3 * n + 1)
             .cloned()
             .flatten()
             .map(|(id, _)| id.as_str().to_owned());
         let cited = cite.blob.clone().or(then);
+        let rev_here = answers.get(3 * n + 2).is_some_and(Option::is_some);
         match now {
             Some((id, _)) if cited.as_deref() == Some(id.as_str()) => {
                 decided.push((index, Verdict::Fresh))
             }
-            Some((id, _)) => read.push((index, id)),
+            Some((id, _)) if cited.is_some() => read.push((index, id, None)),
+            Some((id, _)) => read.push((index, id, Some(unknown(cite, rev_here, clone.shallow)))),
             None => absent.push(index),
         }
     }
-    let ids: Vec<GitObjectId> = read.iter().map(|(_, id)| id.clone()).collect();
+    let ids: Vec<GitObjectId> = read.iter().map(|(_, id, _)| id.clone()).collect();
     let contents = if ids.is_empty() {
         Vec::new()
     } else {
         pinned_blobs(git, dir, &ids, budgets()?, &CANCELLED)?
     };
-    for ((index, _), bytes) in read.iter().zip(contents) {
-        decided.push((
-            *index,
-            by_span(&cites[*index], &String::from_utf8_lossy(&bytes)),
-        ));
+    for ((index, _, unknown), bytes) in read.iter().zip(contents) {
+        let text = String::from_utf8_lossy(&bytes);
+        decided.push((*index, by_span(&cites[*index], &text, unknown.as_deref())));
     }
     if !absent.is_empty() {
         let tree = pinned_tree(git, dir, target, budgets()?, &CANCELLED)?;
@@ -315,25 +323,38 @@ fn settle(
             }
         }
         if !edited.is_empty() {
-            let followed = rename::follow(git, dir, target, &tree, cites, &edited, remaining)?;
+            let followed = rename::follow(git, clone, target, &tree, cites, &edited, remaining)?;
             decided.extend(followed);
         }
     }
     Ok(decided)
 }
 
-fn by_span(cite: &Cite, text: &str) -> Verdict {
-    let (Some(span), Some(first), Some(last)) = (&cite.span, cite.first, cite.last) else {
-        return Verdict::Changed {
-            detail: Some("blob differs; no span digest to search".into()),
-        };
+/// Why no cited blob is known for a citation whose path holds another blob.
+fn unknown(cite: &Cite, rev_here: bool, shallow: bool) -> String {
+    match &cite.rev {
+        Some(_) if !rev_here => rename::history(shallow),
+        Some(_) => {
+            "nothing-to-compare: the path is not at the cited rev, and there is no blob=".into()
+        }
+        None => "nothing-to-compare: no blob= or rev= to compare with".into(),
+    }
+}
+
+/// Another blob at the cited path, decided by the kernel's [`other_blob`]
+/// (#90): `unknown` is why no cited blob is known, `None` when one was
+/// compared and differs.
+fn by_span(cite: &Cite, text: &str, unknown: Option<&str>) -> Verdict {
+    let located = match (&cite.span, cite.first, cite.last) {
+        (Some(span), Some(first), Some(last)) => Some(locate(text, first, last, span)),
+        _ => None,
     };
-    let located = locate(text, first, last, span);
-    match observed(Observed::Code(Target::OtherBlob(Some(located)))) {
+    let (first, last) = (cite.first.unwrap_or(1), cite.last.unwrap_or(1));
+    match other_blob(unknown.is_none(), located) {
         Kernel::Fresh => Verdict::Fresh,
         Kernel::Moved => {
             let (first, last) = match located {
-                Located::At(a, b) => (a, b),
+                Some(Located::At(a, b)) => (a, b),
                 _ => (first, last),
             };
             Verdict::Moved {
@@ -342,7 +363,11 @@ fn by_span(cite: &Cite, text: &str) -> Verdict {
                 last,
             }
         }
-        _ if located == Located::Unsearched => Verdict::Changed {
+        Kernel::Unverifiable => Verdict::Unverifiable(unknown.unwrap_or_default().to_owned()),
+        _ if located.is_none() => Verdict::Changed {
+            detail: Some("blob differs; no span digest to search".into()),
+        },
+        _ if located == Some(Located::Unsearched) => Verdict::Changed {
             detail: Some("unsearched: file too long".into()),
         },
         _ => {

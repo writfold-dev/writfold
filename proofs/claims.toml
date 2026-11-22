@@ -2374,18 +2374,55 @@ file = "crates/writfold-core/src/verdict.rs"
 function = "observed"
 lean = "writfold_core.verdict.observed"
 theorems = [
+  "Writfold.Core.Verdict.absence_never_evidence",
   "Writfold.Core.Verdict.changed_gate_never_fresh",
+  "Writfold.Core.Verdict.changed_witness",
   "Writfold.Core.Verdict.checker_fresh_iff",
+  "Writfold.Core.Verdict.gone_witness",
+  "Writfold.Core.Verdict.history_only_refines",
   "Writfold.Core.Verdict.moved_span_never_fresh",
   "Writfold.Core.Verdict.observed_fresh_iff",
   "Writfold.Core.Verdict.observed_spec",
+  "Writfold.Core.Verdict.rename_never_fresh",
+  "Writfold.Core.Verdict.unknown_blob_changed_only_by_span",
   "Writfold.Core.Verdict.unsearched_never_fresh",
 ]
 total = "Writfold.Core.Verdict.observed_spec"
 subsumes = ["TAU-N001", "TAU-P003"]
 mutants = [
+  "same-blob-changed",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/verdict.rs"
+function = "other_blob"
+lean = "writfold_core.verdict.other_blob"
+theorems = [
+  "Writfold.Core.Verdict.other_blob_spec",
+]
+total = "Writfold.Core.Verdict.other_blob_spec"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
   "moved-span-fresh",
+  "no-blob-no-span-changed",
   "unsearched-fresh",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/verdict.rs"
+function = "missing"
+lean = "writfold_core.verdict.missing"
+theorems = [
+  "Writfold.Core.Verdict.missing_spec",
+]
+total = "Writfold.Core.Verdict.missing_spec"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "capped-gone",
+  "followed-span-fresh",
+  "rev-absent-gone",
 ]
 
 [[claim]]
@@ -2724,8 +2761,15 @@ mutants = [
 ]
 
 [[amend]]
-file = "crates/writfold-core/src/plan/round.rs"
-function = "judged_at"
+file = "crates/writfold-core/src/verdict.rs"
+function = "observed"
 kind = "mutant"
-name = "round-next-again-before-judge"
-reason = "the mutant edits owed_or, the caller, and breaks none of judged_at's theorems; it moved to the owed_or claim, and judged_at has its own mutant round-judged-at-ignores-verdict (v0.6.0-dev.15)"
+name = "moved-span-fresh"
+reason = "#90 moved the code-citation arms into other_blob; the mutant edits other_blob now and is claimed there"
+
+[[amend]]
+file = "crates/writfold-core/src/verdict.rs"
+function = "observed"
+kind = "mutant"
+name = "unsearched-fresh"
+reason = "#90 moved the code-citation arms into other_blob; the mutant edits other_blob now and is claimed there"

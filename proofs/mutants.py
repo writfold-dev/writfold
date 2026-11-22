@@ -856,16 +856,41 @@ MUTANTS = (
            "        !self.checked_against && !self.scope_and_limits && self.open == 0",
            "        !self.checked_against && !self.scope_and_limits",
            ("Writfold.Core.Decision.none_spec",)),
+    # verdict: a same blob is fresh (the table itself)
+    Mutant("same-blob-changed", "verdict.rs",
+           "        Observed::Code(Target::SameBlob) => Verdict::Fresh,",
+           "        Observed::Code(Target::SameBlob) => Verdict::Changed,",
+           ("Writfold.Core.Verdict.observed_spec",)),
     # verdict: a span found at other lines is moved, never fresh
     Mutant("moved-span-fresh", "verdict.rs",
-           "            Located::At(_, _) => Verdict::Moved,",
-           "            Located::At(_, _) => Verdict::Fresh,",
-           ("Writfold.Core.Verdict.observed_spec",)),
+           "        Some(Located::At(_, _)) => Verdict::Moved,\n        Some(Located::Absent) => Verdict::Changed,",
+           "        Some(Located::At(_, _)) => Verdict::Fresh,\n        Some(Located::Absent) => Verdict::Changed,",
+           ("Writfold.Core.Verdict.other_blob_spec",)),
     # verdict: a file too long to search is changed, never fresh
     Mutant("unsearched-fresh", "verdict.rs",
-           "            Located::Absent | Located::Unsearched => Verdict::Changed,",
-           "            Located::Absent => Verdict::Changed,\n            Located::Unsearched => Verdict::Fresh,",
-           ("Writfold.Core.Verdict.observed_spec",)),
+           "            if known {\n                Verdict::Changed",
+           "            if known {\n                Verdict::Fresh",
+           ("Writfold.Core.Verdict.other_blob_spec",)),
+    # verdict (#90): with no cited blob known and no span, there is no evidence of a change
+    Mutant("no-blob-no-span-changed", "verdict.rs",
+           "            } else {\n                Verdict::Unverifiable\n",
+           "            } else {\n                Verdict::Changed\n",
+           ("Writfold.Core.Verdict.other_blob_spec",)),
+    # verdict (#90): a cited commit absent from this clone is not a removal
+    Mutant("rev-absent-gone", "verdict.rs",
+           "        Absence::RevAbsent => Verdict::Unverifiable,",
+           "        Absence::RevAbsent => Verdict::Gone,",
+           ("Writfold.Core.Verdict.missing_spec",)),
+    # verdict (#90): a work limit is never reported as a removal
+    Mutant("capped-gone", "verdict.rs",
+           "        Absence::Capped => Verdict::Unverifiable,",
+           "        Absence::Capped => Verdict::Gone,",
+           ("Writfold.Core.Verdict.missing_spec",)),
+    # verdict (#90): a followed rename is never fresh
+    Mutant("followed-span-fresh", "verdict.rs",
+           "            Some(Located::Same) => Verdict::Moved,",
+           "            Some(Located::Same) => Verdict::Fresh,",
+           ("Writfold.Core.Verdict.missing_spec",)),
     # verdict: a mark never hides a change
     Mutant("mark-hides-change", "verdict.rs",
            "        Verdict::Changed | Verdict::Gone | Verdict::Expired => reached,",

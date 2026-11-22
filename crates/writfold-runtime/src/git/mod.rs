@@ -44,7 +44,7 @@ pub use kb::{
     KbCommit, KbDirty, KbRepository, KbStatus, kb_batch_check, kb_commit, kb_config, kb_diff_tree,
     kb_log, kb_ls_files, kb_ls_tracked, kb_status,
 };
-pub use kb_renames::kb_renames;
+pub use kb_renames::{Renames, kb_renames};
 pub use kb_upstream::{KbUpstream, kb_anchored, kb_is_ancestor, kb_upstream};
 pub use objects::{GitBlob, GitEntry};
 use std::time::Duration;

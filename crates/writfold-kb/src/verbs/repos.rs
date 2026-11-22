@@ -94,17 +94,24 @@ fn found(session: &Session<'_>, dir: PathBuf, via: &'static str) -> (&'static st
             },
         );
     let fetched = repos::fetched(&dir).map_or_else(|| "none".to_owned(), time::stamp);
-    let lines = vec![
+    let mut lines = vec![
         more("resolved", via.to_owned(), Some(dir.display().to_string())),
         more("target", target, None),
         more("fetched", fetched, None),
     ];
+    // Shallow history: blobs at the target are all here, cited commits may
+    // not be (#90). The status stays `local`.
+    if repos::shallow(&dir) {
+        lines.push(more(HISTORY, "shallow".to_owned(), None));
+    }
     (status, lines)
 }
 
+const HISTORY: &str = "history";
+
 pub fn repos(session: &Session<'_>, missing_only: bool) -> Result<Answer> {
     let mut answer = Answer::default();
-    let (mut total, mut missing, mut partial) = (0, 0, 0);
+    let (mut total, mut missing, mut partial, mut shallow) = (0, 0, 0, 0);
     let stores = store::read(&session.ws.root)?;
     let reads =
         store::material::read_all(session.git.as_ref(), session.ws, &session.conn, &stores)?;
@@ -127,6 +134,7 @@ pub fn repos(session: &Session<'_>, missing_only: bool) -> Result<Answer> {
         };
         missing += usize::from(matches!(status, "missing" | "mismatch"));
         partial += usize::from(status == "partial");
+        shallow += usize::from(lines.iter().any(|m| m.label == HISTORY));
         if missing_only && !matches!(status, "missing" | "mismatch") {
             continue;
         }
@@ -159,7 +167,17 @@ pub fn repos(session: &Session<'_>, missing_only: bool) -> Result<Answer> {
             "a partial clone's code citations are unverifiable (its blobs would need a fetch): use a full clone".into(),
         );
     }
-    answer.counts = vec![("repos", total), ("missing", missing), ("partial", partial)];
+    if shallow > 0 {
+        answer.notes.push(
+            "a shallow clone decides code citations from the bytes at its target (blob=, span=); a citation that needs the cited commit is unverifiable (history-not-local) until `git fetch --unshallow`".into(),
+        );
+    }
+    answer.counts = vec![
+        ("repos", total),
+        ("missing", missing),
+        ("partial", partial),
+        ("shallow", shallow),
+    ];
     Ok(answer)
 }
 

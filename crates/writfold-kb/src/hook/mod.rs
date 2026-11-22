@@ -184,9 +184,16 @@ fn verb_within(
     let (ws, cwd) = (ws.clone(), cwd.to_path_buf());
     let (send, answer) = std::sync::mpsc::channel();
     std::thread::spawn(move || {
+        // The receiver is gone once the deadline passed; the late answer is
+        // dropped on purpose (#69).
+        #[expect(
+            clippy::let_underscore_must_use,
+            reason = "a send after the deadline has no reader, by design"
+        )]
         let _ = send.send(self::verb(&ws, &cwd, now, verb, budget));
     });
-    answer.recv_timeout(deadline).map_err(|_| ())
+    // A timeout and a dead worker both mean no brief within the deadline.
+    answer.recv_timeout(deadline).map_err(drop)
 }
 
 /// `draft <session> <updated> [run=<id>] <first line>`.

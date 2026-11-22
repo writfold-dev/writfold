@@ -1,7 +1,7 @@
 //! Exhaustive tests of the verdict kernel.
 use super::{
-    Checker, Described, Handshake, Lifetime, Located, Observed, Said, Target, Verdict, aged,
-    decide, exchange, handshake, lifetime, locate,
+    Absence, Checker, Described, Handshake, Lifetime, Located, Observed, Said, Target, Verdict,
+    aged, decide, exchange, handshake, lifetime, locate, observed,
 };
 
 #[test]
@@ -17,6 +17,55 @@ fn locate_tries_the_cited_lines_first() {
     assert_eq!(locate(6, 1, 2, 5, at([1, 2])), Located::Unsearched);
 }
 
+const ABSENCES: [Absence; 6] = [
+    Absence::Renamed,
+    Absence::Followed(None),
+    Absence::NoRename,
+    Absence::RevAbsent,
+    Absence::NoRev,
+    Absence::Capped,
+];
+
+/// #90: no stale verdict from missing history, and a negative verdict has
+/// a witness (the theorems are in proofs/Writfold/Verdict.lean).
+#[test]
+fn absence_of_history_is_never_evidence() {
+    for a in [Absence::RevAbsent, Absence::NoRev, Absence::Capped] {
+        assert_eq!(
+            observed(Observed::Code(Target::Missing(a))),
+            Verdict::Unverifiable
+        );
+    }
+    assert_eq!(
+        observed(Observed::Code(Target::OtherBlob(false, None))),
+        Verdict::Unverifiable
+    );
+    assert_eq!(
+        observed(Observed::Code(Target::OtherBlob(
+            false,
+            Some(Located::Unsearched)
+        ))),
+        Verdict::Unverifiable
+    );
+    assert_eq!(
+        observed(Observed::Code(Target::OtherBlob(
+            false,
+            Some(Located::Absent)
+        ))),
+        Verdict::Changed
+    );
+    assert_eq!(
+        observed(Observed::Code(Target::Missing(Absence::NoRename))),
+        Verdict::Gone
+    );
+    assert_eq!(
+        observed(Observed::Code(Target::Missing(Absence::Followed(Some(
+            Located::At(2, 3)
+        ))))),
+        Verdict::Moved
+    );
+}
+
 #[test]
 fn every_observation_has_one_verdict_and_marks_never_hide_a_change() {
     let located = [
@@ -29,9 +78,8 @@ fn every_observation_has_one_verdict_and_marks_never_hide_a_change() {
         Observed::Malformed,
         Observed::Unresolved,
         Observed::Code(Target::SameBlob),
-        Observed::Code(Target::OtherBlob(None)),
-        Observed::Code(Target::Missing { renamed: true }),
-        Observed::Code(Target::Missing { renamed: false }),
+        Observed::Code(Target::OtherBlob(true, None)),
+        Observed::Code(Target::OtherBlob(false, None)),
         Observed::State(None),
         Observed::State(Some(None)),
     ];
@@ -44,10 +92,18 @@ fn every_observation_has_one_verdict_and_marks_never_hide_a_change() {
     facts.push(Observed::Timed(None));
     facts.push(Observed::Immutable);
     facts.extend(CHECKERS.iter().map(|c| Observed::Checked(*c)));
+    for known in [true, false] {
+        facts.extend(
+            located
+                .iter()
+                .map(|l| Observed::Code(Target::OtherBlob(known, Some(*l)))),
+        );
+    }
+    facts.extend(ABSENCES.iter().map(|a| Observed::Code(Target::Missing(*a))));
     facts.extend(
         located
             .iter()
-            .map(|l| Observed::Code(Target::OtherBlob(Some(*l)))),
+            .map(|l| Observed::Code(Target::Missing(Absence::Followed(Some(*l))))),
     );
     for fact in facts {
         let plain = decide(fact, false);
@@ -61,7 +117,7 @@ fn every_observation_has_one_verdict_and_marks_never_hide_a_change() {
         let fresh_code = matches!(
             fact,
             Observed::Code(Target::SameBlob)
-                | Observed::Code(Target::OtherBlob(Some(Located::Same)))
+                | Observed::Code(Target::OtherBlob(_, Some(Located::Same)))
         );
         if let Observed::Code(_) = fact {
             assert_eq!(plain == Verdict::Fresh, fresh_code, "{fact:?}");

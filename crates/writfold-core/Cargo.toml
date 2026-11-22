@@ -97,6 +97,8 @@ start_from = [
     "writfold_core::investigation::conclude",
     "writfold_core::investigation::Missing::none",
     "writfold_core::verdict::observed",
+    "writfold_core::verdict::other_blob",
+    "writfold_core::verdict::missing",
     "writfold_core::verdict::with_mark",
     "writfold_core::verdict::decide",
     "writfold_core::verdict::handshake",

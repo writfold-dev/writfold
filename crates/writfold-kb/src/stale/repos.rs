@@ -148,6 +148,13 @@ pub fn partial(git_dir: &Path) -> bool {
     promisor(&std::fs::read_to_string(config).unwrap_or_default())
 }
 
+/// Whether the clone in `git_dir` is shallow (`<git dir>/shallow` exists):
+/// its history stops at a boundary, so a cited commit may be absent (#90).
+/// Every blob at the target is present, so this is not a partial clone.
+pub fn shallow(git_dir: &Path) -> bool {
+    common_dir(git_dir).join("shallow").is_file()
+}
+
 /// [`partial`] on the text of a Git config file. `include` directives are
 /// not followed.
 pub fn promisor(config: &str) -> bool {

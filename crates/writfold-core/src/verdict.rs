@@ -28,11 +28,32 @@ pub enum Located {
 pub enum Target {
     /// The cited blob.
     SameBlob,
-    /// Another blob: where the span sits in it, or `None` when the citation
-    /// carries no span digest to search for.
-    OtherBlob(Option<Located>),
-    /// Nothing; `renamed` when the cited blob sits at another path.
-    Missing { renamed: bool },
+    /// Another blob. The flag says whether the cited blob is known here
+    /// (from `blob=`, or from `rev=` when this clone holds that commit), so
+    /// that a blob was compared at all; then where the span sits in the
+    /// file, or `None` when the citation carries no span digest (#90).
+    OtherBlob(bool, Option<Located>),
+    /// Nothing at the path, and how following it ended.
+    Missing(Absence),
+}
+
+/// How a path absent at the target commit was followed (#90).
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Absence {
+    /// The cited blob sits at another path: an exact rename.
+    Renamed,
+    /// Git found a rename with edits from the cited commit; where the span
+    /// sits in the new file, or `None` without a span digest.
+    Followed(Option<Located>),
+    /// The follow ran and found no rename: the path was removed.
+    NoRename,
+    /// The cited commit is not in this clone (a shallow or single-branch
+    /// clone, an unfetched or rewritten commit): nothing to follow from.
+    RevAbsent,
+    /// The citation has no `rev=` to follow from.
+    NoRev,
+    /// Not followed: over the per-run limit of cited commits.
+    Capped,
 }
 
 /// Everything a check can observe about one citation.
@@ -110,14 +131,8 @@ pub fn observed(fact: Observed) -> Verdict {
     match fact {
         Observed::Malformed | Observed::Unresolved => Verdict::Unverifiable,
         Observed::Code(Target::SameBlob) => Verdict::Fresh,
-        Observed::Code(Target::OtherBlob(None)) => Verdict::Changed,
-        Observed::Code(Target::OtherBlob(Some(located))) => match located {
-            Located::Same => Verdict::Fresh,
-            Located::At(_, _) => Verdict::Moved,
-            Located::Absent | Located::Unsearched => Verdict::Changed,
-        },
-        Observed::Code(Target::Missing { renamed: true }) => Verdict::Renamed,
-        Observed::Code(Target::Missing { renamed: false }) => Verdict::Gone,
+        Observed::Code(Target::OtherBlob(known, located)) => other_blob(known, located),
+        Observed::Code(Target::Missing(absence)) => missing(absence),
         Observed::Gate { at_target: true } => Verdict::Fresh,
         Observed::Gate { at_target: false } => Verdict::Changed,
         Observed::State(None) => Verdict::Gone,
@@ -141,6 +156,41 @@ pub fn observed(fact: Observed) -> Verdict {
             | Checker::Version
             | Checker::Expired => Verdict::Unverifiable,
         },
+    }
+}
+
+/// Another blob at the cited path. A located span decides from the bytes
+/// at the target alone. Otherwise only a compared blob says changed: with
+/// no cited blob known there is no evidence of a change (#90).
+pub fn other_blob(known: bool, located: Option<Located>) -> Verdict {
+    match located {
+        Some(Located::Same) => Verdict::Fresh,
+        Some(Located::At(_, _)) => Verdict::Moved,
+        Some(Located::Absent) => Verdict::Changed,
+        _ => {
+            if known {
+                Verdict::Changed
+            } else {
+                Verdict::Unverifiable
+            }
+        }
+    }
+}
+
+/// A path absent at the target. Gone needs a completed follow; a rename is
+/// never fresh; a follow that could not run is no evidence (#90).
+pub fn missing(absence: Absence) -> Verdict {
+    match absence {
+        Absence::Renamed => Verdict::Renamed,
+        Absence::Followed(located) => match located {
+            Some(Located::Same) => Verdict::Moved,
+            Some(Located::At(_, _)) => Verdict::Moved,
+            _ => Verdict::Gone,
+        },
+        Absence::NoRename => Verdict::Gone,
+        Absence::RevAbsent => Verdict::Unverifiable,
+        Absence::NoRev => Verdict::Unverifiable,
+        Absence::Capped => Verdict::Unverifiable,
     }
 }
 
