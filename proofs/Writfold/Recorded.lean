@@ -1,4 +1,5 @@
-import Extracted.WritfoldCore
+import Extracted.WritfoldCore.Types
+import Extracted.WritfoldCore.Verdict
 import Writfold.Get
 
 /-!

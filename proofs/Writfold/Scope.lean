@@ -1,3 +1,4 @@
+import Extracted.WritfoldCore.Scope
 import Writfold.Wild
 import Writfold.Get
 

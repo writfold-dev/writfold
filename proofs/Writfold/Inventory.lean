@@ -1,3 +1,7 @@
+import Extracted.WritfoldCore.Guard
+import Extracted.WritfoldCore.Inventory
+import Extracted.WritfoldCore.Policy
+import Extracted.WritfoldCore.Types
 import Writfold.Policy
 import Writfold.Guard
 

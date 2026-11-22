@@ -19,7 +19,9 @@ This complements, and does not replace, the existing layers:
 
 `crates/writfold-core` (no dependencies, `no_std` + `alloc`) holds the KB's
 decision kernels. Over the translation of the functions named in
-`[package.metadata.charon] start_from` (`proofs/Extracted/WritfoldCore.lean`),
+`[package.metadata.charon] start_from` (`proofs/Extracted/WritfoldCore/`, one
+module per kernel module, split from Aeneas's single file by
+`proofs/split.py`; `proofs/Extracted/WritfoldCore.lean` imports them all),
 `proofs/Writfold/` proves, as total-correctness Hoare triples (terminates,
 never fails, result as stated):
 

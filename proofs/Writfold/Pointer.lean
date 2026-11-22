@@ -1,5 +1,6 @@
 import Aeneas
-import Extracted.WritfoldCore
+import Extracted.WritfoldCore.Pointer
+import Extracted.WritfoldCore.Types
 
 /-!
 # The current run of a seat

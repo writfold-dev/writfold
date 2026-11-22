@@ -1607,7 +1607,13 @@ def failing_theorems(output: str, project: Path) -> tuple[set[str], list[str]]:
 
 def run(command: list[str], cwd: Path) -> subprocess.CompletedProcess:
     return subprocess.run(command, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                          text=True, timeout=1800)
+                          text=True, timeout=1800, env=dict(os.environ, **THREADS))
+
+
+# Mutants run side by side; each build's Lean threads share the cores (#95).
+JOBS = max(1, int(os.environ.get("WRITFOLD_MUTANT_JOBS", "6") or "6"))
+THREADS = {} if "LEAN_NUM_THREADS" in os.environ else \
+    {"LEAN_NUM_THREADS": str(max(1, (os.cpu_count() or 1) // JOBS))}
 
 
 def calibrate(mutant: Mutant, scratch: Path) -> None:
@@ -1632,6 +1638,12 @@ def calibrate(mutant: Mutant, scratch: Path) -> None:
     shutil.copytree(scratch / "Extracted", project / "Extracted")
     (project / ".lake").mkdir()
     os.symlink(PROOFS / ".lake" / "packages", project / ".lake" / "packages")
+    # The passing build's outputs (#95): Lake rebuilds a module only when its
+    # source or an import changed, so the theorem files that import only
+    # modules the mutant left byte-identical elaborate exactly as they did
+    # there, and are not re-elaborated. A real copy: Lake rewrites in place.
+    if (PROOFS / ".lake" / "build").is_dir():
+        shutil.copytree(PROOFS / ".lake" / "build", project / ".lake" / "build", symlinks=True)
 
     build = run(["lake", "build"], project)
     if build.returncode == 0:
@@ -1713,8 +1725,7 @@ def main() -> None:
                 return mutant.name
         return None
 
-    jobs = max(1, int(os.environ.get("WRITFOLD_MUTANT_JOBS", "6") or "6"))
-    with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as pool:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=JOBS) as pool:
         failed = [name for name in pool.map(one, mutants) if name is not None]
     if failed:
         raise SystemExit(f"FAIL: {len(failed)} mutant(s) not calibrated: {failed}")

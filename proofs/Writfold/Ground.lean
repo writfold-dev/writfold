@@ -1,3 +1,6 @@
+import Extracted.WritfoldCore.Ground
+import Extracted.WritfoldCore.Observe
+import Extracted.WritfoldCore.Types
 import Writfold.Current
 
 /-!

@@ -12,4 +12,4 @@ docker compose -f compose.proofs.yaml run --rm -T --no-deps proofs \
 rm -rf proofs/Extracted
 mkdir -p proofs/Extracted
 tar -C proofs/Extracted -xf "$fresh"
-echo "refreshed: proofs/Extracted ($(ls proofs/Extracted | tr '\n' ' '))"
+echo "refreshed: proofs/Extracted ($(find proofs/Extracted -name '*.lean' | wc -l) Lean files)"

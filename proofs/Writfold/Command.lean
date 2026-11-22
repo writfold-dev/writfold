@@ -1,3 +1,4 @@
+import Extracted.WritfoldCore.Command
 import Writfold.Bytes
 
 /-!

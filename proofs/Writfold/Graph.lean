@@ -1,3 +1,4 @@
+import Extracted.WritfoldCore.Graph
 import Writfold.Get
 
 /-!

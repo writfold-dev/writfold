@@ -1,4 +1,4 @@
-import Extracted.WritfoldCore
+import Extracted.WritfoldCore.Find
 
 /-!
 # `find`'s prefix tier

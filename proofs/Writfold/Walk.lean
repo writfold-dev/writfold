@@ -1,4 +1,6 @@
-import Extracted.WritfoldCore
+import Extracted.WritfoldCore.Diag
+import Extracted.WritfoldCore.Find
+import Extracted.WritfoldCore.Walk
 
 /-!
 # Small claims: a complete walk, a blocking lint, a `find` row

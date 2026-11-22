@@ -1,3 +1,6 @@
+import Extracted.WritfoldCore.Bind
+import Extracted.WritfoldCore.Checklist
+import Extracted.WritfoldCore.Types
 import Writfold.Checklist
 
 /-!

@@ -1,4 +1,4 @@
-import Extracted.WritfoldCore
+import Aeneas
 
 /-!
 # Wildcard matching with one backtrack point
@@ -16,7 +16,6 @@ measure or stops with the answer of `WMatch`.
 -/
 
 open Aeneas Aeneas.Std Result
-open writfold_core
 
 namespace Writfold.Core.Wild
 

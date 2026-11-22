@@ -1,4 +1,5 @@
-import Extracted.WritfoldCore
+import Extracted.WritfoldCore.Plan
+import Extracted.WritfoldCore.Types
 
 /-!
 # Plan writes: the closed run and the re-check under the lock

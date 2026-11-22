@@ -1,5 +1,6 @@
 import Aeneas
-import Extracted.WritfoldCore
+import Extracted.WritfoldCore.Store
+import Extracted.WritfoldCore.Types
 
 /-!
 # Attached stores

@@ -1,3 +1,6 @@
+import Extracted.WritfoldCore.Gate
+import Extracted.WritfoldCore.Policy
+import Extracted.WritfoldCore.Types
 import Writfold.Gate
 
 /-!

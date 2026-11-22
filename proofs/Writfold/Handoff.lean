@@ -1,3 +1,5 @@
+import Extracted.WritfoldCore.Handoff
+import Extracted.WritfoldCore.Types
 import Writfold.Gate
 
 /-!

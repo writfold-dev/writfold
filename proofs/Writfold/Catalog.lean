@@ -1,3 +1,5 @@
+import Extracted.WritfoldCore.Catalog
+import Extracted.WritfoldCore.Types
 import Writfold.Get
 
 /-!

@@ -1,3 +1,5 @@
+import Extracted.WritfoldCore.Gate
+import Extracted.WritfoldCore.Types
 import Writfold.Bytes
 
 /-!

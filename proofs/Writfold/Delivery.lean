@@ -1,3 +1,6 @@
+import Extracted.WritfoldCore.Delivery
+import Extracted.WritfoldCore.Plan
+import Extracted.WritfoldCore.Types
 import Writfold.Current
 
 /-!

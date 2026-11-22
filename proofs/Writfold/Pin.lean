@@ -1,3 +1,5 @@
+import Extracted.WritfoldCore.Pin
+import Extracted.WritfoldCore.Types
 import Writfold.Verdict
 
 /-!

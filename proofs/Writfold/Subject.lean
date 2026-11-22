@@ -1,4 +1,5 @@
-import Extracted.WritfoldCore
+import Extracted.WritfoldCore.Subject
+import Extracted.WritfoldCore.Types
 
 /-!
 # The subject repository

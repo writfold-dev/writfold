@@ -1,4 +1,6 @@
-import Extracted.WritfoldCore
+import Extracted.WritfoldCore.Decision
+import Extracted.WritfoldCore.Investigation
+import Extracted.WritfoldCore.Types
 
 /-!
 # Decision states and investigations

@@ -40,4 +40,7 @@ charon cargo --preset=aeneas --dest-file "$work/writfold_core.llbc" -- --lib
 rm -rf "$dest"
 mkdir -p "$dest"
 aeneas -backend lean -no-progress-bar -abort-on-error -dest "$dest" "$work/writfold_core.llbc"
-echo "extracted: $(ls "$dest" | tr '\n' ' ')"
+# One Lean module per kernel module (#95), so a mutant rebuilds only the
+# theorems that can reach it; split.py checks it kept every declaration.
+python3 "$root/proofs/split.py" "$dest"
+echo "extracted: $(cd "$dest" && find . -name '*.lean' | wc -l) Lean files"

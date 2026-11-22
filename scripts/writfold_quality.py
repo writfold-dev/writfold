@@ -317,6 +317,8 @@ class Producer:
         # Every mutant's site matches its kernel file exactly once (#92):
         # seconds here, instead of a refused claims run.
         self.simple("mutant-sites", [sys.executable, "proofs/mutants.py", "--check-sites"])
+        # The translation splitter keeps every declaration (#95).
+        self.simple("split-translation", [sys.executable, "proofs/split.py", "--self-test"])
         self.flush()
 
 

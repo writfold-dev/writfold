@@ -1,4 +1,4 @@
-import Extracted.WritfoldCore
+import Extracted.WritfoldCore.Order
 
 /-!
 # The order receipts are judged in
