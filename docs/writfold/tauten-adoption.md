@@ -210,7 +210,8 @@ docker build -f proofs/Dockerfile --target gate -t writfold-proofs:tauten .
 docker run --rm --network none writfold-proofs:tauten \
     sh -c 'cd proofs && lake build >&2 && lake env lean Total.lean' > /tmp/total.txt
 python3 proofs/tauten_claims.py /tmp/total.txt     # redraft claims.toml; review the diff
-cargo tauten proofs                                  # the whole gate (~1.5 h); writes proofs/claims.json
+scripts/release claims                               # pre-flight, then `cargo tauten proofs --level ship`; writes proofs/claims.json
+scripts/release claims --full                        # every mutant (~1.5 h): before a stable tag, once per milestone
 scripts/tauten-check                                 # subsumed findings are warnings
 cargo tauten baseline                                # only after the claims are proved
 ```
@@ -224,6 +225,23 @@ is the intended binding, and its cost here is a full gate run.
 and required claims added for stage 2b, and accepts a full claims re-run
 (`cargo tauten proofs`, about 1h45 now) after every kernel or proofs edit
 for now, rather than a finer fingerprint.
+
+**Ship level (22 November 2026,
+[release-speed RFC](../rfcs/2026-11-22-release-speed.md)).** Pre-releases
+record claims at the ship level. `[gate] try` passes `--only a,b` down to
+`proofs/mutants.py`, so only the mutants of claims whose recorded inputs
+changed are re-run. A claim's inputs are:
+- its extracted definitions;
+- the Lean files it imports;
+- its mutants;
+- a `toolchain` text that includes the whole `[gate]` table.
+
+So editing `[gate]` stales every claim once (adopting `try` did;
+[tauten#78](https://github.com/tauten-dev/tauten/issues/78)). Dropping a
+mutant or theorem from a recorded claim needs an `[[amend]]` with a reason.
+tauten checks this only after the gate has run
+([tauten#77](https://github.com/tauten-dev/tauten/issues/77)), so
+`scripts/release claims` checks it first.
 
 ## Total helpers (stage 2c, 19 November 2026)
 

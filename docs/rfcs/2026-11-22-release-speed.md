@@ -93,3 +93,15 @@ tag.
   releases (Fable); accepted under the owner's standing acceptance and the
   owner's instruction to accept and land release-speed RFCs at once.
 - 2026-11-22: 1, 2 and 3 implemented on the dev.16 branch.
+- 2026-11-22: measured. The parallel unit runner ran 897 tests in 406 s on
+  the host, against about 21 minutes serially, with identical counts. The
+  first ship-level claims run (dev.15) re-ran all 170 claims (5779 s,
+  269 mutants): adding `[gate] try` changed every claim's `toolchain` input
+  ([tauten#78](https://github.com/tauten-dev/tauten/issues/78)), a one-time
+  cost. It was then refused for a mutant moved off a claim with no
+  `[[amend]]`, which tauten checks only after the gate
+  ([tauten#77](https://github.com/tauten-dev/tauten/issues/77)), so the run
+  was repeated. `scripts/release claims` now checks that first, along with
+  the mutant sites. 5 implemented: `scripts/release` with `prepare`,
+  `claims`, `build`, `publish`, `site` and `close`; gating stays explicit
+  from main.

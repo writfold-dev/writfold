@@ -5,14 +5,15 @@ Each step checks what it needs, does one thing, and says what it checked;
 steps are resumable (a step already done is reported and skipped).
 
   scripts/release prepare 0.6.0-dev.16   bump Cargo.toml, Cargo.lock and README
+  scripts/release claims [--full]        refuse a claim weakened without [[amend]] or a drifted mutant site,
+                                         then `cargo tauten proofs --level ship` (--full: every mutant)
   scripts/release build COMMIT           musl binary + .sha256 from a detached worktree, smoke-tested
   scripts/release publish COMMIT         refuse an ungated commit; tag, push, GitHub pre-release, verify download
   scripts/release site [SITE_DIR]        install.sh pins, og-image, package.py, build, test, push, deploy, verify
   scripts/release close                  close the version's milestone when no issue is open in it
 
-The gates themselves (quality, unit from main) and the claims run stay
-explicit: `writfold kb gate run quality|unit` and
-`cargo tauten proofs --level ship` (a stable tag: the full level).
+The gates themselves stay explicit, from main: `writfold kb gate run
+quality|unit`. A stable tag needs `claims --full`.
 Release notes are the version's section of docs/guide/changes.md.
 """
 from __future__ import annotations
@@ -74,6 +75,48 @@ def prepare(new: str) -> None:
     if f"## v{new}" not in (ROOT / "docs/guide/changes.md").read_text():
         say(f"warning: docs/guide/changes.md has no '## v{new}' section yet (the release notes)")
     say("next: commit, then `cargo tauten proofs --level ship` on that commit (side by side with `build`)")
+
+
+def weakened() -> list[str]:
+    """Theorems and mutants a recorded claim would lose with no `[[amend]]`.
+
+    tauten refuses these (TAU-R002) only after the whole gate has run
+    (tauten#77); checking first saves a lost claims run.
+    """
+    import tomllib
+    plan = tomllib.loads((ROOT / "proofs/claims.toml").read_text())
+    try:
+        recorded = json.loads((ROOT / "proofs/claims.json").read_text()).get("claims", [])
+    except (OSError, json.JSONDecodeError):
+        return []
+    amended = {(a["file"], a["function"], a["kind"], a["name"]) for a in plan.get("amend", [])}
+    now = {(c["file"], c["function"]): c for c in plan.get("claim", [])}
+    lost = []
+    for old in recorded:
+        key = (old["file"], old["function"])
+        new = now.get(key, {})
+        for kind, field in (("theorem", "theorems"), ("mutant", "mutants")):
+            for name in sorted(set(old.get(field, [])) - set(new.get(field, []))):
+                if (*key, kind, name) not in amended:
+                    lost.append(f"{key[0]}: `{key[1]}` loses {kind} `{name}`")
+    return lost
+
+
+def claims(level: str) -> None:
+    if sh("git", "status", "--porcelain", "--untracked-files=no"):
+        raise SystemExit("release: commit first; tauten proves a snapshot of HEAD")
+    lost = weakened()
+    if lost:
+        raise SystemExit("release: add an [[amend]] with a reason to proofs/claims.toml for:\n  "
+                         + "\n  ".join(lost))
+    sh("python3", "proofs/mutants.py", "--check-sites", capture=False)
+    say("no recorded claim is weakened; every mutant site matches once")
+    import os
+    tauten = os.environ.get("CARGO_TAUTEN") or shutil.which("cargo-tauten") or "cargo-tauten"
+    args = [tauten, "tauten", "proofs"] + (["--level", "ship"] if level == "ship" else [])
+    started = time.monotonic()
+    sh(*args, capture=False)
+    say(f"claims recorded in {int(time.monotonic() - started)} s; commit proofs/claims.json")
 
 
 def gated(commit: str) -> list[str]:
@@ -263,13 +306,17 @@ def close() -> None:
 
 
 def main(argv: list[str]) -> None:
-    steps = {"prepare": (prepare, 1), "build": (build, 1), "publish": (publish, 1),
+    steps = {"prepare": (prepare, 1), "claims": (claims, None), "build": (build, 1), "publish": (publish, 1),
              "site": (site, None), "close": (close, 0)}
     if not argv or argv[0] not in steps:
         raise SystemExit(__doc__)
     step, arity = steps[argv[0]]
     args = argv[1:]
-    if arity is None:
+    if step is claims:
+        if args not in ([], ["--full"]):
+            raise SystemExit(__doc__)
+        claims("full" if args else "ship")
+    elif arity is None:
         step(args[0] if args else None)
     elif len(args) != arity:
         raise SystemExit(__doc__)

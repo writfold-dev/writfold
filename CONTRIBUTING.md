@@ -65,6 +65,24 @@ from a public clone; a pull request's checks above are not a substitute
 for them, and they are not a substitute for a reviewer reading the change.
 This repository has no public CI at present.
 
+### Cutting a pre-release (owner)
+
+The order comes from
+[the release-speed RFC](docs/rfcs/2026-11-22-release-speed.md). Each step
+runs once, and nothing after the gates changes the gated tree.
+
+```sh
+scripts/release prepare 0.6.0-dev.N     # Cargo.toml, Cargo.lock, README; then commit
+# side by side, on that commit:
+scripts/release claims                   # pre-flight, then ship-level claims (a stable tag: --full)
+scripts/release build HEAD               # musl binary, .sha256, smoke test
+# commit proofs/claims.json and merge to main; then from main:
+writfold kb gate run quality && writfold kb gate run unit
+scripts/release publish COMMIT           # refuses an ungated commit; tag, GitHub pre-release, verify
+scripts/release site                     # installer pins, og-image, build, test, deploy, verify live
+scripts/release close                    # closes the milestone once nothing in it is open
+```
+
 ## Commits
 
 - Name the issue: `Refs #N` while work is under way, `Closes #N` on the
