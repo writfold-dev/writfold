@@ -66,7 +66,10 @@ fn demo(name: &str, causes: bool) -> Result<Demo> {
     for n in 0..80 {
         let state = if n % 4 == 0 { "closed" } else { "open" };
         let id = format!("run-{n:03}");
-        put(&kb.join(format!("runs/{id}/manifest.json")), &manifest(&id, state))?;
+        put(
+            &kb.join(format!("runs/{id}/manifest.json")),
+            &manifest(&id, state),
+        )?;
     }
     if causes {
         put(&kb.join("runs/run-nomanifest/checkpoint.md"), "# notes\n")?;
@@ -74,16 +77,31 @@ fn demo(name: &str, causes: bool) -> Result<Demo> {
             &kb.join("archive/runs/run-nested/manifest.json"),
             &manifest("run-nested", "open"),
         )?;
-        put(&kb.join("runs/run-bad/manifest.json"), "{\"run_id\": \"run-bad\", \"task\": ")?;
-        put(&kb.join("runs/run-dup1/manifest.json"), &manifest("run-dup", "open"))?;
-        put(&kb.join("runs/run-dup2/manifest.json"), &manifest("run-dup", "open"))?;
-        put(&kb.join("runs/run-done/manifest.json"), &manifest("run-done", "done"))?;
+        put(
+            &kb.join("runs/run-bad/manifest.json"),
+            "{\"run_id\": \"run-bad\", \"task\": ",
+        )?;
+        put(
+            &kb.join("runs/run-dup1/manifest.json"),
+            &manifest("run-dup", "open"),
+        )?;
+        put(
+            &kb.join("runs/run-dup2/manifest.json"),
+            &manifest("run-dup", "open"),
+        )?;
+        put(
+            &kb.join("runs/run-done/manifest.json"),
+            &manifest("run-done", "done"),
+        )?;
     }
     let (text, exit) = run(
         &kb,
         &d,
         "sh",
-        &["-c", "git init -q -b main && git add -A && git commit -qm kb"],
+        &[
+            "-c",
+            "git init -q -b main && git add -A && git commit -qm kb",
+        ],
     )?;
     assert_eq!(exit, 0, "{text}");
     Ok(d)
@@ -109,7 +127,10 @@ fn every_silent_cause_is_named() -> Result {
     assert_eq!(exit, 1, "{text}");
     // Every page was read: 80 good runs, the duplicate's first and the done run.
     assert!(text.contains("writfold lists 82 run(s) in "), "{text}");
-    assert!(!text.contains(" in 1 page(s)"), "one page would hide the cursor: {text}");
+    assert!(
+        !text.contains(" in 1 page(s)"),
+        "one page would hide the cursor: {text}"
+    );
     for expected in [
         "directories without manifest.json (1)",
         "  run-nomanifest",
@@ -138,6 +159,9 @@ fn a_clean_inventory_agrees() -> Result {
     let (text, exit) = run(&d.0.join("kb"), &d, "python3", &[&recipe()])?;
     assert_eq!(exit, 0, "{text}");
     assert!(text.contains("writfold lists 80 run(s) in "), "{text}");
-    assert!(text.contains("agree: every run directory is a listed run"), "{text}");
+    assert!(
+        text.contains("agree: every run directory is a listed run"),
+        "{text}"
+    );
     Ok(())
 }

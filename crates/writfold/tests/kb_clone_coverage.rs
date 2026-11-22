@@ -101,33 +101,67 @@ fn coverage_is_planned_reviewed_then_provisioned() -> Result {
 
     let (inventory, exit) = sh(&kb, &d, "python3 \"$RECIPE\" inventory")?;
     assert_eq!(exit, 0, "{inventory}");
-    assert!(inventory.contains("# repos=3 missing=2 partial=1"), "{inventory}");
-    assert!(inventory.contains("--missing` does not list it"), "{inventory}");
+    assert!(
+        inventory.contains("# repos=3 missing=2 partial=1"),
+        "{inventory}"
+    );
+    assert!(
+        inventory.contains("--missing` does not list it"),
+        "{inventory}"
+    );
     let (missing, _) = sh(&kb, &d, "writfold kb repos --missing")?;
     assert!(!missing.contains("repo gamma"), "{missing}");
 
     let (shortlist, exit) = sh(&kb, &d, "python3 \"$RECIPE\" shortlist")?;
     assert_eq!(exit, 0, "{shortlist}");
     let order = lines_with(&shortlist, "  ");
-    assert!(order[1].contains("beta") && order[1].contains("named by a gate citation"), "{shortlist}");
-    assert!(order[2].contains("alpha") && order[2].contains("token count"), "{shortlist}");
-    assert!(order[3].contains("gamma") && order[3].contains("partial"), "{shortlist}");
-    let (verdicts, _) = sh(&kb, &d, "python3 \"$RECIPE\" verdicts --save ../before.json")?;
-    assert!(verdicts.contains("unverifiable repo-not-local"), "{verdicts}");
-    assert!(verdicts.contains("unverifiable partial-clone"), "{verdicts}");
+    assert!(
+        order[1].contains("beta") && order[1].contains("named by a gate citation"),
+        "{shortlist}"
+    );
+    assert!(
+        order[2].contains("alpha") && order[2].contains("token count"),
+        "{shortlist}"
+    );
+    assert!(
+        order[3].contains("gamma") && order[3].contains("partial"),
+        "{shortlist}"
+    );
+    let (verdicts, _) = sh(
+        &kb,
+        &d,
+        "python3 \"$RECIPE\" verdicts --save ../before.json",
+    )?;
+    assert!(
+        verdicts.contains("unverifiable repo-not-local"),
+        "{verdicts}"
+    );
+    assert!(
+        verdicts.contains("unverifiable partial-clone"),
+        "{verdicts}"
+    );
     // Nothing so far wrote to Git or cloned anything.
-    assert_eq!(sh(&kb, &d, "git rev-parse HEAD; git status --porcelain")?.0, before);
+    assert_eq!(
+        sh(&kb, &d, "git rev-parse HEAD; git status --porcelain")?.0,
+        before
+    );
     assert!(!d.0.join("clones").exists());
 
     // The operator approves alpha only; beta stays missing on purpose.
-    std::fs::write(d.0.join("approved.txt"), format!("alpha file://{}/src/alpha\n", d.0.display()))?;
+    std::fs::write(
+        d.0.join("approved.txt"),
+        format!("alpha file://{}/src/alpha\n", d.0.display()),
+    )?;
     let (provisioned, exit) = sh(
         &kb,
         &d,
         "python3 \"$RECIPE\" provision ../approved.txt --into ../clones --depth 1",
     )?;
     assert_eq!(exit, 0, "{provisioned}");
-    assert!(provisioned.contains("alpha: ") && provisioned.contains("(depth 1)"), "{provisioned}");
+    assert!(
+        provisioned.contains("alpha: ") && provisioned.contains("(depth 1)"),
+        "{provisioned}"
+    );
     assert!(!d.0.join("clones/beta.git").exists());
     let (sizes, _) = sh(
         &kb,
@@ -138,14 +172,31 @@ fn coverage_is_planned_reviewed_then_provisioned() -> Result {
         .lines()
         .filter_map(|l| l.split_whitespace().next()?.parse().ok())
         .collect();
-    assert!(kib.len() == 2 && kib[0] < kib[1], "shallow is smaller: {sizes}");
+    assert!(
+        kib.len() == 2 && kib[0] < kib[1],
+        "shallow is smaller: {sizes}"
+    );
 
     let _ = sh(&kb, &d, "python3 \"$RECIPE\" verdicts --save ../after.json")?;
-    let (compare, _) = sh(&kb, &d, "python3 \"$RECIPE\" compare ../before.json ../after.json")?;
+    let (compare, _) = sh(
+        &kb,
+        &d,
+        "python3 \"$RECIPE\" compare ../before.json ../after.json",
+    )?;
     // alpha's four citations carry blob= at unchanged paths: fresh even shallow.
-    assert!(compare.lines().any(|l| l.ends_with("  fresh") && l.contains("     4")), "{compare}");
+    assert!(
+        compare
+            .lines()
+            .any(|l| l.ends_with("  fresh") && l.contains("     4")),
+        "{compare}"
+    );
     let local = lines_with(&compare, "repo-not-local");
-    assert!(local.iter().any(|l| l.split_whitespace().nth(1) == Some("3")), "{compare}");
+    assert!(
+        local
+            .iter()
+            .any(|l| l.split_whitespace().nth(1) == Some("3")),
+        "{compare}"
+    );
     assert!(compare.contains("unverifiable partial-clone"), "{compare}");
     Ok(())
 }

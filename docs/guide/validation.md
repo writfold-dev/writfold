@@ -196,6 +196,68 @@ handoff unit [accepted] satisfied by a current mechanical pass
 
 Exit 0 when accepted, 2 when refused. Every refusal is listed in [gates](gates.md).
 
+### Rehearsing a cutover
+
+A read-only pass shows that a KB indexes and answers. It does not show that a required gate ran, or that a change can land under the receiver's rules. `docs/guide/recipes/cutover-rehearsal.sh DIR` walks one change through every step, in a disposable directory, with two roles and two clones each. `crates/writfold/tests/kb_cutover_rehearsal.rs` runs it; the output below is from one such run (paths shortened).
+
+1. **The author** records a decision, fills its research, alternatives and acceptance gates, and moves it to `proposed` and then `accepted`. The author commits the candidate on a branch and works in a run under the `ship` plan (`build`, `test`, `lint`). Then the author runs `build`, runs `test` under a definition weakened in the work tree (never committed), and skips `lint`. The author's own summary reads well:
+
+```text
+$ writfold kb gate lines
+Gates for service@a8af71869aaf (writfold kb gate, run run-…-11bbd8): 2 of 3 satisfied, 1 skipped; plan complete-with-exceptions
+build: satisfied pass exit=0 runs/run-…-11bbd8/gates/build-….json
+lint:  skipped
+test:  satisfied pass exit=0 runs/run-…-11bbd8/gates/test-….json
+```
+
+2. **The receiver**, in its own clones, judges that evidence at the trusted policy revision, whose `.writfold/handoff.toml` requires all three. The receiver refuses it:
+
+```text
+$ writfold kb handoff check --policy 93e0a32 --candidate a8af718 --run run-…-11bbd8
+handoff build [accepted] satisfied by a current mechanical pass
+handoff test [refused] definition-changed: the run's receipts were made under another definition than .writfold/gates/test.toml at 93e0a32e2e91; next: run the policy's definition on the candidate: writfold kb gate run test --run run-…-11bbd8 !definition-changed
+handoff lint [refused] no-evidence: not run; next: writfold kb gate run lint --run run-…-11bbd8 !no-evidence
+# … required=3 refused=2 handoff=refused …
+```
+
+3. **The receiver runs every required gate itself**, into its own run. It runs on the candidate's files, but with the policy revision's `.writfold/` checked out over the candidate's (`git checkout POLICY -- .writfold`): a gate is run from the definitions the receiver trusts, never from ones the candidate brings. Then it checks its own run:
+
+```text
+$ writfold kb handoff check --policy 93e0a32 --candidate a8af718
+handoff build [accepted] satisfied by a current mechanical pass
+handoff test [accepted] satisfied by a current mechanical pass
+handoff lint [accepted] satisfied by a current mechanical pass
+# … required=3 refused=0 handoff=accepted …
+```
+
+4. **Landing** is the ordinary Git workflow (here a fast-forward of `main`). Then the decision is set `applied --commit service@<landed>` and `verified --evidence gate:test`:
+
+```text
+decision proposal/decision/2026-11-22-report-status-in-app-txt [applied] Report status in app.txt
+decision proposal/decision/2026-11-22-report-status-in-app-txt [verified] Report status in app.txt
+```
+
+What each step establishes, and what it does not:
+
+| Step | Establishes | Does not establish |
+|---|---|---|
+| `gate lines` (author) | what the author's run recorded, against the author's work tree | that the definitions were the receiver's, or that a skipped gate is not needed |
+| `handoff check` on the author's run | that the author's receipts are current mechanical passes under the policy's definitions | anything the author did not record; it runs nothing |
+| `handoff check` on the receiver's run | that every required gate passed on these inputs, run by the receiver | that the change is right where no gate looks |
+| `applied` | the named commit is in the history of a local clone's `origin/HEAD` (else `HEAD`) | that any gate ran, or ran on that commit |
+| `verified` | one passing check was cited when it was written | every required gate, or a later re-check: the line stays after the gate goes stale |
+
+Four claims are easy to blur. These are the commands that are evidence for each:
+
+| Claim | Evidence today |
+|---|---|
+| The agent saw the instructions | `read:` lines and instruction digests in receipts show what was offered, not that it was read; no mechanical evidence |
+| A gate ran on these inputs | a receipt (`gate verify` re-checks it), judged current by `gate status` or `handoff check` |
+| The receiving boundary required a pass | `handoff check` against the policy revision, run by the receiver; wiring it into a pre-receive hook or a required status check is [#64](https://github.com/writfold-dev/writfold/issues/64) |
+| A person reviewed a judgment gate | an attestation names who attested; it is a statement, never a pass, and `handoff check` refuses it |
+
+No guard, hook or `verified` decision is proof that every required gate ran: only the receiver's `handoff check` on its own run says that, for the gates `handoff.toml` names.
+
 ## Answers that stop early: the work limit
 
 `impact`, `uses` and `context` read at most `WRITFOLD_KB_WORK` edges (default 100,000). One that stops there says so in a note and reads `coverage=partial` (exit 2): the rows shown are right, and more exist. Raise the limit for one command when the whole answer is needed.

@@ -153,3 +153,4 @@ Records written by another tool are read as they are when they are Git text in t
 Before relying on Writfold in place of another tool, rehearse the parts an index alone does not show:
 - **Run counts:** reconcile Writfold's runs with the other tool's by ID, not by count ([validation guide, "Runs: reconciling a count by ID"](validation.md#runs-reconciling-a-count-by-id)).
 - **Clones:** provision the clones the handoff's evidence needs, reviewed and measured, rather than every cited repository ([validation guide, "Which clones to provision"](validation.md#which-clones-to-provision)).
+- **The landing path:** rehearse one change from an author's run through the receiver's own gates and `handoff check` to `applied` and `verified` ([validation guide, "Rehearsing a cutover"](validation.md#rehearsing-a-cutover)).
