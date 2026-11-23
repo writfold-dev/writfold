@@ -8,7 +8,7 @@ model's output: what is done, what is owed and whether a step may close are
 computed from those files, the same on every machine. A new session reads a
 short brief and the last checkpoint, and carries on.
 
-> **Pre-release (`v0.6.0-dev.17`).** Built in public, for one person and their
+> **Pre-release (`v0.6.0-dev.18`).** Built in public, for one person and their
 > agents; formats and commands may still change. Linux x86_64 or WSL2. See
 > [writfold.dev](https://writfold.dev/) and the [guides](docs/guide/README.md).
 
@@ -29,7 +29,7 @@ the Claude Code plugin. No sudo, no edits to shell startup files. Add `-s -- --d
 By hand, the same steps:
 
 ```sh
-base=https://github.com/writfold-dev/writfold/releases/download/v0.6.0-dev.17
+base=https://github.com/writfold-dev/writfold/releases/download/v0.6.0-dev.18
 curl -LO "$base/writfold-x86_64-linux-musl" -LO "$base/writfold-x86_64-linux-musl.sha256"
 echo "$(cut -d' ' -f1 writfold-x86_64-linux-musl.sha256)  writfold-x86_64-linux-musl" | sha256sum -c
 install -D -m 755 writfold-x86_64-linux-musl ~/.local/bin/writfold
