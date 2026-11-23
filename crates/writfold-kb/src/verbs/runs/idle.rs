@@ -125,7 +125,9 @@ pub fn idle(
     let mut found = Vec::new();
     for (rec, at) in runs::all(session)? {
         let state = runs::state(session, &rec);
-        if state == "closed" || project.is_some_and(|p| rec.project.as_deref() != Some(p)) {
+        let left_out = writfold_core::runs::shown(runs::classify(&state), true)
+            == writfold_core::runs::Shown::Hidden;
+        if left_out || project.is_some_and(|p| rec.project.as_deref() != Some(p)) {
             continue;
         }
         let writes = stamps(session, &rec, &at);
@@ -156,5 +158,6 @@ pub fn idle(
         answer.unknown = Some("no-record");
         answer.notes.push(BOUNDARY.into());
     }
+    runs::inventory(session, &mut answer)?;
     Ok(answer)
 }

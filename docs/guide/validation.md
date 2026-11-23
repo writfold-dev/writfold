@@ -295,11 +295,11 @@ A count of runs from Writfold and a count from the tool it replaces can differ f
 |---|---|---|
 | More rows than one answer holds | `omitted=`, `cursor=` in the trailer; the recipe prints the pages it read | yes |
 | Different commits or a dirty tree | `kb=<commit>[+dirty:N]` in the trailer; the recipe notes a mismatch with `--commit` | yes |
-| A `runs/<id>/` directory without `manifest.json` | the recipe's "directories without manifest.json" | **no** ([#98](https://github.com/writfold-dev/writfold/issues/98)) |
-| A `manifest.json` outside `runs/<id>/` | the recipe's "manifest.json outside runs/<id>/" | **no** (#98) |
+| A `runs/<id>/` directory without `manifest.json` | `no_manifest=N` and `coverage=partial` in the trailer of `kb runs` and `kb runs --idle`, with a note naming each directory; `kb index status` lists it as unreadable ("no manifest.json") | yes, since [#98](https://github.com/writfold-dev/writfold/issues/98) |
+| A `manifest.json` outside `runs/<id>/` | a `kb runs` note ("only runs/<id>/manifest.json is a run"); a `not-a-run` row in `kb index status`. Coverage is unchanged: the file was read | named, since #98 |
 | A manifest that does not parse | `unreadable=N`, `coverage=partial`; `kb index status` names it with the parse error | counted, not named |
 | Two manifests with one `run_id` | the same; `kb index status` says `duplicate id`; the first path wins | counted, not named |
-| A state other than `open` or `closed`, or a closure the other tool records elsewhere | shown as written (`[done]`); `--open` keeps every state but `closed` (#98); Writfold reads only the sidecar's `closed` and the manifest's `state` | shown; `--open` does not exclude it |
+| A state other than `open` or `closed`, or a closure the other tool records elsewhere | shown as written (`[done]`) and flagged `vocab=unknown`, counted as `vocab_unknown=N`; `--open` leaves out only `closed`, and a note says so (#98). Writfold reads only the sidecar's `closed` and the manifest's `state` | flagged; `--open` keeps it |
 | `--open`, `--project` | the command line | yes |
 
 ## Exit codes

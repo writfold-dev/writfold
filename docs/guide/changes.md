@@ -6,6 +6,12 @@ This page is for someone pinned to one release who wants to upgrade on purpose. 
 
 A line marked **fix** changed an answer that was wrong; anything depending on the old answer was depending on the fault.
 
+## v0.6.0-dev.18
+
+- **fix** `kb runs` and `kb runs --idle` read `coverage=partial` (exit 2) while a directory under `runs/` holds files but no `manifest.json`. The trailer counts them (`no_manifest=N`), a note names each directory, and `kb index status` lists each as unreadable ("no manifest.json"). Before, such a directory was silently missing from a list that read complete. Other verbs are unaffected: the directory's files are still indexed ([#98](https://github.com/writfold-dev/writfold/issues/98)).
+- `kb runs` names, in a note, each `manifest.json` under a `runs/` directory that is not `runs/<id>/` at the KB root ("only runs/<id>/manifest.json is a run"), and `kb index status` lists it as `not-a-run`. Coverage and exit codes are unchanged (#98).
+- A run whose state is neither `open` nor `closed` is flagged `vocab=unknown`, and `kb runs` counts it (`vocab_unknown=N`) with a note that `--open` leaves out only closed runs. `--open` and `--idle` still list such a run (#98).
+
 ## v0.6.0-dev.17
 
 - **fix** A code citation whose cited commit is not in the local clone (a shallow or single-branch clone, an unfetched or rewritten commit) now reads `unverifiable` `history-not-local` instead of `changed` or `gone`. This applies to a token with no `blob=` and no `span=`, and to a path renamed or deleted since. A token without `rev=` that would need one reads `nothing-to-compare`, and the 64-revision rename cap reads `rename-unchecked`; both used to read `gone`. Git failures while following a rename other than an unknown commit read `git-error`. Exit codes are unchanged (both exit 2). The trailer moves those citations from `stale=` to `unverifiable=`, and a delivery's `claims.cited-fresh` check reads `unknown` instead of `fail` for them. `proposal accept` still refuses them. An authored `stale=` mark now shows on them. `kb repos` lists a shallow clone with `history: shallow` and a `shallow=` count ([#90](https://github.com/writfold-dev/writfold/issues/90)).

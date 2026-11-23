@@ -5806,6 +5806,46 @@ def publish.derived (source_moved : Bool) : Result publish.Publish := do
   then ok publish.Publish.Retry
   else ok publish.Publish.Replace
 
+/-- [writfold_core::runs::State]
+    Source: 'crates/writfold-core/src/runs.rs', lines 14:0-19:1
+    Visibility: public -/
+@[discriminant isize]
+inductive runs.State where
+| Open : runs.State
+| Closed : runs.State
+| Other : runs.State
+
+/-- [writfold_core::runs::Shown]
+    Source: 'crates/writfold-core/src/runs.rs', lines 23:0-30:1
+    Visibility: public -/
+@[discriminant isize]
+inductive runs.Shown where
+| Hidden : runs.Shown
+| Listed : runs.Shown
+| Flagged : runs.Shown
+
+/-- [writfold_core::runs::shown]:
+    Source: 'crates/writfold-core/src/runs.rs', lines 33:0-45:1
+    Visibility: public -/
+def runs.shown
+  (state : runs.State) (open_only : Bool) : Result runs.Shown := do
+  match state with
+  | runs.State.Open => ok runs.Shown.Listed
+  | runs.State.Closed =>
+    if open_only
+    then ok runs.Shown.Hidden
+    else ok runs.Shown.Listed
+  | runs.State.Other => ok runs.Shown.Flagged
+
+/-- [writfold_core::runs::complete]:
+    Source: 'crates/writfold-core/src/runs.rs', lines 50:0-52:1
+    Visibility: public -/
+def runs.complete
+  (unreadable : Std.Usize) (no_manifest : Std.Usize) : Result Bool := do
+  if unreadable = 0#usize
+  then ok (no_manifest = 0#usize)
+  else ok false
+
 /-- [writfold_core::scope::STAR]
     Source: 'crates/writfold-core/src/scope.rs', lines 19:0-19:25
     Visibility: public -/

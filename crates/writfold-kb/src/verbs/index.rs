@@ -62,7 +62,38 @@ pub fn status(session: &Session<'_>) -> Result<Answer> {
             ..Row::default()
         });
     }
+    runs_not_indexed(session, &mut answer)?;
     Ok(answer)
+}
+
+/// Run directories without `manifest.json`, and manifests outside
+/// `runs/<id>/` (#98): named, as `kb runs` cannot list them.
+fn runs_not_indexed(session: &Session<'_>, answer: &mut Answer) -> Result<()> {
+    let bare = crate::index::query::runs_without_manifest(&session.conn)?;
+    if !bare.is_empty() {
+        answer.counts.push(("no_manifest", bare.len()));
+    }
+    for dir in bare {
+        answer.rows.push(Row {
+            kind: "unreadable",
+            id: "run".into(),
+            text: "no manifest.json: a run directory kb runs cannot list".into(),
+            path: Some(dir),
+            flags: vec!["no-manifest".into()],
+            ..Row::default()
+        });
+    }
+    for path in crate::index::query::stray_manifests(&session.conn)? {
+        answer.rows.push(Row {
+            kind: "not-a-run",
+            id: "doc".into(),
+            text: "only runs/<id>/manifest.json is a run".into(),
+            path: Some(path),
+            flags: vec!["not-a-run".into()],
+            ..Row::default()
+        });
+    }
+    Ok(())
 }
 
 /// The `count:` lines of `index status`.

@@ -2773,3 +2773,32 @@ function = "observed"
 kind = "mutant"
 name = "unsearched-fresh"
 reason = "#90 moved the code-citation arms into other_blob; the mutant edits other_blob now and is claimed there"
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/runs.rs"
+function = "shown"
+lean = "writfold_core.runs.shown"
+theorems = [
+  "Writfold.Core.Runs.shown_spec",
+]
+total = "Writfold.Core.Runs.shown_spec"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "other-hidden-by-open",
+  "other-listed-plain",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/runs.rs"
+function = "complete"
+lean = "writfold_core.runs.complete"
+theorems = [
+  "Writfold.Core.Runs.complete_spec",
+]
+total = "Writfold.Core.Runs.complete_spec"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "complete-ignores-no-manifest",
+]

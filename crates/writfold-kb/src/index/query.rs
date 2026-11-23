@@ -276,3 +276,41 @@ pub fn scope(conn: &Connection) -> Result<(usize, usize, usize)> {
         |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)),
     )?)
 }
+
+/// Run directories (`runs/<id>/`, with the slash) holding an indexed file
+/// but no `manifest.json` (#98): runs the list cannot show.
+pub fn runs_without_manifest(conn: &Connection) -> Result<Vec<String>> {
+    let mut statement = conn.prepare_cached(
+        "WITH d AS (SELECT DISTINCT substr(path, 1, 5 + instr(substr(path, 6), '/')) AS dir \
+         FROM files WHERE path >= 'runs/' AND path < 'runs0' AND instr(substr(path, 6), '/') > 1) \
+         SELECT dir FROM d WHERE NOT EXISTS (SELECT 1 FROM files f WHERE f.path = d.dir || 'manifest.json') \
+         ORDER BY dir",
+    )?;
+    let found = statement
+        .query_map([], |r| r.get(0))?
+        .collect::<rusqlite::Result<Vec<_>>>()?;
+    Ok(found)
+}
+
+/// A `manifest.json` in a directory under some `runs/` that is not
+/// `runs/<id>/` at the KB root (#98): it is not a run.
+pub fn stray_manifests(conn: &Connection) -> Result<Vec<String>> {
+    let mut statement = conn.prepare_cached(
+        "SELECT path FROM files WHERE kind <> 'run' \
+         AND (path GLOB 'runs/*/manifest.json' OR path GLOB '*/runs/*/manifest.json') ORDER BY path",
+    )?;
+    let found = statement
+        .query_map([], |r| r.get(0))?
+        .collect::<rusqlite::Result<Vec<_>>>()?;
+    Ok(found)
+}
+
+/// Run manifests that are unreadable: unparsable, or a duplicate run ID.
+pub fn unreadable_runs(conn: &Connection) -> Result<usize> {
+    Ok(conn.query_row(
+        "SELECT COUNT(*) FROM files WHERE kind = 'run' \
+         AND (parse_status <> 'ok' OR path IN (SELECT path FROM dups))",
+        [],
+        |r| r.get(0),
+    )?)
+}

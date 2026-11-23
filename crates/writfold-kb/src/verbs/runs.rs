@@ -26,6 +26,7 @@ use crate::session::Session;
 use serde_json::Value;
 use std::collections::BTreeMap;
 use std::path::Path;
+use writfold_core::runs::{Shown, shown};
 
 pub fn list(
     session: &Session<'_>,
@@ -35,20 +36,28 @@ pub fn list(
 ) -> Result<Answer> {
     let mut answer = Answer::default();
     let current = runs::current_of(session);
-    let mut planned = 0;
+    let (mut planned, mut unknown) = (0, 0);
     for (rec, at) in runs::all(session)? {
         let state = runs::state(session, &rec);
-        if (open && state == "closed") || project.is_some_and(|p| rec.project.as_deref() != Some(p))
-        {
+        let shown = shown(runs::classify(&state), open);
+        if shown == Shown::Hidden || project.is_some_and(|p| rec.project.as_deref() != Some(p)) {
             continue;
         }
         let (row, has_plan) = run_row(session, (&rec, &at, state), current.as_deref(), plan);
         planned += usize::from(has_plan);
+        unknown += usize::from(shown == Shown::Flagged);
         answer.rows.push(row);
     }
     if plan {
         answer.counts.push(("planned", planned));
     }
+    if unknown > 0 {
+        answer.counts.push(("vocab_unknown", unknown));
+        answer.notes.push(format!(
+            "{unknown} run(s) with a state other than open or closed; only closed is left out by --open"
+        ));
+    }
+    runs::inventory(session, &mut answer)?;
     if answer.rows.is_empty() {
         answer.unknown = Some("no-record");
         answer.notes.push(BOUNDARY.into());
@@ -70,6 +79,9 @@ pub(crate) fn run_row(
     // A closed run whose plan still has an open step (policy spec 2.6).
     if state == "closed" && plan::open(&session.ws.root, rec) {
         row.flags.push("incomplete".into());
+    }
+    if shown(runs::classify(&state), false) == Shown::Flagged {
+        row.flags.push("vocab=unknown".into());
     }
     row.status = Some(state);
     if current == Some(rec.id.as_str()) {

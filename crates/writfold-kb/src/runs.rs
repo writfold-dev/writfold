@@ -167,3 +167,40 @@ pub fn all(session: &Session<'_>) -> Result<Vec<(Rec, String)>> {
     out.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| b.0.id.cmp(&a.0.id)));
     Ok(out)
 }
+
+/// A state word, classified for the kernel: `open`, `closed`, else other.
+pub fn classify(state: &str) -> writfold_core::runs::State {
+    use writfold_core::runs::State;
+    match state {
+        "open" => State::Open,
+        "closed" => State::Closed,
+        _ => State::Other,
+    }
+}
+
+/// What the run list cannot show (#98): whether it may claim to be
+/// complete ([`writfold_core::runs::complete`]), the `no_manifest` count,
+/// and a note naming each run directory without `manifest.json` and each
+/// `manifest.json` outside `runs/<id>/`.
+pub fn inventory(session: &Session<'_>, answer: &mut crate::emit::Answer) -> Result<()> {
+    let bare = query::runs_without_manifest(&session.conn)?;
+    let stray = query::stray_manifests(&session.conn)?;
+    let unreadable = query::unreadable_runs(&session.conn)?;
+    if !writfold_core::runs::complete(unreadable, bare.len()) {
+        answer.partial = true;
+    }
+    if !bare.is_empty() {
+        answer.counts.push(("no_manifest", bare.len()));
+        answer.notes.push(format!(
+            "no manifest.json, so not listed: {}",
+            bare.join(" ")
+        ));
+    }
+    if !stray.is_empty() {
+        answer.notes.push(format!(
+            "only runs/<id>/manifest.json is a run; not runs: {}",
+            stray.join(" ")
+        ));
+    }
+    Ok(())
+}

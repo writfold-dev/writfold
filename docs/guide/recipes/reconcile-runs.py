@@ -10,10 +10,11 @@ Run it at a KB root, with `writfold` on PATH. It reads; it writes nothing.
    the end (a first page is not the inventory).
 2. Lists, from Git at REV (default HEAD), every directory under `runs/` and
    every `manifest.json` in the tree.
-3. Prints what one side has and the other does not, and why. That covers
-   the causes a reader of `kb runs` alone is not told about: a run directory
-   without `manifest.json`, a manifest outside `runs/<id>/`, and a state
-   value other than `open` or `closed`.
+3. Prints what one side has and the other does not, and why: a run
+   directory without `manifest.json`, a manifest outside `runs/<id>/`, an
+   unreadable or duplicate manifest, and a state value other than `open` or
+   `closed`. Since #98 `kb runs` names each of these too (a count, a flag
+   or a note); the recipe lists them by ID from Git as a cross-check.
 4. With `--other FILE` (one `<id> <state>` per line, from the tool being
    replaced), it prints the IDs only one tool knows and the IDs whose
    state differs.
@@ -104,14 +105,15 @@ def main() -> int:
     print(f"writfold lists {len(listed)} run(s) in {pages} page(s); Git at {head} has {len(dirs)} run "
           f"director(ies) and {len(manifests)} manifest(s) at runs/<id>/")
     print(f"  trailer: kb={trailer['kb']} coverage={trailer['coverage']} "
-          f"unreadable={trailer.get('unreadable', 0)} omitted={trailer['omitted']}")
+          f"unreadable={trailer.get('unreadable', 0)} "
+          f"no_manifest={trailer.get('counts', {}).get('no_manifest', 0)} omitted={trailer['omitted']}")
     if not trailer["kb"].startswith(head[:12]) or "+dirty" in trailer["kb"]:
         print(f"  note: writfold read {trailer['kb']}, not {head}: compare at the same commit, clean")
     with_manifest = {m.split("/")[1] for m in manifests}
     report("directories without manifest.json", sorted(dirs - with_manifest),
-           "not a run to writfold, and not reported by `kb runs`")
+           "not a run: `kb runs` counts it (no_manifest=N, coverage=partial) and names it in a note")
     report("manifest.json outside runs/<id>/", elsewhere,
-           "only runs/<id>/manifest.json is a run")
+           "only runs/<id>/manifest.json is a run: `kb runs` names it in a note")
     listed_paths = {path for _, path in listed.values()}
     unlisted = sorted(m for m in manifests if m not in listed_paths)
     report("manifests writfold does not list", unlisted,
@@ -128,7 +130,7 @@ def main() -> int:
            "the first path wins; the rest are unreadable")
     odd = sorted(f"{i} [{s}]" for i, (s, _) in listed.items() if s not in ("open", "closed"))
     report("state other than open or closed", odd,
-           "shown as written; `kb runs --open` keeps every state but closed")
+           "flagged vocab=unknown; `kb runs --open` leaves out only closed")
     if args.other:
         theirs = other_runs(args.other)
         report("only in writfold", sorted(set(listed) - set(theirs)), "")

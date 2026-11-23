@@ -83,6 +83,14 @@ def claims : List Name := [
   ``Writfold.Core.Round.next_report_implies_spent,
   ``Writfold.Core.Round.again_total,
   ``Writfold.Core.Round.advance_total,
+  -- the run list (writfold_core::runs, #98)
+  ``Writfold.Core.Runs.shown_spec,
+  ``Writfold.Core.Runs.hidden_iff,
+  ``Writfold.Core.Runs.all_listed,
+  ``Writfold.Core.Runs.flagged_iff,
+  ``Writfold.Core.Runs.complete_spec,
+  ``Writfold.Core.Runs.no_manifest_incomplete,
+  ``Writfold.Core.Runs.unreadable_incomplete,
   -- policy inventories (writfold_core::inventory, #56)
   ``Writfold.Core.Inventory.readable_spec,
   ``Writfold.Core.Inventory.complete_loop_spec,

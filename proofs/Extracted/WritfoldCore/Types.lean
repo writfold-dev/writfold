@@ -498,6 +498,24 @@ inductive publish.Publish where
 | Keep : publish.Publish
 | Retry : publish.Publish
 
+/-- [writfold_core::runs::State]
+    Source: 'crates/writfold-core/src/runs.rs', lines 14:0-19:1
+    Visibility: public -/
+@[discriminant isize]
+inductive runs.State where
+| Open : runs.State
+| Closed : runs.State
+| Other : runs.State
+
+/-- [writfold_core::runs::Shown]
+    Source: 'crates/writfold-core/src/runs.rs', lines 23:0-30:1
+    Visibility: public -/
+@[discriminant isize]
+inductive runs.Shown where
+| Hidden : runs.Shown
+| Listed : runs.Shown
+| Flagged : runs.Shown
+
 /-- [writfold_core::store::Basis]
     Source: 'crates/writfold-core/src/store.rs', lines 16:0-22:1
     Visibility: public -/

@@ -184,3 +184,4 @@ Rows are in creation order.
 | [2026-11-22](2026-11-22-release-speed.md) | Release speed: incremental claims, an early site check, a parallel unit gate, one release command | accepted | complete | [#91](https://github.com/writfold-dev/writfold/issues/91), [#92](https://github.com/writfold-dev/writfold/issues/92), [#93](https://github.com/writfold-dev/writfold/issues/93), [#94](https://github.com/writfold-dev/writfold/issues/94) |
 | [2026-11-22](2026-11-22-split-translation.md) | Split translation: a mutant rebuilds only the proofs it can reach | accepted | complete | [#95](https://github.com/writfold-dev/writfold/issues/95) |
 | [2026-11-22](2026-11-22-missing-history.md) | Missing history is not evidence of change | accepted | complete | [#90](https://github.com/writfold-dev/writfold/issues/90) |
+| [2026-11-23](2026-11-23-run-list-gaps.md) | The run list names what it cannot list | accepted | complete | [#98](https://github.com/writfold-dev/writfold/issues/98) |

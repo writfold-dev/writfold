@@ -146,7 +146,7 @@ fn every_silent_cause_is_named() -> Result {
         "  run-elsewhere",
         "state differs (1)",
         "  run-004: writfold closed, other open",
-        "coverage=partial unreadable=2",
+        "coverage=partial unreadable=2 no_manifest=1",
     ] {
         assert!(text.contains(expected), "missing {expected:?} in\n{text}");
     }
@@ -162,6 +162,49 @@ fn a_clean_inventory_agrees() -> Result {
     assert!(
         text.contains("agree: every run directory is a listed run"),
         "{text}"
+    );
+    Ok(())
+}
+
+/// Since #98 `kb runs` itself names what it cannot list: the run directory
+/// without a manifest (counted, and the list is partial), the manifest
+/// outside `runs/<id>/`, and the state outside the vocabulary (flagged;
+/// `--open` leaves out only closed runs). `kb index status` names the
+/// directory too.
+#[test]
+fn kb_runs_names_what_it_cannot_list() -> Result {
+    let d = demo("named", true)?;
+    let kb = d.0.join("kb");
+    let (text, exit) = run(
+        &kb,
+        &d,
+        "writfold",
+        &["kb", "runs", "--open", "--budget-tokens", "1000000"],
+    )?;
+    assert_eq!(exit, 2, "{text}");
+    for expected in [
+        "no manifest.json, so not listed: runs/run-nomanifest/",
+        "not runs: archive/runs/run-nested/manifest.json",
+        "only closed is left out by --open",
+        "no_manifest=1",
+        "vocab_unknown=1",
+        "coverage=partial",
+    ] {
+        assert!(text.contains(expected), "missing {expected:?} in\n{text}");
+    }
+    let done = text
+        .lines()
+        .find(|l| l.contains("run-done"))
+        .unwrap_or_default();
+    assert!(done.contains("vocab=unknown"), "{text}");
+    let (status, _) = run(&kb, &d, "writfold", &["kb", "index", "status"])?;
+    assert!(
+        status.contains("runs/run-nomanifest/") && status.contains("no manifest.json"),
+        "{status}"
+    );
+    assert!(
+        status.contains("archive/runs/run-nested/manifest.json"),
+        "{status}"
     );
     Ok(())
 }

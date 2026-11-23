@@ -190,6 +190,21 @@ MUTANTS = (
            "    if source_moved {",
            "    if false {",
            ("Writfold.Core.Publish.derived_replace_iff",)),
+    # runs (#98): --open never hides a state outside the vocabulary
+    Mutant("other-hidden-by-open", "runs.rs",
+           "        State::Other => Shown::Flagged,",
+           "        State::Other => {\n            if open_only {\n                Shown::Hidden\n            } else {\n                Shown::Flagged\n            }\n        }",
+           ("Writfold.Core.Runs.shown_spec",)),
+    # runs: an unrecognized state is flagged, never listed as ordinary
+    Mutant("other-listed-plain", "runs.rs",
+           "        State::Other => Shown::Flagged,",
+           "        State::Other => Shown::Listed,",
+           ("Writfold.Core.Runs.shown_spec",)),
+    # runs: a run directory without a manifest makes the list partial
+    Mutant("complete-ignores-no-manifest", "runs.rs",
+           "    unreadable == 0 && no_manifest == 0",
+           "    unreadable == 0",
+           ("Writfold.Core.Runs.complete_spec",)),
     # inventory (#56): an unreadable root is never readable
     Mutant("readable-all", "inventory.rs",
            "    !matches!(root, Root::Unreadable)",

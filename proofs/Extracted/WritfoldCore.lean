@@ -27,6 +27,7 @@ public import Extracted.WritfoldCore.Order
 public import Extracted.WritfoldCore.Pin
 public import Extracted.WritfoldCore.Pointer
 public import Extracted.WritfoldCore.Publish
+public import Extracted.WritfoldCore.Runs
 public import Extracted.WritfoldCore.Scope
 public import Extracted.WritfoldCore.Store
 public import Extracted.WritfoldCore.Subject
