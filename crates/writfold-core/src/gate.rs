@@ -5,7 +5,7 @@
 //! definition and the receipts, recomputed on every read. Which paths a
 //! scope covers is [`crate::scope`].
 //!
-//! The decisions `outcome`, `bound`, `current`, `newest_bound`, `about`,
+//! The decisions `outcome`, `outcome_kept`, `bound`, `current`, `newest_bound`, `about`,
 //! `evidence`, `judge`, `state`, `stands`, `statements`, `standing` and
 //! `Standing::met` are in the Charon
 //! `start_from` list (named one by one, so the derived trait
@@ -69,6 +69,34 @@ pub fn outcome(ending: Ending, subject_moved: bool) -> Outcome {
         Ending::Exited(0) => Outcome::Pass,
         Ending::Exited(_) => Outcome::Fail,
         Ending::Signaled | Ending::TimedOut | Ending::Error => Outcome::Unknown,
+    }
+}
+
+/// Whether the files a gate declares in `retain` were kept with its
+/// receipt.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Kept {
+    /// The gate declares no file to retain.
+    Nothing,
+    /// Every declared file was kept.
+    All,
+    /// At least one declared file was absent, not a regular file, or over
+    /// the size cap.
+    Missing,
+}
+
+/// The outcome of a gate that may retain evidence: [`outcome`], except
+/// that missing evidence turns a pass into unknown. A failure stays a
+/// failure (the checker said no), and nothing is ever promoted.
+pub fn outcome_kept(ending: Ending, subject_moved: bool, kept: Kept) -> Outcome {
+    let o = outcome(ending, subject_moved);
+    match kept {
+        Kept::Missing => match o {
+            Outcome::Pass => Outcome::Unknown,
+            Outcome::Fail => Outcome::Fail,
+            Outcome::Unknown => Outcome::Unknown,
+        },
+        Kept::Nothing | Kept::All => o,
     }
 }
 

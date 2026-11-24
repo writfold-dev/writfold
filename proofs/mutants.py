@@ -190,6 +190,26 @@ MUTANTS = (
            "    if source_moved {",
            "    if false {",
            ("Writfold.Core.Publish.derived_replace_iff",)),
+    # packet (#109): the cut never overruns the budget
+    Mutant("cut-ignores-used", "packet.rs",
+           "        if cost > budget - used {",
+           "        if cost > budget {",
+           ("Writfold.Core.Packet.cut_spec", "Writfold.Core.Packet.select_within_budget")),
+    # packet: a row that fits exactly is kept
+    Mutant("cut-drops-exact-fit", "packet.rs",
+           "        if cost > budget - used {",
+           "        if cost >= budget - used {",
+           ("Writfold.Core.Packet.cut_spec", "Writfold.Core.Packet.all_fit_all_selected")),
+    # packet: an unreadable input makes the packet partial
+    Mutant("packet-complete-ignores-unreadable", "packet.rs",
+           "    kept >= required && unreadable == 0",
+           "    kept >= required",
+           ("Writfold.Core.Packet.complete_iff",)),
+    # packet: the left-out required rows are counted
+    Mutant("omitted-reads-zero", "packet.rs",
+           "    } else {\n        required - kept\n    }",
+           "    } else {\n        0\n    }",
+           ("Writfold.Core.Packet.required_omitted_spec", "Writfold.Core.Packet.omitted_counted")),
     # runs (#98): --open never hides a state outside the vocabulary
     Mutant("other-hidden-by-open", "runs.rs",
            "        State::Other => Shown::Flagged,",
@@ -340,6 +360,21 @@ MUTANTS = (
            "        Ending::Exited(_) => Outcome::Fail,",
            "        Ending::Exited(_) => Outcome::Unknown,",
            ("Writfold.Core.Gate.outcome_spec",)),
+    # gate (#121): missing retained evidence never passes
+    Mutant("kept-missing-passes", "gate.rs",
+           "            Outcome::Pass => Outcome::Unknown,",
+           "            Outcome::Pass => Outcome::Pass,",
+           ("Writfold.Core.Gate.outcome_kept_spec", "Writfold.Core.Gate.kept_missing_never_pass")),
+    # gate: keeping every file changes nothing
+    Mutant("kept-all-unknown", "gate.rs",
+           "        Kept::Nothing | Kept::All => o,",
+           "        Kept::Nothing => o,\n        Kept::All => Outcome::Unknown,",
+           ("Writfold.Core.Gate.outcome_kept_spec", "Writfold.Core.Gate.kept_all_present_unchanged")),
+    # gate: missing evidence leaves a failure a failure
+    Mutant("kept-fail-unknown", "gate.rs",
+           "            Outcome::Fail => Outcome::Fail,",
+           "            Outcome::Fail => Outcome::Unknown,",
+           ("Writfold.Core.Gate.outcome_kept_spec", "Writfold.Core.Gate.kept_fail_stays_fail")),
     # gate: a receipt about other bytes in scope never decides the state
     # (the comparison moved into `gate::current`, which `state` calls)
     Mutant("state-ignores-scope", "gate.rs",

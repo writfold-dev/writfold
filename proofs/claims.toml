@@ -683,6 +683,7 @@ file = "crates/writfold-core/src/gate.rs"
 function = "bound"
 lean = "writfold_core.gate.bound"
 theorems = [
+  "Writfold.Core.Gate.unretained_not_bound",
   "Writfold.Core.Gate.bound_spec",
 ]
 total = "Writfold.Core.Gate.bound_spec"
@@ -754,6 +755,75 @@ total = "Writfold.Core.Gate.newest_bound_spec"
 subsumes = ["TAU-N001", "TAU-P003"]
 mutants = [
   "stale-from-unbound",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/gate.rs"
+function = "outcome_kept"
+lean = "writfold_core.gate.outcome_kept"
+theorems = [
+  "Writfold.Core.Gate.kept_all_present_unchanged",
+  "Writfold.Core.Gate.kept_fail_stays_fail",
+  "Writfold.Core.Gate.kept_missing_never_pass",
+  "Writfold.Core.Gate.kept_never_promotes",
+  "Writfold.Core.Gate.kept_none_unchanged",
+  "Writfold.Core.Gate.outcome_kept_spec",
+]
+total = "Writfold.Core.Gate.outcome_kept_spec"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "kept-missing-passes",
+  "kept-all-unknown",
+  "kept-fail-unknown",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/packet.rs"
+function = "cut"
+lean = "writfold_core.packet.cut"
+theorems = [
+  "Writfold.Core.Packet.all_fit_all_selected",
+  "Writfold.Core.Packet.cut_loop_spec",
+  "Writfold.Core.Packet.cut_maximal",
+  "Writfold.Core.Packet.cut_spec",
+  "Writfold.Core.Packet.select_within_budget",
+]
+total = "Writfold.Core.Packet.cut_spec"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "cut-ignores-used",
+  "cut-drops-exact-fit",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/packet.rs"
+function = "required_omitted"
+lean = "writfold_core.packet.required_omitted"
+theorems = [
+  "Writfold.Core.Packet.omitted_counted",
+  "Writfold.Core.Packet.required_omitted_spec",
+]
+total = "Writfold.Core.Packet.required_omitted_spec"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "omitted-reads-zero",
+]
+
+[[claim]]
+crate = "writfold-core"
+file = "crates/writfold-core/src/packet.rs"
+function = "complete"
+lean = "writfold_core.packet.complete"
+theorems = [
+  "Writfold.Core.Packet.complete_iff",
+]
+total = "Writfold.Core.Packet.complete_iff"
+subsumes = ["TAU-N001", "TAU-P003"]
+mutants = [
+  "packet-complete-ignores-unreadable",
 ]
 
 [[claim]]

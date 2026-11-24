@@ -12,6 +12,12 @@ Theorems over the Aeneas translation of `writfold_core::gate`'s decisions
 - Only a clean exit with status 0 on an unmoved subject is a pass; any other
   exit status is a failure; every other ending is unknown (`outcome_spec`,
   `outcome_pass_iff`, `outcome_fail_iff`).
+- Retained evidence (#121): declaring nothing or keeping every file changes
+  nothing (`kept_none_unchanged`, `kept_all_present_unchanged`); missing
+  evidence is never a pass (`kept_missing_never_pass`), never promotes
+  (`kept_never_promotes`) and leaves a failure a failure
+  (`kept_fail_stays_fail`); a receipt that is not intact is not bound
+  (`unretained_not_bound`).
 - A record is bound only when it is filed in this run, names this subject
   and is intact (`bound_spec`). `state` is decided by the newest receipt
   that is bound and about the current definition and the current content in
@@ -92,6 +98,54 @@ theorem outcome_fail_iff (e : gate.Ending) (moved : Bool) :
   unfold outcomeOf
   cases moved <;> cases e <;> simp
 
+/-! ## `outcome_kept` (retained evidence, #121) -/
+
+/-- The outcome of a gate that may retain evidence, on the model. -/
+def keptOf (o : gate.Outcome) (k : gate.Kept) : gate.Outcome :=
+  match k, o with
+  | .Missing, .Pass => .Unknown
+  | _, o => o
+
+theorem outcome_kept_spec (e : gate.Ending) (moved : Bool) (k : gate.Kept) :
+    gate.outcome_kept e moved k ⦃ o => o = keptOf (outcomeOf e moved) k ⦄ := by
+  unfold gate.outcome_kept
+  step with outcome_spec as ⟨ o, ho ⟩
+  rw [← ho]
+  cases k <;> cases o <;> simp [keptOf]
+
+/-- A gate that declares nothing to retain behaves as before. -/
+theorem kept_none_unchanged (e : gate.Ending) (moved : Bool) :
+    gate.outcome_kept e moved .Nothing ⦃ o => o = outcomeOf e moved ⦄ := by
+  apply WP.spec_mono (outcome_kept_spec e moved .Nothing)
+  intro o ho; rw [ho]; simp [keptOf]
+
+/-- Keeping every declared file changes nothing. -/
+theorem kept_all_present_unchanged (e : gate.Ending) (moved : Bool) :
+    gate.outcome_kept e moved .All ⦃ o => o = outcomeOf e moved ⦄ := by
+  apply WP.spec_mono (outcome_kept_spec e moved .All)
+  intro o ho; rw [ho]; simp [keptOf]
+
+/-- Missing evidence is never a pass, whatever the exit status. -/
+theorem kept_missing_never_pass (e : gate.Ending) (moved : Bool) :
+    gate.outcome_kept e moved .Missing ⦃ o => o ≠ .Pass ⦄ := by
+  apply WP.spec_mono (outcome_kept_spec e moved .Missing)
+  intro o ho; rw [ho]
+  cases outcomeOf e moved <;> simp [keptOf]
+
+/-- Nothing is promoted: a pass with evidence is a pass without it. -/
+theorem kept_never_promotes (e : gate.Ending) (moved : Bool) (k : gate.Kept) :
+    gate.outcome_kept e moved k ⦃ o => o = .Pass → outcomeOf e moved = .Pass ⦄ := by
+  apply WP.spec_mono (outcome_kept_spec e moved k)
+  intro o ho; rw [ho]
+  cases k <;> cases outcomeOf e moved <;> simp [keptOf]
+
+/-- The checker said no: missing evidence only blocks a pass. -/
+theorem kept_fail_stays_fail (e : gate.Ending) (moved : Bool) (k : gate.Kept) :
+    gate.outcome_kept e moved k ⦃ o => outcomeOf e moved = .Fail → o = .Fail ⦄ := by
+  apply WP.spec_mono (outcome_kept_spec e moved k)
+  intro o ho hf; rw [ho, hf]
+  cases k <;> simp [keptOf]
+
 /-! ## `bound`, `current` and `newest_bound` -/
 
 /-- A record is bound to the run and subject it is judged for only when it is
@@ -99,6 +153,12 @@ filed in this run, names this repository or candidate, and is intact. -/
 theorem bound_spec (r s i : Bool) : gate.bound r s i ⦃ b => b = (r && s && i) ⦄ := by
   unfold gate.bound
   cases r <;> cases s <;> cases i <;> simp
+
+/-- A receipt whose retained evidence is absent or differs is not intact,
+so it is never bound (#121). -/
+theorem unretained_not_bound (r s : Bool) : gate.bound r s false ⦃ b => b = false ⦄ := by
+  apply WP.spec_mono (bound_spec r s false)
+  intro b hb; rw [hb]; simp
 
 /-- A receipt decides: bound, and about the current definition and the
 present content of the paths in scope. -/

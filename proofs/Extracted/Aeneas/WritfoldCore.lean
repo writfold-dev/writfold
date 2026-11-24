@@ -573,7 +573,7 @@ def checklist.rollup_under
   ok { covered := b, stale := b1, first_owed := first }
 
 /-- [writfold_core::gate::State]
-    Source: 'crates/writfold-core/src/gate.rs', lines 77:0-89:1
+    Source: 'crates/writfold-core/src/gate.rs', lines 105:0-117:1
     Visibility: public -/
 @[discriminant isize]
 inductive gate.State where
@@ -592,7 +592,7 @@ def checklist.state (rollup : checklist.Rollup) : Result gate.State := do
   else ok gate.State.Open
 
 /-- [writfold_core::gate::Statements]
-    Source: 'crates/writfold-core/src/gate.rs', lines 249:0-256:1
+    Source: 'crates/writfold-core/src/gate.rs', lines 277:0-284:1
     Visibility: public -/
 structure gate.Statements where
   attested_current : Bool
@@ -600,7 +600,7 @@ structure gate.Statements where
   waived_current : Bool
 
 /-- [writfold_core::gate::Standing]
-    Source: 'crates/writfold-core/src/gate.rs', lines 219:0-225:1
+    Source: 'crates/writfold-core/src/gate.rs', lines 247:0-253:1
     Visibility: public -/
 @[discriminant isize]
 inductive gate.Standing where
@@ -609,7 +609,7 @@ inductive gate.Standing where
 | Waived : gate.Standing
 
 /-- [writfold_core::gate::standing]:
-    Source: 'crates/writfold-core/src/gate.rs', lines 320:0-336:1
+    Source: 'crates/writfold-core/src/gate.rs', lines 348:0-364:1
     Visibility: public -/
 def gate.standing
   (attested_class : Bool) (state : gate.State) (statements : gate.Statements) :
@@ -2070,7 +2070,7 @@ def delivery.ready (owed : Slice delivery.Owed) : Result Bool := do
     | some _ => ok false
 
 /-- [writfold_core::gate::{writfold_core::gate::Standing}::met]:
-    Source: 'crates/writfold-core/src/gate.rs', lines 238:4-243:5
+    Source: 'crates/writfold-core/src/gate.rs', lines 266:4-271:5
     Visibility: public -/
 def gate.Standing.met (self : gate.Standing) : Result Bool := do
   let b ←
@@ -2614,8 +2614,34 @@ def gate.outcome
     | gate.Ending.TimedOut => ok gate.Outcome.Unknown
     | gate.Ending.Error => ok gate.Outcome.Unknown
 
+/-- [writfold_core::gate::Kept]
+    Source: 'crates/writfold-core/src/gate.rs', lines 78:0-86:1
+    Visibility: public -/
+@[discriminant isize]
+inductive gate.Kept where
+| Nothing : gate.Kept
+| All : gate.Kept
+| Missing : gate.Kept
+
+/-- [writfold_core::gate::outcome_kept]:
+    Source: 'crates/writfold-core/src/gate.rs', lines 91:0-101:1
+    Visibility: public -/
+def gate.outcome_kept
+  (ending : gate.Ending) (subject_moved : Bool) (kept : gate.Kept) :
+  Result gate.Outcome
+  := do
+  let o ← gate.outcome ending subject_moved
+  match kept with
+  | gate.Kept.Nothing => ok o
+  | gate.Kept.All => ok o
+  | gate.Kept.Missing =>
+    match o with
+    | gate.Outcome.Pass => ok gate.Outcome.Unknown
+    | gate.Outcome.Fail => ok gate.Outcome.Fail
+    | gate.Outcome.Unknown => ok gate.Outcome.Unknown
+
 /-- [writfold_core::gate::Evidence]
-    Source: 'crates/writfold-core/src/gate.rs', lines 105:0-114:1
+    Source: 'crates/writfold-core/src/gate.rs', lines 133:0-142:1
     Visibility: public -/
 structure gate.Evidence where
   outcome : gate.Outcome
@@ -2624,7 +2650,7 @@ structure gate.Evidence where
   bound : Bool
 
 /-- [writfold_core::gate::bound]:
-    Source: 'crates/writfold-core/src/gate.rs', lines 119:0-121:1
+    Source: 'crates/writfold-core/src/gate.rs', lines 147:0-149:1
     Visibility: public -/
 def gate.bound
   (same_run : Bool) (same_subject : Bool) (intact : Bool) : Result Bool := do
@@ -2635,7 +2661,7 @@ def gate.bound
   else ok false
 
 /-- [writfold_core::gate::current]:
-    Source: 'crates/writfold-core/src/gate.rs', lines 125:0-127:1
+    Source: 'crates/writfold-core/src/gate.rs', lines 153:0-155:1
     Visibility: public -/
 def gate.current (evidence : gate.Evidence) : Result Bool := do
   if evidence.bound
@@ -2645,7 +2671,7 @@ def gate.current (evidence : gate.Evidence) : Result Bool := do
   else ok false
 
 /-- [writfold_core::gate::newest_bound]: loop body 0:
-    Source: 'crates/writfold-core/src/gate.rs', lines 132:4-139:1
+    Source: 'crates/writfold-core/src/gate.rs', lines 160:4-167:1
     Visibility: public -/
 @[rust_loop_body]
 def gate.newest_bound_loop.body
@@ -2662,7 +2688,7 @@ def gate.newest_bound_loop.body
   else ok (done none)
 
 /-- [writfold_core::gate::newest_bound]: loop 0:
-    Source: 'crates/writfold-core/src/gate.rs', lines 132:4-139:1
+    Source: 'crates/writfold-core/src/gate.rs', lines 160:4-167:1
     Visibility: public -/
 @[rust_loop]
 def gate.newest_bound_loop
@@ -2674,7 +2700,7 @@ def gate.newest_bound_loop
     index
 
 /-- [writfold_core::gate::newest_bound]:
-    Source: 'crates/writfold-core/src/gate.rs', lines 130:0-139:1
+    Source: 'crates/writfold-core/src/gate.rs', lines 158:0-167:1
     Visibility: public -/
 def gate.newest_bound
   (receipts : Slice gate.Evidence) : Result (Option Std.Usize) := do
@@ -2682,7 +2708,7 @@ def gate.newest_bound
   gate.newest_bound_loop receipts index
 
 /-- [writfold_core::gate::state]: loop body 0:
-    Source: 'crates/writfold-core/src/gate.rs', lines 147:4-163:1
+    Source: 'crates/writfold-core/src/gate.rs', lines 175:4-191:1
     Visibility: public -/
 @[rust_loop_body]
 def gate.state_loop.body
@@ -2708,7 +2734,7 @@ def gate.state_loop.body
     | some _ => ok (done (gate.State.Stale, o))
 
 /-- [writfold_core::gate::state]: loop 0:
-    Source: 'crates/writfold-core/src/gate.rs', lines 147:4-163:1
+    Source: 'crates/writfold-core/src/gate.rs', lines 175:4-191:1
     Visibility: public -/
 @[rust_loop]
 def gate.state_loop
@@ -2720,7 +2746,7 @@ def gate.state_loop
     index
 
 /-- [writfold_core::gate::state]:
-    Source: 'crates/writfold-core/src/gate.rs', lines 145:0-163:1
+    Source: 'crates/writfold-core/src/gate.rs', lines 173:0-191:1
     Visibility: public -/
 def gate.state
   (receipts : Slice gate.Evidence) :
@@ -2730,7 +2756,7 @@ def gate.state
   gate.state_loop receipts index
 
 /-- [writfold_core::gate::about]:
-    Source: 'crates/writfold-core/src/gate.rs', lines 168:0-176:1
+    Source: 'crates/writfold-core/src/gate.rs', lines 196:0-204:1
     Visibility: public -/
 def gate.about
   (recorded_definition : Slice Std.U8) (recorded_content : Slice Std.U8)
@@ -2743,7 +2769,7 @@ def gate.about
   else ok false
 
 /-- [writfold_core::gate::Recorded]
-    Source: 'crates/writfold-core/src/gate.rs', lines 180:0-188:1
+    Source: 'crates/writfold-core/src/gate.rs', lines 208:0-216:1
     Visibility: public -/
 structure gate.Recorded where
   outcome : gate.Outcome
@@ -2752,7 +2778,7 @@ structure gate.Recorded where
   bound : Bool
 
 /-- [writfold_core::gate::evidence]:
-    Source: 'crates/writfold-core/src/gate.rs', lines 193:0-200:1
+    Source: 'crates/writfold-core/src/gate.rs', lines 221:0-228:1
     Visibility: public -/
 def gate.evidence
   (receipt : gate.Recorded) (definition : Slice Std.U8)
@@ -2783,7 +2809,7 @@ def gate.evidence
       }
 
 /-- [writfold_core::gate::judge]: loop body 0:
-    Source: 'crates/writfold-core/src/gate.rs', lines 207:4-210:5
+    Source: 'crates/writfold-core/src/gate.rs', lines 235:4-238:5
     Visibility: public -/
 @[rust_loop_body]
 def gate.judge_loop.body
@@ -2804,7 +2830,7 @@ def gate.judge_loop.body
   else ok (done all)
 
 /-- [writfold_core::gate::judge]: loop 0:
-    Source: 'crates/writfold-core/src/gate.rs', lines 207:4-210:5
+    Source: 'crates/writfold-core/src/gate.rs', lines 235:4-238:5
     Visibility: public -/
 @[rust_loop]
 def gate.judge_loop
@@ -2819,7 +2845,7 @@ def gate.judge_loop
     (all, index)
 
 /-- [writfold_core::gate::judge]:
-    Source: 'crates/writfold-core/src/gate.rs', lines 204:0-212:1
+    Source: 'crates/writfold-core/src/gate.rs', lines 232:0-240:1
     Visibility: public -/
 def gate.judge
   (receipts : Slice gate.Recorded) (definition : Slice Std.U8)
@@ -2833,7 +2859,7 @@ def gate.judge
   gate.state s
 
 /-- [writfold_core::gate::Said]
-    Source: 'crates/writfold-core/src/gate.rs', lines 260:0-266:1
+    Source: 'crates/writfold-core/src/gate.rs', lines 288:0-294:1
     Visibility: public -/
 structure gate.Said where
   attested : Bool
@@ -2842,7 +2868,7 @@ structure gate.Said where
   bound : Bool
 
 /-- [writfold_core::gate::stands]:
-    Source: 'crates/writfold-core/src/gate.rs', lines 272:0-280:1
+    Source: 'crates/writfold-core/src/gate.rs', lines 300:0-308:1
     Visibility: public -/
 def gate.stands
   (said : gate.Said) (attested : Bool) (definition : Slice Std.U8)
@@ -2860,7 +2886,7 @@ def gate.stands
     else ok false
 
 /-- [writfold_core::gate::attests]:
-    Source: 'crates/writfold-core/src/gate.rs', lines 284:0-286:1
+    Source: 'crates/writfold-core/src/gate.rs', lines 312:0-314:1
     Visibility: public -/
 def gate.attests (said : gate.Said) : Result Bool := do
   if said.attested
@@ -2868,7 +2894,7 @@ def gate.attests (said : gate.Said) : Result Bool := do
   else ok false
 
 /-- [writfold_core::gate::statements]: loop body 0:
-    Source: 'crates/writfold-core/src/gate.rs', lines 297:4-308:5
+    Source: 'crates/writfold-core/src/gate.rs', lines 325:4-336:5
     Visibility: public -/
 @[rust_loop_body]
 def gate.statements_loop.body
@@ -2899,7 +2925,7 @@ def gate.statements_loop.body
   else ok (done (attested_current, attested_any, waived_current))
 
 /-- [writfold_core::gate::statements]: loop 0:
-    Source: 'crates/writfold-core/src/gate.rs', lines 297:4-308:5
+    Source: 'crates/writfold-core/src/gate.rs', lines 325:4-336:5
     Visibility: public -/
 @[rust_loop]
 def gate.statements_loop
@@ -2915,7 +2941,7 @@ def gate.statements_loop
     (attested_current, attested_any, waived_current, index)
 
 /-- [writfold_core::gate::statements]:
-    Source: 'crates/writfold-core/src/gate.rs', lines 292:0-314:1
+    Source: 'crates/writfold-core/src/gate.rs', lines 320:0-342:1
     Visibility: public -/
 def gate.statements
   (said : Slice gate.Said) (definition : Slice Std.U8) (content : Slice Std.U8)
@@ -3001,7 +3027,7 @@ inductive grounding.Grounding where
 | Ungrounded : grounding.Grounding
 
 /-- [writfold_core::ground::of_gate]:
-    Source: 'crates/writfold-core/src/ground.rs', lines 20:0-29:1
+    Source: 'crates/writfold-core/src/ground.rs', lines 19:0-28:1
     Visibility: public -/
 def ground.of_gate
   (found : Bool) (standing : gate.Standing) : Result grounding.Grounding := do
@@ -3020,7 +3046,7 @@ def ground.of_gate
   else ok grounding.Grounding.Ungrounded
 
 /-- [writfold_core::ground::ReceiptFacts]
-    Source: 'crates/writfold-core/src/ground.rs', lines 32:0-43:1
+    Source: 'crates/writfold-core/src/ground.rs', lines 31:0-42:1
     Visibility: public -/
 structure ground.ReceiptFacts where
   same_subject : Bool
@@ -3030,7 +3056,7 @@ structure ground.ReceiptFacts where
   gate_met : Bool
 
 /-- [writfold_core::ground::of_receipt]:
-    Source: 'crates/writfold-core/src/ground.rs', lines 46:0-57:1
+    Source: 'crates/writfold-core/src/ground.rs', lines 45:0-56:1
     Visibility: public -/
 def ground.of_receipt
   (facts : ground.ReceiptFacts) : Result grounding.Grounding := do
@@ -3050,22 +3076,8 @@ def ground.of_receipt
     else ok grounding.Grounding.Ungrounded
   else ok grounding.Grounding.Ungrounded
 
-/-- [writfold_core::ground::of_citations]:
-    Source: 'crates/writfold-core/src/ground.rs', lines 61:0-67:1
-    Visibility: public -/
-def ground.of_citations
-  (count : Std.Usize) (not_fresh : Std.Usize) :
-  Result grounding.Grounding
-  := do
-  if count > 0#usize
-  then
-    if not_fresh = 0#usize
-    then ok grounding.Grounding.Grounded
-    else ok grounding.Grounding.Ungrounded
-  else ok grounding.Grounding.Ungrounded
-
 /-- [writfold_core::ground::of_token]:
-    Source: 'crates/writfold-core/src/ground.rs', lines 71:0-77:1
+    Source: 'crates/writfold-core/src/ground.rs', lines 60:0-66:1
     Visibility: public -/
 def ground.of_token
   (count : Std.Usize) (not_fresh : Std.Usize) :
@@ -3106,7 +3118,7 @@ def observe.grounds
   | observe.Status.Error => ok false
 
 /-- [writfold_core::ground::of_observation]:
-    Source: 'crates/writfold-core/src/ground.rs', lines 81:0-87:1
+    Source: 'crates/writfold-core/src/ground.rs', lines 70:0-76:1
     Visibility: public -/
 def ground.of_observation
   (status : observe.Status) (count : Std.Usize) (not_fresh : Std.Usize) :
@@ -3121,7 +3133,7 @@ def ground.of_observation
   else ok grounding.Grounding.Ungrounded
 
 /-- [writfold_core::ground::of_statement]:
-    Source: 'crates/writfold-core/src/ground.rs', lines 90:0-96:1
+    Source: 'crates/writfold-core/src/ground.rs', lines 79:0-85:1
     Visibility: public -/
 def ground.of_statement
   (current_attestation : Bool) : Result grounding.Grounding := do
@@ -3130,7 +3142,7 @@ def ground.of_statement
   else ok grounding.Grounding.Ungrounded
 
 /-- [writfold_core::ground::moved]:
-    Source: 'crates/writfold-core/src/ground.rs', lines 100:0-102:1
+    Source: 'crates/writfold-core/src/ground.rs', lines 89:0-91:1
     Visibility: public -/
 def ground.moved
   (now : grounding.Grounding) (same_word : Bool) : Result Bool := do
@@ -4284,6 +4296,70 @@ def order.newest_loop
 @[reducible]
 def order.newest (items : Slice order.Keyed) : Result (Option Std.Usize) := do
   order.newest_loop items none 0#usize
+
+/-- [writfold_core::packet::cut]: loop body 0:
+    Source: 'crates/writfold-core/src/packet.rs', lines 20:4-29:1
+    Visibility: public -/
+@[rust_loop_body]
+def packet.cut_loop.body
+  (costs : Slice Std.Usize) (budget : Std.Usize) (used : Std.Usize)
+  (index : Std.Usize) :
+  Result (ControlFlow (Std.Usize × Std.Usize) Std.Usize)
+  := do
+  let i := Slice.len costs
+  if index < i
+  then
+    let cost ← Slice.index_usize costs index
+    let i1 ← budget - used
+    if cost > i1
+    then ok (done index)
+    else
+      let used1 ← used + cost
+      let index1 ← index + 1#usize
+      ok (cont (used1, index1))
+  else let index1 := Slice.len costs
+       ok (done index1)
+
+/-- [writfold_core::packet::cut]: loop 0:
+    Source: 'crates/writfold-core/src/packet.rs', lines 20:4-29:1
+    Visibility: public -/
+@[rust_loop]
+def packet.cut_loop
+  (costs : Slice Std.Usize) (budget : Std.Usize) (used : Std.Usize)
+  (index : Std.Usize) :
+  Result Std.Usize
+  := do
+  loop
+    (fun (used1, index1) => packet.cut_loop.body costs budget used1 index1)
+    (used, index)
+
+/-- [writfold_core::packet::cut]:
+    Source: 'crates/writfold-core/src/packet.rs', lines 17:0-29:1
+    Visibility: public -/
+@[reducible]
+def packet.cut
+  (costs : Slice Std.Usize) (budget : Std.Usize) : Result Std.Usize := do
+  packet.cut_loop costs budget 0#usize 0#usize
+
+/-- [writfold_core::packet::required_omitted]:
+    Source: 'crates/writfold-core/src/packet.rs', lines 37:0-43:1
+    Visibility: public -/
+def packet.required_omitted
+  (kept : Std.Usize) (required : Std.Usize) : Result Std.Usize := do
+  if kept >= required
+  then ok 0#usize
+  else required - kept
+
+/-- [writfold_core::packet::complete]:
+    Source: 'crates/writfold-core/src/packet.rs', lines 47:0-49:1
+    Visibility: public -/
+def packet.complete
+  (kept : Std.Usize) (required : Std.Usize) (unreadable : Std.Usize) :
+  Result Bool
+  := do
+  if kept >= required
+  then ok (unreadable = 0#usize)
+  else ok false
 
 /-- [writfold_core::pin::Pin]
     Source: 'crates/writfold-core/src/pin.rs', lines 27:0-37:1

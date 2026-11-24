@@ -92,10 +92,7 @@ pub fn moved(now: Grounding, same_word: bool) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::{
-        ReceiptFacts, moved, of_gate, of_observation, of_receipt, of_statement,
-        of_token,
-    };
+    use super::{ReceiptFacts, moved, of_gate, of_observation, of_receipt, of_statement, of_token};
     use crate::gate::{Standing, State};
     use crate::grounding::Grounding;
     use crate::observe::{ALL, Status};

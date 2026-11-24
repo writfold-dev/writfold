@@ -61,6 +61,7 @@ pub mod inventory;
 pub mod investigation;
 pub mod observe;
 pub mod order;
+pub mod packet;
 pub mod pin;
 pub mod plan;
 pub mod pointer;

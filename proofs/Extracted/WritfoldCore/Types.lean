@@ -91,7 +91,7 @@ inductive catalog.Verdict where
 | Clean : catalog.Verdict
 
 /-- [writfold_core::gate::State]
-    Source: 'crates/writfold-core/src/gate.rs', lines 77:0-89:1
+    Source: 'crates/writfold-core/src/gate.rs', lines 105:0-117:1
     Visibility: public -/
 @[discriminant isize]
 inductive gate.State where
@@ -102,7 +102,7 @@ inductive gate.State where
 | Unknown : gate.State
 
 /-- [writfold_core::gate::Standing]
-    Source: 'crates/writfold-core/src/gate.rs', lines 219:0-225:1
+    Source: 'crates/writfold-core/src/gate.rs', lines 247:0-253:1
     Visibility: public -/
 @[discriminant isize]
 inductive gate.Standing where
@@ -183,6 +183,15 @@ inductive gate.Outcome where
 | Pass : gate.Outcome
 | Fail : gate.Outcome
 | Unknown : gate.Outcome
+
+/-- [writfold_core::gate::Kept]
+    Source: 'crates/writfold-core/src/gate.rs', lines 78:0-86:1
+    Visibility: public -/
+@[discriminant isize]
+inductive gate.Kept where
+| Nothing : gate.Kept
+| All : gate.Kept
+| Missing : gate.Kept
 
 /-- [writfold_core::graph::Plan]
     Source: 'crates/writfold-core/src/graph.rs', lines 16:0-21:1

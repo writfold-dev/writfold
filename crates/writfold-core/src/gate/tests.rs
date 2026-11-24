@@ -1,6 +1,36 @@
 use super::{
-    Ending, Evidence, Outcome, Standing, State, Statements, bound, outcome, standing, state,
+    Ending, Evidence, Kept, Outcome, Standing, State, Statements, bound, outcome, outcome_kept,
+    standing, state,
 };
+
+/// Missing evidence only ever blocks a pass; declaring nothing or keeping
+/// everything changes nothing, and a failure stays a failure.
+#[test]
+fn kept_evidence_only_blocks_a_pass() {
+    let endings = [
+        Ending::Exited(0),
+        Ending::Exited(1),
+        Ending::Exited(-3),
+        Ending::Signaled,
+        Ending::TimedOut,
+        Ending::Error,
+    ];
+    for ending in endings {
+        for moved in [false, true] {
+            let plain = outcome(ending, moved);
+            assert_eq!(outcome_kept(ending, moved, Kept::Nothing), plain);
+            assert_eq!(outcome_kept(ending, moved, Kept::All), plain);
+            let missing = outcome_kept(ending, moved, Kept::Missing);
+            assert_ne!(missing, Outcome::Pass);
+            let want = if plain == Outcome::Pass {
+                Outcome::Unknown
+            } else {
+                plain
+            };
+            assert_eq!(missing, want);
+        }
+    }
+}
 
 /// Over every input: an attested-class obligation is never satisfied,
 /// a statement never makes anything `Satisfied`, a waiver stands only

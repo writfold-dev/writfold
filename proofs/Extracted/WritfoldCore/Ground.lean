@@ -23,7 +23,7 @@ set_option maxRecDepth 2048
 namespace writfold_core
 
 /-- [writfold_core::ground::of_gate]:
-    Source: 'crates/writfold-core/src/ground.rs', lines 20:0-29:1
+    Source: 'crates/writfold-core/src/ground.rs', lines 19:0-28:1
     Visibility: public -/
 def ground.of_gate
   (found : Bool) (standing : gate.Standing) : Result grounding.Grounding := do
@@ -42,7 +42,7 @@ def ground.of_gate
   else ok grounding.Grounding.Ungrounded
 
 /-- [writfold_core::ground::ReceiptFacts]
-    Source: 'crates/writfold-core/src/ground.rs', lines 32:0-43:1
+    Source: 'crates/writfold-core/src/ground.rs', lines 31:0-42:1
     Visibility: public -/
 structure ground.ReceiptFacts where
   same_subject : Bool
@@ -52,7 +52,7 @@ structure ground.ReceiptFacts where
   gate_met : Bool
 
 /-- [writfold_core::ground::of_receipt]:
-    Source: 'crates/writfold-core/src/ground.rs', lines 46:0-57:1
+    Source: 'crates/writfold-core/src/ground.rs', lines 45:0-56:1
     Visibility: public -/
 def ground.of_receipt
   (facts : ground.ReceiptFacts) : Result grounding.Grounding := do
@@ -72,22 +72,8 @@ def ground.of_receipt
     else ok grounding.Grounding.Ungrounded
   else ok grounding.Grounding.Ungrounded
 
-/-- [writfold_core::ground::of_citations]:
-    Source: 'crates/writfold-core/src/ground.rs', lines 61:0-67:1
-    Visibility: public -/
-def ground.of_citations
-  (count : Std.Usize) (not_fresh : Std.Usize) :
-  Result grounding.Grounding
-  := do
-  if count > 0#usize
-  then
-    if not_fresh = 0#usize
-    then ok grounding.Grounding.Grounded
-    else ok grounding.Grounding.Ungrounded
-  else ok grounding.Grounding.Ungrounded
-
 /-- [writfold_core::ground::of_token]:
-    Source: 'crates/writfold-core/src/ground.rs', lines 71:0-77:1
+    Source: 'crates/writfold-core/src/ground.rs', lines 60:0-66:1
     Visibility: public -/
 def ground.of_token
   (count : Std.Usize) (not_fresh : Std.Usize) :
@@ -101,7 +87,7 @@ def ground.of_token
   else ok grounding.Grounding.Ungrounded
 
 /-- [writfold_core::ground::of_observation]:
-    Source: 'crates/writfold-core/src/ground.rs', lines 81:0-87:1
+    Source: 'crates/writfold-core/src/ground.rs', lines 70:0-76:1
     Visibility: public -/
 def ground.of_observation
   (status : observe.Status) (count : Std.Usize) (not_fresh : Std.Usize) :
@@ -116,7 +102,7 @@ def ground.of_observation
   else ok grounding.Grounding.Ungrounded
 
 /-- [writfold_core::ground::of_statement]:
-    Source: 'crates/writfold-core/src/ground.rs', lines 90:0-96:1
+    Source: 'crates/writfold-core/src/ground.rs', lines 79:0-85:1
     Visibility: public -/
 def ground.of_statement
   (current_attestation : Bool) : Result grounding.Grounding := do
@@ -125,7 +111,7 @@ def ground.of_statement
   else ok grounding.Grounding.Ungrounded
 
 /-- [writfold_core::ground::moved]:
-    Source: 'crates/writfold-core/src/ground.rs', lines 100:0-102:1
+    Source: 'crates/writfold-core/src/ground.rs', lines 89:0-91:1
     Visibility: public -/
 def ground.moved
   (now : grounding.Grounding) (same_word : Bool) : Result Bool := do
