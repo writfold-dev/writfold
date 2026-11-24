@@ -14,7 +14,7 @@ The standing authorities sit above every RFC: the
 - Git text is the source of truth.
 - The index can always be rebuilt.
 - No server on the product path.
-- Formats and citation tokens are preserved.
+- Writfold is pre-alpha: format changes may simplify the current design; backward compatibility is not required (owner, 24 November 2026, [#105](https://github.com/writfold-dev/writfold/issues/105), [policy PR #107](https://github.com/writfold-dev/writfold/pull/107)).
 - Lean proofs come first.
 - The size budgets apply.
 
@@ -185,3 +185,7 @@ Rows are in creation order.
 | [2026-11-22](2026-11-22-split-translation.md) | Split translation: a mutant rebuilds only the proofs it can reach | accepted | complete | [#95](https://github.com/writfold-dev/writfold/issues/95) |
 | [2026-11-22](2026-11-22-missing-history.md) | Missing history is not evidence of change | accepted | complete | [#90](https://github.com/writfold-dev/writfold/issues/90) |
 | [2026-11-23](2026-11-23-run-list-gaps.md) | The run list names what it cannot list | accepted | complete | [#98](https://github.com/writfold-dev/writfold/issues/98) |
+| [2026-11-24](2026-11-24-reflection-reuse.md) | Reflection reuse with scoped, revisable lessons | draft | not-started | [#108](https://github.com/writfold-dev/writfold/issues/108) |
+| [2026-11-24](2026-11-24-resume-context.md) | Bounded context reconstruction for a fresh session | draft | not-started | [#109](https://github.com/writfold-dev/writfold/issues/109) |
+| [2026-11-24](2026-11-24-task-contracts-and-replanning.md) | Task contracts that survive recorded replanning | draft | not-started | [#110](https://github.com/writfold-dev/writfold/issues/110) |
+| [2026-11-24](2026-11-24-attempt-comparison.md) | Honest comparison of repeated attempts | draft | not-started | [#111](https://github.com/writfold-dev/writfold/issues/111) |
