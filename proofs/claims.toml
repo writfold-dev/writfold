@@ -1,6 +1,6 @@
 # Proof claims for `cargo tauten proofs` (docs/writfold/tauten-adoption.md).
-# Drafted by proofs/tauten_claims.py from proofs/Total.lean and
-# proofs/mutants.py; the gate (proofs/tauten-gate.sh) decides each outcome
+# Written by hand; proofs/claims_coverage.py checks every required theorem
+# is claimed or in proofs/unclaimed.txt (#124). The gate (proofs/tauten-gate.sh) decides each outcome
 # and `cargo tauten proofs` records it in proofs/claims.json.
 version = 1
 

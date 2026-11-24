@@ -199,7 +199,7 @@ went from 679 to 549 accepted findings; the check passes with 0 errors,
 | `proofs/tauten-gate.sh` | Host side: checks Docker, builds the proofs image from this tree (`docker build --target gate`, as in `aeneas.md`), runs the adapter with `--network none`. |
 | `proofs/tauten_gate.py` | In the image: runs the unchanged `proofs/gate.sh` and turns what it printed into `TAUTEN-PROOFS` lines (stages reached, each `AXIOMS` line, each `calibration:` or `FAIL` line of `mutants.py`), then runs `proofs/Total.lean`. A stage gate.sh did not reach is `fail`. |
 | `proofs/Total.lean` | Not part of the gate: tauten's template check of the total shape (`totalOver`), over `Writfold.Core`, printing `TOTAL` (and `SPEC` for triples with hypotheses). |
-| `proofs/tauten_claims.py` | Drafts `claims.toml` from `Total.lean`'s output and `mutants.py`. |
+| `proofs/claims_coverage.py` | Since v0.6.0-dev.19 (#124): every theorem `Audit.lean` requires is in a claim or in `proofs/unclaimed.txt`, a backlog that only shrinks. It runs in the quality gate. It replaces `proofs/tauten_claims.py`, a drafter that had not matched `claims.toml` since 19 November and was deleted. New claims are written by hand. |
 | `Pin.lean`, `Bind.lean` | `holds_from_total`, `answered_from_total`: the two functions whose loop specs need a prefix hypothesis now also have a hypothesis-free no-failure theorem (5 findings). |
 | `mutants.py`, `Audit.lean` | 10 mutants: two out-of-bounds reads that must break the new total theorems, and eight skips-last mutants for loops no mutant broke (`any_stale`, `idle::newest`, `policy::{any_unpinned, any_waived, any_attested, any_open, all_passed}`, `best_recorded`; 17 findings), since a claim needs a killed mutant. Their theorems joined the required claims. |
 
@@ -209,7 +209,7 @@ went from 679 to 549 accepted findings; the check passes with 0 errors,
 docker build -f proofs/Dockerfile --target gate -t writfold-proofs:tauten .
 docker run --rm --network none writfold-proofs:tauten \
     sh -c 'cd proofs && lake build >&2 && lake env lean Total.lean' > /tmp/total.txt
-python3 proofs/tauten_claims.py /tmp/total.txt     # redraft claims.toml; review the diff
+python3 proofs/claims_coverage.py                    # every required theorem claimed or in the backlog
 scripts/release claims                               # pre-flight, then `cargo tauten proofs --level ship`; writes proofs/claims.json
 scripts/release claims --full                        # every mutant (~1.5 h): before a stable tag, once per milestone
 scripts/tauten-check                                 # subsumed findings are warnings
