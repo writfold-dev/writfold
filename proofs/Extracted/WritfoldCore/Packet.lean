@@ -65,7 +65,7 @@ def packet.cut
   packet.cut_loop costs budget 0#usize 0#usize
 
 /-- [writfold_core::packet::required_omitted]:
-    Source: 'crates/writfold-core/src/packet.rs', lines 37:0-43:1
+    Source: 'crates/writfold-core/src/packet.rs', lines 37:0-39:1
     Visibility: public -/
 def packet.required_omitted
   (kept : Std.Usize) (required : Std.Usize) : Result Std.Usize := do
@@ -74,7 +74,7 @@ def packet.required_omitted
   else required - kept
 
 /-- [writfold_core::packet::complete]:
-    Source: 'crates/writfold-core/src/packet.rs', lines 47:0-49:1
+    Source: 'crates/writfold-core/src/packet.rs', lines 43:0-45:1
     Visibility: public -/
 def packet.complete
   (kept : Std.Usize) (required : Std.Usize) (unreadable : Std.Usize) :

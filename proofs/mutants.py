@@ -207,8 +207,8 @@ MUTANTS = (
            ("Writfold.Core.Packet.complete_iff",)),
     # packet: the left-out required rows are counted
     Mutant("omitted-reads-zero", "packet.rs",
-           "    } else {\n        required - kept\n    }",
-           "    } else {\n        0\n    }",
+           "    if kept >= required { 0 } else { required - kept }",
+           "    if kept >= required { 0 } else { 0 }",
            ("Writfold.Core.Packet.required_omitted_spec", "Writfold.Core.Packet.omitted_counted")),
     # runs (#98): --open never hides a state outside the vocabulary
     Mutant("other-hidden-by-open", "runs.rs",
