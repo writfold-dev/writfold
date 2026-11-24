@@ -342,18 +342,8 @@ fn answer(session: &Session<'_>, request: &Request) -> Result<(Answer, &'static 
                 args,
             )
         }
-        Verb::Resume { run } => {
-            let (answer, id) = verbs::runs::resume(session, run.as_deref(), &request.cwd)?;
-            (answer, "resume", vec![id])
-        }
-        Verb::Packet { run } => {
-            let (answer, id) =
-                verbs::runs::packet(session, run.as_deref(), &request.cwd, request.budget)?;
-            (answer, "resume", vec![id, "packet".into()])
-        }
-        Verb::Attach { run } => {
-            let (answer, id) = verbs::runs::attach(session, run, &request.cwd)?;
-            (answer, "resume", vec![id])
+        Verb::Resume { .. } | Verb::Packet { .. } | Verb::Attach { .. } => {
+            resumed(session, request)?
         }
         Verb::Policy => (
             verbs::policy::policy(session, &request.cwd)?,
@@ -374,6 +364,29 @@ fn answer(session: &Session<'_>, request: &Request) -> Result<(Answer, &'static 
         )?,
         other => graph(session, other)?,
     })
+}
+
+/// `resume`, `resume --packet` and `resume --here`: one run, answered as
+/// `resume`.
+fn resumed(
+    session: &Session<'_>,
+    request: &Request,
+) -> Result<(Answer, &'static str, Vec<String>)> {
+    let cwd = &request.cwd;
+    let ((answer, id), packet) = match &request.verb {
+        Verb::Packet { run } => (
+            verbs::runs::packet(session, run.as_deref(), cwd, request.budget)?,
+            true,
+        ),
+        Verb::Attach { run } => (verbs::runs::attach(session, run, cwd)?, false),
+        Verb::Resume { run } => (verbs::runs::resume(session, run.as_deref(), cwd)?, false),
+        _ => (verbs::runs::resume(session, None, cwd)?, false),
+    };
+    let mut args = vec![id];
+    if packet {
+        args.push("packet".into());
+    }
+    Ok((answer, "resume", args))
 }
 
 /// The search, graph and housekeeping verbs.
