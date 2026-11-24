@@ -66,6 +66,7 @@ pub mod pin;
 pub mod plan;
 pub mod pointer;
 pub mod policy;
+pub mod prose;
 pub mod publish;
 pub mod runs;
 pub mod scope;

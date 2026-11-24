@@ -210,6 +210,26 @@ MUTANTS = (
            "    if kept >= required { 0 } else { required - kept }",
            "    if kept >= required { 0 } else { 0 }",
            ("Writfold.Core.Packet.required_omitted_spec",)),
+    # prose (#127): an empty rule set is never a pass
+    Mutant("prose-no-rules-pass", "prose.rs",
+           "    if rules == 0 {\n        return Outcome::Unknown;\n    }",
+           "    if rules == 0 {\n        return Outcome::Pass;\n    }",
+           ("Writfold.Core.Prose.verdict_spec",)),
+    # prose: advice is never counted as blocking
+    Mutant("prose-advice-blocks", "prose.rs",
+           "            Weight::Advice => {}",
+           "            Weight::Advice => count += 1,",
+           ("Writfold.Core.Prose.blocking_loop_spec",)),
+    # prose: a blocking match fails the check
+    Mutant("prose-blocking-ignored", "prose.rs",
+           "    if blocking(found) > 0 {",
+           "    if blocking(found) > usize::MAX {",
+           ("Writfold.Core.Prose.verdict_spec",)),
+    # prose: a pass agrees only with no blocking findings
+    Mutant("prose-agrees-pass-any", "prose.rs",
+           "        Outcome::Pass => blocking == 0,",
+           "        Outcome::Pass => true,",
+           ("Writfold.Core.Prose.agrees_spec",)),
     # runs (#98): --open never hides a state outside the vocabulary
     Mutant("other-hidden-by-open", "runs.rs",
            "        State::Other => Shown::Flagged,",

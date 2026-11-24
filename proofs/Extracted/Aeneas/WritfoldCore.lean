@@ -5843,6 +5843,76 @@ def policy.summary
         then ok policy.Summary.ClosedIncomplete
         else ok policy.Summary.Incomplete
 
+/-- [writfold_core::prose::Weight]
+    Source: 'crates/writfold-core/src/prose.rs', lines 15:0-20:1
+    Visibility: public -/
+@[discriminant isize]
+inductive prose.Weight where
+| Advice : prose.Weight
+| Blocking : prose.Weight
+
+/-- [writfold_core::prose::blocking]: loop body 0:
+    Source: 'crates/writfold-core/src/prose.rs', lines 26:4-32:5
+    Visibility: public -/
+@[rust_loop_body]
+def prose.blocking_loop.body
+  (found : Slice prose.Weight) (count : Std.Usize) (index : Std.Usize) :
+  Result (ControlFlow (Std.Usize × Std.Usize) Std.Usize)
+  := do
+  let i := Slice.len found
+  if index < i
+  then
+    let w ← Slice.index_usize found index
+    let count1 ←
+      match w with
+      | prose.Weight.Advice => ok count
+      | prose.Weight.Blocking => count + 1#usize
+    let index1 ← index + 1#usize
+    ok (cont (count1, index1))
+  else ok (done count)
+
+/-- [writfold_core::prose::blocking]: loop 0:
+    Source: 'crates/writfold-core/src/prose.rs', lines 26:4-32:5
+    Visibility: public -/
+@[rust_loop]
+def prose.blocking_loop
+  (found : Slice prose.Weight) (count : Std.Usize) (index : Std.Usize) :
+  Result Std.Usize
+  := do
+  loop
+    (fun (count1, index1) => prose.blocking_loop.body found count1 index1)
+    (count, index)
+
+/-- [writfold_core::prose::blocking]:
+    Source: 'crates/writfold-core/src/prose.rs', lines 23:0-34:1
+    Visibility: public -/
+@[reducible]
+def prose.blocking (found : Slice prose.Weight) : Result Std.Usize := do
+  prose.blocking_loop found 0#usize 0#usize
+
+/-- [writfold_core::prose::verdict]:
+    Source: 'crates/writfold-core/src/prose.rs', lines 38:0-47:1
+    Visibility: public -/
+def prose.verdict
+  (rules : Std.Usize) (found : Slice prose.Weight) : Result gate.Outcome := do
+  if rules = 0#usize
+  then ok gate.Outcome.Unknown
+  else
+    let i ← prose.blocking found
+    if i > 0#usize
+    then ok gate.Outcome.Fail
+    else ok gate.Outcome.Pass
+
+/-- [writfold_core::prose::agrees]:
+    Source: 'crates/writfold-core/src/prose.rs', lines 51:0-57:1
+    Visibility: public -/
+def prose.agrees
+  (outcome : gate.Outcome) (blocking : Std.Usize) : Result Bool := do
+  match outcome with
+  | gate.Outcome.Pass => ok (blocking = 0#usize)
+  | gate.Outcome.Fail => ok (blocking > 0#usize)
+  | gate.Outcome.Unknown => ok true
+
 /-- [writfold_core::publish::Publish]
     Source: 'crates/writfold-core/src/publish.rs', lines 13:0-20:1
     Visibility: public -/

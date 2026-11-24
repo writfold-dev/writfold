@@ -498,6 +498,14 @@ inductive policy.How where
 | Attested : policy.How
 | Waived : policy.How
 
+/-- [writfold_core::prose::Weight]
+    Source: 'crates/writfold-core/src/prose.rs', lines 15:0-20:1
+    Visibility: public -/
+@[discriminant isize]
+inductive prose.Weight where
+| Advice : prose.Weight
+| Blocking : prose.Weight
+
 /-- [writfold_core::publish::Publish]
     Source: 'crates/writfold-core/src/publish.rs', lines 13:0-20:1
     Visibility: public -/
