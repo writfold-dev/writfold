@@ -1,0 +1,23 @@
+#!/bin/sh
+# A stand-in for the Plyrune checker, for Writfold's tests only. It is NOT
+# Plyrune and its reports are NOT the agreed exchange profile
+# (plyrune-dev/plyrune#39): it prints a pinned fixture report chosen by
+# PLYRUNE_STANDIN_MODE so the gate recipe can be exercised without the real
+# binary. Modes: pass, fail, noreport, crash.
+set -eu
+here=$(cd "$(dirname "$0")/.." && pwd)
+case "${1:-}" in
+  --version) echo "plyrune ${PLYRUNE_STANDIN_VERSION:-0.0.0-standin}"; exit 0 ;;
+  check) shift ;;
+  *) echo "stand-in: unknown command" >&2; exit 2 ;;
+esac
+report=
+while [ $# -gt 0 ]; do
+  case "$1" in --report) report=$2; shift 2 ;; *) shift ;; esac
+done
+case "${PLYRUNE_STANDIN_MODE:-pass}" in
+  pass) cp "$here/reports/pass.json" "$report"; exit 0 ;;
+  fail) cp "$here/reports/fail.json" "$report"; exit 1 ;;
+  noreport) exit 0 ;;
+  crash) head -c 40 "$here/reports/pass.json" > "$report"; kill -9 $$ ;;
+esac

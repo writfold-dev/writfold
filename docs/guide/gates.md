@@ -250,6 +250,45 @@ description = "subject at most 72 characters, a blank second line, body wrapped 
 
 A script gate reports findings as `<line>: <text>` on stdout; only a clean exit 0 passes. A timeout, a signal or a draft that changed while it ran is `unknown`. A worked example is in `fixtures/kb/commit-message/`.
 
+## An external checker as a gate (built in v0.6.0-dev.19)
+
+A checker that writes its own report, such as [Plyrune](https://github.com/plyrune-dev/plyrune) ([#106](https://github.com/writfold-dev/writfold/issues/106)), runs as an ordinary command gate. A small wrapper shipped beside the definition is the adapter, and `retain` keeps the report with the receipt. Nothing in Writfold needs the checker unless you define such a gate. Removing the integration means deleting the two files.
+
+```toml
+# .writfold/gates/plyrune.toml, with plyrune-check.sh beside it
+schema = "writfold-gate/1"
+id = "plyrune"
+version = 1
+class = "mechanical"
+argv = ["sh", "{gate}/plyrune-check.sh", "{artifacts}", "requirements/r1.md"]
+timeout_seconds = 300
+scope = ["src/**", "requirements/**"]
+retain = ["report.json"]
+```
+
+[`recipes/plyrune-check.sh`](recipes/plyrune-check.sh) is the wrapper:
+- With the checker not on `PATH`, it exits 127, and the gate stays owed with that message. It never installs or downloads anything.
+- It refuses any checker version but its pin (exit 3).
+- It passes the requirement, the base commit and the work tree explicitly.
+- It copies the checker's own report, unchanged, to `{artifacts}/report.json`.
+
+The wrapper's bytes and the pin are in the definition digest. The requirement is in `scope`, so editing either the wrapper or the requirement, or adding a file in scope, makes the receipt stale. With no report the receipt is `unknown`, whatever the checker's exit status. A fresh clone reads the gate from the committed report, and without it never reads the gate as met.
+
+What a pass means today: the pinned checker exited 0 and its report was kept. Writfold does not yet read the report. Checking its profile, requirement and candidate against the gate's subject waits for the exchange profile agreed in [plyrune-dev/plyrune#39](https://github.com/plyrune-dev/plyrune/issues/39) ([#122](https://github.com/writfold-dev/writfold/issues/122)). A pass satisfies this one gate: it does not close a task or meet any other gate.
+
+[`recipes/plyrune-rehearsal.sh`](recipes/plyrune-rehearsal.sh) runs every case against the stand-in checker in `fixtures/plyrune/`, which is not Plyrune and does not use its profile. The cases are:
+- no checker;
+- another version;
+- the checker says no;
+- no report;
+- a crash mid-report;
+- a pass;
+- an edited requirement;
+- a new in-scope file;
+- a fresh clone with and without the evidence.
+
+The test suite runs the rehearsal (`kb_plyrune_recipe`). Running it with a pinned real checker instead of the stand-in is the paired smoke test, planned once the profile is fixed.
+
 ## Run-record checks
 
 A gate of class `run-record` runs no command: `gate run` judges the run's own records against the built-in requirements its `require` list names, and records a receipt like any other (exit status 0 for met, 1 for not met, with the reason as a note).
