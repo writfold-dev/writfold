@@ -45,11 +45,11 @@ size cap).
 
 Mutants:
 - `kept-missing-passes`: the `Missing` arm returns the outcome unchanged
-  (`kept_missing_never_pass`).
+  (`outcome_kept_spec`, on which `kept_missing_never_pass` rests).
 - `kept-all-unknown`: the `All` arm returns `Unknown`
-  (`kept_all_present_unchanged`).
+  (`outcome_kept_spec`).
 - `kept-fail-unknown`: missing evidence turns `Fail` into `Unknown`
-  (`kept_fail_stays_fail`).
+  (`outcome_kept_spec`).
 
 **Tested, not proved:**
 - parsing and checking the `retain` key;

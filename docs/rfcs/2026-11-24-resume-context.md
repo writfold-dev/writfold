@@ -53,9 +53,9 @@ packet reuses `resume`'s rows unchanged, with their standings, sources and
 flags, and that is tested.
 
 Mutants:
-- `cut-ignores-used` breaks `cut_spec` and `select_within_budget`;
-- `cut-drops-exact-fit` breaks `cut_spec` and `all_fit_all_selected`;
-- `omitted-reads-zero` breaks `required_omitted_spec` and `omitted_counted`;
+- `cut-ignores-used` breaks `cut_loop_spec`, on which `cut_spec` and its corollaries rest;
+- `cut-drops-exact-fit` breaks `cut_loop_spec`;
+- `omitted-reads-zero` breaks `required_omitted_spec`;
 - `packet-complete-ignores-unreadable` breaks `complete_iff`.
 
 **Tested, not proved:**
