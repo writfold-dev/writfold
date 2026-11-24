@@ -185,3 +185,6 @@ Rows are in creation order.
 | [2026-11-22](2026-11-22-split-translation.md) | Split translation: a mutant rebuilds only the proofs it can reach | accepted | complete | [#95](https://github.com/writfold-dev/writfold/issues/95) |
 | [2026-11-22](2026-11-22-missing-history.md) | Missing history is not evidence of change | accepted | complete | [#90](https://github.com/writfold-dev/writfold/issues/90) |
 | [2026-11-23](2026-11-23-run-list-gaps.md) | The run list names what it cannot list | accepted | complete | [#98](https://github.com/writfold-dev/writfold/issues/98) |
+| [2026-11-24](2026-11-24-delivery-check-diagnostics.md) | Structured diagnostics from delivery checks | draft | not-started | [#115](https://github.com/writfold-dev/writfold/issues/115) |
+| [2026-11-24](2026-11-24-candidate-check-inputs.md) | Complete declared inputs for candidate checks | draft | not-started | [#116](https://github.com/writfold-dev/writfold/issues/116) |
+| [2026-11-24](2026-11-24-optional-vale-delivery-checks.md) | Optional Vale checks for delivery modes | draft | not-started | [#117](https://github.com/writfold-dev/writfold/issues/117) |
