@@ -10,9 +10,11 @@
 //! project inferred from the working directory, then the newest open run.
 //! No liveness is claimed: there is no daemon.
 mod idle;
+mod packet;
 mod plan;
 
 pub use idle::{age as idle_age, idle};
+pub use packet::packet;
 
 use super::{BOUNDARY, brief, record_row};
 use crate::emit::{Answer, More, Row};

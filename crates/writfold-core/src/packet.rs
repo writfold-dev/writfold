@@ -35,11 +35,7 @@ pub fn cut(costs: &[usize], budget: usize) -> usize {
     reason = "plain comparison and subtraction translate to Lean as written; the proof covers the bound"
 )]
 pub fn required_omitted(kept: usize, required: usize) -> usize {
-    if kept >= required {
-        0
-    } else {
-        required - kept
-    }
+    if kept >= required { 0 } else { required - kept }
 }
 
 /// A packet is complete exactly when it holds every required row and no

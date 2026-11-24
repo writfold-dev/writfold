@@ -175,6 +175,11 @@ pub fn render_row(row: &Row) -> String {
     out
 }
 
+/// The estimated tokens one row takes in a page, as the pager counts it.
+pub fn row_cost(row: &Row) -> usize {
+    cost(&render_row(row))
+}
+
 fn cost(text: &str) -> usize {
     text.split('\n')
         .map(|line| (line.len() + 1).div_ceil(4))

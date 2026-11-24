@@ -53,7 +53,7 @@ pub const VALUES: [&str; 44] = [
     "to",
 ];
 /// Flags without a value.
-pub const SWITCHES: [&str; 12] = [
+pub const SWITCHES: [&str; 13] = [
     "each",
     "here",
     "deny-warnings",
@@ -66,6 +66,7 @@ pub const SWITCHES: [&str; 12] = [
     "abandon",
     "plan",
     "gates",
+    "packet",
 ];
 
 /// The write flags each verb accepts.
@@ -73,7 +74,7 @@ pub fn allowed(verb: &str) -> &'static [&'static str] {
     match verb {
         "runs" => &["open", "plan", "idle"],
         "find" => &["eval", "each"],
-        "resume" => &["here"],
+        "resume" => &["here", "packet"],
         "guard" => &["rule", "since"],
         "delta" => &["mark", "since-mark", "since"],
         "checkpoint" => &[
@@ -146,7 +147,9 @@ pub fn runs_and_writes(
             project: common.project.clone(),
             plan: switch(common, "plan"),
         }),
-        ("resume", _) => super::lists::resume(switch(common, "here"), positional),
+        ("resume", _) => {
+            super::lists::resume(switch(common, "here"), switch(common, "packet"), positional)
+        }
         ("runs", _) => Err(format!("{name}: too many arguments")),
         ("status", [target]) if common.values.contains_key("set") => {
             super::set::status(common, target.clone()).map(Verb::Write)

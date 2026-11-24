@@ -54,6 +54,7 @@ verbs:
                                    nothing); a mark is local, and session start takes the session's
   resume [<run>]                   one run: manifest, coverage, rechecks, checkpoint tail
   resume <run> --here              first make it the current run of this session and work tree
+  resume [<run>] --packet          the bounded handover: required rows first, cut to --budget-tokens
                                    (local pointers only; a closed run is refused)
   guard status                    would guard rules pass, deny, ask or nudge for the current run?
                                    a read-only judgment, not enforcement; no command is run

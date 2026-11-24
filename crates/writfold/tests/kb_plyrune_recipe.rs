@@ -49,15 +49,27 @@ fn only_a_kept_report_with_a_clean_exit_satisfies_the_gate() -> Result {
     };
     let cases = [
         ("no checker", "[failed] mechanical fail exit=127"),
-        ("checker at another version", "[failed] mechanical fail exit=3"),
+        (
+            "checker at another version",
+            "[failed] mechanical fail exit=3",
+        ),
         ("checker says no", "[failed] mechanical fail exit=1"),
-        ("checker exits 0 but writes no report", "[unknown] mechanical unknown exit=0"),
+        (
+            "checker exits 0 but writes no report",
+            "[unknown] mechanical unknown exit=0",
+        ),
         ("checker crashes", "[failed] mechanical fail exit=137"),
         ("checker satisfied", "[satisfied] mechanical pass exit=0"),
-        ("requirement edited", "why: changed in scope: requirements/r1.md"),
+        (
+            "requirement edited",
+            "why: changed in scope: requirements/r1.md",
+        ),
         ("new in-scope file", "why: changed in scope: src/extra.rs"),
         ("fresh clone with the evidence", "gate plyrune [satisfied]"),
-        ("fresh clone without the evidence", "retained evidence report.json is not here"),
+        (
+            "fresh clone without the evidence",
+            "retained evidence report.json is not here",
+        ),
     ];
     for (title, want) in cases {
         let s = section(title);

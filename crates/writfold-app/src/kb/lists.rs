@@ -34,9 +34,20 @@ pub fn delta(common: &Common, positional: &[String]) -> Result<Verb, String> {
     }
 }
 
-/// `resume [<run>]`, and `resume <run> --here`: make the run this seat's
-/// current run (local pointers), then show it.
-pub fn resume(here: bool, positional: &[String]) -> Result<Verb, String> {
+/// `resume [<run>]`, `resume [<run>] --packet` (the bounded handover), and
+/// `resume <run> --here`: make the run this seat's current run (local
+/// pointers), then show it.
+pub fn resume(here: bool, packet: bool, positional: &[String]) -> Result<Verb, String> {
+    if packet {
+        return match (positional, here) {
+            (_, true) => Err("resume --packet does not take --here".into()),
+            ([], false) => Ok(Verb::Packet { run: None }),
+            ([run], false) => Ok(Verb::Packet {
+                run: Some(run.clone()),
+            }),
+            _ => Err("resume: too many arguments".into()),
+        };
+    }
     match (positional, here) {
         ([], false) => Ok(Verb::Resume { run: None }),
         ([run], false) => Ok(Verb::Resume {

@@ -142,6 +142,12 @@ pub enum Verb {
     Resume {
         run: Option<String>,
     },
+    /// `resume [<run>] --packet`: the run's rows a fresh session needs,
+    /// required ones first, cut to the budget, and whether nothing
+    /// required was left out ([`verbs::runs::packet`]).
+    Packet {
+        run: Option<String>,
+    },
     /// `resume <run> --here`: make the run the seat's current run (local
     /// pointers only, [`seat`]), then show it as `resume` does.
     Attach {
@@ -339,6 +345,11 @@ fn answer(session: &Session<'_>, request: &Request) -> Result<(Answer, &'static 
         Verb::Resume { run } => {
             let (answer, id) = verbs::runs::resume(session, run.as_deref(), &request.cwd)?;
             (answer, "resume", vec![id])
+        }
+        Verb::Packet { run } => {
+            let (answer, id) =
+                verbs::runs::packet(session, run.as_deref(), &request.cwd, request.budget)?;
+            (answer, "resume", vec![id, "packet".into()])
         }
         Verb::Attach { run } => {
             let (answer, id) = verbs::runs::attach(session, run, &request.cwd)?;
