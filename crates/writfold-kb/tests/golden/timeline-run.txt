@@ -7,5 +7,5 @@ plan timeline#1/first [done] 2026-11-02T12:00:00Z done timeline#1/first @runs/ru
 plan timeline#1/second [skipped] 2026-11-02T12:00:00Z skipped timeline#1/second (by owner) not needed @runs/run-20261101T090000Z-a1b2c3/plan/skip-timeline.1~second.json:1
 plan timeline#1 [spliced] 2026-11-02T12:00:00Z spliced timeline#1 @runs/run-20261101T090000Z-a1b2c3/plan/splice-timeline.1.json:1
 checkpoint 2026-11-03T16:00:00Z entry 1 of 3: Finished run-20261101T090000Z-a1b2c3. @runs/run-20261101T090000Z-a1b2c3/checkpoint.md:1
-# coverage=complete records=32/32 shown=9 omitted=0 checkpoints=3 kb=6aac144bb06f index=refreshed:0 cursor=none q=6a43c82d0d5d
+# coverage=complete records=32/32 shown=9 omitted=0 checkpoints=3 kb=c5756baa8870 index=refreshed:0 cursor=none q=6a43c82d0d5d
 # exit=0

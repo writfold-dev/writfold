@@ -1,5 +1,5 @@
 //! Tracked-file writes (M3): `checkpoint`, `record ticket|decision|link`,
-//! `status --set`, `cite make`, and the Tuft adapter's retrieval receipts.
+//! `status --set` and `cite make`.
 //! Each verb first plans its writes from the index at the current
 //! snapshot (validating IDs, vocabularies and
 //! targets, refusing conflicts with exit 3), then applies them through
@@ -16,7 +16,6 @@ pub mod investigation;
 pub mod json;
 pub mod observe;
 pub mod record;
-pub mod retrieval;
 pub mod run;
 pub mod snapshot;
 pub mod span;
@@ -129,8 +128,6 @@ pub enum Write {
     Investigation(investigation::Investigation),
     SetStatus(status::SetStatus),
     CiteMake(cite::CiteMake),
-    /// A retrieval receipt in a run (the Tuft adapter).
-    Retrieval(retrieval::Retrieval),
     /// `observe`: one look at an outside source, in a run.
     Observe(observe::Observe),
 }
@@ -160,7 +157,6 @@ pub fn execute(ws: &Workspace, request: &Request, write: &Write, now: i64) -> Re
             Write::Link(l) => record::link(&session, l)?,
             Write::Investigation(i) => investigation::plan(&session, i)?,
             Write::SetStatus(s) => status::plan(&session, s, &request.cwd)?,
-            Write::Retrieval(r) => retrieval::plan(&session, r)?,
             Write::Observe(o) => observe::plan(&session, o)?,
             Write::CiteMake(_) => return Err(KbError::Usage("unreachable".into())),
         }

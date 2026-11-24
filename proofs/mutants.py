@@ -663,11 +663,6 @@ MUTANTS = (
            "        && facts.gate_met\n",
            "\n",
            ("Writfold.Core.Ground.of_receipt_grounded_iff",)),
-    # grounding: a retrieval with no citation grounds nothing
-    Mutant("citations-zero-grounds", "ground.rs",
-           "    if count > 0 && not_fresh == 0 {",
-           "    if not_fresh == 0 {",
-           ("Writfold.Core.Ground.of_citations_grounded_iff",)),
     # grounding: a token grounds only as exactly one citation
     Mutant("token-many-grounds", "ground.rs",
            "    if count == 1 && not_fresh == 0 {",

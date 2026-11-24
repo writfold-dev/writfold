@@ -1,8 +1,8 @@
 //! Run-record checks: gates of class `run-record`, judged over the run's
-//! own records instead of code. What a run has written is read from three
-//! places: its checkpoint entries (`checkpoint.md`), its retrieval
-//! receipts (`retrievals/`), and the KB's files outside `runs/` (from the
-//! index, as one digest), plus the pending proposals that recorded it
+//! own records instead of code. What a run has written is read from two
+//! places: its checkpoint entries (`checkpoint.md`) and the KB's files
+//! outside `runs/` (from the index, as one digest), plus the pending
+//! proposals that recorded it
 //! ([`crate::proposal::for_run`]).
 //!
 //! A check looks at one window: from the event that began the current
@@ -45,7 +45,6 @@ pub fn known(require: &[String]) -> std::result::Result<(), String> {
 pub struct Records {
     /// The text of each checkpoint entry, in file order.
     pub entries: Vec<String>,
-    pub retrievals: Vec<String>,
     pub kb: String,
     pub proposals: u64,
 }
@@ -54,7 +53,6 @@ impl Records {
     pub fn baseline(&self) -> Baseline {
         Baseline {
             entries: u64::try_from(self.entries.len()).unwrap_or(u64::MAX),
-            retrievals: self.retrievals.clone(),
             kb: self.kb.clone(),
             proposals: self.proposals,
         }
@@ -65,10 +63,8 @@ fn sha(bytes: &[u8]) -> String {
     format!("sha256:{}", crate::index::hex(&Sha256::digest(bytes)))
 }
 
-/// Read the run's records: its checkpoint entries, retrieval receipts,
-/// the KB digest (files outside `runs/`, from the index) and proposals.
+/// Read the run's records: its checkpoint entries, the KB digest (files outside `runs/`, from the index) and proposals.
 pub fn observe(session: &Session<'_>, rec: &Rec) -> Result<Records> {
-    let run_dir = crate::runs::dir(rec);
     let (path, sections) = crate::runs::entries(session, rec);
     let entries = sections
         .iter()
@@ -82,19 +78,6 @@ pub fn observe(session: &Session<'_>, rec: &Rec) -> Result<Records> {
                 .to_owned()
         })
         .collect();
-    let dir = session
-        .ws
-        .root
-        .join(&run_dir)
-        .join(crate::write::retrieval::DIR);
-    let mut retrievals: Vec<String> = std::fs::read_dir(dir)
-        .into_iter()
-        .flatten()
-        .flatten()
-        .map(|e| e.file_name().to_string_lossy().into_owned())
-        .filter(|n| n.ends_with(".md") && !n.starts_with('.'))
-        .collect();
-    retrievals.sort();
     let mut statement = session.conn.prepare(
         "SELECT path, hex(sha256) FROM files WHERE path NOT LIKE 'runs/%' ORDER BY path",
     )?;
@@ -110,7 +93,6 @@ pub fn observe(session: &Session<'_>, rec: &Rec) -> Result<Records> {
     let proposals = crate::proposal::for_run(session.ws, &rec.id);
     Ok(Records {
         entries,
-        retrievals,
         kb: format!("sha256:{}", crate::index::hex(&hash.finalize())),
         proposals: u64::try_from(proposals).unwrap_or(u64::MAX),
     })
@@ -124,7 +106,7 @@ fn upto(n: u64) -> usize {
 /// of the run), where it ends, and every checkpoint entry up to its end.
 /// Any change to those records changes it; nothing after the end does.
 pub fn digest(begin: Option<&Baseline>, end: &Baseline, records: &Records) -> String {
-    let edge = |b: &Baseline| json!({"entries": b.entries, "retrievals": b.retrievals, "kb": b.kb, "proposals": b.proposals});
+    let edge = |b: &Baseline| json!({"entries": b.entries, "kb": b.kb, "proposals": b.proposals});
     let shown: Vec<String> = records
         .entries
         .iter()
@@ -167,11 +149,6 @@ pub fn evaluate(
     for name in require {
         let (met, evidence, missing) = match name.as_str() {
             "research.backfilled" => {
-                let retrievals = end
-                    .retrievals
-                    .iter()
-                    .filter(|r| begin.is_none_or(|b| !b.retrievals.contains(r)))
-                    .count();
                 let cited = upto_end[from..]
                     .iter()
                     .filter(|e| {
@@ -181,8 +158,8 @@ pub fn evaluate(
                     })
                     .count();
                 let kb = usize::from(begin.is_some_and(|b| b.kb != end.kb));
-                let n = retrievals + cited + kb;
-                (n > 0, n, "research.backfilled: since the step began, no KB record changed, no retrieval receipt was recorded and no checkpoint holds a citation".to_owned())
+                let n = cited + kb;
+                (n > 0, n, "research.backfilled: since the step began, no KB record changed and no checkpoint holds a citation".to_owned())
             }
             _ => {
                 let reflected = upto_end.iter().filter(|e| starts(e, "reflection:")).count();
@@ -216,7 +193,6 @@ mod tests {
     fn records(entries: &[&str]) -> Records {
         Records {
             entries: entries.iter().map(|e| (*e).to_owned()).collect(),
-            retrievals: Vec::new(),
             kb: "sha256:00".into(),
             proposals: 0,
         }
@@ -233,7 +209,7 @@ mod tests {
         r.entries.push("looked around".into());
         let end = r.baseline();
         assert!(!evaluate(&need("research.backfilled"), Some(&begin), &end, &r).pass);
-        r.retrievals.push("20261112T000000Z-aaaaaa.md".into());
+        r.entries.push("read ⟦cite kind=src path=a.c⟧".into());
         assert!(
             evaluate(
                 &need("research.backfilled"),
@@ -246,7 +222,7 @@ mod tests {
         let mut kb = end.clone();
         kb.kb = "sha256:11".into();
         assert!(evaluate(&need("research.backfilled"), Some(&begin), &kb, &r).pass);
-        // A retrieval from before the step does not count for it.
+        // A citation from before the step does not count for it.
         let before = r.baseline();
         assert!(!evaluate(&need("research.backfilled"), Some(&before), &before, &r).pass);
         let reflect = need("run.reflected");

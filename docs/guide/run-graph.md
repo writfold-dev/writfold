@@ -99,7 +99,7 @@ Stale never moves the current step back. Done is history; what is owed is the pr
 
 A gate of class `run-record` is judged over the run's own records instead of code ([gates](gates.md#run-record-checks)). The two built-in requirements:
 
-- **`research.backfilled`**: since the step began, the KB's files outside `runs/` changed (a record was written), a retrieval receipt was recorded, or a checkpoint entry holds a citation token (as `cite make` prints).
+- **`research.backfilled`**: since the step began, the KB's files outside `runs/` changed (a record was written) or a checkpoint entry holds a citation token (as `cite make` prints).
 - **`run.reflected`**: a checkpoint entry starts with `reflection:`, and the run has a pending proposal, a KB record written in the step (an accepted proposal), or a line starting `no proposal`.
 
 A step's window runs from the event that began it (the splice, or the previous step's `done-` or `skip-` record) to the event that closed it, or to now while it is current. The receipt binds the window's run-record digest, so it goes stale when the run's records change, and a done step's receipt keeps standing after later steps add records. These checks show that something was written, not that it is good: pair one with an attested gate whose instructions say what a good backfill or reflection covers.

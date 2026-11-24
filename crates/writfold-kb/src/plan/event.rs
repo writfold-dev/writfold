@@ -26,8 +26,6 @@ pub const TEMPLATES: &str = "templates";
 pub struct Baseline {
     /// Checkpoint entries in `checkpoint.md`.
     pub entries: u64,
-    /// Retrieval receipt file names, sorted.
-    pub retrievals: Vec<String>,
     /// `sha256:<hex>` over the KB's files outside `runs/`.
     pub kb: String,
     /// Proposals recorded for this run.
@@ -131,7 +129,7 @@ pub fn name(event: &Event) -> String {
 }
 
 fn baseline_json(b: &Baseline) -> Value {
-    json!({"entries": b.entries, "retrievals": b.retrievals, "kb": b.kb, "proposals": b.proposals})
+    json!({"entries": b.entries, "kb": b.kb, "proposals": b.proposals})
 }
 
 fn body(event: &Event) -> Value {
@@ -213,22 +211,10 @@ fn count(v: &Value, key: &str) -> Parsed<u64> {
         .ok_or_else(|| format!("{key} is missing or not a count"))
 }
 
-fn names(v: &Value, key: &str) -> Parsed<Vec<String>> {
-    let wrong = || format!("{key} is not a list of strings");
-    match v.get(key) {
-        Some(Value::Array(items)) => items
-            .iter()
-            .map(|i| i.as_str().map(str::to_owned).ok_or_else(wrong))
-            .collect(),
-        _ => Err(wrong()),
-    }
-}
-
 fn baseline(v: &Value) -> Parsed<Baseline> {
     let r = v.get("records").ok_or("records is missing")?;
     Ok(Baseline {
         entries: count(r, "entries")?,
-        retrievals: names(r, "retrievals")?,
         kb: text(r, "kb")?,
         proposals: count(r, "proposals")?,
     })

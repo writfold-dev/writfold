@@ -1,7 +1,6 @@
 //! What grounds a cited piece of evidence, for a checklist gate's cover
-//! rows (and, until 21 November 2026, an assessed gate's assumptions). The caller resolves
-//! the reference (a gate, a gate receipt, an attestation, a retrieval, an
-//! observation, a citation token) and gathers the facts; the decision is
+//! rows. The caller resolves the reference (a gate, a gate receipt, an
+//! attestation, an observation, a citation token) and gathers the facts; the decision is
 //! here. The standing words a reference records (`satisfied`,
 //! `not-fresh:3`) are the caller's rendering.
 //!
@@ -56,16 +55,6 @@ pub fn of_receipt(facts: &ReceiptFacts) -> Grounding {
     }
 }
 
-/// A retrieval receipt: grounded while it holds at least one citation and
-/// every one is fresh.
-pub fn of_citations(count: usize, not_fresh: usize) -> Grounding {
-    if count > 0 && not_fresh == 0 {
-        Grounding::Grounded
-    } else {
-        Grounding::Ungrounded
-    }
-}
-
 /// A citation token or locator: grounded only when it reads as exactly one
 /// citation and that citation is fresh.
 pub fn of_token(count: usize, not_fresh: usize) -> Grounding {
@@ -104,7 +93,7 @@ pub fn moved(now: Grounding, same_word: bool) -> bool {
 #[cfg(test)]
 mod tests {
     use super::{
-        ReceiptFacts, moved, of_citations, of_gate, of_observation, of_receipt, of_statement,
+        ReceiptFacts, moved, of_gate, of_observation, of_receipt, of_statement,
         of_token,
     };
     use crate::gate::{Standing, State};
@@ -146,7 +135,6 @@ mod tests {
         for count in 0..3 {
             for not_fresh in 0..3 {
                 let any = count > 0 && not_fresh == 0;
-                assert_eq!(of_citations(count, not_fresh) == Grounding::Grounded, any);
                 let one = count == 1 && not_fresh == 0;
                 assert_eq!(of_token(count, not_fresh) == Grounding::Grounded, one);
                 for status in ALL {

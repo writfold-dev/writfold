@@ -21,7 +21,7 @@ ticket HBR-310 [todo] Replay drops the last batch @ktlo/2026/hbr-310-replay-drop
 # exit=0
 
 $ writfold kb gate run backfilled
-gate backfilled [satisfied] run-record pass exit=0 at demo-service@bcacd8cac84e scope=1308036c9c92 paths=1 @runs/run-20261101T090000Z-a1b2c3/gates/backfilled-20261111T000000Z-XXXXXX.json:1
+gate backfilled [satisfied] run-record pass exit=0 at demo-service@bcacd8cac84e scope=d449b555bffc paths=1 @runs/run-20261101T090000Z-a1b2c3/gates/backfilled-20261111T000000Z-XXXXXX.json:1
 # note: recorded runs/run-20261101T090000Z-a1b2c3/gates/backfilled-20261111T000000Z-XXXXXX.json (pass in 0 ms)
 # note: judged over the run's own records (1 counted); the receipt goes stale when they change
 # note: written to the KB work tree; commit it to share it
@@ -117,7 +117,7 @@ unevaluated run-20261101T090000Z-a1b2c3 session s-1 ended 2026-11-11T01:00:00Z (
   next: writfold kb plan status --run RUN, then its reflect step (the writfold:evaluate skill)
 
 $ writfold kb gate run reflected
-gate reflected [satisfied] run-record pass exit=0 at demo-service@bcacd8cac84e scope=e9531cc1ef4f paths=1 @runs/run-20261101T090000Z-a1b2c3/gates/reflected-20261111T000000Z-XXXXXX.json:1
+gate reflected [satisfied] run-record pass exit=0 at demo-service@bcacd8cac84e scope=c5befe86ebec paths=1 @runs/run-20261101T090000Z-a1b2c3/gates/reflected-20261111T000000Z-XXXXXX.json:1
 # note: recorded runs/run-20261101T090000Z-a1b2c3/gates/reflected-20261111T000000Z-XXXXXX.json (pass in 0 ms)
 # note: judged over the run's own records (1 counted); the receipt goes stale when they change
 # note: written to the KB work tree; commit it to share it

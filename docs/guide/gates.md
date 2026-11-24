@@ -262,7 +262,7 @@ require = ["research.backfilled"]    # research.backfilled | run.reflected
 description = "the research step wrote something back to the KB"
 ```
 
-- **`research.backfilled`**: since the step began, the KB's files outside `runs/` changed (a record was written or edited), a retrieval receipt was recorded in the run, or a checkpoint entry holds a citation token.
+- **`research.backfilled`**: since the step began, the KB's files outside `runs/` changed (a record was written or edited) or a checkpoint entry holds a citation token.
 - **`run.reflected`**: a checkpoint entry starts with `reflection:`, and the run has a pending proposal, a KB record written in the step (an accepted proposal), or a line starting `no proposal`.
 
 A run-record gate takes no `scope`, `subject`, `argv`, `workdir` or `timeout_seconds`. Its receipt binds the run-record digest of the window it judged: the current plan step's, from the event that began the step to now (the whole run when the run has no plan). Any change to the run's records in that window (a new checkpoint entry, a retrieval receipt, a KB file) makes it `stale`; once the step is done, its window is closed and the receipt keeps standing. `gate waive` sets one aside like any check; `gate attest` is refused, and `gate verify` answers `unverifiable` (there is no commit to re-run it at).
@@ -322,7 +322,7 @@ A row whose outcome the policy does not take (hand-written, or merged) keeps its
 
 **A whole-gate waiver.** `gate waive` still sets a checklist aside unless the definition says `accept = ["attested"]`. `kb lint` warns (`policy.waivable`, a warning: exit unchanged without `--deny-warnings`) when a checklist restricts `not_applicable` and still accepts a waiver, because the restriction is then one command from being moot.
 
-Each `REF` is one argument: a citation token, a locator, `gate:<id>`, or a gate receipt, attestation, retrieval receipt, edit receipt or observation of this run.
+Each `REF` is one argument: a citation token, a locator, `gate:<id>`, or a gate receipt, attestation or observation of this run. Anything else, including receipts of tools removed in November 2026, is `unresolved`.
 
 | Reference | Grounded when |
 |---|---|
@@ -330,8 +330,6 @@ Each `REF` is one argument: a citation token, a locator, `gate:<id>`, or a gate 
 | `gate:<id>` | the gate is `satisfied` (or `attested`, kept as attested) |
 | a gate receipt of this run, by path or name | it passed, about the gate's current definition and bytes |
 | an attestation of this run, by path | it is the gate's current attestation (attested) |
-| a retrieval receipt, by path or name | every citation in it is fresh |
-| an edit receipt, by path or name | every file it edited still holds the bytes it wrote |
 | an observation (`runs/<run>/observed/…json`), by path or name (built in v0.5.0-dev.3) | its status is `ok` and its embedded citation is fresh ([observations](#observations-as-evidence-built-in-v050-dev3)) |
 
 `supported` needs at least one, and is refused (exit 3, nothing written) when any is not grounded now, so a row never starts out false. A waiver is never evidence. A checklist is judged against the other gates only, so a reference to another checklist is not grounded. Edit and retrieval receipts are those written before `kb edit` and the Tuft adapter were removed (21 November 2026); nothing writes them now.

@@ -320,8 +320,6 @@ def claims : List Name := [
   ``Writfold.Core.Ground.waiver_never_grounds,
   ``Writfold.Core.Ground.of_receipt_grounded_iff,
   ``Writfold.Core.Ground.of_receipt_never_attested,
-  ``Writfold.Core.Ground.of_citations_grounded_iff,
-  ``Writfold.Core.Ground.of_citations_never_attested,
   ``Writfold.Core.Ground.of_token_grounded_iff,
   ``Writfold.Core.Ground.embeds_iff,
   ``Writfold.Core.Ground.grounds_iff,

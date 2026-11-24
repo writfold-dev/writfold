@@ -2,7 +2,7 @@
 //! write is older than `AGE`, oldest first. The last recorded write is the
 //! newest of the manifest's `created`, the last checkpoint heading and
 //! the UTC stamp in the name of any file under the run's gate, statement,
-//! cover, observation, retrieval, edit, plan and delivery directories, and
+//! cover, observation, plan and delivery directories, and
 //! the `recorded` time of each policy pin (whose name carries none):
 //! tracked text only, so every clone answers the same. No liveness is
 //! claimed, and no state is decided by the clock.
@@ -16,13 +16,11 @@ use std::path::Path;
 
 /// The run directories whose file names carry a write's UTC stamp, and
 /// what each file is.
-const DIRS: [(&str, &str); 8] = [
+const DIRS: [(&str, &str); 6] = [
     ("gates", "gate receipt"),
     ("statements", "statement"),
     ("covers", "cover"),
     ("observed", "observation"),
-    ("retrievals", "retrieval"),
-    ("edits", "edit receipt"),
     ("plan", "plan event"),
     ("deliveries", "delivery"),
 ];

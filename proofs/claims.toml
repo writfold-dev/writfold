@@ -861,21 +861,6 @@ mutants = [
 [[claim]]
 crate = "writfold-core"
 file = "crates/writfold-core/src/ground.rs"
-function = "of_citations"
-lean = "writfold_core.ground.of_citations"
-theorems = [
-  "Writfold.Core.Ground.of_citations_grounded_iff",
-  "Writfold.Core.Ground.of_citations_never_attested",
-]
-total = "Writfold.Core.Ground.of_citations_grounded_iff"
-subsumes = ["TAU-N001", "TAU-P003"]
-mutants = [
-  "citations-zero-grounds",
-]
-
-[[claim]]
-crate = "writfold-core"
-file = "crates/writfold-core/src/ground.rs"
 function = "of_gate"
 lean = "writfold_core.ground.of_gate"
 theorems = [
@@ -2761,18 +2746,25 @@ mutants = [
 ]
 
 [[amend]]
-file = "crates/writfold-core/src/verdict.rs"
-function = "observed"
-kind = "mutant"
-name = "moved-span-fresh"
-reason = "#90 moved the code-citation arms into other_blob; the mutant edits other_blob now and is claimed there"
+file = "crates/writfold-core/src/ground.rs"
+function = "of_citations"
+kind = "theorem"
+name = "Writfold.Core.Ground.of_citations_grounded_iff"
+reason = "#105 removed retrieval receipts (the retired Tuft adapter's) and their grounding arm; the function is gone"
 
 [[amend]]
-file = "crates/writfold-core/src/verdict.rs"
-function = "observed"
+file = "crates/writfold-core/src/ground.rs"
+function = "of_citations"
+kind = "theorem"
+name = "Writfold.Core.Ground.of_citations_never_attested"
+reason = "#105 removed retrieval receipts (the retired Tuft adapter's) and their grounding arm; the function is gone"
+
+[[amend]]
+file = "crates/writfold-core/src/ground.rs"
+function = "of_citations"
 kind = "mutant"
-name = "unsearched-fresh"
-reason = "#90 moved the code-citation arms into other_blob; the mutant edits other_blob now and is claimed there"
+name = "citations-zero-grounds"
+reason = "#105 removed retrieval receipts (the retired Tuft adapter's) and their grounding arm; the function is gone"
 
 [[claim]]
 crate = "writfold-core"

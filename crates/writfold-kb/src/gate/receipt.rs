@@ -77,9 +77,9 @@ pub fn command(d: &Definition) -> Vec<String> {
 }
 
 /// The order receipts are judged in, oldest first: by `seq`, then by file
-/// name. No clock enters: `recorded` is shown, never compared. Receipts
-/// written before `seq` existed read as 0 and keep their name order; two
-/// clones that each wrote the same `seq` are ordered by name.
+/// name. No clock enters: `recorded` is shown, never compared. Two clones
+/// that each wrote the same `seq` are ordered by name. A receipt without a
+/// `seq` is not a receipt (pre-alpha: no reader for older formats).
 pub fn order(a: (&str, &Receipt), b: (&str, &Receipt)) -> std::cmp::Ordering {
     writfold_core::order::cmp((a.1.seq, a.0), (b.1.seq, b.0))
 }
@@ -285,10 +285,10 @@ pub fn parse(text: &str, run: &str, name: &str) -> Result<Receipt, String> {
         ending,
         duration_ms: n(&value, &["result", "duration_ms"])?,
         recorded: s(&value, &["recorded"])?,
-        seq: match at(&value, &["seq"]) {
-            None => 0,
-            Some(v) => v.as_u64().filter(|n| *n > 0).ok_or("seq is not a count")?,
-        },
+        seq: at(&value, &["seq"])
+            .and_then(serde_json::Value::as_u64)
+            .filter(|n| *n > 0)
+            .ok_or("seq is missing or not a count")?,
     })
 }
 

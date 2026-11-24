@@ -10,13 +10,11 @@ pub struct Class {
     pub section: &'static str,
 }
 
-const RUN: [(&str, &str); 9] = [
+const RUN: [(&str, &str); 7] = [
     ("gates", "gate-receipt"),
     ("statements", "statement"),
     ("covers", "cover"),
     ("observed", "observation"),
-    ("retrievals", "retrieval"),
-    ("edits", "edit-receipt"),
     ("plan", "plan-event"),
     ("deliveries", "delivery"),
     ("policy", "policy-pin"),

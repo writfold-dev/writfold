@@ -105,8 +105,6 @@ runs/run-20261112T211025Z-7fe148/
   manifest.json        task, project, mode, created
   writfold-run.json    open or closed; repo, branch, worktree, base commit
   checkpoint.md        one "## <UTC time>" entry per checkpoint
-  retrievals/          retrieval receipts (written by the Tuft adapter, removed)
-  edits/               edit receipts (written by kb edit apply, removed)
   gates/               one receipt per gate run
   statements/          gate attestations and waivers
   covers/              one row per checklist item judgement (gate cover; v0.5.0-dev.1)
@@ -304,7 +302,7 @@ marks/<name>.json       `kb delta` baselines: HEAD and the dirty files' blob IDs
 guard-log.jsonl         what this machine's guard hook decided for audit rules, refusals and
                         passes on a waiver (guard-log.1.jsonl after 4 MiB); mode 0600
 proposals/<id>.json     pending proposals: record calls not yet made
-gates/, edits/          command output tails, artifacts and edit journals
+gates/                  command output tails and artifacts
 staging/, kb-write.lock the write protocol's working files
 ```
 

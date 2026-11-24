@@ -18,9 +18,8 @@ rows alike.
 - `of_receipt_grounded_iff`, `of_receipt_never_attested`: a gate receipt
   grounds only while it is about this subject, under the current
   definition, about the present content, passed, and the gate stands met.
-- `of_citations_grounded_iff`, `of_token_grounded_iff`: a retrieval grounds
-  while it holds a citation and all are fresh; a token, only as exactly one
-  fresh citation.
+- `of_token_grounded_iff`: a token grounds only as exactly one fresh
+  citation.
 - `of_observation_grounded_iff`: an observation grounds only for an `ok` look
   with at least one citation, all fresh; `grounds_iff`, `embeds_iff`.
 - `of_statement_spec`, `moved_iff`.
@@ -101,21 +100,6 @@ theorem of_receipt_never_attested (f : ground.ReceiptFacts) :
   cases a <;> cases b <;> cases c <;> cases d <;> cases e <;> simp
 
 /-! ## Citations -/
-
-theorem of_citations_grounded_iff (n nf : Usize) :
-    ground.of_citations n nf ⦃ g => g = .Grounded ↔ 0 < n.val ∧ nf.val = 0 ⦄ := by
-  unfold ground.of_citations
-  by_cases h : 0 < n.val ∧ nf.val = 0
-  · have h1 : n > 0#usize := by scalar_tac
-    have h2 : nf = 0#usize := by scalar_tac
-    simp [h1, h2, h]
-  · split <;> simp_all <;> scalar_tac
-
-theorem of_citations_never_attested (n nf : Usize) :
-    ground.of_citations n nf ⦃ g => g ≠ .Attested ⦄ := by
-  unfold ground.of_citations
-  repeat' split
-  all_goals simp
 
 theorem of_token_grounded_iff (n nf : Usize) :
     ground.of_token n nf ⦃ g => g = .Grounded ↔ n.val = 1 ∧ nf.val = 0 ⦄ := by

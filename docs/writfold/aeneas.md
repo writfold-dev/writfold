@@ -281,8 +281,7 @@ intended and now stated: `step.met` holds for a run with no plan, while
 What grounds evidence (`proofs/Writfold/Ground.lean`): `of_gate_spec`,
 `of_gate_grounded_iff`, `of_gate_attested_iff`, `waiver_never_grounds` (a
 gate that stands on a waiver grounds nothing), `of_receipt_grounded_iff` and
-`of_receipt_never_attested`, `of_citations_grounded_iff`,
-`of_token_grounded_iff`, `of_observation_grounded_iff`, `grounds_iff`,
+`of_receipt_never_attested`, `of_token_grounded_iff`, `of_observation_grounded_iff`, `grounds_iff`,
 `embeds_iff`, `of_statement_spec`, `moved_iff`. The standing words a
 reference records stay in `writfold-kb`.
 
@@ -1063,7 +1062,6 @@ Two mutants first failed for the wrong reason: `plan-skip-ignores-changes` (remo
 | `of-gate-ignores-found` | `ground.rs` | grounding: a reference to no gate grounds nothing | `Ground.of_gate_spec` |
 | `receipt-ignores-content` | `ground.rs` | grounding: a receipt about other content does not ground | `Ground.of_receipt_grounded_iff` |
 | `receipt-ignores-gate-met` | `ground.rs` | grounding: a receipt grounds only while its gate stands met | `Ground.of_receipt_grounded_iff` |
-| `citations-zero-grounds` | `ground.rs` | grounding: a retrieval with no citation grounds nothing | `Ground.of_citations_grounded_iff` |
 | `token-many-grounds` | `ground.rs` | grounding: a token grounds only as exactly one citation | `Ground.of_token_grounded_iff` |
 | `observation-no-citation-grounds` | `ground.rs` | grounding: an observation with no citation grounds nothing | `Ground.of_observation_grounded_iff` |
 | `statement-not-current-attested` | `ground.rs` | grounding: only the current attestation is attested | `Ground.of_statement_spec` |

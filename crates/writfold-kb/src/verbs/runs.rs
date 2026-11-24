@@ -3,15 +3,12 @@
 //! `runs` lists every run, newest activity first, with its effective state
 //! (the Writfold sidecar's `closed`, else the manifest's), where the work
 //! happens and its last checkpoint. `resume` shows one run: the run, its
-//! coverage counts, the items needing a recheck, its newest retrieval
-//! receipts (written by the retired Tuft adapter), its newest edit receipts (from
-//! the retired `kb edit apply`), the state of each defined gate
+//! coverage counts, the items needing a recheck, the state of each defined gate
 //! (`writfold kb gate`), the newest checkpoint entry, and the local
 //! drafts and pending proposals of the run (or of no run). With no run
 //! named it takes the current-run pointer, then the newest run of the
 //! project inferred from the working directory, then the newest open run.
 //! No liveness is claimed: there is no daemon.
-mod edits;
 mod idle;
 mod plan;
 
@@ -225,22 +222,6 @@ pub fn resume(session: &Session<'_>, named: Option<&str>, cwd: &Path) -> Result<
         .rows
         .extend(crate::plan::resume_row(session, &rec, cwd));
     answer.rows.extend(coverage(session, &rec));
-    let (receipts, total) = crate::write::retrieval::rows(session, &rec)?;
-    if total > receipts.len() {
-        answer.notes.push(format!(
-            "{total} retrieval receipts; the newest {} are shown",
-            receipts.len()
-        ));
-    }
-    answer.rows.extend(receipts);
-    let (edits, total) = edits::rows(session, &rec)?;
-    if total > edits.len() {
-        answer.notes.push(format!(
-            "{total} edit receipts; the newest {} are shown",
-            edits.len()
-        ));
-    }
-    answer.rows.extend(edits);
     let observed = crate::observe::summary(&session.ws.root, &runs::dir(&rec));
     answer.notes.extend(observed);
     let (gates, notes) = crate::gate::resume_rows(session, &rec, cwd);
