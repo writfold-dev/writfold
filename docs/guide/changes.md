@@ -6,7 +6,7 @@ This page is for someone pinned to one release who wants to upgrade on purpose. 
 
 A line marked **fix** changed an answer that was wrong; anything depending on the old answer was depending on the fault.
 
-## Unreleased (v0.6.0-dev.19)
+## v0.6.0-dev.19
 
 - **Pre-alpha cleanup** ([#105](https://github.com/writfold-dev/writfold/issues/105)): readers for formats of the tools removed on 21 November 2026 are gone. Removed: `resume`'s retrieval-receipt and edit-receipt rows and their notes; grounding a checklist cover row on a retrieval receipt or edit receipt (such a reference now reads `unresolved`, so `gate cover … supported` refuses it); retrieval receipts counting towards `research.backfilled`; `retrieval` and `edit-receipt` in `kb delta`'s run kinds (those paths now read as `run-file`) and `retrievals/`, `edits/` in `runs --idle`; the kernel function `writfold_core::ground::of_citations` with its two theorems and mutant. A gate receipt without `seq` is now invalid instead of ordering as 0. Plan events no longer write or read `records.retrievals`, so the run-record digest changes and an earlier `research.backfilled` or `run.reflected` receipt reads stale once: run the gate again.
 - **Retained gate evidence** ([#121](https://github.com/writfold-dev/writfold/issues/121)): a new optional gate key, `retain`. A definition without it keeps its digest and its receipts keep their bytes. With it, a missing declared file makes a receipt `unknown`, and a receipt whose retained files are later deleted or edited reads `[invalid]`. `runs/<run>/evidence/` is a new run directory (`kb delta` kind `gate-evidence`), and it is not indexed.
