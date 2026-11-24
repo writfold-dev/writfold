@@ -6,6 +6,13 @@ This page is for someone pinned to one release who wants to upgrade on purpose. 
 
 A line marked **fix** changed an answer that was wrong; anything depending on the old answer was depending on the fault.
 
+## v0.6.0-dev.20
+
+- **Prose rules for delivery drafts** ([#127](https://github.com/writfold-dev/writfold/issues/127)): a new built-in check, `prose.rules`, with a new mode key `prose` and new rule files, `.writfold/deliveries/prose-<set>.toml`. It is never a default, so the built-in modes and existing receipts are unchanged. Mode names starting `prose-` are refused, as `deny-*` is. `kb init --example delivery` writes `prose-plain.toml` and lists the check in `release-note.toml`.
+- **Advice on delivery receipts** ([#115](https://github.com/writfold-dev/writfold/issues/115)): `result.advice` and `result.advice_total`, written only when there is advice, so a receipt without advice keeps its bytes.
+- **Behaviour change:** a candidate script gate's stdout on exit 0 is now kept as advice instead of being discarded. A finding line may name its rule as `<line>: [rule.name] text`. Outcomes and exit codes are unchanged.
+- The rule that a delivery receipt's outcome agrees with its findings (a pass has none, a failure has some) is now the proved kernel `writfold_core::prose::agrees`. Answers are unchanged.
+
 ## v0.6.0-dev.19
 
 - **Pre-alpha cleanup** ([#105](https://github.com/writfold-dev/writfold/issues/105)): readers for formats of the tools removed on 21 November 2026 are gone. Removed: `resume`'s retrieval-receipt and edit-receipt rows and their notes; grounding a checklist cover row on a retrieval receipt or edit receipt (such a reference now reads `unresolved`, so `gate cover … supported` refuses it); retrieval receipts counting towards `research.backfilled`; `retrieval` and `edit-receipt` in `kb delta`'s run kinds (those paths now read as `run-file`) and `retrievals/`, `edits/` in `runs --idle`; the kernel function `writfold_core::ground::of_citations` with its two theorems and mutant. A gate receipt without `seq` is now invalid instead of ordering as 0. Plan events no longer write or read `records.retrievals`, so the run-record digest changes and an earlier `research.backfilled` or `run.reflected` receipt reads stale once: run the gate again.

@@ -140,6 +140,12 @@ fn accept(text: &str) -> TestResult {
                     .map_err(|e| e.to_string())
             })
         }
+        "writfold-prose-rules/1" => {
+            let name = string(&map, "name")?;
+            writfold_kb::deliver::prose::check(&name, &format!("prose-{name}.toml"), text)
+                .map(|_| ())
+                .map_err(|r| format!("{r:?}").into())
+        }
         "writfold-guard/1" => delivery("guard.toml", text, |root| {
             config::guard(root)
                 .map(|guard| guard.is_some())

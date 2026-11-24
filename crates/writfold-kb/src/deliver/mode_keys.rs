@@ -104,3 +104,52 @@ pub(super) fn closed(c: &mut Check<'_>, key: &str, set: &[&str]) -> Option<Optio
         }
     }
 }
+
+/// `prose`: the rule set `prose.rules` checks against, loaded from
+/// `prose-<set>.toml`. Required when `checks` lists `prose.rules` and
+/// refused otherwise. `Some(None)` when absent and not needed, `None` on a
+/// fault.
+pub(super) fn prose(
+    c: &mut Check<'_>,
+    root: &std::path::Path,
+    listed: bool,
+) -> Option<Option<super::prose::Rules>> {
+    let set = match (c.text("prose"), listed) {
+        (Field::Bad, _) => return None,
+        (Field::Absent, false) => return Some(None),
+        (Field::Absent, true) => {
+            let why =
+                "prose.rules needs prose = \"<set>\", naming .writfold/deliveries/prose-<set>.toml"
+                    .to_owned();
+            c.error("key.missing", None, why).label("no rule set");
+            return None;
+        }
+        (Field::Got(v), false) => {
+            let why = "`prose` names a rule set, but checks does not list prose.rules".to_owned();
+            c.error("value.conflict", Some(v.span), why)
+                .label("not checked");
+            return None;
+        }
+        (Field::Got(v), true) => v,
+    };
+    let file = format!("prose-{}.toml", set.str());
+    let loaded = match super::config::is_name(set.str()) {
+        false => Err(format!("rule set {:?} must be [a-z0-9.-]", set.str())),
+        true => match super::config::open(root, &file) {
+            Ok(None) => Err(format!("no rule set: add {}/{file}", super::config::DIR)),
+            Ok(Some((path, text))) => super::prose::check(set.str(), &path, &text).map_err(|r| {
+                let first = r.diagnostics.first().map(|d| d.message.clone());
+                format!("{file} has errors: {}", first.unwrap_or_default())
+            }),
+            Err(e) => Err(format!("{file} cannot be read: {e}")),
+        },
+    };
+    match loaded {
+        Ok(rules) => Some(Some(rules)),
+        Err(why) => {
+            c.error("ref.undefined", Some(set.span), why)
+                .label("no usable rule set");
+            None
+        }
+    }
+}

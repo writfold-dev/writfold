@@ -36,6 +36,9 @@ pub struct Finding {
 pub struct Evaluated {
     pub outcome: Outcome,
     pub findings: Vec<Finding>,
+    /// Advice: findings that never decide the outcome (`prose.rules`
+    /// advice, a script gate's output on a pass).
+    pub advice: Vec<Finding>,
     /// Why the outcome is `unknown`, or a fact worth showing (`0 tokens`).
     pub note: Option<String>,
 }
@@ -48,6 +51,7 @@ fn judged(findings: Vec<Finding>, note: Option<String>) -> Evaluated {
             Outcome::Fail
         },
         findings,
+        advice: Vec::new(),
         note,
     }
 }
@@ -112,6 +116,7 @@ pub fn references(text: &str, deny: &Deny) -> Evaluated {
         return Evaluated {
             outcome: Outcome::Unknown,
             findings: Vec::new(),
+            advice: Vec::new(),
             note: Some(format!(
                 "no deny list for audience {}: add {}/deny-{}.toml",
                 deny.audience,
@@ -181,6 +186,7 @@ pub fn claims(session: &Session<'_>, text: &str, path: &str) -> Result<Evaluated
         return Ok(Evaluated {
             outcome: Outcome::Unknown,
             findings: unverifiable,
+            advice: Vec::new(),
             note,
         });
     }

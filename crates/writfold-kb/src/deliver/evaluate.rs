@@ -4,7 +4,7 @@
 //! a script gate adds no write path).
 use super::candidate::{self, Candidate};
 use super::checks::{self, Evaluated};
-use super::config::{self, CLAIMS, LENGTH, PARAGRAPHS, REFERENCES};
+use super::config::{self, CLAIMS, LENGTH, PARAGRAPHS, PROSE, REFERENCES};
 use super::receipt::{self, Facts};
 use crate::error::{KbError, Result};
 use crate::index::query::Rec;
@@ -146,6 +146,10 @@ fn evaluate(
         REFERENCES => checks::references(payload, deny),
         CLAIMS => checks::claims(session, source, &c.payload_path())?,
         LENGTH => checks::length(payload, mode),
+        PROSE => match &mode.prose {
+            Some(rules) => super::prose::evaluate(payload, rules),
+            None => return Err(KbError::Refused(format!("{PROSE} needs a prose rule set"))),
+        },
         other => return Err(KbError::Refused(format!("{other} is not a built-in check"))),
     })
 }

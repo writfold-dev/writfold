@@ -1,0 +1,15 @@
+# An example to edit (writfold kb init --example delivery): prose rules for
+# drafts. Advice is shown and recorded and never holds a draft back; a
+# blocking match fails the check. Patterns are matched per prose line,
+# case-insensitively; code blocks, inline code and URLs are skipped.
+schema = "writfold-prose-rules/1"
+name = "plain"
+advise = [
+  "filler: \\b(just|simply|basically|obviously)\\b",
+  "hedge: \\b(I think|probably|seems to|might be)\\b",
+  "vague: \\b(stuff|things|etc\\.)",
+]
+block = [
+  "placeholder: \\b(TODO|TBD|FIXME|XXX)\\b",
+  "lorem: \\blorem ipsum\\b",
+]

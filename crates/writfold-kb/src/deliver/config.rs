@@ -17,8 +17,10 @@ pub const REFERENCES: &str = "references.denied";
 pub const CLAIMS: &str = "claims.cited-fresh";
 /// `length.bounded` (`max_chars`, `max_lines`): never on by default.
 pub const LENGTH: &str = "length.bounded";
+/// `prose.rules` (`prose = "<set>"`): never on by default.
+pub const PROSE: &str = "prose.rules";
 /// The built-in checks, in the order they run and are shown.
-pub const BUILTIN: [&str; 4] = [PARAGRAPHS, REFERENCES, CLAIMS, LENGTH];
+pub const BUILTIN: [&str; 5] = [PARAGRAPHS, REFERENCES, CLAIMS, LENGTH, PROSE];
 /// The checks a built-in mode runs when no file names it.
 pub const DEFAULTS: [&str; 3] = [PARAGRAPHS, REFERENCES, CLAIMS];
 
@@ -153,6 +155,10 @@ pub fn obligations(mode: &Mode, deny: &Deny) -> Vec<Obligation> {
                 };
                 ("mechanical", format!("audience={}\n{list}", deny.audience))
             }
+            PROSE => (
+                "mechanical",
+                (mode.prose.as_ref()).map_or_else(|| "(no rule set)".into(), |p| p.material()),
+            ),
             _ => ("observed", String::new()),
         };
         out.push(Obligation {
@@ -228,6 +234,9 @@ pub fn check_file(
     text: &str,
 ) -> std::result::Result<(), writfold_core::diag::Report> {
     let root = dir.parent().and_then(Path::parent).unwrap_or(dir);
+    if let Some(name) = stem.strip_prefix("prose-") {
+        return super::prose::check(name, shown, text).map(|_| ());
+    }
     match (stem, stem.strip_prefix("deny-")) {
         ("guard", _) => super::config_check::guard(shown, text, Some(root)).map(|_| ()),
         (_, Some(audience)) => super::config_check::deny(audience, shown, text).map(|_| ()),

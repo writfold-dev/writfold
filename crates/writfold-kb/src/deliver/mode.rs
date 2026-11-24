@@ -49,6 +49,9 @@ pub struct Mode {
     /// `audience`: the audience the mode is for, with the key's line;
     /// `None` leaves it to `deliver prepare --audience`.
     pub audience: Option<(String, u32)>,
+    /// `prose`: the rule set `prose.rules` checks against
+    /// ([`super::prose`]); required with that check, refused without it.
+    pub prose: Option<super::prose::Rules>,
 }
 
 impl Mode {
@@ -103,15 +106,17 @@ pub(super) fn default(name: &str) -> Mode {
         waivable: None,
         rendering: super::render::VERBATIM.into(),
         audience: None,
+        prose: None,
     }
 }
 
 /// The mode `name`: `.writfold/deliveries/<name>.toml` when present, else
 /// the built-in default; any other name is refused, naming the file to add.
 pub fn mode(root: &Path, name: &str) -> Result<Mode> {
-    if !is_name(name) || name == "guard" || name.starts_with("deny-") {
+    let reserved = name == "guard" || name.starts_with("deny-") || name.starts_with("prose-");
+    if !is_name(name) || reserved {
         return Err(KbError::Usage(format!(
-            "--mode {name:?} is not a mode name ([a-z0-9.-], not guard or deny-*)"
+            "--mode {name:?} is not a mode name ([a-z0-9.-], not guard, deny-* or prose-*)"
         )));
     }
     let file = format!("{name}.toml");

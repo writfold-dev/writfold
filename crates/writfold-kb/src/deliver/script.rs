@@ -6,8 +6,10 @@
 //!
 //! The script reports findings on standard output, one per line, as
 //! `<line>: <text>` (or `line <line>: <text>`); any other non-empty line is
-//! a finding about the whole candidate (line 0). Exit 0 is a pass and its
-//! output is ignored; any other exit status is a fail, with at least one
+//! a finding about the whole candidate (line 0). A finding may name its
+//! rule first, `<line>: [rule.name] text`; otherwise the rule is the gate.
+//! Exit 0 is a pass, and what it printed is kept as advice (#115): shown
+//! and recorded, never deciding. Any other exit status is a fail, with at least one
 //! finding; a signal, a timeout, a failure to start, or the candidate
 //! changing while the script ran is `unknown`, never a pass.
 use super::candidate::{Candidate, sha};
@@ -28,9 +30,13 @@ fn finding(gate: &str, text: &str) -> Finding {
         .and_then(|(n, d)| n.trim().parse::<u32>().ok().map(|n| (n, d.trim())))
         .filter(|(_, d)| !d.is_empty());
     let (line, detail) = numbered.unwrap_or((0, text.trim()));
+    let named = (detail.strip_prefix('['))
+        .and_then(|r| r.split_once(']'))
+        .filter(|(name, _)| super::config::is_name(name));
+    let (rule, detail) = named.map_or((gate, detail), |(n, d)| (n, d.trim()));
     Finding {
         line,
-        rule: gate.to_owned(),
+        rule: rule.to_owned(),
         detail: detail.chars().take(MAX_DETAIL).collect(),
     }
 }
@@ -55,6 +61,7 @@ pub fn evaluate(root: &Path, c: &Candidate, d: &Definition, payload: &str) -> Ev
     let unknown = |note: String| Evaluated {
         outcome: Outcome::Unknown,
         findings: Vec::new(),
+        advice: Vec::new(),
         note: Some(note),
     };
     if after != before {
@@ -64,6 +71,7 @@ pub fn evaluate(root: &Path, c: &Candidate, d: &Definition, payload: &str) -> Ev
         Ending::Exited(0) => Evaluated {
             outcome: Outcome::Pass,
             findings: Vec::new(),
+            advice: findings(&d.id, &e.stdout.bytes),
             note: Some("exit=0".into()),
         },
         Ending::Exited(code) => {
@@ -78,6 +86,7 @@ pub fn evaluate(root: &Path, c: &Candidate, d: &Definition, payload: &str) -> Ev
             Evaluated {
                 outcome: Outcome::Fail,
                 findings: found,
+                advice: Vec::new(),
                 note: Some(format!("exit={code}")),
             }
         }
@@ -117,5 +126,9 @@ mod tests {
             ]
         );
         assert!(found.iter().all(|f| f.rule == "commit-format"));
+        let named = findings("lint", b"3: [filler] just\n4: [Not A Name] x\n");
+        let shown = |i: usize| (named[i].rule.as_str(), named[i].detail.as_str());
+        assert_eq!(shown(0), ("filler", "just"));
+        assert_eq!(shown(1), ("lint", "[Not A Name] x"));
     }
 }

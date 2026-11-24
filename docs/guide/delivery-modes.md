@@ -100,6 +100,7 @@ delivery 20261112T211045Z-ee94cc [ready] pr-comment audience=external destinatio
 | `references.denied` | mechanical | no line matches a rule of the audience's deny list. With no deny list for the audience the outcome is `unknown`, never a pass |
 | `claims.cited-fresh` | observed | every citation token in the draft is fresh under `kb stale`. A draft with no tokens passes, and the note says `0 citation tokens` |
 | `length.bounded` | mechanical | (built in v0.6.0-dev.11; only in a mode that lists it, never a default) the whole payload has at most `max_chars` characters and `max_lines` lines. A finding names the line where the bound is crossed: `failed[length.bounded]: 3 lines; this mode takes at most 2 (max_lines)`. Listing it without either bound is refused |
+| `prose.rules` | mechanical | (built in v0.6.0-dev.20; only in a mode that lists it with `prose = "<set>"`, never a default) no prose line matches a **blocking** rule of the rule set. Matches of **advice** rules are shown and recorded and never hold the draft back. A rule set with no rules is `unknown`, never a pass ([below](#prose-rules)) |
 
 The checks count words, match patterns and run `stale`. They do not judge tone or truth, and they miss a claim made in prose without a citation token.
 
@@ -166,6 +167,36 @@ rules = ["internal-host: \\.corp\\.example\\.com", "ticket: \\bOPS-[0-9]+"]
 ```
 
 Editing the deny list or the bound makes the matching receipts stale and leaves the others standing. An explicit empty list (`rules = []`) passes as `0 rules for internal`: the team saying nothing is denied.
+
+## Prose rules
+
+Built in v0.6.0-dev.20 ([#127](https://github.com/writfold-dev/writfold/issues/127), [RFC](../rfcs/2026-11-25-prose-rules-and-advice.md)). You keep a rule set as data beside the deny lists, and a mode names it:
+
+```toml
+# .writfold/deliveries/prose-plain.toml
+schema = "writfold-prose-rules/1"
+name = "plain"
+advise = ["filler: \\b(just|simply|basically)\\b", "hedge: \\b(I think|probably)\\b"]
+block = ["placeholder: \\b(TODO|TBD|FIXME)\\b"]
+```
+
+```text
+# in a mode file
+checks = ["paragraphs.bounded", "prose.rules"]
+prose = "plain"
+```
+
+Rules use the deny list's `name: pattern` form: ASCII regular expressions, case-insensitive. They are matched line by line against **prose only**. Lines inside code fences and indented code blocks are skipped, and inline code spans and URLs are blanked first, so a rule never fires on code.
+
+- **A blocking match** fails the check, like a deny-list match. It is drawn against the line with the rule and column, and it is waivable only if the mode says so.
+- **Advice** is recorded in the receipt (`result.advice`, `advice_total`) and shown, but it never changes the outcome, the exit status or a `next:` line. `deliver status` adds `2 advisory: line 3 filler, line 5 hedge`, and `deliver check` draws each piece as `advice[prose.rules]: filler (column 9)` with its location. Advice from a receipt about other bytes is not shown.
+- **No rules** (both lists empty) is `unknown`, never a pass.
+
+Editing a pattern, renaming a rule or moving a rule between `advise` and `block` makes earlier receipts stale. `prose` is required when `checks` lists `prose.rules` and refused otherwise. A missing or broken rule file is refused when the mode loads.
+
+The decision (advice never decides, any blocking match fails, no rules is unknown) is proved in Lean (`writfold_core::prose`). Reading the rules and matching them are tested.
+
+These are rules you write. They do not do grammar or spelling, they do not judge tone or truth, and they give no quality score. `kb init --example delivery` writes a short example set, `prose-plain.toml`, to edit. An external linter (Vale, Harper, anything) can give advice through a candidate script gate (below); a recipe for Vale is planned ([#117](https://github.com/writfold-dev/writfold/issues/117)).
 
 ## What a mode asks for: `deliver modes`
 

@@ -37,23 +37,7 @@ pub(super) fn line(j: &Judged<'_>, id: &str) -> More {
         (None, Some((f, r))) => {
             more.path = Some(f.path.clone());
             more.line = Some(1);
-            let found: Vec<String> = r
-                .findings
-                .iter()
-                .take(3)
-                .map(|x| format!("line {} {} ({})", x.line, x.rule, x.detail))
-                .collect();
-            let mut text = format!("{} for {}", r.outcome.name(), short(&r.content));
-            if !found.is_empty() {
-                text.push_str(&format!(": {}", found.join("; ")));
-            }
-            if r.total > 3 {
-                text.push_str(&format!(" (+{} more)", r.total - 3));
-            }
-            if let Some(note) = r.note.as_ref().filter(|_| r.findings.is_empty()) {
-                text.push_str(&format!(" ({note})"));
-            }
-            text
+            summary(&mut more, r)
         }
         (None, None) if ob.class == "attested" => {
             format!(
@@ -122,4 +106,41 @@ pub(super) fn rejected(j: &Judged<'_>) -> Option<More> {
         text: super::policy::why_rejected(&j.obligation, j.standing.name()),
         ..More::default()
     })
+}
+
+/// A checked obligation's receipt in one line: outcome, the first
+/// findings, the advice, and the note when nothing was found.
+fn summary(more: &mut More, r: &super::receipt::Receipt) -> String {
+    let found: Vec<String> = r
+        .findings
+        .iter()
+        .take(3)
+        .map(|x| format!("line {} {} ({})", x.line, x.rule, x.detail))
+        .collect();
+    let mut text = format!("{} for {}", r.outcome.name(), short(&r.content));
+    if !found.is_empty() {
+        text.push_str(&format!(": {}", found.join("; ")));
+    }
+    if r.total > 3 {
+        text.push_str(&format!(" (+{} more)", r.total - 3));
+    }
+    if r.advice_total > 0 {
+        let listed: Vec<serde_json::Value> = (r.advice.iter())
+            .map(|x| serde_json::json!({"line": x.line, "rule": x.rule, "detail": x.detail}))
+            .collect();
+        more.extra
+            .push(("advice", serde_json::Value::Array(listed)));
+        let shown: Vec<String> = (r.advice.iter().take(3))
+            .map(|x| format!("line {} {}", x.line, x.rule))
+            .collect();
+        text.push_str(&format!(
+            "; {} advisory: {}",
+            r.advice_total,
+            shown.join(", ")
+        ));
+    }
+    if let Some(note) = r.note.as_ref().filter(|_| r.findings.is_empty()) {
+        text.push_str(&format!(" ({note})"));
+    }
+    text
 }

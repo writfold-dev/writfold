@@ -248,7 +248,7 @@ timeout_seconds = 10
 description = "subject at most 72 characters, a blank second line, body wrapped at 72"
 ```
 
-A script gate reports findings as `<line>: <text>` on stdout; only a clean exit 0 passes. A timeout, a signal or a draft that changed while it ran is `unknown`. A worked example is in `fixtures/kb/commit-message/`.
+A script gate reports findings as `<line>: <text>` on stdout, optionally naming the rule as `<line>: [rule.name] text`; only a clean exit 0 passes. Since v0.6.0-dev.20 ([#115](https://github.com/writfold-dev/writfold/issues/115)) what it prints on exit 0 is kept as **advice**: recorded in the receipt and shown with the draft, never deciding. A script that prints on success now shows those lines; a wrapper that prints a linter's warnings and exits 0 gives advice without blocking. A timeout, a signal or a draft that changed while it ran is `unknown`. A worked example is in `fixtures/kb/commit-message/`.
 
 ## An external checker as a gate (built in v0.6.0-dev.19)
 

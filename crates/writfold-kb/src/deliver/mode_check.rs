@@ -135,6 +135,7 @@ pub fn mode(root: &Path, mut mode: Mode, path: &str, text: &str) -> Result<Mode,
         "waivable",
         "rendering",
         "audience",
+        "prose",
     ];
     c.unknown_keys(&keys, &keys, "not a delivery mode key");
     schema(&mut c, "writfold-delivery-mode/1");
@@ -168,6 +169,8 @@ pub fn mode(root: &Path, mut mode: Mode, path: &str, text: &str) -> Result<Mode,
         .chain(attest.iter().flatten().map(|a| &a.value.text))
         .cloned()
         .collect();
+    let listed = (mode.checks.iter()).any(|x| x == super::config::PROSE);
+    let prose = super::mode_keys::prose(&mut c, root, listed);
     let measured = (mode.checks.iter()).any(|x| x == super::config::LENGTH);
     let unbounded = matches!((&max_chars, &max_lines), (Some(None), Some(None)));
     if measured && unbounded {
@@ -191,6 +194,7 @@ pub fn mode(root: &Path, mut mode: Mode, path: &str, text: &str) -> Result<Mode,
             mode.rendering = r;
         }
         mode.audience = audience?;
+        mode.prose = prose?;
         mode.source = path.to_owned();
         (ok && unique && !(measured && unbounded)).then_some(mode)
     })();

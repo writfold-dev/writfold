@@ -143,8 +143,22 @@ fn finding(x: &Ctx<'_>, j: &Judged<'_>, f: &Finding) -> String {
     }
 }
 
-/// The drawing for candidate `c`; empty when nothing failed or is unknown
-/// about its present bytes.
+/// One piece of advice: shown with the draft, never holding it back.
+fn advised(x: &Ctx<'_>, j: &Judged<'_>, f: &Finding) -> String {
+    let name = &j.obligation.name;
+    let mut out = format!("advice[{name}]: {} ({})\n", f.rule, f.detail);
+    if f.line > 0 {
+        let col = (f.detail.strip_prefix("column "))
+            .and_then(|n| n.parse().ok())
+            .unwrap_or(1);
+        out.push_str(&at(x, f, col));
+    }
+    out.push_str("  = note: advice only; it does not hold the draft back\n");
+    out
+}
+
+/// The drawing for candidate `c`; empty when nothing failed, is unknown or
+/// carries advice about its present bytes.
 pub fn draw(root: &Path, c: &Candidate, judged: &[Judged<'_>]) -> String {
     let Some(payload) = super::render::payload(root, c) else {
         return String::new();
@@ -180,6 +194,11 @@ pub fn draw(root: &Path, c: &Candidate, judged: &[Judged<'_>]) -> String {
                 ));
             }
             _ => {}
+        }
+        // Advice about other bytes is not drawn (as for findings).
+        if j.moved.is_none() {
+            let room = MAX.saturating_sub(parts.len());
+            parts.extend(r.advice.iter().take(room).map(|f| advised(&x, j, f)));
         }
     }
     let mut out = parts.join("\n");

@@ -30,7 +30,7 @@ pub(super) fn named(c: &mut Check<'_>, key: &str, want: &str, file: &str) -> boo
     false
 }
 
-fn rule(c: &mut Check<'_>, entry: &Spanned<Text>) -> Option<Rule> {
+pub(super) fn rule(c: &mut Check<'_>, entry: &Spanned<Text>) -> Option<Rule> {
     let Some((name, pattern)) = entry.str().split_once(": ") else {
         let why = format!("rule {:?} is not \"name: pattern\"", entry.str());
         c.error("value.form", Some(entry.span), why)

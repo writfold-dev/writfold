@@ -36,14 +36,15 @@ pub struct Facts<'a> {
 }
 
 /// The receipt's bytes: two-space JSON ending in a line break.
+fn listed(found: &[Finding]) -> Vec<Value> {
+    (found.iter().take(MAX_FINDINGS))
+        .map(|x| json!({"line": x.line, "rule": x.rule, "detail": x.detail}))
+        .collect()
+}
+
 pub fn bytes(f: &Facts<'_>) -> Vec<u8> {
     let e = f.evaluated;
-    let findings: Vec<Value> = e
-        .findings
-        .iter()
-        .take(MAX_FINDINGS)
-        .map(|x| json!({"line": x.line, "rule": x.rule, "detail": x.detail}))
-        .collect();
+    let findings = listed(&e.findings);
     let mut value = json!({
         "schema": SCHEMA,
         "check": f.check,
@@ -61,6 +62,12 @@ pub fn bytes(f: &Facts<'_>) -> Vec<u8> {
         "seq": f.seq,
         "recorded": f.recorded,
     });
+    // Advice only when there is some, so a receipt without it keeps the
+    // bytes it always had.
+    if let (false, Some(Value::Object(result))) = (e.advice.is_empty(), value.get_mut("result")) {
+        result.insert("advice".into(), Value::Array(listed(&e.advice)));
+        result.insert("advice_total".into(), json!(e.advice.len()));
+    }
     let digest = sha(canonical(&value).as_bytes());
     if let Value::Object(map) = &mut value {
         map.insert("digest".into(), Value::String(digest));
@@ -81,6 +88,9 @@ pub struct Receipt {
     pub outcome: Outcome,
     pub findings: Vec<Finding>,
     pub total: u64,
+    /// Advice: shown and recorded, never deciding ([`writfold_core::prose`]).
+    pub advice: Vec<Finding>,
+    pub advice_total: u64,
     pub note: Option<String>,
     /// 0 for a receipt written before receipts carried `seq`.
     pub seq: u64,
@@ -97,10 +107,14 @@ fn text(value: &Value, pointer: &str) -> Result<String, String> {
 }
 
 fn findings(value: &Value) -> Result<Vec<Finding>, String> {
+    found(value, "/result/findings")
+}
+
+fn found(value: &Value, pointer: &str) -> Result<Vec<Finding>, String> {
     let items = value
-        .pointer("/result/findings")
+        .pointer(pointer)
         .and_then(Value::as_array)
-        .ok_or("result.findings is not a list")?;
+        .ok_or_else(|| format!("{pointer} is not a list"))?;
     items
         .iter()
         .map(|item| {
@@ -150,13 +164,22 @@ pub fn parse(text_in: &str, run: &str, candidate: &str, name: &str) -> Result<Re
         .pointer("/result/findings_total")
         .and_then(Value::as_u64)
         .ok_or("result.findings_total is not a count")?;
-    let consistent = match outcome {
-        Outcome::Pass => total == 0,
-        Outcome::Fail => total > 0,
-        Outcome::Unknown => true,
-    };
-    if !consistent || (findings.len() as u64) > total {
+    let counted = usize::try_from(total).unwrap_or(usize::MAX);
+    if !writfold_core::prose::agrees(outcome, counted) || (findings.len() as u64) > total {
         return Err("its outcome disagrees with its findings".into());
+    }
+    let (advice, advice_total) = match value.pointer("/result/advice") {
+        None => (Vec::new(), 0),
+        Some(_) => (
+            found(&value, "/result/advice")?,
+            (value
+                .pointer("/result/advice_total")
+                .and_then(Value::as_u64))
+            .ok_or("result.advice_total is not a count")?,
+        ),
+    };
+    if (advice.len() as u64) > advice_total {
+        return Err("its advice disagrees with its advice count".into());
     }
     Ok(Receipt {
         class: text(&value, "/class")?,
@@ -166,6 +189,8 @@ pub fn parse(text_in: &str, run: &str, candidate: &str, name: &str) -> Result<Re
         outcome,
         findings,
         total,
+        advice,
+        advice_total,
         note: text(&value, "/result/note").ok(),
         seq: match value.get("seq") {
             None => 0,

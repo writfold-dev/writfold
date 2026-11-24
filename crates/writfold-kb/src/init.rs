@@ -36,7 +36,7 @@ const RESEARCH: [(&str, &str); 4] = [
 
 /// What `init` writes with `--example delivery`: the bytes of
 /// `fixtures/kb/delivery-example/`, which are the user's after `init`.
-const DELIVERY: [(&str, &str); 8] = [
+const DELIVERY: [(&str, &str); 9] = [
     (
         ".writfold/deliveries/deny-external.toml",
         include_str!(
@@ -60,6 +60,10 @@ const DELIVERY: [(&str, &str); 8] = [
         include_str!(
             "../../../fixtures/kb/delivery-example/.writfold/deliveries/release-note.toml"
         ),
+    ),
+    (
+        ".writfold/deliveries/prose-plain.toml",
+        include_str!("../../../fixtures/kb/delivery-example/.writfold/deliveries/prose-plain.toml"),
     ),
     (
         ".writfold/deliveries/guard.toml",

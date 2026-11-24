@@ -67,6 +67,8 @@ The policy keys (built in v0.6.0-dev.3), each absent unless it applies: a gate r
 
 `resume --packet` (built in v0.6.0-dev.19) answers under the verb `resume` with the arguments `[<run>, "packet"]`. Its rows are `resume`'s, in a new order, and its trailer gains `required`, `required_omitted` and `optional_omitted` (counts) and `packet` (`complete` or `partial`). A required row that did not fit sets `answer: unknown` with `reason: budget`.
 
+Delivery check receipts (built in v0.6.0-dev.20) may carry `result.advice`, a list of `{line, rule, detail}`, and `result.advice_total`. Both are written only when there is advice. In `deliver status`, a check row's `more` entry gains `advice` (the same list) when its receipt has some. Advice never changes `outcome`, `findings` or an exit status.
+
 `find --each Q…` (built in v0.6.0-dev.6) answers several queries in one envelope, in the order given. Each query opens with a row of kind `query` (`id` its position from 1, `status` `hit` or `none`, `text` the query, and two more keys: `query`, the same text, and `hits`, the number of rows shown for it), followed by the first five rows a lone `find` gives for it (for a record's own ID, from v0.6.0-dev.11, only the `exact` row: the same first row), each carrying the `query` key beside `matched_on`. A query with more rows than five is flagged `more` (ask it alone for the rest). A query that matched nothing has `hits: 0` and any suggested names under it, flagged `suggested`. `trailer.counts` holds `queries` and `miss`; any miss exits 2.
 
 ```console

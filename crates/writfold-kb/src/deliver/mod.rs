@@ -27,6 +27,7 @@ mod pick;
 pub mod policy;
 pub mod post;
 mod prepare;
+pub mod prose;
 mod read;
 pub mod receipt;
 pub mod recheck;
