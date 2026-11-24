@@ -12,10 +12,11 @@
 //! `gate verify`, which re-runs the command at the recorded commit.
 use super::def::Definition;
 use super::exec::Evaluation;
+use super::retain::{self, Gathered, Retained};
 use super::subject::Scoped;
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
-use writfold_core::gate::{Ending, Outcome, outcome};
+use writfold_core::gate::{Ending, Kept, Outcome, outcome_kept};
 
 pub const SCHEMA: &str = "writfold-gate-receipt/1";
 /// The directory of a run that holds its gate receipts.
@@ -63,6 +64,9 @@ pub struct Facts<'a> {
     /// One more than the highest `seq` among the run's receipts of this
     /// gate on this subject: the order receipts are judged in ([`order`]).
     pub seq: u64,
+    /// What was kept of the files the gate declares in `retain`; `None`
+    /// when it declares none, so its receipt has the bytes it always had.
+    pub kept: Option<&'a Gathered>,
 }
 
 /// The argv a receipt records: the definition's, or for a run-record gate
@@ -111,7 +115,7 @@ pub fn bytes(f: &Facts<'_>) -> Vec<u8> {
         },
         "command": {"argv": command(d), "workdir": d.workdir, "timeout_seconds": d.timeout_seconds},
         "result": {
-            "outcome": outcome(e.ending, f.subject_moved).name(),
+            "outcome": outcome_kept(e.ending, f.subject_moved, f.kept.map_or(Kept::Nothing, Gathered::kept)).name(),
             "exit_code": e.exit_code,
             "signal": e.signal,
             "timed_out": e.timed_out,
@@ -124,6 +128,9 @@ pub fn bytes(f: &Facts<'_>) -> Vec<u8> {
         "recorded": f.recorded,
         "seq": f.seq,
     });
+    if let Some(kept) = f.kept {
+        kept.record(&mut value);
+    }
     let digest = sha(canonical(&value).as_bytes());
     if let Value::Object(map) = &mut value {
         map.insert("digest".into(), Value::String(digest));
@@ -157,8 +164,11 @@ pub struct Receipt {
     pub ending: Ending,
     pub duration_ms: u64,
     pub recorded: String,
-    /// The judging order ([`order`]); 0 for a receipt that predates it.
+    /// The judging order ([`order`]).
     pub seq: u64,
+    /// Files kept with the receipt ([`super::retain`]); checked against
+    /// the KB on every read ([`filed`]).
+    pub retained: Vec<Retained>,
 }
 
 fn at<'a>(value: &'a Value, path: &[&str]) -> Option<&'a Value> {
@@ -255,7 +265,8 @@ pub fn parse(text: &str, run: &str, name: &str) -> Result<Receipt, String> {
     let moved = flag(&value, &["result", "subject_moved"])?;
     let stated = Outcome::parse(&s(&value, &["result", "outcome"])?)
         .ok_or("result.outcome is not pass, fail or unknown")?;
-    if stated != outcome(ending, moved) {
+    let (retained, kept) = retain::read(&value)?;
+    if stated != outcome_kept(ending, moved, kept) {
         return Err("its outcome disagrees with how the command ended".into());
     }
     let argv = strings(&value, &["command", "argv"])?;
@@ -289,6 +300,7 @@ pub fn parse(text: &str, run: &str, name: &str) -> Result<Receipt, String> {
             .and_then(serde_json::Value::as_u64)
             .filter(|n| *n > 0)
             .ok_or("seq is missing or not a count")?,
+        retained,
     })
 }
 
@@ -320,7 +332,11 @@ pub fn filed(root: &std::path::Path, run_dir: &str, run: &str) -> Vec<Filed> {
             let path = format!("{run_dir}/{DIR}/{name}");
             let parsed = std::fs::read_to_string(root.join(&path))
                 .map_err(|e| format!("unreadable ({e})"))
-                .and_then(|text| parse(&text, run, &name));
+                .and_then(|text| parse(&text, run, &name))
+                .and_then(|r| {
+                    let stem = name.strip_suffix(".json").unwrap_or(&name);
+                    retain::intact(&root.join(run_dir), stem, &r.retained).map(|()| r)
+                });
             Filed { path, name, parsed }
         })
         .collect();

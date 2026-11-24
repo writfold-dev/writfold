@@ -110,7 +110,7 @@ pub fn classify(path: &str) -> Option<Kind> {
         ["runbooks", _, _] if markdown => Some(Kind::Runbook),
         ["runs", _, "manifest.json"] => Some(Kind::Run),
         ["runs", _, "checkpoint.md"] => Some(Kind::Checkpoint),
-        ["runs", _, "observations" | "receipts", ..] => None,
+        ["runs", _, "observations" | "receipts" | "evidence", ..] => None,
         ["corrections", _] if markdown => Some(Kind::Correction),
         [top, "STATUS.md"] if project_name(top).is_some() => Some(Kind::Project),
         [top, "log", _] if markdown && project_name(top).is_some() => Some(Kind::ProjectLog),

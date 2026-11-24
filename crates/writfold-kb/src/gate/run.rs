@@ -2,7 +2,9 @@
 //! and record one receipt in the run through the write protocol. The
 //! retained output tails and the command's `{artifacts}` directory stay
 //! local, under `<KB git dir>/writfold/gates/<run>/<receipt>/`: logs can be
-//! large and can hold secrets, so only their digests are tracked.
+//! large and can hold secrets, so only their digests are tracked. Files the
+//! gate declares in `retain` are the exception: they are published with the
+//! receipt, in the same write plan ([`super::retain`]).
 use super::receipt::{self, Facts};
 use super::{def, exec, status, subject};
 use crate::Request;
@@ -14,7 +16,7 @@ use crate::write::{Op, atomic};
 use crate::{runs, time};
 use sha2::{Digest, Sha256};
 use std::path::{Path, PathBuf};
-use writfold_core::gate::{Outcome, outcome};
+use writfold_core::gate::{Outcome, outcome, outcome_kept};
 
 /// The local directory of one receipt's tails and artifacts.
 pub fn local_dir(ws: &Workspace, run: &str, stem: &str) -> Option<PathBuf> {
@@ -130,17 +132,26 @@ type Window = (
     crate::plan::event::Baseline,
 );
 
-/// Write one receipt through the write protocol.
-fn publish(ws: &Workspace, request: &Request, path: &str, bytes: Vec<u8>) -> Result<()> {
+/// Write one receipt, and the evidence kept with it, through the write
+/// protocol: all of it or none.
+fn publish(
+    ws: &Workspace,
+    request: &Request,
+    (path, bytes): (&str, Vec<u8>),
+    evidence: Vec<(String, Vec<u8>)>,
+) -> Result<()> {
     let state = ws
         .repo
         .as_ref()
         .map(|r| r.git_dir.join("writfold"))
         .ok_or_else(|| KbError::Refused("gates need a KB under Git".into()))?;
-    let ops = [Op::Create {
+    let mut ops: Vec<Op> = (evidence.into_iter())
+        .map(|(path, bytes)| Op::Create { path, bytes })
+        .collect();
+    ops.push(Op::Create {
         path: path.to_owned(),
         bytes,
-    }];
+    });
     atomic::apply(&ws.root, &state, &ops, request.probe)
 }
 
@@ -193,8 +204,9 @@ fn judged_records(
         subject_moved: false,
         recorded: &time::stamp(now),
         seq: t.seq,
+        kept: None,
     });
-    publish(ws, request, &path, bytes)?;
+    publish(ws, request, (&path, bytes), Vec::new())?;
     let mut notes: Vec<String> = verdict.findings.clone();
     notes.push(format!(
         "judged over the run's own records ({} counted); the receipt goes stale when they change",
@@ -237,6 +249,7 @@ fn command(
     let evaluation = exec::run(definition, &subject.top, &artifacts);
     std::fs::write(local.join("stdout.tail"), &evaluation.stdout.bytes)?;
     std::fs::write(local.join("stderr.tail"), &evaluation.stderr.bytes)?;
+    let gathered = super::retain::gather(&artifacts, &definition.retain);
     let mut after = subject::snapshot(&git, subject, &wanted)?;
     after.attach(&git, ws, patterns.iter().copied());
     let moved = after.commit != before.commit || after.scoped(&patterns) != scoped;
@@ -250,19 +263,27 @@ fn command(
         subject_moved: moved,
         recorded: &time::stamp(now),
         seq: t.seq,
+        kept: (!definition.retain.is_empty()).then_some(&gathered),
     });
     let path = format!("{}/{}/{stem}.json", runs::dir(rec), receipt::DIR);
-    publish(ws, request, &path, bytes)?;
+    let kept = gathered.kept();
+    let notes: Vec<String> = (gathered.missing.iter())
+        .map(|n| format!("retain: {n} was not kept (absent from {{artifacts}}, not a regular file, or past the size cap), so this receipt cannot pass"))
+        .collect();
+    let evidence = (gathered.kept.into_iter())
+        .map(|(name, b)| (super::retain::path(&runs::dir(rec), &stem, &name), b))
+        .collect();
+    publish(ws, request, (&path, bytes), evidence)?;
     let done = Done {
         id: &definition.id,
         path: &path,
         local: Some(&local),
-        outcome: outcome(evaluation.ending, moved),
+        outcome: outcome_kept(evaluation.ending, moved, kept),
         moved,
         evaluation: &evaluation,
         now,
     };
-    answer(ws, tool, request, (rec, subject), done, Vec::new())
+    answer(ws, tool, request, (rec, subject), done, notes)
 }
 
 struct Done<'a> {

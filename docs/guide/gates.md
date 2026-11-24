@@ -20,13 +20,15 @@ scope = ["src/**", "Cargo.toml", "!src/**/*.md"]   # required; see below
 description = "the unit tests"     # optional; one line
 accept = ["satisfied"]             # optional; which standings meet the gate (below)
 ages_as = "ci"                     # optional; mechanical and observed repository gates: receipts age (below)
+retain = ["report.json"]           # optional; mechanical and observed repository gates: files kept with the receipt (below)
 ```
 
 - **`argv`** is executed directly, with stdin closed. A first element containing `/` is resolved against `workdir`; otherwise `PATH` finds it. Placeholders: `{artifacts}` (a fresh local directory for the command's own output files), `{gate}`, `{candidate}` and `{source}` (below). Any other `{name}` is refused.
 - **Unknown keys are refused,** so a misspelt field never silently changes a gate. The files use a small TOML subset: top-level `key = value`, comments, strings, integers and arrays of strings.
 - **`repo:<store>/<glob>` in `scope`** (built in v0.6.0-dev.9) names paths in another repository, declared as a store in `.writfold/stores/` ([stores](stores.md)): `scope = ["src/api/**", "repo:docs/adr/**"]`. Its clone on this machine is found as citations find it and read at `origin/HEAD` (else `HEAD`), committed bytes only, never fetched; its in-scope paths join the scope digest, so a receipt, cover row or statement stops being current when they move there, exactly as for the subject's own paths. `!repo:docs/adr/old/**` excludes. A store that is not declared, not cloned here or a partial clone makes the gate not met (`why: this gate's scope names repo:docs, which cannot be read here …`), and `gate run`, `gate cover`, `gate attest` and `gate waive` refuse to record anything about it. This is how a checklist item like "the docs that describe this API still match" goes stale when either repository moves.
 - **`ages_as`** (built in v0.6.0-dev.9) names a kind in the catalog (`.writfold/sources/KIND.toml`). A receipt then stands only while that kind's lifetime since it was recorded has not passed: for a gate about outside state (CI green, a bot's review) that an unchanged head cannot vouch for. An aged receipt reads `stale` with `why: the receipt aged: this gate ages as ci (.writfold/sources/ci.toml); recorded <time>`, and `gate run` makes it current again. An undeclared kind, or one with no `default_ttl`, never ages; a catalog that cannot be read leaves the gate stale. Candidate gates (delivery checks) refuse the key. The decision is the proved gate kernel with `pin::current_under` ([gate evidence spec](../rfcs/2026-11-18-gate-evidence-binding-and-pins.md)).
-- **Changing** the command, working directory, timeout, class, version or scope makes earlier receipts stale. Changing comments, layout or the description does not.
+- **`retain`** (built in v0.6.0-dev.19, [#121](https://github.com/writfold-dev/writfold/issues/121)) names up to 8 files the command writes into `{artifacts}` (plain names: `A-Z a-z 0-9 . _ -`, not starting with `.`). After the command ends, each that is a regular file (not a symlink) of at most 1 MiB, 4 MiB in all, is published with the receipt, in the same write, at `runs/<run>/evidence/<receipt stem>/<name>`; commit it with the run. The receipt records each kept file's size and digest (`retained`) and names any declared file that was not kept (`result.evidence_missing`). A missing file makes the outcome `unknown`, never `pass`; a failing command stays `fail`. On every read (`gate status`, `gate lines`, `gate verify`, cover rows, `handoff check`) a receipt whose retained files are absent or differ from what it recorded is `[invalid]` (`retained evidence report.json is not here`, `… does not match its receipt`), so a clone without the evidence never reads the gate as met. Writfold does not read the files: what they say is the checker's. The decision is proved (`outcome_kept`, [RFC](../rfcs/2026-11-24-retained-gate-evidence.md)); candidate gates refuse the key. `runs/<run>/evidence/` is not indexed.
+- **Changing** the command, working directory, timeout, class, version, scope or `retain` makes earlier receipts stale. Changing comments, layout or the description does not.
 
 ### When a definition is wrong
 
@@ -114,7 +116,7 @@ The receipt is one JSON file, `runs/<run>/gates/<gate>-<UTC time>-<6 hex>.json` 
 }
 ```
 
-Receipts are a log: a rerun adds a file. Only `gate run` writes them. A hand-edited outcome, a file without the right digest and a real receipt copied under another gate's name all read as `[invalid]` and count for nothing. Output tails (the last 64 KiB of stdout and stderr) stay local and untracked; the receipt holds only their sizes and digests.
+Receipts are a log: a rerun adds a file. Only `gate run` writes them. A hand-edited outcome, a file without the right digest and a real receipt copied under another gate's name all read as `[invalid]` and count for nothing. Output tails (the last 64 KiB of stdout and stderr) stay local and untracked; the receipt holds only their sizes and digests. Files a gate declares in `retain` are the exception (above).
 
 ## Standing
 

@@ -10,8 +10,9 @@ pub struct Class {
     pub section: &'static str,
 }
 
-const RUN: [(&str, &str); 7] = [
+const RUN: [(&str, &str); 8] = [
     ("gates", "gate-receipt"),
+    ("evidence", "gate-evidence"),
     ("statements", "statement"),
     ("covers", "cover"),
     ("observed", "observation"),

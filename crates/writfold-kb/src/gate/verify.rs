@@ -79,6 +79,11 @@ pub(super) fn verify(
     let (path, run, name) = file(ws, &request.cwd, given)?;
     let text = std::fs::read_to_string(&path)?;
     let r = receipt::parse(&text, &run, &name)
+        .and_then(|r| {
+            let run_dir = path.parent().and_then(Path::parent).unwrap_or(&ws.root);
+            let stem = name.trim_end_matches(".json");
+            super::retain::intact(run_dir, stem, &r.retained).map(|()| r)
+        })
         .map_err(|why| KbError::Refused(format!("invalid receipt {given}: {why}")))?;
     let git = tool.admit()?;
     let git_dir = repository(ws, &git, &r, repo, &request.cwd)?;

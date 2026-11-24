@@ -9,7 +9,7 @@ use crate::defs::{Check, Field, Slot, Spanned, Text, Value};
 use std::path::Path;
 use writfold_core::diag::Report;
 
-const KEYS: [&str; 21] = [
+const KEYS: [&str; 22] = [
     "accept",
     "schema",
     "id",
@@ -31,6 +31,7 @@ const KEYS: [&str; 21] = [
     "own_evidence",
     "evidence_from",
     "ages_as",
+    "retain",
 ];
 const COMMON: [&str; 7] = [
     "accept",
@@ -52,6 +53,7 @@ fn keys_for(class: Option<&str>) -> Vec<&'static str> {
             "scope",
             "subject",
             "ages_as",
+            "retain",
         ],
         Some("attested") => &["scope", "subject"],
         Some(RUN_RECORD) => &["require"],
@@ -254,6 +256,7 @@ pub fn check(
     let checklist = super::checklist::spec::check(&mut c, &class);
     let accept = super::def_accept::check(&mut c, &class);
     let ages_as = def_class::ages_as(&mut c, &class);
+    let retain = super::retain::check(&mut c, &class);
     let files = command
         .as_ref()
         .and_then(|(argv, ..)| def_class::files(&mut c, argv, dir));
@@ -279,6 +282,7 @@ pub fn check(
             checklist: checklist?,
             accept: accept?,
             ages_as: ages_as?,
+            retain: retain?,
             dir: dir.to_path_buf(),
             digest: String::new(),
         })

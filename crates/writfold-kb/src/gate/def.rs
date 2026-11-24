@@ -87,6 +87,9 @@ pub struct Definition {
     /// `ages_as`, when written: the kind whose catalog lifetime its
     /// receipts age by ([`super::def_class::ages_as`]).
     pub ages_as: Option<String>,
+    /// `retain`: files the command writes into `{artifacts}` to keep with
+    /// the receipt ([`super::retain`]); empty when not written.
+    pub retain: Vec<String>,
     /// The directory holding the definition: what `{gate}` expands to.
     pub dir: PathBuf,
     /// `.writfold/gates/<id>.toml`, relative to its root.
@@ -181,6 +184,9 @@ pub fn digest(d: &Definition) -> String {
     }
     if let Some(kind) = &d.ages_as {
         canonical.push_str(&format!("ages_as={kind}\n"));
+    }
+    if !d.retain.is_empty() {
+        canonical.push_str(&format!("retain={}\n", json(&d.retain)));
     }
     format!(
         "sha256:{}",
