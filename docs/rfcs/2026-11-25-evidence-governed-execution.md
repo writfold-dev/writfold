@@ -375,8 +375,8 @@ None blocks acceptance.
   [The four use sites](#the-four-use-sites) replaces it.
 - 2026-11-25: Groomed with the vocabulary RFC. Outcomes: the algebra
   moved to the shared calculus; three of four use sites recognised as
-  shipped; `needs` kept as the one addition, with four theorems and two
-  mutants; observations are statements; issuer roles, the `derived` class,
+  shipped; `needs` kept as the one addition, with three new theorems, two
+  restated and two mutants; observations are statements; issuer roles, the `derived` class,
   the rule language, the evidence graph, epochs, triples, strict bootstrap
   and the MCP mention removed, each with its reason above. Status left
   `draft` for the main session to accept.
